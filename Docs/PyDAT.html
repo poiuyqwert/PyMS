@@ -1,0 +1,5727 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyDAT v1.11 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><b>PyDAT v1.11</b>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyDAT v1.11</a><br><br>
+			PyDAT is used to convert DAT (units.dat, weapons.dat, flingy.dat, sprites.dat, images.dat, upgrades.dat, techdata.dat, sfxdata.dat, portdata.dat, mapdata.dat, orders.dat) to and from TXT files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+				<li><a href="#syntax">Syntax</a>
+			<ol>
+				<li><a href="#flags">Flags</a>
+				<li><a href="#restrictions">Restrictions</a>
+			</ol>
+				<li><a href="#examples">Example Usage</a>
+				<li><a href="#reference">Reference</a>
+			<ol>
+				<li><a href="#unitdata">Unit Data</a>
+				<li><a href="#weapondata">Weapon Data</a>
+				<li><a href="#flingydata">Flingy Data</a>
+				<li><a href="#spritedata">Sprite Data</a>
+				<li><a href="#imagedata">Image Data</a>
+				<li><a href="#upgradedata">Upgrade Data</a>
+				<li><a href="#techdata">Technology Data</a>
+				<li><a href="#sounddata">Sound Data</a>
+				<li><a href="#portraitdata">Portrait Data</a>
+				<li><a href="#campaigndata">Campaign Data</a>
+				<li><a href="#orderdata">Order Data</a>
+				<li><a href="#circlesizes">Selection Circle Sizes</a>
+				<li><a href="#rclickactions">Right Click Actions</a>
+				<li><a href="#flingyentries">Flingy Entries</a>
+				<li><a href="#behaviours">Behaviours</a>
+				<li><a href="#damagetypes">Damage Types</a>
+				<li><a href="#campaigns">Campaign Names</a>
+				<li><a href="#units">Default Units</a>
+				<li><a href="#remapping">Remapping</a>
+				<li><a href="#drawtypes">Draw Types</a>
+				<li><a href="#flingycontrol">Flingy Controlers</a>
+				<li><a href="#sprites">Default Sprites</a>
+				<li><a href="#animations">IScript Animations</a>
+				<li><a href="#orders">Default Orders</a>
+				<li><a href="#iscriptentries">IScript ID's</a>
+				<li><a href="#campaign">Default Campaign</a>
+				<li><a href="#weapons">Default Weapons</a>
+				<li><a href="#unitsizes">Unit Sizes</a>
+				<li><a href="#technologies">Default Technologies</a>
+				<li><a href="#elevation">Elevation Levels</a>
+				<li><a href="#images">Default Images</a>
+				<li><a href="#races">Races</a>
+				<li><a href="#explosions">Explosion Types</a>
+				<li><a href="#upgrades">Default Upgrades</a>
+				<li><a href="#icons">Icons</a>
+				<li><a href="#sounds">Sound Effects</a>
+				<li><a href="#shieldsizes">Shield Sizes</a>
+			</ol>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyDAT v1.11</b>
+<ul>
+	<li>Fixed a bug where the Units&gt;StarEdit tab would clear the race flags of the unit
+</ul>
+<b>PyDAT v1.10</b>
+<ul>
+	<li>The dropdown box to choose shield overlay by size on the images tab now loads when changing units
+	<li>A custom iscript.bin can now be selected in the settings window, which is used to show IScript entries on the Images tab
+	<li>The IScript entries dropdown on the Images tab now supports higher iscript id's and has also been updated to support PyICE entry naming (new feature of PyICE v1.6)
+	<li>Control-f now makes the find dropdown active
+	<li>Fixed some display problems with Attack Move, Right-Click Action, Attack Angle, and Launch Angle
+	<li>Fixed sound preview playing the sound below the one selected
+	<li>Fixed problem with play sound button not becoming active if you change the sound from None to something else
+	<li>Fixed a problem where the Upgrades, Techdata, and Orders tabs didn't save changes
+</ul>
+<b>PyDAT v1.9</b>
+<ul>
+	<li>Fixed a problem where disabling Race flags would not save
+	<li>Fixed a problem where loading a file would no update the selected units stats
+	<li>Fixed a problem with Weapons.dat not saving changes
+	<li>Fixed jump buttons for Units, Sounds tab (only the What sounds jump buttons worked)
+	<li>Sfxdata.dat's "Used By" now checks if it is in the range of unit sounds, not just if they are the start or end
+</ul>
+<b>PyDAT v1.8</b>
+<ul>
+	<li>Fixed a problem with StarEdit group flags
+	<li>Fixed a problem with Weapon Type and Weapon Explosion dropdowns
+	<li>Fixed weirdness with the ID listbox when opening from MPQ's or directories
+	<li>Added placement box preview to Units/Graphics tab
+	<li>Added a seconds display of weapon cooldown (for Normal game speed only)
+	<li>Added a display for Flingy's top speed id pixels/frame
+	<li>Added a display for Flingy's halt distance in pixels
+	<li>Added a sound previewer to the Sfxdata tab
+</ul>
+<b>PyDAT v1.7</b>
+<ul>
+	<li>Added unit and sprite GRP previews
+	<li>Added order highlight icon preview (dunno why this wasn't already there :S)
+	<li>Added Open MPQ, Save MPQ, and Save SEMPQ
+	<li>Added Options for MPQ and TBL settings
+</ul>
+<b>PyDAT v1.6</b>
+<ul>
+	<li>Fixed a bug that made your changes not save when switching id's, not tabs
+	<li>You can now press Enter in the search text box to find next
+</ul>
+<b>PyDAT v1.5</b>
+<ul>
+	<li>Fixed some compiling errors
+</ul>
+<b>PyDAT v1.4</b>
+<ul>
+	<li>Some settings now disable in the GUI when hardcode restricted
+	<li>Unknown2 in Orders.dat tab updated to Main/Secondary (thanks FaRTy1billion)
+	<li>Fixed errors in loading/saving various values
+	<li>Finding is no longer case-sensitive
+	<li>Updated entry lists from DatEdit
+	<li>Added open directory
+	<li>Added display preview for icons, unit sizes, selection circles, and health bars
+</ul>
+<b>PyDAT v1.3</b>
+<ul>
+	<li>Fixed a couple label names (Note: Breaks backwards compatability)
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyDAT v1.2</b>
+<ul>
+	<li>Capitalized Edit in StarEditGroupFlags and StarEditAvailabilityFlags (Note: Breaks backwards compatability)
+	<li>Fixed Behaviours (Note: Breaks backwards compatability)
+</ul>
+<b>PyDAT v1.1</b>
+<ul>
+	<li>Added better error reporting
+	<li>Fixed various bugs
+	<li>Indentation changed
+</ul>
+<b>PyDAT v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-h</b></td>
+		<td class="lblue"><b>--help</b></td>
+		<td>Display the command line format and options with small descriptions.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile a DAT file to a TXT file. <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile a TXT file to a DAT file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-u</b></td>
+		<td class="lblue"><b>--units</b></td>
+		<td>Decompiling/Compiling units.dat <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-w</b></td>
+		<td class="lblue"><b>--weapons</b></td>
+		<td>Decompiling/Compiling weapons.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-f</b></td>
+		<td class="lblue"><b>--flingy</b></td>
+		<td>Decompiling/Compiling flingy.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-s</b></td>
+		<td class="lblue"><b>--sprites</b></td>
+		<td>Decompiling/Compiling sprites.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-i</b></td>
+		<td class="lblue"><b>--images</b></td>
+		<td>Decompiling/Compiling images.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-g</b></td>
+		<td class="lblue"><b>--upgrades</b></td>
+		<td>Decompiling/Compiling upgrades.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-t</b></td>
+		<td class="lblue"><b>--techdata</b></td>
+		<td>Decompiling/Compiling techdata.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-l</b></td>
+		<td class="lblue"><b>--sfxdata</b></td>
+		<td>Decompiling/Compiling sfxdata.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-p</b></td>
+		<td class="lblue"><b>--portdata</b></td>
+		<td>Decompiling/Compiling portdata.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-m</b></td>
+		<td class="lblue"><b>--mapdata</b></td>
+		<td>Decompiling/Compiling mapdata.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-o</b></td>
+		<td class="lblue"><b>--orders</b></td>
+		<td>Decompiling/Compiling orders.dat</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-n</b></td>
+		<td class="lblue"><b>--ids</b></td>
+		<td>A list of ID's to decompile, seperated by commas <b>Default: All</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-b</b></td>
+		<td class="lblue"><b>--basedat</b></td>
+		<td>Used to signify the base DAT file to compile on top of <b>Default: Default\*.dat</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><a name="syntax" class="header">Syntax</a><a href="#top" class="top">^</a><br><br>
+Every decompiled DAT file uses the same syntax, just with different keywords. Each entry starts with an ID header, then is followed by a list of all the settings for that id:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>TypeID ID:
+    Data	Value
+    Data	Value
+    ...</pre>
+		</td>
+	</tr>
+</table>
+TypeID and the Data/Value pairs depend on which type of DAT file it is. The different types are:<br>
+<ul>
+	<li><a href="#unitdata">UnitID</a>
+	<li><a href="#weapondata">WeaponID</a>
+	<li><a href="#flingydata">FlingyID</a>
+	<li><a href="#spritedata">SpriteID</a>
+	<li><a href="#imagedata">ImageID</a>
+	<li><a href="#upgradedata">UpgradeID</a>
+	<li><a href="#techdata">TechID</a>
+	<li><a href="#sounddata">SoundID</a>
+	<li><a href="#portraitdata">PortraitID</a>
+	<li><a href="#mapdata">MapID</a>
+	<li><a href="#orderdata">OrderID</a>
+</ul>
+ID is the ID of the entry in the DAT file (for example UnitID 0 is Terran Marine). There are only three types of values in a DAT file:<br>
+<ul>
+	<li>Quantity (like MineralCost or BuildTime)
+	<li>Flags (like SpecialAbilityFlags)
+	<li>Data entry (either from another DAT file, TBL file, or one of a list of values, given in the <a href="#reference">Reference</a>)
+</ul>
+When decompiling entries from a DAT file, data entry values will always have a comment at the end, telling which type of data entry it is and giving additional information on the value. The only values that are flag sets are the values used by data keywords ending in Flags (like SpecialAbilityFlags). Everything else is a quantity.<br>
+<br><br><a name="flags" class="subheader">Flags</a><a href="#top" class="top">^</a><br><br>
+The only entries that take flags are SpecialAbilityFlags, StarEditGroupFlags, and StarEditAvailabilityFlags in units.dat, and TargetFlags in weapons.dat. The value for Flags is a series of zero's and one's, stating which settings are on or off (zero's meaning the flag is off, one's mean its on). SpecialAbilityFlags has 32 flags, in the following order:<br>
+<ol>
+	<li>Building
+	<li>Addon
+	<li>Flyer
+	<li>Worker
+	<li>Subunit
+	<li>Flying Building
+	<li>Hero
+	<li>Regenerates HP
+	<li>Animated Idle(?)
+	<li>Cloakable
+	<li>Two Units in 1 Egg
+	<li>Single Entity
+	<li>Resource Depot
+	<li>Resource Container
+	<li>Robotic Unit
+	<li>Detector
+	<li>Organic Unit
+	<li>Requires Creep
+	<li>Unused(?)
+	<li>Requires Psi
+	<li>Burrowable
+	<li>Spellcaster
+	<li>Permanent Cloak
+	<li>Pickup Item(?)
+	<li>Ignore Supply Check
+	<li>Use Medium Overlays
+	<li>Use Large Overlays
+	<li>Battle Reactions
+	<li>Full Auto-Attack
+	<li>Invincible
+	<li>Mechanical Unit
+	<li>Produces Units(?)
+</ol>
+StarEditGroupFlags takes 8 flags in the following order:<br>
+<ol>
+	<li>Zerg
+	<li>Terran
+	<li>Protoss
+	<li>Men
+	<li>Building
+	<li>Factory
+	<li>Independent
+	<li>Neutral
+</ol>
+StarEditAvailabilityFlags takes 16 flags in the following order:<br>
+<ol>
+	<li>Non-Neutral
+	<li>Unit Listing and Palette
+	<li>Mission Briefing
+	<li>Player Settings
+	<li>All Races
+	<li>Set Doodad State
+	<li>Non-Location Triggers
+	<li>Unit and Hero Settings
+	<li>Location Triggers
+	<li>BroodWar Only
+	<li>Unused (0x400)
+	<li>Unused (0x800)
+	<li>Unused (0x1000)
+	<li>Unused (0x2000)
+	<li>Unused (0x4000)
+	<li>Unused (0x8000)
+</ol>
+And TargetFlags takes 9 flags in the following order:<br>
+<ol>
+	<li>Air
+	<li>Ground
+	<li>Mechanical
+	<li>Organic
+	<li>Non-Building
+	<li>Non-Robotic
+	<li>Terrain
+	<li>Organic or Mechanical
+	<li>Own
+</ol>
+<br><br><a name="restrictions" class="subheader">Restrictions</a><a href="#top" class="top">^</a><br><br>
+Some data entries are restricted to certain ID's in the DAT files, they are:<br>
+<ul>
+	<li>units.dat entries 106-201 are the <b>only</b> unit entries that have the data entries: Infestation, AddonHorizontal, AddonVertical
+	<li>units.dat entries 0-105 are the <b>only</b> unit entries that have the data entries: ReadySound, PissSoundStart, PissSoundEnd, YesSoundStart, YesSoundEnd
+	<li>sprites.dat entries 130-516 re the <b>only</b> sprite entries that have the data entries: HealthBar, SelectionCircleImage, SelectionCircleOffset
+</ul>
+<br><br><a name="examples" class="header">Example Usage</a><a href="#top" class="top">^</a><br><br>
+Decompiling unit id 99 (Samir Duran), then recompiling back into the same dat file:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyDAT.pyw -n 99 units.dat
+  ..edit dat..
+python PyDAT.pyw -b units.dat -c units.txt</pre>
+		</td>
+	</tr>
+</table>
+Decmpiling every entry in mapdata.dat, then recompiling:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyDAT.pyw -m MyMod\mapdata.dat
+  ..edit dat..
+python PyDAT.pyw -m -c MyMod\mapdata.dat</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="reference" class="header">Reference</a><a href="#top" class="top">^</a><br><br>
+<a name="unitdata" class="subheader">Unit Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Unit Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Graphics
+Subunit1
+Subunit2
+Infestation
+ConstructionAnimation
+UnitDirection
+ShieldEnable
+ShieldAmount
+HitPoints
+ElevationLevel
+Unknown
+Sublabel
+CompAIIdle
+HumanAIIdle
+ReturntoIdle
+AttackUnit
+AttackMove
+GroundWeapon
+MaxGroundHits
+AirWeapon
+MaxAirHits
+AIInternal
+SpecialAbilityFlags
+TargetAcquisitionRange
+SightRange
+ArmorUpgrade
+UnitSize
+Armor
+RightClickAction
+ReadySound
+WhatSoundStart
+WhatSoundEnd
+PissSoundStart
+PissSoundEnd
+YesSoundStart
+YesSoundEnd
+StarEditPlacementBoxWidth
+StarEditPlacementBoxHeight
+AddonHorizontal
+AddonVertical
+UnitSizeLeft
+UnitSizeUp
+UnitSizeRight
+UnitSizeDown
+Portrait
+MineralCost
+VespeneCost
+BuildTime
+Unknown1
+StarEditGroupFlags
+SupplyProvided
+SupplyRequired
+SpaceRequired
+SpaceProvided
+BuildScore
+DestroyScore
+UnitMapString
+BroodwarUnitFlag
+StarEditAvailabilityFlags</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="weapondata" class="subheader">Weapon Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Weapon Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Label
+Graphics
+Unused
+TargetFlags
+MinimumRange
+MaximumRange
+DamageUpgrade
+WeaponType
+WeaponBehavior
+RemoveAfter
+ExplosionType
+InnerSplashRange
+MediumSplashRange
+OuterSplashRange
+DamageAmount
+DamageBonus
+WeaponCooldown
+DamageFactor
+AttackAngle
+LaunchSpin
+ForwardOffset
+UpwardOffset
+TargetErrorMessage
+Icon</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="flingydata" class="subheader">Flingy Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Flingy Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Sprite
+Speed
+Acceleration
+HaltDistance
+TurnRadius
+Unused
+MovementControl</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="spritedata" class="subheader">Sprite Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Sprite Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>ImageFile
+HealthBar
+Unknown
+IsVisible
+SelectionCircleImage
+SelectionCircleOffset</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="imagedata" class="subheader">Image Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Image Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>GRPFile
+GfxTurns
+Clickable
+UseFullIscript
+DrawIfCloaked
+DrawFunction
+Remapping
+IscriptID
+ShieldOverlay
+AttackOverlay
+DamageOverlay
+SpecialOverlay
+LandingDustOverlay
+LiftOffDustOverlay</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="upgradedata" class="subheader">Upgrade Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Upgrade Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>MineralCostBase
+MineralCostFactor
+VespeneCostBase
+BespeneCostFactor
+ResearchTimeBase
+ResearchTimeFactor
+Unknown
+Icon
+Label
+Race
+MaxRepeats
+BroodwarOnly</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="techdata" class="subheader">Technology Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Technology Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>MineralCost
+VespeneCost
+ResearchTime
+EnergyRequired
+Unkown
+Icon
+Label
+Race
+Unused
+BroodwarOnly</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="sounddata" class="subheader">Sound Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Sound Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>SoundFile
+Unknown1
+Unknown2
+Unknown3
+Unknown4</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="portraitdata" class="subheader">Portrait Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Portrait Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>PortraitFile
+SMKChange
+Unknown</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="campaigndata" class="subheader">Campaign Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Campaign Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>MapFile</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="orderdata" class="subheader">Order Data</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Order Data</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Label
+UseWeaponTargeting
+Unknown1
+MainOrSecondary
+Unknown3
+Unknown4
+Interruptable
+Unknown5
+Queueable
+Unknown6
+Unknown7
+Unknown8
+Unknown9
+Targeting
+Energy
+Animation
+Highlight
+Unknown10
+ObscuredOrder</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="circlesizes" class="subheader">Selection Circle Sizes</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Selection Circle Sizes</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = 22 pixels
+       1 = 32 pixels
+       2 = 46 pixels
+       3 = 62 pixels
+       4 = 72 pixels
+       5 = 94 pixels
+       6 = 110 pixels
+       7 = 122 pixels
+       8 = 146 pixels
+       9 = 224 pixels
+      10 = 22 pixels [Dashed]
+      11 = 32 pixels [Dashed]
+      12 = 46 pixels [Dashed]
+      13 = 62 pixels [Dashed]
+      14 = 72 pixels [Dashed]
+      15 = 94 pixels [Dashed]
+      16 = 110 pixels [Dashed]
+      17 = 122 pixels [Dashed]
+      18 = 146 pixels [Dashed]
+      19 = 224 pixels [Dashed]</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="rclickactions" class="subheader">Right Click Actions</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Right Click Actions</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = No commands/Auto Attack
+       1 = Normal movement/Normal Attack
+       2 = Normal movement/No Attack
+       3 = No movement/Normal Attack
+       4 = Harvest
+       5 = Harvest&Repair
+       6 = Nothing (with indicator)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="flingyentries" class="subheader">Flingy Entries</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Flingy Entries</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Scourge
+       1 = Broodling
+       2 = Infested Terran
+       3 = Guardian Cocoon
+       4 = Defiler
+       5 = Drone
+       6 = Egg
+       7 = Guardian
+       8 = Hydralisk
+       9 = Infested Kerrigan
+      10 = Larva
+      11 = Mutalisk
+      12 = Overlord
+      13 = Queen
+      14 = Ultralisk
+      15 = Zergling
+      16 = Cerebrate
+      17 = Infested Command Center
+      18 = Spawning Pool
+      19 = Mature Chrysalis
+      20 = Evolution Chamber
+      21 = Creep Colony
+      22 = Hatchery
+      23 = Hive
+      24 = Lair
+      25 = Sunken Colony
+      26 = Greater Spire
+      27 = Defiler Mound
+      28 = Queen's Nest
+      29 = Nydus Canal
+      30 = Overmind With Shell
+      31 = Overmind Without Shell
+      32 = Ultralisk Cavern
+      33 = Extractor
+      34 = Hydralisk Den
+      35 = Spire
+      36 = Spore Colony
+      37 = Arbiter
+      38 = Archon Energy
+      39 = Carrier
+      40 = Dragoon
+      41 = Interceptor
+      42 = Probe
+      43 = Scout
+      44 = Shuttle
+      45 = High Templar
+      46 = Dark Templar (Hero)
+      47 = Reaver
+      48 = Scarab
+      49 = Zealot
+      50 = Observer
+      51 = Templar Archives
+      52 = Assimilator
+      53 = Observatory
+      54 = Citadel of Adun
+      55 = Forge
+      56 = Gateway
+      57 = Cybernetics Core
+      58 = Khaydarin Crystal Formation
+      59 = Nexus
+      60 = Photon Cannon
+      61 = Arbiter Tribunal
+      62 = Pylon
+      63 = Robotics Facility
+      64 = Shield Battery
+      65 = Stargate
+      66 = Stasis Cell/Prison
+      67 = Robotics Support Bay
+      68 = Protoss Temple
+      69 = Fleet Beacon
+      70 = Battlecruiser
+      71 = Civilian
+      72 = Dropship
+      73 = Firebat
+      74 = Ghost
+      75 = Goliath Base
+      76 = Goliath Turret
+      77 = Sarah Kerrigan
+      78 = Marine
+      79 = Scanner Sweep
+      80 = Wraith
+      81 = SCV
+      82 = Siege Tank (Tank) Base
+      83 = Siege Tank (Tank) Turret
+      84 = Siege Tank (Siege) Base
+      85 = Siege Tank (Siege) Turret
+      86 = Science Vessel (Base)
+      87 = Science Vessel (Turret)
+      88 = Vulture
+      89 = Spider Mine
+      90 = Terran Academy
+      91 = Barracks
+      92 = Armory
+      93 = Comsat Station
+      94 = Command Center
+      95 = Supply Depot
+      96 = Control Tower
+      97 = Factory
+      98 = Covert Ops
+      99 = Ion Cannon
+     100 = Machine Shop
+     101 = Missile Turret (Base)
+     102 = Crashed Battlecruiser
+     103 = Physics Lab
+     104 = Bunker
+     105 = Refinery
+     106 = Immobile Barracks
+     107 = Science Facility
+     108 = Nuke Silo
+     109 = Nuclear Missile
+     110 = Starport
+     111 = Engineering Bay
+     112 = Terran Construction (Large)
+     113 = Terran Construction (Small)
+     114 = Ragnasaur (Ashworld)
+     115 = Rhynadon (Badlands)
+     116 = Bengalaas (Jungle)
+     117 = Vespene Geyser
+     118 = Mineral Field Type1
+     119 = Mineral Field Type2
+     120 = Mineral Field Type3
+     121 = Independent Starport (Unused)
+     122 = Zerg Beacon
+     123 = Terran Beacon
+     124 = Protoss Beacon
+     125 = Dark Swarm
+     126 = Flag
+     127 = Young Chrysalis
+     128 = Psi Emitter
+     129 = Data Disc
+     130 = Khaydarin Crystal
+     131 = Mineral Chunk Type1
+     132 = Mineral Chunk Type2
+     133 = Protoss Gas Orb Type1
+     134 = Protoss Gas Orb Type2
+     135 = Zerg Gas Sac Type1
+     136 = Zerg Gas Sac Type2
+     137 = Terran Gas Tank Type1
+     138 = Terran Gas Tank Type2
+     139 = Map Revealer
+     140 = Start Location
+     141 = Fusion Cutter Hit
+     142 = Gauss Rifle Hit
+     143 = C-10 Canister Rifle Hit
+     144 = Gemini Missiles
+     145 = Fragmentation Grenade
+     146 = Lockdown/LongBolt/Hellfire Missile
+     147 = Unknown147
+     148 = ATS/ATA Laser Battery
+     149 = Burst Lasers
+     150 = Arclite Shock Cannon Hit
+     151 = EMP Missile
+     152 = Dual Photon Blasters Hit
+     153 = Particle Beam Hit
+     154 = Anti-Matter Missile
+     155 = Pulse Cannon
+     156 = Psionic Shockwave Hit
+     157 = Psionic Storm
+     158 = Yamato Gun
+     159 = Phase Disruptor
+     160 = STA/STS Cannon Overlay
+     161 = Sunken Colony Tentacle
+     162 = Venom (Unused Zerg Weapon)
+     163 = Acid Spore
+     164 = Unknown164
+     165 = Glave Wurm
+     166 = Seeker Spores
+     167 = Queen Spell Carrier
+     168 = Plague Cloud
+     169 = Consume
+     170 = Ensnare
+     171 = Needle Spine Hit
+     172 = White Circle (Invisible)
+     173 = Left Upper Level Door
+     174 = Right Upper Level Door
+     175 = Substructure Left Door
+     176 = Substructure Right Door
+     177 = Substructure Opening Hole
+     178 = Floor Gun Trap
+     179 = Floor Missile Trap
+     180 = Wall Missile Trap
+     181 = Wall Missile Trap2
+     182 = Wall Flame Trap
+     183 = Wall Flame Trap2
+     184 = Lurker Egg
+     185 = Devourer
+     186 = Lurker
+     187 = Dark Archon Energy
+     188 = Dark Templar (Unit)
+     189 = Medic
+     190 = Valkyrie
+     191 = Corsair
+     192 = Disruption Web
+     193 = Overmind Cocoon
+     194 = Psi Disrupter
+     195 = Warp Gate
+     196 = Power Generator
+     197 = Xel'Naga Temple
+     198 = Scantid (Desert)
+     199 = Kakaru (Twilight)
+     200 = Ursadon (Ice)
+     201 = Optical Flare Grenade
+     202 = Halo Rockets
+     203 = Subterranean Spines
+     204 = Corrosive Acid Shot
+     205 = Corrosive Acid Hit
+     206 = Neutron Flare
+     207 = Uraj
+     208 = Khalis</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="behaviours" class="subheader">Behaviours</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Behaviours</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Fly & Don't Follow Target 
+       1 = Fly & Follow Target
+       2 = Appear on Target Unit
+       3 = Psionic Storm
+       4 = Appear on Target Site
+       5 = Appear on Attacker
+       6 = Attack & Self-Destruct
+       7 = Bounce
+       8 = Attack Target 3x3 Area
+       9 = Go to Max. Range</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="damagetypes" class="subheader">Damage Types</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Damage Types</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Independent
+       1 = Explosive
+       2 = Concussive
+       3 = Normal
+       4 = Ignore Armor</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="campaigns" class="subheader">Campaign Names</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Campaign Names</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = tutorial
+       1 = terran01
+       2 = terran02
+       3 = terran03
+       4 = terran04
+       5 = terran05
+       6 = terran06
+       7 = terran08
+       8 = terran09
+       9 = terran11
+      10 = terran12
+      11 = zerg01
+      12 = zerg02
+      13 = zerg03
+      14 = zerg04
+      15 = zerg05
+      16 = zerg06
+      17 = zerg07
+      18 = zerg08
+      19 = zerg09
+      20 = zerg10
+      21 = protoss01
+      22 = protoss02
+      23 = protoss03
+      24 = protoss04
+      25 = protoss05
+      26 = protoss06
+      27 = protoss07
+      28 = protoss08
+      29 = protoss09
+      30 = protoss10
+      31 = BW - protoss01
+      32 = BW - protoss02
+      33 = BW - protoss03
+      34 = BW - protoss04
+      35 = BW - protoss05
+      36 = BW - protoss06
+      37 = BW - protoss07
+      38 = BW - protoss08
+      39 = BW - terran01
+      40 = BW - terran02
+      41 = BW - terran03
+      42 = BW - terran04
+      43 = BW - terran05a
+      44 = BW - terran05b
+      45 = BW - terran06
+      46 = BW - terran07
+      47 = BW - terran08
+      48 = BW - zerg01
+      49 = BW - zerg02
+      50 = BW - zerg03
+      51 = BW - zerg04a
+      52 = BW - zerg04b
+      53 = BW - zerg04c
+      54 = BW - zerg04d
+      55 = BW - zerg04e
+      56 = BW - zerg04f
+      57 = BW - zerg05
+      58 = BW - zerg06
+      59 = BW - zerg07
+      60 = BW - zerg08
+      61 = BW - zerg09
+      62 = BW - bonus
+      63 = BW - zerg10
+      64 = Unknown</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="units" class="subheader">Default Units</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Units</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Terran Marine
+       1 = Terran Ghost
+       2 = Terran Vulture
+       3 = Terran Goliath
+       4 = Goliath Turret
+       5 = Terran Siege Tank (Tank Mode)
+       6 = Siege Tank Turret (Tank Mode)
+       7 = Terran SCV
+       8 = Terran Wraith
+       9 = Terran Science Vessel
+      10 = Gui Montag (Firebat)
+      11 = Terran Dropship
+      12 = Terran Battlecruiser
+      13 = Spider Mine
+      14 = Nuclear Missile
+      15 = Terran Civilian
+      16 = Sarah Kerrigan (Ghost)
+      17 = Alan Schezar (Goliath)
+      18 = Alan Schezar Turret
+      19 = Jim Raynor (Vulture)
+      20 = Jim Raynor (Marine)
+      21 = Tom Kazansky (Wraith)
+      22 = Magellan (Science Vessel)
+      23 = Edmund Duke (Tank Mode)
+      24 = Edmund Duke Turret (Tank Mode)
+      25 = Edmund Duke (Siege Mode)
+      26 = Edmund Duke Turret (Siege Mode)
+      27 = Arcturus Mengsk (Battlecruiser)
+      28 = Hyperion (Battlecruiser)
+      29 = Norad II (Battlecruiser)
+      30 = Terran Siege Tank (Siege Mode)
+      31 = Siege Tank Turret (Siege Mode)
+      32 = Terran Firebat
+      33 = Scanner Sweep
+      34 = Terran Medic
+      35 = Zerg Larva
+      36 = Zerg Egg
+      37 = Zerg Zergling
+      38 = Zerg Hydralisk
+      39 = Zerg Ultralisk
+      40 = Zerg Broodling
+      41 = Zerg Drone
+      42 = Zerg Overlord
+      43 = Zerg Mutalisk
+      44 = Zerg Guardian
+      45 = Zerg Queen
+      46 = Zerg Defiler
+      47 = Zerg Scourge
+      48 = Torrasque (Ultralisk)
+      49 = Matriarch (Queen)
+      50 = Infested Terran
+      51 = Infested Kerrigan (Infested Terran)
+      52 = Unclean One (Defiler)
+      53 = Hunter Killer (Hydralisk)
+      54 = Devouring One (Zergling)
+      55 = Kukulza (Mutalisk)
+      56 = Kukulza (Guardian)
+      57 = Yggdrasill (Overlord)
+      58 = Terran Valkyrie
+      59 = Mutalisk Cocoon
+      60 = Protoss Corsair
+      61 = Protoss Dark Templar (Unit)
+      62 = Zerg Devourer
+      63 = Protoss Dark Archon
+      64 = Protoss Probe
+      65 = Protoss Zealot
+      66 = Protoss Dragoon
+      67 = Protoss High Templar
+      68 = Protoss Archon
+      69 = Protoss Shuttle
+      70 = Protoss Scout
+      71 = Protoss Arbiter
+      72 = Protoss Carrier
+      73 = Protoss Interceptor
+      74 = Protoss Dark Templar (Hero)
+      75 = Zeratul (Dark Templar)
+      76 = Tassadar/Zeratul (Archon)
+      77 = Fenix (Zealot)
+      78 = Fenix (Dragoon)
+      79 = Tassadar (Templar)
+      80 = Mojo (Scout)
+      81 = Warbringer (Reaver)
+      82 = Gantrithor (Carrier)
+      83 = Protoss Reaver
+      84 = Protoss Observer
+      85 = Protoss Scarab
+      86 = Danimoth (Arbiter)
+      87 = Aldaris (Templar)
+      88 = Artanis (Scout)
+      89 = Rhynadon (Badlands Critter)
+      90 = Bengalaas (Jungle Critter)
+      91 = Cargo Ship (Unused)
+      92 = Mercenary Gunship (Unused)
+      93 = Scantid (Desert Critter)
+      94 = Kakaru (Twilight Critter)
+      95 = Ragnasaur (Ashworld Critter)
+      96 = Ursadon (Ice World Critter)
+      97 = Lurker Egg
+      98 = Raszagal (Corsair)
+      99 = Samir Duran (Ghost)
+     100 = Alexei Stukov (Ghost)
+     101 = Map Revealer
+     102 = Gerard DuGalle (BattleCruiser)
+     103 = Zerg Lurker
+     104 = Infested Duran (Infested Terran)
+     105 = Disruption Web
+     106 = Terran Command Center
+     107 = Terran Comsat Station
+     108 = Terran Nuclear Silo
+     109 = Terran Supply Depot
+     110 = Terran Refinery
+     111 = Terran Barracks
+     112 = Terran Academy
+     113 = Terran Factory
+     114 = Terran Starport
+     115 = Terran Control Tower
+     116 = Terran Science Facility
+     117 = Terran Covert Ops
+     118 = Terran Physics Lab
+     119 = Starbase (Unused)
+     120 = Terran Machine Shop
+     121 = Repair Bay (Unused)
+     122 = Terran Engineering Bay
+     123 = Terran Armory
+     124 = Terran Missile Turret
+     125 = Terran Bunker
+     126 = Norad II (Crashed)
+     127 = Ion Cannon
+     128 = Uraj Crystal
+     129 = Khalis Crystal
+     130 = Infested Command Center
+     131 = Zerg Hatchery
+     132 = Zerg Lair
+     133 = Zerg Hive
+     134 = Zerg Nydus Canal
+     135 = Zerg Hydralisk Den
+     136 = Zerg Defiler Mound
+     137 = Zerg Greater Spire
+     138 = Zerg Queen's Nest
+     139 = Zerg Evolution Chamber
+     140 = Zerg Ultralisk Cavern
+     141 = Zerg Spire
+     142 = Zerg Spawning Pool
+     143 = Zerg Creep Colony
+     144 = Zerg Spore Colony
+     145 = Unused Zerg Building1
+     146 = Zerg Sunken Colony
+     147 = Zerg Overmind (With Shell)
+     148 = Zerg Overmind
+     149 = Zerg Extractor
+     150 = Mature Chrysalis
+     151 = Zerg Cerebrate
+     152 = Zerg Cerebrate Daggoth
+     153 = Unused Zerg Building2
+     154 = Protoss Nexus
+     155 = Protoss Robotics Facility
+     156 = Protoss Pylon
+     157 = Protoss Assimilator
+     158 = Unused Protoss Building1
+     159 = Protoss Observatory
+     160 = Protoss Gateway
+     161 = Unused Protoss Building2
+     162 = Protoss Photon Cannon
+     163 = Protoss Citadel of Adun
+     164 = Protoss Cybernetics Core
+     165 = Protoss Templar Archives
+     166 = Protoss Forge
+     167 = Protoss Stargate
+     168 = Stasis Cell/Prison
+     169 = Protoss Fleet Beacon
+     170 = Protoss Arbiter Tribunal
+     171 = Protoss Robotics Support Bay
+     172 = Protoss Shield Battery
+     173 = Khaydarin Crystal Formation
+     174 = Protoss Temple
+     175 = Xel'Naga Temple
+     176 = Mineral Field (Type 1)
+     177 = Mineral Field (Type 2)
+     178 = Mineral Field (Type 3)
+     179 = Cave (Unused)
+     180 = Cave-in (Unused)
+     181 = Cantina (Unused)
+     182 = Mining Platform (Unused)
+     183 = Independent Command Center (Unused)
+     184 = Independent Starport (Unused)
+     185 = Independent Jump Gate (Unused)
+     186 = Ruins (Unused)
+     187 = Khaydarin Crystal Formation (Unused)
+     188 = Vespene Geyser
+     189 = Warp Gate
+     190 = Psi Disrupter
+     191 = Zerg Marker
+     192 = Terran Marker
+     193 = Protoss Marker
+     194 = Zerg Beacon
+     195 = Terran Beacon
+     196 = Protoss Beacon
+     197 = Zerg Flag Beacon
+     198 = Terran Flag Beacon
+     199 = Protoss Flag Beacon
+     200 = Power Generator
+     201 = Overmind Cocoon
+     202 = Dark Swarm
+     203 = Floor Missile Trap
+     204 = Floor Hatch (Unused)
+     205 = Left Upper Level Door
+     206 = Right Upper Level Door
+     207 = Left Pit Door
+     208 = Right Pit Door
+     209 = Floor Gun Trap
+     210 = Left Wall Missile Trap
+     211 = Left Wall Flame Trap
+     212 = Right Wall Missile Trap
+     213 = Right Wall Flame Trap
+     214 = Start Location
+     215 = Flag
+     216 = Young Chrysalis
+     217 = Psi Emitter
+     218 = Data Disc
+     219 = Khaydarin Crystal
+     220 = Mineral Cluster Type 1
+     221 = Mineral Cluster Type 2
+     222 = Protoss Vespene Gas Orb Type 1
+     223 = Protoss Vespene Gas Orb Type 2
+     224 = Zerg Vespene Gas Sac Type 1
+     225 = Zerg Vespene Gas Sac Type 2
+     226 = Terran Vespene Gas Tank Type 1
+     227 = Terran Vespene Gas Tank Type 2
+     228 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="remapping" class="subheader">Remapping</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Remapping</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = No remapping
+       1 = ofire.pcx (Orange)
+       2 = gfire.pcx (Green)
+       3 = bfire.pcx (Blue)
+       4 = bexpl.pcx (Blue2)
+       5 = Special (Own cloak)
+       6 = (crash)
+       7 = (crash)
+       8 = Unk8 (?)
+       9 = Unk9 (?)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="drawtypes" class="subheader">Draw Types</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Draw Types</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Normal Draw
+       1 = Unknown1
+       2 = Enemy Cloak(+spell)
+       3 = Own Cloak(+spell)
+       4 = Ally Cloak
+       5 = Own Cloak(+spell)
+       6 = Own Cloak(draw only)
+       7 = (crash)
+       8 = EMP Shockwave
+       9 = Use Remapping
+      10 = Shadow/FoW(dark.pcx)
+      11 = Unknown11
+      12 = Warp Flash(SEdit crash)
+      13 = Don't Mirror Frames
+      14 = Unknown14
+      15 = Hide Gfx,Show Size Rect
+      16 = Hallucination
+      17 = Warp Flash</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="flingycontrol" class="subheader">Flingy Controlers</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Flingy Controlers</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Flingy.dat Control
+       1 = Partially Mobile, Weapon
+       2 = Iscript.bin Control</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="sprites" class="subheader">Default Sprites</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Sprites</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = 2/38 Ash
+       1 = 2/39 Ash
+       2 = 2/41 Ash
+       3 = 2/40 Ash
+       4 = 2/42 Ash
+       5 = 2/43 Ash
+       6 = 2/44 Ash
+       7 = 2/1 Ash
+       8 = 2/4 Ash
+       9 = 2/5 Ash
+      10 = 2/30 Ash
+      11 = 2/28 Ash
+      12 = 2/29 Ash
+      13 = 4/1 Ash
+      14 = 4/2 Ash
+      15 = 4/3 Ash
+      16 = 4/56 Jungle
+      17 = 4/57 Jungle
+      18 = 4/58 Jungle
+      19 = 4/59 Jungle
+      20 = 9/5 Jungle
+      21 = 9/6 Jungle
+      22 = 9/7 Jungle
+      23 = 4/51 Jungle
+      24 = 4/52 Jungle
+      25 = 4/54 Jungle
+      26 = 4/53 Jungle
+      27 = 9/1 Jungle
+      28 = 9/2 Jungle
+      29 = 9/3 Jungle
+      30 = 9/4 Jungle
+      31 = 4/12 Jungle
+      32 = 4/13 Jungle
+      33 = 4/1 Jungle
+      34 = 4/3 Jungle
+      35 = 4/2 Jungle
+      36 = 4/5 Jungle
+      37 = 4/4 Jungle
+      38 = 4/9 Jungle
+      39 = 4/10 Jungle
+      40 = 5/5 Jungle
+      41 = 5/7 Jungle
+      42 = 5/6 Jungle
+      43 = 5/9 Jungle
+      44 = 5/8 Jungle
+      45 = 4/6 Jungle
+      46 = 4/7 Jungle
+      47 = 4/17 Jungle
+      48 = 13/4 Jungle
+      49 = 11/5 Jungle
+      50 = 11/6 Jungle
+      51 = 11/7 Jungle
+      52 = 11/8 Jungle
+      53 = 11/10 Jungle
+      54 = 11/11 Jungle
+      55 = 11/12 Jungle
+      56 = 7/4 Platform
+      57 = 7/5 Platform
+      58 = 7/6 Platform
+      59 = 7/1 Platform
+      60 = 7/2 Platform
+      61 = 7/3 Platform
+      62 = 7/9 Platform
+      63 = 7/10 Platform
+      64 = 7/8 Platform
+      65 = 7/7 Platform
+      66 = 7/26 Platform
+      67 = 7/24 Platform
+      68 = 7/28 Platform
+      69 = 7/27 Platform
+      70 = 7/25 Platform
+      71 = 7/29 Platform
+      72 = 7/30 Platform
+      73 = 7/31 Platform
+      74 = 12/1 Platform
+      75 = 9/27 Platform
+      76 = 5/54 Badlands
+      77 = 5/55 Badlands
+      78 = 5/56 Badlands
+      79 = 5/57 Badlands
+      80 = 6/16 Badlands
+      81 = 6/17 Badlands
+      82 = 6/20 Badlands
+      83 = 6/21 Badlands
+      84 = 5/10 Badlands
+      85 = 5/50 Badlands
+      86 = 5/52 Badlands
+      87 = 5/53 Badlands
+      88 = 5/51 Badlands
+      89 = 6/3 Badlands
+      90 = 11/3 Badlands
+      91 = 11/8 Badlands
+      92 = 11/6 Badlands
+      93 = 11/7 Badlands
+      94 = 11/9 Badlands
+      95 = 11/10 Badlands
+      96 = 11/11 Badlands
+      97 = 11/12 Badlands
+      98 = 11/13 Badlands
+      99 = 11/14 Badlands
+     100 = 1/13 Badlands
+     101 = 1/9 Badlands
+     102 = 1/11 Badlands
+     103 = 1/14 Badlands
+     104 = 1/10 Badlands
+     105 = 1/12 Badlands
+     106 = 1/15 Badlands
+     107 = 1/7 Badlands
+     108 = 1/5 Badlands
+     109 = 1/16 Badlands
+     110 = 1/8 Badlands
+     111 = 1/6 Badlands1
+     112 = 1/6 Badlands2
+     113 = 1/6 Badlands3
+     114 = 1/6 Badlands4
+     115 = 1/6 Badlands5
+     116 = 1/6 Badlands6
+     117 = 1/6 Badlands7
+     118 = 1/6 Badlands8
+     119 = 4/15 Installation1
+     120 = 4/15 Installation2
+     121 = 3/9 Installation
+     122 = 3/10 Installation
+     123 = 3/11 Installation
+     124 = 3/12 Installation
+     125 = 1/6 Badlands9
+     126 = 1/6 Badlands10
+     127 = 3/1 Installation
+     128 = 3/2 Installation
+     129 = 1/6 Badlands11
+     130 = Scourge
+     131 = Scourge Death
+     132 = Scourge Explosion
+     133 = Broodling
+     134 = Broodling Remnants
+     135 = Infested Terran
+     136 = Infested Terran Explosion
+     137 = Guardian Cocoon
+     138 = Defiler
+     139 = Defiler Remnants
+     140 = Drone
+     141 = Drone Remnants
+     142 = Egg
+     143 = Egg Remnants
+     144 = Guardian
+     145 = Guardian Death
+     146 = Hydralisk
+     147 = Hydralisk Remnants
+     148 = Infested Kerrigan
+     149 = Larva
+     150 = Larva Remnants
+     151 = Mutalisk
+     152 = Mutalisk Death
+     153 = Overlord
+     154 = Overlord Death
+     155 = Queen
+     156 = Queen Death
+     157 = Ultralisk
+     158 = Ultralisk Remnants
+     159 = Zergling
+     160 = Zergling Remnants
+     161 = Cerebrate
+     162 = Infested Command Center
+     163 = Spawning Pool
+     164 = Mature Chrysalis
+     165 = Evolution Chamber
+     166 = Creep Colony
+     167 = Hatchery
+     168 = Hive
+     169 = Lair
+     170 = Sunken Colony
+     171 = Greater Spire
+     172 = Defiler Mound
+     173 = Queen's Nest
+     174 = Nydus Canal
+     175 = Overmind With Shell
+     176 = Overmind Without Shell
+     177 = Ultralisk Cavern
+     178 = Extractor
+     179 = Hydralisk Den
+     180 = Spire
+     181 = Spore Colony
+     182 = Zerg Building Spawn (Small)
+     183 = Zerg Building Spawn (Medium)
+     184 = Zerg Building Spawn (Large)
+     185 = Zerg Building Explosion
+     186 = Zerg Building Rubble (Small)
+     187 = Zerg Building Rubble (Large)
+     188 = Arbiter
+     189 = Archon Energy
+     190 = Carrier
+     191 = Dragoon
+     192 = Dragoon Remnants
+     193 = Interceptor
+     194 = Probe
+     195 = Scout
+     196 = Shuttle
+     197 = High Templar
+     198 = Dark Templar (Hero)
+     199 = Reaver
+     200 = Scarab
+     201 = Zealot
+     202 = Observer
+     203 = Templar Archives
+     204 = Assimilator
+     205 = Observatory
+     206 = Citadel of Adun
+     207 = Forge
+     208 = Gateway
+     209 = Cybernetics Core
+     210 = Khaydarin Crystal Formation
+     211 = Nexus
+     212 = Photon Cannon
+     213 = Arbiter Tribunal
+     214 = Pylon
+     215 = Robotics Facility
+     216 = Shield Battery
+     217 = Stargate
+     218 = Stasis Cell/Prison
+     219 = Robotics Support Bay
+     220 = Protoss Temple
+     221 = Fleet Beacon
+     222 = Explosion (Large)
+     223 = Protoss Building Rubble (Small)
+     224 = Protoss Building Rubble (Large)
+     225 = Battlecruiser
+     226 = Civilian
+     227 = Dropship
+     228 = Firebat
+     229 = Ghost
+     230 = Ghost Remnants
+     231 = Nuke Target Dot
+     232 = Goliath Base
+     233 = Goliath Turret
+     234 = Sarah Kerrigan
+     235 = Marine
+     236 = Marine Remnants
+     237 = Scanner Sweep
+     238 = Wraith
+     239 = SCV
+     240 = Siege Tank (Tank) Base
+     241 = Siege Tank (Tank) Turret
+     242 = Siege Tank (Siege) Base
+     243 = Siege Tank (Siege) Turret
+     244 = Vulture
+     245 = Spider Mine
+     246 = Science Vessel (Base)
+     247 = Science Vessel (Turret)
+     248 = Terran Academy
+     249 = Barracks
+     250 = Armory
+     251 = Comsat Station
+     252 = Command Center
+     253 = Supply Depot
+     254 = Control Tower
+     255 = Factory
+     256 = Covert Ops
+     257 = Ion Cannon
+     258 = Machine Shop
+     259 = Missile Turret (Base)
+     260 = Crashed Batlecruiser
+     261 = Physics Lab
+     262 = Bunker
+     263 = Refinery
+     264 = Science Facility
+     265 = Nuclear Silo
+     266 = Nuclear Missile
+     267 = Nuke Hit
+     268 = Starport
+     269 = Engineering Bay
+     270 = Terran Construction (Large)
+     271 = Terran Construction (Small)
+     272 = Building Explosion (Large)
+     273 = Terran Building Rubble (Small)
+     274 = Terran Building Rubble (Large)
+     275 = Vespene Geyser
+     276 = Ragnasaur (Ash)
+     277 = Rhynadon (Badlands)
+     278 = Bengalaas (Jungle)
+     279 = Mineral Field Type1
+     280 = Mineral Field Type2
+     281 = Mineral Field Type3
+     282 = Independent Starport (Unused)
+     283 = Zerg Beacon
+     284 = Terran Beacon
+     285 = Protoss Beacon
+     286 = Dark Swarm
+     287 = Flag
+     288 = Young Chrysalis
+     289 = Psi Emitter
+     290 = Data Disc
+     291 = Khaydarin Crystal
+     292 = Mineral Chunk Type1
+     293 = Mineral Chunk Type2
+     294 = Protoss Gas Orb Type1
+     295 = Protoss Gas Orb Type2
+     296 = Zerg Gas Sac Type1
+     297 = Zerg Gas Sac Type2
+     298 = Terran Gas Tank Type1
+     299 = Terran Gas Tank Type2
+     300 = White Circle (Invisible)
+     301 = Start Location
+     302 = Map Revealer
+     303 = Floor Gun Trap
+     304 = Wall Missile Trap
+     305 = Wall Missile Trap2
+     306 = Wall Flame Trap
+     307 = Wall Flame Trap2
+     308 = Floor Missile Trap
+     309 = Longbolt/Gemini Missiles Trail
+     310 = Grenade Shot Smoke
+     311 = Vespene Geyser Smoke1
+     312 = Vespene Geyser Smoke2
+     313 = Vespene Geyser Smoke3
+     314 = Vespene Geyser Smoke4
+     315 = Vespene Geyser Smoke5
+     316 = Unknown316
+     317 = Double Explosion
+     318 = Cursor Marker
+     319 = Egg Spawn
+     320 = High Templar Glow
+     321 = Psi Field (Right Upper)
+     322 = Burrowing Dust
+     323 = Building Landing Dust Type1
+     324 = Building Landing Dust Type2
+     325 = Building Landing Dust Type3
+     326 = Building Landing Dust Type4
+     327 = Building Landing Dust Type5
+     328 = Building Lifting Dust Type1
+     329 = Building Lifting Dust Type2
+     330 = Building Lifting Dust Type3
+     331 = Building Lifting Dust Type4
+     332 = Needle Spines
+     333 = Dual Photon Blasters Hit
+     334 = Particle Beam Hit
+     335 = Anti-Matter Missile
+     336 = Pulse Cannon
+     337 = Phase Disruptor
+     338 = STA/STS Photon Cannon Overlay
+     339 = Psionic Storm
+     340 = Fusion Cutter Hit
+     341 = Gauss Rifle Hit
+     342 = Gemini Missiles
+     343 = Fragmentation Grenade
+     344 = Unknown344
+     345 = Lockdown/LongBolt/Hellfire Missile
+     346 = C-10 Canister Rifle Hit
+     347 = ATS/ATA Laser Battery
+     348 = Burst Lasers
+     349 = Arclite Shock Cannon Hit
+     350 = Yamato Gun
+     351 = Yamato Gun Trail
+     352 = EMP Shockwave Missile
+     353 = Needle Spine Hit
+     354 = Unknown354
+     355 = Sunken Colony Tentacle
+     356 = Venom (Unused Zerg Weapon)
+     357 = Acid Spore
+     358 = Glave Wurm
+     359 = Seeker Spores
+     360 = Queen Spell Holder
+     361 = Stasis Field Hit
+     362 = Plague Cloud
+     363 = Consume
+     364 = Ensnare
+     365 = Glave Wurm/Seeker Spores Hit
+     366 = Psionic Shockwave Hit
+     367 = Glave Wurm Trail
+     368 = Seeker Spores Overlay
+     369 = Phase Disruptor (Unused)
+     370 = White Circle
+     371 = Acid Spray (Unused)
+     372 = Unknown372
+     373 = Scarab/Anti-Matter Missile Overlay
+     374 = Hallucination Death1
+     375 = Hallucination Death2
+     376 = Hallucination Death3
+     377 = Bunker Overlay
+     378 = FlameThrower
+     379 = Recall Field
+     380 = Scanner Sweep Hit
+     381 = Left Upper Level Door
+     382 = Right Upper Level Door
+     383 = Substructure Left Door
+     384 = Substructure Right Door
+     385 = Substructure Opening Hole
+     386 = 7/13 Twilight
+     387 = 7/14 Twilight
+     388 = 7/16 Twilight
+     389 = 7/15 Twilight
+     390 = 7/19 Twilight
+     391 = 7/20 Twilight
+     392 = 7/21 Twilight
+     393 = Unknown Twilight
+     394 = 7/17 Twilight
+     395 = 6/1 Twilight
+     396 = 6/2 Twilight
+     397 = 6/3 Twilight
+     398 = 6/4 Twilight
+     399 = 6/5 Twilight
+     400 = 8/3 Twilight
+     401 = 8/3 Twilight
+     402 = 9/29 Ice
+     403 = 9/28 Ice
+     404 = 12/38 Ice
+     405 = 12/37 Ice
+     406 = 12/33 Ice
+     407 = 9/21 Ice
+     408 = 9/15 Ice
+     409 = 9/16 Ice
+     410 = Unknown410
+     411 = Unknown411
+     412 = 12/9 Ice1
+     413 = 12/10 Ice
+     414 = 9/24 Ice
+     415 = 9/23 Ice
+     416 = Unknown416
+     417 = 12/7 Ice
+     418 = 12/8 Ice
+     419 = 12/9 Ice2
+     420 = 12/10 Ice
+     421 = 12/40 Ice
+     422 = 12/41 Ice
+     423 = 12/42 Ice
+     424 = 12/5 Ice
+     425 = 12/6 Ice
+     426 = 12/36 Ice
+     427 = 12/32 Ice
+     428 = 12/33 Ice
+     429 = 12/34 Ice
+     430 = 12/24 Ice
+     431 = 12/25 Ice
+     432 = 9/22 Ice
+     433 = 12/31 Ice
+     434 = 12/20 Ice
+     435 = 12/24 Ice
+     436 = 12/25 Ice
+     437 = 12/30 Ice
+     438 = 12/30 Ice
+     439 = Unknown439
+     440 = 4/1 Ice
+     441 = 6/1 Ice
+     442 = 5/6 Ice
+     443 = 5/7 Ice
+     444 = 5/8 Ice
+     445 = 5/9 Ice
+     446 = 10/10 Desert1
+     447 = 10/12 Desert1
+     448 = 10/8 Desert
+     449 = 10/9 Desert1
+     450 = 6/10 Desert
+     451 = 6/13 Desert
+     452 = Unknown Desert
+     453 = 10/12 Desert2
+     454 = 10/9 Desert2
+     455 = 10/10 Desert2
+     456 = 10/11 Desert
+     457 = 10/14 Desert
+     458 = 10/41 Desert
+     459 = 10/39 Desert
+     460 = 10/8 Desert
+     461 = 10/6 Desert
+     462 = 10/7 Desert
+     463 = 4/6 Desert
+     464 = 4/11 Desert
+     465 = 4/10 Desert
+     466 = 4/9 Desert
+     467 = 4/7 Desert
+     468 = 4/12 Desert
+     469 = 4/8 Desert
+     470 = 4/13 Desert
+     471 = 6/13 Desert
+     472 = 4/17 Desert
+     473 = 6/20 Desert
+     474 = 4/15 Desert1
+     475 = 4/15 Desert2
+     476 = 10/23 Desert
+     477 = 8/23 Desert
+     478 = 10/5 Desert
+     479 = 12/1 Desert Overlay
+     480 = 11/3 Desert
+     481 = Lurker Egg
+     482 = Devourer
+     483 = Devourer Death
+     484 = Lurker Remnants
+     485 = Lurker
+     486 = Dark Archon Energy
+     487 = Corsair
+     488 = Dark Templar (Unit)
+     489 = Medic
+     490 = Medic Remnants
+     491 = Valkyrie
+     492 = Scantid (Desert)
+     493 = Kakaru (Twilight)
+     494 = Ursadon (Ice)
+     495 = Overmind Cocoon
+     496 = Power Generator
+     497 = Xel'Naga Temple
+     498 = Psi Disrupter
+     499 = Warp Gate
+     500 = Feedback Hit (Small)
+     501 = Feedback Hit (Medium)
+     502 = Feedback Hit (Large)
+     503 = Disruption Web
+     504 = White Circle
+     505 = Halo Rockets Trail
+     506 = Neutron Flare
+     507 = Corsair Attack Overlay (Unused)
+     508 = Optical Flare Grenade
+     509 = Halo Rockets
+     510 = Unknown510
+     511 = Subterranean Spines
+     512 = Corrosive Acid Shot
+     513 = Corrosive Acid Hit
+     514 = Maelstrom Hit
+     515 = Uraj
+     516 = Khalis</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="animations" class="subheader">IScript Animations</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>IScript Animations</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Initial
+       1 = Death
+       2 = Ground Attack - Initial
+       3 = Air Attack - Initial
+       4 = Unused1
+       5 = Ground Attack - Repeat
+       6 = Air Attack - Repeat
+       7 = Cast Spell
+       8 = Return to Idle from Ground Attack
+       9 = Return to Idle from Air Attack
+      10 = Unused2
+      11 = Walking
+      12 = Return to Idle from Walking
+      13 = Special State 1 (Bouncing Animation)
+      14 = Special State 2
+      15 = Almost Built
+      16 = Built
+      17 = Landing
+      18 = Lift-Off
+      19 = Building Is Working
+      20 = Return to Idle from Working
+      21 = Warp In
+      22 = Unused 3
+      23 = Initial (StarEdit only)
+      24 = Disable
+      25 = Burrow
+      26 = UnBurrow
+      27 = Enable
+      28 = No Animation</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="orders" class="subheader">Default Orders</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Orders</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Die
+       1 = Stop
+       2 = Guard (Normal)
+       3 = Guard (Player)
+       4 = Guard (Subunit)
+       5 = Guard (Bunker)
+       6 = Ignore (Normal)
+       7 = Stop (Reaver)
+       8 = Attack 1
+       9 = Attack (Obscured)
+      10 = Attack Unit (Normal)
+      11 = Attack In Range
+      12 = Attack Ground (Unused)
+      13 = Hover (Unused)
+      14 = Attack Move
+      15 = Building Is Being Infested
+      16 = Nothing 1 (Unused)
+      17 = Power-Up (Unused)
+      18 = Guard (Building)
+      19 = Attack (Building)
+      20 = Script (Spider Mine)
+      21 = Stay In Range
+      22 = Attack (Subunit)
+      23 = Nothing 2 (Normal)
+      24 = Nothing 3 (Unused)
+      25 = Drone Start Mutate
+      26 = Drone Mutate
+      27 = Cast Spell (Infest 1)
+      28 = Cast Spell (Infest 2)
+      29 = Infest (Queen)
+      30 = Build (SCV)
+      31 = Build (Probe)
+      32 = Create Building (Probe)
+      33 = Is Building (SCV)
+      34 = Repair Unit (SCV)
+      35 = Repair Unit (Obscured)
+      36 = Place Add-On
+      37 = Build Add-On
+      38 = Train (Normal)
+      39 = Rally to Visible Unit
+      40 = Rally to Ground Tile
+      41 = Zerg Birth
+      42 = Unit Morph
+      43 = Building Morph
+      44 = Building Is Constructed (Terran)
+      45 = Zerg Build Self
+      46 = Build (Nydus Canal Exit)
+      47 = Enter (Nydus Canal)
+      48 = Building Is Constructed (Protoss)
+      49 = Follow
+      50 = Idle (Carrier)
+      51 = Move (Carrier&Reaver)
+      52 = Stop (Carrier)
+      53 = Attack (Carrier)
+      54 = Attack Obscured (Carrier)
+      55 = Ignore 2 (Carrier)
+      56 = Attack Unit (Carrier)
+      57 = Hold Position (Carrier)
+      58 = Idle (Reaver)
+      59 = Attack (Reaver)
+      60 = Attack Obscured (Reaver)
+      61 = Attack Unit (Reaver)
+      62 = Hold Position (Reaver)
+      63 = Training (Subunit)
+      64 = Move&Attack (Interceptor)
+      65 = Move&Attack (Scarab)
+      66 = Recharge Shields (Unit)
+      67 = Recharge Shields (Global)
+      68 = Shield Battery Is Recharging
+      69 = Return To Parent (Interceptor)
+      70 = Land (Drone)
+      71 = Land (Building)
+      72 = Lift Off (Building)
+      73 = Lift Off (Drone)
+      74 = Is Lifting Off
+      75 = Is Researching Technology
+      76 = Is Performing Upgrade
+      77 = Idle (Larva)
+      78 = Is Spawning Larva
+      79 = Move to Harvest
+      80 = Move to Harvest Obscured
+      81 = Move to Harvest Gas
+      82 = Can Entry Gas Mine
+      83 = Enter/Exit Gas Mine
+      84 = Return Gas
+      85 = Move to Harvest Minerals
+      86 = Can Harvest Minerals
+      87 = Harvesting Minerals
+      88 = Harvesting Minerals Interrupted
+      89 = Harvest 4 (Unknown)
+      90 = Return Minerals
+      91 = Harvesting Interrupted - Recharge Shields
+      92 = Move/Enter Transport
+      93 = Idle (Transport)
+      94 = Load Unit (Mobile Transport)
+      95 = Load Unit (Bunker)
+      96 = Load Unit (Unknown)
+      97 = Idle (Power-Up)
+      98 = Siege Mode
+      99 = Tank Mode
+     100 = Watch Target
+     101 = Script (Starting Creep Growth)
+     102 = Script (Spread Creep&Spawn Larva)
+     103 = Script (Stopping Creep Growth)
+     104 = Guardian Aspect (Unused)
+     105 = Move and Morph Archon
+     106 = Completing Archon Summon
+     107 = Hold Position (Normal)
+     108 = Hold Position (Queen)
+     109 = Cloak
+     110 = Decloak
+     111 = Unload Unit (Transport)
+     112 = Move&Unload Unit (Transport)
+     113 = Cast Spell (Yamato Gun)
+     114 = Cast Spell On Obscured (Yamato Gun)
+     115 = Cast Spell (Lockdown)
+     116 = Burrow
+     117 = Idle (Burrowed)
+     118 = Unburrow
+     119 = Cast Spell (Dark Swarm)
+     120 = Cast Spell (Parasite)
+     121 = Cast Spell (Spawn Broodling)
+     122 = Cast Spell (EMP Shockwave)
+     123 = Unknown
+     124 = Idle (Nuclear Silo)
+     125 = Attack (Nuke)
+     126 = Move&Paint Nuke Target
+     127 = Attack Unit (Nuke)
+     128 = Attack Ground (Nuke)
+     129 = Nuke Track (Ghost)
+     130 = Script (Cloak Nearby Units)
+     131 = Cloak Nearby Units (Freezes the casting unit)
+     132 = Place Spider Mine
+     133 = Script (Right-Click Action)
+     134 = Attack Unit (Infested Terran)
+     135 = Attack Ground (Infested Terran)
+     136 = Hold Position (Suicide Units)
+     137 = Cast Spell (Recall)
+     138 = Teleport To Location (Freezes the casting unit)
+     139 = Cast Spell (Scanner Sweep)
+     140 = Idle (Scanner Sweep)
+     141 = Cast Spell (Defensive Matrix)
+     142 = Cast Spell (Psionic Storm)
+     143 = Cast Spell (Irradiate)
+     144 = Cast Spell (Plague)
+     145 = Cast Spell (Consume)
+     146 = Cast Spell (Ensnare)
+     147 = Cast Spell (Stasis Field)
+     148 = Cast Spell (Hallucination)
+     149 = Script (Hallucination)
+     150 = Reset Collision (2 Units)
+     151 = Reset Collision (Harvester&Mine)
+     152 = Patrol (Normal)
+     153 = CTF COP (Initialize)
+     154 = Idle (CTF COP)
+     155 = Unknown CTF COP 2
+     156 = Script (Computer)
+     157 = Attack Move (Computer)
+     158 = Move (Harass)
+     159 = Patrol (Computer)
+     160 = Guard (Computer)
+     161 = Idle (Rescuable)
+     162 = Idle (Neutral)
+     163 = Return To Base (Computer)
+     164 = Script (PSI Provider)
+     165 = Fatal (Scarab)
+     166 = Idle (Critter)
+     167 = Idle (Trap)
+     168 = Open Door
+     169 = Close Door
+     170 = Stop (Trap)
+     171 = Attack (Trap)
+     172 = Enable Doodad
+     173 = Disable Doodad
+     174 = Warp In (Unused)
+     175 = Idle (Medic)
+     176 = Cast Spell (Heal)
+     177 = Move (Medic)
+     178 = Hold Position&Heal (Medic)
+     179 = Return To Idle After Heal
+     180 = Cast Spell (Restoration)
+     181 = Cast Spell (Disruption Web)
+     182 = Cast Spell (Mind Control)
+     183 = Dark Archon Meld
+     184 = Cast Spell (Feedback)
+     185 = Cast Spell (Optical Flare)
+     186 = Cast Spell (Maelstrom)
+     187 = Move (Junk Yard Dog)
+     188 = Fatal
+     189 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="iscriptentries" class="subheader">IScript ID's</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>IScript ID's</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Scourge
+       1 = Unknown1
+       2 = Scourge Death
+       3 = Scourge Explosion
+       4 = Broodling
+       5 = Broodling Remnants
+       6 = Infested Terran
+       7 = Infested Terran Explosion
+       8 = Guardian Cocoon
+       9 = Defiler
+      10 = Defiler Remnants
+      11 = Drone
+      12 = Drone Remnants
+      13 = Egg
+      14 = Egg Remnants
+      15 = Guardian
+      16 = Guardian Birth
+      17 = Guardian Death
+      18 = Hydralisk
+      19 = Hydralisk Remnants
+      20 = Infested Kerrigan
+      21 = Larva
+      22 = Larva Remnants
+      23 = Mutalisk
+      24 = Mutalisk Death
+      25 = Overlord
+      26 = Overlord Death
+      27 = Queen
+      28 = Queen Death
+      29 = Ultralisk
+      30 = Ultralisk Remnants
+      31 = Zergling
+      32 = Zergling Remnants
+      33 = Zerg Air Death Explosion
+      34 = Zerg Building Explosion
+      35 = Unknown35
+      36 = Zerg Birth
+      37 = Egg Spawn
+      38 = Cerebrate
+      39 = Infested Command Center
+      40 = Spawning Pool
+      41 = Evolution Chamber
+      42 = Creep Colony
+      43 = Hatchery
+      44 = Hive
+      45 = Lair
+      46 = Sunken Colony
+      47 = Mature Chrysalis
+      48 = Greater Spire
+      49 = Defiler Mound
+      50 = Queen Nest
+      51 = Nydus Canal
+      52 = Overmind(with Shell)
+      53 = Overmind Remnants
+      54 = Overmind(without Shell)
+      55 = Ultralisk Cavern
+      56 = Extractor
+      57 = Hydralisk Den
+      58 = Spire
+      59 = Spore Colony
+      60 = Infested Command Center Overlay
+      61 = Zerg Construction(Small)
+      62 = Zerg Construction(Medium)
+      63 = Zerg Building Morph
+      64 = Zerg Construction(Large)
+      65 = Zerg Building Spawn
+      66 = Battlecruiser
+      67 = Civilian
+      68 = Dropship
+      69 = Firebat
+      70 = Ghost
+      71 = Ghost Remnants
+      72 = Ghost Death
+      73 = Nuke Beam
+      74 = Nuke Target Dot
+      75 = Goliath(Base)
+      76 = Goliath(Turret)
+      77 = Sarah Kerrigan
+      78 = Marine
+      79 = Marine Remnants
+      80 = Marine Death
+      81 = Scanner Sweep
+      82 = Wraith
+      83 = Wraith Afterburners
+      84 = SCV
+      85 = Unknown85
+      86 = Vulture
+      87 = Spider Mine
+      88 = Science Vessel(Base)
+      89 = Science Vessel(Turret)
+      90 = Siege Tank(Tank) Base
+      91 = Siege Tank(Tank) Turret
+      92 = Siege Tank(Siege) Base
+      93 = Siege Tank(Siege) Turret
+      94 = Academy
+      95 = Academy Overlay
+      96 = Barracks
+      97 = Armory
+      98 = Armory Overlay
+      99 = Comsat Station
+     100 = Comsat Connector
+     101 = Comsat Overlay
+     102 = Command Center
+     103 = Command Center Overlay
+     104 = Crashed Battlecruiser
+     105 = Supply Depot
+     106 = Supply Depot Overlay
+     107 = Control Tower
+     108 = Control Tower Connector
+     109 = Control Tower Overlay
+     110 = Unknown110
+     111 = Factory
+     112 = Factory Overlay
+     113 = Covert Ops
+     114 = Covert Ops Connector
+     115 = Covert Ops Overlay
+     116 = Ion Cannon
+     117 = Machine Shop
+     118 = Machine Shop Connector
+     119 = Missile Turret(Base)
+     120 = Missile Turret(Turret)
+     121 = Physics Lab
+     122 = Physics Lab Connector
+     123 = Bunker
+     124 = Bunker Overlay
+     125 = Refinery
+     126 = Science Facility
+     127 = Science Facility Overlay
+     128 = Nuclear Silo
+     129 = Nuclear Silo Connector
+     130 = Nuclear Silo Overlay
+     131 = Nuclear Missile
+     132 = Unknown132
+     133 = Nuke Explosion
+     134 = Starport
+     135 = Starport Overlay
+     136 = Engineering Bay
+     137 = Engineering Bay Overlay
+     138 = Terran Construction(Large)
+     139 = Terran Construction(Medium)
+     140 = Terran Construction(Small)
+     141 = Addon Construction
+     142 = Explosion(Small)
+     143 = Explosion(Medium)
+     144 = Explosion(Large)
+     145 = Building Rubble Header
+     146 = Arbiter
+     147 = Archon Energy
+     148 = Archon Being
+     149 = Archon Swirl
+     150 = Unknown150
+     151 = Carrier
+     152 = Dark Templar(Hero)
+     153 = Dragoon
+     154 = Dragoon Remnants
+     155 = Interceptor
+     156 = Probe
+     157 = Shuttle
+     158 = High Templar
+     159 = Reaver
+     160 = Scarab
+     161 = Scout
+     162 = Scout Engines
+     163 = Zealot
+     164 = Zealot Death
+     165 = Observer
+     166 = Templar Archives
+     167 = Assimilator
+     168 = Observatory
+     169 = Unknown169
+     170 = Citadel Of Adun
+     171 = Forge
+     172 = Forge Overlay
+     173 = Gateway
+     174 = Cybernetics Core
+     175 = Cybrnetics Core Overlay
+     176 = Khaydarin Crystal Formation
+     177 = Nexus
+     178 = Nexus Overlay
+     179 = Photon Cannon
+     180 = Arbiter Tribunal
+     181 = Pylon
+     182 = Robotics Facility
+     183 = Shield Battery
+     184 = Shield Battery Overlay
+     185 = Stargate
+     186 = Stargate Overlay
+     187 = Stasis Cell/Prison
+     188 = Robotics Support Bay
+     189 = Temple
+     190 = Fleet Beacon
+     191 = Warp Anchor
+     192 = Warp Flash Header
+     193 = Warp Texture
+     194 = Unknown194
+     195 = Unknown195
+     196 = Unknown196
+     197 = Unknown197
+     198 = Ragnasaur(Ashworld Critter)
+     199 = Rhynadon(Badlands Critter)
+     200 = Bengalaas(Jungle Critter)
+     201 = Vespene Geyser
+     202 = Vespene Geyser2
+     203 = Vespene Geyser Shadow
+     204 = Mineral Field Type1
+     205 = Mineral Field Type2
+     206 = Mineral Field Type3
+     207 = Unknown207
+     208 = Zerg Beacon Overlay
+     209 = Terran Beacon Overlay
+     210 = Protoss Beacon Overlay
+     211 = Zerg Beacon
+     212 = Protoss Beacon
+     213 = Terran Beacon
+     214 = Unknwon214
+     215 = Powerups Shadow Header
+     216 = Flag
+     217 = Psi Emitter
+     218 = Data Disk
+     219 = Crystals Shadows
+     220 = Young Chrysalis
+     221 = Ore Chunk
+     222 = Ore Chunk2
+     223 = Gas Sac
+     224 = Gas Sac2
+     225 = Gas Orb
+     226 = Gas Orb2
+     227 = Gas Tank
+     228 = Gas Tank2
+     229 = Archon Overlay
+     230 = Particle Beam Hit
+     231 = Dual Photon Blaster Hit
+     232 = Anti-Matter Missile
+     233 = Pulse Cannon
+     234 = Phase Disruptor
+     235 = STA/STS Photon Cannon Overlay
+     236 = Psionic Storm
+     237 = Fusion Cutter Hit
+     238 = Gauss Rifle Hit
+     239 = Gemini Missiles
+     240 = Longbolt Missile
+     241 = C-10 Canister Rifle Hit
+     242 = Fragmentation Grenade
+     243 = ATA/ATS Laser Battery/Burst Lasers
+     244 = Unknown244
+     245 = Lockdown Hit
+     246 = Arclite Shock Cannon Hit
+     247 = Yamato Gun
+     248 = Yamato Gun Trail
+     249 = Lockdown/EMP Shockwave Missile
+     250 = Siege Tank(Tank) Turret Overlay
+     251 = Siege Tank(Siege) Turret Overlay
+     252 = Science Vessel Overlay
+     253 = Hallucination Hit
+     254 = Unknown254
+     255 = Unknown255
+     256 = Needle Spines Hit
+     257 = Venom (Unused)
+     258 = Subterranean Tentacle
+     259 = Venom Hit (Unused)
+     260 = Acid Spore
+     261 = Acid Spore Hit
+     262 = Guardian Attack Overlay
+     263 = Unknown263
+     264 = Glave Wurm
+     265 = Glave Wurm Hit
+     266 = Seeker Spores
+     267 = Queen Spell Holder
+     268 = Psionic Shockwave Hit
+     269 = Glave Wurm Trail
+     270 = Seeker Spores Overlay
+     271 = Acid Spray
+     272 = Unknown272
+     273 = Longbolt\Halo\Gemini Missiles Trail
+     274 = Burowing Dust
+     275 = Shadow Header
+     276 = Shield Overlay
+     277 = Unknown277
+     278 = Double Explosion
+     279 = Nuclear Missile Death
+     280 = Spider Mine Explosion
+     281 = Vespene Geyser Smokes
+     282 = Unknown282
+     283 = Fragmentation Grenade Hit
+     284 = Grenade Shot Smoke
+     285 = Phase Disruptor/Anti-Matter Missile Hit
+     286 = Scarab/Anti-Matter Missile Overlay
+     287 = Scarab Hit
+     288 = Cursor Marker
+     289 = Circle Marker
+     290 = Carrier Engines
+     291 = Engines/Glow Header
+     292 = White Circle
+     293 = Battlecruiser Attack Overlay
+     294 = ATA/ATS Laser Battery/Burst Lasers Hit
+     295 = Unknown295
+     296 = Plague Cloud
+     297 = Plague Overlay
+     298 = Consume
+     299 = Dark Swarm
+     300 = Defensive Matrix Overlay
+     301 = Defensive Matrix Hit
+     302 = Ensnare
+     303 = Ensnare Overlay
+     304 = Irradiate
+     305 = Recall Field
+     306 = Stasis Field Overlay
+     307 = Stasis Field Hit
+     308 = Recharge Shields(Large)
+     309 = Recharge Shields(Small)
+     310 = High Templar Glow
+     311 = Needle Spines Overlay
+     312 = Flamethrower
+     313 = Gemini Missiles Explosion
+     314 = Yamato Gun Overlay
+     315 = Yamato Gun Hit
+     316 = Unknown316
+     317 = Psionic Storm Part Variant1
+     318 = Psionic Storm Part Variant2
+     319 = EMP Shockwave Hit(Part1)
+     320 = EMP Shockwave Hit(Part2)
+     321 = Hallucination Death
+     322 = Flames(Small)
+     323 = Unknown323
+     324 = Bleeding(Small) Variant1
+     325 = Bleeding(Small) Variant2
+     326 = Flames(Large)
+     327 = Unknown327
+     328 = Bleeding(Large) Variant1
+     329 = Bleeding(Large) Variant2
+     330 = Dust Variant1
+     331 = Dust Variant2
+     332 = Confirm Circle
+     333 = Psi Field Type1
+     334 = Psi Field Type2
+     335 = Start Location
+     336 = Doodad Header
+     337 = Doodad Header(secondary)
+     338 = Space Platform Doodad
+     339 = Space Platform Doodad2
+     340 = Installation Doodad
+     341 = Installation Doodad2
+     342 = Installation Right Wall Fans
+     343 = Installation Left Wall Fans
+     344 = Installation Gear
+     345 = Floor Missile Trap
+     346 = Floor Missile Trap Turret
+     347 = Floor Gun Trap
+     348 = Wall Missile Trap Type1
+     349 = Wall Missile Trap Typet2
+     350 = Wall Flame Trap Type1
+     351 = Wall Flame Trap Type2
+     352 = Map Revealer
+     353 = Lurker Egg
+     354 = Lurker
+     355 = Unknown355
+     356 = Lurker Remnants
+     357 = Devourer
+     358 = Devourer Birth
+     359 = Devourer Death
+     360 = Medic
+     361 = Medic Remnants
+     362 = Valkyrie
+     363 = Unknown363
+     364 = Unknown364
+     365 = Dark Archon Energy
+     366 = Dark Archon Being
+     367 = Dark Archon Swirl
+     368 = Dark Archon Death
+     369 = Corsair
+     370 = Corsair Engines
+     371 = Unknown371
+     372 = Dark Templar(Unit)
+     373 = Neutron Flare
+     374 = Disruption Web
+     375 = Scantid(Desert Critter)
+     376 = Kakaru(Twilight Critter)
+     377 = Ursadon(Ice Critter)
+     378 = Halo Rocket
+     379 = Optical Flare
+     380 = Subterranean Spines
+     381 = Corrosive Acid
+     382 = Corrosive Acid Hit
+     383 = Acid Spores (1) Overlay
+     384 = Acid Spores (2-3) Overlay
+     385 = Acid Spores (4-5) Overlay
+     386 = Acid Spores (6-9) Overlay
+     387 = Ice Doodad
+     388 = Doodad Shadows Header (BW)
+     389 = Restoration Hit
+     390 = Mind Control Hit
+     391 = Optical Flare Hit
+     392 = Feedback
+     393 = Maelstorm Overlay
+     394 = Unknown394
+     395 = Unknown395
+     396 = Desert Doodad
+     397 = Desert Doodad2
+     398 = Desert Doodad3
+     399 = Desert Doodad Overlay
+     400 = Desert Doodad
+     401 = Twilight Doodad
+     402 = Twilight Doodad
+     403 = Twilight Doodad
+     404 = Twilight Doodad
+     405 = Overmind Cocoon
+     406 = Warp Gate
+     407 = Psi Disrupter
+     408 = Power Generator
+     409 = Warp Gate Overlay
+     410 = Xel'Naga Temple
+     411 = Maelstrom Hit</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="campaign" class="subheader">Default Campaign</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Campaign</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Marine - Idle Portrait
+       1 = Ghost - Idle Portrait
+       2 = Firebat - Idle Portrait
+       3 = Vulture - Idle Portrait
+       4 = Spider Mine - Idle Portrait
+       5 = Goliath - Idle Portrait
+       6 = Seige Tank - Idle Portrait
+       7 = SCV - Idle Portrait
+       8 = Wraith - Idle Portrait
+       9 = Science Vessel - Idle Portrait
+      10 = Dropship - Idle Portrait
+      11 = Battlecruiser - Idle Portrait
+      12 = Sarah Kerrigan - Idle Portrait
+      13 = Jim Raynor  - Idle Portrait
+      14 = Edmund Duke - Idle Portrait
+      15 = Civilian - Idle Portrait
+      16 = Arcturus Mengsk - Idle Portrait
+      17 = Terran Advisor - Idle Portrait
+      18 = Larva - Idle Portrait
+      19 = Egg - Idle Portrait
+      20 = Zergling - Idle Portrait
+      21 = Hydralisk - Idle Portrait
+      22 = Ultralisk - Idle Portrait
+      23 = Broodling - Idle Portrait
+      24 = Drone - Idle Portrait
+      25 = Overlord - Idle Portrait
+      26 = Mutalisk - Idle Portrait
+      27 = Guardian - Idle Portrait
+      28 = Queen - Idle Portrait
+      29 = Defiler - Idle Portrait
+      30 = Scourge - Idle Portrait
+      31 = Cocoon - Idle Portrait
+      32 = Mature Chrysalis - Idle Portrait
+      33 = Infested Terran - Idle Portrait
+      34 = Zasz - Idle Portrait
+      35 = Daggoth - Idle Portrait
+      36 = Infested Kerrigan - Idle Portrait
+      37 = Hunter Killer - Idle Portrait
+      38 = Overmind - Idle Portrait
+      39 = Probe - Idle Portrait
+      40 = Zealot - Idle Portrait
+      41 = Dragoon - Idle Portrait
+      42 = High Templar - Idle Portrait
+      43 = Archon - Idle Portrait
+      44 = Shuttle - Idle Portrait
+      45 = Scout - Idle Portrait
+      46 = Arbiter - Idle Portrait
+      47 = Carrier - Idle Portrait
+      48 = Interceptor - Idle Portrait
+      49 = Dark Templar - Idle Portrait
+      50 = Fenix (Zealot) - Idle Portrait
+      51 = Fenix (Dragoon) - Idle Portrait
+      52 = Zeratul - Idle Portrait
+      53 = Tassadar - Idle Portrait
+      54 = Gantrithor - Idle Portrait
+      55 = Observer - Idle Portrait
+      56 = Reaver - Idle Portrait
+      57 = Scarab - Idle Portrait
+      58 = Khaydarin Crystal Formation - Idle Portrait
+      59 = Aldaris - Idle Portrait
+      60 = Protoss Advisor - Idle Portrait
+      61 = Merc Biker - Idle Portrait
+      62 = Rhynadon - Idle Portrait
+      63 = Bengalaas - Idle Portrait
+      64 = Ragnasaur - Idle Portrait
+      65 = Cargo Ship - Idle Portrait
+      66 = Merc Gunship - Idle Portrait
+      67 = Raider - Idle Portrait
+      68 = Grom Biker - Idle Portrait
+      69 = Space Critter - Idle Portrait
+      70 = Sally - Idle Portrait
+      71 = Greedo - Idle Portrait
+      72 = Boskk - Idle Portrait
+      73 = Peter - Idle Portrait
+      74 = Independant Advisor - Idle Portrait
+      75 = Terran Gas Tank - Idle Portrait
+      76 = Protoss Gas Orb - Idle Portrait
+      77 = Zerg Gas Sac - Idle Portrait
+      78 = Mineral Cluster - Idle Portrait
+      79 = Data Disc - Idle Portrait
+      80 = Psi Emitter - Idle Portrait
+      81 = Khaydarin Crystal - Idle Portrait
+      82 = Flag (Red) - Idle Portrait (Pl.1)
+      83 = Flag (Blue) - Idle Portrait (Pl.2)
+      84 = Flag (Teal) - Idle Portrait (Pl.3)
+      85 = Flag (Purple) - Idle Portrait (Pl.4)
+      86 = Flag (Orange) - Idle Portrait (Pl.5)
+      87 = Flag (Brown) - Idle Portrait (Pl.6)
+      88 = Flag (White) - Idle Portrait (Pl.7)
+      89 = Flag (Yellow) - Idle Portrait (Pl.8)
+      90 = Medic - Idle Portrait
+      91 = Valkyrie - Idle Portrait
+      92 = Dugalle - Idle Portrait
+      93 = Stukov - Idle Portrait
+      94 = Duran - Idle Portrait
+      95 = Artanis - Idle Portrait
+      96 = Raszagal - Idle Portrait
+      97 = Devourer - Idle Portrait
+      98 = Lurker - Idle Portrait
+      99 = Dark Archon - Idle Portrait
+     100 = Corsair - Idle Portrait
+     101 = Scantid - Idle Portrait
+     102 = Kakaru - Idle Portrait
+     103 = Ursadon - Idle Portrait
+     104 = Uraj Crystal - Idle Portrait
+     105 = Khalis Crystal - Idle Portrait
+     106 = Flag (Green) - Idle Portrait (Pl.9)
+     107 = Flag (Bright Yellow) - Idle Portrait (Pl.10)
+     108 = Flag (Tan) - Idle Portrait (Pl.11)
+     109 = Flag (Blue) - Idle Portrait (Pl.12)
+     110 = Marine - Talking Portrait
+     111 = Ghost - Talking Portrait
+     112 = Firebat - Talking Portrait
+     113 = Vulture - Talking Portrait
+     114 = Spider Mine - Talking Portrait
+     115 = Goliath - Talking Portrait
+     116 = Seige Tank - Talking Portrait
+     117 = SCV - Talking Portrait
+     118 = Wraith - Talking Portrait
+     119 = Science Vessel - Talking Portrait
+     120 = Dropship - Talking Portrait
+     121 = Battlecruiser - Talking Portrait
+     122 = Sarah Kerrigan - Talking Portrait
+     123 = Jim Raynor  - Talking Portrait
+     124 = Edmund Duke - Talking Portrait
+     125 = Civilian - Talking Portrait
+     126 = Arcturus Mengsk - Talking Portrait
+     127 = Terran Advisor - Talking Portrait
+     128 = Larva - Talking Portrait
+     129 = Egg - Talking Portrait
+     130 = Zergling - Talking Portrait
+     131 = Hydralisk - Talking Portrait
+     132 = Ultralisk - Talking Portrait
+     133 = Broodling - Talking Portrait
+     134 = Drone - Talking Portrait
+     135 = Overlord - Talking Portrait
+     136 = Mutalisk - Talking Portrait
+     137 = Guardian - Talking Portrait
+     138 = Queen - Talking Portrait
+     139 = Defiler - Talking Portrait
+     140 = Scourge - Talking Portrait
+     141 = Cocoon - Talking Portrait
+     142 = Mature Chrysalis - Talking Portrait
+     143 = Infested Terran - Talking Portrait
+     144 = Zasz - Talking Portrait
+     145 = Daggoth - Talking Portrait
+     146 = Infested Kerrigan - Talking Portrait
+     147 = Hunter Killer - Talking Portrait
+     148 = Overmind - Talking Portrait
+     149 = Probe - Talking Portrait
+     150 = Zealot - Talking Portrait
+     151 = Dragoon - Talking Portrait
+     152 = High Templar - Talking Portrait
+     153 = Archon - Talking Portrait
+     154 = Shuttle - Talking Portrait
+     155 = Scout - Talking Portrait
+     156 = Arbiter - Talking Portrait
+     157 = Carrier - Talking Portrait
+     158 = Interceptor - Talking Portrait
+     159 = Dark Templar - Talking Portrait
+     160 = Fenix (Zealot) - Talking Portrait
+     161 = Fenix (Dragoon) - Talking Portrait
+     162 = Zeratul - Talking Portrait
+     163 = Tassadar - Talking Portrait
+     164 = Gantrithor - Talking Portrait
+     165 = Observer - Talking Portrait
+     166 = Reaver - Talking Portrait
+     167 = Scarab - Talking Portrait
+     168 = Khaydarin Crystal Formation - Talking Portrait
+     169 = Aldaris - Talking Portrait
+     170 = Protoss Advisor - Talking Portrait
+     171 = Merc Biker - Talking Portrait
+     172 = Rhynadon - Talking Portrait
+     173 = Bengalaas - Talking Portrait
+     174 = Ragnasaur - Talking Portrait
+     175 = Cargo Ship - Talking Portrait
+     176 = Merc Gunship - Talking Portrait
+     177 = Raider - Talking Portrait
+     178 = Grom Biker - Talking Portrait
+     179 = Space Critter - Talking Portrait
+     180 = Sally - Talking Portrait
+     181 = Greedo - Talking Portrait
+     182 = Boskk - Talking Portrait
+     183 = Peter - Talking Portrait
+     184 = Independant Advisor - Talking Portrait
+     185 = Terran Gas Tank - Talking Portrait
+     186 = Protoss Gas Orb - Talking Portrait
+     187 = Zerg Gas Sac - Talking Portrait
+     188 = Mineral Cluster - Talking Portrait
+     189 = Data Disc - Talking Portrait
+     190 = Psi Emitter - Talking Portrait
+     191 = Khaydarin Crystal - Talking Portrait
+     192 = Flag (Red) - Talking Portrait (Pl.1)
+     193 = Flag (Blue) - Talking Portrait (Pl.2)
+     194 = Flag (Teal) - Talking Portrait (Pl.3)
+     195 = Flag (Purple) - Talking Portrait (Pl.4)
+     196 = Flag (Orange) - Talking Portrait (Pl.5)
+     197 = Flag (Brown) - Talking Portrait (Pl.6)
+     198 = Flag (White) - Talking Portrait (Pl.7)
+     199 = Flag (Yellow) - Talking Portrait (Pl.8)
+     200 = Medic - Talking Portrait
+     201 = Valkyrie - Talking Portrait
+     202 = Dugalle - Talking Portrait
+     203 = Stukov - Talking Portrait
+     204 = Duran - Talking Portrait
+     205 = Artanis - Talking Portrait
+     206 = Raszagal - Talking Portrait
+     207 = Devourer - Talking Portrait
+     208 = Lurker - Talking Portrait
+     209 = Dark Archon - Talking Portrait
+     210 = Corsair - Talking Portrait
+     211 = Scantid - Talking Portrait
+     212 = Kakaru - Talking Portrait
+     213 = Ursadon - Talking Portrait
+     214 = Uraj Crystal - Talking Portrait
+     215 = Khalis Crystal - Talking Portrait
+     216 = Flag (Green) - Talking Portrait (Pl.9)
+     217 = Flag (Bright Yellow) - Talking Portrait (Pl.10)
+     218 = Flag (Tan) - Talking Portrait (Pl.11)
+     219 = Flag (Blue) - Talking Portrait (Pl.12)
+     220 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="weapons" class="subheader">Default Weapons</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Weapons</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Gauss Rifle (Normal)
+       1 = Gauss Rifle (Jim Raynor-Marine)
+       2 = C-10 Concussion Rifle (Normal)
+       3 = C-10 Concussion Rifle (Sarah Kerrigan)
+       4 = Fragmentation Grenade (Normal)
+       5 = Fragmentation Grenade (Jim Raynor-Vulture)
+       6 = Spider Mines
+       7 = Twin Autocannons (Normal)
+       8 = Hellfire Missile Pack (Normal)
+       9 = Twin Autocannons (Alan Schezar)
+      10 = Hellfire Missile Pack (Alan Schezar)
+      11 = Arclite Cannon (Normal)
+      12 = Arclite Cannon (Edmund Duke)
+      13 = Fusion Cutter
+      14 = Fusion Cutter (Harvest)
+      15 = Gemini Missiles (Normal)
+      16 = Burst Lasers (Normal)
+      17 = Gemini Missiles (Tom Kazansky)
+      18 = Burst Lasers (Tom Kazansky)
+      19 = ATS Laser Battery (Normal)
+      20 = ATA Laser Battery (Normal)
+      21 = ATS Laser Battery (Norad II+Mengsk+DuGalle)
+      22 = ATA Laser Battery (Norad II+Mengsk+DuGalle)
+      23 = ATS Laser Battery (Hyperion)
+      24 = ATA Laser Battery (Hyperion)
+      25 = Flame Thrower (Normal)
+      26 = Flame Thrower (Gui Montag)
+      27 = Arclite Shock Cannon (Normal)
+      28 = Arclite Shock Cannon (Edmund Duke)
+      29 = Longbolt Missiles
+      30 = Yamato Gun
+      31 = Nuclear Missile
+      32 = Lockdown
+      33 = EMP Shockwave
+      34 = Irradiate
+      35 = Claws (Normal)
+      36 = Claws (Devouring One)
+      37 = Claws (Infested Kerrigan)
+      38 = Needle Spines (Normal)
+      39 = Needle Spines (Hunter Killer)
+      40 = Kaiser Blades (Normal)
+      41 = Kaiser Blades (Torrasque)
+      42 = Toxic Spores (Broodling)
+      43 = Spines
+      44 = Spines (Harvest)
+      45 = Acid Spray (Unused)
+      46 = Acid Spore (Normal)
+      47 = Acid Spore (Kukulza-Guardian)
+      48 = Glave Wurm (Normal)
+      49 = Glave Wurm (Kukulza-Mutalisk)
+      50 = Venom (Unused-Defiler)
+      51 = Venom (Unused-Defiler Hero)
+      52 = Seeker Spores
+      53 = Subterranean Tentacle
+      54 = Suicide (Infested Terran)
+      55 = Suicide (Scourge)
+      56 = Parasite
+      57 = Spawn Broodlings
+      58 = Ensnare
+      59 = Dark Swarm
+      60 = Plague
+      61 = Consume
+      62 = Particle Beam
+      63 = Particle Beam (Harvest)
+      64 = Psi Blades (Normal)
+      65 = Psi Blades (Fenix-Zealot)
+      66 = Phase Disruptor (Normal)
+      67 = Phase Disruptor (Fenix-Dragoon)
+      68 = Psi Assault (Normal-Unused)
+      69 = Psi Assault (Tassadar+Aldaris)
+      70 = Psionic Shockwave (Normal)
+      71 = Psionic Shockwave (Tassadar/Zeratul Archon)
+      72 = Unknown72
+      73 = Dual Photon Blasters (Normal)
+      74 = Anti-matter Missiles (Normal)
+      75 = Dual Photon Blasters (Mojo)
+      76 = Anti-matter Missiles (Mojo)
+      77 = Phase Disruptor Cannon (Normal)
+      78 = Phase Disruptor Cannon (Danimoth)
+      79 = Pulse Cannon
+      80 = STS Photon Cannon
+      81 = STA Photon Cannon
+      82 = Scarab
+      83 = Stasis Field
+      84 = Psi Storm
+      85 = Warp Blades (Zeratul)
+      86 = Warp Blades (Dark Templar Hero)
+      87 = Missiles (Unused)
+      88 = Laser Battery1 (Unused)
+      89 = Tormentor Missiles (Unused)
+      90 = Bombs (Unused)
+      91 = Raider Gun (Unused)
+      92 = Laser Battery2 (Unused)
+      93 = Laser Battery3 (Unused)
+      94 = Dual Photon Blasters (Unused)
+      95 = Flechette Grenade (Unused)
+      96 = Twin Autocannons (Floor Trap)
+      97 = Hellfire Missile Pack (Wall Trap)
+      98 = Flame Thrower (Wall Trap)
+      99 = Hellfire Missile Pack (Floor Trap)
+     100 = Neutron Flare
+     101 = Disruption Web
+     102 = Restoration
+     103 = Halo Rockets
+     104 = Corrosive Acid
+     105 = Mind Control
+     106 = Feedback
+     107 = Optical Flare
+     108 = Maelstrom
+     109 = Subterranean Spines
+     110 = Gauss Rifle0 (Unused)
+     111 = Warp Blades (Normal)
+     112 = C-10 Concussion Rifle (Samir Duran)
+     113 = C-10 Concussion Rifle (Infested Duran)
+     114 = Dual Photon Blasters (Artanis)
+     115 = Anti-matter Missiles (Artanis)
+     116 = C-10 Concussion Rifle (Alexei Stukov)
+     117 = Gauss Rifle1 (Unused)
+     118 = Gauss Rifle2 (Unused)
+     119 = Gauss Rifle3 (Unused)
+     120 = Gauss Rifle4 (Unused)
+     121 = Gauss Rifle5 (Unused)
+     122 = Gauss Rifle6 (Unused)
+     123 = Gauss Rifle7 (Unused)
+     124 = Gauss Rifle8 (Unused)
+     125 = Gauss Rifle9 (Unused)
+     126 = Gauss Rifle10 (Unused)
+     127 = Gauss Rifle11 (Unused)
+     128 = Gauss Rifle12 (Unused)
+     129 = Gauss Rifle13 (Unused)
+     130 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="unitsizes" class="subheader">Unit Sizes</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Unit Sizes</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Independent
+       1 = Small
+       2 = Medium
+       3 = Large</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="technologies" class="subheader">Default Technologies</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Technologies</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Stim Packs
+       1 = Lockdown
+       2 = EMP Shockwave
+       3 = Spider Mines
+       4 = Scanner Sweep
+       5 = Tank Siege Mode
+       6 = Defensive Matrix
+       7 = Irradiate
+       8 = Yamato Gun
+       9 = Cloaking Field
+      10 = Personnel Cloaking
+      11 = Burrowing
+      12 = Infestation
+      13 = Spawn Broodlings
+      14 = Dark Swarm
+      15 = Plague
+      16 = Consume
+      17 = Ensnare
+      18 = Parasite
+      19 = Psionic Storm
+      20 = Hallucination
+      21 = Recall
+      22 = Stasis Field
+      23 = Archon Warp
+      24 = Restoration
+      25 = Disruption Web
+      26 = Unknown Tech26
+      27 = Mind Control
+      28 = Dark Archon Meld
+      29 = Feedback
+      30 = Optical Flare
+      31 = Maelstorm
+      32 = Lurker Aspect
+      33 = Unknown Tech33
+      34 = Healing
+      35 = Unknown Tech35
+      36 = Unknown Tech36
+      37 = Unknown Tech37
+      38 = Unknown Tech38
+      39 = Unknown Tech39
+      40 = Unknown Tech40
+      41 = Unknown Tech41
+      42 = Unknown Tech42
+      43 = Unknown Tech43
+      44 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="elevation" class="subheader">Elevation Levels</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Elevation Levels</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Below Ground
+       1 = Below Ground
+       2 = Ground Level
+       3 = Ground Level
+       4 = Ground Level
+       5 = Ground Level
+       6 = Ground Level
+       7 = Ground Level
+       8 = Ground Level
+       9 = Ground Level
+      10 = Ground Level
+      11 = Ground Level
+      12 = Air
+      13 = Air
+      14 = Air
+      15 = Air
+      16 = Air
+      17 = Air
+      18 = Air
+      19 = Air</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="images" class="subheader">Default Images</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Images</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Scourge
+       1 = Scourge Shadow
+       2 = Scourge Birth
+       3 = Scourge Death
+       4 = Scourge Explosion
+       5 = Broodling
+       6 = Broodling Shadow
+       7 = Broodling Remnants
+       8 = Infested Terran
+       9 = Infested Terran Shadow
+      10 = Infested Terran Explosion
+      11 = Guardian Cocoon
+      12 = Guardian Cocoon Shadow
+      13 = Defiler
+      14 = Defiler Shadow
+      15 = Defiler Birth
+      16 = Defiler Remnants
+      17 = Drone
+      18 = Drone Shadow
+      19 = Drone Birth
+      20 = Drone Remnants
+      21 = Egg
+      22 = Egg Shadow
+      23 = Egg Spawn
+      24 = Egg Remnants
+      25 = Guardian
+      26 = Guardian Shadow
+      27 = Guardian Birth
+      28 = Guardian Death
+      29 = Hydralisk
+      30 = Hydralisk Shadow
+      31 = Hydralisk Birth
+      32 = Hydralisk Remnants
+      33 = Infested Kerrigan
+      34 = Infested Kerrigan Shadow
+      35 = Needle Spines
+      36 = Larva
+      37 = Larva Remnants
+      38 = Mutalisk
+      39 = Mutalisk Shadow
+      40 = Mutalisk Birth
+      41 = Mutalisk Death
+      42 = Overlord
+      43 = Overlord Shadow
+      44 = Overlord Birth
+      45 = Overlord Death
+      46 = Queen
+      47 = Queen Shadow
+      48 = Queen Death
+      49 = Queen Birth
+      50 = Ultralisk
+      51 = Ultralisk Shadow
+      52 = Ultralisk Birth
+      53 = Ultralisk Remnants
+      54 = Zergling
+      55 = Zergling Shadow
+      56 = Zergling Birth
+      57 = Zergling Remnants
+      58 = Zerg Air Death Explosion (Large)
+      59 = Zerg Air Death Explosion (Small)
+      60 = Zerg Building Explosion
+      61 = Cerebrate
+      62 = Cerebrate Shadow
+      63 = Infested Command Center
+      64 = Spawning Pool
+      65 = Spawning Pool Shadow
+      66 = Evolution Chamber
+      67 = Evolution Chamber Shadow
+      68 = Creep Colony
+      69 = Creep Colony Shadow
+      70 = Hatchery
+      71 = Hatchery Shadow
+      72 = Hive
+      73 = Hive Shadow
+      74 = Lair
+      75 = Lair Shadow
+      76 = Sunken Colony
+      77 = Sunken Colony Shadow
+      78 = Mature Chrysalis
+      79 = Mature Chrysalis Shadow
+      80 = Greater Spire
+      81 = Greater Spire Shadow
+      82 = Defiler Mound
+      83 = Defiler Mound Shadow
+      84 = Queen's Nest
+      85 = Queen Nest Shadow
+      86 = Nydus Canal
+      87 = Nydus Canal Shadow
+      88 = Overmind With Shell
+      89 = Overmind Remnants
+      90 = Overmind Without Shell
+      91 = Ultralisk Cavern
+      92 = Ultralisk Cavern Shadow
+      93 = Extractor
+      94 = Extractor Shadow
+      95 = Hydralisk Den
+      96 = Hydralisk Den Shadow
+      97 = Spire
+      98 = Spire Shadow
+      99 = Spore Colony
+     100 = Spore Colony Shadow
+     101 = Infested Command Center Overlay
+     102 = Zerg Construction (Large)
+     103 = Zerg Building Morph
+     104 = Zerg Construction (Medium)
+     105 = Zerg Construction (Small)
+     106 = Zerg Building Construction Shadow
+     107 = Zerg Building Spawn (Small)
+     108 = Zerg Building Spawn (Medium)
+     109 = Zerg Building Spawn (Large)
+     110 = Zerg Building Rubble (Small)
+     111 = Zerg Building Rubble (Large)
+     112 = Carrier
+     113 = Carrier Shadow
+     114 = Carrier Engines
+     115 = Carrier Warp Flash
+     116 = Interceptor
+     117 = Interceptor Shadow
+     118 = Shuttle
+     119 = Shuttle Shadow
+     120 = Shuttle Engines
+     121 = Shuttle Warp Flash
+     122 = Dragoon
+     123 = Dragoon Shadow
+     124 = Dragoon Remnants
+     125 = Dragoon Warp Flash
+     126 = High Templar
+     127 = High Templar Shadow
+     128 = High Templar Warp Flash
+     129 = Dark Templar (Hero)
+     130 = Arbiter
+     131 = Arbiter Shadow
+     132 = Arbiter Engines
+     133 = Arbiter Warp Flash
+     134 = Archon Energy
+     135 = Archon Being
+     136 = Archon Swirl
+     137 = Probe
+     138 = Probe Shadow
+     139 = Probe Warp Flash
+     140 = Scout
+     141 = Scout Shadow
+     142 = Scout Engines
+     143 = Scout Warp Flash
+     144 = Reaver
+     145 = Reaver Shadow
+     146 = Reaver Warp Flash
+     147 = Scarab
+     148 = Observer
+     149 = Observer Shadow
+     150 = Observer Warp Flash
+     151 = Zealot
+     152 = Zealot Shadow
+     153 = Zealot Death
+     154 = Zealot Warp Flash
+     155 = Templar Archives
+     156 = Templar Archives Warp Flash
+     157 = Templar Archives Shadow
+     158 = Assimilator
+     159 = Assimilator Warp Flash
+     160 = Assimilator Shadow
+     161 = Observatory
+     162 = Observatory Warp Flash
+     163 = Observatory Shadow
+     164 = Citadel of Adun
+     165 = Citadel of Adun Warp Flash
+     166 = Citadel of Adun Shadow
+     167 = Forge
+     168 = Forge Overlay
+     169 = Forge Warp Flash
+     170 = Forge Shadow
+     171 = Gateway
+     172 = Gateway Warp Flash
+     173 = Gateway Shadow
+     174 = Cybernetics Core
+     175 = Cybernetics Core Warp Flash
+     176 = Cybernetics Core Overlay
+     177 = Cybernetics Core Shadow
+     178 = Khaydarin Crystal Formation
+     179 = Nexus
+     180 = Nexus Warp Flash
+     181 = Nexus Overlay
+     182 = Nexus Shadow
+     183 = Photon Cannon
+     184 = Photon Cannon Shadow
+     185 = Photon Cannon Warp Flash
+     186 = Arbiter Tribunal
+     187 = Arbiter Tribunal Warp Flash
+     188 = Arbiter Tribunal Shadow
+     189 = Pylon
+     190 = Pylon Warp Flash
+     191 = Pylon Shadow
+     192 = Robotics Facility
+     193 = Robotics Facility Warp Flash
+     194 = Robotics Facility Shadow
+     195 = Shield Battery
+     196 = Shield Battery Overlay
+     197 = Shileld Battery Warp Flash
+     198 = Shield Battery Shadow
+     199 = Stargate
+     200 = Stargate Overlay
+     201 = Stargate Warp Flash
+     202 = Stargate Shadow
+     203 = Stasis Cell/Prison
+     204 = Robotics Support Bay
+     205 = Robotics Support Bay Warp Flash
+     206 = Robotics Support Bay Shadow
+     207 = Protoss Temple
+     208 = Fleet Beacon
+     209 = Fleet Beacon Warp Flash
+     210 = Warp Texture
+     211 = Warp Anchor
+     212 = Fleet Beacon Shadow
+     213 = Explosion1 (Small)
+     214 = Explosion1 (Medium)
+     215 = Explosion (Large)
+     216 = Protoss Building Rubble (Small)
+     217 = Protoss Building Rubble (Large)
+     218 = Battlecruiser
+     219 = Battlecruiser Shadow
+     220 = Battlecruiser Engines
+     221 = Civilian
+     222 = Civilian Shadow
+     223 = Dropship
+     224 = Dropship Shadow
+     225 = Dropship Engines
+     226 = Firebat
+     227 = Firebat Shadow
+     228 = Ghost
+     229 = Ghost Shadow
+     230 = Ghost Remnants
+     231 = Ghost Death
+     232 = Nuke Beam
+     233 = Nuke Target Dot
+     234 = Goliath Base
+     235 = Goliath Turret
+     236 = Goliath Shadow
+     237 = Sarah Kerrigan
+     238 = Sarah Kerrigan Shadow
+     239 = Marine
+     240 = Marine Shadow
+     241 = Marine Remnants
+     242 = Marine Death
+     243 = Wraith
+     244 = Wraith Shadow
+     245 = Wraith Engines
+     246 = Scanner Sweep
+     247 = SCV
+     248 = SCV Shadow
+     249 = SCV Glow
+     250 = Siege Tank (Tank) Base
+     251 = Siege Tank (Tank) Turret
+     252 = Siege Tank (Tank) Base Shadow
+     253 = Siege Tank (Siege) Base
+     254 = Siege Tank (Siege) Turret
+     255 = Siege Tank (Siege) Base Shadow
+     256 = Vulture
+     257 = Vulture Shadow
+     258 = Spider Mine
+     259 = Spider Mine Shadow
+     260 = Science Vessel (Base)
+     261 = Science Vessel (Turret)
+     262 = Science Vessel Shadow
+     263 = Terran Academy
+     264 = Academy Overlay
+     265 = Academy Shadow
+     266 = Barracks
+     267 = Barracks Shadow
+     268 = Armory
+     269 = Armory Overlay
+     270 = Armory Shadow
+     271 = Comsat Station
+     272 = Comsat Station Connector
+     273 = Comsat Station Overlay
+     274 = Comsat Station Shadow
+     275 = Command Center
+     276 = Command Center Overlay
+     277 = Command Center Shadow
+     278 = Supply Depot
+     279 = Supply Depot Overlay
+     280 = Supply Depot Shadow
+     281 = Control Tower
+     282 = Control Tower Connector
+     283 = Control Tower Overlay
+     284 = Control Tower Shadow
+     285 = Factory
+     286 = Factory Overlay
+     287 = Factory Shadow
+     288 = Covert Ops
+     289 = Covert Ops Connector
+     290 = Covert Ops Overlay
+     291 = Covert Ops Shadow
+     292 = Ion Cannon
+     293 = Machine Shop
+     294 = Machine Shop Connector
+     295 = Machine Shop Shadow
+     296 = Missile Turret (Base)
+     297 = Missile Turret (Turret)
+     298 = Missile Turret (Base) Shadow
+     299 = Crashed Batlecruiser
+     300 = Crashed Battlecruiser Shadow
+     301 = Physics Lab
+     302 = Physics Lab Connector
+     303 = Physics Lab Shadow
+     304 = Bunker
+     305 = Bunker Shadow
+     306 = Bunker Overlay
+     307 = Refinery
+     308 = Refinery Shadow
+     309 = Science Facility
+     310 = Science Facility Overlay
+     311 = Science Facility Shadow
+     312 = Nuclear Silo
+     313 = Nuclear Silo Connector
+     314 = Nuclear Silo Overlay
+     315 = Nuclear Silo Shadow
+     316 = Nuclear Missile
+     317 = Nuclear Missile Shadow
+     318 = Nuke Hit
+     319 = Starport
+     320 = Starport Overlay
+     321 = Starport Shadow
+     322 = Engineering Bay
+     323 = Engineering Bay Overlay
+     324 = Engineering Bay Shadow
+     325 = Terran Construction (Large)
+     326 = Terran Construction (Large) Shadow
+     327 = Terran Construction (Medium)
+     328 = Terran Construction (Medium) Shadow
+     329 = Addon Construction
+     330 = Terran Construction (Small)
+     331 = Terran Construction (Small) Shadow
+     332 = Explosion2 (Small)
+     333 = Explosion2 (Medium)
+     334 = Building Explosion (Large)
+     335 = Terran Building Rubble (Small)
+     336 = Terran Building Rubble (Large)
+     337 = Dark Swarm
+     338 = Ragnasaur (Ash)
+     339 = Ragnasaur (Ash) Shadow
+     340 = Rhynadon (Badlands)
+     341 = Rhynadon (Badlands) Shadow
+     342 = Bengalaas (Jungle)
+     343 = Bengalaas (Jungle) Shadow
+     344 = Vespene Geyser
+     345 = Vespene Geyser2
+     346 = Vespene Geyser Shadow
+     347 = Mineral Field Type1
+     348 = Mineral Field Type1 Shadow
+     349 = Mineral Field Type2
+     350 = Mineral Field Type2 Shadow
+     351 = Mineral Field Type3
+     352 = Mineral Field Type3 Shadow
+     353 = Independent Starport (Unused)
+     354 = Zerg Beacon
+     355 = Zerg Beacon Overlay
+     356 = Terran Beacon
+     357 = Terran Beacon Overlay
+     358 = Protoss Beacon
+     359 = Protoss Beacon Overlay
+     360 = Unknown360
+     361 = Lockdown Field (Small)
+     362 = Lockdown Field (Medium)
+     363 = Lockdown Field (Large)
+     364 = Stasis Field Hit
+     365 = Stasis Field (Small)
+     366 = Stasis Field (Medium)
+     367 = Stasis Field (Large)
+     368 = Recharge Shields (Small)
+     369 = Recharge Shields (Medium)
+     370 = Recharge Shields (Large)
+     371 = Defensive Matrix Front (Small)
+     372 = Defensive Matrix Front (Medium)
+     373 = Defensive Matrix Front (Large)
+     374 = Defensive Matrix Back (Small)
+     375 = Defensive Matrix Back (Medium)
+     376 = Defensive Matrix Back (Large)
+     377 = Defensive Matrix Hit (Small)
+     378 = Defensive Matrix Hit (Medium)
+     379 = Defensive Matrix Hit (Large)
+     380 = Irradiate (Small)
+     381 = Irradiate (Medium)
+     382 = Irradiate (Large)
+     383 = Ensnare Cloud
+     384 = Ensnare Overlay (Small)
+     385 = Ensnare Overlay (Medium)
+     386 = Ensnare Overlay (Large)
+     387 = Plague Cloud
+     388 = Plague Overlay (Small)
+     389 = Plague Overlay (Medium)
+     390 = Plague Overlay (Large)
+     391 = Recall Field
+     392 = Flag
+     393 = Young Chrysalis
+     394 = Psi Emitter
+     395 = Data Disc
+     396 = Khaydarin Crystal
+     397 = Mineral Chunk Type1
+     398 = Mineral Chunk Type2
+     399 = Protoss Gas Orb Type1
+     400 = Protoss Gas Orb Type2
+     401 = Zerg Gas Sac Type1
+     402 = Zerg Gas Sac Type2
+     403 = Terran Gas Tank Type1
+     404 = Terran Gas Tank Type2
+     405 = Mineral Chunk Shadow
+     406 = Protoss Gas Orb Shadow
+     407 = Zerg Gas Sac Shadow
+     408 = Terran Gas Tank Shadow
+     409 = Data Disk Shadow (Ground)
+     410 = Data Disk Shadow (Carried)
+     411 = Flag Shadow (Ground)
+     412 = Flag Shadow (Carried)
+     413 = Crystal Shadow (Ground)
+     414 = Crystal Shadow (Carried)
+     415 = Young Chrysalis Shadow (Ground)
+     416 = Young Chrysalis Shadow (Carried)
+     417 = Psi Emitter Shadow (Ground)
+     418 = Psi Emitter Shadow (Carried)
+     419 = Acid Spray (Unused)
+     420 = Unknown420
+     421 = FlameThrower
+     422 = Longbolt/Gemini Missiles Trail
+     423 = Burrowing Dust
+     424 = Shield Overlay
+     425 = Unknown425
+     426 = Double Explosion
+     427 = Phase Disruptor Hit
+     428 = Nuclear Missile Death
+     429 = Spider Mine Death
+     430 = Vespene Geyser Smoke1
+     431 = Vespene Geyser Smoke2
+     432 = Vespene Geyser Smoke3
+     433 = Vespene Geyser Smoke4
+     434 = Vespene Geyser Smoke5
+     435 = Unknown435
+     436 = Unknown436
+     437 = Unknown437
+     438 = Unknown438
+     439 = Unknown439
+     440 = Fragmentation Grenade Hit
+     441 = Grenade Shot Smoke
+     442 = Anti-Matter Missile Hit
+     443 = Scarab/Anti-Matter Missile Overlay
+     444 = Scarab Hit
+     445 = Cursor Marker
+     446 = Battlecruiser Attack Overlay
+     447 = Burst Lasers Hit
+     448 = Unknown448
+     449 = High Templar Glow
+     450 = Flames1 Type1 (Small)
+     451 = Flames1 Type2 (Small)
+     452 = Flames1 Type3 (Small)
+     453 = Flames2 Type3 (Small)
+     454 = Flames3 Type3 (Small)
+     455 = Flames4 Type3 (Small)
+     456 = Flames5 Type3 (Small)
+     457 = Flames6 Type3 (Small)
+     458 = Bleeding Variant1 Type1 (Small)
+     459 = Bleeding Variant1 Type2 (Small)
+     460 = Bleeding Variant1 Type3 (Small)
+     461 = Bleeding Variant1 Type4 (Small)
+     462 = Bleeding Variant2 Type1 (Small)
+     463 = Bleeding Variant2 Type2 (Small)
+     464 = Bleeding Variant2 Type3 (Small)
+     465 = Bleeding Variant2 Type4 (Small)
+     466 = Flames2 Type1 (Small)
+     467 = Flames2 Type2 (Small)
+     468 = Flames7 Type3 (Small)
+     469 = Flames3 Type1 (Small)
+     470 = Flames3 Type2 (Small)
+     471 = Flames8 Type3 (Small)
+     472 = Flames1 Type1 (Large)
+     473 = Flames1 Type2 (Large)
+     474 = Flames1 Type3 (Large)
+     475 = Flames2 Type3 (Large)
+     476 = Flames3 Type3 (Large)
+     477 = Flames4 Type3 (Large)
+     478 = Flames5 Type3 (Large)
+     479 = Flames6 Type3 (Large)
+     480 = Bleeding Variant1 Type1 (Large)
+     481 = Bleeding Variant1 Type2 (Large)
+     482 = Bleeding Variant1 Type3 (Large)
+     483 = Bleeding Variant1 Type4 (Large)
+     484 = Bleeding Variant2 Type1 (Large)
+     485 = Bleeding Variant2 Type3 (Large)
+     486 = Bleeding Variant3 Type3 (Large)
+     487 = Bleeding Variant2 Type4 (Large)
+     488 = Flames2 Type1 (Large)
+     489 = Flames2 Type2 (Large)
+     490 = Flames7 Type3 (Large)
+     491 = Flames3 Type1 (Large)
+     492 = Flames3 Type2 (Large)
+     493 = Flames8 Type3 (Large)
+     494 = Building Landing Dust Type1
+     495 = Building Landing Dust Type2
+     496 = Building Landing Dust Type3
+     497 = Building Landing Dust Type4
+     498 = Building Landing Dust Type5
+     499 = Building Lifting Dust Type1
+     500 = Building Lifting Dust Type2
+     501 = Building Lifting Dust Type3
+     502 = Building Lifting Dust Type4
+     503 = White Circle
+     504 = Needle Spine Hit
+     505 = Unknown505
+     506 = Sunken Colony Tentacle
+     507 = Venom (Unused Zerg Weapon)
+     508 = Venom Hit (Unused)
+     509 = Acid Spore
+     510 = Acid Spore Hit
+     511 = Glave Wurm
+     512 = Glave Wurm/Seeker Spores Hit
+     513 = Glave Wurm Trail
+     514 = Seeker Spores Overlay
+     515 = Seeker Spores
+     516 = Queen Spell Holder
+     517 = Consume
+     518 = Guardian Attack Overlay
+     519 = Dual Photon Blasters Hit
+     520 = Particle Beam Hit
+     521 = Anti-Matter Missile
+     522 = Pulse Cannon
+     523 = Phase Disruptor
+     524 = STA/STS Photon Cannon Overlay
+     525 = Psionic Storm
+     526 = Fusion Cutter Hit
+     527 = Gauss Rifle Hit
+     528 = Gemini Missiles
+     529 = Lockdown/LongBolt/Hellfire Missile
+     530 = Gemini Missiles Explosion
+     531 = C-10 Canister Rifle Hit
+     532 = Fragmentation Grenade
+     533 = Arclite Shock Cannon Hit
+     534 = ATS/ATA Laser Battery
+     535 = Burst Lasers
+     536 = Siege Tank(Tank) Turret Attack Overlay
+     537 = Siege Tank(Siege) Turret Attack Overlay
+     538 = Science Vessel Overlay (Part1)
+     539 = Science Vessel Overlay (Part2)
+     540 = Science Vessel Overlay (Part3)
+     541 = Yamato Gun
+     542 = Yamato Gun Trail
+     543 = Yamato Gun Overlay
+     544 = Yamato Gun Hit
+     545 = Hallucination Hit
+     546 = Scanner Sweep Hit
+     547 = Unknown547
+     548 = Psionic Shockwave Hit
+     549 = Archon Beam
+     550 = Psionic Storm Part1
+     551 = Psionic Storm Part2
+     552 = Psionic Storm Part3
+     553 = Psionic Storm Part4
+     554 = EMP Shockwave Missile
+     555 = EMP Shockwave Hit (Part1)
+     556 = EMP Shockwave Hit (Part2)
+     557 = Hallucination Death1
+     558 = Hallucination Death2
+     559 = Hallucination Death3
+     560 = Circle Marker1
+     561 = Selection Circle (22pixels)
+     562 = Selection Circle (32pixels)
+     563 = Selection Circle (48pixels)
+     564 = Selection Circle (62pixels)
+     565 = Selection Circle (72pixels)
+     566 = Selection Circle (94pixels)
+     567 = Selection Circle (110pixels)
+     568 = Selection Circle (122pixels)
+     569 = Selection Circle (146pixels)
+     570 = Selection Circle (224pixels)
+     571 = Selection Circle Dashed (22pixels)
+     572 = Selection Circle Dashed (32pixels)
+     573 = Selection Circle Dashed (48pixels)
+     574 = Selection Circle Dashed (62pixels)
+     575 = Selection Circle Dashed (72pixels)
+     576 = Selection Circle Dashed (94pixels)
+     577 = Selection Circle Dashed (110pixels)
+     578 = Selection Circle Dashed (122pixels)
+     579 = Selection Circle Dashed (146pixels)
+     580 = Selection Circle Dashed (224pixels)
+     581 = Circle Marker2
+     582 = Map Revealer
+     583 = Circle Marker3
+     584 = Psi Field1 (Right Upper)
+     585 = Psi Field1 (Right Lower)
+     586 = Psi Field2 (Right Upper)
+     587 = Psi Field2 (Right Lower)
+     588 = Start Location
+     589 = 2/38 Ash
+     590 = 2/38 Ash Shadow
+     591 = 2/39 Ash
+     592 = 2/39 Ash Shadow
+     593 = 2/41 Ash
+     594 = 2/41 Ash Shadow
+     595 = 2/40 Ash
+     596 = 2/40 Ash Shadow
+     597 = 2/42 Ash
+     598 = 2/42 Ash Shadow
+     599 = 2/43 Ash
+     600 = 2/44 Ash
+     601 = 2/1 Ash
+     602 = 2/4 Ash
+     603 = 2/5 Ash
+     604 = 2/30 Ash
+     605 = 2/28 Ash
+     606 = 2/29 Ash
+     607 = 4/1 Ash
+     608 = 4/2 Ash
+     609 = 4/3 Ash
+     610 = 4/56 Jungle
+     611 = 4/56 Jungle Shadow
+     612 = 4/57 Jungle
+     613 = 4/57 Jungle Shadow
+     614 = 4/58 Jungle
+     615 = 4/58 Jungle Shadow
+     616 = 4/59 Jungle
+     617 = 4/59 Jungle Shadow
+     618 = 9/5 Jungle
+     619 = 9/5 Jungle Shadow
+     620 = 9/6 Jungle
+     621 = 9/6 Jungle Shadow
+     622 = 9/7 Jungle
+     623 = 9/7 Jungle Shadow
+     624 = 4/51 Jungle
+     625 = 4/51 Jungle Shadow
+     626 = 4/52 Jungle
+     627 = 4/52 Jungle Shadow
+     628 = 4/54 Jungle
+     629 = 4/54 Jungle Shadow
+     630 = 4/53 Jungle
+     631 = 4/53 Jungle Shadow
+     632 = 9/1 Jungle
+     633 = 9/1 Jungle Shadow
+     634 = 9/2 Jungle
+     635 = 9/2 Jungle Shadow
+     636 = 9/3 Jungle
+     637 = 9/3 Jungle Shadow
+     638 = 9/4 Jungle
+     639 = 9/4 Jungle Shadow
+     640 = 4/12 Jungle
+     641 = 4/13 Jungle
+     642 = 4/1 Jungle
+     643 = 4/3 Jungle
+     644 = 4/2 Jungle
+     645 = 4/5 Jungle
+     646 = 4/4 Jungle
+     647 = 4/9 Jungle
+     648 = 4/10 Jungle
+     649 = 5/5 Jungle
+     650 = 5/7 Jungle
+     651 = 5/6 Jungle
+     652 = 5/9 Jungle
+     653 = 5/8 Jungle
+     654 = 4/6 Jungle
+     655 = 4/7 Jungle
+     656 = 4/17 Jungle
+     657 = 13/4 Jungle
+     658 = 11/5 Jungle
+     659 = 11/6 Jungle
+     660 = 11/7 Jungle
+     661 = 11/8 Jungle
+     662 = 11/10 Jungle
+     663 = 11/11 Jungle
+     664 = 11/12 Jungle
+     665 = 7/4 Platform
+     666 = 7/4 Platform Shadow
+     667 = 7/5 Platform
+     668 = 7/5 Platform Shadow
+     669 = 7/6 Platform
+     670 = 7/6 Platform Shadow
+     671 = 7/1 Platform
+     672 = 7/1 Platform Shadow
+     673 = 7/2 Platform
+     674 = 7/2 Platform Shadow
+     675 = 7/3 Platform
+     676 = 7/3 Platform Shadow
+     677 = 7/9 Platform
+     678 = 7/10 Platform
+     679 = 7/8 Platform
+     680 = 7/7 Platform
+     681 = 7/26 Platform
+     682 = 7/24 Platform
+     683 = 7/28 Platform
+     684 = 7/27 Platform
+     685 = 7/25 Platform
+     686 = 7/29 Platform
+     687 = 7/30 Platform
+     688 = 7/31 Platform
+     689 = 12/1 Platform
+     690 = 9/27 Platform
+     691 = 5/54 Badlands
+     692 = 5/54 Badlands Shadow
+     693 = 5/55 Badlands
+     694 = 5/55 Badlands Shadow
+     695 = 5/56 Badlands
+     696 = 5/56 Badlands Shadow
+     697 = 5/57 Badlands
+     698 = 5/57 Badlands Shadow
+     699 = 6/16 Badlands
+     700 = 6/17 Badlands
+     701 = 6/20 Badlands
+     702 = 6/21 Badlands
+     703 = 5/10 Badlands
+     704 = 5/50 Badlands
+     705 = 5/50 Badlands Shadow
+     706 = 5/52 Badlands
+     707 = 5/52 Badlands Shadow
+     708 = 5/53 Badlands
+     709 = 5/53 Badlands Shadow
+     710 = 5/51 Badlands
+     711 = 5/51 Badlands Shadow
+     712 = 6/3 Badlands
+     713 = 11/3 Badlands
+     714 = 11/8 Badlands
+     715 = 11/6 Badlands
+     716 = 11/7 Badlands
+     717 = 11/9 Badlands
+     718 = 11/10 Badlands
+     719 = 11/11 Badlands
+     720 = 11/12 Badlands
+     721 = 11/13 Badlands
+     722 = 11/14 Badlands
+     723 = 1/13 Badlands
+     724 = 1/9 Badlands
+     725 = 1/11 Badlands
+     726 = 1/14 Badlands
+     727 = 1/10 Badlands
+     728 = 1/12 Badlands
+     729 = 1/15 Badlands
+     730 = 1/7 Badlands
+     731 = 1/5 Badlands
+     732 = 1/16 Badlands
+     733 = 1/8 Badlands
+     734 = 1/6 Badlands
+     735 = Floor Gun Trap
+     736 = Floor Missile Trap
+     737 = Floor Missile Trap Turret
+     738 = Wall Missile Trap
+     739 = Wall Missile Trap2
+     740 = Wall Flame Trap
+     741 = Wall Flame Trap2
+     742 = Left Upper Level Door
+     743 = Right Upper Level Door
+     744 = 4/15 Installation1
+     745 = 4/15 Installation2
+     746 = 3/9 Installation
+     747 = 3/10 Installation
+     748 = 3/11 Installation
+     749 = 3/12 Installation
+     750 = Substructure Left Door
+     751 = Substructure Right Door
+     752 = 3/1 Installation
+     753 = 3/2 Installation
+     754 = Substructure Opening Hole
+     755 = 7/21 Twilight
+     756 = Unknown Twilight
+     757 = 7/13 Twilight
+     758 = 7/14 Twilight
+     759 = 7/16 Twilight
+     760 = 7/15 Twilight
+     761 = 7/19 Twilight
+     762 = 7/20 Twilight
+     763 = 7/17 Twilight
+     764 = 6/1 Twilight
+     765 = 6/2 Twilight
+     766 = 6/3 Twilight
+     767 = 6/4 Twilight
+     768 = 6/5 Twilight
+     769 = 8/3 Twilight1
+     770 = 8/3 Twilight2
+     771 = 9/29 Ice
+     772 = 9/29 Ice Shadow
+     773 = 9/28 Ice
+     774 = 9/28 Ice Shadow
+     775 = 12/38 Ice
+     776 = 12/38 Ice Shadow
+     777 = 12/37 Ice
+     778 = 12/37 Ice Shadow
+     779 = 12/33 Ice1
+     780 = 12/33 Ice1 Shadow
+     781 = 9/21 Ice
+     782 = 9/21 Ice Shadow
+     783 = 9/15 Ice
+     784 = 9/15 Ice Shadow
+     785 = 9/16 Ice
+     786 = 9/16 Ice Shadow
+     787 = Unknown787
+     788 = Unknown788
+     789 = 12/9 Ice1
+     790 = 12/10 Ice1
+     791 = 9/24 Ice
+     792 = 9/24 Ice Shadow
+     793 = 9/23 Ice
+     794 = 9/23 Ice Shadow
+     795 = Unknown795
+     796 = Unknown Ice Shadow
+     797 = 12/7 Ice
+     798 = 12/7 Ice Shadow
+     799 = 12/8 Ice
+     800 = 12/8 Ice Shadow
+     801 = 12/9 Ice2
+     802 = 12/9 Ice2 Shadow
+     803 = 12/10 Ice2
+     804 = 12/10 Ice2 Shadow
+     805 = 12/40 Ice
+     806 = 12/40 Ice Shadow
+     807 = 12/41 Ice
+     808 = 12/41 Ice Shadow
+     809 = 12/42 Ice
+     810 = 12/42 Ice Shadow
+     811 = 12/5 Ice
+     812 = 12/5 Ice Shadow
+     813 = 12/6 Ice
+     814 = 12/6 Ice Shadow
+     815 = 12/36 Ice
+     816 = 12/36 Ice Shadow
+     817 = 12/32 Ice
+     818 = 12/32 Ice Shadow
+     819 = 12/33 Ice2
+     820 = 12/33 Ice2 Shadow
+     821 = 12/34 Ice
+     822 = 12/34 Ice Shadow
+     823 = 12/24 Ice1
+     824 = 12/24 Ice1 Shadow
+     825 = 12/25 Ice1
+     826 = 12/25 Ice1 Shadow
+     827 = 12/30 Ice1
+     828 = 12/30 Ice1 Shadow
+     829 = 12/31 Ice
+     830 = 12/31 Ice Shadow
+     831 = 12/20 Ice
+     832 = 12/30 Ice2
+     833 = 12/30 Ice2 Shadow
+     834 = 9/22 Ice
+     835 = 9/22 Ice Shadow
+     836 = 12/24 Ice2
+     837 = 12/24 Ice2 Shadow
+     838 = 12/25 Ice2
+     839 = 12/25 Ice2 Shadow
+     840 = Unknown840
+     841 = 4/1 Ice
+     842 = 6/1 Ice
+     843 = 5/6 Ice
+     844 = 5/6 Ice Shadow
+     845 = 5/7 Ice
+     846 = 5/7 Ice Shadow
+     847 = 5/8 Ice
+     848 = 5/8 Ice Shadow
+     849 = 5/9 Ice
+     850 = 5/9 Ice Shadow
+     851 = 10/10 Desert1
+     852 = 10/12 Desert1
+     853 = 10/12 Desert1 Shadow
+     854 = 10/8 Desert1
+     855 = 10/8 Desert1 Shadow
+     856 = 10/9 Desert1
+     857 = 10/9 Desert1 Shadow
+     858 = 6/10 Desert
+     859 = 6/10 Desert Shadow
+     860 = 6/13 Desert1
+     861 = 6/13 Desert1 Shadow
+     862 = Unknown Desert
+     863 = Unknown Desert Shadow
+     864 = 10/12 Desert2
+     865 = 10/12 Desert2 Shadow
+     866 = 10/9 Desert2
+     867 = 10/9 Desert2 Shadow
+     868 = 10/10 Desert2
+     869 = 10/10 Desert2 Shadow
+     870 = 10/11 Desert
+     871 = 10/11 Desert Shadow
+     872 = 10/14 Desert
+     873 = 10/14 Desert Shadow
+     874 = 10/41 Desert
+     875 = 10/41 Desert Shadow
+     876 = 10/39 Desert
+     877 = 1/39 Desert Shadow
+     878 = 10/8 Desert2
+     879 = 10/8 Desert2 Shadow
+     880 = 10/6 Desert
+     881 = 10/7 Desert
+     882 = 10/7 Desert Shadow
+     883 = 4/6 Desert
+     884 = 4/6 Desert Shadow
+     885 = 4/11 Desert
+     886 = 4/11 Desert Shadow
+     887 = 4/10 Desert
+     888 = 4/10 Desert Shadow
+     889 = 4/9 Desert
+     890 = 4/7 Desert
+     891 = 4/7 Desert Shadow
+     892 = 4/12 Desert
+     893 = 4/12 Desert Shadow
+     894 = 4/8 Desert
+     895 = 4/13 Desert
+     896 = 4/13 Desert Shadow
+     897 = 4/17 Desert
+     898 = 4/15 Desert1
+     899 = 4/15 Desert1 Shadow
+     900 = 10/23 Desert
+     901 = 10/23 Desert Shadow
+     902 = 10/5 Desert
+     903 = 10/5 Desert Shadow
+     904 = 6/13 Desert2
+     905 = 6/13 Desert2 Shadow
+     906 = 6/20 Desert
+     907 = 4/15 Desert2
+     908 = 4/15 Desert2 Shadow
+     909 = 8/23 Desert
+     910 = 8/23 Desert Shadow
+     911 = 12/1 Desert Overlay
+     912 = 11/3 Desert
+     913 = Unknown913
+     914 = Lurker Egg
+     915 = Devourer
+     916 = Devourer Shadow
+     917 = Devourer Birth
+     918 = Devourer Death
+     919 = Lurker Birth
+     920 = Lurker Remnants
+     921 = Lurker
+     922 = Lurker Shadow
+     923 = Overmind Cocoon
+     924 = Overmind Cocoon Shadow
+     925 = Dark Archon Energy
+     926 = Dark Archon Being
+     927 = Dark Archon Swirl
+     928 = Dark Archon Death
+     929 = Corsair
+     930 = Corsair Shadow
+     931 = Corsair Engines
+     932 = Corsair Attack Overlay (Unused)
+     933 = Dark Templar (Unit)
+     934 = Warp Gate
+     935 = Warp Gate Shadow
+     936 = Warp Gate Overlay
+     937 = Xel'Naga Temple
+     938 = Xel'Naga Temple Shadow
+     939 = Valkyrie
+     940 = Valkyrie Shadow
+     941 = Valkyrie Engines
+     942 = Valkyrie Engines2 (Unused)
+     943 = Valkyrie Afterburners (Unused)
+     944 = Medic
+     945 = Medic Shadow
+     946 = Medic Remnants
+     947 = Psi Disrupter
+     948 = Psi Disrupter Shadow
+     949 = Power Generator
+     950 = Power Generator Shadow
+     951 = Disruption Web
+     952 = Scantid (Desert)
+     953 = Scantid (Desert) Shadow
+     954 = Kakaru (Twilight)
+     955 = Kakaru (Twilight) Shadow
+     956 = Ursadon (Ice)
+     957 = Ursadon (Ice) Shadow
+     958 = Uraj
+     959 = Khalis
+     960 = Halo Rockets Trail
+     961 = Subterranean Spines
+     962 = Coroosive Acid Shot
+     963 = Corrosive Acid Hit
+     964 = Neutron Flare
+     965 = Halo Rockets
+     966 = Optical Flare Grenade
+     967 = Restoration Hit (Small)
+     968 = Restoration Hit (Medium)
+     969 = Restoration Hit (Large)
+     970 = Heal (Small)
+     971 = Heal (medium)
+     972 = Heal (Large)
+     973 = Mind Control Hit (Small)
+     974 = Mind Control Hit (Medium)
+     975 = Mind Control Hit (Large)
+     976 = Optical Flare Hit (Small)
+     977 = Optical Flare Hit (Medium)
+     978 = Optical Flare Hit (Large)
+     979 = Feedback (Small)
+     980 = Feedback (Medium)
+     981 = Feedback Hit (Large)
+     982 = Maelstorm Overlay (Small)
+     983 = Maelstorm Overlay (Medium)
+     984 = Maelstorm Overlay (Large)
+     985 = Unknown985
+     986 = Acid Spores (1) Overlay (Small)
+     987 = Acid Spores (2-3) Overlay (Small)
+     988 = Acid Spores (4-5) Overlay (Small)
+     989 = Acid Spores (6-9) Overlay (Small)
+     990 = Acid Spores (1) Overlay (Medium)
+     991 = Acid Spores (2-3) Overlay (Medium)
+     992 = Acid Spores (4-5) Overlay (Medium)
+     993 = Acid Spores (6-9) Overlay (Medium)
+     994 = Acid Spores (1) Overlay (Large)
+     995 = Acid Spores (2-3) Overlay (Large)
+     996 = Acid Spores (4-5) Overlay (Large)
+     997 = Acid Spores (6-9) Overlay (Large)
+     998 = Maelstorm Hit</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="races" class="subheader">Races</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Races</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Zerg
+       1 = Terran
+       2 = Protoss
+       3 = All</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="explosions" class="subheader">Explosion Types</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Explosion Types</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = None
+       1 = Normal
+       2 = Splash (Radial)
+       3 = Splash (Enemy)
+       4 = Lockdown
+       5 = Nuclear Missile
+       6 = Parasite
+       7 = Broodlings
+       8 = EMP Shockwave
+       9 = Irradiate
+      10 = Ensnare
+      11 = Plague
+      12 = Stasis Field
+      13 = Dark Swarm
+      14 = Consume
+      15 = Yamato Gun
+      16 = Restoration
+      17 = Disruption Web
+      18 = Corrosive Acid
+      19 = Mind Control
+      20 = Feedback
+      21 = Optical Flare
+      22 = Maelstrom
+      23 = Unknown (Crash)
+      24 = Splash (Air)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="upgrades" class="subheader">Default Upgrades</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Default Upgrades</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Terran Infantry Armor
+       1 = Terran Vehicle Plating
+       2 = Terran Ship Plating
+       3 = Zerg Carapace
+       4 = Zerg Flyer Caparace
+       5 = Protoss Armor
+       6 = Protoss Plating
+       7 = Terran Infantry Weapons
+       8 = Terran Vehicle Weapons
+       9 = Terran Ship Weapons
+      10 = Zerg Melee Attacks
+      11 = Zerg Missile Attacks
+      12 = Zerg Flyer Attacks
+      13 = Protoss Ground Weapons
+      14 = Protoss Air Weapons
+      15 = Protoss Plasma Shields
+      16 = U-238 Shells
+      17 = Ion Thrusters
+      18 = Burst Lasers (Unused)
+      19 = Titan Reactor (SV +50)
+      20 = Ocular Implants
+      21 = Moebius Reactor (Ghost +50)
+      22 = Apollo Reactor (Wraith +50)
+      23 = Colossus Reactor (BC +50)
+      24 = Ventral Sacs
+      25 = Antennae
+      26 = Pneumatized Carapace
+      27 = Metabolic Boost
+      28 = Adrenal Glands
+      29 = Muscular Augments
+      30 = Grooved Spines
+      31 = Gamete Meiosis (Queen +50)
+      32 = Metasynaptic Node (Defiler +50)
+      33 = Singularity Charge
+      34 = Leg Enhancements
+      35 = Scarab Damage
+      36 = Reaver Capacity
+      37 = Gravitic Drive
+      38 = Sensor Array
+      39 = Gravitic Boosters
+      40 = Khaydarin Amulet (HT +50)
+      41 = Apial Sensors
+      42 = Gravitic Thrusters
+      43 = Carrier Capacity
+      44 = Khaydarin Core (Arbiter +50)
+      45 = Unknown Upgrade45
+      46 = Unknown Upgrade46
+      47 = Argus Jewel (Corsair +50)
+      48 = Unknown Upgrade48
+      49 = Argus Talisman (DA +50)
+      50 = Unknown Upgrade50
+      51 = Caduceus Reactor (Medic +50)
+      52 = Chitinous Plating
+      53 = Anabolic Synthesis
+      54 = Charon Booster
+      55 = Unknown Upgrade55
+      56 = Unknown Upgrade56
+      57 = Unknown Upgrade57
+      58 = Unknown Upgrade58
+      59 = Unknown Upgrade59
+      60 = Unknown Upgrade60
+      61 = None</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="icons" class="subheader">Icons</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Icons</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Marine
+       1 = Ghost
+       2 = Vulture
+       3 = Goliath
+       4 = Blank (Goliath Turret)
+       5 = Siege Tank (Tank Mode)
+       6 = Blank (Tank Turret)
+       7 = SCV
+       8 = Wraith
+       9 = Science Vessel
+      10 = Gui Montag (Firebat)
+      11 = Dropship
+      12 = Battlecruiser
+      13 = Vulture Spider Mine
+      14 = Nuclear Missile
+      15 = Civilian
+      16 = Sarah Kerrigan (Ghost)
+      17 = Alan Schezar (Goliath)
+      18 = Blank (Alan Turret)
+      19 = Jim Raynor (Vulture)
+      20 = Jim Raynor (Marine)
+      21 = Tom Kazansky (Wraith)
+      22 = Magellan (Science Vessel)
+      23 = Edmund Duke (Siege Tank)
+      24 = Blank (Duke Turret)
+      25 = Edmund Duke (Siege Mode)
+      26 = Blank (Duke Turret)
+      27 = Blank (Arcturus Mengsk)
+      28 = Hyperion (Battlecruiser)
+      29 = Norad II (Battlecruiser)
+      30 = Terran Siege Tank (Siege Mode)
+      31 = Blank (Siege Tank Turret)
+      32 = Firebat
+      33 = Marine (Scanner Sweep)
+      34 = Medic
+      35 = Larva
+      36 = Radioactive (Zerg Egg)
+      37 = Zergling
+      38 = Hydralisk
+      39 = Ultralisk
+      40 = Broodling
+      41 = Drone
+      42 = Overlord
+      43 = Mutalisk
+      44 = Guardian
+      45 = Queen
+      46 = Defiler
+      47 = Scourge
+      48 = Torrarsque (Ultralisk)
+      49 = Matriarch (Queen)
+      50 = Infested Terran
+      51 = Infested Kerrigan (Infested Terran)
+      52 = Unclean One (Defiler)
+      53 = Hunter Killer (Hydralisk)
+      54 = Devouring One (Zergling)
+      55 = Kukulza (Mutalisk)
+      56 = Kukulza (Guardian)
+      57 = Yggdrasill (Overlord)
+      58 = Valkyrie
+      59 = Mutalisk/Guardian Cocoon
+      60 = Corsair
+      61 = Dark Templar (Unit)
+      62 = Devourer
+      63 = Dark Archon
+      64 = Probe
+      65 = Zealot
+      66 = Dragoon
+      67 = High Templar
+      68 = Archon
+      69 = Shuttle
+      70 = Scout
+      71 = Arbiter
+      72 = Carrier
+      73 = Interceptor
+      74 = Dark Templar (Hero)
+      75 = Zeratul (Dark Templar)
+      76 = Tassadar/Zeratul (Archon)
+      77 = Fenix (Zealot)
+      78 = Fenix (Dragoon)
+      79 = Tassadar (Templar)
+      80 = Mojo (Scout)
+      81 = Warbringer (Reaver)
+      82 = Gantrithor (Carrier)
+      83 = Reaver
+      84 = Observer
+      85 = Scarab
+      86 = Danimoth (Arbiter)
+      87 = Blank (Aldaris)
+      88 = Artanis (Scout)
+      89 = Rhynadon (Badlands Critter)
+      90 = Bengalaas (Jungle Critter)
+      91 = Lurker (Cargo Ship - Unused)
+      92 = Mercenary Gunship (Unused)
+      93 = Scantid (Desert Critter)
+      94 = Kakaru (Twilight Critter)
+      95 = Ragnasaur (Ashworld Critter)
+      96 = Ursadon (Ice Critter)
+      97 = Blank (Zerg Lurker Egg)
+      98 = Blank (Raszagal)
+      99 = Samir Duran (Ghost)
+     100 = Alexei Stukov (Ghost)
+     101 = Map Revealer
+     102 = Blank (Gerard DuGalle)
+     103 = Lurker
+     104 = Infested Duran (Infested Terran)
+     105 = Blank (Disruption Field)
+     106 = Command Center
+     107 = Comsat Station
+     108 = Nuclear Silo
+     109 = Supply Depot
+     110 = Refinery
+     111 = Barracks
+     112 = Academy
+     113 = Factory
+     114 = Starport
+     115 = Control Tower
+     116 = Science Facility
+     117 = Covert Ops
+     118 = Physics Lab
+     119 = Blank (Starbase - Unused)
+     120 = Machine Shop
+     121 = Repair Bay (Unused)
+     122 = Engineering Bay
+     123 = Armory
+     124 = Missile Tower
+     125 = Bunker
+     126 = Crashed Norad II
+     127 = Ion Cannon
+     128 = Uraj
+     129 = Khalis
+     130 = Infested Command Center
+     131 = Hatchery
+     132 = Lair
+     133 = Hive
+     134 = Nydus Canal
+     135 = Hydralisk Den
+     136 = Defiler Mound
+     137 = Greater Spire
+     138 = Queen's Nest
+     139 = Evolution Chamber
+     140 = Ultralisk Cavern
+     141 = Spire
+     142 = Spawning Pool
+     143 = Creep Colony
+     144 = Spore Colony
+     145 = Radioactive (Zerg Bldg1 - Unused)
+     146 = Sunken Colony
+     147 = Overmind (Without Shell)
+     148 = Overmind (With Shell)
+     149 = Extractor
+     150 = Mature Chrysalis
+     151 = Cerebrate
+     152 = Cerebrate Daggoth
+     153 = Blank (Zerg Bldg2 - Unused)
+     154 = Nexus
+     155 = Robotics Facility
+     156 = Pylon
+     157 = Assimilator
+     158 = Blank (Protoss Bldg1 - Unused)
+     159 = Observatory
+     160 = Gateway
+     161 = Blank (Protoss Bldg2 - Unused)
+     162 = Photon Cannon
+     163 = Citadel of Adun
+     164 = Cybernetics Core
+     165 = Templar Archives
+     166 = Forge
+     167 = Stargate
+     168 = Stasis Cell/Prison
+     169 = Fleet Beacon
+     170 = Arbiter Tribunal
+     171 = Robotics Support Bay
+     172 = Shield Battery
+     173 = Khaydarin Crystal Formation
+     174 = Protoss Temple
+     175 = Xel'Naga Temple
+     176 = Mineral Cluster (Type 1)
+     177 = Mineral Cluster (Type 2)
+     178 = Mineral Cluster (Type 3)
+     179 = Blank (Cave - Unused)
+     180 = Blank (Cave-in - Unused)
+     181 = Blank (Cantina - Unused)
+     182 = Blank (Mining Platform - Unused)
+     183 = Blank (Independent CC - Unused)
+     184 = Blank (Independent Starport - Unused)
+     185 = Blank (Jump Gate - Unused)
+     186 = Blank (Ruins - Unused)
+     187 = Blank (Khayd. Crystal Form. - Unused)
+     188 = Vespene Geyser
+     189 = Warp Gate
+     190 = Psi Disrupter
+     191 = Blank (Zerg Marker)
+     192 = Blank (Terran Marker)
+     193 = Blank (Protoss Marker)
+     194 = Zerg Beacon
+     195 = Terran Beacon
+     196 = Protoss Beacon
+     197 = Zerg Flag Beacon
+     198 = Terran Flag Beacon
+     199 = Protoss Flag Beacon
+     200 = Power Generator
+     201 = Overmind Cocoon
+     202 = Blank (Dark Swarm)
+     203 = Blank (Floor Missile Trap)
+     204 = Blank (Floor Hatch - Unused)
+     205 = Blank (Left Upper Level Door)
+     206 = Blank (Right Upper Level Door)
+     207 = Blank (Left Pit Door)
+     208 = Blank (Right Pit Door)
+     209 = Blank (Floor Gun Trap)
+     210 = Blank (Left Wall Missile Trap)
+     211 = Blank (Left Wall Flame Trap)
+     212 = Infested Mine (Unused)
+     213 = Blank (Right Wall Flame Trap)
+     214 = Start Location
+     215 = Flag
+     216 = Young Chrysalis
+     217 = Psi Emitter
+     218 = Data Disc
+     219 = Khaydarin Crystal
+     220 = Blank (Mineral Chunk Type 1)
+     221 = Blank (Mineral Chunk Type 2)
+     222 = Blank (Protoss Vespene Orb Type 1)
+     223 = Blank (Protoss Vespene Orb Type 2)
+     224 = Blank (Zerg Vespene Sac Type 1)
+     225 = Blank (Zerg Vespene Sac Type 2)
+     226 = Blank (Terran Vespene Tank Type 1)
+     227 = Blank (Terran Vespene Tank Type 2)
+     228 = Move
+     229 = Stop
+     230 = Attack
+     231 = Gather
+     232 = Repair
+     233 = Return Resources
+     234 = Terran Basic Buildings
+     235 = Terran Advanced Buildings
+     236 = Cancel
+     237 = Use Stimpack
+     238 = U-238 Shells
+     239 = Burst Lasers (Unused)
+     240 = Lockdown
+     241 = EMP Shockwave
+     242 = Irradiate
+     243 = Use Spider Mines
+     244 = Afterburners (Unused Terran Upgrade)
+     245 = Seige Mode
+     246 = Tank Mode
+     247 = Defensive Matrix
+     248 = Titan Reactor
+     249 = Ocular Implants
+     250 = Scanner Sweep
+     251 = Yamato Gun
+     252 = Cloak
+     253 = Decloak
+     254 = Patrol
+     255 = Hold Position
+     256 = Moebius Reactor
+     257 = Zerg Basic Buildings
+     258 = Zerg Advanced Buildings
+     259 = Burrow
+     260 = Unburrow
+     261 = Ventral Sacs
+     262 = Antennae
+     263 = Metabolic Boost
+     264 = Adrenal Glands
+     265 = Plague
+     266 = Muscular Augments
+     267 = Ensnare
+     268 = Grooved Spines
+     269 = Roar (Unused Zerg Upgrade)
+     270 = Dark Swarm
+     271 = Parasite
+     272 = Protoss Basic Buildings
+     273 = Protoss Advanced Buildings
+     274 = Mind Control (SC Beta - Unused)
+     275 = Psionic Storm
+     276 = Gravitic Boosters
+     277 = Hallucination
+     278 = Stasis Field
+     279 = Blank
+     280 = Recall
+     281 = Singularity Charge
+     282 = Lift off
+     283 = Land
+     284 = Apollo Reactor
+     285 = Colossus Reactor
+     286 = Set Rally Point
+     287 = Ion Thrusters
+     288 = Infantry Weapons
+     289 = Vehicle Weapons
+     290 = Ship Weapons
+     291 = Ship Plating
+     292 = Infantry Armor
+     293 = Vehicle Armor
+     294 = Gamete Meiosis
+     295 = Metasynaptic Node
+     296 = Pneumatized Caparace
+     297 = Zerg Caparace
+     298 = Flyer Caparace
+     299 = Melee Attacks
+     300 = Missile Attacks
+     301 = Flyer Attacks
+     302 = Consume
+     303 = Ground Armor
+     304 = Air Plating
+     305 = Ground Weapons
+     306 = Air Weapons
+     307 = Leg Enhancements
+     308 = Recharge Shields
+     309 = Load (into Transport)
+     310 = Plasma Shields
+     311 = Nuclear Strike
+     312 = Unload All (from Transport/Bunker)
+     313 = Infest Command Center
+     314 = Scarab Damage
+     315 = Reaver Capacity
+     316 = Gravitic Drive
+     317 = Sensor Array
+     318 = Khaydarin Amulet
+     319 = Apial Sensors
+     320 = Gravitic Thrusters
+     321 = Carrier Capacity
+     322 = Khaydarin Core
+     323 = Gauss Rifle
+     324 = C-10 Canister Rifle
+     325 = Fragmentation Grenade
+     326 = Twin Autocannons
+     327 = Hellfire Missile Pack
+     328 = Arclite Cannon
+     329 = Fusion Cutter
+     330 = Fusion Cutter (Harvest)
+     331 = Gemini Missiles
+     332 = Burst Lasers
+     333 = ATS Laser Battery
+     334 = ATA Laser Battery
+     335 = Flame Thrower
+     336 = Arclite Shock Cannon
+     337 = Longbolt Missile
+     338 = Claws
+     339 = Needle Spines
+     340 = Kaiser Blades
+     341 = Toxic Spores
+     342 = Spines
+     343 = Flyer Attack
+     344 = Acid Spore
+     345 = Glave Wurm
+     346 = Venom (Unused Zerg Weapon)
+     347 = Seeker Spores
+     348 = Subterranean Tentacle
+     349 = Suicide (Infested Terran)
+     350 = Suicide (Scourge)
+     351 = Particle Beam
+     352 = Particle Beam (Harvest)
+     353 = Psi/Warp Blades
+     354 = Phase Disruptor
+     355 = Psi Assault
+     356 = Psionic Shockwave
+     357 = Radioactive (Unused)
+     358 = Dual Photon Blasters
+     359 = Anti-matter Missiles
+     360 = Phase Disruptor Cannon
+     361 = Pulse Cannon
+     362 = Photon Cannon
+     363 = Radioactive (Unused)
+     364 = Spider Mine
+     365 = Heal
+     366 = Restoration
+     367 = Restoration
+     368 = Disruption Web
+     369 = Disruption Web
+     370 = Unknown371
+     371 = Mind Control
+     372 = Feedback
+     373 = Optical Flare
+     374 = Afterburners ON (Unused)
+     375 = Afterburners OFF (Unused)
+     376 = Lurker Aspect
+     377 = Unknown378
+     378 = Anabolic Synthesis
+     379 = Chitinous Plating
+     380 = Charon Boosters
+     381 = Maelstrom
+     382 = Subterranean Spines
+     383 = Argus Jewel
+     384 = Caduceus Reactor
+     385 = Argus Talisman
+     386 = Play (Replay)
+     387 = Pause (Replay)
+     388 = Speed Up (Replay)
+     389 = Slow Down (Replay)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="sounds" class="subheader">Sound Effects</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Sound Effects</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = Unknown
+       1 = Zerg\Drone\ZDrErr00.WAV
+       2 = Misc\Buzz.wav (1)
+       3 = Misc\PError.WAV
+       4 = Misc\ZBldgPlc.wav (1)
+       5 = Misc\TBldgPlc.wav
+       6 = Misc\PBldgPlc.wav
+       7 = Misc\ExploLrg.wav
+       8 = Misc\ExploMed.wav
+       9 = Misc\ExploSm.wav
+      10 = Misc\Explo1.wav
+      11 = Misc\Explo2.wav
+      12 = Misc\Explo3.wav
+      13 = Misc\Explo4.wav
+      14 = Misc\Explo5.wav
+      15 = Misc\Button.wav
+      16 = Misc\BurrowDn.wav
+      17 = Misc\BurrowUp.wav
+      18 = Misc\OnFirSml.wav
+      19 = Misc\IntoNydus.wav
+      20 = Misc\OutOfGas.wav
+      21 = Misc\youwin.wav
+      22 = Misc\youlose.wav
+      23 = Misc\Transmission.wav
+      24 = Misc\Door\Door1Opn.wav
+      25 = Misc\Door\Door1Cls.wav
+      26 = Misc\Door\Door2Opn.wav
+      27 = Misc\Door\Door2Cls.wav
+      28 = Misc\Door\Door3Opn.wav
+      29 = Misc\Door\Door3Cls.wav
+      30 = Misc\Door\Door4Opn.wav
+      31 = Misc\Door\Door4Cls.wav
+      32 = Misc\ZRescue.wav
+      33 = Misc\TRescue.wav
+      34 = Misc\PRescue.wav
+      35 = terran\SCV\EDrRep00.wav
+      36 = terran\SCV\EDrRep01.wav
+      37 = terran\SCV\EDrRep02.wav
+      38 = terran\SCV\EDrRep03.wav
+      39 = terran\SCV\EDrRep04.wav
+      40 = Misc\ZOvTra00.wav
+      41 = Misc\TDrTra00.wav
+      42 = Misc\PShTra00.wav
+      43 = Misc\ZOvTra01.wav
+      44 = Misc\TDrTra01.wav
+      45 = Misc\PShTra01.wav
+      46 = Misc\CRITTERS\JCrWht00.wav
+      47 = Misc\CRITTERS\JCrWht01.wav
+      48 = Misc\CRITTERS\JCrWht02.wav
+      49 = Misc\CRITTERS\JCrDth00.wav
+      50 = Misc\CRITTERS\LCrWht00.wav
+      51 = Misc\CRITTERS\LCrWht01.wav
+      52 = Misc\CRITTERS\LCrWht02.wav
+      53 = Misc\CRITTERS\LCrDth00.wav
+      54 = Misc\CRITTERS\BCrWht00.wav
+      55 = Misc\CRITTERS\BCrWht01.wav
+      56 = Misc\CRITTERS\BCrWht02.wav
+      57 = Misc\CRITTERS\BCrDth00.wav
+      58 = Bullet\PArFir00.wav
+      59 = Bullet\ZHyFir00.wav
+      60 = Bullet\ZHyHit00.wav
+      61 = Bullet\ZDrHit00.wav
+      62 = Bullet\LaserHit.wav
+      63 = Bullet\pshield.wav
+      64 = Bullet\SpoogHit.wav
+      65 = Bullet\BlastCan.wav
+      66 = Bullet\BlastGn2.wav
+      67 = Bullet\ZBGHit00.wav
+      68 = Bullet\TTaFir00.wav
+      69 = Bullet\TMaFir00.wav
+      70 = Bullet\TGoFir00.wav
+      71 = Bullet\ZGuFir00.wav
+      72 = Bullet\ZGuHit00.wav
+      73 = Bullet\LASERB.wav
+      74 = Bullet\TPhFi100.wav
+      75 = Bullet\LASRHIT1.wav
+      76 = Bullet\LASRHIT2.wav
+      77 = Bullet\LASRHIT3.wav
+      78 = Bullet\ZLuFir00.wav
+      79 = Bullet\ZLuHit00.wav
+      80 = Bullet\HKMISSLE.wav
+      81 = Bullet\TGoFi200.wav
+      82 = Bullet\TPhFi200.wav
+      83 = Bullet\TNsFir00.wav (1)
+      84 = Bullet\TNsFir00.wav (2)
+      85 = Bullet\TNsHit00.wav
+      86 = Bullet\PhoAtt00.wav
+      87 = Bullet\PhoHit00.wav
+      88 = Bullet\PSIBLADE.wav
+      89 = Bullet\PSIBOLT.wav
+      90 = Bullet\ZQuFir00.wav
+      91 = Bullet\ZQuHit00.wav
+      92 = Bullet\ZQuHit01.wav
+      93 = Bullet\ZQuHit02.wav
+      94 = Bullet\tscFir00.wav
+      95 = Bullet\SHOCKBMB.wav
+      96 = Bullet\TTaFi200.wav
+      97 = Bullet\SHCKLNCH.wav
+      98 = Bullet\TGhFir00.wav
+      99 = Bullet\DragBull.wav
+     100 = Bullet\psaHit00.wav
+     101 = Bullet\LaserB.wav
+     102 = Bullet\pTrFir00.wav
+     103 = Bullet\pTrFir01.wav
+     104 = Bullet\pzeFir00.wav
+     105 = Bullet\tbaFir00.wav
+     106 = Bullet\tvuFir00.wav
+     107 = Bullet\tvuHit00.wav
+     108 = Bullet\tvuHit01.wav
+     109 = Bullet\tvuHit02.wav
+     110 = Bullet\zdeAtt00.wav
+     111 = Bullet\UZeFir00.wav
+     112 = Bullet\UKiFir00.wav
+     113 = Bullet\zmuFir00.wav
+     114 = Misc\ZPwrDown.wav
+     115 = Misc\TPwrDown.wav
+     116 = Misc\PPwrDown.wav
+     117 = Zerg\Advisor\ZAdUpd00.WAV
+     118 = Terran\Advisor\TAdUpd00.WAV
+     119 = Protoss\Advisor\PAdUpd00.WAV
+     120 = Zerg\Advisor\ZAdUpd01.WAV
+     121 = Terran\Advisor\TAdUpd01.WAV
+     122 = Protoss\Advisor\PAdUpd01.WAV
+     123 = Zerg\Advisor\ZAdUpd02.WAV
+     124 = Terran\Advisor\TAdUpd02.WAV (1)
+     125 = Protoss\Advisor\PAdUpd02.WAV
+     126 = Terran\Advisor\TAdUpd03.WAV
+     127 = Zerg\Advisor\ZAdUpd04.WAV
+     128 = Terran\Advisor\TAdUpd04.WAV
+     129 = Protoss\Advisor\PAdUpd04.WAV
+     130 = Terran\Advisor\TAdUpd05.WAV
+     131 = Terran\Advisor\TAdUpd06.WAV
+     132 = Terran\Advisor\TAdUpd02.WAV (2)
+     133 = Protoss\Advisor\PAdUpd06.WAV
+     134 = Terran\Advisor\TAdUpd07.WAV
+     135 = Zerg\Bldg\ZChRdy00.WAV
+     136 = Terran\SCV\TSCUpd00.WAV
+     137 = Zerg\DRONE\ZDrErr00.WAV (1)
+     138 = Zerg\DRONE\ZDrErr00.WAV (2)
+     139 = Misc\Buzz.wav (2)
+     140 = Misc\PError.wav
+     141 = Misc\ZBldgPlc.wav (2)
+     142 = Terran\Advisor\tAdErr04.WAV [1]
+     143 = Terran\Advisor\tAdErr03.WAV (1)
+     144 = Terran\Advisor\tAdErr03.WAV (2)
+     145 = Terran\Advisor\tAdErr04.WAV [2]
+     146 = Zerg\Advisor\ZAdErr00.WAV (1)
+     147 = Zerg\Advisor\ZAdErr00.WAV (2)
+     148 = Terran\Advisor\tAdErr00.WAV
+     149 = Protoss\Advisor\PAdErr00.WAV
+     150 = Zerg\Advisor\ZAdErr01.WAV
+     151 = Terran\Advisor\tAdErr01.WAV
+     152 = Protoss\Advisor\PAdErr01.WAV
+     153 = Zerg\Advisor\ZAdErr02.WAV
+     154 = Terran\Advisor\tAdErr02.WAV
+     155 = Protoss\Advisor\PAdErr02.WAV
+     156 = Zerg\Advisor\ZAdErr06.WAV
+     157 = Terran\Advisor\tAdErr06.WAV
+     158 = Protoss\Advisor\PAdErr06.WAV
+     159 = Terran\SCV\TSCErr01.WAV
+     160 = Terran\Advisor\tAdErr04.WAV [3]
+     161 = Protoss\PROBE\PPrErr00.WAV
+     162 = Terran\SCV\TSCErr00.WAV
+     163 = Terran\Advisor\tAdErr04.WAV [4]
+     164 = Protoss\PROBE\PPrErr01.WAV
+     165 = glue\mousedown2.wav
+     166 = glue\mouseover.wav
+     167 = glue\bnetclick.wav
+     168 = glue\scorefill.wav
+     169 = glue\scorefillend.wav
+     170 = glue\countdown.wav
+     171 = glue\swishlock.wav
+     172 = glue\swishin.wav
+     173 = glue\swishout.wav
+     174 = Terran\SCV\TSCMin00.wav
+     175 = Terran\SCV\TSCMin01.wav
+     176 = Terran\BATTLE\tbardy00.wav
+     177 = Terran\BATTLE\tbaDth00.wav
+     178 = Terran\BATTLE\tBaYam01.wav
+     179 = Terran\BATTLE\tBaYam02.wav
+     180 = Terran\BATTLE\tbapss00.wav
+     181 = Terran\BATTLE\tbapss01.wav
+     182 = Terran\BATTLE\tbapss02.wav
+     183 = Terran\BATTLE\tbapss03.wav
+     184 = Terran\BATTLE\tbapss04.wav
+     185 = Terran\BATTLE\tbawht00.wav
+     186 = Terran\BATTLE\tbawht01.wav
+     187 = Terran\BATTLE\tbawht02.wav
+     188 = Terran\BATTLE\tbawht03.wav
+     189 = Terran\BATTLE\tbayes00.wav
+     190 = Terran\BATTLE\tbayes01.wav
+     191 = Terran\BATTLE\tbayes02.wav
+     192 = Terran\BATTLE\tbayes03.wav
+     193 = Terran\CIVILIAN\TCvPss00.WAV
+     194 = Terran\CIVILIAN\TCvPss01.WAV
+     195 = Terran\CIVILIAN\TCvPss02.WAV
+     196 = Terran\CIVILIAN\TCvPss03.WAV
+     197 = Terran\CIVILIAN\TCvPss04.WAV
+     198 = Terran\CIVILIAN\TCvWht00.WAV
+     199 = Terran\CIVILIAN\TCvWht01.WAV
+     200 = Terran\CIVILIAN\TCvWht02.WAV
+     201 = Terran\CIVILIAN\TCvWht03.WAV
+     202 = Terran\CIVILIAN\TCvYes00.WAV
+     203 = Terran\CIVILIAN\TCvYes01.WAV
+     204 = Terran\CIVILIAN\TCvYes02.WAV
+     205 = Terran\CIVILIAN\TCvYes03.WAV
+     206 = Terran\CIVILIAN\TCvYes04.WAV
+     207 = Terran\CIVILIAN\TCvDth00.WAV
+     208 = Terran\CIVILIAN\TCvRdy00.WAV
+     209 = Terran\DROPSHIP\TDrRdy00.wav
+     210 = Terran\DROPSHIP\TDrDth00.wav
+     211 = Terran\DROPSHIP\TDrPss00.wav
+     212 = Terran\DROPSHIP\TDrPss01.wav
+     213 = Terran\DROPSHIP\TDrPss02.wav
+     214 = Terran\DROPSHIP\TDrPss03.wav
+     215 = Terran\DROPSHIP\TDrWht00.wav
+     216 = Terran\DROPSHIP\TDrWht01.wav
+     217 = Terran\DROPSHIP\TDrWht02.wav
+     218 = Terran\DROPSHIP\TDrWht03.wav
+     219 = Terran\DROPSHIP\TDrYes00.wav
+     220 = Terran\DROPSHIP\TDrYes01.wav
+     221 = Terran\DROPSHIP\TDrYes02.wav
+     222 = Terran\DROPSHIP\TDrYes03.wav
+     223 = Terran\DROPSHIP\TDrYes04.wav
+     224 = Terran\DROPSHIP\TDrYes05.wav
+     225 = Terran\GHOST\TGhRdy00.wav
+     226 = Terran\GHOST\TGhPss00.wav
+     227 = Terran\GHOST\TGhPss01.wav
+     228 = Terran\GHOST\TGhPss02.wav
+     229 = Terran\GHOST\TGhPss03.wav
+     230 = Terran\GHOST\TGhWht00.wav
+     231 = Terran\GHOST\TGhWht01.wav
+     232 = Terran\GHOST\TGhWht02.wav
+     233 = Terran\GHOST\TGhWht03.wav
+     234 = Terran\GHOST\TGhYes00.wav
+     235 = Terran\GHOST\TGhYes01.wav
+     236 = Terran\GHOST\TGhYes02.wav
+     237 = Terran\GHOST\TGhYes03.wav
+     238 = Terran\GHOST\TGhDth00.wav
+     239 = Terran\GHOST\TGhLas00.wav
+     240 = Terran\GHOST\TGhLkd00.wav
+     241 = Terran\GOLIATH\TGoRdy00.wav
+     242 = Terran\GOLIATH\TGoPss00.wav
+     243 = Terran\GOLIATH\TGoPss01.WAV
+     244 = Terran\GOLIATH\TGoPss02.WAV
+     245 = Terran\GOLIATH\TGoPss03.WAV
+     246 = Terran\GOLIATH\TGoPss04.WAV
+     247 = Terran\GOLIATH\TGoPss05.WAV
+     248 = Terran\GOLIATH\TGoWht00.WAV
+     249 = Terran\GOLIATH\TGoWht01.WAV
+     250 = Terran\GOLIATH\TGoWht02.WAV
+     251 = Terran\GOLIATH\TGoWht03.WAV
+     252 = Terran\GOLIATH\TGoYes00.WAV
+     253 = Terran\GOLIATH\TGoYes01.WAV
+     254 = Terran\GOLIATH\TGoYes02.WAV
+     255 = Terran\GOLIATH\TGoYes03.WAV
+     256 = Terran\PHOENIX\TPhRdy00.WAV
+     257 = Terran\PHOENIX\TPhDth00.WAV
+     258 = Terran\PHOENIX\TPhPss00.WAV
+     259 = Terran\PHOENIX\TPhPss01.WAV
+     260 = Terran\PHOENIX\TPhPss02.WAV
+     261 = Terran\PHOENIX\TPhPss03.WAV
+     262 = Terran\PHOENIX\TPhPss04.WAV
+     263 = Terran\PHOENIX\TPhPss05.WAV
+     264 = Terran\PHOENIX\TPhPss06.WAV
+     265 = Terran\PHOENIX\TPhWht00.WAV
+     266 = Terran\PHOENIX\TPhWht01.WAV
+     267 = Terran\PHOENIX\TPhWht02.WAV
+     268 = Terran\PHOENIX\TPhWht03.WAV
+     269 = Terran\PHOENIX\TPhYes00.WAV
+     270 = Terran\PHOENIX\TPhYes01.WAV
+     271 = Terran\PHOENIX\TPhYes02.WAV
+     272 = Terran\PHOENIX\TPhYes03.WAV
+     273 = Terran\PHOENIX\TPhClo00.WAV
+     274 = Terran\PHOENIX\TPhClo01.WAV
+     275 = Terran\MARINE\TMaRdy00.WAV
+     276 = Terran\MARINE\TMaDth00.WAV
+     277 = Terran\MARINE\TMaDth01.WAV
+     278 = Terran\MARINE\TMaSti00.WAV
+     279 = Terran\MARINE\TMaSti01.WAV
+     280 = Terran\MARINE\TMaPss00.WAV
+     281 = Terran\MARINE\TMaPss01.WAV
+     282 = Terran\MARINE\TMaPss02.WAV
+     283 = Terran\MARINE\TMaPss03.WAV
+     284 = Terran\MARINE\TMaPss04.WAV
+     285 = Terran\MARINE\TMaPss05.WAV
+     286 = Terran\MARINE\TMaPss06.WAV
+     287 = Terran\MARINE\TMaWht00.WAV
+     288 = Terran\MARINE\TMaWht01.WAV
+     289 = Terran\MARINE\TMaWht02.WAV
+     290 = Terran\MARINE\TMaWht03.WAV
+     291 = Terran\MARINE\TMaYes00.WAV
+     292 = Terran\MARINE\TMaYes01.WAV
+     293 = Terran\MARINE\TMaYes02.WAV
+     294 = Terran\MARINE\TMaYes03.WAV
+     295 = Terran\Firebat\TFBRdy00.WAV
+     296 = Terran\Firebat\TFBDth00.WAV
+     297 = Terran\Firebat\TFBDth01.WAV
+     298 = Terran\Firebat\TFBDth02.WAV
+     299 = Terran\Firebat\TFBWht00.WAV
+     300 = Terran\Firebat\TFBWht01.WAV
+     301 = Terran\Firebat\TFBWht02.WAV
+     302 = Terran\Firebat\TFBWht03.WAV
+     303 = Terran\Firebat\TFBPss00.WAV
+     304 = Terran\Firebat\TFBPss01.WAV
+     305 = Terran\Firebat\TFBPss02.WAV
+     306 = Terran\Firebat\TFBPss03.WAV
+     307 = Terran\Firebat\TFBPss04.WAV
+     308 = Terran\Firebat\TFBPss05.WAV
+     309 = Terran\Firebat\TFBPss06.WAV
+     310 = Terran\Firebat\TFBYes00.WAV
+     311 = Terran\Firebat\TFBYes01.WAV
+     312 = Terran\Firebat\TFBYes02.WAV
+     313 = Terran\Firebat\TFBYes03.WAV
+     314 = Terran\Firebat\TFBFir00.WAV
+     315 = Terran\Firebat\TFBFir01.WAV
+     316 = Terran\TANK\TTaRdy00.WAV
+     317 = Terran\TANK\TTaDth00.WAV
+     318 = Terran\TANK\TTaTra00.WAV
+     319 = Terran\TANK\TTaTra01.WAV
+     320 = Terran\TANK\TTaPss00.WAV
+     321 = Terran\TANK\TTaPss01.WAV
+     322 = Terran\TANK\TTaPss02.WAV
+     323 = Terran\TANK\TTaPss03.WAV
+     324 = Terran\TANK\TTaWht00.WAV
+     325 = Terran\TANK\TTaWht01.WAV
+     326 = Terran\TANK\TTaWht02.WAV
+     327 = Terran\TANK\TTaWht03.WAV
+     328 = Terran\TANK\TTaYes00.WAV
+     329 = Terran\TANK\TTaYes01.WAV
+     330 = Terran\TANK\TTaYes02.WAV
+     331 = Terran\TANK\TTaYes03.WAV
+     332 = Terran\VESSEL\TVeRdy00.WAV
+     333 = Terran\VESSEL\TVePss00.WAV
+     334 = Terran\VESSEL\TVePss01.WAV
+     335 = Terran\VESSEL\TVePss02.WAV
+     336 = Terran\VESSEL\TVePss03.WAV
+     337 = Terran\VESSEL\TVePss04.WAV
+     338 = Terran\VESSEL\TVePss05.WAV
+     339 = Terran\VESSEL\TVePss06.WAV
+     340 = Terran\VESSEL\TVeWht00.WAV
+     341 = Terran\VESSEL\TVeWht01.WAV
+     342 = Terran\VESSEL\TVeWht02.WAV
+     343 = Terran\VESSEL\TVeWht03.WAV
+     344 = Terran\VESSEL\TVeYes00.WAV
+     345 = Terran\VESSEL\TVeYes01.WAV
+     346 = Terran\VESSEL\TVeYes02.WAV
+     347 = Terran\VESSEL\TVeYes03.WAV
+     348 = Terran\VESSEL\TVeDth00.WAV
+     349 = Terran\VESSEL\TVeDef00.WAV
+     350 = Terran\VESSEL\TVeEmp00.WAV
+     351 = Terran\VESSEL\TVeIrr00.WAV
+     352 = Terran\VULTURE\TVuRdy00.WAV
+     353 = Terran\VULTURE\TVuDth00.WAV
+     354 = Terran\VULTURE\TVuMin01.WAV
+     355 = Terran\VULTURE\TVuMin00.WAV
+     356 = Terran\VULTURE\TVuPss00.WAV
+     357 = Terran\VULTURE\TVuPss01.WAV
+     358 = Terran\VULTURE\TVuPss02.WAV
+     359 = Terran\VULTURE\TVuPss03.WAV
+     360 = Terran\VULTURE\TVuWht00.WAV
+     361 = Terran\VULTURE\TVuWht01.WAV
+     362 = Terran\VULTURE\TVuWht02.WAV
+     363 = Terran\VULTURE\TVuWht03.WAV
+     364 = Terran\VULTURE\TVuYes00.WAV
+     365 = Terran\VULTURE\TVuYes01.WAV
+     366 = Terran\VULTURE\TVuYes02.WAV
+     367 = Terran\VULTURE\TVuYes03.WAV
+     368 = Terran\SCV\TSCRdy00.WAV
+     369 = Terran\SCV\TSCDth00.WAV
+     370 = Terran\SCV\TSCPss00.WAV
+     371 = Terran\SCV\TSCPss01.WAV
+     372 = Terran\SCV\TSCPss02.WAV
+     373 = Terran\SCV\TSCPss03.WAV
+     374 = Terran\SCV\TSCPss04.WAV
+     375 = Terran\SCV\TSCPss05.WAV
+     376 = Terran\SCV\TSCPss06.WAV
+     377 = Terran\SCV\TSCWht00.WAV
+     378 = Terran\SCV\TSCWht01.WAV
+     379 = Terran\SCV\TSCWht02.WAV
+     380 = Terran\SCV\TSCWht03.WAV
+     381 = Terran\SCV\TSCYes00.WAV
+     382 = Terran\SCV\TSCYes01.WAV
+     383 = Terran\SCV\TSCYes02.WAV
+     384 = Terran\SCV\TSCYes03.WAV
+     385 = Terran\bldg\tacwht00.WAV
+     386 = Terran\bldg\tclwht00.WAV
+     387 = Terran\bldg\tcswht00.WAV
+     388 = Terran\bldg\tcsSca00.WAV
+     389 = Terran\bldg\tddwht00.WAV
+     390 = Terran\bldg\tglwht00.WAV
+     391 = Misc\UICWht00.wav
+     392 = Terran\bldg\tmswht00.WAV
+     393 = Terran\bldg\tmtwht00.WAV
+     394 = Misc\UNrWht00.wav
+     395 = Terran\bldg\tRlWht00.WAV
+     396 = Terran\bldg\tnswht00.WAV
+     397 = Terran\bldg\tpgwht00.WAV
+     398 = Terran\bldg\tplwht00.WAV
+     399 = Misc\button.wav
+     400 = Terran\bldg\trewht00.WAV
+     401 = Terran\bldg\trfwht00.WAV
+     402 = Terran\bldg\twpwht00.WAV
+     403 = Terran\bldg\OnFirLrg.wav
+     404 = Terran\SCV\TScTra00.WAV
+     405 = Terran\RAYNORM\URaDth00.WAV
+     406 = Terran\RAYNORM\URaDth01.WAV
+     407 = Terran\RAYNORM\URaPss00.WAV
+     408 = Terran\RAYNORM\URaPss01.WAV
+     409 = Terran\RAYNORM\URaPss02.WAV
+     410 = Terran\RAYNORM\URaPss03.WAV
+     411 = Terran\RAYNORM\URaWht00.WAV
+     412 = Terran\RAYNORM\URaWht01.WAV
+     413 = Terran\RAYNORM\URaWht02.WAV
+     414 = Terran\RAYNORM\URaWht03.WAV
+     415 = Terran\RAYNORM\URaYes00.WAV
+     416 = Terran\RAYNORM\URaYes01.WAV
+     417 = Terran\RAYNORM\URaYes02.WAV
+     418 = Terran\RAYNORM\URaYes03.WAV
+     419 = Terran\RAYNORV\URVPss00.WAV
+     420 = Terran\RAYNORV\URVPss01.WAV
+     421 = Terran\RAYNORV\URVPss02.WAV
+     422 = Terran\RAYNORV\URVPss03.WAV
+     423 = Terran\RAYNORV\URVWht00.WAV
+     424 = Terran\RAYNORV\URVWht01.WAV
+     425 = Terran\RAYNORV\URVWht02.WAV
+     426 = Terran\RAYNORV\URVWht03.WAV
+     427 = Terran\RAYNORV\URVYes00.WAV
+     428 = Terran\RAYNORV\URVYes01.WAV
+     429 = Terran\RAYNORV\URVYes02.WAV
+     430 = Terran\RAYNORV\URVYes03.WAV
+     431 = Terran\DUKET\UDTPss00.WAV
+     432 = Terran\DUKET\UDTPss01.WAV
+     433 = Terran\DUKET\UDTPss02.WAV
+     434 = Terran\DUKET\UDTPss03.WAV
+     435 = Terran\DUKET\UDTPss04.WAV
+     436 = Terran\DUKET\UDTWht00.WAV
+     437 = Terran\DUKET\UDTWht01.WAV
+     438 = Terran\DUKET\UDTWht02.WAV
+     439 = Terran\DUKET\UDTWht03.WAV
+     440 = Terran\DUKET\UDTYes00.WAV
+     441 = Terran\DUKET\UDTYes01.WAV
+     442 = Terran\DUKET\UDTYes02.WAV
+     443 = Terran\DUKET\UDTYes03.WAV
+     444 = Terran\DUKEB\UDupss00.wav
+     445 = Terran\DUKEB\UDupss01.wav
+     446 = Terran\DUKEB\UDupss02.wav
+     447 = Terran\DUKEB\UDupss03.wav
+     448 = Terran\DUKEB\UDupss04.wav
+     449 = Terran\DUKEB\UDuwht00.wav
+     450 = Terran\DUKEB\UDuwht01.wav
+     451 = Terran\DUKEB\UDuwht02.wav
+     452 = Terran\DUKEB\UDuwht03.wav
+     453 = Terran\DUKEB\UDuyes00.wav
+     454 = Terran\DUKEB\UDuyes01.wav
+     455 = Terran\DUKEB\UDuyes02.wav
+     456 = Terran\DUKEB\UDuyes03.wav
+     457 = Terran\KERRIGAN\UKePss00.wav
+     458 = Terran\KERRIGAN\UKePss01.wav
+     459 = Terran\KERRIGAN\UKePss02.wav
+     460 = Terran\KERRIGAN\UKePss03.wav
+     461 = Terran\KERRIGAN\UKePss04.wav
+     462 = Terran\KERRIGAN\UKeWht00.wav
+     463 = Terran\KERRIGAN\UKeWht01.wav
+     464 = Terran\KERRIGAN\UKeWht02.wav
+     465 = Terran\KERRIGAN\UKeWht03.wav
+     466 = Terran\KERRIGAN\UKeYes00.wav
+     467 = Terran\KERRIGAN\UKeYes01.wav
+     468 = Terran\KERRIGAN\UKeYes02.wav
+     469 = Terran\KERRIGAN\UKeYes03.wav
+     470 = Terran\KERRIGAN\UKeDth00.wav
+     471 = Misc\LiftOff.WAV
+     472 = Misc\Land.WAV
+     473 = Protoss\Bldg\pAcWht00.WAV
+     474 = Protoss\Bldg\pAsWht00.WAV
+     475 = Protoss\Bldg\pBaWht00.WAV
+     476 = Protoss\Bldg\pBeWht00.WAV
+     477 = Protoss\Bldg\pCiWht00.WAV
+     478 = Protoss\Bldg\pFoWht00.WAV
+     479 = Protoss\Bldg\pGaWht00.WAV
+     480 = Protoss\Bldg\pGcWht00.WAV
+     481 = Protoss\Bldg\PbaAct00.wav
+     482 = Misc\Button.WAV
+     483 = Protoss\Bldg\pNaWht00.WAV (1)
+     484 = Protoss\Bldg\pNeWht00.WAV
+     485 = Protoss\Bldg\pPBWht00.WAV
+     486 = Misc\UTmWht00.WAV
+     487 = Protoss\Bldg\pPyWht00.WAV
+     488 = Protoss\Bldg\pRoWht00.WAV
+     489 = Misc\UPiWht00.WAV
+     490 = Protoss\Bldg\PTrWht00.WAV
+     491 = Protoss\Bldg\pWaWht00.WAV
+     492 = Protoss\DRAGOON\PDrRdy00.WAV
+     493 = Protoss\DRAGOON\PDrDth00.WAV
+     494 = Protoss\DRAGOON\PDrPss00.WAV
+     495 = Protoss\DRAGOON\PDrPss01.WAV
+     496 = Protoss\DRAGOON\PDrPss02.WAV
+     497 = Protoss\DRAGOON\PDrPss03.WAV
+     498 = Protoss\DRAGOON\PDrWht00.WAV
+     499 = Protoss\DRAGOON\PDrWht01.WAV
+     500 = Protoss\DRAGOON\PDrWht02.WAV
+     501 = Protoss\DRAGOON\PDrWht03.WAV
+     502 = Protoss\DRAGOON\PDrWht04.WAV
+     503 = Protoss\DRAGOON\PDrWht05.WAV
+     504 = Protoss\DRAGOON\PDrWht06.WAV
+     505 = Protoss\DRAGOON\PDrWht07.WAV
+     506 = Protoss\DRAGOON\PDrYes00.WAV
+     507 = Protoss\DRAGOON\PDrYes01.WAV
+     508 = Protoss\DRAGOON\PDrYes02.WAV
+     509 = Protoss\DRAGOON\PDrYes03.WAV
+     510 = Protoss\DRAGOON\PDrYes04.WAV
+     511 = Protoss\DRAGOON\PDrYes05.WAV
+     512 = Protoss\DRAGOON\PDrYes06.WAV
+     513 = Protoss\SHUTTLE\PShRdy00.WAV
+     514 = Protoss\SHUTTLE\PShDth00.WAV
+     515 = Protoss\SHUTTLE\PShPss00.WAV
+     516 = Protoss\SHUTTLE\PShPss01.WAV
+     517 = Protoss\SHUTTLE\PShPss02.WAV
+     518 = Protoss\SHUTTLE\PShPss03.WAV
+     519 = Protoss\SHUTTLE\PShPss04.WAV
+     520 = Protoss\SHUTTLE\PShWht00.WAV
+     521 = Protoss\SHUTTLE\PShWht01.WAV
+     522 = Protoss\SHUTTLE\PShWht02.WAV
+     523 = Protoss\SHUTTLE\PShWht03.WAV
+     524 = Protoss\SHUTTLE\PShYes00.WAV
+     525 = Protoss\SHUTTLE\PShYes01.WAV
+     526 = Protoss\SHUTTLE\PShYes02.WAV
+     527 = Protoss\SHUTTLE\PShYes03.WAV
+     528 = Protoss\SHUTTLE\pshBld00.wav
+     529 = Protoss\SHUTTLE\pshBld03.wav
+     530 = Protoss\SHUTTLE\pshBld01.wav
+     531 = Protoss\SHUTTLE\pshBld02.wav
+     532 = Protoss\SHUTTLE\pshBld04.wav
+     533 = Protoss\Scout\PScDth00.WAV
+     534 = Protoss\SCOUT\PScRdy00.WAV
+     535 = Protoss\Scout\PScPss00.WAV
+     536 = Protoss\Scout\PScPss01.WAV
+     537 = Protoss\Scout\PScPss02.WAV
+     538 = Protoss\Scout\PScPss03.WAV
+     539 = Protoss\Scout\PScPss04.WAV
+     540 = Protoss\Scout\PScWht00.WAV
+     541 = Protoss\Scout\PScWht01.WAV
+     542 = Protoss\Scout\PScWht02.WAV
+     543 = Protoss\Scout\PScWht03.WAV
+     544 = Protoss\Scout\PScYes00.WAV
+     545 = Protoss\Scout\PScYes01.WAV
+     546 = Protoss\Scout\PScYes02.WAV
+     547 = Protoss\Scout\PScYes03.WAV
+     548 = Protoss\ARBITER\PAbCag00.WAV
+     549 = Protoss\ARBITER\PAbRdy00.WAV
+     550 = Protoss\ARBITER\PAbFol00.WAV
+     551 = Protoss\ARBITER\PAbFol01.WAV
+     552 = Protoss\ARBITER\PAbFol02.WAV
+     553 = Protoss\ARBITER\PAbFol03.WAV
+     554 = Protoss\ARBITER\PAbPss00.WAV
+     555 = Protoss\ARBITER\PAbPss01.WAV
+     556 = Protoss\ARBITER\PAbPss02.WAV
+     557 = Protoss\ARBITER\PAbPss03.WAV
+     558 = Protoss\ARBITER\PAbPss04.WAV
+     559 = Protoss\ARBITER\PAbWht00.WAV
+     560 = Protoss\ARBITER\PAbWht01.WAV
+     561 = Protoss\ARBITER\PAbWht02.WAV
+     562 = Protoss\ARBITER\PAbWht03.WAV
+     563 = Protoss\ARBITER\PAbYes00.WAV
+     564 = Protoss\ARBITER\PAbYes01.WAV
+     565 = Protoss\ARBITER\PAbYes02.WAV
+     566 = Protoss\ARBITER\PAbDth00.WAV
+     567 = Protoss\ARCHON\PArRdy00.WAV
+     568 = Protoss\ARCHON\PArMin00.WAV
+     569 = Protoss\ARCHON\PArPss00.WAV
+     570 = Protoss\ARCHON\PArPss01.WAV
+     571 = Protoss\ARCHON\PArPss02.WAV
+     572 = Protoss\ARCHON\PArPss03.WAV
+     573 = Protoss\ARCHON\PArWht00.WAV
+     574 = Protoss\ARCHON\PArWht01.WAV
+     575 = Protoss\ARCHON\PArWht02.WAV
+     576 = Protoss\ARCHON\PArWht03.WAV
+     577 = Protoss\ARCHON\PArYes00.WAV
+     578 = Protoss\ARCHON\PArYes01.WAV
+     579 = Protoss\ARCHON\PArYes02.WAV
+     580 = Protoss\ARCHON\PArYes03.WAV
+     581 = Protoss\ARCHON\PArDth00.WAV
+     582 = Protoss\CARRIER\PCaRdy00.WAV
+     583 = Protoss\Carrier\PCaPss00.WAV
+     584 = Protoss\Carrier\PCaPss01.WAV
+     585 = Protoss\Carrier\PCaPss02.WAV
+     586 = Protoss\Carrier\PCaPss03.WAV
+     587 = Protoss\Carrier\PCaWht00.WAV
+     588 = Protoss\Carrier\PCaWht01.WAV
+     589 = Protoss\Carrier\PCaWht02.WAV
+     590 = Protoss\Carrier\PCaWht03.WAV
+     591 = Protoss\Carrier\PCaYes00.WAV
+     592 = Protoss\Carrier\PCaYes01.WAV
+     593 = Protoss\Carrier\PCaYes02.WAV
+     594 = Protoss\Carrier\PCaYes03.WAV
+     595 = Protoss\Carrier\PCaDth00.WAV
+     596 = Protoss\Carrier\PCaDth01.WAV
+     597 = Protoss\PROBE\PPrRdy00.WAV
+     598 = Protoss\PROBE\PPrDth00.WAV
+     599 = Protoss\PROBE\PPrAtt00.WAV
+     600 = Protoss\PROBE\PPrAtt01.WAV
+     601 = Protoss\PROBE\PPrMin00.WAV
+     602 = Protoss\PROBE\PPrPss00.WAV (1)
+     603 = Protoss\PROBE\PPrPss01.WAV
+     604 = Protoss\PROBE\PPrPss02.WAV
+     605 = Protoss\PROBE\PPrPss03.WAV
+     606 = Protoss\PROBE\PPrWht00.WAV
+     607 = Protoss\PROBE\PPrWht01.WAV
+     608 = Protoss\PROBE\PPrWht02.WAV
+     609 = Protoss\PROBE\PPrWht03.WAV
+     610 = Protoss\PROBE\PPrYes00.WAV
+     611 = Protoss\PROBE\PPrYes01.WAV
+     612 = Protoss\PROBE\PPrYes02.WAV
+     613 = Protoss\PROBE\PPrYes03.WAV
+     614 = Protoss\INTERCEP\PInLau00.WAV
+     615 = Protoss\PROBE\PPrPss00.WAV (2)
+     616 = Protoss\TEMPLAR\PTeSum00.WAV (1)
+     617 = Protoss\TEMPLAR\PTeSum00.WAV (2)
+     618 = Protoss\TEMPLAR\PTeHal00.WAV
+     619 = Protoss\TEMPLAR\PTeHal01.WAV
+     620 = Protoss\TEMPLAR\PTeSto00.WAV
+     621 = Protoss\TEMPLAR\PTeSto01.WAV
+     622 = Protoss\TEMPLAR\PTeRdy00.WAV
+     623 = Protoss\TEMPLAR\PTePss00.WAV
+     624 = Protoss\TEMPLAR\PTePss01.WAV
+     625 = Protoss\TEMPLAR\PTePss02.WAV
+     626 = Protoss\TEMPLAR\PTePss03.WAV
+     627 = Protoss\TEMPLAR\PTeWht00.WAV
+     628 = Protoss\TEMPLAR\PTeWht01.WAV
+     629 = Protoss\TEMPLAR\PTeWht02.WAV
+     630 = Protoss\TEMPLAR\PTeWht03.WAV
+     631 = Protoss\TEMPLAR\PTeYes00.WAV
+     632 = Protoss\TEMPLAR\PTeYes01.WAV
+     633 = Protoss\TEMPLAR\PTeYes02.WAV
+     634 = Protoss\TEMPLAR\PTeYes03.WAV
+     635 = Protoss\TEMPLAR\PTeDth00.WAV
+     636 = Protoss\TEMPLAR\PTeMov00.WAV
+     637 = Protoss\TRILOBYTE\PTrRdy00.WAV
+     638 = Protoss\TRILOBYTE\PTrDth00.WAV
+     639 = Protoss\TRILOBYTE\PTrPss00.WAV
+     640 = Protoss\TRILOBYTE\PTrPss01.WAV
+     641 = Protoss\TRILOBYTE\PTrPss02.WAV
+     642 = Protoss\TRILOBYTE\PTrWht00.WAV
+     643 = Protoss\TRILOBYTE\PTrWht01.WAV
+     644 = Protoss\TRILOBYTE\PTrWht02.WAV
+     645 = Protoss\TRILOBYTE\PTrWht03.WAV
+     646 = Protoss\TRILOBYTE\PTrYes00.WAV
+     647 = Protoss\TRILOBYTE\PTrYes01.WAV
+     648 = Protoss\TRILOBYTE\PTrYes02.WAV
+     649 = Protoss\TRILOBYTE\PTrYes03.WAV
+     650 = Protoss\Witness\PWiRdy00.WAV
+     651 = Protoss\Witness\PWiDth00.WAV
+     652 = Protoss\Witness\PWiDth01.WAV
+     653 = Protoss\Witness\PWiPss00.WAV
+     654 = Protoss\Witness\PWiPss01.WAV
+     655 = Protoss\Witness\PWiPss02.WAV
+     656 = Protoss\Witness\PWiPss03.WAV
+     657 = Protoss\Witness\PWiPss04.WAV
+     658 = Protoss\Witness\PWiWht00.WAV
+     659 = Protoss\Witness\PWiWht01.WAV
+     660 = Protoss\Witness\PWiYes00.WAV
+     661 = Protoss\Witness\PWiYes01.WAV
+     662 = Protoss\ZEALOT\pzeAtt00.WAV
+     663 = Protoss\ZEALOT\pzeAtt01.WAV
+     664 = Protoss\ZEALOT\pzeHit00.WAV
+     665 = Protoss\ZEALOT\PZeRag00.wav
+     666 = Protoss\ZEALOT\PZeRdy00.WAV
+     667 = Protoss\ZEALOT\PZePss00.WAV
+     668 = Protoss\ZEALOT\PZePss01.WAV
+     669 = Protoss\ZEALOT\PZePss02.WAV
+     670 = Protoss\ZEALOT\PZeWht00.WAV
+     671 = Protoss\ZEALOT\PZeWht01.WAV
+     672 = Protoss\ZEALOT\PZeWht02.WAV
+     673 = Protoss\ZEALOT\PZeWht03.WAV
+     674 = Protoss\ZEALOT\PZeYes00.WAV
+     675 = Protoss\ZEALOT\PZeYes01.WAV
+     676 = Protoss\ZEALOT\PZeYes02.WAV
+     677 = Protoss\ZEALOT\PZeYes03.WAV
+     678 = Protoss\ZEALOT\PZeDth00.WAV
+     679 = Protoss\FENIXD\UFdPss00.WAV
+     680 = Protoss\FENIXD\UFdPss01.WAV
+     681 = Protoss\FENIXD\UFdPss02.WAV
+     682 = Protoss\FENIXD\UFdPss03.WAV
+     683 = Protoss\FENIXD\UFdWht00.WAV
+     684 = Protoss\FENIXD\UFdWht01.WAV
+     685 = Protoss\FENIXD\UFdWht02.WAV
+     686 = Protoss\FENIXD\UFdWht03.WAV
+     687 = Protoss\FENIXD\UFdYes00.WAV
+     688 = Protoss\FENIXD\UFdYes01.WAV
+     689 = Protoss\FENIXD\UFdYes02.WAV
+     690 = Protoss\FENIXD\UFdYes03.WAV
+     691 = Protoss\FENIXZ\UFePss00.WAV
+     692 = Protoss\FENIXZ\UFePss01.WAV
+     693 = Protoss\FENIXZ\UFePss02.WAV
+     694 = Protoss\FENIXZ\UFePss03.WAV
+     695 = Protoss\FENIXZ\UFeWht00.WAV
+     696 = Protoss\FENIXZ\UFeWht01.WAV
+     697 = Protoss\FENIXZ\UFeWht02.WAV
+     698 = Protoss\FENIXZ\UFeWht03.WAV
+     699 = Protoss\FENIXZ\UFeYes00.WAV
+     700 = Protoss\FENIXZ\UFeYes01.WAV
+     701 = Protoss\FENIXZ\UFeYes02.WAV
+     702 = Protoss\FENIXZ\UFeYes03.WAV
+     703 = Protoss\GANTRITHOR\UTCPss00.WAV
+     704 = Protoss\GANTRITHOR\UTCPss01.WAV
+     705 = Protoss\GANTRITHOR\UTCPss02.WAV
+     706 = Protoss\GANTRITHOR\UTCPss03.WAV
+     707 = Protoss\GANTRITHOR\UTCWht00.WAV
+     708 = Protoss\GANTRITHOR\UTCWht01.WAV
+     709 = Protoss\GANTRITHOR\UTCWht02.WAV
+     710 = Protoss\GANTRITHOR\UTCWht03.WAV
+     711 = Protoss\GANTRITHOR\UTCYes00.WAV
+     712 = Protoss\GANTRITHOR\UTCYes01.WAV
+     713 = Protoss\GANTRITHOR\UTCYes02.WAV
+     714 = Protoss\GANTRITHOR\UTCYes03.WAV
+     715 = Protoss\TASSADAR\UTaPss00.WAV
+     716 = Protoss\TASSADAR\UTaPss01.WAV
+     717 = Protoss\TASSADAR\UTaPss02.WAV
+     718 = Protoss\TASSADAR\UTaPss03.WAV
+     719 = Protoss\TASSADAR\UTaWht00.WAV
+     720 = Protoss\TASSADAR\UTaWht01.WAV
+     721 = Protoss\TASSADAR\UTaWht02.WAV
+     722 = Protoss\TASSADAR\UTaWht03.WAV
+     723 = Protoss\TASSADAR\UTaYes00.WAV
+     724 = Protoss\TASSADAR\UTaYes01.WAV
+     725 = Protoss\TASSADAR\UTaYes02.WAV
+     726 = Protoss\TASSADAR\UTaYes03.WAV
+     727 = Protoss\TASSADAR\UTaDth00.WAV
+     728 = Protoss\DARKTEMPLAR\PDTRdy00.WAV
+     729 = Protoss\DARKTEMPLAR\PDTPss00.WAV
+     730 = Protoss\DARKTEMPLAR\PDTPss01.WAV
+     731 = Protoss\DARKTEMPLAR\PDTPss02.WAV
+     732 = Protoss\DARKTEMPLAR\PDTPss03.WAV
+     733 = Protoss\DARKTEMPLAR\PDTWht00.WAV
+     734 = Protoss\DARKTEMPLAR\PDTWht01.WAV
+     735 = Protoss\DARKTEMPLAR\PDTWht02.WAV
+     736 = Protoss\DARKTEMPLAR\PDTWht03.WAV
+     737 = Protoss\DARKTEMPLAR\PDTYes00.WAV
+     738 = Protoss\DARKTEMPLAR\PDTYes01.WAV
+     739 = Protoss\DARKTEMPLAR\PDTYes02.WAV
+     740 = Protoss\DARKTEMPLAR\PDTYes03.WAV
+     741 = Protoss\DARKTEMPLAR\PDTDth00.WAV
+     742 = Protoss\ZERATUL\UZePss00.WAV
+     743 = Protoss\ZERATUL\UZePss01.WAV
+     744 = Protoss\ZERATUL\UZePss02.WAV
+     745 = Protoss\ZERATUL\UZePss03.WAV
+     746 = Protoss\ZERATUL\UZeWht00.WAV
+     747 = Protoss\ZERATUL\UZeWht01.WAV
+     748 = Protoss\ZERATUL\UZeWht02.WAV
+     749 = Protoss\ZERATUL\UZeWht03.WAV
+     750 = Protoss\ZERATUL\UZeYes00.WAV
+     751 = Protoss\ZERATUL\UZeYes01.WAV
+     752 = Protoss\ZERATUL\UZeYes02.WAV
+     753 = Protoss\ZERATUL\UZeYes03.WAV
+     754 = Protoss\ZERATUL\UZeDth00.WAV
+     755 = Zerg\Bldg\ZChWht00.WAV
+     756 = Zerg\Bldg\ZCbWht00.WAV
+     757 = Zerg\Bldg\ZEvWht00.WAV
+     758 = Zerg\Bldg\ZFcWht00.WAV
+     759 = Zerg\Bldg\ZHaWht00.WAV
+     760 = Zerg\Bldg\ZHiWht00.WAV
+     761 = Zerg\Bldg\ZIgWht00.WAV
+     762 = Zerg\Bldg\ZLrWht00.WAV
+     763 = Zerg\Bldg\ZLuWht00.WAV
+     764 = Zerg\Bldg\ZMcWht00.WAV
+     765 = Protoss\Bldg\pNaWht00.WAV (2)
+     766 = Zerg\Bldg\ZMhWht00.WAV
+     767 = Zerg\Bldg\ZNeWht00.WAV
+     768 = Zerg\Bldg\ZNyWht00.WAV
+     769 = Zerg\Bldg\ZO1Wht00.WAV
+     770 = Zerg\Bldg\ZRcWht00.WAV
+     771 = Zerg\Bldg\ZSbWht00.WAV
+     772 = Zerg\Bldg\ZScWht00.WAV
+     773 = Zerg\Bldg\ZSpWht00.WAV
+     774 = Zerg\Bldg\ZBldgDth.WAV
+     775 = Zerg\AVENGER\ZAvRdy00.WAV
+     776 = Zerg\AVENGER\ZAvDth00.WAV
+     777 = Zerg\AVENGER\ZAvAtt00.WAV
+     778 = Zerg\AVENGER\ZAvHit00.WAV
+     779 = Zerg\AVENGER\ZAvPss00.WAV
+     780 = Zerg\AVENGER\ZAvPss01.WAV
+     781 = Zerg\AVENGER\ZAvWht00.WAV
+     782 = Zerg\AVENGER\ZAvWht01.WAV
+     783 = Zerg\AVENGER\ZAvYes00.WAV
+     784 = Zerg\AVENGER\ZAvYes01.WAV
+     785 = Zerg\BROODLING\ZBrDth00.WAV
+     786 = Zerg\BROODLING\ZBrAtt00.WAV
+     787 = Zerg\BROODLING\ZBrRdy00.WAV
+     788 = Zerg\BROODLING\ZBrPss00.WAV
+     789 = Zerg\BROODLING\ZBrPss01.WAV
+     790 = Zerg\BROODLING\ZBrPss02.WAV
+     791 = Zerg\BROODLING\ZBrPss03.WAV
+     792 = Zerg\BROODLING\ZBrWht00.WAV
+     793 = Zerg\BROODLING\ZBrWht01.WAV
+     794 = Zerg\BROODLING\ZBrWht02.WAV
+     795 = Zerg\BROODLING\ZBrWht03.WAV
+     796 = Zerg\BROODLING\ZBrYes00.WAV
+     797 = Zerg\BROODLING\ZBrYes01.WAV
+     798 = Zerg\BROODLING\ZBrYes02.WAV
+     799 = Zerg\BUGGUY\ZBGRdy00.wav (1)
+     800 = Zerg\BUGGUY\ZBGRdy00.wav (2)
+     801 = Zerg\BUGGUY\ZBGPss00.wav
+     802 = Zerg\BUGGUY\ZBGPss01.wav
+     803 = Zerg\BUGGUY\ZBGPss02.wav
+     804 = Zerg\BUGGUY\ZBGPss03.wav
+     805 = Zerg\BUGGUY\ZBGWht00.wav
+     806 = Zerg\BUGGUY\ZBGWht01.wav
+     807 = Zerg\BUGGUY\ZBGWht02.wav
+     808 = Zerg\BUGGUY\ZBGWht03.wav
+     809 = Zerg\BUGGUY\ZBGYes00.wav
+     810 = Zerg\BUGGUY\ZBGYes01.wav
+     811 = Zerg\BUGGUY\ZBGYes02.wav
+     812 = Zerg\BUGGUY\ZBGYes03.wav
+     813 = Zerg\DEFILER\ZDeCon00.WAV
+     814 = Zerg\DEFILER\ZDeRdy00.WAV
+     815 = Zerg\DEFILER\ZDeDth00.WAV
+     816 = Zerg\DEFILER\ZDeBlo00.WAV
+     817 = Zerg\DEFILER\ZDeBlo01.WAV
+     818 = Zerg\DEFILER\ZDePss00.WAV
+     819 = Zerg\DEFILER\ZDePss01.WAV
+     820 = Zerg\DEFILER\ZDePss02.WAV
+     821 = Zerg\DEFILER\ZDeWht00.WAV
+     822 = Zerg\DEFILER\ZDeWht01.WAV
+     823 = Zerg\DEFILER\ZDeWht02.WAV
+     824 = Zerg\DEFILER\ZDeYes00.WAV
+     825 = Zerg\DEFILER\ZDeYes01.WAV
+     826 = Zerg\DEFILER\ZDeYes02.WAV
+     827 = Zerg\Egg\ZEgRdy00.WAV
+     828 = Zerg\Egg\ZEgWht00.WAV
+     829 = Zerg\Egg\ZEgWht01.WAV
+     830 = Zerg\Egg\ZEgDth00.WAV
+     831 = Zerg\Egg\ZEgPss00.WAV
+     832 = Zerg\DRONE\ZDrRdy00.WAV
+     833 = Zerg\DRONE\ZDrDth00.WAV
+     834 = Zerg\DRONE\ZDrPss00.WAV
+     835 = Zerg\DRONE\ZDrPss01.WAV
+     836 = Zerg\DRONE\ZDrPss02.WAV
+     837 = Zerg\DRONE\ZDrWht00.WAV
+     838 = Zerg\DRONE\ZDrWht01.WAV
+     839 = Zerg\DRONE\ZDrWht02.WAV
+     840 = Zerg\DRONE\ZDrWht03.WAV
+     841 = Zerg\DRONE\ZDrWht04.WAV
+     842 = Zerg\DRONE\ZDrYes00.WAV
+     843 = Zerg\DRONE\ZDrYes01.WAV
+     844 = Zerg\DRONE\ZDrYes02.WAV
+     845 = Zerg\DRONE\ZDrYes03.WAV
+     846 = Zerg\DRONE\ZDrYes04.WAV
+     847 = Zerg\DRONE\ZDrMin00.wav
+     848 = Zerg\Larva\ZLaDth00.WAV
+     849 = Terran\Advisor\tAdErr04.WAV [5]
+     850 = Zerg\Larva\ZLaPss00.WAV
+     851 = Zerg\Larva\ZLaWht00.WAV
+     852 = Zerg\Guardian\ZGuDth00.WAV
+     853 = Zerg\Guardian\ZGuPss00.WAV
+     854 = Zerg\Guardian\ZGuPss01.WAV
+     855 = Zerg\Guardian\ZGuPss02.WAV
+     856 = Zerg\Guardian\ZGuPss03.WAV
+     857 = Zerg\Guardian\ZGuRdy00.WAV
+     858 = Zerg\Guardian\ZGuWht00.WAV
+     859 = Zerg\Guardian\ZGuWht01.WAV
+     860 = Zerg\Guardian\ZGuWht02.WAV
+     861 = Zerg\Guardian\ZGuWht03.WAV
+     862 = Zerg\Guardian\ZGuYes00.WAV
+     863 = Zerg\Guardian\ZGuYes01.WAV
+     864 = Zerg\Guardian\ZGuYes02.WAV
+     865 = Zerg\Guardian\ZGuYes03.WAV
+     866 = Zerg\Hydra\ZHyRdy00.WAV
+     867 = Zerg\Hydra\ZHyDth00.WAV
+     868 = Zerg\Hydra\ZHyPss00.WAV
+     869 = Zerg\Hydra\ZHyPss01.WAV
+     870 = Zerg\Hydra\ZHyWht00.WAV
+     871 = Zerg\Hydra\ZHyWht01.WAV
+     872 = Zerg\Hydra\ZHyWht02.WAV
+     873 = Zerg\Hydra\ZHyYes00.WAV
+     874 = Zerg\Hydra\ZHyYes01.WAV
+     875 = Zerg\Hydra\ZHyYes02.WAV
+     876 = Zerg\Hydra\ZHyYes03.WAV
+     877 = Zerg\Ultra\ZUlRor00.WAV
+     878 = Zerg\Ultra\ZUlDth00.WAV
+     879 = Zerg\Ultra\ZUlPss00.WAV
+     880 = Zerg\Ultra\ZUlPss01.WAV
+     881 = Zerg\Ultra\ZUlPss02.WAV
+     882 = Zerg\Ultra\ZUlRdy00.WAV
+     883 = Zerg\Ultra\ZUlWht00.WAV
+     884 = Zerg\Ultra\ZUlWht01.WAV
+     885 = Zerg\Ultra\ZUlWht02.WAV
+     886 = Zerg\Ultra\ZUlWht03.WAV
+     887 = Zerg\Ultra\ZUlYes00.WAV
+     888 = Zerg\Ultra\ZUlYes01.WAV
+     889 = Zerg\Ultra\ZUlYes02.WAV
+     890 = Zerg\Ultra\ZUlYes03.WAV
+     891 = Zerg\Ultra\zulAtt00.WAV
+     892 = Zerg\Ultra\zulAtt01.WAV
+     893 = Zerg\Ultra\zulAtt02.WAV
+     894 = Zerg\Ultra\zulHit00.WAV
+     895 = Zerg\Ultra\zulHit01.WAV
+     896 = Zerg\Zergling\ZZeDth00.WAV
+     897 = Zerg\Zergling\ZZePss00.WAV
+     898 = Zerg\Zergling\ZZePss01.WAV
+     899 = Zerg\Zergling\ZZePss02.WAV
+     900 = Zerg\Zergling\ZZeRdy00.WAV
+     901 = Zerg\Zergling\ZZeWht00.WAV
+     902 = Zerg\Zergling\ZZeWht01.WAV
+     903 = Zerg\Zergling\ZZeWht02.WAV
+     904 = Zerg\Zergling\ZZeWht03.WAV
+     905 = Zerg\Zergling\ZZeYes00.WAV
+     906 = Zerg\Zergling\ZZeYes01.WAV
+     907 = Zerg\Zergling\ZZeYes02.WAV
+     908 = Zerg\Zergling\ZZeYes03.WAV
+     909 = Zerg\OVERLORD\ZOvRdy00.WAV
+     910 = Zerg\OVERLORD\ZOvDth00.WAV
+     911 = Zerg\OVERLORD\ZOvPss00.WAV
+     912 = Zerg\OVERLORD\ZOvWht00.WAV
+     913 = Zerg\OVERLORD\ZOvWht01.WAV
+     914 = Zerg\OVERLORD\ZOvWht02.WAV
+     915 = Zerg\OVERLORD\ZOvWht03.WAV
+     916 = Zerg\OVERLORD\ZOvYes00.WAV
+     917 = Zerg\OVERLORD\ZOvYes01.WAV
+     918 = Zerg\OVERLORD\ZOvYes02.WAV
+     919 = Zerg\OVERLORD\ZOvYes03.WAV
+     920 = Zerg\Queen\ZQuTag00.WAV
+     921 = Zerg\Queen\ZQuTag01.WAV
+     922 = Zerg\Queen\ZQuSwm00.WAV
+     923 = Zerg\Queen\ZQuSwm01.WAV
+     924 = Zerg\Queen\ZQuEns00.WAV
+     925 = Zerg\Queen\ZQuDth00.WAV
+     926 = Zerg\Queen\ZQuDth01.WAV
+     927 = Zerg\Queen\ZQuDth02.WAV
+     928 = Zerg\Queen\ZQuRdy00.WAV
+     929 = Zerg\Queen\ZQuPss00.WAV
+     930 = Zerg\Queen\ZQuPss01.WAV
+     931 = Zerg\Queen\ZQuPss02.WAV
+     932 = Zerg\Queen\ZQuPss03.WAV
+     933 = Zerg\Queen\ZQuWht00.WAV
+     934 = Zerg\Queen\ZQuWht01.WAV
+     935 = Zerg\Queen\ZQuWht02.WAV
+     936 = Zerg\Queen\ZQuWht03.WAV
+     937 = Zerg\Queen\ZQuYes00.WAV
+     938 = Zerg\Queen\ZQuYes01.WAV
+     939 = Zerg\Queen\ZQuYes02.WAV
+     940 = Zerg\Queen\ZQuYes03.WAV
+     941 = Zerg\Mutalid\ZMuRdy00.WAV
+     942 = Zerg\Mutalid\ZMuDth00.WAV
+     943 = Zerg\Mutalid\ZMuPss00.WAV
+     944 = Zerg\Mutalid\ZMuPss01.WAV
+     945 = Zerg\Mutalid\ZMuPss02.WAV
+     946 = Zerg\Mutalid\ZMuPss03.WAV
+     947 = Zerg\Mutalid\ZMuWht00.WAV
+     948 = Zerg\Mutalid\ZMuWht01.WAV
+     949 = Zerg\Mutalid\ZMuWht02.WAV
+     950 = Zerg\Mutalid\ZMuWht03.WAV
+     951 = Zerg\Mutalid\ZMuYes00.WAV
+     952 = Zerg\Mutalid\ZMuYes01.WAV
+     953 = Zerg\Mutalid\ZMuYes02.WAV
+     954 = Zerg\Mutalid\ZMuYes03.WAV
+     955 = Zerg\ZERGKERRI\UKiPss00.wav
+     956 = Zerg\ZERGKERRI\UKiPss01.wav
+     957 = Zerg\ZERGKERRI\UKiPss02.wav
+     958 = Zerg\ZERGKERRI\UKiPss03.wav
+     959 = Zerg\ZERGKERRI\UKiWht00.wav
+     960 = Zerg\ZERGKERRI\UKiWht01.wav
+     961 = Zerg\ZERGKERRI\UKiWht02.wav
+     962 = Zerg\ZERGKERRI\UKiWht03.wav
+     963 = Zerg\ZERGKERRI\UKiYes00.wav
+     964 = Zerg\ZERGKERRI\UKiYes01.wav
+     965 = Zerg\ZERGKERRI\UKiYes02.wav
+     966 = Zerg\ZERGKERRI\UKiYes03.wav
+     967 = Zerg\ZERGKERRI\UKiDth00.wav
+     968 = Misc\CRITTERS\PbWht01.wav
+     969 = Misc\CRITTERS\PbWht02.wav
+     970 = Misc\CRITTERS\PbWht03.wav
+     971 = Misc\CRITTERS\PBDeath01.wav
+     972 = Misc\CRITTERS\ScWht01.wav
+     973 = Misc\CRITTERS\ScWht02.wav
+     974 = Misc\CRITTERS\ScWht03.wav
+     975 = Misc\CRITTERS\ScDeath01.wav
+     976 = Misc\CRITTERS\TerWht01.wav
+     977 = Misc\CRITTERS\TerWht02.wav
+     978 = Misc\CRITTERS\TerWht03.wav
+     979 = Misc\CRITTERS\TerDeath01.wav
+     980 = Terran\Duran\TDnPss00.wav
+     981 = Terran\Duran\TDnPss01.wav
+     982 = Terran\Duran\TDnPss02.wav
+     983 = Terran\Duran\TDnPss03.wav
+     984 = Terran\Duran\TDnPss04.wav
+     985 = Terran\Duran\TDnPss05.wav
+     986 = Terran\Duran\TDnPss06.wav
+     987 = Terran\Duran\TDnPss07.wav
+     988 = Terran\Duran\TDnPss08.wav
+     989 = Terran\Duran\TDnWht00.wav
+     990 = Terran\Duran\TDnWht01.wav
+     991 = Terran\Duran\TDnWht02.wav
+     992 = Terran\Duran\TDnWht03.wav
+     993 = Terran\Duran\TDnYes00.wav
+     994 = Terran\Duran\TDnYes01.wav
+     995 = Terran\Duran\TDnYes02.wav
+     996 = Terran\Duran\TDnYes03.wav
+     997 = Terran\Duran\TDnDth00.wav
+     998 = Terran\Medic\TmedCure.wav
+     999 = Terran\Medic\TMdRdy00.wav
+     1000 = Terran\Medic\TMdDth00.wav
+     1001 = Terran\Medic\TMdWht00.wav
+     1002 = Terran\Medic\TMdWht01.WAV
+     1003 = Terran\Medic\TMdWht02.WAV
+     1004 = Terran\Medic\TMdWht03.wav
+     1005 = Terran\Medic\TMdYes00.wav
+     1006 = Terran\Medic\TMdYes01.wav
+     1007 = Terran\Medic\TMdYes02.wav
+     1008 = Terran\Medic\TMdYes03.wav
+     1009 = Terran\Medic\TMdPss00.wav
+     1010 = Terran\Medic\TMdPss01.WAV
+     1011 = Terran\Medic\TMdPss02.WAV
+     1012 = Terran\Medic\TMdPss03.WAV
+     1013 = Terran\Medic\TMdPss04.WAV
+     1014 = Terran\Medic\TMdPss05.WAV
+     1015 = Terran\Medic\TMdPss06.wav
+     1016 = Terran\Medic\TMedflsh.wav
+     1017 = Terran\Medic\TMedRest.wav
+     1018 = Terran\Medic\TMedHeal.wav
+     1019 = Terran\Medic\Miopia1.wav
+     1020 = Terran\Frigate\AfterOn.wav
+     1021 = Terran\Frigate\AfterOff.wav
+     1022 = Bullet\Tfrhit.wav
+     1023 = Bullet\Tfrshoot.wav
+     1024 = Terran\FRIGATE\TVkRdy00.WAV
+     1025 = Terran\FRIGATE\TVkPss00.WAV
+     1026 = Terran\FRIGATE\TVkPss01.WAV
+     1027 = Terran\FRIGATE\TVkPss02.WAV
+     1028 = Terran\FRIGATE\TVkPss03.WAV
+     1029 = Terran\FRIGATE\TVkPss04.WAV
+     1030 = Terran\FRIGATE\TVkPss05.WAV
+     1031 = Terran\FRIGATE\TVkWht00.WAV
+     1032 = Terran\FRIGATE\TVkWht01.WAV
+     1033 = Terran\FRIGATE\TVkWht02.WAV
+     1034 = Terran\FRIGATE\TVkWht03.WAV
+     1035 = Terran\FRIGATE\TVkYes00.WAV
+     1036 = Terran\FRIGATE\TVkYes01.WAV
+     1037 = Terran\FRIGATE\TVkYes02.WAV
+     1038 = Terran\FRIGATE\TVkYes03.WAV
+     1039 = Terran\FRIGATE\TVkYes04.WAV
+     1040 = Terran\FRIGATE\TVkDth00.WAV
+     1041 = Protoss\Corsair\PCoRdy00.wav
+     1042 = Protoss\Corsair\PCorhit1.wav
+     1043 = Protoss\Corsair\PCorhit2.wav
+     1044 = Protoss\Corsair\PCoWht00.wav
+     1045 = Protoss\Corsair\PCoWht01.WAV
+     1046 = Protoss\Corsair\PCoWht02.WAV
+     1047 = Protoss\Corsair\PCoWht03.wav
+     1048 = Protoss\Corsair\PCoYes00.wav
+     1049 = Protoss\Corsair\PCoYes01.WAV
+     1050 = Protoss\Corsair\PCoYes02.WAV
+     1051 = Protoss\Corsair\PCoYes03.wav
+     1052 = Protoss\Corsair\PCoPss00.wav
+     1053 = Protoss\Corsair\PCoPss01.WAV
+     1054 = Protoss\Corsair\PCoPss02.WAV
+     1055 = Protoss\Corsair\PCoPss03.WAV
+     1056 = Protoss\Corsair\PCoPss04.WAV
+     1057 = Protoss\Corsair\PCoPss05.WAV
+     1058 = Protoss\Corsair\PCoPss06.wav
+     1059 = Protoss\Corsair\PCorWeb1.wav
+     1060 = Protoss\Corsair\PCorlasr2.wav
+     1061 = Protoss\Darchon\feedback.wav
+     1062 = Protoss\Darchon\mind.wav
+     1063 = Protoss\Darchon\ParaAttk.wav
+     1064 = Protoss\Darchon\Parahit.wav
+     1065 = Protoss\DARCHON\PDaRdy00.WAV
+     1066 = Protoss\DARCHON\PDrDth00.WAV
+     1067 = Protoss\DARCHON\PDaPss00.WAV
+     1068 = Protoss\DARCHON\PDaPss01.WAV
+     1069 = Protoss\DARCHON\PDaPss02.WAV
+     1070 = Protoss\DARCHON\PDaPss03.WAV
+     1071 = Protoss\DARCHON\PDaWht00.WAV
+     1072 = Protoss\DARCHON\PDaWht01.WAV
+     1073 = Protoss\DARCHON\PDaWht02.WAV
+     1074 = Protoss\DARCHON\PDaWht03.WAV
+     1075 = Protoss\DARCHON\PDaYes00.WAV
+     1076 = Protoss\DARCHON\PDaYes01.WAV
+     1077 = Protoss\DARCHON\PDaYes02.WAV
+     1078 = Protoss\DARCHON\PDaYes03.WAV
+     1079 = Zerg\LURKER\ZLuRdy00.WAV
+     1080 = Zerg\LURKER\ZLuDth00.WAV
+     1081 = Zerg\LURKER\ZLuPss00.WAV
+     1082 = Zerg\Lurker\ZLuPss01.WAV
+     1083 = Zerg\Lurker\ZLuPss02.WAV
+     1084 = Zerg\LURKER\ZLuPss03.WAV
+     1085 = Zerg\LURKER\ZLuWht00.WAV
+     1086 = Zerg\LURKER\ZLuWht01.WAV
+     1087 = Zerg\LURKER\ZLuWht02.WAV
+     1088 = Zerg\LURKER\ZLuWht03.WAV
+     1089 = Zerg\LURKER\ZLuYes00.WAV
+     1090 = Zerg\LURKER\ZLuYes01.WAV
+     1091 = Zerg\LURKER\ZLuYes02.WAV
+     1092 = Zerg\LURKER\ZLuYes03.WAV
+     1093 = Zerg\LURKER\ZLuBurrw.wav
+     1094 = Zerg\Devourer\firesuck.wav
+     1095 = Zerg\Devourer\goophit.wav
+     1096 = Zerg\Devourer\ZDvRdy00.WAV
+     1097 = Zerg\Devourer\ZDvDth00.WAV
+     1098 = Zerg\Devourer\ZDvPss00.WAV
+     1099 = Zerg\Devourer\ZDvPss01.WAV
+     1100 = Zerg\Devourer\ZDvPss02.WAV
+     1101 = Zerg\Devourer\ZDvWht00.WAV
+     1102 = Zerg\Devourer\ZDvWht01.WAV
+     1103 = Zerg\Devourer\ZDvWht02.WAV
+     1104 = Zerg\Devourer\ZDvYes00.WAV
+     1105 = Zerg\Devourer\ZDvYes01.WAV
+     1106 = Zerg\Devourer\ZDvYes02.WAV
+     1107 = Zerg\Devourer\ZDvYes03.WAV
+     1108 = Bullet\ZLrkFir1.wav
+     1109 = Bullet\ZLrkFir2.wav
+     1110 = Bullet\ZLrkHit1.wav
+     1111 = Bullet\ZLrkHit2.wav
+     1112 = Zerg\ZergDuran\ZDnPss00.wav
+     1113 = Zerg\ZergDuran\ZDnPss01.wav
+     1114 = Zerg\ZergDuran\ZDnPss02.wav
+     1115 = Zerg\ZergDuran\ZDnPss03.wav
+     1116 = Zerg\ZergDuran\ZDnPss04.wav
+     1117 = Zerg\ZergDuran\ZDnPss05.wav
+     1118 = Zerg\ZergDuran\ZDnPss06.wav
+     1119 = Zerg\ZergDuran\ZDnPss07.wav
+     1120 = Zerg\ZergDuran\ZDnPss08.wav
+     1121 = Zerg\ZergDuran\ZDnWht00.wav
+     1122 = Zerg\ZergDuran\ZDnWht01.wav
+     1123 = Zerg\ZergDuran\ZDnWht02.wav
+     1124 = Zerg\ZergDuran\ZDnWht03.wav
+     1125 = Zerg\ZergDuran\ZDnYes00.wav
+     1126 = Zerg\ZergDuran\ZDnYes01.wav
+     1127 = Zerg\ZergDuran\ZDnYes02.wav
+     1128 = Zerg\ZergDuran\ZDnYes03.wav
+     1129 = Zerg\ZergDuran\ZDnDth00.wav
+     1130 = Protoss\Artanis\PAtPss00.wav
+     1131 = Protoss\Artanis\PAtPss01.wav
+     1132 = Protoss\Artanis\PAtPss02.wav
+     1133 = Protoss\Artanis\PAtPss03.wav
+     1134 = Protoss\Artanis\PAtPss04.wav
+     1135 = Protoss\Artanis\PAtPss05.wav
+     1136 = Protoss\Artanis\PAtWht00.wav
+     1137 = Protoss\Artanis\PAtWht01.wav
+     1138 = Protoss\Artanis\PAtWht02.wav
+     1139 = Protoss\Artanis\PAtWht03.wav
+     1140 = Protoss\Artanis\PAtYes00.wav
+     1141 = Protoss\Artanis\PAtYes01.wav
+     1142 = Protoss\Artanis\PAtYes02.wav
+     1143 = Protoss\Artanis\PAtYes03.wav</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="shieldsizes" class="subheader">Shield Sizes</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Shield Sizes</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>       0 = None
+       1 = Small
+       2 = Medium
+       3 = Large</pre>
+		</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyTRG.html">&#171; PyTRG</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyDAT</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyGOT.html">PyGOT &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

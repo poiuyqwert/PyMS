@@ -1,0 +1,18 @@
+{\
+	'sfxdatatbl':u'MPQ:rez\\sfxdata.tbl',\
+	'settingswindow':'822x482+229+159',\
+	'showplacment':1,\
+	'cmdicons':u'MPQ:unit\\cmdbtns\\cmdicons.grp',\
+	'iscriptbin':u'MPQ:scripts\\iscript.bin',\
+	'showdimensions':1,\
+	'mpqexport':[],\
+	'imagestbl':u'MPQ:rez\\images.tbl',\
+	'portdatatbl':u'MPQ:rez\\portdata.tbl',\
+	'spritepreview':1,\
+	'unitpreview':1,\
+	'window':'200x200+5+27^',\
+	'lastpath':'/Users/zachzahos/Applications/Wineskin/StarCraft.app/Contents/Resources/drive_c/Program Files/Starcraft',\
+	'mapdatatbl':u'MPQ:rez\\mapdata.tbl',\
+	'customlabels':0,\
+	'stat_txt':u'MPQ:rez\\stat_txt.tbl',\
+}

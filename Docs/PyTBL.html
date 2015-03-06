@@ -1,0 +1,300 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyTBL v1.7 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><b>PyTBL v1.7</b>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyTBL v1.7</a><br><br>
+			PyTBL is used to convert TBL files to and from TXT files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+				<li><a href="#syntax">Syntax</a>
+				<li><a href="#examples">Example Usage</a>
+				<li><a href="#reference">Reference</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyTBL v1.7</b>
+<ul>
+	<li>Added a text previewer
+	<li>Added the color list to the main window and removed the colors window
+	<li>Fixed a bug where the text would not change when using up/down/page up/page down/home/end in the strings list
+</ul>
+<b>PyTBL v1.6</b>
+<ul>
+	<li>Fixed a bug preventing PyTBL from closing
+</ul>
+<b>PyTBL v1.5</b>
+<ul>
+	<li>The Find Dialog opens with the the "Find" entry selected, and pressing Enter in the dialog now finds next
+</ul>
+<b>PyTBL v1.4</b>
+<ul>
+	<li>Fixed Delete button inconsistancy
+	<li>Fixed string navigation
+	<li>Strings no longer require a null at the end, if its missing it will be added automatically
+</ul>
+<b>PyTBL v1.3</b>
+<ul>
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyTBL v1.2</b>
+<ul>
+	<li>Fixed major bug that prevented compiling
+	<li>Comments now work properly
+	<li>Added more colors and info to reference
+	<li>Decompiles ALL special characters now
+</ul>
+<b>PyTBL v1.1</b>
+<ul>
+	<li>Added better error reporting
+	<li>Indentation changed
+</ul>
+<b>PyTBL v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-h</b></td>
+		<td class="lblue"><b>--help</b></td>
+		<td>Display the command line format and options with small descriptions.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile a TBL file to a TXT file. <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile a TXT file to a TBL file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-r</b></td>
+		<td class="lblue"><b>--reference</b></td>
+		<td>Output a reference at the top of a decompiled file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><a name="syntax" class="header">Syntax</a><a href="#top" class="top">^</a><br><br>
+Every line of a decompiled TBL file is a string, the only exceptions are emtpy lines, and comments. Comments can be anywhere on a line, and they start with the hash character <b>#</b>. For example:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre># This line is not a string because the whole thing is a comment.
+Marine&lt;0&gt;#This line (excluding the comment) is a string</pre>
+		</td>
+	</tr>
+</table>
+Also, if you noticed the &lt;0&gt;, PyTBL uses the same string formatting as TBLPad. Special characters can be accessed by putting their ASCII codes in angle brackets <b>&lt; &gt;</b>. For example, if you want to have a hash symbol in your string, you must use <b>&lt;35&gt;</b>. For a list of usefull ASCII codes, check out the <a href="#cmdline">-r option</a> on the command line, and the <a href="#reference">Reference</a> section below.<br>
+There are four types of strings:<br>
+<ol>
+	<li>Regular String
+	<li>Unit String
+	<li>Requirement String
+	<li>Hotkey String
+</ol>
+Regular Strings dont really follow a format, they just set the rule for all strings, <b>all</b> strings must end in a &lt;0&gt;:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>string&lt;0&gt;</pre>
+		</td>
+	</tr>
+</table>
+The first 228 strings in the TBL are Unit Strings, and each corrisponds to a unit id (first string is unit id 0, Terran Marine). They are in the form:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Unit Name&lt;0&gt;Subname&lt;0&gt;StarEdit Group&lt;0&gt;</pre>
+		</td>
+	</tr>
+</table>
+A Requirement String doesn't really follow a format, but the deafult StarCraft format is that every requirement is on its own line, with three spaces for indenting:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Something1 Requires:&lt;10&gt;   One Requirement&lt;0&gt;
+Somethings Require:&lt;10&gt;   Two&lt;10&gt;   Requirements&lt;0&gt;
+#  ...</pre>
+		</td>
+	</tr>
+</table>
+Hotkeys are more strict then the other types of strings. The first character is the hotkey character (which includes the Escape key &lt;27&gt; for Cancle buttons), the second is the tooltip type, and the third is the string. There are 6 different types of tooltip:<br>
+<ul>
+	<li>&lt;0&gt; is usually used on hotkeys that aren't any of the others below
+	<li>&lt;1&gt; is used for units
+	<li>&lt;2&gt; is used for upgrades
+	<li>&lt;3&gt; is used on a button for spell casting
+	<li>&lt;4&gt; is used for technology upgrades
+	<li>&lt;5&gt; is used primarily used on the Guardian and Devourer Aspect on the Mutalisk. It shows the correct mineral and gas cost, but it does not show supply
+</ul>
+For example:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>a&lt;0&gt;&lt;3&gt;A&lt;1&gt;ttack&lt;0&gt;
+m&lt;1&gt;Train &lt;3&gt;M&lt;1&gt;arine&lt;0&gt;
+a&lt;2&gt;Upgrade Infantry &lt;3&gt;A&lt;1&gt;rmor&lt;0&gt;
+t&lt;3&gt;Psionic S&lt;3&gt;t&lt;1&gt;orm&lt;0&gt;
+p&lt;4&gt;Develop &lt;3&gt;P&lt;1&gt;sionic Storm(Templar ability)&lt;0&gt;
+d&lt;5&gt;&lt;3&gt;D&lt;1&gt;evourer Aspect&lt;0&gt;</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="examples" class="header">Example Usage</a><a href="#top" class="top">^</a><br><br>
+Decompiling the default stat_txt.tbl to a modding project, then recompiling:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyTBL.pyw Default\stat_txt.tbl "C:\StarCraft\My Mod\stat_txt.txt"
+  ..edit strings..
+python PyTBL.pyw -c "C:\StarCraft\My Mod\stat_txt.txt"</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="reference" class="header">Reference</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>ASCII Codes</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Miscalaneous
+    &lt;0&gt; = End Substring
+    &lt;9&gt; = Tab
+   &lt;10&gt; = Newline
+   &lt;18&gt; = Right Align
+   &lt;19&gt; = Center Align
+   &lt;27&gt; = Escape Key
+   &lt;35&gt; = #
+   &lt;60&gt; = &lt;
+   &lt;62&gt; = &gt;
+
+Menu Screen Colors
+    &lt;1&gt; = Cyan
+    &lt;2&gt; = Cyan
+    &lt;3&gt; = Green
+    &lt;4&gt; = Light Green
+    &lt;5&gt; = Grey*
+    &lt;6&gt; = White
+    &lt;7&gt; = Red
+    &lt;8&gt; = Black*
+   &lt;11&gt; = Invisible*
+   &lt;12&gt; = Truncate
+   &lt;14&gt; = Black
+   &lt;15&gt; = Black
+   &lt;16&gt; = Black
+   &lt;17&gt; = Black
+   &lt;20&gt; = Invisible*
+   &lt;21&gt; = Black
+   &lt;22&gt; = Black
+   &lt;23&gt; = Black
+   &lt;24&gt; = Black
+   &lt;25&gt; = Black
+   &lt;26&gt; = Black/Cyan?
+   &lt;27&gt; = Black
+   &lt;28&gt; = Black
+
+In-game Colors
+    &lt;1&gt; = Cyan
+    &lt;2&gt; = Cyan
+    &lt;3&gt; = Yellow
+    &lt;4&gt; = White
+    &lt;5&gt; = Grey*
+    &lt;6&gt; = Red
+    &lt;7&gt; = Green
+    &lt;8&gt; = Red (Player 1)
+   &lt;11&gt; = Invisible*
+   &lt;12&gt; = Truncate
+   &lt;14&gt; = Blue (Player 2)
+   &lt;15&gt; = Teal (Player 3)
+   &lt;16&gt; = Purple (Player 4)
+   &lt;17&gt; = Orange (Player 5)
+   &lt;20&gt; = Invisible*
+   &lt;21&gt; = Brown (Player 6)
+   &lt;22&gt; = White (Player 7)
+   &lt;23&gt; = Yellow (Player 8)
+   &lt;24&gt; = Green (Player 9)
+   &lt;25&gt; = Brighter Yellow (Player 10)
+   &lt;26&gt; = Cyan
+   &lt;27&gt; = Pinkish (Player 11)
+   &lt;28&gt; = Dark Cyan (Player 12)
+   &lt;29&gt; = Greygreen
+   &lt;30&gt; = Bluegrey
+   &lt;31&gt; = Turquiose</pre>
+		</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyLO.html">&#171; PyLO</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyTBL</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyTRG.html">PyTRG &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

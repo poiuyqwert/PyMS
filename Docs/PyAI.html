@@ -1,0 +1,458 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyAI v2.4 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><b>PyAI v2.4</b>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyAI v2.4</a><br><br>
+			PyAI is used to convert AI scripts to and from TXT files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#readme">Old Readme</a>
+				<li><a href="#cmdline">Commandline Options</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyAI v2.4</b>
+<ul>
+	<li>bwcript.bin scripts with external jumps now decompile the externally referenced scripts
+	<li>Fixed a problem where it would ask for stat_txt.tbl when it shouldn't
+	<li>Fixed a problem with removing unused labels in bwscript.bin
+</ul>
+<b>PyAI v2.3</b>
+<ul>
+	<li>PyAI now keeps track of your aiscript.bin and bwscript.bin's file sizes and displays them in the statusbar
+	<li>The Script Editor now shows at most 5 of the script ID's (that were selected when it was opened) in its title
+	<li>Removed the warning about editing scripts with external jumps entirely
+	<li>Fixed a problem with the "file too large" error not showing up and allowing you to compile in a corrupt way
+	<li>Fixed a problem with unused labels being removed
+	<li>Fixed a problem with Extra Information being loaded when more then 255 labels where saved for one script
+</ul>
+<b>PyAI v2.2</b>
+<ul>
+	<li>The asc3 to PyAI converter in the Script Editor now guesses if the script is a bwscript or not, gives 111 as the default flags, and has a warning comment for the header
+	<li>Fixed a problem reporting labels used only by unused commands in some cases
+	<li>Fixed a problem reporting loops with no waits when using external jumps to the same script
+	<li>Fixed a bug compiling/testing scripts
+	<li>Fixed a problem with comments on the same line as commands (it didn't allow a space between the command and comment)
+	<li>Fixed a problem with tab-completion
+</ul>
+<b>PyAI v2.1</b>
+<ul>
+	<li>Its now possible to select multiple files to add to the List Import dialog
+	<li>Added a check for labels that where self-referenced only (thus unused by the rest of the script)
+	<li>Fixed unitdef.txt (stasis_field was spelled as statis_field)
+</ul>
+<b>PyAI v2.0</b>
+<ul>
+	<li>You can no longer remove scripts when they are referenced externally
+	<li>You are no longer required to open or save bwscript.bin, you can deal with aiscript.bin alone
+	<li>bwscript.bin no longer saves when it is empty
+	<li>Scripts that are supposed to be in bwscript.bin on load but could not be found are now discarded instead of stopping the loading process
+	<li>Added Open MPQ, Save MPQ, and Save SEMPQ
+</ul>
+<b>PyAI v1.9</b>
+<ul>
+	<li>Added the Debuggerizer to the Script Editor
+	<li>Added better support for external jumps
+	<li>Added a right click menu to the Script Editor
+	<li>Added an internal error viewer when you receive a "corrupt ai/bwscript.bin" error
+	<li>You can now open the script editor without selecting a pre-existing script
+	<li>Updated some tooltips
+	<li>PyAI now generates strings if you open a script with a custom name not present in the current stat_txt.tbl
+	<li>The Find/Replace Dialog opens with the "Find" entry selected, and pressing Enter in the dialog now finds next
+	<li>Fixed some spelling errors
+	<li>Fixed the loop missing while warning (was giving incorrect warnings for certain structures)
+	<li>Fixed a tooltip problem with commands that used blocks
+	<li>Fixed a potential problem with tab-completion
+	<li>Fixed a problem editing BW scripts, and some other problems handling scripts in bwscript.bin
+	<li>Fixed a problem with editing scripts with extra information
+	<li>Fixed a problem with the size limitation error
+</ul>
+<b>PyAI v1.8</b>
+<ul>
+	<li>Tab-Completion is no longer case-sensitive and selects the completed text so you can easily delete back to your origional text
+	<li>Command names for tab-completion now have higher priority when completing at the start of the line
+	<li>Fixed problem with parameter errors highlight the incorrect line in the Script Editor
+	<li>Fixed potential problem with tab-completion
+	<li>Fixed various bugs, including a bug which prevented files from loading and saving with an edited TBL
+	<li>Added an Extra Information column to the AI list
+	<li>Added Text drag and drop in Script Editor
+</ul>
+<b>PyAI v1.7</b>
+<ul>
+	<li>Added an ASC3 to PyAI converter to the Script Editor
+	<li>Added search history to Find/Replace dialog and F3 for Search Next in Script Editor
+	<li>The Import List and External Definition files will now save between sessions
+	<li>Fixed Find/Replace dialog resize issue in Script Editor
+	<li>Fixed Alt+Up crash in Script Editor
+	<li>Fixed syntax highlighting problem with block names
+	<li>Fixed a bug when using External Definition files
+	<li>Fixed a bug when using an edited stat_txt
+	<li>Improved listbox navigation
+	<li>Selecting multiple scripts through the Find Dialog now correctly jumps to the selected scripts
+	<li>Strings in the TBL editor no longer require a null at the end, missing nulls will be added for you
+</ul>
+<b>PyAI v1.6</b>
+<ul>
+	<li>Fixed missing command help in the Script Editor tooltips (this caused the tooltip crash from previous versions)
+	<li>Added missing unknown command 'if_towns'
+	<li>Added maximum file size warning
+</ul>
+<b>PyAI v1.5</b>
+<ul>
+	<li>Fixed crash caused by tooltips in the Script Editor again (hopefully the last time)
+	<li>Fixed Script Editor syntax highlighting issues again (hopefully the last time also)
+	<li>Fixed indentating bug caused by tab-completion in the Script Editor
+	<li>Fixed the Find/Replace dialog in the Script Editor
+	<li>When testing for errors in the Script Editor, the first error/warning will be centered on
+	<li>Can now Export or Export As like normal saving in the Script Editor (also shows file name and path in titlebar)
+	<li>Added label names (including external labels) to tab-completion in the Script Editor
+	<li>Pressing Alt+Left and Alt+Right in the Script Editor shows you the previous and next errors/warnings respectivly
+	<li>Pressing Alt+Up and Alt+Down in the Script Editor shows you the prevuious and next labels/headers respectively
+	<li>Added toolbar hotkeys to tooltips
+	<li>Fixed bug when loading external jumps would sometimes give a "corrupt aiscript" error
+	<li>Fixed bug where errors would hide warnings
+	<li>Fixed bug where external jumps would give an "unused label" warning when they were used (did not effect compiles)
+	<li>Added a warning for commands that are not executed because they are after a goto(), stop(), or other blocking command
+</ul>
+<b>PyAI v1.4</b>
+<ul>
+	<li>Fixed crash caused by tooltips in the Script Editor
+	<li>Fixed Script Editor syntax highlighting issues
+	<li>Fixed loading of incorrect DAT files on startup
+	<li>Added Unit, Updrade, and Technology stat_txt.tbl entries to tab-completion
+</ul>
+<b>PyAI v1.3</b>
+<ul>
+	<li>The Script Editor is now multi-instanceable and no longer holds focus
+	<li>Added a status bar to the Script Editor
+	<li>Added Tab-Completion to the Script Editor for commands and types
+	<li>Added import and export to Script Editor
+	<li>Saving in the Script Editor no longer closes the window at the same time
+	<li>When closing the Script Editor it only asks to save when it has been edited
+	<li>Fixed some command tooltips in the Script Editor to show duplicate parameter types order
+	<li>You can now cancel saving with the Script Editor when a warning happens
+	<li>Fixed a bug when pasting text to the Script Editor
+	<li>Commands no longer need an open bracket to syntax hightlight in the Script Editor
+	<li>Added option to save Extra information
+	<li>Added Script Editor option to right click menu
+	<li>Fixed a small bug when adding a new script
+</ul>
+<b>PyAI v1.2</b>
+<ul>
+	<li>Using the List Import dialog no longer gives incorrect line numbers in errors/warnings
+	<li>String Editor titlebar updates when loading new stat_txt.tbl files
+	<li>Fixed bug when opening a new stat_txt.tbl when the current one has been edited
+	<li>Decompiled scripts now use tabs instead of 4 spaces for indenting
+	<li>Added an AI Script Editor
+	<li>Double clicking scripts in the main window now brings up the AI Script Editor, not the AI ID, String and Extra Information editor
+	<li>Now checks if default stat_txt.tbl and dat files loaded successfully
+	<li>Started phasing out the useless long command names
+	<li>Military types no longer give warnings for workers and overlords
+</ul>
+<b>PyAI v1.1</b>
+<ul>
+	<li>You can now use the List Import dialog to import multiple files as if they were one (so no need to combine scripts into one file)
+	<li>Fixed decompile bug
+	<li>Removed useless start_* command warning
+	<li>Fixed various little bugs
+	<li>Overlord no longer gives warnings for being built instead of trained
+	<li>Siege Tanks and Goliaths no longer give warnings for no ground weapons with some commands
+	<li>High level warnings are now a dark red in the warnings dialog
+</ul>
+<b>PyAI v1.0</b>
+<ul>
+	<li>Fixed/Added support for units having the same name but different subname
+	<li>Fixed subunit attack warnings (for example a Siege Tank/Goliath has no ground/air weapon)
+	<li>Fixed ag_military and ga_military warnings
+	<li>Fixed external definitions (warning bug, decompile bug, and interpreting bug)
+	<li>Added a warning when multiple headers are used
+	<li>Made variables less strict
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyAI v0.8</b>
+<ul>
+	<li>Fixed incorrect "missing label" error
+	<li>Added External Definition files
+	<li>Unused blocks will now be discarded and give a warning instead of giving an error
+	<li>Indentation changed
+	<li>Fixed bug when not supplying bwscript.bin file when compiling
+</ul>
+<b>PyAI v0.7</b>
+<ul>
+	<li>Fixed and added compression to extra information (this means any extra information compiled with the v0.5 will not be decompiled, but the ai script will)
+	<li>Fixed, added, changed stuff in the readme
+	<li>Fixed various jumping bugs
+	<li>Added some error reporting
+</ul>
+<b>PyAI v0.6</b>
+<ul>
+	<li>Added a compile feature to save extra information on your scripts (optional)
+	<li>Fixed some minor bugs
+	<li>Added some error reporting
+</ul>
+<b>PyAI v0.5</b>
+<ul>
+	<li>Fixed major bugs in strings using TBL formatting
+	<li>Fixed some error reporting
+	<li>Added the -w option to hide warnings when compiling
+</ul>
+<b>PyAI v0.4</b>
+<ul>
+	<li>Fixed upgrade/technology bug for good
+	<li>Added external script jumps
+	<li>More, better error reporting
+	<li>Misc. bug fixes
+	<li>Removed "TRG Name" stuff
+</ul>
+<b>PyAI v0.3</b>
+<ul>
+	<li>Fixed upgrade bug again
+	<li>Fixed various other bugs
+	<li>Some better error reporting
+</ul>
+<b>PyAI v0.2</b>
+<ul>
+	<li>Fixed the upgrades and technology bugs
+	<li>Fixed bug where you could only only use a label name in one script
+	<li>May have fixed more bugs, i dont remember
+	<li>Added variables for shortening names (can only store values, no manipulations of the values)
+</ul>
+<b>PyAI v0.1</b>
+<ul>
+	<li>First public beta release
+</ul>
+<br><br><a name="readme" class="header">Old Readme</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Temporary Information</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre> PyAI uses basically the same format as all other programs in
+PyMS. The only difference is that when decompiling you need 2
+input files, and when compiling you need 2 output files. So
+for decompiling it is:
+   python PyAI.py [options] -d &lt;aiscript.bin&gt; &lt;bwscript.bin&gt; [out]
+Like the other programs, if you leave [out] blank it will
+make up the filename, so it will take the aiscript.bin's
+filename but with the .txt extension. To compile its:
+   python PyAI.py [options] -c &lt;inp&gt; [aiscript.bin [bwscript.bin]]
+If you dont supply the files for [aiscript.bin] and/or
+[bwscript.bin], it will take the filename of &lt;inp&gt; and use
+the .bin extension ([bwscript.bin] will get 'bw' added to the
+front in this situation).
+
+The coding in PyMS is not too much different then SCAIEdit
+III's .asc3 format. The differences (:
+ - For comments, instead of using semi-colons (';'), PyAI uses 
+    hash's ('#')
+ - Commands use perenthesis ('(' and ')')  to encapsulate the
+    parameters, and commas (',') to seperate them
+ - Strings (used in the debug command, which works with PyMS,
+    BUT NOT SCAIEdit!!!!) use TBL formatting (so use &lt;40&gt; for
+    an open parenthesis '(', &lt;41&gt; for a close parenthesis
+    ')', and &lt;44&gt; for a comma ',')
+ - Block labels are in the format '--Name--' instead of ':Name'
+ - Jumping now supports external script jumps. To use them, the
+    format is 'AIID:Label', where AIID is the ID of the script,
+    and Label is the name of the block in that AI (used like a
+    normal label in any jumping command)
+ - PyMS has the option to use "Descriptive" command names when
+    decompiling. You can also interchange the origional commands
+    with the descriptive ones anywhere in your code.
+ - Instead of using script_name and script_id, there is one
+    header used to start an AI Script
+ - Variables can now be defined. They have overflowing types, so
+    if you define a 'building' variable, it will also work for a
+    'unit' variable because... buildings are units. But if you
+    define a 'military' variable, it will not work as a 'building'
+    because it isn't a building.
+ - Information Comments can be used to save descriptions of things
+    in your AI in its compiled form. They are any text within a
+    pair of braces ('{' and '}')
+ - External Definition files can be supplied either with the -f
+    (--deffile) option, or with the 'extdef' keyword
+
+External Definition files are files that list common variables which
+can be included in any aiscript. To use them in code all you do is
+place an 'extdef' line anywhere in your code like so:
+   extdef &lt;file&gt;
+You can either supply the name of a file in the same folder as the
+aiscript, or a full path to a file.
+Information Comments come on the same line, or directly after a
+variable declaration, block label, or AI Script header. They are
+completely optionally. If its on the same line it must be at the
+end (but still before normal comments), and can only my a single
+line information comment. Single line information comments are in
+the form {&lt;comment&gt;}, and multi-line information comments are in
+the form (The braces must be on their own lines):
+   {
+   &lt;comment&gt;
+   }
+Note: Variables are saved to aiscript.bin, so if you dont keep
+ your aiscript.bin with your bwscript.bin when you try to
+ decompile the bwscript.bin, you will not get your variables.
+You can set variables anywhere in your file, inside or outside
+of your ai's, it doesn't matter. The syntax for a variable is:
+   &lt;type&gt; &lt;name&gt; = &lt;value&gt;
+Type is a paramater type like 'byte', 'building', etc. You can
+view the different types in the reference (Note: Labels can NOT
+but set to variables).
+Every AI Script in your file must start with the declaration
+header, formatted like so:
+   &lt;ID&gt;(&lt;String&gt;, &lt;Flags&gt;, &lt;Script&gt;):
+&lt;ID&gt; is the 4 letter ID for your script, or one of the keywords
+Protoss, BWProtoss, Terran, BWTerran, Zerg, and BWZerg, which
+represents PMCu, PMCx, TMCu, TMCx, ZMCu, and ZMCx respectivly.
+&lt;String&gt; is the id number of the string in your stat_tbl.txt.
+&lt;Flags&gt; is 3 ones or zeros (for example 000, 111, 101, 001, etc),
+a 0 means a flag is unset, a 1 means a flag is set.
+If the first flag is set, the AI script requires a location.
+If the second flag is set, the AI script will not show up in
+StarEdit. If the third flag is set, its a BW AI Script (DOES
+NOT MEAN GOES IN bwscript.bin!). &lt;Script&gt; is either the keyword
+aiscript, or the keyword bwscript and defines which bin file
+it is compiled to. Under that you have your commands and blocks.
+Here is an example of Terran 5 - Harvest Town (Te5H):
+    # stat_txt.tbl entry 1054: Terran 5 - Terran Harvest Town&lt;0&gt;
+    Te5H(1054, 011, aiscript):
+        start_campaign()
+        start_areatown()
+        defaultbuild_off()
+        default_min(0)
+        wait(1)
+        build(1, Terran Command Center, 150)
+        build(4, Terran SCV, 130)
+            --Te5H 0000--
+        wait(1500)
+        goto(Te5H 0000)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile AI's from aiscript.bin and/or bwscript.bin <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile AI's to an aiscript.bin and/or bwscript.bin</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-e</b></td>
+		<td class="lblue"><b>--extrainfo</b></td>
+		<td>Save extra info from your script (variables, label names, and information comments) <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-u</b></td>
+		<td class="lblue"><b>--units</b></td>
+		<td>Specify your own units.dat file for unit data lookups <b>Default: Default\units.dat</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-g</b></td>
+		<td class="lblue"><b>--upgrades</b></td>
+		<td>Specify your own upgrades.dat file for upgrade data lookups <b>Default: Default\upgrades.dat</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-t</b></td>
+		<td class="lblue"><b>--techdata</b></td>
+		<td>Specify your own techdata.dat file for technology data lookups <b>Default: Default\techdata.dat</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-s</b></td>
+		<td class="lblue"><b>--scripts</b></td>
+		<td>A list of AI Script ID's to decompile, separated by commas <b>Default: All</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-a</b></td>
+		<td class="lblue"><b>--aiscript</b></td>
+		<td>Used to signify the base aiscript.bin file to compile on top of</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-b</b></td>
+		<td class="lblue"><b>--bwscript</b></td>
+		<td>Used to signify the base bwscript.bin file to compile on top of</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-l</b></td>
+		<td class="lblue"><b>--longlabels</b></td>
+		<td>Used to signify that you want decompiled scripts to use desriptive command names <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-x</b></td>
+		<td class="lblue"><b>--stattxt</b></td>
+		<td>Used to signify the stat_txt.tbl file to use <b>Default: Default\stat_txt.tbl</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-r</b></td>
+		<td class="lblue"><b>--reference</b></td>
+		<td>When decompiling, put a reference for commands and parameters <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-w</b></td>
+		<td class="lblue"><b>--hidewarns</b></td>
+		<td>Hides any warning produced by compiling your code <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-w</b></td>
+		<td class="lblue"><b>--deffile</b></td>
+		<td>Specify an External Definition file containing variables to be used when interpreting/decompiling <b>Default: None</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyGOT.html">&#171; PyGOT</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyAI</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyICE.html">PyICE &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

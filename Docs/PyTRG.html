@@ -1,0 +1,912 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyTRG v2.6 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><b>PyTRG v2.6</b>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyTRG v2.6</a><br><br>
+			PyTRG is used to convert TRG files to TXT files, and stripping TRG files down to GOT compatable TRG files (<a href="PyGOT.html">PyGOT</a> has a shortcut for this).
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+				<li><a href="#syntax">Syntax</a>
+			<ol>
+				<li><a href="#triggers">Triggers</a>
+				<li><a href="#functions">Condition/Action Functions</a>
+				<li><a href="#constants">Constants</a>
+				<li><a href="#strings">Strings</a>
+				<li><a href="#properties">Properties</a>
+			</ol>
+				<li><a href="#examples">Example Usage</a>
+				<li><a href="#reference">Reference</a>
+			<ol>
+				<li><a href="#types">Types</a>
+				<li><a href="#conditions">Conditions</a>
+				<li><a href="#actions">Actions</a>
+				<li><a href="#ai">AI Scripts</a>
+			</ol>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyTRG v2.6</b>
+<ul>
+	<li>Added RawCond and RawAct to easily create raw conditions and actions
+	<li>Made loading faster
+</ul>
+<b>PyTRG v2.5</b>
+<ul>
+	<li>Fixed a problem decompile Percentages
+</ul>
+<b>PyTRG v2.4</b>
+<ul>
+	<li>Fixed the Order action and misspelling of Patrol as Patroll
+</ul>
+<b>PyTRG v2.3</b>
+<ul>
+	<li>Added the Default String keyword for Leaderboard actions which require strings
+	<li>Added a right click menu to the editor
+	<li>Fixed a potential problem with tab-completion
+	<li>Fixed a problem interpreting unit names with subnames
+	<li>The Find/Replace Dialog opens with the the "Find" entry selected, and pressing Enter in the dialog now finds next
+</ul>
+<b>PyTRG v2.2</b>
+<ul>
+	<li>Added Dynamic Conditions/Actions for plugins
+	<li>Added include keyword to include other files in the source
+	<li>Fixed some errors
+</ul>
+<b>PyTRG v2.1</b>
+<ul>
+	<li>Fixed Location inconsistancies
+</ul>
+<b>PyTRG v2.0</b>
+<ul>
+	<li>Added support for TrigPlug by FaRTy1billion
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyTRG v1.2</b>
+<ul>
+	<li>Fixed 'AllyStatus' parameter
+	<li>Fixed/Added support for units having the same name but different subname
+	<li>Integrated with PyAI
+	<li>Fixed bug when triggers reuse property slots
+	<li>Added additional checks when loading a .trg to try and catch corrupt files
+	<li>Added 'All' keyword to quantity numbers
+	<li>Rearranged parameters for some conditions and actions (<b>Note:</b> This breaks backwards compatability)
+	<li>Fixed missing error for unknown line format
+	<li>Trailing whitespace is fine now
+	<li>Parameter Error's now show line number and line code
+	<li>Fixed some Parameter Error's that said they were Location parameters
+	<li>Fixed 'Any Unit' keyword
+	<li>Fixed 'State' parameter
+	<li>Fixed 'Location' parameter
+	<li>Fixed 'SwitchAction' parameter
+	<li>Fxied 'Condition Function' deceleration bug
+</ul>
+<b>PyTRG v1.1</b>
+<ul>
+	<li>Added better error reporting
+	<li>Fixed major bugs with Number and Modifier parameters
+	<li>Fixed parameters on CountdownTimer condition and SetCountdownTimer action
+	<li>Changed order of parameters for Command condition
+	<li>Indentation changed
+</ul>
+<b>PyTRG v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-h</b></td>
+		<td class="lblue"><b>--help</b></td>
+		<td>Display the command line format and options with small descriptions.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile a TRG file to a TXT file. <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile a TXT file to a TRG file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-t</b></td>
+		<td class="lblue"><b>--trigg</b></td>
+		<td>Compile to a GOT (Game Template) compatable TRG file (removes header, strings, properties, and disables actions that use strings or properties).</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-r</b></td>
+		<td class="lblue"><b>--reference</b></td>
+		<td>Output a reference at the top of a decompiled file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-a &lt;aiscript&gt;</b></td>
+		<td class="lblue"><b>--aiscript &lt;aiscript&gt;</b></td>
+		<td>Used to signify the aiscript.bin file to use. <b>Default: Default\aiscript.bin</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><a name="syntax" class="header">Syntax</a><a href="#top" class="top">^</a><br><br>
+A decompiled TRG file is composed of 6 different elements:<br>
+<ol>
+	<li>Triggers
+	<li>Condition Functions
+	<li>Action Functions
+	<li>Constants
+	<li>Strings
+	<li>Properties
+</ol>
+<br><br><a name="triggers" class="subheader">Triggers</a><a href="#top" class="top">^</a><br><br>
+Triggers obviously are the most important part of the file. The syntax of a trigger is like so:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Trigger(Players):
+    Conditions:
+        Condition()
+        Condition()
+        ...
+    Actions:
+        Action()
+        Action()
+        ...</pre>
+		</td>
+	</tr>
+</table>
+The <b>Players</b> part of the first line is a list of <i>Player</i> type parameters (More on types later). After that comes the <b>Conditions:</b> keyword, which is followed by a list of conditions. Lastly you have the <b>Actions:</b> keyword, followed by a list of actions (<b>Note:</b> There is a maximum of 16 conditions and 64 actions for each trigger). Conditions and actions follow the same format:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Name(Parameters)</pre>
+		</td>
+	</tr>
+</table>
+Name is the name specific to the condition or action. Paramters is a list of parameters of different types, seperated by commas. Also, if you put a minus sign (-) in front of a condition or action, it will be disabled. See <a href="#types">Types</a> Reference for a list of types and their descriptions, and the <a href="#conditions">Conditions</a> and <a href="#actions">Actions</a> References for a list of names and parameters types. For example, the default melee triggers are:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Trigger(All Players):
+    Conditions:
+        Always()
+    Actions:
+        SetResources(Current Player, Set To, 50, Ore)
+
+Trigger(All Players):
+    Conditions:
+        Command(Current Player, Exactly, 0, Buildings)
+    Actions:
+        Defeat()
+
+Trigger(All Players):
+    Conditions:
+        Command(Non Allied Victory Players, Exactly, 0, Buildings)
+    Actions:
+        Victory()</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="functions" class="subheader">Condition/Action Functions</a><a href="#top" class="top">^</a><br><br>
+You can also define your own conditions and actions in the form of Condition/Action Functions. The syntax is basically the same as the <b>Conditions:</b> and <b>Actions:</b> part of a trigger:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Condition name:
+    Condition()
+    Condition()
+    ...
+
+Action name:
+    Action()
+    Action()
+    ...</pre>
+		</td>
+	</tr>
+</table>
+<b>Note:</b> If you use a Condition/Action Function in a trigger, it does not count as one condition or action. And you can not call Condition/Action Functions inside a Condition/Action Function.<br><br>
+For example:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Action hyper:
+    wait(0)
+    wait(0)
+    wait(0)
+    wait(0)
+    # ... 60 more wait(0)'s
+
+Trigger(Player 8):
+    Conditions:
+        Always()
+    Actions:
+        hyper()
+
+Trigger(Player 8):
+    Conditions:
+        Always()
+    Actions:
+        hyper()
+
+Trigger(Player 8):
+    Conditions:
+        Always()
+    Actions:
+        hyper()</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="constants" class="subheader">Constants</a><a href="#top" class="top">^</a><br><br>
+Constants are a way to define variables. The syntax is similar to Condition/Action Functions:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Constant name:
+value</pre>
+		</td>
+	</tr>
+</table>
+To access the value of a constant, just put its name wrapped in braces, inside a condition or action, like <b>{name}</b>. Also, notice how there is no indentation on the <b>value</b>, thats because if there was, the spaces would be included in the value. The value is one line, containing any data, and since they are evaluated before the parameters are, they can contain multiple parameters. For example:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Constant TwoParams:
+Exactly, 0
+
+Trigger(All Players):
+    Conditions:
+        CountdownTimer({TwoParams})
+    Actions:
+        DisplayTextMessage(String 1, Always)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="strings" class="subheader">Strings</a><a href="#top" class="top">^</a><br><br>
+Strings use the same format as a constant, but instead of a name it has an ID (a unique number), and the value can span multiple lines:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>String ID:
+string
+text&lt;0&gt;</pre>
+		</td>
+	</tr>
+</table>
+Strings follow the same format as a regular string in <a href="PyTBL.html#Syntax">TBL</a> files, which also means they <b>must</b> end in a &lt;0&gt;:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>String 1:
+&lt;4&gt;Welcome To My Map!
+&lt;6&gt; By:  poiuy_qwert&lt;0&gt;#This is a comment, but the # has to touch the &gt;
+# If it didn't, the string would end in a space, not a &lt;0&gt;, givin an error</pre>
+		</td>
+	</tr>
+</table>
+<b>Note:</b> <a href="#cmdline">GOT Compatable TRG</a> files do not contain strings. If you compile to one, all strings will be left out, and all triggers associated with them will be disabled.<br>
+<br><br><a name="properties" class="subheader">Properties</a><a href="#top" class="top">^</a><br><br>
+Properties are somewhat like triggers, but have a more strict set of commands and rules for those commands. They are also referenced by an ID, like strings:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Property ID:
+    ValidProperties()
+    Properties()
+    ValidUnitData()
+    data
+    ...</pre>
+		</td>
+	</tr>
+</table>
+Every property <b>must</b> contain a ValidProperties(), ValidUnitData(), and Properties() command. ValidProperties() defines which properties the current property is allowed to set (for example its not valid for normal Marines to have the Burrow property). It must come before the Properties() command, and defines which values the Properties() command allows for that specific property. Both commands take no parameters, or a list of the keywords:<br>
+<ul>
+	<li>Cloaked
+	<li>Burrowed
+	<li>InTransit
+	<li>Hallucinated
+	<li>Invincible
+	<li>Unknown1 <i>to</i> Unknown11
+</ul>
+ValidUnitData() defines which data for the unit can be set (for example you cant set the amount of resources on a Marine), and can take no parameters, or a list of the keywords:<br>
+<ul>
+	<li>Owner
+	<li>Health
+	<li>Shields
+	<li>Energy
+	<li>Resources
+	<li>AmountInHanger
+	<li>Unknown
+</ul>
+For each valid unit data, you must have the command corrisponding to it. Those commands have the same name as the keywords (So Owner(), AmountInHanger(), etc.). Owner() takes a player number, Health(), Shields(), and Energy() take a percentage, Resources() and Unknown() take numbers, and AmountInHanger() a number between 1 and 10. For example, the normal properties for a Zergling:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Property 1:
+    ValidProperties(Burrowed, Hallucinated, Invincible)
+    Properties()
+    ValidUnitData(Health)
+    Health(100%)</pre>
+		</td>
+	</tr>
+</table>
+<b>Note:</b> <a href="#cmdline">GOT Compatable TRG</a> files do not contain properties. If you compile to one, all propeties will be left out, and all triggers associated with them will be disabled.<br>
+<br><br><a name="examples" class="header">Example Usage</a><a href="#top" class="top">^</a><br><br>
+Decompiling a normal TRG file, then recomipling into a GOT compatable TRG file:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyTRG.pyw Triggers.trg
+  ...edit triggers...
+python PyTRG.pyw -t -c Triggers.txt melee.trg</pre>
+		</td>
+	</tr>
+</table>
+Decompiling and recompiling a GOT compatable TRG using a custom aiscript.bin:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyTRG.pyw -a myai.bin -t insane.trg
+  ...edit triggers...
+python PyTRG.pyw -a myai.bin -t -c insane.txt</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="reference" class="header">Reference</a><a href="#top" class="top">^</a><br><br>
+<a name="types" class="subheader">Types</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Types</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Comparison   - One of the keywords: At Least, Exactly, At Most
+Number       - Any number in the range 0 to 4294967295
+Player       - A number in the range 0 to 255 (with or without the keyword Player before it), or any
+               keyword from this list: Current Player, Foes, Allies, Neutral Players, All Players,
+               Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4,
+               Non Allied Victory Players
+TUnit        - A unit ID from 0 to 227 (and extended unit ID 233 to 65535), a full unit name (in the
+               TBL, its the part before the first &lt;0&gt;), or a type from the list: None, Any Unit, Men,
+               Buildings, Factories
+Location     - A number in the range 0 to 255 (with or without the keyword Location before it), or
+               the keyword Anywhere
+ResType      - One of the keywords: Ore, Gas, Ore and Gas
+ScoreType    - One of the keywords: Total, Units, Buildings, Units and Buildings, Kills, Razings,
+               Kills and Razings, Custom
+Switch       - A number in the range 0 to 255 (with or without the keyword Switch before it)
+Set          - Either the keyword Set, or Cleared
+Time         - Like number, can be any number in the range 0 to 4294967295
+String       - A number corrisponding to a string (with or without the keyword String before it)
+WAV          - A number corrisponding to a WAV (with or without the keyword WAV before it)
+Unit         - Like TUnit, but only accepts a unit ID from 0 to 227 (and extended unit ID's 228 to
+               65536), or a full unit name (in the TBL, its the part before the first &lt;0&gt;)
+Modifier     - One of the keywords: Set To, Add, Subtract
+Display      - Either the keyword Always Display, or Only With Subtitles
+Property     - A number corrisponding to a Property (with or without the keyword Property before it)
+SwitchAction - One of the keywords: Set, Clear, Toggle, Randomize
+AIScript     - The name of an AIScript (a list of all the AIScript values is given below)
+AIScriptLoc  - The name of a location based AIScript (a list of all location based AIScripts is given
+               below)
+QNumber      - Any number in the range 1 to 4294967295, or the keyword All
+State        - One of the keywords: Set, Clear, Toggle
+DestLocation - A number in the range 0 to 255 (with or without the keyword Location before it), or the
+               keyword Anywhere
+Order        - One of the keywords: Move, Patroll, Attack
+DestPlayer   - A number in the range 0 to 255 (with or without the keyword Player before it), or any
+               keyword from this list: Current Player, Foes, Allies, Neutral Players, All Players,
+               Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4,
+               Non Allied Victory Players
+Percentage   - A number from 0 to 100 (with or without a trailing %)
+AllyStatus   - One of the keywords: Enemy, Ally, Allied Victory</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="conditions" class="subheader">Conditions</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Conditions</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>NoCondition()
+CountdownTimer(Comparison, Number)
+Command(Player, Comparison, Number, TUnit)
+Bring(Player, Comparison, Number, TUnit, Location)
+Accumulate(Player, Comparison, Number, ResType)
+Kill(Player, Comparison, Number, TUnit)
+CommandTheMost(TUnit)
+CommandsTheMostAt(TUnit, Location)
+MostKills(TUnit)
+HighestScore(ScoreType)
+MostResources(ResType)
+Switch(Switch, Set)
+ElapsedTime(Comparison, Number)
+Opponents(Player, Comparison, Number)
+Deaths(Player, TUnit, Comparison, Number)
+CommandTheLeast(TUnit)
+CommandTheLeastAt(TUnit, Location)
+LeastKills(TUnit)
+LowestScore(ScoreType)
+LeastResources(ResType)
+Score(Player, Comparison, Number, ScoreType)
+Always()
+Never()</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="actions" class="subheader">Actions</a><a href="#top" class="top">^</a><br><br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Actions</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>NoAction()
+Victory()
+Defeat()
+PreserveTrigger()
+Wait(Time)
+PauseGame()
+UnpauseGame()
+Transmission(String, WAV, Time, Unit, Location, Modifier, Time)
+PlayWAV(WAV, Time)
+DisplayTextMessage(String, Display)
+CenterView(Location)
+CreateUnitWithProperties(Player, Number, Unit, Location, Property)
+SetMissionObjectives(String)
+SetSwitch(Switch, SwitchAction)
+SetCountdownTimer(Modifier, Time)
+RunAIScript(AIScript)
+RunAIScriptAtLocation(AIScriptLoc, Location)
+LeaderBoardControl(String, TUnit)
+LeaderBoardControlAtLocation(String, TUnit, Location)
+LeaderBoardResources(String, ResType)
+LeaderBoardKills(String, TUnit)
+LeaderBoardPoints(String, ScoreType)
+KillUnit(Player, TUnit)
+KillUnitAtLocation(Player, QNumber, TUnit, Location)
+RemoveUnit(Player, TUnit)
+RemoveUnitAtLocation(Player, QNumber, TUnit, Location)
+SetResources(Player, Modifier, Number, ResType)
+SetScore(Player, Modifier, Number, ScoreType)
+MinimapPing(Location)
+TalkingPortrait(Unit, Time)
+MuteUnitSpeech()
+UnmuteUnitSpeech()
+LeaderboardComputerPlayers(State)
+LeaderboardGoalControl(String, Number, TUnit)
+LeaderboardGoalControlAtLocation(String, Number, TUnit, Location)
+LeaderboardGoalResources(String, Number, TUnit, ResType)
+LeaderboardGoalKills(String, Number, TUnit)
+LeaderboardGoalPoints(String, Number, ScoreType)
+MoveLocation(Player, Location, DestLocation, TUnit)
+MoveUnit(Player, QNumber, TUnit, Location, DestLocation)
+LeaderboardGreed(Number)
+SetNextScenario(String)
+SetDoodadState(Player, TUnit, Location, State)
+SetInvincibility(Player, TUnit, Location, State)
+CreateUnit(Player, Number, Unit, Location)
+SetDeaths(Player, TUnit, Modifier, Number)
+Order(Player, TUnit, Location, Order, DestLocation)
+Comment(String)
+GiveUnitstoPlayer(Player, DestPlayer, QNumber, TUnit, Location)
+ModifyUnitHitPoints(Player, QNumber, TUnit, Location, Percentage)
+ModifyUnitEnergy(Player, QNumber, TUnit, Location, Percentage)
+ModifyUnitShieldPoints(Player, QNumber, TUnit, Location, Percentage)
+ModifyUnitResourceAmount(Player, QNumber, Location, Percentage)
+ModifyUnitHangerCount(Player, Number, TUnit, Location, Percentage)
+PauseTimer()
+UnpauseTimer()
+Draw()
+SetAllianceStatus(Player, AllyStatus)
+DisableDebugMode()
+EnableDebugMode()</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="ai" class="subheader">AI Scripts</a><a href="#top" class="top">^</a><br><br>
+<b>Note:</b> These are only the default AI Scripts. PyTRG is integrated with <a href="PyAI.html">PyAI</a>, which means it reads the actuall AI Scripts from aiscript.bin and bwscript.bin. If you want to know for sure which AI Scripts are avaiable use the <a href="#cmdline">-r option</a> on the command line when decompiling.<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>AI Scripts (Without Location)</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Suic    |    Send All Units on Strategic Suicide Missions
+SuiR    |    Send All Units on Random Suicide Missions
+Rscu    |    Switch Computer Player to Rescue Passive
++Vi0    |    Turn ON Shared Vision for Player 1
++Vi1    |    Turn ON Shared Vision for Player 2
++Vi2    |    Turn ON Shared Vision for Player 3
++Vi3    |    Turn ON Shared Vision for Player 4
++Vi4    |    Turn ON Shared Vision for Player 5
++Vi5    |    Turn ON Shared Vision for Player 6
++Vi6    |    Turn ON Shared Vision for Player 7
++Vi7    |    Turn ON Shared Vision for Player 8
+-Vi0    |    Turn OFF Shared Vision for Player 1
+-Vi1    |    Turn OFF Shared Vision for Player 2
+-Vi2    |    Turn OFF Shared Vision for Player 3
+-Vi3    |    Turn OFF Shared Vision for Player 4
+-Vi4    |    Turn OFF Shared Vision for Player 5
+-Vi5    |    Turn OFF Shared Vision for Player 6
+-Vi6    |    Turn OFF Shared Vision for Player 7
+-Vi7    |    Turn OFF Shared Vision for Player 8</pre>
+		</td>
+	</tr>
+</table>
+<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>AI Scripts (Requires a Location)</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Ter3    |    Terran 3 - Zerg Town
+Ter5    |    Terran 5 - Terran Main Town
+Te5H    |    Terran 5 - Terran Harvest Town
+Ter6    |    Terran 6 - Air Attack Zerg
+Te6b    |    Terran 6 - Ground Attack Zerg
+Te6c    |    Terran 6 - Zerg Support Town
+Ter7    |    Terran 7 - Bottom Zerg Town
+Te7s    |    Terran 7 - Right Zerg Town
+Te7m    |    Terran 7 - Middle Zerg Town
+Ter8    |    Terran 8 - Confederate Town
+Tr9L    |    Terran 9 - Light Attack
+Tr9H    |    Terran 9 - Heavy Attack
+Te10    |    Terran 10 - Confederate Towns
+T11z    |    Terran 11 - Zerg Town
+T11a    |    Terran 11 - Lower Protoss Town
+T11b    |    Terran 11 - Upper Protoss Town
+T12N    |    Terran 12 - Nuke Town
+T12P    |    Terran 12 - Phoenix Town
+T12T    |    Terran 12 - Tank Town
+TED1    |    Terran 1 - Electronic Distribution
+TED2    |    Terran 2 - Electronic Distribution
+TED3    |    Terran 3 - Electronic Distribution
+TSW1    |    Terran 1 - Shareware
+TSW2    |    Terran 2 - Shareware
+TSW3    |    Terran 3 - Shareware
+TSW4    |    Terran 4 - Shareware
+TSW5    |    Terran 5 - Shareware
+Zer1    |    Zerg 1 - Terran Town
+Zer2    |    Zerg 2 - Protoss Town
+Zer3    |    Zerg 3 - Terran Town
+Zer4    |    Zerg 4 - Right Terran Town
+Ze4S    |    Zerg 4 - Lower Terran Town
+Zer6    |    Zerg 6 - Protoss Town
+Zr7a    |    Zerg 7 - Air Town
+Zr7g    |    Zerg 7 - Ground Town
+Zr7s    |    Zerg 7 - Support Town
+Zer8    |    Zerg 8 - Scout Town
+Ze8T    |    Zerg 8 - Templar Town
+Zer9    |    Zerg 9 - Teal Protoss
+Z9ly    |    Zerg 9 - Left Yellow Protoss
+Z9ry    |    Zerg 9 - Right Yellow Protoss
+Z9lo    |    Zerg 9 - Left Orange Protoss
+Z9ro    |    Zerg 9 - Right Orange Protoss
+Z10a    |    Zerg 10 - Left Teal (Attack)
+Z10b    |    Zerg 10 - Right Teal (Support)
+Z10c    |    Zerg 10 - Left Yellow (Support)
+Z10d    |    Zerg 10 - Right Yellow (Attack)
+Z10e    |    Zerg 10 - Red Protoss
+Pro1    |    Protoss 1 - Zerg Town
+Pro2    |    Protoss 2 - Zerg Town
+Pr3R    |    Protoss 3 - Air Zerg Town
+Pr3G    |    Protoss 3 - Ground Zerg Town
+Pro4    |    Protoss 4 - Zerg Town
+Pr5I    |    Protoss 5 - Zerg Town Island
+Pr5B    |    Protoss 5 - Zerg Town Base
+Pro7    |    Protoss 7 - Left Protoss Town
+Pr7B    |    Protoss 7 - Right Protoss Town
+Pr7S    |    Protoss 7 - Shrine Protoss
+Pro8    |    Protoss 8 - Left Protoss Town
+Pr8B    |    Protoss 8 - Right Protoss Town
+Pr8D    |    Protoss 8 - Protoss Defenders
+Pro9    |    Protoss 9 - Ground Zerg
+Pr9W    |    Protoss 9 - Air Zerg
+Pr9Y    |    Protoss 9 - Spell Zerg
+Pr10    |    Protoss 10 - Mini-Towns
+P10C    |    Protoss 10 - Mini-Town Master
+P10o    |    Protoss 10 - Overmind Defenders
+TMCu    |    Terran Custom Level
+ZMCu    |    Zerg Custom Level
+PMCu    |    Protoss Custom Level
+TLOf    |    Terran Campaign Easy
+TMED    |    Terran Campaign Medium
+THIf    |    Terran Campaign Difficult
+TSUP    |    Terran Campaign Insane
+TARE    |    Terran Campaign Area Town
+ZLOf    |    Zerg Campaign Easy
+ZMED    |    Zerg Campaign Medium
+ZHIf    |    Zerg Campaign Difficult
+ZSUP    |    Zerg Campaign Insane
+ZARE    |    Zerg Campaign Area Town
+PLOf    |    Protoss Campaign Easy
+PMED    |    Protoss Campaign Medium
+PHIf    |    Protoss Campaign Difficult
+PSUP    |    Protoss Campaign Insane
+PARE    |    Protoss Campaign Area Town
+MvTe    |    Move Dark Templars to Region
+ClrC    |    Clear Previous Combat Data
+Enmy    |    Set Player to Enemy
+Ally    |    Set Player to Ally
+VluA    |    Value This Area Higher
+EnBk    |    Enter Closest Bunker
+StTg    |    Set Generic Command Target
+StPt    |    Make These Units Patrol
+EnTr    |    Enter Transport
+ExTr    |    Exit Transport
+NuHe    |    AI Nuke Here
+HaHe    |    AI Harass Here
+JYDg    |    Set Unit Order To: Junk Yard Dog
+ReHe    |    AI Nuke Here
+    -- BroodWar Only --
+PB1A    |    Brood Wars Protoss 1 - Town A
+PB1B    |    Brood Wars Protoss 1 - Town B
+PB1C    |    Brood Wars Protoss 1 - Town C
+PB1D    |    Brood Wars Protoss 1 - Town D
+PB1E    |    Brood Wars Protoss 1 - Town E
+PB1F    |    Brood Wars Protoss 1 - Town F
+PB2A    |    Brood Wars Protoss 2 - Town A
+PB2B    |    Brood Wars Protoss 2 - Town B
+PB2C    |    Brood Wars Protoss 2 - Town C
+PB2D    |    Brood Wars Protoss 2 - Town D
+PB2E    |    Brood Wars Protoss 2 - Town E
+PB2F    |    Brood Wars Protoss 2 - Town F
+PB3A    |    Brood Wars Protoss 3 - Town A
+PB3B    |    Brood Wars Protoss 3 - Town B
+PB3C    |    Brood Wars Protoss 3 - Town C
+PB3D    |    Brood Wars Protoss 3 - Town D
+PB3E    |    Brood Wars Protoss 3 - Town E
+PB3F    |    Brood Wars Protoss 3 - Town F
+PB4A    |    Brood Wars Protoss 4 - Town A
+PB4B    |    Brood Wars Protoss 4 - Town B
+PB4C    |    Brood Wars Protoss 4 - Town C
+PB4D    |    Brood Wars Protoss 4 - Town D
+PB4E    |    Brood Wars Protoss 4 - Town E
+PB4F    |    Brood Wars Protoss 4 - Town F
+PB5A    |    Brood Wars Protoss 5 - Town A
+PB5B    |    Brood Wars Protoss 5 - Town B
+PB5C    |    Brood Wars Protoss 5 - Town C
+PB5D    |    Brood Wars Protoss 5 - Town D
+PB5E    |    Brood Wars Protoss 5 - Town E
+PB5F    |    Brood Wars Protoss 5 - Town F
+PB6A    |    Brood Wars Protoss 6 - Town A
+PB6B    |    Brood Wars Protoss 6 - Town B
+PB6C    |    Brood Wars Protoss 6 - Town C
+PB6D    |    Brood Wars Protoss 6 - Town D
+PB6E    |    Brood Wars Protoss 6 - Town E
+PB6F    |    Brood Wars Protoss 6 - Town F
+PB7A    |    Brood Wars Protoss 7 - Town A
+PB7B    |    Brood Wars Protoss 7 - Town B
+PB7C    |    Brood Wars Protoss 7 - Town C
+PB7D    |    Brood Wars Protoss 7 - Town D
+PB7E    |    Brood Wars Protoss 7 - Town E
+PB7F    |    Brood Wars Protoss 7 - Town F
+PB8A    |    Brood Wars Protoss 8 - Town A
+PB8B    |    Brood Wars Protoss 8 - Town B
+PB8C    |    Brood Wars Protoss 8 - Town C
+PB8D    |    Brood Wars Protoss 8 - Town D
+PB8E    |    Brood Wars Protoss 8 - Town E
+PB8F    |    Brood Wars Protoss 8 - Town F
+TB1A    |    Brood Wars Terran 1 - Town A
+TB1B    |    Brood Wars Terran 1 - Town B
+TB1C    |    Brood Wars Terran 1 - Town C
+TB1D    |    Brood Wars Terran 1 - Town D
+TB1E    |    Brood Wars Terran 1 - Town E
+TB1F    |    Brood Wars Terran 1 - Town F
+TB2A    |    Brood Wars Terran 2 - Town A
+TB2B    |    Brood Wars Terran 2 - Town B
+TB2C    |    Brood Wars Terran 2 - Town C
+TB2D    |    Brood Wars Terran 2 - Town D
+TB2E    |    Brood Wars Terran 2 - Town E
+TB2F    |    Brood Wars Terran 2 - Town F
+TB3A    |    Brood Wars Terran 3 - Town A
+TB3B    |    Brood Wars Terran 3 - Town B
+TB3C    |    Brood Wars Terran 3 - Town C
+TB3D    |    Brood Wars Terran 3 - Town D
+TB3E    |    Brood Wars Terran 3 - Town E
+TB3F    |    Brood Wars Terran 3 - Town F
+TB4A    |    Brood Wars Terran 4 - Town A
+TB4B    |    Brood Wars Terran 4 - Town B
+TB4C    |    Brood Wars Terran 4 - Town C
+TB4D    |    Brood Wars Terran 4 - Town D
+TB4E    |    Brood Wars Terran 4 - Town E
+TB4F    |    Brood Wars Terran 4 - Town F
+TB5A    |    Brood Wars Terran 5 - Town A
+TB5B    |    Brood Wars Terran 5 - Town B
+TB5C    |    Brood Wars Terran 5 - Town C
+TB5D    |    Brood Wars Terran 5 - Town D
+TB5E    |    Brood Wars Terran 5 - Town E
+TB5F    |    Brood Wars Terran 5 - Town F
+TB6A    |    Brood Wars Terran 6 - Town A
+TB6B    |    Brood Wars Terran 6 - Town B
+TB6C    |    Brood Wars Terran 6 - Town C
+TB6D    |    Brood Wars Terran 6 - Town D
+TB6E    |    Brood Wars Terran 6 - Town E
+TB6F    |    Brood Wars Terran 6 - Town F
+TB7A    |    Brood Wars Terran 7 - Town A
+TB7B    |    Brood Wars Terran 7 - Town B
+TB7C    |    Brood Wars Terran 7 - Town C
+TB7D    |    Brood Wars Terran 7 - Town D
+TB7E    |    Brood Wars Terran 7 - Town E
+TB7F    |    Brood Wars Terran 7 - Town F
+TB8A    |    Brood Wars Terran 8 - Town A
+TB8B    |    Brood Wars Terran 8 - Town B
+TB8C    |    Brood Wars Terran 8 - Town C
+TB8D    |    Brood Wars Terran 8 - Town D
+TB8E    |    Brood Wars Terran 8 - Town E
+TB8F    |    Brood Wars Terran 8 - Town F
+ZB1A    |    Brood Wars Zerg 1 - Town A
+ZB1B    |    Brood Wars Zerg 1 - Town B
+ZB1C    |    Brood Wars Zerg 1 - Town C
+ZB1D    |    Brood Wars Zerg 1 - Town D
+ZB1E    |    Brood Wars Zerg 1 - Town E
+ZB1F    |    Brood Wars Zerg 1 - Town F
+ZB2A    |    Brood Wars Zerg 2 - Town A
+ZB2B    |    Brood Wars Zerg 2 - Town B
+ZB2C    |    Brood Wars Zerg 2 - Town C
+ZB2D    |    Brood Wars Zerg 2 - Town D
+ZB2E    |    Brood Wars Zerg 2 - Town E
+ZB2F    |    Brood Wars Zerg 2 - Town F
+ZB3A    |    Brood Wars Zerg 3 - Town A
+ZB3B    |    Brood Wars Zerg 3 - Town B
+ZB3C    |    Brood Wars Zerg 3 - Town C
+ZB3D    |    Brood Wars Zerg 3 - Town D
+ZB3E    |    Brood Wars Zerg 3 - Town E
+ZB3F    |    Brood Wars Zerg 3 - Town F
+ZB4A    |    Brood Wars Zerg 4 - Town A
+ZB4B    |    Brood Wars Zerg 4 - Town B
+ZB4C    |    Brood Wars Zerg 4 - Town C
+ZB4D    |    Brood Wars Zerg 4 - Town D
+ZB4E    |    Brood Wars Zerg 4 - Town E
+ZB4F    |    Brood Wars Zerg 4 - Town F
+ZB5A    |    Brood Wars Zerg 5 - Town A
+ZB5B    |    Brood Wars Zerg 5 - Town B
+ZB5C    |    Brood Wars Zerg 5 - Town C
+ZB5D    |    Brood Wars Zerg 5 - Town D
+ZB5E    |    Brood Wars Zerg 5 - Town E
+ZB5F    |    Brood Wars Zerg 5 - Town F
+ZB6A    |    Brood Wars Zerg 6 - Town A
+ZB6B    |    Brood Wars Zerg 6 - Town B
+ZB6C    |    Brood Wars Zerg 6 - Town C
+ZB6D    |    Brood Wars Zerg 6 - Town D
+ZB6E    |    Brood Wars Zerg 6 - Town E
+ZB6F    |    Brood Wars Zerg 6 - Town F
+ZB7A    |    Brood Wars Zerg 7 - Town A
+ZB7B    |    Brood Wars Zerg 7 - Town B
+ZB7C    |    Brood Wars Zerg 7 - Town C
+ZB7D    |    Brood Wars Zerg 7 - Town D
+ZB7E    |    Brood Wars Zerg 7 - Town E
+ZB7F    |    Brood Wars Zerg 7 - Town F
+ZB8A    |    Brood Wars Zerg 8 - Town A
+ZB8B    |    Brood Wars Zerg 8 - Town B
+ZB8C    |    Brood Wars Zerg 8 - Town C
+ZB8D    |    Brood Wars Zerg 8 - Town D
+ZB8E    |    Brood Wars Zerg 8 - Town E
+ZB8F    |    Brood Wars Zerg 8 - Town F
+ZB9A    |    Brood Wars Zerg 9 - Town A
+ZB9B    |    Brood Wars Zerg 9 - Town B
+ZB9C    |    Brood Wars Zerg 9 - Town C
+ZB9D    |    Brood Wars Zerg 9 - Town D
+ZB9E    |    Brood Wars Zerg 9 - Town E
+ZB9F    |    Brood Wars Zerg 9 - Town F
+ZB0A    |    Brood Wars Zerg 10 - Town A
+ZB0B    |    Brood Wars Zerg 10 - Town B
+ZB0C    |    Brood Wars Zerg 10 - Town C
+ZB0D    |    Brood Wars Zerg 10 - Town D
+ZB0E    |    Brood Wars Zerg 10 - Town E
+ZB0F    |    Brood Wars Zerg 10 - Town F
+TMCx    |    Terran Expansion Custom Level
+ZMCx    |    Zerg Expansion Custom Level
+PMCx    |    Protoss Expansion Custom Level
+TLOx    |    Expansion Terran Campaign Easy
+TMEx    |    Expansion Terran Campaign Medium
+THIx    |    Expansion Terran Campaign Difficult
+TSUx    |    Expansion Terran Campaign Insane
+TARx    |    Expansion Terran Campaign Area Town
+ZLOx    |    Expansion Zerg Campaign Easy
+ZMEx    |    Expansion Zerg Campaign Medium
+ZHIx    |    Expansion Zerg Campaign Difficult
+ZSUx    |    Expansion Zerg Campaign Insane
+ZARx    |    Expansion Zerg Campaign Area Town
+PLOx    |    Expansion Protoss Campaign Easy
+PMEx    |    Expansion Protoss Campaign Medium
+PHIx    |    Expansion Protoss Campaign Difficult
+PSUx    |    Expansion Protoss Campaign Insane
+PARx    |    Expansion Protoss Campaign Area Town
+DWHe    |    AI Nuke Here</pre>
+		</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyTBL.html">&#171; PyTBL</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyTRG</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyDAT.html">PyDAT &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

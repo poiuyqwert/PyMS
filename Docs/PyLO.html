@@ -1,0 +1,169 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyLO v1.6 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><b>PyLO v1.6</b>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyLO v1.6</a><br><br>
+			PyLO is used to convert LO? (LOA, LOB, LOD, LOF, LOO, LOS, LOU, LOG, LOL, LOX) to and from TXT files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+				<li><a href="#syntax">Syntax</a>
+				<li><a href="#examples">Example Usage</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyLO v1.6</b>
+<ul>
+	<li>Enabled the error tracer to give internal error windows instead of only printing it to Libs\stdeo.txt
+	<li>Fixed a bug on file load when "Use base GRP" or "Use overlay GRP" were unselected at program start
+</ul>
+<b>PyLO v1.5</b>
+<ul>
+	<li>Updated the previewer, now it is located in the main window, can preview GRP's, and allows drag and drop for changing offsets
+</ul>
+<b>PyLO v1.4</b>
+<ul>
+	<li>The Find Dialog opens with the the "Find" entry selected, and pressing Enter in the dialog now finds next
+</ul>
+<b>PyLO v1.3</b>
+<ul>
+	<li>Fixed Test function
+</ul>
+<b>PyLO v1.2</b>
+<ul>
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyLO v1.1</b>
+<ul>
+	<li>Added better error reporting
+	<li>Indentation changed
+</ul>
+<b>PyLO v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<b>Note:</b> All LO? files have the same format, just different filename extensions (LOA, LOB, etc).<br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-h</b></td>
+		<td class="lblue"><b>--help</b></td>
+		<td>Display the command line format and options with small descriptions.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile a LO? file to a TXT file. <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile a TXT file to a LO? file.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><a name="syntax" class="header">Syntax</a><a href="#top" class="top">^</a><br><br>
+The syntax of a decompiled LO? file is very simple. There are a bunch of framesets, each started with the header <b>Frame:</b>. Under each header (in each frameset), there is a list of overlay coordinates in the form <b>(&lt;x&gt;, &lt;y&gt;)</b>. <b>&lt;x&gt;</b> and <b>&lt;y&gt;</b> are both integers in the range -127 to 127, and all framesets must have the same amount of overlays. For example, the Vespene Geyser smoke puff overlay is:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Code</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Frame:
+    (11, -19)
+    (-40, -13)
+    (34, 2)
+    (127, 127)
+    (127, 127)
+
+Frame:
+    (11, -19)
+    (-40, -13)
+    (34, 2)
+    (127, 127)
+    (127, 127)
+
+Frame:
+    (11, -19)
+    (-40, -13)
+    (34, 2)
+    (127, 127)
+    (127, 127)
+
+Frame:
+    (11, -19)
+    (-40, -13)
+    (34, 2)
+    (127, 127)
+    (127, 127)</pre>
+		</td>
+	</tr>
+</table>
+<br><br><a name="examples" class="header">Example Usage</a><a href="#top" class="top">^</a><br><br>
+Editing the Vespene Geyser smoke puff overlay:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyLO.pyw geyser.los
+  ..edit overlay..
+python PyLO.pyw -c gayser.txt</pre>
+		</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyPAL.html">&#171; PyPAL</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyLO</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyTBL.html">PyTBL &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

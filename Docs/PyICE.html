@@ -1,0 +1,199 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyICE v1.8 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><b>PyICE v1.8</b>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyICE v1.8</a><br><br>
+			PyICE is used to modify StarCraft iscript.bin files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyICE v1.8</b>
+<ul>
+	<li>Importing now shows warnings if there are any
+	<li>Fixed some problems keeping track of which parts of the code are used and when to delete them
+	<li>Fixed the sound previewer previewing the wrong sounds
+	<li>Fixed a problem loading the 'engframe' opcode
+	<li>Fixed a problem with importing a list of files with the List Import Dialog
+</ul>
+<b>PyICE v1.7</b>
+<ul>
+	<li>The IScript Editor now shows at most 5 of the script ID's (that were selected when it was opened) in its title
+	<li>The IScript Entries list now only shows entries that are actually in the file
+	<li>Added support for custom IScript ID's greater then the default iscript.bin's highest ID
+	<li>Added a new special header extension (like the GRP frames extension from v1.5) to define a custom name for IScript entries
+	<li>Fixed the list of sounds in the Sound Previewer (it was showing a list of sfxdata.tbl entries, now it only shows sfxdata.dat sounds)
+	<li>Fixed the Sound Previewer not selecting the id of the playsnd on the current line
+	<li>Fixed the Sound Previewer's Insert/Overwrite ID/Command buttons
+</ul>
+<b>PyICE v1.6</b>
+<ul>
+	<li>Fixed a bug where the wrong current IScript ID was chosen in the Graphics Previewer
+	<li>Fixed a problem decompiling commands that referenced a flingy
+</ul>
+<b>PyICE v1.5</b>
+<ul>
+	<li>Its now possible to select multiple files to add to the List Import dialog
+	<li>Added a new special header extension to associate one or more GRP's with an iscript entry (to get extra warnings on frame/frameset problems)
+	<li>Added previewing buttons (like PyGRP) to the Graphics Previewer
+	<li>Fixed a bug causing slow loading times for GRP's in the Previewer
+</ul>
+<b>PyICE v1.4</b>
+<ul>
+	<li>Added Sound and Graphics Insert/Previewer to the Script Editor (currently only for Windows)
+	<li>Added MPQ settings to be used with the previewer
+	<li>You no longer need to select items to open the Script Editor
+	<li>Fixed a problem with the settings
+	<li>Fixed right-click bug in script editor
+</ul>
+<b>PyICE v1.3</b>
+<ul>
+	<li>The Find/Replace Dialog opens with the the "Find" entry selected, and pressing Enter in the dialog now finds next
+	<li>Added a right click menu to the Script Editor
+	<li>Fixed a potential problem with tab-completion
+	<li>Fixed a problem with chooseing custom TBL files
+	<li>Fixed a problem with compiling
+	<li>Fixed a problem with default command line parameters (sprites.dat and images.dat were reversed)
+</ul>
+<b>PyICE v1.2</b>
+<ul>
+	<li>Fixed a problem with saving and testing scripts
+</ul>
+<b>PyICE v1.1</b>
+<ul>
+	<li>Fixed tab-completion crash
+	<li>The Frame type now accepts decimal values
+</ul>
+<b>PyICE v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-d</b></td>
+		<td class="lblue"><b>--decompile</b></td>
+		<td>Decompile iscripts from iscript.bin <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-c</b></td>
+		<td class="lblue"><b>--compile</b></td>
+		<td>Compile iscripts to an iscript.bin</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-a</b></td>
+		<td class="lblue"><b>--weapons</b></td>
+		<td>Specify your own weapons.dat file for weapon data lookups</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-l</b></td>
+		<td class="lblue"><b>--flingy</b></td>
+		<td>Specify your own flingy.dat file for flingy data lookups</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-i</b></td>
+		<td class="lblue"><b>--images</b></td>
+		<td>Specify your own images.dat file for image data lookups</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-p</b></td>
+		<td class="lblue"><b>--sprites</b></td>
+		<td>Specify your own sprites.dat file for sprite data lookups</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-f</b></td>
+		<td class="lblue"><b>--sfxdata</b></td>
+		<td>Specify your own sfxdata.dat file for sound data lookups</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-x</b></td>
+		<td class="lblue"><b>--stattxt</b></td>
+		<td>Used to signify the stat_txt.tbl file to use</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-m</b></td>
+		<td class="lblue"><b>--imagestbl</b></td>
+		<td>Used to signify the images.tbl file to use</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-t</b></td>
+		<td class="lblue"><b>--sfxdatatbl</b></td>
+		<td>Used to signify the sfxdata.tbl file to use</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-s</b></td>
+		<td class="lblue"><b>--scripts</b></td>
+		<td>A list of iscript ID's to decompile (seperated by commas) <b>Default: All</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-b</b></td>
+		<td class="lblue"><b>--iscript</b></td>
+		<td>Used to signify the base iscript.bin file to compile on top of</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-r</b></td>
+		<td class="lblue"><b>--reference</b></td>
+		<td>When decompiling, put a reference for commands and parameters <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-w</b></td>
+		<td class="lblue"><b>--hidewarns</b></td>
+		<td>Hides any warning produced by compiling your code <b>Default: Off</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="PyAI.html">&#171; PyAI</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyICE</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyFNT.html">PyFNT &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

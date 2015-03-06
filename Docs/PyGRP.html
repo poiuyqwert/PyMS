@@ -1,0 +1,227 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>PyGRP v3.8 [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><a class="tree" href="intro.html">Introduction </a>
+				<li><b>PyGRP v3.8</b>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">PyGRP v3.8</a><br><br>
+			PyGRP converts StarCraft GRP files to and from BMP files. It supports compressed and uncompressed GRP's, converting all frames to and from a single BMP file, and reading RLE compressed BMP files.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#cmdline">Commandline Options</a>
+				<li><a href="#examples">Example Usage</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyGRP v3.8</b>
+<ul>
+	<li>Fixed a problem importing frames from a single BMP
+</ul>
+<b>PyGRP v3.7</b>
+<ul>
+	<li>You can now select multiple bmp's to import instead of being stuck with the "same name" mechanic (which PyGRP uses for the command line bmp to grp conversions)
+	<li>Added a "Transparent Index" option (like SFGrpConv) to choose which index in the palette will be used for transparency (can only be changed when a GRP is not open)
+	<li>You no longer need to specify if you are loading an uncompressed grp, only if you are saving to one
+	<li>Changed the "Uncompressed GRP" option to "Save Uncompressed" because of above
+	<li>Opening an uncompressed GRP now warns you to use the "Save Uncompressed" option when saving
+	<li>Organized options
+</ul>
+<b>PyGRP v3.6</b>
+<ul>
+	<li>Fixed a problem exporting GRP's to a Single BMP (Framsets) when there arn't a multiple of 17 frames
+	<li>Fixed a bug where crappy (and technically invalid, though Paint could open them) RetroGRP BMP's would crash when imported. the extra invalid data is now just stripped.
+	<li>Added a function to move all selected frames Up or Down through the list
+</ul>
+<b>PyGRP v3.5</b>
+<ul>
+	<li>Fixed a compiling problem resulting from having more then 127 index 0 pixels in a row
+	<li>Fixed open dialog titlebar
+	<li>GRP's that are technicaly invalid but still work in SC, are now properly handled
+</ul>
+<b>PyGRP v3.4</b>
+<ul>
+	<li>Added support for SFGrpConv's vertical single BMP's
+	<li>Added Ctrl+A to select all frames
+	<li>The Frameset organized single BMP no longer outputs black padding on the right when there is less then one frameset
+</ul>
+<b>PyGRP v3.3</b>
+<ul>
+	<li>Double-Clicking the preview now lets you select the preview background color
+	<li>Fixed frame importing
+	<li>Fixed handling of multiple frames in a single bmp
+</ul>
+<b>PyGRP v3.2</b>
+<ul>
+	<li>Fixed saving of Show Preview option to settings
+	<li>Changed default options to Show Preview, Loop Preview, GRP Outline, and Frame Outline
+	<li>Added option to set file assiciations
+	<li>Added option to change preview speed (range of 50-1000ms), and changed default preview speed to 150ms from 300ms
+</ul>
+<b>PyGRP v3.1</b>
+<ul>
+	<li>Fixed problem with opening some old RetroGRP compiled GRP's
+	<li>Added an icon to the statusbar to indicate edited status (like PyAI has)
+	<li>Fixed problem importing a single file when another file had the same name
+</ul>
+<b>PyGRP v3.0</b>
+<ul>
+	<li>Fixed a bug in bmp to grp
+	<li>Added error trap for images containing too much pixel data
+	<li>Added a <b>GUI</b>
+</ul>
+<b>PyGRP v2.1</b>
+<ul>
+	<li>Indentation changed
+</ul>
+<b>PyGRP v2.0</b>
+<ul>
+	<li>Added support for converting to/from a single BMP file
+	<li>Added better error reporting
+</ul>
+<b>PyGRP v1.5</b>
+<ul>
+	<li>Added support for palette file types:
+<ul>
+	<li>RIFF .pal
+	<li>JASC .pal
+	<li>ZSoft .pcx (What StarCraft uses)
+	<li>StarCraft TileSet .wep
+</ul>
+	<li>Added support for uncompressed GRP's (like 'game\icons.grp')
+	<li>Added support for loading RLE compressed BMP's (can't convert to RLE encoded BMP's, only from)
+	<li>Fixed a bug resulting from having a horizontal row of pixels 63 or more pixels wide of the same color
+</ul>
+<b>PyGRP v1.2</b>
+<ul>
+	<li>Fixed various bugs
+</ul>
+<b>PyGRP v1.1</b>
+<ul>
+	<li>The &lt;out&gt; parameter no longer needs to be specified
+</ul>
+<b>PyGRP v1.0</b>
+<ul>
+	<li>First public release
+</ul>
+<br><br><a name="cmdline" class="header">Commandline Options</a><a href="#top" class="top">^</a><br><br>
+<table width="100%%">
+	<tr>
+		<td class="blue" width="10%%"><b>Option</b></td>
+		<td class="blue" width="15%%"><b>Long Option</b></td>
+		<td class="blue"><b>Description</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-h</b></td>
+		<td class="lblue"><b>--help</b></td>
+		<td>Display the command line format and options with small descriptions.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-p &lt;pal&gt;</b></td>
+		<td class="lblue"><b>--palette &lt;pal&gt;</b></td>
+		<td>Tells the program to use the palette &lt;pal&gt; from the Palettes folder (The file name can but doesn't need to have the ".pal" extension), and be wrapped in quotes if it contains spaces. <b>Default: units.pal</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-g</b></td>
+		<td class="lblue"><b>--grptobmp</b></td>
+		<td>Tells the program you want to convert from GRP to BMP. This will make &lt;inp&gt; be the GRP file, and [out] will be the name used for the BMP's. When the BMP's are saved they will be "[out] ###.bmp" where ### is the frame number zero padded to the left (so 1 would be 001). If [out] is not supplied it will use the file name of the &lt;inp&gt; file. <b>Default</b></td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-b</b></td>
+		<td class="lblue"><b>--bmptogrp</b></td>
+		<td>Tells the program you want to convert a list of BMP's to a GRP. This will make &lt;inp&gt; be the first BMP in the frame list, and [out] will be the GRP file. The BMP files should be formatted like "name ***.bmp", where name is a name, and *** is the frame number (so frame 0 of "marine.grp" could be "marine 000.bmp" or "marine 0.bmp"). If [out] is not supplied it will use the name part of the BMP files as the GRP file name (frame number not included).</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b>-u</b></td>
+		<td class="lblue"><b>--grpuncompress</b></td>
+		<td>Tells the program you want the GRP used to be uncompressed (used both when converting from GRP to BMP's, or BMP's to GRP). Most GRP files are supposed to be compressed, but StarCraft sometimes needs them to be uncompressed (for example the grp 'game\icons.grp'). If your GRP wont convert to BMP's, try using this option. If your GRP only converts with this option, remember to convert the BMP's back with this option.</td>
+	</tr>
+	<tr>
+		<td class="lblue"><b></b></td>
+		<td class="lblue"><b>--gui</b></td>
+		<td>Opens a file with the GUI</td>
+	</tr>
+</table>
+<br><br><a name="examples" class="header">Example Usage</a><a href="#top" class="top">^</a><br><br>
+Here is an example of converting marine.grp to a bmp, then back to a grp:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyGRP.pyw marine.grp
+   ..edit images..
+python PyGRP.pyw -b "marine 000.grp"</pre>
+		</td>
+	</tr>
+</table>
+<br>
+Some GRP's are uncompressed, for example 'game\icons.grp':<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyGRP.pyw -u "C:\Program Files\StarCraft\My Mod\mpq\game\icons.grp" myicons
+   ..edit images..
+python PyGRP.pyw -u -b "C:\Program Files\StarCraft\My Mod\mpq\game\myicons 000.bmp" icons</pre>
+		</td>
+	</tr>
+</table>
+<br>
+The default palette is 'units.pal'. If you are converting something that uses another palette, like Dark Swarm, you would do something like:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python PyGRP.pyw -p gfire.pal Project\dswarm.grp
+   ..edit images..
+python PyGRP.pyw -p gfire.pal -b "Project\dswarm 000.bmp"</pre>
+		</td>
+	</tr>
+</table>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"><a class="nav" href="intro.html">&#171; Introduction</a></td></td>
+		<td class="blue" align="center"><a class="nav" href="#top">PyGRP</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyPAL.html">PyPAL &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

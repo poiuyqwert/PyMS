@@ -1,0 +1,272 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Introduction [PyMS v1.2.1 by poiuy_qwert]</title>
+<link rel="stylesheet" type="text/css" href="styles.css"/>
+</style>
+</head>
+<body>
+<br><br>
+<table align="center" width="80%" height="150px" cellspacing="1">
+	<tr>
+		<td class="blue" align="center" valign="middle" colspan="3">
+			<strong>PyMS</strong><br>
+			v1.2.1<br><br>
+			By: poiuy_qwert</td>
+	</tr>
+	<tr height="1">
+		<td class="bblue" width="25%">
+			<ol>
+				<li><b>Introduction</b>
+				<li><a class="tree" href="PyGRP.html">PyGRP v3.8</a>
+				<li><a class="tree" href="PyPAL.html">PyPAL v1.5</a>
+				<li><a class="tree" href="PyLO.html">PyLO v1.6</a>
+				<li><a class="tree" href="PyTBL.html">PyTBL v1.7</a>
+				<li><a class="tree" href="PyTRG.html">PyTRG v2.6</a>
+				<li><a class="tree" href="PyDAT.html">PyDAT v1.11</a>
+				<li><a class="tree" href="PyGOT.html">PyGOT v1.2</a>
+				<li><a class="tree" href="PyAI.html">PyAI v2.4</a>
+				<li><a class="tree" href="PyICE.html">PyICE v1.8</a>
+				<li><a class="tree" href="PyFNT.html">PyFNT v1.2</a>
+				<li><a class="tree" href="PyTILE.html">PyTILE v1.3</a>
+				<li><a class="tree" href="PyPCX.html">PyPCX v1.0</a>
+				<li><a class="tree" href="PyMPQ.html">PyMPQ v1.0</a>
+			</ol>
+		</td>
+		<td class="lblue" valign="top">
+			<a name="top" class="header">Introduction</a><br><br>
+			PyMS is an (almost) all inclusive StarCraft Modding Suite, currently containing 13 programs to edit various StarCraft files. Because PyMS uses <a href="http://www.python.org">Python</a>, it works on Windows, Mac, Linux, and many more operating systems.<br><b>Note:</b> This documentation is incomplete and will be updated in the future.
+			<ol>
+				<li><a href="#changes">Changes</a>
+				<li><a href="#install">Source Installation</a>
+				<li><a href="#exe">Windows EXE Installation</a>
+				<li><a href="#usage">Usage</a>
+				<li><a href="#bugs">Bugs</a>
+				<li><a href="#contact">Contact</a>
+				<li><a href="#credits">Credits</a>
+			</ol>
+		</td>
+	</tr>
+</table>
+<br><br><a name="changes" class="header">Changes</a><a href="#top" class="top">^</a><br><br>
+<b>PyMS v1.2.1 (June 4, '09)</b>
+<ul>
+	<li>Added <b>PyMPQ</b>
+	<li>Updated SFmpq.dll
+	<li>Made a dependency error window which will pop up if you are missing PIL, or need SFmpq and arn't on Windows
+	<li>Canceling the settings dialog when a file is missing at startup now exits the program instead of letting you continue till an error occurs
+	<li>Fixed the problem with default files
+	<li>Fixed some errors on systems that returned unicode strings
+	<li>Fixed a problem on Mac's with the programs that use SFmpq
+</ul>
+<b>PyMS v1.2.0 (March 25, '09)</b>
+<ul>
+	<li>The "Remin me later" checkbox on the PyMS update dialog does not stay disable between versions anymore
+	<li>Totally revamped MPQ and settings handling
+	<li>No PyMS program should ever hog your MPQ's anymore
+	<li>Changed the Libs\Default folder and combined it with Libs\Default\MPQ to create Libs\MPQ (PyDAT's SEMPQ.exe is now in Libs\Data)
+	<li>On Windows all resizeable programs now save their maximized state between uses
+	<li>Canceling in a save/open window will no longer resets the "last used directory"
+</ul>
+<b>PyMS v1.1.1 (Feb 23, '09)</b>
+<ul>
+	<li>Added <b>PyPCX</b>
+	<li>The source release now includes PyTILE and not just a picture of it (i ziped the .png instead of .pyw, oops :X)
+	<li>Reduced the size of EXE release
+	<li>Added a "Remind me later" checkbox to the PyMS update dialog
+	<li>Moved SFmpq.dll to the Libs folder
+	<li>Fixed bugs when SFmpq could not be loaded
+	<li>Fixed a bug when opening a file via file associations, if the program dealt with SFmpq
+	<li>Fixed possible problems by changing the way the base directory is found/saved
+	<li>Fixed a problem with setting programs as the default editor
+</ul>
+<b>PyMS v1.1.0 (Jan 8, '09)</b>
+<ul>
+	<li>Added <b>PyTILE</b>
+	<li>Improved GRP loading speeds
+	<li>PIL is now a requirement for source users (see <a href="#install">Source Installation</a>)
+	<li>The version checker will no longer freeze the main program until closed when a new version is found
+</ul>
+<b>PyMS v1.0.0 (Dec 7, '08)</b>
+<ul>
+	<li>Find dialogs and other hidden persistant windows now load when first used
+	<li>Added PIL support for faster images
+	<li>Added MPQ support to PyICE, PyDAT, and PyAI (works only on Windows currently)
+	<li>Added an online version checker
+	<li>Fixed some bugs
+</ul>
+<b>PyMS v0.1e (Aug 27, '08)</b>
+<ul>
+	<li>Added <b>PyFNT</b>
+	<li>Fixed various bugs
+</ul>
+<b>PyMS v0.1d (July 28, '08)</b>
+<ul>
+	<li>Added <b>PyICE</b>
+	<li>Added a <b>GUI</b> for PyTRG
+	<li>Fixed many bugs in various programs
+</ul>
+<b>PyMS v0.1c (Jun 13, '08)</b>
+<ul>
+	<li>Added an error tracing utility for easier bug catching
+	<li>Totally revamped help file (as you can see)
+	<li>More path bugs fixed, hopefully its the last of them
+	<li>Folder setup changed
+	<li>Bugs fixed in various programs
+	<li>Program extensions changed from .py to .pyw
+	<li>PyMS now comes in a folder
+	<li>Fixed unitdef.txt
+	<li>Fixed version inconsistancies
+	<li><b>GUIs</b> for PyAI, PyGRP, PyPAL, PyTBL, PyGOT, and PyLO
+</ul>
+<b>PyMS v0.1b (Feb 25, '08)</b>
+<ul>
+	<li>Added <b>PyAI</b>, a StarCraft AI editor
+	<li>Added better error reporting to all programs
+	<li>Fixed various bugs in all programs
+	<li>Fixed path bugs
+	<li>Changed all indentation from spaces to tabs
+</ul>
+<b>PyMS v0.1 (Jan 7, '08)</b>
+<ul>
+	<li>First public release.
+</ul>
+<br><br><a name="install" class="header">Source Installation</a><a href="#top" class="top">^</a><br><br>
+Once that is done you can unzip PyMS somewhere on your computer . Now to be able to use PyMS, you will need to have the latest <a href="http://www.python.org">Python</a>. If you are a Windows user, after installing Python, you will then have to change your environment variables. One way is to open your Command Prompt and type:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>set PATH=%PATH%;C:\Python25\</pre>
+		</td>
+	</tr>
+</table>
+<b>C:\Python25\</b> is only the default isntallation path of Python 2.5. If you have a different version of Python and/or installed it somewhere else, use that path instead.<br>
+Finally, as of PyMS v1.1.0, PIL (Python Imaging Library) needs to be installed for the source version to function. You can find it <a href="http://pythonmac.org/packages/py25-fat/index.html">here (Mac)</a> or <a href="http://www.pythonware.com/products/pil/index.htm">here (Windows)</a>.<br>
+<br><br><a name="exe" class="header">Windows EXE Installation</a><a href="#top" class="top">^</a><br><br>
+Just extract the PyMS folder somewhere on your computer and run the exe's, thats it.<br>
+<br><br><a name="usage" class="header">Usage</a><a href="#top" class="top">^</a><br><br>
+<b>Note:</b> Angle brackets (like &lt;example&gt;) are required parameters (the only exception is if you specify the -h option, no &lt;parameter&gt; is required), square brackets (like [example]) are optional parameters.<br>
+All PyMS programs are run practically the exact same way. Start off with opening Command Prompt, and navigating to your PyMS directory. Then to run a program, it is just:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Command Line</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>python &lt;program&gt; [options] &lt;parameters&gt;</pre>
+		</td>
+	</tr>
+</table>
+<b>&lt;program&gt;</b> is the program file (like PyGRP.pyw or PyAI.pyw), <b>[options]</b> are program specific flags, and <b>&lt;parameters&gt;</b> are the input and output of the program (usually in the form <b>&lt;input&gt; [output]</b>). For more details, check the respective programs documentation, or use the -h option on any program to print a list of options to the command line.<br>
+<br><br><a name="bugs" class="header">Bugs</a><a href="#top" class="top">^</a><br><br>
+If one of the programs in PyMS says your file is corrupt, and you don't think it is, or you get a very weird error that looks something like:<br>
+<table align="center" width="95%" class="pre">
+	<tr>
+		<td class="pblue"><b>Error</b></td>
+	</tr>
+	<tr>
+		<td class="pre">
+			<pre>Traceback (most recent call last):
+  File "PyXXX.pyw", line 6
+    def main()
+  File "YYY.py", line 1023
+    var += blah
+         ^
+SomeError: some description</pre>
+		</td>
+	</tr>
+</table>
+<b>Please</b> copy down the error, and send it to me along with information and whatever file you were using the program on when it happened (see <a href="#contact">Contact</a> for contact info).<br>
+<br><br><a name="contact" class="header">Contact</a><a href="#top" class="top">^</a><br><br>
+I would much rather you contact me through the <a href="http://www.broodwarai.com/forums/index.php?showforum=40">Official PyMS Forums</a>, but you can also send me a private message on any of these other sites:<br>
+<ul>
+	<li><a href="http://www.maplantis.org">Maplantis</a>(dead) as <a href="http://www.maplantis.org/index.php?member=759">poiuy_qwert</a>
+	<li><a href="http://www.staredit.net">SEN</a> as <a href="http://www.staredit.net/?member=852">poiuy_qwert</a>
+	<li><a href="http://www.warboards.org">WarBoards</a> as <a href="http://www.warboards.org/member.php?u=44288">poiuyqwert</a>
+	<li><a href="http://www.campaigncreations.org">CampaignCreations</a> as <a href="http://www.campaigncreations.org/forum/profile/poiuy_qwert/">poiuy_qwert</a>
+</ul>
+Last, and the choice I least prefer, you can send an email to me at <a href="mailto:p.q.poiuy.qwert@gmail.com">p.q.poiuy.qwert@gmail.com</a><br>
+<br><br><a name="credits" class="header">Credits</a><a href="#top" class="top">^</a><br><br>
+First of all I would like to thank bajadulce for graciously hosting the official PyMS forum on his great site, <a href="http://www.broodwarai.com">BroodWarAI.com</a>, thanks a million!<br>
+</ul>
+<b>PyMS v1.1.1</b>
+<ul>
+	<li>Many people from SEN and WB<br>
+&nbsp;&nbsp;&nbsp;Lots of bug reports and ideas, thanks!<br>
+</ul>
+<b>PyMS v1.1.0</b>
+<ul>
+	<li><b>FaRTy1billion</b><br>
+&nbsp;&nbsp;&nbsp;File specs for tile sets, and design ideas from Hawt Tiles<br>
+	<li><b>Hercanic</b><br>
+&nbsp;&nbsp;&nbsp;Many more ideas for things, and bugs<br>
+</ul>
+<b>PyMS v1.0.0</b>
+<ul>
+	<li><b>ShadowFlare</b><br>
+&nbsp;&nbsp;&nbsp;Created SFmpq which is now used for MPQ handling on Windows<br>
+	<li><b>shaggydavid</b><br>
+&nbsp;&nbsp;&nbsp;Suggested implementing SFgrp's vertical style single BMP's<br>
+	<li><b>A_of_s_t</b><br>
+&nbsp;&nbsp;&nbsp;Found bugs.<br>
+	<li><b>Hercanic</b><br>
+&nbsp;&nbsp;&nbsp;Pressure to make previews in PyICE, finally got me to do it :P<br>
+</ul>
+<b>PyMS v0.1d</b>
+<ul>
+	<li><b>ShadowFlare</b><br>
+&nbsp;&nbsp;&nbsp;Created IceCC which came with some help info for opcodes and animation types<br>
+	<li><b>ashara</b><br>
+&nbsp;&nbsp;&nbsp;Many many PyAI bug reports<br>
+	<li><b>A_of_s_t</b><br>
+&nbsp;&nbsp;&nbsp;Found bugs, gave suggestions, and tested PyTRG a bit<br>
+</ul>
+<b>PyMS v0.1c</b>
+<ul>
+	<li><b>FaRTy1billion</b><br>
+&nbsp;&nbsp;&nbsp;Created TrigPlug and gave me the specs so I could add support ot PyTRG<br>
+	<li><b>MamiyaOtaru</b><br>
+&nbsp;&nbsp;&nbsp;Helped figure out Linux/Mac problems, thanks so much!!!<br>
+	<li><b>Spirus</b><br>
+&nbsp;&nbsp;&nbsp;Found a problem in PyAI (which also applied to PyTRG)<br>
+	<li><b>bajadulce:</b><br>
+&nbsp;&nbsp;&nbsp;Found another PyTRG bug<br>
+&nbsp;&nbsp;&nbsp;Helped track down the bug in PyAI mentioned above<br>
+&nbsp;&nbsp;&nbsp;Found missing warning in PyAI<br>
+</ul>
+<b>PyMS v0.1b</b>
+<ul>
+	<li><b>Heinermann:</b><br>
+&nbsp;&nbsp;&nbsp;AI Command list for PyAI<br>
+	<li><b>bajadulce:</b><br>
+&nbsp;&nbsp;&nbsp;Lots and lots of testing and ideas on PyAI (Thanks a lot!)<br>
+&nbsp;&nbsp;&nbsp;Found lost of PyTRG related bugs<br>
+	<li><b>modmaster50:</b><br>
+&nbsp;&nbsp;&nbsp;Lots more testing and ideas on PyAI (Thanks a lot!)<br>
+	<li><b>Zelduck:</b><br>
+&nbsp;&nbsp;&nbsp;Found bugs in PyAI<br>
+	<li><b>Lazer_Dude:</b><br>
+&nbsp;&nbsp;&nbsp;Notified me of major path bugs<br>
+</ul>
+<b>PyMS v0.1</b>
+<ul>
+	<li><b>TeLAMoN:</b><br>
+&nbsp;&nbsp;&nbsp;GRP specs.<br>
+	<li><b><a href="http://smempire.org/">Sovereign Modding Empire</a>:</b><br>
+&nbsp;&nbsp;&nbsp;Lots of specs.<br>
+	<li><b>BroodKiller and DatEdit:</b><br>
+&nbsp;&nbsp;&nbsp;DAT file specs, and all the information in the Data and Default folders of DatEdit.<br>
+</ul>
+<br><br><br><br>
+<table align="center" width="80%"  cellspacing="1">
+	<tr>
+		<td class="blue" width="20%"></td>
+		<td class="blue" align="center"><a class="nav" href="#top">Introduction</a></td>
+		<td class="blue" width="20%" align="right"><a class="nav" href="PyGRP.html">PyGRP &#187;</a></td>
+	</tr>
+</table>
+</body>
+</html>

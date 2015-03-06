@@ -1,0 +1,13 @@
+{\
+	'font8':'MPQ:font\\font8.fnt',\
+	'icons':'MPQ:game\\icons.grp',\
+	'window':'981x491+139+134',\
+	'font10':'MPQ:font\\font10.fnt',\
+	'tfontgam':'MPQ:game\\tfontgam.pcx',\
+	'lastpath':'/Users/zachzahos/Documents/Projects/PyMS/Libs/MPQ/rez',\
+	'hotkey':1,\
+	'unitpal':u'/Users/zachzahos/Documents/Projects/PyMS/Palettes/Units.pal',\
+	'findwindow':'403x104+439+348',\
+	'colorlist':(1, 79),\
+	'endatnull':1,\
+}

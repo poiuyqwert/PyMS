@@ -1,0 +1,2 @@
+/Users/zachzahos/Documents/Projects/PyMS/Libs/MPQ/rez/stat_txt.tbl
+/Users/zachzahos/Documents/Projects/PyMS/Libs/MPQ/rez/sfxdata.tbl
