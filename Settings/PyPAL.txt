@@ -1,3 +1,0 @@
-{\
-	'lastpath':'/Users/zachzahos/Documents/Projects/PyMS/Libs/tileset',\
-}
