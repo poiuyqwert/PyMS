@@ -1,0 +1,157 @@
+PyTBL.html
+PyTBL v1.7
+PyTBL is used to convert TBL files to and from TXT files.
+	Changes	changes
++PyTBL v1.7
+ -Added a text previewer
+ -Added the color list to the main window and removed the colors window
+ -Fixed a bug where the text would not change when using up/down/page up/page down/home/end in the strings list
++PyTBL v1.6
+ -Fixed a bug preventing PyTBL from closing
++PyTBL v1.5
+ -The Find Dialog opens with the the "Find" entry selected, and pressing Enter in the dialog now finds next
++PyTBL v1.4
+ -Fixed Delete button inconsistancy
+ -Fixed string navigation
+ -Strings no longer require a null at the end, if its missing it will be added automatically
++PyTBL v1.3
+ -Added a __GUI__
++PyTBL v1.2
+ -Fixed major bug that prevented compiling
+ -Comments now work properly
+ -Added more colors and info to reference
+ -Decompiles ALL special characters now
++PyTBL v1.1
+ -Added better error reporting
+ -Indentation changed
++PyTBL v1.0
+ -First public release
++u
+	Commandline Options	cmdline
+[
+-h	--help	Display the command line format and options with small descriptions.
+-d	--decompile	Decompile a TBL file to a TXT file.	
+-c	--compile	Compile a TXT file to a TBL file.
+-r	--reference	Output a reference at the top of a decompiled file.
+	--gui	Opens a file with the GUI
+]
+	Syntax	syntax
+Every line of a decompiled TBL file is a string, the only exceptions are emtpy lines, and comments. Comments can be anywhere on a line, and they start with the hash character __#__. For example:
+<Code
+# This line is not a string because the whole thing is a comment.
+Marine<0>#This line (excluding the comment) is a string
+>
+Also, if you noticed the <0>, PyTBL uses the same string formatting as TBLPad. Special characters can be accessed by putting their ASCII codes in angle brackets __< >__. For example, if you want to have a hash symbol in your string, you must use __<35>__. For a list of usefull ASCII codes, check out the [#cmdline	-r option] on the command line, and the [#reference	Reference] section below.
+There are four types of strings:
+ +o
+ -Regular String
+ -Unit String
+ -Requirement String
+ -Hotkey String
++o
+Regular Strings dont really follow a format, they just set the rule for all strings, __all__ strings must end in a <0>:
+<Code
+string<0>
+>
+The first 228 strings in the TBL are Unit Strings, and each corrisponds to a unit id (first string is unit id 0, Terran Marine). They are in the form:
+<Code
+Unit Name<0>Subname<0>StarEdit Group<0>
+>
+A Requirement String doesn't really follow a format, but the deafult StarCraft format is that every requirement is on its own line, with three spaces for indenting:
+<Code
+Something1 Requires:<10>   One Requirement<0>
+Somethings Require:<10>   Two<10>   Requirements<0>
+#  ...
+>
+Hotkeys are more strict then the other types of strings. The first character is the hotkey character (which includes the Escape key <27> for Cancle buttons), the second is the tooltip type, and the third is the string. There are 6 different types of tooltip:
+ +u
+ -<0> is usually used on hotkeys that aren't any of the others below
+ -<1> is used for units
+ -<2> is used for upgrades
+ -<3> is used on a button for spell casting
+ -<4> is used for technology upgrades
+ -<5> is used primarily used on the Guardian and Devourer Aspect on the Mutalisk. It shows the correct mineral and gas cost, but it does not show supply
++u
+For example:
+<Code
+a<0><3>A<1>ttack<0>
+m<1>Train <3>M<1>arine<0>
+a<2>Upgrade Infantry <3>A<1>rmor<0>
+t<3>Psionic S<3>t<1>orm<0>
+p<4>Develop <3>P<1>sionic Storm(Templar ability)<0>
+d<5><3>D<1>evourer Aspect<0>
+>
+	Example Usage	examples
+Decompiling the default stat_txt.tbl to a modding project, then recompiling:
+<Command Line
+python PyTBL.pyw Default\stat_txt.tbl "C:\StarCraft\My Mod\stat_txt.txt"
+  ..edit strings..
+python PyTBL.pyw -c "C:\StarCraft\My Mod\stat_txt.txt"
+>
+	Reference	reference
+<ASCII Codes
+Miscalaneous
+    <0> = End Substring
+    <9> = Tab
+   <10> = Newline
+   <18> = Right Align
+   <19> = Center Align
+   <27> = Escape Key
+   <35> = #
+   <60> = <
+   <62> = >
+
+Menu Screen Colors
+    <1> = Cyan
+    <2> = Cyan
+    <3> = Green
+    <4> = Light Green
+    <5> = Grey*
+    <6> = White
+    <7> = Red
+    <8> = Black*
+   <11> = Invisible*
+   <12> = Truncate
+   <14> = Black
+   <15> = Black
+   <16> = Black
+   <17> = Black
+   <20> = Invisible*
+   <21> = Black
+   <22> = Black
+   <23> = Black
+   <24> = Black
+   <25> = Black
+   <26> = Black/Cyan?
+   <27> = Black
+   <28> = Black
+
+In-game Colors
+    <1> = Cyan
+    <2> = Cyan
+    <3> = Yellow
+    <4> = White
+    <5> = Grey*
+    <6> = Red
+    <7> = Green
+    <8> = Red (Player 1)
+   <11> = Invisible*
+   <12> = Truncate
+   <14> = Blue (Player 2)
+   <15> = Teal (Player 3)
+   <16> = Purple (Player 4)
+   <17> = Orange (Player 5)
+   <20> = Invisible*
+   <21> = Brown (Player 6)
+   <22> = White (Player 7)
+   <23> = Yellow (Player 8)
+   <24> = Green (Player 9)
+   <25> = Brighter Yellow (Player 10)
+   <26> = Cyan
+   <27> = Pinkish (Player 11)
+   <28> = Dark Cyan (Player 12)
+   <29> = Greygreen
+   <30> = Bluegrey
+   <31> = Turquiose
+>
+{PyLO	PyTRG

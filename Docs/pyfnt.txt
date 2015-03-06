@@ -1,0 +1,21 @@
+PyFNT.html
+PyFNT v1.2
+PyFNT is used to modify StarCraft fonts.
+	Changes	changes
++PyFNT v1.2
+ -Fixed a problem where some characters would get a pink pixel in the bottom right
++PyFNT v1.1
+ -tfontgam.pcx is now used for the palette
+ -Fixed a bug when opening files
+ -Fixed a bug with using up/down/page up/page down/home/end in the letters list
++PyFNT v1.0
+ -First public release
++u
+	Commandline Options	cmdline
+[
+-d	--decompile	Decompile FNT to a BMP	
+-c	--compile	Compile a BMP to a FNT
+-s	--specifics	Specifies the lowest ASCII index and amount of letters (seperated by commas) when compiling
+	--gui	Opens a file with the GUI
+]
+{PyICE	PyTILE

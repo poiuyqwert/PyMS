@@ -1,0 +1,22 @@
+PyGOT.html
+PyGOT v1.2
+PyGOT is used to convert GOT (Game Templates) to and from TXT files. It also has a shortcut (from [PyTRG.html	PyTRG]) to compiling a TRG as a GOT compatable TRG.
+	Changes	changes
++PyGOT v1.2
+ -Added a __GUI__
++PyGOT v1.1
+ -Added better error reporting
+ -Indentation changed
++PyGOT v1.0
+ -First public release
++u
+	Commandline Options	cmdline
+[
+-h	--help	Display the command line format and options with small descriptions.
+-d	--decompile	Decompile a GOT file to a TXT file.	
+-c	--compile	Compile a TXT file to a GOT file.
+-t	--trig	Compile a TRG file to a GOT compatable TRG file.
+-r	--reference	When decompiling, put a reference for settings at the top of the file.	Off
+	--gui	Opens a file with the GUI
+]
+{PyDAT	PyAI

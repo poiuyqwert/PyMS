@@ -1,0 +1,20 @@
+PyPCX.html
+PyPCX v1.0
+PyPCX is usefull for converting StarCraft's PCX files to and from BMP's, and importing/export palettes to/from them.
+	Changes	changes
++PyPCX v1.0
+ -First public release
++u
+	Commandline Options	cmdline
+[
+-h	--help	Display the command line format and options with small descriptions.
+-p	--pcx	Convert from PCX to BMP.	
+-b	--bmp	Convert from BMP to PCX.
+	--gui	Opens a file with the GUI
+]
+	Example Usage	examples
+Converting a screenshot to a bmp:
+<Command Line
+python PyPCX.pyw -p "C:\StarCraft\SCScrnShot_021909_220704.pcx" ss.bmp
+>
+{PyTILE	PyMPQ

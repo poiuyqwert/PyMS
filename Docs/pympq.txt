@@ -1,0 +1,13 @@
+PyMPQ.html
+PyMPQ v1.0
+PyMPQ is a program for interacting with MPQ archives. 
+	Changes	changes
++PyMPQ v1.0
+ -First public release
++u
+	Commandline Options	cmdline
+[
+-h	--help	Display the command line format and options with small descriptions.
+	--gui	Opens a file with the GUI
+]
+{PyPCX	
