@@ -153,7 +153,8 @@ class MPQHandler:
 
 	def set_mpqs(self, mpqs):
 		if self.open:
-			raise PyMSError('MPQ','Cannot set mpqs when the current mpqs are open.')
+			# raise PyMSError('MPQ','Cannot set mpqs when the current mpqs are open.')
+			self.close_mpqs()
 		self.mpqs = list(mpqs)
 
 	def open_mpqs(self):
@@ -452,7 +453,7 @@ class MPQSettings(Frame):
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		self.listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		for mpq in self.mpqs:
-			self.listbox.insert(0,mpq)
+			self.listbox.insert(END,mpq)
 		if self.listbox.size():
 			self.listbox.select_set(0)
 
@@ -543,7 +544,7 @@ class MPQSettings(Frame):
 			for i in add:
 				if not i in self.mpqs:
 					h = SFileOpenArchive(i)
-					if h not in [None,-1]:
+					if not SFInvalidHandle(h):
 						SFileCloseFile(h)
 						self.mpqs.insert([0,-1][n == END],i)
 						self.listbox.insert(n,i)
@@ -731,7 +732,7 @@ class SettingsDialog(PyMSDialog):
 				self.tabs.add_tab(self.pages[-1], d[0])
 			self.tabs.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		else:
-			self.mpqsettings = MPQSettings(self, self.parent.mpqhandler.mpqs, self.parent.settings)
+			self.mpqsettings = MPQSettings(self, self.parent.mpqhandler.mpqs, self.parent.settings, self)
 			self.mpqsettings.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		btns = Frame(self)
 		ok = Button(btns, text='Ok', width=10, command=self.ok)
@@ -756,14 +757,18 @@ class SettingsDialog(PyMSDialog):
 			PyMSDialog.ok(self)
 
 	def ok(self):
+		print self.edited
 		if self.edited:
+			o = dict(self.parent.settings)
+			print self.mpqs, self.mpqsettings.mpqs
 			if self.mpqs:
 				t = self.parent.mpqhandler.mpqs
 				self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-			o = dict(self.parent.settings)
+				self.parent.settings['mpqs'] = self.mpqsettings.mpqs
 			m = os.path.join(BASE_DIR,'Libs','MPQ','')
-			for p,d in zip(self.pages,self.data):
-				p.save(d,m)
+			if self.data:
+				for p,d in zip(self.pages,self.data):
+					p.save(d,m)
 			try:
 				e = self.parent.open_files()
 			except AttributeError:

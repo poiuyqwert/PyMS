@@ -1,2 +1,6 @@
-/Users/zachzahos/Documents/Projects/PyMS/Libs/MPQ/rez/stat_txt.tbl
-/Users/zachzahos/Documents/Projects/PyMS/Libs/MPQ/rez/sfxdata.tbl
+2055387776
+Filesize: 2345
+[u'unit', u'terran', u'wessel.grp'] 2345
+2055380144
+Filesize: 2722
+[u'unit', u'terran', u'wesselt.grp'] 2722
