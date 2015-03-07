@@ -5,9 +5,12 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
-	e.mainloop()
-	sys.exit()
+	try:
+		import ImageTk
+	except:
+		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+		e.mainloop()
+		sys.exit()
 
 # def merge(l):
 	# z = []
@@ -176,8 +179,11 @@ class GRP:
 			for frame in range(frames):
 				image = []
 				xoffset, yoffset, linewidth, lines, framedata = struct.unpack('<4BL', data[6+8*frame:14+8*frame])
-				if xoffset + linewidth > width or yoffset + lines > height:
-					raise
+				# ignore extra bytes
+				if xoffset + linewidth > width:
+					linewidth = width - xoffset
+				if yoffset + lines > height:
+					lines = height - yoffset
 				image.extend([[0] * width for _ in range(yoffset)])
 				if not uncompressed:
 					try:

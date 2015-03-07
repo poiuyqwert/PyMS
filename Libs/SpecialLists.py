@@ -1,5 +1,6 @@
 from Tkinter import *
 import re
+import os.path
 
 class RichList(Frame):
 	selregex = re.compile('\\bsel\\b')
@@ -623,7 +624,8 @@ class TreeList(Frame):
 		self.entry = 0
 		self.groups = []
 		self.entries = {}
-		self.icons = [PhotoImage(file=closeicon),PhotoImage(file=openicon)]
+		self.icons = [PhotoImage(file=os.path.join('Images','treeclose.gif')),PhotoImage(file=os.path.join('Images','treeopen.gif'))]
+
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		font = ('courier', -12, 'normal')

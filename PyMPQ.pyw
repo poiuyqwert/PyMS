@@ -12,7 +12,8 @@ from Tkinter import *
 
 from thread import start_new_thread
 from operator import itemgetter
-import optparse, os, webbrowser, sys, time, ntpath
+import optparse, os, webbrowser, sys, time
+#import ntpath
 
 if FOLDER:
 	e = DependencyError('PyMPQ', 'PyMS currently has no Mac support for MPQ files, thus this program is useless.\nIf you are a Mac user and can help compile and test SFmpq then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))

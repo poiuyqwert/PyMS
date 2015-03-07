@@ -57,7 +57,7 @@ UnitTAR=Range at which the Carrier will launch Interceptors and Reaver Scarabs. 
 #####ADVANCED TAB#####
 UnitAdvAddon=Makes the building placeable in a special way, dependent on the main building. If unchecked, the building will still use the standard way of placing the addon, but after lift-off, it will be inaccessible.
 
-UnitAdvAnimIdle=Unknown.
+UnitAdvAnimIdle=The unit has a unique animated overlay. For example, the turret on science vessels, missile turrets, and the being inside archons.
 
 UnitAdvAutoAttack=Unit will attack any enemy that enters its firing range. If unchecked, unit will attack the enemy ONLY if it is facing its direction, e.g. because it has an animated idle state. 
 
@@ -99,7 +99,7 @@ UnitAdvOverlayMed=Unit will use medium spell overlay graphics.
 
 UnitAdvPermaCloak=Unit is constantly cloaked. If the unit is also a Spellcaster, giving this property will make it lose energy until 0.
 
-UnitAdvPickup=Related to powerups. Not completely understood.
+UnitAdvPickup=The unit is a powerup that can be carried by any worker unit.
 
 UnitAdvProducesUnits=Unknown.
 
@@ -142,7 +142,7 @@ UnitMov40=Unknown.
 
 UnitMov80=Unit's movement does not activate Spider Mines.
 
-UnitUnk1=Holds the offset to the dat requirement for the unit. Do not change unless you REALLY know what you're doing.
+UnitReq=Holds the index to the internal requirement for the unit. Do not change unless you REALLY know what you're doing.
 
 #####SOUND TAB#####
 
@@ -217,13 +217,6 @@ UnitSEPlayerSet=Unit is available in the Player Settings.
 
 UnitSEDoodadState=Unit is available for the "Set Doodad State" trigger.
 
-UnitSE0x0400=Unused.
-UnitSE0x0800=Unused.
-UnitSE0x1000=Unused.
-UnitSE0x2000=Unused.
-UnitSE0x4000=Unused.
-UnitSE0x8000=Unused.
-
 UnitSEGroupBuilding=Unit is a "Building"-type unit for triggers.
 
 UnitSEGroupFactory=Unit is a "Factory"-type unit for triggers.
@@ -249,7 +242,9 @@ UnitAICompIdle=Order given to the unit if it is under computer control and does 
 
 UnitAIHumanIdle=Order given to the unit if it is under a human player's control and does nothing. [pointer to orders.dat]
 
-UnitAIInternal=Some AI-related property. Not completely understood.
+UnitAINoSuicide=The AI will ignore this unit if a script sends all units on strategic suicide missions.
+
+UnitAINoGuard=The AI will not treat this unit as a standard military guard. A military guard moves to attack units that are in sight range and returns to their guard post when the enemy has left the area.
 
 UnitAIReturn=Order executed after the unit has finished executing another order and returns to Idle state. [pointer to orders.dat]
 
@@ -434,7 +429,7 @@ UpgRace=Determines which race can use/research the upgrade. "All" will disable t
 
 UpgRepeats=Total number of times the upgrade can be researched.
 
-UpgUnk=Holds the offset to the dat requirement for the upgrade. Do not change unless you REALLY know what you're doing.
+UpgReq=Holds the index to the internal requirement for the upgrade. Do not change unless you REALLY know what you're doing.
 
 UpgMinerals=Basic minerals cost for the upgrade.
 
@@ -474,9 +469,9 @@ TechRace=Determines which race can use/research the technology. "All" will disab
 
 TechUnused=Unused.
 
-TechUnk=Holds the offset to the dat requirement for the technology. Do not change unless you REALLY know what you're doing.
+TechReq=Holds the index to the internal requirement for the research of the technology. Do not change unless you REALLY know what you're doing.
 
-
+TechUseReq=Holds the index to the internal requirement for the usage of the ability. Do not change unless you REALLY know what you're doing.
 
 
 
@@ -487,11 +482,11 @@ SoundFileList=The actual wave file associated with the sfxdata entry. [pointer t
 
 SoundUnk1=Unknown.
 
-SoundUnk2=Unknown.
+SoundFlags=Flags that apply to the SFX entry.
 
-SoundUnk3=Unknown.
+SoundRace=Unknown.
 
-SoundUnk4=Unknown.
+SoundVol=The volume percentage of the sound when the Mute Unit Speech trigger is executed.
 
 
 

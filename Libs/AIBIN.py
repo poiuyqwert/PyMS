@@ -10,6 +10,7 @@ default_ais = {'Protoss':'PMCu','BWProtoss':'PMCx','Terran':'TMCu','BWTerran':'T
 types = [
 	'byte',
 	'word',
+	'dword',
 	'unit',
 	'building',
 	'military',
@@ -393,7 +394,7 @@ class AIBIN:
 			[self.ai_byte],
 			[self.ai_address],
 			[self.ai_byte,self.ai_building],
-			None,
+			[self.ai_byte, self.ai_military],
 			None,
 			[self.ai_address],
 			[self.ai_byte, self.ai_address],
@@ -401,7 +402,7 @@ class AIBIN:
 			[self.ai_byte, self.ai_unit],
 			[self.ai_byte, self.ai_military],
 			None,
-			[self.ai_byte, self.ai_military],
+			[self.ai_byte, self.ai_unit],
 			[self.ai_byte],
 			None,
 			None,
@@ -428,7 +429,7 @@ class AIBIN:
 			None,
 			None,
 			None,
-			[self.ai_word,self.ai_word],
+			[self.ai_dword],
 			[self.ai_unit,self.ai_address],
 			None,
 			[self.ai_unit, self.ai_word, self.ai_word],
@@ -447,8 +448,9 @@ class AIBIN:
 			self.starts.append(self.labels[c])
 			self.starts.append(self.short_labels[c])
 		self.types = {
-			'byte':[self.ai_byte,self.ai_word],
-			'word':[self.ai_word],
+			'byte':[self.ai_byte,self.ai_word,self.ai_dword],
+			'word':[self.ai_word,self.ai_dword],
+			'dword':[self.ai_dword],
 			'unit':[self.ai_unit],
 			'building':[self.ai_building,self.ai_unit],
 			'military':[self.ai_military,self.ai_unit],#,self.ai_ggmilitary,self.ai_agmilitary,self.ai_gamilitary,self.ai_aamilitary
@@ -463,6 +465,7 @@ class AIBIN:
 		self.typescanbe = {
 			'byte':[self.ai_byte],
 			'word':[self.ai_word,self.ai_byte],
+			'dword':[self.ai_dword,self.ai_word,self.ai_byte],
 			'unit':[self.ai_unit,self.ai_building,self.ai_military,self.ai_ggmilitary,self.ai_agmilitary,self.ai_gamilitary,self.ai_aamilitary],
 			'building':[self.ai_building],
 			'military':[self.ai_military,self.ai_ggmilitary,self.ai_agmilitary,self.ai_gamilitary,self.ai_aamilitary],
@@ -729,6 +732,23 @@ class AIBIN:
 			except:
 				raise PyMSError('Parameter',"Invalid word value '%s', it must be a number in the range 0 to 65535" % data)
 		return [2,v]
+
+	def ai_dword(self, data, stage=0):
+		"""dword       - A number in the range 0 to 4294967295"""
+		if not stage:
+			v = struct.unpack('<L', data[:4])[0]
+		elif stage == 1:
+			v = str(data)
+		elif stage == 2:
+			v = struct.pack('<L', int(data))
+		else:
+			try:
+				v = int(data)
+				if v < 0 or v > 4294967295:
+					raise
+			except:
+				raise PyMSError('Parameter',"Invalid dword value '%s', it must be a number in the range 0 to 4294967295" % data)
+		return [4,v]
 
 	def ai_address(self, data, stage=0):
 		"""block       - The block label name (Can not be used as a variable type!)"""
@@ -1668,7 +1688,7 @@ class AIBIN:
 			else:
 				f.write('# stat_txt.tbl entry %s: %s\n%s(%s, %s, bwscript):' % (string,TBL.decompile_string(self.tbl.strings[string]),id,string,convflags(flags)))
 				labelnames = None
-				w = self.bwscript.decompile(f, (self.externaljumps,extjumps), values, shortlabel, [id])
+				w = self.bwscript.decompile(f, (self.externaljumps,extjumps), values, shortlabel, [id], False)
 				if w:
 					warnings.extend(w)
 		f.close()
@@ -1914,8 +1934,7 @@ class BWBIN(AIBIN):
 		except:
 			raise PyMSError('Load',"Unsupported bwscript.bin '%s', could possibly be invalid or corrupt" % file,exception=sys.exc_info())
 
-	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None):
-		close = True
+	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None, close=True):
 		if isstr(filename):
 			try:
 				f = open(filename, 'w')

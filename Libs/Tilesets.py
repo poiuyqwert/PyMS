@@ -5,9 +5,12 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
-	e.mainloop()
-	sys.exit()
+	try:
+		import ImageTk
+	except:
+		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+		e.mainloop()
+		sys.exit()
 
 import PAL, BMP
 

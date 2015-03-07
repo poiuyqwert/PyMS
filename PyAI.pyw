@@ -25,6 +25,7 @@ def get_img(n):
 types = [
 	('byte','A number in the range 0 to 255'),
 	('word','A number in the range 0 to 65535'),
+	('dword','A number in the range 0 to 4294967295'),
 	('unit','A unit ID from 0 to 227, or a full unit name from stat_txt.tbl'),
 	('building','Same as unit type, but only units that are Buildings, Resource Miners, and Overlords'),
 	('military','Same as unit type, but only for a unit to train (not a Building, Resource Miners, or Overlords)'),
@@ -70,12 +71,13 @@ cmds = [
 		('guard_resources','Send units of type Military to guard as many resources spots as possible(1 per spot).'),
 		('tech','Research technology Technology, at priority Byte.'),
 		('train','Train Military until it commands Byte of them.'),
+		('do_morph','Train Military if it commands less than Byte of them.'),
 		('upgrade','Research upgrade Upgrade up to level Byte(1), at priority Byte(2).'),
 		('wait','Wait for Word tenths of second in normal game speed.'),
 		('wait_finishattack','Wait until attacking party has finished to attack.'),
 		('wait_build','Wait until computer commands Byte Building.'),
 		('wait_buildstart','Wait until construction of Byte Unit has started.'),
-		('wait_train','Wait until computer commands Byte Military.'),
+		('wait_train','Wait until computer commands Byte Unit.'),
 		('clear_combatdata','Clear previous combat data.'),
 		('nuke_rate','Tells the AI to launch nukes every Byte minutes.'),
 	]),
@@ -110,7 +112,7 @@ cmds = [
 		('give_money','Give 2000 ore and gas if owned resources are low. Should only be used in campaign scripts.'),
 		('nuke_pos','Launch a nuke at map position (x,y) where x = Word(1) and y = Word(2). Should only be used in campaign scripts.'),
 		('send_suicide','Send all units to suicide mission. Byte determines which type, 0 = Strategic suicide; 1 = Random suicide.'),
-		('set_randomseed','Set random seed to Word(1) Word(2) (The two words are transformed in a 32-bit integer).'),
+		('set_randomseed','Set random seed to DWord(1).'),
 		('switch_rescue','Switch computer to rescuable passive mode.'),
 		('help_iftrouble','Ask allies for help if ever in trouble.'),
 		('check_transports','Used in combination with header command transports_off, the AI will build and keep as many transports as was set by the define_max (max 5?) and use them for drops and expanding.'),
@@ -140,7 +142,6 @@ cmds = [
 		('capt_expand','The use of this command is unknown. Takes no parameter.'),
 		('default_min','The use of this command is unknown. Takes Byte as parameter.'),
 		('defaultbuild_off','The use of this command is unknown. Takes no parameter.'),
-		('do_morph','The use of this command is unknown. Takes no parameters.'),
 		('fake_nuke','The use of this command is unknown. Takes no parameters.'),
 		('guard_all','The use of this command is unknown. Takes no parameters.'),
 		('if_owned','The use of this command is unknown. Takes Unit and Block as parameters.'),
@@ -1329,7 +1330,7 @@ class FindDialog(PyMSDialog):
 		if s.result != None:
 			self.stringid.set(s.result)
 
-	def find(self):
+	def find(self, _=None):
 		self.updatecolor()
 		self.listbox.delete(0,END)
 		self.select['state'] = DISABLED
@@ -2312,7 +2313,7 @@ class PyAI(Tk):
 			('Print Reference when Decompiling', self.reference, NORMAL, '', 6, True), # 11
 			('Save Information Comments and Labels', self.extrainfo, NORMAL, '', 0, True), # 12
 			None,
-			('Edit AI Script', self.edit, DISABLED, 'Ctrl+E', 0), #14
+			('Edit AI Script', self.codeedit, DISABLED, 'Ctrl+E', 0), #14
 			('Edit AI ID, String, and Extra Info.', self.edit, DISABLED, 'Ctrl+I', 8), # 15
 			('Edit Flags', self.editflags, DISABLED, 'Ctrl+G', 8), # 16
 			None,
@@ -2528,7 +2529,7 @@ class PyAI(Tk):
 		except PyMSError, e:
 			err = e
 		else:
-			self.unitsdatdat = unitsdat
+			self.unitsdat = unitsdat
 			self.upgrades = upgradesdat
 			self.techdat = techdat
 			if self.ai:

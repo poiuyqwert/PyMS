@@ -1563,7 +1563,7 @@ class FindDialog(PyMSDialog):
 	def updatecolor(self):
 		self.findentry.entry['bg'] = self.findentry.c
 
-	def search(self):
+	def search(self, _=None):
 		self.lists = []
 		self.treelist.delete(ALL)
 		if not self.find.get() in self.parent.settings['findhistory']:

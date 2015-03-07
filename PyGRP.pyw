@@ -15,7 +15,7 @@ VERSION = (3,8)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=False):
-	if isstr(grp, unicode):
+	if isstr(grp):
 		inp = GRP.GRP(pal.palette, uncompressed)
 		if not mute:
 			print "Reading GRP '%s'..." % grp
@@ -470,8 +470,10 @@ class PyGRP(Tk):
 	def move(self, e, a):
 		if a == END:
 			a = self.listbox.size()-2
-		elif a not in [0,END]:
+		elif a not in [0,END] and self.listbox.curselection():
 			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
+		else:
+			a = 0
 		self.listbox.select_clear(0,END)
 		self.listbox.select_set(a)
 		self.listbox.see(a)
@@ -513,7 +515,7 @@ class PyGRP(Tk):
 
 	def preview(self, e=None, pal=False):
 		self.action_states()
-		if self.listbox.size() and self.showpreview.get():
+		if self.listbox.size() and self.listbox.curselection() and self.showpreview.get():
 			frame = int(self.listbox.curselection()[0])
 			if frame != self.frame or pal or not self.item:
 				self.frame = frame
@@ -531,16 +533,17 @@ class PyGRP(Tk):
 			self.canvas.delete(self.item)
 
 	def changepalette(self, e=None):
-		pal = self.pallist.get(self.pallist.curselection()[0])
-		if pal != self.pal:
-			self.pal = pal
-			self.preview(None, True)
+		if self.pallist.curselection():
+			pal = self.pallist.get(self.pallist.curselection()[0])
+			if pal != self.pal:
+				self.pal = pal
+				self.preview(None, True)
 
 	def frameset(self, n):
 		if not n in [3,4,5,6,7]:
 			if n in [0,10]:
 				s = [END,0][not n]
-			elif n in [1,2,8,9]:
+			elif n in [1,2,8,9] and self.listbox.curselection()::
 				s = int(self.listbox.curselection()[0]) + [-17,-1,1,17][n % 5 - 1]
 				if s < 0 or s >= self.listbox.size():
 					if not self.looppreview.get():
@@ -549,6 +552,8 @@ class PyGRP(Tk):
 						s += self.listbox.size()
 					if s >= self.listbox.size():
 						s %= self.listbox.size()
+			else:
+				s = 0
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(s)
 			self.listbox.see(s)
@@ -568,7 +573,7 @@ class PyGRP(Tk):
 			self.play = None
 
 	def playframe(self):
-		if self.speed:
+		if self.speed and self.listbox.curselection():
 			i = int(self.listbox.curselection()[0]) + self.speed
 			if self.looppreview.get() or (i > -1 and i < self.listbox.size()):
 				while i < 0 or i >= self.listbox.size():
@@ -796,11 +801,13 @@ class PyGRP(Tk):
 		s.sort()
 		for f in s[::d]:
 			self.swap(f,f+d)
-		self.frame += d
+		if self.frame != None:
+			self.frame += d
 		self.listbox.select_clear(0,END)
 		for f in s:
 			self.listbox.select_set(f+d)
-		self.listbox.see(self.frame)
+		if self.frame != None:
+			self.listbox.see(self.frame)
 		self.action_states()
 
 	def register(self, e=None):

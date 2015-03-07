@@ -2,6 +2,9 @@ from utils import *
 
 import struct, math
 
+def getPadding(value,alignment):
+	return int(math.ceil(value/float(alignment)))*alignment - value
+
 class BMP:
 	def __init__(self, palette=[]):
 		self.width = 0
@@ -38,7 +41,7 @@ class BMP:
 			palette.extend([[0,0,0] for _ in range(256-colors_used)])
 			image = []
 			if not compression:
-				pad = int(math.ceil(width/4.0))*4-width
+				pad = getPadding(width,4)
 				for y in range(height):
 					x = 4*colors_used+54+(width+pad)*y
 					image.append(list(struct.unpack('%sB%s' % (width, 'x' * pad),data[x:x+width+pad])))
@@ -67,7 +70,7 @@ class BMP:
 						else:
 							n = ord(data[x+1])
 							image[-1].extend([ord(i) for i in data[x+2:x+2+n]])
-							x += int(math.ceil(n / 2.0)) * 2
+							x += n + getPadding(n,2)
 					else:
 						image[-1].extend([ord(data[x+1])] * ord(data[x]))
 					x += 2
@@ -97,9 +100,9 @@ class BMP:
 		except:
 			raise PyMSError('Save',"Could not save BMP to file '%s'" % file)
 		data = ''
-		pad = int(math.ceil(self.width/4.0))*4-self.width
+		pad = getPadding(self.width,4)
 		for y in self.image:
-			data = struct.pack('%sB%s' % (self.width, 'x' * pad), *y) + data
+			data = struct.pack('<%sB%s' % (self.width, 'x' * pad), *y) + data
 		palette = list(self.palette)
 		if len(palette) < 256:
 			palette.extend([[0,0,0] for _ in range(256-len(palette))])
@@ -107,7 +110,7 @@ class BMP:
 		for c in list(palette):
 			t = list(c)
 			t.reverse()
-			data = struct.pack('3Bx', *t) + data
+			data = struct.pack('<3Bx', t[0], t[1], t[2]) + data
 		data = struct.pack('<HH4LHH6L', 0, 0, 1078, 40, self.width, self.height, 1, 8, 0, len(data) - 1024, 0, 0, 0, 0) + data
 		f.write('BM' + struct.pack('<L',len(data) + 6) + data)
 		f.close()

@@ -33,9 +33,14 @@ for l in open(os.path.join(BASE_DIR,'Libs','Data','Hints.txt'),'r'):
 	if m:
 		HINTS[m.group(1)] = m.group(2)
 
-def tip(o, t, h):
-	o.tooltip = Tooltip(o, '%s:\n' % t + fit('  ', HINTS[h], end=True)[:-1], mouse=True)
+def tip(obj, tipname, hint):
+	obj.tooltip = Tooltip(obj, '%s:\n' % tipname + fit('  ', HINTS[hint], end=True)[:-1], mouse=True)
 #
+
+def makeCheckbox(frame, var, txt, hint):
+	c = Checkbutton(frame, text=txt, variable=var)
+	tip(c, txt, hint)
+	return c
 
 class IScriptDropDown(DropDown):
 	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL):
@@ -102,17 +107,13 @@ class DATSettingsDialog(SettingsDialog):
 			t = self.parent.mpqhandler.mpqs
 			self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
 			b = {}
-			if 'mpqs' in self.parent.settings:
-				b['mpqs'] = self.parent.settings.get('mpqs',[])
-			self.parent.settings['mpqs'] = self.mpqsettings.mpqs
 			m = os.path.join(BASE_DIR,'Libs','MPQ','')
 			for p,d in zip(self.pages,self.data):
 				for s in d[1]:
 					b[s[2]] = self.parent.settings[s[2]]
 					self.parent.settings[s[2]] = ['','MPQ:'][p.variables[s[0]][0].get()] + p.variables[s[0]][1].get().replace(m,'MPQ:',1)
-			b['customlabels'] = self.parent.settings.get('customlabels',0)
+			b['customlabels'] = self.parent.settings['customlabels']
 			self.parent.settings['customlabels'] = self.custom.get()
-			print b,self.parent.settings
 			e = self.parent.open_files()
 			if e:
 				self.parent.mpqhandler.set_mpqs(t)
@@ -849,33 +850,39 @@ class SoundsTab(DATTab):
 		l.pack(fill=X)
 
 		self.unknown1 = IntegerVar(0, [0,255])
-		self.unknown2 = IntegerVar(0, [0,255])
-		self.unknown3 = IntegerVar(0, [0,255])
-		self.unknown4 = IntegerVar(0, [0,255])
+		self.flags = IntegerVar(0, [0,255])
+		self.race = IntVar()
+		self.volume = IntegerVar(0, [0,100])
 
 		m = Frame(frame)
 		l = LabelFrame(m, text='General Properties:')
 		s = Frame(l)
+		
 		f = Frame(s)
 		Label(f, text='Unknown1:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.unknown1, font=couriernew, width=10).pack(side=LEFT)
 		tip(f, 'Unknown1', 'SoundUnk1')
 		f.pack(fill=X)
+		
 		f = Frame(s)
-		Label(f, text='Unknown2:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown2, font=couriernew, width=10).pack(side=LEFT)
-		tip(f, 'Unknown2', 'SoundUnk2')
+		Label(f, text='Flags:', width=9, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.flags, font=couriernew, width=10).pack(side=LEFT)
+		tip(f, 'Flags', 'SoundFlags')
 		f.pack(fill=X)
+		
 		f = Frame(s)
-		Label(f, text='Unknown3:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown3, font=couriernew, width=10).pack(side=LEFT)
-		tip(f, 'Unknown3', 'SoundUnk3')
+		
+		Label(f, text='Race:', width=9, anchor=E).pack(side=LEFT)
+		DropDown(f, self.race, DATA_CACHE['Races.txt'], width=10).pack(side=LEFT, fill=X, expand=1)
+		tip(f, 'Race', 'SoundRace')
 		f.pack(fill=X)
+		
 		f = Frame(s)
-		Label(f, text='Unknown4:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown4, font=couriernew, width=10).pack(side=LEFT)
-		tip(f, 'Unknown4', 'SoundUnk4')
+		Label(f, text='Volume %:', width=9, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.volume, font=couriernew, width=10).pack(side=LEFT)
+		tip(f, 'Volume %', 'SoundVol')
 		f.pack(fill=X)
+		
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT)
 		m.pack(fill=X)
@@ -890,9 +897,9 @@ class SoundsTab(DATTab):
 		self.values = {
 			'SoundFile':self.soundentry,
 			'Unknown1':self.unknown1,
-			'Unknown2':self.unknown2,
-			'Unknown3':self.unknown3,
-			'Unknown4':self.unknown4,
+			'Flags':self.flags,
+			'Race':self.race,
+			'Volume':self.volume,
 		}
 
 	def changesound(self, n=None):
@@ -987,7 +994,8 @@ class TechnologyTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT, fill=X)
 
-		self.unknown = IntegerVar(0, [0,4294967295])
+		self.researchReq = IntegerVar(0, [0,65535])
+		self.useReq = IntegerVar(0, [0,65535])
 		self.race = IntVar()
 		self.unused = IntVar()
 		self.broodwar = IntVar()
@@ -995,22 +1003,28 @@ class TechnologyTab(DATTab):
 		l = LabelFrame(m, text='Technology Properties:')
 		s = Frame(l)
 		f = Frame(s)
-		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown, font=couriernew, width=10).pack(side=LEFT)
-		tip(f, 'Unknown', 'TechUnk')
+		
+		Label(f, text='ResearchReq:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.researchReq, font=couriernew, width=10).pack(side=LEFT)
+		tip(f, 'Research Requirements', 'TechReq')
 		f.pack(fill=X)
 		f = Frame(s)
+
+		Label(f, text='UseReq:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.useReq, font=couriernew, width=10).pack(side=LEFT)
+		tip(f, 'Usage Requirements', 'TechUseReq')
+		f.pack(fill=X)
+		f = Frame(s)
+
 		Label(f, text='Race:', width=12, anchor=E).pack(side=LEFT)
 		DropDown(f, self.race, DATA_CACHE['Races.txt'], width=10).pack(side=LEFT, fill=X, expand=1)
 		tip(f, 'Race', 'TechRace')
 		f.pack(fill=X)
 		f = Frame(s)
-		c = Checkbutton(f, text='Unused', variable=self.unused)
-		tip(c, 'Unused', 'TechUnused')
-		c.pack(side=LEFT)
-		c = Checkbutton(f, text='BroodWar', variable=self.broodwar)
-		tip(c, 'BroodWar', 'TechBW')
-		c.pack(side=LEFT)
+		
+		makeCheckbox(f, self.unused, 'Researched', 'TechUnused').pack(side=LEFT)
+		makeCheckbox(f, self.broodwar, 'BroodWar', 'TechBW').pack(side=LEFT)
+
 		f.pack()
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT, fill=Y)
@@ -1029,11 +1043,12 @@ class TechnologyTab(DATTab):
 			'VespeneCost':self.vespene,
 			'ResearchTime':self.time,
 			'EnergyRequired':self.energy,
-			'Unknown':self.unknown,
+			'ResearchRequirements':self.researchReq,
+			'UseRequirements':self.useReq,
 			'Icon':self.iconentry,
 			'Label':self.labelentry,
 			'Race':self.race,
-			'Unused':self.unused,
+			'Researched':self.unused,
 			'BroodwarOnly':self.broodwar,
 		}
 
@@ -1091,6 +1106,7 @@ class UpgradesTab(DATTab):
 		l = LabelFrame(frame, text='Upgrade Display:')
 		s = Frame(l)
 		ls = Frame(s)
+		
 		f = Frame(ls)
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iconentry, font=couriernew, width=5).pack(side=LEFT)
@@ -1098,6 +1114,7 @@ class UpgradesTab(DATTab):
 		DropDown(f, self.icondd, DATA_CACHE['Icons.txt'], self.selicon, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Upgrade Icon', 'UpgIcon')
 		f.pack(fill=X)
+		
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
@@ -1106,6 +1123,7 @@ class UpgradesTab(DATTab):
 		tip(f, 'Upgrade Label', 'UpgLabel')
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
+		
 		ls = Frame(s, relief=SUNKEN, bd=1)
 		self.preview = Canvas(ls, width=34, height=34, background='#000000')
 		self.preview.pack()
@@ -1121,16 +1139,19 @@ class UpgradesTab(DATTab):
 		m = Frame(frame)
 		l = LabelFrame(m, text='Base Cost:')
 		s = Frame(l)
+		
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.baseminerals, font=couriernew, width=5).pack(side=LEFT)
 		tip(f, 'Base Mineral Cost', 'UpgMinerals')
 		f.pack(fill=X)
+		
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.basevespene, font=couriernew, width=5).pack(side=LEFT)
 		tip(f, 'Base Vespene Cost', 'UpgVespene')
 		f.pack(fill=X)
+		
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.basetime, font=couriernew, width=5).pack(side=LEFT)
@@ -1149,16 +1170,19 @@ class UpgradesTab(DATTab):
 
 		l = LabelFrame(m, text='Factor Cost:')
 		s = Frame(l)
+		
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factorminerals, font=couriernew, width=5).pack(side=LEFT)
 		tip(f, 'Mineral Cost Factor', 'UpgFactorMinerals')
 		f.pack(fill=X)
+		
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factorvespene, font=couriernew, width=5).pack(side=LEFT)
 		tip(f, 'Vespene Cost Factor', 'UpgFactorVespene')
 		f.pack(fill=X)
+		
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factortime, font=couriernew, width=5).pack(side=LEFT)
@@ -1172,31 +1196,33 @@ class UpgradesTab(DATTab):
 		m.pack(fill=X)
 
 		self.maxrepeats = IntegerVar(0, [0,255])
-		self.unknown = IntegerVar(0, [0,65535])
+		self.reqIndex = IntegerVar(0, [0,65535])
 		self.race = IntVar()
 		self.broodwar = IntVar()
 
 		m = Frame(frame)
 		l = LabelFrame(m, text='Image:')
 		s = Frame(l)
+		
 		f = Frame(s)
 		Label(f, text='Max Repeats:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.maxrepeats, font=couriernew, width=3).pack(side=LEFT)
 		tip(f, 'Max Repeats', 'UpgRepeats')
 		f.pack(fill=X)
+		
 		f = Frame(s)
-		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown, font=couriernew, width=5).pack(side=LEFT)
-		tip(f, 'Unknown', 'UpgUnk')
+		Label(f, text='ReqIndex:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
+		tip(f, 'Requirements Index', 'UpgReq')
 		f.pack(fill=X)
+		
 		f = Frame(s)
 		Label(f, text='Race:', width=12, anchor=E).pack(side=LEFT)
 		DropDown(f, self.race, DATA_CACHE['Races.txt'], width=10).pack(side=LEFT, fill=X, expand=1)
 		tip(f, 'Race', 'UpgRace')
 		f.pack(fill=X)
-		c = Checkbutton(s, text='BroodWar', variable=self.broodwar)
-		tip(c, 'BroodWar', 'UpgIsBW')
-		c.pack()
+		
+		makeCheckbox(s, self.broodwar, 'BroodWar', 'UpgIsBW').pack()
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT)
 		m.pack(fill=X)
@@ -1216,7 +1242,7 @@ class UpgradesTab(DATTab):
 			'VespeneCostFactor':self.factorvespene,
 			'ResearchTimeBase':self.basetime,
 			'ResearchTimeFactor':self.factortime,
-			'Unknown':self.unknown,
+			'Requirements':self.reqIndex,
 			'Icon':self.iconentry,
 			'Label':self.labelentry,
 			'Race':self.race,
@@ -1663,9 +1689,9 @@ class FlingyTab(DATTab):
 		tip(f, 'Move Control', 'FlingyMoveControl')
 		f.pack(fill=X)
 		f = Frame(s)
-		Label(f, text='Unused:', width=12, anchor=E).pack(side=LEFT)
+		Label(f, text='IScript Mask:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.unused, font=couriernew, width=10).pack(side=LEFT, padx=2)
-		tip(f, 'Unused', 'FlingyUnused')
+		tip(f, 'IScript Mask', 'FlingyUnused')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
@@ -2055,7 +2081,8 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackmoveentry = IntegerVar(0,[0,189])
 		self.attackmove = IntVar()
 		self.rightclick = IntVar()
-		self.aiinternal = IntegerVar(0, [0,255])
+		self.AI_NoSuicide = IntVar()
+		self.AI_NoGuard = IntVar()
 
 		ais = [
 			('Computer Idle', self.computeridleentry, self.computeridle, 'UnitAICompIdle'),
@@ -2082,9 +2109,10 @@ class AIActionsUnitsTab(DATUnitsTab):
 		f.pack(fill=X, pady=5)
 
 		f = Frame(s)
-		Label(f, text='AI Internal:', width=16, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.aiinternal, font=couriernew, width=3).pack(side=LEFT, padx=2)
-		tip(f, 'AI Internal', 'UnitAIInternal')
+		# AI Flags
+		makeCheckbox(f, self.AI_NoSuicide, 'Ignore Strategic Suicide missions', 'UnitAINoSuicide').pack(side=LEFT)
+		makeCheckbox(f, self.AI_NoGuard, 'Don\'t become a guard', 'UnitAINoGuard').pack(side=LEFT)
+		
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
@@ -2097,9 +2125,20 @@ class AIActionsUnitsTab(DATUnitsTab):
 			'ReturntoIdle':self.returntoidle,
 			'AttackUnit':self.attackunit,
 			'AttackMove':self.attackmove,
-			'AIInternal':self.aiinternal,
+			'AIInternal':[self.AI_NoSuicide,self.AI_NoGuard,None,None,None,None,None,None],
 			'RightClickAction':self.rightclick,
 		}
+		
+	def loadsave(self, save=False):
+		DATUnitsTab.loadsave(self, save)
+		if self.toplevel.units:
+			id = self.parent.parent.id
+			if save:
+				self.toplevel.units.set_value(id,'AIInternal',(1 * self.AI_NoSuicide.get() + 2 * self.AI_NoGuard.get()) )
+			else:
+				self.AI_NoSuicide.set( self.toplevel.units.get_value(id,'AIInternal') & 1 == 1)
+				self.AI_NoGuard.set( self.toplevel.units.get_value(id,'AIInternal') & 2 == 2)
+
 
 class StarEditUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel):
@@ -2117,12 +2156,6 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.unitherosettings = IntVar()
 		self.locationtriggers = IntVar()
 		self.broodwaronly = IntVar()
-		self.unused1 = IntVar()
-		self.unused2 = IntVar()
-		self.unused3 = IntVar()
-		self.unused4 = IntVar()
-		self.unused5 = IntVar()
-		self.unused6 = IntVar()
 		self.men = IntVar()
 		self.building = IntVar()
 		self.factory = IntVar()
@@ -2145,12 +2178,6 @@ class StarEditUnitsTab(DATUnitsTab):
 					],[
 						('Location Triggers', self.locationtriggers, 'UnitSELoc'),
 						('BroodWar Only', self.broodwaronly, 'UnitSEBW'),
-						('Unused', self.unused1, 'UnitSE0x0400'),
-						('Unused', self.unused2, 'UnitSE0x0800'),
-						('Unused', self.unused3, 'UnitSE0x1000'),
-						('Unused', self.unused4, 'UnitSE0x2000'),
-						('Unused', self.unused5, 'UnitSE0x4000'),
-						('Unused', self.unused6, 'UnitSE0x8000'),
 					],
 				],
 			),(
@@ -2174,8 +2201,7 @@ class StarEditUnitsTab(DATUnitsTab):
 				cc = Frame(s, width=20)
 				for t,v,h in c:
 					f = Frame(cc)
-					Checkbutton(f, text=t, variable=v).pack(side=LEFT)
-					tip(f, t, h)
+					makeCheckbox(f, v, t, h).pack(side=LEFT)
 					f.pack(fill=X)
 				cc.pack(side=LEFT, fill=Y)
 			s.pack(fill=BOTH, padx=5, pady=5)
@@ -2233,9 +2259,35 @@ class StarEditUnitsTab(DATUnitsTab):
 			'StarEditPlacementBoxWidth':self.width,
 			'StarEditPlacementBoxHeight':self.height,
 			'StarEditGroupFlags':[None,None,None,self.men,self.building,self.factory,self.independent,self.neutral],
-			'StarEditAvailabilityFlags':[self.nonneutral,self.unitlisting,self.missionbriefing,self.playersettings,self.allraces,self.setdoodadstate,self.nonlocationtriggers,self.unitherosettings,self.locationtriggers,self.broodwaronly,self.unused1,self.unused2,self.unused3,self.unused4,self.unused5,self.unused6],
+			'StarEditAvailabilityFlags':[self.nonneutral,self.unitlisting,self.missionbriefing,self.playersettings,self.allraces,self.setdoodadstate,self.nonlocationtriggers,self.unitherosettings,self.locationtriggers,self.broodwaronly,None,None,None,None,None,None],
 		}
 
+	def loadsave(self, save=False):
+		DATUnitsTab.loadsave(self, save)
+		if self.toplevel.units:
+			id = self.parent.parent.id
+			if save:
+				self.toplevel.units.set_value(id,'StarEditGroupFlags',(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 7) | (8*self.men.get() + 16*self.building.get() + 32*self.factory.get() + 64*self.independent.get() + 128*self.neutral.get()))
+				self.toplevel.units.set_value(id,'StarEditAvailabilityFlags',1*self.nonneutral.get() + 2*self.unitlisting.get() + 4*self.missionbriefing.get() + 8*self.playersettings.get() + 16*self.allraces.get() + 32*self.setdoodadstate.get() + 64*self.nonlocationtriggers.get() + 128*self.unitherosettings.get() + 256*self.locationtriggers.get() + 512*self.broodwaronly.get())
+			else:
+				#Staredit Group Flags
+				self.men.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 8 == 8)
+				self.building.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 16 == 16)
+				self.factory.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 32 == 32)
+				self.independent.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 64 == 64)
+				self.neutral.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 128 == 128)
+				#Staredit Availability Flags
+				self.nonneutral.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 1 == 1)
+				self.unitlisting.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 2 == 2)
+				self.missionbriefing.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 4 == 4)
+				self.playersettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 8 == 8)
+				self.allraces.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 16 == 16)
+				self.setdoodadstate.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 32 == 32)
+				self.nonlocationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 64 == 64)
+				self.unitherosettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 128 == 128)
+				self.locationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 256 == 256)
+				self.broodwaronly.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 512 == 512)
+	
 class GraphicsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel):
 		DATUnitsTab.__init__(self, parent, toplevel)
@@ -2614,8 +2666,8 @@ class AdvancedUnitsTab(DATUnitsTab):
 				('Use Large Overlays', self.uselargeoverlays, 'UnitAdvOverlayLarge'),
 				('Ignore Supply Check', self.ignoresupplycheck, 'UnitAdvIgnoreSupply'),
 				('Produces Units(?)', self.producesunits, 'UnitAdvProducesUnits'),
-				('Animated Idle(?)', self.animatedidle, 'UnitAdvAnimIdle'),
-				('Pickup Item(?)', self.pickupitem, 'UnitAdvPickup'),
+				('Animated Overlay', self.animatedidle, 'UnitAdvAnimIdle'),
+				('Carryable', self.pickupitem, 'UnitAdvPickup'),
 				('Unknown', self.unused, 'UnitAdvUnused'),
 			],
 		]
@@ -2638,7 +2690,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunitone = IntVar()
 		self.subunittwoentry = IntegerVar(0,[0,228])
 		self.subunittwo = IntVar()
-		self.unknown = IntegerVar(0, [0,65535])
+		self.reqIndex = IntegerVar(0, [0,65535])
 		self.unknown1 = IntVar()
 		self.unknown2 = IntVar()
 		self.unknown4 = IntVar()
@@ -2677,9 +2729,9 @@ class AdvancedUnitsTab(DATUnitsTab):
 		tip(f, 'Subunit 2', 'UnitSub2')
 		f.pack(fill=X)
 		f = Frame(su)
-		Label(f, text='Unknown:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown, font=couriernew, width=5).pack(side=LEFT)
-		tip(f, 'Unknown', 'UnitUnk1')
+		Label(f, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
+		tip(f, 'Requirements Index', 'UnitReq')
 		f.pack(fill=X)
 		su.pack(side=LEFT, fill=BOTH, expand=1)
 		unknown = Frame(s)
@@ -2700,8 +2752,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 			cc = Frame(unknown)
 			for t,v in c:
 				f = Frame(cc)
-				b = Checkbutton(f, text='0x' + t, variable=v).pack(side=LEFT)
-				tip(f, '0x' + t, 'UnitMov' + t)
+				makeCheckbox(f,v,'0x'+t,'UnitMov'+t).pack(side=LEFT)
 				f.pack(fill=X)
 			cc.pack(side=LEFT)
 		unknown.pack(side=LEFT)
@@ -2716,18 +2767,66 @@ class AdvancedUnitsTab(DATUnitsTab):
 			'Infestation':self.infestentry,
 			'Unknown':[self.unknown1,self.unknown2,self.unknown4,self.unknown8,self.unknown10,self.unknown20,self.unknown40,self.unknown80],
 			'SpecialAbilityFlags':[self.building,self.addon,self.flyer,self.resourceminer,self.subunit,self.flyingbuilding,self.hero,self.regenerate,self.animatedidle,self.cloakable,self.twounitsinoneegg,self.singleentity,self.resourcedepot,self.resourcecontainter,self.robotic,self.detector,self.organic,self.requirescreep,self.unused,self.requirespsi,self.burrowable,self.spellcaster,self.permanentcloak,self.pickupitem,self.ignoresupplycheck,self.usemediumoverlays,self.uselargeoverlays,self.battlereactions,self.fullautoattack,self.invincible,self.mechanical,self.producesunits],
-			'Unknown1':self.unknown,
+			'Requirements':self.reqIndex,
 		}
+		
+	def isFlagSet(self,category,value):
+		return (self.toplevel.units.get_value(self.parent.parent.id, category) & value) == value;
 
 	def loadsave(self, save=False):
+		id = self.parent.parent.id
 		if not save and self.toplevel.units:
-			id = self.parent.parent.id
 			frmt = self.toplevel.units.format[self.toplevel.units.labels.index('Infestation')][0]
 			state = [NORMAL,DISABLED][id < frmt[0] or id >= frmt[1]]
 			self.infestentryw['state'] = state
 			self.infestddw['state'] = state
 			self.infestbtnw['state'] = state
 		DATUnitsTab.loadsave(self, save)
+		if save:
+			self.toplevel.units.set_value(id,'SpecialAbilityFlags', (1<<0)*self.building.get() + (1<<1)*self.addon.get() + (1<<2)*self.flyer.get() + (1<<3)*self.resourceminer.get() + (1<<4)*self.subunit.get() + (1<<5)*self.flyingbuilding.get() + (1<<6)*self.hero.get() + (1<<7)*self.regenerate.get() + (1<<8)*self.animatedidle.get() + (1<<9)*self.cloakable.get() + (1<<10)*self.twounitsinoneegg.get() + (1<<11)*self.singleentity.get() + (1<<12)*self.resourcedepot.get() + (1<<13)*self.resourcecontainter.get() + (1<<14)*self.robotic.get() + (1<<15)*self.detector.get() + (1<<16)*self.organic.get() + (1<<17)*self.requirescreep.get() + (1<<18)*self.unused.get() + (1<<19)*self.requirespsi.get() + (1<<20)*self.burrowable.get() + (1<<21)*self.spellcaster.get() + (1<<22)*self.permanentcloak.get() + (1<<23)*self.pickupitem.get() + (1<<24)*self.ignoresupplycheck.get() + (1<<25)*self.usemediumoverlays.get() + (1<<26)*self.uselargeoverlays.get() + (1<<27)*self.battlereactions.get() + (1<<28)*self.fullautoattack.get() + (1<<29)*self.invincible.get() + (1<<30)*self.mechanical.get() + (1<<31)*self.producesunits.get())
+			self.toplevel.units.set_value(id,'Unknown', (1<<0)*self.unknown1.get() + (1<<1)*self.unknown2.get() + (1<<2)*self.unknown4.get() + (1<<3)*self.unknown8.get() + (1<<4)*self.unknown10.get() + (1<<5)*self.unknown20.get() + (1<<6)*self.unknown40.get() + (1<<7)*self.unknown80.get())
+		else:
+			self.building.set(self.isFlagSet('SpecialAbilityFlags', 1 << 0))
+			self.addon.set(self.isFlagSet('SpecialAbilityFlags', 1 << 1))
+			self.flyer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 2))
+			self.resourceminer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 3))
+			self.subunit.set(self.isFlagSet('SpecialAbilityFlags', 1 << 4))
+			self.flyingbuilding.set(self.isFlagSet('SpecialAbilityFlags', 1 << 5))
+			self.hero.set(self.isFlagSet('SpecialAbilityFlags', 1 << 6))
+			self.regenerate.set(self.isFlagSet('SpecialAbilityFlags', 1 << 7))
+			self.animatedidle.set(self.isFlagSet('SpecialAbilityFlags', 1 << 8))
+			self.cloakable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 9))
+			self.twounitsinoneegg.set(self.isFlagSet('SpecialAbilityFlags', 1 << 10))
+			self.singleentity.set(self.isFlagSet('SpecialAbilityFlags', 1 << 11))
+			self.resourcedepot.set(self.isFlagSet('SpecialAbilityFlags', 1 << 12))
+			self.resourcecontainter.set(self.isFlagSet('SpecialAbilityFlags', 1 << 13))
+			self.robotic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 14))
+			self.detector.set(self.isFlagSet('SpecialAbilityFlags', 1 << 15))
+			self.organic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 16))
+			self.requirescreep.set(self.isFlagSet('SpecialAbilityFlags', 1 << 17))
+			self.unused.set(self.isFlagSet('SpecialAbilityFlags', 1 << 18))
+			self.requirespsi.set(self.isFlagSet('SpecialAbilityFlags', 1 << 19))
+			self.burrowable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 20))
+			self.spellcaster.set(self.isFlagSet('SpecialAbilityFlags', 1 << 21))
+			self.permanentcloak.set(self.isFlagSet('SpecialAbilityFlags', 1 << 22))
+			self.pickupitem.set(self.isFlagSet('SpecialAbilityFlags', 1 << 23))
+			self.ignoresupplycheck.set(self.isFlagSet('SpecialAbilityFlags', 1 << 24))
+			self.usemediumoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 25))
+			self.uselargeoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 26))
+			self.battlereactions.set(self.isFlagSet('SpecialAbilityFlags', 1 << 27))
+			self.fullautoattack.set(self.isFlagSet('SpecialAbilityFlags', 1 << 28))
+			self.invincible.set(self.isFlagSet('SpecialAbilityFlags', 1 << 29))
+			self.mechanical.set(self.isFlagSet('SpecialAbilityFlags', 1 << 30))
+			self.producesunits.set(self.isFlagSet('SpecialAbilityFlags', 1 << 31))
+			
+			self.unknown1.set(self.isFlagSet('Unknown', 1 << 0))
+			self.unknown2.set(self.isFlagSet('Unknown', 1 << 1))
+			self.unknown4.set(self.isFlagSet('Unknown', 1 << 2))
+			self.unknown8.set(self.isFlagSet('Unknown', 1 << 3))
+			self.unknown10.set(self.isFlagSet('Unknown', 1 << 4))
+			self.unknown20.set(self.isFlagSet('Unknown', 1 << 5))
+			self.unknown40.set(self.isFlagSet('Unknown', 1 << 6))
+			self.unknown80.set(self.isFlagSet('Unknown', 1 << 7))
 
 class BasicUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel):
@@ -3001,10 +3100,11 @@ class BasicUnitsTab(DATUnitsTab):
 				x = self.toplevel.units.get_value(id,'SupplyProvided')
 				self.suprovided.set(int(ceil((x - 1) / 2.0)))
 				self.suprovhalf.set(x % 2)
+				#
 				self.zerg.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 1)
 				self.terran.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 2 == 2)
 				self.protoss.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 4 == 4)
-
+				
 class UnitsTab(DATTab):
 	data = 'Units.txt'
 

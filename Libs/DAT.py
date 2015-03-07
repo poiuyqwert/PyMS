@@ -150,7 +150,7 @@ class UnitsDAT:
 		'MineralCost',
 		'VespeneCost',
 		'BuildTime',
-		'Unknown1',
+		'Requirements',
 		'StarEditGroupFlags',
 		'SupplyProvided',
 		'SupplyRequired',
@@ -163,6 +163,7 @@ class UnitsDAT:
 		'StarEditAvailabilityFlags'
 	]
 	flaglens = {
+		'AIInternal':8,
 		'SpecialAbilityFlags':32,
 		'StarEditGroupFlags':8,
 		'StarEditAvailabilityFlags':16
@@ -206,7 +207,7 @@ class UnitsDAT:
 				[[None,''],''],
 				[[self.dat_value,'Weapons'],''],
 				[[None,''],''],
-				[[None,''],''],
+				[[None,''],'"Ignore Strategic Suicide","Ignore Guard",Unused_4,Unused_8,Unused_10,Unused_20,Unused_40,Unused_80'],
 				[[None,''],'Building,Addon,Flyer,Worker,Subunit,"Flying Building",Hero,"Regenerates HP","Animated Idle(?)",Cloakable,"Two Units in 1 Egg","Single Entity","Resource Depot","Resource Container","Robotic Unit",Detector,"Organic Unit","Requires Creep",Unused(?),"Requires Psi",Burrowable,Spellcaster,"Permanent Cloak","Pickup Item(?)","Ignore Supply Check","Use Medium Overlays","Use Large Overlays","Battle Reactions","Full Auto-Attack",Invincible,"Mechanical Unit","Produces Units(?)"'],
 				[[None,''],''],
 				[[None,''],'StarCraft crashes with values above 11'],
@@ -243,7 +244,7 @@ class UnitsDAT:
 				[[None,''],''],
 				[[None,''],''],
 				[[None,''],''],
-				[[None,''],'Non-Neutral,"Unit Listing&&Palette","Mission Briefing","Player Settings","All Races","Set Doodad State","Non-Location Triggers","Unit&&Hero Settings","Location Triggers","BroodWar Only","Unused (0x400)","Unused (0x800)","Unused (0x1000)","Unused (0x2000)","Unused (0x4000)","Unused (0x8000)"']
+				[[None,''],'Non-Neutral,"Unit Listing&&Palette","Mission Briefing","Player Settings","All Races","Set Doodad State","Non-Location Triggers","Unit&&Hero Settings","Location Triggers","BroodWar Only",Unused_400,Unused_800,Unused_1000,Unused_2000,Unused_4000,Unused_8000']
 			]
 			self.special = {
 				'HitPoints':self.hitpoints
@@ -786,7 +787,7 @@ class UpgradesDAT(UnitsDAT):
 		'VespeneCostFactor',
 		'ResearchTimeBase',
 		'ResearchTimeFactor',
-		'Unknown',
+		'Requirements',
 		'Icon',
 		'Label',
 		'Race',
@@ -836,7 +837,8 @@ class TechDAT(UnitsDAT):
 		[[],2],
 		[[],2],
 		[[],2],
-		[[],4],
+		[[],2],
+		[[],2],
 		[[],2],
 		[[],2],
 		[[],1],
@@ -848,11 +850,12 @@ class TechDAT(UnitsDAT):
 		'VespeneCost',
 		'ResearchTime',
 		'EnergyRequired',
-		'Unknown',
+		'ResearchRequirements',
+		'UseRequirements',
 		'Icon',
 		'Label',
 		'Race',
-		'Unused',
+		'Researched',
 		'BroodwarOnly'
 	]
 	longlabel = 14
@@ -868,6 +871,7 @@ class TechDAT(UnitsDAT):
 			[[None,''],''],
 			[[None,''],''],
 			[[self.time_value,''],''],
+			[[None,''],''],
 			[[None,''],''],
 			[[None,''],''],
 			[[self.info_value,'Icons'],''],
@@ -901,9 +905,9 @@ class SoundsDAT(UnitsDAT):
 	labels = [
 		'SoundFile',
 		'Unknown1',
-		'Unknown2',
-		'Unknown3',
-		'Unknown4'
+		'Flags',
+		'Race',
+		'Volume'
 	]
 	longlabel = 9
 	datname = 'sfxdata.dat'
@@ -920,7 +924,7 @@ class SoundsDAT(UnitsDAT):
 			[[self.stattxt_value,'Sound File Path'],''],
 			[[None,''],''],
 			[[None,''],''],
-			[[None,''],''],
+			[[self.info_value,'Races'],''],
 			[[None,''],'']
 		]
 		self.special = {}

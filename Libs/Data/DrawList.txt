@@ -1,5 +1,5 @@
 Normal Draw
-Unknown1
+Overlay on Target
 Enemy Unit Cloak(+spell)
 Own Unit Cloak(+spell)
 Ally Unit Cloak
@@ -8,11 +8,11 @@ Own Unit Cloak(draw only)
 (crash)
 EMP Shockwave
 Use Remapping
-Shadow/FoW(dark.pcx)
-Unknown11
+RLE_SHADOW
+RLE_HPFLOATDRAW
 Warp Flash(SEdit crash)
-Don't Mirror Frames
-Unknown14
+RLE_OUTLINE
+RLE_PLAYER_SIDE (Flag)
 Hide Gfx,Show Size Rect
 Hallucination
 Warp Flash

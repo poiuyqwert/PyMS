@@ -3,8 +3,11 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	print 'PIL is missing. Consult the installation documentation.' # http://pythonmac.org/packages/py25-fat/index.html
-	sys.exit()
+	try:
+		import ImageTk
+	except:
+		print 'PIL is missing. Consult the installation documentation.' # http://pythonmac.org/packages/py25-fat/index.html
+		sys.exit()
 
 from utils import *
 import BMP
