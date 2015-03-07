@@ -1,7 +1,14 @@
 PyDAT.html
-PyDAT v1.11
+PyDAT v1.12
 PyDAT is used to convert DAT (units.dat, weapons.dat, flingy.dat, sprites.dat, images.dat, upgrades.dat, techdata.dat, sfxdata.dat, portdata.dat, mapdata.dat, orders.dat) to and from TXT files.
 	Changes	changes
++PyDAT v1.12
+ -Fixed bug where modifying MPQ settings would not persist
+ -Fixed a bug where unchecking a checkbox in the Units tab did not save correctly. (Thanks Heinermann)
+ -Labelled several unknowns. (Thanks Heinermann)
+ -Fixed a misinterpretation of the unknown in techdata. (Thanks Heinermann)
+ -Added AI Actions flags. (Thanks Heinermann)
+ -Removed unused availability flags. (Thanks Heinermann)
 +PyDAT v1.11
  -Fixed a bug where the Units>StarEdit tab would clear the race flags of the unit
 +PyDAT v1.10

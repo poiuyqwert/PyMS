@@ -1,7 +1,9 @@
 PyTBL.html
-PyTBL v1.7
+PyTBL v1.8
 PyTBL is used to convert TBL files to and from TXT files.
 	Changes	changes
++PyTBL v1.8
+ -Fixed an bug on first run where the font paths were incorrect. (Thanks Heinermann)
 +PyTBL v1.7
  -Added a text previewer
  -Added the color list to the main window and removed the colors window

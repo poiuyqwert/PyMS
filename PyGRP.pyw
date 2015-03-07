@@ -11,7 +11,7 @@ from thread import start_new_thread
 from math import ceil
 import optparse, os, re, webbrowser, sys
 
-VERSION = (3,8)
+VERSION = (3,9)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=False):

@@ -12,7 +12,7 @@ from thread import start_new_thread
 from shutil import copy
 import optparse, os, re, webbrowser, sys
 
-VERSION = (2,4)
+VERSION = (2,5)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 IMG_CACHE = {}

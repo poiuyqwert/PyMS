@@ -10,7 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys, re
 
-VERSION = (1,7)
+VERSION = (1,8)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 class PreviewDialog(PyMSDialog):

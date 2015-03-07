@@ -2,6 +2,9 @@ intro.html
 Introduction
 PyMS is an (almost) all inclusive StarCraft Modding Suite, currently containing 13 programs to edit various StarCraft files. Because PyMS uses [http://www.python.org	Python], it works on Windows, Mac, Linux, and many more operating systems.\n__Note:__ This documentation is incomplete and will be updated in the future.
 	Changes	changes
++PyMS v1.2.2 (Ongoing)
+ -Updated SFmpq.dylib
+ -Updated ImageTk importing to support different versions
 +PyMS v1.2.1 (June 4, '09)
  -Added __PyMPQ__
  -Updated SFmpq.dll
@@ -11,7 +14,7 @@ PyMS is an (almost) all inclusive StarCraft Modding Suite, currently containing 
  -Fixed some errors on systems that returned unicode strings
  -Fixed a problem on Mac's with the programs that use SFmpq
 +PyMS v1.2.0 (March 25, '09)
- -The "Remin me later" checkbox on the PyMS update dialog does not stay disable between versions anymore
+ -The "Remind me later" checkbox on the PyMS update dialog does not stay disable between versions anymore
  -Totally revamped MPQ and settings handling
  -No PyMS program should ever hog your MPQ's anymore
  -Changed the Libs\Default folder and combined it with Libs\Default\MPQ to create Libs\MPQ (PyDAT's SEMPQ.exe is now in Libs\Data)

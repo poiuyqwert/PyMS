@@ -22,7 +22,7 @@ try:
 except:
 	SOUND = False
 
-VERSION = (1,11)
+VERSION = (1,12)
 LONG_VERSION = 'v%s.%s' % VERSION
 ICON_CACHE = {}
 GRP_CACHE = {}

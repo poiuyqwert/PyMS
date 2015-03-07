@@ -1,7 +1,12 @@
 PyGRP.html
-PyGRP v3.8
+PyGRP v3.9
 PyGRP converts StarCraft GRP files to and from BMP files. It supports compressed and uncompressed GRP's, converting all frames to and from a single BMP file, and reading RLE compressed BMP files.
 	Changes	changes
++PyGRP v3.9
+ -Fixed an error that prevented saving. (Thanks Heinermann)
+ -Fixed an error that prevented loading some graphics. (Thanks Heinermann)
+ -Fixed an error involving some actions when "Show Preview" was unchecked. (Thanks Heinermann)
+ -Fixed several errors for when the user deselects all entries. (Thanks Heinermann)
 +PyGRP v3.8
  -Fixed a problem importing frames from a single BMP
 +PyGRP v3.7
