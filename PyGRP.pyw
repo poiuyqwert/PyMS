@@ -543,7 +543,7 @@ class PyGRP(Tk):
 		if not n in [3,4,5,6,7]:
 			if n in [0,10]:
 				s = [END,0][not n]
-			elif n in [1,2,8,9] and self.listbox.curselection()::
+			elif n in [1,2,8,9] and self.listbox.curselection():
 				s = int(self.listbox.curselection()[0]) + [-17,-1,1,17][n % 5 - 1]
 				if s < 0 or s >= self.listbox.size():
 					if not self.looppreview.get():
