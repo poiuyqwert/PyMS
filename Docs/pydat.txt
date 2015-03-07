@@ -3,6 +3,7 @@ PyDAT v1.12
 PyDAT is used to convert DAT (units.dat, weapons.dat, flingy.dat, sprites.dat, images.dat, upgrades.dat, techdata.dat, sfxdata.dat, portdata.dat, mapdata.dat, orders.dat) to and from TXT files.
 	Changes	changes
 +PyDAT v1.12
+ -Fixed "Used By" references not respecting "Custom Labels" setting
  -Fixed open directory
  -Fixed bug where modifying MPQ settings would not persist
  -Fixed a bug where unchecking a checkbox in the Units tab did not save correctly. (Thanks Heinermann)

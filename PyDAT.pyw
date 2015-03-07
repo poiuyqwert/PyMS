@@ -399,7 +399,10 @@ class DATTab(NotebookTab):
 				for id in range(dat.count):
 					for dv in vals:
 						if (isstr(dv) and dat.get_value(id, dv) == val) or (isinstance(dv, tuple) and val >= dat.get_value(id,dv[0]) and val <= dat.get_value(id,dv[1])):
-							self.listbox.insert(END, '%s entry %s: %s' % (dat.datname, id, DATA_CACHE[dat.idfile][id]))
+							ref = DATA_CACHE[dat.idfile][id]
+							if self.toplevel.settings.get('customlabels',0) and isinstance(dat, UnitsDAT):
+								ref = decompile_string(self.toplevel.stat_txt.strings[id])
+							self.listbox.insert(END, '%s entry %s: %s' % (dat.datname, id, ref))
 							break
 
 	def popup(self, e):

@@ -149,13 +149,13 @@ class TBL:
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		o = 2 + 2 * len(self.strings)
-		header = struct.pack('<H', len(self.strings))
-		data = ''
+		header = bytearray(struct.pack('<H', len(self.strings)))
+		data = bytearray()
 		for s in self.strings:
 			if not s.endswith('\x00'):
 				s += '\x00'
 			header += struct.pack('<H', o)
-			data += s
+			data += bytearray(s, 'utf-8')
 			o += len(s)
 		f.write(header + data)
 		f.close()
