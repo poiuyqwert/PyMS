@@ -1,2 +1,4 @@
 *.pyc
 stdeo.txt
+Libs/WORKING/*
+test.py

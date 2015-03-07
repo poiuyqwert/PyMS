@@ -456,10 +456,13 @@ class DATTab(NotebookTab):
 						raise
 					return
 				self.file = file
-				self.id = 0
-				self.toplevel.listbox.select_set(0)
-				if self.toplevel.dattabs.active == self:
-					self.loadsave()
+			elif isinstance(file, tuple):
+				self.dat,self.file = file
+			self.id = 0
+			self.toplevel.listbox.select_set(0)
+			if self.toplevel.dattabs.active == self:
+				self.toplevel.status.set(self.file)
+				self.loadsave()
 
 	def iimport(self, key=None, file=None, c=True, parent=None):
 		if parent == None:
@@ -3559,14 +3562,14 @@ class PyDAT(Tk):
 				d.entries = entries
 				continue
 			l.append(d.datname)
-			found.append(d)
+			found.append((d,'%s:arr\\%s' % (file, d.datname)))
 		SFileCloseArchive(h)
 		if not found:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in MPQ "%s"' % file))
 			return
 		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(l)))
 		for d in found:
-			self.dattabs.pages[d.idfile.split('.')[0]][0].open(file=d)
+			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
 
 	def opendirectory(self):
 		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
@@ -3578,11 +3581,12 @@ class PyDAT(Tk):
 		found = []
 		for f in os.listdir(dir):
 			for n,d in enumerate(dats):
+				ff = os.path.join(dir,f)
 				try:
-					d.load_file(os.path.join(dir,f))
+					d.load_file(ff)
 				except PyMSError, e:
 					continue
-				found.append(d)
+				found.append((d,ff))
 				del dats[n]
 				l += f
 				if f != d.datname:
@@ -3596,7 +3600,7 @@ class PyDAT(Tk):
 			return
 		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, l[:-2]))
 		for d in found:
-			self.dattabs.pages[d.idfile.split('.')[0]][0].open(file=d)
+			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
 
 	def iimport(self, key=None):
 		self.dattabs.active.iimport()
