@@ -70,11 +70,11 @@ PyMS is an (almost) all inclusive StarCraft Modding Suite, currently containing 
  -First public release.
 +u
 	Source Installation	install
-Once that is done you can unzip PyMS somewhere on your computer . Now to be able to use PyMS, you will need to have the latest [http://www.python.org	Python]. If you are a Windows user, after installing Python, you will then have to change your environment variables. One way is to open your Command Prompt and type:
+Once that is done you can unzip PyMS somewhere on your computer . Now to be able to use PyMS, you will need to have [http://www.python.org	Python] 2.6+. If you are a Windows user, after installing Python, you will probably have to change your environment variables. One way is to open your Command Prompt and type:
 <Command Line
-set PATH=%PATH%;C:\Python25\
+set PATH=%PATH%;C:\Python\
 >
-__C:\Python25\__ is only the default isntallation path of Python 2.5. If you have a different version of Python and/or installed it somewhere else, use that path instead.
+__C:\Python\__ is an example isntallation path for Python, make sure you use the actual path to your Python installation.
 Finally, as of PyMS v1.1.0, PIL (Python Imaging Library) needs to be installed for the source version to function. You can find it [http://pythonmac.org/packages/py25-fat/index.html	here (Mac)] or [http://www.pythonware.com/products/pil/index.htm	here (Windows)].
 	Windows EXE Installation	exe
 Just extract the PyMS folder somewhere on your computer and run the exe's, thats it.
@@ -102,12 +102,17 @@ I would much rather you contact me through the [http://www.broodwarai.com/forums
  +u
  -[http://www.maplantis.org	Maplantis](dead) as [http://www.maplantis.org/index.php?member=759	poiuy_qwert]
  -[http://www.staredit.net	SEN] as [http://www.staredit.net/?member=852	poiuy_qwert]
- -[http://www.warboards.org	WarBoards] as [http://www.warboards.org/member.php?u=44288	poiuyqwert]
+ -[http://www.warboards.org	WarBoards](dead) as [http://www.warboards.org/member.php?u=44288	poiuyqwert]
  -[http://www.campaigncreations.org	CampaignCreations] as [http://www.campaigncreations.org/forum/profile/poiuy_qwert/	poiuy_qwert]
 +u
 Last, and the choice I least prefer, you can send an email to me at [mailto:p.q.poiuy.qwert@gmail.com	p.q.poiuy.qwert@gmail.com]
 	Credits	credits
 First of all I would like to thank bajadulce for graciously hosting the official PyMS forum on his great site, [http://www.broodwarai.com	BroodWarAI.com], thanks a million!
++PyMS v1.2.2
+ -__Heinermann__
+&nbsp;&nbsp;&nbsp;Provided fixes/improvements to various programs
+ -__pastelmind__
+&nbsp;&nbsp;&nbsp;Provided fixes/improvements to various programs
 +PyMS v1.1.1
  -Many people from SEN and WB~
 &nbsp;&nbsp;&nbsp;Lots of bug reports and ideas, thanks!

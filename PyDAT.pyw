@@ -16,11 +16,32 @@ from thread import start_new_thread
 from shutil import copy
 from math import ceil
 import optparse, os, re, sys
+play_sound = None
 try:
 	from winsound import *
-	SOUND = True
+	def win_play(raw_audio):
+		start_new_thread(PlaySound, (raw_audio, SND_MEMORY))
+	play_sound = win_play
 except:
-	SOUND = False
+	import subprocess
+	def osx_play(raw_audio):
+		def do_play(path):
+			try:
+				subprocess.call(["afplay", temp_file])
+			except:
+				pass
+			try:
+				os.remove(path)
+			except:
+				pass
+		temp_file = create_temp_file('audio')
+		handle = open(temp_file, 'wb')
+		handle.write(raw_audio)
+		handle.flush()
+		os.fsync(handle.fileno())
+		handle.close()
+		start_new_thread(do_play, (temp_file,))
+	play_sound = osx_play
 
 VERSION = (1,12)
 LONG_VERSION = 'v%s.%s' % VERSION
@@ -35,7 +56,6 @@ for l in open(os.path.join(BASE_DIR,'Libs','Data','Hints.txt'),'r'):
 
 def tip(obj, tipname, hint):
 	obj.tooltip = Tooltip(obj, '%s:\n' % tipname + fit('  ', HINTS[hint], end=True)[:-1], mouse=True)
-#
 
 def makeCheckbox(frame, var, txt, hint):
 	c = Checkbutton(frame, text=txt, variable=var)
@@ -913,12 +933,13 @@ class SoundsTab(DATTab):
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
-		self.playbtn['state'] = [DISABLED,NORMAL][SOUND and not FOLDER and n > 0]
+		self.playbtn['state'] = [DISABLED,NORMAL][play_sound and not FOLDER and n > 0]
 
 	def play(self):
-		f = self.toplevel.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.sfxdatatbl.strings[self.soundentry.get()-1][:-1])
-		if f:
-			start_new_thread(PlaySound, (f.read(), SND_MEMORY))
+		if play_sound:
+			f = self.toplevel.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.sfxdatatbl.strings[self.soundentry.get()-1][:-1])
+			if f:
+				play_sound(f.read())
 
 	def loadsave(self, save=False):
 		DATTab.loadsave(self, save)
