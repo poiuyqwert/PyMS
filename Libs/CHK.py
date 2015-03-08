@@ -1780,7 +1780,7 @@ class CHK:
 
 	def save_file(self, file):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise
 		f.write(self.save_data())

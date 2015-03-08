@@ -1,7 +1,9 @@
 PyTRG.html
-PyTRG v2.6
+PyTRG v2.7
 PyTRG is used to convert TRG files to TXT files, and stripping TRG files down to GOT compatable TRG files ([PyGOT.html	PyGOT] has a shortcut for this).
 	Changes	changes
++PyTRG v2.7
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyTRG v2.6
  -Added RawCond and RawAct to easily create raw conditions and actions
  -Made loading faster

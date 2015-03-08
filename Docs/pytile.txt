@@ -1,7 +1,9 @@
 PyTILE.html
-PyTILE v1.3
+PyTILE v1.4
 PyTILE is used to edit the tileset files (cv5, vf4, vx4, vr4, and dddata.bin).
 	Changes	changes
++PyTILE v1.4
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyTILE v1.3
  -Fixed a problem interpreting DoodadGroup's when importing
  -Fixed a problem where exported Group/MegaTile/MiniTile settings errors would be treated as internal errors

@@ -1,7 +1,9 @@
 PyFNT.html
-PyFNT v1.2
+PyFNT v1.3
 PyFNT is used to modify StarCraft fonts.
 	Changes	changes
++PyFNT v1.3
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyFNT v1.2
  -Fixed a problem where some characters would get a pink pixel in the bottom right
 +PyFNT v1.1

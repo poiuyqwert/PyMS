@@ -1,7 +1,10 @@
 PyICE.html
-PyICE v1.8
+PyICE v1.9
 PyICE is used to modify StarCraft iscript.bin files.
 	Changes	changes
++PyICE v1.9
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
+ -Fixed a bug that showed an error message when pressing Enter in the Find dialog. (Thanks pastelmind)
 +PyICE v1.8
  -Added a find window to find iscript entries
  -Importing now shows warnings if there are any

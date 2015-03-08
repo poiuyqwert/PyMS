@@ -4,7 +4,7 @@ from Tkinter import *
 from tkMessageBox import askquestion,OK
 import tkFileDialog
 from textwrap import wrap
-import os,re,webbrowser,sys,traceback,urllib
+import os,re,webbrowser,sys,traceback,urllib,errno,tempfile,codecs
 win_reg = True
 try:
 	from _winreg import *
@@ -1323,3 +1323,61 @@ class odict:
 
 	def sort(self):
 		self.keynames.sort()
+
+def get_umask():
+	umask = os.umask(0)
+	os.umask(umask)
+	return umask
+
+def temp_file(name, createmode=None):
+	directory, filename = os.path.split(name)
+	handle, temp_file = tempfile.mkstemp(prefix=".%s-" % filename, dir=directory)
+	os.close(handle)
+
+	try:
+		mode = os.lstat(name).st_mode & 0o777
+	except OSError as e:
+		if e.errno != errno.ENOENT:
+			raise
+		mode = createmode
+		if mode == None:
+			mode = ~get_umask()
+		mode &= 0o666
+	os.chmod(temp_file, mode)
+
+	return temp_file
+
+class AtomicWriter:
+	def __init__(self, name, mode="w+b", createmode=None, encoding=None):
+		self.name = name
+		self.handle = None
+		self.temp_file = None
+		
+		temp_file = temp_file(name, createmode=createmode)
+		if encoding:
+			self.handle = codecs.open(self.temp_file, mode, encoding)
+		else:
+			self.handle = open(self.temp_file, mode)
+		self.temp_file = temp_file
+
+		self.write = self.handle.write
+		self.fileno = self.handle.fileno
+
+	def close(self):
+		if self.handle and not self.handle.closed:
+			self.handle.flush()
+			os.fsync(self.handle.fileno())
+			self.handle.close()
+			os.rename(self.temp_file, self.name)
+
+	def discard(self):
+		if self.handle and not self.handle.closed:
+			self.handle.close()
+		if self.temp_file:
+			try:
+				os.remove(self.temp_file)
+			except:
+				pass
+
+	def __del__(self):
+		self.discard()

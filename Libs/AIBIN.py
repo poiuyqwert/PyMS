@@ -1487,7 +1487,7 @@ class AIBIN:
 	def decompile(self, file, defs=None, ref=False, shortlabel=True, scripts=None):
 		if isstr(file):
 			try:
-				f = open(file, 'w')
+				f = AtomicWriter(file, 'w')
 			except:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file, warnings=warnings)
 		else:
@@ -1697,7 +1697,7 @@ class AIBIN:
 	def compile(self, file, bwscript=None, extra=False):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:
@@ -1937,7 +1937,7 @@ class BWBIN(AIBIN):
 	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None, close=True):
 		if isstr(filename):
 			try:
-				f = open(filename, 'w')
+				f = AtomicWriter(filename, 'w')
 			except:
 				raise PyMSError('Decompile',"Could not load file '%s'" % filename)
 		else:
@@ -2067,7 +2067,7 @@ class BWBIN(AIBIN):
 	def compile(self, file, extra=False):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:

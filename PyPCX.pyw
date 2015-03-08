@@ -10,7 +10,7 @@ import tkFileDialog
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,0)
+VERSION = (1,1)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 class PyPCX(Tk):

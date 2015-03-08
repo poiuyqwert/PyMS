@@ -77,7 +77,7 @@ class LO:
 	def decompile(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'w')
+				f = AtomicWriter(file, 'w')
 			except:
 				raise PyMSError('Decompile',"Could not open file '%s'" % file)
 		else:
@@ -91,7 +91,7 @@ class LO:
 
 	def compile(self, file):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not open file '%s'" % file)
 		overlays = len(self.frames[0])

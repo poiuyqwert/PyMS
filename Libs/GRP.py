@@ -248,7 +248,7 @@ class GRP:
 	def save_file(self, file, uncompressed=None):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
 		else:

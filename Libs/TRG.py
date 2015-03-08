@@ -2249,7 +2249,7 @@ class TRG:
 	def decompile(self, file, ref=False):
 		if isstr(file):
 			try:
-				f = open(file, 'w')
+				f = AtomicWriter(file, 'w')
 			except:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
@@ -2358,7 +2358,7 @@ class TRG:
 
 	def compile(self, file, TRIG=False):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise
 		f.write(self.compile_data(TRIG))

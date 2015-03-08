@@ -81,7 +81,7 @@ class PCX:
 
 	def save_file(self, file):
 		try:
-			f = open(file,'wb')
+			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Save',"Could not save PCX to file '%s'" % file)
 		f.write('\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, int(math.ceil(self.width / 2.0) * 2), 0, 0, 0))

@@ -1,7 +1,9 @@
 PyPAL.html
-PyPAL v1.5
+PyPAL v1.6
 PyPAL is usefull for converting various palette formats to and from eachother. It can load StarCraft PAL/WPE, RIFF PAL, JASC PAL, and ZSoft PCX, and can save to all except PCX.
 	Changes	changes
++PyPAL v1.6
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyPAL v1.5
  -Fixed a problem loading palettes from a BMP
 +PyPAL v1.4

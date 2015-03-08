@@ -417,7 +417,7 @@ class UnitsDAT:
 
 	def decompile(self, file, ref=False, ids=None):
 		try:
-			f = open(file, 'w')
+			f = AtomicWriter(file, 'w')
 		except:
 			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
 		if ref:
@@ -451,7 +451,7 @@ class UnitsDAT:
 			raise
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:

@@ -969,7 +969,7 @@ class IScriptBIN:
 	def decompile(self, file, reference=False, ids=None):
 		if isstr(file):
 			try:
-				f = open(file, 'w')
+				f = AtomicWriter(file, 'w')
 			except:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file, warnings=warnings)
 		else:
@@ -1114,7 +1114,7 @@ class IScriptBIN:
 
 	def compile(self, file):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		code = ''

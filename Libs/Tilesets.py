@@ -166,7 +166,7 @@ class Tileset:
 	# type: 0 = group, 1 = megatile, 2 = minitile, 3 = doodad
 	def decompile(self, bmpfile, type=0, id=0, settingfile=None):
 		if settingfile:
-			f = open(settingfile, 'w')
+			f = AtomicWriter(settingfile, 'w')
 		b = BMP.BMP()
 		b.palette = list(self.wpe.palette)
 		if type == 0:
@@ -474,7 +474,7 @@ class CV5:
 	def save_file(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the CV5 to '%s'" % file)
 		else:
@@ -514,7 +514,7 @@ class VF4:
 	def save_file(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the VF4 to '%s'" % file)
 		else:
@@ -554,7 +554,7 @@ class VX4:
 	def save_file(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the VX4 to '%s'" % file)
 		else:
@@ -595,7 +595,7 @@ class VR4:
 	def save_file(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the VR4 to '%s'" % file)
 		else:
@@ -638,7 +638,7 @@ class DDDataBIN:
 	def save_file(self, file):
 		if isstr(file):
 			try:
-				f = open(file, 'wb')
+				f = AtomicWriter(file, 'wb')
 			except:
 				raise PyMSError('Save',"Could not save the dddata.dat to '%s'" % file)
 		else:

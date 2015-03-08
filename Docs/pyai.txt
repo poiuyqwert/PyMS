@@ -3,6 +3,7 @@ PyAI v2.5
 PyAI is used to convert AI scripts to and from TXT files.
 	Changes	changes
 +PyAI v2.5
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
  -set_randomseed now takes a dword parameter instead of two word parameters (Thanks Heinermann)
  -do_morph now takes two parameters: byte, military (Thanks pastelmind)
  -wait_train now takes (byte, unit) (instead of (byte, military)) as its parameters (Thanks pastelmind)

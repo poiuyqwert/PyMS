@@ -111,7 +111,7 @@ class GOT:
 
 	def decompile(self, file, ref=False):
 		try:
-			f = open(file, 'w')
+			f = AtomicWriter(file, 'w')
 		except:
 			raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		if ref:
@@ -134,7 +134,7 @@ class GOT:
 
 	def compile(self, file):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		f.write(struct.pack('<B32s32sBxBxHxx11BLL5x', 3, self.template[0] + '\x00' * (32 - len(self.template[0])), self.template[1] + '\x00' * (32 - len(self.template[1])), *self.template[2:]))

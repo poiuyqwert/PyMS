@@ -1,7 +1,9 @@
 PyGOT.html
-PyGOT v1.2
+PyGOT v1.3
 PyGOT is used to convert GOT (Game Templates) to and from TXT files. It also has a shortcut (from [PyTRG.html	PyTRG]) to compiling a TRG as a GOT compatable TRG.
 	Changes	changes
++PyGOT v1.3
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyGOT v1.2
  -Added a __GUI__
 +PyGOT v1.1

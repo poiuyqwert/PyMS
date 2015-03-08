@@ -10,7 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,2)
+VERSION = (1,3)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 HINTS = {

@@ -19,7 +19,7 @@ try:
 except:
 	SOUND = False
 
-VERSION = (1,8)
+VERSION = (1,9)
 LONG_VERSION = 'v%s.%s' % VERSION
 PALETTES = {}
 GRP_CACHE = {}

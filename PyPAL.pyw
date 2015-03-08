@@ -10,7 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,5)
+VERSION = (1,6)
 LONG_VERSION = 'v%s.%s' % VERSION
 
 class PyPAL(Tk):

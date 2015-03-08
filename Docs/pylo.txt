@@ -1,7 +1,9 @@
 PyLO.html
-PyLO v1.6
+PyLO v1.7
 PyLO is used to convert LO? (LOA, LOB, LOD, LOF, LOO, LOS, LOU, LOG, LOL, LOX) to and from TXT files.
 	Changes	changes
++PyLO v1.7
+ -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyLO v1.6
  -Enabled the error tracer to give internal error windows instead of only printing it to Libs\stdeo.txt
  -Fixed a bug on file load when "Use base GRP" or "Use overlay GRP" were unselected at program start

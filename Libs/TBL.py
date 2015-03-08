@@ -145,7 +145,7 @@ class TBL:
 
 	def compile(self, file):
 		try:
-			f = open(file, 'wb')
+			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		o = 2 + 2 * len(self.strings)
@@ -162,7 +162,7 @@ class TBL:
 
 	def decompile(self, file, ref=False):
 		try:
-			f = open(file, 'w')
+			f = AtomicWriter(file, 'w')
 		except:
 			raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		if ref:
