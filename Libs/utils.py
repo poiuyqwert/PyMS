@@ -1329,7 +1329,7 @@ def get_umask():
 	os.umask(umask)
 	return umask
 
-def temp_file(name, createmode=None):
+def create_temp_file(name, createmode=None):
 	directory, filename = os.path.split(name)
 	handle, temp_file = tempfile.mkstemp(prefix=".%s-" % filename, dir=directory)
 	os.close(handle)
@@ -1348,17 +1348,20 @@ def temp_file(name, createmode=None):
 	return temp_file
 
 class AtomicWriter:
-	def __init__(self, name, mode="w+b", createmode=None, encoding=None):
-		self.name = name
+	def __init__(self, path, mode="w+b", createmode=None, encoding=None):
+		self.real_file = path
 		self.handle = None
 		self.temp_file = None
 		
-		temp_file = temp_file(name, createmode=createmode)
-		if encoding:
-			self.handle = codecs.open(self.temp_file, mode, encoding)
+		if os.path.isfile(path):
+			temp_file = create_temp_file(path, createmode=createmode)
+			if encoding:
+				self.handle = codecs.open(temp_file, mode, encoding)
+			else:
+				self.handle = open(temp_file, mode)
+			self.temp_file = temp_file
 		else:
-			self.handle = open(self.temp_file, mode)
-		self.temp_file = temp_file
+			self.handle = open(path, mode)
 
 		self.write = self.handle.write
 		self.fileno = self.handle.fileno
@@ -1368,7 +1371,34 @@ class AtomicWriter:
 			self.handle.flush()
 			os.fsync(self.handle.fileno())
 			self.handle.close()
-			os.rename(self.temp_file, self.name)
+		if self.temp_file:
+			bak_file = None
+			if os.path.isfile(self.real_file):
+				directory, filename = os.path.split(self.real_file)
+				bak_name = '.%s~' % filename
+				while os.path.isfile(os.path.join(directory,bak_name)):
+					bak_name += '~'
+				bak_file = os.path.join(directory, bak_name)
+				try:
+					os.rename(self.real_file, bak_file)
+				except:
+					bak_file = None
+					pass
+			try:
+				os.rename(self.temp_file, self.real_file)
+			except Exception, e:
+				if bak_file:
+					try:
+						os.rename(bak_file, self.real_file)
+					except:
+						pass
+				raise e
+			finally:
+				if bak_file:
+					try:
+						os.remove(bak_file)
+					except:
+						pass
 
 	def discard(self):
 		if self.handle and not self.handle.closed:
