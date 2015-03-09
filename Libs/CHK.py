@@ -58,32 +58,6 @@ class CHKSectionUnknown(CHKSection):
 	def decompile(self):
 		return '%s: # Unknown\n\t%s\n' % (self.name, pad('Data',self.data.encode('hex')))
 
-class CHKSectionTYPE(CHKSection):
-	NAME = "TYPE"
-
-	STARCRAFT = "RAWS"
-	BROODWAR = "RAWB"
-	@staticmethod
-	def TYPE_NAME(t):
-		names = {
-			CHKSectionTYPE.STARCRAFT:'StarCraft',
-			CHKSectionTYPE.BROODWAR:'BroodWar'
-		}
-		return names.get(t,'Unknown')
-
-	def __init__(self, chk):
-		CHKSection.__init__(self, chk)
-		self.type = CHKSectionTYPE.BROODWAR
-
-	def load_data(self, data):
-		self.type = data[:4]
-
-	def save_data(self):
-		return self.type
-
-	def decompile(self):
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',self.type), CHKSectionTYPE.TYPE_NAME(self.type))
-
 class CHKSectionVER(CHKSection):
 	NAME = "VER "
 
@@ -117,8 +91,70 @@ class CHKSectionVER(CHKSection):
 	def decompile(self):
 		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',self.version), CHKSectionVER.VER_NAME(self.version))
 
+class CHKRequirements:
+	VER_NONE = 0
+	VER_VANILLA = (1 << 0)
+	VER_HYBRID = (1 << 1)
+	VER_BROODWAR = (1 << 2)
+	VER_VANILLA_HYBRID = VER_VANILLA | VER_HYBRID
+	VER_BROODWAR_HYBRID = VER_BROODWAR | VER_HYBRID
+	VER_ALL = VER_VANILLA | VER_HYBRID | VER_BROODWAR
+
+	MODE_NONE = 0
+	MODE_MELEE = (1 << 0)
+	MODE_UMS = (1 << 1)
+	MODE_ALL = MODE_MELEE | MODE_UMS
+
+	def __init__(self, vers=VER_ALL, modes=MODE_ALL):
+		self.vers = []
+		if vers & CHKRequirements.VER_VANILLA:
+			self.vers.append(CHKSectionVER.SC100)
+		if vers & CHKRequirements.VER_HYBRID:
+			self.vers.append(CHKSectionVER.SC104)
+		if vers & CHKRequirements.VER_BROODWAR:
+			self.vers.append(CHKSectionVER.BW)
+
+		self.modes = modes
+
+	def is_required(self, chk, game_mode=MODE_ALL):
+		verSect = chk.get_section(CHKSectionVER.NAME)
+		if verSect.version in self.vers and game_mode & self.modes:
+			return True
+		return False
+
+class CHKSectionTYPE(CHKSection):
+	NAME = "TYPE"
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
+
+	STARCRAFT = "RAWS"
+	BROODWAR = "RAWB"
+	@staticmethod
+	def TYPE_NAME(t):
+		names = {
+			CHKSectionTYPE.STARCRAFT:'StarCraft',
+			CHKSectionTYPE.BROODWAR:'BroodWar'
+		}
+		return names.get(t,'Unknown')
+
+	def __init__(self, chk):
+		CHKSection.__init__(self, chk)
+		self.type = CHKSectionTYPE.BROODWAR
+		verSect = chk.sections.get(CHKSectionVER.NAME)
+		if verSect and not verSect.type == CHKSectionVER.BW:
+			self.type = CHKSectionTYPE.STARCRAFT
+
+	def load_data(self, data):
+		self.type = data[:4]
+
+	def save_data(self):
+		return self.type
+
+	def decompile(self):
+		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',self.type), CHKSectionTYPE.TYPE_NAME(self.type))
+
 class CHKSectionIVER(CHKSection):
 	NAME = 'IVER'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	BETA = 9
 	RELEASE = 10
@@ -133,8 +169,8 @@ class CHKSectionIVER(CHKSection):
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionIVER.RELEASE
-		verSect = chk.sections.get(CHKSectionTYPE.NAME)
-		if verSect and verSect.version == CHKSectionTYPE.BETA:
+		verSect = chk.sections.get(CHKSectionVER.NAME)
+		if verSect and verSect.version == CHKSectionVER.BETA:
 			self.version = CHKSectionIVER.BETA
 	
 	def load_data(self, data):
@@ -148,6 +184,7 @@ class CHKSectionIVER(CHKSection):
 
 class CHKSectionIVE2(CHKSection):
 	NAME = 'IVE2'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	RELEASE = 11
 	@staticmethod
@@ -172,6 +209,7 @@ class CHKSectionIVE2(CHKSection):
 
 class CHKSectionVCOD(CHKSection):
 	NAME = 'VCOD'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	DEFAULT_CODE = '4\x19\xcaw\x99\xdchq\n`\xbf\xc3\xa7\xe7u\xa7\x1f)}\xa6\xd7\xb0:\xbb\xcc1$\xed\x17L\x13\x0be \xa2\xb7\x91\xbd\x18k\x8d\xc3]\xdd\xe2z\xd57\xf6Yd\xd4c\x9a\x12\x0fC\\.F\xe3t\xf8*\x08j7\x067\xf6\xd6;\x0e\x94c\x16Eg\\\xec\xd7{\xf7\xb7\x1a\xfc\xd4\x9es\xfa?\x8c.\xc0\xe1\x0f\xd1t\t\x07\x95\xe3d\xd7u\x16ht\x99\xa7O\xda\xd5 \x18\x1f\xe7\xe6\xa0\xbe\xa6\xb6\xe3\x1f\xca\x0c\xefp1\xd5\x1a1M\xb8$5\xe3\xf8\xc7}\xe1\x1aX\xde\xf4\x05\'C\xba\xac\xdb\x07\xdci\xbe\n\xa8\x8f\xecI\xd7X\x16?\xe5\xdb\xc1\x8aA\xcf\xc0\x05\x9d\xca\x1cr\xa2\xb1_\xa5\xc4#p\x9b\x84\x04\xe1\x14\x80{\x90\xda\xfa\xdbi\x06\xa3\xf3\x0f@\xbe\xf3\xce\xd4\xe3\xc9\xcb\xd7Z@\x014\xf2h\x14\xf88\x8e\xc5\x1a\xfe\xd6=KS\x05\x05\xfa4\x10E\x8e\xdd\x91i\xfe\xaf\xe0\xee\xf0\xf3H~\xdd\x9f\xad\xdcubz\xac\xe51\x1bbg \xcd6M\xe0\x98!t\xfb\tyq6g\xcd\x7fw_\xd6<\xa2\xa2\xa6\xc6\x1a\xe3\xcejN\xcd\xa9l\x86\xba\x9d;\xb5\xf4v\xfd\xf8D\xf0\xbc.\xe9n)#%/k\x08\xab\'Dz\x12\xcc\x99\xed\xdc\xf2u\xc5<8~\xf7\x1c\x1b\xc5\xd1-\x94e\x06\xc9H\xdd\xbe2-\xac\xb5\xc92\x81fJ\xd845?\x15\xdf\xb2\xee\xeb\xb6\x04\xf6M\x965B\x94\x9cb\x8a\xd3aR\xa8{o\xdca\xfc\xf4l\x14-\xfe\x99\xea\xa4\n\xe8\xd9\xfe\x13\xd0HDY\x80f\xf3\xe34\xd9\x8d\x19\x16\xd7c\xfe0\x18~:\x9b\x8d\x0f\xb1\x12\xf0\xf5\x8c\nxX\xdb>c\xb8\x8c:\xaa\xf3\x8e7\x8a\x1a.\\1\xf9\xef\xe3m\xe3~\x9b\xbd>\x13\xc6D\xc0\xb9\xbc:\xda\x90\xa4\xad\xb0t\xf8W\'\x89G\xe6?7\xe4ByZ\xdfC\x8d\xee\xb4\nI\xe8<\xc3\x88\x1a\x88\x01kv\x8a\xc3\xfd\xa3\x16zNV\xa7\x7f\xcb\xba\x02^\x1c\xec\xb0\xb9\xc9v\x1e\x82\xb19>\xc9W\xc5\x19$8L]/T\xb8o]W\x8e0\xa1\nRm\x18q^\x13\x06\xc3Y\x1f\xdc>b\xdc\xda\xb5\xeb\x1b\x91\x95\xf9\xa7\x91\xd5\xda3S\xcek\xf5\x00p\x01\x7f\xd8\xee\xe8\xc0\n\xf1\xcec\xeb\xb6\xd3x\xef\xcc\xa5\xaa]\xbc\xa4\x96\xab\xf2\xd2a\xff\xea\x9a\xa8j\xed\xa2\xbd>\xeda9\xc1\x82\x92\x166#\xb1\xb0\xa0$\xe5\x05\x9b\xa7\xaa\r\x12\x9b3\x83\x92 \xda%\xb0\xec\xfc$\xd08#\xfc\x95\xf2t\x80s\xe5\x19\x97P}DE\x93D\xdb\xa2\xad\x1diD\x14\xee\xe7,\x7f\x87\xff8\x9e2\xf1M\xbc)\xdaB\'&\xfe\xc1\xd2+\xa9\xf6Bz\x0e\xcb\xe8|\xd1\x0f[\xecVi\xb7a1\xb4m\xf9%@4ym\xfaS\xa7\x0b\xfa\xa4\x82\xce\xc3EIa\rE,\x8f(I`\xf7\xf3}\xc9\x1e\x0f\xd0\x89\xc1&R\xf8\xd3M\x8f5\x14\xba\x9d_\x0b\x07\xa9J\x00\xf7"&/>g\xfb\x1f\xa1\x9c\x11\xc6iO]fX4\x15\x90l\xe5TF\xaf_c\xd6\x8a\x0c\x95\xdf\xbd\r\xe4\xaf\xbf@@L\xa3\xf6Qq)\xed&\xf8\x85("\xd5\xbf\xbe\xcf\xfa(\xc5\x7fQ\xb8\x06c\x07\xec\xbd\x8f)\xfaU~q\x1a@2f\xe8\xd4\xde\x9d\xd4^\xfc\x93z=\xd5;\xcdu.\x80\nOt\x87\x1b\xcc\x8f\xea\x9a\xa9\xdb|\x16S\xe5\xef\xabx\xc1n\xa4r\x89Z\x98,pP\xfb\xa1\xdf\x1fk\xb7\xd9D\x07\x80\x82V\xfd\xbf\xc0\x83\x0eI\xd0[\x1ehj\x0e\x9a\xc2\x0b/\x8eC\xa0\xe1\x99\x0c\xf6\xb2\xe0z\x1c^,\xc8\xa0E<\x0b\xe9\x88\xac\xb9\x96\xc6t\xae\x83*\xbb\x13\xfae\xebO\x1f\xa6\xb0\x8a\x8a\xe1\x81\xe9\xb8\xb9\xd5U\x15NE\xf2\xad\x9b>\xc25~_\x92.r\xb6[h#n\xc6E\x0e\xe9;\x87\xd4\xf4A\xc0\xe3\xa8\x05D\xbe\xe4\x0f\x8a\x13\x1a\xc47\xf4Z@U\xef\x9dy\x1dKJy:\x9cv\x857\xcc\x82=\x0f\xb6`\xa6\x93~\xbd\\\xc2\xc4r\xc7\x7f\x90M\x1b\x96\x10\x13\x05hh5\xc0{\xffF\x85C*'
 	DEFAULT_OPCODES = (1, 4, 5, 6, 2, 1, 5, 2, 0, 3, 7, 7, 5, 4, 6, 3)
@@ -196,6 +234,7 @@ class CHKSectionVCOD(CHKSection):
 
 class CHKSectionIOWN(CHKSection):
 	NAME = 'IOWN'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	INACTIVE = 0
 	COMPUTER_GAME_INVALID = 1 # INVALID
@@ -239,6 +278,7 @@ class CHKSectionIOWN(CHKSection):
 
 class CHKSectionOWNR(CHKSection):
 	NAME = 'OWNR'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	INACTIVE = 0
 	COMPUTER_GAME_INVALID = 1 # INVALID
@@ -282,6 +322,7 @@ class CHKSectionOWNR(CHKSection):
 
 class CHKSectionERA(CHKSection):
 	NAME = 'ERA '
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	BADLANDS = 0
 	SPACE = 1
@@ -314,6 +355,7 @@ class CHKSectionERA(CHKSection):
 
 class CHKSectionDIM(CHKSection):
 	NAME = 'DIM '
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	TINY = 64
 	SMALL = 96
@@ -337,6 +379,7 @@ class CHKSectionDIM(CHKSection):
 
 class CHKSectionSIDE(CHKSection):
 	NAME = 'SIDE'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	ZERG = 0
 	TERRAN = 1
@@ -378,6 +421,7 @@ class CHKSectionSIDE(CHKSection):
 
 class CHKSectionMTXM(CHKSection):
 	NAME = 'MTXM'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -391,7 +435,7 @@ class CHKSectionMTXM(CHKSection):
 		if self.map != None:
 			return
 		self.map = []
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		diff = dims.width*dims.height - len(self.raw_map)
 		if diff > 0:
 			self.raw_map += '\0' * diff
@@ -402,7 +446,7 @@ class CHKSectionMTXM(CHKSection):
 			self.map.append([[(v & 0xFFF0) >> 4,v & 0xF] for v in values])
 	
 	def save_data(self):
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		result = ''
 		struct_format = '<%dH' % dims.width
 		for r in self.map:
@@ -425,6 +469,7 @@ class CHKUnitAvailability:
 
 class CHKSectionPUNI(CHKSection):
 	NAME = 'PUNI'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -486,6 +531,7 @@ class CHKUpgradeLevels:
 
 class CHKSectionUPGR(CHKSection):
 	NAME = 'UPGR'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 46
 	
@@ -564,6 +610,7 @@ class CHKTechAvailability:
 
 class CHKSectionPTEC(CHKSection):
 	NAME = 'PTEC'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 24
 	
@@ -704,6 +751,7 @@ class CHKUnit:
 
 class CHKSectionUNIT(CHKSection):
 	NAME = 'UNIT'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -734,6 +782,7 @@ class CHKSectionUNIT(CHKSection):
 
 class CHKSectionTILE(CHKSection):
 	NAME = 'TILE'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -747,7 +796,7 @@ class CHKSectionTILE(CHKSection):
 		if self.map != None:
 			return
 		self.map = []
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		diff = dims.width*dims.height - len(self.raw_map)
 		if diff > 0:
 			self.raw_map += '\0' * diff
@@ -758,7 +807,7 @@ class CHKSectionTILE(CHKSection):
 			self.map.append([[(v & 0xFFF0) >> 4,v & 0xF] for v in values])
 
 	def save_data(self):
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		result = ''
 		struct_format = '<%dH' % dims.width
 		for r in self.map:
@@ -799,6 +848,7 @@ class CHKDoodadVisual:
 
 class CHKSectionDD2(CHKSection):
 	NAME = 'DD2 '
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -855,6 +905,7 @@ class CHKDoodad:
 
 class CHKSectionTHG2(CHKSection):
 	NAME = 'THG2'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -883,6 +934,7 @@ class CHKSectionTHG2(CHKSection):
 
 class CHKSectionMASK(CHKSection):
 	NAME = 'MASK'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -896,7 +948,7 @@ class CHKSectionMASK(CHKSection):
 		if self.map != None:
 			return
 		self.map = []
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		diff = dims.width*dims.height - len(self.raw_map)
 		if diff > 0:
 			self.raw_map += '\xFF' * diff
@@ -906,7 +958,7 @@ class CHKSectionMASK(CHKSection):
 			self.map.append(list(struct.unpack(struct_format, self.raw_map[offset:offset+dims.width])))
 	
 	def save_data(self):
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		result = ''
 		struct_format = '<%dB' % dims.width
 		for r in self.map:
@@ -923,6 +975,7 @@ class CHKSectionMASK(CHKSection):
 
 class CHKSectionSTR(CHKSection):
 	NAME = 'STR '
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -996,6 +1049,7 @@ class CHKUnitProperties:
 
 class CHKSectionUPRP(CHKSection):
 	NAME = 'UPRP'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1024,6 +1078,7 @@ class CHKSectionUPRP(CHKSection):
 
 class CHKSectionUPUS(CHKSection):
 	NAME = 'UPUS'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1064,7 +1119,7 @@ class CHKLocation:
 	def decompile(self):
 		result = '\t#\n'
 		string = ''
-		strings = self.chk.sections[CHKSectionSTR.NAME]
+		strings = self.chk.get_section(CHKSectionSTR.NAME)
 		if strings and self.name > -1 and self.name < len(strings.strings):
 			string = ' # ' + strings.strings[self.name]
 		data = {
@@ -1081,8 +1136,11 @@ class CHKLocation:
 			result += '\t%s\n' % pad(key, value)
 		return result
 
-	def inUse(self):
+	def in_use(self):
 		return self.name > 0 # self.start[0] != 0 or self.start[1] != 0 or self.end[0] != 0 or self.end[1] != 0 or self.name != 0 or self.elevation != 0
+
+	def normalized_coords(self):
+		return (min(self.start[0],self.end[0]), min(self.start[1],self.end[1]), max(self.start[0],self.end[0]), max(self.start[1],self.end[1]))
 
 	def clear(self):
 		self.start = [0,0]
@@ -1092,6 +1150,7 @@ class CHKLocation:
 
 class CHKSectionMRGN(CHKSection):
 	NAME = 'MRGN'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1107,7 +1166,7 @@ class CHKSectionMRGN(CHKSection):
 			o += 20
 
 	def process_data(self):
-		ver = self.chk.sections[CHKSectionVER.NAME]
+		ver = self.chk.get_section(CHKSectionVER.NAME)
 		count = 255 if ver.version >= CHKSectionVER.SC104 else 64
 		while len(self.locations) < count:
 			self.locations.append(CHKLocation(self.chk))
@@ -1126,6 +1185,7 @@ class CHKSectionMRGN(CHKSection):
 
 class CHKSectionTRIG(CHKSection):
 	NAME = 'TRIG'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1148,6 +1208,7 @@ class CHKSectionTRIG(CHKSection):
 
 class CHKSectionMBRF(CHKSection):
 	NAME = 'MBRF'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1170,6 +1231,7 @@ class CHKSectionMBRF(CHKSection):
 
 class CHKSectionSPRP(CHKSection):
 	NAME = 'SPRP'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1200,6 +1262,7 @@ class CHKForce:
 
 class CHKSectionFORC(CHKSection):
 	NAME = 'FORC'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1243,6 +1306,7 @@ class CHKSectionFORC(CHKSection):
 
 class CHKSectionWAV(CHKSection):
 	NAME = 'WAV '
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1277,6 +1341,7 @@ class CHKWeaponStats:
 
 class CHKSectionUNIS(CHKSection):
 	NAME = 'UNIS'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UNITS = 228
 	WEAPONS = 100
@@ -1391,6 +1456,7 @@ class CHKUpgradeStats:
 
 class CHKSectionUPGS(CHKSection):
 	NAME = 'UPGS'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 46
 	PAD = False
@@ -1474,6 +1540,7 @@ class CHKTechStats:
 
 class CHKSectionTECS(CHKSection):
 	NAME = 'TECS'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 24
 	
@@ -1534,6 +1601,7 @@ class CHKSectionTECS(CHKSection):
 
 class CHKSectionSWNM(CHKSection):
 	NAME = 'SWNM'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
@@ -1553,6 +1621,7 @@ class CHKSectionSWNM(CHKSection):
 
 class CHKSectionCOLR(CHKSection):
 	NAME = 'COLR'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR, CHKRequirements.MODE_ALL)
 	
 	RED = 0
 	BLUE = 1
@@ -1571,6 +1640,9 @@ class CHKSectionCOLR(CHKSection):
 	PALE_YELLOW_2 = 14
 	CYAN = 15
 	BLACK = 17
+
+	DEFAULT_COLORS = [RED,BLUE,TEAL,PURPLE,ORANGE,BROWN,WHITE,YELLOW]
+
 	@staticmethod
 	def COLOR_NAME(c):
 		names = {
@@ -1619,7 +1691,7 @@ class CHKSectionCOLR(CHKSection):
 
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
-		self.colors = [CHKSectionCOLR.RED,CHKSectionCOLR.BLUE,CHKSectionCOLR.TEAL,CHKSectionCOLR.PURPLE,CHKSectionCOLR.ORANGE,CHKSectionCOLR.BROWN,CHKSectionCOLR.WHITE,CHKSectionCOLR.YELLOW]
+		self.colors = CHKSectionCOLR.DEFAULT_COLORS
 	
 	def load_data(self, data):
 		self.colors = list(struct.unpack('<8B', data[:8]))
@@ -1635,27 +1707,32 @@ class CHKSectionCOLR(CHKSection):
 
 class CHKSectionPUPx(CHKSectionUPGR):
 	NAME = 'PUPx'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 61
 
 class CHKSectionPTEx(CHKSectionPTEC):
 	NAME = 'PTEx'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 44
 
 class CHKSectionUNIx(CHKSectionUNIS):
 	NAME = 'UNIx'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	WEAPONS = 130
 
 class CHKSectionUPGx(CHKSectionUPGS):
 	NAME = 'UPGx'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 61
 	PAD = True
 
 class CHKSectionTECx(CHKSectionTECS):
 	NAME = 'TECx'
+	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 44
 
@@ -1734,6 +1811,20 @@ class CHK:
 			self.aiscript.load_file(aiscript)
 		self.sections = {}
 		self.section_order = []
+
+	def get_section(self, name, game_mode=CHKRequirements.MODE_ALL):
+		sect_class = CHK.SECTION_TYPES[name]
+		required = False
+
+		if name == CHKSectionVER.NAME:
+			required = True
+		elif sect_class:
+			required = sect_class.REQUIREMENTS.is_required(self, game_mode)
+		sect = self.sections.get(name)
+		if required and sect == None and sect_class:
+			sect = sect_class(self)
+			self.sections[name] = sect
+		return sect
 
 	def load_file(self, file):
 		try:
