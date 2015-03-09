@@ -87,7 +87,7 @@ class RichList(Frame):
 		self.text.tag_bind(e, '<Button-1>', self.select)
 		if tags == None:
 			tags = e
-		elif isinstance(tags, str):
+		elif isstr(tags):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))
@@ -182,7 +182,7 @@ class EditableReportSubList(RichList):
 		self.text.tag_bind(e, '<Control-Button-1>', lambda e,i=e: self.doselect(i,2))
 		if tags == None:
 			tags = e
-		elif isinstance(tags, str):
+		elif isstr(tags):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))
@@ -349,7 +349,7 @@ class ReportSubList(RichList):
 		self.text.tag_bind(e, '<Button-1>', self.select)
 		if tags == None:
 			tags = e
-		elif isinstance(tags, str):
+		elif isstr(tags):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))
@@ -478,7 +478,7 @@ class ReportList(Frame):
 				c[1].select_set(s)
 
 	def insert(self, index, text):
-		if isinstance(text, str):
+		if isstr(text):
 			text = [text]
 		if len(text) < len(self.columns):
 			for _ in range(len(self.columns) - len(text)):
@@ -602,7 +602,7 @@ class ReportList(Frame):
 			# return ""
 
 	# def insert(self, index, text):
-		# if isinstance(text, str):
+		# if isstr(text):
 			# text = [text]
 		# if len(text) < len(self.columns):
 			# for _ in range(len(self.columns) - len(text)):
@@ -934,7 +934,7 @@ class TreeList(Frame):
 		# return '.'.join(str(i) for i in ids)
 
 	def get(self, entry, info=False):
-		if isinstance(entry,str) or isinstance(entry,unicode):
+		if isstr(entry):
 			ids = list(int(i) for i in index.split('.'))
 			t = self.groups
 			if len(ids) > 1:
