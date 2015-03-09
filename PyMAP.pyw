@@ -15,16 +15,137 @@ from PIL import ImageTk
 
 from thread import start_new_thread
 from math import ceil
-import optparse, os, webbrowser, sys
+import optparse, os, webbrowser, sys, copy
 
 VERSION = (0,1)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
 # class Sprite()
+
+class Action:
+	def __init__(self):
+		pass
+
+	def update_display(self, ui):
+		pass
+
+	def undo(self, ui):
+		self.update_display(ui)
+
+	def redo(self, ui):
+		self.update_display(ui)
+
+class ActionUpdateValues(Action):
+	def __init__(self, obj, attrs):
+		Action.__init__(self)
+		self.start_values = {}
+		for attr in attrs:
+			if hasattr(obj, attr):
+				self.start_values[attr] = copy.deepcopy(getattr(obj, attr))
+		self.end_values = None
+
+	def set_end_values(self, obj, attrs):
+		self.end_values = {}
+		for attr in attrs:
+			if hasattr(obj, attr):
+				self.end_values[attr] = copy.deepcopy(getattr(obj, attr))
+		print 'Start',self.start_values
+		print 'End',self.end_values
+
+	def get_obj(self, ui):
+		return None
+
+	def apply_values(self, obj, from_values, to_values):
+		from_attrs = set(from_values.keys())
+		to_attrs = set(to_values.keys())
+		del_attrs = from_attrs - to_attrs
+		print 'Del',del_attrs
+		for attr in del_attrs:
+			delattr(obj, attr)
+		print 'To',to_values
+		for name in to_attrs:
+			setattr(obj, name, copy.deepcopy(to_values[name]))
+
+	def undo(self, ui):
+		self.apply_values(self.get_obj(ui), self.end_values, self.start_values)
+		Action.undo(self, ui)
+
+	def redo(self, ui):
+		self.apply_values(self.get_obj(ui), self.start_values, self.end_values)
+		Action.redo(self, ui)
+
+class ActionUpdateLocation(ActionUpdateValues):
+	def __init__(self, location_id, location, attrs):
+		ActionUpdateValues.__init__(self, location, attrs)
+		self.location_id = location_id
+
+	def get_obj(self, ui):
+		locations = ui.chk.get_section(CHKSectionMRGN.NAME)
+		return locations.locations[self.location_id]
+
+	def update_display(self, ui):
+		if ui.current_editlayer == ui.editlayer_locations:
+			ui.current_editlayer.update_location(self.location_id)
+
+def resize_event(x1,y1, x2,y2, mouseX,mouseY):
+	event = [EditLayer.RESIZE_NONE]
+	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
+		dist_left = abs(x1 - mouseX)
+		close_left = (dist_left <= 5)
+		dist_top = abs(y1 - mouseY)
+		close_top = (dist_top <= 5)
+		dist_right = abs(x2 - mouseX)
+		close_right = (dist_right <= 5)
+		dist_bot = abs(y2 - mouseY)
+		close_bot = (dist_bot <= 5)
+
+		if close_right and (not close_top or dist_top <= dist_right) and (not close_bot or dist_bot <= dist_right):
+			event[0] = EditLayer.RESIZE_RIGHT
+			if close_bot:
+				event.append(EditLayer.RESIZE_BOTTOM)
+			elif close_top:
+				event.append(EditLayer.RESIZE_TOP)
+		elif close_bot and (not close_left or dist_left <= dist_bot) and (not close_right or dist_right <= dist_bot):
+			event[0] = EditLayer.RESIZE_BOTTOM
+			if close_right:
+				event.append(EditLayer.RESIZE_RIGHT)
+			elif close_left:
+				event.append(EditLayer.RESIZE_LEFT)
+		elif close_left and (not close_top or dist_top <= dist_left) and (not close_bot or dist_bot <= dist_left):
+			event[0] = EditLayer.RESIZE_LEFT
+			if close_bot:
+				event.append(EditLayer.RESIZE_BOTTOM)
+			elif close_top:
+				event.append(EditLayer.RESIZE_TOP)
+		elif close_top and (not close_left or dist_left <= dist_top) and (not close_right or dist_right <= dist_top):
+			event[0] = EditLayer.RESIZE_TOP
+			if close_right:
+				event.append(EditLayer.RESIZE_RIGHT)
+			elif close_left:
+				event.append(EditLayer.RESIZE_LEFT)
+		else:
+			event[0] = EditLayer.RESIZE_MOVE
+	return event
 
 class EditLayer:
 	INACTIVE = 0
 	ACTIVE = 1
+
+	MOUSE_LEFT = 1
+	MOUSE_MIDDLE = 2
+	MOUSE_RIGHT = 3
+
+	MOUSE_DOWN = 0
+	MOUSE_MOVE = 1
+	MOUSE_UP = 2
+	MOUSE_DOUBLE = 3
+
+	RESIZE_NONE = 0
+	RESIZE_MOVE = 1
+	RESIZE_LEFT = 2
+	RESIZE_TOP = 3
+	RESIZE_RIGHT = 4
+	RESIZE_BOTTOM = 5
 
 	def __init__(self, ui, name):
 		self.ui = ui
@@ -41,6 +162,9 @@ class EditLayer:
 		return isNew
 
 	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
+		pass
+
+	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
 		pass
 
 class EditLayerTerrain(EditLayer):
@@ -74,34 +198,193 @@ class EditLayerFogOfWar(EditLayer):
 class EditLayerLocations(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Locations")
+		self.snap_to_grid = True
 		self.always_display = self.ui.settings.get('always_show_locations', False)
+		self.show_anywhere = False
 		self.locations = {}
+		self.zOrder = None
+		self.old_cursor = None
+		self.current_event = [EditLayer.RESIZE_NONE]
+		self.mouse_offset = [0,0]
+		self.resize_location = None
+		self.action = None
+
+	def list_select(self, location_id):
+ 		self.ui.mapCanvas.tag_raise('location%d' % location_id)
+ 		self.zOrder.remove(location_id)
+ 		self.zOrder.insert(0, location_id)
+		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
+ 		map_width = dims.width * 32
+ 		map_height = dims.height * 32
+ 		view_width = self.ui.mapCanvas.winfo_width()
+ 		view_height = self.ui.mapCanvas.winfo_height()
+		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+ 		location = locations.locations[location_id]
+ 		x1,y1,x2,y2 = location.normalized_coords()
+ 		loc_width = x2-x1
+ 		loc_height = y2-y1
+ 		x = x1
+ 		y = y1
+ 		if loc_width < view_width:
+ 			x -= (view_width - loc_width) / 2.0
+ 		if loc_height < view_height:
+ 			y -= (view_height - loc_height) / 2.0
+ 		self.ui.mapCanvas.xview_moveto(x / float(map_width))
+ 		self.ui.mapCanvas.yview_moveto(y / float(map_height))
 
 	def set_mode(self, mode, x1,y1, x2,y2):
 		if EditLayer.set_mode(self, mode, x1,y1, x2,y2):
 			if self.mode == EditLayer.ACTIVE:
-				# dims = self.chk.sections[CHKSectionDIM.NAME]
-				locations = self.ui.chk.sections.get(CHKSectionMRGN.NAME)
-				if locations:
-					strings = self.ui.chk.sections[CHKSectionSTR.NAME]
-					for l,location in enumerate(locations.locations):
-						if l == 63:
-							continue
-						if location.inUse():
-							name = strings.strings[location.name-1]
-							name = TBL.decompile_string(name)
-							tag = 'location%d' % l
-							x1 = min(location.start[0],location.end[0])
-							y1 = min(location.start[1],location.end[1])
-							x2 = max(location.start[0],location.end[0])
-							y2 = max(location.start[1],location.end[1])
-							self.locations[tag] = self.ui.mapCanvas.create_rectangle(x1,y1, x2,y2, width=2, outline='#0080ff', stipple='gray75', tags=tag) #, fill='#5555FF'
-							self.ui.mapCanvas.create_text(x1+2,y1+2, anchor=NW, text=name, font=('courier', -10, 'normal'), fill='#00FF00', width=x2-x1-4, tags=tag + '-name')
+				self.old_cursor = self.ui.mapCanvas.cget('cursor')
+				# dims = self.chk.get_section(CHKSectionDIM.NAME)
+				locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+				if not self.zOrder:
+					self.zOrder = list(range(len(locations.locations)))
+				for l in self.zOrder:
+					if l == 63 and not self.show_anywhere:
+						continue
+					self.update_location(l)
  			else:
+ 				self.ui.mapCanvas.config(cursor=self.old_cursor)
  				for tag in self.locations.keys():
  					self.ui.mapCanvas.delete(tag)
  					self.ui.mapCanvas.delete(tag + '-name')
  				self.locations = {}
+
+ 	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
+ 		if self.mode == EditLayer.ACTIVE:
+ 			x = x1+mouseX
+ 			y = y1+mouseY
+ 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+ 			cursor = [self.old_cursor]
+ 			for l in self.zOrder:
+ 				if l == 63 and not self.show_anywhere:
+					continue
+				location = locations.locations[l]
+ 				if location.in_use():
+					x1,y1,x2,y2 = location.normalized_coords()
+					event = resize_event(x1,y1,x2,y2,x,y)
+					if event[0] != EditLayer.RESIZE_NONE:
+						if event[0] == EditLayer.RESIZE_LEFT:
+							cursor.extend(['left_side','size_we','resizeleft','resizeleftright'])
+						elif event[0] == EditLayer.RESIZE_RIGHT:
+							cursor.extend(['right_side','size_we','resizeright','resizeleftright'])
+						elif event[0] == EditLayer.RESIZE_TOP:
+							cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
+						elif event[0] == EditLayer.RESIZE_BOTTOM:
+							cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
+						elif event[0] == EditLayer.RESIZE_MOVE:
+							cursor.extend(['crosshair','fleur','size'])
+						if EditLayer.RESIZE_TOP in event and EditLayer.RESIZE_LEFT in event:
+							cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
+						elif EditLayer.RESIZE_TOP in event and EditLayer.RESIZE_RIGHT in event:
+							cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
+						elif EditLayer.RESIZE_BOTTOM in event and EditLayer.RESIZE_LEFT in event:
+							cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
+						elif EditLayer.RESIZE_BOTTOM in event and EditLayer.RESIZE_RIGHT in event:
+							cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
+						break
+			apply_cursor(self.ui.mapCanvas, cursor)
+
+	def update_location(self, location_id):
+		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+		location = locations.locations[location_id]
+		tag = 'location%d' % location_id
+		tag_name = tag + '-name'
+		loc_rect = self.ui.mapCanvas.find_withtag(tag)
+		loc_name = self.ui.mapCanvas.find_withtag(tag_name)
+		if location.in_use():
+			strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+			name = strings.strings[location.name-1]
+			name = TBL.decompile_string(name)
+			x1,y1,x2,y2 = location.normalized_coords()
+			if loc_rect:
+				self.ui.mapCanvas.coords(loc_rect, x1,y1,x2,y2)
+			else:
+				self.locations[tag] = self.ui.mapCanvas.create_rectangle(x1,y1, x2,y2, width=2, outline='#0080ff', stipple='gray75', tags=tag) #, fill='#5555FF'
+			if loc_name:
+				self.ui.mapCanvas.coords(loc_name, x1+2,y1+2)
+				self.ui.mapCanvas.itemconfig(loc_name, text=name)
+			else:
+				self.ui.mapCanvas.create_text(x1+2,y1+2, anchor=NW, text=name, font=('courier', -10, 'normal'), fill='#00FF00', width=x2-x1-4, tags=tag_name)
+		else:
+			if loc_rect:
+				self.ui.mapCanvas.delete(loc_rect)
+			if loc_name:
+				self.ui.mapCanvas.delete(loc_name)
+
+	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
+		if self.mode == EditLayer.ACTIVE:
+			x = x1+mouseX
+ 			y = y1+mouseY
+ 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+			if button_event == EditLayer.MOUSE_DOWN:
+	 			self.current_event = [EditLayer.RESIZE_NONE]
+	 			for l in self.zOrder:
+	 				if l == 63 and not self.show_anywhere:
+						continue
+					location = locations.locations[l]
+	 				if location.in_use():
+						x1,y1,x2,y2 = location.normalized_coords()
+						event = resize_event(x1,y1,x2,y2,x,y)
+						if event[0] != EditLayer.RESIZE_NONE:
+							self.current_event = event
+							if self.current_event[0] == EditLayer.RESIZE_MOVE:
+								self.mouse_offset[0] = x1 - x
+								self.mouse_offset[1] = y1 - y
+							self.resize_location = l
+							self.action = ActionUpdateLocation(l, location, ('start','end'))
+							break
+			if self.current_event[0] != EditLayer.RESIZE_NONE and self.resize_location != None:
+				location = locations.locations[self.resize_location]
+				x1,y1,x2,y2 = location.normalized_coords()
+				rx = x + self.mouse_offset[0]
+				ry = y + self.mouse_offset[1]
+				dx = 0
+				dy = 0
+				if self.current_event[0] == EditLayer.RESIZE_MOVE or EditLayer.RESIZE_LEFT in self.current_event:
+					dx = rx - x1
+				elif EditLayer.RESIZE_RIGHT in self.current_event:
+					dx = rx - x2
+				if self.current_event[0] == EditLayer.RESIZE_MOVE or EditLayer.RESIZE_TOP in self.current_event:
+					dy = ry - y1
+				elif EditLayer.RESIZE_BOTTOM in self.current_event:
+					dy = ry - y2
+				if self.snap_to_grid:
+					dx += (round(rx / 32.0) * 32) - rx
+					dy += (round(ry / 32.0) * 32) - ry
+				if self.current_event[0] == EditLayer.RESIZE_MOVE:
+					location.start[0] += dx
+					location.start[1] += dy
+					location.end[0] += dx
+					location.end[1] += dy
+				if EditLayer.RESIZE_LEFT in self.current_event:
+					if location.start[0] < location.end[0]:
+						location.start[0] += dx
+					else:
+						location.end[0] += dx
+				elif EditLayer.RESIZE_RIGHT in self.current_event:
+					if location.start[0] > location.end[0]:
+						location.start[0] += dx
+					else:
+						location.end[0] += dx
+				if EditLayer.RESIZE_TOP in self.current_event:
+					if location.start[1] < location.end[1]:
+						location.start[1] += dy
+					else:
+						location.end[1] += dy
+				elif EditLayer.RESIZE_BOTTOM in self.current_event:
+					if location.start[1] > location.end[1]:
+						location.start[1] += dy
+					else:
+						location.end[1] += dy
+				self.update_location(self.resize_location)
+				if button_event == EditLayer.MOUSE_UP:
+					self.current_event = [EditLayer.RESIZE_NONE]
+					self.resize_location = None
+					self.action.set_end_values(location, ('start','end'))
+					self.ui.add_undo(self.action)
+					self.action = None
 
 class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
@@ -127,7 +410,7 @@ class MinimapLayer:
 		self.image = None
 		if not self.ui.chk:
 			return
-		dims = self.ui.chk.sections[CHKSectionDIM.NAME]
+		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
 		points = min(256 / dims.width, 256 / dims.height)
 		size = (dims.width*points,dims.height*points)
 		self.image = PILImage.new('RGBA', size)
@@ -150,8 +433,8 @@ class MinimapLayer:
 
 class MinimapLayerTerrain(MinimapLayer):
 	def draw(self, drawer, size, points):
-		dims = self.ui.chk.sections[CHKSectionDIM.NAME]
-		tiles = self.ui.chk.sections[CHKSectionTILE.NAME]
+		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
+		tiles = self.ui.chk.get_section(CHKSectionTILE.NAME)
 		for y in range(dims.width):
 			for x in range(dims.height):
 				tile = [0,0]
@@ -168,8 +451,8 @@ class MinimapLayerTerrain(MinimapLayer):
 
 class MinimapLayerUnits(MinimapLayer):
 	def draw(self, drawer, size, points):
-		dims = self.ui.chk.sections[CHKSectionDIM.NAME]
-		unit = self.ui.chk.sections[CHKSectionUNIT.NAME]
+		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
+		unit = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 		def compare(unit1, unit2):
 			elevation1 = self.ui.unitsdat.get_value(unit1.unitID, 'ElevationLevel')
 			elevation2 = self.ui.unitsdat.get_value(unit2.unitID, 'ElevationLevel')
@@ -182,9 +465,11 @@ class MinimapLayerUnits(MinimapLayer):
 			if unit1.position[0] > unit2.position[1]:
 				return 1
 			return 0
-		print len(unit.units)
 		units = sorted(unit.units, cmp=compare)
-		colr = self.ui.chk.sections[CHKSectionCOLR.NAME]
+		colors = CHKSectionCOLR.DEFAULT_COLORS
+		colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
+		if colr:
+			colors = colr.colors
 		for unit in units:
 			w = self.ui.unitsdat.get_value(unit.unitID, 'StarEditPlacementBoxWidth') / (dims.width*32.0) * size[0]
 			h = self.ui.unitsdat.get_value(unit.unitID, 'StarEditPlacementBoxHeight') / (dims.height*32.0) * size[0]
@@ -192,7 +477,7 @@ class MinimapLayerUnits(MinimapLayer):
 			y = unit.position[1] / (dims.height*32.0) * size[1] - h/2.0
 			color = CHKSectionCOLR.NEUTRAL
 			if unit.owner < 8:
-				color = colr.colors[unit.owner]
+				color = colors[unit.owner]
 			color = self.ui.tileset.wpe.palette[CHKSectionCOLR.PALETTE_INDICES(color)] + [255]
 			drawer.rectangle((x, y, x+w, y+h), fill=tuple(color))
 
@@ -210,7 +495,7 @@ class MapLayerTerrain(MapLayer):
 		self.map = {}
 
 	def update_display(self, x1,y1, x2,y2):
-		tiles = self.ui.chk.sections[CHKSectionTILE.NAME]
+		tiles = self.ui.chk.get_section(CHKSectionTILE.NAME)
 		tx1 = int(x1 / 32.0)
 		ty1 = int(y1 / 32.0)
 		tx2 = int(ceil(x2 / 32.0))
@@ -274,6 +559,8 @@ class PyMAP(Tk):
 		self.chk = None
 		self.file = None
 		self.edited = False
+		self.undos = []
+		self.redos = []
 		self.tileset = None
 
 		self.minimap_raw_image = None
@@ -303,6 +590,9 @@ class PyMAP(Tk):
 			('save', self.save, 'Save (Ctrl+S)', DISABLED, 'Ctrl+S'),
 			('saveas', self.saveas, 'Save As (Ctrl+Alt+A)', DISABLED, 'Ctrl+Alt+A'),
 			('close', self.close, 'Close (Ctrl+W)', DISABLED, 'Ctrl+W'),
+			2,
+			('undo', self.do_undo, 'Undo (Ctrl+Z)', DISABLED, 'Ctrl+Z'),
+			('redo', self.do_redo, 'Redo (Ctrl+Y)', DISABLED, 'Ctrl+Y'),
 			2,
 			('asc3topyai', self.file_settings, 'Manage data files (Ctrl+M)', NORMAL, 'Ctrl+M'),
 			10,
@@ -379,7 +669,15 @@ class PyMAP(Tk):
 		self.mapCanvas = Canvas(right, background='#000000', highlightthickness=0)
 		self.mapCanvas.grid(sticky=NSEW)
 		self.mapCanvas.bind('<Motion>', self.edit_update)
-		print self.mapCanvas.tag_raise.__doc__
+		mouse_events = (
+			('<Button-%d>', EditLayer.MOUSE_DOWN),
+			('<B%d-Motion>', EditLayer.MOUSE_MOVE),
+			('<ButtonRelease-%d>', EditLayer.MOUSE_UP),
+			('<Double-Button-%d>', EditLayer.MOUSE_DOUBLE)
+		)
+		for name,etype in mouse_events:
+			for b,btn in ((1,EditLayer.MOUSE_LEFT),(2,EditLayer.MOUSE_MIDDLE),(3,EditLayer.MOUSE_RIGHT)):
+				self.mapCanvas.bind(name % b, lambda e,b=btn,t=etype: self.edit_mouse(e,b,t))
 
 		xscrollbar = Scrollbar(right, orient=HORIZONTAL)
 		xscrollbar.config(command=self.mapCanvas.xview)
@@ -463,6 +761,27 @@ class PyMAP(Tk):
 		]
 		SettingsDialog(self, data, (340,215), err)
 
+	def add_undo(self, undo):
+		self.undos.append(undo)
+		self.redos = []
+		self.action_states()
+
+	def do_undo(self):
+		if self.undos:
+			action = self.undos[-1]
+			del self.undos[-1]
+			self.redos.append(action)
+			action.undo(self)
+			self.action_states()
+
+	def do_redo(self):
+		if self.redos:
+			action = self.redos[-1]
+			del self.redos[-1]
+			self.undos.append(action)
+			action.redo(self)
+			self.action_states()
+
 	def change_edit_layer(self, *args):
 		self.set_editmode(self.edit_layers[self.edit_layer_index.get()])
 
@@ -477,17 +796,35 @@ class PyMAP(Tk):
 	def edit_update(self, event):
 		if not self.chk:
 			return
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		map_size = (dims.width*32, dims.height*32)
 		x1,x2 = self.mapCanvas.xview()
 		y1,y2 = self.mapCanvas.yview()
+		x1 *= map_size[0]
+		y1 *= map_size[1]
+		x2 *= map_size[0]
+		y2 *= map_size[1]
 		for layer in self.edit_layers:
-			layer.update_display(map_size[0]*x1,map_size[1]*y1, map_size[0]*x2,map_size[1]*y2,event.x,event.y)
+			layer.update_display(x1,y1,x2,y2,event.x,event.y)
+
+	def edit_mouse(self, event, btn, etype):
+		if not self.chk:
+			return
+		if self.current_editlayer:
+			dims = self.chk.get_section(CHKSectionDIM.NAME)
+			map_size = (dims.width*32, dims.height*32)
+			x1,x2 = self.mapCanvas.xview()
+			y1,y2 = self.mapCanvas.yview()
+			x1 *= map_size[0]
+			y1 *= map_size[1]
+			x2 *= map_size[0]
+			y2 *= map_size[1]
+			self.current_editlayer.mouse_event(btn, etype, x1,y1, x2,y2, event.x,event.y)
 
 	def minimap_move(self, event):
 		if not self.chk:
 			return
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		points = min(256 / dims.width, 256 / dims.height)
 		size = (dims.width*points,dims.height*points)
 		minimap_size = (self.minimap.winfo_width(), self.minimap.winfo_height())
@@ -509,7 +846,7 @@ class PyMAP(Tk):
 		self.resized_minimap()
 
 	def viewport_coords(self):
-		dims = self.chk.sections[CHKSectionDIM.NAME]
+		dims = self.chk.get_section(CHKSectionDIM.NAME)
 		x1,x2 = self.mapCanvas.xview()
 		y1,y2 = self.mapCanvas.yview()
 		map_size = (dims.width*32, dims.height*32)
@@ -517,7 +854,7 @@ class PyMAP(Tk):
 
 	def update_viewport(self):
 		if self.chk:
-			dims = self.chk.sections[CHKSectionDIM.NAME]
+			dims = self.chk.get_section(CHKSectionDIM.NAME)
 			points = min(256 / dims.width, 256 / dims.height)
 			size = (dims.width*points,dims.height*points)
 			minimap_size = (self.minimap.winfo_width(), self.minimap.winfo_height())
@@ -547,15 +884,14 @@ class PyMAP(Tk):
 		self.editlayer_terrain.list_group = groupId
 		groupId = self.listbox.insert('-1', 'Locations', False)
 		self.editlayer_locations.list_group = groupId
-		locations = self.chk.sections.get(CHKSectionMRGN.NAME)
-		if locations:
-			strings = self.chk.sections[CHKSectionSTR.NAME]
-			for l,location in enumerate(locations.locations):
-				if location.inUse():
-					name = strings.strings[location.name]
-					name = TBL.decompile_string(name)
-					listId = self.listbox.insert(groupId + '.-1', name)
-					self.list_options[listId] = (self.editlayer_locations, l)
+		locations = self.chk.get_section(CHKSectionMRGN.NAME)
+		strings = self.chk.get_section(CHKSectionSTR.NAME)
+		for l,location in enumerate(locations.locations):
+			if location.in_use():
+				name = strings.strings[location.name-1]
+				name = TBL.decompile_string(name)
+				listId = self.listbox.insert(groupId + '.-1', name)
+				self.list_options[listId] = (self.editlayer_locations, l)
 		groupId = self.listbox.insert('-1', 'Units', False)
 		self.editlayer_units.list_group = groupId
 		groups = {}
@@ -633,7 +969,9 @@ class PyMAP(Tk):
 		file = [NORMAL,DISABLED][not self.chk]
 		for btn in ['save','saveas','close']:
 			self.buttons[btn]['state'] = file
-		self.buttons['asc3topyai']['state'] = [NORMAL,DISABLED][not not self.chk]
+		self.buttons['undo']['state'] = [NORMAL,DISABLED][not self.undos]
+		self.buttons['redo']['state'] = [NORMAL,DISABLED][not self.redos]
+		self.buttons['asc3topyai']['state'] = [DISABLED,NORMAL][not self.chk]
 
 	def update_title(self, file=None):
 		title = 'PyMAP %s' % LONG_VERSION
@@ -678,7 +1016,7 @@ class PyMAP(Tk):
 					SFileCloseArchive(scmap)
 				else:
 					chk.load_file(file)
-				era = chk.sections.get(CHKSectionERA.NAME)
+				era = chk.get_section(CHKSectionERA.NAME)
 				if era:
 					tilesetName = CHKSectionERA.TILESET_FILE(era.tileset)
 					tilesetPaths = [
@@ -726,7 +1064,7 @@ class PyMAP(Tk):
 			self.tileset = tileset
 			self.file = file
 			self.edited = False
-			dims = self.chk.sections[CHKSectionDIM.NAME]
+			dims = self.chk.get_section(CHKSectionDIM.NAME)
 			self.mapCanvas.config(scrollregion=(0,0,dims.width*32,dims.height*32))
 			self.update_title()
 			self.status.set('Load successful!')

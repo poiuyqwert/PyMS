@@ -1411,3 +1411,11 @@ class AtomicWriter:
 
 	def __del__(self):
 		self.discard()
+
+def apply_cursor(widget, cursors):
+	for cursor in reversed(cursors):
+		try:
+			widget.config(cursor=cursor)
+			return cursor
+		except:
+			pass
