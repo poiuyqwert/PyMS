@@ -999,6 +999,15 @@ class CHKSectionSTR(CHKSection):
 			result += struct.pack('<H', offset+len(strings))
 			strings += string + '\0'
 		return result + strings
+
+	def get_string_id(self, string, add=False):
+		index = None
+		if string in self.strings:
+			self.strings.index(string)
+		elif add:
+			index = len(self.strings)
+			self.strings.append(string)
+		return index
 	
 	def decompile(self):
 		result = '%s:\n' % (self.NAME)
@@ -1097,12 +1106,16 @@ class CHKSectionUPUS(CHKSection):
 		return result
 
 class CHKLocation:
+	NO_ELEVATION = 0
 	LOW_GROUND = (1 << 0)
 	MEDIUM_GROUND = (1 << 1)
 	HIGH_GROUND = (1 << 2)
+	ALL_GROUND = (LOW_GROUND | MEDIUM_GROUND | HIGH_GROUND)
 	LOW_AIR = (1 << 3)
 	MEDIUM_AIR = (1 << 4)
 	HIGH_AIR = (1 << 5)
+	ALL_AIR = (LOW_AIR | MEDIUM_AIR | HIGH_AIR)
+	ALL_ELEVATIONS = (ALL_GROUND | ALL_AIR)
 
 	def __init__(self, chk):
 		self.chk = chk
@@ -1137,7 +1150,7 @@ class CHKLocation:
 		return result
 
 	def in_use(self):
-		return self.name > 0 # self.start[0] != 0 or self.start[1] != 0 or self.end[0] != 0 or self.end[1] != 0 or self.name != 0 or self.elevation != 0
+		return self.name > 0 or self.start[0] != 0 or self.start[1] != 0 or self.end[0] != 0 or self.end[1] != 0 # or self.elevation != 0
 
 	def normalized_coords(self):
 		return (min(self.start[0],self.end[0]), min(self.start[1],self.end[1]), max(self.start[0],self.end[0]), max(self.start[1],self.end[1]))
@@ -1146,7 +1159,7 @@ class CHKLocation:
 		self.start = [0,0]
 		self.end = [0,0]
 		self.name = 0
-		self.elevation = 0
+		self.elevation = CHKLocation.NO_ELEVATION
 
 class CHKSectionMRGN(CHKSection):
 	NAME = 'MRGN'
@@ -1846,7 +1859,6 @@ class CHK:
 			toProcess = []
 			while offset < len(data)-8:
 				name,length = struct.unpack('<4sL', data[offset:offset+8])
-				print name
 				offset += 8
 				sect_class = CHK.SECTION_TYPES.get(name)
 				if not sect_class:

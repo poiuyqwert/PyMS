@@ -320,7 +320,6 @@ def SFileReadFile(file, read=None):
 	all = read == None
 	if all:
 		read = SFileGetFileSize(file)
-		print 'Filesize: %s' % read
 		if read == -1:
 			return
 	d = create_string_buffer(read)

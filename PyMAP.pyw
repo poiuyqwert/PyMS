@@ -26,14 +26,11 @@ class Action:
 	def __init__(self):
 		pass
 
-	def update_display(self, ui):
+	def undo(self, ui):
 		pass
 
-	def undo(self, ui):
-		self.update_display(ui)
-
 	def redo(self, ui):
-		self.update_display(ui)
+		pass
 
 class ActionUpdateValues(Action):
 	def __init__(self, obj, attrs):
@@ -49,8 +46,8 @@ class ActionUpdateValues(Action):
 		for attr in attrs:
 			if hasattr(obj, attr):
 				self.end_values[attr] = copy.deepcopy(getattr(obj, attr))
-		print 'Start',self.start_values
-		print 'End',self.end_values
+		print (self.start_values,self.end_values)
+		return (self.start_values != self.end_values)
 
 	def get_obj(self, ui):
 		return None
@@ -59,20 +56,16 @@ class ActionUpdateValues(Action):
 		from_attrs = set(from_values.keys())
 		to_attrs = set(to_values.keys())
 		del_attrs = from_attrs - to_attrs
-		print 'Del',del_attrs
 		for attr in del_attrs:
 			delattr(obj, attr)
-		print 'To',to_values
 		for name in to_attrs:
 			setattr(obj, name, copy.deepcopy(to_values[name]))
 
 	def undo(self, ui):
 		self.apply_values(self.get_obj(ui), self.end_values, self.start_values)
-		Action.undo(self, ui)
 
 	def redo(self, ui):
 		self.apply_values(self.get_obj(ui), self.start_values, self.end_values)
-		Action.redo(self, ui)
 
 class ActionUpdateLocation(ActionUpdateValues):
 	def __init__(self, location_id, location, attrs):
@@ -86,9 +79,61 @@ class ActionUpdateLocation(ActionUpdateValues):
 	def update_display(self, ui):
 		if ui.current_editlayer == ui.editlayer_locations:
 			ui.current_editlayer.update_location(self.location_id)
+		if 'name' in self.start_values or 'name' in self.end_values:
+			ui.listlayer_locations.clear_list()
+			ui.listlayer_locations.populate_list()
+
+	def undo(self, ui):
+		ActionUpdateValues.undo(self, ui)
+		self.update_display(ui)
+
+	def redo(self, ui):
+		ActionUpdateValues.redo(self, ui)
+		self.update_display(ui)
+
+class ActionUpdateArrays(Action):
+	def __init__(self):
+		self.start_values = []
+		self.end_values = []
+
+	def update_values(self, arrays, indices, values):
+		for indexes,v in zip(indices,values):
+			array = arrays
+			i = 0
+			while len(indexes) - i:
+				array = array[indexes[i]]
+				i += 1
+			self.start_values.append((indexes, array[indexes[i]]))
+			self.end_values.append((indexes, v))
+
+	def update_value(self, obj, indices, value):
+		self.update_values(obj, indices, (value,) * len(indices))
+
+	def get_obj(self, ui):
+		return None
+
+	def update_display(self, ui, values):
+		pass
+
+	def apply_values(self, obj, values):
+		for indexes,v in values:
+			array = arrays
+			i = 0
+			while len(indexes) - i:
+				array = array[indexes[i]]
+				i += 1
+			array[indexes[i]] = v
+
+	def undo(self, ui):
+		self.apply_values(self.get_obj(ui), self.start_values)
+		self.update_display(ui, self.start_values)
+
+	def redo(self, ui):
+		self.apply_values(self.get_obj(ui), self.end_values)
+		self.update_display(ui, self.end_values)
 
 def resize_event(x1,y1, x2,y2, mouseX,mouseY):
-	event = [EditLayer.RESIZE_NONE]
+	event = [EditLayer.EDIT_NONE]
 	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
 		dist_left = abs(x1 - mouseX)
 		close_left = (dist_left <= 5)
@@ -100,31 +145,31 @@ def resize_event(x1,y1, x2,y2, mouseX,mouseY):
 		close_bot = (dist_bot <= 5)
 
 		if close_right and (not close_top or dist_top <= dist_right) and (not close_bot or dist_bot <= dist_right):
-			event[0] = EditLayer.RESIZE_RIGHT
+			event[0] = EditLayer.EDIT_RESIZE_RIGHT
 			if close_bot:
-				event.append(EditLayer.RESIZE_BOTTOM)
+				event.append(EditLayer.EDIT_RESIZE_BOTTOM)
 			elif close_top:
-				event.append(EditLayer.RESIZE_TOP)
+				event.append(EditLayer.EDIT_RESIZE_TOP)
 		elif close_bot and (not close_left or dist_left <= dist_bot) and (not close_right or dist_right <= dist_bot):
-			event[0] = EditLayer.RESIZE_BOTTOM
+			event[0] = EditLayer.EDIT_RESIZE_BOTTOM
 			if close_right:
-				event.append(EditLayer.RESIZE_RIGHT)
+				event.append(EditLayer.EDIT_RESIZE_RIGHT)
 			elif close_left:
-				event.append(EditLayer.RESIZE_LEFT)
+				event.append(EditLayer.EDIT_RESIZE_LEFT)
 		elif close_left and (not close_top or dist_top <= dist_left) and (not close_bot or dist_bot <= dist_left):
-			event[0] = EditLayer.RESIZE_LEFT
+			event[0] = EditLayer.EDIT_RESIZE_LEFT
 			if close_bot:
-				event.append(EditLayer.RESIZE_BOTTOM)
+				event.append(EditLayer.EDIT_RESIZE_BOTTOM)
 			elif close_top:
-				event.append(EditLayer.RESIZE_TOP)
+				event.append(EditLayer.EDIT_RESIZE_TOP)
 		elif close_top and (not close_left or dist_left <= dist_top) and (not close_right or dist_right <= dist_top):
-			event[0] = EditLayer.RESIZE_TOP
+			event[0] = EditLayer.EDIT_RESIZE_TOP
 			if close_right:
-				event.append(EditLayer.RESIZE_RIGHT)
+				event.append(EditLayer.EDIT_RESIZE_RIGHT)
 			elif close_left:
-				event.append(EditLayer.RESIZE_LEFT)
+				event.append(EditLayer.EDIT_RESIZE_LEFT)
 		else:
-			event[0] = EditLayer.RESIZE_MOVE
+			event[0] = EditLayer.EDIT_MOVE
 	return event
 
 class EditLayer:
@@ -140,12 +185,12 @@ class EditLayer:
 	MOUSE_UP = 2
 	MOUSE_DOUBLE = 3
 
-	RESIZE_NONE = 0
-	RESIZE_MOVE = 1
-	RESIZE_LEFT = 2
-	RESIZE_TOP = 3
-	RESIZE_RIGHT = 4
-	RESIZE_BOTTOM = 5
+	EDIT_NONE = 0
+	EDIT_MOVE = 1
+	EDIT_RESIZE_LEFT = 2
+	EDIT_RESIZE_TOP = 3
+	EDIT_RESIZE_RIGHT = 4
+	EDIT_RESIZE_BOTTOM = 5
 
 	def __init__(self, ui, name):
 		self.ui = ui
@@ -182,8 +227,8 @@ class EditLayerTerrain(EditLayer):
 	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
 		if self.mode == EditLayer.ACTIVE:
 			tag = 'tile_border'
-			x = int((x1+mouseX) / 32.0) * 32
-			y = int((y1+mouseY) / 32.0) * 32
+			x = nearest_multiple(x1+mouseX,32)
+			y = nearest_multiple(y1+mouseY,32)
 			self.ui.mapCanvas.coords(tag, x,y, x+32,y+32)
 			self.ui.mapCanvas.tag_raise(tag)
 
@@ -204,7 +249,7 @@ class EditLayerLocations(EditLayer):
 		self.locations = {}
 		self.zOrder = None
 		self.old_cursor = None
-		self.current_event = [EditLayer.RESIZE_NONE]
+		self.current_event = [EditLayer.EDIT_NONE]
 		self.mouse_offset = [0,0]
 		self.resize_location = None
 		self.action = None
@@ -264,24 +309,24 @@ class EditLayerLocations(EditLayer):
  				if location.in_use():
 					x1,y1,x2,y2 = location.normalized_coords()
 					event = resize_event(x1,y1,x2,y2,x,y)
-					if event[0] != EditLayer.RESIZE_NONE:
-						if event[0] == EditLayer.RESIZE_LEFT:
+					if event[0] != EditLayer.EDIT_NONE:
+						if event[0] == EditLayer.EDIT_RESIZE_LEFT:
 							cursor.extend(['left_side','size_we','resizeleft','resizeleftright'])
-						elif event[0] == EditLayer.RESIZE_RIGHT:
+						elif event[0] == EditLayer.EDIT_RESIZE_RIGHT:
 							cursor.extend(['right_side','size_we','resizeright','resizeleftright'])
-						elif event[0] == EditLayer.RESIZE_TOP:
+						elif event[0] == EditLayer.EDIT_RESIZE_TOP:
 							cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
-						elif event[0] == EditLayer.RESIZE_BOTTOM:
+						elif event[0] == EditLayer.EDIT_RESIZE_BOTTOM:
 							cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
-						elif event[0] == EditLayer.RESIZE_MOVE:
+						elif event[0] == EditLayer.EDIT_MOVE:
 							cursor.extend(['crosshair','fleur','size'])
-						if EditLayer.RESIZE_TOP in event and EditLayer.RESIZE_LEFT in event:
+						if EditLayer.EDIT_RESIZE_TOP in event and EditLayer.EDIT_RESIZE_LEFT in event:
 							cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
-						elif EditLayer.RESIZE_TOP in event and EditLayer.RESIZE_RIGHT in event:
+						elif EditLayer.EDIT_RESIZE_TOP in event and EditLayer.EDIT_RESIZE_RIGHT in event:
 							cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
-						elif EditLayer.RESIZE_BOTTOM in event and EditLayer.RESIZE_LEFT in event:
+						elif EditLayer.EDIT_RESIZE_BOTTOM in event and EditLayer.EDIT_RESIZE_LEFT in event:
 							cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
-						elif EditLayer.RESIZE_BOTTOM in event and EditLayer.RESIZE_RIGHT in event:
+						elif EditLayer.EDIT_RESIZE_BOTTOM in event and EditLayer.EDIT_RESIZE_RIGHT in event:
 							cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
 						break
 			apply_cursor(self.ui.mapCanvas, cursor)
@@ -304,7 +349,7 @@ class EditLayerLocations(EditLayer):
 				self.locations[tag] = self.ui.mapCanvas.create_rectangle(x1,y1, x2,y2, width=2, outline='#0080ff', stipple='gray75', tags=tag) #, fill='#5555FF'
 			if loc_name:
 				self.ui.mapCanvas.coords(loc_name, x1+2,y1+2)
-				self.ui.mapCanvas.itemconfig(loc_name, text=name)
+				self.ui.mapCanvas.itemconfig(loc_name, text=name, width=x2-x1-4)
 			else:
 				self.ui.mapCanvas.create_text(x1+2,y1+2, anchor=NW, text=name, font=('courier', -10, 'normal'), fill='#00FF00', width=x2-x1-4, tags=tag_name)
 		else:
@@ -318,72 +363,101 @@ class EditLayerLocations(EditLayer):
 			x = x1+mouseX
  			y = y1+mouseY
  			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
-			if button_event == EditLayer.MOUSE_DOWN:
-	 			self.current_event = [EditLayer.RESIZE_NONE]
+			if button_event == EditLayer.MOUSE_DOWN or button_event == EditLayer.MOUSE_DOUBLE:
+	 			self.current_event = [EditLayer.EDIT_NONE]
+	 			unused = None
 	 			for l in self.zOrder:
 	 				if l == 63 and not self.show_anywhere:
 						continue
 					location = locations.locations[l]
 	 				if location.in_use():
 						x1,y1,x2,y2 = location.normalized_coords()
-						event = resize_event(x1,y1,x2,y2,x,y)
-						if event[0] != EditLayer.RESIZE_NONE:
-							self.current_event = event
-							if self.current_event[0] == EditLayer.RESIZE_MOVE:
-								self.mouse_offset[0] = x1 - x
-								self.mouse_offset[1] = y1 - y
-							self.resize_location = l
-							self.action = ActionUpdateLocation(l, location, ('start','end'))
-							break
-			if self.current_event[0] != EditLayer.RESIZE_NONE and self.resize_location != None:
+						if button_event == EditLayer.MOUSE_DOWN:
+							event = resize_event(x1,y1,x2,y2,x,y)
+							if event[0] != EditLayer.EDIT_NONE:
+								self.current_event = event
+								if self.current_event[0] == EditLayer.EDIT_MOVE:
+									self.mouse_offset[0] = x1 - x
+									self.mouse_offset[1] = y1 - y
+								self.resize_location = l
+								self.action = ActionUpdateLocation(l, location, ('start','end'))
+								break
+						elif x >= x1 and x <= x2 and y >= y1 and y <= y2:
+							print 'Edit Location'
+							return
+					elif unused == None:
+						unused = l
+				if self.current_event[0] == EditLayer.EDIT_NONE and unused != None:
+					location = locations.locations[unused]
+					self.action = ActionUpdateLocation(unused, location, ('name','elevation','start','end'))
+					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+					location.name = strings.get_string_id('Location %d' % (unused+1), add=True)+1
+					location.start[0] = nearest_multiple(x,32,math.floor)
+					location.start[1] = nearest_multiple(y,32,math.floor)
+					location.end[0] = nearest_multiple(x,32,math.ceil)
+					location.end[1] = nearest_multiple(y,32,math.ceil)
+					location.elevation = CHKLocation.ALL_ELEVATIONS
+					self.update_location(unused)
+					self.ui.listlayer_locations.clear_list()
+					self.ui.listlayer_locations.populate_list()
+					self.current_event = [EditLayer.EDIT_RESIZE_RIGHT,EditLayer.EDIT_RESIZE_BOTTOM]
+					self.mouse_offset = [0,0]
+					self.resize_location = unused
+			if self.current_event[0] != EditLayer.EDIT_NONE and self.resize_location != None:
 				location = locations.locations[self.resize_location]
 				x1,y1,x2,y2 = location.normalized_coords()
 				rx = x + self.mouse_offset[0]
 				ry = y + self.mouse_offset[1]
 				dx = 0
 				dy = 0
-				if self.current_event[0] == EditLayer.RESIZE_MOVE or EditLayer.RESIZE_LEFT in self.current_event:
+				round_x = round
+				round_y = round
+				if self.current_event[0] == EditLayer.EDIT_MOVE or EditLayer.EDIT_RESIZE_LEFT in self.current_event:
+					round_x = math.floor
 					dx = rx - x1
-				elif EditLayer.RESIZE_RIGHT in self.current_event:
+				elif EditLayer.EDIT_RESIZE_RIGHT in self.current_event:
+					round_x = math.ceil
 					dx = rx - x2
-				if self.current_event[0] == EditLayer.RESIZE_MOVE or EditLayer.RESIZE_TOP in self.current_event:
+				if self.current_event[0] == EditLayer.EDIT_MOVE or EditLayer.EDIT_RESIZE_TOP in self.current_event:
+					round_y = math.floor
 					dy = ry - y1
-				elif EditLayer.RESIZE_BOTTOM in self.current_event:
+				elif EditLayer.EDIT_RESIZE_BOTTOM in self.current_event:
+					round_y = math.ceil
 					dy = ry - y2
 				if self.snap_to_grid:
-					dx += (round(rx / 32.0) * 32) - rx
-					dy += (round(ry / 32.0) * 32) - ry
-				if self.current_event[0] == EditLayer.RESIZE_MOVE:
+					dx += nearest_multiple(rx,32) - rx
+					dy += nearest_multiple(ry,32) - ry
+				if self.current_event[0] == EditLayer.EDIT_MOVE:
 					location.start[0] += dx
 					location.start[1] += dy
 					location.end[0] += dx
 					location.end[1] += dy
-				if EditLayer.RESIZE_LEFT in self.current_event:
+				if EditLayer.EDIT_RESIZE_LEFT in self.current_event:
 					if location.start[0] < location.end[0]:
 						location.start[0] += dx
 					else:
 						location.end[0] += dx
-				elif EditLayer.RESIZE_RIGHT in self.current_event:
+				elif EditLayer.EDIT_RESIZE_RIGHT in self.current_event:
 					if location.start[0] > location.end[0]:
 						location.start[0] += dx
 					else:
 						location.end[0] += dx
-				if EditLayer.RESIZE_TOP in self.current_event:
+				if EditLayer.EDIT_RESIZE_TOP in self.current_event:
 					if location.start[1] < location.end[1]:
 						location.start[1] += dy
 					else:
 						location.end[1] += dy
-				elif EditLayer.RESIZE_BOTTOM in self.current_event:
+				elif EditLayer.EDIT_RESIZE_BOTTOM in self.current_event:
 					if location.start[1] > location.end[1]:
 						location.start[1] += dy
 					else:
 						location.end[1] += dy
 				self.update_location(self.resize_location)
 				if button_event == EditLayer.MOUSE_UP:
-					self.current_event = [EditLayer.RESIZE_NONE]
+					self.current_event = [EditLayer.EDIT_NONE]
 					self.resize_location = None
-					self.action.set_end_values(location, ('start','end'))
-					self.ui.add_undo(self.action)
+					if self.action.set_end_values(location, self.action.start_values.keys()):
+						self.ui.add_undo(self.action)
 					self.action = None
 
 class EditLayerUnits(EditLayer):
@@ -517,6 +591,133 @@ class MapLayerTerrain(MapLayer):
 					self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
 					self.ui.mapCanvas.tag_lower(tag)
 
+class ListLayer:
+	NAME = None
+
+	def __init__(self, ui):
+		self.ui = ui
+		self.groupId = None
+		self.options = {}
+
+	def setup_group(self):
+		self.groupId = self.ui.listbox.insert('-1', self.NAME, False)
+		self.populate_list()
+		return self.groupId
+
+	def clear_list(self):
+		self.ui.listbox.delete('%s.%s' % (self.groupId,ALL))
+		# while True:
+		# 	try:
+		# 		self.ui.listbox.delete(self.groupId + '.-1')
+		# 	except:
+		# 		break
+		self.options = {}
+
+	def get_event(self, index):
+		return self.options.get(index, (None,None))
+
+	def option_name(self, option):
+		pass
+
+	def update_option(self, option):
+		index = None
+		for i,o in self.groups.iteritems():
+			if o == option:
+				index = i
+				break
+		if index:
+			self.ui.listbox.set(index, self.option_name(option))
+
+	def populate_list(self):
+		pass
+
+class ListLayerTerrain(ListLayer):
+	NAME = 'Terrain'
+
+	def option_name(self, option):
+		return ''
+
+	def populate_list(self):
+		pass
+
+class ListLayerLocations(ListLayer):
+	NAME = 'Locations'
+
+	def option_name(self, option):
+		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+		location = locations.locations[option]
+		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+		name = strings.strings[location.name-1]
+		return TBL.decompile_string(name)
+
+	def populate_list(self):
+		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+		for l,location in enumerate(locations.locations):
+			if l == 63 and not self.ui.editlayer_locations.show_anywhere:
+				continue
+			if location.in_use():
+				name = self.option_name(l)
+				listId = self.ui.listbox.insert(self.groupId + '.-1', name)
+				self.options[listId] = (self.ui.editlayer_locations, l)
+
+class ListLayerUnits(ListLayer):
+	NAME = 'Units'
+
+	def option_name(self, option):
+		# TODO: Custom names
+		name = self.ui.stat_txt.strings[option]
+		return TBL.decompile_string(name)
+
+	def populate_list(self):
+		groups = {}
+		for u in range(self.ui.unitsdat.count):
+			race = 'Neutral'
+			flags = self.ui.unitsdat.get_value(u,'StarEditGroupFlags')
+			if flags & 1:
+				race = 'Zerg'
+			elif flags & 2:
+				race = 'Terran'
+			elif flags & 4:
+				race = 'Protoss'
+			raceGroup = groups.get(race, {})
+			if not race in groups:
+				groups[race] = raceGroup
+			name = self.ui.stat_txt.strings[u]
+			split = name.split('\0')
+			if len(split) == 4:
+				groupName = split[-2]
+			else:
+				groupName = 'Other'
+			items = raceGroup.get(groupName, [])
+			if not groupName in raceGroup:
+				raceGroup[groupName] = items
+			items.append({'name':self.option_name(u), 'id':u})
+		for raceName in sorted(groups.keys(), reverse=True):
+			raceGroupId = self.ui.listbox.insert(self.groupId + '.-1', raceName, False)
+			for groupName in sorted(groups[raceName]):
+				subGroupId = self.ui.listbox.insert(raceGroupId + '.-1', groupName, False)
+				for info in groups[raceName][groupName]:
+					listId = self.ui.listbox.insert(subGroupId + '.-1', info['name'])
+					self.options[listId] = (self.ui.editlayer_units, info['id'])
+
+class ListLayerSprites(ListLayer):
+	NAME = 'Sprites'
+
+	def option_name(self, option):
+		return ''
+
+	def populate_list(self):
+		pass
+
+class ListLayerDoodads(ListLayer):
+	NAME = 'Doodads'
+
+	def option_name(self, option):
+		return ''
+
+	def populate_list(self):
+		pass
+
 class PyMAP(Tk):
 	def __init__(self, guifile=None):
 		self.settings = loadsettings('PyMAP',
@@ -581,6 +782,14 @@ class PyMAP(Tk):
 
 		self.maplayer_terrain = MapLayerTerrain(self)
 		self.map_layers = [self.maplayer_terrain]
+
+		self.listlayer_terrain = ListLayerTerrain(self)
+		self.listlayer_locations = ListLayerLocations(self)
+		self.listlayer_units = ListLayerUnits(self)
+		self.listlayer_sprites = ListLayerSprites(self)
+		self.listlayer_doodads = ListLayerDoodads(self)
+		self.list_layers = [self.listlayer_terrain, self.listlayer_locations, self.listlayer_units, self.listlayer_sprites, self.listlayer_doodads]
+		self.list_layer_indices = {}
 
 		#Toolbar
 		buttons = [
@@ -879,68 +1088,22 @@ class PyMAP(Tk):
 		self.update_viewport()
 
 	def setup_list(self):
-		self.list_options = {}
-		groupId = self.listbox.insert('-1', 'Terrain', False)
-		self.editlayer_terrain.list_group = groupId
-		groupId = self.listbox.insert('-1', 'Locations', False)
-		self.editlayer_locations.list_group = groupId
-		locations = self.chk.get_section(CHKSectionMRGN.NAME)
-		strings = self.chk.get_section(CHKSectionSTR.NAME)
-		for l,location in enumerate(locations.locations):
-			if location.in_use():
-				name = strings.strings[location.name-1]
-				name = TBL.decompile_string(name)
-				listId = self.listbox.insert(groupId + '.-1', name)
-				self.list_options[listId] = (self.editlayer_locations, l)
-		groupId = self.listbox.insert('-1', 'Units', False)
-		self.editlayer_units.list_group = groupId
-		groups = {}
-		for u in range(self.unitsdat.count):
-			race = 'Neutral'
-			flags = self.unitsdat.get_value(u,'StarEditGroupFlags')
-			if flags & 1:
-				race = 'Zerg'
-			elif flags & 2:
-				race = 'Terran'
-			elif flags & 4:
-				race = 'Protoss'
-			raceGroup = groups.get(race, {})
-			if not race in groups:
-				groups[race] = raceGroup
-			name = self.stat_txt.strings[u]
-			split = name.split('\0')
-			if len(split) == 4:
-				groupName = split[-2]
-			else:
-				groupName = 'Other'
-			items = raceGroup.get(groupName, [])
-			if not groupName in raceGroup:
-				raceGroup[groupName] = items
-			items.append({'name':TBL.decompile_string(name), 'id':u})
-		for raceName in sorted(groups.keys(), reverse=True):
-			raceGroupId = self.listbox.insert(groupId + '.-1', raceName, False)
-			for groupName in sorted(groups[raceName]):
-				subGroupId = self.listbox.insert(raceGroupId + '.-1', groupName, False)
-				for info in groups[raceName][groupName]:
-					listId = self.listbox.insert(subGroupId + '.-1', info['name'])
-					self.list_options[listId] = (self.editlayer_units, info['id'])
-		# self.listbox.insert(groupId + '.-1', name)
-		groupId = self.listbox.insert('-1', 'Sprites', False)
-		self.editlayer_sprites = groupId
-		groupId = self.listbox.insert('-1', 'Doodads', False)
-		self.editlayer_doodads = groupId
+		self.list_layer_indices = {}
+		for list_layer in self.list_layers:
+			self.list_layer_indices[list_layer.setup_group()] = list_layer
 
 	def list_select(self, event=None):
 		selected = self.listbox.cur_selection()
 		if selected and selected[0] > -1:
 			list_index = self.listbox.index(selected[0])
-			print list_index
-			layer,select = self.list_options.get(list_index, (None,None))
-			print layer,select
-			if layer:
-				if layer != self.current_editlayer:
-					self.set_editmode(layer)
-				layer.list_select(select)
+			groupId = list_index.split('.')[0]
+			list_layer = self.list_layer_indices.get(groupId)
+			if list_layer:
+				layer,select = list_layer.get_event(list_index)
+				if layer:
+					if layer != self.current_editlayer:
+						self.set_editmode(layer)
+					layer.list_select(select)
 
 	def unsaved(self):
 		if self.chk and self.edited:

@@ -35,6 +35,9 @@ ARROW = None
 def isstr(s):
 	return isinstance(s,str) or isinstance(s,unicode)
 
+def nearest_multiple(v, m, r=round):
+	return m * int(r(v / float(m)))
+
 def register_registry(prog,type,filetype,progpath,icon):
 	if not win_reg:
 		raise PyMSError('Registry', 'You can currently only set as the default program on Windows machines.')

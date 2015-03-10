@@ -203,11 +203,9 @@ class MPQHandler:
 				close = False
 			if self.open and self.open != True:
 				f = SFileOpenFileEx(None, '\\'.join(path), SFILE_SEARCH_ALL_OPEN)
-				print f
 				if not SFInvalidHandle(f):
 					r = SFileReadFile(f)
 					SFileCloseFile(f)
-					print path,len(r[0])
 					p = SFile(r[0], '\\'.join(path))
 					return p
 			if close:
