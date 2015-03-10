@@ -15,122 +15,29 @@ from PIL import ImageTk
 
 from thread import start_new_thread
 from math import ceil
-import optparse, os, webbrowser, sys, copy
+import optparse, os, webbrowser, sys
 
 VERSION = (0,1)
 LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
 # class Sprite()
 
-class Action:
-	def __init__(self):
-		pass
-
-	def undo(self, ui):
-		pass
-
-	def redo(self, ui):
-		pass
-
-class ActionUpdateValues(Action):
-	def __init__(self, obj, attrs):
-		Action.__init__(self)
-		self.start_values = {}
-		for attr in attrs:
-			if hasattr(obj, attr):
-				self.start_values[attr] = copy.deepcopy(getattr(obj, attr))
-		self.end_values = None
-
-	def set_end_values(self, obj, attrs):
-		self.end_values = {}
-		for attr in attrs:
-			if hasattr(obj, attr):
-				self.end_values[attr] = copy.deepcopy(getattr(obj, attr))
-		print (self.start_values,self.end_values)
-		return (self.start_values != self.end_values)
-
-	def get_obj(self, ui):
-		return None
-
-	def apply_values(self, obj, from_values, to_values):
-		from_attrs = set(from_values.keys())
-		to_attrs = set(to_values.keys())
-		del_attrs = from_attrs - to_attrs
-		for attr in del_attrs:
-			delattr(obj, attr)
-		for name in to_attrs:
-			setattr(obj, name, copy.deepcopy(to_values[name]))
-
-	def undo(self, ui):
-		self.apply_values(self.get_obj(ui), self.end_values, self.start_values)
-
-	def redo(self, ui):
-		self.apply_values(self.get_obj(ui), self.start_values, self.end_values)
-
 class ActionUpdateLocation(ActionUpdateValues):
-	def __init__(self, location_id, location, attrs):
+	def __init__(self, ui, location_id, location, attrs):
 		ActionUpdateValues.__init__(self, location, attrs)
+		self.ui = ui
 		self.location_id = location_id
 
-	def get_obj(self, ui):
-		locations = ui.chk.get_section(CHKSectionMRGN.NAME)
+	def get_obj(self):
+		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 		return locations.locations[self.location_id]
 
-	def update_display(self, ui):
-		if ui.current_editlayer == ui.editlayer_locations:
-			ui.current_editlayer.update_location(self.location_id)
+	def update_display(self, info):
+		if self.ui.current_editlayer == self.ui.editlayer_locations:
+			self.ui.current_editlayer.update_location(self.location_id)
 		if 'name' in self.start_values or 'name' in self.end_values:
-			ui.listlayer_locations.clear_list()
-			ui.listlayer_locations.populate_list()
-
-	def undo(self, ui):
-		ActionUpdateValues.undo(self, ui)
-		self.update_display(ui)
-
-	def redo(self, ui):
-		ActionUpdateValues.redo(self, ui)
-		self.update_display(ui)
-
-class ActionUpdateArrays(Action):
-	def __init__(self):
-		self.start_values = []
-		self.end_values = []
-
-	def update_values(self, arrays, indices, values):
-		for indexes,v in zip(indices,values):
-			array = arrays
-			i = 0
-			while len(indexes) - i:
-				array = array[indexes[i]]
-				i += 1
-			self.start_values.append((indexes, array[indexes[i]]))
-			self.end_values.append((indexes, v))
-
-	def update_value(self, obj, indices, value):
-		self.update_values(obj, indices, (value,) * len(indices))
-
-	def get_obj(self, ui):
-		return None
-
-	def update_display(self, ui, values):
-		pass
-
-	def apply_values(self, obj, values):
-		for indexes,v in values:
-			array = arrays
-			i = 0
-			while len(indexes) - i:
-				array = array[indexes[i]]
-				i += 1
-			array[indexes[i]] = v
-
-	def undo(self, ui):
-		self.apply_values(self.get_obj(ui), self.start_values)
-		self.update_display(ui, self.start_values)
-
-	def redo(self, ui):
-		self.apply_values(self.get_obj(ui), self.end_values)
-		self.update_display(ui, self.end_values)
+			self.ui.listlayer_locations.clear_list()
+			self.ui.listlayer_locations.populate_list()
 
 def resize_event(x1,y1, x2,y2, mouseX,mouseY):
 	event = [EditLayer.EDIT_NONE]
@@ -380,7 +287,7 @@ class EditLayerLocations(EditLayer):
 									self.mouse_offset[0] = x1 - x
 									self.mouse_offset[1] = y1 - y
 								self.resize_location = l
-								self.action = ActionUpdateLocation(l, location, ('start','end'))
+								self.action = ActionUpdateLocation(self.ui, l, location, ('start','end'))
 								break
 						elif x >= x1 and x <= x2 and y >= y1 and y <= y2:
 							print 'Edit Location'
@@ -389,7 +296,7 @@ class EditLayerLocations(EditLayer):
 						unused = l
 				if self.current_event[0] == EditLayer.EDIT_NONE and unused != None:
 					location = locations.locations[unused]
-					self.action = ActionUpdateLocation(unused, location, ('name','elevation','start','end'))
+					self.action = ActionUpdateLocation(self.ui, unused, location, ('name','elevation','start','end'))
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
 					location.name = strings.get_string_id('Location %d' % (unused+1), add=True)+1
 					location.start[0] = nearest_multiple(x,32,math.floor)
@@ -750,6 +657,8 @@ class PyMAP(Tk):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		setup_trace(self, 'PyMAP')
 
+		self.action_manager = ActionManager()
+
 		# self.dosave = [False,False]
 		self.profile = self.settings['profiles'][self.settings['profile']]
 		self.stat_txt = None
@@ -760,8 +669,6 @@ class PyMAP(Tk):
 		self.chk = None
 		self.file = None
 		self.edited = False
-		self.undos = []
-		self.redos = []
 		self.tileset = None
 
 		self.minimap_raw_image = None
@@ -970,26 +877,17 @@ class PyMAP(Tk):
 		]
 		SettingsDialog(self, data, (340,215), err)
 
-	def add_undo(self, undo):
-		self.undos.append(undo)
-		self.redos = []
+	def add_undo(self, action):
+		self.action_manager.add_action(action)
 		self.action_states()
 
 	def do_undo(self):
-		if self.undos:
-			action = self.undos[-1]
-			del self.undos[-1]
-			self.redos.append(action)
-			action.undo(self)
-			self.action_states()
+		self.action_manager.undo()
+		self.action_states()
 
 	def do_redo(self):
-		if self.redos:
-			action = self.redos[-1]
-			del self.redos[-1]
-			self.undos.append(action)
-			action.redo(self)
-			self.action_states()
+		self.action_manager.redo()
+		self.action_states()
 
 	def change_edit_layer(self, *args):
 		self.set_editmode(self.edit_layers[self.edit_layer_index.get()])
@@ -1132,8 +1030,8 @@ class PyMAP(Tk):
 		file = [NORMAL,DISABLED][not self.chk]
 		for btn in ['save','saveas','close']:
 			self.buttons[btn]['state'] = file
-		self.buttons['undo']['state'] = [NORMAL,DISABLED][not self.undos]
-		self.buttons['redo']['state'] = [NORMAL,DISABLED][not self.redos]
+		self.buttons['undo']['state'] = [DISABLED,NORMAL][self.action_manager.can_undo()]
+		self.buttons['redo']['state'] = [DISABLED,NORMAL][self.action_manager.can_redo()]
 		self.buttons['asc3topyai']['state'] = [DISABLED,NORMAL][not self.chk]
 
 	def update_title(self, file=None):

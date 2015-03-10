@@ -652,14 +652,18 @@ class TreeGroup(TreeNode):
 class TreeList(Frame):
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent, selectmode=SINGLE, groupsel=True, closeicon='Images\\treeclose.gif', openicon='Images\\treeopen.gif'):
+	def __init__(self, parent, selectmode=SINGLE, groupsel=True, closeicon=None, openicon=None):
 		self.selectmode = selectmode
 		self.lastsel = None
 		self.groupsel = groupsel
 		self.entry = 0
 		self.root = TreeGroup('<ROOT>', -1, -1, True)
 		self.entries = {}
-		self.icons = [PhotoImage(file=os.path.join('Images','treeclose.gif')),PhotoImage(file=os.path.join('Images','treeopen.gif'))]
+		if closeicon == None:
+			closeicon = os.path.join('Images','treeclose.gif')
+		if openicon == None:
+			openicon = os.path.join('Images','treeopen.gif')
+		self.icons = [PhotoImage(file=closeicon),PhotoImage(file=openicon)]
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		font = ('courier', -12, 'normal')
@@ -752,7 +756,7 @@ class TreeList(Frame):
 			self.lastsel = node.entry
 
 	def write_node(self, pos, node):
-		print ('Pos',pos)
+		# print ('Pos',pos)
 		selectable = True
 		if isinstance(node, TreeGroup):
 			selectable = self.groupsel
@@ -775,7 +779,7 @@ class TreeList(Frame):
 		pieces = index.split(' ')
 		for i in range(1,len(pieces)+1):
 			test = ' '.join(pieces[:i])
-			print (test, self.text.index(test))
+			# print (test, self.text.index(test))
 
 	def erase_branch(self, node, eraseRoot):
 		end = 'entry%s.last lineend +1c' % node.entry
@@ -843,7 +847,7 @@ class TreeList(Frame):
 
 	# groupExpanded: None = not group, True = open by default, False = closed by default
 	def insert(self, index, text, groupExpanded=None):
-		print ('Insert', index)
+		# print ('Insert', index)
 		indices = [int(i) for i in index.split('.')]
 		parent_index = '.'.join(str(i) for i in indices[:-1])
 		parent = self.get_node(parent_index)
