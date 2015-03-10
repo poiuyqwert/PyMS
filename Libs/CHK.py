@@ -1014,10 +1014,10 @@ class CHKSectionSTR(CHKSection):
 		self.strings.append(text)
 		return index
 
-	def get_string(self, string_id):
+	def get_string(self, string_id, default=None):
 		if self.string_exists(string_id):
 			return self.strings[string_id]
-		return None
+		return default
 
 	def set_string(self, string_id, text):
 		if self.string_exists(string_id):

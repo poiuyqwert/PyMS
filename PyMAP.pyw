@@ -272,7 +272,7 @@ class EditLayerLocations(EditLayer):
 		loc_name = self.ui.mapCanvas.find_withtag(tag_name)
 		if location.in_use():
 			strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-			name = strings.strings[location.name-1]
+			name = strings.get_string(location.name-1, '')
 			name = TBL.decompile_string(name)
 			x1,y1,x2,y2 = location.normalized_coords()
 			if loc_rect:
@@ -591,7 +591,7 @@ class ListLayerLocations(ListLayer):
 		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 		location = locations.locations[option]
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-		name = strings.strings[location.name-1]
+		name = strings.get_string(location.name-1, '')
 		return TBL.decompile_string(name)
 
 	def populate_list(self):
