@@ -39,6 +39,31 @@ class ActionUpdateLocation(ActionUpdateValues):
 			self.ui.listlayer_locations.clear_list()
 			self.ui.listlayer_locations.populate_list()
 
+class ActionUpdateString(Action):
+	def __init__(self, ui, string_id, start_text):
+		self.ui = ui
+		self.string_id = string_id
+		self.start_text = start_text
+		self.end_text = None
+
+	def update_end_text(self):
+		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+		self.end_text = strings.get_string(self.string_id)
+
+	def undo(self):
+		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+		if self.end_text != None and self.start_text == None:
+			strings.delete_string(self.string_id)
+		else:
+			strings.set_string(self.string_id, self.start_text)
+
+	def redo(self):
+		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+		if self.start_text != None and self.end_text == None:
+			strings.delete_string(self.string_id)
+		else:
+			strings.set_string(self.string_id, self.end_text)
+
 def resize_event(x1,y1, x2,y2, mouseX,mouseY):
 	event = [EditLayer.EDIT_NONE]
 	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
@@ -287,7 +312,9 @@ class EditLayerLocations(EditLayer):
 									self.mouse_offset[0] = x1 - x
 									self.mouse_offset[1] = y1 - y
 								self.resize_location = l
+								self.ui.action_manager.start_group()
 								self.action = ActionUpdateLocation(self.ui, l, location, ('start','end'))
+								self.ui.action_manager.add_action(self.action)
 								break
 						elif x >= x1 and x <= x2 and y >= y1 and y <= y2:
 							print 'Edit Location'
@@ -296,13 +323,22 @@ class EditLayerLocations(EditLayer):
 						unused = l
 				if self.current_event[0] == EditLayer.EDIT_NONE and unused != None:
 					location = locations.locations[unused]
-					self.action = ActionUpdateLocation(self.ui, unused, location, ('name','elevation','start','end'))
+					self.ui.action_manager.start_group()
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-					location.name = strings.get_string_id('Location %d' % (unused+1), add=True)+1
+					name = 'Location %d' % (unused+1)
+					string_id = strings.get_string_id(name)
+					if string_id == None:
+						string_id = strings.add_string(name)
+						action = ActionUpdateString(self.ui, string_id, None)
+						action.update_end_text()
+						self.ui.action_manager.add_action(action)
+					self.action = ActionUpdateLocation(self.ui, unused, location, ('name','elevation','start','end'))
+					self.ui.action_manager.add_action(self.action)
+					location.name = string_id+1
 					location.start[0] = nearest_multiple(x,32,math.floor)
 					location.start[1] = nearest_multiple(y,32,math.floor)
-					location.end[0] = nearest_multiple(x,32,math.ceil)
-					location.end[1] = nearest_multiple(y,32,math.ceil)
+					location.end[0] = location.start[0] + 32
+					location.end[1] = location.start[1] + 32
 					location.elevation = CHKLocation.ALL_ELEVATIONS
 					self.update_location(unused)
 					self.ui.listlayer_locations.clear_list()
@@ -363,9 +399,10 @@ class EditLayerLocations(EditLayer):
 				if button_event == EditLayer.MOUSE_UP:
 					self.current_event = [EditLayer.EDIT_NONE]
 					self.resize_location = None
-					if self.action.set_end_values(location, self.action.start_values.keys()):
-						self.ui.add_undo(self.action)
+					self.action.set_end_values(location, self.action.start_values.keys())
 					self.action = None
+					self.ui.end_undo_group()
+
 
 class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
@@ -879,6 +916,10 @@ class PyMAP(Tk):
 
 	def add_undo(self, action):
 		self.action_manager.add_action(action)
+		self.action_states()
+
+	def end_undo_group(self):
+		self.action_manager.end_group()
 		self.action_states()
 
 	def do_undo(self):

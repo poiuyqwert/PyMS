@@ -1000,14 +1000,38 @@ class CHKSectionSTR(CHKSection):
 			strings += string + '\0'
 		return result + strings
 
-	def get_string_id(self, string, add=False):
+	def string_exists(self, string_id):
+		return (string_id < len(self.strings))
+
+	def get_string_id(self, text):
 		index = None
-		if string in self.strings:
-			self.strings.index(string)
-		elif add:
-			index = len(self.strings)
-			self.strings.append(string)
+		if text in self.strings:
+			index = self.strings.index(text)
 		return index
+
+	def add_string(self, text):
+		index = len(self.strings)
+		self.strings.append(text)
+		return index
+
+	def get_string(self, string_id):
+		if self.string_exists(string_id):
+			return self.strings[string_id]
+		return None
+
+	def set_string(self, string_id, text):
+		if self.string_exists(string_id):
+			self.strings[string_id] = text
+		else:
+			while len(self.strings) < string_id:
+				self.strings.append('')
+			self.add_string(text)
+
+	def delete_string(self, string_id):
+		if string_id - len(self.strings) == 1:
+			del self.strings[-1]
+		else:
+			self.strings[string_id] = ''
 	
 	def decompile(self):
 		result = '%s:\n' % (self.NAME)

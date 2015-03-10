@@ -11,7 +11,7 @@ try:
 except:
 	win_reg = False
 
-PyMS_VERSION = (1,2,1)
+PyMS_VERSION = (1,2,2)
 PyMS_LONG_VERSION = 'v%s.%s.%s' % PyMS_VERSION
 if hasattr(sys, 'frozen'):
 	BASE_DIR = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
@@ -1427,6 +1427,9 @@ class Action:
 	def __init__(self):
 		pass
 
+	def has_changes(self):
+		return False
+
 	def update_display(self, info=None):
 		pass
 
@@ -1450,7 +1453,8 @@ class ActionUpdateValues(Action):
 		for attr in attrs:
 			if hasattr(obj, attr):
 				self.end_values[attr] = copy.deepcopy(getattr(obj, attr))
-		print (self.start_values,self.end_values)
+
+	def has_changes(self):
 		return (self.start_values != self.end_values)
 
 	def get_obj(self):
@@ -1491,6 +1495,9 @@ class ActionUpdateArray(Action):
 	def update_value(self, obj, indices, value):
 		self.update_values(obj, indices, (value,) * len(indices))
 
+	def has_changes(self):
+		return (self.start_values != self.end_values)
+
 	def apply_values(self, obj, values):
 		for indexes,v in values:
 			array = arrays
@@ -1525,6 +1532,15 @@ class ActionGroup(Action):
 		else:
 			self.actions.append(action)
 
+	def remove_action(self, action):
+		self.actions.remove(action)
+
+	def has_changes(self):
+		for action in self.actions:
+			if action.has_changes():
+				return True
+		return False
+
 	def undo(self):
 		for action in reversed(self.actions):
 			action.undo()
@@ -1539,18 +1555,24 @@ class ActionManager(ActionGroup):
 		self.redos = []
 
 	def get_open_group(self):
-		group = self
+		parent,group = self,self
 		while isinstance(group, ActionGroup) and group.actions and isinstance(group.actions[-1], ActionGroup) and not group.actions[-1].complete:
-			group = group.action[-1]
-		return group
+			parent = group
+			group = group.actions[-1]
+		return (parent,group)
 
 	def start_group(self):
 		self.add_action(ActionGroup())
 
 	def end_group(self):
-		open_group = self.get_open_group()
+		parent,open_group = self.get_open_group()
 		if open_group != self:
 			open_group.complete = True
+			if not open_group.has_changes():
+				parent.remove_action(open_group)
+			elif len(open_group.actions) == 1:
+				parent.add_action(open_group.actions[0])
+				parent.remove_action(open_group)
 
 	def add_action(self, action):
 		self.redos = []

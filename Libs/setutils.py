@@ -15,26 +15,26 @@ def check_update(p):
 			return
 		if len(d) == 3:
 			d = tuple(ord(l) for l in d)
-			if PyMS_VERSION != d and d[0] > 0 and d[0] < 4:
+			if PyMS_VERSION < d:
 				def callback():
 					UpdateDialog(p,'v%s.%s.%s' % d,settings)
 				p.after(1, callback)
 
 def loadsize(window, settings, setting, full=False):
-	set = settings[setting]
-	f = set.endswith('^')
+	geometry = settings[setting]
+	f = geometry.endswith('^')
 	if f:
-		set = set[:-1]
-	window.geometry(set)
+		geometry = geometry[:-1]
+	window.geometry(geometry)
 	window.update_idletasks()
 	cur = window.winfo_geometry()
 	if set != cur:
 		def parsegeom(g):
 			s = g.split('+',1)[0].split('x')
 			return (int(s[0]),int(s[1]))
-		sets = parsegeom(set)
+		sets = parsegeom(geometry)
 		curs = parsegeom(cur)
-		window.geometry('%sx%s+%s' % (sets[0] + (sets[0] - curs[0]),sets[1] + (sets[1] - curs[1]),set.split('+',1)[1]))
+		window.geometry('%sx%s+%s' % (sets[0] + (sets[0] - curs[0]),sets[1] + (sets[1] - curs[1]),geometry.split('+',1)[1]))
 	if f and full:
 		try:
 			window.wm_state('zoomed')
