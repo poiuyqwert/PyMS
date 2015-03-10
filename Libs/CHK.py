@@ -979,63 +979,65 @@ class CHKSectionSTR(CHKSection):
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
-		self.strings = []
+		self.strings = {}
 	
 	def load_data(self, data):
-		self.strings = []
+		self.strings = {}
+		string_id = 0
 		count = struct.unpack('<H', data[:2])[0]
 		for n in range(count):
 			offset = struct.unpack('<H', data[2+n*2:4+n*2])[0]
 			end = data.find('\0', offset, len(data))
 			if end == -1:
 				end = len(data)
-			self.strings.append(data[offset:end])
+			self.strings[string_id] = data[offset:end]
+			string_id += 1
 	
+	def string_count(self):
+		count = 0
+		if self.strings:
+			count = list(sorted(self.strings.keys()))[-1] + 1
+		return count
+
 	def save_data(self):
 		result = struct.pack('<H', len(self.strings))
 		strings = ''
-		offset = 2+len(self.strings)*2
-		for string in self.strings:
+		count = self.string_count()
+		offset = 2+len(count)*2
+		for string_id in enumerate(count):
 			result += struct.pack('<H', offset+len(strings))
-			strings += string + '\0'
+			strings += self.get_string(string_id, '') + '\0'
 		return result + strings
 
 	def string_exists(self, string_id):
-		return (string_id < len(self.strings))
+		return (string_id < self.string_count())
 
 	def get_string_id(self, text):
 		index = None
-		if text in self.strings:
-			index = self.strings.index(text)
+		for i,t in self.strings.iteritems():
+			if t == text:
+				index = i
+				break
 		return index
 
 	def add_string(self, text):
-		index = len(self.strings)
-		self.strings.append(text)
+		index = self.string_count()
+		self.set_string(index, text)
 		return index
 
 	def get_string(self, string_id, default=None):
-		if self.string_exists(string_id):
-			return self.strings[string_id]
-		return default
+		return self.strings.get(string_id, default)
 
 	def set_string(self, string_id, text):
-		if self.string_exists(string_id):
-			self.strings[string_id] = text
-		else:
-			while len(self.strings) < string_id:
-				self.strings.append('')
-			self.add_string(text)
+		self.strings[string_id] = text
 
 	def delete_string(self, string_id):
-		if string_id - len(self.strings) == 1:
-			del self.strings[-1]
-		else:
-			self.strings[string_id] = ''
+		if string_id in self.strings:
+			del self.strings[string_id]
 	
 	def decompile(self):
 		result = '%s:\n' % (self.NAME)
-		for n,string in enumerate(self.strings):
+		for n,string in self.strings.iteritems():
 			result += '\t%s"%s"\n' % (pad('String %d' % (n+1)), string.replace('\\','\\\\').replace('"','\\"'))
 		return result
 
