@@ -20,7 +20,9 @@ import optparse, os, webbrowser, sys
 VERSION = (0,1)
 LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
-# class Sprite()
+class Sprite:
+	def __init__(self):
+		pass
 
 class ActionUpdateLocation(ActionUpdateValues):
 	def __init__(self, ui, location_id, location, attrs):
@@ -48,7 +50,9 @@ class ActionUpdateString(Action):
 
 	def update_end_text(self):
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-		self.end_text = strings.get_string(self.string_id)
+		string = strings.get_string(self.string_id)
+		if string:
+			self.end_text = string.text
 
 	def undo(self):
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
@@ -64,44 +68,23 @@ class ActionUpdateString(Action):
 		else:
 			strings.set_string(self.string_id, self.end_text)
 
-def resize_event(x1,y1, x2,y2, mouseX,mouseY):
+def resize_event(location, mouseX,mouseY):
 	event = [EditLayer.EDIT_NONE]
+	x1,y1,x2,y2 = location.normalized_coords()
 	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
-		dist_left = abs(x1 - mouseX)
-		close_left = (dist_left <= 5)
-		dist_top = abs(y1 - mouseY)
-		close_top = (dist_top <= 5)
-		dist_right = abs(x2 - mouseX)
-		close_right = (dist_right <= 5)
-		dist_bot = abs(y2 - mouseY)
-		close_bot = (dist_bot <= 5)
-
-		if close_right and (not close_top or dist_top <= dist_right) and (not close_bot or dist_bot <= dist_right):
-			event[0] = EditLayer.EDIT_RESIZE_RIGHT
-			if close_bot:
-				event.append(EditLayer.EDIT_RESIZE_BOTTOM)
-			elif close_top:
-				event.append(EditLayer.EDIT_RESIZE_TOP)
-		elif close_bot and (not close_left or dist_left <= dist_bot) and (not close_right or dist_right <= dist_bot):
-			event[0] = EditLayer.EDIT_RESIZE_BOTTOM
-			if close_right:
-				event.append(EditLayer.EDIT_RESIZE_RIGHT)
-			elif close_left:
-				event.append(EditLayer.EDIT_RESIZE_LEFT)
-		elif close_left and (not close_top or dist_top <= dist_left) and (not close_bot or dist_bot <= dist_left):
+		event[0] = EditLayer.EDIT_MOVE
+		dist_left = abs(location.start[0] - mouseX)
+		dist_right = abs(location.end[0] - mouseX)
+		if dist_left < dist_right and dist_left <= 5:
 			event[0] = EditLayer.EDIT_RESIZE_LEFT
-			if close_bot:
-				event.append(EditLayer.EDIT_RESIZE_BOTTOM)
-			elif close_top:
-				event.append(EditLayer.EDIT_RESIZE_TOP)
-		elif close_top and (not close_left or dist_left <= dist_top) and (not close_right or dist_right <= dist_top):
-			event[0] = EditLayer.EDIT_RESIZE_TOP
-			if close_right:
-				event.append(EditLayer.EDIT_RESIZE_RIGHT)
-			elif close_left:
-				event.append(EditLayer.EDIT_RESIZE_LEFT)
-		else:
-			event[0] = EditLayer.EDIT_MOVE
+		elif dist_right < dist_left and dist_right <= 5:
+			event[0] = EditLayer.EDIT_RESIZE_RIGHT
+		dist_top = abs(location.start[1] - mouseY)
+		dist_bot = abs(location.end[1] - mouseY)
+		if dist_top < dist_bot and dist_top <= 5:
+			event.append(EditLayer.EDIT_RESIZE_TOP)
+		elif dist_bot < dist_top and dist_bot <= 5:
+			event.append(EditLayer.EDIT_RESIZE_BOTTOM)
 	return event
 
 class EditLayer:
@@ -240,26 +223,27 @@ class EditLayerLocations(EditLayer):
 				location = locations.locations[l]
  				if location.in_use():
 					x1,y1,x2,y2 = location.normalized_coords()
-					event = resize_event(x1,y1,x2,y2,x,y)
+					event = resize_event(location,x,y)
 					if event[0] != EditLayer.EDIT_NONE:
-						if event[0] == EditLayer.EDIT_RESIZE_LEFT:
+						if event[0] == EditLayer.EDIT_MOVE:
+							cursor.extend(['crosshair','fleur','size'])
+						elif event[0] == EditLayer.EDIT_RESIZE_LEFT:
 							cursor.extend(['left_side','size_we','resizeleft','resizeleftright'])
 						elif event[0] == EditLayer.EDIT_RESIZE_RIGHT:
 							cursor.extend(['right_side','size_we','resizeright','resizeleftright'])
-						elif event[0] == EditLayer.EDIT_RESIZE_TOP:
-							cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
-						elif event[0] == EditLayer.EDIT_RESIZE_BOTTOM:
-							cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
-						elif event[0] == EditLayer.EDIT_MOVE:
-							cursor.extend(['crosshair','fleur','size'])
-						if EditLayer.EDIT_RESIZE_TOP in event and EditLayer.EDIT_RESIZE_LEFT in event:
-							cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
-						elif EditLayer.EDIT_RESIZE_TOP in event and EditLayer.EDIT_RESIZE_RIGHT in event:
-							cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
-						elif EditLayer.EDIT_RESIZE_BOTTOM in event and EditLayer.EDIT_RESIZE_LEFT in event:
-							cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
-						elif EditLayer.EDIT_RESIZE_BOTTOM in event and EditLayer.EDIT_RESIZE_RIGHT in event:
-							cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
+						if len(event) == 2:
+							if event[1] == EditLayer.EDIT_RESIZE_TOP:
+								cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
+							elif event[1] == EditLayer.EDIT_RESIZE_BOTTOM:
+								cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
+							if event[0] == EditLayer.EDIT_RESIZE_LEFT and event[1] == EditLayer.EDIT_RESIZE_TOP:
+								cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
+							elif event[0] == EditLayer.EDIT_RESIZE_RIGHT and event[1] == EditLayer.EDIT_RESIZE_TOP:
+								cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
+							elif event[0] == EditLayer.EDIT_RESIZE_LEFT and event[1] == EditLayer.EDIT_RESIZE_BOTTOM:
+								cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
+							elif event[0] == EditLayer.EDIT_RESIZE_RIGHT and event[1] == EditLayer.EDIT_RESIZE_BOTTOM:
+								cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
 						break
 			apply_cursor(self.ui.mapCanvas, cursor)
 
@@ -272,7 +256,7 @@ class EditLayerLocations(EditLayer):
 		loc_name = self.ui.mapCanvas.find_withtag(tag_name)
 		if location.in_use():
 			strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-			name = strings.get_string(location.name-1, '')
+			name = strings.get_text(location.name-1, '')
 			name = TBL.decompile_string(name)
 			x1,y1,x2,y2 = location.normalized_coords()
 			if loc_rect:
@@ -305,12 +289,11 @@ class EditLayerLocations(EditLayer):
 	 				if location.in_use():
 						x1,y1,x2,y2 = location.normalized_coords()
 						if button_event == EditLayer.MOUSE_DOWN:
-							event = resize_event(x1,y1,x2,y2,x,y)
+							event = resize_event(location,x,y)
 							if event[0] != EditLayer.EDIT_NONE:
 								self.current_event = event
 								if self.current_event[0] == EditLayer.EDIT_MOVE:
-									self.mouse_offset[0] = x1 - x
-									self.mouse_offset[1] = y1 - y
+									self.mouse_offset = [x1 - x,y1 - y]
 								self.resize_location = l
 								self.ui.action_manager.start_group()
 								self.action = ActionUpdateLocation(self.ui, l, location, ('start','end'))
@@ -321,20 +304,20 @@ class EditLayerLocations(EditLayer):
 							return
 					elif unused == None:
 						unused = l
-				if self.current_event[0] == EditLayer.EDIT_NONE and unused != None:
+				if self.current_event[0] == EditLayer.EDIT_NONE and len(self.current_event) == 0 and unused != None and button_event == EditLayer.MOUSE_DOWN:
 					location = locations.locations[unused]
 					self.ui.action_manager.start_group()
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
 					name = 'Location %d' % (unused+1)
-					string_id = strings.get_string_id(name)
-					if string_id == None:
-						string_id = strings.add_string(name)
-						action = ActionUpdateString(self.ui, string_id, None)
+					string = strings.lookup_string(name)
+					if not string:
+						string = strings.add_string(name)
+						action = ActionUpdateString(self.ui, string.string_id, None)
 						action.update_end_text()
 						self.ui.action_manager.add_action(action)
 					self.action = ActionUpdateLocation(self.ui, unused, location, ('name','elevation','start','end'))
 					self.ui.action_manager.add_action(self.action)
-					location.name = string_id+1
+					location.name = string.string_id+1
 					location.start[0] = nearest_multiple(x,32,math.floor)
 					location.start[1] = nearest_multiple(y,32,math.floor)
 					location.end[0] = location.start[0] + 32
@@ -346,55 +329,30 @@ class EditLayerLocations(EditLayer):
 					self.current_event = [EditLayer.EDIT_RESIZE_RIGHT,EditLayer.EDIT_RESIZE_BOTTOM]
 					self.mouse_offset = [0,0]
 					self.resize_location = unused
-			if self.current_event[0] != EditLayer.EDIT_NONE and self.resize_location != None:
+			if (self.current_event[0] != EditLayer.EDIT_NONE or len(self.current_event) > 1) and self.resize_location != None:
 				location = locations.locations[self.resize_location]
-				x1,y1,x2,y2 = location.normalized_coords()
-				rx = x + self.mouse_offset[0]
-				ry = y + self.mouse_offset[1]
-				dx = 0
-				dy = 0
-				round_x = round
-				round_y = round
-				if self.current_event[0] == EditLayer.EDIT_MOVE or EditLayer.EDIT_RESIZE_LEFT in self.current_event:
-					round_x = math.floor
-					dx = rx - x1
-				elif EditLayer.EDIT_RESIZE_RIGHT in self.current_event:
-					round_x = math.ceil
-					dx = rx - x2
-				if self.current_event[0] == EditLayer.EDIT_MOVE or EditLayer.EDIT_RESIZE_TOP in self.current_event:
-					round_y = math.floor
-					dy = ry - y1
-				elif EditLayer.EDIT_RESIZE_BOTTOM in self.current_event:
-					round_y = math.ceil
-					dy = ry - y2
-				if self.snap_to_grid:
-					dx += nearest_multiple(rx,32) - rx
-					dy += nearest_multiple(ry,32) - ry
 				if self.current_event[0] == EditLayer.EDIT_MOVE:
+					x1,y1,x2,y2 = location.normalized_coords()
+					dx = (x + self.mouse_offset[0]) - x1
+					dy = (y + self.mouse_offset[1]) - y1
 					location.start[0] += dx
 					location.start[1] += dy
 					location.end[0] += dx
 					location.end[1] += dy
-				if EditLayer.EDIT_RESIZE_LEFT in self.current_event:
-					if location.start[0] < location.end[0]:
-						location.start[0] += dx
-					else:
-						location.end[0] += dx
-				elif EditLayer.EDIT_RESIZE_RIGHT in self.current_event:
-					if location.start[0] > location.end[0]:
-						location.start[0] += dx
-					else:
-						location.end[0] += dx
-				if EditLayer.EDIT_RESIZE_TOP in self.current_event:
-					if location.start[1] < location.end[1]:
-						location.start[1] += dy
-					else:
-						location.end[1] += dy
-				elif EditLayer.EDIT_RESIZE_BOTTOM in self.current_event:
-					if location.start[1] > location.end[1]:
-						location.start[1] += dy
-					else:
-						location.end[1] += dy
+				else:
+					if self.current_event[0] == EditLayer.EDIT_RESIZE_LEFT:
+						location.start[0] = x
+					elif self.current_event[0] == EditLayer.EDIT_RESIZE_RIGHT:
+						location.end[0] = x
+					if self.current_event[1] == EditLayer.EDIT_RESIZE_TOP:
+						location.start[1] = y
+					elif self.current_event[1] == EditLayer.EDIT_RESIZE_BOTTOM:
+						location.end[1] = y
+				if self.snap_to_grid:
+					location.start[0] = nearest_multiple(location.start[0],32)
+					location.start[1] = nearest_multiple(location.start[1],32)
+					location.end[0] = nearest_multiple(location.end[0],32)
+					location.end[1] = nearest_multiple(location.end[1],32)
 				self.update_location(self.resize_location)
 				if button_event == EditLayer.MOUSE_UP:
 					self.current_event = [EditLayer.EDIT_NONE]
@@ -402,7 +360,6 @@ class EditLayerLocations(EditLayer):
 					self.action.set_end_values(location, self.action.start_values.keys())
 					self.action = None
 					self.ui.end_undo_group()
-
 
 class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
@@ -535,6 +492,10 @@ class MapLayerTerrain(MapLayer):
 					self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
 					self.ui.mapCanvas.tag_lower(tag)
 
+# class MapLayerUnits(MapLayer):
+# 	def __init__(self, ui):
+# 		MapLayer.__init__(self, ui)
+
 class ListLayer:
 	NAME = None
 
@@ -550,11 +511,6 @@ class ListLayer:
 
 	def clear_list(self):
 		self.ui.listbox.delete('%s.%s' % (self.groupId,ALL))
-		# while True:
-		# 	try:
-		# 		self.ui.listbox.delete(self.groupId + '.-1')
-		# 	except:
-		# 		break
 		self.options = {}
 
 	def get_event(self, index):
@@ -591,7 +547,7 @@ class ListLayerLocations(ListLayer):
 		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 		location = locations.locations[option]
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-		name = strings.get_string(location.name-1, '')
+		name = strings.get_text(location.name-1, '')
 		return TBL.decompile_string(name)
 
 	def populate_list(self):
@@ -707,8 +663,6 @@ class PyMAP(Tk):
 		self.file = None
 		self.edited = False
 		self.tileset = None
-
-		self.minimap_raw_image = None
 
 		self.editlayer_terrain = EditLayerTerrain(self)
 		self.editlayer_doodads = EditLayerDoodads(self)

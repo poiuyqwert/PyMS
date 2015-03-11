@@ -761,14 +761,14 @@ class TreeList(Frame):
 		if isinstance(node, TreeGroup):
 			selectable = self.groupsel
 			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
-			self.execute('insert',(pos, '\t' * node.depth + '  '))
+			self.execute('insert',(pos, '  ' * node.depth + '  '))
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 			self.text.image_create('entry%s.first -1c' % node.entry, image=self.icons[node.expanded])
 			self.text.tag_add('icon%s' % node.entry, 'entry%s.first -2c' % node.entry, 'entry%s.first -1c' % node.entry)
 			self.text.tag_bind('icon%s' % node.entry, '<Button-1>', lambda e,i=node.entry: self.toggle(i))
 		else:
 			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
-			self.execute('insert',(pos, '\t' * (node.depth+1)))
+			self.execute('insert',(pos, '  ' * (node.depth+1)))
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 		if selectable:
 			self.text.tag_bind('entry%s' % node.entry, '<Button-1>', lambda e,i=node.entry: self.select(i,0))
