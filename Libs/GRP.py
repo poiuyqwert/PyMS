@@ -17,7 +17,7 @@ except:
 	# for r in l:
 		# z.extend(r)
 	# return z
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0):
+def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, player_colors=None):
 	if f != None:
 		if buffered:
 			d = g[f]
@@ -30,6 +30,14 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 		d = g
 	i = PILImage.new('RGBA', (g.width,g.height))
 	data = []
+	pal = []
+	for n,(red,green,blue) in enumerate(p):
+		alpha = 255
+		if trans and n == transindex:
+			alpha = 0
+		if n >= 8 and n <= 15 and player_colors != None and len(player_colors) >= 8:
+			red,green,blue = player_colors[n-8]
+		pal.append((red,green,blue,alpha))
 	if size:
 		image = [None,-1,-1,-1,-1]
 		for y,yd in enumerate(d):
@@ -43,9 +51,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 							image[1] = x
 						if x >= image[2]:
 							image[2] = x + 1
-						data.append(tuple(p[xd] + [255]))
-					else:
-						data.append((0,0,0,0))
+					data.append(pal[xd])
 			else:
 				data.extend([(0,0,0,0) for _ in range(g.width)])
 		i.putdata(data)
@@ -54,7 +60,6 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	else:
 		for y in d:
 			data.extend(y)
-		pal = [(c[0],c[1],c[2],[0,255][not trans or n != transindex]) for n,c in enumerate(p)]
 		i.putdata(map(pal.__getitem__, data))
 		return ImageTk.PhotoImage(i)
 

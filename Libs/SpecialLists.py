@@ -416,17 +416,17 @@ class ReportList(Frame):
 			self.columns.append((b,lb))
 			if not end:
 				p = c
-		bind = [
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
-		]
+		# bind = [
+		# 	('<MouseWheel>', self.scroll),
+		# 	('<Home>', lambda a,i=0: self.move(a,i)),
+		# 	('<End>', lambda a,i=END: self.move(a,i)),
+		# 	('<Up>', lambda a,i=-1: self.move(a,i)),
+		# 	('<Left>', lambda a,i=-1: self.move(a,i)),
+		# 	('<Down>', lambda a,i=1: self.move(a,i)),
+		# 	('<Right>', lambda a,i=-1: self.move(a,i)),
+		# 	('<Prior>', lambda a,i=-10: self.move(a,i)),
+		# 	('<Next>', lambda a,i=10: self.move(a,i)),
+		# ]
 		# for d in bind:
 			# parent.bind(*d)
 

@@ -2,7 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SFmpq import *
-from Libs import TBL, AIBIN, DAT, Tilesets, GRP
+from Libs import TBL, AIBIN, DAT, Tilesets, GRP, PAL, PCX
 from Libs.CHK import *
 
 from Tkinter import *
@@ -15,13 +15,84 @@ from PIL import ImageTk
 
 from thread import start_new_thread
 from math import ceil
-import optparse, os, webbrowser, sys
+import optparse, os, webbrowser, sys, time
 
 VERSION = (0,1)
 LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
+FRAME_DELAY = 42
+
 class Sprite:
-	def __init__(self):
+	GRP_CACHE = {}
+	FRAME_CACHE = {}
+	PALETTES = {}
+
+	def __init__(self, ui, sprite_id, pos, grpPath='', player_color_id=None):
+		self.ui = ui
+		self.sprite_id = sprite_id
+		self.image_id = self.ui.spritesdat.get_value(self.sprite_id,'ImageFile')
+		self.iscript_id = self.ui.spritesdat.get_value(self.sprite_id,'IscriptID')
+		self.position = list(pos)
+		self.frame = 0
+		self.grpFile = None
+		self.grp = None
+		self.player_color_id = player_color_id
+		self.player_colors = None
+		self.pal = 'Units'
+		string_id = self.ui.imagesdat.get_value(self.image_id,'GRPFile')
+		if string_id:
+			self.grpFile = grpPath + self.ui.imagestbl.strings[string_id-1][:-1]
+			if self.grpFile.startswith('thingy\\tileset\\'):
+				self.pal = 'Terrain'
+			elif self.ui.imagesdat.get_value(self.image_id, 'DrawFunction') == 9:
+				remapping = self.ui.imagesdat.get_value(self.image_id, 'Remapping')
+				if remapping > 0 and remapping < 4:
+					self.pal = ['o','b','g'][remapping-1] + 'fire'
+		if not self.pal in self.ui.palettes:
+			self.pal = 'Units'
+		if self.player_color_id != None:
+			start_index = self.player_color_id * 8
+			if start_index+7 < len(self.ui.tunitpcx.image[0]):
+				self.player_colors = []
+				for n in range(start_index,start_index+8):
+					i = self.ui.tunitpcx.image[0][n]
+					self.player_colors.append(self.ui.palettes['Units'][i])
+
+	def get_grp(self):
+		if self.grp == None:
+			if self.grpFile in Sprite.GRP_CACHE:
+				self.grp = Sprite.GRP_CACHE[self.grpFile]
+			else:
+				grp_file = self.ui.mpqhandler.get_file('MPQ:' + self.grpFile)
+				try:
+					grp = GRP.CacheGRP()
+					grp.load_file(grp_file)
+				except PyMSError, e:
+					raise
+					return None
+				self.grp = grp
+				Sprite.GRP_CACHE[self.grpFile] = grp
+		return self.grp
+
+	def current_frame(self):
+		frame = None
+		if self.grpFile:
+			if self.grpFile in Sprite.FRAME_CACHE and self.player_color_id in Sprite.FRAME_CACHE[self.grpFile] and self.pal in Sprite.FRAME_CACHE[self.grpFile][self.player_color_id]:
+				frame = Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal].get(self.frame)
+			if frame == None:
+				grp = self.get_grp()
+				if grp:
+					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, self.frame, True, False, player_colors=self.player_colors)
+					if not self.grpFile in Sprite.FRAME_CACHE:
+						Sprite.FRAME_CACHE[self.grpFile] = {}
+					if not self.player_color_id in Sprite.FRAME_CACHE:
+						Sprite.FRAME_CACHE[self.grpFile][self.player_color_id] = {}
+					if not self.pal in Sprite.FRAME_CACHE[self.grpFile]:
+						Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal] = {}
+					Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal][self.frame] = frame
+		return frame
+
+	def tick(self, dt):
 		pass
 
 class ActionUpdateLocation(ActionUpdateValues):
@@ -69,10 +140,10 @@ class ActionUpdateString(Action):
 			strings.set_string(self.string_id, self.end_text)
 
 def resize_event(location, mouseX,mouseY):
-	event = [EditLayer.EDIT_NONE]
+	event = []
 	x1,y1,x2,y2 = location.normalized_coords()
 	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
-		event[0] = EditLayer.EDIT_MOVE
+		event.append(EditLayer.EDIT_MOVE)
 		dist_left = abs(location.start[0] - mouseX)
 		dist_right = abs(location.end[0] - mouseX)
 		if dist_left < dist_right and dist_left <= 5:
@@ -100,8 +171,8 @@ class EditLayer:
 	MOUSE_UP = 2
 	MOUSE_DOUBLE = 3
 
-	EDIT_NONE = 0
-	EDIT_MOVE = 1
+	EDIT_MOVE = 0
+	EDIT_RESIZE_NONE = 1
 	EDIT_RESIZE_LEFT = 2
 	EDIT_RESIZE_TOP = 3
 	EDIT_RESIZE_RIGHT = 4
@@ -164,15 +235,18 @@ class EditLayerLocations(EditLayer):
 		self.locations = {}
 		self.zOrder = None
 		self.old_cursor = None
-		self.current_event = [EditLayer.EDIT_NONE]
+		self.current_event = []
 		self.mouse_offset = [0,0]
 		self.resize_location = None
 		self.action = None
 
-	def list_select(self, location_id):
- 		self.ui.mapCanvas.tag_raise('location%d' % location_id)
+	def raise_location(self, location_id):
+		self.ui.mapCanvas.tag_raise('location%d' % location_id)
  		self.zOrder.remove(location_id)
  		self.zOrder.insert(0, location_id)
+
+	def list_select(self, location_id):
+ 		self.raise_location(location_id)
 		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
  		map_width = dims.width * 32
  		map_height = dims.height * 32
@@ -217,6 +291,7 @@ class EditLayerLocations(EditLayer):
  			y = y1+mouseY
  			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
  			cursor = [self.old_cursor]
+ 			found = None
  			for l in self.zOrder:
  				if l == 63 and not self.show_anywhere:
 					continue
@@ -224,7 +299,7 @@ class EditLayerLocations(EditLayer):
  				if location.in_use():
 					x1,y1,x2,y2 = location.normalized_coords()
 					event = resize_event(location,x,y)
-					if event[0] != EditLayer.EDIT_NONE:
+					if event:
 						if event[0] == EditLayer.EDIT_MOVE:
 							cursor.extend(['crosshair','fleur','size'])
 						elif event[0] == EditLayer.EDIT_RESIZE_LEFT:
@@ -244,7 +319,14 @@ class EditLayerLocations(EditLayer):
 								cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
 							elif event[0] == EditLayer.EDIT_RESIZE_RIGHT and event[1] == EditLayer.EDIT_RESIZE_BOTTOM:
 								cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
+						found = location
 						break
+			if found:
+				strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
+				name = strings.get_text(location.name-1, '')
+				self.ui.edit_status.set('Edit Location: ' + TBL.decompile_string(name))
+			else:
+				self.ui.edit_status.set('Create new Location')
 			apply_cursor(self.ui.mapCanvas, cursor)
 
 	def update_location(self, location_id):
@@ -290,7 +372,7 @@ class EditLayerLocations(EditLayer):
 						x1,y1,x2,y2 = location.normalized_coords()
 						if button_event == EditLayer.MOUSE_DOWN:
 							event = resize_event(location,x,y)
-							if event[0] != EditLayer.EDIT_NONE:
+							if event:
 								self.current_event = event
 								if self.current_event[0] == EditLayer.EDIT_MOVE:
 									self.mouse_offset = [x1 - x,y1 - y]
@@ -304,7 +386,7 @@ class EditLayerLocations(EditLayer):
 							return
 					elif unused == None:
 						unused = l
-				if self.current_event[0] == EditLayer.EDIT_NONE and len(self.current_event) == 0 and unused != None and button_event == EditLayer.MOUSE_DOWN:
+				if not self.current_event and unused != None and button_event == EditLayer.MOUSE_DOWN:
 					location = locations.locations[unused]
 					self.ui.action_manager.start_group()
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
@@ -329,7 +411,8 @@ class EditLayerLocations(EditLayer):
 					self.current_event = [EditLayer.EDIT_RESIZE_RIGHT,EditLayer.EDIT_RESIZE_BOTTOM]
 					self.mouse_offset = [0,0]
 					self.resize_location = unused
-			if (self.current_event[0] != EditLayer.EDIT_NONE or len(self.current_event) > 1) and self.resize_location != None:
+			if self.current_event and self.resize_location != None:
+				self.raise_location(self.resize_location)
 				location = locations.locations[self.resize_location]
 				if self.current_event[0] == EditLayer.EDIT_MOVE:
 					x1,y1,x2,y2 = location.normalized_coords()
@@ -429,8 +512,8 @@ class MinimapLayerUnits(MinimapLayer):
 		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
 		unit = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 		def compare(unit1, unit2):
-			elevation1 = self.ui.unitsdat.get_value(unit1.unitID, 'ElevationLevel')
-			elevation2 = self.ui.unitsdat.get_value(unit2.unitID, 'ElevationLevel')
+			elevation1 = self.ui.unitsdat.get_value(unit1.unit_id, 'ElevationLevel')
+			elevation2 = self.ui.unitsdat.get_value(unit2.unit_id, 'ElevationLevel')
 			if elevation1 < elevation2:
 				return -1
 			if elevation1 > elevation2:
@@ -440,14 +523,14 @@ class MinimapLayerUnits(MinimapLayer):
 			if unit1.position[0] > unit2.position[1]:
 				return 1
 			return 0
-		units = sorted(unit.units, cmp=compare)
+		units = sorted(unit.units.values(), cmp=compare)
 		colors = CHKSectionCOLR.DEFAULT_COLORS
 		colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
 		if colr:
 			colors = colr.colors
 		for unit in units:
-			w = self.ui.unitsdat.get_value(unit.unitID, 'StarEditPlacementBoxWidth') / (dims.width*32.0) * size[0]
-			h = self.ui.unitsdat.get_value(unit.unitID, 'StarEditPlacementBoxHeight') / (dims.height*32.0) * size[0]
+			w = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxWidth') / (dims.width*32.0) * size[0]
+			h = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxHeight') / (dims.height*32.0) * size[0]
 			x = unit.position[0] / (dims.width*32.0) * size[0] - w/2.0
 			y = unit.position[1] / (dims.height*32.0) * size[1] - h/2.0
 			color = CHKSectionCOLR.NEUTRAL
@@ -461,6 +544,9 @@ class MapLayer:
 		self.ui = ui
 
 	def update_display(self, x1,y1, x2,y2):
+		pass
+
+	def tick(self, dt):
 		pass
 
 class MapLayerTerrain(MapLayer):
@@ -492,9 +578,38 @@ class MapLayerTerrain(MapLayer):
 					self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
 					self.ui.mapCanvas.tag_lower(tag)
 
-# class MapLayerUnits(MapLayer):
-# 	def __init__(self, ui):
-# 		MapLayer.__init__(self, ui)
+class MapLayerUnits(MapLayer):
+	def __init__(self, ui):
+		MapLayer.__init__(self, ui)
+		self.sprites = None
+		self.map = {}
+
+	def update_display(self, x1,y1, x2,y2):
+		if self.sprites == None:
+			colors = CHKSectionCOLR.DEFAULT_COLORS
+			colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
+			if colr:
+				colors = colr.colors
+			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+			self.sprites = {}
+			for n in range(units.unit_count()):
+				unit = units.nth_unit(n)
+				player_color_id = colors[unit.owner]
+				flingy_id = self.ui.unitsdat.get_value(unit.unit_id, 'Graphics')
+				sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
+				sprite = Sprite(self.ui, sprite_id, unit.position, 'unit\\', player_color_id)
+				self.sprites[unit.ref_id] = sprite
+				frame = sprite.current_frame()
+				self.map[unit.ref_id] = self.ui.mapCanvas.create_image(sprite.position[0],sprite.position[1], image=frame, tags='unit%d' % unit.ref_id)
+
+	def tick(self, dt):
+		units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+		for n in range(units.unit_count()):
+			unit = units.nth_unit(n)
+			sprite = self.sprites[unit.ref_id]
+			sprite.tick(dt)
+			frame = sprite.current_frame()
+			self.ui.mapCanvas.itemconfig(self.map[unit.ref_id], image=frame)
 
 class ListLayer:
 	NAME = None
@@ -632,8 +747,10 @@ class PyMAP(Tk):
 						'mapdatatbl':'MPQ:rez\\mapdata.tbl',
 						'iscriptbin':'MPQ:scripts\\iscript.bin',
 						'unitsdat':'MPQ:arr\\units.dat',
+						'flingydat':'MPQ:arr\\flingy.dat',
 						'spritesdat':'MPQ:arr\\sprites.dat',
-						'imagesdat':'MPQ:arr\\images.dat'
+						'imagesdat':'MPQ:arr\\images.dat',
+						'tunitpcx':'MPQ:game\\tunit.pcx'
 					}
 				},
 				'profile':'Default'
@@ -652,11 +769,21 @@ class PyMAP(Tk):
 
 		self.action_manager = ActionManager()
 
+		self.status = StringVar()
+		self.edit_status = StringVar()
+
 		# self.dosave = [False,False]
 		self.profile = self.settings['profiles'][self.settings['profile']]
 		self.stat_txt = None
+		self.imagestbl = None
 		self.unitsdat = None
+		self.flingydat = None
+		self.spritesdat = None
+		self.imagesdat = None
 		self.aibin = None
+		self.iscriptbin = None
+		self.palettes = None
+		self.tunitpcx = None
 
 		self.map = None
 		self.chk = None
@@ -679,7 +806,8 @@ class PyMAP(Tk):
 		self.minimap_layers = [self.minimaplayer_terrain,self.minimaplayer_units]
 
 		self.maplayer_terrain = MapLayerTerrain(self)
-		self.map_layers = [self.maplayer_terrain]
+		self.maplayer_units = MapLayerUnits(self)
+		self.map_layers = [self.maplayer_terrain,self.maplayer_units]
 
 		self.listlayer_terrain = ListLayerTerrain(self)
 		self.listlayer_locations = ListLayerLocations(self)
@@ -688,6 +816,9 @@ class PyMAP(Tk):
 		self.listlayer_doodads = ListLayerDoodads(self)
 		self.list_layers = [self.listlayer_terrain, self.listlayer_locations, self.listlayer_units, self.listlayer_sprites, self.listlayer_doodads]
 		self.list_layer_indices = {}
+
+		self.last_tick = None
+		self.tick_alarm = None
 
 		#Toolbar
 		buttons = [
@@ -775,6 +906,20 @@ class PyMAP(Tk):
 
 		self.mapCanvas = Canvas(right, background='#000000', highlightthickness=0)
 		self.mapCanvas.grid(sticky=NSEW)
+		def scroll_map(event):
+			if self.chk:
+				horizontal = False
+				if hasattr(event, 'state') and getattr(event, 'state', 0):
+					horizontal = True
+				view = self.mapCanvas.yview
+				if horizontal:
+					view = self.mapCanvas.xview
+				if event.delta > 0:
+					view('scroll', -1, 'units')
+				else:
+					view('scroll', 1, 'units')
+		self.mapCanvas.bind('<MouseWheel>', scroll_map)
+		self.mapCanvas.bind('<Leave>', lambda e: self.edit_status.set(''))
 		self.mapCanvas.bind('<Motion>', self.edit_update)
 		mouse_events = (
 			('<Button-%d>', EditLayer.MOUSE_DOWN),
@@ -799,19 +944,17 @@ class PyMAP(Tk):
 		right.grid_rowconfigure(0,weight=1)
 		right.grid_columnconfigure(0,weight=1)
 
-
 		if 'pane' in self.settings:
 			self.panes.sash_place(0, *self.settings['pane'])
 
 		#Statusbar
-		self.status = StringVar()
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=75, anchor=W).pack(side=LEFT, padx=1)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
 		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
 		self.editstatus.image = image
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
-		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
+		Label(statusbar, textvariable=self.edit_status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load or create a Map.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -843,21 +986,62 @@ class PyMAP(Tk):
 			imagestbl.load_file(self.mpqhandler.get_file(self.profile['imagestbl']))
 			unitsdat = DAT.UnitsDAT(stat_txt)
 			unitsdat.load_file(self.mpqhandler.get_file(self.profile['unitsdat']))
+			flingydat = DAT.FlingyDAT(stat_txt)
+			flingydat.load_file(self.mpqhandler.get_file(self.profile['flingydat']))
 			spritesdat = DAT.SpritesDAT(stat_txt)
 			spritesdat.load_file(self.mpqhandler.get_file(self.profile['spritesdat']))
 			imagesdat = DAT.ImagesDAT(stat_txt)
 			imagesdat.load_file(self.mpqhandler.get_file(self.profile['imagesdat']))
-			aibin = AIBIN.AIBIN()
+			aibin = AIBIN.AIBIN(bwscript=None, units=unitsdat, upgrades=None, techs=None, stat_txt=stat_txt)
 			aibin.load_file(self.mpqhandler.get_file(self.profile['aiscript']))
+			iscriptbin = IScriptBIN.IScriptBIN(weaponsdat=None, flingydat=flingydat, imagesdat=imagesdat, spritesdat=spritesdat, soundsdat=None, stat_txt=stat_txt, imagestbl=imagestbl, sfxdatatbl=None)
+			iscriptbin.load_file(self.mpqhandler.get_file(self.profile['iscriptbin']))
+			palettes = {}
+			pal = PAL.Palette()
+			for p in ['Units','bfire','gfire','ofire','Terrain']:#,'Icons']:
+				try:
+					pal.load_file(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+				except:
+					if p == 'Units':
+						raise
+					continue
+				palettes[p] = pal.palette
+			tunitpcx = PCX.PCX()
+			tunitpcx.load_file(self.mpqhandler.get_file(self.profile['tunitpcx']))
 		except PyMSError, e:
 			err = e
 		else:
 			self.stat_txt = stat_txt
 			self.imagestbl = imagestbl
 			self.unitsdat = unitsdat
+			self.flingydat = flingydat
+			self.spritesdat = spritesdat
+			self.imagesdat = imagesdat
 			self.aibin = aibin
+			self.iscriptbin = iscriptbin
+			self.palettes = palettes
+			self.tunitpcx = tunitpcx
 		self.mpqhandler.close_mpqs()
 		return err
+
+	def tick(self):
+		if self.tick_alarm != None:
+			if self.chk:
+				now = int(time.time() * 1000)
+				if self.last_tick == None:
+					self.last_tick = now
+				dt = now - self.last_tick
+				self.last_tick = now
+				for layer in self.map_layers:
+					layer.tick(dt)
+				self.tick_alarm = self.after(FRAME_DELAY, self.tick)
+			else:
+				self.tick_alarm = None
+
+	def stop_tick(self):
+		if self.tick_alarm != None:
+			self.after_cancel(self.tick_alarm)
+			self.tick_alarm = None
 
 	def file_settings(self, key=None, err=None):
 		data = [
@@ -1129,6 +1313,7 @@ class PyMAP(Tk):
 			self.setup_list()
 			self.redraw_minimap()
 			self.set_editmode(self.editlayer_terrain)
+			self.tick()
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
@@ -1183,7 +1368,10 @@ class PyMAP(Tk):
 				f.close()
 			except:
 				pass
-			self.destroy()
+			def close():
+				self.stop_tick()
+				self.destroy()
+			self.after_idle(close)
 
 def main():
 	import sys

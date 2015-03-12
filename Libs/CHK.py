@@ -698,11 +698,12 @@ class CHKUnit:
 	RESOURCE = (1 << 4)
 	HANGER = (1 << 5)
 
-	def __init__(self, chk):
+	def __init__(self, chk, ref_id):
+		self.ref_id = ref_id
 		self.chk = chk
 		self.instanceID = 0
 		self.position = [0,0]
-		self.unitID = 0
+		self.unit_id = 0
 		self.buildingRelation = 0
 		self.validAbilities = 0
 		self.validProperties = 0
@@ -716,19 +717,19 @@ class CHKUnit:
 		self.unitRelationID = 0
 
 	def load_data(self, data):
-		self.instanceID,x,y,self.unitID,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID = \
+		self.instanceID,x,y,self.unit_id,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID = \
 			struct.unpack('<L6H4BL2H4xL', data[:36])
 		self.position = [x,y]
 
 	def save_data(self):
-		return struct.pack('<L6H4BL2H4xL', self.instanceID,self.position[0],self.position[1],self.unitID,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID)
+		return struct.pack('<L6H4BL2H4xL', self.instanceID,self.position[0],self.position[1],self.unit_id,self.buildingRelation,self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates,self.unitRelationID)
 
 	def decompile(self):
 		result = '\t#\n'
 		data = {
 			'InstanceID': self.instanceID,
 			'Position': '%s,%s' % (self.position[0], self.position[1]),
-			'UnitID': self.unitID,
+			'UnitID': self.unit_id,
 			'BuildingRelation': flags(self.buildingRelation, ["Nydus Link","Addon Link"], 16, 9),
 			'ValidAbilities': flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
 			'ValidProperties': flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
@@ -755,26 +756,38 @@ class CHKSectionUNIT(CHKSection):
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
-		self.units = []
+		self.units = {}
+		self.unused_ids = []
 	
 	def load_data(self, data):
-		self.units = []
+		self.units = {}
 		o = 0
+		ref_id = 0
 		while o+36 <= len(data):
-			unit = CHKUnit(self.chk)
+			unit = CHKUnit(self.chk, ref_id)
 			unit.load_data(data[o:o+36])
-			self.units.append(unit)
+			self.units[ref_id] = unit
+			ref_id += 1
 			o += 36
+
+	def unit_count(self):
+		return len(self.units)
+
+	def nth_unit(self, n):
+		ref_ids = sorted(self.units.keys())
+		return self.units[ref_ids[n]]
 	
 	def save_data(self):
 		result = ''
-		for unit in self.units:
+		for ref_id in sorted(self.units.keys()):
+			unit = self.units[ref_id]
 			result += unit.save_data()
 		return result
 	
 	def decompile(self):
 		result = '%s:\n' % (self.NAME)
-		for unit in self.units:
+		for ref_id in sorted(self.units.keys()):
+			unit = self.units[ref_id]
 			result += unit.decompile()
 		return result
 
