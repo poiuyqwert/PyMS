@@ -127,13 +127,14 @@ class DATSettingsDialog(SettingsDialog):
 			t = self.parent.mpqhandler.mpqs
 			self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
 			b = {}
+			b['mpqs'] = self.parent.settings.get('mpqs',[])
+			self.parent.settings['mpqs'] = self.mpqsettings.mpqs
 			m = os.path.join(BASE_DIR,'Libs','MPQ','')
 			for p,d in zip(self.pages,self.data):
 				for s in d[1]:
 					b[s[2]] = self.parent.settings[s[2]]
 					self.parent.settings[s[2]] = ['','MPQ:'][p.variables[s[0]][0].get()] + p.variables[s[0]][1].get().replace(m,'MPQ:',1)
-			if 'customlabels' in self.parent.settings:
-				b['customlabels'] = self.parent.settings['customlabels']
+			b['customlabels'] = self.parent.settings.get('customlabels',False)
 			self.parent.settings['customlabels'] = self.custom.get()
 			e = self.parent.open_files()
 			if e:
