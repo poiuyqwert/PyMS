@@ -132,7 +132,8 @@ class DATSettingsDialog(SettingsDialog):
 				for s in d[1]:
 					b[s[2]] = self.parent.settings[s[2]]
 					self.parent.settings[s[2]] = ['','MPQ:'][p.variables[s[0]][0].get()] + p.variables[s[0]][1].get().replace(m,'MPQ:',1)
-			b['customlabels'] = self.parent.settings['customlabels']
+			if 'customlabels' in self.parent.settings:
+				b['customlabels'] = self.parent.settings['customlabels']
 			self.parent.settings['customlabels'] = self.custom.get()
 			e = self.parent.open_files()
 			if e:
