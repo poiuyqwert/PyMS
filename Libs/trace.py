@@ -2,7 +2,7 @@ from utils import *
 
 import sys,os
 
-DEBUG = True
+DEBUG = 1
 
 class ErrorHandler:
 	def __init__(self, toplevel, prog):
@@ -14,8 +14,12 @@ class ErrorHandler:
 			self.file = open(os.path.join(BASE_DIR,'Libs','stdeo.txt'),'w')
 
 	def write(self, text, stdout=False):
-		if DEBUG:
+		if self.file:
 			self.file.write(text)
+			if DEBUG == 2:
+				self.file.flush()
+				os.fsync(self.file.fileno())
+
 		if not self.window:
 			if stdout:
 				self.buffer += text

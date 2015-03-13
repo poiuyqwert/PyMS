@@ -15,36 +15,144 @@ from PIL import ImageTk
 
 from thread import start_new_thread
 from math import ceil
-import optparse, os, webbrowser, sys, time
+import optparse, os, webbrowser, sys, time, random
 
 VERSION = (0,1)
 LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
 FRAME_DELAY = 42
 
-class Sprite:
+def z_position(y, elevation):
+	if elevation < 2:
+		return elevation
+	return (int(y / 32.0) + 1) * 256 + elevation
+def z_position_unit(unit, unitsdat):
+	elevation = unitsdat.get_value(unit.unit_id, 'ElevationLevel')
+	return z_position(unit.position[1], elevation)	
+def compare_z(unit1, unit2, unitsdat, reverse=False):
+	zorder1 = z_position_unit(unit1, unitsdat)
+	zorder2 = z_position_unit(unit2, unitsdat)
+	if zorder1 < zorder2:
+		return 1 if reverse else -1
+	if zorder1 > zorder2:
+		return -1 if reverse else 1
+	return 0
+
+class BWImage:
 	GRP_CACHE = {}
 	FRAME_CACHE = {}
-	PALETTES = {}
 
-	def __init__(self, ui, sprite_id, pos, grpPath='', player_color_id=None):
+	@staticmethod
+	def purge_frames(grpFile=None, player_color_id=None, flipHor=None, pal=None, index=None):
+		keys = [grpFile, player_color_id, flipHor, pal, index]
+		while keys[-1] == None:
+			del keys[-1]
+		def do_purge(cache, keys):
+			if key[0] == None:
+				for k in cache.keys():
+					do_purge(cache[k], keys[1:])
+			else:
+				del cache[key[0]]
+		do_purge(BWImage.FRAME_CACHE, keys)
+
+	def __init__(self, ui, ref, image_id, pos, parent=None, grpPath='', player_color_id=None, elevation=4):
 		self.ui = ui
-		self.sprite_id = sprite_id
-		self.image_id = self.ui.spritesdat.get_value(self.sprite_id,'ImageFile')
-		self.iscript_id = self.ui.spritesdat.get_value(self.sprite_id,'IscriptID')
+		self.ref = ref
+		self.image_id = image_id
+		self.parent = parent
+		self.children = []
+		self.iscript_id = self.ui.imagesdat.get_value(self.image_id,'IscriptID')
+		self.header_jump(0)
+		self.iscript_wait = 0
+		self.iscript_turns = self.ui.imagesdat.get_value(self.image_id,'GfxTurns')
+		if self.iscript_turns:
+			self.iscript_direction = int(random.uniform(0,16))
+		self.iscript_draw_function = self.ui.imagesdat.get_value(self.image_id, 'DrawFunction')
+		self.iscript_opcodes = {
+			0: self.op_playfram,
+# playframtile
+# sethorpos
+# setvertpos
+# setpos
+			5: self.op_wait,
+			6: self.op_waitrand,
+			7: self.op_goto,
+			8: self.op_imgol,
+			9: self.op_imgul,
+# imgolorig
+# switchul
+# __0c
+# imgoluselo
+# imguluselo
+# sprol
+# highsprol
+			17: self.op_lowsprul,
+# uflunstable
+# spruluselo
+# sprul
+# sproluselo
+			22: self.op_end,
+# setflipstate
+# playsnd
+# playsndrand
+# playsndbtwn
+# domissiledmg
+# attackmelee
+			29: self.op_followmaingraphic,
+			30: self.op_randcondjmp,
+			31: self.op_turnccwise,
+			32: self.op_turncwise,
+# turnlcwise
+			34: self.op_turnrand,
+# setspawnframe
+# sigorder
+# attackwith
+# attack
+# castspell
+# useweapon
+# move
+# gotorepeatattk
+# engframe
+# engset
+# __2d
+# nobrkcodestart
+# nobrkcodeend
+# ignorerest
+# attkshiftproj
+# tmprmgraphicstart
+# tmprmgraphicend
+			52: self.op_setfldirect,
+# call
+# return
+# setflspeed
+# creategasoverlays
+# pwrupcondjmp
+# trgtrangecondjmp
+# trgtarccondjmp
+# curdirectcondjmp
+# imgulnextid
+# __3e
+# liftoffcondjmp
+# warpoverlay
+# orderdone
+# grdsprol
+# __43
+# dogrddamage
+		}
 		self.position = list(pos)
 		self.frame = 0
 		self.grpFile = None
 		self.grp = None
 		self.player_color_id = player_color_id
 		self.player_colors = None
+		self.elevation = elevation
 		self.pal = 'Units'
 		string_id = self.ui.imagesdat.get_value(self.image_id,'GRPFile')
 		if string_id:
 			self.grpFile = grpPath + self.ui.imagestbl.strings[string_id-1][:-1]
 			if self.grpFile.startswith('thingy\\tileset\\'):
 				self.pal = 'Terrain'
-			elif self.ui.imagesdat.get_value(self.image_id, 'DrawFunction') == 9:
+			elif self.iscript_draw_function == 9:
 				remapping = self.ui.imagesdat.get_value(self.image_id, 'Remapping')
 				if remapping > 0 and remapping < 4:
 					self.pal = ['o','b','g'][remapping-1] + 'fire'
@@ -58,42 +166,162 @@ class Sprite:
 					i = self.ui.tunitpcx.image[0][n]
 					self.player_colors.append(self.ui.palettes['Units'][i])
 
+	def z_position(self):
+		return z_position(self.position[1], self.elevation)
+
 	def get_grp(self):
 		if self.grp == None:
-			if self.grpFile in Sprite.GRP_CACHE:
-				self.grp = Sprite.GRP_CACHE[self.grpFile]
+			if self.grpFile in BWImage.GRP_CACHE:
+				self.grp = BWImage.GRP_CACHE[self.grpFile]
 			else:
 				grp_file = self.ui.mpqhandler.get_file('MPQ:' + self.grpFile)
 				try:
 					grp = GRP.CacheGRP()
 					grp.load_file(grp_file)
 				except PyMSError, e:
-					raise
 					return None
 				self.grp = grp
-				Sprite.GRP_CACHE[self.grpFile] = grp
+				BWImage.GRP_CACHE[self.grpFile] = grp
 		return self.grp
 
 	def current_frame(self):
 		frame = None
 		if self.grpFile:
-			if self.grpFile in Sprite.FRAME_CACHE and self.player_color_id in Sprite.FRAME_CACHE[self.grpFile] and self.pal in Sprite.FRAME_CACHE[self.grpFile][self.player_color_id]:
-				frame = Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal].get(self.frame)
+			flipHor = False
+			index = self.frame
+			if self.iscript_turns:
+				flipHor = (self.iscript_direction > 16)
+				if flipHor:
+					index += 33 - self.iscript_direction
+				else:
+					index += self.iscript_direction
+			if self.grpFile in BWImage.FRAME_CACHE and self.player_color_id in BWImage.FRAME_CACHE[self.grpFile] and flipHor in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id] and self.pal in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor]:
+				frame = BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal].get(index)
 			if frame == None:
 				grp = self.get_grp()
 				if grp:
-					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, self.frame, True, False, player_colors=self.player_colors)
-					if not self.grpFile in Sprite.FRAME_CACHE:
-						Sprite.FRAME_CACHE[self.grpFile] = {}
-					if not self.player_color_id in Sprite.FRAME_CACHE:
-						Sprite.FRAME_CACHE[self.grpFile][self.player_color_id] = {}
-					if not self.pal in Sprite.FRAME_CACHE[self.grpFile]:
-						Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal] = {}
-					Sprite.FRAME_CACHE[self.grpFile][self.player_color_id][self.pal][self.frame] = frame
+					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, index, True, False, player_colors=self.player_colors, flipHor=flipHor)
+					if not self.grpFile in BWImage.FRAME_CACHE:
+						BWImage.FRAME_CACHE[self.grpFile] = {}
+					if not self.player_color_id in BWImage.FRAME_CACHE[self.grpFile]:
+						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id] = {}
+					if not flipHor in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id]:
+						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor] = {}
+					if not self.pal in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor]:
+						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal] = {}
+					BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal][index] = frame
 		return frame
 
+	def die(self):
+		if not self.header_jump(1):
+			self.op_end()
+
+	def header_jump(self, header):
+		headers = self.ui.iscriptbin.headers[self.iscript_id][2]
+		if header < len(headers):
+			iscript_offset = headers[header]
+			if iscript_offset != None:
+				self.iscript_wait = 0
+				self.op_goto(iscript_offset)
+				for child in self.children:
+					child.header_jump(header)
+				return True
+			# elif header == 1:
+			# 	self.op_end()
+		return False
+
+	def op_playfram(self, frame):
+		self.frame = frame
+		return True
+
+	def op_wait(self, ticks):
+		self.iscript_wait += FRAME_DELAY * ticks
+		return True
+
+	def op_waitrand(self, min_ticks, max_ticks):
+		ticks = random.randint(min_ticks, max_ticks)
+		return self.op_wait(ticks)
+
+	def op_goto(self, offset):
+		self.iscript_cmd = self.ui.iscriptbin.code.index(offset)
+		return False
+
+	def op_imgol(self, image_id, offset_x,offset_y):
+		ref = self.ref + '-child%d' % len(self.children)
+		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], self, 'unit\\', self.player_color_id, self.elevation-1)
+		self.children.append(image)
+		self.ui.maplayer_images.add_image(image)
+		return True
+
+	def op_imgul(self, image_id, offset_x,offset_y):
+		ref = self.ref + '-child%d' % len(self.children)
+		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], self, 'unit\\', self.player_color_id, self.elevation+1)
+		self.children.append(image)
+		self.ui.maplayer_images.add_image(image)
+		return True
+
+	def op_lowsprul(self, sprite_id, offset_x,offset_y):
+		ref = 'sprite%d' % sprite_id
+		image_id = self.ui.spritesdat.get_value(sprite_id,'ImageFile')
+		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], None, 'unit\\', self.player_color_id, 1)
+		self.ui.maplayer_images.add_image(image)
+		return True
+
+	def op_end(self):
+		self.iscript_wait = sys.maxint
+		self.ui.maplayer_images.remove_image(self)
+		for child in self.children:
+			child.parent = None
+			# self.ui.maplayer_images.remove_image(child)
+		return False
+
+	def op_followmaingraphic(self):
+		if self.parent:
+			self.frame = self.parent.frame
+			self.iscript_direction = self.parent.iscript_direction
+		else:
+			self.op_end()
+		return True
+
+	def op_randcondjmp(self, chance, offset):
+		rand = random.randint(0,255)
+		if rand <= chance:
+			return self.op_goto(offset)
+		return True
+
+	def op_turnccwise(self, delta):
+		return self.op_setfldirect(self.iscript_direction - delta)
+
+	def op_turncwise(self, delta):
+		return self.op_setfldirect(self.iscript_direction + delta)
+
+	def op_turnrand(self, delta):
+		rand = random.randint(0,65535)
+		if rand & 3 == 1:
+			return self.op_turnccwise(delta)
+		return self.op_turncwise(delta)
+
+	def op_setfldirect(self, direction):
+		while direction < 0:
+			direction += 34
+		self.iscript_direction = direction % 34
+		return True
+
 	def tick(self, dt):
-		pass
+		if self.iscript_wait > 0:
+			self.iscript_wait -= dt
+			if self.iscript_wait < 0:
+				self.iscript_wait = 0
+		while self.iscript_wait == 0:
+			cmd = self.ui.iscriptbin.code.getitem(self.iscript_cmd)
+			opcode = self.iscript_opcodes.get(cmd[0])
+			inc = True
+			if opcode:
+				inc = opcode(*cmd[1:])
+			else:
+				print cmd
+			if inc:
+				self.iscript_cmd += 1
 
 class ActionUpdateLocation(ActionUpdateValues):
 	def __init__(self, ui, location_id, location, attrs):
@@ -142,7 +370,7 @@ class ActionUpdateString(Action):
 def resize_event(location, mouseX,mouseY):
 	event = []
 	x1,y1,x2,y2 = location.normalized_coords()
-	if mouseX >= x1-5 and mouseX <= x2+5 and mouseY >= y1-5 and mouseY <= y2+5:
+	if x1-5 <= mouseX <= x2+5 and y1-5 <= mouseY <= y2+5:
 		event.append(EditLayer.EDIT_MOVE)
 		dist_left = abs(location.start[0] - mouseX)
 		dist_right = abs(location.end[0] - mouseX)
@@ -213,8 +441,8 @@ class EditLayerTerrain(EditLayer):
 	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
 		if self.mode == EditLayer.ACTIVE:
 			tag = 'tile_border'
-			x = nearest_multiple(x1+mouseX,32)
-			y = nearest_multiple(y1+mouseY,32)
+			x = nearest_multiple(x1+mouseX,32,math.floor)
+			y = nearest_multiple(y1+mouseY,32,math.floor)
 			self.ui.mapCanvas.coords(tag, x,y, x+32,y+32)
 			self.ui.mapCanvas.tag_raise(tag)
 
@@ -381,7 +609,7 @@ class EditLayerLocations(EditLayer):
 								self.action = ActionUpdateLocation(self.ui, l, location, ('start','end'))
 								self.ui.action_manager.add_action(self.action)
 								break
-						elif x >= x1 and x <= x2 and y >= y1 and y <= y2:
+						elif x1 <= x <= x2 and y1 <= y <= y2:
 							print 'Edit Location'
 							return
 					elif unused == None:
@@ -448,6 +676,36 @@ class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Units")
 
+	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
+		if button == EditLayer.MOUSE_LEFT and button_event == EditLayer.MOUSE_DOWN:
+			x = x1 + mouseX
+			y = y1 + mouseY
+			dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
+			unit_sect = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+			units = sorted(unit_sect.units.values(), cmp=lambda u1,u2,dat=self.ui.unitsdat: compare_z(u1,u2,dat,True))
+			for unit in units:
+				unit_w = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxWidth')
+				unit_h = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxHeight')
+				unit_x = unit.position[0] - unit_w/2.0
+				unit_y = unit.position[1] - unit_h/2.0
+				if unit_x <= x <= (unit_x+unit_w) and unit_y <= y <= (unit_y+unit_h):
+					ref = 'unit%d' % unit.ref_id
+					image = self.ui.maplayer_images.images.get(ref)
+					if image:
+						image.die()
+					return
+			def test():
+				ref = 'unit54'
+				image = self.ui.maplayer_images.images.get(ref)
+				if image:
+					image.die()
+				ref = 'unit74'
+				image = self.ui.maplayer_images.images.get(ref)
+				if image:
+					image.die()
+			self.ui.after(1000, test)
+
+
 class EditLayerSprites(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Sprites")
@@ -511,19 +769,7 @@ class MinimapLayerUnits(MinimapLayer):
 	def draw(self, drawer, size, points):
 		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
 		unit = self.ui.chk.get_section(CHKSectionUNIT.NAME)
-		def compare(unit1, unit2):
-			elevation1 = self.ui.unitsdat.get_value(unit1.unit_id, 'ElevationLevel')
-			elevation2 = self.ui.unitsdat.get_value(unit2.unit_id, 'ElevationLevel')
-			if elevation1 < elevation2:
-				return -1
-			if elevation1 > elevation2:
-				return 1
-			if unit1.position[0] < unit2.position[1]:
-				return -1
-			if unit1.position[0] > unit2.position[1]:
-				return 1
-			return 0
-		units = sorted(unit.units.values(), cmp=compare)
+		units = sorted(unit.units.values(), cmp=lambda u1,u2,dat=self.ui.unitsdat: compare_z(u1,u2,dat))
 		colors = CHKSectionCOLR.DEFAULT_COLORS
 		colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
 		if colr:
@@ -578,38 +824,55 @@ class MapLayerTerrain(MapLayer):
 					self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
 					self.ui.mapCanvas.tag_lower(tag)
 
-class MapLayerUnits(MapLayer):
+class MapLayerImages(MapLayer):
 	def __init__(self, ui):
 		MapLayer.__init__(self, ui)
-		self.sprites = None
-		self.map = {}
+		self.images = None
+
+	def update_zorder(self):
+		zorder = sorted(self.images.values(), key=lambda img: img.z_position())
+		for image in zorder:
+			self.ui.mapCanvas.tag_raise(image.ref)
+
+	def add_image(self, image, update=True):
+		self.images[image.ref] = image
+		frame = image.current_frame()
+		self.ui.mapCanvas.create_image(image.position[0],image.position[1], image=frame, tags=image.ref)
+		if update:
+			self.update_zorder()
+
+	def remove_image(self, image):
+		del self.images[image.ref]
+		self.ui.mapCanvas.delete(image.ref)
 
 	def update_display(self, x1,y1, x2,y2):
-		if self.sprites == None:
+		if self.images == None:
 			colors = CHKSectionCOLR.DEFAULT_COLORS
 			colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
 			if colr:
 				colors = colr.colors
 			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
-			self.sprites = {}
+			self.images = {}
 			for n in range(units.unit_count()):
 				unit = units.nth_unit(n)
 				player_color_id = colors[unit.owner]
 				flingy_id = self.ui.unitsdat.get_value(unit.unit_id, 'Graphics')
 				sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
-				sprite = Sprite(self.ui, sprite_id, unit.position, 'unit\\', player_color_id)
-				self.sprites[unit.ref_id] = sprite
-				frame = sprite.current_frame()
-				self.map[unit.ref_id] = self.ui.mapCanvas.create_image(sprite.position[0],sprite.position[1], image=frame, tags='unit%d' % unit.ref_id)
+				image_id = self.ui.spritesdat.get_value(sprite_id,'ImageFile')
+				elevation = self.ui.unitsdat.get_value(unit.unit_id, 'ElevationLevel')
+				ref = 'unit%d' % unit.ref_id
+				image = BWImage(self.ui, ref, image_id, unit.position, None, 'unit\\', player_color_id, elevation)
+				self.add_image(image, update=False)
+			self.update_zorder()
 
 	def tick(self, dt):
-		units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
-		for n in range(units.unit_count()):
-			unit = units.nth_unit(n)
-			sprite = self.sprites[unit.ref_id]
-			sprite.tick(dt)
-			frame = sprite.current_frame()
-			self.ui.mapCanvas.itemconfig(self.map[unit.ref_id], image=frame)
+		for ref in self.images.keys():
+			image = self.images.get(ref)
+			if image:
+				image.tick(dt)
+				if ref in self.images:
+					frame = image.current_frame()
+					self.ui.mapCanvas.itemconfig(ref, image=frame)
 
 class ListLayer:
 	NAME = None
@@ -806,8 +1069,8 @@ class PyMAP(Tk):
 		self.minimap_layers = [self.minimaplayer_terrain,self.minimaplayer_units]
 
 		self.maplayer_terrain = MapLayerTerrain(self)
-		self.maplayer_units = MapLayerUnits(self)
-		self.map_layers = [self.maplayer_terrain,self.maplayer_units]
+		self.maplayer_images = MapLayerImages(self)
+		self.map_layers = [self.maplayer_terrain,self.maplayer_images]
 
 		self.listlayer_terrain = ListLayerTerrain(self)
 		self.listlayer_locations = ListLayerLocations(self)
@@ -818,6 +1081,7 @@ class PyMAP(Tk):
 		self.list_layer_indices = {}
 
 		self.last_tick = None
+		self.tick_delay = FRAME_DELAY
 		self.tick_alarm = None
 
 		#Toolbar
@@ -869,14 +1133,19 @@ class PyMAP(Tk):
 		left = Frame(self.panes)
 		self.panes.add(left)
 		minimap_wide_container = Frame(left, bd=1, relief=SUNKEN)
-		def place_minimap_wide_container():
-			minimap_wide_container.place(in_=left, x=0,y=0, width=left.winfo_width(),height=min(left.winfo_width(),262))
+		def place_minimap_wide_container(initial=False):
+			width = left.winfo_width()
+			minimap_wide_container.place(in_=left, x=0,y=0, width=width,height=min(width,262))
+			if initial:
+				minimap_wide_container.update()
 		place_minimap_wide_container()
 		minimap_container = Frame(left, bd=1, relief=SUNKEN)
-		def place_minimap_container():
+		def place_minimap_container(initial=False):
 			size = minimap_wide_container.winfo_height() - 6
 			pad = (minimap_wide_container.winfo_width() - size)/2.0
 			minimap_container.place(in_=minimap_wide_container, x=pad,y=2, width=size,height=size)
+			if initial:
+				minimap_container.update()
 			self.resized_minimap()
 		self.minimap = Canvas(minimap_container, background='#000000', highlightthickness=0)
 		self.minimap.bind('<Button-1>', self.minimap_move)
@@ -888,16 +1157,17 @@ class PyMAP(Tk):
 		self.listbox = TreeList(details, groupsel=False, closeicon=os.path.join(BASE_DIR,'Images','treeclose.gif'), openicon=os.path.join(BASE_DIR,'Images','treeopen.gif'))
 		self.listbox.pack(fill=BOTH, expand=True)
 		self.listbox.bind('<Button-1>', self.list_select)
-		def place_details():
+		def place_details(initial=False):
 			y = minimap_wide_container.winfo_height() + 5
 			details.place(in_=left, x=0,y=y, width=left.winfo_width(),height=left.winfo_height()-y)
+			if initial:
+				details.update()
 		place_details()
-		def place_left_children(event=None):
-			place_minimap_wide_container()
-			place_minimap_container()
-			place_details()
+		def place_left_children(event=None, initial=False):
+			place_minimap_wide_container(initial)
+			place_minimap_container(initial)
+			place_details(initial)
 		left.bind('<Configure>', place_left_children)
-		self.after(500, place_left_children)
 
 		self.panes.paneconfigure(left, minsize=128)
 
@@ -963,6 +1233,9 @@ class PyMAP(Tk):
 		if 'window' in self.settings:
 			loadsize(self, self.settings, 'window', True)
 
+		self.update()
+		place_left_children(True)
+
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if not 'mpqs' in self.settings:
 			self.mpqhandler.add_defaults()
@@ -1024,8 +1297,8 @@ class PyMAP(Tk):
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def tick(self):
-		if self.tick_alarm != None:
+	def tick(self, start=False):
+		if self.tick_alarm or start:
 			if self.chk:
 				now = int(time.time() * 1000)
 				if self.last_tick == None:
@@ -1034,14 +1307,16 @@ class PyMAP(Tk):
 				self.last_tick = now
 				for layer in self.map_layers:
 					layer.tick(dt)
-				self.tick_alarm = self.after(FRAME_DELAY, self.tick)
+				self.mapCanvas.update_idletasks()
+				self.tick_alarm = self.after(FRAME_DELAY,self.tick)
 			else:
 				self.tick_alarm = None
 
 	def stop_tick(self):
 		if self.tick_alarm != None:
-			self.after_cancel(self.tick_alarm)
+			cancel = self.tick_alarm
 			self.tick_alarm = None
+			self.after_cancel(cancel)
 
 	def file_settings(self, key=None, err=None):
 		data = [
@@ -1313,7 +1588,7 @@ class PyMAP(Tk):
 			self.setup_list()
 			self.redraw_minimap()
 			self.set_editmode(self.editlayer_terrain)
-			self.tick()
+			self.tick(True)
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
@@ -1368,10 +1643,8 @@ class PyMAP(Tk):
 				f.close()
 			except:
 				pass
-			def close():
-				self.stop_tick()
-				self.destroy()
-			self.after_idle(close)
+			self.stop_tick()
+			self.destroy()
 
 def main():
 	import sys

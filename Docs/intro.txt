@@ -70,7 +70,7 @@ PyMS is an (almost) all inclusive StarCraft Modding Suite, currently containing 
  -First public release.
 +u
 	Source Installation	install
-Once that is done you can unzip PyMS somewhere on your computer . Now to be able to use PyMS, you will need to have [http://www.python.org	Python] 2.6+. If you are a Windows user, after installing Python, you will probably have to change your environment variables. One way is to open your Command Prompt and type:
+Once the download is done, unzip PyMS somewhere on your computer. Now to be able to use PyMS from source, you will need to have [http://www.python.org	Python] 2.6+. If you are a Windows user, after installing Python, you will probably have to change your environment variables. One way is to open your Command Prompt and type:
 <Command Line
 set PATH=%PATH%;C:\Python\
 >

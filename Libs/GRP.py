@@ -17,7 +17,7 @@ except:
 	# for r in l:
 		# z.extend(r)
 	# return z
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, player_colors=None):
+def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, player_colors=None, flipHor=False):
 	if f != None:
 		if buffered:
 			d = g[f]
@@ -45,7 +45,10 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 				if image[3] == -1:
 					image[3] = y
 				image[4] = y + 1
-				for x,xd in enumerate(yd):
+				line = yd
+				if flipHor:
+					line = reversed(line)
+				for x,xd in enumerate(line):
 					if xd != transindex:
 						if image[1] == -1 or x < image[1]:
 							image[1] = x
@@ -59,7 +62,10 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 		return image
 	else:
 		for y in d:
-			data.extend(y)
+			line = y
+			if flipHor:
+				line = reversed(y)
+			data.extend(line)
 		i.putdata(map(pal.__getitem__, data))
 		return ImageTk.PhotoImage(i)
 
