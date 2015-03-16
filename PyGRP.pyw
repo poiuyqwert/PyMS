@@ -78,8 +78,8 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 			else:
 				out.width = inp.width / min(frames,17)
 				out.height = inp.height / int(ceil(frames / 17.0))
-			if out.width > 255 or out.height > 255:
-				raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 255x255, got %sx%s)" % (fullfile,out.width,out.height))
+			if out.width > 256 or out.height > 256:
+				raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 256x256, got %sx%s)" % (fullfile,out.width,out.height))
 			if issize and out.width != issize[0] and out.height != issize[1]:
 				raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],out.width,out.height))
 			for n in range(frames):
@@ -129,8 +129,8 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 						else:
 							if issize and inp.width != issize[0] and inp.height != issize[1]:
 								raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],inp.width,inp.height))
-							if inp.width > 255 or inp.height > 255:
-								raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 255x255, got %sx%s)" % (fullfile,inp.width,inp.height))
+							if inp.width > 256 or inp.height > 256:
+								raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 256x256, got %sx%s)" % (fullfile,inp.width,inp.height))
 							out.load_data(inp.image)
 							found += 1
 						if not mute:
@@ -261,17 +261,18 @@ class PyGRP(Tk):
 		self.listbox = Listbox(listframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, height=17, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
 		bind = [
 			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
+			('<Home>', lambda e,l=self.listbox,i=0: self.move(e,l,i)),
+			('<End>', lambda e,l=self.listbox,i=END: self.move(e,l,i)),
+			('<Up>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Left>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Down>', lambda e,l=self.listbox,i=1: self.move(e,l,i)),
+			('<Right>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Prior>', lambda e,l=self.listbox,i=-10: self.move(e,l,i)),
+			('<Next>', lambda e,l=self.listbox,i=10: self.move(e,l,i)),
 		]
 		for b in bind:
 			self.bind(*b)
+			self.listbox.bind(*b)
 		self.listbox.bind('<ButtonRelease-1>', self.preview)
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
@@ -284,7 +285,20 @@ class PyGRP(Tk):
 		palette = Frame(leftframe, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(palette)
 		self.pallist = Listbox(palette, width=15, height=4, bd=0, activestyle=DOTBOX, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
-		self.pallist.bind('<ButtonRelease-1>', self.changepalette)
+		bind = [
+			('<MouseWheel>', self.scroll),
+			('<Home>', lambda e,l=self.pallist,i=0: self.move(e,l,i)),
+			('<End>', lambda e,l=self.pallist,i=END: self.move(e,l,i)),
+			('<Up>', lambda e,l=self.pallist,i=-1: self.move(e,l,i)),
+			('<Left>', lambda e,l=self.pallist,i=-1: self.move(e,l,i)),
+			('<Down>', lambda e,l=self.pallist,i=1: self.move(e,l,i)),
+			('<Right>', lambda e,l=self.pallist,i=-1: self.move(e,l,i)),
+			('<Prior>', lambda e,l=self.pallist,i=-10: self.move(e,l,i)),
+			('<Next>', lambda e,l=self.pallist,i=10: self.move(e,l,i)),
+			('<ButtonRelease-1>', self.changepalette)
+		]
+		for b in bind:
+			self.pallist.bind(*b)
 		scrollbar.config(command=self.pallist.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.pallist.pack(side=LEFT, fill=BOTH, expand=1)
@@ -467,17 +481,20 @@ class PyGRP(Tk):
 		else:
 			self.listbox.yview('scroll', 2, 'units')
 
-	def move(self, e, a):
-		if a == END:
-			a = self.listbox.size()-2
-		elif a not in [0,END] and self.listbox.curselection():
-			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-		else:
-			a = 0
-		self.listbox.select_clear(0,END)
-		self.listbox.select_set(a)
-		self.listbox.see(a)
+	def move(self, e, listbox, offset):
+		index = 0
+		if offset == END:
+			index = listbox.size()-2
+		elif offset not in [0,END] and listbox.curselection():
+			print listbox.curselection()
+			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
+		listbox.select_clear(0,END)
+		listbox.select_set(index)
+		listbox.see(index)
+		if listbox == self.pallist:
+			self.changepalette()
 		self.preview()
+		return "break"
 
 	def showprev(self):
 		if self.showpreview.get():

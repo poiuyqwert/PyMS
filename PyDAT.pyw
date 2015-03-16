@@ -532,7 +532,7 @@ class DATTab(NotebookTab):
 		self.save()
 
 	def export(self, key=None):
-		file = self.select_file('Export TXT', False, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+		file = self.toplevel.select_file('Export TXT', False, '*.txt', [('Text Files','*.txt'),('All Files','*')])
 		if not file:
 			return True
 		try:
@@ -3219,12 +3219,12 @@ class PyDAT(Tk):
 			2,
 			('open', self.open, 'Open (Ctrl+O)', NORMAL, 'Ctrl+O'),
 			('openfolder', self.opendirectory, 'Open Directiory (Ctrl+D)', NORMAL, 'Ctrl+D'),
-			('import', self.iimport, 'Import Scripts (Ctrl+I)', NORMAL, 'Ctrl+I'),
+			('import', self.iimport, 'Import from TXT (Ctrl+I)', NORMAL, 'Ctrl+I'),
 			('openmpq', self.openmpq, 'Open MPQ (Ctrl+Alt+O)', [NORMAL,DISABLED][FOLDER], 'Ctrl+Alt+O'),
 			2,
 			('save', self.save, 'Save (Ctrl+S)', NORMAL, 'Ctrl+S'),
 			('saveas', self.saveas, 'Save As (Ctrl+Alt+A)', NORMAL, 'Ctrl+Alt+A'),
-			('export', self.export, 'Export Scripts (Ctrl+E)', NORMAL, 'Ctrl+E'),
+			('export', self.export, 'Export to TXT (Ctrl+E)', NORMAL, 'Ctrl+E'),
 			('savempq', self.savempq, 'Save MPQ (Ctrl+Alt+M)', [NORMAL,DISABLED][FOLDER], 'Ctrl+Alt+M'),
 			10,
 			('asc3topyai', self.mpqtbl, 'Manage MPQ and TBL files (Ctrl+M)', NORMAL, 'Ctrl+M'),
@@ -3291,7 +3291,9 @@ class PyDAT(Tk):
 		tdd.entry.bind('<Return>', self.findnext)
 		Button(search, text='Find Next', command=self.findnext).pack(side=LEFT)
 		right = Frame(search)
-		Entry(right, textvariable=self.jumpid, width=4).pack(side=LEFT)
+		entry = Entry(right, textvariable=self.jumpid, width=4)
+		entry.pack(side=LEFT)
+		entry.bind('<Return>', self.jump)
 		Button(right, text='ID Jump', command=self.jump).pack(side=LEFT)
 		right.pack(side=RIGHT)
 		search.pack(fill=X, padx=2, pady=2)
