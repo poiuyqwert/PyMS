@@ -1,6 +1,6 @@
 from utils import *
 
-import sys,struct
+import sys,struct,itertools
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
@@ -12,12 +12,35 @@ except:
 		e.mainloop()
 		sys.exit()
 
+def rle_normal(pal, index, player_colors=None):
+	rgb = pal[index]
+	if player_colors != None and len(player_colors) >= 8 and 8 <= index <= 15:
+		rgb = player_colors[index - 8]
+	return (rgb[0],rgb[1],rgb[2], 255)
+
+def rle_shadow(pal, index, _=None):
+	return (0,0,0, 255)
+
+OUTLINE_ENEMY = 0
+OUTLINE_SELF = 1
+OUTLINE_ALLY = 2
+def rle_outline(pal, index, ally_status=OUTLINE_SELF):
+	rgb = pal[index]
+	if 1 <= index <= 9:
+		if ally_status == OUTLINE_ENEMY:
+			rgb = (155,21,23)
+		elif ally_status == OUTLINE_SELF:
+			rgb = (36,152,36)
+		else:
+			rgb = (220,220,60)
+	return (rgb[0],rgb[1],rgb[2], 255)
+
 # def merge(l):
 	# z = []
 	# for r in l:
 		# z.extend(r)
 	# return z
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, player_colors=None, flipHor=False):
+def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=rle_normal, draw_info=None):
 	if f != None:
 		if buffered:
 			d = g[f]
@@ -31,13 +54,8 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	i = PILImage.new('RGBA', (g.width,g.height))
 	data = []
 	pal = []
-	for n,(red,green,blue) in enumerate(p):
-		alpha = 255
-		if trans and n == transindex:
-			alpha = 0
-		if n >= 8 and n <= 15 and player_colors != None and len(player_colors) >= 8:
-			red,green,blue = player_colors[n-8]
-		pal.append((red,green,blue,alpha))
+	pal = map(lambda i,p=p,e=draw_info: draw_function(p,i,e), xrange(len(p)))
+	pal[transindex] = (0,0,0,0)
 	if size:
 		image = [None,-1,-1,-1,-1]
 		for y,yd in enumerate(d):
@@ -61,12 +79,11 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 		image[0] = ImageTk.PhotoImage(i)
 		return image
 	else:
-		for y in d:
-			line = y
-			if flipHor:
-				line = reversed(y)
-			data.extend(line)
-		i.putdata(map(pal.__getitem__, data))
+		if flipHor:
+			d = map(reversed, d)
+		data = itertools.chain.from_iterable(d)
+		data = map(pal.__getitem__, data)
+		i.putdata(data)
 		return ImageTk.PhotoImage(i)
 
 class CacheGRP:

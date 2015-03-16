@@ -43,21 +43,27 @@ class BWImage:
 	FRAME_CACHE = {}
 
 	@staticmethod
-	def purge_frames(grpFile=None, player_color_id=None, flipHor=None, pal=None, index=None):
-		keys = [grpFile, player_color_id, flipHor, pal, index]
+	def purge_frames(grpFile=None, player_color_id=None, flipHor=None, draw_function_id=None, draw_remapping=None, index=None):
+		keys = [grpFile, player_color_id, flipHor, draw_function_id, draw_remapping, index]
 		while keys[-1] == None:
 			del keys[-1]
 		def do_purge(cache, keys):
 			if key[0] == None:
 				for k in cache.keys():
 					do_purge(cache[k], keys[1:])
-			else:
+			elif len(keys) == 1:
 				del cache[key[0]]
-		do_purge(BWImage.FRAME_CACHE, keys)
+			else:
+				do_purge(cache[k], keys[1:])
+		if not keys:
+			BWImage.FRAME_CACHE = {}
+		else:
+			do_purge(BWImage.FRAME_CACHE, keys)
 
-	def __init__(self, ui, ref, image_id, pos, parent=None, grpPath='', player_color_id=None, elevation=4):
+	def __init__(self, ui, ref, image_id, pos, parent=None, grpPath='', elevation=4, offset=(0,0), unit_ref=None):
 		self.ui = ui
 		self.ref = ref
+		self.unit_ref = unit_ref
 		self.image_id = image_id
 		self.parent = parent
 		self.children = []
@@ -65,14 +71,18 @@ class BWImage:
 		self.header_jump(0)
 		self.iscript_wait = 0
 		self.iscript_turns = self.ui.imagesdat.get_value(self.image_id,'GfxTurns')
+		self.iscript_direction = 0
 		if self.iscript_turns:
 			self.iscript_direction = int(random.uniform(0,16))
-		self.iscript_draw_function = self.ui.imagesdat.get_value(self.image_id, 'DrawFunction')
+		self.draw_function = GRP.rle_normal
+		self.draw_info = None
+		self.draw_function_id = self.ui.imagesdat.get_value(self.image_id, 'DrawFunction')
+		self.draw_remapping = self.ui.imagesdat.get_value(self.image_id, 'Remapping')
 		self.iscript_opcodes = {
 			0: self.op_playfram,
-# playframtile
+			1: self.op_playframtile,
 # sethorpos
-# setvertpos
+			3: self.op_setvertpos,
 # setpos
 			5: self.op_wait,
 			6: self.op_waitrand,
@@ -140,34 +150,55 @@ class BWImage:
 # dogrddamage
 		}
 		self.position = list(pos)
+		self.offset = list(offset)
 		self.frame = 0
 		self.grpFile = None
 		self.grp = None
-		self.player_color_id = player_color_id
-		self.player_colors = None
+		self.player_color_id = None
 		self.elevation = elevation
-		self.pal = 'Units'
+		self.pal = 'Terrain'
 		string_id = self.ui.imagesdat.get_value(self.image_id,'GRPFile')
 		if string_id:
 			self.grpFile = grpPath + self.ui.imagestbl.strings[string_id-1][:-1]
-			if self.grpFile.startswith('thingy\\tileset\\'):
-				self.pal = 'Terrain'
-			elif self.iscript_draw_function == 9:
-				remapping = self.ui.imagesdat.get_value(self.image_id, 'Remapping')
-				if remapping > 0 and remapping < 4:
-					self.pal = ['o','b','g'][remapping-1] + 'fire'
-		if not self.pal in self.ui.palettes:
-			self.pal = 'Units'
-		if self.player_color_id != None:
-			start_index = self.player_color_id * 8
-			if start_index+7 < len(self.ui.tunitpcx.image[0]):
-				self.player_colors = []
-				for n in range(start_index,start_index+8):
-					i = self.ui.tunitpcx.image[0][n]
-					self.player_colors.append(self.ui.palettes['Units'][i])
+		if self.draw_function_id == 9 and 0 < self.draw_remapping < 4:
+			self.pal = ['o','b','g'][self.draw_remapping-1] + 'fire'
+		elif self.draw_function_id == 10:
+			self.draw_function = GRP.rle_shadow
+		elif self.draw_function_id == 13:
+			self.draw_function = GRP.rle_outline
+			self.draw_info = GRP.OUTLINE_ALLY
+			print (1, self.parent)
+			print (2, self.parent.unit_ref)
+			if self.parent != None and self.parent.unit_ref != None:
+				units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+				unit = units.get_unit(self.parent.unit_ref)
+				if unit:
+					print (3,unit.owner)
+					ownr = self.ui.chk.get_section(CHKSectionOWNR.NAME)
+					print (4,ownr.owners[unit.owner])
+					owner = ownr.owners[unit.owner]
+					if owner == CHKSectionOWNR.HUMAN:
+						self.draw_info = GRP.OUTLINE_SELF
+					elif owner == CHKSectionOWNR.COMPUTER:
+						self.draw_info = GRP.OUTLINE_ENEMY
+		elif self.unit_ref != None:
+			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+			unit = units.get_unit(self.unit_ref)
+			if unit:
+				self.player_color_id = self.ui.chk.player_color(unit.owner)
+				if self.player_color_id != None:
+					start_index = self.player_color_id * 8
+					if start_index+7 < len(self.ui.tunitpcx.image[0]):
+						self.draw_info = []
+						for n in range(start_index,start_index+8):
+							i = self.ui.tunitpcx.image[0][n]
+							self.draw_info.append(self.ui.palettes['Units'][i])
 
 	def z_position(self):
 		return z_position(self.position[1], self.elevation)
+
+	def render_position(self):
+		return (self.position[0] + self.offset[0], self.position[1] + self.offset[1])
 
 	def get_grp(self):
 		if self.grp == None:
@@ -195,21 +226,27 @@ class BWImage:
 					index += 33 - self.iscript_direction
 				else:
 					index += self.iscript_direction
-			if self.grpFile in BWImage.FRAME_CACHE and self.player_color_id in BWImage.FRAME_CACHE[self.grpFile] and flipHor in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id] and self.pal in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor]:
-				frame = BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal].get(index)
+			if self.grpFile in BWImage.FRAME_CACHE \
+			and self.player_color_id in BWImage.FRAME_CACHE[self.grpFile] \
+			and flipHor in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id] \
+			and self.draw_function_id in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor] \
+			and self.draw_remapping in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id]:
+				frame = BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id][self.draw_remapping].get(index)
 			if frame == None:
 				grp = self.get_grp()
 				if grp:
-					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, index, True, False, player_colors=self.player_colors, flipHor=flipHor)
+					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, index, True, False, True, 0, flipHor, self.draw_function, self.draw_info)
 					if not self.grpFile in BWImage.FRAME_CACHE:
 						BWImage.FRAME_CACHE[self.grpFile] = {}
 					if not self.player_color_id in BWImage.FRAME_CACHE[self.grpFile]:
 						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id] = {}
 					if not flipHor in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id]:
 						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor] = {}
-					if not self.pal in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor]:
-						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal] = {}
-					BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.pal][index] = frame
+					if not self.draw_function_id in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor]:
+						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id] = {}
+					if not self.draw_remapping in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id]:
+						BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id][self.draw_remapping] = {}
+					BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id][self.draw_remapping][index] = frame
 		return frame
 
 	def die(self):
@@ -234,6 +271,17 @@ class BWImage:
 		self.frame = frame
 		return True
 
+	def op_playframtile(self, frame):
+		era = self.ui.chk.get_section(CHKSectionERA.NAME)
+		frame += era.tileset
+		if frame < self.get_grp().frames:
+			self.frame = frame
+		return True
+
+	def op_setvertpos(self, y_offset):
+		self.offset[1] = y_offset
+		return True
+
 	def op_wait(self, ticks):
 		self.iscript_wait += FRAME_DELAY * ticks
 		return True
@@ -248,14 +296,14 @@ class BWImage:
 
 	def op_imgol(self, image_id, offset_x,offset_y):
 		ref = self.ref + '-child%d' % len(self.children)
-		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], self, 'unit\\', self.player_color_id, self.elevation-1)
+		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation+1, (offset_x,offset_y))
 		self.children.append(image)
 		self.ui.maplayer_images.add_image(image)
 		return True
 
 	def op_imgul(self, image_id, offset_x,offset_y):
 		ref = self.ref + '-child%d' % len(self.children)
-		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], self, 'unit\\', self.player_color_id, self.elevation+1)
+		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation-1, (offset_x,offset_y))
 		self.children.append(image)
 		self.ui.maplayer_images.add_image(image)
 		return True
@@ -263,7 +311,7 @@ class BWImage:
 	def op_lowsprul(self, sprite_id, offset_x,offset_y):
 		ref = 'sprite%d' % sprite_id
 		image_id = self.ui.spritesdat.get_value(sprite_id,'ImageFile')
-		image = BWImage(self.ui, ref, image_id, [self.position[0] + offset_x, self.position[1] + offset_y], None, 'unit\\', self.player_color_id, 1)
+		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), None, 'unit\\', 1, (offset_x,offset_y))
 		self.ui.maplayer_images.add_image(image)
 		return True
 
@@ -319,7 +367,7 @@ class BWImage:
 			if opcode:
 				inc = opcode(*cmd[1:])
 			else:
-				print cmd
+				print (self.iscript_id, cmd)
 			if inc:
 				self.iscript_cmd += 1
 
@@ -590,7 +638,7 @@ class EditLayerLocations(EditLayer):
  			y = y1+mouseY
  			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 			if button_event == EditLayer.MOUSE_DOWN or button_event == EditLayer.MOUSE_DOUBLE:
-	 			self.current_event = [EditLayer.EDIT_NONE]
+	 			self.current_event = []
 	 			unused = None
 	 			for l in self.zOrder:
 	 				if l == 63 and not self.show_anywhere:
@@ -666,7 +714,7 @@ class EditLayerLocations(EditLayer):
 					location.end[1] = nearest_multiple(location.end[1],32)
 				self.update_location(self.resize_location)
 				if button_event == EditLayer.MOUSE_UP:
-					self.current_event = [EditLayer.EDIT_NONE]
+					self.current_event = []
 					self.resize_location = None
 					self.action.set_end_values(location, self.action.start_values.keys())
 					self.action = None
@@ -675,9 +723,14 @@ class EditLayerLocations(EditLayer):
 class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Units")
+		self.selected_image = None
+		self.selection_image_id = 0
+		self.selection_image = None
 
 	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
 		if button == EditLayer.MOUSE_LEFT and button_event == EditLayer.MOUSE_DOWN:
+			selected = None
+			selected_unit = None
 			x = x1 + mouseX
 			y = y1 + mouseY
 			dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
@@ -690,22 +743,23 @@ class EditLayerUnits(EditLayer):
 				unit_y = unit.position[1] - unit_h/2.0
 				if unit_x <= x <= (unit_x+unit_w) and unit_y <= y <= (unit_y+unit_h):
 					ref = 'unit%d' % unit.ref_id
-					image = self.ui.maplayer_images.images.get(ref)
-					if image:
-						image.die()
-					return
-			def test():
-				ref = 'unit54'
-				image = self.ui.maplayer_images.images.get(ref)
-				if image:
-					image.die()
-				ref = 'unit74'
-				image = self.ui.maplayer_images.images.get(ref)
-				if image:
-					image.die()
-			self.ui.after(1000, test)
-
-
+					selected = self.ui.maplayer_images.images.get(ref)
+					selected_unit = unit
+					break
+			if selected != self.selected_image:
+				if self.selection_image:
+					self.ui.maplayer_images.remove_image(self.selection_image)
+				self.selected_image = selected
+				self.selection_image = None
+				if selected:
+					flingy_id = self.ui.unitsdat.get_value(selected_unit.unit_id, 'Graphics')
+					sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
+					selection_image_id = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleImage')
+					y_offset = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleOffset')
+					self.selection_image_id = selection_image_id
+					self.selection_image = BWImage(self.ui, 'sel%d' % selection_image_id, 561 + selection_image_id, (unit.position[0], unit.position[1]), self.selected_image, 'unit\\', elevation=0, offset=(0,y_offset))
+					self.ui.maplayer_images.add_image(self.selection_image)
+ 
 class EditLayerSprites(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Sprites")
@@ -837,7 +891,8 @@ class MapLayerImages(MapLayer):
 	def add_image(self, image, update=True):
 		self.images[image.ref] = image
 		frame = image.current_frame()
-		self.ui.mapCanvas.create_image(image.position[0],image.position[1], image=frame, tags=image.ref)
+		position = image.render_position()
+		self.ui.mapCanvas.create_image(position[0],position[1], image=frame, tags=image.ref)
 		if update:
 			self.update_zorder()
 
@@ -847,21 +902,16 @@ class MapLayerImages(MapLayer):
 
 	def update_display(self, x1,y1, x2,y2):
 		if self.images == None:
-			colors = CHKSectionCOLR.DEFAULT_COLORS
-			colr = self.ui.chk.get_section(CHKSectionCOLR.NAME)
-			if colr:
-				colors = colr.colors
 			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 			self.images = {}
 			for n in range(units.unit_count()):
 				unit = units.nth_unit(n)
-				player_color_id = colors[unit.owner]
 				flingy_id = self.ui.unitsdat.get_value(unit.unit_id, 'Graphics')
 				sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
 				image_id = self.ui.spritesdat.get_value(sprite_id,'ImageFile')
 				elevation = self.ui.unitsdat.get_value(unit.unit_id, 'ElevationLevel')
 				ref = 'unit%d' % unit.ref_id
-				image = BWImage(self.ui, ref, image_id, unit.position, None, 'unit\\', player_color_id, elevation)
+				image = BWImage(self.ui, ref, image_id, unit.position, None, 'unit\\', elevation, unit_ref=unit.ref_id)
 				self.add_image(image, update=False)
 			self.update_zorder()
 

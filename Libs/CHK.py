@@ -306,7 +306,7 @@ class CHKSectionOWNR(CHKSection):
 	
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
-		self.owners = [CHKSectionOWNR.HUMAN]*8 + [CHKSectionOWNR.INACTIVE]*4
+		self.owners = [CHKSectionOWNR.HUMAN]*8 + [CHKSectionOWNR.INACTIVE]*3 + [CHKSectionOWNR.NEUTRAL]
 	
 	def load_data(self, data):
 		self.owners = list(struct.unpack('<12B', data[:12]))
@@ -776,6 +776,9 @@ class CHKSectionUNIT(CHKSection):
 	def nth_unit(self, n):
 		ref_ids = sorted(self.units.keys())
 		return self.units[ref_ids[n]]
+
+	def get_unit(self, ref_id):
+		return self.units.get(ref_id)
 	
 	def save_data(self):
 		result = ''
@@ -1933,6 +1936,14 @@ class CHK:
 			sect = sect_class(self)
 			self.sections[name] = sect
 		return sect
+
+	def player_color(self, player):
+		colors = CHKSectionCOLR.DEFAULT_COLORS
+		colr = self.get_section(CHKSectionCOLR.NAME)
+		if colr:
+			colors = colr.colors
+		colors.extend((CHKSectionCOLR.GREEN,CHKSectionCOLR.PALE_YELLOW,CHKSectionCOLR.TAN,CHKSectionCOLR.NEUTRAL))
+		return colors[player]
 
 	def load_file(self, file):
 		try:
