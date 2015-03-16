@@ -1116,7 +1116,7 @@ class Tooltip:
 			self.tip = None
 
 class IntegerVar(StringVar):
-	def __init__(self, val='0', range=[None,None], exclude=[], callback=None):
+	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, allow_hex=False):
 		StringVar.__init__(self)
 		self.check = True
 		self.defaultval = val
@@ -1125,6 +1125,8 @@ class IntegerVar(StringVar):
 		self.range = range
 		self.exclude = exclude
 		self.callback = callback
+		self.allow_hex = allow_hex
+		self.is_hex = False
 		self.trace('w', self.editvalue)
 
 	def editvalue(self, *_):
@@ -1132,15 +1134,16 @@ class IntegerVar(StringVar):
 		if self.check:
 			#print s,self.range
 			if self.get(True):
+				refresh = True
 				try:
 					s = self.get()
 					if self.range[0] != None and self.range[0] >= 0 and self.get(True).startswith('-'):
 						#print '1'
 						raise
-					s = self.get()
 					if s in self.exclude:
 						#print '2'
 						raise
+					refresh = False
 				except:
 					#raise
 					s = self.lastvalid
@@ -1148,11 +1151,20 @@ class IntegerVar(StringVar):
 					if self.range[0] != None and s < self.range[0]:
 						#print '3'
 						s = self.range[0]
+						refresh = True
 					elif self.range[1] != None and s > self.range[1]:
 						#print '4'
 						s = self.range[1]
+						refresh = True
 				#print s
-				self.set(s)
+				if refresh:
+					if self.is_hex:
+						if s == 0:
+							self.set('0x')
+						else:
+							self.set(hex(s))
+					else:
+						self.set(s)
 				if self.callback:
 					self.callback(s)
 			elif self.range[0] != None:
@@ -1165,9 +1177,16 @@ class IntegerVar(StringVar):
 			self.check = True
 
 	def get(self, s=False):
+		string = StringVar.get(self)
 		if s:
-			return StringVar.get(self)
-		return int(StringVar.get(self) or 0)
+			return string
+		if self.allow_hex and string.startswith('0x'):
+			self.is_hex = True
+			if string == '0x':
+				return 0
+			return int(string, 16)
+		self.is_hex = False
+		return int(string or 0)
 
 	def setrange(self, range):
 		self.range = list(range)

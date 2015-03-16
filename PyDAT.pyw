@@ -3283,7 +3283,7 @@ class PyDAT(Tk):
 
 		self.findhistory = []
 		self.find = StringVar()
-		self.jumpid = IntegerVar('', [0,227])
+		self.jumpid = IntegerVar('', [0,227], allow_hex=True)
 
 		search = Frame(left)
 		tdd = TextDropDown(search, self.find, self.findhistory, 30)

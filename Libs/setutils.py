@@ -17,7 +17,7 @@ def loadsettings(program, default={}):
 
 PYMS_SETTINGS = loadsettings('PyMS',{'remindme':1})
 
-SC_DIR = settings.get('scdir')
+SC_DIR = PYMS_SETTINGS.get('scdir')
 if win_reg:
 	try:
 		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
