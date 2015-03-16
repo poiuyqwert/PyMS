@@ -40,7 +40,7 @@ def rle_outline(pal, index, ally_status=OUTLINE_SELF):
 	# for r in l:
 		# z.extend(r)
 	# return z
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=rle_normal, draw_info=None):
+def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=None, draw_info=None):
 	if f != None:
 		if buffered:
 			d = g[f]
@@ -54,6 +54,8 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	i = PILImage.new('RGBA', (g.width,g.height))
 	data = []
 	pal = []
+	if draw_function == None:
+		draw_function = rle_normal
 	pal = map(lambda i,p=p,e=draw_info: draw_function(p,i,e), xrange(len(p)))
 	pal[transindex] = (0,0,0,0)
 	if size:

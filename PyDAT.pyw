@@ -5,7 +5,7 @@ from Libs.SFmpq import *
 from Libs.DAT import *
 from Libs.TBL import TBL,decompile_string,compile_string
 from Libs.PAL import Palette
-from Libs.GRP import CacheGRP, frame_to_photo
+from Libs.GRP import CacheGRP, frame_to_photo, rle_outline, OUTLINE_SELF
 from Libs.IScriptBIN import IScriptBIN
 
 from Tkinter import *
@@ -1682,18 +1682,22 @@ class SpritesTab(DATTab):
 			if self.showpreview.get():
 				i = int(self.selentry.get())
 				if self.selentry['state'] == NORMAL:
-					image = self.toplevel.grp('Units','unit','thingy','o%s%s.grp' % (['','d'][i/10],['022','032','048','062','072','094','110','122','146','224'][i%10]))
-					if image:
-						y = 130+int(self.vertpos.get())
-						self.preview.create_image(130, y, image=image[0])
-						w = 3*int(self.boxes.get())
-						hp = [130-(w/2),y+6+(image[4]-image[3])/2]
-						self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
-						hp[0] += 1
-						hp[1] += 1
-						for n in range(int(self.boxes.get())):
-							self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
-							hp[0] += 3
+					image_id = 561 + i
+					g = self.toplevel.images.get_value(image_id,'GRPFile')
+					if g:
+						f = self.toplevel.imagestbl.strings[g-1][:-1]
+						image = self.toplevel.grp('Units','unit\\' + f, rle_outline, OUTLINE_SELF)
+						if image:
+							y = 130+int(self.vertpos.get())
+							self.preview.create_image(130, y, image=image[0])
+							w = 3*int(self.boxes.get())
+							hp = [130-(w/2),y+6+(image[4]-image[3])/2]
+							self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
+							hp[0] += 1
+							hp[1] += 1
+							for n in range(int(self.boxes.get())):
+								self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
+								hp[0] += 3
 				i = self.toplevel.sprites.get_value(self.id,'ImageFile')
 				g = self.toplevel.images.get_value(i,'GRPFile')
 				if g:
@@ -1704,7 +1708,7 @@ class SpritesTab(DATTab):
 						p = 'Units'
 						if self.toplevel.images.get_value(i, 'DrawFunction') == 9 and self.toplevel.images.get_value(i, 'Remapping') and self.toplevel.images.get_value(i, 'Remapping') < 4:
 							p = ['o','b','g'][self.toplevel.images.get_value(i, 'Remapping')-1] + 'fire'
-					sprite = self.toplevel.grp(p,'unit',f)
+					sprite = self.toplevel.grp(p,'unit\\' + f)
 					if sprite:
 						self.preview.create_image(130, 130, image=sprite[0])
 				self.previewing = i
@@ -2561,7 +2565,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 						p = 'Units'
 						if self.toplevel.images.get_value(i, 'DrawFunction') == 9 and self.toplevel.images.get_value(i, 'Remapping') and self.toplevel.images.get_value(i, 'Remapping') < 4:
 							p = ['o','b','g'][self.toplevel.images.get_value(i, 'Remapping')-1] + 'fire'
-					sprite = self.toplevel.grp(p,'unit',f)
+					sprite = self.toplevel.grp(p,'unit\\' + f)
 					if sprite:
 						self.preview.create_image(130, 130, image=sprite[0], tags='unit')
 				self.previewing = id
@@ -3594,10 +3598,9 @@ class PyDAT(Tk):
 						page.activate()
 		return err
 
-	def grp(self, pal, *path):
+	def grp(self, pal, path, draw_function=None, draw_info=None):
 		if not FOLDER and pal in PALETTES:
-			p = os.path.join(BASE_DIR,'Libs','MPQ',os.path.join(*path))
-			path = '\\'.join(path)
+			p = os.path.join(BASE_DIR,'Libs','MPQ',os.path.join(*path.split('\\')))
 			if not path in GRP_CACHE or not pal in GRP_CACHE[path]:
 				p = self.mpqhandler.get_file('MPQ:' + path)
 				try:
@@ -3607,7 +3610,7 @@ class PyDAT(Tk):
 					return None
 				if not path in GRP_CACHE:
 					GRP_CACHE[path] = {}
-				GRP_CACHE[path][pal] = frame_to_photo(PALETTES[pal], grp, 0, True)
+				GRP_CACHE[path][pal] = frame_to_photo(PALETTES[pal], grp, 0, True, draw_function=draw_function, draw_info=draw_info)
 			return GRP_CACHE[path][pal]
 
 	def unsaved(self):
