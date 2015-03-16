@@ -6,9 +6,29 @@ from tkMessageBox import *
 
 import re, os
 
+def loadsettings(program, default={}):
+	settings = default
+	try:
+		settings.update(eval(file(os.path.join(BASE_DIR,'Settings','%s.txt' % program), 'r').read(),{}))
+	except IOError, e:
+		if e.args[0] != 2:
+			raise
+	return settings
+
+PYMS_SETTINGS = loadsettings('PyMS',{'remindme':1})
+
+SC_DIR = settings.get('scdir')
+if win_reg:
+	try:
+		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
+		SC_DIR = QueryValueEx(h, 'InstallPath')[0]
+	except:
+		pass
+	if SC_DIR and not os.path.isdir(SC_DIR):
+		SC_DIR = None
+
 def check_update(p):
-	settings = loadsettings('PyMS',{'remindme':1})
-	if settings['remindme'] == 1 or settings['remindme'] != PyMS_LONG_VERSION:
+	if PYMS_SETTINGS['remindme'] == 1 or PYMS_SETTINGS['remindme'] != PyMS_LONG_VERSION:
 		try:
 			d = urllib.urlopen('http://www.broodwarai.com/PyMS/update.txt').read()
 		except:
@@ -46,15 +66,6 @@ def savesize(window, settings, setting='window'):
 	if z:
 		window.wm_state('normal')
 	settings[setting] = window.winfo_geometry() + z
-
-def loadsettings(program, default={}):
-	settings = default
-	try:
-		settings.update(eval(file(os.path.join(BASE_DIR,'Settings','%s.txt' % program), 'r').read(),{}))
-	except IOError, e:
-		if e.args[0] != 2:
-			raise
-	return settings
 
 def pprint(obj, depth=0, max=2):
 	depth += 1
@@ -544,7 +555,10 @@ class MPQSettings(Frame):
 					h = SFileOpenArchive(i)
 					if not SFInvalidHandle(h):
 						SFileCloseFile(h)
-						self.mpqs.insert([0,-1][n == END],i)
+						if n == END:
+							self.mpqs.append(i)
+						else:
+							self.mpqs.insert(int(n),i)
 						self.listbox.insert(n,i)
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(s)
@@ -566,12 +580,25 @@ class MPQSettings(Frame):
 		self.setdlg.edited = True
 
 	def adddefault(self, key=None):
-		if SC_DIR:
+		global SC_DIR
+		scdir = SC_DIR
+		if not scdir:
+			scdir = tkFileDialog.askdirectory(parent=self, title='Choose StarCraft Directory')
+		if scdir and os.path.isdir(scdir):
 			a = []
-			for f in ['StarDat','BrooDat','Patch_rt']:
-				p = os.path.join(SC_DIR, '%s%smpq' % (f,os.extsep))
+			for f in ['Patch_rt','BrooDat','StarDat']:
+				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
 				if os.path.exists(p) and not p in self.mpqs:
 					a.append(p)
+			if len(a) == 3 and not SC_DIR:
+				SC_DIR = scdir
+				PYMS_SETTINGS['scdir'] = SC_DIR
+				try:
+					f = file(os.path.join(BASE_DIR,'Settings','PyMS.txt'),'w')
+					f.write(pprint(PYMS_SETTINGS))
+					f.close()
+				except:
+					pass
 			if a:
 				self.add(add=a)
 

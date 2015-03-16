@@ -38,7 +38,7 @@ for d in DATA_REFERENCE.keys():
 	DATA_CACHE[d] = [l.rstrip() for l in f.readlines()]
 	f.close()
 
-class UnitsDAT:
+class UnitsDAT(object):
 	format = [
 		[[],1],
 		[[],2],

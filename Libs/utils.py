@@ -19,15 +19,7 @@ else:
 	BASE_DIR = os.path.dirname(os.path.dirname(unicode(__file__, sys.getfilesystemencoding())))
 if os.path.exists(BASE_DIR):
 	os.chdir(BASE_DIR)
-SC_DIR = ''
-if win_reg:
-	try:
-		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
-		SC_DIR = QueryValueEx(h, 'InstallPath')[0]
-	except:
-		pass
-	if not os.path.exists(SC_DIR):
-		SC_DIR = ''
+
 couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
 ARROW = None

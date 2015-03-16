@@ -422,7 +422,7 @@ class DATTab(NotebookTab):
 					for dv in vals:
 						if (isstr(dv) and dat.get_value(id, dv) == val) or (isinstance(dv, tuple) and val >= dat.get_value(id,dv[0]) and val <= dat.get_value(id,dv[1])):
 							ref = DATA_CACHE[dat.idfile][id]
-							if self.toplevel.settings.get('customlabels',0) and isinstance(dat, UnitsDAT):
+							if self.toplevel.settings.get('customlabels',0) and type(dat) == UnitsDAT:
 								ref = decompile_string(self.toplevel.stat_txt.strings[id])
 							self.listbox.insert(END, '%s entry %s: %s' % (dat.datname, id, ref))
 							break
@@ -3384,73 +3384,86 @@ class PyDAT(Tk):
 			portdatatbl = TBL()
 			mapdatatbl = TBL()
 			cmdicon = CacheGRP()
-			iscriptbin = IScriptBIN()
 			stat_txt.load_file(self.mpqhandler.get_file(self.settings['stat_txt']))
 			imagestbl.load_file(self.mpqhandler.get_file(self.settings['imagestbl']))
 			sfxdatatbl.load_file(self.mpqhandler.get_file(self.settings['sfxdatatbl']))
 			portdatatbl.load_file(self.mpqhandler.get_file(self.settings['portdatatbl']))
 			mapdatatbl.load_file(self.mpqhandler.get_file(self.settings['mapdatatbl']))
 			cmdicon.load_file(self.mpqhandler.get_file(self.settings['cmdicons']))
-			iscriptbin.load_file(self.mpqhandler.get_file(self.settings['iscriptbin']))
 		except PyMSError, e:
 			err = e
 		else:
+			units = UnitsDAT(stat_txt)
+			weapons = WeaponsDAT(stat_txt)
+			flingy = FlingyDAT(stat_txt)
+			sprites = SpritesDAT(stat_txt)
+			images = ImagesDAT(imagestbl)
+			upgrades = UpgradesDAT(stat_txt)
+			technology = TechDAT(stat_txt)
+			sounds = SoundsDAT(sfxdatatbl)
+			portraits = PortraitDAT(portdatatbl)
+			campaigns = CampaignDAT(mapdatatbl)
+			orders = OrdersDAT(stat_txt)
+			defaults = [
+				(units, UnitsDAT, stat_txt),
+				(weapons, WeaponsDAT, stat_txt),
+				(flingy, FlingyDAT, stat_txt),
+				(sprites, SpritesDAT, stat_txt),
+				(images, ImagesDAT, imagestbl),
+				(upgrades, UpgradesDAT, stat_txt),
+				(technology, TechDAT, stat_txt),
+				(sounds, SoundsDAT, sfxdatatbl),
+				(portraits, PortraitDAT, portdatatbl),
+				(campaigns, CampaignDAT, mapdatatbl),
+				(orders, OrdersDAT, stat_txt),
+			]
+			missing = []
+			defaultmpqs = MPQHandler()
+			defaultmpqs.add_defaults()
+			defaultmpqs.open_mpqs()
+			for v,c,t in defaults:
+				n = c.datname
+				try:
+					v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, True))
+				except:
+					try:
+						v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, False))
+					except PyMSError, e:
+						err = e
+						break
+			if not err:
+				iscriptbin = IScriptBIN(weapons, flingy, images, sprites, sounds, stat_txt, imagestbl, sfxdatatbl)
+				iscriptbin.load_file(self.mpqhandler.get_file(self.settings['iscriptbin']))
+			defaultmpqs.close_mpqs()
+		self.mpqhandler.close_mpqs()
+		if not err:
 			self.stat_txt = stat_txt
 			self.imagestbl = imagestbl
 			self.sfxdatatbl = sfxdatatbl
 			self.portdatatbl = portdatatbl
 			self.mapdatatbl = mapdatatbl
 			self.cmdicon = cmdicon
+			self.units = units
+			self.weapons = weapons
+			self.flingy = flingy
+			self.sprites = sprites
+			self.images = images
+			self.upgrades = upgrades
+			self.technology = technology
+			self.sounds = sounds
+			self.portraits = portraits
+			self.campaigns = campaigns
+			self.orders = orders
 			self.iscriptbin = iscriptbin
-			if not err:
-				if isinstance(self.dattabs.active, UnitsTab):
-					self.dattabs.active.activate()
-				if self.defaults:
-					self.updateiscripts()
-			if not self.defaults:
-				self.units = UnitsDAT(self.stat_txt)
-				self.weapons = WeaponsDAT(self.stat_txt)
-				self.flingy = FlingyDAT(self.stat_txt)
-				self.sprites = SpritesDAT(self.stat_txt)
-				self.images = ImagesDAT(self.imagestbl)
-				self.upgrades = UpgradesDAT(self.stat_txt)
-				self.technology = TechDAT(self.stat_txt)
-				self.sounds = SoundsDAT(self.sfxdatatbl)
-				self.portraits = PortraitDAT(self.portdatatbl)
-				self.campaigns = CampaignDAT(self.mapdatatbl)
-				self.orders = OrdersDAT(self.stat_txt)
-				defaults = [
-					(self.units, UnitsDAT, self.stat_txt),
-					(self.weapons, WeaponsDAT, self.stat_txt),
-					(self.flingy, FlingyDAT, self.stat_txt),
-					(self.sprites, SpritesDAT, self.stat_txt),
-					(self.images, ImagesDAT, self.imagestbl),
-					(self.upgrades, UpgradesDAT, self.stat_txt),
-					(self.technology, TechDAT, self.stat_txt),
-					(self.sounds, SoundsDAT, self.sfxdatatbl),
-					(self.portraits, PortraitDAT, self.portdatatbl),
-					(self.campaigns, CampaignDAT, self.mapdatatbl),
-					(self.orders, OrdersDAT, self.stat_txt),
-				]
-				missing = []
-				defaultmpqs = MPQHandler()
-				defaultmpqs.add_defaults()
-				defaultmpqs.open_mpqs()
-				for v,c,t in defaults:
-					n = c.datname
-					try:
-						v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, True))
-					except:
-						try:
-							v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, False))
-						except PyMSError, e:
-							err = e
-							break
-					self.dats[n] = v
-					self.defaults[n] = c(t)
-					self.defaults[n].entries = ccopy(v.entries)
-				defaultmpqs.close_mpqs()
-		self.mpqhandler.close_mpqs()
+			for v,c,t in defaults:
+				n = c.datname
+				self.dats[n] = v
+				self.defaults[n] = c(t)
+				self.defaults[n].entries = ccopy(v.entries)
+			if self.dattabs.active:
+				self.dattabs.active.activate()
+			if self.dattabs.pages:
+				self.updateiscripts()
 		return err
 
 	def updateiscripts(self):
