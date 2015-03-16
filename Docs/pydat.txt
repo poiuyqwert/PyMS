@@ -3,6 +3,7 @@ PyDAT v1.12
 PyDAT is used to convert DAT (units.dat, weapons.dat, flingy.dat, sprites.dat, images.dat, upgrades.dat, techdata.dat, sfxdata.dat, portdata.dat, mapdata.dat, orders.dat) to and from TXT files.
 	Changes	changes
 +PyDAT v1.12
+ -Fixed default arr\ tbl paths
  -Added "Enter" key binding for ID Jump
  -Fixed "Import Scripts" and "Export Scripts" and renamed them to "Import from TXT" and "Export to TXT" for clarity
  -Fixed bug with missing customlabels setting

@@ -527,9 +527,9 @@ class IScriptBIN:
 		if stat_txt == None:
 			stat_txt = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'stat_txt.tbl')
 		if imagestbl == None:
-			imagestbl = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'images.tbl')
+			imagestbl = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'images.tbl')
 		if sfxdatatbl == None:
-			sfxdatatbl = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'sfxdata.tbl')
+			sfxdatatbl = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'sfxdata.tbl')
 		self.headers = {}
 		self.offsets = {}
 		self.code = odict()

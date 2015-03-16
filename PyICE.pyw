@@ -1624,8 +1624,8 @@ class PyICE(Tk):
 		self.settings = loadsettings('PyICE',
 			{
 				'stat_txt':'MPQ:rez\\stat_txt.tbl',
-				'imagestbl':'MPQ:rez\\images.tbl',
-				'sfxdatatbl':'MPQ:rez\\sfxdata.tbl',
+				'imagestbl':'MPQ:arr\\images.tbl',
+				'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
 				'unitsdat':'MPQ:arr\\units.dat',
 				'weaponsdat':'MPQ:arr\\weapons.dat',
 				'flingydat':'MPQ:arr\\flingy.dat',
@@ -2147,8 +2147,8 @@ def main():
 		p.add_option('-p', '--sprites', help="Specify your own sprites.dat file for sprite data lookups [default: Libs\\MPQ\\arr\\sprite.dat]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'sprites.dat'))
 		p.add_option('-f', '--sfxdata', help="Specify your own sfxdata.dat file for sound data lookups [default: Libs\\MPQ\\arr\\sfxdata.dat]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'sfxdata.dat'))
 		p.add_option('-x', '--stattxt', help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez','stat_txt.tbl'))
-		p.add_option('-m', '--imagestbl', help="Used to signify the images.tbl file to use [default: Libs\\MPQ\\rez\\images.tbl]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'images.tbl'))
-		p.add_option('-t', '--sfxdatatbl', help="Used to signify the sfxdata.tbl file to use [default: Libs\\MPQ\\rez\\sfxdata.tbl]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'sfxdata.tbl'))
+		p.add_option('-m', '--imagestbl', help="Used to signify the images.tbl file to use [default: Libs\\MPQ\\arr\\images.tbl]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'images.tbl'))
+		p.add_option('-t', '--sfxdatatbl', help="Used to signify the sfxdata.tbl file to use [default: Libs\\MPQ\\arr\\sfxdata.tbl]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'sfxdata.tbl'))
 		p.add_option('-s', '--scripts', help="A list of iscript ID's to decompile (seperated by commas) [default: All]", default='')
 		p.add_option('-b', '--iscript', help="Used to signify the base iscript.bin file to compile on top of", default='')
 		p.add_option('-r', '--reference', action='store_true', help="When decompiling, put a reference for commands and parameters [default: Off]", default=False)

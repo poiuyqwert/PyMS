@@ -363,7 +363,7 @@ class DATTab(NotebookTab):
 			if self.file:
 				self.toplevel.status.set(self.file)
 			else:
-				self.toplevel.status.set(os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez',  self.dat.datname))
+				self.toplevel.status.set(os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr',  self.dat.datname))
 			self.loadsave()
 
 	def deactivate(self):
@@ -3160,10 +3160,10 @@ class PyDAT(Tk):
 		self.settings = loadsettings('PyDAT',
 			{
 				'stat_txt':'MPQ:rez\\stat_txt.tbl',
-				'imagestbl':'MPQ:rez\\images.tbl',
-				'sfxdatatbl':'MPQ:rez\\sfxdata.tbl',
-				'portdatatbl':'MPQ:rez\\portdata.tbl',
-				'mapdatatbl':'MPQ:rez\\mapdata.tbl',
+				'imagestbl':'MPQ:arr\\images.tbl',
+				'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
+				'portdatatbl':'MPQ:arr\\portdata.tbl',
+				'mapdatatbl':'MPQ:arr\\mapdata.tbl',
 				'cmdicons':'MPQ:unit\\cmdbtns\\cmdicons.grp',
 				'iscriptbin':'MPQ:scripts\\iscript.bin',
 			}

@@ -731,7 +731,7 @@ class ImagesDAT(UnitsDAT):
 	
 	def __init__(self, grps=None):
 		if grps == None:
-			grps = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'images.tbl')
+			grps = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'images.tbl')
 		UnitsDAT.__init__(self, grps)
 		self.data = [
 			[[self.stattxt_value,'GRP File Path: '],''],
@@ -918,7 +918,7 @@ class SoundsDAT(UnitsDAT):
 	
 	def __init__(self, sfx=None):
 		if sfx == None:
-			sfx = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'sfxdata.tbl')
+			sfx = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'sfxdata.tbl')
 		UnitsDAT.__init__(self, sfx)
 		self.data = [
 			[[self.stattxt_value,'Sound File Path'],''],
@@ -954,7 +954,7 @@ class PortraitDAT(UnitsDAT):
 	
 	def __init__(self, ports=None):
 		if ports == None:
-			ports = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'portdata.tbl')
+			ports = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'portdata.tbl')
 		UnitsDAT.__init__(self, ports)
 		self.data = [
 			[[self.stattxt_value,'Portrait File Path'],''],
@@ -984,7 +984,7 @@ class CampaignDAT(UnitsDAT):
 	
 	def __init__(self, maps=None):
 		if maps == None:
-			maps = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'rez', 'mapdata.tbl')
+			maps = os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'mapdata.tbl')
 		UnitsDAT.__init__(self, maps)
 		self.data = [
 			[[self.stattxt_value,'Map File Path'],'']
