@@ -22,10 +22,10 @@ LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
 FRAME_DELAY = 42
 
-def z_position(y, elevation):
+def z_position(y, elevation, img_offset=0):
 	if elevation < 2:
 		return elevation
-	return (int(y / 32.0) + 1) * 256 + elevation
+	return ((int(y / 32.0) + 1) * (256*256)) + (128 + elevation * 256) + img_offset
 def z_position_unit(unit, unitsdat):
 	elevation = unitsdat.get_value(unit.unit_id, 'ElevationLevel')
 	return z_position(unit.position[1], elevation)	
@@ -60,7 +60,7 @@ class BWImage:
 		else:
 			do_purge(BWImage.FRAME_CACHE, keys)
 
-	def __init__(self, ui, ref, image_id, pos, parent=None, grpPath='', elevation=4, offset=(0,0), unit_ref=None):
+	def __init__(self, ui, ref, image_id, pos, parent=None, grpPath='', elevation=4, pos_offset=(0,0), elevation_offset=0, unit_ref=None):
 		self.ui = ui
 		self.ref = ref
 		self.unit_ref = unit_ref
@@ -150,12 +150,13 @@ class BWImage:
 # dogrddamage
 		}
 		self.position = list(pos)
-		self.offset = list(offset)
+		self.position_offset = list(pos_offset)
 		self.frame = 0
 		self.grpFile = None
 		self.grp = None
 		self.player_color_id = None
 		self.elevation = elevation
+		self.elevation_offset = elevation_offset
 		self.pal = 'Terrain'
 		string_id = self.ui.imagesdat.get_value(self.image_id,'GRPFile')
 		if string_id:
@@ -195,10 +196,10 @@ class BWImage:
 							self.draw_info.append(self.ui.palettes['Units'][i])
 
 	def z_position(self):
-		return z_position(self.position[1], self.elevation)
+		return z_position(self.position[1], self.elevation, self.elevation_offset)
 
 	def render_position(self):
-		return (self.position[0] + self.offset[0], self.position[1] + self.offset[1])
+		return (self.position[0] + self.position_offset[0], self.position[1] + self.position_offset[1])
 
 	def get_grp(self):
 		if self.grp == None:
@@ -279,7 +280,7 @@ class BWImage:
 		return True
 
 	def op_setvertpos(self, y_offset):
-		self.offset[1] = y_offset
+		self.position_offset[1] = y_offset
 		return True
 
 	def op_wait(self, ticks):
@@ -296,14 +297,14 @@ class BWImage:
 
 	def op_imgol(self, image_id, offset_x,offset_y):
 		ref = self.ref + '-child%d' % len(self.children)
-		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation+1, (offset_x,offset_y))
+		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation, (offset_x,offset_y), 1)
 		self.children.append(image)
 		self.ui.maplayer_images.add_image(image)
 		return True
 
 	def op_imgul(self, image_id, offset_x,offset_y):
 		ref = self.ref + '-child%d' % len(self.children)
-		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation-1, (offset_x,offset_y))
+		image = BWImage(self.ui, ref, image_id, (self.position[0], self.position[1]), self, 'unit\\', self.elevation, (offset_x,offset_y), -1)
 		self.children.append(image)
 		self.ui.maplayer_images.add_image(image)
 		return True
@@ -757,7 +758,7 @@ class EditLayerUnits(EditLayer):
 					selection_image_id = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleImage')
 					y_offset = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleOffset')
 					self.selection_image_id = selection_image_id
-					self.selection_image = BWImage(self.ui, 'sel%d' % selection_image_id, 561 + selection_image_id, (unit.position[0], unit.position[1]), self.selected_image, 'unit\\', elevation=0, offset=(0,y_offset))
+					self.selection_image = BWImage(self.ui, 'sel%d' % selection_image_id, 561 + selection_image_id, (unit.position[0], unit.position[1]), self.selected_image, 'unit\\', elevation=0, pos_offset=(0,y_offset))
 					self.ui.maplayer_images.add_image(self.selection_image)
  
 class EditLayerSprites(EditLayer):
