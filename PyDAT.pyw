@@ -336,6 +336,9 @@ class DATTab(NotebookTab):
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 
+	def files_updated(self):
+		pass
+
 	def activate(self):
 		if self.data:
 			self.toplevel.listbox.delete(0,END)
@@ -554,6 +557,9 @@ class DATUnitsTab(NotebookTab):
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 
+	def files_updated(self):
+		pass
+
 	def activate(self):
 		self.loadsave()
 
@@ -640,7 +646,8 @@ class OrdersTab(DATTab):
 		Label(f, text='Label:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.label, stattxt, self.labelentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.labels = DropDown(f, self.label, stattxt, self.labelentry, width=25)
+		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Label', 'OrdLabel')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -746,6 +753,12 @@ class OrdersTab(DATTab):
 			'ObscuredOrder':self.obscured,
 		}
 
+	def files_updated(self):
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry.range[1] = len(stattxt)-1
+		self.labels.setentries(stattxt)
+		self.labelentry.editvalue()
+
 	def drawpreview(self):
 		self.preview.delete(ALL)
 		if 'Icons' in PALETTES and self.toplevel.cmdicon:
@@ -780,7 +793,8 @@ class MapsTab(DATTab):
 		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.missionentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.missiondd, mapdata, self.missionentry, width=30, blank=65).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.missions = DropDown(f, self.missiondd, mapdata, self.missionentry, width=30, blank=65)
+		self.missions.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Mission Dir', 'MapFile')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -789,6 +803,12 @@ class MapsTab(DATTab):
 		frame.pack(side=LEFT, fill=Y)
 
 		self.values = {'MapFile':self.missionentry}
+
+	def files_updated(self):
+		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
+		self.missionentry.range[1] = len(mapdata)
+		self.missions.setentries(mapdata)
+		self.missionentry.editvalue()
 
 class PortraitsTab(DATTab):
 	data = 'Portdata.txt'
@@ -808,7 +828,8 @@ class PortraitsTab(DATTab):
 		Label(f, text='Portrait Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.portraitentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.portraitdd, portdata, self.portraitentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.portraits = DropDown(f, self.portraitdd, portdata, self.portraitentry, width=30)
+		self.portraits.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Portrait Dir', 'PortFile')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -847,6 +868,12 @@ class PortraitsTab(DATTab):
 			'Unknown':self.unknown,
 		}
 
+	def files_updated(self):
+		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
+		self.portraitentry.range[1] = len(portdata)-1
+		self.portraits.setentries(portdata)
+		self.portraitentry.editvalue()
+
 class SoundsTab(DATTab):
 	data = 'Sfxdata.txt'
 
@@ -865,9 +892,9 @@ class SoundsTab(DATTab):
 		Label(f, text='Sound File:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.soundentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		d = DropDown(f, self.sounddd, sfxdata, self.changesound, width=30)
-		self.soundentry.callback = d.set
-		d.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.sounds = DropDown(f, self.sounddd, sfxdata, self.changesound, width=30)
+		self.soundentry.callback = self.sounds.set
+		self.sounds.pack(side=LEFT, fill=X, expand=1, padx=2)
 		i = PhotoImage(file=os.path.join(BASE_DIR,'Images','fwp.gif'))
 		self.playbtn = Button(f, image=i, width=20, height=20, command=self.play)
 		self.playbtn.image = i
@@ -930,6 +957,12 @@ class SoundsTab(DATTab):
 			'Volume':self.volume,
 		}
 
+	def files_updated(self):
+		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		self.soundentry.range[1] = len(sfxdata)-1
+		self.sounds.setentries(sfxdata)
+		self.soundentry.editvalue()
+
 	def changesound(self, n=None):
 		if n == None:
 			n = self.soundentry.get()
@@ -956,11 +989,13 @@ class TechnologyTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
-		self.labelentry = IntegerVar(0)
+
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.labeldd = IntVar()
+
 		self.item = None
 
 		l = LabelFrame(frame, text='Technology Display:')
@@ -977,7 +1012,8 @@ class TechnologyTab(DATTab):
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.labeldd, stattxt, self.labelentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.labels = DropDown(f, self.labeldd, stattxt, self.labelentry, width=30)
+		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Technology Label', 'TechLabel')
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
@@ -1081,6 +1117,12 @@ class TechnologyTab(DATTab):
 			'BroodwarOnly':self.broodwar,
 		}
 
+	def files_updated(self):
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry.range[1] = len(stattxt)-1
+		self.labels.setentries(stattxt)
+		self.labelentry.editvalue()
+
 	def selicon(self, n, t=0):
 		if t:
 			self.icondd.set(n)
@@ -1125,10 +1167,10 @@ class UpgradesTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
-		self.labelentry = IntegerVar(0)
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.labeldd = IntVar()
 		self.item = None
 
@@ -1148,7 +1190,8 @@ class UpgradesTab(DATTab):
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.labeldd, stattxt, self.labelentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.labels = DropDown(f, self.labeldd, stattxt, self.labelentry, width=30)
+		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Upgrade Label', 'UpgLabel')
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
@@ -1279,6 +1322,12 @@ class UpgradesTab(DATTab):
 			'BroodwarOnly':self.broodwar,
 		}
 
+	def files_updated(self):
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry.range[1] = len(stattxt)-1
+		self.labels.setentries(stattxt)
+		self.labelentry.editvalue()
+
 	def selicon(self, n, t=0):
 		if t:
 			self.icondd.set(n)
@@ -1326,9 +1375,10 @@ class ImagesTab(DATTab):
 		frame = Frame(j)
 
 		grps = ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
-		self.grpentry = IntegerVar(0, [0, 929])
+		self.grpentry = IntegerVar(0, [0, len(grps)-1])
 		self.grpdd = IntVar()
-		self.iscriptentry = IntegerVar(0, [0, 411])
+		iscripts = DATA_CACHE['IscriptIDList.txt']
+		self.iscriptentry = IntegerVar(0, [0, len(iscripts)-1])
 		self.iscriptdd = IntVar()
 
 		l = LabelFrame(frame, text='Image:')
@@ -1337,7 +1387,8 @@ class ImagesTab(DATTab):
 		Label(f, text='GRP:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.grpentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.grpdd, grps, self.grpentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
+		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.checkreference(v,c)).pack(side=LEFT, padx=2)
 		tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
@@ -1345,7 +1396,7 @@ class ImagesTab(DATTab):
 		Label(f, text='Iscript ID:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iscriptentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.iscripts = DropDown(f, self.iscriptdd, DATA_CACHE['IscriptIDList.txt'], self.iscriptentry, width=30)
+		self.iscripts = DropDown(f, self.iscriptdd, iscripts, self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.checkreference(v,c)).pack(side=LEFT, padx=2)
 		tip(f, 'Iscript ID', 'ImgIscriptID')
@@ -1474,6 +1525,29 @@ class ImagesTab(DATTab):
 			'LandingDustOverlay':self.landingentry,
 			'LiftOffDustOverlay':self.liftoffentry,
 		}
+
+	def files_updated(self):
+		entries = []
+		last = -1
+		for id in self.toplevel.iscriptbin.headers.keys():
+			if id-last > 1:
+				entries.extend(['*Unused*'] * (id-last-1))
+			if id in self.toplevel.iscriptbin.extrainfo:
+				n = self.toplevel.iscriptbin.extrainfo[id]
+			elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
+				n = DAT.DATA_CACHE['IscriptIDList.txt'][id]
+			else:
+				n = 'Unnamed Custom Entry'
+			entries.append(n)
+			last = id
+		self.iscripts.setentries(entries)
+		self.iscriptentry.range[1] = len(entries)-1
+		self.iscriptentry.editvalue()
+
+		grps = ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
+		self.grps.setentries(grps)
+		self.grpentry.range[1] = len(grps)-1
+		self.grpentry.editvalue()
 
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
@@ -1859,14 +1933,16 @@ class WeaponsTab(DATTab):
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=4).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.label, stattxt, self.labelentry, width=28).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.labels = DropDown(f, self.label, stattxt, self.labelentry, width=28)
+		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Label', 'WeapLabel')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Error Msg:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.errormsgentry, font=couriernew, width=4).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.errormsg, stattxt, self.errormsgentry, width=28).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.errormsgs = DropDown(f, self.errormsg, stattxt, self.errormsgentry, width=28)
+		self.errormsgs.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Error Message', 'WeapError')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -2056,6 +2132,15 @@ class WeaponsTab(DATTab):
 			'TargetErrorMessage':self.errormsg,
 			'Icon':self.iconentry
 		}
+
+	def files_updated(self):
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		self.labelentry.range[1] = len(stattxt)-1
+		self.labels.setentries(stattxt)
+		self.labelentry.editvalue()
+		self.errormsgentry.range[1] = len(stattxt)-1
+		self.errormsgs.setentries(stattxt)
+		self.errormsgentry.editvalue()
 
 	def updatetime(self, num, type):
 		if type:
@@ -2249,7 +2334,8 @@ class StarEditUnitsTab(DATUnitsTab):
 		Label(f, text='Rank/Sublabel:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.rankentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.rankdd, ranks, self.rankentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.ranks = DropDown(f, self.rankdd, ranks, self.rankentry)
+		self.ranks.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Rank/Sublabel', 'UnitRank')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -2290,6 +2376,13 @@ class StarEditUnitsTab(DATUnitsTab):
 			'StarEditGroupFlags':[None,None,None,self.men,self.building,self.factory,self.independent,self.neutral],
 			'StarEditAvailabilityFlags':[self.nonneutral,self.unitlisting,self.missionbriefing,self.playersettings,self.allraces,self.setdoodadstate,self.nonlocationtriggers,self.unitherosettings,self.locationtriggers,self.broodwaronly,None,None,None,None,None,None],
 		}
+
+	def files_updated(self):
+		r = min(255,len(self.toplevel.stat_txt.strings)-1302)
+		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
+		self.rankentry.range[1] = len(ranks)-1
+		self.ranks.setentries(ranks)
+		self.rankentry.editvalue()
 
 	def loadsave(self, save=False):
 		DATUnitsTab.loadsave(self, save)
@@ -2501,91 +2594,105 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.toplevel = toplevel
 		frame = Frame(self)
 
-		self.readyentry = IntegerVar(0, [0,1143])
+		sfxdata = DATA_CACHE['Sfxdata.txt']
+		# if self.toplevel.settings.get('customlabels',0):
+		# 	sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		self.readyentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.readydd = IntVar()
-		self.firstyesentry = IntegerVar(0, [0,1143])
+		self.firstyesentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.firstyesdd = IntVar()
-		self.lastyesentry = IntegerVar(0, [0,1143])
+		self.lastyesentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.lastyesdd = IntVar()
-		self.firstwhatentry = IntegerVar(0, [0,1143])
+		self.firstwhatentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.firstwhatdd = IntVar()
-		self.lastwhatentry = IntegerVar(0, [0,1143])
+		self.lastwhatentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.lastwhatdd = IntVar()
-		self.firstannoyedentry = IntegerVar(0, [0,1143])
+		self.firstannoyedentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.firstannoyeddd = IntVar()
-		self.lastannoyedentry = IntegerVar(0, [0,1143])
+		self.lastannoyedentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.lastannoyeddd = IntVar()
 
-		sfx = [
-			#('Ready', self.readyentry, self.readydd, 'UnitSndReady'),
-			#('Yes (First)', self.firstyesentry, self.firstyesdd, 'UnitSndYesStart'),
-			#('Yes (Last)', self.lastyesentry, self.lastyesdd, 'UnitSndYesEnd'),
-			('What (First)', self.firstwhatentry, self.firstwhatdd, 'UnitSndWhatStart'),
-			('What (Last)', self.lastwhatentry, self.lastwhatdd, 'UnitSndWhatEnd'),
-			#('Annoyed (First)', self.firstannoyedentry, self.firstannoyeddd, 'UnitSndAnnStart'),
-			#('Annoyed (Last)', self.lastannoyedentry, self.lastannoyeddd, 'UnitSndAnnEnd'),
-		]
 		l = LabelFrame(frame, text='Sounds:')
 		s = Frame(l)
+
 		f = Frame(s)
 		Label(f, text='Ready:', width=13, anchor=E).pack(side=LEFT)
 		self.readyentryw = Entry(f, textvariable=self.readyentry, font=couriernew, width=4)
 		self.readyentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.readyddw = DropDown(f, self.readydd, DATA_CACHE['Sfxdata.txt'], self.readyentry, width=30)
+		self.readyddw = DropDown(f, self.readydd, sfxdata, self.readyentry, width=30)
 		self.readyddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.readybtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.readydd: self.jump(t,i))
 		self.readybtnw.pack(side=LEFT)
 		tip(f, 'Ready', 'UnitSndReady')
 		f.pack(fill=X)
+
 		f = Frame(s)
 		Label(f, text='Yes (First):', width=13, anchor=E).pack(side=LEFT)
 		self.firstyesentryw = Entry(f, textvariable=self.firstyesentry, font=couriernew, width=4)
 		self.firstyesentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.firstyesddw = DropDown(f, self.firstyesdd, DATA_CACHE['Sfxdata.txt'], self.firstyesentry, width=30)
+		self.firstyesddw = DropDown(f, self.firstyesdd, sfxdata, self.firstyesentry, width=30)
 		self.firstyesddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.firstyesbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.firstyesdd: self.jump(t,i))
 		self.firstyesbtnw.pack(side=LEFT)
 		tip(f, 'Yes (First)', 'UnitSndYesStart')
 		f.pack(fill=X)
+
 		f = Frame(s)
 		Label(f, text='Yes (Last):', width=13, anchor=E).pack(side=LEFT)
 		self.lastyesentryw = Entry(f, textvariable=self.lastyesentry, font=couriernew, width=4)
 		self.lastyesentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.lastyesddw = DropDown(f, self.lastyesdd, DATA_CACHE['Sfxdata.txt'], self.lastyesentry, width=30)
+		self.lastyesddw = DropDown(f, self.lastyesdd, sfxdata, self.lastyesentry, width=30)
 		self.lastyesddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.lastyesbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.lastyesdd: self.jump(t,i))
 		self.lastyesbtnw.pack(side=LEFT)
 		tip(f, 'Yes (Last)', 'UnitSndYesEnd')
 		f.pack(fill=X)
-		for t,e,d,h in sfx:
-			f = Frame(s)
-			Label(f, text=t + ':', width=13, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=4).pack(side=LEFT)
-			Label(f, text='=').pack(side=LEFT)
-			DropDown(f, d, DATA_CACHE['Sfxdata.txt'], e, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
-			Button(f, text='Jump ->', command=lambda t='Sfxdata',i=d: self.jump(t,i)).pack(side=LEFT)
-			tip(f, t, h)
-			f.pack(fill=X)
+
+		f = Frame(s)
+		Label(f, text='What (First):', width=13, anchor=E).pack(side=LEFT)
+		self.firstwhatentryw = Entry(f, textvariable=self.firstwhatentry, font=couriernew, width=4)
+		self.firstwhatentryw.pack(side=LEFT)
+		Label(f, text='=').pack(side=LEFT)
+		self.firstwhatddw = DropDown(f, self.firstwhatdd, sfxdata, self.firstwhatentry, width=30)
+		self.firstwhatddw.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.firstwhatbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.firstwhatdd: self.jump(t,i))
+		self.firstwhatbtnw.pack(side=LEFT)
+		tip(f, 'What (First)', 'UnitSndWhatStart')
+		f.pack(fill=X)
+
+		f = Frame(s)
+		Label(f, text='What (Last):', width=13, anchor=E).pack(side=LEFT)
+		self.lastwhatentryw = Entry(f, textvariable=self.lastwhatentry, font=couriernew, width=4)
+		self.lastwhatentryw.pack(side=LEFT)
+		Label(f, text='=').pack(side=LEFT)
+		self.lastwhatddw = DropDown(f, self.lastwhatdd, sfxdata, self.lastwhatentry, width=30)
+		self.lastwhatddw.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.lastwhatbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.lastwhatdd: self.jump(t,i))
+		self.lastwhatbtnw.pack(side=LEFT)
+		tip(f, 'What (Last)', 'UnitSndWhatEnd')
+		f.pack(fill=X)
+
 		f = Frame(s)
 		Label(f, text='Annoyed (First):', width=13, anchor=E).pack(side=LEFT)
 		self.firstannoyedentryw = Entry(f, textvariable=self.firstannoyedentry, font=couriernew, width=4)
 		self.firstannoyedentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.firstannoyedddw = DropDown(f, self.firstannoyeddd, DATA_CACHE['Sfxdata.txt'], self.firstannoyedentry, width=30)
+		self.firstannoyedddw = DropDown(f, self.firstannoyeddd, sfxdata, self.firstannoyedentry, width=30)
 		self.firstannoyedddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.firstannoyedbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.firstannoyeddd: self.jump(t,i))
 		self.firstannoyedbtnw.pack(side=LEFT)
 		tip(f, 'Annoyed (First)', 'UnitSndAnnStart')
 		f.pack(fill=X)
+
 		f = Frame(s)
 		Label(f, text='Annoyed (Last):', width=13, anchor=E).pack(side=LEFT)
 		self.lastannoyedentryw = Entry(f, textvariable=self.lastannoyedentry, font=couriernew, width=4)
 		self.lastannoyedentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.lastannoyedddw = DropDown(f, self.lastannoyeddd, DATA_CACHE['Sfxdata.txt'], self.lastannoyedentry, width=30)
+		self.lastannoyedddw = DropDown(f, self.lastannoyeddd, sfxdata, self.lastannoyedentry, width=30)
 		self.lastannoyedddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.lastannoyedbtnw = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.lastannoyeddd: self.jump(t,i))
 		self.lastannoyedbtnw.pack(side=LEFT)
@@ -2605,6 +2712,12 @@ class SoundsUnitsTab(DATUnitsTab):
 			'YesSoundStart':self.firstyesentry,
 			'YesSoundEnd':self.lastyesentry,
 		}
+
+	def files_updated(self):
+		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		self.soundentry.range[1] = len(sfxdata)-1
+		self.sounds.setentries(sfxdata)
+		self.soundentry.editvalue()
 
 	def loadsave(self, save=False):
 		if not save and self.toplevel.units:
@@ -2713,6 +2826,9 @@ class AdvancedUnitsTab(DATUnitsTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
+		units = DATA_CACHE['Units.txt']
+		if self.toplevel.settings.get('customlabels',0):
+			units = [decompile_string(s) for s in self.toplevel.stat_txt.strings[:228]] + ['None']
 		self.infestentry = IntegerVar(0, [0,228])
 		self.infestdd = IntVar()
 		self.subunitoneentry = IntegerVar(0,[0,228])
@@ -2736,7 +2852,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.infestentryw = Entry(f, textvariable=self.infestentry, font=couriernew, width=3)
 		self.infestentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.infestddw = DropDown(f, self.infestdd, DATA_CACHE['Units.txt'], self.infestentry)
+		self.infestddw = DropDown(f, self.infestdd, units, self.infestentry)
 		self.infestddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.infestbtnw = Button(f, text='Jump ->', command=lambda t='Units',i=self.infestdd: self.jump(t,i))
 		self.infestbtnw.pack(side=LEFT)
@@ -2747,14 +2863,14 @@ class AdvancedUnitsTab(DATUnitsTab):
 		Label(f, text='Subunit 1:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunitoneentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.subunitone, DATA_CACHE['Units.txt'], self.subunitoneentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.subunitone, units, self.subunitoneentry).pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Subunit 1', 'UnitSub1')
 		f.pack(fill=X)
 		f = Frame(su)
 		Label(f, text='Subunit 2:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunittwoentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.subunittwo, DATA_CACHE['Units.txt'], self.subunittwoentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.subunittwo, units, self.subunittwoentry).pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Subunit 2', 'UnitSub2')
 		f.pack(fill=X)
 		f = Frame(su)
@@ -2798,6 +2914,12 @@ class AdvancedUnitsTab(DATUnitsTab):
 			'SpecialAbilityFlags':[self.building,self.addon,self.flyer,self.resourceminer,self.subunit,self.flyingbuilding,self.hero,self.regenerate,self.animatedidle,self.cloakable,self.twounitsinoneegg,self.singleentity,self.resourcedepot,self.resourcecontainter,self.robotic,self.detector,self.organic,self.requirescreep,self.unused,self.requirespsi,self.burrowable,self.spellcaster,self.permanentcloak,self.pickupitem,self.ignoresupplycheck,self.usemediumoverlays,self.uselargeoverlays,self.battlereactions,self.fullautoattack,self.invincible,self.mechanical,self.producesunits],
 			'Requirements':self.reqIndex,
 		}
+
+	def files_updated(self):
+		units = DATA_CACHE['Units.txt']
+		if self.parent.settings.get('customlabels',0):
+			units = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[:229]]
+		self.infestddw.setentries(units)
 		
 	def isFlagSet(self,category,value):
 		return (self.toplevel.units.get_value(self.parent.parent.id, category) & value) == value;
@@ -3152,6 +3274,11 @@ class UnitsTab(DATTab):
 			self.dattabs.add_tab(tab[1](self.dattabs, toplevel), tab[0])
 		self.dattabs.pack(fill=BOTH, expand=1)
 
+	def files_updated(self):
+		for tab in self.dattabs.pages:
+			page = tab[0]
+			page.files_updated()
+
 	def loadsave(self, save=False):
 		self.dattabs.active.loadsave(save)
 
@@ -3354,7 +3481,6 @@ class PyDAT(Tk):
 			self.mpqtbl(err=e)
 		for tab in tabs:
 			self.dattabs.add_tab(tab[1](self.dattabs, self), tab[0])
-		self.updateiscripts()
 
 		self.deiconify()
 
@@ -3460,32 +3586,13 @@ class PyDAT(Tk):
 				self.dats[n] = v
 				self.defaults[n] = c(t)
 				self.defaults[n].entries = ccopy(v.entries)
-			if self.dattabs.active:
-				self.dattabs.active.activate()
 			if self.dattabs.pages:
-				self.updateiscripts()
+				for tab in self.dattabs.pages.values():
+					page = tab[0]
+					page.files_updated()
+					if page == self.dattabs.active:
+						page.activate()
 		return err
-
-	def updateiscripts(self):
-		if self.iscriptbin:
-			t = self.dattabs.pages['Images'][0]
-			entries = []
-			last = -1
-			for id in self.iscriptbin.headers.keys():
-				if id-last > 1:
-					entries.extend(['*Unused*'] * (id-last-1))
-				if id in self.iscriptbin.extrainfo:
-					n = self.iscriptbin.extrainfo[id]
-				elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
-					n = DAT.DATA_CACHE['IscriptIDList.txt'][id]
-				else:
-					n = 'Unnamed Custom Entry'
-				entries.append(n)
-				last = id
-			t.iscripts.setentries(entries)
-			t.iscriptentry.range = [0,max(self.iscriptbin.headers.keys())]
-			if self.dattabs.active == t:
-				t.iscriptentry.editvalue()
 
 	def grp(self, pal, *path):
 		if not FOLDER and pal in PALETTES:

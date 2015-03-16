@@ -114,14 +114,19 @@ class TBL:
 		try:
 			n = struct.unpack('<H', data[:2])[0]
 			offsets = struct.unpack('<%sH' % n, data[2:2+2*n])
-			findlen = {}
-			for x in offsets:
-				findlen[x] = 1
-			findlen = findlen.keys() + [len(data)]
-			findlen.sort()
+			findlen = list(offsets) + [len(data)]
+			findlen.sort(reverse=True)
+			lengths = {}
+			for i in xrange(1,len(findlen)):
+				start = findlen[i]
+				if not start in lengths:
+					end = findlen[i-1]
+					lengths[start] = end-start
 			strings = []
-			for o in offsets:
-				strings.append(data[o:findlen[findlen.index(o)+1]])
+			for i in xrange(len(offsets)):
+				o = offsets[i]
+				l = lengths[o]
+				strings.append(data[o:o+l])
 			self.strings = strings
 		except:
 			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)

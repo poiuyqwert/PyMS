@@ -498,13 +498,16 @@ class DropDown(Frame):
 			Frame.__setitem__(self, item, value)
 
 	def setentries(self, entries):
+		selected = self.variable.get()
 		self.entries = list(entries)
 		self.listbox.delete(0,END)
 		for entry in entries:
 			self.listbox.insert(END, entry)
 		if self.blank != None:
 			self.listbox.insert(END, '')
-		self.listbox.see(self.variable.get())
+		if selected >= self.listbox.size():
+			selected = self.listbox.size()-1
+		self.listbox.see(selected)
 
 	def set(self, num):
 		self.change(num)
