@@ -67,12 +67,15 @@ def savesize(window, settings, setting='window'):
 		window.wm_state('normal')
 	settings[setting] = window.winfo_geometry() + z
 
-def pprint(obj, depth=0, max=2):
+def pprint(obj, depth=0, max=2, dict_sort=False):
 	depth += 1
 	string = ''
 	if isinstance(obj, dict) and max:
 		if obj:
 			string += '{\\\n'
+			keys = obj.keys()
+			if dict_sort:
+				keys.sort()
 			for key in obj:
 				string += '%s%s:' % ('\t'*depth, repr(key))
 				string += pprint(obj[key], depth, max-1)

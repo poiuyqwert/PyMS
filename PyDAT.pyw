@@ -309,6 +309,7 @@ class DATTab(NotebookTab):
 		self.file = None
 		self.listbox = None
 		self.entrycopy = None
+		self.edited = False
 		NotebookTab.__init__(self, parent)
 
 	def setuplistbox(self):
@@ -340,7 +341,7 @@ class DATTab(NotebookTab):
 		pass
 
 	def activate(self):
-		if self.data:
+		if self.dat:
 			self.toplevel.listbox.delete(0,END)
 			d = []
 			if self.toplevel.settings.get('customlabels',0):
@@ -382,12 +383,20 @@ class DATTab(NotebookTab):
 						for x,f in enumerate(v):
 							if f.get():
 								flags += 2 ** x
-						self.dat.set_value(self.id,n,flags)
+						if self.dat.get_value(self.id, n) != flags:
+							self.edited = True
+							self.dat.set_value(self.id,n,flags)
 					elif isinstance(v, tuple):
 						for x in v:
-							self.dat.set_value(self.id,n,x.get())
+							r = x.get()
+							if self.dat.get_value(self.id,n) != r:
+								self.edited = True
+								self.dat.set_value(self.id,n,r)
 					else:
-						self.dat.set_value(self.id,n,v.get())
+						r = v.get()
+						if self.dat.get_value(self.id,n) != r:
+							self.edited = True
+							self.dat.set_value(self.id,n,r)
 				else:
 					c = self.dat.get_value(self.id,n)
 					if isinstance(v, list):
@@ -396,19 +405,22 @@ class DATTab(NotebookTab):
 					else:
 						v.set(c)
 			self.checkreference()
+			if save and self.edited:
+				self.toplevel.action_states()
 
 	def unsaved(self):
-		file = self.file
-		if not file:
-			file = self.dat.datname
-		save = askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=YES, type=YESNOCANCEL)
-		if save != 'no':
-			if save == 'cancel':
-				return True
-			if self.file:
-				self.save()
-			else:
-				self.saveas()
+		if self.edited:
+			file = self.file
+			if not file:
+				file = self.dat.datname
+			save = askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=YES, type=YESNOCANCEL)
+			if save != 'no':
+				if save == 'cancel':
+					return True
+				if self.file:
+					self.save()
+				else:
+					self.saveas()
 
 	def checkreference(self, v=None, c=None):
 		if self.listbox:
@@ -460,6 +472,7 @@ class DATTab(NotebookTab):
 		self.activate()
 
 	def new(self, key=None):
+		self.loadsave(True)
 		if not self.unsaved():
 			self.dat.entries = list(self.toplevel.defaults[self.dat.datname].entries)
 			self.file = None
@@ -467,6 +480,8 @@ class DATTab(NotebookTab):
 			self.activate()
 
 	def open(self, key=None, file=None, save=True):
+		if self == self.toplevel.dattabs.active:
+			self.loadsave(True)
 		if not save or not self.unsaved():
 			if file == None:
 				file = self.toplevel.select_file('Open %s' % self.dat.datname, filetypes=[('StarCraft %s files' % self.dat.datname,'*.dat'),('All Files','*')])
@@ -526,6 +541,9 @@ class DATTab(NotebookTab):
 			self.dat.compile(self.file)
 		except PyMSError, e:
 			ErrorDialog(self, e)
+		else:
+			self.edited = False
+			self.toplevel.action_states()
 
 	def saveas(self, key=None):
 		file = self.toplevel.select_file('Save %s As' % self.dat.datname, False, filetypes=[('StarCraft %s files' % self.dat.datname,'*.dat'),('All Files','*')])
@@ -544,11 +562,13 @@ class DATTab(NotebookTab):
 			ErrorDialog(self, e)
 
 class DATUnitsTab(NotebookTab):
-	def __init__(self, parent, toplevel):
+	def __init__(self, parent, toplevel, parent_tab):
 		self.values = {}
 		self.toplevel = toplevel
+		self.parent_tab = parent_tab
 		self.icon = self.toplevel.icon
 		self.tabcopy = None
+		self.edited = False
 		NotebookTab.__init__(self, parent)
 
 	def jump(self, type, id, o=0):
@@ -578,12 +598,20 @@ class DATUnitsTab(NotebookTab):
 								flags += 2 ** x
 							else:
 								flags += oldflags & (2 ** x)
-						self.toplevel.units.set_value(self.parent.parent.id,n,flags)
+						if flags != oldflags:
+							self.edited = True
+							self.toplevel.units.set_value(self.parent.parent.id,n,flags)
 					elif isinstance(v, tuple):
 						for x in v:
-							self.toplevel.units.set_value(self.parent.parent.id,n,x.get())
+							r = x.get()
+							if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
+								self.edited = True
+								self.toplevel.units.set_value(self.parent.parent.id,n,r)
 					else:
-						self.toplevel.units.set_value(self.parent.parent.id,n,v.get())
+						r = v.get()
+						if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
+							self.edited = True
+							self.toplevel.units.set_value(self.parent.parent.id,n,r)
 				else:
 					c = self.toplevel.units.get_value(self.parent.parent.id,n)
 					if isinstance(v, list):
@@ -592,6 +620,9 @@ class DATUnitsTab(NotebookTab):
 								f.set(not not c & (2 ** x))
 					else:
 						v.set(c)
+			if save and self.edited:
+				self.parent_tab.edited = self.edited
+				self.toplevel.action_states()
 
 class OrdersTab(DATTab):
 	data = 'Orders.txt'
@@ -2183,8 +2214,8 @@ class WeaponsTab(DATTab):
 			self.drawpreview()
 
 class AIActionsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -2248,19 +2279,22 @@ class AIActionsUnitsTab(DATUnitsTab):
 		}
 		
 	def loadsave(self, save=False):
-		DATUnitsTab.loadsave(self, save)
 		if self.toplevel.units:
 			id = self.parent.parent.id
 			if save:
-				self.toplevel.units.set_value(id,'AIInternal',(1 * self.AI_NoSuicide.get() + 2 * self.AI_NoGuard.get()) )
+				r = (1 * self.AI_NoSuicide.get() + 2 * self.AI_NoGuard.get())
+				if self.toplevel.units.get_value(id,'AIInternal') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'AIInternal', r)
 			else:
 				self.AI_NoSuicide.set( self.toplevel.units.get_value(id,'AIInternal') & 1 == 1)
 				self.AI_NoGuard.set( self.toplevel.units.get_value(id,'AIInternal') & 2 == 2)
+		DATUnitsTab.loadsave(self, save)
 
 
 class StarEditUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -2389,12 +2423,17 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.rankentry.editvalue()
 
 	def loadsave(self, save=False):
-		DATUnitsTab.loadsave(self, save)
 		if self.toplevel.units:
 			id = self.parent.parent.id
 			if save:
-				self.toplevel.units.set_value(id,'StarEditGroupFlags',(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 7) | (8*self.men.get() + 16*self.building.get() + 32*self.factory.get() + 64*self.independent.get() + 128*self.neutral.get()))
-				self.toplevel.units.set_value(id,'StarEditAvailabilityFlags',1*self.nonneutral.get() + 2*self.unitlisting.get() + 4*self.missionbriefing.get() + 8*self.playersettings.get() + 16*self.allraces.get() + 32*self.setdoodadstate.get() + 64*self.nonlocationtriggers.get() + 128*self.unitherosettings.get() + 256*self.locationtriggers.get() + 512*self.broodwaronly.get())
+				r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 7) | (8*self.men.get() + 16*self.building.get() + 32*self.factory.get() + 64*self.independent.get() + 128*self.neutral.get())
+				if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
+				r = 1*self.nonneutral.get() + 2*self.unitlisting.get() + 4*self.missionbriefing.get() + 8*self.playersettings.get() + 16*self.allraces.get() + 32*self.setdoodadstate.get() + 64*self.nonlocationtriggers.get() + 128*self.unitherosettings.get() + 256*self.locationtriggers.get() + 512*self.broodwaronly.get()
+				if self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'StarEditAvailabilityFlags',r)
 			else:
 				#Staredit Group Flags
 				self.men.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 8 == 8)
@@ -2413,10 +2452,11 @@ class StarEditUnitsTab(DATUnitsTab):
 				self.unitherosettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 128 == 128)
 				self.locationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 256 == 256)
 				self.broodwaronly.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 512 == 512)
+		DATUnitsTab.loadsave(self, save)
 	
 class GraphicsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -2593,8 +2633,8 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.drawpreview()
 
 class SoundsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -2741,8 +2781,8 @@ class SoundsUnitsTab(DATUnitsTab):
 		DATUnitsTab.loadsave(self, save)
 
 class AdvancedUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -2936,10 +2976,15 @@ class AdvancedUnitsTab(DATUnitsTab):
 			self.infestentryw['state'] = state
 			self.infestddw['state'] = state
 			self.infestbtnw['state'] = state
-		DATUnitsTab.loadsave(self, save)
 		if save:
-			self.toplevel.units.set_value(id,'SpecialAbilityFlags', (1<<0)*self.building.get() + (1<<1)*self.addon.get() + (1<<2)*self.flyer.get() + (1<<3)*self.resourceminer.get() + (1<<4)*self.subunit.get() + (1<<5)*self.flyingbuilding.get() + (1<<6)*self.hero.get() + (1<<7)*self.regenerate.get() + (1<<8)*self.animatedidle.get() + (1<<9)*self.cloakable.get() + (1<<10)*self.twounitsinoneegg.get() + (1<<11)*self.singleentity.get() + (1<<12)*self.resourcedepot.get() + (1<<13)*self.resourcecontainter.get() + (1<<14)*self.robotic.get() + (1<<15)*self.detector.get() + (1<<16)*self.organic.get() + (1<<17)*self.requirescreep.get() + (1<<18)*self.unused.get() + (1<<19)*self.requirespsi.get() + (1<<20)*self.burrowable.get() + (1<<21)*self.spellcaster.get() + (1<<22)*self.permanentcloak.get() + (1<<23)*self.pickupitem.get() + (1<<24)*self.ignoresupplycheck.get() + (1<<25)*self.usemediumoverlays.get() + (1<<26)*self.uselargeoverlays.get() + (1<<27)*self.battlereactions.get() + (1<<28)*self.fullautoattack.get() + (1<<29)*self.invincible.get() + (1<<30)*self.mechanical.get() + (1<<31)*self.producesunits.get())
-			self.toplevel.units.set_value(id,'Unknown', (1<<0)*self.unknown1.get() + (1<<1)*self.unknown2.get() + (1<<2)*self.unknown4.get() + (1<<3)*self.unknown8.get() + (1<<4)*self.unknown10.get() + (1<<5)*self.unknown20.get() + (1<<6)*self.unknown40.get() + (1<<7)*self.unknown80.get())
+			r = (1<<0)*self.building.get() + (1<<1)*self.addon.get() + (1<<2)*self.flyer.get() + (1<<3)*self.resourceminer.get() + (1<<4)*self.subunit.get() + (1<<5)*self.flyingbuilding.get() + (1<<6)*self.hero.get() + (1<<7)*self.regenerate.get() + (1<<8)*self.animatedidle.get() + (1<<9)*self.cloakable.get() + (1<<10)*self.twounitsinoneegg.get() + (1<<11)*self.singleentity.get() + (1<<12)*self.resourcedepot.get() + (1<<13)*self.resourcecontainter.get() + (1<<14)*self.robotic.get() + (1<<15)*self.detector.get() + (1<<16)*self.organic.get() + (1<<17)*self.requirescreep.get() + (1<<18)*self.unused.get() + (1<<19)*self.requirespsi.get() + (1<<20)*self.burrowable.get() + (1<<21)*self.spellcaster.get() + (1<<22)*self.permanentcloak.get() + (1<<23)*self.pickupitem.get() + (1<<24)*self.ignoresupplycheck.get() + (1<<25)*self.usemediumoverlays.get() + (1<<26)*self.uselargeoverlays.get() + (1<<27)*self.battlereactions.get() + (1<<28)*self.fullautoattack.get() + (1<<29)*self.invincible.get() + (1<<30)*self.mechanical.get() + (1<<31)*self.producesunits.get()
+			if self.toplevel.units.get_value(id,'SpecialAbilityFlags') != r:
+				self.edited = True
+				self.toplevel.units.set_value(id,'SpecialAbilityFlags', r)
+			r = (1<<0)*self.unknown1.get() + (1<<1)*self.unknown2.get() + (1<<2)*self.unknown4.get() + (1<<3)*self.unknown8.get() + (1<<4)*self.unknown10.get() + (1<<5)*self.unknown20.get() + (1<<6)*self.unknown40.get() + (1<<7)*self.unknown80.get()
+			if self.toplevel.units.get_value(id,'Unknown') != r:
+				self.edited = True
+				self.toplevel.units.set_value(id,'Unknown', r)
 		else:
 			self.building.set(self.isFlagSet('SpecialAbilityFlags', 1 << 0))
 			self.addon.set(self.isFlagSet('SpecialAbilityFlags', 1 << 1))
@@ -2982,10 +3027,11 @@ class AdvancedUnitsTab(DATUnitsTab):
 			self.unknown20.set(self.isFlagSet('Unknown', 1 << 5))
 			self.unknown40.set(self.isFlagSet('Unknown', 1 << 6))
 			self.unknown80.set(self.isFlagSet('Unknown', 1 << 7))
+		DATUnitsTab.loadsave(self, save)
 
 class BasicUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel):
-		DATUnitsTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, toplevel, parent_tab):
+		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
 
@@ -3241,13 +3287,21 @@ class BasicUnitsTab(DATUnitsTab):
 			self.seconds.set(s)
 
 	def loadsave(self, save=False):
-		DATUnitsTab.loadsave(self, save)
 		if self.toplevel.units:
 			id = self.parent.parent.id
 			if save:
-				self.toplevel.units.set_value(id,'SupplyRequired',self.suprequired.get() * 2 + self.supreqhalf.get())
-				self.toplevel.units.set_value(id,'SupplyProvided',self.suprovided.get() * 2 + self.suprovhalf.get())
-				self.toplevel.units.set_value(id,'StarEditGroupFlags',(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 248) | (1 * self.zerg.get() + 2 * self.terran.get() + 4 * self.protoss.get()))
+				r = self.suprequired.get() * 2 + self.supreqhalf.get()
+				if self.toplevel.units.get_value(id,'SupplyRequired') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'SupplyRequired',r)
+				r = self.suprovided.get() * 2 + self.suprovhalf.get()
+				if self.toplevel.units.get_value(id,'SupplyProvided') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'SupplyProvided',r)
+				r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 248) | (1 * self.zerg.get() + 2 * self.terran.get() + 4 * self.protoss.get())
+				if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
+					self.edited = True
+					self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
 			else:
 				x = self.toplevel.units.get_value(id,'SupplyRequired')
 				self.suprequired.set(int(ceil((x - 1) / 2.0)))
@@ -3259,6 +3313,7 @@ class BasicUnitsTab(DATUnitsTab):
 				self.zerg.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 1)
 				self.terran.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 2 == 2)
 				self.protoss.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 4 == 4)
+		DATUnitsTab.loadsave(self, save)
 				
 class UnitsTab(DATTab):
 	data = 'Units.txt'
@@ -3275,7 +3330,7 @@ class UnitsTab(DATTab):
 			('AI Actions', AIActionsUnitsTab),
 		]
 		for tab in tabs:
-			self.dattabs.add_tab(tab[1](self.dattabs, toplevel), tab[0])
+			self.dattabs.add_tab(tab[1](self.dattabs, toplevel, self), tab[0])
 		self.dattabs.pack(fill=BOTH, expand=1)
 
 	def files_updated(self):
@@ -3452,6 +3507,7 @@ class PyDAT(Tk):
 
 		self.status = StringVar()
 		self.dattabs = Notebook(mid)
+		self.pages = []
 		tabs = [
 			('Units', UnitsTab),
 			('Weapons', WeaponsTab),
@@ -3466,12 +3522,19 @@ class PyDAT(Tk):
 			('Orders', OrdersTab),
 		]
 		self.dattabs.pack(side=LEFT, fill=BOTH, expand=1, padx=2, pady=2)
+		# self.dattabs.bind('<<TabDeactivated>>', self.tab_deactivated)
+		self.dattabs.bind('<<TabActivated>>', self.tab_activated)
 		mid.pack(fill=BOTH, expand=1)
 
 		#Statusbar
 		self.datstatus = StringVar()
 		statusbar = Frame(self)
-		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(expand=1, padx=1, fill=X)
+		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
+		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
+		self.editstatus.image = image
+		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
+		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		self.mpq_export = self.settings.get('mpqexport',[])
@@ -3484,7 +3547,10 @@ class PyDAT(Tk):
 		if e:
 			self.mpqtbl(err=e)
 		for tab in tabs:
-			self.dattabs.add_tab(tab[1](self.dattabs, self), tab[0])
+			page = tab[1](self.dattabs, self)
+			self.pages.append(page)
+			self.dattabs.add_tab(page, tab[0])
+		self.update()
 
 		self.deiconify()
 
@@ -3503,6 +3569,9 @@ class PyDAT(Tk):
 				ErrorDialog(self, PyMSError('Load',"'%s' is not a valid StarCraft *.dat file, could possibly be corrupt" % guifile))
 
 		start_new_thread(check_update, (self,))
+
+	def tab_activated(self, event=None):
+		self.action_states()
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()
@@ -3594,8 +3663,7 @@ class PyDAT(Tk):
 				for tab in self.dattabs.pages.values():
 					page = tab[0]
 					page.files_updated()
-					if page == self.dattabs.active:
-						page.activate()
+				self.loadsave()
 		return err
 
 	def grp(self, pal, path, draw_function=None, draw_info=None):
@@ -3614,7 +3682,9 @@ class PyDAT(Tk):
 			return GRP_CACHE[path][pal]
 
 	def unsaved(self):
-		pass
+		for page in self.pages:
+			if page.unsaved():
+				return True
 
 	def select_file(self, title, open=True, ext='.dat', filetypes=[('StarCraft DAT files','*.dat'),('All Files','*')], parent=None):
 		if parent == None:
@@ -3625,19 +3695,28 @@ class PyDAT(Tk):
 			self.settings['lastpath'] = os.path.dirname(file)
 		return file
 
+	def action_states(self):
+		edited = False
+		if self.dattabs.active:
+			edited = self.dattabs.active.edited
+		self.editstatus['state'] = [DISABLED,NORMAL][edited]
+
+	def loadsave(self, save=False):
+		self.dattabs.active.loadsave(save)
+
 	def changeid(self, key=None, i=None):
 		s = True
 		if i == None:
 			i = int(self.listbox.curselection()[0])
 			s = False
 		if i != self.dattabs.active.id:
-			self.dattabs.active.loadsave(True)
+			self.loadsave(True)
 			self.dattabs.active.id = i
 			if s:
 				self.listbox.select_clear(0,END)
 				self.listbox.select_set(i)
 				self.listbox.see(i)
-			self.dattabs.active.loadsave()
+			self.loadsave()
 			self.listframe.focus_set()
 
 	def popup(self, e):
@@ -3726,30 +3805,34 @@ class PyDAT(Tk):
 		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
 		if not dir:
 			return
-		l = ''
 		self.settings['lastpath'] = dir
 		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitDAT(),CampaignDAT(),OrdersDAT()]
-		found = []
+		found = [None] * len(dats)
+		files = [None] * len(dats)
 		for f in os.listdir(dir):
 			for n,d in enumerate(dats):
+				if d == None:
+					continue
 				ff = os.path.join(dir,f)
 				try:
 					d.load_file(ff)
 				except PyMSError, e:
 					continue
-				found.append((d,ff))
-				del dats[n]
-				l += f
-				if f != d.datname:
-					l += ' (%s)' % d.datname
-				l += ', '
+				found[n] = (d,ff)
+				name = f
+				if name != d.datname:
+					name += ' (%s)' % d.datname
+				files[n] = name
+				dats[n] = None
 				break
 			if not dats:
 				break
+		found = (f for f in found if f != None)
 		if not found:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in directory "%s"' % dir))
 			return
-		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, l[:-2]))
+		files = [f for f in files if f != None]
+		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(files)))
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
 
@@ -3757,20 +3840,20 @@ class PyDAT(Tk):
 		self.dattabs.active.iimport()
 
 	def save(self, key=None):
-		self.dattabs.active.loadsave(True)
+		self.loadsave(True)
 		self.dattabs.active.save()
 
 	def saveas(self, key=None):
-		self.dattabs.active.loadsave(True)
+		self.loadsave(True)
 		self.dattabs.active.saveas()
 
 	def export(self, key=None):
-		self.dattabs.active.loadsave(True)
+		self.loadsave(True)
 		self.dattabs.active.export()
 
 	def savempq(self, key=None):
 		if not FOLDER:
-			self.dattabs.active.loadsave(True)
+			self.loadsave(True)
 			SaveMPQDialog(self)
 
 	def mpqtbl(self, key=None, err=None):
@@ -3802,7 +3885,7 @@ class PyDAT(Tk):
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
 
 	def exit(self, e=None):
-		self.dattabs.active.loadsave(True)
+		self.loadsave(True)
 		if not self.unsaved():
 			savesize(self, self.settings)
 			self.settings['mpqexport'] = self.mpq_export

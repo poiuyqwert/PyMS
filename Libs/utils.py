@@ -437,12 +437,14 @@ class Notebook(Frame):
 		if self.active:
 			if hasattr(self.active, 'deactivate'):
 				self.active.deactivate()
+			self.event_generate('<<TabDeactivated>>')
 			self.active.forget()
 		self.tab.set(self.pages[title][1])
 		self.active = self.pages[title][0]
 		self.active.pack(fill=BOTH, expand=1, padx=6, pady=6)
 		if hasattr(self.active, 'activate'):
 			self.active.activate()
+		self.event_generate('<<TabActivated>>')
 
 class NotebookTab(Frame):
 	def __init__(self, parent):
