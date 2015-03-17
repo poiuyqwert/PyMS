@@ -684,10 +684,10 @@ class DropDownChooser(Toplevel):
 		self.close()
 
 	def close(self, e=None):
+		self.parent.focus_set()
 		self.withdraw()
 		self.update_idletasks()
 		self.destroy()
-		self.parent.focus_set()
 
 class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
