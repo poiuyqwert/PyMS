@@ -300,12 +300,12 @@ class ContinueImportDialog(PyMSDialog):
 class DATTab(NotebookTab):
 	data = None
 
-	def __init__(self, parent, toplevel, dat):
+	def __init__(self, parent, toplevel):
 		self.id = 0
 		self.values = {}
 		self.toplevel = toplevel
 		self.icon = self.toplevel.icon
-		self.dat = dat
+		self.dat = None
 		self.file = None
 		self.listbox = None
 		self.entrycopy = None
@@ -371,7 +371,9 @@ class DATTab(NotebookTab):
 			self.loadsave()
 
 	def deactivate(self):
-		self.id = int(self.toplevel.listbox.curselection()[0])
+		selections = self.toplevel.listbox.curselection()
+		if selections:
+			self.id = int(selections[0])
 		self.loadsave(True)
 
 	def loadsave(self, save=False):
@@ -628,11 +630,11 @@ class OrdersTab(DATTab):
 	data = 'Orders.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.orders)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.targetingentry = IntegerVar(0,[0,130])
 		self.targeting = IntVar()
 		self.energyentry = IntegerVar(0,[0,44])
@@ -785,6 +787,7 @@ class OrdersTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.orders
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
@@ -811,10 +814,10 @@ class MapsTab(DATTab):
 	data = 'Mapdata.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.campaigns)
+		DATTab.__init__(self, parent, toplevel)
 		frame = Frame(self)
 
-		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
+		mapdata = [] # [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
 		self.missionentry = IntegerVar(0, [0,len(mapdata)])
 		self.missiondd = IntVar()
 
@@ -836,6 +839,7 @@ class MapsTab(DATTab):
 		self.values = {'MapFile':self.missionentry}
 
 	def files_updated(self):
+		self.dat = self.toplevel.campaigns
 		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
 		self.missionentry.range[1] = len(mapdata)
 		self.missions.setentries(mapdata)
@@ -845,11 +849,11 @@ class PortraitsTab(DATTab):
 	data = 'Portdata.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.portraits)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
-		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
+		portdata = [] # ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
 		self.portraitentry = IntegerVar(0, [0,len(portdata)-1])
 		self.portraitdd = IntVar()
 
@@ -900,6 +904,7 @@ class PortraitsTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.portraits
 		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
 		self.portraitentry.range[1] = len(portdata)-1
 		self.portraits.setentries(portdata)
@@ -909,11 +914,11 @@ class SoundsTab(DATTab):
 	data = 'Sfxdata.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.sounds)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
-		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		sfxdata = [] # ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
 		self.soundentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.sounddd = IntVar()
 
@@ -989,6 +994,7 @@ class SoundsTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.sounds
 		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
 		self.soundentry.range[1] = len(sfxdata)-1
 		self.sounds.setentries(sfxdata)
@@ -1016,14 +1022,14 @@ class TechnologyTab(DATTab):
 	data = 'Techdata.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.technology)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
 
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.labeldd = IntVar()
 
@@ -1149,6 +1155,7 @@ class TechnologyTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.technology
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
@@ -1194,13 +1201,13 @@ class UpgradesTab(DATTab):
 	data = 'Upgrades.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.upgrades)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.labeldd = IntVar()
 		self.item = None
@@ -1354,6 +1361,7 @@ class UpgradesTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.upgrades
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
@@ -1401,11 +1409,11 @@ class ImagesTab(DATTab):
 	data = 'Images.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.images)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
-		grps = ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
+		grps = [] # ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
 		self.grpentry = IntegerVar(0, [0, len(grps)-1])
 		self.grpdd = IntVar()
 		iscripts = DATA_CACHE['IscriptIDList.txt']
@@ -1558,6 +1566,7 @@ class ImagesTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.images
 		entries = []
 		last = -1
 		for id in self.toplevel.iscriptbin.headers.keys():
@@ -1601,7 +1610,7 @@ class SpritesTab(DATTab):
 	data = 'Sprites.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.sprites)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
@@ -1692,6 +1701,9 @@ class SpritesTab(DATTab):
 			'SelectionCircleOffset':self.vertpos,
 		}
 
+	def files_updated(self):
+		self.dat = self.toplevel.sprites
+
 	def selcircle(self, n, t=0):
 		if t:
 			self.selcircledd.set(n)
@@ -1770,7 +1782,7 @@ class FlingyTab(DATTab):
 	data = 'Flingy.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.flingy)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
@@ -1852,6 +1864,9 @@ class FlingyTab(DATTab):
 			'MovementControl':self.movecontrol,
 		}
 
+	def files_updated(self):
+		self.dat = self.toplevel.flingy
+
 	def updatespeed(self, num, type):
 		if type:
 			self.topspeed.check = False
@@ -1882,7 +1897,7 @@ class WeaponsTab(DATTab):
 	data = 'Weapons.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.weapons)
+		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
 		frame = Frame(j)
 
@@ -1956,7 +1971,7 @@ class WeaponsTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.label = IntVar()
 		self.errormsgentry = IntegerVar(0,[0,len(stattxt)-1])
@@ -2169,6 +2184,7 @@ class WeaponsTab(DATTab):
 		}
 
 	def files_updated(self):
+		self.dat = self.toplevel.weapons
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
@@ -2360,8 +2376,8 @@ class StarEditUnitsTab(DATUnitsTab):
 			l.pack(side=LEFT, fill=BOTH)
 		top.pack()
 
-		r = min(255,len(self.toplevel.stat_txt.strings)-1302)
-		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
+		r = 0 # min(255,len(self.toplevel.stat_txt.strings)-1302)
+		ranks = [] # ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
 		self.rankentry = IntegerVar(0, [0,r])
 		self.rankdd = IntVar()
 		self.mapstring = IntegerVar(0, [0,65535])
@@ -2759,9 +2775,19 @@ class SoundsUnitsTab(DATUnitsTab):
 
 	def files_updated(self):
 		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
-		self.soundentry.range[1] = len(sfxdata)-1
-		self.sounds.setentries(sfxdata)
-		self.soundentry.editvalue()
+		fields = (
+			(self.readyentry,self.readyddw),
+			(self.firstyesentry,self.firstyesddw),
+			(self.lastyesentry,self.lastyesddw),
+			(self.firstwhatentry,self.firstwhatddw),
+			(self.lastwhatentry,self.lastwhatddw),
+			(self.firstannoyedentry,self.firstannoyedddw),
+			(self.lastannoyedentry,self.lastannoyedddw)
+		)
+		for entry,dd in fields:
+			entry.range[1] = len(sfxdata)
+			dd.setentries(sfxdata)
+			entry.editvalue()
 
 	def loadsave(self, save=False):
 		if not save and self.toplevel.units:
@@ -2871,8 +2897,8 @@ class AdvancedUnitsTab(DATUnitsTab):
 		l.pack(fill=X)
 
 		units = DATA_CACHE['Units.txt']
-		if self.toplevel.settings.get('customlabels',0):
-			units = [decompile_string(s) for s in self.toplevel.stat_txt.strings[:228]] + ['None']
+		# if self.toplevel.settings.get('customlabels',0):
+		# 	units = [decompile_string(s) for s in self.toplevel.stat_txt.strings[:228]] + ['None']
 		self.infestentry = IntegerVar(0, [0,228])
 		self.infestdd = IntVar()
 		self.subunitoneentry = IntegerVar(0,[0,228])
@@ -2961,7 +2987,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 	def files_updated(self):
 		units = DATA_CACHE['Units.txt']
-		if self.parent.settings.get('customlabels',0):
+		if self.toplevel.settings.get('customlabels',0):
 			units = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[:229]]
 		self.infestddw.setentries(units)
 		
@@ -3319,7 +3345,7 @@ class UnitsTab(DATTab):
 	data = 'Units.txt'
 
 	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel, toplevel.units)
+		DATTab.__init__(self, parent, toplevel)
 		self.dattabs = Notebook(self, FLAT)
 		tabs = [
 			('Basic', BasicUnitsTab),
@@ -3334,7 +3360,8 @@ class UnitsTab(DATTab):
 		self.dattabs.pack(fill=BOTH, expand=1)
 
 	def files_updated(self):
-		for tab in self.dattabs.pages:
+		self.dat = self.toplevel.units
+		for tab in self.dattabs.pages.values():
 			page = tab[0]
 			page.files_updated()
 
@@ -3508,7 +3535,7 @@ class PyDAT(Tk):
 		self.status = StringVar()
 		self.dattabs = Notebook(mid)
 		self.pages = []
-		tabs = [
+		tabs = (
 			('Units', UnitsTab),
 			('Weapons', WeaponsTab),
 			('Flingy', FlingyTab),
@@ -3520,11 +3547,16 @@ class PyDAT(Tk):
 			('Portdata', PortraitsTab),
 			('Mapdata', MapsTab),
 			('Orders', OrdersTab),
-		]
+		)
 		self.dattabs.pack(side=LEFT, fill=BOTH, expand=1, padx=2, pady=2)
+		for tab in tabs:
+			page = tab[1](self.dattabs, self)
+			self.pages.append(page)
+			self.dattabs.add_tab(page, tab[0])
 		# self.dattabs.bind('<<TabDeactivated>>', self.tab_deactivated)
 		self.dattabs.bind('<<TabActivated>>', self.tab_activated)
 		mid.pack(fill=BOTH, expand=1)
+
 
 		#Statusbar
 		self.datstatus = StringVar()
@@ -3546,13 +3578,6 @@ class PyDAT(Tk):
 		e = self.open_files()
 		if e:
 			self.mpqtbl(err=e)
-		for tab in tabs:
-			page = tab[1](self.dattabs, self)
-			self.pages.append(page)
-			self.dattabs.add_tab(page, tab[0])
-		self.update()
-
-		self.deiconify()
 
 		if 'window' in self.settings:
 			loadsize(self, self.settings, 'window', True)
@@ -3659,11 +3684,9 @@ class PyDAT(Tk):
 				self.dats[n] = v
 				self.defaults[n] = c(t)
 				self.defaults[n].entries = ccopy(v.entries)
-			if self.dattabs.pages:
-				for tab in self.dattabs.pages.values():
-					page = tab[0]
-					page.files_updated()
-				self.loadsave()
+			for page in self.pages:
+				page.files_updated()
+			self.dattabs.active.activate()
 		return err
 
 	def grp(self, pal, path, draw_function=None, draw_info=None):
