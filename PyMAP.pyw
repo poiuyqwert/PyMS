@@ -443,10 +443,12 @@ class EditLayer:
 	MOUSE_MIDDLE = 2
 	MOUSE_RIGHT = 3
 
-	MOUSE_DOWN = 0
-	MOUSE_MOVE = 1
-	MOUSE_UP = 2
-	MOUSE_DOUBLE = 3
+	MODIFIER_SHIFT = (1 << 0)
+	MODIFIER_CTRL = (1 << 1)
+	MOUSE_DOWN = (1 << 2)
+	MOUSE_MOVE = (1 << 3)
+	MOUSE_UP = (1 << 4)
+	MOUSE_DOUBLE = (1 << 5)
 
 	EDIT_MOVE = 0
 	EDIT_RESIZE_NONE = 1
@@ -638,7 +640,7 @@ class EditLayerLocations(EditLayer):
 			x = x1+mouseX
  			y = y1+mouseY
  			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
-			if button_event == EditLayer.MOUSE_DOWN or button_event == EditLayer.MOUSE_DOUBLE:
+			if button_event & EditLayer.MOUSE_DOWN or button_event & EditLayer.MOUSE_DOUBLE:
 	 			self.current_event = []
 	 			unused = None
 	 			for l in self.zOrder:
@@ -647,7 +649,7 @@ class EditLayerLocations(EditLayer):
 					location = locations.locations[l]
 	 				if location.in_use():
 						x1,y1,x2,y2 = location.normalized_coords()
-						if button_event == EditLayer.MOUSE_DOWN:
+						if button_event & EditLayer.MOUSE_DOWN:
 							event = resize_event(location,x,y)
 							if event:
 								self.current_event = event
@@ -663,7 +665,7 @@ class EditLayerLocations(EditLayer):
 							return
 					elif unused == None:
 						unused = l
-				if not self.current_event and unused != None and button_event == EditLayer.MOUSE_DOWN:
+				if not self.current_event and unused != None and button_event & EditLayer.MOUSE_DOWN:
 					location = locations.locations[unused]
 					self.ui.action_manager.start_group()
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
@@ -714,7 +716,7 @@ class EditLayerLocations(EditLayer):
 					location.end[0] = nearest_multiple(location.end[0],32)
 					location.end[1] = nearest_multiple(location.end[1],32)
 				self.update_location(self.resize_location)
-				if button_event == EditLayer.MOUSE_UP:
+				if button_event & EditLayer.MOUSE_UP:
 					self.current_event = []
 					self.resize_location = None
 					self.action.set_end_values(location, self.action.start_values.keys())
@@ -724,42 +726,97 @@ class EditLayerLocations(EditLayer):
 class EditLayerUnits(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Units")
-		self.selected_image = None
-		self.selection_image_id = 0
-		self.selection_image = None
+		self.selected_images = []
+		self.selection_images = {}
+		self.selecting_start = None
+		self.selecting_images = None
+		self.selection_box = None
+		self.selecting_moved = False
+
+	def deselect(self, image):
+		if image in self.selected_images:
+			self.selected_images.remove(image)
+			if image.ref in self.selection_images:
+				selection_image = self.selection_images.get(image.ref)
+				if selection_image != None:
+					self.ui.maplayer_images.remove_image(selection_image)
+					del self.selection_images[image.ref]
+
+	def deselect_all(self):
+		for image in list(self.selected_images):
+			self.deselect(image)
+			self.ui.mapCanvas.tag_raise('selection_box')
+
+	def select(self, image):
+		if image.unit_ref != None:
+			self.selected_images.append(image)
+			unit_sect = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+			selected_unit = unit_sect.get_unit(image.unit_ref)
+			flingy_id = self.ui.unitsdat.get_value(selected_unit.unit_id, 'Graphics')
+			sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
+			selection_image_id = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleImage')
+			y_offset = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleOffset')
+			selection_image = BWImage(self.ui, '%s-sel%d' % (image.unit_ref,selection_image_id), 561 + selection_image_id, (selected_unit.position[0], selected_unit.position[1]), image, 'unit\\', elevation=0, pos_offset=(0,y_offset))
+			self.ui.maplayer_images.add_image(selection_image)
+			self.selection_images[image.ref] = selection_image
+			self.ui.mapCanvas.tag_raise('selection_box')
 
 	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
-		if button == EditLayer.MOUSE_LEFT and button_event == EditLayer.MOUSE_DOWN:
-			selected = None
-			selected_unit = None
+		print flags(button_event,8)
+		if button == EditLayer.MOUSE_LEFT:
 			x = x1 + mouseX
 			y = y1 + mouseY
-			dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
-			unit_sect = self.ui.chk.get_section(CHKSectionUNIT.NAME)
-			units = sorted(unit_sect.units.values(), cmp=lambda u1,u2,dat=self.ui.unitsdat: compare_z(u1,u2,dat,True))
-			for unit in units:
-				unit_w = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxWidth')
-				unit_h = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxHeight')
-				unit_x = unit.position[0] - unit_w/2.0
-				unit_y = unit.position[1] - unit_h/2.0
-				if unit_x <= x <= (unit_x+unit_w) and unit_y <= y <= (unit_y+unit_h):
-					ref = 'unit%d' % unit.ref_id
-					selected = self.ui.maplayer_images.images.get(ref)
-					selected_unit = unit
-					break
-			if selected != self.selected_image:
-				if self.selection_image:
-					self.ui.maplayer_images.remove_image(self.selection_image)
-				self.selected_image = selected
-				self.selection_image = None
-				if selected:
-					flingy_id = self.ui.unitsdat.get_value(selected_unit.unit_id, 'Graphics')
-					sprite_id = self.ui.flingydat.get_value(flingy_id, 'Sprite')
-					selection_image_id = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleImage')
-					y_offset = self.ui.spritesdat.get_value(sprite_id, 'SelectionCircleOffset')
-					self.selection_image_id = selection_image_id
-					self.selection_image = BWImage(self.ui, 'sel%d' % selection_image_id, 561 + selection_image_id, (unit.position[0], unit.position[1]), self.selected_image, 'unit\\', elevation=0, pos_offset=(0,y_offset))
-					self.ui.maplayer_images.add_image(self.selection_image)
+			if button_event & EditLayer.MOUSE_DOWN:
+				self.selecting_start = (x,y)
+				self.selecting_images = set()
+				print ('Reset', flags(button_event,8))
+			elif self.selecting_start != None:
+				if not button_event & (EditLayer.MODIFIER_SHIFT | EditLayer.MODIFIER_CTRL):
+					self.deselect_all()
+				if button_event & EditLayer.MOUSE_MOVE:
+					self.selecting_moved = True
+				sx1 = min(self.selecting_start[0],x)
+				sy1 = min(self.selecting_start[1],y)
+				sx2 = max(self.selecting_start[0],x)
+				sy2 = max(self.selecting_start[1],y)
+				if self.selecting_moved:
+					if self.selection_box == None:
+						self.selection_box = self.ui.mapCanvas.create_rectangle(sx1,sy1,sx2,sy2, outline='#FF0000', tags='selection_box')
+					else:
+						self.ui.mapCanvas.coords(self.selection_box, sx1,sy1,sx2,sy2)
+				selecting = []
+				unit_sect = self.ui.chk.get_section(CHKSectionUNIT.NAME)
+				units = sorted(unit_sect.units.values(), cmp=lambda u1,u2,dat=self.ui.unitsdat: compare_z(u1,u2,dat,True))
+				for unit in units:
+					w = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxWidth')
+					h = self.ui.unitsdat.get_value(unit.unit_id, 'StarEditPlacementBoxHeight')
+					ux1 = unit.position[0] - w/2.0
+					uy1 = unit.position[1] - h/2.0
+					ux2 = ux1 + w
+					uy2 = uy1 + h
+					if not (sx1 > ux2 or ux1 > sx2 or sy1 > uy2 or uy1 > sy2):
+						ref = 'unit%d' % unit.ref_id
+						image = self.ui.maplayer_images.images.get(ref)
+						if image:
+							selecting.append(image)
+				select = set(selecting)
+				if not self.selecting_moved and selecting:
+					select = set((selecting[0],))
+				to_deselect = self.selecting_images - select
+				to_select = select - set(self.selected_images)
+				if not self.selecting_moved and select and not to_deselect and not to_select and button_event & (EditLayer.MODIFIER_SHIFT | EditLayer.MODIFIER_CTRL):
+					to_deselect = select
+				for image in to_deselect:
+					self.deselect(image)
+				for image in to_select:
+					self.select(image)
+				self.selecting_images = select
+				if button_event & EditLayer.MOUSE_UP:
+					self.ui.mapCanvas.delete(self.selection_box)
+					self.selecting_start = None
+					self.selecting_images = None
+					self.selection_box = None
+					self.selecting_moved = False
  
 class EditLayerSprites(EditLayer):
 	def __init__(self, ui):
@@ -1175,7 +1232,8 @@ class PyMAP(Tk):
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		self.edit_layer_index = IntVar(0)
 		self.edit_layer_index.trace('w', self.change_edit_layer)
-		DropDown(toolbar, self.edit_layer_index, [l.name for l in self.edit_layers], width=25).pack(side=LEFT, padx=2)
+		self.edit_layer_dropdown = DropDown(toolbar, self.edit_layer_index, [l.name for l in self.edit_layers], width=25)
+		self.edit_layer_dropdown.pack(side=LEFT, padx=2)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.panes = PanedWindow(self, orient=HORIZONTAL)
@@ -1243,14 +1301,25 @@ class PyMAP(Tk):
 		self.mapCanvas.bind('<Leave>', lambda e: self.edit_status.set(''))
 		self.mapCanvas.bind('<Motion>', self.edit_update)
 		mouse_events = (
-			('<Button-%d>', EditLayer.MOUSE_DOWN),
-			('<B%d-Motion>', EditLayer.MOUSE_MOVE),
-			('<ButtonRelease-%d>', EditLayer.MOUSE_UP),
-			('<Double-Button-%d>', EditLayer.MOUSE_DOUBLE)
+			('<%sButton-%d>', EditLayer.MOUSE_DOWN),
+			('<%sB%d-Motion>', EditLayer.MOUSE_MOVE),
+			('<%sButtonRelease-%d>', EditLayer.MOUSE_UP),
+			('<%sDouble-Button-%d>', EditLayer.MOUSE_DOUBLE)
+		)
+		mouse_buttons = (
+			(1,EditLayer.MOUSE_LEFT),
+			(2,EditLayer.MOUSE_MIDDLE),
+			(3,EditLayer.MOUSE_RIGHT)
+		)
+		mouse_modifiers = (
+			('',0),
+			('Shift-',EditLayer.MODIFIER_SHIFT),
+			('Control-',EditLayer.MODIFIER_CTRL)
 		)
 		for name,etype in mouse_events:
-			for b,btn in ((1,EditLayer.MOUSE_LEFT),(2,EditLayer.MOUSE_MIDDLE),(3,EditLayer.MOUSE_RIGHT)):
-				self.mapCanvas.bind(name % b, lambda e,b=btn,t=etype: self.edit_mouse(e,b,t))
+			for b,btn in mouse_buttons:
+				for n,mod in mouse_modifiers:
+					self.mapCanvas.bind(name % (n,b), lambda e,b=btn,t=(etype | mod): self.edit_mouse(e,b,t))
 
 		xscrollbar = Scrollbar(right, orient=HORIZONTAL)
 		xscrollbar.config(command=self.mapCanvas.xview)
@@ -1286,6 +1355,7 @@ class PyMAP(Tk):
 
 		self.update()
 		place_left_children(True)
+		self.action_states()
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if not 'mpqs' in self.settings:
@@ -1532,9 +1602,10 @@ class PyMAP(Tk):
 		return file
 
 	def action_states(self):
-		file = [NORMAL,DISABLED][not self.chk]
+		map_open = [NORMAL,DISABLED][not self.chk]
 		for btn in ['save','saveas','close']:
-			self.buttons[btn]['state'] = file
+			self.buttons[btn]['state'] = map_open
+		self.edit_layer_dropdown['state'] = map_open
 		self.buttons['undo']['state'] = [DISABLED,NORMAL][self.action_manager.can_undo()]
 		self.buttons['redo']['state'] = [DISABLED,NORMAL][self.action_manager.can_redo()]
 		self.buttons['asc3topyai']['state'] = [DISABLED,NORMAL][not self.chk]

@@ -9,7 +9,7 @@ def pad(label, value='', span=PADDING):
 	label = str(label)
 	return '%s%s%s' % (label, ' ' * (span - len(label)), value)
 
-def flags(flags, names, count, skip=0):
+def named_flags(flags, names, count, skip=0):
 	header = ''
 	values = ''
 	for n in range(count):
@@ -730,16 +730,16 @@ class CHKUnit:
 			'InstanceID': self.instanceID,
 			'Position': '%s,%s' % (self.position[0], self.position[1]),
 			'UnitID': self.unit_id,
-			'BuildingRelation': flags(self.buildingRelation, ["Nydus Link","Addon Link"], 16, 9),
-			'ValidAbilities': flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
-			'ValidProperties': flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
+			'BuildingRelation': named_flags(self.buildingRelation, ["Nydus Link","Addon Link"], 16, 9),
+			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
+			'ValidProperties': named_flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
 			'Owner': self.owner + 1,
 			'Health': '%s%%' % self.health,
 			'Shields': '%s%%' % self.shields,
 			'Energy': '%s%%' % self.energy,
 			'Resources': self.resources,
 			'HangerUnits': self.hangerUnits,
-			'AbilityStates': flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
+			'AbilityStates': named_flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
 			'UnitRelationID': self.unitRelationID
 		}
 		for key in ['ClassID','Position','UnitID','BuildingRelation','ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates','UnitRelation']:
@@ -914,7 +914,7 @@ class CHKDoodad:
 		result += '\t%s\n' % pad('DoodadID', self.doodadID)
 		result += '\t%s\n' % pad('Position', '%s,%s' % (self.position[0],self.position[1]))
 		result += '\t%s\n' % pad('Owner', self.owner)
-		header,values = flags(self.flags, ["Sprite",None,None,"Disabled"], 16, 12)
+		header,values = named_flags(self.flags, ["Sprite",None,None,"Disabled"], 16, 12)
 		result += '\t%s%s\n' % (pad('#'), header)
 		result += '\t%s\n' % pad('Flags', values)
 		return result
@@ -1136,15 +1136,15 @@ class CHKUnitProperties:
 	def decompile(self):
 		result = '\t#\n'
 		data = {
-			'ValidAbilities': flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
-			'ValidProperties': flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
+			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
+			'ValidProperties': named_flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
 			'Owner': self.owner + 1,
 			'Health': '%s%%' % self.health,
 			'Shields': '%s%%' % self.shields,
 			'Energy': '%s%%' % self.energy,
 			'Resources': self.resources,
 			'HangerUnits': self.hangerUnits,
-			'AbilityStates': flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
+			'AbilityStates': named_flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
 		}
 		for key in ['ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates']:
 			value = data[key]
@@ -1237,7 +1237,7 @@ class CHKLocation:
 			'Start': pad('%s,%s' % (self.start[0],self.start[1])),
 			'End': pad('%s,%s' % (self.end[0],self.end[1])),
 			'Name': '%s%s' % (self.name, string),
-			'Elevation': flags(self.elevation, ["Low Ground", "Med. Ground", "High Ground", "Low Air", "Med. Air", "High Air"], 16),
+			'Elevation': named_flags(self.elevation, ["Low Ground", "Med. Ground", "High Ground", "Low Air", "Med. Air", "High Air"], 16),
 		}
 		for key in ['Start','End','Name','Elevation']:
 			value = data[key]
@@ -1409,7 +1409,7 @@ class CHKSectionFORC(CHKSection):
 		properties = ''
 		for f,force in enumerate(self.forces):
 			result += '\t%s\n' % pad('Name%d' % (f+1), 'String %d' % force.name)
-			header,values = flags(force.properties, ["Random Start","Allies","Allied Victory","Shared Vision"], 8)
+			header,values = named_flags(force.properties, ["Random Start","Allies","Allied Victory","Shared Vision"], 8)
 			if not properties:
 				properties = '\t%s%s\n' % (pad('#'), header)
 			properties += '\t%s\n' % pad('Properies%d' % (f+1), values)
