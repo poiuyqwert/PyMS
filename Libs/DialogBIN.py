@@ -5,7 +5,7 @@ import struct, re
 
 class DialogBINWidget(object):
 	BYTE_SIZE = 86
-	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','ctrl_type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
+	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
 
 	FLAG_UNK1 = 0x00000001
 	FLAG_DISABLED = 0x00000002
@@ -55,6 +55,7 @@ class DialogBINWidget(object):
 	TYPE_LISTBOX = 12
 	TYPE_COMBOBOX = 13
 	TYPE_HIGHLIGHT_BTN = 14
+
 	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
 	def __init__(self):
@@ -224,7 +225,7 @@ class DialogBIN:
 			return (smk_offsets[smk],data)
 		def save_widget(widget, next_offset):
 			widget_info = []
-			if widget == last_widget or widget.ctrl_type == DialogBINWidget.TYPE_DIALOG:
+			if widget == last_widget or widget.type == DialogBINWidget.TYPE_DIALOG:
 				widget_info.append(0)
 			else:
 				widget_info.append(next_offset)
@@ -234,7 +235,7 @@ class DialogBIN:
 				if attr == 'string' and value != None:
 					value = save_string(value)
 				elif attr == 'smk':
-					if widget.ctrl_type == DialogBINWidget.TYPE_DIALOG:
+					if widget.type == DialogBINWidget.TYPE_DIALOG:
 						value = next_offset
 					elif value != None:
 						value,data = save_smk(value)
@@ -349,6 +350,12 @@ class DialogBIN:
 			setattr(working, attr, value)
 		if backfill_smks:
 			raise PyMSError('Interpreting',"SMK %s is missing" % backfill_smks.keys()[0])
+		for i in xrange(len(widgets)):
+			widget = widgets[i]
+			if widget.type == DialogBINWidget.TYPE_DIALOG:
+				del widgets[i]
+				widgets.insert(i,widget)
+				break
 		self.widgets = widgets
 		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
 
@@ -390,7 +397,7 @@ class DialogBIN:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
 					value = flags(value, 27)
-				elif attr == 'ctrl_type':
+				elif attr == 'type':
 					if value < len(DialogBINWidget.TYPE_NAMES):
 						hint = DialogBINWidget.TYPE_NAMES[value]
 					else:
