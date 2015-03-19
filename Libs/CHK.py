@@ -1955,37 +1955,36 @@ class CHK:
 				data = file.read()
 		except:
 			raise PyMSError('Load',"Could not load CHK file '%s'" % file)
-		self.load_data(data)
-
-	def load_data(self, data):
 		try:
-			offset = 0
-			sections = {}
-			section_order = []
-			toProcess = []
-			while offset < len(data)-8:
-				name,length = struct.unpack('<4sL', data[offset:offset+8])
-				offset += 8
-				sect_class = CHK.SECTION_TYPES.get(name)
-				if not sect_class:
-					sect = CHKSectionUnknown(self, name)
-				else:
-					sect = sect_class(self)
-				sect.load_data(data[offset:offset+min(length,len(data)-offset)])
-				sections[name] = sect
-				section_order.append(name)
-				if hasattr(sect, "process_data"):
-					toProcess.append(sect)
-				offset += length
-			self.sections = sections
-			self.section_order = section_order
-			for sect in toProcess:
-				sect.process_data()
+			self.load_data(data)
 		except PyMSError, e:
 			raise e
 		except:
-			raise
 			raise PyMSError('Load',"Unsupported CHK file '%s', could possibly be corrupt" % file)
+
+	def load_data(self, data):
+		offset = 0
+		sections = {}
+		section_order = []
+		toProcess = []
+		while offset < len(data)-8:
+			name,length = struct.unpack('<4sL', data[offset:offset+8])
+			offset += 8
+			sect_class = CHK.SECTION_TYPES.get(name)
+			if not sect_class:
+				sect = CHKSectionUnknown(self, name)
+			else:
+				sect = sect_class(self)
+			sect.load_data(data[offset:offset+min(length,len(data)-offset)])
+			sections[name] = sect
+			section_order.append(name)
+			if hasattr(sect, "process_data"):
+				toProcess.append(sect)
+			offset += length
+		self.sections = sections
+		self.section_order = section_order
+		for sect in toProcess:
+			sect.process_data()
 
 	def save_file(self, file):
 		try:

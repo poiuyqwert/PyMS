@@ -1,7 +1,7 @@
 from utils import *
 import TBL
 
-import struct
+import struct, re
 
 class DialogBINWidget(object):
 	BYTE_SIZE = 86
@@ -55,7 +55,7 @@ class DialogBINWidget(object):
 	TYPE_LISTBOX = 12
 	TYPE_COMBOBOX = 13
 	TYPE_HIGHLIGHT_BTN = 14
-	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highligh Button']
+	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
 	def __init__(self):
 		self.x1 = 0
@@ -112,6 +112,7 @@ class DialogBINSMK(object):
 class DialogBIN:
 	def __init__(self):
 		self.widgets = []
+		self.smks = []
 
 	def load_file(self, file):
 		try:
@@ -123,67 +124,65 @@ class DialogBIN:
 				data = file.read()
 		except:
 			raise PyMSError('Load',"Could not load Dialog BIN file '%s'" % file)
-		self.load_data(data)
-
-	def load_data(self, data):
 		try:
-			widgets = {}
-			widgets_ordered = []
-			smks = {}
-			smks_ordered = []
-			def load_smk(offset):
-				smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+DialogBINSMK.BYTE_SIZE]))
-				filename_offset = smk_info[3]
-				end_offset = data.find('\0', filename_offset)
-				smk_info[3] = data[filename_offset:end_offset]
-				smk = DialogBINSMK()
-				smks[offset] = smk
-				smks_ordered.append(smk)
-				overlay_smk_offset = smk_info[0]
-				if overlay_smk_offset:
-					if not overlay_smk_offset in smks:
-						load_smk(overlay_smk_offset)
-					smk_info[0] = smks[overlay_smk_offset]
-				else:
-					smk_info[0] = None
-				attrs = DialogBINSMK.ATTR_NAMES
-				for attr,value in zip(attrs,smk_info):
-					setattr(smk, attr, value)
-			def load_widget(offset):
-				widget_info = list(struct.unpack('<L6H4LH5L4HLL4HLL',data[offset:offset+DialogBINWidget.BYTE_SIZE]))
-				string_offset = widget_info[8]
-				if string_offset:
-					end_offset = data.find('\0', string_offset)
-					widget_info[8] = data[string_offset:end_offset]
-				else:
-					widget_info[8] = None
-				next_widget = widget_info[0]
-				smk_offset = widget_info[22]
-				if widget_info[11] == DialogBINWidget.TYPE_DIALOG:
-					next_widget = smk_offset
-					smk_offset = 0
-				if smk_offset:
-					if not smk_offset in smks:
-						load_smk(smk_offset)
-					widget_info[22] = smks[smk_offset]
-				else:
-					widget_info[22] = None
-				widget = DialogBINWidget()
-				widgets[offset] = widget
-				widgets_ordered.append(widget)
-				attrs = DialogBINWidget.ATTR_NAMES
-				for attr,value in zip(attrs,widget_info[1:]):
-					setattr(widget, attr, value)
-				if next_widget:
-					load_widget(next_widget)
-			load_widget(0)
-			self.widgets = widgets_ordered
-			self.smks = smks_ordered
+			self.load_data(data)
 		except PyMSError, e:
 			raise e
 		except:
 			raise
 			raise PyMSError('Load',"Unsupported Dialog BIN file '%s', could possibly be corrupt" % file)
+
+	def load_data(self, data):
+		widgets = []
+		smk_map = {}
+		smks = []
+		def load_smk(offset):
+			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+DialogBINSMK.BYTE_SIZE]))
+			filename_offset = smk_info[3]
+			end_offset = data.find('\0', filename_offset)
+			smk_info[3] = data[filename_offset:end_offset]
+			smk = DialogBINSMK()
+			smk_map[offset] = smk
+			smks.append(smk)
+			overlay_smk_offset = smk_info[0]
+			if overlay_smk_offset:
+				if not overlay_smk_offset in smk_map:
+					load_smk(overlay_smk_offset)
+				smk_info[0] = smk_map[overlay_smk_offset]
+			else:
+				smk_info[0] = None
+			attrs = DialogBINSMK.ATTR_NAMES
+			for attr,value in zip(attrs,smk_info):
+				setattr(smk, attr, value)
+		def load_widget(offset):
+			widget_info = list(struct.unpack('<L6H4LH5L4HLL4HLL',data[offset:offset+DialogBINWidget.BYTE_SIZE]))
+			string_offset = widget_info[8]
+			if string_offset:
+				end_offset = data.find('\0', string_offset)
+				widget_info[8] = data[string_offset:end_offset]
+			else:
+				widget_info[8] = None
+			next_widget = widget_info[0]
+			smk_offset = widget_info[22]
+			if widget_info[11] == DialogBINWidget.TYPE_DIALOG:
+				next_widget = smk_offset
+				smk_offset = 0
+			if smk_offset:
+				if not smk_offset in smk_map:
+					load_smk(smk_offset)
+				widget_info[22] = smk_map[smk_offset]
+			else:
+				widget_info[22] = None
+			widget = DialogBINWidget()
+			widgets.append(widget)
+			attrs = DialogBINWidget.ATTR_NAMES
+			for attr,value in zip(attrs,widget_info[1:]):
+				setattr(widget, attr, value)
+			if next_widget:
+				load_widget(next_widget)
+		load_widget(0)
+		self.widgets = widgets
+		self.smks = smks
 
 	def save_file(self, file):
 		try:
@@ -206,6 +205,7 @@ class DialogBIN:
 				results[2] += string + '\0'
 			return string_offsets[string]
 		def save_smk(smk):
+			data = ''
 			if not smk in smk_offsets:
 				smk_offsets[smk] = offsets[1]
 				offsets[1] += DialogBINSMK.BYTE_SIZE
@@ -213,28 +213,32 @@ class DialogBIN:
 				attrs = DialogBINSMK.ATTR_NAMES
 				for attr in attrs:
 					value = getattr(smk, attr)
-					if attr == 'filename' and value != None:
+					if attr == 'overlay_smk' and value != None:
+						value,data = save_smk(value)
+					elif attr == 'filename' and value != None:
 						value = save_string(value)
-					elif attr == 'overlay_smk' and value != None:
-						value = save_smk(value)
 					if value == None:
 						value = 0
 					smk_info.append(value)
-				results[1] += struct.pack('<LH3LHHLL', *smk_info)
-			return smk_offsets[smk]
-		def save_widget(widget):
+				data = struct.pack('<LH3LHHLL', *smk_info) + data
+			return (smk_offsets[smk],data)
+		def save_widget(widget, next_offset):
 			widget_info = []
 			if widget == last_widget or widget.ctrl_type == DialogBINWidget.TYPE_DIALOG:
 				widget_info.append(0)
 			else:
-				widget_info.append(offsets[0] + DialogBINWidget.BYTE_SIZE)
+				widget_info.append(next_offset)
 			attrs = DialogBINWidget.ATTR_NAMES
 			for attr in attrs:
 				value = getattr(widget, attr)
 				if attr == 'string' and value != None:
 					value = save_string(value)
-				elif attr == 'smk' and value != None:
-					value = save_smk(value)
+				elif attr == 'smk':
+					if widget.ctrl_type == DialogBINWidget.TYPE_DIALOG:
+						value = next_offset
+					elif value != None:
+						value,data = save_smk(value)
+						results[1] += data
 				if value == None:
 					value = 0
 				widget_info.append(value)
@@ -242,7 +246,10 @@ class DialogBIN:
 			results[0] += struct.pack('<L6H4LH5L4HLL4HLL', *widget_info)
 		last_widget = self.widgets[-1]
 		for widget in self.widgets:
-			save_widget(widget)
+			next_offset = offsets[0] + DialogBINWidget.BYTE_SIZE
+			if widget == last_widget:
+				next_offset = 0
+			save_widget(widget, next_offset)
 		return ''.join(results)
 
 	def interpret_file(self, file):
@@ -258,7 +265,92 @@ class DialogBIN:
 		self.interpret_data(data)
 
 	def interpret_data(self, data):
-		pass
+		lines = re.split('(?:\r?\n)+', data)
+		widgets = []
+		smks = {}
+		backfill_smks = {}
+		working = None
+		def get_smk(smk_id):
+			smk = None
+			if smk_id in smks:
+				smk = smks[smk_id]
+			else:
+				if not smk_id in backfill_smks:
+					backfill_smks[smk_id] = []
+				backfill_smks[smk_id].append(working)
+			return smk
+		for n,raw_line in enumerate(lines):
+			line = raw_line.split('#',1)[0].strip()
+			if not line:
+				continue
+			if line == 'Widget:':
+				working = DialogBINWidget()
+				widgets.append(working)
+				continue
+			m = re.match('^SMK (\d+):$', line)
+			if m:
+				smk_id = int(m.group(1))
+				if smk_id in smks:
+					raise PyMSError('Interpreting',"Duplicate definition for SMK '%s'" % attr,n,line)
+				working = DialogBINSMK()
+				if smk_id in backfill_smks:
+					for obj in backfill_smks[smk_id]:
+						if isinstance(obj, DialogBINWidget):
+							obj.smk = working
+						else:
+							obj.overlay_smk = working
+					del backfill_smks[smk_id]
+				smks[smk_id] = working
+				continue
+			if not working:
+				raise PyMSError('Interpreting','Unexpected line, expected a Widget or SMK header',n,line)
+			m = re.match('^(\S+)\s+(.+)$', line)
+			attr = m.group(1)
+			value = m.group(2)
+			if isinstance(working, DialogBINWidget):
+				if not attr in DialogBINWidget.ATTR_NAMES:
+					raise PyMSError('Interpreting',"Invalid Widget attribute name '%s'" % attr,n,line)
+				if attr == 'smk':
+					if value == 'None':
+						value = None
+					else:
+						try:
+							smk_id = int(value)
+						except:
+							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						value = get_smk(smk_id)
+				elif attr == 'string':
+					if value == 'None':
+						value = None
+					else:
+						value = TBL.compile_string(value)
+				elif attr == 'flags':
+					value = flags(value, 27)
+				else:
+					value = int(value)
+			else:
+				if not attr in DialogBINSMK.ATTR_NAMES:
+					raise PyMSError('Interpreting',"Invalid SMK attribute name '%s'" % attr,n,line)
+				if attr == 'overlay_smk':
+					if value == 'None':
+						value = None
+					else:
+						try:
+							smk_id = int(value)
+						except:
+							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						value = get_smk(smk_id)
+				elif attr == 'filename':
+					value = TBL.compile_string(value)
+				elif attr == 'flags':
+					value = flags(value, 5)
+				else:
+					value = int(value)
+			setattr(working, attr, value)
+		if backfill_smks:
+			raise PyMSError('Interpreting',"SMK %s is missing" % backfill_smks.keys()[0])
+		self.widgets = widgets
+		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
 
 	def decompile_file(self, file):
 		try:
@@ -307,9 +399,14 @@ class DialogBIN:
 			result += '\n'
 		return result
 
-if __name__ == '__main__':
-	dialogbin = DialogBIN()
-	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
-	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
-	data = dialogbin.save_data()
-	dialogbin.load_data(data)
+# if __name__ == '__main__':
+# 	dialogbin = DialogBIN()
+# 	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
+# 	data = dialogbin.save_data()
+# 	dialogbin.load_data(data)
+# 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
+# 	dialogbin.interpret_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
+# 	data = dialogbin.save_data()
+# 	dialogbin.load_data(data)
+# 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')
+
