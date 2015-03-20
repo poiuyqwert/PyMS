@@ -1263,7 +1263,7 @@ class PyMAP(Tk):
 		place_minimap_container()
 		details = Frame(left)
 		# listbox
-		self.listbox = TreeList(details, groupsel=False, closeicon=os.path.join(BASE_DIR,'Images','treeclose.gif'), openicon=os.path.join(BASE_DIR,'Images','treeopen.gif'))
+		self.listbox = TreeList(details, groupsel=False)
 		self.listbox.pack(fill=BOTH, expand=True)
 		self.listbox.bind('<Button-1>', self.list_select)
 		def place_details(initial=False):
