@@ -3,6 +3,7 @@ PyTILE v1.4
 PyTILE is used to edit the tileset files (cv5, vf4, vx4, vr4, and dddata.bin).
 	Changes	changes
 +PyTILE v1.4
+ -Update acceptable ID ranges when adding/importing Mega/MiniTiles
  -Fixed some importing issues
  -Better palette selection handling
  -Added mouse scroll to tile palettes

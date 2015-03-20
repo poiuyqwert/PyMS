@@ -442,6 +442,7 @@ class TilePalette(PyMSDialog):
 			self.top = max(min(int(ceil(self.sel / 16.0)),int(ceil(len(self.tileset.vr4.images) / 16.0) - 8)),0)
 		self.updatescroll()
 		self.drawtiles()
+		self.parent.update_ranges()
 
 	def export(self):
 		b = self.select_file('Export Group', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self)
@@ -482,6 +483,7 @@ class TilePalette(PyMSDialog):
 				self.update_top()
 				self.updatescroll()
 			self.drawtiles()
+			self.parent.update_ranges()
 
 	def remove(self):
 		pass
@@ -1037,6 +1039,10 @@ class PyTILE(Tk):
 	def editor(self):
 		MiniEditor(self)
 
+	def update_ranges(self):
+		self.megatilee.setrange([0,len(self.tileset.vf4.flags)-1])
+		self.minitile.setrange([0,len(self.tileset.vr4.images)-1])
+
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
@@ -1055,8 +1061,7 @@ class PyTILE(Tk):
 			self.status.set('Load successful!')
 			self.editstatus['state'] = DISABLED
 			self.action_states()
-			self.megatilee.setrange([0,len(tileset.vf4.flags)-1])
-			self.minitile.setrange([0,len(tileset.vr4.images)-1])
+			self.update_ranges()
 			self.dosave = [False,False]
 			self.group = [0,0]
 			self.megatile = None
