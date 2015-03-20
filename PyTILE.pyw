@@ -8,7 +8,7 @@ from tkMessageBox import *
 import tkFileDialog,tkColorChooser
 
 from thread import start_new_thread
-from math import ceil
+from math import ceil,floor
 import optparse, os, webbrowser, sys
 
 VERSION = (1,3)
@@ -314,9 +314,10 @@ class TilePalette(PyMSDialog):
 		if type == 0:
 			self.top = max(min(sel,len(parent.tileset.cv5.groups)-(8*16)),0)
 		elif type == 1:
-			self.top = max(min(int(ceil(sel / 16.0)),int(ceil(len(parent.tileset.vf4.flags) / 16.0) - 8)),0)
+			self.top = max(min(int(floor(sel / 16.0)),int(ceil(len(parent.tileset.vf4.flags) / 16.0) - 8)),0)
 		else:
-			self.top = max(min(int(ceil(sel / 16.0)),int(ceil(len(parent.tileset.vr4.images) / 16.0) - 8)),0)
+			self.top = max(min(int(floor(sel / 16.0)),int(ceil(len(parent.tileset.vr4.images) / 16.0) - 8)),0)
+		self.lasttop = -1
 		self.sel = sel
 		self.tileset = parent.tileset
 		self.megatile = parent.megatile
@@ -345,37 +346,39 @@ class TilePalette(PyMSDialog):
 		self.drawsel()
 
 	def drawtiles(self):
-		self.canvas.delete(ALL)
-		self.canvas.create_rectangle(0, 0, 0, 0, outline='#FFFFFF', tags='border')
-		self.canvas.images = []
-		if self.type == 0:
-			for q,g in enumerate(range(self.top,min(len(self.tileset.cv5.groups),self.top+8))):
-				for n,m in enumerate(self.tileset.cv5.groups[g][13]):
-					t = 'tile%s' % (n+16*q)
+		if self.top != self.lasttop:
+			self.lasttop = self.top
+			self.canvas.delete(ALL)
+			self.canvas.create_rectangle(0, 0, 0, 0, outline='#FFFFFF', tags='border')
+			self.canvas.images = []
+			if self.type == 0:
+				for q,g in enumerate(range(self.top,min(len(self.tileset.cv5.groups),self.top+8))):
+					for n,m in enumerate(self.tileset.cv5.groups[g][13]):
+						t = 'tile%s' % (n+16*q)
+						self.canvas.images.append(self.gettile(m,True))
+						self.canvas.create_image(19 + 32 * n, 19 + 33 * q, image=self.canvas.images[-1], tags=t)
+						self.canvas.tag_bind(t, '<Button-1>', lambda e,g=g: self.setsel(g))
+						self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=g: self.choose(g))
+			elif self.type == 1:
+				for n,m in enumerate(range(self.top*16,min(len(self.tileset.vx4.graphics),(self.top+8)*16))):
+					t = 'tile%s' % n
 					self.canvas.images.append(self.gettile(m,True))
-					self.canvas.create_image(19 + 32 * n, 19 + 33 * q, image=self.canvas.images[-1], tags=t)
-					self.canvas.tag_bind(t, '<Button-1>', lambda e,g=g: self.setsel(g))
-					self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=g: self.choose(g))
-		elif self.type == 1:
-			for n,m in enumerate(range(self.top*16,min(len(self.tileset.vx4.graphics),(self.top+8)*16))):
-				t = 'tile%s' % n
-				self.canvas.images.append(self.gettile(m,True))
-				self.canvas.create_image(19 + 33 * (n % 16), 19 + 33 * (n / 16), image=self.canvas.images[-1], tags=t)
-				self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
-				self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
-		elif self.type == 2:
-			for n,m in enumerate(range(self.top*16,min(len(self.tileset.vr4.images),(self.top+8)*16))):
-				t = 'tile%s' % n
-				self.canvas.images.append(self.gettile((m,0),True))
-				self.canvas.create_image(15 + 25 * (n % 16), 15 + 25 * (n / 16), image=self.canvas.images[-1], tags=t)
-				self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
-				self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
-		self.drawsel()
+					self.canvas.create_image(19 + 33 * (n % 16), 19 + 33 * (n / 16), image=self.canvas.images[-1], tags=t)
+					self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
+					self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
+			elif self.type == 2:
+				for n,m in enumerate(range(self.top*16,min(len(self.tileset.vr4.images),(self.top+8)*16))):
+					t = 'tile%s' % n
+					self.canvas.images.append(self.gettile((m,0),True))
+					self.canvas.create_image(15 + 25 * (n % 16), 15 + 25 * (n / 16), image=self.canvas.images[-1], tags=t)
+					self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
+					self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
+			self.drawsel()
 
 	def widgetize(self):
 		self.resizable(False,False)
 		buttons = [
-			('add', self.add, 'Add (Insert))', NORMAL, 'Insert'),
+			('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
 			('remove', self.remove, 'Remove (Delete)', DISABLED, 'Delete'),
 			10,
 			('export', self.export, 'Export Group (Ctrl+E)', NORMAL, 'Ctrl+E'),
@@ -413,10 +416,11 @@ class TilePalette(PyMSDialog):
 		self.scroll.pack(side=LEFT, fill=Y, expand=1)
 		c.pack()
 		self.drawtiles()
+		self.bind('<MouseWheel>', lambda e: self.scrolling('scroll',-1 if e.delta > 0 else 1,'units'))
 		self.bind('<Down>', lambda e: self.scrolling('scroll',1,'units'))
 		self.bind('<Up>', lambda e: self.scrolling('scroll',-1,'units'))
-		self.bind('<Next>', lambda e: self.scrolling('scroll',1,'pages'))
-		self.bind('<Prior>', lambda e: self.scrolling('scroll',-1,'pages'))
+		self.bind('<Next>', lambda e: self.scrolling('scroll',1,'page'))
+		self.bind('<Prior>', lambda e: self.scrolling('scroll',-1,'page'))
 
 	def add(self):
 		if self.type == 0:
@@ -478,7 +482,7 @@ class TilePalette(PyMSDialog):
 			self.scroll.set(x,x+8/groups)
 
 	def scrolling(self, t, p, e=None):
-		a = {'pages':8,'units':1}
+		a = {'page':8,'units':1}
 		if self.type == 0:
 			groups = len(self.tileset.cv5.groups)-8
 		elif self.type == 1:
@@ -492,6 +496,7 @@ class TilePalette(PyMSDialog):
 			self.top = min(groups,max(0,self.top + int(p) * a[e]))
 		self.updatescroll()
 		self.drawtiles()
+		return "break"
 
 	def choose(self, id):
 		self.parent.change(self.type, id)
@@ -974,7 +979,7 @@ class PyTILE(Tk):
 		if self.dosave[1]:
 			self.minisave()
 			self.dosave[1] = False
-		a = {'pages':8,'units':1}
+		a = {'page':8,'units':1}
 		groups = len(self.tileset.cv5.groups)-1
 		p = min(100,float(p) / (1-8/float(groups)))
 		if t == 'moveto':
