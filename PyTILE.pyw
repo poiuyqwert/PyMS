@@ -309,21 +309,24 @@ class MiniEditor(PyMSDialog):
 class TilePalette(PyMSDialog):
 	def __init__(self, parent, type=0, sel=0):
 		PAL[0] += 1
-		self.ttext = '%s Palette [%%s]' % ['Group','MegaTile','MiniTile'][type]
+		self.ttext = '%s Palette [%%s]' % ['Group','MegaTile','MiniTile Image'][type]
 		self.type = type
-		if type == 0:
-			self.top = max(min(sel,len(parent.tileset.cv5.groups)-(8*16)),0)
-		elif type == 1:
-			self.top = max(min(int(floor(sel / 16.0)),int(ceil(len(parent.tileset.vf4.flags) / 16.0) - 8)),0)
-		else:
-			self.top = max(min(int(floor(sel / 16.0)),int(ceil(len(parent.tileset.vr4.images) / 16.0) - 8)),0)
-		self.lasttop = -1
 		self.sel = sel
+		self.top = 0
+		self.lasttop = -1
 		self.tileset = parent.tileset
 		self.megatile = parent.megatile
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
 		PyMSDialog.__init__(self, parent, self.ttext % self.sel)
+
+	def update_top(self):
+		if type == 0:
+			self.top = max(min(self.sel,len(self.parent.tileset.cv5.groups)-(8*16)),0)
+		elif type == 1:
+			self.top = max(min(int(floor(self.sel / 16.0)),int(ceil(len(self.parent.tileset.vf4.flags) / 16.0) - 8)),0)
+		else:
+			self.top = max(min(int(floor(self.sel / 16.0)),int(ceil(len(self.parent.tileset.vr4.images) / 16.0) - 8)),0)
 
 	def drawsel(self):
 		if self.type == 0 and self.top <= self.sel <= self.top+8:
@@ -355,27 +358,28 @@ class TilePalette(PyMSDialog):
 				for q,g in enumerate(range(self.top,min(len(self.tileset.cv5.groups),self.top+8))):
 					for n,m in enumerate(self.tileset.cv5.groups[g][13]):
 						t = 'tile%s' % (n+16*q)
-						self.canvas.images.append(self.gettile(m,True))
+						self.canvas.images.append(self.gettile(m))
 						self.canvas.create_image(19 + 32 * n, 19 + 33 * q, image=self.canvas.images[-1], tags=t)
 						self.canvas.tag_bind(t, '<Button-1>', lambda e,g=g: self.setsel(g))
 						self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=g: self.choose(g))
 			elif self.type == 1:
 				for n,m in enumerate(range(self.top*16,min(len(self.tileset.vx4.graphics),(self.top+8)*16))):
 					t = 'tile%s' % n
-					self.canvas.images.append(self.gettile(m,True))
+					self.canvas.images.append(self.gettile(m))
 					self.canvas.create_image(19 + 33 * (n % 16), 19 + 33 * (n / 16), image=self.canvas.images[-1], tags=t)
 					self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
 					self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
 			elif self.type == 2:
 				for n,m in enumerate(range(self.top*16,min(len(self.tileset.vr4.images),(self.top+8)*16))):
 					t = 'tile%s' % n
-					self.canvas.images.append(self.gettile((m,0),True))
+					self.canvas.images.append(self.gettile((m,0)))
 					self.canvas.create_image(15 + 25 * (n % 16), 15 + 25 * (n / 16), image=self.canvas.images[-1], tags=t)
 					self.canvas.tag_bind(t, '<Button-1>', lambda e,g=m: self.setsel(g))
 					self.canvas.tag_bind(t, '<Double-Button-1>', lambda e,g=m: self.choose(g))
 			self.drawsel()
 
 	def widgetize(self):
+		self.update_top()
 		self.resizable(False,False)
 		buttons = [
 			('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
@@ -436,6 +440,7 @@ class TilePalette(PyMSDialog):
 			self.tileset.vr4.images.append([[0] * 8 for _ in range(8)] )
 			self.setsel(len(self.tileset.vr4.images)-1)
 			self.top = max(min(int(ceil(self.sel / 16.0)),int(ceil(len(self.tileset.vr4.images) / 16.0) - 8)),0)
+		self.updatescroll()
 		self.drawtiles()
 
 	def export(self):
@@ -454,10 +459,29 @@ class TilePalette(PyMSDialog):
 		s = None
 		if self.type < 2:
 			s = self.select_file('Import Group Settings (Cancel to import only the BMP)', True, '.txt', [('Text File','*.txt'),('All Files','*')], self)
+		sel = self.sel
+		if self.type == 0:
+			start_size = len(self.parent.tileset.cv5.groups)
+		elif self.type == 1:
+			start_size = len(self.parent.tileset.vf4.flags)
+		else:
+			start_size = len(self.parent.tileset.vr4.images)
 		try:
 			self.tileset.interpret(b,self.type,s)
 		except PyMSError, e:
 			ErrorDialog(self, e)
+		else:
+			if self.type == 0:
+				end_size = len(self.parent.tileset.cv5.groups)
+			elif self.type == 1:
+				end_size = len(self.parent.tileset.vf4.flags)
+			else:
+				end_size = len(self.parent.tileset.vr4.images)
+			if end_size > start_size:
+				self.sel = start_size
+				self.update_top()
+				self.updatescroll()
+			self.drawtiles()
 
 	def remove(self):
 		pass

@@ -193,8 +193,9 @@ Group %s:
 	Unknown9:          	%s
 	HasUp:             	%s
 	Unknown11:         	%s
-	HasDow:            	%s
+	HasDown:            	%s
 """ % data)
+
 				else:
 					f.write("""\
 DoodadGroup %s:
@@ -212,6 +213,7 @@ DoodadGroup %s:
 	DoodadHeight:      	%s
 	Unknown12:         	%s
 """ % data)
+
 				f.write('	MegaTiles:         	%s\n\n' % ' '.join([str(i) for i in g[13]]))
 				# if id > 1023:
 					# f.write('DDData %s:\n' % data[10])
@@ -290,7 +292,7 @@ MegaTile %s:
 				if doodad:
 					name = ['Index','Buildable','Unknown1','OverlayFlags','GroundHeight','OverlayID','Unknown6','DoodadGroupString','Unknown8','DDDataID','DoodadWidth','DoodadHeight','Unknown12'][on-1]
 				else:
-					name = ['Index','Buildable','Flags','Buildable2','GroundHeight','HasUp','HasDown','EdgeLeft','Unknown9','EdgeRight','EdgeUp','EdgeDown','Unknown11'][on-1]
+					name = ['Index','Buildable','Flags','Buildable2','GroundHeight','EdgeLeft','EdgeUp','EdgeRight','EdgeDown','Unknown9','HasUp','Unknown11','HasDown'][on-1]
 				m = re.match('^%s:\\s+(\\d+)$' % name, line)
 				if not m:
 					raise PyMSError('Interpreting', "Unknown line format (expected '%s' specifier)" % name, n,line)
@@ -439,7 +441,7 @@ MegaTile %s:
 		elif type == 2:
 			if b.height % 8:
 				raise PyMSError('Interpreting','The image is not the correct size for minitiles (height must be a multiple of 8, got a height of %s)' % (b.height))
-			for y in range(b.height % 8):
+			for y in range(b.height / 8):
 				self.vr4.images.append([])
 				for o in range(8):
 					self.vr4.images[-1].append(b.image[y*8+o])
