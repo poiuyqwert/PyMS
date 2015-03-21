@@ -321,9 +321,9 @@ class TilePalette(PyMSDialog):
 		PyMSDialog.__init__(self, parent, self.ttext % self.sel)
 
 	def update_top(self):
-		if type == 0:
-			self.top = max(min(self.sel,len(self.parent.tileset.cv5.groups)-(8*16)),0)
-		elif type == 1:
+		if self.type == 0:
+			self.top = max(min(self.sel,len(self.parent.tileset.cv5.groups)-8),0)
+		elif self.type == 1:
 			self.top = max(min(int(floor(self.sel / 16.0)),int(ceil(len(self.parent.tileset.vf4.flags) / 16.0) - 8)),0)
 		else:
 			self.top = max(min(int(floor(self.sel / 16.0)),int(ceil(len(self.parent.tileset.vr4.images) / 16.0) - 8)),0)
