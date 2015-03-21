@@ -213,14 +213,17 @@ class PyMSDialog(Toplevel):
 	def widgetize(self):
 		pass
 
-	def ok(self):
+	def dismiss(self):
 		self.withdraw()
 		self.update_idletasks()
 		self.parent.focus_set()
 		self.destroy()
 
+	def ok(self):
+		self.dismiss()
+
 	def cancel(self):
-		self.ok()
+		self.dismiss()
 
 class InternalErrorDialog(PyMSDialog):
 	def __init__(self, parent, prog, handler=None, txt=None):
