@@ -3,6 +3,7 @@ PyPCX v1.1
 PyPCX is usefull for converting StarCraft's PCX files to and from BMP's, and importing/export palettes to/from them.
 	Changes	changes
 +PyPCX v1.1
+ -Fixed export
  -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
 +PyPCX v1.0
  -First public release

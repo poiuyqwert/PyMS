@@ -198,7 +198,7 @@ class PyPCX(Tk):
 		if not file:
 			return True
 		b = BMP.BMP()
-		b.load_data(self.pcx.palette,self.pcx.image)
+		b.load_data(self.pcx.image,self.pcx.palette)
 		try:
 			b.save_file(file)
 		except PyMSError, e:
