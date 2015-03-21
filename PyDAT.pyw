@@ -3386,7 +3386,6 @@ class PyDAT(Tk):
 			del self.settings['usemodmpq']
 
 		Tk.__init__(self)
-		self.withdraw()
 		self.title('PyDAT %s' % LONG_VERSION)
 		try:
 			self.icon = os.path.join(BASE_DIR, 'Images','PyDAT.ico')
