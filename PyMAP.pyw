@@ -451,11 +451,10 @@ class EditLayer:
 	MOUSE_DOUBLE = (1 << 5)
 
 	EDIT_MOVE = 0
-	EDIT_RESIZE_NONE = 1
-	EDIT_RESIZE_LEFT = 2
-	EDIT_RESIZE_TOP = 3
-	EDIT_RESIZE_RIGHT = 4
-	EDIT_RESIZE_BOTTOM = 5
+	EDIT_RESIZE_LEFT = 1
+	EDIT_RESIZE_TOP = 2
+	EDIT_RESIZE_RIGHT = 3
+	EDIT_RESIZE_BOTTOM = 4
 
 	def __init__(self, ui, name):
 		self.ui = ui
@@ -521,29 +520,29 @@ class EditLayerLocations(EditLayer):
 
 	def raise_location(self, location_id):
 		self.ui.mapCanvas.tag_raise('location%d' % location_id)
- 		self.zOrder.remove(location_id)
- 		self.zOrder.insert(0, location_id)
+		self.zOrder.remove(location_id)
+		self.zOrder.insert(0, location_id)
 
 	def list_select(self, location_id):
- 		self.raise_location(location_id)
+		self.raise_location(location_id)
 		dims = self.ui.chk.get_section(CHKSectionDIM.NAME)
- 		map_width = dims.width * 32
- 		map_height = dims.height * 32
- 		view_width = self.ui.mapCanvas.winfo_width()
- 		view_height = self.ui.mapCanvas.winfo_height()
+		map_width = dims.width * 32
+		map_height = dims.height * 32
+		view_width = self.ui.mapCanvas.winfo_width()
+		view_height = self.ui.mapCanvas.winfo_height()
 		locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
- 		location = locations.locations[location_id]
- 		x1,y1,x2,y2 = location.normalized_coords()
- 		loc_width = x2-x1
- 		loc_height = y2-y1
- 		x = x1
- 		y = y1
- 		if loc_width < view_width:
- 			x -= (view_width - loc_width) / 2.0
- 		if loc_height < view_height:
- 			y -= (view_height - loc_height) / 2.0
- 		self.ui.mapCanvas.xview_moveto(x / float(map_width))
- 		self.ui.mapCanvas.yview_moveto(y / float(map_height))
+		location = locations.locations[location_id]
+		x1,y1,x2,y2 = location.normalized_coords()
+		loc_width = x2-x1
+		loc_height = y2-y1
+		x = x1
+		y = y1
+		if loc_width < view_width:
+			x -= (view_width - loc_width) / 2.0
+		if loc_height < view_height:
+			y -= (view_height - loc_height) / 2.0
+		self.ui.mapCanvas.xview_moveto(x / float(map_width))
+		self.ui.mapCanvas.yview_moveto(y / float(map_height))
 
 	def set_mode(self, mode, x1,y1, x2,y2):
 		if EditLayer.set_mode(self, mode, x1,y1, x2,y2):
@@ -557,25 +556,25 @@ class EditLayerLocations(EditLayer):
 					if l == 63 and not self.show_anywhere:
 						continue
 					self.update_location(l)
- 			else:
- 				self.ui.mapCanvas.config(cursor=self.old_cursor)
- 				for tag in self.locations.keys():
- 					self.ui.mapCanvas.delete(tag)
- 					self.ui.mapCanvas.delete(tag + '-name')
- 				self.locations = {}
+			else:
+				self.ui.mapCanvas.config(cursor=self.old_cursor)
+				for tag in self.locations.keys():
+					self.ui.mapCanvas.delete(tag)
+					self.ui.mapCanvas.delete(tag + '-name')
+				self.locations = {}
 
- 	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
- 		if self.mode == EditLayer.ACTIVE:
- 			x = x1+mouseX
- 			y = y1+mouseY
- 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
- 			cursor = [self.old_cursor]
- 			found = None
- 			for l in self.zOrder:
- 				if l == 63 and not self.show_anywhere:
+	def update_display(self, x1,y1, x2,y2, mouseX,mouseY):
+		if self.mode == EditLayer.ACTIVE:
+			x = x1+mouseX
+			y = y1+mouseY
+			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+			cursor = [self.old_cursor]
+			found = None
+			for l in self.zOrder:
+				if l == 63 and not self.show_anywhere:
 					continue
 				location = locations.locations[l]
- 				if location.in_use():
+				if location.in_use():
 					x1,y1,x2,y2 = location.normalized_coords()
 					event = resize_event(location,x,y)
 					if event:
@@ -638,8 +637,8 @@ class EditLayerLocations(EditLayer):
 	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
 		if self.mode == EditLayer.ACTIVE:
 			x = x1+mouseX
- 			y = y1+mouseY
- 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
+			y = y1+mouseY
+			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 			if button_event & EditLayer.MOUSE_DOWN or button_event & EditLayer.MOUSE_DOUBLE:
 	 			self.current_event = []
 	 			unused = None
@@ -817,7 +816,7 @@ class EditLayerUnits(EditLayer):
 					self.selecting_images = None
 					self.selection_box = None
 					self.selecting_moved = False
- 
+
 class EditLayerSprites(EditLayer):
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Sprites")
@@ -1285,6 +1284,7 @@ class PyMAP(Tk):
 
 		self.mapCanvas = Canvas(right, background='#000000', highlightthickness=0)
 		self.mapCanvas.grid(sticky=NSEW)
+		self.mapCanvas.focus_set()
 		def scroll_map(event):
 			if self.chk:
 				horizontal = False

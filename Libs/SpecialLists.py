@@ -732,6 +732,10 @@ class TreeList(Frame):
 		return s
 
 	def select(self, index, modifier=0):
+		if index == None:
+			self.text.tag_remove('Selection', '1.0', END)
+			self.lastsel = None
+			return
 		node = self.get_node(index)
 
 		if modifier == 0 or (modifier == 1 and self.selectmode == EXTENDED and self.lastsel == None) or (modifier == 2 and self.selectmode != SINGLE):

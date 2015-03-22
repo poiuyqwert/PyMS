@@ -449,6 +449,7 @@ class PyBIN(Tk):
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.pack(fill=X)
 		self.widgetCanvas.bind('<Motion>', self.mouse_motion)
+		self.widgetCanvas.bind('<Leave>', lambda e: self.edit_status.set(''))
 		mouse_events = (
 			('<%sButton-1>', MOUSE_DOWN),
 			('<%sB1-Motion>', MOUSE_MOVE),
