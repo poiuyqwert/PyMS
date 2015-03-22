@@ -3,32 +3,7 @@ import TBL
 
 import struct, re
 
-class DialogBINGroup(object):
-	def __init__(self):
-		self.parent = None
-		self.children = []
-
-	def bounding_box(self):
-		bounding_box = [0,0,0,0]
-		for layer in self.children:
-			x1,y1,x2,y2 = layer.bounding_box()
-			if x1 < bounding_box[0]:
-				bounding_box[0] = x1
-			if y1 < bounding_box[1]:
-				bounding_box[1] = y1
-			if x2 < bounding_box[2]:
-				bounding_box[2] = x2
-			if y2 < bounding_box[3]:
-				bounding_box[3] = y2
-		return bounding_box
-
-	def add_child(self, child):
-		if child.parent:
-			child.parent.children.remove(child)
-		child.parent = self
-		self.children.append(child)
-
-class DialogBINWidget(DialogBINGroup):
+class BINWidget(object):
 	BYTE_SIZE = 86
 	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
 
@@ -65,8 +40,10 @@ class DialogBINWidget(DialogBINGroup):
 	FLAG_NO_CLICK_SOUNG = 0x40000000
 	FLAG_UNK10 = 0x80000000
 
+	FLAGS_TEXT_ALIGN = (FLAG_TEXT_ALIGN_CENTER | FLAG_TEXT_ALIGN_RIGHT | FLAG_TEXT_ALIGN_CENTER2)
+
 	TYPE_DIALOG = 0
-	TYPE_DEFAULT_BTN = 0
+	TYPE_DEFAULT_BTN = 1
 	TYPE_BUTTON = 2
 	TYPE_OPTION_BTN = 3
 	TYPE_CHECKBOX = 4
@@ -84,7 +61,6 @@ class DialogBINWidget(DialogBINGroup):
 	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
 	def __init__(self, ctrl_type=TYPE_DIALOG):
-		DialogBINGroup.__init__(self)
 		self.x1 = 0
 		self.y1 = 0
 		self.x2 = 0
@@ -117,7 +93,20 @@ class DialogBINWidget(DialogBINGroup):
 	def bounding_box(self):
 		return [self.x1,self.y1,self.x2,self.y2]
 
-class DialogBINSMK(object):
+	def text_box(self):
+		return [self.x1 + self.text_offset_x,self.y1 + self.text_offset_y,self.x2,self.y2]
+
+	def responsive_box(self):
+		return [self.x1 + self.responsive_x1,self.y1 + self.responsive_y1,self.x1 + self.responsive_x2,self.y1 + self.responsive_y2]
+
+	def display_text(self):
+		if self.type in (BINWidget.TYPE_DEFAULT_BTN,BINWidget.TYPE_BUTTON,BINWidget.TYPE_OPTION_BTN,BINWidget.TYPE_CHECKBOX,BINWidget.TYPE_HIGHLIGHT_BTN):
+			return self.string[1:]
+		elif self.type in (BINWidget.TYPE_TEXTBOX,BINWidget.TYPE_LABEL_LEFT_ALIGN,BINWidget.TYPE_LABEL_CENTER_ALIGN,BINWidget.TYPE_LABEL_RIGHT_ALIGN):
+			return self.string
+		return None
+
+class BINSMK(object):
 	BYTE_SIZE = 30
 	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','overlay_offset_x','overlay_offset_y','unknown3','unknown4')
 
@@ -141,10 +130,12 @@ class DialogBINSMK(object):
 
 class DialogBIN:
 	def __init__(self):
-		dialog = DialogBINWidget()
+		dialog = BINWidget()
+		dialog.x2 = 639
+		dialog.y2 = 479
 		dialog.width = 640
 		dialog.height = 480
-		self.dialog = dialog
+		self.widgets = [dialog]
 		self.smks = []
 
 	def load_file(self, file):
@@ -166,16 +157,15 @@ class DialogBIN:
 			raise PyMSError('Load',"Unsupported Dialog BIN file '%s', could possibly be corrupt" % file)
 
 	def load_data(self, data):
-		dialog = [None]
 		widgets = []
 		smk_map = {}
 		smks = []
 		def load_smk(offset):
-			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+DialogBINSMK.BYTE_SIZE]))
+			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+BINSMK.BYTE_SIZE]))
 			filename_offset = smk_info[3]
 			end_offset = data.find('\0', filename_offset)
 			smk_info[3] = data[filename_offset:end_offset]
-			smk = DialogBINSMK()
+			smk = BINSMK()
 			smk_map[offset] = smk
 			smks.append(smk)
 			overlay_smk_offset = smk_info[0]
@@ -185,13 +175,11 @@ class DialogBIN:
 				smk_info[0] = smk_map[overlay_smk_offset]
 			else:
 				smk_info[0] = None
-			attrs = DialogBINSMK.ATTR_NAMES
+			attrs = BINSMK.ATTR_NAMES
 			for attr,value in zip(attrs,smk_info):
 				setattr(smk, attr, value)
 		def load_widget(offset):
-			widget = DialogBINWidget()
-			widgets.append(widget)
-			widget_info = list(struct.unpack('<L6H4LH5L4HLL4HLL',data[offset:offset+DialogBINWidget.BYTE_SIZE]))
+			widget_info = list(struct.unpack('<L6H4LH5L4HLL4HLL',data[offset:offset+BINWidget.BYTE_SIZE]))
 			string_offset = widget_info[8]
 			if string_offset:
 				end_offset = data.find('\0', string_offset)
@@ -200,11 +188,7 @@ class DialogBIN:
 				widget_info[8] = None
 			next_widget = widget_info[0]
 			smk_offset = widget_info[22]
-			if widget_info[11] == DialogBINWidget.TYPE_DIALOG:
-				if dialog[0] != None:
-					raise PyMSError('Load','More than one dialog found.')
-				dialog[0] = widget
-				widgets.remove(widget)
+			if widget_info[11] == BINWidget.TYPE_DIALOG:
 				next_widget = smk_offset
 				smk_offset = 0
 			if smk_offset:
@@ -213,17 +197,15 @@ class DialogBIN:
 				widget_info[22] = smk_map[smk_offset]
 			else:
 				widget_info[22] = None
-			attrs = DialogBINWidget.ATTR_NAMES
+			widget = BINWidget()
+			widgets.append(widget)
+			attrs = BINWidget.ATTR_NAMES
 			for attr,value in zip(attrs,widget_info[1:]):
 				setattr(widget, attr, value)
 			if next_widget:
 				load_widget(next_widget)
 		load_widget(0)
-		if not dialog:
-			raise PyMSError('Load','No dialog found.')
-		for widget in widgets:
-			dialog[0].add_child(widget)
-		self.dialog = dialog[0]
+		self.widgets = widgets
 		self.smks = smks
 
 	def save_file(self, file):
@@ -235,17 +217,10 @@ class DialogBIN:
 		f.close()
 
 	def save_data(self):
-		widgets = []
-		def flatten_widget(widget):
-			if not type(widget) == DialogBINGroup:
-				widgets.append(widget)
-			for child in widget.children:
-				flatten_widget(child)
-		flatten_widget(self.dialog)
 		smk_offsets = {}
 		string_offsets = {}
-		smk_offset = len(widgets) * DialogBINWidget.BYTE_SIZE
-		offsets = [0, smk_offset, smk_offset + len(self.smks) * DialogBINSMK.BYTE_SIZE]
+		smk_offset = len(self.widgets) * BINWidget.BYTE_SIZE
+		offsets = [0, smk_offset, smk_offset + len(self.smks) * BINSMK.BYTE_SIZE]
 		results = ['','','']
 		def save_string(string):
 			if not string in string_offsets:
@@ -257,9 +232,9 @@ class DialogBIN:
 			data = ''
 			if not smk in smk_offsets:
 				smk_offsets[smk] = offsets[1]
-				offsets[1] += DialogBINSMK.BYTE_SIZE
+				offsets[1] += BINSMK.BYTE_SIZE
 				smk_info = []
-				attrs = DialogBINSMK.ATTR_NAMES
+				attrs = BINSMK.ATTR_NAMES
 				for attr in attrs:
 					value = getattr(smk, attr)
 					if attr == 'overlay_smk' and value != None:
@@ -273,17 +248,17 @@ class DialogBIN:
 			return (smk_offsets[smk],data)
 		def save_widget(widget, next_offset):
 			widget_info = []
-			if widget == last_widget or widget.type == DialogBINWidget.TYPE_DIALOG:
+			if widget == last_widget or widget.type == BINWidget.TYPE_DIALOG:
 				widget_info.append(0)
 			else:
 				widget_info.append(next_offset)
-			attrs = DialogBINWidget.ATTR_NAMES
+			attrs = BINWidget.ATTR_NAMES
 			for attr in attrs:
 				value = getattr(widget, attr)
 				if attr == 'string' and value != None:
 					value = save_string(value)
 				elif attr == 'smk':
-					if widget.type == DialogBINWidget.TYPE_DIALOG:
+					if widget.type == BINWidget.TYPE_DIALOG:
 						value = next_offset
 					elif value != None:
 						value,data = save_smk(value)
@@ -291,11 +266,11 @@ class DialogBIN:
 				if value == None:
 					value = 0
 				widget_info.append(value)
-			offsets[0] += DialogBINWidget.BYTE_SIZE
+			offsets[0] += BINWidget.BYTE_SIZE
 			results[0] += struct.pack('<L6H4LH5L4HLL4HLL', *widget_info)
-		last_widget = widgets[-1]
-		for widget in widgets:
-			next_offset = offsets[0] + DialogBINWidget.BYTE_SIZE
+		last_widget = self.widgets[-1]
+		for widget in self.widgets:
+			next_offset = offsets[0] + BINWidget.BYTE_SIZE
 			if widget == last_widget:
 				next_offset = 0
 			save_widget(widget, next_offset)
@@ -315,7 +290,6 @@ class DialogBIN:
 
 	def interpret_data(self, data):
 		lines = re.split('(?:\r?\n)+', data)
-		dialog = None
 		widgets = []
 		smks = {}
 		backfill_smks = {}
@@ -334,7 +308,7 @@ class DialogBIN:
 			if not line:
 				continue
 			if line == 'Widget:':
-				working = DialogBINWidget()
+				working = BINWidget()
 				widgets.append(working)
 				continue
 			m = re.match('^SMK (\d+):$', line)
@@ -342,10 +316,10 @@ class DialogBIN:
 				smk_id = int(m.group(1))
 				if smk_id in smks:
 					raise PyMSError('Interpreting',"Duplicate definition for SMK '%s'" % attr,n,line)
-				working = DialogBINSMK()
+				working = BINSMK()
 				if smk_id in backfill_smks:
 					for obj in backfill_smks[smk_id]:
-						if isinstance(obj, DialogBINWidget):
+						if isinstance(obj, BINWidget):
 							obj.smk = working
 						else:
 							obj.overlay_smk = working
@@ -357,8 +331,8 @@ class DialogBIN:
 			m = re.match('^(\S+)\s+(.+)$', line)
 			attr = m.group(1)
 			value = m.group(2)
-			if isinstance(working, DialogBINWidget):
-				if not attr in DialogBINWidget.ATTR_NAMES:
+			if isinstance(working, BINWidget):
+				if not attr in BINWidget.ATTR_NAMES:
 					raise PyMSError('Interpreting',"Invalid Widget attribute name '%s'" % attr,n,line)
 				if attr == 'smk':
 					if value == 'None':
@@ -378,13 +352,8 @@ class DialogBIN:
 					value = flags(value, 27)
 				else:
 					value = int(value)
-					if attr == 'type' and value == DialogBINWidget.TYPE_DIALOG:
-						if dialog != None:
-							raise PyMSError('Interpreting','More than one dialog found.',n,line)
-						dialog = working
-						widgets.remove(working)
 			else:
-				if not attr in DialogBINSMK.ATTR_NAMES:
+				if not attr in BINSMK.ATTR_NAMES:
 					raise PyMSError('Interpreting',"Invalid SMK attribute name '%s'" % attr,n,line)
 				if attr == 'overlay_smk':
 					if value == 'None':
@@ -404,11 +373,15 @@ class DialogBIN:
 			setattr(working, attr, value)
 		if backfill_smks:
 			raise PyMSError('Interpreting',"SMK %s is missing" % backfill_smks.keys()[0])
-		if not dialog:
+		for i in xrange(len(widgets)):
+			widget = widgets[i]
+			if widget.type == BINWidget.TYPE_DIALOG:
+				del widgets[i]
+				widgets.insert(i,widget)
+				break
+		else:
 			raise PyMSError('Interpreting','No dialog found.')
-		for widget in widgets:
-			dialog.add_child(widget)
-		self.dialog = dialog
+		self.widgets = widgets
 		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
 
 	def decompile_file(self, file):
@@ -421,7 +394,7 @@ class DialogBIN:
 
 	def decompile_data(self):
 		result = ''
-		attrs = DialogBINSMK.ATTR_NAMES
+		attrs = BINSMK.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
 		for i,smk in enumerate(self.smks):
 			result += 'SMK %d:\n' % i
@@ -436,16 +409,9 @@ class DialogBIN:
 					value = flags(value, 5)
 				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
 			result += '\n'
-		attrs = DialogBINWidget.ATTR_NAMES
+		attrs = BINWidget.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
-		widgets = []
-		def flatten_widget(widget):
-			if not type(widget) == DialogBINGroup:
-				widgets.append(widget)
-			for child in widget.children:
-				flatten_widget(child)
-		flatten_widget(self.dialog)
-		for widget in widgets:
+		for widget in self.widgets:
 			result += 'Widget:\n'
 			for attr in attrs:
 				value = getattr(widget, attr)
@@ -457,22 +423,22 @@ class DialogBIN:
 				elif attr == 'flags':
 					value = flags(value, 27)
 				elif attr == 'type':
-					if value < len(DialogBINWidget.TYPE_NAMES):
-						hint = DialogBINWidget.TYPE_NAMES[value]
+					if value < len(BINWidget.TYPE_NAMES):
+						hint = BINWidget.TYPE_NAMES[value]
 					else:
 						hint = 'Unknown'
 				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
 			result += '\n'
 		return result
 
-if __name__ == '__main__':
-	dialogbin = DialogBIN()
-	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
-	data = dialogbin.save_data()
-	dialogbin.load_data(data)
-	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
-	dialogbin.interpret_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
-	data = dialogbin.save_data()
-	dialogbin.load_data(data)
-	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')
+# if __name__ == '__main__':
+# 	dialogbin = DialogBIN()
+# 	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
+# 	data = dialogbin.save_data()
+# 	dialogbin.load_data(data)
+# 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
+# 	dialogbin.interpret_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
+# 	data = dialogbin.save_data()
+# 	dialogbin.load_data(data)
+# 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')
 
