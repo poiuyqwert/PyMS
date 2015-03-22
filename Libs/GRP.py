@@ -190,7 +190,7 @@ class GRP:
 		self.uncompressed = uncompressed
 		self.transindex = transindex
 
-	def load_file(self, file, palette=None, transindex=0):
+	def load_file(self, file, palette=None, transindex=0, uncompressed=None):
 		if isstr(file):
 			try:
 				f = open(file,'rb')
@@ -201,48 +201,24 @@ class GRP:
 		else:
 			data = file.read()
 		try:
-			uncompressed = None
 			frames, width, height = struct.unpack('<3H',data[:6])
 			if frames < 1 or frames > 2400 or width < 1 or width > 256 or height < 1 or height > 256:
 				raise
-			images = []
-			for frame in range(frames):
-				image = []
-				xoffset, yoffset, linewidth, lines, framedata = struct.unpack('<4BL', data[6+8*frame:14+8*frame])
-				# ignore extra bytes
-				if xoffset + linewidth > width:
-					linewidth = width - xoffset
-				if yoffset + lines > height:
-					lines = height - yoffset
-				image.extend([[0] * width for _ in range(yoffset)])
-				if not uncompressed:
-					try:
-						for line in range(lines):
-							linedata = []
-							if xoffset > 0:
-								linedata = [transindex] * xoffset
-							offset = framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0]
-							while len(linedata)-xoffset < linewidth:
-								o = ord(data[offset])
-								if o >= 128:
-									linedata.extend([transindex] * (o - 128))
-									offset += 1
-								elif o >= 64:
-									linedata.extend([ord(data[offset+1])] * (o - 64))
-									offset += 2
-								else:
-									linedata.extend([ord(c) for c in data[offset+1:offset+1+o]])
-									offset += o + 1
-							image.append(linedata[:xoffset+linewidth] + [transindex] * (width-linewidth-xoffset))
-						if uncompressed == None:
-							uncompressed = False
-					except:
-						if uncompressed == None:
-							uncompressed = True
-						else:
-							raise PyMSError('Load','Could not decompile frame %s, GRP could be corrupt.' % frame)
-				if uncompressed:
-					try:
+			retries = 2
+			while retries:
+				retries -= 1
+				images = []
+				for frame in range(frames):
+					image = []
+					xoffset, yoffset, linewidth, lines, framedata = struct.unpack('<4BL', data[6+8*frame:14+8*frame])
+					# ignore extra bytes
+					if xoffset + linewidth > width:
+						linewidth = width - xoffset
+					if yoffset + lines > height:
+						lines = height - yoffset
+					# print frames,width,height,xoffset,yoffset,linewidth,lines,framedata
+					image.extend([[0] * width for _ in range(yoffset)])
+					if uncompressed:
 						for line in range(lines):
 							linedata = []
 							if xoffset > 0:
@@ -250,11 +226,33 @@ class GRP:
 							linedata.extend([ord(index) for index in data[framedata:framedata+linewidth]])
 							image.append(linedata + [transindex] * (width-linewidth-xoffset))
 							framedata += linewidth
-					except:
-						raise PyMSError('Load','Could not decompile frame %s, GRP could be corrupt.' % frame)
-				if len(image) < height:
-					image.extend([[transindex] * width for _ in range(height - len(image))])
-				images.append(image[:height])
+					else:
+						try:
+							for line in range(lines):
+								linedata = []
+								if xoffset > 0:
+									linedata = [transindex] * xoffset
+								offset = framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0]
+								while len(linedata)-xoffset < linewidth:
+									o = ord(data[offset])
+									if o >= 128:
+										linedata.extend([transindex] * (o - 128))
+										offset += 1
+									elif o >= 64:
+										linedata.extend([ord(data[offset+1])] * (o - 64))
+										offset += 2
+									else:
+										linedata.extend([ord(c) for c in data[offset+1:offset+1+o]])
+										offset += o + 1
+								image.append(linedata[:xoffset+linewidth] + [transindex] * (width-linewidth-xoffset))
+						except:
+							if uncompressed == None:
+								uncompressed = True
+								break
+							raise
+					if len(image) < height:
+						image.extend([[transindex] * width for _ in range(height - len(image))])
+					images.append(image[:height])
 		except:
 			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt" % file,exception=sys.exc_info())
 		self.frames = frames
