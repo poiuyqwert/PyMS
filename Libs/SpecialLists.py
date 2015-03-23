@@ -685,6 +685,7 @@ class TreeList(Frame):
 		self.tk.call('rename', self.text._w, self.text.orig)
 		self.tk.createcommand(self.text._w, self.dispatch)
 		self.text.tag_config('Selection', background='lightblue')
+		self.text.tag_config('Hightlight', background='#CCCCCC')
 
 	def execute(self, cmd, args):
 		try:
@@ -696,12 +697,29 @@ class TreeList(Frame):
 		if not cmd in ['insert','delete'] and not 'sel' in args:
 			return self.execute(cmd, args)
 
+	def lookup_coords(self, x,y):
+		index = self.index('@%d,%d' % (x,y))
+		if index:
+			for o in xrange(1,100):
+				for below in (True,False):
+					check = self.index('@%d,%d' % (x,y + o * (1 if below else -1)))
+					if check != index:
+						return (index,below)
+		return (index,True)
+
 	def index(self, entry):
-		node = self.entries[entry]
-		index = ''
-		while node != self.root:
-			index = '%d%s%s' % (node.parent.children.index(node),'.' if index else '',index)
-			node = node.parent
+		index = None
+		if isstr(entry) and entry.startswith('@'):
+			entries = [int(n[5:]) for n in self.text.tag_names(entry) if n.startswith('entry')]
+			if entries:
+				entry = entries[0]
+		if isinstance(entry, int):
+			node = self.entries[entry]
+			if node:
+				index = ''
+				while node != self.root:
+					index = '%d%s%s' % (node.parent.children.index(node),'.' if index else '',index)
+					node = node.parent
 		return index
 
 	def get_node(self, index):
@@ -724,6 +742,21 @@ class TreeList(Frame):
 				return False
 			node = node.parent
 		return True
+
+	def cur_highlight(self):
+		ranges = self.text.tag_ranges('Hightlight')
+		if ranges:
+			entries = [int(n[5:]) for n in self.text.tag_names(ranges[0]) if n.startswith('entry')]
+			if entries:
+				return entries[0]
+		return None
+
+	def highlight(self, index):
+		self.text.tag_remove('Hightlight', '1.0', END)
+		if index == None:
+			return
+		node = self.get_node(index)
+		self.text.tag_add('Hightlight',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
 
 	def cur_selection(self):
 		s = []

@@ -493,7 +493,7 @@ class DropDown(Frame):
 			ARROW = PhotoImage(file=os.path.join(BASE_DIR, 'Images', 'arrow.gif'))
 		self.button = Button(self, image=ARROW, command=self.choose, state=state)
 		self.button.image = ARROW
-		self.button.pack(side=LEFT, fill=Y)
+		self.button.pack(side=RIGHT, fill=Y)
 
 	def __setitem__(self, item, value):
 		if item == 'state':

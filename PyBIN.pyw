@@ -153,11 +153,14 @@ class WidgetNode:
 			name = '%s (%s)' % self.name
 		return name
 
-	def add_child(self, node):
-		self.children.append(node)
+	def add_child(self, node, index=-1):
 		if node.parent:
 			node.parent.children.remove(node)
 		node.parent = self
+		if index == -1:
+			self.children.append(node)
+		else:
+			self.children.insert(index, node)
 
 	def bounding_box(self):
 		if self.widget:
@@ -313,6 +316,10 @@ class PyBIN(Tk):
 				'font14':'MPQ:font\\font14.fnt',
 				'font16':'MPQ:font\\font16.fnt',
 				'font16x':'MPQ:font\\font16x.fnt',
+				'show_background_path_history':[
+					'None',
+					'MPQ:glue\\palmm\\backgnd.pcx',
+				]
 			}
 		)
 
@@ -344,6 +351,10 @@ class PyBIN(Tk):
 		self.edit_node = None
 		self.current_event = []
 		self.mouse_offset = [0,0]
+
+		self.background_image = None
+
+		self.item_background = None
 		self.item_selection_box = None
 
 		#Toolbar
@@ -403,6 +414,18 @@ class PyBIN(Tk):
 		self.show_bounds_text.set(self.settings.get('show_bounds_text',True))
 		self.show_bounds_responsive = BooleanVar()
 		self.show_bounds_responsive.set(self.settings.get('show_bounds_responsive',True))
+		self.show_background = BooleanVar()
+		self.show_background.set(self.settings.get('show_background',False))
+		self.show_background_index = IntVar()
+		path = self.settings.get('show_background_path','None')
+		history = self.settings.get('show_background_path_history',['None'])
+		if not path in history:
+			if path == 'None':
+				history.insert(0, path)
+			else:
+				history.insert(1, path)
+		self.last_background_index = history.index(path)
+		self.show_background_index.set(self.last_background_index)
 
 		frame = Frame(self)
 		leftframe = Frame(frame)
@@ -410,6 +433,9 @@ class PyBIN(Tk):
 		self.widgetTree = TreeList(leftframe)
 		self.widgetTree.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
 		self.widgetTree.bind('<Button-1>', self.list_select)
+		self.widgetTree.bind('<B1-Motion>', self.list_drag)
+		self.widgetTree.bind('<ButtonRelease-1>', self.list_drop)
+		self.widgetTree.bind('<Double-Button-1>', self.list_double_click)
 		flagframe = LabelFrame(leftframe, text='Preview:')
 		fields = (
 			('Images','show_images',self.show_images, NORMAL),
@@ -435,6 +461,19 @@ class PyBIN(Tk):
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
 		boundsframe.grid(row=2, column=0, columnspan=2, sticky=NSEW, padx=5, pady=5)
+		Checkbutton(flagframe, text='Background:', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=3, column=0, columnspan=2, sticky=W)
+		f = Frame(flagframe)
+		DropDown(f, self.show_background_index, self.settings['show_background_path_history'], self.change_background).grid(row=0, column=0, sticky=W+E)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','open.gif'))
+		button = Button(f, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
+		button.image = image
+		button.grid(row=0, column=1)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','openmpq.gif'))
+		button = Button(f, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
+		button.image = image
+		button.grid(row=0, column=2)
+		f.grid_columnconfigure(0, weight=1)
+		f.grid(row=4, column=0, columnspan=2, sticky=NSEW, padx=5, pady=5)
 		flagframe.grid_columnconfigure(0, weight=1)
 		flagframe.grid_columnconfigure(1, weight=1)
 		flagframe.pack(side=BOTTOM, padx=1, pady=1, fill=X)
@@ -450,6 +489,8 @@ class PyBIN(Tk):
 		frame.pack(fill=X)
 		self.widgetCanvas.bind('<Motion>', self.mouse_motion)
 		self.widgetCanvas.bind('<Leave>', lambda e: self.edit_status.set(''))
+		self.widgetCanvas.bind('<Double-Button-1>', lambda e,m=0: self.canvas_double_click(e,m))
+		self.widgetCanvas.bind('<Control-Double-Button-1>', lambda e,m=MODIFIER_CTRL: self.canvas_double_click(e,m))
 		mouse_events = (
 			('<%sButton-1>', MOUSE_DOWN),
 			('<%sB1-Motion>', MOUSE_MOVE),
@@ -489,6 +530,47 @@ class PyBIN(Tk):
 
 		if e:
 			self.mpqsettings(err=e)
+
+	def load_background(self, index):
+		try:
+			path = self.settings['show_background_path_history'][index]
+			background = PCX.PCX()
+			background.load_file(self.mpqhandler.get_file(path))
+		except:
+			return False
+		self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
+		return True
+
+	def update_background(self):
+		if self.bin and self.show_background.get() and self.show_background_index.get():
+			if not self.background_image:
+				self.load_background(self.show_background_index.get())
+			if self.item_background:
+				self.widgetCanvas.configure(image=self.background_image)
+			else:
+				self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
+				self.widgetCanvas.lower(self.item_background)
+		elif self.item_background:
+			self.widgetCanvas.delete(self.item_background)
+			self.item_background = None
+
+	def change_background(self, n):
+		index = self.show_background_index.get()
+		if index != self.last_background_index:
+			changed = False
+			path = 'None'
+			if index:
+				changed = self.load_background(index)
+				if not changed:
+					self.show_background_index.set(self.last_background_index)
+					# todo: check remove from list
+			else:
+				self.background_image = None
+				changed = True
+			if changed:
+				self.settings['show_background_path'] = path
+				self.update_background()
+				self.last_background_index = index
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()
@@ -621,6 +703,8 @@ class PyBIN(Tk):
 			if node.children != None:
 				group = True
 			node.index = self.widgetTree.insert(index, node.get_name(), group)
+			if node == self.selected_node:
+				self.widgetTree.select(node.index)
 			self.widget_map[node.index] = node
 			if node.children:
 				for child in node.children:
@@ -636,9 +720,11 @@ class PyBIN(Tk):
 	def reload_canvas(self):
 		if self.bin:
 			# self.widgetCanvas.delete(ALL)
+			self.update_background()
 			reorder = False
 			for node in self.flattened_nodes():
 				reorder = node.update_display(self) or reorder
+			self.update_selection_box()
 			if reorder:
 				self.update_zorder()
 
@@ -663,6 +749,37 @@ class PyBIN(Tk):
 		else:
 			self.widgetTree.select(None)
 
+	def edit_node_settings(self, node):
+		print node
+
+	def canvas_double_click(self, e, m):
+		if self.bin:
+			prefer_selection = (m == MODIFIER_CTRL)
+			def check_clicked(node, x,y):
+				found = None
+				x1,y1,x2,y2 = node.bounding_box()
+				event = edit_event(x1,y1,x2,y2, x,y, False)
+				if event:
+					found = node
+					if node.children and (not prefer_selection or node != self.selected_node):
+						for child in node.children:
+							found_child = check_clicked(child, x,y)
+							if found_child != None:
+								found = found_child
+								break
+				return found
+			node = check_clicked(self.dialog, e.x,e.y)
+			if node:
+				self.edit_node_settings(node)
+
+	def list_double_click(self, event):
+		selected = self.widgetTree.cur_selection()
+		if selected and selected[0] > -1:
+			list_index = self.widgetTree.index(selected[0])
+			node = self.widget_map.get(list_index)
+			if node:
+				self.edit_node_settings(node)
+
 	def select_node(self, node):
 		self.selected_node = node
 		self.update_selection_box()
@@ -672,10 +789,29 @@ class PyBIN(Tk):
 		selected = self.widgetTree.cur_selection()
 		if selected and selected[0] > -1:
 			list_index = self.widgetTree.index(selected[0])
-			node = self.widget_map.get(list_index)
-			if node:
-				self.selected_node = node
-				self.update_selection_box()
+			self.selected_node = self.widget_map[list_index]
+			self.update_selection_box()
+
+	def list_drag(self, event):
+		# todo: Not started on node?
+		if self.selected_node:
+			index = self.widgetTree.index("@%d,%d" % (event.x, event.y))
+			self.widgetTree.highlight(index)
+
+	def list_drop(self, event):
+		# todo: Not started on node?
+		if self.selected_node:
+			self.widgetTree.highlight(None)
+			index,below = self.widgetTree.lookup_coords(event.x, event.y)
+			print index,self.selected_node.index,below
+			if index and index != self.selected_node.index:
+				highlight = self.widget_map[index]
+				if highlight.children != None:
+					highlight.add_child(self.selected_node)
+				else:
+					highlight.parent.add_child(self.selected_node, highlight.parent.children.index(highlight) + below)
+				self.reload_list()
+				self.reload_canvas()
 
 	def edit_event(self, x,y, node=None, prefer_selection=False):
 		if node == None:
@@ -882,12 +1018,28 @@ class PyBIN(Tk):
 			return
 		if not self.unsaved():
 			self.bin = None
-			self.title('PyBIN %s' % LONG_VERSION)
 			self.file = None
-			self.status.set('Load or create a Dialog BIN.')
 			self.edited = False
+			self.dialog = None
+			self.widget_map = None
+
+			self.selected_node = None
+			self.old_cursor = None
+			self.edit_node = None
+			self.current_event = []
+			self.mouse_offset = [0,0]
+
+			self.background_image = None
+
+			self.item_background = None
+			self.item_selection_box = None
+
+			self.widgetTree.delete(ALL)
+			self.widgetCanvas.delete(ALL)
+
+			self.title('PyBIN %s' % LONG_VERSION)
+			self.status.set('Load or create a Dialog BIN.')
 			self.editstatus['state'] = DISABLED
-			self.reset()
 			self.action_states()
 
 	def register(self, e=None):
