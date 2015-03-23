@@ -16,11 +16,12 @@ MOUSE_DOWN = 0
 MOUSE_MOVE = 1
 MOUSE_UP = 2
 
-EDIT_MOVE = 0
-EDIT_RESIZE_LEFT = 1
-EDIT_RESIZE_TOP = 2
-EDIT_RESIZE_RIGHT = 3
-EDIT_RESIZE_BOTTOM = 4
+EDIT_NONE = 0
+EDIT_MOVE = 1
+EDIT_RESIZE_LEFT = 2
+EDIT_RESIZE_TOP = 3
+EDIT_RESIZE_RIGHT = 4
+EDIT_RESIZE_BOTTOM = 5
 
 MODIFIER_SHIFT = 1
 MODIFIER_CTRL = 2
@@ -38,15 +39,21 @@ def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 			dist_left = abs(x1 - mouseX)
 			dist_right = abs(x2 - mouseX)
 			if dist_left < dist_right and dist_left <= 5:
-				event[0] = EDIT_RESIZE_LEFT
+				event = [EDIT_RESIZE_LEFT,EDIT_NONE]
 			elif dist_right < dist_left and dist_right <= 5:
-				event[0] = EDIT_RESIZE_RIGHT
+				event = [EDIT_RESIZE_RIGHT,EDIT_NONE]
 			dist_top = abs(y1 - mouseY)
 			dist_bot = abs(y2 - mouseY)
 			if dist_top < dist_bot and dist_top <= 5:
-				event.append(EDIT_RESIZE_TOP)
+				if len(event) == 1:
+					event = [EDIT_NONE,EDIT_RESIZE_TOP]
+				else:
+					event[1] = EDIT_RESIZE_TOP
 			elif dist_bot < dist_top and dist_bot <= 5:
-				event.append(EDIT_RESIZE_BOTTOM)
+				if len(event) == 1:
+					event = [EDIT_NONE,EDIT_RESIZE_BOTTOM]
+				else:
+					event[1] = EDIT_RESIZE_BOTTOM
 	return event
 
 class StringPreview:
@@ -993,10 +1000,10 @@ class PyBIN(Tk):
 						elif EDIT_RESIZE_RIGHT in mouse_event:
 							mouse_event[mouse_event.index(EDIT_RESIZE_RIGHT)] = EDIT_RESIZE_LEFT
 					if node.widget.y1 > node.widget.y2:
-						if EDIT_RESIZE_UP in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_UP)] = EDIT_RESIZE_DOWN
-						elif EDIT_RESIZE_DOWN in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_DOWN)] = EDIT_RESIZE_UP
+						if EDIT_RESIZE_TOP in mouse_event:
+							mouse_event[mouse_event.index(EDIT_RESIZE_TOP)] = EDIT_RESIZE_BOTTOM
+						elif EDIT_RESIZE_BOTTOM in mouse_event:
+							mouse_event[mouse_event.index(EDIT_RESIZE_BOTTOM)] = EDIT_RESIZE_TOP
 				if mouse_event[0] == EDIT_MOVE:
 					cursor.extend(['crosshair','fleur','size'])
 				elif mouse_event[0] == EDIT_RESIZE_LEFT:
@@ -1077,15 +1084,14 @@ class PyBIN(Tk):
 							self.update_selection_box()
 					offset_node(self.edit_node, dx,dy)
 				else:
-					if self.current_event[0] == EDIT_RESIZE_LEFT:
+					if EDIT_RESIZE_LEFT in self.current_event:
 						self.edit_node.widget.x1 = x
-					elif self.current_event[0] == EDIT_RESIZE_RIGHT:
+					elif EDIT_RESIZE_RIGHT in self.current_event:
 						self.edit_node.widget.x2 = x
-					if len(self.current_event) > 1:
-						if self.current_event[1] == EDIT_RESIZE_TOP:
-							self.edit_node.widget.y1 = y
-						elif self.current_event[1] == EDIT_RESIZE_BOTTOM:
-							self.edit_node.widget.y2 = y
+					if EDIT_RESIZE_TOP in self.current_event:
+						self.edit_node.widget.y1 = y
+					elif EDIT_RESIZE_BOTTOM in self.current_event:
+						self.edit_node.widget.y2 = y
 					self.edit_node.update_display(self)
 					if self.edit_node == self.selected_node:
 						self.update_selection_box()
