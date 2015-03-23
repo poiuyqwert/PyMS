@@ -461,11 +461,12 @@ class NotebookTab(Frame):
 		pass
 
 class DropDown(Frame):
-	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL):
+	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL, stay_right=False):
 		self.variable = variable
 		self.variable.set = self.set
 		self.display = display
 		self.blank = blank
+		self.stay_right = stay_right
 		if display and isinstance(display, Variable):
 			display.callback = self.set
 		self.size = min(10,len(entries))
@@ -513,11 +514,15 @@ class DropDown(Frame):
 		if selected >= self.listbox.size():
 			selected = self.listbox.size()-1
 		self.listbox.see(selected)
+		if self.stay_right:
+			self.listbox.xview(sys.maxint)
 
 	def set(self, num):
 		self.change(num)
 		Variable.set(self.variable, num)
 		self.disp(num)
+		if self.stay_right:
+			self.listbox.xview(sys.maxint)
 
 	def change(self, num):
 		if num >= self.listbox.size():

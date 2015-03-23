@@ -3,6 +3,48 @@ import TBL
 
 import struct, re
 
+DIALOG_PATHS = {
+	"glue\\mainmenu\\":		0x00,
+	"glue\\simulate":		0x0B,
+	"glue\\selconn\\":		0x0B,
+	"glue\\chatroom\\":		0x0B,
+	"glue\\battle.net\\":	0x0C,
+	"glue\\login\\":		0x0B,
+	"glue\\campaign\\":		0x01,
+	"glue\\ReadyT\\":		0x02,
+	"glue\\ReadyZ\\":		0x03,
+	"glue\\ReadyP\\":		0x04,
+	"glue\\gamesel\\":		0x0B,
+	"glue\\create\\":		0x0B,
+	"glue\\create\\":		0x0B,
+	"glue\\load\\":			0x0B,
+	"glue\\score\\":		0x07,
+	"glue\\score\\":		0x08,
+	"glue\\score\\":		0x09,
+	"glue\\score\\":		0x0A,
+	"glue\\score\\":		0x05,
+	"glue\\score\\":		0x06,
+	"glue\\modem\\":		0x0B,
+	"glue\\direct\\":		0x0B,
+	"glue\\campaign\\":		0x01,
+	"glue\\gamemode\\":		0x0B,
+	"glue\\gamemode\\":		0x0B,
+}
+ASSET_PATHS = {
+	0x00: "glue\\palmm\\",
+	0x01: "glue\\palcs\\",
+	0x02: "glue\\palrt\\",
+	0x03: "glue\\palrz\\",
+	0x04: "glue\\palrp\\",
+	0x05: "glue\\palrd\\",
+	0x06: "glue\\palpv\\",
+	0x07: "glue\\palzd\\",
+	0x08: "glue\\palzv\\",
+	0x09: "glue\\paltd\\",
+	0x0A: "glue\\paltv\\",
+	0x0B: "glue\\palnl\\",
+}
+	
 class BINWidget(object):
 	BYTE_SIZE = 86
 	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
@@ -60,6 +102,12 @@ class BINWidget(object):
 
 	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
+	TYPES_DISPLAY_STRING_HOTKEY = (TYPE_DEFAULT_BTN,TYPE_BUTTON,TYPE_OPTION_BTN,TYPE_CHECKBOX,TYPE_HIGHLIGHT_BTN)
+	TYPES_DISPLAY_STRING_BASIC = (TYPE_TEXTBOX,TYPE_LABEL_LEFT_ALIGN,TYPE_LABEL_CENTER_ALIGN,TYPE_LABEL_RIGHT_ALIGN)
+	TYPES_DISPLAY_STRING = TYPES_DISPLAY_STRING_HOTKEY + TYPES_DISPLAY_STRING_BASIC
+	TYPES_HAS_STRING = (TYPE_DIALOG,) + TYPES_DISPLAY_STRING
+	TYPES_RESPONSIVE = (TYPE_DEFAULT_BTN,TYPE_BUTTON,TYPE_OPTION_BTN,TYPE_CHECKBOX,TYPE_HIGHLIGHT_BTN,TYPE_LISTBOX)
+
 	def __init__(self, ctrl_type=TYPE_DIALOG):
 		self.x1 = 0
 		self.y1 = 0
@@ -89,21 +137,36 @@ class BINWidget(object):
 		self.responsive_height = 0
 		self.unknown8 = 0
 		self.unknown9 = 0
+		if self.type in BINWidget.TYPES_HAS_STRING:
+			self.string = ''
 
 	def bounding_box(self):
-		return [self.x1,self.y1,self.x2,self.y2]
+		x1 = (self.x1 if self.x1 < self.x2 else self.x2)
+		y1 = (self.y1 if self.y1 < self.y2 else self.y2)
+		x2 = (self.x2 if self.x2 > self.x1 else self.x1)
+		y2 = (self.y2 if self.y2 > self.y1 else self.y1)
+		return [x1,y1,x2,y2]
 
 	def text_box(self):
-		return [self.x1 + self.text_offset_x,self.y1 + self.text_offset_y,self.x2,self.y2]
+		box = self.bounding_box()
+		box[0] += self.text_offset_x
+		box[1] += self.text_offset_y
+		return box
 
 	def responsive_box(self):
-		return [self.x1 + self.responsive_x1,self.y1 + self.responsive_y1,self.x1 + self.responsive_x2,self.y1 + self.responsive_y2]
+		box = self.bounding_box()
+		box[0] += self.responsive_x1
+		box[1] += self.responsive_y1
+		box[2] = box[0] + self.responsive_x2
+		box[3] = box[1] + self.responsive_y2
+		return box
 
 	def display_text(self):
-		if self.type in (BINWidget.TYPE_DEFAULT_BTN,BINWidget.TYPE_BUTTON,BINWidget.TYPE_OPTION_BTN,BINWidget.TYPE_CHECKBOX,BINWidget.TYPE_HIGHLIGHT_BTN):
-			return self.string[1:]
-		elif self.type in (BINWidget.TYPE_TEXTBOX,BINWidget.TYPE_LABEL_LEFT_ALIGN,BINWidget.TYPE_LABEL_CENTER_ALIGN,BINWidget.TYPE_LABEL_RIGHT_ALIGN):
-			return self.string
+		if self.type in BINWidget.TYPES_DISPLAY_STRING:
+			if self.type in BINWidget.TYPES_DISPLAY_STRING_HOTKEY:
+				return self.string[1:]
+			else:
+				return self.string
 		return None
 
 class BINSMK(object):
