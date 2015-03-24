@@ -112,6 +112,14 @@ Last, and the choice I least prefer, you can send an email to me at [mailto:p.q.
 	Credits	credits
 First of all I would like to thank bajadulce for graciously hosting the official PyMS forum on his great site, [http://www.broodwarai.com	BroodWarAI.com], thanks a million!
 +PyMS v1.2.2
+ -__FaRTy1billion__~
+&nbsp;&nbsp;&nbsp;File specs for dialog bin, and design ideas from BinEdit2
+ -__Corbo__
+&nbsp;&nbsp;&nbsp;Lots of testing and bug reporting (Thanks!)
+ -__Neiv__
+&nbsp;&nbsp;&nbsp;Bug reports and testing
+ -__Sand Wraith__
+&nbsp;&nbsp;&nbsp;Bug reports and testing
  -__Heinermann__
 &nbsp;&nbsp;&nbsp;Provided fixes/improvements to various programs
  -__pastelmind__

@@ -3,33 +3,33 @@ import TBL
 
 import struct, re
 
-# DIALOG_PATHS and ASSET_PATHS from StarCraft.exe (Thanks FaRTy1billion)
-DIALOG_PATHS = {
-	"glue\\mainmenu\\":		0x00,
-	"glue\\simulate":		0x0B,
-	"glue\\selconn\\":		0x0B,
-	"glue\\chatroom\\":		0x0B,
-	"glue\\battle.net\\":	0x0C,
-	"glue\\login\\":		0x0B,
-	"glue\\campaign\\":		0x01,
-	"glue\\ReadyT\\":		0x02,
-	"glue\\ReadyZ\\":		0x03,
-	"glue\\ReadyP\\":		0x04,
-	"glue\\gamesel\\":		0x0B,
-	"glue\\create\\":		0x0B,
-	"glue\\create\\":		0x0B,
-	"glue\\load\\":			0x0B,
-	"glue\\score\\":		0x07,
-	"glue\\score\\":		0x08,
-	"glue\\score\\":		0x09,
-	"glue\\score\\":		0x0A,
-	"glue\\score\\":		0x05,
-	"glue\\score\\":		0x06,
-	"glue\\modem\\":		0x0B,
-	"glue\\direct\\":		0x0B,
-	"glue\\campaign\\":		0x01,
-	"glue\\gamemode\\":		0x0B,
-	"glue\\gamemode\\":		0x0B,
+# DIALOG_INFO and ASSET_PATHS from StarCraft.exe (Thanks FaRTy1billion)
+DIALOG_INFO = {
+	0x00:{"path":"glue\\mainmenu\\", "assets_id":0x00},
+	0x01:{"path":"glue\\simulate", "assets_id":0x0B},
+	0x02:{"path":"glue\\selconn\\", "assets_id":0x0B},
+	0x03:{"path":"glue\\chatroom\\", "assets_id":0x0B},
+	0x04:{"path":"glue\\battle.net\\", "assets_id":0x0C},
+	0x05:{"path":"glue\\login\\", "assets_id":0x0B},
+	0x06:{"path":"glue\\campaign\\", "assets_id":0x01},
+	0x07:{"path":"glue\\ReadyT\\", "assets_id":0x02},
+	0x08:{"path":"glue\\ReadyZ\\", "assets_id":0x03},
+	0x09:{"path":"glue\\ReadyP\\", "assets_id":0x04},
+	0x0A:{"path":"glue\\gamesel\\", "assets_id":0x0B},
+	0x0B:{"path":"glue\\create\\", "assets_id":0x0B},
+	0x0C:{"path":"glue\\create\\", "assets_id":0x0B},
+	0x0D:{"path":"glue\\load\\", "assets_id":0x0B},
+	0x0E:{"path":"glue\\score\\", "assets_id":0x07},
+	0x0F:{"path":"glue\\score\\", "assets_id":0x08},
+	0x10:{"path":"glue\\score\\", "assets_id":0x09},
+	0x11:{"path":"glue\\score\\", "assets_id":0x0A},
+	0x12:{"path":"glue\\score\\", "assets_id":0x05},
+	0x13:{"path":"glue\\score\\", "assets_id":0x06},
+	0x14:{"path":"glue\\modem\\", "assets_id":0x0B},
+	0x15:{"path":"glue\\direct\\", "assets_id":0x0B},
+	0x16:{"path":"glue\\campaign\\", "assets_id":0x01},
+	0x17:{"path":"glue\\gamemode\\", "assets_id":0x0B},
+	0x18:{"path":"glue\\gamemode\\", "assets_id":0x0B},
 }
 ASSET_PATHS = {
 	0x00: "glue\\palmm\\",
@@ -80,7 +80,7 @@ class BINWidget(object):
 	FLAG_UNK7 = 0x08000000
 	FLAG_UNK8 = 0x10000000
 	FLAG_UNK9 = 0x20000000
-	FLAG_NO_CLICK_SOUNG = 0x40000000
+	FLAG_NO_CLICK_SND = 0x40000000
 	FLAG_UNK10 = 0x80000000
 
 	FLAGS_TEXT_ALIGN = (FLAG_TEXT_ALIGN_CENTER | FLAG_TEXT_ALIGN_RIGHT | FLAG_TEXT_ALIGN_CENTER2)
@@ -112,7 +112,7 @@ class BINWidget(object):
 		self.height = 0
 		self.unknown1 = 0
 		self.string = ''
-		self.flags = 0
+		self.flags = BINWidget.FLAG_VISIBLE
 		self.unknown2 = 0
 		self.identifier = 0
 		self.type = ctrl_type
@@ -177,6 +177,7 @@ class BINSMK(object):
 	FLAG_UNK = 0x0010
 
 	def __init__(self):
+		self.widgets = []
 		self.overlay_smk = None
 		self.flags = 0
 		self.unknown1 = 0
@@ -187,6 +188,11 @@ class BINSMK(object):
 		self.unknown3 = 0
 		self.unknown4 = 0
 
+	def add_widget(self, widget):
+		self.widgets.append(widget)
+
+	def remove_widget(self, widget):
+		self.widget.remove(widget)
 
 class DialogBIN:
 	def __init__(self):

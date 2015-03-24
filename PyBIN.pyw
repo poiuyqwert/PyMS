@@ -43,6 +43,7 @@ class WidgetSettings(PyMSDialog):
 		self.height = IntegerVar(range=[0,65535])
 		self.string = StringVar()
 		self.identifier = IntegerVar(range=[0,65535])
+		self.smk = IntVar()
 		self.text_offset_x = IntegerVar(range=[0,65535])
 		self.text_offset_y = IntegerVar(range=[0,65535])
 		self.responsive_left = IntegerVar(range=[0,65535])
@@ -82,10 +83,8 @@ class WidgetSettings(PyMSDialog):
 		self.flag_unk7 = BooleanVar()
 		self.flag_unk8 = BooleanVar()
 		self.flag_unk9 = BooleanVar()
-		self.flag_no_click_soung = BooleanVar()
+		self.flag_no_click_snd = BooleanVar()
 		self.flag_unk10 = BooleanVar()
-
-		self.load_settings()
 
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type])
 
@@ -234,27 +233,84 @@ class WidgetSettings(PyMSDialog):
 		Checkbutton(fontframe, text='Size 16', variable=self.flag_font_size_16).grid(row=2,column=0, sticky=W)
 		Checkbutton(fontframe, text='Size 16x', variable=self.flag_font_size_16x).grid(row=3,column=0, sticky=W)
 		fontframe.grid(row=3,column=4, padx=3,pady=3, sticky=N)
+
 		stringframe.grid_columnconfigure(0, weight=1)
 		stringframe.grid_columnconfigure(1, weight=1)
 		stringframe.grid_columnconfigure(2, weight=1)
 		stringframe.grid_columnconfigure(3, weight=1)
 		stringframe.grid_columnconfigure(4, weight=1)
 		stringframe.grid(row=1,column=0, columnspan=2, padx=5,pady=0, ipadx=2,ipady=2, sticky=NSEW)
+
+		otherframe = Frame(self)
+		stateframe = LabelFrame(otherframe, text='State')
+		Checkbutton(stateframe, text='Visible', variable=self.flag_visible).grid(row=2,column=0, sticky=W)
+		Checkbutton(stateframe, text='Disabled', variable=self.flag_disabled).grid(row=3,column=0, sticky=W)
+		stateframe.grid(row=0,column=0, padx=2,pady=2, sticky=N)
+		soundframe = LabelFrame(otherframe, text='Sounds')
+		Checkbutton(soundframe, text='No Hover', variable=self.flag_no_hover_snd).grid(row=2,column=0, sticky=W)
+		Checkbutton(soundframe, text='No Click', variable=self.flag_no_click_snd).grid(row=3,column=0, sticky=W)
+		soundframe.grid(row=0,column=1, padx=2,pady=2, sticky=N)
+		typeframe = LabelFrame(otherframe, text='Btn. Type')
+		Checkbutton(typeframe, text='Default', variable=self.flag_default_btn).grid(row=0,column=0, sticky=W)
+		Checkbutton(typeframe, text='Cancel', variable=self.flag_cancel_btn).grid(row=1,column=0, sticky=W)
+		typeframe.grid(row=0,column=2, padx=2,pady=2, sticky=N)
+		smkframe = LabelFrame(otherframe, text='SMK')
+		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=True)
+		self.smks_dropdown.grid(row=0, column=0, padx=2,pady=2, sticky=EW)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
+		button = Button(smkframe, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
+		button.image = image
+		button.grid(row=0, column=1)
+		Checkbutton(smkframe, text='Translucent', variable=self.flag_translucent).grid(row=1,column=0, columnspan=2)
+		smkframe.grid_columnconfigure(0, weight=1)
+		smkframe.grid(row=0,column=3, padx=2,pady=2, sticky=NSEW)
+		otherframe.grid_columnconfigure(3, weight=1)
+		otherframe.grid(row=2,column=0, columnspan=2, padx=3,pady=3, sticky=EW)
+
+		miscframe = LabelFrame(self, text='Misc.')
+		Checkbutton(miscframe, text='Bring to Front', variable=self.flag_on_top).grid(row=0,column=0, sticky=W)
+		Checkbutton(miscframe, text='Unknown 0', variable=self.flag_unk1).grid(row=1,column=0, sticky=W)
+		Checkbutton(miscframe, text='Unknown 2', variable=self.flag_unk2).grid(row=1,column=1, sticky=W)
+		Checkbutton(miscframe, text='Unknown 5', variable=self.flag_unk3).grid(row=1,column=2, sticky=W)
+		Checkbutton(miscframe, text='Unknown 12', variable=self.flag_unk4).grid(row=1,column=3, sticky=W)
+		Checkbutton(miscframe, text='Unknown 15', variable=self.flag_unk5).grid(row=1,column=4, sticky=W)
+		Checkbutton(miscframe, text='Unknown 17', variable=self.flag_unk6).grid(row=2,column=0, sticky=W)
+		Checkbutton(miscframe, text='Unknown 27', variable=self.flag_unk7).grid(row=2,column=1, sticky=W)
+		Checkbutton(miscframe, text='Unknown 28', variable=self.flag_unk8).grid(row=2,column=2, sticky=W)
+		Checkbutton(miscframe, text='Unknown 29', variable=self.flag_unk9).grid(row=2,column=3, sticky=W)
+		Checkbutton(miscframe, text='Unknown 31', variable=self.flag_unk10).grid(row=2,column=4, sticky=W)
+		miscframe.grid(row=3,column=0, columnspan=2, padx=3,pady=3, sticky=NSEW)
+
 		isdialog = self.node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG
 		if isimage or isdialog:
 			self.advanced_widgets.extend((offsetframe,hotkeyframe,horframe,verframe,fontframe))
 		if not isimage or isdialog:
 			self.advanced_widgets.extend((transparent,findimage))
+		hassound = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_CHECKBOX,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN,DialogBIN.BINWidget.TYPE_LISTBOX,DialogBIN.BINWidget.TYPE_SLIDER)
+		if not hassound:
+			self.advanced_widgets.append(soundframe)
+		isbtn = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN)
+		if not isbtn:
+			self.advanced_widgets.extend((typeframe,soundframe,smkframe))
+		self.advanced_widgets.append(miscframe)
 
 		bottom = Frame(self)
 		ok = Button(bottom, text='Ok', width=10, command=self.ok)
 		ok.pack(side=LEFT, padx=1, pady=3)
 		Button(bottom, text='Update Preview', width=15, command=self.update_preview).pack(side=LEFT, padx=3, pady=3)
 		Checkbutton(bottom, text='Advanced', variable=self.show_advanced, command=self.update_advanced).pack(side=RIGHT, padx=1, pady=3)
-		bottom.grid(row=2,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
+		bottom.grid(row=4,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
+
+		self.load_settings()
 		self.update_advanced()
 		return ok
 
+	def load_settings_smk(self):
+		smks = ['None']
+		for smk in self.parent.bin.smks:
+			smks.append(smk.filename)
+		self.smks_dropdown.setentries(smks)
+		self.smk.set(0 if not self.node.widget.smk else self.parent.bin.smks.index(self.node.widget.smk)+1)
 	def load_settings(self):
 		self.left.set(self.node.widget.x1)
 		self.right.set(self.node.widget.x2)
@@ -264,6 +320,7 @@ class WidgetSettings(PyMSDialog):
 		self.height.set(self.node.widget.height)
 		self.string.set(TBL.decompile_string(self.node.widget.string))
 		self.identifier.set(self.node.widget.identifier)
+		self.load_settings_smk()
 		self.text_offset_x.set(self.node.widget.text_offset_x)
 		self.text_offset_y.set(self.node.widget.text_offset_y)
 		self.responsive_left.set(self.node.widget.responsive_x1)
@@ -303,9 +360,12 @@ class WidgetSettings(PyMSDialog):
 		self.flag_unk7.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK7 == DialogBIN.BINWidget.FLAG_UNK7))
 		self.flag_unk8.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK8 == DialogBIN.BINWidget.FLAG_UNK8))
 		self.flag_unk9.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK9 == DialogBIN.BINWidget.FLAG_UNK9))
-		self.flag_no_click_soung.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_NO_CLICK_SOUNG == DialogBIN.BINWidget.FLAG_NO_CLICK_SOUNG))
+		self.flag_no_click_snd.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_NO_CLICK_SND == DialogBIN.BINWidget.FLAG_NO_CLICK_SND))
 		self.flag_unk10.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK10 == DialogBIN.BINWidget.FLAG_UNK10))
 
+	def save_settings_smk(self):
+		index = self.smk.get()-1
+		self.node.widget.smk = None if index == -1 else self.parent.bin.smks[index]
 	def save_settings(self):
 		self.node.widget.x1 = self.left.get()
 		self.node.widget.x2 = self.right.get()
@@ -355,7 +415,7 @@ class WidgetSettings(PyMSDialog):
 		self.node.widget.flags |= self.flag_unk7.get() * DialogBIN.BINWidget.FLAG_UNK7
 		self.node.widget.flags |= self.flag_unk8.get() * DialogBIN.BINWidget.FLAG_UNK8
 		self.node.widget.flags |= self.flag_unk9.get() * DialogBIN.BINWidget.FLAG_UNK9
-		self.node.widget.flags |= self.flag_no_click_soung.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SOUNG
+		self.node.widget.flags |= self.flag_no_click_snd.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SND
 		self.node.widget.flags |= self.flag_unk10.get() * DialogBIN.BINWidget.FLAG_UNK10
 
 	def update_preview(self):
@@ -366,6 +426,9 @@ class WidgetSettings(PyMSDialog):
 	def ok(self):
 		self.update_preview()
 		PyMSDialog.ok(self)
+
+	def cancel(self):
+		self.ok()
 
 def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 	event = []
@@ -872,7 +935,7 @@ class PyBIN(Tk):
 			check.grid(row=i / 2, column=i % 2, sticky=W)
 		Checkbutton(flagframe, text='Background:', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=2, column=0, columnspan=2, sticky=W)
 		f = Frame(flagframe)
-		DropDown(f, self.show_background_index, self.settings['show_background_path_history'], self.change_background).grid(row=0, column=0, sticky=W+E)
+		DropDown(f, self.show_background_index, self.settings['show_background_path_history'], self.change_background).grid(row=0, column=0, sticky=EW)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','open.gif'))
 		button = Button(f, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
 		button.image = image
@@ -1579,7 +1642,9 @@ class PyBIN(Tk):
 		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyBIN.html'))
 
 	def about(self, key=None):
-		AboutDialog(self, 'PyBIN', LONG_VERSION)
+		AboutDialog(self, 'PyBIN', LONG_VERSION, [
+			('FaRTy1billion','File Specs and BinEdit2')
+		])
 
 	def exit(self, e=None):
 		if not self.unsaved():
