@@ -147,54 +147,98 @@ class WidgetSettings(PyMSDialog):
 			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
 			self.advanced_shown = False
 
+	def calculate(self, calc, orig, offset, direction, fix):
+		calc.set(orig.get() + offset.get() * direction + fix)
+
 	def widgetize(self):
 		self.resizable(False, False)
+		def calc_button(f, calc, orig, offset, direction, fix):
+			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','debug.gif'))
+			button = Button(f, image=image, width=20, height=20, command=lambda calc=calc,orig=orig,offset=offset,direction=direction,fix=fix: self.calculate(calc,orig,offset,direction,fix))
+			button.image = image
+			return button
 		boundsframe = LabelFrame(self, text="Bounds")
 		Label(boundsframe, text='Left:').grid(row=0,column=0, sticky=E)
 		Entry(boundsframe, textvariable=self.left, font=couriernew, width=5).grid(row=0,column=1)
-		Label(boundsframe, text='Top:').grid(row=0,column=2, sticky=E)
-		Entry(boundsframe, textvariable=self.top, font=couriernew, width=5).grid(row=0,column=3)
+		calculate = calc_button(boundsframe, self.left, self.right, self.width, -1, 1)
+		calculate.grid(row=0,column=2)
+		self.advanced_widgets.append(calculate)
+		Label(boundsframe, text='Top:').grid(row=0,column=3, sticky=E)
+		Entry(boundsframe, textvariable=self.top, font=couriernew, width=5).grid(row=0,column=4)
+		calculate = calc_button(boundsframe, self.top, self.bottom, self.height, -1, 1)
+		calculate.grid(row=0,column=5)
+		self.advanced_widgets.append(calculate)
 		right_label = Label(boundsframe, text='Right:')
 		right_label.grid(row=1,column=0, sticky=E)
 		self.advanced_widgets.append(right_label)
 		right_entry = Entry(boundsframe, textvariable=self.right, font=couriernew, width=5)
 		right_entry.grid(row=1,column=1)
 		self.advanced_widgets.append(right_entry)
+		calculate = calc_button(boundsframe, self.right, self.left, self.width, 1, -1)
+		calculate.grid(row=1,column=2)
+		self.advanced_widgets.append(calculate)
 		bottom_label = Label(boundsframe, text='Bottom:')
-		bottom_label.grid(row=1,column=2, sticky=E)
+		bottom_label.grid(row=1,column=3, sticky=E)
 		self.advanced_widgets.append(bottom_label)
 		bottom_entry = Entry(boundsframe, textvariable=self.bottom, font=couriernew, width=5)
-		bottom_entry.grid(row=1,column=3)
+		bottom_entry.grid(row=1,column=4)
 		self.advanced_widgets.append(bottom_entry)
+		calculate = calc_button(boundsframe, self.bottom, self.top, self.height, 1, -1)
+		calculate.grid(row=1,column=5)
+		self.advanced_widgets.append(calculate)
 		Label(boundsframe, text='Width:').grid(row=2,column=0, sticky=E)
 		Entry(boundsframe, textvariable=self.width, font=couriernew, width=5).grid(row=2,column=1)
-		Label(boundsframe, text='Height:').grid(row=2,column=2, sticky=E)
-		Entry(boundsframe, textvariable=self.height, font=couriernew, width=5).grid(row=2,column=3)
-		boundsframe.grid(row=0,column=0, padx=3,pady=0, ipadx=2,ipady=2, sticky=N)
+		calculate = calc_button(boundsframe, self.width, self.right, self.left, -1, 1)
+		calculate.grid(row=2,column=2)
+		self.advanced_widgets.append(calculate)
+		Label(boundsframe, text='Height:').grid(row=2,column=3, sticky=E)
+		Entry(boundsframe, textvariable=self.height, font=couriernew, width=5).grid(row=2,column=4)
+		calculate = calc_button(boundsframe, self.height, self.bottom, self.top, -1, 1)
+		calculate.grid(row=2,column=5)
+		self.advanced_widgets.append(calculate)
+		boundsframe.grid(row=0,column=0, padx=5,pady=0, ipadx=2,ipady=2, sticky=N)
 
 		responsiveframe = LabelFrame(self, text="Mouse Response")
 		Checkbutton(responsiveframe, text='Responds to Mouse', variable=self.flag_responsive).grid(row=0,column=0, columnspan=4)
 		Label(responsiveframe, text='Left:').grid(row=1,column=0, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_left, font=couriernew, width=5).grid(row=1,column=1)
-		Label(responsiveframe, text='Top:').grid(row=1,column=2, sticky=E)
-		Entry(responsiveframe, textvariable=self.responsive_top, font=couriernew, width=5).grid(row=1,column=3)
+		calculate = calc_button(responsiveframe, self.responsive_left, self.responsive_right, self.responsive_width, -1, 1)
+		calculate.grid(row=1,column=2)
+		self.advanced_widgets.append(calculate)
+		Label(responsiveframe, text='Top:').grid(row=1,column=3, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_top, font=couriernew, width=5).grid(row=1,column=4)
+		calculate = calc_button(responsiveframe, self.responsive_top, self.responsive_bottom, self.responsive_height, -1, 1)
+		calculate.grid(row=1,column=5)
+		self.advanced_widgets.append(calculate)
 		right_label = Label(responsiveframe, text='Right:')
 		right_label.grid(row=2,column=0, sticky=E)
 		self.advanced_widgets.append(right_label)
 		right_entry = Entry(responsiveframe, textvariable=self.responsive_right, font=couriernew, width=5)
 		right_entry.grid(row=2,column=1)
 		self.advanced_widgets.append(right_entry)
+		calculate = calc_button(responsiveframe, self.responsive_right, self.responsive_left, self.responsive_width, 1, -1)
+		calculate.grid(row=2,column=2)
+		self.advanced_widgets.append(calculate)
 		bottom_label = Label(responsiveframe, text='Bottom:')
-		bottom_label.grid(row=2,column=2, sticky=E)
+		bottom_label.grid(row=2,column=3, sticky=E)
 		self.advanced_widgets.append(bottom_label)
 		bottom_entry = Entry(responsiveframe, textvariable=self.responsive_bottom, font=couriernew, width=5)
-		bottom_entry.grid(row=2,column=3)
+		bottom_entry.grid(row=2,column=4)
 		self.advanced_widgets.append(bottom_entry)
+		calculate = calc_button(responsiveframe, self.responsive_bottom, self.responsive_top, self.responsive_height, 1, -1)
+		calculate.grid(row=2,column=5)
+		self.advanced_widgets.append(calculate)
 		Label(responsiveframe, text='Width:').grid(row=3,column=0, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_width, font=couriernew, width=5).grid(row=3,column=1)
-		Label(responsiveframe, text='Height:').grid(row=3,column=2, sticky=E)
-		Entry(responsiveframe, textvariable=self.responsive_height, font=couriernew, width=5).grid(row=3,column=3)
-		responsiveframe.grid(row=0,column=1, padx=3,pady=0, ipadx=2,ipady=2, sticky=N)
+		calculate = calc_button(responsiveframe, self.responsive_width, self.responsive_right, self.responsive_left, -1, 1)
+		calculate.grid(row=3,column=2)
+		self.advanced_widgets.append(calculate)
+		Label(responsiveframe, text='Height:').grid(row=3,column=3, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_height, font=couriernew, width=5).grid(row=3,column=4)
+		calculate = calc_button(responsiveframe, self.responsive_height, self.responsive_bottom, self.responsive_top, -1, 1)
+		calculate.grid(row=3,column=5)
+		self.advanced_widgets.append(calculate)
+		responsiveframe.grid(row=0,column=1, padx=5,pady=0, ipadx=2,ipady=2, sticky=N)
 
 		isimage = self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE
 		stringframe = LabelFrame(self, text="String")
@@ -241,7 +285,7 @@ class WidgetSettings(PyMSDialog):
 		stringframe.grid_columnconfigure(1, weight=1)
 		stringframe.grid_columnconfigure(2, weight=1)
 		stringframe.grid_columnconfigure(3, weight=1)
-		stringframe.grid(row=1,column=0, columnspan=2, padx=3,pady=0, ipadx=2,ipady=2, sticky=NSEW)
+		stringframe.grid(row=1,column=0, columnspan=2, padx=5,pady=0, ipadx=2,ipady=2, sticky=NSEW)
 		isdialog = self.node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG
 		if isimage or isdialog:
 			self.advanced_widgets.extend((xframe,yframe,hotkeyframe,horframe,verframe,fontframe))
@@ -251,10 +295,14 @@ class WidgetSettings(PyMSDialog):
 		bottom = Frame(self)
 		ok = Button(bottom, text='Ok', width=10, command=self.ok)
 		ok.pack(side=LEFT, padx=1, pady=3)
+		Button(bottom, text='Update Preview', width=15, command=self.update_preview).pack(side=LEFT, padx=3, pady=3)
 		Checkbutton(bottom, text='Advanced', variable=self.show_advanced, command=self.update_advanced).pack(side=RIGHT, padx=1, pady=3)
 		bottom.grid(row=2,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
 		self.update_advanced()
 		return ok
+
+	def update_preview(self):
+		pass
 
 def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 	event = []
@@ -392,7 +440,7 @@ class WidgetNode:
 		if self.widget:
 			name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
 			if self.widget.display_text():
-				name = '%s [%s]' % (self.widget.display_text(),name)
+				name = '%s [%s]' % (TBL.decompile_string(self.widget.display_text()),name)
 		if self.name:
 			name = '%s [%s]' % self.name
 		return name
@@ -436,12 +484,11 @@ class WidgetNode:
 				pcx = PCX.PCX()
 				try:
 					pcx.load_file(toplevel.mpqhandler.get_file('MPQ:' + self.widget.string))
-				except PyMSError, e:
-					print self.widget.string
-					print repr(e)
-				else:
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans)
+				except Exception, e:
+					print self.widget.string
+					print repr(e)
 			if self.photo:
 				x1,y1,x2,y2 = self.bounding_box()
 				if self.item_image:
