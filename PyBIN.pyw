@@ -26,6 +26,236 @@ EDIT_RESIZE_BOTTOM = 5
 MODIFIER_SHIFT = 1
 MODIFIER_CTRL = 2
 
+class WidgetSettings(PyMSDialog):
+	def __init__(self, parent, node):
+		self.node = node
+
+		self.advanced_widgets = []
+		self.advanced_shown = True
+		self.show_advanced = BooleanVar()
+		self.show_advanced.set(parent.settings.get('advanced_widget_editor',False))
+
+		self.left = IntegerVar(range=[0,65535])
+		self.left.set(node.widget.x1)
+		self.right = IntegerVar(range=[0,65535])
+		self.right.set(node.widget.x2)
+		self.width = IntegerVar(range=[0,65535])
+		self.width.set(node.widget.width)
+		self.top = IntegerVar(range=[0,65535])
+		self.top.set(node.widget.y1)
+		self.bottom = IntegerVar(range=[0,65535])
+		self.bottom.set(node.widget.y2)
+		self.height = IntegerVar(range=[0,65535])
+		self.height.set(node.widget.height)
+		self.string = StringVar()
+		self.string.set(TBL.decompile_string(node.widget.string))
+		self.identifier = IntegerVar(range=[0,65535])
+		self.identifier.set(node.widget.identifier)
+		self.text_offset_x = IntegerVar(range=[0,65535])
+		self.text_offset_x.set(node.widget.text_offset_x)
+		self.text_offset_y = IntegerVar(range=[0,65535])
+		self.text_offset_y.set(node.widget.text_offset_y)
+		self.responsive_left = IntegerVar(range=[0,65535])
+		self.responsive_left.set(node.widget.responsive_x1)
+		self.responsive_right = IntegerVar(range=[0,65535])
+		self.responsive_right.set(node.widget.responsive_x2)
+		self.responsive_width = IntegerVar(range=[0,65535])
+		self.responsive_width.set(node.widget.responsive_width)
+		self.responsive_top = IntegerVar(range=[0,65535])
+		self.responsive_top.set(node.widget.responsive_y1)
+		self.responsive_bottom = IntegerVar(range=[0,65535])
+		self.responsive_bottom.set(node.widget.responsive_y2)
+		self.responsive_height = IntegerVar(range=[0,65535])
+		self.responsive_height.set(node.widget.responsive_height)
+
+		self.flag_unk1 = BooleanVar()
+		self.flag_unk1.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK1 == DialogBIN.BINWidget.FLAG_UNK1))
+		self.flag_disabled = BooleanVar()
+		self.flag_disabled.set((node.widget.flags & DialogBIN.BINWidget.FLAG_DISABLED == DialogBIN.BINWidget.FLAG_DISABLED))
+		self.flag_unk2 = BooleanVar()
+		self.flag_unk2.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK2 == DialogBIN.BINWidget.FLAG_UNK2))
+		self.flag_visible = BooleanVar()
+		self.flag_visible.set((node.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE == DialogBIN.BINWidget.FLAG_VISIBLE))
+		self.flag_responsive = BooleanVar()
+		self.flag_responsive.set((node.widget.flags & DialogBIN.BINWidget.FLAG_RESPONSIVE == DialogBIN.BINWidget.FLAG_RESPONSIVE))
+		self.flag_unk3 = BooleanVar()
+		self.flag_unk3.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK3 == DialogBIN.BINWidget.FLAG_UNK3))
+		self.flag_cancel_btn = BooleanVar()
+		self.flag_cancel_btn.set((node.widget.flags & DialogBIN.BINWidget.FLAG_CANCEL_BTN == DialogBIN.BINWidget.FLAG_CANCEL_BTN))
+		self.flag_no_hover_snd = BooleanVar()
+		self.flag_no_hover_snd.set((node.widget.flags & DialogBIN.BINWidget.FLAG_NO_HOVER_SND == DialogBIN.BINWidget.FLAG_NO_HOVER_SND))
+		self.flag_virtual_hotkey = BooleanVar()
+		self.flag_virtual_hotkey.set((node.widget.flags & DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY == DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY))
+		self.flag_has_hotkey = BooleanVar()
+		self.flag_has_hotkey.set((node.widget.flags & DialogBIN.BINWidget.FLAG_HAS_HOTKEY == DialogBIN.BINWidget.FLAG_HAS_HOTKEY))
+		self.flag_font_size_10 = BooleanVar()
+		self.flag_font_size_10.set((node.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10 == DialogBIN.BINWidget.FLAG_FONT_SIZE_10))
+		self.flag_font_size_16 = BooleanVar()
+		self.flag_font_size_16.set((node.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16 == DialogBIN.BINWidget.FLAG_FONT_SIZE_16))
+		self.flag_unk4 = BooleanVar()
+		self.flag_unk4.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK4 == DialogBIN.BINWidget.FLAG_UNK4))
+		self.flag_transparency = BooleanVar()
+		self.flag_transparency.set((node.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY == DialogBIN.BINWidget.FLAG_TRANSPARENCY))
+		self.flag_font_size_16x = BooleanVar()
+		self.flag_font_size_16x.set((node.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x == DialogBIN.BINWidget.FLAG_FONT_SIZE_16x))
+		self.flag_unk5 = BooleanVar()
+		self.flag_unk5.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK5 == DialogBIN.BINWidget.FLAG_UNK5))
+		self.flag_font_size_14 = BooleanVar()
+		self.flag_font_size_14.set((node.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14 == DialogBIN.BINWidget.FLAG_FONT_SIZE_14))
+		self.flag_unk6 = BooleanVar()
+		self.flag_unk6.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK6 == DialogBIN.BINWidget.FLAG_UNK6))
+		self.flag_translucent = BooleanVar()
+		self.flag_translucent.set((node.widget.flags & DialogBIN.BINWidget.FLAG_TRANSLUCENT == DialogBIN.BINWidget.FLAG_TRANSLUCENT))
+		self.flag_default_btn = BooleanVar()
+		self.flag_default_btn.set((node.widget.flags & DialogBIN.BINWidget.FLAG_DEFAULT_BTN == DialogBIN.BINWidget.FLAG_DEFAULT_BTN))
+		self.flag_on_top = BooleanVar()
+		self.flag_on_top.set((node.widget.flags & DialogBIN.BINWidget.FLAG_ON_TOP == DialogBIN.BINWidget.FLAG_ON_TOP))
+		self.flag_text_align_center = BooleanVar()
+		self.flag_text_align_center.set((node.widget.flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER == DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER))
+		self.flag_text_align_right = BooleanVar()
+		self.flag_text_align_right.set((node.widget.flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT == DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT))
+		self.flag_text_align_center2 = BooleanVar()
+		self.flag_text_align_center2.set((node.widget.flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2 == DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2))
+		self.flag_align_top = BooleanVar()
+		self.flag_align_top.set((node.widget.flags & DialogBIN.BINWidget.FLAG_ALIGN_TOP == DialogBIN.BINWidget.FLAG_ALIGN_TOP))
+		self.flag_align_middle = BooleanVar()
+		self.flag_align_middle.set((node.widget.flags & DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE == DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE))
+		self.flag_align_bottom = BooleanVar()
+		self.flag_align_bottom.set((node.widget.flags & DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM == DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM))
+		self.flag_unk7 = BooleanVar()
+		self.flag_unk7.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK7 == DialogBIN.BINWidget.FLAG_UNK7))
+		self.flag_unk8 = BooleanVar()
+		self.flag_unk8.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK8 == DialogBIN.BINWidget.FLAG_UNK8))
+		self.flag_unk9 = BooleanVar()
+		self.flag_unk9.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK9 == DialogBIN.BINWidget.FLAG_UNK9))
+		self.flag_no_click_soung = BooleanVar()
+		self.flag_no_click_soung.set((node.widget.flags & DialogBIN.BINWidget.FLAG_NO_CLICK_SOUNG == DialogBIN.BINWidget.FLAG_NO_CLICK_SOUNG))
+		self.flag_unk10 = BooleanVar()
+		self.flag_unk10.set((node.widget.flags & DialogBIN.BINWidget.FLAG_UNK10 == DialogBIN.BINWidget.FLAG_UNK10))
+		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type])
+
+	def update_advanced(self):
+		show = self.show_advanced.get()
+		if show and not self.advanced_shown:
+			for widget in self.advanced_widgets:
+				widget.grid()
+			self.string_label['text'] = 'Text/Image:'
+			self.advanced_shown = True
+		elif not show and self.advanced_shown:
+			for widget in self.advanced_widgets:
+				widget.grid_remove()
+			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
+			self.advanced_shown = False
+
+	def widgetize(self):
+		self.resizable(False, False)
+		boundsframe = LabelFrame(self, text="Bounds")
+		Label(boundsframe, text='Left:').grid(row=0,column=0, sticky=E)
+		Entry(boundsframe, textvariable=self.left, font=couriernew, width=5).grid(row=0,column=1)
+		Label(boundsframe, text='Top:').grid(row=0,column=2, sticky=E)
+		Entry(boundsframe, textvariable=self.top, font=couriernew, width=5).grid(row=0,column=3)
+		right_label = Label(boundsframe, text='Right:')
+		right_label.grid(row=1,column=0, sticky=E)
+		self.advanced_widgets.append(right_label)
+		right_entry = Entry(boundsframe, textvariable=self.right, font=couriernew, width=5)
+		right_entry.grid(row=1,column=1)
+		self.advanced_widgets.append(right_entry)
+		bottom_label = Label(boundsframe, text='Bottom:')
+		bottom_label.grid(row=1,column=2, sticky=E)
+		self.advanced_widgets.append(bottom_label)
+		bottom_entry = Entry(boundsframe, textvariable=self.bottom, font=couriernew, width=5)
+		bottom_entry.grid(row=1,column=3)
+		self.advanced_widgets.append(bottom_entry)
+		Label(boundsframe, text='Width:').grid(row=2,column=0, sticky=E)
+		Entry(boundsframe, textvariable=self.width, font=couriernew, width=5).grid(row=2,column=1)
+		Label(boundsframe, text='Height:').grid(row=2,column=2, sticky=E)
+		Entry(boundsframe, textvariable=self.height, font=couriernew, width=5).grid(row=2,column=3)
+		boundsframe.grid(row=0,column=0, padx=3,pady=0, ipadx=2,ipady=2, sticky=N)
+
+		responsiveframe = LabelFrame(self, text="Mouse Response")
+		Checkbutton(responsiveframe, text='Responds to Mouse', variable=self.flag_responsive).grid(row=0,column=0, columnspan=4)
+		Label(responsiveframe, text='Left:').grid(row=1,column=0, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_left, font=couriernew, width=5).grid(row=1,column=1)
+		Label(responsiveframe, text='Top:').grid(row=1,column=2, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_top, font=couriernew, width=5).grid(row=1,column=3)
+		right_label = Label(responsiveframe, text='Right:')
+		right_label.grid(row=2,column=0, sticky=E)
+		self.advanced_widgets.append(right_label)
+		right_entry = Entry(responsiveframe, textvariable=self.responsive_right, font=couriernew, width=5)
+		right_entry.grid(row=2,column=1)
+		self.advanced_widgets.append(right_entry)
+		bottom_label = Label(responsiveframe, text='Bottom:')
+		bottom_label.grid(row=2,column=2, sticky=E)
+		self.advanced_widgets.append(bottom_label)
+		bottom_entry = Entry(responsiveframe, textvariable=self.responsive_bottom, font=couriernew, width=5)
+		bottom_entry.grid(row=2,column=3)
+		self.advanced_widgets.append(bottom_entry)
+		Label(responsiveframe, text='Width:').grid(row=3,column=0, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_width, font=couriernew, width=5).grid(row=3,column=1)
+		Label(responsiveframe, text='Height:').grid(row=3,column=2, sticky=E)
+		Entry(responsiveframe, textvariable=self.responsive_height, font=couriernew, width=5).grid(row=3,column=3)
+		responsiveframe.grid(row=0,column=1, padx=3,pady=0, ipadx=2,ipady=2, sticky=N)
+
+		isimage = self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE
+		stringframe = LabelFrame(self, text="String")
+		textframe = Frame(stringframe)
+		self.string_label = Label(textframe, text='Image:' if isimage else 'Text:')
+		self.string_label.grid(row=0,column=0)
+		Entry(textframe, textvariable=self.string, font=couriernew).grid(row=0,column=1, sticky=EW)
+		icon = PhotoImage(file=os.path.join(BASE_DIR,'Images','openmpq.gif'))
+		findimage = Button(textframe, image=icon, width=20, height=20)#, command=btn[1], state=btn[3])
+		findimage.icon = icon
+		findimage.grid(row=0, column=2)
+		textframe.grid_columnconfigure(1, weight=1)
+		textframe.grid(row=0,column=0, columnspan=4, sticky=EW)
+		transparent = Checkbutton(textframe, text='Image Transparency', variable=self.flag_transparency)
+		transparent.grid(row=1,column=0, columnspan=4)
+		xframe = Frame(stringframe)
+		Label(xframe, text='X Offset:').grid(row=0,column=0, sticky=E)
+		Entry(xframe, textvariable=self.text_offset_x, font=couriernew, width=5).grid(row=0,column=1)
+		xframe.grid(row=2,column=0, columnspan=2)
+		yframe = Frame(stringframe)
+		Label(yframe, text='Y Offset:').grid(row=0,column=0, sticky=E)
+		Entry(yframe, textvariable=self.text_offset_y, font=couriernew, width=5).grid(row=0,column=1)
+		yframe.grid(row=2,column=2, columnspan=2)
+		hotkeyframe = LabelFrame(stringframe, text='Hotkey')
+		Checkbutton(hotkeyframe, text='Normal', variable=self.flag_has_hotkey).grid(row=0,column=0, sticky=W)
+		Checkbutton(hotkeyframe, text='Virtual', variable=self.flag_virtual_hotkey).grid(row=1,column=0, sticky=W)
+		hotkeyframe.grid(row=3,column=0, padx=3,pady=3, sticky=N)
+		horframe = LabelFrame(stringframe, text="Horizontal")
+		Checkbutton(horframe, text='Center', variable=self.flag_text_align_center).grid(row=0,column=0, sticky=W)
+		Checkbutton(horframe, text='Right', variable=self.flag_text_align_right).grid(row=1,column=0, sticky=W)
+		horframe.grid(row=3,column=1, padx=3,pady=3, sticky=N)
+		verframe = LabelFrame(stringframe, text="Vertical")
+		Checkbutton(verframe, text='Top', variable=self.flag_align_top).grid(row=0,column=0, sticky=W)
+		Checkbutton(verframe, text='Middle', variable=self.flag_align_middle).grid(row=1,column=0, sticky=W)
+		Checkbutton(verframe, text='Right', variable=self.flag_align_bottom).grid(row=2,column=0, sticky=W)
+		verframe.grid(row=3,column=2, padx=3,pady=3, sticky=N)
+		fontframe = LabelFrame(stringframe, text='Font')
+		Checkbutton(fontframe, text='Size 10', variable=self.flag_font_size_10).grid(row=0,column=0, sticky=W)
+		Checkbutton(fontframe, text='Size 14', variable=self.flag_font_size_14).grid(row=1,column=0, sticky=W)
+		Checkbutton(fontframe, text='Size 16', variable=self.flag_font_size_16).grid(row=2,column=0, sticky=W)
+		Checkbutton(fontframe, text='Size 16x', variable=self.flag_font_size_16x).grid(row=3,column=0, sticky=W)
+		fontframe.grid(row=3,column=3, padx=3,pady=3, sticky=N)
+		stringframe.grid_columnconfigure(0, weight=1)
+		stringframe.grid_columnconfigure(1, weight=1)
+		stringframe.grid_columnconfigure(2, weight=1)
+		stringframe.grid_columnconfigure(3, weight=1)
+		stringframe.grid(row=1,column=0, columnspan=2, padx=3,pady=0, ipadx=2,ipady=2, sticky=NSEW)
+		isdialog = self.node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG
+		if isimage or isdialog:
+			self.advanced_widgets.extend((xframe,yframe,hotkeyframe,horframe,verframe,fontframe))
+		if not isimage or isdialog:
+			self.advanced_widgets.extend((transparent,findimage))
+
+		bottom = Frame(self)
+		ok = Button(bottom, text='Ok', width=10, command=self.ok)
+		ok.pack(side=LEFT, padx=1, pady=3)
+		Checkbutton(bottom, text='Advanced', variable=self.show_advanced, command=self.update_advanced).pack(side=RIGHT, padx=1, pady=3)
+		bottom.grid(row=2,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
+		self.update_advanced()
+		return ok
+
 def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 	event = []
 	nx1 = (x1 if x1 < x2 else x2)
@@ -119,6 +349,7 @@ class StringPreview:
 							count += 1
 					w = int(round(w / float(count)))
 					self.font.sizes[a][0] = w
+				w += 1
 				word.append(w)
 				word_width[0] += w
 			if c == ' ':
@@ -160,8 +391,10 @@ class WidgetNode:
 		name = 'Group'
 		if self.widget:
 			name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
+			if self.widget.display_text():
+				name = '%s [%s]' % (self.widget.display_text(),name)
 		if self.name:
-			name = '%s (%s)' % self.name
+			name = '%s [%s]' % self.name
 		return name
 
 	def remove_from_parent(self):
@@ -196,16 +429,16 @@ class WidgetNode:
 	def update_image(self, toplevel):
 		reorder = False
 		SHOW_IMAGES = toplevel.show_images.get()
-		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE:
+		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE and self.widget.string:
 			photo_change = False
 			if self.photo == None:
 				photo_change = True
 				pcx = PCX.PCX()
 				try:
 					pcx.load_file(toplevel.mpqhandler.get_file('MPQ:' + self.widget.string))
-				except:
-					raise
-					pass
+				except PyMSError, e:
+					print self.widget.string
+					print repr(e)
 				else:
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans)
@@ -278,7 +511,7 @@ class WidgetNode:
 	def update_text_bounds(self, toplevel):
 		reorder = False
 		SHOW_TEXT_BOUNDS = toplevel.show_bounds_text.get()
-		if SHOW_TEXT_BOUNDS and self.widget and self.widget.type in DialogBIN.BINWidget.TYPES_DISPLAY_STRING:
+		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() != None:
 			x1,y1,x2,y2 = self.widget.text_box()
 			if self.item_text_bounds:
 				toplevel.widgetCanvas.coords(self.item_text_bounds, x1,y1, x2,y2)
@@ -293,7 +526,7 @@ class WidgetNode:
 	def update_responsive_bounds(self, toplevel):
 		reorder = False
 		SHOW_RESPONSIVE_BOUNDS = toplevel.show_bounds_responsive.get()
-		if SHOW_RESPONSIVE_BOUNDS and self.widget and self.widget.type in DialogBIN.BINWidget.TYPES_RESPONSIVE:
+		if SHOW_RESPONSIVE_BOUNDS and self.widget and self.widget.has_responsive():
 			x1,y1,x2,y2 = self.widget.responsive_box()
 			if self.item_responsive_bounds:
 				toplevel.widgetCanvas.coords(self.item_responsive_bounds, x1,y1, x2,y2)
@@ -389,6 +622,7 @@ class PyBIN(Tk):
 		self.edit_node = None
 		self.current_event = []
 		self.mouse_offset = [0,0]
+		self.event_moved = False
 
 		self.background_image = None
 
@@ -503,6 +737,7 @@ class PyBIN(Tk):
 		buttons = (
 			('add', self.add_node, LEFT),
 			('remove', self.remove_node, LEFT),
+			('edit', lambda: self.edit_node_settings(), LEFT),
 			('down', lambda: self.move_node(2), RIGHT),
 			('up', lambda: self.move_node(-1), RIGHT)
 		)
@@ -658,7 +893,7 @@ class PyBIN(Tk):
 	def move_node(self, delta):
 		index = self.selected_node.parent.children.index(self.selected_node)
 		dest = index + delta
-		if 0 < dest <= len(self.selected_node.parent.children):
+		if 0 <= dest <= len(self.selected_node.parent.children):
 			self.selected_node.parent.children.insert(dest, self.selected_node)
 			del self.selected_node.parent.children[index + (dest < index)]
 			self.reload_list()
@@ -679,7 +914,6 @@ class PyBIN(Tk):
 		if self.bin and self.show_background.get() and self.show_background_index.get():
 			if not self.background_image:
 				self.load_background(self.show_background_index.get())
-			print (self.background_image, self.item_background)
 			if self.item_background:
 				self.widgetCanvas.itemconfigure(self.item_background, image=self.background_image)
 			else:
@@ -762,18 +996,6 @@ class PyBIN(Tk):
 		else:
 			self.listbox.yview('scroll', 2, 'units')
 
-	def move(self, e, listbox, offset):
-		index = 0
-		if offset == END:
-			index = listbox.size()-2
-		elif offset not in [0,END] and listbox.curselection():
-			print listbox.curselection()
-			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
-		listbox.select_clear(0,END)
-		listbox.select_set(index)
-		listbox.see(index)
-		return "break"
-
 	def unsaved(self):
 		if self.bin and self.edited:
 			file = self.file
@@ -802,6 +1024,7 @@ class PyBIN(Tk):
 		hassel = (self.selected_node != None)
 		isdialog = (hassel and self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG)
 		self.buttons['remove']['state'] = [DISABLED,NORMAL][(hassel and not isdialog)]
+		self.buttons['edit']['state'] = [DISABLED,NORMAL][hassel]
 		canmove = (hassel and not not self.selected_node.parent)
 		index = 0
 		if canmove:
@@ -890,13 +1113,18 @@ class PyBIN(Tk):
 	def update_list_selection(self):
 		if self.selected_node:
 			self.widgetTree.select(self.selected_node.index)
+			self.widgetTree.see(self.selected_node.index)
 		else:
 			self.widgetTree.select(None)
 
-	def edit_node_settings(self, node):
-		print node
+	def edit_node_settings(self, node=None):
+		if node == None:
+			node = self.selected_node
+		if node and node.widget:
+			WidgetSettings(self, node)
 
 	def canvas_double_click(self, e, m):
+		print ('canvas_double_click', e)
 		if self.bin:
 			prefer_selection = (m == MODIFIER_CTRL)
 			def check_clicked(node, x,y):
@@ -922,6 +1150,7 @@ class PyBIN(Tk):
 				self.edit_node_settings(node)
 
 	def list_double_click(self, event):
+		print ('list_double_click', event)
 		selected = self.widgetTree.cur_selection()
 		if selected and selected[0] > -1:
 			list_index = self.widgetTree.index(selected[0])
@@ -954,7 +1183,6 @@ class PyBIN(Tk):
 		if self.selected_node:
 			self.widgetTree.highlight(None)
 			index,below = self.widgetTree.lookup_coords(event.x, event.y)
-			print index,self.selected_node.index,below
 			if index and index != self.selected_node.index:
 				highlight = self.widget_map[index]
 				if highlight.children != None:
@@ -1042,10 +1270,13 @@ class PyBIN(Tk):
 	 			if node:
 		 			self.edit_node = node
 		 			self.current_event = mouse_event
+		 			self.event_moved = False
 		 			if mouse_event[0] == EDIT_MOVE:
 		 				x1,y1,x2,y2 = node.bounding_box()
 		 				self.mouse_offset = [x1 - x, y1 - y]
 		 	if self.edit_node:
+		 		if button_event == MOUSE_MOVE:
+		 			self.event_moved = True
 		 		x1,y1,x2,y2 = self.edit_node.bounding_box()
 		 		if self.current_event[0] == EDIT_MOVE:
 	 				dx = (x + self.mouse_offset[0]) - x1
@@ -1083,7 +1314,7 @@ class PyBIN(Tk):
 						if node == self.selected_node:
 							self.update_selection_box()
 					offset_node(self.edit_node, dx,dy)
-				else:
+				elif self.event_moved:
 					if EDIT_RESIZE_LEFT in self.current_event:
 						self.edit_node.widget.x1 = x
 					elif EDIT_RESIZE_RIGHT in self.current_event:
@@ -1190,7 +1421,7 @@ class PyBIN(Tk):
 			self.saveas()
 			return
 		try:
-			self.bin.compile_file(self.file)
+			self.bin.save_file(self.file)
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED

@@ -3,6 +3,7 @@ import TBL
 
 import struct, re
 
+# DIALOG_PATHS and ASSET_PATHS from StarCraft.exe (Thanks FaRTy1billion)
 DIALOG_PATHS = {
 	"glue\\mainmenu\\":		0x00,
 	"glue\\simulate":		0x0B,
@@ -57,7 +58,7 @@ class BINWidget(object):
 	FLAG_UNK3 = 0x00000020
 	FLAG_CANCEL_BTN = 0x00000040
 	FLAG_NO_HOVER_SND = 0x00000080
-	FLAG_SPECIAL_HOTKEY = 0x00000100
+	FLAG_VIRTUAL_HOTKEY = 0x00000100
 	FLAG_HAS_HOTKEY = 0x00000200
 	FLAG_FONT_SIZE_10 = 0x00000400
 	FLAG_FONT_SIZE_16 = 0x00000800
@@ -100,13 +101,7 @@ class BINWidget(object):
 	TYPE_COMBOBOX = 13
 	TYPE_HIGHLIGHT_BTN = 14
 
-	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
-
-	TYPES_DISPLAY_STRING_HOTKEY = (TYPE_DEFAULT_BTN,TYPE_BUTTON,TYPE_OPTION_BTN,TYPE_CHECKBOX,TYPE_HIGHLIGHT_BTN)
-	TYPES_DISPLAY_STRING_BASIC = (TYPE_TEXTBOX,TYPE_LABEL_LEFT_ALIGN,TYPE_LABEL_CENTER_ALIGN,TYPE_LABEL_RIGHT_ALIGN)
-	TYPES_DISPLAY_STRING = TYPES_DISPLAY_STRING_HOTKEY + TYPES_DISPLAY_STRING_BASIC
-	TYPES_HAS_STRING = (TYPE_DIALOG,) + TYPES_DISPLAY_STRING
-	TYPES_RESPONSIVE = (TYPE_DEFAULT_BTN,TYPE_BUTTON,TYPE_OPTION_BTN,TYPE_CHECKBOX,TYPE_HIGHLIGHT_BTN,TYPE_LISTBOX)
+	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
 	def __init__(self, ctrl_type=TYPE_DIALOG):
 		self.x1 = 0
@@ -116,7 +111,7 @@ class BINWidget(object):
 		self.width = 0
 		self.height = 0
 		self.unknown1 = 0
-		self.string = None
+		self.string = ''
 		self.flags = 0
 		self.unknown2 = 0
 		self.identifier = 0
@@ -137,8 +132,6 @@ class BINWidget(object):
 		self.responsive_height = 0
 		self.unknown8 = 0
 		self.unknown9 = 0
-		if self.type in BINWidget.TYPES_HAS_STRING:
-			self.string = ''
 
 	def bounding_box(self):
 		x1 = (self.x1 if self.x1 < self.x2 else self.x2)
@@ -153,6 +146,9 @@ class BINWidget(object):
 		box[1] += self.text_offset_y
 		return box
 
+	def has_responsive(self):
+		return (self.flags & BINWidget.FLAG_RESPONSIVE == BINWidget.FLAG_RESPONSIVE) #(self.responsive_x1 or self.responsive_y1 or self.responsive_x2 or self.responsive_y2)
+
 	def responsive_box(self):
 		box = self.bounding_box()
 		box[0] += self.responsive_x1
@@ -162,8 +158,9 @@ class BINWidget(object):
 		return box
 
 	def display_text(self):
-		if self.type in BINWidget.TYPES_DISPLAY_STRING:
-			if self.type in BINWidget.TYPES_DISPLAY_STRING_HOTKEY:
+		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE:
+		# if self.type in BINWidget.TYPES_DISPLAY_STRING:
+			if self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:
 				return self.string
@@ -248,7 +245,7 @@ class DialogBIN:
 				end_offset = data.find('\0', string_offset)
 				widget_info[8] = data[string_offset:end_offset]
 			else:
-				widget_info[8] = None
+				widget_info[8] = ''
 			next_widget = widget_info[0]
 			smk_offset = widget_info[22]
 			if widget_info[11] == BINWidget.TYPE_DIALOG:
@@ -286,6 +283,8 @@ class DialogBIN:
 		offsets = [0, smk_offset, smk_offset + len(self.smks) * BINSMK.BYTE_SIZE]
 		results = ['','','']
 		def save_string(string):
+			if not string:
+				return 0
 			if not string in string_offsets:
 				string_offsets[string] = offsets[2]
 				offsets[2] += len(string) + 1
@@ -302,7 +301,7 @@ class DialogBIN:
 					value = getattr(smk, attr)
 					if attr == 'overlay_smk' and value != None:
 						value,data = save_smk(value)
-					elif attr == 'filename' and value != None:
+					elif attr == 'filename':
 						value = save_string(value)
 					if value == None:
 						value = 0
@@ -318,7 +317,7 @@ class DialogBIN:
 			attrs = BINWidget.ATTR_NAMES
 			for attr in attrs:
 				value = getattr(widget, attr)
-				if attr == 'string' and value != None:
+				if attr == 'string':
 					value = save_string(value)
 				elif attr == 'smk':
 					if widget.type == BINWidget.TYPE_DIALOG:
@@ -391,7 +390,7 @@ class DialogBIN:
 				continue
 			if not working:
 				raise PyMSError('Interpreting','Unexpected line, expected a Widget or SMK header',n,line)
-			m = re.match('^(\S+)\s+(.+)$', line)
+			m = re.match('^(\S+)(?:\s+(.+))?$', line)
 			attr = m.group(1)
 			value = m.group(2)
 			if isinstance(working, BINWidget):
@@ -407,13 +406,15 @@ class DialogBIN:
 							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
 						value = get_smk(smk_id)
 				elif attr == 'string':
-					if value == 'None':
-						value = None
+					if value == None:
+						value = ''
 					else:
 						value = TBL.compile_string(value)
 				elif attr == 'flags':
+					# todo: try catch
 					value = flags(value, 27)
 				else:
+					# todo: try catch
 					value = int(value)
 			else:
 				if not attr in BINSMK.ATTR_NAMES:

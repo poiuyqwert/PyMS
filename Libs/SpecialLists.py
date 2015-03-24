@@ -936,6 +936,13 @@ class TreeList(Frame):
 		if selected:
 			self.text.tag_add('Selection', start, end)
 
+	def see(self, index):
+		node = self.get_node(index)
+		entry = 'entry%s' % node.entry
+		ranges = self.text.tag_ranges(entry)
+		if ranges:
+			self.text.see(ranges[0])
+
 # import TBL,DAT
 # class Test(Tk):
 	# def __init__(self):
