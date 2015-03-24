@@ -88,22 +88,6 @@ class WidgetSettings(PyMSDialog):
 
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type])
 
-	def update_advanced(self):
-		show = self.show_advanced.get()
-		if show and not self.advanced_shown:
-			for widget in self.advanced_widgets:
-				widget.grid()
-			self.string_label['text'] = 'Text/Image:'
-			self.advanced_shown = True
-		elif not show and self.advanced_shown:
-			for widget in self.advanced_widgets:
-				widget.grid_remove()
-			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
-			self.advanced_shown = False
-
-	def calculate(self, calc, orig, offset, direction, fix):
-		calc.set(orig.get() + offset.get() * direction + fix)
-
 	def widgetize(self):
 		self.resizable(False, False)
 		def calc_button(f, calc, orig, offset, direction, fix):
@@ -286,12 +270,15 @@ class WidgetSettings(PyMSDialog):
 			self.advanced_widgets.extend((offsetframe,hotkeyframe,horframe,verframe,fontframe))
 		if not isimage or isdialog:
 			self.advanced_widgets.extend((transparent,findimage))
-		hassound = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_CHECKBOX,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN,DialogBIN.BINWidget.TYPE_LISTBOX,DialogBIN.BINWidget.TYPE_SLIDER)
-		if not hassound:
-			self.advanced_widgets.append(soundframe)
-		isbtn = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN)
-		if not isbtn:
-			self.advanced_widgets.extend((typeframe,soundframe,smkframe))
+		if isdialog:
+			self.advanced_widgets.append(otherframe)
+		else:
+			hassound = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_CHECKBOX,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN,DialogBIN.BINWidget.TYPE_LISTBOX,DialogBIN.BINWidget.TYPE_SLIDER)
+			if not hassound:
+				self.advanced_widgets.append(soundframe)
+			isbtn = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN)
+			if not isbtn:
+				self.advanced_widgets.extend((typeframe,soundframe,smkframe))
 		self.advanced_widgets.append(miscframe)
 
 		bottom = Frame(self)
@@ -304,6 +291,36 @@ class WidgetSettings(PyMSDialog):
 		self.load_settings()
 		self.update_advanced()
 		return ok
+
+	def update_advanced(self):
+		m = re.match('(\d+)x(\d+)\+(\d+)\+(\d+)', self.geometry())
+		do_center = not not m
+		center_x,center_y = 0,0
+		if do_center:
+			w,h,x,y = int(m.group(1)),int(m.group(2)),int(m.group(3)),int(m.group(4))
+			center_x = x + w/2.0
+			center_y = y + h/2.0
+		show = self.show_advanced.get()
+		if show and not self.advanced_shown:
+			for widget in self.advanced_widgets:
+				widget.grid()
+			self.string_label['text'] = 'Text/Image:'
+			self.advanced_shown = True
+		elif not show and self.advanced_shown:
+			for widget in self.advanced_widgets:
+				widget.grid_remove()
+			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
+			self.advanced_shown = False
+		if do_center:
+			self.update_idletasks()
+			m = re.match('(\d+)x(\d+)\+(\d+)\+(\d+)',self.geometry())
+			w,h = int(m.group(1)),int(m.group(2))
+			center_x -= w/2.0
+			center_y -= h/2.0
+			self.geometry('+%d+%d' % (int(center_x),int(center_y)))
+
+	def calculate(self, calc, orig, offset, direction, fix):
+		calc.set(orig.get() + offset.get() * direction + fix)
 
 	def load_settings_smk(self):
 		smks = ['None']
