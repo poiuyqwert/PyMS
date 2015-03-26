@@ -37,9 +37,15 @@ class WidgetSettings(PyMSDialog):
 		self.left = IntegerVar(range=[0,65535])
 		self.right = IntegerVar(range=[0,65535])
 		self.width = IntegerVar(range=[0,65535])
+		calc_right = lambda n: self.calculate(self.right,self.left,self.width,1,-1,False)
+		self.left.callback = calc_right
+		self.width.callback = calc_right
 		self.top = IntegerVar(range=[0,65535])
 		self.bottom = IntegerVar(range=[0,65535])
 		self.height = IntegerVar(range=[0,65535])
+		calc_bottom = lambda n: self.calculate(self.left,self.right,self.width,-1,1,False)
+		self.top.callback = calc_bottom
+		self.height.callback = calc_bottom
 		self.string = StringVar()
 		self.identifier = IntegerVar(range=[0,65535])
 		self.smk = IntVar()
@@ -48,9 +54,15 @@ class WidgetSettings(PyMSDialog):
 		self.responsive_left = IntegerVar(range=[0,65535])
 		self.responsive_right = IntegerVar(range=[0,65535])
 		self.responsive_width = IntegerVar(range=[0,65535])
+		calc_right = lambda n: self.calculate(self.responsive_right,self.responsive_left,self.responsive_width,1,-1,False)
+		self.responsive_left.callback = calc_right
+		self.responsive_width.callback = calc_right
 		self.responsive_top = IntegerVar(range=[0,65535])
 		self.responsive_bottom = IntegerVar(range=[0,65535])
 		self.responsive_height = IntegerVar(range=[0,65535])
+		calc_bottom = lambda n: self.calculate(self.responsive_left,self.responsive_right,self.responsive_width,-1,1,False)
+		self.responsive_top.callback = calc_bottom
+		self.responsive_height.callback = calc_bottom
 
 		self.flag_unk1 = BooleanVar()
 		self.flag_disabled = BooleanVar()
@@ -253,6 +265,10 @@ class WidgetSettings(PyMSDialog):
 
 		miscframe = LabelFrame(self, text='Misc.')
 		Checkbutton(miscframe, text='Bring to Front', variable=self.flag_on_top).grid(row=0,column=0, sticky=W)
+		f = Frame(miscframe)
+		Label(f, text='Control ID:').pack(side=LEFT)
+		Entry(f, textvariable=self.identifier, font=couriernew, width=5).pack(side=LEFT)
+		f.grid(row=0,column=3, columnspan=2, padx=5, sticky=E)
 		Checkbutton(miscframe, text='Unknown 0', variable=self.flag_unk1).grid(row=1,column=0, sticky=W)
 		Checkbutton(miscframe, text='Unknown 2', variable=self.flag_unk2).grid(row=1,column=1, sticky=W)
 		Checkbutton(miscframe, text='Unknown 5', variable=self.flag_unk3).grid(row=1,column=2, sticky=W)
@@ -320,8 +336,9 @@ class WidgetSettings(PyMSDialog):
 			center_y -= h/2.0
 			self.geometry('+%d+%d' % (int(center_x),int(center_y)))
 
-	def calculate(self, calc, orig, offset, direction, fix):
-		calc.set(orig.get() + offset.get() * direction + fix)
+	def calculate(self, calc, orig, offset, direction, fix, allow_advanced=True):
+		if not self.show_advanced.get() or allow_advanced:
+			calc.set(orig.get() + offset.get() * direction + fix)
 
 	def load_settings(self):
 		self.show_advanced.set(self.parent.settings.get('advanced_widget_editor',False))
@@ -1377,17 +1394,23 @@ class PyBIN(Tk):
 
 	def list_drag(self, event):
 		# todo: Not started on node?
-		if self.selected_node:
+		if self.selected_node and (not self.selected_node.widget or self.selected_node.widget.type != DialogBIN.BINWidget.TYPE_DIALOG):
 			index = self.widgetTree.index("@%d,%d" % (event.x, event.y))
 			self.widgetTree.highlight(index)
 
 	def list_drop(self, event):
 		# todo: Not started on node?
-		if self.selected_node:
+		if self.selected_node and (not self.selected_node.widget or self.selected_node.widget.type != DialogBIN.BINWidget.TYPE_DIALOG):
 			self.widgetTree.highlight(None)
 			index,below = self.widgetTree.lookup_coords(event.x, event.y)
 			if index and index != self.selected_node.index:
 				highlight = self.widget_map[index]
+				if self.selected_node.children:
+					check = highlight.parent
+					while check:
+						if check == self.selected_node:
+							return
+						check = check.parent
 				if highlight.children != None:
 					highlight.add_child(self.selected_node)
 				else:
