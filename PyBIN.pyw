@@ -33,7 +33,6 @@ class WidgetSettings(PyMSDialog):
 		self.advanced_widgets = []
 		self.advanced_shown = True
 		self.show_advanced = BooleanVar()
-		self.show_advanced.set(parent.settings.get('advanced_widget_editor',False))
 
 		self.left = IntegerVar(range=[0,65535])
 		self.right = IntegerVar(range=[0,65535])
@@ -205,11 +204,12 @@ class WidgetSettings(PyMSDialog):
 		horframe = LabelFrame(stringframe, text="Horizontal")
 		Checkbutton(horframe, text='Center', variable=self.flag_text_align_center).grid(row=0,column=0, sticky=W)
 		Checkbutton(horframe, text='Right', variable=self.flag_text_align_right).grid(row=1,column=0, sticky=W)
+		Checkbutton(horframe, text='Center 2', variable=self.flag_text_align_center2).grid(row=2,column=0, sticky=W)
 		horframe.grid(row=3,column=2, padx=3,pady=3, sticky=N)
 		verframe = LabelFrame(stringframe, text="Vertical")
 		Checkbutton(verframe, text='Top', variable=self.flag_align_top).grid(row=0,column=0, sticky=W)
 		Checkbutton(verframe, text='Middle', variable=self.flag_align_middle).grid(row=1,column=0, sticky=W)
-		Checkbutton(verframe, text='Right', variable=self.flag_align_bottom).grid(row=2,column=0, sticky=W)
+		Checkbutton(verframe, text='Bottom', variable=self.flag_align_bottom).grid(row=2,column=0, sticky=W)
 		verframe.grid(row=3,column=3, padx=3,pady=3, sticky=N)
 		fontframe = LabelFrame(stringframe, text='Font')
 		Checkbutton(fontframe, text='Size 10', variable=self.flag_font_size_10).grid(row=0,column=0, sticky=W)
@@ -289,6 +289,7 @@ class WidgetSettings(PyMSDialog):
 		bottom.grid(row=4,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
 
 		self.load_settings()
+		self.load_properties()
 		self.update_advanced()
 		return ok
 
@@ -322,13 +323,18 @@ class WidgetSettings(PyMSDialog):
 	def calculate(self, calc, orig, offset, direction, fix):
 		calc.set(orig.get() + offset.get() * direction + fix)
 
-	def load_settings_smk(self):
+	def load_settings(self):
+		self.show_advanced.set(self.parent.settings.get('advanced_widget_editor',False))
+	def save_settings(self):
+		self.parent.settings['advanced_widget_editor'] = self.show_advanced.get()
+
+	def load_property_smk(self):
 		smks = ['None']
 		for smk in self.parent.bin.smks:
 			smks.append(smk.filename)
 		self.smks_dropdown.setentries(smks)
 		self.smk.set(0 if not self.node.widget.smk else self.parent.bin.smks.index(self.node.widget.smk)+1)
-	def load_settings(self):
+	def load_properties(self):
 		self.left.set(self.node.widget.x1)
 		self.right.set(self.node.widget.x2)
 		self.width.set(self.node.widget.width)
@@ -337,7 +343,7 @@ class WidgetSettings(PyMSDialog):
 		self.height.set(self.node.widget.height)
 		self.string.set(TBL.decompile_string(self.node.widget.string))
 		self.identifier.set(self.node.widget.identifier)
-		self.load_settings_smk()
+		self.load_property_smk()
 		self.text_offset_x.set(self.node.widget.text_offset_x)
 		self.text_offset_y.set(self.node.widget.text_offset_y)
 		self.responsive_left.set(self.node.widget.responsive_x1)
@@ -380,10 +386,10 @@ class WidgetSettings(PyMSDialog):
 		self.flag_no_click_snd.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_NO_CLICK_SND == DialogBIN.BINWidget.FLAG_NO_CLICK_SND))
 		self.flag_unk10.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK10 == DialogBIN.BINWidget.FLAG_UNK10))
 
-	def save_settings_smk(self):
+	def save_property_smk(self):
 		index = self.smk.get()-1
 		self.node.widget.smk = None if index == -1 else self.parent.bin.smks[index]
-	def save_settings(self):
+	def save_properties(self):
 		self.node.widget.x1 = self.left.get()
 		self.node.widget.x2 = self.right.get()
 		self.node.widget.width = self.width.get()
@@ -392,6 +398,7 @@ class WidgetSettings(PyMSDialog):
 		self.node.widget.height = self.height.get()
 		self.node.widget.string = TBL.compile_string(self.string.get())
 		self.node.widget.identifier = self.identifier.get()
+		self.save_property_smk()
 		self.node.widget.text_offset_x = self.text_offset_x.get()
 		self.node.widget.text_offset_y = self.text_offset_y.get()
 		self.node.widget.responsive_x1 = self.responsive_left.get()
@@ -434,13 +441,16 @@ class WidgetSettings(PyMSDialog):
 		self.node.widget.flags |= self.flag_unk9.get() * DialogBIN.BINWidget.FLAG_UNK9
 		self.node.widget.flags |= self.flag_no_click_snd.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SND
 		self.node.widget.flags |= self.flag_unk10.get() * DialogBIN.BINWidget.FLAG_UNK10
+		self.node.string = None
+		self.node.item_string_images = None
 
 	def update_preview(self):
-		self.save_settings()
+		self.save_properties()
 		self.parent.reload_list()
 		self.parent.reload_canvas()
 
 	def ok(self):
+		self.save_settings()
 		self.update_preview()
 		PyMSDialog.ok(self)
 
@@ -480,11 +490,10 @@ def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 class StringPreview:
 	# GLYPH_CACHE = {}
 
-	def __init__(self, text, font, palette, align=0):
+	def __init__(self, text, font, palette):
 		self.text = text
 		self.font = font
 		self.palette = palette
-		self.align = align
 		self.glyphs = None
 
 	def get_glyphs(self):
@@ -500,7 +509,7 @@ class StringPreview:
 					color = a
 		return self.glyphs
 
-	def get_positions(self, x1,y1,x2,y2):
+	def get_positions(self, x1,y1,x2,y2, align_flags):
 		positions = []
 		position = [x1,y1]
 		size = [x2-x1,y2-y1]
@@ -511,12 +520,12 @@ class StringPreview:
 		def add_line():
 			if line:
 				o = 0
-				if self.align & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER:
+				if align_flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER:
 					o = int((size[0] - line_width[0]) / 2.0)
-				elif self.align & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT:
+				elif align_flags & DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT:
 					o = size[0] - line_width[0]
 				for w in line:
-					positions.append((position[0] + o, position[1]))
+					positions.append([position[0] + o, position[1]])
 					o += w
 				del line[:]
 				line_width[0] = 0
@@ -556,6 +565,14 @@ class StringPreview:
 			add_word()
 		if line:
 			add_line()
+
+		if align_flags & (DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE | DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM):
+			height = y2-y1
+			offset = height - (position[1]-y1)
+			if align_flags & DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE:
+				offset /= 2
+			for position in positions:
+				position[1] += offset
 		return positions
 
 class WidgetNode:
@@ -650,24 +667,27 @@ class WidgetNode:
 		reorder = False
 		SHOW_TEXT = toplevel.show_text.get()
 		if SHOW_TEXT and self.widget and self.widget.display_text() and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE:
+			if self.string == None:
+				if self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
+					font = toplevel.font10
+				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
+					font = toplevel.font14
+				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16:
+					font = toplevel.font16
+				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
+					font = toplevel.font16x
+				else:
+					font = toplevel.font10
+				self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam)
 			x1,y1,x2,y2 = self.widget.text_box()
 			if self.item_string_images:
-				positions = self.string.get_positions(x1,y1, x2,y2)
+				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
 				for item,position in zip(self.item_string_images,positions):
 					toplevel.widgetCanvas.coords(item, *position)
 			else:
-				if self.string == None:
-					font = toplevel.font10
-					if self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
-						font = toplevel.font14
-					elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16:
-						font = toplevel.font16
-					elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
-						font = toplevel.font16x
-					self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam, align=self.widget.flags & DialogBIN.BINWidget.FLAGS_TEXT_ALIGN)
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
-				positions = self.string.get_positions(x1,y1, x2,y2)
+				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
 				for glyph,position in zip(glyphs,positions):
 					self.item_string_images.append(toplevel.widgetCanvas.create_image(position[0],position[1], image=glyph, anchor=NW))
 				reorder = True
@@ -777,10 +797,6 @@ class PyBIN(Tk):
 				'font14':'MPQ:font\\font14.fnt',
 				'font16':'MPQ:font\\font16.fnt',
 				'font16x':'MPQ:font\\font16x.fnt',
-				'show_background_path_history':[
-					'None',
-					'MPQ:glue\\palmm\\backgnd.pcx',
-				]
 			}
 		)
 
@@ -860,34 +876,18 @@ class PyBIN(Tk):
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
+		self.show_preview_settings = BooleanVar()
 		self.show_images = BooleanVar()
-		self.show_images.set(self.settings.get('show_images',True))
 		self.show_text = BooleanVar()
-		self.show_text.set(self.settings.get('show_text',True))
 		self.show_smks = BooleanVar()
-		self.show_smks.set(self.settings.get('show_smks',True))
 		self.show_animated = BooleanVar()
-		self.show_animated.set(self.settings.get('show_animated',False))
 		self.show_background = BooleanVar()
-		self.show_background.set(self.settings.get('show_background',False))
-		self.show_background_index = IntVar()
-		path = self.settings.get('show_background_path','None')
-		history = self.settings.get('show_background_path_history',['None'])
-		if not path in history:
-			if path == 'None':
-				history.insert(0, path)
-			else:
-				history.insert(1, path)
-		self.last_background_index = history.index(path)
-		self.show_background_index.set(self.last_background_index)
+		self.show_theme_index = IntVar()
 		self.show_bounds_widget = BooleanVar()
-		self.show_bounds_widget.set(self.settings.get('show_bounds_widget',True))
 		self.show_bounds_group = BooleanVar()
-		self.show_bounds_group.set(self.settings.get('show_bounds_group',True))
 		self.show_bounds_text = BooleanVar()
-		self.show_bounds_text.set(self.settings.get('show_bounds_text',True))
 		self.show_bounds_responsive = BooleanVar()
-		self.show_bounds_responsive.set(self.settings.get('show_bounds_responsive',True))
+		self.load_settings()
 
 		self.type_menu = Menu(self, tearoff=0)
 		fields = (
@@ -925,21 +925,30 @@ class PyBIN(Tk):
 		self.widgetTree.bind('<Double-Button-1>', self.list_double_click)
 		f = Frame(leftframe)
 		buttons = (
-			('add', self.add_node, LEFT),
-			('remove', self.remove_node, LEFT),
-			('edit', lambda: self.edit_node_settings(), LEFT),
-			('down', lambda: self.move_node(2), RIGHT),
-			('up', lambda: self.move_node(-1), RIGHT)
+			('add', self.add_node, 0, 20, 20, DISABLED),
+			('remove', self.remove_node, 0, 20, 20, DISABLED),
+			('edit', lambda: self.edit_node_settings(), 0, 20, 20, DISABLED),
+			('arrow', self.toggle_preview_settings, 1, 20, 10, NORMAL),
+			('down', lambda: self.move_node(2), 0, 20, 20, DISABLED),
+			('up', lambda: self.move_node(-1), 0, 20, 20, DISABLED)
 		)
-		for icon,callback,side in buttons:
+		for col,(icon,callback,weight,width,height,state) in enumerate(buttons):
 			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % icon))
-			button = Button(f, image=image, width=20, height=20, command=callback, state=DISABLED)
+			button = Button(f, image=image, width=width, height=height, command=callback, state=state)
 			button.image = image
+			if icon == 'arrow':
+				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%sup.gif' % icon))
+				button.image_up = image
+				if not self.show_preview_settings.get():
+					button.config(image=button.image_up)
 			# button.tooltip = Tooltip(button, btn[1])
-			button.pack(side=side)
+			button.grid(row=0,column=col, sticky=S)
+			f.grid_columnconfigure(col, weight=weight)
 			self.buttons[icon] = button
 		f.grid(row=2, column=0, padx=1, pady=1, sticky=EW)
-		flagframe = LabelFrame(leftframe, text='Preview:')
+
+		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')
+		widgetsframe = LabelFrame(self.preview_settings_frame, text='Widget')
 		fields = (
 			('Images','show_images',self.show_images, NORMAL),
 			('Text','show_text',self.show_text, NORMAL),
@@ -947,23 +956,13 @@ class PyBIN(Tk):
 			('Animated','show_animated',self.show_animated, DISABLED)
 		)
 		for i,(name,setting_name,variable,state) in enumerate(fields):
-			check = Checkbutton(flagframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
+			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
 			check['state'] = state
 			check.grid(row=i / 2, column=i % 2, sticky=W)
-		Checkbutton(flagframe, text='Background:', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=2, column=0, columnspan=2, sticky=W)
-		f = Frame(flagframe)
-		DropDown(f, self.show_background_index, self.settings['show_background_path_history'], self.change_background).grid(row=0, column=0, sticky=EW)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','open.gif'))
-		button = Button(f, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
-		button.image = image
-		button.grid(row=0, column=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','openmpq.gif'))
-		button = Button(f, image=image, width=20, height=20)#, command=btn[1], state=btn[3])
-		button.image = image
-		button.grid(row=0, column=2)
-		f.grid_columnconfigure(0, weight=1)
-		f.grid(row=3, column=0, columnspan=2, sticky=NSEW, padx=5, pady=0)
-		boundsframe = LabelFrame(flagframe, text='Bounds')
+		widgetsframe.grid_columnconfigure(0, weight=1)
+		widgetsframe.grid_columnconfigure(1, weight=1)
+		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
+		boundsframe = LabelFrame(self.preview_settings_frame, text='Bounds')
 		fields = (
 			('Widgets','show_bounds_widget',self.show_bounds_widget, NORMAL),
 			('Groups','show_bounds_group',self.show_bounds_group, NORMAL),
@@ -976,10 +975,21 @@ class PyBIN(Tk):
 			check.grid(row=i / 2, column=i % 2, sticky=W)
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
-		boundsframe.grid(row=4, column=0, columnspan=2, sticky=NSEW, padx=5, pady=5)
-		flagframe.grid_columnconfigure(0, weight=1)
-		flagframe.grid_columnconfigure(1, weight=1)
-		flagframe.grid(row=3, column=0, padx=1, pady=1, sticky=EW)
+		boundsframe.grid(row=1, column=0, sticky=NSEW, padx=5)
+		themeframe = LabelFrame(self.preview_settings_frame, text='Theme')
+		themes = ['None']
+		for t in xrange(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
+			theme = DialogBIN.THEME_ASSETS_INFO[t]
+			themes.append('%s (%s)' % (theme['name'],theme['path']))
+		DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=EW)
+		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=1, column=0, sticky=W)
+		themeframe.grid_columnconfigure(0, weight=1)
+		# themeframe.grid_columnconfigure(1, weight=1)
+		themeframe.grid(row=2, column=0, sticky=NSEW, padx=5, pady=5)
+		self.preview_settings_frame.grid_columnconfigure(0, weight=1)
+		self.preview_settings_frame.grid(row=3, column=0, padx=1, pady=1, sticky=EW)
+		if not self.show_preview_settings.get():
+			self.preview_settings_frame.grid_forget()
 		leftframe.grid_rowconfigure(1, weight=1)
 		leftframe.grid_columnconfigure(0, weight=1)
 		leftframe.grid(row=0, column=0, padx=2, pady=2, sticky=NSEW)
@@ -1036,6 +1046,16 @@ class PyBIN(Tk):
 		if e:
 			self.mpqsettings(err=e)
 
+	def toggle_preview_settings(self):
+		show = not self.show_preview_settings.get()
+		self.show_preview_settings.set(show)
+		if show:
+			self.buttons['arrow'].config(image=self.buttons['arrow'].image)
+			self.preview_settings_frame.grid()
+		else:
+			self.buttons['arrow'].config(image=self.buttons['arrow'].image_up)
+			self.preview_settings_frame.grid_forget()
+
 	def add_node(self):
 		self.type_menu.post(*self.winfo_pointerxy())
 
@@ -1060,7 +1080,7 @@ class PyBIN(Tk):
 			widget.y1 = y1 + (y2-y1-(widget.height-1)) / 2
 			widget.x2 = widget.x1 + widget.width-1
 			widget.y2 = widget.y1 + widget.height-1
-			if widget.type in DialogBIN.BINWidget.TYPES_RESPONSIVE:
+			if widget.flags & DialogBIN.BINWidget.FLAG_RESPONSIVE:
 				widget.responsive_x1 = 0
 				widget.responsive_y1 = 0
 				widget.responsive_x2 = widget.width-1
@@ -1090,46 +1110,39 @@ class PyBIN(Tk):
 			self.action_states()
 			self.update_zorder()
 
-	def load_background(self, index):
-		try:
-			path = self.settings['show_background_path_history'][index]
-			background = PCX.PCX()
-			background.load_file(self.mpqhandler.get_file(path))
-		except:
-			return False
-		self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
-		return True
-
 	def update_background(self):
-		if self.bin and self.show_background.get() and self.show_background_index.get():
+		delete = True
+		if self.bin and self.show_background.get() and self.show_theme_index.get():
 			if not self.background_image:
-				self.load_background(self.show_background_index.get())
-			if self.item_background:
-				self.widgetCanvas.itemconfigure(self.item_background, image=self.background_image)
+				path = DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path']
+				print path + 'backgnd.pcx'
+				try:
+					background = PCX.PCX()
+					background.load_file(self.mpqhandler.get_file('MPQ:' + path + 'backgnd.pcx'))
+				except:
+					raise
+					pass
+				else:
+					self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
+			if self.background_image:
+				delete = False
+				if self.item_background:
+					self.widgetCanvas.itemconfigure(self.item_background, image=self.background_image)
+				else:
+					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
+					self.widgetCanvas.lower(self.item_background)
 			else:
-				self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
-				self.widgetCanvas.lower(self.item_background)
-		elif self.item_background:
+				delete = True
+		if self.item_background and delete:
 			self.widgetCanvas.delete(self.item_background)
 			self.item_background = None
 
-	def change_background(self, n):
-		index = self.show_background_index.get()
-		if index != self.last_background_index:
-			changed = False
-			path = 'None'
-			if index:
-				changed = self.load_background(index)
-				if not changed:
-					self.show_background_index.set(self.last_background_index)
-					# todo: check remove from list
-			else:
-				self.background_image = None
-				changed = True
-			if changed:
-				self.settings['show_background_path'] = path
-				self.update_background()
-				self.last_background_index = index
+	def change_theme(self, n):
+		index = self.show_theme_index.get()-1
+		if index != self.settings.get('theme_id'):
+			self.settings['theme_id'] = index
+			self.background_image = None
+			self.update_background()
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()
@@ -1262,9 +1275,10 @@ class PyBIN(Tk):
 			node.index = self.widgetTree.insert(index, node.get_name(), group)
 			if node == self.selected_node:
 				self.widgetTree.select(node.index)
+				self.widgetTree.see(node.index)
 			self.widget_map[node.index] = node
 			if node.children:
-				for child in node.children:
+				for child in reversed(node.children):
 					list_node(node.index + '.-1', child)
 		list_node('-1', self.dialog)
 
@@ -1329,11 +1343,10 @@ class PyBIN(Tk):
 				if event:
 					found = node
 					if node.children and (not prefer_selection or node != self.selected_node):
-						for child in node.children:
+						for child in reversed(node.children):
 							found_child = check_clicked(child, x,y)
 							if found_child != None:
 								found = found_child
-								break
 				return found
 			node = check_clicked(self.dialog, e.x,e.y)
 			if node:
@@ -1397,7 +1410,7 @@ class PyBIN(Tk):
 			found[0] = node
 			found[1] = event
 		if node.children and (not prefer_selection or node != self.selected_node):
-			for child in node.children:
+			for child in reversed(node.children):
 				found_child = self.edit_event(x,y, node=child, prefer_selection=prefer_selection)
 				if found_child[0] != None:
 					found = found_child
@@ -1582,6 +1595,7 @@ class PyBIN(Tk):
 			self.status.set('Load Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
+			self.select_node(self.dialog)
 			self.action_states()
 
 	def iimport(self, key=None):
@@ -1663,9 +1677,36 @@ class PyBIN(Tk):
 			('FaRTy1billion','File Specs and BinEdit2')
 		])
 
+	def load_settings(self):
+		self.show_preview_settings.set(self.settings.get('show_preview_settings',True))
+		self.show_images.set(self.settings.get('show_images',True))
+		self.show_text.set(self.settings.get('show_text',True))
+		self.show_smks.set(self.settings.get('show_smks',True))
+		self.show_animated.set(self.settings.get('show_animated',False))
+		self.show_background.set(self.settings.get('show_background',False))
+		self.show_theme_index.set(self.settings.get('theme_id',-1) + 1)
+		self.show_bounds_widget.set(self.settings.get('show_bounds_widget',True))
+		self.show_bounds_group.set(self.settings.get('show_bounds_group',True))
+		self.show_bounds_text.set(self.settings.get('show_bounds_text',True))
+		self.show_bounds_responsive.set(self.settings.get('show_bounds_responsive',True))
+
+	def save_settings(self):
+		self.settings['show_preview_settings'] = self.show_preview_settings.get()
+		self.settings['show_images'] = self.show_images.get()
+		self.settings['show_text'] = self.show_text.get()
+		self.settings['show_smks'] = self.show_smks.get()
+		self.settings['show_animated'] = self.show_animated.get()
+		self.settings['show_background'] = self.show_background.get()
+		self.settings['theme_id'] = self.show_theme_index.get()-1
+		self.settings['show_bounds_widget'] = self.show_bounds_widget.get()
+		self.settings['show_bounds_group'] = self.show_bounds_group.get()
+		self.settings['show_bounds_text'] = self.show_bounds_text.get()
+		self.settings['show_bounds_responsive'] = self.show_bounds_responsive.get()
+
 	def exit(self, e=None):
 		if not self.unsaved():
 			savesize(self, self.settings)
+			self.save_settings()
 			try:
 				f = file(os.path.join(BASE_DIR,'Settings','PyBIN.txt'),'w')
 				f.write(pprint(self.settings))

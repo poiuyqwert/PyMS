@@ -3,47 +3,245 @@ import TBL
 
 import struct, re
 
-# DIALOG_INFO and ASSET_PATHS from StarCraft.exe (Thanks FaRTy1billion)
-DIALOG_INFO = {
-	0x00:{"path":"glue\\mainmenu\\", "assets_id":0x00},
-	0x01:{"path":"glue\\simulate", "assets_id":0x0B},
-	0x02:{"path":"glue\\selconn\\", "assets_id":0x0B},
-	0x03:{"path":"glue\\chatroom\\", "assets_id":0x0B},
-	0x04:{"path":"glue\\battle.net\\", "assets_id":0x0C},
-	0x05:{"path":"glue\\login\\", "assets_id":0x0B},
-	0x06:{"path":"glue\\campaign\\", "assets_id":0x01},
-	0x07:{"path":"glue\\ReadyT\\", "assets_id":0x02},
-	0x08:{"path":"glue\\ReadyZ\\", "assets_id":0x03},
-	0x09:{"path":"glue\\ReadyP\\", "assets_id":0x04},
-	0x0A:{"path":"glue\\gamesel\\", "assets_id":0x0B},
-	0x0B:{"path":"glue\\create\\", "assets_id":0x0B},
-	0x0C:{"path":"glue\\create\\", "assets_id":0x0B},
-	0x0D:{"path":"glue\\load\\", "assets_id":0x0B},
-	0x0E:{"path":"glue\\score\\", "assets_id":0x07},
-	0x0F:{"path":"glue\\score\\", "assets_id":0x08},
-	0x10:{"path":"glue\\score\\", "assets_id":0x09},
-	0x11:{"path":"glue\\score\\", "assets_id":0x0A},
-	0x12:{"path":"glue\\score\\", "assets_id":0x05},
-	0x13:{"path":"glue\\score\\", "assets_id":0x06},
-	0x14:{"path":"glue\\modem\\", "assets_id":0x0B},
-	0x15:{"path":"glue\\direct\\", "assets_id":0x0B},
-	0x16:{"path":"glue\\campaign\\", "assets_id":0x01},
-	0x17:{"path":"glue\\gamemode\\", "assets_id":0x0B},
-	0x18:{"path":"glue\\gamemode\\", "assets_id":0x0B},
+THEME_ASSETS_MAIN_MENU = 0x00
+THEME_ASSETS_CAMPAIGN = 0x01
+THEME_ASSETS_TERRAN_BRIEFING = 0x02
+THEME_ASSETS_ZERG_BRIEFING = 0x03
+THEME_ASSETS_PROTOSS_BRIEFING = 0x04
+THEME_ASSETS_PROTOSS_DEFEAT = 0x05
+THEME_ASSETS_PROTOSS_VICTORY = 0x06
+THEME_ASSETS_ZERG_DEFEAT = 0x07
+THEME_ASSETS_ZERG_VICTORY = 0x08
+THEME_ASSETS_TERRAN_DEFEAT = 0x09
+THEME_ASSETS_TERRAN_VICTORY = 0x0A
+THEME_ASSETS_GENERAL = 0x0B
+THEME_ASSETS_NONE = 0x0C
+THEME_ASSETS_INFO = {
+	THEME_ASSETS_MAIN_MENU: {
+		"path":"glue\\palmm\\",
+		"name":"Main Menu"
+	},
+	THEME_ASSETS_CAMPAIGN: {
+		"path":"glue\\palcs\\",
+		"name":"Campaign"
+	},
+	THEME_ASSETS_TERRAN_BRIEFING: {
+		"path":"glue\\palrt\\",
+		"name":"Terran Mission Briefing"
+	},
+	THEME_ASSETS_ZERG_BRIEFING: {
+		"path":"glue\\palrz\\",
+		"name":"Zerg Mission Briefing"
+	},
+	THEME_ASSETS_PROTOSS_BRIEFING: {
+		"path":"glue\\palrp\\",
+		"name":"Protoss Mission Briefing"
+	},
+	THEME_ASSETS_PROTOSS_DEFEAT: {
+		"path":"glue\\palpd\\",
+		"name":"Protoss Defeat"
+	},
+	THEME_ASSETS_PROTOSS_VICTORY: {
+		"path":"glue\\palpv\\",
+		"name":"Protoss Victory"
+	},
+	THEME_ASSETS_ZERG_DEFEAT: {
+		"path":"glue\\palzd\\",
+		"name":"Zerg Defeat"
+	},
+	THEME_ASSETS_ZERG_VICTORY: {
+		"path":"glue\\palzv\\",
+		"name":"Zerg Victory"
+	},
+	THEME_ASSETS_TERRAN_DEFEAT: {
+		"path":"glue\\paltd\\",
+		"name":"Terran Defeat"
+	},
+	THEME_ASSETS_TERRAN_VICTORY: {
+		"path":"glue\\paltv\\",
+		"name":"Terran Victory"
+	},
+	THEME_ASSETS_GENERAL: {
+		"path":"glue\\palnl\\",
+		"name":"General"
+	},
 }
-ASSET_PATHS = {
-	0x00: "glue\\palmm\\",
-	0x01: "glue\\palcs\\",
-	0x02: "glue\\palrt\\",
-	0x03: "glue\\palrz\\",
-	0x04: "glue\\palrp\\",
-	0x05: "glue\\palrd\\",
-	0x06: "glue\\palpv\\",
-	0x07: "glue\\palzd\\",
-	0x08: "glue\\palzv\\",
-	0x09: "glue\\paltd\\",
-	0x0A: "glue\\paltv\\",
-	0x0B: "glue\\palnl\\",
+SCREEN_MAIN_MENU = 0x00
+SCREEN_SIMULATE = 0x01
+SCREEN_SELCONN = 0x02
+SCREEN_CHATROOM = 0x03
+SCREEN_BATTLENT = 0x04
+SCREEN_LOGIN = 0x05
+SCREEN_CAMPAIGN = 0x06
+SCREEN_TERRAN_BRIEFING = 0x07
+SCREEN_ZERG_BRIEFING = 0x08
+SCREEN_PROTOSS_BRIEFING = 0x09
+SCREEN_GAMESEL = 0x0A
+SCREEN_CREATE = 0x0B
+SCREEN_CREATE_2 = 0x0C
+SCREEN_LOAD = 0x0D
+SCREEN_ZERG_SCORE_DEFEAT = 0x0E
+SCREEN_ZERG_SCORE_VICTORY = 0x0F
+SCREEN_TERRAN_SCORE_DEFEAT = 0x10
+SCREEN_TERRAN_SCORE_VICTORY = 0x11
+SCREEN_PROTOSS_SCORE_DEFEAT = 0x12
+SCREEN_PROTOSS_SCORE_VICTORY = 0x13
+SCREEN_MODEM = 0x14
+SCREEN_DIRECT = 0x15
+SCREEN_CAMPAIGN_BW = 0x16
+SCREEN_GAMEMODE = 0x17
+SCREEN_GAMEMODE_2 = 0x18
+SCREEN_INFO = {
+	SCREEN_MAIN_MENU:{
+		# "assets_path":"glue\\mainmenu\\",
+		"dialog_bin":"glumain.bin",
+		"theme_id":THEME_ASSETS_MAIN_MENU,
+		"name":"Main Menu"
+	},
+	# SCREEN_SIMULATE:{
+	# 	# "assets_path":"glue\\simulate",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	SCREEN_SELCONN:{
+		# "assets_path":"glue\\selconn\\",
+		"dialog_bin":"gluconn.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Multiplay Connection Selection"
+	},
+	SCREEN_CHATROOM:{
+		# "assets_path":"glue\\chatroom\\",
+		"dialog_bin":"gluchat.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Game Lobby"
+	},
+	# SCREEN_BATTLENT:{
+	# 	# "assets_path":"glue\\battle.net\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_NONE,
+	# 	"name":""
+	# },
+	SCREEN_LOGIN:{
+		# "assets_path":"glue\\login\\",
+		"dialog_bin":"glulogin.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Username Selection"
+	},
+	SCREEN_CAMPAIGN:{
+		# "assets_path":"glue\\campaign\\",
+		"dialog_bin":"glucmpgn.bin",
+		"theme_id":THEME_ASSETS_CAMPAIGN,
+		"name":"Campaign Selection"
+	},
+	SCREEN_TERRAN_BRIEFING:{
+		# "assets_path":"glue\\ReadyT\\",
+		"dialog_bin":"glurdyt.bin",
+		"theme_id":THEME_ASSETS_TERRAN_BRIEFING,
+		"name":"Terran Mission Briefing"
+	},
+	SCREEN_ZERG_BRIEFING:{
+		# "assets_path":"glue\\ReadyZ\\",
+		"dialog_bin":"glurdyz.bin",
+		"theme_id":THEME_ASSETS_ZERG_BRIEFING,
+		"name":"Zerg Mission Briefing"
+	},
+	SCREEN_PROTOSS_BRIEFING:{
+		# "assets_path":"glue\\ReadyP\\",
+		"dialog_bin":"glurdyp.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_BRIEFING,
+		"name":"Protoss Mission Briefing"
+	},
+	SCREEN_GAMESEL:{
+		# "assets_path":"glue\\gamesel\\",
+		"dialog_bin":"glujoin.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Games List"
+	},
+	SCREEN_CREATE:{
+		# "assets_path":"glue\\create\\",
+		"dialog_bin":"glucreat.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Create Game (Multiplayer)"
+	},
+	SCREEN_CREATE_2:{
+		# "assets_path":"glue\\create\\",
+		"dialog_bin":"glucustm.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Create Game (Singleplayer)"
+	},
+	SCREEN_LOAD:{
+		# "assets_path":"glue\\load\\",
+		"dialog_bin":"gluload.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Save Games"
+	},
+	SCREEN_ZERG_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_ZERG_DEFEAT,
+		"name":"Zerg Score Screen (Defeat)"
+	},
+	SCREEN_ZERG_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_ZERG_VICTORY,
+		"name":"Zerg Score Screen (Victory)"
+	},
+	SCREEN_TERRAN_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_TERRAN_DEFEAT,
+		"name":"Terran Score Screen (Defeat)"
+	},
+	SCREEN_TERRAN_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_TERRAN_VICTORY,
+		"name":"Terran Score Screen (Victory)"
+	},
+	SCREEN_PROTOSS_SCORE_DEFEAT:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_DEFEAT,
+		"name":"Protoss Score Screen (Defeat)"
+	},
+	SCREEN_PROTOSS_SCORE_VICTORY:{
+		# "assets_path":"glue\\score\\",
+		"dialog_bin":"gluscore.bin",
+		"theme_id":THEME_ASSETS_PROTOSS_VICTORY,
+		"name":"Protoss Score Screen (Victory)"
+	},
+	SCREEN_MODEM:{
+		# "assets_path":"glue\\modem\\",
+		"dialog_bin":"glumodem.bin",
+		"theme_id":THEME_ASSETS_GENERAL,
+		"name":"Modem Connection"
+	},
+	# SCREEN_DIRECT:{
+	# 	# "assets_path":"glue\\direct\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	SCREEN_CAMPAIGN_BW:{
+		# "assets_path":"glue\\campaign\\",
+		"dialog_bin":"gluexpcmpgn.bin",
+		"theme_id":THEME_ASSETS_CAMPAIGN,
+		"name":"Campaign Selection (BroodWar)"
+	},
+	# SCREEN_GAMEMODE:{
+	# 	# "assets_path":"glue\\gamemode\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
+	# SCREEN_GAMEMODE_2:{
+	# 	# "assets_path":"glue\\gamemode\\",
+	# 	"dialog_bin":"",
+	# 	"theme_id":THEME_ASSETS_GENERAL,
+	# 	"name":""
+	# },
 }
 	
 class BINWidget(object):
@@ -132,6 +330,8 @@ class BINWidget(object):
 		self.responsive_height = 0
 		self.unknown8 = 0
 		self.unknown9 = 0
+		if self.type in (BINWidget.TYPE_DEFAULT_BTN, BINWidget.TYPE_BUTTON, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_SLIDER, BINWidget.TYPE_TEXTBOX, BINWidget.TYPE_LISTBOX, BINWidget.TYPE_COMBOBOX, BINWidget.TYPE_HIGHLIGHT_BTN):
+			self.flags |= BINWidget.FLAG_RESPONSIVE
 
 	def bounding_box(self):
 		x1 = (self.x1 if self.x1 < self.x2 else self.x2)
@@ -159,7 +359,6 @@ class BINWidget(object):
 
 	def display_text(self):
 		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE:
-		# if self.type in BINWidget.TYPES_DISPLAY_STRING:
 			if self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:
