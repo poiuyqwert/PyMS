@@ -507,22 +507,23 @@ def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 class StringPreview:
 	# GLYPH_CACHE = {}
 
-	def __init__(self, text, font, palette):
+	def __init__(self, text, font, palette, color_remap):
 		self.text = text
 		self.font = font
 		self.palette = palette
+		self.color_remap = color_remap
 		self.glyphs = None
 
 	def get_glyphs(self):
 		if self.glyphs == None:
 			self.glyphs = []
-			color = 2
+			color = 1
 			for c in self.text:
 				a = ord(c)
 				if a >= self.font.start and a < self.font.start + len(self.font.letters):
 					a -= self.font.start
-					self.glyphs.append(FNT.letter_to_photo(self.palette, self.font.letters[a], color))
-				elif a in FNT.COLOR_CODES and not color in FNT.COLOR_OVERPOWER:
+					self.glyphs.append(FNT.letter_to_photo(self.palette, self.font.letters[a], color, self.color_remap))
+				elif a in self.color_remap and not color in FNT.COLOR_OVERPOWER:
 					color = a
 		return self.glyphs
 
@@ -695,7 +696,12 @@ class WidgetNode:
 					font = toplevel.font16x
 				else:
 					font = toplevel.font10
-				self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam)
+				pal = toplevel.tfontgam
+				remap = FNT.COLOR_CODES_INGAME
+				if toplevel.tfont:
+					pal = toplevel.tfont
+					remap = FNT.COLOR_CODES_GLUE
+				self.string = StringPreview(self.widget.display_text(), font, pal, remap)
 			x1,y1,x2,y2 = self.widget.text_box()
 			if self.item_string_images:
 				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
@@ -839,6 +845,8 @@ class PyBIN(Tk):
 		self.edited = False
 		self.dialog = None
 		self.widget_map = None
+
+		self.tfont = None
 
 		self.selected_node = None
 		self.old_cursor = None
@@ -1131,11 +1139,10 @@ class PyBIN(Tk):
 		delete = True
 		if self.bin and self.show_background.get() and self.show_theme_index.get():
 			if not self.background_image:
-				path = DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path']
-				print path + 'backgnd.pcx'
 				try:
+					path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 					background = PCX.PCX()
-					background.load_file(self.mpqhandler.get_file('MPQ:' + path + 'backgnd.pcx'))
+					background.load_file(self.mpqhandler.get_file(path))
 				except:
 					raise
 					pass
@@ -1154,12 +1161,31 @@ class PyBIN(Tk):
 			self.widgetCanvas.delete(self.item_background)
 			self.item_background = None
 
+	def load_tfont(self):
+		try:
+			tfont = None
+			if self.show_theme_index.get():
+				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx'
+				tfont = PCX.PCX()
+				tfont.load_file(self.mpqhandler.get_file(path))
+		except:
+			raise
+			pass
+		else:
+			self.tfont = tfont
+			if self.bin:
+				for widget in self.flattened_nodes():
+					widget.string = None
+					widget.item_string_images = None
+				self.reload_canvas()
+
 	def change_theme(self, n):
 		index = self.show_theme_index.get()-1
 		if index != self.settings.get('theme_id'):
 			self.settings['theme_id'] = index
 			self.background_image = None
 			self.update_background()
+			self.load_tfont()
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()
@@ -1584,6 +1610,8 @@ class PyBIN(Tk):
 
 	def new(self, key=None):
 		if not self.unsaved():
+			if not self.tfont:
+				self.load_tfont()
 			self.clear()
 			self.bin = DialogBIN.DialogBIN()
 			self.setup_nodes()
@@ -1608,6 +1636,8 @@ class PyBIN(Tk):
 			except PyMSError, e:
 				ErrorDialog(self, e)
 				return
+			if not self.tfont:
+				self.load_tfont()
 			self.clear()
 			self.bin = dbin
 			self.setup_nodes()

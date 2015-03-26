@@ -15,7 +15,7 @@ import BMP
 import struct, re
 
 # Maps the color characters to special palette index
-COLOR_CODES = {
+COLOR_CODES_INGAME = {
 	1:(0,0), # This is technically "default" color, but its usually the same as (0,0) so thats what i use
 	2:(0,0),
 	3:(0,1),
@@ -42,12 +42,22 @@ COLOR_CODES = {
 	30:(2,6),
 	31:(2,7)
 }
+COLOR_CODES_GLUE = {
+	1:(0,1), # This is technically "default" color, but its usually the same as (0,0) so thats what i use
+	2:(0,0),
+	3:(0,1),
+	4:(0,2),
+	5:(0,3),
+	6:(0,4),
+	13:(0,0),
+	26:(0,0),
+}
 # Any color codes after these will do nothing
 COLOR_OVERPOWER = [5,11,20]
 
-def letter_to_photo(p, l, c):
+def letter_to_photo(p, l, c, remap=COLOR_CODES_INGAME):
 	i = PILImage.new('RGBA', (len(l[0]),len(l)))
-	color = COLOR_CODES[c]
+	color = remap[c]
 	data = []
 	for y in l:
 		data.extend(y)
