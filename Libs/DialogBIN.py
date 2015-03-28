@@ -64,7 +64,7 @@ THEME_ASSETS_INFO = {
 	THEME_ASSETS_GENERAL: {
 		"path":"glue\\palnl\\",
 		"name":"General"
-	},
+	}
 }
 SCREEN_MAIN_MENU = 0x00
 SCREEN_SIMULATE = 0x01
@@ -243,7 +243,10 @@ SCREEN_INFO = {
 	# 	"name":""
 	# },
 }
+DIALOG_ASSETS = {
 	
+}
+
 class BINWidget(object):
 	BYTE_SIZE = 86
 	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
@@ -293,11 +296,13 @@ class BINWidget(object):
 	TYPE_UNK = 7
 	TYPE_TEXTBOX = 8
 	TYPE_LABEL_LEFT_ALIGN = 9
-	TYPE_LABEL_RIGHT_ALIGN = 10
-	TYPE_LABEL_CENTER_ALIGN = 11
+	TYPE_LABEL_CENTER_ALIGN = 10
+	TYPE_LABEL_RIGHT_ALIGN = 11
 	TYPE_LISTBOX = 12
 	TYPE_COMBOBOX = 13
 	TYPE_HIGHLIGHT_BTN = 14
+
+	INTERFACE_ID = 65535
 
 	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
 
@@ -312,7 +317,8 @@ class BINWidget(object):
 		self.string = ''
 		self.flags = BINWidget.FLAG_VISIBLE
 		self.unknown2 = 0
-		self.identifier = 0
+		self.identifier = BINWidget.INTERFACE_ID
+		BINWidget.INTERFACE_ID -= 1
 		self.type = ctrl_type
 		self.unknown3 = 0
 		self.unknown4 = 0
@@ -463,10 +469,18 @@ class DialogBIN:
 			else:
 				widget_info[22] = None
 			widget = BINWidget()
-			widgets.append(widget)
 			attrs = BINWidget.ATTR_NAMES
 			for attr,value in zip(attrs,widget_info[1:]):
 				setattr(widget, attr, value)
+			if widget.type == BINWidget.TYPE_DIALOG:
+				widget.x2 = widget.x1 + widget.responsive_x1
+				widget.y2 = widget.y1 + widget.responsive_y1
+			else:
+				widget.x1 += widgets[0].x1
+				widget.y1 += widgets[0].y1
+				widget.x2 += widgets[0].x1
+				widget.y2 += widgets[0].y1
+			widgets.append(widget)
 			if next_widget:
 				load_widget(next_widget)
 		load_widget(0)
@@ -530,6 +544,19 @@ class DialogBIN:
 					elif value != None:
 						value,data = save_smk(value)
 						results[1] += data
+				elif widget.type == BINWidget.TYPE_DIALOG:
+					if attr == 'x2':
+						value = widget.width-1
+					elif attr == 'y2':
+						value = widget.height-1
+					elif attr == 'responsive_x1':
+						value = widget.width
+					elif attr == 'responsive_y1':
+						value = widget.height
+				elif attr in ('x1','x2'):
+					value -= self.widgets[0].x1
+				elif attr in ('y1','y2'):
+					value -= self.widgets[0].y1
 				if value == None:
 					value = 0
 				widget_info.append(value)

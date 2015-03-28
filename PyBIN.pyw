@@ -525,7 +525,7 @@ class StringPreview:
 				if a >= self.font.start and a < self.font.start + len(self.font.letters):
 					a -= self.font.start
 					self.glyphs.append(FNT.letter_to_photo(self.tfontgam, self.font.letters[a], color, self.remap, self.remap_palette))
-				elif (a in self.remap or a in DialogBIN.COLOR_CODES_INGAME) and not color in FNT.COLOR_OVERPOWER:
+				elif (a in self.remap or a in FNT.COLOR_CODES_INGAME) and not color in FNT.COLOR_OVERPOWER:
 					color = a if a > 1 else self.default_color
 		return self.glyphs
 
@@ -698,7 +698,7 @@ class WidgetNode:
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
 					font = toplevel.font16x
 				else:
-					font = toplevel.font14
+					font = toplevel.font10
 				remap_pal = toplevel.tfont
 				remap = FNT.COLOR_CODES_INGAME
 				if toplevel.tfont:
@@ -709,14 +709,22 @@ class WidgetNode:
 					default_color = 3
 				self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam, remap, remap_pal, default_color)
 			x1,y1,x2,y2 = self.widget.text_box()
+			align = self.widget.flags
+			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
+				align = 0
+			elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_CENTER_ALIGN:
+				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
+			elif self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_RIGHT_ALIGN:
+				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
+			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
+				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER | DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
+			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
 			if self.item_string_images:
-				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
 				for item,position in zip(self.item_string_images,positions):
 					toplevel.widgetCanvas.coords(item, *position)
 			else:
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
-				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
 				for glyph,position in zip(glyphs,positions):
 					self.item_string_images.append(toplevel.widgetCanvas.create_image(position[0],position[1], image=glyph, anchor=NW))
 				reorder = True
