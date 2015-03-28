@@ -16,7 +16,7 @@ import struct, re
 
 # Maps the color characters to special palette index
 COLOR_CODES_INGAME = {
-	1:(0,0), # This is technically "default" color, but its usually the same as (0,0) so thats what i use
+	1:2, # This is technically "default" color, but its usually the same as 2 so I remap it there by default
 	2:(0,0),
 	3:(0,1),
 	4:(0,2),
@@ -43,7 +43,17 @@ COLOR_CODES_INGAME = {
 	31:(2,7)
 }
 COLOR_CODES_GLUE = {
-	1:(0,1), # This is technically "default" color, but its usually the same as (0,0) so thats what i use
+	1:2, # This is technically "default" color, but its usually the same as 2 so I remap it there by default
+	2:(0,0),
+	3:(0,1),
+	4:(0,2),
+	5:(0,3),
+	6:(0,4),
+	13:(0,0),
+	26:(0,0),
+}
+COLOR_CODES_TITLE = {
+	1:2, # This is technically "default" color, but its usually the same as 2 so I remap it there by default
 	2:(0,0),
 	3:(0,1),
 	4:(0,2),
@@ -55,14 +65,21 @@ COLOR_CODES_GLUE = {
 # Any color codes after these will do nothing
 COLOR_OVERPOWER = [5,11,20]
 
-def letter_to_photo(p, l, c, remap=COLOR_CODES_INGAME):
-	i = PILImage.new('RGBA', (len(l[0]),len(l)))
-	color = remap[c]
+def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
+	i = PILImage.new('RGBA', (len(letter[0]),len(letter)))
+	if remap == None:
+		remap = COLOR_CODES_INGAME
+	if remap_palette:
+		palette = remap_palette
+	color_map = remap[color]
+	while isinstance(color_map, int):
+		color_map = remap[color_map]
+	print (color,color_map)
 	data = []
-	for y in l:
+	for y in letter:
 		data.extend(y)
-	pal = [(c[0],c[1],c[2],[0,255][n != p.image[color[0]][color[1] * 8] and c != [255,0,255]]) for n,c in enumerate(p.palette)]
-	i.putdata(map(lambda i: pal[p.image[color[0]][color[1]*8+i]], data))
+	pal = [(c[0],c[1],c[2],[0,255][n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]]) for n,c in enumerate(palette.palette)]
+	i.putdata(map(lambda i: pal[palette.image[color_map[0]][color_map[1]*8+i]], data))
 	return ImageTk.PhotoImage(i)
 
 def fnttobmp(fnt,pal,file=None):

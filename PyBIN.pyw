@@ -507,24 +507,26 @@ def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 class StringPreview:
 	# GLYPH_CACHE = {}
 
-	def __init__(self, text, font, palette, color_remap):
+	def __init__(self, text, font, tfontgam, remap=None, remap_palette=None, default_color=1):
 		self.text = text
 		self.font = font
-		self.palette = palette
-		self.color_remap = color_remap
+		self.tfontgam = tfontgam
+		self.remap = remap
+		self.remap_palette = remap_palette
+		self.default_color = default_color
 		self.glyphs = None
 
 	def get_glyphs(self):
 		if self.glyphs == None:
 			self.glyphs = []
-			color = 1
+			color = self.default_color
 			for c in self.text:
 				a = ord(c)
 				if a >= self.font.start and a < self.font.start + len(self.font.letters):
 					a -= self.font.start
-					self.glyphs.append(FNT.letter_to_photo(self.palette, self.font.letters[a], color, self.color_remap))
-				elif a in self.color_remap and not color in FNT.COLOR_OVERPOWER:
-					color = a
+					self.glyphs.append(FNT.letter_to_photo(self.tfontgam, self.font.letters[a], color, self.remap, self.remap_palette))
+				elif (a in self.remap or a in DialogBIN.COLOR_CODES_INGAME) and not color in FNT.COLOR_OVERPOWER:
+					color = a if a > 1 else self.default_color
 		return self.glyphs
 
 	def get_positions(self, x1,y1,x2,y2, align_flags):
@@ -577,6 +579,7 @@ class StringPreview:
 				if line_width[0] >= size[0]:
 					add_line()
 			elif c in '\r\n':
+				add_word()
 				add_line()
 
 		if word:
@@ -695,13 +698,16 @@ class WidgetNode:
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
 					font = toplevel.font16x
 				else:
-					font = toplevel.font10
-				pal = toplevel.tfontgam
+					font = toplevel.font14
+				remap_pal = toplevel.tfont
 				remap = FNT.COLOR_CODES_INGAME
 				if toplevel.tfont:
-					pal = toplevel.tfont
+					remap_pal = toplevel.tfont
 					remap = FNT.COLOR_CODES_GLUE
-				self.string = StringPreview(self.widget.display_text(), font, pal, remap)
+				default_color = 2
+				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
+					default_color = 3
+				self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam, remap, remap_pal, default_color)
 			x1,y1,x2,y2 = self.widget.text_box()
 			if self.item_string_images:
 				positions = self.string.get_positions(x1,y1, x2,y2, align_flags=self.widget.flags)
@@ -1162,22 +1168,26 @@ class PyBIN(Tk):
 			self.item_background = None
 
 	def load_tfont(self):
-		try:
-			tfont = None
-			if self.show_theme_index.get():
-				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx'
+		tfont = None
+		check = ['MPQ:glue\\title\\tfont.pcx']
+		if self.show_theme_index.get():
+			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx'
+			check.insert(0, path)
+		for path in check:
+			try:
 				tfont = PCX.PCX()
 				tfont.load_file(self.mpqhandler.get_file(path))
-		except:
-			raise
-			pass
-		else:
-			self.tfont = tfont
-			if self.bin:
-				for widget in self.flattened_nodes():
-					widget.string = None
-					widget.item_string_images = None
-				self.reload_canvas()
+				print path
+			except:
+				pass
+			else:
+				break
+		self.tfont = tfont
+		if self.bin:
+			for widget in self.flattened_nodes():
+				widget.string = None
+				widget.item_string_images = None
+			self.reload_canvas()
 
 	def change_theme(self, n):
 		index = self.show_theme_index.get()-1
@@ -1288,14 +1298,8 @@ class PyBIN(Tk):
 			node = WidgetNode(widget)
 			if self.dialog == None:
 				self.dialog = node
-				# test = self.dialog
 			else:
 				self.dialog.add_child(node)
-				# if len(test.children) == 4:
-				# 	group = WidgetNode(None)
-				# 	test.add_child(group)
-				# 	test = group
-				# test.add_child(node)
 
 	def flattened_nodes(self, include_groups=True):
 		nodes = []
@@ -1305,7 +1309,8 @@ class PyBIN(Tk):
 			if node.children:
 				for child in node.children:
 					add_node(child)
-		add_node(self.dialog)
+		if self.dialog:
+			add_node(self.dialog)
 		return nodes
 
 	def reload_list(self):
@@ -1567,14 +1572,31 @@ class PyBIN(Tk):
 							self.update_selection_box()
 					offset_node(self.edit_node, dx,dy)
 				elif self.event_moved:
+					rdx2,rdy2 = 0,0
 					if EDIT_RESIZE_LEFT in self.current_event:
+						rdx2 = self.edit_node.widget.x1 - x
 						self.edit_node.widget.x1 = x
 					elif EDIT_RESIZE_RIGHT in self.current_event:
+						rdx2 = x - self.edit_node.widget.x2
 						self.edit_node.widget.x2 = x
 					if EDIT_RESIZE_TOP in self.current_event:
+						rdy2 = self.edit_node.widget.y1 - y
 						self.edit_node.widget.y1 = y
 					elif EDIT_RESIZE_BOTTOM in self.current_event:
+						rdy2 = y - self.edit_node.widget.y2
 						self.edit_node.widget.y2 = y
+					if rdx2 > 0:
+						self.edit_node.widget.responsive_x2 += rdx2
+					elif self.edit_node.widget.x1+self.edit_node.widget.responsive_x1+self.edit_node.widget.responsive_x2 > self.edit_node.widget.x2:
+						self.edit_node.widget.responsive_x2 = self.edit_node.widget.x2-self.edit_node.widget.x1-self.edit_node.widget.responsive_x1
+					if rdy2 > 0:
+						self.edit_node.widget.responsive_y2 += rdy2
+					elif self.edit_node.widget.y1+self.edit_node.widget.responsive_y1+self.edit_node.widget.responsive_y2 > self.edit_node.widget.y2:
+						self.edit_node.widget.responsive_y2 = self.edit_node.widget.y2-self.edit_node.widget.y1-self.edit_node.widget.responsive_y1
+					self.edit_node.widget.width = abs(self.edit_node.widget.x2-self.edit_node.widget.x1) + 1
+					self.edit_node.widget.height = abs(self.edit_node.widget.y2-self.edit_node.widget.y1) + 1
+					self.edit_node.widget.responsive_width = abs(self.edit_node.widget.responsive_x2-self.edit_node.widget.responsive_x1) + 1
+					self.edit_node.widget.responsive_height = abs(self.edit_node.widget.responsive_y2-self.edit_node.widget.responsive_y1) + 1
 					self.edit_node.update_display(self)
 					if self.edit_node == self.selected_node:
 						self.update_selection_box()
