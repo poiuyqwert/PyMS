@@ -2,15 +2,17 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SpecialLists import TreeList
-from Libs import DialogBIN, FNT, PCX
+from Libs import DialogBIN, FNT, PCX, SMK
 
 from Tkinter import *
 
 from thread import start_new_thread
-import optparse, os, webbrowser, sys
+import optparse, os, webbrowser, sys, time
 
 VERSION = (0,1)
 LONG_VERSION = 'v%s.%s-DEV' % VERSION
+
+FRAME_DELAY = 67
 
 MOUSE_DOWN = 0
 MOUSE_MOVE = 1
@@ -597,7 +599,10 @@ class StringPreview:
 		return positions
 
 class WidgetNode:
-	def __init__(self, widget=None):
+	SMK_FRAME_CACHE = {}
+
+	def __init__(self, toplevel, widget=None):
+		self.toplevel = toplevel
 		self.widget = widget
 		self.parent = None
 		self.name = None
@@ -609,12 +614,16 @@ class WidgetNode:
 
 		self.string = None
 		self.photo = None
+		self.smk = None
+		self.frame_delay = None
+		self.frame_waited = None
 
 		self.item_bounds = None
 		self.item_text_bounds = None
 		self.item_responsive_bounds = None
 		self.item_string_images = None
 		self.item_image = None
+		self.item_smk = None
 
 	def get_name(self):
 		name = 'Group'
@@ -655,18 +664,65 @@ class WidgetNode:
 				bounding_box[3] = y2
 		return bounding_box
 
-	def update_image(self, toplevel):
+	def tick(self, dt):
+		SHOW_SMKS = self.toplevel.show_smks.get()
+		SHOW_ANIMATED = self.toplevel.show_animated.get()
+		if SHOW_SMKS and SHOW_ANIMATED and self.smk and (self.smk.current_frame < self.smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS):
+			self.frame_waited += dt
+			while self.frame_waited > self.frame_delay:
+				self.smk.next_frame()
+				# self.frame_waited -= self.frame_delay
+				self.frame_waited = 0
+	def update_video(self):
 		reorder = False
-		SHOW_IMAGES = toplevel.show_images.get()
+		SHOW_SMKS = self.toplevel.show_smks.get()
+		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk:
+			print 'Load SMK'
+			if self.smk == None:
+				try:
+					smk = SMK.SMK()
+					smk.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + self.widget.smk.filename))
+					self.frame_delay = int(1000 / float(smk.fps))
+					self.frame_waited = 0
+					self.smk = smk
+				except Exception, e:
+					print repr(e)
+			if self.smk:
+				frame = self.smk.get_frame()
+				# trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
+				trans = False
+				if self.widget.smk.filename in WidgetNode.SMK_FRAME_CACHE and self.smk.current_frame in WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename]:
+					image = WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename][self.smk.current_frame]
+				else:
+					image = GRP.frame_to_photo(frame.palette, frame.image, None, size=False, trans=trans)
+					if not self.widget.smk.filename in WidgetNode.SMK_FRAME_CACHE:
+						WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename] = {}
+					WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename][self.smk.current_frame] = image
+				x1,y1,x2,y2 = self.widget.responsive_box()
+				if self.item_smk:
+					if image != self.toplevel.widgetCanvas.itemcget(self.item_smk, 'image'):
+						self.toplevel.widgetCanvas.itemconfigure(self.item_smk, image=image)
+					self.toplevel.widgetCanvas.coords(self.item_smk, x1,y1)
+				else:
+					self.item_smk = self.toplevel.widgetCanvas.create_image(x1,y1, image=image, anchor=NW)
+					reorder = True
+		else:
+			self.toplevel.widgetCanvas.delete(self.item_smk)
+			self.item_smk = None
+		return reorder
+
+	def update_image(self):
+		reorder = False
+		SHOW_IMAGES = self.toplevel.show_images.get()
 		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE and self.widget.string:
 			photo_change = False
 			if self.photo == None:
-				photo_change = True
-				pcx = PCX.PCX()
 				try:
-					pcx.load_file(toplevel.mpqhandler.get_file('MPQ:' + self.widget.string))
+					pcx = PCX.PCX()
+					pcx.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + self.widget.string))
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans)
+					photo_change = True
 				except Exception, e:
 					print self.widget.string
 					print repr(e)
@@ -674,40 +730,40 @@ class WidgetNode:
 				x1,y1,x2,y2 = self.bounding_box()
 				if self.item_image:
 					if photo_change:
-						toplevel.widgetCanvas.itemconfigure(self.item_image, image=self.photo)
-					toplevel.widgetCanvas.coords(self.item_image, x1,y1)
+						self.toplevel.widgetCanvas.itemconfigure(self.item_image, image=self.photo)
+					self.toplevel.widgetCanvas.coords(self.item_image, x1,y1)
 				else:
-					self.item_image = toplevel.widgetCanvas.create_image(x1,y1, image=self.photo, anchor=NW)
+					self.item_image = self.toplevel.widgetCanvas.create_image(x1,y1, image=self.photo, anchor=NW)
 					reorder = True
 		elif self.item_image:
-			toplevel.widgetCanvas.delete(self.item_image)
+			self.toplevel.widgetCanvas.delete(self.item_image)
 			self.item_image = None
 		return reorder
 
-	def update_text(self, toplevel):
+	def update_text(self):
 		reorder = False
-		SHOW_TEXT = toplevel.show_text.get()
+		SHOW_TEXT = self.toplevel.show_text.get()
 		if SHOW_TEXT and self.widget and self.widget.display_text() and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE:
 			if self.string == None:
 				if self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
-					font = toplevel.font10
+					font = self.toplevel.font10
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
-					font = toplevel.font14
+					font = self.toplevel.font14
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16:
-					font = toplevel.font16
+					font = self.toplevel.font16
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
-					font = toplevel.font16x
+					font = self.toplevel.font16x
 				else:
-					font = toplevel.font10
-				remap_pal = toplevel.tfont
+					font = self.toplevel.font10
+				remap_pal = self.toplevel.tfont
 				remap = FNT.COLOR_CODES_INGAME
-				if toplevel.tfont:
-					remap_pal = toplevel.tfont
+				if self.toplevel.tfont:
+					remap_pal = self.toplevel.tfont
 					remap = FNT.COLOR_CODES_GLUE
 				default_color = 2
 				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
 					default_color = 3
-				self.string = StringPreview(self.widget.display_text(), font, toplevel.tfontgam, remap, remap_pal, default_color)
+				self.string = StringPreview(self.widget.display_text(), font, self.toplevel.tfontgam, remap, remap_pal, default_color)
 			x1,y1,x2,y2 = self.widget.text_box()
 			align = self.widget.flags
 			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
@@ -721,108 +777,114 @@ class WidgetNode:
 			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
 			if self.item_string_images:
 				for item,position in zip(self.item_string_images,positions):
-					toplevel.widgetCanvas.coords(item, *position)
+					self.toplevel.widgetCanvas.coords(item, *position)
 			else:
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
 				for glyph,position in zip(glyphs,positions):
-					self.item_string_images.append(toplevel.widgetCanvas.create_image(position[0],position[1], image=glyph, anchor=NW))
+					self.item_string_images.append(self.toplevel.widgetCanvas.create_image(position[0],position[1], image=glyph, anchor=NW))
 				reorder = True
 		elif self.item_string_images:
 			for item in self.item_string_images:
-				toplevel.widgetCanvas.delete(item)
+				self.toplevel.widgetCanvas.delete(item)
 			self.item_string_images = None
 		return reorder
 
-	def update_bounds(self, toplevel):
+	def update_bounds(self):
 		reorder = False
-		SHOW_BOUNDING_BOX = toplevel.show_bounds_widget.get()
-		SHOW_GROUP_BOUNDS = toplevel.show_bounds_group.get()
+		SHOW_BOUNDING_BOX = self.toplevel.show_bounds_widget.get()
+		SHOW_GROUP_BOUNDS = self.toplevel.show_bounds_group.get()
 		if SHOW_BOUNDING_BOX and (self.widget or SHOW_GROUP_BOUNDS):
 			x1,y1,x2,y2 = self.bounding_box()
 			if self.item_bounds:
-				toplevel.widgetCanvas.coords(self.item_bounds, x1,y1, x2,y2)
+				self.toplevel.widgetCanvas.coords(self.item_bounds, x1,y1, x2,y2)
 			else:
 				color = '#505050'
 				if self.widget:
 					color = '#0080ff'
 					if self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
 						color = '#00A0A0'
-				self.item_bounds = toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline=color)
+				self.item_bounds = self.toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline=color)
 				reorder = True
 		elif self.item_bounds:
-			toplevel.widgetCanvas.delete(self.item_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_bounds)
 			self.item_bounds = None
 		return reorder
 
-	def update_text_bounds(self, toplevel):
+	def update_text_bounds(self):
 		reorder = False
-		SHOW_TEXT_BOUNDS = toplevel.show_bounds_text.get()
+		SHOW_TEXT_BOUNDS = self.toplevel.show_bounds_text.get()
 		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() != None:
 			x1,y1,x2,y2 = self.widget.text_box()
 			if self.item_text_bounds:
-				toplevel.widgetCanvas.coords(self.item_text_bounds, x1,y1, x2,y2)
+				self.toplevel.widgetCanvas.coords(self.item_text_bounds, x1,y1, x2,y2)
 			else:
-				self.item_text_bounds = toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#F0F0F0')
+				self.item_text_bounds = self.toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#F0F0F0')
 				reorder = True
 		elif self.item_text_bounds:
-			toplevel.widgetCanvas.delete(self.item_text_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_text_bounds)
 			self.item_text_bounds = None
 		return reorder
 
-	def update_responsive_bounds(self, toplevel):
+	def update_responsive_bounds(self):
 		reorder = False
-		SHOW_RESPONSIVE_BOUNDS = toplevel.show_bounds_responsive.get()
+		SHOW_RESPONSIVE_BOUNDS = self.toplevel.show_bounds_responsive.get()
 		if SHOW_RESPONSIVE_BOUNDS and self.widget and self.widget.has_responsive():
 			x1,y1,x2,y2 = self.widget.responsive_box()
 			if self.item_responsive_bounds:
-				toplevel.widgetCanvas.coords(self.item_responsive_bounds, x1,y1, x2,y2)
+				self.toplevel.widgetCanvas.coords(self.item_responsive_bounds, x1,y1, x2,y2)
 			else:
-				self.item_responsive_bounds = toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#00ff80')
+				self.item_responsive_bounds = self.toplevel.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#00ff80')
 				reorder = True
 		elif self.item_responsive_bounds:
-			toplevel.widgetCanvas.delete(self.item_responsive_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_responsive_bounds)
 			self.item_responsive_bounds = None
 		return reorder
 
-	def update_display(self, toplevel):
+	def update_display(self):
 		reorder = False
-		reorder = self.update_image(toplevel) or reorder
-		reorder = self.update_text(toplevel) or reorder
-		reorder = self.update_bounds(toplevel) or reorder
-		reorder = self.update_text_bounds(toplevel) or reorder
-		reorder = self.update_responsive_bounds(toplevel) or reorder
+		reorder = self.update_image() or reorder
+		reorder = self.update_video() or reorder
+		reorder = self.update_text() or reorder
+		reorder = self.update_bounds() or reorder
+		reorder = self.update_text_bounds() or reorder
+		reorder = self.update_responsive_bounds() or reorder
 		return reorder
 
-	def lift(self, toplevel):
+	def lift(self):
 		if self.item_image:
-			toplevel.widgetCanvas.lift(self.item_image)
+			self.toplevel.widgetCanvas.lift(self.item_image)
+		if self.item_smk:
+			self.toplevel.widgetCanvas.lift(self.item_smk)
 		if self.item_string_images:
 			for item in self.item_string_images:
-				toplevel.widgetCanvas.lift(item)
+				self.toplevel.widgetCanvas.lift(item)
 		if self.item_bounds:
-			toplevel.widgetCanvas.lift(self.item_bounds)
+			self.toplevel.widgetCanvas.lift(self.item_bounds)
 		if self.item_text_bounds:
-			toplevel.widgetCanvas.lift(self.item_text_bounds)
+			self.toplevel.widgetCanvas.lift(self.item_text_bounds)
 		if self.item_responsive_bounds:
-			toplevel.widgetCanvas.lift(self.item_responsive_bounds)
+			self.toplevel.widgetCanvas.lift(self.item_responsive_bounds)
 
-	def remove_display(self, toplevel):
+	def remove_display(self):
 		if self.item_image:
-			toplevel.widgetCanvas.delete(self.item_image)
+			self.toplevel.widgetCanvas.delete(self.item_image)
 			self.item_image = None
+		if self.item_smk:
+			self.toplevel.widgetCanvas.delete(self.item_smk)
+			self.item_smk = None
 		if self.item_string_images:
 			for item in self.item_string_images:
-				toplevel.widgetCanvas.delete(item)
+				self.toplevel.widgetCanvas.delete(item)
 			self.item_string_images = []
 		if self.item_bounds:
-			toplevel.widgetCanvas.delete(self.item_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_bounds)
 			self.item_bounds = None
 		if self.item_text_bounds:
-			toplevel.widgetCanvas.delete(self.item_text_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_text_bounds)
 			self.item_text_bounds = None
 		if self.item_responsive_bounds:
-			toplevel.widgetCanvas.delete(self.item_responsive_bounds)
+			self.toplevel.widgetCanvas.delete(self.item_responsive_bounds)
 			self.item_responsive_bounds = None
 
 class PyBIN(Tk):
@@ -928,6 +990,9 @@ class PyBIN(Tk):
 		self.show_bounds_responsive = BooleanVar()
 		self.load_settings()
 
+		self.last_tick = None
+		self.tick_alarm = None
+
 		self.type_menu = Menu(self, tearoff=0)
 		fields = (
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_DEFAULT_BTN], DialogBIN.BINWidget.TYPE_DEFAULT_BTN),
@@ -989,14 +1054,13 @@ class PyBIN(Tk):
 		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')
 		widgetsframe = LabelFrame(self.preview_settings_frame, text='Widget')
 		fields = (
-			('Images','show_images',self.show_images, NORMAL),
-			('Text','show_text',self.show_text, NORMAL),
-			('SMKs','show_smks',self.show_smks, DISABLED),
-			('Animated','show_animated',self.show_animated, DISABLED)
+			('Images','show_images',self.show_images),
+			('Text','show_text',self.show_text),
+			('SMKs','show_smks',self.show_smks),
+			('Animated','show_animated',self.show_animated)
 		)
-		for i,(name,setting_name,variable,state) in enumerate(fields):
+		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check['state'] = state
 			check.grid(row=i / 2, column=i % 2, sticky=W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
@@ -1085,6 +1149,28 @@ class PyBIN(Tk):
 		if e:
 			self.mpqsettings(err=e)
 
+	def tick(self, start=False):
+		if self.tick_alarm or start:
+			if self.bin:
+				now = int(time.time() * 1000)
+				if self.last_tick == None:
+					self.last_tick = now
+				dt = now - self.last_tick
+				self.last_tick = now
+				for node in self.flattened_nodes():
+					node.tick(dt)
+					node.update_video()
+				self.widgetCanvas.update_idletasks()
+				self.tick_alarm = self.after(FRAME_DELAY,self.tick)
+			else:
+				self.tick_alarm = None
+
+	def stop_tick(self):
+		if self.tick_alarm != None:
+			cancel = self.tick_alarm
+			self.tick_alarm = None
+			self.after_cancel(cancel)
+
 	def toggle_preview_settings(self):
 		show = not self.show_preview_settings.get()
 		self.show_preview_settings.set(show)
@@ -1109,7 +1195,7 @@ class PyBIN(Tk):
 				index = parent.children.index(self.selected_node)
 		node = None
 		if ctrl_type == -1:
-			node = WidgetNode()
+			node = WidgetNode(self)
 		else:
 			x1,y1,x2,y2 = parent.bounding_box()
 			widget = DialogBIN.BINWidget(ctrl_type)
@@ -1124,14 +1210,14 @@ class PyBIN(Tk):
 				widget.responsive_y1 = 0
 				widget.responsive_x2 = widget.width-1
 				widget.responsive_y2 = widget.height-1
-			node = WidgetNode(widget)
+			node = WidgetNode(self, widget)
 		parent.add_child(node, index)
 		self.reload_list()
 		self.reload_canvas()
 		self.select_node(node)
 
 	def remove_node(self):
-		self.selected_node.remove_display(self)
+		self.selected_node.remove_display()
 		if self.selected_node.widget:
 			self.bin.widgets.remove(self.selected_node.widget)
 		self.selected_node.remove_from_parent()
@@ -1303,7 +1389,7 @@ class PyBIN(Tk):
 
 	def setup_nodes(self):
 		for widget in self.bin.widgets:
-			node = WidgetNode(widget)
+			node = WidgetNode(self, widget)
 			if self.dialog == None:
 				self.dialog = node
 			else:
@@ -1340,7 +1426,7 @@ class PyBIN(Tk):
 
 	def update_zorder(self):
 		for node in self.flattened_nodes():
-			node.lift(self)
+			node.lift()
 		if self.item_selection_box:
 			self.widgetCanvas.lift(self.item_selection_box)
 
@@ -1350,7 +1436,7 @@ class PyBIN(Tk):
 			self.update_background()
 			reorder = False
 			for node in self.flattened_nodes():
-				reorder = node.update_display(self) or reorder
+				reorder = node.update_display() or reorder
 			self.update_selection_box()
 			if reorder:
 				self.update_zorder()
@@ -1575,7 +1661,7 @@ class PyBIN(Tk):
 						if node.children:
 							for child in node.children:
 								offset_node(child, delta_x,delta_y)
-						node.update_display(self)
+						node.update_display()
 						if node == self.selected_node:
 							self.update_selection_box()
 					offset_node(self.edit_node, dx,dy)
@@ -1605,12 +1691,12 @@ class PyBIN(Tk):
 					self.edit_node.widget.height = abs(self.edit_node.widget.y2-self.edit_node.widget.y1) + 1
 					self.edit_node.widget.responsive_width = abs(self.edit_node.widget.responsive_x2-self.edit_node.widget.responsive_x1) + 1
 					self.edit_node.widget.responsive_height = abs(self.edit_node.widget.responsive_y2-self.edit_node.widget.responsive_y1) + 1
-					self.edit_node.update_display(self)
+					self.edit_node.update_display()
 					if self.edit_node == self.selected_node:
 						self.update_selection_box()
 				check = self.edit_node
 				while check.parent and check.parent.widget == None:
-					check.parent.update_display(self)
+					check.parent.update_display()
 					check = check.parent
 				if button_event == MOUSE_UP:
 					self.edit_node = None
@@ -1653,6 +1739,7 @@ class PyBIN(Tk):
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 			self.action_states()
+			self.tick(True)
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
@@ -1680,6 +1767,7 @@ class PyBIN(Tk):
 			self.editstatus['state'] = DISABLED
 			self.select_node(self.dialog)
 			self.action_states()
+			self.tick(True)
 
 	def iimport(self, key=None):
 		if not self.unsaved():
@@ -1700,6 +1788,7 @@ class PyBIN(Tk):
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 			self.action_states()
+			self.tick(True)
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
@@ -1796,6 +1885,7 @@ class PyBIN(Tk):
 				f.close()
 			except:
 				pass
+			self.stop_tick()
 			self.destroy()
 
 def main():

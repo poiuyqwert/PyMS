@@ -51,7 +51,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 			transindex = g.transindex
 	else:
 		d = g
-	i = PILImage.new('RGBA', (g.width,g.height))
+	i = PILImage.new('RGBA', (len(d[0]),len(d)))
 	data = []
 	pal = []
 	if draw_function == None:
