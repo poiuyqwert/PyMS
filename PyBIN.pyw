@@ -669,20 +669,19 @@ class WidgetNode:
 		SHOW_ANIMATED = self.toplevel.show_animated.get()
 		if SHOW_SMKS and SHOW_ANIMATED and self.smks:
 			self.frame_waited += dt
-			for smk in self.smks.values():
-				if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
-					# while self.frame_waited > self.frame_delay:
-					if self.frame_waited > self.frame_delay:
-						smk.next_frame()
-						# self.frame_waited -= self.frame_delay
-						self.frame_waited = 0
+			if self.frame_waited > self.frame_delay:
+				for smk in self.smks.values():
+					if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
+						# while self.frame_waited > self.frame_delay:
+							smk.next_frame()
+							# self.frame_waited -= self.frame_delay
+				self.frame_waited = 0
 	def update_video(self):
 		reorder = False
 		SHOW_SMKS = self.toplevel.show_smks.get()
 		SHOW_HOVER_SMKS = self.toplevel.show_hover_smks.get()
 		showing = []
 		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk:
-			print 'Load SMK'
 			if self.smks == None:
 				self.smks = {}
 			check = self.widget.smk
@@ -1295,7 +1294,6 @@ class PyBIN(Tk):
 			try:
 				tfont = PCX.PCX()
 				tfont.load_file(self.mpqhandler.get_file(path))
-				print path
 			except:
 				pass
 			else:
