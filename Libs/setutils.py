@@ -41,25 +41,34 @@ def check_update(p):
 				p.after(1, callback)
 
 def loadsize(window, settings, setting, full=False):
-	geometry = settings[setting]
-	f = geometry.endswith('^')
-	if f:
-		geometry = geometry[:-1]
-	window.geometry(geometry)
-	window.update_idletasks()
-	cur = window.winfo_geometry()
-	if set != cur:
-		def parsegeom(g):
-			s = g.split('+',1)[0].split('x')
-			return (int(s[0]),int(s[1]))
-		sets = parsegeom(geometry)
-		curs = parsegeom(cur)
-		window.geometry('%sx%s+%s' % (sets[0] + (sets[0] - curs[0]),sets[1] + (sets[1] - curs[1]),geometry.split('+',1)[1]))
-	if f and full:
-		try:
-			window.wm_state('zoomed')
-		except:
-			pass
+	def parse_geometry(geometry):
+		match = re.match('(\\d+)x(\\d+)([+-]\\d+)([+-]\\d+)(^)?',geometry)
+		return tuple(int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
+	geometry = settings.get(setting)
+	if geometry and geometry:
+		w,h,x,y,fullscreen = parse_geometry(geometry)
+		screen_w = window.winfo_screenwidth()
+		screen_h = window.winfo_screenheight()
+		resizable = window.resizable()
+		min_size = window.minsize()
+		if x+w > screen_w:
+			x = screen_w-w
+		if x < 0:
+			x = 0
+		if w > screen_w and resizable[0] and screen_w > min_size[0]:
+			w = screen_w
+		if y+h > screen_h:
+			y = max(0,screen_h-h)
+		if y < 0:
+			y = 0
+		if h > screen_h and resizable[1] and screen_h > min_size[1]:
+			h = screen_h
+		window.geometry('%dx%d%+d%+d' % (w,h, x,y))
+		if fullscreen:
+			try:
+				window.wm_state('zoomed')
+			except:
+				pass
 
 def savesize(window, settings, setting='window'):
 	z = ['','^'][window.wm_state() == 'zoomed']
