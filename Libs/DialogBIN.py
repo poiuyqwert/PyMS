@@ -373,12 +373,12 @@ class BINWidget(object):
 
 class BINSMK(object):
 	BYTE_SIZE = 30
-	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','overlay_offset_x','overlay_offset_y','unknown3','unknown4')
+	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','offset_x','offset_y','unknown3','unknown4')
 
 	FLAG_FADE_IN = 0x0001
 	FLAG_DARK = 0x0002
 	FLAG_REPEATS = 0x0004
-	FLAG_SHOW_IF_OVER = 0x0008
+	FLAG_SHOW_ON_HOVER = 0x0008
 	FLAG_UNK = 0x0010
 
 	def __init__(self):
@@ -388,8 +388,8 @@ class BINSMK(object):
 		self.unknown1 = 0
 		self.filename = ''
 		self.unknown2 = 0
-		self.overlay_offset_x = 0
-		self.overlay_offset_y = 0
+		self.offset_x = 0
+		self.offset_y = 0
 		self.unknown3 = 0
 		self.unknown4 = 0
 

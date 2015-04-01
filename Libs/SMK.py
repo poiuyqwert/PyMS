@@ -4,6 +4,9 @@ import struct
 
 # http://wiki.multimedia.cx/index.php?title=Smacker
 
+
+# import BMP,sys
+
 class SMKAudioInfo:
 	FLAG_COMPRESS_BINK1 = (1 << 26)
 	FLAG_COMPRESS_BINK2 = (1 << 27)
@@ -362,6 +365,9 @@ class SMK:
 		frame.image = [[0] * self.width for _ in range(self.height)]
 		bit_stream = BitStream(data)
 		x,y = 0,0
+		# TEST = 0
+		for tree in (self.tree_mmap,self.tree_mclr,self.tree_full,self.tree_type):
+			tree.reset_cache()
 		while y < self.height:
 			unpack = self.tree_type.lookup(bit_stream)
 			block_type = ((unpack & 0x0003));
@@ -374,6 +380,7 @@ class SMK:
 					block_type = SMK.VIDEO_BLOCK_TYPE_FULL_HALF
 			size = SMK.VIDEO_BLOCK_SIZE_LOOKUP[block_len]
 			for i in range(size):
+				# print ((TEST,i),(x,y),block_type,block_len,size,type_data)
 				if block_type == SMK.VIDEO_BLOCK_TYPE_MONO:
 					unpack = self.tree_mclr.lookup(bit_stream)
 					high = (unpack & 0xFF00) >> 8
@@ -424,6 +431,10 @@ class SMK:
 				if x >= self.width:
 					x = 0
 					y += 4
+				# bmp = BMP.BMP()
+				# bmp.load_data(frame.image, frame.palette)
+				# bmp.save_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/glue/mainmenu/editoron%d-%d.bmp' % (self.current_frame, TEST))
+				# TEST += 1
 
 	def get_frame(self):
 		if self.current_frame in self.frame_cache:
@@ -478,10 +489,16 @@ class SMK:
 	def save_data(self):
 		pass
 
-# import BMP,sys
 # if __name__ == '__main__':
 # 	sys.stdout = open('/Users/zachzahos/Documents/Projects/PyMS/Libs/stdeo.txt','w')
 # 	smk = SMK()
+
+# 	smk.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/glue/mainmenu/editoron.smk')
+# 	frame = smk.get_frame()
+# 	bmp = BMP.BMP()
+# 	bmp.load_data(frame.image, frame.palette)
+# 	bmp.save_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/glue/mainmenu/editoron0.bmp')
+
 # 	smk.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/glue/mainmenu/single.smk')
 	# for f in range(smk.frames):
 	# 	frame = smk.get_frame()

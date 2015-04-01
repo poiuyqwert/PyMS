@@ -614,16 +614,16 @@ class WidgetNode:
 
 		self.string = None
 		self.photo = None
-		self.smk = None
+		self.smks = None
 		self.frame_delay = None
-		self.frame_waited = None
+		self.frame_waited = 0
 
 		self.item_bounds = None
 		self.item_text_bounds = None
 		self.item_responsive_bounds = None
 		self.item_string_images = None
 		self.item_image = None
-		self.item_smk = None
+		self.item_smks = []
 
 	def get_name(self):
 		name = 'Group'
@@ -667,48 +667,68 @@ class WidgetNode:
 	def tick(self, dt):
 		SHOW_SMKS = self.toplevel.show_smks.get()
 		SHOW_ANIMATED = self.toplevel.show_animated.get()
-		if SHOW_SMKS and SHOW_ANIMATED and self.smk and (self.smk.current_frame < self.smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS):
+		if SHOW_SMKS and SHOW_ANIMATED and self.smks:
 			self.frame_waited += dt
-			while self.frame_waited > self.frame_delay:
-				self.smk.next_frame()
-				# self.frame_waited -= self.frame_delay
-				self.frame_waited = 0
+			for smk in self.smks.values():
+				if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
+					# while self.frame_waited > self.frame_delay:
+					if self.frame_waited > self.frame_delay:
+						smk.next_frame()
+						# self.frame_waited -= self.frame_delay
+						self.frame_waited = 0
 	def update_video(self):
 		reorder = False
 		SHOW_SMKS = self.toplevel.show_smks.get()
+		SHOW_HOVER_SMKS = self.toplevel.show_hover_smks.get()
+		showing = []
 		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk:
 			print 'Load SMK'
-			if self.smk == None:
-				try:
-					smk = SMK.SMK()
-					smk.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + self.widget.smk.filename))
-					self.frame_delay = int(1000 / float(smk.fps))
-					self.frame_waited = 0
-					self.smk = smk
-				except Exception, e:
-					print repr(e)
-			if self.smk:
-				frame = self.smk.get_frame()
-				# trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
-				trans = False
-				if self.widget.smk.filename in WidgetNode.SMK_FRAME_CACHE and self.smk.current_frame in WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename]:
-					image = WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename][self.smk.current_frame]
-				else:
-					image = GRP.frame_to_photo(frame.palette, frame.image, None, size=False, trans=trans)
-					if not self.widget.smk.filename in WidgetNode.SMK_FRAME_CACHE:
-						WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename] = {}
-					WidgetNode.SMK_FRAME_CACHE[self.widget.smk.filename][self.smk.current_frame] = image
-				x1,y1,x2,y2 = self.widget.responsive_box()
-				if self.item_smk:
-					if image != self.toplevel.widgetCanvas.itemcget(self.item_smk, 'image'):
-						self.toplevel.widgetCanvas.itemconfigure(self.item_smk, image=image)
-					self.toplevel.widgetCanvas.coords(self.item_smk, x1,y1)
-				else:
-					self.item_smk = self.toplevel.widgetCanvas.create_image(x1,y1, image=image, anchor=NW)
-					reorder = True
-		else:
-			self.toplevel.widgetCanvas.delete(self.item_smk)
-			self.item_smk = None
+			if self.smks == None:
+				self.smks = {}
+			check = self.widget.smk
+			while check:
+				if not check.flags & DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER or SHOW_HOVER_SMKS:
+					if not check.filename in self.smks:
+						try:
+							smk = SMK.SMK()
+							smk.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + check.filename))
+							delay = int(1000 / float(smk.fps))
+							if self.frame_delay == None:
+								self.frame_delay = delay
+							else:
+								self.frame_delay = min(self.frame_delay,delay)
+							self.smks[check.filename] = smk
+						except Exception, e:
+							print repr(e)
+					smk = self.smks.get(check.filename)
+					if smk:
+						showing.append((check,smk))
+				check = check.overlay_smk
+		while len(self.item_smks) > len(showing):
+			self.toplevel.widgetCanvas.delete(self.item_smks[-1])
+			del self.item_smks[-1]
+		for i,(bin_smk,smk) in enumerate(showing):
+			frame = smk.get_frame()
+			# trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
+			trans = False
+			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
+				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
+			else:
+				image = GRP.frame_to_photo(frame.palette, frame.image, None, size=False, trans=trans)
+				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
+					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
+				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
+			x1,y1,x2,y2 = self.widget.bounding_box()
+			x1 += bin_smk.offset_x
+			y1 += bin_smk.offset_y
+			if i < len(self.item_smks):
+				self.toplevel.widgetCanvas.itemconfigure(self.item_smks[i], image=image)
+				self.toplevel.widgetCanvas.coords(self.item_smks[i], x1,y1)
+			else:
+				item = self.toplevel.widgetCanvas.create_image(x1,y1, image=image, anchor=NW)
+				self.item_smks.append(item)
+				# self.toplevel.widgetCanvas.create_rectangle(x1,y1,x1+self.smk.width,y1+self.smk.height, width=1, outline='#FFFF00')
+				reorder = True
 		return reorder
 
 	def update_image(self):
@@ -854,8 +874,9 @@ class WidgetNode:
 	def lift(self):
 		if self.item_image:
 			self.toplevel.widgetCanvas.lift(self.item_image)
-		if self.item_smk:
-			self.toplevel.widgetCanvas.lift(self.item_smk)
+		if self.item_smks:
+			for item in self.item_smks:
+				self.toplevel.widgetCanvas.lift(item)
 		if self.item_string_images:
 			for item in self.item_string_images:
 				self.toplevel.widgetCanvas.lift(item)
@@ -870,9 +891,10 @@ class WidgetNode:
 		if self.item_image:
 			self.toplevel.widgetCanvas.delete(self.item_image)
 			self.item_image = None
-		if self.item_smk:
-			self.toplevel.widgetCanvas.delete(self.item_smk)
-			self.item_smk = None
+		if self.item_smks:
+			for item in self.item_smks:
+				self.toplevel.widgetCanvas.delete(item)
+			self.item_smks = []
 		if self.item_string_images:
 			for item in self.item_string_images:
 				self.toplevel.widgetCanvas.delete(item)
@@ -982,6 +1004,7 @@ class PyBIN(Tk):
 		self.show_text = BooleanVar()
 		self.show_smks = BooleanVar()
 		self.show_animated = BooleanVar()
+		self.show_hover_smks = BooleanVar()
 		self.show_background = BooleanVar()
 		self.show_theme_index = IntVar()
 		self.show_bounds_widget = BooleanVar()
@@ -1057,7 +1080,8 @@ class PyBIN(Tk):
 			('Images','show_images',self.show_images),
 			('Text','show_text',self.show_text),
 			('SMKs','show_smks',self.show_smks),
-			('Animated','show_animated',self.show_animated)
+			('Animated','show_animated',self.show_animated),
+			('Hovers','show_hover_smks',self.show_hover_smks)
 		)
 		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
@@ -1855,6 +1879,7 @@ class PyBIN(Tk):
 		self.show_text.set(self.settings.get('show_text',True))
 		self.show_smks.set(self.settings.get('show_smks',True))
 		self.show_animated.set(self.settings.get('show_animated',False))
+		self.show_hover_smks.set(self.settings.get('show_hover_smks',False))
 		self.show_background.set(self.settings.get('show_background',False))
 		self.show_theme_index.set(self.settings.get('theme_id',-1) + 1)
 		self.show_bounds_widget.set(self.settings.get('show_bounds_widget',True))
@@ -1868,6 +1893,7 @@ class PyBIN(Tk):
 		self.settings['show_text'] = self.show_text.get()
 		self.settings['show_smks'] = self.show_smks.get()
 		self.settings['show_animated'] = self.show_animated.get()
+		self.settings['show_hover_smks'] = self.show_hover_smks.get()
 		self.settings['show_background'] = self.show_background.get()
 		self.settings['theme_id'] = self.show_theme_index.get()-1
 		self.settings['show_bounds_widget'] = self.show_bounds_widget.get()
