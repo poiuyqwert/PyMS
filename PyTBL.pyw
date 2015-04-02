@@ -72,7 +72,7 @@ class PreviewDialog(PyMSDialog):
 						if not color in self.canvas.characters[c]:
 							self.canvas.characters[c][color] = (FNT.letter_to_photo(self.parent.tfontgam, fnt.letters[a], color), fnt.sizes[a])
 						display[-1].append(self.canvas.characters[c][color])
-					elif a in FNT.COLOR_CODES and not color in FNT.COLOR_OVERPOWER:
+					elif a in FNT.COLOR_CODES_INGAME and not color in FNT.COLOR_OVERPOWER:
 						color = a
 				if w > width:
 					width = w
