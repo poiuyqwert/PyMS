@@ -1141,6 +1141,7 @@ class IntegerVar(StringVar):
 		self.allow_hex = allow_hex
 		self.is_hex = False
 		self.trace('w', self.editvalue)
+		self.silence = False
 
 	def editvalue(self, *_):
 		#print self.check
@@ -1178,7 +1179,7 @@ class IntegerVar(StringVar):
 							self.set(hex(s))
 					else:
 						self.set(s)
-				if self.callback:
+				if self.callback and not self.silence:
 					self.callback(s)
 			elif self.range[0] != None:
 				s = self.range[0]
@@ -1188,6 +1189,11 @@ class IntegerVar(StringVar):
 		else:
 			self.lastvalid = self.get(True)
 			self.check = True
+
+	def set(self, value, silence=False):
+		self.silence = silence
+		StringVar.set(self, value)
+		self.silence = False
 
 	def get(self, s=False):
 		string = StringVar.get(self)

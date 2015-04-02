@@ -354,23 +354,23 @@ class WidgetSettings(PyMSDialog):
 		self.smks_dropdown.setentries(smks)
 		self.smk.set(0 if not self.node.widget.smk else self.parent.bin.smks.index(self.node.widget.smk)+1)
 	def load_properties(self):
-		self.left.set(self.node.widget.x1)
-		self.right.set(self.node.widget.x2)
-		self.width.set(self.node.widget.width)
-		self.top.set(self.node.widget.y1)
-		self.bottom.set(self.node.widget.y2)
-		self.height.set(self.node.widget.height)
+		self.left.set(self.node.widget.x1, True)
+		self.right.set(self.node.widget.x2, True)
+		self.width.set(self.node.widget.width, True)
+		self.top.set(self.node.widget.y1, True)
+		self.bottom.set(self.node.widget.y2, True)
+		self.height.set(self.node.widget.height, True)
 		self.string.set(TBL.decompile_string(self.node.widget.string))
 		self.identifier.set(self.node.widget.identifier)
 		self.load_property_smk()
 		self.text_offset_x.set(self.node.widget.text_offset_x)
 		self.text_offset_y.set(self.node.widget.text_offset_y)
-		self.responsive_left.set(self.node.widget.responsive_x1)
-		self.responsive_right.set(self.node.widget.responsive_x2)
-		self.responsive_width.set(self.node.widget.responsive_width)
-		self.responsive_top.set(self.node.widget.responsive_y1)
-		self.responsive_bottom.set(self.node.widget.responsive_y2)
-		self.responsive_height.set(self.node.widget.responsive_height)
+		self.responsive_left.set(self.node.widget.responsive_x1, True)
+		self.responsive_right.set(self.node.widget.responsive_x2, True)
+		self.responsive_width.set(self.node.widget.responsive_width, True)
+		self.responsive_top.set(self.node.widget.responsive_y1, True)
+		self.responsive_bottom.set(self.node.widget.responsive_y2, True)
+		self.responsive_height.set(self.node.widget.responsive_height, True)
 
 		self.flag_unk1.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK1 == DialogBIN.BINWidget.FLAG_UNK1))
 		self.flag_disabled.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_DISABLED == DialogBIN.BINWidget.FLAG_DISABLED))
@@ -946,6 +946,7 @@ class PyBIN(Tk):
 		self.tfont = None
 
 		self.selected_node = None
+
 		self.old_cursor = None
 		self.edit_node = None
 		self.current_event = []
@@ -1079,15 +1080,24 @@ class PyBIN(Tk):
 			('Images','show_images',self.show_images),
 			('Text','show_text',self.show_text),
 			('SMKs','show_smks',self.show_smks),
-			('Animated','show_animated',self.show_animated),
-			('Hovers','show_hover_smks',self.show_hover_smks)
 		)
 		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
 			check.grid(row=i / 2, column=i % 2, sticky=W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
-		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
+		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5)
+		smkframe = LabelFrame(self.preview_settings_frame, text='SMKs')
+		fields = (
+			('Animated','show_animated',self.show_animated),
+			('Hovers','show_hover_smks',self.show_hover_smks)
+		)
+		for i,(name,setting_name,variable) in enumerate(fields):
+			check = Checkbutton(smkframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
+			check.grid(row=i / 2, column=i % 2, sticky=W)
+		smkframe.grid_columnconfigure(0, weight=1)
+		smkframe.grid_columnconfigure(1, weight=1)
+		smkframe.grid(row=1, column=0, sticky=NSEW, padx=5)
 		boundsframe = LabelFrame(self.preview_settings_frame, text='Bounds')
 		fields = (
 			('Widgets','show_bounds_widget',self.show_bounds_widget, NORMAL),
@@ -1101,7 +1111,7 @@ class PyBIN(Tk):
 			check.grid(row=i / 2, column=i % 2, sticky=W)
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
-		boundsframe.grid(row=1, column=0, sticky=NSEW, padx=5)
+		boundsframe.grid(row=2, column=0, sticky=NSEW, padx=5)
 		themeframe = LabelFrame(self.preview_settings_frame, text='Theme')
 		themes = ['None']
 		for t in xrange(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
@@ -1111,9 +1121,9 @@ class PyBIN(Tk):
 		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=1, column=0, sticky=W)
 		themeframe.grid_columnconfigure(0, weight=1)
 		# themeframe.grid_columnconfigure(1, weight=1)
-		themeframe.grid(row=2, column=0, sticky=NSEW, padx=5, pady=5)
+		themeframe.grid(row=3, column=0, sticky=NSEW, padx=5)
 		self.preview_settings_frame.grid_columnconfigure(0, weight=1)
-		self.preview_settings_frame.grid(row=3, column=0, padx=1, pady=1, sticky=EW)
+		self.preview_settings_frame.grid(row=3, column=0, padx=1,pady=1, ipady=3, sticky=EW)
 		if not self.show_preview_settings.get():
 			self.preview_settings_frame.grid_forget()
 		leftframe.grid_rowconfigure(1, weight=1)
