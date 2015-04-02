@@ -146,10 +146,9 @@ class DATSettingsDialog(SettingsDialog):
 
 class SaveMPQDialog(PyMSDialog):
 	def __init__(self, parent):
-		PyMSDialog.__init__(self, parent, 'Save MPQ')
+		PyMSDialog.__init__(self, parent, 'Save MPQ', resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
 		listframe = Frame(self, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)

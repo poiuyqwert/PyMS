@@ -86,11 +86,9 @@ class CodeTooltip(Tooltip):
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.resettimer = None
-		PyMSDialog.__init__(self, parent, 'Find/Replace', grabwait=False)
+		PyMSDialog.__init__(self, parent, 'Find/Replace', grabwait=False, resizable=(True, False))
 
 	def widgetize(self):
-		self.resizable(True, False)
-
 		self.find = StringVar()
 		self.replacewith = StringVar()
 		self.replace = IntVar()
@@ -309,10 +307,9 @@ class CodeColors(PyMSDialog):
 		self.info['Error'] = 'The color of an error when compiling.'
 		self.info['Warning'] = 'The color of a warning when compiling.'
 		self.info['Selection'] = 'The color of selected text in the editor.'
-		PyMSDialog.__init__(self, parent, 'Color Settings')
+		PyMSDialog.__init__(self, parent, 'Color Settings', resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		self.listbox = Listbox(self, font=couriernew, width=20, height=16, exportselection=0)
 		self.listbox.bind('<ButtonRelease-1>', self.select)
 		for t in self.info.keys():

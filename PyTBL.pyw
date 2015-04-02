@@ -23,7 +23,7 @@ class PreviewDialog(PyMSDialog):
 		self.hotkey.set(parent.settings.get('hotkey',1))
 		self.endatnull = IntVar()
 		self.endatnull.set(parent.settings.get('endatnull',1))
-		PyMSDialog.__init__(self, parent, 'Text Previewer')
+		PyMSDialog.__init__(self, parent, 'Text Previewer', resizable=(False,False))
 
 	def geticon(self, n, f):
 		if not n in self.icons:
@@ -99,7 +99,6 @@ class PreviewDialog(PyMSDialog):
 				y += fnt.height
 
 	def widgetize(self):
-		self.resizable(False,False)
 		self.canvas = Canvas(self, width=200, height=16, background='#000000', bd=2, relief=SUNKEN)
 		self.canvas.pack(padx=5, pady=5)
 		f = Frame(self)
@@ -119,16 +118,16 @@ class PreviewDialog(PyMSDialog):
 class FindDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.resettimer = None
-		PyMSDialog.__init__(self, parent, 'Find', grabwait=False)
+		PyMSDialog.__init__(self, parent, 'Find', grabwait=False, escape=True, resizable=(True,False))
 
 	def widgetize(self):
-		self.resizable(True, False)
-
 		self.find = StringVar()
-		self.casesens = IntVar()
-		self.regex = IntVar()
+		self.casesens = BooleanVar()
+		self.regex = BooleanVar()
 		self.updown = IntVar()
 		self.updown.set(1)
+		self.wrap = BooleanVar()
+		self.wrap.set(True)
 
 		l = Frame(self)
 		f = Frame(l)
@@ -142,6 +141,7 @@ class FindDialog(PyMSDialog):
 		f = Frame(l)
 		Checkbutton(f, text='Case Sensitive', variable=self.casesens, anchor=W).pack(fill=X)
 		Checkbutton(f, text='Regular Expression', variable=self.regex, anchor=W).pack(fill=X)
+		Checkbutton(f, text='Wrap', variable=self.wrap, anchor=W).pack(fill=X)
 		f.pack(side=LEFT, fill=BOTH)
 		f = Frame(l)
 		lf = LabelFrame(f, text='Direction')
@@ -189,15 +189,24 @@ class FindDialog(PyMSDialog):
 				self.resettimer = self.after(1000, self.updatecolor)
 				return
 			u = self.updown.get()
-			i = int(self.parent.listbox.curselection()[0])-1+u*2
+			s = int(self.parent.listbox.curselection()[0])
+			i = s-1+u*2
 			while i != [-1,self.parent.listbox.size()][u]:
+				print (i,s)
 				if regex.match(self.parent.listbox.get(i)):
 					self.parent.listbox.select_clear(0,END)
 					self.parent.listbox.select_set(i)
 					self.parent.listbox.see(i)
 					self.parent.update()
 					return
+				if i == s:
+					break
 				i += -1+u*2
+				if i == [-1,self.parent.listbox.size()][u] and self.wrap.get():
+					if i == -1:
+						i = self.parent.listbox.size()-1
+					else:
+						i = 0
 		p = self
 		if key and key.keycode == 13:
 			p = self.parent

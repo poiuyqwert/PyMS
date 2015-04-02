@@ -41,9 +41,6 @@ def check_update(p):
 				p.after(1, callback)
 
 def loadsize(window, settings, setting, full=False):
-	def parse_geometry(geometry):
-		match = re.match('(\\d+)x(\\d+)([+-]\\d+)([+-]\\d+)(^)?',geometry)
-		return tuple(int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
 	geometry = settings.get(setting)
 	if geometry and geometry:
 		w,h,x,y,fullscreen = parse_geometry(geometry)
@@ -111,10 +108,9 @@ class UpdateDialog(PyMSDialog):
 	def __init__(self, parent, v, settings=[]):
 		self.version = v
 		self.settings = settings
-		PyMSDialog.__init__(self, parent, 'New Version Found')
+		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		Label(self, justify=LEFT, anchor=W, text="Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (PyMS_LONG_VERSION,self.version)).pack(pady=5,padx=5)
 		f = Frame(self)
 		self.remind = IntVar()

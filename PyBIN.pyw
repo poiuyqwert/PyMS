@@ -99,10 +99,9 @@ class WidgetSettings(PyMSDialog):
 		self.flag_no_click_snd = BooleanVar()
 		self.flag_unk10 = BooleanVar()
 
-		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type])
+		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		def calc_button(f, calc, orig, offset, direction, fix):
 			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','debug.gif'))
 			button = Button(f, image=image, width=20, height=20, command=lambda calc=calc,orig=orig,offset=offset,direction=direction,fix=fix: self.calculate(calc,orig,offset,direction,fix))

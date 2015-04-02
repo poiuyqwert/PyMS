@@ -24,6 +24,10 @@ couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
 ARROW = None
 
+def parse_geometry(geometry):
+	match = re.match('(\\d+)x(\\d+)([+-]\\d+)([+-]\\d+)(^)?',geometry)
+	return tuple(int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
+
 def isstr(s):
 	return isinstance(s,str) or isinstance(s,unicode)
 
@@ -190,22 +194,38 @@ class PyMSWarnList(Exception):
 		return r[:-1]
 
 class PyMSDialog(Toplevel):
-	def __init__(self, parent, title, center=True, grabwait=True, hidden=False):
+	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True)):
 		Toplevel.__init__(self, parent)
 		self.title(title)
 		self.icon = parent.icon
 		self.wm_iconbitmap(parent.icon)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
+		if escape:
+			self.bind('<Escape>', self.cancel)
 		#self.transient(parent)
 		self.parent = parent
 		focus = self.widgetize()
+		self.update_idletasks()
 		if not focus:
 			focus = self
 		focus.focus_set()
-		self.update_idletasks()
-		size = self.winfo_geometry().split('+',1)[0].split('x')
+		w,h,x,y,fullscreen = parse_geometry(self.winfo_geometry())
+		screen_w = self.winfo_screenwidth()
+		screen_h = self.winfo_screenheight()
 		if center:
-			self.geometry('+%d+%d' % (self.winfo_screenwidth()/2-int(size[0])/2,self.winfo_screenheight()/2-int(size[1])/2))
+			self.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
+		self.resizable(*resizable)
+		if False in resizable:
+			min_w = 0
+			max_w = screen_w
+			min_h = 0
+			max_h = screen_h
+			if not resizable[0]:
+				min_w = max_w = w
+			if not resizable[1]:
+				min_h = max_h = h
+			self.minsize(min_w, min_h)
+			self.maxsize(max_w, max_h)
 		if grabwait:
 			self.grab_set()
 			self.wait_window(self)
@@ -219,10 +239,10 @@ class PyMSDialog(Toplevel):
 		self.parent.focus_set()
 		self.destroy()
 
-	def ok(self):
+	def ok(self, event=None):
 		self.dismiss()
 
-	def cancel(self):
+	def cancel(self, event=None):
 		self.dismiss()
 
 class InternalErrorDialog(PyMSDialog):
@@ -275,10 +295,9 @@ class InternalErrorDialog(PyMSDialog):
 class ErrorDialog(PyMSDialog):
 	def __init__(self, parent, error):
 		self.error = error
-		PyMSDialog.__init__(self, parent, '%s Error!' % error.type)
+		PyMSDialog.__init__(self, parent, '%s Error!' % error.type, resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		Label(self, justify=LEFT, anchor=W, text=self.error.repr(), wraplen=640).pack(pady=10, padx=5)
 		frame = Frame(self)
 		ok = Button(frame, text='Ok', width=10, command=self.ok)
@@ -308,11 +327,10 @@ class WarningDialog(PyMSDialog):
 	def __init__(self, parent, warnings, cont=False):
 		self.warnings = warnings
 		self.cont = cont
-		PyMSDialog.__init__(self, parent, 'Warning!')
+		PyMSDialog.__init__(self, parent, 'Warning!', resizable=(False, False))
 
 	def widgetize(self):
 		self.bind('<Control-a>', self.selectall)
-		self.resizable(False, False)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
 		vscroll = Scrollbar(frame)
@@ -360,10 +378,9 @@ class AboutDialog(PyMSDialog):
 			('BroodWarAI.com','Support and hosting of course!'),
 			('Blizzard','For creating StarCraft and BroodWar...'),
 		])
-		PyMSDialog.__init__(self, parent, 'About %s' % program)
+		PyMSDialog.__init__(self, parent, 'About %s' % program, resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		name = Label(self, text='%s %s' % (self.program, self.version), font=('Courier', 18, 'bold'))
 		name.pack()
 		frame = Frame(self)

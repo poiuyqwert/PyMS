@@ -149,10 +149,9 @@ class Placeability(PyMSDialog):
 		self.select_file = parent.select_file
 		self.selecting = None
 		self.width = 0
-		PyMSDialog.__init__(self, parent, 'Doodad Placeability [%s]' % id)
+		PyMSDialog.__init__(self, parent, 'Doodad Placeability [%s]' % id, resizable=(False,False))
 
 	def widgetize(self):
-		self.resizable(False,False)
 		f = Frame(self)
 		ty = -1
 		for n,g in enumerate(self.tileset.cv5.groups[1024:]):
@@ -211,12 +210,11 @@ class MiniEditor(PyMSDialog):
 		self.select = False
 		self.id = id
 		if id == None:
-			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % parent.tileset.vx4.graphics[parent.megatile[0]][parent.megatile[1]][0])
+			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % parent.tileset.vx4.graphics[parent.megatile[0]][parent.megatile[1]][0], resizable=(False,False))
 		else:
-			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id)
+			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id, resizable=(False,False))
 
 	def widgetize(self):
-		self.resizable(False,False)
 		self.canvas = Canvas(self, width=202, height=114)
 		self.canvas.pack(padx=3,pady=3)
 		self.canvas.bind('<ButtonRelease-1>', self.release)
@@ -318,7 +316,7 @@ class TilePalette(PyMSDialog):
 		self.megatile = parent.megatile
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
-		PyMSDialog.__init__(self, parent, self.ttext % self.sel)
+		PyMSDialog.__init__(self, parent, self.ttext % self.sel, resizable=False,False))
 
 	def update_top(self):
 		if self.type == 0:
@@ -380,7 +378,6 @@ class TilePalette(PyMSDialog):
 
 	def widgetize(self):
 		self.update_top()
-		self.resizable(False,False)
 		buttons = [
 			('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
 			('remove', self.remove, 'Remove (Delete)', DISABLED, 'Delete'),

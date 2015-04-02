@@ -90,10 +90,9 @@ class CheckThread:
 class UpdateFiles(PyMSDialog):
 	def __init__(self, parent, files):
 		self.files = files
-		PyMSDialog.__init__(self, parent, 'Files Edited')
+		PyMSDialog.__init__(self, parent, 'Files Edited', resizable=(False, False))
 
 	def widgetize(self):
-		self.resizable(False, False)
 		Label(self, text='These files have been modified since they were extracted.\n\nChoose which files to update the archive with:', justify=LEFT, anchor=W).pack(fill=X)
 		listframe = Frame(self, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)
