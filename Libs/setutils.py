@@ -64,6 +64,7 @@ def loadsize(window, settings, setting, full=False):
 		if h > screen_h and resizable[1] and screen_h > min_size[1]:
 			h = screen_h
 		window.geometry('%dx%d%+d%+d' % (w,h, x,y))
+		window.update_idletasks()
 		if fullscreen:
 			try:
 				window.wm_state('zoomed')

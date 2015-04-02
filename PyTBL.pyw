@@ -404,7 +404,7 @@ class PyTBL(Tk):
 		if 'window' in self.settings:
 			loadsize(self, self.settings, 'window', True)
 		if 'colorlist' in self.settings:
-			self.pane.sash_place(0, *self.settings['colorlist'])
+			self.after(200, lambda: self.pane.sash_place(0, *self.settings['colorlist']))
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if not 'mpqs' in self.settings:
