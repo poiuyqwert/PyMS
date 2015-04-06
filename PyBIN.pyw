@@ -701,6 +701,9 @@ class WidgetNode:
 		if self.widget:
 			if self.visible():
 				x1,y1,x2,y2 = self.bounding_box()
+				x = x1
+				y = y1
+				anchor = NW
 				if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
 					asset_id = DialogBIN.DIALOG_ASSET_CHECK_DISABLED
 					if self.enabled():
@@ -708,6 +711,8 @@ class WidgetNode:
 					pil = self.toplevel.dialog_asset(asset_id)
 					if pil:
 						self.dialog_image = ImageTk.PhotoImage(pil)
+						y += (y2 - y1) / 2
+						anchor = W
 				elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
 					asset_id = DialogBIN.DIALOG_ASSET_RADIO_DISABLED
 					if self.enabled():
@@ -715,6 +720,8 @@ class WidgetNode:
 					pil = self.toplevel.dialog_asset(asset_id)
 					if pil:
 						self.dialog_image = ImageTk.PhotoImage(pil)
+						y += (y2 - y1) / 2
+						anchor = W
 				elif self.widget.type == DialogBIN.BINWidget.TYPE_SLIDER:
 					if self.enabled():
 						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT)
@@ -734,28 +741,30 @@ class WidgetNode:
 						for img in (left,mid,spot,right,dot):
 							if img:
 								height = max(height, img.size[1])
-						divides = 8
+						spots = 8
 						spots_padding = 0
-						while spots_padding < 25 and divides:
-							divides -= 1
-							spots_padding = (width - left.size[0] - right.size[0] - spot.size[0] * (divides+1)) / divides
-						x = 0
-						y = height / 2
+						while spots_padding < 25 and spots > 1:
+							spots -= 1
+							spots_padding = (width - left.size[0] - right.size[0] - spot.size[0] * (spots+1)) / spots
+						draw_x = 0
+						mid_y = height / 2
 						pil = PILImage.new('RGBA', (width,height))
-						pil.paste(left, (x,y - left.size[1]/2))
-						x += left.size[0]
-						while divides >= 0:
-							pil.paste(spot, (x,y - spot.size[1]/2))
-							x += spot.size[0]
-							if divides:
+						pil.paste(left, (draw_x,mid_y - left.size[1]/2))
+						draw_x += left.size[0]
+						while spots >= 0:
+							pil.paste(spot, (draw_x,mid_y - spot.size[1]/2))
+							draw_x += spot.size[0]
+							if spots and spots_padding > 0:
 								pad = mid.resize((spots_padding, mid.size[1]))
-								pil.paste(pad, (x,y - pad.size[1]/2))
-								x += pad.size[0]
-							divides -= 1
-						pil.paste(right, (x,y - right.size[1]/2))
+								pil.paste(pad, (draw_x,mid_y - pad.size[1]/2))
+								draw_x += pad.size[0]
+							spots -= 1
+						pil.paste(right, (draw_x,mid_y - right.size[1]/2))
 						if dot:
-							pil.paste(dot, ((width - dot.size[0])/2, y - dot.size[1]/2))
+							pil.paste(dot, ((width - dot.size[0])/2, mid_y - dot.size[1]/2))
 						self.dialog_image = ImageTk.PhotoImage(pil)
+						y += (y2 - y1) / 2
+						anchor = W
 				elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
 					if self.enabled():
 						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_LEFT)
@@ -770,13 +779,49 @@ class WidgetNode:
 						height = 0
 						for img in (left,mid,right):
 							height = max(height, img.size[1])
-						y = height / 2
+						mid_y = height / 2
 						pil = PILImage.new('RGBA', (width,height))
-						pil.paste(left, (0,y - left.size[1]/2))
-						pad = mid.resize((width-left.size[0]-right.size[0],mid.size[1]))
-						pil.paste(pad, (left.size[0],y - pad.size[1]/2))
-						pil.paste(right, (width-right.size[0],y - right.size[1]/2))
+						pil.paste(left, (0,mid_y - left.size[1]/2))
+						pad_size = width-left.size[0]-right.size[0]
+						if pad_size > 0:
+							pad = mid.resize((pad_size,mid.size[1]))
+							pil.paste(pad, (left.size[0],mid_y - pad.size[1]/2))
+						pil.paste(right, (width-right.size[0],mid_y - right.size[1]/2))
 						self.dialog_image = ImageTk.PhotoImage(pil)
+						y += (y2 - y1) / 2
+						anchor = W
+				elif self.widget.type == DialogBIN.BINWidget.TYPE_LISTBOX:
+					top = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_TOP)
+					mid = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE)
+					bot = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_BOTTOM)
+					bar = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_BAR)
+					if self.enabled():
+						up = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP)
+						down = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN)
+					else:
+						up = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP_DISABLED)
+						down = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN_DISABLED)
+					imgs = (top,mid,bot,bar,up,down)
+					if not None in imgs:
+						width = 0
+						height = y2-y1
+						for img in imgs:
+							width = max(width, img.size[0])
+						mid_x = width / 2
+						pil = PILImage.new('RGBA', (width,height))
+						pil.paste(up, (mid_x-up.size[0]/2,0))
+						pil.paste(top, (mid_x-top.size[0]/2,up.size[1]+2))
+						mid_height = height - up.size[1] - 2 - top.size[1] - bot.size[1] - 2 - down.size[1]
+						if mid_height > 0:
+							mid_full = mid.resize((mid.size[0],mid_height))
+							pil.paste(mid_full, (mid_x-mid.size[0]/2,up.size[1]+2+top.size[1]))
+						pil.paste(bot, (mid_x-bot.size[0]/2,height-down.size[1]-2-bot.size[1]))
+						pil.paste(down, (mid_x-down.size[0]/2,height-down.size[1]))
+						pil.paste(bar, (mid_x-bar.size[0]/2,up.size[1]+4))
+						self.dialog_image = ImageTk.PhotoImage(pil)
+						x = x2
+						y += (y2 - y1) / 2
+						anchor = E
 				elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.toplevel.show_dialog.get():
 					tl = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_TL)
 					t = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_T)
@@ -809,12 +854,11 @@ class WidgetNode:
 						pil.paste(br, (width-br.size[0],height-br.size[1]))
 						self.dialog_image = ImageTk.PhotoImage(pil)
 				if self.dialog_image:
-					y1 += (y2 - y1) / 2
 					if self.item_dialog:
 						self.toplevel.widgetCanvas.itemconfigure(self.item_dialog, image=self.dialog_image)
-						self.toplevel.widgetCanvas.coords(self.item_dialog, x1,y1)
+						self.toplevel.widgetCanvas.coords(self.item_dialog, x,y)
 					else:
-						self.item_dialog = self.toplevel.widgetCanvas.create_image(x1,y1, image=self.dialog_image, anchor=W)
+						self.item_dialog = self.toplevel.widgetCanvas.create_image(x,y, image=self.dialog_image, anchor=anchor)
 						reorder = True
 		if self.dialog_image == None and self.item_dialog:
 			self.toplevel.widgetCanvas.delete(self.item_dialog)
