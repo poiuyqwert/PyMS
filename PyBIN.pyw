@@ -839,18 +839,22 @@ class WidgetNode:
 						i_height = height-tl.size[1]-bl.size[1]
 						pil = PILImage.new('RGBA', (width,height))
 						pil.paste(tl, (0,0))
-						t_full = t.resize((i_width,t.size[1]))
-						pil.paste(t_full, (tl.size[0],0))
+						if i_width > 0:
+							t_full = t.resize((i_width,t.size[1]))
+							pil.paste(t_full, (tl.size[0],0))
 						pil.paste(tr, (width-tr.size[0],0))
-						l_full = l.resize((l.size[0],i_height))
-						pil.paste(l_full, (0,tl.size[1]))
-						m_full = m.resize((i_width,i_height))
-						pil.paste(m_full, tl.size)
-						r_full = r.resize((r.size[0],i_height))
-						pil.paste(r_full, (width-r.size[0],tr.size[1]))
+						if i_height > 0:
+							l_full = l.resize((l.size[0],i_height))
+							pil.paste(l_full, (0,tl.size[1]))
+							if i_width > 0:
+								m_full = m.resize((i_width,i_height))
+								pil.paste(m_full, tl.size)
+							r_full = r.resize((r.size[0],i_height))
+							pil.paste(r_full, (width-r.size[0],tr.size[1]))
 						pil.paste(bl, (0,height-bl.size[1]))
-						b_full = b.resize((i_width,b.size[1]))
-						pil.paste(b_full, (bl.size[0],height-b.size[1]))
+						if i_width > 0:
+							b_full = b.resize((i_width,b.size[1]))
+							pil.paste(b_full, (bl.size[0],height-b.size[1]))
 						pil.paste(br, (width-br.size[0],height-br.size[1]))
 						self.dialog_image = ImageTk.PhotoImage(pil)
 				if self.dialog_image:
