@@ -25,7 +25,7 @@ couriersmall = ('Courier', -8, 'normal')
 ARROW = None
 
 def parse_geometry(geometry):
-	match = re.match('(\\d+)x(\\d+)([+-]\\d+)([+-]\\d+)(^)?',geometry)
+	match = re.match(r'(\d+)x(\d+)\+(-?\d+)\+(-?\d+)(\^?)',geometry)
 	return tuple(int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
 
 def isstr(s):

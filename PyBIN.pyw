@@ -2,9 +2,14 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SpecialLists import TreeList
-from Libs import DialogBIN, FNT, PCX, SMK
+from Libs import DialogBIN, FNT, PCX, SMK, GRP
 
 from Tkinter import *
+from PIL import Image as PILImage
+try:
+	from PIL import ImageTk
+except:
+	import ImageTk
 
 from thread import start_new_thread
 import optparse, os, webbrowser, sys, time
@@ -481,24 +486,24 @@ def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
 	ny1 = (y1 if y1 < y2 else y2)
 	nx2 = (x2 if x2 > x1 else x1)
 	ny2 = (y2 if y2 > y1 else y1)
-	d = 5 * resizable
+	d = 2 * resizable
 	if nx1-d <= mouseX <= nx2+d and ny1-d <= mouseY <= ny2+d:
 		event.append(EDIT_MOVE)
 		if resizable:
 			dist_left = abs(x1 - mouseX)
 			dist_right = abs(x2 - mouseX)
-			if dist_left < dist_right and dist_left <= 5:
+			if dist_left < dist_right and dist_left <= d:
 				event = [EDIT_RESIZE_LEFT,EDIT_NONE]
-			elif dist_right < dist_left and dist_right <= 5:
+			elif dist_right < dist_left and dist_right <= d:
 				event = [EDIT_RESIZE_RIGHT,EDIT_NONE]
 			dist_top = abs(y1 - mouseY)
 			dist_bot = abs(y2 - mouseY)
-			if dist_top < dist_bot and dist_top <= 5:
+			if dist_top < dist_bot and dist_top <= d:
 				if len(event) == 1:
 					event = [EDIT_NONE,EDIT_RESIZE_TOP]
 				else:
 					event[1] = EDIT_RESIZE_TOP
-			elif dist_bot < dist_top and dist_bot <= 5:
+			elif dist_bot < dist_top and dist_bot <= d:
 				if len(event) == 1:
 					event = [EDIT_NONE,EDIT_RESIZE_BOTTOM]
 				else:
@@ -614,6 +619,7 @@ class WidgetNode:
 		self.string = None
 		self.photo = None
 		self.smks = None
+		self.dialog_image = None
 		self.frame_delay = None
 		self.frame_waited = 0
 
@@ -623,6 +629,7 @@ class WidgetNode:
 		self.item_string_images = None
 		self.item_image = None
 		self.item_smks = []
+		self.item_dialog = None
 
 	def get_name(self):
 		name = 'Group'
@@ -647,6 +654,16 @@ class WidgetNode:
 		else:
 			self.children.insert(index, node)
 
+	def visible(self):
+		if self.widget and not self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE:
+			return self.toplevel.show_hidden.get()
+		return True
+
+	def enabled(self):
+		if self.widget and self.widget.flags & DialogBIN.BINWidget.FLAG_DISABLED:
+			return False
+		return True
+
 	def bounding_box(self):
 		if self.widget:
 			return self.widget.bounding_box()
@@ -662,6 +679,147 @@ class WidgetNode:
 			if y2 > bounding_box[3]:
 				bounding_box[3] = y2
 		return bounding_box
+
+	def text_box(self):
+		text_box = self.bounding_box()
+		if self.widget:
+			text_box[0] += self.widget.text_offset_x
+			text_box[1] += self.widget.text_offset_y
+			if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
+				image = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_CHECK_SELECTED)
+				if image:
+					text_box[0] += image.size[0] + 4
+			elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
+				image = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_RADIO_SELECTED)
+				if image:
+					text_box[0] += image.size[0] + 4
+		return text_box
+
+	def update_dialog(self):
+		reorder = False
+		self.dialog_image = None
+		if self.widget:
+			if self.visible():
+				x1,y1,x2,y2 = self.bounding_box()
+				if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
+					asset_id = DialogBIN.DIALOG_ASSET_CHECK_DISABLED
+					if self.enabled():
+						asset_id = DialogBIN.DIALOG_ASSET_CHECK_SELECTED
+					pil = self.toplevel.dialog_asset(asset_id)
+					if pil:
+						self.dialog_image = ImageTk.PhotoImage(pil)
+				elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
+					asset_id = DialogBIN.DIALOG_ASSET_RADIO_DISABLED
+					if self.enabled():
+						asset_id = DialogBIN.DIALOG_ASSET_RADIO_SELECTED
+					pil = self.toplevel.dialog_asset(asset_id)
+					if pil:
+						self.dialog_image = ImageTk.PhotoImage(pil)
+				elif self.widget.type == DialogBIN.BINWidget.TYPE_SLIDER:
+					if self.enabled():
+						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT)
+						mid = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_MIDDLE)
+						spot = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_SPOT)
+						right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_RIGHT)
+						dot = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_DOT_YELLOW)
+					else:
+						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT_DISABLED)
+						mid = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_MIDDLE_DISABLED)
+						spot = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_SPOT_DISABLED)
+						right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_RIGHT_DISABLED)
+						dot = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_DOT_DISABLED)
+					if left and mid and spot and right:
+						width = x2-x1
+						height = 0
+						for img in (left,mid,spot,right,dot):
+							if img:
+								height = max(height, img.size[1])
+						divides = 8
+						spots_padding = 0
+						while spots_padding < 25 and divides:
+							divides -= 1
+							spots_padding = (width - left.size[0] - right.size[0] - spot.size[0] * (divides+1)) / divides
+						x = 0
+						y = height / 2
+						pil = PILImage.new('RGBA', (width,height))
+						pil.paste(left, (x,y - left.size[1]/2))
+						x += left.size[0]
+						while divides >= 0:
+							pil.paste(spot, (x,y - spot.size[1]/2))
+							x += spot.size[0]
+							if divides:
+								pad = mid.resize((spots_padding, mid.size[1]))
+								pil.paste(pad, (x,y - pad.size[1]/2))
+								x += pad.size[0]
+							divides -= 1
+						pil.paste(right, (x,y - right.size[1]/2))
+						if dot:
+							pil.paste(dot, ((width - dot.size[0])/2, y - dot.size[1]/2))
+						self.dialog_image = ImageTk.PhotoImage(pil)
+				elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
+					if self.enabled():
+						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_LEFT)
+						mid = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_MIDDLE)
+						right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_RIGHT)
+					else:
+						left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_LEFT)
+						mid = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_MIDDLE)
+						right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_DISABLED_RIGHT)
+					if left and mid and right:
+						width = x2-x1
+						height = 0
+						for img in (left,mid,right):
+							height = max(height, img.size[1])
+						y = height / 2
+						pil = PILImage.new('RGBA', (width,height))
+						pil.paste(left, (0,y - left.size[1]/2))
+						pad = mid.resize((width-left.size[0]-right.size[0],mid.size[1]))
+						pil.paste(pad, (left.size[0],y - pad.size[1]/2))
+						pil.paste(right, (width-right.size[0],y - right.size[1]/2))
+						self.dialog_image = ImageTk.PhotoImage(pil)
+				elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.toplevel.show_dialog.get():
+					tl = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_TL)
+					t = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_T)
+					tr = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_TR)
+					l = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_L)
+					m = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_M)
+					r = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_R)
+					bl = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_BL)
+					b = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_B)
+					br = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_BR)
+					if not None in (tl,t,tr,l,m,r,bl,b,br):
+						width = x2-x1
+						height = y2-y1
+						i_width = width-tl.size[0]-tr.size[0]
+						i_height = height-tl.size[1]-bl.size[1]
+						pil = PILImage.new('RGBA', (width,height))
+						pil.paste(tl, (0,0))
+						t_full = t.resize((i_width,t.size[1]))
+						pil.paste(t_full, (tl.size[0],0))
+						pil.paste(tr, (width-tr.size[0],0))
+						l_full = l.resize((l.size[0],i_height))
+						pil.paste(l_full, (0,tl.size[1]))
+						m_full = m.resize((i_width,i_height))
+						pil.paste(m_full, tl.size)
+						r_full = r.resize((r.size[0],i_height))
+						pil.paste(r_full, (width-r.size[0],tr.size[1]))
+						pil.paste(bl, (0,height-bl.size[1]))
+						b_full = b.resize((i_width,b.size[1]))
+						pil.paste(b_full, (bl.size[0],height-b.size[1]))
+						pil.paste(br, (width-br.size[0],height-br.size[1]))
+						self.dialog_image = ImageTk.PhotoImage(pil)
+				if self.dialog_image:
+					y1 += (y2 - y1) / 2
+					if self.item_dialog:
+						self.toplevel.widgetCanvas.itemconfigure(self.item_dialog, image=self.dialog_image)
+						self.toplevel.widgetCanvas.coords(self.item_dialog, x1,y1)
+					else:
+						self.item_dialog = self.toplevel.widgetCanvas.create_image(x1,y1, image=self.dialog_image, anchor=W)
+						reorder = True
+		if self.dialog_image == None and self.item_dialog:
+			self.toplevel.widgetCanvas.delete(self.item_dialog)
+			self.item_dialog = None
+		return reorder
 
 	def tick(self, dt):
 		SHOW_SMKS = self.toplevel.show_smks.get()
@@ -680,7 +838,7 @@ class WidgetNode:
 		SHOW_SMKS = self.toplevel.show_smks.get()
 		SHOW_HOVER_SMKS = self.toplevel.show_hover_smks.get()
 		showing = []
-		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk:
+		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk and self.visible():
 			if self.smks == None:
 				self.smks = {}
 			check = self.widget.smk
@@ -732,7 +890,7 @@ class WidgetNode:
 	def update_image(self):
 		reorder = False
 		SHOW_IMAGES = self.toplevel.show_images.get()
-		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE and self.widget.string:
+		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.visible() and self.widget.string:
 			photo_change = False
 			if self.photo == None:
 				try:
@@ -742,7 +900,6 @@ class WidgetNode:
 					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans)
 					photo_change = True
 				except Exception, e:
-					print self.widget.string
 					print repr(e)
 			if self.photo:
 				x1,y1,x2,y2 = self.bounding_box()
@@ -761,7 +918,7 @@ class WidgetNode:
 	def update_text(self):
 		reorder = False
 		SHOW_TEXT = self.toplevel.show_text.get()
-		if SHOW_TEXT and self.widget and self.widget.display_text() and self.widget.flags & DialogBIN.BINWidget.FLAG_VISIBLE:
+		if SHOW_TEXT and self.widget and self.widget.display_text() and self.visible():
 			if self.string == None:
 				if self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
 					font = self.toplevel.font10
@@ -782,7 +939,7 @@ class WidgetNode:
 				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
 					default_color = 3
 				self.string = StringPreview(self.widget.display_text(), font, self.toplevel.tfontgam, remap, remap_pal, default_color)
-			x1,y1,x2,y2 = self.widget.text_box()
+			x1,y1,x2,y2 = self.text_box()
 			align = self.widget.flags
 			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
 				align = 0
@@ -792,6 +949,8 @@ class WidgetNode:
 				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
 			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
 				align = DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER | DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
+			elif self.widget.type in (DialogBIN.BINWidget.TYPE_CHECKBOX, DialogBIN.BINWidget.TYPE_OPTION_BTN):
+				align = DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
 			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
 			if self.item_string_images:
 				for item,position in zip(self.item_string_images,positions):
@@ -833,7 +992,7 @@ class WidgetNode:
 		reorder = False
 		SHOW_TEXT_BOUNDS = self.toplevel.show_bounds_text.get()
 		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() != None:
-			x1,y1,x2,y2 = self.widget.text_box()
+			x1,y1,x2,y2 = self.text_box()
 			if self.item_text_bounds:
 				self.toplevel.widgetCanvas.coords(self.item_text_bounds, x1,y1, x2,y2)
 			else:
@@ -861,6 +1020,7 @@ class WidgetNode:
 
 	def update_display(self):
 		reorder = False
+		reorder = self.update_dialog() or reorder
 		reorder = self.update_image() or reorder
 		reorder = self.update_video() or reorder
 		reorder = self.update_text() or reorder
@@ -870,6 +1030,8 @@ class WidgetNode:
 		return reorder
 
 	def lift(self):
+		if self.item_dialog:
+			self.toplevel.widgetCanvas.lift(self.item_dialog)
 		if self.item_image:
 			self.toplevel.widgetCanvas.lift(self.item_image)
 		if self.item_smks:
@@ -886,6 +1048,9 @@ class WidgetNode:
 			self.toplevel.widgetCanvas.lift(self.item_responsive_bounds)
 
 	def remove_display(self):
+		if self.item_dialog:
+			self.toplevel.widgetCanvas.delete(self.item_dialog)
+			self.item_dialog = None
 		if self.item_image:
 			self.toplevel.widgetCanvas.delete(self.item_image)
 			self.item_image = None
@@ -934,7 +1099,7 @@ class PyBIN(Tk):
 		self.maxsize(1080, 539)
 		# self.resizable(True, False)
 		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window', True)
+			loadsize(self, self.settings, 'window')
 
 		self.bin = None
 		self.file = None
@@ -943,6 +1108,10 @@ class PyBIN(Tk):
 		self.widget_map = None
 
 		self.tfont = None
+		self.dlggrp = None
+		self.tilegrp = None
+		self.dialog_assets = {}
+		self.dialog_frames = {}
 
 		self.selected_node = None
 
@@ -1002,6 +1171,8 @@ class PyBIN(Tk):
 		self.show_images = BooleanVar()
 		self.show_text = BooleanVar()
 		self.show_smks = BooleanVar()
+		self.show_hidden = BooleanVar()
+		self.show_dialog = BooleanVar()
 		self.show_animated = BooleanVar()
 		self.show_hover_smks = BooleanVar()
 		self.show_background = BooleanVar()
@@ -1079,6 +1250,8 @@ class PyBIN(Tk):
 			('Images','show_images',self.show_images),
 			('Text','show_text',self.show_text),
 			('SMKs','show_smks',self.show_smks),
+			('Hidden','show_hidden',self.show_hidden),
+			('Dialog','show_dialog',self.show_dialog)
 		)
 		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
@@ -1279,6 +1452,7 @@ class PyBIN(Tk):
 					raise
 					pass
 				else:
+					self.background = background
 					self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
 			if self.background_image:
 				delete = False
@@ -1292,6 +1466,70 @@ class PyBIN(Tk):
 		if self.item_background and delete:
 			self.widgetCanvas.delete(self.item_background)
 			self.item_background = None
+
+	def load_dlggrp(self):
+		dlggrp = None
+		check = ['MPQ:glue\\palmm\\dlg.grp']
+		if self.show_theme_index.get():
+			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp'
+			check.insert(0, path)
+		for path in check:
+			try:
+				dlggrp = GRP.GRP()
+				dlggrp.load_file(self.mpqhandler.get_file(path), uncompressed=True)
+			except:
+				raise
+				pass
+			else:
+				break
+		self.dlggrp = dlggrp
+		self.dialog_assets = {}
+		if self.bin:
+			for widget in self.flattened_nodes():
+				pass
+			# self.reload_canvas()
+
+	def dialog_asset(self, asset_id):
+		asset = None
+		if self.dlggrp and self.background:
+			if asset_id in self.dialog_assets:
+				asset = self.dialog_assets[asset_id]
+			else:
+				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, image_bounds=self.dlggrp.images_bounds[asset_id])
+				self.dialog_assets[asset_id] = asset
+		return asset
+
+	def load_tilegrp(self):
+		tilegrp = None
+		check = ['MPQ:glue\\palmm\\tile.grp']
+		if self.show_theme_index.get():
+			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp'
+			check.insert(0, path)
+		for path in check:
+			try:
+				tilegrp = GRP.GRP()
+				tilegrp.load_file(self.mpqhandler.get_file(path))
+			except:
+				raise
+				pass
+			else:
+				break
+		self.tilegrp = tilegrp
+		self.dialog_frames = {}
+		if self.bin:
+			for widget in self.flattened_nodes():
+				pass
+			# self.reload_canvas()
+
+	def dialog_frame(self, frame_id):
+		frame = None
+		if self.tilegrp and self.background:
+			if frame_id in self.dialog_frames:
+				frame = self.dialog_frames[frame_id]
+			else:
+				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, image_bounds=self.tilegrp.images_bounds[frame_id])
+				self.dialog_frames[frame_id] = frame
+		return frame
 
 	def load_tfont(self):
 		tfont = None
@@ -1312,7 +1550,7 @@ class PyBIN(Tk):
 			for widget in self.flattened_nodes():
 				widget.string = None
 				widget.item_string_images = None
-			self.reload_canvas()
+			# self.reload_canvas()
 
 	def change_theme(self, n):
 		index = self.show_theme_index.get()-1
@@ -1320,7 +1558,10 @@ class PyBIN(Tk):
 			self.settings['theme_id'] = index
 			self.background_image = None
 			self.update_background()
+			self.load_dlggrp()
+			self.load_tilegrp()
 			self.load_tfont()
+			self.reload_canvas()
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()
@@ -1759,6 +2000,10 @@ class PyBIN(Tk):
 		if not self.unsaved():
 			if not self.tfont:
 				self.load_tfont()
+			if not self.dlggrp:
+				self.load_dlggrp()
+			if not self.tilegrp:
+				self.load_tilegrp()
 			self.clear()
 			self.bin = DialogBIN.DialogBIN()
 			self.setup_nodes()
@@ -1786,6 +2031,10 @@ class PyBIN(Tk):
 				return
 			if not self.tfont:
 				self.load_tfont()
+			if not self.dlggrp:
+				self.load_dlggrp()
+			if not self.tilegrp:
+				self.load_tilegrp()
 			self.clear()
 			self.bin = dbin
 			self.setup_nodes()
@@ -1885,6 +2134,8 @@ class PyBIN(Tk):
 		self.show_images.set(self.settings.get('show_images',True))
 		self.show_text.set(self.settings.get('show_text',True))
 		self.show_smks.set(self.settings.get('show_smks',True))
+		self.show_hidden.set(self.settings.get('show_hidden',True))
+		self.show_dialog.set(self.settings.get('show_dialog',False))
 		self.show_animated.set(self.settings.get('show_animated',False))
 		self.show_hover_smks.set(self.settings.get('show_hover_smks',False))
 		self.show_background.set(self.settings.get('show_background',False))
@@ -1899,6 +2150,8 @@ class PyBIN(Tk):
 		self.settings['show_images'] = self.show_images.get()
 		self.settings['show_text'] = self.show_text.get()
 		self.settings['show_smks'] = self.show_smks.get()
+		self.settings['show_hidden'] = self.show_hidden.get()
+		self.settings['show_dialog'] = self.show_dialog.get()
 		self.settings['show_animated'] = self.show_animated.get()
 		self.settings['show_hover_smks'] = self.show_hover_smks.get()
 		self.settings['show_background'] = self.show_background.get()

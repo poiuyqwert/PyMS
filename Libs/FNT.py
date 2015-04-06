@@ -74,7 +74,6 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
 	color_map = remap[color]
 	while isinstance(color_map, int):
 		color_map = remap[color_map]
-	print (color,color_map)
 	data = []
 	for y in letter:
 		data.extend(y)

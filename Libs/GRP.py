@@ -35,11 +35,45 @@ def rle_outline(pal, index, ally_status=OUTLINE_SELF):
 			rgb = (220,220,60)
 	return (rgb[0],rgb[1],rgb[2], 255)
 
-# def merge(l):
-	# z = []
-	# for r in l:
-		# z.extend(r)
-	# return z
+def image_bounds(image, transindex=0):
+	bounds = [-1,-1,-1,-1]
+	for y,yd in enumerate(d):
+		if yd.count(transindex) != g.width:
+			if bounds[1] == -1:
+				bounds[1] = y
+			bounds[3] = y
+			line = yd
+			for x,xd in enumerate(line):
+				if xd != transindex:
+					if bounds[0] == -1 or x < bounds[0]:
+						bounds[0] = x
+					if x > bounds[2]:
+						bounds[2] = x
+	return bounds
+
+# transindex=None for no transparency
+def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False, draw_function=rle_normal, draw_info=None):
+	if image_bounds:
+		x_min,y_min,x_max,y_max = image_bounds
+		image = list(line[x_min:x_max+1] for line in image[y_min:y_max+1])
+	width = len(image[0])
+	height = len(image)
+	i = PILImage.new('RGBA', (width,height))
+	data = []
+	pal = map(lambda i: draw_function(palette,i,draw_info), xrange(len(palette)))
+	if transindex != None:
+		pal[transindex] = (0,0,0,0)
+	if flipHor:
+		image = map(reversed, image)
+	data = itertools.chain.from_iterable(image)
+	data = map(pal.__getitem__, data)
+	i.putdata(data)
+	return i
+
+def image_to_tk(image, palette, transindex=0, image_bounds=None, flipHor=False, draw_function=rle_normal, draw_info=None):
+	pil = image_to_pil(image, palette, transindex, image_bounds, flipHor, draw_function, draw_info)
+	return ImageTk.PhotoImage(pil)
+
 def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=None, draw_info=None):
 	if f != None:
 		if buffered:
@@ -96,10 +130,11 @@ class CacheGRP:
 		self.palette = palette
 		self.imagebuffer = []
 		self.images = {}
+		self.image_frames = {}
 		self.databuffer = ''
 		self.uncompressed = None
 
-	def load_file(self, file, palette=None, restrict=None):
+	def load_file(self, file, palette=None, restrict=None, uncompressed=None):
 		try:
 			if isstr(file):
 				f = open(file,'rb')
@@ -132,13 +167,16 @@ class CacheGRP:
 		self.imagebuffer = images
 		self.images = {}
 		self.databuffer = data
+		self.uncompressed = uncompressed
 
 	def __getitem__(self, frame):
 		if not frame in self.images:
 			image = []
 			xoffset, yoffset, linewidth, lines, offsets = self.imagebuffer[frame]
-			if xoffset + linewidth > self.width or yoffset + lines > self.height:
-				raise
+			if xoffset + linewidth > width:
+				linewidth = width - xoffset
+			if yoffset + lines > height:
+				lines = height - yoffset
 			image.extend([[0] * self.width for _ in range(yoffset)])
 			if not self.uncompressed:
 				try:
@@ -171,13 +209,15 @@ class CacheGRP:
 						linedata = []
 						if xoffset > 0:
 							linedata = [0] * xoffset
-						linedata.extend([ord(index) for index in data[offset:offset+linewidth]])
-						image.append(linedata + [0] * (width-linewidth-xoffset))
+						linedata.extend([ord(index) for index in self.databuffer[offset:offset+linewidth]])
+						image.append(linedata + [0] * (self.width-linewidth-xoffset))
 				except:
+					raise
 					raise PyMSError('Decompile','Could not decompile frame %s, GRP could be corrupt.' % frame)
 			if len(image) < self.height:
 				image.extend([[0] * self.width for _ in range(self.height - len(image))])
 			self.images[frame] = image[:self.height]
+			self.image_frames[frame] = (xoffset,yoffset,linewidth,lines)
 		return self.images[frame]
 
 class GRP:
@@ -187,6 +227,7 @@ class GRP:
 		self.height = 0
 		self.palette = palette
 		self.images = []
+		self.images_bounds = []
 		self.uncompressed = uncompressed
 		self.transindex = transindex
 
@@ -208,6 +249,7 @@ class GRP:
 			while retries:
 				retries -= 1
 				images = []
+				images_bounds = []
 				for frame in range(frames):
 					image = []
 					xoffset, yoffset, linewidth, lines, framedata = struct.unpack('<4BL', data[6+8*frame:14+8*frame])
@@ -253,6 +295,7 @@ class GRP:
 					if len(image) < height:
 						image.extend([[transindex] * width for _ in range(height - len(image))])
 					images.append(image[:height])
+					images_bounds.append((xoffset,yoffset,xoffset+linewidth-1,yoffset+lines-1))
 		except:
 			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt" % file,exception=sys.exc_info())
 		self.frames = frames
@@ -262,6 +305,7 @@ class GRP:
 		if palette:
 			self.palette = list(palette)
 		self.images = images
+		self.images_bounds = images_bounds
 		self.transindex = transindex
 
 	def load_data(self, image, palette=None, transindex=0):
@@ -271,6 +315,7 @@ class GRP:
 		if palette:
 			self.palette = list(palette)
 		self.images = [list(image)]
+		self.images_bounds = [image_bounds(image, transindex)]
 		self.transindex = transindex
 
 	def save_file(self, file, uncompressed=None):
@@ -288,18 +333,19 @@ class GRP:
 		offset = 6 + 8 * self.frames
 		frame_history = {}
 		for z,frame in enumerate(self.images):
-			x_min, x_max, y_min, y_max = (-1,)*4
-			for y,line in enumerate(frame):
-				if line != [self.transindex] * len(line):
-					if y_min == -1:
-						y_min = y
-					y_max = y + 1
-					for x,index in enumerate(line):
-						if index != self.transindex:
-							if x_min == -1 or x < x_min:
-								x_min = x
-							if x >= x_max:
-								x_max = x + 1
+			x_min, y_min, x_max, y_max = self.images_bounds[z]
+			# x_min, x_max, y_min, y_max = (-1,)*4
+			# for y,line in enumerate(frame):
+			# 	if line != [self.transindex] * len(line):
+			# 		if y_min == -1:
+			# 			y_min = y
+			# 		y_max = y + 1
+			# 		for x,index in enumerate(line):
+			# 			if index != self.transindex:
+			# 				if x_min == -1 or x < x_min:
+			# 					x_min = x
+			# 				if x >= x_max:
+			# 					x_max = x + 1
 			if uncompressed:
 				data = ''.join(''.join(chr(i) for i in l[x_min:x_max]) for l in frame[y_min:y_max])
 				if data in frame_history:
