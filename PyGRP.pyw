@@ -327,7 +327,7 @@ class PyGRP(Tk):
 
 		rightframe = Frame(frame)
 		#Canvas
-		self.canvas = Canvas(rightframe, width=257, height=257, background=self.settings.get('bgcolor','#000000'))
+		self.canvas = Canvas(rightframe, width=258, height=258, background=self.settings.get('bgcolor','#000000'))
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		self.canvas.bind('<Double-Button-1>', self.bgcolor)
 		self.grpbrdr = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00')
@@ -415,6 +415,9 @@ class PyGRP(Tk):
 		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load or create a GRP.')
 		statusbar.pack(side=BOTTOM, fill=X)
+
+		if 'window' in self.settings:
+			loadsize(self, self.settings, 'window')
 
 		if guifile:
 			self.open(file=guifile)
@@ -510,7 +513,7 @@ class PyGRP(Tk):
 	def grpoutline(self):
 		if self.grpo.get() and self.listbox.curselection() and self.showpreview.get():
 			if self.grp:
-				x,y = 129 - self.grp.width/2, 129 - self.grp.height/2
+				x,y = 131 - self.grp.width/2, 131 - self.grp.height/2
 				w,h = x + self.grp.width + 1, y + self.grp.height + 1
 			else:
 				x,y,w,h = 0,0,0,0
@@ -519,16 +522,17 @@ class PyGRP(Tk):
 			self.canvas.coords(self.grpbrdr, 0, 0, 0, 0)
 
 	def frameoutline(self):
-		if self.frameo.get() and self.listbox.curselection() and self.showpreview.get():
-			if self.grp:
-				image = self.frames[int(self.listbox.curselection()[0])][self.pal]
-				w,h = image[2] - image[1] + 1,image[4] - image[3] + 1
-				x,y = 129 + image[1] - self.grp.width/2, 129 + image[3] - self.grp.height/2
-			else:
-				x,y,w,h = 0,0,0,0
-			self.canvas.coords(self.framebrdr, x, y, x+w, y+h)
-		else:
-			self.canvas.coords(self.framebrdr, 0, 0, 0, 0)
+		x1,y1,x2,y2 = 0,0,0,0
+		if self.grp and self.frameo.get() and self.listbox.curselection() and self.showpreview.get():
+			frame = int(self.listbox.curselection()[0])
+			x1,y1,x2,y2 = self.grp.images_bounds[frame]
+			dx = 131 - self.grp.width/2
+			dy = 131 - self.grp.height/2
+			x1 += dx
+			x2 += dx + 2
+			y1 += dy
+			y2 += dy + 2
+		self.canvas.coords(self.framebrdr, x1,y1, x2,y2)
 
 	def preview(self, e=None, pal=False):
 		self.action_states()
@@ -537,13 +541,14 @@ class PyGRP(Tk):
 			if frame != self.frame or pal or not self.item:
 				self.frame = frame
 				if not self.pal in self.frames[frame]:
-					image = GRP.frame_to_photo(self.palettes[self.pal].palette, self.grp, frame)
+					image = GRP.image_to_tk(self.grp.images[frame], self.palettes[self.pal].palette)
+					# image = GRP.frame_to_photo(self.palettes[self.pal].palette, self.grp, frame)
 					self.frames[frame][self.pal] = image
 				else:
 					image = self.frames[frame][self.pal]
 				if self.item:
 					self.canvas.delete(self.item)
-				self.item = self.canvas.create_image(130, 130, image=image[0])
+				self.item = self.canvas.create_image(132, 132, image=image)
 				if self.frameo.get():
 					self.frameoutline()
 		elif self.item:
@@ -843,6 +848,7 @@ class PyGRP(Tk):
 	def exit(self, e=None):
 		self.stopframe()
 		if not self.unsaved():
+			savesize(self, self.settings, 'window')
 			self.settings['bgcolor'] = self.canvas['background']
 			self.settings['previewspeed'] = int(self.prevspeed.get())
 			self.settings['showpreview'] = not not self.showpreview.get()
