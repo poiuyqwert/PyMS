@@ -822,6 +822,32 @@ class WidgetNode:
 						x = x2
 						y += (y2 - y1) / 2
 						anchor = E
+				elif self.widget.type == DialogBIN.BINWidget.TYPE_COMBOBOX:
+					left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_LEFT)
+					middle = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_MIDDLE)
+					right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_RIGHT)
+					if self.enabled():
+						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_ARROW)
+					else:
+						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_ARROW_DISABLED)
+					imgs = (left,middle,right,arrow)
+					if not None in imgs:
+						width = x2-x1
+						height = 0
+						for img in imgs:
+							height = max(height, img.size[1])
+						mid_y = height / 2
+						pil = PILImage.new('RGBA', (width,height))
+						pil.paste(left, (0,mid_y - left.size[1]/2))
+						pad_size = width-left.size[0]-right.size[0]
+						if pad_size > 0:
+							pad = middle.resize((pad_size,middle.size[1]))
+							pil.paste(pad, (left.size[0],mid_y - pad.size[1]/2))
+						pil.paste(right, (width-right.size[0],mid_y - right.size[1]/2))
+						pil.paste(arrow, (width-arrow.size[0]-5,mid_y - arrow.size[1]/2))
+						self.dialog_image = ImageTk.PhotoImage(pil)
+						y += (y2 - y1) / 2
+						anchor = W
 				elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.toplevel.show_dialog.get():
 					tl = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_TL)
 					t = self.toplevel.dialog_frame(DialogBIN.DIALOG_FRAME_T)
