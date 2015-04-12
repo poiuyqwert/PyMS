@@ -126,7 +126,7 @@ class TBL:
 			for i in xrange(len(offsets)):
 				o = offsets[i]
 				l = lengths[o]
-				strings.append(data[o:o+l])
+				strings.append(data[o:o+l].decode('latin-1'))
 			self.strings = strings
 		except:
 			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)
@@ -160,7 +160,7 @@ class TBL:
 			if not s.endswith('\x00'):
 				s += '\x00'
 			header += struct.pack('<H', o)
-			data += bytearray(s, 'utf-8')
+			data += bytearray(s, 'latin-1')
 			o += len(s)
 		f.write(header + data)
 		f.close()

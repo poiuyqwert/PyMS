@@ -3508,7 +3508,7 @@ class PyDAT(Tk):
 		Button(right, text='ID Jump', command=self.jump).pack(side=LEFT)
 		right.pack(side=RIGHT)
 		search.pack(fill=X, padx=2, pady=2)
-		self.bind('<Control-f>', lambda e: tdd.entry.focus_set())
+		self.bind('<Control-f>', lambda e: tdd.focus_set(highlight=True))
 
 		left.pack(side=LEFT, fill=Y)
 

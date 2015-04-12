@@ -316,13 +316,11 @@ class WidgetSettings(PyMSDialog):
 		return ok
 
 	def update_advanced(self):
-		m = re.match('(\d+)x(\d+)\+(\d+)\+(\d+)', self.geometry())
-		do_center = not not m
-		center_x,center_y = 0,0
-		if do_center:
-			w,h,x,y = int(m.group(1)),int(m.group(2)),int(m.group(3)),int(m.group(4))
-			center_x = x + w/2.0
-			center_y = y + h/2.0
+		self.minsize(0,0)
+		self.maxsize(9999, 9999)
+		w,h,x,y,f = parse_geometry(self.geometry())
+		center_x = x + w/2.0
+		center_y = y + h/2.0
 		show = self.show_advanced.get()
 		if show and not self.advanced_shown:
 			for widget in self.advanced_widgets:
@@ -334,13 +332,13 @@ class WidgetSettings(PyMSDialog):
 				widget.grid_remove()
 			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
 			self.advanced_shown = False
-		if do_center:
-			self.update_idletasks()
-			m = re.match('(\d+)x(\d+)\+(\d+)\+(\d+)',self.geometry())
-			w,h = int(m.group(1)),int(m.group(2))
-			center_x -= w/2.0
-			center_y -= h/2.0
-			self.geometry('+%d+%d' % (int(center_x),int(center_y)))
+		self.update_idletasks()
+		w,h,x,y,f = parse_geometry(self.geometry())
+		center_x -= w/2.0
+		center_y -= h/2.0
+		self.geometry('+%d+%d' % (int(center_x),int(center_y)))
+		self.minsize(w,h)
+		self.maxsize(w,h)
 
 	def calculate(self, calc, orig, offset, direction, fix, allow_advanced=True):
 		if not self.show_advanced.get() or allow_advanced:
@@ -823,13 +821,13 @@ class WidgetNode:
 						y += (y2 - y1) / 2
 						anchor = E
 				elif self.widget.type == DialogBIN.BINWidget.TYPE_COMBOBOX:
-					left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_LEFT)
-					middle = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_MIDDLE)
-					right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_RIGHT)
+					left = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_LEFT)
+					middle = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_MIDDLE)
+					right = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_RIGHT)
 					if self.enabled():
-						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_ARROW)
+						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_ARROW)
 					else:
-						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBO_ARROW_DISABLED)
+						arrow = self.toplevel.dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_ARROW_DISABLED)
 					imgs = (left,middle,right,arrow)
 					if not None in imgs:
 						width = x2-x1

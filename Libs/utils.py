@@ -595,8 +595,10 @@ class TextDropDown(Frame):
 		self.button = Button(self, image=ARROW, command=self.choose, state=state)
 		self.button.pack(side=LEFT, fill=Y)
 
-	def focus_set(self):
+	def focus_set(self, highlight=False):
 		self.entry.focus_set()
+		if highlight:
+			self.entry.selection_range(0,END)
 
 	def __setitem__(self, item, value):
 		if item == 'state':

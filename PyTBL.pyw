@@ -738,7 +738,7 @@ class PyTBL(Tk):
 			self.bind('<F3>', self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
-		self.findwindow.focus_set()
+			self.findwindow.findentry.focus_set(highlight=True)
 
 	def preview(self, key=None):
 		if key and self.buttons['test']['state'] != NORMAL:

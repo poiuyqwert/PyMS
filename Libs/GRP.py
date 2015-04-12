@@ -173,10 +173,10 @@ class CacheGRP:
 		if not frame in self.images:
 			image = []
 			xoffset, yoffset, linewidth, lines, offsets = self.imagebuffer[frame]
-			if xoffset + linewidth > width:
-				linewidth = width - xoffset
-			if yoffset + lines > height:
-				lines = height - yoffset
+			if xoffset + linewidth > self.width:
+				linewidth = self.width - xoffset
+			if yoffset + lines > self.height:
+				lines = self.height - yoffset
 			image.extend([[0] * self.width for _ in range(yoffset)])
 			if not self.uncompressed:
 				try:
