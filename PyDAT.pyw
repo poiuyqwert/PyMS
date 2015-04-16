@@ -2601,7 +2601,8 @@ class GraphicsUnitsTab(DATUnitsTab):
 		else:
 			self.preview.coords('place', 0, 0, 0, 0)
 		if self.showpreview.get() and self.showdims.get():
-			self.preview.coords('size', 129-self.toplevel.units.get_value(id, 'UnitSizeLeft'), 129-self.toplevel.units.get_value(id, 'UnitSizeUp'), 129+self.toplevel.units.get_value(id, 'UnitSizeRight'), 129+self.toplevel.units.get_value(id, 'UnitSizeDown'))
+			w,h = (self.toplevel.units.get_value(id, 'UnitSizeLeft') + self.toplevel.units.get_value(id, 'UnitSizeRight') + 1) / 2,(self.toplevel.units.get_value(id, 'UnitSizeUp') + self.toplevel.units.get_value(id, 'UnitSizeDown') + 1) / 2
+			self.preview.coords('size', 129-w, 129-h, 129+w, 129+h)
 			self.preview.lift('size')
 		else:
 			self.preview.coords('size', 0, 0, 0 ,0)
