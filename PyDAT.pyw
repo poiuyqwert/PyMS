@@ -501,12 +501,13 @@ class DATTab(NotebookTab):
 					return
 				self.file = file
 			elif isinstance(file, tuple):
-				self.dat,self.file = file
-			self.id = 0
-			self.toplevel.listbox.select_set(0)
+				dat,self.file = file
+				self.dat.entries = dat.entries
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.status.set(self.file)
 				self.loadsave()
+			self.id = 0
+			self.toplevel.listbox.select_set(0)
 
 	def iimport(self, key=None, file=None, c=True, parent=None):
 		if parent == None:
@@ -3823,7 +3824,7 @@ class PyDAT(Tk):
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
 
-	def opendirectory(self, event):
+	def opendirectory(self, event=None):
 		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
 		if not dir:
 			return
