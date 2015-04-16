@@ -2773,7 +2773,8 @@ class SoundsUnitsTab(DATUnitsTab):
 		}
 
 	def files_updated(self):
-		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		# sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		sfxdata = DATA_CACHE['Sfxdata.txt']
 		fields = (
 			(self.readyentry,self.readyddw),
 			(self.firstyesentry,self.firstyesddw),
@@ -3822,7 +3823,7 @@ class PyDAT(Tk):
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
 
-	def opendirectory(self):
+	def opendirectory(self, event):
 		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
 		if not dir:
 			return

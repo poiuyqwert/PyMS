@@ -3,6 +3,7 @@ PyTBL v1.8
 PyTBL is used to convert TBL files to and from TXT files.
 	Changes	changes
 +PyTBL v1.8
+ -Added a goto dialog for jumping to strings by index
  -Better find dialog handling
  -Updated to do atomic writes for all files (writes to a temp file then replaces the existing file with the temp one on completion. Protects your existing files against corruption due to crashes in the writing process)
  -Fixed a crash when saving TBL's

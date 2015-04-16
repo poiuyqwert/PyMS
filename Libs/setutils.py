@@ -40,27 +40,30 @@ def check_update(p):
 					UpdateDialog(p,'v%s.%s.%s' % d,settings)
 				p.after(1, callback)
 
-def loadsize(window, settings, setting, full=False):
+def loadsize(window, settings, setting, full=False, size=True):
 	geometry = settings.get(setting)
 	if geometry and geometry:
 		w,h,x,y,fullscreen = parse_geometry(geometry)
-		screen_w = window.winfo_screenwidth()
-		screen_h = window.winfo_screenheight()
-		resizable = window.resizable()
-		min_size = window.minsize()
-		if x+w > screen_w:
-			x = screen_w-w
-		if x < 0:
-			x = 0
-		if w > screen_w and resizable[0] and screen_w > min_size[0]:
-			w = screen_w
-		if y+h > screen_h:
-			y = max(0,screen_h-h)
-		if y < 0:
-			y = 0
-		if h > screen_h and resizable[1] and screen_h > min_size[1]:
-			h = screen_h
-		window.geometry('%dx%d+%d+%d' % (w,h, x,y))
+		if size and w != None and h != None:
+			screen_w = window.winfo_screenwidth()
+			screen_h = window.winfo_screenheight()
+			resizable = window.resizable()
+			min_size = window.minsize()
+			if x+w > screen_w:
+				x = screen_w-w
+			if x < 0:
+				x = 0
+			if w > screen_w and resizable[0] and screen_w > min_size[0]:
+				w = screen_w
+			if y+h > screen_h:
+				y = max(0,screen_h-h)
+			if y < 0:
+				y = 0
+			if h > screen_h and resizable[1] and screen_h > min_size[1]:
+				h = screen_h
+			window.geometry('%dx%d+%d+%d' % (w,h, x,y))
+		else:
+			window.geometry('+%d+%d' % (x,y))
 		window.update_idletasks()
 		if fullscreen:
 			try:
@@ -68,11 +71,15 @@ def loadsize(window, settings, setting, full=False):
 			except:
 				pass
 
-def savesize(window, settings, setting='window'):
-	z = ['','^'][window.wm_state() == 'zoomed']
-	if z:
-		window.wm_state('normal')
-	settings[setting] = window.winfo_geometry() + z
+def savesize(window, settings, setting='window', size=True):
+	w,h,x,y,f = parse_geometry(window.winfo_geometry())
+	if size:
+		z = ['','^'][window.wm_state() == 'zoomed']
+		if z:
+			window.wm_state('normal')
+		settings[setting] = '%dx%d+%d+%d%s' % (w,h,x,y,z)
+	else:
+		settings[setting] = '+%d+%d' % (x,y)
 
 def pprint(obj, depth=0, max=2, dict_sort=False):
 	depth += 1

@@ -161,7 +161,7 @@ class FindDialog(PyMSDialog):
 		self.bind('<Return>', self.findnext)
 
 		if 'findwindow' in self.parent.settings:
-			loadsize(self, self.parent.settings, 'findwindow')
+			loadsize(self, self.parent.settings, 'findwindow', size=False)
 
 		return self.findentry
 
@@ -169,7 +169,7 @@ class FindDialog(PyMSDialog):
 		self.updatecolor()
 		t = self.find.get()
 		if not t in self.parent.findhistory:
-			self.parent.findhistory.append(t)
+			self.parent.findhistory.insert(0, t)
 		if self.parent.listbox.size():
 			m = []
 			if self.regex.get():
@@ -208,7 +208,7 @@ class FindDialog(PyMSDialog):
 					else:
 						i = 0
 		p = self
-		if key and key.keycode == 13:
+		if key and key.keycode != 13:
 			p = self.parent
 		askquestion(parent=p, title='Find', message="Can't find text.", type=OK)
 
@@ -219,7 +219,43 @@ class FindDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry.c
 
 	def destroy(self):
-		self.parent.settings['findwindow'] = self.winfo_geometry()
+		savesize(self, self.parent.settings, 'findwindow', size=False)
+		self.withdraw()
+
+class GotoDialog(PyMSDialog):
+	def __init__(self, parent):
+		self.goto = IntegerVar(range=(0,65535), allow_hex=True)
+		PyMSDialog.__init__(self, parent, 'Goto', grabwait=False, escape=True, resizable=(False,False))
+
+	def widgetize(self):
+		f = Frame(self)
+		Label(f, text='Index:').grid(row=0,column=0)
+		self.gotoentry = TextDropDown(f, self.goto, self.parent.gotohistory, 5)
+		self.gotoentry.entry.selection_range(0, END)
+		self.gotoentry.grid(row=0,column=1)
+
+		Button(f, text='Goto', command=self.jump).grid(row=0,column=2, padx=(4,0))
+		f.pack(padx=4,pady=4)
+
+		self.bind('<Return>', self.jump)
+
+		if 'gotowindow' in self.parent.settings:
+			loadsize(self, self.parent.settings, 'gotowindow', size=False)
+
+		return self.gotoentry
+
+	def jump(self, event=None):
+		s = self.goto.get(True)
+		if not s in self.parent.gotohistory:
+			self.parent.gotohistory.insert(0, s)
+		i = min(self.goto.get(), len(self.parent.tbl.strings)-1)
+		self.parent.listbox.select_clear(0,END)
+		self.parent.listbox.select_set(i)
+		self.parent.listbox.see(i)
+		self.parent.update()
+
+	def destroy(self):
+		savesize(self, self.parent.settings, 'gotowindow', size=False)
 		self.withdraw()
 
 class PyTBL(Tk):
@@ -251,6 +287,8 @@ class PyTBL(Tk):
 		self.edited = False
 		self.findhistory = []
 		self.findwindow = None
+		self.gotohistory = []
+		self.gotowindow = None
 		self.colorswindow = None
 		self.tfontgam = None
 		self.font8 = None
@@ -296,6 +334,7 @@ class PyTBL(Tk):
 			('down', lambda e=None,i=1: self.movestring(e,i), 'Move String Down (Shift+Down)', DISABLED, 'Shift+Down'),
 			4,
 			('find', self.find, 'Find Strings (Ctrl+F)', DISABLED, 'Ctrl+F'),
+			('ffw', self.goto, 'Go to (Ctrl+G)', DISABLED, 'Ctrl+G'),
 			4,
 			('test', self.preview, 'Test String (Ctrl+T)', DISABLED, 'Ctrl+T'),
 			10,
@@ -326,7 +365,7 @@ class PyTBL(Tk):
 							self.bind('<%s>' % a, btn[1])
 			else:
 				Frame(toolbar, width=btn).pack(side=LEFT)
-		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
 
 		mid = Frame(self)
 
@@ -393,7 +432,7 @@ class PyTBL(Tk):
 		self.pane.add(colors, sticky=NSEW)
 		self.pane.pack(side=LEFT, fill=BOTH, expand=1)
 
-		mid.pack(fill=BOTH, expand=1)
+		mid.grid(row=1,column=0, sticky=NSEW)
 
 		#Statusbar
 		self.status = StringVar()
@@ -406,7 +445,9 @@ class PyTBL(Tk):
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
 		Label(statusbar, textvariable=self.stringstatus, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load or create a TBL.')
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.grid(row=2,column=0, sticky=EW)
+
+		self.grid_rowconfigure(1, weight=1)
 
 		listframe.focus_set()
 
@@ -526,7 +567,7 @@ class PyTBL(Tk):
 		select = [NORMAL,DISABLED][not self.listbox.curselection()]
 		self.listbox['state'] = file
 		self.text['state'] = select
-		for btn in ['save','saveas','export','close','add','find']:
+		for btn in ['save','saveas','export','close','add','find','ffw']:
 			self.buttons[btn]['state'] = file
 		for btn in ['insert','remove','up','down','test']:
 			self.buttons[btn]['state'] = select
@@ -739,6 +780,15 @@ class PyTBL(Tk):
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 			self.findwindow.findentry.focus_set(highlight=True)
+
+	def goto(self, key=None):
+		if key and self.buttons['ffw']['state'] != NORMAL:
+			return
+		if not self.gotowindow:
+			self.gotowindow = GotoDialog(self)
+		elif self.gotowindow.state() == 'withdrawn':
+			self.gotowindow.deiconify()
+			self.gotowindow.gotoentry.focus_set(highlight=True)
 
 	def preview(self, key=None):
 		if key and self.buttons['test']['state'] != NORMAL:
