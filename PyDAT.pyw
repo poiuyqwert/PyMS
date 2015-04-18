@@ -3790,7 +3790,7 @@ class PyDAT(Tk):
 	def open(self, key=None):
 		self.dattabs.active.open()
 
-	def openmpq(self):
+	def openmpq(self, event=None):
 		file = self.select_file('Open MPQ', True, '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
 		if not file:
 			return
