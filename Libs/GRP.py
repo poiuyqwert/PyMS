@@ -36,9 +36,10 @@ def rle_outline(pal, index, ally_status=OUTLINE_SELF):
 	return (rgb[0],rgb[1],rgb[2], 255)
 
 def image_bounds(image, transindex=0):
+	width = len(image[0])
 	bounds = [-1,-1,-1,-1]
-	for y,yd in enumerate(d):
-		if yd.count(transindex) != g.width:
+	for y,yd in enumerate(image):
+		if yd.count(transindex) != width:
 			if bounds[1] == -1:
 				bounds[1] = y
 			bounds[3] = y

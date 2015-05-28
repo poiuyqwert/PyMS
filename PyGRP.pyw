@@ -762,6 +762,7 @@ class PyGRP(Tk):
 					self.grp.height = fs.height
 				sel = self.listbox.size()
 				self.grp.images.extend(fs.images)
+				self.grp.images_bounds += [GRP.image_bounds(img) for img in fs.images]
 				for i in fs.images:
 					self.frames.append({})
 					self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
@@ -788,6 +789,7 @@ class PyGRP(Tk):
 			i -= 1
 		for n,index in enumerate(indexs):
 			del self.grp.images[index-n]
+			del self.grp.images_bounds[index-n]
 			del self.frames[index-n]
 		self.grp.frames = len(self.grp.images)
 		if not self.grp.frames:
