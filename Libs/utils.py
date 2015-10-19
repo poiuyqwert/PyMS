@@ -1444,7 +1444,7 @@ class AtomicWriter:
 						os.rename(bak_file, self.real_file)
 					except:
 						pass
-				raise e
+				raise PyMSError('Save', "File already exists and cannot be modified")
 			finally:
 				if bak_file:
 					try:
