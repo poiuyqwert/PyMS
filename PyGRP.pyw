@@ -90,6 +90,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 					else:
 						x = (n % 17) * out.width
 						out.images[-1].append(inp.image[(n / 17) * out.height + y][x:x+out.width])
+				out.images_bounds.append(GRP.image_bounds(out.images[-1]))
 			if not mute:
 				print " - '%s' read successfully" % fullfile
 			if ret:
@@ -126,6 +127,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 								raise PyMSError('Input',"Incorrect frame dimensions in BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,out.width,out.height,inp.width,inp.height))
 							out.frames += 1
 							out.images.append(inp.image)
+							out.images_bounds.append(GRP.image_bounds(out.images[-1]))
 						else:
 							if issize and inp.width != issize[0] and inp.height != issize[1]:
 								raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],inp.width,inp.height))
@@ -762,6 +764,7 @@ class PyGRP(Tk):
 					self.grp.height = fs.height
 				sel = self.listbox.size()
 				self.grp.images.extend(fs.images)
+				self.grp.images_bounds.extend(fs.images_bounds)
 				for i in fs.images:
 					self.frames.append({})
 					self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
@@ -788,6 +791,7 @@ class PyGRP(Tk):
 			i -= 1
 		for n,index in enumerate(indexs):
 			del self.grp.images[index-n]
+			del self.grp.images_bounds[index-n]
 			del self.frames[index-n]
 		self.grp.frames = len(self.grp.images)
 		if not self.grp.frames:
