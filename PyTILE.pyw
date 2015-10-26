@@ -316,7 +316,7 @@ class TilePalette(PyMSDialog):
 		self.megatile = parent.megatile
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
-		PyMSDialog.__init__(self, parent, self.ttext % self.sel, resizable=False,False))
+		PyMSDialog.__init__(self, parent, self.ttext % self.sel, resizable=(False,False))
 
 	def update_top(self):
 		if self.type == 0:

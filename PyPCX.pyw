@@ -180,7 +180,7 @@ class PyPCX(Tk):
 			return
 		types = [(('RIFF PAL','*.pal'),('JASC PAL','*.pal'),('StarCraft PAL','*.pal'),('StarCraft Terrain WPE','*.wpe'))[type]]
 		types.append(('All Files','*'))
-		file = self.select_file('Save Palette As', False, filetypes=types)
+		file = self.select_file('Save Palette As', False, types[0][1][1:], types)
 		if not file:
 			return True
 		p = PAL.Palette()

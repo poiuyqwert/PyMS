@@ -22,6 +22,909 @@ LONG_VERSION = 'v%s.%s-DEV' % VERSION
 
 FRAME_DELAY = 42
 
+TERRAIN_DETAILS = {
+	CHKSectionERA.BADLANDS:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.BADLANDS),
+		'types':[
+			{
+				'name':'Rocky Ground',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,11),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Asphalt',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Structure',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Grass',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,6),
+						'messy':(8,10)
+					}
+				]
+			},
+			{
+				'name':'Grass',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,6),
+						'messy':(8,10)
+					}
+				]
+			},
+			{
+				'name':'Water',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Mud',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.SPACE:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.SPACE),
+		'types':[
+			{
+				'name':'Elevated Catwalk',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,3),
+						'messy':(5,6)
+					}
+				]
+			},
+			{
+				'name':'High Plating',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'High Platform',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Solar Array',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Plating',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Dark Platform',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Platform',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Rusty Pit',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,9),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Low Platform',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Space',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.INSTALLATION:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.INSTALLATION),
+		'types':[
+			{
+				'name':'Bottomless Pit',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Sunstructure Panels',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,3),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Plating',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Substructure Plating',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Roof',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Floor',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Substructure',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,0),
+						'messy':None
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.ASHWORLD:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.ASHWORLD),
+		'types':[
+			{
+				'name':'High Shale',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,7),
+						'messy':(9,10)
+					}
+				]
+			},
+			{
+				'name':'High Lava',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,9),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,7),
+						'messy':(9,14)
+					}
+				]
+			},
+			{
+				'name':'Broken Rock',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,12),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Shale',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,7),
+						'messy':(9,10)
+					}
+				]
+			},
+			{
+				'name':'Lava',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,9),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,7),
+						'messy':(9,14)
+					}
+				]
+			},
+			{
+				'name':'Magma',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,7),
+						'messy':(9,14)
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.JUNGLE:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.JUNGLE),
+		'types':[
+			{
+				'name':'High Temple',
+				'ranges':[
+					{
+						'groups':(24,25),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Raised Jungle',
+				'ranges':[
+					{
+						'groups':(22,23),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Ruins',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Jungle',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Temple',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Raised Jungle',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Ruins',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Rocky Ground',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,11),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Jungle',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Mud',
+				'ranges':[
+					{
+						'groups':(26,27),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Water',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.DESERT:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.DESERT),
+		'types':[
+			{
+				'name':'High Compound',
+				'ranges':[
+					{
+						'groups':(24,25),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Sandy Sunken Pit',
+				'ranges':[
+					{
+						'groups':(22,23),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Crags',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Sand Dunes',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Compund',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Sandy Sunken Pit',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Crags',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Rocky Ground',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,11),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Sand Dunes',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Dried Mud',
+				'ranges':[
+					{
+						'groups':(26,27),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Tar',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,2),
+						'messy':(4,6)
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.ARCTIC:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.ARCTIC),
+		'types':[
+			{
+				'name':'High Outpost',
+				'ranges':[
+					{
+						'groups':(24,25),
+						'tiles':(0,2),
+						'messy':(4,5)
+					}
+				]
+			},
+			{
+				'name':'High Water',
+				'ranges':[
+					{
+						'groups':(22,23),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Grass',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Snow',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Outpost',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,2),
+						'messy':(4,5)
+					}
+				]
+			},
+			{
+				'name':'Water',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Grass',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Rocky Snow',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Moguls',
+				'ranges':[
+					{
+						'groups':(26,27),
+						'tiles':(0,5),
+						'messy':(7,14)
+					}
+				]
+			},
+			{
+				'name':'Snow',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Ice',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			}
+		]
+	},
+	CHKSectionERA.TWILIGHT:{
+		'name':CHKSectionERA.TILESET_NAME(CHKSectionERA.TWILIGHT),
+		'types':[
+			{
+				'name':'High Basilica',
+				'ranges':[
+					{
+						'groups':(24,25),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'High Sunken Ground',
+				'ranges':[
+					{
+						'groups':(22,23),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Flagstones',
+				'ranges':[
+					{
+						'groups':(20,21),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Crushed Rock',
+				'ranges':[
+					{
+						'groups':(18,19),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'High Dirt',
+				'ranges':[
+					{
+						'groups':(4,5),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Basilica',
+				'ranges':[
+					{
+						'groups':(16,17),
+						'tiles':(0,4),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Sunken Ground',
+				'ranges':[
+					{
+						'groups':(12,13),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Flagstones',
+				'ranges':[
+					{
+						'groups':(14,15),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Crevices',
+				'ranges':[
+					{
+						'groups':(10,11),
+						'tiles':(0,11),
+						'messy':None
+					}
+				]
+			},
+			{
+				'name':'Crushed Rock',
+				'ranges':[
+					{
+						'groups':(8,9),
+						'tiles':(0,5),
+						'messy':(7,12)
+					}
+				]
+			},
+			{
+				'name':'Mud',
+				'ranges':[
+					{
+						'groups':(26,27),
+						'tiles':(0,8),
+						'messy':(10,14)
+					}
+				]
+			},
+			{
+				'name':'Dirt',
+				'ranges':[
+					{
+						'groups':(2,3),
+						'tiles':(0,7),
+						'messy':(9,14)
+					}
+				]
+			},
+			{
+				'name':'Water',
+				'ranges':[
+					{
+						'groups':(6,7),
+						'tiles':(0,5),
+						'messy':None
+					}
+				]
+			}
+		]
+	}
+}
+
 def z_position(y, elevation, img_offset=0):
 	if elevation < 2:
 		return elevation
@@ -424,15 +1327,21 @@ def resize_event(location, mouseX,mouseY):
 		dist_left = abs(location.start[0] - mouseX)
 		dist_right = abs(location.end[0] - mouseX)
 		if dist_left < dist_right and dist_left <= 5:
-			event[0] = EditLayer.EDIT_RESIZE_LEFT
+			event = [EditLayer.EDIT_RESIZE_LEFT,EditLayer.EDIT_NONE]
 		elif dist_right < dist_left and dist_right <= 5:
-			event[0] = EditLayer.EDIT_RESIZE_RIGHT
+			event = [EditLayer.EDIT_RESIZE_RIGHT,EditLayer.EDIT_NONE]
 		dist_top = abs(location.start[1] - mouseY)
 		dist_bot = abs(location.end[1] - mouseY)
 		if dist_top < dist_bot and dist_top <= 5:
-			event.append(EditLayer.EDIT_RESIZE_TOP)
+			if len(event) == 1:
+				event = [EditLayer.EDIT_NONE,EditLayer.EDIT_RESIZE_TOP]
+			else:
+				event[1] = EditLayer.EDIT_RESIZE_TOP
 		elif dist_bot < dist_top and dist_bot <= 5:
-			event.append(EditLayer.EDIT_RESIZE_BOTTOM)
+			if len(event) == 1:
+				event = [EditLayer.EDIT_NONE,EditLayer.EDIT_RESIZE_BOTTOM]
+			else:
+				event[1] = EditLayer.EDIT_RESIZE_BOTTOM
 	return event
 
 class EditLayer:
@@ -450,11 +1359,12 @@ class EditLayer:
 	MOUSE_UP = (1 << 4)
 	MOUSE_DOUBLE = (1 << 5)
 
-	EDIT_MOVE = 0
-	EDIT_RESIZE_LEFT = 1
-	EDIT_RESIZE_TOP = 2
-	EDIT_RESIZE_RIGHT = 3
-	EDIT_RESIZE_BOTTOM = 4
+	EDIT_NONE = 0
+	EDIT_MOVE = 1
+	EDIT_RESIZE_LEFT = 2
+	EDIT_RESIZE_TOP = 3
+	EDIT_RESIZE_RIGHT = 4
+	EDIT_RESIZE_BOTTOM = 5
 
 	def __init__(self, ui, name):
 		self.ui = ui
@@ -477,8 +1387,16 @@ class EditLayer:
 		pass
 
 class EditLayerTerrain(EditLayer):
+	EDIT_RECTANGULAR = 0
+	EDIT_INDEXED = 1
+
 	def __init__(self, ui):
 		EditLayer.__init__(self, ui, "Terrain")
+		self.type_id = 0
+		self.messy = False
+
+	def list_select(self, type_id):
+		self.type_id = type_id
 
 	def set_mode(self, mode, x1,y1, x2,y2):
 		if EditLayer.set_mode(self, mode, x1,y1, x2,y2):
@@ -495,6 +1413,28 @@ class EditLayerTerrain(EditLayer):
 			y = nearest_multiple(y1+mouseY,32,math.floor)
 			self.ui.mapCanvas.coords(tag, x,y, x+32,y+32)
 			self.ui.mapCanvas.tag_raise(tag)
+
+	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
+		if self.mode == EditLayer.ACTIVE and (button_event & EditLayer.MOUSE_DOWN or button_event & EditLayer.MOUSE_MOVE):
+			x = int((x1+mouseX) / 32.0)
+			y = int((y1+mouseY) / 32.0)
+			era = self.ui.chk.get_section(CHKSectionERA.NAME)
+			details = TERRAIN_DETAILS[era.tileset]['types'][self.type_id]
+			options = details.get('options')
+			if options == None:
+				options = []
+				details['options'] = options
+				for range_details in details['ranges']:
+					for group in range(*range_details['groups']):
+						for tile in range(*range_details['tiles']):
+							options.append([group,tile])
+						if range_details['messy'] != None and self.messy:
+							for tile in range(*range_details['messy']):
+								options.append([group,tile])
+			option = random.choice(options)
+			tiles = self.ui.chk.get_section(CHKSectionTILE.NAME)
+			tiles.map[y][x] = option
+			self.ui.maplayer_terrain.update_tile(x,y)
 
 class EditLayerDoodads(EditLayer):
 	def __init__(self, ui):
@@ -912,8 +1852,24 @@ class MapLayerTerrain(MapLayer):
 		self.tile_cache = {}
 		self.map = {}
 
-	def update_display(self, x1,y1, x2,y2):
+	def update_tile(self, x,y):
 		tiles = self.ui.chk.get_section(CHKSectionTILE.NAME)
+		tag = '%s,%s' % (x,y)
+		if tag in self.map:
+			self.ui.mapCanvas.delete(tag)
+		tile = [0,0]
+		if y < len(tiles.map) and x < len(tiles.map[y]):
+			tile = tiles.map[y][x]
+		group = self.ui.tileset.cv5.groups[tile[0]]
+		mega = group[13][tile[1]]
+		image = self.tile_cache.get(mega)
+		if image == None:
+			image = Tilesets.megatile_to_photo(self.ui.tileset, mega)
+			self.tile_cache[mega] = image
+		self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
+		self.ui.mapCanvas.tag_lower(tag)
+
+	def update_display(self, x1,y1, x2,y2):
 		tx1 = int(x1 / 32.0)
 		ty1 = int(y1 / 32.0)
 		tx2 = int(ceil(x2 / 32.0))
@@ -923,17 +1879,7 @@ class MapLayerTerrain(MapLayer):
 				tag = '%s,%s' % (x,y)
 				item = self.map.get(tag)
 				if not item:
-					tile = [0,0]
-					if y < len(tiles.map) and x < len(tiles.map[y]):
-						tile = tiles.map[y][x]
-					group = self.ui.tileset.cv5.groups[tile[0]]
-					mega = group[13][tile[1]]
-					image = self.tile_cache.get(mega)
-					if image == None:
-						image = Tilesets.megatile_to_photo(self.ui.tileset, mega)
-						self.tile_cache[mega] = image
-					self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
-					self.ui.mapCanvas.tag_lower(tag)
+					self.update_tile(x,y)
 
 class MapLayerImages(MapLayer):
 	def __init__(self, ui):
@@ -1020,10 +1966,17 @@ class ListLayerTerrain(ListLayer):
 	NAME = 'Terrain'
 
 	def option_name(self, option):
-		return ''
+		era = self.ui.chk.get_section(CHKSectionERA.NAME)
+		details = TERRAIN_DETAILS[era.tileset]
+		return details['types'][option]['name']
 
 	def populate_list(self):
-		pass
+		era = self.ui.chk.get_section(CHKSectionERA.NAME)
+		details = TERRAIN_DETAILS[era.tileset]
+		for t,ttype in enumerate(details['types']):
+			name = self.option_name(t)
+			listId = self.ui.listbox.insert(self.groupId + '.-1', name)
+			self.options[listId] = (self.ui.editlayer_terrain, t)
 
 class ListLayerLocations(ListLayer):
 	NAME = 'Locations'
@@ -1487,7 +2440,7 @@ class PyMAP(Tk):
 		x2 *= map_size[0]
 		y2 *= map_size[1]
 		for layer in self.edit_layers:
-			layer.update_display(x1,y1,x2,y2,event.x,event.y)
+			layer.update_display(x1,y1,x2,y2, event.x,event.y)
 
 	def edit_mouse(self, event, btn, etype):
 		if not self.chk:
@@ -1501,6 +2454,8 @@ class PyMAP(Tk):
 			y1 *= map_size[1]
 			x2 *= map_size[0]
 			y2 *= map_size[1]
+			if etype == EditLayer.MOUSE_MOVE:
+				self.current_editlayer.update_display(x1,y1,x2,y2, event.x,event.y)
 			self.current_editlayer.mouse_event(btn, etype, x1,y1, x2,y2, event.x,event.y)
 
 	def minimap_move(self, event):
