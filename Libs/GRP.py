@@ -187,11 +187,11 @@ class CacheGRP:
 							linedata = [0] * xoffset
 						while len(linedata)-xoffset < linewidth:
 							o = ord(self.databuffer[offset])
-							if o >= 128:
-								linedata.extend([0] * (o - 128))
+							if o & 0x80:
+								linedata.extend([0] * (o - 0x80))
 								offset += 1
-							elif o >= 64:
-								linedata.extend([ord(self.databuffer[offset+1])] * (o - 64))
+							elif o & 0x40:
+								linedata.extend([ord(self.databuffer[offset+1])] * (o - 0x40))
 								offset += 2
 							else:
 								linedata.extend([ord(c) for c in self.databuffer[offset+1:offset+1+o]])
@@ -278,11 +278,11 @@ class GRP:
 								offset = framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0]
 								while len(linedata)-xoffset < linewidth:
 									o = ord(data[offset])
-									if o >= 128:
-										linedata.extend([transindex] * (o - 128))
+									if o & 0x80:
+										linedata.extend([transindex] * (o - 0x80))
 										offset += 1
-									elif o >= 64:
-										linedata.extend([ord(data[offset+1])] * (o - 64))
+									elif o & 0x40:
+										linedata.extend([ord(data[offset+1])] * (o - 0x40))
 										offset += 2
 									else:
 										linedata.extend([ord(c) for c in data[offset+1:offset+1+o]])
@@ -415,11 +415,12 @@ class GRP:
 									else:
 										working[2] += 1
 							data = ''
+							debug_result = []
 							for run in runs:
 								if run[0] == STATIC_RUN:
 									o = 0
 									while o < len(run[1]):
-										size = min(0x7F,len(run[1])-o)
+										size = min(0x3F,len(run[1])-o)
 										data += chr(size)
 										for c in run[1][o:o+size]:
 											data += chr(c)
