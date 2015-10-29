@@ -464,7 +464,7 @@ OPCODES = [
 	[('randcondjmp',), [type_byte,type_label]],         #30
 	[('turnccwise',), [type_byte]],
 	[('turncwise',), [type_byte]],
-	[('turnlcwise',), []],
+	[('turn1cwise', 'turnlcwise',), []],
 	[('turnrand',), [type_byte]],
 	[('setspawnframe',), [type_byte]],
 	[('sigorder',), [type_signalid]],

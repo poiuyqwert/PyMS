@@ -2180,7 +2180,7 @@ def main():
 					print " - Loading finished successfully\nReading BIN '%s'..." % args[0]
 					warnings.extend(ibin.load_file(args[0]))
 					print " - BIN read successfully\nWriting iscript entries to '%s'..." % args[1]
-					warnings.extend(bin.decompile(args[1],opt.reference,ids))
+					warnings.extend(ibin.decompile(args[1],opt.reference,ids))
 					print " - '%s' written succesfully" % args[1]
 				else:
 					print "Loading weapons.dat '%s', flingy.dat '%s', images.dat '%s', sprites.dat '%s', sdxdata.dat '%s', stat_txt.tbl '%s', images.tbl '%s', and sfxdata.tbl '%s'" % (opt.weapons,opt.flingy,opt.sprites,opt.images,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl)
@@ -2193,7 +2193,7 @@ def main():
 					print "Interpreting file '%s'..." % args[0]
 					warnings.extend(ibin.interpret(args[0]))
 					print " - '%s' read successfully\nCompiling file '%s' to iscript.bin '%s'..." % (args[0], args[0], args[1])
-					bin.compile(args[1])
+					ibin.compile(args[1])
 					print " - iscript.bin '%s' written succesfully" % args[1]
 				if not opt.hidewarns:
 					for warning in warnings:
