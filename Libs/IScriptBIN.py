@@ -13,6 +13,7 @@ from zlib import compress, decompress
 
 TYPE_HELP = {
 	'Frame':'The index of a frame in a GRP, in decimal or hexadecimal (number in the range 0 to 65535. framesets are increments of 17, so 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)',
+	'Frameset':'The index of a frame set in a GRP (number in the range 0 to 255)',
 	'Byte':'A number in the range 0 to 255',
 	'SByte':'A number in the range -128 to 127',
 	'Label':'A label name of a block in the script',
@@ -107,7 +108,7 @@ CMD_HELP = [
 	'Sets the unit to move forward Byte(1) pixels at the end of the current tick.',
 	"Signals to StarCraft that after this point, when the unit's cooldown time is over, the repeat attack animation can be called.",
 	'Plays Frame(1), often used in engine glow animations.',
-	'Plays the frame set Frame(1), often used in engine glow animations.',
+	'Plays the frame set Frameset(1), often used in engine glow animations.',
 	'Hypothesised to hide the current image overlay until the next animation.',
 	'Holds the processing of player orders until a nobrkcodeend is encountered.',
 	'Allows the processing of player orders after a nobrkcodestart instruction.',
@@ -158,6 +159,26 @@ def type_frame(stage, bin, data=None):
 		raise
 	except:
 		raise PyMSError('Parameter',"Invalid Frame value '%s', it must be a number in the range 0 to 65535 in decimal or hexidecimal (framesets are increments of 17: 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)" % data)
+	return v
+
+def type_frameset(stage, bin, data=None):
+	"""Frameset"""
+	if data == None:
+		return 1
+	if stage == 1:
+		return (str(data),'Frame set %s' % data)
+	try:
+		v = int(data)
+		if 0 > v or v > 255:
+			raise
+		if bin and bin.grpframes and v*17 > bin.grpframes:
+			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, int((bin.grpframes - 17) / 17)),extra=v)
+		if bin and bin.grpframes and v*17 > bin.grpframes - 17:
+			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, int((bin.grpframes - 17) / 17)),extra=v)
+	except PyMSWarning:
+		raise
+	except:
+		raise PyMSError('Parameter',"Invalid Frameset value '%s', it must be a number in the range 0 to 255" % data)
 	return v
 
 def type_bframe(stage, bin, data=None):
@@ -475,7 +496,7 @@ OPCODES = [
 	[('move',), [type_byte]],
 	[('gotorepeatattk',), []],
 	[('engframe',), [type_bframe]],
-	[('engset',), [type_frame]],
+	[('engset',), [type_frameset]],
 	[('__2d',), []],
 	[('nobrkcodestart',), []],
 	[('nobrkcodeend',), []],
