@@ -40,10 +40,12 @@ def check_update(p):
 					UpdateDialog(p,'v%s.%s.%s' % d,settings)
 				p.after(1, callback)
 
-def loadsize(window, settings, setting, full=False, size=True):
+def loadsize(window, settings, setting, full=False, size=True, position=None):
 	geometry = settings.get(setting)
-	if geometry and geometry:
+	if geometry:
 		w,h,x,y,fullscreen = parse_geometry(geometry)
+		if position:
+			x,y = position
 		if size and w != None and h != None:
 			screen_w = window.winfo_screenwidth()
 			screen_h = window.winfo_screenheight()

@@ -70,7 +70,7 @@ SCREEN_MAIN_MENU = 0x00
 SCREEN_SIMULATE = 0x01
 SCREEN_SELCONN = 0x02
 SCREEN_CHATROOM = 0x03
-SCREEN_BATTLENT = 0x04
+SCREEN_BATTLENET = 0x04
 SCREEN_LOGIN = 0x05
 SCREEN_CAMPAIGN = 0x06
 SCREEN_TERRAN_BRIEFING = 0x07
@@ -116,7 +116,7 @@ SCREEN_INFO = {
 		"theme_id":THEME_ASSETS_GENERAL,
 		"name":"Game Lobby"
 	},
-	# SCREEN_BATTLENT:{
+	# SCREEN_BATTLENET:{
 	# 	# "assets_path":"glue\\battle.net\\",
 	# 	"dialog_bin":"",
 	# 	"theme_id":THEME_ASSETS_NONE,
@@ -505,11 +505,14 @@ class BINSMK(object):
 	BYTE_SIZE = 30
 	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','offset_x','offset_y','unknown3','unknown4')
 
-	FLAG_FADE_IN = 0x0001
-	FLAG_DARK = 0x0002
-	FLAG_REPEATS = 0x0004
-	FLAG_SHOW_ON_HOVER = 0x0008
-	FLAG_UNK = 0x0010
+	FLAG_FADE_IN = 0x01
+	FLAG_DARK = 0x02
+	FLAG_REPEATS = 0x04
+	FLAG_SHOW_ON_HOVER = 0x08
+	FLAG_UNK1 = 0x10
+	FLAG_UNK2 = 0x20
+	FLAG_UNK3 = 0x40
+	FLAG_UNK4 = 0x80
 
 	def __init__(self):
 		self.widgets = []
