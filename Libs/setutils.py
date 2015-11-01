@@ -304,7 +304,7 @@ class MPQHandler:
 		return files
 
 class MpqSelect(PyMSDialog):
-	def __init__(self, parent, mpqhandler, type, search, settings):
+	def __init__(self, parent, mpqhandler, filetype, search, settings, open_type='Open'):
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
 		self.search.set(search)
@@ -316,7 +316,8 @@ class MpqSelect(PyMSDialog):
 		self.file = None
 		self.resettimer = None
 		self.searchtimer = None
-		PyMSDialog.__init__(self, parent, 'Open a ' + type)
+		self.open_type = open_type
+		PyMSDialog.__init__(self, parent, self.open_type + ' a ' + filetype)
 
 	def widgetize(self):
 		listframe = Frame(self, bd=2, relief=SUNKEN)
@@ -346,7 +347,7 @@ class MpqSelect(PyMSDialog):
 		self.textdrop = TextDropDown(s, self.search, self.settings.get('mpqselecthistory',[])[::-1])
 		self.textdrop.entry.c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
-		self.open = Button(s, text='Open', width=10, command=self.ok)
+		self.open = Button(s, text=self.open_type, width=10, command=self.ok)
 		self.open.pack(side=RIGHT, padx=1, pady=3)
 		s.pack(fill=X)
 		s = Frame(self)

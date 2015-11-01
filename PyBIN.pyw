@@ -58,7 +58,11 @@ class SMKSettings(PyMSDialog):
 	def widgetize(self):
 		textframe = Frame(self)
 		Label(textframe, text='Filename:').pack(side=LEFT)
-		Entry(textframe, textvariable=self.filename, font=couriernew).pack(side=RIGHT, fill=X, expand=1)
+		Entry(textframe, textvariable=self.filename, font=couriernew).pack(side=LEFT, fill=X, expand=1)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
+		button = Button(textframe, image=image, width=20, height=20, command=self.find_smk)
+		button.image = image
+		button.pack(side=LEFT)
 		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=NSEW)
 
 		overlayframe = LabelFrame(self, text='Overlay SMK')
@@ -68,7 +72,11 @@ class SMKSettings(PyMSDialog):
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
 		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
 		button.image = image
-		button.pack(side=RIGHT)
+		button.pack(side=LEFT)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','add.gif'))
+		button = Button(smkframe, image=image, width=20, height=20, command=self.add_smk)
+		button.image = image
+		button.pack(side=LEFT)
 		smkframe.pack(side=TOP, fill=X, expand=1)
 		offsetframe = Frame(overlayframe)
 		Label(offsetframe, text='Offset X:').pack(side=LEFT)
@@ -76,7 +84,7 @@ class SMKSettings(PyMSDialog):
 		Label(offsetframe, text='Offset Y:').pack(side=LEFT)
 		Entry(offsetframe, textvariable=self.overlay_y, font=couriernew, width=5).pack(side=LEFT)
 		offsetframe.pack(side=TOP, fill=X, expand=1)
-		overlayframe.grid(row=1,column=0, padx=2,pady=2, sticky=NSEW)
+		overlayframe.grid(row=1,column=0, padx=5,pady=0, sticky=NSEW)
 
 		flagsframe = LabelFrame(self, text='Flags')
 		Checkbutton(flagsframe, text='Fade In', variable=self.flag_fadein).grid(row=0,column=0, sticky=W)
@@ -84,10 +92,10 @@ class SMKSettings(PyMSDialog):
 		Checkbutton(flagsframe, text='Repeat Forever', variable=self.flag_repeat).grid(row=2,column=0, sticky=W)
 		Checkbutton(flagsframe, text='Show on Hover', variable=self.flag_hover).grid(row=3,column=0, sticky=W)
 		Checkbutton(flagsframe, text='4', variable=self.flag_unk1).grid(row=0,column=1, sticky=W)
-		Checkbutton(flagsframe, text='6', variable=self.flag_unk2).grid(row=1,column=1, sticky=W)
-		Checkbutton(flagsframe, text='7', variable=self.flag_unk3).grid(row=2,column=1, sticky=W)
-		Checkbutton(flagsframe, text='8', variable=self.flag_unk4).grid(row=3,column=1, sticky=W)
-		flagsframe.grid(row=0,column=1, rowspan=2, padx=2,pady=2, sticky=N)
+		Checkbutton(flagsframe, text='5', variable=self.flag_unk2).grid(row=1,column=1, sticky=W)
+		Checkbutton(flagsframe, text='6', variable=self.flag_unk3).grid(row=2,column=1, sticky=W)
+		Checkbutton(flagsframe, text='7', variable=self.flag_unk4).grid(row=3,column=1, sticky=W)
+		flagsframe.grid(row=0,column=1, rowspan=2, padx=2,pady=2, sticky=S)
 
 		bottom = Frame(self)
 		ok = Button(bottom, text='Ok', width=10, command=self.ok)
@@ -152,13 +160,29 @@ class SMKSettings(PyMSDialog):
 
 	def update_preview(self):
 		self.save_properties()
-		self.widget.load_property_smk()
+		self.update_smks()
 		self.widget.parent.reload_canvas()
+
+	def find_smk(self):
+		m = MpqSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', self.widget.parent.settings, 'Select')
+		if m.file and m.file.startswith('MPQ:'):
+			self.filename.set(m.file[4:])
 
 	def edit_smk(self):
 		if self.overlay_smk.get():
 			w,h,x,y,f = parse_geometry(self.winfo_geometry())
 			SMKSettings(self, self.widget.parent.bin.smks[self.overlay_smk.get()-1], self.widget, (x+20,y+20))
+
+	def add_smk(self):
+		smk = DialogBIN.BINSMK()
+		self.widget.parent.bin.smks.append(smk)
+		self.smk.overlay_smk = smk
+		self.update_smks()
+		self.edit_smk()
+
+	def update_smks(self):
+		self.load_property_smk()
+		self.parent.update_smks()
 
 	def ok(self):
 		self.save_settings()
@@ -378,6 +402,21 @@ class WidgetSettings(PyMSDialog):
 		stringframe.grid_columnconfigure(4, weight=1)
 		stringframe.grid(row=1,column=0, columnspan=2, padx=5,pady=0, ipadx=2,ipady=2, sticky=NSEW)
 
+		smkframe = LabelFrame(self, text='SMK')
+		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=True)
+		self.smks_dropdown.grid(row=0, column=0, padx=2,pady=2, sticky=EW)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
+		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
+		button.image = image
+		button.grid(row=0, column=1)
+		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','add.gif'))
+		button = Button(smkframe, image=image, width=20, height=20, command=self.add_smk)
+		button.image = image
+		button.grid(row=0, column=2)
+		Checkbutton(smkframe, text='Translucent', variable=self.flag_translucent).grid(row=1,column=0, columnspan=3)
+		smkframe.grid_columnconfigure(0, weight=1)
+		smkframe.grid(row=2,column=0, columnspan=2, padx=5,pady=0, ipadx=2,ipady=2, sticky=NSEW)
+
 		otherframe = Frame(self)
 		stateframe = LabelFrame(otherframe, text='State')
 		Checkbutton(stateframe, text='Visible', variable=self.flag_visible).grid(row=2,column=0, sticky=W)
@@ -391,18 +430,7 @@ class WidgetSettings(PyMSDialog):
 		Checkbutton(typeframe, text='Default', variable=self.flag_default_btn).grid(row=0,column=0, sticky=W)
 		Checkbutton(typeframe, text='Cancel', variable=self.flag_cancel_btn).grid(row=1,column=0, sticky=W)
 		typeframe.grid(row=0,column=2, padx=2,pady=2, sticky=N)
-		smkframe = LabelFrame(otherframe, text='SMK')
-		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=True)
-		self.smks_dropdown.grid(row=0, column=0, padx=2,pady=2, sticky=EW)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
-		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
-		button.image = image
-		button.grid(row=0, column=1)
-		Checkbutton(smkframe, text='Translucent', variable=self.flag_translucent).grid(row=1,column=0, columnspan=2)
-		smkframe.grid_columnconfigure(0, weight=1)
-		smkframe.grid(row=0,column=3, padx=2,pady=2, sticky=NSEW)
-		otherframe.grid_columnconfigure(3, weight=1)
-		otherframe.grid(row=2,column=0, columnspan=2, padx=3,pady=3, sticky=EW)
+		otherframe.grid(row=3,column=0, columnspan=2, padx=3,pady=3, sticky=EW)
 
 		miscframe = LabelFrame(self, text='Misc.')
 		Checkbutton(miscframe, text='Bring to Front', variable=self.flag_on_top).grid(row=0,column=0, sticky=W)
@@ -420,7 +448,7 @@ class WidgetSettings(PyMSDialog):
 		Checkbutton(miscframe, text='Unknown 28', variable=self.flag_unk8).grid(row=2,column=2, sticky=W)
 		Checkbutton(miscframe, text='Unknown 29', variable=self.flag_unk9).grid(row=2,column=3, sticky=W)
 		Checkbutton(miscframe, text='Unknown 31', variable=self.flag_unk10).grid(row=2,column=4, sticky=W)
-		miscframe.grid(row=3,column=0, columnspan=2, padx=3,pady=3, sticky=NSEW)
+		miscframe.grid(row=4,column=0, columnspan=2, padx=3,pady=3, sticky=NSEW)
 
 		isdialog = self.node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG
 		if isimage or isdialog:
@@ -443,7 +471,7 @@ class WidgetSettings(PyMSDialog):
 		ok.pack(side=LEFT, padx=1, pady=3)
 		Button(bottom, text='Update Preview', width=15, command=self.update_preview).pack(side=LEFT, padx=3, pady=3)
 		Checkbutton(bottom, text='Advanced', variable=self.show_advanced, command=self.update_advanced).pack(side=RIGHT, padx=1, pady=3)
-		bottom.grid(row=4,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
+		bottom.grid(row=5,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
 
 		self.load_settings()
 		self.load_properties()
@@ -609,7 +637,14 @@ class WidgetSettings(PyMSDialog):
 		self.parent.reload_canvas()
 
 	def edit_smk(self):
-		SMKSettings(self, self.node.widget.smk)
+		if self.node.widget.smk:
+			SMKSettings(self, self.node.widget.smk)
+
+	def add_smk(self):
+		pass
+
+	def update_smks(self):
+		self.load_property_smk()
 
 	def ok(self):
 		self.save_settings()
