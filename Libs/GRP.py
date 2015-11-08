@@ -391,19 +391,13 @@ class GRP:
 								else:
 									# If the current byte doesn't continue the repeat run
 									if cur != working[1]:
-										# If the working run only repeats its byte 2 times (or 1 time for transparent), and the previous run was a static run
-										if len(runs) > 1 and runs[-2][0] == STATIC_RUN and ((working[1] == self.transindex and working[2] == 1) or (working[1] != self.transindex and working[2] == 2)):
+										# If the working run only repeats its byte 2 times (and is not transparent), and the previous run was a static run
+										if len(runs) > 1 and runs[-2][0] == STATIC_RUN and working[1] != self.transindex and working[2] == 2:
 											# Merge the repeat run into the previous static run. This can save us a byte if the upcoming run is static (we won't need another length byte to start the next static run)
 											del runs[-1]
 											runs[-1][1].extend([working[1]] * working[2])
-											# Start a new repeat run if transparent
-											if cur == self.transindex:
-												working = [REPEAT_RUN,cur,1]
-												runs.append(working)
-											# Else just continue the static run
-											else:
-												working = runs[-1]
-												working[1].append(cur)
+											working = runs[-1]
+											working[1].append(cur)
 										# Start a new repeat run
 										elif cur == self.transindex:
 											working = [REPEAT_RUN,cur,1]
