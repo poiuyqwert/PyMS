@@ -557,7 +557,6 @@ class DialogBIN:
 		except PyMSError, e:
 			raise e
 		except:
-			raise
 			raise PyMSError('Load',"Unsupported Dialog BIN file '%s', could possibly be corrupt" % file)
 
 	def load_data(self, data):

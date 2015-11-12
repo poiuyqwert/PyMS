@@ -1085,6 +1085,8 @@ class BWImage:
 						self.draw_info = GRP.OUTLINE_SELF
 					elif owner == CHKSectionOWNR.COMPUTER:
 						self.draw_info = GRP.OUTLINE_ENEMY
+					else:
+						self.draw_info = GRP.OUTLINE_ALLY
 		elif self.unit_ref != None:
 			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 			unit = units.get_unit(self.unit_ref)
@@ -2274,11 +2276,9 @@ class PyMAP(Tk):
 				for n,mod in mouse_modifiers:
 					self.mapCanvas.bind(name % (n,b), lambda e,b=btn,t=(etype | mod): self.edit_mouse(e,b,t))
 
-		xscrollbar = Scrollbar(right, orient=HORIZONTAL)
-		xscrollbar.config(command=self.mapCanvas.xview)
+		xscrollbar = Scrollbar(right, orient=HORIZONTAL, command=self.mapCanvas.xview)
 		xscrollbar.grid(sticky=EW)
-		yscrollbar = Scrollbar(right)
-		yscrollbar.config(command=self.mapCanvas.yview)
+		yscrollbar = Scrollbar(right, command=self.mapCanvas.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
 		def scroll(l,h,bar):
 			bar.set(l,h)

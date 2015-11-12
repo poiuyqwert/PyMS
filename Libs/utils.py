@@ -23,6 +23,7 @@ if os.path.exists(BASE_DIR):
 couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
 ARROW = None
+TRANS_FIX = None
 
 def parse_geometry(geometry):
 	match = re.match(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?',geometry)
@@ -445,8 +446,14 @@ class Notebook(Frame):
 	def pack(self, **kw):
 		self.notebook.pack(kw)
 
+	def grid(self, **kw):
+		self.notebook.grid(kw)
+
 	def add_tab(self, fr, title):
-		b = Radiobutton(self.tabs, text=title, indicatoron=0, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
+		global TRANS_FIX
+		if not TRANS_FIX:
+			TRANS_FIX = PhotoImage(file=os.path.join(BASE_DIR, 'Images', 'trans_fix.gif'))
+		b = Radiobutton(self.tabs, image=TRANS_FIX, text=title, indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
 		b.pack(side=LEFT)
 		self.pages[title] = [fr,len(self.pages)]
 		if not self.active:

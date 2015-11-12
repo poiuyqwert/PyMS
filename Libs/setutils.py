@@ -623,11 +623,12 @@ class MPQSettings(Frame):
 
 class SettingsPanel(Frame):
 	types = {
-		'PCX':(PCX.PCX,'PCX','pcx',[('StarCraft Special Palette','.pcx'),('All Files','*')]),
-		'FNT':(FNT.FNT,'FNT','fnt',[('StarCraft FNT','.fnt'),('All Files','*')]),
-		'GRP':(GRP.GRP,'GRP','grp',[('StarCraft GRP','.grp'),('All Files','*')]),
-		'CacheGRP':(GRP.CacheGRP,'GRP','grp',[('StarCraft GRP','.grp'),('All Files','*')]),
+		'PCX':(PCX.PCX,'PCX','pcx',[('StarCraft Special Palette','*.pcx'),('All Files','*')]),
+		'FNT':(FNT.FNT,'FNT','fnt',[('StarCraft FNT','*.fnt'),('All Files','*')]),
+		'GRP':(GRP.GRP,'GRP','grp',[('StarCraft GRP','*.grp'),('All Files','*')]),
+		'CacheGRP':(GRP.CacheGRP,'GRP','grp',[('StarCraft GRP','*.grp'),('All Files','*')]),
 		'Palette':(PAL.Palette,'Palette','pal',[('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('All Files','*')]),
+		'WPE':(PAL.Palette,'Palette','wpe',[('StarCraft Tileset WPE','*.wpe'),('RIFF, JASC, and StarCraft PAL','*.pal'),('ZSoft PCX','*.pcx'),('All Files','*')]),
 		'TBL':(TBL.TBL,'TBL','tbl',[('StarCraft TBL Files','*.tbl'),('All Files','*')]),
 		'AIBIN':(AIBIN.AIBIN,'aiscript.bin','bin',[('AI Scripts','*.bin'),('All Files','*')]),
 		'UnitsDAT':(DAT.UnitsDAT,'units.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),

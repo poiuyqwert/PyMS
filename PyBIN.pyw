@@ -2309,7 +2309,7 @@ class PyBIN(Tk):
 				ErrorDialog(self, e)
 				return
 			self.clear()
-			self.bin = abin
+			self.bin = dbin
 			self.title('PyBIN %s (%s)' % (LONG_VERSION,file))
 			self.file = file
 			self.status.set('Import Successful!')
