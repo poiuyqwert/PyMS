@@ -29,6 +29,9 @@ def parse_geometry(geometry):
 	match = re.match(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?',geometry)
 	return tuple(None if v == None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
 
+def parse_scrollregion(scrollregion):
+	return tuple(int(v) for v in scrollregion.split(' '))
+
 def isstr(s):
 	return isinstance(s,str) or isinstance(s,unicode)
 
