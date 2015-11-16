@@ -23,7 +23,7 @@ class SPKImage:
 class SPK:
 	LAYER_WIDTH = 648
 	LAYER_HEIGHT = 488
-	PARALLAX_RATIOS = [1/(64/4.0), 1/(128/10.0), 1/(320/20.0), 1/(192/23.0), 1/(320/45.0)] # Estimates
+	PARALLAX_RATIOS = [1/(64/4.0), 1/(128/10.0), 1/(320/32.0), 1/(192/23.0), 1/(320/45.0)] # Estimates
 
 	def __init__(self):
 		self.layers = []

@@ -29,6 +29,85 @@ TOOL_SELECT = 0
 TOOL_MOVE = 1
 TOOL_DRAW = 2
 
+class PreviewDialog(PyMSDialog):
+	MAP_WIDTH = 32*256
+	MAP_HEIGHT = 32*256
+	def __init__(self, parent):
+		self.items = {}
+		self.last_x = None
+		self.last_y = None
+		PyMSDialog.__init__(self, parent, 'Parallax Preview', center=False)
+
+	def widgetize(self):
+		self.canvas = Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT))
+		self.canvas.grid(row=0,column=0)
+		xscrollbar = Scrollbar(self, orient=HORIZONTAL, command=self.canvas.xview)
+		xscrollbar.grid(row=1,column=0, sticky=EW)
+		yscrollbar = Scrollbar(self, command=self.canvas.yview)
+		yscrollbar.grid(row=0,column=1, sticky=NS)
+		def scroll(l,h,bar):
+			bar.set(l,h)
+			self.update_viewport()
+		self.canvas.config(xscrollcommand=lambda l,h,s=xscrollbar: scroll(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scroll(l,h,s))
+		self.grid_rowconfigure(0,weight=1)
+		self.grid_columnconfigure(0,weight=1)
+
+		self.canvas.focus_set()
+		def scroll_map(event=None, horizontal=None,delta=None):
+			if event:
+				horizontal = False
+				if hasattr(event, 'state') and getattr(event, 'state', 0):
+					horizontal = True
+				delta = event.delta
+			view = self.canvas.yview
+			if horizontal:
+				view = self.canvas.xview
+			if delta > 0:
+				view('scroll', -1, 'units')
+			else:
+				view('scroll', 1, 'units')
+			self.update_viewport()
+		self.canvas.bind('<MouseWheel>', scroll_map)
+		self.bind('<Up>', lambda e: scroll_map(None, False,1))
+		self.bind('<Down>', lambda e: scroll_map(None, False,-1))
+		self.bind('<Left>', lambda e: scroll_map(None, True,1))
+		self.bind('<Right>', lambda e: scroll_map(None, True,-1))
+
+		loadsize(self, self.parent.settings, 'preview', size=False)
+
+		self.load_viewport()
+
+	def load_viewport(self):
+		for layer in self.parent.spk.layers:
+			for star in layer.stars:
+				image = self.parent.get_image(star.image)
+				item = self.canvas.create_image(star.x,star.y, image=image, anchor=NW)
+				self.items[star] = item
+
+	def update_viewport(self):
+		if len(self.items):
+			x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
+			y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
+			if x != self.last_x or y != self.last_y:
+				self.last_x = x
+				self.last_y = y
+				for l,layer in enumerate(self.parent.spk.layers):
+					ratio = SPK.SPK.PARALLAX_RATIOS[l]
+					ox = int(x * ratio) % 640
+					oy = int(y * ratio) % 480
+					for star in layer.stars:
+						px = star.x - ox
+						if px < 0:
+							px += 640
+						py = star.y - oy
+						if py < 0:
+							py += 480
+						self.canvas.coords(self.items[star], x+px,y+py)
+
+	def cancel(self):
+		savesize(self, self.parent.settings, 'preview')
+		PyMSDialog.cancel(self)
+
 class LayersDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.result = IntegerVar(5, [1,5])
@@ -216,7 +295,7 @@ class StarsTab(NotebookTab):
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(side=TOP, fill=BOTH, expand=1)
+		listframe.pack(side=TOP, fill=BOTH, padx=2, expand=1)
 		self.buttons = {}
 		f = Frame(self)
 		buttons = (
@@ -464,6 +543,8 @@ class PySPK(Tk):
 			2,
 			('close', self.close, 'Close (Ctrl+W)', DISABLED, 'Ctrl+W'),
 			10,
+			('fwp', self.preview, 'Preview (Ctrl+L)', DISABLED, 'Ctrl+L'),
+			10,
 			('asc3topyai', self.mpqsettings, 'Manage Settings (Ctrl+M)', NORMAL, 'Ctrl+M'),
 			10,
 			('register', self.register, 'Set as default *.spk editor (Windows Only)', [DISABLED,NORMAL][win_reg], ''),
@@ -502,13 +583,11 @@ class PySPK(Tk):
 			row.hide()
 			row.pack(side=TOP, fill=X, expand=1)
 			self.rows.append(row)
-		listbox.pack(side=TOP, padx=2, fill=X, expand=1)
+		listbox.pack(side=TOP, padx=5, fill=X, expand=1)
 		f = Frame(layersframe)
 		buttons = (
 			('add', self.add_layer, LEFT, 'Add Layer', 0, None),
 			('remove', self.remove_layer, LEFT, 'Remove Layer', 0, None),
-			# ('exportc', self.export_layer, LEFT, 'Export Layer', (5,0), None),
-			# ('importc', self.import_layer, LEFT, 'Import Layer', (0,5), None),
 
 			('down', lambda: self.move_layer(1), RIGHT, 'Move Layer Down', 0, None),
 			('up', lambda: self.move_layer(-1), RIGHT, 'Move Layer Up', 0, None),
@@ -556,7 +635,6 @@ class PySPK(Tk):
 		for k,c in bind:
 			self.skyCanvas.bind('<%s>' % k, c)
 		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=NSEW)
-		# frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.pack(fill=X)
 		mouse_events = (
 			('<%sButton-1>', MOUSE_DOWN),
@@ -681,7 +759,7 @@ class PySPK(Tk):
 
 	def action_states(self):
 		isopen = [NORMAL,DISABLED][not self.spk]
-		for btn in ['save','saveas','close','eye','lock']:
+		for btn in ['save','saveas','close','fwp','eye','lock']:
 			self.buttons[btn]['state'] = isopen
 		self.buttons['exportc']['state'] = [DISABLED,NORMAL][(not not self.spk and len(self.spk.layers) > 0)]
 		self.buttons['add']['state'] = [DISABLED,NORMAL][(not not self.spk and len(self.spk.layers) < 5)]
@@ -902,6 +980,9 @@ class PySPK(Tk):
 		if self.item_place_image:
 			self.skyCanvas.delete(self.item_place_image)
 			self.item_place_image = None
+
+	def preview(self):
+		PreviewDialog(self)
 
 	def clear(self):
 		self.spk = None
