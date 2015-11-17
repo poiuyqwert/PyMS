@@ -951,7 +951,7 @@ class PySPK(Tk):
 			star.x = event.x - star.image.width/2
 			star.y = event.y - star.image.height/2
 			self.spk.layers[self.layer.get()].stars.append(star)
-			self.update_star(star, 0)
+			self.update_star(star, self.layer.get())
 			self.update_zorder()
 			self.stars_tab.update_list()
 			if not self.visible.get() & (1 << self.layer.get()):
