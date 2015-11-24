@@ -13,15 +13,16 @@ class BMP:
 		self.image = []
 
 	def load_file(self, file, issize=None):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load the BMP '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load the BMP '%s'" % file)
+		else:
+			data = file.read()
 		if data[:2] != 'BM':
 			raise PyMSError('Load',"'%s' is not a BMP file (no BMP header)" % file)
 		try:

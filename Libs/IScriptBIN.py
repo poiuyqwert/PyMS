@@ -597,15 +597,16 @@ class IScriptBIN:
 			self.sfxdatatbl.load_file(sfxdatatbl)
 
 	def load_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load iscript.bin '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load iscript.bin '%s'" % file)
+		else:
+			data = file.read()
 		try:
 			headers = {}
 			offsets = {}

@@ -543,15 +543,16 @@ class DialogBIN:
 		self.smks = []
 
 	def load_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load Dialog BIN file '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load Dialog BIN file '%s'" % file)
+		else:
+			data = file.read()
 		try:
 			self.load_data(data)
 		except PyMSError, e:
@@ -708,15 +709,16 @@ class DialogBIN:
 		return ''.join(results)
 
 	def interpret_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load file '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load file '%s'" % file)
+		else:
+			data = file.read()
 		self.interpret_data(data)
 
 	def interpret_data(self, data):

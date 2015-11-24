@@ -11,15 +11,16 @@ class PCX:
 		self.image = []
 
 	def load_file(self, file, pal=False):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load the PCX '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load the PCX '%s'" % file)
+		else:
+			data = file.read()
 		if data[:4] != '\x0A\x05\x01\x08':
 			raise PyMSError('Load',"'%s' is not a PCX file (no PCX header)" % file)
 		try:

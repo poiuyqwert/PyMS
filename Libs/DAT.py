@@ -276,9 +276,10 @@ class UnitsDAT(object):
 			try:
 				f = open(file,'rb')
 				data = f.read()
-				f.close()
 			except:
 				raise PyMSError('Load',"Could not load %s file '%s'" % (self.datname, file))
+			finally:
+				f.close()
 		else:
 			data = file.read()
 		if len(data) != self.filesize:

@@ -1711,15 +1711,16 @@ class TRG:
 			r(self)
 
 	def load_file(self, file, TRIG=False):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load TRG '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load TRG '%s'" % file)
+		else:
+			data = file.read()
 		self.load_data(data, TRIG)
 
 	def load_data(self, data, TRIG=False, MBRF=False):

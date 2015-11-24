@@ -30,15 +30,16 @@ class SPK:
 		self.images = []
 
 	def load_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load SPK file '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load SPK file '%s'" % file)
+		else:
+			data = file.read()
 		try:
 			self.load_data(data)
 		except PyMSError, e:

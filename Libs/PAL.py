@@ -37,15 +37,16 @@ class Palette:
 		return palette
 
 	def load_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Palette',"Could not load palette '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Palette',"Could not load palette '%s'" % file)
+		else:
+			data = file.read()
 		for t,pal in [(0,self.load_riff_pal),(1,self.load_jasc_pal),(None,self.load_zsoft_pcx),(3,self.load_sc_wpe),(2,self.load_sc_pal)]:
 			try:
 				palette = pal(data)

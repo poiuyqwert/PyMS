@@ -7,15 +7,16 @@ class LO:
 		self.frames = [[[0,0]]]
 
 	def load_file(self, file):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load LO* '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load LO* '%s'" % file)
+		else:
+			data = file.read()
 		try:
 			frames,overlays = struct.unpack('<LL', data[:8])
 			framedata = []

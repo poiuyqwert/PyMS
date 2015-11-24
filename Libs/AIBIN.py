@@ -480,15 +480,16 @@ class AIBIN:
 		self.script_endings = [0,36,39,57,65,97] #goto, stop, debug, racejump, return, kill_thread
 
 	def load_file(self, file, addstrings=False):
-		try:
-			if isstr(file):
+		if isstr(file):
+			try:
 				f = open(file,'rb')
 				data = f.read()
+			except:
+				raise PyMSError('Load',"Could not load aiscript.bin '%s'" % file)
+			finally:
 				f.close()
-			else:
-				data = file.read()
-		except:
-			raise PyMSError('Load',"Could not load aiscript.bin '%s'" % file)
+		else:
+			data = file.read()
 		try:
 			offset = struct.unpack('<L', data[:4])[0]
 			ais = odict()
@@ -1799,9 +1800,10 @@ class BWBIN(AIBIN):
 			try:
 				f = open(file,'rb')
 				data = f.read()
-				f.close()
 			except:
 				raise PyMSError('Load',"Could not load bwscript.bin '%s'" % file)
+			finally:
+				f.close()
 		else:
 			data = file.read()
 		try:
