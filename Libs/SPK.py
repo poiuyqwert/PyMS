@@ -155,12 +155,17 @@ class SPK:
 		self.images = images.values()
 
 	def save_file(self, file):
+		data = self.save_data()
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
+			raise PyMSError('Save',"Could not save SPK to file '%s'" % file)
+		try:
+			f.write(data)
+		except:
 			raise
-		f.write(self.save_data())
-		f.close()
+		finally:
+			f.close()
 
 	def save_data(self):
 		headers = struct.pack('<H', len(self.layers))

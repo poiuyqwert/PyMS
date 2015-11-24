@@ -482,16 +482,21 @@ class SMK:
 		if self.current_frame == self.frames:
 			self.current_frame = 0
 
-	def save_file(self, file):
-		try:
-			f = AtomicWriter(file, 'wb')
-		except:
-			raise
-		f.write(self.save_data())
-		f.close()
+	# def save_file(self, file):
+	# 	data = self.save_data()
+	# 	try:
+	# 		f = AtomicWriter(file, 'wb')
+	# 	except:
+	# 		raise
+	# 	try:
+	# 		f.write(data)
+	# 	except:
+	# 		raise
+	# 	finally:
+	# 		f.close()
 
-	def save_data(self):
-		pass
+	# def save_data(self):
+	# 	pass
 
 # if __name__ == '__main__':
 # 	sys.stdout = open('/Users/zachzahos/Documents/Projects/PyMS/Libs/stdeo.txt','w')

@@ -84,34 +84,38 @@ class PCX:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Save',"Could not save PCX to file '%s'" % file)
-		f.write('\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
-		for y in self.image:
-			last = y[0]
-			repeat = 1
-			for index in y[1:]:
-				if index == last:
-					if repeat == 63:
-						f.write('\xFF%c' % index)
+		try:
+			f.write('\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
+			for y in self.image:
+				last = y[0]
+				repeat = 1
+				for index in y[1:]:
+					if index == last:
+						if repeat == 63:
+							f.write('\xFF%c' % index)
+							repeat = 1
+						else:
+							repeat += 1
+					else:
+						if repeat > 1:
+							f.write('%c%c' % (repeat | 0xC0, last))
+						elif last >= 192:
+							f.write('\xC1%c' % last)
+						else:
+							f.write(chr(last))
+						last = index
 						repeat = 1
-					else:
-						repeat += 1
+				if repeat > 1:
+					f.write('%c%c' % (repeat | 0xC0, last))
+				elif last >= 192:
+					f.write('\xC1%c' % last)
 				else:
-					if repeat > 1:
-						f.write('%c%c' % (repeat | 0xC0, last))
-					elif last >= 192:
-						f.write('\xC1%c' % last)
-					else:
-						f.write(chr(last))
-					last = index
-					repeat = 1
-			if repeat > 1:
-				f.write('%c%c' % (repeat | 0xC0, last))
-			elif last >= 192:
-				f.write('\xC1%c' % last)
-			else:
-				f.write(chr(last))
-		f.write('\x0C' + ''.join(struct.pack('3B',*c) for c in self.palette))
-		f.close()
+					f.write(chr(last))
+			f.write('\x0C' + ''.join(struct.pack('3B',*c) for c in self.palette))
+		except:
+			raise
+		finally:
+			f.close()
 
 # import sys
 # sys.stdout = open('stdeo.txt','w')

@@ -153,28 +153,36 @@ class TBL:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		o = 2 + 2 * len(self.strings)
-		header = bytearray(struct.pack('<H', len(self.strings)))
-		data = bytearray()
-		for s in self.strings:
-			if not s.endswith('\x00'):
-				s += '\x00'
-			header += struct.pack('<H', o)
-			data += bytearray(s, 'latin-1')
-			o += len(s)
-		f.write(header + data)
-		f.close()
+		try:
+			o = 2 + 2 * len(self.strings)
+			header = bytearray(struct.pack('<H', len(self.strings)))
+			data = bytearray()
+			for s in self.strings:
+				if not s.endswith('\x00'):
+					s += '\x00'
+				header += struct.pack('<H', o)
+				data += bytearray(s, 'latin-1')
+				o += len(s)
+			f.write(header + data)
+		except:
+			raise
+		finally:
+			f.close()
 
 	def decompile(self, file, ref=False):
 		try:
 			f = AtomicWriter(file, 'w')
 		except:
 			raise PyMSError('Decompile',"Could not load file '%s'" % file)
-		if ref:
-			f.write(TBL_REF)
-		for s in self.strings:
-		   f.write(decompile_string(s) + '\n')
-		f.close()
+		try:
+			if ref:
+				f.write(TBL_REF)
+			for s in self.strings:
+			   f.write(decompile_string(s) + '\n')
+		except:
+			raise
+		finally:
+			f.close()
 
 #t = TBL()
 #t.load_file('Data\stat_txt.tbl')

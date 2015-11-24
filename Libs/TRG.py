@@ -2247,6 +2247,7 @@ class TRG:
 		return result
 
 	def decompile(self, file, ref=False):
+		data = self.decompile_data(ref)
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'w')
@@ -2254,8 +2255,12 @@ class TRG:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		f.write(self.decompile_data(ref))
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 	def decompile_data(self, ref=False):
 		result = ''
@@ -2357,12 +2362,17 @@ class TRG:
 		return result
 
 	def compile(self, file, TRIG=False):
+		data = self.compile_data(TRIG)
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise
-		f.write(self.compile_data(TRIG))
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 	def compile_data(self, TRIG=False):
 		result = ''

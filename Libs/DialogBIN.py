@@ -620,12 +620,17 @@ class DialogBIN:
 		self.smks = smks
 
 	def save_file(self, file):
+		data = self.save_data()
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
+			raise PyMSError('Save',"Could not save Dialog BIN to file '%s'" % file)
+		try:
+			f.write(data)
+		except:
 			raise
-		f.write(self.save_data())
-		f.close()
+		finally:
+			f.close()
 
 	def save_data(self):
 		smk_offsets = {}
@@ -813,12 +818,17 @@ class DialogBIN:
 		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
 
 	def decompile_file(self, file):
+		data = self.decompile_data()
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise
-		f.write(self.decompile_data())
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 	def decompile_data(self):
 		result = ''

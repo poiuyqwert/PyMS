@@ -167,19 +167,20 @@ class Tileset:
 	def decompile(self, bmpfile, type=0, id=0, settingfile=None):
 		if settingfile:
 			f = AtomicWriter(settingfile, 'w')
-		b = BMP.BMP()
-		b.palette = list(self.wpe.palette)
-		if type == 0:
-			b.image = [[] for _ in range(32)]
-			b.width = 512
-			b.height = 32
-			g = self.cv5.groups[id]
-			megas = []
-			minis = []
-			if settingfile:
-				data = (id,) + tuple(g[:13])
-				if id < 1024:
-					f.write("""\
+		try:
+			b = BMP.BMP()
+			b.palette = list(self.wpe.palette)
+			if type == 0:
+				b.image = [[] for _ in range(32)]
+				b.width = 512
+				b.height = 32
+				g = self.cv5.groups[id]
+				megas = []
+				minis = []
+				if settingfile:
+					data = (id,) + tuple(g[:13])
+					if id < 1024:
+						f.write("""\
 Group %s:
 	Index:             	%s
 	Buildable:         	%s
@@ -196,8 +197,8 @@ Group %s:
 	HasDown:            	%s
 """ % data)
 
-				else:
-					f.write("""\
+					else:
+						f.write("""\
 DoodadGroup %s:
 	Index:             	%s
 	Buildable:         	%s
@@ -214,65 +215,68 @@ DoodadGroup %s:
 	Unknown12:         	%s
 """ % data)
 
-				f.write('	MegaTiles:         	%s\n\n' % ' '.join([str(i) for i in g[13]]))
-				# if id > 1023:
-					# f.write('DDData %s:\n' % data[10])
-					# for y in range(data[12]):
-						# x = y * data[11]
-						# f.write('\t%s\n' % ' '.join(['%s%s' % (n,' ' * (3 - len(str(n)))) for n in self.dddata.doodads[data[10]][x:x+data[11]]]))
-					# f.write('\n')
-			for t,mega in enumerate(g[13]):
-				if settingfile and not mega in megas:
-					f.write("""\
+					f.write('	MegaTiles:         	%s\n\n' % ' '.join([str(i) for i in g[13]]))
+					# if id > 1023:
+						# f.write('DDData %s:\n' % data[10])
+						# for y in range(data[12]):
+							# x = y * data[11]
+							# f.write('\t%s\n' % ' '.join(['%s%s' % (n,' ' * (3 - len(str(n)))) for n in self.dddata.doodads[data[10]][x:x+data[11]]]))
+						# f.write('\n')
+				for t,mega in enumerate(g[13]):
+					if settingfile and not mega in megas:
+						f.write("""\
 MegaTile %s:
 	MiniTiles:         	%s
 	MiniTileFlags:     	%s
 	FlippedStates:     	%s
 
 """ % (mega,' '.join([str(mini[0]) for mini in self.vx4.graphics[mega]]),' '.join([flags(mini,16) for mini in self.vf4.flags[mega]]),' '.join([str(mini[1]) for mini in self.vx4.graphics[mega]])))
-					megas.append(mega)
-				for m,mini in enumerate(self.vx4.graphics[mega]):
-					for y,p in enumerate(self.vr4.images[mini[0]]):
-						if mini[1]:
-							p = p[::-1]
-						b.image[y + (m/4)*8].extend(p)
-		elif type == 1:
-			b.image = [[] for _ in range(32)]
-			b.width = 32
-			b.height = 32
-			if settingfile:
-				f.write("""\
+						megas.append(mega)
+					for m,mini in enumerate(self.vx4.graphics[mega]):
+						for y,p in enumerate(self.vr4.images[mini[0]]):
+							if mini[1]:
+								p = p[::-1]
+							b.image[y + (m/4)*8].extend(p)
+			elif type == 1:
+				b.image = [[] for _ in range(32)]
+				b.width = 32
+				b.height = 32
+				if settingfile:
+					f.write("""\
 MegaTile %s:
 	MiniTiles:         	%s
 	MiniTileFlags:     	%s
 	FlippedStates      	%s""" % (id,' '.join([str(mini[0]) for mini in self.vx4.graphics[id]]),' '.join([flags(mini,16) for mini in self.vf4.flags[id]]),' '.join([str(mini[1]) for mini in self.vx4.graphics[id]])))
-			for m,mini in enumerate(self.vx4.graphics[id]):
-				for y,p in enumerate(self.vr4.images[mini[0]]):
-					if mini[1]:
-						p = p[::-1]
-					b.image[y + (m/4)*8].extend(p)
-		elif type == 2:
-			b.image = []
-			b.width = 8
-			b.height = 8
-			for y,p in enumerate(self.vr4.images[id]):
-				b.image.append(p)
-		elif type == 3:
-			ty = -1
-			for n,g in enumerate(self.tileset.cv5.groups[1024:]):
-				if g[9] == id and ty == -1:
-					w,h,ty = g[10],g[11],g[11]
-					if n + h > len(self.tileset.cv5.groups):
-						h = len(self.tileset.cv5.groups) - n
-						ty = h
-					b.image = [[] for _ in range(32 * h)]
-				if ty > 0:
-					for x in range(w):
-						c = self.tileset.dddata.doodads[id][x + (h-ty) * w]
-						
-		b.save_file(bmpfile)
-		if settingfile:
-			f.close()
+				for m,mini in enumerate(self.vx4.graphics[id]):
+					for y,p in enumerate(self.vr4.images[mini[0]]):
+						if mini[1]:
+							p = p[::-1]
+						b.image[y + (m/4)*8].extend(p)
+			elif type == 2:
+				b.image = []
+				b.width = 8
+				b.height = 8
+				for y,p in enumerate(self.vr4.images[id]):
+					b.image.append(p)
+			elif type == 3:
+				ty = -1
+				for n,g in enumerate(self.tileset.cv5.groups[1024:]):
+					if g[9] == id and ty == -1:
+						w,h,ty = g[10],g[11],g[11]
+						if n + h > len(self.tileset.cv5.groups):
+							h = len(self.tileset.cv5.groups) - n
+							ty = h
+						b.image = [[] for _ in range(32 * h)]
+					if ty > 0:
+						for x in range(w):
+							c = self.tileset.dddata.doodads[id][x + (h-ty) * w]
+							
+			b.save_file(bmpfile)
+		except:
+			raise
+		finally:
+			if settingfile:
+				f.close()
 
 	def interpret(self, bmpfile, type=0, settingfile=None):
 		b = BMP.BMP()
@@ -474,6 +478,9 @@ class CV5:
 		self.groups = groups
 
 	def save_file(self, file):
+		data = ''
+		for d in self.groups:
+			data += struct.pack('<HBB24H', *[d[0],(d[1] << 4) + d[2],(d[3] << 4) + d[4]] + d[5:13] + d[13])
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -481,11 +488,12 @@ class CV5:
 				raise PyMSError('Save',"Could not save the CV5 to '%s'" % file)
 		else:
 			f = file
-		data = ''
-		for d in self.groups:
-			data += struct.pack('<HBB24H', *[d[0],(d[1] << 4) + d[2],(d[3] << 4) + d[4]] + d[5:13] + d[13])
-		f.write(data)
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 class VF4:
 	def __init__(self):
@@ -514,6 +522,9 @@ class VF4:
 		self.flags = flags
 
 	def save_file(self, file):
+		data = ''
+		for d in self.flags:
+			data += struct.pack('<16H', *d)
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -521,11 +532,12 @@ class VF4:
 				raise PyMSError('Save',"Could not save the VF4 to '%s'" % file)
 		else:
 			f = file
-		data = ''
-		for d in self.flags:
-			data += struct.pack('<16H', *d)
-		f.write(data)
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 class VX4:
 	def __init__(self):
@@ -554,6 +566,9 @@ class VX4:
 		self.graphics = graphics
 
 	def save_file(self, file):
+		data = ''
+		for d in self.graphics:
+			data += struct.pack('<16H', *[g*2 + h for g,h in d])
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -561,11 +576,12 @@ class VX4:
 				raise PyMSError('Save',"Could not save the VX4 to '%s'" % file)
 		else:
 			f = file
-		data = ''
-		for d in self.graphics:
-			data += struct.pack('<16H', *[g*2 + h for g,h in d])
-		f.write(data)
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 class VR4:
 	def __init__(self):
@@ -595,6 +611,12 @@ class VR4:
 		self.images = images
 
 	def save_file(self, file):
+		data = ''
+		for d in self.images:
+			i = []
+			for l in d:
+				i.extend(l)
+			data += struct.pack('64B', *i)
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -602,14 +624,12 @@ class VR4:
 				raise PyMSError('Save',"Could not save the VR4 to '%s'" % file)
 		else:
 			f = file
-		data = ''
-		for d in self.images:
-			i = []
-			for l in d:
-				i.extend(l)
-			data += struct.pack('64B', *i)
-		f.write(data)
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 class DDDataBIN:
 	def __init__(self):
@@ -638,6 +658,9 @@ class DDDataBIN:
 		self.doodads = doodads
 
 	def save_file(self, file):
+		data = ''
+		for d in self.doodads:
+			data += struct.pack('<256H', *d)
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -645,11 +668,12 @@ class DDDataBIN:
 				raise PyMSError('Save',"Could not save the dddata.dat to '%s'" % file)
 		else:
 			f = file
-		data = ''
-		for d in self.doodads:
-			data += struct.pack('<256H', *d)
-		f.write(data)
-		f.close()
+		try:
+			f.write(data)
+		except:
+			raise
+		finally:
+			f.close()
 
 # sys.stdout = open('stdeo.txt','w')
 # sys.stderr = sys.stdout

@@ -420,31 +420,35 @@ class UnitsDAT(object):
 			f = AtomicWriter(file, 'w')
 		except:
 			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
-		if ref:
-			f.write('#----------------------------------------------------')
-			for file,name in DATA_REFERENCE.iteritems():
-				f.write('\n# %s:' % name)
-				for n,value in enumerate(DATA_CACHE[file]):
-					pad = ' ' * (3 - len(str(n)))
-					f.write('\n#     %s%s = %s' % (pad,n,value))
-				f.write('\n#')
-			f.write('----------------------------------------------------\n\n')
-		if ids == None:
-			ids = range(self.count)
-		for id in ids:
-			f.write('%sID %s:%s# %s name: %s\n' % (self.header, id, ' ' * (12 + self.longlabel - len(self.header) - len(str(id))), self.header, DATA_CACHE[self.idfile][id]))
-			for format,data,label,value in zip(self.format,self.data,self.labels,self.entries[id]):
-				if not format[0] or id in range(*format[0]):
-					if label in self.flaglens:
-						v = ''.join(reversed([str(value/(2**n)%2) for n in range(self.flaglens[label])]))
-					else:
-						v = value
-					f.write('    %s%s%s' % (label, ' ' * (self.longlabel + 1 - len(label)), v))
-					if data[0][0]:
-						f.write('%s# %s' % (' ' * (11 - len(str(v))), data[0][0](data[0][1], v)))
-					f.write('\n')
-			f.write('\n')
-		f.close()
+		try:
+			if ref:
+				f.write('#----------------------------------------------------')
+				for file,name in DATA_REFERENCE.iteritems():
+					f.write('\n# %s:' % name)
+					for n,value in enumerate(DATA_CACHE[file]):
+						pad = ' ' * (3 - len(str(n)))
+						f.write('\n#     %s%s = %s' % (pad,n,value))
+					f.write('\n#')
+				f.write('----------------------------------------------------\n\n')
+			if ids == None:
+				ids = range(self.count)
+			for id in ids:
+				f.write('%sID %s:%s# %s name: %s\n' % (self.header, id, ' ' * (12 + self.longlabel - len(self.header) - len(str(id))), self.header, DATA_CACHE[self.idfile][id]))
+				for format,data,label,value in zip(self.format,self.data,self.labels,self.entries[id]):
+					if not format[0] or id in range(*format[0]):
+						if label in self.flaglens:
+							v = ''.join(reversed([str(value/(2**n)%2) for n in range(self.flaglens[label])]))
+						else:
+							v = value
+						f.write('    %s%s%s' % (label, ' ' * (self.longlabel + 1 - len(label)), v))
+						if data[0][0]:
+							f.write('%s# %s' % (' ' * (11 - len(str(v))), data[0][0](data[0][1], v)))
+						f.write('\n')
+				f.write('\n')
+		except:
+			raise
+		finally:
+			f.close()
 
 	def compile(self, file):
 		if len(self.entries) != self.count:
@@ -456,42 +460,46 @@ class UnitsDAT(object):
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		data = []
-		for id,entry in enumerate(self.entries):
-			if len(entry) < len(self.format):
-				raise
-			array = 0
-			d,fd = 0,0
-			for x,value in enumerate(entry):
-				if array:
-					d += 1
-					fd += 1
-				format = self.format[x-fd]
-				if x-d == len(data):
-					data.append([])
-				if not array:
-					if len(format) == 3:
-						array = format[2] - 1
+		try:
+			data = []
+			for id,entry in enumerate(self.entries):
+				if len(entry) < len(self.format):
+					raise
+				array = 0
+				d,fd = 0,0
+				for x,value in enumerate(entry):
+					if array:
+						d += 1
+						fd += 1
+					format = self.format[x-fd]
+					if x-d == len(data):
+						data.append([])
+					if not array:
+						if len(format) == 3:
+							array = format[2] - 1
+					else:
+						array -= 1
+						if array == 0:
+							fd = 0
+					if format[0] and not id in range(*format[0]):
+						continue
+					data[x-d].append(value)
+			l = list(self.labels)
+			d = 0
+			for n,values in enumerate(data):
+				format,label = self.format[n+d],self.labels[n+d]
+				l.remove(label)
+				if len(format) == 3:
+					d += format[2]-1
+				if label in self.special:
+					for value in values:
+						f.write(self.special[label](value,True))
 				else:
-					array -= 1
-					if array == 0:
-						fd = 0
-				if format[0] and not id in range(*format[0]):
-					continue
-				data[x-d].append(value)
-		l = list(self.labels)
-		d = 0
-		for n,values in enumerate(data):
-			format,label = self.format[n+d],self.labels[n+d]
-			l.remove(label)
-			if len(format) == 3:
-				d += format[2]-1
-			if label in self.special:
-				for value in values:
-					f.write(self.special[label](value,True))
-			else:
-				f.write(struct.pack('<%s%s' % (len(values), ['', 'B','H','','L'][format[1]]), *values))
-		f.close()
+					f.write(struct.pack('<%s%s' % (len(values), ['', 'B','H','','L'][format[1]]), *values))
+		except:
+			raise
+		finally:
+			f.close()
 
 class WeaponsDAT(UnitsDAT):
 	format = [

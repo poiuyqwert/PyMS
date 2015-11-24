@@ -170,50 +170,54 @@ class FNT:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		header = 'FONT%c%c%c%c' % (self.start,self.start+len(self.letters)-1,self.width,self.height)
-		o = 8+4*len(self.letters)
-		data = ''
-		hist = {}
-		for d in self.letters:
-			ldata = ''
-			maxw = len(d[0])
-			w,h,xo,yo = 0,0,999,-1
-			for y,yd in enumerate(d):
-				if yd.count(0) < maxw:
-					if yo < 0:
-						yo = y
-					h = y + 1
-					for x,xd in enumerate(yd):
-						if xd:
-							if xo < 0 or x < xo:
-								xo = x
-							if x >= w:
-								w = x + 1
-			if w + h == 0:
-				header += '\x00'*4
-			else:
-				w -= xo
-				h -= yo
-				ldata += '%c%c%c%c' % (w,h,xo,yo)
-				skip = 0
-				for y in d[yo:yo+h]:
-					for x in y[xo:xo+w]:
-						if not x and skip < 31:
-							skip += 1
-						else:
-							ldata += chr((skip << 3) + x)
-							skip = 0
-				if skip:
-					ldata += chr(skip << 3)
-				if ldata in hist:
-					header += struct.pack('<L',hist[ldata])
+		try:
+			header = 'FONT%c%c%c%c' % (self.start,self.start+len(self.letters)-1,self.width,self.height)
+			o = 8+4*len(self.letters)
+			data = ''
+			hist = {}
+			for d in self.letters:
+				ldata = ''
+				maxw = len(d[0])
+				w,h,xo,yo = 0,0,999,-1
+				for y,yd in enumerate(d):
+					if yd.count(0) < maxw:
+						if yo < 0:
+							yo = y
+						h = y + 1
+						for x,xd in enumerate(yd):
+							if xd:
+								if xo < 0 or x < xo:
+									xo = x
+								if x >= w:
+									w = x + 1
+				if w + h == 0:
+					header += '\x00'*4
 				else:
-					header += struct.pack('<L',o)
-					hist[ldata] = o
-					data += ldata
-					o += len(ldata)
-		f.write(header + data)
-		f.close()
+					w -= xo
+					h -= yo
+					ldata += '%c%c%c%c' % (w,h,xo,yo)
+					skip = 0
+					for y in d[yo:yo+h]:
+						for x in y[xo:xo+w]:
+							if not x and skip < 31:
+								skip += 1
+							else:
+								ldata += chr((skip << 3) + x)
+								skip = 0
+					if skip:
+						ldata += chr(skip << 3)
+					if ldata in hist:
+						header += struct.pack('<L',hist[ldata])
+					else:
+						header += struct.pack('<L',o)
+						hist[ldata] = o
+						data += ldata
+						o += len(ldata)
+			f.write(header + data)
+		except:
+			raise
+		finally:
+			f.close()
 
 # from BMP import *
 # import sys

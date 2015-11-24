@@ -327,119 +327,123 @@ class GRP:
 				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
 		else:
 			f = file
-		if uncompressed == None:
-			uncompressed = self.uncompressed
-		f.write(struct.pack('<3H', self.frames, self.width, self.height))
-		image_data = ''
-		offset = 6 + 8 * self.frames
-		frame_history = {}
-		for z,frame in enumerate(self.images):
-			x_min, y_min, x_max, y_max = self.images_bounds[z]
-			if uncompressed:
-				data = ''.join(''.join(chr(i) for i in l[x_min:x_max]) for l in frame[y_min:y_max])
-				if data in frame_history:
-					f.write(frame_history[data])
+		try:
+			if uncompressed == None:
+				uncompressed = self.uncompressed
+			f.write(struct.pack('<3H', self.frames, self.width, self.height))
+			image_data = ''
+			offset = 6 + 8 * self.frames
+			frame_history = {}
+			for z,frame in enumerate(self.images):
+				x_min, y_min, x_max, y_max = self.images_bounds[z]
+				if uncompressed:
+					data = ''.join(''.join(chr(i) for i in l[x_min:x_max]) for l in frame[y_min:y_max])
+					if data in frame_history:
+						f.write(frame_history[data])
+					else:
+						frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
+						f.write(frame_data)
+						frame_history[data] = frame_data
+						image_data += data
+						offset += len(data)
 				else:
-					frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
-					f.write(frame_data)
-					frame_history[data] = frame_data
-					image_data += data
-					offset += len(data)
-			else:
-				frame_hash = tuple(tuple(l[x_min:x_max]) for l in frame[y_min:y_max])
-				# If there is a duplicate frame, just point to it
-				if frame_hash in frame_history:
-					f.write(frame_history[frame_hash])
-				else:
-					frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
-					frame_history[frame_hash] = frame_data
-					f.write(frame_data)
-					line_data = ''
-					line_offset = 2 * (y_max - y_min)
-					line_offsets = []
-					line_history = {}
-					for y,line in enumerate(frame[y_min:y_max]):
-						line_hash = tuple(line)
-						# If there is a duplicate line is this frame, just point to it
-						if line_hash in line_history:
-							line_offsets.append(line_history[line_hash])
-						else:
-							# Break down bytes into runs of static bytes or repeating bytes (Note: Single transparent pixels are considered "repeating")
-							STATIC_RUN = 0
-							REPEAT_RUN = 1
-							working = [STATIC_RUN,[line[x_min]]]
-							runs = [working]
-							for cur in line[x_min+1:x_max]:
-								# Currently working on a static run
-								if working[0] == STATIC_RUN:
-									repeat = (cur == working[1][-1])
-									# If current byte is transparent or is a repeat of the last byte in the static run
-									if cur == self.transindex or repeat:
-										# If its a repeat remove the repeat from the static run
-										if repeat:
-											# If there is only 1 byte in the static run just remove the run
-											if len(working[1]) == 1:
-												del runs[-1]
-											else:
-												del working[1][-1]
-										# Start a new repeat run
-										working = [REPEAT_RUN,cur,1 + repeat]
-										runs.append(working)
-									# Else just append byte to static run
-									else:
-										working[1].append(cur)
-								else:
-									# If the current byte doesn't continue the repeat run
-									if cur != working[1]:
-										# If the working run only repeats its byte 2 times (and is not transparent), and the previous run was a static run
-										if len(runs) > 1 and runs[-2][0] == STATIC_RUN and working[1] != self.transindex and working[2] == 2:
-											# Merge the repeat run into the previous static run. This can save us a byte if the upcoming run is static (we won't need another length byte to start the next static run)
-											del runs[-1]
-											runs[-1][1].extend([working[1]] * working[2])
-											working = runs[-1]
-											working[1].append(cur)
-										# Start a new repeat run
-										elif cur == self.transindex:
-											working = [REPEAT_RUN,cur,1]
+					frame_hash = tuple(tuple(l[x_min:x_max]) for l in frame[y_min:y_max])
+					# If there is a duplicate frame, just point to it
+					if frame_hash in frame_history:
+						f.write(frame_history[frame_hash])
+					else:
+						frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
+						frame_history[frame_hash] = frame_data
+						f.write(frame_data)
+						line_data = ''
+						line_offset = 2 * (y_max - y_min)
+						line_offsets = []
+						line_history = {}
+						for y,line in enumerate(frame[y_min:y_max]):
+							line_hash = tuple(line)
+							# If there is a duplicate line is this frame, just point to it
+							if line_hash in line_history:
+								line_offsets.append(line_history[line_hash])
+							else:
+								# Break down bytes into runs of static bytes or repeating bytes (Note: Single transparent pixels are considered "repeating")
+								STATIC_RUN = 0
+								REPEAT_RUN = 1
+								working = [STATIC_RUN,[line[x_min]]]
+								runs = [working]
+								for cur in line[x_min+1:x_max]:
+									# Currently working on a static run
+									if working[0] == STATIC_RUN:
+										repeat = (cur == working[1][-1])
+										# If current byte is transparent or is a repeat of the last byte in the static run
+										if cur == self.transindex or repeat:
+											# If its a repeat remove the repeat from the static run
+											if repeat:
+												# If there is only 1 byte in the static run just remove the run
+												if len(working[1]) == 1:
+													del runs[-1]
+												else:
+													del working[1][-1]
+											# Start a new repeat run
+											working = [REPEAT_RUN,cur,1 + repeat]
 											runs.append(working)
+										# Else just append byte to static run
 										else:
-											working = [STATIC_RUN,[cur]]
-											runs.append(working)
-									# Else just increase repeat count
+											working[1].append(cur)
 									else:
-										working[2] += 1
-							data = ''
-							debug_result = []
-							for run in runs:
-								if run[0] == STATIC_RUN:
-									o = 0
-									while o < len(run[1]):
-										size = min(0x3F,len(run[1])-o)
-										data += chr(size)
-										for c in run[1][o:o+size]:
-											data += chr(c)
-										o += size
-								elif run[0] == REPEAT_RUN:
-									if run[1] == self.transindex:
-										repeats = run[2]
-										while repeats:
-											size = min(0x7F,repeats)
-											data += chr(size | 0x80)
-											repeats -= size
-									else:
-										repeats = run[2]
-										while repeats:
-											size = min(0x3F,repeats)
-											data += chr(size | 0x40) + chr(run[1])
-											repeats -= size
-							line_data += data
-							if line_offset > 65535:
-								raise PyMSError('Save','The image has too much pixel data to compile')
-							line_offsets.append(struct.pack('<H', line_offset))
-							line_history[line_hash] = line_offsets[-1]
-							line_offset += len(data)
-					line_data = ''.join(line_offsets) + line_data
-					image_data += line_data
-					offset += len(line_data)
-		f.write(image_data)
-		f.close()
+										# If the current byte doesn't continue the repeat run
+										if cur != working[1]:
+											# If the working run only repeats its byte 2 times (and is not transparent), and the previous run was a static run
+											if len(runs) > 1 and runs[-2][0] == STATIC_RUN and working[1] != self.transindex and working[2] == 2:
+												# Merge the repeat run into the previous static run. This can save us a byte if the upcoming run is static (we won't need another length byte to start the next static run)
+												del runs[-1]
+												runs[-1][1].extend([working[1]] * working[2])
+												working = runs[-1]
+												working[1].append(cur)
+											# Start a new repeat run
+											elif cur == self.transindex:
+												working = [REPEAT_RUN,cur,1]
+												runs.append(working)
+											else:
+												working = [STATIC_RUN,[cur]]
+												runs.append(working)
+										# Else just increase repeat count
+										else:
+											working[2] += 1
+								data = ''
+								debug_result = []
+								for run in runs:
+									if run[0] == STATIC_RUN:
+										o = 0
+										while o < len(run[1]):
+											size = min(0x3F,len(run[1])-o)
+											data += chr(size)
+											for c in run[1][o:o+size]:
+												data += chr(c)
+											o += size
+									elif run[0] == REPEAT_RUN:
+										if run[1] == self.transindex:
+											repeats = run[2]
+											while repeats:
+												size = min(0x7F,repeats)
+												data += chr(size | 0x80)
+												repeats -= size
+										else:
+											repeats = run[2]
+											while repeats:
+												size = min(0x3F,repeats)
+												data += chr(size | 0x40) + chr(run[1])
+												repeats -= size
+								line_data += data
+								if line_offset > 65535:
+									raise PyMSError('Save','The image has too much pixel data to compile')
+								line_offsets.append(struct.pack('<H', line_offset))
+								line_history[line_hash] = line_offsets[-1]
+								line_offset += len(data)
+						line_data = ''.join(line_offsets) + line_data
+						image_data += line_data
+						offset += len(line_data)
+			f.write(image_data)
+		except:
+			raise
+		finally:
+			f.close()
