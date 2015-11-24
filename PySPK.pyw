@@ -950,8 +950,8 @@ class PySPK(Tk):
 				and not self.locked.get() & (1 << self.layer.get()):
 			star = SPK.SPKStar()
 			star.image = self.selected_image
-			star.x = event.x - star.image.width/2
-			star.y = event.y - star.image.height/2
+			star.x = max(0,event.x - star.image.width/2)
+			star.y = max(0,event.y - star.image.height/2)
 			self.spk.layers[self.layer.get()].stars.append(star)
 			self.update_star(star, self.layer.get())
 			self.update_zorder()
