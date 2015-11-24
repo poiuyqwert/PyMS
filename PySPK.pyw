@@ -178,7 +178,7 @@ class PaletteTab(NotebookTab):
 					if toplevel.spk:
 						toplevel.tool.set(t)
 				toplevel.bind(key, lambda e,t=tool: choose_tool(t))
-		f.pack(side=TOP, fill=X, padx=2)
+		f.pack(side=TOP, fill=X, padx=2, pady=(2,0))
 
 	def action_states(self):
 		isopen = [NORMAL,DISABLED][not self.toplevel.spk]
@@ -259,7 +259,7 @@ class PaletteTab(NotebookTab):
 			try:
 				b.load_file(filepath)
 			except PyMSError, e:
-				ErrorDialog(self, e)
+				ErrorDialog(self.toplevel, e)
 			else:
 				image = SPK.SPKImage()
 				image.width = b.width
@@ -321,7 +321,7 @@ class StarsTab(NotebookTab):
 					if toplevel.spk:
 						toplevel.tool.set(t)
 				toplevel.bind(key, lambda e,t=tool: choose_tool(t))
-		f.pack(side=TOP, fill=X, padx=2)
+		f.pack(side=TOP, fill=X, padx=2, pady=(2,0))
 
 	def action_states(self):
 		isopen = [NORMAL,DISABLED][not self.toplevel.spk]
@@ -576,7 +576,8 @@ class PySPK(Tk):
 		frame = Frame(self)
 		leftframe = Frame(frame)
 		layersframe = LabelFrame(leftframe, text='Layers:')
-		listbox = Frame(layersframe, border=2, relief=SUNKEN)
+		f = Frame(layersframe)
+		listbox = Frame(f, border=2, relief=SUNKEN)
 		self.rows = []
 		for l in range(5):
 			row = LayerRow(listbox, selvar=self.layer, visvar=self.visible, lockvar=self.locked, layer=l)
@@ -584,7 +585,7 @@ class PySPK(Tk):
 			row.pack(side=TOP, fill=X, expand=1)
 			self.rows.append(row)
 		listbox.pack(side=TOP, padx=5, fill=X, expand=1)
-		f = Frame(layersframe)
+		btnsframe = Frame(f)
 		buttons = (
 			('add', self.add_layer, LEFT, 'Add Layer', 0, None),
 			('remove', self.remove_layer, LEFT, 'Remove Layer', 0, None),
@@ -597,21 +598,22 @@ class PySPK(Tk):
 		for col,(icon,callback,side,tip,padx,var) in enumerate(buttons):
 			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % icon))
 			if var:
-				button = Checkbutton(f, image=image, indicatoron=0, width=20, height=20, variable=var, state=DISABLED)
+				button = Checkbutton(btnsframe, image=image, indicatoron=0, width=20, height=20, variable=var, state=DISABLED)
 			else:
-				button = Button(f, image=image, width=20, height=20, command=callback, state=DISABLED)
+				button = Button(btnsframe, image=image, width=20, height=20, command=callback, state=DISABLED)
 			button.tooltip = Tooltip(button, tip)
 			button.image = image
 			button.pack(side=side, padx=padx)
 			self.buttons[icon] = button
-		f.pack(side=TOP, fill=X, padx=2)
+		btnsframe.pack(side=TOP, fill=X, padx=2)
+		f.pack(padx=2, pady=2, expand=1, fill=BOTH)
 		layersframe.grid(row=0,column=0, sticky=NSEW, padx=(2,0))
 		notebook = Notebook(leftframe)
 		self.palette_tab = PaletteTab(notebook, self)
 		notebook.add_tab(self.palette_tab, 'Palette')
 		self.stars_tab = StarsTab(notebook, self)
 		notebook.add_tab(self.stars_tab, 'Stars')
-		notebook.grid(row=1,column=0, stick=NSEW, padx=(2,0))
+		notebook.grid(row=1,column=0, stick=NSEW, padx=(2,0), pady=(4,0))
 		leftframe.grid_columnconfigure(0, weight=1)
 		leftframe.grid_rowconfigure(1, weight=1)
 		leftframe.grid(row=0, column=0, padx=2, pady=2, sticky=NSEW)
