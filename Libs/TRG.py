@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 import TBL, AIBIN
 
 import struct, re, os
@@ -1711,16 +1712,7 @@ class TRG:
 			r(self)
 
 	def load_file(self, file, TRIG=False):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load TRG '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'TRG')
 		self.load_data(data, TRIG)
 
 	def load_data(self, data, TRIG=False, MBRF=False):

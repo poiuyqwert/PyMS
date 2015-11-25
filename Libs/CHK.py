@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 import TRG, TBL, AIBIN
 
 import struct, math
@@ -1946,16 +1947,7 @@ class CHK:
 		return colors[player]
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load CHK file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'CHK')
 		try:
 			self.load_data(data)
 		except PyMSError, e:

@@ -1,4 +1,4 @@
-from SFmpq import *
+# from SFmpq import *
 
 from Tkinter import *
 from tkMessageBox import askquestion,OK

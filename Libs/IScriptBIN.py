@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 import TBL,DAT
 
 import struct, re, os
@@ -597,16 +598,7 @@ class IScriptBIN:
 			self.sfxdatatbl.load_file(sfxdatatbl)
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load iscript.bin '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'iscript.bin')
 		try:
 			headers = {}
 			offsets = {}

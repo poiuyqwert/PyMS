@@ -1,4 +1,6 @@
 from utils import *
+from fileutils import *
+from SFmpq import *
 from Libs import PCX,FNT,GRP,PAL,TBL,AIBIN,DAT,IScriptBIN
 
 from Tkinter import *
@@ -143,16 +145,6 @@ class UpdateDialog(PyMSDialog):
 		except:
 			pass
 		PyMSDialog.ok(self)
-
-class BadFile:
-	def __init__(self, file):
-		self.file = file
-
-	def __str__(self):
-		return self.file
-
-	def __nonzero__(self):
-		return False
 
 class MPQHandler:
 	def __init__(self, mpqs=[], listfiles=None):

@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import struct, math
 
@@ -13,16 +14,7 @@ class BMP:
 		self.image = []
 
 	def load_file(self, file, issize=None):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load the BMP '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'BMP')
 		if data[:2] != 'BM':
 			raise PyMSError('Load',"'%s' is not a BMP file (no BMP header)" % file)
 		try:

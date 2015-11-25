@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import struct, re
 
@@ -46,16 +47,7 @@ class GOT:
 		self.template = [0]*18
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load GOT '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'GOT')
 		try:
 			if data[0] != '\x03':
 				raise

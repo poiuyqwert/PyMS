@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 import TBL
 
 import struct, re
@@ -543,16 +544,7 @@ class DialogBIN:
 		self.smks = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load Dialog BIN file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'Dialog BIN')
 		try:
 			self.load_data(data)
 		except PyMSError, e:
@@ -709,16 +701,7 @@ class DialogBIN:
 		return ''.join(results)
 
 	def interpret_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file)
 		self.interpret_data(data)
 
 	def interpret_data(self, data):

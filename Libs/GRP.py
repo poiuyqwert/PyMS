@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import sys,struct,itertools
 try:
@@ -136,16 +137,7 @@ class CacheGRP:
 		self.uncompressed = None
 
 	def load_file(self, file, palette=None, restrict=None, uncompressed=None):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load the GRP '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = struct.unpack('<3H',data[:6])
 			if frames < 1 or frames > 2400 or width < 1 or width > 256 or height < 1 or height > 256:
@@ -234,16 +226,7 @@ class GRP:
 		self.transindex = transindex
 
 	def load_file(self, file, palette=None, transindex=0, uncompressed=None):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load the GRP '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = struct.unpack('<3H',data[:6])
 			if frames < 1 or frames > 2400 or width < 1 or width > 256 or height < 1 or height > 256:

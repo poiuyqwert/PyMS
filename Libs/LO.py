@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import struct, re
 
@@ -7,16 +8,7 @@ class LO:
 		self.frames = [[[0,0]]]
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load LO* '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'LO*')
 		try:
 			frames,overlays = struct.unpack('<LL', data[:8])
 			framedata = []

@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import sys,struct
 try:
@@ -455,16 +456,7 @@ class CV5:
 		self.groups = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load CV5 file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'CV5')
 		if data and len(data) % 52:
 			raise PyMSError('Load',"'%s' is an invalid CV5 file" % file)
 		groups = []
@@ -501,16 +493,7 @@ class VF4:
 		self.flags = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load VF4 file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'VF4')
 		if data and len(data) % 32:
 			raise PyMSError('Load',"'%s' is an invalid VF$ file" % file)
 		flags = []
@@ -546,16 +529,7 @@ class VX4:
 		self.graphics = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load VX4 file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'VX4')
 		if data and len(data) % 32:
 			raise PyMSError('Load',"'%s' is an invalid VX4 file" % file)
 		graphics = []
@@ -591,16 +565,7 @@ class VR4:
 		self.images = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load VR4 file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'VR4')
 		if data and len(data) % 64:
 			raise PyMSError('Load',"'%s' is an invalid VR4 file" % file)
 		images = []
@@ -640,16 +605,7 @@ class DDDataBIN:
 		self.doodads = [[0]*256 for _ in range(512)]
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load dddata.bin file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'dddata.dat')
 		if len(data) != 262144:
 			raise PyMSError('Load',"'%s' is an invalid dddata.bin file" % file)
 		doodads = []

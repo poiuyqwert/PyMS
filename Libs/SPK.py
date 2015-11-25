@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import BMP, PAL
 
@@ -30,16 +31,7 @@ class SPK:
 		self.images = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load SPK file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'SPK')
 		try:
 			self.load_data(data)
 		except PyMSError, e:

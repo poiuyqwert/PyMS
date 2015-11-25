@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 import TBL
 
 import struct, os, re
@@ -272,16 +273,7 @@ class UnitsDAT(object):
 		return value>>8
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load %s file '%s'" % (self.datname, file))
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, self.datname)
 		if len(data) != self.filesize:
 			raise PyMSError('Load',"'%s' is an invalid %s file (the file size must be %s, but got a file with size %s)" % (file,self.datname,self.filesize,len(data)))
 		try:

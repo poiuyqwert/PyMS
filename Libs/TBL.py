@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import struct, re
 
@@ -102,16 +103,7 @@ class TBL:
 		self.strings = []
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Load',"Could not load TBL file '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'TBL')
 		try:
 			n = struct.unpack('<H', data[:2])[0]
 			offsets = struct.unpack('<%sH' % n, data[2:2+2*n])

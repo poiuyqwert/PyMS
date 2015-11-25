@@ -1,4 +1,5 @@
 from utils import *
+from fileutils import *
 
 import struct
 
@@ -37,16 +38,7 @@ class Palette:
 		return palette
 
 	def load_file(self, file):
-		if isstr(file):
-			try:
-				f = open(file,'rb')
-				data = f.read()
-			except:
-				raise PyMSError('Palette',"Could not load palette '%s'" % file)
-			finally:
-				f.close()
-		else:
-			data = file.read()
+		data = load_file(file, 'palette')
 		for t,pal in [(0,self.load_riff_pal),(1,self.load_jasc_pal),(None,self.load_zsoft_pcx),(3,self.load_sc_wpe),(2,self.load_sc_pal)]:
 			try:
 				palette = pal(data)
