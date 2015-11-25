@@ -757,7 +757,7 @@ class PyMPQ(Tk):
 		close = False
 		if h == -1:
 			close = True
-			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING)
+			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 		if SFInvalidHandle(h):
 			raise
 		self.files = []
@@ -826,7 +826,7 @@ class PyMPQ(Tk):
 			close = False
 			if h == None:
 				close = True
-				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING)
+				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 			if SFInvalidHandle(h):
 				raise
 			f = SFileGetFileInfo(h,SFILE_INFO_NUM_FILES)
@@ -887,7 +887,7 @@ class PyMPQ(Tk):
 
 	def openfile(self, e=None):
 		path = os.path.join(BASE_DIR,'Libs','Temp',str(self.id))
-		h = SFileOpenArchive(self.file)
+		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 		if SFInvalidHandle(h):
 			raise
 		for i in self.listbox.cur_selection():
@@ -908,7 +908,7 @@ class PyMPQ(Tk):
 				start_new_thread(os.system, ('"%s"' % fn,))
 		if not self.thread:
 			self.thread.start()
-		SFileCloseArchive(h)
+		MpqCloseUpdatedArchive(h)
 
 	def update_files(self, fs):
 		p = os.path.join(BASE_DIR,'Libs','Temp',str(self.id),'')
@@ -954,7 +954,7 @@ class PyMPQ(Tk):
 			file = self.select_file('Open MPQ')
 			if not file:
 				return
-		h = MpqOpenArchiveForUpdateEx(file)
+		h = MpqOpenArchiveForUpdateEx(file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 		if SFInvalidHandle(h):
 			askquestion(parent=self, title='Open', message='There is no MPQ in "%s".' % file, type=OK)
 			return
@@ -963,7 +963,7 @@ class PyMPQ(Tk):
 		self.status.set('Load Successful!')
 		self.list_files(h)
 		self.update_info(h)
-		SFileCloseArchive(h)
+		MpqCloseUpdatedArchive(h)
 		self.update_list()
 		self.select()
 

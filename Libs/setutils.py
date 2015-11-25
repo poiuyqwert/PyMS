@@ -187,7 +187,7 @@ class MPQHandler:
 				if not os.path.exists(m):
 					missing[0].append(m)
 					continue
-				handles[m] = SFileOpenArchive(m, len(self.mpqs)-p)
+				handles[m] = MpqOpenArchiveForUpdateEx(m, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 				if SFInvalidHandle(handles[m]):
 					missing[1].append(m)
 				elif self.open == True:
@@ -207,7 +207,7 @@ class MPQHandler:
 		self.open = False
 		for h in self.handles.values():
 			if not SFInvalidHandle(h):
-				SFileCloseArchive(h)
+				MpqCloseUpdatedArchive(h)
 		self.handles = {}
 
 	# folder(True)=Get only from folder,folder(None)=Get from either, MPQ first, folder second,folder(False)=Get only from MPQ
