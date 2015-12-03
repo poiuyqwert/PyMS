@@ -393,7 +393,7 @@ class PyTBL(Tk):
 		self.listbox.bind('<ButtonRelease-3>', self.popup)
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=Y, expand=1)
+		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		# listframe.pack(side=LEFT, fill=Y, padx=1, pady=2)
 		self.hor_pane.add(listframe, sticky=NSEW, minsize=200)
 
