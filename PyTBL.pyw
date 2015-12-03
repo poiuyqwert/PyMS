@@ -367,10 +367,10 @@ class PyTBL(Tk):
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
 
-		mid = Frame(self)
+		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
 
 		# listbox
-		listframe = Frame(mid, bd=2, relief=SUNKEN)
+		listframe = Frame(self.hor_pane, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)
 		self.listbox = Listbox(listframe, width=35, height=1, bd=0, yscrollcommand=scrollbar.set, exportselection=0, state=DISABLED, activestyle=DOTBOX)
 		bind = [
@@ -394,11 +394,12 @@ class PyTBL(Tk):
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=Y, expand=1)
-		listframe.pack(side=LEFT, fill=Y, padx=1, pady=2)
+		# listframe.pack(side=LEFT, fill=Y, padx=1, pady=2)
+		self.hor_pane.add(listframe, sticky=NSEW, minsize=200)
 
 		# Textbox
-		self.pane = PanedWindow(mid,orient=VERTICAL)
-		textframe = Frame(self.pane, bd=2, relief=SUNKEN)
+		self.ver_pane = PanedWindow(self.hor_pane,orient=VERTICAL)
+		textframe = Frame(self.ver_pane, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(textframe, orient=HORIZONTAL)
 		vscroll = Scrollbar(textframe)
 		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0, state=DISABLED)
@@ -415,8 +416,8 @@ class PyTBL(Tk):
 		vscroll.grid(sticky=NS, row=0, column=1)
 		textframe.grid_rowconfigure(0, weight=1)
 		textframe.grid_columnconfigure(0, weight=1)
-		self.pane.add(textframe, sticky=NSEW)
-		colors = Frame(self.pane, bd=2, relief=SUNKEN)
+		self.ver_pane.add(textframe, sticky=NSEW)
+		colors = Frame(self.ver_pane, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(colors, orient=HORIZONTAL)
 		vscroll = Scrollbar(colors)
 		text = Text(colors, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
@@ -429,10 +430,11 @@ class PyTBL(Tk):
 		vscroll.grid(sticky=NS, row=0, column=1)
 		colors.grid_rowconfigure(0, weight=1)
 		colors.grid_columnconfigure(0, weight=1)
-		self.pane.add(colors, sticky=NSEW)
-		self.pane.pack(side=LEFT, fill=BOTH, expand=1)
+		self.ver_pane.add(colors, sticky=NSEW)
+		# self.ver_pane.pack(side=LEFT, fill=BOTH, expand=1)
+		self.hor_pane.add(self.ver_pane, sticky=NSEW, minsize=200)
 
-		mid.grid(row=1,column=0, sticky=NSEW)
+		self.hor_pane.grid(row=1,column=0, sticky=NSEW)
 
 		#Statusbar
 		self.status = StringVar()
@@ -453,8 +455,13 @@ class PyTBL(Tk):
 
 		if 'window' in self.settings:
 			loadsize(self, self.settings, 'window', True)
-		if 'colorlist' in self.settings:
-			self.after(200, lambda: self.pane.sash_place(0, *self.settings['colorlist']))
+		def update_panes():
+			if 'stringlist' in self.settings:
+				self.hor_pane.sash_place(0, *self.settings['stringlist'])
+			if 'colorlist' in self.settings:
+				self.ver_pane.sash_place(0, *self.settings['colorlist'])
+		if 'stringlist' in self.settings or 'colorlist' in self.settings:
+			self.after(200, update_panes)
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if not 'mpqs' in self.settings:
@@ -827,7 +834,8 @@ class PyTBL(Tk):
 
 	def exit(self, e=None):
 		if not self.unsaved():
-			self.settings['colorlist'] = self.pane.sash_coord(0)
+			self.settings['stringlist'] = self.hor_pane.sash_coord(0)
+			self.settings['colorlist'] = self.ver_pane.sash_coord(0)
 			savesize(self, self.settings)
 			try:
 				f = file(os.path.join(BASE_DIR,'Settings','PyTBL.txt'),'w')
