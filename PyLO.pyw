@@ -1045,7 +1045,7 @@ def main():
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, args = p.parse_args()
 		if opt.gui:
-			gui = PyAI(opt.gui)
+			gui = PyLO(opt.gui)
 			gui.mainloop()
 		else:
 			if not len(args) in [1,2]:
