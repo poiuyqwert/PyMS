@@ -36,11 +36,11 @@ COLOR_CODES_INGAME = {
 	23:(1,7),
 	24:(2,0),
 	25:(2,1),
-	26:(2,2),
-	27:(2,3),
-	28:(2,4),
-	29:(2,5),
-	30:(2,6),
+	26:(0,0),
+	27:(2,2),
+	28:(2,3),
+	29:(2,4),
+	30:(2,5),
 	31:(2,7)
 }
 COLOR_CODES_GLUE = {
@@ -78,7 +78,12 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
 	data = []
 	for y in letter:
 		data.extend(y)
-	pal = [(c[0],c[1],c[2],[0,255][n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]]) for n,c in enumerate(palette.palette)]
+	pal = []
+	for n,c in enumerate(palette.palette):
+		alpha = 0
+		if n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]:
+			alpha = 255
+		pal.append((c[0],c[1],c[2],alpha))
 	i.putdata(map(lambda i: pal[palette.image[color_map[0]][color_map[1]*8+i]], data))
 	return ImageTk.PhotoImage(i)
 
