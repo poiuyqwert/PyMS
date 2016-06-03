@@ -255,9 +255,15 @@ class PyGRP(Tk):
 
 		frame = Frame(self)
 
+		self.hex = IntVar()
+		self.hex.set(self.settings.get('hex', 0))
+
 		leftframe = Frame(frame)
 		#Listbox
-		Label(leftframe, text='Frames:', anchor=W).pack(side=TOP, fill=X)
+		s = Frame(leftframe)
+		Label(s, text='Frames:', anchor=W).pack(side=LEFT)
+		Checkbutton(s, text='Hex', variable=self.hex, command=self.update_list).pack(side=RIGHT)
+		s.pack(side=TOP, fill=X)
 		listframe = Frame(leftframe, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)
 		self.listbox = Listbox(listframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, height=17, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
@@ -651,6 +657,21 @@ class PyGRP(Tk):
 			self.prevfrom.set(0)
 			self.prevto.set(0)
 
+	def append_frame(self, frame):
+		f = frame
+		if self.hex.get():
+			f = '0x%02X' % frame
+		self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), f))
+	def update_list(self):
+		s = self.listbox.curselection()
+		y = self.listbox.yview()[0]
+		self.listbox.delete(0,END)
+		for frame in range(self.grp.frames):
+			self.append_frame(frame)
+		for i in s:
+			self.listbox.select_set(i)
+		self.listbox.yview_moveto(y)
+
 	def new(self, key=None):
 		self.stopframe()
 		if not self.unsaved():
@@ -661,9 +682,7 @@ class PyGRP(Tk):
 			self.frames = []
 			self.status.set('Editing new GRP.')
 			self.editstatus['state'] = DISABLED
-			self.listbox.delete(0,END)
-			for frame in range(self.grp.frames):
-				self.listbox.insert(END, '%sFrame %s' % ('  ' * (frame / 17 % 2), frame))
+			self.update_list()
 			self.listbox.select_set(0)
 			self.preview_limits(True)
 			self.preview()
@@ -692,9 +711,7 @@ class PyGRP(Tk):
 			self.status.set('Load successful!')
 			self.editstatus['state'] = DISABLED
 			self.status.set(file)
-			self.listbox.delete(0,END)
-			for frame in range(self.grp.frames):
-				self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
+			self.update_list()
 			self.listbox.select_set(0)
 			self.preview_limits(True)
 			self.preview()
@@ -798,7 +815,7 @@ class PyGRP(Tk):
 				self.grp.images_bounds.extend(fs.images_bounds)
 				for i in fs.images:
 					self.frames.append({})
-					self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
+					self.append_frame(frame)
 					frame += 1
 				self.edited = True
 				self.editstatus['state'] = NORMAL
@@ -830,8 +847,7 @@ class PyGRP(Tk):
 			self.grp.width = 0
 			self.grp.height = 0
 		self.listbox.delete(0,END)
-		for frame in range(self.grp.frames):
-			self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
+		self.update_list()
 		self.edited = True
 		self.editstatus['state'] = NORMAL
 		if self.listbox.size():
@@ -886,6 +902,7 @@ class PyGRP(Tk):
 		self.stopframe()
 		if not self.unsaved():
 			savesize(self, self.settings, 'window')
+			self.settings['hex'] = not not self.hex.get()
 			self.settings['bgcolor'] = self.canvas['background']
 			self.settings['previewspeed'] = int(self.prevspeed.get())
 			self.settings['showpreview'] = not not self.showpreview.get()
