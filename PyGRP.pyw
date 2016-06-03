@@ -279,7 +279,7 @@ class PyGRP(Tk):
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
+		listframe.pack(side=TOP, padx=1, pady=1)
 		self.bind('<Control-a>', self.selectall)
 
 		#Palette
@@ -304,7 +304,7 @@ class PyGRP(Tk):
 		scrollbar.config(command=self.pallist.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.pallist.pack(side=LEFT, fill=BOTH, expand=1)
-		palette.pack(side=BOTTOM, padx=1, pady=1)
+		palette.pack(side=BOTTOM, padx=1, pady=1, fill=BOTH, expand=1)
 		s = -1
 		for pal in os.listdir(os.path.join(BASE_DIR, 'Palettes')):
 			try:
@@ -364,6 +364,8 @@ class PyGRP(Tk):
 
 		self.prevspeed = IntegerVar(self.settings.get('previewspeed', 150), [1,5000])
 		self.transid = IntegerVar(self.settings.get('transid', 0), [0,255])
+		self.prevfrom = IntegerVar(0,[0,0])
+		self.prevto = IntegerVar(0,[0,0])
 		self.showpreview = IntVar()
 		self.showpreview.set(self.settings.get('showpreview', 1))
 		self.looppreview = IntVar()
@@ -388,18 +390,26 @@ class PyGRP(Tk):
 		self.transent = Entry(s, textvariable=self.transid, font=couriernew, width=3)
 		self.transent.pack(side=LEFT)
 		s.grid(row=0, column=1, sticky=W)
-		Checkbutton(opts, text='Show Preview', variable=self.showpreview, command=self.showprev).grid(row=1, column=0, sticky=W)
-		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(row=1, column=1, sticky=W)
-		Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=2, column=0, sticky=W)
-		Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=2, column=1, sticky=W)
+		s = Frame(opts)
+		Label(s, text='Preview Between: ').pack(side=LEFT)
+		self.prevstart = Entry(s, textvariable=self.prevfrom, font=couriernew, width=3, state=DISABLED)
+		self.prevstart.pack(side=LEFT)
+		Label(s, text=' - ').pack(side=LEFT)
+		self.prevend = Entry(s, textvariable=self.prevto, font=couriernew, width=3, state=DISABLED)
+		self.prevend.pack(side=LEFT)
+		s.grid(row=1, columnspan=2)
+		Checkbutton(opts, text='Show Preview', variable=self.showpreview, command=self.showprev).grid(row=2, column=0, sticky=W)
+		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(row=2, column=1, sticky=W)
+		Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=3, column=0, sticky=W)
+		Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=3, column=1, sticky=W)
 		self.checktext = StringVar()
 		c = Checkbutton(opts, textvariable=self.checktext, variable=self.singlebmp, command=self.threestate)
 		self.checktooltip = Tooltip(c, '')
-		c.grid(row=3, column=0, sticky=W)
+		c.grid(row=4, column=0, sticky=W)
 		self.threestate(True)
 		self.uncompressed = IntVar()
 		self.uncompressed.set(self.settings.get('uncompressed', 0))
-		Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=3, column=1, sticky=W)
+		Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=4, column=1, sticky=W)
 		opts.pack()
 
 		leftframe.pack(side=LEFT, padx=1, pady=1, fill=Y, expand=1)
@@ -419,7 +429,7 @@ class PyGRP(Tk):
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window')
+			loadsize(self, self.settings, 'window', size=False)
 
 		if guifile:
 			self.open(file=guifile)
@@ -597,14 +607,17 @@ class PyGRP(Tk):
 			self.play = None
 
 	def playframe(self):
-		if self.speed and self.listbox.curselection():
+		prevfrom = self.prevfrom.get()
+		prevto = self.prevto.get()
+		if self.speed and self.listbox.curselection() and prevto > prevfrom:
 			i = int(self.listbox.curselection()[0]) + self.speed
-			if self.looppreview.get() or (i > -1 and i < self.listbox.size()):
-				while i < 0 or i >= self.listbox.size():
-					if i < 0:
-						i += self.listbox.size()
-					if i >= self.listbox.size():
-						i %= self.listbox.size()
+			frames = prevto-prevfrom+1
+			if self.looppreview.get() or (i >= prevfrom and i <= prevto):
+				while i < prevfrom or i > prevto:
+					if i < prevfrom:
+						i += frames
+					if i > prevto:
+						i -= frames
 				self.listbox.select_clear(0,END)
 				self.listbox.select_set(i)
 				self.listbox.see(i)
@@ -623,6 +636,21 @@ class PyGRP(Tk):
 		self.listbox.select_set(0,END)
 		self.action_states()
 
+	def preview_limits(self, init=False):
+		if self.grp:
+			self.prevstart.config(state=NORMAL)
+			self.prevend.config(state=NORMAL)
+			to = max(self.grp.frames-1,0)
+			self.prevfrom.range[1] = to
+			self.prevto.range[1] = to
+			if init or self.prevto.get() > to:
+				self.prevto.set(to)
+		else:
+			self.prevstart.config(state=DISABLED)
+			self.prevend.config(state=DISABLED)
+			self.prevfrom.set(0)
+			self.prevto.set(0)
+
 	def new(self, key=None):
 		self.stopframe()
 		if not self.unsaved():
@@ -637,6 +665,7 @@ class PyGRP(Tk):
 			for frame in range(self.grp.frames):
 				self.listbox.insert(END, '%sFrame %s' % ('  ' * (frame / 17 % 2), frame))
 			self.listbox.select_set(0)
+			self.preview_limits(True)
 			self.preview()
 			self.action_states()
 			self.grpoutline()
@@ -667,6 +696,7 @@ class PyGRP(Tk):
 			for frame in range(self.grp.frames):
 				self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), frame))
 			self.listbox.select_set(0)
+			self.preview_limits(True)
 			self.preview()
 			self.action_states()
 			self.grpoutline()
@@ -712,6 +742,7 @@ class PyGRP(Tk):
 			self.status.set('Load or create a GRP.')
 			self.editstatus['state'] = DISABLED
 			self.listbox.delete(0,END)
+			self.preview_limits()
 			self.preview()
 			self.action_states()
 			self.grpoutline()
@@ -776,6 +807,7 @@ class PyGRP(Tk):
 				self.listbox.select_set(sel)
 				self.listbox.see(sel)
 				self.status.set('Frames imported successfully!')
+				self.preview_limits()
 				self.preview()
 				self.action_states()
 				self.grpoutline()
@@ -807,6 +839,7 @@ class PyGRP(Tk):
 			self.listbox.see(i)
 		else:
 			self.frame = None
+		self.preview_limits()
 		self.preview(pal=self.pal)
 		self.action_states()
 		self.grpoutline()
