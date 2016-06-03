@@ -503,11 +503,12 @@ class DATTab(NotebookTab):
 			elif isinstance(file, tuple):
 				dat,self.file = file
 				self.dat.entries = dat.entries
+			self.id = 0
+			self.toplevel.listbox.select_clear()
+			self.toplevel.listbox.select_set(0)
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.status.set(self.file)
 				self.loadsave()
-			self.id = 0
-			self.toplevel.listbox.select_set(0)
 
 	def iimport(self, key=None, file=None, c=True, parent=None):
 		if parent == None:
