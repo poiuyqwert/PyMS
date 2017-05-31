@@ -104,7 +104,7 @@ class Tileset:
 		if isstr(cv5):
 			path = os.path.dirname(cv5)
 			name = os.path.basename(cv5)
-			if name.split(os.extsep)[-1].lower() == 'cv5'):
+			if name.split(os.extsep)[-1].lower() == 'cv5':
 				name = name[:-4]
 		if not vf4:
 			if not path or not name:
