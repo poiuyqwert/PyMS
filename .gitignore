@@ -1,4 +1,5 @@
 *.pyc
 stdeo.txt
 Libs/WORKING/*
+Libs/Logs/*
 test.py

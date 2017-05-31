@@ -2,7 +2,12 @@ from utils import *
 
 import sys,os
 
-DEBUG = 1
+# DEBUG = Show std out in logs
+DEBUG = True
+# FSYNC = Use fsync for std err to try and ensure we capture the errors
+FSYNC = True
+
+LOGS_FOLDER = os.path.join(BASE_DIR,'Libs','Logs')
 
 class ErrorHandler:
 	def __init__(self, toplevel, prog):
@@ -10,13 +15,16 @@ class ErrorHandler:
 		self.prog = prog
 		self.window = None
 		self.buffer = ''
-		if DEBUG:
-			self.file = open(os.path.join(BASE_DIR,'Libs','stdeo.txt'),'w')
+		try:
+			os.makedirs(LOGS_FOLDER)
+			self.file = open(os.path.join(LOGS_FOLDER, '%s.txt' % prog),'w')
+		except OSError:
+			pass
 
 	def write(self, text, stdout=False):
 		if self.file:
 			self.file.write(text)
-			if DEBUG == 2:
+			if FSYNC:
 				self.file.flush()
 				os.fsync(self.file.fileno())
 
