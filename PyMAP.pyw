@@ -1262,20 +1262,24 @@ class BWImage:
 		return True
 
 	def tick(self, dt):
+		# return
 		if self.iscript_wait > 0:
 			self.iscript_wait -= dt
 			if self.iscript_wait < 0:
 				self.iscript_wait = 0
+		dirty = False
 		while self.iscript_wait == 0:
 			cmd = self.ui.iscriptbin.code.getitem(self.iscript_cmd)
 			opcode = self.iscript_opcodes.get(cmd[0])
 			inc = True
 			if opcode:
+				dirty = True
 				inc = opcode(*cmd[1:])
-			else:
-				print (self.iscript_id, cmd)
+			# else:
+			# 	print (self.iscript_id, cmd)
 			if inc:
 				self.iscript_cmd += 1
+		return dirty
 
 class ActionUpdateLocation(ActionUpdateValues):
 	def __init__(self, ui, location_id, location, attrs):
@@ -1674,6 +1678,11 @@ class EditLayerUnits(EditLayer):
 		self.selection_box = None
 		self.selecting_moved = False
 
+	def set_mode(self, mode, x1,y1, x2,y2):
+		if EditLayer.set_mode(self, mode, x1,y1, x2,y2):
+			if self.mode != EditLayer.ACTIVE:
+				self.deselect_all()
+
 	def deselect(self, image):
 		if image in self.selected_images:
 			self.selected_images.remove(image)
@@ -1923,11 +1932,9 @@ class MapLayerImages(MapLayer):
 	def tick(self, dt):
 		for ref in self.images.keys():
 			image = self.images.get(ref)
-			if image:
-				image.tick(dt)
-				if ref in self.images:
-					frame = image.current_frame()
-					self.ui.mapCanvas.itemconfig(ref, image=frame)
+			if image and image.tick(dt):
+				frame = image.current_frame()
+				self.ui.mapCanvas.itemconfig(ref, image=frame)
 
 class ListLayer:
 	NAME = None
