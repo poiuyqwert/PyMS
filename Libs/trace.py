@@ -8,6 +8,10 @@ DEBUG = True
 FSYNC = True
 
 LOGS_FOLDER = os.path.join(BASE_DIR,'Libs','Logs')
+try:
+	os.makedirs(LOGS_FOLDER)
+except:
+	pass
 
 class ErrorHandler:
 	def __init__(self, toplevel, prog):
@@ -16,7 +20,6 @@ class ErrorHandler:
 		self.window = None
 		self.buffer = ''
 		try:
-			os.makedirs(LOGS_FOLDER)
 			self.file = open(os.path.join(LOGS_FOLDER, '%s.txt' % prog),'w')
 		except OSError:
 			pass
