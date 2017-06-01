@@ -482,7 +482,7 @@ class TilePalette(PyMSDialog):
 			self.drawtiles()
 			self.parent.update_ranges()
 
-	def remove(self):
+	def remove(self, e=None):
 		pass
 
 	def edit(self, e=None):
@@ -505,8 +505,8 @@ class TilePalette(PyMSDialog):
 			self.scroll.set(x,x+8/groups)
 
 	def scrolling(self, t, p, e=None):
-		a = {'page':8,'units':1}
 		if self.type == 0:
+		a = {'page':8,'pages':8,'units':1}
 			groups = len(self.tileset.cv5.groups)-8
 		elif self.type == 1:
 			groups = int(ceil(len(self.tileset.vx4.graphics) / 16.0) - 8)
@@ -1002,7 +1002,7 @@ class PyTILE(Tk):
 		if self.dosave[1]:
 			self.minisave()
 			self.dosave[1] = False
-		a = {'page':8,'units':1}
+		a = {'page':8,'pages':8,'units':1}
 		groups = len(self.tileset.cv5.groups)-1
 		p = min(100,float(p) / (1-8/float(groups)))
 		if t == 'moveto':
