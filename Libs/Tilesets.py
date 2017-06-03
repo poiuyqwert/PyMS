@@ -63,6 +63,10 @@ def minitile_to_photo(t, m=None):
 	pi.putdata(put)
 	return ImageTk.PhotoImage(pi)
 
+TILETYPE_GROUP = 0
+TILETYPE_MEGA  = 1
+TILETYPE_MINI  = 2
+
 class Tileset:
 	def __init__(self):
 		self.cv5 = None
