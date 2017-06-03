@@ -42,7 +42,7 @@ def check_update(p):
 					UpdateDialog(p,'v%s.%s.%s' % d,settings)
 				p.after(1, callback)
 
-def loadsize(window, settings, setting, full=False, size=True, position=None):
+def loadsize(window, settings, setting='window', full=False, size=True, position=None):
 	geometry = settings.get(setting)
 	if geometry:
 		w,h,x,y,fullscreen = parse_geometry(geometry)
