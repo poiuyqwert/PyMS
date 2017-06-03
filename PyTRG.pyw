@@ -1093,12 +1093,7 @@ class PyTRG(Tk):
 		if not self.unsaved():
 			savesize(self, self.settings)
 			self.settings['highlights'] = self.text.highlights
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyTRG.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyTRG', self.settings)
 			self.destroy()
 
 	def readlines(self):

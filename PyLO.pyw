@@ -1017,12 +1017,7 @@ class PyLO(Tk):
 			self.settings['overlaygrp'] = ['','MPQ:'][self.grppanel.variables['Overlay GRP:'][0].get()] + self.grppanel.variables['Overlay GRP:'][1].get().replace(m,'MPQ:',1)
 			self.settings['usebasegrp'] = self.usebasegrp.get()
 			self.settings['useoverlaygrp'] = self.useoverlaygrp.get()
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyLO.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyLO', self.settings)
 			self.destroy()
 
 	def readlines(self):

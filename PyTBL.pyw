@@ -837,12 +837,7 @@ class PyTBL(Tk):
 			self.settings['stringlist'] = self.hor_pane.sash_coord(0)
 			self.settings['colorlist'] = self.ver_pane.sash_coord(0)
 			savesize(self, self.settings)
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyTBL.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyTBL', self.settings)
 			self.destroy()
 
 	def destroy(self):

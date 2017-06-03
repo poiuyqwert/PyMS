@@ -2413,12 +2413,7 @@ class PyBIN(Tk):
 		if not self.unsaved():
 			savesize(self, self.settings)
 			self.save_settings()
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyBIN.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyBIN', self.settings)
 			self.stop_tick()
 			self.destroy()
 

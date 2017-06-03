@@ -444,12 +444,7 @@ class PyFNT(Tk):
 
 	def exit(self, e=None):
 		if not self.unsaved():
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyFNT.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyFNT', self.settings)
 			self.destroy()
 
 def main():

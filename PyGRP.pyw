@@ -913,12 +913,7 @@ class PyGRP(Tk):
 			self.settings['uncompressed'] = not not self.uncompressed.get()
 			self.settings['palette'] = self.pal
 			self.settings['transindex'] = self.transid.get()
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyGRP.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyGRP', self.settings)
 			self.destroy()
 
 def main():

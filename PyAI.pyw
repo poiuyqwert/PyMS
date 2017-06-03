@@ -2878,12 +2878,7 @@ class PyAI(Tk):
 			self.settings['extrainfo'] = self.extrainfo.get()
 			self.settings['imports'] = self.imports
 			self.settings['extdefs'] = self.extdefs
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyAI.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyAI', self.settings)
 			self.destroy()
 
 	def order(self, key=None):

@@ -2721,12 +2721,7 @@ class PyMAP(Tk):
 		if not self.unsaved():
 			savesize(self, self.settings)
 			self.settings['pane'] = self.panes.sash_coord(0)
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyMAP.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyMAP', self.settings)
 			self.stop_tick()
 			self.destroy()
 

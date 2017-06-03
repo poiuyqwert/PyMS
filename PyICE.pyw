@@ -2120,12 +2120,7 @@ class PyICE(Tk):
 			savesize(self, self.settings)
 			self.settings['highlights'] = self.highlights
 			self.settings['usemodmpq'] = self.use_mod_mpq
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyICE.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyICE', self.settings)
 			self.destroy()
 
 def main():

@@ -1125,12 +1125,7 @@ class PyMPQ(Tk):
 		removedir(os.path.join(BASE_DIR,'Libs','Temp',str(self.id)))
 		savesize(self, self.settings)
 		self.settings['listspacing'] = [p.sash_coord(0) for p in self.listbox.panes]
-		try:
-			f = file(os.path.join(BASE_DIR,'Settings','PyMPQ.txt'),'w')
-			f.write(pprint(self.settings))
-			f.close()
-		except:
-			pass
+		savesettings('PyMPQ', self.settings)
 		self.destroy()
 
 def main():

@@ -1151,12 +1151,7 @@ class PySPK(Tk):
 		if not self.unsaved():
 			savesize(self, self.settings, 'window')
 			self.save_settings()
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PySPK.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PySPK', self.settings)
 			self.destroy()
 
 def main():

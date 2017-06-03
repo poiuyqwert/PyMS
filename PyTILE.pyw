@@ -1194,12 +1194,7 @@ class PyTILE(Tk):
 	def exit(self, e=None):
 		if not self.unsaved():
 			savesize(self, self.settings, size=False)
-			try:
-				f = file(os.path.join(BASE_DIR,'Settings','PyTILE.txt'),'w')
-				f.write(pprint(self.settings))
-				f.close()
-			except:
-				pass
+			savesettings('PyTILE', self.settings)
 			self.destroy()
 
 def main():

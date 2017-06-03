@@ -6,16 +6,28 @@ from Libs import PCX,FNT,GRP,PAL,TBL,AIBIN,DAT,IScriptBIN
 from Tkinter import *
 from tkMessageBox import *
 
-import re, os
+import re, os, json
 
 def loadsettings(program, default={}):
 	settings = default
-	try:
-		settings.update(eval(file(os.path.join(BASE_DIR,'Settings','%s.txt' % program), 'r').read(),{}))
-	except IOError, e:
-		if e.args[0] != 2:
-			raise
+	path = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
+	if os.path.exists(path):
+		try:
+			contents = None
+			with file(path, 'r') as f:
+				contents = f.read()
+			settings.update(json.loads(contents))
+		except:
+			pass
 	return settings
+
+def savesettings(program, settings):
+	try:
+		f = file(os.path.join(BASE_DIR,'Settings','%s.txt' % program),'w')
+		f.write(json.dumps(settings, sort_keys=True, indent=4))
+		f.close()
+	except:
+		pass
 
 PYMS_SETTINGS = loadsettings('PyMS',{'remindme':1})
 
@@ -85,36 +97,6 @@ def savesize(window, settings, setting='window', size=True):
 	else:
 		settings[setting] = '+%d+%d' % (x,y)
 
-def pprint(obj, depth=0, max=2, dict_sort=False):
-	depth += 1
-	string = ''
-	if isinstance(obj, dict) and max:
-		if obj:
-			string += '{\\\n'
-			keys = obj.keys()
-			if dict_sort:
-				keys.sort()
-			for key in obj:
-				string += '%s%s:' % ('\t'*depth, repr(key))
-				string += pprint(obj[key], depth, max-1)
-			string += '%s},\\\n' % ('\t'*(depth-1))
-		else:
-			string += '{},\\\n'
-	elif isinstance(obj, list) and max:
-		if obj:
-			string += '[\\\n'
-			for item in obj:
-				string += ('%s' % ('\t'*depth))
-				string += pprint(item, depth, max-1)
-			string += '%s],\\\n' % ('\t'*(depth-1))
-		else:
-			string += '[],\\\n'
-	else:
-		string += '%s,\\\n' % (repr(obj),)
-	if depth == 1:
-		return string[:-3]
-	return string
-
 class UpdateDialog(PyMSDialog):
 	def __init__(self, parent, v, settings=[]):
 		self.version = v
@@ -138,12 +120,7 @@ class UpdateDialog(PyMSDialog):
 
 	def ok(self):
 		self.settings['remindme'] = [PyMS_LONG_VERSION,1][self.remind.get()]
-		try:
-			f = file(os.path.join(BASE_DIR,'Settings','PyMS.txt'),'w')
-			f.write(pprint(self.settings))
-			f.close()
-		except:
-			pass
+		savesettings('PyMS', self.settings)
 		PyMSDialog.ok(self)
 
 class MPQHandler:
@@ -604,12 +581,7 @@ class MPQSettings(Frame):
 			if len(a) == 3 and not SC_DIR:
 				SC_DIR = scdir
 				PYMS_SETTINGS['scdir'] = SC_DIR
-				try:
-					f = file(os.path.join(BASE_DIR,'Settings','PyMS.txt'),'w')
-					f.write(pprint(PYMS_SETTINGS))
-					f.close()
-				except:
-					pass
+				savesettings('PyMS', PYMS_SETTINGS)
 			if a:
 				self.add(add=a)
 

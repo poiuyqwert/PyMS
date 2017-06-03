@@ -252,12 +252,7 @@ class PyPCX(Tk):
 
 	def exit(self, e=None):
 		savesize(self, self.settings)
-		try:
-			f = file(os.path.join(BASE_DIR,'Settings','PyPCX.txt'),'w')
-			f.write(pprint(self.settings))
-			f.close()
-		except:
-			pass
+		savesettings('PyPCX', self.settings)
 		self.destroy()
 
 def main():

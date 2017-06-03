@@ -1,6 +1,5 @@
 from Tkinter import *
 from utils import isstr
-from setutils import pprint
 import re
 import os.path
 
