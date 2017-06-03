@@ -171,7 +171,7 @@ class CacheGRP:
 				linewidth = self.width - xoffset
 			if yoffset + lines > self.height:
 				lines = self.height - yoffset
-			image.extend([[0] * self.width for _ in range(yoffset)])
+			image.extend([[0] * self.width for _ in xrange(yoffset)])
 			if not self.uncompressed:
 				try:
 					for offset in offsets:
@@ -187,7 +187,7 @@ class CacheGRP:
 								linedata.extend([ord(self.databuffer[offset+1])] * (o - 0x40))
 								offset += 2
 							else:
-								linedata.extend([ord(c) for c in self.databuffer[offset+1:offset+1+o]])
+								linedata.extend(map(ord, self.databuffer[offset+1:offset+1+o]))
 								offset += o + 1
 						image.append(linedata[:xoffset+linewidth] + [0] * (self.width-linewidth-xoffset))
 					if self.uncompressed == None:
