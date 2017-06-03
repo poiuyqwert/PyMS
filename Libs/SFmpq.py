@@ -15,7 +15,6 @@ except:
 	try:
 		_SFmpq = CDLL("SFmpq.dylib", RTLD_GLOBAL)
 	except:
-		raise
 		FOLDER = True
 os.chdir(cwd)
 
@@ -124,19 +123,19 @@ SFILE_SEARCH_ALL_OPEN =     0x01 #SFileOpenFileEx will look through all open arc
 
 class SFMPQVERSION(Structure):
 	_fields_ = [
-		('Major',c_int),
-		('Minor',c_int),
-		('Revision',c_int),
-		('Subrevision',c_int)
+		('Major',c_uint16),
+		('Minor',c_uint16),
+		('Revision',c_uint16),
+		('Subrevision',c_uint16)
 	]
 
 class FILELISTENTRY(Structure):
 	_fields_ = [
-		('fileExists',c_int),
-		('locale',c_int),
-		('compressedSize',c_int),
-		('fullSize',c_int),
-		('flags',c_int),
+		('fileExists',c_uint32),
+		('locale',c_uint32),
+		('compressedSize',c_uint32),
+		('fullSize',c_uint32),
+		('flags',c_uint32),
 		('fileName',c_char * 260)
 	]
 
@@ -232,90 +231,131 @@ MPQARCHIVE._fields_ = [
 	('sfExtraFlags',c_int),
 ]
 
+class MPQHANDLE(c_void_p):
+	pass
+
 def MpqInitialize():
 	if not FOLDER:
+		_SFmpq.GetLastError.restype = c_int32
+
 		_SFmpq.MpqGetVersionString.restype = c_char_p
 		_SFmpq.MpqGetVersion.restype = c_float
 		_SFmpq.SFMpqGetVersionString.restype = c_char_p
 		# _SFmpq.SFMpqGetVersionString2.argtypes = [c_char_p,c_int]
 		_SFmpq.SFMpqGetVersion.restype = SFMPQVERSION
 		
-		_SFmpq.SFileOpenArchive.argtypes = [c_char_p,c_int,c_int,c_void_p]
-		_SFmpq.SFileCloseArchive.argtypes = [c_int]
-		#_SFmpq.SFileOpenFileAsArchive.argtypes = [c_int,c_char_p,c_int,c_int,c_void_p]
-		# _SFmpq.SFileGetArchiveName.argtypes = [c_int,c_char_p,c_int]
-		_SFmpq.SFileOpenFile.argtypes = [c_char_p,c_void_p]
-		_SFmpq.SFileOpenFileEx.argtypes = [c_int,c_char_p,c_int,c_void_p]
-		_SFmpq.SFileCloseFile.argtypes = [c_int]
-		_SFmpq.SFileGetFileSize.argtypes = [c_int,c_void_p]
-		_SFmpq.SFileGetFileArchive.argtypes = [c_int,c_void_p]
-		# _SFmpq.SFileGetFileName.argtypes = [c_int,c_char_p,c_int]
-		_SFmpq.SFileSetFilePointer.argtypes = [c_int,c_int,c_void_p,c_int]
-		_SFmpq.SFileReadFile.argtypes = [c_int,c_void_p,c_int,c_void_p,c_void_p]
-		_SFmpq.SFileSetLocale.argtypes = [c_int]
+		_SFmpq.SFileOpenArchive.argtypes = [c_char_p,c_int32,c_uint32,POINTER(MPQHANDLE)]
+		_SFmpq.SFileCloseArchive.argtypes = [MPQHANDLE]
+		#_SFmpq.SFileOpenFileAsArchive.argtypes = [MPQHANDLE,c_char_p,c_int32,c_int32,POINTER(MPQHANDLE)]
+		# _SFmpq.SFileGetArchiveName.argtypes = [MPQHANDLE,c_char_p,c_int32]
+		_SFmpq.SFileOpenFile.argtypes = [c_char_p,POINTER(MPQHANDLE)]
+		_SFmpq.SFileOpenFileEx.argtypes = [MPQHANDLE,c_char_p,c_uint32,POINTER(MPQHANDLE)]
+		_SFmpq.SFileCloseFile.argtypes = [MPQHANDLE]
+		_SFmpq.SFileGetFileSize.argtypes = [MPQHANDLE,POINTER(c_uint32)]
+		_SFmpq.SFileGetFileSize.restype = c_uint32
+		_SFmpq.SFileGetFileArchive.argtypes = [MPQHANDLE,POINTER(MPQHANDLE)]
+		# _SFmpq.SFileGetFileName.argtypes = [MPQHANDLE,c_char_p,c_uint32]
+		_SFmpq.SFileSetFilePointer.argtypes = [MPQHANDLE,c_int32,POINTER(c_int32),c_uint32]
+		_SFmpq.SFileReadFile.argtypes = [MPQHANDLE,c_void_p,c_uint32,POINTER(c_uint32),c_void_p]
+		_SFmpq.SFileSetLocale.argtypes = [c_uint32]
+		_SFmpq.SFileSetLocale.restype = c_uint32
+		_SFmpq.SFileGetBasePath.argtypes = [c_char_p,c_uint32]
+		_SFmpq.SFileSetBasePath.argtypes = [c_char_p]
 
-		_SFmpq.SFileGetFileInfo.argtypes = [c_int,c_int]
-		_SFmpq.SFileListFiles.argtypes = [c_int,c_char_p,c_void_p,c_int]
-		# _SFmpq..argtypes = []
-		# _SFmpq..argtypes = []
-		# _SFmpq..argtypes = []
-		# _SFmpq..argtypes = []
-		# _SFmpq..argtypes = []
-		# _SFmpq..argtypes = []
-		_SFmpq.SFileSetArchivePriority.argtypes = [c_int,c_int]
-		_SFmpq.MpqOpenArchiveForUpdate.argtypes = [c_char_p,c_int,c_int]
-		_SFmpq.MpqCloseUpdatedArchive.argtypes = [c_int,c_int]
-		_SFmpq.MpqAddFileToArchive.argtypes = [c_int,c_char_p,c_char_p,c_int]
-		_SFmpq.MpqAddWaveToArchive.argtypes = [c_int,c_char_p,c_char_p,c_int,c_int]
-		_SFmpq.MpqRenameFile.argtypes = [c_int,c_char_p,c_char_p]
-		_SFmpq.MpqDeleteFile.argtypes = [c_int,c_char_p,c_char_p]
-		_SFmpq.MpqCompactArchive.argtypes = [c_int]
+		_SFmpq.SFileGetFileInfo.argtypes = [MPQHANDLE,c_uint32]
+		_SFmpq.SFileGetFileInfo.restype = c_size_t
+		_SFmpq.SFileSetArchivePriority.argtypes = [MPQHANDLE,c_uint32]
+		_SFmpq.SFileFindMpqHeader.argtypes = [c_void_p]
+		_SFmpq.SFileFindMpqHeader.restype = c_uint32
+		_SFmpq.SFileListFiles.argtypes = [MPQHANDLE,c_char_p,POINTER(FILELISTENTRY),c_uint32]
 
-		_SFmpq.MpqOpenArchiveForUpdateEx.argtypes = [c_char_p,c_int,c_int,c_int]
-		_SFmpq.MpqAddFileToArchiveEx.argtypes = [c_int,c_char_p,c_char_p,c_int,c_int,c_int]
-		_SFmpq.MpqAddFileFromBuffer.argtypes = [c_int,c_void_p,c_int,c_char_p,c_int]
-		_SFmpq.MpqRenameAndSetFileLocale.argtypes = [c_int,c_char_p,c_char_p,c_int,c_int]
-		_SFmpq.MpqDeleteFileWithLocale.argtypes = [c_int,c_char_p,c_int]
-		_SFmpq.MpqSetFileLocale.argtypes = [c_int,c_char_p,c_int,c_int]
+		_SFmpq.MpqOpenArchiveForUpdate.argtypes = [c_char_p,c_uint32,c_uint32]
+		_SFmpq.MpqOpenArchiveForUpdate.restype = MPQHANDLE
+		_SFmpq.MpqCloseUpdatedArchive.argtypes = [MPQHANDLE,c_uint32]
+		_SFmpq.MpqCloseUpdatedArchive.restype = c_uint32
+		_SFmpq.MpqAddFileToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32]
+		_SFmpq.MpqAddWaveToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32]
+		_SFmpq.MpqRenameFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
+		_SFmpq.MpqDeleteFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
+		_SFmpq.MpqCompactArchive.argtypes = [MPQHANDLE]
 
+		_SFmpq.MpqOpenArchiveForUpdateEx.argtypes = [c_char_p,c_uint32,c_uint32,c_uint32]
+		_SFmpq.MpqOpenArchiveForUpdateEx.restype = MPQHANDLE
+		_SFmpq.MpqAddFileToArchiveEx.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32,c_uint32]
+		_SFmpq.MpqAddFileFromBufferEx.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
+		_SFmpq.MpqAddFileFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32]
+		_SFmpq.MpqAddWaveFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
+		_SFmpq.MpqRenameAndSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_int,c_int]
+		_SFmpq.MpqDeleteFileWithLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32]
+		_SFmpq.MpqSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32,c_uint32]
+
+DEBUG = False
+def debug_log(func):
+	if DEBUG:
+		def do_log(*args, **kwargs):
+			result = func(*args, **kwargs)
+			print "Func  : %s" % func.__name__
+			print "Args  : %s" % (args,)
+			print "kwargs: %s" % kwargs
+			print "Result: %s" % (result,)
+			return result
+		return do_log
+	else:
+		return func
+
+@debug_log
+def GetLastError():
+	return _SFmpq.GetLastError()
+
+@debug_log
 def SFInvalidHandle(h):
 	return h in [None,0,-1]
 
+@debug_log
 def MpqGetVersionString():
 	return _SFmpq.MpqGetVersionString()
 
+@debug_log
 def MpqGetVersion():
 	return _SFmpq.MpqGetVersion()
 
+@debug_log
 def SFMpqGetVersionString():
 	return _SFmpq.SFMpqGetVersionString()
 
+@debug_log
 def SFMpqGetVersion():
 	return _SFmpq.SFMpqGetVersion()
 
+@debug_log
 def SFileOpenArchive(path, priority=0, flags=SFILE_OPEN_HARD_DISK_FILE):
-	h = c_int()
-	if _SFmpq.SFileOpenArchive(path, priority, flags, byref(h)):
-		return h.value
+	f = MPQHANDLE()
+	if _SFmpq.SFileOpenArchive(path, priority, flags, byref(f)):
+		return f.value
 
+@debug_log
 def SFileCloseArchive(mpq):
 	return _SFmpq.SFileCloseArchive(mpq)
 
+@debug_log
 def SFileOpenFileEx(mpq, path, search=SFILE_SEARCH_CURRENT_ONLY):
-	f = c_int()
-	if _SFmpq.SFileOpenFileEx(mpq if mpq else 0, path, search, byref(f)):
+	f = MPQHANDLE()
+	if _SFmpq.SFileOpenFileEx(mpq if mpq else None, path, search, byref(f)):
 		return f.value
 
+@debug_log
 def SFileCloseFile(file):
 	return _SFmpq.SFileCloseFile(file)
 
+@debug_log
 def SFileGetFileSize(file, high=False):
-	s = c_int()
+	s = c_uint32()
 	l = _SFmpq.SFileGetFileSize(file, byref(s))
 	if high:
 		return (l,s.value)
 	return l
 
+@debug_log
 def SFileReadFile(file, read=None):
 	all = read == None
 	if all:
@@ -323,8 +363,8 @@ def SFileReadFile(file, read=None):
 		if read == -1:
 			return
 	d = create_string_buffer(read)
-	r = c_int()
-	o = c_int()
+	r = c_uint32()
+	o = c_uint32()
 	if _SFmpq.SFileReadFile(file, d, read, byref(r), byref(o)):
 		if all and r.value < read:
 			t = r.value
@@ -340,13 +380,16 @@ def SFileReadFile(file, read=None):
 		else:
 			return (d.raw,r.value)
 
+@debug_log
 def SFileSetLocale(locale):
 	return _SFmpq.SFileSetLocale(locale)
 
+@debug_log
 def SFileGetFileInfo(mpq, flags=SFILE_INFO_BLOCK_SIZE):
 	return _SFmpq.SFileGetFileInfo(mpq, flags)
 
 # listfiles is either a list of file lists or a file list itself depending on flags, either are seperated by newlines (\n \r or \r\n?)
+@debug_log
 def SFileListFiles(mpq, listfiles='', flags=0):
 	n = SFileGetFileInfo(mpq, SFILE_INFO_HASH_TABLE_SIZE)
 	if n < 1:
@@ -355,36 +398,46 @@ def SFileListFiles(mpq, listfiles='', flags=0):
 	_SFmpq.SFileListFiles(mpq, listfiles, f, flags)
 	return filter(lambda e: e.fileExists,f)
 
+@debug_log
 def SFileSetArchivePriority(mpq, priority):
 	return _SFmpq.SFileSetArchivePriority(mpq, priority)
 
+@debug_log
 def MpqOpenArchiveForUpdate(path, flags=MOAU_OPEN_ALWAYS, maxfiles=1024):
 	return _SFmpq.MpqOpenArchiveForUpdate(path, flags, maxfiles)
 
+@debug_log
 def MpqCloseUpdatedArchive(handle, unknown=0):
 	return _SFmpq.MpqCloseUpdatedArchive(handle, unknown)
 
+@debug_log
 def MpqAddFileToArchive(mpq, source, dest, flags=MAFA_REPLACE_EXISTING):
 	return _SFmpq.MpqAddFileToArchive(mpq, source, dest, flags)
 
+@debug_log
 def MpqAddFileFromBuffer(mpq, buffer, file, flags=MAFA_REPLACE_EXISTING):
 	return _SFmpq.MpqAddFileFromBuffer(mpq, buffer, len(buffer), file, flags)
 
+@debug_log
 def MpqCompactArchive(mpq):
 	return _SFmpq.MpqCompactArchive(mpq)
 
+@debug_log
 def MpqOpenArchiveForUpdateEx(mpq, flags=MOAU_OPEN_ALWAYS, maxfiles=1024, blocksize=3):
 	return _SFmpq.MpqOpenArchiveForUpdateEx(mpq, flags, maxfiles, blocksize)
 
+@debug_log
 def MpqAddFileToArchiveEx(mpq, source, dest, flags=MAFA_REPLACE_EXISTING, comptype=0, complevel=0):
 	return _SFmpq.MpqAddFileToArchiveEx(mpq, source, dest, flags, comptype, complevel)
 
+@debug_log
 def MpqRenameAndSetFileLocale(mpq, oldname, newname, oldlocale, newlocale):
 	return _SFmpq.MpqRenameAndSetFileLocale(mpq, oldname, newname, oldlocale, newlocale)
 
+@debug_log
 def MpqDeleteFileWithLocale(mpq, file, locale):
 	return _SFmpq.MpqDeleteFileWithLocale(mpq, file, locale)
 
+@debug_log
 def MpqSetFileLocale(mpq, file, oldlocale, newlocale):
-	print repr(mpq),repr(file),repr(oldlocale),repr(newlocale)
 	return _SFmpq.MpqSetFileLocale(mpq, file, oldlocale, newlocale)
