@@ -18,11 +18,20 @@ class ErrorHandler:
 		self.toplevel = toplevel
 		self.prog = prog
 		self.window = None
+		self.creating_window = False
 		self.buffer = ''
 		try:
 			self.file = open(os.path.join(LOGS_FOLDER, '%s.txt' % prog),'w')
 		except OSError:
 			pass
+
+	def find_presenter(self):
+		presenter = self.toplevel
+		children = presenter.winfo_children()
+		while len(children) and isinstance(children[-1], Toplevel):
+			presenter = children[-1]
+			children = presenter.winfo_children()
+		return presenter
 
 	def write(self, text, stdout=False):
 		if self.file:
@@ -32,16 +41,21 @@ class ErrorHandler:
 				os.fsync(self.file.fileno())
 
 		if not self.window:
-			if stdout:
-				self.buffer += text
-				return
-			else:
-				self.window = InternalErrorDialog(self.toplevel, self.prog, self)
-				if self.buffer:
-					text = self.buffer+'\n'+text
-		self.window.text['state'] = NORMAL
-		self.window.text.insert(END, text)
-		self.window.text['state'] = DISABLED
+			self.buffer += text
+			if not stdout and not self.creating_window:
+				self.creating_window = True
+				def present():
+					presenter = self.find_presenter()
+					self.window = InternalErrorDialog(presenter, self.prog, self, self.buffer)
+					self.buffer = ''
+					self.creating_window = False
+					self.window.grab_wait()
+				self.toplevel.after(0, present)
+		else:
+			self.window.add_text(text)
+
+	def clear_window(self):
+		self.window = None
 
 class OutputHandler:
 	def __init__(self, file):

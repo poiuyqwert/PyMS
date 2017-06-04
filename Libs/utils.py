@@ -231,6 +231,9 @@ class PyMSDialog(Toplevel):
 			self.minsize(min_w, min_h)
 			self.maxsize(max_w, max_h)
 		if grabwait:
+			self.grab_wait()
+
+	def grab_wait(self):
 			self.grab_set()
 			self.wait_window(self)
 
@@ -254,7 +257,7 @@ class InternalErrorDialog(PyMSDialog):
 		self.prog = prog
 		self.handler = handler
 		self.txt = txt
-		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=not not txt)
+		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=False)
 
 	def widgetize(self):
 		self.bind('<Control-a>', self.selectall)
@@ -288,13 +291,22 @@ class InternalErrorDialog(PyMSDialog):
 		self.text.focus_set()
 		self.text.tag_add(SEL, 1.0, END)
 
+	def cancel(self):
+		if self.handler:
+			self.handler.clear_window()
+		PyMSDialog.cancel(self)
 	def ok(self):
 		if self.handler:
-			self.handler.window = None
+			self.handler.clear_window()
 		PyMSDialog.ok(self)
 
 	def contact(self, e=None):
 		webbrowser.open(os.path.join(os.path.dirname(BASE_DIR), 'Docs', 'intro.html'))
+
+	def add_text(self, text):
+		self.text['state'] = NORMAL
+		self.text.insert(END, text)
+		self.text['state'] = DISABLED
 
 class ErrorDialog(PyMSDialog):
 	def __init__(self, parent, error):
