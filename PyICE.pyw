@@ -1776,8 +1776,8 @@ class PyICE(Tk):
 			loadsize(self, self.settings, 'window', True)
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if not 'mpqs' in self.settings:
-			self.mpqhandler.add_defaults()
+		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
+			self.settings['mpqs'] = self.mpqhandler.mpqs
 		e = self.open_files()
 		if e:
 			self.tblbin(err=e)

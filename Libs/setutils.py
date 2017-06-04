@@ -140,14 +140,17 @@ class MPQHandler:
 		self.mpqs = []
 
 	def add_defaults(self):
+		changed = False
 		if SC_DIR:
-			for f in ['StarDat','BrooDat','Patch_rt']:
+			for f in ['Patch_rt','BrooDat','StarDat']:
 				p = os.path.join(SC_DIR, '%s%smpq' % (f,os.extsep))
 				if os.path.exists(p) and not p in self.mpqs:
 					h = SFileOpenArchive(p)
 					if not SFInvalidHandle(h):
 						SFileCloseArchive(h)
 						self.mpqs.append(p)
+						changed = True
+		return changed
 
 	def set_mpqs(self, mpqs):
 		if self.open:
