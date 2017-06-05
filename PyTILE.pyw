@@ -313,7 +313,7 @@ class TilePalette(PyMSDialog):
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
-		PyMSDialog.__init__(self, parent, '%s Palette' % ['Group','MegaTile','MiniTile Image'][tiletype], resizable=(tiletype != TILETYPE_GROUP,True))
+		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True))
 
 	def widgetize(self):
 		buttons = [
@@ -351,17 +351,23 @@ class TilePalette(PyMSDialog):
 		self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
 		scrollbar = Scrollbar(c, command=self.canvas.yview)
 		scrollbar.pack(side=LEFT, fill=Y)
-		c.pack(fill=BOTH, expand=1)
+		c.pack(side=TOP, fill=BOTH, expand=1)
+
+		self.status = StringVar()
+		self.update_status()
+
+		statusbar = Frame(self)
+		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, fill=X, expand=1, padx=1)
+		statusbar.pack(side=BOTTOM, fill=X)
+
 		def canvas_resized(e):
 			self.update_size()
 		self.canvas.bind('<Configure>', canvas_resized)
-		def scroll_canvas(direction, unit):
-			self.canvas.yview('scroll', direction, unit)
-		self.bind('<MouseWheel>', lambda e: scroll_canvas(-1 if e.delta > 0 else 1,'units'))
-		self.bind('<Down>', lambda e: scroll_canvas(1,'units'))
-		self.bind('<Up>', lambda e: scroll_canvas(-1,'units'))
-		self.bind('<Next>', lambda e: scroll_canvas(1,'page'))
-		self.bind('<Prior>', lambda e: scroll_canvas(-1,'page'))
+		self.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)),'units'))
+		self.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
+		self.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
+		self.bind('<Next>', lambda e: self.canvas.yview('scroll', 1,'page'))
+		self.bind('<Prior>', lambda e: self.canvas.yview('scroll', -1,'page'))
 		def update_scrollbar(l,h,bar):
 			scrollbar.set(l,h)
 			self.draw_tiles()
@@ -373,6 +379,31 @@ class TilePalette(PyMSDialog):
 
 		if len(self.selected):
 			self.after(100, self.scroll_to_selection)
+
+	def get_title(self):
+		count = 0
+		max_count = 0
+		if self.tiletype == TILETYPE_GROUP:
+			count = len(self.tileset.cv5.groups)
+			max_count = 4095
+		elif self.tiletype == TILETYPE_MEGA:
+			count = len(self.tileset.vx4.graphics)
+			max_count = 65535
+		elif self.tiletype == TILETYPE_MINI:
+			count = len(self.tileset.vr4.images)
+			max_count = 32767
+		return '%s Palette [%d/%d]' % (['Group','MegaTile','MiniTile Image'][self.tiletype], count,max_count)
+	def update_title(self):
+		self.title(self.get_title())
+
+	def update_status(self):
+		status = 'Selected: '
+		if len(self.selected):
+			for id in self.selected:
+				status += '%s ' % id
+		else:
+			status += 'None'
+		self.status.set(status)
 
 	def select(self, select, toggle=False):
 		if toggle:
@@ -391,6 +422,7 @@ class TilePalette(PyMSDialog):
 			if self.tiletype == TILETYPE_GROUP:
 				select /= 16
 			self.selected = [select]
+		self.update_status()
 		self.draw_selections()
 	
 	def get_tile_size(self, group=False):
@@ -494,6 +526,7 @@ class TilePalette(PyMSDialog):
 		else:
 			self.tileset.vr4.images.append([[0] * 8 for _ in range(8)] )
 			select = len(self.tileset.vr4.images)-1
+		self.update_title()
 		self.update_size()
 		self.select(select)
 		self.scroll_to_selection()
@@ -536,6 +569,7 @@ class TilePalette(PyMSDialog):
 			else:
 				end_size = len(self.parent.tileset.vr4.images)
 			if end_size > start_size:
+				self.update_title()
 				self.update_size()
 				select = list(range(start_size,end_size))
 				if self.tiletype == TILETYPE_GROUP:
