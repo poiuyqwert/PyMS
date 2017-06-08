@@ -1250,7 +1250,10 @@ class IntegerVar(StringVar):
 
 	def setrange(self, range):
 		self.range = list(range)
-		self.set(max(range[0],min(range[1],self.get())))
+		value = self.get()
+		new_value = max(range[0],min(range[1],value))
+		if new_value != value:
+			self.set(new_value)
 
 class FloatVar(IntegerVar):
 	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, precision=None):

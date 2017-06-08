@@ -25,7 +25,6 @@ class MegaEditor(PyMSDialog):
 		self.tileset = parent.tileset
 		self.megatile = [id,0]
 		self.gettile = parent.gettile
-		self.select_file = parent.select_file
 		self.dosave = False
 		PyMSDialog.__init__(self, parent, 'MegaTile Editor [%s]' % id)
 
@@ -71,6 +70,9 @@ class MegaEditor(PyMSDialog):
 		self.updateminis()
 		self.miniload()
 		self.minisel()
+
+	def mark_edited(self):
+		self.edited = True
 
 	def editor(self):
 		MiniEditor(self, self.minitile)
@@ -132,7 +134,7 @@ class MegaEditor(PyMSDialog):
 		self.minisave()
 		del TILE_CACHE[self.megatile[0]]
 		try:
-			self.parent.updategroup()
+			self.parent.megaload()
 		except:
 			self.parent.draw_tiles()
 		PyMSDialog.ok(self)
@@ -144,7 +146,6 @@ class Placeability(PyMSDialog):
 		self.groups = []
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
-		self.select_file = parent.select_file
 		self.selecting = None
 		self.width = 0
 		PyMSDialog.__init__(self, parent, 'Doodad Placeability [%s]' % id, resizable=(False,False))
@@ -195,33 +196,40 @@ class Placeability(PyMSDialog):
 		self.ok(self)
 
 	def ok(self, e=None):
-		self.tileset.dddata.doodads[self.id] = [0] * 256
+		edited = False
 		for y,l in enumerate(self.groups):
 			for x,g in enumerate(l):
-				self.tileset.dddata.doodads[self.id][x + y * self.width] = g.get()
+				n = x + y * self.width
+				value = g.get()
+				old_value = self.tileset.dddata.doodads[self.id][n]
+				if value != old_value:
+					self.tileset.dddata.doodads[self.id][n] = value
+					edited = True
+		if edited:
+			self.parent.mark_edited()
 		PyMSDialog.ok(self)
 
 class MiniEditor(PyMSDialog):
-	def __init__(self, parent, colors=[0,255], id=None):
+	def __init__(self, parent, id, colors=[0,0]):
 		self.colors = colors
 		self.click = None
 		self.select = False
 		self.id = id
-		if id == None:
-			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % parent.tileset.vx4.graphics[parent.megatile[0]][parent.megatile[1]][0], resizable=(False,False))
-		else:
-			PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id, resizable=(False,False))
+		self.edited = True
+		PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id, resizable=(False,False))
 
 	def widgetize(self):
 		self.canvas = Canvas(self, width=202, height=114)
 		self.canvas.pack(padx=3,pady=3)
 		self.canvas.bind('<ButtonRelease-1>', self.release)
+		self.canvas.bind('<ButtonRelease-2>', self.release)
+		self.canvas.bind('<ButtonRelease-3>', self.release)
 		self.canvas.bind('<Motion>', self.motion)
-		if self.id == None:
-			m = self.parent.tileset.vx4.graphics[self.parent.megatile[0]][self.parent.megatile[1]][0]
-			d = self.parent.tileset.vr4.images[m]
-		else:
-			d = self.parent.tileset.vr4.images[self.id]
+		self.canvas.bind('<B1-Motion>', self.motion)
+		self.canvas.bind('<B2-Motion>', self.motion)
+		self.canvas.bind('<B3-Motion>', self.motion)
+		d = self.parent.tileset.vr4.images[self.id]
+		self.colors[0] = d[0][0]
 		self.indexs = []
 		for y,p in enumerate(d):
 			self.indexs.append(list(p))
@@ -230,6 +238,7 @@ class MiniEditor(PyMSDialog):
 				t = 'tile%s,%s' % (x,y)
 				self.canvas.create_rectangle(cx, cy, cx+10, cy+10, fill=c, outline=c, tags=t)
 				self.canvas.tag_bind(t, '<Button-1>', lambda e,p=(x,y),c=0: self.color(p,c))
+				self.canvas.tag_bind(t, '<Button-2>', lambda e,p=(x,y),c=1: self.color(p,c))
 				self.canvas.tag_bind(t, '<Button-3>', lambda e,p=(x,y),c=1: self.color(p,c))
 				cx,cy = x + 32,y + 90
 				self.canvas.create_rectangle(cx, cy, cx+2, cy+2, fill=c, outline=c, tags='scale%s,%s' % (x,y))
@@ -240,7 +249,9 @@ class MiniEditor(PyMSDialog):
 			self.canvas.create_rectangle(cx, cy, cx+5, cy+5, fill=c, outline=c, tags=t)
 			c = '#%02x%02x%02x' % tuple(self.parent.tileset.wpe.palette[self.colors[1]])
 			self.canvas.tag_bind(t, '<Button-1>', lambda e,p=n,c=0: self.pencolor(p,c))
+			self.canvas.tag_bind(t, '<Button-2>', lambda e,p=n,c=1: self.pencolor(p,c))
 			self.canvas.tag_bind(t, '<Button-3>', lambda e,p=n,c=1: self.pencolor(p,c))
+		c = '#%02x%02x%02x' % tuple(self.parent.tileset.wpe.palette[self.colors[1]])
 		self.canvas.create_rectangle(10, 98, 26, 114, fill=c, outline=c, tags='bg')
 		c = '#%02x%02x%02x' % tuple(self.parent.tileset.wpe.palette[self.colors[0]])
 		self.canvas.create_rectangle(2, 90, 18, 106, fill=c, outline=c, tags='fg')
@@ -283,6 +294,7 @@ class MiniEditor(PyMSDialog):
 			self.canvas.itemconfig('tile%s,%s' % p, fill=r, outline=r)
 			self.canvas.itemconfig('scale%s,%s' % p, fill=r, outline=r)
 			self.click = c
+		self.edited = True
 
 	def pencolor(self, p, c):
 		self.colors[c] = p
@@ -293,13 +305,13 @@ class MiniEditor(PyMSDialog):
 		PyMSDialog.cancel(self)
 
 	def ok(self):
-		m = self.parent.tileset.vx4.graphics[self.parent.megatile[0]][self.parent.megatile[1]][0]
-		self.parent.tileset.vr4.images[m] = self.indexs
-		if self.id == None:
-			self.parent.updategroup()
-		else:
-			del TILE_CACHE[-self.id]
-			self.parent.draw_tiles()
+		self.parent.tileset.vr4.set_image(self.id, self.indexs)
+		self.parent.mark_edited()
+		if isinstance(self.parent, PyTILE):
+			self.parent.megaload()
+		elif isinstance(self.parent, TilePalette):
+			TILE_CACHE.clear()
+			self.parent.draw_tiles(force=True)
 		PyMSDialog.ok(self)
 
 class TilePalette(PyMSDialog):
@@ -313,18 +325,28 @@ class TilePalette(PyMSDialog):
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
+		self.edited = False
 		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True))
 
 	def widgetize(self):
+		typename = ''
+		if self.tiletype == TILETYPE_GROUP:
+			typename = 'Groups'
+		elif self.tiletype == TILETYPE_MEGA:
+			typename = 'MegaTiles'
+		elif self.tiletype == TILETYPE_MINI:
+			typename = 'MiniTiles'
 		buttons = [
 			('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
-			('remove', self.remove, 'Remove (Delete)', DISABLED, 'Delete'),
 			10,
-			('export', self.export, 'Export Group (Ctrl+E)', NORMAL, 'Ctrl+E'),
-			('import', self.iimport, 'Import Groups (Ctrl+I)', NORMAL, 'Ctrl+I'),
+			('export', self.export, 'Export %s (Ctrl+E)' % typename, NORMAL, 'Ctrl+E'),
+			('import', self.iimport, 'Import %s (Ctrl+I)' % typename, NORMAL, 'Ctrl+I'),
+			20,
+			'WIP:',
+			('import', self.new_iimport, 'Import %s [WIP]' % typename, NORMAL, None),
 		]
-		if self.tiletype:
-			buttons.extend([10,('edit', self.edit, 'Edit %sTile (Enter)' % ['Mega','Mini'][self.tiletype-1], NORMAL, 'Return')])
+		if self.tiletype != TILETYPE_GROUP:
+			buttons.extend([10,('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')])
 		self.buttons = {}
 		toolbar = Frame(self)
 		for btn in buttons:
@@ -341,6 +363,8 @@ class TilePalette(PyMSDialog):
 						self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
 					else:
 						self.bind('<%s>' % a, btn[1])
+			elif isinstance(btn, str): # WIP, remove later
+				Label(toolbar, text=btn).pack(side=LEFT)
 			else:
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		toolbar.pack(fill=X)
@@ -380,6 +404,9 @@ class TilePalette(PyMSDialog):
 		if len(self.selected):
 			self.after(100, self.scroll_to_selection)
 
+	def mark_edited(self):
+		self.edited = True
+
 	def get_title(self):
 		count = 0
 		max_count = 0
@@ -407,20 +434,14 @@ class TilePalette(PyMSDialog):
 
 	def select(self, select, toggle=False):
 		if toggle:
-			if self.tiletype == TILETYPE_GROUP:
-				select /= 16
 			if select in self.selected:
 				self.selected.remove(select)
 			else:
 				self.selected.append(select)
 				self.selected.sort()
 		elif isinstance(select, list):
-			if self.tiletype == TILETYPE_GROUP:
-				select = [id / 16 for id in select]
 			self.selected = sorted(select)
 		else:
-			if self.tiletype == TILETYPE_GROUP:
-				select /= 16
 			self.selected = [select]
 		self.update_status()
 		self.draw_selections()
@@ -465,7 +486,10 @@ class TilePalette(PyMSDialog):
 				y = (id / columns) * tile_size[1]
 				self.canvas.create_rectangle(x, y, x+tile_size[0], y+tile_size[1], outline='#FFFFFF', tags='selection')
 
-	def draw_tiles(self):
+	def draw_tiles(self, force=False):
+		if force:
+			self.visible_range = None
+			self.canvas.delete(ALL)
 		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
 		tile_size = self.get_tile_size()
 		tile_count = self.get_tile_count()
@@ -501,16 +525,16 @@ class TilePalette(PyMSDialog):
 							if self.tiletype == TILETYPE_GROUP:
 								group = int(id / 16.0)
 								megatile = self.tileset.cv5.groups[group][13][id % 16]
-								self.canvas.images[id] = self.gettile(megatile)
+								self.canvas.images[id] = self.gettile(megatile,cache=True)
 							elif self.tiletype == TILETYPE_MEGA:
-								self.canvas.images[id] = self.gettile(id)
+								self.canvas.images[id] = self.gettile(id,cache=True)
 							elif self.tiletype == TILETYPE_MINI:
-								self.canvas.images[id] = self.gettile((id,0))
+								self.canvas.images[id] = self.gettile((id,0),cache=True)
 							tag = 'tile%s' % id
 							self.canvas.create_image(x,y, image=self.canvas.images[id], tags=tag, anchor=NW)
-							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: self.select(id))
-							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: self.select(id,True))
-							self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id: self.choose(id))
+							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.select(id))
+							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.select(id,True))
+							self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.choose(id))
 			self.visible_range = visible_range
 			self.draw_selections()
 
@@ -518,7 +542,7 @@ class TilePalette(PyMSDialog):
 		select = 0
 		if self.tiletype == TILETYPE_GROUP:
 			self.tileset.cv5.groups.append([0] * 13 + [[0] * 16])
-			select = (len(self.tileset.cv5.groups)-1) * 16
+			select = len(self.tileset.cv5.groups)-1
 		elif self.tiletype == TILETYPE_MEGA:
 			self.tileset.vf4.flags.append([0]*32)
 			self.tileset.vx4.graphics.append([[0,0] for _ in range(16)])
@@ -531,26 +555,47 @@ class TilePalette(PyMSDialog):
 		self.select(select)
 		self.scroll_to_selection()
 		self.parent.update_ranges()
+		self.mark_edited()
 
 	def export(self):
 		if not len(self.selected):
 			return
 		id = self.selected[0]
-		b = self.select_file('Export Group', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self)
+		b = self.select_file('Export Group', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
 		if not b:
 			return
 		s = None
 		if self.tiletype < 2:
-			s = self.select_file('Export Group Settings (Cancel to export only the BMP)', False, '.txt', [('Text File','*.txt'),('All Files','*')], self)
+			s = self.select_file('Export Group Settings (Cancel to export only the BMP)', False, '.txt', [('Text File','*.txt'),('All Files','*')], self, 'lastpath_exports')
 		self.tileset.decompile(b,self.tiletype,id,s)
 
+	def new_iimport(self):
+		b = self.select_file('Import Group', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
+		if not b:
+			return
+		try:
+			new_ids = self.tileset.iimport(self.tiletype, b, self.selected)
+		except PyMSError, e:
+			ErrorDialog(self, e)
+		else:
+			TILE_CACHE.clear()
+			self.update_title()
+			self.update_size()
+			if len(new_ids):
+				self.select(new_ids)
+				self.draw_selections()
+				self.scroll_to_selection()
+			self.draw_tiles(force=True)
+			self.parent.update_ranges()
+			self.mark_edited()
+
 	def iimport(self):
-		b = self.select_file('Import Group', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self)
+		b = self.select_file('Import Group', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
 		if not b:
 			return
 		s = None
 		if self.tiletype < TILETYPE_MINI:
-			s = self.select_file('Import Group Settings (Cancel to import only the BMP)', True, '.txt', [('Text File','*.txt'),('All Files','*')], self)
+			s = self.select_file('Import Group Settings (Cancel to import only the BMP)', True, '.txt', [('Text File','*.txt'),('All Files','*')], self, 'lastpath_exports')
 		if self.tiletype == TILETYPE_GROUP:
 			start_size = len(self.parent.tileset.cv5.groups)
 		elif self.tiletype == TILETYPE_MEGA:
@@ -572,24 +617,20 @@ class TilePalette(PyMSDialog):
 				self.update_title()
 				self.update_size()
 				select = list(range(start_size,end_size))
-				if self.tiletype == TILETYPE_GROUP:
-					select = [id * 16 for id in select]
 				self.select(select)
 				self.draw_selections()
 				self.scroll_to_selection()
 			self.draw_tiles()
 			self.parent.update_ranges()
-
-	def remove(self, e=None):
-		pass
+			self.mark_edited()
 
 	def edit(self, e=None):
 		if not len(self.selected):
 			return
 		if self.tiletype == TILETYPE_MEGA:
-			MegaEditor(self, id=self.selected[0])
+			MegaEditor(self, self.selected[0])
 		elif self.tiletype == TILETYPE_MINI:
-			MiniEditor(self, id=self.selected[0])
+			MiniEditor(self, self.selected[0])
 
 	def scroll_to_selection(self):
 		if not len(self.selected):
@@ -607,8 +648,6 @@ class TilePalette(PyMSDialog):
 		self.canvas.yview_moveto(y / total_size[1])
 
 	def choose(self, id):
-		if self.tiletype == TILETYPE_GROUP:
-			id /= 16
 		self.parent.change(self.tiletype, id)
 		self.ok()
 
@@ -618,16 +657,12 @@ class TilePalette(PyMSDialog):
 		if hasattr(self.parent,'selecting'):
 			self.parent.selecting = None
 		else:
-			try:
-				self.parent.updategroup()
-			except:
-				try:
-					self.parent.updateminis()
-				except:
-					pass
+			self.parent.megaload()
+			if self.edited:
+				self.parent.mark_edited()
 		PAL[0] -= 1
 		if not PAL[0]:
-			TILE_CACHE = {}
+			TILE_CACHE.clear()
 		PyMSDialog.ok(self)
 
 	def cancel(self):
@@ -662,7 +697,8 @@ class PyTILE(Tk):
 				if not filen:
 					sys.exit()
 
-		self.dosave = [False,False]
+		self.loading_megas = False
+		self.loading_minis = False
 		self.tileset = None
 		self.file = None
 		self.edited = False
@@ -710,20 +746,25 @@ class PyTILE(Tk):
 		self.blockview = IntVar()
 		self.ramp = IntVar()
 
+		self.flipped.trace('w', self.minitile_flipped_changed)
+		minitile_flag_vars = [self.heightdd,self.walkable,self.blockview,self.ramp]
+		for var in minitile_flag_vars:
+			var.trace('w', self.minitile_flags_changed)
+
 		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TILETYPE_MEGA, id))
-		self.index = IntegerVar(0,[0,65535])
-		self.flags = IntegerVar(0,[0,15])
-		self.groundheight = IntegerVar(0,[0,15])
-		self.buildable = IntegerVar(0,[0,15])
-		self.buildable2 = IntegerVar(0,[0,15])
-		self.edgeleft = IntegerVar(0,[0,65535])
-		self.edgeright = IntegerVar(0,[0,65535])
-		self.edgeup = IntegerVar(0,[0,65535])
-		self.edgedown = IntegerVar(0,[0,65535])
-		self.hasup = IntegerVar(0,[0,65535])
-		self.hasdown = IntegerVar(0,[0,65535])
-		self.unknown9 = IntegerVar(0,[0,65535])
-		self.unknown11 = IntegerVar(0,[0,65535])
+		self.index = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.flags = IntegerVar(0,[0,15],callback=self.group_values_changed)
+		self.groundheight = IntegerVar(0,[0,15],callback=self.group_values_changed)
+		self.buildable = IntegerVar(0,[0,15],callback=self.group_values_changed)
+		self.buildable2 = IntegerVar(0,[0,15],callback=self.group_values_changed)
+		self.edgeleft = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.edgeright = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.edgeup = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.edgedown = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.hasup = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.hasdown = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.unknown9 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.unknown11 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
 		self.doodad = False
 
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
@@ -917,13 +958,13 @@ class PyTILE(Tk):
 				else:
 					self.saveas()
 
-	def select_file(self, title, open=True, ext='.cv5', filetypes=[('Complete Tileset','*.cv5'),('All Files','*')], parent=None):
+	def select_file(self, title, open=True, ext='.cv5', filetypes=[('Complete Tileset','*.cv5'),('All Files','*')], parent=None, setting='lastpath'):
 		if parent == None:
 			parent = self
-		path = self.settings.get('lastpath', BASE_DIR)
+		path = self.settings.get(setting, BASE_DIR)
 		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](title=title, defaultextension=ext, filetypes=filetypes, initialdir=path, parent=parent)
 		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
+			self.settings[setting] = os.path.dirname(file)
 		return file
 
 	def action_states(self):
@@ -932,6 +973,10 @@ class PyTILE(Tk):
 			self.buttons[btn]['state'] = file
 		for w in self.disable:
 			w['state'] = file
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = [DISABLED,NORMAL][edited]
 
 	def gettile(self, id, cache=False):
 		to_photo = [Tilesets.megatile_to_photo,Tilesets.minitile_to_photo][isinstance(id,tuple) or isinstance(id,list)]
@@ -949,11 +994,11 @@ class PyTILE(Tk):
 			for n in range(16):
 				self.tileset.vf4.flags[mega][n] = self.heightdd.get() * 2 + self.walkable.get() + 8 * self.blockview.get() + 16 * self.ramp.get()
 
-	def groupsel(self):
+	def draw_group_selection(self):
 		x = 2 + 33 * self.group[1]
 		self.megatiles.coords('border', x, 2, x + 33, 35)
 
-	def updategroup(self):
+	def draw_group(self):
 		d = ['',' - Doodad'][self.group[0] >= 1024]
 		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.group[0],d)
 		self.megatiles.images = []
@@ -964,18 +1009,9 @@ class PyTILE(Tk):
 			self.megatiles.create_image(19 + 33 * n, 19, image=self.megatiles.images[-1], tags=t)
 			self.megatiles.tag_bind(t, '<Button-1>', lambda e,n=n: self.megaload(n))
 			self.megatiles.tag_bind(t, '<Double-Button-1>', lambda e,i=1: self.choose(i))
-		if self.megatile == None:
-			self.megatile = [self.tileset.cv5.groups[self.group[0]][13][0],0]
-		self.megaload()
 
 	def megaload(self, n=None):
-		if self.dosave[0]:
-			self.megasave()
-		else:
-			self.dosave[0] = True
-		if self.dosave[1]:
-			self.minisave()
-			self.dosave[1] = False
+		self.loading_megas = True
 		if n == None:
 			n = self.group[1]
 		else:
@@ -1004,30 +1040,16 @@ class PyTILE(Tk):
 				v.set(group[n+1]-1)
 			else:
 				v.set(group[n+1])
-		self.groupsel()
-		self.updateminitiles()
+		self.draw_group()
+		self.draw_group_selection()
 		self.miniload()
+		self.loading_megas = False
 
-	def megasave(self):
-		group = self.tileset.cv5.groups[self.group[0]]
-		group[0] = self.index.get()
-		if self.group[0] >= 1024:
-			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
-		else:
-			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
-		for n,v in enumerate(o):
-			if self.group[0] >= 1024 and n == 6:
-				group[n+1] = v.get()+1
-			else:
-				group[n+1] = v.get()
-		self.edited = True
-		self.editstatus['state'] = NORMAL
-
-	def minisel(self):
+	def draw_minitiles_selection(self):
 		x,y = 2 + 25 * (self.megatile[1] % 4),2 + 25 * (self.megatile[1] / 4)
 		self.minitiles.coords('border', x, y, x + 25, y + 25)
 
-	def updateminitiles(self):
+	def draw_minitiles(self):
 		self.minitiles.images = []
 		for n,m in enumerate(self.tileset.vx4.graphics[self.megatile[0]]):
 			t = 'tile%s' % n
@@ -1038,10 +1060,7 @@ class PyTILE(Tk):
 			self.minitiles.tag_bind(t, '<Double-Button-1>', lambda e,i=2: self.choose(i))
 
 	def miniload(self, n=None):
-		if self.dosave[1]:
-			self.minisave()
-		else:
-			self.dosave[1] = True
+		self.loading_minis = True
 		if n == None:
 			n = self.megatile[1]
 		else:
@@ -1062,18 +1081,49 @@ class PyTILE(Tk):
 		self.walkable.set(f & 1)
 		self.blockview.set(f & 8 == 8)
 		self.ramp.set(f & 16 == 16)
-		self.minisel()
+		self.draw_minitiles()
+		self.draw_minitiles_selection()
+		self.loading_minis = False
 
-	def minisave(self):
-		mega = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		self.tileset.vx4.graphics[mega][self.megatile[1]][1] = self.flipped.get()
-		self.tileset.vf4.flags[mega][self.megatile[1]] = [0,2,4][self.heightdd.get()] + self.walkable.get() + 8 * self.blockview.get() + 16 * self.ramp.get()
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+
+	def group_values_changed(self, *_):
+		if not self.tileset or self.loading_megas:
+			return
+		group = self.tileset.cv5.groups[self.group[0]]
+		group[0] = self.index.get()
+		if self.group[0] >= 1024:
+			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
+		else:
+			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
+		for n,v in enumerate(o):
+			if self.group[0] >= 1024 and n == 6:
+				group[n+1] = v.get()+1
+			else:
+				group[n+1] = v.get()
+		self.mark_edited()
+
+	def minitile_flipped_changed(self, *_):
+		if not self.tileset or self.loading_minis:
+			return
+		megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
+		minitile_n = self.megatile[1]
+		tile = list(self.tileset.vx4.graphics[megatile_id])
+		tile[minitile_n] = (tile[minitile_n][0],self.flipped.get())
+		self.tileset.vx4.set_tile(megatile_id, tile)
+		self.draw_minitiles()
+		self.draw_group()
+		self.mark_edited()
+
+	def minitile_flags_changed(self, *_):
+		if not self.tileset or self.loading_minis:
+			return
+		flags = [0,2,4][self.heightdd.get()] + self.walkable.get() + 8 * self.blockview.get() + 16 * self.ramp.get()
+		megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
+		minitile_n = self.megatile[1]
+		self.tileset.vf4.flags[megatile_id][minitile_n] = flags
+		self.mark_edited()
 
 	def choose(self, i):
-		self.minisave()
-		self.megasave()
 		TilePalette(self, i, [
 			self.group[0],
 			self.tileset.cv5.groups[self.group[0]][13][self.group[1]],
@@ -1091,12 +1141,6 @@ class PyTILE(Tk):
 			self.scroll.set(x,x+(8/groups))
 
 	def scrolling(self, t, p, e=None):
-		if self.dosave[0]:
-			self.megasave()
-			self.dosave[0] = False
-		if self.dosave[1]:
-			self.minisave()
-			self.dosave[1] = False
 		a = {'page':8,'pages':8,'units':1}
 		groups = len(self.tileset.cv5.groups)-1
 		p = min(100,float(p) / (1-8/float(groups)))
@@ -1105,31 +1149,39 @@ class PyTILE(Tk):
 		elif t == 'scroll':
 			self.group[0] = min(groups,max(0,self.group[0] + int(p) * a[e]))
 		self.updatescroll()
-		self.updategroup()
+		self.megaload()
 
 	def change(self, tiletype, id):
 		if not self.tileset:
 			return
 		if tiletype == TILETYPE_GROUP:
-			self.megasave()
-			self.dosave[0] = False
 			self.group[0] = id
-			self.updategroup()
-		elif tiletype == TILETYPE_MEGA:
+			self.megaload()
+		elif tiletype == TILETYPE_MEGA and not self.loading_megas:
+			self.megatile[0] = id
 			self.tileset.cv5.groups[self.group[0]][13][self.group[1]] = id
-			self.updategroup()
-		elif tiletype == TILETYPE_MINI:
-			self.tileset.vx4.graphics[self.tileset.cv5.groups[self.group[0]][13][self.group[1]]][self.megatile[1]][0] = id
-			self.updategroup()
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+			self.draw_group()
+			self.draw_minitiles()
+		elif tiletype == TILETYPE_MINI and not self.loading_minis:
+			megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
+			tile = self.tileset.vx4.graphics[megatile_id]
+			minitile_n = self.megatile[1]
+			if tile[minitile_n][0] != id:
+				self.megatile[1] = id
+				tile = list(tile)
+				tile[minitile_n] = (id,tile[minitile_n][1])
+				self.tileset.vx4.set_tile(megatile_id, tile)
+				self.draw_group()
+				self.draw_minitiles()
 		self.updatescroll()
+		self.mark_edited()
 
 	def placeability(self):
 		Placeability(self, self.edgeright.get())
 
 	def editor(self):
-		MiniEditor(self)
+		minitile_image_id = self.tileset.vx4.graphics[self.megatile[0]][self.megatile[1]][0]
+		MiniEditor(self, minitile_image_id)
 
 	def update_ranges(self):
 		self.megatilee.setrange([0,len(self.tileset.vf4.flags)-1])
@@ -1149,15 +1201,13 @@ class PyTILE(Tk):
 				return
 			self.tileset = tileset
 			self.file = file
-			self.edited = False
 			self.status.set('Load successful!')
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 			self.update_ranges()
-			self.dosave = [False,False]
 			self.group = [0,0]
-			self.megatile = None
-			self.updategroup()
+			self.megatile = [self.tileset.cv5.groups[0][13][0],0]
+			self.megaload()
 			self.updatescroll()
 
 	def save(self, key=None):
@@ -1169,8 +1219,7 @@ class PyTILE(Tk):
 		try:
 			self.tileset.save_file(self.file)
 			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 		except PyMSError, e:
 			ErrorDialog(self, e)
 
@@ -1187,14 +1236,12 @@ class PyTILE(Tk):
 		if key and self.buttons['close']['state'] != NORMAL:
 			return
 		if not self.unsaved():
-			self.edited = False
 			self.tileset = None
 			self.file = None
-			self.edited = False
 			self.group = [0,0]
 			self.megatile = None
 			self.status.set('Load or create a Tileset.')
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.groupid['text'] = 'MegaTile Group'
 			if self.doodad:
 				self.doodads.pack_forget()

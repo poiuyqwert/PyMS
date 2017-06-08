@@ -199,7 +199,7 @@ Group %s:
 	Unknown9:          	%s
 	HasUp:             	%s
 	Unknown11:         	%s
-	HasDown:            	%s
+	HasDown:            %s
 """ % data)
 
 					else:
@@ -282,6 +282,146 @@ MegaTile %s:
 		finally:
 			if settingfile:
 				f.close()
+
+	# options.minitiles_find_duplicates_old - Attempt to find and reuse existing minitile images (default: True)
+	# options.minitiles_find_duplicates_new - Attempt to find and reuse duplicate imported minitile images (default: True)
+	# options.minitiles_find_duplicates_flipped - Check flipped versions of tiles for duplicates (default: True)
+	# options.megatiles_find_duplicates_old - Attempt to find and reuse existing minitile images (default: True)
+	# options.megatiles_find_duplicates_new - Attempt to find and reuse duplicate imported minitile images (default: True)
+	def iimport(self, tiletype, bmpfile, ids=None, options={}):
+		if ids:
+			ids = list(ids)
+		else:
+			ids = []
+		new_ids = []
+		bmp = BMP.BMP()
+		bmp.load_file(bmpfile)
+		if tiletype == TILETYPE_GROUP and (bmp.width != 512 or bmp.height % 32):
+			raise PyMSError('Interpreting','The image is not the correct size for a tile group (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
+		elif tiletype == TILETYPE_MEGA and (bmp.width % 32 or bmp.height % 32):
+			raise PyMSError('Interpreting','The image is not the correct size for megatiles (got %sx%s, expected width and height to be multiples of 32)' % (bmp.width,bmp.height))
+		elif tiletype == TILETYPE_MINI and (bmp.width % 8 or bmp.height % 8):
+			raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
+		new_images = []
+		minis_w = bmp.width / 8
+		minis_h = bmp.height / 8
+		for iy in xrange(minis_h):
+			py = iy * 8
+			for ix in xrange(minis_w):
+				px = ix * 8
+				image = tuple(tuple(bmp.image[py+oy][px:px+8]) for oy in xrange(8))
+				new_images.append(image)
+		image_details = [] # (id,isFlipped)
+		new_id = len(self.vr4.images)
+		mini_lookup = {}
+		i = 0
+		minitiles_find_duplicates_old = options.get('minitiles_find_duplicates_old', True)
+		minitiles_find_duplicates_new = options.get('minitiles_find_duplicates_new', True)
+		minitiles_find_duplicates_flipped = options.get('minitiles_find_duplicates_flipped', True)
+		while i < len(new_images):
+			image_hash = hash(new_images[i])
+			found = False
+			if tiletype != TILETYPE_MINI or not len(ids):
+				flipped_hash = None
+				if minitiles_find_duplicates_flipped:
+					flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
+				if minitiles_find_duplicates_old:
+					not_flipped = image_hash in self.vr4.lookup
+				 	if not_flipped or (flipped_hash != None and flipped_hash in self.vr4.lookup):
+				 		found = True
+						del new_images[i]
+						image_details.append((self.vr4.lookup[image_hash if not_flipped else flipped_hash][0],int(not not_flipped)))
+				if minitiles_find_duplicates_new and not found:
+					not_flipped = image_hash in mini_lookup
+				 	if not_flipped or (flipped_hash != None and flipped_hash in mini_lookup):
+				 		found = True
+						del new_images[i]
+						image_details.append((mini_lookup[image_hash if not_flipped else flipped_hash][0],int(not not_flipped)))
+			if not found:
+				id = new_id
+				if tiletype == TILETYPE_MINI and len(ids):
+					id = ids[0]
+					del ids[0]
+					self.vr4.set_image(id, new_images[i])
+					del new_images[i]
+				else:
+					if tiletype == TILETYPE_MINI:
+						new_ids.append(new_id)
+					new_id += 1
+				image_details.append((id,0))
+				if image_hash in mini_lookup:
+					mini_lookup[image_hash] = [id]
+				else:
+					mini_lookup[image_hash].append(id)
+		self.vr4.images.extend(new_images)
+		for image_hash in mini_lookup:
+			if image_hash in self.vr4.images.lookup:
+				self.vr4.images.lookup[image_hash].extend(mini_lookup[image_hash])
+			else:
+				self.vr4.images.lookup[image_hash] = mini_lookup[image_hash]
+		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
+			new_megatiles = []
+			megas_w = minis_w / 4
+			megas_h = minis_h / 4
+			for y in xrange(megas_h):
+				for x in xrange(megas_w):
+					minitiles = []
+					for oy in xrange(4):
+						o = (y+oy)*minis_w + x*4
+						minitiles.extend(image_details[o:o+4])
+					new_megatiles.append(tuple(minitiles))
+			megatile_ids = []
+			new_id = len(self.vx4.graphics)
+			mega_lookup = {}
+			i = 0
+			megatiles_find_duplicates_old = options.get('megatiles_find_duplicates_old', True)
+			megatiles_find_duplicates_new = options.get('megatiles_find_duplicates_new', True)
+			while i < len(new_megatiles):
+				tile_hash = hash(new_megatiles[i])
+				found = False
+				if tiletype != TILETYPE_MEGA or not len(ids):
+					if megatiles_find_duplicates_old and tile_hash in self.vx4.lookup:
+						del new_megatiles[i]
+						megatile_ids.append(self.vx4.lookup[tile_hash][0])
+						found = True
+					elif megatiles_find_duplicates_new and tile_hash in mega_lookup:
+						del new_megatiles[i]
+						megatile_ids.append(mega_lookup[tile_hash][0])
+						found = True
+				if not found:
+					id = new_id
+					if tiletype == TILETYPE_MEGA and len(ids):
+						id = ids[0]
+						del ids[0]
+						self.vx4.set_tile(id, new_megatiles[i])
+						del new_megatiles[i]
+					else:
+						if tiletype == TILETYPE_MEGA:
+							new_ids.append(new_id)
+						new_id += 1
+					megatile_ids.append(id)
+					if tile_hash in mega_lookup:
+						mega_lookup[tile_hash] = [id]
+					else:
+						mega_lookup[tile_hash].append(id)
+			self.vx4.graphics.extend(new_megatiles)
+			for tile_hash in mega_lookup:
+				if tile_hash in self.vx4.graphics.lookup:
+					self.vx4.graphics.lookup[tile_hash].extend(mega_lookup[tile_hash])
+				else:
+					self.vx4.graphics.lookup[tile_hash] = mega_lookup[tile_hash]
+			if tiletype == TILETYPE_GROUP:
+				for n in xrange(megas_h):
+					group = megatile_ids[n*16:(n+1)*16]
+					if len(ids):
+						id = ids[0]
+						del ids[0]
+						self.cv5.groups[id][13] = group
+					else:
+						if tiletype == TILETYPE_GROUP:
+							new_ids.append(len(self.cv5.groups))
+						self.cv5.groups.append([0]*13 + [group])
+		return new_ids
 
 	def interpret(self, bmpfile, type=0, settingfile=None):
 		b = BMP.BMP()
@@ -531,20 +671,51 @@ class VF4:
 class VX4:
 	def __init__(self):
 		self.graphics = []
+		self.lookup = {}
+
+	def find_tile(self, tile):
+		tile = tuple(tuple(r) for r in tile)
+		tile_hash = hash(tile)
+		if tile_hash in self.lookup:
+			return self.lookup[tile_hash]
+		return None
+
+	def set_tile(self, id, tile):
+		correct_size = (len(tile) == 16)
+		if correct_size:
+			for r in tile:
+				if len(r) != 2:
+					correct_size = False
+					break
+		if not correct_size:
+			raise
+		old_hash = hash(self.graphics[id])
+		self.lookup[old_hash].remove(id)
+		if len(self.lookup[old_hash]) == 0:
+			del self.lookup[old_hash]
+		self.graphics[id] = tuple(tuple(r) for r in tile)
+		tile_hash = hash(self.graphics[id])
+		if not tile_hash in self.lookup:
+			self.lookup[tile_hash] = []
+		self.lookup[tile_hash].append(id)
 
 	def load_file(self, file):
 		data = load_file(file, 'VX4')
 		if data and len(data) % 32:
 			raise PyMSError('Load',"'%s' is an invalid VX4 file" % file)
 		graphics = []
+		lookup = {}
 		try:
-			o = 0
-			while o + 31 < len(data):
-				graphics.append([[(d & 65534)/2,d & 1] for d in struct.unpack('<16H', data[o:o+32])])
-				o += 32
+			for id in xrange(len(data) / 32):
+				graphics.append(tuple(((d & 65534)/2,d & 1) for d in struct.unpack('<16H', data[id*32:(id+1)*32])))
+				tile_hash = hash(graphics[-1])
+				if not tile_hash in lookup:
+					lookup[tile_hash] = []
+				lookup[tile_hash].append(id)
 		except:
 			raise PyMSError('Load',"Unsupported VX4 file '%s', could possibly be corrupt" % file)
 		self.graphics = graphics
+		self.lookup = lookup
 
 	def save_file(self, file):
 		data = ''
@@ -567,21 +738,56 @@ class VX4:
 class VR4:
 	def __init__(self):
 		self.images = []
+		self.lookup = {}
+
+	# returns ([ids],isFlipped) or None
+	def find_image(self, image):
+		image = tuple(tuple(r) for r in image)
+		image_hash = hash(image)
+		if image_hash in self.lookup:
+			return (self.lookup[image_hash],False)
+		flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
+		if flipped_hash in self.lookup:
+			return (self.lookup[flipped_hash],True)
+		return None
+
+	def set_image(self, id, image):
+		correct_size = (len(image) == 8)
+		if correct_size:
+			for r in image:
+				if len(r) != 8:
+					correct_size = False
+					break
+		if not correct_size:
+			raise
+		old_hash = hash(self.images[id])
+		self.lookup[old_hash].remove(id)
+		if len(self.lookup[old_hash]) == 0:
+			del self.lookup[old_hash]
+		self.images[id] = tuple(tuple(r) for r in image)
+		image_hash = hash(self.images[id])
+		if not image_hash in self.lookup:
+			self.lookup[image_hash] = []
+		self.lookup[image_hash].append(id)
 
 	def load_file(self, file):
 		data = load_file(file, 'VR4')
 		if data and len(data) % 64:
 			raise PyMSError('Load',"'%s' is an invalid VR4 file" % file)
 		images = []
+		lookup = {}
 		try:
-			o = 0
-			while o + 63 < len(data):
-				d = struct.unpack('64B', data[o:o+64])
-				images.append([d[y:y+8] for y in range(0,64,8)])
-				o += 64
+			for id in xrange(len(data) / 64):
+				d = struct.unpack('64B', data[id*64:(id+1)*64])
+				images.append(tuple(tuple(d[y:y+8]) for y in range(0,64,8)))
+				image_hash = hash(images[-1])
+				if not image_hash in self.lookup:
+					lookup[image_hash] = []
+				lookup[image_hash].append(id)
 		except:
 			raise PyMSError('Load',"Unsupported VR4 file '%s', could possibly be corrupt" % file)
 		self.images = images
+		self.lookup = lookup
 
 	def save_file(self, file):
 		data = ''
