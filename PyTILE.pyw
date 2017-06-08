@@ -341,12 +341,17 @@ class TilePalette(PyMSDialog):
 			10,
 			('export', self.export, 'Export %s (Ctrl+E)' % typename, NORMAL, 'Ctrl+E'),
 			('import', self.iimport, 'Import %s (Ctrl+I)' % typename, NORMAL, 'Ctrl+I'),
-			20,
-			'WIP:',
-			('import', self.new_iimport, 'Import %s [WIP]' % typename, NORMAL, None),
 		]
 		if self.tiletype != TILETYPE_GROUP:
-			buttons.extend([10,('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')])
+			buttons.extend([
+				10,
+				('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')
+			])
+		buttons.extend([
+			20,
+			'WIP:',
+			('import', self.new_iimport, 'Import %s [WIP]' % typename, NORMAL, None)
+		])
 		self.buttons = {}
 		toolbar = Frame(self)
 		for btn in buttons:
