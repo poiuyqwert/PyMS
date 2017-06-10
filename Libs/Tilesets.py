@@ -350,9 +350,9 @@ MegaTile %s:
 					new_id += 1
 				image_details.append((id,0))
 				if image_hash in mini_lookup:
-					mini_lookup[image_hash] = [id]
-				else:
 					mini_lookup[image_hash].append(id)
+				else:
+					mini_lookup[image_hash] = [id]
 		self.vr4.images.extend(new_images)
 		for image_hash in mini_lookup:
 			if image_hash in self.vr4.images.lookup:
