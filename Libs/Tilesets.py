@@ -401,9 +401,9 @@ MegaTile %s:
 						new_id += 1
 					megatile_ids.append(id)
 					if tile_hash in mega_lookup:
-						mega_lookup[tile_hash] = [id]
-					else:
 						mega_lookup[tile_hash].append(id)
+					else:
+						mega_lookup[tile_hash] = [id]
 			self.vx4.graphics.extend(new_megatiles)
 			for tile_hash in mega_lookup:
 				if tile_hash in self.vx4.graphics.lookup:
