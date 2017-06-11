@@ -319,7 +319,8 @@ MegaTile %s:
 		minitiles_find_duplicates_new = options.get('minitiles_find_duplicates_new', True)
 		minitiles_find_duplicates_flipped = options.get('minitiles_find_duplicates_flipped', True)
 		while i < len(new_images):
-			image_hash = hash(new_images[i])
+			image = new_images[i]
+			image_hash = hash(image)
 			found = False
 			if tiletype != TILETYPE_MINI or not len(ids):
 				flipped_hash = None
