@@ -37,6 +37,7 @@ class MegaEditorView(Frame):
 		self.megatile_id = megatile_id
 		self.edit_mode = IntVar()
 		self.edit_mode.set(self.delegate.settings.get('mega_edit_mode', MEGA_EDIT_MODE_MINI))
+		self.edit_mode.trace('w', self.edit_mode_updated)
 		self.minitile_n = 0
 		self.last_click = None
 		self.toggle_on = None
@@ -49,9 +50,13 @@ class MegaEditorView(Frame):
 		self.active_tools = None
 
 		frame = Frame(self)
+		tools = ['Minitile','Height','Walkable','Block View','Ramp?','Flip']
+		DropDown(frame, self.edit_mode, tools, width=15).pack(side=TOP, padx=5)
+		for n in xrange(MEGA_EDIT_MODE_FLIP+1):
+			self.delegate.bind('%d' % (n+1), lambda e,m=n: self.edit_mode.set(m))
 		self.canvas = Canvas(frame, width=96, height=96, background='#000000')
 		def mouse_to_mini(e):
-			return (e.y / 24) * 4 + (e.x / 24)
+			return min((e.y - 1) / 24,3) * 4 + min((e.x - 1) / 24,3)
 		def click(e):
 			self.last_click = mouse_to_mini(e)
 			self.click_minitile(self.last_click)
@@ -66,7 +71,7 @@ class MegaEditorView(Frame):
 		self.canvas.bind('<Button-1>', click)
 		self.canvas.bind('<B1-Motion>', move)
 		self.canvas.bind('<ButtonRelease-1>', release)
-		self.canvas.pack(side=TOP, padx=20)
+		self.canvas.pack(side=TOP)
 		tools = Frame(frame)
 		self.mini_tools = Frame(tools)
 		e = Frame(self.mini_tools)
@@ -85,19 +90,6 @@ class MegaEditorView(Frame):
 		self.height_tools.pack_forget()
 		tools.pack(side=TOP, pady=3)
 		frame.pack(side=LEFT, fill=Y)
-		modes = LabelFrame(self, text='Edit Mode')
-		trans_fix = PhotoImage(file=os.path.join(BASE_DIR, 'Images', 'trans_fix.gif'))
-		edit_modes = [
-			(MEGA_EDIT_MODE_MINI, 'Minitile'),
-			(MEGA_EDIT_MODE_HEIGHT, 'Height'),
-			(MEGA_EDIT_MODE_WALKABILITY, 'Walkable'),
-			(MEGA_EDIT_MODE_VIEW_BLOCKING, 'Block View'),
-			(MEGA_EDIT_MODE_RAMP, 'Ramp?'),
-			(MEGA_EDIT_MODE_FLIP, 'Flip')
-		]
-		for mode,name in edit_modes:
-			Radiobutton(modes, image=TRANS_FIX, text=name, indicatoron=0, compound=RIGHT, variable=self.edit_mode, value=mode, command=lambda m=mode: self.change_edit_mode(m)).pack(side=TOP, fill=X)
-		modes.pack(side=RIGHT)
 
 		self.update_tools()
 		self.load_megatile()
@@ -114,17 +106,16 @@ class MegaEditorView(Frame):
 			self.height_tools.pack()
 			self.active_tools = self.height_tools
 
-	def change_edit_mode(self, mode):
-		self.edit_mode.set(mode)
+	def edit_mode_updated(self, *_):
 		self.update_tools()
 		self.draw_edit_mode()
-		self.delegate.settings['mega_edit_mode'] = mode
+		self.delegate.settings['mega_edit_mode'] = self.edit_mode.get()
 	def height_updated(self, *_):
 		self.delegate.settings['mega_edit_height'] = self.height.get()
 
 	def draw_border(self, minitile_n, color='#FFFFFF'):
-		x = 24 * (minitile_n % 4)
-		y = 24 * (minitile_n / 4)
+		x = 1 + 24 * (minitile_n % 4)
+		y = 1 + 24 * (minitile_n / 4)
 		self.canvas.create_rectangle(x,y, x+23,y+23, outline=color, tags='mode')
 
 	def draw_selection(self):
@@ -187,8 +178,6 @@ class MegaEditorView(Frame):
 	def click_flag(self, minitile_n, flag):
 		if self.toggle_on == None:
 			self.toggle_on = not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
-			print 'Toggle: %s' % self.toggle_on
-		print 'Draw: %s' % self.toggle_on
 		if self.toggle_on:
 			self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] |= flag
 		else:
@@ -228,7 +217,7 @@ class MegaEditorView(Frame):
 			return
 		for n,m in enumerate(self.delegate.tileset.vx4.graphics[self.megatile_id]):
 			self.canvas.images.append(self.delegate.gettile(m))
-			self.canvas.create_image(24 * (n % 4), 24 * (n / 4), anchor=NW, image=self.canvas.images[-1], tags='tile')
+			self.canvas.create_image(1 + 24 * (n % 4), 1 + 24 * (n / 4), anchor=NW, image=self.canvas.images[-1], tags='tile')
 
 	def draw(self):
 		self.draw_minitiles()
@@ -271,9 +260,9 @@ class MegaEditor(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'MegaTile Editor [%s]' % id)
 
 	def widgetize(self):
-		MegaEditorView(self, self, self.id).pack(side=TOP)
+		MegaEditorView(self, self, self.id).pack(side=TOP, padx=3, pady=(3,0))
 		ok = Button(self, text='Ok', width=10, command=self.ok)
-		ok.pack(side=BOTTOM, padx=3)
+		ok.pack(side=BOTTOM, padx=3, pady=3)
 		return ok
 
 	def mark_edited(self):
@@ -1077,6 +1066,24 @@ class PyTILE(Tk):
 		right.pack(side=LEFT, fill=Y, pady=8)
 		f.pack(fill=X)
 		self.groupid.pack(padx=5, pady=5)
+
+		def change_group(d):
+			if not self.tileset or not self.group:
+				return
+			group = max(0,min(len(self.tileset.cv5.groups)-1,self.group[0] + d))
+			if group != self.group[0]:
+				self.group[0] = group
+				self.megaload()
+		self.bind('<Up>', lambda e: change_group(-1))
+		self.bind('<Down>', lambda e: change_group(1))
+		def change_mega(d):
+			if not self.tileset or not self.group:
+				return
+			mega = max(0,min(15,self.group[1] + d))
+			if mega != self.group[1]:
+				self.megaload(mega)
+		self.bind('<Left>', lambda e: change_mega(-1))
+		self.bind('<Right>', lambda e: change_mega(1))
 
 		#Statusbar
 		self.status = StringVar()
