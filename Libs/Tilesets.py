@@ -406,10 +406,10 @@ MegaTile %s:
 						mega_lookup[tile_hash] = [id]
 			self.vx4.graphics.extend(new_megatiles)
 			for tile_hash in mega_lookup:
-				if tile_hash in self.vx4.graphics.lookup:
-					self.vx4.graphics.lookup[tile_hash].extend(mega_lookup[tile_hash])
+				if tile_hash in self.vx4.lookup:
+					self.vx4.lookup[tile_hash].extend(mega_lookup[tile_hash])
 				else:
-					self.vx4.graphics.lookup[tile_hash] = mega_lookup[tile_hash]
+					self.vx4.lookup[tile_hash] = mega_lookup[tile_hash]
 			if tiletype == TILETYPE_GROUP:
 				for n in xrange(megas_h):
 					group = megatile_ids[n*16:(n+1)*16]
