@@ -355,10 +355,10 @@ MegaTile %s:
 					mini_lookup[image_hash] = [id]
 		self.vr4.images.extend(new_images)
 		for image_hash in mini_lookup:
-			if image_hash in self.vr4.images.lookup:
-				self.vr4.images.lookup[image_hash].extend(mini_lookup[image_hash])
+			if image_hash in self.vr4.lookup:
+				self.vr4.lookup[image_hash].extend(mini_lookup[image_hash])
 			else:
-				self.vr4.images.lookup[image_hash] = mini_lookup[image_hash]
+				self.vr4.lookup[image_hash] = mini_lookup[image_hash]
 		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
 			new_megatiles = []
 			megas_w = minis_w / 4
