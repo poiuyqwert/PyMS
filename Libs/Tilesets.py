@@ -348,6 +348,7 @@ MegaTile %s:
 					if tiletype == TILETYPE_MINI:
 						new_ids.append(new_id)
 					new_id += 1
+					i += 1
 				image_details.append((id,0))
 				if image_hash in mini_lookup:
 					mini_lookup[image_hash].append(id)
@@ -399,12 +400,14 @@ MegaTile %s:
 						if tiletype == TILETYPE_MEGA:
 							new_ids.append(new_id)
 						new_id += 1
+						i += 1
 					megatile_ids.append(id)
 					if tile_hash in mega_lookup:
 						mega_lookup[tile_hash].append(id)
 					else:
 						mega_lookup[tile_hash] = [id]
 			self.vx4.graphics.extend(new_megatiles)
+			self.vf4.flags.extend([0]*16 for _ in xrange(len(new_megatiles)))
 			for tile_hash in mega_lookup:
 				if tile_hash in self.vx4.lookup:
 					self.vx4.lookup[tile_hash].extend(mega_lookup[tile_hash])
