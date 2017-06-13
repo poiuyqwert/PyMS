@@ -236,7 +236,10 @@ class MPQHANDLE(c_void_p):
 
 def MpqInitialize():
 	if not FOLDER:
-		_SFmpq.GetLastError.restype = c_int32
+		try:
+			_SFmpq.GetLastError.restype = c_int32
+		except:
+			_SFmpq.GetLastError = None
 
 		_SFmpq.MpqGetVersionString.restype = c_char_p
 		_SFmpq.MpqGetVersion.restype = c_float
@@ -304,7 +307,10 @@ def debug_log(func):
 		return func
 
 @debug_log
-def GetLastError():
+def SFGetLastError():
+	# SFmpq only implements its own GetLastError on platforms other than windows
+	if _SFmpq.GetLastError == None:
+		return GetLastError()
 	return _SFmpq.GetLastError()
 
 @debug_log
