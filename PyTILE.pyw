@@ -21,11 +21,11 @@ def tip(o, t, h):
 PAL = [0]
 
 MEGA_EDIT_MODE_MINI			 = 0
-MEGA_EDIT_MODE_HEIGHT		 = 1
-MEGA_EDIT_MODE_WALKABILITY	 = 2
-MEGA_EDIT_MODE_VIEW_BLOCKING = 3
-MEGA_EDIT_MODE_RAMP			 = 4
-MEGA_EDIT_MODE_FLIP			 = 5
+MEGA_EDIT_MODE_FLIP			 = 1
+MEGA_EDIT_MODE_HEIGHT		 = 2
+MEGA_EDIT_MODE_WALKABILITY	 = 3
+MEGA_EDIT_MODE_VIEW_BLOCKING = 4
+MEGA_EDIT_MODE_RAMP			 = 5
 HEIGHT_LOW  = 0
 HEIGHT_MID  = (1 << 1)
 HEIGHT_HIGH = (1 << 2)
@@ -38,11 +38,15 @@ class MegaEditorView(Frame):
 		self.edit_mode = IntVar()
 		self.edit_mode.set(self.delegate.settings.get('mega_edit_mode', MEGA_EDIT_MODE_MINI))
 		self.edit_mode.trace('w', self.edit_mode_updated)
+		if hasattr(self.delegate, 'mega_edit_mode_updated'):
+			self.delegate.mega_edit_mode_updated(self.edit_mode.get())
 		self.minitile_n = 0
 		self.last_click = None
 		self.toggle_on = None
+		self.enabled = True
+		self.disable = []
 
-		self.minitile = IntegerVar(0,[0,len(self.delegate.tileset.vr4.images)-1],callback=lambda id: self.change(None, id))
+		self.minitile = IntegerVar(0,[0,0],callback=lambda id: self.change(None, int(id)))
 		self.height = IntVar()
 		self.height.set(self.delegate.settings.get('mega_edit_height', 1))
 		self.height.trace('w', self.height_updated)
@@ -50,19 +54,37 @@ class MegaEditorView(Frame):
 		self.active_tools = None
 
 		frame = Frame(self)
-		tools = ['Minitile','Height','Walkable','Block View','Ramp?','Flip']
-		DropDown(frame, self.edit_mode, tools, width=15).pack(side=TOP, padx=5)
-		for n in xrange(MEGA_EDIT_MODE_FLIP+1):
-			self.delegate.bind('%d' % (n+1), lambda e,m=n: self.edit_mode.set(m))
+		tools = ['Minitile (m)','Flip (f)','Height (h)','Walkable (w)','Block view (b)','Ramp? (r)']
+		d = DropDown(frame, self.edit_mode, tools, width=15)
+		self.disable.append(d)
+		d.pack(side=TOP, padx=5)
+		bind = [
+			('m',MEGA_EDIT_MODE_MINI),
+			('f',MEGA_EDIT_MODE_FLIP),
+			('h',MEGA_EDIT_MODE_HEIGHT),
+			('w',MEGA_EDIT_MODE_WALKABILITY),
+			('b',MEGA_EDIT_MODE_VIEW_BLOCKING),
+			('r',MEGA_EDIT_MODE_RAMP)
+		]
+		def set_edit_mode(mode):
+			if not self.enabled:
+				return
+			self.edit_mode.set(mode)
+		for b,m in bind:
+			self.delegate.bind(b, lambda e,m=m: set_edit_mode(m))
 		self.canvas = Canvas(frame, width=96, height=96, background='#000000')
 		def mouse_to_mini(e):
-			return min((e.y - 1) / 24,3) * 4 + min((e.x - 1) / 24,3)
+			if e.x < 1 or e.x > 96 or e.y < 1 or e.y > 96:
+				return None
+			return (e.y - 1) / 24 * 4 + (e.x - 1) / 24
 		def click(e):
-			self.last_click = mouse_to_mini(e)
-			self.click_minitile(self.last_click)
+			mini = mouse_to_mini(e)
+			if mini != None:
+				self.last_click = mouse_to_mini(e)
+				self.click_minitile(self.last_click)
 		def move(e):
 			mini = mouse_to_mini(e)
-			if mini != self.last_click:
+			if mini != None and mini != self.last_click:
 				self.last_click = mini
 				self.click_minitile(mini)
 		def release(_):
@@ -72,27 +94,52 @@ class MegaEditorView(Frame):
 		self.canvas.bind('<B1-Motion>', move)
 		self.canvas.bind('<ButtonRelease-1>', release)
 		self.canvas.pack(side=TOP)
-		tools = Frame(frame)
-		self.mini_tools = Frame(tools)
+		self.mini_tools = Frame(frame)
 		e = Frame(self.mini_tools)
-		Label(e, text='MiniTile:').pack(side=LEFT)
-		Entry(e, textvariable=self.minitile, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Label(e, text='ID:').pack(side=LEFT)
+		f = Entry(e, textvariable=self.minitile, font=couriernew, width=5)
+		self.disable.append(f)
+		f.pack(side=LEFT, padx=2)
 		i = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 		b = Button(e, image=i, width=20, height=20, command=self.choose)
 		b.image = i
+		self.disable.append(b)
+		b.pack(side=LEFT, padx=2)
+		i = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
+		b = Button(e, image=i, width=20, height=20, command=self.editor)
+		b.image = i
+		self.disable.append(b)
 		b.pack(side=LEFT, padx=2)
 		e.pack(fill=X)
-		self.mini_tools.pack(side=LEFT)
+		self.mini_tools.pack(side=TOP, pady=(3,0))
 		self.mini_tools.pack_forget()
-		self.height_tools = Frame(tools)
-		DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)'], width=15).pack(side=LEFT, padx=5)
-		self.height_tools.pack(side=LEFT)
+		self.height_tools = Frame(frame)
+		d = DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)'], width=15)
+		self.disable.append(d)
+		d.pack(side=LEFT, padx=5)
+		self.height_tools.pack(side=TOP, pady=(3,0))
 		self.height_tools.pack_forget()
-		tools.pack(side=TOP, pady=3)
 		frame.pack(side=LEFT, fill=Y)
 
+		self.update_mini_range()
 		self.update_tools()
 		self.load_megatile()
+
+	def editor(self):
+		minitile_image_id = self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0]
+		MiniEditor(self.delegate, minitile_image_id)
+
+	def set_enabled(self, enabled):
+		self.enabled = enabled
+		state = NORMAL if enabled else DISABLED
+		for w in self.disable:
+			w['state'] = state
+
+	def update_mini_range(self):
+		size = 0
+		if self.delegate.tileset:
+			size = len(self.delegate.tileset.vr4.images)-1
+		self.minitile.setrange([0,size])
 
 	def update_tools(self):
 		if self.active_tools:
@@ -109,7 +156,10 @@ class MegaEditorView(Frame):
 	def edit_mode_updated(self, *_):
 		self.update_tools()
 		self.draw_edit_mode()
-		self.delegate.settings['mega_edit_mode'] = self.edit_mode.get()
+		mode = self.edit_mode.get()
+		self.delegate.settings['mega_edit_mode'] = mode
+		if hasattr(self.delegate, 'mega_edit_mode_updated'):
+			self.delegate.mega_edit_mode_updated(mode)
 	def height_updated(self, *_):
 		self.delegate.settings['mega_edit_height'] = self.height.get()
 
@@ -119,10 +169,8 @@ class MegaEditorView(Frame):
 		self.canvas.create_rectangle(x,y, x+23,y+23, outline=color, tags='mode')
 
 	def draw_selection(self):
-		self.canvas.delete('mode')
 		self.draw_border(self.minitile_n)
 	def draw_height(self):
-		self.canvas.delete('mode')
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			color = '#FF0000'
@@ -132,23 +180,21 @@ class MegaEditorView(Frame):
 				color = '#FFFF00'
 			self.draw_border(n, color)
 	def draw_walkability(self):
-		self.canvas.delete('mode')
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			self.draw_border(n, '#00FF00' if flags & 1 else '#FF0000')
 	def draw_blocking(self):
-		self.canvas.delete('mode')
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			self.draw_border(n, '#FF0000' if flags & 8 else '#00FF00')
 	def draw_ramp(self):
-		self.canvas.delete('mode')
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			self.draw_border(n, '#00FF00' if flags & 16 else '#FF0000')
-	def draw_flipped(self):
-		self.canvas.delete('mode')
 	def draw_edit_mode(self):
+		self.canvas.delete('mode')
+		if not self.delegate.tileset or self.megatile_id == None:
+			return
 		mode = self.edit_mode.get()
 		if mode == MEGA_EDIT_MODE_MINI:
 			self.draw_selection()
@@ -160,13 +206,19 @@ class MegaEditorView(Frame):
 			self.draw_blocking()
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			self.draw_ramp()
-		elif mode == MEGA_EDIT_MODE_FLIP:
-			self.draw_flipped()
 
 	def click_selection(self, minitile_n):
 		self.minitile_n = minitile_n
 		self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][minitile_n][0], silence=True)
 		self.draw_edit_mode()
+	def click_flipped(self, minitile_n):
+		megatile = list(self.delegate.tileset.vx4.graphics[self.megatile_id])
+		minitile = megatile[minitile_n]
+		megatile[minitile_n] = (minitile[0], not minitile[1])
+		self.delegate.tileset.vx4.set_tile(self.megatile_id, megatile)
+		self.redraw_delegate()
+		self.draw()
+		self.mark_edited()
 	def click_height(self, minitile_n):
 		flags = self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n]
 		new_flags = flags & ~(HEIGHT_MID | HEIGHT_HIGH)
@@ -174,7 +226,7 @@ class MegaEditorView(Frame):
 		if new_flags != flags:
 			self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] = new_flags
 			self.draw_edit_mode()
-			self.delegate.mark_edited()
+			self.mark_edited()
 	def click_flag(self, minitile_n, flag):
 		if self.toggle_on == None:
 			self.toggle_on = not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
@@ -183,22 +235,15 @@ class MegaEditorView(Frame):
 		else:
 			self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] &= ~flag
 		self.draw_edit_mode()
-		self.delegate.mark_edited()
-	def click_flipped(self, minitile_n):
-		megatile = list(self.delegate.tileset.vx4.graphics[self.megatile_id])
-		minitile = megatile[minitile_n]
-		megatile[minitile_n] = (minitile[0], not minitile[1])
-		self.delegate.tileset.vx4.set_tile(self.megatile_id, megatile)
-		if self.megatile_id in TILE_CACHE:
-			del TILE_CACHE[self.megatile_id]
-		self.draw()
-		self.delegate.mark_edited()
+		self.mark_edited()
 	def click_minitile(self, minitile_n):
-		if self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id == None:
 			return
 		mode = self.edit_mode.get()
 		if mode == MEGA_EDIT_MODE_MINI:
 			self.click_selection(minitile_n)
+		elif mode == MEGA_EDIT_MODE_FLIP:
+			self.click_flipped(minitile_n)
 		elif mode == MEGA_EDIT_MODE_HEIGHT:
 			self.click_height(minitile_n)
 		elif mode == MEGA_EDIT_MODE_WALKABILITY:
@@ -207,13 +252,11 @@ class MegaEditorView(Frame):
 			self.click_flag(minitile_n, 8)
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			self.click_flag(minitile_n, 16)
-		elif mode == MEGA_EDIT_MODE_FLIP:
-			self.click_flipped(minitile_n)
 
 	def draw_minitiles(self):
 		self.canvas.delete('tile')
 		self.canvas.images = []
-		if self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id == None:
 			return
 		for n,m in enumerate(self.delegate.tileset.vx4.graphics[self.megatile_id]):
 			self.canvas.images.append(self.delegate.gettile(m))
@@ -224,13 +267,21 @@ class MegaEditorView(Frame):
 		self.draw_edit_mode()
 
 	def load_megatile(self):
-		self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], silence=True)
+		if self.delegate.tileset and self.megatile_id != None:
+			self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], silence=True)
+		else:
+			self.minitile.set(0, silence=True)
 		self.draw()
 
 	def set_megatile(self, megatile_id):
 		self.megatile_id = megatile_id
 		self.load_megatile()
 
+	def redraw_delegate(self):
+		if self.megatile_id in TILE_CACHE:
+			del TILE_CACHE[self.megatile_id]
+		if hasattr(self.delegate, 'draw_group'):
+			self.delegate.draw_group()
 	def mark_edited(self):
 		self.delegate.mark_edited()
 	def change(self, tiletype, minitile_id):
@@ -242,10 +293,9 @@ class MegaEditorView(Frame):
 		minitile = megatile[self.minitile_n]
 		megatile[self.minitile_n] = (minitile_id, minitile[1])
 		self.delegate.tileset.vx4.set_tile(self.megatile_id, megatile)
-		if self.megatile_id in TILE_CACHE:
-			del TILE_CACHE[self.megatile_id]
+		self.redraw_delegate()
 		self.draw()
-		self.delegate.mark_edited()
+		self.mark_edited()
 	def choose(self):
 		TilePalette(self.delegate, TILETYPE_MINI, self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], self)
 
@@ -260,7 +310,8 @@ class MegaEditor(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'MegaTile Editor [%s]' % id)
 
 	def widgetize(self):
-		MegaEditorView(self, self, self.id).pack(side=TOP, padx=3, pady=(3,0))
+		self.editor = MegaEditorView(self, self, self.id)
+		self.editor.pack(side=TOP, padx=3, pady=(3,0))
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(side=BOTTOM, padx=3, pady=3)
 		return ok
@@ -268,11 +319,19 @@ class MegaEditor(PyMSDialog):
 	def mark_edited(self):
 		self.edited = True
 
+	def megaload(self):
+		self.editor.draw()
+
 	def ok(self):
-		if hasattr(self.parent, 'megaload'):
-			self.parent.megaload()
-		if hasattr(self.parent, 'draw_tiles'):
-			self.parent.draw_tiles(force=True)
+		if self.edited:
+			if self.editor.megatile_id in TILE_CACHE:
+				del TILE_CACHE[self.editor.megatile_id]
+			if hasattr(self.parent, 'megaload'):
+				self.parent.megaload()
+			if hasattr(self.parent, 'draw_tiles'):
+				self.parent.draw_tiles(force=True)
+			if hasattr(self.parent, 'mark_edited'):
+				self.parent.mark_edited()
 		PyMSDialog.ok(self)
 
 class Placeability(PyMSDialog):
@@ -443,7 +502,7 @@ class MiniEditor(PyMSDialog):
 	def ok(self):
 		self.parent.tileset.vr4.set_image(self.id, self.indexs)
 		self.parent.mark_edited()
-		if isinstance(self.parent, PyTILE):
+		if hasattr(self.parent, 'megaload'):
 			self.parent.megaload()
 		elif isinstance(self.parent, TilePalette):
 			TILE_CACHE.clear()
@@ -633,6 +692,7 @@ class TilePalette(PyMSDialog):
 		if force:
 			self.visible_range = None
 			self.canvas.delete(ALL)
+			self.canvas.images.clear()
 		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
 		tile_size = self.get_tile_size()
 		tile_count = self.get_tile_count()
@@ -882,19 +942,8 @@ class PyTILE(Tk):
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.disable = []
-		self.minitile = IntegerVar(0,[0,32767],callback=lambda id: self.change(TILETYPE_MINI, id))
-		self.flipped = IntVar()
-		self.heightdd = IntVar()
-		self.walkable = IntVar()
-		self.blockview = IntVar()
-		self.ramp = IntVar()
 
-		self.flipped.trace('w', self.minitile_flipped_changed)
-		minitile_flag_vars = [self.heightdd,self.walkable,self.blockview,self.ramp]
-		for var in minitile_flag_vars:
-			var.trace('w', self.minitile_flags_changed)
-
-		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TILETYPE_MEGA, id))
+		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TILETYPE_MEGA, int(id)))
 		self.index = IntegerVar(0,[0,65535],callback=self.group_values_changed)
 		self.flags = IntegerVar(0,[0,15],callback=self.group_values_changed)
 		self.groundheight = IntegerVar(0,[0,15],callback=self.group_values_changed)
@@ -928,44 +977,20 @@ class PyTILE(Tk):
 		f = Frame(self.groupid)
 		left = Frame(f)
 		l = LabelFrame(left, text='MiniTiles')
-		d = Frame(l)
-		self.minitiles = Canvas(d, width=101, height=101, background='#000000')
-		self.minitiles.pack(padx=2, pady=2)
-		self.minitiles.create_rectangle(0, 0, 0, 0, outline='#FFFFFF', tags='border')
-		e = Frame(d)
-		Label(e, text='MiniTile:').pack(side=LEFT)
-		self.disable.append(Entry(e, textvariable=self.minitile, font=couriernew, width=5, state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=2)
-		self.disable.append(Button(e, image=self.findimage, width=20, height=20, command=lambda i=2: self.choose(i), state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=2)
-		e.pack(fill=X)
-		e = Frame(d)
-		i = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
-		self.disable.append(Button(e, image=i, width=20, height=20, command=self.editor, state=DISABLED))
-		self.disable[-1].image = i
-		self.disable[-1].pack(side=RIGHT, padx=2)
-		self.disable.append(Checkbutton(e, text='Flipped', variable=self.flipped, state=DISABLED))
-		self.disable[-1].pack(side=RIGHT, padx=2)
-		e.pack(fill=X, pady=3)
-		d.pack(side=LEFT)
-		d = Frame(l)
-		c = Frame(d)
-		self.disable.append(DropDown(c, self.heightdd, ['Low','Med','High'], width=4, state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=5)
-		c.pack(fill=X)
-		for t,v in [('Walkable',self.walkable),('Block View',self.blockview),('Ramp?',self.ramp)]:
-			c = Frame(d)
-			self.disable.append(Checkbutton(c, text=t, variable=v, state=DISABLED))
-			self.disable[-1].pack(side=LEFT)
-			c.pack(fill=X)
-		a = LabelFrame(d, text='Apply to all')
-		self.disable.append(Button(a, text='MiniTiles', width=10, command=lambda i=0: self.applyallminiflags(i), state=DISABLED))
-		self.disable[-1].pack(padx=3, pady=2)
-		self.disable.append(Button(a, text='MegaTiles', width=10, command=lambda i=1: self.applyallminiflags(i), state=DISABLED))
-		self.disable[-1].pack(padx=3, pady=2)
-		a.pack(side=BOTTOM, padx=2, pady=2)
-		d.pack(side=LEFT, fill=Y)
-		l.pack(padx=5, pady=5)
+		def apply_all_pressed():
+			menu = Menu(self, tearoff=0)
+			mode = self.mega_editor.edit_mode.get()
+			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode]
+			menu.add_command(label="Apply %s flags to Megatiles" % name, command=lambda m=mode: self.apply_all(mode))
+			menu.add_command(label="Apply all flags to Megatiles", command=self.apply_all)
+			menu.post(*self.winfo_pointerxy())
+		self.apply_all_btn = Button(l, text='Apply to Megas', state=DISABLED, command=apply_all_pressed)
+		self.disable.append(self.apply_all_btn)
+		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
+		self.mega_editor = MegaEditorView(l, self)
+		self.mega_editor.set_enabled(False)
+		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
+		l.pack(padx=5, pady=(0,5))
 		left.pack(side=LEFT)
 		right = Frame(f)
 		self.tiles = Frame(right)
@@ -1067,28 +1092,28 @@ class PyTILE(Tk):
 		f.pack(fill=X)
 		self.groupid.pack(padx=5, pady=5)
 
-		def change_group(d):
-			if not self.tileset or not self.group:
-				return
-			group = max(0,min(len(self.tileset.cv5.groups)-1,self.group[0] + d))
-			if group != self.group[0]:
-				self.group[0] = group
-				self.megaload()
-		self.bind('<Up>', lambda e: change_group(-1))
-		self.bind('<Down>', lambda e: change_group(1))
-		def change_mega(d):
-			if not self.tileset or not self.group:
-				return
-			mega = max(0,min(15,self.group[1] + d))
-			if mega != self.group[1]:
-				self.megaload(mega)
-		self.bind('<Left>', lambda e: change_mega(-1))
-		self.bind('<Right>', lambda e: change_mega(1))
+		# def change_group(d):
+		# 	if not self.tileset or not self.group:
+		# 		return
+		# 	group = max(0,min(len(self.tileset.cv5.groups)-1,self.group[0] + d))
+		# 	if group != self.group[0]:
+		# 		self.group[0] = group
+		# 		self.megaload()
+		# self.bind('<Up>', lambda e: change_group(-1))
+		# self.bind('<Down>', lambda e: change_group(1))
+		# def change_mega(d):
+		# 	if not self.tileset or not self.group:
+		# 		return
+		# 	mega = max(0,min(15,self.group[1] + d))
+		# 	if mega != self.group[1]:
+		# 		self.megaload(mega)
+		# self.bind('<Left>', lambda e: change_mega(-1))
+		# self.bind('<Right>', lambda e: change_mega(1))
 
 		#Statusbar
 		self.status = StringVar()
 		statusbar = Frame(self)
-		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=75, anchor=W).pack(side=LEFT, padx=1)
+		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=45, anchor=W).pack(side=LEFT, padx=1)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
 		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
 		self.editstatus.image = image
@@ -1134,6 +1159,7 @@ class PyTILE(Tk):
 			self.buttons[btn]['state'] = file
 		for w in self.disable:
 			w['state'] = file
+		self.mega_editor.set_enabled(self.tileset != None)
 
 	def mark_edited(self, edited=True):
 		self.edited = edited
@@ -1147,13 +1173,27 @@ class PyTILE(Tk):
 			return TILE_CACHE[id]
 		return to_photo(self.tileset, id)
 
-	def applyallminiflags(self, i):
-		megas = self.tileset.cv5.groups[self.group[0]][13]
-		if i == 0:
-			megas = [megas[self.group[1]]]
-		for mega in megas:
-			for n in range(16):
-				self.tileset.vf4.flags[mega][n] = self.heightdd.get() * 2 + self.walkable.get() + 8 * self.blockview.get() + 16 * self.ramp.get()
+	def apply_all(self, mode=None):
+		copy_mask = ~0
+		if mode == MEGA_EDIT_MODE_HEIGHT:
+			copy_mask = HEIGHT_MID | HEIGHT_HIGH
+		elif mode == MEGA_EDIT_MODE_WALKABILITY:
+			copy_mask = 1
+		elif mode == MEGA_EDIT_MODE_VIEW_BLOCKING:
+			copy_mask = 8
+		elif mode == MEGA_EDIT_MODE_RAMP:
+			copy_mask = 16
+		for m in self.tileset.cv5.groups[self.group[0]][13]:
+			for n in xrange(16):
+				copy_flags = self.tileset.vf4.flags[self.group[1]][n]
+				flags = self.tileset.vf4.flags[m][n]
+				self.tileset.vf4.flags[m][n] = (flags & ~copy_mask) | (copy_flags & copy_mask)
+
+	def mega_edit_mode_updated(self, mode):
+		if mode == MEGA_EDIT_MODE_MINI or mode == MEGA_EDIT_MODE_FLIP:
+			self.apply_all_btn.pack_forget()
+		else:
+			self.apply_all_btn.pack()
 
 	def draw_group_selection(self):
 		x = 2 + 33 * self.group[1]
@@ -1179,7 +1219,6 @@ class PyTILE(Tk):
 			self.group[1] = n
 		group = self.tileset.cv5.groups[self.group[0]]
 		mega = group[13][n]
-		self.megatile[0] = mega
 		if self.megatilee.get() != mega:
 			self.megatilee.check = False
 			self.megatilee.set(mega)
@@ -1206,46 +1245,8 @@ class PyTILE(Tk):
 		self.miniload()
 		self.loading_megas = False
 
-	def draw_minitiles_selection(self):
-		x,y = 2 + 25 * (self.megatile[1] % 4),2 + 25 * (self.megatile[1] / 4)
-		self.minitiles.coords('border', x, y, x + 25, y + 25)
-
-	def draw_minitiles(self):
-		self.minitiles.images = []
-		for n,m in enumerate(self.tileset.vx4.graphics[self.megatile[0]]):
-			t = 'tile%s' % n
-			self.minitiles.delete(t)
-			self.minitiles.images.append(self.gettile(m))
-			self.minitiles.create_image(15 + 25 * (n % 4), 15 + 25 * (n / 4), image=self.minitiles.images[-1], tags=t)
-			self.minitiles.tag_bind(t, '<Button-1>', lambda e,n=n: self.miniload(n))
-			self.minitiles.tag_bind(t, '<Double-Button-1>', lambda e,i=2: self.choose(i))
-
 	def miniload(self, n=None):
-		self.loading_minis = True
-		if n == None:
-			n = self.megatile[1]
-		else:
-			self.megatile[1] = n
-		mega = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		g = self.tileset.vx4.graphics[mega][n]
-		if self.minitile.get() != g[0]:
-			self.minitile.check = False
-			self.minitile.set(g[0])
-		self.flipped.set(g[1])
-		f = self.tileset.vf4.flags[mega][n]
-		if f & 4:
-			self.heightdd.set(2)
-		elif f & 2:
-			self.heightdd.set(1)
-		else:
-			self.heightdd.set(0)
-		self.walkable.set(f & 1)
-		self.blockview.set(f & 8 == 8)
-		self.ramp.set(f & 16 == 16)
-		self.draw_minitiles()
-		self.draw_minitiles_selection()
-		self.loading_minis = False
-
+		self.mega_editor.set_megatile(self.tileset.cv5.groups[self.group[0]][13][self.group[1]])
 
 	def group_values_changed(self, *_):
 		if not self.tileset or self.loading_megas:
@@ -1263,32 +1264,10 @@ class PyTILE(Tk):
 				group[n+1] = v.get()
 		self.mark_edited()
 
-	def minitile_flipped_changed(self, *_):
-		if not self.tileset or self.loading_minis:
-			return
-		megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		minitile_n = self.megatile[1]
-		tile = list(self.tileset.vx4.graphics[megatile_id])
-		tile[minitile_n] = (tile[minitile_n][0],self.flipped.get())
-		self.tileset.vx4.set_tile(megatile_id, tile)
-		self.draw_minitiles()
-		self.draw_group()
-		self.mark_edited()
-
-	def minitile_flags_changed(self, *_):
-		if not self.tileset or self.loading_minis:
-			return
-		flags = [0,2,4][self.heightdd.get()] + self.walkable.get() + 8 * self.blockview.get() + 16 * self.ramp.get()
-		megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		minitile_n = self.megatile[1]
-		self.tileset.vf4.flags[megatile_id][minitile_n] = flags
-		self.mark_edited()
-
 	def choose(self, i):
 		TilePalette(self, i, [
 			self.group[0],
-			self.tileset.cv5.groups[self.group[0]][13][self.group[1]],
-			self.tileset.vx4.graphics[self.tileset.cv5.groups[self.group[0]][13][self.group[1]]][self.megatile[1]][0]
+			self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
 		][i])
 
 	def updatescroll(self):
@@ -1319,34 +1298,18 @@ class PyTILE(Tk):
 			self.group[0] = id
 			self.megaload()
 		elif tiletype == TILETYPE_MEGA and not self.loading_megas:
-			self.megatile[0] = id
 			self.tileset.cv5.groups[self.group[0]][13][self.group[1]] = id
 			self.draw_group()
-			self.draw_minitiles()
-		elif tiletype == TILETYPE_MINI and not self.loading_minis:
-			megatile_id = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-			tile = self.tileset.vx4.graphics[megatile_id]
-			minitile_n = self.megatile[1]
-			if tile[minitile_n][0] != id:
-				self.megatile[1] = id
-				tile = list(tile)
-				tile[minitile_n] = (id,tile[minitile_n][1])
-				self.tileset.vx4.set_tile(megatile_id, tile)
-				self.draw_group()
-				self.draw_minitiles()
+			self.mega_editor.set_megatile(id)
 		self.updatescroll()
 		self.mark_edited()
 
 	def placeability(self):
 		Placeability(self, self.edgeright.get())
 
-	def editor(self):
-		minitile_image_id = self.tileset.vx4.graphics[self.megatile[0]][self.megatile[1]][0]
-		MiniEditor(self, minitile_image_id)
-
 	def update_ranges(self):
 		self.megatilee.setrange([0,len(self.tileset.vf4.flags)-1])
-		self.minitile.setrange([0,len(self.tileset.vr4.images)-1])
+		self.mega_editor.update_mini_range()
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
@@ -1367,7 +1330,6 @@ class PyTILE(Tk):
 			self.action_states()
 			self.update_ranges()
 			self.group = [0,0]
-			self.megatile = [self.tileset.cv5.groups[0][13][0],0]
 			self.megaload()
 			self.updatescroll()
 
@@ -1400,7 +1362,6 @@ class PyTILE(Tk):
 			self.tileset = None
 			self.file = None
 			self.group = [0,0]
-			self.megatile = None
 			self.status.set('Load or create a Tileset.')
 			self.mark_edited(False)
 			self.groupid['text'] = 'MegaTile Group'
@@ -1408,16 +1369,14 @@ class PyTILE(Tk):
 				self.doodads.pack_forget()
 				self.tiles.pack(side=TOP)
 				self.doodad = False
-			for v in [self.minitile,self.flipped,self.heightdd,self.walkable,self.blockview,self.ramp,self.index,self.megatilee,self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]:
+			self.mega_editor.set_megatile(None)
+			for v in [self.index,self.megatilee,self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]:
 				v.set(0)
 			for n in range(16):
 				t = 'tile%s' % n
 				self.megatiles.delete(t)
-				self.minitiles.delete(t)
 			self.megatiles.images = []
-			self.minitiles.images = []
 			self.megatiles.coords('border', 0, 0, 0, 0)
-			self.minitiles.coords('border', 0, 0, 0, 0)
 			self.action_states()
 			self.updatescroll()
 
