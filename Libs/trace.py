@@ -3,7 +3,7 @@ from utils import *
 import sys,os
 
 # DEBUG = Show std out in logs
-DEBUG = True
+DEBUG = False
 # FSYNC = Use fsync for std err to try and ensure we capture the errors
 FSYNC = True
 

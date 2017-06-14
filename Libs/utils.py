@@ -1382,7 +1382,6 @@ class odict:
 		return self.dict[key]
 
 	def getkey(self, n):
-		print 'len',len(self.keynames),type(self.keynames),n
 		return self.keynames[n]
 
 	def getitem(self, n):

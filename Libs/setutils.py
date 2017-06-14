@@ -769,10 +769,8 @@ class SettingsDialog(PyMSDialog):
 			PyMSDialog.ok(self)
 
 	def ok(self):
-		print self.edited
 		if self.edited:
 			o = dict(self.parent.settings)
-			print self.mpqs, self.mpqsettings.mpqs
 			if self.mpqs:
 				t = self.parent.mpqhandler.mpqs
 				self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
