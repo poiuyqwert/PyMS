@@ -198,7 +198,7 @@ class PyMSWarnList(Exception):
 		return r[:-1]
 
 class PyMSDialog(Toplevel):
-	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True)):
+	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True), set_min_size=(False,False)):
 		Toplevel.__init__(self, parent)
 		self.title(title)
 		self.icon = parent.icon
@@ -219,17 +219,21 @@ class PyMSDialog(Toplevel):
 		if center:
 			self.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
 		self.resizable(*resizable)
-		if False in resizable:
-			min_w = 0
-			max_w = screen_w
-			min_h = 0
-			max_h = screen_h
-			if not resizable[0]:
-				min_w = max_w = w
-			if not resizable[1]:
-				min_h = max_h = h
-			self.minsize(min_w, min_h)
-			self.maxsize(max_w, max_h)
+		min_w = 0
+		max_w = screen_w
+		min_h = 0
+		max_h = screen_h
+		if not resizable[0]:
+			min_w = max_w = w
+		elif set_min_size[0]:
+			min_w = w
+		if not resizable[1]:
+			min_h = max_h = h
+		elif set_min_size[1]:
+			min_h = h
+		self.minsize(min_w, min_h)
+		self.maxsize(max_w, max_h)
+		self.setup_complete()
 		if grabwait:
 			self.grab_wait()
 
@@ -238,6 +242,8 @@ class PyMSDialog(Toplevel):
 			self.wait_window(self)
 
 	def widgetize(self):
+		pass
+	def setup_complete(self):
 		pass
 
 	def dismiss(self):

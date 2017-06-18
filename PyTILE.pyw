@@ -297,7 +297,7 @@ class MegaEditorView(Frame):
 		self.draw()
 		self.mark_edited()
 	def choose(self):
-		TilePalette(self.delegate, TILETYPE_MINI, self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], self)
+		TilePalette(self.delegate, TILETYPE_MINI, self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], self, editing=True)
 
 class MegaEditor(PyMSDialog):
 	def __init__(self, parent, id):
@@ -509,67 +509,308 @@ class MiniEditor(PyMSDialog):
 			self.parent.draw_tiles(force=True)
 		PyMSDialog.ok(self)
 
+class Importer(PyMSDialog):
+	def __init__(self, parent, tiletype=TILETYPE_GROUP, ids=None):
+		self.tiletype = tiletype
+		self.ids = ids
+		self.tileset = parent.tileset
+		self.gettile = parent.gettile
+		self.select_file = parent.select_file
+		self.settings = parent.settings
+		title = 'Import '
+		if tiletype == TILETYPE_GROUP:
+			title += 'MegaTile Groups'
+		elif tiletype == TILETYPE_MEGA:
+			title += 'MegaTiles'
+		elif tiletype == TILETYPE_MINI:
+			title += 'MiniTiles'
+		PyMSDialog.__init__(self, parent, title, resizable=(True,False), set_min_size=(True,True))
+
+	def widgetize(self):
+		self.graphics_path = StringVar()
+		self.settings_path = StringVar()
+
+		self.replace_selections = IntVar()
+		self.auto_close = IntVar()
+		self.megatiles_reuse_duplicates_old = IntVar()
+		self.megatiles_reuse_duplicates_new = IntVar()
+		self.megatiles_reuse_null = IntVar()
+		self.megatiles_null_id = IntegerVar(0,[0,len(self.tileset.vf4.flags)-1])
+		self.minitiles_reuse_duplicates_old = IntVar()
+		self.minitiles_reuse_duplicates_new = IntVar()
+		self.minitiles_reuse_null = IntVar()
+		self.minitiles_null_id = IntegerVar(0,[0,len(self.tileset.vr4.images)-1])
+		self.load_settings()
+
+		self.find = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
+		self.clear = PhotoImage(file=os.path.join(BASE_DIR,'Images','remove.gif'))
+		frame = Frame(self)
+		Label(frame, text='Graphics:', anchor=W).pack(fill=X, expand=1)
+		entryframe = Frame(frame)
+		self.graphics_entry = Entry(entryframe, textvariable=self.graphics_path, state=DISABLED)
+		self.graphics_entry.pack(side=LEFT, fill=X, expand=1)
+		Button(entryframe, image=self.find, width=20, height=20, command=lambda *_: self.select_path(True)).pack(side=LEFT, padx=(1,0))
+		Button(entryframe, image=self.clear, width=20, height=20, command=lambda *_: self.clear_path(True)).pack(side=LEFT, padx=1)
+		entryframe.pack(fill=X, expand=1)
+		frame.pack(side=TOP, fill=X, padx=3, pady=0)
+		if self.tiletype != TILETYPE_MINI:
+			frame = Frame(self)
+			Label(frame, text='Settings (not implemented yet):', anchor=W).pack(fill=X, expand=1)
+			entryframe = Frame(frame)
+			self.settings_entry = Entry(entryframe, textvariable=self.settings_path, state=DISABLED)
+			self.settings_entry.pack(side=LEFT, fill=X, expand=1)
+			Button(entryframe, image=self.find, width=20, height=20, command=lambda *_: self.select_path(False)).pack(side=LEFT, padx=(1,0))
+			Button(entryframe, image=self.clear, width=20, height=20, command=lambda *_: self.clear_path(False)).pack(side=LEFT, padx=1)
+			entryframe.pack(fill=X, expand=1)
+			frame.pack(side=TOP, fill=X, padx=3, pady=(3,0))
+		sets = Frame(self)
+		if self.tiletype == TILETYPE_GROUP:
+			g = LabelFrame(sets, text='Reuse MegaTiles')
+			f = Frame(g)
+			Checkbutton(f, text='Duplicates (Old)', variable=self.megatiles_reuse_duplicates_old, anchor=W).pack(side=LEFT)
+			f.pack(side=TOP, fill=X)
+			f = Frame(g)
+			Checkbutton(f, text='Duplicates (New)', variable=self.megatiles_reuse_duplicates_new, anchor=W).pack(side=LEFT)
+			f.pack(side=TOP, fill=X)
+			f = Frame(g)
+			Checkbutton(f, text='Null:', variable=self.megatiles_reuse_null, anchor=W).pack(side=LEFT)
+			Entry(f, textvariable=self.megatiles_null_id, font=couriernew, width=5).pack(side=LEFT)
+			Button(f, image=self.find, width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MEGA)).pack(side=LEFT, padx=1)
+			f.pack(side=TOP, fill=X)
+			g.grid(column=0,row=0, padx=(0,3), sticky=W+E)
+			sets.grid_columnconfigure(0, weight=1)
+		g = LabelFrame(sets, text='Reuse MiniTiles')
+		f = Frame(g)
+		Checkbutton(f, text='Duplicates (Old)', variable=self.minitiles_reuse_duplicates_old, anchor=W).pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+		f = Frame(g)
+		Checkbutton(f, text='Duplicates (New)', variable=self.minitiles_reuse_duplicates_new, anchor=W).pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+		f = Frame(g)
+		Checkbutton(f, text='Null:', variable=self.minitiles_reuse_null, anchor=W).pack(side=LEFT)
+		Entry(f, textvariable=self.minitiles_null_id, font=couriernew, width=5).pack(side=LEFT)
+		Button(f, image=self.find, width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MINI)).pack(side=LEFT, padx=1)
+		f.pack(side=TOP, fill=X)
+		g.grid(column=1,row=0, sticky=W+E)
+		sets.grid_columnconfigure(1, weight=1)
+		f = Frame(sets)
+		g = Frame(f)
+		Checkbutton(g, text='Replace palette selection', variable=self.replace_selections).pack(side=LEFT)
+		Checkbutton(g, text='Auto-close', variable=self.auto_close).pack(side=LEFT, padx=(10,0))
+		g.pack(side=BOTTOM)
+		f.grid(column=0,row=1, columnspan=2, sticky=W+E)
+		sets.pack(side=TOP, fill=X, expand=1, padx=3, pady=(3,0))
+
+		buts = Frame(self)
+		self.import_button = Button(buts, text='Import', state=DISABLED, command=self.iimport)
+		self.import_button.pack(side=LEFT)
+		Button(buts, text='Reset Options', command=self.reset_options).pack(side=LEFT, padx=(20,0))
+		Button(buts, text='Cancel', command=self.cancel).pack(side=LEFT, padx=(20,0))
+		buts.pack(side=BOTTOM, padx=3, pady=3)
+
+		self.update_states()
+		self.graphics_path.trace('w', self.update_states)
+		self.settings_path.trace('w', self.update_states)
+
+		return self.import_button
+	def setup_complete(self):
+		setting = '%s_import_window' % ['group','mega','mini'][self.tiletype]
+		if setting in self.settings:
+			loadsize(self, self.settings, setting)
+
+	def load_settings(self):
+		import_settings = self.settings.get('import',{})
+		type_key = ''
+		if self.tiletype == TILETYPE_GROUP:
+			type_key = 'groups'
+		elif self.tiletype == TILETYPE_MEGA:
+			type_key = 'megatiles'
+		elif self.tiletype == TILETYPE_MINI:
+			type_key = 'minitiles'
+		type_settings = import_settings.get(type_key,{})
+		self.megatiles_reuse_duplicates_old.set(type_settings.get('megatiles_reuse_duplicates_old',True))
+		self.megatiles_reuse_duplicates_new.set(type_settings.get('megatiles_reuse_duplicates_new',True))
+		self.megatiles_reuse_null.set(type_settings.get('megatiles_reuse_null',True))
+		self.megatiles_null_id.set(type_settings.get('megatiles_null_id',0))
+		self.minitiles_reuse_duplicates_old.set(type_settings.get('minitiles_reuse_duplicates_old',True))
+		self.minitiles_reuse_duplicates_new.set(type_settings.get('minitiles_reuse_duplicates_new',True))
+		self.minitiles_reuse_null.set(type_settings.get('minitiles_reuse_null',True))
+		self.minitiles_null_id.set(type_settings.get('minitiles_null_id',0))
+		self.replace_selections.set(type_settings.get('replace_selections',True))
+		self.auto_close.set(type_settings.get('auto_close',True))
+
+	def update_states(self, *_):
+		self.import_button['state'] = NORMAL if (self.graphics_path.get() or self.settings_path.get()) else DISABLED
+
+	def iimport(self, *_):
+		options = {
+			'minitiles_reuse_duplicates_old': self.minitiles_reuse_duplicates_old.get(),
+			'minitiles_reuse_duplicates_new': self.minitiles_reuse_duplicates_new.get(),
+			'minitiles_reuse_null_with_id': self.minitiles_null_id.get() if self.minitiles_reuse_null.get() else None,
+			'megatiles_reuse_duplicates_old': self.megatiles_reuse_duplicates_old.get(),
+			'megatiles_reuse_duplicates_new': self.megatiles_reuse_duplicates_new.get(),
+			'megatiles_reuse_null_with_id': self.megatiles_null_id.get() if self.megatiles_reuse_null.get() else None
+		}
+		ids = None
+		if self.replace_selections.get():
+			ids = self.ids
+		try:
+			new_ids = self.tileset.iimport(self.tiletype, self.graphics_path.get(), ids, options)
+		except PyMSError, e:
+			ErrorDialog(self, e)
+		else:
+			self.parent.imported(new_ids)
+			if self.auto_close.get():
+				self.ok()
+
+	def select_path(self, graphics):
+		graphics_path = None
+		settings_path = None
+		if graphics:
+			graphics_path = self.select_file('Choose Graphics', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
+			if not self.settings_path.get():
+				path = os.path.splitext(graphics_path)[0] + os.path.extsep + 'txt'
+				if os.path.exists(path):
+					settings_path = path
+		else:
+			settings_path = self.select_file('Choose Settings', True, '.txt', [('Text File','*.txt'),('All Files','*')], self, 'lastpath_exports')
+			if not self.graphics_path.get():
+				path = os.path.splitext(settings_path)[0] + os.path.extsep + 'bmp'
+				if os.path.exists(path):
+					graphics_path = path
+		if graphics_path:
+			self.graphics_path.set(graphics_path)
+			self.graphics_entry.xview(END)
+		if settings_path:
+			self.settings_path.set(settings_path)
+			self.settings_entry.xview(END)
+
+	def clear_path(self, graphics):
+		if graphics:
+			self.graphics_path.set('')
+		else:
+			self.settings_path.set('')
+
+	def select_null(self, tiletype):
+		id = 0
+		if tiletype == TILETYPE_MEGA:
+			id = self.megatiles_null_id.get()
+		elif tiletype == TILETYPE_MINI:
+			id = self.minitiles_null_id.get()
+		TilePalette(self, tiletype, id)
+	def change(self, tiletype, id):
+		if tiletype == TILETYPE_MEGA:
+			self.megatiles_null_id.set(id)
+		elif tiletype == TILETYPE_MINI:
+			self.minitiles_null_id.set(id)
+
+	def reset_options(self):
+		if 'import' in self.settings:
+			type_key = ''
+			if self.tiletype == TILETYPE_GROUP:
+				type_key = 'groups'
+			elif self.tiletype == TILETYPE_MEGA:
+				type_key = 'megatiles'
+			elif self.tiletype == TILETYPE_MINI:
+				type_key = 'minitiles'
+			if type_key in self.settings['import']:
+				del self.settings['import'][type_key]
+		self.load_settings()
+
+	def dismiss(self):
+		type_settings = {
+			'minitiles_reuse_duplicates_old': self.minitiles_reuse_duplicates_old.get(),
+			'minitiles_reuse_duplicates_new': self.minitiles_reuse_duplicates_new.get(),
+			'minitiles_reuse_null': self.minitiles_reuse_null.get(),
+			'minitiles_null_id': self.minitiles_null_id.get(),
+			'replace_selections': self.replace_selections.get(),
+			'auto_close': self.auto_close.get()
+		}
+		if self.tiletype != TILETYPE_MINI:
+			type_settings['megatiles_reuse_duplicates_old'] = self.megatiles_reuse_duplicates_old.get()
+			type_settings['megatiles_reuse_duplicates_new'] = self.megatiles_reuse_duplicates_new.get()
+			type_settings['megatiles_reuse_null'] = self.megatiles_reuse_null.get()
+			type_settings['megatiles_null_id'] = self.megatiles_null_id.get()
+		if not 'import' in self.settings:
+			self.settings['import'] = {}
+		type_key = ''
+		if self.tiletype == TILETYPE_GROUP:
+			type_key = 'groups'
+		elif self.tiletype == TILETYPE_MEGA:
+			type_key = 'megatiles'
+		elif self.tiletype == TILETYPE_MINI:
+			type_key = 'minitiles'
+		self.settings['import'][type_key] = type_settings
+		setting = '%s_import_window' % ['group','mega','mini'][self.tiletype]
+		savesize(self, self.settings, setting)
+		PyMSDialog.dismiss(self)
+
 class TilePalette(PyMSDialog):
-	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None):
+	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, editing=False):
 		PAL[0] += 1
 		self.tiletype = tiletype
 		self.selected = []
 		if select != None:
 			self.selected.append(select)
 		self.delegate = delegate or parent
+		self.editing = editing
 		self.visible_range = None
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
 		self.select_file = parent.select_file
 		self.settings = parent.settings
 		self.edited = False
-		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True))
+		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True), set_min_size=(True,True))
 
 	def widgetize(self):
 		typename = ''
 		if self.tiletype == TILETYPE_GROUP:
-			typename = 'Groups'
+			typename = 'MegaTile Groups'
 		elif self.tiletype == TILETYPE_MEGA:
 			typename = 'MegaTiles'
 		elif self.tiletype == TILETYPE_MINI:
 			typename = 'MiniTiles'
-		buttons = [
-			('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
-			10,
-			('export', self.export, 'Export %s (Ctrl+E)' % typename, NORMAL, 'Ctrl+E'),
-			('import', self.iimport, 'Import %s (Ctrl+I)' % typename, NORMAL, 'Ctrl+I'),
-		]
-		if self.tiletype != TILETYPE_GROUP:
-			buttons.extend([
+		if self.editing:
+			buttons = [
+				('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
 				10,
-				('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')
+				('export', self.export, 'Export %s (Ctrl+E)' % typename, NORMAL, 'Ctrl+E'),
+				('import', self.iimport, 'Import %s (Ctrl+I)' % typename, NORMAL, 'Ctrl+I'),
+			]
+			if self.tiletype != TILETYPE_GROUP:
+				buttons.extend([
+					10,
+					('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')
+				])
+			buttons.extend([
+				20,
+				'WIP:',
+				('import', self.new_iimport, 'Import %s [WIP]' % typename, NORMAL, None)
 			])
-		buttons.extend([
-			20,
-			'WIP:',
-			('import', self.new_iimport, 'Import %s [WIP]' % typename, NORMAL, None)
-		])
-		self.buttons = {}
-		toolbar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
-				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-				button.image = image
-				button.tooltip = Tooltip(button, btn[2])
-				button.pack(side=LEFT)
-				self.buttons[btn[0]] = button
-				a = btn[4]
-				if a:
-					if not a.startswith('F'):
-						self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
-					else:
-						self.bind('<%s>' % a, btn[1])
-			elif isinstance(btn, str): # WIP, remove later
-				Label(toolbar, text=btn).pack(side=LEFT)
-			else:
-				Frame(toolbar, width=btn).pack(side=LEFT)
-		toolbar.pack(fill=X)
+			self.buttons = {}
+			toolbar = Frame(self)
+			for btn in buttons:
+				if isinstance(btn, tuple):
+					image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
+					button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
+					if btn[0] == 'add':
+						self.add_button = button
+					button.image = image
+					button.tooltip = Tooltip(button, btn[2])
+					button.pack(side=LEFT)
+					self.buttons[btn[0]] = button
+					a = btn[4]
+					if a:
+						if not a.startswith('F'):
+							self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
+						else:
+							self.bind('<%s>' % a, btn[1])
+				elif isinstance(btn, str): # WIP, remove later
+					Label(toolbar, text=btn).pack(side=LEFT)
+				else:
+					Frame(toolbar, width=btn).pack(side=LEFT)
+			toolbar.pack(fill=X)
+
 		tile_size = self.get_tile_size()
 		c = Frame(self)
 		self.canvas = Canvas(c, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000')
@@ -581,6 +822,7 @@ class TilePalette(PyMSDialog):
 
 		self.status = StringVar()
 		self.update_status()
+		self.update_state()
 
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, fill=X, expand=1, padx=1)
@@ -599,6 +841,7 @@ class TilePalette(PyMSDialog):
 			self.draw_tiles()
 		self.canvas.config(yscrollcommand=lambda l,h,s=scrollbar: update_scrollbar(l,h,s))
 
+	def setup_complete(self):
 		setting = '%s_palette_window' % ['group','mega','mini'][self.tiletype]
 		if setting in self.settings:
 			loadsize(self, self.settings, setting)
@@ -614,16 +857,26 @@ class TilePalette(PyMSDialog):
 		max_count = 0
 		if self.tiletype == TILETYPE_GROUP:
 			count = len(self.tileset.cv5.groups)
-			max_count = 4095
+			max_count = 4096
 		elif self.tiletype == TILETYPE_MEGA:
 			count = len(self.tileset.vx4.graphics)
-			max_count = 65535
+			max_count = 65536
 		elif self.tiletype == TILETYPE_MINI:
 			count = len(self.tileset.vr4.images)
-			max_count = 32767
+			max_count = 32768
 		return '%s Palette [%d/%d]' % (['Group','MegaTile','MiniTile Image'][self.tiletype], count,max_count)
 	def update_title(self):
 		self.title(self.get_title())
+
+	def update_state(self):
+		at_max = False
+		if self.tiletype == TILETYPE_GROUP:
+			at_max = (self.tileset.groups_remaining() == 0)
+		elif self.tiletype == TILETYPE_MEGA:
+			at_max = (self.tileset.megatiles_remaining() == 0)
+		elif self.tiletype == TILETYPE_MINI:
+			at_max = (self.tileset.minitiles_remaining() == 0)
+		self.add_button['state'] == DISABLED if at_max else NORMAL
 
 	def update_status(self):
 		status = 'Selected: '
@@ -754,6 +1007,7 @@ class TilePalette(PyMSDialog):
 			self.tileset.vr4.images.append([[0] * 8 for _ in range(8)] )
 			select = len(self.tileset.vr4.images)-1
 		self.update_title()
+		self.update_state()
 		self.update_size()
 		self.select(select)
 		self.scroll_to_selection()
@@ -773,24 +1027,19 @@ class TilePalette(PyMSDialog):
 		self.tileset.decompile(b,self.tiletype,id,s)
 
 	def new_iimport(self):
-		b = self.select_file('Import Group', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
-		if not b:
-			return
-		try:
-			new_ids = self.tileset.iimport(self.tiletype, b, self.selected)
-		except PyMSError, e:
-			ErrorDialog(self, e)
-		else:
-			TILE_CACHE.clear()
-			self.update_title()
-			self.update_size()
-			if len(new_ids):
-				self.select(new_ids)
-				self.draw_selections()
-				self.scroll_to_selection()
-			self.draw_tiles(force=True)
-			self.parent.update_ranges()
-			self.mark_edited()
+		Importer(self, self.tiletype, self.selected)
+	def imported(self, new_ids):
+		TILE_CACHE.clear()
+		self.update_title()
+		self.update_state()
+		self.update_size()
+		if len(new_ids):
+			self.select(new_ids)
+			self.draw_selections()
+			self.scroll_to_selection()
+		self.draw_tiles(force=True)
+		self.parent.update_ranges()
+		self.mark_edited()
 
 	def iimport(self):
 		b = self.select_file('Import Group', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], self, 'lastpath_exports')
@@ -997,7 +1246,7 @@ class PyTILE(Tk):
 		data = [
 			[
 				('Index',self.index,5,'Group Index? Seems to always be 1 for doodads. Not completely understood'),
-				('MegaTile',self.megatilee,4,'MegaTile ID for selected tile in the group. Either input a value,\n  or hit the find button to browse for a MegaTile.')
+				('MegaTile',self.megatilee,5,'MegaTile ID for selected tile in the group. Either input a value,\n  or hit the find button to browse for a MegaTile.')
 			],
 			[
 				('Flags',self.flags,2,'Unknown property:\n    0 = ?\n    1 = Edge?\n    4 = Cliff?'),
@@ -1266,9 +1515,10 @@ class PyTILE(Tk):
 
 	def choose(self, i):
 		TilePalette(self, i, [
-			self.group[0],
-			self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		][i])
+				self.group[0],
+				self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
+			][i],
+			editing=True)
 
 	def updatescroll(self):
 		groups = 0

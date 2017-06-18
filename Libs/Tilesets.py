@@ -76,6 +76,18 @@ class Tileset:
 		self.dddata = None
 		self.wpe = None
 
+	def groups_remaining(self):
+		if self.cv5:
+			return self.cv5.groups_remaining()
+
+	def megatiles_remaining(self):
+		if self.vx4:
+			return self.vx4.graphics_remaining()
+
+	def minitiles_remaining(self):
+		if self.vr4:
+			return self.vr4.images_remaining()
+
 	def new_file(self, cv5=None, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
 		if cv5:
 			self.cv5 = cv5
@@ -283,11 +295,13 @@ MegaTile %s:
 			if settingfile:
 				f.close()
 
-	# options.minitiles_find_duplicates_old - Attempt to find and reuse existing minitile images (default: True)
-	# options.minitiles_find_duplicates_new - Attempt to find and reuse duplicate imported minitile images (default: True)
-	# options.minitiles_find_duplicates_flipped - Check flipped versions of tiles for duplicates (default: True)
-	# options.megatiles_find_duplicates_old - Attempt to find and reuse existing minitile images (default: True)
-	# options.megatiles_find_duplicates_new - Attempt to find and reuse duplicate imported minitile images (default: True)
+	# options.minitiles_reuse_duplicates_old       - Attempt to find and reuse existing minitile images (Boolean, default: True)
+	# options.minitiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: True)
+	# options.minitiles_reuse_null_with_id         - Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
+	# options.minitiles_reuse_duplicates_flipped   - Check flipped versions of tiles for duplicates (Boolean, default: True)
+	# options.megatiles_reuse_duplicates_old       - Attempt to find and reuse existing minitile images (Boolean, default: True)
+	# options.megatiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: True)
+	# options.megatiles_reuse_null_with_id         - Reuse "null" megatile with id even if find duplicates is off (None or int, default: 0)
 	def iimport(self, tiletype, bmpfile, ids=None, options={}):
 		if ids:
 			ids = list(ids)
@@ -297,12 +311,21 @@ MegaTile %s:
 		bmp = BMP.BMP()
 		bmp.load_file(bmpfile)
 		if tiletype == TILETYPE_GROUP and (bmp.width != 512 or bmp.height % 32):
-			raise PyMSError('Interpreting','The image is not the correct size for a tile group (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
+			raise PyMSError('Interpreting','The image is not the correct size for tile groups (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
 		elif tiletype == TILETYPE_MEGA and (bmp.width % 32 or bmp.height % 32):
 			raise PyMSError('Interpreting','The image is not the correct size for megatiles (got %sx%s, expected width and height to be multiples of 32)' % (bmp.width,bmp.height))
 		elif tiletype == TILETYPE_MINI and (bmp.width % 8 or bmp.height % 8):
 			raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
+		
 		new_images = []
+		mini_lookup = {}
+		update_images = [] # (id,image)
+		new_megatiles = []
+		mega_lookup = {}
+		update_megatiles = [] # (id,tile)
+		new_groups = []
+		update_groups = [] # (id,group)
+
 		minis_w = bmp.width / 8
 		minis_h = bmp.height / 8
 		for iy in xrange(minis_h):
@@ -313,37 +336,36 @@ MegaTile %s:
 				new_images.append(image)
 		image_details = [] # (id,isFlipped)
 		new_id = len(self.vr4.images)
-		mini_lookup = {}
 		i = 0
-		minitiles_find_duplicates_old = options.get('minitiles_find_duplicates_old', True)
-		minitiles_find_duplicates_new = options.get('minitiles_find_duplicates_new', True)
-		minitiles_find_duplicates_flipped = options.get('minitiles_find_duplicates_flipped', True)
+		minitiles_reuse_null_with_id = options.get('minitiles_reuse_null_with_id', 0)
+		minitiles_reuse_duplicates_old = options.get('minitiles_reuse_duplicates_old', True)
+		minitiles_reuse_duplicates_new = options.get('minitiles_reuse_duplicates_new', True)
+		minitiles_reuse_duplicates_flipped = options.get('minitiles_reuse_duplicates_flipped', True)
 		while i < len(new_images):
 			image = new_images[i]
 			image_hash = hash(image)
 			found = False
 			if tiletype != TILETYPE_MINI or not len(ids):
-				flipped_hash = None
-				if minitiles_find_duplicates_flipped:
-					flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
-				if minitiles_find_duplicates_old:
-					not_flipped = image_hash in self.vr4.lookup
-				 	if not_flipped or (flipped_hash != None and flipped_hash in self.vr4.lookup):
+				flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
+				existing_ids = self.vr4.lookup.get(image_hash,[]) + self.vr4.lookup.get(flipped_hash,[])
+			 	if len(existing_ids) and (minitiles_reuse_duplicates_old or minitiles_reuse_null_with_id in existing_ids):
+			 		normal_found = image_hash in self.vr4.lookup
+			 		found = True
+					del new_images[i]
+					image_details.append((existing_ids[0],int(not normal_found)))
+				if not found:
+					existing_ids = mini_lookup.get(image_hash,[]) + mini_lookup.get(flipped_hash,[])
+				 	if len(existing_ids) and (minitiles_reuse_duplicates_new or minitiles_reuse_null_with_id in existing_ids):
+				 		normal_found = image_hash in mini_lookup
 				 		found = True
 						del new_images[i]
-						image_details.append((self.vr4.lookup[image_hash if not_flipped else flipped_hash][0],int(not not_flipped)))
-				if minitiles_find_duplicates_new and not found:
-					not_flipped = image_hash in mini_lookup
-				 	if not_flipped or (flipped_hash != None and flipped_hash in mini_lookup):
-				 		found = True
-						del new_images[i]
-						image_details.append((mini_lookup[image_hash if not_flipped else flipped_hash][0],int(not not_flipped)))
+						image_details.append((existing_ids[0],int(not normal_found)))
 			if not found:
 				id = new_id
 				if tiletype == TILETYPE_MINI and len(ids):
 					id = ids[0]
 					del ids[0]
-					self.vr4.set_image(id, new_images[i])
+					update_images.append((id, new_images[i]))
 					del new_images[i]
 				else:
 					if tiletype == TILETYPE_MINI:
@@ -355,14 +377,9 @@ MegaTile %s:
 					mini_lookup[image_hash].append(id)
 				else:
 					mini_lookup[image_hash] = [id]
-		self.vr4.images.extend(new_images)
-		for image_hash in mini_lookup:
-			if image_hash in self.vr4.lookup:
-				self.vr4.lookup[image_hash].extend(mini_lookup[image_hash])
-			else:
-				self.vr4.lookup[image_hash] = mini_lookup[image_hash]
+		if len(new_images) > self.minitiles_remaining():
+			raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (len(self.vr4.images),len(new_images),VR4.MAX_ID+1))
 		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
-			new_megatiles = []
 			megas_w = minis_w / 4
 			megas_h = minis_h / 4
 			for y in xrange(megas_h):
@@ -374,28 +391,31 @@ MegaTile %s:
 					new_megatiles.append(tuple(minitiles))
 			megatile_ids = []
 			new_id = len(self.vx4.graphics)
-			mega_lookup = {}
 			i = 0
-			megatiles_find_duplicates_old = options.get('megatiles_find_duplicates_old', True)
-			megatiles_find_duplicates_new = options.get('megatiles_find_duplicates_new', True)
+			megatiles_reuse_null_with_id = options.get('megatiles_reuse_null_with_id', 0)
+			megatiles_reuse_duplicates_old = options.get('megatiles_reuse_duplicates_old', True)
+			megatiles_reuse_duplicates_new = options.get('megatiles_reuse_duplicates_new', True)
 			while i < len(new_megatiles):
 				tile_hash = hash(new_megatiles[i])
 				found = False
 				if tiletype != TILETYPE_MEGA or not len(ids):
-					if megatiles_find_duplicates_old and tile_hash in self.vx4.lookup:
+					existing_ids = self.vx4.lookup.get(tile_hash,None)
+					if existing_ids and (megatiles_reuse_duplicates_old or megatiles_reuse_null_with_id in existing_ids):
 						del new_megatiles[i]
-						megatile_ids.append(self.vx4.lookup[tile_hash][0])
+						megatile_ids.append(existing_ids[0])
 						found = True
-					elif megatiles_find_duplicates_new and tile_hash in mega_lookup:
-						del new_megatiles[i]
-						megatile_ids.append(mega_lookup[tile_hash][0])
-						found = True
+					if not found:
+						existing_ids = mega_lookup.get(tile_hash,None)
+						if existing_ids and (megatiles_reuse_duplicates_old or megatiles_reuse_null_with_id in existing_ids):
+							del new_megatiles[i]
+							megatile_ids.append(existing_ids[0])
+							found = True
 				if not found:
 					id = new_id
 					if tiletype == TILETYPE_MEGA and len(ids):
 						id = ids[0]
 						del ids[0]
-						self.vx4.set_tile(id, new_megatiles[i])
+						update_megatiles.append((id, new_megatiles[i]))
 						del new_megatiles[i]
 					else:
 						if tiletype == TILETYPE_MEGA:
@@ -407,24 +427,45 @@ MegaTile %s:
 						mega_lookup[tile_hash].append(id)
 					else:
 						mega_lookup[tile_hash] = [id]
-			self.vx4.graphics.extend(new_megatiles)
-			self.vf4.flags.extend([0]*16 for _ in xrange(len(new_megatiles)))
-			for tile_hash in mega_lookup:
-				if tile_hash in self.vx4.lookup:
-					self.vx4.lookup[tile_hash].extend(mega_lookup[tile_hash])
-				else:
-					self.vx4.lookup[tile_hash] = mega_lookup[tile_hash]
+			if len(new_megatiles) > self.megatiles_remaining():
+				raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile count (%d + %d > %d)' % (len(self.vf4.flags),len(new_megatiles),VF4.MAX_ID+1))
 			if tiletype == TILETYPE_GROUP:
 				for n in xrange(megas_h):
 					group = megatile_ids[n*16:(n+1)*16]
 					if len(ids):
 						id = ids[0]
 						del ids[0]
-						self.cv5.groups[id][13] = group
+						update_groups.append((id,group))
 					else:
 						if tiletype == TILETYPE_GROUP:
 							new_ids.append(len(self.cv5.groups))
-						self.cv5.groups.append([0]*13 + [group])
+						new_groups.append(group)
+				if len(new_images) > self.groups_remaining():
+					raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile group count (%d + %d > %d)' % (len(self.cv5.groups),len(new_groups),CV5.MAX_ID+1))
+		# Update minitiles
+		self.vr4.images.extend(new_images)
+		for id,image in update_images:
+			self.vr4.set_image(id, image)
+		for image_hash in mini_lookup:
+			if image_hash in self.vr4.lookup:
+				self.vr4.lookup[image_hash].extend(mini_lookup[image_hash])
+			else:
+				self.vr4.lookup[image_hash] = mini_lookup[image_hash]
+		# Update megatiles
+		self.vx4.graphics.extend(new_megatiles)
+		self.vf4.flags.extend([0]*16 for _ in xrange(len(new_megatiles)))
+		for id,tile in update_megatiles:
+			self.vx4.set_tile(id, tile)
+		for tile_hash in mega_lookup:
+			if tile_hash in self.vx4.lookup:
+				self.vx4.lookup[tile_hash].extend(mega_lookup[tile_hash])
+			else:
+				self.vx4.lookup[tile_hash] = mega_lookup[tile_hash]
+		# Update megatile groups
+		for group in new_groups:
+			self.cv5.groups.append([0]*13 + [group])
+		for id,group in update_groups:
+		    self.cv5.groups[id][13] = group
 		return new_ids
 
 	def interpret(self, bmpfile, type=0, settingfile=None):
@@ -600,8 +641,12 @@ MegaTile %s:
 					self.vr4.images[-1].append(b.image[y*8+o])
 
 class CV5:
+	MAX_ID = 4095
 	def __init__(self):
 		self.groups = []
+
+	def groups_remaining(self):
+		return (CV5.MAX_ID+1) - len(self.groups)
 
 	def load_file(self, file):
 		data = load_file(file, 'CV5')
@@ -637,8 +682,12 @@ class CV5:
 			f.close()
 
 class VF4:
+	MAX_ID = 65535
 	def __init__(self):
 		self.flags = []
+
+	def flags_remaining(self):
+		return (VF4.MAX_ID+1) - len(self.flags)
 
 	def load_file(self, file):
 		data = load_file(file, 'VF4')
@@ -673,9 +722,13 @@ class VF4:
 			f.close()
 
 class VX4:
+	MAX_ID = 65535
 	def __init__(self):
 		self.graphics = []
 		self.lookup = {}
+
+	def graphics_remaining(self):
+		return (VX4.MAX_ID+1) - len(self.graphics)
 
 	def find_tile(self, tile):
 		tile = tuple(tuple(r) for r in tile)
@@ -740,9 +793,13 @@ class VX4:
 			f.close()
 
 class VR4:
+	MAX_ID = 32767
 	def __init__(self):
 		self.images = []
 		self.lookup = {}
+
+	def images_remaining(self):
+		return (VR4.MAX_ID+1) - len(self.images)
 
 	# returns ([ids],isFlipped) or None
 	def find_image(self, image):
