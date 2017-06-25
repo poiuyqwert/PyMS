@@ -449,6 +449,7 @@ class PyTBL(Tk):
 		self.status.set('Load or create a TBL.')
 		statusbar.grid(row=2,column=0, sticky=EW)
 
+		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(1, weight=1)
 
 		listframe.focus_set()
