@@ -15,7 +15,7 @@ except:
 
 import PAL, BMP
 
-import struct, re
+import struct, re, math
 
 def megatile_to_photo(t, m=None):
 	if m != None:
@@ -67,14 +67,35 @@ TILETYPE_GROUP = 0
 TILETYPE_MEGA  = 1
 TILETYPE_MINI  = 2
 
+HEIGHT_LOW  = 0
+HEIGHT_MID  = (1 << 1)
+HEIGHT_HIGH = (1 << 2)
+
+def setting_import_extras_ignore(setting_count, tile_n, tile_count):
+	if tile_n == setting_count:
+		return None
+	return tile_n
+
+def setting_import_extras_repeat_all(setting_count, tile_n, tile_count):
+	return tile_n % setting_count
+
+def setting_import_extras_repeat_last(setting_count, tile_n, tile_count):
+	return min(tile_n, setting_count-1)
+
 class Tileset:
 	def __init__(self):
 		self.cv5 = None
+		self.cv5_path = None
 		self.vf4 = None
+		self.vf4_path = None
 		self.vx4 = None
+		self.vx4_path = None
 		self.vr4 = None
+		self.vr4_path = None
 		self.dddata = None
+		self.dddata_path = None
 		self.wpe = None
+		self.wpe_path = None
 
 	def groups_remaining(self):
 		if self.cv5:
@@ -154,6 +175,12 @@ class Tileset:
 		self.dddata.load_file(dddata)
 		self.wpe = PAL.Palette()
 		self.wpe.load_file(wpe)
+		self.cv5_path = cv5 if isstr(cv5) else None
+		self.vf4_path = vf4 if isstr(vf4) else None
+		self.vx4_path = vx4 if isstr(vx4) else None
+		self.vr4_path = vr4 if isstr(vr4) else None
+		self.dddata_path = dddata if isstr(dddata) else None
+		self.wpe_path = wpe if isstr(wpe) else None
 
 	def save_file(self, cv5, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
 		path = os.path.dirname(cv5)
@@ -180,129 +207,17 @@ class Tileset:
 		self.dddata.save_file(dddata)
 		self.wpe.save_sc_wpe(wpe)
 
-	# type: 0 = group, 1 = megatile, 2 = minitile, 3 = doodad
-	def decompile(self, bmpfile, type=0, id=0, settingfile=None):
-		if settingfile:
-			f = AtomicWriter(settingfile, 'w')
-		try:
-			b = BMP.BMP()
-			b.palette = list(self.wpe.palette)
-			if type == 0:
-				b.image = [[] for _ in range(32)]
-				b.width = 512
-				b.height = 32
-				g = self.cv5.groups[id]
-				megas = []
-				minis = []
-				if settingfile:
-					data = (id,) + tuple(g[:13])
-					if id < 1024:
-						f.write("""\
-Group %s:
-	Index:             	%s
-	Buildable:         	%s
-	Flags:             	%s
-	Buildable2:        	%s
-	GroundHeight:      	%s
-	EdgeLeft:          	%s
-	EdgeUp:            	%s
-	EdgeRight:         	%s
-	EdgeDown:          	%s
-	Unknown9:          	%s
-	HasUp:             	%s
-	Unknown11:         	%s
-	HasDown:            %s
-""" % data)
-
-					else:
-						f.write("""\
-DoodadGroup %s:
-	Index:             	%s
-	Buildable:         	%s
-	Unknown1:          	%s
-	OverlayFlags:      	%s
-	GroundHeight:      	%s
-	OverlayID:         	%s
-	Unknown6:          	%s
-	DoodadGroupString: 	%s
-	Unknown8:          	%s
-	DDDataID:          	%s
-	DoodadWidth:       	%s
-	DoodadHeight:      	%s
-	Unknown12:         	%s
-""" % data)
-
-					f.write('	MegaTiles:         	%s\n\n' % ' '.join([str(i) for i in g[13]]))
-					# if id > 1023:
-						# f.write('DDData %s:\n' % data[10])
-						# for y in range(data[12]):
-							# x = y * data[11]
-							# f.write('\t%s\n' % ' '.join(['%s%s' % (n,' ' * (3 - len(str(n)))) for n in self.dddata.doodads[data[10]][x:x+data[11]]]))
-						# f.write('\n')
-				for t,mega in enumerate(g[13]):
-					if settingfile and not mega in megas:
-						f.write("""\
-MegaTile %s:
-	MiniTiles:         	%s
-	MiniTileFlags:     	%s
-	FlippedStates:     	%s
-
-""" % (mega,' '.join([str(mini[0]) for mini in self.vx4.graphics[mega]]),' '.join([flags(mini,16) for mini in self.vf4.flags[mega]]),' '.join([str(mini[1]) for mini in self.vx4.graphics[mega]])))
-						megas.append(mega)
-					for m,mini in enumerate(self.vx4.graphics[mega]):
-						for y,p in enumerate(self.vr4.images[mini[0]]):
-							if mini[1]:
-								p = p[::-1]
-							b.image[y + (m/4)*8].extend(p)
-			elif type == 1:
-				b.image = [[] for _ in range(32)]
-				b.width = 32
-				b.height = 32
-				if settingfile:
-					f.write("""\
-MegaTile %s:
-	MiniTiles:         	%s
-	MiniTileFlags:     	%s
-	FlippedStates      	%s""" % (id,' '.join([str(mini[0]) for mini in self.vx4.graphics[id]]),' '.join([flags(mini,16) for mini in self.vf4.flags[id]]),' '.join([str(mini[1]) for mini in self.vx4.graphics[id]])))
-				for m,mini in enumerate(self.vx4.graphics[id]):
-					for y,p in enumerate(self.vr4.images[mini[0]]):
-						if mini[1]:
-							p = p[::-1]
-						b.image[y + (m/4)*8].extend(p)
-			elif type == 2:
-				b.image = []
-				b.width = 8
-				b.height = 8
-				for y,p in enumerate(self.vr4.images[id]):
-					b.image.append(p)
-			elif type == 3:
-				ty = -1
-				for n,g in enumerate(self.tileset.cv5.groups[1024:]):
-					if g[9] == id and ty == -1:
-						w,h,ty = g[10],g[11],g[11]
-						if n + h > len(self.tileset.cv5.groups):
-							h = len(self.tileset.cv5.groups) - n
-							ty = h
-						b.image = [[] for _ in range(32 * h)]
-					if ty > 0:
-						for x in range(w):
-							c = self.tileset.dddata.doodads[id][x + (h-ty) * w]
-							
-			b.save_file(bmpfile)
-		except:
-			raise
-		finally:
-			if settingfile:
-				f.close()
-
+	# options.groups_ignore_extra                  - Ignore extra groups (Boolean, default: False)
+	# options.megatiles_ignore_extra               - Ignore extra megatiles (Boolean, default: False)
+	# options.megatiles_reuse_duplicates_old       - Attempt to find and reuse existing minitile images (Boolean, default: False)
+	# options.megatiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: False)
+	# options.megatiles_reuse_null_with_id         - Reuse "null" megatile with id even if find duplicates is off (None or int, default: 0)
+	# options.minitiles_ignore_extra               - Ignore extra minitiles (Boolean, default: False)
 	# options.minitiles_reuse_duplicates_old       - Attempt to find and reuse existing minitile images (Boolean, default: True)
 	# options.minitiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: True)
 	# options.minitiles_reuse_null_with_id         - Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
 	# options.minitiles_reuse_duplicates_flipped   - Check flipped versions of tiles for duplicates (Boolean, default: True)
-	# options.megatiles_reuse_duplicates_old       - Attempt to find and reuse existing minitile images (Boolean, default: True)
-	# options.megatiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: True)
-	# options.megatiles_reuse_null_with_id         - Reuse "null" megatile with id even if find duplicates is off (None or int, default: 0)
-	def iimport(self, tiletype, bmpfile, ids=None, options={}):
+	def import_graphics(self, tiletype, bmpfile, ids=None, options={}):
 		if ids:
 			ids = list(ids)
 		else:
@@ -341,6 +256,8 @@ MegaTile %s:
 		minitiles_reuse_duplicates_old = options.get('minitiles_reuse_duplicates_old', True)
 		minitiles_reuse_duplicates_new = options.get('minitiles_reuse_duplicates_new', True)
 		minitiles_reuse_duplicates_flipped = options.get('minitiles_reuse_duplicates_flipped', True)
+		if tiletype == TILETYPE_MINI and options.get('minitiles_ignore_extra', False) and len(new_images) > len(ids):
+			new_images = new_images[:len(ids)]
 		while i < len(new_images):
 			image = new_images[i]
 			image_hash = hash(image)
@@ -395,6 +312,8 @@ MegaTile %s:
 			megatiles_reuse_null_with_id = options.get('megatiles_reuse_null_with_id', 0)
 			megatiles_reuse_duplicates_old = options.get('megatiles_reuse_duplicates_old', True)
 			megatiles_reuse_duplicates_new = options.get('megatiles_reuse_duplicates_new', True)
+			if tiletype == TILETYPE_MEGA and options.get('megatiles_ignore_extra', False) and len(new_megatiles) > len(ids):
+				new_megatiles = new_megatiles[:len(ids)]
 			while i < len(new_megatiles):
 				tile_hash = hash(new_megatiles[i])
 				found = False
@@ -430,7 +349,10 @@ MegaTile %s:
 			if len(new_megatiles) > self.megatiles_remaining():
 				raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile count (%d + %d > %d)' % (len(self.vf4.flags),len(new_megatiles),VF4.MAX_ID+1))
 			if tiletype == TILETYPE_GROUP:
-				for n in xrange(megas_h):
+				groups = megas_h
+				if tiletype == TILETYPE_GROUP and options.get('groups_ignore_extra', False) and groups > len(ids):
+					groups = len(ids)
+				for n in xrange(groups):
 					group = megatile_ids[n*16:(n+1)*16]
 					if len(ids):
 						id = ids[0]
@@ -468,177 +390,303 @@ MegaTile %s:
 		    self.cv5.groups[id][13] = group
 		return new_ids
 
-	def interpret(self, bmpfile, type=0, settingfile=None):
-		b = BMP.BMP()
+	def export_graphics(self, tiletype, path, ids):
+		bmp = BMP.BMP()
+		bmp.palette = list(self.wpe.palette)
+		tiles_wide = 0
+		tile_width = 0
+		tiles_high = 0
+		tile_height = 0
+		def calc_dims(tiles):
+			for f in xrange(int(math.sqrt(tiles)),0,-1):
+				if not tiles % f:
+					return (tiles / f, f)
+			return (tiles,1)
+		if tiletype == TILETYPE_GROUP:
+			tiles_wide,tiles_high = 16,len(ids) % 16
+			tile_width,tile_height = 32,32
+			tiletype = TILETYPE_MEGA
+			groups = ids
+			ids = []
+			for id in groups:
+				ids.extend(self.cv5.groups[id][13])
+		elif tiletype == TILETYPE_MEGA:
+			tiles_wide,tiles_high = calc_dims(len(ids))
+			tile_width,tile_height = 32,32
+		elif tiletype == TILETYPE_MINI:
+			tiles_wide,tiles_high = calc_dims(len(ids))
+		bmp.width = tile_width * tiles_wide
+		bmp.height = tile_height * tiles_high
+		bmp.image = [[] for _ in range(bmp.height)]
+		if tiletype == TILETYPE_MEGA:
+			for mega_n,mega_id in enumerate(ids):
+				mega_y = (mega_n / tiles_wide) * tile_height
+				for mini_n in xrange(16):
+					mini_y = (mini_n / 4) * 8
+					mini_id,flipped = self.vx4.graphics[mega_id][mini_n]
+					image = self.vr4.images[mini_id]
+					for row_y,row in enumerate(image):
+						if flipped:
+							row = reversed(row)
+						bmp.image[mega_y+mini_y+row_y].extend(r)
+		elif tiletype == TILETYPE_MINI:
+			for mini_y,mini_id in enumerate(ids):
+				image = self.vr4.images[mini_id]
+				for row_y,row in enumerate(image):
+					bmp.image[mini_y+row_y].extend(row)
+		bmp.save_file(path)
+
+	# options.megatiles_export_height
+	# options.megatiles_export_walkability
+	# options.megatiles_export_block_sight
+	# options.megatiles_export_ramp
+	def export_settings(self, tiletype, path, ids, options={}):
+		file = AtomicWriter(path, 'w')
+		if tiletype == TILETYPE_GROUP and self.cv5_path != None:
+			file.write("# Exported from %s\n" % self.cv5_path)
+		elif tiletype == TILETYPE_MEGA and self.vf4_path != None:
+			file.write("# Exported from %s\n" % self.vf4_path)
+		megatiles_export_height = options.get('megatiles_export_height',True)
+		megatiles_export_walkability = options.get('megatiles_export_walkability',True)
+		megatiles_export_block_sight = options.get('megatiles_export_block_sight',True)
+		megatiles_export_ramp = options.get('megatiles_export_ramp',True)
+		for id in ids:
+			if tiletype == TILETYPE_GROUP:
+				data = tuple([id] + self.cv5.groups[id][:13])
+				if id < 1024:
+					file.write("""\
+# Export of MegaTile Group %s
+TileGroup:
+	Index:             	%s
+	Buildable:         	%s
+	Flags:             	%s
+	Buildable2:        	%s
+	GroundHeight:      	%s
+	EdgeLeft:          	%s
+	EdgeUp:            	%s
+	EdgeRight:         	%s
+	EdgeDown:          	%s
+	Unknown9:          	%s
+	HasUp:             	%s
+	Unknown11:         	%s
+	HasDown:            %s
+""" % data)
+				else:
+					file.write("""\
+# Export of MegaTile Group %s
+DoodadGroup:
+	Index:             	%s
+	Buildable:         	%s
+	Unknown1:          	%s
+	OverlayFlags:      	%s
+	GroundHeight:      	%s
+	OverlayID:         	%s
+	Unknown6:          	%s
+	DoodadGroupString: 	%s
+	Unknown8:          	%s
+	DDDataID:          	%s
+	DoodadWidth:       	%s
+	DoodadHeight:      	%s
+	Unknown12:         	%s
+""" % data)
+			elif tiletype == TILETYPE_MEGA:
+				def write_flags(id, name, mask_values, else_value):
+					file.write('\n\t%s:' % name)
+					for n in xrange(16):
+						if not n % 4:
+							file.write('\n\t\t')
+						flags = self.vf4.flags[id][n]
+						for mask,value in mask_values:
+							if (flags & mask) == mask:
+								file.write(value)
+								break
+						else:
+							file.write(else_value)
+				file.write("""\
+# Export of MegaTile %s
+MegaTile:""" % id)
+				layers = []
+				if megatiles_export_height:
+					layers.append(('Height', ((HEIGHT_HIGH,'H'),(HEIGHT_MID,'M')), 'L'))
+				if megatiles_export_walkability:
+					layers.append(('Walkability', ((1,'1'),), '0'))
+				if megatiles_export_block_sight:
+					layers.append(('Block Sight', ((8,'1'),), '0'))
+				if megatiles_export_ramp:
+					layers.append(('Ramp', ((16,'1'),), '0'))
+				for layer in layers:
+					write_flags(id, *layer)
+				file.write('\n\n')
+		file.close()
+
+	# options.repeater (Func, default: setting_import_extras_ignore)
+	def import_settings(self, tiletype, path, ids, options={}):
 		try:
-			b.load_file(bmpfile)
+			with open(path,'r') as settings_file:
+				lines = settings_file.readlines()
 		except:
-			raise
-		if type == 0 and b.width != 512:
-			raise PyMSError('Interpreting','The image is not the correct size for a tile group (got a width of %s, expected 512)' % b.width)
-		elif type == 1 and b.width != 32:
-			raise PyMSError('Interpreting','The image is not the correct size for megatiles (got a width of %s, expected 32)' % b.width)
-		elif type == 2 and b.width != 8:
-			raise PyMSError('Interpreting','The image is not the correct size for minitiles (got a width of %s, expected 8)' % b.width)
-		needmega = []
-		if type != 2 and settingfile:
-			def getset(on, line, n, doodad):
-				if doodad:
-					name = ['Index','Buildable','Unknown1','OverlayFlags','GroundHeight','OverlayID','Unknown6','DoodadGroupString','Unknown8','DDDataID','DoodadWidth','DoodadHeight','Unknown12'][on-1]
+			raise PyMSError('Importing',"Could not load file '%s'" % path)
+		importing = []
+		line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
+		group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')
+		group_fields = [
+			# TileGroup
+			[
+				'Index',
+				'Buildable',
+				'Flags',
+				'Buildable2',
+				'GroundHeight',
+				'EdgeLeft',
+				'EdgeUp',
+				'EdgeRight',
+				'EdgeDown',
+				'Unknown9',
+				'HasUp',
+				'Unknown11',
+				'HasDown'
+			],
+			# DoodadGroup
+			[
+				'Index',
+				'Buildable',
+				'Unknown1',
+				'OverlayFlags',
+				'GroundHeight',
+				'OverlayID',
+				'Unknown6',
+				'DoodadGroupString',
+				'Unknown8',
+				'DDDataID',
+				'DoodadWidth',
+				'DoodadHeight',
+				'Unknown12'
+			]
+		]
+		setting_re = re.compile(r'^\s*([a-zA-Z0-9]+):\s*(\d+)\s*$')
+		height_re = re.compile(r'^\s*[LMH?]{4}\s*$')
+		height_flags = {
+			'L': HEIGHT_LOW,
+			'M': HEIGHT_MID,
+			'H': HEIGHT_HIGH,
+			'?': None
+		}
+		bool_re = re.compile(r'^\s*[01?]{4}\s*$')
+		bool_flags = {
+			'0': False,
+			'1': True,
+			'?': None
+		}
+		last_line = len(lines)-1
+		def get_line(inside=None, validate_re=None, validate_msg=None):
+			while len(lines):
+				line = line_re.sub('\\1', lines.pop(0))
+				if not line:
+					continue
+				if validate_re and not validate_re.match(line):
+					message = 'Unknown line format'
+					if validate_msg:
+						message += ', expected ' + validate_msg
+					raise PyMSError('Importing', message, last_line-len(lines), line)
+				return line
+			if inside:
+				raise PyMSError('Importing', 'Unexpected end of file inside ' + inside)
+		while lines:
+			line = get_line()
+			if not line:
+				continue
+			if tiletype == TILETYPE_GROUP:
+				m = group_re.match(line)
+				if m:
+					importing.append(((m.group(1) == 'Doodad'),last_line-len(lines),[None] * 13))
+					continue
+				if not importing:
+					raise PyMSError('Importing', 'Unknown line format, expected a TileGroup or DoodadGroup header.', last_line-len(lines), line)
+				m = setting_re.match(line)
+				if not m or not m.group(1) in group_fields[importing[-1][0]]:
+					raise PyMSError('Importing', 'Unknown line format, expected a group setting (Index, Buildable, etc.)', last_line-len(lines), line)
+				index = group_fields[importing[-1][0]].index(m.group(1))
+				importing[-1][2][index] = int(m.group(2)) # TODO: storage limits
+			elif tiletype == TILETYPE_MEGA:
+				if line == 'MegaTile:':
+					if len(importing) and all(flag == None for flag in importing[-1]):
+						raise PyMSError('Importing', 'Previous MegaTile is empty.', last_line-len(lines), line)
+					importing.append([None]*4)
+					continue
+				if not importing:
+					raise PyMSError('Importing', 'Unknown line format, expected a MegaTile header.', last_line-len(lines), line)
+				if line == 'Height:':
+					flags = []
+					for _ in xrange(4):
+						flags.extend(height_flags[f] for f in get_line('Height settings', height_re, ' 4 height flags (flags = L, M, H, or ?)'))
+					importing[-1][0] = flags
+				elif line == 'Walkability:':
+					flags = []
+					for _ in xrange(4):
+						flags.extend(bool_flags[f] for f in get_line('Walkability settings', bool_re, ' 4 walkability flags (1 = Walkable, 0 = Not, or ?)'))
+					importing[-1][1] = flags
+				elif line == 'Block Sight:':
+					flags = []
+					for _ in xrange(4):
+						flags.extend(bool_flags[f] for f in get_line('Block Sight settings', bool_re, ' 4 block sight flags (1 = Blocked, 0 = Not, or ?)'))
+					importing[-1][2] = flags
+				elif line == 'Ramp:':
+					flags = []
+					for _ in xrange(4):
+						flags.extend(bool_flags[f] for f in get_line('Ramp settings', bool_re, ' 4 ramp flags (1 = Ramp(?), 0 = Not)'))
+					importing[-1][3] = flags
 				else:
-					name = ['Index','Buildable','Flags','Buildable2','GroundHeight','EdgeLeft','EdgeUp','EdgeRight','EdgeDown','Unknown9','HasUp','Unknown11','HasDown'][on-1]
-				m = re.match('^%s:\\s+(\\d+)$' % name, line)
-				if not m:
-					raise PyMSError('Interpreting', "Unknown line format (expected '%s' specifier)" % name, n,line)
-				ma = [65535,15][on in range(2,6)]
-				if int(m.group(1)) > ma:
-					raise PyMSError('Interpreting', "Invalid '%s' value '%s' (must be a number from 0 to %s)" % (m.group(1), ma), n,line)
-				return int(m.group(1))
-			try:
-				if isstr(settingfile):
-					f = open(settingfile,'r')
-					set = f.readlines()
-					f.close()
-				else:
-					set = settingfile.readlines()
-			except:
-				raise PyMSError('Interpreter',"Could not load file '%s'" % settingfile)
-			data,groups = [],{}
-			omega,megas = [],{}
-			on = 0
-			group = 0
-			megatile = 0
-			doodad = False
-			for n,l in enumerate(set):
-				if l:
-					line = l.split('#',1)[0].strip()
-					if line:
-						if on == 0:
-							valid = False
-							if type == 0:
-								m = re.match('^(Doodad)?Group (\\d+):\\s*(?:#.*)?$', line)
-								if m:
-									group = int(m.group(2))
-									if group > 4095:
-										raise PyMSError('Interpreting', "Invalid group id '%s' (must be a number from 0 to 4095)" % group, n,line)
-									if group in groups:
-										raise PyMSError('Interpreting', "Duplicate Tile Group id '%s'" % group,n,line)
-									if m.group(1):
-										doodad = True
-									groups[group] = len(data)
-									data.append([])
-									on += 1
-									valid = True
-							if type < 2:
-								m = re.match('^MegaTile (\\d+):\\s*(?:#.*)?$', line)
-								if m:
-									megatile = int(m.group(1))
-									if megatile > 65535:
-										raise PyMSError('Interpreting', "Invalid megatile id '%s' (must be a number from 0 to 65535)" % group, n,line)
-									if megatile in megas:
-										raise PyMSError('Interpreting', "Duplicate megatile id '%s'" % megatile,n,line)
-									megas[megatile] = len(omega)
-									omega.append([])
-									needmega.remove(megatile)
-									on = 15
-									valid = True
-							if not valid:
-								e = ''
-								if type == 0:
-									e = 'Group/DoodadGroup or '
-								raise PyMSError('Interpreting', 'Uknown line format, expected a %sMegaTile header.',b,line)
-						elif on < 14:
-							data[-1].append(getset(on, line, n, doodad))
-							on += 1
-						elif on == 14:
-							m = re.match('^MegaTiles:\\s+(%s\\d+)$' % ('\\d+\\s+' * 15), line)
-							if not m:
-								raise PyMSError('Interpreting', "Invalid MegaTiles list (expected a list of 16 megatiles)", n,line)
-							g = list(int(n) for n in re.split('\\s+',m.group(1)))
-							for i in g:
-								if i > 65535:
-									raise PyMSError('Interpreting', "Invalid MegaTile id '%s' (must be a number from 0 to 65535)" % i, n,line)
-								if not i in megas.keys()+needmega:
-									needmega.append(i)
-							data[-1].append(g)
-							on = 0
-						elif on == 15:
-							m = re.match('^MiniTiles:\\s+(%s\\d+)$' % ('\\d+\\s+' * 15), line)
-							if not m:
-								raise PyMSError('Interpreting', "Invalid MiniTiles list (expected a list of 16 minitiles)", n,line)
-							g = list(int(n) for n in re.split('\\s+',m.group(1)))
-							for i in g:
-								if i > 65535:
-									raise PyMSError('Interpreting', "Invalid MiniTile id '%s' (must be a number from 0 to 65535)" % i, n,line)
-							omega[-1].append(g)
-							on += 1
-						elif on == 16:
-							m = re.match('^MiniTileFlags:\\s+(%s[01]{16})$' % ('[01]{16}\\s+' * 15), line)
-							if not m:
-								raise PyMSError('Interpreting', "Invalid MiniTileFlags list (expected 16 flags for each of the 16 minitiles)", n,line)
-							omega[-1].append(list(flags(n,16) for n in re.split('\\s+',m.group(1))))
-							on += 1
-						elif on == 17:
-							m = re.match('^FlippedStates:\\s+(%s[01])$' % ('[01]\\s+' * 15), line)
-							if not m:
-								raise PyMSError('Interpreting', "Invalid FlippedStates list (expected 1 flag for each of the 16 minitiles)", n,line)
-							omega[-1].append(list(int(n) for n in re.split('\\s+',m.group(1))))
-							on = 0
-		elif type == 0:
-			mini = 0
-			data,omega,megas = [],[],{}
-			for g in range(b.height / 32):
-				data.append([0]*13 + [range(g*16,g*16+16)])
-				for m in data[-1][13]:
-					megas[m] = len(omega)
-					omega.append([range(mini,mini+16)] + [[0]*16,[0]*16])
-					mini += 16
-		elif type == 1:
-			omega = [[range(m*16,m*16+16),[0]*16,[0]*16] for m in range(b.height / 32)]
-		if type == 0:
-			if needmega:
-				raise PyMSError('Interpreting', "Missing MegaTile definition for megatile id '%s" % needmega[0])
-			if b.height != 32 * len(data):
-				raise PyMSError('Interpreting','The image is not the correct size for %s tile groups (got a height of %s, expected %s)' % (len(data),b.height,32*len(data)))
-			minitiles = {}
-			curmegas,curminis = len(self.vf4.flags),len(self.vr4.images)
-			for g,dat in enumerate(data):
-				self.cv5.groups.append(dat[:13] + [[]])
-				for x,mega in enumerate(dat[13]):
-					m = omega[megas[mega]]
-					self.cv5.groups[-1][13].append(curmegas + megas[mega])
-					self.vf4.flags.append(m[1])
-					self.vx4.graphics.append([])
-					for y,mini in enumerate(m[0]):
-						if not mini in minitiles:
-							minitiles[mini] = len(self.vr4.images)
-							self.vr4.images.append([])
-							for o in range(8):
-								cx = x*32+(y%4)*8
-								self.vr4.images[-1].append(b.image[g*32+(y/4)*8+o][cx:cx+8])
-						self.vx4.graphics[-1].append([minitiles[mini],m[2][y]])
-		elif type == 1:
-			if b.height != 32 * len(omega):
-				raise PyMSError('Interpreting','The image is not the correct size for %s tile groups (got a height of %s, expected %s)' % (len(omega),b.height,32*len(omega)))
-			minitiles = {}
-			for x,mega in enumerate(omegas):
-				self.vf4.flags.append(mega[1])
-				self.vx4.graphics.append([])
-				for y,mini in enumerate(mega[0]):
-					if not mini in minitiles:
-						minitiles[mini] = len(self.vr4.images)
-						self.vr4.images.append([])
-						for o in range(8):
-							cx = (y%4)*8
-							self.vr4.images[-1].append(b.image[m*32+(y/4)*8+o][cx:cx+8])
-					self.vx4.graphics[-1].append([minitiles[mini],mega[2][y]])
-		elif type == 2:
-			if b.height % 8:
-				raise PyMSError('Interpreting','The image is not the correct size for minitiles (height must be a multiple of 8, got a height of %s)' % (b.height))
-			for y in range(b.height / 8):
-				self.vr4.images.append([])
-				for o in range(8):
-					self.vr4.images[-1].append(b.image[y*8+o])
+					raise PyMSError('Importing', 'Unknown line format, expected a setting header (Height, Walkability, Block Sight, or Ramp).', last_line-len(lines), line)
+		if not len(importing):
+			raise PyMSError('Importing', 'Nothing to import.')
+		if len(importing) and all(flag == None for flag in importing[-1]):
+			raise PyMSError('Importing', 'Last %s is empty.' % (''))
+		repeater = options.get('repeater', setting_import_extras_ignore)
+		setting_count = len(importing)
+		tile_count = len(ids)
+		if tiletype == TILETYPE_GROUP:
+			for tile_n,id in enumerate(ids):
+				settings_n = repeater(setting_count, tile_n, tile_count)
+				if settings_n == None:
+					break
+				doodad,line_n,_ = importing[settings_n]
+				if doodad and id < 1024:
+					raise PyMSError('Importing', 'Attempting to import DoodadGroup onto TileGroup %s' % id, line_n)
+				elif not doodad and id >= 1024:
+					raise PyMSError('Importing', 'Attempting to import TileGroup onto DoodadGroup %s' % id, line_n)
+		for tile_n,id in enumerate(ids):
+			settings_n = repeater(setting_count, tile_n, tile_count)
+			print tile_n,settings_n
+			if settings_n == None:
+				break
+			data = importing[settings_n]
+			if tiletype == TILETYPE_GROUP:
+				_,_,data = data
+				for n in xrange(13):
+					if data[n] != None:
+						self.cv5.groups[id][n] = data[n]
+			else:
+				for mini_n in xrange(16):
+					flags = self.vf4.flags[id][mini_n]
+					if data[0] != None and data[0][mini_n] != None:
+						flags &= ~(HEIGHT_MID | HEIGHT_HIGH)
+						flags |= data[0][mini_n]
+					if data[1] != None and data[1][mini_n] != None:
+						if data[1][mini_n]:
+							flags |= 1
+						else:
+							flags &= ~1
+					if data[2] != None and data[2][mini_n] != None:
+						if data[2][mini_n]:
+							flags |= 8
+						else:
+							flags &= ~8
+					if data[3] != None and data[3][mini_n] != None:
+						if data[3][mini_n]:
+							flags |= 16
+						else:
+							flags &= ~16
+					self.vf4.flags[id][mini_n] = flags
 
 class CV5:
 	MAX_ID = 4095
