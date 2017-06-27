@@ -263,7 +263,7 @@ class InternalErrorDialog(PyMSDialog):
 		self.prog = prog
 		self.handler = handler
 		self.txt = txt
-		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=False)
+		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=True)
 
 	def widgetize(self):
 		self.bind('<Control-a>', self.selectall)

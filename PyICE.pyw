@@ -12,7 +12,7 @@ from tkMessageBox import *
 import tkFileDialog,tkColorChooser
 
 from thread import start_new_thread
-import optparse, os, re, webbrowser, sys
+import optparse, os, re, webbrowser, sys, json
 try:
 	from winsound import *
 	SOUND = True
@@ -259,6 +259,8 @@ class PreviewerDialog(PyMSDialog):
 		self.showpreview.set(self.toplevel.settings.get('showpreview',1))
 		self.looppreview = IntVar()
 		self.looppreview.set(self.toplevel.settings.get('looppreview',1))
+		self.prevfrom = IntegerVar(0,[0,0])
+		self.prevto = IntegerVar(0,[0,0])
 
 		opts = Frame(right)
 		speedview = Frame(opts)
@@ -267,6 +269,14 @@ class PreviewerDialog(PyMSDialog):
 		Label(speedview, text='ms').pack(side=LEFT)
 		speedview.grid()
 		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(column=1, row=0) # , command=self.drawpreview
+		s = Frame(opts)
+		Label(s, text='Preview Between: ').pack(side=LEFT)
+		self.prevstart = Entry(s, textvariable=self.prevfrom, font=couriernew, width=3, state=DISABLED)
+		self.prevstart.pack(side=LEFT)
+		Label(s, text=' - ').pack(side=LEFT)
+		self.prevend = Entry(s, textvariable=self.prevto, font=couriernew, width=3, state=DISABLED)
+		self.prevend.pack(side=LEFT)
+		s.grid(row=1, columnspan=2)
 		opts.pack(fill=X)
 		right.pack(side=LEFT, fill=Y, expand=1)
 
@@ -313,14 +323,17 @@ class PreviewerDialog(PyMSDialog):
 			self.play = None
 
 	def playframe(self):
-		if self.speed:
+		prevfrom = self.prevfrom.get()
+		prevto = self.prevto.get()
+		if self.speed and prevto > prevfrom:
 			i = self.previewing[1] + self.speed
-			if self.looppreview.get() or (i > -1 and i < self.curgrp[2]):
-				while i < 0 or i >= self.curgrp[2]:
-					if i < 0:
-						i += self.curgrp[2]
-					if i >= self.curgrp[2]:
-						i %= self.curgrp[2]
+			frames = prevto-prevfrom+1
+			if self.looppreview.get() or (i >= prevfrom and i <= prevto):
+				while i < prevfrom or i > prevto:
+					if i < prevfrom:
+						i += frames
+					if i > prevto:
+						i -= frames
 				self.previewnext[1] = i
 				self.updateframes()
 				self.drawpreview()
@@ -383,6 +396,21 @@ class PreviewerDialog(PyMSDialog):
 				self.scroll.set(0,1)
 		self.action_states()
 
+	def preview_limits(self):
+		if self.curgrp[1]:
+			self.prevstart.config(state=NORMAL)
+			self.prevend.config(state=NORMAL)
+			to = max(self.curgrp[2]-1,0)
+			self.prevfrom.range[1] = to
+			self.prevto.range[1] = to
+			self.prevfrom.set(0)
+			self.prevto.set(to)
+		else:
+			self.prevstart.config(state=DISABLED)
+			self.prevend.config(state=DISABLED)
+			self.prevfrom.set(0)
+			self.prevto.set(0)
+
 	def grp(self, i, pal, frame, *path):
 		if not FOLDER and pal in PALETTES:
 			p = os.path.join(BASE_DIR,'Libs','MPQ',os.path.join(*path))
@@ -401,6 +429,7 @@ class PreviewerDialog(PyMSDialog):
 					self.curgrp = [i,None,0]
 					self.curgrp[1] = grp
 					self.curgrp[2] = grp.frames
+					self.preview_limits()
 				if draw:
 					if not path in GRP_CACHE:
 						GRP_CACHE[path] = {}
@@ -994,6 +1023,973 @@ class CommandTooltip(CodeTooltip):
 		text += ')'
 		return text + '\n' + fit('    ', IScriptBIN.CMD_HELP[c], end=True)[:-1] + pinfo[:-1]
 
+class GeneratorEditor(Frame):
+	def __init__(self, parent, generator):
+		self.generator = generator
+		Frame.__init__(self, parent)
+	def save(self):
+		raise
+class GeneratorType:
+	TYPES = {}
+	@staticmethod
+	def validate(save):
+		raise NotImplementerError(self.__class__.__name__ + '.validate()')
+	def __init__(self, save=None):
+		pass
+	# None for infinite
+	def count(self):
+		raise NotImplementerError(self.__class__.__name__ + '.count()')
+	def value(self, lookup_value):
+		raise PyMSError(self.__class__.__name__ + '.value()')
+	def description(self):
+		raise PyMSError(self.__class__.__name__ + '.description()')
+	def save(self):
+		return {'type': self.TYPE}
+class GeneratorEditorRange(GeneratorEditor):
+	RESIZABLE = (False,False)
+	def __init__(self, parent, generator):
+		GeneratorEditor.__init__(self, parent, generator)
+
+		self.start = IntegerVar(0,[0,None])
+		self.start.set(self.generator.start)
+		self.stop = IntegerVar(0,[0,None])
+		self.stop.set(self.generator.stop)
+		self.step = IntegerVar(1,[1,None])
+		self.step.set(self.generator.step)
+
+		Label(self, text='From ').pack(side=LEFT)
+		Entry(self, textvariable=self.start, width=5).pack(side=LEFT)
+		Label(self, text=' to ').pack(side=LEFT)
+		Entry(self, textvariable=self.stop, width=5).pack(side=LEFT)
+		Label(self, text=', by adding ').pack(side=LEFT)
+		Entry(self, textvariable=self.step, width=5).pack(side=LEFT)
+	def save(self):
+		self.generator.start = self.start.get()
+		self.generator.stop = self.stop.get()
+		self.generator.step = self.step.get()
+class GeneratorTypeRange(GeneratorType):
+	TYPE = 'range'
+	EDITOR = GeneratorEditorRange
+	@staticmethod
+	def validate(save):
+		return 'start' in save and isinstance(save['start'], int) \
+			and 'stop' in save and isinstance(save['stop'], int) \
+			and 'step' in save and isinstance(save['step'], int) and save['step'] != 0
+	def __init__(self, save={}):
+		self.start = save.get('start',0)
+		self.stop = save.get('stop',0)
+		self.step = save.get('step',1)
+	def count(self):
+		return len(xrange(self.start,self.stop+1,self.step))
+	def value(self, lookup_value):
+		n = lookup_value('n')
+		r = xrange(self.start,self.stop+1,self.step)
+		if n >= len(r):
+			return ''
+		return r[n]
+	def description(self):
+		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
+	def save(self):
+		save = GeneratorType.save(self)
+		save.update({
+			'start': self.start,
+			'stop': self.stop,
+			'step': self.step
+		})
+		return save
+GeneratorType.TYPES[GeneratorTypeRange.TYPE] = GeneratorTypeRange
+class GeneratorEditorMath(GeneratorEditor):
+	RESIZABLE = (True,False)
+	def __init__(self, parent, generator):
+		GeneratorEditor.__init__(self, parent, generator)
+
+		self.math = StringVar()
+		self.math.set(self.generator.math)
+
+		Label(self, text='Math:', anchor=W).pack(side=TOP, fill=X)
+		Entry(self, textvariable=self.math).pack(side=TOP, fill=X)
+	def save(self):
+		self.generator.math = self.math.get()
+class GeneratorTypeMath(GeneratorType):
+	TYPE = 'math'
+	EDITOR = GeneratorEditorMath
+	@staticmethod
+	def validate(save):
+		return 'math' in save and isstr(save['math'])
+	def __init__(self, save={}):
+		self.math = save.get('math', '')
+	def count(self):
+		return None
+	def value(self, lookup_value):
+		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
+		math_re = re.compile(r'^[0-9.+-/*() \t]+$')
+		math = variable_re.sub(lambda m: str(lookup_value(m.group(1))), self.math)
+		if not math_re.match(math):
+			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, and whitespace allowed)" % math)
+		try:
+			return eval(math)
+		except Exception, e:
+			raise PyMSError('Generate', "Error evaluating math expression '%s'" % math, exception=e)
+	def description(self):
+		return self.math
+	def save(self):
+		save = GeneratorType.save(self)
+		save['math'] = self.math
+		return save
+GeneratorType.TYPES[GeneratorTypeMath.TYPE] = GeneratorTypeMath
+class GeneratorTypeListRepeater:
+	def count(self, list_size):
+		raise
+	def index(self, list_size, n):
+		raise
+class GeneratorTypeListRepeaterDont(GeneratorTypeListRepeater):
+	TYPE = 'dont'
+	NAME = "Don't Repeat"
+	def count(self, list_size):
+		return list_size
+	def index(self, list_count, n):
+		if n >= list_count:
+			return None
+		return n
+class GeneratorTypeListRepeaterRepeatOnce(GeneratorTypeListRepeater):
+	TYPE = 'once'
+	NAME = 'Once'
+	def count(self, list_size):
+		return list_size * 2
+	def index(self, list_size, n):
+		if n >= list_size * 2:
+			return None
+		return n % list_size
+class GeneratorTypeListRepeaterRepeatForever(GeneratorTypeListRepeater):
+	TYPE = 'forever'
+	NAME = 'Forever'
+	def count(self, list_size):
+		return None
+	def index(self, list_size, n):
+		return n % list_size
+class GeneratorTypeListRepeaterRepeatLast(GeneratorTypeListRepeater):
+	TYPE = 'last_forever'
+	NAME = 'Last Forever'
+	def count(self, list_size):
+		return None
+	def index(self, list_size, n):
+		return min(n, list_size-1)
+class GeneratorTypeListRepeaterRepeatInvertedOnce(GeneratorTypeListRepeater):
+	TYPE = 'inverted_once'
+	NAME = 'Inverted Once'
+	def count(self, list_size):
+		return list_size * 2 - 2
+	def index(self, list_size, n):
+		if n >= list_size * 2 - 2:
+			return None
+		if n >= list_size:
+			return list_size-(n - list_size + 2)
+		return n % list_size
+class GeneratorTypeListRepeaterRepeatInvertedForever(GeneratorTypeListRepeater):
+	TYPE = 'inverted_forever'
+	NAME = 'Inverted Forever'
+	def count(self, list_size):
+		return None
+	def index(self, list_size, n):
+		i = n % (list_size * 2 - 2)
+		if i >= list_size:
+			return list_size - (i - list_size + 2)
+		return i
+class GeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd(GeneratorTypeListRepeater):
+	TYPE = 'inverted_once_repeat_end'
+	NAME = 'Inverted Once (Repeat End)'
+	def count(self, list_size):
+		return list_size * 2
+	def index(self, list_size, n):
+		if n >= list_size * 2:
+			return None
+		if n >= list_size:
+			return list_size-(n % list_size + 1)
+		return n % list_size
+class GeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd(GeneratorTypeListRepeater):
+	TYPE = 'inverted_forever_repeat_end'
+	NAME = 'Inverted Forever (Repeat Ends)'
+	def count(self, list_size):
+		return None
+	def index(self, list_size, n):
+		if (n / list_size) % 2:
+			return list_size-(n % list_size + 1)
+		return n % list_size
+class GeneratorEditorList(GeneratorEditor):
+	RESIZABLE = (True,True)
+	REPEATERS = (
+		GeneratorTypeListRepeaterDont,
+		GeneratorTypeListRepeaterRepeatOnce,
+		GeneratorTypeListRepeaterRepeatForever,
+		GeneratorTypeListRepeaterRepeatLast,
+		GeneratorTypeListRepeaterRepeatInvertedOnce,
+		GeneratorTypeListRepeaterRepeatInvertedForever,
+		GeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd,
+		GeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd
+	)
+	def __init__(self, parent, generator):
+		GeneratorEditor.__init__(self, parent, generator)
+
+		Label(self, text='Values:', anchor=W).pack(side=TOP, fill=X)
+		textframe = Frame(self, bd=2, relief=SUNKEN)
+		hscroll = Scrollbar(textframe, orient=HORIZONTAL)
+		vscroll = Scrollbar(textframe)
+		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
+		self.text.grid(sticky=NSEW)
+		# self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))
+		hscroll.config(command=self.text.xview)
+		hscroll.grid(sticky=EW)
+		vscroll.config(command=self.text.yview)
+		vscroll.grid(sticky=NS, row=0, column=1)
+		textframe.grid_rowconfigure(0, weight=1)
+		textframe.grid_columnconfigure(0, weight=1)
+		textframe.pack(side=TOP, expand=1, fill=BOTH)
+
+		self.repeater = IntVar()
+
+		Label(self, text='Repeat:', anchor=W).pack(side=TOP, fill=X)
+		DropDown(self, self.repeater, [r.NAME for r in GeneratorEditorList.REPEATERS], width=20).pack(side=TOP, fill=X)
+
+		self.text.insert(END, '\n'.join(generator.list))
+		for n,repeater in enumerate(GeneratorEditorList.REPEATERS):
+			if repeater.TYPE == self.generator.repeater.TYPE:
+				self.repeater.set(n)
+				break
+	def save(self):
+		self.generator.list = self.text.get(1.0, END).rstrip('\n').split('\n')
+		self.generator.repeater = GeneratorEditorList.REPEATERS[self.repeater.get()]()
+class GeneratorTypeList(GeneratorType):
+	TYPE = 'list'
+	EDITOR = GeneratorEditorList
+	REPEATERS = {
+		GeneratorTypeListRepeaterDont.TYPE: GeneratorTypeListRepeaterDont,
+		GeneratorTypeListRepeaterRepeatOnce.TYPE: GeneratorTypeListRepeaterRepeatOnce,
+		GeneratorTypeListRepeaterRepeatForever.TYPE: GeneratorTypeListRepeaterRepeatForever,
+		GeneratorTypeListRepeaterRepeatLast.TYPE: GeneratorTypeListRepeaterRepeatLast,
+		GeneratorTypeListRepeaterRepeatInvertedOnce.TYPE: GeneratorTypeListRepeaterRepeatInvertedOnce,
+		GeneratorTypeListRepeaterRepeatInvertedForever.TYPE: GeneratorTypeListRepeaterRepeatInvertedForever,
+		GeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd.TYPE: GeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd,
+		GeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd.TYPE: GeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd
+	}
+	@staticmethod
+	def validate(save):
+		if not 'list' in save and isinstance(save['list'], list) \
+				or not 'repeater' in save or not save['repeater'] in GeneratorTypeList.REPEATERS:
+			return False
+		for val in save['list']:
+			if not isstr(val):
+				return False
+		return True
+	def __init__(self, save={}):
+		self.list = save.get('list', [])
+		self.repeater = GeneratorTypeList.REPEATERS.get(save.get('repeater'), GeneratorTypeListRepeaterDont)()
+	def count(self):
+		return self.repeater.count(len(self.list))
+	def value(self, lookup_value):
+		n = self.repeater.index(len(self.list), lookup_value('n'))
+		if n == None:
+			return ''
+		value = self.list[n]
+		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
+		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
+	def description(self):
+		return 'Items from list: %s' % ', '.join(self.list)
+	def save(self):
+		save = GeneratorType.save(self)
+		save['list'] = list(self.list)
+		save['repeater'] = self.repeater.TYPE
+		return save
+GeneratorType.TYPES[GeneratorTypeList.TYPE] = GeneratorTypeList
+class GeneratorVariable:
+	def __init__(self, generator, name='variable'):
+		self.generator = generator
+		self.name = name
+
+class GeneratorVariableEditor(PyMSDialog):
+	def __init__(self, parent, variable):
+		self.variable = variable
+		PyMSDialog.__init__(self, parent, 'Variable Editor', grabwait=True, resizable=variable.generator.EDITOR.RESIZABLE)
+
+	def widgetize(self):
+		self.name = StringVar()
+		self.name.set(self.variable.name)
+		def strip_name(*_):
+			strip_re = re.compile(r'[^a-zA-Z0-9_]')
+			name = self.name.get()
+			stripped = strip_re.sub('', name)
+			if stripped != name:
+				self.name.set(stripped)
+		self.name.trace('w', strip_name)
+
+		Label(self, text='Name:', anchor=W).pack(side=TOP, fill=X, padx=3)
+		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
+
+		self.editor = self.variable.generator.EDITOR(self, self.variable.generator)
+		self.editor.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=3)
+
+		buts = Frame(self)
+		done = Button(buts, text='Done', command=self.ok)
+		done.pack(side=LEFT)
+		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT)
+		buts.pack(side=BOTTOM, fill=X, padx=3, pady=(0,3))
+
+		return done
+
+	def setup_complete(self):
+		setting = '%s_editor_window' % self.variable.generator.TYPE
+		if 'generator' in self.parent.settings and setting in self.parent.settings['generator']:
+			loadsize(self, self.parent.settings['generator'], setting)
+
+	def ok(self):
+		self.variable.name = self.parent.unique_name(self.name.get(), self.variable)
+		self.editor.save()
+		self.parent.update_list()
+		PyMSDialog.ok(self)
+
+	def dismiss(self):
+		if not 'generator' in self.parent.settings:
+			self.parent.settings['generator'] = {}
+		setting = '%s_editor_window' % self.variable.generator.TYPE
+		savesize(self, self.parent.settings['generator'], setting)
+		PyMSDialog.dismiss(self)
+
+class NameDialog(PyMSDialog):
+	def __init__(self, parent, title='Name', value='', done='Done', callback=None):
+		self.callback = callback
+		self.name = StringVar()
+		self.name.set(value)
+		self.done = done
+		PyMSDialog.__init__(self, parent, title, grabwait=True, resizable=(True,False))
+
+	def widgetize(self):
+		Label(self, text='Name:', width=30, anchor=W).pack(side=TOP, fill=X, padx=3)
+		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
+
+		buts = Frame(self)
+		done = Button(buts, text=self.done, command=self.ok)
+		done.pack(side=LEFT)
+		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT)
+		buts.pack(side=BOTTOM, fill=X, padx=3, pady=(0,3))
+
+		return done
+
+	def ok(self):
+		if self.callback and self.callback(self, self.name.get()) == False:
+			return
+		PyMSDialog.ok(self)
+
+class ManagePresets(PyMSDialog):
+	def __init__(self, parent):
+		self.settings = parent.settings
+		PyMSDialog.__init__(self, parent, 'Manage Presets', grabwait=True)
+	def widgetize(self):
+		listframe = Frame(self, bd=2, relief=SUNKEN)
+		scrollbar = Scrollbar(listframe)
+		self.listbox = Listbox(listframe, selectmode=EXTENDED, activestyle=DOTBOX, width=30, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
+		bind = [
+			('<MouseWheel>', self.scroll),
+			('<Home>', lambda e,l=self.listbox,i=0: self.move_select(e,l,i)),
+			('<End>', lambda e,l=self.listbox,i=END: self.move_select(e,l,i)),
+			('<Up>', lambda e,l=self.listbox,i=-1: self.move_select(e,l,i)),
+			('<Left>', lambda e,l=self.listbox,i=-1: self.move_select(e,l,i)),
+			('<Down>', lambda e,l=self.listbox,i=1: self.move_select(e,l,i)),
+			('<Right>', lambda e,l=self.listbox,i=-1: self.move_select(e,l,i)),
+			('<Prior>', lambda e,l=self.listbox,i=-10: self.move_select(e,l,i)),
+			('<Next>', lambda e,l=self.listbox,i=10: self.move_select(e,l,i)),
+		]
+		for b in bind:
+			self.bind(*b)
+			self.listbox.bind(*b)
+		self.listbox.bind('<ButtonRelease-1>', self.update_states)
+		self.listbox.bind('<Double-Button-1>', self.rename)
+		scrollbar.config(command=self.listbox.yview)
+		scrollbar.pack(side=RIGHT, fill=Y)
+		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
+		listframe.pack(side=TOP, padx=3, pady=3, fill=BOTH, expand=1)
+
+		buts = Frame(self)
+		buttons = [
+			('test', 'Use Preset', LEFT, 0, self.select),
+			('remove', 'Remove Preset', LEFT, (5,0), self.remove),
+			('up', 'Move Up', LEFT, (5,0), lambda d=-1: self.move(d)),
+			('down', 'Move Down', LEFT, (0,5), lambda d=1: self.move(d)),
+			('edit', 'Rename Preset', RIGHT, 0, self.rename),
+			('import', 'Import Preset', RIGHT, (0,5), self.iimport),
+			('export', 'Export Preset', RIGHT, 0, self.export)
+		]
+		self.buttons = {}
+		for icon,tip,side,padx,callback in buttons:
+			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % icon))
+			button = Button(buts, image=image, width=20, height=20, command=callback)
+			button.image = image
+			button.tooltip = Tooltip(button, tip)
+			button.pack(side=side, padx=padx)
+			self.buttons[icon] = button
+		buts.pack(side=TOP, fill=X, padx=3)
+
+		done = Button(self, text='Done', command=self.ok)
+		done.pack(side=BOTTOM, padx=3, pady=(0,3))
+
+		self.update_list()
+
+		return done
+
+	def remove(self):
+		selected = int(self.listbox.curselection()[0])
+		preset = self.settings['generator']['presets'][selected]
+		cont = askquestion(parent=self, title='Remove Preset?', message="'%s' will be removed and you won't be able to get it back. Continue?" % preset['name'], default=OK, type=OKCANCEL)
+		if cont == 'cancel':
+			return
+		del self.settings['generator']['presets'][selected]
+		self.update_list()
+
+	def export(self):
+		if not self.listbox.curselection():
+			return
+		path = self.settings.get('lastpath', BASE_DIR)
+		path = tkFileDialog.asksaveasfilename(parent=self, title='Export Preset', defaultextension='.txt', filetypes=[('Text Files','*.txt'),('All Files','*')], initialdir=path)
+		if not path:
+			return
+		selected = int(self.listbox.curselection()[0])
+		preset = self.settings['generator']['presets'][selected]
+		try:
+			f = AtomicWriter(path, 'w')
+			f.write(json.dumps(preset, indent=4))
+			f.close()
+		except:
+			ErrorDialog(self, PyMSError('Export',"Could not write to file '%s'" % path))
+
+	def iimport(self):
+		path = self.settings.get('lastpath', BASE_DIR)
+		path = tkFileDialog.askopenfilename(parent=self, title='Import Preset', defaultextension='.txt', filetypes=[('Text Files','*.txt'),('All Files','*')], initialdir=path)
+		if not path:
+			return
+		try:
+			preset = None
+			try:
+				with open(path, 'r') as f:
+					preset = json.loads(f.read())
+			except:
+				raise PyMSError('Import',"Could not read preset '%s'" % path, exception=sys.exc_info())
+			if not 'name' in preset or not isstr(preset['name']) \
+					or not 'code' in preset or not isstr(preset['code']) \
+					or not 'variables' in preset or not isinstance(preset['variables'], list):
+				raise PyMSError('Import',"Invalid preset format in file '%s'" % path)
+			for variable in preset['variables']:
+				if not 'name' in variable or not isstr(variable['name']) \
+						or not 'generator' in variable or not isinstance(variable['generator'], dict) \
+						or not 'type' in variable['generator'] or not variable['generator']['type'] in GeneratorType.TYPES \
+						or not GeneratorType.TYPES[variable['generator']['type']].validate(variable['generator']):
+					raise PyMSError('Import',"Invalid preset format in file '%s'" % path)
+			copy = 1
+			while True:
+				check = '%s%s' % (preset['name'],'' if copy == 1 else str(copy))
+				for p in self.settings['generator']['presets']:
+					if check == p['name']:
+						copy += 1
+						break
+				else:
+					break
+			if copy > 1:
+				preset['name'] += str(copy)
+			self.settings['generator']['presets'].insert(0, preset)
+			self.update_list()
+		except PyMSError, e:
+			ErrorDialog(self, e)
+	
+	def rename(self):
+		if not self.listbox.curselection():
+			return
+		selected = int(self.listbox.curselection()[0])
+		def do_rename(window, name):
+			for n,preset in enumerate(self.settings['generator']['presets']):
+				if preset['name'] == name:
+					ErrorDialog(self, PyMSError('Renaming','That name already exists'))
+					return
+			self.settings['generator']['presets'][selected]['name'] = name
+			self.update_list()
+		name = self.settings['generator']['presets'][selected]['name']
+		NameDialog(self, title='Rename Preset', value=name, done='Rename', callback=do_rename)
+
+	def update_states(self, *_):
+		selected = None
+		if self.listbox.curselection():
+			selected = int(self.listbox.curselection()[0])
+		for b in ('test','remove','export','edit'):
+			self.buttons[b]['state'] = NORMAL if selected != None else DISABLED
+		self.buttons['up']['state'] = NORMAL if selected else DISABLED
+		self.buttons['down']['state'] = NORMAL if selected != None and selected+1 < len(self.settings['generator']['presets']) else DISABLED
+
+	def update_list(self):
+		select = None
+		if self.listbox.curselection():
+			select = self.listbox.curselection()[0]
+		y = self.listbox.yview()[0]
+		self.listbox.delete(0,END)
+		for preset in self.settings.get('generator',{}).get('presets',[]):
+			self.listbox.insert(END, preset['name'])
+		if select != None:
+			self.listbox.select_set(select)
+		self.listbox.yview_moveto(y)
+		self.update_states()
+
+	def scroll(self, e):
+		if e.delta > 0:
+			self.listbox.yview('scroll', -2, 'units')
+		else:
+			self.listbox.yview('scroll', 2, 'units')
+
+	def move_select(self, e, listbox, offset):
+		index = 0
+		if offset == END:
+			index = listbox.size()-2
+		elif offset not in [0,END] and listbox.curselection():
+			print listbox.curselection()
+			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
+		listbox.select_clear(0,END)
+		listbox.select_set(index)
+		listbox.see(index)
+		return "break"
+
+	def move(self, move):
+		selected = int(self.listbox.curselection()[0])
+		preset = self.settings['generator']['presets'].pop(selected)
+		index = selected+move
+		self.settings['generator']['presets'].insert(index, preset)
+		self.listbox.select_clear(0,END)
+		self.listbox.select_set(index)
+		self.update_list()
+
+	def select(self):
+		selected = int(self.listbox.curselection()[0])
+		preset = self.settings['generator']['presets'][selected]
+		if self.parent.load_preset(preset, self):
+			self.ok()
+
+class CodeGeneratorDialog(PyMSDialog):
+	PRESETS = [
+		{
+			'name': 'Play Frames', 
+			'code': """\
+	playfram            $frame
+	wait                2""", 
+			'variables': [
+				{
+					'name': 'frame',
+					'generator': {
+						'type': 'range',
+						'start': 0, 
+						'stop': 20, 
+						'step': 1
+					}
+				}
+			]
+		}, 
+		{
+			'name': 'Play Framesets', 
+			'code': """\
+	playfram            %frameset
+	wait                2""", 
+			'variables': [
+				{
+					'name': 'frameset',
+					'generator': {
+						'type': 'range',
+						'start': 0, 
+						'stop': 51, 
+						'step': 17
+					}
+				}
+			]
+		},
+		{
+            'name': 'Play Framesets (Advanced)', 
+            'code': """\
+	playfram            %frame
+	wait                2""", 
+            'variables': [
+                {
+                    'name': 'frameset',
+                    'generator': {
+                        'type': 'range',
+                        'start': 0, 
+                        'stop': 20, 
+                        'step': 1
+                    }
+                }, 
+                {
+                    'name': 'frame',
+                    'generator': {
+                        'type': 'math',
+                        'math': '$frameset * 17'
+                    }
+                }
+            ]
+        },
+        {
+            'name': 'Hover Bobbing', 
+            'code': """\
+	setvertpos          $offset
+	waitrand            8 10""", 
+            'variables': [
+                {
+                    'name': 'offset',
+                    'generator': {
+                        'type': 'list',
+                        'list': [
+                            '0', 
+                            '1', 
+                            '2'
+                        ], 
+                        'repeater': 'inverted_once'
+                    }
+                }
+            ]
+        }
+	]
+	def __init__(self, parent):
+		self.variables = []
+		self.previewing = False
+		self.settings = parent.parent.settings
+		if not 'generator' in self.settings:
+			self.settings['generator'] = {}
+		if not 'presets' in self.settings['generator']:
+			self.settings['generator']['presets'] = CodeGeneratorDialog.PRESETS
+		PyMSDialog.__init__(self, parent, 'Code Generator', grabwait=True)
+
+	def widgetize(self):
+		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
+		leftframe = Frame(self.hor_pane)
+		Label(leftframe, text='Variables:', anchor=W).pack(side=TOP, fill=X)
+		listframe = Frame(leftframe, bd=2, relief=SUNKEN)
+		scrollbar = Scrollbar(listframe)
+		self.listbox = Listbox(listframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
+		bind = [
+			('<MouseWheel>', self.scroll),
+			('<Home>', lambda e,l=self.listbox,i=0: self.move(e,l,i)),
+			('<End>', lambda e,l=self.listbox,i=END: self.move(e,l,i)),
+			('<Up>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Left>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Down>', lambda e,l=self.listbox,i=1: self.move(e,l,i)),
+			('<Right>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
+			('<Prior>', lambda e,l=self.listbox,i=-10: self.move(e,l,i)),
+			('<Next>', lambda e,l=self.listbox,i=10: self.move(e,l,i)),
+		]
+		for b in bind:
+			self.bind(*b)
+			self.listbox.bind(*b)
+		self.listbox.bind('<ButtonRelease-1>', self.update_states)
+		self.listbox.bind('<Double-Button-1>', self.edit)
+		scrollbar.config(command=self.listbox.yview)
+		scrollbar.pack(side=RIGHT, fill=Y)
+		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
+		listframe.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
+		def add_variable(generator_class, name):
+			id = len(self.variables)
+			self.variables.append(GeneratorVariable(generator_class(), self.unique_name(name)))
+			self.update_list(id)
+			self.edit()
+		def add_pressed():
+			menu = Menu(self, tearoff=0)
+			menu.add_command(label="Range", command=lambda: add_variable(GeneratorTypeRange, 'range'))
+			menu.add_command(label="Math", command=lambda: add_variable(GeneratorTypeMath, 'math'))
+			menu.add_command(label="List", command=lambda: add_variable(GeneratorTypeList, 'list'))
+			menu.post(*self.winfo_pointerxy())
+		def load_preset_pressed():
+			menu = Menu(self, tearoff=0)
+			presets = self.settings.get('generator', {}).get('presets',[])
+			for n,preset in enumerate(presets):
+				if n == 5:
+					menu.add_command(label='More...', command=self.manage_presets)
+					break
+				else:
+					menu.add_command(label=preset['name'], command=lambda n=n: self.load_preset(n))
+			menu.add_separator()
+			menu.add_command(label='Manage Presets', command=self.manage_presets)
+			menu.post(*self.winfo_pointerxy())
+		buts = Frame(leftframe)
+		buttons = [
+			('add', 'Add Variable', LEFT, 0, add_pressed),
+			('remove', 'Remove Variable', LEFT, 0, self.remove),
+			('save', 'Save Preset', LEFT, (5,0), self.save_preset),
+			('open', 'Load Preset', LEFT, 0, load_preset_pressed),
+			('edit', 'Edit Variable', RIGHT, 0, self.edit),
+		]
+		self.buttons = {}
+		for icon,tip,side,padx,callback in buttons:
+			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % icon))
+			button = Button(buts, image=image, width=20, height=20, command=callback)
+			button.image = image
+			button.tooltip = Tooltip(button, tip)
+			button.pack(side=side, padx=padx)
+			self.buttons[icon] = button
+		buts.pack(side=BOTTOM, fill=X)
+		self.hor_pane.add(leftframe, sticky=NSEW)
+
+		self.ver_pane = PanedWindow(self.hor_pane,orient=VERTICAL)
+		f = Frame(self.ver_pane)
+		Label(f, text='Code:', anchor=W).pack(side=TOP, fill=X)
+		textframe = Frame(f, bd=2, relief=SUNKEN)
+		hscroll = Scrollbar(textframe, orient=HORIZONTAL)
+		vscroll = Scrollbar(textframe)
+		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
+		self.text.grid(sticky=NSEW)
+		# self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))
+		hscroll.config(command=self.text.xview)
+		hscroll.grid(sticky=EW)
+		vscroll.config(command=self.text.yview)
+		vscroll.grid(sticky=NS, row=0, column=1)
+		textframe.grid_rowconfigure(0, weight=1)
+		textframe.grid_columnconfigure(0, weight=1)
+		textframe.pack(side=BOTTOM, expand=1, fill=BOTH)
+		self.ver_pane.add(f, sticky=NSEW)
+		colors = Frame(self.ver_pane, bd=2, relief=SUNKEN)
+		hscroll = Scrollbar(colors, orient=HORIZONTAL)
+		vscroll = Scrollbar(colors)
+		self.code = Text(colors, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
+		self.code.grid(sticky=NSEW)
+		self.code.orig = self.text._w + '_orig'
+		self.tk.call('rename', self.code._w, self.code.orig)
+		self.tk.createcommand(self.code._w, self.code_dispatch)
+		hscroll.config(command=self.code.xview)
+		hscroll.grid(sticky=EW)
+		vscroll.config(command=self.code.yview)
+		vscroll.grid(sticky=NS, row=0, column=1)
+		colors.grid_rowconfigure(0, weight=1)
+		colors.grid_columnconfigure(0, weight=1)
+		self.ver_pane.add(colors, sticky=NSEW)
+		self.hor_pane.add(self.ver_pane, sticky=NSEW)
+		self.hor_pane.pack(fill=BOTH, expand=1, padx=3, pady=(0,3))
+
+		def select_all(text):
+			text.tag_remove(SEL, '1.0', END)
+			text.tag_add(SEL, '1.0', END)
+			text.mark_set(INSERT, '1.0')
+		self.bind('<Control-a>', lambda *_: select_all(self.code))
+
+		buts = Frame(self)
+		self.insert_button = Button(buts, text='Insert', command=self.insert)
+		self.insert_button.pack(side=LEFT)
+		self.preview_button = Button(buts, text='Preview', command=self.preview)
+		self.preview_button.pack(side=LEFT, padx=10)
+		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT)
+		buts.pack(side=BOTTOM, fill=X, padx=3, pady=(0,3))
+
+		self.update_states()
+
+		return self.insert_button
+
+	def setup_complete(self):
+		settings = self.settings.get('generator', {})
+		if 'window' in settings:
+			loadsize(self, settings, 'window')
+		def update_panes():
+			if 'variables_list' in settings:
+				self.hor_pane.sash_place(0, *settings['variables_list'])
+			if 'code_box' in settings:
+				self.ver_pane.sash_place(0, *settings['code_box'])
+		self.after(200, update_panes)
+
+	def code_dispatch(self, operation, *args):
+		if operation in ['insert','delete'] and not self.previewing:
+			return 'break'
+		try:
+			return self.tk.call((self.code.orig, operation) + args)
+		except TclError:
+			return ''
+
+	def update_states(self, *_):
+		selection = DISABLED if not self.listbox.curselection() else NORMAL
+		self.buttons['remove']['state'] = selection
+		self.buttons['save']['state'] = NORMAL if (self.variables and self.text.get(1.0,END)) else DISABLED
+		self.buttons['open']['state'] = NORMAL if self.settings.get('generator',{}).get('presets',None) else DISABLED
+		self.buttons['edit']['state'] = selection
+
+	def remove(self, *_):
+		cont = askquestion(parent=self, title='Remove Variable?', message="The variable settings will be lost.", default=YES, type=YESNO)
+		if cont == 'no':
+			return
+		del self.variables[int(self.listbox.curselection()[0])]
+		self.update_list()
+
+	def unique_name(self, name, ignore=None):
+		n = 1
+		unique = name
+		if name == 'n':
+			n = 2
+			name = 'n2'
+		for v in self.variables:
+			if v == ignore:
+				continue
+			if v.name == unique:
+				n += 1
+				unique = '%s%d' % (name,n)
+		return unique
+
+	def edit(self, *_):
+		if self.listbox.curselection():
+			variable = self.variables[int(self.listbox.curselection()[0])]
+			GeneratorVariableEditor(self, variable)
+
+	def insert(self, *_):
+		code = self.generate()
+		if code == None:
+			return
+		self.parent.text.insert(INSERT, code)
+		self.ok()
+
+	def save_preset(self, *_):
+		def do_save(window, name):
+			replace = None
+			for n,preset in enumerate(self.settings.get('generator',{}).get('presets',[])):
+				if preset['name'] == name:
+					cont = askquestion(parent=window, title='Overwrite Preset?', message="A preset with the name '%s' already exists. Do you want to overwrite it?" % name, default=YES, type=YESNOCANCEL)
+					if cont == 'no':
+						return
+					elif cont == 'cancel':
+						return False
+					replace = n
+					break
+			preset = {
+				'name': name,
+				'code': self.text.get(1.0,END),
+				'variables': []
+			}
+			if preset['code'].endswith('\r\n'):
+				preset['code'] = preset['code'][:-2]
+			elif preset['code'].endswith('\n'):
+				preset['code'] = preset['code'][:-1]
+			for v in self.variables:
+				preset['variables'].append({
+					'name': v.name,
+					'generator': v.generator.save()
+				})
+			if not 'generator' in self.settings:
+				self.settings['generator'] = {}
+			if not 'presets' in self.settings['generator']:
+				self.settings['generator']['presets'] = []
+			if replace == None:
+				self.settings['generator']['presets'].insert(0, preset)
+			else:
+				self.settings['generator']['presets'][replace] = preset
+		NameDialog(self, title='Save Preset', done='Save', callback=do_save)
+	def load_preset(self, preset, window=None):
+		if self.variables or self.text.get(1.0, END).strip():
+			cont = askquestion(parent=window if window else self, title='Load Preset?', message="Your current variables and code will be lost.", default=YES, type=YESNO)
+			if cont == 'no':
+				return False
+		if isinstance(preset, int):
+			preset = self.settings['generator']['presets'][preset]
+		self.text.delete(1.0, END)
+		self.text.insert(END, preset['code'])
+		self.variables = []
+		for var in preset['variables']:
+			generator = var['generator']
+			self.variables.append(GeneratorVariable(GeneratorType.TYPES[generator['type']](generator), var['name']))
+		self.update_list()
+		return True
+
+	def manage_presets(self):
+		ManagePresets(self)
+
+	def preview(self, *_):
+		code = self.generate()
+		if code != None:
+			self.previewing = True
+			self.code.delete(1.0, END)
+			self.code.insert(END, code)
+			self.previewing = False
+
+	def update_list(self, select=None):
+		if select == None and self.listbox.curselection():
+			select = self.listbox.curselection()[0]
+		y = self.listbox.yview()[0]
+		self.listbox.delete(0,END)
+		for v in self.variables:
+			self.listbox.insert(END, '$%s = %s' % (v.name, v.generator.description()))
+		if select != None:
+			self.listbox.select_set(select)
+		self.listbox.yview_moveto(y)
+		self.update_states()
+
+	def scroll(self, e):
+		if e.delta > 0:
+			self.listbox.yview('scroll', -2, 'units')
+		else:
+			self.listbox.yview('scroll', 2, 'units')
+
+	def move(self, e, listbox, offset):
+		index = 0
+		if offset == END:
+			index = listbox.size()-2
+		elif offset not in [0,END] and listbox.curselection():
+			print listbox.curselection()
+			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
+		listbox.select_clear(0,END)
+		listbox.select_set(index)
+		listbox.see(index)
+		return "break"
+
+	def generate(self):
+		variable_re = re.compile(r'([$%])([a-zA-Z0-9_]+)')
+		code = self.text.get(1.0, END)
+		generated = ''
+		count = None
+		for v in self.variables:
+			c = v.generator.count()
+			if c != None:
+				if count == None:
+					count = c
+				else:
+					count = max(count,c)
+		if count == None:
+			ErrorDialog(self, PyMSError('Generate','No finite variables to generate with'))
+			return
+		def calculate_variable(variable, values, lookup):
+			def calculate_variable_named(name, values, lookup):
+				if name in values:
+					return values[name]
+				for v in self.variables:
+					if v.name == name:
+						return calculate_variable(v, values, lookup)
+				return '$' + name
+			if not variable.name in values:
+				if variable.name in lookup:
+					raise PyMSError('Generate', 'Cyclical reference detected: %s' % ' > '.join(lookup + [variable.name]))
+				lookup.append(variable.name)
+				values[variable.name] = variable.generator.value(lambda n,v=values,l=lookup: calculate_variable_named(n,v,l))
+			return values[variable.name]
+		def replace_variable(match, values):
+			tohex = (match.group(1) == '%')
+			name = match.group(2)
+			replacement = values.get(name, match.group(0))
+			if tohex:
+				try:
+					replacement = '0x%02X' % int(replacement)
+				except:
+					pass
+			return str(replacement)
+		for n in xrange(count):
+			values = {'n': n}
+			for v in self.variables:
+				if not v.name in values:
+					try:
+						calculate_variable(v, values, [])
+					except PyMSError, e:
+						ErrorDialog(self, e)
+						return
+			generated += variable_re.sub(lambda m: replace_variable(m, values), code)
+		return generated
+
+	def dismiss(self):
+		if not 'generator' in self.settings:
+			self.settings['generator'] = {}
+		settings = self.settings['generator']
+		savesize(self, settings, 'window')
+		settings['variables_list'] = self.hor_pane.sash_coord(0)
+		settings['code_box'] = self.ver_pane.sash_coord(0)
+		PyMSDialog.dismiss(self)
+
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, ids):
 		self.ids = ids
@@ -1030,6 +2026,7 @@ class CodeEditDialog(PyMSDialog):
 			10,
 			('colors', self.colors, 'Color Settings (Ctrl+Alt+C)', '<Control-Alt-c>'),
 			10,
+			('debug', self.generate, 'Generate Code (Ctrl+G)', '<Control-g>'),
 			('insert', self.preview, 'Insert/Preview Window (Ctrl+W)', '<Control-w>'),
 			('fwp', self.sounds, 'Sound Previewer (Ctrl+Q)', '<Control-q>'),
 		]
@@ -1269,6 +2266,9 @@ class CodeEditDialog(PyMSDialog):
 		if c.cont:
 			self.text.setup(c.cont)
 			self.parent.highlights = c.cont
+
+	def generate(self, *_):
+		CodeGeneratorDialog(self)
 
 	def preview(self, e=None):
 		if not self.previewer or self.previewer.state() == 'withdrawn':
