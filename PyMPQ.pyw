@@ -1067,7 +1067,7 @@ class PyMPQ(Tk):
 	def extract(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		path = tkFileDialog.askdirectory(initialdir=self.settings['lastpath'], title='Extract to folder', parent=self)
+		path = tkFileDialog.askdirectory(initialdir=self.settings.get('lastpath', BASE_DIR), title='Extract to folder', parent=self)
 		if not path:
 			return
 		self.settings['lastpath'] = path
