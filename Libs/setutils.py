@@ -167,7 +167,7 @@ class MPQHandler:
 				if not os.path.exists(m):
 					missing[0].append(m)
 					continue
-				handles[m] = MpqOpenArchiveForUpdateEx(m, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
+				handles[m] = MpqOpenArchiveForUpdateEx(m, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 				if SFInvalidHandle(handles[m]):
 					missing[1].append(m)
 				elif self.open == True:
