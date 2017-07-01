@@ -3729,7 +3729,7 @@ class PyDAT(Tk):
 	def loadsave(self, save=False):
 		self.dattabs.active.loadsave(save)
 
-	def changeid(self, key=None, i=None):
+	def changeid(self, key=None, i=None, focus_list=True):
 		s = True
 		if i == None:
 			i = int(self.listbox.curselection()[0])
@@ -3742,7 +3742,8 @@ class PyDAT(Tk):
 				self.listbox.select_set(i)
 				self.listbox.see(i)
 			self.loadsave()
-			self.listframe.focus_set()
+			if focus_list:
+				self.listframe.focus_set()
 
 	def popup(self, e):
 		self.dattabs.active.popup(e)
@@ -3768,7 +3769,7 @@ class PyDAT(Tk):
 		cur = (start + 1) % self.listbox.size()
 		while cur != start:
 			if f.lower() in DATA_CACHE[self.dattabs.active.data][cur].lower():
-				self.changeid(i=cur)
+				self.changeid(i=cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size()
 		askquestion(parent=self, title='Find', message="Can't find text.", type=OK)
