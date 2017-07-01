@@ -1428,6 +1428,7 @@ class ImagesTab(DATTab):
 		Entry(f, textvariable=self.grpentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
+		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.checkreference(v,c)).pack(side=LEFT, padx=2)
 		tip(f, 'GRP File', 'ImgGRP')
@@ -1529,7 +1530,9 @@ class ImagesTab(DATTab):
 			Label(f, text=t + ':', width=12, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=e, font=couriernew, width=3).pack(side=LEFT, padx=2)
 			Label(f, text='=').pack(side=LEFT)
-			DropDown(f, d, grps, e, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
+			dd = DropDown(f, d, grps, e, width=15)
+			dd.pack(side=LEFT, fill=X, expand=1, padx=2)
+			self.grpdds.append((dd,e))
 			tip(f, t + ' Overlay', 'Img' + h)
 			f.pack(fill=X)
 		f = Frame(s)
@@ -1586,13 +1589,13 @@ class ImagesTab(DATTab):
 		self.iscriptentry.editvalue()
 
 		grps = ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
-		self.grps.setentries(grps)
-		self.grpentry.range[1] = len(grps)-1
-		self.grpentry.editvalue()
+		for dd,entry_var in self.grpdds:
+			dd.setentries(grps)
+			entry_var.range[1] = len(grps)-1
+			entry_var.editvalue()
 
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
-		self.sizedd.focus_set()
 
 	def loadsave(self, save=False):
 		DATTab.loadsave(self, save)
