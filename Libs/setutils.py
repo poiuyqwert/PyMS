@@ -41,6 +41,80 @@ if win_reg:
 	if SC_DIR and not os.path.isdir(SC_DIR):
 		SC_DIR = None
 
+class SettingDict(object):
+	def __init__(self, settings={}):
+		self._settings = settings
+	def __getattr__(self, key):
+		return self[key]
+	def __setattr__(self, key, value):
+		self[key] = value
+	def __delattr__(self, key):
+		del self[key]
+	def __len__(self):
+		return len(self._settings)
+	def __getitem__(self, key):
+		if key == '_settings':
+			return self._settings
+		if not key in self._settings:
+			self._settings[key] = SettingDict()
+		return self._settings[key]
+	def __setitem__(self, key, value):
+		if key == '_settings':
+			self.__dict__[key] = value
+		else:
+			if isinstance(value, dict):
+				value = SettingDict(value)
+			self._settings[key] = value
+	def __delitem__(self, key):
+		if key in self._settings:
+			del self._settings[key]
+	def __iter__(self):
+		return self._settings.__iter__()
+	def __contains__(self, key):
+		return key in self._settings
+	def get(self, key, default=None, autosave=True):
+		if not key in self._settings and default != None:
+			if callable(default):
+				default = default()
+			if autosave:
+				self._settings[key] = default
+			else:
+				return default
+		return self._settings[key]
+class SettingEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if isinstance(obj, SettingDict):
+			return obj._settings
+		return json.JSONEncoder.default(self, obj)
+class Settings(SettingDict):
+	def __init__(self, program, defaults=None):
+		settings = {}
+		try:
+			contents = None
+			with file(path, 'r') as f:
+				contents = f.read()
+			settings = json.loads(contents, object_hook=SettingDict.__init__)._settings
+		except:
+			pass
+		SettingDict.__init__(self, settings)
+		self.path = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
+
+		if defaults != None:
+			self.set_defaults(defaults)
+
+	def set_defaults(self, defaults):
+		for key,value in defaults.iteritems():
+			if not key in self.settings:
+				self.settings[key] = value
+
+	def save(self):
+		try:
+			f = file(self.path,'w')
+			f.write(json.dumps(settings, sort_keys=True, indent=4, cls=SettingEncoder))
+			f.close()
+		except:
+			pass
+
 def check_update(p):
 	if PYMS_SETTINGS['remindme'] == 1 or PYMS_SETTINGS['remindme'] != PyMS_LONG_VERSION:
 		try:
