@@ -428,7 +428,7 @@ class Tileset:
 					for row_y,row in enumerate(image):
 						if flipped:
 							row = reversed(row)
-						bmp.image[mega_y+mini_y+row_y].extend(r)
+						bmp.image[mega_y+mini_y+row_y].extend(row)
 		elif tiletype == TILETYPE_MINI:
 			for mini_y,mini_id in enumerate(ids):
 				image = self.vr4.images[mini_id]
