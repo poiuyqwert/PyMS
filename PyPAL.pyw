@@ -10,8 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,6)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyPAL']
 
 class PyPAL(Tk):
 	def __init__(self, guifile=None):
@@ -123,7 +122,7 @@ class PyPAL(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyPAL'))
 
 	def unsaved(self):
 		if self.palette and self.edited:

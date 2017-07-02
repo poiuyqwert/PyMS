@@ -10,8 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,3)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyGOT']
 
 HINTS = {
 	'name':'The name of the Game Template listed in StarCraft',
@@ -206,7 +205,7 @@ class PyGOT(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyGOT'))
 
 	def unsaved(self):
 		if self.got and self.edited:

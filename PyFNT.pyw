@@ -11,8 +11,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,3)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyFNT']
 
 # Direct implementation of pseudocode from http://en.wikipedia.org/wiki/Bresenham's_line_algorithm#Optimization
 # def bresenham_line(start,end):
@@ -219,7 +218,7 @@ class PyFNT(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyFNT'))
 
 		if e:
 			self.special(err=e)

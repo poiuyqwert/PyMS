@@ -17,8 +17,7 @@ from thread import start_new_thread
 from math import ceil
 import optparse, os, webbrowser, sys, time, random
 
-VERSION = (0,1)
-LONG_VERSION = 'v%s.%s-DEV' % VERSION
+LONG_VERSION = 'v%s-DEV' % VERSIONS['PyMAP']
 
 FRAME_DELAY = 42
 
@@ -2325,7 +2324,7 @@ class PyMAP(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyMAP'))
 
 		if e:
 			self.file_settings(err=e)

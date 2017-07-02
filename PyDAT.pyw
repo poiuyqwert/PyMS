@@ -16,6 +16,9 @@ from thread import start_new_thread
 from shutil import copy
 from math import ceil
 import optparse, os, re, sys
+
+LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
+
 play_sound = None
 try:
 	from winsound import *
@@ -43,8 +46,6 @@ except:
 		start_new_thread(do_play, (temp_file,))
 	play_sound = osx_play
 
-VERSION = (1,12)
-LONG_VERSION = 'v%s.%s' % VERSION
 ICON_CACHE = {}
 GRP_CACHE = {}
 HINTS = {}
@@ -3598,7 +3599,7 @@ class PyDAT(Tk):
 			else:
 				ErrorDialog(self, PyMSError('Load',"'%s' is not a valid StarCraft *.dat file, could possibly be corrupt" % guifile))
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyDAT'))
 
 	def tab_activated(self, event=None):
 		self.action_states()

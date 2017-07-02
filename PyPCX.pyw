@@ -10,8 +10,7 @@ import tkFileDialog
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,1)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyPCX']
 
 class PyPCX(Tk):
 	def __init__(self, guifile=None):
@@ -95,7 +94,7 @@ class PyPCX(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyPCX'))
 
 	def select_file(self, title, open=True, ext='.pcx', filetypes=[('StarCraft PCX','*.pcx'),('All Files','*')]):
 		path = self.settings.get('lastpath', BASE_DIR)

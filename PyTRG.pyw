@@ -16,8 +16,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (2,7)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyTRG']
 
 CONDITIONS_HELP = {
 	'NoCondition':'No condition.',
@@ -830,7 +829,7 @@ class PyTRG(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyTRG'))
 
 		if e:
 			self.tblbin(err=e)

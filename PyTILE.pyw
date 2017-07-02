@@ -12,8 +12,8 @@ from thread import start_new_thread
 from math import ceil,floor
 import optparse, os, webbrowser, sys
 
-VERSION = (1,3)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyTILE']
+
 TILE_CACHE = {}
 
 def tip(o, t, h):
@@ -1510,7 +1510,7 @@ class PyTILE(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyTILE'))
 
 	def unsaved(self):
 		if self.tileset and self.edited:

@@ -168,29 +168,15 @@ class Settings(SettingDict):
 
 PYMS_SETTINGS = Settings('PyMS', '1')
 
-SC_DIR = PYMS_SETTINGS.get('scdir')
-if win_reg:
+SC_DIR = PYMS_SETTINGS.get('scdir', autosave=False)
+if win_reg and SC_DIR == None:
 	try:
 		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
-		SC_DIR = QueryValueEx(h, 'InstallPath')[0]
+		path = QueryValueEx(h, 'InstallPath')[0]
 	except:
 		pass
-	if SC_DIR and not os.path.isdir(SC_DIR):
-		SC_DIR = None
-
-def check_update(p):
-	return
-	# if PYMS_SETTINGS['remindme'] == 1 or PYMS_SETTINGS['remindme'] != PyMS_LONG_VERSION:
-	# 	try:
-	# 		d = urllib.urlopen('http://www.broodwarai.com/PyMS/update.txt').read()
-	# 	except:
-	# 		return
-	# 	if len(d) == 3:
-	# 		d = tuple(ord(l) for l in d)
-	# 		if PyMS_VERSION < d:
-	# 			def callback():
-	# 				UpdateDialog(p,'v%s.%s.%s' % d,settings)
-	# 			p.after(1, callback)
+	if os.path.isdir(path):
+		SC_DIR = path
 
 def loadsize(window, settings, setting='window', full=False, size=True, position=None):
 	geometry = settings.get(setting)
@@ -235,30 +221,49 @@ def savesize(window, settings, setting='window', size=True):
 	else:
 		settings[setting] = '+%d+%d' % (x,y)
 
+def check_update(window, program):
+	VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/settings/Libs/versions.json'
+	remindme = PYMS_SETTINGS.get('remindme', True)
+	if remindme == True or remindme != VERSIONS['PyMS']:
+		try:
+			versions = json.loads(urllib.urlopen(VERSIONS_URL).read())
+			PyMS_version = versions['PyMS']
+			program_version = versions[program]
+		except:
+			return
+		if VERSIONS['PyMS'] < PyMS_version or VERSIONS[program] < program_version:
+			def callback():
+				UpdateDialog(window,program,versions)
+			window.after(1, callback)
 class UpdateDialog(PyMSDialog):
-	def __init__(self, parent, v, settings=[]):
-		self.version = v
-		self.settings = settings
+	def __init__(self, parent, program, versions):
+		self.program = program
+		self.versions = versions
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
 	def widgetize(self):
-		Label(self, justify=LEFT, anchor=W, text="Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (PyMS_LONG_VERSION,self.version)).pack(pady=5,padx=5)
+		if VERSIONS[self.program] < self.versions[self.program]:
+			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,VERSIONS[self.program],self.versions[self.program])	
+		else:
+			text = "Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (VERSIONS['PyMS'],self.versions['PyMS'])
+		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
 		f = Frame(self)
 		self.remind = IntVar()
-		self.remind.set(self.settings.get('remindme',1) == 1 or self.settings.get('remindme') != PyMS_LONG_VERSION)
+		remindme = PYMS_SETTINGS.get('remindme', True)
+		self.remind.set(remindme == True or remindme != VERSIONS['PyMS'])
 		Checkbutton(f, text='Remind me later', variable=self.remind).pack(side=LEFT, padx=5)
-		Hotlink(f, 'Homepage', self.homepage).pack(side=RIGHT, padx=5)
+		Hotlink(f, 'Github', self.github).pack(side=RIGHT, padx=5)
 		f.pack(fill=X, expand=1)
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=5)
 		return ok
 
-	def homepage(self, e=None):
-		webbrowser.open('http://www.broodwarai.com/index.php?page=pyms')
+	def github(self, e=None):
+		webbrowser.open('https://github.com/poiuyqwert/PyMS')
 
 	def ok(self):
-		self.settings['remindme'] = [PyMS_LONG_VERSION,1][self.remind.get()]
-		savesettings('PyMS', self.settings)
+		PYMS_SETTINGS.remindme = [VERSIONS['PyMS'],1][self.remind.get()]
+		PYMS_SETTINGS.save()
 		PyMSDialog.ok(self)
 
 class MPQHandler:

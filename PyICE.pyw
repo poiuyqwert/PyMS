@@ -19,8 +19,8 @@ try:
 except:
 	SOUND = False
 
-VERSION = (1,9)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyICE']
+
 PALETTES = {}
 GRP_CACHE = {}
 PREVIEWER_CMDS = [[],[],[],[]]
@@ -2785,7 +2785,7 @@ class PyICE(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyICE'))
 
 	def open_files(self):
 		self.mpqhandler.open_mpqs()

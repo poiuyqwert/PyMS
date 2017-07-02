@@ -12,8 +12,7 @@ from thread import start_new_thread
 from shutil import copy
 import optparse, os, re, webbrowser, sys
 
-VERSION = (2,5)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyAI']
 
 IMG_CACHE = {}
 def get_img(n):
@@ -2499,7 +2498,7 @@ class PyAI(Tk):
 		if guifile:
 			self.open(aiscript=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyAI'))
 
 		if e:
 			self.managedat(err=e)
@@ -2537,7 +2536,6 @@ class PyAI(Tk):
 
 	# Misc. functions
 	def title(self, text=None):
-		global LONG_VERSION
 		if not text:
 			text = self.titletext
 		Tk.title(self,'PyAI %s (%s)' % (LONG_VERSION, text))

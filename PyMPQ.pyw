@@ -20,8 +20,7 @@ if FOLDER:
 	e.mainloop()
 	sys.exit()
 
-VERSION = (1,0)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyMPQ']
 
 def size(b):
 	s = ['B','KB','MB','GB']
@@ -689,7 +688,7 @@ class PyMPQ(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyMPQ'))
 
 	def open_files(self):
 		return not SFileSetLocale(self.settings['defaultlocale'])

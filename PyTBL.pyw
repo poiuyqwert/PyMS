@@ -10,8 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys, re
 
-VERSION = (1,8)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyTBL']
 
 class PreviewDialog(PyMSDialog):
 	letter_space = 1
@@ -472,7 +471,7 @@ class PyTBL(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyTBL'))
 
 		if e:
 			self.mpqsettings(err=e)

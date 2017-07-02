@@ -11,8 +11,7 @@ from thread import start_new_thread
 from math import ceil
 import optparse, os, re, webbrowser, sys
 
-VERSION = (3,9)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyGRP']
 
 def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=False):
 	if isstr(grp):
@@ -446,7 +445,7 @@ class PyGRP(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyGRP'))
 
 	def unsaved(self):
 		if self.grp and self.edited:

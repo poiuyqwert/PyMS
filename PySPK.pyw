@@ -14,8 +14,7 @@ except:
 from thread import start_new_thread
 import optparse, os, webbrowser, sys, time
 
-VERSION = (0,1)
-LONG_VERSION = 'v%s.%s-DEV' % VERSION
+LONG_VERSION = 'v%s-DEV' % VERSIONS['PySPK']
 
 MOUSE_DOWN = 0
 MOUSE_MOVE = 1
@@ -673,7 +672,7 @@ class PySPK(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PySPK'))
 
 		if e:
 			self.mpqsettings(err=e)

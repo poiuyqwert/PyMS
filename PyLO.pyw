@@ -10,8 +10,7 @@ import tkFileDialog,tkColorChooser
 from thread import start_new_thread
 import optparse, os, webbrowser, sys
 
-VERSION = (1,7)
-LONG_VERSION = 'v%s.%s' % VERSION
+LONG_VERSION = 'v%s' % VERSIONS['PyLO']
 
 SIGNED_INT = '-128|-?(?:12[0-7]|1[01]\\d|\\d?\\d)'
 COORDINATES = re.compile('^\\s*\\(\\s*(%s)\\s*,\\s*(%s)\\s*\\)\\s*(?:#.+)?$' % (SIGNED_INT,SIGNED_INT))
@@ -654,7 +653,7 @@ class PyLO(Tk):
 		if guifile:
 			self.open(file=guifile)
 
-		start_new_thread(check_update, (self,))
+		start_new_thread(check_update, (self, 'PyLO'))
 
 	def scrolling(self, t, p, e=None):
 		a = {'pages':17,'units':1}
