@@ -222,7 +222,7 @@ def savesize(window, settings, setting='window', size=True):
 		settings[setting] = '+%d+%d' % (x,y)
 
 def check_update(window, program):
-	VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/settings/Libs/versions.json'
+	VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/master/Libs/versions.json'
 	remindme = PYMS_SETTINGS.get('remindme', True)
 	if remindme == True or remindme != VERSIONS['PyMS']:
 		try:

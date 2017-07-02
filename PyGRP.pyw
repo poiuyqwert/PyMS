@@ -190,6 +190,12 @@ class FramesDialog(PyMSDialog):
 		PYGRP_SETTINGS.window.save_window_size('frames', self)
 		PyMSDialog.dismiss(self)
 
+BMP_STYLES = (
+	('bmp_per_frame', 'One BMP per Frame'),
+	('single_bmp_framesets', 'Single BMP (Framesets)'),
+	('single_bmp_vertical', 'Single BMP (Vertical/SFGrpConv)')
+)
+BMP_STYLES_LOOKUP = {key: n for n,(key,_) in enumerate(BMP_STYLES)}
 class PyGRP(Tk):
 	def __init__(self, guifile=None):
 		#Window
@@ -226,7 +232,7 @@ class PyGRP(Tk):
 			('saveas', self.saveas, 'Save As (Ctrl+Alt+A)', DISABLED, 'Ctrl+Alt+A'),
 			('close', self.close, 'Close (Ctrl+W)', DISABLED, 'Ctrl+W'),
 			10,
-			('exportc', self.exports, 'Export Frames (Ctrl+E)', DISABLED, 'Ctrl+E'),
+			('exportc', self.exports, 'Export Selected Frames (Ctrl+E)', DISABLED, 'Ctrl+E'),
 			('importc', self.imports, 'Import Frames (Ctrl+I)', DISABLED, 'Ctrl+I'),
 			4,
 			('remove', self.remove, 'Remove Frames (Delete)', DISABLED, 'Delete'),
@@ -386,9 +392,10 @@ class PyGRP(Tk):
 		self.grpo.set(PYGRP_SETTINGS.preview.get('grpoutline', 1))
 		self.frameo = IntVar()
 		self.frameo.set(PYGRP_SETTINGS.preview.get('frameoutline', 1))
-		self.singlebmp = IntVar()
-		self.singlebmp.set(not not PYGRP_SETTINGS.get('singlebmp', 0))
-		self.thirdstate = PYGRP_SETTINGS.get('singlebmp', 0) == 2
+		self.bmp_style = IntVar()
+		self.bmp_style.set(BMP_STYLES_LOOKUP.get(PYGRP_SETTINGS.get('bmpstyle', BMP_STYLES[0][0]), 0))
+		self.uncompressed = IntVar()
+		self.uncompressed.set(PYGRP_SETTINGS.get('uncompressed', 0))
 
 		#Options
 		opts = Frame(rightframe)
@@ -414,15 +421,13 @@ class PyGRP(Tk):
 		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(row=2, column=1, sticky=W)
 		Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=3, column=0, sticky=W)
 		Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=3, column=1, sticky=W)
-		self.checktext = StringVar()
-		c = Checkbutton(opts, textvariable=self.checktext, variable=self.singlebmp, command=self.threestate)
-		self.checktooltip = Tooltip(c, '')
-		c.grid(row=4, column=0, sticky=W)
-		self.threestate(True)
-		self.uncompressed = IntVar()
-		self.uncompressed.set(PYGRP_SETTINGS.get('uncompressed', 0))
+		dd = DropDown(opts, self.bmp_style, [name for _,name in BMP_STYLES])
+		dd.tooltip = Tooltip(dd, """\
+This option controls the style of BMP being Exported/Imported.
+BMP's must be imported with the same style they were exported as.""")
+		dd.grid(row=4, column=0, sticky=EW, padx=(3,0))
 		Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=4, column=1, sticky=W)
-		opts.pack()
+		opts.pack(pady=(0,3))
 
 		leftframe.pack(side=LEFT, padx=1, pady=1, fill=Y, expand=1)
 		rightframe.pack(side=RIGHT, padx=1, pady=1)
@@ -475,17 +480,6 @@ class PyGRP(Tk):
 		self.buttons['down']['state'] = [NORMAL,DISABLED][not s or max(s) == m-1]
 		for btn in ['begin','frw','rw','frwp','rwp','fw','ffw','fwp','ffwp','end']:
 			self.buttons[btn]['state'] = btns
-
-	def threestate(self, setup=False):
-		if not self.singlebmp.get():
-			if not setup:
-				if not self.thirdstate:
-					self.singlebmp.set(1)
-				self.thirdstate = not self.thirdstate
-		self.checktext.set('Single BMP (%s)' % ['Framesets','Vertical'][self.thirdstate])
-		self.checktooltip.text = "Single BMP is used to export or import all the frames in one single bmp\n(instead of one BMP per frame). " + ["\n\nClick the checkbox to enable output as a single bmp organized by framesets",
-			"For this option, the first frameset is\nat the top of the bmp, with the other framesets stacked vertcally below\nit. The frames in each frameset are layed out horizontaly. If you export\na BMP with this option, you are required to use this option when\nimporting it. SFGrpConv is not compatable with this type of single BMP.\n\nClick the check again to use the vertical setup compatible with SFGrpConv.",
-			"This option is simply each frame stacked\nvirtically, from the first frame at the top to the last at the bottom.\nThis is the same output style as SFGrpConv.\n\nClick the checkbox again to disable output as a single BMP."][self.singlebmp.get() + self.thirdstate]
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -761,13 +755,13 @@ class PyGRP(Tk):
 			return
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
-		file = PYGRP_SETTINGS.lastpath.select_file('exportbmp', self, 'Export Frames To...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+		file = PYGRP_SETTINGS.lastpath.select_file('exportbmp', self, 'Export Frames To...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], save=True)
 		if file:
 			self.status.set('Extracting frames, please wait...')
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
 			self.update_idletasks()
 			try:
-				grptobmp(os.path.dirname(file), self.palettes[self.pal], self.uncompressed.get(), self.singlebmp.get() + self.thirdstate, self.grp, name, indexs, True)
+				grptobmp(os.path.dirname(file), self.palettes[self.pal], self.uncompressed.get(), self.bmp_style.get(), self.grp, name, indexs, True)
 			except PyMSError, e:
 				ErrorDialog(self, e)
 				return
@@ -777,13 +771,13 @@ class PyGRP(Tk):
 		if key and self.buttons['importc']['state'] != NORMAL:
 			return
 		self.stopframe()
-		if self.singlebmp.get():
+		if self.bmp_style.get():
 			files = PYGRP_SETTINGS.lastpath.select_file('importbmp', self, 'Import single BMP...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		else:
 			files = PYGRP_SETTINGS.lastpath.select_files('importbmp', self, 'Import frames from...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		if files:
 			frames = 0
-			if self.singlebmp.get():
+			if self.bmp_style.get():
 				t = FramesDialog(self)
 				if not t.result.get():
 					return
@@ -901,7 +895,7 @@ class PyGRP(Tk):
 			PYGRP_SETTINGS.preview.grpoutline = not not self.grpo.get()
 			PYGRP_SETTINGS.preview.frameoutline = not not self.frameo.get()
 			PYGRP_SETTINGS.preview.palette = self.pal
-			PYGRP_SETTINGS.singlebmp = self.singlebmp.get() + self.thirdstate
+			PYGRP_SETTINGS.bmpstyle = BMP_STYLES[self.bmp_style.get()][0]
 			PYGRP_SETTINGS.uncompressed = not not self.uncompressed.get()
 			PYGRP_SETTINGS.transid = self.transid.get()
 			PYGRP_SETTINGS.save()
