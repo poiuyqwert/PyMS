@@ -160,10 +160,12 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 		if not mute:
 			print " - '%s' written successfully" % fullfile
 
+PYGRP_SETTINGS = Settings('PyGRP', '1')
+
 class FramesDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.result = IntegerVar(1, [1,None])
-		PyMSDialog.__init__(self, parent, 'How many frames?')
+		PyMSDialog.__init__(self, parent, 'How many frames?', resizable=(True,False))
 
 	def widgetize(self):
 		Label(self, text='How many frames are contained in the BMP?').pack(padx=5, pady=5)
@@ -177,15 +179,20 @@ class FramesDialog(PyMSDialog):
 
 		return ok
 
+	def setup_complete(self):
+		PYGRP_SETTINGS.window.load_window_size('frames', self)
+
 	def cancel(self):
 		self.result.check = False
 		self.result.set(0)
 		PyMSDialog.cancel(self)
 
+	def dismiss(self):
+		PYGRP_SETTINGS.window.save_window_size('frames', self)
+		PyMSDialog.dismiss(self)
+
 class PyGRP(Tk):
 	def __init__(self, guifile=None):
-		self.settings = loadsettings('PyGRP')
-
 		#Window
 		Tk.__init__(self)
 		self.title('PyGRP %s' % LONG_VERSION)
@@ -256,7 +263,7 @@ class PyGRP(Tk):
 		frame = Frame(self)
 
 		self.hex = IntVar()
-		self.hex.set(self.settings.get('hex', 0))
+		self.hex.set(PYGRP_SETTINGS.get('hex', False))
 
 		leftframe = Frame(frame)
 		#Listbox
@@ -316,7 +323,7 @@ class PyGRP(Tk):
 			try:
 				p = PAL.Palette()
 				p.load_file(os.path.join(BASE_DIR, 'Palettes',pal))
-				if pal == self.settings.get('palette'):
+				if pal == PYGRP_SETTINGS.preview.get('palette', 'Units.pal'):
 					s = self.pallist.size()
 					self.pal = pal
 				if not self.pal:
@@ -328,14 +335,14 @@ class PyGRP(Tk):
 		if not self.pal:
 			raise
 		if s == -1:
-			self.settings['palette'] = self.pal
+			PYGRP_SETTINGS.preview.palette = self.pal
 			s = 0
 		self.pallist.select_set(s)
 		self.pallist.see(s)
 
 		rightframe = Frame(frame)
 		#Canvas
-		self.canvas = Canvas(rightframe, width=258, height=258, background=self.settings.get('bgcolor','#000000'))
+		self.canvas = Canvas(rightframe, width=258, height=258, background=PYGRP_SETTINGS.preview.get('bgcolor','#000000'))
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		self.canvas.bind('<Double-Button-1>', self.bgcolor)
 		self.grpbrdr = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00')
@@ -368,21 +375,21 @@ class PyGRP(Tk):
 				Frame(frameview, width=2).pack(side=LEFT)
 		frameview.pack(padx=1, pady=1)
 
-		self.prevspeed = IntegerVar(self.settings.get('previewspeed', 150), [1,5000])
-		self.transid = IntegerVar(self.settings.get('transid', 0), [0,255])
+		self.prevspeed = IntegerVar(PYGRP_SETTINGS.preview.get('speed', 150), [1,5000])
+		self.transid = IntegerVar(PYGRP_SETTINGS.get('transid', 0), [0,255])
 		self.prevfrom = IntegerVar(0,[0,0])
 		self.prevto = IntegerVar(0,[0,0])
 		self.showpreview = IntVar()
-		self.showpreview.set(self.settings.get('showpreview', 1))
+		self.showpreview.set(PYGRP_SETTINGS.preview.get('show', 1))
 		self.looppreview = IntVar()
-		self.looppreview.set(self.settings.get('looppreview', 1))
+		self.looppreview.set(PYGRP_SETTINGS.preview.get('loop', 1))
 		self.grpo = IntVar()
-		self.grpo.set(self.settings.get('grpoutline', 1))
+		self.grpo.set(PYGRP_SETTINGS.preview.get('grpoutline', 1))
 		self.frameo = IntVar()
-		self.frameo.set(self.settings.get('frameoutline', 1))
+		self.frameo.set(PYGRP_SETTINGS.preview.get('frameoutline', 1))
 		self.singlebmp = IntVar()
-		self.singlebmp.set(not not self.settings.get('singlebmp', 0))
-		self.thirdstate = self.settings.get('singlebmp', 0) == 2
+		self.singlebmp.set(not not PYGRP_SETTINGS.get('singlebmp', 0))
+		self.thirdstate = PYGRP_SETTINGS.get('singlebmp', 0) == 2
 
 		#Options
 		opts = Frame(rightframe)
@@ -414,7 +421,7 @@ class PyGRP(Tk):
 		c.grid(row=4, column=0, sticky=W)
 		self.threestate(True)
 		self.uncompressed = IntVar()
-		self.uncompressed.set(self.settings.get('uncompressed', 0))
+		self.uncompressed.set(PYGRP_SETTINGS.get('uncompressed', 0))
 		Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=4, column=1, sticky=W)
 		opts.pack()
 
@@ -434,8 +441,7 @@ class PyGRP(Tk):
 		self.status.set('Load or create a GRP.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window', size=False)
+		PYGRP_SETTINGS.window.load_window_size('main', self, size=False)
 
 		if guifile:
 			self.open(file=guifile)
@@ -455,20 +461,6 @@ class PyGRP(Tk):
 					self.save()
 				else:
 					self.saveas()
-
-	def select_file(self, title, open=True, ext='.grp', filetypes=[('GRP Files','*.grp'),('All Files','*')]):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
-		return file
-
-	def select_files(self):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = tkFileDialog.askopenfilename(parent=self, title='Import Frames From...', defaultextension='.bmp', filetypes=[('256 Color BMP','*.bmp'),('All Files','*')], initialdir=path, multiple=True)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file[0])
-		return file
 
 	def action_states(self):
 		s,m = [int(i) for i in self.listbox.curselection()],self.listbox.size()
@@ -694,7 +686,7 @@ class PyGRP(Tk):
 		self.stopframe()
 		if not self.unsaved():
 			if file == None:
-				file = self.select_file('Open GRP')
+				file = PYGRP_SETTINGS.lastpath.select_file('opengrp', self, 'Open GRP', '.grp', [('GRP Files','*.grp'),('All Files','*')])
 				if not file:
 					return
 			grp = GRP.GRP(self.palettes[self.pal])
@@ -740,7 +732,7 @@ class PyGRP(Tk):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
 		self.stopframe()
-		file = self.select_file('Save GRP As', False)
+		file = PYGRP_SETTINGS.lastpath.select_file('savegrp', 'Save GRP As', '.grp', [('GRP Files','*.grp'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
@@ -770,7 +762,7 @@ class PyGRP(Tk):
 			return
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
-		file = self.select_file('Export Frames To...', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+		file = PYGRP_SETTINGS.lastpath.select_file('exportbmp', self, 'Export Frames To...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		if file:
 			self.status.set('Extracting frames, please wait...')
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
@@ -787,9 +779,9 @@ class PyGRP(Tk):
 			return
 		self.stopframe()
 		if self.singlebmp.get():
-			files = self.select_file('Import single BMP...', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+			files = PYGRP_SETTINGS.lastpath.select_file('importbmp', self, 'Import single BMP...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		else:
-			files = self.select_files()
+			files = PYGRP_SETTINGS.lastpath.select_files('importbmp', self, 'Import frames from...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		if files:
 			frames = 0
 			if self.singlebmp.get():
@@ -901,19 +893,19 @@ class PyGRP(Tk):
 	def exit(self, e=None):
 		self.stopframe()
 		if not self.unsaved():
-			savesize(self, self.settings, 'window')
-			self.settings['hex'] = not not self.hex.get()
-			self.settings['bgcolor'] = self.canvas['background']
-			self.settings['previewspeed'] = int(self.prevspeed.get())
-			self.settings['showpreview'] = not not self.showpreview.get()
-			self.settings['looppreview'] = not not self.looppreview.get()
-			self.settings['grpoutline'] = not not self.grpo.get()
-			self.settings['frameoutline'] = not not self.frameo.get()
-			self.settings['singlebmp'] = self.singlebmp.get() + self.thirdstate
-			self.settings['uncompressed'] = not not self.uncompressed.get()
-			self.settings['palette'] = self.pal
-			self.settings['transindex'] = self.transid.get()
-			savesettings('PyGRP', self.settings)
+			PYGRP_SETTINGS.window.save_window_size('main', self, size=False)
+			PYGRP_SETTINGS.hex = not not self.hex.get()
+			PYGRP_SETTINGS.preview.bgcolor = self.canvas['background']
+			PYGRP_SETTINGS.preview.speed = int(self.prevspeed.get())
+			PYGRP_SETTINGS.preview.show = not not self.showpreview.get()
+			PYGRP_SETTINGS.preview.loop = not not self.looppreview.get()
+			PYGRP_SETTINGS.preview.grpoutline = not not self.grpo.get()
+			PYGRP_SETTINGS.preview.frameoutline = not not self.frameo.get()
+			PYGRP_SETTINGS.preview.palette = self.pal
+			PYGRP_SETTINGS.singlebmp = self.singlebmp.get() + self.thirdstate
+			PYGRP_SETTINGS.uncompressed = not not self.uncompressed.get()
+			PYGRP_SETTINGS.transid = self.transid.get()
+			PYGRP_SETTINGS.save()
 			self.destroy()
 
 def main():

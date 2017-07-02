@@ -54,16 +54,6 @@ for l in open(os.path.join(BASE_DIR,'Libs','Data','Hints.txt'),'r'):
 	if m:
 		HINTS[m.group(1)] = m.group(2)
 
-PYDAT_SETTINGS = Settings('PyDAT', {
-	'stat_txt':'MPQ:rez\\stat_txt.tbl',
-	'imagestbl':'MPQ:arr\\images.tbl',
-	'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
-	'portdatatbl':'MPQ:arr\\portdata.tbl',
-	'mapdatatbl':'MPQ:arr\\mapdata.tbl',
-	'cmdicons':'MPQ:unit\\cmdbtns\\cmdicons.grp',
-	'iscriptbin':'MPQ:scripts\\iscript.bin',
-})
-
 def tip(obj, tipname, hint):
 	obj.tooltip = Tooltip(obj, '%s:\n' % tipname + fit('  ', HINTS[hint], end=True)[:-1], mouse=True)
 

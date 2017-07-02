@@ -11,14 +11,16 @@ try:
 except:
 	win_reg = False
 
-PyMS_VERSION = (1,2,2)
-PyMS_LONG_VERSION = 'v%s.%s.%s' % PyMS_VERSION
 if hasattr(sys, 'frozen'):
 	BASE_DIR = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
 	BASE_DIR = os.path.dirname(os.path.dirname(unicode(__file__, sys.getfilesystemencoding())))
 if os.path.exists(BASE_DIR):
 	os.chdir(BASE_DIR)
+
+import json
+with open(os.path.join(BASE_DIR, 'Libs', 'versions.json'), 'r') as f:
+	VERSIONS = json.load(f)
 
 couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')

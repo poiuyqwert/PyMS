@@ -29,7 +29,144 @@ def savesettings(program, settings):
 	except:
 		pass
 
-PYMS_SETTINGS = loadsettings('PyMS',{'remindme':1})
+class SettingDict(object):
+	def __init__(self, settings=None):
+		if not isinstance(settings, dict):
+			settings = {}
+		self.__dict__['settings'] = settings
+	def __getattr__(self, key):
+		return self[key]
+	def __setattr__(self, key, value):
+		self[key] = value
+	def __delattr__(self, key):
+		del self[key]
+	def __len__(self):
+		return len(self.__dict__['settings'])
+	def __getitem__(self, key):
+		if not key in self.__dict__['settings']:
+			self.__dict__['settings'][key] = SettingDict()
+		return self.__dict__['settings'][key]
+	def __setitem__(self, key, value):
+		if isinstance(value, dict):
+			value = SettingDict(value)
+		self.__dict__['settings'][key] = value
+	def __delitem__(self, key):
+		if key in self.__dict__['settings']:
+			del self.__dict__['settings'][key]
+	def __iter__(self):
+		return self.__dict__['settings'].__iter__()
+	def __contains__(self, key):
+		return key in self.__dict__['settings']
+	def get(self, key, default=None, autosave=True):
+		if not key in self.__dict__['settings']:
+			if callable(default):
+				default = default()
+			if not autosave:
+				return default
+			self.__dict__['settings'][key] = default
+		return self.__dict__['settings'][key]
+	def get_list(self, key, default=None, autosave=True):
+		def get_default():
+			if callable(default):
+				default = default()
+			if not isinstance(default, list):
+				default = []
+			return default
+		self.get(key, get_default)
+	def set_defaults(self, defaults):
+		for key,value in defaults.iteritems():
+			if not key in self:
+				self[key] = value
+	def save_window_size(self, key, window, size=True):
+		w,h,x,y,f = parse_geometry(window.winfo_geometry())
+		if size:
+			z = ['','^'][window.wm_state() == 'zoomed']
+			if z:
+				window.wm_state('normal')
+			self[key] = '%dx%d+%d+%d%s' % (w,h,x,y,z)
+		else:
+			self[key] = '+%d+%d' % (x,y)
+	def load_window_size(self, key, window, size=True, position=None, default_center=True):
+		geometry = self.get(key)
+		if geometry:
+			w,h,x,y,fullscreen = parse_geometry(geometry)
+			if position:
+				x,y = position
+			if size and w != None and h != None:
+				screen_w = window.winfo_screenwidth()
+				screen_h = window.winfo_screenheight()
+				resizable = window.resizable()
+				min_size = window.minsize()
+				if x+w > screen_w:
+					x = screen_w-w
+				if x < 0:
+					x = 0
+				if w > screen_w and resizable[0] and screen_w > min_size[0]:
+					w = screen_w
+				if y+h > screen_h:
+					y = max(0,screen_h-h)
+				if y < 0:
+					y = 0
+				if h > screen_h and resizable[1] and screen_h > min_size[1]:
+					h = screen_h
+				window.geometry('%dx%d+%d+%d' % (w,h, x,y))
+			else:
+				window.geometry('+%d+%d' % (x,y))
+			window.update_idletasks()
+			if fullscreen:
+				try:
+					window.wm_state('zoomed')
+				except:
+					pass
+		else:
+			if position:
+				window.geometry('+%d+%d' % position)
+			elif default_center:
+				window.update_idletasks()
+				w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
+				screen_w = window.winfo_screenwidth()
+				screen_h = window.winfo_screenheight()
+				window.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
+	def select_file(self, key, parent, title, ext, filetypes, save=False):
+		dialog = tkFileDialog.asksaveasfilename if save else tkFileDialog.askopenfilename
+		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR))
+		if path:
+			self[key] = os.path.dirname(path)
+		return path
+	def select_files(self, key, parent, title, ext, filetypes):
+		path = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR))
+		if path:
+			self[key] = os.path.dirname(path)
+		return path
+class SettingEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if isinstance(obj, SettingDict):
+			return obj.__dict__['settings']
+		return json.JSONEncoder.default(self, obj)
+class Settings(SettingDict):
+	def __init__(self, program, settings_version):
+		self.__dict__['path'] = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
+		self.__dict__['version'] = settings_version
+		try:
+			with file(self.__dict__['path'], 'r') as f:
+				settings = json.load(f, object_hook=lambda o: SettingDict(o)).__dict__['settings']
+			if settings:
+				version = settings.get('version', '?')
+				if version != settings_version:
+					settings = {}
+		except:
+			settings = {}
+		SettingDict.__init__(self, settings)
+
+	def save(self):
+		try:
+			self.version = self.__dict__['version']
+			with file(self.__dict__['path'], 'w') as f:
+				json.dump(self, f, sort_keys=True, indent=4, cls=SettingEncoder)
+		except:
+			pass
+
+PYMS_SETTINGS = Settings('PyMS', '1')
 
 SC_DIR = PYMS_SETTINGS.get('scdir')
 if win_reg:
@@ -41,92 +178,19 @@ if win_reg:
 	if SC_DIR and not os.path.isdir(SC_DIR):
 		SC_DIR = None
 
-class SettingDict(object):
-	def __init__(self, settings={}):
-		self._settings = settings
-	def __getattr__(self, key):
-		return self[key]
-	def __setattr__(self, key, value):
-		self[key] = value
-	def __delattr__(self, key):
-		del self[key]
-	def __len__(self):
-		return len(self._settings)
-	def __getitem__(self, key):
-		if key == '_settings':
-			return self._settings
-		if not key in self._settings:
-			self._settings[key] = SettingDict()
-		return self._settings[key]
-	def __setitem__(self, key, value):
-		if key == '_settings':
-			self.__dict__[key] = value
-		else:
-			if isinstance(value, dict):
-				value = SettingDict(value)
-			self._settings[key] = value
-	def __delitem__(self, key):
-		if key in self._settings:
-			del self._settings[key]
-	def __iter__(self):
-		return self._settings.__iter__()
-	def __contains__(self, key):
-		return key in self._settings
-	def get(self, key, default=None, autosave=True):
-		if not key in self._settings and default != None:
-			if callable(default):
-				default = default()
-			if autosave:
-				self._settings[key] = default
-			else:
-				return default
-		return self._settings[key]
-class SettingEncoder(json.JSONEncoder):
-	def default(self, obj):
-		if isinstance(obj, SettingDict):
-			return obj._settings
-		return json.JSONEncoder.default(self, obj)
-class Settings(SettingDict):
-	def __init__(self, program, defaults=None):
-		settings = {}
-		try:
-			contents = None
-			with file(path, 'r') as f:
-				contents = f.read()
-			settings = json.loads(contents, object_hook=SettingDict.__init__)._settings
-		except:
-			pass
-		SettingDict.__init__(self, settings)
-		self.path = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
-
-		if defaults != None:
-			self.set_defaults(defaults)
-
-	def set_defaults(self, defaults):
-		for key,value in defaults.iteritems():
-			if not key in self.settings:
-				self.settings[key] = value
-
-	def save(self):
-		try:
-			f = file(self.path,'w')
-			f.write(json.dumps(settings, sort_keys=True, indent=4, cls=SettingEncoder))
-			f.close()
-		except:
-			pass
-
 def check_update(p):
-	if PYMS_SETTINGS['remindme'] == 1 or PYMS_SETTINGS['remindme'] != PyMS_LONG_VERSION:
-		try:
-			d = urllib.urlopen('http://www.broodwarai.com/PyMS/update.txt').read()
-		except:
-			return
-		if len(d) == 3:
-			d = tuple(ord(l) for l in d)
-			if PyMS_VERSION < d:
-				def callback():
-					UpdateDialog(p,'v%s.%s.%s' % d,settings)
-				p.after(1, callback)
+	return
+	# if PYMS_SETTINGS['remindme'] == 1 or PYMS_SETTINGS['remindme'] != PyMS_LONG_VERSION:
+	# 	try:
+	# 		d = urllib.urlopen('http://www.broodwarai.com/PyMS/update.txt').read()
+	# 	except:
+	# 		return
+	# 	if len(d) == 3:
+	# 		d = tuple(ord(l) for l in d)
+	# 		if PyMS_VERSION < d:
+	# 			def callback():
+	# 				UpdateDialog(p,'v%s.%s.%s' % d,settings)
+	# 			p.after(1, callback)
 
 def loadsize(window, settings, setting='window', full=False, size=True, position=None):
 	geometry = settings.get(setting)
