@@ -962,13 +962,15 @@ class SettingsDialog(PyMSDialog):
 		ok.pack(side=LEFT, padx=3, pady=3)
 		Button(btns, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
 		btns.pack()
+		if self.err:
+			self.after(1, self.showerr)
+		return ok
+
+	def setup_complete(self):
 		if isinstance(self.settings, SettingDict):
 			self.settings.windows.settings.load_window_size('main', self)
 		elif 'settingswindow' in self.settings:
 			loadsize(self, self.settings, 'settingswindow', True)
-		if self.err:
-			self.after(1, self.showerr)
-		return ok
 
 	def showerr(self):
 		ErrorDialog(self, self.err)
@@ -980,17 +982,20 @@ class SettingsDialog(PyMSDialog):
 		elif not self.edited or askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
 			PyMSDialog.ok(self)
 
+	def save_settings(self):
+		if self.mpqs:
+			old_mpqs = self.parent.mpqhandler.mpqs
+			self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
+		m = os.path.join(BASE_DIR,'Libs','MPQ','')
+		if self.data:
+			for p,d in zip(self.pages,self.data):
+				p.save(d,m,self.settings)
+
 	def ok(self):
 		if self.edited:
 			old_mpqs = None
 			old_settings = copy.deepcopy(self.settings)
-			if self.mpqs:
-				old_mpqs = self.parent.mpqhandler.mpqs
-				self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-			m = os.path.join(BASE_DIR,'Libs','MPQ','')
-			if self.data:
-				for p,d in zip(self.pages,self.data):
-					p.save(d,m,self.settings)
+			self.save_settings()
 			if hasattr(self.parent, 'open_files'):
 				e = self.parent.open_files()
 				if e:

@@ -18,6 +18,7 @@ from math import ceil
 import optparse, os, re, sys
 
 LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
+PYDAT_SETTINGS = Settings('PyDAT', '1')
 
 play_sound = None
 try:
@@ -93,15 +94,15 @@ class IScriptDropDown(DropDown):
 class DATSettingsDialog(SettingsDialog):
 	def widgetize(self):
 		self.custom = IntVar()
-		self.custom.set(self.parent.settings.get('customlabels',0))
+		self.custom.set(self.settings.settings.get('customlabels', False))
 		self.minsize(*self.min_size)
 		self.tabs = Notebook(self)
-		self.mpqsettings = MPQSettings(self.tabs, self.parent.mpqhandler.mpqs, self.parent.settings)
+		self.mpqsettings = MPQSettings(self.tabs, self.parent.mpqhandler.mpqs, self.settings)
 		self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 		for d in self.data:
 			f = Frame(self.tabs)
 			f.parent = self
-			pane = SettingsPanel(f, d[1], self.parent.settings, self.parent.mpqhandler)
+			pane = SettingsPanel(f, d[1], self.settings, self.parent.mpqhandler)
 			pane.pack(fill=BOTH, expand=1)
 			self.pages.append(pane)
 			if d[0].startswith('TBL'):
@@ -113,8 +114,6 @@ class DATSettingsDialog(SettingsDialog):
 		ok.pack(side=LEFT, padx=3, pady=3)
 		Button(btns, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
 		btns.pack()
-		if 'settingswindow' in self.parent.settings:
-			loadsize(self, self.parent.settings, 'settingswindow', True)
 		if self.err:
 			self.after(1, self.showerr)
 		return ok
@@ -122,28 +121,9 @@ class DATSettingsDialog(SettingsDialog):
 	def doedit(self, e=None):
 		self.edited = True
 
-	def ok(self):
-		savesize(self, self.parent.settings, 'settingswindow')
-		if self.edited:
-			t = self.parent.mpqhandler.mpqs
-			self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-			b = {}
-			b['mpqs'] = self.parent.settings.get('mpqs',[])
-			self.parent.settings['mpqs'] = self.mpqsettings.mpqs
-			m = os.path.join(BASE_DIR,'Libs','MPQ','')
-			for p,d in zip(self.pages,self.data):
-				for s in d[1]:
-					b[s[2]] = self.parent.settings[s[2]]
-					self.parent.settings[s[2]] = ['','MPQ:'][p.variables[s[0]][0].get()] + p.variables[s[0]][1].get().replace(m,'MPQ:',1)
-			b['customlabels'] = self.parent.settings.get('customlabels',False)
-			self.parent.settings['customlabels'] = self.custom.get()
-			e = self.parent.open_files()
-			if e:
-				self.parent.mpqhandler.set_mpqs(t)
-				self.parent.settings.update(b)
-				ErrorDialog(self, e)
-				return
-		PyMSDialog.ok(self)
+	def save_settings(self):
+		SettingsDialog.save_settings(self)
+		self.settings.settings.customlabels = not not self.custom.get()
 
 class SaveMPQDialog(PyMSDialog):
 	def __init__(self, parent):
@@ -176,7 +156,7 @@ class SaveMPQDialog(PyMSDialog):
 		Button(sel, text='Unselect All', command=lambda: self.listbox.select_clear(0,END)).pack(side=LEFT, fill=X, expand=1)
 		sel.pack(fill=X, padx=5)
 		self.sempq = IntVar()
-		self.sempq.set(self.parent.settings.get('sempq',0))
+		self.sempq.set(PYDAT_SETTINGS.get('sempq', False))
 		Checkbutton(self, text='Self-executing MPQ (SEMPQ)', variable=self.sempq).pack(pady=3)
 		for f in ['units.dat','weapons.dat','flingy.dat','sprites.dat','images.dat','upgrades.dat','techdata.dat','sfxdata.dat','portdata.dat','mapdata.dat','orders.dat','stat_txt.tbl','images.tbl','sfxdata.tbl','portdata.tbl','mapdata.tbl','cmdicons.grp']:
 			self.listbox.insert(END,f)
@@ -208,9 +188,9 @@ class SaveMPQDialog(PyMSDialog):
 			askquestion(parent=self, title='Nothing to save', message='Please choose at least one item to save.', type=OK)
 		else:
 			if self.sempq.get():
-				file = self.parent.select_file('Save SEMPQ to...', False, '.exe', [('Executable Files','*.exe'),('All Files','*')], self)
+				file = PYDAT_SETTINGS.lastpath.sempq.select_file('save', self, 'Save SEMPQ to...', '.exe', [('Executable Files','*.exe'),('All Files','*')], save=True)
 			else:
-				file = self.parent.select_file('Save MPQ to...', False, '.mpq', [('MPQ Files','*.mpq'),('All Files','*')], self)
+				file = PYDAT_SETTINGS.lastpath.mpq.select_file('save', self, 'Save MPQ to...', '.mpq', [('MPQ Files','*.mpq'),('All Files','*')], save=True)
 			if file:
 				if self.sempq.get():
 					if os.path.exists(file):
@@ -263,7 +243,7 @@ class SaveMPQDialog(PyMSDialog):
 					askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone), type=OK)
 
 	def ok(self):
-		self.parent.settings['sempq'] = self.sempq.get()
+		PYDAT_SETTINGS.sempq = not not self.sempq.get()
 		self.parent.mpq_export = [self.listbox.get(i) for i in self.listbox.curselection()]
 		PyMSDialog.ok(self)
 
@@ -344,7 +324,7 @@ class DATTab(NotebookTab):
 		if self.dat:
 			self.toplevel.listbox.delete(0,END)
 			d = []
-			if self.toplevel.settings.get('customlabels',0):
+			if PYDAT_SETTINGS.settings.get('customlabels', False):
 				if self.data == 'Units.txt':
 					d = [decompile_string(s) for s in self.toplevel.stat_txt.strings[0:228]]
 				elif self.data in ['Weapons.txt','Upgrades.txt','Techdata.txt']:
@@ -439,7 +419,7 @@ class DATTab(NotebookTab):
 					for dv in vals:
 						if (isstr(dv) and dat.get_value(id, dv) == val) or (isinstance(dv, tuple) and val >= dat.get_value(id,dv[0]) and val <= dat.get_value(id,dv[1])):
 							ref = DATA_CACHE[dat.idfile][id]
-							if self.toplevel.settings.get('customlabels',0) and type(dat) == UnitsDAT:
+							if PYDAT_SETTINGS.settings.get('customlabels', False) and type(dat) == UnitsDAT:
 								ref = decompile_string(self.toplevel.stat_txt.strings[id])
 							self.listbox.insert(END, '%s entry %s: %s' % (dat.datname, id, ref))
 							break
@@ -511,7 +491,7 @@ class DATTab(NotebookTab):
 		if parent == None:
 			parent = self
 		if not file:
-			file = self.toplevel.select_file('Import TXT', True, '*.txt', [('Text Files','*.txt'),('All Files','*')], parent)
+			file = PYDAT_SETTINGS.lastpath.txt.select_file('import', self, 'Import TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')])
 		if not file:
 			return
 		entries = ccopy(self.dat.entries)
@@ -546,14 +526,14 @@ class DATTab(NotebookTab):
 			self.toplevel.action_states()
 
 	def saveas(self, key=None):
-		file = self.toplevel.select_file('Save %s As' % self.dat.datname, False, filetypes=[('StarCraft %s files' % self.dat.datname,'*.dat'),('All Files','*')])
+		file = PYDAT_SETTINGS.lastpath.dat.save.select_file(self.dat.datname, self, 'Save %s As' % self.dat.datname, '*.dat', [('StarCraft %s files' % self.dat.datname,'*.dat'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
 		self.save()
 
 	def export(self, key=None):
-		file = self.toplevel.select_file('Export TXT', False, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+		file = PYDAT_SETTINGS.lastpath.txt.select_file('export', self, 'Export TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')], save=True)
 		if not file:
 			return True
 		try:
@@ -1674,7 +1654,7 @@ class SpritesTab(DATTab):
 
 		self.previewing = None
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.settings.get('spritepreview',1))
+		self.showpreview.set(PYDAT_SETTINGS.preview.sprite.get('show', False))
 
 		x = Frame(frame)
 		l = LabelFrame(x, text='Preview:')
@@ -1774,7 +1754,7 @@ class SpritesTab(DATTab):
 					for w in ws:
 						w['state'] = state
 			else:
-				self.toplevel.settings['spritepreview'] = self.showpreview.get()
+				PYDAT_SETTINGS.preview.sprite.show = not not self.showpreview.get()
 			DATTab.loadsave(self, save)
 		if not save:
 			self.drawpreview()
@@ -2521,11 +2501,11 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.vertical = IntegerVar(0, [0,65535])
 		self.previewing = None
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.settings.get('unitpreview',1))
+		self.showpreview.set(PYDAT_SETTINGS.preview.unit.get('show', False))
 		self.showplace = IntVar()
-		self.showplace.set(self.toplevel.settings.get('showplacement',1))
+		self.showplace.set(PYDAT_SETTINGS.preview.unit.get('show_placement', False))
 		self.showdims = IntVar()
-		self.showdims.set(self.toplevel.settings.get('showdimensions',1))
+		self.showdims.set(PYDAT_SETTINGS.preview.unit.get('show_dimensions', False))
 
 		bottom = Frame(frame)
 		left = Frame(bottom)
@@ -2643,9 +2623,9 @@ class GraphicsUnitsTab(DATUnitsTab):
 					frmt = self.toplevel.units.format[self.toplevel.units.labels.index(l)]
 					w['state'] = [NORMAL,DISABLED][id < frmt[0][0] or id >= frmt[0][1]]
 			else:
-				self.toplevel.settings['unitpreview'] = self.showpreview.get()
-				self.toplevel.settings['showplacment'] = self.showplace.get()
-				self.toplevel.settings['showdimensions'] = self.showdims.get()
+				PYDAT_SETTINGS.preview.unit.show = not not self.showpreview.get()
+				PYDAT_SETTINGS.preview.unit.show_placment = not not self.showplace.get()
+				PYDAT_SETTINGS.preview.unit.show_dimensions = not not self.showdims.get()
 			DATUnitsTab.loadsave(self, save)
 		if not save:
 			self.drawpreview()
@@ -2657,7 +2637,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		frame = Frame(self)
 
 		sfxdata = DATA_CACHE['Sfxdata.txt']
-		# if self.toplevel.settings.get('customlabels',0):
+		# if PYDAT_SETTINGS.settings.get('customlabels', False):
 		# 	sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
 		self.readyentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.readydd = IntVar()
@@ -2900,7 +2880,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		l.pack(fill=X)
 
 		units = DATA_CACHE['Units.txt']
-		# if self.toplevel.settings.get('customlabels',0):
+		# if PYDAT_SETTINGS.settings.get('customlabels', False):
 		# 	units = [decompile_string(s) for s in self.toplevel.stat_txt.strings[:228]] + ['None']
 		self.infestentry = IntegerVar(0, [0,228])
 		self.infestdd = IntVar()
@@ -2990,7 +2970,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 	def files_updated(self):
 		units = DATA_CACHE['Units.txt']
-		if self.toplevel.settings.get('customlabels',0):
+		if PYDAT_SETTINGS.settings.get('customlabels', False):
 			units = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[:229]]
 		self.infestddw.setentries(units)
 		
@@ -3373,21 +3353,6 @@ class UnitsTab(DATTab):
 
 class PyDAT(Tk):
 	def __init__(self, guifile=None):
-		self.settings = loadsettings('PyDAT',
-			{
-				'stat_txt':'MPQ:rez\\stat_txt.tbl',
-				'imagestbl':'MPQ:arr\\images.tbl',
-				'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
-				'portdatatbl':'MPQ:arr\\portdata.tbl',
-				'mapdatatbl':'MPQ:arr\\mapdata.tbl',
-				'cmdicons':'MPQ:unit\\cmdbtns\\cmdicons.grp',
-				'iscriptbin':'MPQ:scripts\\iscript.bin',
-			}
-		)
-		###### Remove later down the line (currently v1.9)
-		if 'usemodmpq' in self.settings:
-			del self.settings['usemodmpq']
-
 		Tk.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
 		try:
@@ -3421,7 +3386,7 @@ class PyDAT(Tk):
 		pal = Palette()
 		for p in ['Units','bfire','gfire','ofire','Terrain','Icons']:
 			try:
-				pal.load_file(self.settings.get('%spal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+				pal.load_file(PYDAT_SETTINGS.settings.palettes.get(p, os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
 			except:
 				continue
 			PALETTES[p] = pal.palette
@@ -3501,7 +3466,7 @@ class PyDAT(Tk):
 		self.jumpid = IntegerVar('', [0,227], allow_hex=True)
 
 		search = Frame(left)
-		tdd = TextDropDown(search, self.find, self.findhistory, 30)
+		tdd = TextDropDown(search, self.find, self.findhistory, 15)
 		tdd.pack(side=LEFT)
 		tdd.entry.bind('<Return>', self.findnext)
 		Button(search, text='Find Next', command=self.findnext).pack(side=LEFT)
@@ -3572,18 +3537,17 @@ class PyDAT(Tk):
 		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.mpq_export = self.settings.get('mpqexport',[])
+		self.mpq_export = PYDAT_SETTINGS.get('mpqexport',[])
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpqs
+		self.mpqhandler = MPQHandler(PYDAT_SETTINGS.settings.get('mpqs',[]))
+		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
+			PYDAT_SETTINGS.settings.mpqs = self.mpqhandler.mpqs
 
 		e = self.open_files()
 		if e:
 			self.mpqtbl(err=e)
 
-		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window', True)
+		PYDAT_SETTINGS.windows.load_window_size('main', self)
 
 		if guifile:
 			for title,tab in self.dattabs.pages.iteritems():
@@ -3611,12 +3575,12 @@ class PyDAT(Tk):
 			portdatatbl = TBL()
 			mapdatatbl = TBL()
 			cmdicon = CacheGRP()
-			stat_txt.load_file(self.mpqhandler.get_file(self.settings['stat_txt']))
-			imagestbl.load_file(self.mpqhandler.get_file(self.settings['imagestbl']))
-			sfxdatatbl.load_file(self.mpqhandler.get_file(self.settings['sfxdatatbl']))
-			portdatatbl.load_file(self.mpqhandler.get_file(self.settings['portdatatbl']))
-			mapdatatbl.load_file(self.mpqhandler.get_file(self.settings['mapdatatbl']))
-			cmdicon.load_file(self.mpqhandler.get_file(self.settings['cmdicons']))
+			stat_txt.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('stat_txt', 'MPQ:rez\\stat_txt.tbl')))
+			imagestbl.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('imagestbl', 'MPQ:arr\\images.tbl')))
+			sfxdatatbl.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('sfxdatatbl', 'MPQ:arr\\sfxdata.tbl')))
+			portdatatbl.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('portdatatbl', 'MPQ:arr\\portdata.tbl')))
+			mapdatatbl.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('mapdatatbl', 'MPQ:arr\\mapdata.tbl')))
+			cmdicon.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('cmdicons', 'MPQ:unit\\cmdbtns\\cmdicons.grp')))
 		except PyMSError, e:
 			err = e
 		else:
@@ -3660,7 +3624,7 @@ class PyDAT(Tk):
 						break
 			if not err:
 				iscriptbin = IScriptBIN(weapons, flingy, images, sprites, sounds, stat_txt, imagestbl, sfxdatatbl)
-				iscriptbin.load_file(self.mpqhandler.get_file(self.settings['iscriptbin']))
+				iscriptbin.load_file(self.mpqhandler.get_file(PYDAT_SETTINGS.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
 			defaultmpqs.close_mpqs()
 		self.mpqhandler.close_mpqs()
 		if not err:
@@ -3711,15 +3675,6 @@ class PyDAT(Tk):
 		for page in self.pages:
 			if page.unsaved():
 				return True
-
-	def select_file(self, title, open=True, ext='.dat', filetypes=[('StarCraft DAT files','*.dat'),('All Files','*')], parent=None):
-		if parent == None:
-			parent = self
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
-		return file
 
 	def action_states(self):
 		edited = False
@@ -3791,29 +3746,15 @@ class PyDAT(Tk):
 		self.dattabs.active.new()
 
 	def open(self, key=None):
-		path = self.select_file('Open DAT file', filetypes=[('StarCraft DAT files','*.dat'),('All Files','*')])
+		path = PYDAT_SETTINGS.lastpath.dat.select_file('open', self, 'Open DAT file', '*.dat', [('StarCraft DAT files','*.dat'),('All Files','*')])
 		if not path:
 			return
 		try:
 			filesize = os.path.getsize(path)
 		except:
 			ErrorDialog(self, PyMSError('Open',"Couldn't get file size for '%s'" % path))
-		datsizes = (
-			UnitsDAT.filesize,
-			WeaponsDAT.filesize,
-			FlingyDAT.filesize,
-			SpritesDAT.filesize,
-			ImagesDAT.filesize,
-			UpgradesDAT.filesize,
-			TechDAT.filesize,
-			SoundsDAT.filesize,
-			PortraitDAT.filesize,
-			CampaignDAT.filesize,
-			OrdersDAT.filesize
-		)
-		pages = (page for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]))
-		for datsize,page in zip(datsizes,pages):
-			if filesize == datsize:
+		for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]):
+			if filesize == page.dat.filesize:
 				page.open(path)
 				self.dattabs.display(page.page_title)
 				break
@@ -3821,7 +3762,7 @@ class PyDAT(Tk):
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT file '%s'" % path))
 
 	def openmpq(self, event=None):
-		file = self.select_file('Open MPQ', True, '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
+		file = PYDAT_SETTINGS.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
 		if not file:
 			return
 		h = SFileOpenArchive(file)
@@ -3856,10 +3797,9 @@ class PyDAT(Tk):
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
 	def opendirectory(self, event=None):
-		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
+		dir = PYDAT_SETTINGS.lastpath.select_directory('dir', self, 'Open Directory')
 		if not dir:
 			return
-		self.settings['lastpath'] = dir
 		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitDAT(),CampaignDAT(),OrdersDAT()]
 		found = [None] * len(dats)
 		files = [None] * len(dats)
@@ -3924,7 +3864,7 @@ class PyDAT(Tk):
 				('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
 			])
 		]
-		DATSettingsDialog(self, data, (340,450), err)
+		DATSettingsDialog(self, data, (340,450), err, settings=PYDAT_SETTINGS)
 
 	def register(self, e=None):
 		try:
@@ -3941,9 +3881,9 @@ class PyDAT(Tk):
 	def exit(self, e=None):
 		self.loadsave(True)
 		if not self.unsaved():
-			savesize(self, self.settings)
-			self.settings['mpqexport'] = self.mpq_export
-			savesettings('PyDAT', self.settings)
+			PYDAT_SETTINGS.windows.save_window_size('main', self)
+			PYDAT_SETTINGS.mpqexport = self.mpq_export
+			PYDAT_SETTINGS.save()
 			self.destroy()
 
 def main():
