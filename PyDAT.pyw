@@ -481,14 +481,10 @@ class DATTab(NotebookTab):
 			self.id = 0
 			self.activate()
 
-	def open(self, key=None, file=None, save=True):
+	def open(self, file, save=True):
 		if self == self.toplevel.dattabs.active:
 			self.loadsave(True)
 		if not save or not self.unsaved():
-			if file == None:
-				file = self.toplevel.select_file('Open %s' % self.dat.datname, filetypes=[('StarCraft %s files' % self.dat.datname,'*.dat'),('All Files','*')])
-				if not file:
-					return
 			if isstr(file):
 				entries = ccopy(self.dat.entries)
 				try:
@@ -3557,6 +3553,7 @@ class PyDAT(Tk):
 		self.dattabs.pack(side=LEFT, fill=BOTH, expand=1, padx=2, pady=2)
 		for tab in tabs:
 			page = tab[1](self.dattabs, self)
+			page.page_title = tab[0]
 			self.pages.append(page)
 			self.dattabs.add_tab(page, tab[0])
 		# self.dattabs.bind('<<TabDeactivated>>', self.tab_deactivated)
@@ -3591,7 +3588,7 @@ class PyDAT(Tk):
 		if guifile:
 			for title,tab in self.dattabs.pages.iteritems():
 				try:
-					tab[0].open(file=guifile, save=False)
+					tab[0].open(guifile, save=False)
 					self.dattabs.display(title)
 					break
 				except PyMSError, e:
@@ -3794,7 +3791,34 @@ class PyDAT(Tk):
 		self.dattabs.active.new()
 
 	def open(self, key=None):
-		self.dattabs.active.open()
+		path = self.select_file('Open DAT file', filetypes=[('StarCraft DAT files','*.dat'),('All Files','*')])
+		if not path:
+			return
+		try:
+			filesize = os.path.getsize(path)
+		except:
+			ErrorDialog(self, PyMSError('Open',"Couldn't get file size for '%s'" % path))
+		datsizes = (
+			UnitsDAT.filesize,
+			WeaponsDAT.filesize,
+			FlingyDAT.filesize,
+			SpritesDAT.filesize,
+			ImagesDAT.filesize,
+			UpgradesDAT.filesize,
+			TechDAT.filesize,
+			SoundsDAT.filesize,
+			PortraitDAT.filesize,
+			CampaignDAT.filesize,
+			OrdersDAT.filesize
+		)
+		pages = (page for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]))
+		for datsize,page in zip(datsizes,pages):
+			if filesize == datsize:
+				page.open(path)
+				self.dattabs.display(page.page_title)
+				break
+		else:
+			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT file '%s'" % path))
 
 	def openmpq(self, event=None):
 		file = self.select_file('Open MPQ', True, '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
@@ -3829,7 +3853,7 @@ class PyDAT(Tk):
 			return
 		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(l)))
 		for d in found:
-			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
+			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
 	def opendirectory(self, event=None):
 		dir = tkFileDialog.askdirectory(parent=self, title='Open Directory', initialdir=self.settings.get('lastpath', BASE_DIR))
@@ -3864,7 +3888,7 @@ class PyDAT(Tk):
 		files = [f for f in files if f != None]
 		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(files)))
 		for d in found:
-			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(file=d)
+			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
 	def iimport(self, key=None):
 		self.dattabs.active.iimport()
