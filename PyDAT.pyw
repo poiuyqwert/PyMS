@@ -505,7 +505,7 @@ class DATTab(NotebookTab):
 				dat,self.file = file
 				self.dat.entries = dat.entries
 			self.id = 0
-			self.toplevel.listbox.select_clear()
+			self.toplevel.listbox.select_clear(0,END)
 			self.toplevel.listbox.select_set(0)
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.status.set(self.file)
