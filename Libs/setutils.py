@@ -6,7 +6,7 @@ from Libs import PCX,FNT,GRP,PAL,TBL,AIBIN,DAT,IScriptBIN
 from Tkinter import *
 from tkMessageBox import *
 
-import re, os, json
+import re, os, json, copy
 
 def loadsettings(program, default={}):
 	settings = default
@@ -33,7 +33,7 @@ class SettingDict(object):
 	def __init__(self, settings=None):
 		if not isinstance(settings, dict):
 			settings = {}
-		self.__dict__['settings'] = settings
+		self.__dict__['_settings'] = settings
 	def __getattr__(self, key):
 		return self[key]
 	def __setattr__(self, key, value):
@@ -41,30 +41,54 @@ class SettingDict(object):
 	def __delattr__(self, key):
 		del self[key]
 	def __len__(self):
-		return len(self.__dict__['settings'])
+		return len(self.__dict__['_settings'])
 	def __getitem__(self, key):
-		if not key in self.__dict__['settings']:
-			self.__dict__['settings'][key] = SettingDict()
-		return self.__dict__['settings'][key]
+		if not key in self.__dict__['_settings']:
+			self.__dict__['_settings'][key] = SettingDict()
+		return self.__dict__['_settings'][key]
 	def __setitem__(self, key, value):
 		if isinstance(value, dict):
 			value = SettingDict(value)
-		self.__dict__['settings'][key] = value
+		self.__dict__['_settings'][key] = value
 	def __delitem__(self, key):
-		if key in self.__dict__['settings']:
-			del self.__dict__['settings'][key]
+		if key in self.__dict__['_settings']:
+			del self.__dict__['_settings'][key]
 	def __iter__(self):
-		return self.__dict__['settings'].__iter__()
+		return self.__dict__['_settings'].__iter__()
 	def __contains__(self, key):
-		return key in self.__dict__['settings']
+		return key in self.__dict__['_settings']
+	def __copy__(self):
+		return SettingDict(dict(self.__dict__['_settings']))
+	def __deepcopy__(self, memo):
+		if id(self) in memo:
+			return memo[id(self)]
+		result = SettingDict()
+		memo[id(self)] = result
+		for key,value in self.iteritems():
+			result[key] = copy.deepcopy(value, memo)
+		return result
+	def iteritems(self):
+		return self.__dict__['_settings'].iteritems()
+	def update(self, settings, set=False):
+		if set:
+			self.__dict__['_settings'] = copy.deepcopy(settings.__dict__['_settings'])
+		else:
+			for key,value in settings.iteritems():
+				if isinstance(value, SettingDict):
+					if key in self:
+						self[key].update(value, set=set)
+					else:
+						self[key] = copy.deepcopy(value)
+				else:
+					self[key] = value
 	def get(self, key, default=None, autosave=True):
-		if not key in self.__dict__['settings']:
+		if not key in self.__dict__['_settings']:
 			if callable(default):
 				default = default()
 			if not autosave:
 				return default
-			self.__dict__['settings'][key] = default
-		return self.__dict__['settings'][key]
+			self.__dict__['_settings'][key] = default
+		return self.__dict__['_settings'][key]
 	def get_list(self, key, default=None, autosave=True):
 		def get_default():
 			if callable(default):
@@ -97,8 +121,11 @@ class SettingDict(object):
 			if (resizable_w or resizable_h) and w != None and h != None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
 				min_w,min_h = window.minsize()
+				max_w,max_h = window.maxsize()
+				screen_w = window.winfo_screenwidth()
+				screen_h = window.winfo_screenheight()
+				can_fullscreen = (max_w > screen_w or screen_w - max_w < 10) and (max_h > screen_h or screen_h - max_h < 10)
 				if resizable_w:
-					screen_w = window.winfo_screenwidth()
 					if x+w > screen_w:
 						x = screen_w-w
 					if x < 0:
@@ -107,7 +134,6 @@ class SettingDict(object):
 				else:
 					w = cur_w
 				if resizable_h:
-					screen_h = window.winfo_screenheight()
 					if y+h > screen_h:
 						y = screen_h-h
 					if y < 0:
@@ -119,11 +145,14 @@ class SettingDict(object):
 			else:
 				window.geometry('+%d+%d' % (x,y))
 			window.update_idletasks()
-			if fullscreen:
-				try:
+			try:
+				if fullscreen and can_fullscreen:
 					window.wm_state('zoomed')
-				except:
-					pass
+				else:
+					window.wm_state('normal')
+			except:
+				pass
+
 		else:
 			if position:
 				window.geometry('+%d+%d' % position)
@@ -133,21 +162,26 @@ class SettingDict(object):
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
 				window.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
-	def select_file(self, key, parent, title, ext, filetypes, save=False):
+	def select_file(self, key, parent, title, ext, filetypes, save=False, store=True):
 		dialog = tkFileDialog.asksaveasfilename if save else tkFileDialog.askopenfilename
-		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR))
-		if path:
+		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
+		if path and store:
 			self[key] = os.path.dirname(path)
 		return path
-	def select_files(self, key, parent, title, ext, filetypes):
-		path = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR))
-		if path:
+	def select_files(self, key, parent, title, ext, filetypes, store=True):
+		path = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
+		if path and store:
 			self[key] = os.path.dirname(path)
+		return path
+	def select_directory(self, key, parent, title, store=True):
+		path = tkFileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
+		if path and store:
+			self[key] = path
 		return path
 class SettingEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if isinstance(obj, SettingDict):
-			return obj.__dict__['settings']
+			return obj.__dict__['_settings']
 		return json.JSONEncoder.default(self, obj)
 class Settings(SettingDict):
 	def __init__(self, program, settings_version):
@@ -155,7 +189,7 @@ class Settings(SettingDict):
 		self.__dict__['version'] = settings_version
 		try:
 			with file(self.__dict__['path'], 'r') as f:
-				settings = json.load(f, object_hook=lambda o: SettingDict(o)).__dict__['settings']
+				settings = json.load(f, object_hook=lambda o: SettingDict(o)).__dict__['_settings']
 			if settings:
 				version = settings.get('version', '?')
 				if version != settings_version:
@@ -170,19 +204,19 @@ class Settings(SettingDict):
 			with file(self.__dict__['path'], 'w') as f:
 				json.dump(self, f, sort_keys=True, indent=4, cls=SettingEncoder)
 		except:
+			raise
 			pass
 
 PYMS_SETTINGS = Settings('PyMS', '1')
 
-SC_DIR = PYMS_SETTINGS.get('scdir', autosave=False)
-if win_reg and SC_DIR == None:
+if win_reg and not 'scdir' in PYMS_SETTINGS:
 	try:
 		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
 		path = QueryValueEx(h, 'InstallPath')[0]
 	except:
 		pass
 	if os.path.isdir(path):
-		SC_DIR = path
+		PYMS_SETTINGS.scdir = path
 
 def loadsize(window, settings, setting='window', full=False, size=True, position=None):
 	geometry = settings.get(setting)
@@ -290,9 +324,10 @@ class MPQHandler:
 
 	def add_defaults(self):
 		changed = False
-		if SC_DIR:
+		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
+		if scdir and os.path.isdir(scdir):
 			for f in ['Patch_rt','BrooDat','StarDat']:
-				p = os.path.join(SC_DIR, '%s%smpq' % (f,os.extsep))
+				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
 				if os.path.exists(p) and not p in self.mpqs:
 					h = SFileOpenArchive(p)
 					if not SFInvalidHandle(h):
@@ -443,7 +478,7 @@ class MpqSelect(PyMSDialog):
 	def widgetize(self):
 		listframe = Frame(self, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, width=35, height=1, bd=0, yscrollcommand=scrollbar.set, exportselection=0, activestyle=DOTBOX)
+		self.listbox = Listbox(listframe, width=35, height=10, bd=0, yscrollcommand=scrollbar.set, exportselection=0, activestyle=DOTBOX)
 		bind = [
 			('<MouseWheel>', self.scroll),
 			('<Home>', lambda a,i=0: self.move(a,i)),
@@ -465,7 +500,7 @@ class MpqSelect(PyMSDialog):
 		listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		listframe.focus_set()
 		s = Frame(self)
-		self.textdrop = TextDropDown(s, self.search, self.settings.get('mpqselecthistory',[])[::-1])
+		self.textdrop = TextDropDown(s, self.search, self.settings.settings.get('mpqselecthistory',[])[::-1])
 		self.textdrop.entry.c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
 		self.open = Button(s, text=self.open_type, width=10, command=self.ok)
@@ -480,10 +515,13 @@ class MpqSelect(PyMSDialog):
 		self.listfiles()
 		self.updatelist()
 
-		if 'mpqselectwindow' in self.settings:
-			loadsize(self, self.settings, 'mpqselectwindow', True)
-
 		return self.open
+
+	def setup_complete(self):
+		if isinstance(self.settings, SettingDict):
+			self.settings.windows.settings.load_window_size('mpqselect', self)
+		elif 'mpqselectwindow' in self.settings:
+			loadsize(self, self.settings, 'mpqselectwindow', True)
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -551,23 +589,30 @@ class MpqSelect(PyMSDialog):
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
-	def cancel(self):
-		savesize(self, self.settings, 'mpqselectwindow')
-		PyMSDialog.ok(self)
-
 	def ok(self):
-		savesize(self, self.settings, 'mpqselectwindow')
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
-		if not 'mpqselecthistory' in self.settings:
-			self.settings['mpqselecthistory'] = []
-		if f in self.settings['mpqselecthistory']:
-			self.settings['mpqselecthistory'].remove(f)
-		self.settings['mpqselecthistory'].append(f)
-		if len(self.settings['mpqselecthistory']) > 10:
-			del self.settings['mpqselecthistory'][0]
+		if isinstance(self.settings, SettingDict):
+			history = self.settings.settings.get('mpqselecthistory', [])
+		else:
+			if not 'mpqselecthistory' in self.settings:
+				self.settings['mpqselecthistory'] = []
+			history = self.settings['mpqselecthistory']
+		if f in history:
+			history.remove(f)
+		history.append(f)
+		if len(history) > 10:
+			del history[0]
 		PyMSDialog.ok(self)
 
+	def dismiss(self):
+		if isinstance(self.settings, SettingDict):
+			self.settings.windows.settings.save_window_size('mpqselect', self)
+		else:
+			savesize(self, self.settings, 'mpqselectwindow')
+		PyMSDialog.dismiss(self)
+
+# TODO: Update settings handling once all programs use Settings objects
 class MPQSettings(Frame):
 	def __init__(self, parent, mpqs, settings, setdlg=None):
 		if setdlg == None:
@@ -676,11 +721,14 @@ class MPQSettings(Frame):
 		self.setdlg.edited = True
 
 	def select_files(self):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = tkFileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file[0])
-		return file
+		if isinstance(self.settings, SettingDict):
+			return self.settings.lastpath.settings.select_files('mpqs', self, "Add MPQ's", '.mpq', [('MPQ Files','*.mpq'),('All Files','*')])
+		else:
+			path = self.settings.get('lastpath', BASE_DIR)
+			file = tkFileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
+			if file:
+				self.settings['lastpath'] = os.path.dirname(file[0])
+			return file
 
 	def add(self, key=None, add=None):
 		if add == None:
@@ -720,23 +768,22 @@ class MPQSettings(Frame):
 		self.setdlg.edited = True
 
 	def adddefault(self, key=None):
-		global SC_DIR
-		scdir = SC_DIR
-		if not scdir:
-			scdir = tkFileDialog.askdirectory(parent=self, title='Choose StarCraft Directory')
+		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
+		if not scdir or not os.path.isdir(scdir):
+			scdir = PYMS_SETTINGS.select_directory('scdir', self, 'Choose StarCraft Directory', store=False)
 		if scdir and os.path.isdir(scdir):
 			a = []
 			for f in ['Patch_rt','BrooDat','StarDat']:
 				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
 				if os.path.exists(p) and not p in self.mpqs:
 					a.append(p)
-			if len(a) == 3 and not SC_DIR:
-				SC_DIR = scdir
-				PYMS_SETTINGS['scdir'] = SC_DIR
-				savesettings('PyMS', PYMS_SETTINGS)
+			if len(a) == 3 and not 'scdir' in PYMS_SETTINGS:
+				PYMS_SETTINGS.scdir = scdir
+				PYMS_SETTINGS.save()
 			if a:
 				self.add(add=a)
 
+# TODO: Update settings handling once all programs use Settings objects
 class SettingsPanel(Frame):
 	types = {
 		'PCX':(PCX.PCX,'PCX','pcx',[('StarCraft Special Palette','*.pcx'),('All Files','*')]),
@@ -769,17 +816,23 @@ class SettingsPanel(Frame):
 		self.variables = {}
 		inmpq = False
 		Frame.__init__(self, parent)
-		for _ in entries:
-			if len(_) == 5:
-				f,e,v,t,c = _
+		for entry in entries:
+			if len(entry) == 5:
+				f,e,v,t,c = entry
 			else:
-				f,e,v,t = _
+				f,e,v,t = entry
 				c = None
 			self.variables[f] = (IntVar(),StringVar(),[])
 			if isinstance(v, tuple) or isinstance(v, list):
 				profileKey,valueKey = v
-				profile = settings[profileKey]
-				v = settings['profiles'][profile][valueKey]
+				if issubclass(settings, SettingDict):
+					profile = settings.settings.get(profileKey, autosave=False)
+					v = settings.settings.profiles[profile].get(valueKey, autosave=False)
+				else:
+					profile = settings[profileKey]
+					v = settings['profiles'][profile][valueKey]
+			elif isinstance(settings, SettingDict):
+				v = settings.settings.files.get(v)
 			else:
 				v = settings[v]
 			m = v.startswith('MPQ:')
@@ -819,11 +872,14 @@ class SettingsPanel(Frame):
 			self.setdlg.edited = True
 
 	def select_file(self, t, e, f):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = tkFileDialog.askopenfilename(parent=self, title="Open a " + t, defaultextension='.' + e, filetypes=f, initialdir=path)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
-		return file
+		if isinstance(self.settings, SettingDict):
+			return self.settings.lastpath.settings.select_file(t, self, "Open a " + t, '.' + e, f)
+		else:
+			path = self.settings.get('lastpath', BASE_DIR)
+			file = tkFileDialog.askopenfilename(parent=self, title="Open a " + t, defaultextension='.' + e, filetypes=f, initialdir=path)
+			if file:
+				self.settings['lastpath'] = os.path.dirname(file)
+			return file
 
 	def setting(self, f, t, e, cb):
 		file = ''
@@ -864,18 +920,24 @@ class SettingsPanel(Frame):
 			else:
 				self.setdlg.edited = True
 
-	def save(self, d, m):
+	def save(self, d, m, settings):
 		for s in d[1]:
-			self.setdlg.parent.settings[s[2]] = ['','MPQ:'][self.variables[s[0]][0].get()] + self.variables[s[0]][1].get().replace(m,'MPQ:',1)
+			v = ['','MPQ:'][self.variables[s[0]][0].get()] + self.variables[s[0]][1].get().replace(m,'MPQ:',1)
+			if isinstance(settings, SettingDict):
+				settings.settings.files[s[2]] = v
+			else:
+				settings[s[2]] = v
 
+# TODO: Update settings handling once all programs use Settings objects
 class SettingsDialog(PyMSDialog):
-	def __init__(self, parent, data, min_size, err=None, mpqs=True):
+	def __init__(self, parent, data, min_size, err=None, mpqs=True, settings=None):
 		self.min_size = min_size
 		self.data = data
 		self.pages = []
 		self.err = err
 		self.mpqs = mpqs
 		self.edited = False
+		self.settings = parent.settings if settings == None else settings
 		PyMSDialog.__init__(self, parent, 'Settings')
 
 	def widgetize(self):
@@ -883,25 +945,27 @@ class SettingsDialog(PyMSDialog):
 		if self.data:
 			self.tabs = Notebook(self)
 			if self.mpqs:
-				self.mpqsettings = MPQSettings(self.tabs, self.parent.mpqhandler.mpqs, self.parent.settings)
+				self.mpqsettings = MPQSettings(self.tabs, self.parent.mpqhandler.mpqs, self.settings)
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if isinstance(d[1],list):
-					self.pages.append(SettingsPanel(self.tabs, d[1], self.parent.settings, self.parent.mpqhandler))
+					self.pages.append(SettingsPanel(self.tabs, d[1], self.settings, self.parent.mpqhandler))
 				else:
 					self.pages.append(d[1](self.tabs))
 				self.tabs.add_tab(self.pages[-1], d[0])
 			self.tabs.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		else:
-			self.mpqsettings = MPQSettings(self, self.parent.mpqhandler.mpqs, self.parent.settings, self)
+			self.mpqsettings = MPQSettings(self, self.parent.mpqhandler.mpqs, self.settings, self)
 			self.mpqsettings.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		btns = Frame(self)
 		ok = Button(btns, text='Ok', width=10, command=self.ok)
 		ok.pack(side=LEFT, padx=3, pady=3)
 		Button(btns, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
 		btns.pack()
-		if 'settingswindow' in self.parent.settings:
-			loadsize(self, self.parent.settings, 'settingswindow', True)
+		if isinstance(self.settings, SettingDict):
+			self.settings.windows.settings.load_window_size('main', self)
+		elif 'settingswindow' in self.settings:
+			loadsize(self, self.settings, 'settingswindow', True)
 		if self.err:
 			self.after(1, self.showerr)
 		return ok
@@ -914,31 +978,40 @@ class SettingsDialog(PyMSDialog):
 			self.parent.after(1, self.parent.exit)
 			PyMSDialog.ok(self)
 		elif not self.edited or askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
-			self.parent.settings['settingswindow'] = self.winfo_geometry() + ['','^'][self.wm_state() == 'zoomed']
 			PyMSDialog.ok(self)
 
 	def ok(self):
 		if self.edited:
-			o = dict(self.parent.settings)
+			old_mpqs = None
+			old_settings = copy.deepcopy(self.settings)
 			if self.mpqs:
-				t = self.parent.mpqhandler.mpqs
+				old_mpqs = self.parent.mpqhandler.mpqs
 				self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-				self.parent.settings['mpqs'] = self.mpqsettings.mpqs
 			m = os.path.join(BASE_DIR,'Libs','MPQ','')
 			if self.data:
 				for p,d in zip(self.pages,self.data):
-					p.save(d,m)
-			try:
+					p.save(d,m,self.settings)
+			if hasattr(self.parent, 'open_files'):
 				e = self.parent.open_files()
-			except AttributeError:
-				pass
-			else:
 				if e:
-					if self.mpqs:
-						self.parent.mpqhandler.set_mpqs(t)
-					self.parent.settings = o
+					if old_mpqs != None:
+						self.parent.mpqhandler.set_mpqs(old_mpqs)
+					if isinstance(self.settings, SettingDict):
+						self.settings.update(old_settings, set=True)
+					else:
+						self.settings = old_settings
+						self.parent.settings = old_settings
 					ErrorDialog(self, e)
 					return
-				self.parent.settings['mpqs'] = self.parent.mpqhandler.mpqs
-		savesize(self, self.parent.settings, 'settingswindow')
+			if isinstance(self.settings, SettingDict):
+				self.settings.settings.mpqs = self.parent.mpqhandler.mpqs
+			else:
+				self.settings['mpqs'] = self.parent.mpqhandler.mpqs
 		PyMSDialog.ok(self)
+
+	def dismiss(self):
+		if isinstance(self.settings, SettingDict):
+			self.settings.windows.settings.save_window_size('main', self)
+		else:
+			savesize(self, self.settings, 'settingswindow', True)
+		PyMSDialog.dismiss(self)

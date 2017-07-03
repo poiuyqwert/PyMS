@@ -15,6 +15,7 @@ from thread import start_new_thread
 import optparse, os, webbrowser, sys, time
 
 LONG_VERSION = 'v%s-DEV' % VERSIONS['PyBIN']
+PYBIN_SETTINGS = Settings('PyBIN', '1')
 
 FRAME_DELAY = 67
 
@@ -107,14 +108,14 @@ class SMKSettings(PyMSDialog):
 		self.minsize(400,160)
 		self.maxsize(9999,160)
 
+	def setup_complete(self):
 		self.load_settings()
 		self.load_properties()
 
 	def load_settings(self):
-		if 'smkwindow' in self.widget.parent.settings:
-			loadsize(self, self.widget.parent.settings, 'smkwindow', position=self.window_pos)
+		PYBIN_SETTINGS.windows.edit.load_window_size('smk', self)
 	def save_settings(self):
-		savesize(self, self.widget.parent.settings, 'smkwindow')
+		PYBIN_SETTINGS.windows.edit.save_window_size('smk', self)
 
 	def load_property_smk(self):
 		smks = ['None']
@@ -163,7 +164,7 @@ class SMKSettings(PyMSDialog):
 		self.widget.parent.reload_canvas()
 
 	def find_smk(self):
-		m = MpqSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', self.widget.parent.settings, 'Select')
+		m = MpqSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', 'Select')
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 
@@ -507,12 +508,11 @@ class WidgetSettings(PyMSDialog):
 			calc.set(orig.get() + offset.get() * direction + fix)
 
 	def load_settings(self):
-		self.show_advanced.set(self.parent.settings.get('advanced_widget_editor',False))
-		if 'widgetwindow' in self.parent.settings:
-			loadsize(self, self.parent.settings, 'widgetwindow', size=False)
+		self.show_advanced.set(PYBIN_SETTINGS.edit.widget.get('advanced',False))
+		PYBIN_SETTINGS.windows.edit.load_window_size('widget', self)
 	def save_settings(self):
-		self.parent.settings['advanced_widget_editor'] = self.show_advanced.get()
-		savesize(self, self.parent.settings, 'widgetwindow', size=False)
+		PYBIN_SETTINGS.edit.widget.advanced = not not self.show_advanced.get()
+		PYBIN_SETTINGS.windows.edit.save_window_size('widget', self)
 
 	def load_property_smk(self):
 		smks = ['None']
@@ -1101,8 +1101,8 @@ class WidgetNode:
 							else:
 								self.frame_delay = min(self.frame_delay,delay)
 							self.smks[check.filename] = smk
-						except Exception, e:
-							print repr(e)
+						except:
+							InternalErrorDialog.capture(self, 'PyBIN')
 					smk = self.smks.get(check.filename)
 					if smk:
 						showing.append((check,smk))
@@ -1146,8 +1146,8 @@ class WidgetNode:
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans)
 					photo_change = True
-				except Exception, e:
-					print repr(e)
+				except:
+					InternalErrorDialog.capture(self, 'PyBIN')
 			if self.photo:
 				x1,y1,x2,y2 = self.bounding_box()
 				if self.item_image:
@@ -1321,15 +1321,6 @@ class WidgetNode:
 
 class PyBIN(Tk):
 	def __init__(self, guifile=None):
-		self.settings = loadsettings('PyBIN',
-			{
-				'tfontgam':'MPQ:game\\tfontgam.pcx',
-				'font10':'MPQ:font\\font10.fnt',
-				'font14':'MPQ:font\\font14.fnt',
-				'font16':'MPQ:font\\font16.fnt',
-				'font16x':'MPQ:font\\font16x.fnt',
-			}
-		)
 
 		#Window
 		Tk.__init__(self)
@@ -1342,11 +1333,6 @@ class PyBIN(Tk):
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		setup_trace(self, 'PyBIN')
-		self.minsize(850, 539)
-		self.maxsize(1080, 539)
-		# self.resizable(True, False)
-		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window')
 
 		self.bin = None
 		self.file = None
@@ -1588,9 +1574,13 @@ class PyBIN(Tk):
 		self.status.set('Load or create a Dialog BIN.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpqs
+		self.minsize(850, 539)
+		self.maxsize(1080, 539)
+		PYBIN_SETTINGS.windows.load_window_size('main', self)
+
+		self.mpqhandler = MPQHandler(PYBIN_SETTINGS.settings.get('mpqs',[]))
+		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
+			PYBIN_SETTINGS.settings.mpqs = self.mpqhandler.mpqs
 		e = self.open_files()
 
 		if guifile:
@@ -1696,8 +1686,7 @@ class PyBIN(Tk):
 					background = PCX.PCX()
 					background.load_file(self.mpqhandler.get_file(path))
 				except:
-					raise
-					pass
+					InternalErrorDialog.capture(self, 'PyBIN')
 				else:
 					self.background = background
 					self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
@@ -1725,8 +1714,7 @@ class PyBIN(Tk):
 				dlggrp = GRP.GRP()
 				dlggrp.load_file(self.mpqhandler.get_file(path), uncompressed=True)
 			except:
-				raise
-				pass
+				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
 				break
 		self.dlggrp = dlggrp
@@ -1757,8 +1745,7 @@ class PyBIN(Tk):
 				tilegrp = GRP.GRP()
 				tilegrp.load_file(self.mpqhandler.get_file(path))
 			except:
-				raise
-				pass
+				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
 				break
 		self.tilegrp = tilegrp
@@ -1801,8 +1788,8 @@ class PyBIN(Tk):
 
 	def change_theme(self, n):
 		index = self.show_theme_index.get()-1
-		if index != self.settings.get('theme_id'):
-			self.settings['theme_id'] = index
+		if index != PYBIN_SETTINGS.preview.get('theme_id'):
+			PYBIN_SETTINGS.preview.theme_id = index
 			self.background_image = None
 			self.update_background()
 			self.load_dlggrp()
@@ -1819,23 +1806,28 @@ class PyBIN(Tk):
 			font14 = FNT.FNT()
 			font16 = FNT.FNT()
 			font16x = FNT.FNT()
-			tfontgam.load_file(self.mpqhandler.get_file(self.settings['tfontgam']))
+
+			tfontgam.load_file(self.mpqhandler.get_file(PYBIN_SETTINGS.settings.files.get('tfontgam', 'MPQ:game\\tfontgam.pcx')))
+			path = PYBIN_SETTINGS.settings.files.get('font10', 'MPQ:font\\font10.fnt')
 			try:
-				font10.load_file(self.mpqhandler.get_file(self.settings['font10'], False))
+				font10.load_file(self.mpqhandler.get_file(path, False))
 			except:
-				font10.load_file(self.mpqhandler.get_file(self.settings['font10'], True))
+				font10.load_file(self.mpqhandler.get_file(path, True))
+			path = PYBIN_SETTINGS.settings.files.get('font14', 'MPQ:font\\font14.fnt')
 			try:
-				font14.load_file(self.mpqhandler.get_file(self.settings['font14'], False))
+				font14.load_file(self.mpqhandler.get_file(path, False))
 			except:
-				font14.load_file(self.mpqhandler.get_file(self.settings['font14'], True))
+				font14.load_file(self.mpqhandler.get_file(path, True))
+			path = PYBIN_SETTINGS.settings.files.get('font16', 'MPQ:font\\font16.fnt')
 			try:
-				font16.load_file(self.mpqhandler.get_file(self.settings['font16'], False))
+				font16.load_file(self.mpqhandler.get_file(path, False))
 			except:
-				font16.load_file(self.mpqhandler.get_file(self.settings['font16'], True))
+				font16.load_file(self.mpqhandler.get_file(path, True))
+			path = PYBIN_SETTINGS.settings.files.get('font16x', 'MPQ:font\\font16x.fnt')
 			try:
-				font16x.load_file(self.mpqhandler.get_file(self.settings['font16x'], False))
+				font16x.load_file(self.mpqhandler.get_file(path, False))
 			except:
-				font16x.load_file(self.mpqhandler.get_file(self.settings['font16x'], True))
+				font16x.load_file(self.mpqhandler.get_file(path, True))
 		except PyMSError, e:
 			err = e
 		else:
@@ -1857,7 +1849,7 @@ class PyBIN(Tk):
 				('font16x.fnt','Size 16x font','font16x','FNT'),
 			])
 		]
-		SettingsDialog(self, data, (340,430), err)
+		SettingsDialog(self, data, (340,430), err, settings=PYBIN_SETTINGS)
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -1878,13 +1870,6 @@ class PyBIN(Tk):
 					self.save()
 				else:
 					self.saveas()
-
-	def select_file(self, title, open=True, ext='.bin', filetypes=[('StarCraft Dialogs','*.bin'),('All Files','*')]):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
-		return file
 
 	def action_states(self):
 		isopen = [NORMAL,DISABLED][not self.bin]
@@ -1961,7 +1946,7 @@ class PyBIN(Tk):
 				self.update_zorder()
 
 	def toggle_setting(self, setting_name, variable):
-		self.settings[setting_name] = variable.get()
+		PYBIN_SETTINGS.preview[setting_name] = variable.get()
 		self.reload_canvas()
 
 	def update_selection_box(self):
@@ -1989,7 +1974,6 @@ class PyBIN(Tk):
 			WidgetSettings(self, node)
 
 	def canvas_double_click(self, e, m):
-		print ('canvas_double_click', e)
 		if self.bin:
 			prefer_selection = (m == MODIFIER_CTRL)
 			def check_clicked(node, x,y):
@@ -2014,7 +1998,6 @@ class PyBIN(Tk):
 				self.edit_node_settings(node)
 
 	def list_double_click(self, event):
-		print ('list_double_click', event)
 		selected = self.widgetTree.cur_selection()
 		if selected and selected[0] > -1:
 			list_index = self.widgetTree.index(selected[0])
@@ -2267,7 +2250,7 @@ class PyBIN(Tk):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.select_file('Open Dialog BIN')
+				file = PYBIN_SETTINGS.lastpath.bin.select_file('open', self, 'Open Dialog BIN', '.bin', [('StarCraft Dialogs','*.bin'),('All Files','*')])
 				if not file:
 					return
 			dbin = DialogBIN.DialogBIN()
@@ -2298,7 +2281,7 @@ class PyBIN(Tk):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.select_file('Import TXT', True, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+			file = PYBIN_SETTINGS.lastpath.txt.select_file('import', self, 'Import TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')])
 			if not file:
 				return
 			dbin = DialogBIN.DialogBIN()
@@ -2334,7 +2317,7 @@ class PyBIN(Tk):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.select_file('Save Dialog BIN As', False)
+		file = PYBIN_SETTINGS.lastpath.bin.select_file('save', self, 'Save Dialog BIN As', '.bin', [('StarCraft Dialogs','*.bin'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
@@ -2343,7 +2326,7 @@ class PyBIN(Tk):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.select_file('Export TXT', False, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+		file = PYBIN_SETTINGS.lastpath.txt.select_file('export', self, 'Export TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')], save=True)
 		if not file:
 			return True
 		try:
@@ -2377,42 +2360,42 @@ class PyBIN(Tk):
 		])
 
 	def load_settings(self):
-		self.show_preview_settings.set(self.settings.get('show_preview_settings',True))
-		self.show_images.set(self.settings.get('show_images',True))
-		self.show_text.set(self.settings.get('show_text',True))
-		self.show_smks.set(self.settings.get('show_smks',True))
-		self.show_hidden.set(self.settings.get('show_hidden',True))
-		self.show_dialog.set(self.settings.get('show_dialog',False))
-		self.show_animated.set(self.settings.get('show_animated',False))
-		self.show_hover_smks.set(self.settings.get('show_hover_smks',False))
-		self.show_background.set(self.settings.get('show_background',False))
-		self.show_theme_index.set(self.settings.get('theme_id',-1) + 1)
-		self.show_bounds_widget.set(self.settings.get('show_bounds_widget',True))
-		self.show_bounds_group.set(self.settings.get('show_bounds_group',True))
-		self.show_bounds_text.set(self.settings.get('show_bounds_text',True))
-		self.show_bounds_responsive.set(self.settings.get('show_bounds_responsive',True))
+		self.show_preview_settings.set(PYBIN_SETTINGS.preview.get('show_settings',True))
+		self.show_images.set(PYBIN_SETTINGS.preview.get('show_images',True))
+		self.show_text.set(PYBIN_SETTINGS.preview.get('show_text',True))
+		self.show_smks.set(PYBIN_SETTINGS.preview.get('show_smks',True))
+		self.show_hidden.set(PYBIN_SETTINGS.preview.get('show_hidden',True))
+		self.show_dialog.set(PYBIN_SETTINGS.preview.get('show_dialog',False))
+		self.show_animated.set(PYBIN_SETTINGS.preview.get('show_animated',False))
+		self.show_hover_smks.set(PYBIN_SETTINGS.preview.get('show_hover_smks',False))
+		self.show_background.set(PYBIN_SETTINGS.preview.get('show_background',False))
+		self.show_theme_index.set(PYBIN_SETTINGS.preview.get('theme_id',-1) + 1)
+		self.show_bounds_widget.set(PYBIN_SETTINGS.preview.get('show_bounds_widget',True))
+		self.show_bounds_group.set(PYBIN_SETTINGS.preview.get('show_bounds_group',True))
+		self.show_bounds_text.set(PYBIN_SETTINGS.preview.get('show_bounds_text',True))
+		self.show_bounds_responsive.set(PYBIN_SETTINGS.preview.get('show_bounds_responsive',True))
 
 	def save_settings(self):
-		self.settings['show_preview_settings'] = self.show_preview_settings.get()
-		self.settings['show_images'] = self.show_images.get()
-		self.settings['show_text'] = self.show_text.get()
-		self.settings['show_smks'] = self.show_smks.get()
-		self.settings['show_hidden'] = self.show_hidden.get()
-		self.settings['show_dialog'] = self.show_dialog.get()
-		self.settings['show_animated'] = self.show_animated.get()
-		self.settings['show_hover_smks'] = self.show_hover_smks.get()
-		self.settings['show_background'] = self.show_background.get()
-		self.settings['theme_id'] = self.show_theme_index.get()-1
-		self.settings['show_bounds_widget'] = self.show_bounds_widget.get()
-		self.settings['show_bounds_group'] = self.show_bounds_group.get()
-		self.settings['show_bounds_text'] = self.show_bounds_text.get()
-		self.settings['show_bounds_responsive'] = self.show_bounds_responsive.get()
+		PYBIN_SETTINGS.preview.show_settings = self.show_preview_settings.get()
+		PYBIN_SETTINGS.preview.show_images = self.show_images.get()
+		PYBIN_SETTINGS.preview.show_text = self.show_text.get()
+		PYBIN_SETTINGS.preview.show_smks = self.show_smks.get()
+		PYBIN_SETTINGS.preview.show_hidden = self.show_hidden.get()
+		PYBIN_SETTINGS.preview.show_dialog = self.show_dialog.get()
+		PYBIN_SETTINGS.preview.show_animated = self.show_animated.get()
+		PYBIN_SETTINGS.preview.show_hover_smks = self.show_hover_smks.get()
+		PYBIN_SETTINGS.preview.show_background = self.show_background.get()
+		PYBIN_SETTINGS.preview.theme_id = self.show_theme_index.get()-1
+		PYBIN_SETTINGS.preview.show_bounds_widget = self.show_bounds_widget.get()
+		PYBIN_SETTINGS.preview.show_bounds_group = self.show_bounds_group.get()
+		PYBIN_SETTINGS.preview.show_bounds_text = self.show_bounds_text.get()
+		PYBIN_SETTINGS.preview.show_bounds_responsive = self.show_bounds_responsive.get()
 
 	def exit(self, e=None):
 		if not self.unsaved():
-			savesize(self, self.settings)
+			PYBIN_SETTINGS.windows.save_window_size('main', self)
 			self.save_settings()
-			savesettings('PyBIN', self.settings)
+			PYBIN_SETTINGS.save()
 			self.stop_tick()
 			self.destroy()
 

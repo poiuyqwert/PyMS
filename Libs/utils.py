@@ -166,6 +166,9 @@ class PyMSError(Exception):
 				r += repr(w)
 		return r[:-1]
 
+	def __str__(self):
+		return repr(self)
+
 class PyMSWarning(Exception):
 	def __init__(self, type, warning, line=None, code=None, extra=None, level=0):
 		self.type = type
@@ -261,6 +264,17 @@ class PyMSDialog(Toplevel):
 		self.dismiss()
 
 class InternalErrorDialog(PyMSDialog):
+	CAPTURE_NONE = 0
+	CAPTURE_PRINT = 1
+	CAPTURE_DIALOG = 2
+	@staticmethod
+	def capture(parent, prog, debug=0):
+		trace = ''.join(traceback.format_exception(*sys.exc_info()))
+		if debug == InternalErrorDialog.CAPTURE_DIALOG:
+			InternalErrorDialog(parent, prog, txt=trace)
+		elif debug == InternalErrorDialog.CAPTURE_PRINT:
+			print trace
+
 	def __init__(self, parent, prog, handler=None, txt=None):
 		self.prog = prog
 		self.handler = handler
