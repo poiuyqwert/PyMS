@@ -77,38 +77,44 @@ class SettingDict(object):
 		for key,value in defaults.iteritems():
 			if not key in self:
 				self[key] = value
-	def save_window_size(self, key, window, size=True):
+	def save_window_size(self, key, window):
+		resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
 		w,h,x,y,f = parse_geometry(window.winfo_geometry())
-		if size:
+		if resizable_w or resizable_h:
 			z = ['','^'][window.wm_state() == 'zoomed']
 			if z:
 				window.wm_state('normal')
-			self[key] = '%dx%d+%d+%d%s' % (w,h,x,y,z)
+			self[key] = '%sx%s+%d+%d%s' % (w,h,x,y,z)
 		else:
 			self[key] = '+%d+%d' % (x,y)
-	def load_window_size(self, key, window, size=True, position=None, default_center=True):
+	def load_window_size(self, key, window, position=None, default_center=True):
 		geometry = self.get(key)
 		if geometry:
 			w,h,x,y,fullscreen = parse_geometry(geometry)
 			if position:
 				x,y = position
-			if size and w != None and h != None:
-				screen_w = window.winfo_screenwidth()
-				screen_h = window.winfo_screenheight()
-				resizable = window.resizable()
-				min_size = window.minsize()
-				if x+w > screen_w:
-					x = screen_w-w
-				if x < 0:
-					x = 0
-				if w > screen_w and resizable[0] and screen_w > min_size[0]:
-					w = screen_w
-				if y+h > screen_h:
-					y = max(0,screen_h-h)
-				if y < 0:
-					y = 0
-				if h > screen_h and resizable[1] and screen_h > min_size[1]:
-					h = screen_h
+			resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
+			if (resizable_w or resizable_h) and w != None and h != None:
+				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
+				min_w,min_h = window.minsize()
+				if resizable_w:
+					screen_w = window.winfo_screenwidth()
+					if x+w > screen_w:
+						x = screen_w-w
+					if x < 0:
+						x = 0
+					w = max(min_w,min(screen_w,w))
+				else:
+					w = cur_w
+				if resizable_h:
+					screen_h = window.winfo_screenheight()
+					if y+h > screen_h:
+						y = screen_h-h
+					if y < 0:
+						y = 0
+					h = max(min_h,min(screen_h,h))
+				else:
+					h = cur_h
 				window.geometry('%dx%d+%d+%d' % (w,h, x,y))
 			else:
 				window.geometry('+%d+%d' % (x,y))

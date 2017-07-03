@@ -12,6 +12,7 @@ from math import ceil
 import optparse, os, re, webbrowser, sys
 
 LONG_VERSION = 'v%s' % VERSIONS['PyGRP']
+PYGRP_SETTINGS = Settings('PyGRP', '1')
 
 def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=False):
 	if isstr(grp):
@@ -158,8 +159,6 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 		out.save_file(fullfile)
 		if not mute:
 			print " - '%s' written successfully" % fullfile
-
-PYGRP_SETTINGS = Settings('PyGRP', '1')
 
 class FramesDialog(PyMSDialog):
 	def __init__(self, parent):
@@ -445,7 +444,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.status.set('Load or create a GRP.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		PYGRP_SETTINGS.window.load_window_size('main', self, size=False)
+		PYGRP_SETTINGS.window.load_window_size('main', self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -679,7 +678,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		if not self.unsaved():
 			if file == None:
-				file = PYGRP_SETTINGS.lastpath.select_file('opengrp', self, 'Open GRP', '.grp', [('GRP Files','*.grp'),('All Files','*')])
+				file = PYGRP_SETTINGS.lastpath.grp.select_file('open', self, 'Open GRP', '.grp', [('GRP Files','*.grp'),('All Files','*')])
 				if not file:
 					return
 			grp = GRP.GRP(self.palettes[self.pal])
@@ -725,7 +724,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
 		self.stopframe()
-		file = PYGRP_SETTINGS.lastpath.select_file('savegrp', 'Save GRP As', '.grp', [('GRP Files','*.grp'),('All Files','*')], save=True)
+		file = PYGRP_SETTINGS.lastpath.grp.select_file('save', 'Save GRP As', '.grp', [('GRP Files','*.grp'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
@@ -755,7 +754,7 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
-		file = PYGRP_SETTINGS.lastpath.select_file('exportbmp', self, 'Export Frames To...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], save=True)
+		file = PYGRP_SETTINGS.lastpath.bmp.select_file('export', self, 'Export Frames To...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], save=True)
 		if file:
 			self.status.set('Extracting frames, please wait...')
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
@@ -772,9 +771,9 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		if self.bmp_style.get():
-			files = PYGRP_SETTINGS.lastpath.select_file('importbmp', self, 'Import single BMP...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+			files = PYGRP_SETTINGS.lastpath.bmp.select_file('import', self, 'Import single BMP...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		else:
-			files = PYGRP_SETTINGS.lastpath.select_files('importbmp', self, 'Import frames from...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+			files = PYGRP_SETTINGS.lastpath.bmp.select_files('import', self, 'Import frames from...', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		if files:
 			frames = 0
 			if self.bmp_style.get():
@@ -886,7 +885,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def exit(self, e=None):
 		self.stopframe()
 		if not self.unsaved():
-			PYGRP_SETTINGS.window.save_window_size('main', self, size=False)
+			PYGRP_SETTINGS.window.save_window_size('main', self)
 			PYGRP_SETTINGS.hex = not not self.hex.get()
 			PYGRP_SETTINGS.preview.bgcolor = self.canvas['background']
 			PYGRP_SETTINGS.preview.speed = int(self.prevspeed.get())
