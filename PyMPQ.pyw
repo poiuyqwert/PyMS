@@ -21,6 +21,23 @@ if FOLDER:
 	sys.exit()
 
 LONG_VERSION = 'v%s' % VERSIONS['PyMPQ']
+PYMPQ_SETTINGS = Settings('PyMPQ', '1')
+PYMPQ_SETTINGS.set_defaults({
+	'sort': [0,False,None],
+	'compress': [0,0]
+})
+PYMPQ_SETTINGS.settings.set_defaults({
+	'listfiles': [os.path.join(BASE_DIR,'Libs','Data','Listfile.txt')],
+	'autocompression': SettingDict({
+		'Default':[1,0],
+		'.smk':[0,0],
+		'.mpq':[0,0],
+		'.wav':[3,1]
+	})
+})
+PYMPQ_SETTINGS.settings.autocompression.set_defaults({
+	'Default':[1,0]
+})
 
 def size(b):
 	s = ['B','KB','MB','GB']
@@ -158,11 +175,11 @@ class GeneralSettings(Frame):
 			self.setdlg = setdlg
 		Frame.__init__(self, parent)
 		self.maxfiles = IntegerVar(1,[1,65535])
-		self.maxfiles.set(self.setdlg.parent.settings['defaultmaxfiles'])
+		self.maxfiles.set(PYMPQ_SETTINGS.settings.defaults.get('maxfiles', 1024))
 		self.localeid = IntegerVar(0,[0,65535])
-		self.localeid.set(self.setdlg.parent.settings['defaultlocale'])
+		self.localeid.set(PYMPQ_SETTINGS.settings.defaults.get('locale', 0))
 		self.blocksize = IntegerVar(1,[1,23])
-		self.blocksize.set(self.setdlg.parent.settings['defaultblocksize'])
+		self.blocksize.set(PYMPQ_SETTINGS.settings.defaults.get('blocksize', 3))
 		f = Frame(self)
 		Label(f, text='Max Files', font=('Courier', -12, 'bold'), anchor=W).pack(fill=X, expand=1)
 		Label(f, text='Max file capacity for new archives (cannot be changed for an existing archive)', anchor=W).pack(fill=X, expand=1)
@@ -179,9 +196,9 @@ class GeneralSettings(Frame):
 		f.pack(side=TOP, fill=X)
 
 	def save(self):
-		self.setdlg.parent.settings['defaultmaxfiles'] = self.maxfiles.get()
-		self.setdlg.parent.settings['defaultlocale'] = self.localeid.get()
-		self.setdlg.parent.settings['defaultblocksize'] = self.blocksize.get()
+		PYMPQ_SETTINGS.settings.default.maxfiles = self.maxfiles.get()
+		PYMPQ_SETTINGS.settings.default.locale = self.localeid.get()
+		PYMPQ_SETTINGS.settings.default.blocksize = self.blocksize.get()
 
 class ListfileSettings(Frame):
 	def __init__(self, parent, setdlg=None):
@@ -212,7 +229,7 @@ class ListfileSettings(Frame):
 		scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		self.listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
-		for l in self.setdlg.parent.settings['listfiles']:
+		for l in PYMPQ_SETTINGS.settings.get('listfiles', []):
 			self.listbox.insert(0,l)
 		if self.listbox.size():
 			self.listbox.select_set(0)
@@ -243,13 +260,6 @@ class ListfileSettings(Frame):
 
 		self.action_states()
 
-	def select_files(self):
-		path = self.setdlg.parent.settings.get('lastpath', BASE_DIR)
-		file = tkFileDialog.askopenfilename(parent=self, title="Add Listfiles", defaultextension='.txt', filetypes=[('Text files','*.txt'),('All Files','*')], initialdir=path, multiple=True)
-		if file:
-			self.setdlg.parent.settings['lastpath'] = os.path.dirname(file[0])
-		return file
-
 	def action_states(self):
 		self.buttons['remove']['state'] = [NORMAL,DISABLED][not self.listbox.curselection()]
 
@@ -269,7 +279,7 @@ class ListfileSettings(Frame):
 		self.listbox.see(a)
 
 	def add(self, key=None):
-		add = self.select_files()
+		add = PYMPQ_SETTINGS.lastpath.settings.select_files('listfiles', self, 'Add Listfiles', '.txt', [('Text files','*.txt'),('All Files','*')])
 		if add:
 			error = []
 			for i in add:
@@ -290,17 +300,17 @@ class ListfileSettings(Frame):
 		self.setdlg.edited = True
 
 	def save(self):
-		self.setdlg.parent.settings['listfiles'] = []
+		PYMPQ_SETTINGS.settings.listfiles = []
 		for i in range(self.listbox.size()):
-			self.setdlg.parent.settings['listfiles'].append(self.listbox.get(i))
+			PYMPQ_SETTINGS.settings.listfiles.append(self.listbox.get(i))
 
 class CompressionSettings(Frame):
 	def __init__(self, parent, setdlg=None):
+		self.autocompression = PYMPQ_SETTINGS.settings.autocompression.deepcopy()
 		if setdlg == None:
 			self.setdlg = parent.parent
 		else:
 			self.setdlg = setdlg
-		self.autocompression = dict(self.setdlg.parent.settings['autocompression'])
 		Frame.__init__(self, parent)
 		self.extension = SStringVar(callback=self.addstate)
 		left = Frame(self)
@@ -462,13 +472,13 @@ class CompressionSettings(Frame):
 		self.action_states()
 
 	def save(self):
-		self.setdlg.parent.settings['autocompression'] = self.autocompression
+		PYMPQ_SETTINGS.settings.autocompression = self.autocompression
 
 class FolderDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.save = True
 		self.result = StringVar()
-		self.result.set(parent.settings['folder'])
+		self.result.set(PYMPQ_SETTINGS['import'].get('add_folder', ''))
 		PyMSDialog.__init__(self, parent, 'Folder name...')
 
 	def widgetize(self):
@@ -486,6 +496,10 @@ class FolderDialog(PyMSDialog):
 	def cancel(self):
 		self.save = False
 		PyMSDialog.cancel(self)
+
+	def ok(self):
+		PYMPQ_SETTINGS['import'].add_folder = self.result.get()
+		PyMSDialog.ok(self)
 
 class LocaleDialog(PyMSDialog):
 	def __init__(self, parent, locale=0):
@@ -512,26 +526,6 @@ class LocaleDialog(PyMSDialog):
 
 class PyMPQ(Tk):
 	def __init__(self, guifile=None):
-		self.settings = loadsettings('PyMPQ',
-			{
-				'sort':[0,False,None],
-				'defaultmaxfiles':1024,
-				'defaultblocksize':3,
-				'defaultlocale':0,
-				'compress':[0,0],
-				'encrypt':False,
-				'autocompression':{'Default':[1,0],'.smk':[0,0],'.mpq':[0,0],'.wav':[3,1]},
-				'listfiles':[os.path.join(BASE_DIR,'Libs','Data','Listfile.txt')],
-				'folder':'',
-				'filters':[],
-				'regex':0,
-				'listspacing':[(317,0),(74,0),(45,0),(67,0),(52,0),(64,0)],
-				'window':'695x493+196+148',
-			}
-		)
-		if not 'Default' in self.settings['autocompression']:
-			self.settings['autocompression']['Default'] = [1,0]
-
 		#Window
 		Tk.__init__(self)
 		self.title('PyMPQ %s' % LONG_VERSION)
@@ -595,12 +589,12 @@ class PyMPQ(Tk):
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.regex = IntVar()
-		self.regex.set(self.settings['regex'])
+		self.regex.set(PYMPQ_SETTINGS.get('regex', False))
 		self.filter = StringVar()
 		self.filter.set(['*','.+'][self.regex.get()])
 		filter = Frame(self)
 		Label(filter, text='Filter: ').pack(side=LEFT)
-		self.textdrop = TextDropDown(filter, self.filter, self.settings['filters'])
+		self.textdrop = TextDropDown(filter, self.filter, PYMPQ_SETTINGS.get('filters', []))
 		self.textdrop.pack(side=LEFT, fill=X, expand=1)
 		self.textdrop.entry.bind('<Return>', self.dofilter)
 		self.textdrop.c = self.textdrop.entry['bg']
@@ -677,11 +671,8 @@ class PyMPQ(Tk):
 		self.status.set('Open or create an MPQ.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		if 'window' in self.settings:
-			loadsize(self, self.settings, 'window', True)
-		if 'listspacing' in self.settings and len(self.settings['listspacing']) == 6:
-			for s,p in zip(self.settings['listspacing'],self.listbox.panes):
-				p.sash_place(0, *s)
+		PYMPQ_SETTINGS.windows.load_window_size('main', self, default_size=(700,500))
+		PYMPQ_SETTINGS.load_pane_sizes('list_sizes', self.listbox.panes, (317,74,45,67,52,64))
 
 		MpqInitialize()
 
@@ -691,36 +682,23 @@ class PyMPQ(Tk):
 		start_new_thread(check_update, (self, 'PyMPQ'))
 
 	def open_files(self):
-		return not SFileSetLocale(self.settings['defaultlocale'])
+		return not SFileSetLocale(PYMPQ_SETTINGS.settings.defaults.get('locale', 0))
 
 	def compress(self, c, l):
-		self.settings['compress'] = [c,l]
+		PYMPQ_SETTINGS.settings.compress = [c,l]
 
 	def encrypt(self):
-		self.settings['encrypt'] = not self.settings['encrypt']
+		PYMPQ_SETTINGS.settings.encrypt = not PYMPQ_SETTINGS.settings.get('encrypt', False)
 
 	def sort(self, n):
-		if n == self.settings['sort'][0]:
-			self.settings['sort'][1] = not self.settings['sort'][1]
+		sort = PYMPQ_SETTINGS.get('sort')
+		if n == sort[0]:
+			PYMPQ_SETTINGS.sort[1] = not sort[1]
 		else:
-			self.settings['sort'][2] = self.settings['sort'][0]
-			self.settings['sort'][0] = n
-			self.settings['sort'][1] = False
+			PYMPQ_SETTINGS.sort[2] = sort[0]
+			PYMPQ_SETTINGS.sort[0] = n
+			PYMPQ_SETTINGS.sort[1] = False
 		self.update_list()
-
-	def select_file(self, title, open=True, ext='.mpq', filetypes=[('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')]):
-		path = self.settings.get('last%spath' % ('open' if open else 'close'), self.settings.get('lastpath', BASE_DIR))
-		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-		if file:
-			self.settings['last%spath' % ('open' if open else 'close')] = os.path.dirname(file)
-		return file
-
-	def select_files(self):
-		path = self.settings.get('lastpath', BASE_DIR)
-		file = tkFileDialog.askopenfilename(parent=self, title='Add files...', filetypes=[('All Files','*')], initialdir=path, multiple=True)
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file[0])
-		return file
 
 	def select(self):
 		if self.file:
@@ -744,11 +722,12 @@ class PyMPQ(Tk):
 	def dofilter(self, e=None):
 		if self.file:
 			f = self.filter.get()
-			if f in self.settings['filters']:
-				self.settings['filters'].remove(f)
-			self.settings['filters'].append(self.filter.get())
-			if len(self.settings['filters']) > 10:
-				del self.settings['filters'][0]
+			filters = PYMPQ_SETTINGS.get('filters', [])
+			if f in filters:
+				filters.remove(f)
+			filters.append(self.filter.get())
+			if len(filters) > 10:
+				del filters[0]
 			if self.files:
 				self.update_list()
 
@@ -761,7 +740,7 @@ class PyMPQ(Tk):
 			raise
 		self.files = []
 		self.totalsize = 0
-		for e in SFileListFiles(h, str('\r\n'.join(self.settings['listfiles']))):
+		for e in SFileListFiles(h, str('\r\n'.join(PYMPQ_SETTINGS.settings.get('listfiles', [])))):
 			if e.fileExists:
 				self.files.append(e)
 				self.totalsize += e.fullSize
@@ -773,10 +752,11 @@ class PyMPQ(Tk):
 		self.resettimer = None
 
 	def update_list(self):
-		if self.settings['sort'][2] != None:
-			self.listbox.columns[self.settings['sort'][2]][0]['image'] = self.listbox.arrows[2]
-			self.settings['sort'][2] = None
-		self.listbox.columns[self.settings['sort'][0]][0]['image'] = self.listbox.arrows[self.settings['sort'][1]]
+		sort = PYMPQ_SETTINGS.get('sort')
+		if sort[2] != None:
+			self.listbox.columns[sort[2]][0]['image'] = self.listbox.arrows[2]
+			sort[2] = None
+		self.listbox.columns[sort[0]][0]['image'] = self.listbox.arrows[sort[1]]
 		sel = []
 		if self.listbox.size():
 			for i in self.listbox.cur_selection():
@@ -785,13 +765,13 @@ class PyMPQ(Tk):
 		if self.file and self.files:
 			s = [6,4,3,2,1,5]
 			o = [6,2,3,4,1,5]
-			del o[o.index(s[self.settings['sort'][0]])]
-			o.insert(0, s[self.settings['sort'][0]])
+			del o[o.index(s[sort[0]])]
+			o.insert(0, s[sort[0]])
 			def keysort(l):
 				t = list(l)
 				t[6] = t[6].lower()
 				return map(lambda i: t[i], o)
-			self.files.sort(key=keysort, reverse=self.settings['sort'][1])
+			self.files.sort(key=keysort, reverse=sort[1])
 			check = True
 			s = self.filter.get()
 			if not self.regex.get():
@@ -849,7 +829,7 @@ class PyMPQ(Tk):
 		if isinstance(file,list):
 			c = file
 		else:
-			c = self.settings['compress']
+			c = PYMPQ_SETTINGS.get('compress')
 		f,l = MAFA_REPLACE_EXISTING,0
 		if c[0]:
 			f |= MAFA_COMPRESS
@@ -859,10 +839,10 @@ class PyMPQ(Tk):
 				l = [MAWA_QUALITY_LOW,MAWA_QUALITY_MEDIUM,MAWA_QUALITY_HIGH][c[1]]
 			elif c[0] == 4:
 				e = os.extsep + file.split(os.extsep)[-1]
-				if e in self.settings['autocompression']:
-					return self.flagcomp(self.settings['autocompression'][e])
-				return self.flagcomp(self.settings['autocompression']['Default'])
-		if self.settings['encrypt']:
+				if e in PYMPQ_SETTINGS.autocompression:
+					return self.flagcomp(PYMPQ_SETTINGS.autocompression[e])
+				return self.flagcomp(PYMPQ_SETTINGS.autocompression.Default)
+		if PYMPQ_SETTINGS.get('encrypt', False):
 			f |= MAFA_ENCRYPT
 		return (f,[0,MAFA_COMPRESS_STANDARD,MAFA_COMPRESS_DEFLATE,MAFA_COMPRESS_WAVE][c[0]],l)
 
@@ -924,7 +904,7 @@ class PyMPQ(Tk):
 			raise
 		fc = None
 		for file in fs:
-			if fc == None or self.settings['compress'][0] == 4:
+			if fc == None or PYMPQ_SETTINGS.get('compress')[0] == 4:
 				fc = self.flagcomp(file)
 			MpqAddFileToArchiveEx(h, os.path.join(BASE_DIR,'Libs','Temp',str(self.id),file), file, *fc)
 		self.list_files(h)
@@ -934,9 +914,9 @@ class PyMPQ(Tk):
 		self.select()
 
 	def new(self, key=None):
-		file = self.select_file('Save new MPQ', False)
+		file = PYMPQ_SETTINGS.lastpath.mpq.select_file('new', self, 'Save new MPQ', '.mpq', [('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')], save=True)
 		if file:
-			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, self.settings['defaultmaxfiles'], self.settings['defaultblocksize'])
+			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, PYMPQ_SETTINGS.settings.defaults.maxfiles, PYMPQ_SETTINGS.settings.defaults.blocksize)
 			if SFInvalidHandle(h):
 				raise
 			MpqCloseUpdatedArchive(h)
@@ -950,7 +930,7 @@ class PyMPQ(Tk):
 
 	def open(self, key=None, file=None):
 		if file == None:
-			file = self.select_file('Open MPQ')
+			file = PYMPQ_SETTINGS.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')])
 			if not file:
 				return
 		h = MpqOpenArchiveForUpdateEx(file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
@@ -980,21 +960,21 @@ class PyMPQ(Tk):
 	def add(self, key=None):
 		if key and self.buttons['add']['state'] != NORMAL:
 			return
-		files = self.select_files()
+		files = PYMPQ_SETTINGS.lastpath.files.select_files('import', self, 'Add files...', '*', [('All Files','*')])
 		if files:
 			f = FolderDialog(self)
 			if f.save:
-				self.settings['folder'] = f.result.get()
+				PYMPQ_SETTINGS['import'].add_folder = f.result.get()
 				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 				if SFInvalidHandle(h):
 					raise
 				fc = None
 				for file in files:
-					if self.settings['folder']:
-						p = '\\'.join((self.settings['folder'],os.path.basename(file)))
-					else:
-						p = os.path.basename(file)
-					if fc == None or self.settings['compress'][0] == 4:
+					p = os.path.basename(file)
+					folder = PYMPQ_SETTINGS['import'].get('add_folder', '')
+					if folder:
+						p = folder + p
+					if fc == None or PYMPQ_SETTINGS.get('compress')[0] == 4:
 						fc = self.flagcomp(file)
 					MpqAddFileToArchiveEx(h, file, p, *fc)
 				self.list_files(h)
@@ -1006,30 +986,29 @@ class PyMPQ(Tk):
 	def adddir(self, key=None):
 		if key and self.buttons['openfolder']['state'] != NORMAL:
 			return
-		path = tkFileDialog.askdirectory(initialdir=self.settings['lastpath'], title='Extract to folder', parent=self)
+		path = PYMPQ_SETTINGS.lastpath.files.select_directory('import_dir', self, 'Add files from folder...')
 		if not path:
 			return
-		self.settings['lastpath'] = path
 		path = os.path.join(path,'')
 		fo = FolderDialog(self)
 		if fo.save:
-			self.settings['folder'] = fo.result.get()
 			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 			if SFInvalidHandle(h):
 				raise
 			fc = None
 			for p in os.walk(path):
-				folder = p[0].replace(path,'')
+				folder = PYMPQ_SETTINGS['import'].get('add_folder', '')
+				path_folder = p[0].replace(path,'')
+				if path_folder:
+					folder += path_folder + '\\'
 				for f in p[2]:
-					if self.settings['folder']:
-						p = '\\'.join((self.settings['folder'],folder,f))
-					elif folder:
-						p = '\\'.join((folder,f))
+					if folder:
+						p = folder + f
 					else:
 						p = f
-					if fc == None or self.settings['compress'][0] == 4:
+					if fc == None or PYMPQ_SETTINGS.get('compress')[0] == 4:
 						fc = self.flagcomp(f)
-					MpqAddFileToArchiveEx(h, os.path.join(path,folder,f), p, *fc)
+					MpqAddFileToArchiveEx(h, os.path.join(path,f), p, *fc)
 			self.list_files(h)
 			self.update_info(h)
 			MpqCloseUpdatedArchive(h)
@@ -1042,12 +1021,10 @@ class PyMPQ(Tk):
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 		if SFInvalidHandle(h):
 			raise
-		n = 0
 		for i in self.listbox.cur_selection():
-			l = self.listbox.get(i - n)
+			l = self.listbox.get(i)
 			MpqDeleteFileWithLocale(h, l[0], int(l[4]))
-			del self.files[i - n]
-			n += 1
+		self.list_files(h)
 		self.update_info(h)
 		MpqCloseUpdatedArchive(h)
 		self.update_list()
@@ -1066,10 +1043,9 @@ class PyMPQ(Tk):
 	def extract(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		path = tkFileDialog.askdirectory(initialdir=self.settings.get('lastpath', BASE_DIR), title='Extract to folder', parent=self)
+		path = PYMPQ_SETTINGS.lastpath.files.select_directory('export', self, 'Extract files...')
 		if not path:
 			return
-		self.settings['lastpath'] = path
 		h = SFileOpenArchive(self.file)
 		if SFInvalidHandle(h):
 			raise
@@ -1094,9 +1070,10 @@ class PyMPQ(Tk):
 
 	def mansets(self, key=None):
 		if key:
-			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, False)
+			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, False, settings=PYMPQ_SETTINGS)
 		else:
-			self.compvar.set([0,1,2,13,16][self.settings['compress'][0]] + self.settings['compress'][1])
+			compress = PYMPQ_SETTINGS.get('compress')
+			self.compvar.set([0,1,2,13,16][compress[0]] + compress[1])
 			self.setmenu.post(*self.winfo_pointerxy())
 
 	def compact(self, key=None):
@@ -1122,9 +1099,9 @@ class PyMPQ(Tk):
 	def exit(self, e=None):
 		self.thread.end()
 		removedir(os.path.join(BASE_DIR,'Libs','Temp',str(self.id)))
-		savesize(self, self.settings)
-		self.settings['listspacing'] = [p.sash_coord(0) for p in self.listbox.panes]
-		savesettings('PyMPQ', self.settings)
+		PYMPQ_SETTINGS.windows.save_window_size('main', self)
+		PYMPQ_SETTINGS.save_pane_sizes('list_sizes', self.listbox.panes)
+		PYMPQ_SETTINGS.save()
 		self.destroy()
 
 def main():

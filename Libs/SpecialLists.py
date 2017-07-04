@@ -374,7 +374,7 @@ class ReportList(Frame):
 		self.entry = 0
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		self.selectmode = selectmode
-		self.panes = []
+		self.panes = PanedWindow(self, orient=HORIZONTAL, borderwidth=0, sashpad=0, sashwidth=4, sashrelief=FLAT)
 		self.columns = []
 		self.vscroll = Scrollbar(self)
 		self.vscroll.config(command=self.yview)
@@ -382,12 +382,7 @@ class ReportList(Frame):
 		p = self
 		for n,title in enumerate(columns):
 			end = n+1 == len(columns)
-			if not end:
-				c = PanedWindow(p, orient=HORIZONTAL, borderwidth=0, sashpad=0, sashwidth=4, sashrelief=FLAT)
-				self.panes.append(c)
-				l = Frame(c)
-			else:
-				l = Frame(p)
+			l = Frame(self.panes)
 			if title == None:
 				b = Button(l, text=' ', state=DISABLED)
 			else:
@@ -398,23 +393,11 @@ class ReportList(Frame):
 			else:
 				lb = ReportSubList(l, yscrollcommand=self.yscroll, **conf)
 			lb.pack(side=TOP, fill=BOTH, expand=1)
-			l.pack(side=LEFT, fill=BOTH, expand=1)
-			if not end:
-				if n == 0:
-					p['background'] = lb.text['background']
-				c['background'] = lb.text['background']
-				c.add(l)
-			else:
-				c = l
-			if isinstance(p,PanedWindow):
-				p.add(c)
-			elif n == 0:
-				c.pack(fill=BOTH, expand=1, padx=2, pady=2)
-			else:
-				c.pack()
+			if n == 0:
+				self.panes['background'] = lb.text['background']
+			self.panes.add(l)
 			self.columns.append((b,lb))
-			if not end:
-				p = c
+		self.panes.pack(fill=BOTH, expand=1)
 		# bind = [
 		# 	('<MouseWheel>', self.scroll),
 		# 	('<Home>', lambda a,i=0: self.move(a,i)),

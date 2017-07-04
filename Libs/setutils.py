@@ -59,6 +59,8 @@ class SettingDict(object):
 		return key in self.__dict__['_settings']
 	def __copy__(self):
 		return SettingDict(dict(self.__dict__['_settings']))
+	def copy(self):
+		return copy.copy(self)
 	def __deepcopy__(self, memo):
 		if id(self) in memo:
 			return memo[id(self)]
@@ -67,8 +69,14 @@ class SettingDict(object):
 		for key,value in self.iteritems():
 			result[key] = copy.deepcopy(value, memo)
 		return result
+	def deepcopy(self):
+		return copy.deepcopy(self)
 	def iteritems(self):
 		return self.__dict__['_settings'].iteritems()
+	def keys(self):
+		return self.__dict__['_settings'].keys()
+	def values(self):
+		return self.__dict__['_settings'].values()
 	def update(self, settings, set=False):
 		if set:
 			self.__dict__['_settings'] = copy.deepcopy(settings.__dict__['_settings'])
@@ -81,6 +89,10 @@ class SettingDict(object):
 						self[key] = copy.deepcopy(value)
 				else:
 					self[key] = value
+	def set_defaults(self, settings):
+		for key,value in settings.iteritems():
+			if not key in self:
+				self[key] = value
 	def get(self, key, default=None, autosave=True):
 		if not key in self.__dict__['_settings']:
 			if callable(default):
@@ -101,14 +113,31 @@ class SettingDict(object):
 		for key,value in defaults.iteritems():
 			if not key in self:
 				self[key] = value
-	def save_pane_size(self, key, pane, index=0):
-		axis = 0 if pane.cget('orient') == HORIZONTAL else 1
-		self[key] = pane.sash_coord(index)[axis]
-	def load_pane_size(self, key, pane, default, index=0):
-		axis = 0 if pane.cget('orient') == HORIZONTAL else 1
+	def save_pane_size(self, key, panedwindow, index=0):
+		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
+		self[key] = panedwindow.sash_coord(index)[axis]
+	def save_pane_sizes(self, key, panedwindow):
+		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
+		sizes = []
+		o = 0
+		for n in range(len(panedwindow.panes())-1):
+			c = panedwindow.sash_coord(n)[axis]
+			sizes.append(c - o)
+			o = c
+		self[key] = sizes
+	def load_pane_size(self, key, panedwindow, default, index=0):
+		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		size = [0,0]
 		size[axis] = self.get(key, default)
-		pane.sash_place(index, *size)
+		panedwindow.sash_place(index, *size)
+	def load_pane_sizes(self, key, panedwindow, defaults):
+		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
+		o = 0
+		for n,s in enumerate(self.get(key, defaults)[:len(panedwindow.panes())-1]):
+			size = [0,0]
+			o += s
+			size[axis] = o
+			panedwindow.sash_place(n, *size)
 	def save_window_size(self, key, window):
 		resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
 		w,h,x,y,f = parse_geometry(window.winfo_geometry())
@@ -119,7 +148,7 @@ class SettingDict(object):
 			self[key] = '%sx%s+%d+%d%s' % (w,h,x,y,z)
 		else:
 			self[key] = '+%d+%d' % (x,y)
-	def load_window_size(self, key, window, position=None, default_center=True):
+	def load_window_size(self, key, window, position=None, default_center=True, default_size=None):
 		geometry = self.get(key)
 		if geometry:
 			w,h,x,y,fullscreen = parse_geometry(geometry)
@@ -162,14 +191,20 @@ class SettingDict(object):
 				pass
 
 		else:
+			w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
+			geometry = ''
+			if default_size:
+				w,h = default_size
+				geometry = '%dx%d' % default_size
 			if position:
-				window.geometry('+%d+%d' % position)
-			elif default_center:
+				geometry += '+%d+%d' % position
+			elif default_center or geometry:
 				window.update_idletasks()
-				w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
-				window.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
+				geometry += '+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2)
+			if geometry:
+				window.geometry(geometry)
 	def select_file(self, key, parent, title, ext, filetypes, save=False, store=True):
 		dialog = tkFileDialog.asksaveasfilename if save else tkFileDialog.askopenfilename
 		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
@@ -177,10 +212,15 @@ class SettingDict(object):
 			self[key] = os.path.dirname(path)
 		return path
 	def select_files(self, key, parent, title, ext, filetypes, store=True):
-		path = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
-		if path and store:
-			self[key] = os.path.dirname(path)
-		return path
+		if len(filetypes) == 1 and filetypes[0][1] == '*':
+			filetypes = None
+		if filetypes == None:
+			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+		else:
+			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+		if paths and store:
+			self[key] = os.path.dirname(paths[0])
+		return paths
 	def select_directory(self, key, parent, title, store=True):
 		path = tkFileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
 		if path and store:
