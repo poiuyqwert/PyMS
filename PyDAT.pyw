@@ -3435,8 +3435,8 @@ class PyDAT(Tk):
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
-		mid = Frame(self)
-		left = Frame(mid)
+		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)
+		left = Frame(self.hor_pane)
 		##listbox
 		self.listframe = Frame(left, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(self.listframe)
@@ -3466,8 +3466,8 @@ class PyDAT(Tk):
 		self.jumpid = IntegerVar('', [0,227], allow_hex=True)
 
 		search = Frame(left)
-		tdd = TextDropDown(search, self.find, self.findhistory, 15)
-		tdd.pack(side=LEFT)
+		tdd = TextDropDown(search, self.find, self.findhistory, 5)
+		tdd.pack(side=LEFT, fill=X, expand=1)
 		tdd.entry.bind('<Return>', self.findnext)
 		Button(search, text='Find Next', command=self.findnext).pack(side=LEFT)
 		right = Frame(search)
@@ -3479,7 +3479,7 @@ class PyDAT(Tk):
 		search.pack(fill=X, padx=2, pady=2)
 		self.bind('<Control-f>', lambda e: tdd.focus_set(highlight=True))
 
-		left.pack(side=LEFT, fill=Y)
+		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
 		listmenu = [
 			('Copy Entry (Ctrl+Shift+C)', lambda t=0: self.copy(t), 0, 'Control-Shift-c'), # 0
@@ -3500,7 +3500,7 @@ class PyDAT(Tk):
 				self.listmenu.add_separator()
 
 		self.status = StringVar()
-		self.dattabs = Notebook(mid)
+		self.dattabs = Notebook(self.hor_pane)
 		self.pages = []
 		tabs = (
 			('Units', UnitsTab),
@@ -3515,7 +3515,6 @@ class PyDAT(Tk):
 			('Mapdata', MapsTab),
 			('Orders', OrdersTab),
 		)
-		self.dattabs.pack(side=LEFT, fill=BOTH, expand=1, padx=2, pady=2)
 		for tab in tabs:
 			page = tab[1](self.dattabs, self)
 			page.page_title = tab[0]
@@ -3523,8 +3522,8 @@ class PyDAT(Tk):
 			self.dattabs.add_tab(page, tab[0])
 		# self.dattabs.bind('<<TabDeactivated>>', self.tab_deactivated)
 		self.dattabs.bind('<<TabActivated>>', self.tab_activated)
-		mid.pack(fill=BOTH, expand=1)
-
+		self.hor_pane.add(self.dattabs.notebook, sticky=NSEW)
+		self.hor_pane.pack(fill=BOTH, expand=1)
 
 		#Statusbar
 		self.datstatus = StringVar()
@@ -3548,6 +3547,7 @@ class PyDAT(Tk):
 			self.mpqtbl(err=e)
 
 		PYDAT_SETTINGS.windows.load_window_size('main', self)
+		PYDAT_SETTINGS.load_pane_size('list_size', self.hor_pane, 300)
 
 		if guifile:
 			for title,tab in self.dattabs.pages.iteritems():
@@ -3882,6 +3882,7 @@ class PyDAT(Tk):
 		self.loadsave(True)
 		if not self.unsaved():
 			PYDAT_SETTINGS.windows.save_window_size('main', self)
+			PYDAT_SETTINGS.save_pane_size('list_size', self.hor_pane)
 			PYDAT_SETTINGS.mpqexport = self.mpq_export
 			PYDAT_SETTINGS.save()
 			self.destroy()

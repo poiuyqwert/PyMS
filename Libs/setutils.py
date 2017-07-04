@@ -101,6 +101,14 @@ class SettingDict(object):
 		for key,value in defaults.iteritems():
 			if not key in self:
 				self[key] = value
+	def save_pane_size(self, key, pane, index=0):
+		axis = 0 if pane.cget('orient') == HORIZONTAL else 1
+		self[key] = pane.sash_coord(index)[axis]
+	def load_pane_size(self, key, pane, default, index=0):
+		axis = 0 if pane.cget('orient') == HORIZONTAL else 1
+		size = [0,0]
+		size[axis] = self.get(key, default)
+		pane.sash_place(index, *size)
 	def save_window_size(self, key, window):
 		resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
 		w,h,x,y,f = parse_geometry(window.winfo_geometry())
