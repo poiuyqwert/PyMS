@@ -189,10 +189,13 @@ class FramesDialog(PyMSDialog):
 		PYGRP_SETTINGS.window.save_window_size('frames', self)
 		PyMSDialog.dismiss(self)
 
+BMP_STYLE_BMP_PER_FRAME = 'bmp_per_frame'
+BMP_STYLE_SINGLE_BMP_FRAMESETS = 'single_bmp_framesets'
+BMP_STYLE_SINGLE_BMP_VERTICAL = 'single_bmp_vertical'
 BMP_STYLES = (
-	('bmp_per_frame', 'One BMP per Frame'),
-	('single_bmp_framesets', 'Single BMP (Framesets)'),
-	('single_bmp_vertical', 'Single BMP (Vertical/SFGrpConv)')
+	(BMP_STYLE_BMP_PER_FRAME, 'One BMP per Frame'),
+	(BMP_STYLE_SINGLE_BMP_FRAMESETS, 'Single BMP (Framesets)'),
+	(BMP_STYLE_SINGLE_BMP_VERTICAL, 'Single BMP (Vertical/SFGrpConv)')
 )
 BMP_STYLES_LOOKUP = {key: n for n,(key,_) in enumerate(BMP_STYLES)}
 class PyGRP(Tk):
@@ -724,7 +727,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
 		self.stopframe()
-		file = PYGRP_SETTINGS.lastpath.grp.select_file('save', 'Save GRP As', '.grp', [('GRP Files','*.grp'),('All Files','*')], save=True)
+		file = PYGRP_SETTINGS.lastpath.grp.select_file('save', self, 'Save GRP As', '.grp', [('GRP Files','*.grp'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
@@ -786,7 +789,7 @@ BMP's must be imported with the same style they were exported as.""")
 			if self.grp.frames:
 				size = [self.grp.width,self.grp.height]
 			try:
-				fs = bmptogrp(os.path.dirname(files[0]), self.palettes[self.pal], self.uncompressed.get(), frames, files, None, size, True, True, self.thirdstate, self.transid.get())
+				fs = bmptogrp(os.path.dirname(files[0]), self.palettes[self.pal], self.uncompressed.get(), frames, files, None, size, True, True, BMP_STYLES[self.bmp_style.get()][0] == BMP_STYLE_SINGLE_BMP_VERTICAL, self.transid.get())
 			except PyMSError, e:
 				ErrorDialog(self, e)
 			else:
