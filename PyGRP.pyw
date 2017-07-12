@@ -653,6 +653,8 @@ BMP's must be imported with the same style they were exported as.""")
 		s = self.listbox.curselection()
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
+		if not self.grp:
+			return
 		for frame in range(self.grp.frames):
 			self.append_frame(frame)
 		for i in s:

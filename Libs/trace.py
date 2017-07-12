@@ -2,11 +2,6 @@ from utils import *
 
 import sys,os
 
-# DEBUG = Show std out in logs
-DEBUG = False
-# FSYNC = Use fsync for std err to try and ensure we capture the errors
-FSYNC = True
-
 LOGS_FOLDER = os.path.join(BASE_DIR,'Libs','Logs')
 try:
 	os.makedirs(LOGS_FOLDER)
@@ -33,16 +28,16 @@ class ErrorHandler:
 			children = presenter.winfo_children()
 		return presenter
 
-	def write(self, text, stdout=False):
+	def write(self, text, from_stdout=False):
 		if self.file:
 			self.file.write(text)
-			if FSYNC:
+			if from_stdout == False:
 				self.file.flush()
 				os.fsync(self.file.fileno())
 
 		if not self.window:
 			self.buffer += text
-			if not stdout and not self.creating_window:
+			if not from_stdout and not self.creating_window:
 				self.creating_window = True
 				def present():
 					presenter = self.find_presenter()
@@ -62,9 +57,8 @@ class OutputHandler:
 		self.file = file
 
 	def write(self, text):
-		self.file.write(text, True)
+		self.file.write(text, from_stdout=True)
 
 def setup_trace(toplevel, prog):
 	sys.stderr = ErrorHandler(toplevel, prog)
-	if DEBUG:
-		sys.stdout = OutputHandler(sys.stderr)
+	sys.stdout = OutputHandler(sys.stderr)
