@@ -832,41 +832,66 @@ class PortraitsTab(DATTab):
 		frame = Frame(j)
 
 		portdata = [] # ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
-		self.portraitentry = IntegerVar(0, [0,len(portdata)-1])
-		self.portraitdd = IntVar()
+		self.idle_entry = IntegerVar(0, [0,len(portdata)-1])
+		self.idle_dd = IntVar()
+		self.idle_change = IntegerVar(0, [0,255])
+		self.idle_unknown = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Portrait:')
+		self.talking_entry = IntegerVar(0, [0,len(portdata)-1])
+		self.talking_dd = IntVar()
+		self.talking_change = IntegerVar(0, [0,255])
+		self.talking_unknown = IntegerVar(0, [0,255])
+
+		l = LabelFrame(frame, text='Idle Portrait:')
 		s = Frame(l)
 		f = Frame(s)
-		Label(f, text='Portrait Dir:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.portraitentry, font=couriernew, width=5).pack(side=LEFT)
+		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_entry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.portraits = DropDown(f, self.portraitdd, portdata, self.portraitentry, width=30)
-		self.portraits.pack(side=LEFT, fill=X, expand=1, padx=2)
-		tip(f, 'Portrait Dir', 'PortFile')
+		self.idle_dd_view = DropDown(f, self.idle_dd, portdata, self.idle_entry, width=30)
+		self.idle_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
+		tip(f, 'SMK Dir', 'PortFile')
 		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
-
-		self.smkchange = IntegerVar(0, [0,255])
-		self.unknown = IntegerVar(0, [0,255])
-
-		m = Frame(frame)
-		l = LabelFrame(m, text='General Properties:')
+		s.pack(fill=BOTH, padx=5, pady=(5,0))
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Change:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.smkchange, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_change, font=couriernew, width=3).pack(side=LEFT)
 		tip(f, 'SMK Change', 'PortSMKChange')
-		f.pack(fill=X)
+		f.pack(side=LEFT)
 		f = Frame(s)
 		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_unknown, font=couriernew, width=3).pack(side=LEFT)
 		tip(f, 'Unknown', 'PortUnk1')
+		f.pack(side=RIGHT)
+		s.pack(fill=BOTH, padx=5, pady=(0,5))
+		l.pack(fill=X)
+
+		l = LabelFrame(frame, text='Talking Portrait:')
+		s = Frame(l)
+		f = Frame(s)
+		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_entry, font=couriernew, width=5).pack(side=LEFT)
+		Label(f, text='=').pack(side=LEFT)
+		self.talking_dd_view = DropDown(f, self.talking_dd, portdata, self.talking_entry, width=30)
+		self.talking_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
+		tip(f, 'SMK Dir', 'PortFile')
 		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(side=LEFT)
-		m.pack(fill=X)
+		s.pack(fill=BOTH, padx=5, pady=(5,0))
+		s = Frame(l)
+		f = Frame(s)
+		Label(f, text='SMK Change:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_change, font=couriernew, width=3).pack(side=LEFT)
+		tip(f, 'SMK Change', 'PortSMKChange')
+		f.pack(side=LEFT)
+		f = Frame(s)
+		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_unknown, font=couriernew, width=3).pack(side=LEFT)
+		tip(f, 'Unknown', 'PortUnk1')
+		f.pack(side=RIGHT)
+		s.pack(fill=BOTH, padx=5, pady=(0,5))
+		l.pack(fill=X, pady=5)
+
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
@@ -875,18 +900,30 @@ class PortraitsTab(DATTab):
 		]
 		self.setuplistbox()
 
-		self.values = {
-			'PortraitFile':self.portraitentry,
-			'SMKChange':self.smkchange,
-			'Unknown':self.unknown,
-		}
+	def loadsave(self, save=False):
+		if not self.dat:
+			return
+		labels = ('PortraitFile','SMKChange','Unknown')
+		values = (
+			(self.id, (self.idle_entry, self.idle_change, self.idle_unknown)),
+			(self.id + self.dat.count/2, (self.talking_entry, self.talking_change, self.talking_unknown))
+		)
+		for id,variables in values:
+			for label,var in zip(labels, variables):
+				if save:
+					self.dat.set_value(id, label, var.get())
+				else:
+					var.set(self.dat.get_value(id, label))
 
 	def files_updated(self):
 		self.dat = self.toplevel.portraits
 		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
-		self.portraitentry.range[1] = len(portdata)-1
-		self.portraits.setentries(portdata)
-		self.portraitentry.editvalue()
+		self.idle_entry.range[1] = len(portdata)-1
+		self.idle_dd_view.setentries(portdata)
+		self.idle_entry.editvalue()
+		self.talking_entry.range[1] = len(portdata)-1
+		self.talking_dd_view.setentries(portdata)
+		self.talking_entry.editvalue()
 
 class SoundsTab(DATTab):
 	data = 'Sfxdata.txt'
@@ -2461,26 +2498,26 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.graphicsdd = IntVar()
 		self.constructionentry = IntegerVar(0, [0,998])
 		self.constructiondd = IntVar()
-		self.idleportraitentry = IntegerVar(0, [0,220])
-		self.idleportraitdd = IntVar()
+		self.portraitsentry = IntegerVar(0, [0,109], maxout=65535)
+		self.portraitsdd = IntVar()
 		self.elevationentry = IntegerVar(0, [0,19])
 		self.elevationdd = IntVar()
 		self.direction = IntegerVar(0, [0,255])
 
 		gfx = [
-			('Graphics', self.graphicsentry, self.graphicsdd, 'Flingy.txt', 'UnitGfx'),
-			('Construction', self.constructionentry, self.constructiondd, 'Images.txt', 'UnitConstruction'),
-			('Idle Portrait', self.idleportraitentry, self.idleportraitdd, 'Portdata.txt', 'UnitPortrait'),
-			('Elevation', self.elevationentry, self.elevationdd, 'ElevationLevels.txt', 'UnitElevationLevel'),
+			('Graphics', self.graphicsentry, self.graphicsdd, 'Flingy.txt', 'UnitGfx', None),
+			('Construction', self.constructionentry, self.constructiondd, 'Images.txt', 'UnitConstruction', None),
+			('Portraits', self.portraitsentry, self.portraitsdd, 'Portdata.txt', 'UnitPortrait', 65535),
+			('Elevation', self.elevationentry, self.elevationdd, 'ElevationLevels.txt', 'UnitElevationLevel', None),
 		]
-		l = LabelFrame(frame, text='Sounds:')
+		l = LabelFrame(frame, text='Sprite Graphics:')
 		s = Frame(l)
-		for t,e,d,q,h in gfx:
+		for t,e,d,q,h,n in gfx:
 			f = Frame(s)
 			Label(f, text=t + ':', width=13, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=3).pack(side=LEFT)
+			Entry(f, textvariable=e, font=couriernew, width=5).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
-			DropDown(f, d, DATA_CACHE[q], e, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+			DropDown(f, d, DATA_CACHE[q], e, width=30, none_value=n).pack(side=LEFT, fill=X, expand=1, padx=2)
 			if t != 'Elevation':
 				Button(f, text='Jump ->', command=lambda t=q.split('.')[0],i=d: self.jump(t,i)).pack(side=LEFT)
 			tip(f, t, h)
@@ -2570,7 +2607,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			'UnitSizeDown':self.down,
 			'AddonHorizontal':self.horizontal,
 			'AddonVertical':self.vertical,
-			'Portrait':self.idleportraitentry,
+			'Portrait':self.portraitsentry,
 		}
 
 	def drawboxes(self):

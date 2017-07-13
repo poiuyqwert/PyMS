@@ -522,7 +522,7 @@ class NotebookTab(Frame):
 		pass
 
 class DropDown(Frame):
-	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL, stay_right=False):
+	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL, stay_right=False, none_name='None', none_value=None):
 		self.variable = variable
 		self.variable.set = self.set
 		self.display = display
@@ -531,6 +531,8 @@ class DropDown(Frame):
 		if display and isinstance(display, Variable):
 			display.callback = self.set
 		self.size = min(10,len(entries))
+		self.none_name = none_name
+		self.none_value = none_value
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
 		self.listbox = Listbox(self, selectmode=SINGLE, font=couriernew, width=width, height=1, borderwidth=0, exportselection=1, activestyle=DOTBOX)
 		self.listbox.bind('<Button-1>', self.choose)
@@ -611,8 +613,15 @@ class DropDown(Frame):
 	def choose(self, e=None):
 		if self.listbox['state'] == NORMAL:
 			i = self.variable.get()
+			if i == self.none_value:
+				n = self.entries.index(self.none_name)
+				if n >= 0:
+					i = n
 			c = DropDownChooser(self, self.entries, i)
-			self.set(c.result)
+			if self.entries[c.result] == self.none_name and self.none_value:
+				self.set(self.none_value)
+			else:
+				self.set(c.result)
 			self.listbox.select_set(c.result)
 
 	def disp(self, n):
@@ -1192,13 +1201,14 @@ class Tooltip:
 			self.tip = None
 
 class IntegerVar(StringVar):
-	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, allow_hex=False):
+	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, allow_hex=False, maxout=None):
 		StringVar.__init__(self)
 		self.check = True
 		self.defaultval = val
 		self.lastvalid = val
 		self.set(val)
 		self.range = range
+		self.maxout = maxout
 		self.exclude = exclude
 		self.callback = callback
 		self.allow_hex = allow_hex
@@ -1231,7 +1241,10 @@ class IntegerVar(StringVar):
 						refresh = True
 					elif self.range[1] != None and s > self.range[1]:
 						#print '4'
-						s = self.range[1]
+						if self.maxout != None:
+							s = self.maxout
+						else:
+							s = self.range[1]
 						refresh = True
 				#print s
 				if refresh:

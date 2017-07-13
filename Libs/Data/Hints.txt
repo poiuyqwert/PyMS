@@ -175,7 +175,7 @@ UnitGfxList=Unit's main graphics object. [pointer to flingy.dat]
 UnitConstruction=Construction graphics of the unit (used mostly with buildings). 0-Scourge = No graphics. [pointer to images.dat]
 UnitConstructionList=Construction graphics of the unit (used mostly with buildings). 0-Scourge = No graphics. [pointer to images.dat]
 
-UnitPortrait=Unit's Idle portrait. Talking Portraits are determined by adding 110 to this value, so any "Talking" portraits here will almost always crash the game! (Ghost's and Vulture's for some reasons won't) [pointer to portdata.dat]
+UnitPortrait=Unit's Idle and Talking portraits. [pointer to portdata.dat]
 UnitPortraitList=Unit's Idle portrait. Talking Portraits are determined by adding 110 to this value, so any "Talking" portraits here will almost always crash the game! (Ghost's and Vulture's for some reasons won't) [pointer to portdata.dat]
 
 UnitElevationLevel=The elevation level at which the unit moves. It can be used to make units moves like flyers, but still be attacked by ground weapons and act as ground units to specific special abilities (like Recall). Higher values puts the unit higher over terrain and other units.
