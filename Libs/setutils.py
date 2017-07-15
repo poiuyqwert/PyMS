@@ -207,22 +207,28 @@ class SettingDict(object):
 				window.geometry(geometry)
 	def select_file(self, key, parent, title, ext, filetypes, save=False, store=True):
 		dialog = tkFileDialog.asksaveasfilename if save else tkFileDialog.askopenfilename
+		parent._pyms__window_blocking = True
 		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
+		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = os.path.dirname(path)
 		return path
 	def select_files(self, key, parent, title, ext, filetypes, store=True):
 		if len(filetypes) == 1 and filetypes[0][1] == '*':
 			filetypes = None
+		parent._pyms__window_blocking = True
 		if filetypes == None:
 			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
 		else:
 			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+		parent._pyms__window_blocking = False
 		if paths and store:
 			self[key] = os.path.dirname(paths[0])
 		return paths
 	def select_directory(self, key, parent, title, store=True):
+		parent._pyms__window_blocking = True
 		path = tkFileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
+		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = path
 		return path
@@ -321,6 +327,9 @@ def check_update(window, program):
 			return
 		if VERSIONS['PyMS'] < PyMS_version or VERSIONS[program] < program_version:
 			def callback():
+				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
+					window.after(1000, callback)
+					return
 				UpdateDialog(window,program,versions)
 			window.after(1, callback)
 class UpdateDialog(PyMSDialog):

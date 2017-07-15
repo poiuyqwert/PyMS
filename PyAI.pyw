@@ -1549,7 +1549,9 @@ class ImportListDialog(PyMSDialog):
 
 	def select_files(self):
 		path = self.parent.settings.get('lastpath', BASE_DIR)
+		self._pyms__window_blocking = True
 		file = tkFileDialog.askopenfilename(parent=self, title='Add Imports', defaultextension='.txt', filetypes=[('Text Files','*.txt'),('All Files','*')], initialdir=path, multiple=True)
+		self._pyms__window_blocking = False
 		if file:
 			self.parent.settings['lastpath'] = os.path.dirname(file[0])
 		return file
@@ -2568,7 +2570,9 @@ class PyAI(Tk):
 		if parent == None:
 			parent = self
 		path = self.settings.get('lastpath', BASE_DIR)
+		parent._pyms__window_blocking = True
 		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
+		parent._pyms__window_blocking = False
 		if file:
 			self.settings['lastpath'] = os.path.dirname(file)
 		return file

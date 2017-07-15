@@ -747,7 +747,9 @@ class PyLO(Tk):
 
 	def select_file(self, title, open=True, ext='.loa', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox'),('All Files','*')]):
 		path = self.settings.get('lastpath', BASE_DIR)
+		self._pyms__window_blocking = True
 		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
+		self._pyms__window_blocking = False
 		if file:
 			self.settings['lastpath'] = os.path.dirname(file)
 		return file

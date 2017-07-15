@@ -8,6 +8,8 @@ try:
 except:
 	pass
 
+STDOUT_FSYNC = True
+
 class ErrorHandler:
 	def __init__(self, toplevel, prog):
 		self.toplevel = toplevel
@@ -31,7 +33,7 @@ class ErrorHandler:
 	def write(self, text, from_stdout=False):
 		if self.file:
 			self.file.write(text)
-			if from_stdout == False:
+			if from_stdout == False or STDOUT_FSYNC:
 				self.file.flush()
 				os.fsync(self.file.fileno())
 
@@ -41,6 +43,9 @@ class ErrorHandler:
 				self.creating_window = True
 				def present():
 					presenter = self.find_presenter()
+					if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking:
+						self.toplevel.after(1000, present)
+						return
 					self.window = InternalErrorDialog(presenter, self.prog, self, self.buffer)
 					self.buffer = ''
 					self.creating_window = False

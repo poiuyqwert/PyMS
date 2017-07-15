@@ -564,7 +564,9 @@ class PyTBL(Tk):
 
 	def select_file(self, title, open=True, ext='.tbl', filetypes=[('StarCraft TBL Files','*.tbl'),('All Files','*')]):
 		path = self.settings.get('lastpath', BASE_DIR)
+		self._pyms__window_blocking = True
 		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
+		self._pyms__window_blocking = False
 		if file:
 			self.settings['lastpath'] = os.path.dirname(file)
 		return file
