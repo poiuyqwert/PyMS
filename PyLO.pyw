@@ -720,11 +720,15 @@ class PyLO(Tk):
 	def updatebasegrp(self, grp):
 		self.basegrp = grp
 		GRP_CACHE[0] = {}
+		self.previewing = None
+		self.previewupdate()
 		self.framesupdate()
 
 	def updateoverlaygrp(self, grp):
 		self.overlaygrp = grp
 		GRP_CACHE[1] = {}
+		self.previewing = None
+		self.previewupdate()
 		self.framesupdate()
 
 	def unsaved(self):
@@ -741,7 +745,7 @@ class PyLO(Tk):
 				else:
 					self.saveas()
 
-	def select_file(self, title, open=True, ext='.loa', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlays','*.log;*.lol;*.lox'),('All Files','*')]):
+	def select_file(self, title, open=True, ext='.loa', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox'),('All Files','*')]):
 		path = self.settings.get('lastpath', BASE_DIR)
 		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
 		if file:

@@ -548,7 +548,11 @@ class MpqSelect(PyMSDialog):
 		listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		listframe.focus_set()
 		s = Frame(self)
-		self.textdrop = TextDropDown(s, self.search, self.settings.settings.get('mpqselecthistory',[])[::-1])
+		if isinstance(self.settings, SettingDict):
+			history = self.settings.settings.get('mpqselecthistory',[])[::-1]
+		else:
+			history = self.settings.get('mpqselecthistory',[])[::-1]
+		self.textdrop = TextDropDown(s, self.search, history)
 		self.textdrop.entry.c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
 		self.open = Button(s, text=self.open_type, width=10, command=self.ok)
