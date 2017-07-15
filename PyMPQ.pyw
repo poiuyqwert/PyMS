@@ -35,6 +35,11 @@ PYMPQ_SETTINGS.settings.set_defaults({
 		'.wav':[3,1]
 	})
 })
+PYMPQ_SETTINGS.settings.defaults.set_defaults({
+	'maxfiles': 1024,
+	'locale': 0,
+	'blocksize': 3
+})
 PYMPQ_SETTINGS.settings.autocompression.set_defaults({
 	'Default':[1,0]
 })
@@ -175,11 +180,11 @@ class GeneralSettings(Frame):
 			self.setdlg = setdlg
 		Frame.__init__(self, parent)
 		self.maxfiles = IntegerVar(1,[1,65535])
-		self.maxfiles.set(PYMPQ_SETTINGS.settings.defaults.get('maxfiles', 1024))
+		self.maxfiles.set(PYMPQ_SETTINGS.settings.defaults.get('maxfiles'))
 		self.localeid = IntegerVar(0,[0,65535])
-		self.localeid.set(PYMPQ_SETTINGS.settings.defaults.get('locale', 0))
+		self.localeid.set(PYMPQ_SETTINGS.settings.defaults.get('locale'))
 		self.blocksize = IntegerVar(1,[1,23])
-		self.blocksize.set(PYMPQ_SETTINGS.settings.defaults.get('blocksize', 3))
+		self.blocksize.set(PYMPQ_SETTINGS.settings.defaults.get('blocksize'))
 		f = Frame(self)
 		Label(f, text='Max Files', font=('Courier', -12, 'bold'), anchor=W).pack(fill=X, expand=1)
 		Label(f, text='Max file capacity for new archives (cannot be changed for an existing archive)', anchor=W).pack(fill=X, expand=1)
@@ -916,7 +921,7 @@ class PyMPQ(Tk):
 	def new(self, key=None):
 		file = PYMPQ_SETTINGS.lastpath.mpq.select_file('new', self, 'Save new MPQ', '.mpq', [('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')], save=True)
 		if file:
-			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, PYMPQ_SETTINGS.settings.defaults.maxfiles, PYMPQ_SETTINGS.settings.defaults.blocksize)
+			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, PYMPQ_SETTINGS.settings.defaults.get('maxfiles'), PYMPQ_SETTINGS.settings.defaults.get('blocksize'))
 			if SFInvalidHandle(h):
 				raise
 			MpqCloseUpdatedArchive(h)
