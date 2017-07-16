@@ -138,13 +138,18 @@ class SettingDict(object):
 			o += s
 			size[axis] = o
 			panedwindow.sash_place(n, *size)
-	def save_window_size(self, key, window):
+	def save_window_size(self, key, window, closing=True):
 		resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
 		w,h,x,y,f = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
-			z = ['','^'][window.wm_state() == 'zoomed']
-			if z:
+			z = ''
+			if window.wm_state() == 'zoomed':
+				z = '^'
 				window.wm_state('normal')
+				window.update_idletasks()
+				w,h,x,y,_ = parse_geometry(window.winfo_geometry())
+				if not closing:
+					window.wm_state('zoomed')
 			self[key] = '%sx%s+%d+%d%s' % (w,h,x,y,z)
 		else:
 			self[key] = '+%d+%d' % (x,y)
@@ -155,13 +160,13 @@ class SettingDict(object):
 			if position:
 				x,y = position
 			resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
+			can_fullscreen = (resizable_w and resizable_h)
 			if (resizable_w or resizable_h) and w != None and h != None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
 				min_w,min_h = window.minsize()
 				max_w,max_h = window.maxsize()
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
-				can_fullscreen = (max_w > screen_w or screen_w - max_w < 10) and (max_h > screen_h or screen_h - max_h < 10)
 				if resizable_w:
 					if x+w > screen_w:
 						x = screen_w-w
@@ -189,7 +194,6 @@ class SettingDict(object):
 					window.wm_state('normal')
 			except:
 				pass
-
 		else:
 			w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
 			geometry = ''
@@ -305,12 +309,17 @@ def loadsize(window, settings, setting='window', full=False, size=True, position
 			except:
 				pass
 
-def savesize(window, settings, setting='window', size=True):
+def savesize(window, settings, setting='window', size=True, closing=True):
 	w,h,x,y,f = parse_geometry(window.winfo_geometry())
 	if size:
-		z = ['','^'][window.wm_state() == 'zoomed']
-		if z:
+		z = ''
+		if window.wm_state() == 'zoomed':
+			z = '^'
 			window.wm_state('normal')
+			window.update_idletasks()
+			w,h,x,y,_ = parse_geometry(window.winfo_geometry())
+			if not closing:
+				window.wm_state('zoomed')
 		settings[setting] = '%dx%d+%d+%d%s' % (w,h,x,y,z)
 	else:
 		settings[setting] = '+%d+%d' % (x,y)
