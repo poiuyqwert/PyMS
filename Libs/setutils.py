@@ -226,6 +226,8 @@ class SettingDict(object):
 		else:
 			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
 		parent._pyms__window_blocking = False
+		if isstr(paths):
+			paths = [paths]
 		if paths and store:
 			self[key] = os.path.dirname(paths[0])
 		return paths
