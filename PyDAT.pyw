@@ -391,6 +391,8 @@ class DATTab(NotebookTab):
 				self.toplevel.action_states()
 
 	def unsaved(self):
+		if self == self.toplevel.dattabs.active:
+			self.loadsave(save=True)
 		if self.edited:
 			file = self.file
 			if not file:
@@ -454,7 +456,6 @@ class DATTab(NotebookTab):
 		self.activate()
 
 	def new(self, key=None):
-		self.loadsave(True)
 		if not self.unsaved():
 			self.dat.entries = list(self.toplevel.defaults[self.dat.datname].entries)
 			self.file = None
@@ -462,8 +463,6 @@ class DATTab(NotebookTab):
 			self.activate()
 
 	def open(self, file, save=True):
-		if self == self.toplevel.dattabs.active:
-			self.loadsave(True)
 		if not save or not self.unsaved():
 			if isstr(file):
 				entries = ccopy(self.dat.entries)
@@ -3920,7 +3919,6 @@ class PyDAT(Tk):
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
 
 	def exit(self, e=None):
-		self.loadsave(True)
 		if not self.unsaved():
 			PYDAT_SETTINGS.windows.save_window_size('main', self)
 			PYDAT_SETTINGS.save_pane_size('list_size', self.hor_pane)
