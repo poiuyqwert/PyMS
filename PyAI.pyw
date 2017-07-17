@@ -2785,6 +2785,7 @@ class PyAI(Tk):
 			if bw != None:
 				self.bwscript = bw
 			self.edited = False
+			self.editstatus['state'] = DISABLED
 			self.status.set('Save Successful!')
 		except PyMSError, e:
 			ErrorDialog(self, e)
