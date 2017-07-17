@@ -911,7 +911,10 @@ class PortraitsTab(DATTab):
 		for id,variables in values:
 			for label,var in zip(labels, variables):
 				if save:
-					self.dat.set_value(id, label, var.get())
+					v = var.get()
+					if self.dat.get_value(id, label) != v:
+						self.edited = True
+						self.dat.set_value(id, label, v)
 				else:
 					var.set(self.dat.get_value(id, label))
 
@@ -3721,6 +3724,7 @@ class PyDAT(Tk):
 
 	def loadsave(self, save=False):
 		self.dattabs.active.loadsave(save)
+		self.action_states()
 
 	def changeid(self, key=None, i=None, focus_list=True):
 		s = True
