@@ -64,33 +64,6 @@ def makeCheckbox(frame, var, txt, hint):
 	tip(c, txt, hint)
 	return c
 
-class IScriptDropDown(DropDown):
-	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL):
-		self.ids = dict([(n,n) for n in range(0,len(entries))])
-		DropDown.__init__(self, parent, variable, entries, display, width, blank, state)
-
-	def set(self, num):
-		#print num,'\t',self.ids[num]
-		self.change(self.ids[num])
-		Variable.set(self.variable, num)
-		self.disp(num)
-
-	def choose(self, e=None):
-		if self.listbox['state'] == NORMAL:
-			i = self.ids[self.variable.get()]
-			c = DropDownChooser(self, self.entries, i)
-			self.set(int(self.entries[c.result].split('[')[-1][:-1]))
-			self.listbox.select_set(c.result)
-
-	def disp(self, n):
-		if self.display:
-			if n == self.listbox.size()-1 and self.blank != None:
-				n = self.blank
-			if isinstance(self.display, Variable):
-				self.display.set(n)
-			else:
-				self.display(n)
-
 class DATSettingsDialog(SettingsDialog):
 	def widgetize(self):
 		self.custom = IntVar()
@@ -320,6 +293,12 @@ class DATTab(NotebookTab):
 	def files_updated(self):
 		pass
 
+	def update_status(self):
+		if self.file:
+			self.toplevel.status.set(self.file)
+		else:
+			self.toplevel.status.set(os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr',  self.dat.datname))
+
 	def activate(self):
 		if self.dat:
 			self.toplevel.listbox.delete(0,END)
@@ -344,10 +323,7 @@ class DATTab(NotebookTab):
 				self.toplevel.listbox.insert(END, ' %s%s  %s' % (' ' * (4-len(str(n))),n,l))
 			self.toplevel.listbox.select_set(self.id)
 			self.toplevel.listbox.see(self.id)
-			if self.file:
-				self.toplevel.status.set(self.file)
-			else:
-				self.toplevel.status.set(os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr',  self.dat.datname))
+			self.update_status()
 			self.loadsave()
 
 	def deactivate(self):
@@ -530,6 +506,7 @@ class DATTab(NotebookTab):
 			return True
 		self.file = file
 		self.save()
+		self.update_status()
 
 	def export(self, key=None):
 		file = PYDAT_SETTINGS.lastpath.txt.select_file('export', self, 'Export TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')], save=True)
@@ -673,7 +650,7 @@ class OrdersTab(DATTab):
 		Label(f, text='Highlight:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.highlightentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.highlightdd, DATA_CACHE['Icons.txt'], self.highlightentry, width=25, blank=65535).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.highlightdd, DATA_CACHE['Icons.txt'] + ['None'], self.highlightentry, width=25, none_value=65535).pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Highlight', 'OrdHighlight')
 		f.pack(fill=X)
 		f = Frame(ls)
@@ -804,7 +781,7 @@ class MapsTab(DATTab):
 		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.missionentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.missions = DropDown(f, self.missiondd, mapdata, self.missionentry, width=30, blank=65)
+		self.missions = DropDown(f, self.missiondd, mapdata, self.missionentry, width=30)
 		self.missions.pack(side=LEFT, fill=X, expand=1, padx=2)
 		tip(f, 'Mission Dir', 'MapFile')
 		f.pack(fill=X)
@@ -818,8 +795,9 @@ class MapsTab(DATTab):
 	def files_updated(self):
 		self.dat = self.toplevel.campaigns
 		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
+		self.missions.none_value = len(mapdata)
 		self.missionentry.range[1] = len(mapdata)
-		self.missions.setentries(mapdata)
+		self.missions.setentries(mapdata + ['None'])
 		self.missionentry.editvalue()
 
 class PortraitsTab(DATTab):
@@ -3383,12 +3361,17 @@ class UnitsTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.units
-		for tab in self.dattabs.pages.values():
-			page = tab[0]
-			page.files_updated()
+		for tab,_ in self.dattabs.pages.values():
+			tab.files_updated()
 
 	def loadsave(self, save=False):
 		self.dattabs.active.loadsave(save)
+
+	def save(self, key=None):
+		DATTab.save(self)
+		if not self.edited:
+			for tab,_ in self.dattabs.pages.values():
+				tab.edited = False
 
 class PyDAT(Tk):
 	def __init__(self, guifile=None):
@@ -3565,7 +3548,6 @@ class PyDAT(Tk):
 		self.hor_pane.pack(fill=BOTH, expand=1)
 
 		#Statusbar
-		self.datstatus = StringVar()
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))

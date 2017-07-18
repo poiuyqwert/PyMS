@@ -522,11 +522,10 @@ class NotebookTab(Frame):
 		pass
 
 class DropDown(Frame):
-	def __init__(self, parent, variable, entries, display=None, width=1, blank=None, state=NORMAL, stay_right=False, none_name='None', none_value=None):
+	def __init__(self, parent, variable, entries, display=None, width=1, state=NORMAL, stay_right=False, none_name='None', none_value=None):
 		self.variable = variable
 		self.variable.set = self.set
 		self.display = display
-		self.blank = blank
 		self.stay_right = stay_right
 		if display and isinstance(display, Variable):
 			display.callback = self.set
@@ -572,8 +571,6 @@ class DropDown(Frame):
 		self.listbox.delete(0,END)
 		for entry in entries:
 			self.listbox.insert(END, entry)
-		if self.blank != None:
-			self.listbox.insert(END, '')
 		if selected >= self.listbox.size():
 			selected = self.listbox.size()-1
 		self.listbox.see(selected)
@@ -598,15 +595,13 @@ class DropDown(Frame):
 		if self.listbox['state'] == NORMAL:
 			if e.delta > 0:
 				self.move(None, -1)
-			elif self.blank != None or self.variable.get() < self.listbox.size()-2:
+			elif self.variable.get() < self.listbox.size()-2:
 				self.move(None, 1)
 
 	def move(self, e, a):
 		if self.listbox['state'] == NORMAL:
-			if a == END and self.blank != None:
-				a = self.listbox.size()-2
-			elif a not in [0,END]:
-				a = max(min([self.listbox.size()-2,self.listbox.size()-1][self.blank == None],self.variable.get() + a),0)
+			if a not in [0,END]:
+				a = max(min(self.listbox.size(),self.variable.get() + a),0)
 			self.set(a)
 			self.listbox.select_set(a)
 
@@ -618,7 +613,7 @@ class DropDown(Frame):
 				if n >= 0:
 					i = n
 			c = DropDownChooser(self, self.entries, i)
-			if self.entries[c.result] == self.none_name and self.none_value:
+			if c.result > -1 and c.result < len(self.entries) and self.entries[c.result] == self.none_name and self.none_value:
 				self.set(self.none_value)
 			else:
 				self.set(c.result)
@@ -626,8 +621,6 @@ class DropDown(Frame):
 
 	def disp(self, n):
 		if self.display:
-			if n == self.listbox.size()-1 and self.blank != None:
-				n = self.blank
 			if isinstance(self.display, Variable):
 				self.display.set(n)
 			else:
