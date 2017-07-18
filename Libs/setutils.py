@@ -272,10 +272,10 @@ if win_reg and not 'scdir' in PYMS_SETTINGS:
 	try:
 		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
 		path = QueryValueEx(h, 'InstallPath')[0]
+		if os.path.isdir(path):
+			PYMS_SETTINGS.scdir = path
 	except:
 		pass
-	if os.path.isdir(path):
-		PYMS_SETTINGS.scdir = path
 
 def loadsize(window, settings, setting='window', full=False, size=True, position=None):
 	geometry = settings.get(setting)
