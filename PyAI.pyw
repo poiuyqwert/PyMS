@@ -878,11 +878,11 @@ class CodeEditDialog(PyMSDialog):
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(61):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgrades.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgradesdat.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(44):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.tech.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.techdat.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			aiid = ''
@@ -2527,7 +2527,7 @@ class PyAI(Tk):
 			err = e
 		else:
 			self.unitsdat = unitsdat
-			self.upgrades = upgradesdat
+			self.upgradesdat = upgradesdat
 			self.techdat = techdat
 			if self.ai:
 				self.ai.unitsdat = unitsdat
@@ -3456,12 +3456,9 @@ class PyAI(Tk):
 					return
 			self.tbl = sets[0]
 			self.stat_txt = files[0]
-			self.units = sets[1]
-			self.unitsdat = files[1]
-			self.upgrades = sets[2]
-			self.upgradesdat = files[2]
-			self.tech = sets[3]
-			self.techdat = files[3]
+			self.unitsdat = sets[1]
+			self.upgradesdat = sets[2]
+			self.techdat = sets[3]
 
 	def saveset(self, key=None):
 		file = self.select_file('Save Settings', False, '.txt', [('Text Files','*.txt'),('All Files','*')])
