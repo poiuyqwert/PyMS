@@ -1485,210 +1485,206 @@ class AIBIN:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file, warnings=warnings)
 		else:
 			f = file
-		try:
-			if scripts == None:
-				scripts = self.ais.keys()
-			if shortlabel:
-				labels = self.short_labels
-			else:
-				labels = self.labels
-			if ref:
-				self.reference(f)
-			warnings = []
-			extjumps = {}
-			if defs:
-				variables = {}
-				if isstr(defs):
-					defs = defs.split(',')
-				loaded = []
-				for dname in defs:
-					try:
-						deffile = os.path.join(os.path.dirname(file),dname)
-					except:
-						deffile = os.path.abspath(dname)
-					if dname in loaded:
-						continue
-					try:
-						d = open(deffile,'r')
-						ddata = d.readlines()
-						d.close()
-					except:
-						raise PyMSError('External Definition',"External definition file '%s' was not found" % dname, warnings=warnings)
-					for n,l in enumerate(ddata):
-						if len(l) > 1:
-							line = l.strip().split('#',1)[0]
-							if line:
-								match = re.match('\\A(\\S+)\\s+(.+)\\s+=\\s+(.+?)(?:\\s*\\{(.+)\\})?\\Z', line)
-								if match:
-									t,name,dat,vinfo = match.groups()
-									if re.match('[\x00,(){}]',name):
-										raise PyMSError('External Definition',"The variable name '%s' in external definition file '%s' is invalid, it must not contain a null, or the characters: , ( ) { }" % (name,dname),n,line, warnings=warnings)
-									t = t.lower()
-									if t == 'label' or t not in self.types:
-										raise PyMSError('External Definition',"Invalid variable type '%s' for variable '%s' in external definition file '%s', consult the reference" % (t, name, dname),n,line, warnings=warnings)
-									if name.lower() in variables:
-										raise PyMSError('External Definition',"The variable name '%s' in external definition file '%s' is already in use" % (name, dname),n,line, warnings=warnings)
-									if vinfo:
-										warnings.append(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
-									try:
-										v = self.types[t][0](dat,3)[1]
-									except PyMSWarning, w:
-										w.line = n
-										w.code = line
-										warnings.append(w)
-										v = w.extra[1]
-									except PyMSError, e:
-										e.line = n + 1
-										e.code = line
-										e.warnings = warnings
-										raise e
-									except:
-										raise PyMSError('External Definition',"Invalid value '%s' for variable '%s' of type '%s' in external definition file '%s'" % (dat, name, t, dname),n,line, warnings=warnings)
-									variables[name.lower()] = [self.types[t],dat]
-									self.varinfo[name] = [types.index(t),v,None]
-								else:
-									raise PyMSError('External Definition','Invalid syntax, unknown line format',n,l, warnings=warnings)
-					f.write('extdef %s\n' % dname)
-					loaded.append(dname)
-				f.write('\n')
-			values = {}
-			for name,dat in self.varinfo.iteritems():
-				vtype = types[dat[0]]
-				if dat[2] != None:
-					f.write('%s %s = %s' % (vtype,name,dat[1]))
-					if dat[2] and not '\n' in dat[2]:
-						f.write(' {%s}' % dat[2])
-					t = self.types[vtype][0](dat[1],1)[1]
-					if t != str(dat[1]):
-						f.write(' # Translated Value: %s' % t)
-					f.write('\n')
-					if dat[2] and '\n' in dat[2]:
-						f.write('{\n%s\n}\n' % dat[2])
-				if not vtype in values:
-					values[vtype] = {}
-				values[vtype][dat[1]] = name
-			f.write('\n')
-			for id in scripts:
-				if id not in self.ais:
-					raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % id, warnings=warnings)
-				loc,string,flags,ai,jumps = self.ais[id]
-				if loc:
-					cmdn = 0
-					if id in extjumps:
-						j = len(extjumps[id])
-						jump = dict(extjumps[id])
-					else:
-						j = 0
-						jump = {}
-					f.write('# stat_txt.tbl entry %s: %s\n%s(%s, %s, aiscript):' % (string,TBL.decompile_string(self.tbl.strings[string]),id,string,convflags(flags)))
-					labelnames = None
-					if id in self.aiinfo:
-						labelnames = self.aiinfo[id][1].copy()
-						namenum = 0
-						gotonum = 0
-						i = self.aiinfo[id][0]
-						if '\n' in i:
-							f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-						elif i:
-							f.write(' {%s}' % i)
-					f.write('\n')
-					for cmd in ai:
-						if cmdn in jump:
-							if cmdn:
-								f.write('\n')
-							if id in self.externaljumps[0][0] and cmdn in self.externaljumps[0][0][id]:
-								s = ''
-								if len(self.externaljumps[0][0][id][cmdn]) > 1:
-									s = 's'
-								f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[0][0][id][cmdn])))
-							f.write('\t\t--%s--' % jump[cmdn])
-							if labelnames and jump[cmdn] in labelnames:
-								i = labelnames.get(jump[cmdn],'')
-								if '\n' in i:
-									f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-								elif i:
-									f.write(' {%s}' % i)
-							f.write('\n')
-						elif cmdn in jumps:
-							if labelnames:
-								jump[cmdn] = labelnames.getkey(namenum)
+		if scripts == None:
+			scripts = self.ais.keys()
+		if shortlabel:
+			labels = self.short_labels
+		else:
+			labels = self.labels
+		if ref:
+			self.reference(f)
+		warnings = []
+		extjumps = {}
+		if defs:
+			variables = {}
+			if isstr(defs):
+				defs = defs.split(',')
+			loaded = []
+			for dname in defs:
+				try:
+					deffile = os.path.join(os.path.dirname(file),dname)
+				except:
+					deffile = os.path.abspath(dname)
+				if dname in loaded:
+					continue
+				try:
+					d = open(deffile,'r')
+					ddata = d.readlines()
+					d.close()
+				except:
+					raise PyMSError('External Definition',"External definition file '%s' was not found" % dname, warnings=warnings)
+				for n,l in enumerate(ddata):
+					if len(l) > 1:
+						line = l.strip().split('#',1)[0]
+						if line:
+							match = re.match('\\A(\\S+)\\s+(.+)\\s+=\\s+(.+?)(?:\\s*\\{(.+)\\})?\\Z', line)
+							if match:
+								t,name,dat,vinfo = match.groups()
+								if re.match('[\x00,(){}]',name):
+									raise PyMSError('External Definition',"The variable name '%s' in external definition file '%s' is invalid, it must not contain a null, or the characters: , ( ) { }" % (name,dname),n,line, warnings=warnings)
+								t = t.lower()
+								if t == 'label' or t not in self.types:
+									raise PyMSError('External Definition',"Invalid variable type '%s' for variable '%s' in external definition file '%s', consult the reference" % (t, name, dname),n,line, warnings=warnings)
+								if name.lower() in variables:
+									raise PyMSError('External Definition',"The variable name '%s' in external definition file '%s' is already in use" % (name, dname),n,line, warnings=warnings)
+								if vinfo:
+									warnings.append(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
+								try:
+									v = self.types[t][0](dat,3)[1]
+								except PyMSWarning, w:
+									w.line = n
+									w.code = line
+									warnings.append(w)
+									v = w.extra[1]
+								except PyMSError, e:
+									e.line = n + 1
+									e.code = line
+									e.warnings = warnings
+									raise e
+								except:
+									raise PyMSError('External Definition',"Invalid value '%s' for variable '%s' of type '%s' in external definition file '%s'" % (dat, name, t, dname),n,line, warnings=warnings)
+								variables[name.lower()] = [self.types[t],dat]
+								self.varinfo[name] = [types.index(t),v,None]
 							else:
-								jump[cmdn] = '%s %04d' % (id,j)
-							if cmdn:
-								f.write('\n')
-							if id in self.externaljumps[0][0] and cmdn in self.externaljumps[0][0][id]:
-								s = ''
-								if len(self.externaljumps[0][0][id][cmdn]) > 1:
-									s = 's'
-								f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[0][0][id][cmdn])))
-							f.write('\t\t--%s--' % jump[cmdn])
-							if labelnames and jump[cmdn] in labelnames:
-								i = labelnames.get(jump[cmdn],'')
-								if '\n' in i:
-									f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-								elif i:
-									f.write(' {%s}' % i)
-							f.write('\n')
-							j += 1
-						f.write('\t%s(' % labels[cmd[0]])
-						if len(cmd) > 1:
-							comma = False
-							for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
-								if comma:
-									f.write(', ')
-								else:
-									comma = True
-								temp = t(p,1)
-								if t == self.ai_address:
-									if type(temp[1]) == list:
-										if temp[1][0] in extjumps and temp[1][1] in extjumps[temp[1][0]]:
-											f.write('%s:%s' % (temp[1][0],extjumps[temp[1][0]][temp[1][1]]))
-										else:
-											if not temp[1][0] in extjumps:
-												extjumps[temp[1][0]] = {}
-											if labelnames:
-												t = self.aiinfo[id][2][gotonum]
-												n = t.split(':',1)
-												f.write(t)
-												extjumps[n[0]][temp[1][1]] = n[1]
-											else:
-												n = '%s %04d' % (temp[1][0],len(extjumps[temp[1][0]]))
-												f.write('%s:%s' % (temp[1][0],n))
-												extjumps[temp[1][0]][temp[1][1]] = n
-									elif temp[1] in jump:
-										f.write(jump[temp[1]])
-									else:
-										if labelnames:
-											jump[temp[1]] = self.aiinfo[id][2][gotonum]
-										else:
-											jump[temp[1]] = '%s %04d' % (id,j)
-										f.write(jump[temp[1]])
-										j += 1
-									if labelnames:
-										gotonum += 1
-								else:
-									for vt in self.typescanbe[t.__doc__.split(' ',1)[0]]:
-										vtype = vt.__doc__.split(' ',1)[0]
-										if vtype in values and p in values[vtype]:
-											f.write(values[vtype][p])
-											break
-									else:
-										f.write(temp[1])
-						f.write(')\n')
-						if labels[cmd[0]].lower() in self.separate:
-							f.write('\n')
-						cmdn += 1
-					f.write('\n')
+								raise PyMSError('External Definition','Invalid syntax, unknown line format',n,l, warnings=warnings)
+				f.write('extdef %s\n' % dname)
+				loaded.append(dname)
+			f.write('\n')
+		values = {}
+		for name,dat in self.varinfo.iteritems():
+			vtype = types[dat[0]]
+			if dat[2] != None:
+				f.write('%s %s = %s' % (vtype,name,dat[1]))
+				if dat[2] and not '\n' in dat[2]:
+					f.write(' {%s}' % dat[2])
+				t = self.types[vtype][0](dat[1],1)[1]
+				if t != str(dat[1]):
+					f.write(' # Translated Value: %s' % t)
+				f.write('\n')
+				if dat[2] and '\n' in dat[2]:
+					f.write('{\n%s\n}\n' % dat[2])
+			if not vtype in values:
+				values[vtype] = {}
+			values[vtype][dat[1]] = name
+		f.write('\n')
+		for id in scripts:
+			if id not in self.ais:
+				raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % id, warnings=warnings)
+			loc,string,flags,ai,jumps = self.ais[id]
+			if loc:
+				cmdn = 0
+				if id in extjumps:
+					j = len(extjumps[id])
+					jump = dict(extjumps[id])
 				else:
-					f.write('# stat_txt.tbl entry %s: %s\n%s(%s, %s, bwscript):' % (string,TBL.decompile_string(self.tbl.strings[string]),id,string,convflags(flags)))
-					labelnames = None
-					w = self.bwscript.decompile(f, (self.externaljumps,extjumps), values, shortlabel, [id], False)
-					if w:
-						warnings.extend(w)
-		except:
-			raise
-		finally:
-			f.close()
+					j = 0
+					jump = {}
+				f.write('# stat_txt.tbl entry %s: %s\n%s(%s, %s, aiscript):' % (string,TBL.decompile_string(self.tbl.strings[string]),id,string,convflags(flags)))
+				labelnames = None
+				if id in self.aiinfo:
+					labelnames = self.aiinfo[id][1].copy()
+					namenum = 0
+					gotonum = 0
+					i = self.aiinfo[id][0]
+					if '\n' in i:
+						f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+					elif i:
+						f.write(' {%s}' % i)
+				f.write('\n')
+				for cmd in ai:
+					if cmdn in jump:
+						if cmdn:
+							f.write('\n')
+						if id in self.externaljumps[0][0] and cmdn in self.externaljumps[0][0][id]:
+							s = ''
+							if len(self.externaljumps[0][0][id][cmdn]) > 1:
+								s = 's'
+							f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[0][0][id][cmdn])))
+						f.write('\t\t--%s--' % jump[cmdn])
+						if labelnames and jump[cmdn] in labelnames:
+							i = labelnames.get(jump[cmdn],'')
+							if '\n' in i:
+								f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+							elif i:
+								f.write(' {%s}' % i)
+						f.write('\n')
+					elif cmdn in jumps:
+						if labelnames:
+							jump[cmdn] = labelnames.getkey(namenum)
+						else:
+							jump[cmdn] = '%s %04d' % (id,j)
+						if cmdn:
+							f.write('\n')
+						if id in self.externaljumps[0][0] and cmdn in self.externaljumps[0][0][id]:
+							s = ''
+							if len(self.externaljumps[0][0][id][cmdn]) > 1:
+								s = 's'
+							f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[0][0][id][cmdn])))
+						f.write('\t\t--%s--' % jump[cmdn])
+						if labelnames and jump[cmdn] in labelnames:
+							i = labelnames.get(jump[cmdn],'')
+							if '\n' in i:
+								f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+							elif i:
+								f.write(' {%s}' % i)
+						f.write('\n')
+						j += 1
+					f.write('\t%s(' % labels[cmd[0]])
+					if len(cmd) > 1:
+						comma = False
+						for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
+							if comma:
+								f.write(', ')
+							else:
+								comma = True
+							temp = t(p,1)
+							if t == self.ai_address:
+								if type(temp[1]) == list:
+									if temp[1][0] in extjumps and temp[1][1] in extjumps[temp[1][0]]:
+										f.write('%s:%s' % (temp[1][0],extjumps[temp[1][0]][temp[1][1]]))
+									else:
+										if not temp[1][0] in extjumps:
+											extjumps[temp[1][0]] = {}
+										if labelnames:
+											t = self.aiinfo[id][2][gotonum]
+											n = t.split(':',1)
+											f.write(t)
+											extjumps[n[0]][temp[1][1]] = n[1]
+										else:
+											n = '%s %04d' % (temp[1][0],len(extjumps[temp[1][0]]))
+											f.write('%s:%s' % (temp[1][0],n))
+											extjumps[temp[1][0]][temp[1][1]] = n
+								elif temp[1] in jump:
+									f.write(jump[temp[1]])
+								else:
+									if labelnames:
+										jump[temp[1]] = self.aiinfo[id][2][gotonum]
+									else:
+										jump[temp[1]] = '%s %04d' % (id,j)
+									f.write(jump[temp[1]])
+									j += 1
+								if labelnames:
+									gotonum += 1
+							else:
+								for vt in self.typescanbe[t.__doc__.split(' ',1)[0]]:
+									vtype = vt.__doc__.split(' ',1)[0]
+									if vtype in values and p in values[vtype]:
+										f.write(values[vtype][p])
+										break
+								else:
+									f.write(temp[1])
+					f.write(')\n')
+					if labels[cmd[0]].lower() in self.separate:
+						f.write('\n')
+					cmdn += 1
+				f.write('\n')
+			else:
+				f.write('# stat_txt.tbl entry %s: %s\n%s(%s, %s, bwscript):' % (string,TBL.decompile_string(self.tbl.strings[string]),id,string,convflags(flags)))
+				labelnames = None
+				w = self.bwscript.decompile(f, (self.externaljumps,extjumps), values, shortlabel, [id], False)
+				if w:
+					warnings.extend(w)
+		f.close()
 		return warnings
 
 	def compile(self, file, bwscript=None, extra=False):
@@ -1699,86 +1695,82 @@ class AIBIN:
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		try:
-			warnings = []
-			ais = ''
-			table = ''
-			offset = 4
-			totaloffsets = {}
-			for id in self.ais.keys():
-				loc,string,flags,ai,jumps = self.ais[id]
-				if loc:
-					cmdn = 0
-					totaloffsets[id] = {}
-					for cmd in ai:
-						if cmdn in jumps:
-							totaloffsets[id][cmdn] = offset
-						if self.parameters[cmd[0]]:
-							for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
-								try:
-									if t == self.ai_address:
-										offset += t(0,2)[0]
-									else:
-										offset += t(p,2)[0]
-								except PyMSWarning, e:
-									if not warnings:
-										warnings.append(e)
-									offset += e.extra[0]
-						cmdn += 1
-						offset += 1
-			offset = 4
-			for id in self.ais.keys():
-				loc,string,flags,ai,jumps = self.ais[id]
-				if loc:
-					table += struct.pack('<4s3L', id, offset, string+1, flags)
-					for cmd in ai:
-						ais += chr(cmd[0])
-						if self.parameters[cmd[0]]:
-							for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
-								try:
-									if t == self.ai_address:
-										if type(p) == list:
-											d = t(totaloffsets[p[0]][p[1]],2)
-										else:
-											d = t(totaloffsets[id][p],2)
-									else:
-										d = t(p,2)
-								except PyMSWarning, e:
-									if not warnings:
-										warnings.append(e)
-									offset += e.extra[0]
-									ais += e.extra[1]
+		warnings = []
+		ais = ''
+		table = ''
+		offset = 4
+		totaloffsets = {}
+		for id in self.ais.keys():
+			loc,string,flags,ai,jumps = self.ais[id]
+			if loc:
+				cmdn = 0
+				totaloffsets[id] = {}
+				for cmd in ai:
+					if cmdn in jumps:
+						totaloffsets[id][cmdn] = offset
+					if self.parameters[cmd[0]]:
+						for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
+							try:
+								if t == self.ai_address:
+									offset += t(0,2)[0]
 								else:
-									ais += d[1]
-									offset += d[0]
-						offset += 1
-				else:
-					table += struct.pack('<4s3L', id, 0, string+1, flags)
-			f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
-			if extra and (self.varinfo or self.aiinfo):
-				info = ''
-				for var,dat in self.varinfo.iteritems():
-					if dat[2] != None:
-						info += '%s%s\x00%s%s\x00' % (chr(dat[0]+1),var,self.types[types[dat[0]]][0](dat[1],2)[1],dat[2])
-				info += '\x00'
-				for ai,dat in self.aiinfo.iteritems():
-					info += '%s%s\x00' % (ai,dat[0])
-					for label,desc in dat[1].iteritems():
-						info += '%s\x00%s\x00' % (label,desc)
-					info += '\x00'
-					if dat[2]:
-						s = '<' + ['B','H','L','L'][int(floor(log(len(dat[2]),256)))]
-						for label in dat[2]:
-							if len(dat[2]) < 255:
-								info += chr(dat[1].index(label)+1)
+									offset += t(p,2)[0]
+							except PyMSWarning, e:
+								if not warnings:
+									warnings.append(e)
+								offset += e.extra[0]
+					cmdn += 1
+					offset += 1
+		offset = 4
+		for id in self.ais.keys():
+			loc,string,flags,ai,jumps = self.ais[id]
+			if loc:
+				table += struct.pack('<4s3L', id, offset, string+1, flags)
+				for cmd in ai:
+					ais += chr(cmd[0])
+					if self.parameters[cmd[0]]:
+						for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
+							try:
+								if t == self.ai_address:
+									if type(p) == list:
+										d = t(totaloffsets[p[0]][p[1]],2)
+									else:
+										d = t(totaloffsets[id][p],2)
+								else:
+									d = t(p,2)
+							except PyMSWarning, e:
+								if not warnings:
+									warnings.append(e)
+								offset += e.extra[0]
+								ais += e.extra[1]
 							else:
-								info += struct.pack(s,dat[1].index(label)+1)
-					info += '\x00'
-				f.write(compress(info + '\x00',9))
-		except:
-			raise
-		finally:
-			f.close()
+								ais += d[1]
+								offset += d[0]
+					offset += 1
+			else:
+				table += struct.pack('<4s3L', id, 0, string+1, flags)
+		f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
+		if extra and (self.varinfo or self.aiinfo):
+			info = ''
+			for var,dat in self.varinfo.iteritems():
+				if dat[2] != None:
+					info += '%s%s\x00%s%s\x00' % (chr(dat[0]+1),var,self.types[types[dat[0]]][0](dat[1],2)[1],dat[2])
+			info += '\x00'
+			for ai,dat in self.aiinfo.iteritems():
+				info += '%s%s\x00' % (ai,dat[0])
+				for label,desc in dat[1].iteritems():
+					info += '%s\x00%s\x00' % (label,desc)
+				info += '\x00'
+				if dat[2]:
+					s = '<' + ['B','H','L','L'][int(floor(log(len(dat[2]),256)))]
+					for label in dat[2]:
+						if len(dat[2]) < 255:
+							info += chr(dat[1].index(label)+1)
+						else:
+							info += struct.pack(s,dat[1].index(label)+1)
+				info += '\x00'
+			f.write(compress(info + '\x00',9))
+		f.close()
 		if bwscript:
 			self.bwscript.compile(bwscript, extra)
 		return warnings
@@ -1935,130 +1927,126 @@ class BWBIN(AIBIN):
 				raise PyMSError('Decompile',"Could not load file '%s'" % filename)
 		else:
 			f = filename
-		try:
-			if scripts == None:
-				scripts = self.ais.keys()
-			if shortlabel:
-				labels = self.short_labels
+		if scripts == None:
+			scripts = self.ais.keys()
+		if shortlabel:
+			labels = self.short_labels
+		else:
+			labels = self.labels
+		externaljumps = extjumps[0]
+		extjumps = extjumps[1]
+		warnings = []
+		for id in scripts:
+			if not id in self.ais:
+				raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % id)
+			loc,ai,jumps = self.ais[id]
+			cmdn = 0
+			if id in extjumps:
+				j = len(extjumps[id])
+				jump = dict(extjumps[id])
 			else:
-				labels = self.labels
-			externaljumps = extjumps[0]
-			extjumps = extjumps[1]
-			warnings = []
-			for id in scripts:
-				if not id in self.ais:
-					raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % id)
-				loc,ai,jumps = self.ais[id]
-				cmdn = 0
-				if id in extjumps:
-					j = len(extjumps[id])
-					jump = dict(extjumps[id])
-				else:
-					j = 0
-					jump = {}
-				labelnames = None
-				if id in self.aiinfo:
-					labelnames = self.aiinfo[id][1].copy()
-					namenum = 0
-					gotonum = 0
-					i = self.aiinfo[id][0]
-					if '\n' in i:
-						f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-					elif i:
-						f.write(' {%s}' % i)
-				f.write('\n')
-				for cmd in ai:
-					if cmdn in jump:
-						if cmdn:
-							f.write('\n')
-						if id in self.externaljumps[1][0] and cmdn in self.externaljumps[1][0][id]:
-							s = ''
-							if len(self.externaljumps[1][0][id][cmdn]) > 1:
-								s = 's'
-							f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[1][0][id][cmdn])))
-						f.write('\t\t--%s--' % jump[cmdn])
-						if labelnames:
-							i = labelnames.get(jump[cmdn],'')
-							if '\n' in i:
-								f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-							elif i:
-								f.write(' {%s}' % i)
-							namenum += 1
+				j = 0
+				jump = {}
+			labelnames = None
+			if id in self.aiinfo:
+				labelnames = self.aiinfo[id][1].copy()
+				namenum = 0
+				gotonum = 0
+				i = self.aiinfo[id][0]
+				if '\n' in i:
+					f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+				elif i:
+					f.write(' {%s}' % i)
+			f.write('\n')
+			for cmd in ai:
+				if cmdn in jump:
+					if cmdn:
 						f.write('\n')
-					elif cmdn in jumps:
-						if labelnames:
-							jump[cmdn] = labelnames.getkey(namenum)
-							namenum += 1
+					if id in self.externaljumps[1][0] and cmdn in self.externaljumps[1][0][id]:
+						s = ''
+						if len(self.externaljumps[1][0][id][cmdn]) > 1:
+							s = 's'
+						f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[1][0][id][cmdn])))
+					f.write('\t\t--%s--' % jump[cmdn])
+					if labelnames:
+						i = labelnames.get(jump[cmdn],'')
+						if '\n' in i:
+							f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+						elif i:
+							f.write(' {%s}' % i)
+						namenum += 1
+					f.write('\n')
+				elif cmdn in jumps:
+					if labelnames:
+						jump[cmdn] = labelnames.getkey(namenum)
+						namenum += 1
+					else:
+						jump[cmdn] = '%s %04d' % (id,j)
+					if cmdn:
+						f.write('\n')
+					if id in self.externaljumps[1][0] and cmdn in self.externaljumps[1][0][id]:
+						s = ''
+						if len(self.externaljumps[1][0][id][cmdn]) > 1:
+							s = 's'
+						f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[1][0][id][cmdn])))
+					f.write('\t\t--%s--' % jump[cmdn])
+					if labelnames and jump[cmdn] in labelnames:
+						i = labelnames.get(jump[cmdn],'')
+						if '\n' in i:
+							f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
+						elif i:
+							f.write(' {%s}' % i)
+					f.write('\n')
+					j += 1
+				f.write('\t%s(' % labels[cmd[0]])
+				if len(cmd) > 1:
+					comma = False
+					for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
+						if comma:
+							f.write(', ')
 						else:
-							jump[cmdn] = '%s %04d' % (id,j)
-						if cmdn:
-							f.write('\n')
-						if id in self.externaljumps[1][0] and cmdn in self.externaljumps[1][0][id]:
-							s = ''
-							if len(self.externaljumps[1][0][id][cmdn]) > 1:
-								s = 's'
-							f.write('\t\t# Referenced externally by script%s: %s\n' % (s, ', '.join(self.externaljumps[1][0][id][cmdn])))
-						f.write('\t\t--%s--' % jump[cmdn])
-						if labelnames and jump[cmdn] in labelnames:
-							i = labelnames.get(jump[cmdn],'')
-							if '\n' in i:
-								f.write('\n\t{\n\t%s\n\t}' % i.replace('\n','\n\t'))
-							elif i:
-								f.write(' {%s}' % i)
-						f.write('\n')
-						j += 1
-					f.write('\t%s(' % labels[cmd[0]])
-					if len(cmd) > 1:
-						comma = False
-						for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
-							if comma:
-								f.write(', ')
-							else:
-								comma = True
-							temp = t(p,1)
-							if t == self.ai_address:
-								if type(temp[1]) == list:
-									if temp[1][0] in extjumps and temp[1][1] in extjumps[temp[1][0]]:
-										f.write('%s:%s' % (temp[1][0],extjumps[temp[1][0]][temp[1][1]]))
-									else:
-										if not temp[1][0] in extjumps:
-											extjumps[temp[1][0]] = {}
-										if labelnames:
-											t = self.aiinfo[id][2][gotonum]
-											n = t.split(':',1)
-											f.write(t)
-											extjumps[n[0]][temp[1][1]] = n[1]
-										else:
-											n = '%s %04d' % (temp[1][0],len(extjumps[temp[1][0]]))
-											f.write('%s:%s' % (temp[1][0],n))
-											extjumps[temp[1][0]][temp[1][1]] = n
-								elif temp[1] in jump:
-									f.write(jump[temp[1]])
+							comma = True
+						temp = t(p,1)
+						if t == self.ai_address:
+							if type(temp[1]) == list:
+								if temp[1][0] in extjumps and temp[1][1] in extjumps[temp[1][0]]:
+									f.write('%s:%s' % (temp[1][0],extjumps[temp[1][0]][temp[1][1]]))
 								else:
+									if not temp[1][0] in extjumps:
+										extjumps[temp[1][0]] = {}
 									if labelnames:
-										jump[temp[1]] = self.aiinfo[id][2][gotonum]
+										t = self.aiinfo[id][2][gotonum]
+										n = t.split(':',1)
+										f.write(t)
+										extjumps[n[0]][temp[1][1]] = n[1]
 									else:
-										jump[temp[1]] = '%s %04d' % (id,j)
-									f.write(jump[temp[1]])
-									j += 1
-								if labelnames:
-									gotonum += 1
+										n = '%s %04d' % (temp[1][0],len(extjumps[temp[1][0]]))
+										f.write('%s:%s' % (temp[1][0],n))
+										extjumps[temp[1][0]][temp[1][1]] = n
+							elif temp[1] in jump:
+								f.write(jump[temp[1]])
 							else:
-								for vt in self.typescanbe[t.__doc__.split(' ',1)[0]]:
-									vtype = vt.__doc__.split(' ',1)[0]
-									if vtype in values and p in values[vtype]:
-										f.write(values[vtype][p])
-										break
+								if labelnames:
+									jump[temp[1]] = self.aiinfo[id][2][gotonum]
 								else:
-									f.write(temp[1])
-					f.write(')\n')
-					cmdn += 1
-				f.write('\n')
-		except:
-			raise
-		finally:
-			if close:
-				f.close()
+									jump[temp[1]] = '%s %04d' % (id,j)
+								f.write(jump[temp[1]])
+								j += 1
+							if labelnames:
+								gotonum += 1
+						else:
+							for vt in self.typescanbe[t.__doc__.split(' ',1)[0]]:
+								vtype = vt.__doc__.split(' ',1)[0]
+								if vtype in values and p in values[vtype]:
+									f.write(values[vtype][p])
+									break
+							else:
+								f.write(temp[1])
+				f.write(')\n')
+				cmdn += 1
+			f.write('\n')
+		if close:
+			f.close()
 		return warnings
 
 	def compile(self, file, extra=False):
@@ -2069,71 +2057,67 @@ class BWBIN(AIBIN):
 				raise PyMSError('Compile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		try:
-			ais = ''
-			table = ''
-			offset = 4
-			totaloffsets = {}
-			for id in self.ais.keys():
-				loc,ai,jumps = self.ais[id]
-				if loc:
-					cmdn = 0
-					totaloffsets[id] = {}
-					for cmd in ai:
-						totaloffsets[id][cmdn] = offset
-						if self.parameters[cmd[0]]:
-							for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
-								try:
-									if t == self.ai_address:
-										offset += t(0,1)[0]
-									else:
-										offset += t(p,1)[0]
-								except PyMSWarning, e:
-									if not warnings:
-										warnings.append(e)
-						cmdn += 1
-						offset += 1
-			offset = 4
-			for id in self.ais.keys():
-				loc,ai,jumps = self.ais[id]
-				table += struct.pack('<4sL', id, offset)
+		ais = ''
+		table = ''
+		offset = 4
+		totaloffsets = {}
+		for id in self.ais.keys():
+			loc,ai,jumps = self.ais[id]
+			if loc:
+				cmdn = 0
+				totaloffsets[id] = {}
 				for cmd in ai:
-					ais += chr(cmd[0])
+					totaloffsets[id][cmdn] = offset
 					if self.parameters[cmd[0]]:
 						for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
 							try:
 								if t == self.ai_address:
-									if type(p) == list:
-										d = t(totaloffsets[p[0]][p[1]],2)
-									else:
-										d = t(totaloffsets[id][p],2)
+									offset += t(0,1)[0]
 								else:
-									d = t(p,2)
-								ais += d[1]
-								offset += d[0]
+									offset += t(p,1)[0]
 							except PyMSWarning, e:
 								if not warnings:
 									warnings.append(e)
+					cmdn += 1
 					offset += 1
-			f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
-			if extra and self.aiinfo:
-				info = ''
-				for ai,dat in self.aiinfo.iteritems():
-					info += '%s%s\x00' % (ai,dat[0])
-					for label,desc in dat[1].iteritems():
-						info += '%s\x00%s\x00' % (label,desc)
-					info += '\x00'
-					for label in dat[2]:
-						if len(dat[2]) < 255:
-							info += chr(dat[1].index(label)+1)
-						else:
-							info += struct.pack('<H',dat[1].index(label)+1)
-					info += '\x00'
-				f.write(compress(info + '\x00',9))
-		except:
-			raise
-		finally:
-			f.close()
+		offset = 4
+		for id in self.ais.keys():
+			loc,ai,jumps = self.ais[id]
+			table += struct.pack('<4sL', id, offset)
+			for cmd in ai:
+				ais += chr(cmd[0])
+				if self.parameters[cmd[0]]:
+					for p,t in zip(cmd[1:],self.parameters[cmd[0]]):
+						try:
+							if t == self.ai_address:
+								if type(p) == list:
+									d = t(totaloffsets[p[0]][p[1]],2)
+								else:
+									d = t(totaloffsets[id][p],2)
+							else:
+								d = t(p,2)
+							ais += d[1]
+							offset += d[0]
+						except PyMSWarning, e:
+							if not warnings:
+								warnings.append(e)
+				offset += 1
+		f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
+		if extra and self.aiinfo:
+			info = ''
+			for ai,dat in self.aiinfo.iteritems():
+				info += '%s%s\x00' % (ai,dat[0])
+				for label,desc in dat[1].iteritems():
+					info += '%s\x00%s\x00' % (label,desc)
+				info += '\x00'
+				for label in dat[2]:
+					if len(dat[2]) < 255:
+						info += chr(dat[1].index(label)+1)
+					else:
+						info += struct.pack('<H',dat[1].index(label)+1)
+				info += '\x00'
+			f.write(compress(info + '\x00',9))
+		f.close()
 		return []
 
 # gwarnings = []

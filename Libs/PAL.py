@@ -59,51 +59,35 @@ class Palette:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
-		try:
-			f.write('RIFF\x00\x00PAL data')
-			for c in self.palette:
-				f.write(struct.pack('3B',*c))
-		except:
-			raise
-		finally:
-			f.close()
+		f.write('RIFF\x00\x00PAL data')
+		for c in self.palette:
+			f.write(struct.pack('3B',*c))
+		f.close()
 
 	def save_jasc_pal(self, file):
 		try:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
-		try:
-			f.write('JASC-PAL\r\n0100\r\n256\r\n')
-			for c in self.palette:
-				f.write(' '.join(c) + '\r\n')
-		except:
-			raise
-		finally:
-			f.close()
+		f.write('JASC-PAL\r\n0100\r\n256\r\n')
+		for c in self.palette:
+			f.write(' '.join(c) + '\r\n')
+		f.close()
 
 	def save_sc_wpe(self, file):
 		try:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
-		try:
-			for c in self.palette:
-				f.write(struct.pack('3Bx',*c))
-		except:
-			raise
-		finally:
-			f.close()
+		for c in self.palette:
+			f.write(struct.pack('3Bx',*c))
+		f.close()
 
 	def save_sc_pal(self, file):
 		try:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
-		try:
-			for c in self.palette:
-				f.write(struct.pack('3B',*c))
-		except:
-			raise
-		finally:
-			f.close()
+		for c in self.palette:
+			f.write(struct.pack('3B',*c))
+		f.close()

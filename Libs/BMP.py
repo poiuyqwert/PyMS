@@ -92,22 +92,18 @@ class BMP:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Save',"Could not save BMP to file '%s'" % file)
-		try:
-			data = ''
-			pad = getPadding(self.width,4)
-			for y in self.image:
-				data = struct.pack('<%sB%s' % (self.width, 'x' * pad), *y) + data
-			palette = list(self.palette)
-			if len(palette) < 256:
-				palette.extend([[0,0,0] for _ in range(256-len(palette))])
-			palette.reverse()
-			for c in list(palette):
-				t = list(c)
-				t.reverse()
-				data = struct.pack('<3Bx', t[0], t[1], t[2]) + data
-			data = struct.pack('<HH4LHH6L', 0, 0, 1078, 40, self.width, self.height, 1, 8, 0, len(data) - 1024, 0, 0, 0, 0) + data
-			f.write('BM' + struct.pack('<L',len(data) + 6) + data)
-		except:
-			raise
-		finally:
-			f.close()
+		data = ''
+		pad = getPadding(self.width,4)
+		for y in self.image:
+			data = struct.pack('<%sB%s' % (self.width, 'x' * pad), *y) + data
+		palette = list(self.palette)
+		if len(palette) < 256:
+			palette.extend([[0,0,0] for _ in range(256-len(palette))])
+		palette.reverse()
+		for c in list(palette):
+			t = list(c)
+			t.reverse()
+			data = struct.pack('<3Bx', t[0], t[1], t[2]) + data
+		data = struct.pack('<HH4LHH6L', 0, 0, 1078, 40, self.width, self.height, 1, 8, 0, len(data) - 1024, 0, 0, 0, 0) + data
+		f.write('BM' + struct.pack('<L',len(data) + 6) + data)
+		f.close()

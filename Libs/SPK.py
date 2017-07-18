@@ -153,12 +153,8 @@ class SPK:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Save',"Could not save SPK to file '%s'" % file)
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 	def save_data(self):
 		headers = struct.pack('<H', len(self.layers))

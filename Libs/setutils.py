@@ -264,7 +264,6 @@ class Settings(SettingDict):
 			with file(self.__dict__['path'], 'w') as f:
 				json.dump(self, f, sort_keys=True, indent=4, cls=SettingEncoder)
 		except:
-			raise
 			pass
 
 PYMS_SETTINGS = Settings('PyMS', '1')

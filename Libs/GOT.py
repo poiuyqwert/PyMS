@@ -106,41 +106,33 @@ class GOT:
 		try:
 			f = AtomicWriter(file, 'w')
 		except:
-			raise PyMSError('Decompile',"Could not load file '%s'" % file)
-		try:
-			if ref:
-				f.write('#----------------------------------------------------\n')
-				for l,v in zip(self.labels,self.info):
-					if type(v) == list:
-						f.write('# %s Values:\n' % l)
-						for n,i in enumerate(v):
-							f.write('#    %s = %s\n' % (n,i))
-						f.write('#\n')
-				f.write('#----------------------------------------------------\n')
-			f.write('%s Template:\n' % self.template[0])
-			for label,info,value in zip(self.labels,self.info,self.template[1:]):
-				f.write('    %s%s%s' % (label, ' ' * (18 - len(label)), value))
-				if type(info) == list:
-					if value < len(info):
-						f.write('%s# %s' % (' ' * (11 - len(str(value))), info[value]))
-				f.write('\n')
-		except:
-			raise
-		finally:
-			f.close()
+			raise PyMSError('Decompile',"Could not write to file file '%s'" % file)
+		if ref:
+			f.write('#----------------------------------------------------\n')
+			for l,v in zip(self.labels,self.info):
+				if type(v) == list:
+					f.write('# %s Values:\n' % l)
+					for n,i in enumerate(v):
+						f.write('#    %s = %s\n' % (n,i))
+					f.write('#\n')
+			f.write('#----------------------------------------------------\n')
+		f.write('%s Template:\n' % self.template[0])
+		for label,info,value in zip(self.labels,self.info,self.template[1:]):
+			f.write('    %s%s%s' % (label, ' ' * (18 - len(label)), value))
+			if type(info) == list:
+				if value < len(info):
+					f.write('%s# %s' % (' ' * (11 - len(str(value))), info[value]))
+			f.write('\n')
+		f.close()
 
 	def compile(self, file):
 		data = struct.pack('<B32s32sBxBxHxx11BLL5x', 3, self.template[0] + '\x00' * (32 - len(self.template[0])), self.template[1] + '\x00' * (32 - len(self.template[1])), *self.template[2:])
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
-			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+			raise PyMSError('Compile',"Could not write to file '%s'" % file)
+		f.write(data)
+		f.close()
 
 #g = GOT()
 #g.load_file('test.got')

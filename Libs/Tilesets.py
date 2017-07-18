@@ -722,12 +722,8 @@ class CV5:
 				raise PyMSError('Save',"Could not save the CV5 to '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 class VF4:
 	MAX_ID = 65535
@@ -762,12 +758,8 @@ class VF4:
 				raise PyMSError('Save',"Could not save the VF4 to '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 class VX4:
 	MAX_ID = 65535
@@ -833,12 +825,8 @@ class VX4:
 				raise PyMSError('Save',"Could not save the VX4 to '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 class VR4:
 	MAX_ID = 32767
@@ -912,12 +900,8 @@ class VR4:
 				raise PyMSError('Save',"Could not save the VR4 to '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 class DDDataBIN:
 	def __init__(self):
@@ -948,12 +932,8 @@ class DDDataBIN:
 				raise PyMSError('Save',"Could not save the dddata.dat to '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 # sys.stdout = open('stdeo.txt','w')
 # sys.stderr = sys.stdout

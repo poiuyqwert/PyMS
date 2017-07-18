@@ -988,203 +988,195 @@ class IScriptBIN:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file, warnings=warnings)
 		else:
 			f = file
-		try:
-			if ids == None:
-				ids = self.header.keys()
-			longheader = max([len(h[0]) for h in HEADER] + [13]) + 1
-			longopcode = max([len(o[0][0]) for o in OPCODES] + [13]) + 1
-			warnings = []
-			labels = {}
-			completed = []
-			def setlabel(o,local,entry):
-				entry = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",''))
-				f = []
-				for i in self.offsets[o]:
-					if isinstance(i,list) and i[0] == id:
-						f.append(i[1])
-				if f:
-					f.sort()
-					labels[o] = entry + HEADER[f[0]][0]
-					return 0
-				labels[o] = entry + 'Local' + str(local).zfill(2)
-				return 1
-			def decompile_offset(o,code,local,id):
-				if id in self.extrainfo:
-					entry = self.extrainfo[id].replace(' ','_')
-				elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
-					entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
-				else:
-					entry = 'Unnamed Custom Entry'
-				if not o in completed:
-					completed.append(o)
-					if not o in labels:
-						labels[o] = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",'')) + 'Local%s' % local
-						local += 1
-					code += labels[o] + ':\n'
-					curcmd = self.code.index(o)
-					# print '\t%s' % o
-					donext = []
-					while True:
-						# print curcmd
-						co = self.code.getkey(curcmd)
-						# print co
-						if co in self.offsets and not co in labels:
-							local += setlabel(co,local,entry)
-							completed.append(co)
-							code += '%s:\n' % labels[co]
-						cmd = self.code.getitem(curcmd)
-						c = OPCODES[cmd[0]][0][0]
-						if cmd[0] == 7:
-							if not cmd[1] in labels:
-								local += setlabel(cmd[1],local,entry)
-							code += '	%s%s	%s\n\n' % (c,' ' * (longopcode-len(c)),labels[cmd[1]])
-							code,local,curcmd = decompile_offset(cmd[1],code,local,id)
-							break
-						elif cmd[0] in [22,54]: #end,return
-							code += '	%s\n\n' % c
-							break
-						elif cmd[0] in [30,53,57,58,59,60,63]: #randcondjump,call,pwrupcondjmp,trgtrangecondjmp,trgtarccondjmp,curdirectcondjmp,liftoffcondjump
-							if cmd[-1] not in labels:
-								local += setlabel(cmd[-1],local,entry)
-							if not cmd[-1] in donext:
-								donext.append(cmd[-1])
-							extra = []
-							code += '	%s%s	' % (c,' ' * (longopcode-len(c)))
-							for v,t in zip(cmd[1:-1],OPCODES[cmd[0]][1][:-1]):
+		if ids == None:
+			ids = self.header.keys()
+		longheader = max([len(h[0]) for h in HEADER] + [13]) + 1
+		longopcode = max([len(o[0][0]) for o in OPCODES] + [13]) + 1
+		warnings = []
+		labels = {}
+		completed = []
+		def setlabel(o,local,entry):
+			entry = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",''))
+			f = []
+			for i in self.offsets[o]:
+				if isinstance(i,list) and i[0] == id:
+					f.append(i[1])
+			if f:
+				f.sort()
+				labels[o] = entry + HEADER[f[0]][0]
+				return 0
+			labels[o] = entry + 'Local' + str(local).zfill(2)
+			return 1
+		def decompile_offset(o,code,local,id):
+			if id in self.extrainfo:
+				entry = self.extrainfo[id].replace(' ','_')
+			elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
+				entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
+			else:
+				entry = 'Unnamed Custom Entry'
+			if not o in completed:
+				completed.append(o)
+				if not o in labels:
+					labels[o] = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",'')) + 'Local%s' % local
+					local += 1
+				code += labels[o] + ':\n'
+				curcmd = self.code.index(o)
+				# print '\t%s' % o
+				donext = []
+				while True:
+					# print curcmd
+					co = self.code.getkey(curcmd)
+					# print co
+					if co in self.offsets and not co in labels:
+						local += setlabel(co,local,entry)
+						completed.append(co)
+						code += '%s:\n' % labels[co]
+					cmd = self.code.getitem(curcmd)
+					c = OPCODES[cmd[0]][0][0]
+					if cmd[0] == 7:
+						if not cmd[1] in labels:
+							local += setlabel(cmd[1],local,entry)
+						code += '	%s%s	%s\n\n' % (c,' ' * (longopcode-len(c)),labels[cmd[1]])
+						code,local,curcmd = decompile_offset(cmd[1],code,local,id)
+						break
+					elif cmd[0] in [22,54]: #end,return
+						code += '	%s\n\n' % c
+						break
+					elif cmd[0] in [30,53,57,58,59,60,63]: #randcondjump,call,pwrupcondjmp,trgtrangecondjmp,trgtarccondjmp,curdirectcondjmp,liftoffcondjump
+						if cmd[-1] not in labels:
+							local += setlabel(cmd[-1],local,entry)
+						if not cmd[-1] in donext:
+							donext.append(cmd[-1])
+						extra = []
+						code += '	%s%s	' % (c,' ' * (longopcode-len(c)))
+						for v,t in zip(cmd[1:-1],OPCODES[cmd[0]][1][:-1]):
+							p,e = t(1,self,v)
+							if e:
+								extra.append(e)
+							code += p + ' '
+						code += labels[cmd[-1]]
+						if extra:
+							code = code[:-1] + '\t# ' + ' | '.join(extra)
+						code += '\n'
+						curcmd += 1
+					else:
+						extra = []
+						code += '	' + c
+						if OPCODES[cmd[0]][1]:
+							code += ' ' * (longopcode-len(c)) + '\t'
+							d,o = cmd[1:],OPCODES[cmd[0]][1]
+							if OPCODES[cmd[0]][1][0](0,self) == -1:
+								n = OPCODES[cmd[0]][1][0](1,self,d[0])[0]
+								code += n + ' '
+								o = [OPCODES[cmd[0]][1][1]] * int(n)
+								del d[0]
+							for v,t in zip(d,o):
 								p,e = t(1,self,v)
 								if e:
 									extra.append(e)
 								code += p + ' '
-							code += labels[cmd[-1]]
 							if extra:
 								code = code[:-1] + '\t# ' + ' | '.join(extra)
-							code += '\n'
-							curcmd += 1
-						else:
-							extra = []
-							code += '	' + c
-							if OPCODES[cmd[0]][1]:
-								code += ' ' * (longopcode-len(c)) + '\t'
-								d,o = cmd[1:],OPCODES[cmd[0]][1]
-								if OPCODES[cmd[0]][1][0](0,self) == -1:
-									n = OPCODES[cmd[0]][1][0](1,self,d[0])[0]
-									code += n + ' '
-									o = [OPCODES[cmd[0]][1][1]] * int(n)
-									del d[0]
-								for v,t in zip(d,o):
-									p,e = t(1,self,v)
-									if e:
-										extra.append(e)
-									code += p + ' '
-								if extra:
-									code = code[:-1] + '\t# ' + ' | '.join(extra)
-							code += '\n'
-							curcmd += 1
-					if donext:
-						for d in donext:
-							code,local,curcmd = decompile_offset(d,code,local,id)
-					return (code,local,curcmd)
-				return (code,local,-1)
-			usedby = {}
-			for i in range(DAT.ImagesDAT.count):
-				id = self.imagesdat.get_value(i, 'IscriptID')
-				if id in ids:
-					if not id in usedby:
-						usedby[id] = '# This header is used by images.dat entries:\n'
-					usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DAT.DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_value(i,'GRPFile')-1][:-1]))
-			invalid = []
-			unknownid = 0
-			for id in ids:
-				code = ''
-				local = 0
-				if not id in self.headers:
-					invalid.append(id)
-					continue
-				type, offset, header = self.headers[id]
-				u = ''
-				if id in usedby:
-					u = usedby[id]
-				f.write('# ----------------------------------------------------------------------------- #\n%s.headerstart\nIsId          	%s\nType          	%s\n' % (u, id, type))
-				for o,l in zip(header,HEADER[:ENTRY_TYPES[type]]):
-					if o == None:
-						label = '[NONE]'
-					elif o in labels:
-						label = labels[o]
+						code += '\n'
+						curcmd += 1
+				if donext:
+					for d in donext:
+						code,local,curcmd = decompile_offset(d,code,local,id)
+				return (code,local,curcmd)
+			return (code,local,-1)
+		usedby = {}
+		for i in range(DAT.ImagesDAT.count):
+			id = self.imagesdat.get_value(i, 'IscriptID')
+			if id in ids:
+				if not id in usedby:
+					usedby[id] = '# This header is used by images.dat entries:\n'
+				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DAT.DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_value(i,'GRPFile')-1][:-1]))
+		invalid = []
+		unknownid = 0
+		for id in ids:
+			code = ''
+			local = 0
+			if not id in self.headers:
+				invalid.append(id)
+				continue
+			type, offset, header = self.headers[id]
+			u = ''
+			if id in usedby:
+				u = usedby[id]
+			f.write('# ----------------------------------------------------------------------------- #\n%s.headerstart\nIsId          	%s\nType          	%s\n' % (u, id, type))
+			for o,l in zip(header,HEADER[:ENTRY_TYPES[type]]):
+				if o == None:
+					label = '[NONE]'
+				elif o in labels:
+					label = labels[o]
+				else:
+					if id in self.extrainfo:
+						entry = self.extrainfo[id].replace(' ','_')
+					elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
+						entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
 					else:
-						if id in self.extrainfo:
-							entry = self.extrainfo[id].replace(' ','_')
-						elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
-							entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
-						else:
-							entry = 'Unnamed Custom Entry'
-						local += setlabel(o,local,entry)
-						label = labels[o]#'%s%s' % (DAT.DATA_CACHE['IscriptIDList.txt'][id],l[0])
-					f.write('%s%s	%s\n' % (l[0],' ' * (longheader-len(l[0])),label))
-					if o != None:
-						code,local,curcmd = decompile_offset(o,code,local,id)
-				if id in self.extrainfo:
-					f.write('##Name: %s\n' % self.extrainfo[id])
-				f.write('.headerend\n# ----------------------------------------------------------------------------- #\n\n' + code)
-		except:
-			raise
-		finally:
-			f.close()
+						entry = 'Unnamed Custom Entry'
+					local += setlabel(o,local,entry)
+					label = labels[o]#'%s%s' % (DAT.DATA_CACHE['IscriptIDList.txt'][id],l[0])
+				f.write('%s%s	%s\n' % (l[0],' ' * (longheader-len(l[0])),label))
+				if o != None:
+					code,local,curcmd = decompile_offset(o,code,local,id)
+			if id in self.extrainfo:
+				f.write('##Name: %s\n' % self.extrainfo[id])
+			f.write('.headerend\n# ----------------------------------------------------------------------------- #\n\n' + code)
+		f.close()
 
 	def compile(self, file):
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
-		try:
-			code = ''
-			offsets = {}
-			offset = 1372
-			for o,cmd in self.code.iteritems():
-				offsets[o] = offset
-				#print sum([1] + [p(0,self) for p in OPCODES[cmd[0]][1]])
-				offset += 1
-				ps = OPCODES[cmd[0]][1]
-				if ps:
-					p1 = ps[0](0,self)
-					if p1 < 0:
-						offset += sum([-p1,ps[1](0,self)*cmd[1]])
-					else:
-						offset += sum([p(0,self) for p in ps])
-			for o,cmd in self.code.iteritems():
-				ps = OPCODES[cmd[0]][1]
-				if ps:
-					p1 = ps[0](0,self)
-					if p1 < 0:
-						code += struct.pack('<B%s%s%s' % (['','B','H'][-p1],len(cmd)-2,['','B','H'][ps[1](0,self)]), *cmd)
-					else:
-						code += chr(cmd[0])
-						for v,p in zip(cmd[1:],ps):
-							if p == type_label:
-								code += struct.pack('<H',offsets[v])
-							else:
-								code += struct.pack(['','B','<H'][p(0,self)], v)
+		code = ''
+		offsets = {}
+		offset = 1372
+		for o,cmd in self.code.iteritems():
+			offsets[o] = offset
+			#print sum([1] + [p(0,self) for p in OPCODES[cmd[0]][1]])
+			offset += 1
+			ps = OPCODES[cmd[0]][1]
+			if ps:
+				p1 = ps[0](0,self)
+				if p1 < 0:
+					offset += sum([-p1,ps[1](0,self)*cmd[1]])
+				else:
+					offset += sum([p(0,self) for p in ps])
+		for o,cmd in self.code.iteritems():
+			ps = OPCODES[cmd[0]][1]
+			if ps:
+				p1 = ps[0](0,self)
+				if p1 < 0:
+					code += struct.pack('<B%s%s%s' % (['','B','H'][-p1],len(cmd)-2,['','B','H'][ps[1](0,self)]), *cmd)
 				else:
 					code += chr(cmd[0])
-			# print offset-1372
-			# print len(code)
-			table = ''
-			for id,dat in self.headers.iteritems():
-				table += struct.pack('<HH', id,offset)
-				entry = 'SCPE%s\x00\x00\x00' % chr(dat[0])
-				for o in dat[2]:
-					if o == None:
-						entry += '\x00\x00'
-					else:
-						entry += struct.pack('<H', offsets[o])
-				offset += len(entry)
-				code += entry
-			f.write('%s%s\xFF\xFF\x00\x00' % (struct.pack('<H',offset),'\x00' * 1366) + code + table + '\xFF\xFF\x00\x00')
-			if self.extrainfo:
-				f.write(compress(dumps(self.extrainfo),9))
-		except:
-			raise
-		finally:
-			f.close()
+					for v,p in zip(cmd[1:],ps):
+						if p == type_label:
+							code += struct.pack('<H',offsets[v])
+						else:
+							code += struct.pack(['','B','<H'][p(0,self)], v)
+			else:
+				code += chr(cmd[0])
+		# print offset-1372
+		# print len(code)
+		table = ''
+		for id,dat in self.headers.iteritems():
+			table += struct.pack('<HH', id,offset)
+			entry = 'SCPE%s\x00\x00\x00' % chr(dat[0])
+			for o in dat[2]:
+				if o == None:
+					entry += '\x00\x00'
+				else:
+					entry += struct.pack('<H', offsets[o])
+			offset += len(entry)
+			code += entry
+		f.write('%s%s\xFF\xFF\x00\x00' % (struct.pack('<H',offset),'\x00' * 1366) + code + table + '\xFF\xFF\x00\x00')
+		if self.extrainfo:
+			f.write(compress(dumps(self.extrainfo),9))
+		f.close()
 
 #if __name__ == '__main__':
 	## import sys

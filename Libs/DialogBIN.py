@@ -618,12 +618,8 @@ class DialogBIN:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Save',"Could not save Dialog BIN to file '%s'" % file)
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 	def save_data(self):
 		smk_offsets = {}
@@ -807,13 +803,9 @@ class DialogBIN:
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
-			raise
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+			raise PyMSError('Decompiling', "Couldn't write to file '%s'" % file)
+		f.write(data)
+		f.close()
 
 	def decompile_data(self):
 		result = ''

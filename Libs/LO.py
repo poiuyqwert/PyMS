@@ -75,35 +75,27 @@ class LO:
 				raise PyMSError('Decompile',"Could not open file '%s'" % file)
 		else:
 			f = file
-		try:
-			for frame in self.frames:
-				f.write('Frame:\n')
-				for overlay in frame:
-					f.write('    (%s, %s)\n' % tuple(overlay))
-				f.write('\n')
-		except:
-			raise
-		finally:
-			f.close()
+		for frame in self.frames:
+			f.write('Frame:\n')
+			for overlay in frame:
+				f.write('    (%s, %s)\n' % tuple(overlay))
+			f.write('\n')
+		f.close()
 
 	def compile(self, file):
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not open file '%s'" % file)
-		try:
-			overlays = len(self.frames[0])
-			f.write(struct.pack('<LL', len(self.frames), overlays))
-			data = ''
-			offsets = ''
-			offset = 8 + 4 * len(self.frames)
-			for frame in self.frames:
-				offsets += struct.pack('<L', offset)
-				for overlay in frame:
-					data += struct.pack('<bb', *overlay)
-				offset += 2 * overlays
-			f.write(offsets + data)
-		except:
-			raise
-		finally:
-			f.close()
+		overlays = len(self.frames[0])
+		f.write(struct.pack('<LL', len(self.frames), overlays))
+		data = ''
+		offsets = ''
+		offset = 8 + 4 * len(self.frames)
+		for frame in self.frames:
+			offsets += struct.pack('<L', offset)
+			for overlay in frame:
+				data += struct.pack('<bb', *overlay)
+			offset += 2 * overlays
+		f.write(offsets + data)
+		f.close()

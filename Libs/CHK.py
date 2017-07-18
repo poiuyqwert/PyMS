@@ -1985,12 +1985,8 @@ class CHK:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Save',"Could not save CHK to file '%s'" % file)
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 	def save_data(self):
 		print '========= Save'

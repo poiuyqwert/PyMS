@@ -258,7 +258,6 @@ class SMK:
 		except PyMSError, e:
 			raise e
 		except:
-			raise
 			raise PyMSError('Load',"Unsupported SMK file '%s', could possibly be corrupt" % file)
 
 	def load_data(self, data):
@@ -481,12 +480,8 @@ class SMK:
 	# 		f = AtomicWriter(file, 'wb')
 	# 	except:
 	# 		raise
-	# 	try:
-	# 		f.write(data)
-	# 	except:
-	# 		raise
-	# 	finally:
-	# 		f.close()
+	# 	f.write(data)
+	# 	f.close()
 
 	# def save_data(self):
 	# 	pass

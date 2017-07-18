@@ -2248,12 +2248,8 @@ class TRG:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+		f.write(data)
+		f.close()
 
 	def decompile_data(self, ref=False):
 		result = ''
@@ -2359,13 +2355,9 @@ class TRG:
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
-			raise
-		try:
-			f.write(data)
-		except:
-			raise
-		finally:
-			f.close()
+			raise PyMSError('Compiling', "Couldn't write to file '%s'" % file)
+		f.write(data)
+		f.close()
 
 	def compile_data(self, TRIG=False):
 		result = ''
