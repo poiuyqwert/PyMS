@@ -844,6 +844,7 @@ class PyLO(Tk):
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', 'Frame:\n\t(0, 0)')
+			self.text.edit_reset()
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 
@@ -871,6 +872,7 @@ class PyLO(Tk):
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', d.text.rstrip('\n'))
+			self.text.edit_reset()
 			self.text.see('1.0')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
@@ -896,6 +898,7 @@ class PyLO(Tk):
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', text.rstrip('\n'))
+			self.text.edit_reset()
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 

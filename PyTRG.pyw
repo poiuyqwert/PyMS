@@ -936,6 +936,7 @@ class PyTRG(Tk):
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', d.text.rstrip('\n'))
+			self.text.edit_reset()
 			self.text.see('1.0')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
@@ -958,6 +959,7 @@ class PyTRG(Tk):
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', text.rstrip('\n'))
+			self.text.edit_reset()
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 
@@ -1107,10 +1109,10 @@ class PyTRG(Tk):
 		self.completing = True
 		self.text.taboverride = ' (,):'
 		def docomplete(s, e, v, t):
-			self.text.delete(s, e)
-			self.text.insert(s, v)
 			ss = '%s+%sc' % (s,len(t))
 			se = '%s+%sc' % (s,len(v))
+			self.text.delete(s, ss)
+			self.text.insert(s, v)
 			self.text.tag_remove('Selection', '1.0', END)
 			self.text.tag_add('Selection', ss, se)
 			if self.complete[0] == None:

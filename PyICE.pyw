@@ -2109,10 +2109,10 @@ class CodeEditDialog(PyMSDialog):
 		self.completing = True
 		self.text.taboverride = ' :'
 		def docomplete(s, e, v, t):
-			self.text.delete(s, e)
-			self.text.insert(s, v)
 			ss = '%s+%sc' % (s,len(t))
 			se = '%s+%sc' % (s,len(v))
+			self.text.delete(s, ss)
+			self.text.insert(s, v)
 			self.text.tag_remove('Selection', '1.0', END)
 			self.text.tag_add('Selection', ss, se)
 			if self.complete[0] == None:
@@ -2253,6 +2253,7 @@ class CodeEditDialog(PyMSDialog):
 				f = open(iimport, 'r')
 				self.text.delete('1.0', END)
 				self.text.insert('1.0', f.read())
+				self.text.edit_reset()
 				f.close()
 			except:
 				ErrorDialog(self, PyMSError('Import','Could not import file "%s"' % iimport))
@@ -2353,6 +2354,7 @@ class CodeEditDialog(PyMSDialog):
 			self.decompile = ''
 			self.text.text.mark_set(INSERT, '1.0')
 			self.text.text.see(INSERT)
+			self.text.edit_reset()
 			self.text.edited = False
 			self.editstatus['state'] = DISABLED
 

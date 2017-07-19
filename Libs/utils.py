@@ -27,6 +27,29 @@ couriersmall = ('Courier', -8, 'normal')
 ARROW = None
 TRANS_FIX = None
 
+# Decorator
+def debug_func_log(should_log_call=None):
+	def decorator(func):
+		def do_log(*args, **kwargs):
+			import uuid
+			ref = uuid.uuid4().hex
+			log = not should_log_call or should_log_call(func, args, kwargs)
+			if log:
+				print "Func  : %s (%s)" % (func.__name__, ref)
+				print "\tArgs  : %s" % (args,)
+				print "\tkwargs: %s" % kwargs
+			result = func(*args, **kwargs)
+			if log:
+				print "Func  : %s (%s)" % (func.__name__, ref)
+				print "\tResult: %s" % (result,)
+			return result
+		return do_log
+	return decorator
+def debug_state(states, history=[]):
+	n = len(history)
+	print '##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')
+	history.append(None)
+
 def parse_geometry(geometry):
 	match = re.match(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?',geometry)
 	return tuple(None if v == None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
@@ -846,8 +869,7 @@ class CodeText(Frame):
 		self.compare = self.text.compare
 		self.edited = False
 		self.afterid = None
-		self.dodelete = None
-		self.deleteid = None
+		self.last_delete = None
 		self.tags = {}
 		# None - Nothing, True - Continue coloring, False - Stop coloring
 		self.coloring = None
@@ -887,6 +909,9 @@ class CodeText(Frame):
 
 	def undo(self):
 		self.text.edit_undo()
+
+	def edit_reset(self):
+		self.text.edit_reset()
 
 	def copy(self, cut=False):
 		self.clipboard_clear()
@@ -932,10 +957,6 @@ class CodeText(Frame):
 	def indent(self, e=None, dedent=False):
 		item = self.text.tag_ranges('Selection')
 		if item and not self.taboverride:
-			if self.deleteid:
-				self.after_cancel(self.deleteid)
-				self.dodelete = None
-				self.deleteid = None
 			head,tail = self.index('%s linestart' % item[0]),self.index('%s linestart' % item[1])
 			while self.text.compare(head, '!=', END) and self.text.compare(head, '<=', tail):
 				if dedent and self.text.get(head) in ' \t':
@@ -969,23 +990,20 @@ class CodeText(Frame):
 
 	def insert(self, index, text, tags=None):
 		if text == '\t':
-			#c,d = self.acallback != None,self.acallback()
-			#if (self.acallback != None and self.acallback()) or self.indent():
-			if (self.acallback != None and self.acallback()) or self.indent():
+			if self.last_delete and '\n' in self.last_delete[2]:
+				self.tk.call(self.text.orig, 'insert', self.last_delete[0], self.last_delete[2])
+				self.tag_add('Selection', self.last_delete[0], self.last_delete[1])
+				if self.indent():
+					self.setedit()
+				return
+			if self.acallback != None and self.acallback():
 				self.setedit()
 				return
-		elif self.taboverride and text in self.taboverride and self.tag_ranges('Selection'):
-			self.tag_remove('Selection', '1.0', END)
+		elif self.taboverride and text in self.taboverride and self.last_delete:
+			self.tk.call(self.text.orig, 'insert', self.last_delete[0], self.last_delete[2])
 			self.taboverride = False
+		self.last_delete = None
 		self.setedit()
-		if self.deleteid:
-			try:
-				self.tk.call(self.text.orig, 'delete', self.dodelete[0], self.dodelete[1])
-			except:
-				pass
-			self.after_cancel(self.deleteid)
-			self.dodelete = None
-			self.deleteid = None
 		if text == '\n':
 			i = self.index('%s linestart' % index)
 			while i != '1.0' and not self.get(i, '%s lineend' % i).split('#',1)[0]:
@@ -999,8 +1017,7 @@ class CodeText(Frame):
 		self.update_range(i, i + "+%dc" % len(text))
 
 	def delete(self, start, end=None):
-		#print start,end
-		self.setedit()
+		self.after(1, self.setedit)
 		try:
 			self.tk.call(self.text.orig, 'delete', start, end)
 		except:
@@ -1046,11 +1063,16 @@ class CodeText(Frame):
 			self.after(1, self.update_selection)
 			return self.insert(*a)
 		elif cmd == 'delete':
-			self.dodelete = a
-			self.deleteid = self.after(1, lambda n=a: self.delete(*n))
 			self.after(1, self.update_insert)
 			self.after(1, self.update_selection)
-			return
+			# When you press Tab to indent, it actually deletes the selection and then types \t, so we must keep
+			#  the last deletion to indent it
+			if len(a) == 2 and a[0] == 'Selection.first' and a[1] == 'Selection.last':
+				self.last_delete = (self.text.index(a[0]), self.text.index(a[1]), self.text.get(a[0], a[1]))
+				def remove_last_delete(*_):
+					self.last_delete = None
+				self.after(1, remove_last_delete)
+			return self.delete(*a)
 		elif cmd == 'edit' and a[0] != 'separator':
 			self.after(1, self.update_lines)
 			self.after(1, self.update_range)
