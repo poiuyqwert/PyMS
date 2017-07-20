@@ -324,51 +324,56 @@ class DATTab(NotebookTab):
 			self.toplevel.listbox.select_set(self.id)
 			self.toplevel.listbox.see(self.id)
 			self.update_status()
-			self.loadsave()
+			self.load_data()
 
 	def deactivate(self):
 		selections = self.toplevel.listbox.curselection()
 		if selections:
 			self.id = int(selections[0])
-		self.loadsave(True)
+		self.save_data()
 
-	def loadsave(self, save=False):
-		if self.dat:
-			for n,v in self.values.iteritems():
-				if save:
-					if isinstance(v, list):
-						flags = 0
-						for x,f in enumerate(v):
-							if f.get():
-								flags += 2 ** x
-						if self.dat.get_value(self.id, n) != flags:
-							self.edited = True
-							self.dat.set_value(self.id,n,flags)
-					elif isinstance(v, tuple):
-						for x in v:
-							r = x.get()
-							if self.dat.get_value(self.id,n) != r:
-								self.edited = True
-								self.dat.set_value(self.id,n,r)
-					else:
-						r = v.get()
-						if self.dat.get_value(self.id,n) != r:
-							self.edited = True
-							self.dat.set_value(self.id,n,r)
-				else:
-					c = self.dat.get_value(self.id,n)
-					if isinstance(v, list):
-						for x,f in enumerate(v):
-							f.set(not not c & (2 ** x))
-					else:
-						v.set(c)
-			self.checkreference()
-			if save and self.edited:
-				self.toplevel.action_states()
+	def load_data(self, id=None):
+		if not self.dat:
+			return
+		for n,v in self.values.iteritems():
+			c = self.dat.get_value(self.id,n)
+			if isinstance(v, list):
+				for x,f in enumerate(v):
+					f.set(not not c & (2 ** x))
+			else:
+				v.set(c)
+		self.checkreference()
+
+	def save_data(self):
+		if not self.dat:
+			return
+		for n,v in self.values.iteritems():
+			if isinstance(v, list):
+				flags = 0
+				for x,f in enumerate(v):
+					if f.get():
+						flags += 2 ** x
+				if self.dat.get_value(self.id, n) != flags:
+					self.edited = True
+					self.dat.set_value(self.id,n,flags)
+			elif isinstance(v, tuple):
+				for x in v:
+					r = x.get()
+					if self.dat.get_value(self.id,n) != r:
+						self.edited = True
+						self.dat.set_value(self.id,n,r)
+			else:
+				r = v.get()
+				if self.dat.get_value(self.id,n) != r:
+					self.edited = True
+					self.dat.set_value(self.id,n,r)
+		self.checkreference()
+		if self.edited:
+			self.toplevel.action_states()
 
 	def unsaved(self):
 		if self == self.toplevel.dattabs.active:
-			self.loadsave(save=True)
+			self.save_data()
 		if self.edited:
 			file = self.file
 			if not file:
@@ -460,7 +465,7 @@ class DATTab(NotebookTab):
 			self.toplevel.listbox.select_set(0)
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.status.set(self.file)
-				self.loadsave()
+				self.load_data()
 
 	def iimport(self, key=None, file=None, c=True, parent=None):
 		if parent == None:
@@ -537,48 +542,51 @@ class DATUnitsTab(NotebookTab):
 		pass
 
 	def activate(self):
-		self.loadsave()
+		self.load_data()
 
 	def deactivate(self):
-		self.loadsave(True)
+		self.save_data()
 
-	def loadsave(self, save=False):
-		if self.toplevel.units:
-			for n,v in self.values.iteritems():
-				if save:
-					if isinstance(v, list):
-						oldflags = self.toplevel.units.get_value(self.parent.parent.id,n)
-						flags = 0
-						for x,f in enumerate(v):
-							if f and f.get():
-								flags += 2 ** x
-							else:
-								flags += oldflags & (2 ** x)
-						if flags != oldflags:
-							self.edited = True
-							self.toplevel.units.set_value(self.parent.parent.id,n,flags)
-					elif isinstance(v, tuple):
-						for x in v:
-							r = x.get()
-							if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
-								self.edited = True
-								self.toplevel.units.set_value(self.parent.parent.id,n,r)
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		for n,v in self.values.iteritems():
+			c = self.toplevel.units.get_value(self.parent.parent.id,n)
+			if isinstance(v, list):
+				for x,f in enumerate(v):
+					if f:
+						f.set(not not c & (2 ** x))
+			else:
+				v.set(c)
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		for n,v in self.values.iteritems():
+			if isinstance(v, list):
+				oldflags = self.toplevel.units.get_value(self.parent.parent.id,n)
+				flags = 0
+				for x,f in enumerate(v):
+					if f and f.get():
+						flags += 2 ** x
 					else:
-						r = v.get()
-						if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
-							self.edited = True
-							self.toplevel.units.set_value(self.parent.parent.id,n,r)
-				else:
-					c = self.toplevel.units.get_value(self.parent.parent.id,n)
-					if isinstance(v, list):
-						for x,f in enumerate(v):
-							if f:
-								f.set(not not c & (2 ** x))
-					else:
-						v.set(c)
-			if save and self.edited:
-				self.parent_tab.edited = self.edited
-				self.toplevel.action_states()
+						flags += oldflags & (2 ** x)
+				if flags != oldflags:
+					self.edited = True
+					self.toplevel.units.set_value(self.parent.parent.id,n,flags)
+			elif isinstance(v, tuple):
+				for x in v:
+					r = x.get()
+					if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
+						self.edited = True
+						self.toplevel.units.set_value(self.parent.parent.id,n,r)
+			else:
+				r = v.get()
+				if self.toplevel.units.get_value(self.parent.parent.id,n) != r:
+					self.edited = True
+					self.toplevel.units.set_value(self.parent.parent.id,n,r)
+		if self.edited:
+			self.parent_tab.edited = self.edited
+			self.toplevel.action_states()
 
 class OrdersTab(DATTab):
 	data = 'Orders.txt'
@@ -759,9 +767,9 @@ class OrdersTab(DATTab):
 					image = ICON_CACHE[i]
 				self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		if not save and 'Icons' in PALETTES and self.toplevel.cmdicon:
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		if 'Icons' in PALETTES and self.toplevel.cmdicon:
 			self.drawpreview()
 
 class MapsTab(DATTab):
@@ -877,23 +885,31 @@ class PortraitsTab(DATTab):
 		]
 		self.setuplistbox()
 
-	def loadsave(self, save=False):
+	def loadsave_data(self):
+		return (
+			('PortraitFile','SMKChange','Unknown'),
+			(
+				(self.id, (self.idle_entry, self.idle_change, self.idle_unknown)),
+				(self.id + self.dat.count/2, (self.talking_entry, self.talking_change, self.talking_unknown))
+			)
+		)
+	def load_data(self, id=None):
 		if not self.dat:
 			return
-		labels = ('PortraitFile','SMKChange','Unknown')
-		values = (
-			(self.id, (self.idle_entry, self.idle_change, self.idle_unknown)),
-			(self.id + self.dat.count/2, (self.talking_entry, self.talking_change, self.talking_unknown))
-		)
+		labels,values = self.loadsave_data()
 		for id,variables in values:
 			for label,var in zip(labels, variables):
-				if save:
-					v = var.get()
-					if self.dat.get_value(id, label) != v:
-						self.edited = True
-						self.dat.set_value(id, label, v)
-				else:
-					var.set(self.dat.get_value(id, label))
+				var.set(self.dat.get_value(id, label))
+	def save_data(self):
+		if not self.dat:
+			return
+		labels,values = self.loadsave_data()
+		for id,variables in values:
+			for label,var in zip(labels, variables):
+				v = var.get()
+				if self.dat.get_value(id, label) != v:
+					self.edited = True
+					self.dat.set_value(id, label, v)
 
 	def files_updated(self):
 		self.dat = self.toplevel.portraits
@@ -1008,10 +1024,9 @@ class SoundsTab(DATTab):
 			if f:
 				play_sound(f.read())
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		if not save:
-			self.changesound()
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		self.changesound()
 
 class TechnologyTab(DATTab):
 	data = 'Techdata.txt'
@@ -1187,9 +1202,9 @@ class TechnologyTab(DATTab):
 				s = s[:s.index('.')+5]
 			self.secs.set(s)
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		if not save and 'Icons' in PALETTES and self.toplevel.cmdicon:
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		if 'Icons' in PALETTES and self.toplevel.cmdicon:
 			self.drawpreview()
 
 class UpgradesTab(DATTab):
@@ -1395,9 +1410,9 @@ class UpgradesTab(DATTab):
 				s = s[:s.index('.')+5]
 			x.set(s)
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		if not save and 'Icons' in PALETTES and self.toplevel.cmdicon:
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		if 'Icons' in PALETTES and self.toplevel.cmdicon:
 			self.drawpreview()
 
 class ImagesTab(DATTab):
@@ -1591,9 +1606,10 @@ class ImagesTab(DATTab):
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		shield,sizes = self.shieldentry.get(),[0,133,2,184],
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		shield = self.shieldentry.get()
+		sizes = [0,133,2,184]
 		if shield in sizes:
 			self.shieldsizes.set(sizes.index(shield))
 
@@ -1756,25 +1772,26 @@ class SpritesTab(DATTab):
 			else:
 				self.previewing = None
 
-	def loadsave(self, save=False):
-		if self.toplevel.sprites:
-			if not save:
-				id = self.id
-				check = [
-					('HealthBar', [self.hpentry,self.hpboxes]),
-					('SelectionCircleImage', [self.selentry,self.seldd]),
-					('SelectionCircleOffset', [self.vertentry])
-				]
-				for l,ws in check:
-					frmt = self.toplevel.sprites.format[self.toplevel.sprites.labels.index(l)][0]
-					state = [NORMAL,DISABLED][id < frmt[0] or id >= frmt[1]]
-					for w in ws:
-						w['state'] = state
-			else:
-				PYDAT_SETTINGS.preview.sprite.show = not not self.showpreview.get()
-			DATTab.loadsave(self, save)
-		if not save:
-			self.drawpreview()
+	def load_data(self, id=None):
+		if not self.dat:
+			return
+		DATTab.load_data(self, id)
+		check = [
+			('HealthBar', [self.hpentry,self.hpboxes]),
+			('SelectionCircleImage', [self.selentry,self.seldd]),
+			('SelectionCircleOffset', [self.vertentry])
+		]
+		for l,ws in check:
+			frmt = self.toplevel.sprites.format[self.toplevel.sprites.labels.index(l)][0]
+			state = [NORMAL,DISABLED][self.id < frmt[0] or self.id >= frmt[1]]
+			for w in ws:
+				w['state'] = state
+		self.drawpreview()
+	def save_data(self):
+		if not self.dat:
+			return
+		DATTab.save_data(self)
+		PYDAT_SETTINGS.preview.sprite.show = not not self.showpreview.get()
 
 class FlingyTab(DATTab):
 	data = 'Flingy.txt'
@@ -2222,9 +2239,9 @@ class WeaponsTab(DATTab):
 				image = ICON_CACHE[i]
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
-	def loadsave(self, save=False):
-		DATTab.loadsave(self, save)
-		if not save and 'Icons' in PALETTES and self.toplevel.cmdicon:
+	def load_data(self, id=None):
+		DATTab.load_data(self, id)
+		if 'Icons' in PALETTES and self.toplevel.cmdicon:
 			self.drawpreview()
 
 class AIActionsUnitsTab(DATUnitsTab):
@@ -2291,20 +2308,23 @@ class AIActionsUnitsTab(DATUnitsTab):
 			'AIInternal':[self.AI_NoSuicide,self.AI_NoGuard,None,None,None,None,None,None],
 			'RightClickAction':self.rightclick,
 		}
-		
-	def loadsave(self, save=False):
-		if self.toplevel.units:
-			id = self.parent.parent.id
-			if save:
-				r = (1 * self.AI_NoSuicide.get() + 2 * self.AI_NoGuard.get())
-				if self.toplevel.units.get_value(id,'AIInternal') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'AIInternal', r)
-			else:
-				self.AI_NoSuicide.set( self.toplevel.units.get_value(id,'AIInternal') & 1 == 1)
-				self.AI_NoGuard.set( self.toplevel.units.get_value(id,'AIInternal') & 2 == 2)
-		DATUnitsTab.loadsave(self, save)
 
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
+		id = self.parent.parent.id
+		self.AI_NoSuicide.set( self.toplevel.units.get_value(id,'AIInternal') & 1 == 1)
+		self.AI_NoGuard.set( self.toplevel.units.get_value(id,'AIInternal') & 2 == 2)
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		id = self.parent.parent.id
+		r = (1 * self.AI_NoSuicide.get() + 2 * self.AI_NoGuard.get())
+		if self.toplevel.units.get_value(id,'AIInternal') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'AIInternal', r)
+		DATUnitsTab.save_data(self)
 
 class StarEditUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
@@ -2436,37 +2456,41 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.ranks.setentries(ranks)
 		self.rankentry.editvalue()
 
-	def loadsave(self, save=False):
-		if self.toplevel.units:
-			id = self.parent.parent.id
-			if save:
-				r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 7) | (8*self.men.get() + 16*self.building.get() + 32*self.factory.get() + 64*self.independent.get() + 128*self.neutral.get())
-				if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
-				r = 1*self.nonneutral.get() + 2*self.unitlisting.get() + 4*self.missionbriefing.get() + 8*self.playersettings.get() + 16*self.allraces.get() + 32*self.setdoodadstate.get() + 64*self.nonlocationtriggers.get() + 128*self.unitherosettings.get() + 256*self.locationtriggers.get() + 512*self.broodwaronly.get()
-				if self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'StarEditAvailabilityFlags',r)
-			else:
-				#Staredit Group Flags
-				self.men.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 8 == 8)
-				self.building.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 16 == 16)
-				self.factory.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 32 == 32)
-				self.independent.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 64 == 64)
-				self.neutral.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 128 == 128)
-				#Staredit Availability Flags
-				self.nonneutral.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 1 == 1)
-				self.unitlisting.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 2 == 2)
-				self.missionbriefing.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 4 == 4)
-				self.playersettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 8 == 8)
-				self.allraces.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 16 == 16)
-				self.setdoodadstate.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 32 == 32)
-				self.nonlocationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 64 == 64)
-				self.unitherosettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 128 == 128)
-				self.locationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 256 == 256)
-				self.broodwaronly.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 512 == 512)
-		DATUnitsTab.loadsave(self, save)
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
+		id = self.parent.parent.id
+		#Staredit Group Flags
+		self.men.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 8 == 8)
+		self.building.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 16 == 16)
+		self.factory.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 32 == 32)
+		self.independent.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 64 == 64)
+		self.neutral.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 128 == 128)
+		#Staredit Availability Flags
+		self.nonneutral.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 1 == 1)
+		self.unitlisting.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 2 == 2)
+		self.missionbriefing.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 4 == 4)
+		self.playersettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 8 == 8)
+		self.allraces.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 16 == 16)
+		self.setdoodadstate.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 32 == 32)
+		self.nonlocationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 64 == 64)
+		self.unitherosettings.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 128 == 128)
+		self.locationtriggers.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 256 == 256)
+		self.broodwaronly.set(self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') & 512 == 512)
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		id = self.parent.parent.id
+		r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 7) | (8*self.men.get() + 16*self.building.get() + 32*self.factory.get() + 64*self.independent.get() + 128*self.neutral.get())
+		if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
+		r = 1*self.nonneutral.get() + 2*self.unitlisting.get() + 4*self.missionbriefing.get() + 8*self.playersettings.get() + 16*self.allraces.get() + 32*self.setdoodadstate.get() + 64*self.nonlocationtriggers.get() + 128*self.unitherosettings.get() + 256*self.locationtriggers.get() + 512*self.broodwaronly.get()
+		if self.toplevel.units.get_value(id,'StarEditAvailabilityFlags') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'StarEditAvailabilityFlags',r)
+		DATUnitsTab.save_data(self)
 	
 class GraphicsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
@@ -2628,24 +2652,26 @@ class GraphicsUnitsTab(DATUnitsTab):
 				self.previewing = None
 			self.drawboxes()
 
-	def loadsave(self, save=False):
-		if self.toplevel.units:
-			if not save:
-				id = self.parent.parent.id
-				restricted = [
-					('AddonHorizontal',self.horizontalw),
-					('AddonVertical',self.verticalw),
-				]
-				for l,w in restricted:
-					frmt = self.toplevel.units.format[self.toplevel.units.labels.index(l)]
-					w['state'] = [NORMAL,DISABLED][id < frmt[0][0] or id >= frmt[0][1]]
-			else:
-				PYDAT_SETTINGS.preview.unit.show = not not self.showpreview.get()
-				PYDAT_SETTINGS.preview.unit.show_placment = not not self.showplace.get()
-				PYDAT_SETTINGS.preview.unit.show_dimensions = not not self.showdims.get()
-			DATUnitsTab.loadsave(self, save)
-		if not save:
-			self.drawpreview()
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
+		id = self.parent.parent.id
+		restricted = [
+			('AddonHorizontal',self.horizontalw),
+			('AddonVertical',self.verticalw),
+		]
+		for l,w in restricted:
+			frmt = self.toplevel.units.format[self.toplevel.units.labels.index(l)]
+			w['state'] = [NORMAL,DISABLED][id < frmt[0][0] or id >= frmt[0][1]]
+		self.drawpreview()
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		PYDAT_SETTINGS.preview.unit.show = not not self.showpreview.get()
+		PYDAT_SETTINGS.preview.unit.show_placment = not not self.showplace.get()
+		PYDAT_SETTINGS.preview.unit.show_dimensions = not not self.showdims.get()
+		DATUnitsTab.save_data(self)
 
 class SoundsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
@@ -2789,22 +2815,23 @@ class SoundsUnitsTab(DATUnitsTab):
 			dd.setentries(sfxdata)
 			entry.editvalue()
 
-	def loadsave(self, save=False):
-		if not save and self.toplevel.units:
-			id = self.parent.parent.id
-			restricted = [
-				('ReadySound',[self.readyentryw,self.readyddw,self.readybtnw]),
-				('PissSoundStart',[self.firstannoyedentryw,self.firstannoyedddw,self.firstannoyedbtnw]),
-				('PissSoundEnd',[self.lastannoyedentryw,self.lastannoyedddw,self.lastannoyedbtnw]),
-				('YesSoundStart',[self.firstyesentryw,self.firstyesddw,self.firstyesbtnw]),
-				('YesSoundEnd',[self.lastyesentryw,self.lastyesddw,self.lastyesbtnw]),
-			]
-			for l,ws in restricted:
-				frmt = self.toplevel.units.format[self.toplevel.units.labels.index(l)]
-				state = [NORMAL,DISABLED][id < frmt[0][0] or id >= frmt[0][1]]
-				for w in ws:
-					w['state'] = state
-		DATUnitsTab.loadsave(self, save)
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
+		id = self.parent.parent.id
+		restricted = [
+			('ReadySound',[self.readyentryw,self.readyddw,self.readybtnw]),
+			('PissSoundStart',[self.firstannoyedentryw,self.firstannoyedddw,self.firstannoyedbtnw]),
+			('PissSoundEnd',[self.lastannoyedentryw,self.lastannoyedddw,self.lastannoyedbtnw]),
+			('YesSoundStart',[self.firstyesentryw,self.firstyesddw,self.firstyesbtnw]),
+			('YesSoundEnd',[self.lastyesentryw,self.lastyesddw,self.lastyesbtnw]),
+		]
+		for l,ws in restricted:
+			frmt = self.toplevel.units.format[self.toplevel.units.labels.index(l)]
+			state = [NORMAL,DISABLED][id < frmt[0][0] or id >= frmt[0][1]]
+			for w in ws:
+				w['state'] = state
 
 class AdvancedUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
@@ -2994,66 +3021,70 @@ class AdvancedUnitsTab(DATUnitsTab):
 	def isFlagSet(self,category,value):
 		return (self.toplevel.units.get_value(self.parent.parent.id, category) & value) == value;
 
-	def loadsave(self, save=False):
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
 		id = self.parent.parent.id
-		if not save and self.toplevel.units:
-			frmt = self.toplevel.units.format[self.toplevel.units.labels.index('Infestation')][0]
-			state = [NORMAL,DISABLED][id < frmt[0] or id >= frmt[1]]
-			self.infestentryw['state'] = state
-			self.infestddw['state'] = state
-			self.infestbtnw['state'] = state
-		if save:
-			r = (1<<0)*self.building.get() + (1<<1)*self.addon.get() + (1<<2)*self.flyer.get() + (1<<3)*self.resourceminer.get() + (1<<4)*self.subunit.get() + (1<<5)*self.flyingbuilding.get() + (1<<6)*self.hero.get() + (1<<7)*self.regenerate.get() + (1<<8)*self.animatedidle.get() + (1<<9)*self.cloakable.get() + (1<<10)*self.twounitsinoneegg.get() + (1<<11)*self.singleentity.get() + (1<<12)*self.resourcedepot.get() + (1<<13)*self.resourcecontainter.get() + (1<<14)*self.robotic.get() + (1<<15)*self.detector.get() + (1<<16)*self.organic.get() + (1<<17)*self.requirescreep.get() + (1<<18)*self.unused.get() + (1<<19)*self.requirespsi.get() + (1<<20)*self.burrowable.get() + (1<<21)*self.spellcaster.get() + (1<<22)*self.permanentcloak.get() + (1<<23)*self.pickupitem.get() + (1<<24)*self.ignoresupplycheck.get() + (1<<25)*self.usemediumoverlays.get() + (1<<26)*self.uselargeoverlays.get() + (1<<27)*self.battlereactions.get() + (1<<28)*self.fullautoattack.get() + (1<<29)*self.invincible.get() + (1<<30)*self.mechanical.get() + (1<<31)*self.producesunits.get()
-			if self.toplevel.units.get_value(id,'SpecialAbilityFlags') != r:
-				self.edited = True
-				self.toplevel.units.set_value(id,'SpecialAbilityFlags', r)
-			r = (1<<0)*self.unknown1.get() + (1<<1)*self.unknown2.get() + (1<<2)*self.unknown4.get() + (1<<3)*self.unknown8.get() + (1<<4)*self.unknown10.get() + (1<<5)*self.unknown20.get() + (1<<6)*self.unknown40.get() + (1<<7)*self.unknown80.get()
-			if self.toplevel.units.get_value(id,'Unknown') != r:
-				self.edited = True
-				self.toplevel.units.set_value(id,'Unknown', r)
-		else:
-			self.building.set(self.isFlagSet('SpecialAbilityFlags', 1 << 0))
-			self.addon.set(self.isFlagSet('SpecialAbilityFlags', 1 << 1))
-			self.flyer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 2))
-			self.resourceminer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 3))
-			self.subunit.set(self.isFlagSet('SpecialAbilityFlags', 1 << 4))
-			self.flyingbuilding.set(self.isFlagSet('SpecialAbilityFlags', 1 << 5))
-			self.hero.set(self.isFlagSet('SpecialAbilityFlags', 1 << 6))
-			self.regenerate.set(self.isFlagSet('SpecialAbilityFlags', 1 << 7))
-			self.animatedidle.set(self.isFlagSet('SpecialAbilityFlags', 1 << 8))
-			self.cloakable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 9))
-			self.twounitsinoneegg.set(self.isFlagSet('SpecialAbilityFlags', 1 << 10))
-			self.singleentity.set(self.isFlagSet('SpecialAbilityFlags', 1 << 11))
-			self.resourcedepot.set(self.isFlagSet('SpecialAbilityFlags', 1 << 12))
-			self.resourcecontainter.set(self.isFlagSet('SpecialAbilityFlags', 1 << 13))
-			self.robotic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 14))
-			self.detector.set(self.isFlagSet('SpecialAbilityFlags', 1 << 15))
-			self.organic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 16))
-			self.requirescreep.set(self.isFlagSet('SpecialAbilityFlags', 1 << 17))
-			self.unused.set(self.isFlagSet('SpecialAbilityFlags', 1 << 18))
-			self.requirespsi.set(self.isFlagSet('SpecialAbilityFlags', 1 << 19))
-			self.burrowable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 20))
-			self.spellcaster.set(self.isFlagSet('SpecialAbilityFlags', 1 << 21))
-			self.permanentcloak.set(self.isFlagSet('SpecialAbilityFlags', 1 << 22))
-			self.pickupitem.set(self.isFlagSet('SpecialAbilityFlags', 1 << 23))
-			self.ignoresupplycheck.set(self.isFlagSet('SpecialAbilityFlags', 1 << 24))
-			self.usemediumoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 25))
-			self.uselargeoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 26))
-			self.battlereactions.set(self.isFlagSet('SpecialAbilityFlags', 1 << 27))
-			self.fullautoattack.set(self.isFlagSet('SpecialAbilityFlags', 1 << 28))
-			self.invincible.set(self.isFlagSet('SpecialAbilityFlags', 1 << 29))
-			self.mechanical.set(self.isFlagSet('SpecialAbilityFlags', 1 << 30))
-			self.producesunits.set(self.isFlagSet('SpecialAbilityFlags', 1 << 31))
-			
-			self.unknown1.set(self.isFlagSet('Unknown', 1 << 0))
-			self.unknown2.set(self.isFlagSet('Unknown', 1 << 1))
-			self.unknown4.set(self.isFlagSet('Unknown', 1 << 2))
-			self.unknown8.set(self.isFlagSet('Unknown', 1 << 3))
-			self.unknown10.set(self.isFlagSet('Unknown', 1 << 4))
-			self.unknown20.set(self.isFlagSet('Unknown', 1 << 5))
-			self.unknown40.set(self.isFlagSet('Unknown', 1 << 6))
-			self.unknown80.set(self.isFlagSet('Unknown', 1 << 7))
-		DATUnitsTab.loadsave(self, save)
+		self.building.set(self.isFlagSet('SpecialAbilityFlags', 1 << 0))
+		self.addon.set(self.isFlagSet('SpecialAbilityFlags', 1 << 1))
+		self.flyer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 2))
+		self.resourceminer.set(self.isFlagSet('SpecialAbilityFlags', 1 << 3))
+		self.subunit.set(self.isFlagSet('SpecialAbilityFlags', 1 << 4))
+		self.flyingbuilding.set(self.isFlagSet('SpecialAbilityFlags', 1 << 5))
+		self.hero.set(self.isFlagSet('SpecialAbilityFlags', 1 << 6))
+		self.regenerate.set(self.isFlagSet('SpecialAbilityFlags', 1 << 7))
+		self.animatedidle.set(self.isFlagSet('SpecialAbilityFlags', 1 << 8))
+		self.cloakable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 9))
+		self.twounitsinoneegg.set(self.isFlagSet('SpecialAbilityFlags', 1 << 10))
+		self.singleentity.set(self.isFlagSet('SpecialAbilityFlags', 1 << 11))
+		self.resourcedepot.set(self.isFlagSet('SpecialAbilityFlags', 1 << 12))
+		self.resourcecontainter.set(self.isFlagSet('SpecialAbilityFlags', 1 << 13))
+		self.robotic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 14))
+		self.detector.set(self.isFlagSet('SpecialAbilityFlags', 1 << 15))
+		self.organic.set(self.isFlagSet('SpecialAbilityFlags', 1 << 16))
+		self.requirescreep.set(self.isFlagSet('SpecialAbilityFlags', 1 << 17))
+		self.unused.set(self.isFlagSet('SpecialAbilityFlags', 1 << 18))
+		self.requirespsi.set(self.isFlagSet('SpecialAbilityFlags', 1 << 19))
+		self.burrowable.set(self.isFlagSet('SpecialAbilityFlags', 1 << 20))
+		self.spellcaster.set(self.isFlagSet('SpecialAbilityFlags', 1 << 21))
+		self.permanentcloak.set(self.isFlagSet('SpecialAbilityFlags', 1 << 22))
+		self.pickupitem.set(self.isFlagSet('SpecialAbilityFlags', 1 << 23))
+		self.ignoresupplycheck.set(self.isFlagSet('SpecialAbilityFlags', 1 << 24))
+		self.usemediumoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 25))
+		self.uselargeoverlays.set(self.isFlagSet('SpecialAbilityFlags', 1 << 26))
+		self.battlereactions.set(self.isFlagSet('SpecialAbilityFlags', 1 << 27))
+		self.fullautoattack.set(self.isFlagSet('SpecialAbilityFlags', 1 << 28))
+		self.invincible.set(self.isFlagSet('SpecialAbilityFlags', 1 << 29))
+		self.mechanical.set(self.isFlagSet('SpecialAbilityFlags', 1 << 30))
+		self.producesunits.set(self.isFlagSet('SpecialAbilityFlags', 1 << 31))
+		
+		self.unknown1.set(self.isFlagSet('Unknown', 1 << 0))
+		self.unknown2.set(self.isFlagSet('Unknown', 1 << 1))
+		self.unknown4.set(self.isFlagSet('Unknown', 1 << 2))
+		self.unknown8.set(self.isFlagSet('Unknown', 1 << 3))
+		self.unknown10.set(self.isFlagSet('Unknown', 1 << 4))
+		self.unknown20.set(self.isFlagSet('Unknown', 1 << 5))
+		self.unknown40.set(self.isFlagSet('Unknown', 1 << 6))
+		self.unknown80.set(self.isFlagSet('Unknown', 1 << 7))
+		frmt = self.toplevel.units.format[self.toplevel.units.labels.index('Infestation')][0]
+		state = [NORMAL,DISABLED][id < frmt[0] or id >= frmt[1]]
+		self.infestentryw['state'] = state
+		self.infestddw['state'] = state
+		self.infestbtnw['state'] = state
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		id = self.parent.parent.id
+		r = (1<<0)*self.building.get() + (1<<1)*self.addon.get() + (1<<2)*self.flyer.get() + (1<<3)*self.resourceminer.get() + (1<<4)*self.subunit.get() + (1<<5)*self.flyingbuilding.get() + (1<<6)*self.hero.get() + (1<<7)*self.regenerate.get() + (1<<8)*self.animatedidle.get() + (1<<9)*self.cloakable.get() + (1<<10)*self.twounitsinoneegg.get() + (1<<11)*self.singleentity.get() + (1<<12)*self.resourcedepot.get() + (1<<13)*self.resourcecontainter.get() + (1<<14)*self.robotic.get() + (1<<15)*self.detector.get() + (1<<16)*self.organic.get() + (1<<17)*self.requirescreep.get() + (1<<18)*self.unused.get() + (1<<19)*self.requirespsi.get() + (1<<20)*self.burrowable.get() + (1<<21)*self.spellcaster.get() + (1<<22)*self.permanentcloak.get() + (1<<23)*self.pickupitem.get() + (1<<24)*self.ignoresupplycheck.get() + (1<<25)*self.usemediumoverlays.get() + (1<<26)*self.uselargeoverlays.get() + (1<<27)*self.battlereactions.get() + (1<<28)*self.fullautoattack.get() + (1<<29)*self.invincible.get() + (1<<30)*self.mechanical.get() + (1<<31)*self.producesunits.get()
+		if self.toplevel.units.get_value(id,'SpecialAbilityFlags') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'SpecialAbilityFlags', r)
+		r = (1<<0)*self.unknown1.get() + (1<<1)*self.unknown2.get() + (1<<2)*self.unknown4.get() + (1<<3)*self.unknown8.get() + (1<<4)*self.unknown10.get() + (1<<5)*self.unknown20.get() + (1<<6)*self.unknown40.get() + (1<<7)*self.unknown80.get()
+		if self.toplevel.units.get_value(id,'Unknown') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'Unknown', r)
+		DATUnitsTab.save_data(self)
 
 class BasicUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
@@ -3312,34 +3343,38 @@ class BasicUnitsTab(DATUnitsTab):
 				s = s[:s.index('.')+5]
 			self.seconds.set(s)
 
-	def loadsave(self, save=False):
-		if self.toplevel.units:
-			id = self.parent.parent.id
-			if save:
-				r = self.suprequired.get() * 2 + self.supreqhalf.get()
-				if self.toplevel.units.get_value(id,'SupplyRequired') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'SupplyRequired',r)
-				r = self.suprovided.get() * 2 + self.suprovhalf.get()
-				if self.toplevel.units.get_value(id,'SupplyProvided') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'SupplyProvided',r)
-				r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 248) | (1 * self.zerg.get() + 2 * self.terran.get() + 4 * self.protoss.get())
-				if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
-					self.edited = True
-					self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
-			else:
-				x = self.toplevel.units.get_value(id,'SupplyRequired')
-				self.suprequired.set(int(ceil((x - 1) / 2.0)))
-				self.supreqhalf.set(x % 2)
-				x = self.toplevel.units.get_value(id,'SupplyProvided')
-				self.suprovided.set(int(ceil((x - 1) / 2.0)))
-				self.suprovhalf.set(x % 2)
-				#
-				self.zerg.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 1)
-				self.terran.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 2 == 2)
-				self.protoss.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 4 == 4)
-		DATUnitsTab.loadsave(self, save)
+	def load_data(self, id=None):
+		if not self.toplevel.units:
+			return
+		DATUnitsTab.load_data(self, id)
+		id = self.parent.parent.id
+		x = self.toplevel.units.get_value(id,'SupplyRequired')
+		self.suprequired.set(int(ceil((x - 1) / 2.0)))
+		self.supreqhalf.set(x % 2)
+		x = self.toplevel.units.get_value(id,'SupplyProvided')
+		self.suprovided.set(int(ceil((x - 1) / 2.0)))
+		self.suprovhalf.set(x % 2)
+		#
+		self.zerg.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 1)
+		self.terran.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 2 == 2)
+		self.protoss.set(self.toplevel.units.get_value(id,'StarEditGroupFlags') & 4 == 4)
+	def save_data(self):
+		if not self.toplevel.units:
+			return
+		id = self.parent.parent.id
+		r = self.suprequired.get() * 2 + self.supreqhalf.get()
+		if self.toplevel.units.get_value(id,'SupplyRequired') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'SupplyRequired',r)
+		r = self.suprovided.get() * 2 + self.suprovhalf.get()
+		if self.toplevel.units.get_value(id,'SupplyProvided') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'SupplyProvided',r)
+		r = (self.toplevel.units.get_value(id,'StarEditGroupFlags') & 248) | (1 * self.zerg.get() + 2 * self.terran.get() + 4 * self.protoss.get())
+		if self.toplevel.units.get_value(id,'StarEditGroupFlags') != r:
+			self.edited = True
+			self.toplevel.units.set_value(id,'StarEditGroupFlags',r)
+		DATUnitsTab.save_data(self)
 				
 class UnitsTab(DATTab):
 	data = 'Units.txt'
@@ -3364,8 +3399,10 @@ class UnitsTab(DATTab):
 		for tab,_ in self.dattabs.pages.values():
 			tab.files_updated()
 
-	def loadsave(self, save=False):
-		self.dattabs.active.loadsave(save)
+	def load_data(self, id=None):
+		self.dattabs.active.load_data(id)
+	def save_data(self):
+		self.dattabs.active.save_data()
 
 	def save(self, key=None):
 		DATTab.save(self)
@@ -3703,8 +3740,10 @@ class PyDAT(Tk):
 			edited = self.dattabs.active.edited
 		self.editstatus['state'] = [DISABLED,NORMAL][edited]
 
-	def loadsave(self, save=False):
-		self.dattabs.active.loadsave(save)
+	def load_data(self, id=None):
+		self.dattabs.active.load_data(id)
+	def save_data(self):
+		self.dattabs.active.save_data()
 		self.action_states()
 
 	def changeid(self, key=None, i=None, focus_list=True):
@@ -3713,13 +3752,13 @@ class PyDAT(Tk):
 			i = int(self.listbox.curselection()[0])
 			s = False
 		if i != self.dattabs.active.id:
-			self.loadsave(True)
+			self.save_data()
 			self.dattabs.active.id = i
 			if s:
 				self.listbox.select_clear(0,END)
 				self.listbox.select_set(i)
 				self.listbox.see(i)
-			self.loadsave()
+			self.load_data()
 			if focus_list:
 				self.listframe.focus_set()
 
@@ -3856,20 +3895,20 @@ class PyDAT(Tk):
 		self.dattabs.active.iimport()
 
 	def save(self, key=None):
-		self.loadsave(True)
+		self.save_data()
 		self.dattabs.active.save()
 
 	def saveas(self, key=None):
-		self.loadsave(True)
+		self.save_data()
 		self.dattabs.active.saveas()
 
 	def export(self, key=None):
-		self.loadsave(True)
+		self.save_data()
 		self.dattabs.active.export()
 
 	def savempq(self, key=None):
 		if not FOLDER:
-			self.loadsave(True)
+			self.save_data()
 			SaveMPQDialog(self)
 
 	def mpqtbl(self, key=None, err=None):
