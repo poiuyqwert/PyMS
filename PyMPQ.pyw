@@ -655,7 +655,7 @@ class PyMPQ(Tk):
 		self.listmenu.add_command(label='Delete', command=self.remove, underline=0)
 		self.listmenu.add_command(label='Rename', command=self.rename, underline=0)
 		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
-		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, self.select, self.do_rename, self.popup, self.openfile)
+		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, self.select, self.do_rename, self.popup, self.openfile, min_widths=[50]*6)
 		self.listbox.arrows = [PhotoImage(file=os.path.join(BASE_DIR,'Images','arrow.gif')),PhotoImage(file=os.path.join(BASE_DIR,'Images','arrowup.gif')),PhotoImage(file=os.path.join(BASE_DIR,'Images','arrowblank.gif'))]
 		for n,b in enumerate(self.listbox.columns):
 			if n != 6:

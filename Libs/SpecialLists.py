@@ -366,7 +366,7 @@ class ReportSubList(RichList):
 		return self.execute('insert',(i, '%s\n' % text, tags))
 
 class ReportList(Frame):
-	def __init__(self, parent, columns=[''], selectmode=SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, **conf):
+	def __init__(self, parent, columns=[''], selectmode=SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, min_widths=None, **conf):
 		self.scmd = scmd
 		self.rcmd = rcmd
 		self.pcmd = pcmd
@@ -396,6 +396,8 @@ class ReportList(Frame):
 			if n == 0:
 				self.panes['background'] = lb.text['background']
 			self.panes.add(l)
+			if min_widths and n < len(min_widths):
+				self.panes.paneconfig(l, minsize=min_widths[n])
 			self.columns.append((b,lb))
 		self.panes.pack(fill=BOTH, expand=1)
 		# bind = [
