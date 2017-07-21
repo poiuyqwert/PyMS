@@ -634,7 +634,7 @@ class PySPK(Tk):
 			('BackSpace', self.delete_stars)
 		)
 		for k,c in bind:
-			self.skyCanvas.bind('<%s>' % k, c)
+			self.bind('<%s>' % k, c)
 		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=NSEW)
 		frame.pack(fill=X)
 		mouse_events = (
