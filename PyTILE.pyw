@@ -645,7 +645,7 @@ class GraphicsImporter(PyMSDialog):
 			if self.auto_close.get():
 				self.ok()
 
-	def select_path(self, graphics):
+	def select_path(self):
 		path = PYTILE_SETTINGS.lastpath.graphics.select_file('import', self, 'Choose Graphics', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 		if path:
 			self.graphics_path.set(path)
