@@ -1072,9 +1072,7 @@ class AIBIN:
 									if not ai[4]:
 										raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 									if None in ai[5]:
-										dat = blocknames[ai[5].index(None)]
-										if type(dat) == str:
-											raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
+										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (blocknames[ai[5].index(None)],ai[0]), warnings=warnings)
 									if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 										n = findtotaljumps[ai[0]].keys()[0]
 										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
@@ -1352,9 +1350,7 @@ class AIBIN:
 			if not ai[4]:
 				raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 			if None in ai[5]:
-				dat = blocknames[ai[5].index(None)]
-				if type(dat) == str:
-					raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
+				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (blocknames[ai[5].index(None)],ai[0]), warnings=warnings)
 			if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 				n = findtotaljumps[ai[0]].keys()[0]
 				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
@@ -1376,16 +1372,16 @@ class AIBIN:
 			for l in curinfo[ai[0]][2]:
 				if not l in curinfo[ai[0]][1]:
 					curinfo[ai[0]][1][l] = ''
+		if findtotaljumps:
+			i = findtotaljumps.peek()
+			l = i[1].peek()
+			raise PyMSError('Interpreting',"The external jump '%s:%s' in AI script '%s' jumps to an AI script that was not found while interpreting (you must include the scripts for all external jumps)" % (i[0],l[0],l[1][0][4]), warnings=warnings)
 		s = 2+sum(aisizes.values())
 		if s > 65535:
 			raise PyMSError('Interpreting',"There is not enough room in your aiscript.bin to compile these changes. The current file is %sB out of the max 65535B, these changes would make the file %sB." % (2+sum(self.aisizes.values()),s))
 		s = 2+sum(bwsizes.values())
 		if s > 65535:
 			raise PyMSError('Interpreting',"There is not enough room in your bwscript.bin to compile these changes. The current file is %sB out of the max 65535B, these changes would make the file %sB." % (2+sum(self.bwsizes.values()),s))
-		if findtotaljumps:
-			i = findtotaljumps.peek()
-			l = i[1].peek()
-			raise PyMSError('Interpreting',"The external jump '%s:%s' in AI script '%s' jumps to an AI script that was not found while interpreting (you must include the scripts for all external jumps)" % (i[0],l[0],l[1][0][4]), warnings=warnings)
 		if findgoto:
 			remove = [{},{}]
 			for i in findgoto.iteritems():
