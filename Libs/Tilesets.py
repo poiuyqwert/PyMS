@@ -97,17 +97,25 @@ class Tileset:
 		self.wpe = None
 		self.wpe_path = None
 
+	def groups_max(self):
+		return CV5.MAX_ID+1
 	def groups_remaining(self):
 		if self.cv5:
 			return self.cv5.groups_remaining()
 
+	def megatiles_max(self):
+		return VX4.MAX_ID+1
 	def megatiles_remaining(self):
 		if self.vx4:
 			return self.vx4.graphics_remaining()
 
+	def minitiles_max(self):
+		if self.vr4:
+			return self.vr4.max_id(self.vx4.expanded)+1
+		return VR4.MAX_ID+1
 	def minitiles_remaining(self):
 		if self.vr4:
-			return self.vr4.images_remaining()
+			return self.vr4.images_remaining(expanded_vx4=self.vx4.expanded)
 
 	def new_file(self, cv5=None, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
 		if cv5:
@@ -150,7 +158,10 @@ class Tileset:
 		if not vx4:
 			if not path or not name:
 				raise
-			vx4 = os.path.join(path, '%s%svx4' % (name,os.extsep))
+			vx4 = os.path.join(path, '%s%svx4ex' % (name,os.extsep))
+			# Check for and prefer expanded vx4 files
+			if not os.path.exists(vx4):
+				vx4 = os.path.join(path, '%s%svx4' % (name,os.extsep))
 		if not vr4:
 			if not path or not name:
 				raise
@@ -190,7 +201,8 @@ class Tileset:
 		if vf4 == None:
 			vf4 = os.path.join(path, '%s%svf4' % (name,os.extsep))
 		if vx4 == None:
-			vx4 = os.path.join(path, '%s%svx4' % (name,os.extsep))
+			expanded = 'ex' if self.vx4.expanded else ''
+			vx4 = os.path.join(path, '%s%svx4%s' % (name,os.extsep,expanded))
 		if vr4 == None:
 			vr4 = os.path.join(path, '%s%svr4' % (name,os.extsep))
 		dddir = os.path.join(path, name)
@@ -217,6 +229,7 @@ class Tileset:
 	# options.minitiles_reuse_duplicates_new       - Attempt to find and reuse duplicate imported minitile images (Boolean, default: True)
 	# options.minitiles_reuse_null_with_id         - Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
 	# options.minitiles_reuse_duplicates_flipped   - Check flipped versions of tiles for duplicates (Boolean, default: True)
+	# options.minitiles_expand_allowed             - Whether importing too many minitiles will expand VX4 or not (True, False, or callback, default: False)
 	def import_graphics(self, tiletype, bmpfile, ids=None, options={}):
 		if ids:
 			ids = list(ids)
@@ -294,8 +307,11 @@ class Tileset:
 					mini_lookup[image_hash].append(id)
 				else:
 					mini_lookup[image_hash] = [id]
+		minitiles_expand_allowed = options.get('minitiles_expand_allowed', False)
 		if len(new_images) > self.minitiles_remaining():
-			raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (len(self.vr4.images),len(new_images),VR4.MAX_ID+1))
+			if self.vx4.expanded or not minitiles_expand_allowed or (callable(minitiles_expand_allowed) and not minitiles_expand_allowed()):
+				raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (len(self.vr4.images),len(new_images),VR4.MAX_ID+1))
+			self.vx4.expanded = True
 		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
 			megas_w = minis_w / 4
 			megas_h = minis_h / 4
@@ -763,9 +779,10 @@ class VF4:
 
 class VX4:
 	MAX_ID = 65535
-	def __init__(self):
+	def __init__(self, expanded=False):
 		self.graphics = []
 		self.lookup = {}
+		self.expanded = expanded
 
 	def graphics_remaining(self):
 		return (VX4.MAX_ID+1) - len(self.graphics)
@@ -777,6 +794,21 @@ class VX4:
 			return self.lookup[tile_hash]
 		return None
 
+	def add_tile(self, tile):
+		correct_size = (len(tile) == 16)
+		if correct_size:
+			for r in tile:
+				if len(r) != 2:
+					correct_size = False
+					break
+		if not correct_size:
+			raise
+		id = len(self.graphics)
+		self.graphics.append(tuple(tuple(r) for r in tile))
+		tile_hash = hash(self.graphics[id])
+		if not tile_hash in self.lookup:
+			self.lookup[tile_hash] = []
+		self.lookup[tile_hash].append(id)
 	def set_tile(self, id, tile):
 		correct_size = (len(tile) == 16)
 		if correct_size:
@@ -796,28 +828,37 @@ class VX4:
 			self.lookup[tile_hash] = []
 		self.lookup[tile_hash].append(id)
 
-	def load_file(self, file):
+	# expanded = True, False, or None (None = .vx4ex file extension detection)
+	def load_file(self, file, expanded=None):
+		if expanded == None and isstr(file):
+			expanded = (file[-6:].lower() == '.vx4ex')
 		data = load_file(file, 'VX4')
-		if data and len(data) % 32:
-			raise PyMSError('Load',"'%s' is an invalid VX4 file" % file)
+		struct_size = (64 if expanded else 32)
+		file_type = 'Expanded VX4 file' if expanded else 'VX4 file'
+		if data and len(data) % struct_size:
+			raise PyMSError('Load',"'%s' is an invalid %s" % (file, file_type))
 		graphics = []
 		lookup = {}
 		try:
-			for id in xrange(len(data) / 32):
-				graphics.append(tuple(((d & 65534)/2,d & 1) for d in struct.unpack('<16H', data[id*32:(id+1)*32])))
+			ref_size_max = 0xFFFFFFFE if expanded else 0xFFFE
+			struct_frmt = '<16L' if expanded else '<16H'
+			for id in xrange(len(data) / struct_size):
+				graphics.append(tuple(((d & ref_size_max)/2,d & 1) for d in struct.unpack(struct_frmt, data[id*struct_size:(id+1)*struct_size])))
 				tile_hash = hash(graphics[-1])
 				if not tile_hash in lookup:
 					lookup[tile_hash] = []
 				lookup[tile_hash].append(id)
 		except:
-			raise PyMSError('Load',"Unsupported VX4 file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported %s '%s', could possibly be corrupt" % (file_type, file))
 		self.graphics = graphics
 		self.lookup = lookup
+		self.expanded = expanded
 
 	def save_file(self, file):
 		data = ''
+		struct_frmt = '<16L' if self.expanded else '<16H'
 		for d in self.graphics:
-			data += struct.pack('<16H', *[g*2 + h for g,h in d])
+			data += struct.pack(struct_frmt, *[g*2 + h for g,h in d])
 		if isstr(file):
 			try:
 				f = AtomicWriter(file, 'wb')
@@ -829,13 +870,17 @@ class VX4:
 		f.close()
 
 class VR4:
-	MAX_ID = 32767
+	MAX_ID 				= 0xFFFE / 2
+	MAX_ID_EXPANDED_VX4 = 0xFFFFFFFE / 2
+
 	def __init__(self):
 		self.images = []
 		self.lookup = {}
 
-	def images_remaining(self):
-		return (VR4.MAX_ID+1) - len(self.images)
+	def max_id(self, expanded_vx4=False):
+		return VR4.MAX_ID_EXPANDED_VX4 if expanded_vx4 else VR4.MAX_ID
+	def images_remaining(self, expanded_vx4=False):
+		return self.max_id(expanded_vx4)+1 - len(self.images)
 
 	# returns ([ids],isFlipped) or None
 	def find_image(self, image):
@@ -848,6 +893,21 @@ class VR4:
 			return (self.lookup[flipped_hash],True)
 		return None
 
+	def add_image(self, image):
+		correct_size = (len(image) == 8)
+		if correct_size:
+			for r in image:
+				if len(r) != 8:
+					correct_size = False
+					break
+		if not correct_size:
+			raise
+		id = len(self.images)
+		self.images.append(tuple(tuple(r) for r in image))
+		image_hash = hash(self.images[id])
+		if not image_hash in self.lookup:
+			self.lookup[image_hash] = []
+		self.lookup[image_hash].append(id)
 	def set_image(self, id, image):
 		correct_size = (len(image) == 8)
 		if correct_size:

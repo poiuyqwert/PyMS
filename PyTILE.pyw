@@ -625,13 +625,16 @@ class GraphicsImporter(PyMSDialog):
 		self.import_button['state'] = NORMAL if self.graphics_path.get() else DISABLED
 
 	def iimport(self, *_):
+		def can_expand():
+			return askyesno(parent=self, title='Expand VX4', message="You have run out of minitiles, would you like to expand the VX4 file? If you don't know what this is you should google 'VX4 Expander Plugin' before saying Yes")
 		options = {
 			'minitiles_reuse_duplicates_old': self.minitiles_reuse_duplicates_old.get(),
 			'minitiles_reuse_duplicates_new': self.minitiles_reuse_duplicates_new.get(),
 			'minitiles_reuse_null_with_id': self.minitiles_null_id.get() if self.minitiles_reuse_null.get() else None,
+			'minitiles_expand_allowed': can_expand,
 			'megatiles_reuse_duplicates_old': self.megatiles_reuse_duplicates_old.get(),
 			'megatiles_reuse_duplicates_new': self.megatiles_reuse_duplicates_new.get(),
-			'megatiles_reuse_null_with_id': self.megatiles_null_id.get() if self.megatiles_reuse_null.get() else None
+			'megatiles_reuse_null_with_id': self.megatiles_null_id.get() if self.megatiles_reuse_null.get() else None,
 		}
 		ids = None
 		if self.replace_selections.get():
@@ -974,13 +977,13 @@ class TilePalette(PyMSDialog):
 		max_count = 0
 		if self.tiletype == TILETYPE_GROUP:
 			count = len(self.tileset.cv5.groups)
-			max_count = 4096
+			max_count = self.tileset.groups_max()
 		elif self.tiletype == TILETYPE_MEGA:
 			count = len(self.tileset.vx4.graphics)
-			max_count = 65536
+			max_count = self.tileset.megatiles_max()
 		elif self.tiletype == TILETYPE_MINI:
 			count = len(self.tileset.vr4.images)
-			max_count = 32768
+			max_count = self.tileset.minitiles_max()
 		return '%s Palette [%d/%d]' % (['Group','MegaTile','MiniTile Image'][self.tiletype], count,max_count)
 	def update_title(self):
 		self.title(self.get_title())
@@ -994,7 +997,7 @@ class TilePalette(PyMSDialog):
 		elif self.tiletype == TILETYPE_MEGA:
 			at_max = (self.tileset.megatiles_remaining() == 0)
 		elif self.tiletype == TILETYPE_MINI:
-			at_max = (self.tileset.minitiles_remaining() == 0)
+			at_max = (self.tileset.minitiles_remaining() == 0 and self.tileset.vx4.expanded)
 		self.buttons['add']['state'] == DISABLED if at_max else NORMAL
 		export_state = DISABLED if not self.selected else NORMAL
 		self.buttons['exportc']['state'] = export_state
@@ -1125,10 +1128,15 @@ class TilePalette(PyMSDialog):
 			select = len(self.tileset.cv5.groups)-1
 		elif self.tiletype == TILETYPE_MEGA:
 			self.tileset.vf4.flags.append([0]*32)
-			self.tileset.vx4.graphics.append([[0,0] for _ in range(16)])
+			self.tileset.vx4.add_tile(((0,0),)*16)
 			select = len(self.tileset.vx4.graphics)-1
 		else:
-			self.tileset.vr4.images.append([[0] * 8 for _ in range(8)] )
+			if self.tileset.minitiles_remaining() == 0:
+				if not askyesno(parent=self, title='Expand VX4', message="You have run out of minitiles, would you like to expand the VX4 file? If you don't know what this is you should google 'VX4 Expander Plugin' before saying Yes"):
+					return
+				self.tileset.vx4.expanded = True
+			for _ in range(1 if self.tileset.vx4.expanded else self.tileset.minitiles_remaining()):
+				self.tileset.vr4.add_image(((0,)*8,)*8)
 			select = len(self.tileset.vr4.images)-1
 		self.update_title()
 		self.update_state()
@@ -1462,13 +1470,14 @@ class PyTILE(Tk):
 
 		#Statusbar
 		self.status = StringVar()
+		self.expanded = StringVar()
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=45, anchor=W).pack(side=LEFT, padx=1)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
 		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
 		self.editstatus.image = image
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
-		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
+		Label(statusbar, textvariable=self.expanded, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load a Tileset.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -1500,6 +1509,8 @@ class PyTILE(Tk):
 		for w in self.disable:
 			w['state'] = file
 		self.mega_editor.set_enabled(self.tileset != None)
+		if self.tileset and self.tileset.vx4.expanded:
+			self.expanded.set('VX4 Expanded')
 
 	def mark_edited(self, edited=True):
 		self.edited = edited
@@ -1673,6 +1684,8 @@ class PyTILE(Tk):
 			self.group = [0,0]
 			self.megaload()
 			self.updatescroll()
+			if self.tileset.vx4.expanded:
+				showwarning(parent=self, title='Expanded VX4 Warning', message='This tileset is using an expanded vx4 file.')
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
