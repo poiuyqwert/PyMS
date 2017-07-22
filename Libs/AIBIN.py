@@ -1089,7 +1089,9 @@ class AIBIN:
 									if not ai[4]:
 										raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 									if None in ai[5]:
-										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (blocknames[ai[5].index(None)],ai[0]), warnings=warnings)
+										dat = blocknames[ai[5].index(None)]
+										if isstr(dat):
+											raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 									if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 										n = findtotaljumps[ai[0]].keys()[0]
 										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
@@ -1367,7 +1369,9 @@ class AIBIN:
 			if not ai[4]:
 				raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 			if None in ai[5]:
-				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (blocknames[ai[5].index(None)],ai[0]), warnings=warnings)
+				dat = blocknames[ai[5].index(None)]
+				if issstr(dat):
+					raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 			if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 				n = findtotaljumps[ai[0]].keys()[0]
 				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
