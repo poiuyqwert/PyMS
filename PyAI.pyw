@@ -74,6 +74,8 @@ It seems that AI difficulty is mostly an unused concept. The AI Difficulty now i
 		('eval_harass',"""This command will initiate an attack if it has not (without waiting for grouping), and then it will calculate the strength of its own attack force and enemy units in 32-tile range around the target region. If either the ground or air strength of the attack force is larger than the respective enemy strength, the script will jump to Block.
 
 eval_harass will cause the grouping and attack to commence as usual, but it also can be canceled with attack_clear if you just want to use it for control flow instead of causing attacks."""),
+		('prep_down',"""This command is similar to attack_add, but it can be used to add more units if the AI commands more of them. It is essentially:
+attack_add max(unit_count(Military) - Byte(1), Byte(2)) Military"""),
 		('tech','Research technology Technology, at priority Byte.'),
 		('train','Train Military until it commands Byte of them.'),
 		('do_morph','Train Military if it commands less than Byte of them.'),
@@ -151,6 +153,7 @@ It seems that AI difficulty is mostly an unused concept. The AI Difficulty now i
 		('defaultbuild_off','The use of this command is unknown. Takes no parameter.'),
 		('fake_nuke','The use of this command is unknown. Takes no parameters.'),
 		('guard_all','The use of this command is unknown. Takes no parameters.'),
+		('harass_factor','This command is not fully understood, it does something related to unit strengths in a region. It is never used in Blizzard scripts.'),
 		('if_owned','The use of this command is unknown. Takes Unit and Block as parameters.'),
 		('max_force','The use of this command is unknown. Takes Word as parameter.'),
 		('place_guard','The use of this command is unknown. Takes Unit and Byte as parameters.'),
@@ -166,10 +169,8 @@ It seems that AI difficulty is mostly an unused concept. The AI Difficulty now i
 		('build_turrets','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('default_build','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('fatal_error','The definition of this command is unknown. It is never used in Blizzard scripts.'),
-		('harass_factor','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('if_towns','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('implode','The definition of this command is unknown. It is never used in Blizzard scripts.'),
-		('prep_down','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('quick_attack','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('wait_bunkers','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('wait_secure','The definition of this command is unknown. It is never used in Blizzard scripts.'),

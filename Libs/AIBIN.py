@@ -381,7 +381,7 @@ class AIBIN:
 			None, # build_turrets
 			None, # wait_turrets
 			None, # default_build
-			None, # harass_factor (Possibly one parameter)
+			[self.ai_word], # harass_factor
 			None, # start_campaign
 			[self.ai_address, self.ai_address, self.ai_address], # race_jump
 			[self.ai_byte, self.ai_address], # region_size
@@ -409,7 +409,7 @@ class AIBIN:
 			None, # set_gencmd
 			None, # make_patrol
 			None, # give_money
-			None, # prep_down (Possibly three parameters?)
+			[self.ai_byte, self.ai_byte, self.ai_military], # prep_down
 			[self.ai_word, self.ai_word, self.ai_address], # resources_jump
 			None, # enter_transport
 			None, # exit_transport
