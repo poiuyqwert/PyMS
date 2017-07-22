@@ -36,6 +36,7 @@ types = [
 	('technology','An technology ID from 0 to 43, or a full technology name from stat_txt.tbl'),
 	('string',"A string of any characters (except for nulls: <0>) in TBL string formatting (use <40> for an open parenthesis '(', <41> for a close parenthesis ')', and <44> for a comma ',')"),
 	('block','The label name of a block in the code'),
+	('compare','Either LessThan or GreaterThan')
 ]
 TYPE_HELP = odict()
 for t,h in types:
@@ -68,6 +69,11 @@ cmds = [
 		('defenseuse_ga','Use Byte Military to defend against enemy attacking ground units, when air units are attacked.'),
 		('defenseuse_gg','Use Byte Military to defend against enemy attacking ground units, when ground units are attacked.'),
 		('guard_resources','Send units of type Military to guard as many resources spots as possible(1 per spot).'),
+		('easy_attack',"""This command functions the same as attack_add, but only if the "AI Diffiulty" value is 0. Otherwise it doesn't do anything.
+It seems that AI difficulty is mostly an unused concept. The AI Difficulty now is always 1, unless the AI has never started a town, in which case it is 0. There is also some unused functionality which would allow AI to mine more than 8 resources per trip if the difficulty was ever 2."""),
+		('eval_harass',"""This command will initiate an attack if it has not (without waiting for grouping), and then it will calculate the strength of its own attack force and enemy units in 32-tile range around the target region. If either the ground or air strength of the attack force is larger than the respective enemy strength, the script will jump to Block.
+
+eval_harass will cause the grouping and attack to commence as usual, but it also can be canceled with attack_clear if you just want to use it for control flow instead of causing attacks."""),
 		('tech','Research technology Technology, at priority Byte.'),
 		('train','Train Military until it commands Byte of them.'),
 		('do_morph','Train Military if it commands less than Byte of them.'),
@@ -109,6 +115,8 @@ cmds = [
 		('create_unit','Create Unit at map position (x,y) where x = Word(1) and y = Word(2). Should only be used in campaign scripts.'),
 		('define_max','Define maximum number of Unit to Byte.'),
 		('give_money','Give 2000 ore and gas if owned resources are low. Should only be used in campaign scripts.'),
+		('if_dif',"""This command will jump to Block if the "AI Difficulty" is LessThan/GreaterThan (Compare) Byte.
+It seems that AI difficulty is mostly an unused concept. The AI Difficulty now is always 1, unless the AI has never started a town, in which case it is 0. There is also some unused functionality which would allow AI to mine more than 8 resources per trip if the difficulty was ever 2."""),
 		('nuke_pos','Launch a nuke at map position (x,y) where x = Word(1) and y = Word(2). Should only be used in campaign scripts.'),
 		('send_suicide','Send all units to suicide mission. Byte determines which type, 0 = Strategic suicide; 1 = Random suicide.'),
 		('set_randomseed','Set random seed to DWord(1).'),
@@ -157,11 +165,8 @@ cmds = [
 		('build_bunkers','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('build_turrets','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('default_build','The definition of this command is unknown. It is never used in Blizzard scripts.'),
-		('easy_attack','The definition of this command is unknown. It is never used in Blizzard scripts.'),
-		('eval_harass','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('fatal_error','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('harass_factor','The definition of this command is unknown. It is never used in Blizzard scripts.'),
-		('if_dif','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('if_towns','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('implode','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 		('prep_down','The definition of this command is unknown. It is never used in Blizzard scripts.'),
@@ -572,7 +577,7 @@ class AICodeText(CodeText):
 		num = '\\b(?P<Number>\\d+)\\b'
 		tbl = '(?P<TBLFormat><0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>)'
 		operators = '(?P<Operators>[():,=])'
-		kw = '\\b(?P<Keywords>extdef|aiscript|bwscript)\\b'
+		kw = '\\b(?P<Keywords>extdef|aiscript|bwscript|LessThan|GreaterThan)\\b'
 		types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
 		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, '(?P<Newline>\\n)')), re.S | re.M)
 		self.tooptips = [CommandCodeTooltip(self.text,self.ai),TypeCodeTooltip(self.text,self.ai),StringCodeTooltip(self.text,self.ai),FlagCodeTooltip(self.text,self.ai)]
@@ -869,6 +874,7 @@ class CodeEditDialog(PyMSDialog):
 			if not m:
 				for _,c in CMD_HELP.iteritems():
 					ac.extend(c.keys())
+				ac.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
 			for ns in self.parent.tbl.strings[:228]:
 				cs = ns.split('\x00')
 				if cs[1] != '*':

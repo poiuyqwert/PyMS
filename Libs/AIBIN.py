@@ -21,7 +21,8 @@ types = [
 	'aa_military',
 	'upgrade',
 	'technology',
-	'string'
+	'string',
+	'compare'
 ]
 
 def convflags(num):
@@ -222,49 +223,49 @@ class AIBIN:
 		'panic',              #0x44 - 68
 		'player_need',        #0x45 - 69
 		'do_morph',           #0x46 - 70
-		'wait_upgrades',      #0x47 - 
-		'multirun',           #0x48 - 
-		'rush',               #0x49 - 
-		'scout_with',         #0x4A - 
-		'define_max',         #0x4B - 
-		'train',              #0x4C - 
-		'target_expansion',   #0x4D - 
-		'wait_train',         #0x4E - 
-		'set_attacks',        #0x4F - 
-		'set_gencmd',         #0x50 - 
-		'make_patrol',        #0x51 - 
-		'give_money',         #0x52 - 
-		'prep_down',          #0x53 - 
-		'resources_jump',     #0x54 - 
-		'enter_transport',    #0x55 - 
-		'exit_transport',     #0x56 - 
-		'sharedvision_on',    #0x57 - 
-		'sharedvision_off',   #0x58 - 
-		'nuke_location',      #0x59 - 
-		'harass_location',    #0x5A - 
-		'implode',            #0x5B - 
-		'guard_all',          #0x5C - 
-		'enemyowns_jump',     #0x5D - 
-		'enemyresources_jump',#0x5E - 
-		'if_dif',             #0x5F - 
-		'easy_attack',        #0x60 - 
-		'kill_thread',        #0x61 - 
-		'killable',           #0x62 - 
-		'wait_finishattack',  #0x63 - 
-		'quick_attack',       #0x64 - 
-		'junkyard_dog',       #0x65 - 
-		'fake_nuke',          #0x66 - 
-		'disruption_web',     #0x67 - 
-		'recall_location',    #0x68 - 
-		'set_randomseed',     #0x69 - 
-		'if_owned',           #0x6A - 
-		'create_nuke',        #0x6B - 
-		'create_unit',        #0x6C - 
-		'nuke_pos',           #0x6D - 
-		'help_iftrouble',     #0x6E - 
-		'allies_watch',       #0x6F - 
-		'try_townpoint',      #0x70 - 
-		'if_towns',           #0x71 - 
+		'wait_upgrades',      #0x47 - 71
+		'multirun',           #0x48 - 72
+		'rush',               #0x49 - 73
+		'scout_with',         #0x4A - 74
+		'define_max',         #0x4B - 75
+		'train',              #0x4C - 76
+		'target_expansion',   #0x4D - 77
+		'wait_train',         #0x4E - 78
+		'set_attacks',        #0x4F - 79
+		'set_gencmd',         #0x50 - 80
+		'make_patrol',        #0x51 - 81
+		'give_money',         #0x52 - 82
+		'prep_down',          #0x53 - 83
+		'resources_jump',     #0x54 - 84
+		'enter_transport',    #0x55 - 85
+		'exit_transport',     #0x56 - 86
+		'sharedvision_on',    #0x57 - 87
+		'sharedvision_off',   #0x58 - 88
+		'nuke_location',      #0x59 - 89
+		'harass_location',    #0x5A - 90
+		'implode',            #0x5B - 91
+		'guard_all',          #0x5C - 92
+		'enemyowns_jump',     #0x5D - 93
+		'enemyresources_jump',#0x5E - 94
+		'if_dif',             #0x5F - 95
+		'easy_attack',        #0x60 - 96
+		'kill_thread',        #0x61 - 97
+		'killable',           #0x62 - 98
+		'wait_finishattack',  #0x63 - 99
+		'quick_attack',       #0x64 - 100
+		'junkyard_dog',       #0x65 - 101
+		'fake_nuke',          #0x66 - 102
+		'disruption_web',     #0x67 - 103
+		'recall_location',    #0x68 - 104
+		'set_randomseed',     #0x69 - 105
+		'if_owned',           #0x6A - 106
+		'create_nuke',        #0x6B - 107
+		'create_unit',        #0x6C - 108
+		'nuke_pos',           #0x6D - 109
+		'help_iftrouble',     #0x6E - 110
+		'allies_watch',       #0x6F - 111
+		'try_townpoint',      #0x70 - 112
+		'if_towns',           #0x71 - 113
 	]
 
 	separate = [
@@ -325,120 +326,120 @@ class AIBIN:
 			self.techdat = DAT.TechDAT(self.tbl)
 			self.techdat.load_file(techs)
 		self.parameters = [
-			[self.ai_address],
-			[self.ai_unit,self.ai_address],
-			[self.ai_word],
-			None,
-			None,
-			[self.ai_byte, self.ai_address],
-			[self.ai_byte, self.ai_building, self.ai_byte],
-			[self.ai_byte, self.ai_upgrade, self.ai_byte],
-			[self.ai_technology,self.ai_byte],
-			[self.ai_byte, self.ai_building],
-			[self.ai_byte, self.ai_unit],
-			None,
-			[self.ai_byte, self.ai_military],
-			None,
-			None,
-			None,
-			None,
-			None,
-			None,
-			[self.ai_byte, self.ai_ggmilitary],
-			[self.ai_byte, self.ai_agmilitary],
-			[self.ai_byte, self.ai_gamilitary],
-			[self.ai_byte, self.ai_aamilitary],
-			[self.ai_byte, self.ai_ggmilitary],
-			[self.ai_byte, self.ai_agmilitary],
-			[self.ai_byte, self.ai_gamilitary],
-			[self.ai_byte, self.ai_aamilitary],
-			None,
-			None,
-			None,
-			None,
-			[self.ai_byte],
-			None,
-			None,
-			[self.ai_byte],
-			None,
-			None,
-			None,
-			None,
-			[self.ai_address,self.ai_string],
-			None,
-			None,
-			None,
-			None,
-			None,
-			[self.ai_byte],
-			[self.ai_word],
-			None,
-			[self.ai_byte, self.ai_address],
-			[self.ai_byte, self.ai_address],
-			None,
-			None,
-			None,
-			None,
-			None,
-			None, #Possibly one parameter
-			None,
-			[self.ai_address, self.ai_address, self.ai_address],
-			[self.ai_byte, self.ai_address],
-			[self.ai_byte],
-			[self.ai_address],
-			[self.ai_unit, self.ai_byte],
-			[self.ai_byte, self.ai_military],
-			[self.ai_military],
-			[self.ai_address],
-			None,
-			None, #Possibly one parameter
-			[self.ai_byte],
-			[self.ai_address],
-			[self.ai_byte,self.ai_building],
-			[self.ai_byte, self.ai_military],
-			None,
-			[self.ai_address],
-			[self.ai_byte, self.ai_address],
-			[self.ai_military],
-			[self.ai_byte, self.ai_unit],
-			[self.ai_byte, self.ai_military],
-			None,
-			[self.ai_byte, self.ai_unit],
-			[self.ai_byte],
-			None,
-			None,
-			None,
-			None, #Possibly three parameters
-			[self.ai_word, self.ai_word, self.ai_address],
-			None,
-			None,
-			[self.ai_byte],
-			[self.ai_byte],
-			None,
-			None,
-			None,
-			None,
-			[self.ai_unit, self.ai_address],
-			[self.ai_word, self.ai_word, self.ai_address],
-			None, #Possibly three parameters
-			None, #Possibly two parameters
-			None,
-			None,
-			None,
-			None,
-			None,
-			None,
-			None,
-			None,
-			[self.ai_dword],
-			[self.ai_unit,self.ai_address],
-			None,
-			[self.ai_unit, self.ai_word, self.ai_word],
-			[self.ai_word, self.ai_word],
-			None,
-			[self.ai_byte, self.ai_address],
-			[self.ai_byte, self.ai_address],
-			None,
+			[self.ai_address], # goto
+			[self.ai_unit,self.ai_address], # notowns_jump
+			[self.ai_word], # wait
+			None, # start_town
+			None, # start_areatown
+			[self.ai_byte, self.ai_address], # expand
+			[self.ai_byte, self.ai_building, self.ai_byte], # build
+			[self.ai_byte, self.ai_upgrade, self.ai_byte], # upgrade
+			[self.ai_technology,self.ai_byte], # tech
+			[self.ai_byte, self.ai_building], # wait_build
+			[self.ai_byte, self.ai_unit], # wait_buildstart
+			None, # attack_clear
+			[self.ai_byte, self.ai_military], # attack_add
+			None, # attack_prepare
+			None, # attack_do
+			None, # wait_secure
+			None, # capt_expand
+			None, # build_bunkers
+			None, # wait_bunkers
+			[self.ai_byte, self.ai_ggmilitary], # defensebuild_gg
+			[self.ai_byte, self.ai_agmilitary], # defensebuild_ag
+			[self.ai_byte, self.ai_gamilitary], # defensebuild_ga
+			[self.ai_byte, self.ai_aamilitary], # defensebuild_aa
+			[self.ai_byte, self.ai_ggmilitary], # defenseuse_gg
+			[self.ai_byte, self.ai_agmilitary], # defenseuse_ag
+			[self.ai_byte, self.ai_gamilitary], # defenseuse_ga
+			[self.ai_byte, self.ai_aamilitary], # defenseuse_aa
+			None, # defenseclear_gg
+			None, # defenseclear_ag
+			None, # defenseclear_ga
+			None, # defenseclear_aa
+			[self.ai_byte], # send_suicide
+			None, # player_enemy
+			None, # player_ally
+			[self.ai_byte], # default_min
+			None, # defaultbuild_off
+			None, # stop
+			None, # switch_rescue
+			None, # move_dt
+			[self.ai_address,self.ai_string], # debug
+			None, # fatal_error
+			None, # enter_bunker
+			None, # value_area
+			None, # transports_off
+			None, # check_transports
+			[self.ai_byte], # nuke_rate
+			[self.ai_word], # max_force
+			None, # clear_combatdata
+			[self.ai_byte, self.ai_address], # random_jump
+			[self.ai_byte, self.ai_address], # time_jump
+			None, # farms_notiming
+			None, # farms_timing
+			None, # build_turrets
+			None, # wait_turrets
+			None, # default_build
+			None, # harass_factor (Possibly one parameter)
+			None, # start_campaign
+			[self.ai_address, self.ai_address, self.ai_address], # race_jump
+			[self.ai_byte, self.ai_address], # region_size
+			[self.ai_byte], # get_oldpeons
+			[self.ai_address], # groundmap_jump
+			[self.ai_unit, self.ai_byte], # place_guard
+			[self.ai_byte, self.ai_military], # wait_force
+			[self.ai_military], # guard_resources
+			[self.ai_address], # call
+			None, # return
+			[self.ai_address], # eval_harass
+			[self.ai_byte], # creep
+			[self.ai_address], # panic
+			[self.ai_byte,self.ai_building], # player_need
+			[self.ai_byte, self.ai_military], # do_morph
+			None, # wait_upgrades
+			[self.ai_address], # multirun
+			[self.ai_byte, self.ai_address], # rush
+			[self.ai_military], # scout_with
+			[self.ai_byte, self.ai_unit], # define_max
+			[self.ai_byte, self.ai_military], # train
+			None, # target_expansion
+			[self.ai_byte, self.ai_unit], # wait_train
+			[self.ai_byte], # set_attacks
+			None, # set_gencmd
+			None, # make_patrol
+			None, # give_money
+			None, # prep_down (Possibly three parameters?)
+			[self.ai_word, self.ai_word, self.ai_address], # resources_jump
+			None, # enter_transport
+			None, # exit_transport
+			[self.ai_byte], # sharedvision_on
+			[self.ai_byte], # sharedvision_off
+			None, # nuke_location
+			None, # harass_location
+			None, # implode
+			None, # guard_all
+			[self.ai_unit, self.ai_address], # enemyowns_jump
+			[self.ai_word, self.ai_word, self.ai_address], # enemyresources_jump
+			[self.ai_compare, self.ai_byte, self.ai_address], # if_dif
+			[self.ai_byte, self.ai_military], # easy_attack
+			None, # kill_thread
+			None, # killable
+			None, # wait_finishattack
+			None, # quick_attack
+			None, # junkyard_dog
+			None, # fake_nuke
+			None, # disruption_web
+			None, # recall_location
+			[self.ai_dword], # set_randomseed
+			[self.ai_unit,self.ai_address], # if_owned
+			None, # create_nuke
+			[self.ai_unit, self.ai_word, self.ai_word], # create_unit
+			[self.ai_word, self.ai_word], # nuke_pos
+			None, # help_iftrouble
+			[self.ai_byte, self.ai_address], # allies_watch
+			[self.ai_byte, self.ai_address], # try_townpoint
+			None, # if_towns
 		]
 		self.builds = []
 		for c in [6,19,20,21,22,69]:
@@ -461,7 +462,8 @@ class AIBIN:
 			'aa_military':[self.ai_aamilitary,self.ai_agmilitary,self.ai_military,self.ai_unit],
 			'upgrade':[self.ai_upgrade],
 			'technology':[self.ai_technology],
-			'string':[self.ai_string]
+			'string':[self.ai_string],
+			'compare':[self.ai_compare]
 		}
 		self.typescanbe = {
 			'byte':[self.ai_byte],
@@ -476,7 +478,8 @@ class AIBIN:
 			'aa_military':[self.ai_aamilitary,self.ai_agmilitary,self.ai_military],
 			'upgrade':[self.ai_upgrade],
 			'technology':[self.ai_technology],
-			'string':[self.ai_string]
+			'string':[self.ai_string],
+			'compare':[self.ai_compare]
 		}
 		self.script_endings = [0,36,39,57,65,97] #goto, stop, debug, racejump, return, kill_thread
 
@@ -891,6 +894,20 @@ class AIBIN:
 				raise PyMSError('Parameter',"String '%s' contains a null (<0>)" % data)
 			return [len(s) + 1,s + '\x00']
 		return [len(data),data]
+
+	def ai_compare(self, data, stage=0):
+		"""compare        - Either LessThan or GreaterThan"""
+		if not stage:
+			v = ord(data[0])
+		elif stage == 1:
+			v = 'GreaterThan' if data else 'LessThan'
+		elif stage == 2:
+			v = chr(data)
+		else:
+			if data not in ('LessThan','GreaterThan'):
+				raise PyMSError('Parameter','Compare must be either LessThan or GreaterThan, got %s instead' % data)
+			v = 1 if data == 'GreaterThan' else 0
+		return [1,v]
 
 	def interpret(self, files, defs=None, extra=False):
 		if not isinstance(files, list):

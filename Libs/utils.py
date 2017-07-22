@@ -120,15 +120,17 @@ def fit(label, text, width=80, end=False, indent=0):
 	else:
 		s = indent
 	indent = False
-	for l in wrap(text, width - s):
-		if indent:
-			r += ' ' * s
-		else:
-			indent = True
-		r += l
-		if len(l) != width - s or end:
+	for p in text.split('\n'):
+		if p:
+			for l in wrap(p, width - s):
+				if indent:
+					r += ' ' * s
+				else:
+					indent = True
+				r += l
+				r += '\n'
 			r += '\n'
-	return r
+	return r.rstrip('\n') + '\n' if end else ''
 
 def removedir(path):
 	if os.path.exists(path):
