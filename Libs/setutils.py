@@ -273,7 +273,7 @@ PYMS_SETTINGS = Settings('PyMS', '1')
 
 if win_reg and not 'scdir' in PYMS_SETTINGS:
 	try:
-		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft')
+		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft', sam=KEY_WOW64_32KEY)
 		path = QueryValueEx(h, 'InstallPath')[0]
 		if os.path.isdir(path):
 			PYMS_SETTINGS.scdir = path
