@@ -1370,7 +1370,7 @@ class AIBIN:
 				raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 			if None in ai[5]:
 				dat = blocknames[ai[5].index(None)]
-				if issstr(dat):
+				if isstr(dat):
 					raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 			if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 				n = findtotaljumps[ai[0]].keys()[0]
