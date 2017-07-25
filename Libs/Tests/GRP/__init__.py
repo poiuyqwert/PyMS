@@ -1,8 +1,10 @@
 
 import save_load
+import image_bounds
 
 tests = [
-	save_load
+	save_load,
+	image_bounds
 ]
 
 from .. import testing

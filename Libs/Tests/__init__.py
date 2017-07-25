@@ -8,7 +8,7 @@ groups = [
 from logging import *
 
 
-def test_groups():
+def run():
 	total_groups = len(groups)
 	for n,group in enumerate(groups):
 		name = group.__name__
