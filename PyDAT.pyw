@@ -897,6 +897,8 @@ class PortraitsTab(DATTab):
 	def load_data(self, id=None):
 		if not self.dat:
 			return
+		if id != None:
+			self.id = id
 		labels,values = self.loadsave_data()
 		for id,variables in values:
 			for label,var in zip(labels, variables):
