@@ -96,7 +96,7 @@ CascStorageFileCount    = 0
 CascStorageFeatures     = 1
 CascStorageGameInfo     = 2
 CascStorageGameBuild    = 3
-CascStorageInfoClassMax = 4
+# CascStorageInfoClassMax = 4
 
 class QUERY_KEY(Structure):
     _fields_ = [
@@ -109,21 +109,41 @@ class CASC_FIND_DATA(Structure):
     _fields_ = [
         ('fileName', c_char * MAX_PATH),
         ('plainName', c_char_p),
-        ('encodingKey', c_byte * MD5_HASH_SIZE),
+        ('encodingKey', c_ubyte * MD5_HASH_SIZE),
         ('localeFlags', c_ulong),
         ('fileDataId', c_ulong),
         ('fileSize', c_ulong)
     ]
 
+    def encodingKeyHex(self):
+        h = ''
+        for b in self.encodingKey:
+            h += '%02X' % b
+        return h
+
 class HANDLE(c_void_p):
-    @static_method
-    def IsInvalid(handle):
-        return h in (None,0,-1)
+    @staticmethod
+    def IsValid(handle):
+        return not handle.value in (None,0,-1,2**(8*sizeof(HANDLE))-1)
+
+    def __repr__(self):
+        return '<HANDLE object at %s: %d (%d)>' % (hex(id(self)), self.value, sizeof(self))
+
+def CascLibGetLastError():
+    # SFmpq only implements its own GetLastError on platforms other than windows
+    if _CascLib.GetLastError == None:
+        return GetLastError()
+    return _CascLib.GetLastError()
 
 #-----------------------------------------------------------------------------
 # Functions for storage manipulation
 
 if not FOLDER:
+    try:
+        _CascLib.GetLastError.restype = c_int
+    except:
+        _CascLib.GetLastError = None
+
 # bool  WINAPI CascOpenStorage(const TCHAR * szDataPath, DWORD dwLocaleMask, HANDLE * phStorage);
     _CascLib.CascOpenStorage.argtypes = [c_char_p, c_ulong, POINTER(HANDLE)]
     _CascLib.CascOpenStorage.restype = c_bool
@@ -169,14 +189,14 @@ if not FOLDER:
     _CascLib.CascFindClose.argtypes = [HANDLE]
     _CascLib.CascFindClose.restype = c_bool
 
-def CascOpenStorage(path, localeMask=0):
+def CascOpenStorage(path, localeMask=CASC_LOCALE_ALL):
     f = HANDLE()
     if _CascLib.CascOpenStorage(path, localeMask, byref(f)):
-        return f.value
+        return f
 def CascGetStorageInfo(casc, infoClass):
     i = c_ulong()
     s = c_ulong()
-    if _CascLib.CascGetStorageInfo(casc, byref(i), sizeof(c_ulong), byref(s)):
+    if _CascLib.CascGetStorageInfo(casc, infoClass, byref(i), sizeof(c_ulong), byref(s)):
         return i.value
 def CascCloseStorage(casc):
     return _CascLib.CascCloseStorage(casc)
@@ -187,18 +207,18 @@ def CascOpenFileByIndexKey(casc, indexKey, flags):
     q.size = len(indexKey)
     f = HANDLE()
     if _CascLib.CascOpenFileByIndexKey(casc, byref(q), flags, byref(f)):
-        return f.value
+        return f
 def CascOpenFileByEncodingKey(casc, encodingKey, flags):
     q = QUERY_KEY()
     q.key = encodingKey
     q.size = len(encodingKey)
     f = HANDLE()
     if _CascLib.CascOpenFileByIndexKey(casc, byref(q), flags, byref(f)):
-        return f.value
+        return f
 def CascOpenFile(casc, filename, locale, flags):
     f = HANDLE()
     if _CascLib.CascOpenFile(casc, filename, locale, flags, byref(f)):
-        return f.value
+        return f
 def CascGetFileSize(file):
     return _CascLib.CascGetFileSize(file, None)
 def CascGetFileId(casc, filename):
@@ -225,13 +245,37 @@ def CascReadFile(file, read=None):
 def CascCloseFile(file):
     return _CascLib.CascCloseFile(file)
 
-def CascFindFirstFile(casc, search, listfilePath=None):
+def CascFindFirstFile(casc, search="*", listfilePath=None):
+    if search == None:
+        search = POINTER(c_char)()
     result = CASC_FIND_DATA()
-    find = _CascLib.CascFindFirstFile(casc, search, byref(result), listfilePath)
-    return (find, result)
+    f = _CascLib.CascFindFirstFile(casc, search, byref(result), listfilePath)
+    return (f, result)
 def CascFindNextFile(find):
     result = CASC_FIND_DATA()
-    if _CascLib.CascFindFirstFile(casc, search, byref(result), listfilePath):
+    if _CascLib.CascFindNextFile(find, byref(result)):
         return result
 def CascFindClose(find):
     return _CascLib.CascFindClose(find)
+
+if __name__ == '__main__':
+    path = "/Users/zachzahos/Applications/Wineskin/SCRemastered.app/Contents/Resources/drive_c/Program Files/StarCraft"
+    print 'Opening CASC Directory: %s' % path
+    casc = CascOpenStorage(path)
+    print 'CASC Handle: %s' % casc
+    if not HANDLE.IsValid(casc):
+        sys.exit()
+    print 'FileCount: %d' % CascGetStorageInfo(casc, CascStorageFileCount)
+    print 'Features: %d' % CascGetStorageInfo(casc, CascStorageFeatures)
+    print 'GameInfo: %d' % CascGetStorageInfo(casc, CascStorageGameInfo)
+    print 'GameBuild: %d' % CascGetStorageInfo(casc, CascStorageGameBuild)
+    find,result = CascFindFirstFile(casc)
+    print 'Find Handle: %s (%d)' % (find, CascLibGetLastError())
+    print 'fileName, plainName, encodingKey, localeFlags, fileDataId, fileSize'
+    if not HANDLE.IsValid(find):
+        sys.exit()
+    while result:
+        print '%s, %s, %s, %d, %d, %d' % (result.fileName, result.plainName, result.encodingKeyHex(), result.localeFlags, result.fileDataId, result.fileSize)
+        result = CascFindNextFile(find)
+    CascFindClose(find)
+    CascCloseStorage(casc)
