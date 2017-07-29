@@ -1,6 +1,6 @@
 
 from ctypes import *
-import os,sys
+import os,sys,errno
 
 cwd = os.getcwd()
 if hasattr(sys, 'frozen'):
@@ -88,6 +88,25 @@ FILE_BEGIN =    0
 FILE_CURRENT =  1
 FILE_END =      2
 
+ERROR_SUCCESS =                 0
+ERROR_FILE_NOT_FOUND =          errno.ENOENT
+ERROR_ACCESS_DENIED =           errno.EPERM
+ERROR_INVALID_HANDLE =          errno.EBADF
+ERROR_NOT_ENOUGH_MEMORY =       errno.ENOMEM
+ERROR_NOT_SUPPORTED =           errno.ENOTSUP
+ERROR_INVALID_PARAMETER =       errno.EINVAL
+ERROR_DISK_FULL =               errno.ENOSPC
+ERROR_ALREADY_EXISTS =          errno.EEXIST
+ERROR_INSUFFICIENT_BUFFER =     errno.ENOBUFS
+ERROR_BAD_FORMAT =              1000        # No such error code under Linux
+ERROR_NO_MORE_FILES =           1001        # No such error code under Linux
+ERROR_HANDLE_EOF =              1002        # No such error code under Linux
+ERROR_CAN_NOT_COMPLETE =        1003        # No such error code under Linux
+ERROR_FILE_CORRUPT =            1004        # No such error code under Linux
+ERROR_FILE_ENCRYPTED =          1005        # Returned by encrypted stream when can't find file key
+
+ERROR_FILE_INCOMPLETE =         1006        # The required file part is missing
+
 #-----------------------------------------------------------------------------
 # Structures
 
@@ -124,7 +143,7 @@ class CASC_FIND_DATA(Structure):
 class HANDLE(c_void_p):
     @staticmethod
     def IsValid(handle):
-        return not handle.value in (None,0,-1,2**(8*sizeof(HANDLE))-1)
+        return isinstance(handle, HANDLE) and not handle.value in (None,0,-1,2**(8*sizeof(HANDLE))-1)
 
     def __repr__(self):
         return '<HANDLE object at %s: %d (%d)>' % (hex(id(self)), self.value, sizeof(self))
@@ -215,7 +234,7 @@ def CascOpenFileByEncodingKey(casc, encodingKey, flags):
     f = HANDLE()
     if _CascLib.CascOpenFileByIndexKey(casc, byref(q), flags, byref(f)):
         return f
-def CascOpenFile(casc, filename, locale, flags):
+def CascOpenFile(casc, filename, locale=CASC_LOCALE_ENUS, flags=0):
     f = HANDLE()
     if _CascLib.CascOpenFile(casc, filename, locale, flags, byref(f)):
         return f
@@ -231,7 +250,7 @@ def CascReadFile(file, read=None):
         read = CascGetFileSize(file)
         if read == None or read == -1:
             return
-    r = c_uint32()
+    r = c_ulong()
     data = ''
     total_read = 0
     while total_read < read:
@@ -265,17 +284,36 @@ if __name__ == '__main__':
     print 'CASC Handle: %s' % casc
     if not HANDLE.IsValid(casc):
         sys.exit()
-    print 'FileCount: %d' % CascGetStorageInfo(casc, CascStorageFileCount)
-    print 'Features: %d' % CascGetStorageInfo(casc, CascStorageFeatures)
-    print 'GameInfo: %d' % CascGetStorageInfo(casc, CascStorageGameInfo)
-    print 'GameBuild: %d' % CascGetStorageInfo(casc, CascStorageGameBuild)
-    find,result = CascFindFirstFile(casc)
-    print 'Find Handle: %s (%d)' % (find, CascLibGetLastError())
-    print 'fileName, plainName, encodingKey, localeFlags, fileDataId, fileSize'
-    if not HANDLE.IsValid(find):
-        sys.exit()
-    while result:
-        print '%s, %s, %s, %d, %d, %d' % (result.fileName, result.plainName, result.encodingKeyHex(), result.localeFlags, result.fileDataId, result.fileSize)
-        result = CascFindNextFile(find)
-    CascFindClose(find)
+    def doDetails():
+        print 'FileCount: %d' % CascGetStorageInfo(casc, CascStorageFileCount)
+        print 'Features: %d' % CascGetStorageInfo(casc, CascStorageFeatures)
+        print 'GameInfo: %d' % CascGetStorageInfo(casc, CascStorageGameInfo)
+        print 'GameBuild: %d' % CascGetStorageInfo(casc, CascStorageGameBuild)
+    # doDetails()
+    def doFind(search):
+        filenames = []
+        find,result = CascFindFirstFile(casc, search)
+        print 'Find Handle: %s (%d)' % (find, CascLibGetLastError())
+        print 'fileName, plainName, encodingKey, localeFlags, fileDataId, fileSize'
+        if not HANDLE.IsValid(find):
+            sys.exit()
+        while result:
+            filenames.append(result.fileName)
+            print '%s\n\t%s, %s, %d, %d, %d' % (result.fileName, result.plainName, result.encodingKeyHex(), result.localeFlags, result.fileDataId, result.fileSize)
+            result = CascFindNextFile(find)
+        CascFindClose(find)
+        return filenames
+    filenames = doFind("*cmdicons*")
+    def doExtract(names):
+        for name in names:
+            print 'Extracing file: %s' % repr(name)
+            file = CascOpenFile(casc, name)
+            if not HANDLE.IsValid(file):
+                continue
+            data,size = CascReadFile(file)
+            print 'Extracted Size: %d' % size
+            with open('WORKING/remastered/' + name.replace('/', '_'), 'wb') as f:
+                f.write(data)
+            CascCloseFile(file)
+    doExtract(filenames)
     CascCloseStorage(casc)
