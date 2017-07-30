@@ -1718,6 +1718,8 @@ class SpritesTab(DATTab):
 			'SelectionCircleOffset':self.vertpos,
 		}
 
+		self.vertpos.trace('w', lambda *_: self.drawpreview())
+
 	def files_updated(self):
 		self.dat = self.toplevel.sprites
 
@@ -1735,6 +1737,7 @@ class SpritesTab(DATTab):
 		else:
 			self.boxes.check = False
 			self.boxes.set(max(1,(num - 1) / 3))
+		self.drawpreview()
 
 	def drawpreview(self, e=None):
 		if self.previewing != self.id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
@@ -2617,6 +2620,10 @@ class GraphicsUnitsTab(DATUnitsTab):
 			'Portrait':self.portraitsentry,
 		}
 
+		self.graphicsentry.trace('w', lambda *_: self.drawpreview())
+		for v in (self.left,self.up,self.right,self.down):
+			v.trace('w', lambda *_: self.drawboxes())
+
 	def drawboxes(self):
 		id = self.parent_tab.id
 		if self.showpreview.get() and self.showplace.get():
@@ -2626,18 +2633,18 @@ class GraphicsUnitsTab(DATUnitsTab):
 		else:
 			self.preview.coords('place', 0, 0, 0, 0)
 		if self.showpreview.get() and self.showdims.get():
-			w,h = (self.parent_tab.dat.get_value(id, 'UnitSizeLeft') + self.parent_tab.dat.get_value(id, 'UnitSizeRight') + 1) / 2,(self.parent_tab.dat.get_value(id, 'UnitSizeUp') + self.parent_tab.dat.get_value(id, 'UnitSizeDown') + 1) / 2
-			self.preview.coords('size', 129-w, 129-h, 129+w, 129+h)
+			self.preview.coords('size', 129-self.left.get(), 129-self.up.get(), 129+self.right.get(), 129+self.down.get())
 			self.preview.lift('size')
 		else:
 			self.preview.coords('size', 0, 0, 0 ,0)
 
 	def drawpreview(self):
 		id = self.parent_tab.id
-		if self.previewing != id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
+		flingy_id = self.graphicsentry.get()
+		if self.previewing != flingy_id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
 			self.preview.delete('unit')
 			if self.showpreview.get():
-				i = self.toplevel.sprites.get_value(self.toplevel.flingy.get_value(self.parent_tab.dat.get_value(id, 'Graphics'), 'Sprite'),'ImageFile')
+				i = self.toplevel.sprites.get_value(self.toplevel.flingy.get_value(flingy_id, 'Sprite'),'ImageFile')
 				g = self.toplevel.images.get_value(i,'GRPFile')
 				if g:
 					f = self.toplevel.imagestbl.strings[g-1][:-1]
@@ -2650,7 +2657,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 					sprite = self.toplevel.grp(p,'unit\\' + f)
 					if sprite:
 						self.preview.create_image(130, 130, image=sprite[0], tags='unit')
-				self.previewing = id
+				self.previewing = flingy_id
 			else:
 				self.previewing = None
 			self.drawboxes()
