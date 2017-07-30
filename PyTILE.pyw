@@ -367,9 +367,9 @@ class Placeability(PyMSDialog):
 						Entry(f, textvariable=self.groups[-1][-1], width=1, font=couriernew, bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
 			elif ty > 0:
 				for x in range(self.width):
-					c = self.tileset.dddata.doodads[self.id][x + (h-ty) * self.width]
+					t = 'tile%s,%s' % (x,y)
 					self.canvass[h-ty].images.append(Tilesets.megatile_to_photo(self.tileset, g[13][x]))
-					self.canvass[h-ty].create_image(x * 33 + 18, 18, image=self.canvass[h-ty].images[-1])
+					self.canvass[h-ty].create_image(x * 33 + 18, 18, image=self.canvass[h-ty].images[-1], tags=t)
 					self.canvass[h-ty].tag_bind(t, '<Double-Button-1>', lambda e,p=(x,h-ty): self.select(p))
 				ty -= 1
 				if not ty:
