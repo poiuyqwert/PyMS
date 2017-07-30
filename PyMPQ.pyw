@@ -823,12 +823,12 @@ class PyMPQ(Tk):
 
 	def do_rename(self, entry, new):
 		l = self.listbox.get(entry)
+		success = False
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-		if SFInvalidHandle(h):
-			return False
-		if MpqRenameAndSetFileLocale(h, l[0], new, int(l[4]), int(l[4])):
-			MpqCloseUpdatedArchive(h)
-			return True
+		if not SFInvalidHandle(h) and MpqRenameAndSetFileLocale(h, l[0], new, int(l[4]), int(l[4])):
+			success = True
+		MpqCloseUpdatedArchive(h)
+		return success
 
 	def flagcomp(self, file=None):
 		if isinstance(file,list):
