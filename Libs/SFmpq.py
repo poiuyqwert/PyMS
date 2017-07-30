@@ -376,7 +376,7 @@ def SFileReadFile(file, read=None):
 			total_read += r.value
 		else:
 			return
-	return (data.raw,total_read)
+	return (data.raw[:total_read],total_read)
 
 @debug_log
 def SFileSetLocale(locale):
