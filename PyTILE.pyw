@@ -367,9 +367,9 @@ class Placeability(PyMSDialog):
 						Entry(f, textvariable=self.groups[-1][-1], width=1, font=couriernew, bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
 			elif ty > 0:
 				for x in range(self.width):
-					c = self.tileset.dddata.doodads[self.id][x + (h-ty) * self.width]
+					t = 'tile%s,%s' % (x,y)
 					self.canvass[h-ty].images.append(Tilesets.megatile_to_photo(self.tileset, g[13][x]))
-					self.canvass[h-ty].create_image(x * 33 + 18, 18, image=self.canvass[h-ty].images[-1])
+					self.canvass[h-ty].create_image(x * 33 + 18, 18, image=self.canvass[h-ty].images[-1], tags=t)
 					self.canvass[h-ty].tag_bind(t, '<Double-Button-1>', lambda e,p=(x,h-ty): self.select(p))
 				ty -= 1
 				if not ty:
@@ -1335,12 +1335,16 @@ class PyTILE(Tk):
 		f = Frame(self.groupid)
 		left = Frame(f)
 		l = LabelFrame(left, text='MiniTiles')
+		self.apply_all_exclude_nulls = IntVar()
+		self.apply_all_exclude_nulls.set(PYTILE_SETTINGS.mega_edit.get('apply_all_exclude_nulls', True))
 		def apply_all_pressed():
 			menu = Menu(self, tearoff=0)
 			mode = self.mega_editor.edit_mode.get()
 			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode]
-			menu.add_command(label="Apply %s flags to Megatiles" % name, command=lambda m=mode: self.apply_all(mode))
-			menu.add_command(label="Apply all flags to Megatiles", command=self.apply_all)
+			menu.add_command(label="Apply %s flags to Megatiles in Group" % name, command=lambda m=mode: self.apply_all(mode))
+			menu.add_command(label="Apply all flags to Megatiles in Group", command=self.apply_all)
+			menu.add_separator()
+			menu.add_checkbutton(label="Exclude Null Tiles", variable=self.apply_all_exclude_nulls)
 			menu.post(*self.winfo_pointerxy())
 		self.apply_all_btn = Button(l, text='Apply to Megas', state=DISABLED, command=apply_all_pressed)
 		self.disable.append(self.apply_all_btn)
@@ -1534,9 +1538,12 @@ class PyTILE(Tk):
 			copy_mask = 8
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			copy_mask = 16
+		copy_mega = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
 		for m in self.tileset.cv5.groups[self.group[0]][13]:
+			if m == copy_mega or (m == 0 and self.apply_all_exclude_nulls.get()):
+				continue
 			for n in xrange(16):
-				copy_flags = self.tileset.vf4.flags[self.group[1]][n]
+				copy_flags = self.tileset.vf4.flags[copy_mega][n]
 				flags = self.tileset.vf4.flags[m][n]
 				self.tileset.vf4.flags[m][n] = (flags & ~copy_mask) | (copy_flags & copy_mask)
 
@@ -1685,7 +1692,7 @@ class PyTILE(Tk):
 			self.megaload()
 			self.updatescroll()
 			if self.tileset.vx4.expanded:
-				showwarning(parent=self, title='Expanded VX4 Warning', message='This tileset is using an expanded vx4 file.')
+				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, 'This tileset is using an expanded vx4 file.')
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
@@ -1749,6 +1756,7 @@ class PyTILE(Tk):
 	def exit(self, e=None):
 		if not self.unsaved():
 			PYTILE_SETTINGS.windows.save_window_size('main', self)
+			PYTILE_SETTINGS.mega_edit.apply_all_exclude_nulls = not not self.apply_all_exclude_nulls.get()
 			PYTILE_SETTINGS.save()
 			self.destroy()
 
