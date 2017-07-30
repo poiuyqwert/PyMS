@@ -2397,8 +2397,8 @@ class StarEditUnitsTab(DATUnitsTab):
 					f.pack(fill=X)
 				cc.pack(side=LEFT, fill=Y)
 			s.pack(fill=BOTH, padx=5, pady=5)
-			l.pack(side=LEFT, fill=BOTH)
-		top.pack()
+			l.pack(side=LEFT, fill=BOTH, expand=(lt == 'Availability'))
+		top.pack(fill=X)
 
 		r = 0 # min(255,len(self.toplevel.stat_txt.strings)-1302)
 		ranks = [] # ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
@@ -2426,9 +2426,12 @@ class StarEditUnitsTab(DATUnitsTab):
 
 		self.width = IntegerVar(0, [0,65535])
 		self.height = IntegerVar(0, [0,65535])
+		self.showpreview = IntVar()
+		self.showpreview.set(PYDAT_SETTINGS.preview.staredit.get('show', False))
 
 		bottom = Frame(frame)
-		l = LabelFrame(bottom, text='Placement Box (Pixels):')
+		t = Frame(bottom)
+		l = LabelFrame(t, text='Placement Box (Pixels):')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Width:', width=13, anchor=E).pack(side=LEFT)
@@ -2441,6 +2444,15 @@ class StarEditUnitsTab(DATUnitsTab):
 		tip(f, 'Placement Height', 'UnitSEPlaceHeight')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
+		l.pack(side=TOP)
+		t.pack(side=LEFT, fill=Y)
+		l = LabelFrame(bottom, text='Preview:')
+		self.preview = Canvas(l, width=257, height=257, background='#000000')
+		self.preview.pack(side=TOP)
+		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
+		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')
+		self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00', tags='addon_parent_size')
+		Checkbutton(l, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=TOP)
 		l.pack(side=LEFT)
 		bottom.pack(fill=X)
 
@@ -2454,6 +2466,42 @@ class StarEditUnitsTab(DATUnitsTab):
 			'StarEditGroupFlags':[None,None,None,self.men,self.building,self.factory,self.independent,self.neutral],
 			'StarEditAvailabilityFlags':[self.nonneutral,self.unitlisting,self.missionbriefing,self.playersettings,self.allraces,self.setdoodadstate,self.nonlocationtriggers,self.unitherosettings,self.locationtriggers,self.broodwaronly,None,None,None,None,None,None],
 		}
+
+		for v in (self.width, self.height):
+			v.trace('w', lambda *_: self.drawpreview())
+
+	def drawboxes(self):
+		if self.showpreview.get():
+			id = self.parent_tab.id
+			w,h = self.width.get() / 2,self.height.get() / 2
+			self.preview.coords('place', 129-w, 129-h, 129+w, 129+h)
+			self.preview.lift('place')
+		else:
+			self.preview.coords('place', 0, 0, 0, 0)
+
+	def draw_image(self, image_id, tag, x=130, y=130):
+		g = self.toplevel.images.get_value(image_id,'GRPFile')
+		if g:
+			f = self.toplevel.imagestbl.strings[g-1][:-1]
+			if f.startswith('thingy\\tileset\\'):
+				p = 'Terrain'
+			else:
+				p = 'Units'
+				if self.toplevel.images.get_value(image_id, 'DrawFunction') == 9 and self.toplevel.images.get_value(image_id, 'Remapping') and self.toplevel.images.get_value(image_id, 'Remapping') < 4:
+					p = ['o','b','g'][self.toplevel.images.get_value(image_id, 'Remapping')-1] + 'fire'
+			sprite = self.toplevel.grp(p,'unit\\' + f)
+			if sprite:
+				self.preview.create_image(x, y, image=sprite[0], tags=tag)
+
+	def drawpreview(self):
+		self.preview.delete('unit')
+		if self.showpreview.get():
+			id = self.parent_tab.id
+			flingy_id = self.parent_tab.dat.get_value(id, 'Graphics')
+			sprite_id = self.toplevel.flingy.get_value(flingy_id, 'Sprite')
+			image_id = self.toplevel.sprites.get_value(sprite_id,'ImageFile')
+			self.draw_image(image_id, 'unit')
+		self.drawboxes()
 
 	def files_updated(self):
 		r = min(255,len(self.toplevel.stat_txt.strings)-1302)
@@ -2484,6 +2532,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.unitherosettings.set(self.parent_tab.dat.get_value(id,'StarEditAvailabilityFlags') & 128 == 128)
 		self.locationtriggers.set(self.parent_tab.dat.get_value(id,'StarEditAvailabilityFlags') & 256 == 256)
 		self.broodwaronly.set(self.parent_tab.dat.get_value(id,'StarEditAvailabilityFlags') & 512 == 512)
+		self.drawpreview()
 	def save_data(self):
 		if not self.parent_tab.dat:
 			return
@@ -2496,6 +2545,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		if self.parent_tab.dat.get_value(id,'StarEditAvailabilityFlags') != r:
 			self.edited = True
 			self.parent_tab.dat.set_value(id,'StarEditAvailabilityFlags',r)
+		PYDAT_SETTINGS.preview.staredit.show = not not self.showpreview.get()
 		DATUnitsTab.save_data(self)
 	
 class GraphicsUnitsTab(DATUnitsTab):
@@ -2659,7 +2709,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			else:
 				p = 'Units'
 				if self.toplevel.images.get_value(image_id, 'DrawFunction') == 9 and self.toplevel.images.get_value(image_id, 'Remapping') and self.toplevel.images.get_value(image_id, 'Remapping') < 4:
-					p = ['o','b','g'][self.toplevel.images.get_value(i, 'Remapping')-1] + 'fire'
+					p = ['o','b','g'][self.toplevel.images.get_value(image_id, 'Remapping')-1] + 'fire'
 			sprite = self.toplevel.grp(p,'unit\\' + f)
 			if sprite:
 				self.preview.create_image(x, y, image=sprite[0], tags=tag)
