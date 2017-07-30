@@ -250,17 +250,15 @@ def CascReadFile(file, read=None):
         read = CascGetFileSize(file)
         if read == None or read == -1:
             return
+    data = create_string_buffer(read)
     r = c_ulong()
-    data = ''
     total_read = 0
     while total_read < read:
-        d = create_string_buffer(read-total_read)
-        if _CascLib.CascReadFile(file, d, read-total_read, byref(r)):
+        if _CascLib.CascReadFile(file, byref(data, total_read), read-total_read, byref(r)):
             total_read += r.value
-            data += d.raw
         else:
             return
-    return (data,total_read)
+    return (data.raw[:total_read],total_read)
 def CascCloseFile(file):
     return _CascLib.CascCloseFile(file)
 
