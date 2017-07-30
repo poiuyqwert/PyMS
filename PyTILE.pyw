@@ -1685,7 +1685,7 @@ class PyTILE(Tk):
 			self.megaload()
 			self.updatescroll()
 			if self.tileset.vx4.expanded:
-				showwarning(parent=self, title='Expanded VX4 Warning', message='This tileset is using an expanded vx4 file.')
+				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, 'This tileset is using an expanded vx4 file.')
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
