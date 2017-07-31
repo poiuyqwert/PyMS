@@ -845,21 +845,218 @@ class SettingsImporter(PyMSDialog):
 		PYTILE_SETTINGS['import'].settings.auto_close = not not self.auto_close.get()
 		PyMSDialog.dismiss(self)
 
-class TilePalette(PyMSDialog):
-	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, editing=False):
-		PAL[0] += 1
+class TilePaletteView(Frame):
+	# sub_select currently only supported by TILETYPE_GROUP
+	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, multiselect=True, sub_select=False):
+		Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected = []
+		self.sub_selection = 0
 		if select != None:
 			if isinstance(select, list):
 				self.selected.extend(sorted(select))
 			else:
 				self.selected.append(select)
 		self.delegate = delegate or parent
-		self.editing = editing
+		self.multiselect = multiselect
+		if not multiselect:
+			if not self.selected:
+				self.selected.append(0)
+			elif len(self.selected) > 1:
+				self.selected = self.selected[:1]
+		self.sub_select = not self.multiselect and sub_select
+
 		self.visible_range = None
+		self.gettile = self.delegate.tile_palette_get_tile()
+
+		tile_size = self.get_tile_size()
+		self.canvas = Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000')
+		self.canvas.images = {}
+		self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
+		scrollbar = Scrollbar(self, command=self.canvas.yview)
+		scrollbar.pack(side=LEFT, fill=Y)
+
+		def canvas_resized(e):
+			self.update_size()
+		self.canvas.bind('<Configure>', canvas_resized)
+		binding_widget = self.delegate.tile_palette_binding_widget()
+		binding_widget.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)),'units'))
+		binding_widget.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
+		binding_widget.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
+		binding_widget.bind('<Next>', lambda e: self.canvas.yview('scroll', 1,'page'))
+		binding_widget.bind('<Prior>', lambda e: self.canvas.yview('scroll', -1,'page'))
+		def update_scrollbar(l,h,bar):
+			scrollbar.set(l,h)
+			self.draw_tiles()
+		self.canvas.config(yscrollcommand=lambda l,h,s=scrollbar: update_scrollbar(l,h,s))
+
+	def get_tile_size(self, tiletype=None, group=False):
+		tiletype = self.tiletype if tiletype == None else tiletype
+		if tiletype == TILETYPE_GROUP:
+			return [32.0 * (16 if group else 1),33.0]
+		elif tiletype == TILETYPE_MEGA:
+			return [32.0 + (0 if group else 1),32.0 + (0 if group else 1)]
+		elif tiletype == TILETYPE_MINI:
+			return [25.0,25.0]
+	def get_tile_count(self):
+		tileset = self.delegate.tile_palette_get_tileset()
+		if not tileset:
+			return 0
+		if self.tiletype == TILETYPE_GROUP:
+			return len(tileset.cv5.groups) * 16
+		elif self.tiletype == TILETYPE_MEGA:
+			return len(tileset.vx4.graphics)
+		elif self.tiletype == TILETYPE_MINI:
+			return len(tileset.vr4.images)
+	def get_total_size(self):
+		tile_size = self.get_tile_size()
+		tile_count = self.get_tile_count()
+		width = self.canvas.winfo_width()
+		columns = floor(width / tile_size[0])
+		total_size = [0,0]
+		if columns:
+			total_size = [width,int(ceil(tile_count / columns)) * tile_size[1] + 1]
+		return total_size
+
+	def update_size(self):
+		total_size = self.get_total_size()
+		self.canvas.config(scrollregion=(0,0,total_size[0],total_size[1]))
+		self.draw_tiles()
+
+	def draw_selections(self):
+		self.canvas.delete('selection')
+		self.canvas.delete('sub_selection')
+		tile_size = self.get_tile_size(group=True)
+		tile_count = self.get_tile_count()
+		columns = int(floor(self.canvas.winfo_width() / tile_size[0]))
+		if columns:
+			for id in self.selected:
+				x = (id % columns) * tile_size[0]
+				y = (id / columns) * tile_size[1]
+				self.canvas.create_rectangle(x, y, x+tile_size[0], y+tile_size[1], outline='#AAAAAA' if self.sub_select else '#FFFFFF', tags='selection')
+				if self.sub_select:
+					mega_size = self.get_tile_size(TILETYPE_MEGA, group=True)
+					x += mega_size[0] * self.sub_selection
+					self.canvas.create_rectangle(x, y, x+mega_size[0]+1, y+mega_size[1]+1, outline='#FFFFFF', tags='sub_selection')
+
+	def draw_tiles(self, force=False):
+		tileset = self.delegate.tile_palette_get_tileset()
+		if force or not tileset:
+			self.visible_range = None
+			self.canvas.delete(ALL)
+			self.canvas.images.clear()
+		if not tileset:
+			return
+		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
+		tile_size = self.get_tile_size()
+		tile_count = self.get_tile_count()
+		total_height = float((self.canvas.cget('scrollregion') or '0').split(' ')[-1])
+		topy = int(self.canvas.yview()[0] * total_height)
+		start_row = int(floor(topy / tile_size[1]))
+		start_y = start_row * int(tile_size[1])
+		tiles_size = [int(floor(viewport_size[0] / tile_size[0])),int(ceil((viewport_size[1] + topy-start_y) / tile_size[1]))]
+		first = start_row * tiles_size[0]
+		last = min(tile_count,first + tiles_size[0] * tiles_size[1]) - 1
+		visible_range = [first,last]
+		if visible_range != self.visible_range:
+			update_ranges = [visible_range]
+			overlaps = self.visible_range \
+				and ((self.visible_range[0] <= visible_range[0] <= self.visible_range[1] or self.visible_range[0] <= visible_range[1] <= self.visible_range[1]) \
+				or (visible_range[0] <= self.visible_range[0] <= visible_range[1] or visible_range[0] <= self.visible_range[1] <= visible_range[1]))
+			if overlaps:
+				update_ranges = [[min(self.visible_range[0],visible_range[0]),max(self.visible_range[1],visible_range[1])]]
+			elif self.visible_range:
+				update_ranges.append(self.visible_range)
+			for update_range in update_ranges:
+				for id in range(update_range[0],update_range[1]+1):
+					if (id < visible_range[0] or id > visible_range[1]) and id >= self.visible_range[0] and id <= self.visible_range[1]:
+						del self.canvas.images[id]
+						self.canvas.delete('tile%s' % id)
+					else:
+						n = id - visible_range[0]
+						x = 1 + (n % tiles_size[0]) * tile_size[0]
+						y = 1 + start_y + floor(n / tiles_size[0]) * tile_size[1]
+						if self.visible_range and id >= self.visible_range[0] and id <= self.visible_range[1]:
+							self.canvas.coords('tile%s' % id, x,y)
+						else:
+							if self.tiletype == TILETYPE_GROUP:
+								group = int(id / 16.0)
+								megatile = tileset.cv5.groups[group][13][id % 16]
+								self.canvas.images[id] = self.gettile(megatile,cache=True)
+							elif self.tiletype == TILETYPE_MEGA:
+								self.canvas.images[id] = self.gettile(id,cache=True)
+							elif self.tiletype == TILETYPE_MINI:
+								self.canvas.images[id] = self.gettile((id,0),cache=True)
+							tag = 'tile%s' % id
+							self.canvas.create_image(x,y, image=self.canvas.images[id], tags=tag, anchor=NW)
+							def select(id, toggle):
+								sub_select = None
+								if self.tiletype == TILETYPE_GROUP:
+									if self.sub_select:
+										sub_select = id % 16
+									id /= 16
+								self.select(id, sub_select, toggle)
+							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,False))
+							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: self.select(id,True))
+							if hasattr(self.delegate, 'tile_palette_double_clicked'):
+								self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
+			self.visible_range = visible_range
+			self.draw_selections()
+
+	def select(self, select, sub_select=None, toggle=False, scroll_to=False):
+		if self.multiselect:
+			if toggle:
+				if select in self.selected:
+					self.selected.remove(select)
+				else:
+					self.selected.append(select)
+					self.selected.sort()
+			elif isinstance(select, list):
+				self.selected = sorted(select)
+			else:
+				self.selected = [select]
+		else:
+			if isinstance(select, list):
+				select = select[0] if select else 0
+			self.selected = [select]
+			if sub_select != None:
+				self.sub_selection = sub_select
+		if scroll_to:
+			self.scroll_to_selection()
+		else:
+			self.draw_selections()
+		if hasattr(self.delegate, 'tile_palette_selection_changed'):
+			self.delegate.tile_palette_selection_changed()
+
+	def scroll_to_selection(self):
+		if not len(self.selected):
+			return
+		tile_size = self.get_tile_size(group=True)
+		tile_count = self.get_tile_count()
+		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
+		columns = int(floor(viewport_size[0] / tile_size[0]))
+		if not columns:
+			return
+		total_size = self.get_total_size()
+		max_y = total_size[1] - viewport_size[1]
+		id = self.selected[0]
+		y = max(0,min(max_y,(id / columns + 0.5) * tile_size[1] - viewport_size[1]/2.0))
+		self.canvas.yview_moveto(y / total_size[1])
+
+class TilePalette(PyMSDialog):
+	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, editing=False):
+		PAL[0] += 1
+		self.tiletype = tiletype
+		self.start_selected = []
+		if select != None:
+			if isinstance(select, list):
+				self.start_selected.extend(sorted(select))
+			else:
+				self.start_selected.append(select)
+		self.delegate = delegate or parent
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
+		self.editing = editing
 		self.edited = False
 		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True), set_min_size=(True,True))
 
@@ -920,14 +1117,8 @@ class TilePalette(PyMSDialog):
 					Frame(toolbar, width=btn).pack(side=LEFT)
 			toolbar.pack(fill=X)
 
-		tile_size = self.get_tile_size()
-		c = Frame(self)
-		self.canvas = Canvas(c, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000')
-		self.canvas.images = {}
-		self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
-		scrollbar = Scrollbar(c, command=self.canvas.yview)
-		scrollbar.pack(side=LEFT, fill=Y)
-		c.pack(side=TOP, fill=BOTH, expand=1)
+		self.palette = TilePaletteView(self, self.tiletype, self.start_selected)
+		self.palette.pack(side=TOP, fill=BOTH, expand=1)
 
 		self.status = StringVar()
 		self.update_status()
@@ -937,28 +1128,35 @@ class TilePalette(PyMSDialog):
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, fill=X, expand=1, padx=1)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		def canvas_resized(e):
-			self.update_size()
-		self.canvas.bind('<Configure>', canvas_resized)
-		self.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)),'units'))
-		self.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
-		self.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
-		self.bind('<Next>', lambda e: self.canvas.yview('scroll', 1,'page'))
-		self.bind('<Prior>', lambda e: self.canvas.yview('scroll', -1,'page'))
-		def update_scrollbar(l,h,bar):
-			scrollbar.set(l,h)
-			self.draw_tiles()
-		self.canvas.config(yscrollcommand=lambda l,h,s=scrollbar: update_scrollbar(l,h,s))
+	def tile_palette_get_tileset(self):
+		return self.tileset
+
+	def tile_palette_get_tile(self):
+		return self.gettile
+
+	def tile_palette_binding_widget(self):
+		return self
+
+	def tile_palette_double_clicked(self, id):
+		if not hasattr(self.delegate, 'change'):
+			return
+		self.delegate.change(self.tiletype, id)
+		self.ok()
+
+	def tile_palette_selection_changed(self):
+		self.update_status()
+		self.update_state()
+		self.palette.draw_selections()
 
 	def setup_complete(self):
 		PYTILE_SETTINGS.windows.palette.load_window_size(('group','mega','mini')[self.tiletype], self)
 
-		if len(self.selected):
-			self.after(100, self.scroll_to_selection)
+		if len(self.start_selected):
+			self.after(100, self.palette.scroll_to_selection)
 
 	def select_smaller(self):
 		ids = []
-		for id in self.selected:
+		for id in self.palette.selected:
 			if self.tiletype == TILETYPE_GROUP:
 				for sid in self.tileset.cv5.groups[id][13]:
 					if sid and not sid in ids:
@@ -999,127 +1197,19 @@ class TilePalette(PyMSDialog):
 		elif self.tiletype == TILETYPE_MINI:
 			at_max = (self.tileset.minitiles_remaining() == 0 and self.tileset.vx4.expanded)
 		self.buttons['add']['state'] == DISABLED if at_max else NORMAL
-		export_state = DISABLED if not self.selected else NORMAL
+		export_state = DISABLED if not self.palette.selected else NORMAL
 		self.buttons['exportc']['state'] = export_state
 		if 'export' in self.buttons:
 			self.buttons['export']['state'] = export_state
 
 	def update_status(self):
 		status = 'Selected: '
-		if len(self.selected):
-			for id in self.selected:
+		if len(self.palette.selected):
+			for id in self.palette.selected:
 				status += '%s ' % id
 		else:
 			status += 'None'
 		self.status.set(status)
-
-	def select(self, select, toggle=False):
-		if toggle:
-			if select in self.selected:
-				self.selected.remove(select)
-			else:
-				self.selected.append(select)
-				self.selected.sort()
-		elif isinstance(select, list):
-			self.selected = sorted(select)
-		else:
-			self.selected = [select]
-		self.update_status()
-		self.update_state()
-		self.draw_selections()
-	
-	def get_tile_size(self, group=False):
-		if self.tiletype == TILETYPE_GROUP:
-			return [32.0 * (16 if group else 1),33.0]
-		elif self.tiletype == TILETYPE_MEGA:
-			return [33.0,33.0]
-		elif self.tiletype == TILETYPE_MINI:
-			return [25.0,25.0]
-	def get_tile_count(self):
-		if self.tiletype == TILETYPE_GROUP:
-			return len(self.tileset.cv5.groups) * 16
-		elif self.tiletype == TILETYPE_MEGA:
-			return len(self.tileset.vx4.graphics)
-		elif self.tiletype == TILETYPE_MINI:
-			return len(self.tileset.vr4.images)
-	def get_total_size(self):
-		tile_size = self.get_tile_size()
-		tile_count = self.get_tile_count()
-		width = self.canvas.winfo_width()
-		columns = floor(width / tile_size[0])
-		total_size = [0,0]
-		if columns:
-			total_size = [width,int(ceil(tile_count / columns)) * tile_size[1] + 1]
-		return total_size
-
-	def update_size(self):
-		total_size = self.get_total_size()
-		self.canvas.config(scrollregion=(0,0,total_size[0],total_size[1]))
-		self.draw_tiles()
-
-	def draw_selections(self):
-		self.canvas.delete('selection')
-		tile_size = self.get_tile_size(group=True)
-		tile_count = self.get_tile_count()
-		columns = int(floor(self.canvas.winfo_width() / tile_size[0]))
-		if columns:
-			for id in self.selected:
-				x = (id % columns) * tile_size[0]
-				y = (id / columns) * tile_size[1]
-				self.canvas.create_rectangle(x, y, x+tile_size[0], y+tile_size[1], outline='#FFFFFF', tags='selection')
-
-	def draw_tiles(self, force=False):
-		if force:
-			self.visible_range = None
-			self.canvas.delete(ALL)
-			self.canvas.images.clear()
-		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
-		tile_size = self.get_tile_size()
-		tile_count = self.get_tile_count()
-		total_height = float((self.canvas.cget('scrollregion') or '0').split(' ')[-1])
-		topy = int(self.canvas.yview()[0] * total_height)
-		start_row = int(floor(topy / tile_size[1]))
-		start_y = start_row * int(tile_size[1])
-		tiles_size = [int(floor(viewport_size[0] / tile_size[0])),int(ceil((viewport_size[1] + topy-start_y) / tile_size[1]))]
-		first = start_row * tiles_size[0]
-		last = min(tile_count,first + tiles_size[0] * tiles_size[1]) - 1
-		visible_range = [first,last]
-		if visible_range != self.visible_range:
-			update_ranges = [visible_range]
-			overlaps = self.visible_range \
-				and ((self.visible_range[0] <= visible_range[0] <= self.visible_range[1] or self.visible_range[0] <= visible_range[1] <= self.visible_range[1]) \
-				or (visible_range[0] <= self.visible_range[0] <= visible_range[1] or visible_range[0] <= self.visible_range[1] <= visible_range[1]))
-			if overlaps:
-				update_ranges = [[min(self.visible_range[0],visible_range[0]),max(self.visible_range[1],visible_range[1])]]
-			elif self.visible_range:
-				update_ranges.append(self.visible_range)
-			for update_range in update_ranges:
-				for id in range(update_range[0],update_range[1]+1):
-					if (id < visible_range[0] or id > visible_range[1]) and id >= self.visible_range[0] and id <= self.visible_range[1]:
-						del self.canvas.images[id]
-						self.canvas.delete('tile%s' % id)
-					else:
-						n = id - visible_range[0]
-						x = 1 + (n % tiles_size[0]) * tile_size[0]
-						y = 1 + start_y + floor(n / tiles_size[0]) * tile_size[1]
-						if self.visible_range and id >= self.visible_range[0] and id <= self.visible_range[1]:
-							self.canvas.coords('tile%s' % id, x,y)
-						else:
-							if self.tiletype == TILETYPE_GROUP:
-								group = int(id / 16.0)
-								megatile = self.tileset.cv5.groups[group][13][id % 16]
-								self.canvas.images[id] = self.gettile(megatile,cache=True)
-							elif self.tiletype == TILETYPE_MEGA:
-								self.canvas.images[id] = self.gettile(id,cache=True)
-							elif self.tiletype == TILETYPE_MINI:
-								self.canvas.images[id] = self.gettile((id,0),cache=True)
-							tag = 'tile%s' % id
-							self.canvas.create_image(x,y, image=self.canvas.images[id], tags=tag, anchor=NW)
-							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.select(id))
-							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.select(id,True))
-							self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.choose(id))
-			self.visible_range = visible_range
-			self.draw_selections()
 
 	def add(self):
 		select = 0
@@ -1140,9 +1230,8 @@ class TilePalette(PyMSDialog):
 			select = len(self.tileset.vr4.images)-1
 		self.update_title()
 		self.update_state()
-		self.update_size()
-		self.select(select)
-		self.scroll_to_selection()
+		self.palette.update_size()
+		self.palette.select(select, scroll_to=True)
 		self.parent.update_ranges()
 		self.mark_edited()
 
@@ -1156,9 +1245,9 @@ class TilePalette(PyMSDialog):
 			typename = 'MiniTile'
 		path = PYTILE_SETTINGS.lastpath.graphics.select_file('export', self, 'Export %s Graphics' % typename, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')], save=True)
 		if path:
-			self.tileset.export_graphics(self.tiletype, path, self.selected)
+			self.tileset.export_graphics(self.tiletype, path, self.palette.selected)
 	def import_graphics(self):
-		GraphicsImporter(self, self.tiletype, self.selected)
+		GraphicsImporter(self, self.tiletype, self.palette.selected)
 	def imported_graphics(self, new_ids):
 		TILE_CACHE.clear()
 		self.update_title()
@@ -1173,47 +1262,26 @@ class TilePalette(PyMSDialog):
 		self.mark_edited()
 
 	def export_settings(self):
-		if not len(self.selected):
+		if not len(self.palette.selected):
 			return
 		if self.tiletype == TILETYPE_GROUP:
 			path = PYTILE_SETTINGS.lastpath.graphics.select_file('export', self, 'Export MegaTile Group Settings', '.txt', [('Text File','*.txt'),('All Files','*')], save=True)
 			if path:
-				self.tileset.export_settings(TILETYPE_GROUP, path, self.selected)
+				self.tileset.export_settings(TILETYPE_GROUP, path, self.palette.selected)
 		elif self.tiletype == TILETYPE_MEGA:
-			MegaTileSettingsExporter(self, self.selected)
+			MegaTileSettingsExporter(self, self.palette.selected)
 	def import_settings(self):
-		if not len(self.selected):
+		if not len(self.palette.selected):
 			return
-		SettingsImporter(self, self.tiletype, self.selected)
+		SettingsImporter(self, self.tiletype, self.palette.selected)
 
 	def edit(self, e=None):
-		if not len(self.selected):
+		if not len(self.palette.selected):
 			return
 		if self.tiletype == TILETYPE_MEGA:
-			MegaEditor(self, self.selected[0])
+			MegaEditor(self, self.palette.selected[0])
 		elif self.tiletype == TILETYPE_MINI:
-			MiniEditor(self, self.selected[0])
-
-	def scroll_to_selection(self):
-		if not len(self.selected):
-			return
-		tile_size = self.get_tile_size(group=True)
-		tile_count = self.get_tile_count()
-		viewport_size = [self.canvas.winfo_width(),self.canvas.winfo_height()]
-		columns = int(floor(viewport_size[0] / tile_size[0]))
-		if not columns:
-			return
-		total_size = self.get_total_size()
-		max_y = total_size[1] - viewport_size[1]
-		id = self.selected[0]
-		y = max(0,min(max_y,(id / columns + 0.5) * tile_size[1] - viewport_size[1]/2.0))
-		self.canvas.yview_moveto(y / total_size[1])
-
-	def choose(self, id):
-		if not hasattr(self.delegate, 'change'):
-			return
-		self.delegate.change(self.tiletype, id)
-		self.ok()
+			MiniEditor(self, self.palette.selected[0])
 
 	def ok(self):
 		PYTILE_SETTINGS.windows.palette.save_window_size(('group','mega','mini')[self.tiletype], self)
@@ -1244,7 +1312,6 @@ class PyTILE(Tk):
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		setup_trace(self, 'PyTILE')
-		self.resizable(False, False)
 
 		self.stat_txt = TBL.TBL()
 		self.stat_txt_file = ''
@@ -1263,7 +1330,6 @@ class PyTILE(Tk):
 		self.tileset = None
 		self.file = None
 		self.edited = False
-		self.group = [0,0]
 		self.megatile = None
 
 		#Toolbar
@@ -1319,19 +1385,12 @@ class PyTILE(Tk):
 
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 
-		self.groupid = LabelFrame(self, text='MegaTile Group')
-		g = Frame(self.groupid)
-		c = Frame(g)
-		self.megatiles = Canvas(c, width=529, height=34, background='#000000')
-		self.megatiles.pack()
-		self.scroll = Scrollbar(c, orient=HORIZONTAL, command=self.scrolling)
-		self.scroll.set(0,1)
-		self.scroll.pack(fill=X, expand=1, padx=2)
-		c.pack(side=LEFT,padx=2)
-		self.megatiles.create_rectangle(0, 0, 0, 0, outline='#FFFFFF', tags='border')
-		self.disable.append(Button(g, image=self.findimage, width=20, height=20, command=lambda i=0: self.choose(i), state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=2)
-		g.pack(padx=5)
+		mid = Frame(self)
+		self.palette = TilePaletteView(mid, TILETYPE_GROUP, delegate=self, multiselect=False, sub_select=True)
+		self.palette.pack(side=LEFT, fill=Y)
+
+		settings = Frame(mid)
+		self.groupid = LabelFrame(settings, text='MegaTile Group')
 		f = Frame(self.groupid)
 		left = Frame(f)
 		l = LabelFrame(left, text='MiniTiles')
@@ -1452,25 +1511,9 @@ class PyTILE(Tk):
 		self.disable[-1].grid(sticky=W+E, column=2, row=7, pady=5)
 		right.pack(side=LEFT, fill=Y, pady=8)
 		f.pack(fill=X)
-		self.groupid.pack(padx=5, pady=5)
-
-		# def change_group(d):
-		# 	if not self.tileset or not self.group:
-		# 		return
-		# 	group = max(0,min(len(self.tileset.cv5.groups)-1,self.group[0] + d))
-		# 	if group != self.group[0]:
-		# 		self.group[0] = group
-		# 		self.megaload()
-		# self.bind('<Up>', lambda e: change_group(-1))
-		# self.bind('<Down>', lambda e: change_group(1))
-		# def change_mega(d):
-		# 	if not self.tileset or not self.group:
-		# 		return
-		# 	mega = max(0,min(15,self.group[1] + d))
-		# 	if mega != self.group[1]:
-		# 		self.megaload(mega)
-		# self.bind('<Left>', lambda e: change_mega(-1))
-		# self.bind('<Right>', lambda e: change_mega(1))
+		self.groupid.pack(side=TOP, padx=5, pady=5)
+		settings.pack(side=LEFT, fill=Y)
+		mid.pack(fill=BOTH, expand=1)
 
 		#Statusbar
 		self.status = StringVar()
@@ -1491,6 +1534,24 @@ class PyTILE(Tk):
 			self.open(file=guifile)
 
 		start_new_thread(check_update, (self, 'PyTILE'))
+
+	def tile_palette_get_tileset(self):
+		return self.tileset
+
+	def tile_palette_get_tile(self):
+		return self.gettile
+
+	def tile_palette_binding_widget(self):
+		return self
+
+	# def tile_palette_double_clicked(self, id):
+	# 	if not hasattr(self.delegate, 'change'):
+	# 		return
+	# 	self.delegate.change(self.tiletype, id)
+	# 	self.ok()
+
+	def tile_palette_selection_changed(self):
+		self.megaload()
 
 	def unsaved(self):
 		if self.tileset and self.edited:
@@ -1538,8 +1599,8 @@ class PyTILE(Tk):
 			copy_mask = 8
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			copy_mask = 16
-		copy_mega = self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
-		for m in self.tileset.cv5.groups[self.group[0]][13]:
+		copy_mega = self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection]
+		for m in self.tileset.cv5.groups[self.palette.selected[0]][13]:
 			if m == copy_mega or (m == 0 and self.apply_all_exclude_nulls.get()):
 				continue
 			for n in xrange(16):
@@ -1553,35 +1614,20 @@ class PyTILE(Tk):
 		else:
 			self.apply_all_btn.pack()
 
-	def draw_group_selection(self):
-		x = 2 + 33 * self.group[1]
-		self.megatiles.coords('border', x, 2, x + 33, 35)
+	def update_group_label(self):
+		d = ['',' - Doodad'][self.palette.selected[0] >= 1024]
+		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.palette.selected[0],d)
 
-	def draw_group(self):
-		d = ['',' - Doodad'][self.group[0] >= 1024]
-		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.group[0],d)
-		self.megatiles.images = []
-		for n,m in enumerate(self.tileset.cv5.groups[self.group[0]][13]):
-			t = 'tile%s' % n
-			self.megatiles.delete(t)
-			self.megatiles.images.append(self.gettile(m))
-			self.megatiles.create_image(19 + 33 * n, 19, image=self.megatiles.images[-1], tags=t)
-			self.megatiles.tag_bind(t, '<Button-1>', lambda e,n=n: self.megaload(n))
-			self.megatiles.tag_bind(t, '<Double-Button-1>', lambda e,i=1: self.choose(i))
-
-	def megaload(self, n=None):
+	def megaload(self):
 		self.loading_megas = True
-		if n == None:
-			n = self.group[1]
-		else:
-			self.group[1] = n
-		group = self.tileset.cv5.groups[self.group[0]]
-		mega = group[13][n]
+		group = self.tileset.cv5.groups[self.palette.selected[0]]
+		mega = group[13][self.palette.sub_selection]
 		if self.megatilee.get() != mega:
 			self.megatilee.check = False
 			self.megatilee.set(mega)
+			self.megatilee.check = True
 		self.index.set(group[0])
-		if self.group[0] >= 1024:
+		if self.palette.selected[0] >= 1024:
 			if not self.doodad:
 				self.tiles.pack_forget()
 				self.doodads.pack(side=TOP)
@@ -1594,29 +1640,28 @@ class PyTILE(Tk):
 				self.doodad = False
 			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
 		for n,v in enumerate(o):
-			if self.group[0] >= 1024 and n == 6:
+			if self.palette.selected[0] >= 1024 and n == 6:
 				v.set(group[n+1]-1)
 			else:
 				v.set(group[n+1])
-		self.draw_group()
-		self.draw_group_selection()
 		self.miniload()
+		self.update_group_label()
 		self.loading_megas = False
 
-	def miniload(self, n=None):
-		self.mega_editor.set_megatile(self.tileset.cv5.groups[self.group[0]][13][self.group[1]])
+	def miniload(self):
+		self.mega_editor.set_megatile(self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection])
 
 	def group_values_changed(self, *_):
 		if not self.tileset or self.loading_megas:
 			return
-		group = self.tileset.cv5.groups[self.group[0]]
+		group = self.tileset.cv5.groups[self.palette.selected[0]]
 		group[0] = self.index.get()
-		if self.group[0] >= 1024:
+		if self.palette.selected[0] >= 1024:
 			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
 		else:
 			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
 		for n,v in enumerate(o):
-			if self.group[0] >= 1024 and n == 6:
+			if self.palette.selected[0] >= 1024 and n == 6:
 				group[n+1] = v.get()+1
 			else:
 				group[n+1] = v.get()
@@ -1624,43 +1669,18 @@ class PyTILE(Tk):
 
 	def choose(self, i):
 		TilePalette(self, i, [
-				self.group[0],
-				self.tileset.cv5.groups[self.group[0]][13][self.group[1]]
+				self.palette.selected[0],
+				self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection]
 			][i],
 			editing=True)
-
-	def updatescroll(self):
-		groups = 0
-		if self.tileset:
-			groups = float(len(self.tileset.cv5.groups)-1)
-		if groups <= 1:
-			self.scroll.set(0,1)
-		else:
-			x = (1-8/groups)*(self.group[0] / groups)
-			self.scroll.set(x,x+(8/groups))
-
-	def scrolling(self, t, p, e=None):
-		a = {'page':8,'pages':8,'units':1}
-		groups = len(self.tileset.cv5.groups)-1
-		p = min(100,float(p) / (1-8/float(groups)))
-		if t == 'moveto':
-			self.group[0] = int(groups * float(p))
-		elif t == 'scroll':
-			self.group[0] = min(groups,max(0,self.group[0] + int(p) * a[e]))
-		self.updatescroll()
-		self.megaload()
 
 	def change(self, tiletype, id):
 		if not self.tileset:
 			return
-		if tiletype == TILETYPE_GROUP:
-			self.group[0] = id
-			self.megaload()
-		elif tiletype == TILETYPE_MEGA and not self.loading_megas:
-			self.tileset.cv5.groups[self.group[0]][13][self.group[1]] = id
-			self.draw_group()
+		if tiletype == TILETYPE_MEGA and not self.loading_megas:
+			self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection] = id
+			self.palette.draw_tiles(force=True)
 			self.mega_editor.set_megatile(id)
-		self.updatescroll()
 		self.mark_edited()
 
 	def placeability(self):
@@ -1688,9 +1708,8 @@ class PyTILE(Tk):
 			self.mark_edited(False)
 			self.action_states()
 			self.update_ranges()
-			self.group = [0,0]
-			self.megaload()
-			self.updatescroll()
+			self.palette.update_size()
+			self.palette.select(0)
 			if self.tileset.vx4.expanded:
 				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, 'This tileset is using an expanded vx4 file.')
 
@@ -1722,7 +1741,6 @@ class PyTILE(Tk):
 		if not self.unsaved():
 			self.tileset = None
 			self.file = None
-			self.group = [0,0]
 			self.status.set('Load or create a Tileset.')
 			self.mark_edited(False)
 			self.groupid['text'] = 'MegaTile Group'
@@ -1733,13 +1751,8 @@ class PyTILE(Tk):
 			self.mega_editor.set_megatile(None)
 			for v in [self.index,self.megatilee,self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]:
 				v.set(0)
-			for n in range(16):
-				t = 'tile%s' % n
-				self.megatiles.delete(t)
-			self.megatiles.images = []
-			self.megatiles.coords('border', 0, 0, 0, 0)
+			self.palette.draw_tiles()
 			self.action_states()
-			self.updatescroll()
 
 	def register(self, e=None):
 		try:
