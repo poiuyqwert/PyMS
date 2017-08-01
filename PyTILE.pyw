@@ -846,7 +846,7 @@ class SettingsImporter(PyMSDialog):
 		PyMSDialog.dismiss(self)
 
 class TilePaletteView(Frame):
-	# sub_select currently only supported by TILETYPE_GROUP
+	# sub_select currently only supported by TILETYPE_GROUP when multiselect=False
 	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, multiselect=True, sub_select=False):
 		Frame.__init__(self, parent)
 		self.tiletype = tiletype
@@ -881,8 +881,9 @@ class TilePaletteView(Frame):
 		self.canvas.bind('<Configure>', canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
 		binding_widget.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)),'units'))
-		binding_widget.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
-		binding_widget.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
+		if not hasattr(self.delegate, 'tile_palette_bind_updown') or self.delegate.tile_palette_bind_updown():
+			binding_widget.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
+			binding_widget.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
 		binding_widget.bind('<Next>', lambda e: self.canvas.yview('scroll', 1,'page'))
 		binding_widget.bind('<Prior>', lambda e: self.canvas.yview('scroll', -1,'page'))
 		def update_scrollbar(l,h,bar):
@@ -997,7 +998,7 @@ class TilePaletteView(Frame):
 									id /= 16
 								self.select(id, sub_select, toggle)
 							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,False))
-							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: self.select(id,True))
+							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: select(id,True))
 							if hasattr(self.delegate, 'tile_palette_double_clicked'):
 								self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
 			self.visible_range = visible_range
@@ -1544,11 +1545,8 @@ class PyTILE(Tk):
 	def tile_palette_binding_widget(self):
 		return self
 
-	# def tile_palette_double_clicked(self, id):
-	# 	if not hasattr(self.delegate, 'change'):
-	# 		return
-	# 	self.delegate.change(self.tiletype, id)
-	# 	self.ok()
+	def tile_palette_bind_updown(self):
+		return False
 
 	def tile_palette_selection_changed(self):
 		self.megaload()
