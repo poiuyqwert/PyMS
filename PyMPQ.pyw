@@ -488,21 +488,28 @@ class FolderDialog(PyMSDialog):
 
 	def widgetize(self):
 		Label(self, text='The text in the box below will be put at the beginnings of the\nnames of every file you selected.\n\nExample: If "title.wav" is the original filename, and you type\n"music\\" the file will become "music\\title.wav"', anchor=W, justify=LEFT).pack(padx=5, pady=5)
-		Entry(self, textvariable=self.result).pack(padx=5, fill=X)
+		entry = Entry(self, textvariable=self.result)
+		entry.icursor(END)
+		entry.pack(padx=5, fill=X)
 
 		buttons = Frame(self)
-		ok = Button(buttons, text='Ok', width=10, command=self.ok)
-		ok.pack(side=LEFT, padx=3, pady=3)
+		Button(buttons, text='Ok', width=10, command=self.ok).pack(side=LEFT, padx=3, pady=3)
 		Button(buttons, text='Cancel', width=10, command=self.cancel).pack(padx=3, pady=3)
 		buttons.pack()
 
-		return ok
+		self.bind('<Return>', self.ok)
+		def select_all(*_):
+			entry.select_to(END)
+			entry.icursor(END)
+		self.bind('<Control-a>', select_all)
+
+		return entry
 
 	def cancel(self):
 		self.save = False
 		PyMSDialog.cancel(self)
 
-	def ok(self):
+	def ok(self, *_):
 		PYMPQ_SETTINGS['import'].add_folder = self.result.get()
 		PyMSDialog.ok(self)
 
