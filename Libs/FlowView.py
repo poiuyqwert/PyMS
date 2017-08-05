@@ -13,32 +13,29 @@ class FlowView(Frame):
 	def __init__(self, parent, **config):
 		Frame.__init__(self, parent, **config)
 
-		content_area = Frame(self)
-		self.content_view = Canvas(content_area, scrollregion=(0,0,0,0), highlightthickness=0)
-		self.content_view.pack(fill=BOTH, expand=1)
-		content_area.grid(sticky=NSEW)
-		xscrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self.content_view.xview)
+		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
+		self.content_view = Frame(self._content_area)
+		self.content_view_id = self._content_area.create_window((0,0), window=self.content_view, anchor=NW)
+		self._content_area.grid(sticky=NSEW)
+		xscrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self._content_area.xview)
 		xscrollbar.grid(sticky=EW)
-		yscrollbar = AutohideScrollbar(self, command=self.content_view.yview)
+		yscrollbar = AutohideScrollbar(self, command=self._content_area.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
 		def scrolled(l,h,bar):
 			bar.set(l,h)
 			# self.update_viewport()
-		self.content_view.config(xscrollcommand=lambda l,h,s=xscrollbar: scrolled(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scrolled(l,h,s))
+		self._content_area.config(xscrollcommand=lambda l,h,s=xscrollbar: scrolled(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scrolled(l,h,s))
 		def scroll(event):
 			horizontal = False
 			if hasattr(event, 'state') and getattr(event, 'state', 0):
 				horizontal = True
-			view = self.content_view.yview
+			view = self._content_area.yview
 			if horizontal:
-				view = self.content_view.xview
+				view = self._content_area.xview
 			if event.delta > 0:
-				# for some reason I can scroll past the left side but xview doesn't actually change, so just don't scroll past 0
-				if not horizontal or self.content_view.xview()[0] > 0:
-					view('scroll', -1, 'units')
+				view('scroll', -1, 'units')
 			else:
 				view('scroll', 1, 'units')
-			print self.content_view.xview(),self.content_view.yview()
 		self.bind_all('<MouseWheel>', scroll)
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
@@ -52,25 +49,81 @@ class FlowView(Frame):
 		self._subview_configs = {}
 		self._bindings = {}
 		self._update = False
-		# self._updates = 0
 		self.bind('<<Update>>', self._update_layout)
 		self._viewport_size = (0,0)
 		def resize(*_):
-			viewport_size = (self.content_view.winfo_width(), self.content_view.winfo_height())
+			viewport_size = self.viewport_size()
 			if viewport_size != self._viewport_size:
 				self._viewport_size = viewport_size
 				self.set_needs_update()
-		self.content_view.bind('<Configure>', resize)
+		self._content_area.bind('<Configure>', resize)
 
+		self._focus_bind_info = None
+		def check_focus():
+			focused = self.content_view.focus_displayof()
+			if self._focus_bind_info:
+				view,bind_id = self._focus_bind_info
+				view.unbind('<FocusOut>', bind_id)
+				self._focus_bind_info = None
+			def focus_out(*_):
+				check_focus()
+			if focused:
+				self._focus_bind_info = (focused,focused.bind('<FocusOut>', focus_out, True))
+				self.scroll_to_view(focused)
+		def focus_in(*_):
+			check_focus()
+		self.content_view.bind('<FocusIn>', focus_in)
+
+	def viewport_size(self):
+		return (self._content_area.winfo_width(), self._content_area.winfo_height())
 	def content_size(self):
-		x,y,w,h = (int(v) for v in self.content_view.cget('scrollregion').split(' '))
+		x,y,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)
+	def content_offset(self):
+		w,h = self.content_size()
+		x = w * self._content_area.xview()[0]
+		y = h * self._content_area.yview()[0]
+		return (x,y)
 
 	def set_needs_update(self):
 		# import inspect
 		# print inspect.stack()[1][3]
 		self._update = True
 		self.event_generate('<<Update>>')
+
+	def scroll_to_view(self, view):
+		offset_x = 0
+		offset_y = 0
+		view_w = view.winfo_width()
+		view_h = view.winfo_height()
+		while not view in self.subviews:
+			offset_x += view.winfo_x()
+			offset_y += view.winfo_y()
+			parent = view.nametowidget(view.winfo_parent())
+			if not parent or parent == view:
+				return
+			view = parent
+		view_x1 = view.winfo_x() + offset_x
+		view_x2 = view_x1 + view_w
+		view_y1 = view.winfo_y() + offset_y
+		view_y2 = view_y1 + view_h
+		viewport_x1,viewport_y1 = self.content_offset()
+		viewport_w,viewport_h = self.viewport_size()
+		viewport_x2 = viewport_x1 + viewport_w
+		viewport_y2 = viewport_y1 + viewport_h
+		content_w,content_h = self.content_size()
+		if view_x1 < viewport_x1:
+			self._content_area.xview_moveto(view_x1 / float(content_w))
+		elif view_x2 > viewport_x2:
+			xview = list(self._content_area.xview())
+			x_span = xview[1] - xview[0]
+			self._content_area.xview_moveto(view_x2 / float(content_w) - x_span)
+		if view_y1 < viewport_y1:
+			self._content_area.yview_moveto(view_y1 / float(content_h))
+		elif view_y2 > viewport_y2:
+			yview = list(self._content_area.yview())
+			y_span = yview[1] - yview[0]
+			self._content_area.yview_moveto(view_y2 / float(content_h) - y_span)
 
 	# WARNING: You must use the `content_view` as the master of the widgets placed into a FlowView
 	# padx/y can be None, an Int, or a 2 len tuple combination of them
@@ -96,7 +149,7 @@ class FlowView(Frame):
 		if not view in self.subviews:
 			return
 		name = str(view)
-		self.content_view.delete(name)
+		view.place_forget()
 		view.unbind('<Configure>', self._bindings[name])
 		del self._bindings[name]
 		del self._sizes[name]
@@ -119,10 +172,7 @@ class FlowView(Frame):
 		if not self._update:
 			return
 		self._update = False
-		# self._updates += 1
-		# print 'update %d' % self._updates
-		max_w = self.content_view.winfo_width() - 10
-		# print max_w
+		max_w = self._content_area.winfo_width()
 		x = 0
 		y = 0
 		w = 0
@@ -130,13 +180,7 @@ class FlowView(Frame):
 		row_widths = []
 		row_h = 0
 		def place(view, x,y, width):
-			name = str(view)
-			# improve check?
-			if self.content_view.find_withtag(name):
-				self.content_view.coords(name, (x,y))
-				self.content_view.itemconfig(name, width=width)
-			else:
-				self.content_view.create_window((x,y), window=view, anchor=NW, tags=name, width=width)
+			view.place(x=x, y=y, width=width)
 		for view in self.subviews:
 			name = str(view)
 			if not name in self._sizes:
@@ -169,21 +213,23 @@ class FlowView(Frame):
 		total_h = y + row_h
 		for row,row_width in zip(rows,row_widths):
 			if row_width < max_w:
-				total = 0.0
+				total_weight = 0.0
 				for _,_,_,_,weight in row:
-					total += weight
-				if total:
+					total_weight += weight
+				if total_weight:
 					distrubute = max_w - row_width
-					add_widths = tuple(int(col[4] / total * distrubute) for col in row)
+					add_widths = tuple(int(col[4] / total_weight * distrubute) for col in row)
 					offset = 0
 					for n in range(len(row)):
 						row[n][1] += offset
 						row[n][3] += add_widths[n]
 						offset += add_widths[n]
+				row_width = max_w
+			total_w = max(total_w,row_width)
 			for view,x,y,w,_ in row:
-				total_w = max(total_w,w)
 				place(view, x,y, w)
-		self.content_view.config(scrollregion=(0,0,total_w,total_h))
+		self._content_area.itemconfig(self.content_view_id, width=total_w,height=total_h)
+		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 
 if __name__ == '__main__':
 	import random,string
@@ -192,7 +238,6 @@ if __name__ == '__main__':
 	flow = FlowView(window, borderwidth=2, relief=SUNKEN, width=500,height=350)
 	flow.pack(fill=BOTH, expand=1, padx=30,pady=30)
 	count = random.randint(10,20)
-	print count
 	for n in range(count):
 		f = LabelFrame(flow.content_view, text=''.join([random.choice(string.lowercase + ' ') for i in xrange(random.randint(10,20))]))
 		for t in range(random.randint(1,5)):
@@ -202,4 +247,5 @@ if __name__ == '__main__':
 			l = Label(f, text=''.join([random.choice(string.lowercase + ' ') for i in xrange(random.randint(10,20))]))
 			l.pack()
 		flow.add_subview(f, padx=2,pady=2, weight=0 if n % 5 else 1)
+	flow.scroll_to_view(flow)
 	window.mainloop()
