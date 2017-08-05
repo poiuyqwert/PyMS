@@ -49,8 +49,7 @@ def image_bounds(image, transindex=0):
 				if xd != transindex:
 					if bounds[0] == -1 or x < bounds[0]:
 						bounds[0] = x
-					if x > bounds[2]:
-						bounds[2] = x + 1
+					bounds[2] = x + 1
 	return bounds
 
 # transindex=None for no transparency

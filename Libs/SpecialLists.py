@@ -299,7 +299,7 @@ class EditableReportSubList(RichList):
 
 	def endedit(self, i, n):
 		t = self.edittext.get()
-		if self.checkedit != t and self.report.rcmd and not self.report.rcmd(self.entries.index(int(n[5:])),self.checkedit):
+		if self.checkedit != t and self.report.rcmd and not self.report.rcmd(self.entries.index(int(n[5:])),t):
 			t = self.checkedit
 		self.execute('delete',(i + ' linestart', i + ' lineend'))
 		self.execute('insert',(i, t, n + ' Selection'))
@@ -313,6 +313,8 @@ class EditableReportSubList(RichList):
 		return s
 
 	def get(self, index):
+		if self.checkedit:
+			return self.checkedit
 		return self.text.get('entry%s.first' % self.entries[index],'entry%s.last' % self.entries[index])
 
 class ReportSubList(RichList):

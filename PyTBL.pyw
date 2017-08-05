@@ -169,7 +169,8 @@ class FindDialog(PyMSDialog):
 		t = self.find.get()
 		if not t in self.parent.findhistory:
 			self.parent.findhistory.insert(0, t)
-		if self.parent.listbox.size():
+		size = self.parent.listbox.size()
+		if size:
 			m = []
 			if self.regex.get():
 				regex = t
@@ -180,32 +181,43 @@ class FindDialog(PyMSDialog):
 			else:
 				regex = '.*%s.*' % re.escape(t)
 			try:
-				regex = re.compile(regex, [re.I,0][self.casesens.get()])
+				regex = re.compile(regex, re.I if self.casesens.get() else 0)
 			except:
 				self.reset = self.findentry
 				self.reset.c = self.reset['bg']
 				self.reset['bg'] = '#FFB4B4'
 				self.resettimer = self.after(1000, self.updatecolor)
 				return
-			u = self.updown.get()
+			wrap = self.wrap.get()
+			down = self.updown.get()
 			s = int(self.parent.listbox.curselection()[0])
-			i = s-1+u*2
-			while i != [-1,self.parent.listbox.size()][u]:
-				print (i,s)
+			def next(i, down, size):
+				if down:
+					i += 1
+					while i >= size:
+						i -= size
+				else:
+					i -= 1
+					while i < 0:
+						i += size
+				return i
+			i = next(s, down, size)
+			check = 0
+			if wrap:
+				check = size - 1
+			elif down:
+				check = size - s - 1
+			else:
+				check = s
+			while check:
+				check -= 1
 				if regex.match(self.parent.listbox.get(i)):
 					self.parent.listbox.select_clear(0,END)
 					self.parent.listbox.select_set(i)
 					self.parent.listbox.see(i)
 					self.parent.update()
 					return
-				if i == s:
-					break
-				i += -1+u*2
-				if i == [-1,self.parent.listbox.size()][u] and self.wrap.get():
-					if i == -1:
-						i = self.parent.listbox.size()-1
-					else:
-						i = 0
+				i = next(i, down, size)
 		p = self
 		if key and key.keycode != 13:
 			p = self.parent

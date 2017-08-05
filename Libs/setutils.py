@@ -241,6 +241,12 @@ class SettingDict(object):
 		if path and store:
 			self[key] = path
 		return path
+	def warn(self, key, parent, message, title='Warning!'):
+		if self.get(key):
+			return
+		w = WarnDialog(parent, message, title, show_dont_warn=True)
+		if w.dont_warn.get():
+			self[key] = True
 class SettingEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if isinstance(obj, SettingDict):
