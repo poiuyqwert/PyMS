@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import GRP, Tilesets, TBL
 from Libs.Tilesets import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH
+from Libs.FlowView import FlowView
 
 from Tkinter import *
 from tkMessageBox import *
@@ -97,6 +98,7 @@ class MegaEditorView(Frame):
 		e = Frame(self.mini_tools)
 		Label(e, text='ID:').pack(side=LEFT)
 		f = Entry(e, textvariable=self.minitile, font=couriernew, width=5)
+		tip(f, 'MiniTile ID', 'ID for the selected MiniTile in the current MegaTile')
 		self.disable.append(f)
 		f.pack(side=LEFT, padx=2)
 		i = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
@@ -1022,10 +1024,9 @@ class TilePaletteView(Frame):
 			self.selected = [select]
 			if sub_select != None:
 				self.sub_selection = sub_select
+		self.draw_selections()
 		if scroll_to:
 			self.scroll_to_selection()
-		else:
-			self.draw_selections()
 		if hasattr(self.delegate, 'tile_palette_selection_changed'):
 			self.delegate.tile_palette_selection_changed()
 
@@ -1340,6 +1341,8 @@ class PyTILE(Tk):
 			('saveas', self.saveas, 'Save As (Ctrl+Alt+A)', DISABLED, 'Ctrl+Alt+A'),
 			('close', self.close, 'Close (Ctrl+W)', DISABLED, 'Ctrl+W'),
 			10,
+			('find', lambda *_: self.choose(TILETYPE_GROUP), 'MegaTile Group Palette (Ctrl+P)', DISABLED, 'Ctrl+P'),
+			10,
 			('register', self.register, 'Set as default *.cv5 editor (Windows Only)', [DISABLED,NORMAL][win_reg], ''),
 			('help', self.help, 'Help (F1)', NORMAL, 'F1'),
 			('about', self.about, 'About PyTILE', NORMAL, ''),
@@ -1384,6 +1387,9 @@ class PyTILE(Tk):
 		self.unknown11 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
 		self.doodad = False
 
+		self.apply_all_exclude_nulls = IntVar()
+		self.apply_all_exclude_nulls.set(PYTILE_SETTINGS.mega_edit.get('apply_all_exclude_nulls', True))
+
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 
 		mid = Frame(self)
@@ -1392,11 +1398,113 @@ class PyTILE(Tk):
 
 		settings = Frame(mid)
 		self.groupid = LabelFrame(settings, text='MegaTile Group')
-		f = Frame(self.groupid)
-		left = Frame(f)
-		l = LabelFrame(left, text='MiniTiles')
-		self.apply_all_exclude_nulls = IntVar()
-		self.apply_all_exclude_nulls.set(PYTILE_SETTINGS.mega_edit.get('apply_all_exclude_nulls', True))
+		self.flow_view = FlowView(self.groupid, width=300)
+		self.flow_view.pack(fill=BOTH, expand=1, padx=2)
+
+		OPTIONS_CHOICES = 0
+		OPTIONS_FLAGS = 1
+		def options_editor(name, tooltip, options_type, variable, options):
+			group = LabelFrame(self.flow_view.content_view, text=name)
+			c = Frame(group)
+			raw_tooltip = ''
+			for option_name,option_value,option_tooltip in options:
+				raw_tooltip += '\n  %d = %s' % (option_value, option_name)
+				if options_type == OPTIONS_FLAGS and not option_value:
+					continue
+				f = Frame(c)
+				if options_type == OPTIONS_FLAGS:
+					self.disable.append(MaskCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED))
+				else:
+					self.disable.append(Radiobutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED))
+				self.disable[-1].pack(side=LEFT)
+				tip(self.disable[-1], name, tooltip + '\n\n%s:\n  %s' % (option_name, option_tooltip))
+				f.pack(side=TOP, fill=X)
+			f = Frame(c)
+			Label(f, text='Raw:').pack(side=LEFT)
+			self.disable.append(Entry(f, textvariable=variable, font=couriernew, width=len(str(variable.range[1])), state=DISABLED))
+			self.disable[-1].pack(side=LEFT)
+			tip(self.disable[-1], name, tooltip + '\n\nRaw:' + raw_tooltip)
+			f.pack(side=TOP, fill=X)
+			c.pack(padx=2,pady=2)
+			return group
+		def entries_editor(name, tooltip, rows):
+			group = LabelFrame(self.flow_view.content_view, text=name)
+			f = Frame(group)
+			for r,row in enumerate(rows):
+				for c,(field_name, variable, field_tooltip) in enumerate(row):
+					Label(f, text=field_name + ':').grid(column=c*2, row=r, sticky=E)
+					self.disable.append(Entry(f, textvariable=variable, font=couriernew, width=len(str(variable.range[1])), state=DISABLED))
+					self.disable[-1].grid(column=c*2+1, row=r, sticky=W)
+					if tooltip:
+						tip(self.disable[-1], name, tooltip + '\n\n%s:\n  %s' % (field_name, field_tooltip))
+					else:
+						tip(self.disable[-1], field_name, field_tooltip)
+			f.pack(padx=2,pady=2)
+			return group
+
+		self.normal_editors = []
+		group = options_editor('Flags', 'Unknown', OPTIONS_CHOICES, self.flags, (
+			('Normal?', 0, 'Unknown'),
+			('Edge?', 1, 'Unknown'),
+			('Cliff?', 4, 'Unknown')
+		))
+		self.normal_editors.append(group)
+		group = options_editor('Buildable', 'Default buildability property', OPTIONS_CHOICES, self.buildable, (
+			('Buildable', 0, 'All buildings buildable'),
+			('Creep', 4, 'Only Zerg buildings buildable'),
+			('Unbuildable', 8, 'No buildings buildable')
+		))
+		self.normal_editors.append(group)
+		group = options_editor('Buildable 2', 'Buildability for Beacons/Start Location', OPTIONS_CHOICES, self.buildable2, (
+			('Default', 0, 'Use default buildability'),
+			('Buildable', 8, 'Beacons and Start Location are Buildable')
+		))
+		self.normal_editors.append(group)
+		group = options_editor('Has Up', 'Edge piece has rows above it. Not completely understood.', OPTIONS_CHOICES, self.hasup, (
+			('Basic edge piece', 1, 'Unknown'),
+			('Right edge piece', 2, 'Unknown'),
+			('Left edge piece', 3, 'Unknown')
+		))
+		self.normal_editors.append(group)
+		group = options_editor('Has Down', 'Edge piece has rows below it. Not completely understood.', OPTIONS_CHOICES, self.hasdown, (
+			('Basic edge piece', 1, 'Unknown'),
+			('Right edge piece', 2, 'Unknown'),
+			('Left edge piece', 3, 'Unknown')
+		))
+		self.normal_editors.append(group)
+		group = entries_editor('Edges?', 'Unknown. Seems to be related to surrounding tiles & ISOM.', (
+			(('Left?', self.edgeleft, 'Unknown.'), ('Up?', self.edgeup, 'Unknown.')),
+			(('Right?', self.edgeright, 'Unknown.'), ('Down?', self.edgedown, 'Unknown.')),
+		))
+		self.normal_editors.append(group)
+		group = entries_editor('Other', None, (
+			(('Index', self.index, 'Group Index? Not completely understood'),),
+			(('Ground Height', self.groundheight, 'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),),
+		))
+		self.normal_editors.append(group)
+		group = entries_editor('Unknowns', None, (
+			(('Unknown 9', self.unknown9, 'Unknown'),),
+			(('Unknown 11', self.unknown11, 'Unknown'),)
+		))
+		self.normal_editors.append(group)
+
+		self.doodad_editors = []
+
+		group = entries_editor('Other', None, (
+			(('Index', self.index, 'Group Index? Not completely understood'),),
+			(('Ground Height', self.groundheight, 'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),),
+		))
+		self.doodad_editors.append(group)
+
+		group = LabelFrame(self.flow_view.content_view, text='MegaTile')
+		f = Frame(group)
+		Label(f, text='ID:').pack(side=LEFT)
+		self.disable.append(Entry(f, textvariable=self.megatilee, font=couriernew, width=len(str(self.megatilee.range[1])), state=DISABLED))
+		self.disable[-1].pack(side=LEFT, padx=2)
+		tip(self.disable[-1], 'MegaTile ID', 'ID for the selected MegaTile in the current MegaTile Group')
+		self.disable.append(Button(f, image=self.findimage, width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
+		self.disable[-1].pack(side=LEFT, padx=2)
+		f.pack(side=TOP, fill=X, padx=3)
 		def apply_all_pressed():
 			menu = Menu(self, tearoff=0)
 			mode = self.mega_editor.edit_mode.get()
@@ -1406,114 +1514,72 @@ class PyTILE(Tk):
 			menu.add_separator()
 			menu.add_checkbutton(label="Exclude Null Tiles", variable=self.apply_all_exclude_nulls)
 			menu.post(*self.winfo_pointerxy())
-		self.apply_all_btn = Button(l, text='Apply to Megas', state=DISABLED, command=apply_all_pressed)
+		self.apply_all_btn = Button(group, text='Apply to Megas', state=DISABLED, command=apply_all_pressed)
 		self.disable.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
-		self.mega_editor = MegaEditorView(l, self, palette_editable=True)
+		self.mega_editor = MegaEditorView(group, self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
-		l.pack(padx=5, pady=(0,5))
-		left.pack(side=LEFT)
-		right = Frame(f)
-		self.tiles = Frame(right)
-		data = [
-			[
-				('Index',self.index,5,'Group Index? Seems to always be 1 for doodads. Not completely understood'),
-				('MegaTile',self.megatilee,5,'MegaTile ID for selected tile in the group. Either input a value,\n  or hit the find button to browse for a MegaTile.')
-			],
-			[
-				('Flags',self.flags,2,'Unknown property:\n    0 = ?\n    1 = Edge?\n    4 = Cliff?'),
-				('Ground Height',self.groundheight,2,'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),
-				('Edge Left?',self.edgeleft,5,'Unknown. Seems to be related to surrounding tiles & ISOM. (Left?)'),
-				('Edge Right?',self.edgeright,5,'Unknown. Seems to be related to surrounding tiles & ISOM. (Right?)'),
-				('Edge Up?',self.edgeup,5,'Unknown. Seems to be related to surrounding tiles & ISOM. (Up?)'),
-				('Edge Down?',self.edgedown,5,'Unknown. Seems to be related to surrounding tiles & ISOM. (Down?)')
-			],
-			[
-				('Buildable',self.buildable,2,'Sets the default buildable property:\n    0 = Buildable\n    4 = Creep\n    8 = Unbuildable'),
-				('Buildable 2',self.buildable2,2,'Buildable Flag for Beacons/Start Location:\n    0 = Default\n    8 = Buildable'),
-				('Has Up',self.hasup,5,'Edge piece has rows above it. (Recently noticed; not fully understood.)\n    1 = Basic edge piece.\n    2 = Right edge piece.\n    3 = Left edge piece.'),
-				('Has Down',self.hasdown,5,'Edge piece has rows below it. (Recently noticed; not fully understood.)\n    1 = Basic edge piece.\n    2 = Right edge piece.\n    3 = Left edge piece.'),
-				('Unknown 9',self.unknown9,5,'Unknown'),
-				('Unknown 11',self.unknown11,5,'Unknown')
-			],
-		]
-		for c,a in enumerate(data):
-			for r,row in enumerate(a):
-				t,v,w,desc = row
-				l = Label(self.tiles, text=t + ':', anchor=E)
-				if t == 'MegaTile':
-					l.grid(sticky=W+E, column=c*2, row=5)
-					tip(l, t, desc)
-					e = Frame(self.tiles)
-					self.disable.append(Entry(e, textvariable=v, font=couriernew, width=w, state=DISABLED))
-					self.disable[-1].pack(side=LEFT)
-					self.disable.append(Button(e, image=self.findimage, width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
-					self.disable[-1].pack(side=LEFT, padx=2)
-					e.grid(sticky=W, column=c*2+1, row=5)
-					tip(e, t, desc)
-				else:
-					l.grid(sticky=W+E, column=c*2, row=r)
-					tip(l, t, desc)
-					self.disable.append(Entry(self.tiles, textvariable=v, font=couriernew, width=w, state=DISABLED))
-					self.disable[-1].grid(sticky=W, column=c*2+1, row=r)
-					tip(self.disable[-1], t, desc)
-		self.tiles.pack(side=TOP)
-		self.doodads = Frame(right)
-		data = [
-			[
-				('Index',self.index,5,'Group Index? Seems to always be 1 for doodads. Not completely understood'),
-				('MegaTile',self.megatilee,4,'MegaTile ID for selected tile in the group. Either input a value,\n  or hit the find button to browse for a MegaTile.')
-			],
-			[
-				('Unknown 1',self.flags,2,'Unknown:\n    0 = ?\n    1 = ?'),
-				('Ground Height',self.groundheight,2,'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),
-				(None,self.edgeleft,None,'Doodad group string from stat_txt.tbl'),
-				('Doodad #',self.edgeright,5,'Doodad ID used used for dddata.bi'),
-				('Doodad Width',self.edgeup,5,'Total width of the doodad in MegaTiles'),
-				('Doodad Height',self.edgedown,5,'Total height of the doodad in MegaTiles')
-			],
-			[
-				('Buildable',self.buildable,2,'Sets the default buildable property:\n    0 = Buildable\n    4 = Creep\n    8 = Unbuildable'),
-				('Has Overlay',self.buildable2,2,'Flag that determins if a doodad has a sprite overlay:\n    0 = None\n    1 = Sprites.dat Reference\n    2 = Units.dat Reference\n    4 = Overlay is Flipped'),
-				('Overlay ID',self.hasup,5,'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),
-				('Unknown 6',self.hasdown,5,'Unknown'),
-				('Unknown 8',self.unknown9,5,'Unknown'),
-				('Unknown 12',self.unknown11,5,'Unknown')
-			],
-		]
-		for c,a in enumerate(data):
-			for r,row in enumerate(a):
-				t,v,w,desc = row
-				if t == None:
-					l = Label(self.doodads, text='Group:', anchor=E)
-					l.grid(sticky=W+E, column=0, row=2)
-					tip(l, 'Doodad Group', desc)
-					self.doodaddd = DropDown(self.doodads, v, [TBL.decompile_string(s) for s in self.stat_txt.strings])
-					self.doodaddd.grid(sticky=W+E, column=1, row=r, columnspan=3)
-				else:
-					l = Label(self.doodads, text=t + ':', anchor=E)
-					if t == 'MegaTile':
-						l.grid(sticky=W+E, column=c*2, row=5)
-						tip(l, t, desc)
-						e = Frame(self.doodads)
-						self.disable.append(Entry(e, textvariable=v, font=couriernew, width=w, state=DISABLED))
-						self.disable[-1].pack(side=LEFT)
-						self.disable.append(Button(e, image=self.findimage, width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
-						self.disable[-1].pack(side=LEFT, padx=2)
-						e.grid(sticky=W, column=c*2+1, row=5)
-					else:
-						l.grid(sticky=W+E, column=c*2, row=r)
-						tip(l, t, desc)
-						self.disable.append(Entry(self.doodads, textvariable=v, font=couriernew, width=w, state=DISABLED))
-						self.disable[-1].grid(sticky=W, column=c*2+1, row=r)
-						tip(self.disable[-1], t, desc)
-		self.disable.append(Button(self.doodads, text='Placeability', command=self.placeability))
-		self.disable[-1].grid(sticky=W+E, column=2, row=7, pady=5)
-		right.pack(side=LEFT, fill=Y, pady=8)
-		f.pack(fill=X)
-		self.groupid.pack(side=TOP, padx=5, pady=5)
-		settings.pack(side=LEFT, fill=Y)
+		self.normal_editors.append(group)
+		self.doodad_editors.append(group)
+
+		self.flow_view.add_subviews(self.normal_editors, padx=2)
+		# self.doodads = Frame(right)
+		# data = [
+		# 	[
+		# 		('Index',self.index,5,'Group Index? Seems to always be 1 for doodads. Not completely understood'),
+		# 		('MegaTile',self.megatilee,4,'MegaTile ID for selected tile in the group. Either input a value,\n  or hit the find button to browse for a MegaTile.')
+		# 	],
+		# 	[
+		# 		('Unknown 1',self.flags,2,'Unknown:\n    0 = ?\n    1 = ?'),
+		# 		('Ground Height',self.groundheight,2,'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),
+		# 		(None,self.edgeleft,None,'Doodad group string from stat_txt.tbl'),
+		# 		('Doodad #',self.edgeright,5,'Doodad ID used used for dddata.bi'),
+		# 		('Doodad Width',self.edgeup,5,'Total width of the doodad in MegaTiles'),
+		# 		('Doodad Height',self.edgedown,5,'Total height of the doodad in MegaTiles')
+		# 	],
+		# 	[
+		# 		('Buildable',self.buildable,2,'Sets the default buildable property:\n    0 = Buildable\n    4 = Creep\n    8 = Unbuildable'),
+		# 		('Has Overlay',self.buildable2,2,'Flag that determins if a doodad has a sprite overlay:\n    0 = None\n    1 = Sprites.dat Reference\n    2 = Units.dat Reference\n    4 = Overlay is Flipped'),
+		# 		('Overlay ID',self.hasup,5,'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),
+		# 		('Unknown 6',self.hasdown,5,'Unknown'),
+		# 		('Unknown 8',self.unknown9,5,'Unknown'),
+		# 		('Unknown 12',self.unknown11,5,'Unknown')
+		# 	],
+		# ]
+		# for c,a in enumerate(data):
+		# 	for r,row in enumerate(a):
+		# 		t,v,w,desc = row
+		# 		if t == None:
+		# 			l = Label(self.doodads, text='Group:', anchor=E)
+		# 			l.grid(sticky=W+E, column=0, row=2)
+		# 			tip(l, 'Doodad Group', desc)
+		# 			self.doodaddd = DropDown(self.doodads, v, [TBL.decompile_string(s) for s in self.stat_txt.strings])
+		# 			self.doodaddd.grid(sticky=W+E, column=1, row=r, columnspan=3)
+		# 		else:
+		# 			l = Label(self.doodads, text=t + ':', anchor=E)
+		# 			if t == 'MegaTile':
+		# 				l.grid(sticky=W+E, column=c*2, row=5)
+		# 				tip(l, t, desc)
+		# 				e = Frame(self.doodads)
+		# 				self.disable.append(Entry(e, textvariable=v, font=couriernew, width=w, state=DISABLED))
+		# 				self.disable[-1].pack(side=LEFT)
+		# 				self.disable.append(Button(e, image=self.findimage, width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
+		# 				self.disable[-1].pack(side=LEFT, padx=2)
+		# 				e.grid(sticky=W, column=c*2+1, row=5)
+		# 			else:
+		# 				l.grid(sticky=W+E, column=c*2, row=r)
+		# 				tip(l, t, desc)
+		# 				self.disable.append(Entry(self.doodads, textvariable=v, font=couriernew, width=w, state=DISABLED))
+		# 				self.disable[-1].grid(sticky=W, column=c*2+1, row=r)
+		# 				tip(self.disable[-1], t, desc)
+		# self.disable.append(Button(self.doodads, text='Placeability', command=self.placeability))
+		# self.disable[-1].grid(sticky=W+E, column=2, row=7, pady=5)
+		# right.pack(side=LEFT, fill=BOTH, expand=1, pady=8)
+		# f.pack(fill=BOTH, expand=1)
+
+		self.groupid.pack(fill=BOTH, expand=1, padx=5, pady=5)
+		settings.pack(side=LEFT, fill=BOTH, expand=1)
 		mid.pack(fill=BOTH, expand=1)
 
 		#Statusbar
@@ -1567,7 +1633,7 @@ class PyTILE(Tk):
 
 	def action_states(self):
 		file = [NORMAL,DISABLED][not self.tileset]
-		for btn in ['save','saveas','close']:
+		for btn in ['save','saveas','close','find']:
 			self.buttons[btn]['state'] = file
 		for w in self.disable:
 			w['state'] = file
@@ -1627,14 +1693,18 @@ class PyTILE(Tk):
 		self.index.set(group[0])
 		if self.palette.selected[0] >= 1024:
 			if not self.doodad:
-				self.tiles.pack_forget()
-				self.doodads.pack(side=TOP)
+				self.flow_view.remove_all_subviews()
+				self.flow_view.add_subviews(self.doodad_editors, padx=2)
+				# self.tiles.pack_forget()
+				# self.doodads.pack(side=TOP)
 				self.doodad = True
 			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
 		else:
 			if self.doodad:
-				self.doodads.pack_forget()
-				self.tiles.pack(side=TOP)
+				self.flow_view.remove_all_subviews()
+				self.flow_view.add_subviews(self.normal_editors, padx=2)
+				# self.doodads.pack_forget()
+				# self.tiles.pack(side=TOP)
 				self.doodad = False
 			o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
 		for n,v in enumerate(o):
@@ -1675,11 +1745,13 @@ class PyTILE(Tk):
 	def change(self, tiletype, id):
 		if not self.tileset:
 			return
-		if tiletype == TILETYPE_MEGA and not self.loading_megas:
+		if tiletype == TILETYPE_GROUP:
+			self.palette.select(id, sub_select=0, scroll_to=True)
+		elif tiletype == TILETYPE_MEGA and not self.loading_megas:
 			self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection] = id
 			self.palette.draw_tiles(force=True)
 			self.mega_editor.set_megatile(id)
-		self.mark_edited()
+			self.mark_edited()
 
 	def placeability(self):
 		Placeability(self, self.edgeright.get())

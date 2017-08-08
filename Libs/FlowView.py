@@ -9,6 +9,7 @@ class AutohideScrollbar(Scrollbar):
 			self.grid()
 		Scrollbar.set(self, lo, hi)
 
+# WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
 class FlowView(Frame):
 	def __init__(self, parent, **config):
 		Frame.__init__(self, parent, **config)
@@ -63,7 +64,10 @@ class FlowView(Frame):
 			focused = self.content_view.focus_displayof()
 			if self._focus_bind_info:
 				view,bind_id = self._focus_bind_info
-				view.unbind('<FocusOut>', bind_id)
+				try:
+					view.unbind('<FocusOut>', bind_id)
+				except:
+					pass
 				self._focus_bind_info = None
 			def focus_out(*_):
 				check_focus()
@@ -125,10 +129,8 @@ class FlowView(Frame):
 			y_span = yview[1] - yview[0]
 			self._content_area.yview_moveto(view_y2 / float(content_h) - y_span)
 
-	# WARNING: You must use the `content_view` as the master of the widgets placed into a FlowView
-	# padx/y can be None, an Int, or a 2 len tuple combination of them
-	def add_subview(self, view, padx=0,pady=0, weight=0):
-		self.subviews.append(view)
+	def _insert_subview(self, index, view, padx=0,pady=0, weight=0):
+		self.subviews.insert(index, view)
 		if not isinstance(padx, tuple):
 			padx = (padx,padx)
 		if not isinstance(pady, tuple):
@@ -143,9 +145,23 @@ class FlowView(Frame):
 		view.grid(in_=self._staging_view)
 		self._update_view_size(view, update_idletasks=True)
 		self._bindings[name] = view.bind('<Configure>', lambda *_: self._update_view_size(view, set_needs_update=True), True)
+
+	def insert_subview(self, view, padx=0,pady=0, weight=0):
+		self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()
 
-	def remove_subview(self, view):
+	def insert_subviews(self, index, views, padx=0,pady=0, weight=0):
+		for view in reversed(views):
+			self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
+		self.set_needs_update()
+
+	def add_subview(self, view, padx=0,pady=0, weight=0):
+		self.insert_subview(len(self.subviews), view, padx=padx,pady=pady, weight=weight)
+
+	def add_subviews(self, views, padx=0,pady=0, weight=0):
+		self.insert_subviews(len(self.subviews), views, padx=padx,pady=pady, weight=weight)
+
+	def _remove_subview(self, view):
 		if not view in self.subviews:
 			return
 		name = str(view)
@@ -155,7 +171,18 @@ class FlowView(Frame):
 		del self._sizes[name]
 		del self._subview_configs[name]
 		self.subviews.remove(view)
+
+	def remove_subview(self, view):
+		self._remove_subview(self, view)
 		self.set_needs_update()
+
+	def remove_subviews(self, views):
+		for view in views:
+			self._remove_subview(view)
+		self.set_needs_update()
+
+	def remove_all_subviews(self):
+		self.remove_subviews(list(self.subviews))
 
 	def _update_view_size(self, view, update_idletasks=False, set_needs_update=False):
 		if update_idletasks:
