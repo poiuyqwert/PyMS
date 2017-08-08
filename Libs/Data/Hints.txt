@@ -297,9 +297,9 @@ WeapRemoveAfter=Time until the weapon is removed if it does not hit a target. 1 
 WeapOffsetUpward=Distance (in pixels) from the top of the attacking unit, at which the weapon's sprite will be spawned.
 WeapOffsetForward=Distance (in pixels) from the front of the attacking unit (depending on which direction it is facing), at which the weapon's sprite will be spawned.
 
-WeapRangeMin=Minimal range from which the weapon can be used.
+WeapRangeMin=Minimal range from which the weapon can be used, in pixels.
 
-WeapRangeMax=Maximal range from which the weapon can be used.
+WeapRangeMax=Maximal range from which the weapon can be used, in pixels.
 
 WeapSplashInner=Distance from the target at which the weapon will deal 100% of its base damage. Works ONLY if the "Explosion" is set to "Nuclear Missile", "Splash (Radial)", "Splash (Enemy)" or "Splash (Air)".
 
