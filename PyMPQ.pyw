@@ -942,7 +942,7 @@ class PyMPQ(Tk):
 
 	def open(self, key=None, file=None):
 		if file == None:
-			file = PYMPQ_SETTINGS.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')])
+			file = PYMPQ_SETTINGS.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('Any MPQ', '*.mpq;*.exe;*.scm;*.scx'),('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx'),('All Files','*')])
 			if not file:
 				return
 		h = MpqOpenArchiveForUpdateEx(file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
