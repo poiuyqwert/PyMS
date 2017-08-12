@@ -759,8 +759,6 @@ class CodeEditDialog(PyMSDialog):
 		self.findwindow = None
 
 	def widgetize(self):
-		self.extrainfo = IntVar()
-		self.extrainfo.set(self.parent.settings.get('codeeditextrainfo', 1))
 		buttons = [
 			('save', self.save, 'Save (Ctrl+S)', '<Control-s>'),
 			('test', self.test, 'Test Code (Ctrl+T)', '<Control-t>'),
@@ -768,8 +766,6 @@ class CodeEditDialog(PyMSDialog):
 			('export', self.export, 'Export Code (Ctrl+E)', '<Control-e>'),
 			('saveas', self.exportas, 'Export As... (Ctrl+Alt+A)', '<Control-Alt-a>'),
 			('import', self.iimport, 'Import Code (Ctrl+I)', '<Control-i>'),
-			4,
-			('saveextra', self.extrainfo, 'Save Information Comments and Labels', True),
 			10,
 			('find', self.find, 'Find/Replace (Ctrl+F)', '<Control-f>'),
 			10,
@@ -786,11 +782,8 @@ class CodeEditDialog(PyMSDialog):
 		for btn in buttons:
 			if isinstance(btn, tuple):
 				image = get_img(btn[0])
-				if btn[3] == True:
-					button = Checkbutton(bar, image=image, width=20, height=20, indicatoron=0, variable=btn[1])
-				else:
-					button = Button(bar, image=image, width=20, height=20, command=btn[1])
-					self.bind(btn[3], btn[1])
+				button = Button(bar, image=image, width=20, height=20, command=btn[1])
+				self.bind(btn[3], btn[1])
 				button.image = image
 				button.tooltip = Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
@@ -969,13 +962,12 @@ class CodeEditDialog(PyMSDialog):
 		self.ok()
 
 	def save(self, e=None):
-		if self.parent.iimport(iimport=self, parent=self, extra=self.extrainfo.get()):
+		if self.parent.iimport(iimport=self, parent=self):
 			self.text.edited = False
 			self.editstatus['state'] = DISABLED
 
 	def ok(self):
 		savesize(self, self.parent.settings, 'codeeditwindow')
-		self.parent.settings['codeeditextrainfo'] = self.extrainfo.get()
 		PyMSDialog.ok(self)
 
 	def test(self, e=None):
@@ -1211,7 +1203,6 @@ class FindDialog(PyMSDialog):
 		self.flags = StringVar()
 		self.stringid = StringVar()
 		self.string = StringVar()
-		self.extra = StringVar()
 		self.casesens = IntVar()
 		self.regex = IntVar()
 
@@ -1248,7 +1239,6 @@ class FindDialog(PyMSDialog):
 				('Flags', self.flags, 'flagsentry'),
 				('String ID', self.stringid, 'stringidentry', True),
 				('String', self.string, 'stringentry'),
-				('Extra Info', self.extra, None, False),
 			]
 		focuson = None
 		for d in data:
@@ -1260,23 +1250,14 @@ class FindDialog(PyMSDialog):
 			else:
 				Label(self, text=d[0], anchor=W).pack(fill=X)
 				if len(d) == 4:
-					if d[3]:
-						frame = Frame(self)
-						entry = Entry(frame, textvariable=d[1])
-						setattr(self, d[2], entry)
-						entry.pack(side=LEFT, fill=X, expand=1)
-						Button(frame, text='Browse...', width=10, command=self.browse).pack(side=RIGHT)
-						frame.pack(fill=X)
-						if not focuson:
-							focuson = entry
-					else:
-						frame = Frame(self)
-						vscroll = Scrollbar(frame)
-						self.extraentry = Text(frame, yscrollcommand=vscroll.set, width=1, height=3, wrap=WORD)
-						self.extraentry.pack(side=LEFT, fill=X, expand=1)
-						vscroll.config(command=self.extraentry.yview)
-						vscroll.pack(side=RIGHT, fill=Y)
-						frame.pack(fill=X)
+					frame = Frame(self)
+					entry = Entry(frame, textvariable=d[1])
+					setattr(self, d[2], entry)
+					entry.pack(side=LEFT, fill=X, expand=1)
+					Button(frame, text='Browse...', width=10, command=self.browse).pack(side=RIGHT)
+					frame.pack(fill=X)
+					if not focuson:
+						focuson = entry
 				else:
 					entry = Entry(self, textvariable=d[1])
 					setattr(self, d[2], entry)
@@ -1367,21 +1348,15 @@ class FindDialog(PyMSDialog):
 					self.listbox.insert(END, '%s%s     %s' % (' ' * (pad - len(str(n))), n, l))
 		else:
 			m = []
-			for t,e in [(self.id, self.identry), (self.flags, self.flagsentry), (self.stringid, self.stringidentry), (self.string, self.stringentry), (self.extra, self.extraentry), (None, self.extraentry)]:
+			for t,e in [(self.id, self.identry), (self.flags, self.flagsentry), (self.stringid, self.stringidentry), (self.string, self.stringentry)]:
 				if self.regex.get():
-					if t:
-						regex = t.get()
-					else:
-						regex = self.extraentry.get(1.0,END)
+					regex = t.get()
 					if not regex.startswith('\\A'):
 						regex = '.*' + regex
 					if not regex.endswith('\\Z'):
 						regex = regex + '.*'
 				else:
-					if t:
-						regex = t.get()
-					else:
-						regex = self.extraentry.get(1.0,END)
+					regex = t.get()
 					regex = '.*%s.*' % re.escape(regex)
 				try:
 					m.append(re.compile(regex, [re.I,0][self.casesens.get()]))
@@ -2287,8 +2262,6 @@ class PyAI(Tk):
 		self.sort = StringVar()
 		self.reference = IntVar()
 		self.reference.set(self.settings.get('reference', 0))
-		self.extrainfo = IntVar()
-		self.extrainfo.set(self.settings.get('extrainfo', 1))
 
 		#Menu
 		menus = odict()
@@ -2319,15 +2292,14 @@ class PyAI(Tk):
 			('Import Scripts', self.iimport, DISABLED, 'Ctrl+Alt+I', 0), # 9
 			('Import a List of Files', self.listimport, DISABLED, 'Ctrl+L', 9), # 10
 			('Print Reference when Decompiling', self.reference, NORMAL, '', 6, True), # 11
-			('Save Information Comments and Labels', self.extrainfo, NORMAL, '', 0, True), # 12
 			None,
-			('Edit AI Script', self.codeedit, DISABLED, 'Ctrl+E', 0), #14
-			('Edit AI ID, String, and Extra Info.', self.edit, DISABLED, 'Ctrl+I', 8), # 15
-			('Edit Flags', self.editflags, DISABLED, 'Ctrl+G', 8), # 16
+			('Edit AI Script', self.codeedit, DISABLED, 'Ctrl+E', 0), #13
+			('Edit AI ID, String, and Extra Info.', self.edit, DISABLED, 'Ctrl+I', 8), # 14
+			('Edit Flags', self.editflags, DISABLED, 'Ctrl+G', 8), # 15
 			None,
-			('Manage External Definition Files', self.extdef, NORMAL, 'Ctrl+X', 8), # 18
-			('Manage TBL File', self.managetbl, NORMAL, 'Ctrl+T', 7), # 19
-			('Manage MPQ and DAT Settings', self.managedat, NORMAL, 'Ctrl+U', 7), # 20
+			('Manage External Definition Files', self.extdef, NORMAL, 'Ctrl+X', 8), # 17
+			('Manage TBL File', self.managetbl, NORMAL, 'Ctrl+T', 7), # 18
+			('Manage MPQ and DAT Settings', self.managedat, NORMAL, 'Ctrl+U', 7), # 29
 		]
 		menus['View'] = [
 			('File Order', self.order, NORMAL, '', 5, 'order'), # 0
@@ -2404,7 +2376,6 @@ class PyAI(Tk):
 				('listimport', self.listimport, 'Import a List of Files (Ctrl+L)', DISABLED),
 				4,
 				('reference', self.reference, 'Print Reference when Decompiling', NORMAL, False),
-				('saveextra', self.extrainfo, 'Save Information Comments and Labels', NORMAL, False),
 				10,
 				('codeedit', self.codeedit, 'Edit AI Script (Ctrl+E)', DISABLED),
 				('edit', self.edit, 'Edit AI ID, String, and Extra Info. (Ctrl+I)', DISABLED),
@@ -2608,13 +2579,13 @@ class PyAI(Tk):
 		select = [NORMAL,DISABLED][not self.listbox.curselection()]
 		for entry in [4,5,6,7]:
 			self.menus['File'].entryconfig(entry, state=file)
-		for entry in [3,4,9,10,11,14,19,20]:
+		for entry in [3,4,9,10,11,13,18,19]:
 			self.menus['Edit'].entryconfig(entry, state=file)
 		for btn in ['save','saveas','close','add','import','listimport','codeedit']:
 			self.buttons[btn]['state'] = file
 		if not FOLDER:
 			self.buttons['savempq']['state'] = file
-		for entry in [5,6,8,15,16]:
+		for entry in [5,6,8,14,15]:
 			self.menus['Edit'].entryconfig(entry, state=select)
 		for btn in ['remove','find','export','edit','flags']:
 			self.buttons[btn]['state'] = select
@@ -2785,13 +2756,13 @@ class PyAI(Tk):
 			if file:
 				self.stat_txt = file
 				try:
-					self.tbl.compile(file, extra=self.extrainfo.get())
+					self.tbl.compile(file)
 				except PyMSError, e:
 					ErrorDialog(self, e)
 					return
 				self.tbledited = False
 		try:
-			self.ai.compile(ai, bw, extra=self.extrainfo.get())
+			self.ai.compile(ai, bw)
 			self.aiscript = ai
 			if bw != None:
 				self.bwscript = bw
@@ -2834,7 +2805,7 @@ class PyAI(Tk):
 			ai = SFile()
 			bw = SFile()
 			try:
-				self.ai.compile(ai, bw, self.extrainfo.get())
+				self.ai.compile(ai, bw)
 			except PyMSError, e:
 				ErrorDialog(self, e)
 			undone = []
@@ -2890,7 +2861,6 @@ class PyAI(Tk):
 			self.settings['stat_txt'] = self.stat_txt
 			self.settings['highlights'] = self.highlights
 			self.settings['reference'] = self.reference.get()
-			self.settings['extrainfo'] = self.extrainfo.get()
 			self.settings['imports'] = self.imports
 			self.settings['extdefs'] = self.extdefs
 			savesettings('PyAI', self.settings)
@@ -3294,20 +3264,18 @@ class PyAI(Tk):
 			if external:
 				askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(external), type=OK)
 
-	def iimport(self, key=None, iimport=None, c=True, parent=None, extra=None):
+	def iimport(self, key=None, iimport=None, c=True, parent=None):
 		if key and self.buttons['import']['state'] != NORMAL:
 			return
 		if parent == None:
 			parent = self
-		if extra == None:
-			extra = self.extrainfo.get()
 		if not iimport:
 			iimport = self.select_file('Import From', True, '.txt', [('Text Files','*.txt'),('All Files','*')], parent)
 		if iimport:
 			i = AIBIN.AIBIN(False, self.unitsdat, self.upgradesdat, self.techdat, self.stat_txt)
 			i.bwscript = AIBIN.BWBIN(self.unitsdat, self.upgradesdat, self.techdat, self.stat_txt)
 			try:
-				warnings = i.interpret(iimport, self.extdefs, extra)
+				warnings = i.interpret(iimport, self.extdefs)
 				for id in i.ais.keys():
 					if id in self.ai.externaljumps[0]:
 						for o,l in self.ai.externaljumps[0]:
@@ -3490,7 +3458,6 @@ def main():
 		p = optparse.OptionParser(usage='usage: PyAI [options] <inp|aiscriptin bwscriptin> [out|aiscriptout bwscriptout]', version='PyAI %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile AI's from aiscript.bin and/or bwscript.bin [default]", default=True)
 		p.add_option('-c', '--compile', action='store_false', dest='convert', help="Compile AI's to an aiscript.bin and/or bwscript.bin")
-		p.add_option('-e', '--extrainfo', action='store_true', help="Save extra info from your script (variables, label names, and information comments) [default: Off]", default=False)
 		p.add_option('-u', '--units', help="Specify your own units.dat file for unit data lookups [default: Libs\\MPQ\\arr\\units.dat]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'units.dat'))
 		p.add_option('-g', '--upgrades', help="Specify your own upgrades.dat file for upgrade data lookups [default: Libs\\MPQ\\arr\\upgrades.dat]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'upgrades.dat'))
 		p.add_option('-t', '--techdata', help="Specify your own techdata.dat file for technology data lookups [default: Libs\\MPQ\\arr\\techdata.dat]", default=os.path.join(BASE_DIR, 'Libs', 'MPQ', 'arr', 'techdata.dat'))
@@ -3557,7 +3524,7 @@ def main():
 					print "Interpreting file '%s'..." % args[0]
 					warnings.extend(bin.interpret(args[0],opt.deffile))
 					print " - '%s' read successfully\nCompiling file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2])
-					bin.compile(args[1], args[2], opt.extrainfo)
+					bin.compile(args[1], args[2])
 					print " - aiscript.bin '%s' and bwscript.bin '%s' written succesfully" % (args[1], args[2])
 				if not opt.hidewarns:
 					for warning in warnings:
