@@ -18,11 +18,13 @@ military goliath = 3
 military siege_tank = 5
 military wraith = 8
 military science_vessel = 9
+@spellcaster(science_vessel)
 military dropship = 11
 military battlecruiser = 12
 military nuclear_missile = 14
 military firebat = 32
 military medic = 34
+@spellcaster(medic)
 military valkyrie = 58
 
 # Zerg military units
@@ -32,7 +34,9 @@ military ultralisk = 39
 military mutalisk = 43
 military guardian = 44
 military queen = 45
+@spellcaster(queen)
 military defiler = 46
+@spellcaster(defiler)
 military scourge = 47
 military infested_terran = 50
 military devourer = 62
@@ -42,9 +46,11 @@ military lurker = 103
 military corsair = 60
 military dark_templar = 61
 military dark_archon = 63
+@spellcaster(dark_archon)
 military zealot = 65
 military dragoon = 66
 military high_templar = 67
+@spellcaster(high_templar)
 military archon = 68
 military shuttle = 69
 military scout = 70

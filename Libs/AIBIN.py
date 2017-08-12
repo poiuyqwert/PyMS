@@ -325,6 +325,7 @@ class AIBIN:
 		else:
 			self.techdat = DAT.TechDAT(self.tbl)
 			self.techdat.load_file(techs)
+		self._casters = None # Used during interpreting
 		self.parameters = [
 			[self.ai_address], # goto
 			[self.ai_unit,self.ai_address], # notowns_jump
@@ -802,9 +803,10 @@ class AIBIN:
 		v = self.ai_military(data, stage)
 		if stage == 3:
 			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] and \
-				(subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])):
-				raise PyMSWarning('Parameter','Unit has no ground weapon', extra=v, level=1)
+			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
+					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
+					and (not self._casters or not v[1] in self._casters):
+				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1)
 		return v
 
 	def ai_agmilitary(self, data, stage=0):
@@ -812,9 +814,10 @@ class AIBIN:
 		v = self.ai_military(data, stage)
 		if stage == 3:
 			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 and \
-				(subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and self.unitsdat.get_value(subunit,'AttackUnit') != 53)):
-				raise PyMSWarning('Parameter','Unit has no air weapon', extra=v, level=1)
+			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
+					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
+					and (not self._casters or not v[1] in self._casters):
+				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1)
 		return v
 
 	def ai_gamilitary(self, data, stage=0):
@@ -822,9 +825,10 @@ class AIBIN:
 		v = self.ai_military(data, stage)
 		if stage == 3:
 			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] and \
-				(subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])):
-				raise PyMSWarning('Parameter','Unit has no ground weapon', extra=v, level=1)
+			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
+					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
+					and (not self._casters or not v[1] in self._casters):
+				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1)
 		return v
 
 	def ai_aamilitary(self, data, stage=0):
@@ -832,9 +836,10 @@ class AIBIN:
 		v = self.ai_military(data, stage)
 		if stage == 3:
 			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 and \
-				(subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') != 53)):
-				raise PyMSWarning('Parameter','Unit has no air weapon', extra=v, level=1)
+			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
+					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
+					and (not self._casters or not v[1] in self._casters):
+				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1)
 		return v
 
 	def ai_upgrade(self, data, stage=0):
@@ -951,6 +956,38 @@ class AIBIN:
 		multiline = False
 		lastmulti = [None,None]
 		loaded = []
+		self._casters = []
+		def parse_param(p,d,n=None,line=None):
+			try:
+				var = None
+				da = d
+				if d.lower() in variables:
+					for pt in self.typescanbe[p.__doc__.split(' ',1)[0]]:
+						if pt in variables[d.lower()][0]:
+							da = variables[d.lower()][1]
+							break
+					else:
+						raise PyMSError('Variable',"Incorrect type on varaible '%s'. Excpected '%s' but got '%s'" % (d.lower(), p.__doc__.split(' ',1)[0], variables[d.lower()][0][0].__doc__.split(' ',1)[0]),n,line, warnings=warnings)
+					var = PyMSWarning('Variable',"The variable '%s' of type '%s' was set to '%s'" % (d, variables[d.lower()][0][0].__doc__.split(' ',1)[0], variables[d.lower()][1]))
+				return p(da,3)
+			except PyMSWarning, w:
+				w.line = n + 1
+				w.code = line
+				warnings.append(w)
+				if var:
+					var.warning += ' when the above warning happened'
+					warnings.append(var)
+				return w.extra
+			except PyMSError, e:
+				e.line = n + 1
+				e.code = line
+				e.warnings = warnings
+				if var:
+					var.warning += ' when the above error happened'
+					e.warnings.append(var)
+				raise e
+			except:
+				raise PyMSError('Parameter',"Invalid parameter data '%s', looking for type '%s'" % (d,p.__doc__.split(' ',1)[0]),n,line, warnings=warnings)
 		def load_defs(defname):
 			try:
 				deffile = os.path.join(os.path.dirname(files[0]),defname)
@@ -968,6 +1005,13 @@ class AIBIN:
 				if len(l) > 1:
 					line = l.strip().split('#',1)[0]
 					if line:
+						match = re.match(r'\A@spellcaster\(\s*(\S+?)\s*\)\s*\Z', line)
+						print match
+						if match:
+							v = parse_param(self.ai_military, match.group(1))
+							print '@spellcaster(%d)' % v[1]
+							self._casters.append(v[1])
+							continue
 						match = re.match('\\A(\\S+)\\s+(.+)\\s+=\\s+(.+?)(?:\\s*\\{(.+)\\})?\\Z', line)
 						if match:
 							t,name,dat,vinfo = match.groups()
@@ -1248,39 +1292,9 @@ class AIBIN:
 														unused[(id,d)] = False
 												curinfo[id][2].append(d)
 											else:
-												try:
-													var = None
-													da = d
-													if d.lower() in variables:
-														for pt in self.typescanbe[p.__doc__.split(' ',1)[0]]:
-															if pt in variables[d.lower()][0]:
-																da = variables[d.lower()][1]
-																break
-														else:
-															raise PyMSError('Variable',"Incorrect type on varaible '%s'. Excpected '%s' but got '%s'" % (d.lower(), p.__doc__.split(' ',1)[0], variables[d.lower()][0][0].__doc__.split(' ',1)[0]),n,line, warnings=warnings)
-														var = PyMSWarning('Variable',"The variable '%s' of type '%s' was set to '%s'" % (d, variables[d.lower()][0][0].__doc__.split(' ',1)[0], variables[d.lower()][1]))
-													cs = p(da,3)
-													ai[4][-1].append(cs[1])
-													aisize += cs[0]
-												except PyMSWarning, w:
-													ai[4][-1].append(w.extra[1])
-													aisize += w.extra[0]
-													w.line = n + 1
-													w.code = line
-													warnings.append(w)
-													if var:
-														var.warning += ' when the above warning happened'
-														warnings.append(var)
-												except PyMSError, e:
-													e.line = n + 1
-													e.code = line
-													e.warnings = warnings
-													if var:
-														var.warning += ' when the above error happened'
-														e.warnings.append(var)
-													raise e
-												except:
-													raise PyMSError('Parameter',"Invalid parameter data '%s', looking for type '%s'" % (d,p.__doc__.split(' ',1)[0]),n,line, warnings=warnings)
+												cs = parse_param(p, d, n, line)
+												ai[4][-1].append(cs[1])
+												aisize += cs[0]
 									if cmd != 'wait' and cmd in self.separate:
 										notused = (n,line)
 									if cmd.lower() in self.separate:
@@ -1534,6 +1548,9 @@ class AIBIN:
 					if len(l) > 1:
 						line = l.strip().split('#',1)[0]
 						if line:
+							match = re.match(r'\A@spellcaster\(\s*(\S+?)\s*\)\s*\Z', line)
+							if match:
+								continue
 							match = re.match('\\A(\\S+)\\s+(.+)\\s+=\\s+(.+?)(?:\\s*\\{(.+)\\})?\\Z', line)
 							if match:
 								t,name,dat,vinfo = match.groups()
