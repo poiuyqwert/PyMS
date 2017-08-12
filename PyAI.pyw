@@ -185,6 +185,17 @@ for s,cmdl in cmds:
 	CMD_HELP[s] = odict()
 	for c,h in cmdl:
 		CMD_HELP[s][c] = h
+
+DIRECTIVE_HELP = {
+	'@spellcaster': """@spellcaster(Military):
+  Mark a Military unit as a spellcaster so it can be used with defenseuse_xx/defensebuild_xx without
+  warning that the unit doesn't have an attack.""",
+	'@supress_all': """@supress_all(Type):
+  Supress all warnings of a specific Type.""",
+	'@suppress_next_line': """@supress_next_line(Type):
+  Supress warnings of a specific Type on the next line of code."""
+}
+
 #
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent):
@@ -546,6 +557,7 @@ class AICodeText(CodeText):
 				'Newline':{'foreground':None,'background':None,'font':None},
 				'Error':{'foreground':None,'background':'#FF8C8C','font':None},
 				'Warning':{'foreground':None,'background':'#FFC8C8','font':None},
+				'Directives':{'foreground':'#0000FF','background':None,'font':self.boldfont}
 			}
 		CodeText.__init__(self, parent, ecallback, icallback, scallback)
 		self.text.bind('<Control-q>', self.commentrange)
@@ -582,8 +594,15 @@ class AICodeText(CodeText):
 		operators = '(?P<Operators>[():,=])'
 		kw = '\\b(?P<Keywords>extdef|aiscript|bwscript|LessThan|GreaterThan)\\b'
 		types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
-		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, '(?P<Newline>\\n)')), re.S | re.M)
-		self.tooptips = [CommandCodeTooltip(self.text,self.ai),TypeCodeTooltip(self.text,self.ai),StringCodeTooltip(self.text,self.ai),FlagCodeTooltip(self.text,self.ai)]
+		directives = r'(?P<Directives>@(?:spellcaster|supress_all|suppress_next_line))\b'
+		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
+		self.tooptips = [
+			CommandCodeTooltip(self.text,self.ai),
+			TypeCodeTooltip(self.text,self.ai),
+			StringCodeTooltip(self.text,self.ai),
+			FlagCodeTooltip(self.text,self.ai),
+			DirectiveTooltip(self.text,self.ai)
+		]
 		self.tags = dict(self.highlights)
 
 	def colorize(self):
@@ -740,6 +759,12 @@ class FlagCodeTooltip(CodeTooltip):
 			text += '\n    '.join([d for d,f in zip(['BroodWar Only','Invisible in StarEdit','Requires a Location'], flags) if f == '1'])
 		return text
 
+class DirectiveTooltip(CodeTooltip):
+	tag = 'Directives'
+
+	def gettext(self, directive):
+		return DIRECTIVE_HELP.get(directive, '%s:\n  Unknown directive' % directive)
+
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, ids):
 		self.ids = ids
@@ -864,7 +889,11 @@ class CodeEditDialog(PyMSDialog):
 		else:
 			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
 			t,f = self.text.get(s,e),0
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz':
+			prefix = self.text.get('%s -1c' % s, s)
+			if prefix == '@':
+				s = self.text.index('%s -1c' % s)
+				t = prefix + t
+		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz@':
 			ac = list(self.autocomptext)
 			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
 			if not m:
@@ -908,6 +937,7 @@ class CodeEditDialog(PyMSDialog):
 				if not block in ac:
 					ac.append(block)
 				head = tail
+			ac.extend(('@spellcaster','@supress_all','@suppress_next_line'))
 			ac.sort()
 			if m:
 				x = []

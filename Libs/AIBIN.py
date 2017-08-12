@@ -785,8 +785,8 @@ class AIBIN:
 		v = self.ai_unit(data, stage)
 		if stage == 3:
 			flags = self.unitsdat.get_value(v[1],'SpecialAbilityFlags')
-			if not flags & 8 and not flags & 1 and not self.unitsdat.get_value(v[1],'SupplyProvided'):#v != 42 and 
-				raise PyMSWarning('Parameter','Unit is not a building or worker', extra=v, level=1)
+			if not flags & 8 and not flags & 1 and v[1] != 42: 
+				raise PyMSWarning('Parameter','Unit is not a building, worker, or Overlord', extra=v, level=1, id='building')
 		return v
 
 	def ai_military(self, data, stage=0):
@@ -795,7 +795,7 @@ class AIBIN:
 		if stage == 3:
 			flags = self.unitsdat.get_value(v[1],'SpecialAbilityFlags')
 			if flags & 1:
-				raise PyMSWarning('Parameter','Unit is a building', extra=v, level=1)
+				raise PyMSWarning('Parameter','Unit is a building', extra=v, level=1, id='military')
 		return v
 
 	def ai_ggmilitary(self, data, stage=0):
@@ -806,7 +806,7 @@ class AIBIN:
 			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
 					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
 					and (not self._casters or not v[1] in self._casters):
-				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1)
+				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1, id='gg_military')
 		return v
 
 	def ai_agmilitary(self, data, stage=0):
@@ -817,7 +817,7 @@ class AIBIN:
 			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
 					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
 					and (not self._casters or not v[1] in self._casters):
-				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1)
+				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1, id='ag_military')
 		return v
 
 	def ai_gamilitary(self, data, stage=0):
@@ -828,7 +828,7 @@ class AIBIN:
 			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
 					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
 					and (not self._casters or not v[1] in self._casters):
-				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1)
+				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1, id='ga_military')
 		return v
 
 	def ai_aamilitary(self, data, stage=0):
@@ -839,7 +839,7 @@ class AIBIN:
 			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
 					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
 					and (not self._casters or not v[1] in self._casters):
-				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1)
+				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1, id='aa_military')
 		return v
 
 	def ai_upgrade(self, data, stage=0):
@@ -957,6 +957,13 @@ class AIBIN:
 		lastmulti = [None,None]
 		loaded = []
 		self._casters = []
+		suppress_warnings = []
+		suppress_next_line = []
+		suppress_next_line_new = False
+		def add_warning(warning):
+			if warning.id in suppress_next_line:
+				return
+			warnings.append(warning)
 		def parse_param(p,d,n=None,line=None):
 			try:
 				var = None
@@ -973,10 +980,10 @@ class AIBIN:
 			except PyMSWarning, w:
 				w.line = n + 1
 				w.code = line
-				warnings.append(w)
 				if var:
 					var.warning += ' when the above warning happened'
-					warnings.append(var)
+					w.sub_warnings.append(var)
+				add_warning(w)
 				return w.extra
 			except PyMSError, e:
 				e.line = n + 1
@@ -1006,10 +1013,8 @@ class AIBIN:
 					line = l.strip().split('#',1)[0]
 					if line:
 						match = re.match(r'\A@spellcaster\(\s*(\S+?)\s*\)\s*\Z', line)
-						print match
 						if match:
 							v = parse_param(self.ai_military, match.group(1))
-							print '@spellcaster(%d)' % v[1]
 							self._casters.append(v[1])
 							continue
 						match = re.match('\\A(\\S+)\\s+(.+)\\s+=\\s+(.+?)(?:\\s*\\{(.+)\\})?\\Z', line)
@@ -1023,13 +1028,13 @@ class AIBIN:
 							if name.lower() in variables:
 								raise PyMSError('External Definition',"The variable name '%s' in external definition file '%s' is already in use" % (name, defname),n,line, warnings=warnings)
 							if vinfo:
-								warnings.append(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
+								add_warning(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
 							try:
 								v = self.types[t][0](dat,3)[1]
 							except PyMSWarning, w:
 								w.line = n + 1
 								w.code = line
-								warnings.append(w)
+								add_warning(w)
 								v = w.extra[1]
 							except PyMSError, e:
 								e.line = n + 1
@@ -1071,6 +1076,20 @@ class AIBIN:
 							else:
 								nextinfo[0][nextinfo[1]][0] += line + '\n'
 						else:
+							match = re.match(r'\A\s*@suppress_all\(\s*(\S+?)\s*\)\Z', line)
+							if match:
+								suppress_warnings.append(match.group(1))
+								continue
+							match = re.match(r'\A\s*@suppress_next_line\(\s*(\S+?)\s*\)\Z', line)
+							if match:
+								suppress_next_line.append(match.group(1))
+								suppress_next_line_new = True
+								continue
+							if suppress_next_line:
+								if suppress_next_line_new:
+									suppress_next_line_new = False
+								else:
+									suppress_next_line = []
 							match = re.match('\\Aextdef\\s*(.+)\\Z',line)
 							if match:
 								load_defs(match.group(1))
@@ -1090,7 +1109,7 @@ class AIBIN:
 								except PyMSWarning, w:
 									w.line = n
 									w.code = line
-									warnings.append(w)
+									add_warning(w)
 								except PyMSError, e:
 									e.line = n + 1
 									e.code = line
@@ -1140,7 +1159,7 @@ class AIBIN:
 										n = findtotaljumps[ai[0]].keys()[0]
 										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
 									if ai[4][-1][0] not in self.script_endings:
-										warnings.append(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1))
+										add_warning(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1, id='end'))
 									if ai[0] in findgoto:
 										for l,f in findgoto[ai[0]].iteritems():
 											if f[0]:
@@ -1198,11 +1217,11 @@ class AIBIN:
 									else:
 										raise PyMSError('Interpreting',"Invalid command name '%s'" % cmd,n,line, warnings=warnings)
 									if cmd in self.builds and not town:
-										warnings.append(PyMSWarning('Interpreting',"You may not have initiated a town in the script '%s' with one of the start_* commands before building units" % ai[0],n,line,level=1))
+										add_warning(PyMSWarning('Interpreting',"You may not have initiated a town in the script '%s' with one of the start_* commands before building units" % ai[0],n,line,level=1, id='town'))
 									elif cmd in self.starts:
 										town = True
 									if notused:
-										warnings.append(PyMSWarning('Interpreting',"This command and everything up to the next script or block will never be run",*notused))
+										add_warning(PyMSWarning('Interpreting',"This command and everything up to the next script or block will never be run",*notused, id='unaccessible'))
 										notused = False
 									dat = []
 									if match.group(2):
@@ -1231,7 +1250,7 @@ class AIBIN:
 													if cid in totaljumps:
 														if curlabel:
 															if label in curlabel:
-																warnings.append(PyMSWarning('Interpreting',"All loops require at least 1 wait statement. Block '%s' seems to not have one" % label))
+																add_warning(PyMSWarning('Interpreting',"All loops require at least 1 wait statement. Block '%s' seems to not have one" % label, 'loop'))
 															curlabel = []
 														if id in scriptids[0]:
 															a = 'aiscript'
@@ -1275,7 +1294,7 @@ class AIBIN:
 												else:
 													if curlabel:
 														if d in curlabel:
-															warnings.append(PyMSWarning('Interpreting',"All loops require at least 1 wait statement. Block '%s' seems to not have one" % d))
+															add_warning(PyMSWarning('Interpreting',"All loops require at least 1 wait statement. Block '%s' seems to not have one" % d, id='loop'))
 														curlabel = []
 													if type(jumps.get(d)) == int:
 														ai[4][-1].append(jumps[d])
@@ -1390,7 +1409,7 @@ class AIBIN:
 				n = findtotaljumps[ai[0]].keys()[0]
 				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
 			if ai[4][-1][0] not in self.script_endings:
-				warnings.append(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1))
+				add_warning(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1, id='end'))
 			if ai[0] in findgoto:
 				for l,f in findgoto[ai[0]].iteritems():
 					if f[0]:
@@ -1424,7 +1443,7 @@ class AIBIN:
 					remove[i[0] not in aiinfo][i[0]] = []
 				for l,f in i[1].iteritems():
 					if not f[0]:
-						warnings.append(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is unused, label is discarded" % (l,i[0])))
+						add_warning(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is unused, label is discarded" % (l,i[0])))
 						remove[i[0] not in aiinfo][i[0]].append(f[1])
 						if i[0] in aiinfo:
 							aiinfo[i[0]][1].remove(l)
@@ -1444,7 +1463,7 @@ class AIBIN:
 							n += 1
 		for id,u in unused.iteritems():
 			if u and (not id[0] in findgoto or not id[1] in findgoto[id[0]]):
-				warnings.append(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is only referenced by commands that cannot be reached and is therefore unused" % (id[1],id[0])))
+				add_warning(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is only referenced by commands that cannot be reached and is therefore unused" % (id[1],id[0])))
 		if self.ais:
 			for id,dat in ais.iteritems():
 				self.ais[id] = dat
@@ -1467,6 +1486,7 @@ class AIBIN:
 			self.varinfo = varinfo
 			self.aiinfo = aiinfo
 			self.bwscript.aiinfo = bwinfo
+		warnings = [w for w in warnings if not w.id in suppress_warnings]
 		return warnings
 
 	def reference(self, file):
