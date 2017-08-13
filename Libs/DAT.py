@@ -574,10 +574,7 @@ class WeaponsDAT(UnitsDAT):
 			[[self.stattxt_value,'Targetting Error Message'],''],
 			[[self.info_value,'Icons'],'']
 		]
-		self.special = {
-			'MinimumRange':self.range,
-			'MaximumRange':self.range,
-		}
+		self.special = {}
 
 	def info_value(self, file, value):
 		if file == 'DamTypes':
@@ -591,11 +588,6 @@ class WeaponsDAT(UnitsDAT):
 		elif file == 'Techdata':
 			s = 'Has no effect. Assumed value: '
 		return s + DATA_CACHE[file + '.txt'][value]
-
-	def range(self, value, save=False):
-		if save:
-			return struct.pack('<L', value<<4)
-		return value>>4
 
 class FlingyDAT(UnitsDAT):
 	format = [

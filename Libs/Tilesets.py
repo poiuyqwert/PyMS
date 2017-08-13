@@ -319,7 +319,7 @@ class Tileset:
 				for x in xrange(megas_w):
 					minitiles = []
 					for oy in xrange(4):
-						o = (y+oy)*minis_w + x*4
+						o = (y*4+oy)*minis_w + x*4
 						minitiles.extend(image_details[o:o+4])
 					new_megatiles.append(tuple(minitiles))
 			megatile_ids = []
@@ -376,7 +376,7 @@ class Tileset:
 						update_groups.append((id,group))
 					else:
 						if tiletype == TILETYPE_GROUP:
-							new_ids.append(len(self.cv5.groups))
+							new_ids.append(len(self.cv5.groups) + len(new_groups))
 						new_groups.append(group)
 				if len(new_images) > self.groups_remaining():
 					raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile group count (%d + %d > %d)' % (len(self.cv5.groups),len(new_groups),CV5.MAX_ID+1))
@@ -403,7 +403,7 @@ class Tileset:
 		for group in new_groups:
 			self.cv5.groups.append([0]*13 + [group])
 		for id,group in update_groups:
-		    self.cv5.groups[id][13] = group
+			self.cv5.groups[id][13] = group
 		return new_ids
 
 	def export_graphics(self, tiletype, path, ids):
@@ -672,7 +672,6 @@ MegaTile:""" % id)
 					raise PyMSError('Importing', 'Attempting to import TileGroup onto DoodadGroup %s' % id, line_n)
 		for tile_n,id in enumerate(ids):
 			settings_n = repeater(setting_count, tile_n, tile_count)
-			print tile_n,settings_n
 			if settings_n == None:
 				break
 			data = importing[settings_n]

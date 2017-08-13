@@ -1259,7 +1259,6 @@ class TilePalette(PyMSDialog):
 		self.update_size()
 		if len(new_ids):
 			self.select(new_ids)
-			self.draw_selections()
 			self.scroll_to_selection()
 		self.draw_tiles(force=True)
 		self.parent.update_ranges()

@@ -13,9 +13,12 @@ try:
 	_SFmpq = windll.SFmpq
 except:
 	try:
-		_SFmpq = CDLL("SFmpq.dylib", RTLD_GLOBAL)
+		_SFmpq = windll.SFmpq64
 	except:
-		FOLDER = True
+		try:
+			_SFmpq = CDLL("SFmpq.dylib", RTLD_GLOBAL)
+		except:
+			FOLDER = True
 os.chdir(cwd)
 
 class SFile:
