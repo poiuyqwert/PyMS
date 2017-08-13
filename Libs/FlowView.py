@@ -33,9 +33,10 @@ class FlowView(Frame):
 			view = self._content_area.yview
 			if horizontal:
 				view = self._content_area.xview
-			if event.delta > 0:
+			cur = view()
+			if event.delta > 0 and cur[0] > 0:
 				view('scroll', -1, 'units')
-			else:
+			elif event.delta <= 0 and cur[1] < 1:
 				view('scroll', 1, 'units')
 		self.bind_all('<MouseWheel>', scroll)
 		self.grid_rowconfigure(0,weight=1)
@@ -51,11 +52,13 @@ class FlowView(Frame):
 		self._bindings = {}
 		self._update = False
 		self.bind('<<Update>>', self._update_layout)
-		self._viewport_size = (0,0)
+		self._viewport_widths = []
 		def resize(*_):
-			viewport_size = self.viewport_size()
-			if viewport_size != self._viewport_size:
-				self._viewport_size = viewport_size
+			viewport_width = self.viewport_size()[0]
+			if not viewport_width in self._viewport_widths or self._viewport_widths.count(viewport_width) < 2:
+				self._viewport_widths.append(viewport_width)
+				if len(self._viewport_widths) > 3:
+					del self._viewport_widths[0]
 				self.set_needs_update()
 		self._content_area.bind('<Configure>', resize)
 
@@ -90,8 +93,8 @@ class FlowView(Frame):
 		return (x,y)
 
 	def set_needs_update(self):
-		# import inspect
-		# print inspect.stack()[1][3]
+		import inspect
+		print inspect.stack()[1][3]
 		self._update = True
 		self.event_generate('<<Update>>')
 
@@ -184,6 +187,18 @@ class FlowView(Frame):
 	def remove_all_subviews(self):
 		self.remove_subviews(list(self.subviews))
 
+	def update_subview_config(self, view, padx=None,pady=None, weight=None):
+		if not view in self.subviews:
+			return
+		name = str(view)
+		if padx != None:
+			self._subview_configs[name]['padx'] = padx
+		if pady != None:
+			self._subview_configs[name]['pady'] = pady
+		if weight != None:
+			self._subview_configs[name]['weight'] = weight
+		self.set_needs_update()
+
 	def _update_view_size(self, view, update_idletasks=False, set_needs_update=False):
 		if update_idletasks:
 			view.update_idletasks()
@@ -200,6 +215,7 @@ class FlowView(Frame):
 			return
 		self._update = False
 		max_w = self._content_area.winfo_width()
+		print max_w
 		x = 0
 		y = 0
 		w = 0
@@ -255,6 +271,7 @@ class FlowView(Frame):
 			total_w = max(total_w,row_width)
 			for view,x,y,w,_ in row:
 				place(view, x,y, w)
+		print total_w,total_h
 		self._content_area.itemconfig(self.content_view_id, width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 
