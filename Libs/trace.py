@@ -8,7 +8,7 @@ try:
 except:
 	pass
 
-STDOUT_FSYNC = True
+STDOUT_FSYNC = False
 
 class ErrorHandler:
 	def __init__(self, toplevel, prog):

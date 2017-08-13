@@ -93,8 +93,8 @@ class FlowView(Frame):
 		return (x,y)
 
 	def set_needs_update(self):
-		import inspect
-		print inspect.stack()[1][3]
+		# import inspect
+		# print inspect.stack()[1][3]
 		self._update = True
 		self.event_generate('<<Update>>')
 
@@ -215,7 +215,7 @@ class FlowView(Frame):
 			return
 		self._update = False
 		max_w = self._content_area.winfo_width()
-		print max_w
+		# print max_w
 		x = 0
 		y = 0
 		w = 0
@@ -271,7 +271,7 @@ class FlowView(Frame):
 			total_w = max(total_w,row_width)
 			for view,x,y,w,_ in row:
 				place(view, x,y, w)
-		print total_w,total_h
+		# print total_w,total_h
 		self._content_area.itemconfig(self.content_view_id, width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 

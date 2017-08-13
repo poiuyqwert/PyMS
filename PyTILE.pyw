@@ -1733,7 +1733,6 @@ class PyTILE(Tk):
 		self.mega_editor.set_megatile(self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection])
 
 	def group_values_changed(self, *_):
-		print 'skip: %s or %s' % (not self.tileset, self.loading_megas)
 		if not self.tileset or self.loading_megas:
 			return
 		group = self.tileset.cv5.groups[self.palette.selected[0]]
