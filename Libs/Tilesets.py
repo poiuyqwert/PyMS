@@ -725,6 +725,21 @@ class CV5:
 		except:
 			raise PyMSError('Load',"Unsupported CV5 file '%s', could possibly be corrupt" % file)
 		self.groups = groups
+		# n = len(groups[0])-1
+		# info = [{} for _ in xrange(n)]
+		# for gid in xrange(1024):
+		# 	group = groups[gid]
+		# 	for i in xrange(n):
+		# 		v = group[i]
+		# 		if not v in info[i]:
+		# 			info[i][v] = []
+		# 		info[i][v].append(gid)
+		# names = ['index','buildable','flags','buildable2','groundheight','edgeleft','edgeup','edgeright','edgedown','unknown9','hasup','unknown11','hasdown']
+		# for name,data in zip(names,info):
+		# 	print name
+		# 	for k in sorted(data.keys()):
+		# 		print '\t%s' % k
+		# 		print '\t\t%s' % data[k]
 
 	def save_file(self, file):
 		data = ''

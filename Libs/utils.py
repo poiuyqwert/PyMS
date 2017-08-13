@@ -575,8 +575,14 @@ class DropDown(Frame):
 		self.variable.set = self.set
 		self.display = display
 		self.stay_right = stay_right
+		self._original_display_callback = None
 		if display and isinstance(display, Variable):
-			display.callback = self.set
+			self._original_display_callback = display.callback
+			def callback_wrapper(num):
+				self.set(num)
+				if self._original_display_callback:
+					self._original_display_callback(self.variable.get())
+			display.callback = callback_wrapper
 		self.size = min(10,len(entries))
 		self.none_name = none_name
 		self.none_value = none_value
