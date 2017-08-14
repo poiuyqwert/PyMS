@@ -230,21 +230,23 @@ class Tileset:
 	# options.minitiles_reuse_null_with_id         - Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
 	# options.minitiles_reuse_duplicates_flipped   - Check flipped versions of tiles for duplicates (Boolean, default: True)
 	# options.minitiles_expand_allowed             - Whether importing too many minitiles will expand VX4 or not (True, False, or callback, default: False)
-	def import_graphics(self, tiletype, bmpfile, ids=None, options={}):
+	def import_graphics(self, tiletype, bmpfiles, ids=None, options={}):
 		if ids:
 			ids = list(ids)
 		else:
 			ids = []
 		new_ids = []
-		bmp = BMP.BMP()
-		bmp.load_file(bmpfile)
-		if tiletype == TILETYPE_GROUP and (bmp.width != 512 or bmp.height % 32):
-			raise PyMSError('Interpreting','The image is not the correct size for tile groups (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
-		elif tiletype == TILETYPE_MEGA and (bmp.width % 32 or bmp.height % 32):
-			raise PyMSError('Interpreting','The image is not the correct size for megatiles (got %sx%s, expected width and height to be multiples of 32)' % (bmp.width,bmp.height))
-		elif tiletype == TILETYPE_MINI and (bmp.width % 8 or bmp.height % 8):
-			raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
-		
+		pixels = []
+		for path in bmpfiles:
+			bmp = BMP.BMP()
+			bmp.load_file(path)
+			if tiletype == TILETYPE_GROUP and (bmp.width != 512 or bmp.height % 32):
+				raise PyMSError('Interpreting','The image is not the correct size for tile groups (got %sx%s, expected width to be 512 and height to be a multiple of 32)' % (bmp.width,bmp.height))
+			elif tiletype == TILETYPE_MEGA and (bmp.width % 32 or bmp.height % 32):
+				raise PyMSError('Interpreting','The image is not the correct size for megatiles (got %sx%s, expected width and height to be multiples of 32)' % (bmp.width,bmp.height))
+			elif tiletype == TILETYPE_MINI and (bmp.width % 8 or bmp.height % 8):
+				raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
+			pixels.extend(bmp.image)
 		new_images = []
 		mini_lookup = {}
 		update_images = [] # (id,image)
@@ -254,13 +256,13 @@ class Tileset:
 		new_groups = []
 		update_groups = [] # (id,group)
 
-		minis_w = bmp.width / 8
-		minis_h = bmp.height / 8
+		minis_w = len(pixels[0]) / 8
+		minis_h = len(pixels) / 8
 		for iy in xrange(minis_h):
 			py = iy * 8
 			for ix in xrange(minis_w):
 				px = ix * 8
-				image = tuple(tuple(bmp.image[py+oy][px:px+8]) for oy in xrange(8))
+				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in xrange(8))
 				new_images.append(image)
 		image_details = [] # (id,isFlipped)
 		new_id = len(self.vr4.images)

@@ -6,6 +6,7 @@ from Libs.Tilesets import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, HEIGHT_L
 from Libs.FlowView import FlowView
 from Libs.MaskCheckbutton import MaskCheckbutton
 from Libs.MaskedRadiobutton import MaskedRadiobutton
+from Libs.ScrolledListbox import ScrolledListbox
 
 from Tkinter import *
 from tkMessageBox import *
@@ -524,11 +525,9 @@ class GraphicsImporter(PyMSDialog):
 		elif tiletype == TILETYPE_MINI:
 			title += 'MiniTile'
 		title += ' Graphics'
-		PyMSDialog.__init__(self, parent, title, resizable=(True,False), set_min_size=(True,True))
+		PyMSDialog.__init__(self, parent, title, resizable=(True,True), set_min_size=(True,True))
 
 	def widgetize(self):
-		self.graphics_path = StringVar()
-
 		self.replace_selections = IntVar()
 		self.auto_close = IntVar()
 		self.megatiles_reuse_duplicates_old = IntVar()
@@ -542,14 +541,29 @@ class GraphicsImporter(PyMSDialog):
 		self.load_settings()
 
 		self.find = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
-		frame = Frame(self)
-		Label(frame, text='BMP:', anchor=W).pack(fill=X, expand=1)
-		entryframe = Frame(frame)
-		self.graphics_entry = Entry(entryframe, textvariable=self.graphics_path, state=DISABLED)
-		self.graphics_entry.pack(side=LEFT, fill=X, expand=1)
-		Button(entryframe, image=self.find, width=20, height=20, command=self.select_path).pack(side=LEFT, padx=(1,0))
-		entryframe.pack(fill=X, expand=1)
-		frame.pack(side=TOP, fill=X, padx=3, pady=0)
+		frame = LabelFrame(self, text="BMP's:")
+		self.graphics_list = ScrolledListbox(frame, frame_config={'bd':2, 'relief': SUNKEN}, auto_bind=self, selectmode=EXTENDED, activestyle=DOTBOX, height=3, bd=0, highlightthickness=0, exportselection=0)
+		self.graphics_list.pack(side=TOP, fill=BOTH, expand=1, padx=2,pady=2)
+		buts = Frame(frame)
+		Button(buts, image=self.find, width=20, height=20, command=lambda *_: self.select_paths(replace=True)).pack(side=LEFT, padx=(1,0))
+		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','add.gif'))
+		button = Button(buts, image=image, width=20, height=20, command=lambda *_: self.select_paths(replace=False))
+		button.pack(side=LEFT)
+		button.image = image
+		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','remove.gif'))
+		button = Button(buts, image=image, width=20, height=20, command=self.remove_paths)
+		button.pack(side=LEFT)
+		button.image = image
+		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','down.gif'))
+		button = Button(buts, image=image, width=20, height=20, command=self.shift_down)
+		button.pack(side=RIGHT, padx=(0,1))
+		button.image = image
+		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','up.gif'))
+		button = Button(buts, image=image, width=20, height=20, command=self.shift_up)
+		button.pack(side=RIGHT)
+		button.image = image
+		buts.pack(fill=X)
+		frame.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=2)
 		self.settings_frame = LabelFrame(self, text='Settings')
 		sets = Frame(self.settings_frame)
 		if self.tiletype == TILETYPE_GROUP:
@@ -589,17 +603,16 @@ class GraphicsImporter(PyMSDialog):
 		g.pack(side=BOTTOM)
 		f.grid(column=0,row=1, columnspan=2, sticky=W+E)
 		sets.pack(fill=X, expand=1, padx=3)
-		self.settings_frame.pack(side=TOP, fill=X, expand=1, padx=3, pady=(3,0))
+		self.settings_frame.pack(side=TOP, fill=X, padx=3, pady=(3,0))
 
 		buts = Frame(self)
 		self.import_button = Button(buts, text='Import', state=DISABLED, command=self.iimport)
 		self.import_button.grid(column=0,row=0)
 		Button(buts, text='Cancel', command=self.cancel).grid(column=2,row=0)
 		buts.grid_columnconfigure(1, weight=1)
-		buts.pack(side=BOTTOM, padx=3, pady=3, fill=X, expand=1)
+		buts.pack(side=BOTTOM, padx=3, pady=3, fill=X)
 
 		self.update_states()
-		self.graphics_path.trace('w', self.update_states)
 
 		return self.import_button
 	def setup_complete(self):
@@ -626,7 +639,7 @@ class GraphicsImporter(PyMSDialog):
 		self.auto_close.set(type_settings.get('auto_close',True))
 
 	def update_states(self, *_):
-		self.import_button['state'] = NORMAL if self.graphics_path.get() else DISABLED
+		self.import_button['state'] = NORMAL if self.graphics_list.size() else DISABLED
 
 	def iimport(self, *_):
 		def can_expand():
@@ -644,7 +657,7 @@ class GraphicsImporter(PyMSDialog):
 		if self.replace_selections.get():
 			ids = self.ids
 		try:
-			new_ids = self.tileset.import_graphics(self.tiletype, self.graphics_path.get(), ids, options)
+			new_ids = self.tileset.import_graphics(self.tiletype, self.graphics_list.get(0,END), ids, options)
 		except PyMSError, e:
 			ErrorDialog(self, e)
 		else:
@@ -652,11 +665,54 @@ class GraphicsImporter(PyMSDialog):
 			if self.auto_close.get():
 				self.ok()
 
-	def select_path(self):
-		path = PYTILE_SETTINGS.lastpath.graphics.select_file('import', self, 'Choose Graphics', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
-		if path:
-			self.graphics_path.set(path)
-			self.graphics_entry.xview(END)
+	def select_paths(self, replace=False):
+		paths = PYTILE_SETTINGS.lastpath.graphics.select_files('import', self, 'Choose Graphics', '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+		if paths:
+			if replace:
+				self.graphics_list.delete(0, END)
+			self.graphics_list.insert(END, *paths)
+			self.graphics_list.xview_moveto(1.0)
+			self.graphics_list.yview_moveto(1.0)
+		self.update_states()
+
+	def remove_paths(self, *_):
+		for index in sorted(self.graphics_list.curselection(), reverse=True):
+			self.graphics_list.delete(index)
+		self.update_states()
+
+	def shift_up(self):
+		min_index = -1
+		select = []
+		for index in sorted(self.graphics_list.curselection()):
+			move_to = index-1
+			if move_to > min_index:
+				select.append(move_to)
+				item = self.graphics_list.get(index)
+				self.graphics_list.delete(index)
+				self.graphics_list.insert(move_to, item)
+			else:
+				min_index = index
+				select.append(index)
+		self.graphics_list.select_clear(0,END)
+		for index in select:
+			self.graphics_list.select_set(index)
+
+	def shift_down(self):
+		max_index = self.graphics_list.size()
+		select = []
+		for index in sorted(self.graphics_list.curselection(), reverse=True):
+			move_to = index+1
+			if move_to < max_index:
+				select.append(move_to)
+				item = self.graphics_list.get(index)
+				self.graphics_list.delete(index)
+				self.graphics_list.insert(move_to, item)
+			else:
+				max_index = index
+				select.append(index)
+		self.graphics_list.select_clear(0,END)
+		for index in select:
+			self.graphics_list.select_set(index)
 
 	def select_null(self, tiletype):
 		id = 0
@@ -1256,11 +1312,11 @@ class TilePalette(PyMSDialog):
 		TILE_CACHE.clear()
 		self.update_title()
 		self.update_state()
-		self.update_size()
+		self.palette.update_size()
 		if len(new_ids):
-			self.select(new_ids)
-			self.scroll_to_selection()
-		self.draw_tiles(force=True)
+			self.palette.select(new_ids)
+			self.palette.scroll_to_selection()
+		self.palette.draw_tiles(force=True)
 		self.parent.update_ranges()
 		self.mark_edited()
 
@@ -1769,6 +1825,8 @@ class PyTILE(Tk):
 	def update_ranges(self):
 		self.megatilee.setrange([0,len(self.tileset.vf4.flags)-1])
 		self.mega_editor.update_mini_range()
+		self.palette.update_size()
+		self.palette.draw_tiles(force=True)
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():

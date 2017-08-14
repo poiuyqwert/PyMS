@@ -1,13 +1,8 @@
 
+from AutohideScrollbar import AutohideScrollbar
+
 from Tkinter import *
 
-class AutohideScrollbar(Scrollbar):
-	def set(self, lo, hi):
-		if float(lo) <= 0.0 and float(hi) >= 1.0:
-			self.grid_remove()
-		else:
-			self.grid()
-		Scrollbar.set(self, lo, hi)
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
 class FlowView(Frame):
