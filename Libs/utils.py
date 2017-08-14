@@ -27,6 +27,20 @@ couriersmall = ('Courier', -8, 'normal')
 ARROW = None
 TRANS_FIX = None
 
+def startup(toplevel):
+	toplevel.lift()
+	toplevel.call('wm', 'attributes', '.', '-topmost', True)
+	toplevel.after_idle(toplevel.call, 'wm', 'attributes', '.', '-topmost', False)
+	toplevel.focus_force()
+	try:
+		from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps
+
+		app = NSRunningApplication.runningApplicationWithProcessIdentifier_(os.getpid())
+		app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+	except:
+		pass
+	toplevel.mainloop()
+
 # Decorator
 def debug_func_log(should_log_call=None):
 	def decorator(func):

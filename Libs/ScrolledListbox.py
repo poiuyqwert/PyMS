@@ -69,6 +69,7 @@ class ScrolledListbox(Frame):
 				self.select_clear(0,END)
 				self.select_set(index)
 				self.see(index)
+				self.listbox.event_generate('<<ListboxSelect>>')
 				return "break"
 			bind = [
 				('<MouseWheel>', scroll),

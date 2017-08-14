@@ -544,6 +544,7 @@ class GraphicsImporter(PyMSDialog):
 		frame = LabelFrame(self, text="BMP's:")
 		self.graphics_list = ScrolledListbox(frame, frame_config={'bd':2, 'relief': SUNKEN}, auto_bind=self, selectmode=EXTENDED, activestyle=DOTBOX, height=3, bd=0, highlightthickness=0, exportselection=0)
 		self.graphics_list.pack(side=TOP, fill=BOTH, expand=1, padx=2,pady=2)
+		self.graphics_list.bind('<<ListboxSelect>>', self.update_states)
 		buts = Frame(frame)
 		button = Button(buts, image=self.find, width=20, height=20, command=lambda *_: self.select_paths(replace=True))
 		button.pack(side=LEFT, padx=(1,0))
@@ -558,16 +559,19 @@ class GraphicsImporter(PyMSDialog):
 		button.pack(side=LEFT)
 		button.image = image
 		button.tooltip = Tooltip(button, "Remove BMP's", mouse=True)
+		self.sel_buttons = [button]
 		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','down.gif'))
 		button = Button(buts, image=image, width=20, height=20, command=self.shift_down)
 		button.pack(side=RIGHT, padx=(0,1))
 		button.image = image
 		button.tooltip = Tooltip(button, "Move Selections Down", mouse=True)
+		self.sel_buttons.append(button)
 		image = PhotoImage(file=os.path.join(BASE_DIR, 'Images','up.gif'))
 		button = Button(buts, image=image, width=20, height=20, command=self.shift_up)
 		button.pack(side=RIGHT)
 		button.image = image
 		button.tooltip = Tooltip(button, "Move Selections Up", mouse=True)
+		self.sel_buttons.append(button)
 		buts.pack(fill=X)
 		frame.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=2)
 		self.settings_frame = LabelFrame(self, text='Settings')
@@ -646,6 +650,9 @@ class GraphicsImporter(PyMSDialog):
 
 	def update_states(self, *_):
 		self.import_button['state'] = NORMAL if self.graphics_list.size() else DISABLED
+		sel = NORMAL if self.graphics_list.curselection() else DISABLED
+		for b in self.sel_buttons:
+			b['state'] = sel
 
 	def iimport(self, *_):
 		def can_expand():
@@ -1921,7 +1928,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pytile.py','pytile.pyw','pytile.exe']):
 		gui = PyTILE()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PyTILE [options]', version='PyTILE %s' % LONG_VERSION)
 		# p.add_option('-v', '--vf4', metavar='FILE', help='Choose a palette for GRP to BMP conversion [default: %default]', default='')
@@ -1935,7 +1942,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyTILE(opt.gui)
-			gui.mainloop()
+			startup(gui)
 
 if __name__ == '__main__':
 	main()
