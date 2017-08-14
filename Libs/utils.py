@@ -1222,6 +1222,7 @@ class Tooltip:
 			return
 		self.tip = Toplevel(self.widget, relief=SOLID, borderwidth=1)
 		self.tip.wm_overrideredirect(1)
+		self.tip.wm_transient(self.widget)
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 		Label(frame, text=self.text, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
