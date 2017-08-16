@@ -380,7 +380,7 @@ class Tileset:
 						if tiletype == TILETYPE_GROUP:
 							new_ids.append(len(self.cv5.groups) + len(new_groups))
 						new_groups.append(group)
-				if len(new_images) > self.groups_remaining():
+				if len(new_groups) > self.groups_remaining():
 					raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile group count (%d + %d > %d)' % (len(self.cv5.groups),len(new_groups),CV5.MAX_ID+1))
 		# Update minitiles
 		self.vr4.images.extend(new_images)
