@@ -655,7 +655,7 @@ class TreeList(Frame):
 		font = ('courier', -12, 'normal')
 		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
-		self.text = Text(self, cursor='arrow', height=1, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", self, '  ')+9)
 		self.text.grid(sticky=NSEW)
 		self.hscroll.config(command=self.text.xview)

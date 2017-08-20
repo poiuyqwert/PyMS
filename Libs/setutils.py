@@ -139,7 +139,7 @@ class SettingDict(object):
 			size[axis] = o
 			panedwindow.sash_place(n, *size)
 	def save_window_size(self, key, window, closing=True):
-		resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
+		resizable_w,resizable_h = (bool(int(v)) for v in window.resizable().split(' '))
 		w,h,x,y,f = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
 			z = ''

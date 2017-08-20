@@ -1354,6 +1354,7 @@ class PyBIN(Tk):
 		self.mouse_offset = [0,0]
 		self.event_moved = False
 
+		self.background = None
 		self.background_image = None
 
 		self.item_background = None
@@ -1528,21 +1529,25 @@ class PyBIN(Tk):
 		# themeframe.grid_columnconfigure(1, weight=1)
 		themeframe.grid(row=3, column=0, sticky=NSEW, padx=5)
 		self.preview_settings_frame.grid_columnconfigure(0, weight=1)
-		self.preview_settings_frame.grid(row=3, column=0, padx=1,pady=1, ipady=3, sticky=EW)
+		self.preview_settings_frame.grid(row=3, column=0, padx=1,pady=1, ipady=3, sticky=NSEW)
 		if not self.show_preview_settings.get():
-			self.preview_settings_frame.grid_forget()
+			self.preview_settings_frame.grid_remove()
 		leftframe.grid_rowconfigure(1, weight=1)
 		leftframe.grid_columnconfigure(0, weight=1)
 		leftframe.grid(row=0, column=0, padx=2, pady=2, sticky=NSEW)
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
-		rightframe = Frame(frame, bd=1, relief=SUNKEN)
-		self.widgetCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=640, height=480)
-		self.widgetCanvas.pack(fill=BOTH)
+		rightframe = Frame(frame)
+		Label(rightframe, text='Canvas:', anchor=W).pack(side=TOP, fill=X)
+		bdframe = Frame(rightframe, borderwidth=1, relief=SUNKEN)
+		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480)
+		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
-		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=NSEW)
+		bdframe.pack(side=TOP)
+		rightframe.grid(row=0, column=1, padx=(2,5), pady=2, sticky=NSEW)
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
-		frame.pack(fill=X)
+		frame.grid_rowconfigure(0, weight=1, minsize=480)
+		frame.pack(fill=BOTH, expand=1)
 		self.widgetCanvas.bind('<Motion>', self.mouse_motion)
 		self.widgetCanvas.bind('<Leave>', lambda e: self.edit_status.set(''))
 		self.widgetCanvas.bind('<Double-Button-1>', lambda e,m=0: self.canvas_double_click(e,m))
@@ -1561,6 +1566,8 @@ class PyBIN(Tk):
 			for n,mod in mouse_modifiers:
 				self.widgetCanvas.bind(name % n, lambda e,t=etype,m=mod: self.mouse_event(e,t,m))
 
+		self.bind('<Return>', self.list_double_click)
+
 		#Statusbar
 		self.status = StringVar()
 		self.edit_status = StringVar()
@@ -1574,8 +1581,9 @@ class PyBIN(Tk):
 		self.status.set('Load or create a Dialog BIN.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.minsize(850, 539)
-		self.maxsize(1080, 539)
+		self.update_idletasks()
+		w,h,_,_,_ = parse_geometry(self.winfo_geometry())
+		self.minsize(w,h)
 		PYBIN_SETTINGS.windows.load_window_size('main', self)
 
 		self.mpqhandler = MPQHandler(PYBIN_SETTINGS.settings.get('mpqs',[]))
@@ -1621,7 +1629,7 @@ class PyBIN(Tk):
 			self.preview_settings_frame.grid()
 		else:
 			self.buttons['arrow'].config(image=self.buttons['arrow'].image_up)
-			self.preview_settings_frame.grid_forget()
+			self.preview_settings_frame.grid_remove()
 
 	def add_node(self):
 		self.type_menu.post(*self.winfo_pointerxy())
@@ -1678,18 +1686,21 @@ class PyBIN(Tk):
 			self.update_zorder()
 
 	def update_background(self):
+		if self.bin and self.show_theme_index.get() and not self.background:
+			try:
+				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
+				background = PCX.PCX()
+				background.load_file(self.mpqhandler.get_file(path))
+			except:
+				InternalErrorDialog.capture(self, 'PyBIN')
+			else:
+				self.background = background
+		elif not self.show_theme_index.get() and self.background:
+			self.background = None
 		delete = True
-		if self.bin and self.show_background.get() and self.show_theme_index.get():
+		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				try:
-					path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
-					background = PCX.PCX()
-					background.load_file(self.mpqhandler.get_file(path))
-				except:
-					InternalErrorDialog.capture(self, 'PyBIN')
-				else:
-					self.background = background
-					self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
+				self.background_image = GRP.frame_to_photo(background.palette, background, -1, size=False)
 			if self.background_image:
 				delete = False
 				if self.item_background:
@@ -1697,8 +1708,6 @@ class PyBIN(Tk):
 				else:
 					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
 					self.widgetCanvas.lower(self.item_background)
-			else:
-				delete = True
 		if self.item_background and delete:
 			self.widgetCanvas.delete(self.item_background)
 			self.item_background = None
@@ -1790,6 +1799,7 @@ class PyBIN(Tk):
 		index = self.show_theme_index.get()-1
 		if index != PYBIN_SETTINGS.preview.get('theme_id'):
 			PYBIN_SETTINGS.preview.theme_id = index
+			self.background = None
 			self.background_image = None
 			self.update_background()
 			self.load_dlggrp()
@@ -2218,6 +2228,7 @@ class PyBIN(Tk):
 		self.current_event = []
 		self.mouse_offset = [0,0]
 
+		self.background = None
 		self.background_image = None
 
 		self.item_background = None

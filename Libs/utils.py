@@ -643,14 +643,14 @@ class DropDown(Frame):
 			selected = self.listbox.size()-1
 		self.listbox.see(selected)
 		if self.stay_right:
-			self.listbox.xview(sys.maxint)
+			self.listbox.xview_moveto(1.0)
 
 	def set(self, num):
 		self.change(num)
 		Variable.set(self.variable, num)
 		self.disp(num)
 		if self.stay_right:
-			self.listbox.xview(sys.maxint)
+			self.listbox.xview_moveto(1.0)
 
 	def change(self, num):
 		if num >= self.listbox.size():
