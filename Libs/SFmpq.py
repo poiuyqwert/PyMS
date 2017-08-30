@@ -235,7 +235,8 @@ MPQARCHIVE._fields_ = [
 ]
 
 class MPQHANDLE(c_void_p):
-	pass
+	def __repr__(self):
+		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
 
 def MpqInitialize():
 	if not FOLDER:
@@ -318,7 +319,7 @@ def SFGetLastError():
 
 @debug_log
 def SFInvalidHandle(h):
-	return h in [None,0,-1]
+	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]
 
 @debug_log
 def MpqGetVersionString():
