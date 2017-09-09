@@ -341,7 +341,7 @@ def SFMpqGetVersion():
 def SFileOpenArchive(path, priority=0, flags=SFILE_OPEN_HARD_DISK_FILE):
 	f = MPQHANDLE()
 	if _SFmpq.SFileOpenArchive(path, priority, flags, byref(f)):
-		return f.value
+		return f
 
 @debug_log
 def SFileCloseArchive(mpq):
@@ -351,7 +351,7 @@ def SFileCloseArchive(mpq):
 def SFileOpenFileEx(mpq, path, search=SFILE_SEARCH_CURRENT_ONLY):
 	f = MPQHANDLE()
 	if _SFmpq.SFileOpenFileEx(mpq if mpq else None, path, search, byref(f)):
-		return f.value
+		return f
 
 @debug_log
 def SFileCloseFile(file):
