@@ -749,7 +749,8 @@ class PyMPQ(Tk):
 			close = True
 			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Read MPQ (List Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		self.files = []
 		self.totalsize = 0
 		for e in SFileListFiles(h, str('\r\n'.join(PYMPQ_SETTINGS.settings.get('listfiles', [])))):
@@ -819,7 +820,8 @@ class PyMPQ(Tk):
 				close = True
 				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 			if SFInvalidHandle(h):
-				raise
+				ErrorDialog(self, PyMSError('Read MPQ (Update Info)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+				return
 			f = SFileGetFileInfo(h,SFILE_INFO_NUM_FILES)
 			self.info.set('Total %s/%s files, %s' % (len(self.files),f,size(self.totalsize)))
 			self.buttons['debug']['state'] = [DISABLED,NORMAL][f > len(self.files)]
@@ -868,7 +870,8 @@ class PyMPQ(Tk):
 		if l.save:
 			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 			if SFInvalidHandle(h):
-				raise
+				ErrorDialog(self, PyMSError('Write MPQ (Change Locale)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+				return
 			l = l.result.get()
 			for i in self.listbox.cur_selection():
 				if self.files[i].locale != l and MpqSetFileLocale(h, self.files[i].fileName, self.files[i].locale, l):
@@ -880,7 +883,8 @@ class PyMPQ(Tk):
 		path = os.path.join(BASE_DIR,'Libs','Temp',str(self.id))
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Open MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		for i in self.listbox.cur_selection():
 			n = self.listbox.get(i)[0]
 			try:
@@ -913,7 +917,8 @@ class PyMPQ(Tk):
 			fs = u.files
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Write MPQ (Update Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		fc = None
 		for file in fs:
 			if fc == None or PYMPQ_SETTINGS.get('compress')[0] == 4:
@@ -930,7 +935,8 @@ class PyMPQ(Tk):
 		if file:
 			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, PYMPQ_SETTINGS.settings.defaults.get('maxfiles'), PYMPQ_SETTINGS.settings.defaults.get('blocksize'))
 			if SFInvalidHandle(h):
-				raise
+				ErrorDialog(self, PyMSError('New MPQ', "The MPQ could not be created/opened."))
+				return
 			MpqCloseUpdatedArchive(h)
 			self.file = file
 			self.files = []
@@ -979,7 +985,8 @@ class PyMPQ(Tk):
 				PYMPQ_SETTINGS['import'].add_folder = f.result.get()
 				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 				if SFInvalidHandle(h):
-					raise
+					ErrorDialog(self, PyMSError('Write MPQ (Add File)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+					return
 				fc = None
 				for file in files:
 					p = os.path.basename(file)
@@ -1006,7 +1013,8 @@ class PyMPQ(Tk):
 		if fo.save:
 			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 			if SFInvalidHandle(h):
-				raise
+				ErrorDialog(self, PyMSError('Write MPQ (Add Folder)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+				return
 			fc = None
 			for p in os.walk(path):
 				folder = PYMPQ_SETTINGS['import'].get('add_folder', '')
@@ -1032,7 +1040,8 @@ class PyMPQ(Tk):
 			return
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Write MPQ (Remove Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		for i in self.listbox.cur_selection():
 			l = self.listbox.get(i)
 			MpqDeleteFileWithLocale(h, l[0], int(l[4]))
@@ -1060,7 +1069,8 @@ class PyMPQ(Tk):
 			return
 		h = SFileOpenArchive(self.file)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Read MPQ (Extract Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		for i in self.listbox.cur_selection():
 			n = self.listbox.get(i)[0]
 			p = n.split('\\')
@@ -1091,7 +1101,8 @@ class PyMPQ(Tk):
 	def compact(self, key=None):
 		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING)
 		if SFInvalidHandle(h):
-			raise
+			ErrorDialog(self, PyMSError('Compact MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			return
 		MpqCompactArchive(h)
 		self.update_info(h)
 		MpqCloseUpdatedArchive(h)
