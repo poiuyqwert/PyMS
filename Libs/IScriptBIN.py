@@ -989,7 +989,7 @@ class IScriptBIN:
 		else:
 			f = file
 		if ids == None:
-			ids = self.header.keys()
+			ids = self.headers.keys()
 		longheader = max([len(h[0]) for h in HEADER] + [13]) + 1
 		longopcode = max([len(o[0][0]) for o in OPCODES] + [13]) + 1
 		warnings = []
