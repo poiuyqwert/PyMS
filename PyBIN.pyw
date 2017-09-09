@@ -1785,7 +1785,7 @@ class PyBIN(Tk):
 				tfont = PCX.PCX()
 				tfont.load_file(self.mpqhandler.get_file(path))
 			except:
-				pass
+				tfont = None
 			else:
 				break
 		self.tfont = tfont
