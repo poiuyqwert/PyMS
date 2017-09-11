@@ -421,7 +421,7 @@ class Tileset:
 					return (tiles / f, f)
 			return (tiles,1)
 		if tiletype == TILETYPE_GROUP:
-			tiles_wide,tiles_high = 16,len(ids) % 16
+			tiles_wide,tiles_high = 16,len(ids)
 			tile_width,tile_height = 32,32
 			tiletype = TILETYPE_MEGA
 			groups = ids

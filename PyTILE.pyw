@@ -924,6 +924,7 @@ class TilePaletteView(Frame):
 		Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected = []
+		self.last_selection = None # (index, on_or_off)
 		self.sub_selection = 0
 		if select != None:
 			if isinstance(select, list):
@@ -1063,32 +1064,58 @@ class TilePaletteView(Frame):
 								self.canvas.images[id] = self.gettile((id,0),cache=True)
 							tag = 'tile%s' % id
 							self.canvas.create_image(x,y, image=self.canvas.images[id], tags=tag, anchor=NW)
-							def select(id, toggle):
+							def select(id, modifier):
 								sub_select = None
 								if self.tiletype == TILETYPE_GROUP:
 									if self.sub_select:
 										sub_select = id % 16
 									id /= 16
-								self.select(id, sub_select, toggle)
-							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,False))
-							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: select(id,True))
+								self.select(id, sub_select, modifier)
+							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,None))
+							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: select(id,'shift'))
+							self.canvas.tag_bind(tag, '<Control-Button-1>', lambda e,id=id: select(id,'cntrl'))
+							self.canvas.tag_bind(tag, '<Command-Button-1>', lambda e,id=id: select(id,'cntrl'))
 							if hasattr(self.delegate, 'tile_palette_double_clicked'):
 								self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
 			self.visible_range = visible_range
 			self.draw_selections()
 
-	def select(self, select, sub_select=None, toggle=False, scroll_to=False):
+	def select(self, select, sub_select=None, modifier=None, scroll_to=False):
 		if self.multiselect:
-			if toggle:
+			if modifier == 'shift':
+				if self.last_selection != None:
+					last_select,enable = self.last_selection
+					start = min(last_select,select)
+					end = max(last_select,select)
+					for index in xrange(start,end+1):
+						if enable and not index in self.selected:
+							self.selected.append(index)
+						elif not enable and index in self.selected:
+							self.selected.remove(index)
+					if enable:
+						self.selected.sort()
+					self.last_selection = (select, enable)
+					select = None
+				else:
+					modifier = 'cntrl'
+			if modifier == 'cntrl':
 				if select in self.selected:
 					self.selected.remove(select)
+					self.last_selection = (select, False)
 				else:
 					self.selected.append(select)
 					self.selected.sort()
-			elif isinstance(select, list):
-				self.selected = sorted(select)
-			else:
-				self.selected = [select]
+					self.last_selection = (select, True)
+			elif select != None:
+				if isinstance(select, list):
+					select = sorted(select)
+				else:
+					select = [select]
+				self.selected = select
+				if self.selected:
+					self.last_selection = (self.selected[-1], True)
+				else:
+					self.last_selection = None
 		else:
 			if isinstance(select, list):
 				select = select[0] if select else 0
