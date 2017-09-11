@@ -93,9 +93,15 @@ class MegaEditorView(Frame):
 		def release(_):
 			self.last_click = None
 			self.toggle_on = None
+		def fill(e):
+			mini = mouse_to_mini(e)
+			if mini != None:
+				self.fill_minitiles(mini)
 		self.canvas.bind('<Button-1>', click)
 		self.canvas.bind('<B1-Motion>', move)
 		self.canvas.bind('<ButtonRelease-1>', release)
+		self.canvas.bind('<Button-2>', fill)
+		self.canvas.bind('<Button-3>', fill)
 		self.canvas.pack(side=TOP)
 		self.mini_tools = Frame(frame)
 		e = Frame(self.mini_tools)
@@ -256,6 +262,40 @@ class MegaEditorView(Frame):
 			self.click_flag(minitile_n, 8)
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			self.click_flag(minitile_n, 16)
+
+	def fill_height(self):
+		edited = False
+		for n in xrange(16):
+			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
+			new_flags = flags & ~(HEIGHT_MID | HEIGHT_HIGH)
+			new_flags |= [HEIGHT_LOW,HEIGHT_MID,HEIGHT_HIGH][self.height.get()]
+			if new_flags != flags:
+				self.delegate.tileset.vf4.flags[self.megatile_id][n] = new_flags
+				edited = True
+		if edited:
+			self.draw_edit_mode()
+			self.mark_edited()
+	def fill_flag(self, minitile_n, flag):
+		enable = not not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
+		for n in xrange(16):
+			if enable:
+				self.delegate.tileset.vf4.flags[self.megatile_id][n] |= flag
+			else:
+				self.delegate.tileset.vf4.flags[self.megatile_id][n] &= ~flag
+		self.draw_edit_mode()
+		self.mark_edited()
+	def fill_minitiles(self, minitile_n):
+		if not self.delegate.tileset or self.megatile_id == None:
+			return
+		mode = self.edit_mode.get()
+		if mode == MEGA_EDIT_MODE_HEIGHT:
+			self.fill_height()
+		elif mode == MEGA_EDIT_MODE_WALKABILITY:
+			self.fill_flag(minitile_n, 1)
+		elif mode == MEGA_EDIT_MODE_VIEW_BLOCKING:
+			self.fill_flag(minitile_n, 8)
+		elif mode == MEGA_EDIT_MODE_RAMP:
+			self.fill_flag(minitile_n, 16)
 
 	def draw_minitiles(self):
 		self.canvas.delete('tile')
@@ -1622,14 +1662,24 @@ class PyTILE(Tk):
 			menu = Menu(self, tearoff=0)
 			mode = self.mega_editor.edit_mode.get()
 			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode]
-			menu.add_command(label="Apply %s flags to Megatiles in Group" % name, command=lambda m=mode: self.megatile_apply_all(mode))
-			menu.add_command(label="Apply all flags to Megatiles in Group", command=self.megatile_apply_all)
+			menu.add_command(label="Apply %s flags to Megatiles in Group (Control+Shift+%s)" % (name, name[0]), command=lambda m=mode: self.megatile_apply_all(mode))
+			menu.add_command(label="Apply all flags to Megatiles in Group (Control+Shift+A)", command=self.megatile_apply_all)
 			menu.add_separator()
-			menu.add_checkbutton(label="Exclude Null Tiles", variable=self.apply_all_exclude_nulls)
+			menu.add_checkbutton(label="Exclude Null Tiles (Control+Shift+N)", variable=self.apply_all_exclude_nulls)
 			menu.post(*self.winfo_pointerxy())
 		self.apply_all_btn = Button(megatile_group, text='Apply to Megas', state=DISABLED, command=megatile_apply_all_pressed)
 		self.disable.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
+		bind = (
+			('H', lambda e: self.megatile_apply_all(MEGA_EDIT_MODE_HEIGHT)),
+			('W', lambda e: self.megatile_apply_all(MEGA_EDIT_MODE_WALKABILITY)),
+			('B', lambda e: self.megatile_apply_all(MEGA_EDIT_MODE_VIEW_BLOCKING)),
+			('R', lambda e: self.megatile_apply_all(MEGA_EDIT_MODE_RAMP)),
+			('A', lambda e: self.megatile_apply_all(None)),
+			('N', lambda e: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
+		)
+		for key,func in bind:
+			self.bind('<Control-Shift-%s>' % key, func)
 		self.mega_editor = MegaEditorView(megatile_group, self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
@@ -1760,6 +1810,8 @@ class PyTILE(Tk):
 		return to_photo(self.tileset, id)
 
 	def megatile_apply_all(self, mode=None):
+		if not self.tileset:
+			return
 		copy_mask = ~0
 		if mode == MEGA_EDIT_MODE_HEIGHT:
 			copy_mask = HEIGHT_MID | HEIGHT_HIGH
