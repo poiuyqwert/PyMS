@@ -1822,13 +1822,19 @@ class PyTILE(Tk):
 		elif mode == MEGA_EDIT_MODE_RAMP:
 			copy_mask = 16
 		copy_mega = self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection]
+		edited = False
 		for m in self.tileset.cv5.groups[self.palette.selected[0]][13]:
 			if m == copy_mega or (m == 0 and self.apply_all_exclude_nulls.get()):
 				continue
 			for n in xrange(16):
 				copy_flags = self.tileset.vf4.flags[copy_mega][n]
 				flags = self.tileset.vf4.flags[m][n]
-				self.tileset.vf4.flags[m][n] = (flags & ~copy_mask) | (copy_flags & copy_mask)
+				new_flags = (flags & ~copy_mask) | (copy_flags & copy_mask)
+				if new_flags != flags:
+					self.tileset.vf4.flags[m][n] = new_flags
+					edited = True
+		if edited:
+			self.mark_edited()
 
 	def doodad_apply_all(self):
 		doodad_id = self.edgeright.get()
