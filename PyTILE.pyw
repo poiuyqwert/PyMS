@@ -276,7 +276,7 @@ class MegaEditorView(Frame):
 			self.draw_edit_mode()
 			self.mark_edited()
 	def fill_flag(self, minitile_n, flag):
-		enable = not not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
+		enable = not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
 		for n in xrange(16):
 			if enable:
 				self.delegate.tileset.vf4.flags[self.megatile_id][n] |= flag
