@@ -4,7 +4,7 @@ from Tkinter import *
 from tkMessageBox import askquestion,OK
 import tkFileDialog
 from textwrap import wrap
-import os,re,webbrowser,sys,traceback,urllib,errno,tempfile,codecs,copy
+import os,re,webbrowser,sys,traceback,urllib,errno,tempfile,codecs,copy,platform
 win_reg = True
 try:
 	from _winreg import *
@@ -26,6 +26,11 @@ couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
 ARROW = None
 TRANS_FIX = None
+
+def is_windows():
+	return (platform.system().lower() == 'windows')
+def is_mac():
+	return (platform.system().lower() == 'darwin')
 
 def startup(toplevel):
 	toplevel.lift()
@@ -1236,7 +1241,8 @@ class Tooltip:
 			return
 		self.tip = Toplevel(self.widget, relief=SOLID, borderwidth=1)
 		self.tip.wm_overrideredirect(1)
-		self.tip.wm_transient(self.widget)
+		if is_mac():
+			self.tip.wm_transient(self.widget.winfo_toplevel())
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 		Label(frame, text=self.text, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
