@@ -1460,8 +1460,8 @@ class PyBIN(Tk):
 			('remove', self.remove_node, 0, 20, 20, DISABLED),
 			('edit', lambda: self.edit_node_settings(), 0, 20, 20, DISABLED),
 			('arrow', self.toggle_preview_settings, 1, 20, 10, NORMAL),
-			('down', lambda: self.move_node(2), 0, 20, 20, DISABLED),
-			('up', lambda: self.move_node(-1), 0, 20, 20, DISABLED)
+			('down', lambda: self.move_node(-1), 0, 20, 20, DISABLED),
+			('up', lambda: self.move_node(2), 0, 20, 20, DISABLED)
 		)
 		for col,(icon,callback,weight,width,height,state) in enumerate(buttons):
 			image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % icon))
