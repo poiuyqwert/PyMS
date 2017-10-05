@@ -1114,7 +1114,8 @@ class TilePaletteView(Frame):
 							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,None))
 							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: select(id,'shift'))
 							self.canvas.tag_bind(tag, '<Control-Button-1>', lambda e,id=id: select(id,'cntrl'))
-							self.canvas.tag_bind(tag, '<Command-Button-1>', lambda e,id=id: select(id,'cntrl'))
+							if is_mac():
+								self.canvas.tag_bind(tag, '<Command-Button-1>', lambda e,id=id: select(id,'cntrl'))
 							if hasattr(self.delegate, 'tile_palette_double_clicked'):
 								self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
 			self.visible_range = visible_range
