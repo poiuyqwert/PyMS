@@ -757,14 +757,7 @@ class TreeList(Frame):
 			return
 		node = self.get_node(index)
 
-		if modifier == 0 or (modifier == 1 and self.selectmode == EXTENDED and self.lastsel == None) or (modifier == 2 and self.selectmode != SINGLE):
-			if self.selectmode != MULTIPLE and modifier != 2:
-				self.text.tag_remove('Selection', '1.0', END)
-			if self.selectmode == EXTENDED:
-				self.lastsel = node.entry
-			if not self.selected(node.entry):
-				self.text.tag_add('Selection',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
-		elif modifier == 1 and self.selectmode == EXTENDED:
+		if modifier == 1 and self.selectmode == EXTENDED:
 			if tuple(int(n) for n in self.text.index('entry%s.first' % self.lastsel).split('.')) > tuple(int(n) for n in self.text.index('entry%s.first' % node.entry).split('.')):
 				d = '-1l'
 			else:
@@ -777,6 +770,13 @@ class TreeList(Frame):
 						self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
 				c = self.text.index('%s %s lineend -1c' % (c,d))
 			self.lastsel = node.entry
+		else:
+			if self.selectmode != MULTIPLE or modifier != 2:
+				self.text.tag_remove('Selection', '1.0', END)
+			if self.selectmode == EXTENDED:
+				self.lastsel = node.entry
+			if not self.selected(node.entry):
+				self.text.tag_add('Selection',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
 
 	def write_node(self, pos, node):
 		# print ('Pos',pos)
