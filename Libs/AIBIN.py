@@ -894,7 +894,7 @@ class AIBIN:
 		elif stage == 1:
 			return [len(data)+1,data]
 		elif stage == 2:
-			s = TBL.compile_string(data)
+			s = TBL.compile_string(data).encode('utf8')
 			if '\x00' in s:
 				raise PyMSError('Parameter',"String '%s' contains a null (<0>)" % data)
 			return [len(s) + 1,s + '\x00']
