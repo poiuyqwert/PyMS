@@ -231,8 +231,10 @@ class SettingDict(object):
 				paths = [paths]
 			else:
 				paths = []
-		if paths and store:
-			self[key] = os.path.dirname(paths[0])
+		if paths:
+			paths = sorted(paths)
+			if store:
+				self[key] = os.path.dirname(paths[0])
 		return paths
 	def select_directory(self, key, parent, title, store=True):
 		parent._pyms__window_blocking = True
