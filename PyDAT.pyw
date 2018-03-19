@@ -2279,7 +2279,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			('Attack Unit', self.attackunitentry, self.attackunit, 'UnitAIAttackUnit'),
 			('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove'),
 		]
-		l = LabelFrame(frame, text='Sounds:')
+		l = LabelFrame(frame, text='AI Actions:')
 		s = Frame(l)
 		for t,e,d,h in ais:
 			f = Frame(s)
