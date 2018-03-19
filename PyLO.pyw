@@ -658,7 +658,6 @@ class PyLO(Tk):
 	def scrolling(self, t, p, e=None):
 		a = {'pages':17,'units':1}
 		frames = self.overlaygrp.frames-1
-		p = min(1,float(p) / (1-17/float(frames)))
 		if t == 'moveto':
 			self.overlayframe = int(frames * float(p))
 		elif t == 'scroll':
@@ -668,10 +667,10 @@ class PyLO(Tk):
 		self.framesupdate()
 
 	def updatescroll(self):
-		if self.overlayframe != None:
-			frames = float(self.overlaygrp.frames-1)
-			x = (1-17/frames)*(self.overlayframe / frames)
-			self.framescroll.set(x,x+(17/frames))
+		if self.overlayframe != None and self.overlaygrp != None:
+			frames = float(self.overlaygrp.frames)
+			step = 1 / frames
+			self.framescroll.set(self.overlayframe*step, (self.overlayframe+1)*step)
 
 	def updategrps(self):
 		self.grppanel.variables['Base GRP:'][2][1]['state'] = [DISABLED,NORMAL][self.usebasegrp.get()]
@@ -774,11 +773,11 @@ class PyLO(Tk):
 		if self.basegrp:
 			bm = self.basegrp.frames
 		if self.previewing:
-			b = self.previewing[0]
+			b = self.previewing[0] + 1
 		if self.overlaygrp:
 			om = self.overlaygrp.frames
 		if self.overlayframe != None:
-			o = self.overlayframe
+			o = self.overlayframe + 1
 		self.baseframes.set('Base Frame: %s / %s' % (b,bm))
 		self.overlayframes.set('Overlay Frame: %s / %s' % (o,om))
 
@@ -874,6 +873,7 @@ class PyLO(Tk):
 			self.text.insert('1.0', d.text.rstrip('\n'))
 			self.text.edit_reset()
 			self.text.see('1.0')
+			self.text.mark_set('insert', '2.0 lineend')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 
