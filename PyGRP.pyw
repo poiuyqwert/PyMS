@@ -492,7 +492,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def move(self, e, listbox, offset):
 		index = 0
 		if offset == END:
-			index = listbox.size()-2
+			index = listbox.size()-1
 		elif offset not in [0,END] and listbox.curselection():
 			print listbox.curselection()
 			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
