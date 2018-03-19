@@ -1221,7 +1221,7 @@ class AIBIN:
 									elif cmd in self.starts:
 										town = True
 									if notused:
-										add_warning(PyMSWarning('Interpreting',"This command and everything up to the next script or block will never be run",*notused, id='unaccessible'))
+										add_warning(PyMSWarning('Interpreting',"Everything after this command and up to the next script or block will never be run",*notused, id='inaccessible'))
 										notused = False
 									dat = []
 									if match.group(2):
