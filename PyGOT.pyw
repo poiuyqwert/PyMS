@@ -424,7 +424,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pygot.py','pygot.pyw','pygot.exe']):
 		gui = PyGOT()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PyGOT [options] <inp> [out]', version='PyGOT %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile a GOT file [default]", default=True)
@@ -435,7 +435,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyGOT(opt.gui)
-			gui.mainloop()
+			startup(gui)
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

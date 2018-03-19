@@ -260,7 +260,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pypcx.py','pypcx.pyw','pypcx.exe']):
 		gui = PyPCX()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PyPCX [options] <inp> [out]', version='PyPCX %s' % LONG_VERSION)
 		p.add_option('-p', '--pcx', action='store_true', dest='convert', help='Convert from PCX to BMP [Default]', default=True)
@@ -269,7 +269,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyPCX(opt.gui)
-			gui.mainloop()
+			startup(gui)
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

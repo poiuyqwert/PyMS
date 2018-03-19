@@ -1159,7 +1159,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyspk.py','pyspk.pyw','pyspk.exe']):
 		gui = PySPK()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PySPK [options] <inp> [out]', version='PySPK %s' % LONG_VERSION)
 		# p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile a GOT file [default]", default=True)
@@ -1170,7 +1170,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PySPK(opt.gui)
-			gui.mainloop()
+			startup(gui)
 		# else:
 		# 	if not len(args) in [1,2]:
 		# 		p.error('Invalid amount of arguments')

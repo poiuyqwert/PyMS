@@ -452,7 +452,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyfnt.py','pyfnt.pyw','pyfnt.exe']):
 		gui = PyFNT()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PyFNT [options] <inp> [out]', version='PyFNT %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile FNT to a BMP [default]", default=True)
@@ -462,7 +462,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyFNT(opt.gui)
-			gui.mainloop()
+			startup(gui)
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

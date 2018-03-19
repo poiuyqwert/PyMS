@@ -909,7 +909,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pygrp.py','pygrp.pyw','pygrp.exe']):
 		gui = PyGRP()
-		gui.mainloop()
+		startup(gui)
 	else:
 		p = optparse.OptionParser(usage='usage: PyGRP [options] <inp> [out]', version='PyGRP %s' % LONG_VERSION)
 		p.add_option('-p', '--palette', metavar='FILE', help='Choose a palette for GRP to BMP conversion [default: %default]', default='Units.pal')
@@ -922,7 +922,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyGRP(opt.gui)
-			gui.mainloop()
+			startup(gui)
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')
