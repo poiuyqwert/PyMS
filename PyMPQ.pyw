@@ -16,7 +16,7 @@ import optparse, os, webbrowser, sys, time
 #import ntpath
 
 if FOLDER:
-	e = DependencyError('PyMPQ', 'PyMS currently has no Mac support for MPQ files, thus this program is useless.\nIf you are a Mac user and can help compile and test SFmpq then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test SFmpq for your operating system, then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
 	e.mainloop()
 	sys.exit()
 
