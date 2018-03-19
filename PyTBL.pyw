@@ -181,7 +181,7 @@ class FindDialog(PyMSDialog):
 			else:
 				regex = '.*%s.*' % re.escape(t)
 			try:
-				regex = re.compile(regex, re.I if self.casesens.get() else 0)
+				regex = re.compile(regex, 0 if self.casesens.get() else re.I)
 			except:
 				self.reset = self.findentry
 				self.reset.c = self.reset['bg']
