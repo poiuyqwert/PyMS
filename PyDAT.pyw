@@ -749,6 +749,8 @@ class OrdersTab(DATTab):
 			'ObscuredOrder':self.obscured,
 		}
 
+		self.highlightentry.trace('w', lambda *_: self.drawpreview())
+
 	def files_updated(self):
 		self.dat = self.toplevel.orders
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
