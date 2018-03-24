@@ -19,7 +19,11 @@ class MaskedRadiobutton(Radiobutton):
 		self._update_state()
 
 	def _update_state(self, *_):
-		value = (self._real_variable.get() & self._mask)
+		try:
+			raw = self._real_variable.get()
+		except:
+			return
+		value = (raw & self._mask)
 		if value != self._variable.get():
 			self._variable.set(value)
 

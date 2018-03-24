@@ -15,7 +15,11 @@ class MaskCheckbutton(Checkbutton):
 		self._update_state()
 
 	def _update_state(self, *_):
-		on = ((self._real_variable.get() & self._value) == self._value)
+		try:
+			raw = self._real_variable.get()
+		except:
+			return
+		on = ((raw & self._value) == self._value)
 		if on != self._variable.get():
 			self._variable.set(on)
 
