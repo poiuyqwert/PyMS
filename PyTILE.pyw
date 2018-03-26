@@ -994,7 +994,7 @@ class TilePaletteView(Frame):
 			self.update_size()
 		self.canvas.bind('<Configure>', canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
-		binding_widget.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)),'units'))
+		binding_widget.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)) if e.delta else 0,'units'))
 		if not hasattr(self.delegate, 'tile_palette_bind_updown') or self.delegate.tile_palette_bind_updown():
 			binding_widget.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
 			binding_widget.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
