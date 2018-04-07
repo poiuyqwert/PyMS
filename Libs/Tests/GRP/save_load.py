@@ -1,5 +1,5 @@
 
-from ..ffile import FFile
+from ...utils import FFile
 from ... import GRP
 
 def run(path_to):

@@ -458,8 +458,13 @@ class Tileset:
 	# options.megatiles_export_walkability
 	# options.megatiles_export_block_sight
 	# options.megatiles_export_ramp
-	def export_settings(self, tiletype, path, ids, options={}):
-		file = AtomicWriter(path, 'w')
+	def export_settings(self, tiletype, path_or_file, ids, options={}):
+		if isstr(path_or_file):
+			close = True
+			file = AtomicWriter(path_or_file, 'w')
+		else:
+			close = False
+			file = path_or_file
 		if tiletype == TILETYPE_GROUP and self.cv5_path != None:
 			file.write("# Exported from %s\n" % self.cv5_path)
 		elif tiletype == TILETYPE_MEGA and self.vf4_path != None:
@@ -535,15 +540,19 @@ MegaTile:""" % id)
 				for layer in layers:
 					write_flags(id, *layer)
 				file.write('\n\n')
-		file.close()
+		if close:
+			file.close()
 
 	# options.repeater (Func, default: setting_import_extras_ignore)
-	def import_settings(self, tiletype, path, ids, options={}):
-		try:
-			with open(path,'r') as settings_file:
-				lines = settings_file.readlines()
-		except:
-			raise PyMSError('Importing',"Could not load file '%s'" % path)
+	def import_settings(self, tiletype, path_or_text, ids, options={}):
+		if isstr(path_or_text):
+			lines = re.split('[\r\n]+', path_or_text)
+		else:
+			try:
+				with open(path,'r') as settings_file:
+					lines = settings_file.readlines()
+			except:
+				raise PyMSError('Importing',"Could not load file '%s'" % path)
 		importing = []
 		line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
 		group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')

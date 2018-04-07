@@ -174,9 +174,9 @@ class MegaEditorView(Frame):
 		PYTILE_SETTINGS.mega_edit.height = self.height.get()
 
 	def draw_border(self, minitile_n, color='#FFFFFF'):
-		x = 1 + 24 * (minitile_n % 4)
-		y = 1 + 24 * (minitile_n / 4)
-		self.canvas.create_rectangle(x,y, x+23,y+23, outline=color, tags='mode')
+		x = 2 + 24 * (minitile_n % 4)
+		y = 2 + 24 * (minitile_n / 4)
+		self.canvas.create_rectangle(x,y, x+21,y+21, outline=color, tags='mode')
 
 	def draw_selection(self):
 		self.draw_border(self.minitile_n)
@@ -1528,6 +1528,15 @@ class PyTILE(Tk):
 		self.apply_all_exclude_nulls = IntVar()
 		self.apply_all_exclude_nulls.set(PYTILE_SETTINGS.mega_edit.get('apply_all_exclude_nulls', True))
 
+		self.copy_mega_height = IntVar()
+		self.copy_mega_height.set(PYTILE_SETTINGS.copy_mega.get('height', True))
+		self.copy_mega_walkable = IntVar()
+		self.copy_mega_walkable.set(PYTILE_SETTINGS.copy_mega.get('walkable', True))
+		self.copy_mega_sight = IntVar()
+		self.copy_mega_sight.set(PYTILE_SETTINGS.copy_mega.get('sight', True))
+		self.copy_mega_ramp = IntVar()
+		self.copy_mega_ramp.set(PYTILE_SETTINGS.copy_mega.get('ramp', True))
+
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 
 		mid = Frame(self)
@@ -1685,6 +1694,54 @@ class PyTILE(Tk):
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
 		self.normal_editors.append(megatile_group)
+		copy_mega_group = LabelFrame(self.flow_view.content_view, text='Copy MegaTile Flags')
+		opts = [
+			('Height', self.copy_mega_height),
+			('Walkable', self.copy_mega_walkable),
+			('Blocks Sight', self.copy_mega_sight),
+			('Ramp', self.copy_mega_ramp)
+		]
+		for n,(name,var) in enumerate(opts):
+			check = Checkbutton(copy_mega_group, text=name, variable=var, anchor=W, state=DISABLED)
+			check.grid(sticky=W)
+			self.disable.append(check)
+		def copy_mega(*args):
+			if not self.tileset:
+				return
+			group = self.tileset.cv5.groups[self.palette.selected[0]]
+			mega = group[13][self.palette.sub_selection]
+			options = {
+				'megatiles_export_height': self.copy_mega_height.get(),
+				'megatiles_export_walkability': self.copy_mega_walkable.get(),
+				'megatiles_export_block_sight': self.copy_mega_sight.get(),
+				'megatiles_export_ramp': self.copy_mega_ramp.get(),
+			}
+			f = FFile()
+			self.tileset.export_settings(TILETYPE_MEGA, f, [mega], options)
+			self.clipboard_clear()
+			self.clipboard_append(f.data)
+		btn = Button(copy_mega_group, text='Copy (Ctrl+Shift+C)', state=DISABLED, command=copy_mega)
+		self.bind('<Control-Shift-C>', copy_mega)
+		btn.grid(sticky=E+W)
+		self.disable.append(btn)
+		def paste_mega(*args):
+			if not self.tileset:
+				return
+			group = self.tileset.cv5.groups[self.palette.selected[0]]
+			mega = group[13][self.palette.sub_selection]
+			settings = self.clipboard_get()
+			try:
+				self.tileset.import_settings(TILETYPE_MEGA, settings, [mega])
+			except PyMSError, e:
+				ErrorDialog(self, e)
+				return
+			self.mega_editor.draw()
+			self.mark_edited()
+		btn = Button(copy_mega_group, text='Paste (Ctrl+Shift+V)', state=DISABLED, command=paste_mega)
+		self.bind('<Control-Shift-V>', paste_mega)
+		btn.grid(sticky=E+W)
+		self.disable.append(btn)
+		self.normal_editors.append(copy_mega_group)
 
 		self.doodad_editors = []
 
@@ -1733,6 +1790,7 @@ class PyTILE(Tk):
 		))
 		self.doodad_editors.append(group)
 		self.doodad_editors.append(megatile_group)
+		self.doodad_editors.append(copy_mega_group)
 		self.flow_view.add_subviews(self.normal_editors, padx=2)
 
 		self.groupid.pack(fill=BOTH, expand=1, padx=5, pady=5)
