@@ -2065,6 +2065,10 @@ class PyTILE(Tk):
 		if not self.unsaved():
 			PYTILE_SETTINGS.windows.save_window_size('main', self)
 			PYTILE_SETTINGS.mega_edit.apply_all_exclude_nulls = not not self.apply_all_exclude_nulls.get()
+			PYTILE_SETTINGS.copy_mega.height = not not self.copy_mega_height.get()
+			PYTILE_SETTINGS.copy_mega.walkable = not not self.copy_mega_walkable.get()
+			PYTILE_SETTINGS.copy_mega.sight = not not self.copy_mega_sight.get()
+			PYTILE_SETTINGS.copy_mega.ramp = not not self.copy_mega_ramp.get()
 			PYTILE_SETTINGS.save()
 			self.destroy()
 
