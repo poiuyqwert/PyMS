@@ -1530,54 +1530,78 @@ class PyTILE(Tk):
 
 		self.copy_mega_height = IntVar()
 		self.copy_mega_height.set(PYTILE_SETTINGS['copy'].mega.get('height', True))
+		self.copy_mega_height.trace('w', self.action_states)
 		self.copy_mega_walkable = IntVar()
 		self.copy_mega_walkable.set(PYTILE_SETTINGS['copy'].mega.get('walkable', True))
+		self.copy_mega_walkable.trace('w', self.action_states)
 		self.copy_mega_sight = IntVar()
 		self.copy_mega_sight.set(PYTILE_SETTINGS['copy'].mega.get('sight', True))
+		self.copy_mega_sight.trace('w', self.action_states)
 		self.copy_mega_ramp = IntVar()
 		self.copy_mega_ramp.set(PYTILE_SETTINGS['copy'].mega.get('ramp', True))
+		self.copy_mega_ramp.trace('w', self.action_states)
 
 		self.copy_tilegroup_flags = IntVar()
 		self.copy_tilegroup_flags.set(PYTILE_SETTINGS['copy'].tilegroup.get('flags', True))
+		self.copy_tilegroup_flags.trace('w', self.action_states)
 		self.copy_tilegroup_buildable = IntVar()
 		self.copy_tilegroup_buildable.set(PYTILE_SETTINGS['copy'].tilegroup.get('buildable', True))
+		self.copy_tilegroup_buildable.trace('w', self.action_states)
 		self.copy_tilegroup_hasup = IntVar()
 		self.copy_tilegroup_hasup.set(PYTILE_SETTINGS['copy'].tilegroup.get('hasup', True))
+		self.copy_tilegroup_hasup.trace('w', self.action_states)
 		self.copy_tilegroup_edges = IntVar()
 		self.copy_tilegroup_edges.set(PYTILE_SETTINGS['copy'].tilegroup.get('edges', True))
+		self.copy_tilegroup_edges.trace('w', self.action_states)
 		self.copy_tilegroup_unknown9 = IntVar()
 		self.copy_tilegroup_unknown9.set(PYTILE_SETTINGS['copy'].tilegroup.get('unknown9', True))
+		self.copy_tilegroup_unknown9.trace('w', self.action_states)
 		self.copy_tilegroup_index = IntVar()
 		self.copy_tilegroup_index.set(PYTILE_SETTINGS['copy'].tilegroup.get('index', True))
+		self.copy_tilegroup_index.trace('w', self.action_states)
 		self.copy_tilegroup_buildable2 = IntVar()
 		self.copy_tilegroup_buildable2.set(PYTILE_SETTINGS['copy'].tilegroup.get('buildable2', True))
+		self.copy_tilegroup_buildable2.trace('w', self.action_states)
 		self.copy_tilegroup_hasdown = IntVar()
 		self.copy_tilegroup_hasdown.set(PYTILE_SETTINGS['copy'].tilegroup.get('hasdown', True))
+		self.copy_tilegroup_hasdown.trace('w', self.action_states)
 		self.copy_tilegroup_ground_height = IntVar()
 		self.copy_tilegroup_ground_height.set(PYTILE_SETTINGS['copy'].tilegroup.get('ground_height', True))
+		self.copy_tilegroup_ground_height.trace('w', self.action_states)
 		self.copy_tilegroup_unknown11 = IntVar()
 		self.copy_tilegroup_unknown11.set(PYTILE_SETTINGS['copy'].tilegroup.get('unknown11', True))
+		self.copy_tilegroup_unknown11.trace('w', self.action_states)
 
 		self.copy_doodadgroup_doodad = IntVar()
 		self.copy_doodadgroup_doodad.set(PYTILE_SETTINGS['copy'].doodadgroup.get('doodad', True))
+		self.copy_doodadgroup_doodad.trace('w', self.action_states)
 		self.copy_doodadgroup_overlay = IntVar()
 		self.copy_doodadgroup_overlay.set(PYTILE_SETTINGS['copy'].doodadgroup.get('overlay', True))
+		self.copy_doodadgroup_overlay.trace('w', self.action_states)
 		self.copy_doodadgroup_buildable = IntVar()
 		self.copy_doodadgroup_buildable.set(PYTILE_SETTINGS['copy'].doodadgroup.get('buildable', True))
+		self.copy_doodadgroup_buildable.trace('w', self.action_states)
 		self.copy_doodadgroup_unknown1 = IntVar()
 		self.copy_doodadgroup_unknown1.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown1', True))
+		self.copy_doodadgroup_unknown1.trace('w', self.action_states)
 		self.copy_doodadgroup_unknown6 = IntVar()
 		self.copy_doodadgroup_unknown6.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown6', True))
+		self.copy_doodadgroup_unknown6.trace('w', self.action_states)
 		self.copy_doodadgroup_unknown8 = IntVar()
 		self.copy_doodadgroup_unknown8.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown8', True))
+		self.copy_doodadgroup_unknown8.trace('w', self.action_states)
 		self.copy_doodadgroup_unknown12 = IntVar()
 		self.copy_doodadgroup_unknown12.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown12', True))
+		self.copy_doodadgroup_unknown12.trace('w', self.action_states)
 		self.copy_doodadgroup_index = IntVar()
 		self.copy_doodadgroup_index.set(PYTILE_SETTINGS['copy'].doodadgroup.get('index', True))
+		self.copy_doodadgroup_index.trace('w', self.action_states)
 		self.copy_doodadgroup_ground_height = IntVar()
 		self.copy_doodadgroup_ground_height.set(PYTILE_SETTINGS['copy'].doodadgroup.get('ground_height', True))
+		self.copy_doodadgroup_ground_height.trace('w', self.action_states)
 		self.copy_doodadgroup_group_string_id = IntVar()
 		self.copy_doodadgroup_group_string_id.set(PYTILE_SETTINGS['copy'].doodadgroup.get('group_string_id', True))
+		self.copy_doodadgroup_group_string_id.trace('w', self.action_states)
 
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 
@@ -1750,22 +1774,23 @@ class PyTILE(Tk):
 		def copy_mega(*args):
 			if not self.tileset:
 				return
-			group = self.tileset.cv5.groups[self.palette.selected[0]]
-			mega = group[13][self.palette.sub_selection]
 			options = {
 				'megatiles_export_height': self.copy_mega_height.get(),
 				'megatiles_export_walkability': self.copy_mega_walkable.get(),
 				'megatiles_export_block_sight': self.copy_mega_sight.get(),
 				'megatiles_export_ramp': self.copy_mega_ramp.get(),
 			}
+			if not max(options.values):
+				return
+			group = self.tileset.cv5.groups[self.palette.selected[0]]
+			mega = group[13][self.palette.sub_selection]
 			f = FFile()
 			self.tileset.export_settings(TILETYPE_MEGA, f, [mega], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
-		btn = Button(copy_mega_group, text='Copy (Ctrl+Shift+C)', state=DISABLED, command=copy_mega)
+		self.copy_mega_btn = Button(copy_mega_group, text='Copy (Ctrl+Shift+C)', state=DISABLED, command=copy_mega)
 		self.bind('<Control-Shift-c>', copy_mega)
-		btn.grid(sticky=E+W)
-		self.disable.append(btn)
+		self.copy_mega_btn.grid(sticky=E+W)
 		def paste_mega(*args):
 			if not self.tileset:
 				return
@@ -1809,7 +1834,6 @@ class PyTILE(Tk):
 		def copy_tilegroup(*args):
 			if not self.tileset:
 				return
-			group = self.palette.selected[0]
 			options = {}
 			if group < 1024:
 				options = {
@@ -1843,14 +1867,16 @@ class PyTILE(Tk):
 					'groups_export_doodad_height': self.copy_doodadgroup_doodad.get(),
 					'groups_export_unknown12': self.copy_doodadgroup_unknown12.get(),
 				}
+			if not max(options.values):
+				return
+			group = self.palette.selected[0]
 			f = FFile()
 			self.tileset.export_settings(TILETYPE_GROUP, f, [group], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
-		btn = Button(copy_tilegroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
+		self.copy_tilegroup_btn = Button(copy_tilegroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
 		self.bind('<Control-Alt-c>', copy_tilegroup)
-		btn.grid(column=0,row=5, sticky=E+W)
-		self.disable.append(btn)
+		self.copy_tilegroup_btn.grid(column=0,row=5, sticky=E+W)
 		def paste_tilegroup(*args):
 			if not self.tileset:
 				return
@@ -1940,10 +1966,9 @@ class PyTILE(Tk):
 				check = Checkbutton(copy_doodadgroup_group, text=name, variable=var, anchor=W, state=DISABLED)
 				check.grid(column=c,row=r, sticky=W)
 				self.disable.append(check)
-		btn = Button(copy_doodadgroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
+		self.copy_doodadgroup_btn = Button(copy_doodadgroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
 		self.bind('<Control-Alt-c>', copy_tilegroup)
-		btn.grid(column=0,row=5, sticky=E+W)
-		self.disable.append(btn)
+		self.copy_doodadgroup_btn.grid(column=0,row=5, sticky=E+W)
 		btn = Button(copy_doodadgroup_group, text='Paste (Ctrl+Alt+V)', state=DISABLED, command=paste_tilegroup)
 		self.bind('<Control-Alt-v>', paste_tilegroup)
 		btn.grid(column=1,row=5, sticky=E+W)
@@ -2004,7 +2029,7 @@ class PyTILE(Tk):
 				else:
 					self.saveas()
 
-	def action_states(self):
+	def action_states(self, *args, **kwargs):
 		file = [NORMAL,DISABLED][not self.tileset]
 		for btn in ['save','saveas','close','find']:
 			self.buttons[btn]['state'] = file
@@ -2013,6 +2038,9 @@ class PyTILE(Tk):
 		self.mega_editor.set_enabled(self.tileset != None)
 		if self.tileset and self.tileset.vx4.expanded:
 			self.expanded.set('VX4 Expanded')
+		self.copy_mega_btn['state'] = [DISABLED,NORMAL][not not self.tileset and (self.copy_mega_height.get() or self.copy_mega_walkable.get() or self.copy_mega_sight.get() or self.copy_mega_ramp.get())]
+		self.copy_tilegroup_btn['state'] = [DISABLED,NORMAL][not not self.tileset and (self.copy_tilegroup_flags.get() or self.copy_tilegroup_buildable.get() or self.copy_tilegroup_hasup.get() or self.copy_tilegroup_edges.get() or self.copy_tilegroup_unknown9.get() or self.copy_tilegroup_index.get() or self.copy_tilegroup_buildable2.get() or self.copy_tilegroup_hasdown.get() or self.copy_tilegroup_ground_height.get() or self.copy_tilegroup_unknown11.get())]
+		self.copy_doodadgroup_btn['state'] = [DISABLED,NORMAL][not not self.tileset and (self.copy_doodadgroup_doodad.get() or self.copy_doodadgroup_overlay.get() or self.copy_doodadgroup_buildable.get() or self.copy_doodadgroup_unknown1.get() or self.copy_doodadgroup_unknown6.get() or self.copy_doodadgroup_unknown8.get() or self.copy_doodadgroup_unknown12.get() or self.copy_doodadgroup_index.get() or self.copy_doodadgroup_ground_height.get() or self.copy_doodadgroup_group_string_id.get())]
 
 	def mark_edited(self, edited=True):
 		self.edited = edited
