@@ -2252,6 +2252,9 @@ class WeaponsTab(DATTab):
 		if 'Icons' in PALETTES and self.toplevel.cmdicon:
 			self.drawpreview()
 
+FORCETYPE_GROUND = 0
+FORCETYPE_AIR = 1
+
 class AIActionsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
@@ -2306,7 +2309,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		l.pack(fill=X, side=TOP)
 
 		l = LabelFrame(frame, text='AI Force Values:')
-		self.force_value_text = Text(l, state=DISABLED, height=9, font=('Courier New', -12, 'normal'))
+		self.force_value_text = Text(l, state=DISABLED, height=11, font=('Courier New', -12, 'normal'))
 		self.force_value_text.pack(fill=BOTH, padx=5,pady=5)
 		l.pack(fill=X, side=TOP)
 
@@ -2315,17 +2318,21 @@ class AIActionsUnitsTab(DATUnitsTab):
 		def show_arrow_cursor(*_):
 			self.force_value_text.config(cursor='arrow')
 		def view_ground_weapon(*_):
-			id = self.parent_tab.id
-			weapon_id = self.parent_tab.dat.get_value(id,'GroundWeapon')
+			_,weapon_id = self.force_weapon_id(FORCETYPE_GROUND)
 			self.toplevel.dattabs.display('Weapons')
 			self.toplevel.changeid(i=weapon_id)
 		def view_air_weapon(*_):
-			id = self.parent_tab.id
-			weapon_id = self.parent_tab.dat.get_value(id,'AirWeapon')
+			_,weapon_id = self.force_weapon_id(FORCETYPE_AIR)
 			self.toplevel.dattabs.display('Weapons')
 			self.toplevel.changeid(i=weapon_id)
 		def view_basic_unit(*_):
 			self.parent_tab.dattabs.display('Basic')
+		def view_weapon_override_unit(force_type):
+			unit_id,_ = self.force_weapon_id(force_type)
+			if unit_id == None:
+				return
+			self.parent_tab.dattabs.display('Basic')
+			self.toplevel.changeid(i=unit_id)
 
 		bold = ('Courier New', -12, 'bold')
 		self.force_value_text.tag_configure('force_type', underline=1)
@@ -2346,10 +2353,22 @@ class AIActionsUnitsTab(DATUnitsTab):
   - SCV/Drone/Probe: 0.25
   - Spider Mine/Interceptor/Scarab: 0
   - Firebat/Mutalisk/Zealot: 2
-  - Defiler/Infested Terran: 1/16
+  - Scourge/Infested Terran: 1/16
   - Reaver: 0.1
   - Everything Else: 1"""
   			),
+  			('ground_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_GROUND), \
+"""Weapons Override:
+  - Carrier/Gantrithor: Uses Interceptor weapons
+  - Reaver/Warbringer: Uses Scarab weapons
+  - Has a subunit: Uses subunit weapons"""
+			),
+  			('air_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_AIR), \
+"""Weapons Override:
+  - Carrier/Gantrithor: Uses Interceptor weapons
+  - Reaver/Warbringer: Uses Scarab weapons
+  - Has a subunit: Uses subunit weapons"""
+			)
 		)
 		self.force_value_text.tooltips = []
 		for tag,fg,bg,action,tooltip in values:
@@ -2372,7 +2391,26 @@ class AIActionsUnitsTab(DATUnitsTab):
 			'RightClickAction':self.rightclick,
 		}
 
-	def build_force_value(self, force_type, weapon_id):
+	def force_weapon_id(self, type):
+		id = self.parent_tab.id
+		override_unit_id = None
+		weapon_type = ['GroundWeapon','AirWeapon'][type]
+		weapon_id = self.parent_tab.dat.get_value(id,weapon_type)
+		if id == 72 or id == 82: # Carrier/Gantrithor
+			override_unit_id = 73 # Intercepter
+		elif id == 81 or id == 83: # Reaver/Warbringer
+			override_unit_id = 85 # Scarab
+		else:
+			subunit_id = self.parent_tab.dat.get_value(id,'Subunit1')
+			if subunit_id != 228:
+				override_unit_id = subunit_id
+		if override_unit_id != None:
+			weapon_id = self.parent_tab.dat.get_value(override_unit_id,weapon_type)
+		return (override_unit_id,weapon_id)
+
+	def build_force_value(self, type):
+		force_type = ['Ground','Air'][type]
+
 		id = self.parent_tab.id
 		reductions = {
 			7: 0.25, # SCV
@@ -2387,11 +2425,13 @@ class AIActionsUnitsTab(DATUnitsTab):
 			43: 2.0, # Mutalisk
 			65: 2.0, # Zealot
 
-			46: 1/16.0, # Defiler
+			47: 1/16.0, # Scourge
 			50: 1/16.0, # Infested Terran
 
 			83: 0.1, # Reaver
 		}
+
+		override_unit_id,weapon_id = self.force_weapon_id(type)
 
 		attack_range = 0
 		cooldown = 1
@@ -2405,7 +2445,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		hp = self.parent_tab.dat.get_value(id,'HitPoints')
 		shields = self.parent_tab.dat.get_value(id,'ShieldAmount') if self.parent_tab.dat.get_value(id,'ShieldEnable') else 0
 		reduction = reductions.get(id, 1.0)
-		force_value = floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) / 256)) * 7.58) * reduction
+		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) / 256)) * 7.58) * reduction)
 
 		def fstr(f):
 			return ('%f' % f).rstrip('0').rstrip('.')
@@ -2413,7 +2453,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, force_type, ('force_type',))
 		text.insert(END, '\n = ')
 		text.insert(END, fstr(force_value), ('force_value',))
-		text.insert(END, '\n = floor(sqrt(floor(floor(')
+		text.insert(END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type.lower()
 		text.insert(END, '%d' % attack_range, ('%s_range' % tp,))
 		text.insert(END, ' / ')
@@ -2434,15 +2474,19 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, '%d' % shields, ('shields',))
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
+		text.insert(END, ')')
+		if type == FORCETYPE_AIR and override_unit_id != None:
+			text.insert(END, '\n\nUsing weapons from Unit: ')
+			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
 
 	def build_force_values(self):
 		text = self.force_value_text
 		text["state"] = NORMAL
 		text.delete('1.0', END)
 		id = self.parent_tab.id
-		self.build_force_value('Ground', self.parent_tab.dat.get_value(id,'GroundWeapon'))
+		self.build_force_value(FORCETYPE_GROUND)
 		text.insert(END, '\n\n')
-		self.build_force_value('Air', self.parent_tab.dat.get_value(id,'AirWeapon'))
+		self.build_force_value(FORCETYPE_AIR)
 		text["state"] = DISABLED
 
 	def load_data(self):
