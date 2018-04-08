@@ -608,8 +608,9 @@ class DropDown(Frame):
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
 		self.listbox = Listbox(self, selectmode=SINGLE, font=couriernew, width=width, height=1, borderwidth=0, exportselection=1, activestyle=DOTBOX)
 		self.listbox.bind('<Button-1>', self.choose)
+		self.listbox.bind('<MouseWheel>', lambda *args: 'break')
 		bind = [
-			('<MouseWheel>', self.scroll),
+			# ('<MouseWheel>', self.scroll),
 			('<Home>', lambda a,i=0: self.move(a,i)),
 			('<End>', lambda a,i=END: self.move(a,i)),
 			('<Up>', lambda a,i=-1: self.move(a,i)),
@@ -618,9 +619,11 @@ class DropDown(Frame):
 			('<Right>', lambda a,i=-1: self.move(a,i)),
 			('<Prior>', lambda a,i=-10: self.move(a,i)),
 			('<Next>', lambda a,i=10: self.move(a,i)),
+			('<space>', self.choose)
 		]
 		for b in bind:
 			self.bind(*b)
+			self.listbox.bind(*b)
 		self.setentries(entries)
 		self.listbox.pack(side=LEFT, fill=X, expand=1)
 		self.listbox['state'] = state
@@ -664,12 +667,12 @@ class DropDown(Frame):
 		#self.listbox.select_set(num)
 		self.listbox.see(num)
 
-	def scroll(self, e):
-		if self.listbox['state'] == NORMAL:
-			if e.delta > 0:
-				self.move(None, -1)
-			elif self.variable.get() < self.listbox.size()-2:
-				self.move(None, 1)
+	# def scroll(self, e):
+	# 	if self.listbox['state'] == NORMAL:
+	# 		if e.delta > 0:
+	# 			self.move(None, -1)
+	# 		elif self.variable.get() < self.listbox.size()-2:
+	# 			self.move(None, 1)
 
 	def move(self, e, a):
 		if self.listbox['state'] == NORMAL:
