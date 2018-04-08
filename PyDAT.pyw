@@ -2327,6 +2327,12 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.toplevel.changeid(i=weapon_id)
 		def view_basic_unit(*_):
 			self.parent_tab.dattabs.display('Basic')
+		def view_weapon_override_unit(force_type):
+			unit_id,_ = self.force_weapon_id(force_type)
+			if unit_id == None:
+				return
+			self.parent_tab.dattabs.display('Basic')
+			self.toplevel.changeid(i=unit_id)
 
 		bold = ('Courier New', -12, 'bold')
 		self.force_value_text.tag_configure('force_type', underline=1)
@@ -2351,14 +2357,14 @@ class AIActionsUnitsTab(DATUnitsTab):
   - Reaver: 0.1
   - Everything Else: 1"""
   			),
-  			('ground_weapon_override', '#000000', '#F3F3F3', view_ground_weapon, \
-"""Weapon ID Override:
+  			('ground_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_GROUND), \
+"""Weapons Override:
   - Carrier/Gantrithor: Uses Interceptor weapons
   - Reaver/Warbringer: Uses Scarab weapons
   - Has a subunit: Uses subunit weapons"""
 			),
-  			('air_weapon_override', '#000000', '#F3F3F3', view_air_weapon, \
-"""Weapon ID Override:
+  			('air_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_AIR), \
+"""Weapons Override:
   - Carrier/Gantrithor: Uses Interceptor weapons
   - Reaver/Warbringer: Uses Scarab weapons
   - Has a subunit: Uses subunit weapons"""
@@ -2387,21 +2393,20 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 	def force_weapon_id(self, type):
 		id = self.parent_tab.id
-		weapon_override = False
+		override_unit_id = None
 		weapon_type = ['GroundWeapon','AirWeapon'][type]
 		weapon_id = self.parent_tab.dat.get_value(id,weapon_type)
-		if id == 72 or id == 82:
-			weapon_override = True
-			weapon_id = self.parent_tab.dat.get_value(73,weapon_type)
-		elif id == 81 or id == 83:
-			weapon_override = True
-			weapon_id = self.parent_tab.dat.get_value(85,weapon_type)
+		if id == 72 or id == 82: # Carrier/Gantrithor
+			override_unit_id = 73 # Intercepter
+		elif id == 81 or id == 83: # Reaver/Warbringer
+			override_unit_id = 85 # Scarab
 		else:
 			subunit_id = self.parent_tab.dat.get_value(id,'Subunit1')
 			if subunit_id != 228:
-				weapon_override = True
-				weapon_id = self.parent_tab.dat.get_value(subunit_id,weapon_type)
-		return (weapon_override,weapon_id)
+				override_unit_id = subunit_id
+		if override_unit_id != None:
+			weapon_id = self.parent_tab.dat.get_value(override_unit_id,weapon_type)
+		return (override_unit_id,weapon_id)
 
 	def build_force_value(self, type):
 		force_type = ['Ground','Air'][type]
@@ -2426,7 +2431,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			83: 0.1, # Reaver
 		}
 
-		weapon_override,weapon_id = self.force_weapon_id(type)
+		override_unit_id,weapon_id = self.force_weapon_id(type)
 
 		attack_range = 0
 		cooldown = 1
@@ -2470,9 +2475,9 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
 		text.insert(END, ')')
-		if weapon_override:
-			text.insert(END, '\n Weapon ID Override: ')
-			text.insert(END, '%d' % weapon_id, ('%s_weapon_override' % tp,))
+		if type == FORCETYPE_AIR and override_unit_id != None:
+			text.insert(END, '\n\nUsing weapons from Unit: ')
+			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
 
 	def build_force_values(self):
 		text = self.force_value_text
