@@ -454,59 +454,115 @@ class Tileset:
 					bmp.image[mini_y+row_y].extend(row)
 		bmp.save_file(path)
 
+	# options.groups_export_index
+	# options.groups_export_buildable
+	# options.groups_export_flags
+	# options.groups_export_buildable2
+	# options.groups_export_ground_height
+	# options.groups_export_edge_left
+	# options.groups_export_edge_up
+	# options.groups_export_edge_right
+	# options.groups_export_edge_down
+	# options.groups_export_unknown9
+	# options.groups_export_has_up
+	# options.groups_export_unknown11
+	# options.groups_export_has_down
+	# options.groups_export_unknown1
+	# options.groups_export_overlay_flags
+	# options.groups_export_overlay_id
+	# options.groups_export_unknown6
+	# options.groups_export_doodad_group_string
+	# options.groups_export_unknown8
+	# options.groups_export_dddata_id
+	# options.groups_export_doodad_width
+	# options.groups_export_doodad_height
+	# options.groups_export_unknown12
 	# options.megatiles_export_height
 	# options.megatiles_export_walkability
 	# options.megatiles_export_block_sight
 	# options.megatiles_export_ramp
-	def export_settings(self, tiletype, path, ids, options={}):
-		file = AtomicWriter(path, 'w')
+	def export_settings(self, tiletype, path_or_file, ids, options={}):
+		if isstr(path_or_file):
+			close = True
+			file = AtomicWriter(path_or_file, 'w')
+		else:
+			close = False
+			file = path_or_file
 		if tiletype == TILETYPE_GROUP and self.cv5_path != None:
 			file.write("# Exported from %s\n" % self.cv5_path)
 		elif tiletype == TILETYPE_MEGA and self.vf4_path != None:
 			file.write("# Exported from %s\n" % self.vf4_path)
+		groups_export_index = options.get('groups_export_index',True)
+		groups_export_buildable = options.get('groups_export_buildable',True)
+		groups_export_flags = options.get('groups_export_flags',True)
+		groups_export_buildable2 = options.get('groups_export_buildable2',True)
+		groups_export_ground_height = options.get('groups_export_ground_height',True)
+		groups_export_edge_left = options.get('groups_export_edge_left',True)
+		groups_export_edge_up = options.get('groups_export_edge_up',True)
+		groups_export_edge_right = options.get('groups_export_edge_right',True)
+		groups_export_edge_down = options.get('groups_export_edge_down',True)
+		groups_export_unknown9 = options.get('groups_export_unknown9',True)
+		groups_export_has_up = options.get('groups_export_has_up',True)
+		groups_export_unknown11 = options.get('groups_export_unknown11',True)
+		groups_export_has_down = options.get('groups_export_has_down',True)
+		groups_export_unknown1 = options.get('groups_export_unknown1',True)
+		groups_export_overlay_flags = options.get('groups_export_overlay_flags',True)
+		groups_export_overlay_id = options.get('groups_export_overlay_id',True)
+		groups_export_unknown6 = options.get('groups_export_unknown6',True)
+		groups_export_doodad_group_string = options.get('groups_export_doodad_group_string',True)
+		groups_export_unknown8 = options.get('groups_export_unknown8',True)
+		groups_export_dddata_id = options.get('groups_export_dddata_id',True)
+		groups_export_doodad_width = options.get('groups_export_doodad_width',True)
+		groups_export_doodad_height = options.get('groups_export_doodad_height',True)
+		groups_export_unknown12 = options.get('groups_export_unknown12',True)
 		megatiles_export_height = options.get('megatiles_export_height',True)
 		megatiles_export_walkability = options.get('megatiles_export_walkability',True)
 		megatiles_export_block_sight = options.get('megatiles_export_block_sight',True)
 		megatiles_export_ramp = options.get('megatiles_export_ramp',True)
 		for id in ids:
 			if tiletype == TILETYPE_GROUP:
-				data = tuple([id] + self.cv5.groups[id][:13])
+				data = self.cv5.groups[id][:13]
 				if id < 1024:
 					file.write("""\
 # Export of MegaTile Group %s
-TileGroup:
-	Index:             	%s
-	Buildable:         	%s
-	Flags:             	%s
-	Buildable2:        	%s
-	GroundHeight:      	%s
-	EdgeLeft:          	%s
-	EdgeUp:            	%s
-	EdgeRight:         	%s
-	EdgeDown:          	%s
-	Unknown9:          	%s
-	HasUp:             	%s
-	Unknown11:         	%s
-	HasDown:            %s
-""" % data)
+TileGroup:""" % id)
+					fields = (
+						('Index',groups_export_index),
+						('Buildable',groups_export_buildable),
+						('Flags',groups_export_flags),
+						('Buildable2',groups_export_buildable2),
+						('GroundHeight',groups_export_ground_height),
+						('EdgeLeft',groups_export_edge_left),
+						('EdgeUp',groups_export_edge_up),
+						('EdgeRight',groups_export_edge_right),
+						('EdgeDown',groups_export_edge_down),
+						('Unknown9',groups_export_unknown9),
+						('HasUp',groups_export_has_up),
+						('Unknown11',groups_export_unknown11),
+						('HasDown',groups_export_has_down),
+					)
 				else:
 					file.write("""\
 # Export of MegaTile Group %s
-DoodadGroup:
-	Index:             	%s
-	Buildable:         	%s
-	Unknown1:          	%s
-	OverlayFlags:      	%s
-	GroundHeight:      	%s
-	OverlayID:         	%s
-	Unknown6:          	%s
-	DoodadGroupString: 	%s
-	Unknown8:          	%s
-	DDDataID:          	%s
-	DoodadWidth:       	%s
-	DoodadHeight:      	%s
-	Unknown12:         	%s
-""" % data)
+DoodadGroup:""" % id)
+					fields = (
+						('Index',groups_export_index),
+						('Buildable',groups_export_buildable),
+						('Unknown1',groups_export_unknown1),
+						('OverlayFlags',groups_export_overlay_flags),
+						('GroundHeight',groups_export_ground_height),
+						('OverlayID',groups_export_overlay_id),
+						('Unknown6',groups_export_unknown6),
+						('DoodadGroupString',groups_export_doodad_group_string),
+						('Unknown8',groups_export_unknown8),
+						('DDDataID',groups_export_dddata_id),
+						('DoodadWidth',groups_export_doodad_width),
+						('DoodadHeight',groups_export_doodad_height),
+						('Unknown12',groups_export_unknown12),
+					)
+				for v,(name,show) in zip(data,fields):
+					if show:
+						file.write("\n\t%s:%s%s" % (name, ' ' * (22-len(name)), v))
 			elif tiletype == TILETYPE_MEGA:
 				def write_flags(id, name, mask_values, else_value):
 					file.write('\n\t%s:' % name)
@@ -535,15 +591,19 @@ MegaTile:""" % id)
 				for layer in layers:
 					write_flags(id, *layer)
 				file.write('\n\n')
-		file.close()
+		if close:
+			file.close()
 
 	# options.repeater (Func, default: setting_import_extras_ignore)
-	def import_settings(self, tiletype, path, ids, options={}):
-		try:
-			with open(path,'r') as settings_file:
-				lines = settings_file.readlines()
-		except:
-			raise PyMSError('Importing',"Could not load file '%s'" % path)
+	def import_settings(self, tiletype, path_or_text, ids, options={}):
+		if isstr(path_or_text):
+			lines = re.split('[\r\n]+', path_or_text)
+		else:
+			try:
+				with open(path,'r') as settings_file:
+					lines = settings_file.readlines()
+			except:
+				raise PyMSError('Importing',"Could not load file '%s'" % path)
 		importing = []
 		line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
 		group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')
