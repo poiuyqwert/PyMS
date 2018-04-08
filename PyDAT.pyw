@@ -2346,7 +2346,7 @@ class AIActionsUnitsTab(DATUnitsTab):
   - SCV/Drone/Probe: 0.25
   - Spider Mine/Interceptor/Scarab: 0
   - Firebat/Mutalisk/Zealot: 2
-  - Defiler/Infested Terran: 1/16
+  - Scourge/Infested Terran: 1/16
   - Reaver: 0.1
   - Everything Else: 1"""
   			),
@@ -2387,7 +2387,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			43: 2.0, # Mutalisk
 			65: 2.0, # Zealot
 
-			46: 1/16.0, # Defiler
+			47: 1/16.0, # Scourge
 			50: 1/16.0, # Infested Terran
 
 			83: 0.1, # Reaver
@@ -2405,7 +2405,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		hp = self.parent_tab.dat.get_value(id,'HitPoints')
 		shields = self.parent_tab.dat.get_value(id,'ShieldAmount') if self.parent_tab.dat.get_value(id,'ShieldEnable') else 0
 		reduction = reductions.get(id, 1.0)
-		force_value = floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) / 256)) * 7.58) * reduction
+		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) / 256)) * 7.58) * reduction)
 
 		def fstr(f):
 			return ('%f' % f).rstrip('0').rstrip('.')
@@ -2413,7 +2413,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, force_type, ('force_type',))
 		text.insert(END, '\n = ')
 		text.insert(END, fstr(force_value), ('force_value',))
-		text.insert(END, '\n = floor(sqrt(floor(floor(')
+		text.insert(END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type.lower()
 		text.insert(END, '%d' % attack_range, ('%s_range' % tp,))
 		text.insert(END, ' / ')
@@ -2434,6 +2434,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, '%d' % shields, ('shields',))
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
+		text.insert(END, ')')
 
 	def build_force_values(self):
 		text = self.force_value_text
