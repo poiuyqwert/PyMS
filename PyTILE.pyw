@@ -174,8 +174,8 @@ class MegaEditorView(Frame):
 		PYTILE_SETTINGS.mega_edit.height = self.height.get()
 
 	def draw_border(self, minitile_n, color='#FFFFFF'):
-		x = 2 + 24 * (minitile_n % 4)
-		y = 2 + 24 * (minitile_n / 4)
+		x = 3 + 24 * (minitile_n % 4)
+		y = 3 + 24 * (minitile_n / 4)
 		self.canvas.create_rectangle(x,y, x+21,y+21, outline=color, tags='mode')
 
 	def draw_selection(self):
@@ -304,7 +304,7 @@ class MegaEditorView(Frame):
 			return
 		for n,m in enumerate(self.delegate.tileset.vx4.graphics[self.megatile_id]):
 			self.canvas.images.append(self.delegate.gettile(m))
-			self.canvas.create_image(1 + 24 * (n % 4), 1 + 24 * (n / 4), anchor=NW, image=self.canvas.images[-1], tags='tile')
+			self.canvas.create_image(2 + 24 * (n % 4), 2 + 24 * (n / 4), anchor=NW, image=self.canvas.images[-1], tags='tile')
 
 	def draw(self):
 		self.draw_minitiles()
@@ -1529,13 +1529,55 @@ class PyTILE(Tk):
 		self.apply_all_exclude_nulls.set(PYTILE_SETTINGS.mega_edit.get('apply_all_exclude_nulls', True))
 
 		self.copy_mega_height = IntVar()
-		self.copy_mega_height.set(PYTILE_SETTINGS.copy_mega.get('height', True))
+		self.copy_mega_height.set(PYTILE_SETTINGS['copy'].mega.get('height', True))
 		self.copy_mega_walkable = IntVar()
-		self.copy_mega_walkable.set(PYTILE_SETTINGS.copy_mega.get('walkable', True))
+		self.copy_mega_walkable.set(PYTILE_SETTINGS['copy'].mega.get('walkable', True))
 		self.copy_mega_sight = IntVar()
-		self.copy_mega_sight.set(PYTILE_SETTINGS.copy_mega.get('sight', True))
+		self.copy_mega_sight.set(PYTILE_SETTINGS['copy'].mega.get('sight', True))
 		self.copy_mega_ramp = IntVar()
-		self.copy_mega_ramp.set(PYTILE_SETTINGS.copy_mega.get('ramp', True))
+		self.copy_mega_ramp.set(PYTILE_SETTINGS['copy'].mega.get('ramp', True))
+
+		self.copy_tilegroup_flags = IntVar()
+		self.copy_tilegroup_flags.set(PYTILE_SETTINGS['copy'].tilegroup.get('flags', True))
+		self.copy_tilegroup_buildable = IntVar()
+		self.copy_tilegroup_buildable.set(PYTILE_SETTINGS['copy'].tilegroup.get('buildable', True))
+		self.copy_tilegroup_hasup = IntVar()
+		self.copy_tilegroup_hasup.set(PYTILE_SETTINGS['copy'].tilegroup.get('hasup', True))
+		self.copy_tilegroup_edges = IntVar()
+		self.copy_tilegroup_edges.set(PYTILE_SETTINGS['copy'].tilegroup.get('edges', True))
+		self.copy_tilegroup_unknown9 = IntVar()
+		self.copy_tilegroup_unknown9.set(PYTILE_SETTINGS['copy'].tilegroup.get('unknown9', True))
+		self.copy_tilegroup_index = IntVar()
+		self.copy_tilegroup_index.set(PYTILE_SETTINGS['copy'].tilegroup.get('index', True))
+		self.copy_tilegroup_buildable2 = IntVar()
+		self.copy_tilegroup_buildable2.set(PYTILE_SETTINGS['copy'].tilegroup.get('buildable2', True))
+		self.copy_tilegroup_hasdown = IntVar()
+		self.copy_tilegroup_hasdown.set(PYTILE_SETTINGS['copy'].tilegroup.get('hasdown', True))
+		self.copy_tilegroup_ground_height = IntVar()
+		self.copy_tilegroup_ground_height.set(PYTILE_SETTINGS['copy'].tilegroup.get('ground_height', True))
+		self.copy_tilegroup_unknown11 = IntVar()
+		self.copy_tilegroup_unknown11.set(PYTILE_SETTINGS['copy'].tilegroup.get('unknown11', True))
+
+		self.copy_doodadgroup_doodad = IntVar()
+		self.copy_doodadgroup_doodad.set(PYTILE_SETTINGS['copy'].doodadgroup.get('doodad', True))
+		self.copy_doodadgroup_overlay = IntVar()
+		self.copy_doodadgroup_overlay.set(PYTILE_SETTINGS['copy'].doodadgroup.get('overlay', True))
+		self.copy_doodadgroup_buildable = IntVar()
+		self.copy_doodadgroup_buildable.set(PYTILE_SETTINGS['copy'].doodadgroup.get('buildable', True))
+		self.copy_doodadgroup_unknown1 = IntVar()
+		self.copy_doodadgroup_unknown1.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown1', True))
+		self.copy_doodadgroup_unknown6 = IntVar()
+		self.copy_doodadgroup_unknown6.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown6', True))
+		self.copy_doodadgroup_unknown8 = IntVar()
+		self.copy_doodadgroup_unknown8.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown8', True))
+		self.copy_doodadgroup_unknown12 = IntVar()
+		self.copy_doodadgroup_unknown12.set(PYTILE_SETTINGS['copy'].doodadgroup.get('unknown12', True))
+		self.copy_doodadgroup_index = IntVar()
+		self.copy_doodadgroup_index.set(PYTILE_SETTINGS['copy'].doodadgroup.get('index', True))
+		self.copy_doodadgroup_ground_height = IntVar()
+		self.copy_doodadgroup_ground_height.set(PYTILE_SETTINGS['copy'].doodadgroup.get('ground_height', True))
+		self.copy_doodadgroup_group_string_id = IntVar()
+		self.copy_doodadgroup_group_string_id.set(PYTILE_SETTINGS['copy'].doodadgroup.get('group_string_id', True))
 
 		self.findimage = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 
@@ -1695,12 +1737,12 @@ class PyTILE(Tk):
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
 		self.normal_editors.append(megatile_group)
 		copy_mega_group = LabelFrame(self.flow_view.content_view, text='Copy MegaTile Flags')
-		opts = [
+		opts = (
 			('Height', self.copy_mega_height),
 			('Walkable', self.copy_mega_walkable),
 			('Blocks Sight', self.copy_mega_sight),
 			('Ramp', self.copy_mega_ramp)
-		]
+		)
 		for n,(name,var) in enumerate(opts):
 			check = Checkbutton(copy_mega_group, text=name, variable=var, anchor=W, state=DISABLED)
 			check.grid(sticky=W)
@@ -1721,7 +1763,7 @@ class PyTILE(Tk):
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
 		btn = Button(copy_mega_group, text='Copy (Ctrl+Shift+C)', state=DISABLED, command=copy_mega)
-		self.bind('<Control-Shift-C>', copy_mega)
+		self.bind('<Control-Shift-c>', copy_mega)
 		btn.grid(sticky=E+W)
 		self.disable.append(btn)
 		def paste_mega(*args):
@@ -1738,10 +1780,95 @@ class PyTILE(Tk):
 			self.mega_editor.draw()
 			self.mark_edited()
 		btn = Button(copy_mega_group, text='Paste (Ctrl+Shift+V)', state=DISABLED, command=paste_mega)
-		self.bind('<Control-Shift-V>', paste_mega)
+		self.bind('<Control-Shift-v>', paste_mega)
 		btn.grid(sticky=E+W)
 		self.disable.append(btn)
 		self.normal_editors.append(copy_mega_group)
+		copy_tilegroup_group = LabelFrame(self.flow_view.content_view, text='Copy Group Settings')
+		opts = (
+			(
+				('Flags', self.copy_tilegroup_flags),
+				('Buildable', self.copy_tilegroup_buildable),
+				('Has Up', self.copy_tilegroup_hasup),
+				('Edges', self.copy_tilegroup_edges),
+				('Unknown 9', self.copy_tilegroup_unknown9),
+			),
+			(
+				('Index', self.copy_tilegroup_index),
+				('Buildable 2', self.copy_tilegroup_buildable2),
+				('Has Down', self.copy_tilegroup_hasdown),
+				('Ground Height', self.copy_tilegroup_ground_height),
+				('Unknown 11', self.copy_tilegroup_unknown11)
+			)
+		)
+		for c,rows in enumerate(opts):
+			for r,(name,var) in enumerate(rows):
+				check = Checkbutton(copy_tilegroup_group, text=name, variable=var, anchor=W, state=DISABLED)
+				check.grid(column=c,row=r, sticky=W)
+				self.disable.append(check)
+		def copy_tilegroup(*args):
+			if not self.tileset:
+				return
+			group = self.palette.selected[0]
+			options = {}
+			if group < 1024:
+				options = {
+					'groups_export_index': self.copy_tilegroup_index.get(),
+					'groups_export_buildable': self.copy_tilegroup_buildable.get(),
+					'groups_export_flags': self.copy_tilegroup_flags.get(),
+					'groups_export_buildable2': self.copy_tilegroup_buildable2.get(),
+					'groups_export_ground_height': self.copy_tilegroup_ground_height.get(),
+					'groups_export_edge_left': self.copy_tilegroup_edges.get(),
+					'groups_export_edge_up': self.copy_tilegroup_edges.get(),
+					'groups_export_edge_right': self.copy_tilegroup_edges.get(),
+					'groups_export_edge_down': self.copy_tilegroup_edges.get(),
+					'groups_export_unknown9': self.copy_tilegroup_unknown9.get(),
+					'groups_export_has_up': self.copy_tilegroup_hasup.get(),
+					'groups_export_unknown11': self.copy_tilegroup_unknown11.get(),
+					'groups_export_has_down': self.copy_tilegroup_hasdown.get(),
+				}
+			else:
+				options = {
+					'groups_export_index': self.copy_doodadgroup_index.get(),
+					'groups_export_buildable': self.copy_doodadgroup_buildable.get(),
+					'groups_export_unknown1': self.copy_doodadgroup_unknown1.get(),
+					'groups_export_overlay_flags': self.copy_doodadgroup_overlay.get(),
+					'groups_export_ground_height': self.copy_doodadgroup_ground_height.get(),
+					'groups_export_overlay_id': self.copy_doodadgroup_overlay.get(),
+					'groups_export_unknown6': self.copy_doodadgroup_unknown6.get(),
+					'groups_export_doodad_group_string': self.copy_doodadgroup_group_string_id.get(),
+					'groups_export_unknown8': self.copy_doodadgroup_unknown8.get(),
+					'groups_export_dddata_id': self.copy_doodadgroup_doodad.get(),
+					'groups_export_doodad_width': self.copy_doodadgroup_doodad.get(),
+					'groups_export_doodad_height': self.copy_doodadgroup_doodad.get(),
+					'groups_export_unknown12': self.copy_doodadgroup_unknown12.get(),
+				}
+			f = FFile()
+			self.tileset.export_settings(TILETYPE_GROUP, f, [group], options)
+			self.clipboard_clear()
+			self.clipboard_append(f.data)
+		btn = Button(copy_tilegroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
+		self.bind('<Control-Alt-c>', copy_tilegroup)
+		btn.grid(column=0,row=5, sticky=E+W)
+		self.disable.append(btn)
+		def paste_tilegroup(*args):
+			if not self.tileset:
+				return
+			group = self.palette.selected[0]
+			settings = self.clipboard_get()
+			try:
+				self.tileset.import_settings(TILETYPE_GROUP, settings, [group])
+			except PyMSError, e:
+				ErrorDialog(self, e)
+				return
+			self.megaload()
+			self.mark_edited()
+		btn = Button(copy_tilegroup_group, text='Paste (Ctrl+Alt+V)', state=DISABLED, command=paste_tilegroup)
+		self.bind('<Control-Alt-v>', paste_tilegroup)
+		btn.grid(column=1,row=5, sticky=E+W)
+		self.disable.append(btn)
+		self.normal_editors.append(copy_tilegroup_group)
+
 
 		self.doodad_editors = []
 
@@ -1791,6 +1918,37 @@ class PyTILE(Tk):
 		self.doodad_editors.append(group)
 		self.doodad_editors.append(megatile_group)
 		self.doodad_editors.append(copy_mega_group)
+		copy_doodadgroup_group = LabelFrame(self.flow_view.content_view, text='Copy Group Settings')
+		opts = (
+			(
+				('Doodad', self.copy_doodadgroup_doodad),
+				('Buildable', self.copy_doodadgroup_buildable),
+				('Index', self.copy_doodadgroup_index),
+				('Unknown 1', self.copy_doodadgroup_unknown1),
+				('Unknown 6', self.copy_doodadgroup_unknown6),
+			),
+			(
+				('Overlay', self.copy_doodadgroup_overlay),
+				('Ground Height', self.copy_doodadgroup_ground_height),
+				('Group String', self.copy_doodadgroup_group_string_id),
+				('Unknown 8', self.copy_doodadgroup_unknown8),
+				('Unknown 12', self.copy_doodadgroup_unknown12),
+			)
+		)
+		for c,rows in enumerate(opts):
+			for r,(name,var) in enumerate(rows):
+				check = Checkbutton(copy_doodadgroup_group, text=name, variable=var, anchor=W, state=DISABLED)
+				check.grid(column=c,row=r, sticky=W)
+				self.disable.append(check)
+		btn = Button(copy_doodadgroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
+		self.bind('<Control-Alt-c>', copy_tilegroup)
+		btn.grid(column=0,row=5, sticky=E+W)
+		self.disable.append(btn)
+		btn = Button(copy_doodadgroup_group, text='Paste (Ctrl+Alt+V)', state=DISABLED, command=paste_tilegroup)
+		self.bind('<Control-Alt-v>', paste_tilegroup)
+		btn.grid(column=1,row=5, sticky=E+W)
+		self.disable.append(btn)
+		self.doodad_editors.append(copy_doodadgroup_group)
 		self.flow_view.add_subviews(self.normal_editors, padx=2)
 
 		self.groupid.pack(fill=BOTH, expand=1, padx=5, pady=5)
@@ -2065,10 +2223,30 @@ class PyTILE(Tk):
 		if not self.unsaved():
 			PYTILE_SETTINGS.windows.save_window_size('main', self)
 			PYTILE_SETTINGS.mega_edit.apply_all_exclude_nulls = not not self.apply_all_exclude_nulls.get()
-			PYTILE_SETTINGS.copy_mega.height = not not self.copy_mega_height.get()
-			PYTILE_SETTINGS.copy_mega.walkable = not not self.copy_mega_walkable.get()
-			PYTILE_SETTINGS.copy_mega.sight = not not self.copy_mega_sight.get()
-			PYTILE_SETTINGS.copy_mega.ramp = not not self.copy_mega_ramp.get()
+			PYTILE_SETTINGS['copy'].mega.height = not not self.copy_mega_height.get()
+			PYTILE_SETTINGS['copy'].mega.walkable = not not self.copy_mega_walkable.get()
+			PYTILE_SETTINGS['copy'].mega.sight = not not self.copy_mega_sight.get()
+			PYTILE_SETTINGS['copy'].mega.ramp = not not self.copy_mega_ramp.get()
+			PYTILE_SETTINGS['copy'].tilegroup.flags = not not self.copy_tilegroup_flags.get()
+			PYTILE_SETTINGS['copy'].tilegroup.buildable = not not self.copy_tilegroup_buildable.get()
+			PYTILE_SETTINGS['copy'].tilegroup.hasup = not not self.copy_tilegroup_hasup.get()
+			PYTILE_SETTINGS['copy'].tilegroup.edges = not not self.copy_tilegroup_edges.get()
+			PYTILE_SETTINGS['copy'].tilegroup.unknown9 = not not self.copy_tilegroup_unknown9.get()
+			PYTILE_SETTINGS['copy'].tilegroup.index = not not self.copy_tilegroup_index.get()
+			PYTILE_SETTINGS['copy'].tilegroup.buildable2 = not not self.copy_tilegroup_buildable2.get()
+			PYTILE_SETTINGS['copy'].tilegroup.hasdown = not not self.copy_tilegroup_hasdown.get()
+			PYTILE_SETTINGS['copy'].tilegroup.ground_height = not not self.copy_tilegroup_ground_height.get()
+			PYTILE_SETTINGS['copy'].tilegroup.unknown11 = not not self.copy_tilegroup_unknown11.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.doodad = not not self.copy_doodadgroup_doodad.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.overlay = not not self.copy_doodadgroup_overlay.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.buildable = not not self.copy_doodadgroup_buildable.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.unknown1 = not not self.copy_doodadgroup_unknown1.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.unknown6 = not not self.copy_doodadgroup_unknown6.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.unknown8 = not not self.copy_doodadgroup_unknown8.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.unknown12 = not not self.copy_doodadgroup_unknown12.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.index = not not self.copy_doodadgroup_index.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.ground_height = not not self.copy_doodadgroup_ground_height.get()
+			PYTILE_SETTINGS['copy'].doodadgroup.group_string_id = not not self.copy_doodadgroup_group_string_id.get()
 			PYTILE_SETTINGS.save()
 			self.destroy()
 
