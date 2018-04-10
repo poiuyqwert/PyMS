@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import TRG, GOT
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -43,6 +44,8 @@ class PyGOT(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyGOT.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyGOT', VERSIONS['PyGOT'])
+		ga.track(GAScreen('PyGOT'))
 		setup_trace(self, 'PyGOT')
 		self.resizable(False, False)
 

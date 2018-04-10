@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SFmpq import *
 from Libs import AIBIN, TBL, DAT
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -2258,6 +2259,8 @@ class PyAI(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyAI.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyAI', VERSIONS['PyAI'])
+		ga.track(GAScreen('PyAI'))
 		setup_trace(self, 'PyAI')
 
 		self.aiscript = None

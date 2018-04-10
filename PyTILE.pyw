@@ -7,6 +7,7 @@ from Libs.FlowView import FlowView
 from Libs.MaskCheckbutton import MaskCheckbutton
 from Libs.MaskedRadiobutton import MaskedRadiobutton
 from Libs.ScrolledListbox import ScrolledListbox
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -1451,6 +1452,8 @@ class PyTILE(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTILE.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyTILE', VERSIONS['PyTILE'])
+		ga.track(GAScreen('PyTILE'))
 		setup_trace(self, 'PyTILE')
 
 		self.stat_txt = TBL.TBL()

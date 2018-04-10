@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import LO,GRP,PAL
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -503,6 +504,8 @@ class PyLO(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyLO.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyLO', VERSIONS['PyLO'])
+		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace(self, 'PyLO')
 

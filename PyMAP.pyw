@@ -4,6 +4,7 @@ from Libs.trace import setup_trace
 from Libs.SFmpq import *
 from Libs import TBL, AIBIN, DAT, Tilesets, GRP, PAL, PCX
 from Libs.CHK import *
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -2096,6 +2097,8 @@ class PyMAP(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTILE.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyMAP', VERSIONS['PyMAP'])
+		ga.track(GAScreen('PyMAP'))
 		setup_trace(self, 'PyMAP')
 
 		self.action_manager = ActionManager()

@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SpecialLists import ReportList
 from Libs.SFmpq import *
+from Libs.analytics import *
 
 # from Libs import TRG, GOT
 
@@ -548,6 +549,8 @@ class PyMPQ(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyMPQ.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyMPQ', VERSIONS['PyMPQ'])
+		ga.track(GAScreen('PyMPQ'))
 		setup_trace(self, 'PyMPQ')
 
 		self.file = None

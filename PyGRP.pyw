@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import BMP, GRP, PAL
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -210,6 +211,8 @@ class PyGRP(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyGRP.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyGRP', VERSIONS['PyGRP'])
+		ga.track(GAScreen('PyGRP'))
 		setup_trace(self, 'PyGRP')
 		self.resizable(False, False)
 
