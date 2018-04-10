@@ -4,6 +4,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 ## Table of Contents
 1. [Installation](https://github.com/poiuyqwert/PyMS#installation)
 1. [Issues](https://github.com/poiuyqwert/PyMS#issues)
+1. [Analytics](https://github.com/poiuyqwert/PyMS#analytics)
 1. [Programs](https://github.com/poiuyqwert/PyMS#programs)
    * [PyAI](https://github.com/poiuyqwert/PyMS#PyAI)
    * [PyBIN](https://github.com/poiuyqwert/PyMS#PyBIN)
