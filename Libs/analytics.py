@@ -2,7 +2,7 @@
 from gapy.ga import *
 from setutils import *
 
-ga.set_tracking_id(PYMS_SETTINGS.analytics.get('tid', 'UA-42320973-3', autosave=False))
+ga.set_tracking_id(PYMS_SETTINGS.analytics.get('tid', 'UA-42320973-2', autosave=False))
 PYMS_SETTINGS.analytics.cid = ga.set_client_id(PYMS_SETTINGS.analytics.get('cid', autosave=False))
 # ga.set_application('PyGRP', '4.0.0')
 ga.Custom.register(1, 'PYMS_VERSION')
