@@ -7,6 +7,7 @@ from Libs.TBL import TBL,decompile_string,compile_string
 from Libs.PAL import Palette
 from Libs.GRP import CacheGRP, frame_to_photo, rle_outline, OUTLINE_SELF
 from Libs.IScriptBIN import IScriptBIN
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -3705,6 +3706,8 @@ class PyDAT(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyDAT.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyDAT', VERSIONS['PyDAT'])
+		ga.track(GAScreen('PyDAT'))
 		setup_trace(self, 'PyDAT')
 
 		self.stat_txt = None

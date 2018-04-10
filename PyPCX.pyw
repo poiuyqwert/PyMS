@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import PCX,BMP,GRP,PAL
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -26,6 +27,8 @@ class PyPCX(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyPCX.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyPCX', VERSIONS['PyPCX'])
+		ga.track(GAScreen('PyPCX'))
 		setup_trace(self, 'PyPCX')
 
 		self.pcx = None

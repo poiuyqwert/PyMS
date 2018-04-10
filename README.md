@@ -38,6 +38,28 @@ Please include as much information as possible. If you are reporting an issue, p
 * The OS you are running on
 * The error message or crash logs. If the program crashed without an error dialog, you can check in the Libs\Logs\ folder for the programs log file
 
+## Analytics
+At the moment PyMS only tracks the launch of PyMS programs, anonamously and with no sensitive information sent. An example of the data sent in these analytics calls:
+
+```
+{
+  "an": "PyGRP",
+  "av": "4.0.0",
+  "cd": "PyGRP",
+  "cd1": "1.2.3",
+  "cd2": "2.7.10",
+  "cd3": "darwin",
+  "cd4": "10.12.6",
+  "cd5": 64,
+  "cid": "bd32dccd-13be-4027-86eb-8a3fc11c61e7",
+  "t": "screenview",
+  "tid": "UA-########-#",
+  "v": "1"
+}
+```
+
+Even though the analytics is anonamous and has no sensitive information, you can still disable analytics by editing "Settings/PyMS.txt", and setting the "allow" key under "analytics" to be False.
+
 ## Programs
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.
 

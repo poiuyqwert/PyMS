@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SpecialLists import TreeList
 from Libs import DialogBIN, FNT, PCX, SMK, GRP
+from Libs.analytics import *
 
 from Tkinter import *
 from PIL import Image as PILImage
@@ -1332,6 +1333,8 @@ class PyBIN(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyGOT.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyBIN', VERSIONS['PyBIN'])
+		ga.track(GAScreen('PyBIN'))
 		setup_trace(self, 'PyBIN')
 
 		self.bin = None

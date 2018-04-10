@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import TRG,TBL,AIBIN
+from Libs.analytics import *
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
 	# trg.dynamic_actions[2] = ['MySetLocationFromDeaths',[TRG.new_location,TRG.action_tunit]]
@@ -735,6 +736,8 @@ class PyTRG(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTRG.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyTRG', VERSIONS['PyTRG'])
+		ga.track(GAScreen('PyTRG'))
 		setup_trace(self, 'PyTRG')
 
 		self.trg = None

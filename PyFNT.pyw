@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.FNT import *
 from Libs import BMP,PCX
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -89,6 +90,8 @@ class PyFNT(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyFNT.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyFNT', VERSIONS['PyFNT'])
+		ga.track(GAScreen('PyFNT'))
 		setup_trace(self, 'PyFNT')
 		self.resizable(False, False)
 

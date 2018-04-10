@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import TBL,FNT,PCX,GRP,PAL
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -291,6 +292,8 @@ class PyTBL(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTBL.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyTBL', VERSIONS['PyTBL'])
+		ga.track(GAScreen('PyTBL'))
 		setup_trace(self, 'PyTBL')
 
 		self.tbl = None

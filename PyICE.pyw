@@ -3,6 +3,7 @@ from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs.SpecialLists import TreeList
 from Libs import IScriptBIN, AIBIN, TBL, DAT, PAL, GRP
+from Libs.analytics import *
 
 #import sys
 #sys.stdout = open('stdieo.txt','w')
@@ -2650,6 +2651,8 @@ class PyICE(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyICE.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyICE', VERSIONS['PyICE'])
+		ga.track(GAScreen('PyICE'))
 		setup_trace(self, 'PyICE')
 
 		self.file = None

@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import SPK, BMP, PAL, GRP
+from Libs.analytics import *
 from Tkinter import *
 from tkMessageBox import *
 from PIL import Image as PILImage
@@ -490,6 +491,8 @@ class PySPK(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyGOT.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PySPK', VERSIONS['PySPK'])
+		ga.track(GAScreen('PySPK'))
 		setup_trace(self, 'PySPK')
 
 		self.minsize(870, 547)

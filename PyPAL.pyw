@@ -2,6 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import PAL,BMP
+from Libs.analytics import *
 
 from Tkinter import *
 from tkMessageBox import *
@@ -33,6 +34,8 @@ class PyPAL(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyPAL.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
+		ga.set_application('PyPAL', VERSIONS['PyPAL'])
+		ga.track(GAScreen('PyPAL'))
 		setup_trace(self, 'PyPAL')
 		self.resizable(False, False)
 
