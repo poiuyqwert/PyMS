@@ -29,13 +29,14 @@ def os_version():
 	return platform.version()
 
 def build_user_agent():
-	user_agent = 'Python%d/%s' % (os_bits(), platform.python_version())
+	bits = os_bits()
+	user_agent = 'Python%d/%s' % (bits, platform.python_version())
 	system = os_name()
 	version = os_version()
 	if system == 'darwin':
 		user_agent += ' (Macintosh; Intel Mac OS X %s)' % version.replace('.','_')
 	elif system == 'windows':
-		user_agent += ' (Windows NT %s%s)' % (version, '; WOW64' if is64bit else '')
+		user_agent += ' (Windows NT %s%s)' % (version, '; WOW64' if bits == 64 else '')
 	else:
 		user_agent += ' (%s %s)' % (system, version)
 	return user_agent
