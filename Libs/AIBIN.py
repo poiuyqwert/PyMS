@@ -1131,11 +1131,11 @@ class AIBIN:
 								newai = re.match('\\A(.+)\\(\s*(.+)\s*,\s*(.+)\s*,\s*(\w+)\s*\\):\\s*(?:\\{(.+)\\})?\\Z', line)
 								if not newai:
 									raise PyMSError('Interpreting','Invalid syntax, expected a new script header',n,line, warnings=warnings)
-								id = newai.group(1)
+								id = newai.group(1).encode('ascii', 'ignore')
 								if id in default_ais:
 									id = default_ais[id]
 								elif len(id) != 4:
-									raise PyMSError('Interpreting',"Invalid AI ID '%s' (must be 4 characeters long, or one of the keywords: Protoss, BWProtoss, Terran, BWTerran, Zerg, BWZerg)" % id,n,line, warnings=warnings)
+									raise PyMSError('Interpreting',"Invalid AI ID '%s' (must be 4 ascii characeters long, or one of the keywords: Protoss, BWProtoss, Terran, BWTerran, Zerg, BWZerg)" % id,n,line, warnings=warnings)
 								elif re.match('[,\x00:()]', id):
 									raise PyMSError('Interpreting',"Invalid AI ID '%s', it can not contain a null byte, or the characters: , ( ) :" % id,n,line, warnings=warnings)
 								try:
