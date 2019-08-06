@@ -653,7 +653,10 @@ class WidgetSettings(PyMSDialog):
 			SMKSettings(self, self.node.widget.smk)
 
 	def add_smk(self):
-		pass
+		smk = DialogBIN.BINSMK()
+		self.parent.bin.smks.append(smk)
+		self.node.widget.smk = smk
+		SMKSettings(self, smk)
 
 	def update_smks(self):
 		self.load_property_smk()

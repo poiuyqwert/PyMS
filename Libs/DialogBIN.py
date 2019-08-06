@@ -506,7 +506,7 @@ class BINWidget(object):
 		return self.type in (BINWidget.TYPE_BUTTON, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_DEFAULT_BTN)
 
 	def display_text(self):
-		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE:
+		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE and self.type != BINWidget.TYPE_HTML:
 			if self.is_button() and self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:
@@ -612,7 +612,7 @@ class DialogBIN:
 				widget.smk = None
 			if widget.smk:
 				if not widget.smk in smk_map:
-					load_smk(smk_offset)
+					load_smk(widget.smk)
 				widget.smk = smk_map[widget.smk]
 			else:
 				widget.smk = None
