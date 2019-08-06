@@ -386,7 +386,12 @@ DIALOG_FRAME_BR = 8
 
 class BINWidget(object):
 	BYTE_SIZE = 86
+	STRUCT =            '<L6H4LH5L4HLL4HLL'
+	BYTE_SIZE_REMASTERED = 88
+	STRUCT_REMASTERED = '<L6H4L2H5L4HLL4HLL'
+
 	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
+	ATTR_NAMES_REMASTERED = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','scr_unknown1','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
 
 	FLAG_UNK1 = 0x00000001
 	FLAG_DISABLED = 0x00000002
@@ -438,10 +443,12 @@ class BINWidget(object):
 	TYPE_LISTBOX = 12
 	TYPE_COMBOBOX = 13
 	TYPE_HIGHLIGHT_BTN = 14
+	# Remastered
+	TYPE_HTML = 15
 
 	INTERFACE_ID = 65535
 
-	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button']
+	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button','HTML']
 
 	def __init__(self, ctrl_type=TYPE_DIALOG):
 		self.x1 = 0
@@ -456,6 +463,7 @@ class BINWidget(object):
 		self.unknown2 = 0
 		self.identifier = BINWidget.INTERFACE_ID
 		BINWidget.INTERFACE_ID -= 1
+		self.scr_unknown1 = 0
 		self.type = ctrl_type
 		self.unknown3 = 0
 		self.unknown4 = 0
@@ -494,9 +502,12 @@ class BINWidget(object):
 		box[3] = box[1] + self.responsive_y2
 		return box
 
+	def is_button(self):
+		return self.type in (BINWidget.TYPE_BUTTON, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_DEFAULT_BTN)
+
 	def display_text(self):
-		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE:
-			if self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
+		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE and self.type != BINWidget.TYPE_HTML:
+			if self.is_button() and self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:
 				return self.string
@@ -534,7 +545,8 @@ class BINSMK(object):
 		self.widget.remove(widget)
 
 class DialogBIN:
-	def __init__(self):
+	def __init__(self, remastered=False):
+		self.remastered = remastered
 		dialog = BINWidget()
 		dialog.x2 = 639
 		dialog.y2 = 479
@@ -574,29 +586,37 @@ class DialogBIN:
 			attrs = BINSMK.ATTR_NAMES
 			for attr,value in zip(attrs,smk_info):
 				setattr(smk, attr, value)
-		def load_widget(offset):
-			widget_info = list(struct.unpack('<L6H4LH5L4HLL4HLL',data[offset:offset+BINWidget.BYTE_SIZE]))
-			string_offset = widget_info[8]
-			if string_offset:
-				end_offset = data.find('\0', string_offset)
-				widget_info[8] = data[string_offset:end_offset]
-			else:
-				widget_info[8] = ''
+		def load_widget(offset, remastered):
+			widget_struct = BINWidget.STRUCT_REMASTERED if remastered else BINWidget.STRUCT
+			widget_size = BINWidget.BYTE_SIZE_REMASTERED if remastered else BINWidget.BYTE_SIZE
+			attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
+			widget_max = BINWidget.TYPE_HTML if remastered else BINWidget.TYPE_HIGHLIGHT_BTN
+
+			widget_info = list(struct.unpack(widget_struct,data[offset:offset+widget_size]))
 			next_widget = widget_info[0]
-			smk_offset = widget_info[22]
-			if widget_info[11] == BINWidget.TYPE_DIALOG:
-				next_widget = smk_offset
-				smk_offset = 0
-			if smk_offset:
-				if not smk_offset in smk_map:
-					load_smk(smk_offset)
-				widget_info[22] = smk_map[smk_offset]
-			else:
-				widget_info[22] = None
 			widget = BINWidget()
-			attrs = BINWidget.ATTR_NAMES
 			for attr,value in zip(attrs,widget_info[1:]):
 				setattr(widget, attr, value)
+
+			if widget.type > widget_max:
+				raise PyMSError('Load', "Invalid widget type '%s'" % widget_info[11])
+
+			if widget.string:
+				end_offset = data.find('\0', widget.string)
+				widget.string = data[widget.string:end_offset]
+			else:
+				widget.string = ''
+
+			if widget.type == BINWidget.TYPE_DIALOG:
+				next_widget = widget.smk
+				widget.smk = None
+			if widget.smk:
+				if not widget.smk in smk_map:
+					load_smk(widget.smk)
+				widget.smk = smk_map[widget.smk]
+			else:
+				widget.smk = None
+
 			if widget.type == BINWidget.TYPE_DIALOG:
 				widget.x2 = widget.x1 + widget.responsive_x1
 				widget.y2 = widget.y1 + widget.responsive_y1
@@ -605,15 +625,23 @@ class DialogBIN:
 				widget.y1 += widgets[0].y1
 				widget.x2 += widgets[0].x1
 				widget.y2 += widgets[0].y1
+
 			widgets.append(widget)
 			if next_widget:
-				load_widget(next_widget)
-		load_widget(0)
+				load_widget(next_widget, remastered)
+		try:
+			load_widget(0, False)
+		except:
+			widgets = []
+			smk_map = {}
+			smks = []
+			load_widget(0, True)
+			self.remastered = True
 		self.widgets = widgets
 		self.smks = smks
 
-	def save_file(self, file):
-		data = self.save_data()
+	def save_file(self, file, remastered=None):
+		data = self.save_data(remastered)
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
@@ -621,10 +649,15 @@ class DialogBIN:
 		f.write(data)
 		f.close()
 
-	def save_data(self):
+	def save_data(self, remastered=None):
+		remastered = (self.remastered or self.remastered_required()) if remastered == None else remastered
+		widget_struct = BINWidget.STRUCT_REMASTERED if remastered else BINWidget.STRUCT
+		widget_size = BINWidget.BYTE_SIZE_REMASTERED if remastered else BINWidget.BYTE_SIZE
+		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
+
 		smk_offsets = {}
 		string_offsets = {}
-		smk_offset = len(self.widgets) * BINWidget.BYTE_SIZE
+		smk_offset = len(self.widgets) * widget_size
 		offsets = [0, smk_offset, smk_offset + len(self.smks) * BINSMK.BYTE_SIZE]
 		results = ['','','']
 		def save_string(string):
@@ -659,7 +692,6 @@ class DialogBIN:
 				widget_info.append(0)
 			else:
 				widget_info.append(next_offset)
-			attrs = BINWidget.ATTR_NAMES
 			for attr in attrs:
 				value = getattr(widget, attr)
 				if attr == 'string':
@@ -686,11 +718,11 @@ class DialogBIN:
 				if value == None:
 					value = 0
 				widget_info.append(value)
-			offsets[0] += BINWidget.BYTE_SIZE
-			results[0] += struct.pack('<L6H4LH5L4HLL4HLL', *widget_info)
+			offsets[0] += widget_size
+			results[0] += struct.pack(widget_struct, *widget_info)
 		last_widget = self.widgets[-1]
 		for widget in self.widgets:
-			next_offset = offsets[0] + BINWidget.BYTE_SIZE
+			next_offset = offsets[0] + widget_size
 			if widget == last_widget:
 				next_offset = 0
 			save_widget(widget, next_offset)
@@ -706,6 +738,7 @@ class DialogBIN:
 		smks = {}
 		backfill_smks = {}
 		working = None
+		remastered = False
 		def get_smk(smk_id):
 			smk = None
 			if smk_id in smks:
@@ -744,7 +777,7 @@ class DialogBIN:
 			attr = m.group(1)
 			value = m.group(2)
 			if isinstance(working, BINWidget):
-				if not attr in BINWidget.ATTR_NAMES:
+				if not attr in BINWidget.ATTR_NAMES_REMASTERED:
 					raise PyMSError('Interpreting',"Invalid Widget attribute name '%s'" % attr,n,line)
 				if attr == 'smk':
 					if value == 'None':
@@ -765,7 +798,9 @@ class DialogBIN:
 					value = flags(value, 27)
 				else:
 					# todo: try catch
-					value = int(value)
+					value = int(value)	
+				if attr in BINWidget.ATTR_NAMES_REMASTERED and not attr in BINWidget.ATTR_NAMES:
+					remastered = True
 			else:
 				if not attr in BINSMK.ATTR_NAMES:
 					raise PyMSError('Interpreting',"Invalid SMK attribute name '%s'" % attr,n,line)
@@ -797,8 +832,9 @@ class DialogBIN:
 			raise PyMSError('Interpreting','No dialog found.')
 		self.widgets = widgets
 		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
+		self.remastered = remastered
 
-	def decompile_file(self, file):
+	def decompile_file(self, file, remastered=None):
 		data = self.decompile_data()
 		try:
 			f = AtomicWriter(file, 'wb')
@@ -807,7 +843,8 @@ class DialogBIN:
 		f.write(data)
 		f.close()
 
-	def decompile_data(self):
+	def decompile_data(self, remastered=None):
+		remastered = (self.remastered or self.remastered_required()) if remastered == None else remastered
 		result = ''
 		attrs = BINSMK.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
@@ -824,7 +861,7 @@ class DialogBIN:
 					value = flags(value, 5)
 				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
 			result += '\n'
-		attrs = BINWidget.ATTR_NAMES
+		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
 		for widget in self.widgets:
 			result += 'Widget:\n'
@@ -845,6 +882,12 @@ class DialogBIN:
 				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
 			result += '\n'
 		return result
+
+	def remastered_required(self):
+		for widget in self.widgets:
+			if widget.type >= BINWidget.TYPE_HTML:
+				return True
+		return False
 
 # if __name__ == '__main__':
 # 	dialogbin = DialogBIN()

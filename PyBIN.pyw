@@ -264,6 +264,8 @@ class WidgetSettings(PyMSDialog):
 		self.flag_no_click_snd = BooleanVar()
 		self.flag_unk10 = BooleanVar()
 
+		self.scr_unknown1 = IntegerVar(range=[0,65535])
+
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))
 
 	def widgetize(self):
@@ -431,6 +433,13 @@ class WidgetSettings(PyMSDialog):
 		Checkbutton(typeframe, text='Default', variable=self.flag_default_btn).grid(row=0,column=0, sticky=W)
 		Checkbutton(typeframe, text='Cancel', variable=self.flag_cancel_btn).grid(row=1,column=0, sticky=W)
 		typeframe.grid(row=0,column=2, padx=2,pady=2, sticky=N)
+		scrframe = LabelFrame(otherframe, text='SC:R')
+		f = Frame(scrframe)
+		Label(f, text='Unknown 1:').pack(side=LEFT)
+		self.scr_unknown1_entry = Entry(f, textvariable=self.scr_unknown1, font=couriernew, width=5, state=NORMAL if self.parent.scr_enabled.get() else DISABLED)
+		self.scr_unknown1_entry.pack(side=LEFT)
+		f.grid(row=0,column=3, columnspan=2, padx=5, sticky=E)
+		scrframe.grid(row=0,column=3, padx=2,pady=2, sticky=N)
 		otherframe.grid(row=3,column=0, columnspan=2, padx=3,pady=3, sticky=EW)
 
 		miscframe = LabelFrame(self, text='Misc.')
@@ -465,6 +474,7 @@ class WidgetSettings(PyMSDialog):
 			isbtn = self.node.widget.type in (DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN)
 			if not isbtn:
 				self.advanced_widgets.extend((typeframe,soundframe,smkframe))
+		self.advanced_widgets.append(scrframe)
 		self.advanced_widgets.append(miscframe)
 
 		bottom = Frame(self)
@@ -530,6 +540,7 @@ class WidgetSettings(PyMSDialog):
 		self.height.set(self.node.widget.height, True)
 		self.string.set(TBL.decompile_string(self.node.widget.string))
 		self.identifier.set(self.node.widget.identifier)
+		self.scr_unknown1.set(self.node.widget.scr_unknown1)
 		self.load_property_smk()
 		self.text_offset_x.set(self.node.widget.text_offset_x)
 		self.text_offset_y.set(self.node.widget.text_offset_y)
@@ -585,6 +596,7 @@ class WidgetSettings(PyMSDialog):
 		self.node.widget.height = self.height.get()
 		self.node.widget.string = TBL.compile_string(self.string.get())
 		self.node.widget.identifier = self.identifier.get()
+		self.node.widget.scr_unknown1 = self.scr_unknown1.get()
 		self.save_property_smk()
 		self.node.widget.text_offset_x = self.text_offset_x.get()
 		self.node.widget.text_offset_y = self.text_offset_y.get()
@@ -641,7 +653,10 @@ class WidgetSettings(PyMSDialog):
 			SMKSettings(self, self.node.widget.smk)
 
 	def add_smk(self):
-		pass
+		smk = DialogBIN.BINSMK()
+		self.parent.bin.smks.append(smk)
+		self.node.widget.smk = smk
+		SMKSettings(self, smk)
 
 	def update_smks(self):
 		self.load_property_smk()
@@ -1439,6 +1454,7 @@ class PyBIN(Tk):
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_LISTBOX], DialogBIN.BINWidget.TYPE_LISTBOX),
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_COMBOBOX], DialogBIN.BINWidget.TYPE_COMBOBOX),
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN], DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN),
+			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_HTML] + ' (SC:R)', DialogBIN.BINWidget.TYPE_HTML),
 			None,
 			('Group',-1),
 		)
@@ -1448,9 +1464,16 @@ class PyBIN(Tk):
 			else:
 				self.type_menu.add_separator()
 
+		self.scr_enabled = IntVar()
+
 		frame = Frame(self)
 		leftframe = Frame(frame)
-		Label(leftframe, text='Widgets:', anchor=W).grid(row=0, column=0, sticky=EW)
+		titleframe = Frame(leftframe)
+		Label(titleframe, text='Widgets:', anchor=W).pack(side=LEFT)
+		self.scr_check = Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=lambda: self.scr_toggled(), state=DISABLED)
+		self.scr_check.tooltip = Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
+		self.scr_check.pack(side=RIGHT, padx=(0,20))
+		titleframe.grid(row=0, column=0, sticky=EW)
 		self.widgetTree = TreeList(leftframe)
 		self.widgetTree.grid(row=1, column=0, padx=1, pady=1, sticky=NSEW)
 		self.widgetTree.bind('<Button-1>', self.list_select)
@@ -1624,12 +1647,15 @@ class PyBIN(Tk):
 			self.tick_alarm = None
 			self.after_cancel(cancel)
 
+	def scr_toggled(self):
+		self.bin.remastered = self.scr_enabled.get()
+
 	def toggle_preview_settings(self):
 		show = not self.show_preview_settings.get()
 		self.show_preview_settings.set(show)
 		if show:
 			self.buttons['arrow'].config(image=self.buttons['arrow'].image)
-			self.preview_settings_frame.grid()
+			self.preview_settings_frame.grid(sticky=EW)
 		else:
 			self.buttons['arrow'].config(image=self.buttons['arrow'].image_up)
 			self.preview_settings_frame.grid_remove()
@@ -1663,7 +1689,10 @@ class PyBIN(Tk):
 				widget.responsive_y1 = 0
 				widget.responsive_x2 = widget.width-1
 				widget.responsive_y2 = widget.height-1
+			self.bin.widgets.append(widget)
 			node = WidgetNode(self, widget)
+			if ctrl_type >= DialogBIN.BINWidget.TYPE_HTML:
+				self.scr_enabled.set(True)
 		parent.add_child(node, index)
 		self.reload_list()
 		self.reload_canvas()
@@ -1673,6 +1702,9 @@ class PyBIN(Tk):
 		self.selected_node.remove_display()
 		if self.selected_node.widget:
 			self.bin.widgets.remove(self.selected_node.widget)
+			if self.selected_node.widget.type >= DialogBIN.BINWidget.TYPE_HTML and not self.bin.remastered:
+				self.scr_enabled.set(False)
+			self.action_states()
 		self.selected_node.remove_from_parent()
 		self.selected_node = None
 		self.update_selection_box()
@@ -1898,6 +1930,7 @@ class PyBIN(Tk):
 			index = self.selected_node.parent.children.index(self.selected_node)
 		self.buttons['up']['state'] = [DISABLED,NORMAL][(canmove and index > 0)]
 		self.buttons['down']['state'] = [DISABLED,NORMAL][(canmove and index < len(self.selected_node.parent.children)-1)]
+		self.scr_check['state'] = [NORMAL,DISABLED][not self.bin or self.bin.remastered_required()]
 
 	def edit(self, n=None):
 		self.edited = True
@@ -2286,6 +2319,7 @@ class PyBIN(Tk):
 			self.reload_canvas()
 			self.title('PyBIN %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.scr_enabled.set(self.bin.remastered)
 			self.status.set('Load Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
@@ -2304,10 +2338,20 @@ class PyBIN(Tk):
 			except PyMSError, e:
 				ErrorDialog(self, e)
 				return
+			if not self.tfont:
+				self.load_tfont()
+			if not self.dlggrp:
+				self.load_dlggrp()
+			if not self.tilegrp:
+				self.load_tilegrp()
 			self.clear()
 			self.bin = dbin
+			self.setup_nodes()
+			self.reload_list()
+			self.reload_canvas()
 			self.title('PyBIN %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.scr_enabled.set(self.bin.remastered)
 			self.status.set('Import Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
@@ -2357,6 +2401,7 @@ class PyBIN(Tk):
 			self.title('PyBIN %s' % LONG_VERSION)
 			self.status.set('Load or create a Dialog BIN.')
 			self.editstatus['state'] = DISABLED
+			self.scr_enabled.set(False)
 			self.action_states()
 
 	def register(self, e=None):
