@@ -68,7 +68,7 @@ class SMKSettings(PyMSDialog):
 
 		overlayframe = LabelFrame(self, text='Overlay SMK')
 		smkframe = Frame(overlayframe)
-		self.smks_dropdown = DropDown(smkframe, self.overlay_smk, ['None'], stay_right=True)
+		self.smks_dropdown = DropDown(smkframe, self.overlay_smk, ['None'], stay_right=False)
 		self.smks_dropdown.pack(side=LEFT, fill=X, expand=1)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
 		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
@@ -121,7 +121,10 @@ class SMKSettings(PyMSDialog):
 	def load_property_smk(self):
 		smks = ['None']
 		for smk in self.widget.parent.bin.smks:
-			smks.append(smk.filename)
+			name = smk.filename
+			if smk.overlay_smk:
+				name += " (Overlay: %s)" % smk.overlay_smk.filename
+			smks.append(name)
 		self.smks_dropdown.setentries(smks)
 
 		self.overlay_smk.set(0 if not self.smk.overlay_smk else self.widget.parent.bin.smks.index(self.smk.overlay_smk)+1)
@@ -406,7 +409,7 @@ class WidgetSettings(PyMSDialog):
 		stringframe.grid(row=1,column=0, columnspan=2, padx=5,pady=0, ipadx=2,ipady=2, sticky=NSEW)
 
 		smkframe = LabelFrame(self, text='SMK')
-		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=True)
+		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=False)
 		self.smks_dropdown.grid(row=0, column=0, padx=2,pady=2, sticky=EW)
 		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','edit.gif'))
 		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
@@ -528,7 +531,10 @@ class WidgetSettings(PyMSDialog):
 	def load_property_smk(self):
 		smks = ['None']
 		for smk in self.parent.bin.smks:
-			smks.append(smk.filename)
+			name = smk.filename
+			if smk.overlay_smk:
+				name += " (Overlay: %s)" % smk.overlay_smk.filename
+			smks.append(name)
 		self.smks_dropdown.setentries(smks)
 		self.smk.set(0 if not self.node.widget.smk else self.parent.bin.smks.index(self.node.widget.smk)+1)
 	def load_properties(self):
