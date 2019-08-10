@@ -391,7 +391,7 @@ class BINWidget(object):
 	STRUCT_REMASTERED = '<L6H4L2H5L4HLL4HLL'
 
 	ATTR_NAMES = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
-	ATTR_NAMES_REMASTERED = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','identifier','scr_unknown1','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
+	ATTR_NAMES_REMASTERED = ('x1','y1','x2','y2','width','height','unknown1','string','flags','unknown2','scr_unknown1','identifier','type','unknown3','unknown4','unknown5','unknown6','responsive_x1','responsive_y1','responsive_x2','responsive_y2','unknown7','smk','text_offset_x','text_offset_y','responsive_width','responsive_height','unknown8','unknown9')
 
 	FLAG_UNK1 = 0x00000001
 	FLAG_DISABLED = 0x00000002
