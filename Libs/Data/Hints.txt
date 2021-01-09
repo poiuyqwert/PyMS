@@ -2,6 +2,8 @@
 #####BASIC TAB#####
 UnitHP=Unit Hit Points (HP) or "life" amount. Values over "9999" will be accepted in-game, but they will not be displayed.
 
+UnitHPFraction=Fractional portion of HP (0-255). Instead of using decimals, SC uses a whole number and a fractional number. To represent "1.5" HP, you would use 1 for the HP, and 127 for the fraction.
+
 UnitShieldEnable=Enables Shields for the unit. Works for any unit, not only Protoss. Terran and zerg buildings with shields do NOT acquire full shield capacity during construction.
 
 UnitSP=Amount of Shield Points the unit has. Shields are reduced before the unit's Hit Points are affected.

@@ -1,6 +1,18 @@
 from utils import *
 from fileutils import *
-import TBL,DAT
+import TBL
+from FileFormats.DAT.UnitsDAT import UnitsDAT
+from FileFormats.DAT.WeaponsDAT import WeaponsDAT
+from FileFormats.DAT.FlingyDAT import FlingyDAT
+from FileFormats.DAT.SpritesDAT import SpritesDAT
+from FileFormats.DAT.ImagesDAT import ImagesDAT
+from FileFormats.DAT.UpgradesDAT import UpgradesDAT
+from FileFormats.DAT.TechDAT import TechDAT
+from FileFormats.DAT.SoundsDAT import SoundsDAT
+from FileFormats.DAT.PortraitDAT import PortraitDAT
+from FileFormats.DAT.CampaignDAT import CampaignDAT
+from FileFormats.DAT.OrdersDAT import OrdersDAT
+from FileFormats.DAT.DataCache import DAT_DATA_CACHE
 
 import struct, re, os
 try:
@@ -237,13 +249,13 @@ def type_imageid(stage, bin, data=None):
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DAT.DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(data,'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DAT_DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(data,'GRPFile')-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > DAT.ImagesDAT.count:
+		if 0 > v or v > ImagesDAT.FORMAT.entries:
 			raise
 	except:
-		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,DAT.ImagesDAT.count))
+		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,ImagesDAT.FORMAT.entries))
 	return v
 
 def type_spriteid(stage, bin, data=None):
@@ -251,13 +263,13 @@ def type_spriteid(stage, bin, data=None):
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DAT.DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(data,'ImageFile'),'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DAT_DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(data,'ImageFile'),'GRPFile')-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > DAT.SpritesDAT.count:
+		if 0 > v or v > SpritesDAT.FORMAT.entries:
 			raise
 	except:
-		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,DAT.SpritesDAT.count))
+		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,SpritesDAT.FORMAT.entries))
 	return v
 
 def type_flingy(stage, bin, data=None):
@@ -265,13 +277,13 @@ def type_flingy(stage, bin, data=None):
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DAT.DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(bin.flingydat.get_value(data,'Sprite'),'ImageFile'),'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DAT_DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(bin.flingydat.get_value(data,'Sprite'),'ImageFile'),'GRPFile')-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > DAT.FlingyDAT.count:
+		if 0 > v or v > FlingyDAT.FORMAT.entries:
 			raise
 	except:
-		raise PyMSError('Parameter',"Invalid FlingyID value '%s', it must be a number in the range 0 to %s" % (data,DAT.FlingyDAT.count))
+		raise PyMSError('Parameter',"Invalid FlingyID value '%s', it must be a number in the range 0 to %s" % (data,FlingyDAT.FORMAT.entries))
 	return v
 
 def type_overlayid(stage, bin, data=None):
@@ -315,10 +327,10 @@ def type_soundid(stage, bin, data=None):
 		return (str(data), TBL.decompile_string(bin.sfxdatatbl.strings[bin.soundsdat.get_value(data,'SoundFile')-1][:-1]))
 	try:
 		v = int(data)
-		if 0 > v or v > DAT.SoundsDAT.count:
+		if 0 > v or v > SoundsDAT.FORMAT.entries:
 			raise
 	except:
-		raise PyMSError('Parameter',"Invalid SoundID value '%s', it must be a number in the range 0 to %s" % (data,DAT.SoundsDAT.count))
+		raise PyMSError('Parameter',"Invalid SoundID value '%s', it must be a number in the range 0 to %s" % (data,SoundsDAT.FORMAT.entries))
 	return v
 
 def type_sounds(stage, bin, data=None):
@@ -368,13 +380,13 @@ def type_weaponid(stage, bin, data=None):
 	if data == None:
 		return 1
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DAT.DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_value(data,'Label')-1][:-1])))
+		return (str(data),'%s (%s)' % (DAT_DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_value(data,'Label')-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > DAT.WeaponsDAT.count:
+		if 0 > v or v > WeaponsDAT.FORMAT.entries:
 			raise
 	except:
-		raise PyMSError('Parameter',"Invalid WeaponID value '%s', it must be a number in the range 0 to %s" % (data,DAT.WeaponsDAT.count))
+		raise PyMSError('Parameter',"Invalid WeaponID value '%s', it must be a number in the range 0 to %s" % (data,WeaponsDAT.FORMAT.entries))
 	return v
 
 def type_speed(stage, bin, data=None):
@@ -561,30 +573,30 @@ class IScriptBIN:
 		else:
 			self.tbl = TBL.TBL()
 			self.tbl.load_file(stat_txt)
-		if isinstance(weaponsdat, DAT.WeaponsDAT):
+		if isinstance(weaponsdat, WeaponsDAT):
 			self.weaponsdat = weaponsdat
 		else:
-			self.weaponsdat = DAT.WeaponsDAT(self.tbl)
+			self.weaponsdat = WeaponsDAT()
 			self.weaponsdat.load_file(weaponsdat)
-		if isinstance(flingydat, DAT.FlingyDAT):
+		if isinstance(flingydat, FlingyDAT):
 			self.flingydat = flingydat
 		else:
-			self.flingydat = DAT.FlingyDAT(self.tbl)
+			self.flingydat = FlingyDAT()
 			self.flingydat.load_file(flingydat)
-		if isinstance(imagesdat, DAT.ImagesDAT):
+		if isinstance(imagesdat, ImagesDAT):
 			self.imagesdat = imagesdat
 		else:
-			self.imagesdat = DAT.ImagesDAT(self.tbl)
+			self.imagesdat = ImagesDAT()
 			self.imagesdat.load_file(imagesdat)
-		if isinstance(spritesdat, DAT.SpritesDAT):
+		if isinstance(spritesdat, SpritesDAT):
 			self.spritesdat = spritesdat
 		else:
-			self.spritesdat = DAT.SpritesDAT()
+			self.spritesdat = SpritesDAT()
 			self.spritesdat.load_file(spritesdat)
-		if isinstance(soundsdat, DAT.SoundsDAT):
+		if isinstance(soundsdat, SoundsDAT):
 			self.soundsdat = soundsdat
 		else:
-			self.soundsdat = DAT.SoundsDAT()
+			self.soundsdat = SoundsDAT()
 			self.soundsdat.load_file(soundsdat)
 		if isinstance(imagestbl, TBL.TBL):
 			self.imagestbl = imagestbl
@@ -1010,8 +1022,8 @@ class IScriptBIN:
 		def decompile_offset(o,code,local,id):
 			if id in self.extrainfo:
 				entry = self.extrainfo[id].replace(' ','_')
-			elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
-				entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
+			elif id < len(DAT_DATA_CACHE['IscriptIDList.txt']):
+				entry = DAT_DATA_CACHE['IscriptIDList.txt'][id]
 			else:
 				entry = 'Unnamed Custom Entry'
 			if not o in completed:
@@ -1085,12 +1097,12 @@ class IScriptBIN:
 				return (code,local,curcmd)
 			return (code,local,-1)
 		usedby = {}
-		for i in range(DAT.ImagesDAT.count):
+		for i in range(ImagesDAT.FORMAT.entries):
 			id = self.imagesdat.get_value(i, 'IscriptID')
 			if id in ids:
 				if not id in usedby:
 					usedby[id] = '# This header is used by images.dat entries:\n'
-				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DAT.DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_value(i,'GRPFile')-1][:-1]))
+				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DAT_DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_value(i,'GRPFile')-1][:-1]))
 		invalid = []
 		unknownid = 0
 		for id in ids:
@@ -1112,12 +1124,12 @@ class IScriptBIN:
 				else:
 					if id in self.extrainfo:
 						entry = self.extrainfo[id].replace(' ','_')
-					elif id < len(DAT.DATA_CACHE['IscriptIDList.txt']):
-						entry = DAT.DATA_CACHE['IscriptIDList.txt'][id]
+					elif id < len(DAT_DATA_CACHE['IscriptIDList.txt']):
+						entry = DAT_DATA_CACHE['IscriptIDList.txt'][id]
 					else:
 						entry = 'Unnamed Custom Entry'
 					local += setlabel(o,local,entry)
-					label = labels[o]#'%s%s' % (DAT.DATA_CACHE['IscriptIDList.txt'][id],l[0])
+					label = labels[o]#'%s%s' % (DAT_DATA_CACHE['IscriptIDList.txt'][id],l[0])
 				f.write('%s%s	%s\n' % (l[0],' ' * (longheader-len(l[0])),label))
 				if o != None:
 					code,local,curcmd = decompile_offset(o,code,local,id)

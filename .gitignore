@@ -3,3 +3,4 @@ stdeo.txt
 Libs/WORKING/*
 Libs/Logs/*
 test.py
+**/__pycache__
