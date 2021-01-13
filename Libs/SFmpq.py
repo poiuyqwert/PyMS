@@ -16,7 +16,7 @@ except:
 		_SFmpq = windll.SFmpq64
 	except:
 		try:
-			_SFmpq = CDLL("SFmpq.dylib", RTLD_GLOBAL)
+			_SFmpq = CDLL(os.path.join(SFmpq_DIR, "SFmpq.dylib"), RTLD_GLOBAL)
 		except:
 			FOLDER = True
 os.chdir(cwd)
