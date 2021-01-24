@@ -42,7 +42,7 @@ def main():
 			path = os.path.dirname(args[0])
 			if not path:
 				path = os.path.abspath('')
-			dat = [UnitsDAT,WeaponsDAT,FlingyDAT,SpritesDAT,ImagesDAT,UpgradesDAT,TechDAT,SoundsDAT,PortraitDAT,CampaignDAT,OrdersDAT][opt.type]()
+			dat = [UnitsDAT,WeaponsDAT,FlingyDAT,SpritesDAT,ImagesDAT,UpgradesDAT,TechDAT,SoundsDAT,PortraitsDAT,CampaignDAT,OrdersDAT][opt.type]()
 			if len(args) == 1:
 				if opt.convert:
 					ext = 'txt'

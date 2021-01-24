@@ -15,12 +15,6 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 	def __init__(self):
 		self.idle = Portrait()
 		self.talking = Portrait()
-		# self.idle_portrait_file = 0
-		# self.talking_portrait_file = 0
-		# self.idle_smk_change = 0
-		# self.talking_smk_change = 0
-		# self.idle_unknown = 0
-		# self.talking_unknown = 0
 
 	def load_values(self, values):
 		self.idle.portrait_file,\
@@ -30,13 +24,6 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 		self.idle.unknown,\
 		self.talking.unknown\
 			= values
-		# self.idle_portrait_file,\
-		# self.talking_portrait_file,\
-		# self.idle_smk_change,\
-		# self.talking_smk_change,\
-		# self.idle_unknown,\
-		# self.talking_unknown\
-		#	= values
 
 	def save_values(self):
 		return (
@@ -46,12 +33,6 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 			self.talking.smk_change,
 			self.idle.unknown,
 			self.talking.unknown
-			# self.idle_portrait_file,
-			# self.talking_portrait_file,
-			# self.idle_smk_change,
-			# self.talking_smk_change,
-			# self.idle_unknown,
-			# self.talking_unknown
 		)
 
 	def expand(self):
@@ -63,12 +44,6 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 		self.talking.smk_change = self.talking.smk_change or 0
 		self.idle.unknown = self.idle.unknown or 0
 		self.talking.unknown = self.talking.unknown or 0
-		# self.idle_portrait_file = self.idle_portrait_file or 0
-		# self.talking_portrait_file = self.talking_portrait_file or 0
-		# self.idle_smk_change = self.idle_smk_change or 0
-		# self.talking_smk_change = self.talking_smk_change or 0
-		# self.idle_unknown = self.idle_unknown or 0
-		# self.talking_unknown = self.talking_unknown or 0
 
 	def export_text(self, id):
 		return """Portraits(%d):
@@ -85,12 +60,6 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 			self.talking.portrait_file,
 			self.talking.smk_change,
 			self.talking.unknown
-			# self.idle_portrait_file,
-			# self.idle_smk_change,
-			# self.idle_unknown,
-			# self.talking_portrait_file,
-			# self.talking_smk_change,
-			# self.talking_unknown
 		)
 
 	def export_json(self, id, dump=True, indent=4):
@@ -101,24 +70,18 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 		idle["portrait_file"] = self.idle.portrait_file
 		idle["smk_change"] = self.idle.smk_change
 		idle["unknown"] = self.idle.unknown
-		# idle["portrait_file"] = self.idle_portrait_file
-		# idle["smk_change"] = self.idle_smk_change
-		# idle["unknown"] = self.idle_unknown
 		data["idle"] = idle
 		talking = OrderedDict()
 		talking["portrait_file"] = self.talking.portrait_file
 		talking["smk_change"] = self.talking.smk_change
 		talking["unknown"] = self.talking.unknown
-		# talking["portrait_file"] = self.talking_portrait_file
-		# talking["smk_change"] = self.talking_smk_change
-		# talking["unknown"] = self.talking_unknown
 		data["talking"] = talking
 		if not dump:
 			return data
 		return json.dumps(data, indent=indent)
 
 # portdata.dat file handler
-class PortraitDAT(AbstractDAT.AbstractDAT):
+class PortraitsDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 110,
 			"properties": [

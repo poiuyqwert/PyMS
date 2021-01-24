@@ -1,26 +1,26 @@
 
-from UnitsDAT import UnitsDAT
-from WeaponsDAT import WeaponsDAT
-from FlingyDAT import FlingyDAT
-from SpritesDAT import SpritesDAT
-from ImagesDAT import ImagesDAT
-from UpgradesDAT import UpgradesDAT
-from TechDAT import TechDAT
-from SoundsDAT import SoundsDAT
-from PortraitDAT import PortraitDAT
-from CampaignDAT import CampaignDAT
-from OrdersDAT import OrdersDAT
+from UnitsDAT import UnitsDAT, Unit
+from WeaponsDAT import WeaponsDAT, Weapon
+from FlingyDAT import FlingyDAT, Flingy
+from SpritesDAT import SpritesDAT, Sprite
+from ImagesDAT import ImagesDAT, Image
+from UpgradesDAT import UpgradesDAT, Upgrade
+from TechDAT import TechDAT, Technology
+from SoundsDAT import SoundsDAT, Sound
+from PortraitsDAT import PortraitsDAT, Portrait
+from CampaignDAT import CampaignDAT, Map
+from OrdersDAT import OrdersDAT, Order
 
 __all__ = [
-	'UnitsDAT',
-	'WeaponsDAT',
-	'FlingyDAT',
-	'SpritesDAT',
-	'ImagesDAT',
-	'UpgradesDAT',
-	'TechDAT',
-	'SoundsDAT',
-	'PortraitDAT',
-	'CampaignDAT',
-	'OrdersDAT',
+	'UnitsDAT', 'Unit',
+	'WeaponsDAT', 'Weapon',
+	'FlingyDAT', 'Flingy',
+	'SpritesDAT', 'Sprite',
+	'ImagesDAT', 'Image',
+	'UpgradesDAT', 'Upgrade',
+	'TechDAT', 'Technology',
+	'SoundsDAT', 'Sound',
+	'PortraitsDAT', 'Portrait',
+	'CampaignDAT', 'Map',
+	'OrdersDAT', 'Order'
 ]

@@ -80,20 +80,10 @@ class FlingyTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['Graphics']),
-			('weapons.dat', ['Graphics']),
+			('units.dat', lambda entry: (entry.graphics, )),
+			('weapons.dat', lambda entry: (entry.graphics, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'Sprite':self.spriteentry,
-			'Speed':self.topspeed,
-			'Acceleration':self.acceleration,
-			'HaltDistance':self.haltdistance,
-			'TurnRadius':self.turnradius,
-			'Unused':self.unused,
-			'MovementControl':self.movecontrol,
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.flingy
@@ -123,3 +113,35 @@ class FlingyTab(DATTab):
 			elif len(s.split('.')[1]) > 4:
 				s = s[:s.index('.')+5]
 			self.halt.set(s)
+
+	def load_entry(self, entry):
+		self.spriteentry.set(entry.sprite)
+		self.topspeed.set(entry.speed)
+		self.acceleration.set(entry.acceleration)
+		self.haltdistance.set(entry.halt_distance)
+		self.turnradius.set(entry.turn_radius)
+		self.unused.set(entry.iscript_mask)
+		self.movecontrol.set(entry.movement_control)
+
+	def save_entry(self, entry):
+		if self.spriteentry.get() != entry.sprite:
+			entry.sprite = self.spriteentry.get()
+			self.edited = True
+		if self.topspeed.get() != entry.speed:
+			entry.speed = self.topspeed.get()
+			self.edited = True
+		if self.acceleration.get() != entry.acceleration:
+			entry.acceleration = self.acceleration.get()
+			self.edited = True
+		if self.haltdistance.get() != entry.halt_distance:
+			entry.halt_distance = self.haltdistance.get()
+			self.edited = True
+		if self.turnradius.get() != entry.turn_radius:
+			entry.turn_radius = self.turnradius.get()
+			self.edited = True
+		if self.unused.get() != entry.iscript_mask:
+			entry.iscript_mask = self.unused.get()
+			self.edited = True
+		if self.movecontrol.get() != entry.movement_control:
+			entry.movement_control = self.movecontrol.get()
+			self.edited = True

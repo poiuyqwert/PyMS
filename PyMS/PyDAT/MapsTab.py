@@ -34,8 +34,6 @@ class MapsTab(DATTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-		self.values = {'MapFile':self.missionentry}
-
 	def files_updated(self):
 		self.dat = self.toplevel.campaigns
 		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
@@ -43,3 +41,11 @@ class MapsTab(DATTab):
 		self.missionentry.range[1] = len(mapdata)
 		self.missions.setentries(mapdata + ['None'])
 		self.missionentry.editvalue()
+
+	def load_entry(self, entry):
+		self.missionentry.set(entry.map_file)
+
+	def save_entry(self, entry):
+		if self.missionentry.get() != entry.map_file:
+			entry.map_file = self.missionentry.get()
+			self.edited = True

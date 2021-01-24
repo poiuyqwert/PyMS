@@ -2,6 +2,7 @@
 from ..Utilities.utils import fit
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Tooltip import Tooltip
+from ..Utilities.DataCache import DATA_CACHE
 
 from Tkinter import Checkbutton
 
@@ -24,7 +25,7 @@ class DATUnitsTab(NotebookTab):
 
 	def jump(self, type, id, o=0):
 		i = id.get() + o
-		if i < len(DAT_DATA_CACHE['%s.txt' % type]) - 1:
+		if i < len(DATA_CACHE['%s.txt' % type]) - 1:
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 

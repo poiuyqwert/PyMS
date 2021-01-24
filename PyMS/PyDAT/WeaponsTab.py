@@ -1,7 +1,10 @@
 
 from DATTab import DATTab
 
+from ..FileFormats.DAT.WeaponsDAT import Weapon
 from ..FileFormats.TBL import decompile_string
+from ..FileFormats.GRP import frame_to_photo
+
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
@@ -268,37 +271,10 @@ class WeaponsTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['GroundWeapon','AirWeapon']),
-			('orders.dat', ['Targeting']),
+			('units.dat', lambda entry: (entry.ground_weapon, entry.air_weapon)),
+			('orders.dat', lambda entry: (entry.weapon_targeting, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'Label':self.label,
-			'Graphics':self.graphicsentry,
-			'Unused':self.unused,
-			'TargetFlags':[self.air, self.ground, self.mechanical, self.organic, self.nonbuilding, self.nonrobotic, self.terrain, self.orgormech, self.own],
-			'MinimumRange':self.minrange,
-			'MaximumRange':self.maxrange,
-			'DamageUpgrade':self.upgrade,
-			'WeaponType':self.type,
-			'WeaponBehavior':self.behaviour,
-			'RemoveAfter':self.removeafter,
-			'ExplosionType':self.explosion,
-			'InnerSplashRange':self.innerradius,
-			'MediumSplashRange':self.mediumradius,
-			'OuterSplashRange':self.outerradius,
-			'DamageAmount':self.amount,
-			'DamageBonus':self.bonus,
-			'WeaponCooldown':self.cooldown,
-			'DamageFactor':self.factor,
-			'AttackAngle':self.attackangle,
-			'LaunchSpin':self.launchspin,
-			'ForwardOffset':self.xoffset,
-			'UpwardOffset':self.yoffset,
-			'TargetErrorMessage':self.errormsg,
-			'Icon':self.iconentry
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.weapons
@@ -332,16 +308,146 @@ class WeaponsTab(DATTab):
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
+		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
 			i = self.iconentry.get()
-			if not i in ICON_CACHE:
-				image = frame_to_photo(PALETTES['Icons'], self.toplevel.cmdicon, i, True)
-				ICON_CACHE[i] = image
+			if not i in self.toplevel.data_context.icon_cache:
+				image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
+				self.toplevel.data_context.icon_cache[i] = image
 			else:
-				image = ICON_CACHE[i]
+				image = self.toplevel.data_context.icon_cache[i]
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
+	def load_entry(self, entry):
+		self.label.set(entry.label)
+		self.graphicsentry.set(entry.graphics)
+		self.unused.set(entry.unused_technology)
+
+		target_flags_fields = (
+			(self.air, Weapon.TargetFlag.air),
+			(self.ground, Weapon.TargetFlag.ground),
+			(self.mechanical, Weapon.TargetFlag.mechanical),
+			(self.organic, Weapon.TargetFlag.organic),
+			(self.nonbuilding, Weapon.TargetFlag.non_building),
+			(self.nonrobotic, Weapon.TargetFlag.non_robotic),
+			(self.terrain, Weapon.TargetFlag.terrain),
+			(self.orgormech, Weapon.TargetFlag.organic_or_mechanical),
+			(self.own, Weapon.TargetFlag.own )
+		)
+		for (variable, flag) in target_flags_fields:
+			variable.set(entry.target_flags & flag == flag)
+
+		self.minrange.set(entry.minimum_range)
+		self.maxrange.set(entry.maximum_range)
+		self.upgrade.set(entry.damage_upgrade)
+		self.type.set(entry.weapon_type)
+		self.behaviour.set(entry.weapon_behavior)
+		self.removeafter.set(entry.remove_after)
+		self.explosion.set(entry.explosion_type)
+		self.innerradius.set(entry.inner_splash_range)
+		self.mediumradius.set(entry.medium_splash_range)
+		self.outerradius.set(entry.outer_splash_range)
+		self.amount.set(entry.damage_amount)
+		self.bonus.set(entry.damage_bonus)
+		self.cooldown.set(entry.weapon_cooldown)
+		self.factor.set(entry.damage_factor)
+		self.attackangle.set(entry.attack_angle)
+		self.launchspin.set(entry.launch_spin)
+		self.xoffset.set(entry.forward_offset)
+		self.yoffset.set(entry.upward_offset)
+		self.errormsg.set(entry.target_error_message)
+		self.iconentry.set(entry.icon)
+
+		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
 			self.drawpreview()
+
+	def save_entry(self, entry):
+		if self.label.get() != entry.label:
+			entry.label = self.label.get()
+			self.edited = True
+		if self.graphicsentry.get() != entry.graphics:
+			entry.graphics = self.graphicsentry.get()
+			self.edited = True
+		if self.unused.get() != entry.unused_technology:
+			entry.unused_technology = self.unused.get()
+			self.edited = True
+
+		target_flags = entry.target_flags & ~Weapon.TargetFlag.ALL_FLAGS
+		target_flags_fields = (
+			(self.air, Weapon.TargetFlag.air),
+			(self.ground, Weapon.TargetFlag.ground),
+			(self.mechanical, Weapon.TargetFlag.mechanical),
+			(self.organic, Weapon.TargetFlag.organic),
+			(self.nonbuilding, Weapon.TargetFlag.non_building),
+			(self.nonrobotic, Weapon.TargetFlag.non_robotic),
+			(self.terrain, Weapon.TargetFlag.terrain),
+			(self.orgormech, Weapon.TargetFlag.organic_or_mechanical),
+			(self.own, Weapon.TargetFlag.own )
+		)
+		for (variable, flag) in target_flags_fields:
+			if variable.get():
+				target_flags |= flag
+		if target_flags != entry.target_flags:
+			entry.target_flags = target_flags
+			self.edited = True
+
+		if self.minrange.get() != entry.minimum_range:
+			entry.minimum_range = self.minrange.get()
+			self.edited = True
+		if self.maxrange.get() != entry.maximum_range:
+			entry.maximum_range = self.maxrange.get()
+			self.edited = True
+		if self.upgrade.get() != entry.damage_upgrade:
+			entry.damage_upgrade = self.upgrade.get()
+			self.edited = True
+		if self.type.get() != entry.weapon_type:
+			entry.weapon_type = self.type.get()
+			self.edited = True
+		if self.behaviour.get() != entry.weapon_behavior:
+			entry.weapon_behavior = self.behaviour.get()
+			self.edited = True
+		if self.removeafter.get() != entry.remove_after:
+			entry.remove_after = self.removeafter.get()
+			self.edited = True
+		if self.explosion.get() != entry.explosion_type:
+			entry.explosion_type = self.explosion.get()
+			self.edited = True
+		if self.innerradius.get() != entry.inner_splash_range:
+			entry.inner_splash_range = self.innerradius.get()
+			self.edited = True
+		if self.mediumradius.get() != entry.medium_splash_range:
+			entry.medium_splash_range = self.mediumradius.get()
+			self.edited = True
+		if self.outerradius.get() != entry.outer_splash_range:
+			entry.outer_splash_range = self.outerradius.get()
+			self.edited = True
+		if self.amount.get() != entry.damage_amount:
+			entry.damage_amount = self.amount.get()
+			self.edited = True
+		if self.bonus.get() != entry.damage_bonus:
+			entry.damage_bonus = self.bonus.get()
+			self.edited = True
+		if self.cooldown.get() != entry.weapon_cooldown:
+			entry.weapon_cooldown = self.cooldown.get()
+			self.edited = True
+		if self.factor.get() != entry.damage_factor:
+			entry.damage_factor = self.factor.get()
+			self.edited = True
+		if self.attackangle.get() != entry.attack_angle:
+			entry.attack_angle = self.attackangle.get()
+			self.edited = True
+		if self.launchspin.get() != entry.launch_spin:
+			entry.launch_spin = self.launchspin.get()
+			self.edited = True
+		if self.xoffset.get() != entry.forward_offset:
+			entry.forward_offset = self.xoffset.get()
+			self.edited = True
+		if self.yoffset.get() != entry.upward_offset:
+			entry.upward_offset = self.yoffset.get()
+			self.edited = True
+		if self.errormsg.get() != entry.target_error_message:
+			entry.target_error_message = self.errormsg.get()
+			self.edited = True
+		if self.iconentry.get() != entry.icon:
+			entry.icon = self.iconentry.get()
+			self.edited = True
+

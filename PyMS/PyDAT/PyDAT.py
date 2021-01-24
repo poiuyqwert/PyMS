@@ -286,7 +286,7 @@ class PyDAT(Tk):
 			upgrades = UpgradesDAT()
 			technology = TechDAT()
 			sounds = SoundsDAT()
-			portraits = PortraitDAT()
+			portraits = PortraitsDAT()
 			campaigns = CampaignDAT()
 			orders = OrdersDAT()
 			defaults = [
@@ -298,7 +298,7 @@ class PyDAT(Tk):
 				(upgrades, UpgradesDAT),
 				(technology, TechDAT),
 				(sounds, SoundsDAT),
-				(portraits, PortraitDAT),
+				(portraits, PortraitsDAT),
 				(campaigns, CampaignDAT),
 				(orders, OrdersDAT),
 			]
@@ -495,7 +495,7 @@ class PyDAT(Tk):
 		dir = self.data_context.settings.lastpath.select_directory('dir', self, 'Open Directory')
 		if not dir:
 			return
-		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitDAT(),CampaignDAT(),OrdersDAT()]
+		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitsDAT(),CampaignDAT(),OrdersDAT()]
 		found = [None] * len(dats)
 		files = [None] * len(dats)
 		for f in os.listdir(dir):

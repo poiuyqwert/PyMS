@@ -81,37 +81,9 @@ class PortraitsTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['Portrait']),
+			('units.dat', lambda entry: (entry.portrait, )),
 		]
 		self.setuplistbox()
-
-	def loadsave_data(self):
-		return (
-			('PortraitFile','SMKChange','Unknown'),
-			(
-				(self.id, (self.idle_entry, self.idle_change, self.idle_unknown)),
-				(self.id + self.dat.count/2, (self.talking_entry, self.talking_change, self.talking_unknown))
-			)
-		)
-	def load_data(self, id=None):
-		if not self.dat:
-			return
-		if id != None:
-			self.id = id
-		labels,values = self.loadsave_data()
-		for id,variables in values:
-			for label,var in zip(labels, variables):
-				var.set(self.dat.get_value(id, label))
-	def save_data(self):
-		if not self.dat:
-			return
-		labels,values = self.loadsave_data()
-		for id,variables in values:
-			for label,var in zip(labels, variables):
-				v = var.get()
-				if self.dat.get_value(id, label) != v:
-					self.edited = True
-					self.dat.set_value(id, label, v)
 
 	def files_updated(self):
 		self.dat = self.toplevel.portraits
@@ -122,3 +94,31 @@ class PortraitsTab(DATTab):
 		self.talking_entry.range[1] = len(portdata)-1
 		self.talking_dd_view.setentries(portdata)
 		self.talking_entry.editvalue()
+
+	def load_entry(self, entry):
+		self.idle_entry.set(entry.idle.portrait_file)
+		self.idle_change.set(entry.idle.smk_change)
+		self.idle_unknown.set(entry.idle.unknown)
+		self.talking_entry.set(entry.talking.portrait_file)
+		self.talking_change.set(entry.talking.smk_change)
+		self.talking_unknown.set(entry.talking.unknown)
+
+	def save_entry(self, entry):
+		if self.idle_entry.get() != entry.idle.portrait_file:
+			entry.idle.portrait_file = self.idle_entry.get()
+			self.edited = True
+		if self.idle_change.get() != entry.idle.smk_change:
+			entry.idle.smk_change = self.idle_change.get()
+			self.edited = True
+		if self.idle_unknown.get() != entry.idle.unknown:
+			entry.idle.unknown = self.idle_unknown.get()
+			self.edited = True
+		if self.talking_entry.get() != entry.talking.portrait_file:
+			entry.talking.portrait_file = self.talking_entry.get()
+			self.edited = True
+		if self.talking_change.get() != entry.talking.smk_change:
+			entry.talking.smk_change = self.talking_change.get()
+			self.edited = True
+		if self.talking_unknown.get() != entry.talking.unknown:
+			entry.talking.unknown = self.talking_unknown.get()
+			self.edited = True

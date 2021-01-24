@@ -13,16 +13,29 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
 from Tkinter import *
-from tkMessageBox import askquestion, YESNOCANCEL
+import tkMessageBox
 
 import os
+
+DAT_DATA_REF_FILES = {
+	'units.dat': 'Units.txt',
+	'weapons.dat': 'Weapons.txt',
+	'flingy.dat': 'Flingy.txt',
+	'sprites.dat': 'Sprites.txt',
+	'images.dat': 'Images.txt',
+	'upgrades.dat': 'Upgrades.txt',
+	'techdata.dat': 'Techdata.txt',
+	'sfxdata.dat': 'Sfxdata.txt',
+	'portdata.dat': 'Portdata.txt',
+	'mapdata.dat': 'Mapdata.txt',
+	'orders.dat': 'Orders.txt',
+}
 
 class DATTab(NotebookTab):
 	data = None
 
 	def __init__(self, parent, toplevel):
 		self.id = 0
-		self.values = {}
 		self.toplevel = toplevel
 		self.icon = self.toplevel.icon
 		self.dat = None
@@ -112,41 +125,24 @@ class DATTab(NotebookTab):
 			return
 		if id != None:
 			self.id = id
-		for n,v in self.values.iteritems():
-			c = self.dat.get_value(self.id,n)
-			if isinstance(v, list):
-				for x,f in enumerate(v):
-					f.set(not not c & (2 ** x))
-			else:
-				v.set(c)
+		entry = self.dat.get_entry(self.id)
+		self.load_entry(entry)
 		self.checkreference()
+
+	def load_entry(self, entry):
+		pass
 
 	def save_data(self):
 		if not self.dat:
 			return
-		for n,v in self.values.iteritems():
-			if isinstance(v, list):
-				flags = 0
-				for x,f in enumerate(v):
-					if f.get():
-						flags += 2 ** x
-				if self.dat.get_value(self.id, n) != flags:
-					self.edited = True
-					self.dat.set_value(self.id,n,flags)
-			elif isinstance(v, tuple):
-				for x in v:
-					r = x.get()
-					if self.dat.get_value(self.id,n) != r:
-						self.edited = True
-						self.dat.set_value(self.id,n,r)
-			else:
-				r = v.get()
-				if self.dat.get_value(self.id,n) != r:
-					self.edited = True
-					self.dat.set_value(self.id,n,r)
+		entry = self.dat.get_entry(self.id)
+		self.save_entry(entry)
 		self.checkreference()
 		if self.edited:
 			self.toplevel.action_states()
+
+	def save_entry(self, entry):
+		pass
 
 	def unsaved(self):
 		if self == self.toplevel.dattabs.active:
@@ -155,30 +151,32 @@ class DATTab(NotebookTab):
 			file = self.file
 			if not file:
 				file = self.dat.FILE_NAME
-			save = askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=YES, type=YESNOCANCEL)
-			if save != 'no':
-				if save == 'cancel':
+			save = tkMessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=tkMessageBox.YES, type=tkMessageBox.YESNOCANCEL)
+			if save != tkMessageBox.NO:
+				if save == tkMessageBox.CANCEL:
 					return True
 				if self.file:
 					self.save()
 				else:
 					self.saveas()
 
-	def checkreference(self, v=None, c=None):
+	def checkreference(self, lookup_id=None, used_by=None):
 		if self.listbox:
-			if not c:
-				c = self.usedby
 			self.listbox.delete(0,END)
-			if not v:
-				val = self.id
-			else:
-				val = v.get()
-			for d,vals in c:
-				dat = self.toplevel.dats[d]
-				for id in range(dat.count):
-					for dv in vals:
-						if (isstr(dv) and dat.get_value(id, dv) == val) or (isinstance(dv, tuple) and val >= dat.get_value(id,dv[0]) and val <= dat.get_value(id,dv[1])):
-							ref = DATA_CACHE[dat.idfile][id]
+			if not used_by:
+				used_by = self.usedby
+			if not lookup_id:
+				lookup_id = self.id
+			for dat_name,lookup in used_by:
+				dat = self.toplevel.dats[dat_name]
+				# TODO: Expanded DAT
+				for id in range(dat.FORMAT.entries):
+					entry = dat.get_entry(id)
+					check_ids = lookup(entry)
+					for check_id in check_ids:
+						# If `lookup` returns a tuple, it represents a range of IDs, and we must check if the `lookup_id` is within that range
+						if check_id == lookup_id or (isinstance(check_id, tuple) and lookup_id >= check_id[0] and lookup_id <= check_id[1]):
+							ref = DATA_CACHE[DAT_DATA_REF_FILES[dat_name]][id]
 							if self.toplevel.data_context.settings.settings.get('customlabels', False) and type(dat) == UnitsDAT:
 								ref = decompile_string(self.toplevel.stat_txt.strings[id])
 							self.listbox.insert(END, '%s entry %s: %s' % (dat.FILE_NAME, id, ref))

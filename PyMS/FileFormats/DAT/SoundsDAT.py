@@ -6,6 +6,14 @@ from collections import OrderedDict
 import json
 
 class Sound(AbstractDAT.AbstractDATEntry):
+	class Flag:
+		preload       = 1 << 0
+		unit_speech   = 1 << 1
+		_internal     = 1 << 2
+		_internal2    = 1 << 3
+		one_at_a_time = 1 << 4
+		never_preempt = 1 << 5
+
 	def __init__(self):
 		self.sound_file = 0
 		self.priority = 0

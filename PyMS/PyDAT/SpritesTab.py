@@ -1,6 +1,7 @@
 
 from DATTab import DATTab
 
+from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 from ..FileFormats.GRP import rle_outline, OUTLINE_SELF
 
 from ..Utilities.utils import couriernew
@@ -92,18 +93,9 @@ class SpritesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('flingy.dat', ['Sprite']),
+			('flingy.dat', lambda entry: (entry.sprite, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'ImageFile':self.imageentry,
-			'HealthBar':self.healthbar,
-			'Unknown':self.unknown,
-			'IsVisible':self.visible,
-			'SelectionCircleImage':self.selcircleentry,
-			'SelectionCircleOffset':self.vertpos,
-		}
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
@@ -133,7 +125,7 @@ class SpritesTab(DATTab):
 				i = int(self.selentry.get())
 				if self.selentry['state'] == NORMAL:
 					image_id = 561 + i
-					g = self.toplevel.images.get_value(image_id,'GRPFile')
+					g = self.toplevel.images.get_entry(image_id).grp_file
 					if g:
 						f = self.toplevel.imagestbl.strings[g-1][:-1]
 						image = self.toplevel.grp('Units','unit\\' + f, rle_outline, OUTLINE_SELF)
@@ -148,16 +140,17 @@ class SpritesTab(DATTab):
 							for _ in range(int(self.boxes.get())):
 								self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
 								hp[0] += 3
-				i = self.toplevel.sprites.get_value(self.id,'ImageFile')
-				g = self.toplevel.images.get_value(i,'GRPFile')
+				i = self.toplevel.sprites.get_entry(self.id).image_file
+				image_entry = self.toplevel.images.get_entry(i)
+				g = image_entry.grp_file
 				if g:
 					f = self.toplevel.imagestbl.strings[g-1][:-1]
 					if f.startswith('thingy\\tileset\\'):
 						p = 'Terrain'
 					else:
 						p = 'Units'
-						if self.toplevel.images.get_value(i, 'DrawFunction') == 9 and self.toplevel.images.get_value(i, 'Remapping') and self.toplevel.images.get_value(i, 'Remapping') < 4:
-							p = ['o','b','g'][self.toplevel.images.get_value(i, 'Remapping')-1] + 'fire'
+						if image_entry.draw_function == DATImage.DrawFunction.use_remapping and image_entry.remapping >= DATImage.Remapping.ofire and image_entry.remapping <= DATImage.Remapping.bfire:
+							p = ('o','g','b')[image_entry.remapping-1] + 'fire'
 					sprite = self.toplevel.grp(p,'unit\\' + f)
 					if sprite:
 						self.preview.create_image(130, 130, image=sprite[0])
@@ -165,23 +158,45 @@ class SpritesTab(DATTab):
 			else:
 				self.previewing = None
 
-	def load_data(self, id=None):
-		if not self.dat:
-			return
-		DATTab.load_data(self, id)
-		check = [
-			('HealthBar', [self.hpentry,self.hpboxes]),
-			('SelectionCircleImage', [self.selentry,self.seldd]),
-			('SelectionCircleOffset', [self.vertentry])
-		]
-		for l,ws in check:
-			frmt = self.toplevel.sprites.format[self.toplevel.sprites.labels.index(l)][0]
-			state = [NORMAL,DISABLED][self.id < frmt[0] or self.id >= frmt[1]]
-			for w in ws:
-				w['state'] = state
+	def load_entry(self, entry):
+		self.imageentry.set(entry.image_file)
+		self.unknown.set(entry.unused)
+		self.visible.set(entry.is_visible)
+
+		fields = (
+			(entry.health_bar, self.healthbar, (self.hpentry, self.hpboxes)),
+
+			(entry.selection_circle_image, self.selcircleentry, (self.selentry, self.seldd)),
+			(entry.selection_circle_offset, self.vertpos, (self.vertentry,)),
+		)
+		for (value, variable, widgets) in fields:
+			has_value = value != None
+			variable.set(value if has_value else 0)
+			state = NORMAL if has_value else DISABLED
+			for widget in widgets:
+				widget['state'] = state
+
 		self.drawpreview()
-	def save_data(self):
-		if not self.dat:
-			return
-		DATTab.save_data(self)
+
+	def save_entry(self, entry):
+		if self.imageentry.get() != entry.image_file:
+			entry.image_file = self.imageentry.get()
+			self.edited = True
+		if self.unknown.get() != entry.unused:
+			entry.unused = self.unknown.get()
+			self.edited = True
+		if self.visible.get() != entry.is_visible:
+			entry.is_visible = self.visible.get()
+			self.edited = True
+		
+		if entry.health_bar != None and self.healthbar.get() != entry.health_bar:
+			entry.health_bar = self.healthbar.get()
+			self.edited = True
+		if entry.selection_circle_image != None and self.selcircleentry.get() != entry.selection_circle_image:
+			entry.selection_circle_image = self.selcircleentry.get()
+			self.edited = True
+		if entry.selection_circle_offset != None and self.vertpos.get() != entry.selection_circle_offset:
+			entry.selection_circle_offset = self.vertpos.get()
+			self.edited = True
+
 		self.toplevel.data_context.settings.preview.sprite.show = not not self.showpreview.get()

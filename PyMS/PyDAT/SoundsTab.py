@@ -83,17 +83,9 @@ class SoundsTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['ReadySound',('WhatSoundStart','WhatSoundEnd'),('PissSoundStart','PissSoundEnd'),('YesSoundStart','YesSoundEnd')]),
+			('units.dat', lambda entry: (entry.ready_sound, (entry.what_sound_start, entry.what_sound_end), (entry.pissed_sound_start, entry.pissed_sound_end), (entry.yes_sound_start, entry.yes_sound_end)))
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'SoundFile':self.soundentry,
-			'Unknown1':self.unknown1,
-			'Flags':self.flags,
-			'Race':self.race,
-			'Volume':self.volume,
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.sounds
@@ -107,7 +99,7 @@ class SoundsTab(DATTab):
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
-		self.playbtn['state'] = [DISABLED,NORMAL][play_sound and SFMPQ_LOADED and n > 0]
+		self.playbtn['state'] = NORMAL if (play_sound and SFMPQ_LOADED and n > 0) else DISABLED
 
 	def play(self):
 		if play_sound:
@@ -115,6 +107,32 @@ class SoundsTab(DATTab):
 			if f:
 				play_sound(f.read())
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
+	def load_entry(self, entry):
+		self.soundentry.set(entry.sound_file)
+		self.unknown1.set(entry.priority)
+		# TODO: Flags
+		self.flags.set(entry.flags)
+		# TODO: Length adjust
+		self.race.set(entry.length_adjust)
+		self.volume.set(entry.minimum_volume)
+
 		self.changesound()
+
+	def save_entry(self, entry):
+		if self.soundentry.get() != entry.sound_file:
+			entry.sound_file = self.soundentry.get()
+			self.edited = True
+		if self.unknown1.get() != entry.priority:
+			entry.priority = self.unknown1.get()
+			self.edited = True
+		# TODO: Flags
+		if self.flags.get() != entry.flags:
+			entry.flags = self.flags.get()
+			self.edited = True
+		# TODO: Length adjust
+		if self.race.get() != entry.length_adjust:
+			entry.length_adjust = self.race.get()
+			self.edited = True
+		if self.volume.get() != entry.minimum_volume:
+			entry.minimum_volume = self.volume.get()
+			self.edited = True

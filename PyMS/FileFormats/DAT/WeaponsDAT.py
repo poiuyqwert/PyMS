@@ -6,10 +6,22 @@ from collections import OrderedDict
 import json
 
 class Weapon(AbstractDAT.AbstractDATEntry):
+	class TargetFlag:
+		air                   = 1 << 0
+		ground                = 1 << 1
+		mechanical            = 1 << 2
+		organic               = 1 << 3
+		non_building          = 1 << 4
+		non_robotic           = 1 << 5
+		terrain               = 1 << 6
+		organic_or_mechanical = 1 << 7
+		own                   = 1 << 8
+		ALL_FLAGS             = (air | ground | mechanical | organic | non_building | non_robotic | terrain | organic_or_mechanical | own)
+
 	def __init__(self):
 		self.label = 0
 		self.graphics = 0
-		self.unused = 0
+		self.unused_technology = 0
 		self.target_flags = 0
 		self.minimum_range = 0
 		self.maximum_range = 0
@@ -19,7 +31,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		self.remove_after = 0
 		self.explosion_type = 0
 		self.inner_splash_range = 0
-		self.medium_spash_range = 0
+		self.medium_splash_range = 0
 		self.outer_splash_range = 0
 		self.damage_amount = 0
 		self.damage_bonus = 0
@@ -35,7 +47,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 	def load_values(self, values):
 		self.label,\
 		self.graphics,\
-		self.unused,\
+		self.unused_technology,\
 		self.target_flags,\
 		self.minimum_range,\
 		self.maximum_range,\
@@ -45,7 +57,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		self.remove_after,\
 		self.explosion_type,\
 		self.inner_splash_range,\
-		self.medium_spash_range,\
+		self.medium_splash_range,\
 		self.outer_splash_range,\
 		self.damage_amount,\
 		self.damage_bonus,\
@@ -63,7 +75,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		return (
 			self.label,
 			self.graphics,
-			self.unused,
+			self.unused_technology,
 			self.target_flags,
 			self.minimum_range,
 			self.maximum_range,
@@ -73,7 +85,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 			self.remove_after,
 			self.explosion_type,
 			self.inner_splash_range,
-			self.medium_spash_range,
+			self.medium_splash_range,
 			self.outer_splash_range,
 			self.damage_amount,
 			self.damage_bonus,
@@ -90,7 +102,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 	def expand(self):
 		self.label = self.label or 0
 		self.graphics = self.graphics or 0
-		self.unused = self.unused or 0
+		self.unused_technology = self.unused_technology or 0
 		self.target_flags = self.target_flags or 0
 		self.minimum_range = self.minimum_range or 0
 		self.maximum_range = self.maximum_range or 0
@@ -100,7 +112,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		self.remove_after = self.remove_after or 0
 		self.explosion_type = self.explosion_type or 0
 		self.inner_splash_range = self.inner_splash_range or 0
-		self.medium_spash_range = self.medium_spash_range or 0
+		self.medium_splash_range = self.medium_splash_range or 0
 		self.outer_splash_range = self.outer_splash_range or 0
 		self.damage_amount = self.damage_amount or 0
 		self.damage_bonus = self.damage_bonus or 0
@@ -117,7 +129,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		return """Weapon(%d):
 	label %d
 	graphics %d
-	unused %d
+	unused_technology %d
 	target_flags %d
 	minimum_range %d
 	maximum_range %d
@@ -127,7 +139,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 	remove_after %d
 	explosion_type %d
 	inner_splash_range %d
-	medium_spash_range %d
+	medium_splash_range %d
 	outer_splash_range %d
 	damage_amount %d
 	damage_bonus %d
@@ -142,7 +154,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 			id,
 			self.label,
 			self.graphics,
-			self.unused,
+			self.unused_technology,
 			self.target_flags,
 			self.minimum_range,
 			self.maximum_range,
@@ -152,7 +164,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 			self.remove_after,
 			self.explosion_type,
 			self.inner_splash_range,
-			self.medium_spash_range,
+			self.medium_splash_range,
 			self.outer_splash_range,
 			self.damage_amount,
 			self.damage_bonus,
@@ -172,7 +184,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		data["_id"] = id
 		data["label"] = self.label
 		data["graphics"] = self.graphics
-		data["unused"] = self.unused
+		data["unused_technology"] = self.unused_technology
 		data["target_flags"] = self.target_flags
 		data["minimum_range"] = self.minimum_range
 		data["maximum_range"] = self.maximum_range
@@ -182,7 +194,7 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		data["remove_after"] = self.remove_after
 		data["explosion_type"] = self.explosion_type
 		data["inner_splash_range"] = self.inner_splash_range
-		data["medium_spash_range"] = self.medium_spash_range
+		data["medium_splash_range"] = self.medium_splash_range
 		data["outer_splash_range"] = self.outer_splash_range
 		data["damage_amount"] = self.damage_amount
 		data["damage_bonus"] = self.damage_bonus
@@ -212,7 +224,7 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "long"
 				},
 				{
-					"name": "unused",
+					"name": "unused_technology",
 					"type": "byte"
 				},
 				{
@@ -252,7 +264,7 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "medium_spash_range",
+					"name": "medium_splash_range",
 					"type": "short"
 				},
 				{

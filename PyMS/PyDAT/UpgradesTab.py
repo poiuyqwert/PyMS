@@ -1,6 +1,8 @@
 
 from DATTab import DATTab
+
 from ..FileFormats.TBL import decompile_string
+from ..FileFormats.GRP import frame_to_photo
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -124,7 +126,7 @@ class UpgradesTab(DATTab):
 		self.broodwar = IntVar()
 
 		m = Frame(frame)
-		l = LabelFrame(m, text='Image:')
+		l = LabelFrame(m, text='Misc.:')
 		s = Frame(l)
 		
 		f = Frame(s)
@@ -153,25 +155,10 @@ class UpgradesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['ArmorUpgrade']),
-			('weapons.dat', ['DamageUpgrade']),
+			('units.dat', lambda entry: (entry.armor_upgrade, )),
+			('weapons.dat', lambda entry: (entry.damage_upgrade, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'MineralCostBase':self.baseminerals,
-			'MineralCostFactor':self.factorminerals,
-			'VespeneCostBase':self.basevespene,
-			'VespeneCostFactor':self.factorvespene,
-			'ResearchTimeBase':self.basetime,
-			'ResearchTimeFactor':self.factortime,
-			'Requirements':self.reqIndex,
-			'Icon':self.iconentry,
-			'Label':self.labelentry,
-			'Race':self.race,
-			'MaxRepeats':self.maxrepeats,
-			'BroodwarOnly':self.broodwar,
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.upgrades
@@ -189,13 +176,13 @@ class UpgradesTab(DATTab):
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
+		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
 			i = self.iconentry.get()
-			if not i in ICON_CACHE:
-				image = frame_to_photo(PALETTES['Icons'], self.toplevel.cmdicon, i, True)
-				ICON_CACHE[i] = image
+			if not i in self.toplevel.data_context.icon_cache:
+				image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
+				self.toplevel.data_context.icon_cache[i] = image
 			else:
-				image = ICON_CACHE[i]
+				image = self.toplevel.data_context.icon_cache[i]
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
 	def updatetime(self, num, factor, type):
@@ -213,7 +200,56 @@ class UpgradesTab(DATTab):
 				s = s[:s.index('.')+5]
 			x.set(s)
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
-			self.drawpreview()
+	def load_entry(self, entry):
+		self.baseminerals.set(entry.mineral_cost_base)
+		self.factorminerals.set(entry.mineral_cost_factor)
+		self.basevespene.set(entry.vespene_cost_base)
+		self.factorvespene.set(entry.vespene_cost_factor)
+		self.basetime.set(entry.research_time_base)
+		self.factortime.set(entry.research_time_factor)
+		self.reqIndex.set(entry.requirements)
+		self.iconentry.set(entry.icon)
+		self.labelentry.set(entry.label)
+		self.race.set(entry.staredit_race)
+		self.maxrepeats.set(entry.max_repeats)
+		self.broodwar.set(entry.broodwar_only)
+
+		self.drawpreview()
+
+	def save_entry(self, entry):
+		if self.baseminerals.get() != entry.mineral_cost_base:
+			entry.mineral_cost_base = self.baseminerals.get()
+			self.edited = True
+		if self.factorminerals.get() != entry.mineral_cost_factor:
+			entry.mineral_cost_factor = self.factorminerals.get()
+			self.edited = True
+		if self.basevespene.get() != entry.vespene_cost_base:
+			entry.vespene_cost_base = self.basevespene.get()
+			self.edited = True
+		if self.factorvespene.get() != entry.vespene_cost_factor:
+			entry.vespene_cost_factor = self.factorvespene.get()
+			self.edited = True
+		if self.basetime.get() != entry.research_time_base:
+			entry.research_time_base = self.basetime.get()
+			self.edited = True
+		if self.factortime.get() != entry.research_time_factor:
+			entry.research_time_factor = self.factortime.get()
+			self.edited = True
+		if self.reqIndex.get() != entry.requirements:
+			entry.requirements = self.reqIndex.get()
+			self.edited = True
+		if self.iconentry.get() != entry.icon:
+			entry.icon = self.iconentry.get()
+			self.edited = True
+		if self.labelentry.get() != entry.label:
+			entry.label = self.labelentry.get()
+			self.edited = True
+		if self.race.get() != entry.staredit_race:
+			entry.staredit_race = self.race.get()
+			self.edited = True
+		if self.maxrepeats.get() != entry.max_repeats:
+			entry.max_repeats = self.maxrepeats.get()
+			self.edited = True
+		if self.broodwar.get() != entry.broodwar_only:
+			entry.broodwar_only = self.broodwar.get()
+			self.edited = True

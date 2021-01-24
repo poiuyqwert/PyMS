@@ -156,7 +156,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		for (sound, variable, widgets) in fields:
 			has_sound = sound != None
 			variable.set(sound if has_sound else 0)
-			state = (DISABLED,NORMAL)[has_sound]
+			state = NORMAL if has_sound else DISABLED
 			for widget in widgets:
 				widget['state'] = state
 

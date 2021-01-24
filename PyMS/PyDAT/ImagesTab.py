@@ -1,5 +1,6 @@
 
 from DATTab import DATTab
+
 from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import couriernew
@@ -33,7 +34,7 @@ class ImagesTab(DATTab):
 		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.checkreference(v,c)).pack(side=LEFT, padx=2)
+		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.checkreference(v.get(),c)).pack(side=LEFT, padx=2)
 		self.tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -42,7 +43,7 @@ class ImagesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, iscripts, self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.checkreference(v,c)).pack(side=LEFT, padx=2)
+		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.checkreference(v.get(),c)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Iscript ID', 'ImgIscriptID')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -150,27 +151,10 @@ class ImagesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['ConstructionAnimation']),
-			('sprites.dat', ['ImageFile']),
+			('units.dat', lambda entry: (entry.construction_animation, )),
+			('sprites.dat', lambda entry: (entry.image_file, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'GRPFile':self.grpentry,
-			'GfxTurns':self.graphicsturns,
-			'Clickable':self.clickable,
-			'UseFullIscript':self.usefulliscript,
-			'DrawIfCloaked':self.drawifcloaked,
-			'DrawFunction':self.functionentry,
-			'Remapping':self.remapentry,
-			'IscriptID':self.iscriptentry,
-			'ShieldOverlay':self.shieldentry,
-			'AttackOverlay':self.attackentry,
-			'DamageOverlay':self.damageentry,
-			'SpecialOverlay':self.specialentry,
-			'LandingDustOverlay':self.landingentry,
-			'LiftOffDustOverlay':self.liftoffentry,
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.images
@@ -200,16 +184,66 @@ class ImagesTab(DATTab):
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
-		shield = self.shieldentry.get()
-		sizes = [0,133,2,184]
-		if shield in sizes:
-			self.shieldsizes.set(sizes.index(shield))
+	def load_entry(self, entry):
+		self.grpentry.set(entry.grp_file)
+		self.graphicsturns.set(entry.gfx_turns)
+		self.clickable.set(entry.clickable)
+		self.usefulliscript.set(entry.use_full_iscript)
+		self.drawifcloaked.set(entry.draw_if_cloaked)
+		self.functionentry.set(entry.draw_function)
+		self.remapentry.set(entry.remapping)
+		self.iscriptentry.set(entry.iscript_id)
+		self.shieldentry.set(entry.shield_overlay)
+		self.attackentry.set(entry.attack_overlay)
+		self.damageentry.set(entry.damage_overlay)
+		self.specialentry.set(entry.special_overlay)
+		self.landingentry.set(entry.landing_dust_overlay)
+		self.liftoffentry.set(entry.lift_off_dust_overlay)
 
-	# def checkreferences(self, t, v):
-		# self.listbox.delete(0,END)
-		# val = v.get()
-		# for id in range(self.dat.count):
-			# if self.dat.get_value(id, ['GRPFile','IscriptID'][t]) == val:
-				# self.listbox.insert(END, 'images.dat entry %s: %s' % (id,DATA_CACHE['Images.txt'][id]))
+		default_shield_overlays = (0, 133, 2, 184)
+		if entry.shield_overlay in default_shield_overlays:
+			self.shieldsizes.set(default_shield_overlays.index(entry.shield_overlay))
+
+	def save_entry(self, entry):
+		if self.grpentry.get() != entry.grp_file:
+			entry.grp_file = self.grpentry.get()
+			self.edited = True
+		if self.graphicsturns.get() != entry.gfx_turns:
+			entry.gfx_turns = self.graphicsturns.get()
+			self.edited = True
+		if self.clickable.get() != entry.clickable:
+			entry.clickable = self.clickable.get()
+			self.edited = True
+		if self.usefulliscript.get() != entry.use_full_iscript:
+			entry.use_full_iscript = self.usefulliscript.get()
+			self.edited = True
+		if self.drawifcloaked.get() != entry.draw_if_cloaked:
+			entry.draw_if_cloaked = self.drawifcloaked.get()
+			self.edited = True
+		if self.functionentry.get() != entry.draw_function:
+			entry.draw_function = self.functionentry.get()
+			self.edited = True
+		if self.remapentry.get() != entry.remapping:
+			entry.remapping = self.remapentry.get()
+			self.edited = True
+		if self.iscriptentry.get() != entry.iscript_id:
+			entry.iscript_id = self.iscriptentry.get()
+			self.edited = True
+		if self.shieldentry.get() != entry.shield_overlay:
+			entry.shield_overlay = self.shieldentry.get()
+			self.edited = True
+		if self.attackentry.get() != entry.attack_overlay:
+			entry.attack_overlay = self.attackentry.get()
+			self.edited = True
+		if self.damageentry.get() != entry.damage_overlay:
+			entry.damage_overlay = self.damageentry.get()
+			self.edited = True
+		if self.specialentry.get() != entry.special_overlay:
+			entry.special_overlay = self.specialentry.get()
+			self.edited = True
+		if self.landingentry.get() != entry.landing_dust_overlay:
+			entry.landing_dust_overlay = self.landingentry.get()
+			self.edited = True
+		if self.liftoffentry.get() != entry.lift_off_dust_overlay:
+			entry.lift_off_dust_overlay = self.liftoffentry.get()
+			self.edited = True

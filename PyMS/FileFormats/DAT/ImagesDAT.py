@@ -6,6 +6,38 @@ from collections import OrderedDict
 import json
 
 class Image(AbstractDAT.AbstractDATEntry):
+	class DrawFunction:
+		normal                  = 0
+		overlay_on_target       = 1
+		enemy_unit_cloak        = 2 # + spell
+		own_unit_cloak          = 3 # + spell
+		ally_unit_cloak         = 4
+		own_unit_cloak2         = 5 # + spell
+		own_unit_cloak3         = 6 # draw only
+		_crash                  = 7
+		emp_shockwave           = 8
+		use_remapping           = 9
+		rle_shadow              = 10
+		rle_hpfloatdraw         = 11
+		warp_flash              = 12 # crashes staredit
+		rle_outline             = 13
+		rle_player_side         = 14 # Flag
+		hide_gfx_show_size_rect = 15
+		hallucination           = 16
+		warp_flash              = 17
+
+	class Remapping:
+		none     = 0
+		ofire    = 1 # Orange
+		gfire    = 2 # Green
+		bfire    = 3 # Blue
+		bexpl    = 4 # Blue2
+		special  = 5 # Own cloak
+		_crash   = 6
+		_crash2  = 7
+		unknown8 = 8
+		uknonwn9 = 9
+
 	def __init__(self):
 		self.grp_file = 0
 		self.gfx_turns = 0

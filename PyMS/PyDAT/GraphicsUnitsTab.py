@@ -1,6 +1,8 @@
 
 from DATUnitsTab import DATUnitsTab
 
+from ..FileFormats.DAT.ImagesDAT import Image as DATImage
+
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
@@ -148,16 +150,16 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.preview.coords('size', 0, 0, 0 ,0)
 
 	def draw_image(self, image_id, tag, x=130, y=130):
-		image = self.toplevel.images.get_entry(image_id)
-		g = image.grp_file
+		image_entry = self.toplevel.images.get_entry(image_id)
+		g = image_entry.grp_file
 		if g:
 			f = self.toplevel.imagestbl.strings[g-1][:-1]
 			if f.startswith('thingy\\tileset\\'):
 				p = 'Terrain'
 			else:
 				p = 'Units'
-				if image.draw_function == 9 and image.remapping and image.remapping < 4:
-					p = ['o','b','g'][image.remapping-1] + 'fire'
+				if image_entry.draw_function == DATImage.DrawFunction.use_remapping and image_entry.remapping >= DATImage.Remapping.ofire and image_entry.remapping <= DATImage.Remapping.bfire:
+					p = ('o','g','b')[image_entry.remapping-1] + 'fire'
 			sprite = self.toplevel.grp(p,'unit\\' + f)
 			if sprite:
 				self.preview.create_image(x, y, image=sprite[0], tags=tag)

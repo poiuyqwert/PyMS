@@ -1,6 +1,8 @@
 
 from DATTab import DATTab
+
 from ..FileFormats.TBL import decompile_string
+from ..FileFormats.GRP import frame_to_photo
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -143,31 +145,9 @@ class OrdersTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('units.dat', ['CompAIIdle','HumanAIIdle','ReturntoIdle','AttackUnit','AttackMove']),
+			('units.dat', lambda entry: (entry.comp_ai_idle, entry.human_ai_idle, entry.return_to_idle, entry.attack_unit, entry.attack_move))
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'Label':self.label,
-			'UseWeaponTargeting':self.weapontargeting,
-			'Unknown1':self.unknown2,
-			'MainOrSecondary':self.unknown3,
-			'Unknown3':self.unknown4,
-			'Unknown4':self.unknown5,
-			'Interruptable':self.interruptable,
-			'Unknown5':self.unknown7,
-			'Queueable':self.queueable,
-			'Unknown6':self.unknown9,
-			'Unknown7':self.unknown10,
-			'Unknown8':self.unknown11,
-			'Unknown9':self.unknown12,
-			'Targeting':self.targeting,
-			'Energy':self.energy,
-			'Animation':self.animation,
-			'Highlight':self.highlightentry,
-			'Unknown10':self.unknown,
-			'ObscuredOrder':self.obscured,
-		}
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
@@ -180,17 +160,94 @@ class OrdersTab(DATTab):
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
+		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
 			i = self.highlightentry.get()
 			if i < self.toplevel.cmdicon.frames:
-				if not i in ICON_CACHE:
-					image = frame_to_photo(PALETTES['Icons'], self.toplevel.cmdicon, i, True)
-					ICON_CACHE[i] = image
+				if not i in self.toplevel.data_context.icon_cache:
+					image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
+					self.toplevel.data_context.icon_cache[i] = image
 				else:
-					image = ICON_CACHE[i]
+					image = self.toplevel.data_context.icon_cache[i]
 				self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
-			self.drawpreview()
+	def load_entry(self, entry):
+		self.label.set(entry.label)
+		self.weapontargeting.set(entry.use_weapon_targeting)
+		self.unknown2.set(entry.unused_is_secondary)
+		self.unknown3.set(entry.unused_allow_non_subunits)
+		self.unknown4.set(entry.changes_subunit_order)
+		self.unknown5.set(entry.unused_allow_subunits)
+		self.interruptable.set(entry.interruptable)
+		self.unknown7.set(entry.waypoint_step_slowdown)
+		self.queueable.set(entry.queueable)
+		self.unknown9.set(entry.disabled_maintain_air_target)
+		self.unknown10.set(entry.obstructable)
+		self.unknown11.set(entry.flee_unreturnable_damage)
+		self.unknown12.set(entry.unused_requires_movable_unit)
+		self.targeting.set(entry.weapon_targeting)
+		self.energy.set(entry.technology_energy)
+		self.animation.set(entry.iscript_animation)
+		self.highlightentry.set(entry.highlight_icon)
+		self.unknown.set(entry.unknown17)
+		self.obscured.set(entry.obscured_order)
+		
+		self.drawpreview()
+
+	def save_entry(self, entry):
+		if self.label.get() != entry.label:
+			entry.label = self.label.get()
+			self.edited = True
+		if self.weapontargeting.get() != entry.use_weapon_targeting:
+			entry.use_weapon_targeting = self.weapontargeting.get()
+			self.edited = True
+		if self.unknown2.get() != entry.unused_is_secondary:
+			entry.unused_is_secondary = self.unknown2.get()
+			self.edited = True
+		if self.unknown3.get() != entry.unused_allow_non_subunits:
+			entry.unused_allow_non_subunits = self.unknown3.get()
+			self.edited = True
+		if self.unknown4.get() != entry.changes_subunit_order:
+			entry.changes_subunit_order = self.unknown4.get()
+			self.edited = True
+		if self.unknown5.get() != entry.unused_allow_subunits:
+			entry.unused_allow_subunits = self.unknown5.get()
+			self.edited = True
+		if self.interruptable.get() != entry.interruptable:
+			entry.interruptable = self.interruptable.get()
+			self.edited = True
+		if self.unknown7.get() != entry.waypoint_step_slowdown:
+			entry.waypoint_step_slowdown = self.unknown7.get()
+			self.edited = True
+		if self.queueable.get() != entry.queueable:
+			entry.queueable = self.queueable.get()
+			self.edited = True
+		if self.unknown9.get() != entry.disabled_maintain_air_target:
+			entry.disabled_maintain_air_target = self.unknown9.get()
+			self.edited = True
+		if self.unknown10.get() != entry.obstructable:
+			entry.obstructable = self.unknown10.get()
+			self.edited = True
+		if self.unknown11.get() != entry.flee_unreturnable_damage:
+			entry.flee_unreturnable_damage = self.unknown11.get()
+			self.edited = True
+		if self.unknown12.get() != entry.unused_requires_movable_unit:
+			entry.unused_requires_movable_unit = self.unknown12.get()
+			self.edited = True
+		if self.targeting.get() != entry.weapon_targeting:
+			entry.weapon_targeting = self.targeting.get()
+			self.edited = True
+		if self.energy.get() != entry.technology_energy:
+			entry.technology_energy = self.energy.get()
+			self.edited = True
+		if self.animation.get() != entry.iscript_animation:
+			entry.iscript_animation = self.animation.get()
+			self.edited = True
+		if self.highlightentry.get() != entry.highlight_icon:
+			entry.highlight_icon = self.highlightentry.get()
+			self.edited = True
+		if self.unknown.get() != entry.unknown17:
+			entry.unknown17 = self.unknown.get()
+			self.edited = True
+		if self.obscured.get() != entry.obscured_order:
+			entry.obscured_order = self.obscured.get()
+			self.edited = True

@@ -1,6 +1,8 @@
 
 from DATTab import DATTab
+
 from ..FileFormats.TBL import decompile_string
+from ..FileFormats.GRP import frame_to_photo
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -127,24 +129,10 @@ class TechnologyTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.usedby = [
-			('orders.dat', ['Energy']),
-			('weapons.dat', ['Unused']),
+			('orders.dat', lambda entry: (entry.technology_energy, )),
+			('weapons.dat', lambda entry: (entry.unused_technology, )),
 		]
 		self.setuplistbox()
-
-		self.values = {
-			'MineralCost':self.minerals,
-			'VespeneCost':self.vespene,
-			'ResearchTime':self.time,
-			'EnergyRequired':self.energy,
-			'ResearchRequirements':self.researchReq,
-			'UseRequirements':self.useReq,
-			'Icon':self.iconentry,
-			'Label':self.labelentry,
-			'Race':self.race,
-			'Researched':self.unused,
-			'BroodwarOnly':self.broodwar,
-		}
 
 	def files_updated(self):
 		self.dat = self.toplevel.technology
@@ -162,13 +150,13 @@ class TechnologyTab(DATTab):
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
+		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
 			i = self.iconentry.get()
-			if not i in ICON_CACHE:
-				image = frame_to_photo(PALETTES['Icons'], self.toplevel.cmdicon, i, True)
-				ICON_CACHE[i] = image
+			if not i in self.toplevel.data_context.icon_cache:
+				image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
+				self.toplevel.data_context.icon_cache[i] = image
 			else:
-				image = ICON_CACHE[i]
+				image = self.toplevel.data_context.icon_cache[i]
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
 	def updatetime(self, num, type):
@@ -184,7 +172,52 @@ class TechnologyTab(DATTab):
 				s = s[:s.index('.')+5]
 			self.secs.set(s)
 
-	def load_data(self, id=None):
-		DATTab.load_data(self, id)
-		if 'Icons' in PALETTES and self.toplevel.cmdicon:
-			self.drawpreview()
+	def load_entry(self, entry):
+		self.minerals.set(entry.mineral_cost)
+		self.vespene.set(entry.vespene_cost)
+		self.time.set(entry.research_time)
+		self.energy.set(entry.energy_required)
+		self.researchReq.set(entry.research_requirements)
+		self.useReq.set(entry.use_requirements)
+		self.iconentry.set(entry.icon)
+		self.labelentry.set(entry.label)
+		self.race.set(entry.staredit_race)
+		self.unused.set(entry.researched)
+		self.broodwar.set(entry.broodwar_only)
+
+		self.drawpreview()
+
+	def save_entry(self, entry):
+		if self.minerals.get() != entry.mineral_cost:
+			entry.mineral_cost = self.minerals.get()
+			self.edited = True
+		if self.vespene.get() != entry.vespene_cost:
+			entry.vespene_cost = self.vespene.get()
+			self.edited = True
+		if self.time.get() != entry.research_time:
+			entry.research_time = self.time.get()
+			self.edited = True
+		if self.energy.get() != entry.energy_required:
+			entry.energy_required = self.energy.get()
+			self.edited = True
+		if self.researchReq.get() != entry.research_requirements:
+			entry.research_requirements = self.researchReq.get()
+			self.edited = True
+		if self.useReq.get() != entry.use_requirements:
+			entry.use_requirements = self.useReq.get()
+			self.edited = True
+		if self.iconentry.get() != entry.icon:
+			entry.icon = self.iconentry.get()
+			self.edited = True
+		if self.labelentry.get() != entry.label:
+			entry.label = self.labelentry.get()
+			self.edited = True
+		if self.race.get() != entry.staredit_race:
+			entry.staredit_race = self.race.get()
+			self.edited = True
+		if self.unused.get() != entry.researched:
+			entry.researched = self.unused.get()
+			self.edited = True
+		if self.broodwar.get() != entry.broodwar_only:
+			entry.broodwar_only = self.broodwar.get()
+			self.edited = True
