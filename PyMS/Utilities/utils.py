@@ -17,8 +17,6 @@ if hasattr(sys, 'frozen'):
 	BASE_DIR = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
 else:
 	BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))))
-# if os.path.exists(BASE_DIR):
-# 	os.chdir(BASE_DIR)
 
 import json
 with open(os.path.join(BASE_DIR, 'PyMS', 'versions.json'), 'r') as f:

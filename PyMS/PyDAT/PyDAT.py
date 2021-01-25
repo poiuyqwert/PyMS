@@ -114,7 +114,7 @@ class PyDAT(Tk):
 		toolbar = Frame(self)
 		for btn in buttons:
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
+				image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','%s.gif' % btn[0]))
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
 				button.tooltip = Tooltip(button, btn[2])
@@ -223,7 +223,7 @@ class PyDAT(Tk):
 		#Statusbar
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
+		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif'))
 		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
 		self.editstatus.image = image
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)

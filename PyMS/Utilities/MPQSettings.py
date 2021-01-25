@@ -62,7 +62,7 @@ class MPQSettings(Frame):
 		toolbar = Frame(self)
 		for btn in buttons:
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
+				image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','%s.gif' % btn[0]))
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
 				button.tooltip = Tooltip(button, btn[2])

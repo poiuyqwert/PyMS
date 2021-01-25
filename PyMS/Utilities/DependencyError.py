@@ -13,10 +13,10 @@ class DependencyError(Tk):
 		self.resizable(False,False)
 		self.title('Dependency Error')
 		try:
-			self.icon = os.path.join(BASE_DIR,'Images','%s.ico' % prog)
+			self.icon = os.path.join(BASE_DIR,'PyMS','Images','%s.ico' % prog)
 			self.wm_iconbitmap(self.icon)
 		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','%s.xbm' % prog)
+			self.icon = '@%s' % os.path.join(BASE_DIR,'PyMS','Images','%s.xbm' % prog)
 			self.wm_iconbitmap(self.icon)
 		Label(self, text=msg, anchor=W, justify=LEFT).pack(side=TOP,pady=2,padx=2)
 		if hotlink:

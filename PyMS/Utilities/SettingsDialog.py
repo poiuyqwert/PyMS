@@ -70,7 +70,7 @@ class SettingsDialog(PyMSDialog):
 	def save_settings(self):
 		if self.mpqs:
 			self.parent.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-		m = os.path.join(BASE_DIR,'Libs','MPQ','')
+		m = os.path.join(BASE_DIR,'PyMS','MPQ','')
 		if self.data:
 			for p,d in zip(self.pages,self.data):
 				p.save(d,m,self.settings)

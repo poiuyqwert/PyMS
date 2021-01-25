@@ -10,7 +10,7 @@ class MPQHandler(object):
 	def __init__(self, mpqs=[], listfiles=None):
 		self.mpqs = list(mpqs)
 		if listfiles == None:
-			self.listfiles = [os.path.join(BASE_DIR,'Libs','Data','Listfile.txt')]
+			self.listfiles = [os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')]
 		else:
 			self.listfiles = listfiles
 		self.handles = {}
@@ -97,7 +97,7 @@ class MPQHandler(object):
 				self.close_mpqs()
 		if folder != False:
 			if mpq:
-				p = os.path.join(BASE_DIR, 'Libs', 'MPQ', *path)
+				p = os.path.join(BASE_DIR, 'PyMS', 'MPQ', *path)
 				if os.path.exists(p):
 					return open(p, 'rb')
 			elif os.path.exists(path):
@@ -125,7 +125,7 @@ class MPQHandler(object):
 				self.close_mpqs()
 		if folder != False:
 			if mpq:
-				return os.path.exists(os.path.join(BASE_DIR, 'Libs', 'MPQ', *path))
+				return os.path.exists(os.path.join(BASE_DIR, 'PyMS', 'MPQ', *path))
 			else:
 				return os.path.exists(path)
 		return False

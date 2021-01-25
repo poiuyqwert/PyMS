@@ -67,7 +67,7 @@ class InternalErrorDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def contact(self, e=None):
-		webbrowser.open(os.path.join(os.path.dirname(BASE_DIR), 'Docs', 'intro.html'))
+		webbrowser.open(os.path.join(BASE_DIR, 'Docs', 'intro.html'))
 
 	def add_text(self, text):
 		self.text['state'] = NORMAL

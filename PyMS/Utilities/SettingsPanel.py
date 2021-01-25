@@ -48,7 +48,7 @@ class SettingsPanel(Frame):
 			self.setdlg = setdlg
 		self.settings = settings
 		self.mpqhandler = mpqhandler
-		self.find = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
+		self.find = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','find.gif'))
 		self.variables = {}
 		inmpq = False
 		Frame.__init__(self, parent)

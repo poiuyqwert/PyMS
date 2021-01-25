@@ -94,7 +94,7 @@ class MPQSelect(PyMSDialog):
 		self.listbox.see(a)
 
 	def listfiles(self):
-		filelists = os.path.join(BASE_DIR,'Libs','Data','Listfile.txt')
+		filelists = os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')
 		self.files = []
 		self.mpqhandler.open_mpqs()
 		for h in self.mpqhandler.handles.values():
@@ -102,7 +102,7 @@ class MPQSelect(PyMSDialog):
 				if e.fileName and not e.fileName in self.files:
 					self.files.append(e.fileName)
 		self.mpqhandler.close_mpqs()
-		m = os.path.join(BASE_DIR,'Libs','MPQ','')
+		m = os.path.join(BASE_DIR,'PyMS','MPQ','')
 		for p in os.walk(m):
 			folder = p[0].replace(m,'')
 			for f in p[2]:

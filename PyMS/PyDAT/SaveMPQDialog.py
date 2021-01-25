@@ -83,7 +83,7 @@ class SaveMPQDialog(PyMSDialog):
 						h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
 					else:
 						try:
-							shutil.copy(os.path.join(BASE_DIR,'Libs','Data','SEMPQ.exe'), file)
+							shutil.copy(os.path.join(BASE_DIR,'PyMS','Data','SEMPQ.exe'), file)
 							h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
 						except:
 							h = -1
