@@ -28,7 +28,7 @@ class FlingyTab(DATTab):
 		self.movecontrol = IntVar()
 		self.unused = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Damage Properties:')
+		l = LabelFrame(frame, text='Flingy Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Sprite:', width=12, anchor=E).pack(side=LEFT)

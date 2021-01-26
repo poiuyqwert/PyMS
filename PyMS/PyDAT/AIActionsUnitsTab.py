@@ -79,12 +79,14 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.force_value_text.config(cursor='arrow')
 		def view_ground_weapon(*_):
 			_,weapon_id = self.force_weapon_id(FORCETYPE_GROUND)
-			self.toplevel.dattabs.display('Weapons')
-			self.toplevel.changeid(i=weapon_id)
+			if weapon_id != 130:
+				self.toplevel.dattabs.display('Weapons')
+				self.toplevel.changeid(i=weapon_id)
 		def view_air_weapon(*_):
 			_,weapon_id = self.force_weapon_id(FORCETYPE_AIR)
-			self.toplevel.dattabs.display('Weapons')
-			self.toplevel.changeid(i=weapon_id)
+			if weapon_id != 130:
+				self.toplevel.dattabs.display('Weapons')
+				self.toplevel.changeid(i=weapon_id)
 		def view_basic_unit(*_):
 			self.parent_tab.dattabs.display('Basic')
 		def view_weapon_override_unit(force_type):
@@ -153,9 +155,9 @@ class AIActionsUnitsTab(DATUnitsTab):
 				unit_id = entry.subunit1
 		entry = self.parent_tab.dat.get_entry(unit_id)
 		if force_type == FORCETYPE_AIR:
-			weapon_id = entry.ground_weapon
-		else:
 			weapon_id = entry.air_weapon
+		else:
+			weapon_id = entry.ground_weapon
 		return (unit_id if unit_id != self.parent_tab.id else None, weapon_id)
 
 	def build_force_value(self, force_type):
