@@ -101,8 +101,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		l.pack(fill=X)
 
 		units = DATA_CACHE['Units.txt']
-		# if PYDAT_SETTINGS.settings.get('customlabels', False):
-		# 	units = [decompile_string(s) for s in self.toplevel.stat_txt.strings[:228]] + ['None']
+
 		self.infestentry = IntegerVar(0, [0,228])
 		self.infestdd = IntVar()
 		self.subunitoneentry = IntegerVar(0,[0,228])
@@ -183,11 +182,8 @@ class AdvancedUnitsTab(DATUnitsTab):
 	def files_updated(self):
 		units = DATA_CACHE['Units.txt']
 		if self.toplevel.data_context.settings.settings.get('customlabels', False):
-			units = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[:229]]
+			units = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[:229]]
 		self.infestddw.setentries(units)
-		
-	def isFlagSet(self,category,value):
-		return (self.parent_tab.dat.get_value(self.parent_tab.id, category) & value) == value
 
 	def load_data(self, entry):
 		self.subunitone.set(entry.subunit1)

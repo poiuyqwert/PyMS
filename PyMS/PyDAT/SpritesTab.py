@@ -127,8 +127,8 @@ class SpritesTab(DATTab):
 					image_id = 561 + i
 					g = self.toplevel.images.get_entry(image_id).grp_file
 					if g:
-						f = self.toplevel.imagestbl.strings[g-1][:-1]
-						image = self.toplevel.grp('Units','unit\\' + f, rle_outline, OUTLINE_SELF)
+						f = self.toplevel.data_context.imagestbl.strings[g-1][:-1]
+						image = self.toplevel.data_context.get_grp_frame(f, draw_function=rle_outline, draw_info=OUTLINE_SELF)
 						if image:
 							y = 130+int(self.vertpos.get())
 							self.preview.create_image(130, y, image=image[0])
@@ -142,16 +142,10 @@ class SpritesTab(DATTab):
 								hp[0] += 3
 				i = self.toplevel.sprites.get_entry(self.id).image_file
 				image_entry = self.toplevel.images.get_entry(i)
-				g = image_entry.grp_file
-				if g:
-					f = self.toplevel.imagestbl.strings[g-1][:-1]
-					if f.startswith('thingy\\tileset\\'):
-						p = 'Terrain'
-					else:
-						p = 'Units'
-						if image_entry.draw_function == DATImage.DrawFunction.use_remapping and image_entry.remapping >= DATImage.Remapping.ofire and image_entry.remapping <= DATImage.Remapping.bfire:
-							p = ('o','g','b')[image_entry.remapping-1] + 'fire'
-					sprite = self.toplevel.grp(p,'unit\\' + f)
+				tbl_index = image_entry.grp_file
+				if tbl_index:
+					grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
+					sprite = self.toplevel.data_context.get_grp_frame(grp_path)
 					if sprite:
 						self.preview.create_image(130, 130, image=sprite[0])
 				self.previewing = i

@@ -1900,7 +1900,7 @@ class PyBIN(Tk):
 				('font16x.fnt','Size 16x font','font16x','FNT'),
 			])
 		]
-		SettingsDialog(self, data, (340,430), err, settings=PYBIN_SETTINGS)
+		SettingsDialog(self, data, (340,430), err, settings=PYBIN_SETTINGS, mpqhandler=self.mpqhandler)
 
 	def scroll(self, e):
 		if e.delta > 0:

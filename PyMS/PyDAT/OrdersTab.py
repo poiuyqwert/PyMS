@@ -19,7 +19,7 @@ class OrdersTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = []
 		self.targetingentry = IntegerVar(0,[0,130])
 		self.targeting = IntVar()
 		self.energyentry = IntegerVar(0,[0,44])
@@ -153,22 +153,17 @@ class OrdersTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.orders
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
 		self.labelentry.editvalue()
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
-			i = self.highlightentry.get()
-			if i < self.toplevel.cmdicon.frames:
-				if not i in self.toplevel.data_context.icon_cache:
-					image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
-					self.toplevel.data_context.icon_cache[i] = image
-				else:
-					image = self.toplevel.data_context.icon_cache[i]
-				self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
+		index = self.highlightentry.get()
+		image = self.toplevel.data_context.get_cmdicon(index)
+		if image:
+			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
 	def load_entry(self, entry):
 		self.label.set(entry.label)

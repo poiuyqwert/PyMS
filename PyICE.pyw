@@ -3114,7 +3114,7 @@ class PyICE(Tk):
 				('sfxdata.dat', 'Contains sfxdata.tbl string entries for mpq file paths', 'sfxdatadat', 'SoundsDAT'),
 			])
 		]
-		SettingsDialog(self, data, (340,495), err)
+		SettingsDialog(self, data, (340,495), er, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

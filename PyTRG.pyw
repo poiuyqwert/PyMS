@@ -1081,7 +1081,7 @@ class PyTRG(Tk):
 				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", 'aiscript', 'AIBIN'),
 			])
 		]
-		SettingsDialog(self, data, (340,215), err)
+		SettingsDialog(self, data, (340,215), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

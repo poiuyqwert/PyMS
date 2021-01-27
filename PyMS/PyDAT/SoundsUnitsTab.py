@@ -15,8 +15,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		frame = Frame(self)
 
 		sfxdata = DATA_CACHE['Sfxdata.txt']
-		# if PYDAT_SETTINGS.settings.get('customlabels', False):
-		# 	sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		
 		self.ready_sound = IntegerVar(0, [0,len(sfxdata)-1])
 		self.ready_sound_dropdown = IntVar()
 		self.yes_sound_start = IntegerVar(0, [0,len(sfxdata)-1])
@@ -124,7 +123,6 @@ class SoundsUnitsTab(DATUnitsTab):
 		frame.pack(side=LEFT, fill=Y)
 
 	def files_updated(self):
-		# sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
 		sfxdata = DATA_CACHE['Sfxdata.txt']
 		fields = (
 			(self.ready_sound,self.ready_sound_dropdown_widget),

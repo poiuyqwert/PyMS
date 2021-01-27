@@ -20,7 +20,7 @@ class SoundsTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		sfxdata = [] # ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		sfxdata = []
 		self.soundentry = IntegerVar(0, [0,len(sfxdata)-1])
 		self.sounddd = IntVar()
 
@@ -89,7 +89,7 @@ class SoundsTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.sounds
-		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.sfxdatatbl.strings]
+		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.sfxdatatbl.strings]
 		self.soundentry.range[1] = len(sfxdata)-1
 		self.sounds.setentries(sfxdata)
 		self.soundentry.editvalue()
@@ -103,7 +103,7 @@ class SoundsTab(DATTab):
 
 	def play(self):
 		if play_sound:
-			f = self.toplevel.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.sfxdatatbl.strings[self.soundentry.get()-1][:-1])
+			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1][:-1])
 			if f:
 				play_sound(f.read())
 

@@ -22,7 +22,7 @@ class UpgradesTab(DATTab):
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
-		stattxt = [] # ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = [] 
 		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
 		self.labeldd = IntVar()
 		self.item = None
@@ -162,7 +162,7 @@ class UpgradesTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.upgrades
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings]
+		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
 		self.labelentry.editvalue()
@@ -176,13 +176,9 @@ class UpgradesTab(DATTab):
 
 	def drawpreview(self):
 		self.preview.delete(ALL)
-		if 'Icons' in self.toplevel.data_context.palettes and self.toplevel.cmdicon:
-			i = self.iconentry.get()
-			if not i in self.toplevel.data_context.icon_cache:
-				image = frame_to_photo(self.toplevel.data_context.palettes['Icons'], self.toplevel.cmdicon, i, True)
-				self.toplevel.data_context.icon_cache[i] = image
-			else:
-				image = self.toplevel.data_context.icon_cache[i]
+		index = self.iconentry.get()
+		image = self.toplevel.data_context.get_cmdicon(index)
+		if image:
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
 
 	def updatetime(self, num, factor, type):

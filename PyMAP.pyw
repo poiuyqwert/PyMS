@@ -2408,7 +2408,7 @@ class PyMAP(Tk):
 				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", ('profile','aiscript'), 'AIBIN'),
 			])
 		]
-		SettingsDialog(self, data, (340,215), err)
+		SettingsDialog(self, data, (340,215), err, mpqhandler=self.mpqhandler)
 
 	def add_undo(self, action):
 		self.action_manager.add_action(action)

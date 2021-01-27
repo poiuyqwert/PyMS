@@ -16,7 +16,7 @@ class PortraitsTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		portdata = [] # ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
+		portdata = []
 		self.idle_entry = IntegerVar(0, [0,len(portdata)-1])
 		self.idle_dd = IntVar()
 		self.idle_change = IntegerVar(0, [0,255])
@@ -87,7 +87,7 @@ class PortraitsTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.portraits
-		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.portdatatbl.strings]
+		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.portdatatbl.strings]
 		self.idle_entry.range[1] = len(portdata)-1
 		self.idle_dd_view.setentries(portdata)
 		self.idle_entry.editvalue()

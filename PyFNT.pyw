@@ -428,7 +428,7 @@ class PyFNT(Tk):
 					self.status.set('Font imported successfully!')
 
 	def special(self, key=None, err=None):
-		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')])], (340,215), err)
+		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')])], (340,215), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

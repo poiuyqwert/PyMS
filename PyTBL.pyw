@@ -835,7 +835,7 @@ class PyTBL(Tk):
 				('Unit Palette','The palette used to display icons.grp','unitpal','Palette'),
 			])
 		]
-		SettingsDialog(self, data, (340,430), err)
+		SettingsDialog(self, data, (340,430), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

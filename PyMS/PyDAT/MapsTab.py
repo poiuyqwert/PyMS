@@ -15,7 +15,7 @@ class MapsTab(DATTab):
 		DATTab.__init__(self, parent, toplevel)
 		frame = Frame(self)
 
-		mapdata = [] # [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
+		mapdata = []
 		self.missionentry = IntegerVar(0, [0,len(mapdata)])
 		self.missiondd = IntVar()
 
@@ -36,7 +36,7 @@ class MapsTab(DATTab):
 
 	def files_updated(self):
 		self.dat = self.toplevel.campaigns
-		mapdata = [decompile_string(s) for s in self.toplevel.mapdatatbl.strings]
+		mapdata = [decompile_string(s) for s in self.toplevel.data_context.mapdatatbl.strings]
 		self.missions.none_value = len(mapdata)
 		self.missionentry.range[1] = len(mapdata)
 		self.missions.setentries(mapdata + ['None'])

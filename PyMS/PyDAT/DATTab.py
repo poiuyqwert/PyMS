@@ -1,7 +1,7 @@
 
 from ContinueImportDialog import ContinueImportDialog
 
-from ..FileFormats.DAT import WeaponsDAT
+from ..FileFormats.DAT import WeaponsDAT, UpgradesDAT, TechDAT
 from ..FileFormats.DAT import UnitsDAT
 from ..FileFormats.TBL import decompile_string
 
@@ -95,13 +95,18 @@ class DATTab(NotebookTab):
 			d = []
 			if self.toplevel.data_context.settings.settings.get('customlabels', False):
 				if self.data == 'Units.txt':
-					d = [decompile_string(s) for s in self.toplevel.stat_txt.strings[0:228]]
+					d = [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[0:228]]
 				elif self.data in ['Weapons.txt','Upgrades.txt','Techdata.txt']:
 					# TODO: Expanded DAT
-					for i in range(WeaponsDAT.FORMAT.entries):
-						s = self.toplevel.defaults['%s.dat' % self.data.split('.')[0].lower()].get_value(i, 'Label')
+					entry_counts = {
+						'Weapons.txt': WeaponsDAT.FORMAT.entries,
+						'Upgrades.txt': UpgradesDAT.FORMAT.entries,
+						'Techdata.txt': TechDAT.FORMAT.entries
+					}
+					for i in range(entry_counts[self.data]):
+						s = self.toplevel.defaults['%s.dat' % self.data.split('.')[0].lower()].get_entry(i).label
 						if s:
-							d.append(decompile_string(self.toplevel.stat_txt.strings[s-1]))
+							d.append(decompile_string(self.toplevel.data_context.stat_txt.strings[s-1]))
 						else:
 							d.append('None')
 			if not d:
@@ -178,7 +183,7 @@ class DATTab(NotebookTab):
 						if check_id == lookup_id or (isinstance(check_id, tuple) and lookup_id >= check_id[0] and lookup_id <= check_id[1]):
 							ref = DATA_CACHE[DAT_DATA_REF_FILES[dat_name]][id]
 							if self.toplevel.data_context.settings.settings.get('customlabels', False) and type(dat) == UnitsDAT:
-								ref = decompile_string(self.toplevel.stat_txt.strings[id])
+								ref = decompile_string(self.toplevel.data_context.stat_txt.strings[id])
 							self.listbox.insert(END, '%s entry %s: %s' % (dat.FILE_NAME, id, ref))
 							break
 

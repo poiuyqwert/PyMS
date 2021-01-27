@@ -18,7 +18,7 @@ class ImagesTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		grps = [] # ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
+		grps = []
 		self.grpentry = IntegerVar(0, [0, len(grps)-1])
 		self.grpdd = IntVar()
 		iscripts = DATA_CACHE['IscriptIDList.txt']
@@ -160,11 +160,11 @@ class ImagesTab(DATTab):
 		self.dat = self.toplevel.images
 		entries = []
 		last = -1
-		for id in self.toplevel.iscriptbin.headers.keys():
+		for id in self.toplevel.data_context.iscriptbin.headers.keys():
 			if id-last > 1:
 				entries.extend(['*Unused*'] * (id-last-1))
-			if id in self.toplevel.iscriptbin.extrainfo:
-				n = self.toplevel.iscriptbin.extrainfo[id]
+			if id in self.toplevel.data_context.iscriptbin.extrainfo:
+				n = self.toplevel.data_context.iscriptbin.extrainfo[id]
 			elif id < len(DATA_CACHE['IscriptIDList.txt']):
 				n = DATA_CACHE['IscriptIDList.txt'][id]
 			else:
@@ -175,7 +175,7 @@ class ImagesTab(DATTab):
 		self.iscriptentry.range[1] = len(entries)-1
 		self.iscriptentry.editvalue()
 
-		grps = ['None'] + [decompile_string(s) for s in self.toplevel.imagestbl.strings]
+		grps = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.imagestbl.strings]
 		for dd,entry_var in self.grpdds:
 			dd.setentries(grps)
 			entry_var.range[1] = len(grps)-1

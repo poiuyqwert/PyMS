@@ -1095,7 +1095,7 @@ class PyMPQ(Tk):
 
 	def mansets(self, key=None):
 		if key:
-			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, False, settings=PYMPQ_SETTINGS)
+			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, settings=PYMPQ_SETTINGS)
 		else:
 			compress = PYMPQ_SETTINGS.get('compress')
 			self.compvar.set([0,1,2,13,16][compress[0]] + compress[1])

@@ -151,16 +151,10 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 	def draw_image(self, image_id, tag, x=130, y=130):
 		image_entry = self.toplevel.images.get_entry(image_id)
-		g = image_entry.grp_file
-		if g:
-			f = self.toplevel.imagestbl.strings[g-1][:-1]
-			if f.startswith('thingy\\tileset\\'):
-				p = 'Terrain'
-			else:
-				p = 'Units'
-				if image_entry.draw_function == DATImage.DrawFunction.use_remapping and image_entry.remapping >= DATImage.Remapping.ofire and image_entry.remapping <= DATImage.Remapping.bfire:
-					p = ('o','g','b')[image_entry.remapping-1] + 'fire'
-			sprite = self.toplevel.grp(p,'unit\\' + f)
+		tbl_index = image_entry.grp_file
+		if tbl_index:
+			grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
+			sprite = self.toplevel.data_context.get_grp_frame(grp_path)
 			if sprite:
 				self.preview.create_image(x, y, image=sprite[0], tags=tag)
 

@@ -12,12 +12,12 @@ class DATSettingsDialog(SettingsDialog):
 		self.custom.set(self.settings.settings.get('customlabels', False))
 		self.minsize(*self.min_size)
 		self.tabs = Notebook(self)
-		self.mpqsettings = MPQSettings(self.tabs, self.parent.mpqhandler.mpqs, self.settings)
+		self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpqs, self.settings)
 		self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 		for d in self.data:
 			f = Frame(self.tabs)
 			f.parent = self
-			pane = SettingsPanel(f, d[1], self.settings, self.parent.mpqhandler)
+			pane = SettingsPanel(f, d[1], self.settings, self.mpqhandler)
 			pane.pack(fill=BOTH, expand=1)
 			self.pages.append(pane)
 			if d[0].startswith('TBL'):

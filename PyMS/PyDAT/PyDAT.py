@@ -14,12 +14,8 @@ from DataContext import DataContext
 from SaveMPQDialog import SaveMPQDialog
 from DATSettingsDialog import DATSettingsDialog
 
-from ..FileFormats.Palette import Palette
 from ..FileFormats.MPQ.SFmpq import *
-from ..FileFormats.TBL import TBL
 from ..FileFormats.DAT import *
-from ..FileFormats.GRP import CacheGRP, frame_to_photo
-from ..FileFormats.IScriptBIN import IScriptBIN
 
 from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, ccopy
 from ..Utilities.analytics import ga, GAScreen
@@ -59,13 +55,6 @@ class PyDAT(Tk):
 
 		self.data_context = DataContext()
 
-		self.stat_txt = None
-		self.imagestbl = None
-		self.sfxdatatbl = None
-		self.portdatatbl = None
-		self.mapdatatbl = None
-		self.cmdicon = None
-		self.iscriptbin = None
 		self.units = None
 		self.weapons = None
 		self.flingy = None
@@ -78,13 +67,7 @@ class PyDAT(Tk):
 		self.campaigns = None
 		self.orders = None
 
-		pal = Palette()
-		for p in ['Units','bfire','gfire','ofire','Terrain','Icons']:
-			try:
-				pal.load_file(self.data_context.settings.settings.palettes.get(p, os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
-			except:
-				continue
-			self.data_context.palettes[p] = pal.palette
+		self.data_context.load_palettes()
 		self.dats = {}
 		self.defaults = {}
 
@@ -232,9 +215,7 @@ class PyDAT(Tk):
 
 		self.mpq_export = self.data_context.settings.get('mpqexport',[])
 
-		self.mpqhandler = MPQHandler(self.data_context.settings.settings.get('mpqs',[]))
-		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
-			self.data_context.settings.settings.mpqs = self.mpqhandler.mpqs
+		self.data_context.load_mpqs()
 
 		e = self.open_files()
 		if e:
@@ -260,21 +241,9 @@ class PyDAT(Tk):
 		self.action_states()
 
 	def open_files(self):
-		self.mpqhandler.open_mpqs()
 		err = None
 		try:
-			stat_txt = TBL()
-			imagestbl = TBL()
-			sfxdatatbl = TBL()
-			portdatatbl = TBL()
-			mapdatatbl = TBL()
-			cmdicon = CacheGRP()
-			stat_txt.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('stat_txt', 'MPQ:rez\\stat_txt.tbl')))
-			imagestbl.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('imagestbl', 'MPQ:arr\\images.tbl')))
-			sfxdatatbl.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('sfxdatatbl', 'MPQ:arr\\sfxdata.tbl')))
-			portdatatbl.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('portdatatbl', 'MPQ:arr\\portdata.tbl')))
-			mapdatatbl.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('mapdatatbl', 'MPQ:arr\\mapdata.tbl')))
-			cmdicon.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('cmdicons', 'MPQ:unit\\cmdbtns\\cmdicons.grp')))
+			self.data_context.load_additional_files()
 		except PyMSError, e:
 			err = e
 		else:
@@ -315,18 +284,8 @@ class PyDAT(Tk):
 					except PyMSError, e:
 						err = e
 						break
-			if not err:
-				iscriptbin = IScriptBIN(weapons, flingy, images, sprites, sounds, stat_txt, imagestbl, sfxdatatbl)
-				iscriptbin.load_file(self.mpqhandler.get_file(self.data_context.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
 			defaultmpqs.close_mpqs()
-		self.mpqhandler.close_mpqs()
 		if not err:
-			self.stat_txt = stat_txt
-			self.imagestbl = imagestbl
-			self.sfxdatatbl = sfxdatatbl
-			self.portdatatbl = portdatatbl
-			self.mapdatatbl = mapdatatbl
-			self.cmdicon = cmdicon
 			self.units = units
 			self.weapons = weapons
 			self.flingy = flingy
@@ -338,7 +297,6 @@ class PyDAT(Tk):
 			self.portraits = portraits
 			self.campaigns = campaigns
 			self.orders = orders
-			self.iscriptbin = iscriptbin
 			for v,c in defaults:
 				n = c.FILE_NAME
 				self.dats[n] = v
@@ -348,21 +306,6 @@ class PyDAT(Tk):
 				page.files_updated()
 			self.dattabs.active.activate()
 		return err
-
-	def grp(self, pal, path, draw_function=None, draw_info=None):
-		if SFMPQ_LOADED and pal in self.data_context.palettes:
-			p = os.path.join(BASE_DIR,'PyMS','MPQ',os.path.join(*path.split('\\')))
-			if not path in self.data_context.grp_cache or not pal in self.data_context.grp_cache[path]:
-				p = self.mpqhandler.get_file('MPQ:' + path)
-				try:
-					grp = CacheGRP()
-					grp.load_file(p,restrict=1)
-				except PyMSError:
-					return None
-				if not path in self.data_context.grp_cache:
-					self.data_context.grp_cache[path] = {}
-				self.data_context.grp_cache[path][pal] = frame_to_photo(self.data_context.palettes[pal], grp, 0, True, draw_function=draw_function, draw_info=draw_info)
-			return self.data_context.grp_cache[path][pal]
 
 	def unsaved(self):
 		for page in self.pages:
@@ -559,7 +502,7 @@ class PyDAT(Tk):
 				('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
 			])
 		]
-		DATSettingsDialog(self, data, (340,450), err, settings=self.data_context.settings)
+		DATSettingsDialog(self, data, (340,450), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 
 	def register(self, e=None):
 		try:

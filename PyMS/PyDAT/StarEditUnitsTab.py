@@ -79,8 +79,8 @@ class StarEditUnitsTab(DATUnitsTab):
 			l.pack(side=LEFT, fill=BOTH, expand=(lt == 'Availability'))
 		top.pack(fill=X)
 
-		r = 0 # min(255,len(self.toplevel.stat_txt.strings)-1302)
-		ranks = [] # ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
+		r = 0
+		ranks = []
 		self.rankentry = IntegerVar(0, [0,r])
 		self.rankdd = IntVar()
 		self.mapstring = IntegerVar(0, [0,65535])
@@ -150,16 +150,10 @@ class StarEditUnitsTab(DATUnitsTab):
 
 	def draw_image(self, image_id, tag, x=130, y=130):
 		image_entry = self.toplevel.images.get_entry(image_id)
-		g = image_entry.grp_file
-		if g:
-			f = self.toplevel.imagestbl.strings[g-1][:-1]
-			if f.startswith('thingy\\tileset\\'):
-				p = 'Terrain'
-			else:
-				p = 'Units'
-				if image_entry.draw_function == DATImage.DrawFunction.use_remapping and image_entry.remapping >= DATImage.Remapping.ofire and image_entry.remapping <= DATImage.Remapping.bfire:
-					p = ('o','g','b')[image_entry.remapping-1] + 'fire'
-			sprite = self.toplevel.grp(p,'unit\\' + f)
+		tbl_index = image_entry.grp_file
+		if tbl_index:
+			grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
+			sprite = self.toplevel.data_context.get_grp_frame(grp_path)
 			if sprite:
 				self.preview.create_image(x, y, image=sprite[0], tags=tag)
 
@@ -173,8 +167,8 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.drawboxes()
 
 	def files_updated(self):
-		r = min(255,len(self.toplevel.stat_txt.strings)-1302)
-		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.stat_txt.strings[1302:1302+r]]
+		r = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
+		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[1302:1302+r]]
 		self.rankentry.range[1] = len(ranks)-1
 		self.ranks.setentries(ranks)
 		self.rankentry.editvalue()

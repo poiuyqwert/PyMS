@@ -3445,7 +3445,7 @@ class PyAI(Tk):
 				('techdata.dat', 'Used to specify technology string entries in stat_txt.tbl', 'techdatadat', 'TechDAT')
 			])
 		]
-		SettingsDialog(self, data, (340,295), err)
+		SettingsDialog(self, data, (340,295), err, mpqhandler=self.mpqhandler)
 
 	def openset(self, key=None):
 		file = self.select_file('Load Settings', True, '.txt', [('Text Files','*.txt'),('All Files','*')])

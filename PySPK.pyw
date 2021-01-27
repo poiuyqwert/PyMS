@@ -738,7 +738,7 @@ class PySPK(Tk):
 				('platform.wpe','The palette which holds the star palette.','platformwpe','WPE')
 			])
 		]
-		SettingsDialog(self, data, (340,430), err)
+		SettingsDialog(self, data, (340,430), err, mpqhandler=self.mpqhandler)
 
 	def unsaved(self):
 		if self.spk and self.edited:
