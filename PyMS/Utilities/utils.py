@@ -123,14 +123,23 @@ def flags(value, length):
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
 	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
 
-def ccopy(lst):
-	r = []
-	for item in lst:
-		if isinstance(item, list):
-			r.append(ccopy(item))
-		else:
-			r.append(item)
-	return r
+def named_flags(flags, names, count, skip=0):
+	header = ''
+	values = ''
+	for n in range(count):
+		f = flags & (1 << n)
+		name = 'Unknown%d' % n
+		if n >= skip and n-skip < len(names) and names[n-skip]:
+			name = names[n-skip]
+		header += pad(name)
+		values += pad(1 if f else 0)
+	return (header,values)
+
+def binary(flags, count):
+	result = ''
+	for n in range(count):
+		result = ('1' if flags & (1 << n) else '0') + result
+	return result
 
 def fit(label, text, width=80, end=False, indent=0):
 	r = label
@@ -151,6 +160,10 @@ def fit(label, text, width=80, end=False, indent=0):
 			r += '\n'
 	return r.rstrip('\n') + '\n' if end else ''
 
+def pad(label, value='', span=20):
+	label = str(label)
+	return '%s%s%s' % (label, ' ' * (span - len(label)), value)
+
 def removedir(path):
 	if os.path.exists(path):
 		for r,ds,fs in os.walk(path, topdown=False):
@@ -161,80 +174,6 @@ def removedir(path):
 				removedir(p)
 				os.rmdir(p)
 		os.rmdir(path)
-
-class odict:
-	def __init__(self, d=None, k=None):
-		self.keynames = []
-		self.dict = {}
-		if d:
-			if k:
-				self.keynames = list(k)
-				self.dict = dict(d)
-			else:
-				self.keynames = list(d.keynames)
-				self.dict = dict(d.dict)
-
-	def __delitem__(self, key):
-		del self.dict[key]
-		self.keynames.remove(key)
-
-	def __setitem__(self, key, item):
-		self.dict[key] = item
-		if key not in self.keynames:
-			self.keynames.append(key)
-
-	def __getitem__(self, key):
-		return self.dict[key]
-
-	def __contains__(self, key):
-		if key in self.keynames:
-			return True
-		return False
-
-	def __len__(self):
-		return len(self.keynames)
-
-	def iteritems(self):
-		iter = []
-		for k in self.keynames:
-			iter.append((k,self.dict[k]))
-		return iter
-
-	def iterkeys(self):
-		return list(self.keynames)
-
-	def peek(self):
-		return (self.keynames[0],self.dict[self.keynames[0]])
-
-	def keys(self):
-		return list(self.keynames)
-
-	def index(self, key):
-		return self.keynames.index(key)
-
-	def get(self, key, default=None):
-		if not key in self.keynames:
-			return default
-		return self.dict[key]
-
-	def getkey(self, n):
-		return self.keynames[n]
-
-	def getitem(self, n):
-		return self.dict[self.keynames[n]]
-
-	def remove(self, n):
-		self.keynames.remove(n)
-		del self.dict[n]
-
-	def __repr__(self):
-		return '%s@%s' % (self.keynames,self.dict)
-
-	def copy(self):
-		return odict(self)
-
-	def sort(self):
-		self.keynames.sort()
 
 def get_umask():
 	umask = os.umask(0)
