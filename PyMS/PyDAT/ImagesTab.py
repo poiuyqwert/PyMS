@@ -34,8 +34,13 @@ class ImagesTab(DATTab):
 		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
-		# TODO: Update check_used_by_references
-		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.check_used_by_references(v.get(),c)).pack(side=LEFT, padx=2)
+		def check_grp_ref():
+			grp_id = self.grpdd.get()
+			refs = (
+				(self.toplevel.data_context.images.dat, lambda image: (image.grp_file,)),
+			)
+			self.check_used_by_references(grp_id,refs)
+		Button(f, text='Check', command=check_grp_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -44,8 +49,13 @@ class ImagesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, iscripts, self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
-		# TODO: Update check_used_by_references
-		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.check_used_by_references(v.get(),c)).pack(side=LEFT, padx=2)
+		def check_iscript_ref():
+			iscript_id = self.iscriptdd.get()
+			refs = (
+				(self.toplevel.data_context.images.dat, lambda image: (image.iscript_id,)),
+			)
+			self.check_used_by_references(iscript_id,refs)
+		Button(f, text='Check', command=check_iscript_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'Iscript ID', 'ImgIscriptID')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
