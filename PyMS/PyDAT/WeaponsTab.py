@@ -270,14 +270,18 @@ class WeaponsTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.ground_weapon, entry.air_weapon)),
-			('orders.dat', lambda entry: (entry.weapon_targeting, )),
+		self.setup_used_by_listbox()
+
+	def get_dat_data(self):
+		return self.toplevel.data_context.weapons
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.ground_weapon, unit.air_weapon)),
+			(self.toplevel.data_context.orders.dat, lambda order: (order.weapon_targeting, )),
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.weapons
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)

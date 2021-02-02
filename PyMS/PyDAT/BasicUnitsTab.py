@@ -62,7 +62,8 @@ class BasicUnitsTab(DATUnitsTab):
 		Label(f, text='Upgrade:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.armor_upgrade_entry, font=couriernew, width=2).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.armor_upgrade, DATA_CACHE['Upgrades.txt'], self.armor_upgrade_entry, width=20).pack(side=LEFT, fill=X, expand=1)
+		self.armor_upgrade_ddw = DropDown(f, self.armor_upgrade, [], self.armor_upgrade_entry, width=20)
+		self.armor_upgrade_ddw.pack(side=LEFT, fill=X, expand=1)
 		Button(f, text='Jump ->', command=lambda t='Upgrades',i=self.armor_upgrade: self.jump(t,i)).pack(side=LEFT)
 		self.tip(f, 'Armor Upgrade', 'UnitArmorUpgrade')
 		f.pack(fill=X)
@@ -115,7 +116,8 @@ class BasicUnitsTab(DATUnitsTab):
 		Label(f, text='Ground:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.ground_weapon_entry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.ground_weapon_dropdown, DATA_CACHE['Weapons.txt'], self.ground_weapon_entry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.ground_weapon_ddw = DropDown(f, self.ground_weapon_dropdown, [], self.ground_weapon_entry)
+		self.ground_weapon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Weapons',i=self.ground_weapon_dropdown: self.jump(t,i)).pack(side=LEFT)
 		self.tip(f, 'Ground Weapon', 'UnitWeaponGround')
 		f.pack(fill=X)
@@ -128,7 +130,8 @@ class BasicUnitsTab(DATUnitsTab):
 		Label(f, text='Air:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.air_weapon_entry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.air_weapon_dropdown, DATA_CACHE['Weapons.txt'], self.air_weapon_entry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.air_weapon_ddw = DropDown(f, self.air_weapon_dropdown, [], self.air_weapon_entry)
+		self.air_weapon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Weapons',i=self.air_weapon_dropdown: self.jump(t,i)).pack(side=LEFT)
 		self.tip(f, 'Air Weapon', 'UnitWeaponAir')
 		f.pack(fill=X)
@@ -254,6 +257,21 @@ class BasicUnitsTab(DATUnitsTab):
 			elif len(s.split('.')[1]) > 4:
 				s = s[:s.index('.')+5]
 			self.build_time_seconds.set(s)
+
+	def update_entry_names(self):
+		self.armor_upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
+		self.ground_weapon_ddw.setentries(self.toplevel.data_context.weapons.names)
+		self.air_weapon_ddw.setentries(self.toplevel.data_context.weapons.names)
+
+	def update_entry_counts(self):
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count()
+			self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
+			self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
+		else:
+			self.armor_upgrade_entry.range[1] = None
+			self.ground_weapon_entry.range[1] = None
+			self.air_weapon_entry.range[1] = None
 
 	def load_data(self, entry):
 		self.hit_points_whole.set(entry.hit_points.whole)

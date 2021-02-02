@@ -122,21 +122,35 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-	def files_updated(self):
-		sfxdata = DATA_CACHE['Sfxdata.txt']
-		fields = (
-			(self.ready_sound,self.ready_sound_dropdown_widget),
-			(self.yes_sound_start,self.yes_sound_start_dropdown_widget),
-			(self.yes_soound_end,self.yes_sound_end_dropdown_widget),
-			(self.what_sound_start,self.what_sound_start_dropdown_widget),
-			(self.what_sound_end,self.what_sound_end_dropdown_widget),
-			(self.pissed_sound_start,self.pissed_sound_start_dropdown_widget),
-			(self.pissed_sound_end,self.pissed_sound_end_dropdown_widget)
+	def update_entry_names(self):
+		names = self.toplevel.data_context.sounds.names
+		dropdowns = (
+			self.ready_sound_dropdown_widget,
+			self.yes_sound_start_dropdown_widget,
+			self.yes_sound_end_dropdown_widget,
+			self.what_sound_start_dropdown_widget,
+			self.what_sound_end_dropdown_widget,
+			self.pissed_sound_start_dropdown_widget,
+			self.pissed_sound_end_dropdown_widget
 		)
-		for entry,dd in fields:
-			entry.range[1] = len(sfxdata)
-			dd.setentries(sfxdata)
-			entry.editvalue()
+		for dropdown in dropdowns:
+			dropdown.setentries(names)
+
+	def update_entry_counts(self):
+		limit = None
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			limit = self.toplevel.data_context.sounds.entry_count() - 1
+		variables = (
+			self.ready_sound,
+			self.yes_sound_start,
+			self.yes_soound_end,
+			self.what_sound_start,
+			self.what_sound_end,
+			self.pissed_sound_start,
+			self.pissed_sound_end
+		)
+		for variable in variables:
+			variable.range[1] = limit
 
 	def load_data(self, entry):
 		fields = (

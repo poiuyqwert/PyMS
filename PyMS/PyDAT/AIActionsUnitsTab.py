@@ -35,24 +35,24 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.AI_NoSuicide = IntVar()
 		self.AI_NoGuard = IntVar()
 
-		ais = [
-			('Computer Idle', self.computeridleentry, self.computeridle, 'UnitAICompIdle'),
-			('Human Idle', self.humanidleentry, self.humanidle, 'UnitAIHumanIdle'),
-			('Return to Idle', self.returntoidleentry, self.returntoidle, 'UnitAIReturn'),
-			('Attack Unit', self.attackunitentry, self.attackunit, 'UnitAIAttackUnit'),
-			('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove'),
-		]
 		l = LabelFrame(frame, text='AI Actions:')
 		s = Frame(l)
-		for t,e,d,h in ais:
+		def add_dropdown(title, entry_variable, dropdown_variable, hint_name):
 			f = Frame(s)
-			Label(f, text=t + ':', width=16, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=3).pack(side=LEFT)
+			Label(f, text=title + ':', width=16, anchor=E).pack(side=LEFT)
+			Entry(f, textvariable=entry_variable, font=couriernew, width=3).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
-			DropDown(f, d, DATA_CACHE['Orders.txt'], e, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
-			Button(f, text='Jump ->', command=lambda t='Orders',i=d: self.jump(t,i)).pack(side=LEFT)
-			self.tip(f, t, h)
+			dropdown = DropDown(f, dropdown_variable, [], entry_variable, width=30)
+			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
+			Button(f, text='Jump ->', command=lambda t='Orders',i=dropdown_variable: self.jump(t,i)).pack(side=LEFT)
+			self.tip(f, title, hint_name)
 			f.pack(fill=X)
+			return dropdown
+		self.computeridle_ddw = add_dropdown('Computer Idle', self.computeridleentry, self.computeridle, 'UnitAICompIdle')
+		self.humanidle_ddw = add_dropdown('Human Idle', self.humanidleentry, self.humanidle, 'UnitAIHumanIdle')
+		self.returntoidle_ddw = add_dropdown('Return to Idle', self.returntoidleentry, self.returntoidle, 'UnitAIReturn')
+		self.attackunit_ddw = add_dropdown('Attack Unit', self.attackunitentry, self.attackunit, 'UnitAIAttackUnit')
+		self.attackmove_ddw = add_dropdown('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove')
 		f = Frame(s)
 		Label(f, text='Right-Click Action:', width=16, anchor=E).pack(side=LEFT)
 		DropDown(f, self.rightclick, DATA_CACHE['Rightclick.txt'], width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -143,6 +143,25 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def update_entry_names(self):
+		# TODO: None for expanded dat?
+		names = self.toplevel.data_context.orders.names + ['None']
+		self.computeridle_ddw.setentries(names)
+		self.humanidle_ddw.setentries(names)
+		self.returntoidle_ddw.setentries(names)
+		self.attackunit_ddw.setentries(names)
+		self.attackmove_ddw.setentries(names)
+
+	def update_entry_counts(self):
+		count = None
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			count = self.toplevel.data_context.orders.entry_count() + 1
+		self.computeridleentry.range[1] = count
+		self.humanidleentry.range[1] = count
+		self.returntoidleentry.range[1] = count
+		self.attackunitentry.range[1] = count
+		self.attackmoveentry.range[1] = count
+
 	def force_weapon_id(self, force_type):
 		unit_id = self.parent_tab.id
 		if unit_id == 72 or unit_id == 82: # Carrier/Gantrithor
@@ -150,10 +169,10 @@ class AIActionsUnitsTab(DATUnitsTab):
 		elif unit_id == 81 or unit_id == 83: # Reaver/Warbringer
 			unit_id = 85 # Scarab
 		else:
-			entry = self.parent_tab.dat.get_entry(unit_id)
+			entry = self.toplevel.data_context.units.dat.get_entry(unit_id)
 			if entry.subunit1 != 228:
 				unit_id = entry.subunit1
-		entry = self.parent_tab.dat.get_entry(unit_id)
+		entry = self.toplevel.data_context.units.dat.get_entry(unit_id)
 		if force_type == FORCETYPE_AIR:
 			weapon_id = entry.air_weapon
 		else:
@@ -190,12 +209,12 @@ class AIActionsUnitsTab(DATUnitsTab):
 		factor = 0
 		damage = 0
 		if weapon_id != 130:
-			weapon = self.toplevel.weapons.get_entry(weapon_id)
+			weapon = self.toplevel.data_context.weapons.dat.get_entry(weapon_id)
 			attack_range = weapon.maximum_range
 			cooldown = weapon.weapon_cooldown
 			factor = weapon.damage_factor
 			damage = weapon.damage_amount
-		unit = self.parent_tab.dat.get_entry(unit_id)
+		unit = self.toplevel.data_context.units.dat.get_entry(unit_id)
 		hp = unit.hit_points.whole
 		shields = unit.shield_amount if unit.shield_enabled else 0
 		reduction = reductions.get(unit_id, 1.0)

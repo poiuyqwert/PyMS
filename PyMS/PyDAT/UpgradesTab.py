@@ -154,14 +154,18 @@ class UpgradesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.armor_upgrade, )),
-			('weapons.dat', lambda entry: (entry.damage_upgrade, )),
+		self.setup_used_by_listbox()
+
+	def get_dat_data(self):
+		return self.toplevel.data_context.upgrades
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.armor_upgrade, )),
+			(self.toplevel.data_context.weapons.dat, lambda weapon: (weapon.damage_upgrade, )),
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.upgrades
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)

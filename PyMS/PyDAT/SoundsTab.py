@@ -81,14 +81,17 @@ class SoundsTab(DATTab):
 		m.pack(fill=X)
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
+		self.setup_used_by_listbox()
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.ready_sound, (entry.what_sound_start, entry.what_sound_end), (entry.pissed_sound_start, entry.pissed_sound_end), (entry.yes_sound_start, entry.yes_sound_end)))
+	def get_dat_data(self):
+		return self.toplevel.data_context.sounds
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.ready_sound, (unit.what_sound_start, unit.what_sound_end), (unit.pissed_sound_start, unit.pissed_sound_end), (unit.yes_sound_start, unit.yes_sound_end)))
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.sounds
 		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.sfxdatatbl.strings]
 		self.soundentry.range[1] = len(sfxdata)-1
 		self.sounds.setentries(sfxdata)

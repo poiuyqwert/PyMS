@@ -92,15 +92,17 @@ class SpritesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('flingy.dat', lambda entry: (entry.sprite, )),
-		]
-		self.setuplistbox()
+		self.setup_used_by_listbox()
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
-	def files_updated(self):
-		self.dat = self.toplevel.sprites
+	def get_dat_data(self):
+		return self.toplevel.data_context.sprites
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.flingy.dat, lambda flingy: (flingy.sprite, )),
+		]
 
 	def selcircle(self, n, t=0):
 		if t:
@@ -125,29 +127,22 @@ class SpritesTab(DATTab):
 				i = int(self.selentry.get())
 				if self.selentry['state'] == NORMAL:
 					image_id = 561 + i
-					g = self.toplevel.images.get_entry(image_id).grp_file
-					if g:
-						f = self.toplevel.data_context.imagestbl.strings[g-1][:-1]
-						image = self.toplevel.data_context.get_grp_frame(f, draw_function=rle_outline, draw_info=OUTLINE_SELF)
-						if image:
-							y = 130+int(self.vertpos.get())
-							self.preview.create_image(130, y, image=image[0])
-							w = 3*int(self.boxes.get())
-							hp = [130-(w/2),y+6+(image[4]-image[3])/2]
-							self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
-							hp[0] += 1
-							hp[1] += 1
-							for _ in range(int(self.boxes.get())):
-								self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
-								hp[0] += 3
-				i = self.toplevel.sprites.get_entry(self.id).image_file
-				image_entry = self.toplevel.images.get_entry(i)
-				tbl_index = image_entry.grp_file
-				if tbl_index:
-					grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
-					sprite = self.toplevel.data_context.get_grp_frame(grp_path)
-					if sprite:
-						self.preview.create_image(130, 130, image=sprite[0])
+					frame = self.toplevel.data_context.get_image_frame(image_id, draw_function=rle_outline, draw_info=OUTLINE_SELF)
+					if frame:
+						y = 130+int(self.vertpos.get())
+						self.preview.create_image(130, y, image=frame[0])
+						w = 3*int(self.boxes.get())
+						hp = [130-(w/2),y+6+(frame[4]-frame[3])/2]
+						self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
+						hp[0] += 1
+						hp[1] += 1
+						for _ in range(int(self.boxes.get())):
+							self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
+							hp[0] += 3
+				image_id = self.toplevel.data_context.sprites.dat.get_entry(self.id).image_file
+				frame = self.toplevel.data_context.get_image_frame(image_id)
+				if frame:
+					self.preview.create_image(130, 130, image=frame[0])
 				self.previewing = i
 			else:
 				self.previewing = None

@@ -80,13 +80,17 @@ class PortraitsTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.portrait, )),
+		self.setup_used_by_listbox()
+
+	def get_dat_data(self):
+		return self.toplevel.data_context.portraits
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.portrait, )),
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.portraits
 		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.portdatatbl.strings]
 		self.idle_entry.range[1] = len(portdata)-1
 		self.idle_dd_view.setentries(portdata)

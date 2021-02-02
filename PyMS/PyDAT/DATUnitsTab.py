@@ -29,19 +29,22 @@ class DATUnitsTab(NotebookTab):
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 
-	def files_updated(self):
+	def update_entry_names(self):
+		pass
+
+	def update_entry_counts(self):
 		pass
 
 	def activate(self):
-		if not self.parent_tab.dat:
+		if not self.toplevel.data_context.units.dat:
 			return
-		entry = self.parent_tab.dat.get_entry(self.parent_tab.id)
+		entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
 		self.load_data(entry)
 
 	def deactivate(self):
-		if not self.parent_tab.dat:
+		if not self.toplevel.data_context.units.dat:
 			return
-		entry = self.parent_tab.dat.get_entry(self.parent_tab.id)
+		entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
 		edited = self.save_data(entry)
 		if edited:
 			self.parent_tab.edited = edited

@@ -34,8 +34,10 @@ class MapsTab(DATTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def get_dat_data(self):
+		return self.toplevel.data_context.campaign
+
 	def files_updated(self):
-		self.dat = self.toplevel.campaigns
 		mapdata = [decompile_string(s) for s in self.toplevel.data_context.mapdatatbl.strings]
 		self.missions.none_value = len(mapdata)
 		self.missionentry.range[1] = len(mapdata)

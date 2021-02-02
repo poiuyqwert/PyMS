@@ -79,14 +79,16 @@ class FlingyTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.graphics, )),
-			('weapons.dat', lambda entry: (entry.graphics, )),
-		]
-		self.setuplistbox()
+		self.setup_used_by_listbox()
 
-	def files_updated(self):
-		self.dat = self.toplevel.flingy
+	def get_dat_data(self):
+		return self.toplevel.data_context.flingy
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.graphics, )),
+			(self.toplevel.data_context.weapons.dat, lambda weapon: (weapon.graphics, )),
+		]
 
 	def updatespeed(self, num, type):
 		if type:

@@ -17,7 +17,7 @@ from DATSettingsDialog import DATSettingsDialog
 from ..FileFormats.MPQ.SFmpq import *
 from ..FileFormats.DAT import *
 
-from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, ccopy
+from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Tooltip import Tooltip
@@ -34,7 +34,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from Tkinter import *
 from tkMessageBox import askquestion, showinfo, OK
 
-import os, webbrowser
+import os, webbrowser, copy
 
 LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
 
@@ -55,21 +55,7 @@ class PyDAT(Tk):
 
 		self.data_context = DataContext()
 
-		self.units = None
-		self.weapons = None
-		self.flingy = None
-		self.sprites = None
-		self.images = None
-		self.upgrades = None
-		self.technology = None
-		self.sounds = None
-		self.portraits = None
-		self.campaigns = None
-		self.orders = None
-
 		self.data_context.load_palettes()
-		self.dats = {}
-		self.defaults = {}
 
 		#Toolbar
 		buttons = [
@@ -240,6 +226,14 @@ class PyDAT(Tk):
 	def tab_activated(self, event=None):
 		self.action_states()
 
+	def update_entry_names(self):
+		for page in self.pages:
+			page.update_entry_names()
+
+	def update_entry_counts(self):
+		for page in self.pages:
+			page.update_entry_counts()
+
 	def open_files(self):
 		err = None
 		try:
@@ -247,63 +241,9 @@ class PyDAT(Tk):
 		except PyMSError, e:
 			err = e
 		else:
-			units = UnitsDAT()
-			weapons = WeaponsDAT()
-			flingy = FlingyDAT()
-			sprites = SpritesDAT()
-			images = ImagesDAT()
-			upgrades = UpgradesDAT()
-			technology = TechDAT()
-			sounds = SoundsDAT()
-			portraits = PortraitsDAT()
-			campaigns = CampaignDAT()
-			orders = OrdersDAT()
-			defaults = [
-				(units, UnitsDAT),
-				(weapons, WeaponsDAT),
-				(flingy, FlingyDAT),
-				(sprites, SpritesDAT),
-				(images, ImagesDAT),
-				(upgrades, UpgradesDAT),
-				(technology, TechDAT),
-				(sounds, SoundsDAT),
-				(portraits, PortraitsDAT),
-				(campaigns, CampaignDAT),
-				(orders, OrdersDAT),
-			]
-			defaultmpqs = MPQHandler()
-			defaultmpqs.add_defaults()
-			defaultmpqs.open_mpqs()
-			for v,c in defaults:
-				n = c.FILE_NAME
-				try:
-					v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, True))
-				except:
-					try:
-						v.load_file(defaultmpqs.get_file('MPQ:arr\\' + n, False))
-					except PyMSError, e:
-						err = e
-						break
-			defaultmpqs.close_mpqs()
-		if not err:
-			self.units = units
-			self.weapons = weapons
-			self.flingy = flingy
-			self.sprites = sprites
-			self.images = images
-			self.upgrades = upgrades
-			self.technology = technology
-			self.sounds = sounds
-			self.portraits = portraits
-			self.campaigns = campaigns
-			self.orders = orders
-			for v,c in defaults:
-				n = c.FILE_NAME
-				self.dats[n] = v
-				self.defaults[n] = c()
-				self.defaults[n].entries = ccopy(v.entries)
-			for page in self.pages:
-				page.files_updated()
+			self.data_context.load_dat_files()
+			self.update_entry_counts()
+			self.update_entry_names()
 			self.dattabs.active.activate()
 		return err
 

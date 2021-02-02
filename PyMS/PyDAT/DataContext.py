@@ -1,5 +1,6 @@
 
-from ..FileFormats.DAT.ImagesDAT import Image
+from DATData import *
+
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP
 from ..FileFormats.TBL import TBL
@@ -20,12 +21,25 @@ class DataContext(object):
 		self.mpqhandler = None
 
 		self.stat_txt = None
+		self.unitnamestbl = None # Expanded unit names
 		self.imagestbl = None
 		self.sfxdatatbl = None
 		self.portdatatbl = None
 		self.mapdatatbl = None
 		self.cmdicon = None
 		self.iscriptbin = None
+
+		self.units = UnitsDATData()
+		self.weapons = EntryLabelDATData(WeaponsDAT, 'Weapons.txt', 'Weapon')
+		self.flingy = DATData(FlingyDAT, 'Flingy.txt', 'Flingy')
+		self.sprites = DATData(SpritesDAT, 'Sprites.txt', 'Sprite')
+		self.images = DATData(ImagesDAT, 'Images.txt', 'Image')
+		self.upgrades = EntryLabelDATData(UpgradesDAT, 'Upgrades.txt', 'Upgrade')
+		self.technology = EntryLabelDATData(TechDAT, 'Techdata.txt', 'Technology')
+		self.sounds = DATData(SoundsDAT, 'Sfxdata.txt', 'Sound')
+		self.portraits = DATData(PortraitsDAT, 'Portdata.txt', 'Portrait')
+		self.campaign = DATData(CampaignDAT, 'Mapdata.txt', 'Map')
+		self.orders = EntryLabelDATData(OrdersDAT, 'Orders.txt', 'Order', label_offset=1)
 
 		self.palettes = {}
 		self.grp_cache = {}
@@ -85,6 +99,33 @@ class DataContext(object):
 		self.cmdicon = cmdicon
 		self.iscriptbin = iscriptbin
 
+	def load_dat_files(self):
+		defaultmpqs = MPQHandler()
+		defaultmpqs.add_defaults()
+		defaultmpqs.open_mpqs()
+		self.units.load_defaults(defaultmpqs)
+		self.units.update_names(self)
+		self.weapons.load_defaults(defaultmpqs)
+		self.weapons.update_names(self)
+		self.flingy.load_defaults(defaultmpqs)
+		self.flingy.update_names(self)
+		self.sprites.load_defaults(defaultmpqs)
+		self.sprites.update_names(self)
+		self.images.load_defaults(defaultmpqs)
+		self.images.update_names(self)
+		self.upgrades.load_defaults(defaultmpqs)
+		self.upgrades.update_names(self)
+		self.technology.load_defaults(defaultmpqs)
+		self.technology.update_names(self)
+		self.sounds.load_defaults(defaultmpqs)
+		self.sounds.update_names(self)
+		self.portraits.load_defaults(defaultmpqs)
+		self.portraits.update_names(self)
+		self.campaign.load_defaults(defaultmpqs)
+		self.campaign.update_names(self)
+		self.orders.load_defaults(defaultmpqs)
+		self.orders.update_names(self)
+		defaultmpqs.close_mpqs()
 
 	def get_cmdicon(self, index):
 		if not 'Icons' in self.palettes or not self.cmdicon or index >= self.cmdicon.frames:
@@ -119,9 +160,12 @@ class DataContext(object):
 			self.grp_cache[path][palette] = frame_to_photo(self.palettes[palette], grp, frame, True, draw_function=draw_function, draw_info=draw_info)
 		return self.grp_cache[path][palette]
 
-	# def get_image_frame(self, image_id):
-	# 	image_entry = self.images.get_entry(image_id)
-	# 	tbl_index = image_entry.grp_file
-	# 	if tbl_index:
-	# 		grp_path = self.imagestbl.strings[tbl_index - 1][:-1]
-	# 		return self.get_grp_frame(grp_path)
+	def get_image_frame(self, image_id, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0):
+		if not self.images.dat:
+			return None
+		image_entry = self.images.dat.get_entry(image_id)
+		tbl_index = image_entry.grp_file
+		if not tbl_index:
+			return None
+		grp_path = self.imagestbl.strings[tbl_index - 1][:-1]
+		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)

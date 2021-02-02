@@ -140,6 +140,13 @@ class StarEditUnitsTab(DATUnitsTab):
 		for v in (self.width, self.height):
 			v.trace('w', lambda *_: self.drawpreview())
 
+	def update_entry_names(self):
+		count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
+		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[1302:1302+count]]
+		self.ranks.setentries(ranks)
+		self.rankentry.range[1] = count
+		self.rankentry.editvalue()
+
 	def drawboxes(self):
 		if self.showpreview.get():
 			w,h = self.width.get() / 2,self.height.get() / 2
@@ -149,29 +156,18 @@ class StarEditUnitsTab(DATUnitsTab):
 			self.preview.coords('place', 0, 0, 0, 0)
 
 	def draw_image(self, image_id, tag, x=130, y=130):
-		image_entry = self.toplevel.images.get_entry(image_id)
-		tbl_index = image_entry.grp_file
-		if tbl_index:
-			grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
-			sprite = self.toplevel.data_context.get_grp_frame(grp_path)
-			if sprite:
-				self.preview.create_image(x, y, image=sprite[0], tags=tag)
+		frame = self.toplevel.data_context.get_image_frame(image_id)
+		if frame:
+			self.preview.create_image(x, y, image=frame[0], tags=tag)
 
 	def drawpreview(self):
 		self.preview.delete('unit')
 		if self.showpreview.get():
-			entry = self.parent_tab.dat.get_entry(self.parent_tab.id)
-			flingy = self.toplevel.flingy.get_entry(entry.graphics)
-			sprite = self.toplevel.sprites.get_entry(flingy.sprite)
+			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
+			flingy = self.toplevel.data_context.flingy.dat.get_entry(entry.graphics)
+			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
 			self.draw_image(sprite.image_file, 'unit')
 		self.drawboxes()
-
-	def files_updated(self):
-		r = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
-		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[1302:1302+r]]
-		self.rankentry.range[1] = len(ranks)-1
-		self.ranks.setentries(ranks)
-		self.rankentry.editvalue()
 
 	def load_data(self, entry):
 		self.men.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.men == Unit.StarEditGroupFlag.men)

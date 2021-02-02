@@ -5,7 +5,7 @@ from ..FileFormats.DAT import WeaponsDAT, UpgradesDAT, TechDAT
 from ..FileFormats.DAT import UnitsDAT
 from ..FileFormats.TBL import decompile_string
 
-from ..Utilities.utils import BASE_DIR, fit, isstr, ccopy
+from ..Utilities.utils import BASE_DIR, fit, isstr
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.DataCache import DATA_CACHE
@@ -15,7 +15,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from Tkinter import *
 import tkMessageBox
 
-import os
+import os, copy
 
 DAT_DATA_REF_FILES = {
 	'units.dat': 'Units.txt',
@@ -38,13 +38,12 @@ class DATTab(NotebookTab):
 		self.id = 0
 		self.toplevel = toplevel
 		self.icon = self.toplevel.icon
-		self.dat = None
 		self.file = None
-		self.listbox = None
+		self.used_by_listbox = None
+		self.used_by_data = []
 		self.entrycopy = None
 		self.edited = False
 		self.dattabs = None
-		self.usedby = None
 		NotebookTab.__init__(self, parent)
 
 	def tip(self, obj, tipname, hint):
@@ -55,22 +54,25 @@ class DATTab(NotebookTab):
 		self.tip(c, txt, hint)
 		return c
 
-	def setuplistbox(self):
+	def get_dat_data(self):
+		return None
+
+	def setup_used_by_listbox(self):
 		f = LabelFrame(self, text='Used By:')
 		listframe = Frame(f, bd=2, relief=SUNKEN)
 		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, width=1, activestyle=DOTBOX, height=6, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
-		self.listbox.bind('<Double-Button-1>', self.usedbyjump)
-		scrollbar.config(command=self.listbox.yview)
+		self.used_by_listbox = Listbox(listframe, width=1, activestyle=DOTBOX, height=6, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
+		self.used_by_listbox.bind('<Double-Button-1>', self.usedbyjump)
+		scrollbar.config(command=self.used_by_listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
+		self.used_by_listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		listframe.pack(fill=X, padx=2, pady=2)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
 
 	def usedbyjump(self, key=None):
-		s = self.listbox.curselection()
+		s = self.used_by_listbox.curselection()
 		if s:
-			dat = self.listbox.get(int(s[0])).split(' ', 3)
+			dat = self.used_by_listbox.get(int(s[0])).split(' ', 3)
 			self.toplevel.dattabs.display(self.toplevel.dats[dat[0]].idfile.split('.')[0])
 			self.toplevel.changeid(i=int(dat[2][:-1]))
 
@@ -80,43 +82,25 @@ class DATTab(NotebookTab):
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 
-	def files_updated(self):
+	def update_entry_names(self):
+		pass
+
+	def update_entry_counts(self):
 		pass
 
 	def update_status(self):
 		if self.file:
 			self.toplevel.status.set(self.file)
 		else:
-			self.toplevel.status.set(os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr',  self.dat.FILE_NAME))
+			self.toplevel.status.set(os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr',  self.get_dat_data().dat.FILE_NAME))
 
 	def activate(self):
-		if self.dat:
-			self.toplevel.listbox.delete(0,END)
-			d = []
-			if self.toplevel.data_context.settings.settings.get('customlabels', False):
-				if self.data == 'Units.txt':
-					d = [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[0:228]]
-				elif self.data in ['Weapons.txt','Upgrades.txt','Techdata.txt']:
-					# TODO: Expanded DAT
-					entry_counts = {
-						'Weapons.txt': WeaponsDAT.FORMAT.entries,
-						'Upgrades.txt': UpgradesDAT.FORMAT.entries,
-						'Techdata.txt': TechDAT.FORMAT.entries
-					}
-					for i in range(entry_counts[self.data]):
-						s = self.toplevel.defaults['%s.dat' % self.data.split('.')[0].lower()].get_entry(i).label
-						if s:
-							d.append(decompile_string(self.toplevel.data_context.stat_txt.strings[s-1]))
-						else:
-							d.append('None')
-			if not d:
-				d = list(DATA_CACHE[self.data])
-				if d[-1] == 'None':
-					del d[-1]
-			self.toplevel.jumpid.range[1] = len(d) - 1
+		self.toplevel.listbox.delete(0,END)
+		dat_data = self.get_dat_data()
+		if dat_data.dat:
+			self.toplevel.jumpid.range[1] = dat_data.dat.entry_count() - 1
 			self.toplevel.jumpid.editvalue()
-			for n,l in enumerate(d):
-				self.toplevel.listbox.insert(END, ' %s%s  %s' % (' ' * (4-len(str(n))),n,l))
+			self.toplevel.listbox.insert(END, *[' %s%s  %s' % (' ' * (4-len(str(id))),id,name) for id,name in enumerate(dat_data.names)])
 			self.toplevel.listbox.select_set(self.id)
 			self.toplevel.listbox.see(self.id)
 			self.update_status()
@@ -126,23 +110,23 @@ class DATTab(NotebookTab):
 		self.save_data()
 
 	def load_data(self, id=None):
-		if not self.dat:
+		if not self.get_dat_data().dat:
 			return
 		if id != None:
 			self.id = id
-		entry = self.dat.get_entry(self.id)
+		entry = self.get_dat_data().dat.get_entry(self.id)
 		self.load_entry(entry)
-		self.checkreference()
+		self.check_used_by_references()
 
 	def load_entry(self, entry):
 		pass
 
 	def save_data(self):
-		if not self.dat:
+		if not self.get_dat_data().dat:
 			return
-		entry = self.dat.get_entry(self.id)
+		entry = self.get_dat_data().dat.get_entry(self.id)
 		self.save_entry(entry)
-		self.checkreference()
+		self.check_used_by_references()
 		if self.edited:
 			self.toplevel.action_states()
 
@@ -155,7 +139,7 @@ class DATTab(NotebookTab):
 		if self.edited:
 			file = self.file
 			if not file:
-				file = self.dat.FILE_NAME
+				file = self.get_dat_data().dat.FILE_NAME
 			save = tkMessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=tkMessageBox.YES, type=tkMessageBox.YESNOCANCEL)
 			if save != tkMessageBox.NO:
 				if save == tkMessageBox.CANCEL:
@@ -165,15 +149,16 @@ class DATTab(NotebookTab):
 				else:
 					self.saveas()
 
-	def checkreference(self, lookup_id=None, used_by=None):
-		if self.listbox:
-			self.listbox.delete(0,END)
+	def get_used_by_references(self):
+		pass
+	def check_used_by_references(self, lookup_id=None, used_by=None):
+		if self.used_by_listbox:
+			self.used_by_listbox.delete(0,END)
 			if not used_by:
-				used_by = self.usedby
+				used_by = self.get_used_by_references()
 			if not lookup_id:
 				lookup_id = self.id
-			for dat_name,lookup in used_by:
-				dat = self.toplevel.dats[dat_name]
+			for dat,lookup in used_by:
 				# TODO: Expanded DAT
 				for id in range(dat.FORMAT.entries):
 					entry = dat.get_entry(id)
@@ -181,15 +166,15 @@ class DATTab(NotebookTab):
 					for check_id in check_ids:
 						# If `lookup` returns a tuple, it represents a range of IDs, and we must check if the `lookup_id` is within that range
 						if check_id == lookup_id or (isinstance(check_id, tuple) and lookup_id >= check_id[0] and lookup_id <= check_id[1]):
-							ref = DATA_CACHE[DAT_DATA_REF_FILES[dat_name]][id]
+							ref = DATA_CACHE[DAT_DATA_REF_FILES[dat.FILE_NAME]][id]
 							if self.toplevel.data_context.settings.settings.get('customlabels', False) and type(dat) == UnitsDAT:
 								ref = decompile_string(self.toplevel.data_context.stat_txt.strings[id])
-							self.listbox.insert(END, '%s entry %s: %s' % (dat.FILE_NAME, id, ref))
+							self.used_by_listbox.insert(END, '%s entry %s: %s' % (dat.FILE_NAME, id, ref))
 							break
 
 	def popup(self, e):
 		self.toplevel.listmenu.entryconfig(1, state=[NORMAL,DISABLED][not self.entrycopy])
-		if self.dat.FILE_NAME == 'units.dat':
+		if self.get_dat_data().dat.FILE_NAME == 'units.dat':
 			self.toplevel.listmenu.entryconfig(3, state=NORMAL)
 			self.toplevel.listmenu.entryconfig(4, state=[NORMAL,DISABLED][not self.dattabs.active.tabcopy])
 		else:
@@ -199,26 +184,27 @@ class DATTab(NotebookTab):
 
 	def copy(self, t):
 		if not t:
-			self.entrycopy = list(self.dat.entries[self.id])
-		elif self.dat.FILE_NAME == 'units.dat':
-			self.dattabs.active.tabcopy = list(self.dat.entries[self.id])
+			self.entrycopy = list(self.get_dat_data().dat.entries[self.id])
+		elif self.get_dat_data().dat.FILE_NAME == 'units.dat':
+			self.dattabs.active.tabcopy = list(self.get_dat_data().dat.entries[self.id])
 
 	def paste(self, t):
 		if not t:
 			if self.entrycopy:
-				self.dat.entries[self.id] = list(self.entrycopy)
-		elif self.dat.FILE_NAME == 'units.dat' and self.dattabs.active.tabcopy:
+				self.get_dat_data().dat.entries[self.id] = list(self.entrycopy)
+		elif self.get_dat_data().dat.FILE_NAME == 'units.dat' and self.dattabs.active.tabcopy:
 			for v in self.dattabs.active.values.keys():
-				self.dat.set_value(self.id, v, self.dattabs.active.tabcopy[self.dat.labels.index(v)])
+				self.get_dat_data().dat.set_value(self.id, v, self.dattabs.active.tabcopy[self.get_dat_data().dat.labels.index(v)])
 		self.activate()
 
 	def reload(self):
-		self.dat.entries[self.id] = list(self.toplevel.defaults[self.dat.FILE_NAME].entries[self.id])
+		self.get_dat_data().dat.set_entry(self.id, copy.deepcopy(self.get_dat_data().default_dat.get_entry(self.id)))
 		self.activate()
 
 	def new(self, key=None):
 		if not self.unsaved():
-			self.dat.entries = list(self.toplevel.defaults[self.dat.FILE_NAME].entries)
+			# TODO: Better new?
+			self.get_dat_data().dat.entries = copy.deepcopy(self.get_dat_data().default_dat.entries)
 			self.file = None
 			self.id = 0
 			self.activate()
@@ -226,11 +212,11 @@ class DATTab(NotebookTab):
 	def open(self, file, save=True):
 		if not save or not self.unsaved():
 			if isstr(file):
-				entries = ccopy(self.dat.entries)
+				entries = copy.deepcopy(self.get_dat_data().dat.entries)
 				try:
-					self.dat.load_file(file)
+					self.get_dat_data().dat.load_file(file)
 				except PyMSError, e:
-					self.dat.entries = entries
+					self.get_dat_data().dat.entries = entries
 					if save:
 						ErrorDialog(self, e)
 					else:
@@ -239,7 +225,7 @@ class DATTab(NotebookTab):
 				self.file = file
 			elif isinstance(file, tuple):
 				dat,self.file = file
-				self.dat.entries = dat.entries
+				self.get_dat_data().dat.entries = dat.entries
 			self.id = 0
 			self.toplevel.listbox.select_clear(0,END)
 			self.toplevel.listbox.select_set(0)
@@ -254,23 +240,23 @@ class DATTab(NotebookTab):
 			file = self.toplevel.data_context.settings.lastpath.txt.select_file('import', self, 'Import TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')])
 		if not file:
 			return
-		entries = ccopy(self.dat.entries)
+		entries = copy.deepcopy(self.get_dat_data().dat.entries)
 		try:
-			ids = self.dat.interpret(file)
+			ids = self.get_dat_data().dat.interpret(file)
 		except PyMSError, e:
-			self.dat.entries = entries
+			self.get_dat_data().dat.entries = entries
 			ErrorDialog(self, e)
 			return
 		cont = c
 		for n,_entry in enumerate(entries):
 			if cont != 3 and n in ids:
 				if cont != 2:
-					x = ContinueImportDialog(parent, self.dat.FILE_NAME, n)
+					x = ContinueImportDialog(parent, self.get_dat_data().dat.FILE_NAME, n)
 					cont = x.cont
 					if cont in [0,3]:
-						self.dat.entries[n] = entries[n]
+						self.get_dat_data().dat.entries[n] = entries[n]
 			else:
-				self.dat.entries[n] = entries[n]
+				self.get_dat_data().dat.entries[n] = entries[n]
 		return cont
 
 	def save(self, key=None):
@@ -278,7 +264,7 @@ class DATTab(NotebookTab):
 			self.saveas()
 			return
 		try:
-			self.dat.compile(self.file)
+			self.get_dat_data().dat.compile(self.file)
 		except PyMSError, e:
 			ErrorDialog(self, e)
 		else:
@@ -286,7 +272,7 @@ class DATTab(NotebookTab):
 			self.toplevel.action_states()
 
 	def saveas(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.dat.save.select_file(self.dat.FILE_NAME, self, 'Save %s As' % self.dat.FILE_NAME, '*.dat', [('StarCraft %s files' % self.dat.FILE_NAME,'*.dat'),('All Files','*')], save=True)
+		file = self.toplevel.data_context.settings.lastpath.dat.save.select_file(self.get_dat_data().dat.FILE_NAME, self, 'Save %s As' % self.get_dat_data().dat.FILE_NAME, '*.dat', [('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME,'*.dat'),('All Files','*')], save=True)
 		if not file:
 			return True
 		self.file = file
@@ -298,6 +284,6 @@ class DATTab(NotebookTab):
 		if not file:
 			return True
 		try:
-			self.dat.decompile(file)
+			self.get_dat_data().dat.decompile(file)
 		except PyMSError, e:
 			ErrorDialog(self, e)

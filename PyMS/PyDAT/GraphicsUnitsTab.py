@@ -26,24 +26,27 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.elevationdd = IntVar()
 		self.direction = IntegerVar(0, [0,255])
 
-		gfx = [
-			('Graphics', self.graphicsentry, self.graphicsdd, 'Flingy.txt', 'UnitGfx', None),
-			('Construction', self.constructionentry, self.constructiondd, 'Images.txt', 'UnitConstruction', None),
-			('Portraits', self.portraitsentry, self.portraitsdd, 'Portdata.txt', 'UnitPortrait', 65535),
-			('Elevation', self.elevationentry, self.elevationdd, 'ElevationLevels.txt', 'UnitElevationLevel', None),
-		]
 		l = LabelFrame(frame, text='Sprite Graphics:')
 		s = Frame(l)
-		for t,e,d,q,h,n in gfx:
+		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, data_file=None, jump_ref=None):
 			f = Frame(s)
-			Label(f, text=t + ':', width=13, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=5).pack(side=LEFT)
+			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
+			Entry(f, textvariable=entry_variable, font=couriernew, width=5).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
-			DropDown(f, d, DATA_CACHE[q], e, width=30, none_value=n).pack(side=LEFT, fill=X, expand=1, padx=2)
-			if t != 'Elevation':
-				Button(f, text='Jump ->', command=lambda t=q.split('.')[0],i=d: self.jump(t,i)).pack(side=LEFT)
-			self.tip(f, t, h)
+			values = []
+			if data_file:
+				values = DATA_CACHE[data_file]
+			dropdown = DropDown(f, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
+			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
+			if jump_ref:
+				Button(f, text='Jump ->', command=lambda t=jump_ref,i=dropdown_variable: self.jump(t,i)).pack(side=LEFT)
+			self.tip(f, title, hint_name)
 			f.pack(fill=X)
+			return dropdown
+		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', jump_ref='Flingy')
+		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', jump_ref='Images')
+		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', none_value=65535, jump_ref='Portdata')
+		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', data_file='ElevationLevels.txt')
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.direction, font=couriernew, width=3).pack(side=LEFT)
@@ -134,9 +137,24 @@ class GraphicsUnitsTab(DATUnitsTab):
 		for v in (self.left, self.up, self.right, self.down):
 			v.trace('w', lambda *_: self.drawboxes())
 
+	def update_entry_names(self):
+		self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+		self.construction_ddw.setentries(self.toplevel.data_context.images.names)
+		self.portraits_ddw.setentries(self.toplevel.data_context.portraits.names + ['None'])
+
+	def update_entry_counts(self):
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count()
+			self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count()
+			self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
+		else:
+			self.graphicsentry.range[1] = None
+			self.constructionentry.range[1] = None
+			self.portraitsentry.range[1] = None
+
 	def drawboxes(self):
 		if self.showpreview.get() and self.showplace.get():
-			entry = self.parent_tab.dat.get_entry(self.parent_tab.id)
+			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
 			w = entry.staredit_placement_size.width / 2
 			h = entry.staredit_placement_size.height / 2
 			self.preview.coords('place', 129-w, 129-h, 129+w, 129+h)
@@ -150,13 +168,9 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.preview.coords('size', 0, 0, 0 ,0)
 
 	def draw_image(self, image_id, tag, x=130, y=130):
-		image_entry = self.toplevel.images.get_entry(image_id)
-		tbl_index = image_entry.grp_file
-		if tbl_index:
-			grp_path = self.toplevel.data_context.imagestbl.strings[tbl_index - 1][:-1]
-			sprite = self.toplevel.data_context.get_grp_frame(grp_path)
-			if sprite:
-				self.preview.create_image(x, y, image=sprite[0], tags=tag)
+		frame = self.toplevel.data_context.get_image_frame(image_id)
+		if frame:
+			self.preview.create_image(x, y, image=frame[0], tags=tag)
 
 	def draw_addon_preview(self):
 		self.preview.delete('addon_parent')
@@ -165,17 +179,17 @@ class GraphicsUnitsTab(DATUnitsTab):
 		addon_preview = addon_preview and self.show_addon_placement.get()
 		addon_preview = addon_preview and (self.horizontal.get() or self.vertical.get())
 		if addon_preview:
-			entry = self.parent_tab.dat.get_entry(self.parent_tab.id)
+			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
 			w = entry.staredit_placement_size.width
 			h = entry.staredit_placement_size.height
 			parent_id = self.addon_parent_id.get()
-			parent_entry = self.parent_tab.dat.get_entry(parent_id)
+			parent_entry = self.toplevel.data_context.units.dat.get_entry(parent_id)
 			parent_w = parent_entry.staredit_placement_size.width
 			parent_h = parent_entry.staredit_placement_size.height
 			x = 129 - w/2 - self.horizontal.get()
 			y = 129 - h/2 - self.vertical.get()
-			parent_flingy = self.toplevel.flingy.get_entry(parent_entry.graphics)
-			parent_sprite = self.toplevel.sprites.get_entry(parent_flingy.sprite)
+			parent_flingy = self.toplevel.data_context.flingy.dat.get_entry(parent_entry.graphics)
+			parent_sprite = self.toplevel.data_context.sprites.dat.get_entry(parent_flingy.sprite)
 			self.draw_image(parent_sprite.image_file, 'addon_parent', x=x+parent_w/2, y=y+parent_h/2)
 			self.preview.coords('addon_parent_size', x, y, x+parent_w, y+parent_h)
 			self.preview.lift('addon_parent_size')
@@ -187,8 +201,8 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.preview.delete('unit')
 		if self.showpreview.get():
 			flingy_id = self.graphicsentry.get()
-			flingy = self.toplevel.flingy.get_entry(flingy_id)
-			sprite = self.toplevel.sprites.get_entry(flingy.sprite)
+			flingy = self.toplevel.data_context.flingy.dat.get_entry(flingy_id)
+			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
 			self.draw_image(sprite.image_file, 'unit')
 		self.drawboxes()
 

@@ -100,8 +100,6 @@ class AdvancedUnitsTab(DATUnitsTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		units = DATA_CACHE['Units.txt']
-
 		self.infestentry = IntegerVar(0, [0,228])
 		self.infestdd = IntVar()
 		self.subunitoneentry = IntegerVar(0,[0,228])
@@ -125,7 +123,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.infestentryw = Entry(f, textvariable=self.infestentry, font=couriernew, width=3)
 		self.infestentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.infestddw = DropDown(f, self.infestdd, units, self.infestentry)
+		self.infestddw = DropDown(f, self.infestdd, [], self.infestentry)
 		self.infestddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.infestbtnw = Button(f, text='Jump ->', command=lambda t='Units',i=self.infestdd: self.jump(t,i))
 		self.infestbtnw.pack(side=LEFT)
@@ -136,14 +134,16 @@ class AdvancedUnitsTab(DATUnitsTab):
 		Label(f, text='Subunit 1:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunitoneentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.subunitone, units, self.subunitoneentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.subunitone_ddw = DropDown(f, self.subunitone, [], self.subunitoneentry)
+		self.subunitone_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Subunit 1', 'UnitSub1')
 		f.pack(fill=X)
 		f = Frame(su)
 		Label(f, text='Subunit 2:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunittwoentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.subunittwo, units, self.subunittwoentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.subunittwo_ddw = DropDown(f, self.subunittwo, [], self.subunittwoentry)
+		self.subunittwo_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Subunit 2', 'UnitSub2')
 		f.pack(fill=X)
 		f = Frame(su)
@@ -179,11 +179,25 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-	def files_updated(self):
-		units = DATA_CACHE['Units.txt']
-		if self.toplevel.data_context.settings.settings.get('customlabels', False):
-			units = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[:229]]
-		self.infestddw.setentries(units)
+	def update_entry_names(self):
+		names = self.toplevel.data_context.units.names
+		if self.toplevel.data_context.units.is_expanded():
+			names[self.toplevel.data_context.units.dat_type.FORMAT.entries] = 'None'
+		else:
+			names.append('None')
+		self.infestddw.setentries(names)
+		self.subunitone_ddw.setentries(names)
+		self.subunittwo_ddw.setentries(names)
+
+	def update_entry_counts(self):
+		limit = None
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			limit = self.toplevel.data_context.units.entry_count()
+			if self.toplevel.data_context.units.is_expanded():
+				limit -= 1
+		self.infestentry.range[1] = limit
+		self.subunitoneentry.range[1] = limit
+		self.subunittwoentry.range[1] = limit
 
 	def load_data(self, entry):
 		self.subunitone.set(entry.subunit1)

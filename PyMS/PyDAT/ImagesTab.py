@@ -34,7 +34,8 @@ class ImagesTab(DATTab):
 		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.checkreference(v.get(),c)).pack(side=LEFT, padx=2)
+		# TODO: Update check_used_by_references
+		Button(f, text='Check', command=lambda v=self.grpdd,c=[('images.dat',['GRPFile'])]: self.check_used_by_references(v.get(),c)).pack(side=LEFT, padx=2)
 		self.tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -43,7 +44,8 @@ class ImagesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, iscripts, self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.checkreference(v.get(),c)).pack(side=LEFT, padx=2)
+		# TODO: Update check_used_by_references
+		Button(f, text='Check', command=lambda v=self.iscriptdd,c=[('images.dat',['IscriptID'])]: self.check_used_by_references(v.get(),c)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Iscript ID', 'ImgIscriptID')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -150,14 +152,18 @@ class ImagesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.construction_animation, )),
-			('sprites.dat', lambda entry: (entry.image_file, )),
+		self.setup_used_by_listbox()
+
+	def get_dat_data(self):
+		return self.toplevel.data_context.images
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.construction_animation, )),
+			(self.toplevel.data_context.sprites.dat, lambda sprite: (sprite.image_file, )),
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.images
 		entries = []
 		last = -1
 		for id in self.toplevel.data_context.iscriptbin.headers.keys():

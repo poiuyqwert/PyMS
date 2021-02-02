@@ -74,6 +74,9 @@ class AbstractDAT(object):
 	def get_entry(self, index):
 		return self.entries[index]
 
+	def set_entry(self, index, entry):
+		self.entries[index] = entry
+
 	def is_expanded(self):
 		return self.entry_count() > self.FORMAT.entries
 

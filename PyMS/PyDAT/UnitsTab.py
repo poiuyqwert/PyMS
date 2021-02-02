@@ -29,22 +29,28 @@ class UnitsTab(DATTab):
 			self.dattabs.add_tab(tab(self.dattabs, toplevel, self), name)
 		self.dattabs.pack(fill=BOTH, expand=1)
 
-	def files_updated(self):
-		self.dat = self.toplevel.units
+	def get_dat_data(self):
+		return self.toplevel.data_context.units
+
+	def update_entry_names(self):
 		for tab,_ in self.dattabs.pages.values():
-			tab.files_updated()
+			tab.update_entry_names()
+
+	def update_entry_counts(self):
+		for tab,_ in self.dattabs.pages.values():
+			tab.update_entry_counts()
 
 	def load_data(self, id=None):
-		if not self.dat:
+		if not self.toplevel.data_context.units.dat:
 			return
 		if id != None:
 			self.id = id
-		entry = self.dat.get_entry(self.id)
+		entry = self.toplevel.data_context.units.dat.get_entry(self.id)
 		self.dattabs.active.load_data(entry)
 	def save_data(self):
-		if not self.dat:
+		if not self.toplevel.data_context.units.dat:
 			return
-		entry = self.dat.get_entry(self.id)
+		entry = self.toplevel.data_context.units.dat.get_entry(self.id)
 		if self.dattabs.active.save_data(entry):
 			self.edited = True
 			self.toplevel.action_states()

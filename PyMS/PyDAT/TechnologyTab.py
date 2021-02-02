@@ -128,14 +128,18 @@ class TechnologyTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('orders.dat', lambda entry: (entry.technology_energy, )),
-			('weapons.dat', lambda entry: (entry.unused_technology, )),
+		self.setup_used_by_listbox()
+
+	def get_dat_data(self):
+		return self.toplevel.data_context.technology
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.orders.dat, lambda order: (order.technology_energy, )),
+			(self.toplevel.data_context.weapons.dat, lambda weapons: (weapons.unused_technology, )),
 		]
-		self.setuplistbox()
 
 	def files_updated(self):
-		self.dat = self.toplevel.technology
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)

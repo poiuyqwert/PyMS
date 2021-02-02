@@ -144,15 +144,19 @@ class OrdersTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.usedby = [
-			('units.dat', lambda entry: (entry.comp_ai_idle, entry.human_ai_idle, entry.return_to_idle, entry.attack_unit, entry.attack_move))
-		]
-		self.setuplistbox()
+		self.setup_used_by_listbox()
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
+	def get_dat_data(self):
+		return self.toplevel.data_context.orders
+
+	def get_used_by_references(self):
+		return [
+			(self.toplevel.data_context.units.dat, lambda unit: (unit.comp_ai_idle, unit.human_ai_idle, unit.return_to_idle, unit.attack_unit, unit.attack_move))
+		]
+
 	def files_updated(self):
-		self.dat = self.toplevel.orders
 		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
 		self.labelentry.range[1] = len(stattxt)-1
 		self.labels.setentries(stattxt)
