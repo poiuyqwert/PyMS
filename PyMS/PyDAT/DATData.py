@@ -14,6 +14,7 @@ class DATData(object):
 		self.entry_type_name = entry_type_name
 		self.dat = None
 		self.default_dat = None
+		# TODO: Make tuple
 		self.names = []
 
 	def load_defaults(self, mpqhandler):
@@ -72,15 +73,15 @@ class UnitsDATData(DATData):
 		dat = self.dat or self.default_dat
 		if dat:
 			entry_count = dat.entry_count()
-		tbl = data_context.unitnamestbl or data_context.stat_txt
+		strings = data_context.unitnamestbl.strings or data_context.stat_txt.strings
 		for entry_id in range(entry_count):
-			if tbl and data_context.settings.settings.customlabels:
+			if strings and data_context.settings.settings.customlabels:
 				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 					self.names.append(self.reserved_name(entry_id))
-				elif entry_id >= len(tbl.strings):
+				elif entry_id >= len(strings):
 					self.names.append(self.entry_name(entry_id))
 				else:
-					self.names.append(decompile_string(tbl.strings[entry_id]))
+					self.names.append(strings[entry_id])
 			else:
 				if entry_id >= len(DATA_CACHE[self.data_file]):
 					self.names.append(self.entry_name(entry_id))
@@ -88,7 +89,7 @@ class UnitsDATData(DATData):
 					self.names.append(DATA_CACHE[self.data_file][entry_id])
 
 class EntryLabelDATData(DATData):
-	def __init__(self, dat_type, data_file, entry_type_name, label_offset=0):
+	def __init__(self, dat_type, data_file, entry_type_name, label_offset=1):
 		self.label_offset = label_offset
 		DATData.__init__(self, dat_type, data_file, entry_type_name)
 
@@ -98,19 +99,19 @@ class EntryLabelDATData(DATData):
 		dat = self.dat or self.default_dat
 		if dat:
 			entry_count = dat.entry_count()
-		tbl = data_context.stat_txt
+		strings = data_context.stat_txt.strings
 		for entry_id in range(entry_count):
-			if tbl and data_context.settings.settings.customlabels:
+			if strings and data_context.settings.settings.customlabels:
 				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 					self.names.append(self.reserved_name(entry_id))
 				else:
 					label_id = dat.get_entry(entry_id).label - self.label_offset
 					if label_id < 0:
 						self.names.append('None')
-					elif label_id >= len(tbl.strings):
+					elif label_id >= len(strings):
 						self.names.append(self.entry_name(entry_id))
 					else:
-						self.names.append(decompile_string((tbl.strings[label_id])))
+						self.names.append(strings[label_id])
 			else:
 				if entry_id >= len(DATA_CACHE[self.data_file]):
 					self.names.append(self.entry_name(entry_id))

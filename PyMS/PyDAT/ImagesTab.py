@@ -18,11 +18,9 @@ class ImagesTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		grps = []
-		self.grpentry = IntegerVar(0, [0, len(grps)-1])
+		self.grpentry = IntegerVar(0, [0, 0])
 		self.grpdd = IntVar()
-		iscripts = DATA_CACHE['IscriptIDList.txt']
-		self.iscriptentry = IntegerVar(0, [0, len(iscripts)-1])
+		self.iscriptentry = IntegerVar(0, [0, 0])
 		self.iscriptdd = IntVar()
 
 		l = LabelFrame(frame, text='Image:')
@@ -31,7 +29,7 @@ class ImagesTab(DATTab):
 		Label(f, text='GRP:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.grpentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.grps = DropDown(f, self.grpdd, grps, self.grpentry, width=30)
+		self.grps = DropDown(f, self.grpdd, [], self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
 		def check_grp_ref():
@@ -47,7 +45,7 @@ class ImagesTab(DATTab):
 		Label(f, text='Iscript ID:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iscriptentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.iscripts = DropDown(f, self.iscriptdd, iscripts, self.iscriptentry, width=30)
+		self.iscripts = DropDown(f, self.iscriptdd, [], self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
 		def check_iscript_ref():
 			iscript_id = self.iscriptdd.get()
@@ -146,7 +144,7 @@ class ImagesTab(DATTab):
 			Label(f, text=t + ':', width=12, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=e, font=couriernew, width=3).pack(side=LEFT, padx=2)
 			Label(f, text='=').pack(side=LEFT)
-			dd = DropDown(f, d, grps, e, width=15)
+			dd = DropDown(f, d, [], e, width=15)
 			dd.pack(side=LEFT, fill=X, expand=1, padx=2)
 			self.grpdds.append((dd,e))
 			self.tip(f, t + ' Overlay', 'Img' + h)
@@ -173,29 +171,27 @@ class ImagesTab(DATTab):
 			(self.toplevel.data_context.sprites.dat, lambda sprite: (sprite.image_file, )),
 		]
 
-	def files_updated(self):
-		entries = []
+	def update_entry_names(self):
+		image_names = ['None'] + self.toplevel.data_context.imagestbl.strings
+		for dropdown,entry_var in self.grpdds:
+			dropdown.setentries(image_names)
+			entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)
+
+		iscript_names = []
 		last = -1
 		for id in self.toplevel.data_context.iscriptbin.headers.keys():
 			if id-last > 1:
-				entries.extend(['*Unused*'] * (id-last-1))
+				iscript_names.extend(['*Unused*'] * (id-last-1))
 			if id in self.toplevel.data_context.iscriptbin.extrainfo:
 				n = self.toplevel.data_context.iscriptbin.extrainfo[id]
 			elif id < len(DATA_CACHE['IscriptIDList.txt']):
 				n = DATA_CACHE['IscriptIDList.txt'][id]
 			else:
 				n = 'Unnamed Custom Entry'
-			entries.append(n)
+			iscript_names.append(n)
 			last = id
-		self.iscripts.setentries(entries)
-		self.iscriptentry.range[1] = len(entries)-1
-		self.iscriptentry.editvalue()
-
-		grps = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.imagestbl.strings]
-		for dd,entry_var in self.grpdds:
-			dd.setentries(grps)
-			entry_var.range[1] = len(grps)-1
-			entry_var.editvalue()
+		self.iscripts.setentries(iscript_names)
+		self.iscriptentry.range[1] = len(iscript_names)-1
 
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])

@@ -68,7 +68,8 @@ class WeaponsTab(DATTab):
 		ls.pack(side=LEFT)
 		ls = Frame(f)
 		Label(ls, text='Unused:', width=9, anchor=E).pack(side=LEFT)
-		DropDown(ls, self.unused, DATA_CACHE['Techdata.txt'], width=20).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.unused_ddw = DropDown(ls, self.unused, [], width=20)
+		self.unused_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(ls, 'Unused Technology', 'WeapUnused')
 		ls.pack(side=LEFT)
 		f.pack(fill=X)
@@ -84,17 +85,17 @@ class WeaponsTab(DATTab):
 		Label(f, text='Upgrade:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.upgradeentry, font=couriernew, width=2).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.upgrade, DATA_CACHE['Upgrades.txt'], self.upgradeentry, width=18).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.upgrade_ddw = DropDown(f, self.upgrade, [], self.upgradeentry, width=18)
+		self.upgrade_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Upgrades',i=self.upgrade: self.jump(t,i)).pack(side=LEFT)
 		self.tip(f, 'Damage Upgrade', 'WeapDamageUpgrade')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		stattxt = []
-		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
+		self.labelentry = IntegerVar(0,[0,0])
 		self.label = IntVar()
-		self.errormsgentry = IntegerVar(0,[0,len(stattxt)-1])
+		self.errormsgentry = IntegerVar(0,[0,0])
 		self.errormsg = IntVar()
 
 		l = LabelFrame(left, text='Weapon Display:')
@@ -103,7 +104,7 @@ class WeaponsTab(DATTab):
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=4).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.labels = DropDown(f, self.label, stattxt, self.labelentry, width=28)
+		self.labels = DropDown(f, self.label, [], self.labelentry, width=28)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Label', 'WeapLabel')
 		f.pack(fill=X)
@@ -111,7 +112,7 @@ class WeaponsTab(DATTab):
 		Label(f, text='Error Msg:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.errormsgentry, font=couriernew, width=4).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.errormsgs = DropDown(f, self.errormsg, stattxt, self.errormsgentry, width=28)
+		self.errormsgs = DropDown(f, self.errormsg, [], self.errormsgentry, width=28)
 		self.errormsgs.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Error Message', 'WeapError')
 		f.pack(fill=X)
@@ -145,7 +146,8 @@ class WeaponsTab(DATTab):
 		Label(f, text='Graphics:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.graphicsentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.graphicsdd, DATA_CACHE['Flingy.txt'], self.graphicsentry).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.graphics_ddw = DropDown(f, self.graphicsdd, [], self.graphicsentry)
+		self.graphics_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Flingy',i=self.graphicsdd: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Graphics', 'WeapGraphics')
 		f.pack(fill=X)
@@ -153,7 +155,8 @@ class WeaponsTab(DATTab):
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iconentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.icondd, DATA_CACHE['Icons.txt'], self.selicon).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon)
+		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Icon', 'WeapIcon')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -281,14 +284,26 @@ class WeaponsTab(DATTab):
 			(self.toplevel.data_context.orders.dat, lambda order: (order.weapon_targeting, )),
 		]
 
-	def files_updated(self):
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
-		self.labelentry.range[1] = len(stattxt)-1
-		self.labels.setentries(stattxt)
-		self.labelentry.editvalue()
-		self.errormsgentry.range[1] = len(stattxt)-1
-		self.errormsgs.setentries(stattxt)
-		self.errormsgentry.editvalue()
+	def update_entry_names(self):
+		self.unused_ddw.setentries(['None'] + self.toplevel.data_context.technology.names)
+		self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
+		strings = ['None'] + self.toplevel.data_context.stat_txt.strings
+		self.labels.setentries(strings)
+		self.errormsgs.setentries(strings)
+		self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+
+	def update_entry_counts(self):
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			self.upgradeentry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
+			self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
+		else:
+			self.upgradeentry.range[1] = None
+			self.graphicsentry.range[1] = None
+		string_limit = len(self.toplevel.data_context.stat_txt.strings) - 1
+		self.labelentry.range[1] = string_limit
+		self.errormsgentry.range[1] = string_limit
+		self.iconentry.range[1] = self.toplevel.data_context.cmdicons.frame_count() - 1
 
 	def updatetime(self, num, type):
 		if type:

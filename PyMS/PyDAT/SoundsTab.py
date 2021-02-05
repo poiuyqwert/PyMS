@@ -20,8 +20,7 @@ class SoundsTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		sfxdata = []
-		self.soundentry = IntegerVar(0, [0,len(sfxdata)-1])
+		self.soundentry = IntegerVar(0, [0,0])
 		self.sounddd = IntVar()
 
 		l = LabelFrame(frame, text='Sound:')
@@ -30,7 +29,7 @@ class SoundsTab(DATTab):
 		Label(f, text='Sound File:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.soundentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.sounds = DropDown(f, self.sounddd, sfxdata, self.changesound, width=30)
+		self.sounds = DropDown(f, self.sounddd, [], self.changesound, width=30)
 		self.soundentry.callback = self.sounds.set
 		self.sounds.pack(side=LEFT, fill=X, expand=1, padx=2)
 		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'fwp.gif'))
@@ -91,11 +90,9 @@ class SoundsTab(DATTab):
 			(self.toplevel.data_context.units.dat, lambda unit: (unit.ready_sound, (unit.what_sound_start, unit.what_sound_end), (unit.pissed_sound_start, unit.pissed_sound_end), (unit.yes_sound_start, unit.yes_sound_end)))
 		]
 
-	def files_updated(self):
-		sfxdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.sfxdatatbl.strings]
-		self.soundentry.range[1] = len(sfxdata)-1
-		self.sounds.setentries(sfxdata)
-		self.soundentry.editvalue()
+	def update_entry_names(self):
+		self.sounds.setentries(['None'] + self.toplevel.data_context.sfxdatatbl.strings)
+		self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
 
 	def changesound(self, n=None):
 		if n == None:
@@ -106,7 +103,7 @@ class SoundsTab(DATTab):
 
 	def play(self):
 		if play_sound:
-			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1][:-1])
+			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1])
 			if f:
 				play_sound(f.read())
 

@@ -15,8 +15,7 @@ class MapsTab(DATTab):
 		DATTab.__init__(self, parent, toplevel)
 		frame = Frame(self)
 
-		mapdata = []
-		self.missionentry = IntegerVar(0, [0,len(mapdata)])
+		self.missionentry = IntegerVar(0, [0,0])
 		self.missiondd = IntVar()
 
 		l = LabelFrame(frame, text='Campaign Properties:')
@@ -25,7 +24,7 @@ class MapsTab(DATTab):
 		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.missionentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.missions = DropDown(f, self.missiondd, mapdata, self.missionentry, width=30)
+		self.missions = DropDown(f, self.missiondd, [], self.missionentry, width=30)
 		self.missions.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Mission Dir', 'MapFile')
 		f.pack(fill=X)
@@ -37,12 +36,9 @@ class MapsTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.campaign
 
-	def files_updated(self):
-		mapdata = [decompile_string(s) for s in self.toplevel.data_context.mapdatatbl.strings]
-		self.missions.none_value = len(mapdata)
-		self.missionentry.range[1] = len(mapdata)
-		self.missions.setentries(mapdata + ['None'])
-		self.missionentry.editvalue()
+	def update_entry_names(self):
+		self.missions.setentries(self.toplevel.data_context.mapdatatbl.strings + ['None'])
+		self.missionentry.range[1] = len(self.toplevel.data_context.mapdatatbl.strings)
 
 	def load_entry(self, entry):
 		self.missionentry.set(entry.map_file)

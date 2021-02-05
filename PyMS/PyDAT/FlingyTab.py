@@ -34,7 +34,8 @@ class FlingyTab(DATTab):
 		Label(f, text='Sprite:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.spriteentry, font=couriernew, width=10).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.spritedd, DATA_CACHE['Sprites.txt'], self.spriteentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.sprite_ddw = DropDown(f, self.spritedd, [], self.spriteentry, width=30)
+		self.sprite_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Sprites',i=self.spritedd: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Sprite', 'FlingySprite')
 		f.pack(fill=X)
@@ -89,6 +90,15 @@ class FlingyTab(DATTab):
 			(self.toplevel.data_context.units.dat, lambda unit: (unit.graphics, )),
 			(self.toplevel.data_context.weapons.dat, lambda weapon: (weapon.graphics, )),
 		]
+
+	def update_entry_names(self):
+		self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
+
+	def update_entry_counts(self):
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count()
+		else:
+			self.spriteentry.range[1] = None
 
 	def updatespeed(self, num, type):
 		if type:

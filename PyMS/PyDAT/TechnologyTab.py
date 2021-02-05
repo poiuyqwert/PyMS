@@ -23,8 +23,7 @@ class TechnologyTab(DATTab):
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
 
-		stattxt = []
-		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
+		self.labelentry = IntegerVar(0,[0,0])
 		self.labeldd = IntVar()
 
 		self.item = None
@@ -36,14 +35,15 @@ class TechnologyTab(DATTab):
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iconentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.icondd, DATA_CACHE['Icons.txt'], self.selicon, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon, width=30)
+		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Technology Icon', 'TechIcon')
 		f.pack(fill=X)
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.labels = DropDown(f, self.labeldd, stattxt, self.labelentry, width=30)
+		self.labels = DropDown(f, self.labeldd, [], self.labelentry, width=30)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Technology Label', 'TechLabel')
 		f.pack(fill=X)
@@ -139,11 +139,10 @@ class TechnologyTab(DATTab):
 			(self.toplevel.data_context.weapons.dat, lambda weapons: (weapons.unused_technology, )),
 		]
 
-	def files_updated(self):
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
-		self.labelentry.range[1] = len(stattxt)-1
-		self.labels.setentries(stattxt)
-		self.labelentry.editvalue()
+	def update_entry_names(self):
+		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+		self.labels.setentries(['None'] + self.toplevel.data_context.stat_txt.strings)
+		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
 
 	def selicon(self, n, t=0):
 		if t:

@@ -1,6 +1,9 @@
 
-from DATData import *
+from DATData import DATData, EntryLabelDATData, UnitsDATData
+from TBLData import TBLData
+from IconData import IconData
 
+from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP
 from ..FileFormats.TBL import TBL
@@ -20,13 +23,14 @@ class DataContext(object):
 
 		self.mpqhandler = None
 
-		self.stat_txt = None
-		self.unitnamestbl = None # Expanded unit names
-		self.imagestbl = None
-		self.sfxdatatbl = None
-		self.portdatatbl = None
-		self.mapdatatbl = None
-		self.cmdicon = None
+		self.stat_txt = TBLData('stat_txt', 'rez\\stat_txt.tbl')
+		self.unitnamestbl = TBLData('unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
+		self.imagestbl = TBLData('imagestbl', 'arr\\images.tbl')
+		self.sfxdatatbl = TBLData('sfxdatatbl', 'arr\\sfxdata.tbl')
+		self.portdatatbl = TBLData('portdatatbl', 'arr\\portdata.tbl')
+		self.mapdatatbl = TBLData('mapdatatbl', 'arr\\mapdata.tbl')
+
+		self.cmdicons = IconData()
 		self.iscriptbin = None
 
 		self.units = UnitsDATData()
@@ -39,11 +43,10 @@ class DataContext(object):
 		self.sounds = DATData(SoundsDAT, 'Sfxdata.txt', 'Sound')
 		self.portraits = DATData(PortraitsDAT, 'Portdata.txt', 'Portrait')
 		self.campaign = DATData(CampaignDAT, 'Mapdata.txt', 'Map')
-		self.orders = EntryLabelDATData(OrdersDAT, 'Orders.txt', 'Order', label_offset=1)
+		self.orders = EntryLabelDATData(OrdersDAT, 'Orders.txt', 'Order')
 
 		self.palettes = {}
 		self.grp_cache = {}
-		self.icon_cache = {}
 		self.hints = {}
 
 		self.load_hints()
@@ -72,18 +75,11 @@ class DataContext(object):
 	def load_additional_files(self):
 		self.mpqhandler.open_mpqs()
 		try:
-			stat_txt = TBL()
-			stat_txt.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('stat_txt', 'MPQ:rez\\stat_txt.tbl')))
-			imagestbl = TBL()
-			imagestbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('imagestbl', 'MPQ:arr\\images.tbl')))
-			sfxdatatbl = TBL()
-			sfxdatatbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('sfxdatatbl', 'MPQ:arr\\sfxdata.tbl')))
-			portdatatbl = TBL()
-			portdatatbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('portdatatbl', 'MPQ:arr\\portdata.tbl')))
-			mapdatatbl = TBL()
-			mapdatatbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('mapdatatbl', 'MPQ:arr\\mapdata.tbl')))
-			cmdicon = CacheGRP()
-			cmdicon.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('cmdicons', 'MPQ:unit\\cmdbtns\\cmdicons.grp')))
+			self.stat_txt.load_strings(self.mpqhandler, self.settings)
+			self.imagestbl.load_strings(self.mpqhandler, self.settings)
+			self.sfxdatatbl.load_strings(self.mpqhandler, self.settings)
+			self.portdatatbl.load_strings(self.mpqhandler, self.settings)
+			self.mapdatatbl.load_strings(self.mpqhandler, self.settings)
 			iscriptbin = IScriptBIN()
 			iscriptbin.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
 		except:
@@ -91,12 +87,8 @@ class DataContext(object):
 			raise
 		else:
 			self.mpqhandler.close_mpqs()
-		self.stat_txt = stat_txt
-		self.imagestbl = imagestbl
-		self.sfxdatatbl = sfxdatatbl
-		self.portdatatbl = portdatatbl
-		self.mapdatatbl = mapdatatbl
-		self.cmdicon = cmdicon
+		self.cmdicons.load_grp(self.mpqhandler, self.settings)
+		self.cmdicons.update_names()
 		self.iscriptbin = iscriptbin
 
 	def load_dat_files(self):
@@ -128,12 +120,12 @@ class DataContext(object):
 		defaultmpqs.close_mpqs()
 
 	def get_cmdicon(self, index):
-		if not 'Icons' in self.palettes or not self.cmdicon or index >= self.cmdicon.frames:
+		if not 'Icons' in self.palettes or not self.cmdicons.grp or index >= self.cmdicons.grp.frames:
 			return None
-		if index in self.icon_cache:
-			return self.icon_cache[index]
-		image = frame_to_photo(self.palettes['Icons'], self.cmdicon, index, True)
-		self.icon_cache[index] = image
+		if index in self.cmdicons.images:
+			return self.cmdicons.images[index]
+		image = frame_to_photo(self.palettes['Icons'], self.cmdicons.grp, index, True)
+		self.cmdicons.images[index] = image
 		return image
 
 	def get_grp_frame(self, path, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0, is_full_path=False):
@@ -167,5 +159,5 @@ class DataContext(object):
 		tbl_index = image_entry.grp_file
 		if not tbl_index:
 			return None
-		grp_path = self.imagestbl.strings[tbl_index - 1][:-1]
+		grp_path = self.imagestbl.strings[tbl_index - 1]
 		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)

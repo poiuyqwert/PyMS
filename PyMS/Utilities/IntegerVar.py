@@ -80,9 +80,15 @@ class IntegerVar(StringVar):
 			self.is_hex = True
 			if string == '0x':
 				return 0
-			return int(string, 16)
+			try:
+				return int(string, 16)
+			except:
+				return 0
 		self.is_hex = False
-		return int(string or 0)
+		try:
+			return int(string or 0)
+		except:
+			return 0
 
 	def setrange(self, range):
 		self.range = list(range)

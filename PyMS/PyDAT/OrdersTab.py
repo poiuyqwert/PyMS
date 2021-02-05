@@ -19,14 +19,13 @@ class OrdersTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		stattxt = []
 		self.targetingentry = IntegerVar(0,[0,130])
 		self.targeting = IntVar()
 		self.energyentry = IntegerVar(0,[0,44])
 		self.energy = IntVar()
 		self.obscuredentry = IntegerVar(0,[0,189])
 		self.obscured = IntVar()
-		self.labelentry = IntegerVar(0,[0,len(stattxt)-1])
+		self.labelentry = IntegerVar(0,[0,0])
 		self.label = IntVar()
 		self.animationentry = IntegerVar(0,[0,28])
 		self.animation = IntVar()
@@ -40,7 +39,8 @@ class OrdersTab(DATTab):
 		Label(f, text='Targeting:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.targetingentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.targeting, DATA_CACHE['Weapons.txt'], self.targetingentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.targeting_ddw = DropDown(f, self.targeting, [], self.targetingentry, width=25)
+		self.targeting_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Weapons',i=self.targeting: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Targeting', 'OrdTargeting')
 		f.pack(fill=X)
@@ -48,7 +48,8 @@ class OrdersTab(DATTab):
 		Label(f, text='Energy:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.energyentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.energy, DATA_CACHE['Techdata.txt'], self.energyentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.energy_ddw = DropDown(f, self.energy, [], self.energyentry, width=25)
+		self.energy_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Techdata',i=self.energy: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Energy', 'OrdEnergy')
 		f.pack(fill=X)
@@ -56,7 +57,8 @@ class OrdersTab(DATTab):
 		Label(f, text='Obscured:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.obscuredentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.obscured, DATA_CACHE['Orders.txt'], self.obscuredentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.obscured_ddw = DropDown(f, self.obscured, [], self.obscuredentry, width=25)
+		self.obscured_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Orders',i=self.obscured: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Obscured', 'OrdObscured')
 		f.pack(fill=X)
@@ -64,7 +66,7 @@ class OrdersTab(DATTab):
 		Label(f, text='Label:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.labels = DropDown(f, self.label, stattxt, self.labelentry, width=25)
+		self.labels = DropDown(f, self.label, [], self.labelentry, width=25)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Label', 'OrdLabel')
 		f.pack(fill=X)
@@ -81,7 +83,8 @@ class OrdersTab(DATTab):
 		Label(f, text='Highlight:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.highlightentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.highlightdd, DATA_CACHE['Icons.txt'] + ['None'], self.highlightentry, width=25, none_value=65535).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.highlight_ddw = DropDown(f, self.highlightdd, [], self.highlightentry, width=25, none_value=65535)
+		self.highlight_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Highlight', 'OrdHighlight')
 		f.pack(fill=X)
 		f = Frame(ls)
@@ -156,11 +159,25 @@ class OrdersTab(DATTab):
 			(self.toplevel.data_context.units.dat, lambda unit: (unit.comp_ai_idle, unit.human_ai_idle, unit.return_to_idle, unit.attack_unit, unit.attack_move))
 		]
 
-	def files_updated(self):
-		stattxt = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings]
-		self.labelentry.range[1] = len(stattxt)-1
-		self.labels.setentries(stattxt)
-		self.labelentry.editvalue()
+	def update_entry_names(self):
+		self.targeting_ddw.setentries(self.toplevel.data_context.weapons.names + ['None'])
+		self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ['None'])
+		self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ['None'])
+		self.labels.setentries(['None'] + self.toplevel.data_context.stat_txt.strings)
+		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
+		self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ['None'])
+		# TODO: Limit-1 while supporting none_value
+		self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
+
+	def update_entry_counts(self):
+		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+			self.targetingentry.range[1] = self.toplevel.data_context.weapons.entry_count()
+			self.energyentry.range[1] = self.toplevel.data_context.technology.entry_count()
+			self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
+		else:
+			self.targetingentry.range[1] = None
+			self.energyentry.range[1] = None
+			self.obscuredentry.range[1] = None
 
 	def drawpreview(self):
 		self.preview.delete(ALL)

@@ -16,13 +16,12 @@ class PortraitsTab(DATTab):
 		j = Frame(self)
 		frame = Frame(j)
 
-		portdata = []
-		self.idle_entry = IntegerVar(0, [0,len(portdata)-1])
+		self.idle_entry = IntegerVar(0, [0,0])
 		self.idle_dd = IntVar()
 		self.idle_change = IntegerVar(0, [0,255])
 		self.idle_unknown = IntegerVar(0, [0,255])
 
-		self.talking_entry = IntegerVar(0, [0,len(portdata)-1])
+		self.talking_entry = IntegerVar(0, [0,0])
 		self.talking_dd = IntVar()
 		self.talking_change = IntegerVar(0, [0,255])
 		self.talking_unknown = IntegerVar(0, [0,255])
@@ -33,7 +32,7 @@ class PortraitsTab(DATTab):
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.idle_entry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.idle_dd_view = DropDown(f, self.idle_dd, portdata, self.idle_entry, width=30)
+		self.idle_dd_view = DropDown(f, self.idle_dd, [], self.idle_entry, width=30)
 		self.idle_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'SMK Dir', 'PortFile')
 		f.pack(fill=X)
@@ -58,7 +57,7 @@ class PortraitsTab(DATTab):
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.talking_entry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.talking_dd_view = DropDown(f, self.talking_dd, portdata, self.talking_entry, width=30)
+		self.talking_dd_view = DropDown(f, self.talking_dd, [], self.talking_entry, width=30)
 		self.talking_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'SMK Dir', 'PortFile')
 		f.pack(fill=X)
@@ -90,14 +89,13 @@ class PortraitsTab(DATTab):
 			(self.toplevel.data_context.units.dat, lambda unit: (unit.portrait, )),
 		]
 
-	def files_updated(self):
-		portdata = ['None'] + [decompile_string(s) for s in self.toplevel.data_context.portdatatbl.strings]
-		self.idle_entry.range[1] = len(portdata)-1
+	def update_entry_names(self):
+		portdata = ['None'] + self.toplevel.data_context.portdatatbl.strings
+		limit = len(self.toplevel.data_context.portdatatbl.strings)
 		self.idle_dd_view.setentries(portdata)
-		self.idle_entry.editvalue()
-		self.talking_entry.range[1] = len(portdata)-1
+		self.idle_entry.range[1] = limit
 		self.talking_dd_view.setentries(portdata)
-		self.talking_entry.editvalue()
+		self.talking_entry.range[1] = limit
 
 	def load_entry(self, entry):
 		self.idle_entry.set(entry.idle.portrait_file)

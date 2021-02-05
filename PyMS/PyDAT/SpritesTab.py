@@ -35,7 +35,8 @@ class SpritesTab(DATTab):
 		Label(f, text='Image:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.imageentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.imagedd, DATA_CACHE['Images.txt'], self.imageentry, width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.image_ddw = DropDown(f, self.imagedd, [], self.imageentry, width=30)
+		self.image_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda t='Images',i=self.imagedd: self.jump(t,i)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Image', 'SpriteImage')
 		f.pack(fill=X)
@@ -103,6 +104,12 @@ class SpritesTab(DATTab):
 		return [
 			(self.toplevel.data_context.flingy.dat, lambda flingy: (flingy.sprite, )),
 		]
+
+	def update_entry_names(self):
+		self.image_ddw.setentries(self.toplevel.data_context.images.names)
+
+	def update_entry_counts(self):
+		self.imageentry.range[1] = self.toplevel.data_context.images.entry_count()
 
 	def selcircle(self, n, t=0):
 		if t:

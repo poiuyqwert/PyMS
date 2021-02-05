@@ -142,7 +142,7 @@ class StarEditUnitsTab(DATUnitsTab):
 
 	def update_entry_names(self):
 		count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
-		ranks = ['No Sublabel'] + [decompile_string(s) for s in self.toplevel.data_context.stat_txt.strings[1302:1302+count]]
+		ranks = ['No Sublabel'] + self.toplevel.data_context.stat_txt.strings[1302:1302+count]
 		self.ranks.setentries(ranks)
 		self.rankentry.range[1] = count
 		self.rankentry.editvalue()

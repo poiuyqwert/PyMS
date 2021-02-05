@@ -180,7 +180,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		frame.pack(side=LEFT, fill=Y)
 
 	def update_entry_names(self):
-		names = self.toplevel.data_context.units.names
+		names = list(self.toplevel.data_context.units.names)
 		if self.toplevel.data_context.units.is_expanded():
 			names[self.toplevel.data_context.units.dat_type.FORMAT.entries] = 'None'
 		else:

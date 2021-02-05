@@ -168,7 +168,7 @@ class DATTab(NotebookTab):
 						if check_id == lookup_id or (isinstance(check_id, tuple) and lookup_id >= check_id[0] and lookup_id <= check_id[1]):
 							ref = DATA_CACHE[DAT_DATA_REF_FILES[dat.FILE_NAME]][id]
 							if self.toplevel.data_context.settings.settings.get('customlabels', False) and type(dat) == UnitsDAT:
-								ref = decompile_string(self.toplevel.data_context.stat_txt.strings[id])
+								ref = self.toplevel.data_context.stat_txt.strings[id]
 							self.used_by_listbox.insert(END, '%s entry %s: %s' % (dat.FILE_NAME, id, ref))
 							break
 
