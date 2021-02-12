@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 from ..FileFormats.GRP import rle_outline, OUTLINE_SELF
@@ -93,23 +95,26 @@ class SpritesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.flingy, lambda flingy: (
+				DATRef('Sprite', flingy.sprite),
+			)),
+		))
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.sprites
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.flingy.dat, lambda flingy: (flingy.sprite, )),
-		]
+	def updated_entry_names(self, datids):
+		if DATID.flingy in datids and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		if DATID.images in datids:
+			self.image_ddw.setentries(self.toplevel.data_context.images.names)
 
-	def update_entry_names(self):
-		self.image_ddw.setentries(self.toplevel.data_context.images.names)
-
-	def update_entry_counts(self):
-		self.imageentry.range[1] = self.toplevel.data_context.images.entry_count()
+	def updated_entry_counts(self, datids):
+		if DATID.images in datids:
+			self.imageentry.range[1] = self.toplevel.data_context.images.entry_count()
 
 	def selcircle(self, n, t=0):
 		if t:

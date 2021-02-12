@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.GRP import frame_to_photo
@@ -147,33 +149,44 @@ class OrdersTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.units, lambda unit: (
+				DATRef('AI Actions > Computer Idle', unit.comp_ai_idle),
+				DATRef('AI Actions > Human Idle', unit.human_ai_idle),
+				DATRef('AI Actions > Return to Idle', unit.return_to_idle),
+				DATRef('AI Actions > Attach Unit', unit.attack_unit),
+				DATRef('AI Actions > Attack Move', unit.attack_move)
+			)),
+		))
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.orders
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.comp_ai_idle, unit.human_ai_idle, unit.return_to_idle, unit.attack_unit, unit.attack_move))
-		]
-
-	def update_entry_names(self):
-		self.targeting_ddw.setentries(self.toplevel.data_context.weapons.names + ['None'])
-		self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ['None'])
-		self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ['None'])
-		self.labels.setentries(['None'] + self.toplevel.data_context.stat_txt.strings)
+	def updated_entry_names(self, datids):
+		if DATID.units in datids and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		if DATID.weapons in datids:
+			self.targeting_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
+		if DATID.techdata in datids:
+			self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ('None',))
+		if DATID.orders in datids:
+			self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ('None',))
+		self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
 		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
-		self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ['None'])
+		self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ('None',))
 		# TODO: Limit-1 while supporting none_value
-		self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
+		# self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			self.targetingentry.range[1] = self.toplevel.data_context.weapons.entry_count()
-			self.energyentry.range[1] = self.toplevel.data_context.technology.entry_count()
-			self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
+			if DATID.weapons in datids:
+				self.targetingentry.range[1] = self.toplevel.data_context.weapons.entry_count()
+			if DATID.techdata in datids:
+				self.energyentry.range[1] = self.toplevel.data_context.technology.entry_count()
+			if DATID.orders in datids:
+				self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
 		else:
 			self.targetingentry.range[1] = None
 			self.energyentry.range[1] = None

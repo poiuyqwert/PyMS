@@ -1129,8 +1129,8 @@ class GeneratorTypeMath(GeneratorType):
 			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, and whitespace allowed)" % math)
 		try:
 			return eval(math)
-		except Exception, e:
-			raise PyMSError('Generate', "Error evaluating math expression '%s'" % math, exception=e)
+		except:
+			raise PyMSError('Generate', "Error evaluating math expression '%s'" % math, capture_exception=True)
 	def description(self):
 		return self.math
 	def save(self):
@@ -1475,7 +1475,7 @@ class ManagePresets(PyMSDialog):
 				with open(path, 'r') as f:
 					preset = json.loads(f.read())
 			except:
-				raise PyMSError('Import',"Could not read preset '%s'" % path, exception=sys.exc_info())
+				raise PyMSError('Import',"Could not read preset '%s'" % path, capture_exception=True)
 			if not 'name' in preset or not isstr(preset['name']) \
 					or not 'code' in preset or not isstr(preset['code']) \
 					or not 'variables' in preset or not isinstance(preset['variables'], list):

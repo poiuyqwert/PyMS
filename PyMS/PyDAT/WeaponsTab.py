@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
 from ..FileFormats.TBL import decompile_string
@@ -273,30 +275,39 @@ class WeaponsTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by([
+			(DATID.units, lambda unit: (
+				DATRef('Basic > Ground Weapon', unit.ground_weapon),
+				DATRef('Basic > Air Weapon', unit.air_weapon)
+			)),
+			(DATID.orders, lambda order: (
+				DATRef('Targeting', order.weapon_targeting),
+			)),
+		])
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.weapons
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.ground_weapon, unit.air_weapon)),
-			(self.toplevel.data_context.orders.dat, lambda order: (order.weapon_targeting, )),
-		]
-
-	def update_entry_names(self):
-		self.unused_ddw.setentries(['None'] + self.toplevel.data_context.technology.names)
-		self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
-		strings = ['None'] + self.toplevel.data_context.stat_txt.strings
+	def updated_entry_names(self, datids):
+		if (DATID.units in datids or DATID.orders in datids) and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		if DATID.techdata in datids:
+			self.unused_ddw.setentries(('None',) + self.toplevel.data_context.technology.names)
+		if DATID.upgrades in datids:
+			self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
+		strings = ('None',) + self.toplevel.data_context.stat_txt.strings
 		self.labels.setentries(strings)
 		self.errormsgs.setentries(strings)
-		self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+		if DATID.flingy in datids:
+			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
 		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			self.upgradeentry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
-			self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
+			if DATID.upgrades in datids:
+				self.upgradeentry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
+			if DATID.flingy in datids:
+				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
 		else:
 			self.upgradeentry.range[1] = None
 			self.graphicsentry.range[1] = None
@@ -378,6 +389,8 @@ class WeaponsTab(DATTab):
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
+			if self.toplevel.data_context.settings.settings.customlabels:
+				self.toplevel.update_entry_names(DATID.weapons)
 		if self.graphicsentry.get() != entry.graphics:
 			entry.graphics = self.graphicsentry.get()
 			self.edited = True

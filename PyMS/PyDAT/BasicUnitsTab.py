@@ -1,4 +1,7 @@
 
+from DATUnitsTab import DATUnitsTab
+from DATID import DATID
+
 from ..FileFormats.DAT.UnitsDAT import Unit
 
 from ..Utilities.utils import couriernew
@@ -6,8 +9,6 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from DATUnitsTab import DATUnitsTab
 
 from Tkinter import *
 
@@ -258,16 +259,20 @@ class BasicUnitsTab(DATUnitsTab):
 				s = s[:s.index('.')+5]
 			self.build_time_seconds.set(s)
 
-	def update_entry_names(self):
-		self.armor_upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
-		self.ground_weapon_ddw.setentries(self.toplevel.data_context.weapons.names)
-		self.air_weapon_ddw.setentries(self.toplevel.data_context.weapons.names)
+	def updated_entry_names(self, datids):
+		if DATID.upgrades in datids:
+			self.armor_upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
+		if DATID.weapons in datids:
+			self.ground_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
+			self.air_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count()
-			self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
-			self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
+			if DATID.upgrades in datids:
+				self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count()
+			if DATID.weapons in datids:
+				self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
+				self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
 		else:
 			self.armor_upgrade_entry.range[1] = None
 			self.ground_weapon_entry.range[1] = None

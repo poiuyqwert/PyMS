@@ -1,5 +1,7 @@
 
 from DATUnitsTab import DATUnitsTab
+from DATID import DATID
+
 from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.TBL import decompile_string
 
@@ -179,7 +181,9 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-	def update_entry_names(self):
+	def updated_entry_names(self, datids):
+		if not DATID.units in datids:
+			return
 		names = list(self.toplevel.data_context.units.names)
 		if self.toplevel.data_context.units.is_expanded():
 			names[self.toplevel.data_context.units.dat_type.FORMAT.entries] = 'None'
@@ -189,7 +193,9 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunitone_ddw.setentries(names)
 		self.subunittwo_ddw.setentries(names)
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
+		if not DATID.units in datids:
+			return
 		limit = None
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			limit = self.toplevel.data_context.units.entry_count()

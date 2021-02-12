@@ -17,22 +17,22 @@ class AbstractDAT(object):
 	def __init__(self):
 		self.entries = []
 
-	def load_file(self, file, expanded_entry_count=None):
+	def load_file(self, file):
 		data = load_file(file, self.FILE_NAME)
 		try:
-			self.load_data(data, expanded_entry_count=expanded_entry_count)
+			self.load_data(data)
 		except PyMSError:
 			raise
-		except Exception as exception:
-			raise PyMSError("Load", "Invalid %s (error parsing file)" % self.FILE_NAME, exception=exception)
+		except:
+			raise PyMSError("Load", "Invalid %s (error parsing file)" % self.FILE_NAME, capture_exception=True)
 
-	def load_data(self, data, expanded_entry_count=None):
+	def load_data(self, data):
 		data_size = len(data)
-		expected_data_size = self.FORMAT.file_size(expanded_entry_count=expanded_entry_count)
-		if data_size != expected_data_size:
+		entry_info = self.FORMAT.check_file_size(data_size)
+		if not entry_info:
+			expected_data_size = self.FORMAT.file_size()
 			raise PyMSError("Load", "Invalid %s (the file size must be %d, but got %d)" % (self.FILE_NAME, expected_data_size, data_size))
-		entry_count = expanded_entry_count or self.FORMAT.entries
-		is_expanded = expanded_entry_count != None
+		entry_count,is_expanded = entry_info
 		offset = 0
 		properties = []
 		for prop in self.FORMAT.properties:

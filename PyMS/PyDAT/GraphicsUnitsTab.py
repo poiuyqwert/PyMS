@@ -1,5 +1,6 @@
 
 from DATUnitsTab import DATUnitsTab
+from DATID import DATID
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 
@@ -137,16 +138,22 @@ class GraphicsUnitsTab(DATUnitsTab):
 		for v in (self.left, self.up, self.right, self.down):
 			v.trace('w', lambda *_: self.drawboxes())
 
-	def update_entry_names(self):
-		self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
-		self.construction_ddw.setentries(self.toplevel.data_context.images.names)
-		self.portraits_ddw.setentries(self.toplevel.data_context.portraits.names + ['None'])
+	def updated_entry_names(self, datids):
+		if DATID.flingy in datids:
+			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+		if DATID.images in datids:
+			self.construction_ddw.setentries(self.toplevel.data_context.images.names)
+		if DATID.portdata in datids:
+			self.portraits_ddw.setentries(self.toplevel.data_context.portraits.names + ('None',))
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count()
-			self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count()
-			self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
+			if DATID.flingy in datids:
+				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count()
+			if DATID.images in datids:
+				self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count()
+			if DATID.portdata in datids:
+				self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
 		else:
 			self.graphicsentry.range[1] = None
 			self.constructionentry.range[1] = None

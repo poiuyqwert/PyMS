@@ -1,5 +1,8 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
+
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 
@@ -80,18 +83,22 @@ class SoundsTab(DATTab):
 		m.pack(fill=X)
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.units, lambda unit: (
+				DATRef('Sounds > Ready', unit.ready_sound),
+				DATRef('Sounds > What', unit.what_sound_start, unit.what_sound_end),
+				DATRef('Sounds > Annoyed', unit.pissed_sound_start, unit.pissed_sound_end),
+				DATRef('Sounds > Yes', unit.yes_sound_start, unit.yes_sound_end)
+			)),
+		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.sounds
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.ready_sound, (unit.what_sound_start, unit.what_sound_end), (unit.pissed_sound_start, unit.pissed_sound_end), (unit.yes_sound_start, unit.yes_sound_end)))
-		]
-
-	def update_entry_names(self):
-		self.sounds.setentries(['None'] + self.toplevel.data_context.sfxdatatbl.strings)
+	def updated_entry_names(self, datids):
+		if DATID.units in datids and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		self.sounds.setentries(('None',) + self.toplevel.data_context.sfxdatatbl.strings)
 		self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
 
 	def changesound(self, n=None):

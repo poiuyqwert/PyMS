@@ -696,7 +696,7 @@ class AIBIN:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported aiscript.bin '%s', could possibly be invalid or corrupt" % file,exception=sys.exc_info())
+			raise PyMSError('Load',"Unsupported aiscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
 
 	#Stages:
 	# 0 - Load file
@@ -1982,7 +1982,7 @@ class BWBIN(AIBIN):
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported bwscript.bin '%s', could possibly be invalid or corrupt" % file,exception=sys.exc_info())
+			raise PyMSError('Load',"Unsupported bwscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
 
 	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None, close=True):
 		if isstr(filename):

@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
 
@@ -35,9 +37,9 @@ class ImagesTab(DATTab):
 		def check_grp_ref():
 			grp_id = self.grpdd.get()
 			refs = (
-				(self.toplevel.data_context.images.dat, lambda image: (image.grp_file,)),
+				(DATID.images, lambda image: (image.grp_file,)),
 			)
-			self.check_used_by_references(grp_id,refs)
+			self.check_used_by_references(grp_id, refs)
 		Button(f, text='Check', command=check_grp_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
@@ -50,9 +52,9 @@ class ImagesTab(DATTab):
 		def check_iscript_ref():
 			iscript_id = self.iscriptdd.get()
 			refs = (
-				(self.toplevel.data_context.images.dat, lambda image: (image.iscript_id,)),
+				(DATID.images, lambda image: (image.iscript_id,)),
 			)
-			self.check_used_by_references(iscript_id,refs)
+			self.check_used_by_references(iscript_id, refs)
 		Button(f, text='Check', command=check_iscript_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'Iscript ID', 'ImgIscriptID')
 		f.pack(fill=X)
@@ -160,19 +162,22 @@ class ImagesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.units, lambda unit: (
+				DATRef('Graphics > Construction', unit.construction_animation),
+			)),
+			(DATID.sprites, lambda sprite: (
+				DATRef('Image', sprite.image_file),
+			)),
+		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.images
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.construction_animation, )),
-			(self.toplevel.data_context.sprites.dat, lambda sprite: (sprite.image_file, )),
-		]
-
-	def update_entry_names(self):
-		image_names = ['None'] + self.toplevel.data_context.imagestbl.strings
+	def updated_entry_names(self, datids):
+		if (DATID.units in datids or DATID.sprites in datids) and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		image_names = ('None',) + self.toplevel.data_context.imagestbl.strings
 		for dropdown,entry_var in self.grpdds:
 			dropdown.setentries(image_names)
 			entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)

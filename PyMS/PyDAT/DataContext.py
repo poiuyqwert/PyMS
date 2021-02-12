@@ -2,6 +2,7 @@
 from DATData import DATData, EntryLabelDATData, UnitsDATData
 from TBLData import TBLData
 from IconData import IconData
+from DATID import DATID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
@@ -23,27 +24,27 @@ class DataContext(object):
 
 		self.mpqhandler = None
 
-		self.stat_txt = TBLData('stat_txt', 'rez\\stat_txt.tbl')
-		self.unitnamestbl = TBLData('unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
-		self.imagestbl = TBLData('imagestbl', 'arr\\images.tbl')
-		self.sfxdatatbl = TBLData('sfxdatatbl', 'arr\\sfxdata.tbl')
-		self.portdatatbl = TBLData('portdatatbl', 'arr\\portdata.tbl')
-		self.mapdatatbl = TBLData('mapdatatbl', 'arr\\mapdata.tbl')
+		self.stat_txt = TBLData(self, 'stat_txt', 'rez\\stat_txt.tbl')
+		self.unitnamestbl = TBLData(self, 'unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
+		self.imagestbl = TBLData(self, 'imagestbl', 'arr\\images.tbl')
+		self.sfxdatatbl = TBLData(self, 'sfxdatatbl', 'arr\\sfxdata.tbl')
+		self.portdatatbl = TBLData(self, 'portdatatbl', 'arr\\portdata.tbl')
+		self.mapdatatbl = TBLData(self, 'mapdatatbl', 'arr\\mapdata.tbl')
 
-		self.cmdicons = IconData()
+		self.cmdicons = IconData(self)
 		self.iscriptbin = None
 
-		self.units = UnitsDATData()
-		self.weapons = EntryLabelDATData(WeaponsDAT, 'Weapons.txt', 'Weapon')
-		self.flingy = DATData(FlingyDAT, 'Flingy.txt', 'Flingy')
-		self.sprites = DATData(SpritesDAT, 'Sprites.txt', 'Sprite')
-		self.images = DATData(ImagesDAT, 'Images.txt', 'Image')
-		self.upgrades = EntryLabelDATData(UpgradesDAT, 'Upgrades.txt', 'Upgrade')
-		self.technology = EntryLabelDATData(TechDAT, 'Techdata.txt', 'Technology')
-		self.sounds = DATData(SoundsDAT, 'Sfxdata.txt', 'Sound')
-		self.portraits = DATData(PortraitsDAT, 'Portdata.txt', 'Portrait')
-		self.campaign = DATData(CampaignDAT, 'Mapdata.txt', 'Map')
-		self.orders = EntryLabelDATData(OrdersDAT, 'Orders.txt', 'Order')
+		self.units = UnitsDATData(self)
+		self.weapons = EntryLabelDATData(self, WeaponsDAT, 'Weapons.txt', 'Weapon')
+		self.flingy = DATData(self, FlingyDAT, 'Flingy.txt', 'Flingy')
+		self.sprites = DATData(self, SpritesDAT, 'Sprites.txt', 'Sprite')
+		self.images = DATData(self, ImagesDAT, 'Images.txt', 'Image')
+		self.upgrades = EntryLabelDATData(self, UpgradesDAT, 'Upgrades.txt', 'Upgrade')
+		self.technology = EntryLabelDATData(self, TechDAT, 'Techdata.txt', 'Technology')
+		self.sounds = DATData(self, SoundsDAT, 'Sfxdata.txt', 'Sound')
+		self.portraits = DATData(self, PortraitsDAT, 'Portdata.txt', 'Portrait')
+		self.campaign = DATData(self, CampaignDAT, 'Mapdata.txt', 'Map')
+		self.orders = EntryLabelDATData(self, OrdersDAT, 'Orders.txt', 'Order')
 
 		self.palettes = {}
 		self.grp_cache = {}
@@ -59,10 +60,11 @@ class DataContext(object):
 					self.hints[m.group(1)] = m.group(2)
 
 	def load_palettes(self):
+		self.palettes = {}
 		pal = Palette()
 		for p in ['Units','bfire','gfire','ofire','Terrain','Icons']:
 			try:
-				pal.load_file(self.settings.settings.palettes.get(p, os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+				pal.load_file(self.settings.settings.files.get(p, os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
 			except:
 				continue
 			self.palettes[p] = pal.palette
@@ -72,51 +74,78 @@ class DataContext(object):
 		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
 			self.settings.settings.mpqs = self.mpqhandler.mpqs
 
+	def dat_data(self, datid):
+		if datid == DATID.units:
+			return self.units
+		elif datid == DATID.weapons:
+			return self.weapons
+		elif datid == DATID.flingy:
+			return self.flingy
+		elif datid == DATID.sprites:
+			return self.sprites
+		elif datid == DATID.images:
+			return self.images
+		elif datid == DATID.upgrades:
+			return self.upgrades
+		elif datid == DATID.techdata:
+			return self.technology
+		elif datid == DATID.sfxdata:
+			return self.sounds
+		elif datid == DATID.portdata:
+			return self.portraits
+		elif datid == DATID.mapdata:
+			return self.campaign
+		elif datid == DATID.orders:
+			return self.orders
+
 	def load_additional_files(self):
 		self.mpqhandler.open_mpqs()
 		try:
-			self.stat_txt.load_strings(self.mpqhandler, self.settings)
-			self.imagestbl.load_strings(self.mpqhandler, self.settings)
-			self.sfxdatatbl.load_strings(self.mpqhandler, self.settings)
-			self.portdatatbl.load_strings(self.mpqhandler, self.settings)
-			self.mapdatatbl.load_strings(self.mpqhandler, self.settings)
+			self.unitnamestbl.load_strings()
+		except:
+			pass
+		try:
+			self.stat_txt.load_strings()
+			self.imagestbl.load_strings()
+			self.sfxdatatbl.load_strings()
+			self.portdatatbl.load_strings()
+			self.mapdatatbl.load_strings()
 			iscriptbin = IScriptBIN()
 			iscriptbin.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
 		except:
-			self.mpqhandler.close_mpqs()
 			raise
-		else:
+		finally:
 			self.mpqhandler.close_mpqs()
-		self.cmdicons.load_grp(self.mpqhandler, self.settings)
-		self.cmdicons.update_names()
+		self.load_palettes()
+		self.cmdicons.load_grp()
 		self.iscriptbin = iscriptbin
+		self.units.update_names()
+		self.weapons.update_names()
+		self.flingy.update_names()
+		self.sprites.update_names()
+		self.images.update_names()
+		self.upgrades.update_names()
+		self.technology.update_names()
+		self.sounds.update_names()
+		self.portraits.update_names()
+		self.campaign.update_names()
+		self.orders.update_names()
 
 	def load_dat_files(self):
 		defaultmpqs = MPQHandler()
 		defaultmpqs.add_defaults()
 		defaultmpqs.open_mpqs()
 		self.units.load_defaults(defaultmpqs)
-		self.units.update_names(self)
 		self.weapons.load_defaults(defaultmpqs)
-		self.weapons.update_names(self)
 		self.flingy.load_defaults(defaultmpqs)
-		self.flingy.update_names(self)
 		self.sprites.load_defaults(defaultmpqs)
-		self.sprites.update_names(self)
 		self.images.load_defaults(defaultmpqs)
-		self.images.update_names(self)
 		self.upgrades.load_defaults(defaultmpqs)
-		self.upgrades.update_names(self)
 		self.technology.load_defaults(defaultmpqs)
-		self.technology.update_names(self)
 		self.sounds.load_defaults(defaultmpqs)
-		self.sounds.update_names(self)
 		self.portraits.load_defaults(defaultmpqs)
-		self.portraits.update_names(self)
 		self.campaign.load_defaults(defaultmpqs)
-		self.campaign.update_names(self)
 		self.orders.load_defaults(defaultmpqs)
-		self.orders.update_names(self)
 		defaultmpqs.close_mpqs()
 
 	def get_cmdicon(self, index):

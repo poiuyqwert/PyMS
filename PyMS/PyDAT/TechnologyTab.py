@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.GRP import frame_to_photo
@@ -128,20 +130,23 @@ class TechnologyTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.orders, lambda order: (
+				DATRef('Energy', order.technology_energy),
+			)),
+			(DATID.weapons, lambda weapons: (
+				DATRef('Unused', weapons.unused_technology),
+			)),
+		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.technology
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.orders.dat, lambda order: (order.technology_energy, )),
-			(self.toplevel.data_context.weapons.dat, lambda weapons: (weapons.unused_technology, )),
-		]
-
-	def update_entry_names(self):
+	def updated_entry_names(self, datids):
+		if (DATID.orders in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
 		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
-		self.labels.setentries(['None'] + self.toplevel.data_context.stat_txt.strings)
+		self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
 		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
 
 	def selicon(self, n, t=0):

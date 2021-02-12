@@ -10,6 +10,21 @@ class DATFormat(object):
 		self.expanded_entries_reserved = format.get("expanded_entries_reserved")
 		self.properties = list(DATProperty(prop) for prop in format["properties"])
 
+	# Return a tuple `(<entry_count>, <is_expanded>)` if valid size, otherwise None
+	def check_file_size(self, size):
+		if size == self.file_size():
+			return (self.entries, False)
+		expanded_entry_size = self.expanded_entry_size()
+		if size % expanded_entry_size == 0:
+			return (int(size / expanded_entry_size), True)
+		return None
+
+	def expanded_entry_size(self):
+		size = 0
+		for prop in self.properties:
+			size += prop.size(True)
+		return size
+
 	def file_size(self, expanded_entry_count=None):
 		size = 0
 		for prop in self.properties:
@@ -148,8 +163,11 @@ class DATProperty(object):
 			return self._entry_count
 		return total_entry_count
 
+	def size(self, is_expanded):
+		return self.dat_type(is_expanded).size()
+
 	def total_size(self, total_entry_count, is_expanded):
-		return self.dat_type(is_expanded).size() * self.entry_count(total_entry_count, is_expanded)
+		return self.entry_count(total_entry_count, is_expanded) * self.size(is_expanded)
 
 	def load_data(self, data, offset, total_entry_count, is_expanded):
 		total_size = self.total_size(total_entry_count, is_expanded)

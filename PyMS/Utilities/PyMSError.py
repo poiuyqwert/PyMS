@@ -1,6 +1,8 @@
 
+import sys
+
 class PyMSError(Exception):
-	def __init__(self, type, error, line=None, code=None, warnings=[], exception=None):
+	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False):
 		self.type = type
 		self.error = error
 		self.line = line
@@ -8,7 +10,9 @@ class PyMSError(Exception):
 			self.line += 1
 		self.code = code
 		self.warnings = warnings
-		self.exception = exception
+		self.exception = None
+		if capture_exception:
+			self.exception = sys.exc_info()
 
 	def repr(self):
 		r = '%s Error: %s' % (self.type, self.error)

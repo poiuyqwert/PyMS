@@ -44,8 +44,8 @@ class PyMSDialog(Toplevel):
 			self.grab_wait()
 
 	def grab_wait(self):
-			self.grab_set()
-			self.wait_window(self)
+		self.grab_set()
+		self.wait_window(self)
 
 	def widgetize(self):
 		pass

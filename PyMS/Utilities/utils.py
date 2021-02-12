@@ -113,7 +113,7 @@ def register_registry(prog,type,filetype,progpath,icon):
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell', REG_SZ, 'open')
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, '"%s" "%s" --gui "%%1"' % (sys.executable.replace('python.exe','pythonw.exe'),progpath))
 	except:
-		raise PyMSError('Registry', 'Could not complete file association.',exception=sys.exc_info())
+		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True)
 	askquestion(title='Success!', message='The file association was set.', type=OK)
 
 def flags(value, length):
@@ -158,7 +158,7 @@ def fit(label, text, width=80, end=False, indent=0):
 				r += l
 				r += '\n'
 			r += '\n'
-	return r.rstrip('\n') + '\n' if end else ''
+	return r.rstrip('\n') + ('\n' if end else '')
 
 def pad(label, value='', span=20):
 	label = str(label)

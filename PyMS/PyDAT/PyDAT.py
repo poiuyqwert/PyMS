@@ -11,6 +11,7 @@ from PortraitsTab import PortraitsTab
 from MapsTab import MapsTab
 from OrdersTab import OrdersTab
 from DataContext import DataContext
+from DATID import DATID
 from SaveMPQDialog import SaveMPQDialog
 from DATSettingsDialog import DATSettingsDialog
 
@@ -30,6 +31,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.StatusBar import StatusBar
 
 from Tkinter import *
 from tkMessageBox import askquestion, showinfo, OK
@@ -164,6 +166,8 @@ class PyDAT(Tk):
 				self.listmenu.add_separator()
 
 		self.status = StringVar()
+		self.expanded = StringVar()
+
 		self.dattabs = Notebook(self.hor_pane)
 		self.pages = []
 		tabs = (
@@ -190,13 +194,10 @@ class PyDAT(Tk):
 		self.hor_pane.pack(fill=BOTH, expand=1)
 
 		#Statusbar
-		statusbar = Frame(self)
-		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif'))
-		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
-		self.editstatus.image = image
-		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
-		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
+		statusbar = StatusBar(self)
+		statusbar.add_label(self.status, weight=0.60)
+		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		statusbar.add_label(self.expanded)
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		self.mpq_export = self.data_context.settings.get('mpqexport',[])
@@ -224,15 +225,49 @@ class PyDAT(Tk):
 		UpdateDialog.check_update(self, 'PyDAT')
 
 	def tab_activated(self, event=None):
-		self.action_states()
+		self.update_entry_listing(True)
+		self.update_status_bar()
+		self.dattabs.active.load_data()
 
-	def update_entry_names(self):
-		for page in self.pages:
-			page.update_entry_names()
+	def update_entry_names(self, datid):
+		self.data_context.dat_data(datid).update_names()
+		self.updated_entry_names([datid])
 
-	def update_entry_counts(self):
+	def update_entry_listing(self, update_scroll=False):
+		self.listbox.delete(0,END)
+		tab = self.dattabs.active
+		dat_data = tab.get_dat_data()
+		if dat_data.dat:
+			self.jumpid.range[1] = dat_data.dat.entry_count() - 1
+			self.jumpid.editvalue()
+			self.listbox.insert(END, *[' %s%s  %s' % (' ' * (4-len(str(id))),id,name) for id,name in enumerate(dat_data.names)])
+			self.listbox.select_set(tab.id)
+			if update_scroll:
+				self.listbox.see(tab.id)
+
+	def update_status_bar(self):
+		tab = self.dattabs.active
+		dat_data = tab.get_dat_data()
+		if dat_data.file_path:
+			self.status.set(dat_data.file_path)
+		else:
+			# TODO: This might not be correct if its loaded from an MPQ?
+			self.status.set(os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr',  dat_data.dat.FILE_NAME))
+		self.editstatus['state'] = NORMAL if tab.edited else DISABLED
+		if dat_data.is_expanded():
+			self.expanded.set('%s expanded' % dat_data.dat_type.FILE_NAME)
+		else:
+			self.expanded.set('')
+
+	def updated_entry_names(self, datids=DATID.ALL):
 		for page in self.pages:
-			page.update_entry_counts()
+			page.updated_entry_names(datids)
+			if self.dattabs.active == page and page.page_title in datids:
+				self.update_entry_listing()
+
+	def updated_entry_counts(self, datids=DATID.ALL):
+		for page in self.pages:
+			page.updated_entry_counts(datids)
 
 	def open_files(self):
 		err = None
@@ -242,9 +277,9 @@ class PyDAT(Tk):
 			err = e
 		else:
 			self.data_context.load_dat_files()
-			self.update_entry_counts()
-			self.update_entry_names()
-			self.dattabs.active.activate()
+			self.updated_entry_counts()
+			self.updated_entry_names()
+			self.tab_activated()
 		return err
 
 	def unsaved(self):
@@ -252,17 +287,11 @@ class PyDAT(Tk):
 			if page.unsaved():
 				return True
 
-	def action_states(self):
-		edited = False
-		if self.dattabs.active:
-			edited = self.dattabs.active.edited
-		self.editstatus['state'] = [DISABLED,NORMAL][edited]
-
 	def load_data(self, id=None):
 		self.dattabs.active.load_data(id)
 	def save_data(self):
 		self.dattabs.active.save_data()
-		self.action_states()
+		self.update_status_bar()
 
 	def changeid(self, key=None, i=None, focus_list=True):
 		s = True
@@ -272,9 +301,9 @@ class PyDAT(Tk):
 		if i != self.dattabs.active.id:
 			self.save_data()
 			self.load_data(i)
+			self.listbox.select_clear(0,END)
+			self.listbox.select_set(i)
 			if s:
-				self.listbox.select_clear(0,END)
-				self.listbox.select_set(i)
 				self.listbox.see(i)
 			if focus_list:
 				self.listframe.focus_set()
@@ -327,17 +356,22 @@ class PyDAT(Tk):
 		path = self.data_context.settings.lastpath.dat.select_file('open', self, 'Open DAT file', '*.dat', [('StarCraft DAT files','*.dat'),('All Files','*')])
 		if not path:
 			return
-		try:
-			filesize = os.path.getsize(path)
-		except:
-			ErrorDialog(self, PyMSError('Open',"Couldn't get file size for '%s'" % path))
+		filename = os.path.basename(path)
 		for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]):
-			if filesize == page.dat.filesize:
-				page.open(path)
-				self.dattabs.display(page.page_title)
+			if filename == page.get_dat_data().dat_type.FILE_NAME:
+				try:
+					page.open(path)
+				except PyMSError, e:
+					ErrorDialog(self, e)
+				else:
+					self.updated_entry_names()
+					self.updated_entry_counts()
+					self.dattabs.display(page.page_title)
+					if page.get_dat_data().dat.is_expanded():
+						self.data_context.settings.dont_warn.warn('expanded_dat', self, 'This %s file is expanded.' % filename)
 				break
 		else:
-			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT file '%s'" % path))
+			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % path))
 
 	def openmpq(self, event=None):
 		file = self.data_context.settings.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
@@ -431,7 +465,8 @@ class PyDAT(Tk):
 	def mpqtbl(self, key=None, err=None):
 		data = [
 			('TBL Settings',[
-				('stat_txt.tbl', 'Contains Unit names', 'stat_txt', 'TBL'),
+				('stat_txt.tbl', 'Contains Unit, Weapon, Upgrade, Tech, and Order names', 'stat_txt', 'TBL'),
+				('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
 				('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
 				('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
 				('portdata.tbl', 'Contains Portrait mpq file paths', 'portdatatbl', 'TBL'),
@@ -440,9 +475,17 @@ class PyDAT(Tk):
 			('Other Settings',[
 				('cmdicons.grp', 'Contains icon images', 'cmdicons', 'CacheGRP'),
 				('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
+			]),
+			('Palette Settings',[
+				('Unit', 'Used to display normal graphics previews', 'Units', 'Palette'),
+				('bfire', 'Used to display graphics previews with bfire.pcx remapping', 'bfire', 'Palette'),
+				('gfire', 'Used to display graphics previews with gfire.pcx remapping', 'gfire', 'Palette'),
+				('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
+				('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
+				('Icons', 'Used to display icon previews', 'Icons', 'Palette')
 			])
 		]
-		DATSettingsDialog(self, data, (340,450), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
+		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 
 	def register(self, e=None):
 		try:

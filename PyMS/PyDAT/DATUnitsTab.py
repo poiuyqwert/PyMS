@@ -29,10 +29,10 @@ class DATUnitsTab(NotebookTab):
 			self.toplevel.dattabs.display(type)
 			self.toplevel.changeid(i=i)
 
-	def update_entry_names(self):
+	def updated_entry_names(self, datids):
 		pass
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
 		pass
 
 	def activate(self):
@@ -48,7 +48,7 @@ class DATUnitsTab(NotebookTab):
 		edited = self.save_data(entry)
 		if edited:
 			self.parent_tab.edited = edited
-			self.toplevel.action_states()
+			self.toplevel.update_status()
 
 	def load_data(self, id):
 		pass

@@ -61,9 +61,12 @@ class SettingsDialog(PyMSDialog):
 		ErrorDialog(self, self.err)
 
 	def cancel(self):
-		if self.err and askyesno(parent=self, title='Exit?', message="One or more files required for this program can not be found and must be chosen. Canceling will close the program, do you wish to continue?"):
-			self.parent.after(1, self.parent.exit)
-			PyMSDialog.ok(self)
+		if self.err:
+			if askyesno(parent=self, title='Exit?', message="One or more files required for this program can not be found and must be chosen. Canceling will close the program, do you wish to continue?"):
+				self.parent.after(1, self.parent.exit)
+				PyMSDialog.ok(self)
+			else:
+				pass
 		elif not self.edited or askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
 			PyMSDialog.ok(self)
 

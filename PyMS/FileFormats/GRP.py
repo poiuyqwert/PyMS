@@ -159,7 +159,7 @@ class CacheGRP:
 					d[4].append(framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0])
 				images.append(d)
 		except:
-			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt or an uncompressed GRP" % file,exception=sys.exc_info())
+			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt or an uncompressed GRP" % file, capture_exception=True)
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -289,7 +289,7 @@ class GRP:
 					images.append(image[:height])
 					images_bounds.append((xoffset,yoffset,xoffset+linewidth,yoffset+lines))
 		except:
-			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt" % file,exception=sys.exc_info())
+			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt" % file, capture_exception=True)
 		self.frames = frames
 		self.width = width
 		self.height = height

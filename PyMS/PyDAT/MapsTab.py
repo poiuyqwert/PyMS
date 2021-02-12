@@ -1,5 +1,6 @@
 
 from DATTab import DATTab
+
 from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import couriernew
@@ -36,8 +37,8 @@ class MapsTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.campaign
 
-	def update_entry_names(self):
-		self.missions.setentries(self.toplevel.data_context.mapdatatbl.strings + ['None'])
+	def updated_entry_names(self, datids):
+		self.missions.setentries(self.toplevel.data_context.mapdatatbl.strings + ('None',))
 		self.missionentry.range[1] = len(self.toplevel.data_context.mapdatatbl.strings)
 
 	def load_entry(self, entry):

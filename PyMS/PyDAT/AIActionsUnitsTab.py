@@ -1,5 +1,7 @@
 
 from DATUnitsTab import DATUnitsTab
+from DATID import DATID
+
 from ..FileFormats.DAT.UnitsDAT import Unit
 
 from ..Utilities.utils import couriernew
@@ -143,16 +145,20 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-	def update_entry_names(self):
+	def updated_entry_names(self, datids):
+		if not DATID.orders in datids:
+			return
 		# TODO: None for expanded dat?
-		names = self.toplevel.data_context.orders.names + ['None']
+		names = self.toplevel.data_context.orders.names + ('None',)
 		self.computeridle_ddw.setentries(names)
 		self.humanidle_ddw.setentries(names)
 		self.returntoidle_ddw.setentries(names)
 		self.attackunit_ddw.setentries(names)
 		self.attackmove_ddw.setentries(names)
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
+		if not DATID.orders in datids:
+			return
 		count = None
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			count = self.toplevel.data_context.orders.entry_count() + 1

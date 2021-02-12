@@ -1,5 +1,7 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -80,21 +82,27 @@ class FlingyTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.units, lambda unit: (
+				DATRef('Graphics > Graphics', unit.graphics),
+			)),
+			(DATID.weapons, lambda weapon: (
+				DATRef('Graphics', weapon.graphics),
+			)),
+		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.flingy
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.graphics, )),
-			(self.toplevel.data_context.weapons.dat, lambda weapon: (weapon.graphics, )),
-		]
+	def updated_entry_names(self, datids):
+		if (DATID.units in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		if DATID.sprites in datids:
+			self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
 
-	def update_entry_names(self):
-		self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
-
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
+		if not DATID.sprites in datids:
+			return
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count()
 		else:

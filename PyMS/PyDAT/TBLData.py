@@ -8,13 +8,14 @@ def convert_string(string):
 	return string
 
 class TBLData(object):
-	def __init__(self, setting, path):
+	def __init__(self, data_context, setting, path):
+		self.data_context = data_context
 		self.setting = setting
 		self.path = path
-		# TODO: Make tuple
-		self.strings = []
+		self.strings = ()
 
-	def load_strings(self, mpqhandler, settings):
+	def load_strings(self):
 		tbl = TBL()
-		tbl.load_file(mpqhandler.get_file(settings.settings.files.get(self.setting, 'MPQ:' + self.path)))
-		self.strings = [convert_string(string) for string in tbl.strings]
+		path = self.data_context.settings.settings.files.get(self.setting, 'MPQ:' + self.path)
+		tbl.load_file(self.data_context.mpqhandler.get_file(path))
+		self.strings = tuple(convert_string(string) for string in tbl.strings)

@@ -1,10 +1,11 @@
 
+from DATUnitsTab import DATUnitsTab
+from DATID import DATID
+
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from DATUnitsTab import DATUnitsTab
 
 from Tkinter import *
 
@@ -122,7 +123,9 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
-	def update_entry_names(self):
+	def updated_entry_names(self, datids):
+		if not DATID.sfxdata in datids:
+			return
 		names = self.toplevel.data_context.sounds.names
 		dropdowns = (
 			self.ready_sound_dropdown_widget,
@@ -136,7 +139,9 @@ class SoundsUnitsTab(DATUnitsTab):
 		for dropdown in dropdowns:
 			dropdown.setentries(names)
 
-	def update_entry_counts(self):
+	def updated_entry_counts(self, datids):
+		if not DATID.sfxdata in datids:
+			return
 		limit = None
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			limit = self.toplevel.data_context.sounds.entry_count() - 1

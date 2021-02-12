@@ -1,5 +1,8 @@
 
 from DATTab import DATTab
+from DATID import DATID
+from DATRef import DATRef
+
 from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import couriernew
@@ -79,18 +82,19 @@ class PortraitsTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
-		self.setup_used_by_listbox()
+		self.setup_used_by((
+			(DATID.units, lambda unit: (
+				DATRef('Graphics > Portrait', unit.portrait),
+			)),
+		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.portraits
 
-	def get_used_by_references(self):
-		return [
-			(self.toplevel.data_context.units.dat, lambda unit: (unit.portrait, )),
-		]
-
-	def update_entry_names(self):
-		portdata = ['None'] + self.toplevel.data_context.portdatatbl.strings
+	def updated_entry_names(self, datids):
+		if DATID.units in datids and self.toplevel.dattabs.active == self:
+			self.check_used_by_references()
+		portdata = ('None',) + self.toplevel.data_context.portdatatbl.strings
 		limit = len(self.toplevel.data_context.portdatatbl.strings)
 		self.idle_dd_view.setentries(portdata)
 		self.idle_entry.range[1] = limit
