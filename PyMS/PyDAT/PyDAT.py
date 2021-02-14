@@ -11,14 +11,14 @@ from PortraitsTab import PortraitsTab
 from MapsTab import MapsTab
 from OrdersTab import OrdersTab
 from DataContext import DataContext
-from DATID import DATID
+from DataID import DATID, DataID
 from SaveMPQDialog import SaveMPQDialog
 from DATSettingsDialog import DATSettingsDialog
 
 from ..FileFormats.MPQ.SFmpq import *
 from ..FileFormats.DAT import *
 
-from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Tooltip import Tooltip
@@ -32,6 +32,9 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
+from ..Utilities.Toolbar import Toolbar
+from ..Utilities.EventPattern import *
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 from Tkinter import *
 from tkMessageBox import askquestion, showinfo, OK
@@ -59,73 +62,34 @@ class PyDAT(Tk):
 
 		self.data_context.load_palettes()
 
-		#Toolbar
-		buttons = [
-			('new', self.new, 'New (Ctrl+N)', NORMAL, 'Ctrl+N'),
-			2,
-			('open', self.open, 'Open (Ctrl+O)', NORMAL, 'Ctrl+O'),
-			('openfolder', self.opendirectory, 'Open Directory (Ctrl+D)', NORMAL, 'Ctrl+D'),
-			('import', self.iimport, 'Import from TXT (Ctrl+I)', NORMAL, 'Ctrl+I'),
-			('openmpq', self.openmpq, 'Open MPQ (Ctrl+Alt+O)', NORMAL if SFMPQ_LOADED else DISABLED, 'Ctrl+Alt+O'),
-			2,
-			('save', self.save, 'Save (Ctrl+S)', NORMAL, 'Ctrl+S'),
-			('saveas', self.saveas, 'Save As (Ctrl+Alt+A)', NORMAL, 'Ctrl+Alt+A'),
-			('export', self.export, 'Export to TXT (Ctrl+E)', NORMAL, 'Ctrl+E'),
-			('savempq', self.savempq, 'Save MPQ (Ctrl+Alt+M)', NORMAL if SFMPQ_LOADED else DISABLED, 'Ctrl+Alt+M'),
-			10,
-			('asc3topyai', self.mpqtbl, 'Manage MPQ and TBL files (Ctrl+M)', NORMAL, 'Ctrl+M'),
-			10,
-			('register', self.register, 'Set as default *.dat editor (Windows Only)', NORMAL if WIN_REG_AVAILABLE else DISABLED, ''),
-			('help', self.help, 'Help (F1)', NORMAL, 'F1'),
-			('about', self.about, 'About PyDAT', NORMAL, ''),
-			10,
-			('exit', self.exit, 'Exit (Alt+F4)', NORMAL, 'Alt+F4'),
-		]
-		self.buttons = {}
-		toolbar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','%s.gif' % btn[0]))
-				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-				button.image = image
-				button.tooltip = Tooltip(button, btn[2])
-				button.pack(side=LEFT)
-				self.buttons[btn[0]] = button
-				a = btn[4]
-				if a:
-					if not a.startswith('F'):
-						self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
-					else:
-						self.bind('<%s>' % a, btn[1])
-			else:
-				Frame(toolbar, width=btn).pack(side=LEFT)
+		toolbar = Toolbar(self)
+		toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		toolbar.add_gap()
+		toolbar.add_button('open', self.open, 'Open', Ctrl.o)
+		toolbar.add_button('openfolder', self.opendirectory, 'Open Directory', Ctrl.d)
+		toolbar.add_button('import', self.iimport, 'Import from TXT', Ctrl.i)
+		toolbar.add_button('openmpq', self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
+		toolbar.add_gap()
+		toolbar.add_button('save', self.save, 'Save', Ctrl.s)
+		toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.s)
+		toolbar.add_button('export', self.export, 'Export to TXT', Ctrl.e)
+		toolbar.add_button('savempq', self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=SFMPQ_LOADED)
+		toolbar.add_section()
+		toolbar.add_button('asc3topyai', self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
+		toolbar.add_section()
+		toolbar.add_button('register', self.register, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		toolbar.add_button('help', self.help, 'Help', Key.F1)
+		toolbar.add_button('about', self.about, 'About PyDAT')
+		toolbar.add_section()
+		toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)
 		left = Frame(self.hor_pane)
-		##listbox
-		self.listframe = Frame(left, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(self.listframe)
-		self.listbox = Listbox(self.listframe, font=couriernew, width=45, height=1, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0, activestyle=DOTBOX)
-		bind = [
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
-		]
-		for b in bind:
-			self.listframe.bind(*b)
-		self.listbox.bind('<ButtonRelease-1>', self.changeid)
-		self.listbox.bind('<ButtonRelease-3>', self.popup)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		self.listframe.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
+		self.listbox = ScrolledListbox(left, {'bd': 2, 'relief': SUNKEN}, scroll_speed=2, font=couriernew, width=45, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
+		self.listbox.bind(ButtonRelease.Right_Click, self.popup)
+		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.changeid())
 
 		self.findhistory = []
 		self.find = StringVar()
@@ -134,33 +98,33 @@ class PyDAT(Tk):
 		search = Frame(left)
 		tdd = TextDropDown(search, self.find, self.findhistory, 5)
 		tdd.pack(side=LEFT, fill=X, expand=1)
-		tdd.entry.bind('<Return>', self.findnext)
+		tdd.entry.bind(Key.Return, self.findnext)
 		Button(search, text='Find Next', command=self.findnext).pack(side=LEFT)
 		right = Frame(search)
 		entry = Entry(right, textvariable=self.jumpid, width=4)
 		entry.pack(side=LEFT)
-		entry.bind('<Return>', self.jump)
+		entry.bind(Key.Return, self.jump)
 		Button(right, text='ID Jump', command=self.jump).pack(side=LEFT)
 		right.pack(side=RIGHT)
 		search.pack(fill=X, padx=2, pady=2)
-		self.bind('<Control-f>', lambda e: tdd.focus_set(highlight=True))
+		self.bind(Ctrl.f, lambda e: tdd.focus_set(highlight=True))
 
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
 		listmenu = [
-			('Copy Entry (Ctrl+Shift+C)', lambda t=0: self.copy(t), 0, 'Control-Shift-c'), # 0
-			('Paste Entry (Ctrl+Shift+P)', lambda t=0: self.paste(t), 0, 'Control-Shift-p'), # 1
+			('Copy Entry', lambda t=0: self.copy(t), 0, Shift.Ctrl.c), # 0
+			('Paste Entry', lambda t=0: self.paste(t), 0, Shift.Ctrl.p), # 1
 			None,
-			('Copy Tab (Ctrl+Y)', lambda t=1: self.copy(t), 1, 'Control-y'), # 3
-			('Paste Tab (Ctrl+B)', lambda t=1: self.paste(t), 1, 'Control-b'), # 4
+			('Copy Sub-Tab', lambda t=1: self.copy(t), 1, Ctrl.y), # 3
+			('Paste Sub-Tab', lambda t=1: self.paste(t), 1, Ctrl.b), # 4
 			None,
-			('Reload Entry (Ctrl+R)', self.reload, 0, 'Control-r'), #6
+			('Reload Entry', self.reload, 0, Ctrl.r), #6
 		]
 		self.listmenu = Menu(self, tearoff=0)
 		for m in listmenu:
 			if m:
 				l,c,u,b = m
-				self.listmenu.add_command(label=l, command=c, underline=u)
+				self.listmenu.add_command(label=l, command=c, underline=u, accelerator=b.name())
 				self.bind(b, c)
 			else:
 				self.listmenu.add_separator()
@@ -238,9 +202,10 @@ class PyDAT(Tk):
 		tab = self.dattabs.active
 		dat_data = tab.get_dat_data()
 		if dat_data.dat:
-			self.jumpid.range[1] = dat_data.dat.entry_count() - 1
+			max_id = dat_data.dat.entry_count() - 1
+			self.jumpid.range[1] = max_id
 			self.jumpid.editvalue()
-			self.listbox.insert(END, *[' %s%s  %s' % (' ' * (4-len(str(id))),id,name) for id,name in enumerate(dat_data.names)])
+			self.listbox.insert(END, *[' %s  %s' % (lpad(id, min(4,len(str(max_id)))), name) for id,name in enumerate(dat_data.names)])
 			self.listbox.select_set(tab.id)
 			if update_scroll:
 				self.listbox.see(tab.id)
@@ -258,6 +223,10 @@ class PyDAT(Tk):
 			self.expanded.set('%s expanded' % dat_data.dat_type.FILE_NAME)
 		else:
 			self.expanded.set('')
+
+	def updated_data_files(self, dataids=DataID.ALL):
+		for page in self.pages:
+			page.updated_data_files(dataids)
 
 	def updated_entry_names(self, datids=DATID.ALL):
 		for page in self.pages:
@@ -277,6 +246,7 @@ class PyDAT(Tk):
 			err = e
 		else:
 			self.data_context.load_dat_files()
+			self.updated_data_files()
 			self.updated_entry_counts()
 			self.updated_entry_names()
 			self.tab_activated()
@@ -293,36 +263,23 @@ class PyDAT(Tk):
 		self.dattabs.active.save_data()
 		self.update_status_bar()
 
-	def changeid(self, key=None, i=None, focus_list=True):
-		s = True
-		if i == None:
-			i = int(self.listbox.curselection()[0])
-			s = False
-		if i != self.dattabs.active.id:
+	def changeid(self, entry_id=None, focus_list=True):
+		show_selection = True
+		if entry_id == None:
+			entry_id = int(self.listbox.curselection()[0])
+			show_selection = False
+		if entry_id != self.dattabs.active.id:
 			self.save_data()
-			self.load_data(i)
+			self.load_data(entry_id)
 			self.listbox.select_clear(0,END)
-			self.listbox.select_set(i)
-			if s:
-				self.listbox.see(i)
+			self.listbox.select_set(entry_id)
+			if show_selection:
+				self.listbox.see(entry_id)
 			if focus_list:
-				self.listframe.focus_set()
+				self.listbox.listbox.focus_set()
 
 	def popup(self, e):
 		self.dattabs.active.popup(e)
-
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
-	def move(self, e, a):
-		if a == END:
-			a = self.listbox.size()-2
-		elif a not in [0,END]:
-			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-		self.changeid(i=a)
 
 	def findnext(self, key=None):
 		f = self.find.get()
@@ -331,14 +288,15 @@ class PyDAT(Tk):
 		start = int(self.listbox.curselection()[0])
 		cur = (start + 1) % self.listbox.size()
 		while cur != start:
+			# TODO: Fixme
 			if f.lower() in DATA_CACHE[self.dattabs.active.data][cur].lower():
-				self.changeid(i=cur, focus_list=False)
+				self.changeid(cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size()
 		askquestion(parent=self, title='Find', message="Can't find text.", type=OK)
 
 	def jump(self, key=None):
-		self.changeid(i=self.jumpid.get())
+		self.changeid(self.jumpid.get())
 
 	def copy(self, t):
 		self.dattabs.active.copy(t)

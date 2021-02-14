@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
@@ -169,12 +169,16 @@ class UpgradesTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.upgrades
 
+	def updated_data_files(self, dataids):
+		if DataID.cmdicons in dataids:
+			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+		if DataID.stat_txt in dataids:
+			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
+			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
+
 	def updated_entry_names(self, datids):
 		if (DATID.units in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
-		self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
-		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
 
 	def selicon(self, n, t=0):
 		if t:

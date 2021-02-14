@@ -25,9 +25,13 @@ class DATUnitsTab(NotebookTab):
 
 	def jump(self, type, id, o=0):
 		i = id.get() + o
+		# TODO: Fixme
 		if i < len(DATA_CACHE['%s.txt' % type]) - 1:
 			self.toplevel.dattabs.display(type)
-			self.toplevel.changeid(i=i)
+			self.toplevel.changeid(i)
+
+	def updated_data_files(self, dataids):
+		pass
 
 	def updated_entry_names(self, datids):
 		pass

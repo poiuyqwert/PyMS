@@ -160,9 +160,14 @@ def fit(label, text, width=80, end=False, indent=0):
 			r += '\n'
 	return r.rstrip('\n') + ('\n' if end else '')
 
-def pad(label, value='', span=20):
+def rpad(label, value='', span=20, padding=' '):
 	label = str(label)
-	return '%s%s%s' % (label, ' ' * (span - len(label)), value)
+	return '%s%s%s' % (label, padding * (span - len(label)), value)
+pad = rpad
+
+def lpad(label, span=20, padding=' '):
+	label = str(label)
+	return '%s%s' % (padding * (span - len(label)), label)
 
 def removedir(path):
 	if os.path.exists(path):

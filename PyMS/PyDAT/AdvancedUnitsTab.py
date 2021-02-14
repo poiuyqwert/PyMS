@@ -1,6 +1,6 @@
 
 from DATUnitsTab import DATUnitsTab
-from DATID import DATID
+from DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.TBL import decompile_string
@@ -8,7 +8,6 @@ from ..FileFormats.TBL import decompile_string
 from ..Utilities.utils import couriernew
 from ..Utilities.DropDown import DropDown
 from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DataCache import DATA_CACHE
 
 from Tkinter import *
 

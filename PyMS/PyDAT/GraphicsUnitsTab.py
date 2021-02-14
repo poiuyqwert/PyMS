@@ -1,6 +1,6 @@
 
 from DATUnitsTab import DATUnitsTab
-from DATID import DATID
+from DataID import DATID
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 
@@ -29,14 +29,11 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = LabelFrame(frame, text='Sprite Graphics:')
 		s = Frame(l)
-		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, data_file=None, jump_ref=None):
+		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, values=[], jump_ref=None):
 			f = Frame(s)
 			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=entry_variable, font=couriernew, width=5).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
-			values = []
-			if data_file:
-				values = DATA_CACHE[data_file]
 			dropdown = DropDown(f, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
 			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
 			if jump_ref:
@@ -47,7 +44,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', jump_ref='Flingy')
 		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', jump_ref='Images')
 		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', none_value=65535, jump_ref='Portdata')
-		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', data_file='ElevationLevels.txt')
+		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', values=DATA_CACHE['ElevationLevels.txt'])
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.direction, font=couriernew, width=3).pack(side=LEFT)

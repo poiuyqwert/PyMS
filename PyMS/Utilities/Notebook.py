@@ -36,6 +36,8 @@ class Notebook(Frame):
 		return b
 
 	def display(self, title):
+		if self.pages[title][0] == self.active:
+			return
 		if self.active:
 			if hasattr(self.active, 'deactivate'):
 				self.active.deactivate()

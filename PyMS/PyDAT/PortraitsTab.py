@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
@@ -91,15 +91,18 @@ class PortraitsTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.portraits
 
+	def updated_data_files(self, dataids):
+		if DataID.portdatatbl in dataids:
+			portdata = ('None',) + self.toplevel.data_context.portdatatbl.strings
+			limit = len(self.toplevel.data_context.portdatatbl.strings)
+			self.idle_dd_view.setentries(portdata)
+			self.idle_entry.range[1] = limit
+			self.talking_dd_view.setentries(portdata)
+			self.talking_entry.range[1] = limit
+
 	def updated_entry_names(self, datids):
 		if DATID.units in datids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		portdata = ('None',) + self.toplevel.data_context.portdatatbl.strings
-		limit = len(self.toplevel.data_context.portdatatbl.strings)
-		self.idle_dd_view.setentries(portdata)
-		self.idle_entry.range[1] = limit
-		self.talking_dd_view.setentries(portdata)
-		self.talking_entry.range[1] = limit
 
 	def load_entry(self, entry):
 		self.idle_entry.set(entry.idle.portrait_file)

@@ -6,7 +6,7 @@ from SoundsUnitsTab import SoundsUnitsTab
 from GraphicsUnitsTab import GraphicsUnitsTab
 from StarEditUnitsTab import StarEditUnitsTab
 from AIActionsUnitsTab import AIActionsUnitsTab
-from DATID import DATID
+from DataID import DATID
 from DATRef import DATRef
 
 from ..Utilities.Notebook import Notebook
@@ -41,6 +41,10 @@ class UnitsTab(DATTab):
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.units
+
+	def updated_data_files(self, dataids):
+		for tab,_ in self.dattabs.pages.values():
+			tab.updated_data_files(dataids)
 
 	def updated_entry_names(self, datids):
 		for tab,_ in self.dattabs.pages.values():

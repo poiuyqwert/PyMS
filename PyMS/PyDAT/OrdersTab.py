@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
@@ -164,6 +164,15 @@ class OrdersTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.orders
 
+	def updated_data_files(self, dataids):
+		if DataID.stat_txt in dataids:
+			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
+			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
+		if DataID.cmdicons in dataids:
+			self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ('None',))
+			# TODO: Limit-1 while supporting none_value
+			# self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
+
 	def updated_entry_names(self, datids):
 		if DATID.units in datids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
@@ -173,11 +182,6 @@ class OrdersTab(DATTab):
 			self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ('None',))
 		if DATID.orders in datids:
 			self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ('None',))
-		self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
-		self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
-		self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ('None',))
-		# TODO: Limit-1 while supporting none_value
-		# self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
 
 	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):

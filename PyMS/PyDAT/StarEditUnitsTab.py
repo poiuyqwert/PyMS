@@ -1,5 +1,6 @@
 
 from DATUnitsTab import DATUnitsTab
+from DataID import DataID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
@@ -140,12 +141,13 @@ class StarEditUnitsTab(DATUnitsTab):
 		for v in (self.width, self.height):
 			v.trace('w', lambda *_: self.drawpreview())
 
-	def updated_entry_names(self, datids):
-		count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
-		ranks = ('No Sublabel',) + self.toplevel.data_context.stat_txt.strings[1302:1302+count]
-		self.ranks.setentries(ranks)
-		self.rankentry.range[1] = count
-		self.rankentry.editvalue()
+	def updated_data_files(self, dataids):
+		if DataID.stat_txt in dataids:
+			count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
+			ranks = ('No Sublabel',) + self.toplevel.data_context.stat_txt.strings[1302:1302+count]
+			self.ranks.setentries(ranks)
+			self.rankentry.range[1] = count
+			self.rankentry.editvalue()
 
 	def drawboxes(self):
 		if self.showpreview.get():

@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
@@ -288,6 +288,14 @@ class WeaponsTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.weapons
 
+	def updated_data_files(self, dataids):
+		if DataID.stat_txt in dataids:
+			strings = ('None',) + self.toplevel.data_context.stat_txt.strings
+			self.labels.setentries(strings)
+			self.errormsgs.setentries(strings)
+		if DataID.cmdicons in dataids:
+			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+
 	def updated_entry_names(self, datids):
 		if (DATID.units in datids or DATID.orders in datids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
@@ -295,12 +303,8 @@ class WeaponsTab(DATTab):
 			self.unused_ddw.setentries(('None',) + self.toplevel.data_context.technology.names)
 		if DATID.upgrades in datids:
 			self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
-		strings = ('None',) + self.toplevel.data_context.stat_txt.strings
-		self.labels.setentries(strings)
-		self.errormsgs.setentries(strings)
 		if DATID.flingy in datids:
 			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
-		self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
 
 	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):

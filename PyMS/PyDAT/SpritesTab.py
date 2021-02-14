@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID
 from DATRef import DATRef
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage

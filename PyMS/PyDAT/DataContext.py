@@ -2,7 +2,7 @@
 from DATData import DATData, EntryLabelDATData, UnitsDATData
 from TBLData import TBLData
 from IconData import IconData
-from DATID import DATID
+from DataID import DATID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette

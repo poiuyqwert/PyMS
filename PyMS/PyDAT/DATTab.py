@@ -5,12 +5,13 @@ from ..FileFormats.DAT import WeaponsDAT, UpgradesDAT, TechDAT
 from ..FileFormats.DAT import UnitsDAT
 from ..FileFormats.TBL import decompile_string
 
-from ..Utilities.utils import BASE_DIR, fit, isstr
+from ..Utilities.utils import BASE_DIR, fit, isstr, couriernew
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Tooltip import Tooltip
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.EventPattern import *
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 from Tkinter import *
 import tkMessageBox
@@ -61,14 +62,10 @@ class DATTab(NotebookTab):
 		self.used_by_references = references
 
 		f = LabelFrame(self, text='Used By:')
-		listframe = Frame(f, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(listframe)
-		self.used_by_listbox = Listbox(listframe, width=1, activestyle=DOTBOX, height=6, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
-		self.used_by_listbox.bind('<Double-Button-1>', self.used_by_jump)
-		scrollbar.config(command=self.used_by_listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.used_by_listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(fill=X, padx=2, pady=2)
+		self.used_by_listbox = ScrolledListbox(f, {'bd': 2, 'relief': SUNKEN}, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.used_by_listbox.bind(Double.Click, self.used_by_jump)
+		self.used_by_listbox.bind(Key.Return, self.used_by_jump)
+		self.used_by_listbox.pack(fill=X, padx=2, pady=2)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
 
 	def check_used_by_references(self, lookup_id=None, used_by=None):
@@ -91,8 +88,7 @@ class DATTab(NotebookTab):
 					if check_ref.matches(lookup_id):
 						self.used_by_data.append((datid, check_entry_id))
 						ref_entry_name = dat_data.entry_name(check_entry_id)
-						self.used_by_listbox.insert(END, '%s entry %s, %s field: %s' % (dat_data.dat.FILE_NAME, check_entry_id, check_ref.ref_name, ref_entry_name))
-						break
+						self.used_by_listbox.insert(END, '%s, %s field, entry %s: %s' % (dat_data.dat.FILE_NAME, check_ref.name, check_entry_id, ref_entry_name))
 
 	def used_by_jump(self, *_):
 		selections = self.used_by_listbox.curselection()
@@ -102,13 +98,16 @@ class DATTab(NotebookTab):
 		if selected < len(self.used_by_data):
 			datid, entry_id = self.used_by_data[selected]
 			self.toplevel.dattabs.display(datid.id)
-			self.toplevel.changeid(i=entry_id)
+			self.toplevel.changeid(entry_id)
 
 	def jump(self, datid, entry_id_var, o=0):
 		entry_id = entry_id_var.get() + o
 		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
 			self.toplevel.dattabs.display(datid)
-			self.toplevel.changeid(i=entry_id)
+			self.toplevel.changeid(entry_id)
+
+	def updated_data_files(self, dataids):
+		pass
 
 	def updated_entry_names(self, datids):
 		pass

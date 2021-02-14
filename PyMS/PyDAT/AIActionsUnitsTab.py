@@ -1,6 +1,6 @@
 
 from DATUnitsTab import DATUnitsTab
-from DATID import DATID
+from DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
@@ -9,6 +9,7 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
 from ..Utilities.DataCache import DATA_CACHE
+from ..Utilities.EventPattern import *
 
 from Tkinter import *
 
@@ -83,12 +84,12 @@ class AIActionsUnitsTab(DATUnitsTab):
 			_,weapon_id = self.force_weapon_id(FORCETYPE_GROUND)
 			if weapon_id != 130:
 				self.toplevel.dattabs.display('Weapons')
-				self.toplevel.changeid(i=weapon_id)
+				self.toplevel.changeid(weapon_id)
 		def view_air_weapon(*_):
 			_,weapon_id = self.force_weapon_id(FORCETYPE_AIR)
 			if weapon_id != 130:
 				self.toplevel.dattabs.display('Weapons')
-				self.toplevel.changeid(i=weapon_id)
+				self.toplevel.changeid(weapon_id)
 		def view_basic_unit(*_):
 			self.parent_tab.dattabs.display('Basic')
 		def view_weapon_override_unit(force_type):
@@ -96,7 +97,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			if unit_id == None:
 				return
 			self.parent_tab.dattabs.display('Basic')
-			self.toplevel.changeid(i=unit_id)
+			self.toplevel.changeid(unit_id)
 
 		bold = ('Courier New', -12, 'bold')
 		self.force_value_text.tag_configure('force_type', underline=1)
@@ -139,9 +140,9 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.force_value_text.tag_configure(tag, foreground=fg, background=bg, font=bold)
 			self.force_value_text.tooltips.append(TextTooltip(self.force_value_text, tag, text=tooltip))
 			if action:
-				self.force_value_text.tag_bind(tag, '<Enter>', show_hand_cursor, '+')
-				self.force_value_text.tag_bind(tag, '<Leave>', show_arrow_cursor, '+')
-				self.force_value_text.tag_bind(tag, '<Button-1>', action)
+				self.force_value_text.tag_bind(tag, Cursor.Enter, show_hand_cursor, '+')
+				self.force_value_text.tag_bind(tag, Cursor.Leave, show_arrow_cursor, '+')
+				self.force_value_text.tag_bind(tag, Mouse.Click, action)
 
 		frame.pack(side=LEFT, fill=Y)
 

@@ -9,7 +9,8 @@ SHOW_SCROLL_ALWAYS = 1
 SHOW_SCROLL_NEEDED = 2
 
 class ScrolledListbox(Frame):
-	def __init__(self, parent, frame_config={}, horizontal=SHOW_SCROLL_NEEDED, vertical=SHOW_SCROLL_NEEDED, auto_bind=True, **kwargs):
+	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
+	def __init__(self, parent, frame_config={}, horizontal=SHOW_SCROLL_NEEDED, vertical=SHOW_SCROLL_NEEDED, auto_bind=True, scroll_speed=1, **kwargs):
 		Frame.__init__(self, parent, **frame_config)
 
 		self.listbox = Listbox(self, **kwargs)
@@ -34,14 +35,39 @@ class ScrolledListbox(Frame):
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(0, weight=1)
 
-		# Forward listbox methods and certain other methods to the listbox
+		# Proxy listbox binding on self, but preserve binding to self in separate function
 		self.frame_bind = self.bind
 		self.bind = self.listbox.bind
-		methods = vars(Listbox).keys() + vars(XView).keys() + vars(YView).keys()
-		for m in methods:
-			if m.startswith('_'):
-				continue
-			setattr(self, m, getattr(self.listbox, m))
+		# Proxy listbox functions on self
+		self.scan_mark = self.listbox.scan_mark
+		self.selection_includes = self.listbox.selection_includes
+		self.activate = self.listbox.activate
+		self.itemconfigure = self.listbox.itemconfigure
+		self.nearest = self.listbox.nearest
+		self.scan_dragto = self.listbox.scan_dragto
+		self.select_anchor = self.listbox.select_anchor
+		self.see = self.listbox.see
+		self.selection_clear = self.listbox.selection_clear
+		self.size = self.listbox.size
+		self.index = self.listbox.index
+		self.selection_set = self.listbox.selection_set
+		self.itemcget = self.listbox.itemcget
+		self.select_set = self.listbox.select_set
+		self.itemconfig = self.listbox.itemconfig
+		self.get = self.listbox.get
+		self.selection_anchor = self.listbox.selection_anchor
+		self.bbox = self.listbox.bbox
+		self.insert = self.listbox.insert
+		self.select_clear = self.listbox.select_clear
+		self.select_includes = self.listbox.select_includes
+		self.curselection = self.listbox.curselection
+		self.delete = self.listbox.delete
+		self.xview_moveto = self.listbox.xview_moveto
+		self.xview = self.listbox.xview
+		self.xview_scroll = self.listbox.xview_scroll
+		self.yview_moveto = self.listbox.yview_moveto
+		self.yview_scroll = self.listbox.yview_scroll
+		self.yview = self.listbox.yview
 
 		if auto_bind:
 			bind_to = self.listbox
@@ -56,9 +82,9 @@ class ScrolledListbox(Frame):
 					view = self.xview
 				cur = view()
 				if event.delta > 0 and cur[0] > 0:
-					view('scroll', -1, 'units')
+					view('scroll', -1 * scroll_speed, 'units')
 				elif event.delta <= 0 and cur[1] < 1:
-					view('scroll', 1, 'units')
+					view('scroll', scroll_speed, 'units')
 				return "break"
 			def move(offset):
 				index = 0
@@ -78,7 +104,7 @@ class ScrolledListbox(Frame):
 				('<Up>', lambda e,i=-1: move(i)),
 				('<Left>', lambda e,i=-1: move(i)),
 				('<Down>', lambda e,i=1: move(i)),
-				('<Right>', lambda e,i=-1: move(i)),
+				('<Right>', lambda e,i=1: move(i)),
 				('<Prior>', lambda e,i=-10: move(i)),
 				('<Next>', lambda e,i=10: move(i)),
 			]

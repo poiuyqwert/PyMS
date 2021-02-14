@@ -1,11 +1,10 @@
 
 from DATUnitsTab import DATUnitsTab
-from DATID import DATID
+from DataID import DATID
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 
 from Tkinter import *
 
@@ -14,22 +13,20 @@ class SoundsUnitsTab(DATUnitsTab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
 		frame = Frame(self)
-
-		sfxdata = DATA_CACHE['Sfxdata.txt']
 		
-		self.ready_sound = IntegerVar(0, [0,len(sfxdata)-1])
+		self.ready_sound = IntegerVar(0, [0,0])
 		self.ready_sound_dropdown = IntVar()
-		self.yes_sound_start = IntegerVar(0, [0,len(sfxdata)-1])
+		self.yes_sound_start = IntegerVar(0, [0,0])
 		self.yes_sounds_start_dropdown = IntVar()
-		self.yes_soound_end = IntegerVar(0, [0,len(sfxdata)-1])
+		self.yes_soound_end = IntegerVar(0, [0,0])
 		self.lastyesdd = IntVar()
-		self.what_sound_start = IntegerVar(0, [0,len(sfxdata)-1])
+		self.what_sound_start = IntegerVar(0, [0,0])
 		self.what_sound_start_dropdown = IntVar()
-		self.what_sound_end = IntegerVar(0, [0,len(sfxdata)-1])
+		self.what_sound_end = IntegerVar(0, [0,0])
 		self.what_sound_end_dropdown = IntVar()
-		self.pissed_sound_start = IntegerVar(0, [0,len(sfxdata)-1])
+		self.pissed_sound_start = IntegerVar(0, [0,0])
 		self.pissed_sound_start_dropdown = IntVar()
-		self.pissed_sound_end = IntegerVar(0, [0,len(sfxdata)-1])
+		self.pissed_sound_end = IntegerVar(0, [0,0])
 		self.pissed_sound_end_dropdown = IntVar()
 
 		l = LabelFrame(frame, text='Sounds:')
@@ -40,7 +37,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.ready_sound_entry_widget = Entry(f, textvariable=self.ready_sound, font=couriernew, width=4)
 		self.ready_sound_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.ready_sound_dropdown_widget = DropDown(f, self.ready_sound_dropdown, sfxdata, self.ready_sound, width=30)
+		self.ready_sound_dropdown_widget = DropDown(f, self.ready_sound_dropdown, [], self.ready_sound, width=30)
 		self.ready_sound_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.ready_sound_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.ready_sound_dropdown: self.jump(t,i))
 		self.ready_sound_button_widget.pack(side=LEFT)
@@ -52,7 +49,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.yes_sound_start_entry_widget = Entry(f, textvariable=self.yes_sound_start, font=couriernew, width=4)
 		self.yes_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.yes_sound_start_dropdown_widget = DropDown(f, self.yes_sounds_start_dropdown, sfxdata, self.yes_sound_start, width=30)
+		self.yes_sound_start_dropdown_widget = DropDown(f, self.yes_sounds_start_dropdown, [], self.yes_sound_start, width=30)
 		self.yes_sound_start_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.yes_sound_start_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.yes_sounds_start_dropdown: self.jump(t,i))
 		self.yes_sound_start_button_widget.pack(side=LEFT)
@@ -64,7 +61,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.yes_sound_end_entry_widget = Entry(f, textvariable=self.yes_soound_end, font=couriernew, width=4)
 		self.yes_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.yes_sound_end_dropdown_widget = DropDown(f, self.lastyesdd, sfxdata, self.yes_soound_end, width=30)
+		self.yes_sound_end_dropdown_widget = DropDown(f, self.lastyesdd, [], self.yes_soound_end, width=30)
 		self.yes_sound_end_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.yes_sound_end_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.lastyesdd: self.jump(t,i))
 		self.yes_sound_end_button_widget.pack(side=LEFT)
@@ -76,7 +73,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.what_sound_start_entry_widget = Entry(f, textvariable=self.what_sound_start, font=couriernew, width=4)
 		self.what_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.what_sound_start_dropdown_widget = DropDown(f, self.what_sound_start_dropdown, sfxdata, self.what_sound_start, width=30)
+		self.what_sound_start_dropdown_widget = DropDown(f, self.what_sound_start_dropdown, [], self.what_sound_start, width=30)
 		self.what_sound_start_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.what_sound_start_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.what_sound_start_dropdown: self.jump(t,i))
 		self.what_sound_start_button_widget.pack(side=LEFT)
@@ -88,7 +85,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.what_sound_end_entry_widget = Entry(f, textvariable=self.what_sound_end, font=couriernew, width=4)
 		self.what_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.what_sound_end_dropdown_widget = DropDown(f, self.what_sound_end_dropdown, sfxdata, self.what_sound_end, width=30)
+		self.what_sound_end_dropdown_widget = DropDown(f, self.what_sound_end_dropdown, [], self.what_sound_end, width=30)
 		self.what_sound_end_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.what_sound_end_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.what_sound_end_dropdown: self.jump(t,i))
 		self.what_sound_end_button_widget.pack(side=LEFT)
@@ -100,7 +97,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.pissed_sound_start_entry_widget = Entry(f, textvariable=self.pissed_sound_start, font=couriernew, width=4)
 		self.pissed_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.pissed_sound_start_dropdown_widget = DropDown(f, self.pissed_sound_start_dropdown, sfxdata, self.pissed_sound_start, width=30)
+		self.pissed_sound_start_dropdown_widget = DropDown(f, self.pissed_sound_start_dropdown, [], self.pissed_sound_start, width=30)
 		self.pissed_sound_start_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.pissed_sound_start_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.pissed_sound_start_dropdown: self.jump(t,i))
 		self.pissed_sound_start_button_widget.pack(side=LEFT)
@@ -112,7 +109,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.pissed_sound_end_entry_widget = Entry(f, textvariable=self.pissed_sound_end, font=couriernew, width=4)
 		self.pissed_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.pissed_sound_end_dropdown_widget = DropDown(f, self.pissed_sound_end_dropdown, sfxdata, self.pissed_sound_end, width=30)
+		self.pissed_sound_end_dropdown_widget = DropDown(f, self.pissed_sound_end_dropdown, [], self.pissed_sound_end, width=30)
 		self.pissed_sound_end_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.pissed_sound_end_button_widget = Button(f, text='Jump ->', command=lambda t='Sfxdata',i=self.pissed_sound_end_dropdown: self.jump(t,i))
 		self.pissed_sound_end_button_widget.pack(side=LEFT)

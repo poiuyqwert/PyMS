@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
@@ -95,11 +95,14 @@ class SoundsTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.sounds
 
+	def updated_data_files(self, dataids):
+		if DataID.sfxdatatbl in dataids:
+			self.sounds.setentries(('None',) + self.toplevel.data_context.sfxdatatbl.strings)
+			self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
+
 	def updated_entry_names(self, datids):
 		if DATID.units in datids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		self.sounds.setentries(('None',) + self.toplevel.data_context.sfxdatatbl.strings)
-		self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
 
 	def changesound(self, n=None):
 		if n == None:

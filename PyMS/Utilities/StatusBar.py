@@ -1,10 +1,10 @@
 
-import Tkinter as Tk
+from Tkinter import *
 
-class StatusBar(Tk.Frame):
+class StatusBar(Frame):
 	def __init__(self, *args, **kwargs):
 		self._weights = []
-		Tk.Frame.__init__(self, *args, **kwargs)
+		Frame.__init__(self, *args, **kwargs)
 
 	def _adjust_weights(self):
 		none_count = self._weights.count(None)
@@ -16,23 +16,23 @@ class StatusBar(Tk.Frame):
 			self.grid_columnconfigure(column, weight=split_remainder if weight == None else int(100 * weight))
 
 	def add_label(self, text_variable, weight=None):
-		label = Tk.Label(self, textvariable=text_variable, bd=1, relief=Tk.SUNKEN, anchor=Tk.W)
-		label.grid(row=0, column=len(self._weights), padx=1, sticky=Tk.NSEW)
+		label = Label(self, textvariable=text_variable, bd=1, relief=SUNKEN, anchor=W)
+		label.grid(row=0, column=len(self._weights), padx=1, sticky=NSEW)
 		self._weights.append(weight)
 		self._adjust_weights()
 		return label
 
 	def add_icon(self, image, weight=0):
-		label = Tk.Label(self, image=image, bd=0, state=Tk.DISABLED)
+		label = Label(self, image=image, bd=0, state=DISABLED)
 		label.image = image
-		label.grid(row=0, column=len(self._weights), padx=1, sticky=Tk.NS)
+		label.grid(row=0, column=len(self._weights), padx=1, sticky=NS)
 		self._weights.append(weight)
 		self._adjust_weights()
 		return label
 
 	def add_spacer(self, weight=None):
-		frame = Tk.Frame(self, bd=1, relief=Tk.SUNKEN)
-		frame.grid(row=0, column=len(self._weights), padx=1, sticky=Tk.NSEW)
+		frame = Frame(self, bd=1, relief=SUNKEN)
+		frame.grid(row=0, column=len(self._weights), padx=1, sticky=NSEW)
 		self._weights.append(weight)
 		self._adjust_weights()
 		return frame

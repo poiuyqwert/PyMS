@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DATID import DATID
+from DataID import DATID, DataID
 from DATRef import DATRef
 
 from ..FileFormats.TBL import decompile_string
@@ -174,29 +174,32 @@ class ImagesTab(DATTab):
 	def get_dat_data(self):
 		return self.toplevel.data_context.images
 
+	def updated_data_files(self, dataids):
+		if DataID.imagestbl in dataids:
+			image_names = ('None',) + self.toplevel.data_context.imagestbl.strings
+			for dropdown,entry_var in self.grpdds:
+				dropdown.setentries(image_names)
+				entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)
+		if DataID.iscriptbin in dataids:
+			iscript_names = []
+			last = -1
+			for id in self.toplevel.data_context.iscriptbin.headers.keys():
+				if id-last > 1:
+					iscript_names.extend(['*Unused*'] * (id-last-1))
+				if id in self.toplevel.data_context.iscriptbin.extrainfo:
+					n = self.toplevel.data_context.iscriptbin.extrainfo[id]
+				elif id < len(DATA_CACHE['IscriptIDList.txt']):
+					n = DATA_CACHE['IscriptIDList.txt'][id]
+				else:
+					n = 'Unnamed Custom Entry'
+				iscript_names.append(n)
+				last = id
+			self.iscripts.setentries(iscript_names)
+			self.iscriptentry.range[1] = len(iscript_names)-1
+
 	def updated_entry_names(self, datids):
 		if (DATID.units in datids or DATID.sprites in datids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		image_names = ('None',) + self.toplevel.data_context.imagestbl.strings
-		for dropdown,entry_var in self.grpdds:
-			dropdown.setentries(image_names)
-			entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)
-
-		iscript_names = []
-		last = -1
-		for id in self.toplevel.data_context.iscriptbin.headers.keys():
-			if id-last > 1:
-				iscript_names.extend(['*Unused*'] * (id-last-1))
-			if id in self.toplevel.data_context.iscriptbin.extrainfo:
-				n = self.toplevel.data_context.iscriptbin.extrainfo[id]
-			elif id < len(DATA_CACHE['IscriptIDList.txt']):
-				n = DATA_CACHE['IscriptIDList.txt'][id]
-			else:
-				n = 'Unnamed Custom Entry'
-			iscript_names.append(n)
-			last = id
-		self.iscripts.setentries(iscript_names)
-		self.iscriptentry.range[1] = len(iscript_names)-1
 
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
