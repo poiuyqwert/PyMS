@@ -18,20 +18,6 @@ import tkMessageBox
 
 import os, copy
 
-DAT_DATA_REF_FILES = {
-	'units.dat': 'Units.txt',
-	'weapons.dat': 'Weapons.txt',
-	'flingy.dat': 'Flingy.txt',
-	'sprites.dat': 'Sprites.txt',
-	'images.dat': 'Images.txt',
-	'upgrades.dat': 'Upgrades.txt',
-	'techdata.dat': 'Techdata.txt',
-	'sfxdata.dat': 'Sfxdata.txt',
-	'portdata.dat': 'Portdata.txt',
-	'mapdata.dat': 'Mapdata.txt',
-	'orders.dat': 'Orders.txt',
-}
-
 class DATTab(NotebookTab):
 	data = None
 
@@ -77,18 +63,10 @@ class DATTab(NotebookTab):
 			used_by = self.used_by_references
 		if not lookup_id:
 			lookup_id = self.id
-		for datid,get_refs in used_by:
-			dat_data = self.toplevel.data_context.dat_data(datid)
-			if not dat_data.dat:
-				continue
-			for check_entry_id in range(dat_data.entry_count()):
-				check_entry = dat_data.dat.get_entry(check_entry_id)
-				check_refs = get_refs(check_entry)
-				for check_ref in check_refs:
-					if check_ref.matches(lookup_id):
-						self.used_by_data.append((datid, check_entry_id))
-						ref_entry_name = dat_data.entry_name(check_entry_id)
-						self.used_by_listbox.insert(END, '%s, %s field, entry %s: %s' % (dat_data.dat.FILE_NAME, check_ref.name, check_entry_id, ref_entry_name))
+		for dat_refs in used_by:
+			self.used_by_data.extend(dat_refs.matching(self.toplevel.data_context, lookup_id))
+		if self.used_by_data:
+			self.used_by_listbox.insert(END, *self.used_by_data)
 
 	def used_by_jump(self, *_):
 		selections = self.used_by_listbox.curselection()
@@ -96,15 +74,19 @@ class DATTab(NotebookTab):
 			return
 		selected = selections[0]
 		if selected < len(self.used_by_data):
-			datid, entry_id = self.used_by_data[selected]
-			self.toplevel.dattabs.display(datid.id)
+			match = self.used_by_data[selected]
+			tab = self.toplevel.dattabs.display(match.dat_id.tab_id)
+			self.toplevel.changeid(match.entry_id)
+			if match.dat_sub_tab_id:
+				tab.change_sub_tab(match.dat_sub_tab_id)
+
+	def jump(self, datid, entry_id):
+		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
+			self.toplevel.dattabs.display(datid.tab_id)
 			self.toplevel.changeid(entry_id)
 
-	def jump(self, datid, entry_id_var, o=0):
-		entry_id = entry_id_var.get() + o
-		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
-			self.toplevel.dattabs.display(datid)
-			self.toplevel.changeid(entry_id)
+	def change_sub_tab(self, sub_tab_id):
+		pass
 
 	def updated_data_files(self, dataids):
 		pass

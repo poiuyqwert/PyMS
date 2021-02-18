@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 
@@ -13,8 +13,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class ImagesTab(DATTab):
-	data = 'Images.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -163,10 +161,10 @@ class ImagesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Graphics > Construction', unit.construction_animation),
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Construction', unit.construction_animation, dat_sub_tab=UnitsTabID.graphics),
 			)),
-			(DATID.sprites, lambda sprite: (
+			DATRefs(DATID.sprites, lambda sprite: (
 				DATRef('Image', sprite.image_file),
 			)),
 		))

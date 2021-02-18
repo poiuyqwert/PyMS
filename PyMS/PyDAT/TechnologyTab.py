@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
 from DataID import DATID, DataID
-from DATRef import DATRef
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.GRP import frame_to_photo
@@ -15,8 +15,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class TechnologyTab(DATTab):
-	data = 'Techdata.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -131,10 +129,10 @@ class TechnologyTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.orders, lambda order: (
+			DATRefs(DATID.orders, lambda order: (
 				DATRef('Energy', order.technology_energy),
 			)),
-			(DATID.weapons, lambda weapons: (
+			DATRefs(DATID.weapons, lambda weapons: (
 				DATRef('Unused', weapons.unused_technology),
 			)),
 		))

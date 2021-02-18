@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.GRP import frame_to_photo
@@ -15,8 +15,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class UpgradesTab(DATTab):
-	data = 'Upgrades.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -158,10 +156,10 @@ class UpgradesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Basic > Upgrade', unit.armor_upgrade),
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Upgrade', unit.armor_upgrade, dat_sub_tab=UnitsTabID.basic),
 			)),
-			(DATID.weapons, lambda weapon: (
+			DATRefs(DATID.weapons, lambda weapon: (
 				DATRef('Upgrade', weapon.damage_upgrade),
 			)),
 		))

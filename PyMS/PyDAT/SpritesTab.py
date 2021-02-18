@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
 from DataID import DATID
-from DATRef import DATRef
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 from ..FileFormats.GRP import rle_outline, OUTLINE_SELF
@@ -14,8 +14,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class SpritesTab(DATTab):
-	data = 'Sprites.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -39,7 +37,7 @@ class SpritesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.image_ddw = DropDown(f, self.imagedd, [], self.imageentry, width=30)
 		self.image_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Images',i=self.imagedd: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.imagedd.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Image', 'SpriteImage')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -57,7 +55,7 @@ class SpritesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.seldd = DropDown(f, self.selcircledd, DATA_CACHE['SelCircleSize.txt'], self.selcircle, width=30)
 		self.seldd.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Images',i=self.selcircledd,o=561: self.jump(t,i,o)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.selcircledd.get() + 561)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Selection Circle', 'SpriteSelCircle')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -96,7 +94,7 @@ class SpritesTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.flingy, lambda flingy: (
+			DATRefs(DATID.flingy, lambda flingy: (
 				DATRef('Sprite', flingy.sprite),
 			)),
 		))

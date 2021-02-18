@@ -126,7 +126,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.infestddw = DropDown(f, self.infestdd, [], self.infestentry)
 		self.infestddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		self.infestbtnw = Button(f, text='Jump ->', command=lambda t='Units',i=self.infestdd: self.jump(t,i))
+		self.infestbtnw = Button(f, text='Jump ->', command=lambda: self.jump(DATID.units, self.infestdd.get()))
 		self.infestbtnw.pack(side=LEFT)
 		self.tip(f, 'Infestation', 'UnitInfestation')
 		f.pack(fill=X)

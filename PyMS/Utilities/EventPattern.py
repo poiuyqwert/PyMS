@@ -44,6 +44,11 @@ class Field(object):
 		self.value = value
 		self.description = description or value
 
+	def __eq__(self, other):
+		if not isinstance(other, Field):
+			return False
+		return other.value == self.value
+
 class Modifier:
 	class Mac:
 		pass
@@ -60,46 +65,61 @@ Modifier.Quadruple = Field('Quadruple')
 Modifier.ButtonRelease = Field('ButtonRelease')
 
 class Keysym(Field):
-	def __init__(self, key, description=None):
-		value = key.lower() if len(key) == 1 else key.capitalize()
+	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
+	# So Keysym's specify their capitalized versions (if applicable) to automatically be adjusted for Shift modifiers
+	def __init__(self, key, description=None, capitalized_key=None, capitalized_key_description=None):
+		value = key
 		description = description or key.capitalize()
 		Field.__init__(self, value, description)
+		self._capitalized_key = capitalized_key
+		self._capitalized_key_description = capitalized_key_description
+
+	def capitalized(self):
+		if not self._capitalized_key:
+			return self
+		return Keysym(self._capitalized_key, self._capitalized_key_description)
+
+	def __repr__(self):
+		return "<Keysym '%s'>" % self.value
 
 class Events(object):
 	@classmethod
 	def modify(cls, *modifiers):
 		for attr, value in inspect.getmembers(cls, lambda member: not inspect.ismethod(member)):
 			if not attr.startswith('_') and isinstance(value, EventPattern):
-				setattr(cls, attr, EventPattern(*(modifiers + value.fields)))
+				fields = value.fields
+				if Modifier.Shift in modifiers:
+					fields = tuple(field.capitalized() if isinstance(field, Keysym) else field for field in fields)
+				setattr(cls, attr, EventPattern(*(modifiers + fields)))
 
 class Key(Events):
 	# https://www.tcl.tk/man/tcl8.6/TkCmd/keysyms.htm
-	a = EventPattern(Keysym('a'))
-	b = EventPattern(Keysym('b'))
-	c = EventPattern(Keysym('c'))
-	d = EventPattern(Keysym('d'))
-	e = EventPattern(Keysym('e'))
-	f = EventPattern(Keysym('f'))
-	g = EventPattern(Keysym('g'))
-	h = EventPattern(Keysym('h'))
-	i = EventPattern(Keysym('i'))
-	j = EventPattern(Keysym('j'))
-	k = EventPattern(Keysym('k'))
-	l = EventPattern(Keysym('l'))
-	m = EventPattern(Keysym('m'))
-	n = EventPattern(Keysym('n'))
-	o = EventPattern(Keysym('o'))
-	p = EventPattern(Keysym('p'))
-	q = EventPattern(Keysym('q'))
-	r = EventPattern(Keysym('r'))
-	s = EventPattern(Keysym('s'))
-	t = EventPattern(Keysym('t'))
-	u = EventPattern(Keysym('u'))
-	v = EventPattern(Keysym('v'))
-	w = EventPattern(Keysym('w'))
-	x = EventPattern(Keysym('x'))
-	y = EventPattern(Keysym('y'))
-	z = EventPattern(Keysym('z'))
+	a = EventPattern(Keysym('a', capitalized_key='A'))
+	b = EventPattern(Keysym('b', capitalized_key='B'))
+	c = EventPattern(Keysym('c', capitalized_key='C'))
+	d = EventPattern(Keysym('d', capitalized_key='D'))
+	e = EventPattern(Keysym('e', capitalized_key='E'))
+	f = EventPattern(Keysym('f', capitalized_key='F'))
+	g = EventPattern(Keysym('g', capitalized_key='G'))
+	h = EventPattern(Keysym('h', capitalized_key='H'))
+	i = EventPattern(Keysym('i', capitalized_key='I'))
+	j = EventPattern(Keysym('j', capitalized_key='J'))
+	k = EventPattern(Keysym('k', capitalized_key='K'))
+	l = EventPattern(Keysym('l', capitalized_key='L'))
+	m = EventPattern(Keysym('m', capitalized_key='M'))
+	n = EventPattern(Keysym('n', capitalized_key='N'))
+	o = EventPattern(Keysym('o', capitalized_key='O'))
+	p = EventPattern(Keysym('p', capitalized_key='P'))
+	q = EventPattern(Keysym('q', capitalized_key='Q'))
+	r = EventPattern(Keysym('r', capitalized_key='R'))
+	s = EventPattern(Keysym('s', capitalized_key='S'))
+	t = EventPattern(Keysym('t', capitalized_key='T'))
+	u = EventPattern(Keysym('u', capitalized_key='U'))
+	v = EventPattern(Keysym('v', capitalized_key='V'))
+	w = EventPattern(Keysym('w', capitalized_key='W'))
+	x = EventPattern(Keysym('x', capitalized_key='X'))
+	y = EventPattern(Keysym('y', capitalized_key='Y'))
+	z = EventPattern(Keysym('z', capitalized_key='Z'))
 
 	Return = EventPattern(Keysym('Return'))
 	Left = EventPattern(Keysym('Left', '←' if is_mac() else None))

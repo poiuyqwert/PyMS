@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID
-from DATRef import DATRef
+from DataID import DATID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -12,8 +12,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class FlingyTab(DATTab):
-	data = 'Flingy.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -38,7 +36,7 @@ class FlingyTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.sprite_ddw = DropDown(f, self.spritedd, [], self.spriteentry, width=30)
 		self.sprite_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Sprites',i=self.spritedd: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.sprites, self.spritedd.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Sprite', 'FlingySprite')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -83,10 +81,10 @@ class FlingyTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Graphics > Graphics', unit.graphics),
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Graphics', unit.graphics, dat_sub_tab=UnitsTabID.graphics),
 			)),
-			(DATID.weapons, lambda weapon: (
+			DATRefs(DATID.weapons, lambda weapon: (
 				DATRef('Graphics', weapon.graphics),
 			)),
 		))

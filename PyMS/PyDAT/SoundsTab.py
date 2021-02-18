@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
@@ -16,8 +16,6 @@ from Tkinter import *
 import os
 
 class SoundsTab(DATTab):
-	data = 'Sfxdata.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -84,11 +82,11 @@ class SoundsTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Sounds > Ready', unit.ready_sound),
-				DATRef('Sounds > What', unit.what_sound_start, unit.what_sound_end),
-				DATRef('Sounds > Annoyed', unit.pissed_sound_start, unit.pissed_sound_end),
-				DATRef('Sounds > Yes', unit.yes_sound_start, unit.yes_sound_end)
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Ready', unit.ready_sound, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('What', unit.what_sound_start, unit.what_sound_end, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('Annoyed', unit.pissed_sound_start, unit.pissed_sound_end, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('Yes', unit.yes_sound_start, unit.yes_sound_end, dat_sub_tab=UnitsTabID.sounds)
 			)),
 		))
 

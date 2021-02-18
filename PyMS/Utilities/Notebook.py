@@ -25,30 +25,32 @@ class Notebook(Frame):
 	def grid(self, **kw):
 		self.notebook.grid(kw)
 
-	def add_tab(self, fr, title):
+	def add_tab(self, frame, title, tab_id=None):
+		tab_id = tab_id or title
 		if not Notebook.TRANS_FIX:
 			Notebook.TRANS_FIX = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'trans_fix.gif'))
 		b = Radiobutton(self.tabs, image=Notebook.TRANS_FIX, text=title, indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
 		b.pack(side=LEFT)
-		self.pages[title] = [fr,len(self.pages)]
+		self.pages[tab_id] = (frame, len(self.pages))
 		if not self.active:
 			self.display(title)
 		return b
 
-	def display(self, title):
-		if self.pages[title][0] == self.active:
-			return
+	def display(self, tab_id):
+		if self.pages[tab_id][0] == self.active:
+			return self.active
 		if self.active:
 			if hasattr(self.active, 'deactivate'):
 				self.active.deactivate()
 			self.event_generate('<<TabDeactivated>>')
 			self.active.forget()
-		self.tab.set(self.pages[title][1])
-		self.active = self.pages[title][0]
+		self.tab.set(self.pages[tab_id][1])
+		self.active = self.pages[tab_id][0]
 		self.active.pack(fill=BOTH, expand=1, padx=6, pady=6)
 		if hasattr(self.active, 'activate'):
 			self.active.activate()
 		self.event_generate('<<TabActivated>>')
+		return self.active
 
 class NotebookTab(Frame):
 	def __init__(self, parent):

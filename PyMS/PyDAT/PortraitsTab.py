@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 
@@ -12,8 +12,6 @@ from ..Utilities.DropDown import DropDown
 from Tkinter import *
 
 class PortraitsTab(DATTab):
-	data = 'Portdata.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -83,8 +81,8 @@ class PortraitsTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Graphics > Portrait', unit.portrait),
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Portrait', unit.portrait, dat_sub_tab=UnitsTabID.graphics),
 			)),
 		))
 

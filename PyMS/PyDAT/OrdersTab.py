@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.TBL import decompile_string
 from ..FileFormats.GRP import frame_to_photo
@@ -14,8 +14,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class OrdersTab(DATTab):
-	data = 'Orders.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -43,7 +41,7 @@ class OrdersTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.targeting_ddw = DropDown(f, self.targeting, [], self.targetingentry, width=25)
 		self.targeting_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Weapons',i=self.targeting: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.weapons, self.targeting.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Targeting', 'OrdTargeting')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -52,7 +50,7 @@ class OrdersTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.energy_ddw = DropDown(f, self.energy, [], self.energyentry, width=25)
 		self.energy_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Techdata',i=self.energy: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.techdata, self.energy.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Energy', 'OrdEnergy')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -61,7 +59,7 @@ class OrdersTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.obscured_ddw = DropDown(f, self.obscured, [], self.obscuredentry, width=25)
 		self.obscured_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Orders',i=self.obscured: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.orders, self.obscured.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Obscured', 'OrdObscured')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -150,12 +148,12 @@ class OrdersTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('AI Actions > Computer Idle', unit.comp_ai_idle),
-				DATRef('AI Actions > Human Idle', unit.human_ai_idle),
-				DATRef('AI Actions > Return to Idle', unit.return_to_idle),
-				DATRef('AI Actions > Attach Unit', unit.attack_unit),
-				DATRef('AI Actions > Attack Move', unit.attack_move)
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Computer Idle', unit.comp_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Human Idle', unit.human_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Return to Idle', unit.return_to_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Attach Unit', unit.attack_unit, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Attack Move', unit.attack_move, dat_sub_tab=UnitsTabID.ai_actions)
 			)),
 		))
 

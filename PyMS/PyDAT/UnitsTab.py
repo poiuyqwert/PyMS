@@ -6,16 +6,14 @@ from SoundsUnitsTab import SoundsUnitsTab
 from GraphicsUnitsTab import GraphicsUnitsTab
 from StarEditUnitsTab import StarEditUnitsTab
 from AIActionsUnitsTab import AIActionsUnitsTab
-from DataID import DATID
-from DATRef import DATRef
+from DataID import DATID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..Utilities.Notebook import Notebook
 
 from Tkinter import *
 
 class UnitsTab(DATTab):
-	data = 'Units.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		self.dattabs = Notebook(self, FLAT)
@@ -32,15 +30,18 @@ class UnitsTab(DATTab):
 		self.dattabs.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
-			(DATID.units, lambda unit: (
-				DATRef('Advanced > Subunit 1', unit.subunit1),
-				DATRef('Advanced > Subunit 2', unit.subunit2),
-				DATRef('Advanced > Infestation', unit.infestation)
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Subunit 1', unit.subunit1, dat_sub_tab=UnitsTabID.advanced),
+				DATRef('Subunit 2', unit.subunit2, dat_sub_tab=UnitsTabID.advanced),
+				DATRef('Infestation', unit.infestation, dat_sub_tab=UnitsTabID.advanced)
 			)),
 		))
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.units
+
+	def change_sub_tab(self, sub_tab_id):
+		self.dattabs.display(sub_tab_id.id)
 
 	def updated_data_files(self, dataids):
 		for tab,_ in self.dattabs.pages.values():

@@ -1,7 +1,7 @@
 
 from DATTab import DATTab
-from DataID import DATID, DataID
-from DATRef import DATRef
+from DataID import DATID, DataID, UnitsTabID
+from DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
 from ..FileFormats.TBL import decompile_string
@@ -16,8 +16,6 @@ from ..Utilities.DataCache import DATA_CACHE
 from Tkinter import *
 
 class WeaponsTab(DATTab):
-	data = 'Weapons.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -89,7 +87,7 @@ class WeaponsTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.upgrade_ddw = DropDown(f, self.upgrade, [], self.upgradeentry, width=18)
 		self.upgrade_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Upgrades',i=self.upgrade: self.jump(t,i)).pack(side=LEFT)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.upgrades, self.upgrade.get())).pack(side=LEFT)
 		self.tip(f, 'Damage Upgrade', 'WeapDamageUpgrade')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -150,7 +148,7 @@ class WeaponsTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.graphics_ddw = DropDown(f, self.graphicsdd, [], self.graphicsentry)
 		self.graphics_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda t='Flingy',i=self.graphicsdd: self.jump(t,i)).pack(side=LEFT, padx=2)
+		Button(f, text='Jump ->', command=lambda: self.jump(DATID.flingy, self.graphicsdd.get())).pack(side=LEFT, padx=2)
 		self.tip(f, 'Graphics', 'WeapGraphics')
 		f.pack(fill=X)
 		f = Frame(s)
@@ -276,11 +274,11 @@ class WeaponsTab(DATTab):
 		j.pack(side=TOP, fill=X)
 
 		self.setup_used_by([
-			(DATID.units, lambda unit: (
-				DATRef('Basic > Ground Weapon', unit.ground_weapon),
-				DATRef('Basic > Air Weapon', unit.air_weapon)
+			DATRefs(DATID.units, lambda unit: (
+				DATRef('Ground Weapon', unit.ground_weapon, dat_sub_tab=UnitsTabID.basic),
+				DATRef('Air Weapon', unit.air_weapon, dat_sub_tab=UnitsTabID.basic)
 			)),
-			(DATID.orders, lambda order: (
+			DATRefs(DATID.orders, lambda order: (
 				DATRef('Targeting', order.weapon_targeting),
 			)),
 		])

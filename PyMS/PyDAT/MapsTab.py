@@ -11,8 +11,6 @@ from ..Utilities.DropDown import DropDown
 from Tkinter import *
 
 class MapsTab(DATTab):
-	data = 'Mapdata.txt'
-
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		frame = Frame(self)

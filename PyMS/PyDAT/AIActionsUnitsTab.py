@@ -47,7 +47,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			Label(f, text='=').pack(side=LEFT)
 			dropdown = DropDown(f, dropdown_variable, [], entry_variable, width=30)
 			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
-			Button(f, text='Jump ->', command=lambda t='Orders',i=dropdown_variable: self.jump(t,i)).pack(side=LEFT)
+			Button(f, text='Jump ->', command=lambda variable=dropdown_variable: self.jump(DATID.orders, variable.get())).pack(side=LEFT)
 			self.tip(f, title, hint_name)
 			f.pack(fill=X)
 			return dropdown

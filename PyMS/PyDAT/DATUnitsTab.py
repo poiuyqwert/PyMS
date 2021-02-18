@@ -23,12 +23,10 @@ class DATUnitsTab(NotebookTab):
 		self.tip(c, txt, hint)
 		return c
 
-	def jump(self, type, id, o=0):
-		i = id.get() + o
-		# TODO: Fixme
-		if i < len(DATA_CACHE['%s.txt' % type]) - 1:
-			self.toplevel.dattabs.display(type)
-			self.toplevel.changeid(i)
+	def jump(self, datid, entry_id):
+		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
+			self.toplevel.dattabs.display(datid.tab_id)
+			self.toplevel.changeid(entry_id)
 
 	def updated_data_files(self, dataids):
 		pass
@@ -52,7 +50,7 @@ class DATUnitsTab(NotebookTab):
 		edited = self.save_data(entry)
 		if edited:
 			self.parent_tab.edited = edited
-			self.toplevel.update_status()
+			self.toplevel.update_status_bar()
 
 	def load_data(self, id):
 		pass

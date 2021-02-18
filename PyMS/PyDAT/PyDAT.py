@@ -146,7 +146,7 @@ class PyDAT(Tk):
 			('Portdata', PortraitsTab),
 			('Mapdata', MapsTab),
 			('Orders', OrdersTab),
-		)
+		) 
 		for name,tab in tabs:
 			page = tab(self.dattabs, self)
 			page.page_title = name
@@ -282,18 +282,19 @@ class PyDAT(Tk):
 		self.dattabs.active.popup(e)
 
 	def findnext(self, key=None):
-		f = self.find.get()
-		if not f in self.findhistory:
-			self.findhistory.append(f)
+		find = self.find.get()
+		if find in self.findhistory:
+			self.findhistory.remove(find)
+		self.findhistory.insert(0, find)
+		find = find.lower()
 		start = int(self.listbox.curselection()[0])
 		cur = (start + 1) % self.listbox.size()
 		while cur != start:
-			# TODO: Fixme
-			if f.lower() in DATA_CACHE[self.dattabs.active.data][cur].lower():
+			if find in self.listbox.get(cur).lower():
 				self.changeid(cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size()
-		askquestion(parent=self, title='Find', message="Can't find text.", type=OK)
+		askquestion(parent=self, title='Find', message="Can't find '%s'." % self.find.get(), type=OK)
 
 	def jump(self, key=None):
 		self.changeid(self.jumpid.get())
