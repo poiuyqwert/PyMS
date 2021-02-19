@@ -1,8 +1,7 @@
 
 from utils import BASE_DIR
 from InternalErrorDialog import InternalErrorDialog
-
-from Tkinter import Toplevel
+from UIKit import Toplevel
 
 import sys,os
 

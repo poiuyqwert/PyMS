@@ -3,15 +3,13 @@ from DATTab import DATTab
 from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
 
-from ..FileFormats.TBL import decompile_string
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 
 from ..Utilities.utils import BASE_DIR, couriernew, play_sound
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 import os
 

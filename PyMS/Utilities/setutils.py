@@ -2,8 +2,6 @@
 from utils import BASE_DIR, WIN_REG_AVAILABLE, parse_geometry
 from Settings import Settings
 
-from Tkinter import *
-
 import os, json
 
 PYMS_SETTINGS = Settings('PyMS', '1')

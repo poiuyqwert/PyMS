@@ -21,31 +21,25 @@ from ..FileFormats.DAT import *
 from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.TextDropDown import TextDropDown
 from ..Utilities.Notebook import Notebook
-from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.Toolbar import Toolbar
-from ..Utilities.EventPattern import *
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities.UIKit import *
 
-from Tkinter import *
-from tkMessageBox import askquestion, showinfo, OK
-
-import os, webbrowser, copy
+import os, webbrowser
 
 LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
 
-class PyDAT(Tk):
+class PyDAT(MainWindow):
 	def __init__(self, guifile=None):
-		Tk.__init__(self)
+		MainWindow.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
 		try:
 			self.icon = os.path.join(BASE_DIR, 'PyMS','Images','PyDAT.ico')
@@ -111,23 +105,14 @@ class PyDAT(Tk):
 
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
-		listmenu = [
-			('Copy Entry', lambda t=0: self.copy(t), 0, Shift.Ctrl.c), # 0
-			('Paste Entry', lambda t=0: self.paste(t), 0, Shift.Ctrl.p), # 1
-			None,
-			('Copy Sub-Tab', lambda t=1: self.copy(t), 1, Ctrl.y), # 3
-			('Paste Sub-Tab', lambda t=1: self.paste(t), 1, Ctrl.b), # 4
-			None,
-			('Reload Entry', self.reload, 0, Ctrl.r), #6
-		]
 		self.listmenu = Menu(self, tearoff=0)
-		for m in listmenu:
-			if m:
-				l,c,u,b = m
-				self.listmenu.add_command(label=l, command=c, underline=u, accelerator=b.name())
-				self.bind(b, c)
-			else:
-				self.listmenu.add_separator()
+		self.listmenu.add_command(label='Copy Entry', command=lambda: self.copy(0), shortcut=Shift.Ctrl.c) # 0
+		self.listmenu.add_command(label='Paste Entry', command=lambda: self.paste(0), shortcut=Shift.Ctrl.p) # 1
+		self.listmenu.add_separator()
+		self.listmenu.add_command(label='Copy Sub-Tab', command=lambda: self.copy(1), shortcut=Ctrl.y) # 3
+		self.listmenu.add_command(label='Paste Sub-Tab', command=lambda: self.paste(1), shortcut=Ctrl.b) # 4
+		self.listmenu.add_separator()
+		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r) #6
 
 		self.status = StringVar()
 		self.expanded = StringVar()
@@ -294,7 +279,7 @@ class PyDAT(Tk):
 				self.changeid(cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size()
-		askquestion(parent=self, title='Find', message="Can't find '%s'." % self.find.get(), type=OK)
+		MessageBox.askquestion(parent=self, title='Find', message="Can't find '%s'." % self.find.get(), type=MessageBox.OK)
 
 	def jump(self, key=None):
 		self.changeid(self.jumpid.get())
@@ -363,7 +348,7 @@ class PyDAT(Tk):
 		if not found:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in MPQ "%s"' % file))
 			return
-		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(l)))
+		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(l)))
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
@@ -397,7 +382,7 @@ class PyDAT(Tk):
 			ErrorDialog(self, PyMSError('Open','No DAT files found in directory "%s"' % dir))
 			return
 		files = [f for f in files if f != None]
-		showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(files)))
+		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(files)))
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 

@@ -1,5 +1,5 @@
 
-from Tkinter import StringVar
+from UIKit import StringVar
 
 class IntegerVar(StringVar):
 	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, allow_hex=False, maxout=None):

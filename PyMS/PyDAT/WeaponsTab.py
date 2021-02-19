@@ -4,16 +4,13 @@ from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
-from ..FileFormats.TBL import decompile_string
-from ..FileFormats.GRP import frame_to_photo
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class WeaponsTab(DATTab):
 	def __init__(self, parent, toplevel):

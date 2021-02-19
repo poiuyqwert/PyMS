@@ -9,9 +9,7 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
 from ..Utilities.DataCache import DATA_CACHE
-from ..Utilities.EventPattern import *
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 from math import floor, sqrt
 

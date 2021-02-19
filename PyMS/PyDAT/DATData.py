@@ -1,6 +1,5 @@
 
 from ..FileFormats.DAT import *
-from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import isstr
 from ..Utilities.MPQHandler import MPQHandler

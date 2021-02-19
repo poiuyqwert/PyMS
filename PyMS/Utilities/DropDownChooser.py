@@ -1,7 +1,6 @@
 
 from utils import couriernew
-
-from Tkinter import *
+from UIKit import *
 
 class DropDownChooser(Toplevel):
 	def __init__(self, parent, list, select):

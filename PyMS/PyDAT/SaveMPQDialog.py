@@ -5,9 +5,7 @@ from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-
-from Tkinter import *
-from tkMessageBox import askquestion, OK
+from ..Utilities.UIKit import *
 
 import os, shutil
 
@@ -71,7 +69,7 @@ class SaveMPQDialog(PyMSDialog):
 	def save(self):
 		sel = [self.listbox.get(i) for i in self.listbox.curselection()]
 		if not sel:
-			askquestion(parent=self, title='Nothing to save', message='Please choose at least one item to save.', type=OK)
+			MessageBox.askquestion(parent=self, title='Nothing to save', message='Please choose at least one item to save.', type=MessageBox.OK)
 		else:
 			if self.sempq.get():
 				file = self.parent.data_context.settings.lastpath.sempq.select_file('save', self, 'Save SEMPQ to...', '.exe', [('Executable Files','*.exe'),('All Files','*')], save=True)
@@ -126,7 +124,7 @@ class SaveMPQDialog(PyMSDialog):
 						undone.append(f)
 				MpqCloseUpdatedArchive(h)
 				if undone:
-					askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone), type=OK)
+					MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone), type=MessageBox.OK)
 
 	def ok(self):
 		self.parent.data_context.settings.sempq = not not self.sempq.get()

@@ -1,12 +1,12 @@
 
+from ..FileFormats.MPQ.SFmpq import SFileListFiles
+
 from utils import BASE_DIR
 from Settings import SettingDict
 from setutils import loadsize, savesize
 from PyMSDialog import PyMSDialog
 from TextDropDown import TextDropDown
-from ..FileFormats.MPQ.SFmpq import SFileListFiles
-
-from Tkinter import *
+from UIKit import *
 
 import os
 

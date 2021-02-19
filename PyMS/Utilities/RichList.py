@@ -1,7 +1,6 @@
 
 from utils import isstr
-
-from Tkinter import *
+from UIKit import *
 
 import re
 

@@ -2,8 +2,7 @@
 from PyMSDialog import PyMSDialog
 from WarningDialog import WarningDialog
 from InternalErrorDialog import InternalErrorDialog
-
-from Tkinter import *
+from UIKit import *
 
 import sys, traceback
 

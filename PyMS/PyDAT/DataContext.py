@@ -7,7 +7,6 @@ from DataID import DATID
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP
-from ..FileFormats.TBL import TBL
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 from ..FileFormats.IScriptBIN import IScriptBIN
 

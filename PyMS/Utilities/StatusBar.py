@@ -1,5 +1,5 @@
 
-from Tkinter import *
+from UIKit import *
 
 class StatusBar(Frame):
 	def __init__(self, *args, **kwargs):

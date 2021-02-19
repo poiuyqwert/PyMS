@@ -1,9 +1,7 @@
 
 from utils import BASE_DIR, parse_geometry, isstr
 from WarnDialog import WarnDialog
-
-from Tkinter import HORIZONTAL
-import tkFileDialog
+from UIKit import FileDialog, HORIZONTAL
 
 import os, copy, json
 
@@ -211,7 +209,7 @@ class SettingDict(object):
 				window.geometry(geometry)
 
 	def select_file(self, key, parent, title, ext, filetypes, save=False, store=True):
-		dialog = tkFileDialog.asksaveasfilename if save else tkFileDialog.askopenfilename
+		dialog = FileDialog.asksaveasfilename if save else FileDialog.askopenfilename
 		parent._pyms__window_blocking = True
 		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
 		parent._pyms__window_blocking = False
@@ -224,9 +222,9 @@ class SettingDict(object):
 			filetypes = None
 		parent._pyms__window_blocking = True
 		if filetypes == None:
-			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+			paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
 		else:
-			paths = tkFileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+			paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
 		parent._pyms__window_blocking = False
 		if isstr(paths):
 			if paths:
@@ -241,7 +239,7 @@ class SettingDict(object):
 
 	def select_directory(self, key, parent, title, store=True):
 		parent._pyms__window_blocking = True
-		path = tkFileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
+		path = FileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = path

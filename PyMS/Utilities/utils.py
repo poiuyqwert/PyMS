@@ -1,8 +1,6 @@
 
 from PyMSError import PyMSError
 
-from tkMessageBox import askquestion, OK
-
 from textwrap import wrap
 from thread import start_new_thread
 import os, sys, platform, re, tempfile, errno, codecs
@@ -114,7 +112,8 @@ def register_registry(prog,type,filetype,progpath,icon):
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, '"%s" "%s" --gui "%%1"' % (sys.executable.replace('python.exe','pythonw.exe'),progpath))
 	except:
 		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True)
-	askquestion(title='Success!', message='The file association was set.', type=OK)
+	from UIKit import MessageBox
+	MessageBox.askquestion(title='Success!', message='The file association was set.', type=MessageBox.OK)
 
 def flags(value, length):
 	if isstr(value):

@@ -1,5 +1,5 @@
 
-from Tkinter import Label
+from UIKit import Label
 
 class Hotlink(Label):
 	def __init__(self, parent, text, callback=None, fonts=[('Courier', 8, 'normal'),('Courier', 8, 'underline')]):

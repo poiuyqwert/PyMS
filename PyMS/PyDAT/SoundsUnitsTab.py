@@ -5,8 +5,7 @@ from DataID import DATID
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class SoundsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):

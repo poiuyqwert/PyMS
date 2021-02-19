@@ -1,7 +1,6 @@
 
 from utils import BASE_DIR
-
-from Tkinter import *
+from UIKit import *
 
 import os
 

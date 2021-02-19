@@ -1,7 +1,6 @@
 
 from PyMSDialog import PyMSDialog
-
-from Tkinter import *
+from UIKit import *
 
 class WarningDialog(PyMSDialog):
 	def __init__(self, parent, warnings, cont=False):

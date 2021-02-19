@@ -2,9 +2,7 @@
 from ..Utilities.utils import fit
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Tooltip import Tooltip
-from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import Checkbutton
+from ..Utilities.UIKit import Checkbutton
 
 class DATUnitsTab(NotebookTab):
 	def __init__(self, parent, toplevel, parent_tab):

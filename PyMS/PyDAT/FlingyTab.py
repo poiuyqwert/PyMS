@@ -8,8 +8,7 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class FlingyTab(DATTab):
 	def __init__(self, parent, toplevel):

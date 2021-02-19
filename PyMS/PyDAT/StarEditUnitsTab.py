@@ -4,13 +4,11 @@ from DataID import DataID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
-from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class StarEditUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):

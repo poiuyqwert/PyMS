@@ -1,7 +1,6 @@
 
 from utils import is_mac
-
-from Tkinter import *
+from UIKit import *
 
 class Tooltip:
 	def __init__(self, widget, text='', font=None, delay=750, press=False, mouse=False):

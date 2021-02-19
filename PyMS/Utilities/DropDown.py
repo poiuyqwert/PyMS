@@ -1,8 +1,7 @@
 
 from utils import BASE_DIR, couriernew
 from ..Utilities.DropDownChooser import DropDownChooser
-
-from Tkinter import *
+from UIKit import *
 
 import os
 

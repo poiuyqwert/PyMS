@@ -1,15 +1,14 @@
 
 from utils import BASE_DIR
 from Hotlink import Hotlink
-
-from Tkinter import *
+from UIKit import *
 
 import os
 
-class DependencyError(Tk):
+class DependencyError(MainWindow):
 	def __init__(self, prog, msg, hotlink=None):
 		#Window
-		Tk.__init__(self)
+		MainWindow.__init__(self)
 		self.resizable(False,False)
 		self.title('Dependency Error')
 		try:

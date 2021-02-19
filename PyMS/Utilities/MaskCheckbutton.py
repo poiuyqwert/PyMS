@@ -1,6 +1,5 @@
 
-from Tkinter import *
-
+from UIKit import Checkbutton, IntVar
 
 class MaskCheckbutton(Checkbutton):
 	def __init__(self, parent, **options):

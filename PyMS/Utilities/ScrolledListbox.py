@@ -1,7 +1,6 @@
 
 from AutohideScrollbar import AutohideScrollbar
-
-from Tkinter import *
+from UIKit import *
 
 
 SHOW_SCROLL_NEVER = 0

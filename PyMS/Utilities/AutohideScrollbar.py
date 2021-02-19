@@ -1,6 +1,5 @@
 
-from Tkinter import *
-
+from UIKit import Scrollbar
 
 class AutohideScrollbar(Scrollbar):
 	def __init__(self, parent, **kwargs):

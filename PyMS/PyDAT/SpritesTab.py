@@ -10,8 +10,7 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class SpritesTab(DATTab):
 	def __init__(self, parent, toplevel):

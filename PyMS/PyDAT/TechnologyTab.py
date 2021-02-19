@@ -3,16 +3,12 @@ from DATTab import DATTab
 from DataID import DATID, DataID
 from DATRef import DATRefs, DATRef
 
-from ..FileFormats.TBL import decompile_string
-from ..FileFormats.GRP import frame_to_photo
-
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class TechnologyTab(DATTab):
 	def __init__(self, parent, toplevel):

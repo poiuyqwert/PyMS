@@ -1,7 +1,6 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class ContinueImportDialog(PyMSDialog):
 	def __init__(self, parent, dattype, id):

@@ -2,8 +2,7 @@
 from utils import BASE_DIR
 from PyMSDialog import PyMSDialog
 from Hotlink import Hotlink
-
-from Tkinter import *
+from UIKit import *
 
 import traceback, webbrowser, os
 

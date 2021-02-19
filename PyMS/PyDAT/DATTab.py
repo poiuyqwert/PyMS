@@ -1,22 +1,15 @@
 
 from ContinueImportDialog import ContinueImportDialog
 
-from ..FileFormats.DAT import WeaponsDAT, UpgradesDAT, TechDAT
-from ..FileFormats.DAT import UnitsDAT
-from ..FileFormats.TBL import decompile_string
-
-from ..Utilities.utils import BASE_DIR, fit, isstr, couriernew
+from ..Utilities.utils import fit, couriernew
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.EventPattern import *
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities.UIKit import *
 
-from Tkinter import *
-import tkMessageBox
-
-import os, copy
+import copy
 
 class DATTab(NotebookTab):
 	data = None
@@ -131,9 +124,9 @@ class DATTab(NotebookTab):
 			file = self.get_dat_data().file_path
 			if not file:
 				file = self.get_dat_data().dat.FILE_NAME
-			save = tkMessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=tkMessageBox.YES, type=tkMessageBox.YESNOCANCEL)
-			if save != tkMessageBox.NO:
-				if save == tkMessageBox.CANCEL:
+			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+			if save != MessageBox.NO:
+				if save == MessageBox.CANCEL:
 					return True
 				self.save()
 

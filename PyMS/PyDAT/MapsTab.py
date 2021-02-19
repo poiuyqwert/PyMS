@@ -2,13 +2,10 @@
 from DATTab import DATTab
 from DataID import DataID
 
-from ..FileFormats.TBL import decompile_string
-
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class MapsTab(DATTab):
 	def __init__(self, parent, toplevel):

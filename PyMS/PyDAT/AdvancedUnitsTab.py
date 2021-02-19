@@ -3,13 +3,11 @@ from DATUnitsTab import DATUnitsTab
 from DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
-from ..FileFormats.TBL import decompile_string
 
 from ..Utilities.utils import couriernew
 from ..Utilities.DropDown import DropDown
 from ..Utilities.IntegerVar import IntegerVar
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class AdvancedUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):

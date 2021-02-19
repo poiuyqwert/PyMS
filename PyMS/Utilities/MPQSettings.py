@@ -5,9 +5,7 @@ from utils import BASE_DIR
 from Settings import SettingDict
 from setutils import PYMS_SETTINGS
 from Tooltip import Tooltip
-
-from Tkinter import *
-import tkFileDialog
+from UIKit import *
 
 import os
 
@@ -125,7 +123,7 @@ class MPQSettings(Frame):
 			return self.settings.lastpath.settings.select_files('mpqs', self, "Add MPQ's", '.mpq', [('MPQ Files','*.mpq'),('All Files','*')])
 		else:
 			path = self.settings.get('lastpath', BASE_DIR)
-			file = tkFileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
+			file = FileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
 			if file:
 				self.settings['lastpath'] = os.path.dirname(file[0])
 			return file

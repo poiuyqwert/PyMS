@@ -3,14 +3,11 @@ from DATTab import DATTab
 from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
 
-from ..FileFormats.TBL import decompile_string
-
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
-
-from Tkinter import *
+from ..Utilities.UIKit import *
 
 class ImagesTab(DATTab):
 	def __init__(self, parent, toplevel):
