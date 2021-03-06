@@ -1,7 +1,7 @@
 *.pyc
 stdeo.txt
-Libs/WORKING/*
-Libs/Logs/*
+PyMS/WORKING/*
+PyMS/Logs/*
 test.py
 **/__pycache__
 .vscode/*
