@@ -11,6 +11,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class TechnologyTab(DATTab):
+	DAT_ID = DATID.techdata
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -53,8 +55,8 @@ class TechnologyTab(DATTab):
 
 		self.minerals = IntegerVar(0, [0,65535])
 		self.vespene = IntegerVar(0, [0,65535])
-		self.time = IntegerVar(24, [1,65535], callback=lambda n,i=0: self.updatetime(n,i))
-		self.secs = FloatVar(1, [0.0416,2730.625], callback=lambda n,i=1: self.updatetime(n,i), precision=4)
+		self.time = IntegerVar(24, [0,65535], callback=lambda n,i=0: self.updatetime(n,i))
+		self.secs = FloatVar(1, [0,2730.625], callback=lambda n,i=1: self.updatetime(n,i), precision=4)
 		self.energy = IntegerVar(0, [0,65535])
 
 		m = Frame(frame)
@@ -132,9 +134,6 @@ class TechnologyTab(DATTab):
 				DATRef('Unused', weapons.unused_technology),
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.technology
 
 	def updated_data_files(self, dataids):
 		if DataID.cmdicons in dataids:

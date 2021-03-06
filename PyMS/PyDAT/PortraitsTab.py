@@ -9,6 +9,8 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 
 class PortraitsTab(DATTab):
+	DAT_ID = DATID.portdata
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -82,9 +84,6 @@ class PortraitsTab(DATTab):
 				DATRef('Portrait', unit.portrait, dat_sub_tab=UnitsTabID.graphics),
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.portraits
 
 	def updated_data_files(self, dataids):
 		if DataID.portdatatbl in dataids:

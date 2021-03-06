@@ -87,7 +87,7 @@ class PyDAT(MainWindow):
 
 		self.findhistory = []
 		self.find = StringVar()
-		self.jumpid = IntegerVar('', [0,227], allow_hex=True)
+		self.jumpid = IntegerVar('', [0,0], allow_hex=True)
 
 		search = Frame(left)
 		tdd = TextDropDown(search, self.find, self.findhistory, 5)
@@ -106,11 +106,9 @@ class PyDAT(MainWindow):
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
 		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Copy Entry', command=lambda: self.copy(0), shortcut=Shift.Ctrl.c) # 0
-		self.listmenu.add_command(label='Paste Entry', command=lambda: self.paste(0), shortcut=Shift.Ctrl.p) # 1
-		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Copy Sub-Tab', command=lambda: self.copy(1), shortcut=Ctrl.y) # 3
-		self.listmenu.add_command(label='Paste Sub-Tab', command=lambda: self.paste(1), shortcut=Ctrl.b) # 4
+		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c) # 0
+		self.listmenu_command_copy_sub_tab = self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y) # 3
+		self.listmenu_command_paste = self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p) # 1
 		self.listmenu.add_separator()
 		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r) #6
 
@@ -263,9 +261,6 @@ class PyDAT(MainWindow):
 			if focus_list:
 				self.listbox.listbox.focus_set()
 
-	def popup(self, e):
-		self.dattabs.active.popup(e)
-
 	def findnext(self, key=None):
 		find = self.find.get()
 		if find in self.findhistory:
@@ -284,13 +279,20 @@ class PyDAT(MainWindow):
 	def jump(self, key=None):
 		self.changeid(self.jumpid.get())
 
-	def copy(self, t):
-		self.dattabs.active.copy(t)
+	def popup(self, e):
+		self.listmenu_command_copy_sub_tab['state'] = NORMAL if hasattr(self.dattabs.active, 'copy_subtab') else DISABLED
+		self.listmenu.post(e.x_root, e.y_root)
 
-	def paste(self, t):
+	def copy(self):
+		self.dattabs.active.copy()
+
+	def copy_subtab(self):
+		self.dattabs.active.copy_subtab()
+
+	def paste(self):
 		self.dattabs.active.paste(t)
 
-	def reload(self, key=None):
+	def reload(self):
 		self.dattabs.active.reload()
 
 	def new(self, key=None):

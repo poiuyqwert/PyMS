@@ -14,6 +14,8 @@ from ..Utilities.UIKit import *
 import os
 
 class SoundsTab(DATTab):
+	DAT_ID = DATID.sfxdata
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -87,9 +89,6 @@ class SoundsTab(DATTab):
 				DATRef('Yes', unit.yes_sound_start, unit.yes_sound_end, dat_sub_tab=UnitsTabID.sounds)
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.sounds
 
 	def updated_data_files(self, dataids):
 		if DataID.sfxdatatbl in dataids:

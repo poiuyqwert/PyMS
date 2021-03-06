@@ -12,7 +12,7 @@ from ..Utilities.UIKit import *
 import copy
 
 class DATTab(NotebookTab):
-	data = None
+	DAT_ID = None
 
 	def __init__(self, parent, toplevel):
 		self.id = 0
@@ -21,7 +21,6 @@ class DATTab(NotebookTab):
 		self.used_by_references = None
 		self.used_by_listbox = None
 		self.used_by_data = []
-		self.entrycopy = None
 		self.edited = False
 		self.dattabs = None
 		NotebookTab.__init__(self, parent)
@@ -35,7 +34,7 @@ class DATTab(NotebookTab):
 		return c
 
 	def get_dat_data(self):
-		return None
+		return self.toplevel.data_context.dat_data(self.DAT_ID)
 
 	def setup_used_by(self, references):
 		self.used_by_references = references
@@ -130,29 +129,12 @@ class DATTab(NotebookTab):
 					return True
 				self.save()
 
-	def popup(self, e):
-		self.toplevel.listmenu.entryconfig(1, state=[NORMAL,DISABLED][not self.entrycopy])
-		if self.get_dat_data().dat.FILE_NAME == 'units.dat':
-			self.toplevel.listmenu.entryconfig(3, state=NORMAL)
-			self.toplevel.listmenu.entryconfig(4, state=[NORMAL,DISABLED][not self.dattabs.active.tabcopy])
-		else:
-			self.toplevel.listmenu.entryconfig(3, state=DISABLED)
-			self.toplevel.listmenu.entryconfig(4, state=DISABLED)
-		self.toplevel.listmenu.post(e.x_root, e.y_root)
+	def copy(self):
+		text = self.get_dat_data().dat.export_entry(self.id)
+		self.clipboard_set(text)
 
-	def copy(self, t):
-		if not t:
-			self.entrycopy = list(self.get_dat_data().dat.entries[self.id])
-		elif self.get_dat_data().dat.FILE_NAME == 'units.dat':
-			self.dattabs.active.tabcopy = list(self.get_dat_data().dat.entries[self.id])
-
-	def paste(self, t):
-		if not t:
-			if self.entrycopy:
-				self.get_dat_data().dat.entries[self.id] = list(self.entrycopy)
-		elif self.get_dat_data().dat.FILE_NAME == 'units.dat' and self.dattabs.active.tabcopy:
-			for v in self.dattabs.active.values.keys():
-				self.get_dat_data().dat.set_value(self.id, v, self.dattabs.active.tabcopy[self.get_dat_data().dat.labels.index(v)])
+	def paste(self):
+		# TODO
 		self.toplevel.tab_activated()
 
 	def reload(self):
@@ -161,7 +143,7 @@ class DATTab(NotebookTab):
 
 	def new(self, key=None):
 		if not self.unsaved():
-			self.get_dat_data().dat.new_file()
+			self.get_dat_data().new_file()
 			self.id = 0
 			self.toplevel.tab_activated()
 

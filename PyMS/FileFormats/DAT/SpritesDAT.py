@@ -2,10 +2,15 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Sprite(AbstractDAT.AbstractDATEntry):
+	class Property:
+		image_file = 'image_file'
+		health_bar = 'health_bar'
+		unused = 'unused'
+		is_visible = 'is_visible'
+		selection_circle_image = 'selection_circle_image'
+		selection_circle_offset = 'selection_circle_offset'
+
 	def __init__(self):
 		self.image_file = 0
 		self.health_bar = 0
@@ -33,44 +38,27 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 			self.selection_circle_offset,
 		)
 
+	def limit(self, id):
+		if not SpritesDAT.FORMAT.get_property('health_bar').is_on_entry(id):
+			self.health_bar = None
+		if not SpritesDAT.FORMAT.get_property('selection_circle_image').is_on_entry(id):
+			self.selection_circle_image = None
+		if not SpritesDAT.FORMAT.get_property('selection_circle_offset').is_on_entry(id):
+			self.selection_circle_offset = None
+
 	def expand(self):
-		self.image_file = self.image_file or 0
 		self.health_bar = self.health_bar or 0
-		self.unused = self.unused or 0
-		self.is_visible = self.is_visible or 0
 		self.selection_circle_image = self.selection_circle_image or 0
 		self.selection_circle_offset = self.selection_circle_offset or 0
 
-	def export_text(self, id):
-		return """Sprite(%d):
-	image_file %d
-	health_bar %d
-	unused %d
-	is_visible %d
-	selection_circle_image %d
-	selection_circle_offset %d""" % (
-			id,
-			self.image_file,
-			self.health_bar,
-			self.unused,
-			self.is_visible,
-			self.selection_circle_image,
-			self.selection_circle_offset
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Sprite"
-		data["_id"] = id
-		data["image_file"] = self.image_file
-		data["health_bar"] = self.health_bar
-		data["unused"] = self.unused
-		data["is_visible"] = self.is_visible
-		data["selection_circle_image"] = self.selection_circle_image
-		data["selection_circle_offset"] = self.selection_circle_offset
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Sprite'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Sprite.Property.image_file, self.image_file, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.health_bar, self.health_bar, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.unused, self.unused, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.is_visible, self.is_visible, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.selection_circle_image, self.selection_circle_image, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.selection_circle_offset, self.selection_circle_offset, export_type, data)
 
 # sprites.dat file handler
 class SpritesDAT(AbstractDAT.AbstractDAT):

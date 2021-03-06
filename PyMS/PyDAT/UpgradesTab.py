@@ -11,6 +11,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class UpgradesTab(DATTab):
+	DAT_ID = DATID.upgrades
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -55,8 +57,8 @@ class UpgradesTab(DATTab):
 
 		self.baseminerals = IntegerVar(0, [0,65535])
 		self.basevespene = IntegerVar(0, [0,65535])
-		self.basetime = IntegerVar(24, [1,65535], callback=lambda n,b=0,i=0: self.updatetime(n,b,i))
-		self.basesecs = FloatVar(1, [0.0416,2730.625], callback=lambda n,b=0,i=1: self.updatetime(n,b,i), precision=4)
+		self.basetime = IntegerVar(24, [0,65535], callback=lambda n,b=0,i=0: self.updatetime(n,b,i))
+		self.basesecs = FloatVar(1, [0,2730.625], callback=lambda n,b=0,i=1: self.updatetime(n,b,i), precision=4)
 
 		m = Frame(frame)
 		l = LabelFrame(m, text='Base Cost:')
@@ -87,8 +89,8 @@ class UpgradesTab(DATTab):
 
 		self.factorminerals = IntegerVar(0, [0,65535])
 		self.factorvespene = IntegerVar(0, [0,65535])
-		self.factortime = IntegerVar(24, [1,65535], callback=lambda n,b=1,i=0: self.updatetime(n,b,i))
-		self.factorsecs = FloatVar(1, [0.0416,2730.625], callback=lambda n,b=1,i=1: self.updatetime(n,b,i), precision=4)
+		self.factortime = IntegerVar(24, [0,65535], callback=lambda n,b=1,i=0: self.updatetime(n,b,i))
+		self.factorsecs = FloatVar(1, [0,2730.625], callback=lambda n,b=1,i=1: self.updatetime(n,b,i), precision=4)
 
 		l = LabelFrame(m, text='Factor Cost:')
 		s = Frame(l)
@@ -159,9 +161,6 @@ class UpgradesTab(DATTab):
 				DATRef('Upgrade', weapon.damage_upgrade),
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.upgrades
 
 	def updated_data_files(self, dataids):
 		if DataID.cmdicons in dataids:

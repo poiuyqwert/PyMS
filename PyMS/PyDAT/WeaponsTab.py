@@ -13,6 +13,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class WeaponsTab(DATTab):
+	DAT_ID = DATID.weapons
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -279,9 +281,6 @@ class WeaponsTab(DATTab):
 				DATRef('Targeting', order.weapon_targeting),
 			)),
 		])
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.weapons
 
 	def updated_data_files(self, dataids):
 		if DataID.stat_txt in dataids:

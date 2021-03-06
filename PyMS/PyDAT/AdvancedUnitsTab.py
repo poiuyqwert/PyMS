@@ -178,6 +178,17 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.subunit1,
+			Unit.Property.subunit2,
+			Unit.Property.unknown_flags,
+			Unit.Property.special_ability_flags,
+			Unit.Property.infestation,
+			Unit.Property.requirements,
+		])
+		self.clipboard_set(text)
+
 	def updated_entry_names(self, datids):
 		if not DATID.units in datids:
 			return

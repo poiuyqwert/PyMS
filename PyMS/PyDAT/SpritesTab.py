@@ -13,6 +13,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class SpritesTab(DATTab):
+	DAT_ID = DATID.sprites
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -99,9 +101,6 @@ class SpritesTab(DATTab):
 		))
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.sprites
 
 	def updated_entry_names(self, datids):
 		if DATID.flingy in datids and self.toplevel.dattabs.active == self:

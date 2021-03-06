@@ -2,10 +2,16 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Flingy(AbstractDAT.AbstractDATEntry):
+	class Property:
+		sprite = 'sprite'
+		speed = 'speed'
+		acceleration = 'acceleration'
+		halt_distance = 'halt_distance'
+		turn_radius = 'turn_radius'
+		iscript_mask = 'iscript_mask'
+		movement_control = 'movement_control'
+
 	def __init__(self):
 		self.sprite = 0
 		self.speed = 0
@@ -36,48 +42,15 @@ class Flingy(AbstractDAT.AbstractDATEntry):
 			self.movement_control
 		)
 
-	def expand(self):
-		self.sprite = self.sprite or 0
-		self.speed = self.speed or 0
-		self.acceleration = self.acceleration or 0
-		self.halt_distance = self.halt_distance or 0
-		self.turn_radius = self.turn_radius or 0
-		self.iscript_mask = self.iscript_mask or 0
-		self.movement_control = self.movement_control or 0
-
-	def export_text(self, id):
-		return """Flingy(%d):
-	sprite %d
-	speed %d
-	acceleration %d
-	halt_distance %d
-	turn_radius %d
-	iscript_mask %d
-	movement_control %d""" % (
-			id,
-			self.sprite,
-			self.speed,
-			self.acceleration,
-			self.halt_distance,
-			self.turn_radius,
-			self.iscript_mask,
-			self.movement_control
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Flingy"
-		data["_id"] = id
-		data["sprite"] = self.sprite
-		data["speed"] = self.speed
-		data["acceleration"] = self.acceleration
-		data["halt_distance"] = self.halt_distance
-		data["turn_radius"] = self.turn_radius
-		data["iscript_mask"] = self.iscript_mask
-		data["movement_control"] = self.movement_control
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Flingy'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Flingy.Property.sprite, self.sprite, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.speed, self.speed, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.acceleration, self.acceleration, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.halt_distance, self.halt_distance, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.turn_radius, self.turn_radius, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.iscript_mask, self.iscript_mask, export_type, data)
+		self._export_property_value(export_properties, Flingy.Property.movement_control, self.movement_control, export_type, data)
 
 # flingy.dat file handler
 class FlingyDAT(AbstractDAT.AbstractDAT):

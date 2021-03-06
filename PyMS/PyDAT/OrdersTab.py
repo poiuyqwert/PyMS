@@ -10,6 +10,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class OrdersTab(DATTab):
+	DAT_ID = DATID.orders
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -154,9 +156,6 @@ class OrdersTab(DATTab):
 		))
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.orders
 
 	def updated_data_files(self, dataids):
 		if DataID.stat_txt in dataids:

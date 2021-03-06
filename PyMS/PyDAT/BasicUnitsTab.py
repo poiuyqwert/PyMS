@@ -11,8 +11,6 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
-from math import ceil
-
 class BasicUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
@@ -245,6 +243,34 @@ class BasicUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.hit_points,
+			Unit.Property.shield_amount,
+			Unit.Property.shield_enabled,
+			Unit.Property.armor,
+			Unit.Property.armor_upgrade,
+			Unit.Property.mineral_cost,
+			Unit.Property.vespene_cost,
+			Unit.Property.build_time,
+			Unit.Property.broodwar_unit_flag,
+			Unit.Property.ground_weapon,
+			Unit.Property.max_ground_hits,
+			Unit.Property.air_weapon,
+			Unit.Property.max_air_hits,
+			Unit.Property.space_required,
+			Unit.Property.space_provided,
+			Unit.Property.build_score,
+			Unit.Property.destroy_score,
+			Unit.Property.unit_size,
+			Unit.Property.sight_range,
+			Unit.Property.target_acquisition_range,
+			Unit.Property.supply_required,
+			Unit.Property.supply_provided,
+			Unit.Property.staredit_group_flags,
+		])
+		self.clipboard_set(text)
+
 	def updatetime(self, num, type):
 		if type:
 			self.build_time.check = False
@@ -299,10 +325,10 @@ class BasicUnitsTab(DATUnitsTab):
 		self.unit_size.set(entry.unit_size)
 		self.sight_range.set(entry.sight_range)
 		self.target_acquisition_range.set(entry.target_acquisition_range)
-		self.supply_required.set(int(ceil((entry.supply_required - 1) / 2.0)))
-		self.supply_required_half.set(entry.supply_required % 2)
-		self.supply_provided.set(int(ceil((entry.supply_provided - 1) / 2.0)))
-		self.supply_provided_half.set(entry.supply_provided % 2)
+		self.supply_required.set(entry.supply_required.whole)
+		self.supply_required_half.set(entry.supply_required.half)
+		self.supply_provided.set(entry.supply_provided.whole)
+		self.supply_provided_half.set(entry.supply_provided.half)
 		self.zerg.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.zerg) == Unit.StarEditGroupFlag.zerg)
 		self.terran.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.terran) == Unit.StarEditGroupFlag.terran)
 		self.protoss.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.protoss) == Unit.StarEditGroupFlag.protoss)
@@ -372,13 +398,17 @@ class BasicUnitsTab(DATUnitsTab):
 		if self.target_acquisition_range.get() != entry.target_acquisition_range:
 			entry.target_acquisition_range = self.target_acquisition_range.get()
 			edited = True
-		supply_required = self.supply_required.get() * 2 + self.supply_required_half.get()
-		if supply_required != entry.supply_required:
-			entry.supply_required = supply_required
+		if self.supply_required.get() != entry.supply_required.whole:
+			entry.supply_required.whole = self.supply_required.get()
 			edited = True
-		supply_provided = self.supply_provided.get() * 2 + self.supply_provided_half.get()
-		if supply_provided != entry.supply_provided:
-			entry.supply_provided = supply_provided
+		if self.supply_required_half.get() != entry.supply_required.half:
+			entry.supply_required.half = self.supply_required_half.get()
+			edited = True
+		if self.supply_provided.get() != entry.supply_provided.whole:
+			entry.supply_provided.whole = self.supply_provided.get()
+			edited = True
+		if self.supply_provided_half.get() != entry.supply_provided.half:
+			entry.supply_provided.half = self.supply_provided_half.get()
 			edited = True
 		staredit_group_flags = entry.staredit_group_flags & Unit.StarEditGroupFlag.GROUP_FLAGS
 		if self.zerg.get():

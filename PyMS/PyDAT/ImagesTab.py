@@ -10,6 +10,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class ImagesTab(DATTab):
+	DAT_ID = DATID.images
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -165,9 +167,6 @@ class ImagesTab(DATTab):
 				DATRef('Image', sprite.image_file),
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.images
 
 	def updated_data_files(self, dataids):
 		if DataID.imagestbl in dataids:

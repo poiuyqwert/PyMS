@@ -242,63 +242,62 @@ class MPQHANDLE(c_void_p):
 	def __repr__(self):
 		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
 
-def MpqInitialize():
-	if SFMPQ_LOADED:
-		try:
-			_SFmpq.GetLastError.restype = c_int32
-		except:
-			_SFmpq.GetLastError = None
+if SFMPQ_LOADED:
+	try:
+		_SFmpq.GetLastError.restype = c_int32
+	except:
+		_SFmpq.GetLastError = None
 
-		_SFmpq.MpqGetVersionString.restype = c_char_p
-		_SFmpq.MpqGetVersion.restype = c_float
-		_SFmpq.SFMpqGetVersionString.restype = c_char_p
-		# _SFmpq.SFMpqGetVersionString2.argtypes = [c_char_p,c_int]
-		_SFmpq.SFMpqGetVersion.restype = SFMPQVERSION
-		
-		_SFmpq.SFileOpenArchive.argtypes = [c_char_p,c_int32,c_uint32,POINTER(MPQHANDLE)]
-		_SFmpq.SFileCloseArchive.argtypes = [MPQHANDLE]
-		#_SFmpq.SFileOpenFileAsArchive.argtypes = [MPQHANDLE,c_char_p,c_int32,c_int32,POINTER(MPQHANDLE)]
-		# _SFmpq.SFileGetArchiveName.argtypes = [MPQHANDLE,c_char_p,c_int32]
-		_SFmpq.SFileOpenFile.argtypes = [c_char_p,POINTER(MPQHANDLE)]
-		_SFmpq.SFileOpenFileEx.argtypes = [MPQHANDLE,c_char_p,c_uint32,POINTER(MPQHANDLE)]
-		_SFmpq.SFileCloseFile.argtypes = [MPQHANDLE]
-		_SFmpq.SFileGetFileSize.argtypes = [MPQHANDLE,POINTER(c_uint32)]
-		_SFmpq.SFileGetFileSize.restype = c_uint32
-		_SFmpq.SFileGetFileArchive.argtypes = [MPQHANDLE,POINTER(MPQHANDLE)]
-		# _SFmpq.SFileGetFileName.argtypes = [MPQHANDLE,c_char_p,c_uint32]
-		_SFmpq.SFileSetFilePointer.argtypes = [MPQHANDLE,c_int32,POINTER(c_int32),c_uint32]
-		_SFmpq.SFileReadFile.argtypes = [MPQHANDLE,c_void_p,c_uint32,POINTER(c_uint32),c_void_p]
-		_SFmpq.SFileSetLocale.argtypes = [c_uint32]
-		_SFmpq.SFileSetLocale.restype = c_uint32
-		_SFmpq.SFileGetBasePath.argtypes = [c_char_p,c_uint32]
-		_SFmpq.SFileSetBasePath.argtypes = [c_char_p]
+	_SFmpq.MpqGetVersionString.restype = c_char_p
+	_SFmpq.MpqGetVersion.restype = c_float
+	_SFmpq.SFMpqGetVersionString.restype = c_char_p
+	# _SFmpq.SFMpqGetVersionString2.argtypes = [c_char_p,c_int]
+	_SFmpq.SFMpqGetVersion.restype = SFMPQVERSION
+	
+	_SFmpq.SFileOpenArchive.argtypes = [c_char_p,c_int32,c_uint32,POINTER(MPQHANDLE)]
+	_SFmpq.SFileCloseArchive.argtypes = [MPQHANDLE]
+	#_SFmpq.SFileOpenFileAsArchive.argtypes = [MPQHANDLE,c_char_p,c_int32,c_int32,POINTER(MPQHANDLE)]
+	# _SFmpq.SFileGetArchiveName.argtypes = [MPQHANDLE,c_char_p,c_int32]
+	_SFmpq.SFileOpenFile.argtypes = [c_char_p,POINTER(MPQHANDLE)]
+	_SFmpq.SFileOpenFileEx.argtypes = [MPQHANDLE,c_char_p,c_uint32,POINTER(MPQHANDLE)]
+	_SFmpq.SFileCloseFile.argtypes = [MPQHANDLE]
+	_SFmpq.SFileGetFileSize.argtypes = [MPQHANDLE,POINTER(c_uint32)]
+	_SFmpq.SFileGetFileSize.restype = c_uint32
+	_SFmpq.SFileGetFileArchive.argtypes = [MPQHANDLE,POINTER(MPQHANDLE)]
+	# _SFmpq.SFileGetFileName.argtypes = [MPQHANDLE,c_char_p,c_uint32]
+	_SFmpq.SFileSetFilePointer.argtypes = [MPQHANDLE,c_int32,POINTER(c_int32),c_uint32]
+	_SFmpq.SFileReadFile.argtypes = [MPQHANDLE,c_void_p,c_uint32,POINTER(c_uint32),c_void_p]
+	_SFmpq.SFileSetLocale.argtypes = [c_uint32]
+	_SFmpq.SFileSetLocale.restype = c_uint32
+	_SFmpq.SFileGetBasePath.argtypes = [c_char_p,c_uint32]
+	_SFmpq.SFileSetBasePath.argtypes = [c_char_p]
 
-		_SFmpq.SFileGetFileInfo.argtypes = [MPQHANDLE,c_uint32]
-		_SFmpq.SFileGetFileInfo.restype = c_size_t
-		_SFmpq.SFileSetArchivePriority.argtypes = [MPQHANDLE,c_uint32]
-		_SFmpq.SFileFindMpqHeader.argtypes = [c_void_p]
-		_SFmpq.SFileFindMpqHeader.restype = c_uint32
-		_SFmpq.SFileListFiles.argtypes = [MPQHANDLE,c_char_p,POINTER(FILELISTENTRY),c_uint32]
+	_SFmpq.SFileGetFileInfo.argtypes = [MPQHANDLE,c_uint32]
+	_SFmpq.SFileGetFileInfo.restype = c_size_t
+	_SFmpq.SFileSetArchivePriority.argtypes = [MPQHANDLE,c_uint32]
+	_SFmpq.SFileFindMpqHeader.argtypes = [c_void_p]
+	_SFmpq.SFileFindMpqHeader.restype = c_uint32
+	_SFmpq.SFileListFiles.argtypes = [MPQHANDLE,c_char_p,POINTER(FILELISTENTRY),c_uint32]
 
-		_SFmpq.MpqOpenArchiveForUpdate.argtypes = [c_char_p,c_uint32,c_uint32]
-		_SFmpq.MpqOpenArchiveForUpdate.restype = MPQHANDLE
-		_SFmpq.MpqCloseUpdatedArchive.argtypes = [MPQHANDLE,c_uint32]
-		_SFmpq.MpqCloseUpdatedArchive.restype = c_uint32
-		_SFmpq.MpqAddFileToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32]
-		_SFmpq.MpqAddWaveToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32]
-		_SFmpq.MpqRenameFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
-		_SFmpq.MpqDeleteFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
-		_SFmpq.MpqCompactArchive.argtypes = [MPQHANDLE]
+	_SFmpq.MpqOpenArchiveForUpdate.argtypes = [c_char_p,c_uint32,c_uint32]
+	_SFmpq.MpqOpenArchiveForUpdate.restype = MPQHANDLE
+	_SFmpq.MpqCloseUpdatedArchive.argtypes = [MPQHANDLE,c_uint32]
+	_SFmpq.MpqCloseUpdatedArchive.restype = c_uint32
+	_SFmpq.MpqAddFileToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32]
+	_SFmpq.MpqAddWaveToArchive.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32]
+	_SFmpq.MpqRenameFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
+	_SFmpq.MpqDeleteFile.argtypes = [MPQHANDLE,c_char_p,c_char_p]
+	_SFmpq.MpqCompactArchive.argtypes = [MPQHANDLE]
 
-		_SFmpq.MpqOpenArchiveForUpdateEx.argtypes = [c_char_p,c_uint32,c_uint32,c_uint32]
-		_SFmpq.MpqOpenArchiveForUpdateEx.restype = MPQHANDLE
-		_SFmpq.MpqAddFileToArchiveEx.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32,c_uint32]
-		_SFmpq.MpqAddFileFromBufferEx.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
-		_SFmpq.MpqAddFileFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32]
-		_SFmpq.MpqAddWaveFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
-		_SFmpq.MpqRenameAndSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_int,c_int]
-		_SFmpq.MpqDeleteFileWithLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32]
-		_SFmpq.MpqSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32,c_uint32]
+	_SFmpq.MpqOpenArchiveForUpdateEx.argtypes = [c_char_p,c_uint32,c_uint32,c_uint32]
+	_SFmpq.MpqOpenArchiveForUpdateEx.restype = MPQHANDLE
+	_SFmpq.MpqAddFileToArchiveEx.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_uint32,c_uint32,c_uint32]
+	_SFmpq.MpqAddFileFromBufferEx.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
+	_SFmpq.MpqAddFileFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32]
+	_SFmpq.MpqAddWaveFromBuffer.argtypes = [MPQHANDLE,c_void_p,c_uint32,c_char_p,c_uint32,c_uint32]
+	_SFmpq.MpqRenameAndSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_char_p,c_int,c_int]
+	_SFmpq.MpqDeleteFileWithLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32]
+	_SFmpq.MpqSetFileLocale.argtypes = [MPQHANDLE,c_char_p,c_uint32,c_uint32]
 
 DEBUG = False
 def debug_log(func):

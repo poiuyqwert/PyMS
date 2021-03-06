@@ -13,6 +13,8 @@ from ..Utilities.Notebook import Notebook
 from ..Utilities.UIKit import *
 
 class UnitsTab(DATTab):
+	DAT_ID = DATID.units
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		self.dattabs = Notebook(self, FLAT)
@@ -36,8 +38,8 @@ class UnitsTab(DATTab):
 			)),
 		))
 
-	def get_dat_data(self):
-		return self.toplevel.data_context.units
+	def copy_subtab(self):
+		self.dattabs.active.copy()
 
 	def change_sub_tab(self, sub_tab_id):
 		self.dattabs.display(sub_tab_id.id)

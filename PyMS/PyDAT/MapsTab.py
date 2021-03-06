@@ -1,6 +1,6 @@
 
 from DATTab import DATTab
-from DataID import DataID
+from DataID import DATID, DataID
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -8,6 +8,8 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 
 class MapsTab(DATTab):
+	DAT_ID = DATID.mapdata
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		frame = Frame(self)
@@ -29,9 +31,6 @@ class MapsTab(DATTab):
 		l.pack(fill=X)
 
 		frame.pack(side=LEFT, fill=Y)
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.campaign
 
 	def updated_data_files(self, dataids):
 		if DataID.mapdatatbl in dataids:

@@ -2,10 +2,28 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Order(AbstractDAT.AbstractDATEntry):
+	class Property:
+		label = 'label'
+		use_weapon_targeting = 'use_weapon_targeting'
+		unused_is_secondary = 'unused_is_secondary'
+		unused_allow_non_subunits = 'unused_allow_non_subunits'
+		changes_subunit_order = 'changes_subunit_order'
+		unused_allow_subunits = 'unused_allow_subunits'
+		interruptable = 'interruptable'
+		waypoint_step_slowdown = 'waypoint_step_slowdown'
+		queueable = 'queueable'
+		disabled_maintain_air_target = 'disabled_maintain_air_target'
+		obstructable = 'obstructable'
+		flee_unreturnable_damage = 'flee_unreturnable_damage'
+		unused_requires_movable_unit = 'unused_requires_movable_unit'
+		weapon_targeting = 'weapon_targeting'
+		technology_energy = 'technology_energy'
+		iscript_animation = 'iscript_animation'
+		highlight_icon = 'highlight_icon'
+		unknown17 = 'unknown17'
+		obscured_order = 'obscured_order'
+
 	def __init__(self):
 		self.label = 0
 		self.use_weapon_targeting = 0
@@ -72,96 +90,27 @@ class Order(AbstractDAT.AbstractDATEntry):
 			self.obscured_order
 		)
 
-	def expand(self):
-		self.label = self.label or 0
-		self.use_weapon_targeting = self.use_weapon_targeting or 0
-		self.unused_is_secondary = self.unused_is_secondary or 0
-		self.unused_allow_non_subunits = self.unused_allow_non_subunits or 0
-		self.changes_subunit_order = self.changes_subunit_order or 0
-		self.unused_allow_subunits = self.unused_allow_subunits or 0
-		self.interruptable = self.interruptable or 0
-		self.waypoint_step_slowdown = self.waypoint_step_slowdown or 0
-		self.queueable = self.queueable or 0
-		self.disabled_maintain_air_target = self.disabled_maintain_air_target or 0
-		self.obstructable = self.obstructable or 0
-		self.flee_unreturnable_damage = self.flee_unreturnable_damage or 0
-		self.unused_requires_movable_unit = self.unused_requires_movable_unit or 0
-		self.weapon_targeting = self.weapon_targeting or 0
-		self.technology_energy = self.technology_energy or 0
-		self.iscript_animation = self.iscript_animation or 0
-		self.highlight_icon = self.highlight_icon or 0
-		self.unknown17 = self.unknown17 or 0
-		self.obscured_order = self.obscured_order or 0
-
-	def export_text(self, id):
-		return """Order(%d):
-	label %d
-	use_weapon_targeting %d
-	unused_is_secondary %d
-	unused_allow_non_subunits %d
-	changes_subunit_order %d
-	unused_allow_subunits %d
-	interruptable %d
-	waypoint_step_slowdown %d
-	queueable %d
-	disabled_maintain_air_target %d
-	obstructable %d
-	flee_unreturnable_damage %d
-	unused_requires_movable_unit %d
-	weapon_targeting %d
-	technology_energy %d
-	iscript_animation %d
-	highlight_icon %d
-	unknown17 %d
-	obscured_order %d""" % (
-			id,
-			self.label,
-			self.use_weapon_targeting,
-			self.unused_is_secondary,
-			self.unused_allow_non_subunits,
-			self.changes_subunit_order,
-			self.unused_allow_subunits,
-			self.interruptable,
-			self.waypoint_step_slowdown,
-			self.queueable,
-			self.disabled_maintain_air_target,
-			self.obstructable,
-			self.flee_unreturnable_damage,
-			self.unused_requires_movable_unit,
-			self.weapon_targeting,
-			self.technology_energy,
-			self.iscript_animation,
-			self.highlight_icon,
-			self.unknown17,
-			self.obscured_order
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Order"
-		data["_id"] = id
-		data["label"] = self.label
-		data["use_weapon_targeting"] = self.use_weapon_targeting
-		data["unused_is_secondary"] = self.unused_is_secondary
-		data["unused_allow_non_subunits"] = self.unused_allow_non_subunits
-		data["changes_subunit_order"] = self.changes_subunit_order
-		data["unused_allow_subunits"] = self.unused_allow_subunits
-		data["interruptable"] = self.interruptable
-		data["waypoint_step_slowdown"] = self.waypoint_step_slowdown
-		data["queueable"] = self.queueable
-		data["disabled_maintain_air_target"] = self.disabled_maintain_air_target
-		data["obstructable"] = self.obstructable
-		data["flee_unreturnable_damage"] = self.flee_unreturnable_damage
-		data["unused_requires_movable_unit"] = self.unused_requires_movable_unit
-		data["weapon_targeting"] = self.weapon_targeting
-		data["technology_energy"] = self.technology_energy
-		data["iscript_animation"] = self.iscript_animation
-		data["highlight_icon"] = self.highlight_icon
-		data["unknown17"] = self.unknown17
-		data["obscured_order"] = self.obscured_order
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Order'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Order.Property.label, self.label, export_type, data)
+		self._export_property_value(export_properties, Order.Property.use_weapon_targeting, self.use_weapon_targeting, export_type, data)
+		self._export_property_value(export_properties, Order.Property.unused_is_secondary, self.unused_is_secondary, export_type, data)
+		self._export_property_value(export_properties, Order.Property.unused_allow_non_subunits, self.unused_allow_non_subunits, export_type, data)
+		self._export_property_value(export_properties, Order.Property.changes_subunit_order, self.changes_subunit_order, export_type, data)
+		self._export_property_value(export_properties, Order.Property.unused_allow_subunits, self.unused_allow_subunits, export_type, data)
+		self._export_property_value(export_properties, Order.Property.interruptable, self.interruptable, export_type, data)
+		self._export_property_value(export_properties, Order.Property.waypoint_step_slowdown, self.waypoint_step_slowdown, export_type, data)
+		self._export_property_value(export_properties, Order.Property.queueable, self.queueable, export_type, data)
+		self._export_property_value(export_properties, Order.Property.disabled_maintain_air_target, self.disabled_maintain_air_target, export_type, data)
+		self._export_property_value(export_properties, Order.Property.obstructable, self.obstructable, export_type, data)
+		self._export_property_value(export_properties, Order.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, export_type, data)
+		self._export_property_value(export_properties, Order.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, export_type, data)
+		self._export_property_value(export_properties, Order.Property.weapon_targeting, self.weapon_targeting, export_type, data)
+		self._export_property_value(export_properties, Order.Property.technology_energy, self.technology_energy, export_type, data)
+		self._export_property_value(export_properties, Order.Property.iscript_animation, self.iscript_animation, export_type, data)
+		self._export_property_value(export_properties, Order.Property.highlight_icon, self.highlight_icon, export_type, data)
+		self._export_property_value(export_properties, Order.Property.unknown17, self.unknown17, export_type, data)
+		self._export_property_value(export_properties, Order.Property.obscured_order, self.obscured_order, export_type, data)
 
 # orders.dat file handler
 class OrdersDAT(AbstractDAT.AbstractDAT):

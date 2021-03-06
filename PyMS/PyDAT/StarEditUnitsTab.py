@@ -139,6 +139,16 @@ class StarEditUnitsTab(DATUnitsTab):
 		for v in (self.width, self.height):
 			v.trace('w', lambda *_: self.drawpreview())
 
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.staredit_group_flags,
+			Unit.Property.staredit_availability_flags,
+			Unit.Property.sublabel,
+			Unit.Property.unit_map_string,
+			Unit.Property.staredit_placement_size,
+		])
+		self.clipboard_set(text)
+
 	def updated_data_files(self, dataids):
 		if DataID.stat_txt in dataids:
 			count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)

@@ -2,6 +2,8 @@
 from DATUnitsTab import DATUnitsTab
 from DataID import DATID
 
+from ..FileFormats.DAT.UnitsDAT import Unit
+
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
@@ -17,7 +19,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.ready_sound_dropdown = IntVar()
 		self.yes_sound_start = IntegerVar(0, [0,0])
 		self.yes_sounds_start_dropdown = IntVar()
-		self.yes_soound_end = IntegerVar(0, [0,0])
+		self.yes_sound_end = IntegerVar(0, [0,0])
 		self.lastyesdd = IntVar()
 		self.what_sound_start = IntegerVar(0, [0,0])
 		self.what_sound_start_dropdown = IntVar()
@@ -57,10 +59,10 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Yes (Last):', width=13, anchor=E).pack(side=LEFT)
-		self.yes_sound_end_entry_widget = Entry(f, textvariable=self.yes_soound_end, font=couriernew, width=4)
+		self.yes_sound_end_entry_widget = Entry(f, textvariable=self.yes_sound_end, font=couriernew, width=4)
 		self.yes_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.yes_sound_end_dropdown_widget = DropDown(f, self.lastyesdd, [], self.yes_soound_end, width=30)
+		self.yes_sound_end_dropdown_widget = DropDown(f, self.lastyesdd, [], self.yes_sound_end, width=30)
 		self.yes_sound_end_dropdown_widget.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.yes_sound_end_button_widget = Button(f, text='Jump ->', command=lambda: self.jump(DATID.sfxdata, self.lastyesdd.get()))
 		self.yes_sound_end_button_widget.pack(side=LEFT)
@@ -119,6 +121,18 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.ready_sound,
+			Unit.Property.what_sound_start,
+			Unit.Property.what_sound_end,
+			Unit.Property.pissed_sound_start,
+			Unit.Property.pissed_sound_end,
+			Unit.Property.yes_sound_start,
+			Unit.Property.yes_sound_end,
+		])
+		self.clipboard_set(text)
+
 	def updated_entry_names(self, datids):
 		if not DATID.sfxdata in datids:
 			return
@@ -144,7 +158,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		variables = (
 			self.ready_sound,
 			self.yes_sound_start,
-			self.yes_soound_end,
+			self.yes_sound_end,
 			self.what_sound_start,
 			self.what_sound_end,
 			self.pissed_sound_start,
@@ -164,7 +178,7 @@ class SoundsUnitsTab(DATUnitsTab):
 			(entry.pissed_sound_end, self.pissed_sound_end, (self.pissed_sound_end_entry_widget, self.pissed_sound_end_dropdown_widget, self.pissed_sound_end_button_widget)),
 
 			(entry.yes_sound_start, self.yes_sound_start, (self.yes_sound_start_entry_widget, self.yes_sound_start_dropdown_widget, self.yes_sound_start_button_widget)),
-			(entry.yes_sound_end, self.yes_soound_end, (self.yes_sound_end_entry_widget, self.yes_sound_end_dropdown_widget, self.yes_sound_end_button_widget))
+			(entry.yes_sound_end, self.yes_sound_end, (self.yes_sound_end_entry_widget, self.yes_sound_end_dropdown_widget, self.yes_sound_end_button_widget))
 		)
 		for (sound, variable, widgets) in fields:
 			has_sound = sound != None
@@ -196,8 +210,8 @@ class SoundsUnitsTab(DATUnitsTab):
 		if entry.yes_sound_start != None and self.yes_sound_start.get() != entry.yes_sound_start:
 			entry.yes_sound_start = self.yes_sound_start.get()
 			edited = True
-		if entry.yes_sound_end != None and self.yes_soound_end.get() != entry.yes_sound_end:
-			entry.yes_sound_end = self.yes_soound_end.get()
+		if entry.yes_sound_end != None and self.yes_sound_end.get() != entry.yes_sound_end:
+			entry.yes_sound_end = self.yes_sound_end.get()
 			edited = True
 
 		return edited

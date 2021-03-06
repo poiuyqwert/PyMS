@@ -2,10 +2,23 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Image(AbstractDAT.AbstractDATEntry):
+	class Property:
+		grp_file = 'grp_file'
+		gfx_turns = 'gfx_turns'
+		clickable = 'clickable'
+		use_full_iscript = 'use_full_iscript'
+		draw_if_cloaked = 'draw_if_cloaked'
+		draw_function = 'draw_function'
+		remapping = 'remapping'
+		iscript_id = 'iscript_id'
+		shield_overlay = 'shield_overlay'
+		attack_overlay = 'attack_overlay'
+		damage_overlay = 'damage_overlay'
+		special_overlay = 'special_overlay'
+		landing_dust_overlay = 'landing_dust_overlay'
+		lift_off_dust_overlay = 'lift_off_dust_overlay'
+
 	class DrawFunction:
 		normal                  = 0
 		overlay_on_target       = 1
@@ -89,76 +102,22 @@ class Image(AbstractDAT.AbstractDATEntry):
 			self.lift_off_dust_overlay
 		)
 
-	def expand(self):
-		self.grp_file = self.grp_file or 0
-		self.gfx_turns = self.gfx_turns or 0
-		self.clickable = self.clickable or 0
-		self.use_full_iscript = self.use_full_iscript or 0
-		self.draw_if_cloaked = self.draw_if_cloaked or 0
-		self.draw_function = self.draw_function or 0
-		self.remapping = self.remapping or 0
-		self.iscript_id = self.iscript_id or 0
-		self.shield_overlay = self.shield_overlay or 0
-		self.attack_overlay = self.attack_overlay or 0
-		self.damage_overlay = self.damage_overlay or 0
-		self.special_overlay = self.special_overlay or 0
-		self.landing_dust_overlay = self.landing_dust_overlay or 0
-		self.lift_off_dust_overlay = self.lift_off_dust_overlay or 0
-
-	def export_text(self, id):
-		return """Image(%d):
-	grp_file %d
-	gfx_turns %d
-	clickable %d
-	use_full_iscript %d
-	draw_if_cloaked %d
-	draw_function %d
-	remapping %d
-	iscript_id %d
-	shield_overlay %d
-	attack_overlay %d
-	damage_overlay %d
-	special_overlay %d
-	landing_dust_overlay %d
-	lift_off_dust_overlay %d""" % (
-			id,
-			self.grp_file,
-			self.gfx_turns,
-			self.clickable,
-			self.use_full_iscript,
-			self.draw_if_cloaked,
-			self.draw_function,
-			self.remapping,
-			self.iscript_id,
-			self.shield_overlay,
-			self.attack_overlay,
-			self.damage_overlay,
-			self.special_overlay,
-			self.landing_dust_overlay,
-			self.lift_off_dust_overlay
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Image"
-		data["_id"] = id
-		data["grp_file"] = self.grp_file
-		data["gfx_turns"] = self.gfx_turns
-		data["clickable"] = self.clickable
-		data["use_full_iscript"] = self.use_full_iscript
-		data["draw_if_cloaked"] = self.draw_if_cloaked
-		data["draw_function"] = self.draw_function
-		data["remapping"] = self.remapping
-		data["iscript_id"] = self.iscript_id
-		data["shield_overlay"] = self.shield_overlay
-		data["attack_overlay"] = self.attack_overlay
-		data["damage_overlay"] = self.damage_overlay
-		data["special_overlay"] = self.special_overlay
-		data["landing_dust_overlay"] = self.landing_dust_overlay
-		data["lift_off_dust_overlay"] = self.lift_off_dust_overlay
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Image'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Image.Property.grp_file, self.grp_file, export_type, data)
+		self._export_property_value(export_properties, Image.Property.gfx_turns, self.gfx_turns, export_type, data)
+		self._export_property_value(export_properties, Image.Property.clickable, self.clickable, export_type, data)
+		self._export_property_value(export_properties, Image.Property.use_full_iscript, self.use_full_iscript, export_type, data)
+		self._export_property_value(export_properties, Image.Property.draw_if_cloaked, self.draw_if_cloaked, export_type, data)
+		self._export_property_value(export_properties, Image.Property.draw_function, self.draw_function, export_type, data)
+		self._export_property_value(export_properties, Image.Property.remapping, self.remapping, export_type, data)
+		self._export_property_value(export_properties, Image.Property.iscript_id, self.iscript_id, export_type, data)
+		self._export_property_value(export_properties, Image.Property.shield_overlay, self.shield_overlay, export_type, data)
+		self._export_property_value(export_properties, Image.Property.attack_overlay, self.attack_overlay, export_type, data)
+		self._export_property_value(export_properties, Image.Property.damage_overlay, self.damage_overlay, export_type, data)
+		self._export_property_value(export_properties, Image.Property.special_overlay, self.special_overlay, export_type, data)
+		self._export_property_value(export_properties, Image.Property.landing_dust_overlay, self.landing_dust_overlay, export_type, data)
+		self._export_property_value(export_properties, Image.Property.lift_off_dust_overlay, self.lift_off_dust_overlay, export_type, data)
 
 # images.dat file handler
 class ImagesDAT(AbstractDAT.AbstractDAT):

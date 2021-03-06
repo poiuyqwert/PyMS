@@ -31,6 +31,12 @@ class DATFormat(object):
 			size += prop.total_size(expanded_entry_count or self.entries, expanded_entry_count != None)
 		return size
 
+	def get_property(self, name):
+		for prop in self.properties:
+			if prop.name == name:
+				return prop
+		return None
+
 class DATType(object):
 	STRUCT = None
 
@@ -83,7 +89,7 @@ class DATTypeSize(DATType):
 		self.height = 0
 
 	def load_data(self, data, offset):
-		self.width,self.height = self.unpack_data(data, offset)
+		self.width, self.height = self.unpack_data(data, offset)
 
 	def save_data(self):
 		return self.pack_data((self.width, self.height))
@@ -96,7 +102,7 @@ class DATTypePosition(DATType):
 		self.y = 0
 
 	def load_data(self, data, offset):
-		self.x,self.y = self.unpack_data(data, offset)
+		self.x, self.y = self.unpack_data(data, offset)
 
 	def save_data(self):
 		return self.pack_data((self.x, self.y))
@@ -111,7 +117,7 @@ class DATTypeExtents(DATType):
 		self.down = 0
 
 	def load_data(self, data, offset):
-		self.left,self.up,self.right,self.down = self.unpack_data(data, offset)
+		self.left, self.up, self.right, self.down = self.unpack_data(data, offset)
 
 	def save_data(self):
 		return self.pack_data((self.left, self.up, self.right, self.down))
@@ -132,6 +138,22 @@ class DATTypeHitPoints(DATType):
 		value = (self.whole << 8) & self.fraction
 		return self.pack_data((value,))
 
+class DATTypeSupply(DATType):
+	STRUCT = struct.Struct('<B')
+
+	def __init__(self):
+		self.whole = 0
+		self.half = 1
+
+	def load_data(self, data, offset):
+		value = self.unpack_data(data, offset)[0]
+		self.whole = value >> 1
+		self.half = value & 1
+
+	def save_data(self):
+		value = (self.whole << 1) & (1 if self.half else 0)
+		return self.pack_data((value,))
+
 class DATProperty(object):
 	DAT_TYPES = {
 		'byte': DATTypeByte,
@@ -141,7 +163,8 @@ class DATProperty(object):
 		'size': DATTypeSize,
 		'position': DATTypePosition,
 		'extents': DATTypeExtents,
-		'hit_points': DATTypeHitPoints
+		'hit_points': DATTypeHitPoints,
+		'supply': DATTypeSupply,
 	}
 	def __init__(self, format):
 		self.name = format["name"]
@@ -204,3 +227,9 @@ class DATProperty(object):
 		if issubclass(dat_type, DATTypeScalar):
 			values = (dat_type(value) for value in values)
 		return ''.join(value.save_data() for value in values)
+
+	# Whether this property is on an entry with `id` (non-expanded, as expanded dats have all entries)
+	def is_on_entry(self, id):
+		if not self.entry_offset or not self.entry_count:
+			return True
+		return (id >= self.entry_offset and id < (self.entry_offset + self._entry_count))

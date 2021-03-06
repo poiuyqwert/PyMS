@@ -4,6 +4,12 @@ from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
 
 from math import ceil
+from collections import OrderedDict
+import json
+
+class ExportType:
+	text = 'text'
+	json = 'json'
 
 # Abstract class for DAT files
 class AbstractDAT(object):
@@ -16,6 +22,15 @@ class AbstractDAT(object):
 
 	def __init__(self):
 		self.entries = []
+
+	def new_file(self, entry_count=None):
+		entry_count = max(entry_count or 0, self.FORMAT.entries)
+		if entry_count != self.FORMAT.entries:
+			entry_count = self._expanded_count(entry_count)
+		self.entries = list(self.ENTRY_STRUCT() for _ in range(entry_count))
+		if not self.is_expanded():
+			for id,entry in enumerate(self.entries):
+				entry.limit(id)
 
 	def load_file(self, file):
 		data = load_file(file, self.FILE_NAME)
@@ -80,49 +95,95 @@ class AbstractDAT(object):
 	def is_expanded(self):
 		return self.entry_count() > self.FORMAT.entries
 
-	def _expand_count(self, count=1):
-		resulting_entry_count = self.entry_count()
+	def _expanded_count(self, count):
+		resulting_entry_count = count
 		if not self.is_expanded() and self.FORMAT.expanded_min_entries:
 			resulting_entry_count = self.FORMAT.expanded_min_entries
-		resulting_entry_count += count
 		if self.FORMAT.expanded_entries_multiple:
-			resulting_entry_count = ceil(resulting_entry_count / float(self.FORMAT.expanded_entries_multiple)) * self.FORMAT.expanded_entries_multiple
+			resulting_entry_count = int(ceil(resulting_entry_count / float(self.FORMAT.expanded_entries_multiple)) * self.FORMAT.expanded_entries_multiple)
 		return resulting_entry_count
 
-	def can_expand(self, count=1):
-		resulting_entry_count = self._expand_count(count)
+	def can_expand(self, add=1):
+		resulting_entry_count = self._expanded_count(self.entry_count() + add)
 		if self.FORMAT.expanded_max_entries and resulting_entry_count > self.FORMAT.expanded_max_entries:
 			return False
 		return True
 
-	def expand_entries(self, count=1):
+	def expand_entries(self, add=1):
 		if not self.is_expanded():
 			for entry in self.entries:
 				entry.expand()
-		resulting_entry_count = self._expand_count(count)
+		resulting_entry_count = self._expanded_count(self.entry_count() + add)
 		while self.entry_count() < resulting_entry_count:
 			self.entries.append(self.ENTRY_STRUCT())
 		return True
 
+	def export_entry(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
+		return self.get_entry(id).export(id, export_properties, export_type, json_dump, json_indent)
+
 class AbstractDATEntry(object):
+	EXPORT_NAME = None
+
 	def load_values(self, values):
 		pass
 
 	def save_values(self):
 		pass
 
-	# Ensure entry has all properties enabled (not set to `None`)
+	# Ensure entry has limited properties unavailable (set to `None`)
+	def limit(self, id):
+		pass
+
+	# Ensure entry has limited properties available (not set to `None`)
 	def expand(self):
 		pass
 
-	def export_text(self, id):
+	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
+	def export(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
+		if export_type == ExportType.text:
+			data = []
+			data.append("%s(%d):" % (self.EXPORT_NAME, id))
+		elif export_type == ExportType.json:
+			data = OrderedDict()
+			data["_type"] = self.EXPORT_NAME
+			data["_id"] = id
+		else:
+			raise PyMSError('Export', "Invalid export type '%s'" % export_type)
+		self._export(export_properties, export_type, data)
+		if export_type == ExportType.text:
+			return '\n\t'.join(data)
+		elif export_type == ExportType.json:
+			if json_dump:
+				return json.dumps(data, indent=json_indent)
+			return data
+	
+	def _export(self, export_properties, export_type, data):
 		pass
 
 	def import_text(self, text):
 		pass
 
-	def export_json(self, id, dump=True, indent=4):
-		pass
-
 	def import_json(self, json):
 		pass
+
+	def _export_property_value(self, export_properties, prop, value, export_type, data):
+		if (not export_properties or prop in export_properties) and value != None:
+			if export_type == ExportType.text:
+				data.append("%s %s" % (prop, value))
+			elif export_type == ExportType.json:
+				data[prop] = value
+
+	# `values_lambda` is called with `obj` (if not None), and returns an iterable of tuples in the format `(field, value)`
+	def _export_property_values(self, export_properties, prop, obj, values_lambda, export_type, data):
+		if (not export_properties or prop in export_properties) and obj != None:
+			if export_type == ExportType.text:
+				for field,value in values_lambda(obj):
+					if value != None:
+						data.append("%s.%s %s" % (prop, field, value))
+			elif export_type == ExportType.json:
+				sub_data = OrderedDict()
+				for field,value in values_lambda(obj):
+					if value != None:
+						sub_data[field] = value
+				if sub_data:
+					data[prop] = sub_data

@@ -2,9 +2,6 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Portrait(object):
 	def __init__(self):
 		self.portrait_file = 0
@@ -12,6 +9,10 @@ class Portrait(object):
 		self.unknown = 0
 
 class Portraits(AbstractDAT.AbstractDATEntry):
+	class Property:
+		idle = 'idle'
+		talking = 'talking'
+
 	def __init__(self):
 		self.idle = Portrait()
 		self.talking = Portrait()
@@ -35,50 +36,10 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 			self.talking.unknown
 		)
 
-	def expand(self):
-		self.idle = self.idle or Portrait()
-		self.talking = self.talking or Portrait()
-		self.idle.portrait_file = self.idle.portrait_file or 0
-		self.talking.portrait_file = self.talking.portrait_file or 0
-		self.idle.smk_change = self.idle.smk_change or 0
-		self.talking.smk_change = self.talking.smk_change or 0
-		self.idle.unknown = self.idle.unknown or 0
-		self.talking.unknown = self.talking.unknown or 0
-
-	def export_text(self, id):
-		return """Portraits(%d):
-	idle.portrait_file %d
-	idle.smk_change %d
-	idle.unknown %d
-	talking.portrait_file %d
-	talking.smk_change %d
-	talking.unknown %d""" % (
-			id,
-			self.idle.portrait_file,
-			self.idle.smk_change,
-			self.idle.unknown,
-			self.talking.portrait_file,
-			self.talking.smk_change,
-			self.talking.unknown
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Portraits"
-		data["_id"] = id
-		idle = OrderedDict()
-		idle["portrait_file"] = self.idle.portrait_file
-		idle["smk_change"] = self.idle.smk_change
-		idle["unknown"] = self.idle.unknown
-		data["idle"] = idle
-		talking = OrderedDict()
-		talking["portrait_file"] = self.talking.portrait_file
-		talking["smk_change"] = self.talking.smk_change
-		talking["unknown"] = self.talking.unknown
-		data["talking"] = talking
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Portraits'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_values(export_properties, Portraits.Property.idle, self.idle, lambda idle: (('portrait_file', idle.portrait_file), ('smk_change', idle.smk_change), ('unknown', idle.unknown)), export_type, data)
+		self._export_property_values(export_properties, Portraits.Property.talking, self.talking, lambda talking: (('portrait_file', talking.portrait_file), ('smk_change', talking.smk_change), ('unknown', talking.unknown)), export_type, data)
 
 # portdata.dat file handler
 class PortraitsDAT(AbstractDAT.AbstractDAT):

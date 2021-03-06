@@ -19,23 +19,29 @@ class DATData(object):
 		self.names = ()
 
 	def load_defaults(self, mpqhandler):
+		update_names = False
 		try:
 			dat = self.dat_type()
 			dat.load_file(mpqhandler.get_file('MPQ:arr\\' + self.dat_type.FILE_NAME, MPQHandler.GET_FROM_FOLDER_OR_MPQ))
+			update_names = True
 		except:
 			pass
 		else:
 			self.default_dat = dat
-			if self.dat == None:
-				self.new_file()
+		if self.dat == None:
+			self.new_file()
+			update_names = True
+		if update_names:
 			self.update_names()
 
 	def new_file(self):
-		# TODO: Blank file if no default? Need AbstractDAT to understand creating entries with proper `None` values for properties that don't apply to every entry
 		if self.default_dat:
 			self.dat = copy.deepcopy(self.default_dat)
 			self.file_path = None
 			self.update_names()
+		else:
+			self.dat = self.dat_type()
+			self.dat.new_file()
 
 	def load_file(self, file_info):
 		if isstr(file_info):

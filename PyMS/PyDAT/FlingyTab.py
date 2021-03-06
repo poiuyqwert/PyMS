@@ -11,6 +11,8 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
 class FlingyTab(DATTab):
+	DAT_ID = DATID.flingy
+
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
 		j = Frame(self)
@@ -87,9 +89,6 @@ class FlingyTab(DATTab):
 				DATRef('Graphics', weapon.graphics),
 			)),
 		))
-
-	def get_dat_data(self):
-		return self.toplevel.data_context.flingy
 
 	def updated_entry_names(self, datids):
 		if (DATID.units in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:

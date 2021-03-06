@@ -2,10 +2,10 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Map(AbstractDAT.AbstractDATEntry):
+	class Property:
+		map_file = 'map_file'
+
 	def __init__(self):
 		self.map_file = 0
 
@@ -15,24 +15,9 @@ class Map(AbstractDAT.AbstractDATEntry):
 	def save_values(self):
 		return (self.map_file,)
 
-	def expand(self):
-		self.map_file = self.map_file or 0
-
-	def export_text(self, id):
-		return """Map(%d):
-	map_file %d""" % (
-			id,
-			self.map_file
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Map"
-		data["_id"] = id
-		data["map_file"] = self.map_file
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Map'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Map.Property.map_file, self.map_file, export_type, data)
 
 # mapdata.dat file handler
 class CampaignDAT(AbstractDAT.AbstractDAT):

@@ -2,6 +2,7 @@
 from DATUnitsTab import DATUnitsTab
 from DataID import DATID
 
+from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 
 from ..Utilities.utils import couriernew
@@ -133,6 +134,18 @@ class GraphicsUnitsTab(DATUnitsTab):
 			v.trace('w', lambda *_: self.drawpreview())
 		for v in (self.left, self.up, self.right, self.down):
 			v.trace('w', lambda *_: self.drawboxes())
+
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.graphics,
+			Unit.Property.construction_animation,
+			Unit.Property.unit_direction,
+			Unit.Property.elevation_level,
+			Unit.Property.unit_extents,
+			Unit.Property.portrait,
+			Unit.Property.addon_position,
+		])
+		self.clipboard_set(text)
 
 	def updated_entry_names(self, datids):
 		if DATID.flingy in datids:

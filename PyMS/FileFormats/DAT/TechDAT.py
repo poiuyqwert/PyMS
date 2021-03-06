@@ -2,10 +2,20 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Technology(AbstractDAT.AbstractDATEntry):
+	class Property:
+		mineral_cost = 'mineral_cost'
+		vespene_cost = 'vespene_cost'
+		research_time = 'research_time'
+		energy_required = 'energy_required'
+		research_requirements = 'research_requirements'
+		use_requirements = 'use_requirements'
+		icon = 'icon'
+		label = 'label'
+		staredit_race = 'staredit_race'
+		researched = 'researched'
+		broodwar_only = 'broodwar_only'
+
 	def __init__(self):
 		self.mineral_cost = 0
 		self.vespene_cost = 0
@@ -48,64 +58,19 @@ class Technology(AbstractDAT.AbstractDATEntry):
 			self.broodwar_only
 		)
 
-	def expand(self):
-		self.mineral_cost = self.mineral_cost or 0
-		self.vespene_cost = self.vespene_cost or 0
-		self.research_time = self.research_time or 0
-		self.energy_required = self.energy_required or 0
-		self.research_requirements = self.research_requirements or 0
-		self.use_requirements = self.use_requirements or 0
-		self.icon = self.icon or 0
-		self.label = self.label or 0
-		self.staredit_race = self.staredit_race or 0
-		self.researched = self.researched or 0
-		self.broodwar_only = self.broodwar_only or 0
-
-	def export_text(self, id):
-		return """Technology(%d):
-	mineral_cost %d
-	vespene_cost %d
-	research_time %d
-	energy_required %d
-	research_requirements %d
-	use_requirements %d
-	icon %d
-	label %d
-	staredit_race %d
-	researched %d
-	broodwar_only %d""" % (
-			id,
-			self.mineral_cost,
-			self.vespene_cost,
-			self.research_time,
-			self.energy_required,
-			self.research_requirements,
-			self.use_requirements,
-			self.icon,
-			self.label,
-			self.staredit_race,
-			self.researched,
-			self.broodwar_only
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Technology"
-		data["_id"] = id
-		data["mineral_cost"] = self.mineral_cost
-		data["vespene_cost"] = self.vespene_cost
-		data["research_time"] = self.research_time
-		data["energy_required"] = self.energy_required
-		data["research_requirements"] = self.research_requirements
-		data["use_requirements"] = self.use_requirements
-		data["icon"] = self.icon
-		data["label"] = self.label
-		data["staredit_race"] = self.staredit_race
-		data["researched"] = self.researched
-		data["broodwar_only"] = self.broodwar_only
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Technology'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Technology.Property.mineral_cost, self.mineral_cost, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.vespene_cost, self.vespene_cost, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.research_time, self.research_time, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.energy_required, self.energy_required, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.research_requirements, self.research_requirements, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.use_requirements, self.use_requirements, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.icon, self.icon, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.label, self.label, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.staredit_race, self.staredit_race, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.researched, self.researched, export_type, data)
+		self._export_property_value(export_properties, Technology.Property.broodwar_only, self.broodwar_only, export_type, data)
 
 # techdata.dat file handler
 class TechDAT(AbstractDAT.AbstractDAT):

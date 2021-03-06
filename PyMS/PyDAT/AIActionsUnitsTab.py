@@ -144,6 +144,18 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		frame.pack(side=LEFT, fill=Y)
 
+	def copy(self):
+		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+			Unit.Property.comp_ai_idle,
+			Unit.Property.human_ai_idle,
+			Unit.Property.return_to_idle,
+			Unit.Property.attack_unit,
+			Unit.Property.attack_move,
+			Unit.Property.right_click_action,
+			Unit.Property.ai_internal,
+		])
+		self.clipboard_set(text)
+
 	def updated_entry_names(self, datids):
 		if not DATID.orders in datids:
 			return

@@ -15,7 +15,6 @@ class MPQHandler(object):
 			self.listfiles = listfiles
 		self.handles = {}
 		self.open = False
-		MpqInitialize()
 
 	def clear(self):
 		if self.open:

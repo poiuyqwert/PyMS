@@ -21,6 +21,9 @@ class DATUnitsTab(NotebookTab):
 		self.tip(c, txt, hint)
 		return c
 
+	def copy(self):
+		pass
+
 	def jump(self, datid, entry_id):
 		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
 			self.toplevel.dattabs.display(datid.tab_id)

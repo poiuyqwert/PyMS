@@ -2,10 +2,14 @@
 import AbstractDAT
 import DATFormat
 
-from collections import OrderedDict
-import json
-
 class Sound(AbstractDAT.AbstractDATEntry):
+	class Property:
+		sound_file = 'sound_file'
+		priority = 'priority'
+		flags = 'flags'
+		length_adjust = 'length_adjust'
+		minimum_volume = 'minimum_volume'
+
 	class Flag:
 		preload       = 1 << 0
 		unit_speech   = 1 << 1
@@ -38,40 +42,13 @@ class Sound(AbstractDAT.AbstractDATEntry):
 			self.minimum_volume
 		)
 
-	def expand(self):
-		self.sound_file = self.sound_file or 0
-		self.priority = self.priority or 0
-		self.flags = self.flags or 0
-		self.length_adjust = self.length_adjust or 0
-		self.minimum_volume = self.minimum_volume or 0
-
-	def export_text(self, id):
-		return """Sound(%d):
-	sound_file %d
-	priority %d
-	flags %d
-	length_adjust %d
-	minimum_volume %d""" % (
-			id,
-			self.sound_file,
-			self.priority,
-			self.flags,
-			self.length_adjust,
-			self.minimum_volume
-		)
-
-	def export_json(self, id, dump=True, indent=4):
-		data = OrderedDict()
-		data["_type"] = "Sound"
-		data["_id"] = id
-		data["sound_file"] = self.sound_file
-		data["priority"] = self.priority
-		data["flags"] = self.flags
-		data["length_adjust"] = self.length_adjust
-		data["minimum_volume"] = self.minimum_volume
-		if not dump:
-			return data
-		return json.dumps(data, indent=indent)
+	EXPORT_NAME = 'Sound'
+	def _export(self, export_properties, export_type, data):
+		self._export_property_value(export_properties, Sound.Property.sound_file, self.sound_file, export_type, data)
+		self._export_property_value(export_properties, Sound.Property.priority, self.priority, export_type, data)
+		self._export_property_value(export_properties, Sound.Property.flags, self.flags, export_type, data)
+		self._export_property_value(export_properties, Sound.Property.length_adjust, self.length_adjust, export_type, data)
+		self._export_property_value(export_properties, Sound.Property.minimum_volume, self.minimum_volume, export_type, data)
 
 # sfxdata.dat file handler
 class SoundsDAT(AbstractDAT.AbstractDAT):

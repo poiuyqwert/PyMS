@@ -689,8 +689,6 @@ class PyMPQ(Tk):
 		PYMPQ_SETTINGS.windows.load_window_size('main', self, default_size=(700,500))
 		PYMPQ_SETTINGS.load_pane_sizes('list_sizes', self.listbox.panes, (317,74,45,67,52,64))
 
-		MpqInitialize()
-
 		if guifile:
 			self.open(file=guifile)
 
