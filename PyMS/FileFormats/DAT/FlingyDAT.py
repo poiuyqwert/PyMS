@@ -56,9 +56,10 @@ class Flingy(AbstractDAT.AbstractDATEntry):
 class FlingyDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 209,
+			"expanded_max_entries": 65536,
 			"properties": [
 				{
-					"name": "sprite",
+					"name": "sprite", # Pointer to sprites.dat
 					"type": "short"
 				},
 				{

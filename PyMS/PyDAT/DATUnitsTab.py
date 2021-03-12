@@ -1,10 +1,9 @@
 
-from ..Utilities.utils import fit
-from ..Utilities.Notebook import NotebookTab
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.UIKit import Checkbutton
+from DATTabConveniences import DATTabConveniences
 
-class DATUnitsTab(NotebookTab):
+from ..Utilities.Notebook import NotebookTab
+
+class DATUnitsTab(NotebookTab, DATTabConveniences):
 	def __init__(self, parent, toplevel, parent_tab):
 		self.toplevel = toplevel
 		self.parent_tab = parent_tab
@@ -12,14 +11,6 @@ class DATUnitsTab(NotebookTab):
 		self.tabcopy = None
 		self.edited = False
 		NotebookTab.__init__(self, parent)
-
-	def tip(self, obj, tipname, hint):
-		obj.tooltip = Tooltip(obj, '%s:\n' % tipname + fit('  ', self.toplevel.data_context.hints[hint], end=True)[:-1], mouse=True)
-
-	def makeCheckbox(self, frame, var, txt, hint):
-		c = Checkbutton(frame, text=txt, variable=var)
-		self.tip(c, txt, hint)
-		return c
 
 	def copy(self):
 		pass

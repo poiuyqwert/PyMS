@@ -1,9 +1,9 @@
 
 from ContinueImportDialog import ContinueImportDialog
+from DATTabConveniences import DATTabConveniences
 
-from ..Utilities.utils import fit, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.Notebook import NotebookTab
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -11,7 +11,7 @@ from ..Utilities.UIKit import *
 
 import copy
 
-class DATTab(NotebookTab):
+class DATTab(NotebookTab, DATTabConveniences):
 	DAT_ID = None
 
 	def __init__(self, parent, toplevel):
@@ -22,16 +22,7 @@ class DATTab(NotebookTab):
 		self.used_by_listbox = None
 		self.used_by_data = []
 		self.edited = False
-		self.dattabs = None
 		NotebookTab.__init__(self, parent)
-
-	def tip(self, obj, tipname, hint):
-		obj.tooltip = Tooltip(obj, '%s:\n' % tipname + fit('  ', self.toplevel.data_context.hints[hint], end=True)[:-1], mouse=True)
-
-	def makeCheckbox(self, frame, var, txt, hint):
-		c = Checkbutton(frame, text=txt, variable=var)
-		self.tip(c, txt, hint)
-		return c
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.dat_data(self.DAT_ID)
@@ -134,7 +125,8 @@ class DATTab(NotebookTab):
 		self.clipboard_set(text)
 
 	def paste(self):
-		# TODO
+		text = self.clipboard_get()
+		self.get_dat_data().dat.get_entry(self.id).import_text(text)
 		self.toplevel.tab_activated()
 
 	def reload(self):

@@ -57,8 +57,8 @@ class UpgradesTab(DATTab):
 
 		self.baseminerals = IntegerVar(0, [0,65535])
 		self.basevespene = IntegerVar(0, [0,65535])
-		self.basetime = IntegerVar(24, [0,65535], callback=lambda n,b=0,i=0: self.updatetime(n,b,i))
-		self.basesecs = FloatVar(1, [0,2730.625], callback=lambda n,b=0,i=1: self.updatetime(n,b,i), precision=4)
+		self.basetime = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.basesecs))
+		self.basesecs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.basetime), precision=4)
 
 		m = Frame(frame)
 		l = LabelFrame(m, text='Base Cost:')
@@ -89,8 +89,8 @@ class UpgradesTab(DATTab):
 
 		self.factorminerals = IntegerVar(0, [0,65535])
 		self.factorvespene = IntegerVar(0, [0,65535])
-		self.factortime = IntegerVar(24, [0,65535], callback=lambda n,b=1,i=0: self.updatetime(n,b,i))
-		self.factorsecs = FloatVar(1, [0,2730.625], callback=lambda n,b=1,i=1: self.updatetime(n,b,i), precision=4)
+		self.factortime = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.factorsecs))
+		self.factorsecs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.factortime), precision=4)
 
 		l = LabelFrame(m, text='Factor Cost:')
 		s = Frame(l)
@@ -186,21 +186,6 @@ class UpgradesTab(DATTab):
 		image = self.toplevel.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
-
-	def updatetime(self, num, factor, type):
-		if type:
-			x = [self.basetime,self.factortime][factor]
-			x.check = False
-			x.set(int(float(num) * 24))
-		else:
-			x = [self.basesecs,self.factorsecs][factor]
-			x.check = False
-			s = str(int(num) / 24.0)
-			if s.endswith('.0'):
-				s = s[:-2]
-			elif len(s.split('.')[1]) > 4:
-				s = s[:s.index('.')+5]
-			x.set(s)
 
 	def load_entry(self, entry):
 		self.baseminerals.set(entry.mineral_cost_base)

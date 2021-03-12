@@ -123,9 +123,10 @@ class Image(AbstractDAT.AbstractDATEntry):
 class ImagesDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 999,
+			"expanded_max_entries": 65536,
 			"properties": [
 				{
-					"name": "grp_file",
+					"name": "grp_file", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
@@ -153,31 +154,31 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "iscript_id",
+					"name": "iscript_id", # Pointer to iscript.bin
 					"type": "long"
 				},
 				{
-					"name": "shield_overlay",
+					"name": "shield_overlay", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
-					"name": "attack_overlay",
+					"name": "attack_overlay", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
-					"name": "damage_overlay",
+					"name": "damage_overlay", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
-					"name": "special_overlay",
+					"name": "special_overlay", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
-					"name": "landing_dust_overlay",
+					"name": "landing_dust_overlay", # Pointer to images.tbl
 					"type": "long"
 				},
 				{
-					"name": "lift_off_dust_overlay",
+					"name": "lift_off_dust_overlay", # Pointer to images.tbl
 					"type": "long"
 				}
 			]

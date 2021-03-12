@@ -3,7 +3,7 @@ from PyMS.PyDAT.PyDAT import PyDAT, LONG_VERSION
 
 from PyMS.FileFormats.DAT import *
 
-from PyMS.Utilities.utils import BASE_DIR, startup
+from PyMS.Utilities.utils import BASE_DIR
 from PyMS.Utilities.PyMSError import PyMSError
 
 import os, optparse
@@ -12,7 +12,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pydat.py','pydat.pyw','pydat.exe']):
 		gui = PyDAT()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyDAT [options] <inp> [out]', version='PyDAT %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile a DAT file [default]", default=True)
@@ -35,7 +35,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyDAT(opt.gui)
-			startup(gui)
+			gui.startup()
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

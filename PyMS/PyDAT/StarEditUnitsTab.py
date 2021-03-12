@@ -176,7 +176,7 @@ class StarEditUnitsTab(DATUnitsTab):
 			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
 			flingy = self.toplevel.data_context.flingy.dat.get_entry(entry.graphics)
 			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
-			self.draw_image(sprite.image_file, 'unit')
+			self.draw_image(sprite.image, 'unit')
 		self.drawboxes()
 
 	def load_data(self, entry):

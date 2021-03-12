@@ -1,6 +1,7 @@
 
 from utils import is_mac
 from UIKit import *
+from EventPattern import *
 
 class Tooltip:
 	def __init__(self, widget, text='', font=None, delay=750, press=False, mouse=False):
@@ -15,12 +16,13 @@ class Tooltip:
 		self.pos = None
 
 	def setupbinds(self, press):
-		self.widget.bind('<Enter>', self.enter, '+')
-		self.widget.bind('<Leave>', self.leave, '+')
-		self.widget.bind('<Motion>', self.motion, '+')
-		self.widget.bind('<Button-1>', self.leave, '+')
+		self.widget.winfo_toplevel().bind(Focus.Out, self.leave, '+')
+		self.widget.bind(Cursor.Enter, self.enter, '+')
+		self.widget.bind(Cursor.Leave, self.leave, '+')
+		self.widget.bind(Cursor.Motion, self.motion, '+')
+		self.widget.bind(Mouse.Click, self.leave, '+')
 		if press:
-			self.widget.bind('<ButtonPress>', self.leave)
+			self.widget.bind(Mouse.ButtonPress, self.leave)
 
 	def enter(self, e=None):
 		self.unschedule()

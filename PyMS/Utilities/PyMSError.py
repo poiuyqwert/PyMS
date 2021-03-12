@@ -24,11 +24,14 @@ class PyMSError(Exception):
 		from utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
-			r += fit('    Line %s: ' % self.line, self.code)
+			if self.code != None:
+				r += fit('    Line %s: ' % self.line, self.code)
+			else:
+				r += fit('    Line %s')
 		if self.warnings:
 			for w in self.warnings:
 				r += repr(w)
-		return r[:-1]
+		return r
 
 	def __str__(self):
 		return repr(self)

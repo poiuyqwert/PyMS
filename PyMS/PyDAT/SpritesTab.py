@@ -23,7 +23,7 @@ class SpritesTab(DATTab):
 		self.imageentry = IntegerVar(0, [0,998])
 		self.imagedd = IntVar()
 		self.visible = IntVar()
-		self.unknown = IntVar()
+		self.unused = IntVar()
 		self.selcircleentry = IntegerVar(0, [0,19], callback=lambda n: self.selcircle(n,1))
 		self.selcircledd = IntVar()
 		self.healthbar = IntegerVar(0, [0,255], callback=lambda n,i=0: self.updatehealth(n,i))
@@ -34,7 +34,7 @@ class SpritesTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Image:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.imageentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.imageentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.image_ddw = DropDown(f, self.imagedd, [], self.imageentry, width=30)
 		self.image_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -45,13 +45,13 @@ class SpritesTab(DATTab):
 		c = Checkbutton(f, text='Is Visible', variable=self.visible)
 		self.tip(c, 'Is Visible', 'SpriteVisible')
 		c.pack(side=LEFT)
-		c = Checkbutton(f, text='Unknown', variable=self.unknown)
-		self.tip(c, 'Unknown', 'SpriteUnk1')
+		c = Checkbutton(f, text='Unused', variable=self.unused)
+		self.tip(c, 'Unused', 'SpriteUnused')
 		c.pack(side=LEFT)
 		f.pack()
 		f = Frame(s)
 		Label(f, text='Sel. Circle:', width=12, anchor=E).pack(side=LEFT)
-		self.selentry = Entry(f, textvariable=self.selcircleentry, font=couriernew, width=3)
+		self.selentry = Entry(f, textvariable=self.selcircleentry, font=couriernew, width=5)
 		self.selentry.pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.seldd = DropDown(f, self.selcircledd, DATA_CACHE['SelCircleSize.txt'], self.selcircle, width=30)
@@ -61,7 +61,7 @@ class SpritesTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Health Bar:', width=12, anchor=E).pack(side=LEFT)
-		self.hpentry = Entry(f, textvariable=self.healthbar, font=couriernew, width=3)
+		self.hpentry = Entry(f, textvariable=self.healthbar, font=couriernew, width=5)
 		self.hpentry.pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.hpboxes = Entry(f, textvariable=self.boxes, font=couriernew, width=2)
@@ -71,7 +71,7 @@ class SpritesTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Vert. Position:', width=12, anchor=E).pack(side=LEFT)
-		self.vertentry = Entry(f, textvariable=self.vertpos, font=couriernew, width=3)
+		self.vertentry = Entry(f, textvariable=self.vertpos, font=couriernew, width=5)
 		self.vertentry.pack(side=LEFT, padx=2)
 		self.tip(f, 'Vertical Position', 'SpriteCircleOff')
 		f.pack(fill=X)
@@ -147,7 +147,7 @@ class SpritesTab(DATTab):
 						for _ in range(int(self.boxes.get())):
 							self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
 							hp[0] += 3
-				image_id = self.toplevel.data_context.sprites.dat.get_entry(self.id).image_file
+				image_id = self.toplevel.data_context.sprites.dat.get_entry(self.id).image
 				frame = self.toplevel.data_context.get_image_frame(image_id)
 				if frame:
 					self.preview.create_image(130, 130, image=frame[0])
@@ -156,8 +156,8 @@ class SpritesTab(DATTab):
 				self.previewing = None
 
 	def load_entry(self, entry):
-		self.imageentry.set(entry.image_file)
-		self.unknown.set(entry.unused)
+		self.imageentry.set(entry.image)
+		self.unused.set(entry.unused)
 		self.visible.set(entry.is_visible)
 
 		fields = (
@@ -176,11 +176,11 @@ class SpritesTab(DATTab):
 		self.drawpreview()
 
 	def save_entry(self, entry):
-		if self.imageentry.get() != entry.image_file:
-			entry.image_file = self.imageentry.get()
+		if self.imageentry.get() != entry.image:
+			entry.image = self.imageentry.get()
 			self.edited = True
-		if self.unknown.get() != entry.unused:
-			entry.unused = self.unknown.get()
+		if self.unused.get() != entry.unused:
+			entry.unused = self.unused.get()
 			self.edited = True
 		if self.visible.get() != entry.is_visible:
 			entry.is_visible = self.visible.get()

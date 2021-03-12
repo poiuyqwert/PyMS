@@ -55,8 +55,8 @@ class TechnologyTab(DATTab):
 
 		self.minerals = IntegerVar(0, [0,65535])
 		self.vespene = IntegerVar(0, [0,65535])
-		self.time = IntegerVar(24, [0,65535], callback=lambda n,i=0: self.updatetime(n,i))
-		self.secs = FloatVar(1, [0,2730.625], callback=lambda n,i=1: self.updatetime(n,i), precision=4)
+		self.time = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.secs))
+		self.secs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.time), precision=4)
 		self.energy = IntegerVar(0, [0,65535])
 
 		m = Frame(frame)
@@ -159,19 +159,6 @@ class TechnologyTab(DATTab):
 		image = self.toplevel.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
-
-	def updatetime(self, num, type):
-		if type:
-			self.time.check = False
-			self.time.set(int(float(num) * 24))
-		else:
-			self.secs.check = False
-			s = str(int(num) / 24.0)
-			if s.endswith('.0'):
-				s = s[:-2]
-			elif len(s.split('.')[1]) > 4:
-				s = s[:s.index('.')+5]
-			self.secs.set(s)
 
 	def load_entry(self, entry):
 		self.minerals.set(entry.mineral_cost)

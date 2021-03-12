@@ -2,6 +2,7 @@
 from utils import BASE_DIR, couriernew
 from ..Utilities.DropDownChooser import DropDownChooser
 from UIKit import *
+from EventPattern import *
 
 import os
 
@@ -24,21 +25,23 @@ class DropDown(Frame):
 		self.size = min(10,len(entries))
 		self.none_name = none_name
 		self.none_value = none_value
+		self._typed = ''
+		self._typed_timer = None
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
 		self.listbox = Listbox(self, selectmode=SINGLE, font=couriernew, width=width, height=1, borderwidth=0, exportselection=1, activestyle=DOTBOX)
-		self.listbox.bind('<Button-1>', self.choose)
-		self.listbox.bind('<MouseWheel>', lambda *args: 'break')
+		self.listbox.bind(Mouse.Click, self.choose)
+		self.listbox.bind(Mouse.Scroll, lambda *args: Event.BREAK)
 		bind = [
-			# ('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
-			('<space>', self.choose)
+			(Key.Home, lambda a,i=0: self.move(a,i)),
+			(Key.End, lambda a,i=END: self.move(a,i)),
+			(Key.Up, lambda a,i=-1: self.move(a,i)),
+			(Key.Left, lambda a,i=-1: self.move(a,i)),
+			(Key.Down, lambda a,i=1: self.move(a,i)),
+			(Key.Right, lambda a,i=-1: self.move(a,i)),
+			(Key.Prior, lambda a,i=-10: self.move(a,i)),
+			(Key.Next, lambda a,i=10: self.move(a,i)),
+			# (Key.Space, self.choose),
+			(Key.Pressed, self.key_pressed)
 		]
 		for b in bind:
 			self.bind(*b)
@@ -85,13 +88,6 @@ class DropDown(Frame):
 		#self.listbox.select_set(num)
 		self.listbox.see(num)
 
-	# def scroll(self, e):
-	# 	if self.listbox['state'] == NORMAL:
-	# 		if e.delta > 0:
-	# 			self.move(None, -1)
-	# 		elif self.variable.get() < self.listbox.size()-2:
-	# 			self.move(None, 1)
-
 	def move(self, e, a):
 		if self.listbox['state'] == NORMAL:
 			if a not in [0,END]:
@@ -119,3 +115,22 @@ class DropDown(Frame):
 				self.display.set(n)
 			else:
 				self.display(n)
+
+	def key_pressed(self, event):
+		if self._typed_timer:
+			self.after_cancel(self._typed_timer)
+		if event.keysym == Key.Backspace.name():
+			self._typed = self._typed[:-1]
+		elif event.char:
+			self._typed += event.char.lower()
+		if self._typed:
+			items = self.listbox.get(0, END)
+			for index,item in enumerate(items):
+				if self._typed in item.lower():
+					self.set(index)
+					break
+			self._typed_timer = self.after(1000, self.clear_typed)
+
+	def clear_typed(self):
+		self._typed_timer = None
+		self._typed = ''

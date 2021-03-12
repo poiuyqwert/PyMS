@@ -4,7 +4,7 @@ import DATFormat
 
 class Sprite(AbstractDAT.AbstractDATEntry):
 	class Property:
-		image_file = 'image_file'
+		image = 'image'
 		health_bar = 'health_bar'
 		unused = 'unused'
 		is_visible = 'is_visible'
@@ -12,7 +12,7 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 		selection_circle_offset = 'selection_circle_offset'
 
 	def __init__(self):
-		self.image_file = 0
+		self.image = 0
 		self.health_bar = 0
 		self.unused = 0
 		self.is_visible = 0
@@ -20,7 +20,7 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 		self.selection_circle_offset = 0
 
 	def load_values(self, values):
-		self.image_file,\
+		self.image,\
 		self.health_bar,\
 		self.unused,\
 		self.is_visible,\
@@ -30,7 +30,7 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 
 	def save_values(self):
 		return (
-			self.image_file,
+			self.image,
 			self.health_bar,
 			self.unused,
 			self.is_visible,
@@ -53,7 +53,7 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Sprite'
 	def _export(self, export_properties, export_type, data):
-		self._export_property_value(export_properties, Sprite.Property.image_file, self.image_file, export_type, data)
+		self._export_property_value(export_properties, Sprite.Property.image, self.image, export_type, data)
 		self._export_property_value(export_properties, Sprite.Property.health_bar, self.health_bar, export_type, data)
 		self._export_property_value(export_properties, Sprite.Property.unused, self.unused, export_type, data)
 		self._export_property_value(export_properties, Sprite.Property.is_visible, self.is_visible, export_type, data)
@@ -64,9 +64,10 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 class SpritesDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 517,
+			"expanded_max_entries": 65536,
 			"properties": [
 				{
-					"name": "image_file",
+					"name": "image", # Pointer to images.dat
 					"type": "short"
 				},
 				{
@@ -84,7 +85,7 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "selection_circle_image",
+					"name": "selection_circle_image", # Pointer to images.dat (starting at 561)
 					"type": "byte",
 					"entry_offset": 130,
 					"entry_count": 387

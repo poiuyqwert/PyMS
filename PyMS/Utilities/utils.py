@@ -30,20 +30,6 @@ def is_windows():
 def is_mac():
 	return (platform.system().lower() == 'darwin')
 
-def startup(toplevel):
-	toplevel.lift()
-	toplevel.call('wm', 'attributes', '.', '-topmost', True)
-	toplevel.after_idle(toplevel.call, 'wm', 'attributes', '.', '-topmost', False)
-	toplevel.focus_force()
-	try:
-		from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps
-
-		app = NSRunningApplication.runningApplicationWithProcessIdentifier_(os.getpid())
-		app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
-	except:
-		pass
-	toplevel.mainloop()
-
 # Decorator
 def debug_func_log(should_log_call=None):
 	def decorator(func):
@@ -158,6 +144,14 @@ def fit(label, text, width=80, end=False, indent=0):
 				r += '\n'
 			r += '\n'
 	return r.rstrip('\n') + ('\n' if end else '')
+
+def float_to_str(value, strip_zero_decimals=True, max_decimals=4):
+	result = str(value)
+	if result.endswith('.0') and strip_zero_decimals:
+		result = result[:-2]
+	elif max_decimals != None and '.' in result and len(result.split('.')[-1]) > max_decimals:
+		result = result[:result.index('.') + max_decimals + 1]
+	return result
 
 def rpad(label, value='', span=20, padding=' '):
 	label = str(label)

@@ -26,7 +26,7 @@ class ImagesTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='GRP:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.grpentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.grpentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.grps = DropDown(f, self.grpdd, [], self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
@@ -42,7 +42,7 @@ class ImagesTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Iscript ID:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.iscriptentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.iscriptentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, [], self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -141,7 +141,7 @@ class ImagesTab(DATTab):
 		for t,e,d,h in ols:
 			f = Frame(s)
 			Label(f, text=t + ':', width=12, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=3).pack(side=LEFT, padx=2)
+			Entry(f, textvariable=e, font=couriernew, width=5).pack(side=LEFT, padx=2)
 			Label(f, text='=').pack(side=LEFT)
 			dd = DropDown(f, d, [], e, width=15)
 			dd.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -164,7 +164,7 @@ class ImagesTab(DATTab):
 				DATRef('Construction', unit.construction_animation, dat_sub_tab=UnitsTabID.graphics),
 			)),
 			DATRefs(DATID.sprites, lambda sprite: (
-				DATRef('Image', sprite.image_file),
+				DATRef('Image', sprite.image),
 			)),
 		))
 

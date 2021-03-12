@@ -2733,7 +2733,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pymap.py','pymap.pyw','pymap.exe']):
 		gui = PyMAP()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyMAP [options]', version='PyMAP %s' % LONG_VERSION)
 		# p.add_option('-v', '--vf4', metavar='FILE', help='Choose a palette for GRP to BMP conversion [default: %default]', default='')
@@ -2747,7 +2747,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyMAP(opt.gui)
-			startup(gui)
+			gui.startup()
 
 if __name__ == '__main__':
 	# import profile

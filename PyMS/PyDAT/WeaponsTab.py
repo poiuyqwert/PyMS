@@ -26,8 +26,8 @@ class WeaponsTab(DATTab):
 		self.explosion = IntVar()
 		self.factor = IntegerVar(0, [0,255])
 		self.unused = IntVar()
-		self.cooldown = IntegerVar(0, [1,255], callback=lambda n,i=0: self.updatetime(n,i))
-		self.seconds = FloatVar(1, [0.06,17], callback=lambda n,i=1: self.updatetime(n,i), precision=2)
+		self.cooldown = IntegerVar(0, [1,255], callback=lambda ticks: self.update_time(ticks, self.seconds))
+		self.seconds = FloatVar(1, [1/24.0,255/24.0], callback=lambda time: self.update_ticks(time, self.cooldown), precision=2)
 		self.upgradeentry = IntegerVar(0,[0,61])
 		self.upgrade = IntVar()
 
@@ -68,7 +68,7 @@ class WeaponsTab(DATTab):
 		ls = Frame(f)
 		Label(ls, text='Unused:', width=9, anchor=E).pack(side=LEFT)
 		self.unused_ddw = DropDown(ls, self.unused, [], width=20)
-		self.unused_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.unused_ddw.pack(side=LEFT, fill=X, expand=1, padx=3)
 		self.tip(ls, 'Unused Technology', 'WeapUnused')
 		ls.pack(side=LEFT)
 		f.pack(fill=X)
@@ -76,7 +76,7 @@ class WeaponsTab(DATTab):
 		Label(f, text='Cooldown:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.cooldown, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		Entry(f, textvariable=self.seconds, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.seconds, font=couriernew, width=7).pack(side=LEFT, padx=2)
 		Label(f, text='secs.').pack(side=LEFT)
 		self.tip(f, 'Cooldown', 'WeapDamageCooldown')
 		f.pack(fill=X)
@@ -101,7 +101,7 @@ class WeaponsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.labelentry, font=couriernew, width=4).pack(side=LEFT)
+		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.labels = DropDown(f, self.label, [], self.labelentry, width=28)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -109,7 +109,7 @@ class WeaponsTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Error Msg:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.errormsgentry, font=couriernew, width=4).pack(side=LEFT)
+		Entry(f, textvariable=self.errormsgentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.errormsgs = DropDown(f, self.errormsg, [], self.errormsgentry, width=28)
 		self.errormsgs.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -138,12 +138,12 @@ class WeaponsTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Remove After:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.removeafter, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.removeafter, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		self.tip(f, 'Remove After', 'WeapRemoveAfter')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Graphics:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.graphicsentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.graphicsentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.graphics_ddw = DropDown(f, self.graphicsdd, [], self.graphicsentry)
 		self.graphics_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -152,7 +152,7 @@ class WeaponsTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.iconentry, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.iconentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon)
 		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -162,12 +162,12 @@ class WeaponsTab(DATTab):
 		ls = Frame(f)
 		rs = Frame(ls)
 		Label(rs, text='X Offset:', width=12, anchor=E).pack(side=LEFT)
-		Entry(rs, textvariable=self.xoffset, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(rs, textvariable=self.xoffset, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		self.tip(rs, 'X Offset', 'WeapOffsetForward')
 		rs.pack(side=TOP)
 		rs = Frame(ls)
 		Label(rs, text='Y Offset:', width=12, anchor=E).pack(side=LEFT)
-		Entry(rs, textvariable=self.yoffset, font=couriernew, width=3).pack(side=LEFT, padx=2)
+		Entry(rs, textvariable=self.yoffset, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		self.tip(rs, 'Y Offset', 'WeapOffsetUpward')
 		rs.pack(side=TOP)
 		ls.pack(side=LEFT)
@@ -313,19 +313,6 @@ class WeaponsTab(DATTab):
 		self.labelentry.range[1] = string_limit
 		self.errormsgentry.range[1] = string_limit
 		self.iconentry.range[1] = self.toplevel.data_context.cmdicons.frame_count() - 1
-
-	def updatetime(self, num, type):
-		if type:
-			self.cooldown.check = False
-			self.cooldown.set(int(float(num) * 15))
-		else:
-			self.seconds.check = False
-			s = str(int(num) / 15.0)
-			if s.endswith('.0'):
-				s = s[:-2]
-			elif len(s.split('.')[1]) > 2:
-				s = s[:s.index('.')+3]
-			self.seconds.set(s)
 
 	def selicon(self, n, t=0):
 		if t:

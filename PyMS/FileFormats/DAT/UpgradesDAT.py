@@ -81,6 +81,7 @@ class Upgrade(AbstractDAT.AbstractDATEntry):
 class UpgradesDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 61,
+			"expanded_max_entries": 256,
 			"properties": [
 				{
 					"name": "mineral_cost_base",
@@ -111,11 +112,11 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 					"type": "short"
 				},
 				{
-					"name": "icon",
+					"name": "icon", # Pointer to cmdicon.grp
 					"type": "short"
 				},
 				{
-					"name": "label",
+					"name": "label", # Pointer to stat_txt.tbl
 					"type": "short"
 				},
 				{

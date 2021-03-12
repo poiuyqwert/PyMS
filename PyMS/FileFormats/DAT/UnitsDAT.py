@@ -414,26 +414,26 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 			],
 			"properties": [
 				{
-					"name": "graphics",
+					"name": "graphics", # Pointer to flingy.dat
 					"type": "byte",
 					"expanded_type": "short"
 				},
 				{
-					"name": "subunit1",
+					"name": "subunit1", # Pointer to units.dat
 					"type": "short"
 				},
 				{
-					"name": "subunit2",
+					"name": "subunit2", # Pointer to units.dat
 					"type": "short"
 				},
 				{
-					"name": "infestation",
+					"name": "infestation", # Pointer to units.dat
 					"type": "short",
 					"entry_offset": 106,
 					"entry_count": 96
 				},
 				{
-					"name": "construction_animation",
+					"name": "construction_animation", # Pointer to images.dat
 					"type": "long"
 				},
 				{
@@ -461,31 +461,31 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "sublabel",
+					"name": "sublabel", # Pointer to stat_txt.tbl
 					"type": "byte"
 				},
 				{
-					"name": "comp_ai_idle",
+					"name": "comp_ai_idle", # Pointer to orders.dat
 					"type": "byte"
 				},
 				{
-					"name": "human_ai_idle",
+					"name": "human_ai_idle", # Pointer to orders.dat
 					"type": "byte"
 				},
 				{
-					"name": "return_to_idle",
+					"name": "return_to_idle", # Pointer to orders.dat
 					"type": "byte"
 				},
 				{
-					"name": "attack_unit",
+					"name": "attack_unit", # Pointer to orders.dat
 					"type": "byte"
 				},
 				{
-					"name": "attack_move",
+					"name": "attack_move", # Pointer to orders.dat
 					"type": "byte"
 				},
 				{
-					"name": "ground_weapon",
+					"name": "ground_weapon", # Pointer to weapons.dat
 					"type": "byte"
 				},
 				{
@@ -493,7 +493,7 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "air_weapon",
+					"name": "air_weapon", # Pointer to weapons.dat
 					"type": "byte"
 				},
 				{
@@ -517,7 +517,7 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "armor_upgrade",
+					"name": "armor_upgrade", # Pointer to upgrades.dat
 					"type": "byte"
 				},
 				{
@@ -533,39 +533,39 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "ready_sound",
+					"name": "ready_sound", # Pointer to sfxdata.dat
 					"type": "short",
 					"entry_offset": 0,
 					"entry_count": 106
 				},
 				{
-					"name": "what_sound_start",
+					"name": "what_sound_start", # Pointer to sfxdata.dat
 					"type": "short"
 				},
 				{
-					"name": "what_sound_end",
+					"name": "what_sound_end", # Pointer to sfxdata.dat
 					"type": "short"
 				},
 				{
-					"name": "pissed_sound_start",
+					"name": "pissed_sound_start", # Pointer to sfxdata.dat
 					"type": "short",
 					"entry_offset": 0,
 					"entry_count": 106
 				},
 				{
-					"name": "pissed_sound_end",
+					"name": "pissed_sound_end", # Pointer to sfxdata.dat
 					"type": "short",
 					"entry_offset": 0,
 					"entry_count": 106
 				},
 				{
-					"name": "yes_sound_start",
+					"name": "yes_sound_start", # Pointer to sfxdata.dat
 					"type": "short",
 					"entry_offset": 0,
 					"entry_count": 106
 				},
 				{
-					"name": "yes_sound_end",
+					"name": "yes_sound_end", # Pointer to sfxdata.dat
 					"type": "short",
 					"entry_offset": 0,
 					"entry_count": 106
@@ -585,7 +585,7 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 					"type": "extents"
 				},
 				{
-					"name": "portrait",
+					"name": "portrait", # Pointer to portdata.dat
 					"type": "short"
 				},
 				{

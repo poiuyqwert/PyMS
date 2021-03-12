@@ -3,6 +3,7 @@ from DATTab import DATTab
 from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
 
+from ..FileFormats.DAT.SoundsDAT import Sound
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 
 from ..Utilities.utils import BASE_DIR, couriernew, play_sound
@@ -42,42 +43,60 @@ class SoundsTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		self.unknown1 = IntegerVar(0, [0,255])
-		self.flags = IntegerVar(0, [0,255])
-		self.race = IntVar()
-		self.volume = IntegerVar(0, [0,100])
+		self.priority = IntegerVar(0, [0,255])
+		self.portrait_length_adjust = IntegerVar(0, [0,65535])
+		self.minimum_volume = IntegerVar(0, [0,100])
 
 		m = Frame(frame)
+
 		l = LabelFrame(m, text='General Properties:')
 		s = Frame(l)
 		
 		f = Frame(s)
-		Label(f, text='Unknown1:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.unknown1, font=couriernew, width=10).pack(side=LEFT)
-		self.tip(f, 'Unknown1', 'SoundUnk1')
+		Label(f, text='Priority:', width=17, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.priority, font=couriernew, width=5).pack(side=LEFT)
+		self.tip(f, 'Priority', 'SoundPriority')
 		f.pack(fill=X)
 		
 		f = Frame(s)
-		Label(f, text='Flags:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.flags, font=couriernew, width=10).pack(side=LEFT)
-		self.tip(f, 'Flags', 'SoundFlags')
+		Label(f, text='Portrait Length Adjust:', width=17, anchor=E).pack(side=LEFT)
+		self.tip(f, 'Portrait Length Adjust', 'SoundPortraitLengthAdjust')
+		Entry(f, textvariable=self.portrait_length_adjust, font=couriernew, width=5).pack(side=LEFT)
 		f.pack(fill=X)
 		
 		f = Frame(s)
-		
-		Label(f, text='Race:', width=9, anchor=E).pack(side=LEFT)
-		DropDown(f, self.race, DATA_CACHE['Races.txt'], width=10).pack(side=LEFT, fill=X, expand=1)
-		self.tip(f, 'Race', 'SoundRace')
-		f.pack(fill=X)
-		
-		f = Frame(s)
-		Label(f, text='Volume %:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.volume, font=couriernew, width=10).pack(side=LEFT)
-		self.tip(f, 'Volume %', 'SoundVol')
+		Label(f, text='Minimum Volume %:', width=17, anchor=E).pack(side=LEFT)
+		Entry(f, textvariable=self.minimum_volume, font=couriernew, width=5).pack(side=LEFT)
+		self.tip(f, 'Minimum Volume %', 'SoundMinimumVolume')
 		f.pack(fill=X)
 		
 		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(side=LEFT)
+		l.pack(side=LEFT, fill=Y)
+
+		self.preload = IntVar()
+		self.unit_speech = IntVar()
+		self.one_at_a_time = IntVar()
+		self.never_preempt = IntVar()
+
+		l = LabelFrame(m, text='Flags:')
+		s = Frame(l)
+
+		f = Frame(s)
+		self.makeCheckbox(f, self.preload, 'Preload', 'SoundPreload').pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+		f = Frame(s)
+		self.makeCheckbox(f, self.unit_speech, 'Unit Speech', 'SoundUnitSpeech').pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+		f = Frame(s)
+		self.makeCheckbox(f, self.one_at_a_time, 'One at a Time', 'SoundOneAtATime').pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+		f = Frame(s)
+		self.makeCheckbox(f, self.never_preempt, 'Never Preempt', 'SoundNeverPreempt').pack(side=LEFT)
+		f.pack(side=TOP, fill=X)
+
+		s.pack(fill=BOTH, padx=5, pady=5)
+		l.pack(side=LEFT, padx=2)
+
 		m.pack(fill=X)
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
@@ -114,12 +133,20 @@ class SoundsTab(DATTab):
 
 	def load_entry(self, entry):
 		self.soundentry.set(entry.sound_file)
-		self.unknown1.set(entry.priority)
-		# TODO: Flags
-		self.flags.set(entry.flags)
+		self.priority.set(entry.priority)
+
+		flags_fields = (
+			(self.preload, Sound.Flag.preload),
+			(self.unit_speech, Sound.Flag.unit_speech),
+			(self.one_at_a_time, Sound.Flag.one_at_a_time),
+			(self.never_preempt, Sound.Flag.never_preempt)
+		)
+		for (variable, flag) in flags_fields:
+			variable.set(entry.flags & flag == flag)
+
 		# TODO: Length adjust
-		self.race.set(entry.length_adjust)
-		self.volume.set(entry.minimum_volume)
+		self.portrait_length_adjust.set(entry.portrait_length_adjust)
+		self.minimum_volume.set(entry.minimum_volume)
 
 		self.changesound()
 
@@ -127,17 +154,28 @@ class SoundsTab(DATTab):
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True
-		if self.unknown1.get() != entry.priority:
-			entry.priority = self.unknown1.get()
+		if self.priority.get() != entry.priority:
+			entry.priority = self.priority.get()
 			self.edited = True
-		# TODO: Flags
-		if self.flags.get() != entry.flags:
-			entry.flags = self.flags.get()
+
+		flags = entry.flags & ~Sound.Flag.ALL_FLAGS
+		flags_fields = (
+			(self.preload, Sound.Flag.preload),
+			(self.unit_speech, Sound.Flag.unit_speech),
+			(self.one_at_a_time, Sound.Flag.one_at_a_time),
+			(self.never_preempt, Sound.Flag.never_preempt)
+		)
+		for (variable, flag) in flags_fields:
+			if variable.get():
+				flags |= flag
+		if flags != entry.flags:
+			entry.flags = flags
 			self.edited = True
+
 		# TODO: Length adjust
-		if self.race.get() != entry.length_adjust:
-			entry.length_adjust = self.race.get()
+		if self.portrait_length_adjust.get() != entry.portrait_length_adjust:
+			entry.portrait_length_adjust = self.portrait_length_adjust.get()
 			self.edited = True
-		if self.volume.get() != entry.minimum_volume:
-			entry.minimum_volume = self.volume.get()
+		if self.minimum_volume.get() != entry.minimum_volume:
+			entry.minimum_volume = self.minimum_volume.get()
 			self.edited = True

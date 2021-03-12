@@ -5,7 +5,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 from math import ceil
 from collections import OrderedDict
-import json
+import json, re
 
 class ExportType:
 	text = 'text'
@@ -118,6 +118,55 @@ class AbstractDAT(object):
 			self.entries.append(self.ENTRY_STRUCT())
 		return True
 
+	re_comment = re.compile(r'\s*#.+')
+	re_entry_header = re.compile(r'^\s*(\w+)\((\d+)?\):\s*$')
+	re_property = re.compile(r'^\s*(\w+)(?:\.(\w+))?\s+(\d+)$')
+	@classmethod
+	def parse_text(self, entry_type, text):
+		entry_name = entry_type.EXPORT_NAME
+		entries = []
+		entry_starts = {}
+		entry = None
+		def check_entry():
+			if entry != None:
+				if len(entry) < 3:
+					raise PyMSError('Import', 'Entry %d is empty' % entry['_id'], line=entry_starts[entry['_id']])
+				entries.append(entry)
+		for n,line in enumerate(text.splitlines()):
+			line = self.re_comment.sub('', line)
+			if not line:
+				continue
+			match = self.re_entry_header.match(line)
+			if match:
+				check_entry()
+				name,id = match.groups()
+				if name != entry_name:
+					raise PyMSError('Import', "Entry type is incorrect (expected '%s' but got '%s')" % (entry_name, name), line=n, code=line)
+				if id in entry_starts:
+					raise PyMSError('Import', 'Entry %d already exists' % id, line=n, code=line)
+				entry = {'_type': name, '_id': id}
+				entry_starts[id] = n
+				continue
+			match = self.re_property.match(line)
+			if match:
+				if entry == None:
+					raise PyMSError('Import', "Missing '%s' header before defining properties" % entry_name, line=n, code=line)
+				name,subproperty,value = match.groups()
+				# TODO: Validate property, subproperty, value?
+				if subproperty != None:
+					subobject = entry.get(name, {})
+					if not name in entry:
+						entry[name] = subobject
+					subobject[subproperty] = value
+				else:
+					entry[name] = value
+				continue
+			raise PyMSError('Import', "Unexpected line, expected a '%s' header or a property" % entry_name, line=n, code=line)
+		check_entry()
+		if not entries:
+			raise PyMSError('Import', 'No entries found')
+		print entries
+
 	def export_entry(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
 		return self.get_entry(id).export(id, export_properties, export_type, json_dump, json_indent)
 
@@ -161,7 +210,7 @@ class AbstractDATEntry(object):
 		pass
 
 	def import_text(self, text):
-		pass
+		json = AbstractDAT.parse_text(type(self), text)
 
 	def import_json(self, json):
 		pass

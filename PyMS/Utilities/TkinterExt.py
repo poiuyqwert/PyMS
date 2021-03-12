@@ -2,7 +2,21 @@
 import Tkinter as Tk
 
 class MainWindow(Tk.Tk):
-	pass
+	def startup(self):
+		self.lift()
+		self.call('wm', 'attributes', '.', '-topmost', True)
+		self.after_idle(self.call, 'wm', 'attributes', '.', '-topmost', False)
+		self.focus_force()
+		# On Mac the main window doesn't get focused, so we use Cocoa to focus it
+		try:
+			import os
+			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps
+
+			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(os.getpid())
+			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+		except:
+			pass
+		self.mainloop()
 
 class Menu(Tk.Menu):
 	class Command(object):
@@ -34,6 +48,9 @@ class Menu(Tk.Menu):
 			shortcut_widget.bind(shortcut, command)
 		Tk.Menu.add_command(self, **kwargs)
 		return Menu.Command(self, self.index(Tk.END))
+
+# Return from event callbacks to break further processing of the event
+Tk.Event.BREAK = 'break'
 
 def _clipboard_set(obj, text):
 	obj.clipboard_clear()

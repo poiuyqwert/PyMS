@@ -1,12 +1,15 @@
 
 from utils import couriernew
 from UIKit import *
+from EventPattern import *
 
 class DropDownChooser(Toplevel):
 	def __init__(self, parent, list, select):
 		self.focus = 0
 		self.parent = parent
 		self.result = select
+		self._typed = ''
+		self._typed_timer = None
 		Toplevel.__init__(self, parent, relief=SOLID, borderwidth=1)
 		self.protocol('WM_LOSE_FOCUS', self.select)
 		self.wm_overrideredirect(1)
@@ -17,22 +20,23 @@ class DropDownChooser(Toplevel):
 		if self.result > -1:
 			self.listbox.select_set(self.result)
 			self.listbox.see(self.result)
-		self.listbox.bind('<ButtonRelease-1>', self.select)
+		self.listbox.bind(ButtonRelease.Click, self.select)
 		bind = [
-			('<Enter>', lambda e,i=1: self.enter(e,i)),
-			('<Leave>', lambda e,i=0: self.enter(e,i)),
-			('<Button-1>', self.focusout),
-			('<Return>', self.select),
-			('<Escape>', self.close),
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
+			(Cursor.Enter, lambda e,i=1: self.enter(e,i)),
+			(Cursor.Leave, lambda e,i=0: self.enter(e,i)),
+			(Mouse.Click, self.focusout),
+			(Key.Return, self.select),
+			(Key.Escape, self.close),
+			(Mouse.Scroll, self.scroll),
+			(Key.Home, lambda e: self.move(0)),
+			(Key.End, lambda e: self.move(END)),
+			(Key.Up, lambda e: self.move(-1)),
+			(Key.Left, lambda e: self.move(-1)),
+			(Key.Down, lambda e: self.move(1)),
+			(Key.Right, lambda e: self.move(-1)),
+			(Key.Prior, lambda e: self.move(-10)),
+			(Key.Next, lambda e: self.move(10)),
+			(Key.Pressed, self.key_pressed)
 		]
 		for b in bind:
 			self.bind(*b)
@@ -58,12 +62,17 @@ class DropDownChooser(Toplevel):
 		if not self.focus:
 			self.select()
 
-	def move(self, e, a):
-		if not a in [0,END]:
-			a = max(min(self.listbox.size()-1,int(self.listbox.curselection()[0]) + a),0)
+	def move(self, offset):
+		if offset in [0,END]:
+			index = offset
+		else:
+			index = max(min(self.listbox.size()-1,int(self.listbox.curselection()[0]) + offset),0)
+		self.jump_to(index)
+
+	def jump_to(self, index):
 		self.listbox.select_clear(0,END)
-		self.listbox.select_set(a)
-		self.listbox.see(a)
+		self.listbox.select_set(index)
+		self.listbox.see(index)
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -100,3 +109,22 @@ class DropDownChooser(Toplevel):
 		self.withdraw()
 		self.update_idletasks()
 		self.destroy()
+
+	def key_pressed(self, event):
+		if self._typed_timer:
+			self.after_cancel(self._typed_timer)
+		if event.keysym == Key.Backspace.name():
+			self._typed = self._typed[:-1]
+		elif event.char:
+			self._typed += event.char.lower()
+		if self._typed:
+			items = self.listbox.get(0, END)
+			for index,item in enumerate(items):
+				if self._typed in item.lower():
+					self.jump_to(index)
+					break
+			self._typed_timer = self.after(1000, self.clear_typed)
+
+	def clear_typed(self):
+		self._typed_timer = None
+		self._typed = ''

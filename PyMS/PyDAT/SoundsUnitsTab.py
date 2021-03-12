@@ -35,7 +35,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Ready:', width=13, anchor=E).pack(side=LEFT)
-		self.ready_sound_entry_widget = Entry(f, textvariable=self.ready_sound, font=couriernew, width=4)
+		self.ready_sound_entry_widget = Entry(f, textvariable=self.ready_sound, font=couriernew, width=5)
 		self.ready_sound_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.ready_sound_dropdown_widget = DropDown(f, self.ready_sound_dropdown, [], self.ready_sound, width=30)
@@ -47,7 +47,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Yes (First):', width=13, anchor=E).pack(side=LEFT)
-		self.yes_sound_start_entry_widget = Entry(f, textvariable=self.yes_sound_start, font=couriernew, width=4)
+		self.yes_sound_start_entry_widget = Entry(f, textvariable=self.yes_sound_start, font=couriernew, width=5)
 		self.yes_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.yes_sound_start_dropdown_widget = DropDown(f, self.yes_sounds_start_dropdown, [], self.yes_sound_start, width=30)
@@ -59,7 +59,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Yes (Last):', width=13, anchor=E).pack(side=LEFT)
-		self.yes_sound_end_entry_widget = Entry(f, textvariable=self.yes_sound_end, font=couriernew, width=4)
+		self.yes_sound_end_entry_widget = Entry(f, textvariable=self.yes_sound_end, font=couriernew, width=5)
 		self.yes_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.yes_sound_end_dropdown_widget = DropDown(f, self.lastyesdd, [], self.yes_sound_end, width=30)
@@ -71,7 +71,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='What (First):', width=13, anchor=E).pack(side=LEFT)
-		self.what_sound_start_entry_widget = Entry(f, textvariable=self.what_sound_start, font=couriernew, width=4)
+		self.what_sound_start_entry_widget = Entry(f, textvariable=self.what_sound_start, font=couriernew, width=5)
 		self.what_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.what_sound_start_dropdown_widget = DropDown(f, self.what_sound_start_dropdown, [], self.what_sound_start, width=30)
@@ -83,7 +83,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='What (Last):', width=13, anchor=E).pack(side=LEFT)
-		self.what_sound_end_entry_widget = Entry(f, textvariable=self.what_sound_end, font=couriernew, width=4)
+		self.what_sound_end_entry_widget = Entry(f, textvariable=self.what_sound_end, font=couriernew, width=5)
 		self.what_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.what_sound_end_dropdown_widget = DropDown(f, self.what_sound_end_dropdown, [], self.what_sound_end, width=30)
@@ -95,7 +95,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Annoyed (First):', width=13, anchor=E).pack(side=LEFT)
-		self.pissed_sound_start_entry_widget = Entry(f, textvariable=self.pissed_sound_start, font=couriernew, width=4)
+		self.pissed_sound_start_entry_widget = Entry(f, textvariable=self.pissed_sound_start, font=couriernew, width=5)
 		self.pissed_sound_start_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.pissed_sound_start_dropdown_widget = DropDown(f, self.pissed_sound_start_dropdown, [], self.pissed_sound_start, width=30)
@@ -107,7 +107,7 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		f = Frame(s)
 		Label(f, text='Annoyed (Last):', width=13, anchor=E).pack(side=LEFT)
-		self.pissed_sound_end_entry_widget = Entry(f, textvariable=self.pissed_sound_end, font=couriernew, width=4)
+		self.pissed_sound_end_entry_widget = Entry(f, textvariable=self.pissed_sound_end, font=couriernew, width=5)
 		self.pissed_sound_end_entry_widget.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.pissed_sound_end_dropdown_widget = DropDown(f, self.pissed_sound_end_dropdown, [], self.pissed_sound_end, width=30)

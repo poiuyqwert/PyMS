@@ -336,7 +336,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pypal.py','pypal.pyw','pypal.exe']):
 		gui = PyPAL()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyPAL [options] <inp> [out]', version='PyPAL %s' % LONG_VERSION)
 		p.add_option('-s', '--starcraft', action='store_const', const=0, dest='format', help="Convert to StarCraft PAL format [default]", default=0)
@@ -347,7 +347,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyPAL(opt.gui)
-			startup(gui)
+			gui.startup()
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

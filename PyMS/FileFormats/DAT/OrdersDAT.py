@@ -11,9 +11,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 		changes_subunit_order = 'changes_subunit_order'
 		unused_allow_subunits = 'unused_allow_subunits'
 		interruptable = 'interruptable'
-		waypoint_step_slowdown = 'waypoint_step_slowdown'
+		waypoints_slowdown = 'waypoints_slowdown'
 		queueable = 'queueable'
-		disabled_maintain_air_target = 'disabled_maintain_air_target'
+		disabled_maintain_unit_target = 'disabled_maintain_unit_target'
 		obstructable = 'obstructable'
 		flee_unreturnable_damage = 'flee_unreturnable_damage'
 		unused_requires_movable_unit = 'unused_requires_movable_unit'
@@ -21,7 +21,7 @@ class Order(AbstractDAT.AbstractDATEntry):
 		technology_energy = 'technology_energy'
 		iscript_animation = 'iscript_animation'
 		highlight_icon = 'highlight_icon'
-		unknown17 = 'unknown17'
+		requirements = 'requirements'
 		obscured_order = 'obscured_order'
 
 	def __init__(self):
@@ -32,9 +32,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.changes_subunit_order = 0
 		self.unused_allow_subunits = 0
 		self.interruptable = 0
-		self.waypoint_step_slowdown = 0
+		self.waypoints_slowdown = 0
 		self.queueable = 0
-		self.disabled_maintain_air_target = 0
+		self.disabled_maintain_unit_target = 0
 		self.obstructable = 0
 		self.flee_unreturnable_damage = 0
 		self.unused_requires_movable_unit = 0
@@ -42,7 +42,7 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.technology_energy = 0
 		self.iscript_animation = 0
 		self.highlight_icon = 0
-		self.unknown17 = 0
+		self.requirements = 0
 		self.obscured_order = 0
 
 	def load_values(self, values):
@@ -53,9 +53,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.changes_subunit_order,\
 		self.unused_allow_subunits,\
 		self.interruptable,\
-		self.waypoint_step_slowdown,\
+		self.waypoints_slowdown,\
 		self.queueable,\
-		self.disabled_maintain_air_target,\
+		self.disabled_maintain_unit_target,\
 		self.obstructable,\
 		self.flee_unreturnable_damage,\
 		self.unused_requires_movable_unit,\
@@ -63,7 +63,7 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.technology_energy,\
 		self.iscript_animation,\
 		self.highlight_icon,\
-		self.unknown17,\
+		self.requirements,\
 		self.obscured_order\
 			= values
 
@@ -76,9 +76,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 			self.changes_subunit_order,
 			self.unused_allow_subunits,
 			self.interruptable,
-			self.waypoint_step_slowdown,
+			self.waypoints_slowdown,
 			self.queueable,
-			self.disabled_maintain_air_target,
+			self.disabled_maintain_unit_target,
 			self.obstructable,
 			self.flee_unreturnable_damage,
 			self.unused_requires_movable_unit,
@@ -86,7 +86,7 @@ class Order(AbstractDAT.AbstractDATEntry):
 			self.technology_energy,
 			self.iscript_animation,
 			self.highlight_icon,
-			self.unknown17,
+			self.requirements,
 			self.obscured_order
 		)
 
@@ -99,9 +99,9 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Order.Property.changes_subunit_order, self.changes_subunit_order, export_type, data)
 		self._export_property_value(export_properties, Order.Property.unused_allow_subunits, self.unused_allow_subunits, export_type, data)
 		self._export_property_value(export_properties, Order.Property.interruptable, self.interruptable, export_type, data)
-		self._export_property_value(export_properties, Order.Property.waypoint_step_slowdown, self.waypoint_step_slowdown, export_type, data)
+		self._export_property_value(export_properties, Order.Property.waypoints_slowdown, self.waypoints_slowdown, export_type, data)
 		self._export_property_value(export_properties, Order.Property.queueable, self.queueable, export_type, data)
-		self._export_property_value(export_properties, Order.Property.disabled_maintain_air_target, self.disabled_maintain_air_target, export_type, data)
+		self._export_property_value(export_properties, Order.Property.disabled_maintain_unit_target, self.disabled_maintain_unit_target, export_type, data)
 		self._export_property_value(export_properties, Order.Property.obstructable, self.obstructable, export_type, data)
 		self._export_property_value(export_properties, Order.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, export_type, data)
 		self._export_property_value(export_properties, Order.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, export_type, data)
@@ -109,16 +109,17 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Order.Property.technology_energy, self.technology_energy, export_type, data)
 		self._export_property_value(export_properties, Order.Property.iscript_animation, self.iscript_animation, export_type, data)
 		self._export_property_value(export_properties, Order.Property.highlight_icon, self.highlight_icon, export_type, data)
-		self._export_property_value(export_properties, Order.Property.unknown17, self.unknown17, export_type, data)
+		self._export_property_value(export_properties, Order.Property.requirements, self.requirements, export_type, data)
 		self._export_property_value(export_properties, Order.Property.obscured_order, self.obscured_order, export_type, data)
 
 # orders.dat file handler
 class OrdersDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 189,
+			"expanded_max_entries": 255,
 			"properties": [
 				{
-					"name": "label",
+					"name": "label", # Pointer to stat_txt.tbl
 					"type": "short"
 				},
 				{
@@ -146,7 +147,7 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "waypoint_step_slowdown",
+					"name": "waypoints_slowdown",
 					"type": "byte"
 				},
 				{
@@ -154,7 +155,7 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "disabled_maintain_air_target",
+					"name": "disabled_maintain_unit_target",
 					"type": "byte"
 				},
 				{
@@ -170,11 +171,11 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "targeting",
+					"name": "targeting", # Pointer to weapons.dat
 					"type": "byte"
 				},
 				{
-					"name": "technology_energy",
+					"name": "technology_energy", # Pointer to techdata.dat
 					"type": "byte"
 				},
 				{
@@ -182,15 +183,15 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "highlight_icon",
+					"name": "highlight_icon", # Pointer to cmdicon.grp
 					"type": "short"
 				},
 				{
-					"name": "unknown17",
+					"name": "requirements",
 					"type": "short"
 				},
 				{
-					"name": "obscured_order",
+					"name": "obscured_order", # Pointer to orders.dat
 					"type": "byte"
 				}
 			]

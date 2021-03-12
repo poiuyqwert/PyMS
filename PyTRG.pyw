@@ -1189,7 +1189,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pytrg.py','pytrg.pyw','pytrg.exe']):
 		gui = PyTRG()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyTRG [options] <inp> [out]', version='PyTRG %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile a TRG file [default]", default=True)
@@ -1202,7 +1202,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyTRG(opt.gui)
-			startup(gui)
+			gui.startup()
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')

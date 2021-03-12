@@ -128,10 +128,14 @@ class Key(Events):
 	Down = EventPattern(Keysym('Down', '↓' if is_mac() else None))
 	Insert = EventPattern(Keysym('Insert'))
 	Delete = EventPattern(Keysym('Delete', '⌫' if is_mac() else None))
-	# Next
-	# Prior
-	# Escape
-	# Tab
+	Home = EventPattern(Keysym('Home'))
+	End = EventPattern(Keysym('End'))
+	Next = EventPattern(Keysym('Next'))
+	Prior = EventPattern(Keysym('Prior'))
+	Space = EventPattern(Keysym('space'))
+	Backspace = EventPattern(Keysym('BackSpace'))
+	Escape = EventPattern(Keysym('Escape'))
+	Tab = EventPattern(Keysym('Tab'))
 
 	F1 = EventPattern(Keysym('F1'))
 	F2 = EventPattern(Keysym('F2'))
@@ -146,6 +150,9 @@ class Key(Events):
 	F11 = EventPattern(Keysym('F11'))
 	F12 = EventPattern(Keysym('F12'))
 
+	Pressed = EventPattern(Field('KeyPress'))
+	Released = EventPattern(Field('KeyRelease'))
+
 class Mouse(Events):
 	Left_Click = EventPattern(Field('1', 'Left-Click'))
 	Click = Left_Click
@@ -153,17 +160,13 @@ class Mouse(Events):
 	Right_Click = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
 	# 4
 	# 5
-
-# ButtonPress
-# ButtonRelease
-# MouseWheel
+	ButtonPress = EventPattern(Field('ButtonPress'))
+	ButtonRelease = EventPattern(Field('ButtonRelease'))
+	Scroll = EventPattern(Field('MouseWheel'))
 
 class ButtonRelease(Mouse):
 	pass
 ButtonRelease.modify(Modifier.ButtonRelease)
-
-# KeyPress
-# KeyRelease
 
 # Control
 # Alt
@@ -257,8 +260,8 @@ class Cursor:
 	Leave = EventPattern(Field('Leave'))
 
 class Focus:
-	In = EventPattern(Field('In'))
-	Out = EventPattern(Field('Out'))
+	In = EventPattern(Field('FocusIn'))
+	Out = EventPattern(Field('FocusOut'))
 
 if __name__ == '__main__':
 	events = [

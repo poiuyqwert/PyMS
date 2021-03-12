@@ -58,7 +58,7 @@ class BasicUnitsTab(DATUnitsTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Upgrade:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.armor_upgrade_entry, font=couriernew, width=2).pack(side=LEFT)
+		Entry(f, textvariable=self.armor_upgrade_entry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.armor_upgrade_ddw = DropDown(f, self.armor_upgrade, [], self.armor_upgrade_entry, width=20)
 		self.armor_upgrade_ddw.pack(side=LEFT, fill=X, expand=1)
@@ -70,8 +70,8 @@ class BasicUnitsTab(DATUnitsTab):
 
 		self.mineral_cost = IntegerVar(0, [0,65535])
 		self.vespene_cost = IntegerVar(0, [0,65535])
-		self.build_time = IntegerVar(24, [0,65535], callback=lambda n,i=0: self.updatetime(n,i))
-		self.build_time_seconds = FloatVar(1, [0,2730.625], callback=lambda n,i=1: self.updatetime(n,i), precision=4)
+		self.build_time = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.build_time_seconds))
+		self.build_time_seconds = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.build_time), precision=4)
 		self.broodwar_unit_flag = IntVar()
 
 		l = LabelFrame(statframe, text='Build Cost')
@@ -270,19 +270,6 @@ class BasicUnitsTab(DATUnitsTab):
 			Unit.Property.staredit_group_flags,
 		])
 		self.clipboard_set(text)
-
-	def updatetime(self, num, type):
-		if type:
-			self.build_time.check = False
-			self.build_time.set(int(float(num) * 24))
-		else:
-			self.build_time_seconds.check = False
-			s = str(int(num) / 24.0)
-			if s.endswith('.0'):
-				s = s[:-2]
-			elif len(s.split('.')[1]) > 4:
-				s = s[:s.index('.')+5]
-			self.build_time_seconds.set(s)
 
 	def updated_entry_names(self, datids):
 		if DATID.upgrades in datids:

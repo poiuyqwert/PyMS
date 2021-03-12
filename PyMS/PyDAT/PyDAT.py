@@ -290,7 +290,12 @@ class PyDAT(MainWindow):
 		self.dattabs.active.copy_subtab()
 
 	def paste(self):
-		self.dattabs.active.paste(t)
+		try:
+			self.dattabs.active.paste()
+		except PyMSError, e:
+			ErrorDialog(self, e)
+		except:
+			raise
 
 	def reload(self):
 		self.dattabs.active.reload()

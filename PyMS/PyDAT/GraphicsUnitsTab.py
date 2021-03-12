@@ -206,7 +206,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			y = 129 - h/2 - self.vertical.get()
 			parent_flingy = self.toplevel.data_context.flingy.dat.get_entry(parent_entry.graphics)
 			parent_sprite = self.toplevel.data_context.sprites.dat.get_entry(parent_flingy.sprite)
-			self.draw_image(parent_sprite.image_file, 'addon_parent', x=x+parent_w/2, y=y+parent_h/2)
+			self.draw_image(parent_sprite.image, 'addon_parent', x=x+parent_w/2, y=y+parent_h/2)
 			self.preview.coords('addon_parent_size', x, y, x+parent_w, y+parent_h)
 			self.preview.lift('addon_parent_size')
 		else:
@@ -219,7 +219,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			flingy_id = self.graphicsentry.get()
 			flingy = self.toplevel.data_context.flingy.dat.get_entry(flingy_id)
 			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
-			self.draw_image(sprite.image_file, 'unit')
+			self.draw_image(sprite.image, 'unit')
 		self.drawboxes()
 
 	def load_data(self, entry):

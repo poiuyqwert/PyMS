@@ -362,7 +362,7 @@ SpriteImageList=The images.dat entry corresponding to the sprites.dat entry [poi
 
 SpriteHPBar=The length of the Hit Points/Shields/Energy bar below the sprite, in pixels. The way the actual number of "boxes" is calculated is the following: substract 1 from the value, divide the result by 3 and round it down. Even though a sprite may actually USE less than 6 boxes, 6 boxes is the minimal amount that will be SHOWN in-game (just that some will not be functional). Values below 6 will all result in 1 box being USED.
 
-SpriteUnk1=Unknown.
+SpriteUnused=Unused.
 
 SpriteVisible=Sprite will start as visible. Unchecked, used to hide the "White Circle", the Zerg Beacon used by Subterranean Spines, and few other things.
 
@@ -482,14 +482,19 @@ TechUseReq=Holds the index to the internal requirement for the usage of the abil
 SoundFile=The actual wave file associated with the sfxdata entry. [pointer to sfxdata.tbl]
 SoundFileList=The actual wave file associated with the sfxdata entry. [pointer to sfxdata.tbl]
 
-SoundUnk1=Unknown.
+SoundPriority=Sounds with higher priority are allowed to override lower priority ones that are already playing, if BW doesn't have enough sound channels available.
 
-SoundFlags=Flags that apply to the SFX entry.
+SoundPortraitLengthAdjust=Can be used to modify the duration of talking portrait animation (Milliseconds) when the related sound is played as a unit response.
 
-SoundRace=Unknown.
+SoundMinimumVolume=The minimum volume percentage the sound plays at. For example it causes explosion sounds to be heard regardless of how far the screen is from the explosion.
 
-SoundVol=The volume percentage of the sound when the Mute Unit Speech trigger is executed.
+SoundPreload=Preload
 
+SoundUnitSpeech=Will not play if the "Mute Unit Speech" trigger action is on, or if the "Unit Speech", "Unit Acknowledgements", or "Building Sounds" settings are turned off, depending on the sound's source.
+
+SoundOneAtATime=Will not play if an instance of the sound is already playing.
+
+SoundNeverPreempt=Will not be interrupted by new sounds when all sound channels are being used.
 
 
 
@@ -529,29 +534,29 @@ OrdTargeting=Weapon used by the order to determine the targeting rules, if "Use 
 
 OrdWeapTarg=Order will use the weapons.dat targeting settings.
 
-OrdUnk2=Unused.
+OrdSecondaryOrder=The order is a secondary order. (Unused, was for debugging)
 
-OrdUnk3=Unused.
+OrdAllowNonSubunits=Non-subunits should be able to execute this order. (Unused, was for debugging)
 
-OrdUnk4=Unknown.
+OrdChangesSubunitOrder=If set, overrides subunit's order as well when the main unit is ordered. Otherwise subunit's order doesn't change when issuing this order to the main unit.
 
-OrdUnk5=Unused.
+OrdAllowSubunits=Subunits should be able to execute this order. (Unused, was for debugging)
 
 OrdInterrupt=Order's execution can be interrupted by calling another order (e.g. movement or something). Does not work for the "Die" order.
 
-OrdUnk7=Unknown.
+OrdWaypointsSlowdown=If set, and the unit is shift-queued a waypoint path, the unit will slow down at each waypoint. Otherwise the unit only slows down at the end. (The exact behaviour is to slow down if there are no additional waypoints when the current order is started to be executed.)
 
 OrdQueue=Order execution can be queued using the SHIFT+click combination, up to 16 times.
 
-OrdUnk9=Unknown.
+OrdDisabledMaintainUnitTarget=If the unit is disabled with a spell (Lockdown/Maelstrom/Stasis), it is targeting a unit, and this flag is set, it will keep targeting once the spell wears off. Otherwise it will lose its target. If the unit is targeting terrain, it will keep the target regardless of this flag's state.
 
-OrdUnk10=Related to order's execution being obstructed/blocked by the terrain, such as shores or cliffs. Applies only to ground units.
+OrdObstructable=If the unit is a ground unit, targeting terrain will cause the target to be clipped to the closest walkable position.
 
-OrdUnk11=Unknown.
+OrdFleeUnreturnableDamage=If the unit is damaged by an attacker which it cannot attack back, and this flag is set, it will interrupt the order to run away from the attacker. Ai-controlled units may disregard this flag in some situations.
 
-OrdUnk12=Unused.
+OrdRequiresMovableUnit=Order requires a unit that is able to move. (Unused, was for debugging)
 
 OrdHighlight=Determines which icon on the button panel is highlightened when the order is being called. If the selected icon is not present, no icon is highlightened. 65535 = no highlight at all [pointer to cmdicons.grp]
 OrdHighlightList=Determines which icon on the button panel is highlightened when the order is being called. If the selected icon is not present, no icon is highlightened. 65535 = no highlight at all [pointer to cmdicons.grp]
 
-OrdUnk13=Holds the offset to the dat requirement for the order. Do not change unless you REALLY know what you're doing.
+OrdReq=Holds the offset to the dat requirement for the order. Do not change unless you REALLY know what you're doing.

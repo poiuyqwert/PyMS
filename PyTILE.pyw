@@ -2285,7 +2285,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pytile.py','pytile.pyw','pytile.exe']):
 		gui = PyTILE()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyTILE [options]', version='PyTILE %s' % LONG_VERSION)
 		# p.add_option('-v', '--vf4', metavar='FILE', help='Choose a palette for GRP to BMP conversion [default: %default]', default='')
@@ -2299,7 +2299,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyTILE(opt.gui)
-			startup(gui)
+			gui.startup()
 
 if __name__ == '__main__':
 	main()

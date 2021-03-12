@@ -45,13 +45,14 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 class PortraitsDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 110,
+			"expanded_max_entries": 65535,
 			"properties": [
 				{
-					"name": "idle_portrait_file",
+					"name": "idle_portrait_file", # Pointer to portdata.tbl
 					"type": "long"
 				},
 				{
-					"name": "talking_portrait_file",
+					"name": "talking_portrait_file", # Pointer to portdata.tbl
 					"type": "long"
 				},
 				{

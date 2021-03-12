@@ -153,17 +153,18 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 class WeaponsDAT(AbstractDAT.AbstractDAT):
 	FORMAT = DATFormat.DATFormat({
 			"entries": 130,
+			"expanded_max_entries": 255,
 			"properties": [
 				{
-					"name": "label",
+					"name": "label", # Pointer to stat_txt.tbl
 					"type": "short"
 				},
 				{
-					"name": "graphics",
+					"name": "graphics", # Pointer to flingy.dat
 					"type": "long"
 				},
 				{
-					"name": "unused_technology",
+					"name": "unused_technology", # Pointer to techdata.dat
 					"type": "byte"
 				},
 				{
@@ -179,7 +180,7 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "long"
 				},
 				{
-					"name": "damage_upgrade",
+					"name": "damage_upgrade", # Pointer to upgrades.dat
 					"type": "byte"
 				},
 				{
@@ -243,11 +244,11 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 					"type": "byte"
 				},
 				{
-					"name": "target_error_message",
+					"name": "target_error_message", # Pointer to stat_txt.tbl
 					"type": "short"
 				},
 				{
-					"name": "icon",
+					"name": "icon", # Pointer to cmdicon.grp
 					"type": "short"
 				}
 			]

@@ -3486,7 +3486,7 @@ def main():
 	import sys
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyai.py','pyai.pyw','pyai.exe']):
 		gui = PyAI()
-		startup(gui)
+		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyAI [options] <inp|aiscriptin bwscriptin> [out|aiscriptout bwscriptout]', version='PyAI %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile AI's from aiscript.bin and/or bwscript.bin [default]", default=True)
@@ -3506,7 +3506,7 @@ def main():
 		opt, args = p.parse_args()
 		if opt.gui:
 			gui = PyAI(opt.gui)
-			startup(gui)
+			gui.startup()
 		else:
 			if not len(args) in [2,3]:
 				p.error('Invalid amount of arguments')

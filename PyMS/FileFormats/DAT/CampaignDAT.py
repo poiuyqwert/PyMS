@@ -25,7 +25,7 @@ class CampaignDAT(AbstractDAT.AbstractDAT):
 			"entries": 65,
 			"properties": [
 				{
-					"name": "map_file",
+					"name": "map_file", # Pointer to mapdata.tbl
 					"type": "long"
 				}
 			]

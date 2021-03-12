@@ -17,6 +17,15 @@ from ..Utilities.PyMSError import PyMSError
 
 import os, re
 
+class TicksPerSecond:
+	fastest = 24
+	faster  = 21
+	fast    = 18
+	normal  = 15
+	slow    = 12
+	slower  = 9
+	slowest = 6
+
 class DataContext(object):
 	def __init__(self):
 		self.settings = Settings('PyDAT', '1')
@@ -48,6 +57,9 @@ class DataContext(object):
 		self.palettes = {}
 		self.grp_cache = {}
 		self.hints = {}
+
+		# TODO: Make adjustable (which will also need the FloatVar limits to be adjusted in the tabs)
+		self.ticks_per_second = TicksPerSecond.fastest
 
 		self.load_hints()
 
