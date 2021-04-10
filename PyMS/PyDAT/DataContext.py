@@ -6,7 +6,7 @@ from DataID import DATID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
-from ..FileFormats.GRP import frame_to_photo, CacheGRP
+from ..FileFormats.GRP import frame_to_photo, CacheGRP, rle_normal, rle_outline, rle_shadow, OUTLINE_SELF
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 from ..FileFormats.IScriptBIN import IScriptBIN
 
@@ -180,7 +180,9 @@ class DataContext(object):
 			return None
 		if not is_full_path:
 			path = 'unit\\' + path
-		if not path in self.grp_cache or not palette in self.grp_cache[path]:
+		if not draw_function in (Image.DrawFunction.selection_circle, Image.DrawFunction.shadow):
+			draw_function = Image.DrawFunction.normal
+		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
 			p = self.mpqhandler.get_file('MPQ:' + path)
 			try:
 				grp = CacheGRP()
@@ -189,8 +191,20 @@ class DataContext(object):
 				return None
 			if not path in self.grp_cache:
 				self.grp_cache[path] = {}
-			self.grp_cache[path][palette] = frame_to_photo(self.palettes[palette], grp, frame, True, draw_function=draw_function, draw_info=draw_info)
-		return self.grp_cache[path][palette]
+			if not palette in self.grp_cache[path]:
+				self.grp_cache[path][palette] = {}
+			if draw_function == Image.DrawFunction.selection_circle:
+				rle_function = rle_outline
+				if draw_info == None:
+					draw_info = OUTLINE_SELF
+			elif draw_function == Image.DrawFunction.shadow:
+				rle_function = rle_shadow
+				if draw_info == None:
+					draw_info = (50,50,50, 255)
+			else:
+				rle_function = rle_normal
+			self.grp_cache[path][palette][draw_function] = frame_to_photo(self.palettes[palette], grp, frame, True, draw_function=rle_function, draw_info=draw_info)
+		return self.grp_cache[path][palette][draw_function]
 
 	def get_image_frame(self, image_id, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0):
 		if not self.images.dat:
@@ -200,4 +214,8 @@ class DataContext(object):
 		if not tbl_index:
 			return None
 		grp_path = self.imagestbl.strings[tbl_index - 1]
+		if draw_function == None:
+			draw_function = image_entry.draw_function
+			if draw_function == Image.DrawFunction.use_remapping and remapping == None:
+				remapping = image_entry.remapping
 		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)

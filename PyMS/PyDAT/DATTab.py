@@ -133,6 +133,16 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.get_dat_data().dat.set_entry(self.id, copy.deepcopy(self.get_dat_data().default_dat.get_entry(self.id)))
 		self.toplevel.tab_activated()
 
+	def add_entry(self):
+		dat_data = self.get_dat_data()
+		if not dat_data.dat.expand_entries():
+			return
+		self.toplevel.update_entry_names(self.DAT_ID)
+		self.edited = True
+		self.toplevel.update_status_bar()
+		entry_count = dat_data.dat.entry_count()
+		self.toplevel.changeid(entry_count - 1)
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.get_dat_data().new_file()

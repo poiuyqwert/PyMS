@@ -106,11 +106,14 @@ class PyDAT(MainWindow):
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
 		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c) # 0
-		self.listmenu_command_copy_sub_tab = self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y) # 3
-		self.listmenu_command_paste = self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p) # 1
+		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c)
+		self.listmenu_command_copy_sub_tab = self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y)
+		self.listmenu_command_paste = self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p)
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r) #6
+		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r)
+		self.listmenu.add_separator()
+		self.listmenu_command_add_entry = self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a)
+		self.listmenu_command_set_entry_count = self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s)
 
 		self.status = StringVar()
 		self.expanded = StringVar()
@@ -281,6 +284,9 @@ class PyDAT(MainWindow):
 
 	def popup(self, e):
 		self.listmenu_command_copy_sub_tab['state'] = NORMAL if hasattr(self.dattabs.active, 'copy_subtab') else DISABLED
+		can_expand = self.dattabs.active.get_dat_data().dat.can_expand()
+		self.listmenu_command_add_entry['state'] = NORMAL if can_expand else DISABLED
+		self.listmenu_command_set_entry_count['state'] = NORMAL if can_expand else DISABLED
 		self.listmenu.post(e.x_root, e.y_root)
 
 	def copy(self):
@@ -299,6 +305,12 @@ class PyDAT(MainWindow):
 
 	def reload(self):
 		self.dattabs.active.reload()
+
+	def add_entry(self):
+		self.dattabs.active.add_entry()
+
+	def set_entry_count(self):
+		pass
 
 	def new(self, key=None):
 		self.dattabs.active.new()

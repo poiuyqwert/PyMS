@@ -17,6 +17,7 @@ class DATData(object):
 		self.file_path = None
 		self.default_dat = None
 		self.names = ()
+		self.name_overrides = {}
 
 	def load_defaults(self, mpqhandler):
 		update_names = False
@@ -54,6 +55,9 @@ class DATData(object):
 			raise Exception()
 		self.update_names()
 
+	def load_name_overrides(self, path):
+		pass
+
 	def update_names(self):
 		entry_count = self.dat_type.FORMAT.entries
 		dat = self.dat or self.default_dat
@@ -63,6 +67,8 @@ class DATData(object):
 		for entry_id in range(entry_count):
 			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 				names.append(self.reserved_name(entry_id))
+			elif entry_id in self.name_overrides:
+				names.append(self.name_overrides[entry_id])
 			elif entry_id >= len(DATA_CACHE[self.data_file]):
 				names.append(self.unknown_name(entry_id))
 			else:
@@ -109,10 +115,12 @@ class UnitsDATData(DATData):
 			entry_count = dat.entry_count()
 		strings = self.data_context.unitnamestbl.strings or self.data_context.stat_txt.strings[:228]
 		for entry_id in range(entry_count):
-			if strings and self.data_context.settings.settings.customlabels:
-				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
-					names.append(self.reserved_name(entry_id))
-				elif entry_id >= len(strings):
+			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
+				names.append(self.reserved_name(entry_id))
+			elif entry_id in self.name_overrides:
+				names.append(self.name_overrides[entry_id])
+			elif strings and self.data_context.settings.settings.customlabels:
+				if entry_id >= len(strings):
 					names.append(self.unknown_name(entry_id))
 				else:
 					names.append(strings[entry_id])
@@ -136,7 +144,9 @@ class EntryLabelDATData(DATData):
 			entry_count = dat.entry_count()
 		strings = self.data_context.stat_txt.strings
 		for entry_id in range(entry_count):
-			if strings and self.data_context.settings.settings.customlabels:
+			if entry_id in self.name_overrides:
+				names.append(self.name_overrides[entry_id])
+			elif strings and self.data_context.settings.settings.customlabels:
 				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 					names.append(self.reserved_name(entry_id))
 				elif not dat:

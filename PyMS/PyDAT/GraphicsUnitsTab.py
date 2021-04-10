@@ -11,6 +11,8 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 
+from math import floor, ceil
+
 class GraphicsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
@@ -171,14 +173,14 @@ class GraphicsUnitsTab(DATUnitsTab):
 	def drawboxes(self):
 		if self.showpreview.get() and self.showplace.get():
 			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
-			w = entry.staredit_placement_size.width / 2
-			h = entry.staredit_placement_size.height / 2
-			self.preview.coords('place', 129-w, 129-h, 129+w, 129+h)
+			w = entry.staredit_placement_size.width / 2.0
+			h = entry.staredit_placement_size.height / 2.0
+			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
 			self.preview.lift('place')
 		else:
 			self.preview.coords('place', 0, 0, 0, 0)
 		if self.showpreview.get() and self.showdims.get():
-			self.preview.coords('size', 129-self.left.get(), 129-self.up.get(), 129+self.right.get(), 129+self.down.get())
+			self.preview.coords('size', 130-self.left.get(), 130-self.up.get(), 130+self.right.get(), 130+self.down.get())
 			self.preview.lift('size')
 		else:
 			self.preview.coords('size', 0, 0, 0 ,0)

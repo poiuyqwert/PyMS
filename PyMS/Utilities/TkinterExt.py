@@ -49,6 +49,56 @@ class Menu(Tk.Menu):
 		Tk.Menu.add_command(self, **kwargs)
 		return Menu.Command(self, self.index(Tk.END))
 
+class Canvas(Tk.Canvas):
+	class Item(object):
+		def __init__(self, canvas, item_id):
+			self.canvas = canvas
+			self.item_id = item_id
+
+		def cget(self, option):
+			return self.canvas.itemcget(self.item_id, option)
+		def __getitem__(self, option):
+			return self.cget(option)
+
+		def config(self, **kwargs):
+			self.canvas.itemconfig(self.item_id, **kwargs)
+		def __setitem__(self, option, value):
+			self.config(**{option: value})
+
+		def coords(self, x,y):
+			self.canvas.coords(self.item_id, x,y)
+
+	def create_arc(self, x1,y1, x2,y2, *args, **kwargs):
+		return Canvas.Item(self, Tk.Canvas.create_arc(self, x1,y1, x2,y2, *args, **kwargs))
+
+	def create_bitmap(self, x,y, bitmap=None, *args, **kwargs):
+		kwargs['bitmap'] = bitmap
+		return Canvas.Item(self, Tk.Canvas.create_bitmap(self, x,y, *args, **kwargs))
+
+	def create_image(self, x,y, image=None, *args, **kwargs):
+		kwargs['image'] = image
+		return Canvas.Item(self, Tk.Canvas.create_image(self, x,y, *args, **kwargs))
+
+	def create_line(self, *points, **kwargs):
+		return Canvas.Item(self, Tk.Canvas.create_line(self, *points, **kwargs))
+
+	def create_oval(self, x1,y1, x2,y2, *args, **kwargs):
+		return Canvas.Item(self, Tk.Canvas.create_oval(self, x1,y1, x2,y2, *args, **kwargs))
+
+	def create_polygon(self, *points, **kwargs):
+		return Canvas.Item(self, Tk.Canvas.create_polygon(self, *points, **kwargs))
+
+	def create_rectangle(self, x1,y1, x2,y2, *args, **kwargs):
+		return Canvas.Item(self, Tk.Canvas.create_rectangle(self, x1,y1, x2,y2, *args, **kwargs))
+
+	def create_text(self, x1,y1, text=None, *args, **kwargs):
+		kwargs['text'] = text
+		return Canvas.Item(self, Tk.Canvas.create_text(self, x1,y1, *args, **kwargs))
+
+	def create_window(self, x1,y1, x2,y2, window=None, *args, **kwargs):
+		kwargs['window'] = window
+		return Canvas.Item(self, Tk.Canvas.create_window(self, x1,y1, x2,y2, *args, **kwargs))
+
 # Return from event callbacks to break further processing of the event
 Tk.Event.BREAK = 'break'
 

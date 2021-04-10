@@ -191,11 +191,11 @@ UnitAddPosY=Vertical distance in pixels at which an addon will be placed. Exists
 
 UnitDimUp=Space the unit takes upward from its position. Measured in pixels.
 
-UnitDimDown=Space the unit takes downward from its position. Measured in pixels.
+UnitDimDown=Space the unit takes downward from its position (StarCraft will add 1 to this value). Measured in pixels.
 
 UnitDimLeft=Space the unit takes left from its position. Measured in pixels.
 
-UnitDimRight=Space the unit takes right from its position. Measured in pixels.
+UnitDimRight=Space the unit takes right from its position (StarCraft will add 1 to this value). Measured in pixels.
 
 #####STAREDIT TAB#####
 
@@ -340,12 +340,9 @@ FlingySpeed=Maximum speed at which the sprite will move. Measured in pixels-per-
 
 FlingyAcceleration=How fast the sprite speeds up or slows down. Added to or subtracted from current speed until it reaches the Top Speed or 0. Measured in pixels-per-frame.  Works ONLY if "Move Control" is set to "Flingy.dat Control".
 
-FlingyHaltDist=Distance from its destination at which the sprite will begin to deccelerate from its Top Speed to a complete halt. Measured in pixels*256.
+FlingyHaltDist=Distance from its destination at which the sprite will begin to deccelerate from its Top Speed to a complete halt. Measured in pixels*256. This value is only used when already going top speed, otherwise it is automatically computed as (top speed^2)/(2*acceleration)
 
-FlingyMoveControl=Indicates the mechanism that is used to control the movement of the flingy.dat entry. "Flingy.dat Control" makes use of the Acceleration, Speed, Turn Style and Turn Radius properties, i.e. the values in this editor will be used. "Iscript.bin Control" ignores these properties and follows only the Iscript opcode sequence. "Partially Mobile/Weapon" is used for various weapons sprites, not completely understood.
-
-
-
+FlingyMoveControl=Indicates the mechanism that is used to control the movement of the flingy.dat entry. "Flingy.dat Control" makes use of the Acceleration, Speed, Turn Style and Turn Radius properties, i.e. the values in this editor will be used. "Iscript.bin Control" ignores these properties and follows only the Iscript opcode sequence. "Partially Mobile/Weapon" is used for various weapons sprites, seems the same as "Flingy.dat Control" but without deccelerating (useful for bullets)
 
 FlingyUnused=Unused.
 

@@ -159,6 +159,22 @@ class ImagesTab(DATTab):
 		frame.pack(side=LEFT)
 		j.pack(side=TOP, fill=X)
 
+		self.previewing = None
+		self.showpreview = IntVar()
+		self.showpreview.set(self.toplevel.data_context.settings.preview.image.get('show', False))
+
+		x = Frame(frame)
+		l = LabelFrame(x, text='Preview:')
+		s = Frame(l)
+		self.preview = Canvas(s, width=257, height=257, background='#000000')
+		self.preview.pack()
+		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
+		s.pack()
+		l.pack(side=LEFT)
+		x.pack(fill=X)
+		frame.pack(side=LEFT)
+		j.pack(side=TOP, fill=X)
+
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
 				DATRef('Construction', unit.construction_animation, dat_sub_tab=UnitsTabID.graphics),
@@ -198,6 +214,17 @@ class ImagesTab(DATTab):
 	def shieldupdate(self, n):
 		self.shieldentry.set([0,133,2,184][n])
 
+	def drawpreview(self, e=None):
+		if self.previewing != self.id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
+			self.preview.delete(ALL)
+			if self.showpreview.get():
+				frame = self.toplevel.data_context.get_image_frame(self.id)
+				if frame:
+					self.preview.create_image(130, 130, image=frame[0])
+				self.previewing = self.id
+			else:
+				self.previewing = None
+
 	def load_entry(self, entry):
 		self.grpentry.set(entry.grp_file)
 		self.graphicsturns.set(entry.gfx_turns)
@@ -217,6 +244,8 @@ class ImagesTab(DATTab):
 		default_shield_overlays = (0, 133, 2, 184)
 		if entry.shield_overlay in default_shield_overlays:
 			self.shieldsizes.set(default_shield_overlays.index(entry.shield_overlay))
+
+		self.drawpreview()
 
 	def save_entry(self, entry):
 		if self.grpentry.get() != entry.grp_file:
@@ -261,3 +290,5 @@ class ImagesTab(DATTab):
 		if self.liftoffentry.get() != entry.lift_off_dust_overlay:
 			entry.lift_off_dust_overlay = self.liftoffentry.get()
 			self.edited = True
+
+		self.toplevel.data_context.settings.preview.image.show = not not self.showpreview.get()

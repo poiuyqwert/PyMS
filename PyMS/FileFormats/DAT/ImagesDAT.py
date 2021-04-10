@@ -21,20 +21,20 @@ class Image(AbstractDAT.AbstractDATEntry):
 
 	class DrawFunction:
 		normal                  = 0
-		overlay_on_target       = 1
-		enemy_unit_cloak        = 2 # + spell
-		own_unit_cloak          = 3 # + spell
-		ally_unit_cloak         = 4
-		own_unit_cloak2         = 5 # + spell
-		own_unit_cloak3         = 6 # draw only
-		_crash                  = 7
+		normal_no_hallucination = 1
+		non_vision_cloaking     = 2
+		non_vision_cloaked      = 3
+		non_vision_decloaking   = 4
+		vision_cloaking         = 5
+		vision_cloaked          = 6
+		vision_decloaking       = 7 # Crashes?
 		emp_shockwave           = 8
 		use_remapping           = 9
-		rle_shadow              = 10
-		rle_hpfloatdraw         = 11
+		shadow                  = 10
+		hp_bar                  = 11
 		warp_flash              = 12 # crashes staredit
-		rle_outline             = 13
-		rle_player_side         = 14 # Flag
+		selection_circle        = 13
+		player_color_override   = 14 # Flag
 		hide_gfx_show_size_rect = 15
 		hallucination           = 16
 		warp_flash              = 17

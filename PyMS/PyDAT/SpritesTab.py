@@ -4,7 +4,6 @@ from DataID import DATID
 from DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
-from ..FileFormats.GRP import rle_outline, OUTLINE_SELF
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -135,7 +134,7 @@ class SpritesTab(DATTab):
 				i = int(self.selentry.get())
 				if self.selentry['state'] == NORMAL:
 					image_id = 561 + i
-					frame = self.toplevel.data_context.get_image_frame(image_id, draw_function=rle_outline, draw_info=OUTLINE_SELF)
+					frame = self.toplevel.data_context.get_image_frame(image_id)
 					if frame:
 						y = 130+int(self.vertpos.get())
 						self.preview.create_image(130, y, image=frame[0])

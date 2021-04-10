@@ -187,4 +187,3 @@ Use Ability (Optical Flare)
 Use Ability (Maelstrom)
 Move (Junk Yard Dog)
 Fatal
-None

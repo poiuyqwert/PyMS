@@ -10,6 +10,8 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 
+from math import floor, ceil
+
 class StarEditUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
@@ -159,8 +161,9 @@ class StarEditUnitsTab(DATUnitsTab):
 
 	def drawboxes(self):
 		if self.showpreview.get():
-			w,h = self.width.get() / 2,self.height.get() / 2
-			self.preview.coords('place', 129-w, 129-h, 129+w, 129+h)
+			w = self.width.get() / 2
+			h = self.height.get() / 2
+			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
 			self.preview.lift('place')
 		else:
 			self.preview.coords('place', 0, 0, 0, 0)

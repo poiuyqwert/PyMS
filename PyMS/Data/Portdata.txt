@@ -108,4 +108,3 @@ Flag (Green) (Pl.9)
 Flag (Bright Yellow) (Pl.10)
 Flag (Tan) (Pl.11)
 Flag (Blue) (Pl.12)
-None

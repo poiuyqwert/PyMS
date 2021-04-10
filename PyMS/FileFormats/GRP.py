@@ -26,8 +26,8 @@ def rle_normal(pal, index, player_colors=None):
 		rgb = player_colors[index - 8]
 	return (rgb[0],rgb[1],rgb[2], 255)
 
-def rle_shadow(pal, index, _=None):
-	return (0,0,0, 255)
+def rle_shadow(pal, index, color=None):
+	return color or (0,0,0,255)
 
 OUTLINE_ENEMY = 0
 OUTLINE_SELF = 1

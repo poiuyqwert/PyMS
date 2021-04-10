@@ -226,4 +226,3 @@ Zerg Vespene Gas Sac Type 1
 Zerg Vespene Gas Sac Type 2
 Terran Vespene Gas Tank Type 1
 Terran Vespene Gas Tank Type 2
-None
