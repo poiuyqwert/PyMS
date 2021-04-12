@@ -8,12 +8,13 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class SoundsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 		
 		self.ready_sound = IntegerVar(0, [0,0])
 		self.ready_sound_dropdown = IntVar()
@@ -30,7 +31,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		self.pissed_sound_end = IntegerVar(0, [0,0])
 		self.pissed_sound_end_dropdown = IntVar()
 
-		l = LabelFrame(frame, text='Sounds:')
+		l = LabelFrame(scrollview.content_view, text='Sounds:')
 		s = Frame(l)
 
 		f = Frame(s)
@@ -119,7 +120,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[

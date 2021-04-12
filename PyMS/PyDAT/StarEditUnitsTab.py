@@ -9,6 +9,7 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 from math import floor, ceil
 
@@ -16,7 +17,7 @@ class StarEditUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.nonneutral = IntVar()
 		self.unitlisting = IntVar()
@@ -65,7 +66,7 @@ class StarEditUnitsTab(DATUnitsTab):
 				],
 			)
 		]
-		top = Frame(frame)
+		top = Frame(scrollview.content_view)
 		for lt,lf in flags:
 			l = LabelFrame(top, text=lt + ' Flags:')
 			s = Frame(l)
@@ -86,7 +87,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.rankdd = IntVar()
 		self.mapstring = IntegerVar(0, [0,65535])
 
-		l = LabelFrame(frame, text='String Properties:')
+		l = LabelFrame(scrollview.content_view, text='String Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Rank/Sublabel:', width=13, anchor=E).pack(side=LEFT)
@@ -109,7 +110,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.showpreview = IntVar()
 		self.showpreview.set(self.toplevel.data_context.settings.preview.staredit.get('show', False))
 
-		bottom = Frame(frame)
+		bottom = Frame(scrollview.content_view)
 		t = Frame(bottom)
 		l = LabelFrame(t, text='Placement Box (Pixels):')
 		s = Frame(l)
@@ -136,7 +137,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		l.pack(side=LEFT)
 		bottom.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		for v in (self.width, self.height):
 			v.trace('w', lambda *_: self.drawpreview())

@@ -4,6 +4,7 @@ from UIKit import *
 
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
+# TODO: Subclass ScrollView?
 class FlowView(Frame):
 	def __init__(self, parent, **config):
 		Frame.__init__(self, parent, **config)

@@ -11,14 +11,14 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class WeaponsTab(DATTab):
 	DAT_ID = DATID.weapons
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.amount = IntegerVar(0, [0,65535])
 		self.type = IntVar()
@@ -31,7 +31,7 @@ class WeaponsTab(DATTab):
 		self.upgradeentry = IntegerVar(0,[0,61])
 		self.upgrade = IntVar()
 
-		data = Frame(frame)
+		data = Frame(scrollview.content_view)
 		left = Frame(data)
 		l = LabelFrame(left, text='Damage Properties:')
 		s = Frame(l)
@@ -269,8 +269,7 @@ class WeaponsTab(DATTab):
 		l.pack(fill=BOTH)
 		right.pack(side=LEFT)
 		data.pack(pady=5)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by([
 			DATRefs(DATID.units, lambda unit: (

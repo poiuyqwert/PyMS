@@ -6,18 +6,19 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.missionentry = IntegerVar(0, [0,0])
 		self.missiondd = IntVar()
 
-		l = LabelFrame(frame, text='Campaign Properties:')
+		l = LabelFrame(scrollview.content_view, text='Campaign Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
@@ -30,7 +31,7 @@ class MapsTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 	def updated_data_files(self, dataids):
 		if DataID.mapdatatbl in dataids:

@@ -10,6 +10,7 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 from math import floor, ceil
 
@@ -17,7 +18,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.graphicsentry = IntegerVar(0, [0,208])
 		self.graphicsdd = IntVar()
@@ -29,7 +30,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.elevationdd = IntVar()
 		self.direction = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Sprite Graphics:')
+		l = LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = Frame(l)
 		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, values=[], jump_dat_id=None):
 			f = Frame(s)
@@ -73,7 +74,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.addon_parent_id = IntegerVar(0, [0,228])
 		self.addon_parent_id.set(self.toplevel.data_context.settings.preview.unit.get('addon_parent_unit_id', 106))
 
-		bottom = Frame(frame)
+		bottom = Frame(scrollview.content_view)
 		left = Frame(bottom)
 		l = LabelFrame(left, text='Unit Dimensions:')
 		s = Frame(l)
@@ -130,7 +131,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		l.pack()
 		bottom.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		for v in (self.graphicsentry, self.horizontal, self.vertical, self.addon_parent_id):
 			v.trace('w', lambda *_: self.drawpreview())

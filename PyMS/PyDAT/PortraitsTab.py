@@ -7,14 +7,14 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class PortraitsTab(DATTab):
 	DAT_ID = DATID.portdata
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.idle_entry = IntegerVar(0, [0,0])
 		self.idle_dd = IntVar()
@@ -26,7 +26,7 @@ class PortraitsTab(DATTab):
 		self.talking_change = IntegerVar(0, [0,255])
 		self.talking_unknown = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Idle Portrait:')
+		l = LabelFrame(scrollview.content_view, text='Idle Portrait:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
@@ -51,7 +51,7 @@ class PortraitsTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=(0,5))
 		l.pack(fill=X)
 
-		l = LabelFrame(frame, text='Talking Portrait:')
+		l = LabelFrame(scrollview.content_view, text='Talking Portrait:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
@@ -76,8 +76,7 @@ class PortraitsTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=(0,5))
 		l.pack(fill=X, pady=5)
 
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (

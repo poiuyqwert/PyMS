@@ -9,8 +9,8 @@ from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
 from ..Utilities.utils import BASE_DIR, couriernew, play_sound
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 import os
 
@@ -19,13 +19,12 @@ class SoundsTab(DATTab):
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.soundentry = IntegerVar(0, [0,0])
 		self.sounddd = IntVar()
 
-		l = LabelFrame(frame, text='Sound:')
+		l = LabelFrame(scrollview.content_view, text='Sound:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Sound File:', width=9, anchor=E).pack(side=LEFT)
@@ -47,7 +46,7 @@ class SoundsTab(DATTab):
 		self.portrait_length_adjust = IntegerVar(0, [0,65535])
 		self.minimum_volume = IntegerVar(0, [0,100])
 
-		m = Frame(frame)
+		m = Frame(scrollview.content_view)
 
 		l = LabelFrame(m, text='General Properties:')
 		s = Frame(l)
@@ -98,8 +97,8 @@ class SoundsTab(DATTab):
 		l.pack(side=LEFT, padx=2)
 
 		m.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
+
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
 				DATRef('Ready', unit.ready_sound, dat_sub_tab=UnitsTabID.sounds),

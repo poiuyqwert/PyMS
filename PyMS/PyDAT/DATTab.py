@@ -2,16 +2,18 @@
 from ContinueImportDialog import ContinueImportDialog
 from DATTabConveniences import DATTabConveniences
 
-from ..Utilities.utils import couriernew
+from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 
-import copy
+import copy, os
 
 class DATTab(NotebookTab, DATTabConveniences):
+	ARROW_DOWN = None
+	ARROW_UP = None
 	DAT_ID = None
 
 	def __init__(self, parent, toplevel):
@@ -19,23 +21,55 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toplevel = toplevel
 		self.icon = self.toplevel.icon
 		self.used_by_references = None
+		self.used_by_collapse_button = None
 		self.used_by_listbox = None
 		self.used_by_data = []
+		self.used_by_header = None
 		self.edited = False
 		NotebookTab.__init__(self, parent)
 
 	def get_dat_data(self):
 		return self.toplevel.data_context.dat_data(self.DAT_ID)
 
+	def update_used_by_header(self):
+		text = 'Used By (%d)' % len(self.used_by_data)
+		if  self.toplevel.data_context.settings.get('show_used_by', True):
+			text += ':'
+		self.used_by_header.set(text)
+
+	def toggle_used_by(self, toggle=True):
+		visible = self.toplevel.data_context.settings.get('show_used_by', True)
+		if toggle:
+			visible = not visible
+			self.toplevel.data_context.settings.show_used_by = visible
+			self.update_used_by_header()
+		if not visible:
+			self.used_by_listbox.pack_forget()
+			self.used_by_collapse_button['image'] = DATTab.ARROW_UP
+		else:
+			self.used_by_listbox.pack(side=BOTTOM, fill=X, padx=2, pady=2)
+			self.used_by_collapse_button['image'] = DATTab.ARROW_DOWN
+
 	def setup_used_by(self, references):
 		self.used_by_references = references
 
-		f = LabelFrame(self, text='Used By:')
+		f = Frame(self)
+		h  = Frame(f)
+		if DATTab.ARROW_DOWN == None:
+			DATTab.ARROW_DOWN = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'arrow.gif'))
+		if DATTab.ARROW_UP == None:
+			DATTab.ARROW_UP = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'arrowup.gif'))
+		self.used_by_collapse_button = Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
+		self.used_by_collapse_button.pack(side=LEFT, padx=(0, 5))
+		self.used_by_header = StringVar()
+		Label(h, textvariable=self.used_by_header).pack(side=LEFT)
+		h.pack(side=TOP, fill=X)
 		self.used_by_listbox = ScrolledListbox(f, {'bd': 2, 'relief': SUNKEN}, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.used_by_listbox.bind(Double.Click, self.used_by_jump)
 		self.used_by_listbox.bind(Key.Return, self.used_by_jump)
-		self.used_by_listbox.pack(fill=X, padx=2, pady=2)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
+		self.toggle_used_by(toggle=False)
+		self.update_used_by_header()
 
 	def check_used_by_references(self, lookup_id=None, used_by=None):
 		self.used_by_data = []
@@ -50,6 +84,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.used_by_data.extend(dat_refs.matching(self.toplevel.data_context, lookup_id))
 		if self.used_by_data:
 			self.used_by_listbox.insert(END, *self.used_by_data)
+		self.update_used_by_header()
 
 	def used_by_jump(self, *_):
 		selections = self.used_by_listbox.curselection()

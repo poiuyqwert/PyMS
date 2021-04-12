@@ -8,14 +8,14 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class OrdersTab(DATTab):
 	DAT_ID = DATID.orders
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.targetingentry = IntegerVar(0,[0,130])
 		self.targeting = IntVar()
@@ -31,7 +31,7 @@ class OrdersTab(DATTab):
 		self.highlightdd = IntVar()
 		self.requirements = IntegerVar(0, [0,65535])
 
-		l = LabelFrame(frame, text='Order Properties:')
+		l = LabelFrame(scrollview.content_view, text='Order Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Targeting:', width=9, anchor=E).pack(side=LEFT)
@@ -130,7 +130,7 @@ class OrdersTab(DATTab):
 				('Requires Movable Unit (Unused)', self.requires_movable_unit, 'OrdRequiresMovableUnit'),
 			],
 		]
-		l = LabelFrame(frame, text='Flags:')
+		l = LabelFrame(scrollview.content_view, text='Flags:')
 		s = Frame(l)
 		for c in flags:
 			cc = Frame(s, width=20)
@@ -142,8 +142,8 @@ class OrdersTab(DATTab):
 			cc.pack(side=LEFT, fill=Y)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (

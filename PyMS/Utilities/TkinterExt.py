@@ -95,14 +95,19 @@ class Canvas(Tk.Canvas):
 		kwargs['text'] = text
 		return Canvas.Item(self, Tk.Canvas.create_text(self, x1,y1, *args, **kwargs))
 
-	def create_window(self, x1,y1, x2,y2, window=None, *args, **kwargs):
+	def create_window(self, pos, window=None, *args, **kwargs):
 		kwargs['window'] = window
-		return Canvas.Item(self, Tk.Canvas.create_window(self, x1,y1, x2,y2, *args, **kwargs))
+		return Canvas.Item(self, Tk.Canvas.create_window(self, pos, *args, **kwargs))
 
 # Return from event callbacks to break further processing of the event
 Tk.Event.BREAK = 'break'
+# Return from event callbacks to leave current processing but continue processing other bindings
+Tk.Event.CONTINUE = 'continue'
 
 def _clipboard_set(obj, text):
 	obj.clipboard_clear()
 	obj.clipboard_append(text)
 Tk.Misc.clipboard_set = _clipboard_set
+
+class Colors:
+	SystemHighlight = 'SystemHighlight'

@@ -10,12 +10,13 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class BasicUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.hit_points_whole = IntegerVar(0,[0,4294967295])
 		self.hit_points_fraction = IntegerVar(0,[0,255])
@@ -25,7 +26,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.armor_upgrade_entry = IntegerVar(0,[0,60])
 		self.armor_upgrade = IntVar()
 
-		statframe = Frame(frame)
+		statframe = Frame(scrollview.content_view)
 		l = LabelFrame(statframe, text='Vital Statistics')
 		s = Frame(l)
 		r = Frame(s)
@@ -108,7 +109,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.air_weapon_dropdown = IntVar()
 		self.max_air_hits = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Weapons')
+		l = LabelFrame(scrollview.content_view, text='Weapons')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Ground:', width=9, anchor=E).pack(side=LEFT)
@@ -149,7 +150,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.terran = IntVar()
 		self.protoss = IntVar()
 
-		ssframe = Frame(frame)
+		ssframe = Frame(scrollview.content_view)
 		l = LabelFrame(ssframe, text='Supply')
 		s = Frame(l)
 		f = Frame(s)
@@ -219,7 +220,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.sight_range = IntegerVar(0, [0,11])
 		self.target_acquisition_range = IntegerVar(0, [0,255])
 
-		otherframe = Frame(frame)
+		otherframe = Frame(scrollview.content_view)
 		l = LabelFrame(otherframe, text='Other')
 		s = Frame(l)
 		t = Frame(s)
@@ -241,7 +242,7 @@ class BasicUnitsTab(DATUnitsTab):
 		l.pack(side=LEFT, fill=BOTH, expand=1)
 		otherframe.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[

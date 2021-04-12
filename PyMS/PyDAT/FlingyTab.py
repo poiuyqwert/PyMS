@@ -9,14 +9,14 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class FlingyTab(DATTab):
 	DAT_ID = DATID.flingy
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.spriteentry = IntegerVar(0, [0,516])
 		self.spritedd = IntVar()
@@ -29,7 +29,7 @@ class FlingyTab(DATTab):
 		self.movecontrol = IntVar()
 		self.unused = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Flingy Properties:')
+		l = LabelFrame(scrollview.content_view, text='Flingy Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Sprite:', width=12, anchor=E).pack(side=LEFT)
@@ -78,8 +78,7 @@ class FlingyTab(DATTab):
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (

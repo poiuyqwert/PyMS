@@ -8,21 +8,21 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class ImagesTab(DATTab):
 	DAT_ID = DATID.images
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.grpentry = IntegerVar(0, [0, 0])
 		self.grpdd = IntVar()
 		self.iscriptentry = IntegerVar(0, [0, 0])
 		self.iscriptdd = IntVar()
 
-		l = LabelFrame(frame, text='Image:')
+		l = LabelFrame(scrollview.content_view, text='Image:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='GRP:', width=12, anchor=E).pack(side=LEFT)
@@ -63,7 +63,7 @@ class ImagesTab(DATTab):
 		self.clickable = IntVar()
 		self.usefulliscript = IntVar()
 
-		p = Frame(frame)
+		p = Frame(scrollview.content_view)
 		l = LabelFrame(p, text='General Properties:')
 		s = Frame(l)
 		ls = Frame(s)
@@ -136,7 +136,7 @@ class ImagesTab(DATTab):
 			('Lift-Off Dust', self.liftoffentry, self.liftoffdd, 'OL5'),
 			('Shield', self.shieldentry, self.shielddd, 'Shield'),
 		]
-		l = LabelFrame(frame, text='Extra Overlay Placements:')
+		l = LabelFrame(scrollview.content_view, text='Extra Overlay Placements:')
 		s = Frame(l)
 		for t,e,d,h in ols:
 			f = Frame(s)
@@ -156,14 +156,12 @@ class ImagesTab(DATTab):
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
 
 		self.previewing = None
 		self.showpreview = IntVar()
 		self.showpreview.set(self.toplevel.data_context.settings.preview.image.get('show', False))
 
-		x = Frame(frame)
+		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
 		self.preview = Canvas(s, width=257, height=257, background='#000000')
@@ -172,8 +170,7 @@ class ImagesTab(DATTab):
 		s.pack()
 		l.pack(side=LEFT)
 		x.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (

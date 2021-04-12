@@ -263,6 +263,9 @@ class Focus:
 	In = EventPattern(Field('FocusIn'))
 	Out = EventPattern(Field('FocusOut'))
 
+class WidgetEvent:
+	Configure = EventPattern(Field('Configure'))
+
 if __name__ == '__main__':
 	events = [
 		Ctrl.a,

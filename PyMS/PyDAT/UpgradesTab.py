@@ -9,14 +9,14 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class UpgradesTab(DATTab):
 	DAT_ID = DATID.upgrades
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
@@ -25,7 +25,7 @@ class UpgradesTab(DATTab):
 		self.labeldd = IntVar()
 		self.item = None
 
-		l = LabelFrame(frame, text='Upgrade Display:')
+		l = LabelFrame(scrollview.content_view, text='Upgrade Display:')
 		s = Frame(l)
 		ls = Frame(s)
 		
@@ -60,7 +60,7 @@ class UpgradesTab(DATTab):
 		self.basetime = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.basesecs))
 		self.basesecs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.basetime), precision=4)
 
-		m = Frame(frame)
+		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Base Cost:')
 		s = Frame(l)
 		
@@ -124,7 +124,7 @@ class UpgradesTab(DATTab):
 		self.race = IntVar()
 		self.broodwar = IntVar()
 
-		m = Frame(frame)
+		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Misc.:')
 		s = Frame(l)
 		
@@ -150,8 +150,7 @@ class UpgradesTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT)
 		m.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (

@@ -3,7 +3,7 @@ from PyMSError import PyMSError
 
 from textwrap import wrap
 from thread import start_new_thread
-import os, sys, platform, re, tempfile, errno, codecs
+import os, sys, platform, re, tempfile, errno
 
 WIN_REG_AVAILABLE = True
 try:

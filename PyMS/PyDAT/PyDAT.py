@@ -202,8 +202,7 @@ class PyDAT(MainWindow):
 		if dat_data.file_path:
 			self.status.set(dat_data.file_path)
 		else:
-			# TODO: This might not be correct if its loaded from an MPQ?
-			self.status.set(os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr',  dat_data.dat.FILE_NAME))
+			self.status.set(dat_data.dat.FILE_NAME)
 		self.editstatus['state'] = NORMAL if tab.edited else DISABLED
 		if dat_data.is_expanded():
 			self.expanded.set('%s expanded' % dat_data.dat_type.FILE_NAME)

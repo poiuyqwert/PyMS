@@ -10,6 +10,7 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 from math import floor, sqrt
 
@@ -20,7 +21,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.computeridleentry = IntegerVar(0,[0,189])
 		self.computeridle = IntVar()
@@ -36,7 +37,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.AI_NoSuicide = IntVar()
 		self.AI_NoGuard = IntVar()
 
-		l = LabelFrame(frame, text='AI Actions:')
+		l = LabelFrame(scrollview.content_view, text='AI Actions:')
 		s = Frame(l)
 		def add_dropdown(title, entry_variable, dropdown_variable, hint_name):
 			f = Frame(s)
@@ -69,7 +70,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		s.pack(fill=BOTH, padx=5, pady=(0,5))
 		l.pack(fill=X, side=TOP)
 
-		l = LabelFrame(frame, text='AI Force Values:')
+		l = LabelFrame(scrollview.content_view, text='AI Force Values:')
 		self.force_value_text = Text(l, state=DISABLED, height=11, font=('Courier New', -12, 'normal'))
 		self.force_value_text.pack(fill=BOTH, padx=5,pady=5)
 		l.pack(fill=X, side=TOP)
@@ -142,7 +143,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 				self.force_value_text.tag_bind(tag, Cursor.Leave, show_arrow_cursor, '+')
 				self.force_value_text.tag_bind(tag, Mouse.Click, action)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[

@@ -9,14 +9,14 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class TechnologyTab(DATTab):
 	DAT_ID = DATID.techdata
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
 		self.icondd = IntVar()
@@ -26,7 +26,7 @@ class TechnologyTab(DATTab):
 
 		self.item = None
 
-		l = LabelFrame(frame, text='Technology Display:')
+		l = LabelFrame(scrollview.content_view, text='Technology Display:')
 		s = Frame(l)
 		ls = Frame(s)
 		f = Frame(ls)
@@ -59,7 +59,7 @@ class TechnologyTab(DATTab):
 		self.secs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.time), precision=4)
 		self.energy = IntegerVar(0, [0,65535])
 
-		m = Frame(frame)
+		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Technology Cost:')
 		s = Frame(l)
 		f = Frame(s)
@@ -123,8 +123,7 @@ class TechnologyTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT, fill=Y)
 		m.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.orders, lambda order: (

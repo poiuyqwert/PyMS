@@ -10,14 +10,14 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class SpritesTab(DATTab):
 	DAT_ID = DATID.sprites
 
 	def __init__(self, parent, toplevel):
 		DATTab.__init__(self, parent, toplevel)
-		j = Frame(self)
-		frame = Frame(j)
+		scrollview = ScrollView(self)
 
 		self.imageentry = IntegerVar(0, [0,998])
 		self.imagedd = IntVar()
@@ -29,7 +29,7 @@ class SpritesTab(DATTab):
 		self.boxes = IntegerVar(1, [1,84], callback=lambda n,i=1: self.updatehealth(n,i))
 		self.vertpos = IntegerVar(0, [0,255])
 
-		l = LabelFrame(frame, text='Sprite Properties:')
+		l = LabelFrame(scrollview.content_view, text='Sprite Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Image:', width=12, anchor=E).pack(side=LEFT)
@@ -81,7 +81,7 @@ class SpritesTab(DATTab):
 		self.showpreview = IntVar()
 		self.showpreview.set(self.toplevel.data_context.settings.preview.sprite.get('show', False))
 
-		x = Frame(frame)
+		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
 		self.preview = Canvas(s, width=257, height=257, background='#000000')
@@ -90,8 +90,7 @@ class SpritesTab(DATTab):
 		s.pack()
 		l.pack(side=LEFT)
 		x.pack(fill=X)
-		frame.pack(side=LEFT)
-		j.pack(side=TOP, fill=X)
+		scrollview.pack(fill=BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.flingy, lambda flingy: (

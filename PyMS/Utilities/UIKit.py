@@ -8,5 +8,9 @@ import tkFont as Fonts
 
 from EventPattern import *
 
+Fonts.BOLDED = '-weight ' + Fonts.BOLD
+Fonts.ITALICIZED = '-slant ' + Fonts.ITALIC
+Fonts.UNDERLINED = '-underline 1'
+Fonts.STRIKED = '-overstrike 1'
 # TkinterExt wraps some Tkinter widgets to provide extensions
 from TkinterExt import *

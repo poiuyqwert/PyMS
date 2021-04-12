@@ -27,76 +27,84 @@ class DropDown(Frame):
 		self.none_value = none_value
 		self._typed = ''
 		self._typed_timer = None
-		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
-		self.listbox = Listbox(self, selectmode=SINGLE, font=couriernew, width=width, height=1, borderwidth=0, exportselection=1, activestyle=DOTBOX)
-		self.listbox.bind(Mouse.Click, self.choose)
-		self.listbox.bind(Mouse.Scroll, lambda *args: Event.BREAK)
-		bind = [
-			(Key.Home, lambda a,i=0: self.move(a,i)),
-			(Key.End, lambda a,i=END: self.move(a,i)),
-			(Key.Up, lambda a,i=-1: self.move(a,i)),
-			(Key.Left, lambda a,i=-1: self.move(a,i)),
-			(Key.Down, lambda a,i=1: self.move(a,i)),
-			(Key.Right, lambda a,i=-1: self.move(a,i)),
-			(Key.Prior, lambda a,i=-10: self.move(a,i)),
-			(Key.Next, lambda a,i=10: self.move(a,i)),
-			# (Key.Space, self.choose),
-			(Key.Pressed, self.key_pressed)
-		]
-		for b in bind:
-			self.bind(*b)
-			self.listbox.bind(*b)
+		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN, takefocus=False)
+		self.text = StringVar()
+		self.entry = Entry(self, textvariable=self.text, font=couriernew, width=width, borderwidth=0, highlightthickness=0, cursor='arrow', insertontime=0)
+		self.entry.pack(side=LEFT, fill=X, expand=1)
+		self.entry['state'] = state
+		self.entry.bind(Mouse.Click, self.choose)
+		self.entry.bind(Key.Home, lambda a,i=0: self.move(a,i)),
+		self.entry.bind(Key.End, lambda a,i=END: self.move(a,i)),
+		self.entry.bind(Key.Up, lambda a,i=-1: self.move(a,i)),
+		self.entry.bind(Key.Left, lambda a,i=-1: self.move(a,i)),
+		self.entry.bind(Key.Down, lambda a,i=1: self.move(a,i)),
+		self.entry.bind(Key.Right, lambda a,i=1: self.move(a,i)),
+		self.entry.bind(Key.Prior, lambda a,i=-10: self.move(a,i)),
+		self.entry.bind(Key.Next, lambda a,i=10: self.move(a,i)),
+		self.entry.bind(Key.Pressed, self.key_pressed),
+		self.entry.bind(Key.Return, self.choose)
 		self.setentries(entries)
-		self.listbox.pack(side=LEFT, fill=X, expand=1)
-		self.listbox['state'] = state
 		if DropDown.ARROW == None:
 			DropDown.ARROW = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS','Images','arrow.gif'))
 		self.button = Button(self, image=DropDown.ARROW, command=self.choose, state=state)
 		self.button.image = DropDown.ARROW
 		self.button.pack(side=RIGHT, fill=Y)
 
+		self.background_color = self.entry.cget('bg')
+		self.highlight_color = self.entry.cget('selectbackground')
+		def update_background(color):
+			self.entry['bg'] = color
+		self.entry.bind(Focus.In, lambda *_: update_background(self.highlight_color))
+		self.entry.bind(Focus.Out, lambda *_: update_background(self.background_color))
+		# The Focus.Out event stops firing sometimes, so we use a workaround with `validatecommand` triggering on `focusout` to overcome the issue
+		def validate(reason):
+			if reason == 'focusout':
+				update_background(self.background_color)
+			return True
+		self.entry.config(validate='focusout', validatecommand=(self.register(validate), '%V'))
+
 	def __setitem__(self, item, value):
 		if item == 'state':
-			self.listbox['state'] = value
+			self.entry['state'] = value
 			self.button['state'] = value
 		else:
 			Frame.__setitem__(self, item, value)
 
 	def setentries(self, entries):
-		selected = self.variable.get()
 		self.entries = list(entries)
-		self.listbox.delete(0,END)
-		for entry in entries:
-			self.listbox.insert(END, entry)
-		if selected >= self.listbox.size():
-			selected = self.listbox.size()-1
-		self.listbox.see(selected)
-		if self.stay_right:
-			self.listbox.xview_moveto(1.0)
+		if self.entries:
+			self.text.set(self.entries[self.variable.get()])
+		else:
+			self.text.set('')
 
 	def set(self, num):
 		self.change(num)
 		Variable.set(self.variable, num)
 		self.disp(num)
 		if self.stay_right:
-			self.listbox.xview_moveto(1.0)
+			self.entry.xview_moveto(1.0)
 
 	def change(self, num):
-		if num >= self.listbox.size():
-			num = self.listbox.size()-1
-		self.listbox.select_clear(0,END)
-		#self.listbox.select_set(num)
-		self.listbox.see(num)
+		if num >= len(self.entries):
+			num = len(self.entries)-1
+		if self.entries:
+			self.text.set(self.entries[num])
+			if self.stay_right:
+				self.entry.xview_moveto(1.0)
+		else:
+			self.text.set('')
 
 	def move(self, e, a):
-		if self.listbox['state'] == NORMAL:
-			if a not in [0,END]:
-				a = max(min(self.listbox.size(),self.variable.get() + a),0)
+		if self.entry['state'] == NORMAL:
+			if a == END:
+				a = len(self.entries)-1
+			elif a:
+				a = max(min(len(self.entries)-1,self.variable.get() + a),0)
 			self.set(a)
-			self.listbox.select_set(a)
+		return Event.BREAK
 
 	def choose(self, e=None):
-		if self.listbox['state'] == NORMAL:
+		if self.entry['state'] == NORMAL:
 			i = self.variable.get()
 			if i == self.none_value:
 				n = self.entries.index(self.none_name)
@@ -107,7 +115,6 @@ class DropDown(Frame):
 				self.set(self.none_value)
 			else:
 				self.set(c.result)
-			self.listbox.select_set(c.result)
 
 	def disp(self, n):
 		if self.display:
@@ -121,15 +128,17 @@ class DropDown(Frame):
 			self.after_cancel(self._typed_timer)
 		if event.keysym == Key.Backspace.name():
 			self._typed = self._typed[:-1]
+		elif event.keysym == Key.Tab.name() or event.char == '\t':
+			return Event.CONTINUE
 		elif event.char:
 			self._typed += event.char.lower()
 		if self._typed:
-			items = self.listbox.get(0, END)
-			for index,item in enumerate(items):
+			for index,item in enumerate(self.entries):
 				if self._typed in item.lower():
 					self.set(index)
 					break
 			self._typed_timer = self.after(1000, self.clear_typed)
+		return Event.BREAK
 
 	def clear_typed(self):
 		self._typed_timer = None

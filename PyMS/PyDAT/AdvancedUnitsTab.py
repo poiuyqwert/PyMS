@@ -8,12 +8,13 @@ from ..Utilities.utils import couriernew
 from ..Utilities.DropDown import DropDown
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.UIKit import *
+from ..Utilities.ScrollView import ScrollView
 
 class AdvancedUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):
 		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
 		self.toplevel = toplevel
-		frame = Frame(self)
+		scrollview = ScrollView(self)
 
 		self.flyer = IntVar()
 		self.hero = IntVar()
@@ -86,7 +87,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 				('Unknown', self.unused, 'UnitAdvUnused'),
 			],
 		]
-		l = LabelFrame(frame, text='Advanced Properties:')
+		l = LabelFrame(scrollview.content_view, text='Advanced Properties:')
 		s = Frame(l)
 		for c in flags:
 			cc = Frame(s, width=20)
@@ -115,7 +116,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.unknown40 = IntVar()
 		self.unknown80 = IntVar()
 
-		l = LabelFrame(frame, text='Other Properties:')
+		l = LabelFrame(scrollview.content_view, text='Other Properties:')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Infestation:', width=9, anchor=E).pack(side=LEFT)
@@ -176,7 +177,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		frame.pack(side=LEFT, fill=Y)
+		scrollview.pack(fill=BOTH, expand=1)
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
