@@ -282,10 +282,11 @@ class PyDAT(MainWindow):
 		self.changeid(self.jumpid.get())
 
 	def popup(self, e):
+		self.listmenu_command_paste['state'] = DISABLED # TODO
 		self.listmenu_command_copy_sub_tab['state'] = NORMAL if hasattr(self.dattabs.active, 'copy_subtab') else DISABLED
 		can_expand = self.dattabs.active.get_dat_data().dat.can_expand()
 		self.listmenu_command_add_entry['state'] = NORMAL if can_expand else DISABLED
-		self.listmenu_command_set_entry_count['state'] = NORMAL if can_expand else DISABLED
+		self.listmenu_command_set_entry_count['state'] = DISABLED # TODO: NORMAL if can_expand else DISABLED
 		self.listmenu.post(e.x_root, e.y_root)
 
 	def copy(self):
@@ -335,6 +336,7 @@ class PyDAT(MainWindow):
 		else:
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % path))
 
+	# TODO
 	def openmpq(self, event=None):
 		file = self.data_context.settings.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
 		if not file:
@@ -370,6 +372,7 @@ class PyDAT(MainWindow):
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
+	# TODO
 	def opendirectory(self, event=None):
 		dir = self.data_context.settings.lastpath.select_directory('dir', self, 'Open Directory')
 		if not dir:
@@ -404,6 +407,7 @@ class PyDAT(MainWindow):
 		for d in found:
 			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
 
+	# TODO
 	def iimport(self, key=None):
 		self.dattabs.active.iimport()
 
@@ -415,10 +419,12 @@ class PyDAT(MainWindow):
 		self.save_data()
 		self.dattabs.active.saveas()
 
+	# TODO
 	def export(self, key=None):
 		self.save_data()
 		self.dattabs.active.export()
 
+	# TODO
 	def savempq(self, key=None):
 		if SFMPQ_LOADED:
 			self.save_data()
