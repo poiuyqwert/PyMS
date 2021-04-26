@@ -373,7 +373,7 @@ class WeaponsTab(DATTab):
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.customlabels:
+			if self.toplevel.data_context.settings.settings.get('customlabels'):
 				self.toplevel.update_entry_names(DATID.weapons)
 		if self.graphicsentry.get() != entry.graphics:
 			entry.graphics = self.graphicsentry.get()

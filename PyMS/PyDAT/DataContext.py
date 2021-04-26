@@ -29,6 +29,9 @@ class TicksPerSecond:
 class DataContext(object):
 	def __init__(self):
 		self.settings = Settings('PyDAT', '1')
+		self.settings.setttings.set_defaults({
+			'customlabels': False
+		})
 
 		self.mpqhandler = None
 

@@ -223,6 +223,8 @@ class OrdersTab(DATTab):
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
+			if self.toplevel.data_context.settings.settings.get('customlabels'):
+				self.toplevel.update_entry_names(DATID.orders)
 		if self.weapontargeting.get() != entry.use_weapon_targeting:
 			entry.use_weapon_targeting = self.weapontargeting.get()
 			self.edited = True

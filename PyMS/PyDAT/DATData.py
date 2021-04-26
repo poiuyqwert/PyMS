@@ -119,7 +119,7 @@ class UnitsDATData(DATData):
 				names.append(self.reserved_name(entry_id))
 			elif entry_id in self.name_overrides:
 				names.append(self.name_overrides[entry_id])
-			elif strings and self.data_context.settings.settings.customlabels:
+			elif strings and self.data_context.settings.settings.get('customlabels'):
 				if entry_id >= len(strings):
 					names.append(self.unknown_name(entry_id))
 				else:
@@ -146,7 +146,7 @@ class EntryLabelDATData(DATData):
 		for entry_id in range(entry_count):
 			if entry_id in self.name_overrides:
 				names.append(self.name_overrides[entry_id])
-			elif strings and self.data_context.settings.settings.customlabels:
+			elif strings and self.data_context.settings.settings.get('customlabels'):
 				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 					names.append(self.reserved_name(entry_id))
 				elif not dat:

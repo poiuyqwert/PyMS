@@ -199,6 +199,8 @@ class TechnologyTab(DATTab):
 		if self.labelentry.get() != entry.label:
 			entry.label = self.labelentry.get()
 			self.edited = True
+			if self.toplevel.data_context.settings.settings.get('customlabels'):
+				self.toplevel.update_entry_names(DATID.techdata)
 		if self.race.get() != entry.staredit_race:
 			entry.staredit_race = self.race.get()
 			self.edited = True
