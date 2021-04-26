@@ -222,7 +222,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.saveas()
 			return
 		try:
-			self.get_dat_data().dat.compile(self.get_dat_data().file_path)
+			self.get_dat_data().dat.save_file(self.get_dat_data().file_path)
 		except PyMSError, e:
 			ErrorDialog(self, e)
 		else:
