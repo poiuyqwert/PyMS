@@ -1,5 +1,5 @@
 
-from ..utils import isstr
+from ..Utilities.utils import isstr
 from logging import *
 
 import os, inspect

@@ -1,5 +1,5 @@
 
-from ...GRP import image_bounds
+from ...FileFormats.GRP import image_bounds
 
 
 def run(path_to):

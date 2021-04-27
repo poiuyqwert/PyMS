@@ -135,7 +135,7 @@ class DATTypeHitPoints(DATType):
 		self.fraction = value & 0xFF
 
 	def save_data(self):
-		value = (self.whole << 8) & self.fraction
+		value = (self.whole << 8) | self.fraction
 		return self.pack_data((value,))
 
 class DATTypeSupply(DATType):
@@ -151,7 +151,7 @@ class DATTypeSupply(DATType):
 		self.half = value & 1
 
 	def save_data(self):
-		value = (self.whole << 1) & (1 if self.half else 0)
+		value = (self.whole << 1) | (1 if self.half else 0)
 		return self.pack_data((value,))
 
 class DATProperty(object):

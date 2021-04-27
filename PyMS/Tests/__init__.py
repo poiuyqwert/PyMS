@@ -1,8 +1,10 @@
 
 import GRP
+import DAT
 
 groups = [
-	GRP
+	GRP,
+	DAT
 ]
 
 from logging import *

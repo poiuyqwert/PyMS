@@ -1,6 +1,6 @@
 
-from ...utils import FFile
-from ... import GRP
+from ...Utilities.utils import FFile
+from ...FileFormats import GRP
 
 def run(path_to):
 	"""Save then Load"""
