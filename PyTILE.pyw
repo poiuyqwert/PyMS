@@ -1009,11 +1009,11 @@ class TilePaletteView(Frame):
 	def get_tile_size(self, tiletype=None, group=False):
 		tiletype = self.tiletype if tiletype == None else tiletype
 		if tiletype == TILETYPE_GROUP:
-			return [32.0 * (16 if group else 1),33.0]
+			return (32.0 * (16 if group else 1),33.0)
 		elif tiletype == TILETYPE_MEGA:
-			return [32.0 + (0 if group else 1),32.0 + (0 if group else 1)]
+			return (32.0 + (0 if group else 1),32.0 + (0 if group else 1))
 		elif tiletype == TILETYPE_MINI:
-			return [25.0,25.0]
+			return (25.0,25.0)
 	def get_tile_count(self):
 		tileset = self.delegate.tile_palette_get_tileset()
 		if not tileset:
@@ -1042,7 +1042,7 @@ class TilePaletteView(Frame):
 	def draw_selections(self):
 		self.canvas.delete('selection')
 		self.canvas.delete('sub_selection')
-		tile_size = self.get_tile_size(group=True)
+		tile_size = self.get_tile_size(group=self.tiletype == TILETYPE_GROUP)
 		tile_count = self.get_tile_count()
 		columns = int(floor(self.canvas.winfo_width() / tile_size[0]))
 		if columns:
@@ -1359,7 +1359,7 @@ class TilePalette(PyMSDialog):
 			self.tileset.cv5.groups.append([0] * 13 + [[0] * 16])
 			select = len(self.tileset.cv5.groups)-1
 		elif self.tiletype == TILETYPE_MEGA:
-			self.tileset.vf4.flags.append([0]*32)
+			self.tileset.vf4.flags.append([0]*16)
 			self.tileset.vx4.add_tile(((0,0),)*16)
 			select = len(self.tileset.vx4.graphics)-1
 		else:
@@ -2195,7 +2195,7 @@ class PyTILE(Tk):
 			self.palette.update_size()
 			self.palette.select(0)
 			if self.tileset.vx4.expanded:
-				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, 'This tileset is using an expanded vx4 file.')
+				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, "This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
