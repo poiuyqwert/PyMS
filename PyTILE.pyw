@@ -1006,6 +1006,13 @@ class TilePaletteView(Frame):
 			self.draw_tiles()
 		self.canvas.config(yscrollcommand=lambda l,h,s=scrollbar: update_scrollbar(l,h,s))
 
+		self.initial_scroll_bind = None
+		def initial_scroll(_):
+			print 'initial_scroll'
+			self.scroll_to_selection()
+			self.canvas.unbind('<Configure>', self.initial_scroll_bind)
+		self.initial_scroll_bind = self.canvas.bind('<Configure>', initial_scroll, add=True)
+
 	def get_tile_size(self, tiletype=None, group=False):
 		tiletype = self.tiletype if tiletype == None else tiletype
 		if tiletype == TILETYPE_GROUP:
@@ -1292,9 +1299,6 @@ class TilePalette(PyMSDialog):
 
 	def setup_complete(self):
 		PYTILE_SETTINGS.windows.palette.load_window_size(('group','mega','mini')[self.tiletype], self)
-
-		if len(self.start_selected):
-			self.after(100, self.palette.scroll_to_selection)
 
 	def select_smaller(self):
 		ids = []
