@@ -168,7 +168,7 @@ class SMKSettings(PyMSDialog):
 		self.widget.parent.reload_canvas()
 
 	def find_smk(self):
-		m = MpqSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', 'Select')
+		m = MpqSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', PYBIN_SETTINGS, 'Select')
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 
