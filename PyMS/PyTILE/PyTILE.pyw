@@ -1006,6 +1006,14 @@ class TilePaletteView(Frame):
 			self.draw_tiles()
 		self.canvas.config(yscrollcommand=lambda l,h,s=scrollbar: update_scrollbar(l,h,s))
 
+		self.initial_scroll_bind = None
+		def initial_scroll(_):
+			print 'initial_scroll'
+			self.scroll_to_selection()
+			self.canvas.unbind('<Configure>', self.initial_scroll_bind)
+		self.initial_scroll_bind = self.canvas.bind('<Configure>', initial_scroll, add=True)
+
+
 	def get_tile_size(self, tiletype=None, group=False):
 		tiletype = self.tiletype if tiletype == None else tiletype
 		if tiletype == TILETYPE_GROUP:
@@ -1042,7 +1050,7 @@ class TilePaletteView(Frame):
 	def draw_selections(self):
 		self.canvas.delete('selection')
 		self.canvas.delete('sub_selection')
-		tile_size = self.get_tile_size(group=True)
+		tile_size = self.get_tile_size(group=self.tiletype == TILETYPE_GROUP)
 		tile_count = self.get_tile_count()
 		columns = int(floor(self.canvas.winfo_width() / tile_size[0]))
 		if columns:
@@ -1293,9 +1301,6 @@ class TilePalette(PyMSDialog):
 	def setup_complete(self):
 		PYTILE_SETTINGS.windows.palette.load_window_size(('group','mega','mini')[self.tiletype], self)
 
-		if len(self.start_selected):
-			self.after(100, self.palette.scroll_to_selection)
-
 	def select_smaller(self):
 		ids = []
 		for id in self.palette.selected:
@@ -1359,7 +1364,7 @@ class TilePalette(PyMSDialog):
 			self.tileset.cv5.groups.append([0] * 13 + [[0] * 16])
 			select = len(self.tileset.cv5.groups)-1
 		elif self.tiletype == TILETYPE_MEGA:
-			self.tileset.vf4.flags.append([0]*32)
+			self.tileset.vf4.flags.append([0]*16)
 			self.tileset.vx4.add_tile(((0,0),)*16)
 			select = len(self.tileset.vx4.graphics)-1
 		else:
@@ -2195,7 +2200,7 @@ class PyTILE(Tk):
 			self.palette.update_size()
 			self.palette.select(0)
 			if self.tileset.vx4.expanded:
-				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, 'This tileset is using an expanded vx4 file.')
+				PYTILE_SETTINGS.dont_warn.warn('expanded_vx4', self, "This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
