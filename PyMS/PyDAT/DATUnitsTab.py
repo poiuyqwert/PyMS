@@ -20,13 +20,7 @@ class DATUnitsTab(NotebookTab, DATTabConveniences):
 			self.toplevel.dattabs.display(datid.tab_id)
 			self.toplevel.changeid(entry_id)
 
-	def updated_data_files(self, dataids):
-		pass
-
-	def updated_entry_names(self, datids):
-		pass
-
-	def updated_entry_counts(self, datids):
+	def updated_pointer_entries(self, ids):
 		pass
 
 	def activate(self):

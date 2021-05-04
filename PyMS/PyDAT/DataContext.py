@@ -2,7 +2,7 @@
 from DATData import DATData, EntryLabelDATData, UnitsDATData
 from TBLData import TBLData
 from IconData import IconData
-from DataID import DATID
+from DataID import DATID, DataID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
@@ -14,6 +14,7 @@ from ..Utilities.utils import BASE_DIR
 from ..Utilities.Settings import Settings
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities.Callback import Callback
 
 import os, re
 
@@ -29,33 +30,53 @@ class TicksPerSecond:
 class DataContext(object):
 	def __init__(self):
 		self.settings = Settings('PyDAT', '1')
-		self.settings.setttings.set_defaults({
+		self.settings.settings.set_defaults({
 			'customlabels': False
 		})
 
 		self.mpqhandler = None
 
-		self.stat_txt = TBLData(self, 'stat_txt', 'rez\\stat_txt.tbl')
-		self.unitnamestbl = TBLData(self, 'unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
-		self.imagestbl = TBLData(self, 'imagestbl', 'arr\\images.tbl')
-		self.sfxdatatbl = TBLData(self, 'sfxdatatbl', 'arr\\sfxdata.tbl')
-		self.portdatatbl = TBLData(self, 'portdatatbl', 'arr\\portdata.tbl')
-		self.mapdatatbl = TBLData(self, 'mapdatatbl', 'arr\\mapdata.tbl')
+		self.update_cb = Callback()
+
+		self.stat_txt = TBLData(self, DataID.stat_txt, 'stat_txt', 'rez\\stat_txt.tbl')
+		self.stat_txt.update_cb += self.update_cb
+		self.unitnamestbl = TBLData(self, DataID.unitnamestbl, 'unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
+		self.unitnamestbl.update_cb += self.update_cb
+		self.imagestbl = TBLData(self, DataID.imagestbl, 'imagestbl', 'arr\\images.tbl')
+		self.imagestbl.update_cb += self.update_cb
+		self.sfxdatatbl = TBLData(self, DataID.sfxdatatbl, 'sfxdatatbl', 'arr\\sfxdata.tbl')
+		self.sfxdatatbl.update_cb += self.update_cb
+		self.portdatatbl = TBLData(self, DataID.portdatatbl, 'portdatatbl', 'arr\\portdata.tbl')
+		self.portdatatbl.update_cb += self.update_cb
+		self.mapdatatbl = TBLData(self, DataID.mapdatatbl, 'mapdatatbl', 'arr\\mapdata.tbl')
+		self.mapdatatbl.update_cb += self.update_cb
 
 		self.cmdicons = IconData(self)
+		self.cmdicons.update_cb += self.update_cb
 		self.iscriptbin = None
 
 		self.units = UnitsDATData(self)
-		self.weapons = EntryLabelDATData(self, WeaponsDAT, 'Weapons.txt', 'Weapon')
-		self.flingy = DATData(self, FlingyDAT, 'Flingy.txt', 'Flingy')
-		self.sprites = DATData(self, SpritesDAT, 'Sprites.txt', 'Sprite')
-		self.images = DATData(self, ImagesDAT, 'Images.txt', 'Image')
-		self.upgrades = EntryLabelDATData(self, UpgradesDAT, 'Upgrades.txt', 'Upgrade')
-		self.technology = EntryLabelDATData(self, TechDAT, 'Techdata.txt', 'Technology')
-		self.sounds = DATData(self, SoundsDAT, 'Sfxdata.txt', 'Sound')
-		self.portraits = DATData(self, PortraitsDAT, 'Portdata.txt', 'Portrait')
-		self.campaign = DATData(self, CampaignDAT, 'Mapdata.txt', 'Map')
-		self.orders = EntryLabelDATData(self, OrdersDAT, 'Orders.txt', 'Order')
+		self.units.update_cb += self.update_cb
+		self.weapons = EntryLabelDATData(self, DATID.weapons, WeaponsDAT, 'Weapons.txt', 'Weapon')
+		self.weapons.update_cb += self.update_cb
+		self.flingy = DATData(self, DATID.flingy, FlingyDAT, 'Flingy.txt', 'Flingy')
+		self.flingy.update_cb += self.update_cb
+		self.sprites = DATData(self, DATID.sprites, SpritesDAT, 'Sprites.txt', 'Sprite')
+		self.sprites.update_cb += self.update_cb
+		self.images = DATData(self, DATID.images, ImagesDAT, 'Images.txt', 'Image')
+		self.images.update_cb += self.update_cb
+		self.upgrades = EntryLabelDATData(self, DATID.upgrades, UpgradesDAT, 'Upgrades.txt', 'Upgrade')
+		self.upgrades.update_cb += self.update_cb
+		self.technology = EntryLabelDATData(self, DATID.techdata, TechDAT, 'Techdata.txt', 'Technology')
+		self.technology.update_cb += self.update_cb
+		self.sounds = DATData(self, DATID.sfxdata, SoundsDAT, 'Sfxdata.txt', 'Sound')
+		self.sounds.update_cb += self.update_cb
+		self.portraits = DATData(self, DATID.portdata, PortraitsDAT, 'Portdata.txt', 'Portrait')
+		self.portraits.update_cb += self.update_cb
+		self.campaign = DATData(self, DATID.mapdata, CampaignDAT, 'Mapdata.txt', 'Map')
+		self.campaign.update_cb += self.update_cb
+		self.orders = EntryLabelDATData(self, DATID.orders, OrdersDAT, 'Orders.txt', 'Order')
+		self.orders.update_cb += self.update_cb
 
 		self.palettes = {}
 		self.grp_cache = {}
@@ -126,6 +147,7 @@ class DataContext(object):
 			self.mapdatatbl.load_strings()
 			iscriptbin = IScriptBIN()
 			iscriptbin.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
+			self.update_cb(DataID.iscriptbin)
 		except:
 			raise
 		finally:

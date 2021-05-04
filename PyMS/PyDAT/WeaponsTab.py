@@ -281,29 +281,27 @@ class WeaponsTab(DATTab):
 			)),
 		])
 
-	def updated_data_files(self, dataids):
-		if DataID.stat_txt in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.stat_txt in ids:
 			strings = ('None',) + self.toplevel.data_context.stat_txt.strings
 			self.labels.setentries(strings)
 			self.errormsgs.setentries(strings)
-		if DataID.cmdicons in dataids:
+		if DataID.cmdicons in ids:
 			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
 
-	def updated_entry_names(self, datids):
-		if (DATID.units in datids or DATID.orders in datids) and self.toplevel.dattabs.active == self:
+		if (DATID.units in ids or DATID.orders in ids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		if DATID.techdata in datids:
+		if DATID.techdata in ids:
 			self.unused_ddw.setentries(('None',) + self.toplevel.data_context.technology.names)
-		if DATID.upgrades in datids:
+		if DATID.upgrades in ids:
 			self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
-		if DATID.flingy in datids:
+		if DATID.flingy in ids:
 			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
 
-	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			if DATID.upgrades in datids:
+			if DATID.upgrades in ids:
 				self.upgradeentry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
-			if DATID.flingy in datids:
+			if DATID.flingy in ids:
 				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
 		else:
 			self.upgradeentry.range[1] = None
@@ -374,7 +372,7 @@ class WeaponsTab(DATTab):
 			entry.label = self.label.get()
 			self.edited = True
 			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.update_entry_names(DATID.weapons)
+				self.toplevel.data_context.dat_data(DATID.weapons).update_names()
 		if self.graphicsentry.get() != entry.graphics:
 			entry.graphics = self.graphicsentry.get()
 			self.edited = True

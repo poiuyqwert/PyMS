@@ -272,18 +272,17 @@ class BasicUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text)
 
-	def updated_entry_names(self, datids):
-		if DATID.upgrades in datids:
+	def updated_pointer_entries(self, ids):
+		if DATID.upgrades in ids:
 			self.armor_upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
-		if DATID.weapons in datids:
+		if DATID.weapons in ids:
 			self.ground_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
 			self.air_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
 
-	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			if DATID.upgrades in datids:
+			if DATID.upgrades in ids:
 				self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count()
-			if DATID.weapons in datids:
+			if DATID.weapons in ids:
 				self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
 				self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
 		else:

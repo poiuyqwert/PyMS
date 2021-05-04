@@ -89,19 +89,15 @@ class FlingyTab(DATTab):
 			)),
 		))
 
-	def updated_entry_names(self, datids):
-		if (DATID.units in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:
+	def updated_pointer_entries(self, ids):
+		if (DATID.units in ids or DATID.weapons in ids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		if DATID.sprites in datids:
+		if DATID.sprites in ids:
 			self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
-
-	def updated_entry_counts(self, datids):
-		if not DATID.sprites in datids:
-			return
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count()
-		else:
-			self.spriteentry.range[1] = None
+			if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+				self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count()
+			else:
+				self.spriteentry.range[1] = None
 
 	def updatespeed(self, num, type):
 		if type:

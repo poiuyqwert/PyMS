@@ -157,9 +157,10 @@ class AIActionsUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text)
 
-	def updated_entry_names(self, datids):
-		if not DATID.orders in datids:
+	def updated_pointer_entries(self, ids):
+		if not DATID.orders in ids:
 			return
+
 		# TODO: None for expanded dat?
 		names = self.toplevel.data_context.orders.names + ('None',)
 		self.computeridle_ddw.setentries(names)
@@ -168,9 +169,6 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackunit_ddw.setentries(names)
 		self.attackmove_ddw.setentries(names)
 
-	def updated_entry_counts(self, datids):
-		if not DATID.orders in datids:
-			return
 		count = None
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			count = self.toplevel.data_context.orders.entry_count() + 1

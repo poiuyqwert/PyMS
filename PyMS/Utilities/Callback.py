@@ -9,6 +9,10 @@ class Callback(object):
 	def add(self, callback):
 		self.callbacks.append(callback)
 
+	def __add__(self, callback):
+		self.add(callback)
+		return self
+
 	def set(self, callback):
 		self.callbacks =  [callback]
 

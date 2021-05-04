@@ -64,7 +64,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.used_by_header = StringVar()
 		Label(h, textvariable=self.used_by_header).pack(side=LEFT)
 		h.pack(side=TOP, fill=X)
-		self.used_by_listbox = ScrolledListbox(f, {'bd': 2, 'relief': SUNKEN}, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.used_by_listbox = ScrolledListbox(f, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.used_by_listbox.bind(Double.Click, self.used_by_jump)
 		self.used_by_listbox.bind(Key.Return, self.used_by_jump)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
@@ -106,13 +106,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def change_sub_tab(self, sub_tab_id):
 		pass
 
-	def updated_data_files(self, dataids):
-		pass
-
-	def updated_entry_names(self, datids):
-		pass
-
-	def updated_entry_counts(self, datids):
+	def updated_pointer_entries(self, ids):
 		pass
 
 	def deactivate(self):
@@ -170,12 +164,11 @@ class DATTab(NotebookTab, DATTabConveniences):
 
 	def add_entry(self):
 		dat_data = self.get_dat_data()
-		if not dat_data.dat.expand_entries():
+		if not dat_data.expand_entries():
 			return
-		self.toplevel.update_entry_names(self.DAT_ID)
 		self.edited = True
 		self.toplevel.update_status_bar()
-		entry_count = dat_data.dat.entry_count()
+		entry_count = dat_data.entry_count()
 		self.toplevel.changeid(entry_count - 1)
 
 	def new(self, key=None):

@@ -100,14 +100,13 @@ class SpritesTab(DATTab):
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
-	def updated_entry_names(self, datids):
-		if DATID.flingy in datids and self.toplevel.dattabs.active == self:
+	def updated_pointer_entries(self, ids):
+		if DATID.flingy in ids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		if DATID.images in datids:
+		if DATID.images in ids:
 			self.image_ddw.setentries(self.toplevel.data_context.images.names)
 
-	def updated_entry_counts(self, datids):
-		if DATID.images in datids:
+		if DATID.images in ids:
 			self.imageentry.range[1] = self.toplevel.data_context.images.entry_count()
 
 	def selcircle(self, n, t=0):

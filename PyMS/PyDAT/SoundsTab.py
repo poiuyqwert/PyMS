@@ -108,13 +108,12 @@ class SoundsTab(DATTab):
 			)),
 		))
 
-	def updated_data_files(self, dataids):
-		if DataID.sfxdatatbl in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.sfxdatatbl in ids:
 			self.sounds.setentries(('None',) + self.toplevel.data_context.sfxdatatbl.strings)
 			self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
 
-	def updated_entry_names(self, datids):
-		if DATID.units in datids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
 
 	def changesound(self, n=None):

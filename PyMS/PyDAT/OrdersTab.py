@@ -157,32 +157,30 @@ class OrdersTab(DATTab):
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
-	def updated_data_files(self, dataids):
-		if DataID.stat_txt in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.stat_txt in ids:
 			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
 			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
-		if DataID.cmdicons in dataids:
+		if DataID.cmdicons in ids:
 			self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ('None',))
 			# TODO: Limit-1 while supporting none_value
 			# self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
 
-	def updated_entry_names(self, datids):
-		if DATID.units in datids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
-		if DATID.weapons in datids:
+		if DATID.weapons in ids:
 			self.targeting_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
-		if DATID.techdata in datids:
+		if DATID.techdata in ids:
 			self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ('None',))
-		if DATID.orders in datids:
+		if DATID.orders in ids:
 			self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ('None',))
 
-	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			if DATID.weapons in datids:
+			if DATID.weapons in ids:
 				self.targetingentry.range[1] = self.toplevel.data_context.weapons.entry_count()
-			if DATID.techdata in datids:
+			if DATID.techdata in ids:
 				self.energyentry.range[1] = self.toplevel.data_context.technology.entry_count()
-			if DATID.orders in datids:
+			if DATID.orders in ids:
 				self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
 		else:
 			self.targetingentry.range[1] = None
@@ -224,7 +222,7 @@ class OrdersTab(DATTab):
 			entry.label = self.label.get()
 			self.edited = True
 			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.update_entry_names(DATID.orders)
+				self.toplevel.data_context.dat_data(DATID.orders).update_names()
 		if self.weapontargeting.get() != entry.use_weapon_targeting:
 			entry.use_weapon_targeting = self.weapontargeting.get()
 			self.edited = True

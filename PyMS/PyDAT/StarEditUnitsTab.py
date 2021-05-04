@@ -152,8 +152,8 @@ class StarEditUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text)
 
-	def updated_data_files(self, dataids):
-		if DataID.stat_txt in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.stat_txt in ids:
 			count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
 			ranks = ('No Sublabel',) + self.toplevel.data_context.stat_txt.strings[1302:1302+count]
 			self.ranks.setentries(ranks)

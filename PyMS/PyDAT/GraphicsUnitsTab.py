@@ -150,21 +150,20 @@ class GraphicsUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text)
 
-	def updated_entry_names(self, datids):
-		if DATID.flingy in datids:
+	def updated_pointer_entries(self, ids):
+		if DATID.flingy in ids:
 			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
-		if DATID.images in datids:
+		if DATID.images in ids:
 			self.construction_ddw.setentries(self.toplevel.data_context.images.names)
-		if DATID.portdata in datids:
+		if DATID.portdata in ids:
 			self.portraits_ddw.setentries(self.toplevel.data_context.portraits.names + ('None',))
 
-	def updated_entry_counts(self, datids):
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			if DATID.flingy in datids:
+			if DATID.flingy in ids:
 				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count()
-			if DATID.images in datids:
+			if DATID.images in ids:
 				self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count()
-			if DATID.portdata in datids:
+			if DATID.portdata in ids:
 				self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
 		else:
 			self.graphicsentry.range[1] = None

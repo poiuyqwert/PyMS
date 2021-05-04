@@ -1,7 +1,10 @@
 
+from DataID import DataID
+
 from ..FileFormats.GRP import CacheGRP
 
 from ..Utilities.DataCache import DATA_CACHE
+from ..Utilities.Callback import Callback
 
 class IconData(object):
 	def __init__(self, data_context):
@@ -9,6 +12,8 @@ class IconData(object):
 		self.grp = None
 		self.names = ()
 		self.images = {}
+
+		self.update_cb = Callback()
 
 	def load_grp(self):
 		try:
@@ -30,6 +35,7 @@ class IconData(object):
 			elif self.grp.frames < len(names):
 				names = names[:self.grp.frames]
 		self.names = tuple(names)
+		self.update_cb(DataID.cmdicons)
 
 	def frame_count(self):
 		if self.grp:

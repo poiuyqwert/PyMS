@@ -44,17 +44,9 @@ class UnitsTab(DATTab):
 	def change_sub_tab(self, sub_tab_id):
 		self.dattabs.display(sub_tab_id.id)
 
-	def updated_data_files(self, dataids):
+	def updated_pointer_entries(self, ids):
 		for tab,_ in self.dattabs.pages.values():
-			tab.updated_data_files(dataids)
-
-	def updated_entry_names(self, datids):
-		for tab,_ in self.dattabs.pages.values():
-			tab.updated_entry_names(datids)
-
-	def updated_entry_counts(self, datids):
-		for tab,_ in self.dattabs.pages.values():
-			tab.updated_entry_counts(datids)
+			tab.updated_pointer_entries(ids)
 
 	def load_data(self, id=None):
 		if not self.toplevel.data_context.units.dat:

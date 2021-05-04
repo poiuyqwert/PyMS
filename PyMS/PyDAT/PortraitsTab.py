@@ -84,8 +84,8 @@ class PortraitsTab(DATTab):
 			)),
 		))
 
-	def updated_data_files(self, dataids):
-		if DataID.portdatatbl in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.portdatatbl in ids:
 			portdata = ('None',) + self.toplevel.data_context.portdatatbl.strings
 			limit = len(self.toplevel.data_context.portdatatbl.strings)
 			self.idle_dd_view.setentries(portdata)
@@ -93,8 +93,7 @@ class PortraitsTab(DATTab):
 			self.talking_dd_view.setentries(portdata)
 			self.talking_entry.range[1] = limit
 
-	def updated_entry_names(self, datids):
-		if DATID.units in datids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
 
 	def load_entry(self, entry):

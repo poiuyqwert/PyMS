@@ -583,7 +583,7 @@ class GraphicsImporter(PyMSDialog):
 
 		self.find = PhotoImage(file=os.path.join(BASE_DIR,'Images','find.gif'))
 		frame = LabelFrame(self, text="BMP's:")
-		self.graphics_list = ScrolledListbox(frame, frame_config={'bd':2, 'relief': SUNKEN}, auto_bind=self, selectmode=EXTENDED, activestyle=DOTBOX, height=3, bd=0, highlightthickness=0, exportselection=0)
+		self.graphics_list = ScrolledListbox(frame, auto_bind=self, selectmode=EXTENDED, activestyle=DOTBOX, height=3, bd=0, highlightthickness=0, exportselection=0)
 		self.graphics_list.pack(side=TOP, fill=BOTH, expand=1, padx=2,pady=2)
 		self.graphics_list.bind('<<ListboxSelect>>', self.update_states)
 		buts = Frame(frame)

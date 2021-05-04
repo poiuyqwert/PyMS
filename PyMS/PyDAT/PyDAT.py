@@ -11,9 +11,9 @@ from PortraitsTab import PortraitsTab
 from MapsTab import MapsTab
 from OrdersTab import OrdersTab
 from DataContext import DataContext
-from DataID import DATID, DataID
 from SaveMPQDialog import SaveMPQDialog
 from DATSettingsDialog import DATSettingsDialog
+from EntryNameOverrides import EntryNameOverrides
 
 from ..FileFormats.MPQ.SFmpq import *
 from ..FileFormats.DAT import *
@@ -53,6 +53,22 @@ class PyDAT(MainWindow):
 		setup_trace(self, 'PyDAT')
 
 		self.data_context = DataContext()
+	
+		self.updates = []
+		self.update_after_id = None
+		def buffer_updates(id):
+			if id in self.updates:
+				return
+			self.updates.append(id)
+			if self.update_after_id:
+				self.after_cancel(self.update_after_id)
+			def perform_updates():
+				self.update_after_id = None
+				updates = self.updates
+				self.updates = []
+				self.updated_pointer_entries(updates)
+			self.update_after_id = self.after(1, perform_updates)
+		self.data_context.update_cb += buffer_updates
 
 		self.data_context.load_palettes()
 
@@ -69,7 +85,10 @@ class PyDAT(MainWindow):
 		toolbar.add_button('export', self.export, 'Export to TXT', Ctrl.e)
 		toolbar.add_button('savempq', self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=SFMPQ_LOADED)
 		toolbar.add_section()
+		toolbar.add_button('idsort', self.override_name, 'Name Overrides', Shift.Ctrl.n)
+		toolbar.add_section()
 		toolbar.add_button('asc3topyai', self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
+		toolbar.add_button('debug', self.open_files, 'Reload data files', Ctrl.r)
 		toolbar.add_section()
 		toolbar.add_button('register', self.register, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		toolbar.add_button('help', self.help, 'Help', Key.F1)
@@ -80,7 +99,7 @@ class PyDAT(MainWindow):
 
 		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)
 		left = Frame(self.hor_pane)
-		self.listbox = ScrolledListbox(left, {'bd': 2, 'relief': SUNKEN}, scroll_speed=2, font=couriernew, width=45, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(left, scroll_speed=2, font=couriernew, width=45, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(ButtonRelease.Right_Click, self.popup)
 		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.changeid())
@@ -114,6 +133,8 @@ class PyDAT(MainWindow):
 		self.listmenu.add_separator()
 		self.listmenu_command_add_entry = self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a)
 		self.listmenu_command_set_entry_count = self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s)
+		self.listmenu.add_separator()
+		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=Shift.Ctrl.n)
 
 		self.status = StringVar()
 		self.expanded = StringVar()
@@ -154,7 +175,7 @@ class PyDAT(MainWindow):
 
 		self.data_context.load_mpqs()
 
-		e = self.open_files()
+		e = self.open_files(dat_files=True)
 		if e:
 			self.mpqtbl(err=e)
 
@@ -178,10 +199,6 @@ class PyDAT(MainWindow):
 		self.update_entry_listing(True)
 		self.update_status_bar()
 		self.dattabs.active.load_data()
-
-	def update_entry_names(self, datid):
-		self.data_context.dat_data(datid).update_names()
-		self.updated_entry_names([datid])
 
 	def update_entry_listing(self, update_scroll=False):
 		self.listbox.delete(0,END)
@@ -209,31 +226,21 @@ class PyDAT(MainWindow):
 		else:
 			self.expanded.set('')
 
-	def updated_data_files(self, dataids=DataID.ALL):
+	def updated_pointer_entries(self, ids):
 		for page in self.pages:
-			page.updated_data_files(dataids)
+			page.updated_pointer_entries(ids)
+			if self.dattabs.active == page and page.page_title in ids:
+				self.update_entry_listing(True)
 
-	def updated_entry_names(self, datids=DATID.ALL):
-		for page in self.pages:
-			page.updated_entry_names(datids)
-			if self.dattabs.active == page and page.page_title in datids:
-				self.update_entry_listing()
-
-	def updated_entry_counts(self, datids=DATID.ALL):
-		for page in self.pages:
-			page.updated_entry_counts(datids)
-
-	def open_files(self):
+	def open_files(self, dat_files=False):
 		err = None
 		try:
 			self.data_context.load_additional_files()
 		except PyMSError, e:
 			err = e
 		else:
-			self.data_context.load_dat_files()
-			self.updated_data_files()
-			self.updated_entry_counts()
-			self.updated_entry_names()
+			if dat_files:
+				self.data_context.load_dat_files()
 			self.tab_activated()
 		return err
 
@@ -261,7 +268,7 @@ class PyDAT(MainWindow):
 			if show_selection:
 				self.listbox.see(entry_id)
 			if focus_list:
-				self.listbox.listbox.focus_set()
+				self.listbox.focus_set()
 
 	def findnext(self, key=None):
 		find = self.find.get()
@@ -312,6 +319,9 @@ class PyDAT(MainWindow):
 	def set_entry_count(self):
 		pass
 
+	def override_name(self):
+		EntryNameOverrides(self, self.data_context, self.dattabs.active.DAT_ID, self.dattabs.active.id)
+
 	def new(self, key=None):
 		self.dattabs.active.new()
 
@@ -327,8 +337,6 @@ class PyDAT(MainWindow):
 				except PyMSError, e:
 					ErrorDialog(self, e)
 				else:
-					self.updated_entry_names()
-					self.updated_entry_counts()
 					self.dattabs.display(page.page_title)
 					if page.get_dat_data().dat.is_expanded():
 						self.data_context.settings.dont_warn.warn('expanded_dat', self, 'This %s file is expanded.' % filename)

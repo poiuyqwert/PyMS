@@ -134,9 +134,10 @@ class SoundsUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text)
 
-	def updated_entry_names(self, datids):
-		if not DATID.sfxdata in datids:
+	def updated_pointer_entries(self, ids):
+		if not DATID.sfxdata in ids:
 			return
+
 		names = self.toplevel.data_context.sounds.names
 		dropdowns = (
 			self.ready_sound_dropdown_widget,
@@ -150,9 +151,6 @@ class SoundsUnitsTab(DATUnitsTab):
 		for dropdown in dropdowns:
 			dropdown.setentries(names)
 
-	def updated_entry_counts(self, datids):
-		if not DATID.sfxdata in datids:
-			return
 		limit = None
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			limit = self.toplevel.data_context.sounds.entry_count() - 1

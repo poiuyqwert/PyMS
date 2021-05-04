@@ -33,8 +33,8 @@ class MapsTab(DATTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def updated_data_files(self, dataids):
-		if DataID.mapdatatbl in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.mapdatatbl in ids:
 			self.missions.setentries(self.toplevel.data_context.mapdatatbl.strings + ('None',))
 			self.missionentry.range[1] = len(self.toplevel.data_context.mapdatatbl.strings)
 

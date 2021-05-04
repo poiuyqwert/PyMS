@@ -1,15 +1,19 @@
 
+from DataID import DATID
+
 from ..FileFormats.DAT import *
 
 from ..Utilities.utils import isstr
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.DataCache import DATA_CACHE
+from ..Utilities.Callback import Callback
 
 import copy
 
 class DATData(object):
-	def __init__(self, data_context, dat_type, data_file, entry_type_name):
+	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name):
 		self.data_context = data_context
+		self.dat_id = dat_id
 		self.dat_type = dat_type
 		self.data_file = data_file
 		self.entry_type_name = entry_type_name
@@ -19,30 +23,29 @@ class DATData(object):
 		self.names = ()
 		self.name_overrides = {}
 
+		self.update_cb = Callback()
+
 	def load_defaults(self, mpqhandler):
-		update_names = False
 		try:
 			dat = self.dat_type()
 			dat.load_file(mpqhandler.get_file('MPQ:arr\\' + self.dat_type.FILE_NAME, MPQHandler.GET_FROM_FOLDER_OR_MPQ))
-			update_names = True
 		except:
 			pass
 		else:
 			self.default_dat = dat
 		if self.dat == None:
 			self.new_file()
-			update_names = True
-		if update_names:
+		else:
 			self.update_names()
 
 	def new_file(self):
 		if self.default_dat:
 			self.dat = copy.deepcopy(self.default_dat)
 			self.file_path = None
-			self.update_names()
 		else:
 			self.dat = self.dat_type()
 			self.dat.new_file()
+		self.update_names()
 
 	def load_file(self, file_info):
 		if isstr(file_info):
@@ -67,13 +70,21 @@ class DATData(object):
 		for entry_id in range(entry_count):
 			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 				names.append(self.reserved_name(entry_id))
-			elif entry_id in self.name_overrides:
-				names.append(self.name_overrides[entry_id])
-			elif entry_id >= len(DATA_CACHE[self.data_file]):
-				names.append(self.unknown_name(entry_id))
 			else:
-				names.append(DATA_CACHE[self.data_file][entry_id])
+				name = ''
+				if entry_id >= len(DATA_CACHE[self.data_file]):
+					name = self.unknown_name(entry_id)
+				else:
+					name = DATA_CACHE[self.data_file][entry_id]
+				if entry_id in self.name_overrides:
+					append, override = self.name_overrides[entry_id]
+					if append:
+						name += " " + override
+					else:
+						name = override
+				names.append(name)
 		self.names = tuple(names)
+		self.update_cb(self.dat_id)
 
 	def reserved_name(self, entry_id):
 		return "Reserved %s #%s" % (self.entry_type_name, entry_id)
@@ -103,9 +114,15 @@ class DATData(object):
 			return self.default_dat.entry_count()
 		return self.dat_type.FORMAT.entries
 
+	def expand_entries(self):
+		expanded = self.dat.expand_entries()
+		if expanded:
+			self.update_names()
+		return expanded
+
 class UnitsDATData(DATData):
 	def __init__(self, data_context):
-		DATData.__init__(self, data_context, UnitsDAT, 'Units.txt', 'Unit')
+		DATData.__init__(self, data_context, DATID.units, UnitsDAT, 'Units.txt', 'Unit')
 
 	def update_names(self):
 		names = []
@@ -117,24 +134,32 @@ class UnitsDATData(DATData):
 		for entry_id in range(entry_count):
 			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
 				names.append(self.reserved_name(entry_id))
-			elif entry_id in self.name_overrides:
-				names.append(self.name_overrides[entry_id])
-			elif strings and self.data_context.settings.settings.get('customlabels'):
-				if entry_id >= len(strings):
-					names.append(self.unknown_name(entry_id))
-				else:
-					names.append(strings[entry_id])
 			else:
-				if entry_id >= len(DATA_CACHE[self.data_file]):
-					names.append(self.unknown_name(entry_id))
+				name = ''
+				if strings and self.data_context.settings.settings.get('customlabels'):
+					if entry_id >= len(strings):
+						name = self.unknown_name(entry_id)
+					else:
+						name = strings[entry_id]
 				else:
-					names.append(DATA_CACHE[self.data_file][entry_id])
+					if entry_id >= len(DATA_CACHE[self.data_file]):
+						name = self.unknown_name(entry_id)
+					else:
+						name = DATA_CACHE[self.data_file][entry_id]
+				if entry_id in self.name_overrides:
+					append, override = self.name_overrides[entry_id]
+					if append:
+						name += " " + override
+					else:
+						name = override
+				names.append(name)
 		self.names = tuple(names)
+		self.update_cb(self.dat_id)
 
 class EntryLabelDATData(DATData):
-	def __init__(self, data_context, dat_type, data_file, entry_type_name, label_offset=1):
+	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name, label_offset=1):
 		self.label_offset = label_offset
-		DATData.__init__(self, data_context, dat_type, data_file, entry_type_name)
+		DATData.__init__(self, data_context, dat_id, dat_type, data_file, entry_type_name)
 
 	def update_names(self):
 		names = []
@@ -144,24 +169,31 @@ class EntryLabelDATData(DATData):
 			entry_count = dat.entry_count()
 		strings = self.data_context.stat_txt.strings
 		for entry_id in range(entry_count):
-			if entry_id in self.name_overrides:
-				names.append(self.name_overrides[entry_id])
-			elif strings and self.data_context.settings.settings.get('customlabels'):
+			name = ''
+			if strings and self.data_context.settings.settings.get('customlabels'):
 				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
-					names.append(self.reserved_name(entry_id))
+					name = self.reserved_name(entry_id)
 				elif not dat:
-					names.append(self.unknown_name())
+					name = self.unknown_name()
 				else:
 					label_id = dat.get_entry(entry_id).label - self.label_offset
 					if label_id < 0:
-						names.append('None')
+						name = 'None'
 					elif label_id >= len(strings):
-						names.append(self.unknown_name(entry_id))
+						name = self.unknown_name(entry_id)
 					else:
-						names.append(strings[label_id])
+						name = strings[label_id]
 			else:
 				if entry_id >= len(DATA_CACHE[self.data_file]):
-					names.append(self.unknown_name(entry_id))
+					name = self.unknown_name(entry_id)
 				else:
-					names.append(DATA_CACHE[self.data_file][entry_id])
+					name = DATA_CACHE[self.data_file][entry_id]
+			if entry_id in self.name_overrides:
+				append, override = self.name_overrides[entry_id]
+				if append:
+					name += " " + override
+				else:
+					name = override
+			names.append(name)
 		self.names = tuple(names)
+		self.update_cb(self.dat_id)

@@ -134,15 +134,14 @@ class TechnologyTab(DATTab):
 			)),
 		))
 
-	def updated_data_files(self, dataids):
-		if DataID.cmdicons in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.cmdicons in ids:
 			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
-		if DataID.stat_txt in dataids:
+		if DataID.stat_txt in ids:
 			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
 			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
 
-	def updated_entry_names(self, datids):
-		if (DATID.orders in datids or DATID.weapons in datids) and self.toplevel.dattabs.active == self:
+		if (DATID.orders in ids or DATID.weapons in ids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
 
 	def selicon(self, n, t=0):
@@ -200,7 +199,7 @@ class TechnologyTab(DATTab):
 			entry.label = self.labelentry.get()
 			self.edited = True
 			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.update_entry_names(DATID.techdata)
+				self.toplevel.data_context.dat_data(DATID.techdata).update_names()
 		if self.race.get() != entry.staredit_race:
 			entry.staredit_race = self.race.get()
 			self.edited = True

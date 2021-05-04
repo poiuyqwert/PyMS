@@ -181,13 +181,13 @@ class ImagesTab(DATTab):
 			)),
 		))
 
-	def updated_data_files(self, dataids):
-		if DataID.imagestbl in dataids:
+	def updated_pointer_entries(self, ids):
+		if DataID.imagestbl in ids:
 			image_names = ('None',) + self.toplevel.data_context.imagestbl.strings
 			for dropdown,entry_var in self.grpdds:
 				dropdown.setentries(image_names)
 				entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)
-		if DataID.iscriptbin in dataids:
+		if DataID.iscriptbin in ids:
 			iscript_names = []
 			last = -1
 			for id in self.toplevel.data_context.iscriptbin.headers.keys():
@@ -204,8 +204,7 @@ class ImagesTab(DATTab):
 			self.iscripts.setentries(iscript_names)
 			self.iscriptentry.range[1] = len(iscript_names)-1
 
-	def updated_entry_names(self, datids):
-		if (DATID.units in datids or DATID.sprites in datids) and self.toplevel.dattabs.active == self:
+		if (DATID.units in ids or DATID.sprites in ids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
 
 	def shieldupdate(self, n):

@@ -9,7 +9,7 @@ SHOW_SCROLL_NEEDED = 2
 
 class ScrolledListbox(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent, frame_config={}, horizontal=SHOW_SCROLL_NEEDED, vertical=SHOW_SCROLL_NEEDED, auto_bind=True, scroll_speed=1, **kwargs):
+	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=SHOW_SCROLL_NEEDED, vertical=SHOW_SCROLL_NEEDED, auto_bind=True, scroll_speed=1, **kwargs):
 		Frame.__init__(self, parent, **frame_config)
 
 		self.listbox = Listbox(self, **kwargs)
