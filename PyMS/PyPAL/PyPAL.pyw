@@ -16,13 +16,7 @@ LONG_VERSION = 'v%s' % VERSIONS['PyPAL']
 class PyPAL(Tk):
 	def __init__(self, guifile=None):
 		#Config
-		try:
-			self.settings = eval(file(os.path.join(BASE_DIR,'Settings','PyPAL.txt'), 'r').read().strip(),{})
-		except IOError, e:
-			if e.args[0] == 2:
-				self.settings = {}
-			else:
-				raise
+		self.settings = Settings('PyPAL', '1')
 
 		#Window
 		Tk.__init__(self)
@@ -125,6 +119,8 @@ class PyPAL(Tk):
 		if guifile:
 			self.open(file=guifile)
 
+		self.settings.windows.load_window_size('main', self)
+
 		start_new_thread(check_update, (self, 'PyPAL'))
 
 	def unsaved(self):
@@ -140,15 +136,6 @@ class PyPAL(Tk):
 					self.save()
 				else:
 					self.saveas()
-
-	def select_file(self, title, open=True, ext='.pal', filetypes=[('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')]):
-		path = self.settings.get('lastpath', BASE_DIR)
-		self._pyms__window_blocking = True
-		file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-		self._pyms__window_blocking = False
-		if file:
-			self.settings['lastpath'] = os.path.dirname(file)
-		return file
 
 	def action_states(self):
 		file = [NORMAL,DISABLED][not self.palette]
@@ -241,7 +228,7 @@ class PyPAL(Tk):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.select_file('Open Palette')
+				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', [('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')])
 				if not file:
 					return
 			pal = PAL.Palette()
@@ -289,7 +276,7 @@ class PyPAL(Tk):
 			return
 		types = [(('RIFF PAL','*.pal'),('JASC PAL','*.pal'),('StarCraft PAL','*.pal'),('StarCraft Terrain WPE','*.wpe'))[type]]
 		types.append(('All Files','*'))
-		file = self.select_file('Save Palette As', False, filetypes=types)
+		file = self.settings.lastpath.select_file('save', self, 'Save Palette As', types[0][1], filetypes=types, save=True)
 		if not file:
 			return True
 		self.file = file
@@ -329,7 +316,8 @@ class PyPAL(Tk):
 
 	def exit(self, e=None):
 		if not self.unsaved():
-			savesettings('PyPAL', self.settings)
+			self.settings.windows.save_window_size('main', self)
+			self.settings.save()
 			self.destroy()
 
 def main():
