@@ -70,8 +70,8 @@ class Palette:
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
 		f.write('JASC-PAL\r\n0100\r\n256\r\n')
-		for c in self.palette:
-			f.write(' '.join(c) + '\r\n')
+		for color in self.palette:
+			f.write(' '.join(str(c) for c in color) + '\r\n')
 		f.close()
 
 	def save_sc_wpe(self, file):
