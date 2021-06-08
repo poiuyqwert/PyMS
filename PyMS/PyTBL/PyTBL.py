@@ -424,7 +424,10 @@ class PyTBL(MainWindow):
 	def add(self, key=None, i=END):
 		if not self.is_file_open():
 			return
-		self.tbl.strings.append('')
+		if i == END:
+			self.tbl.strings.append('')
+		else:
+			self.tbl.strings.insert(i, '')
 		self.listbox.insert(i, '')
 		self.listbox.select_clear(0, END)
 		self.listbox.select_set(i)
@@ -432,7 +435,7 @@ class PyTBL(MainWindow):
 		self.edited = True
 		self.editstatus['state'] = NORMAL
 		self.action_states()
-		self.update(status=True)
+		self.update()
 
 	def insert(self, key=None):
 		if not self.is_string_selected():
@@ -480,8 +483,8 @@ class PyTBL(MainWindow):
 		if not self.findwindow:
 			self.findwindow = FindDialog(self)
 			self.bind(Key.F3, self.findwindow.findnext)
-		elif self.findwindow.state() == 'withdrawn':
-			self.findwindow.deiconify()
+		else:
+			self.findwindow.make_active()
 			self.findwindow.findentry.focus_set(highlight=True)
 
 	def goto(self, key=None):
@@ -489,8 +492,8 @@ class PyTBL(MainWindow):
 			return
 		if not self.gotowindow:
 			self.gotowindow = GotoDialog(self)
-		elif self.gotowindow.state() == 'withdrawn':
-			self.gotowindow.deiconify()
+		else:
+			self.gotowindow.make_active()
 			self.gotowindow.gotoentry.focus_set(highlight=True)
 
 	def preview(self, key=None):

@@ -28,6 +28,16 @@ class MainWindow(Tk.Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'PyMS','Images','%s.xbm' % name)
 			self.wm_iconbitmap(self.icon)
 
+class Toplevel(Tk.Toplevel):
+	def make_active(self):
+		if self.state() == 'withdrawn':
+			self.deiconify()
+		self.lift()
+		self.focus_force()
+		if not self.grab_status():
+			self.grab_set()
+			self.grab_release()
+
 class Menu(Tk.Menu):
 	class Command(object):
 		def __init__(self, menu, index):
