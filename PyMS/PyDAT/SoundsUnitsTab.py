@@ -151,7 +151,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		for dropdown in dropdowns:
 			dropdown.setentries(names)
 
-		limit = None
+		limit = 65535
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			limit = self.toplevel.data_context.sounds.entry_count() - 1
 		variables = (

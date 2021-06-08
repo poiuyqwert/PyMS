@@ -304,8 +304,8 @@ class WeaponsTab(DATTab):
 			if DATID.flingy in ids:
 				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
 		else:
-			self.upgradeentry.range[1] = None
-			self.graphicsentry.range[1] = None
+			self.upgradeentry.range[1] = 255
+			self.graphicsentry.range[1] = 4294967295
 		string_limit = len(self.toplevel.data_context.stat_txt.strings) - 1
 		self.labelentry.range[1] = string_limit
 		self.errormsgentry.range[1] = string_limit

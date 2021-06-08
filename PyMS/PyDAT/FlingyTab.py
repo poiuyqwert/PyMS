@@ -95,9 +95,9 @@ class FlingyTab(DATTab):
 		if DATID.sprites in ids:
 			self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
 			if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-				self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count()
+				self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count() - 1
 			else:
-				self.spriteentry.range[1] = None
+				self.spriteentry.range[1] = 65535
 
 	def updatespeed(self, num, type):
 		if type:

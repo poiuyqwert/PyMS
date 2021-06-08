@@ -41,12 +41,7 @@ class PyDAT(MainWindow):
 	def __init__(self, guifile=None):
 		MainWindow.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
-		try:
-			self.icon = os.path.join(BASE_DIR, 'PyMS','Images','PyDAT.ico')
-			self.wm_iconbitmap(self.icon)
-		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR, 'PyMS','Images','PyDAT.xbm')
-			self.wm_iconbitmap(self.icon)
+		self.set_icon('PyDAT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyDAT', VERSIONS['PyDAT'])
 		ga.track(GAScreen('PyDAT'))

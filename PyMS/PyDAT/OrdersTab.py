@@ -183,9 +183,9 @@ class OrdersTab(DATTab):
 			if DATID.orders in ids:
 				self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
 		else:
-			self.targetingentry.range[1] = None
-			self.energyentry.range[1] = None
-			self.obscuredentry.range[1] = None
+			self.targetingentry.range[1] = 255
+			self.energyentry.range[1] = 255
+			self.obscuredentry.range[1] = 255
 
 	def drawpreview(self):
 		self.preview.delete(ALL)

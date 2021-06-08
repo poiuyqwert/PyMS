@@ -160,15 +160,15 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			if DATID.flingy in ids:
-				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count()
+				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
 			if DATID.images in ids:
-				self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count()
+				self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count() - 1
 			if DATID.portdata in ids:
 				self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
 		else:
-			self.graphicsentry.range[1] = None
-			self.constructionentry.range[1] = None
-			self.portraitsentry.range[1] = None
+			self.graphicsentry.range[1] = 65535 if self.toplevel.data_context.units.is_expanded() else 255
+			self.constructionentry.range[1] = 4294967295
+			self.portraitsentry.range[1] = 65535
 
 	def drawboxes(self):
 		if self.showpreview.get() and self.showplace.get():

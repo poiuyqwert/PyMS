@@ -18,6 +18,16 @@ class MainWindow(Tk.Tk):
 			pass
 		self.mainloop()
 
+	def set_icon(self, name):
+		from .utils import BASE_DIR
+		import os
+		try:
+			self.icon = os.path.join(BASE_DIR, 'PyMS','Images','%s.ico' % name)
+			self.wm_iconbitmap(self.icon)
+		except:
+			self.icon = '@%s' % os.path.join(BASE_DIR, 'PyMS','Images','%s.xbm' % name)
+			self.wm_iconbitmap(self.icon)
+
 class Menu(Tk.Menu):
 	class Command(object):
 		def __init__(self, menu, index):

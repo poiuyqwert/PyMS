@@ -107,7 +107,7 @@ class SpritesTab(DATTab):
 			self.image_ddw.setentries(self.toplevel.data_context.images.names)
 
 		if DATID.images in ids:
-			self.imageentry.range[1] = self.toplevel.data_context.images.entry_count()
+			self.imageentry.range[1] = self.toplevel.data_context.images.entry_count() - 1
 
 	def selcircle(self, n, t=0):
 		if t:

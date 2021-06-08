@@ -169,9 +169,9 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackunit_ddw.setentries(names)
 		self.attackmove_ddw.setentries(names)
 
-		count = None
+		count = 255
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			count = self.toplevel.data_context.orders.entry_count() + 1
+			count = self.toplevel.data_context.orders.entry_count()
 		self.computeridleentry.range[1] = count
 		self.humanidleentry.range[1] = count
 		self.returntoidleentry.range[1] = count

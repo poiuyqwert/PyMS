@@ -23,7 +23,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.shield_amount = IntegerVar(0,[0,65535])
 		self.shield_enabled = IntVar()
 		self.armor = IntegerVar(0,[0,255])
-		self.armor_upgrade_entry = IntegerVar(0,[0,60])
+		self.armor_upgrade_entry = IntegerVar(0, [0,60])
 		self.armor_upgrade = IntVar()
 
 		statframe = Frame(scrollview.content_view)
@@ -281,14 +281,14 @@ class BasicUnitsTab(DATUnitsTab):
 
 		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
 			if DATID.upgrades in ids:
-				self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count()
+				self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
 			if DATID.weapons in ids:
 				self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
 				self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
 		else:
-			self.armor_upgrade_entry.range[1] = None
-			self.ground_weapon_entry.range[1] = None
-			self.air_weapon_entry.range[1] = None
+			self.armor_upgrade_entry.range[1] = 255
+			self.ground_weapon_entry.range[1] = 255
+			self.air_weapon_entry.range[1] = 255
 
 	def load_data(self, entry):
 		self.hit_points_whole.set(entry.hit_points.whole)

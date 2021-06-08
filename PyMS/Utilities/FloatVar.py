@@ -46,6 +46,13 @@ class FloatVar(IntegerVar):
 			self.check = True
 
 	def get(self, s=False):
+		try:
+			string = StringVar.get(self)
+		except:
+			string = ''
 		if s:
-			return StringVar.get(self)
-		return float(StringVar.get(self))
+			return string
+		try:
+			return float(string)
+		except:
+			return 0.0

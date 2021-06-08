@@ -81,9 +81,7 @@ class StarEditUnitsTab(DATUnitsTab):
 			l.pack(side=LEFT, fill=BOTH, expand=(lt == 'Availability'))
 		top.pack(fill=X)
 
-		r = 0
-		ranks = []
-		self.rankentry = IntegerVar(0, [0,r])
+		self.rankentry = IntegerVar(0, [0,0])
 		self.rankdd = IntVar()
 		self.mapstring = IntegerVar(0, [0,65535])
 
@@ -93,7 +91,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		Label(f, text='Rank/Sublabel:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.rankentry, font=couriernew, width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		self.ranks = DropDown(f, self.rankdd, ranks, self.rankentry)
+		self.ranks = DropDown(f, self.rankdd, [], self.rankentry)
 		self.ranks.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Rank/Sublabel', 'UnitRank')
 		f.pack(fill=X)
