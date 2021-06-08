@@ -126,6 +126,15 @@ def binary(flags, count):
 		result = ('1' if flags & (1 << n) else '0') + result
 	return result
 
+def flags_code(flags, name_map):
+	names = []
+	for (flag, name) in sorted(name_map.iteritems(), key=lambda p: p[0]):
+		if flags & flag:
+			names.append(name)
+	if not names:
+		return 0
+	return ' | '.join(names)
+
 def fit(label, text, width=80, end=False, indent=0):
 	r = label
 	if not indent:
