@@ -120,7 +120,10 @@ class SettingDict(object):
 			o = c
 		self[key] = sizes
 
-	def load_pane_size(self, key, panedwindow, default, index=0):
+	def load_pane_size(self, key, panedwindow, default=None, index=0):
+		if not key in self and default == None:
+			return
+		panedwindow.update()
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		size = [0,0]
 		size[axis] = self.get(key, default)
@@ -129,6 +132,7 @@ class SettingDict(object):
 	def load_pane_sizes(self, key, panedwindow, defaults):
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		o = 0
+		panedwindow.update()
 		for n,s in enumerate(self.get(key, defaults)[:len(panedwindow.panes())-1]):
 			size = [0,0]
 			o += s

@@ -54,9 +54,13 @@ class Modifier:
 		pass
 
 Modifier.Shift = Field('Shift', '⇧' if is_mac() else None)
+Modifier.Shift.state = 0x1
 Modifier.Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
+Modifier.Ctrl.state = 0x8 if is_mac() else 0x4
 Modifier.Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
+Modifier.Alt.state = 0x10
 Modifier.Mac.Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
+Modifier.Mac.Ctrl.state = 0x4
 
 Modifier.Double = Field('Double')
 Modifier.Triple = Field('Triple')

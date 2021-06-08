@@ -85,7 +85,9 @@ class ScrolledListbox(Frame):
 				elif event.delta <= 0 and cur[1] < 1:
 					view('scroll', scroll_speed, 'units')
 				return "break"
-			def move(offset):
+			def move(event, offset):
+				if event.state & (Modifier.Shift.state | Modifier.Mac.Ctrl.state | Modifier.Alt.state | Modifier.Ctrl.state):
+					return "continue"
 				index = 0
 				if offset == END:
 					index = self.size()-2
@@ -97,15 +99,15 @@ class ScrolledListbox(Frame):
 				self.listbox.event_generate('<<ListboxSelect>>')
 				return "break"
 			bind = [
-				('<MouseWheel>', scroll),
-				('<Home>', lambda e,i=0: move(i)),
-				('<End>', lambda e,i=END: move(i)),
-				('<Up>', lambda e,i=-1: move(i)),
-				('<Left>', lambda e,i=-1: move(i)),
-				('<Down>', lambda e,i=1: move(i)),
-				('<Right>', lambda e,i=1: move(i)),
-				('<Prior>', lambda e,i=-10: move(i)),
-				('<Next>', lambda e,i=10: move(i)),
+				(Mouse.Scroll, scroll),
+				(Key.Home, lambda event: move(event, 0)),
+				(Key.End, lambda event: move(event, END)),
+				(Key.Up, lambda event: move(event, -1)),
+				(Key.Left, lambda event: move(event, -1)),
+				(Key.Down, lambda event: move(event, 1)),
+				(Key.Right, lambda event: move(event, 1)),
+				(Key.Prior, lambda event: move(event, -10)),
+				(Key.Next, lambda event: move(event, 10)),
 			]
 			for b in bind:
 				bind_to.bind(*b, add=True)

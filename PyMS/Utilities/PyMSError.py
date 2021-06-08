@@ -27,7 +27,7 @@ class PyMSError(Exception):
 			if self.code != None:
 				r += fit('    Line %s: ' % self.line, self.code)
 			else:
-				r += fit('    Line %s')
+				r += '    Line %s' % self.line
 		if self.warnings:
 			for w in self.warnings:
 				r += repr(w)
