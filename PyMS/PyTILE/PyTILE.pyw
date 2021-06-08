@@ -220,7 +220,7 @@ class MegaEditorView(Frame):
 
 	def click_selection(self, minitile_n):
 		self.minitile_n = minitile_n
-		self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][minitile_n][0], silence=True)
+		self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][minitile_n][0])
 		self.draw_edit_mode()
 	def click_flipped(self, minitile_n):
 		megatile = list(self.delegate.tileset.vx4.graphics[self.megatile_id])
@@ -313,9 +313,9 @@ class MegaEditorView(Frame):
 
 	def load_megatile(self):
 		if self.delegate.tileset and self.megatile_id != None:
-			self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0], silence=True)
+			self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0])
 		else:
-			self.minitile.set(0, silence=True)
+			self.minitile.set(0)
 		self.draw()
 
 	def set_megatile(self, megatile_id):
@@ -331,7 +331,7 @@ class MegaEditorView(Frame):
 		self.delegate.mark_edited()
 	def change(self, tiletype, minitile_id):
 		if tiletype == TILETYPE_MINI:
-			self.minitile.set(minitile_id, silence=True)
+			self.minitile.set(minitile_id)
 		elif tiletype != None:
 			return
 		megatile = list(self.delegate.tileset.vx4.graphics[self.megatile_id])
