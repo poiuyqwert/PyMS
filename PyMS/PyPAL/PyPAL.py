@@ -1,32 +1,31 @@
-from Libs.utils import *
-from Libs.setutils import *
-from Libs.trace import setup_trace
-from Libs import PAL,BMP
-from Libs.analytics import *
 
-from Tkinter import *
-from tkMessageBox import *
-import tkFileDialog,tkColorChooser
+from ..FileFormats import Palette
+from ..FileFormats import BMP
 
-from thread import start_new_thread
-import optparse, os, webbrowser, sys
+from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.UIKit import *
+from ..Utilities.Settings import Settings
+from ..Utilities.analytics import ga, GAScreen
+from ..Utilities.trace import setup_trace
+from ..Utilities.Toolbar import Toolbar
+from ..Utilities.UpdateDialog import UpdateDialog
+from ..Utilities.PyMSError import PyMSError
+from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.AboutDialog import AboutDialog
+
+import os, webbrowser
 
 LONG_VERSION = 'v%s' % VERSIONS['PyPAL']
 
-class PyPAL(Tk):
+class PyPAL(MainWindow):
 	def __init__(self, guifile=None):
 		#Config
 		self.settings = Settings('PyPAL', '1')
 
 		#Window
-		Tk.__init__(self)
+		MainWindow.__init__(self)
 		self.title('PyPAL %s' % LONG_VERSION)
-		try:
-			self.icon = os.path.join(BASE_DIR,'Images','PyPAL.ico')
-			self.wm_iconbitmap(self.icon)
-		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyPAL.xbm')
-			self.wm_iconbitmap(self.icon)
+		self.set_icon('PyPAL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPAL', VERSIONS['PyPAL'])
 		ga.track(GAScreen('PyPAL'))
@@ -40,75 +39,45 @@ class PyPAL(Tk):
 		self.selected = None
 
 		#Toolbar
-		buttons = [
-			('new', self.new, 'New (Ctrl+N)', NORMAL, 'Ctrl+N'),
-			('open', self.open, 'Open (Ctrl+O)', NORMAL, 'Ctrl+O'),
-			('save', self.save, 'Save (Ctrl+S)', DISABLED, 'Ctrl+S'),
-			('saveriff', lambda key=None,i=0: self.saveas(key,type=i), 'Save as RIFF *.pal (Ctrl+R)', DISABLED, 'Ctrl+R'),
-			('savejasc', lambda key=None,i=1: self.saveas(key,type=i), 'Save as JASC *.pal (Ctrl+J)', DISABLED, 'Ctrl+J'),
-			('savepal', lambda key=None,i=2: self.saveas(key,type=i), 'Save as StarCraft *.pal (Ctrl+P)', DISABLED, 'Ctrl+P'),
-			('savewpe', lambda key=None,i=3: self.saveas(key,type=i), 'Save as StarCraft Terrain *.wpe (Ctrl+T)', DISABLED, 'Ctrl+T'),
-			('close', self.close, 'Close (Ctrl+W)', DISABLED, 'Ctrl+W'),
-			10,
-			('register', self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', [DISABLED,NORMAL][win_reg], ''),
-			('help', self.help, 'Help (F1)', NORMAL, 'F1'),
-			('about', self.about, 'About PyPAL', NORMAL, ''),
-			10,
-			('exit', self.exit, 'Exit (Alt+F4)', NORMAL, 'Alt+F4'),
-		]
-		self.buttons = {}
-		toolbar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
-				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-				button.image = image
-				button.tooltip = Tooltip(button, btn[2])
-				button.pack(side=LEFT)
-				self.buttons[btn[0]] = button
-				a = btn[4]
-				if a:
-					if not a.startswith('F'):
-						self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
-					else:
-						self.bind('<%s>' % a, btn[1])
-			else:
-				Frame(toolbar, width=btn).pack(side=LEFT)
-		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar = Toolbar(self)
+		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, identifier='save', tags='file_open')
+		self.toolbar.add_button('saveriff', lambda: self.saveas(type=0), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
+		self.toolbar.add_button('savejasc', lambda: self.saveas(type=1), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
+		self.toolbar.add_button('savepal', lambda: self.saveas(type=2), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button('savewpe', lambda: self.saveas(type=3), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_section()
+		self.toolbar.add_button('register', self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
+		self.toolbar.add_button('about', self.about, 'About PyPAL')
+		self.toolbar.add_section()
+		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
-		palmenu = [
-			('Copy (Ctrl+C)', self.copy, 0), # 0
-			('Paste (Ctrl+P)', self.paste, 0), # 1
-		]
 		self.palmenu = Menu(self, tearoff=0)
-		for m in palmenu:
-			if m:
-				l,c,u = m
-				self.palmenu.add_command(label=l, command=c, underline=u)
-			else:
-				self.palmenu.add_separator()
+		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=Ctrl.c)
+		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=Ctrl.p, tags='paste')
 
 		#Canvas
 		self.canvas = Canvas(self, width=273, height=273, background='#000000')
 		self.canvas.pack(padx=2, pady=2)
 		for n in range(256):
-			x,y = 3+17*(n%16),3+17*(n/16)
+			x,y = 4+17*(n%16),4+17*(n/16)
 			self.canvas.create_rectangle(x, y, x+15, y+15, fill='#000000', outline='#000000')
-			self.canvas.tag_bind(n+1, '<Enter>', lambda e,i=n: self.colorstatus(e,i))
-			self.canvas.tag_bind(n+1, '<Leave>', lambda e,i=-1: self.colorstatus(e,i))
-			self.canvas.tag_bind(n+1, '<Button-1>', lambda e,i=n: self.select(e,i))
-			self.canvas.tag_bind(n+1, '<Double-Button-1>', lambda e,i=n: self.changecolor(e,i))
-			self.canvas.tag_bind(n+1, '<ButtonRelease-3>', lambda e,i=n: self.popup(e,i))
+			self.canvas.tag_bind(n+1, Cursor.Enter, lambda e,i=n: self.colorstatus(e,i))
+			self.canvas.tag_bind(n+1, Cursor.Leave, lambda e,i=-1: self.colorstatus(e,i))
+			self.canvas.tag_bind(n+1, Mouse.Left_Click, lambda e,i=n: self.select(e,i))
+			self.canvas.tag_bind(n+1, Double.Left_Click, lambda e,i=n: self.changecolor(e,i))
+			self.canvas.tag_bind(n+1, ButtonRelease.Right_Click, lambda e,i=n: self.popup(e,i))
 		self.sel = self.canvas.create_rectangle(0,0,0,0,outline='#FFFFFF')
-
-		self.bind('<<Copy>>', self.copy)
-		self.bind('<<Paste>>', self.paste)
 
 		#Statusbar
 		self.status = StringVar()
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=40, anchor=W).pack(side=LEFT, padx=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'Images','save.gif'))
+		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif'))
 		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
 		self.editstatus.image = image
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
@@ -121,32 +90,32 @@ class PyPAL(Tk):
 
 		self.settings.windows.load_window_size('main', self)
 
-		start_new_thread(check_update, (self, 'PyPAL'))
+		UpdateDialog.check_update(self, 'PyPAL')
 
 	def unsaved(self):
 		if self.palette and self.edited:
 			file = self.file
 			if not file:
 				file = 'Unnamed.pal'
-			save = askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=YES, type=YESNOCANCEL)
-			if save != 'no':
-				if save == 'cancel':
+			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+			if save != MessageBox.NO:
+				if save == MessageBox.CANCEL:
 					return True
 				if self.file:
 					self.save()
 				else:
 					self.saveas()
 
+	def is_file_open(self):
+		return not not self.palette
+
 	def action_states(self):
-		file = [NORMAL,DISABLED][not self.palette]
-		for btn in ['saveriff','savejasc','savepal','savewpe','close']:
-			self.buttons[btn]['state'] = file
-		self.buttons['save']['state'] = [NORMAL,DISABLED][not self.palette or self.type == None]
+		self.toolbar.tag_enabled('file_open', self.is_file_open())
 
 	def popup(self, e, i):
 		if self.palette:
 			self.select(e,i)
-			self.palmenu.entryconfig(i, state=[DISABLED,NORMAL][not not self.canpaste()])
+			self.palmenu.tag_enabled('paste', not not self.canpaste())
 			self.palmenu.post(e.x_root, e.y_root)
 
 	def update(self):
@@ -166,13 +135,13 @@ class PyPAL(Tk):
 	def select(self, e, i):
 		if self.palette:
 			self.selected = i
-			x,y = 2+17*(i%16),2+17*(i/16)
+			x,y = 3+17*(i%16),3+17*(i/16)
 			self.canvas.coords(self.sel, x, y, x+17, y+17)
 
 	def changecolor(self, e, i):
 		if self.palette:
 			self.select(None,i)
-			c = tkColorChooser.askcolor(parent=self, initialcolor='#%02X%02X%02X' % tuple(self.palette.palette[i]), title='Select Color')
+			c = ColorChooser.askcolor(parent=self, initialcolor='#%02X%02X%02X' % tuple(self.palette.palette[i]), title='Select Color')
 			if c[1]:
 				self.edited = True
 				self.editstatus['state'] = NORMAL
@@ -191,7 +160,7 @@ class PyPAL(Tk):
 		except:
 			pass
 		else:
-			m = re.match('^#([\dA-Fa-f]{2})([\dA-Fa-f]{2})([\dA-Fa-f]{2})$', c)
+			m = re.match(r'^#([\dA-Fa-f]{2})([\dA-Fa-f]{2})([\dA-Fa-f]{2})$', c)
 			if m:
 				return [int(c,16) for c in m.groups()]
 
@@ -211,7 +180,7 @@ class PyPAL(Tk):
 
 	def new(self, key=None):
 		if not self.unsaved():
-			self.palette = PAL.Palette()
+			self.palette = Palette.Palette()
 			self.file = None
 			self.type = None
 			self.status.set('Editing new Palette.')
@@ -231,7 +200,7 @@ class PyPAL(Tk):
 				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', [('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')])
 				if not file:
 					return
-			pal = PAL.Palette()
+			pal = Palette.Palette()
 			try:
 				pal.load_file(file)
 				self.type = pal.type
@@ -239,7 +208,7 @@ class PyPAL(Tk):
 				bmp = BMP.BMP()
 				try:
 					bmp.load_file(file)
-				except PyMSError, b:
+				except PyMSError:
 					ErrorDialog(self, e)
 					return
 				pal.palette = bmp.palette
@@ -258,7 +227,7 @@ class PyPAL(Tk):
 			self.colorstatus(None, 0)
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
+		if not self.is_file_open() or not self.type:
 			return
 		if self.file == None:
 			self.saveas()
@@ -272,7 +241,7 @@ class PyPAL(Tk):
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None, type=0):
-		if key and self.buttons['save']['state'] != NORMAL:
+		if not self.is_file_open():
 			return
 		types = [(('RIFF PAL','*.pal'),('JASC PAL','*.pal'),('StarCraft PAL','*.pal'),('StarCraft Terrain WPE','*.wpe'))[type]]
 		types.append(('All Files','*'))
@@ -286,7 +255,7 @@ class PyPAL(Tk):
 		self.action_states()
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
+		if not self.is_file_open():
 			return
 		if not self.unsaved():
 			self.palette = None
@@ -303,7 +272,7 @@ class PyPAL(Tk):
 	def register(self, e=None):
 		for type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
-				register_registry('PyPAL',type + 'Palette',ext,os.path.join(BASE_DIR, 'PyPAL.pyw'),os.path.join(BASE_DIR,'Images','PyPAL.ico'))
+				register_registry('PyPAL',type + 'Palette',ext,os.path.join(BASE_DIR, 'PyPAL.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyPAL.ico'))
 			except PyMSError, e:
 				ErrorDialog(self, e)
 				break
@@ -319,41 +288,3 @@ class PyPAL(Tk):
 			self.settings.windows.save_window_size('main', self)
 			self.settings.save()
 			self.destroy()
-
-def main():
-	import sys
-	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pypal.py','pypal.pyw','pypal.exe']):
-		gui = PyPAL()
-		gui.startup()
-	else:
-		p = optparse.OptionParser(usage='usage: PyPAL [options] <inp> [out]', version='PyPAL %s' % LONG_VERSION)
-		p.add_option('-s', '--starcraft', action='store_const', const=0, dest='format', help="Convert to StarCraft PAL format [default]", default=0)
-		p.add_option('-w', '--wpe', action='store_const', const=1, dest='format', help="Convert to StarCraft WPE format")
-		p.add_option('-r', '--riff', action='store_const', const=2, dest='format', help="Convert to RIFF PAL format")
-		p.add_option('-j', '--jasc', action='store_const', const=3, dest='format', help="Convert to JASC PAL format")
-		p.add_option('--gui', help="Opens a file with the GUI", default='')
-		opt, args = p.parse_args()
-		if opt.gui:
-			gui = PyPAL(opt.gui)
-			gui.startup()
-		else:
-			if not len(args) in [1,2]:
-				p.error('Invalid amount of arguments')
-			path = os.path.dirname(args[0])
-			if not path:
-				path = os.path.abspath('')
-			pal = PAL.Palette()
-			ext = ['pal','wpe','pal','pal'][opt.format]
-			if len(args) == 1:
-				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
-			print "Reading Palette '%s'..." % args[0]
-			try:
-				pal.load_file(args[0])
-				print " - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], ext.upper(), args[1])
-				[pal.save_sc_pal,pal.save_sc_wpe,pal.save_riff_pal,pal.save_jasc_pal][opt.format](args[1])
-				print " - '%s' written succesfully" % args[1]
-			except PyMSError, e:
-				print repr(e)
-
-if __name__ == '__main__':
-	main()

@@ -1,4 +1,6 @@
 
+from utils import is_mac
+
 import Tkinter as Tk
 
 class MainWindow(Tk.Tk):
@@ -54,6 +56,10 @@ class Menu(Tk.Menu):
 		def __setitem__(self, option, value):
 			self.config(**{option: value})
 
+	def __init__(self, master=None, cnf={}, **kw):
+		self._tags = {}
+		Tk.Menu.__init__(self, master, cnf, **kw)
+
 	# Extend `add_command` to:
 	#  - Optionally take an `EventPattern` as a `shortcut`, which will drive the `accelerator` and bind the shortcut to the `command`
 	#  - Return a wrapper of the command to be able to configure it
@@ -72,8 +78,6 @@ class Menu(Tk.Menu):
 		if tags:
 			if not isinstance(tags, list) and not isinstance(tags, tuple):
 				tags = (tags, )
-			if not hasattr(self, '_tags'):
-				self._tags = {}
 			for tag in tags:
 				if not tag in self._tags:
 					self._tags[tag] = [command]
@@ -101,8 +105,11 @@ class Canvas(Tk.Canvas):
 		def __setitem__(self, option, value):
 			self.config(**{option: value})
 
-		def coords(self, x,y):
-			self.canvas.coords(self.item_id, x,y)
+		def coords(self, x,y, x2=None,y2=None):
+			self.canvas.coords(self.item_id, x,y, x2,y2)
+
+		def __str__(self):
+			return str(self.item_id)
 
 	def create_arc(self, x1,y1, x2,y2, *args, **kwargs):
 		return Canvas.Item(self, Tk.Canvas.create_arc(self, x1,y1, x2,y2, *args, **kwargs))
