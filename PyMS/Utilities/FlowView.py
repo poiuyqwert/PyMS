@@ -11,7 +11,7 @@ class FlowView(Frame):
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
 		self.content_view = Frame(self._content_area)
-		self.content_view_id = self._content_area.create_window((0,0), window=self.content_view, anchor=NW)
+		self.content_view_id = self._content_area.create_window(0, 0s, window=self.content_view, anchor=NW)
 		self._content_area.grid(sticky=NSEW)
 		xscrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self._content_area.xview)
 		xscrollbar.grid(sticky=EW)
