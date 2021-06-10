@@ -121,7 +121,7 @@ class Canvas(Tk.Canvas):
 	@staticmethod
 	# Adjust the coordinates to work for Mac an Windows
 	def coordinate_adjust_os(x, y):
-		return (x + 1 if is_mac() else 0, y + 1 if is_mac() else 0)
+		return (x + (1 if is_mac() else 0), y + (1 if is_mac() else 0))
 
 	def __init__(self, master=None, cnf={}, coordinate_adjust=None, **kw):
 		self.coordinate_adjust = coordinate_adjust or Canvas.coordinate_adjust_none

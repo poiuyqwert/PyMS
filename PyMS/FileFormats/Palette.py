@@ -11,9 +11,10 @@ class Palette:
 		self.type = None
 
 	def load_riff_pal(self, data):
-		if len(data) != 1047 or not data.startswith('RIFF\x00\x00PAL data'):
+		# TODO: Better parsing, specs here: https://worms2d.info/Palette_file
+		if len(data) != 1048 or not data.startswith('RIFF\x00\x00\x00\x00PAL data'):
 			raise PyMSError('Palette',"Unsupported RIFF palette file, could possibly be corrupt")
-		return self.load_sc_pal(self, data[24:])
+		return self.load_sc_pal(data[24:], 4)
 
 	def load_jasc_pal(self, data):
 		data = data.split('\r\n')
@@ -29,14 +30,15 @@ class Palette:
 		return self.load_sc_pal(data[-768:])
 
 	def load_sc_wpe(self, data):
-		return self.load_sc_pal(data, 1024, 4)
+		return self.load_sc_pal(data, 4)
 
-	def load_sc_pal(self, data, max=768, mult=3):
-		if len(data) != max:
+	def load_sc_pal(self, data, components=3):
+		size = 256 * components
+		if len(data) != size:
 			raise PyMSError('Palette',"Unsupported PAL palette file, could possibly be corrupt")
 		palette = []
-		for x in range(0,max,mult):
-			palette.append(list(struct.unpack('3B', data[x:x+3])))
+		for x in range(0,size,components):
+			palette.append(list(struct.unpack('3B', data[x:x + 3])))
 		return palette
 
 	def load_file(self, file):
@@ -61,9 +63,9 @@ class Palette:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % file)
-		f.write('RIFF\x00\x00PAL data')
+		f.write('RIFF\x00\x00\x00\x00PAL data\x04\x04\x00\x00\x00\x03\x00\x01')
 		for c in self.palette:
-			f.write(struct.pack('3B',*c))
+			f.write(struct.pack('3Bx',*c))
 		f.close()
 
 	def save_jasc_pal(self, file):

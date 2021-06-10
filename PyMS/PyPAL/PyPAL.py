@@ -225,7 +225,7 @@ class PyPAL(MainWindow):
 			self.colorstatus(None, 0)
 
 	def save(self, key=None):
-		if not self.is_file_open() or not self.type:
+		if not self.is_file_open() or self.type == None:
 			return
 		if self.file == None:
 			self.saveas()
