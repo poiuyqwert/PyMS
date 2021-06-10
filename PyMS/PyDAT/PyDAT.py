@@ -278,7 +278,7 @@ class PyDAT(MainWindow):
 				self.changeid(cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size()
-		MessageBox.askquestion(parent=self, title='Find', message="Can't find '%s'." % self.find.get(), type=MessageBox.OK)
+		MessageBox.showinfo('Find', "Can't find '%s'." % self.find.get())
 
 	def jump(self, key=None):
 		self.changeid(self.jumpid.get())

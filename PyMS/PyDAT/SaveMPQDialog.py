@@ -69,7 +69,7 @@ class SaveMPQDialog(PyMSDialog):
 	def save(self):
 		sel = [self.listbox.get(i) for i in self.listbox.curselection()]
 		if not sel:
-			MessageBox.askquestion(parent=self, title='Nothing to save', message='Please choose at least one item to save.', type=MessageBox.OK)
+			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
 			if self.sempq.get():
 				file = self.parent.data_context.settings.lastpath.sempq.select_file('save', self, 'Save SEMPQ to...', '.exe', [('Executable Files','*.exe'),('All Files','*')], save=True)
@@ -124,7 +124,7 @@ class SaveMPQDialog(PyMSDialog):
 						undone.append(f)
 				MpqCloseUpdatedArchive(h)
 				if undone:
-					MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone), type=MessageBox.OK)
+					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone))
 
 	def ok(self):
 		self.parent.data_context.settings.sempq = not not self.sempq.get()

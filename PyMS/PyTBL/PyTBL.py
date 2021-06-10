@@ -256,8 +256,8 @@ class PyTBL(MainWindow):
 			if not file:
 				file = 'Unnamed.tbl'
 			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != 'no':
-				if save == 'cancel':
+			if save != MessageBox.NO:
+				if save == MessageBox.CANCEL:
 					return True
 				if self.file:
 					self.save()

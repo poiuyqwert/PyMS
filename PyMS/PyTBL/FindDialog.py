@@ -108,7 +108,7 @@ class FindDialog(PyMSDialog):
 		p = self
 		if key and key.keycode != 13:
 			p = self.parent
-		MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+		MessageBox.showinfo('Find', "Can't find text.")
 
 	def updatecolor(self):
 		if self.resettimer:

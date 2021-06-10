@@ -99,7 +99,7 @@ def register_registry(prog,type,filetype,progpath,icon):
 	except:
 		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True)
 	from UIKit import MessageBox
-	MessageBox.askquestion(title='Success!', message='The file association was set.', type=MessageBox.OK)
+	MessageBox.showinfo('Success!', 'The file association was set.')
 
 def flags(value, length):
 	if isstr(value):
