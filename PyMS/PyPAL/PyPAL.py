@@ -12,6 +12,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.StatusBar import StatusBar
 
 import os, webbrowser
 
@@ -75,14 +76,11 @@ class PyPAL(MainWindow):
 
 		#Statusbar
 		self.status = StringVar()
-		statusbar = Frame(self)
-		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=40, anchor=W).pack(side=LEFT, padx=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif'))
-		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
-		self.editstatus.image = image
-		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
-		Label(statusbar, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load or create a Palette.')
+		statusbar = StatusBar(self)
+		statusbar.add_label(self.status, width=40)
+		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		if guifile:

@@ -15,8 +15,8 @@ class StatusBar(Frame):
 		for column,weight in enumerate(self._weights):
 			self.grid_columnconfigure(column, weight=split_remainder if weight == None else int(100 * weight))
 
-	def add_label(self, text_variable, weight=None):
-		label = Label(self, textvariable=text_variable, bd=1, relief=SUNKEN, anchor=W)
+	def add_label(self, text_variable, width=None, weight=None):
+		label = Label(self, textvariable=text_variable, width=width, bd=1, relief=SUNKEN, anchor=W)
 		label.grid(row=0, column=len(self._weights), padx=1, sticky=NSEW)
 		self._weights.append(weight)
 		self._adjust_weights()
