@@ -198,7 +198,7 @@ class PyPAL(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', [('RIFF, JASC, and StarCraft PAL','*.pal'),('Adobe Color Table','*.act'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')])
+				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', Palette.FileType.load_types())
 				if not file:
 					return
 			pal = Palette()
@@ -240,7 +240,6 @@ class PyPAL(MainWindow):
 		if not self.is_file_open():
 			return
 		types = Palette.FileType.save_types(file_type.format, file_type.ext)
-		types.append(('All Files','*'))
 		file = self.settings.lastpath.select_file('save', self, 'Save Palette As', types[0][1], filetypes=types, save=True)
 		if not file:
 			return True

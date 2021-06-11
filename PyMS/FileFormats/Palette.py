@@ -24,7 +24,20 @@ class Palette:
 		act = None
 
 		@staticmethod
-		def save_types(format, ext):
+		def load_types(include_all_files=True):
+			load_types = [
+				('RIFF, JASC, and StarCraft PAL','*.pal'),
+				('StarCraft Tileset WPE','*.wpe'),
+				('Adobe Color Table','*.act'),
+				('ZSoft PCX','*.pcx'),
+				('8-Bit BMP','*.bmp')
+			]
+			if include_all_files:
+				load_types.append(('All Files','*'))
+			return tuple(load_types)
+
+		@staticmethod
+		def save_types(format, ext, include_all_files=True):
 			save_types_lookup = {
 				Palette.Format.riff: {
 					None: [('RIFF PAL','*.pal')]
@@ -41,10 +54,13 @@ class Palette:
 					None: [('StarCraft Terrain WPE','*.wpe')]
 				}
 			}
-			save_types = save_types_lookup.get(format)
-			if not save_types:
+			save_types_format = save_types_lookup.get(format)
+			if not save_types_format:
 				raise PyMSError('Palette',"Unsupported save format '%s'" % format)
-			return save_types.get(ext, save_types.get(None))
+			save_types = save_types_format.get(ext, save_types_format.get(None))
+			if include_all_files:
+				save_types.append(('All Files','*'))
+			return tuple(save_types)
 
 		def __init__(self, format, ext):
 			self.format = format
