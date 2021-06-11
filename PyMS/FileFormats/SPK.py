@@ -196,7 +196,7 @@ class SPK:
 						if not image[star.y+y+ly][star.x+x] and star.image.pixels[y][x]:
 							image[star.y+y+ly][star.x+x] = star.image.pixels[y][x]
 		bmp = BMP.BMP()
-		bmp.load_data(image, palette.palette)
+		bmp.set_pixels(image, palette.palette)
 		bmp.save_file(filepath)
 
 # import PAL, BMP

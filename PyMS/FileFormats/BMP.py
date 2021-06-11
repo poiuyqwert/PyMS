@@ -17,6 +17,9 @@ class BMP:
 
 	def load_file(self, file, issize=None):
 		data = load_file(file, 'BMP')
+		self.load_data(data, issize=issize)
+
+	def load_data(self, data, issize=None):
 		if data[:2] != 'BM':
 			raise PyMSError('Load',"'%s' is not a BMP file (no BMP header)" % file)
 		try:
@@ -82,7 +85,7 @@ class BMP:
 		self.palette = palette
 		self.image = image
 
-	def load_data(self, image, palette=None):
+	def set_pixels(self, image, palette=None):
 		self.height = len(image)
 		self.width = len(image[0])
 		if palette:

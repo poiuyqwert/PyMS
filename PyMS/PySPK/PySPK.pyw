@@ -249,7 +249,7 @@ class PaletteTab(NotebookTab):
 			filepath = self.toplevel.select_file('Export Star To...', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
 			if filepath:
 				bmp = BMP.BMP()
-				bmp.load_data(self.toplevel.selected_image.pixels, self.toplevel.platformwpe.palette)
+				bmp.set_pixels(self.toplevel.selected_image.pixels, self.toplevel.platformwpe.palette)
 				bmp.save_file(filepath)
 
 	def import_image(self, *args):

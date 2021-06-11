@@ -1,6 +1,5 @@
 
-from ..FileFormats import Palette
-from ..FileFormats import BMP
+from ..FileFormats.Palette import Palette
 
 from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
@@ -35,7 +34,8 @@ class PyPAL(MainWindow):
 
 		self.palette = None
 		self.file = None
-		self.type = None
+		self.format = None
+		self.ext = None
 		self.edited = False
 		self.selected = None
 
@@ -44,10 +44,11 @@ class PyPAL(MainWindow):
 		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
 		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, identifier='save', tags='file_open')
-		self.toolbar.add_button('saveriff', lambda: self.saveas(type=0), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button('savejasc', lambda: self.saveas(type=1), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button('savepal', lambda: self.saveas(type=2), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button('savewpe', lambda: self.saveas(type=3), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button('saveriff', lambda: self.saveas(file_type=Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
+		self.toolbar.add_button('savejasc', lambda: self.saveas(file_type=Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
+		self.toolbar.add_button('savepal', lambda: self.saveas(file_type=Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button('savewpe', lambda: self.saveas(file_type=Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button('saveact', lambda: self.saveas(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
 		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button('register', self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
@@ -109,6 +110,8 @@ class PyPAL(MainWindow):
 
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
+		if self.format == None:
+			self.toolbar.set_enabled('save', False)
 
 	def popup(self, e, i):
 		if self.palette:
@@ -178,9 +181,9 @@ class PyPAL(MainWindow):
 
 	def new(self, key=None):
 		if not self.unsaved():
-			self.palette = Palette.Palette()
+			self.palette = Palette()
 			self.file = None
-			self.type = None
+			self.format = None
 			self.status.set('Editing new Palette.')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
@@ -195,22 +198,17 @@ class PyPAL(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', [('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')])
+				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', [('RIFF, JASC, and StarCraft PAL','*.pal'),('Adobe Color Table','*.act'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('8-Bit BMP','*.bmp'),('All Files','*')])
 				if not file:
 					return
-			pal = Palette.Palette()
+			pal = Palette()
 			try:
 				pal.load_file(file)
-				self.type = pal.type
+				self.format = pal.format
+				self.ext = os.path.splitext(file)[-1][1:]
 			except PyMSError, e:
-				bmp = BMP.BMP()
-				try:
-					bmp.load_file(file)
-				except PyMSError:
-					ErrorDialog(self, e)
-					return
-				pal.palette = bmp.palette
-				self.type = None
+				ErrorDialog(self, e)
+				return
 			self.palette = pal
 			self.title('PyPAL %s (%s)' % (LONG_VERSION,file))
 			self.file = file
@@ -225,30 +223,31 @@ class PyPAL(MainWindow):
 			self.colorstatus(None, 0)
 
 	def save(self, key=None):
-		if not self.is_file_open() or self.type == None:
+		if not self.is_file_open() or self.format == None:
 			return
 		if self.file == None:
 			self.saveas()
 			return
 		try:
-			[self.palette.save_riff_pal,self.palette.save_jasc_pal,self.palette.save_sc_pal,self.palette.save_sc_wpe][self.type](self.file)
+			self.palette.save(self.file, self.format)
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 		except PyMSError, e:
 			ErrorDialog(self, e)
 
-	def saveas(self, key=None, type=0):
+	def saveas(self, key=None, file_type=Palette.FileType.sc_pal):
 		if not self.is_file_open():
 			return
-		types = [(('RIFF PAL','*.pal'),('JASC PAL','*.pal'),('StarCraft PAL','*.pal'),('StarCraft Terrain WPE','*.wpe'))[type]]
+		types = Palette.FileType.save_types(file_type.format, file_type.ext)
 		types.append(('All Files','*'))
 		file = self.settings.lastpath.select_file('save', self, 'Save Palette As', types[0][1], filetypes=types, save=True)
 		if not file:
 			return True
 		self.file = file
 		self.title('PyPAL %s (%s)' % (LONG_VERSION,self.file))
-		self.type = type
+		self.format = format
+		self.ext = os.path.splitext(file)[-1][1:]
 		self.save()
 		self.action_states()
 

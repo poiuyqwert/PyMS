@@ -95,7 +95,7 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
 
 def fnttobmp(fnt,pal,file=None):
 	b = BMP.BMP()
-	b.load_data(fnt.letters[0],pal)
+	b.set_pixels(fnt.letters[0],pal)
 	for l in fnt.letters[1:]:
 		for y,yd in enumerate(l):
 			b.image[y].extend(yd)
