@@ -120,7 +120,7 @@ class MPQSettings(Frame):
 
 	def select_files(self):
 		if isinstance(self.settings, SettingDict):
-			return self.settings.lastpath.settings.select_files('mpqs', self, "Add MPQ's", '.mpq', [('MPQ Files','*.mpq'),('All Files','*')])
+			return self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=(('MPQ Files','*.mpq'),))
 		else:
 			path = self.settings.get('lastpath', BASE_DIR)
 			file = FileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
@@ -167,7 +167,7 @@ class MPQSettings(Frame):
 	def adddefault(self, key=None):
 		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
 		if not scdir or not os.path.isdir(scdir):
-			scdir = PYMS_SETTINGS.select_directory('scdir', self, 'Choose StarCraft Directory', store=False)
+			scdir = PYMS_SETTINGS.select_directory(self, key='scdir', title='Choose StarCraft Directory', store=False)
 		if scdir and os.path.isdir(scdir):
 			a = []
 			for f in ['Patch_rt','BrooDat','StarDat']:

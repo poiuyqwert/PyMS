@@ -72,9 +72,9 @@ class SaveMPQDialog(PyMSDialog):
 			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
 			if self.sempq.get():
-				file = self.parent.data_context.settings.lastpath.sempq.select_file('save', self, 'Save SEMPQ to...', '.exe', [('Executable Files','*.exe'),('All Files','*')], save=True)
+				file = self.parent.data_context.settings.lastpath.sempq.select_save_file(self, title='Save SEMPQ to...', filetypes=[('Executable Files','*.exe')])
 			else:
-				file = self.parent.data_context.settings.lastpath.mpq.select_file('save', self, 'Save MPQ to...', '.mpq', [('MPQ Files','*.mpq'),('All Files','*')], save=True)
+				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq')])
 			if file:
 				if self.sempq.get():
 					if os.path.exists(file):

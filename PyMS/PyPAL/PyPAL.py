@@ -198,7 +198,7 @@ class PyPAL(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.select_file('open', self, 'Open Palette', '.pal', Palette.FileType.load_types())
+				file = self.settings.lastpath.select_open_file(self, title='Open Palette', filetypes=Palette.FileType.load_types())
 				if not file:
 					return
 			pal = Palette()
@@ -239,13 +239,12 @@ class PyPAL(MainWindow):
 	def saveas(self, key=None, file_type=Palette.FileType.sc_pal):
 		if not self.is_file_open():
 			return
-		types = Palette.FileType.save_types(file_type.format, file_type.ext)
-		file = self.settings.lastpath.select_file('save', self, 'Save Palette As', types[0][1], filetypes=types, save=True)
+		file = self.settings.lastpath.select_save_file(self, title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
 		if not file:
 			return True
 		self.file = file
 		self.title('PyPAL %s (%s)' % (LONG_VERSION,self.file))
-		self.format = format
+		self.format = file_type.format
 		self.ext = os.path.splitext(file)[-1][1:]
 		self.save()
 		self.action_states()

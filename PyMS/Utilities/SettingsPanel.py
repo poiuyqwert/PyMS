@@ -107,7 +107,7 @@ class SettingsPanel(Frame):
 
 	def select_file(self, t, e, f):
 		if isinstance(self.settings, SettingDict):
-			return self.settings.lastpath.settings.select_file(t, self, "Open a " + t, '.' + e, f)
+			return self.settings.lastpath.settings.select_open_file(self, key=t, title="Open a " + t, ext='.' + e, filetypes=f)
 		else:
 			path = self.settings.get('lastpath', BASE_DIR)
 			file = FileDialog.askopenfilename(parent=self, title="Open a " + t, defaultextension='.' + e, filetypes=f, initialdir=path)

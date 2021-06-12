@@ -188,7 +188,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if parent == None:
 			parent = self
 		if not file:
-			file = self.toplevel.data_context.settings.lastpath.txt.select_file('import', self, 'Import TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')])
+			file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
 		if not file:
 			return
 		entries = copy.deepcopy(self.get_dat_data().dat.entries)
@@ -223,7 +223,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.toplevel.update_status_bar()
 
 	def saveas(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.dat.save.select_file(self.get_dat_data().dat.FILE_NAME, self, 'Save %s As' % self.get_dat_data().dat.FILE_NAME, '*.dat', [('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME,'*.dat'),('All Files','*')], save=True)
+		file = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME,'*.dat')], filename=self.get_dat_data().dat.FILE_NAME)
 		if not file:
 			return True
 		self.get_dat_data().file_path = file
@@ -231,7 +231,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toplevel.update_status_bar()
 
 	def export(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.txt.select_file('export', self, 'Export TXT', '*.txt', [('Text Files','*.txt'),('All Files','*')], save=True)
+		file = self.toplevel.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
 		if not file:
 			return True
 		try:

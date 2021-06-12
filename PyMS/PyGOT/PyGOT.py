@@ -276,7 +276,7 @@ class PyGOT(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.got.select_file('open', self, 'Open GOT', '.got', [('StarCraft Game Templates','*.got'),('All Files','*')])
+				file = self.settings.lastpath.got.select_open_file(self, title='Open GOT', filetypes=[('StarCraft Game Templates','*.got')])
 				if not file:
 					return
 			got = GOT()
@@ -299,7 +299,7 @@ class PyGOT(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_file('import', self, 'Import TXT', '.txt', [('Text Files','*.txt'),('All Files','*')])
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
 			if not file:
 				return
 			got = GOT()
@@ -342,7 +342,7 @@ class PyGOT(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.got.select_file('save', self, 'Save GOT As', '.got', [('StarCraft Game Templates','*.got'),('All Files','*')], save=True)
+		file = self.settings.lastpath.got.select_save_file(self, title='Save GOT As', filetypes=[('StarCraft Game Templates','*.got')])
 		if not file:
 			return True
 		self.file = file
@@ -351,7 +351,7 @@ class PyGOT(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.txt.select_file('export', self, 'Export TXT', '.txt', [('Text Files','*.txt'),('All Files','*')], save=True)
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
 		if not file:
 			return True
 		try:
@@ -374,7 +374,7 @@ class PyGOT(MainWindow):
 			self.action_states()
 
 	def trg(self, e=None, t=0):
-		file = self.settings.lastpath.trg.select_file('open', self, 'Open TRG', '.trg', [('StarCraft Triggers','*.trg'),('All Files','*')])
+		file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[('StarCraft Triggers','*.trg')])
 		if not file:
 			return
 		trg = TRG()
@@ -383,7 +383,7 @@ class PyGOT(MainWindow):
 		except PyMSError, e:
 			ErrorDialog(self, e)
 			return
-		file = self.settings.lastpath.trg.select_file('save', self, 'Save TRG', '.trgg', [('StarCraft Triggers','*.trg'),('All Files','*')])
+		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG', filetypes=[('StarCraft Triggers','*.trg')])
 		if not file:
 			return True
 		try:

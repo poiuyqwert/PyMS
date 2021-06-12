@@ -115,7 +115,7 @@ class PyPCX(MainWindow):
 		if self.unsaved():
 			return
 		if file == None:
-			file = self.settings.lastpath.pcx.select_file('open', self, 'Open PCX', '.pcx', (('StarCraft PCX','*.pcx'),('All Files','*')))
+			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=(('StarCraft PCX','*.pcx'),))
 			if not file:
 				return
 		pcx = PCX()
@@ -149,7 +149,7 @@ class PyPCX(MainWindow):
 	def saveas(self, key=None, type=0):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.pcx.select_file('save', self, 'Save PCX As', '.pcx', (('StarCraft PCX','*.pcx'),('All Files','*')), save=True)
+		file = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=(('StarCraft PCX','*.pcx'),))
 		if not file:
 			return True
 		self.file = file
@@ -159,7 +159,7 @@ class PyPCX(MainWindow):
 	def loadpal(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.pal.select_file('import', self, 'Import Palette', '.pal', Palette.FileType.load_types())
+		file = self.settings.lastpath.pal.select_open_file(self, key='import', title='Import Palette', filetypes=Palette.FileType.load_types())
 		if not file:
 			return True
 		pal = Palette()
@@ -175,8 +175,7 @@ class PyPCX(MainWindow):
 	def savepal(self, key=None, file_type=Palette.FileType.sc_pal):
 		if not self.is_file_open():
 			return
-		types = Palette.FileType.save_types(file_type.format, file_type.ext)
-		file = self.settings.lastpath.pal.select_file('export', self, 'Save Palette As', types[0][1], types)
+		file = self.settings.lastpath.pal.select_save_file(self, key='export', title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
 		if not file:
 			return True
 		p = Palette()
@@ -190,7 +189,7 @@ class PyPCX(MainWindow):
 	def export(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.bmp.select_file('export', self, 'Export to BMP', '.bmp', (('256 Color BMP','*.bmp'),('All Files','*')))
+		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export to BMP', filetypes=(('256 Color BMP','*.bmp'),))
 		if not file:
 			return True
 		b = BMP()
@@ -205,7 +204,7 @@ class PyPCX(MainWindow):
 	def iimport(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.bmp.select_file('import', self, 'Import a BMP', '.bmp', (('256 Color BMP','*.bmp'),('All Files','*')))
+		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import a BMP', filetypes=(('256 Color BMP','*.bmp'),))
 		if not file:
 			return True
 		b = BMP()

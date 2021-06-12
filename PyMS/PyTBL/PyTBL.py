@@ -316,7 +316,7 @@ class PyTBL(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if not file:
-				file = self.settings.lastpath.tbl.select_file('open', self, 'Open TBL', '.tbl', (('StarCraft TBL Files','*.tbl'),('All Files','*')))
+				file = self.settings.lastpath.tbl.select_open_file(self, title='Open TBL', filetypes=(('StarCraft TBL Files','*.tbl'),))
 				if not file:
 					return
 			tbl = TBL.TBL()
@@ -346,7 +346,7 @@ class PyTBL(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_file('import', self, 'Import TXT', '.txt', (('Text Files','*.txt'),('All Files','*')))
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=(('Text Files','*.txt'),))
 			if not file:
 				return
 			tbl = TBL.TBL()
@@ -388,7 +388,7 @@ class PyTBL(MainWindow):
 	def saveas(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.tbl.select_file('save', self, 'Save TBL As', '.tbl', (('StarCraft TBL Files','*.tbl'),('All Files','*')), save=True)
+		file = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=(('StarCraft TBL Files','*.tbl'),))
 		if not file:
 			return True
 		self.file = file
@@ -397,7 +397,7 @@ class PyTBL(MainWindow):
 	def export(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.txt.select_file('export', self, 'Export TXT', '.txt', (('Text Files','*.txt'),('All Files','*')))
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=(('Text Files','*.txt'),))
 		if not file:
 			return True
 		try:

@@ -212,23 +212,50 @@ class SettingDict(object):
 			if geometry:
 				window.geometry(geometry)
 
-	def select_file(self, key, parent, title, ext, filetypes, save=False, store=True):
+	def _select_file(self, parent, key, title, ext, filetypes, filename, store, include_all_filetype, save):
 		dialog = FileDialog.asksaveasfilename if save else FileDialog.askopenfilename
+		if include_all_filetype and filetypes:
+			for _, check_ext in filetypes:
+				if check_ext == '*':
+					break
+			else:
+				filetypes = list(filetypes)
+				filetypes.append(('All Files', '*'))
+		if ext == None and filetypes:
+			ext = filetypes[0][1]
+		ext = os.path.splitext(ext)[1]
+		initialfile = None
+		if filename:
+			try:
+				initialfile = os.path.basename(filename) or None
+			except:
+				pass
 		parent._pyms__window_blocking = True
-		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store))
+		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), initialfile=initialfile)
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = os.path.dirname(path)
 		return path
 
-	def select_files(self, key, parent, title, ext, filetypes, store=True):
-		if len(filetypes) == 1 and filetypes[0][1] == '*':
-			filetypes = None
+	def select_save_file(self, parent, key='save', title='Save File', ext=None, filetypes=None, filename=None, store=True, include_all_filetype=True):
+		return self._select_file(parent, key, title, ext, filetypes, filename, store, include_all_filetype, True)
+
+	def select_open_file(self, parent, key='open', title='Open File', ext=None, filetypes=None, store=True, include_all_filetype=True):
+		return self._select_file(parent, key, title, ext, filetypes, None, store, include_all_filetype, False)
+
+	def select_open_files(self, parent, key='open', title='Open Files', ext=None, filetypes=None, store=True, include_all_filetype=True):
+		if include_all_filetype and filetypes:
+			for _, ext in filetypes:
+				if ext == '*':
+					break
+			else:
+				filetypes = list(filetypes)
+				filetypes.append(('All Files', '*'))
+		if ext == None and filetypes:
+			ext = filetypes[0][1]
+		ext = os.path.splitext(ext)[1]
 		parent._pyms__window_blocking = True
-		if filetypes == None:
-			paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
-		else:
-			paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+		paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
 		parent._pyms__window_blocking = False
 		if isstr(paths):
 			if paths:
@@ -241,7 +268,7 @@ class SettingDict(object):
 				self[key] = os.path.dirname(paths[0])
 		return paths
 
-	def select_directory(self, key, parent, title, store=True):
+	def select_directory(self, parent, key='dir', title='Select Folder', store=True):
 		parent._pyms__window_blocking = True
 		path = FileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
 		parent._pyms__window_blocking = False

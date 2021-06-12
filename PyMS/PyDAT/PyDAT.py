@@ -321,7 +321,7 @@ class PyDAT(MainWindow):
 		self.dattabs.active.new()
 
 	def open(self, key=None):
-		path = self.data_context.settings.lastpath.dat.select_file('open', self, 'Open DAT file', '*.dat', [('StarCraft DAT files','*.dat'),('All Files','*')])
+		path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[('StarCraft DAT files','*.dat')])
 		if not path:
 			return
 		filename = os.path.basename(path)
@@ -341,7 +341,7 @@ class PyDAT(MainWindow):
 
 	# TODO
 	def openmpq(self, event=None):
-		file = self.data_context.settings.lastpath.mpq.select_file('open', self, 'Open MPQ', '.mpq', [('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe'),('All Files','*')])
+		file = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
 		if not file:
 			return
 		h = SFileOpenArchive(file)
@@ -377,7 +377,7 @@ class PyDAT(MainWindow):
 
 	# TODO
 	def opendirectory(self, event=None):
-		dir = self.data_context.settings.lastpath.select_directory('dir', self, 'Open Directory')
+		dir = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
 		if not dir:
 			return
 		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitsDAT(),CampaignDAT(),OrdersDAT()]

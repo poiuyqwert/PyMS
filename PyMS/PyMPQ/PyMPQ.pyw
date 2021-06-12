@@ -1006,7 +1006,7 @@ class PyMPQ(Tk):
 	def adddir(self, key=None):
 		if key and self.buttons['openfolder']['state'] != NORMAL:
 			return
-		path = PYMPQ_SETTINGS.lastpath.files.select_directory('import_dir', self, 'Add files from folder...')
+		path = PYMPQ_SETTINGS.lastpath.files.select_directory(self,  key='import_dir', title='Add files from folder...')
 		if not path:
 			return
 		path = os.path.join(path,'')
@@ -1065,7 +1065,7 @@ class PyMPQ(Tk):
 	def extract(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		path = PYMPQ_SETTINGS.lastpath.files.select_directory('export', self, 'Extract files...')
+		path = PYMPQ_SETTINGS.lastpath.files.select_directory(self, key='export', title='Extract files...')
 		if not path:
 			return
 		h = SFileOpenArchive(self.file)
