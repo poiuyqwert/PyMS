@@ -111,6 +111,9 @@ class Canvas(Tk.Canvas):
 				x2,y2 = self.canvas.coordinate_adjust(x2, y2)
 			self.canvas.coords(self.item_id, x,y, x2,y2)
 
+		def delete(self):
+			self.canvas.delete(self.item_id)
+
 		def __str__(self):
 			return str(self.item_id)
 
