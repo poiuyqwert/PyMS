@@ -37,7 +37,7 @@ class Notebook(Frame):
 			if hidden_tabs:
 				menu = Menu(self)
 				for index,tab_name in hidden_tabs:
-					menu.add_command(label=tab_name, command=lambda name=tab_name: self.display(name), font=Fonts.BOLDED if index == self.tab.get() else None)
+					menu.add_command(label=tab_name, command=lambda name=tab_name: self.display(name), font=Font(bold=True) if index == self.tab.get() else None)
 				menu.post(*self.winfo_pointerxy())
 
 		def resize(*_):

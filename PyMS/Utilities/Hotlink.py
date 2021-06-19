@@ -1,17 +1,19 @@
 
-from UIKit import Label
+from UIKit import Label, Font
+from EventPattern import *
 
 class Hotlink(Label):
-	def __init__(self, parent, text, callback=None, fonts=[('Courier', 8, 'normal'),('Courier', 8, 'underline')]):
-		self.fonts = fonts
-		Label.__init__(self, parent, text=text, foreground='#0000FF', cursor='hand2', font=fonts[0])
-		self.bind('<Enter>', self.enter)
-		self.bind('<Leave>', self.leave)
+	def __init__(self, parent, text, callback=None, font=None, hover_font=None):
+		self.font = font or Font()
+		self.hover_font = hover_font or Font(underline=True)
+		Label.__init__(self, parent, text=text, foreground='#0000FF', cursor='hand2', font=self.font)
+		self.bind(Cursor.Enter, self.enter)
+		self.bind(Cursor.Leave, self.leave)
 		if callback:
-			self.bind('<Button-1>', callback)
+			self.bind(Mouse.Left_Click, callback)
 
 	def enter(self, e):
-		self['font'] = self.fonts[1]
+		self['font'] = self.hover_font
 
 	def leave(self, e):
-		self['font'] = self.fonts[0]
+		self['font'] = self.font

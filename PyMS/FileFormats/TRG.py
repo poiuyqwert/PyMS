@@ -1687,14 +1687,14 @@ class TRG:
 			self.stat_txt = stat_txt
 		else:
 			if stat_txt == None:
-				stat_txt = os.path.join(BASE_DIR,'Libs', 'MPQ', 'rez', 'stat_txt.tbl')
+				stat_txt = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
 			self.stat_txt.load_file(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			ais = aiscript
 		else:
 			if aiscript == None:
-				aiscript = os.path.join(BASE_DIR,'Libs', 'MPQ', 'scripts', 'aiscript.bin')
+				aiscript = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts', 'aiscript.bin')
 			ais = AIBIN.AIBIN(stat_txt=self.stat_txt)
 			ais.load_file(aiscript)
 		self.triggers_type = NORMAL_TRIGGERS
