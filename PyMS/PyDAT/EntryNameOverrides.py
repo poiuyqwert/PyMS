@@ -84,7 +84,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.append.set(name_overrides[entry_id][0])
 
 	def open(self, _=None):
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_file('open', self, 'Open Name Overrides', '*.txt', [('Text Files','*.txt'),('All Files','*')])
+		path = self.data_context.settings.lastpath.entry_name_overrides.select_open_file(self, title='Open Name Overrides', filetypes=(('Text Files','*.txt'),))
 		if not path:
 			return
 		try:
@@ -110,7 +110,7 @@ class EntryNameOverrides(PyMSDialog):
 			ErrorDialog(self, PyMSError('Open', "Invalid name overrides '%s'" % path))
 
 	def saveas(self, _=None):
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_file('save', self, 'Save Name Overrides', '*.txt', [('TXT files','*.txt'),('All Files','*')], save=True)
+		path = self.data_context.settings.lastpath.entry_name_overrides.select_save_file(self, title='Save Name Overrides', filetypes=(('TXT files','*.txt'),), filename=self.dat_id.filename.replace('.dat', '.txt'))
 		if not path:
 			return
 		try:
