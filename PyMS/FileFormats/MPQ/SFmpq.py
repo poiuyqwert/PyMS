@@ -1,3 +1,4 @@
+
 from ctypes import *
 import os,sys
 
@@ -9,19 +10,21 @@ else:
 
 _SFmpq = None
 if SFMPQ_DIR:
-	cwd = os.getcwd()
-	os.chdir(SFMPQ_DIR)
-	try:
-		_SFmpq = windll.SFmpq
-	except:
+	libraries = (
+		# 'StormLib.dll',
+		# 'StormLib64.dll',
+		# 'StormLib.dylib',
+
+		'SFmpq.dll',
+		'SFmpq64.dll',
+		'SFmpq.dylib',
+	)
+	for library in libraries:
 		try:
-			_SFmpq = windll.SFmpq64
-		except:
-			try:
-				_SFmpq = CDLL(os.path.join(SFMPQ_DIR, "SFmpq.dylib"), RTLD_GLOBAL)
-			except:
-				pass
-	os.chdir(cwd)
+			_SFmpq = CDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
+			break
+		except Exception, e:
+			pass
 
 SFMPQ_LOADED = (_SFmpq != None)
 
