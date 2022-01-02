@@ -1,4 +1,6 @@
 
+from PyMSError import PyMSError
+
 import struct
 
 class Endian:
@@ -73,7 +75,7 @@ class Type:
 
 class Struct(object):
 	_endian = Endian.little
-	_fields = None # ( ('name', 'struct c type'), ... )
+	_fields = () # ( ('name', 'struct c type'), ... )
 
 	_struct = None 
 
