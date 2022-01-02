@@ -980,9 +980,9 @@ Optical Flare Hit (Large)
 Feedback (Small)
 Feedback (Medium)
 Feedback Hit (Large)
-Maelstorm Overlay (Small)
-Maelstorm Overlay (Medium)
-Maelstorm Overlay (Large)
+Maelstrom Overlay (Small)
+Maelstrom Overlay (Medium)
+Maelstrom Overlay (Large)
 Subterranean Spines Hit
 Acid Spores (1) Overlay (Small)
 Acid Spores (2-3) Overlay (Small)
@@ -996,4 +996,4 @@ Acid Spores (1) Overlay (Large)
 Acid Spores (2-3) Overlay (Large)
 Acid Spores (4-5) Overlay (Large)
 Acid Spores (6-9) Overlay (Large)
-Maelstorm Hit
+Maelstrom Hit

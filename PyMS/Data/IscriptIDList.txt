@@ -391,7 +391,7 @@ Restoration Hit
 Mind Control Hit
 Optical Flare Hit
 Feedback
-Maelstorm Overlay
+Maelstrom Overlay
 Unknown394
 Unknown395
 Desert Doodad
