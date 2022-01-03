@@ -164,6 +164,11 @@ class Mouse(Events):
 	Right_Click = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
 	# 4
 	# 5
+
+	Left_Drag = EventPattern(Field('B1', 'Left'),Field('Motion', '-Drag'))
+	Middle_Drag = EventPattern(Field('B2', 'Middle'),Field('Motion', '-Drag'))
+	Right_Drag = EventPattern(Field('B2' if is_mac() else 'B3', 'Right'),Field('Motion', '-Drag'))
+
 	ButtonPress = EventPattern(Field('ButtonPress'))
 	ButtonRelease = EventPattern(Field('ButtonRelease'))
 	Scroll = EventPattern(Field('MouseWheel'))
@@ -280,7 +285,11 @@ if __name__ == '__main__':
 		Shift.Right_Click,
 		Shift.Double.Click,
 		Shift.Ctrl.Alt.Quadruple.Right_Click,
+		Mouse.Left_Drag,
+		Shift.Ctrl.Alt.Left_Drag,
+		ButtonRelease.Left_Click
 	]
 	for event in events:
 		print event
 		print event.name()
+		print event.description()

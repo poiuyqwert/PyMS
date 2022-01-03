@@ -74,7 +74,7 @@ class Canvas(Tk.Canvas):
 		return Canvas.Item(self, Tk.Canvas.create_image(self, x,y, *args, **kwargs))
 
 	def create_line(self, *points, **kwargs):
-		points = (self.coordinate_adjust(x,y) for x,y in points)
+		points = tuple(self.coordinate_adjust(points[n],points[n+1]) for n in range(0,len(points),2))
 		return Canvas.Item(self, Tk.Canvas.create_line(self, *points, **kwargs))
 
 	def create_oval(self, x1,y1, x2,y2, *args, **kwargs):
@@ -83,7 +83,7 @@ class Canvas(Tk.Canvas):
 		return Canvas.Item(self, Tk.Canvas.create_oval(self, x1,y1, x2,y2, *args, **kwargs))
 
 	def create_polygon(self, *points, **kwargs):
-		points = (self.coordinate_adjust(x,y) for x,y in points)
+		points = tuple(self.coordinate_adjust(points[n],points[n+1]) for n in range(0,len(points),2))
 		return Canvas.Item(self, Tk.Canvas.create_polygon(self, *points, **kwargs))
 
 	def create_rectangle(self, x1,y1, x2,y2, *args, **kwargs):
