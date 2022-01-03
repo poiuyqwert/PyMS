@@ -6,6 +6,8 @@ from ..FileFormats import TRG
 from ..Utilities.CodeText import CodeText
 from ..Utilities.UIKit import *
 
+from copy import deepcopy
+
 class TRGCodeText(CodeText):
 	def __init__(self, parent, ecallback=None, highlights=None, state=NORMAL):
 		self.toplevel = parent
@@ -55,7 +57,7 @@ class TRGCodeText(CodeText):
 		operators = r'(?P<Operators>[():,\-])'
 		self.basic = '|'.join((comment, header, keywords, conditions, actions, trigplugactions, constants, constdef, tblformat, num, operators))
 		self.tooltips = [ConditionsTooltip(self),ActionsTooltip(self),TrigPlugActionsTooltip(self)]
-		self.tags = dict(self.highlights)
+		self.tags = deepcopy(self.highlights)
 
 	def dynamic(self):
 		dyn = '|'

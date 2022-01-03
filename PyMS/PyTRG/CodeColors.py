@@ -4,11 +4,12 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 
 from collections import OrderedDict
+from copy import deepcopy
 
 class CodeColors(PyMSDialog):
 	def __init__(self, parent):
 		self.cont = False
-		self.tags = dict(parent.text.tags)
+		self.tags = deepcopy(parent.text.tags)
 		self.info = OrderedDict()
 		self.info['Comment'] = 'The color of a comment.'
 		self.info['Headers'] = 'The color of any header.'

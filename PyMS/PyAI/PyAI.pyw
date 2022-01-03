@@ -11,6 +11,7 @@ import tkFileDialog,tkColorChooser
 
 from thread import start_new_thread
 from shutil import copy
+from copy import deepcopy
 import optparse, os, re, webbrowser, sys
 
 LONG_VERSION = 'v%s' % VERSIONS['PyAI']
@@ -416,7 +417,7 @@ class FindReplaceDialog(PyMSDialog):
 class CodeColors(PyMSDialog):
 	def __init__(self, parent):
 		self.cont = False
-		self.tags = dict(parent.text.tags)
+		self.tags = deepcopy(parent.text.tags)
 		self.info = odict()
 		self.info['Block'] = 'The color of a --block-- in the code.'
 		self.info['Keywords'] = 'Keywords:\n    extdef  aiscript  bwscript'
@@ -604,7 +605,7 @@ class AICodeText(CodeText):
 			FlagCodeTooltip(self.text,self.ai),
 			DirectiveTooltip(self.text,self.ai)
 		]
-		self.tags = dict(self.highlights)
+		self.tags = deepcopy(self.highlights)
 
 	def colorize(self):
 		next = '1.0'

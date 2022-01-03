@@ -306,7 +306,7 @@ class GRP:
 		self.width = len(image[0])
 		if palette:
 			self.palette = list(palette)
-		self.images = [list(image)]
+		self.images = [list(y) for y in image]
 		self.images_bounds = [image_bounds(image, transindex)]
 		self.transindex = transindex
 

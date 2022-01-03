@@ -13,6 +13,7 @@ from tkMessageBox import *
 import tkFileDialog,tkColorChooser
 
 from thread import start_new_thread
+from copy import deepcopy
 import optparse, os, re, webbrowser, sys, json
 try:
 	from winsound import *
@@ -716,7 +717,7 @@ class FindReplaceDialog(PyMSDialog):
 class CodeColors(PyMSDialog):
 	def __init__(self, parent):
 		self.cont = False
-		self.tags = dict(parent.text.tags)
+		self.tags = deepcopy(parent.text.tags)
 		self.info = odict()
 		self.info['Block'] = 'The color of a "block:" in the code.'
 		self.info['Keywords'] = ['Keywords:\n    .headerstart  .headerend  [NONE]','HeaderStart']
@@ -894,7 +895,7 @@ class IScriptCodeText(CodeText):
 		#types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
 		self.basic = re.compile('|'.join((comment, kw, block, cmds, animations, num, operators, '(?P<HeaderStart>\\.headerstart)', '(?P<Newline>\\n)')), re.S | re.M)
 		self.tooptips = [AnimationTooltip(self),CommandTooltip(self)]
-		self.tags = dict(self.highlights)
+		self.tags = deepcopy(self.highlights)
 
 	def colorize(self):
 		next = '1.0'
@@ -3045,7 +3046,7 @@ class PyICE(Tk):
 				self.ibin.offsets[o].extend(i)
 			else:
 				self.ibin.offsets[o] = i
-		c = dict(self.ibin.code.dict)
+		c = deepcopy(self.ibin.code.dict)
 		for o,cmd in ibin.code.iteritems():
 			c[o] = cmd
 		k = c.keys()

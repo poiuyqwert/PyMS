@@ -12,6 +12,7 @@ import struct, re, os, sys
 from math import log, floor
 from zlib import compress, decompress
 from collections import OrderedDict
+from copy import deepcopy
 
 default_ais = {'Protoss':'PMCu','BWProtoss':'PMCx','Terran':'TMCu','BWTerran':'TMCx','Zerg':'ZMCu','BWZerg':'ZMCx'}
 
@@ -527,7 +528,7 @@ class AIBIN:
 			offset += 4
 			offsets.sort()
 			try:
-				externaljumps = [[{},{}],[dict(self.bwscript.externaljumps[1][0]),dict(self.bwscript.externaljumps[1][1])]]
+				externaljumps = [[{},{}],[deepcopy(self.bwscript.externaljumps[1][0]),deepcopy(self.bwscript.externaljumps[1][1])]]
 			except:
 				externaljumps = [[{},{}],[{},{}]]
 			totaloffsets = {}
@@ -941,14 +942,14 @@ class AIBIN:
 			except:
 				raise PyMSError('Interpreting',"Could not load file '%s'" % file)
 		ais = OrderedDict()
-		aisizes = dict(self.aisizes)
-		bwsizes = dict(self.bwscript.aisizes)
+		aisizes = deepcopy(self.aisizes)
+		bwsizes = deepcopy(self.bwscript.aisizes)
 		aisize = 0
 		externaljumps = [[{},{}],[{},{}]]
 		bwais = OrderedDict()
 		varinfo = OrderedDict(self.varinfo)
-		aiinfo = dict(self.aiinfo)
-		bwinfo = dict(self.bwscript.aiinfo)
+		aiinfo = deepcopy(self.aiinfo)
+		bwinfo = deepcopy(self.bwscript.aiinfo)
 		curinfo = None
 		ai = []
 		cmdn = 0
@@ -1640,7 +1641,7 @@ class AIBIN:
 				cmdn = 0
 				if id in extjumps:
 					j = len(extjumps[id])
-					jump = dict(extjumps[id])
+					jump = deepcopy(extjumps[id])
 				else:
 					j = 0
 					jump = {}
@@ -2007,7 +2008,7 @@ class BWBIN(AIBIN):
 			cmdn = 0
 			if id in extjumps:
 				j = len(extjumps[id])
-				jump = dict(extjumps[id])
+				jump = deepcopy(extjumps[id])
 			else:
 				j = 0
 				jump = {}

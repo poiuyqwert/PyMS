@@ -16,6 +16,7 @@ except ImportError:
 	import pickle
 from zlib import compress, decompress
 from collections import OrderedDict
+from copy import deepcopy
 
 TYPE_HELP = {
 	'Frame':'The index of a frame in a GRP, in decimal or hexadecimal (number in the range 0 to 65535. framesets are increments of 17, so 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)',
@@ -962,7 +963,7 @@ class IScriptBIN:
 				warnings.append(PyMSWarning('Interpeting', "The label '%s' is unused, label is discarded" % l))
 				r = OrderedDict(code, sorted(code.keys()))
 				self.remove_code(labels[l], code=r, offsets=offsets)
-				code = dict(r)
+				code = deepcopy(r)
 		# print 'Headers: ' + pprint(headers)
 		# print 'Offsets: ' + pprint(offsets)
 		# print 'Code   : ' + pprint(code)
@@ -976,7 +977,7 @@ class IScriptBIN:
 			self.headers[id] = headers[id]
 		for o,i in offsets.iteritems():
 			self.offsets[o] = i
-		c = dict(self.code)
+		c = deepcopy(self.code)
 		for o,cmd in code.iteritems():
 			c[o] = cmd
 		k = c.keys()
