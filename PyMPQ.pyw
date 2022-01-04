@@ -850,7 +850,7 @@ class PyMPQ(Tk):
 		f,l = MAFA_REPLACE_EXISTING,0
 		if c[0]:
 			f |= MAFA_COMPRESS
-			if [0] == 2:
+			if c[0] == 2:
 				l = c[1]
 			elif c[0] == 3:
 				l = [MAWA_QUALITY_LOW,MAWA_QUALITY_MEDIUM,MAWA_QUALITY_HIGH][c[1]]
