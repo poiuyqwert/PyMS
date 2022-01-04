@@ -1,25 +1,27 @@
 from ctypes import *
 import os,sys
 
-cwd = os.getcwd()
+SFMPQ_DIR = None
 if hasattr(sys, 'frozen'):
-	SFmpq_DIR = os.path.join(os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding())),'Libs')
+	SFMPQ_DIR = os.path.join(os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding())) ,'PyMS','FileFormats','MPQ')
 else:
-	SFmpq_DIR = os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))
-if SFmpq_DIR:
-	os.chdir(SFmpq_DIR)
-FOLDER = False
-try:
-	_SFmpq = windll.SFmpq
-except:
-	try:
-		_SFmpq = windll.SFmpq64
-	except:
+	SFMPQ_DIR = os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))
+
+_SFmpq = None
+if SFMPQ_DIR:
+	libraries = (
+		'SFmpq.dll',
+		'SFmpq64.dll',
+		'SFmpq.dylib',
+	)
+	for library in libraries:
 		try:
-			_SFmpq = CDLL("SFmpq.dylib", RTLD_GLOBAL)
-		except:
-			FOLDER = True
-os.chdir(cwd)
+			_SFmpq = CDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
+			break
+		except Exception:
+			pass
+
+FOLDER = (_SFmpq == None)
 
 class SFile:
 	def __init__(self, text='', file='<Internal SFile>'):
