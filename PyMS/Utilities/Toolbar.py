@@ -10,11 +10,16 @@ class Toolbar(Frame):
 	def __init__(self, *args, **kwargs):
 		self._buttons = {}
 		self._tags = {}
+		self._bind_target = None
+		if 'bind_target' in kwargs:
+			self._bind_target = kwargs['bind_target']
+			del kwargs['bind_target']
 		Frame.__init__(self, *args, **kwargs)
-		self._bind_target = kwargs.get('bind_target', self.master)
+		if not self._bind_target:
+			self._bind_target = self.master
 
 	def add_button(self, icon, callback, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
-		if isstr(icon):
+		if not isinstance(icon, PhotoImage):
 			try:
 				if os.path.exists(icon):
 					icon = PhotoImage(file=icon)
@@ -23,7 +28,7 @@ class Toolbar(Frame):
 			except:
 				icon = None
 		button = Button(self, image=icon, width=20, height=20, command=callback, state=NORMAL if enabled else DISABLED)
-		button.image = icon
+		button._image = icon
 		if shortcut:
 			if bind_shortcut:
 				self._bind_target.bind(shortcut, lambda *e: callback())
@@ -43,6 +48,21 @@ class Toolbar(Frame):
 					self._tags[tag].append(button)
 		return button
 
+	def update_icon(self, identifier, icon):
+		button = self._buttons.get(identifier)
+		if not button:
+			return
+		if not isinstance(icon, PhotoImage):
+			try:
+				if os.path.exists(icon):
+					icon = PhotoImage(file=icon)
+				else:
+					icon = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', '%s.gif' % icon))
+			except:
+				icon = None
+		button['image'] = icon
+		button._image = icon
+
 	def set_enabled(self, button_identifier, is_enabled):
 		button = self._buttons.get(button_identifier)
 		if button:
@@ -52,8 +72,8 @@ class Toolbar(Frame):
 		for button in self._tags.get(tag, ()):
 			button['state'] = NORMAL if is_enabled else DISABLED
 
-	def add_spacer(self, width):
-		return Frame(self, width=width).pack(side=LEFT)
+	def add_spacer(self, width, flexible=False):
+		return Frame(self, width=width).pack(side=LEFT, fill=X, expand=flexible)
 
 	GAP_SIZE = 2
 	def add_gap(self):

@@ -1,5 +1,5 @@
 
-from utils import isstr
+from utils import BASE_DIR, isstr
 from UIKit import *
 
 import os
@@ -44,9 +44,9 @@ class TreeList(Frame):
 		self.root = TreeGroup('<ROOT>', -1, -1, True)
 		self.entries = {}
 		if closeicon == None:
-			closeicon = os.path.join('Images','treeclose.gif')
+			closeicon = os.path.join(BASE_DIR,'PyMS','Images','treeclose.gif')
 		if openicon == None:
-			openicon = os.path.join('Images','treeopen.gif')
+			openicon = os.path.join(BASE_DIR,'PyMS','Images','treeopen.gif')
 		self.icons = [PhotoImage(file=closeicon),PhotoImage(file=openicon)]
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)

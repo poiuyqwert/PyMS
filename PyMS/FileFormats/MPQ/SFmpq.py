@@ -23,7 +23,7 @@ if SFMPQ_DIR:
 		try:
 			_SFmpq = CDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
 			break
-		except Exception, e:
+		except Exception:
 			pass
 
 SFMPQ_LOADED = (_SFmpq != None)

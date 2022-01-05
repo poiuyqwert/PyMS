@@ -4,24 +4,11 @@ from utils import is_mac
 
 import inspect
 
-# __all__ = [
-# 	'Key',
-# 	'Mouse',
-# 	'ButtonRelease',
-# 	'Shift',
-# 	'Ctrl',
-# 	'Alt',
-# 	'Double',
-# 	'Triple',
-# 	'Quadruple',
-# 	'Cursor',
-#	'Focus',
-# ]
-
 # https://www.tcl-lang.org/man/tcl8.4/TkCmd/bind.htm
 
 class EventPattern(object):
 	def __init__(self, *fields):
+		# TODO: Validate fields make sense?
 		self.fields = fields
 
 	def name(self):
@@ -39,6 +26,14 @@ class EventPattern(object):
 	def __repr__(self):
 		return '<EventPattern %s>' % self
 
+	def __add__(self, other):
+		if isinstance(other, EventPattern):
+			return EventPattern(*(self.fields + other.fields))
+		elif isinstance(other, Field):
+			return EventPattern(*(self.fields + (other,)))
+		else:
+			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
+
 class Field(object):
 	def __init__(self, value, description=None):
 		self.value = value
@@ -49,24 +44,49 @@ class Field(object):
 			return False
 		return other.value == self.value
 
-class Modifier:
-	class Mac:
-		pass
+	def __add__(self, other):
+		if isinstance(other, EventPattern):
+			return EventPattern(*((self,) + other.fields))
+		elif isinstance(other, Field):
+			return EventPattern(self, other)
+		else:
+			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
-Modifier.Shift = Field('Shift', '⇧' if is_mac() else None)
+class Modifier:
+	Shift = Field('Shift', '⇧' if is_mac() else None)
+	Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
+	Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
+	class Mac:
+		Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
+
+	Double = Field('Double')
+	Triple = Field('Triple')
+	Quadruple = Field('Quadruple')
+
+	ButtonRelease = Field('ButtonRelease')
+
+	Left_Click = Field('B1', 'Left-Click')
+	Middle_Click = Field('B2', 'Middle-Click')
+	Right_Click = Field('B2' if is_mac() else 'B3', 'Right-Click')
+
+# Modifier.Shift = Field('Shift', '⇧' if is_mac() else None)
 Modifier.Shift.state = 0x1
-Modifier.Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
+# Modifier.Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
 Modifier.Ctrl.state = 0x8 if is_mac() else 0x4
-Modifier.Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
+# Modifier.Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
 Modifier.Alt.state = 0x10
-Modifier.Mac.Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
+# Modifier.Mac.Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
 Modifier.Mac.Ctrl.state = 0x4
 
-Modifier.Double = Field('Double')
-Modifier.Triple = Field('Triple')
-Modifier.Quadruple = Field('Quadruple')
+# Modifier.Double = Field('Double')
+# Modifier.Triple = Field('Triple')
+# Modifier.Quadruple = Field('Quadruple')
 
-Modifier.ButtonRelease = Field('ButtonRelease')
+# Modifier.ButtonRelease = Field('ButtonRelease')
+
+# Modifier.Left_Click = Field('B1', 'Left-Click')
+# Modifier.Middle_Click = Field('B2', 'Middle-Click')
+# Modifier.Right_Click = Field('B2' if is_mac() else 'B3', 'Right-Click')
 
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
@@ -158,23 +178,26 @@ class Key(Events):
 	Released = EventPattern(Field('KeyRelease'))
 
 class Mouse(Events):
-	Left_Click = EventPattern(Field('1', 'Left-Click'))
+	Left_Click = EventPattern(Field('Button-1', 'Left-Click'))
 	Click = Left_Click
-	Middle_Click = EventPattern(Field('2', 'Middle-Click'))
-	Right_Click = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
+	Middle_Click = EventPattern(Field('Button-2', 'Middle-Click'))
+	Right_Click = EventPattern(Field('Button-2' if is_mac() else 'Button-3', 'Right-Click'))
 	# 4
 	# 5
 
-	Left_Drag = EventPattern(Field('B1', 'Left'),Field('Motion', '-Drag'))
-	Middle_Drag = EventPattern(Field('B2', 'Middle'),Field('Motion', '-Drag'))
-	Right_Drag = EventPattern(Field('B2' if is_mac() else 'B3', 'Right'),Field('Motion', '-Drag'))
+	Left_Drag = EventPattern(Modifier.Left_Click,Field('Motion', '-Drag'))
+	Middle_Drag = EventPattern(Modifier.Middle_Click,Field('Motion', '-Drag'))
+	Right_Drag = EventPattern(Modifier.Right_Click,Field('Motion', '-Drag'))
 
 	ButtonPress = EventPattern(Field('ButtonPress'))
 	ButtonRelease = EventPattern(Field('ButtonRelease'))
 	Scroll = EventPattern(Field('MouseWheel'))
 
-class ButtonRelease(Mouse):
-	pass
+class ButtonRelease(Events):
+	Left_Click = EventPattern(Field('1', 'Left-Click'))
+	Click = Left_Click
+	Middle_Click = EventPattern(Field('2', 'Middle-Click'))
+	Right_Click = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
 ButtonRelease.modify(Modifier.ButtonRelease)
 
 # Control
@@ -275,9 +298,10 @@ class Focus:
 class WidgetEvent:
 	Configure = EventPattern(Field('Configure'))
 
-if __name__ == '__main__':
+def main():
 	events = [
 		Ctrl.a,
+		Modifier.Ctrl + Key.a,
 		Alt.a,
 		Ctrl.Alt.a,
 		Shift.Ctrl.Alt.a,
@@ -287,9 +311,27 @@ if __name__ == '__main__':
 		Shift.Ctrl.Alt.Quadruple.Right_Click,
 		Mouse.Left_Drag,
 		Shift.Ctrl.Alt.Left_Drag,
-		ButtonRelease.Left_Click
+		ButtonRelease.Left_Click,
+		Double.Click,
+		Ctrl.Double.Click
 	]
 	for event in events:
-		print event
-		print event.name()
-		print event.description()
+		print(event)
+		print(event.name())
+		print(event.description())
+
+	import Tkinter as Tk
+
+	root = Tk.Tk()
+	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')
+	canvas.grid(row=0, column=1)
+	def double_click(*e):
+		print('Double')
+	canvas.bind(Double.Left_Click, double_click)
+	def click(*e):
+		print('Left')
+	canvas.bind(Mouse.Left_Click, click)
+	root.mainloop()
+
+if __name__ == '__main__':
+	main()

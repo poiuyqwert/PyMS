@@ -102,7 +102,7 @@ class Canvas(Tk.Canvas):
 		return Canvas.Item(self, Tk.Canvas.create_window(self, x,y, *args, **kwargs))
 
 	def coords(self, item_id, x,y, x2=None,y2=None):
-			x,y = self.coordinate_adjust(x, y)
-			if x2 != None and y2 != None:
-				x2,y2 = self.coordinate_adjust(x2, y2)
-			Tk.Canvas.coords(self, item_id, x,y, x2,y2)
+		x,y = self.coordinate_adjust(x, y)
+		if x2 != None and y2 != None:
+			x2,y2 = self.coordinate_adjust(x2, y2)
+		Tk.Canvas.coords(self, item_id, x,y, x2,y2)
