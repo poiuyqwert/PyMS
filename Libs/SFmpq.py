@@ -16,6 +16,11 @@ if SFMPQ_DIR:
 	)
 	for library in libraries:
 		try:
+			_SFmpq = WinDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
+			break
+		except Exception:
+			pass
+		try:
 			_SFmpq = CDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
 			break
 		except Exception:
