@@ -139,7 +139,7 @@ class PyTRG(MainWindow):
 			aibin = AIBIN.AIBIN()
 			tbl.load_file(self.mpqhandler.get_file(self.settings.settings.files['stat_txt']))
 			aibin.load_file(self.mpqhandler.get_file(self.settings.settings.files['aiscript']))
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.tbl = tbl
@@ -206,11 +206,11 @@ class PyTRG(MainWindow):
 			try:
 				trg.load_file(file)
 				data = trg.decompile_data()
-			except PyMSError, e:
+			except PyMSError as e:
 				try:
 					trg.load_file(file, True)
 					data = trg.decompile_data()
-				except PyMSError, e:
+				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
 			self.text.re = None
@@ -257,7 +257,7 @@ class PyTRG(MainWindow):
 		try:
 			self.trg.interpret(self.text)
 			self.trg.compile(self.file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('Save Successful!')
@@ -282,7 +282,7 @@ class PyTRG(MainWindow):
 		try:
 			self.trg.interpret(self.text)
 			self.trg.compile(file, True)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('*.got Compatable *.trg Saved Successfully!')
@@ -298,14 +298,14 @@ class PyTRG(MainWindow):
 			f.write(self.text.get('1.0',END))
 			f.close()
 			self.status.set('Export Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def test(self, key=None):
 		i = TRG.TRG()
 		try:
 			warnings = i.interpret(self)
-		except PyMSError, e:
+		except PyMSError as e:
 			if e.line != None:
 				self.text.see('%s.0' % e.line)
 				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
@@ -368,7 +368,7 @@ class PyTRG(MainWindow):
 	def register(self, e=None):
 		try:
 			register_registry('PyTRG','','trg',os.path.join(BASE_DIR, 'PyTRG.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyTRG.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

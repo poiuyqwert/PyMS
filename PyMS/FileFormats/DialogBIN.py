@@ -563,7 +563,7 @@ class DialogBIN:
 		data = load_file(file, 'Dialog BIN')
 		try:
 			self.load_data(data)
-		except PyMSError, e:
+		except PyMSError as e:
 			raise e
 		except:
 			raise PyMSError('Load',"Unsupported Dialog BIN file '%s', could possibly be corrupt" % file)
@@ -826,7 +826,7 @@ class DialogBIN:
 			setattr(working, attr, value)
 		if backfill_smks:
 			raise PyMSError('Interpreting',"SMK %s is missing" % backfill_smks.keys()[0])
-		for i in xrange(len(widgets)):
+		for i in range(len(widgets)):
 			widget = widgets[i]
 			if widget.type == BINWidget.TYPE_DIALOG:
 				del widgets[i]

@@ -39,10 +39,10 @@ class CV5:
 		# 		info[i][v].append(gid)
 		# names = ['index','buildable','flags','buildable2','groundheight','edgeleft','edgeup','edgeright','edgedown','unknown9','hasup','unknown11','hasdown']
 		# for name,data in zip(names,info):
-		# 	print name
+		# 	print(name)
 		# 	for k in sorted(data.keys()):
-		# 		print '\t%s' % k
-		# 		print '\t\t%s' % data[k]
+		# 		print('\t%s' % k)
+		# 		print('\t\t%s' % data[k])
 
 	def save_file(self, file):
 		data = ''

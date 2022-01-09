@@ -194,7 +194,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		entries = copy.deepcopy(self.get_dat_data().dat.entries)
 		try:
 			ids = self.get_dat_data().dat.interpret(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			self.get_dat_data().dat.entries = entries
 			ErrorDialog(self, e)
 			return
@@ -216,7 +216,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			return
 		try:
 			self.get_dat_data().dat.save_file(self.get_dat_data().file_path)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:
 			self.edited = False
@@ -236,5 +236,5 @@ class DATTab(NotebookTab, DATTabConveniences):
 			return True
 		try:
 			self.get_dat_data().dat.decompile(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)

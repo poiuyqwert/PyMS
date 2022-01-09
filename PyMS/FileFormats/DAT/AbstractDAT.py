@@ -165,7 +165,7 @@ class AbstractDAT(object):
 		check_entry()
 		if not entries:
 			raise PyMSError('Import', 'No entries found')
-		print entries
+		print(entries)
 
 	def export_entry(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
 		return self.get_entry(id).export(id, export_properties, export_type, json_dump, json_indent)

@@ -98,7 +98,7 @@ class CHK:
 		data = load_file(file, 'CHK')
 		try:
 			self.load_data(data)
-		except PyMSError, e:
+		except PyMSError as e:
 			raise e
 		except:
 			raise PyMSError('Load',"Unsupported CHK file '%s', could possibly be corrupt" % file)

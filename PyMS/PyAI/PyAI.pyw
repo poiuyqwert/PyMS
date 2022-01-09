@@ -1013,7 +1013,7 @@ class CodeEditDialog(PyMSDialog):
 						for cid in l:
 							if not cid in i.ais:
 								raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally with out editing the scripts with the external references (%s) at the same time." % (id,cid))
-		except PyMSError, e:
+		except PyMSError as e:
 			if e.line != None:
 				self.text.see('%s.0' % e.line)
 				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
@@ -1199,7 +1199,7 @@ class CodeEditDialog(PyMSDialog):
 	def load(self):
 		try:
 			warnings = self.parent.ai.decompile(self, self.parent.extdefs, self.parent.reference.get(), 1, self.ids)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		if warnings:
@@ -2019,7 +2019,7 @@ class StringEditor(PyMSDialog):
 			tbl = TBL.TBL()
 			try:
 				tbl.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			max = len(tbl.strings)
@@ -2048,7 +2048,7 @@ class StringEditor(PyMSDialog):
 		try:
 			self.tbl.compile(file)
 			self.parent.stattxt(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.tbledited = False
@@ -2539,7 +2539,7 @@ class PyAI(Tk):
 				tbl.load_file(file)
 				self.stat_txt = file
 				self.tbl = tbl
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.unitsdat = unitsdat
@@ -2716,7 +2716,7 @@ class PyAI(Tk):
 				ai = AIBIN.AIBIN(bwscript, self.unitsdat, self.upgradesdat, self.techdat, self.tbl)
 				warnings.extend(ai.warnings)
 				warnings.extend(ai.load_file(aiscript, True))
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.ai = ai
@@ -2791,7 +2791,7 @@ class PyAI(Tk):
 				self.stat_txt = file
 				try:
 					self.tbl.compile(file)
-				except PyMSError, e:
+				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
 				self.tbledited = False
@@ -2803,7 +2803,7 @@ class PyAI(Tk):
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 			self.status.set('Save Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -2840,7 +2840,7 @@ class PyAI(Tk):
 			bw = SFile()
 			try:
 				self.ai.compile(ai, bw)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 			undone = []
 			for f,s in [('ai',ai),('bw',bw)]:
@@ -2873,7 +2873,7 @@ class PyAI(Tk):
 	def register(self, e=None):
 		try:
 			register_registry('PyAI','AI','bin',os.path.join(BASE_DIR, 'PyAI.pyw'),os.path.join(BASE_DIR,'Images','PyAI.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
@@ -3290,7 +3290,7 @@ class PyAI(Tk):
 					ids.extend(external)
 			try:
 				warnings = self.ai.decompile(export, self.extdefs, self.reference.get(), 1, ids)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			if warnings:
@@ -3316,7 +3316,7 @@ class PyAI(Tk):
 							for cid in l:
 								if not cid in i.ais:
 									raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally with out editing the scripts with the external references (%s) at the same time." % (id,cid))
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(parent, e)
 				return -1
 			cont = c
@@ -3464,7 +3464,7 @@ class PyAI(Tk):
 			for n,s in enumerate(sets):
 				try:
 					s.load_file(files[n] % {'path':BASE_DIR})
-				except PyMSError, e:
+				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
 			self.tbl = sets[0]
@@ -3530,44 +3530,44 @@ def main():
 						ids = []
 						for i in opt.scripts.split(','):
 							if len(i) != 4:
-								print 'Invalid ID: %s' % ids[-1]
+								print('Invalid ID: %s' % ids[-1])
 								return
 							ids.append(i)
 					else:
 						ids = None
-					print "Loading bwscript.bin '%s', units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (args[1],opt.units,opt.upgrades,opt.techdata,opt.stattxt)
+					print("Loading bwscript.bin '%s', units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (args[1],opt.units,opt.upgrades,opt.techdata,opt.stattxt))
 					bin = AIBIN.AIBIN(args[1],opt.units,opt.upgrades,opt.techdata,opt.stattxt)
 					warnings.extend(bin.warnings)
-					print " - Loading finished successfully\nReading BINs '%s' and '%s'..." % (args[0],args[1])
+					print(" - Loading finished successfully\nReading BINs '%s' and '%s'..." % (args[0],args[1]))
 					warnings.extend(bin.load_file(args[0]))
-					print " - BINs read successfully\nWriting AI Scripts to '%s'..." % args[2]
+					print(" - BINs read successfully\nWriting AI Scripts to '%s'..." % args[2])
 					warnings.extend(bin.decompile(args[2],opt.deffile,opt.reference,opt.longlabels,ids))
-					print " - '%s' written succesfully" % args[2]
+					print(" - '%s' written succesfully" % args[2])
 				else:
 					if opt.bwscript:
-						print "Loading base bwscript.bin '%s', units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (os.path.abspath(opt.bwscript),opt.units,opt.upgrades,opt.techdata,opt.stattxt)
+						print("Loading base bwscript.bin '%s', units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (os.path.abspath(opt.bwscript),opt.units,opt.upgrades,opt.techdata,opt.stattxt))
 						bin = AIBIN.AIBIN(os.path.abspath(opt.bwscript),opt.units,opt.upgrades,opt.techdata,opt.stattxt)
 					else:
-						print "Loading units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (opt.units,opt.upgrades,opt.techdata,opt.stattxt)
+						print("Loading units.dat '%s', upgrades.dat '%s', techdata.dat '%s', and stat_txt.tbl '%s'" % (opt.units,opt.upgrades,opt.techdata,opt.stattxt))
 						bin = AIBIN.AIBIN('',opt.units,opt.upgrades,opt.techdata,opt.stattxt)
-					print " - Loading finished successfully"
+					print(" - Loading finished successfully")
 					if opt.aiscript:
-						print "Loading base aiscript.bin '%s'..." % os.path.abspath(opt.aiscript)
+						print("Loading base aiscript.bin '%s'..." % os.path.abspath(opt.aiscript))
 						bin.load_file(os.path.abspath(opt.aiscript))
-						print " - aiscript.bin read successfully"
-					print "Interpreting file '%s'..." % args[0]
+						print(" - aiscript.bin read successfully")
+					print("Interpreting file '%s'..." % args[0])
 					warnings.extend(bin.interpret(args[0],opt.deffile))
-					print " - '%s' read successfully\nCompiling file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2])
+					print(" - '%s' read successfully\nCompiling file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2]))
 					bin.compile(args[1], args[2])
-					print " - aiscript.bin '%s' and bwscript.bin '%s' written succesfully" % (args[1], args[2])
+					print(" - aiscript.bin '%s' and bwscript.bin '%s' written succesfully" % (args[1], args[2]))
 				if not opt.hidewarns:
 					for warning in warnings:
-						print repr(warning)
-			except PyMSError, e:
+						print(repr(warning))
+			except PyMSError as e:
 				if warnings and not opt.hidewarns:
 					for warning in warnings:
-						print repr(warning)
-				print repr(e)
+						print(repr(warning))
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

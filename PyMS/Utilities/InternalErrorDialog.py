@@ -16,7 +16,7 @@ class InternalErrorDialog(PyMSDialog):
 		if debug == InternalErrorDialog.CAPTURE_DIALOG:
 			InternalErrorDialog(parent, prog, txt=trace)
 		elif debug == InternalErrorDialog.CAPTURE_PRINT:
-			print trace
+			print(trace)
 
 	def __init__(self, parent, prog, handler=None, txt=None):
 		self.prog = prog

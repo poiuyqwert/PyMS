@@ -1726,7 +1726,7 @@ class TRG:
 			offset = 0
 			if not TRIG:
 				if data[:8] != 'qw\x986\x18\x00\x00\x00':
-					raise PyMSError('Load',"'%s' is not a TRG file (no TRG header). It could possibly be a .got TRG file, try using the -t option when decompiling" % file)
+					raise PyMSError('Load',"Not a TRG file (no TRG header). It could possibly be a .got TRG file, try using the -t option when decompiling")
 				offset = 8
 			triggers_type = MISSION_BRIEFING if MBRF else NORMAL_TRIGGERS
 			triggers = []
@@ -1813,7 +1813,7 @@ class TRG:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported TRG file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported TRG file, could possibly be corrupt")
 
 	def interpret(self, file): 
 		if isstr(file):
@@ -1866,7 +1866,7 @@ class TRG:
 								continue
 							else:
 								triggers_type = NORMAL_TRIGGERS
-						#print '%s : %s' % (state,line)
+						#print('%s : %s' % (state,line))
 						if state == 1:
 							if l.endswith('\n'):
 								l = l[:-1]
@@ -1961,7 +1961,7 @@ class TRG:
 								state = 6
 								continue
 							cont = True
-							for r in ['\\AString (\\d+):\\s*\\Z','\\AProperty (\\d+):\\s*\\Z','\\ATrigger(.+):\\s*\\Z','\\AConstant ([^\s]+):\\s*\\Z','\\AConditions ([^\s]+):\\s*\\Z','\\AActions ([^\s]+):\\s*\\Z']:
+							for r in [r'\AString (\d+):\s*\Z',r'\AProperty (\d+):\s*\Z',r'\ATrigger(.+):\s*\Z',r'\AConstant ([^\s]+):\s*\Z',r'\AConditions ([^\s]+):\s*\Z',r'\AActions ([^\s]+):\s*\Z']:
 								match = re.match(r, line)
 								if match:
 									if state != 8:
@@ -1984,7 +1984,7 @@ class TRG:
 									else:
 										dat = []
 										if match.group(3):
-											dat = re.split('\\s*,\\s*', re.sub('\\{([^}\s]+)\\}', param_constant, match.group(3)))
+											dat = re.split(r'\s*,\s*', re.sub(r'\{([^}\s]+)\}', param_constant, match.group(3)))
 										if not cmd in self.conditions[triggers_type] and not cmd in self.new_conditions and not cmd in rev_dynamic_conditions:
 											raise PyMSError('Interpreter',"'%s' is an invalid condition" % cmd,n,line)
 										if cmd in self.conditions[triggers_type]:
@@ -2004,7 +2004,7 @@ class TRG:
 											for d,param in zip(dat,params):
 												try:
 													param(self, False, condition, d)
-												except PyMSError, e:
+												except PyMSError as e:
 													e.line = n + 1
 													e.code = line
 													raise
@@ -2030,7 +2030,7 @@ class TRG:
 							continue
 						elif state == 12:
 							cont = True
-							for r in ['\\AString (\\d+):\\s*\\Z','\\AProperty (\\d+):\\s*\\Z','\\ATrigger(.+):\\s*\\Z','\\AConstant ([^\s]+):\\s*\\Z','\\AConditions ([^\s]+):\\s*\\Z','\\AActions ([^\s]+):\\s*\\Z']:
+							for r in [r'\AString (\d+):\s*\Z',r'\AProperty (\d+):\s*\Z',r'\ATrigger(.+):\s*\Z',r'\AConstant ([^\s]+):\s*\Z',r'\AConditions ([^\s]+):\s*\Z',r'\AActions ([^\s]+):\s*\Z']:
 								match = re.match(r, line)
 								if match:
 									cont = False
@@ -2039,7 +2039,7 @@ class TRG:
 								raise PyMSError('Interpreter',"Too many conditions in Conditions Function (max is 16)",n,line)
 						elif state in [6,9,10,11]:
 							cont = True
-							for r in ['\\AString (\\d+):\\s*\\Z','\\AProperty (\\d+):\\s*\\Z','\\ATrigger(.+):\\s*\\Z','\\AConstant ([^\s]+):\\s*\\Z','\\AConditions ([^\s]+):\\s*\\Z','\\AActions ([^\s]+):\\s*\\Z']:
+							for r in [r'\AString (\d+):\s*\Z',r'\AProperty (\d+):\s*\Z',r'\ATrigger(.+):\s*\Z',r'\\Constant ([^\s]+):\s*\Z',r'\AConditions ([^\s]+):\s*\Z',r'\AActions ([^\s]+):\s*\Z']:
 								match = re.match(r, line)
 								if match:
 									cont = False
@@ -2064,7 +2064,7 @@ class TRG:
 									else:
 										dat = []
 										if match.group(3):
-											dat = re.split('\\s*,\\s*', re.sub('\\{([^}\s]+)\\}', param_constant, match.group(3)))
+											dat = re.split(r'\s*,\s*', re.sub(r'\{([^}\s]+)\}', param_constant, match.group(3)))
 										if not cmd in self.actions[triggers_type] and not cmd in self.new_actions and not cmd in rev_dynamic_actions:
 											raise PyMSError('Interpreter',"'%s' is an invalid action" % cmd,n,line)
 										if cmd in self.actions[triggers_type]:
@@ -2084,7 +2084,7 @@ class TRG:
 											for d,param in zip(dat,params):
 												try:
 													param(self, False, action, strings, properties, d)
-												except PyMSError, e:
+												except PyMSError as e:
 													e.line = n + 1
 													e.code = line
 													raise
@@ -2158,12 +2158,12 @@ class TRG:
 								triggers[-1][0][player_ids.index(param)] = 1
 							state = 3
 							continue
-						match = re.match('\\AConstant ([^\s]+):\\s*\\Z', line)
+						match = re.match(r'\AConstant ([^\s]+):\s*\Z', line)
 						if match:
 							id = match.group(1)
 							state = 7
 							continue
-						match = re.match('\\AConditions ([^\s]+):\\s*\\Z', line)
+						match = re.match(r'\AConditions ([^\s]+):\s*\Z', line)
 						if match:
 							id = match.group(1)
 							if id in self.conditions[triggers_type]:
@@ -2173,7 +2173,7 @@ class TRG:
 							conditions[id] = []
 							state = 8
 							continue
-						match = re.match('\\AActions ([^\s]+):\\s*\\Z', line)
+						match = re.match(r'\AActions ([^\s]+):\s*\Z', line)
 						if match:
 							id = match.group(1)
 							if id in self.actions[triggers_type]:
@@ -2406,15 +2406,15 @@ for triggers_type in [NORMAL_TRIGGERS,MISSION_BRIEFING]:
 						TYPE_HELP[d[0].rstrip()] = d[1].lstrip()
 #t = TRG()
 #t.load_file('AG.trg')
-#print t.triggers
-#print t.strings
-#print t.properties
+#print(t.triggers)
+#print(t.strings)
+#print(t.properties)
 #t.decompile('AG.txt')
-#print condition_tunit(True, [0,0,0,37])
-#print '-----'
+#print(condition_tunit(True, [0,0,0,37]))
+#print('-----')
 #t.interpret('test.txt')
 #t.compile('test.trg')
 #t.load_file('test.trg')
-#print t.triggers
-#print t.strings
-#print t.properties
+#print(t.triggers)
+#print(t.strings)
+#print(t.properties)

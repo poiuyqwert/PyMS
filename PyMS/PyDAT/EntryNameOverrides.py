@@ -104,7 +104,7 @@ class EntryNameOverrides(PyMSDialog):
 				name_overrides[entry_id] = (append, name)
 			self.data_context.dat_data(self.dat_id).name_overrides = name_overrides
 			self.refresh_list()
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 		except:
 			ErrorDialog(self, PyMSError('Open', "Invalid name overrides '%s'" % path))

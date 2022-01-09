@@ -62,25 +62,25 @@ def main():
 							raise PyMSError('Options','Invalid ID list')
 					else:
 						ids = None
-					print "Reading DAT '%s'..." % args[0]
+					print("Reading DAT '%s'..." % args[0])
 					dat.load_file(args[0])
-					print " - '%s' read successfully\nDecompiling DAT file '%s'..." % (args[0],args[0])
+					print(" - '%s' read successfully\nDecompiling DAT file '%s'..." % (args[0],args[0]))
 					dat.decompile(args[1], opt.reference, ids)
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				else:
 					if opt.basedat:
 						basedat = os.path.abspath(opt.basedat)
 					else:
 						basedat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr','%s%sdat' % (['units','weapons','flingy','sprites','images','upgrades','techdata','sfxdata','portdata','mapdata','orders'][opt.type],os.extsep))
-					print "Loading base DAT file '%s'..." % basedat
+					print("Loading base DAT file '%s'..." % basedat)
 					dat.load_file(basedat)
-					print " - '%s' read successfully\nInterpreting file '%s'..." % (basedat,args[0])
+					print(" - '%s' read successfully\nInterpreting file '%s'..." % (basedat,args[0]))
 					dat.interpret(args[0])
-					print " - '%s' read successfully\nCompiling file '%s' to DAT format..." % (args[0],args[0])
+					print(" - '%s' read successfully\nCompiling file '%s' to DAT format..." % (args[0],args[0]))
 					dat.compile(args[1])
-					print " - '%s' written succesfully" % args[1]
-			except PyMSError, e:
-				print repr(e)
+					print(" - '%s' written succesfully" % args[1])
+			except PyMSError as e:
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

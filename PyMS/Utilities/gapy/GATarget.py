@@ -10,7 +10,7 @@ class GATarget:
 
 class GAOutputTarget:
 	def track(self, data):
-		print data
+		print(data)
 
 
 def os_bits():
@@ -70,9 +70,9 @@ class GAAPITarget(threading.Thread):
 		self._pause_cond = threading.Condition(threading.Lock())
 		self._pause()
 		self._backlog = []
-		# print self._url_collect
-		# print self._url_batch
-		# print self._useragent
+		# print(self._url_collect)
+		# print(self._url_batch)
+		# print(self._useragent)
 
 	def _body(self, data):
 		return urllib.urlencode(data)
@@ -82,12 +82,12 @@ class GAAPITarget(threading.Thread):
 
 	def _send(self, batch, body):
 		try:
-			# print batch
-			# print repr(body)
+			# print(batch)
+			# print(repr(body))
 			request = urllib2.Request(self._url_batch if len(batch) > 1 else self._url_collect, body)
 			request.add_header('User-Agent', self._useragent)
-			result = urllib2.urlopen(request)
-			# print 'done: ' + result.read()
+			_ = urllib2.urlopen(request)
+			# print('done: ' + result.read())
 			if self._backlog:
 				retry_at = self._time()
 				for data,failed_at in self._backlog:
@@ -96,8 +96,7 @@ class GAAPITarget(threading.Thread):
 		except urllib2.URLError:
 			for data in batch:
 				self._backlog.append((data, self._time()))
-		except Exception, e:
-			# print e
+		except Exception:
 			pass
 
 	def run(self):

@@ -72,7 +72,7 @@ def register_registry(prog,type,filetype,progpath,icon):
 	def delkey(key,sub_key):
 		try:
 			h = OpenKey(key,sub_key)
-		except WindowsError, e:
+		except WindowsError as e:
 			if e.errno == 2:
 				return
 			raise

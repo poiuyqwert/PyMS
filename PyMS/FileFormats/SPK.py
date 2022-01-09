@@ -36,7 +36,7 @@ class SPK:
 		data = load_file(file, 'SPK')
 		try:
 			self.load_data(data)
-		except PyMSError, e:
+		except PyMSError as e:
 			raise e
 		except:
 			raise PyMSError('Load',"Unsupported SPK file '%s', could possibly be corrupt" % file)
@@ -88,7 +88,7 @@ class SPK:
 		for row in bmp.image:
 			runs = []
 			runs_by_row.append(runs)
-			run = None
+			run = []
 			for x,i in enumerate(row):
 				if i and not run:
 					run = [x,x]

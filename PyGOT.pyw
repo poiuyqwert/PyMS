@@ -39,31 +39,31 @@ def main():
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			try:
 				if opt.convert:
-					print "Reading GOT '%s'..." % args[0]
+					print("Reading GOT '%s'..." % args[0])
 					got.load_file(args[0])
-					print " - '%s' read successfully\nDecompiling GOT file '%s'..." % (args[0],args[0])
+					print(" - '%s' read successfully\nDecompiling GOT file '%s'..." % (args[0],args[0]))
 					got.decompile(args[1], opt.reference)
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				else:
-					print "Interpreting file '%s'..." % args[0]
+					print("Interpreting file '%s'..." % args[0])
 					got.interpret(args[0])
-					print " - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0])
+					print(" - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0]))
 					got.compile(args[1])
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 					if opt.trig:
-						print "Reading TRG '%s'..." % args[0]
+						print("Reading TRG '%s'..." % args[0])
 						trg = TRG()
 						trg.load_file(opt.trig)
-						print " - '%s' read successfully" % args[0]
+						print(" - '%s' read successfully" % args[0])
 						path = os.path.dirname(opt.trig)
 						if not path:
 							path = os.path.abspath('')
 						file = '%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[1]).split(os.extsep)[:-1])), os.extsep, 'trg')
-						print "Compiling file '%s' to GOT compatable TRG..." % file
+						print("Compiling file '%s' to GOT compatable TRG..." % file)
 						trg.compile(file, True)
-						print " - '%s' written succesfully" % file
-			except PyMSError, e:
-				print repr(e)
+						print(" - '%s' written succesfully" % file)
+			except PyMSError as e:
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

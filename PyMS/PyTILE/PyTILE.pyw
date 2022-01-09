@@ -712,7 +712,7 @@ class GraphicsImporter(PyMSDialog):
 			ids = self.ids
 		try:
 			new_ids = self.tileset.import_graphics(self.tiletype, self.graphics_list.get(0,END), ids, options)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:
 			self.parent.imported_graphics(new_ids)
@@ -947,7 +947,7 @@ class SettingsImporter(PyMSDialog):
 	def iimport(self):
 		try:
 			self.tileset.import_settings(self.tiletype, self.settings_path.get(), self.ids, {'repeater': SettingsImporter.REPEATERS[self.repeater.get()][2]})
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:
 			self.parent.mark_edited()
@@ -1008,7 +1008,7 @@ class TilePaletteView(Frame):
 
 		self.initial_scroll_bind = None
 		def initial_scroll(_):
-			print 'initial_scroll'
+			print('initial_scroll')
 			self.scroll_to_selection()
 			self.canvas.unbind('<Configure>', self.initial_scroll_bind)
 		self.initial_scroll_bind = self.canvas.bind('<Configure>', initial_scroll, add=True)
@@ -1807,7 +1807,7 @@ class PyTILE(Tk):
 			settings = self.clipboard_get()
 			try:
 				self.tileset.import_settings(TILETYPE_MEGA, settings, [mega])
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.mega_editor.draw()
@@ -1892,7 +1892,7 @@ class PyTILE(Tk):
 			settings = self.clipboard_get()
 			try:
 				self.tileset.import_settings(TILETYPE_GROUP, settings, [group])
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.megaload()
@@ -2188,7 +2188,7 @@ class PyTILE(Tk):
 			tileset = Tilesets.Tileset()
 			try:
 				tileset.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.tileset = tileset
@@ -2212,7 +2212,7 @@ class PyTILE(Tk):
 			self.tileset.save_file(self.file)
 			self.status.set('Save Successful!')
 			self.mark_edited(False)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -2246,7 +2246,7 @@ class PyTILE(Tk):
 	def register(self, e=None):
 		try:
 			register_registry('PyTILE','','cv5',os.path.join(BASE_DIR, 'PyTILE.pyw'),os.path.join(BASE_DIR,'Images','PyTILE.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

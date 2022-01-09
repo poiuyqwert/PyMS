@@ -34,14 +34,14 @@ def main():
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			if opt.convert:
 				fnt = FNT()
-				print "Reading FNT '%s'..." % args[0]
+				print("Reading FNT '%s'..." % args[0])
 				try:
 					fnt.load_file(args[0])
-					print " - '%s' read successfully\nDecompiling FNT to file '%s'..." % (args[0], args[1])
+					print(" - '%s' read successfully\nDecompiling FNT to file '%s'..." % (args[0], args[1]))
 					fnttobmp(fnt,args[1])
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				except PyMSError as e:
-					print repr(e)
+					print(repr(e))
 			else:
 				if not opt.specifics:
 					p.error('You must supply the -s option when using the -c option')
@@ -49,24 +49,24 @@ def main():
 				try:
 					lowi,letters = int(t),int(t)
 				except:
-					print 'Invalid compiling specifics (must be lowest ASCII index followed by amount of letters, seperated by a comma)'
+					print('Invalid compiling specifics (must be lowest ASCII index followed by amount of letters, seperated by a comma)')
 				else:
 					if lowi < 1 or lowi > 255:
-						print 'Invalid lowest ASCII index (must be in the range 1-255)'
+						print('Invalid lowest ASCII index (must be in the range 1-255)')
 					elif letters < 1 or letters > 255:
-						print 'Invalid amount of letters (must be in the range 1-255)'
+						print('Invalid amount of letters (must be in the range 1-255)')
 					elif lowi+letters > 256:
-						print 'Either too many letters where specified or too high an initial ASCII index'
+						print('Either too many letters where specified or too high an initial ASCII index')
 					else:
 						bmp = BMP()
-						print "Reading BMP '%s'..." % args[0]
+						print("Reading BMP '%s'..." % args[0])
 						try:
 							bmp.load_file(args[0])
-							print " - '%s' read successfully\nDecompiling BMP to file '%s'..." % (args[0], args[1])
+							print(" - '%s' read successfully\nDecompiling BMP to file '%s'..." % (args[0], args[1]))
 							bmptofnt(bmp, lowi, letters, args[1])
-							print " - '%s' written succesfully" % args[1]
+							print(" - '%s' written succesfully" % args[1])
 						except PyMSError as e:
-							print repr(e)
+							print(repr(e))
 
 if __name__ == '__main__':
 	main()

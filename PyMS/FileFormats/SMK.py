@@ -325,7 +325,7 @@ class SMK:
 		self.frame_cache = {}
 
 	def load_palette(self, data):
-		# print 'Load Palette'
+		# print('Load Palette')
 		_frame_info = self.frame_info[self.current_frame]
 		last_frame = None
 		if self.current_frame:
@@ -354,11 +354,11 @@ class SMK:
 		frame.palette = palette
 
 	def load_audio(self, data):
-		# print 'Load Audio'
+		# print('Load Audio')
 		pass
 
 	def load_image(self, data):
-		# print 'Load Video'
+		# print('Load Video')
 		frame = self.frame_cache[self.current_frame]
 		frame.image = [[0] * self.width for _ in range(self.height)]
 		bit_stream = BitStream(data)
@@ -378,7 +378,7 @@ class SMK:
 					block_type = SMK.VIDEO_BLOCK_TYPE_FULL_HALF
 			size = SMK.VIDEO_BLOCK_SIZE_LOOKUP[block_len]
 			for _ in range(size):
-				# print ((TEST,i),(x,y),block_type,block_len,size,type_data)
+				# print(((TEST,i),(x,y),block_type,block_len,size,type_data))
 				if block_type == SMK.VIDEO_BLOCK_TYPE_MONO:
 					unpack = self.tree_mclr.lookup(bit_stream)
 					high = (unpack & 0xFF00) >> 8
@@ -422,10 +422,10 @@ class SMK:
 							if y+dy < self.height and x+dx < self.width:
 								frame.image[y+dy][x+dx] = type_data
 				elif block_type == SMK.VIDEO_BLOCK_TYPE_FULL_DOUBLE:
-					# print 'VIDEO_BLOCK_TYPE_FULL_DOUBLE'
+					# print('VIDEO_BLOCK_TYPE_FULL_DOUBLE')
 					pass
 				elif block_type == SMK.VIDEO_BLOCK_TYPE_FULL_HALF:
-					# print 'VIDEO_BLOCK_TYPE_FULL_HALF'
+					# print('VIDEO_BLOCK_TYPE_FULL_HALF')
 					pass
 				x += 4
 				if x >= self.width:

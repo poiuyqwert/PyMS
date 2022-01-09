@@ -207,7 +207,7 @@ class MPQ(object):
 			# Load v1 header
 			file_handle.seek(mpq_offset)
 			headerv1 = MPQHeaderV1.unpack_file(file_handle)
-			# print headerv1
+			# print(headerv1)
 			if headerv1.format_version != 0:
 				raise PyMSError('Load', "Unsupported MPQ version (expected 0, got %d)" % headerv1.format_version)
 
@@ -221,7 +221,7 @@ class MPQ(object):
 			hash_table = MPQHashEntry.unpack_array(hash_table_data, headerv1.hash_table_entries)
 			# for entry in hash_table:
 			# 	if not entry.block_index in (MPQHashEntry.BLOCK_INDEX_EMPTY, MPQHashEntry.BLOCK_INDEX_DELETED):
-			# 		print entry
+			# 		print(entry)
 			
 			# Load block table
 			try:
@@ -232,7 +232,7 @@ class MPQ(object):
 			block_table_data = MPQCrypt.decrypt(block_table_data, MPQTableKey.block_table)
 			block_table = MPQBlockEntry.unpack_array(block_table_data, headerv1.block_table_entries)
 			# for entry in block_table:
-			# 	print entry
+			# 	print(entry)
 		except:
 			file_handle.close()
 			raise
@@ -366,7 +366,7 @@ class MPQ(object):
 				block_offsets.append(i * block_size)
 			block_offsets.append(block_entry.compressed_size - header_length)
 
-		print block_offsets
+		print(block_offsets)
 		file_data = ''
 		for index in range(0, len(block_offsets)-1):
 			size = block_offsets[index+1] - block_offsets[index]

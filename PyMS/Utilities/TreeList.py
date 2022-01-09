@@ -84,7 +84,7 @@ class TreeList(Frame):
 	def lookup_coords(self, x,y):
 		index = self.index('@%d,%d' % (x,y))
 		if index:
-			for o in xrange(1,100):
+			for o in range(1,100):
 				for below in (True,False):
 					check = self.index('@%d,%d' % (x,y + o * (1 if below else -1)))
 					if check != index:
@@ -107,7 +107,7 @@ class TreeList(Frame):
 		return index
 
 	def get_node(self, index):
-		# print ('Get',index)
+		# print(('Get',index))
 		node = None
 		if isinstance(index, int):
 			node = self.entries[index]
@@ -177,7 +177,7 @@ class TreeList(Frame):
 				self.text.tag_add('Selection',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
 
 	def write_node(self, pos, node):
-		# print ('Pos',pos)
+		# print(('Pos',pos))
 		selectable = True
 		if isinstance(node, TreeGroup):
 			selectable = self.groupsel
@@ -234,7 +234,7 @@ class TreeList(Frame):
 			self.execute('delete', ('1.0', END))
 		else:
 			eraseRoot = True
-			# print index
+			# print(index)
 			if isstr(index):
 				indices = index.split('.')
 				if indices[-1] == ALL:
@@ -257,12 +257,12 @@ class TreeList(Frame):
 					child = node.children[0]
 					delete_node(child)
 					del node.children[0]
-			# print self.entries
-			# print self.root
+			# print(self.entries)
+			# print(self.root)
 
 	# groupExpanded: None = not group, True = open by default, False = closed by default
 	def insert(self, index, text, groupExpanded=None):
-		# print ('Insert', index)
+		# print(('Insert', index))
 		indices = [int(i) for i in index.split('.')]
 		parent_index = '.'.join(str(i) for i in indices[:-1])
 		parent = self.get_node(parent_index)
@@ -288,8 +288,8 @@ class TreeList(Frame):
 			elif parent != self.root:
 				base = 'entry%s.last +1l' % parent.entry
 			self.write_node('%s linestart' % base, node)
-		# print self.entries
-		# print self.root
+		# print(self.entries)
+		# print(self.root)
 		return '.'.join(str(i) for i in indices)
 
 	def get(self, index):
@@ -367,14 +367,14 @@ class TreeList(Frame):
 		# self.tl.insert('0', 'Test', False)
 		# self.tl.bind('<Button-1>', self.test)
 		# self.tl.bind('<Alt-d>', self.delete)
-		# print self.tl.groups
+		# print(self.tl.groups)
 
 	# def test(self, e):
-		# print self.tl.text.tag_ranges('Selection')
+		# print(self.tl.text.tag_ranges('Selection'))
 		# s = self.tl.cur_selection()
-		# print s
+		# print(s)
 		# if s:
-			# print self.tl.get(s[0],True)
+			# print(self.tl.get(s[0],True))
 
 	# def delete(self, e):
 		# self.tl.delete(self.tl.cur_selection())

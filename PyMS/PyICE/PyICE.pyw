@@ -426,7 +426,7 @@ class PreviewerDialog(PyMSDialog):
 					try:
 						grp = GRP.CacheGRP()
 						grp.load_file(p)
-					except PyMSError, e:
+					except PyMSError as e:
 						return None
 					self.curgrp = [i,None,0]
 					self.curgrp[1] = grp
@@ -1500,7 +1500,7 @@ class ManagePresets(PyMSDialog):
 				preset['name'] += str(copy)
 			self.settings['generator']['presets'].insert(0, preset)
 			self.update_list()
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 	
 	def rename(self):
@@ -1550,7 +1550,7 @@ class ManagePresets(PyMSDialog):
 		if offset == END:
 			index = listbox.size()-2
 		elif offset not in [0,END] and listbox.curselection():
-			print listbox.curselection()
+			print(listbox.curselection())
 			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
 		listbox.select_clear(0,END)
 		listbox.select_set(index)
@@ -1929,7 +1929,7 @@ class CodeGeneratorDialog(PyMSDialog):
 		if offset == END:
 			index = listbox.size()-2
 		elif offset not in [0,END] and listbox.curselection():
-			print listbox.curselection()
+			print(listbox.curselection())
 			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
 		listbox.select_clear(0,END)
 		listbox.select_set(index)
@@ -1981,7 +1981,7 @@ class CodeGeneratorDialog(PyMSDialog):
 				if not v.name in values:
 					try:
 						calculate_variable(v, values, [])
-					except PyMSError, e:
+					except PyMSError as e:
 						ErrorDialog(self, e)
 						return
 			generated += variable_re.sub(lambda m: replace_variable(m, values), code)
@@ -2202,7 +2202,7 @@ class CodeEditDialog(PyMSDialog):
 		try:
 			grp = GRP.CacheGRP()
 			grp.load_file(p)
-		except PyMSError, e:
+		except PyMSError as e:
 			return None
 		return grp.frames
 
@@ -2210,7 +2210,7 @@ class CodeEditDialog(PyMSDialog):
 		i = IScriptBIN.IScriptBIN(self.parent.weaponsdat, self.parent.flingydat, self.parent.imagesdat, self.parent.spritesdat, self.parent.soundsdat, self.parent.tbl, self.parent.imagestbl, self.parent.sfxdatatbl)
 		try:
 			warnings = i.interpret(self, checkframes=self.checkframes)
-		except PyMSError, e:
+		except PyMSError as e:
 			if e.line != None:
 				self.text.see('%s.0' % e.line)
 				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
@@ -2338,7 +2338,7 @@ class CodeEditDialog(PyMSDialog):
 	def load(self):
 		try:
 			warnings = self.parent.ibin.decompile(self, ids=self.ids)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		if warnings:
@@ -2821,7 +2821,7 @@ class PyICE(Tk):
 			spritesdat.load_file(self.mpqhandler.get_file(self.settings['spritesdat']))
 			imagesdat.load_file(self.mpqhandler.get_file(self.settings['imagesdat']))
 			soundsdat.load_file(self.mpqhandler.get_file(self.settings['sfxdatadat']))
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.tbl = tbl
@@ -2975,7 +2975,7 @@ class PyICE(Tk):
 			ibin = IScriptBIN.IScriptBIN()
 			try:
 				ibin.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.ibin = ibin
@@ -2998,7 +2998,7 @@ class PyICE(Tk):
 			return
 		try:
 			self.ibin.compile(self.file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('Save Successful!')
@@ -3028,7 +3028,7 @@ class PyICE(Tk):
 			else:
 				s = 0
 			w = ibin.interpret(file, s)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		if w:
@@ -3068,7 +3068,7 @@ class PyICE(Tk):
 		try:
 			self.ibin.decompile(file, ids=self.selected())
 			self.status.set('Export Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def listimport(self, key=None):
@@ -3120,7 +3120,7 @@ class PyICE(Tk):
 	def register(self, e=None):
 		try:
 			register_registry('PyICE','','bin',os.path.join(BASE_DIR, 'PyICE.pyw'),os.path.join(BASE_DIR,'Images','PyICE.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
@@ -3184,34 +3184,34 @@ def main():
 							ids.append(i)
 					else:
 						ids = None
-					print "Loading weapons.dat '%s', flingy.dat '%s', images.dat '%s', sprites.dat '%s', sdxdata.dat '%s', stat_txt.tbl '%s', images.tbl '%s', and sfxdata.tbl '%s'" % (opt.weapons,opt.flingy,opt.sprites,opt.images,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl)
+					print("Loading weapons.dat '%s', flingy.dat '%s', images.dat '%s', sprites.dat '%s', sdxdata.dat '%s', stat_txt.tbl '%s', images.tbl '%s', and sfxdata.tbl '%s'" % (opt.weapons,opt.flingy,opt.sprites,opt.images,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl))
 					ibin = IScriptBIN.IScriptBIN(opt.weapons,opt.flingy,opt.images,opt.sprites,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl)
-					print " - Loading finished successfully\nReading BIN '%s'..." % args[0]
+					print(" - Loading finished successfully\nReading BIN '%s'..." % args[0])
 					ibin.load_file(args[0])
-					print " - BIN read successfully\nWriting iscript entries to '%s'..." % args[1]
+					print(" - BIN read successfully\nWriting iscript entries to '%s'..." % args[1])
 					ibin.decompile(args[1],opt.reference,ids)
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				else:
-					print "Loading weapons.dat '%s', flingy.dat '%s', images.dat '%s', sprites.dat '%s', sdxdata.dat '%s', stat_txt.tbl '%s', images.tbl '%s', and sfxdata.tbl '%s'" % (opt.weapons,opt.flingy,opt.sprites,opt.images,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl)
+					print("Loading weapons.dat '%s', flingy.dat '%s', images.dat '%s', sprites.dat '%s', sdxdata.dat '%s', stat_txt.tbl '%s', images.tbl '%s', and sfxdata.tbl '%s'" % (opt.weapons,opt.flingy,opt.sprites,opt.images,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl))
 					ibin = IScriptBIN.IScriptBIN(opt.weapons,opt.flingy,opt.images,opt.sprites,opt.sfxdata,opt.stattxt,opt.imagestbl,opt.sfxdatatbl)
-					print " - Loading finished successfully"
+					print(" - Loading finished successfully")
 					if opt.iscript:
-						print "Loading base iscript.bin '%s'..." % os.path.abspath(opt.iscript)
+						print("Loading base iscript.bin '%s'..." % os.path.abspath(opt.iscript))
 						ibin.load_file(os.path.abspath(opt.iscript))
-						print " - iscript.bin read successfully"
-					print "Interpreting file '%s'..." % args[0]
+						print(" - iscript.bin read successfully")
+					print("Interpreting file '%s'..." % args[0])
 					warnings.extend(ibin.interpret(args[0]))
-					print " - '%s' read successfully\nCompiling file '%s' to iscript.bin '%s'..." % (args[0], args[0], args[1])
+					print(" - '%s' read successfully\nCompiling file '%s' to iscript.bin '%s'..." % (args[0], args[0], args[1]))
 					ibin.compile(args[1])
-					print " - iscript.bin '%s' written succesfully" % args[1]
+					print(" - iscript.bin '%s' written succesfully" % args[1])
 				if not opt.hidewarns:
 					for warning in warnings:
-						print repr(warning)
-			except PyMSError, e:
+						print(repr(warning))
+			except PyMSError as e:
 				if warnings and not opt.hidewarns:
 					for warning in warnings:
-						print repr(warning)
-				print repr(e)
+						print(repr(warning))
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

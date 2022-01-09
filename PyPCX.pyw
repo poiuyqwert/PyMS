@@ -34,27 +34,27 @@ def main():
 			if len(args) == 1:
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			if opt.convert:
-				print "Reading PCX '%s'..." % args[0]
+				print("Reading PCX '%s'..." % args[0])
 				try:
 					pcx.load_file(args[0])
-					print " - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1])
+					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					bmp.load_data(pcx.image,pcx.palette)
 					bmp.save_file(args[1])
-				except PyMSError, e:
-					print repr(e)
+				except PyMSError as e:
+					print(repr(e))
 				else:
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 			else:
-				print "Reading BMP '%s'..." % args[0]
+				print("Reading BMP '%s'..." % args[0])
 				try:
 					bmp.load_file(args[0])
-					print " - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1])
+					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					pcx.load_data(bmp.image,bmp.palette)
 					pcx.save_file(args[1])
-				except PyMSError, e:
-					print repr(e)
+				except PyMSError as e:
+					print(repr(e))
 				else:
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 
 if __name__ == '__main__':
 	main()

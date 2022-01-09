@@ -42,25 +42,25 @@ def main():
 			try:
 				if opt.convert:
 					if opt.trig:
-						print "Reading GOT compatable TRG '%s'..." % args[0]
+						print("Reading GOT compatable TRG '%s'..." % args[0])
 					else:
-						print "Reading TRG '%s'..." % args[0]
+						print("Reading TRG '%s'..." % args[0])
 					trg.load_file(args[0], opt.trig)
-					print " - '%s' read successfully\nDecompiling TRG file '%s'..." % (args[0],args[0])
+					print(" - '%s' read successfully\nDecompiling TRG file '%s'..." % (args[0],args[0]))
 					trg.decompile(args[1], opt.reference)
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				else:
-					print "Interpreting file '%s'..." % args[0]
+					print("Interpreting file '%s'..." % args[0])
 					trg.interpret(args[0])
-					print " - '%s' read successfully" % args[0]
+					print(" - '%s' read successfully" % args[0])
 					if opt.trig:
-						print "Compiling file '%s' to GOT compatable TRG format..." % args[0]
+						print("Compiling file '%s' to GOT compatable TRG format..." % args[0])
 					else:
-						print "Compiling file '%s' to TRG format..." % args[0]
+						print("Compiling file '%s' to TRG format..." % args[0])
 					trg.compile(args[1], opt.trig)
-					print " - '%s' written succesfully" % args[1]
-			except PyMSError, e:
-				print repr(e)
+					print(" - '%s' written succesfully" % args[1])
+			except PyMSError as e:
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

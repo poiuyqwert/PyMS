@@ -183,7 +183,7 @@ class PyDAT(MainWindow):
 					tab[0].open(guifile, save=False)
 					self.dattabs.display(title)
 					break
-				except PyMSError, e:
+				except PyMSError as e:
 					pass
 			else:
 				ErrorDialog(self, PyMSError('Load',"'%s' is not a valid StarCraft *.dat file, could possibly be corrupt" % guifile))
@@ -231,7 +231,7 @@ class PyDAT(MainWindow):
 		err = None
 		try:
 			self.data_context.load_additional_files()
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			if dat_files:
@@ -300,7 +300,7 @@ class PyDAT(MainWindow):
 	def paste(self):
 		try:
 			self.dattabs.active.paste()
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 		except:
 			raise
@@ -329,7 +329,7 @@ class PyDAT(MainWindow):
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
 					page.open(path)
-				except PyMSError, e:
+				except PyMSError as e:
 					ErrorDialog(self, e)
 				else:
 					self.dattabs.display(page.page_title)
@@ -461,7 +461,7 @@ class PyDAT(MainWindow):
 	def register(self, e=None):
 		try:
 			register_registry('PyDAT','','dat',os.path.join(BASE_DIR, 'PyDAT.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyDAT.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

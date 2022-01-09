@@ -49,7 +49,7 @@ class PCX:
 					image[-2] = image[-2][:xmax]
 				elif len(image[-1]) == xmax and len(image) < ymax:
 					image.append([])
-			# print """\
+			# print("""\
 # --- %s ---------------
 # x min/max      : %s %s
 # y min/max      : %s %s
@@ -58,7 +58,7 @@ class PCX:
 # bytes/plane    : %s
 # palinfo        : %s
 # h/v screen size: %s %s
-# palette        : %s""" % (file,xmin,xmax,ymin,ymax,hdpi,vdpi,planes,bytesperline,palinfo,hscreensize,vscreensize,palette)
+# palette        : %s""" % (file,xmin,xmax,ymin,ymax,hdpi,vdpi,planes,bytesperline,palinfo,hscreensize,vscreensize,palette))
 			for y in image:
 				if len(y) < xmax:
 					y.extend([0]*(xmax-len(y)))
@@ -123,7 +123,7 @@ class PCX:
 # for f in ['ticon','bfire','gfire','ofire']:
 	# p.load_file(f + '.pcx')
 	# # for l in p.image:
-	# # 	print len(l)
-	# # print '-----'
+	# # 	print(len(l))
+	# # print('-----')
 	# b.load_data(p.image, p.palette)
 	# b.save_file(f + '.bmp')

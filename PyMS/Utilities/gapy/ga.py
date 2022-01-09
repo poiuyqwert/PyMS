@@ -132,7 +132,7 @@ ga = GoogleAnalytics()
 if __name__ == '__main__':
 	# ga.set_target(GATarget.GAAPITarget(debug=True))
 	ga.set_tracking_id('UA-42320973-3')
-	print ga.set_client_id()#'80d7d928-8946-443c-845c-49039ef671f8')
+	print(ga.set_client_id()) #'80d7d928-8946-443c-845c-49039ef671f8')
 	ga.set_application('PyGRP', '4.0.0')
 	ga.Custom.register(1, 'PYMS_VERSION')
 	ga.Custom.register(2, 'PYTHON_VERSION')

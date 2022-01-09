@@ -1071,15 +1071,15 @@ class BWImage:
 		elif self.draw_function_id == 13:
 			self.draw_function = GRP.rle_outline
 			self.draw_info = GRP.OUTLINE_ALLY
-			print (1, self.parent)
-			print (2, self.parent.unit_ref)
+			print((1, self.parent))
+			print((2, self.parent.unit_ref))
 			if self.parent != None and self.parent.unit_ref != None:
 				units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 				unit = units.get_unit(self.parent.unit_ref)
 				if unit:
-					print (3,unit.owner)
+					print((3,unit.owner))
 					ownr = self.ui.chk.get_section(CHKSectionOWNR.NAME)
-					print (4,ownr.owners[unit.owner])
+					print((4,ownr.owners[unit.owner]))
 					owner = ownr.owners[unit.owner]
 					if owner == CHKSectionOWNR.HUMAN:
 						self.draw_info = GRP.OUTLINE_SELF
@@ -1115,7 +1115,7 @@ class BWImage:
 				try:
 					grp = GRP.CacheGRP()
 					grp.load_file(grp_file)
-				except PyMSError, e:
+				except PyMSError as e:
 					return None
 				self.grp = grp
 				BWImage.GRP_CACHE[self.grpFile] = grp
@@ -1276,7 +1276,7 @@ class BWImage:
 				dirty = True
 				inc = opcode(*cmd[1:])
 			# else:
-			# 	print (self.iscript_id, cmd)
+			# 	print((self.iscript_id, cmd))
 			if inc:
 				self.iscript_cmd += 1
 		return dirty
@@ -1606,7 +1606,7 @@ class EditLayerLocations(EditLayer):
 								self.ui.action_manager.add_action(self.action)
 								break
 						elif x1 <= x <= x2 and y1 <= y <= y2:
-							print 'Edit Location'
+							print('Edit Location')
 							return
 					elif unused == None:
 						unused = l
@@ -1712,14 +1712,14 @@ class EditLayerUnits(EditLayer):
 			self.ui.mapCanvas.tag_raise('selection_box')
 
 	def mouse_event(self, button, button_event, x1,y1, x2,y2, mouseX,mouseY):
-		print flags(button_event,8)
+		print(flags(button_event,8))
 		if button == EditLayer.MOUSE_LEFT:
 			x = x1 + mouseX
 			y = y1 + mouseY
 			if button_event & EditLayer.MOUSE_DOWN:
 				self.selecting_start = (x,y)
 				self.selecting_images = set()
-				print ('Reset', flags(button_event,8))
+				print(('Reset', flags(button_event,8)))
 			elif self.selecting_start != None:
 				if not button_event & (EditLayer.MODIFIER_SHIFT | EditLayer.MODIFIER_CTRL):
 					self.deselect_all()
@@ -2364,7 +2364,7 @@ class PyMAP(Tk):
 				palettes[p] = pal.palette
 			tunitpcx = PCX.PCX()
 			tunitpcx.load_file(self.mpqhandler.get_file(self.profile['tunitpcx']))
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.stat_txt = stat_txt
@@ -2648,7 +2648,7 @@ class PyMAP(Tk):
 						tileset = Tilesets.Tileset()
 						tileset.load_file(*tilesetFiles)
 					self.mpqhandler.close_mpqs()
-			except PyMSError, e:
+			except PyMSError as e:
 				self.mpqhandler.close_mpqs()
 				if not SFInvalidHandle(chkfile):
 					SFileCloseFile(chkfile)
@@ -2689,7 +2689,7 @@ class PyMAP(Tk):
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):

@@ -485,7 +485,7 @@ BMP's must be imported with the same style they were exported as.""")
 			grp = GRP.GRP(self.palettes[self.pal])
 			try:
 				grp.load_file(file, transindex=self.transid.get())
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.frame = None
@@ -517,7 +517,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.action_states()
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -560,7 +560,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.update_idletasks()
 			try:
 				grptobmp(os.path.dirname(file), self.palettes[self.pal], self.uncompressed.get(), self.bmp_style.get(), self.grp, name, indexs, True)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.status.set('Frames extracted successfully!')
@@ -587,7 +587,7 @@ BMP's must be imported with the same style they were exported as.""")
 				size = [self.grp.width,self.grp.height]
 			try:
 				fs = bmptogrp(os.path.dirname(files[0]), self.palettes[self.pal], self.uncompressed.get(), frames, files, None, size, True, True, BMPStyle.ALL[self.bmp_style.get()][0] == BMPStyle.single_bmp_vertical, self.transid.get())
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 			else:
 				frame = self.grp.frames
@@ -674,7 +674,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def register(self, e=None):
 		try:
 			register_registry('PyGRP','','grp',os.path.join(BASE_DIR, 'PyGRP.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyGRP.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

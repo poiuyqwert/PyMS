@@ -377,7 +377,7 @@ class ReportList(Frame):
 	# def sel(self, e):
 		# s = self.rl.curselection()
 		# for i in s:
-			# print '\t',self.rl.get(i)
+			# print('\t',self.rl.get(i))
 
 # def main():
 	# gui = Test()

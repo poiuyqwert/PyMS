@@ -282,7 +282,7 @@ class PyGOT(MainWindow):
 			got = GOT()
 			try:
 				got.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.got = got
@@ -305,7 +305,7 @@ class PyGOT(MainWindow):
 			got = GOT()
 			try:
 				got.interpret(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.got = got
@@ -336,7 +336,7 @@ class PyGOT(MainWindow):
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -357,7 +357,7 @@ class PyGOT(MainWindow):
 		try:
 			self.got.decompile(file)
 			self.status.set('Export Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
@@ -380,7 +380,7 @@ class PyGOT(MainWindow):
 		trg = TRG()
 		try:
 			trg.load_file(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG', filetypes=[('StarCraft Triggers','*.trg')])
@@ -388,13 +388,13 @@ class PyGOT(MainWindow):
 			return True
 		try:
 			trg.compile(file, t)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def register(self, e=None):
 		try:
 			register_registry('PyGOT','','got',os.path.join(BASE_DIR, 'PyGOT.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyGOT.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

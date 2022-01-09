@@ -69,7 +69,7 @@ def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False,
 	height = len(image)
 	i = PILImage.new('RGBA', (width,height))
 	data = []
-	pal = map(lambda i: draw_function(palette,i,draw_info), xrange(len(palette)))
+	pal = map(lambda i: draw_function(palette,i,draw_info), range(len(palette)))
 	if transindex != None:
 		pal[transindex] = (0,0,0,0)
 	if flipHor:
@@ -99,7 +99,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	pal = []
 	if draw_function == None:
 		draw_function = rle_normal
-	pal = map(lambda i,p=p,e=draw_info: draw_function(p,i,e), xrange(len(p)))
+	pal = map(lambda i,p=p,e=draw_info: draw_function(p,i,e), range(len(p)))
 	pal[transindex] = (0,0,0,0)
 	if size:
 		image = [None,-1,-1,-1,-1]
@@ -178,7 +178,7 @@ class CacheGRP:
 				linewidth = self.width - xoffset
 			if yoffset + lines > self.height:
 				lines = self.height - yoffset
-			image.extend([[0] * self.width for _ in xrange(yoffset)])
+			image.extend([[0] * self.width for _ in range(yoffset)])
 			if not self.uncompressed:
 				try:
 					for offset in offsets:
@@ -250,7 +250,7 @@ class GRP:
 						linewidth = width - xoffset
 					if yoffset + lines > height:
 						lines = height - yoffset
-					# print frames,width,height,xoffset,yoffset,linewidth,lines,framedata
+					# print(frames,width,height,xoffset,yoffset,linewidth,lines,framedata)
 					image.extend([[0] * width for _ in range(yoffset)])
 					if uncompressed:
 						for line in range(lines):

@@ -565,7 +565,7 @@ class AIBIN:
 						totaloffsets[curoffset+loc] = [id,len(cmdoffsets)]
 						cmdoffsets.append(curoffset)
 						cmd,curoffset = ord(curdata[curoffset]),curoffset + 1
-						#print id,loc,curoffset,self.short_labels[cmd]
+						#print(id,loc,curoffset,self.short_labels[cmd])
 						if not cmd and curoffset == len(curdata):
 							break
 						if cmd >= len(self.labels):
@@ -581,8 +581,8 @@ class AIBIN:
 										tos = totaloffsets[d[1]]
 										ais[id][4].append(tos)
 										ai.append(tos)
-										# print tos
-										# print externaljumps
+										# print(tos)
+										# print(externaljumps)
 										if not tos[0] in externaljumps[0][0]:
 											externaljumps[0][0][tos[0]] = {}
 										if not tos[1] in externaljumps[0][0][tos[0]]:
@@ -692,7 +692,7 @@ class AIBIN:
 				if depth == 1:
 					return string[:-3]
 				return string
-			# print pprint(self.externaljumps)
+			# print(pprint(self.externaljumps))
 			return warnings
 		except PyMSError:
 			raise
@@ -989,7 +989,7 @@ class AIBIN:
 						raise PyMSError('Variable',"Incorrect type on varaible '%s'. Excpected '%s' but got '%s'" % (d.lower(), p.__doc__.split(' ',1)[0], variables[d.lower()][0][0].__doc__.split(' ',1)[0]),n,line, warnings=warnings)
 					var = PyMSWarning('Variable',"The variable '%s' of type '%s' was set to '%s'" % (d, variables[d.lower()][0][0].__doc__.split(' ',1)[0], variables[d.lower()][1]))
 				return p(da,3)
-			except PyMSWarning, w:
+			except PyMSWarning as w:
 				w.line = n + 1
 				w.code = line
 				if var:
@@ -997,7 +997,7 @@ class AIBIN:
 					w.sub_warnings.append(var)
 				add_warning(w)
 				return w.extra
-			except PyMSError, e:
+			except PyMSError as e:
 				e.line = n + 1
 				e.code = line
 				e.warnings = warnings
@@ -1043,12 +1043,12 @@ class AIBIN:
 								add_warning(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
 							try:
 								v = self.types[t][0](dat,3)[1]
-							except PyMSWarning, w:
+							except PyMSWarning as w:
 								w.line = n + 1
 								w.code = line
 								add_warning(w)
 								v = w.extra[1]
-							except PyMSError, e:
+							except PyMSError as e:
 								e.line = n + 1
 								e.code = line
 								e.warnings = warnings
@@ -1118,11 +1118,11 @@ class AIBIN:
 									raise PyMSError('Interpreting',"The variable name '%s' is already in use" % name,n,line, warnings=warnings)
 								try:
 									self.types[t][0](dat,3)
-								except PyMSWarning, w:
+								except PyMSWarning as w:
 									w.line = n
 									w.code = line
 									add_warning(w)
-								except PyMSError, e:
+								except PyMSError as e:
 									e.line = n + 1
 									e.code = line
 									e.warnings = warnings
@@ -1461,7 +1461,7 @@ class AIBIN:
 							aiinfo[i[0]][1].remove(l)
 						else:
 							bwinfo[i[0]][1].remove(l)
-			# print remove
+			# print(remove)
 			for b,r in enumerate(remove):
 				for i in r.iterkeys():
 					if r[i]:
@@ -1597,12 +1597,12 @@ class AIBIN:
 									warnings.append(PyMSWarning('External Definition',"External definition files do not support Information Comments, information is discarded",n,line))
 								try:
 									v = self.types[t][0](dat,3)[1]
-								except PyMSWarning, w:
+								except PyMSWarning as w:
 									w.line = n
 									w.code = line
 									warnings.append(w)
 									v = w.extra[1]
-								except PyMSError, e:
+								except PyMSError as e:
 									e.line = n + 1
 									e.code = line
 									e.warnings = warnings
@@ -1781,7 +1781,7 @@ class AIBIN:
 									offset += t(0,2)[0]
 								else:
 									offset += t(p,2)[0]
-							except PyMSWarning, e:
+							except PyMSWarning as e:
 								if not warnings:
 									warnings.append(e)
 								offset += e.extra[0]
@@ -1804,7 +1804,7 @@ class AIBIN:
 										d = t(totaloffsets[id][p],2)
 								else:
 									d = t(p,2)
-							except PyMSWarning, e:
+							except PyMSWarning as e:
 								if not warnings:
 									warnings.append(e)
 								offset += e.extra[0]
@@ -2140,7 +2140,7 @@ class BWBIN(AIBIN):
 									offset += t(0,1)[0]
 								else:
 									offset += t(p,1)[0]
-							except PyMSWarning, e:
+							except PyMSWarning as e:
 								if not warnings:
 									warnings.append(e)
 					cmdn += 1
@@ -2163,7 +2163,7 @@ class BWBIN(AIBIN):
 								d = t(p,2)
 							ais += d[1]
 							offset += d[0]
-						except PyMSWarning, e:
+						except PyMSWarning as e:
 							if not warnings:
 								warnings.append(e)
 				offset += 1
@@ -2195,7 +2195,7 @@ class BWBIN(AIBIN):
 #a.load_file('ai.bin')
 	# b = AIBIN('')
 	# gwarnings.extend(a.warnings)
-	# print a.interpret('test.txt')
+	# print(a.interpret('test.txt'))
 	# gwarnings.extend(a.load_file('Default\\aiscript.bin'))#'aitest.bin'))
 	# for n in a.ais.keys():
 		# if n not in ['ZB3C','ZB3E']:
@@ -2206,21 +2206,21 @@ class BWBIN(AIBIN):
 	# gwarnings.extend(a.decompile('test.txt'))#, False, True, ['ZB3C','ZB3E']))
 	# gwarnings.extend(b.interpret('test.txt'))
 	# a.compile('aitest.bin','bwtest.bin')
-	# print time.time() - t
+	# print(time.time() - t)
 	
 	# a = AIBIN('bw.bin')
 	# gwarnings.extend(a.load_file('ai.bin'))
 	# gwarnings.extend(a.decompile('aitestd.txt'))
 	# gwarnings.extend(a.interpret('aitest.txt'))
 	# gwarnings.extend(a.compile('ai.bin','bw.bin',True))
-# except PyMSError, e:
+# except PyMSError as e:
 	# if gwarnings:
 		# for warning in gwarnings:
-			# print repr(warning)
-	# print repr(e)
+			# print(repr(warning))
+	# print(repr(e))
 # except:
 	# raise
 # else:
 	# if gwarnings:
 		# for warning in gwarnings:
-			# print repr(warning)
+			# print(repr(warning))

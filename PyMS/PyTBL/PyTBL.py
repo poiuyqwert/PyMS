@@ -203,7 +203,7 @@ class PyTBL(MainWindow):
 				font10.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('font10'), True))
 			unitpal.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('unitpal')))
 			icons.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('icons')))
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.tfontgam = tfontgam
@@ -322,7 +322,7 @@ class PyTBL(MainWindow):
 			tbl = TBL.TBL()
 			try:
 				tbl.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.tbl = tbl
@@ -352,7 +352,7 @@ class PyTBL(MainWindow):
 			tbl = TBL.TBL()
 			try:
 				tbl.interpret(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.tbl = tbl
@@ -382,7 +382,7 @@ class PyTBL(MainWindow):
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -403,7 +403,7 @@ class PyTBL(MainWindow):
 		try:
 			self.tbl.decompile(file)
 			self.status.set('Export Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
@@ -516,7 +516,7 @@ class PyTBL(MainWindow):
 	def register(self, e=None):
 		try:
 			register_registry('PyTBL','','tbl',os.path.join(BASE_DIR, 'PyTBL.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyTBL.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

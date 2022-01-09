@@ -33,14 +33,14 @@ def main():
 			pal = Palette()
 			if len(args) == 1:
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, opt.file_type.ext))
-			print "Reading Palette '%s'..." % args[0]
+			print("Reading Palette '%s'..." % args[0])
 			try:
 				pal.load_file(args[0])
-				print " - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], opt.file_type.ext.upper(), args[1])
+				print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], opt.file_type.ext.upper(), args[1]))
 				pal.save(args[1], opt.file_type.format)
-				print " - '%s' written succesfully" % args[1]
-			except PyMSError, e:
-				print repr(e)
+				print(" - '%s' written succesfully" % args[1])
+			except PyMSError as e:
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

@@ -79,7 +79,7 @@ class FlowView(Frame):
 	def viewport_size(self):
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
 	def content_size(self):
-		x,y,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
+		_,_,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)
 	def content_offset(self):
 		w,h = self.content_size()
@@ -89,7 +89,7 @@ class FlowView(Frame):
 
 	def set_needs_update(self):
 		# import inspect
-		# print inspect.stack()[1][3]
+		# print(inspect.stack()[1][3])
 		self._update = True
 		self.event_generate('<<Update>>')
 
@@ -144,7 +144,7 @@ class FlowView(Frame):
 		self._update_view_size(view, update_idletasks=True)
 		self._bindings[name] = view.bind('<Configure>', lambda *_: self._update_view_size(view, set_needs_update=True), True)
 
-	def insert_subview(self, view, padx=0,pady=0, weight=0):
+	def insert_subview(self, index, view, padx=0,pady=0, weight=0):
 		self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()
 
@@ -171,7 +171,7 @@ class FlowView(Frame):
 		self.subviews.remove(view)
 
 	def remove_subview(self, view):
-		self._remove_subview(self, view)
+		self._remove_subview(view)
 		self.set_needs_update()
 
 	def remove_subviews(self, views):
@@ -210,7 +210,7 @@ class FlowView(Frame):
 			return
 		self._update = False
 		max_w = self._content_area.winfo_width()
-		# print max_w
+		# print(max_w)
 		x = 0
 		y = 0
 		w = 0
@@ -266,7 +266,7 @@ class FlowView(Frame):
 			total_w = max(total_w,row_width)
 			for view,x,y,w,_ in row:
 				place(view, x,y, w)
-		# print total_w,total_h
+		# print(total_w,total_h)
 		self._content_area.itemconfig(self.content_view_id, width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 
@@ -278,12 +278,12 @@ if __name__ == '__main__':
 	flow.pack(fill=BOTH, expand=1, padx=30,pady=30)
 	count = random.randint(10,20)
 	for n in range(count):
-		f = LabelFrame(flow.content_view, text=''.join([random.choice(string.lowercase + ' ') for i in xrange(random.randint(10,20))]))
+		f = LabelFrame(flow.content_view, text=''.join([random.choice(string.lowercase + ' ') for i in range(random.randint(10,20))]))
 		for t in range(random.randint(1,5)):
 			if t == 3:
 				e = Entry(f, width=5)
 				e.pack()
-			l = Label(f, text=''.join([random.choice(string.lowercase + ' ') for i in xrange(random.randint(10,20))]))
+			l = Label(f, text=''.join([random.choice(string.lowercase + ' ') for i in range(random.randint(10,20))]))
 			l.pack()
 		flow.add_subview(f, padx=2,pady=2, weight=0 if n % 5 else 1)
 	flow.scroll_to_view(flow)

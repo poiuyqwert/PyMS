@@ -227,8 +227,8 @@ class FNT:
 # b = BMP()
 # for y in f.letters[0][-1]:
 	# for x in y:
-		# print FONT_COLORS[x],
-	# print ''
+		# print(FONT_COLORS[x],)
+	# print('')
 # b.load_data(f.letters[0],FONT_COLORS)
 # for d in f.letters[1:]:
 	# for y,yd in enumerate(d):

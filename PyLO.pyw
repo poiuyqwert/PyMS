@@ -36,19 +36,19 @@ def main():
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			try:
 				if opt.convert:
-					print "Reading LO? '%s'..." % args[0]
+					print("Reading LO? '%s'..." % args[0])
 					lo.load_file(args[0])
-					print " - '%s' read successfully\nDecompiling LO? file '%s'..." % (args[0],args[0])
+					print(" - '%s' read successfully\nDecompiling LO? file '%s'..." % (args[0],args[0]))
 					lo.decompile(args[1])
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 				else:
-					print "Interpreting file '%s'..." % args[0]
+					print("Interpreting file '%s'..." % args[0])
 					lo.interpret(args[0])
-					print " - '%s' read successfully\nCompiling file '%s' to LO? format..." % (args[0],args[0])
+					print(" - '%s' read successfully\nCompiling file '%s' to LO? format..." % (args[0],args[0]))
 					lo.compile(args[1])
-					print " - '%s' written succesfully" % args[1]
+					print(" - '%s' written succesfully" % args[1])
 			except PyMSError as e:
-				print repr(e)
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()

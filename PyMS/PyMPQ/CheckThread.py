@@ -16,24 +16,24 @@ class CheckThread:
 		def check_dir(path, main=False):
 			u = []
 			for r,ds,fs in os.walk(path, topdown=False):
-				#print r,ds,fs
+				#print(r,ds,fs)
 				if main and not fs and not ds:
 					return None
 				for f in fs:
 					p = os.path.join(r,f)
 					s = os.stat(p).st_mtime
-					#print '\t',p,s,m
+					#print('\t',p,s,m)
 					if p in m and s > m[p]:
 						u.append(p)
 					m[p] = s
 				for d in ds:
 					u.extend(check_dir(os.path.join(r,d)))
-			#print u
+			#print(u)
 			return u
 		while self.cont:
 			if not os.path.exists(self.path):
 				break
-			#print '-----'
+			#print('-----')
 			u = check_dir(self.path, True)
 			if u == None:
 				break

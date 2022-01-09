@@ -121,7 +121,7 @@ class PyPCX(MainWindow):
 		pcx = PCX()
 		try:
 			pcx.load_file(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.pcx = pcx
@@ -139,7 +139,7 @@ class PyPCX(MainWindow):
 			return
 		try:
 			self.pcx.save_file(self.file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.edited = False
@@ -165,7 +165,7 @@ class PyPCX(MainWindow):
 		pal = Palette()
 		try:
 			pal.load_file(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.pcx.palette = list(pal.palette)
@@ -183,7 +183,7 @@ class PyPCX(MainWindow):
 		try:
 			p.save(file, file_type.format)
 			self.status.set('Palette saved successfully!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def export(self, key=None):
@@ -196,7 +196,7 @@ class PyPCX(MainWindow):
 		b.set_pixels(self.pcx.image,self.pcx.palette)
 		try:
 			b.save_file(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('Image exported successfully!')
@@ -210,7 +210,7 @@ class PyPCX(MainWindow):
 		b = BMP()
 		try:
 			b.load_file(file)
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		if not self.pcx:
@@ -239,7 +239,7 @@ class PyPCX(MainWindow):
 	def register(self, e=None):
 		try:
 			register_registry('PyPCX','StarCraft PCX','pcx',os.path.join(BASE_DIR, 'PyPCX.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyPCX.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):

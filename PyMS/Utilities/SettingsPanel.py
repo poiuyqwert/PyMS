@@ -51,11 +51,7 @@ class SettingsPanel(Frame):
 		inmpq = False
 		Frame.__init__(self, parent)
 		for entry in entries:
-			if len(entry) == 5:
-				f,e,v,t,c = entry
-			else:
-				f,e,v,t = entry
-				c = None
+			f,e,v,t = entry
 			self.variables[f] = (IntVar(),StringVar(),[])
 			if isinstance(v, tuple) or isinstance(v, list):
 				profileKey,valueKey = v
@@ -86,7 +82,7 @@ class SettingsPanel(Frame):
 				Label(datframe, text=f, anchor=W).pack(fill=X, expand=1)
 			entryframe = Frame(datframe)
 			e = Entry(entryframe, textvariable=self.variables[f][1], state=DISABLED)
-			b = Button(entryframe, image=self.find, width=20, height=20, command=lambda f=f,t=self.types[t],e=e,c=c: self.setting(f,t,e,c))
+			b = Button(entryframe, image=self.find, width=20, height=20, command=lambda _f=f,_t=self.types[t],_e=e: self.setting(_f,_t,_e))
 			self.variables[f][2].extend([e,b])
 			if not t == 'Palette':
 				inmpq = True
@@ -115,7 +111,7 @@ class SettingsPanel(Frame):
 				self.settings['lastpath'] = os.path.dirname(file)
 			return file
 
-	def setting(self, f, t, e, cb):
+	def setting(self, f, t, e):
 		file = ''
 		if self.variables[f][0].get():
 			m = MPQSelect(self.setdlg, self.mpqhandler, t[1], '*.' + t[2], self.settings)
@@ -138,21 +134,18 @@ class SettingsPanel(Frame):
 					try:
 						c.load_file(file[1])
 						self.variables[f][1].set(file[0].file)
-					except PyMSError, err:
+					except PyMSError as err:
 						ErrorDialog(self.setdlg, err)
 						return
 			else:
 				try:
 					c.load_file(file)
-				except PyMSError, e:
+				except PyMSError as e:
 					ErrorDialog(self.setdlg, e)
 					return
 				self.variables[f][1].set(file)
 			e.xview(END)
-			if cb:
-				cb(c)
-			else:
-				self.setdlg.edited = True
+			self.setdlg.edited = True
 
 	def save(self, d, m, settings):
 		for s in d[1]:

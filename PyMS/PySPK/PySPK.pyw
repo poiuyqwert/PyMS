@@ -258,7 +258,7 @@ class PaletteTab(NotebookTab):
 			b = BMP.BMP()
 			try:
 				b.load_file(filepath)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self.toplevel, e)
 			else:
 				image = SPK.SPKImage()
@@ -725,7 +725,7 @@ class PySPK(Tk):
 		try:
 			platformwpe = PAL.Palette()
 			platformwpe.load_file(self.mpqhandler.get_file(self.settings['platformwpe']))
-		except PyMSError, e:
+		except PyMSError as e:
 			err = e
 		else:
 			self.platformwpe = platformwpe
@@ -1034,7 +1034,7 @@ class PySPK(Tk):
 			spk = SPK.SPK()
 			try:
 				spk.load_file(file)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.clear()
@@ -1065,7 +1065,7 @@ class PySPK(Tk):
 			spk = SPK.SPK()
 			try:
 				spk.interpret_file(filepath, layer_count)
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.clear()
@@ -1095,7 +1095,7 @@ class PySPK(Tk):
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None):
@@ -1116,7 +1116,7 @@ class PySPK(Tk):
 		try:
 			self.spk.decompile_file(filepath, self.platformwpe)
 			self.status.set('Export Successful!')
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
@@ -1132,7 +1132,7 @@ class PySPK(Tk):
 	def register(self, e=None):
 		try:
 			register_registry('PySPK','','spk',os.path.join(BASE_DIR, 'PySPK.pyw'),os.path.join(BASE_DIR,'Images','PyGOT.ico'))
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
@@ -1189,31 +1189,31 @@ def main():
 		# 		args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 		# 	try:
 		# 		if opt.convert:
-		# 			print "Reading GOT '%s'..." % args[0]
+		# 			print("Reading GOT '%s'..." % args[0])
 		# 			got.load_file(args[0])
-		# 			print " - '%s' read successfully\nDecompiling GOT file '%s'..." % (args[0],args[0])
+		# 			print(" - '%s' read successfully\nDecompiling GOT file '%s'..." % (args[0],args[0]))
 		# 			got.decompile(args[1], opt.reference)
-		# 			print " - '%s' written succesfully" % args[1]
+		# 			print(" - '%s' written succesfully" % args[1])
 		# 		else:
-		# 			print "Interpreting file '%s'..." % args[0]
+		# 			print("Interpreting file '%s'..." % args[0])
 		# 			got.interpret(args[0])
-		# 			print " - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0])
+		# 			print(" - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0]))
 		# 			lo.compile(args[1])
-		# 			print " - '%s' written succesfully" % args[1]
+		# 			print(" - '%s' written succesfully" % args[1])
 		# 			if opt.trig:
-		# 				print "Reading TRG '%s'..." % args[0]
+		# 				print("Reading TRG '%s'..." % args[0])
 		# 				trg = TRG.TRG()
 		# 				trg.load_file(opt.trig)
-		# 				print " - '%s' read successfully" % args[0]
+		# 				print(" - '%s' read successfully" % args[0])
 		# 				path = os.path.dirname(opt.trig)
 		# 				if not path:
 		# 					path = os.path.abspath('')
 		# 				file = '%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[1]).split(os.extsep)[:-1])), os.extsep, 'trg')
-		# 				print "Compiling file '%s' to GOT compatable TRG..." % file
+		# 				print("Compiling file '%s' to GOT compatable TRG..." % file)
 		# 				trg.compile(file, True)
-		# 				print " - '%s' written succesfully" % file
-		# 	except PyMSError, e:
-		# 		print repr(e)
+		# 				print(" - '%s' written succesfully" % file)
+		# 	except PyMSError as e:
+		# 		print(repr(e))
 
 if __name__ == '__main__':
 	main()

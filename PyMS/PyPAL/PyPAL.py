@@ -206,7 +206,7 @@ class PyPAL(MainWindow):
 				pal.load_file(file)
 				self.format = pal.format
 				self.ext = os.path.splitext(file)[-1][1:]
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.palette = pal
@@ -233,7 +233,7 @@ class PyPAL(MainWindow):
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED
-		except PyMSError, e:
+		except PyMSError as e:
 			ErrorDialog(self, e)
 
 	def saveas(self, key=None, file_type=Palette.FileType.sc_pal):
@@ -268,7 +268,7 @@ class PyPAL(MainWindow):
 		for type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
 				register_registry('PyPAL',type + 'Palette',ext,os.path.join(BASE_DIR, 'PyPAL.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyPAL.ico'))
-			except PyMSError, e:
+			except PyMSError as e:
 				ErrorDialog(self, e)
 				break
 

@@ -34,10 +34,10 @@ def main():
 			ext = os.extsep + 'pal'
 			if not fullfile.endswith(ext):
 				fullfile += ext
-			print "Reading palette '%s'..." % fullfile
+			print("Reading palette '%s'..." % fullfile)
 			try:
 				pal.load_file(fullfile)
-				print " - '%s' read successfully" % fullfile
+				print(" - '%s' read successfully" % fullfile)
 				path = os.path.dirname(args[0])
 				if not path:
 					path = os.path.abspath('')
@@ -46,8 +46,8 @@ def main():
 					grptobmp(path, pal, opt.uncompressed, opt.onebmp, *args)
 				else:
 					bmptogrp(path, pal, opt.uncompressed, opt.frames, *args)
-			except PyMSError, e:
-				print repr(e)
+			except PyMSError as e:
+				print(repr(e))
 
 if __name__ == '__main__':
 	main()
