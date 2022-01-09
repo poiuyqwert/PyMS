@@ -38,19 +38,19 @@ def debug_func_log(should_log_call=None):
 			ref = uuid.uuid4().hex
 			log = not should_log_call or should_log_call(func, args, kwargs)
 			if log:
-				print "Func  : %s (%s)" % (func.__name__, ref)
-				print "\tArgs  : %s" % (args,)
-				print "\tkwargs: %s" % kwargs
+				print("Func  : %s (%s)" % (func.__name__, ref))
+				print("\tArgs  : %s" % (args,))
+				print("\tkwargs: %s" % kwargs)
 			result = func(*args, **kwargs)
 			if log:
-				print "Func  : %s (%s)" % (func.__name__, ref)
-				print "\tResult: %s" % (result,)
+				print("Func  : %s (%s)" % (func.__name__, ref))
+				print("\tResult: %s" % (result,))
 			return result
 		return do_log
 	return decorator
 def debug_state(states, history=[]):
 	n = len(history)
-	print '##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')
+	print('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown'))
 	history.append(None)
 
 def parse_geometry(geometry):
@@ -171,21 +171,19 @@ def lpad(label, span=20, padding=' '):
 	label = str(label)
 	return '%s%s' % (padding * (span - len(label)), label)
 
-def removedir(path):
-	if os.path.exists(path):
-		for r,ds,fs in os.walk(path, topdown=False):
-			for f in fs:
-				os.remove(os.path.join(r, f))
-			for d in ds:
-				p = os.path.join(r, d)
-				removedir(p)
-				os.rmdir(p)
-		os.rmdir(path)
-
 def get_umask():
 	umask = os.umask(0)
 	os.umask(umask)
 	return umask
+
+BYTE_UNITS = ('B','KB','MB','GB')
+def format_byte_size(bytes):
+	value = bytes
+	unit_id = 0
+	while value / 1024.0 >= 1 and unit_id < len(BYTE_UNITS)-1:
+		value = value / 1024.0
+		unit_id += 1
+	return float_to_str(value, max_decimals=2) + BYTE_UNITS[unit_id]
 
 def create_temp_file(name, createmode=None):
 	directory, filename = os.path.split(name)
@@ -212,6 +210,13 @@ def apply_cursor(widget, cursors):
 			return cursor
 		except:
 			pass
+
+def start_file(filepath):
+	if is_windows():
+		os.startfile(filepath)
+	else:
+		cmd = 'open' if is_mac() else 'xdg-open'
+		start_new_thread(os.system, ('%s "%s"' % (cmd, filepath),))
 
 play_sound = None
 try:

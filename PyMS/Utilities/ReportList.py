@@ -25,13 +25,13 @@ class EditableReportSubList(RichList):
 		self.tk.call('rename', self.text._w, self.text.orig)
 		self.tk.createcommand(self.text._w, self.dispatch)
 		self.text.tag_config('Selection', background='lightblue')
-		self.text.tag_bind('Selection', '<Button-1>', self.edit)
+		self.text.tag_bind('Selection', Mouse.Click, self.edit)
 		bind = [
-			('<Button-1>', self.deselect),
-			('<Up>', lambda e: self.movesel(-1)),
-			('<Down>', lambda e: self.movesel(1)),
-			('<Shift-Up>', lambda e: self.movesel(-1,True)),
-			('<Shift-Down>', lambda e: self.movesel(1,True)),
+			(Mouse.Click, self.deselect),
+			(Key.Up, lambda e: self.movesel(-1)),
+			(Key.Down, lambda e: self.movesel(1)),
+			(Shift.Up, lambda e: self.movesel(-1,True)),
+			(Shift.Down, lambda e: self.movesel(1,True)),
 		]
 		for b in bind:
 			self.text.bind(*b)
@@ -51,11 +51,11 @@ class EditableReportSubList(RichList):
 		if index == END:
 			index = -1
 		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, '<Button-1>', lambda e,i=e: self.doselect(i,0))
-		self.text.tag_bind(e, '<DoubleButton-1>', self.doubleclick)
-		self.text.tag_bind(e, '<Button-3>', lambda e,i=e: self.popup(e,i))
-		self.text.tag_bind(e, '<Shift-Button-1>', lambda e,i=e: self.doselect(i,1))
-		self.text.tag_bind(e, '<Control-Button-1>', lambda e,i=e: self.doselect(i,2))
+		self.text.tag_bind(e, Mouse.Click, lambda e,i=e: self.doselect(i,0))
+		self.text.tag_bind(e, Double.Click, self.doubleclick)
+		self.text.tag_bind(e, Mouse.Right_Click, lambda e,i=e: self.popup(e,i))
+		self.text.tag_bind(e, Shift.Click, lambda e,i=e: self.doselect(i,1))
+		self.text.tag_bind(e, Ctrl.Click, lambda e,i=e: self.doselect(i,2))
 		if tags == None:
 			tags = e
 		elif isstr(tags):
@@ -115,6 +115,7 @@ class EditableReportSubList(RichList):
 		self.lineselect = True
 		if self.editing:
 			self.text.tag_remove('Selection', '1.0', END)
+			self.report.scmd()
 			return
 		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel == None) or (t == 2 and self.selectmode != SINGLE):
 			if self.selectmode != MULTIPLE and t != 2:
@@ -154,22 +155,22 @@ class EditableReportSubList(RichList):
 			return
 		self.editing = True
 		if isinstance(e,int):
-			n = 'entry%s' % self.entries[e]
+			tag_name = 'entry%s' % self.entries[e]
 		elif e == None:
-			n = [n for n in self.text.tag_names('Selection.first') if n.startswith('entry')][0]
+			tag_name = [n for n in self.text.tag_names('Selection.first') if n.startswith('entry')][0]
 		else:
 			c = '@%s,%s' % (e.x,e.y)
-			n = [n for n in self.text.tag_names(c) if n.startswith('entry')][0]
-		i = self.text.index(n + '.first')
-		self.checkedit = self.text.get(n + '.first', n + '.last')
+			tag_name = [n for n in self.text.tag_names(c) if n.startswith('entry')][0]
+		index = self.text.index(tag_name + '.first')
+		self.checkedit = self.text.get(tag_name + '.first', tag_name + '.last')
 		self.edittext.set(self.checkedit)
 		e = Entry(self.text, width=len(self.checkedit) + 5, textvariable=self.edittext, bd=1, relief=SOLID)
 		e.select_range(0,END)
-		e.bind('<Return>', lambda _,i=i,n=n: self.endedit(i,n))
-		e.bind('<FocusOut>', lambda _,i=i,n=n: self.endedit(i,n))
-		self.text.window_create('%s.first' % n, window=e)
+		e.bind(Key.Return, lambda _,i=index,n=tag_name: self.endedit(i,n))
+		e.bind(Focus.Out, lambda _,i=index,n=tag_name: self.endedit(i,n))
+		self.text.window_create('%s.first' % tag_name, window=e)
 		e.focus_set()
-		self.execute('delete',(n + '.first', n + '.last'))
+		self.execute('delete',(tag_name + '.first', tag_name + '.last'))
 		self.text.tag_remove('Selection', '1.0', END)
 
 	def endedit(self, i, n):
@@ -224,7 +225,7 @@ class ReportSubList(RichList):
 		if index == END:
 			index = -1
 		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, '<Button-1>', self.select)
+		self.text.tag_bind(e, Mouse.Click, self.select)
 		if tags == None:
 			tags = e
 		elif isstr(tags):

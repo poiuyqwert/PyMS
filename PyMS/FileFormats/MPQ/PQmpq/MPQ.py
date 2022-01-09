@@ -3,9 +3,9 @@
 
 import MPQCrypt, MPQComp
 
-from ...Utilities.PyMSError import PyMSError
-from ...Utilities.Struct import *
-from ...Utilities.utils import flags_code
+from ....Utilities.PyMSError import PyMSError
+from ....Utilities.Struct import *
+from ....Utilities.utils import flags_code
 
 import re, math, struct
 

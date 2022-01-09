@@ -10,7 +10,7 @@ except:
 		from ..Utilities.DependencyError import DependencyError
 		import sys, os
 		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
-		e.mainloop()
+		e.startup()
 		sys.exit()
 
 from ..Utilities.utils import isstr

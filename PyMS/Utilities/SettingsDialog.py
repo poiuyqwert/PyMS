@@ -71,10 +71,10 @@ class SettingsDialog(PyMSDialog):
 	def save_settings(self):
 		if self.mpqhandler:
 			self.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-		m = os.path.join(BASE_DIR,'PyMS','MPQ','')
+		mpq_dir = os.path.join(BASE_DIR,'PyMS','MPQ','')
 		if self.data:
-			for p,d in zip(self.pages,self.data):
-				p.save(d,m,self.settings)
+			for page,page_data in zip(self.pages,self.data):
+				page.save(page_data,mpq_dir,self.settings)
 
 	def ok(self):
 		if self.edited:
@@ -93,10 +93,11 @@ class SettingsDialog(PyMSDialog):
 						self.parent.settings = old_settings
 					ErrorDialog(self, e)
 					return
-			if isinstance(self.settings, SettingDict):
-				self.settings.settings.mpqs = self.mpqhandler.mpqs
-			else:
-				self.settings['mpqs'] = self.mpqhandler.mpqs
+			if self.mpqhandler:
+				if isinstance(self.settings, SettingDict):
+					self.settings.settings.mpqs = self.mpqhandler.mpqs
+				else:
+					self.settings['mpqs'] = self.mpqhandler.mpqs
 		PyMSDialog.ok(self)
 
 	def dismiss(self):

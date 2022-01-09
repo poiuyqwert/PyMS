@@ -6,7 +6,7 @@
 #   PKWARE Data Compression Library Reg. U.S. Pat. and Tm. Off.
 #   Version 1.11
 
-from ....Utilities.PyMSError import  PyMSError
+from .....Utilities.PyMSError import  PyMSError
 
 import struct
 
@@ -206,7 +206,7 @@ class Explode(object):
 			raise PyMSError('Explode', "Invalid dictionary size (got %d, need 4, 5 or 6)" % self.dsize_bits)
 		if self.comp_type != CompType.binary:
 			if self.comp_type != CompType.ascii:
-				raise PyMSError('Explode', "Invalid compression type (got %d, need either 0 or 1)" % comp_type)
+				raise PyMSError('Explode', "Invalid compression type (got %d, need either 0 or 1)" % self.comp_type)
 			Tables.gen_asc_tables()
 		Tables.gen_decode_tables()
 

@@ -326,7 +326,7 @@ class WidgetSettings(PyMSDialog):
 			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
 			self.advanced_shown = False
 		self.update_idletasks()
-		w,h,x,y,f = parse_geometry(self.geometry())
+		w,h,x,y,_ = parse_geometry(self.geometry())
 		center_x -= w/2.0
 		center_y -= h/2.0
 		self.geometry('+%d+%d' % (int(center_x),int(center_y)))

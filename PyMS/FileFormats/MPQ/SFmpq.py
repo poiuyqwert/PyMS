@@ -21,6 +21,11 @@ if SFMPQ_DIR:
 	)
 	for library in libraries:
 		try:
+			_SFmpq = WinDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
+			break
+		except Exception:
+			pass
+		try:
 			_SFmpq = CDLL(os.path.join(SFMPQ_DIR, library), RTLD_GLOBAL)
 			break
 		except Exception:
@@ -149,19 +154,21 @@ class FILELISTENTRY(Structure):
 		('fileName',c_char * 260)
 	]
 
-	def __getitem__(self, k):
+	def get_compression_ratio(self):
 		if self.fullSize:
-			p = self.compressedSize / float(self.fullSize)
-		else:
-			p = 0
-		return [self.fileExists,self.locale,self.compressedSize,p,self.fullSize,self.flags,self.fileName][k]
+			return self.compressedSize / float(self.fullSize)
+		return 0
+
+	def __getitem__(self, k):
+		return [self.fileExists,self.locale,self.compressedSize,self.get_compression_ratio(),self.fullSize,self.flags,self.fileName][k]
 
 	def __str__(self):
-		if self.fullSize:
-			p = self.compressedSize / float(self.fullSize)
-		else:
-			p = 0
-		return str([self.fileExists,self.locale,self.compressedSize,p,self.fullSize,self.flags,self.fileName])
+		return str([self.fileExists,self.locale,self.compressedSize,self.get_compression_ratio(),self.fullSize,self.flags,self.fileName])
+
+	def __eq__(self, other):
+		if not isinstance(other, FILELISTENTRY):
+			return
+		return self.fileName == other.fileName and self.locale == other.locale
 
 class MPQHEADER(Structure):
 	_fields_ = [

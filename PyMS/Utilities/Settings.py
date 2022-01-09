@@ -100,10 +100,10 @@ class SettingDict(object):
 	def get_list(self, key, default=None, autosave=True):
 		def get_default():
 			if callable(default):
-				default = default()
+				value = default()
 			if not isinstance(default, list):
-				default = []
-			return default
+				value = []
+			return value
 		self.get(key, get_default)
 
 	def save_pane_size(self, key, panedwindow, index=0):
@@ -212,8 +212,7 @@ class SettingDict(object):
 			if geometry:
 				window.geometry(geometry)
 
-	def _select_file(self, parent, key, title, ext, filetypes, filename, store, include_all_filetype, save):
-		dialog = FileDialog.asksaveasfilename if save else FileDialog.askopenfilename
+	def _process_filetypes(self, filetypes, include_all_filetype):
 		if include_all_filetype and filetypes:
 			for _, check_ext in filetypes:
 				if check_ext == '*':
@@ -221,9 +220,22 @@ class SettingDict(object):
 			else:
 				filetypes = list(filetypes)
 				filetypes.append(('All Files', '*'))
-		if ext == None and filetypes:
+		return filetypes
+
+	def _process_extension(self, ext, filetypes):
+		if not ext and filetypes:
 			ext = filetypes[0][1]
-		ext = os.path.splitext(ext)[1]
+		if ext:
+			if ';' in ext:
+				ext = ext.split(';')[0]
+			if os.extsep in ext:
+				ext = os.path.splitext(ext)[1]
+		return ext
+
+	def _select_file(self, parent, key, title, ext, filetypes, filename, store, include_all_filetype, save):
+		dialog = FileDialog.asksaveasfilename if save else FileDialog.askopenfilename
+		filetypes = self._process_filetypes(filetypes, include_all_filetype)
+		ext = self._process_extension(ext, filetypes)
 		initialfile = None
 		if filename:
 			try:
@@ -231,7 +243,14 @@ class SettingDict(object):
 			except:
 				pass
 		parent._pyms__window_blocking = True
-		path = dialog(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), initialfile=initialfile)
+		kwargs = {}
+		if filetypes:
+			kwargs['filetypes'] = filetypes
+		if ext:
+			kwargs['defaultextension'] = ext
+		if initialfile:
+			kwargs['initialfile'] = initialfile
+		path = dialog(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store), **kwargs)
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = os.path.dirname(path)
@@ -244,18 +263,15 @@ class SettingDict(object):
 		return self._select_file(parent, key, title, ext, filetypes, None, store, include_all_filetype, False)
 
 	def select_open_files(self, parent, key='open', title='Open Files', ext=None, filetypes=None, store=True, include_all_filetype=True):
-		if include_all_filetype and filetypes:
-			for _, ext in filetypes:
-				if ext == '*':
-					break
-			else:
-				filetypes = list(filetypes)
-				filetypes.append(('All Files', '*'))
-		if ext == None and filetypes:
-			ext = filetypes[0][1]
-		ext = os.path.splitext(ext)[1]
+		filetypes = self._process_filetypes(filetypes, include_all_filetype)
+		ext = self._process_extension(ext, filetypes)
 		parent._pyms__window_blocking = True
-		paths = FileDialog.askopenfilename(parent=parent, title=title, defaultextension=ext, filetypes=filetypes, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True)
+		kwargs = {}
+		if filetypes:
+			kwargs['filetypes'] = filetypes
+		if ext:
+			kwargs['defaultextension'] = ext
+		paths = FileDialog.askopenfilename(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True, **kwargs)
 		parent._pyms__window_blocking = False
 		if isstr(paths):
 			if paths:
@@ -294,7 +310,7 @@ class Settings(SettingDict):
 		self.__dict__['path'] = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
 		self.__dict__['version'] = settings_version
 		try:
-			with file(self.__dict__['path'], 'r') as f:
+			with open(self.__dict__['path'], 'r') as f:
 				settings = json.load(f, object_hook=lambda o: SettingDict(o)).__dict__['_settings']
 			if settings:
 				version = settings.get('version', '?')
@@ -307,7 +323,7 @@ class Settings(SettingDict):
 	def save(self):
 		try:
 			self.version = self.__dict__['version']
-			with file(self.__dict__['path'], 'w') as f:
+			with open(self.__dict__['path'], 'w') as f:
 				json.dump(self, f, sort_keys=True, indent=4, cls=SettingEncoder)
 		except:
 			pass
