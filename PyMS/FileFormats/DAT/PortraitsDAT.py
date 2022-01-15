@@ -75,3 +75,6 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Portraits
 	FILE_NAME = "portdata.dat"
+
+	def get_entry(self, index): # type: (int) -> Portraits
+		return super(PortraitsDAT, self).get_entry(index)

@@ -80,3 +80,6 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Sound
 	FILE_NAME = "sfxdata.dat"
+
+	def get_entry(self, index): # type: (int) -> Sound
+		return super(SoundsDAT, self).get_entry(index)

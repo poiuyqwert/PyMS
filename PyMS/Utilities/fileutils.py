@@ -25,7 +25,7 @@ def load_file(file, file_type='file', mode='rb'):
 			name = " '%s'" % file
 		elif isinstance(file, BadFile):
 			name = " '%s'" % file.file
-		raise PyMSError('Load',"Could not load %s%s" % (file_type, name))
+		raise PyMSError('Load',"Could not load %s%s" % (file_type, name), capture_exception=True)
 	finally:
 		try:
 			f.close()

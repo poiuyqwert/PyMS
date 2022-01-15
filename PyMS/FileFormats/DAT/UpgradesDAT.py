@@ -135,3 +135,6 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Upgrade
 	FILE_NAME = "upgrades.dat"
+
+	def get_entry(self, index): # type: (int) -> Upgrade
+		return super(UpgradesDAT, self).get_entry(index)

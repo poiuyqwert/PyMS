@@ -794,7 +794,7 @@ class AIBIN:
 		"""building    - Same as unit type, but only units that are Buildings, Resource Miners, and Overlords"""
 		v = self.ai_unit(data, stage)
 		if stage == 3:
-			flags = self.unitsdat.get_value(v[1],'SpecialAbilityFlags')
+			flags = self.unitsdat.get_entry(v[1]).special_ability_flags
 			if not flags & 8 and not flags & 1 and v[1] != 42: 
 				raise PyMSWarning('Parameter','Unit is not a building, worker, or Overlord', extra=v, level=1, id='building')
 		return v
@@ -803,7 +803,7 @@ class AIBIN:
 		"""military    - Same as unit type, but only military units (not Buildings)"""
 		v = self.ai_unit(data, stage)
 		if stage == 3:
-			flags = self.unitsdat.get_value(v[1],'SpecialAbilityFlags')
+			flags = self.unitsdat.get_entry(v[1]).special_ability_flags
 			if flags & 1:
 				raise PyMSWarning('Parameter','Unit is a building', extra=v, level=1, id='military')
 		return v
@@ -812,9 +812,9 @@ class AIBIN:
 		"""gg_military - Same as Military type, but only for defending against an enemy Ground unit attacking your Ground unit"""
 		v = self.ai_military(data, stage)
 		if stage == 3:
-			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
-					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
+			subunit = self.unitsdat.get_entry(v[1]).subunit1
+			if self.unitsdat.get_entry(v[1]).ground_weapon == 130 and not self.unitsdat.get_entry(v[1]).attack_unit in [53,59] \
+					and (subunit in [None,228] or (self.unitsdat.get_entry(subunit).ground_weapon == 130 and not self.unitsdat.get_entry(subunit).attack_unit in [53,59])) \
 					and (not self._casters or not v[1] in self._casters):
 				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1, id='gg_military')
 		return v
@@ -823,9 +823,9 @@ class AIBIN:
 		"""ag_military - Same as Military type, but only for defending against an enemy Air unit attacking your Ground unit"""
 		v = self.ai_military(data, stage)
 		if stage == 3:
-			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
-					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
+			subunit = self.unitsdat.get_entry(v[1]).subunit1
+			if self.unitsdat.get_entry(v[1]).air_weapon == 130 and self.unitsdat.get_entry(v[1]).attack_unit != 53 \
+					and (subunit in [None,228] or (self.unitsdat.get_entry(subunit).air_weapon == 130 and self.unitsdat.get_entry(subunit).attack_unit != 53)) \
 					and (not self._casters or not v[1] in self._casters):
 				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1, id='ag_military')
 		return v
@@ -834,9 +834,9 @@ class AIBIN:
 		"""ga_military - Same as Military type, but only for defending against an enemy Ground unit attacking your Air unit"""
 		v = self.ai_military(data, stage)
 		if stage == 3:
-			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'GroundWeapon') == 130 and not self.unitsdat.get_value(v[1],'AttackUnit') in [53,59] \
-					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'GroundWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') in [53,59])) \
+			subunit = self.unitsdat.get_entry(v[1]).subunit1
+			if self.unitsdat.get_entry(v[1]).ground_weapon == 130 and not self.unitsdat.get_entry(v[1]).attack_unit in [53,59] \
+					and (subunit in [None,228] or (self.unitsdat.get_entry(subunit).ground_weapon == 130 and not self.unitsdat.get_entry(subunit).attack_unit in [53,59])) \
 					and (not self._casters or not v[1] in self._casters):
 				raise PyMSWarning('Parameter','Unit has no ground weapon, and is not marked as a @spellcaster', extra=v, level=1, id='ga_military')
 		return v
@@ -845,9 +845,9 @@ class AIBIN:
 		"""aa_military - Same as Military type, but only for defending against an enemy Air unit attacking your Air unit"""
 		v = self.ai_military(data, stage)
 		if stage == 3:
-			subunit = self.unitsdat.get_value(v[1],'Subunit1')
-			if self.unitsdat.get_value(v[1],'AirWeapon') == 130 and self.unitsdat.get_value(v[1],'AttackUnit') != 53 \
-					and (subunit in [None,228] or (self.unitsdat.get_value(subunit,'AirWeapon') == 130 and not self.unitsdat.get_value(subunit,'AttackUnit') != 53)) \
+			subunit = self.unitsdat.get_entry(v[1]).subunit1
+			if self.unitsdat.get_entry(v[1]).air_weapon == 130 and self.unitsdat.get_entry(v[1]).attack_unit != 53 \
+					and (subunit in [None,228] or (self.unitsdat.get_entry(subunit).air_weapon == 130 and not self.unitsdat.get_entry(subunit).attack_unit != 53)) \
 					and (not self._casters or not v[1] in self._casters):
 				raise PyMSWarning('Parameter','Unit has no air weapon, and is not marked as a @spellcaster', extra=v, level=1, id='aa_military')
 		return v
@@ -857,7 +857,7 @@ class AIBIN:
 		if not stage:
 			v = ord(data[0])
 		elif stage == 1:
-			v = TBL.decompile_string(self.tbl.strings[self.upgradesdat.get_value(data,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+			v = TBL.decompile_string(self.tbl.strings[self.upgradesdat.get_entry(data).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 		elif stage == 2:
 			v = chr(data) + '\x00'
 		else:
@@ -868,7 +868,7 @@ class AIBIN:
 					raise Exception()
 			except:
 				for i in range(len(self.upgradesdat.entries)):
-					if TBL.compile_string(data) == self.tbl.strings[self.upgradesdat.get_value(i,'Label') - 1].split('\x00', 1)[0].strip():
+					if TBL.compile_string(data) == self.tbl.strings[self.upgradesdat.get_entry(i).label - 1].split('\x00', 1)[0].strip():
 						v = i
 						break
 				else:
@@ -880,7 +880,7 @@ class AIBIN:
 		if not stage:
 			v = ord(data[0])
 		elif stage == 1:
-			v = TBL.decompile_string(self.tbl.strings[self.techdat.get_value(data,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+			v = TBL.decompile_string(self.tbl.strings[self.techdat.get_entry(data).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 		elif stage == 2:
 			v = chr(data) + '\x00'
 		else:
@@ -891,7 +891,7 @@ class AIBIN:
 					raise Exception()
 			except:
 				for i in range(len(self.techdat.entries)):
-					if TBL.compile_string(data) == self.tbl.strings[self.techdat.get_value(i,'Label') - 1].split('\x00', 1)[0].strip():
+					if TBL.compile_string(data) == self.tbl.strings[self.techdat.get_entry(i).label - 1].split('\x00', 1)[0].strip():
 						v = i
 						break
 				else:

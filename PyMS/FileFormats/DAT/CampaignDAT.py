@@ -32,3 +32,6 @@ class CampaignDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Map
 	FILE_NAME = "mapdata.dat"
+
+	def get_entry(self, index): # type: (int) -> Map
+		return super(CampaignDAT, self).get_entry(index)

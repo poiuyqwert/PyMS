@@ -126,3 +126,6 @@ class TechDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Technology
 	FILE_NAME = "techdata.dat"
+
+	def get_entry(self, index): # type: (int) -> Technology
+		return super(TechDAT, self).get_entry(index)

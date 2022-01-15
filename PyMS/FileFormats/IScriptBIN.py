@@ -238,12 +238,12 @@ def type_label(stage, bin):
 	"""Label"""
 	return 2
 
-def type_imageid(stage, bin, data=None):
+def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
 	"""ImageID"""
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(data,'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(data).grp_file-1][:-1])))
 	try:
 		v = int(data)
 		if 0 > v or v > ImagesDAT.FORMAT.entries:
@@ -252,12 +252,12 @@ def type_imageid(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,ImagesDAT.FORMAT.entries))
 	return v
 
-def type_spriteid(stage, bin, data=None):
+def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
 	"""SpriteID"""
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(data,'ImageFile'),'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(data).image).grp_file-1][:-1])))
 	try:
 		v = int(data)
 		if 0 > v or v > SpritesDAT.FORMAT.entries:
@@ -266,12 +266,12 @@ def type_spriteid(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,SpritesDAT.FORMAT.entries))
 	return v
 
-def type_flingy(stage, bin, data=None):
+def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
 	"""FlingyID"""
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_value(bin.spritesdat.get_value(bin.flingydat.get_value(data,'Sprite'),'ImageFile'),'GRPFile')-1][:-1])))
+		return (str(data),'%s (%s)' % (DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(bin.flingydat.get_entry(data).sprite).image).grp_file-1][:-1])))
 	try:
 		v = int(data)
 		if 0 > v or v > FlingyDAT.FORMAT.entries:
@@ -313,12 +313,12 @@ def type_flipstate(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid FlipState value '%s', it must be a number in the range 0 to 255" % data)
 	return v
 
-def type_soundid(stage, bin, data=None):
+def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
 	"""SoundID"""
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data), TBL.decompile_string(bin.sfxdatatbl.strings[bin.soundsdat.get_value(data,'SoundFile')-1][:-1]))
+		return (str(data), TBL.decompile_string(bin.sfxdatatbl.strings[bin.soundsdat.get_entry(data).sound_file-1][:-1]))
 	try:
 		v = int(data)
 		if 0 > v or v > SoundsDAT.FORMAT.entries:
@@ -369,12 +369,12 @@ def type_weapon(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid Weapon value '%s', it must be 1 for ground attack or not 1 for air attack." % data)
 	return v
 
-def type_weaponid(stage, bin, data=None):
+def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
 	"""WeaponID"""
 	if data == None:
 		return 1
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_value(data,'Label')-1][:-1])))
+		return (str(data),'%s (%s)' % (DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_entry(data).label-1][:-1])))
 	try:
 		v = int(data)
 		if 0 > v or v > WeaponsDAT.FORMAT.entries:
@@ -477,7 +477,7 @@ OPCODES = [
 	[('sprol',), [type_spriteid,type_sbyte,type_sbyte]],
 	[('highsprol',), [type_spriteid,type_sbyte,type_sbyte]],
 	[('lowsprul',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('uflunstable',), [type_flingy]],
+	[('uflunstable',), [type_flingyid]],
 	[('spruluselo',), [type_spriteid,type_sbyte,type_sbyte]],
 	[('sprul',), [type_spriteid,type_sbyte,type_sbyte]],
 	[('sproluselo',), [type_spriteid,type_overlayid]],
@@ -694,7 +694,7 @@ class IScriptBIN:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported aiscript.bin '%s', could possibly be invalid or corrupt" % file)
+			raise PyMSError('Load',"Unsupported iscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
 
 	def remove_code(self, o, id=None, code=None, offsets=None):
 		if code == None:
@@ -710,7 +710,7 @@ class IScriptBIN:
 		if (not o in offsets and id == None) or not offsets[o]:
 			if o in offsets :
 				del offsets[o]
-			curcmd = code.index(o)
+			curcmd = code.keys().index(o)
 			while curcmd < len(code):
 				co = code.getkey(curcmd)
 				if co != o and co in offsets:
@@ -982,7 +982,7 @@ class IScriptBIN:
 			c[o] = cmd
 		k = c.keys()
 		k.sort()
-		self.code = OrderedDict(c,k)
+		self.code = OrderedDict((key,c[key]) for key in sorted(c.keys()))
 		self.extrainfo.update(extrainfo)
 		return warnings
 
@@ -1001,7 +1001,7 @@ class IScriptBIN:
 		labels = {}
 		completed = []
 		def setlabel(o,local,entry):
-			entry = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",''))
+			entry = re.sub(r'[^a-zA-Z0-9]','_',entry.replace(' ','').replace("'",''))
 			f = []
 			for i in self.offsets[o]:
 				if isinstance(i,list) and i[0] == id:
@@ -1022,7 +1022,7 @@ class IScriptBIN:
 			if not o in completed:
 				completed.append(o)
 				if not o in labels:
-					labels[o] = re.sub('[\\/\\(\\)-]','_',entry.replace(' ','').replace("'",'')) + 'Local%s' % local
+					labels[o] = re.sub(r'[^a-zA-Z0-9]','_',entry.replace(' ','').replace("'",'')) + 'Local%s' % local
 					local += 1
 				code += labels[o] + ':\n'
 				curcmd = self.code.keys().index(o)
@@ -1091,11 +1091,11 @@ class IScriptBIN:
 			return (code,local,-1)
 		usedby = {}
 		for i in range(ImagesDAT.FORMAT.entries):
-			id = self.imagesdat.get_value(i, 'IscriptID')
+			id = self.imagesdat.get_entry(i).iscript_id
 			if id in ids:
 				if not id in usedby:
 					usedby[id] = '# This header is used by images.dat entries:\n'
-				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_value(i,'GRPFile')-1][:-1]))
+				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_entry(i).grp_file-1][:-1]))
 		invalid = []
 		for id in ids:
 			code = ''

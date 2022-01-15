@@ -911,11 +911,11 @@ class CodeEditDialog(PyMSDialog):
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(61):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgradesdat.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgradesdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(44):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.techdat.get_value(i,'Label') - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.techdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			aiid = ''

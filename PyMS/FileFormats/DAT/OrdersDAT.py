@@ -198,3 +198,6 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Order
 	FILE_NAME = "orders.dat"
+
+	def get_entry(self, index): # type: (int) -> Order
+		return super(OrdersDAT, self).get_entry(index)

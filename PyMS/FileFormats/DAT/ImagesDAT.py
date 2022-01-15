@@ -185,3 +185,6 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Image
 	FILE_NAME = "images.dat"
+
+	def get_entry(self, index): # type: (int) -> Image
+		return super(ImagesDAT, self).get_entry(index)

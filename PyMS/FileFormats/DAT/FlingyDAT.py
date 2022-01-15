@@ -90,3 +90,6 @@ class FlingyDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Flingy
 	FILE_NAME = "flingy.dat"
+
+	def get_entry(self, index): # type: (int) -> Flingy
+		return super(FlingyDAT, self).get_entry(index)

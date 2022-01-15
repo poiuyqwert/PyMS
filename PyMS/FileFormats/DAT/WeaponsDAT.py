@@ -255,3 +255,6 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Weapon
 	FILE_NAME = "weapons.dat"
+
+	def get_entry(self, index): # type: (int) -> Weapon
+		return super(WeaponsDAT, self).get_entry(index)

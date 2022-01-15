@@ -648,3 +648,6 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 		})
 	ENTRY_STRUCT = Unit
 	FILE_NAME = "units.dat"
+
+	def get_entry(self, index): # type: (int) -> Unit
+		return super(UnitsDAT, self).get_entry(index)
