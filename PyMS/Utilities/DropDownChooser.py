@@ -20,11 +20,11 @@ class DropDownChooser(Toplevel):
 		if self.result > -1:
 			self.listbox.select_set(self.result)
 			self.listbox.see(self.result)
-		self.listbox.bind(ButtonRelease.Click, self.select)
+		self.listbox.bind(ButtonRelease.Click_Left, self.select)
 		bind = [
 			(Cursor.Enter, lambda e,i=1: self.enter(e,i)),
 			(Cursor.Leave, lambda e,i=0: self.enter(e,i)),
-			(Mouse.Click, self.focusout),
+			(Mouse.Click_Left, self.focusout),
 			(Key.Return, self.select),
 			(Key.Escape, self.close),
 			(Mouse.Scroll, self.scroll),

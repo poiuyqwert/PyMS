@@ -52,6 +52,7 @@ class Notebook(Frame):
 				self.overflow_button.grid_forget()
 			self.overflowing = overflowing
 		self.tabs_area.bind('<Configure>', resize)
+		self.tabs_container.bind('<Configure>', resize)
 
 	def pack(self, **kw):
 		self.notebook.pack(kw)

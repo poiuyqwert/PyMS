@@ -19,8 +19,8 @@ class Tooltip:
 		self.widget.winfo_toplevel().bind(Focus.Out, self.leave, '+')
 		self.widget.bind(Cursor.Enter, self.enter, '+')
 		self.widget.bind(Cursor.Leave, self.leave, '+')
-		self.widget.bind(Cursor.Motion, self.motion, '+')
-		self.widget.bind(Mouse.Click, self.leave, '+')
+		self.widget.bind(Mouse.Motion, self.motion, '+')
+		self.widget.bind(Mouse.Click_Left, self.leave, '+')
 		if press:
 			self.widget.bind(Mouse.ButtonPress, self.leave)
 

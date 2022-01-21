@@ -25,9 +25,9 @@ class EditableReportSubList(RichList):
 		self.tk.call('rename', self.text._w, self.text.orig)
 		self.tk.createcommand(self.text._w, self.dispatch)
 		self.text.tag_config('Selection', background='lightblue')
-		self.text.tag_bind('Selection', Mouse.Click, self.edit)
+		self.text.tag_bind('Selection', Mouse.Click_Left, self.edit)
 		bind = [
-			(Mouse.Click, self.deselect),
+			(Mouse.Click_Left, self.deselect),
 			(Key.Up, lambda e: self.movesel(-1)),
 			(Key.Down, lambda e: self.movesel(1)),
 			(Shift.Up, lambda e: self.movesel(-1,True)),
@@ -51,11 +51,11 @@ class EditableReportSubList(RichList):
 		if index == END:
 			index = -1
 		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, Mouse.Click, lambda e,i=e: self.doselect(i,0))
-		self.text.tag_bind(e, Double.Click, self.doubleclick)
-		self.text.tag_bind(e, Mouse.Right_Click, lambda e,i=e: self.popup(e,i))
-		self.text.tag_bind(e, Shift.Click, lambda e,i=e: self.doselect(i,1))
-		self.text.tag_bind(e, Ctrl.Click, lambda e,i=e: self.doselect(i,2))
+		self.text.tag_bind(e, Mouse.Click_Left, lambda e,i=e: self.doselect(i,0))
+		self.text.tag_bind(e, Double.Click_Left, self.doubleclick)
+		self.text.tag_bind(e, Mouse.Click_Right, lambda e,i=e: self.popup(e,i))
+		self.text.tag_bind(e, Shift.Click_Left, lambda e,i=e: self.doselect(i,1))
+		self.text.tag_bind(e, Ctrl.Click_Left, lambda e,i=e: self.doselect(i,2))
 		if tags == None:
 			tags = e
 		elif isstr(tags):
@@ -225,7 +225,7 @@ class ReportSubList(RichList):
 		if index == END:
 			index = -1
 		e = 'entry%s' % self.entry
-		self.text.tag_bind(e, Mouse.Click, self.select)
+		self.text.tag_bind(e, Mouse.Click_Left, self.select)
 		if tags == None:
 			tags = e
 		elif isstr(tags):

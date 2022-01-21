@@ -141,7 +141,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			if action:
 				self.force_value_text.tag_bind(tag, Cursor.Enter, show_hand_cursor, '+')
 				self.force_value_text.tag_bind(tag, Cursor.Leave, show_arrow_cursor, '+')
-				self.force_value_text.tag_bind(tag, Mouse.Click, action)
+				self.force_value_text.tag_bind(tag, Mouse.Click_Left, action)
 
 		scrollview.pack(fill=BOTH, expand=1)
 

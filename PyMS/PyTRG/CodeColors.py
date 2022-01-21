@@ -30,7 +30,7 @@ class CodeColors(PyMSDialog):
 
 	def widgetize(self):
 		self.listbox = Listbox(self, font=couriernew, width=20, height=16, exportselection=0, activestyle=DOTBOX)
-		self.listbox.bind(ButtonRelease.Left_Click, self.select)
+		self.listbox.bind(ButtonRelease.Click_Left, self.select)
 		for t in self.info.keys():
 			if isinstance(t, list):
 				self.listbox.insert(END, t[0])
@@ -48,19 +48,19 @@ class CodeColors(PyMSDialog):
 		opt = LabelFrame(r, text='Style:', padx=5, pady=5)
 		f = Frame(opt)
 		c = Checkbutton(f, text='Foreground', variable=self.fg, width=20, anchor=W)
-		c.bind(ButtonRelease.Left_Click, lambda e,i=0: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left, lambda e,i=0: self.select(e,i))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Background', variable=self.bg)
-		c.bind(ButtonRelease.Left_Click, lambda e,i=1: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left, lambda e,i=1: self.select(e,i))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Bold', variable=self.bold)
-		c.bind(ButtonRelease.Left_Click, lambda e,i=2: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left, lambda e,i=2: self.select(e,i))
 		c.grid(sticky=W)
 		self.fgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.fgcanvas.bind(Mouse.Left_Click, lambda e,i=0: self.colorselect(e, i))
+		self.fgcanvas.bind(Mouse.Click_Left, lambda e,i=0: self.colorselect(e, i))
 		self.fgcanvas.grid(column=1, row=0)
 		self.bgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.bgcanvas.bind(Mouse.Left_Click, lambda e,i=1: self.colorselect(e, i))
+		self.bgcanvas.bind(Mouse.Click_Left, lambda e,i=1: self.colorselect(e, i))
 		self.bgcanvas.grid(column=1, row=1)
 		f.pack(side=TOP)
 		Label(opt, textvariable=self.infotext, height=6, justify=LEFT).pack(side=BOTTOM, fill=X)

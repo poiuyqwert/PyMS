@@ -31,7 +31,7 @@ class FindDialog(PyMSDialog):
 		f.pack()
 
 		self.treelist = TreeList(self, EXTENDED, False)
-		self.treelist.bind(Mouse.Click, self.action_states)
+		self.treelist.bind(Mouse.Click_Left, self.action_states)
 		self.treelist.pack(fill=BOTH, expand=1)
 
 		buttons = Frame(self)

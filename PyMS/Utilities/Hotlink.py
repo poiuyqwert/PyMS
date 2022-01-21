@@ -10,7 +10,7 @@ class Hotlink(Label):
 		self.bind(Cursor.Enter, self.enter)
 		self.bind(Cursor.Leave, self.leave)
 		if callback:
-			self.bind(Mouse.Left_Click, callback)
+			self.bind(Mouse.Click_Left, callback)
 
 	def enter(self, e):
 		self['font'] = self.hover_font

@@ -22,6 +22,17 @@ class Menu(Tk.Menu):
 		self._tags = {}
 		Tk.Menu.__init__(self, master, cnf, **kw)
 
+	def _tag_item(self, item, tags):
+		if not tags:
+			return
+		if not isinstance(tags, list) and not isinstance(tags, tuple):
+			tags = (tags, )
+		for tag in tags:
+			if not tag in self._tags:
+				self._tags[tag] = [item]
+			else:
+				self._tags[tag].append(item)
+
 	# Extend `add_command` to:
 	#  - Optionally take an `EventPattern` as a `shortcut`, which will drive the `accelerator` and bind the shortcut to the `command`
 	#  - Return a wrapper of the command to be able to configure it
@@ -40,14 +51,7 @@ class Menu(Tk.Menu):
 					command()
 			shortcut_widget = shortcut_widget or self.master
 			shortcut_widget.bind(shortcut, lambda event, _item=item, command=kwargs['command'], pass_event=shortcut_event: _binding_trigger_command(_item, command, event, pass_event))
-		if tags:
-			if not isinstance(tags, list) and not isinstance(tags, tuple):
-				tags = (tags, )
-			for tag in tags:
-				if not tag in self._tags:
-					self._tags[tag] = [item]
-				else:
-					self._tags[tag].append(item)
+		self._tag_item(item, tags)
 		return item
 
 	def add_radiobutton(self, shortcut=None, shortcut_widget=None, tags=None, bind_shortcut=True, **kwargs):
@@ -62,14 +66,7 @@ class Menu(Tk.Menu):
 				variable.set(value)
 			shortcut_widget = shortcut_widget or self.master
 			shortcut_widget.bind(shortcut, lambda _, _item=item, variable=kwargs['variable'], value=kwargs['value']: _binding_trigger_radiobutton(_item, variable, value))
-		if tags:
-			if not isinstance(tags, list) and not isinstance(tags, tuple):
-				tags = (tags, )
-			for tag in tags:
-				if not tag in self._tags:
-					self._tags[tag] = [item]
-				else:
-					self._tags[tag].append(item)
+		self._tag_item(item, tags)
 		return item
 
 	def add_checkbutton(self, shortcut=None, shortcut_widget=None, tags=None, bind_shortcut=True, **kwargs):
@@ -83,15 +80,8 @@ class Menu(Tk.Menu):
 					return
 				variable.set(onvalue if variable.get() == offvalue else offvalue)
 			shortcut_widget = shortcut_widget or self.master
-			shortcut_widget.bind(shortcut, lambda _, _item=item, variable=kwargs['variable'], onvalue=kwargs['onvalue'], offvalue=kwargs['offvalue']: _binding_trigger_checkbutton(_item, variable, onvalue, offvalue))
-		if tags:
-			if not isinstance(tags, list) and not isinstance(tags, tuple):
-				tags = (tags, )
-			for tag in tags:
-				if not tag in self._tags:
-					self._tags[tag] = [item]
-				else:
-					self._tags[tag].append(item)
+			shortcut_widget.bind(shortcut, lambda _, _item=item, variable=kwargs['variable'], onvalue=kwargs.get('onvalue', True), offvalue=kwargs.get('offvalue',False): _binding_trigger_checkbutton(_item, variable, onvalue, offvalue))
+		self._tag_item(item, tags)
 		return item
 
 	def tag_enabled(self, tag, is_enabled):

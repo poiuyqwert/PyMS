@@ -31,6 +31,14 @@ class Canvas(Tk.Canvas):
 		def __str__(self):
 			return str(self.item_id)
 
+		def __eq__(self, other):
+			if isinstance(other, Canvas.Item):
+				return other.item_id == self.item_id
+			return other == self.item_id
+
+		def __hash__(self):
+			return self.item_id
+
 	@staticmethod
 	def coordinate_adjust_none(x, y):
 		return (x, y)

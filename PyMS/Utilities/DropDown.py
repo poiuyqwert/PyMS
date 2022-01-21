@@ -32,7 +32,7 @@ class DropDown(Frame):
 		self.entry = Entry(self, textvariable=self.text, font=couriernew, width=width, borderwidth=0, highlightthickness=0, cursor='arrow', insertontime=0)
 		self.entry.pack(side=LEFT, fill=X, expand=1)
 		self.entry['state'] = state
-		self.entry.bind(Mouse.Click, self.choose)
+		self.entry.bind(Mouse.Click_Left, self.choose)
 		self.entry.bind(Key.Home, lambda a,i=0: self.move(a,i)),
 		self.entry.bind(Key.End, lambda a,i=END: self.move(a,i)),
 		self.entry.bind(Key.Up, lambda a,i=-1: self.move(a,i)),

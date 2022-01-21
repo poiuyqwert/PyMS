@@ -70,9 +70,9 @@ class PyPAL(MainWindow):
 			self.canvas.create_rectangle(x, y, x+15, y+15, fill='#000000', outline='#000000')
 			self.canvas.tag_bind(n+1, Cursor.Enter, lambda e,i=n: self.colorstatus(e,i))
 			self.canvas.tag_bind(n+1, Cursor.Leave, lambda e,i=-1: self.colorstatus(e,i))
-			self.canvas.tag_bind(n+1, Mouse.Left_Click, lambda e,i=n: self.select(e,i))
-			self.canvas.tag_bind(n+1, Double.Left_Click, lambda e,i=n: self.changecolor(e,i))
-			self.canvas.tag_bind(n+1, ButtonRelease.Right_Click, lambda e,i=n: self.popup(e,i))
+			self.canvas.tag_bind(n+1, Mouse.Click_Left, lambda e,i=n: self.select(e,i))
+			self.canvas.tag_bind(n+1, Double.Click_Left, lambda e,i=n: self.changecolor(e,i))
+			self.canvas.tag_bind(n+1, ButtonRelease.Click_Right, lambda e,i=n: self.popup(e,i))
 		self.sel = self.canvas.create_rectangle(0,0,0,0,outline='#FFFFFF')
 
 		#Statusbar

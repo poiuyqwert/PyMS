@@ -65,7 +65,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		Label(h, textvariable=self.used_by_header).pack(side=LEFT)
 		h.pack(side=TOP, fill=X)
 		self.used_by_listbox = ScrolledListbox(f, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
-		self.used_by_listbox.bind(Double.Click, self.used_by_jump)
+		self.used_by_listbox.bind(Double.Click_Left, self.used_by_jump)
 		self.used_by_listbox.bind(Key.Return, self.used_by_jump)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
 		self.toggle_used_by(toggle=False)

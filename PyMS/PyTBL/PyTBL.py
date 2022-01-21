@@ -112,7 +112,7 @@ class PyTBL(MainWindow):
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		self.hor_pane.add(self.listbox, sticky=NSEW, minsize=200)
 		self.listbox.bind('<<ListboxSelect>>', lambda e: self.update(e))
-		self.listbox.bind(Mouse.Right_Click, self.popup)
+		self.listbox.bind(Mouse.Click_Right, self.popup)
 
 		# Textbox
 		self.ver_pane = PanedWindow(self.hor_pane,orient=VERTICAL)

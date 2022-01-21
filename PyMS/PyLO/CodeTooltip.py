@@ -14,8 +14,8 @@ class CodeTooltip(Tooltip):
 		if self.tag:
 			self.widget.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
 			self.widget.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
-			self.widget.tag_bind(self.tag, Cursor.Motion, self.motion, '+')
-			self.widget.tag_bind(self.tag, Mouse.Click, self.leave, '+')
+			self.widget.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
+			self.widget.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
 			self.widget.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
 
 	def showtip(self):

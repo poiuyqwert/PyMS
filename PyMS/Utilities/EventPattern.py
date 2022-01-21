@@ -24,7 +24,7 @@ class EventPattern(object):
 		return self.event()
 
 	def __repr__(self):
-		return '<EventPattern %s>' % self
+		return '<%s %s>' % (self.__class__.__name__, self)
 
 	def __add__(self, other):
 		if isinstance(other, EventPattern):
@@ -33,6 +33,10 @@ class EventPattern(object):
 			return EventPattern(*(self.fields + (other,)))
 		else:
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
+
+class CustomEventPattern(EventPattern):
+	def event(self):
+		return '<<%s>>' % self.name()
 
 class Field(object):
 	def __init__(self, value, description=None):
@@ -65,28 +69,14 @@ class Modifier:
 
 	ButtonRelease = Field('ButtonRelease')
 
-	Left_Click = Field('B1', 'Left-Click')
-	Middle_Click = Field('B2', 'Middle-Click')
-	Right_Click = Field('B2' if is_mac() else 'B3', 'Right-Click')
+	Click_Left = Field('B1', 'Left-Click')
+	Click_Middle = Field('B2', 'Middle-Click')
+	Click_Right = Field('B2' if is_mac() else 'B3', 'Right-Click')
 
-# Modifier.Shift = Field('Shift', '⇧' if is_mac() else None)
 Modifier.Shift.state = 0x1
-# Modifier.Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
 Modifier.Ctrl.state = 0x8 if is_mac() else 0x4
-# Modifier.Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
 Modifier.Alt.state = 0x10
-# Modifier.Mac.Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
 Modifier.Mac.Ctrl.state = 0x4
-
-# Modifier.Double = Field('Double')
-# Modifier.Triple = Field('Triple')
-# Modifier.Quadruple = Field('Quadruple')
-
-# Modifier.ButtonRelease = Field('ButtonRelease')
-
-# Modifier.Left_Click = Field('B1', 'Left-Click')
-# Modifier.Middle_Click = Field('B2', 'Middle-Click')
-# Modifier.Right_Click = Field('B2' if is_mac() else 'B3', 'Right-Click')
 
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
@@ -178,26 +168,26 @@ class Key(Events):
 	Released = EventPattern(Field('KeyRelease'))
 
 class Mouse(Events):
-	Left_Click = EventPattern(Field('Button-1', 'Left-Click'))
-	Click = Left_Click
-	Middle_Click = EventPattern(Field('Button-2', 'Middle-Click'))
-	Right_Click = EventPattern(Field('Button-2' if is_mac() else 'Button-3', 'Right-Click'))
+	Click_Left = EventPattern(Field('Button-1', 'Left-Click'))
+	Click_Middle = EventPattern(Field('Button-2', 'Middle-Click'))
+	Click_Right = EventPattern(Field('Button-2' if is_mac() else 'Button-3', 'Right-Click'))
 	# 4
 	# 5
 
-	Left_Drag = EventPattern(Modifier.Left_Click,Field('Motion', '-Drag'))
-	Middle_Drag = EventPattern(Modifier.Middle_Click,Field('Motion', '-Drag'))
-	Right_Drag = EventPattern(Modifier.Right_Click,Field('Motion', '-Drag'))
+	Motion = EventPattern(Field('Motion'))
+
+	Drag_Left = EventPattern(Modifier.Click_Left,Field('Motion', '-Drag'))
+	Drag_Middle = EventPattern(Modifier.Click_Middle,Field('Motion', '-Drag'))
+	Drag_Right = EventPattern(Modifier.Click_Right,Field('Motion', '-Drag'))
 
 	ButtonPress = EventPattern(Field('ButtonPress'))
 	ButtonRelease = EventPattern(Field('ButtonRelease'))
 	Scroll = EventPattern(Field('MouseWheel'))
 
 class ButtonRelease(Events):
-	Left_Click = EventPattern(Field('1', 'Left-Click'))
-	Click = Left_Click
-	Middle_Click = EventPattern(Field('2', 'Middle-Click'))
-	Right_Click = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
+	Click_Left = EventPattern(Field('1', 'Left-Click'))
+	Click_Middle = EventPattern(Field('2', 'Middle-Click'))
+	Click_Right = EventPattern(Field('2' if is_mac() else '3', 'Right-Click'))
 ButtonRelease.modify(Modifier.ButtonRelease)
 
 # Control
@@ -288,7 +278,6 @@ Quadruple.modify(Modifier.Quadruple)
 
 class Cursor:
 	Enter = EventPattern(Field('Enter'))
-	Motion = EventPattern(Field('Motion'))
 	Leave = EventPattern(Field('Leave'))
 
 class Focus:
@@ -298,6 +287,9 @@ class Focus:
 class WidgetEvent:
 	Configure = EventPattern(Field('Configure'))
 
+	class Listbox:
+		Select = CustomEventPattern(Field('ListboxSelect'))
+
 def main():
 	events = [
 		Ctrl.a,
@@ -305,15 +297,17 @@ def main():
 		Alt.a,
 		Ctrl.Alt.a,
 		Shift.Ctrl.Alt.a,
-		Shift.Click,
-		Shift.Right_Click,
-		Shift.Double.Click,
-		Shift.Ctrl.Alt.Quadruple.Right_Click,
-		Mouse.Left_Drag,
-		Shift.Ctrl.Alt.Left_Drag,
-		ButtonRelease.Left_Click,
-		Double.Click,
-		Ctrl.Double.Click
+		Shift.Click_Left,
+		Shift.Click_Right,
+		Shift.Double.Click_Left,
+		Shift.Ctrl.Alt.Quadruple.Click_Right,
+		Mouse.Drag_Left,
+		Shift.Ctrl.Alt.Drag_Left,
+		ButtonRelease.Click_Left,
+		Double.Click_Left,
+		Ctrl.Double.Click_Left,
+		WidgetEvent.Configure,
+		WidgetEvent.Listbox.Select
 	]
 	for event in events:
 		print(event)
@@ -327,10 +321,10 @@ def main():
 	canvas.grid(row=0, column=1)
 	def double_click(*e):
 		print('Double')
-	canvas.bind(Double.Left_Click, double_click)
+	canvas.bind(Double.Click_Left, double_click)
 	def click(*e):
 		print('Left')
-	canvas.bind(Mouse.Left_Click, click)
+	canvas.bind(Mouse.Click_Left, click)
 	root.mainloop()
 
 if __name__ == '__main__':

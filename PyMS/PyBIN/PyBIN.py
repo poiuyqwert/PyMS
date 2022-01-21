@@ -195,10 +195,10 @@ class PyBIN(MainWindow):
 
 		self.widgetTree = TreeList(leftframe)
 		self.widgetTree.grid(row=1, column=0, padx=1, pady=1, sticky=NSEW)
-		self.widgetTree.bind(Mouse.Click, self.list_select)
-		self.widgetTree.bind(Mouse.Left_Drag, self.list_drag)
-		self.widgetTree.bind(ButtonRelease.Left_Click, self.list_drop)
-		self.widgetTree.bind(Double.Left_Click, self.list_double_click)
+		self.widgetTree.bind(Mouse.Click_Left, self.list_select)
+		self.widgetTree.bind(Mouse.Drag_Left, self.list_drag)
+		self.widgetTree.bind(ButtonRelease.Click_Left, self.list_drop)
+		self.widgetTree.bind(Double.Click_Left, self.list_double_click)
 
 		self.widgets_toolbar = Toolbar(leftframe)
 		self.widgets_toolbar.add_button('add', self.add_node, 'Add Widget', enabled=False, identifier='add')
@@ -281,15 +281,15 @@ class PyBIN(MainWindow):
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.grid_rowconfigure(0, weight=1, minsize=480)
 		frame.pack(fill=BOTH, expand=1)
-		self.widgetCanvas.bind(Cursor.Motion, self.mouse_motion)
+		self.widgetCanvas.bind(Mouse.Motion, self.mouse_motion)
 		self.widgetCanvas.bind(Cursor.Leave, lambda e: self.edit_status.set(''))
-		self.widgetCanvas.bind(Double.Click, lambda e,m=0: self.canvas_double_click(e,m))
-		self.widgetCanvas.bind(Ctrl.Double.Click, lambda e,m=MODIFIER_CTRL: self.canvas_double_click(e,m))
+		self.widgetCanvas.bind(Double.Click_Left, lambda e,m=0: self.canvas_double_click(e,m))
+		self.widgetCanvas.bind(Ctrl.Double.Click_Left, lambda e,m=MODIFIER_CTRL: self.canvas_double_click(e,m))
 
 		mouse_events = (
-			(Mouse.Left_Click, MOUSE_DOWN),
-			(Mouse.Left_Drag, MOUSE_MOVE),
-			(ButtonRelease.Left_Click, MOUSE_UP),
+			(Mouse.Click_Left, MOUSE_DOWN),
+			(Mouse.Drag_Left, MOUSE_MOVE),
+			(ButtonRelease.Click_Left, MOUSE_UP),
 		)
 		mouse_modifiers = (
 			(None,0),

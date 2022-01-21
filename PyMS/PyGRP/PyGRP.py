@@ -151,7 +151,7 @@ class PyGRP(MainWindow):
 		#Canvas
 		self.canvas = Canvas(rightframe, width=258, height=258, background=self.settings.preview.get('bgcolor','#000000'))
 		self.canvas.pack(side=TOP, padx=2, pady=2)
-		self.canvas.bind(Double.Left_Click, self.bgcolor)
+		self.canvas.bind(Double.Click_Left, self.bgcolor)
 		self.grpbrdr = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00')
 		self.framebrdr = self.canvas.create_rectangle(0, 0, 0, 0, outline='#FF0000')
 

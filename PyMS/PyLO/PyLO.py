@@ -118,9 +118,9 @@ class PyLO(MainWindow):
 		l.pack(fill=X, expand=1)
 		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0)
 		for tt in [0,1]:
-			self.canvas.bind(Mouse.Click, lambda e,t=tt: self.drag(e,t,0))
-			self.canvas.bind(Mouse.Left_Drag, lambda e,t=tt: self.drag(e,t,1))
-			self.canvas.bind(ButtonRelease.Left_Click, lambda e,t=tt: self.drag(e,t,2))
+			self.canvas.bind(Mouse.Click_Left, lambda e,t=tt: self.drag(e,t,0))
+			self.canvas.bind(Mouse.Drag_Left, lambda e,t=tt: self.drag(e,t,1))
+			self.canvas.bind(ButtonRelease.Click_Left, lambda e,t=tt: self.drag(e,t,2))
 		self.canvas.pack(side=TOP)
 		self.framescroll = Scrollbar(c, orient=HORIZONTAL, command=self.scrolling)
 		self.framescroll.set(0,1)
