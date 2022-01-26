@@ -166,7 +166,7 @@ class CodeGeneratorDialog(PyMSDialog):
 			image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % icon))
 			button = Button(buts, image=image, width=20, height=20, command=callback)
 			button.image = image
-			button.tooltip = Tooltip(button, tip)
+			Tooltip(button, tip)
 			button.pack(side=side, padx=padx)
 			self.buttons[icon] = button
 		buts.pack(side=BOTTOM, fill=X)

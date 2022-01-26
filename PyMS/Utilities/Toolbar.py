@@ -32,7 +32,7 @@ class Toolbar(Frame):
 		return None
 
 	def _add_button(self, button, tooltip, identifier, tags):
-		button.tooltip = Tooltip(button, tooltip)
+		Tooltip(button, tooltip)
 		button.pack(side=LEFT)
 		if identifier:
 			self._buttons[identifier] = button

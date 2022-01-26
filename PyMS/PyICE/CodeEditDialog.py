@@ -73,7 +73,7 @@ class CodeEditDialog(PyMSDialog):
 					button = Button(bar, image=image, width=20, height=20, command=btn[1])
 					self.bind(btn[3], btn[1])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				if button.winfo_reqwidth() > 26:
 					button['width'] = 18

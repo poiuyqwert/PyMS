@@ -71,7 +71,7 @@ class VX4:
 		try:
 			ref_size_max = 0xFFFFFFFE if expanded else 0xFFFE
 			struct_frmt = '<16L' if expanded else '<16H'
-			for id in xrange(len(data) / struct_size):
+			for id in range(len(data) / struct_size):
 				graphics.append(tuple(((d & ref_size_max)/2,d & 1) for d in struct.unpack(struct_frmt, data[id*struct_size:(id+1)*struct_size])))
 				tile_hash = hash(graphics[-1])
 				if not tile_hash in lookup:

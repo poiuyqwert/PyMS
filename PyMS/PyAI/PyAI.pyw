@@ -598,13 +598,11 @@ class AICodeText(CodeText):
 		types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
 		directives = r'(?P<Directives>@(?:spellcaster|supress_all|suppress_next_line))\b'
 		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
-		self.tooptips = [
-			CommandCodeTooltip(self.text,self.ai),
-			TypeCodeTooltip(self.text,self.ai),
-			StringCodeTooltip(self.text,self.ai),
-			FlagCodeTooltip(self.text,self.ai),
-			DirectiveTooltip(self.text,self.ai)
-		]
+		CommandCodeTooltip(self.text,self.ai)
+		TypeCodeTooltip(self.text,self.ai)
+		StringCodeTooltip(self.text,self.ai)
+		FlagCodeTooltip(self.text,self.ai)
+		DirectiveTooltip(self.text,self.ai)
 		self.tags = deepcopy(self.highlights)
 
 	def colorize(self):
@@ -657,34 +655,34 @@ class AICodeText(CodeText):
 class CodeTooltip(Tooltip):
 	tag = ''
 
-	def __init__(self, widget, ai):
+	def __init__(self, parent, ai):
 		self.ai = ai
-		Tooltip.__init__(self, widget)
+		Tooltip.__init__(self, parent)
 
 	def setupbinds(self, press):
 		if self.tag:
-			self.widget.tag_bind(self.tag, '<Enter>', self.enter, '+')
-			self.widget.tag_bind(self.tag, '<Leave>', self.leave, '+')
-			self.widget.tag_bind(self.tag, '<Motion>', self.motion, '+')
-			self.widget.tag_bind(self.tag, '<Button-1>', self.leave, '+')
-			self.widget.tag_bind(self.tag, '<ButtonPress>', self.leave)
+			self.parent.tag_bind(self.tag, '<Enter>', self.enter, '+')
+			self.parent.tag_bind(self.tag, '<Leave>', self.leave, '+')
+			self.parent.tag_bind(self.tag, '<Motion>', self.motion, '+')
+			self.parent.tag_bind(self.tag, '<Button-1>', self.leave, '+')
+			self.parent.tag_bind(self.tag, '<ButtonPress>', self.leave)
 
 	def showtip(self):
 		if self.tip:
 			return
 		t = ''
 		if self.tag:
-			pos = list(self.widget.winfo_pointerxy())
-			head,tail = self.widget.tag_prevrange(self.tag,self.widget.index('@%s,%s+1c' % (pos[0] - self.widget.winfo_rootx(),pos[1] - self.widget.winfo_rooty())))
-			t = self.widget.get(head,tail)
+			pos = list(self.parent.winfo_pointerxy())
+			head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
+			t = self.parent.get(head,tail)
 		try:
 			t = self.gettext(t)
-			self.tip = Toplevel(self.widget, relief=SOLID, borderwidth=1)
+			self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
 			self.tip.wm_overrideredirect(1)
 			frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 			Label(frame, text=t, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 			frame.pack()
-			pos = list(self.widget.winfo_pointerxy())
+			pos = list(self.parent.winfo_pointerxy())
 			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
 			self.tip.update_idletasks()
 			move = False
@@ -812,7 +810,7 @@ class CodeEditDialog(PyMSDialog):
 				button = Button(bar, image=image, width=20, height=20, command=btn[1])
 				self.bind(btn[3], btn[1])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				if button.winfo_reqwidth() > 26:
 					button['width'] = 18
@@ -1447,7 +1445,7 @@ class ExternalDefDialog(PyMSDialog):
 				image = get_img(btn[0])
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 			else:
@@ -1531,7 +1529,7 @@ class ImportListDialog(PyMSDialog):
 				image = get_img(btn[0])
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 			else:
@@ -1878,7 +1876,7 @@ class StringEditor(PyMSDialog):
 				image = get_img(btn[0])
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 			else:
@@ -2170,12 +2168,12 @@ class FlagEditor(PyMSDialog):
 		PyMSDialog.ok(self)
 
 class ListboxTooltip(Tooltip):
-	def __init__(self, widget, font=None, delay=750, press=False):
-		Tooltip.__init__(self, widget, '', font, delay, press)
+	def __init__(self, parent, font=None, delay=750, press=False):
+		Tooltip.__init__(self, parent, '', font, delay, press)
 		self.index = None
 
 	def enter(self, e):
-		if self.widget.size():
+		if self.parent.size():
 			self.motion(e)
 			Tooltip.enter(self,e)
 
@@ -2185,7 +2183,7 @@ class ListboxTooltip(Tooltip):
 			self.enter(e)
 
 	def motion(self, e):
-		if self.tip and self.index != self.widget.nearest(e.y):
+		if self.tip and self.index != self.parent.nearest(e.y):
 			self.leave()
 			self.enter(e)
 		self.pos = (e.x,e.y)
@@ -2194,12 +2192,12 @@ class ListboxTooltip(Tooltip):
 	def showtip(self):
 		if self.tip:
 			return
-		self.tip = Toplevel(self.widget)
+		self.tip = Toplevel(self.parent)
 		self.tip.maxsize(640,400)
 		self.tip.wm_overrideredirect(1)
-		pos = list(self.widget.winfo_pointerxy())
-		self.index = self.widget.nearest(pos[1] - self.widget.winfo_rooty())
-		item = self.widget.get_entry(self.index)
+		pos = list(self.parent.winfo_pointerxy())
+		self.index = self.parent.nearest(pos[1] - self.parent.winfo_rooty())
+		item = self.parent.get_entry(self.index)
 		id = item[0]
 		flags = ''
 		comma = False
@@ -2215,7 +2213,7 @@ class ListboxTooltip(Tooltip):
 		if flags:
 			flags += '\n'
 		text = "Script ID         : %s\nIn bwscript.bin   : %s\n%sString ID         : %s\n" % (id, ['No','Yes'][item[1]], flags, item[3])
-		ai = self.widget.master.master.ai
+		ai = self.parent.master.master.ai
 		text += fit('String            : ', TBL.decompile_string(ai.tbl.strings[ai.ais[id][1]]), end=True)
 		if id in ai.aiinfo and ai.aiinfo[id][0]:
 			text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
@@ -2435,7 +2433,7 @@ class PyAI(Tk):
 					else:
 						button = Checkbutton(bar, image=image, width=20, height=20, state=btn[3], indicatoron=0, variable=btn[1])
 					button.image = image
-					button.tooltip = Tooltip(button, btn[2], couriernew)
+					Tooltip(button, btn[2], couriernew)
 					button.pack(side=LEFT)
 					if button.winfo_reqwidth() > 26:
 						button['width'] = 18
@@ -2466,7 +2464,7 @@ class PyAI(Tk):
 			self.bind(*b)
 		self.listbox.bind('<ButtonRelease-3>', self.popup)
 		self.listbox.bind('<Double-Button-1>', self.codeedit)
-		self.listbox.tooltip = ListboxTooltip(self.listbox, couriernew)
+		ListboxTooltip(self.listbox, couriernew)
 		self.listbox.get_entry = self.get_entry
 		scrollbar.config(command=self.listbox.yview)
 		scrollbar.pack(side=RIGHT, fill=Y)

@@ -171,7 +171,7 @@ class PreviewerDialog(PyMSDialog):
 				image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % btn[0]))
 				button = Button(frameview, image=image, width=20, height=20, command=lambda i=n: self.frameset(i), state=DISABLED)
 				button.image = image
-				button.tooltip = Tooltip(button, btn[1])
+				Tooltip(button, btn[1])
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 			else:

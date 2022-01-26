@@ -212,7 +212,7 @@ class PyGRP(MainWindow):
 		Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=3, column=0, sticky=W)
 		Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=3, column=1, sticky=W)
 		dd = DropDown(opts, self.bmp_style, [name for _,name in BMPStyle.ALL])
-		dd.tooltip = Tooltip(dd, """\
+		Tooltip(dd, """\
 This option controls the style of BMP being Exported/Imported.
 BMP's must be imported with the same style they were exported as.""")
 		dd.grid(row=4, column=0, sticky=EW, padx=(3,0))

@@ -7,27 +7,27 @@ from ..Utilities.UIKit import *
 class CodeTooltip(Tooltip):
 	tag = 'Selection'
 
-	def __init__(self, widget):
-		Tooltip.__init__(self, widget)
+	def __init__(self, parent):
+		Tooltip.__init__(self, parent)
 
 	def setupbinds(self, press):
 		if self.tag:
-			self.widget.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
-			self.widget.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
-			self.widget.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
-			self.widget.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
-			self.widget.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
+			self.parent.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
+			self.parent.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
+			self.parent.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
+			self.parent.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
+			self.parent.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
 
 	def showtip(self):
 		if self.tip:
 			return
-		pos = list(self.widget.winfo_pointerxy())
-		head,tail = self.widget.tag_prevrange(self.tag,self.widget.index('@%s,%s+1c' % (pos[0] - self.widget.winfo_rootx(),pos[1] - self.widget.winfo_rooty())))
-		m = RE_COORDINATES.match(self.widget.get(head,tail))
+		pos = list(self.parent.winfo_pointerxy())
+		head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
+		m = RE_COORDINATES.match(self.parent.get(head,tail))
 		if not m:
 			return
 		try:
-			self.tip = Toplevel(self.widget, relief=SOLID, borderwidth=1)
+			self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
 			self.tip.wm_overrideredirect(1)
 			c = Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
 			c.pack()
@@ -36,7 +36,7 @@ class CodeTooltip(Tooltip):
 			x,y = int(m.group(1)),int(m.group(2))
 			c.create_line(-x+123,y+128,-x+134,y+128,fill='#0000FF')
 			c.create_line(-x+128,y+123,-x+128,y+134,fill='#0000FF')
-			pos = list(self.widget.winfo_pointerxy())
+			pos = list(self.parent.winfo_pointerxy())
 			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
 			self.tip.update_idletasks()
 			move = False

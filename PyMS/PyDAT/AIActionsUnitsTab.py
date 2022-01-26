@@ -134,10 +134,9 @@ class AIActionsUnitsTab(DATUnitsTab):
   - Has a subunit: Uses subunit weapons"""
 			)
 		)
-		self.force_value_text.tooltips = []
 		for tag,fg,bg,action,tooltip in values:
 			self.force_value_text.tag_configure(tag, foreground=fg, background=bg, font=bold)
-			self.force_value_text.tooltips.append(TextTooltip(self.force_value_text, tag, text=tooltip))
+			TextTooltip(self.force_value_text, tag, text=tooltip)
 			if action:
 				self.force_value_text.tag_bind(tag, Cursor.Enter, show_hand_cursor, '+')
 				self.force_value_text.tag_bind(tag, Cursor.Leave, show_arrow_cursor, '+')

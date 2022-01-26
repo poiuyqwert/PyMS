@@ -56,7 +56,9 @@ class TRGCodeText(CodeText):
 		num = r'\b(?P<Number>\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+)\b'
 		operators = r'(?P<Operators>[():,\-])'
 		self.basic = '|'.join((comment, header, keywords, conditions, actions, trigplugactions, constants, constdef, tblformat, num, operators))
-		self.tooltips = [ConditionsTooltip(self),ActionsTooltip(self),TrigPlugActionsTooltip(self)]
+		ConditionsTooltip(self)
+		ActionsTooltip(self)
+		TrigPlugActionsTooltip(self)
 		self.tags = deepcopy(self.highlights)
 
 	def dynamic(self):

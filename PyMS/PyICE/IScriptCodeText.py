@@ -66,7 +66,8 @@ class IScriptCodeText(CodeText):
 		kw = '(?P<Keywords>\\.headerend|##[gG][rR][pP]:|##[nN][aA][mM][eE]:|\\[NONE\\])'
 		#types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
 		self.basic = re.compile('|'.join((comment, kw, block, cmds, animations, num, operators, '(?P<HeaderStart>\\.headerstart)', '(?P<Newline>\\n)')), re.S | re.M)
-		self.tooptips = [AnimationTooltip(self),CommandTooltip(self)]
+		AnimationTooltip(self)
+		CommandTooltip(self)
 		self.tags = deepcopy(self.highlights)
 
 	def colorize(self):

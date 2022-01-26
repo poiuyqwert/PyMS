@@ -71,7 +71,7 @@ class VR4:
 		images = []
 		lookup = {}
 		try:
-			for id in xrange(len(data) / 64):
+			for id in range(len(data) / 64):
 				d = struct.unpack('64B', data[id*64:(id+1)*64])
 				images.append(tuple(tuple(d[y:y+8]) for y in range(0,64,8)))
 				image_hash = hash(images[-1])

@@ -6,8 +6,8 @@ except:
 	try:
 		import ImageTk
 	except:
-		from ..Utilities.utils import BASE_DIR
-		from ..Utilities.DependencyError import DependencyError
+		from ...Utilities.utils import BASE_DIR
+		from ...Utilities.DependencyError import DependencyError
 		import sys, os
 		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
 		e.startup()
@@ -26,7 +26,7 @@ from ...Utilities.utils import isstr
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
 
-import re, math
+import os, re, math
 
 def megatile_to_photo(t, m=None):
 	if m != None:
@@ -269,11 +269,11 @@ class Tileset:
 
 		minis_w = len(pixels[0]) / 8
 		minis_h = len(pixels) / 8
-		for iy in xrange(minis_h):
+		for iy in range(minis_h):
 			py = iy * 8
-			for ix in xrange(minis_w):
+			for ix in range(minis_w):
 				px = ix * 8
-				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in xrange(8))
+				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in range(8))
 				new_images.append(image)
 		image_details = [] # (id,isFlipped)
 		new_id = len(self.vr4.images)
@@ -281,7 +281,7 @@ class Tileset:
 		minitiles_reuse_null_with_id = options.get('minitiles_reuse_null_with_id', 0)
 		minitiles_reuse_duplicates_old = options.get('minitiles_reuse_duplicates_old', True)
 		minitiles_reuse_duplicates_new = options.get('minitiles_reuse_duplicates_new', True)
-		minitiles_reuse_duplicates_flipped = options.get('minitiles_reuse_duplicates_flipped', True)
+		# minitiles_reuse_duplicates_flipped = options.get('minitiles_reuse_duplicates_flipped', True) # TODO: Figure out why this is not used
 		if tiletype == TILETYPE_MINI and options.get('minitiles_ignore_extra', False) and len(new_images) > len(ids):
 			new_images = new_images[:len(ids)]
 		while i < len(new_images):
@@ -291,16 +291,16 @@ class Tileset:
 			if tiletype != TILETYPE_MINI or not len(ids):
 				flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
 				existing_ids = self.vr4.lookup.get(image_hash,[]) + self.vr4.lookup.get(flipped_hash,[])
-			 	if len(existing_ids) and (minitiles_reuse_duplicates_old or minitiles_reuse_null_with_id in existing_ids):
-			 		normal_found = image_hash in self.vr4.lookup
-			 		found = True
+				if len(existing_ids) and (minitiles_reuse_duplicates_old or minitiles_reuse_null_with_id in existing_ids):
+					normal_found = image_hash in self.vr4.lookup
+					found = True
 					del new_images[i]
 					image_details.append((existing_ids[0],int(not normal_found)))
 				if not found:
 					existing_ids = mini_lookup.get(image_hash,[]) + mini_lookup.get(flipped_hash,[])
-				 	if len(existing_ids) and (minitiles_reuse_duplicates_new or minitiles_reuse_null_with_id in existing_ids):
-				 		normal_found = image_hash in mini_lookup
-				 		found = True
+					if len(existing_ids) and (minitiles_reuse_duplicates_new or minitiles_reuse_null_with_id in existing_ids):
+						normal_found = image_hash in mini_lookup
+						found = True
 						del new_images[i]
 						image_details.append((existing_ids[0],int(not normal_found)))
 			if not found:
@@ -328,10 +328,10 @@ class Tileset:
 		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
 			megas_w = minis_w / 4
 			megas_h = minis_h / 4
-			for y in xrange(megas_h):
-				for x in xrange(megas_w):
+			for y in range(megas_h):
+				for x in range(megas_w):
 					minitiles = []
-					for oy in xrange(4):
+					for oy in range(4):
 						o = (y*4+oy)*minis_w + x*4
 						minitiles.extend(image_details[o:o+4])
 					new_megatiles.append(tuple(minitiles))
@@ -340,7 +340,7 @@ class Tileset:
 			i = 0
 			megatiles_reuse_null_with_id = options.get('megatiles_reuse_null_with_id', 0)
 			megatiles_reuse_duplicates_old = options.get('megatiles_reuse_duplicates_old', True)
-			megatiles_reuse_duplicates_new = options.get('megatiles_reuse_duplicates_new', True)
+			# megatiles_reuse_duplicates_new = options.get('megatiles_reuse_duplicates_new', True) # TODO: Figure out why this is not used
 			if tiletype == TILETYPE_MEGA and options.get('megatiles_ignore_extra', False) and len(new_megatiles) > len(ids):
 				new_megatiles = new_megatiles[:len(ids)]
 			while i < len(new_megatiles):
@@ -381,7 +381,7 @@ class Tileset:
 				groups = megas_h
 				if tiletype == TILETYPE_GROUP and options.get('groups_ignore_extra', False) and groups > len(ids):
 					groups = len(ids)
-				for n in xrange(groups):
+				for n in range(groups):
 					group = megatile_ids[n*16:(n+1)*16]
 					if len(ids):
 						id = ids[0]
@@ -404,7 +404,7 @@ class Tileset:
 				self.vr4.lookup[image_hash] = mini_lookup[image_hash]
 		# Update megatiles
 		self.vx4.graphics.extend(new_megatiles)
-		self.vf4.flags.extend([0]*16 for _ in xrange(len(new_megatiles)))
+		self.vf4.flags.extend([0]*16 for _ in range(len(new_megatiles)))
 		for id,tile in update_megatiles:
 			self.vx4.set_tile(id, tile)
 		for tile_hash in mega_lookup:
@@ -427,7 +427,7 @@ class Tileset:
 		tiles_high = 0
 		tile_height = 0
 		def calc_dims(tiles):
-			for f in xrange(int(math.sqrt(tiles)),0,-1):
+			for f in range(int(math.sqrt(tiles)),0,-1):
 				if not tiles % f:
 					return (tiles / f, f)
 			return (tiles,1)
@@ -450,7 +450,7 @@ class Tileset:
 		if tiletype == TILETYPE_MEGA:
 			for mega_n,mega_id in enumerate(ids):
 				mega_y = (mega_n / tiles_wide) * tile_height
-				for mini_n in xrange(16):
+				for mini_n in range(16):
 					mini_y = (mini_n / 4) * 8
 					mini_id,flipped = self.vx4.graphics[mega_id][mini_n]
 					image = self.vr4.images[mini_id]
@@ -577,7 +577,7 @@ DoodadGroup:""" % id)
 			elif tiletype == TILETYPE_MEGA:
 				def write_flags(id, name, mask_values, else_value):
 					file.write('\n\t%s:' % name)
-					for n in xrange(16):
+					for n in range(16):
 						if not n % 4:
 							file.write('\n\t\t')
 						flags = self.vf4.flags[id][n]
@@ -706,22 +706,22 @@ MegaTile:""" % id)
 					raise PyMSError('Importing', 'Unknown line format, expected a MegaTile header.', last_line-len(lines), line)
 				if line == 'Height:':
 					flags = []
-					for _ in xrange(4):
+					for _ in range(4):
 						flags.extend(height_flags[f] for f in get_line('Height settings', height_re, ' 4 height flags (flags = L, M, H, or ?)'))
 					importing[-1][0] = flags
 				elif line == 'Walkability:':
 					flags = []
-					for _ in xrange(4):
+					for _ in range(4):
 						flags.extend(bool_flags[f] for f in get_line('Walkability settings', bool_re, ' 4 walkability flags (1 = Walkable, 0 = Not, or ?)'))
 					importing[-1][1] = flags
 				elif line == 'Block Sight:':
 					flags = []
-					for _ in xrange(4):
+					for _ in range(4):
 						flags.extend(bool_flags[f] for f in get_line('Block Sight settings', bool_re, ' 4 block sight flags (1 = Blocked, 0 = Not, or ?)'))
 					importing[-1][2] = flags
 				elif line == 'Ramp:':
 					flags = []
-					for _ in xrange(4):
+					for _ in range(4):
 						flags.extend(bool_flags[f] for f in get_line('Ramp settings', bool_re, ' 4 ramp flags (1 = Ramp(?), 0 = Not)'))
 					importing[-1][3] = flags
 				else:
@@ -750,11 +750,11 @@ MegaTile:""" % id)
 			data = importing[settings_n]
 			if tiletype == TILETYPE_GROUP:
 				_,_,data = data
-				for n in xrange(13):
+				for n in range(13):
 					if data[n] != None:
 						self.cv5.groups[id][n] = data[n]
 			else:
-				for mini_n in xrange(16):
+				for mini_n in range(16):
 					flags = self.vf4.flags[id][mini_n]
 					if data[0] != None and data[0][mini_n] != None:
 						flags &= ~(HEIGHT_MID | HEIGHT_HIGH)

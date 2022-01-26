@@ -28,7 +28,7 @@ class ImportListDialog(PyMSDialog):
 				image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % btn[0]))
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2], couriernew)
+				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 			else:

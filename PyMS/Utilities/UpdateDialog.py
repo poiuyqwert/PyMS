@@ -17,8 +17,8 @@ class UpdateDialog(PyMSDialog):
 			if remindme == True or remindme != VERSIONS['PyMS']:
 				try:
 					versions = json.loads(urllib.urlopen(VERSIONS_URL).read())
-					PyMS_version = versions['PyMS']
-					program_version = versions[program]
+					PyMS_version = SemVer(versions['PyMS'])
+					program_version = SemVer(versions[program])
 				except:
 					return
 				if VERSIONS['PyMS'] < PyMS_version or VERSIONS[program] < program_version:
@@ -36,7 +36,7 @@ class UpdateDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
 	def widgetize(self):
-		if VERSIONS[self.program] < self.versions[self.program]:
+		if SemVer(VERSIONS[self.program]) < SemVer(self.versions[self.program]):
 			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,VERSIONS[self.program],self.versions[self.program])	
 		else:
 			text = "Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (VERSIONS['PyMS'],self.versions['PyMS'])
@@ -59,3 +59,27 @@ class UpdateDialog(PyMSDialog):
 		PYMS_SETTINGS.remindme = [VERSIONS['PyMS'],1][self.remind.get()]
 		PYMS_SETTINGS.save()
 		PyMSDialog.ok(self)
+
+class SemVer(object):
+	def __init__(self, version):
+		self.meta = None
+		if '-' in version:
+			version,self.meta = version.split('-')
+		components = (int(c) for c in version.split('.'))
+		self.major, self.minor, self.patch = components
+
+	def __lt__(self, other):
+		if not isinstance(other, SemVer):
+			return False
+		if self.major < other.major:
+			return True
+		elif self.major > other.major:
+			return False
+		if self.minor < other.minor:
+			return True
+		elif self.minor > other.minor:
+			return False
+		if self.patch < other.patch:
+			return True
+		elif self.patch > other.patch:
+			return False

@@ -126,7 +126,7 @@ class PyMPQ(MainWindow):
 		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','find.gif'))
 		self.find_button = Button(filter, image=image, width=20, height=20, command=self.dofilter, state=DISABLED)
 		self.find_button.image = image
-		self.find_button.tooltip = Tooltip(self.find_button, 'List Matches')
+		Tooltip(self.find_button, 'List Matches')
 		self.find_button.pack(side=LEFT, padx=2)
 		Radiobutton(filter, text='Regex', variable=self.regex, value=1).pack(side=RIGHT)
 		Radiobutton(filter, text='Wildcard', variable=self.regex, value=0).pack(side=RIGHT)
@@ -194,7 +194,7 @@ class PyMPQ(MainWindow):
 				button['command'] = lambda c=column: self.sort(c)
 			button['compound'] = LEFT
 		attributes_column_button,_ = self.listbox.columns[ColumnID.Attributes]
-		attributes_column_button.tooltip = Tooltip(attributes_column_button, 'Attributes:\n C = Compressed\n E = Encrypted\n X = Adjust CryptKey')
+		Tooltip(attributes_column_button, 'Attributes:\n C = Compressed\n E = Encrypted\n X = Adjust CryptKey')
 		self.update_columns()
 		self.update_list()
 		self.listbox.pack(fill=BOTH, expand=1)

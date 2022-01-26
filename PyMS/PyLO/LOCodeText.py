@@ -35,7 +35,7 @@ class LOCodeText(CodeText):
 		num = '(?<!\\w)(?P<Number>%s)(?!\\w)' % SIGNED_INT
 		operators = '(?P<Operators>[():,])'
 		self.basic = re.compile('|'.join((comment, header, num, operators, '(?P<Newline>\\n)')), re.M)
-		self.tooltip = CodeTooltip(self)
+		CodeTooltip(self)
 		self.tags = deepcopy(self.highlights)
 
 	def colorize(self):

@@ -189,7 +189,7 @@ class PyBIN(MainWindow):
 		titleframe = Frame(leftframe)
 		Label(titleframe, text='Widgets:', anchor=W).pack(side=LEFT)
 		self.scr_check = Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=lambda: self.scr_toggled(), state=DISABLED)
-		self.scr_check.tooltip = Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
+		Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
 		self.scr_check.pack(side=RIGHT, padx=(0,20))
 		titleframe.grid(row=0, column=0, sticky=EW)
 

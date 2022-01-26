@@ -2182,7 +2182,7 @@ class PyMAP(Tk):
 				image = PhotoImage(file=os.path.join(BASE_DIR,'Images','%s.gif' % btn[0]))
 				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
 				button.image = image
-				button.tooltip = Tooltip(button, btn[2])
+				Tooltip(button, btn[2])
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
 				a = btn[4]
