@@ -16,6 +16,7 @@ from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.Notebook import Notebook
 from ..Utilities.MPQHandler import MPQHandler
@@ -90,26 +91,26 @@ class PySPK(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('importc', self.iimport, 'Import from BMP', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('exportc', self.export, 'Export to BMP', Ctrl.e, enabled=False, identifier='export')
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, identifier='export')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('fwp', self.preview, 'Preview', Ctrl.l, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('fwp'), self.preview, 'Preview', Ctrl.l, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('asc3topyai', self.mpqsettings, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PySPK')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		frame = Frame(self)
@@ -126,14 +127,14 @@ class PySPK(MainWindow):
 		listbox.pack(side=TOP, padx=5, fill=X, expand=1)
 
 		self.edit_toolbar = Toolbar(f)
-		self.edit_toolbar.add_button('add', self.add_layer, 'Add Layer', Key.Insert, enabled=False, identifier='add')
-		self.edit_toolbar.add_button('remove', self.remove_layer, 'Remove Layer', Key.Delete, enabled=False, tags='layer_selected')
+		self.edit_toolbar.add_button(Assets.get_image('add'), self.add_layer, 'Add Layer', Key.Insert, enabled=False, identifier='add')
+		self.edit_toolbar.add_button(Assets.get_image('remove'), self.remove_layer, 'Remove Layer', Key.Delete, enabled=False, tags='layer_selected')
 		self.edit_toolbar.add_spacer(2, flexible=True)
-		self.edit_toolbar.add_button('up', lambda: self.move_layer(-1), 'Move Layer Up', enabled=False, identifier='up')
-		self.edit_toolbar.add_button('down', lambda: self.move_layer(1), 'Move Layer Down', enabled=False, identifier='down')
+		self.edit_toolbar.add_button(Assets.get_image('up'), lambda: self.move_layer(-1), 'Move Layer Up', enabled=False, identifier='up')
+		self.edit_toolbar.add_button(Assets.get_image('down'), lambda: self.move_layer(1), 'Move Layer Down', enabled=False, identifier='down')
 		self.edit_toolbar.add_gap()
-		self.edit_toolbar.add_checkbutton('lock', self.autolock, 'Auto-lock', enabled=False, tags='file_open')
-		self.edit_toolbar.add_checkbutton('eye', self.autovis, 'Auto-visibility', enabled=False, tags='file_open')
+		self.edit_toolbar.add_checkbutton(Assets.get_image('lock'), self.autolock, 'Auto-lock', enabled=False, tags='file_open')
+		self.edit_toolbar.add_checkbutton(Assets.get_image('eye'), self.autovis, 'Auto-visibility', enabled=False, tags='file_open')
 		self.edit_toolbar.pack(side=TOP, fill=X, padx=2)
 
 		f.pack(padx=2, pady=2, expand=1, fill=BOTH)

@@ -3,7 +3,7 @@ from utils import is_mac
 from UIKit import *
 from EventPattern import *
 
-class Tooltip:
+class Tooltip(object):
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
 	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=False, attach_to_parent=True):
 		self.parent = parent

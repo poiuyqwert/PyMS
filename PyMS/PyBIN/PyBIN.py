@@ -13,6 +13,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import SettingDict, Settings
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.TreeList import TreeList
 from ..Utilities.DropDown import DropDown
@@ -117,24 +118,24 @@ class PyBIN(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('import', self.iimport, 'Import from TXT', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('export', self.export, 'Export to TXT', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('asc3topyai', self.mpqsettings, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F4)
-		self.toolbar.add_button('about', self.about, 'About PyBIN')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.show_preview_settings = BooleanVar()
@@ -201,14 +202,14 @@ class PyBIN(MainWindow):
 		self.widgetTree.bind(Double.Click_Left, self.list_double_click)
 
 		self.widgets_toolbar = Toolbar(leftframe)
-		self.widgets_toolbar.add_button('add', self.add_node, 'Add Widget', enabled=False, identifier='add')
-		self.widgets_toolbar.add_button('remove', self.remove_node, 'Remove Selected', enabled=False, identifier='remove')
-		self.widgets_toolbar.add_button('edit', self.edit_node_settings, 'Edit Widget', enabled=False, identifier='edit')
+		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, identifier='add')
+		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Selected', enabled=False, identifier='remove')
+		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', enabled=False, identifier='edit')
 		self.widgets_toolbar.add_spacer(2, flexible=True)
-		self.widgets_toolbar.add_button('arrow', self.toggle_preview_settings, 'Toggle Preview Settings', identifier='settings_toggle')
+		self.widgets_toolbar.add_button(Assets.get_image('arrow'), self.toggle_preview_settings, 'Toggle Preview Settings', identifier='settings_toggle')
 		self.widgets_toolbar.add_spacer(2, flexible=True)
-		self.widgets_toolbar.add_button('up', lambda: self.move_node(-1), 'Move Widget Up', enabled=False, identifier='up')
-		self.widgets_toolbar.add_button('down', lambda: self.move_node(2), 'Move Widget Down', enabled=False, identifier='down')
+		self.widgets_toolbar.add_button(Assets.get_image('up'), lambda: self.move_node(-1), 'Move Widget Up', enabled=False, identifier='up')
+		self.widgets_toolbar.add_button(Assets.get_image('down'), lambda: self.move_node(2), 'Move Widget Down', enabled=False, identifier='down')
 		self.widgets_toolbar.grid(row=2, column=0, padx=1, pady=1, sticky=EW)
 
 		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')

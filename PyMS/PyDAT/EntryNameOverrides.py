@@ -6,6 +6,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.EventPattern import *
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.PyMSError import PyMSError
 
@@ -25,8 +26,8 @@ class EntryNameOverrides(PyMSDialog):
 
 	def widgetize(self):
 		toolbar = Toolbar(self)
-		toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.s)
+		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
 		toolbar.pack(side=TOP, fill=X)
 
 		self.listbox = ScrolledListbox(self, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)

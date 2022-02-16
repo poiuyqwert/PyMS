@@ -19,7 +19,7 @@ class ConditionsTooltip(CodeTooltip):
   Short: Any number in the range 0 to 65535
   Byte: Any number in the range 0 to 255"""
 			return text
-		params = self.widget.toplevel.trg.condition_parameters[self.widget.toplevel.trg.conditions.index(condition)]
+		params = self.parent.toplevel.trg.condition_parameters[self.parent.toplevel.trg.conditions.index(condition)]
 		pinfo = ''
 		if params:
 			pinfo = '\n\n'
@@ -47,7 +47,7 @@ class ActionsTooltip(CodeTooltip):
   Short: Any number in the range 0 to 65535
   Byte: Any number in the range 0 to 255"""
 			return text
-		params = self.widget.toplevel.trg.action_parameters[self.widget.toplevel.trg.actions.index(action)]
+		params = self.parent.toplevel.trg.action_parameters[self.parent.toplevel.trg.actions.index(action)]
 		pinfo = ''
 		if params:
 			pinfo = '\n\n'
@@ -66,7 +66,7 @@ class TrigPlugActionsTooltip(CodeTooltip):
 
 	def gettext(self, action):
 		text = 'TrigPlug Action:\n  %s(' % action
-		params = self.widget.toplevel.trg.new_action_parameters[self.widget.toplevel.trg.new_actions.index(action)]
+		params = self.parent.toplevel.trg.new_action_parameters[self.parent.toplevel.trg.new_actions.index(action)]
 		pinfo = ''
 		if params:
 			pinfo = '\n\n'

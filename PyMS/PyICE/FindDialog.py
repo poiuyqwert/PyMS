@@ -10,8 +10,6 @@ class FindDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Find', grabwait=False)
 
 	def widgetize(self):
-		self.minsize(330,160)
-
 		self.lists = []
 		self.find = StringVar()
 		self.regex = IntVar()
@@ -47,9 +45,11 @@ class FindDialog(PyMSDialog):
 
 		self.bind(Key.Return, self.search)
 
-		self.parent.settings.windows.load_window_size('find', self)
-
 		return self.findentry
+
+	def setup_complete(self):
+		self.minsize(330,160)
+		self.parent.settings.windows.load_window_size('find', self)
 
 	def action_states(self, e=None):
 		if not self.treelist.cur_selection() == -1:
@@ -115,6 +115,6 @@ class FindDialog(PyMSDialog):
 			self.lists[g].listbox.event_generate('<<ListboxSelect>>')
 		self.ok()
 
-	def ok(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('find', self)
-		PyMSDialog.ok(self)
+		PyMSDialog.dismiss(self)

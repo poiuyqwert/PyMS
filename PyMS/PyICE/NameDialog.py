@@ -32,4 +32,4 @@ class NameDialog(PyMSDialog):
 
 	def dismiss(self):
 		self.parent.settings.windows.generator.save_window_size('name', self)
-		return PyMSDialog.dismiss(self)
+		PyMSDialog.dismiss(self)

@@ -83,10 +83,9 @@ class SMKSettings(PyMSDialog):
 
 		self.grid_columnconfigure(0, weight=1)
 
+	def setup_complete(self):
 		self.minsize(400,160)
 		self.maxsize(9999,160)
-
-	def setup_complete(self):
 		self.load_settings()
 		self.load_properties()
 
@@ -166,9 +165,12 @@ class SMKSettings(PyMSDialog):
 		self.parent.update_smks()
 
 	def ok(self):
-		self.save_settings()
 		self.update_preview()
 		PyMSDialog.ok(self)
 
 	def cancel(self):
 		self.ok()
+
+	def dismiss(self):
+		self.save_settings()
+		PyMSDialog.dismiss(self)

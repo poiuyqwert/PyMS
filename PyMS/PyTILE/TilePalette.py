@@ -258,7 +258,7 @@ class TilePalette(PyMSDialog):
 		elif self.tiletype == TILETYPE_MINI:
 			MiniEditor.MiniEditor(self, self.palette.selected[0])
 
-	def ok(self):
+	def dismiss(self):
 		self.settings.windows.palette.save_window_size(('group','mega','mini')[self.tiletype], self)
 		if hasattr(self.delegate,'selecting'):
 			self.delegate.selecting = None
@@ -269,7 +269,4 @@ class TilePalette(PyMSDialog):
 		TilePalette.OPEN_PALETTE_COUNT -= 1
 		if not TilePalette.OPEN_PALETTE_COUNT:
 			TilePalette.TILE_CACHE.clear()
-		PyMSDialog.ok(self)
-
-	def cancel(self):
-		self.ok()
+		PyMSDialog.dismiss(self)

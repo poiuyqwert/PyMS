@@ -49,6 +49,7 @@ class PreviewDialog(PyMSDialog):
 		self.bind(Key.Left, lambda e: scroll_map(None, True,1))
 		self.bind(Key.Right, lambda e: scroll_map(None, True,-1))
 
+	def setup_complete(self):
 		self.parent.settings.windows.load_window_size('preview', self)
 
 		self.load_viewport()
@@ -80,6 +81,6 @@ class PreviewDialog(PyMSDialog):
 							py += 480
 						self.canvas.coords(self.items[star], x+px,y+py)
 
-	def cancel(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('preview', self)
-		PyMSDialog.cancel(self)
+		PyMSDialog.dismiss(self)

@@ -14,6 +14,7 @@ from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
@@ -64,29 +65,29 @@ class PyLO(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('import', self.iimport, 'Import LO?', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import LO?', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('export', self.export, 'Export LO?', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button('test', self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export LO?', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(5)
-		self.toolbar.add_button('find', self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('colors', self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('asc3topyai', self.mpqsettings, 'Manage MPQ Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage MPQ Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyLO')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyLO')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		m = Frame(self)
@@ -262,15 +263,6 @@ class PyLO(MainWindow):
 				else:
 					self.saveas()
 
-	# def select_file(self, title, open=True, ext='.loa', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox'),('All Files','*')]):
-	# 	path = self.settings.get('lastpath', BASE_DIR)
-	# 	self._pyms__window_blocking = True
-	# 	file = [tkFileDialog.asksaveasfilename,tkFileDialog.askopenfilename][open](parent=self, title=title, defaultextension=ext, filetypes=filetypes, initialdir=path)
-	# 	self._pyms__window_blocking = False
-	# 	if file:
-	# 		self.settings['lastpath'] = os.path.dirname(file)
-	# 	return file
-
 	def is_file_open(self):
 		return not not self.lo
 
@@ -369,7 +361,7 @@ class PyLO(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.select_file('Open LO')
+				file = self.settings.lastpath.lo.select_open_file(self, title='Open LO', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox')])
 				if not file:
 					return
 			lo = LO()
@@ -398,7 +390,7 @@ class PyLO(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.select_file('Import TXT', True, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
 			if not file:
 				return
 			try:
@@ -440,7 +432,7 @@ class PyLO(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.select_file('Save LO As', False)
+		file = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox')])
 		if not file:
 			return True
 		self.file = file
@@ -449,7 +441,7 @@ class PyLO(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.select_file('Export TXT', False, '*.txt', [('Text Files','*.txt'),('All Files','*')])
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
 		if not file:
 			return True
 		try:

@@ -63,9 +63,10 @@ class FindReplaceDialog(PyMSDialog):
 
 		self.bind(Focus.In, lambda e,i=3: self.check(i))
 
-		self.parent.settings.windows.load_window_size('findreplacewindow', self)
-
 		return self.findentry
+
+	def setup_complete(self):
+		self.parent.settings.windows.load_window_size('findreplacewindow', self)
 
 	def check(self, i):
 		if i == 1:

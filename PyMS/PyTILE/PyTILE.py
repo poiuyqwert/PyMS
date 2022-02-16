@@ -14,6 +14,7 @@ from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FlowView import FlowView
 from ..Utilities.MaskCheckbutton import MaskCheckbutton
@@ -62,18 +63,18 @@ class PyTILE(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('find', lambda *_: self.choose(TILETYPE_GROUP), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TILETYPE_GROUP), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.cv5 editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyTILE')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.cv5 editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTILE')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.disable = []
@@ -350,7 +351,7 @@ class PyTILE(MainWindow):
 				'megatiles_export_block_sight': self.copy_mega_sight.get(),
 				'megatiles_export_ramp': self.copy_mega_ramp.get(),
 			}
-			if not max(options.values):
+			if not max(options.values()):
 				return
 			group = self.tileset.cv5.groups[self.palette.selected[0]]
 			mega = group[13][self.palette.sub_selection]
@@ -438,7 +439,7 @@ class PyTILE(MainWindow):
 					'groups_export_doodad_height': self.copy_doodadgroup_doodad.get(),
 					'groups_export_unknown12': self.copy_doodadgroup_unknown12.get(),
 				}
-			if not max(options.values):
+			if not max(options.values()):
 				return
 			f = FFile()
 			self.tileset.export_settings(TILETYPE_GROUP, f, [group], options)

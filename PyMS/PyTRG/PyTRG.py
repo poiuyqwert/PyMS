@@ -13,6 +13,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
@@ -61,30 +62,30 @@ class PyTRG(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('import', self.iimport, 'Import TRG', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('savegottrg', self.savegottrg, 'Save *.got Compatable *.trg', Ctrl.g, enabled=False, tags='file_open')
-		self.toolbar.add_button('export', self.export, 'Export TRG', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button('test', self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', Ctrl.g, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export TRG', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('find', self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('colors', self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('asc3topyai', self.tblbin, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyTRG')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.completing = False

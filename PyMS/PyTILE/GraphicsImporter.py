@@ -129,6 +129,7 @@ class GraphicsImporter(PyMSDialog):
 		self.update_states()
 
 		return self.import_button
+
 	def setup_complete(self):
 		self.settings.windows['import'].graphics.load_window_size(('group','mega','mini')[self.tiletype], self)
 

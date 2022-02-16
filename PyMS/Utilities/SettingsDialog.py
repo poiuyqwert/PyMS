@@ -24,7 +24,6 @@ class SettingsDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Settings')
 
 	def widgetize(self):
-		self.minsize(*self.min_size)
 		if self.data:
 			self.tabs = Notebook(self)
 			if self.mpqhandler:
@@ -50,6 +49,7 @@ class SettingsDialog(PyMSDialog):
 		return ok
 
 	def setup_complete(self):
+		self.minsize(*self.min_size)
 		if isinstance(self.settings, SettingDict):
 			self.settings.windows.settings.load_window_size('main', self)
 		elif 'settingswindow' in self.settings:

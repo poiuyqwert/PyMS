@@ -215,6 +215,6 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry.c
 
-	def destroy(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('findreplace', self)
-		PyMSDialog.withdraw(self)
+		PyMSDialog.dismiss(self)

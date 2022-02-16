@@ -30,6 +30,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 
@@ -68,28 +69,28 @@ class PyDAT(MainWindow):
 		self.data_context.load_palettes()
 
 		toolbar = Toolbar(self)
-		toolbar.add_button('new', self.new, 'New', Ctrl.n)
+		toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		toolbar.add_gap()
-		toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		toolbar.add_button('openfolder', self.opendirectory, 'Open Directory', Ctrl.d)
-		toolbar.add_button('import', self.iimport, 'Import from TXT', Ctrl.i)
-		toolbar.add_button('openmpq', self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
+		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', Ctrl.d)
+		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
+		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
 		toolbar.add_gap()
-		toolbar.add_button('save', self.save, 'Save', Ctrl.s)
-		toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.s)
-		toolbar.add_button('export', self.export, 'Export to TXT', Ctrl.e)
-		toolbar.add_button('savempq', self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=SFMPQ_LOADED)
+		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
+		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
+		toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e)
+		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=SFMPQ_LOADED)
 		toolbar.add_section()
-		toolbar.add_button('idsort', self.override_name, 'Name Overrides', Shift.Ctrl.n)
+		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', Shift.Ctrl.n)
 		toolbar.add_section()
-		toolbar.add_button('asc3topyai', self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
-		toolbar.add_button('debug', self.open_files, 'Reload data files', Ctrl.r)
+		toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
+		toolbar.add_button(Assets.get_image('debug'), self.open_files, 'Reload data files', Ctrl.r)
 		toolbar.add_section()
-		toolbar.add_button('register', self.register, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		toolbar.add_button('help', self.help, 'Help', Key.F1)
-		toolbar.add_button('about', self.about, 'About PyDAT')
+		toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		toolbar.add_section()
-		toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)

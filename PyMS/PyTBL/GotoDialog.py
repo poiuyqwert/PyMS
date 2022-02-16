@@ -21,9 +21,10 @@ class GotoDialog(PyMSDialog):
 
 		self.bind('<Return>', self.jump)
 
-		self.parent.settings.windows.load_window_size('goto', self)
-
 		return self.gotoentry
+
+	def setup_complete(self):
+		self.parent.settings.windows.load_window_size('goto', self)
 
 	def jump(self, event=None):
 		s = self.goto.get(True)
@@ -35,6 +36,6 @@ class GotoDialog(PyMSDialog):
 		self.parent.listbox.see(i)
 		self.parent.update()
 
-	def destroy(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('goto', self)
-		self.withdraw()
+		PyMSDialog.dismiss(self)

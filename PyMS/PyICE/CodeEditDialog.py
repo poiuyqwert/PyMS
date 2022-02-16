@@ -20,7 +20,8 @@ from ..Utilities.WarningDialog import WarningDialog
 import os
 
 class CodeEditDialog(PyMSDialog):
-	def __init__(self, parent, ids):
+	def __init__(self, parent, settings, ids):
+		self.settings = settings
 		self.ids = ids
 		self.decompile = ''
 		self.file = None
@@ -103,11 +104,12 @@ class CodeEditDialog(PyMSDialog):
 		Label(statusbar, textvariable=self.scriptstatus, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		statusbar.pack(side=BOTTOM, fill=X)
 
+		return self.text
+
+	def setup_complete(self):
 		self.after(1, self.load)
 
-		self.parent.settings.windows.load_window_size('codeedit', self)
-
-		return self.text
+		self.settings.windows.load_window_size('codeedit', self)
 
 	def gotosection(self, e, i):
 		c = [self.text.tag_prevrange, self.text.tag_nextrange][i % 2]
@@ -212,9 +214,9 @@ class CodeEditDialog(PyMSDialog):
 		self.text.edited = False
 		self.editstatus['state'] = DISABLED
 
-	def ok(self):
-		self.parent.settings.windows.save_window_size('codeedit', self)
-		PyMSDialog.ok(self)
+	def dismiss(self):
+		self.settings.windows.save_window_size('codeedit', self)
+		PyMSDialog.dismiss(self)
 
 	def checkframes(self, grp):
 		if os.path.exists(grp):
@@ -264,14 +266,14 @@ class CodeEditDialog(PyMSDialog):
 			self.title('IScript Editor [%s]' % self.file)
 
 	def exportas(self, e=None):
-		file = self.parent.select_file('Export Code', False, '.txt', [('Text Files','*.txt'),('All Files','*')], self)
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export Code', filetypes=[('Text Files','*.txt'),('All Files','*')])
 		if not file:
 			return
 		self.file = file
 		self.export()
 
 	def iimport(self, e=None):
-		iimport = self.parent.select_file('Import From', True, '.txt', [('Text Files','*.txt'),('All Files','*')], self)
+		iimport = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import From', filetypes=[('Text Files','*.txt'),('All Files','*')])
 		if iimport:
 			try:
 				f = open(iimport, 'r')

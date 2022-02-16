@@ -48,9 +48,10 @@ class FindDialog(PyMSDialog):
 
 		self.bind('<Return>', self.findnext)
 
-		self.parent.settings.windows.load_window_size('find', self)
-
 		return self.findentry
+
+	def setup_complete(self):
+		self.parent.settings.windows.load_window_size('find', self)
 
 	def findnext(self, key=None):
 		self.updatecolor()
@@ -116,6 +117,6 @@ class FindDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry.c
 
-	def destroy(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('find', self)
-		self.withdraw()
+		PyMSDialog.dismiss(self)

@@ -8,28 +8,21 @@ import os
 class Toolbar(Frame):
 	# Use `bind_target=<widget>` to adjust where shortcuts are bound, otherwise `self.master` will be used
 	def __init__(self, *args, **kwargs):
-		self._buttons = {}
-		self._tags = {}
-		self._bind_target = None
+		self._buttons = {} # type: dict[str, Widget]
+		self._tags = {} # type: dict[str, list[Widget]]
+		self._bind_target = None # type: Widget
 		if 'bind_target' in kwargs:
 			self._bind_target = kwargs['bind_target']
 			del kwargs['bind_target']
 		Frame.__init__(self, *args, **kwargs)
 		if not self._bind_target:
 			self._bind_target = self.master
+		self._row = None # type: Frame
+		self.add_row()
 
-	def _process_icon(self, icon):
-		if isinstance(icon, PhotoImage):
-			return icon
-		if isstr(icon):
-			try:
-				if os.path.exists(icon):
-					return PhotoImage(file=icon)
-				else:
-					return PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', '%s.gif' % icon))
-			except:
-				pass
-		return None
+	def add_row(self):
+		self._row = Frame(self)
+		self._row.pack(side=TOP, fill=X, pady=(0,2))
 
 	def _add_button(self, button, tooltip, identifier, tags):
 		Tooltip(button, tooltip)
@@ -46,8 +39,7 @@ class Toolbar(Frame):
 					self._tags[tag].append(button)
 
 	def add_button(self, icon, callback, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
-		icon = self._process_icon(icon)
-		button = Button(self, image=icon, width=20, height=20, command=callback, state=NORMAL if enabled else DISABLED)
+		button = Button(self._row, image=icon, width=20, height=20, command=callback, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:
@@ -62,8 +54,7 @@ class Toolbar(Frame):
 		return button
 
 	def add_radiobutton(self, icon, variable, value, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
-		icon = self._process_icon(icon)
-		button = Radiobutton(self, image=icon, width=20, height=20, variable=variable, value=value, indicatoron=0, state=NORMAL if enabled else DISABLED)
+		button = Radiobutton(self._row, image=icon, width=20, height=20, variable=variable, value=value, indicatoron=0, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:
@@ -78,8 +69,7 @@ class Toolbar(Frame):
 		return button
 
 	def add_checkbutton(self, icon, variable, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True, onvalue=True, offvalue=False):
-		icon = self._process_icon(icon)
-		button = Checkbutton(self, image=icon, width=20, height=20, variable=variable, indicatoron=0, state=NORMAL if enabled else DISABLED)
+		button = Checkbutton(self._row, image=icon, width=20, height=20, variable=variable, onvalue=onvalue, offvalue=offvalue, indicatoron=0, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:
@@ -93,11 +83,21 @@ class Toolbar(Frame):
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 
+	def add_spacer(self, width, flexible=False):
+		return Frame(self._row, width=width).pack(side=LEFT, fill=X, expand=flexible)
+
+	GAP_SIZE = 2
+	def add_gap(self):
+		return self.add_spacer(Toolbar.GAP_SIZE)
+
+	SECTION_SIZE = 10
+	def add_section(self):
+		return self.add_spacer(Toolbar.SECTION_SIZE)
+
 	def update_icon(self, identifier, icon):
 		button = self._buttons.get(identifier)
 		if not button:
 			return
-		icon = self._process_icon(icon)
 		button['image'] = icon
 		button._image = icon
 
@@ -109,14 +109,3 @@ class Toolbar(Frame):
 	def tag_enabled(self, tag, is_enabled):
 		for button in self._tags.get(tag, ()):
 			button['state'] = NORMAL if is_enabled else DISABLED
-
-	def add_spacer(self, width, flexible=False):
-		return Frame(self, width=width).pack(side=LEFT, fill=X, expand=flexible)
-
-	GAP_SIZE = 2
-	def add_gap(self):
-		return self.add_spacer(Toolbar.GAP_SIZE)
-
-	SECTION_SIZE = 10
-	def add_section(self):
-		return self.add_spacer(Toolbar.SECTION_SIZE)

@@ -10,6 +10,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -39,26 +40,26 @@ class PyPCX(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('exportc', self.export, 'Export as BMP', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button('importc', self.iimport, 'Import BMP', Ctrl.i),
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export as BMP', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', Ctrl.i),
 		self.toolbar.add_section()
-		self.toolbar.add_button('colors', self.loadpal, 'Import a palette', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveriff', lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button('savejasc', lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button('savepal', lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button('savewpe', lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveact', lambda: self.savepal(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import a palette', Ctrl.Alt.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.savepal(file_type=Palette.FileType.jasc), 'Save Palette as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.pcx editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyPCX')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pcx editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPCX')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		#Canvas

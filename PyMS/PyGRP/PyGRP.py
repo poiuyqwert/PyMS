@@ -13,6 +13,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
@@ -83,24 +84,24 @@ class PyGRP(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exportc', self.exports, 'Export Selected Frames', Ctrl.e, enabled=False, tags='frame_selected')
-		self.toolbar.add_button('importc', self.imports, 'Import Frames', Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Selected Frames', Ctrl.e, enabled=False, tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('remove', self.remove, 'Remove Frames', Key.Delete, enabled=False, tags='frame_selected')
-		self.toolbar.add_button('up', lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, identifier='up', tags='frame_selected')
-		self.toolbar.add_button('down', lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, identifier='down', tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', Key.Delete, enabled=False, tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, identifier='up', tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, identifier='down', tags='frame_selected')
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyGRP')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		frame = Frame(self)
@@ -157,17 +158,17 @@ class PyGRP(MainWindow):
 
 		#Frameviewing
 		self.controls = Toolbar(rightframe)
-		self.controls.add_button('begin', lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
-		self.controls.add_button('frw', lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Up', enabled=False, tags='can_preview')
-		self.controls.add_button('rw', lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Up', enabled=False, tags='can_preview')
-		self.controls.add_button('frwp', lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Up', enabled=False, tags='can_preview')
-		self.controls.add_button('rwp', lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Up', enabled=False, tags='can_preview')
-		self.controls.add_button('stop', lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, identifier='stop', tags='can_preview')
-		self.controls.add_button('fwp', lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Down', enabled=False, tags='can_preview')
-		self.controls.add_button('ffwp', lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Down', enabled=False, tags='can_preview')
-		self.controls.add_button('fw', lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Down', enabled=False, tags='can_preview')
-		self.controls.add_button('ffw', lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 frames Down', enabled=False, tags='can_preview')
-		self.controls.add_button('end', lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Up', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Up', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Up', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Up', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, identifier='stop', tags='can_preview')
+		self.controls.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Down', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Down', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Down', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('ffw'), lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 frames Down', enabled=False, tags='can_preview')
+		self.controls.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.controls.pack(padx=1, pady=1)
 
 		self.prevspeed = IntegerVar(self.settings.preview.get('speed', 150), [1,5000])

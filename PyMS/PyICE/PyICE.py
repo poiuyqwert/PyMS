@@ -13,6 +13,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
@@ -84,28 +85,28 @@ class PyICE(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n),
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('opendefault', self.open_default, 'Open Default Scripts', Ctrl.d)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n),
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('export', self.export, 'Export Entries', Ctrl.Alt.e, enabled=False, tags='entries_selected')
-		self.toolbar.add_button('import', self.iimport, 'Import Entries', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button('listimport', self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', Ctrl.Alt.e, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', Ctrl.Alt.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='entries_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('find', self.find, 'Find Entries', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('codeedit', self.codeedit, 'Edit IScript entries', Ctrl.e, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', Ctrl.e, enabled=False, tags='entries_selected')
 		self.toolbar.add_section()
-		self.toolbar.add_button('asc3topyai', self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE),
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyICE'),
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE),
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE'),
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		#listbox,etc.
@@ -411,7 +412,7 @@ class PyICE(MainWindow):
 	def listimport(self, key=None):
 		if not self.is_file_open():
 			return
-		ImportListDialog(self)
+		ImportListDialog(self, self.settings)
 
 	def close(self, key=None):
 		if not self.is_file_open():
@@ -435,7 +436,7 @@ class PyICE(MainWindow):
 		selected_iscript_ids = self.selected_iscript_ids()
 		if not selected_iscript_ids:
 			return
-		CodeEditDialog(self, selected_iscript_ids)
+		CodeEditDialog(self, self.settings, selected_iscript_ids)
 
 	def tblbin(self, key=None, err=None):
 		data = [

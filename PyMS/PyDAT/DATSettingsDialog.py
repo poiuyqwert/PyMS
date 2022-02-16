@@ -9,7 +9,6 @@ class DATSettingsDialog(SettingsDialog):
 	def widgetize(self):
 		self.custom = IntVar()
 		self.custom.set(self.settings.settings.get('customlabels', False))
-		self.minsize(*self.min_size)
 		self.tabs = Notebook(self)
 		self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpqs, self.settings)
 		self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')

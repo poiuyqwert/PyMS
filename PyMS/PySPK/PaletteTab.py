@@ -8,6 +8,7 @@ from ..Utilities.utils import BASE_DIR, parse_scrollregion
 from ..Utilities.UIKit import *
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
@@ -39,12 +40,12 @@ class PaletteTab(NotebookTab):
 		scrollframe.pack(side=TOP, padx=2, fill=Y, expand=1)
 
 		self.toolbar = Toolbar(self, bind_target=self.toplevel)
-		self.toolbar.add_radiobutton('select', self.toplevel.tool, Tool.Select, 'Select', Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton('arrows', self.toplevel.tool, Tool.Move, 'Move', Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton('pencil', self.toplevel.tool, Tool.Draw, 'Draw', Key.p, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.toplevel.tool, Tool.Select, 'Select', Key.m, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.toplevel.tool, Tool.Move, 'Move', Key.v, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.toplevel.tool, Tool.Draw, 'Draw', Key.p, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(2, flexible=True)
-		self.toolbar.add_button('exportc', self.export_image, 'Export Star', enabled=False, tags='image_selected')
-		self.toolbar.add_button('importc', self.import_image, 'Import Star', enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
+		self.toolbar.add_button(Assets.get_image('importc'), self.import_image, 'Import Star', enabled=False, tags='file_open')
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=(2,0))
 
 	def action_states(self):
@@ -113,14 +114,14 @@ class PaletteTab(NotebookTab):
 	def export_image(self, *args):
 		if not self.toplevel.is_image_selected():
 			return
-		filepath = self.toplevel.select_file('Export Star To...', False, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+		filepath = self.toplevel.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Star To...', filetypes=[('256 Color BMP','*.bmp')])
 		if filepath:
 			bmp = BMP.BMP()
 			bmp.set_pixels(self.toplevel.selected_image.pixels, self.toplevel.platformwpe.palette)
 			bmp.save_file(filepath)
 
 	def import_image(self, *args):
-		filepath = self.toplevel.select_file('Import Star From...', True, '.bmp', [('256 Color BMP','*.bmp'),('All Files','*')])
+		filepath = self.toplevel.settings.lastpath.bmp.select_open_file(self, key='import', title='Import Star From...', filetypes=[('256 Color BMP','*.bmp')])
 		if not filepath:
 			return
 		b = BMP.BMP()

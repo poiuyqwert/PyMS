@@ -5,6 +5,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 
 import os
 
@@ -27,9 +28,9 @@ class ListfileSettings(Frame):
 
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_spacer(0, flexible=True)
-		self.toolbar.add_button('add', self.add, 'Add MPQ', Key.Insert)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add MPQ', Key.Insert)
 		self.toolbar.add_spacer(0, flexible=True)
-		self.toolbar.add_button('remove', self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='listfile_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='listfile_selected')
 		self.toolbar.add_spacer(0, flexible=True)
 		self.toolbar.pack(fill=X, padx=51, pady=1)
 

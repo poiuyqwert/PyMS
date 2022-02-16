@@ -7,6 +7,7 @@ from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -41,21 +42,21 @@ class PyPAL(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, identifier='save', tags='file_open')
-		self.toolbar.add_button('saveriff', lambda: self.saveas(file_type=Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button('savejasc', lambda: self.saveas(file_type=Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button('savepal', lambda: self.saveas(file_type=Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button('savewpe', lambda: self.saveas(file_type=Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveact', lambda: self.saveas(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, identifier='save', tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.saveas(file_type=Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.saveas(file_type=Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.saveas(file_type=Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.saveas(file_type=Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.saveas(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyPAL')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.palmenu = Menu(self, tearoff=0)

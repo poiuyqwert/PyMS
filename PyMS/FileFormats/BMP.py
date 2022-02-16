@@ -21,14 +21,14 @@ class BMP:
 
 	def load_data(self, data, issize=None):
 		if data[:2] != 'BM':
-			raise PyMSError('Load',"'%s' is not a BMP file (no BMP header)" % file)
+			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
 		try:
 			width, height, bitcount, compression, colors_used = \
 				struct.unpack('<LLxxHL12xL',data[18:50])
 			if issize and width != issize[0] and height != issize[1]:
-				raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (file,issize[0],issize[1],width,height))
+				raise PyMSError('Load', "Invalid dimensions (Expected %sx%s, got %sx%s)" % (issize[0],issize[1],width,height))
 			if bitcount != 8 or not compression in [0,1]:
-				raise PyMSError('Load',"The BMP '%s' is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all." % file)
+				raise PyMSError('Load',"The BMP is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all.")
 			if not colors_used:
 				colors_used = 256
 			palette = []
@@ -79,7 +79,7 @@ class BMP:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported BMP file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported BMP file, could possibly be corrupt")
 		self.width = width
 		self.height = height
 		self.palette = palette

@@ -20,6 +20,15 @@ class EventPattern(object):
 	def description(self):
 		return ('' if is_mac() else '+').join(field.description for field in self.fields)
 
+	# Return the last field if it is a `Keysym`
+	def get_keysym(self):
+		if not self.fields:
+			return None
+		field = self.fields[-1]
+		if not isinstance(field, Keysym):
+			return None
+		return field
+
 	def __str__(self):
 		return self.event()
 
@@ -100,11 +109,12 @@ class Events(object):
 	@classmethod
 	def modify(cls, *modifiers):
 		for attr, value in inspect.getmembers(cls, lambda member: not inspect.ismethod(member)):
-			if not attr.startswith('_') and isinstance(value, EventPattern):
-				fields = value.fields
-				if Modifier.Shift in modifiers:
-					fields = tuple(field.capitalized() if isinstance(field, Keysym) else field for field in fields)
-				setattr(cls, attr, EventPattern(*(modifiers + fields)))
+			if attr.startswith('_') or not isinstance(value, EventPattern):
+				continue
+			fields = value.fields
+			if Modifier.Shift in modifiers:
+				fields = tuple(field.capitalized() if isinstance(field, Keysym) else field for field in fields)
+			setattr(cls, attr, EventPattern(*(modifiers + fields)))
 
 class Key(Events):
 	# https://www.tcl.tk/man/tcl8.6/TkCmd/keysyms.htm

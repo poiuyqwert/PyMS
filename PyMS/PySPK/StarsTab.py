@@ -6,6 +6,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 
 import os
 
@@ -19,12 +20,12 @@ class StarsTab(NotebookTab):
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, expand=1)
 
 		self.toolbar = Toolbar(self, bind_target=self.toplevel)
-		self.toolbar.add_radiobutton('select', self.toplevel.tool, Tool.Select, 'Select', Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton('arrows', self.toplevel.tool, Tool.Move, 'Move', Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton('pencil', self.toplevel.tool, Tool.Draw, 'Draw', Key.p, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.toplevel.tool, Tool.Select, 'Select', Key.m, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.toplevel.tool, Tool.Move, 'Move', Key.v, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.toplevel.tool, Tool.Draw, 'Draw', Key.p, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(2, flexible=True)
-		self.toolbar.add_button('up', lambda: self.move_stars(-1), 'Move Stars Up', enabled=False, tags='stars_selected')
-		self.toolbar.add_button('down', lambda: self.move_stars(-1), 'Move Stars Down', enabled=False, tags='stars_selected')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.move_stars(-1), 'Move Stars Up', enabled=False, tags='stars_selected')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.move_stars(-1), 'Move Stars Down', enabled=False, tags='stars_selected')
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=(2,0))
 
 	def action_states(self):

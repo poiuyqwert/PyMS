@@ -53,8 +53,9 @@ def debug_state(states, history=[]):
 	print('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown'))
 	history.append(None)
 
+RE_GEOMETRY = re.compile(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?')
 def parse_geometry(geometry):
-	match = re.match(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?',geometry)
+	match = RE_GEOMETRY.match(geometry)
 	return tuple(None if v == None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
 
 def parse_scrollregion(scrollregion):

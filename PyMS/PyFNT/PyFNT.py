@@ -11,6 +11,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.Settings import Settings
@@ -306,22 +307,22 @@ class PyFNT(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar()
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button('save', self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button('saveas', self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('exportc', self.exports, 'Export Font', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button('importc', self.imports, 'Import Font', Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font', Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('asc3topyai', self.special, "Manage MPQ's and Special Palette", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.special, "Manage MPQ's and Special Palette", Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyFNT')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyFNT')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		frame = Frame(self)

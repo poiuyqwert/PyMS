@@ -197,6 +197,7 @@ class SettingDict(object):
 			except:
 				pass
 		else:
+			window.update_idletasks()
 			w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
 			geometry = ''
 			if default_size:

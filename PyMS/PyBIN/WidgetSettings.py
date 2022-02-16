@@ -303,10 +303,12 @@ class WidgetSettings(PyMSDialog):
 		Checkbutton(bottom, text='Advanced', variable=self.show_advanced, command=self.update_advanced).pack(side=RIGHT, padx=1, pady=3)
 		bottom.grid(row=5,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
 
+		return ok
+
+	def setup_complete(self):
 		self.load_settings()
 		self.load_properties()
 		self.update_advanced()
-		return ok
 
 	def update_advanced(self):
 		self.minsize(0,0)
@@ -484,9 +486,12 @@ class WidgetSettings(PyMSDialog):
 		self.load_property_smk()
 
 	def ok(self):
-		self.save_settings()
 		self.update_preview()
 		PyMSDialog.ok(self)
 
 	def cancel(self):
 		self.ok()
+
+	def dismiss(self):
+		self.save_settings()
+		PyMSDialog.dismiss(self)

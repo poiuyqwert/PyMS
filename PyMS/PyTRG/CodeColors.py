@@ -138,6 +138,6 @@ class CodeColors(PyMSDialog):
 		self.cont = False
 		PyMSDialog.ok(self)
 
-	def destroy(self):
+	def dismiss(self):
 		self.parent.settings.windows.save_window_size('colors', self)
-		PyMSDialog.destroy(self)
+		PyMSDialog.dismiss(self)

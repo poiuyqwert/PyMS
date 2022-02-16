@@ -7,7 +7,8 @@ from ..Utilities.Tooltip import Tooltip
 import os
 
 class ImportListDialog(PyMSDialog):
-	def __init__(self, parent):
+	def __init__(self, parent, settings):
+		self.settings = settings
 		PyMSDialog.__init__(self, parent, 'List Importing')
 
 	def widgetize(self):
@@ -57,22 +58,14 @@ class ImportListDialog(PyMSDialog):
 			self.listbox.select_set(0)
 			self.listbox.see(0)
 
-		self.minsize(200,150)
-		self.parent.settings.windows.load_window_size('listimport')
-
 		return ok
 
-	# def select_files(self):
-	# 	path = self.parent.settings.get('lastpath', BASE_DIR)
-	# 	self._pyms__window_blocking = True
-	# 	file = tkFileDialog.askopenfilename(parent=self, title='Add Imports', defaultextension='.txt', filetypes=[('Text Files','*.txt'),('All Files','*')], initialdir=path, multiple=True)
-	# 	self._pyms__window_blocking = False
-	# 	if file:
-	# 		self.parent.settings['lastpath'] = os.path.dirname(file[0])
-	# 	return file
+	def setup_complete(self):
+		self.minsize(200,150)
+		self.settings.windows.load_window_size('listimport')
 
 	def add(self, key=None):
-		iimport = self.select_files()
+		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[('Text Files','*.txt')])
 		if iimport:
 			for i in iimport:
 				if i not in self.parent.imports:
@@ -117,6 +110,6 @@ class ImportListDialog(PyMSDialog):
 			self.buttons['import']['state'] = NORMAL
 			self.importbtn['state'] = DISABLED
 
-	def ok(self):
-		self.parent.settings.windows.save_window_size('listimport', self)
-		PyMSDialog.ok(self)
+	def dismiss(self):
+		self.settings.windows.save_window_size('listimport', self)
+		PyMSDialog.dismiss(self)

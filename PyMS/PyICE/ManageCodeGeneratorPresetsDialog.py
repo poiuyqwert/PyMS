@@ -7,6 +7,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
@@ -25,17 +26,17 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.listbox.pack(side=TOP, padx=3, pady=3, fill=BOTH, expand=1)
 
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('test', self.select, 'Use Preset', tags='preset_selected')
+		self.toolbar.add_button(Assets.get_image('test'), self.select, 'Use Preset', tags='preset_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('remove', self.remove, 'Remove Preset', tags='preset_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Preset', tags='preset_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('up', lambda: self.move(-1), 'Move Up', identifier='up')
-		self.toolbar.add_button('down', lambda: self.move(1), 'Move Down', identifier='down')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.move(-1), 'Move Up', identifier='up')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.move(1), 'Move Down', identifier='down')
 		self.toolbar.add_spacer(5, flexible=True)
-		self.toolbar.add_button('edit', self.rename, 'Rename Preset', tags='preset_selected')
+		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename Preset', tags='preset_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('import', self.iimport, 'Import Preset')
-		self.toolbar.add_button('export', self.export, 'Export Preset', tags='preset_selected')
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Preset')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Preset', tags='preset_selected')
 		self.toolbar.pack(side=TOP, fill=X, padx=3)
 
 		done = Button(self, text='Done', command=self.ok)

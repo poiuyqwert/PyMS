@@ -9,21 +9,25 @@ class MainWindow(Tk.Tk):
 		self.focus_force()
 		# On Mac the main window doesn't get focused, so we use Cocoa to focus it
 		try:
-			import os
-			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps
+			from os import getpid
+			from Cocoa import NSRunningApplication, NSApplicationActivateIgnoringOtherApps # pylint: disable=no-name-in-module
 
-			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(os.getpid())
+			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(getpid())
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
 		except:
 			pass
 		self.mainloop()
 
 	def set_icon(self, name):
-		from ..utils import BASE_DIR
-		import os
+		from ...Utilities import Assets
 		try:
-			self.icon = os.path.join(BASE_DIR, 'PyMS','Images','%s.ico' % name)
+			self.icon = Assets.get_image('%s.ico' % name)
 			self.wm_iconbitmap(self.icon)
 		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR, 'PyMS','Images','%s.xbm' % name)
+			self.icon = '@%s' % Assets.image_path('%s.xbm' % name)
 			self.wm_iconbitmap(self.icon)
+
+	def destroy(self):
+		from ...Utilities import Assets
+		Assets.clear_image_cache()
+		return Tk.Tk.destroy(self)

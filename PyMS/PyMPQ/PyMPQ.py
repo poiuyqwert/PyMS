@@ -18,6 +18,7 @@ from ..Utilities.Settings import SettingDict, Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities import Assets
 from ..Utilities.TextDropDown import TextDropDown
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.ReportList import ReportList
@@ -90,27 +91,27 @@ class PyMPQ(MainWindow):
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button('new', self.new, 'New', Ctrl.n)
-		self.toolbar.add_button('open', self.open, 'Open', Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_gap()
-		self.toolbar.add_button('close', self.close, 'Close', Ctrl.w)
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w)
 		self.toolbar.add_section()
-		self.toolbar.add_button('add', self.add, 'Add Files', Ctrl.i, enabled=False, tags='mpq_open')
-		self.toolbar.add_button('openfolder', self.adddir, 'Add Directory', Ctrl.d, enabled=False, tags='mpq_open')
-		self.toolbar.add_button('remove', self.remove, 'Delete Files', Key.Delete, enabled=False, tags='file_selected')
-		self.toolbar.add_button('export', self.extract, 'Extract Files', Ctrl.e, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Files', Ctrl.i, enabled=False, tags='mpq_open')
+		self.toolbar.add_button(Assets.get_image('openfolder'), self.adddir, 'Add Directory', Ctrl.d, enabled=False, tags='mpq_open')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Delete Files', Key.Delete, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', Ctrl.e, enabled=False, tags='file_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button('edit', self.rename, 'Rename File', Ctrl.r, enabled=False, tags='file_selected')
-		self.toolbar.add_button('debug', self.compact, 'Compact Archive', Ctrl.p, enabled=False, identifier='compact')
-		# self.toolbar.add_button('insert', self.editlistfile, 'Edit Internal Listfile', Ctrl.l, enabled=False, tags='mpq_open')
+		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', Ctrl.r, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', Ctrl.p, enabled=False, identifier='compact')
+		# self.toolbar.add_button(Assets.get_image('insert'), self.editlistfile, 'Edit Internal Listfile', Ctrl.l, enabled=False, tags='mpq_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button('asc3topyai', self.mansets, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button('register', self.register, 'Set as default *.mpq editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
-		self.toolbar.add_button('help', self.help, 'Help', Key.F1)
-		self.toolbar.add_button('about', self.about, 'About PyMPQ')
+		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.mpq editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMPQ')
 		self.toolbar.add_section()
-		self.toolbar.add_button('exit', self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.regex = IntVar()

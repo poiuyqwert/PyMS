@@ -301,6 +301,7 @@ class AIBIN:
 			stat_txt = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl')
 		self.ais = OrderedDict()
 		self.aisizes = {}
+		self.bwsizes = {}
 		self.externaljumps = [[{},{}],[{},{}]]
 		self.varinfo = OrderedDict()
 		self.aiinfo = {}
@@ -950,7 +951,7 @@ class AIBIN:
 		varinfo = OrderedDict(self.varinfo)
 		aiinfo = deepcopy(self.aiinfo)
 		bwinfo = deepcopy(self.bwscript.aiinfo)
-		curinfo = None
+		curinfo = {}
 		ai = []
 		cmdn = 0
 		jumps = {}
@@ -964,7 +965,8 @@ class AIBIN:
 		findgoto = OrderedDict()
 		unused = {}
 		scriptids = [[],[]]
-		nextinfo = None
+		nextinfo = []
+		blocknames = []
 		multiline = False
 		lastmulti = [None,None]
 		loaded = []
@@ -1081,7 +1083,7 @@ class AIBIN:
 									if not nextinfo[0][nextinfo[1]][0].replace('\n',''):
 										raise PyMSError('Interpreting','The Information Comment has no text',n,line, warnings=warnings)
 									nextinfo[0][nextinfo[1]][0] = nextinfo[0][nextinfo[1]][0][:-1]
-								nextinfo = None
+								nextinfo = []
 								multiline = False
 							elif len(nextinfo) == 3:
 								nextinfo[0][nextinfo[1]][1][nextinfo[2]] += line + '\n'
@@ -1135,12 +1137,12 @@ class AIBIN:
 									if '\x00' in vinfo:
 										raise PyMSError('Interpreting','Information Comments can not contain null bytes',n,line, warnings=warnings)
 									varinfo[name][2] = vinfo
-									nextinfo = None
+									nextinfo = []
 								else:
 									nextinfo = [2,varinfo[name]]
 								continue
 							if re.match('\\A[^(]+\\([^)]+\\):\\s*(?:\\{.+\\})?\\Z', line):
-								newai = re.match('\\A(.+)\\(\s*(.+)\s*,\s*(.+)\s*,\s*(\w+)\s*\\):\\s*(?:\\{(.+)\\})?\\Z', line)
+								newai = re.match(r'\A(.+)\(\s*(.+)\s*,\s*(.+)\s*,\s*(\w+)\s*\):\s*(?:\{(.+)\})?\Z', line)
 								if not newai:
 									raise PyMSError('Interpreting','Invalid syntax, expected a new script header',n,line, warnings=warnings)
 								id = newai.group(1).encode('ascii', 'ignore')
@@ -1204,7 +1206,7 @@ class AIBIN:
 									if '\x00' in newai.group(5):
 										raise PyMSError('Interpreting','Information Comments can not contain null bytes',n,line, warnings=warnings)
 									aiinfo[id][0] = newai.group(5)
-									nextinfo = None
+									nextinfo = []
 								else:
 									nextinfo = [curinfo,id]
 								totaljumps[id] = {}
@@ -1331,9 +1333,9 @@ class AIBIN:
 									if cmd.lower() in self.separate:
 										curlabel = []
 									cmdn += 1
-									nextinfo = None
+									nextinfo = []
 									continue
-								match = re.match('\\A--\s*(.+)\s*--\\s*(?:\\{(.+)\\})?\\Z', line)
+								match = re.match(r'\A--\s*(.+)\s*--\s*(?:\{(.+)\})?\Z', line)
 								if match:
 									notused = False
 									label = match.group(1)
@@ -1389,7 +1391,7 @@ class AIBIN:
 										if '\x00' in match.group(2):
 											raise PyMSError('Interpreting','Information Comments can not contain null bytes',n,line, warnings=warnings)
 										curinfo[id][1][label] = match.group(2)
-										nextinfo = None
+										nextinfo = []
 									else:
 										nextinfo = [curinfo,id,label]
 									continue
@@ -1402,7 +1404,7 @@ class AIBIN:
 										nextinfo[0][curinfo[1]][1][curinfo[2]] = match.group(1)
 									else:
 										nextinfo[0][curinfo[1]][0] = match.group(1)
-									nextinfo = None
+									nextinfo = []
 								else:
 									multiline = True
 									lastmulti = [n,line]
@@ -1439,8 +1441,8 @@ class AIBIN:
 				if not l in curinfo[ai[0]][1]:
 					curinfo[ai[0]][1][l] = ''
 		if findtotaljumps:
-			i = findtotaljumps.peek()
-			l = i[1].peek()
+			i = (findtotaljumps.keys()[0], findtotaljumps.values()[0])
+			l = (i[1].keys()[0], i[1].values()[0])
 			raise PyMSError('Interpreting',"The external jump '%s:%s' in AI script '%s' jumps to an AI script that was not found while interpreting (you must include the scripts for all external jumps)" % (i[0],l[0],l[1][0][4]), warnings=warnings)
 		s = 2+sum(aisizes.values())
 		if s > 65535:
@@ -2126,6 +2128,7 @@ class BWBIN(AIBIN):
 		table = ''
 		offset = 4
 		totaloffsets = {}
+		warnings = []
 		for id in self.ais.keys():
 			loc,ai,_jumps = self.ais[id]
 			if loc:
@@ -2147,7 +2150,7 @@ class BWBIN(AIBIN):
 					offset += 1
 		offset = 4
 		for id in self.ais.keys():
-			loc,ai,jumps = self.ais[id]
+			loc,ai,_ = self.ais[id]
 			table += struct.pack('<4sL', id, offset)
 			for cmd in ai:
 				ais += chr(cmd[0])

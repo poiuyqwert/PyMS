@@ -66,9 +66,10 @@ class FindReplaceDialog(PyMSDialog):
 		self.bind('<Return>', self.findnext)
 		self.bind('<FocusIn>', lambda e,i=3: self.check(i))
 
-		self.parent.parent.settings.windows.load_window_size('find_replace', self)
-
 		return self.findentry
+
+	def setup_complete(self):
+		self.parent.parent.settings.windows.load_window_size('find_replace', self)
 
 	def check(self, i):
 		if i == 1:
@@ -213,6 +214,6 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry.c
 
-	def destroy(self):
+	def dismiss(self):
 		self.parent.parent.settings.windows.save_window_size('find_replace', self)
-		PyMSDialog.withdraw(self)
+		PyMSDialog.dismiss(self)
