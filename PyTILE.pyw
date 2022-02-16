@@ -1787,7 +1787,7 @@ class PyTILE(Tk):
 				'megatiles_export_block_sight': self.copy_mega_sight.get(),
 				'megatiles_export_ramp': self.copy_mega_ramp.get(),
 			}
-			if not max(options.values):
+			if not max(options.values()):
 				return
 			group = self.tileset.cv5.groups[self.palette.selected[0]]
 			mega = group[13][self.palette.sub_selection]
@@ -1874,7 +1874,7 @@ class PyTILE(Tk):
 					'groups_export_doodad_height': self.copy_doodadgroup_doodad.get(),
 					'groups_export_unknown12': self.copy_doodadgroup_unknown12.get(),
 				}
-			if not max(options.values):
+			if not max(options.values()):
 				return
 			group = self.palette.selected[0]
 			f = FFile()
