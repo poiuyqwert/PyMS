@@ -62,24 +62,28 @@ class PreviewDialog(PyMSDialog):
 				self.items[star] = item
 
 	def update_viewport(self):
-		if len(self.items):
-			x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
-			y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
-			if x != self.last_x or y != self.last_y:
-				self.last_x = x
-				self.last_y = y
-				for l,layer in enumerate(self.parent.spk.layers):
-					ratio = SPK.SPK.PARALLAX_RATIOS[l]
-					ox = int(x * ratio) % 640
-					oy = int(y * ratio) % 480
-					for star in layer.stars:
-						px = star.x - ox
-						if px < 0:
-							px += 640
-						py = star.y - oy
-						if py < 0:
-							py += 480
-						self.canvas.coords(self.items[star], x+px,y+py)
+		if not len(self.items):
+			return
+		x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
+		y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
+		if x == self.last_x and y == self.last_y:
+			return
+		self.last_x = x
+		self.last_y = y
+		for l,layer in enumerate(self.parent.spk.layers):
+			ratio = SPK.SPK.PARALLAX_RATIOS[l]
+			ox = int(x * ratio) % SPK.SPK.LAYER_SIZE[0]
+			oy = int(y * ratio) % SPK.SPK.LAYER_SIZE[1]
+			for star in layer.stars:
+				px = star.x - ox
+				if px < 0:
+					px += SPK.SPK.LAYER_SIZE[0]
+				py = star.y - oy
+				if py < 0:
+					py += SPK.SPK.LAYER_SIZE[1]
+				px -= SPK.SPK.LAYER_ORIGIN[0]
+				py -= SPK.SPK.LAYER_ORIGIN[1]
+				self.canvas.coords(self.items[star], x+px,y+py)
 
 	def dismiss(self):
 		self.parent.settings.windows.save_window_size('preview', self)
