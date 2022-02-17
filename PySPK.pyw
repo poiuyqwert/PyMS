@@ -36,7 +36,7 @@ class PreviewDialog(PyMSDialog):
 		self.items = {}
 		self.last_x = None
 		self.last_y = None
-		PyMSDialog.__init__(self, parent, 'Parallax Preview', center=False)
+		PyMSDialog.__init__(self, parent, 'Parallax Preview', center=False, resizable=(False, False))
 
 	def widgetize(self):
 		self.canvas = Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT))
@@ -85,24 +85,28 @@ class PreviewDialog(PyMSDialog):
 				self.items[star] = item
 
 	def update_viewport(self):
-		if len(self.items):
-			x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
-			y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
-			if x != self.last_x or y != self.last_y:
-				self.last_x = x
-				self.last_y = y
-				for l,layer in enumerate(self.parent.spk.layers):
-					ratio = SPK.SPK.PARALLAX_RATIOS[l]
-					ox = int(x * ratio) % 640
-					oy = int(y * ratio) % 480
-					for star in layer.stars:
-						px = star.x - ox
-						if px < 0:
-							px += 640
-						py = star.y - oy
-						if py < 0:
-							py += 480
-						self.canvas.coords(self.items[star], x+px,y+py)
+		if not len(self.items):
+			return
+		x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
+		y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])
+		if x == self.last_x and y == self.last_y:
+			return
+		self.last_x = x
+		self.last_y = y
+		for l,layer in enumerate(self.parent.spk.layers):
+			ratio = SPK.SPK.PARALLAX_RATIOS[l]
+			ox = int(x * ratio) % SPK.SPK.LAYER_SIZE[0]
+			oy = int(y * ratio) % SPK.SPK.LAYER_SIZE[1]
+			for star in layer.stars:
+				px = star.x - ox
+				if px < 0:
+					px += SPK.SPK.LAYER_SIZE[0]
+				py = star.y - oy
+				if py < 0:
+					py += SPK.SPK.LAYER_SIZE[1]
+				px -= SPK.SPK.LAYER_ORIGIN[0]
+				py -= SPK.SPK.LAYER_ORIGIN[1]
+				self.canvas.coords(self.items[star], x+px,y+py)
 
 	def cancel(self):
 		savesize(self, self.parent.settings, 'preview')
@@ -622,7 +626,7 @@ class PySPK(Tk):
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
 		rightframe = Frame(frame, bd=1, relief=SUNKEN)
-		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_WIDTH, height=SPK.SPK.LAYER_HEIGHT)
+		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1])
 		self.skyCanvas.pack(fill=BOTH)
 		self.skyCanvas.focus_set()
 		self.skyCanvas.bind('<Motion>', lambda e,m=0: self.mouse_move(e,m))
@@ -879,11 +883,11 @@ class PySPK(Tk):
 		self.edit_status.set('%d stars selected' % len(self.selected_stars))
 		self.stars_tab.update_selection()
 
-	def edit_star_settings(self, star=None):
-		if star == None:
-			star = self.selected_stars[0]
-		if star and star.widget:
-			StarSettings(self, star)
+	# def edit_star_settings(self, star=None):
+	# 	if star == None:
+	# 		star = self.selected_stars[0]
+	# 	if star and star.widget:
+	# 		StarSettings(self, star)
 
 	def move_stars(self, delta):
 		if len(self.selected_stars):
