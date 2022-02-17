@@ -42,7 +42,7 @@ class Order(AbstractDAT.AbstractDATEntry):
 		self.technology_energy = 0
 		self.iscript_animation = 0
 		self.highlight_icon = 0
-		self.requirements = 0
+		self.requirements = 65535
 		self.obscured_order = 0
 
 	def load_values(self, values):

@@ -24,7 +24,7 @@ class Upgrade(AbstractDAT.AbstractDATEntry):
 		self.vespene_cost_factor = 0
 		self.research_time_base = 0
 		self.research_time_factor = 0
-		self.requirements = 0
+		self.requirements = 65535
 		self.icon = 0
 		self.label = 0
 		self.staredit_race = 0

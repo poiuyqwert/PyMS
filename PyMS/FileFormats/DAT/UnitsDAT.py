@@ -178,7 +178,7 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		self.mineral_cost = 0
 		self.vespene_cost = 0
 		self.build_time = 0
-		self.requirements = 0
+		self.requirements = 65535
 		self.staredit_group_flags = 0
 		self.supply_provided = DATFormat.DATTypeSupply()
 		self.supply_required = DATFormat.DATTypeSupply()
