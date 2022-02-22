@@ -170,6 +170,9 @@ class CacheGRP:
 		self.databuffer = data
 		self.uncompressed = uncompressed
 
+	def save_data(self):
+		return self.databuffer
+
 	def __getitem__(self, frame):
 		if not frame in self.images:
 			image = []
@@ -310,17 +313,10 @@ class GRP:
 		self.images_bounds = [image_bounds(image, transindex)]
 		self.transindex = transindex
 
-	def save_file(self, file, uncompressed=None):
-		if isstr(file):
-			try:
-				f = AtomicWriter(file, 'wb')
-			except:
-				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
-		else:
-			f = file
+	def save_data(self, uncompressed=None):
 		if uncompressed == None:
 			uncompressed = self.uncompressed
-		f.write(struct.pack('<3H', self.frames, self.width, self.height))
+		header_data = struct.pack('<3H', self.frames, self.width, self.height)
 		image_data = ''
 		offset = 6 + 8 * self.frames
 		frame_history = {}
@@ -329,10 +325,10 @@ class GRP:
 			if uncompressed:
 				data = ''.join(''.join(chr(i) for i in l[x_min:x_max]) for l in frame[y_min:y_max])
 				if data in frame_history:
-					f.write(frame_history[data])
+					header_data += frame_history[data]
 				else:
 					frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
-					f.write(frame_data)
+					header_data += frame_data
 					frame_history[data] = frame_data
 					image_data += data
 					offset += len(data)
@@ -340,11 +336,11 @@ class GRP:
 				frame_hash = tuple(tuple(l[x_min:x_max]) for l in frame[y_min:y_max])
 				# If there is a duplicate frame, just point to it
 				if frame_hash in frame_history:
-					f.write(frame_history[frame_hash])
+					header_data += frame_history[frame_hash]
 				else:
 					frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
 					frame_history[frame_hash] = frame_data
-					f.write(frame_data)
+					header_data += frame_data
 					line_data = ''
 					line_offset = 2 * (y_max - y_min)
 					line_offsets = []
@@ -431,5 +427,16 @@ class GRP:
 					line_data = ''.join(line_offsets) + line_data
 					image_data += line_data
 					offset += len(line_data)
+		return header_data + image_data
+
+	def save_file(self, file, uncompressed=None):
+		if isstr(file):
+			try:
+				f = AtomicWriter(file, 'wb')
+			except:
+				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
+		else:
+			f = file
+		image_data = self.save_data()
 		f.write(image_data)
 		f.close()

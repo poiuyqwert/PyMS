@@ -1,4 +1,6 @@
 
+from DataID import DATID, DataID
+
 from ..FileFormats.MPQ.SFmpq import *
 
 from ..Utilities.utils import BASE_DIR, couriernew
@@ -6,35 +8,38 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 import os, shutil
 
 class SaveMPQDialog(PyMSDialog):
+	OPTIONS = (
+		('units.dat', 'arr\\units.dat', DATID.units),
+		('weapons.dat', 'arr\\weapons.dat', DATID.weapons),
+		('flingy.dat', 'arr\\flingy.dat', DATID.flingy),
+		('sprites.dat', 'arr\\sprites.dat', DATID.sprites),
+		('images.dat', 'arr\\images.dat', DATID.images),
+		('upgrades.dat', 'arr\\upgrades.dat', DATID.upgrades),
+		('techdata.dat', 'arr\\techdata.dat', DATID.techdata),
+		('sfxdata.dat', 'arr\\sfxdata.dat', DATID.sfxdata),
+		('portdata.dat', 'arr\\portdata.dat', DATID.portdata),
+		('mapdata.dat', 'arr\\mapdata.dat', DATID.mapdata),
+		('orders.dat', 'arr\\orders.dat', DATID.orders),
+		('stat_txt.tbl', 'rez\\stat_txt.tbl', DataID.stat_txt),
+		('images.tbl', 'arr\\images.tbl', DataID.imagestbl),
+		('sfxdata.tbl', 'arr\\sfxdata.tbl', DataID.sfxdatatbl),
+		('portdata.tbl', 'arr\\portdata.tbl', DataID.portdatatbl),
+		('mapdata.tbl', 'arr\\mapdata.tbl', DataID.mapdatatbl),
+		('cmdicons.grp', 'unit\\cmdbtns\\cmdicons.grp', DataID.cmdicons)
+	)
+
 	def __init__(self, parent):
 		PyMSDialog.__init__(self, parent, 'Save MPQ', resizable=(False, False))
 
 	def widgetize(self):
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
-		listframe = Frame(self, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, activestyle=DOTBOX, selectmode=MULTIPLE, font=couriernew, width=12, height=10, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
-		bind = [
-			('<MouseWheel>', lambda a,l=self.listbox: self.scroll(a,l)),
-			('<Home>', lambda a,l=self.listbox,i=0: self.move(a,l,i)),
-			('<End>', lambda a,l=self.listbox,i=END: self.move(a,l,i)),
-			('<Up>', lambda a,l=self.listbox,i=-1: self.move(a,l,i)),
-			('<Left>', lambda a,l=self.listbox,i=-1: self.move(a,l,i)),
-			('<Down>', lambda a,l=self.listbox,i=1: self.move(a,l,i)),
-			('<Right>', lambda a,l=self.listbox,i=-1: self.move(a,l,i)),
-			('<Prior>', lambda a,l=self.listbox,i=-10: self.move(a,l,i)),
-			('<Next>', lambda a,l=self.listbox,i=10: self.move(a,l,i)),
-		]
-		for b in bind:
-			listframe.bind(*b)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=X, expand=1)
-		listframe.pack(fill=BOTH, expand=1, padx=5)
+		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=couriernew, width=14, height=len(SaveMPQDialog.OPTIONS), bd=0, highlightthickness=0, exportselection=0)
+		self.listbox.pack(fill=BOTH, expand=1, padx=5)
 		sel = Frame(self)
 		Button(sel, text='Select All', command=lambda: self.listbox.select_set(0,END)).pack(side=LEFT, fill=X, expand=1)
 		Button(sel, text='Unselect All', command=lambda: self.listbox.select_clear(0,END)).pack(side=LEFT, fill=X, expand=1)
@@ -42,9 +47,9 @@ class SaveMPQDialog(PyMSDialog):
 		self.sempq = IntVar()
 		self.sempq.set(self.parent.data_context.settings.get('sempq', False))
 		Checkbutton(self, text='Self-executing MPQ (SEMPQ)', variable=self.sempq).pack(pady=3)
-		for f in ['units.dat','weapons.dat','flingy.dat','sprites.dat','images.dat','upgrades.dat','techdata.dat','sfxdata.dat','portdata.dat','mapdata.dat','orders.dat','stat_txt.tbl','images.tbl','sfxdata.tbl','portdata.tbl','mapdata.tbl','cmdicons.grp']:
-			self.listbox.insert(END,f)
-			if f in self.parent.mpq_export:
+		for filename,_,_ in SaveMPQDialog.OPTIONS:
+			self.listbox.insert(END, filename)
+			if filename in self.parent.mpq_export:
 				self.listbox.select_set(END)
 		btns = Frame(self)
 		save = Button(btns, text='Save', width=10, command=self.save)
@@ -53,22 +58,9 @@ class SaveMPQDialog(PyMSDialog):
 		btns.pack()
 		return save
 
-	def scroll(self, e, lb):
-		if e.delta > 0:
-			lb.yview('scroll', -2, 'units')
-		else:
-			lb.yview('scroll', 2, 'units')
-
-	def move(self, e, lb, a):
-		if a == END:
-			a = lb.size()-2
-		elif a not in [0,END]:
-			a = max(min(lb.size()-1, int(lb.curselection()[0]) + a),0)
-		lb.see(a)
-
 	def save(self):
-		sel = [self.listbox.get(i) for i in self.listbox.curselection()]
-		if not sel:
+		selected_options = [SaveMPQDialog.OPTIONS[i] for i in self.listbox.curselection()]
+		if not selected_options:
 			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
 			if self.sempq.get():
@@ -87,41 +79,23 @@ class SaveMPQDialog(PyMSDialog):
 							h = -1
 				else:
 					h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-				if h == -1:
+				if SFInvalidHandle(h):
 					ErrorDialog(self, PyMSError('Saving','Could not open %sMPQ "%s".' % (['','SE'][self.sempq.get()],file)))
 					return
 				undone = []
-				s = SFile()
-				for f in sel:
-					if f == 'stat_txt.tbl':
-						p = 'rez\\' + f
-					elif f.endswith('.grp'):
-						p = 'unit\\cmdbtns\\' + f
-					else:
-						p = 'arr\\' + f
+				buffer = None
+				for filename,filepath,id in selected_options:
 					try:
-						if f in self.parent.dats:
-							self.parent.dats[f].compile(s)
-							MpqAddFileFromBuffer(h, s.text, p, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
-							s.text = ''
-						elif f.endswith('tbl'):
-							if f == 'stat_txt.tbl':
-								t = self.parent.stat_txt_file
-							elif f == 'images.tbl':
-								t = self.parent.imagestbl_file
-							elif f == 'sfxdata.tbl':
-								t = self.parent.sfxdatatbl_file
-							elif f == 'portdata.tbl':
-								t = self.parent.portdatatbl_file
-							else:
-								t = self.parent.mapdatatbl_file
-							MpqAddFileToArchive(h, t, p, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
+						if isinstance(id, DATID):
+							dat_data = self.parent.data_context.dat_data(id)
+							buffer = dat_data.save_data()
 						else:
-							self.parent.cmdicon.save_file(s)
-							MpqAddFileFromBuffer(h, s.text, p, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
-							s.text = ''
+							data_data = self.parent.data_context.data_data(id)
+							buffer = data_data.save_data()
+						MpqAddFileFromBuffer(h, buffer, filepath, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
+						buffer = None
 					except:
-						undone.append(f)
+						undone.append(filename)
 				MpqCloseUpdatedArchive(h)
 				if undone:
 					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone))

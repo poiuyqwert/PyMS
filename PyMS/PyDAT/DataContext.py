@@ -133,6 +133,24 @@ class DataContext(object):
 		elif datid == DATID.orders:
 			return self.orders
 
+	def data_data(self, dataid):
+		if dataid == DataID.stat_txt:
+			return self.stat_txt
+		elif dataid == DataID.unitnamestbl:
+			return self.unitnamestbl
+		elif dataid == DataID.imagestbl:
+			return self.imagestbl
+		elif dataid == DataID.sfxdatatbl:
+			return self.sfxdatatbl
+		elif dataid == DataID.portdatatbl:
+			return self.portdatatbl
+		elif dataid == DataID.mapdatatbl:
+			return self.mapdatatbl
+		elif dataid == DataID.cmdicons:
+			return self.cmdicons
+		elif dataid == DataID.iscriptbin:
+			return self.iscriptbin
+
 	def load_additional_files(self):
 		self.mpqhandler.open_mpqs()
 		try:

@@ -143,11 +143,7 @@ class TBL:
 				strings.append(s)
 		self.strings = strings
 
-	def compile(self, file):
-		try:
-			f = AtomicWriter(file, 'wb')
-		except:
-			raise PyMSError('Compile',"Could not load file '%s'" % file)
+	def save_data(self):
 		o = 2 + 2 * len(self.strings)
 		header = bytearray(struct.pack('<H', len(self.strings)))
 		data = bytearray()
@@ -157,7 +153,15 @@ class TBL:
 			header += struct.pack('<H', o)
 			data += bytearray(s, 'latin-1')
 			o += len(s)
-		f.write(header + data)
+		return str(header + data)
+
+	def compile(self, file):
+		try:
+			f = AtomicWriter(file, 'wb')
+		except:
+			raise PyMSError('Compile',"Could not load file '%s'" % file)
+		data = self.save_data()
+		f.write(data)
 		f.close()
 
 	def decompile(self, file, ref=False):
@@ -168,7 +172,7 @@ class TBL:
 		if ref:
 			f.write(TBL_REF)
 		for s in self.strings:
-		   f.write(decompile_string(s) + '\n')
+			f.write(decompile_string(s) + '\n')
 		f.close()
 
 #t = TBL()

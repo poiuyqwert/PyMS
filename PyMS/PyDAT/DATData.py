@@ -47,11 +47,11 @@ class DATData(object):
 			self.dat.new_file()
 		self.update_names()
 
-	def load_file(self, file_info):
+	def load_file(self, file_path):
 		dat = self.dat_type()
-		dat.load_file(file_info)
+		dat.load_file(file_path)
 		self.dat = dat
-		self.file_path = file_info
+		self.file_path = file_path
 		self.update_names()
 
 	def load_data(self, file_data):
@@ -59,6 +59,12 @@ class DATData(object):
 		dat.load_data(file_data)
 		self.dat = dat
 		self.file_path = None
+
+	def save_file(self, file_path):
+		self.dat.save_file(file_path)
+
+	def save_data(self):
+		return self.dat.save_data()
 
 	def load_name_overrides(self, path):
 		pass

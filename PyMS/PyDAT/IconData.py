@@ -27,6 +27,9 @@ class IconData(object):
 			self.images = {}
 			self.update_names()
 
+	def save_data(self):
+		return self.grp.save_data()
+
 	def update_names(self):
 		names = DATA_CACHE['Icons.txt']
 		if self.grp:
