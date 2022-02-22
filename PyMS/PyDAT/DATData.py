@@ -48,15 +48,17 @@ class DATData(object):
 		self.update_names()
 
 	def load_file(self, file_info):
-		if isstr(file_info):
-			dat = self.dat_type()
-			dat.load_file(file_info)
-			self.dat = dat
-			self.file_path = file_info
-		# TODO: Handle open from folder/mpq
-		else:
-			raise Exception()
+		dat = self.dat_type()
+		dat.load_file(file_info)
+		self.dat = dat
+		self.file_path = file_info
 		self.update_names()
+
+	def load_data(self, file_data):
+		dat = self.dat_type()
+		dat.load_data(file_data)
+		self.dat = dat
+		self.file_path = None
 
 	def load_name_overrides(self, path):
 		pass

@@ -177,9 +177,16 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.id = 0
 			self.toplevel.tab_activated()
 
-	def open(self, file, save=True):
+	def open_file(self, file, save=True):
 		if not save or not self.unsaved():
 			self.get_dat_data().load_file(file)
+			self.id = 0
+			if self.toplevel.dattabs.active == self:
+				self.toplevel.tab_activated()
+
+	def open_data(self, file_data, save=True):
+		if not save or not self.unsaved():
+			self.get_dat_data().load_data(file_data)
 			self.id = 0
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.tab_activated()

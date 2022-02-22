@@ -122,13 +122,13 @@ class PyDAT(MainWindow):
 
 		self.listmenu = Menu(self, tearoff=0)
 		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c)
-		self.listmenu_command_copy_sub_tab = self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y)
-		self.listmenu_command_paste = self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p)
+		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y, tags='can_copy_sub_tab')
+		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p, tags='can_paste')
 		self.listmenu.add_separator()
 		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r)
 		self.listmenu.add_separator()
-		self.listmenu_command_add_entry = self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a)
-		self.listmenu_command_set_entry_count = self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s)
+		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a, tags='can_expand')
+		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s, tags='can_expand')
 		self.listmenu.add_separator()
 		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=Shift.Ctrl.n)
 
@@ -155,7 +155,6 @@ class PyDAT(MainWindow):
 			page.page_title = name
 			self.pages.append(page)
 			self.dattabs.add_tab(page, name)
-		# self.dattabs.bind('<<TabDeactivated>>', self.tab_deactivated)
 		self.dattabs.bind('<<TabActivated>>', self.tab_activated)
 		self.hor_pane.add(self.dattabs.notebook, sticky=NSEW)
 		self.hor_pane.pack(fill=BOTH, expand=1)
@@ -181,7 +180,7 @@ class PyDAT(MainWindow):
 		if guifile:
 			for title,tab in self.dattabs.pages.iteritems():
 				try:
-					tab[0].open(guifile, save=False)
+					tab[0].open_file(guifile, save=False)
 					self.dattabs.display(title)
 					break
 				except PyMSError as e:
@@ -285,11 +284,9 @@ class PyDAT(MainWindow):
 		self.changeid(self.jumpid.get())
 
 	def popup(self, e):
-		self.listmenu_command_paste['state'] = DISABLED # TODO
-		self.listmenu_command_copy_sub_tab['state'] = NORMAL if hasattr(self.dattabs.active, 'copy_subtab') else DISABLED
-		can_expand = self.dattabs.active.get_dat_data().dat.can_expand()
-		self.listmenu_command_add_entry['state'] = NORMAL if can_expand else DISABLED
-		self.listmenu_command_set_entry_count['state'] = DISABLED # TODO: NORMAL if can_expand else DISABLED
+		self.listmenu.tag_enabled('can_paste', False) # TODO
+		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.dattabs.active, 'copy_subtab'))
+		self.listmenu.tag_enabled('can_expand', self.dattabs.active.get_dat_data().dat.can_expand())
 		self.listmenu.post(e.x_root, e.y_root)
 
 	def copy(self):
@@ -329,7 +326,7 @@ class PyDAT(MainWindow):
 		for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]):
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
-					page.open(path)
+					page.open_file(path)
 				except PyMSError as e:
 					ErrorDialog(self, e)
 				else:
@@ -340,7 +337,6 @@ class PyDAT(MainWindow):
 		else:
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % path))
 
-	# TODO
 	def openmpq(self, event=None):
 		file = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
 		if not file:
@@ -349,67 +345,44 @@ class PyDAT(MainWindow):
 		if SFInvalidHandle(h):
 			ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % file))
 			return
-		l = []
-		found = []
-		p = SFile()
-		for _,d in self.dats.iteritems():
-			entries = list(d.entries)
-			p.text = ''
-			f = SFileOpenFileEx(h, 'arr\\' + d.FILE_NAME)
+		found = [] # type: list[str]
+		for _,(tab,_) in self.dattabs.pages.iteritems():
+			filename = tab.get_dat_data().dat_type.FILE_NAME
+			f = SFileOpenFileEx(h, 'arr\\' + filename)
 			if f in [None,-1]:
 				continue
-			r = SFileReadFile(f)
+			file_data,_ = SFileReadFile(f)
 			SFileCloseFile(f)
-			p.text = r[0]
 			try:
-				d.load_file(p)
+				tab.open_data(file_data)
 			except:
-				d.entries = entries
 				continue
-			l.append(d.FILE_NAME)
-			found.append((d,'%s:arr\\%s' % (file, d.FILE_NAME)))
+			found.append(filename)
 		SFileCloseArchive(h)
 		if not found:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in MPQ "%s"' % file))
 			return
-		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(l)))
-		for d in found:
-			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
+		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(found)))
 
-	# TODO
 	def opendirectory(self, event=None):
 		dir = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
 		if not dir:
 			return
-		dats = [UnitsDAT(),WeaponsDAT(),FlingyDAT(),SpritesDAT(),ImagesDAT(),UpgradesDAT(),TechDAT(),SoundsDAT(),PortraitsDAT(),CampaignDAT(),OrdersDAT()]
-		found = [None] * len(dats)
-		files = [None] * len(dats)
-		for f in os.listdir(dir):
-			for n,d in enumerate(dats):
-				if d == None:
-					continue
-				ff = os.path.join(dir,f)
-				try:
-					d.load_file(ff)
-				except PyMSError:
-					continue
-				found[n] = (d,ff)
-				name = f
-				if name != d.FILE_NAME:
-					name += ' (%s)' % d.FILE_NAME
-				files[n] = name
-				dats[n] = None
-				break
-			if not dats:
-				break
-		found = (f for f in found if f != None)
+		found = [] # type: list[str]
+		for _,(tab,_) in self.dattabs.pages.iteritems():
+			filename = tab.get_dat_data().dat_type.FILE_NAME
+			filepath = os.path.join(dir, filename)
+			if not os.path.exists(filepath):
+				continue
+			try:
+				tab.open_file(filepath)
+				found.append(filename)
+			except:
+				pass
 		if not found:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in directory "%s"' % dir))
 			return
-		files = [f for f in files if f != None]
-		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(files)))
-		for d in found:
-			self.dattabs.pages[d[0].idfile.split('.')[0]][0].open(d)
+		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(found)))
 
 	# TODO
 	def iimport(self, key=None):
