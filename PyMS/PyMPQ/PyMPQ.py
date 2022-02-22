@@ -102,7 +102,7 @@ class PyMPQ(MainWindow):
 		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', Ctrl.e, enabled=False, tags='file_selected')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', Ctrl.r, enabled=False, tags='file_selected')
-		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', Ctrl.p, enabled=False, identifier='compact')
+		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', Ctrl.p, enabled=False, tags='can_compact')
 		# self.toolbar.add_button(Assets.get_image('insert'), self.editlistfile, 'Edit Internal Listfile', Ctrl.l, enabled=False, tags='mpq_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', Ctrl.m)
@@ -402,7 +402,7 @@ class PyMPQ(MainWindow):
 			files = SFileGetFileInfo(h,SFILE_INFO_NUM_FILES)
 			self.info.set('Total %s/%s files, %s' % (len(self.all_files),files,format_byte_size(self.totalsize)))
 			can_compact = files > len(self.all_files)
-			self.toolbar.set_enabled('compact', can_compact)
+			self.toolbar.tag_enabled('can_compact', can_compact)
 			if close:
 				MpqCloseUpdatedArchive(h)
 		else:

@@ -94,8 +94,8 @@ class PyGRP(MainWindow):
 		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', Key.Delete, enabled=False, tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, identifier='up', tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, identifier='down', tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, tags='can_move_up')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, tags='can_move_down')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -163,7 +163,7 @@ class PyGRP(MainWindow):
 		self.controls.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Up', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Up', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Up', enabled=False, tags='can_preview')
-		self.controls.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, identifier='stop', tags='can_preview')
+		self.controls.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, tags=('can_preview', 'is_playing'))
 		self.controls.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Down', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Down', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Down', enabled=False, tags='can_preview')
@@ -263,26 +263,25 @@ BMP's must be imported with the same style they were exported as.""")
 	def can_preview(self):
 		return self.listbox.size() > 1 and self.showpreview.get()
 
-	def can_shift_up(self):
+	def can_move_up(self):
 		selected = [int(i) for i in self.listbox.curselection()]
 		return selected and min(selected) > 0
 
-	def can_shift_down(self):
+	def can_move_down(self):
 		selected = [int(i) for i in self.listbox.curselection()]
 		return selected and max(selected) < self.listbox.size()-1
 
 	def action_states(self):
 		self.editstatus['state'] = NORMAL if self.edited else DISABLED
 		self.transent['state'] = NORMAL if self.is_file_open() else DISABLED
+
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.toolbar.tag_enabled('frame_selected', self.is_frame_selected())
-		if not self.can_shift_up():
-			self.toolbar.set_enabled('up', False)
-		if not self.can_shift_down():
-			self.toolbar.set_enabled('down', False)
+		self.toolbar.tag_enabled('can_move_up', self.can_move_up())
+		self.toolbar.tag_enabled('can_move_down', self.can_move_down())
+
 		self.controls.tag_enabled('can_preview', self.can_preview())
-		if not self.play:
-			self.controls.set_enabled('stop', False)
+		self.controls.tag_enabled('is_playing', not not self.play)
 
 	def showprev(self):
 		if self.showpreview.get():

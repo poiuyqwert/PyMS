@@ -2,6 +2,7 @@
 from utils import BASE_DIR, isstr
 from Tooltip import Tooltip
 from UIKit import *
+from TagStateManager import TagStateManager
 
 import os
 
@@ -9,7 +10,7 @@ class Toolbar(Frame):
 	# Use `bind_target=<widget>` to adjust where shortcuts are bound, otherwise `self.master` will be used
 	def __init__(self, *args, **kwargs):
 		self._buttons = {} # type: dict[str, Widget]
-		self._tags = {} # type: dict[str, list[Widget]]
+		self._tag_manager = TagStateManager()
 		self._bind_target = None # type: Widget
 		if 'bind_target' in kwargs:
 			self._bind_target = kwargs['bind_target']
@@ -30,13 +31,7 @@ class Toolbar(Frame):
 		if identifier:
 			self._buttons[identifier] = button
 		if tags:
-			if not isinstance(tags, list) and not isinstance(tags, tuple):
-				tags = (tags, )
-			for tag in tags:
-				if not tag in self._tags:
-					self._tags[tag] = [button]
-				else:
-					self._tags[tag].append(button)
+			self._tag_manager.add_item(button, tags)
 
 	def add_button(self, icon, callback, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
 		button = Button(self._row, image=icon, width=20, height=20, command=callback, state=NORMAL if enabled else DISABLED)
@@ -101,11 +96,10 @@ class Toolbar(Frame):
 		button['image'] = icon
 		button._image = icon
 
-	def set_enabled(self, button_identifier, is_enabled):
-		button = self._buttons.get(button_identifier)
+	def set_enabled(self, identifier, is_enabled):
+		button = self._buttons.get(identifier)
 		if button:
 			button['state'] = NORMAL if is_enabled else DISABLED
 
 	def tag_enabled(self, tag, is_enabled):
-		for button in self._tags.get(tag, ()):
-			button['state'] = NORMAL if is_enabled else DISABLED
+		self._tag_manager.tag_enabled(tag, is_enabled)

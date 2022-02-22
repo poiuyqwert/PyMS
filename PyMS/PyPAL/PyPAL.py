@@ -44,7 +44,7 @@ class PyPAL(MainWindow):
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, identifier='save', tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
 		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.saveas(file_type=Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savejasc'), lambda: self.saveas(file_type=Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.saveas(file_type=Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
@@ -111,8 +111,7 @@ class PyPAL(MainWindow):
 
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		if self.format == None:
-			self.toolbar.set_enabled('save', False)
+		self.toolbar.tag_enabled('format_known', self.format != None)
 
 	def popup(self, e, i):
 		if self.palette:

@@ -202,14 +202,14 @@ class PyBIN(MainWindow):
 		self.widgetTree.bind(Double.Click_Left, self.list_double_click)
 
 		self.widgets_toolbar = Toolbar(leftframe)
-		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, identifier='add')
-		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Selected', enabled=False, identifier='remove')
-		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', enabled=False, identifier='edit')
+		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, tags='file_open')
+		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Selected', enabled=False, tags=('node_selected', 'dialog_not_selected'))
+		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', enabled=False, tags='node_selected')
 		self.widgets_toolbar.add_spacer(2, flexible=True)
 		self.widgets_toolbar.add_button(Assets.get_image('arrow'), self.toggle_preview_settings, 'Toggle Preview Settings', identifier='settings_toggle')
 		self.widgets_toolbar.add_spacer(2, flexible=True)
-		self.widgets_toolbar.add_button(Assets.get_image('up'), lambda: self.move_node(-1), 'Move Widget Up', enabled=False, identifier='up')
-		self.widgets_toolbar.add_button(Assets.get_image('down'), lambda: self.move_node(2), 'Move Widget Down', enabled=False, identifier='down')
+		self.widgets_toolbar.add_button(Assets.get_image('up'), lambda: self.move_node(-1), 'Move Widget Up', enabled=False, tags='can_move_up')
+		self.widgets_toolbar.add_button(Assets.get_image('down'), lambda: self.move_node(2), 'Move Widget Down', enabled=False, tags='can_move_down')
 		self.widgets_toolbar.grid(row=2, column=0, padx=1, pady=1, sticky=EW)
 
 		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')
@@ -643,11 +643,11 @@ class PyBIN(MainWindow):
 			index = self.selected_node.parent.children.index(self.selected_node)
 			can_move_up = (index > 0)
 			can_move_down = (index < len(self.selected_node.parent.children)-1)
-		self.widgets_toolbar.set_enabled('add', is_file_open)
-		self.widgets_toolbar.set_enabled('remove', (has_selected_node and not selection_is_dialog))
-		self.widgets_toolbar.set_enabled('edit', has_selected_node)
-		self.widgets_toolbar.set_enabled('up', can_move_up)
-		self.widgets_toolbar.set_enabled('down', can_move_down)
+		self.widgets_toolbar.tag_enabled('file_open', is_file_open)
+		self.widgets_toolbar.tag_enabled('node_selected', has_selected_node)
+		self.widgets_toolbar.tag_enabled('dialog_not_selected', not selection_is_dialog)
+		self.widgets_toolbar.tag_enabled('can_move_up', can_move_up)
+		self.widgets_toolbar.tag_enabled('can_move_down', can_move_down)
 
 		# self.scr_check['state'] = NORMAL if is_file_open and not self.bin.remastered_required() else DISABLED
 

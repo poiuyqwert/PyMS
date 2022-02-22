@@ -30,8 +30,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Preset', tags='preset_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('up'), lambda: self.move(-1), 'Move Up', identifier='up')
-		self.toolbar.add_button(Assets.get_image('down'), lambda: self.move(1), 'Move Down', identifier='down')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.move(-1), 'Move Up', tags='can_move_up')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.move(1), 'Move Down', tags='can_move_down')
 		self.toolbar.add_spacer(5, flexible=True)
 		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename Preset', tags='preset_selected')
 		self.toolbar.add_gap()
@@ -128,8 +128,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		if self.listbox.curselection():
 			selected = int(self.listbox.curselection()[0])
 		self.toolbar.tag_enabled('preset_selected', selected != None)
-		self.toolbar.set_enabled('up', selected)
-		self.toolbar.set_enabled('down', selected != None and selected+1 < len(self.settings.generator.presets))
+		self.toolbar.tag_enabled('can_move_up', not not selected)
+		self.toolbar.tag_enabled('can_move_down', selected != None and selected+1 < len(self.settings.generator.presets))
 
 	def update_list(self):
 		select = None

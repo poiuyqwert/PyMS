@@ -104,7 +104,7 @@ class PyAI(MainWindow):
 		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=SFMPQ_LOADED, bind_shortcut=False, underline='m')
 		file_menu.add_command('Save', self.save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
 		file_menu.add_command('Save As...', self.saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
-		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=SFMPQ_LOADED, identifier='save_mpq', bind_shortcut=False, underline='a')
+		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=SFMPQ_LOADED, tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
 		file_menu.add_command('Close', self.close, Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
 		file_menu.add_separator()
 		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register, enabled=WIN_REG_AVAILABLE, underline='t')
@@ -112,8 +112,8 @@ class PyAI(MainWindow):
 		file_menu.add_command('Exit', self.exit, Alt.F4, underline='e')
 
 		edit_menu = self.menu.add_cascade('Edit')
-		edit_menu.add_command('Undo', self.undo, Ctrl.z, enabled=False, identifier='undo', bind_shortcut=False, underline='u')
-		edit_menu.add_command('Redo', self.redo, Ctrl.y, enabled=False, identifier='redo', bind_shortcut=False, underline='r')
+		edit_menu.add_command('Undo', self.undo, Ctrl.z, enabled=False, tags='can_undo', bind_shortcut=False, underline='u')
+		edit_menu.add_command('Redo', self.redo, Ctrl.y, enabled=False, tags='can_redo', bind_shortcut=False, underline='r')
 		edit_menu.add_separator()
 		edit_menu.add_command('Select All', self.select_all, Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_command('Add Blank Script', self.add, Key.Insert, enabled=False, tags='file_open', bind_shortcut=False, underline='b')
@@ -152,11 +152,11 @@ class PyAI(MainWindow):
 		self.toolbar.add_button(Assets.get_image('openmpq'), self.open_mpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=False, identifier='save_mpq')
+		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=False, tags=('file_open','mpq_available'))
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('undo'), self.undo, 'Undo', Ctrl.z, enabled=False, identifier='undo')
-		self.toolbar.add_button(Assets.get_image('redo'), self.redo, 'Redo', Ctrl.y, enabled=False, identifier='redo')
+		self.toolbar.add_button(Assets.get_image('undo'), self.undo, 'Undo', Ctrl.z, enabled=False, tags='can_undo')
+		self.toolbar.add_button(Assets.get_image('redo'), self.redo, 'Redo', Ctrl.y, enabled=False, tags='can_redo')
 		self.toolbar.add_section()
 		self.toolbar.add_radiobutton(Assets.get_image('order'), self.sort, 'order', 'File Order')
 		self.toolbar.add_radiobutton(Assets.get_image('idsort'), self.sort, 'idsort', 'Sort by ID')
@@ -193,6 +193,9 @@ class PyAI(MainWindow):
 		self.toolbar.add_button(Assets.get_image('openset'), self.openset, 'Open TBL and DAT Settings')
 		self.toolbar.add_button(Assets.get_image('saveset'), self.saveset, 'Save TBL and DAT Settings')
 		self.toolbar.pack(side=TOP, fill=X)
+
+		self.menu.tag_enabled('mpq_available', SFMPQ_LOADED)
+		self.toolbar.tag_enabled('mpq_available', SFMPQ_LOADED)
 
 		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=couriernew, activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
@@ -306,13 +309,11 @@ class PyAI(MainWindow):
 			return
 		if self.redos:
 			self.redos = []
-			self.toolbar.set_enabled('redo', False)
-			self.menu.set_enabled('redo', False)
-			# self.menus['Edit'].entryconfig(1, state=DISABLED)
+			self.toolbar.tag_enabled('can_redo', False)
+			self.menu.tag_enabled('can_redo', False)
 		if not self.undos:
-			self.toolbar.set_enabled('undo', True)
-			self.menu.set_enabled('undo', True)
-			# self.menus['Edit'].entryconfig(0, state=NORMAL)
+			self.toolbar.tag_enabled('can_undo', True)
+			self.menu.tag_enabled('can_undo', True)
 		self.undos.append((type, data))
 		if len(self.undos) > max:
 			del self.undos[0]
@@ -327,16 +328,9 @@ class PyAI(MainWindow):
 		is_file_open = self.is_file_open()
 		has_scripts_selected = self.has_scripts_selected()
 
-		# for entry in [3,4,9,10,11,13,18,19]:
-		# 	self.menus['Edit'].entryconfig(entry, state=NORMAL if is_file_open else DISABLED)
 		self.toolbar.tag_enabled('file_open', is_file_open)
 		self.menu.tag_enabled('file_open', is_file_open)
 
-		self.toolbar.set_enabled('save_mpq', is_file_open and SFMPQ_LOADED)
-		self.menu.set_enabled('save_mpq', is_file_open and SFMPQ_LOADED)
-
-		# for entry in [5,6,8,14,15]:
-		# 	self.menus['Edit'].entryconfig(entry, state=NORMAL if has_scripts_selected else DISABLED)
 		self.toolbar.tag_enabled('scripts_selected', has_scripts_selected)
 		self.menu.tag_enabled('scripts_selected', has_scripts_selected)
 
@@ -374,6 +368,7 @@ class PyAI(MainWindow):
 			return self.stat_txt
 		self.stat_txt = file
 
+	# TODO: Update
 	def popup(self, e):
 		if self.ai:
 			if not self.listbox.curselection():
@@ -383,22 +378,6 @@ class PyAI(MainWindow):
 			for i in [1,3,7,8]:
 				self.listmenu.entryconfig(i, state=s)
 			self.listmenu.post(e.x_root, e.y_root)
-
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
-	def move(self, e, a):
-		if self.listbox.curselection():
-			if a == END:
-				a = self.listbox.size()-2
-			elif a not in [0,END]:
-				a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-			self.listbox.select_clear(0,END)
-			self.listbox.select_set(a)
-			self.listbox.see(a)
 
 	# Acitions
 	def new(self, key=None):
@@ -728,16 +707,14 @@ class PyAI(MainWindow):
 		undo = self.undos.pop()
 		if max:
 			if not self.redos:
-				self.toolbar.set_enabled('redo', True)
-				self.menu.set_enabled('redo', True)
-				# self.menus['Edit'].entryconfig(1, state=NORMAL)
+				self.toolbar.tag_enabled('can_redo', True)
+				self.menu.tag_enabled('can_redo', True)
 			self.redos.append(undo)
 			if len(self.redos) > max:
 				del self.redos[0]
 		if not self.undos:
-			self.toolbar.set_enabled('undo', False)
-			self.menu.set_enabled('undo', False)
-			# self.menus['Edit'].entryconfig(0, state=DISABLED)
+			self.toolbar.tag_enabled('can_undo', False)
+			self.menu.tag_enabled('can_undo', False)
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 		if undo[0] == 'remove':
@@ -811,16 +788,14 @@ class PyAI(MainWindow):
 		redo = self.redos.pop()
 		if max:
 			if not self.undos:
-				self.toolbar.set_enabled('undo', True)
-				self.menu.set_enabled('undo', True)
-				# self.menus['Edit'].entryconfig(0, state=NORMAL)
+				self.toolbar.tag_enabled('can_undo', True)
+				self.menu.tag_enabled('can_undo', True)
 			self.undos.append(redo)
 			if len(self.undos) > max:
 				del self.undos[0]
 		if not self.redos:
-			self.toolbar.set_enabled('redo', False)
-			self.menu.set_enabled('redo', False)
-			# self.menus['Edit'].entryconfig(1, state=DISABLED)
+			self.toolbar.tag_enabled('can_redo', False)
+			self.menu.tag_enabled('can_redo', False)
 		if redo[0] == 'remove':
 			for id,ai,bw,_,s in redo[1]:
 				del self.ai.ais[id]

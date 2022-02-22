@@ -98,7 +98,7 @@ class PySPK(MainWindow):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, identifier='export')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
@@ -127,11 +127,11 @@ class PySPK(MainWindow):
 		listbox.pack(side=TOP, padx=5, fill=X, expand=1)
 
 		self.edit_toolbar = Toolbar(f)
-		self.edit_toolbar.add_button(Assets.get_image('add'), self.add_layer, 'Add Layer', Key.Insert, enabled=False, identifier='add')
+		self.edit_toolbar.add_button(Assets.get_image('add'), self.add_layer, 'Add Layer', Key.Insert, enabled=False, tags=('file_open', 'can_add_layers'))
 		self.edit_toolbar.add_button(Assets.get_image('remove'), self.remove_layer, 'Remove Layer', Key.Delete, enabled=False, tags='layer_selected')
 		self.edit_toolbar.add_spacer(2, flexible=True)
-		self.edit_toolbar.add_button(Assets.get_image('up'), lambda: self.move_layer(-1), 'Move Layer Up', enabled=False, identifier='up')
-		self.edit_toolbar.add_button(Assets.get_image('down'), lambda: self.move_layer(1), 'Move Layer Down', enabled=False, identifier='down')
+		self.edit_toolbar.add_button(Assets.get_image('up'), lambda: self.move_layer(-1), 'Move Layer Up', enabled=False, tags='can_move_up')
+		self.edit_toolbar.add_button(Assets.get_image('down'), lambda: self.move_layer(1), 'Move Layer Down', enabled=False, tags='can_move_down')
 		self.edit_toolbar.add_gap()
 		self.edit_toolbar.add_checkbutton(Assets.get_image('lock'), self.autolock, 'Auto-lock', enabled=False, tags='file_open')
 		self.edit_toolbar.add_checkbutton(Assets.get_image('eye'), self.autovis, 'Auto-visibility', enabled=False, tags='file_open')
@@ -295,12 +295,13 @@ class PySPK(MainWindow):
 
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.set_enabled('export', self.is_file_open() and len(self.spk.layers) > 0)
+		self.toolbar.tag_enabled('has_layers', self.spk and len(self.spk.layers) > 0)
 
-		self.edit_toolbar.set_enabled('add', self.is_file_open() and len(self.spk.layers) < 5)
-		self.edit_toolbar.set_enabled('remove', self.is_layer_selected())
-		self.edit_toolbar.set_enabled('up', self.layer.get() > 0)
-		self.edit_toolbar.set_enabled('down', self.is_layer_selected() and self.layer.get() < len(self.spk.layers)-1)
+		self.edit_toolbar.tag_enabled('file_open', self.is_file_open())
+		self.edit_toolbar.tag_enabled('can_add_layers', self.spk and len(self.spk.layers) < 5)
+		self.edit_toolbar.tag_enabled('layer_selected', self.is_layer_selected())
+		self.edit_toolbar.tag_enabled('can_move_up', self.is_layer_selected() and self.layer.get() > 0)
+		self.edit_toolbar.tag_enabled('can_move_down', self.is_layer_selected() and self.layer.get() < len(self.spk.layers)-1)
 
 		self.palette_tab.action_states()
 		self.stars_tab.action_states()
