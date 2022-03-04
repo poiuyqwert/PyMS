@@ -130,7 +130,7 @@ class WindowGeometry(SettingObject):
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
 			z = ''
-			if window.wm_state() == 'zoomed':
+			if window.is_maximized():
 				z = '^'
 				window.wm_state('normal')
 				window.update_idletasks()
@@ -175,19 +175,20 @@ class WindowGeometry(SettingObject):
 			else:
 				window.geometry('+%d+%d' % (x,y))
 			window.update_idletasks()
-			try:
-				if fullscreen and can_fullscreen:
+			if fullscreen and can_fullscreen:
+				try:
 					window.wm_state('zoomed')
-				else:
-					window.wm_state('normal')
-			except:
-				pass
+				except:
+					pass
 		else:
-			w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
+			window.update_idletasks()
+			w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 			geometry = ''
 			if self._default_size:
 				w,h = self._default_size
 				geometry = '%dx%d' % self._default_size
+			else:
+				geometry = '%dx%d' % (w,h)
 			# if position:
 			# 	geometry += '+%d+%d' % position
 			if self._default_centered:
@@ -195,8 +196,7 @@ class WindowGeometry(SettingObject):
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
 				geometry += '+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2)
-			if geometry:
-				window.geometry(geometry)
+			window.geometry(geometry)
 
 	def encode(self):
 		return self._geometry

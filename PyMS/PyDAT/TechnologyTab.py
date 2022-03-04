@@ -2,6 +2,7 @@
 from DATTab import DATTab
 from DataID import DATID, DataID
 from DATRef import DATRefs, DATRef
+from IconSelectDialog import IconSelectDialog
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -10,6 +11,7 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 class TechnologyTab(DATTab):
 	DAT_ID = DATID.techdata
@@ -36,6 +38,7 @@ class TechnologyTab(DATTab):
 		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon, width=30)
 		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Technology Icon', 'TechIcon')
+		Button(f, image=Assets.get_image('find'), command=self.choose_icon, width=20, height=20).pack(side=LEFT, padx=2)
 		f.pack(fill=X)
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
@@ -49,6 +52,7 @@ class TechnologyTab(DATTab):
 		ls = Frame(s, relief=SUNKEN, bd=1)
 		self.preview = Canvas(ls, width=34, height=34, background='#000000')
 		self.preview.pack()
+		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
@@ -150,6 +154,11 @@ class TechnologyTab(DATTab):
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
+
+	def choose_icon(self):
+		def update_icon(index):
+			self.iconentry.set(index)
+		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.iconentry.get())
 
 	def drawpreview(self):
 		self.preview.delete(ALL)

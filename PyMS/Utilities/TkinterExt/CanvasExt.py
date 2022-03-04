@@ -6,7 +6,7 @@ import Tkinter as Tk
 class Canvas(Tk.Canvas):
 	class Item(object):
 		def __init__(self, canvas, item_id):
-			self.canvas = canvas
+			self.canvas = canvas # type: Tk.Canvas
 			self.item_id = item_id
 
 		def cget(self, option):
@@ -27,6 +27,12 @@ class Canvas(Tk.Canvas):
 
 		def delete(self):
 			self.canvas.delete(self.item_id)
+
+		def tag_raise(self):
+			self.canvas.tag_raise(self.item_id)
+
+		def tag_lower(self):
+			self.canvas.tag_lower(self.item_id)
 
 		def __str__(self):
 			return str(self.item_id)

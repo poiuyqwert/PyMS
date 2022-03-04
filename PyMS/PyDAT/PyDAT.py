@@ -401,7 +401,6 @@ class PyDAT(MainWindow):
 		self.save_data()
 		self.dattabs.active.export()
 
-	# TODO
 	def savempq(self, key=None):
 		if SFMPQ_LOADED:
 			self.save_data()

@@ -2,6 +2,7 @@
 from DATTab import DATTab
 from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
+from IconSelectDialog import IconSelectDialog
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
@@ -9,6 +10,7 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 class OrdersTab(DATTab):
 	DAT_ID = DATID.orders
@@ -84,6 +86,7 @@ class OrdersTab(DATTab):
 		self.highlight_ddw = DropDown(f, self.highlightdd, [], self.highlightentry, width=25, none_value=65535)
 		self.highlight_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Highlight', 'OrdHighlight')
+		Button(f, image=Assets.get_image('find'), command=self.choose_icon, width=20, height=20).pack(side=LEFT, padx=2)
 		f.pack(fill=X)
 		f = Frame(ls)
 		Label(f, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
@@ -94,6 +97,7 @@ class OrdersTab(DATTab):
 		ls = Frame(m, relief=SUNKEN, bd=1)
 		self.preview = Canvas(ls, width=34, height=34, background='#000000')
 		self.preview.pack()
+		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		m.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -186,6 +190,12 @@ class OrdersTab(DATTab):
 			self.targetingentry.range[1] = 255
 			self.energyentry.range[1] = 255
 			self.obscuredentry.range[1] = 255
+
+
+	def choose_icon(self):
+		def update_icon(index):
+			self.highlightentry.set(index)
+		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.highlightentry.get(), none_index=65535)
 
 	def drawpreview(self):
 		self.preview.delete(ALL)

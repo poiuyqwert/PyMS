@@ -172,6 +172,7 @@ class DataContext(object):
 			self.mpqhandler.close_mpqs()
 		self.load_palettes()
 		self.cmdicons.load_grp()
+		self.cmdicons.load_ticon_pcx()
 		self.iscriptbin = iscriptbin
 		self.units.update_names()
 		self.weapons.update_names()
@@ -202,13 +203,20 @@ class DataContext(object):
 		self.orders.load_defaults(defaultmpqs)
 		defaultmpqs.close_mpqs()
 
-	def get_cmdicon(self, index):
+	def get_cmdicon(self, index, highlighted=False):
 		if not 'Icons' in self.palettes or not self.cmdicons.grp or index >= self.cmdicons.grp.frames:
 			return None
-		if index in self.cmdicons.images:
-			return self.cmdicons.images[index]
-		image = frame_to_photo(self.palettes['Icons'], self.cmdicons.grp, index, True)
-		self.cmdicons.images[index] = image
+		if highlighted in self.cmdicons.images and index in self.cmdicons.images[highlighted]:
+			return self.cmdicons.images[highlighted][index]
+		palette = self.palettes['Icons']
+		if highlighted and self.cmdicons.ticon_pcx:
+			palette = list(palette)
+			for i in range(16):
+				palette[i] = palette[self.cmdicons.ticon_pcx.image[0][32+i]]
+		image = frame_to_photo(palette, self.cmdicons.grp, index, True)
+		if not highlighted in self.cmdicons.images:
+			self.cmdicons.images[highlighted] = {}
+		self.cmdicons.images[highlighted][index] = image
 		return image
 
 	def get_grp_frame(self, path, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0, is_full_path=False):

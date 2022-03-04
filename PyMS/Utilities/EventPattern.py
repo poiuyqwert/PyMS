@@ -296,6 +296,7 @@ class Focus:
 
 class WidgetEvent:
 	Configure = EventPattern(Field('Configure'))
+	Scrolled = CustomEventPattern(Field('Scrolled'))
 
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))

@@ -1,30 +1,26 @@
 
 from AutohideScrollbar import AutohideScrollbar
 from UIKit import *
-
-
-SHOW_SCROLL_NEVER = 0
-SHOW_SCROLL_ALWAYS = 1
-SHOW_SCROLL_NEEDED = 2
+from ShowScrollbar import ShowScrollbar
 
 class ScrolledListbox(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=SHOW_SCROLL_NEEDED, vertical=SHOW_SCROLL_NEEDED, auto_bind=True, scroll_speed=1, **kwargs):
+	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=ShowScrollbar.when_needed, vertical=ShowScrollbar.when_needed, auto_bind=True, scroll_speed=1, **kwargs):
 		Frame.__init__(self, parent, **frame_config)
 
 		self.listbox = Listbox(self, **kwargs)
 		self.listbox.grid(column=0,row=0, sticky=NSEW)
 
-		if horizontal != SHOW_SCROLL_NEVER:
-			if horizontal == SHOW_SCROLL_ALWAYS:
+		if horizontal != ShowScrollbar.never:
+			if horizontal == ShowScrollbar.always:
 				scrollbar = Scrollbar(self, orient=HORIZONTAL, command=self.listbox.xview)
 			else:
 				scrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self.listbox.xview)
 			scrollbar.grid(column=0,row=1, sticky=EW)
 			self.listbox.config(xscrollcommand=scrollbar.set)
 		
-		if vertical != SHOW_SCROLL_NEVER:
-			if horizontal == SHOW_SCROLL_ALWAYS:
+		if vertical != ShowScrollbar.never:
+			if horizontal == ShowScrollbar.always:
 				scrollbar = Scrollbar(self, command=self.listbox.yview)
 			else:
 				scrollbar = AutohideScrollbar(self, command=self.listbox.yview)
@@ -98,7 +94,7 @@ class ScrolledListbox(Frame):
 				self.select_clear(0,END)
 				self.select_set(index)
 				self.see(index)
-				self.listbox.event_generate('<<ListboxSelect>>')
+				self.listbox.event_generate(WidgetEvent.Listbox.Select)
 				return Event.BREAK
 			bind = [
 				(Mouse.Scroll, scroll),

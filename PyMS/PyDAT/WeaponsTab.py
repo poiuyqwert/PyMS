@@ -2,6 +2,7 @@
 from DATTab import DATTab
 from DataID import DATID, DataID, UnitsTabID
 from DATRef import DATRefs, DATRef
+from IconSelectDialog import IconSelectDialog
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
 
@@ -12,6 +13,7 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 class WeaponsTab(DATTab):
 	DAT_ID = DATID.weapons
@@ -157,6 +159,7 @@ class WeaponsTab(DATTab):
 		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon)
 		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Icon', 'WeapIcon')
+		Button(f, image=Assets.get_image('find'), command=self.choose_icon, width=20, height=20).pack(side=LEFT, padx=2)
 		f.pack(fill=X)
 		f = Frame(s)
 		ls = Frame(f)
@@ -186,6 +189,7 @@ class WeaponsTab(DATTab):
 		ls = Frame(f, relief=SUNKEN, bd=1)
 		self.preview = Canvas(ls, width=34, height=34, background='#000000')
 		self.preview.pack()
+		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		f.pack(fill=X)
 		f = Frame(s)
@@ -317,6 +321,11 @@ class WeaponsTab(DATTab):
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
+
+	def choose_icon(self):
+		def update_icon(index):
+			self.iconentry.set(index)
+		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.iconentry.get())
 
 	def drawpreview(self):
 		self.preview.delete(ALL)

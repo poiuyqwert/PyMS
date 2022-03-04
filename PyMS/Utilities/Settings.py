@@ -144,13 +144,14 @@ class SettingDict(object):
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
 			z = ''
-			if window.wm_state() == 'zoomed':
+			if window.is_maximized():
 				z = '^'
 				window.wm_state('normal')
 				window.update_idletasks()
 				w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 				if not closing:
 					window.wm_state('zoomed')
+					window.update_idletasks()
 			self[key] = '%sx%s+%d+%d%s' % (w,h,x,y,z)
 		else:
 			self[key] = '+%d+%d' % (x,y)
@@ -189,20 +190,20 @@ class SettingDict(object):
 			else:
 				window.geometry('+%d+%d' % (x,y))
 			window.update_idletasks()
-			try:
-				if fullscreen and can_fullscreen:
+			if fullscreen and can_fullscreen:
+				try:
 					window.wm_state('zoomed')
-				else:
-					window.wm_state('normal')
-			except:
-				pass
+				except:
+					pass
 		else:
 			window.update_idletasks()
-			w,h,x,y,fullscreen = parse_geometry(window.winfo_geometry())
+			w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 			geometry = ''
 			if default_size:
 				w,h = default_size
 				geometry = '%dx%d' % default_size
+			else:
+				geometry = '%dx%d' % (w,h)
 			if position:
 				geometry += '+%d+%d' % position
 			elif default_center or geometry:
@@ -210,8 +211,7 @@ class SettingDict(object):
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
 				geometry += '+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2)
-			if geometry:
-				window.geometry(geometry)
+			window.geometry(geometry)
 
 	def _process_filetypes(self, filetypes, include_all_filetype):
 		if include_all_filetype and filetypes:
