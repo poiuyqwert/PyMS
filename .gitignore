@@ -2,6 +2,6 @@
 stdeo.txt
 PyMS/WORKING/*
 PyMS/Logs/*
-test.py
+playground.py
 **/__pycache__
 .vscode/*

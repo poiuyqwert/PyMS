@@ -19,6 +19,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct, itertools
+from copy import deepcopy
 
 def rle_normal(pal, index, player_colors=None):
 	rgb = pal[index]
@@ -130,6 +131,67 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 		data = map(pal.__getitem__, data)
 		i.putdata(data)
 		return ImageTk.PhotoImage(i)
+
+class RLE:
+	TRANSPARENT_FLAG = (1 << 7)
+	TRANSPARENT_MAX_LENGTH = TRANSPARENT_FLAG - 1
+	REPEAT_FLAG = (1 << 6)
+	REPEAT_MAX_LENGTH = REPEAT_FLAG - 1
+	STATIC_MAX_LENGTH = REPEAT_FLAG - 1
+
+	@staticmethod
+	def encode_transparent(count): # type: (int) -> str
+		encoded = ''
+		while count > 0:
+			encoded += struct.pack('<B', RLE.TRANSPARENT_FLAG | min(RLE.TRANSPARENT_MAX_LENGTH, count))
+			count -= RLE.TRANSPARENT_MAX_LENGTH
+		return encoded
+
+	@staticmethod
+	def encode_repeat(index, count): # type: (int, int) -> str
+		encoded = ''
+		while count > 0:
+			encoded += struct.pack('<BB', RLE.REPEAT_FLAG | min(RLE.REPEAT_MAX_LENGTH, count), index)
+			count -= RLE.REPEAT_MAX_LENGTH
+		return encoded
+
+	@staticmethod
+	def encode_static(line): # type: (list[int]) -> str
+		encoded = ''
+		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
+			run = line[x:x+RLE.STATIC_MAX_LENGTH]
+			encoded += struct.pack('<%dB' % (1 + len(run)), len(run), *run)
+		return encoded
+
+	@staticmethod
+	def compress_line(line, transparent_index): # type: (list[int], int) -> str
+		last_index = line[0]
+		repeat_count = 0
+		static_len = 0
+		compressed = ''
+		for (x,index) in enumerate(line):
+			if index == last_index:
+				repeat_count += 1
+			else:
+				if last_index == transparent_index:
+					compressed += RLE.encode_transparent(repeat_count)
+				elif repeat_count > 1 and static_len < 2:
+					compressed += RLE.encode_repeat(last_index, repeat_count)
+				repeat_count =  1
+			if repeat_count > 2 or index == transparent_index:
+				if static_len > repeat_count-1:
+					compressed += RLE.encode_static(line[x-static_len:x-repeat_count+1])
+				static_len = 0
+			else:
+				static_len += 1
+			last_index = index
+		if last_index == transparent_index:
+			compressed += RLE.encode_transparent(repeat_count)
+		elif static_len:
+			compressed += RLE.encode_static(line[-static_len:])
+		elif repeat_count:
+			compressed += RLE.encode_repeat(last_index, repeat_count)
+		return compressed
 
 class CacheGRP:
 	def __init__(self, palette=[[0,0,0]]*256):
@@ -303,14 +365,27 @@ class GRP:
 		self.images_bounds = images_bounds
 		self.transindex = transindex
 
-	def load_data(self, image, palette=None, transindex=0):
-		self.frames = 1
-		self.height = len(image)
-		self.width = len(image[0])
+	def load_data(self, frames, palette=None, transindex=0, validate=True):
+		if not frames:
+			raise PyMSError('GRP', 'Attempting to load GRP data with no frames')
+		self.frames = len(frames)
+		height = len(frames[0])
+		width = len(frames[0][0])
+		if validate:
+			for (n, frame) in enumerate(frames, 1):
+				frame_height = len(frame)
+				if frame_height != height:
+					raise PyMSError('GRP', 'Frame %d has unexpected height (got %d, expected %d)' % (n, frame_height, height))
+				for (y, line) in enumerate(frame):
+					line_width = len(line)
+					if line_width != width:
+						raise PyMSError('GRP', 'Frame %d line %d has unexpected width (got %d, expected %d)' % (n, y, line_width, width))
+		self.height = height
+		self.width = width
 		if palette:
 			self.palette = list(palette)
-		self.images = [list(y) for y in image]
-		self.images_bounds = [image_bounds(image, transindex)]
+		self.images = deepcopy(frames)
+		self.images_bounds = [image_bounds(frame, transindex) for frame in frames]
 		self.transindex = transindex
 
 	def save_data(self, uncompressed=None):

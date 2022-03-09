@@ -126,7 +126,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 								raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],inp.width,inp.height))
 							if inp.width > 256 or inp.height > 256:
 								raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 256x256, got %sx%s)" % (fullfile,inp.width,inp.height))
-							out.load_data(inp.image)
+							out.load_data([inp.image])
 							found += 1
 						if not mute:
 							print(" - '%s' read successfully" % fullfile)
