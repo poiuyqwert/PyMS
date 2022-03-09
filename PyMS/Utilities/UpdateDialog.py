@@ -9,10 +9,12 @@ import webbrowser, json, urllib
 from thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
+	BRANCH = 'expanded_dat_files' # Default to `master` branch, but can be update for long-lived branches
+
 	@staticmethod
 	def check_update(window, program):
 		def do_check_update(window, program):
-			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/master/Libs/versions.json'
+			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
 			remindme = PYMS_SETTINGS.get('remindme', True)
 			if remindme == True or remindme != VERSIONS['PyMS']:
 				try:
