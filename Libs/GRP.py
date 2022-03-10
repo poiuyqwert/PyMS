@@ -124,6 +124,67 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 		i.putdata(data)
 		return ImageTk.PhotoImage(i)
 
+class RLE:
+	TRANSPARENT_FLAG = (1 << 7)
+	TRANSPARENT_MAX_LENGTH = TRANSPARENT_FLAG - 1
+	REPEAT_FLAG = (1 << 6)
+	REPEAT_MAX_LENGTH = REPEAT_FLAG - 1
+	STATIC_MAX_LENGTH = REPEAT_FLAG - 1
+
+	@staticmethod
+	def encode_transparent(count): # type: (int) -> str
+		encoded = ''
+		while count > 0:
+			encoded += struct.pack('<B', RLE.TRANSPARENT_FLAG | min(RLE.TRANSPARENT_MAX_LENGTH, count))
+			count -= RLE.TRANSPARENT_MAX_LENGTH
+		return encoded
+
+	@staticmethod
+	def encode_repeat(index, count): # type: (int, int) -> str
+		encoded = ''
+		while count > 0:
+			encoded += struct.pack('<BB', RLE.REPEAT_FLAG | min(RLE.REPEAT_MAX_LENGTH, count), index)
+			count -= RLE.REPEAT_MAX_LENGTH
+		return encoded
+
+	@staticmethod
+	def encode_static(line): # type: (list[int]) -> str
+		encoded = ''
+		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
+			run = line[x:x+RLE.STATIC_MAX_LENGTH]
+			encoded += struct.pack('<%dB' % (1 + len(run)), len(run), *run)
+		return encoded
+
+	@staticmethod
+	def compress_line(line, transparent_index): # type: (list[int], int) -> str
+		last_index = line[0]
+		repeat_count = 0
+		static_len = 0
+		compressed = ''
+		for (x,index) in enumerate(line):
+			if index == last_index:
+				repeat_count += 1
+			else:
+				if last_index == transparent_index:
+					compressed += RLE.encode_transparent(repeat_count)
+				elif repeat_count > 1 and static_len < 2:
+					compressed += RLE.encode_repeat(last_index, repeat_count)
+				repeat_count =  1
+			if repeat_count > 2 or index == transparent_index:
+				if static_len > repeat_count-1:
+					compressed += RLE.encode_static(line[x-static_len:x-repeat_count+1])
+				static_len = 0
+			else:
+				static_len += 1
+			last_index = index
+		if last_index == transparent_index:
+			compressed += RLE.encode_transparent(repeat_count)
+		elif static_len:
+			compressed += RLE.encode_static(line[-static_len:])
+		elif repeat_count:
+			compressed += RLE.encode_repeat(last_index, repeat_count)
+		return compressed
+
 class CacheGRP:
 	def __init__(self, palette=[[0,0,0]]*256):
 		self.frames = 0
@@ -348,74 +409,7 @@ class GRP:
 						if line_hash in line_history:
 							line_offsets.append(line_history[line_hash])
 						else:
-							# Break down bytes into runs of static bytes or repeating bytes (Note: Single transparent pixels are considered "repeating")
-							STATIC_RUN = 0
-							REPEAT_RUN = 1
-							working = [STATIC_RUN,[line[x_min]]]
-							runs = [working]
-							for cur in line[x_min+1:x_max]:
-								# Currently working on a static run
-								if working[0] == STATIC_RUN:
-									repeat = (cur == working[1][-1])
-									# If current byte is transparent or is a repeat of the last byte in the static run
-									if cur == self.transindex or repeat:
-										# If its a repeat remove the repeat from the static run
-										if repeat:
-											# If there is only 1 byte in the static run just remove the run
-											if len(working[1]) == 1:
-												del runs[-1]
-											else:
-												del working[1][-1]
-										# Start a new repeat run
-										working = [REPEAT_RUN,cur,1 + repeat]
-										runs.append(working)
-									# Else just append byte to static run
-									else:
-										working[1].append(cur)
-								else:
-									# If the current byte doesn't continue the repeat run
-									if cur != working[1]:
-										# If the working run only repeats its byte 2 times (and is not transparent), and the previous run was a static run
-										if len(runs) > 1 and runs[-2][0] == STATIC_RUN and working[1] != self.transindex and working[2] == 2:
-											# Merge the repeat run into the previous static run. This can save us a byte if the upcoming run is static (we won't need another length byte to start the next static run)
-											del runs[-1]
-											runs[-1][1].extend([working[1]] * working[2])
-											working = runs[-1]
-											working[1].append(cur)
-										# Start a new repeat run
-										elif cur == self.transindex:
-											working = [REPEAT_RUN,cur,1]
-											runs.append(working)
-										else:
-											working = [STATIC_RUN,[cur]]
-											runs.append(working)
-									# Else just increase repeat count
-									else:
-										working[2] += 1
-							data = ''
-							debug_result = []
-							for run in runs:
-								if run[0] == STATIC_RUN:
-									o = 0
-									while o < len(run[1]):
-										size = min(0x3F,len(run[1])-o)
-										data += chr(size)
-										for c in run[1][o:o+size]:
-											data += chr(c)
-										o += size
-								elif run[0] == REPEAT_RUN:
-									if run[1] == self.transindex:
-										repeats = run[2]
-										while repeats:
-											size = min(0x7F,repeats)
-											data += chr(size | 0x80)
-											repeats -= size
-									else:
-										repeats = run[2]
-										while repeats:
-											size = min(0x3F,repeats)
-											data += chr(size | 0x40) + chr(run[1])
-											repeats -= size
+							data = RLE.compress_line(line, self.transindex)
 							line_data += data
 							if line_offset > 65535:
 								raise PyMSError('Save','The image has too much pixel data to compile')
