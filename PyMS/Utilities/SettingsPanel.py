@@ -51,7 +51,11 @@ class SettingsPanel(Frame):
 		inmpq = False
 		Frame.__init__(self, parent)
 		for entry in entries:
-			f,e,v,t = entry
+			if len(entry) == 5:
+				f,e,v,t,c = entry
+			else:
+				f,e,v,t = entry
+				c = None
 			self.variables[f] = (IntVar(),StringVar(),[])
 			if isinstance(v, tuple) or isinstance(v, list):
 				profileKey,valueKey = v
@@ -82,7 +86,7 @@ class SettingsPanel(Frame):
 				Label(datframe, text=f, anchor=W).pack(fill=X, expand=1)
 			entryframe = Frame(datframe)
 			e = Entry(entryframe, textvariable=self.variables[f][1], state=DISABLED)
-			b = Button(entryframe, image=self.find, width=20, height=20, command=lambda _f=f,_t=self.types[t],_e=e: self.setting(_f,_t,_e))
+			b = Button(entryframe, image=self.find, width=20, height=20, command=lambda _f=f,_t=self.types[t],_e=e,_c=c: self.setting(_f,_t,_e,_c))
 			self.variables[f][2].extend([e,b])
 			if not t == 'Palette':
 				inmpq = True
@@ -111,7 +115,7 @@ class SettingsPanel(Frame):
 				self.settings['lastpath'] = os.path.dirname(file)
 			return file
 
-	def setting(self, f, t, e):
+	def setting(self, f, t, e, cb):
 		file = ''
 		if self.variables[f][0].get():
 			m = MPQSelect(self.setdlg, self.mpqhandler, t[1], '*.' + t[2], self.settings)
@@ -145,6 +149,8 @@ class SettingsPanel(Frame):
 					return
 				self.variables[f][1].set(file)
 			e.xview(END)
+			if cb:
+				cb(c)
 			self.setdlg.edited = True
 
 	def save(self, d, m, settings):

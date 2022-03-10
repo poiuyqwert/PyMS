@@ -127,7 +127,16 @@ class PyLO(MainWindow):
 		self.framescroll.set(0,1)
 		self.framescroll.pack(side=TOP, fill=X)
 		c.pack(side=TOP)
-		self.grppanel = SettingsPanel(f, (('Base GRP:',False,'basegrp','CacheGRP',self.updatebasegrp),('Overlay GRP:',False,'overlaygrp','CacheGRP',self.updateoverlaygrp)), self.settings, self.mpqhandler, self)
+		self.grppanel = SettingsPanel(
+			f,
+			(
+				('Base GRP:',False,'basegrp','CacheGRP',self.updatebasegrp),
+				('Overlay GRP:',False,'overlaygrp','CacheGRP',self.updateoverlaygrp)
+			),
+			self.settings,
+			self.mpqhandler,
+			self
+		)
 		self.grppanel.pack(side=TOP)
 		x = Frame(f)
 		Checkbutton(x, text='Use base GRP', variable=self.usebasegrp, command=self.updateusebase).pack(side=LEFT)
