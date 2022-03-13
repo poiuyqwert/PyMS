@@ -71,6 +71,14 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
+	def test_ending_in_short_repeats(self):
+		line = (1, 1, 1, 2, 2)
+		expected = '43 01 42 02'
+
+		result = data_to_hex(RLE.compress_line(line, 0))
+
+		self.assertEqual(result, expected)
+
 	def test_ending_in_static_run_with_short_repeat(self):
 		line = (1, 2, 3, 3)
 		expected = '04 01 02 03 03'

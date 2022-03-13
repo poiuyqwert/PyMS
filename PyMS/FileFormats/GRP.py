@@ -187,7 +187,7 @@ class RLE:
 			last_index = index
 		if last_index == transparent_index:
 			compressed += RLE.encode_transparent(repeat_count)
-		elif static_len:
+		elif static_len and static_len > repeat_count:
 			compressed += RLE.encode_static(line[-static_len:])
 		elif repeat_count:
 			compressed += RLE.encode_repeat(last_index, repeat_count)
@@ -408,7 +408,7 @@ class GRP:
 					image_data += data
 					offset += len(data)
 			else:
-				frame_hash = tuple(tuple(l[x_min:x_max]) for l in frame[y_min:y_max])
+				frame_hash = (x_min, x_max, y_min, y_max) + tuple(tuple(l[x_min:x_max]) for l in frame[y_min:y_max])
 				# If there is a duplicate frame, just point to it
 				if frame_hash in frame_history:
 					header_data += frame_history[frame_hash]
@@ -426,7 +426,7 @@ class GRP:
 						if line_hash in line_history:
 							line_offsets.append(line_history[line_hash])
 						else:
-							data = RLE.compress_line(line, self.transindex)
+							data = RLE.compress_line(line[x_min:x_max], self.transindex)
 							line_data += data
 							if line_offset > 65535:
 								raise PyMSError('Save','The image has too much pixel data to compile')
