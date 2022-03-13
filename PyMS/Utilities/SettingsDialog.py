@@ -1,7 +1,5 @@
 
 from utils import BASE_DIR
-from Settings import SettingDict
-from setutils import loadsize, savesize
 from PyMSDialog import PyMSDialog
 from Notebook import Notebook
 from MPQSettings import MPQSettings
@@ -11,7 +9,6 @@ from UIKit import *
 
 import os, copy
 
-# TODO: Update settings handling once all programs use Settings objects
 class SettingsDialog(PyMSDialog):
 	def __init__(self, parent, data, min_size, err=None, settings=None, mpqhandler=None):
 		self.min_size = min_size
@@ -50,10 +47,7 @@ class SettingsDialog(PyMSDialog):
 
 	def setup_complete(self):
 		self.minsize(*self.min_size)
-		if isinstance(self.settings, SettingDict):
-			self.settings.windows.settings.load_window_size('main', self)
-		elif 'settingswindow' in self.settings:
-			loadsize(self, self.settings, 'settingswindow', True)
+		self.settings.windows.settings.load_window_size('main', self)
 
 	def showerr(self):
 		ErrorDialog(self, self.err)
@@ -86,23 +80,13 @@ class SettingsDialog(PyMSDialog):
 				if e:
 					if old_mpqs != None:
 						self.mpqhandler.set_mpqs(old_mpqs)
-					if isinstance(self.settings, SettingDict):
-						self.settings.update(old_settings, set=True)
-					else:
-						self.settings = old_settings
-						self.parent.settings = old_settings
+					self.settings.update(old_settings, set=True)
 					ErrorDialog(self, e)
 					return
 			if self.mpqhandler:
-				if isinstance(self.settings, SettingDict):
-					self.settings.settings.mpqs = self.mpqhandler.mpqs
-				else:
-					self.settings['mpqs'] = self.mpqhandler.mpqs
+				self.settings.settings.mpqs = self.mpqhandler.mpqs
 		PyMSDialog.ok(self)
 
 	def dismiss(self):
-		if isinstance(self.settings, SettingDict):
-			self.settings.windows.settings.save_window_size('main', self)
-		else:
-			savesize(self, self.settings, 'settingswindow', True)
+		self.settings.windows.settings.save_window_size('main', self)
 		PyMSDialog.dismiss(self)

@@ -2,8 +2,6 @@
 from ..FileFormats.MPQ.SFmpq import SFileListFiles
 
 from utils import BASE_DIR
-from Settings import SettingDict
-from setutils import loadsize, savesize
 from PyMSDialog import PyMSDialog
 from TextDropDown import TextDropDown
 from UIKit import *
@@ -49,11 +47,7 @@ class MPQSelect(PyMSDialog):
 		listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		listframe.focus_set()
 		s = Frame(self)
-        # TODO: Drop support for non-SettingDict
-		if isinstance(self.settings, SettingDict):
-			history = self.settings.settings.get('mpqselecthistory',[])[::-1]
-		else:
-			history = self.settings.get('mpqselecthistory',[])[::-1]
+		history = self.settings.settings.get('mpqselecthistory',[])[::-1]
 		self.textdrop = TextDropDown(s, self.search, history)
 		self.textdrop.entry.c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
@@ -72,11 +66,7 @@ class MPQSelect(PyMSDialog):
 		return self.open
 
 	def setup_complete(self):
-        # TODO: Drop support for non-SettingDict
-		if isinstance(self.settings, SettingDict):
-			self.settings.windows.settings.load_window_size('mpqselect', self)
-		elif 'mpqselectwindow' in self.settings:
-			loadsize(self, self.settings, 'mpqselectwindow', True)
+		self.settings.windows.settings.load_window_size('mpqselect', self)
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -147,12 +137,7 @@ class MPQSelect(PyMSDialog):
 	def ok(self):
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
-		if isinstance(self.settings, SettingDict):
-			history = self.settings.settings.get('mpqselecthistory', [])
-		else:
-			if not 'mpqselecthistory' in self.settings:
-				self.settings['mpqselecthistory'] = []
-			history = self.settings['mpqselecthistory']
+		history = self.settings.settings.get('mpqselecthistory', [])
 		if f in history:
 			history.remove(f)
 		history.append(f)
@@ -161,9 +146,5 @@ class MPQSelect(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self):
-        # TODO: Drop support for non-SettingDict
-		if isinstance(self.settings, SettingDict):
-			self.settings.windows.settings.save_window_size('mpqselect', self)
-		else:
-			savesize(self, self.settings, 'mpqselectwindow')
+		self.settings.windows.settings.save_window_size('mpqselect', self)
 		PyMSDialog.dismiss(self)

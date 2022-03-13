@@ -2,14 +2,12 @@
 from ..FileFormats.MPQ.SFmpq import *
 
 from utils import BASE_DIR
-from Settings import SettingDict
 from setutils import PYMS_SETTINGS
 from Tooltip import Tooltip
 from UIKit import *
 
 import os
 
-# TODO: Update settings handling once all programs use Settings objects
 class MPQSettings(Frame):
 	def __init__(self, parent, mpqs, settings, setdlg=None):
 		if setdlg == None:
@@ -118,20 +116,10 @@ class MPQSettings(Frame):
 		self.listbox.see(n)
 		self.setdlg.edited = True
 
-	def select_files(self):
-		if isinstance(self.settings, SettingDict):
-			return self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=(('MPQ Files','*.mpq'),))
-		else:
-			path = self.settings.get('lastpath', BASE_DIR)
-			file = FileDialog.askopenfilename(parent=self, title="Add MPQ's", defaultextension='.mpq', filetypes=[('MPQ Files','*.mpq'),('All Files','*')], initialdir=path, multiple=True)
-			if file:
-				self.settings['lastpath'] = os.path.dirname(file[0])
-			return file
-
 	def add(self, key=None, add=None):
 		if add == None:
 			n,s = 0,0
-			add = self.select_files()
+			add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=(('MPQ Files','*.mpq'),))
 		else:
 			n,s = END,self.listbox.size()
 		if add:

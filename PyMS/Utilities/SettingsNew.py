@@ -206,7 +206,7 @@ class WindowGeometry(SettingObject):
 			return
 		self._geometry = geometry
 
-# TODO: This simply replicates the existing Settings use case, but should this be more complicated like `SettingSelectFile`?
+# TODO: This simply replicates the existing Settings use case, but should this be more complicated like `SelectFile`?
 class File(SettingObject):
 	def __init__(self, default=None): # type: (str) -> File
 		self._file_path = default
