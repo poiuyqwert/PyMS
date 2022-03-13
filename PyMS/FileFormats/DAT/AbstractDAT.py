@@ -1,4 +1,7 @@
 
+from DATFormat import DATProperty
+from DATCoders import DATPropertyCoder
+
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -16,7 +19,7 @@ class AbstractDAT(object):
 	# File format
 	FORMAT = None
 	# Struct object for entries
-	ENTRY_STRUCT = None
+	ENTRY_STRUCT = lambda: None
 	# Default filename for DAT file
 	FILE_NAME = None
 
@@ -222,16 +225,16 @@ class AbstractDATEntry(object):
 			elif export_type == ExportType.json:
 				data[prop] = value
 
-	# `values_lambda` is called with `obj` (if not None), and returns an iterable of tuples in the format `(field, value)`
-	def _export_property_values(self, export_properties, prop, obj, values_lambda, export_type, data):
-		if (not export_properties or prop in export_properties) and obj != None:
+	# `property_coder` is called with `value` (if not None), and returns an ordered dict of encoded data
+	def _export_property_values(self, export_properties, prop, value, property_coder, export_type, data): # type: (list[str], DATProperty, Any, DATPropertyCoder, ExportType, Any) -> None
+		if (not export_properties or prop in export_properties) and value != None:
 			if export_type == ExportType.text:
-				for field,value in values_lambda(obj):
+				for field,value in property_coder.encode(value).items():
 					if value != None:
 						data.append("%s.%s %s" % (prop, field, value))
 			elif export_type == ExportType.json:
 				sub_data = OrderedDict()
-				for field,value in values_lambda(obj):
+				for field,value in property_coder.encode(value).items():
 					if value != None:
 						sub_data[field] = value
 				if sub_data:

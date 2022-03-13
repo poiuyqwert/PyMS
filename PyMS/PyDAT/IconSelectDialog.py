@@ -115,6 +115,8 @@ class IconSelectDialog(PyMSDialog):
 		display_index = self._selected_index_to_display_index(self.selected_index)
 		icon_size = self._icon_size()
 		columns, total_height, _, _, _ = self._calculate_visibility()
+		if columns == 0:
+			return
 		viewport_height = self.scrolled_canvas.canvas.winfo_height()
 		y = max(0,min(total_height,(display_index / columns + 0.5) * icon_size[1] - viewport_height/2.0))
 		self.scrolled_canvas.canvas.yview_moveto(y / total_height)

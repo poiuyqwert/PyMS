@@ -143,12 +143,12 @@ class DATTypeSupply(DATType):
 
 	def __init__(self):
 		self.whole = 0
-		self.half = 1
+		self.half = False
 
 	def load_data(self, data, offset):
 		value = self.unpack_data(data, offset)[0]
 		self.whole = value >> 1
-		self.half = value & 1
+		self.half = (value & 1) == 1
 
 	def save_data(self):
 		value = (self.whole << 1) | (1 if self.half else 0)
@@ -196,7 +196,7 @@ class DATProperty(object):
 		total_size = self.total_size(total_entry_count, is_expanded)
 		entry_count = self.entry_count(total_entry_count, is_expanded)
 		prop_data = []
-		for n in range(entry_count):
+		for _ in range(entry_count):
 			dat_type = self.dat_type(is_expanded)()
 			dat_type.load_data(data, offset)
 			# DATTypeScalar will return the raw scalar value, other DATTypes will return themselves

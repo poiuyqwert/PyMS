@@ -95,6 +95,7 @@ class ScrolledListbox(Frame):
 				self.select_set(index)
 				self.see(index)
 				self.listbox.event_generate(WidgetEvent.Listbox.Select)
+				self.listbox.focus_set()
 				return Event.BREAK
 			bind = [
 				(Mouse.Scroll, scroll),

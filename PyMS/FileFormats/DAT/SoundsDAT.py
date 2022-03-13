@@ -1,6 +1,7 @@
 
 import AbstractDAT
 import DATFormat
+import DATCoders
 
 class Sound(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -46,7 +47,13 @@ class Sound(AbstractDAT.AbstractDATEntry):
 	def _export(self, export_properties, export_type, data):
 		self._export_property_value(export_properties, Sound.Property.sound_file, self.sound_file, export_type, data)
 		self._export_property_value(export_properties, Sound.Property.priority, self.priority, export_type, data)
-		self._export_property_value(export_properties, Sound.Property.flags, self.flags, export_type, data)
+		flags_coder = DATCoders.DATFlagsCoder(6, {
+			Sound.Flag.preload: 'preload',
+			Sound.Flag.unit_speech: 'unit_speech',
+			Sound.Flag.one_at_a_time: 'one_at_a_time',
+			Sound.Flag.never_preempt: 'never_preempt'
+		})
+		self._export_property_values(export_properties, Sound.Property.flags, self.flags, flags_coder, export_type, data)
 		self._export_property_value(export_properties, Sound.Property.portrait_length_adjust, self.portrait_length_adjust, export_type, data)
 		self._export_property_value(export_properties, Sound.Property.minimum_volume, self.minimum_volume, export_type, data)
 

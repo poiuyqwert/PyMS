@@ -1,5 +1,4 @@
 
-from operator import is_
 import Tkinter as Tk
 from ..TagStateManager import TagStateManager
 

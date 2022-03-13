@@ -1,6 +1,7 @@
 
 import AbstractDAT
 import DATFormat
+import DATCoders
 
 class Weapon(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -127,7 +128,18 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Weapon.Property.label, self.label, export_type, data)
 		self._export_property_value(export_properties, Weapon.Property.graphics, self.graphics, export_type, data)
 		self._export_property_value(export_properties, Weapon.Property.unused_technology, self.unused_technology, export_type, data)
-		self._export_property_value(export_properties, Weapon.Property.target_flags, self.target_flags, export_type, data)
+		target_flags_coder = DATCoders.DATFlagsCoder(9, {
+			Weapon.TargetFlag.air: 'air',
+			Weapon.TargetFlag.ground: 'ground',
+			Weapon.TargetFlag.mechanical: 'mechanical',
+			Weapon.TargetFlag.organic: 'organic',
+			Weapon.TargetFlag.non_building: 'non_building',
+			Weapon.TargetFlag.non_robotic: 'non_robotic',
+			Weapon.TargetFlag.terrain: 'terrain',
+			Weapon.TargetFlag.organic_or_mechanical: 'organic_or_mechanical',
+			Weapon.TargetFlag.own: 'own',
+		})
+		self._export_property_values(export_properties, Weapon.Property.target_flags, self.target_flags, target_flags_coder, export_type, data)
 		self._export_property_value(export_properties, Weapon.Property.minimum_range, self.minimum_range, export_type, data)
 		self._export_property_value(export_properties, Weapon.Property.maximum_range, self.maximum_range, export_type, data)
 		self._export_property_value(export_properties, Weapon.Property.damage_upgrade, self.damage_upgrade, export_type, data)

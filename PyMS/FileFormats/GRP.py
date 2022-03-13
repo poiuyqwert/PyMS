@@ -426,73 +426,7 @@ class GRP:
 						if line_hash in line_history:
 							line_offsets.append(line_history[line_hash])
 						else:
-							# Break down bytes into runs of static bytes or repeating bytes (Note: Single transparent pixels are considered "repeating")
-							STATIC_RUN = 0
-							REPEAT_RUN = 1
-							working = [STATIC_RUN,[line[x_min]]]
-							runs = [working]
-							for cur in line[x_min+1:x_max]:
-								# Currently working on a static run
-								if working[0] == STATIC_RUN:
-									repeat = (cur == working[1][-1])
-									# If current byte is transparent or is a repeat of the last byte in the static run
-									if cur == self.transindex or repeat:
-										# If its a repeat remove the repeat from the static run
-										if repeat:
-											# If there is only 1 byte in the static run just remove the run
-											if len(working[1]) == 1:
-												del runs[-1]
-											else:
-												del working[1][-1]
-										# Start a new repeat run
-										working = [REPEAT_RUN,cur,1 + repeat]
-										runs.append(working)
-									# Else just append byte to static run
-									else:
-										working[1].append(cur)
-								else:
-									# If the current byte doesn't continue the repeat run
-									if cur != working[1]:
-										# If the working run only repeats its byte 2 times (and is not transparent), and the previous run was a static run
-										if len(runs) > 1 and runs[-2][0] == STATIC_RUN and working[1] != self.transindex and working[2] == 2:
-											# Merge the repeat run into the previous static run. This can save us a byte if the upcoming run is static (we won't need another length byte to start the next static run)
-											del runs[-1]
-											runs[-1][1].extend([working[1]] * working[2])
-											working = runs[-1]
-											working[1].append(cur)
-										# Start a new repeat run
-										elif cur == self.transindex:
-											working = [REPEAT_RUN,cur,1]
-											runs.append(working)
-										else:
-											working = [STATIC_RUN,[cur]]
-											runs.append(working)
-									# Else just increase repeat count
-									else:
-										working[2] += 1
-							data = ''
-							for run in runs:
-								if run[0] == STATIC_RUN:
-									o = 0
-									while o < len(run[1]):
-										size = min(0x3F,len(run[1])-o)
-										data += chr(size)
-										for c in run[1][o:o+size]:
-											data += chr(c)
-										o += size
-								elif run[0] == REPEAT_RUN:
-									if run[1] == self.transindex:
-										repeats = run[2]
-										while repeats:
-											size = min(0x7F,repeats)
-											data += chr(size | 0x80)
-											repeats -= size
-									else:
-										repeats = run[2]
-										while repeats:
-											size = min(0x3F,repeats)
-											data += chr(size | 0x40) + chr(run[1])
-											repeats -= size
+							data = RLE.compress_line(line, self.transindex)
 							line_data += data
 							if line_offset > 65535:
 								raise PyMSError('Save','The image has too much pixel data to compile')

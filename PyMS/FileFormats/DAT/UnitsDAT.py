@@ -1,6 +1,7 @@
 
 import AbstractDAT
 import DATFormat
+import DATCoders
 
 class Unit(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -333,9 +334,10 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Unit.Property.unit_direction, self.unit_direction, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.shield_enabled, self.shield_enabled, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.shield_amount, self.shield_amount, export_type, data)
-		self._export_property_values(export_properties, Unit.Property.hit_points, self.hit_points, lambda hit_points: (('whole', hit_points.whole), ('fraction', hit_points.fraction)), export_type, data)
+		self._export_property_values(export_properties, Unit.Property.hit_points, self.hit_points, DATCoders.DATHitPointsCoder(), export_type, data)
 		self._export_property_value(export_properties, Unit.Property.elevation_level, self.elevation_level, export_type, data)
-		self._export_property_value(export_properties, Unit.Property.unknown_flags, self.unknown_flags, export_type, data)
+		unknown_flags_coder = DATCoders.DATFlagsCoder(8, {})
+		self._export_property_values(export_properties, Unit.Property.unknown_flags, self.unknown_flags, unknown_flags_coder, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.sublabel, self.sublabel, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.comp_ai_idle, self.comp_ai_idle, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.human_ai_idle, self.human_ai_idle, export_type, data)
@@ -347,7 +349,41 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Unit.Property.air_weapon, self.air_weapon, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.max_air_hits, self.max_air_hits, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.ai_internal, self.ai_internal, export_type, data)
-		self._export_property_value(export_properties, Unit.Property.special_ability_flags, self.special_ability_flags, export_type, data)
+		special_ability_flags_coder = DATCoders.DATFlagsCoder(32, {
+			Unit.SpecialAbilityFlag.building: 'building',
+			Unit.SpecialAbilityFlag.addon: 'addon',
+			Unit.SpecialAbilityFlag.flyer: 'flyer',
+			Unit.SpecialAbilityFlag.resource_miner: 'resource_miner',
+			Unit.SpecialAbilityFlag.subunit: 'subunit',
+			Unit.SpecialAbilityFlag.flying_building: 'flying_building',
+			Unit.SpecialAbilityFlag.hero: 'hero',
+			Unit.SpecialAbilityFlag.regenerate: 'regenerate',
+			Unit.SpecialAbilityFlag.animated_idle: 'animated_idle',
+			Unit.SpecialAbilityFlag.cloakable: 'cloakable',
+			Unit.SpecialAbilityFlag.two_units_in_one_egg: 'two_units_in_one_egg',
+			Unit.SpecialAbilityFlag.single_entity: 'single_entity',
+			Unit.SpecialAbilityFlag.resource_depot: 'resource_depot',
+			Unit.SpecialAbilityFlag.resource_container: 'resource_container',
+			Unit.SpecialAbilityFlag.robotic: 'robotic',
+			Unit.SpecialAbilityFlag.detector: 'detector',
+			Unit.SpecialAbilityFlag.organic: 'organic',
+			Unit.SpecialAbilityFlag.requires_creep: 'requires_creep',
+			Unit.SpecialAbilityFlag.unused: 'unused',
+			Unit.SpecialAbilityFlag.requires_psi: 'requires_psi',
+			Unit.SpecialAbilityFlag.burrowable: 'burrowable',
+			Unit.SpecialAbilityFlag.spellcaster: 'spellcaster',
+			Unit.SpecialAbilityFlag.permanent_cloak: 'permanent_cloak',
+			Unit.SpecialAbilityFlag.pickup_item: 'pickup_item',
+			Unit.SpecialAbilityFlag.ignores_supply_check: 'ignores_supply_check',
+			Unit.SpecialAbilityFlag.use_medium_overlays: 'use_medium_overlays',
+			Unit.SpecialAbilityFlag.use_large_overlays: 'use_large_overlays',
+			Unit.SpecialAbilityFlag.battle_reactions: 'battle_reactions',
+			Unit.SpecialAbilityFlag.full_auto_attack: 'full_auto_attack',
+			Unit.SpecialAbilityFlag.invincible: 'invincible',
+			Unit.SpecialAbilityFlag.mechanical: 'mechanical',
+			Unit.SpecialAbilityFlag.produces_units: 'produces_units',
+		})
+		self._export_property_values(export_properties, Unit.Property.special_ability_flags, self.special_ability_flags, special_ability_flags_coder, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.target_acquisition_range, self.target_acquisition_range, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.sight_range, self.sight_range, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.armor_upgrade, self.armor_upgrade, export_type, data)
@@ -361,24 +397,46 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, Unit.Property.pissed_sound_end, self.pissed_sound_end, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.yes_sound_start, self.yes_sound_start, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.yes_sound_end, self.yes_sound_end, export_type, data)
-		self._export_property_values(export_properties, Unit.Property.staredit_placement_size, self.staredit_placement_size, lambda staredit_placement_size: (('width', staredit_placement_size.width), ('height', staredit_placement_size.height)), export_type, data)
-		self._export_property_values(export_properties, Unit.Property.addon_position, self.addon_position, lambda addon_position: (('x', addon_position.x), ('y', addon_position.y)), export_type, data)
-		self._export_property_values(export_properties, Unit.Property.unit_extents, self.unit_extents, lambda unit_extents: (('left', unit_extents.left), ('up', unit_extents.up), ('right', unit_extents.right), ('down', unit_extents.down)), export_type, data)
+		self._export_property_values(export_properties, Unit.Property.staredit_placement_size, self.staredit_placement_size, DATCoders.DATSizeCoder(), export_type, data)
+		self._export_property_values(export_properties, Unit.Property.addon_position, self.addon_position, DATCoders.DATPositionCoder(), export_type, data)
+		self._export_property_values(export_properties, Unit.Property.unit_extents, self.unit_extents, DATCoders.DATExtentsCoder(), export_type, data)
 		self._export_property_value(export_properties, Unit.Property.portrait, self.portrait, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.mineral_cost, self.mineral_cost, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.vespene_cost, self.vespene_cost, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.build_time, self.build_time, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.requirements, self.requirements, export_type, data)
-		self._export_property_value(export_properties, Unit.Property.staredit_group_flags, self.staredit_group_flags, export_type, data)
-		self._export_property_values(export_properties, Unit.Property.supply_provided, self.supply_provided, lambda supply_provided: (('whole', supply_provided.whole), ('half', supply_provided.half)), export_type, data)
-		self._export_property_values(export_properties, Unit.Property.supply_required, self.supply_required, lambda supply_required: (('whole', supply_required.whole), ('half', supply_required.half)), export_type, data)
+		staredit_group_flags_coder = DATCoders.DATFlagsCoder(8, {
+			Unit.StarEditGroupFlag.zerg: 'zerg',
+			Unit.StarEditGroupFlag.terran: 'terran',
+			Unit.StarEditGroupFlag.protoss: 'protoss',
+			Unit.StarEditGroupFlag.men: 'men',
+			Unit.StarEditGroupFlag.building: 'building',
+			Unit.StarEditGroupFlag.factory: 'factory',
+			Unit.StarEditGroupFlag.independent: 'independent',
+			Unit.StarEditGroupFlag.neutral: 'neutral',
+		})
+		self._export_property_values(export_properties, Unit.Property.staredit_group_flags, self.staredit_group_flags, staredit_group_flags_coder, export_type, data)
+		self._export_property_values(export_properties, Unit.Property.supply_provided, self.supply_provided, DATCoders.DATSupplyCoder(), export_type, data)
+		self._export_property_values(export_properties, Unit.Property.supply_required, self.supply_required, DATCoders.DATSupplyCoder(), export_type, data)
 		self._export_property_value(export_properties, Unit.Property.space_required, self.space_required, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.space_provided, self.space_provided, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.build_score, self.build_score, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.destroy_score, self.destroy_score, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.unit_map_string, self.unit_map_string, export_type, data)
 		self._export_property_value(export_properties, Unit.Property.broodwar_unit_flag, self.broodwar_unit_flag, export_type, data)
-		self._export_property_value(export_properties, Unit.Property.staredit_availability_flags, self.staredit_availability_flags, export_type, data)
+		staredit_availability_flags_coder = DATCoders.DATFlagsCoder(10, {
+			Unit.StarEditAvailabilityFlag.non_neutral: 'non_neutral',
+			Unit.StarEditAvailabilityFlag.unit_listing: 'unit_listing',
+			Unit.StarEditAvailabilityFlag.mission_briefing: 'mission_briefing',
+			Unit.StarEditAvailabilityFlag.player_settings: 'player_settings',
+			Unit.StarEditAvailabilityFlag.all_races: 'all_races',
+			Unit.StarEditAvailabilityFlag.set_doodad_state: 'set_doodad_state',
+			Unit.StarEditAvailabilityFlag.non_location_triggers: 'non_location_triggers',
+			Unit.StarEditAvailabilityFlag.unit_hero_settings: 'unit_hero_settings',
+			Unit.StarEditAvailabilityFlag.location_triggers: 'location_triggers',
+			Unit.StarEditAvailabilityFlag.broodwar_only: 'broodwar_only',
+		})
+		self._export_property_values(export_properties, Unit.Property.staredit_availability_flags, self.staredit_availability_flags, staredit_availability_flags_coder, export_type, data)
 
 # units.dat file handler
 class UnitsDAT(AbstractDAT.AbstractDAT):
