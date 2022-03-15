@@ -123,7 +123,7 @@ class PyDAT(MainWindow):
 		self.listmenu = Menu(self, tearoff=0)
 		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c)
 		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y, tags='can_copy_sub_tab')
-		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p, tags='can_paste')
+		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p)
 		self.listmenu.add_separator()
 		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r)
 		self.listmenu.add_separator()
@@ -284,7 +284,6 @@ class PyDAT(MainWindow):
 		self.changeid(self.jumpid.get())
 
 	def popup(self, e):
-		self.listmenu.tag_enabled('can_paste', False) # TODO
 		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.dattabs.active, 'copy_subtab'))
 		self.listmenu.tag_enabled('can_expand', self.dattabs.active.get_dat_data().dat.can_expand())
 		self.listmenu.post(e.x_root, e.y_root)

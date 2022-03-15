@@ -1,6 +1,11 @@
 
 import AbstractDAT
 import DATFormat
+import DATCoders
+
+from ...Utilities.PyMSError import PyMSError
+
+from collections import OrderedDict
 
 class Portrait(object):
 	def __init__(self):
@@ -37,9 +42,43 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Portraits'
-	def _export(self, export_properties, export_type, data):
-		self._export_property_values(export_properties, Portraits.Property.idle, self.idle, lambda idle: (('portrait_file', idle.portrait_file), ('smk_change', idle.smk_change), ('unknown', idle.unknown)), export_type, data)
-		self._export_property_values(export_properties, Portraits.Property.talking, self.talking, lambda talking: (('portrait_file', talking.portrait_file), ('smk_change', talking.smk_change), ('unknown', talking.unknown)), export_type, data)
+	def _export_data(self, export_properties, data):
+		self._export_property_value(export_properties, Portraits.Property.idle, self.idle, data, _PortraitsPropertyCoder.idle)
+		self._export_property_value(export_properties, Portraits.Property.talking, self.talking, data, _PortraitsPropertyCoder.talking)
+
+	def _import_data(self, data):
+		idle = self._import_property_value(data, Portraits.Property.idle, _PortraitsPropertyCoder.idle)
+		talking = self._import_property_value(data, Portraits.Property.talking, _PortraitsPropertyCoder.talking)
+
+		if idle != None:
+			self.idle = idle
+		if talking != None:
+			self.talking = talking
+
+class DATPortraitCoder(DATCoders.DATPropertyCoder):
+	def encode(self, portrait): # type: (Portrait) -> OrderedDict[str, int]
+		values = OrderedDict()
+		values['portrait_file'] = portrait.portrait_file
+		values['smk_change'] = portrait.smk_change
+		values['unknown'] = portrait.unknown
+		return values
+
+	def decode(self, values): # type: (dict[str, int]) -> Portrait
+		if not 'portrait_file' in values:
+			raise PyMSError('Decode', 'Portrait missing `portrait_file` value')
+		if not 'smk_change' in values:
+			raise PyMSError('Decode', 'Portrait missing `smk_change` value')
+		if not 'unknown' in values:
+			raise PyMSError('Decode', 'Portrait missing `unknown` value')
+		portrait = Portrait()
+		portrait.portrait_file = values['portrait_file']
+		portrait.smk_change = values['smk_change']
+		portrait.unknown = values['unknown']
+		return portrait
+
+class _PortraitsPropertyCoder:
+	idle = DATPortraitCoder()
+	talking = DATPortraitCoder()
 
 # portdata.dat file handler
 class PortraitsDAT(AbstractDAT.AbstractDAT):

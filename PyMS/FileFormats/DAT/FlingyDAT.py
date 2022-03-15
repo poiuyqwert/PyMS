@@ -43,14 +43,38 @@ class Flingy(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Flingy'
-	def _export(self, export_properties, export_type, data):
-		self._export_property_value(export_properties, Flingy.Property.sprite, self.sprite, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.speed, self.speed, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.acceleration, self.acceleration, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.halt_distance, self.halt_distance, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.turn_radius, self.turn_radius, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.iscript_mask, self.iscript_mask, export_type, data)
-		self._export_property_value(export_properties, Flingy.Property.movement_control, self.movement_control, export_type, data)
+	def _export_data(self, export_properties, data):
+		self._export_property_value(export_properties, Flingy.Property.sprite, self.sprite, data)
+		self._export_property_value(export_properties, Flingy.Property.speed, self.speed, data)
+		self._export_property_value(export_properties, Flingy.Property.acceleration, self.acceleration, data)
+		self._export_property_value(export_properties, Flingy.Property.halt_distance, self.halt_distance, data)
+		self._export_property_value(export_properties, Flingy.Property.turn_radius, self.turn_radius, data)
+		self._export_property_value(export_properties, Flingy.Property.iscript_mask, self.iscript_mask, data)
+		self._export_property_value(export_properties, Flingy.Property.movement_control, self.movement_control, data)
+
+	def _import_data(self, data):
+		sprite = self._import_property_value(data, Flingy.Property.sprite)
+		speed = self._import_property_value(data, Flingy.Property.speed)
+		acceleration = self._import_property_value(data, Flingy.Property.acceleration)
+		halt_distance = self._import_property_value(data, Flingy.Property.halt_distance)
+		turn_radius = self._import_property_value(data, Flingy.Property.turn_radius)
+		iscript_mask = self._import_property_value(data, Flingy.Property.iscript_mask)
+		movement_control = self._import_property_value(data, Flingy.Property.movement_control)
+
+		if sprite != None:
+			self.sprite = sprite
+		if speed != None:
+			self.speed = speed
+		if acceleration != None:
+			self.acceleration = acceleration
+		if halt_distance != None:
+			self.halt_distance = halt_distance
+		if turn_radius != None:
+			self.turn_radius = turn_radius
+		if iscript_mask != None:
+			self.iscript_mask = iscript_mask
+		if movement_control != None:
+			self.movement_control = movement_control
 
 # flingy.dat file handler
 class FlingyDAT(AbstractDAT.AbstractDAT):

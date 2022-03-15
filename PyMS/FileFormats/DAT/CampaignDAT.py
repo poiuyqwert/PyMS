@@ -16,8 +16,14 @@ class Map(AbstractDAT.AbstractDATEntry):
 		return (self.map_file,)
 
 	EXPORT_NAME = 'Map'
-	def _export(self, export_properties, export_type, data):
-		self._export_property_value(export_properties, Map.Property.map_file, self.map_file, export_type, data)
+	def _export_data(self, export_properties, data):
+		self._export_property_value(export_properties, Map.Property.map_file, self.map_file, data)
+
+	def _import_data(self, data):
+		map_file = self._import_property_value(data, Map.Property.map_file)
+
+		if map_file != None:
+			self.map_file = map_file
 
 # mapdata.dat file handler
 class CampaignDAT(AbstractDAT.AbstractDAT):

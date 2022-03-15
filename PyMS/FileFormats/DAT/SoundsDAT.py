@@ -44,18 +44,38 @@ class Sound(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Sound'
-	def _export(self, export_properties, export_type, data):
-		self._export_property_value(export_properties, Sound.Property.sound_file, self.sound_file, export_type, data)
-		self._export_property_value(export_properties, Sound.Property.priority, self.priority, export_type, data)
-		flags_coder = DATCoders.DATFlagsCoder(6, {
-			Sound.Flag.preload: 'preload',
-			Sound.Flag.unit_speech: 'unit_speech',
-			Sound.Flag.one_at_a_time: 'one_at_a_time',
-			Sound.Flag.never_preempt: 'never_preempt'
-		})
-		self._export_property_values(export_properties, Sound.Property.flags, self.flags, flags_coder, export_type, data)
-		self._export_property_value(export_properties, Sound.Property.portrait_length_adjust, self.portrait_length_adjust, export_type, data)
-		self._export_property_value(export_properties, Sound.Property.minimum_volume, self.minimum_volume, export_type, data)
+	def _export_data(self, export_properties, data):
+		self._export_property_value(export_properties, Sound.Property.sound_file, self.sound_file, data)
+		self._export_property_value(export_properties, Sound.Property.priority, self.priority, data)
+		self._export_property_value(export_properties, Sound.Property.flags, self.flags, data, _SoundPropertyCoder.flags)
+		self._export_property_value(export_properties, Sound.Property.portrait_length_adjust, self.portrait_length_adjust, data)
+		self._export_property_value(export_properties, Sound.Property.minimum_volume, self.minimum_volume, data)
+
+	def _import_data(self, data):
+		sound_file = self._import_property_value(data, Sound.Property.sound_file)
+		priority = self._import_property_value(data, Sound.Property.priority)
+		flags = self._import_property_value(data, Sound.Property.flags, _SoundPropertyCoder.flags)
+		portrait_length_adjust = self._import_property_value(data, Sound.Property.portrait_length_adjust)
+		minimum_volume = self._import_property_value(data, Sound.Property.minimum_volume)
+
+		if sound_file != None:
+			self.sound_file = sound_file
+		if priority != None:
+			self.priority = priority
+		if flags != None:
+			self.flags = flags
+		if portrait_length_adjust != None:
+			self.portrait_length_adjust = portrait_length_adjust
+		if minimum_volume != None:
+			self.minimum_volume = minimum_volume
+
+class _SoundPropertyCoder:
+	flags = DATCoders.DATFlagsCoder(6, {
+		Sound.Flag.preload: 'preload',
+		Sound.Flag.unit_speech: 'unit_speech',
+		Sound.Flag.one_at_a_time: 'one_at_a_time',
+		Sound.Flag.never_preempt: 'never_preempt'
+	})
 
 # sfxdata.dat file handler
 class SoundsDAT(AbstractDAT.AbstractDAT):

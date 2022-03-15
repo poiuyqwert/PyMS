@@ -155,7 +155,9 @@ class DATTab(NotebookTab, DATTabConveniences):
 
 	def paste(self):
 		text = self.clipboard_get()
-		self.get_dat_data().dat.get_entry(self.id).import_text(text)
+		self.get_dat_data().dat.import_entry(self.id, text)
+		self.edited = True
+		self.toplevel.update_status_bar()
 		self.toplevel.tab_activated()
 
 	def reload(self):
@@ -191,31 +193,14 @@ class DATTab(NotebookTab, DATTabConveniences):
 			if self.toplevel.dattabs.active == self:
 				self.toplevel.tab_activated()
 
-	def iimport(self, key=None, file=None, c=True, parent=None):
-		if parent == None:
-			parent = self
-		if not file:
-			file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
+	def iimport(self):
+		file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
 		if not file:
 			return
-		entries = copy.deepcopy(self.get_dat_data().dat.entries)
-		try:
-			ids = self.get_dat_data().dat.interpret(file)
-		except PyMSError as e:
-			self.get_dat_data().dat.entries = entries
-			ErrorDialog(self, e)
-			return
-		cont = c
-		for n,_entry in enumerate(entries):
-			if cont != 3 and n in ids:
-				if cont != 2:
-					x = ContinueImportDialog(parent, self.get_dat_data().dat.FILE_NAME, n)
-					cont = x.cont
-					if cont in [0,3]:
-						self.get_dat_data().dat.entries[n] = entries[n]
-			else:
-				self.get_dat_data().dat.entries[n] = entries[n]
-		return cont
+		self.get_dat_data().dat.import_file(file)
+		self.edited = True
+		self.toplevel.update_status_bar()
+		self.toplevel.tab_activated()
 
 	def save(self, key=None):
 		if self.get_dat_data().file_path == None:
@@ -242,6 +227,6 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if not file:
 			return True
 		try:
-			self.get_dat_data().dat.decompile(file)
+			self.get_dat_data().dat.export_file(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)

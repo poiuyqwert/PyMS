@@ -1,5 +1,4 @@
 
-from DATFormat import DATProperty
 from DATCoders import DATPropertyCoder
 
 from ...Utilities.fileutils import load_file
@@ -8,6 +7,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 from math import ceil
 from collections import OrderedDict
+from copy import deepcopy
 import json, re
 
 class ExportType:
@@ -89,7 +89,7 @@ class AbstractDAT(object):
 	def entry_count(self):
 		return len(self.entries)
 
-	def get_entry(self, index):
+	def get_entry(self, index): # type: (int) -> AbstractDATEntry
 		return self.entries[index]
 
 	def set_entry(self, index, entry):
@@ -123,18 +123,18 @@ class AbstractDAT(object):
 
 	re_comment = re.compile(r'\s*#.+')
 	re_entry_header = re.compile(r'^\s*(\w+)\((\d+)?\):\s*$')
-	re_property = re.compile(r'^\s*(\w+)(?:\.(\w+))?\s+(\d+)$')
+	re_property = re.compile(r'^\s*(\w+)(?:\.(\w+))?\s+(\d+|True|False)\s*$')
 	@classmethod
-	def parse_text(self, entry_type, text):
-		entry_name = entry_type.EXPORT_NAME
+	def parse_text(self, text):
 		entries = []
 		entry_starts = {}
 		entry = None
 		def check_entry():
-			if entry != None:
-				if len(entry) < 3:
-					raise PyMSError('Import', 'Entry %d is empty' % entry['_id'], line=entry_starts[entry['_id']])
-				entries.append(entry)
+			if entry == None:
+				return
+			if len(entry) < 3:
+				raise PyMSError('Import', 'Entry %d is empty' % entry['_id'], line=entry_starts[entry['_id']])
+			entries.append(entry)
 		for n,line in enumerate(text.splitlines()):
 			line = self.re_comment.sub('', line)
 			if not line:
@@ -143,8 +143,7 @@ class AbstractDAT(object):
 			if match:
 				check_entry()
 				name,id = match.groups()
-				if name != entry_name:
-					raise PyMSError('Import', "Entry type is incorrect (expected '%s' but got '%s')" % (entry_name, name), line=n, code=line)
+				id = int(id)
 				if id in entry_starts:
 					raise PyMSError('Import', 'Entry %d already exists' % id, line=n, code=line)
 				entry = {'_type': name, '_id': id}
@@ -153,8 +152,14 @@ class AbstractDAT(object):
 			match = self.re_property.match(line)
 			if match:
 				if entry == None:
-					raise PyMSError('Import', "Missing '%s' header before defining properties" % entry_name, line=n, code=line)
+					raise PyMSError('Import', "Missing header before defining properties", line=n, code=line)
 				name,subproperty,value = match.groups()
+				if value == 'True':
+					value = True
+				elif value == 'False':
+					value = False
+				else:
+					value = int(value)
 				# TODO: Validate property, subproperty, value?
 				if subproperty != None:
 					subobject = entry.get(name, {})
@@ -164,14 +169,87 @@ class AbstractDAT(object):
 				else:
 					entry[name] = value
 				continue
-			raise PyMSError('Import', "Unexpected line, expected a '%s' header or a property" % entry_name, line=n, code=line)
+			raise PyMSError('Import', "Unexpected line, expected a header or a property definition", line=n, code=line)
 		check_entry()
 		if not entries:
 			raise PyMSError('Import', 'No entries found')
-		print(entries)
+		return entries
 
-	def export_entry(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
-		return self.get_entry(id).export(id, export_properties, export_type, json_dump, json_indent)
+	def export_file(self, file_path):
+		try:
+			file = AtomicWriter(file_path, 'wb')
+		except:
+			raise PyMSError("Decompile", "Could not create file for writing")
+		data = self.export_entries()
+		file.write(data)
+		file.close()
+
+	def export_entries(self, ids=None, export_properties=None, export_type=ExportType.text, json_dump=False, json_indent=4):
+		if not ids:
+			ids = range(self.entry_count())
+		data = []
+		for id in ids:
+			if id < 0 or id >= self.entry_count():
+				raise PyMSError('Export', "Invalid entry id (must be between 0 and %d, got %d)" % (self.entry_count(), id))
+			data.append(self.get_entry(id).export_data(id, export_properties))
+		return self._export(data, export_type, json_dump, json_indent)
+
+	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
+	def export_entry(self, id, export_properties=None, export_type=ExportType.text, json_dump=False, json_indent=4):
+		data = self.get_entry(id).export_data(id, export_properties)
+		return self._export(data, export_type, json_dump, json_indent)
+
+	def _export(self, data, export_type=ExportType.text, json_dump=True, json_indent=4):
+		if export_type == ExportType.text:
+			if not isinstance(data, list):
+				data = [data]
+			def flatten(fields, breadcrumbs, lines): # type: (OrderedDict[str, Any], tuple[str], list[str]) -> None
+				for key, value in fields.items():
+					if key.startswith('_'):
+						continue
+					if isinstance(value, OrderedDict):
+						flatten(value, breadcrumbs + (key,), lines)
+					else:
+						name = '.'.join(breadcrumbs + (key,))
+						lines.append('\t%s %s' % (name, value))
+			lines = []
+			for entry in data:
+				lines.append('%s%s:' % (entry['_type'], '(%d)' % entry['_id'] if '_id' in entry else ''))
+				flatten(entry, (), lines)
+				lines.append('')
+			return '\n'.join(lines)
+		elif export_type == ExportType.json:
+			if json_dump:
+				return json.dumps(data, indent=json_indent)
+			return data
+
+	def import_file(self, file_path):
+		data = load_file(file_path)
+		self.import_entries(data)
+
+	def import_entries(self, data, export_type=ExportType.text):
+		if export_type == ExportType.text:
+			data = AbstractDAT.parse_text(data)
+		backup = deepcopy(self.entries)
+		try:
+			for entry in data:
+				id = entry.get('_id')
+				if id == None:
+					raise PyMSError('Import', 'Entry missing id')
+				if id >= self.entry_count():
+					raise PyMSError('Export', "Invalid entry id (must be between 0 and %d, got %d)" % (self.entry_count(), id))
+				self.get_entry(id).import_data(entry)
+		except:
+			self.entries = backup
+			raise
+
+	def import_entry(self, id, data, export_type=ExportType.text):
+		if export_type == ExportType.text:
+			data_entries = AbstractDAT.parse_text(data)
+			if len(data_entries) != 1:
+				raise PyMSError('Import', 'Too many entries to import (expected 1, got %d)' % len(data_entries))
+			data = data_entries[0]
+		return self.get_entry(id).import_data(data)
 
 class AbstractDATEntry(object):
 	EXPORT_NAME = None
@@ -191,51 +269,44 @@ class AbstractDATEntry(object):
 		pass
 
 	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
-	def export(self, id, export_properties=None, export_type=ExportType.text, json_dump=True, json_indent=4):
-		if export_type == ExportType.text:
-			data = []
-			data.append("%s(%d):" % (self.EXPORT_NAME, id))
-		elif export_type == ExportType.json:
-			data = OrderedDict()
-			data["_type"] = self.EXPORT_NAME
+	def export_data(self, id=None, export_properties=None):
+		data = OrderedDict()
+		data["_type"] = self.EXPORT_NAME
+		if id != None:
 			data["_id"] = id
-		else:
-			raise PyMSError('Export', "Invalid export type '%s'" % export_type)
-		self._export(export_properties, export_type, data)
-		if export_type == ExportType.text:
-			return '\n\t'.join(data)
-		elif export_type == ExportType.json:
-			if json_dump:
-				return json.dumps(data, indent=json_indent)
-			return data
+		self._export_data(export_properties, data)
+		return data
 	
-	def _export(self, export_properties, export_type, data):
+	def _export_data(self, export_properties, data): # type: (list[str], OrderedDict[str, Any]) -> None
 		pass
 
-	def import_text(self, text):
-		json = AbstractDAT.parse_text(type(self), text)
+	def import_data(self, data): # type: (dict[str, Any]) -> None
+		type_name = data.get('_type')
+		if type_name != self.EXPORT_NAME:
+			raise PyMSError('Import', "Invalid type (expected '%s', got '%s')" % (self.EXPORT_NAME, type_name))
+		self._import_data(data)
+		for key in data.keys():
+			if key.startswith('_'):
+				continue
+			raise PyMSError('Import', "Unrecognized property '%s'" % key)
 
-	def import_json(self, json):
+	def _import_data(self, data):
 		pass
 
-	def _export_property_value(self, export_properties, prop, value, export_type, data):
-		if (not export_properties or prop in export_properties) and value != None:
-			if export_type == ExportType.text:
-				data.append("%s %s" % (prop, value))
-			elif export_type == ExportType.json:
-				data[prop] = value
+	def _export_property_value(self, export_properties, prop, value, data, property_encoder=None): # type: (list[str], str, Any, Any, DATPropertyCoder) -> None
+		if value == None or (export_properties and not prop in export_properties):
+			return
+		if property_encoder:
+			value = property_encoder.encode(value)
+		data[prop] = value
 
-	# `property_coder` is called with `value` (if not None), and returns an ordered dict of encoded data
-	def _export_property_values(self, export_properties, prop, value, property_coder, export_type, data): # type: (list[str], DATProperty, Any, DATPropertyCoder, ExportType, Any) -> None
-		if (not export_properties or prop in export_properties) and value != None:
-			if export_type == ExportType.text:
-				for field,value in property_coder.encode(value).items():
-					if value != None:
-						data.append("%s.%s %s" % (prop, field, value))
-			elif export_type == ExportType.json:
-				sub_data = OrderedDict()
-				for field,value in property_coder.encode(value).items():
-					if value != None:
-						sub_data[field] = value
-				if sub_data:
-					data[prop] = sub_data
+	def _import_property_value(self, data, prop, property_coder=None, allowed=True): # type: (dict[str, Any], str, Any, DATPropertyCoder) -> Any
+		if not prop in data:
+			return None
+		elif not allowed:
+			return None
+		value = data[prop]
+		del data[prop]
+		if property_coder:
+			value = property_coder.decode(value)
+		return value

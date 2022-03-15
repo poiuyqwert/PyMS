@@ -1,6 +1,7 @@
 
 import AbstractDAT
 import DATFormat
+import DATCoders
 
 class Sprite(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -52,13 +53,38 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 		self.selection_circle_offset = self.selection_circle_offset or 0
 
 	EXPORT_NAME = 'Sprite'
-	def _export(self, export_properties, export_type, data):
-		self._export_property_value(export_properties, Sprite.Property.image, self.image, export_type, data)
-		self._export_property_value(export_properties, Sprite.Property.health_bar, self.health_bar, export_type, data)
-		self._export_property_value(export_properties, Sprite.Property.unused, self.unused, export_type, data)
-		self._export_property_value(export_properties, Sprite.Property.is_visible, self.is_visible, export_type, data)
-		self._export_property_value(export_properties, Sprite.Property.selection_circle_image, self.selection_circle_image, export_type, data)
-		self._export_property_value(export_properties, Sprite.Property.selection_circle_offset, self.selection_circle_offset, export_type, data)
+	def _export_data(self, export_properties, data):
+		self._export_property_value(export_properties, Sprite.Property.image, self.image, data)
+		self._export_property_value(export_properties, Sprite.Property.health_bar, self.health_bar, data)
+		self._export_property_value(export_properties, Sprite.Property.unused, self.unused, data, _SpritePropertyCoder.unused)
+		self._export_property_value(export_properties, Sprite.Property.is_visible, self.is_visible, data, _SpritePropertyCoder.is_visible)
+		self._export_property_value(export_properties, Sprite.Property.selection_circle_image, self.selection_circle_image, data)
+		self._export_property_value(export_properties, Sprite.Property.selection_circle_offset, self.selection_circle_offset, data)
+
+	def _import_data(self, data):
+		image = self._import_property_value(data, Sprite.Property.image)
+		health_bar = self._import_property_value(data, Sprite.Property.health_bar, allowed=(self.health_bar != None))
+		unused = self._import_property_value(data, Sprite.Property.unused, _SpritePropertyCoder.unused)
+		is_visible = self._import_property_value(data, Sprite.Property.is_visible, _SpritePropertyCoder.is_visible)
+		selection_circle_image = self._import_property_value(data, Sprite.Property.selection_circle_image, allowed=(self.selection_circle_image != None))
+		selection_circle_offset = self._import_property_value(data, Sprite.Property.selection_circle_offset, allowed=(self.selection_circle_offset != None))
+
+		if image != None:
+			self.image = image
+		if health_bar != None:
+			self.health_bar = health_bar
+		if unused != None:
+			self.unused = unused
+		if is_visible != None:
+			self.is_visible = is_visible
+		if selection_circle_image != None:
+			self.selection_circle_image = selection_circle_image
+		if selection_circle_offset != None:
+			self.selection_circle_offset = selection_circle_offset
+
+class _SpritePropertyCoder:
+	unused = DATCoders.DATBoolCoder()
+	is_visible = DATCoders.DATBoolCoder()
 
 # sprites.dat file handler
 class SpritesDAT(AbstractDAT.AbstractDAT):
