@@ -178,15 +178,7 @@ class PyDAT(MainWindow):
 		self.data_context.settings.load_pane_size('list_size', self.hor_pane, 300)
 
 		if guifile:
-			for title,tab in self.dattabs.pages.iteritems():
-				try:
-					tab[0].open_file(guifile, save=False)
-					self.dattabs.display(title)
-					break
-				except PyMSError as e:
-					pass
-			else:
-				ErrorDialog(self, PyMSError('Load',"'%s' is not a valid StarCraft *.dat file, could possibly be corrupt" % guifile))
+			self.open(file_path=guifile)
 
 		UpdateDialog.check_update(self, 'PyDAT')
 
@@ -317,15 +309,16 @@ class PyDAT(MainWindow):
 	def new(self, key=None):
 		self.dattabs.active.new()
 
-	def open(self, key=None):
-		path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[('StarCraft DAT files','*.dat')])
-		if not path:
-			return
-		filename = os.path.basename(path)
+	def open(self, key=None, file_path=None):
+		if file_path == None:
+			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[('StarCraft DAT files','*.dat')])
+			if not file_path:
+				return
+		filename = os.path.basename(file_path)
 		for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]):
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
-					page.open_file(path)
+					page.open_file(file_path)
 				except PyMSError as e:
 					ErrorDialog(self, e)
 				else:
@@ -334,7 +327,7 @@ class PyDAT(MainWindow):
 						self.data_context.settings.dont_warn.warn('expanded_dat', self, 'This %s file is expanded.' % filename)
 				break
 		else:
-			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % path))
+			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % file_path))
 
 	def openmpq(self, event=None):
 		file = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
@@ -383,7 +376,6 @@ class PyDAT(MainWindow):
 			return
 		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(found)))
 
-	# TODO
 	def iimport(self, key=None):
 		self.dattabs.active.iimport()
 
@@ -395,7 +387,6 @@ class PyDAT(MainWindow):
 		self.save_data()
 		self.dattabs.active.saveas()
 
-	# TODO
 	def export(self, key=None):
 		self.save_data()
 		self.dattabs.active.export()

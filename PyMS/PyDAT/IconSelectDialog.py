@@ -1,7 +1,5 @@
 
-from numpy import disp
 from DataContext import DataContext
-import PyMS
 from PyMS.Utilities.ShowScrollbar import ShowScrollbar
 
 from ..Utilities.UIKit import *
