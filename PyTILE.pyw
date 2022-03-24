@@ -2,7 +2,7 @@ from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace
 from Libs import GRP, Tilesets, TBL
-from Libs.Tilesets import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH
+from Libs.Tilesets import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, HEIGHT_HIGHER
 from Libs.FlowView import FlowView
 from Libs.MaskCheckbutton import MaskCheckbutton
 from Libs.MaskedRadiobutton import MaskedRadiobutton
@@ -125,7 +125,7 @@ class MegaEditorView(Frame):
 		self.mini_tools.pack(side=TOP, pady=(3,0))
 		self.mini_tools.pack_forget()
 		self.height_tools = Frame(frame)
-		d = DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)'], width=15)
+		d = DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)','Higher (Green)'], width=15)
 		self.disable.append(d)
 		d.pack(side=LEFT, padx=5)
 		self.height_tools.pack(side=TOP, pady=(3,0))
@@ -185,7 +185,9 @@ class MegaEditorView(Frame):
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			color = '#FF0000'
-			if flags & HEIGHT_MID:
+			if (flags & HEIGHT_HIGHER) == HEIGHT_HIGHER:
+				color = '#11FF00'
+			elif flags & HEIGHT_MID:
 				color = '#FFA500'
 			elif flags & HEIGHT_HIGH:
 				color = '#FFFF00'
@@ -233,7 +235,7 @@ class MegaEditorView(Frame):
 	def click_height(self, minitile_n):
 		flags = self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n]
 		new_flags = flags & ~(HEIGHT_MID | HEIGHT_HIGH)
-		new_flags |= [HEIGHT_LOW,HEIGHT_MID,HEIGHT_HIGH][self.height.get()]
+		new_flags |= [HEIGHT_LOW,HEIGHT_MID,HEIGHT_HIGH,HEIGHT_HIGHER][self.height.get()]
 		if new_flags != flags:
 			self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] = new_flags
 			self.draw_edit_mode()
@@ -269,7 +271,7 @@ class MegaEditorView(Frame):
 		for n in xrange(16):
 			flags = self.delegate.tileset.vf4.flags[self.megatile_id][n]
 			new_flags = flags & ~(HEIGHT_MID | HEIGHT_HIGH)
-			new_flags |= [HEIGHT_LOW,HEIGHT_MID,HEIGHT_HIGH][self.height.get()]
+			new_flags |= [HEIGHT_LOW,HEIGHT_MID,HEIGHT_HIGH,HEIGHT_HIGHER][self.height.get()]
 			if new_flags != flags:
 				self.delegate.tileset.vf4.flags[self.megatile_id][n] = new_flags
 				edited = True
