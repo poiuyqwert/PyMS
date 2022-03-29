@@ -23,8 +23,8 @@ class BMP:
 		if data[:2] != 'BM':
 			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
 		try:
-			width, height, bitcount, compression, colors_used = \
-				struct.unpack('<LLxxHL12xL',data[18:50])
+			pixels_offset, dib_header_size, width, height, bitcount, compression, colors_used = \
+				struct.unpack('<4LxxHL12xL',data[10:50])
 			if issize and width != issize[0] and height != issize[1]:
 				raise PyMSError('Load', "Invalid dimensions (Expected %sx%s, got %sx%s)" % (issize[0],issize[1],width,height))
 			if bitcount != 8 or not compression in [0,1]:
@@ -33,7 +33,7 @@ class BMP:
 				colors_used = 256
 			palette = []
 			for x in range(0,4 * colors_used,4):
-				c = list(struct.unpack('3B',data[54+x:57+x]))
+				c = list(struct.unpack('3B',data[14+dib_header_size+x:17+dib_header_size+x]))
 				c.reverse()
 				palette.append(c)
 			palette.extend([[0,0,0] for _ in range(256-colors_used)])
@@ -41,10 +41,10 @@ class BMP:
 			if not compression:
 				pad = getPadding(width,4)
 				for y in range(height):
-					x = 4*colors_used+54+(width+pad)*y
+					x = pixels_offset+(width+pad)*y
 					image.append(list(struct.unpack('%sB%s' % (width, 'x' * pad),data[x:x+width+pad])))
 			else:
-				x = 4*colors_used+54
+				x = pixels_offset
 				image.append([])
 				while True:
 					if data[x] == '\x00':
