@@ -409,7 +409,7 @@ class GRP:
 						if line_hash in line_history:
 							line_offsets.append(line_history[line_hash])
 						else:
-							data = RLE.compress_line(line[x_min:x_max], self.transindex)s
+							data = RLE.compress_line(line[x_min:x_max], self.transindex)
 							line_data += data
 							if line_offset > 65535:
 								raise PyMSError('Save','The image has too much pixel data to compile')
