@@ -46,6 +46,7 @@ class PyICE(MainWindow):
 		})
 		self.settings.settings.files.set_defaults({
 			'stat_txt':'MPQ:rez\\stat_txt.tbl',
+			'unitnamestbl':'MPQ:rez\\unitnames.tbl',
 			'imagestbl':'MPQ:arr\\images.tbl',
 			'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
 			'unitsdat':'MPQ:arr\\units.dat',
@@ -192,16 +193,52 @@ class PyICE(MainWindow):
 			self.spritesdat = spritesdat
 			self.imagesdat = imagesdat
 			self.soundsdat = soundsdat
+			try:
+				unitnamestbl = TBL.TBL()
+				unitnamestbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.unitnamestbl))
+			except:
+				self.unitnamestbl = None
+			else:
+				self.unitnamestbl = unitnamestbl
 			self.update_dat_lists()
 		self.mpqhandler.close_mpqs()
 		return err
+
+	def get_unit_names(self):
+		names = []
+		strings = self.tbl.strings[:228]
+		if self.unitnamestbl:
+			strings = self.unitnamestbl.strings
+		for entry_id in range(self.unitsdat.entry_count()):
+			if DAT.UnitsDAT.FORMAT.expanded_entries_reserved and entry_id in DAT.UnitsDAT.FORMAT.expanded_entries_reserved:
+				names.append("Reserved Unit #%s" % entry_id)
+			else:
+				name = ''
+				# if strings and self.settings.settings.get('customlabels'):
+				if entry_id >= len(strings):
+					name = "Unit #%s" % entry_id
+				else:
+					name = TBL.decompile_string(strings[entry_id])
+				# else:
+				# 	if entry_id >= len(DATA_CACHE[self.data_file]):
+				# 		name = self.unknown_name(entry_id)
+				# 	else:
+				# 		name = DATA_CACHE[self.data_file][entry_id]
+				# if entry_id in self.name_overrides:
+				# 	append, override = self.name_overrides[entry_id]
+				# 	if append:
+				# 		name += " " + override
+				# 	else:
+				# 		name = override
+				names.append(name)
+		return tuple(names)
 
 	def update_dat_lists(self):
 		updates = (
 			(DATA_CACHE['Images.txt'], ColumnID.Images, self.imageslist),
 			(DATA_CACHE['Sprites.txt'], ColumnID.Sprites, self.spriteslist),
 			(DATA_CACHE['Flingy.txt'], ColumnID.Flingys, self.flingylist),
-			((TBL.decompile_string(self.tbl.strings[n]) for n in range(DAT.UnitsDAT.FORMAT.entries)), ColumnID.Units, self.unitlist)
+			(self.get_unit_names(), ColumnID.Units, self.unitlist)
 		)
 		for names, column, listbox in updates:
 			listbox.delete(0,END)
@@ -442,6 +479,7 @@ class PyICE(MainWindow):
 		data = [
 			('TBL Settings',[
 				('stat_txt.tbl', 'Contains Unit names', 'stat_txt', 'TBL'),
+				('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
 				('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
 				('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
 			]),
@@ -454,7 +492,7 @@ class PyICE(MainWindow):
 				('sfxdata.dat', 'Contains sfxdata.tbl string entries for mpq file paths', 'sfxdatadat', 'SoundsDAT'),
 			])
 		]
-		SettingsDialog(self, data, (340,495), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (340,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

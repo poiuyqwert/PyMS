@@ -20,7 +20,7 @@ class SoundDialog(PyMSDialog):
 
 	def widgetize(self):
 		f = Frame(self)
-		self.dd = DropDown(f, self.id, ['%03s %s' % (n,TBL.decompile_string(self.toplevel.sfxdatatbl.strings[self.toplevel.soundsdat.get_entry(n).sound_file-1][:-1])) for n in range(DAT.SoundsDAT.FORMAT.entries)], width=30)
+		self.dd = DropDown(f, self.id, ['%03s %s' % (n,TBL.decompile_string(self.toplevel.sfxdatatbl.strings[self.toplevel.soundsdat.get_entry(n).sound_file-1][:-1])) for n in range(self.toplevel.soundsdat.entry_count())], width=30)
 		self.dd.pack(side=LEFT, padx=1)
 		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','fwp.gif'))
 		b = Button(f, image=i, width=20, height=20, command=self.play, state=NORMAL if (play_sound and SFMPQ_LOADED) else DISABLED)

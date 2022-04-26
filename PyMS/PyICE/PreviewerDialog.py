@@ -82,7 +82,7 @@ class PreviewerDialog(PyMSDialog):
 				self.curdd['state'] = NORMAL
 				self.curcmddd['state'] = NORMAL
 			cur = []
-			for i in range(DAT.ImagesDAT.FORMAT.entries):
+			for i in range(self.toplevel.imagesdat.entry_count()):
 				if self.toplevel.imagesdat.get_entry(i).iscript_id == n[1]:
 					cur.append('['.join(self.toplevel.imageslist.get(i).split('[')[:-1]))
 			self.curdd.setentries(cur)
@@ -94,9 +94,9 @@ class PreviewerDialog(PyMSDialog):
 		left = Frame(self)
 		c = [
 			(0, "Current IScript's images", self.curid, self.curcmd, [], DISABLED),
-			(1, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.toplevel.imageslist,DAT.ImagesDAT.FORMAT.entries), NORMAL),
-			(2, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.toplevel.spriteslist,DAT.SpritesDAT.FORMAT.entries), NORMAL),
-			(3, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.toplevel.flingylist,DAT.FlingyDAT.FORMAT.entries), NORMAL),
+			(1, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.toplevel.imageslist,self.toplevel.imagesdat.entry_count()), NORMAL),
+			(2, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.toplevel.spriteslist,self.toplevel.spritesdat.entry_count()), NORMAL),
+			(3, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.toplevel.flingylist,self.toplevel.flingydat.entry_count()), NORMAL),
 		]
 		for n,l,v,c,e,s in c:
 			Label(left, text=l + ":", anchor=W).pack(fill=X)
