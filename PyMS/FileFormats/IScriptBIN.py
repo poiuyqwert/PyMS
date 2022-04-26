@@ -246,10 +246,10 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Unio
 		return (str(data),'%s (%s)' % (DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(data).grp_file-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > ImagesDAT.FORMAT.entries:
+		if 0 > v or v > bin.imagesdat.entry_count():
 			raise Exception()
 	except:
-		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,ImagesDAT.FORMAT.entries))
+		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,bin.imagesdat.entry_count()))
 	return v
 
 def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
@@ -260,10 +260,10 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 		return (str(data),'%s (%s)' % (DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(data).image).grp_file-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > SpritesDAT.FORMAT.entries:
+		if 0 > v or v > bin.spritesdat.entry_count():
 			raise Exception()
 	except:
-		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,SpritesDAT.FORMAT.entries))
+		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,bin.spritesdat.entry_count()))
 	return v
 
 def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
@@ -274,10 +274,10 @@ def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 		return (str(data),'%s (%s)' % (DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(bin.flingydat.get_entry(data).sprite).image).grp_file-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > FlingyDAT.FORMAT.entries:
+		if 0 > v or v > bin.flingydat.entry_count():
 			raise Exception()
 	except:
-		raise PyMSError('Parameter',"Invalid FlingyID value '%s', it must be a number in the range 0 to %s" % (data,FlingyDAT.FORMAT.entries))
+		raise PyMSError('Parameter',"Invalid FlingyID value '%s', it must be a number in the range 0 to %s" % (data,bin.flingydat.entry_count()))
 	return v
 
 def type_overlayid(stage, bin, data=None):
@@ -321,10 +321,10 @@ def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Unio
 		return (str(data), TBL.decompile_string(bin.sfxdatatbl.strings[bin.soundsdat.get_entry(data).sound_file-1][:-1]))
 	try:
 		v = int(data)
-		if 0 > v or v > SoundsDAT.FORMAT.entries:
+		if 0 > v or v > bin.soundsdat.entry_count():
 			raise Exception()
 	except:
-		raise PyMSError('Parameter',"Invalid SoundID value '%s', it must be a number in the range 0 to %s" % (data,SoundsDAT.FORMAT.entries))
+		raise PyMSError('Parameter',"Invalid SoundID value '%s', it must be a number in the range 0 to %s" % (data,bin.soundsdat.entry_count()))
 	return v
 
 def type_sounds(stage, bin, data=None):
@@ -377,10 +377,10 @@ def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 		return (str(data),'%s (%s)' % (DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_entry(data).label-1][:-1])))
 	try:
 		v = int(data)
-		if 0 > v or v > WeaponsDAT.FORMAT.entries:
+		if 0 > v or v > bin.weaponsdat.entry_count():
 			raise Exception()
 	except:
-		raise PyMSError('Parameter',"Invalid WeaponID value '%s', it must be a number in the range 0 to %s" % (data,WeaponsDAT.FORMAT.entries))
+		raise PyMSError('Parameter',"Invalid WeaponID value '%s', it must be a number in the range 0 to %s" % (data,bin.weaponsdat.entry_count()))
 	return v
 
 def type_speed(stage, bin, data=None):
@@ -1090,7 +1090,7 @@ class IScriptBIN:
 				return (code,local,curcmd)
 			return (code,local,-1)
 		usedby = {}
-		for i in range(ImagesDAT.FORMAT.entries):
+		for i in range(self.imagesdat.entry_count()):
 			id = self.imagesdat.get_entry(i).iscript_id
 			if id in ids:
 				if not id in usedby:
