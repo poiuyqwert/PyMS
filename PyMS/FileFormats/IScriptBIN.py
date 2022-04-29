@@ -1,5 +1,6 @@
 
 from ..FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, WeaponsDAT
+from ..FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
 from ..FileFormats import TBL
 
 from ..Utilities.utils import BASE_DIR, isstr
@@ -243,7 +244,7 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Unio
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Images.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(data).grp_file-1][:-1])))
+		return (str(data), DATEntryName.image(data, data_names=DATA_CACHE['Images.txt'], imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.imagesdat.entry_count():
@@ -257,7 +258,7 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Sprites.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(data).image).grp_file-1][:-1])))
+		return (str(data), DATEntryName.sprite(data, data_names=DATA_CACHE['Sprites.txt'], spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.spritesdat.entry_count():
@@ -271,7 +272,7 @@ def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Flingy.txt'][data], TBL.decompile_string(bin.imagestbl.strings[bin.imagesdat.get_entry(bin.spritesdat.get_entry(bin.flingydat.get_entry(data).sprite).image).grp_file-1][:-1])))
+		return (str(data), DATEntryName.flingy(data, data_names=DATA_CACHE['Flingy.txt'], flingydat=bin.flingydat, spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.flingydat.entry_count():
@@ -374,7 +375,7 @@ def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 	if data == None:
 		return 1
 	if stage == 1:
-		return (str(data),'%s (%s)' % (DATA_CACHE['Weapons.txt'][data], TBL.decompile_string(bin.tbl.strings[bin.weaponsdat.get_entry(data).label-1][:-1])))
+		return (str(data), DATEntryName.weapon(data, data_names=DATA_CACHE['Weapons.txt'], weaponsdat=bin.weaponsdat, stat_txt=bin.tbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.weaponsdat.entry_count():
@@ -712,7 +713,7 @@ class IScriptBIN:
 				del offsets[o]
 			curcmd = code.keys().index(o)
 			while curcmd < len(code):
-				co = code.getkey(curcmd)
+				co = code.keys()[curcmd]
 				if co != o and co in offsets:
 					self.remove_code(co,id,code,offsets)
 					break
@@ -1095,7 +1096,7 @@ class IScriptBIN:
 			if id in ids:
 				if not id in usedby:
 					usedby[id] = '# This header is used by images.dat entries:\n'
-				usedby[id] += '# %s %s (%s)\n' % (str(i).zfill(3), DATA_CACHE['Images.txt'][i], TBL.decompile_string(self.imagestbl.strings[self.imagesdat.get_entry(i).grp_file-1][:-1]))
+				usedby[id] += '# %s %s\n' % (str(i).zfill(3), DATEntryName.image(i, data_names=DATA_CACHE['Images.txt'], imagesdat=self.imagesdat, imagestbl=self.imagestbl, data_names_usage=DataNamesUsage.combine))
 		invalid = []
 		for id in ids:
 			code = ''

@@ -10,6 +10,7 @@ from SoundsDAT import SoundsDAT, Sound
 from PortraitsDAT import PortraitsDAT, Portrait
 from CampaignDAT import CampaignDAT, Map
 from OrdersDAT import OrdersDAT, Order
+from Utilities import DATEntryName, DataNamesUsage
 
 __all__ = [
 	'UnitsDAT', 'Unit',
@@ -22,5 +23,7 @@ __all__ = [
 	'SoundsDAT', 'Sound',
 	'PortraitsDAT', 'Portrait',
 	'CampaignDAT', 'Map',
-	'OrdersDAT', 'Order'
+	'OrdersDAT', 'Order',
+
+	'DATEntryName', 'DataNamesUsage'
 ]

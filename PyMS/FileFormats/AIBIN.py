@@ -656,7 +656,7 @@ class AIBIN:
 						p = int(floor(log(len(aiinfo[id][1]),256)))
 						s,n = '<' + ['B','H','L','L'][p],[1,2,4,4][p]
 						while info[offset:offset+n].replace('\x00',''):
-							aiinfo[id][2].append(aiinfo[id][1].getkey(struct.unpack(s,info[offset:offset+n])[0]-1))
+							aiinfo[id][2].append(aiinfo[id][1].keys()[struct.unpack(s,info[offset:offset+n])[0]-1])
 							offset += n
 						offset += 1
 				except:
@@ -1678,7 +1678,7 @@ class AIBIN:
 						f.write('\n')
 					elif cmdn in jumps:
 						if labelnames:
-							jump[cmdn] = labelnames.getkey(namenum)
+							jump[cmdn] = labelnames.keys()[namenum]
 						else:
 							jump[cmdn] = '%s %04d' % (id,j)
 						if cmdn:
@@ -1972,7 +1972,7 @@ class BWBIN(AIBIN):
 						p = int(floor(log(len(aiinfo),256)))
 						s,n = '<' + ['B','H','L','L'][p],[1,2,4,4][p]
 						while info[offset] != '\x00':
-							aiinfo[id][2].append(aiinfo[id][1].getkey(struct.unpack(s,info[offset:offset+n])[0]-1))
+							aiinfo[id][2].append(aiinfo[id][1].keys()[struct.unpack(s,info[offset:offset+n])[0]-1])
 							offset += n
 						offset += 1
 				except:
@@ -2045,7 +2045,7 @@ class BWBIN(AIBIN):
 					f.write('\n')
 				elif cmdn in jumps:
 					if labelnames:
-						jump[cmdn] = labelnames.getkey(namenum)
+						jump[cmdn] = labelnames.keys()[namenum]
 						namenum += 1
 					else:
 						jump[cmdn] = '%s %04d' % (id,j)

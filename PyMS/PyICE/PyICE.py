@@ -204,40 +204,23 @@ class PyICE(MainWindow):
 		self.mpqhandler.close_mpqs()
 		return err
 
+	def get_image_names(self):
+		return tuple(DAT.DATEntryName.image(entry_id, data_names=DATA_CACHE['Images.txt']) for entry_id in range(self.imagesdat.entry_count()))
+
+	def get_sprite_names(self):
+		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=DATA_CACHE['Sprites.txt']) for entry_id in range(self.spritesdat.entry_count()))
+
+	def get_flingy_names(self):
+		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=DATA_CACHE['Flingy.txt']) for entry_id in range(self.flingydat.entry_count()))
+
 	def get_unit_names(self):
-		names = []
-		strings = self.tbl.strings[:228]
-		if self.unitnamestbl:
-			strings = self.unitnamestbl.strings
-		for entry_id in range(self.unitsdat.entry_count()):
-			if DAT.UnitsDAT.FORMAT.expanded_entries_reserved and entry_id in DAT.UnitsDAT.FORMAT.expanded_entries_reserved:
-				names.append("Reserved Unit #%s" % entry_id)
-			else:
-				name = ''
-				# if strings and self.settings.settings.get('customlabels'):
-				if entry_id >= len(strings):
-					name = "Unit #%s" % entry_id
-				else:
-					name = TBL.decompile_string(strings[entry_id])
-				# else:
-				# 	if entry_id >= len(DATA_CACHE[self.data_file]):
-				# 		name = self.unknown_name(entry_id)
-				# 	else:
-				# 		name = DATA_CACHE[self.data_file][entry_id]
-				# if entry_id in self.name_overrides:
-				# 	append, override = self.name_overrides[entry_id]
-				# 	if append:
-				# 		name += " " + override
-				# 	else:
-				# 		name = override
-				names.append(name)
-		return tuple(names)
+		return tuple(DAT.DATEntryName.unit(entry_id, stat_txt=self.tbl, unitnamestbl=self.unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore) for entry_id in range(self.unitsdat.entry_count()))
 
 	def update_dat_lists(self):
 		updates = (
-			(DATA_CACHE['Images.txt'], ColumnID.Images, self.imageslist),
-			(DATA_CACHE['Sprites.txt'], ColumnID.Sprites, self.spriteslist),
-			(DATA_CACHE['Flingy.txt'], ColumnID.Flingys, self.flingylist),
+			(self.get_image_names(), ColumnID.Images, self.imageslist),
+			(self.get_sprite_names(), ColumnID.Sprites, self.spriteslist),
+			(self.get_flingy_names(), ColumnID.Flingys, self.flingylist),
 			(self.get_unit_names(), ColumnID.Units, self.unitlist)
 		)
 		for names, column, listbox in updates:
@@ -326,10 +309,22 @@ class PyICE(MainWindow):
 				else:
 					return self.saveas()
 
+	def create_iscriptbin(self):
+		return IScriptBIN.IScriptBIN(
+				weaponsdat=self.weaponsdat,
+				flingydat=self.flingydat,
+				imagesdat=self.imagesdat,
+				spritesdat=self.spritesdat,
+				soundsdat=self.soundsdat,
+				stat_txt=self.tbl,
+				imagestbl=self.imagestbl,
+				sfxdatatbl=self.sfxdatatbl
+			)
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.iscriptlist.delete(0,END)
-			self.ibin = IScriptBIN.IScriptBIN()
+			self.ibin = self.create_iscriptbin()
 			self.file = None
 			self.status.set('Editing new BIN.')
 			self.title('PyICE %s (Unnamed.bin)' % LONG_VERSION)
@@ -343,7 +338,7 @@ class PyICE(MainWindow):
 				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[('IScripts','*.bin')])
 				if not file:
 					return
-			ibin = IScriptBIN.IScriptBIN()
+			ibin = self.create_iscriptbin()
 			try:
 				ibin.load_file(file)
 			except PyMSError as e:
@@ -395,7 +390,7 @@ class PyICE(MainWindow):
 			return
 		if parent == None:
 			parent = self
-		ibin = IScriptBIN.IScriptBIN()
+		ibin = self.create_iscriptbin()
 		try:
 			if self.ibin.code:
 				s = self.ibin.code.keys()[-1] + 10
