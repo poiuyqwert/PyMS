@@ -47,8 +47,10 @@ def rle_outline(pal, index, ally_status=OUTLINE_SELF):
 def image_bounds(image, transindex=0):
 	width = len(image[0])
 	bounds = [-1,-1,-1,-1]
+	found_pixels = False
 	for y,yd in enumerate(image):
 		if yd.count(transindex) != width:
+			found_pixels = True
 			if bounds[1] == -1:
 				bounds[1] = y
 			bounds[3] = y + 1
@@ -59,7 +61,9 @@ def image_bounds(image, transindex=0):
 						bounds[0] = x
 					if x + 1 > bounds[2]:
 						bounds[2] = x + 1
-	return bounds
+	if not found_pixels:
+		return (0,0,0,0)
+	return tuple(bounds)
 
 # transindex=None for no transparency
 def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False, draw_function=rle_normal, draw_info=None):
