@@ -29,7 +29,7 @@ class AbstractDAT(object):
 	def new_file(self, entry_count=None):
 		entry_count = max(entry_count or 0, self.FORMAT.entries)
 		if entry_count != self.FORMAT.entries:
-			entry_count = self._expanded_count(entry_count)
+			entry_count = self.expanded_count(entry_count)
 		self.entries = list(self.ENTRY_STRUCT() for _ in range(entry_count))
 		if not self.is_expanded():
 			for id,entry in enumerate(self.entries):
@@ -98,16 +98,16 @@ class AbstractDAT(object):
 	def is_expanded(self):
 		return self.entry_count() > self.FORMAT.entries
 
-	def _expanded_count(self, count):
+	def expanded_count(self, count):
 		resulting_entry_count = count
-		if not self.is_expanded() and self.FORMAT.expanded_min_entries:
+		if not self.is_expanded() and self.FORMAT.expanded_min_entries and resulting_entry_count < self.FORMAT.expanded_min_entries:
 			resulting_entry_count = self.FORMAT.expanded_min_entries
 		if self.FORMAT.expanded_entries_multiple:
 			resulting_entry_count = int(ceil(resulting_entry_count / float(self.FORMAT.expanded_entries_multiple)) * self.FORMAT.expanded_entries_multiple)
 		return resulting_entry_count
 
 	def can_expand(self, add=1):
-		resulting_entry_count = self._expanded_count(self.entry_count() + add)
+		resulting_entry_count = self.expanded_count(self.entry_count() + add)
 		if self.FORMAT.expanded_max_entries and resulting_entry_count > self.FORMAT.expanded_max_entries:
 			return False
 		return True
@@ -116,7 +116,7 @@ class AbstractDAT(object):
 		if not self.is_expanded():
 			for entry in self.entries:
 				entry.expand()
-		resulting_entry_count = self._expanded_count(self.entry_count() + add)
+		resulting_entry_count = self.expanded_count(self.entry_count() + add)
 		while self.entry_count() < resulting_entry_count:
 			self.entries.append(self.ENTRY_STRUCT())
 		return True

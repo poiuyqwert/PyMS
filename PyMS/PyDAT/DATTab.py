@@ -1,6 +1,6 @@
 
-from ContinueImportDialog import ContinueImportDialog
 from DATTabConveniences import DATTabConveniences
+from EntryCountDialog import EntryCountDialog
 
 from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.Notebook import NotebookTab
@@ -164,14 +164,31 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.get_dat_data().dat.set_entry(self.id, copy.deepcopy(self.get_dat_data().default_dat.get_entry(self.id)))
 		self.toplevel.tab_activated()
 
-	def add_entry(self):
+	def _expand_entries(self, add):
 		dat_data = self.get_dat_data()
-		if not dat_data.expand_entries():
+		if not dat_data.expand_entries(add):
 			return
 		self.edited = True
 		self.toplevel.update_status_bar()
 		entry_count = dat_data.entry_count()
 		self.toplevel.changeid(entry_count - 1)
+
+	def add_entry(self):
+		dat_data = self.get_dat_data()
+		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+			return
+		self._expand_entries(1)
+
+	def set_entry_count(self):
+		dat_data = self.get_dat_data()
+		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+			return
+		def _set_entry_count(count):
+			add = count - dat_data.entry_count()
+			if add < 1:
+				return
+			self._expand_entries(add)
+		EntryCountDialog(self, _set_entry_count, dat_data, self.toplevel.data_context.settings)
 
 	def new(self, key=None):
 		if not self.unsaved():

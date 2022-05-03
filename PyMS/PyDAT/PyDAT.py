@@ -301,7 +301,7 @@ class PyDAT(MainWindow):
 		self.dattabs.active.add_entry()
 
 	def set_entry_count(self):
-		pass
+		self.dattabs.active.set_entry_count()
 
 	def override_name(self):
 		EntryNameOverrides(self, self.data_context, self.dattabs.active.DAT_ID, self.dattabs.active.id)
@@ -324,57 +324,67 @@ class PyDAT(MainWindow):
 				else:
 					self.dattabs.display(page.page_title)
 					if page.get_dat_data().dat.is_expanded():
-						self.data_context.settings.dont_warn.warn('expanded_dat', self, 'This %s file is expanded.' % filename)
+						self.data_context.settings.dont_warn.warn('expanded_dat', self, "This %s file is expanded and will require a plugin like 'DatExtend'." % filename)
 				break
 		else:
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % file_path))
 
-	def openmpq(self, event=None):
-		file = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
-		if not file:
+	def _open_all(self, path, ismpq):
+		if not path:
 			return
-		h = SFileOpenArchive(file)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % file))
-			return
-		found = [] # type: list[str]
+		mpq_handle = None
+		if ismpq:
+			mpq_handle = SFileOpenArchive(path)
+			if SFInvalidHandle(mpq_handle):
+				ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % path))
+				return
+		found_normal = [] # type: list[str]
+		found_expanded = [] # type: list[str]
 		for _,(tab,_) in self.dattabs.pages.iteritems():
 			filename = tab.get_dat_data().dat_type.FILE_NAME
-			f = SFileOpenFileEx(h, 'arr\\' + filename)
-			if f in [None,-1]:
-				continue
-			file_data,_ = SFileReadFile(f)
-			SFileCloseFile(f)
-			try:
-				tab.open_data(file_data)
-			except:
-				continue
-			found.append(filename)
-		SFileCloseArchive(h)
-		if not found:
-			ErrorDialog(self, PyMSError('Open','No DAT files found in MPQ "%s"' % file))
+			if mpq_handle:
+				file_handle = SFileOpenFileEx(mpq_handle, 'arr\\' + filename)
+				if SFInvalidHandle(file_handle):
+					continue
+				file_data,_ = SFileReadFile(file_handle)
+				SFileCloseFile(file_handle)
+				try:
+					tab.open_data(file_data)
+				except:
+					continue
+			else:
+				filepath = os.path.join(path, filename)
+				if not os.path.exists(filepath):
+					continue
+				try:
+					tab.open_file(filepath)
+				except:
+					continue
+			if tab.get_dat_data().is_expanded():
+				found_expanded.append(filename)
+			else:
+				found_normal.append(filename)
+		if mpq_handle:
+			SFileCloseArchive(mpq_handle)
+		if not found_normal and not found_expanded:
+			ErrorDialog(self, PyMSError('Open','No DAT files found in %s "%s"' % ('MPQ' if ismpq else 'directory', path)))
 			return
-		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (file, ', '.join(found)))
+		message = ''
+		if found_normal:
+			message += 'DAT Files found:\n\t%s' % ', '.join(found_normal)
+		if found_expanded:
+			if message:
+				message += '\n\n'
+			message += "Expanded DAT Files found:\n\t%s\n\nExpanded DAT files require a plugin like 'DatExtend'." % ', '.join(found_expanded)
+		MessageBox.showinfo('DAT Files Found', message)	
+
+	def openmpq(self, event=None):
+		path = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
+		self._open_all(path, True)
 
 	def opendirectory(self, event=None):
-		dir = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
-		if not dir:
-			return
-		found = [] # type: list[str]
-		for _,(tab,_) in self.dattabs.pages.iteritems():
-			filename = tab.get_dat_data().dat_type.FILE_NAME
-			filepath = os.path.join(dir, filename)
-			if not os.path.exists(filepath):
-				continue
-			try:
-				tab.open_file(filepath)
-				found.append(filename)
-			except:
-				pass
-		if not found:
-			ErrorDialog(self, PyMSError('Open','No DAT files found in directory "%s"' % dir))
-			return
-		MessageBox.showinfo('DAT Files Found','DAT Files found in "%s":\n\t%s' % (dir, ', '.join(found)))
+		path = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
+		self._open_all(path, False)
 
 	def iimport(self, key=None):
 		self.dattabs.active.iimport()

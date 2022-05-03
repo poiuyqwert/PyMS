@@ -122,8 +122,8 @@ class DATData(object):
 			return self.default_dat.entry_count()
 		return self.dat_type.FORMAT.entries
 
-	def expand_entries(self):
-		expanded = self.dat.expand_entries()
+	def expand_entries(self, add):
+		expanded = self.dat.expand_entries(add)
 		if expanded:
 			self.update_names()
 		return expanded
