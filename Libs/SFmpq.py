@@ -3,7 +3,7 @@ import os,sys
 
 SFMPQ_DIR = None
 if hasattr(sys, 'frozen'):
-	SFMPQ_DIR = os.path.join(os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding())) ,'PyMS','FileFormats','MPQ')
+	SFMPQ_DIR = os.path.join(os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding())), 'Libs')
 else:
 	SFMPQ_DIR = os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))
 
