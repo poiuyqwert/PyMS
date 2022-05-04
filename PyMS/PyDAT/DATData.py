@@ -66,46 +66,30 @@ class DATData(object):
 	def save_data(self):
 		return self.dat.save_data()
 
-	def load_name_overrides(self, path):
-		pass
+	def load_name_overrides(self, path, update_names=True):
+		with open(path, 'r') as f:
+			contents = f.readlines()
+		self.name_overrides = DATEntryName.parse_overrides(contents)
+		if update_names:
+			self.update_names()
+
+	def save_name_overrides(self, path):
+		with open(path, 'w') as f:
+			for entry_id in sorted(self.name_overrides.keys()):
+				f.write('%d%s:%s\n' % (entry_id, '+' if self.name_overrides[entry_id][0] else '', self.name_overrides[entry_id][1]))
 
 	def update_names(self):
-		entry_count = self.dat_type.FORMAT.entries
-		dat = self.dat or self.default_dat
-		if dat:
-			entry_count = dat.entry_count()
+		entry_count = self.entry_count()
 		names = []
 		for entry_id in range(entry_count):
-			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
-				names.append(self.reserved_name(entry_id))
-			else:
-				name = ''
-				if entry_id >= len(DATA_CACHE[self.data_file]):
-					name = self.unknown_name(entry_id)
-				else:
-					name = DATA_CACHE[self.data_file][entry_id]
-				if entry_id in self.name_overrides:
-					append, override = self.name_overrides[entry_id]
-					if append:
-						name += " " + override
-					else:
-						name = override
-				names.append(name)
+			names.append(DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=DATA_CACHE[self.data_file], name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-	def reserved_name(self, entry_id):
-		return "Reserved %s #%s" % (self.entry_type_name, entry_id)
-
-	def unknown_name(self, entry_id=None):
-		name = self.entry_type_name
-		if entry_id != None:
-			name += " #%s" % entry_id
-		return name
-
 	def entry_name(self, entry_id):
 		if entry_id >= len(self.names):
-			return self.unknown_name(entry_id)
+			entry_count = self.entry_count()
+			return DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=DATA_CACHE[self.data_file], name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
 	def is_expanded(self):
@@ -134,74 +118,229 @@ class UnitsDATData(DATData):
 
 	def update_names(self):
 		names = []
-		entry_count = self.dat_type.FORMAT.entries
-		dat = self.dat or self.default_dat
-		if dat:
-			entry_count = dat.entry_count()
-		strings = self.data_context.unitnamestbl.strings or self.data_context.stat_txt.strings[:228]
+		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
-				names.append(self.reserved_name(entry_id))
-			else:
-				name = ''
-				if strings and self.data_context.settings.settings.get('customlabels'):
-					if entry_id >= len(strings):
-						name = self.unknown_name(entry_id)
-					else:
-						name = strings[entry_id]
-				else:
-					if entry_id >= len(DATA_CACHE[self.data_file]):
-						name = self.unknown_name(entry_id)
-					else:
-						name = DATA_CACHE[self.data_file][entry_id]
-				if entry_id in self.name_overrides:
-					append, override = self.name_overrides[entry_id]
-					if append:
-						name += " " + override
-					else:
-						name = override
-				names.append(name)
+			names.append(DATEntryName.unit(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				stat_txt=self.data_context.stat_txt,
+				unitnamestbl=self.data_context.unitnamestbl,
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class EntryLabelDATData(DATData):
-	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name, label_offset=1):
-		self.label_offset = label_offset
-		DATData.__init__(self, data_context, dat_id, dat_type, data_file, entry_type_name)
+class WeaponsDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.weapons, WeaponsDAT, 'Weapons.txt', 'Weapon')
 
 	def update_names(self):
 		names = []
-		entry_count = self.dat_type.FORMAT.entries
-		dat = self.dat or self.default_dat
-		if dat:
-			entry_count = dat.entry_count()
-		strings = self.data_context.stat_txt.strings
+		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			name = ''
-			if strings and self.data_context.settings.settings.get('customlabels'):
-				if self.dat_type.FORMAT.expanded_entries_reserved and entry_id in self.dat_type.FORMAT.expanded_entries_reserved:
-					name = self.reserved_name(entry_id)
-				elif not dat:
-					name = self.unknown_name()
-				else:
-					label_id = dat.get_entry(entry_id).label - self.label_offset
-					if label_id < 0:
-						name = 'None'
-					elif label_id >= len(strings):
-						name = self.unknown_name(entry_id)
-					else:
-						name = strings[label_id]
-			else:
-				if entry_id >= len(DATA_CACHE[self.data_file]):
-					name = self.unknown_name(entry_id)
-				else:
-					name = DATA_CACHE[self.data_file][entry_id]
-			if entry_id in self.name_overrides:
-				append, override = self.name_overrides[entry_id]
-				if append:
-					name += " " + override
-				else:
-					name = override
-			names.append(name)
+			names.append(DATEntryName.weapon(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				weaponsdat=self.dat,
+				stat_txt=self.data_context.stat_txt,
+				none_name='None',
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class FlingyDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.flingy, FlingyDAT, 'Flingy.txt', 'Flingy')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.flingy(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				flingydat=self.dat,
+				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
+				imagesdat=self.data_context.dat_data(DATID.images).dat,
+				imagestbl=self.data_context.imagestbl,
+				# TODO
+				data_names_usage=DataNamesUsage.use,
+				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class SpritesDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.sprites, SpritesDAT, 'Sprites.txt', 'Sprite')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.sprite(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				spritesdat=self.dat,
+				imagesdat=self.data_context.dat_data(DATID.images).dat,
+				imagestbl=self.data_context.imagestbl,
+				# TODO
+				data_names_usage=DataNamesUsage.use,
+				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class ImagesDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.images, ImagesDAT, 'Images.txt', 'Image')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.image(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				imagesdat=self.dat,
+				imagestbl=self.data_context.imagestbl,
+				# TODO
+				data_names_usage=DataNamesUsage.use,
+				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class UpgradesDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.upgrades, UpgradesDAT, 'Upgrades.txt', 'Upgrade')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.upgrade(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				upgradesdat=self.dat,
+				stat_txt=self.data_context.stat_txt,
+				none_name='None',
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class TechDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.techdata, TechDAT, 'Techdata.txt', 'Technology')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.tech(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				techdatadat=self.dat,
+				stat_txt=self.data_context.stat_txt,
+				none_name='None',
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class SoundsDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.sfxdata, SoundsDAT, 'Sfxdata.txt', 'Sound')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.sound(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				sfxdatadat=self.dat,
+				sfxdatatbl=self.data_context.sfxdatatbl,
+				none_name='No sound',
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class PortraitsDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.portdata, PortraitsDAT, 'Portdata.txt', 'Portrait')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.portrait(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				portdatadat=self.dat,
+				portdatatbl=self.data_context.portdatatbl,
+				none_name='None',
+				# TODO
+				data_names_usage=DataNamesUsage.use,
+				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class CampaignDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.mapdata, CampaignDAT, 'Mapdata.txt', 'Map')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.map(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				mapdatadat=self.dat,
+				mapdatatbl=self.data_context.mapdatatbl,
+				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
+		self.names = tuple(names)
+		self.update_cb(self.dat_id)
+
+class OrdersDATData(DATData):
+	def __init__(self, data_context):
+		DATData.__init__(self, data_context, DATID.orders, OrdersDAT, 'Orders.txt', 'Order')
+
+	def update_names(self):
+		names = []
+		entry_count = self.entry_count()
+		for entry_id in range(entry_count):
+			names.append(DATEntryName.order(entry_id,
+				data_names=DATA_CACHE[self.data_file],
+				ordersdat=self.dat,
+				stat_txt=self.data_context.stat_txt,
+				none_name='None',
+				# TODO
+				data_names_usage=DataNamesUsage.use,
+				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				tbl_decompile=False,
+				name_overrides=self.name_overrides
+			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)

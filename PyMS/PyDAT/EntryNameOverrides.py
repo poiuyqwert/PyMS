@@ -1,4 +1,6 @@
 
+from ..FileFormats.DAT import DATEntryName
+
 from ..Utilities.utils import BASE_DIR, couriernew, lpad
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -89,36 +91,19 @@ class EntryNameOverrides(PyMSDialog):
 		if not path:
 			return
 		try:
-			with open(path, 'r') as f:
-				contents = f.readlines()
-		except:
-			ErrorDialog(self, PyMSError('Open', "Couldn't open name overrides '%s'" % path))
-		try:
-			name_overrides = {}
-			for line in contents:
-				m = RE_OVERRIDE.match(line)
-				if not m:
-					raise PyMSError('Open', "Invalid name override '%s'" % line)
-				entry_id = int(m.group(1))
-				append = (m.group(2) == '+')
-				name = m.group(3)
-				name_overrides[entry_id] = (append, name)
-			self.data_context.dat_data(self.dat_id).name_overrides = name_overrides
-			self.refresh_list()
+			self.data_context.dat_data(self.dat_id).load_name_overrides(path, update_names=False)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		except:
-			ErrorDialog(self, PyMSError('Open', "Invalid name overrides '%s'" % path))
+			ErrorDialog(self, PyMSError('Open', "Couldn't open name overrides '%s'" % path))
+		self.refresh_list()
 
 	def saveas(self, _=None):
 		path = self.data_context.settings.lastpath.entry_name_overrides.select_save_file(self, title='Save Name Overrides', filetypes=(('TXT files','*.txt'),), filename=self.dat_id.filename.replace('.dat', '.txt'))
 		if not path:
 			return
 		try:
-			with open(path, 'w') as f:
-				name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
-				for entry_id in sorted(name_overrides.keys()):
-					f.write('%d%s:%s\n' % (entry_id, '+' if name_overrides[entry_id][0] else '', name_overrides[entry_id][1]))
+			self.data_context.dat_data(self.dat_id).save_name_overrides(path)
 		except:
 			ErrorDialog(self, PyMSError('Save', "Couldn't save name overrides to '%s'" % path))
 

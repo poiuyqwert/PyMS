@@ -152,6 +152,8 @@ class SoundsTab(DATTab):
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True
+			if self.toplevel.data_context.settings.settings.get('customlabels'):
+				self.toplevel.data_context.dat_data(DATID.sfxdata).update_names()
 		if self.priority.get() != entry.priority:
 			entry.priority = self.priority.get()
 			self.edited = True

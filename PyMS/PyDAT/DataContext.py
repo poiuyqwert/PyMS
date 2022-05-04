@@ -1,5 +1,5 @@
 
-from DATData import DATData, EntryLabelDATData, UnitsDATData
+from DATData import *
 from TBLData import TBLData
 from IconData import IconData
 from DataID import DATID, DataID
@@ -31,7 +31,8 @@ class DataContext(object):
 	def __init__(self):
 		self.settings = Settings('PyDAT', '1')
 		self.settings.settings.set_defaults({
-			'customlabels': False
+			'customlabels': False,
+			'simple_labels': False
 		})
 
 		self.mpqhandler = None
@@ -57,25 +58,25 @@ class DataContext(object):
 
 		self.units = UnitsDATData(self)
 		self.units.update_cb += self.update_cb
-		self.weapons = EntryLabelDATData(self, DATID.weapons, WeaponsDAT, 'Weapons.txt', 'Weapon')
+		self.weapons = WeaponsDATData(self)
 		self.weapons.update_cb += self.update_cb
-		self.flingy = DATData(self, DATID.flingy, FlingyDAT, 'Flingy.txt', 'Flingy')
+		self.flingy = FlingyDATData(self)
 		self.flingy.update_cb += self.update_cb
-		self.sprites = DATData(self, DATID.sprites, SpritesDAT, 'Sprites.txt', 'Sprite')
+		self.sprites = SpritesDATData(self)
 		self.sprites.update_cb += self.update_cb
-		self.images = DATData(self, DATID.images, ImagesDAT, 'Images.txt', 'Image')
+		self.images = ImagesDATData(self)
 		self.images.update_cb += self.update_cb
-		self.upgrades = EntryLabelDATData(self, DATID.upgrades, UpgradesDAT, 'Upgrades.txt', 'Upgrade')
+		self.upgrades = UpgradesDATData(self)
 		self.upgrades.update_cb += self.update_cb
-		self.technology = EntryLabelDATData(self, DATID.techdata, TechDAT, 'Techdata.txt', 'Technology')
+		self.technology = TechDATData(self)
 		self.technology.update_cb += self.update_cb
-		self.sounds = DATData(self, DATID.sfxdata, SoundsDAT, 'Sfxdata.txt', 'Sound')
+		self.sounds = SoundsDATData(self)
 		self.sounds.update_cb += self.update_cb
-		self.portraits = DATData(self, DATID.portdata, PortraitsDAT, 'Portdata.txt', 'Portrait')
+		self.portraits = PortraitsDATData(self)
 		self.portraits.update_cb += self.update_cb
-		self.campaign = DATData(self, DATID.mapdata, CampaignDAT, 'Mapdata.txt', 'Map')
+		self.campaign = CampaignDATData(self)
 		self.campaign.update_cb += self.update_cb
-		self.orders = EntryLabelDATData(self, DATID.orders, OrdersDAT, 'Orders.txt', 'Order')
+		self.orders = OrdersDATData(self)
 		self.orders.update_cb += self.update_cb
 
 		self.palettes = {}
