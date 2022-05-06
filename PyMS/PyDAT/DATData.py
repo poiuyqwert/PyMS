@@ -10,6 +10,25 @@ from ..Utilities.Callback import Callback
 
 import copy
 
+class NamesDisplaySetting:
+	basic = 'basic'
+	tbl = 'tbl'
+	combine = 'combine'
+
+	DATANAMES_USAGE_TO_SETTING = None # type: dict[DataNamesUsage, str]
+	SETTING_TO_DATANAMES_USAGE = None # type: dict[str, DataNamesUsage]
+
+NamesDisplaySetting.DATANAMES_USAGE_TO_SETTING = {
+	DataNamesUsage.use: NamesDisplaySetting.basic,
+	DataNamesUsage.ignore: NamesDisplaySetting.tbl,
+	DataNamesUsage.combine: NamesDisplaySetting.combine
+}
+NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE = {
+	NamesDisplaySetting.basic: DataNamesUsage.use,
+	NamesDisplaySetting.tbl: DataNamesUsage.ignore,
+	NamesDisplaySetting.combine: DataNamesUsage.combine
+}
+
 class DATData(object):
 	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name):
 		self.data_context = data_context
@@ -124,8 +143,8 @@ class UnitsDATData(DATData):
 				data_names=DATA_CACHE[self.data_file],
 				stat_txt=self.data_context.stat_txt,
 				unitnamestbl=self.data_context.unitnamestbl,
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -145,8 +164,8 @@ class WeaponsDATData(DATData):
 				weaponsdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -167,9 +186,7 @@ class FlingyDATData(DATData):
 				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl,
-				# TODO
-				data_names_usage=DataNamesUsage.use,
-				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -188,9 +205,7 @@ class SpritesDATData(DATData):
 				spritesdat=self.dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl,
-				# TODO
-				data_names_usage=DataNamesUsage.use,
-				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -208,9 +223,7 @@ class ImagesDATData(DATData):
 				data_names=DATA_CACHE[self.data_file],
 				imagesdat=self.dat,
 				imagestbl=self.data_context.imagestbl,
-				# TODO
-				data_names_usage=DataNamesUsage.use,
-				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -229,8 +242,8 @@ class UpgradesDATData(DATData):
 				upgradesdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -250,8 +263,8 @@ class TechDATData(DATData):
 				techdatadat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -271,8 +284,7 @@ class SoundsDATData(DATData):
 				sfxdatadat=self.dat,
 				sfxdatatbl=self.data_context.sfxdatatbl,
 				none_name='No sound',
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -292,10 +304,7 @@ class PortraitsDATData(DATData):
 				portdatadat=self.dat,
 				portdatatbl=self.data_context.portdatatbl,
 				none_name='None',
-				# TODO
-				data_names_usage=DataNamesUsage.use,
-				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -314,8 +323,7 @@ class CampaignDATData(DATData):
 				data_names=DATA_CACHE[self.data_file],
 				mapdatadat=self.dat,
 				mapdatatbl=self.data_context.mapdatatbl,
-				data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -335,10 +343,8 @@ class OrdersDATData(DATData):
 				ordersdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				# TODO
-				data_names_usage=DataNamesUsage.use,
-				# data_names_usage=DataNamesUsage.ignore if self.data_context.settings.settings.customlabels else DataNamesUsage.use,
-				tbl_raw_string=not self.data_context.settings.settings.simple_labels,
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))

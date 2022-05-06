@@ -36,6 +36,8 @@ class MainWindow(Tk.Tk):
 		from ...Utilities import Assets
 		try:
 			self.icon = Assets.get_image('%s.ico' % name)
+			if not self.icon:
+				self.icon = Assets.get_image('PyMS.ico')
 			self.wm_iconbitmap(self.icon)
 		except:
 			self.icon = '@%s' % Assets.image_path('%s.xbm' % name)

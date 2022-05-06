@@ -33,6 +33,9 @@ class DataNamesUsage:
 
 	def __eq__(self, other):
 		return isinstance(other, DataNamesUsage) and other.value == self.value
+
+	def __hash__(self):
+		return hash(self.value)
 DataNamesUsage.use = DataNamesUsage('use')
 DataNamesUsage.ignore = DataNamesUsage('ignore')
 DataNamesUsage.combine = DataNamesUsage('combine')
@@ -252,7 +255,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, TechDAT.FORMAT.entries, 'Tech')
 
 	@staticmethod
-	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], SoundsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], SoundsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -263,11 +266,11 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if sfxdatadat and sfxdatatbl and data_names_usage != DataNamesUsage.use and entry_id < sfxdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(sfxdatadat.get_entry(entry_id).sound_file, sfxdatatbl, none_name, tbl_raw_string, tbl_decompile)
+			tbl_name = DATEntryName._entry_label(sfxdatadat.get_entry(entry_id).sound_file, sfxdatatbl, none_name, True, tbl_decompile)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, SoundsDAT.FORMAT.entries, 'Sound')
 
 	@staticmethod
-	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], PortraitsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], PortraitsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -278,11 +281,11 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if portdatadat and portdatatbl and data_names_usage != DataNamesUsage.use and entry_id < portdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(portdatadat.get_entry(entry_id).idle.portrait_file, portdatatbl, none_name, tbl_raw_string, tbl_decompile, offset=0)
+			tbl_name = DATEntryName._entry_label(portdatadat.get_entry(entry_id).idle.portrait_file, portdatatbl, none_name, True, tbl_decompile, offset=0)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, PortraitsDAT.FORMAT.entries, 'Portrait')
 
 	@staticmethod
-	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -293,7 +296,7 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if mapdatadat and mapdatatbl and data_names_usage != DataNamesUsage.use and entry_id < mapdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, None, tbl_raw_string, tbl_decompile, offset=0)
+			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, None, True, tbl_decompile, offset=0)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, CampaignDAT.FORMAT.entries, 'Map')
 
 	@staticmethod

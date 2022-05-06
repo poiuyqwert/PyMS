@@ -11,6 +11,7 @@ from PortraitsTab import PortraitsTab
 from MapsTab import MapsTab
 from OrdersTab import OrdersTab
 from DataContext import DataContext
+from DATData import NamesDisplaySetting
 from SaveMPQDialog import SaveMPQDialog
 from DATSettingsDialog import DATSettingsDialog
 from EntryNameOverrides import EntryNameOverrides
@@ -33,6 +34,8 @@ from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
+from ..Utilities.CollapseView import CollapseView
+from ..Utilities.DropDown import DropDown
 
 import os, webbrowser
 
@@ -100,23 +103,47 @@ class PyDAT(MainWindow):
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
 		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.changeid())
 
+		f = Frame(left)
+		collapse_button = CollapseView.Button(f)
+		collapse_button.pack(side=TOP)
+		f.pack(fill=X, pady=2)
+
+		def _update_collapse_setting(collapsed):
+			self.data_context.settings.show_listbox_options = not collapsed
+		collapse_view = CollapseView(left, collapse_button, callback=_update_collapse_setting)
+		collapse_view.pack(fill=X, padx=2, pady=2)
+
+		collapse_view.set_collapsed(not self.data_context.settings.get('show_listbox_options', True))
+
 		self.findhistory = []
 		self.find = StringVar()
-		self.jumpid = IntegerVar('', [0,0], allow_hex=True)
+		Label(collapse_view, text='Find:').grid(column=0,row=0, sticky=E)
+		find = Frame(collapse_view)
+		find_tdd = TextDropDown(find, self.find, self.findhistory, 5)
+		find_tdd.pack(side=LEFT, fill=X, expand=1)
+		find_tdd.entry.bind(Key.Return, self.findnext)
+		Button(find, text='Next', command=self.findnext).pack(side=LEFT)
+		find.grid(column=1,row=0, sticky=EW)
 
-		search = Frame(left)
-		tdd = TextDropDown(search, self.find, self.findhistory, 5)
-		tdd.pack(side=LEFT, fill=X, expand=1)
-		tdd.entry.bind(Key.Return, self.findnext)
-		Button(search, text='Find Next', command=self.findnext).pack(side=LEFT)
-		right = Frame(search)
-		entry = Entry(right, textvariable=self.jumpid, width=4)
-		entry.pack(side=LEFT)
-		entry.bind(Key.Return, self.jump)
-		Button(right, text='ID Jump', command=self.jump).pack(side=LEFT)
-		right.pack(side=RIGHT)
-		search.pack(fill=X, padx=2, pady=2)
-		self.bind(Ctrl.f, lambda e: tdd.focus_set(highlight=True))
+		collapse_view.grid_columnconfigure(1, weight=1)
+
+		self.jumpid = IntegerVar('', [0,0], allow_hex=True)
+		Label(collapse_view, text='ID Jump:').grid(column=0,row=1, sticky=E)
+		jump = Frame(collapse_view)
+		jump_entry = Entry(jump, textvariable=self.jumpid, width=5)
+		jump_entry.pack(side=LEFT)
+		jump_entry.bind(Key.Return, self.jump)
+		Button(jump, text='Go', command=self.jump).pack(side=LEFT)
+		jump.grid(column=1,row=1, sticky=W)
+
+		self.names_display = IntVar()
+		self.names_display.trace('w', self.change_names_display)
+		self.simple_names = BooleanVar()
+		self.simple_names.trace('w', self.change_simple_names)
+		Label(collapse_view, text='Names:').grid(column=0,row=2, sticky=E)
+		DropDown(collapse_view, self.names_display, ['Basic', 'TBL Based', 'Combined']).grid(column=1,row=2, sticky=EW)
+		self.simple_names_checkbox = Checkbutton(collapse_view, text='Simple TBL Names', variable=self.simple_names)
+		self.simple_names_checkbox.grid(column=1,row=3, sticky=W)
 
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
@@ -184,6 +211,7 @@ class PyDAT(MainWindow):
 
 	def tab_activated(self, event=None):
 		self.update_entry_listing(True)
+		self.update_name_settings()
 		self.update_status_bar()
 		self.dattabs.active.load_data()
 
@@ -199,6 +227,39 @@ class PyDAT(MainWindow):
 			self.listbox.select_set(tab.id)
 			if update_scroll:
 				self.listbox.see(tab.id)
+
+	NAMES_SETTING_TO_OPTION = {
+		NamesDisplaySetting.basic: 0,
+		NamesDisplaySetting.tbl: 1,
+		NamesDisplaySetting.combine: 2
+	}
+	NAMES_OPTION_TO_SETTING = [
+		NamesDisplaySetting.basic,
+		NamesDisplaySetting.tbl,
+		NamesDisplaySetting.combine
+	]
+	def update_name_settings(self):
+		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[name_settings.display])
+		if 'simple' in name_settings:
+			self.simple_names_checkbox['state'] = NORMAL
+			self.simple_names.set(name_settings.simple)
+		else:
+			self.simple_names_checkbox['state'] = DISABLED
+			self.simple_names.set(False)
+	def change_names_display(self, *_):
+		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
+		if new_setting == name_settings.display:
+			return
+		name_settings.display = new_setting
+		self.dattabs.active.get_dat_data().update_names()
+	def change_simple_names(self, *_):
+		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+		if not 'simple' in name_settings or self.simple_names.get() == name_settings.simple:
+			return
+		name_settings.simple = self.simple_names.get()
+		self.dattabs.active.get_dat_data().update_names()
 
 	def update_status_bar(self):
 		tab = self.dattabs.active
