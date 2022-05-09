@@ -687,7 +687,7 @@ class IScriptBIN:
 						elif not [id,n] in offsets[o]:
 							offsets[o].append([id,n])
 						load_offset(o, id)
-			ocode = OrderedDict(sorted(code.items(), key=lambda item: item[0]))
+			ocode = OrderedDict(sorted(code.iteritems(), key=lambda item: item[0]))
 			self.headers = headers
 			self.offsets = offsets
 			self.code = ocode
@@ -962,7 +962,7 @@ class IScriptBIN:
 		if unused:
 			for l in unused:
 				warnings.append(PyMSWarning('Interpeting', "The label '%s' is unused, label is discarded" % l))
-				r = OrderedDict(code, sorted(code.keys()))
+				r = OrderedDict(sorted(code.iteritems(), key=lambda item: item[0]))
 				self.remove_code(labels[l], code=r, offsets=offsets)
 				code = deepcopy(r)
 		# print('Headers: ' + pprint(headers))
@@ -983,7 +983,7 @@ class IScriptBIN:
 			c[o] = cmd
 		k = c.keys()
 		k.sort()
-		self.code = OrderedDict((key,c[key]) for key in sorted(c.keys()))
+		self.code = OrderedDict(sorted(c.iteritems(), key=lambda item: item[0]))
 		self.extrainfo.update(extrainfo)
 		return warnings
 

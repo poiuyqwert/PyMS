@@ -420,7 +420,7 @@ class PyICE(MainWindow):
 			c[o] = cmd
 		k = c.keys()
 		k.sort()
-		self.ibin.code = OrderedDict((key,c[key]) for key in sorted(c.keys()))
+		self.ibin.code = OrderedDict(sorted(c.iteritems(), key=lambda item: item[0]))
 		self.ibin.extrainfo.update(ibin.extrainfo)
 		self.update_iscrips_list()
 		self.status.set('Import Successful!')
