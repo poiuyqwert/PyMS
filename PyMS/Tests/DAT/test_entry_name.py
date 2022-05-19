@@ -1020,18 +1020,6 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Sound #0',
-			'Protoss\\ARCHON\\PArPss02.WAV',
-			'Protoss\\Artanis\\PAtYes03.wav',
-			'Misc\\Buzz.wav',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
-				expected_name
-			)
-
-		expected_names = (
 			'No sound',
 			'Protoss\\ARCHON\\PArPss02.WAV',
 			'Protoss\\Artanis\\PAtYes03.wav',
@@ -1039,7 +1027,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, none_name='No sound', data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
+				DATEntryName.sound(entry_id, sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, none_name='No sound', data_names_usage=DataNamesUsage.ignore),
 				expected_name
 			)
 
@@ -1052,18 +1040,6 @@ class Test_Entry_Name(unittest.TestCase):
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
 				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine),
-				expected_name
-			)
-
-		expected_names = (
-			'No sound',
-			'Protoss\\ARCHON\\PArPss02.WAV',
-			'Protoss\\Artanis\\PAtYes03.wav',
-			'Expanded Sound #1144 (Misc\\Buzz.wav)',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -1081,7 +1057,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1099,7 +1075,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.sound(entry_id, data_names=DATA_CACHE['Sfxdata.txt'], sfxdatadat=sfxdatadat, sfxdatatbl=sfxdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1163,18 +1139,6 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tmarine\\TMaTlk0',
-			'UTassadar\\UTaTlk0',
-			'UFlag12\\UF12Tlk0',
-			'tmarine\\TMaFid0',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.portrait(entry_id, portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
-				expected_name
-			)
-
-		expected_names = (
 			'Marine (tmarine\\TMaTlk0)',
 			'Gantrithor (UTassadar\\UTaTlk0)',
 			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0)',
@@ -1183,18 +1147,6 @@ class Test_Entry_Name(unittest.TestCase):
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
 				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine),
-				expected_name
-			)
-
-		expected_names = (
-			'Marine (tmarine\\TMaTlk0)',
-			'Gantrithor (UTassadar\\UTaTlk0)',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0)',
-			'Expanded Portrait #110 (tmarine\\TMaFid0)',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -1212,7 +1164,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1230,7 +1182,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.portrait(entry_id, data_names=DATA_CACHE['Portdata.txt'], portdatadat=portdatadat, portdatatbl=portdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1294,18 +1246,6 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.map(entry_id, mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.ignore, tbl_raw_string=False),
-				expected_name
-			)
-
-		expected_names = (
 			'tutorial (campaign\\terran\\tutorial)',
 			'BW - protoss02 (campaign\\expprotoss\\protoss02)',
 			'Unknown',
@@ -1314,18 +1254,6 @@ class Test_Entry_Name(unittest.TestCase):
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
 				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine),
-				expected_name
-			)
-
-		expected_names = (
-			'tutorial (campaign\\terran\\tutorial)',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02)',
-			'Unknown',
-			'Expanded Map #65 (campaign\\terran\\terran01)',
-		)
-		for (entry_id, expected_name) in zip(entry_ids, expected_names):
-			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False),
 				expected_name
 			)
 
@@ -1343,7 +1271,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 
@@ -1361,7 +1289,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, tbl_raw_string=False, name_overrides=name_overrides),
+				DATEntryName.map(entry_id, data_names=DATA_CACHE['Mapdata.txt'], mapdatadat=mapdatadat, mapdatatbl=mapdatatbl, data_names_usage=DataNamesUsage.combine, name_overrides=name_overrides),
 				expected_name
 			)
 

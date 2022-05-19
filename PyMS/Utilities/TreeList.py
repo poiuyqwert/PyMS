@@ -36,7 +36,7 @@ class TreeGroup(TreeNode):
 class TreeList(Frame):
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent, selectmode=SINGLE, groupsel=True, closeicon=None, openicon=None):
+	def __init__(self, parent, selectmode=SINGLE, groupsel=True, closeicon=None, openicon=None, height=1, width=1):
 		self.selectmode = selectmode
 		self.lastsel = None
 		self.groupsel = groupsel
@@ -53,7 +53,7 @@ class TreeList(Frame):
 		font = ('courier', -12, 'normal')
 		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
+		self.text = Text(self, cursor='arrow', height=height, width=width, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", self, '  ')+9)
 		self.text.grid(sticky=NSEW)
 		self.hscroll.config(command=self.text.xview)
@@ -152,6 +152,7 @@ class TreeList(Frame):
 		if index == None:
 			self.text.tag_remove('Selection', '1.0', END)
 			self.lastsel = None
+			self.text.event_generate(WidgetEvent.Listbox.Select)
 			return
 		node = self.get_node(index)
 
@@ -175,6 +176,7 @@ class TreeList(Frame):
 				self.lastsel = node.entry
 			if not self.selected(node.entry):
 				self.text.tag_add('Selection',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
+		self.text.event_generate(WidgetEvent.Listbox.Select)
 
 	def write_node(self, pos, node):
 		# print(('Pos',pos))
@@ -321,6 +323,11 @@ class TreeList(Frame):
 		if ranges:
 			self.text.see(ranges[0])
 
+	def build(self, tree, get_children, get_name, index='-1'): # type: (list[Any], Callable[Any, list[(Any, bool)]], Callable[Any, str], str) -> None
+		for node,folder in tree:
+			name = get_name(node)
+			node_index = self.insert(index, name, folder)
+			self.build(get_children(node), get_children, get_name, node_index + '.-1')
 
 # import TBL,DAT
 # class Test(Tk):

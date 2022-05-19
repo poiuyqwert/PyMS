@@ -47,7 +47,7 @@ class DATEntryName:
 	RE_STR_END = re.compile(r'(?:<0>|\x00)$')
 
 	@staticmethod
-	def parse_overrides(overrides): # type: (lsist[str]) -> dict[int, tuple[bool, str]]
+	def parse_overrides(overrides): # type: (list[str]) -> dict[int, tuple[bool, str]]
 		try:
 			name_overrides = {}
 			for line in overrides:
@@ -128,7 +128,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, UnitsDAT.FORMAT.entries, 'Unit')
 
 	@staticmethod
-	def _entry_label(label_id, stat_txt, none_name, tbl_raw_string, tbl_decompile, offset=1): # type: (int, TBL, Optional[str], bool, bool, int) -> Optional[str]
+	def _entry_label(label_id, stat_txt, none_name, tbl_raw_string, tbl_decompile, offset=1): # type: (int, TBL, str | None, bool, bool, int) -> (str | None)
 		if offset:
 			if label_id < offset:
 				return none_name
@@ -255,7 +255,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, TechDAT.FORMAT.entries, 'Tech')
 
 	@staticmethod
-	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], SoundsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], SoundsDAT, TBL, str, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -270,7 +270,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, SoundsDAT.FORMAT.entries, 'Sound')
 
 	@staticmethod
-	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], PortraitsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], PortraitsDAT, TBL, str, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -285,7 +285,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, PortraitsDAT.FORMAT.entries, 'Portrait')
 
 	@staticmethod
-	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]

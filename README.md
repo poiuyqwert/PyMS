@@ -65,13 +65,13 @@ Even though the analytics is anonamous and has no sensitive information, you can
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.
 
 ### PyAI
-PyAI is used for editing AI .bin files.
+[PyAI](/Help/Programs/PyAI.md) is used for editing AI .bin files.
 
 ### PyBIN
 PyBIN is used for editing dialog .bin files.
 
 ### PyDAT
-PyDAT is used for editing the various .dat files.
+[PyDAT](/Help/Programs/PyDAT.md) is used for editing the various .dat files.
 
 ### PyFNT
 PyFNT is used for converting .fnt Font files to and from .bmp files.

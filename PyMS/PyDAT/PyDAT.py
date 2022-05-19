@@ -36,6 +36,7 @@ from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 from ..Utilities.CollapseView import CollapseView
 from ..Utilities.DropDown import DropDown
+from ..Utilities.HelpDialog import HelpDialog
 
 import os, webbrowser
 
@@ -499,7 +500,7 @@ class PyDAT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyDAT.html'))
+		HelpDialog(self, 'Help/Programs/PyDAT.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])

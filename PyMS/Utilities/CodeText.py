@@ -28,7 +28,7 @@ class CodeText(Frame):
 		self.lines.pack(side=LEFT, fill=Y)
 		hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
-		self.text = Text(frame, height=1, font=font, bd=0, undo=1, maxundo=100, wrap=NONE, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=0)
+		self.text = Text(frame, height=1, font=font, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
 		self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))

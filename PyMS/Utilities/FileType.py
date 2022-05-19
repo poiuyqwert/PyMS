@@ -125,7 +125,7 @@ class FileType(tuple):
 		return FileType(name, 'loa', 'lob', 'lod', 'lof', 'loo', 'los', 'lou', 'log', 'lol', 'lox')
 
 	@staticmethod
-	def loa(name='StarCraft Attach Overlays'):
+	def loa(name='StarCraft Attack Overlays'):
 		return FileType(name, 'loa')
 
 	@staticmethod

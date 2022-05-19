@@ -5,7 +5,7 @@ from EventPattern import *
 
 class Tooltip(object):
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
-	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=False, attach_to_parent=True):
+	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=False, attach_to_parent=True): # type: (Widget, str, (Font | tuple[str, int, str]), int, bool, bool, bool) -> Tooltip
 		self.parent = parent
 		self.setupbinds(press)
 		self.text = text

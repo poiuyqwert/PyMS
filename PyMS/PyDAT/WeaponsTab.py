@@ -296,7 +296,7 @@ class WeaponsTab(DATTab):
 		if (DATID.units in ids or DATID.orders in ids) and self.toplevel.dattabs.active == self:
 			self.check_used_by_references()
 		if DATID.techdata in ids:
-			self.unused_ddw.setentries(('None',) + self.toplevel.data_context.technology.names)
+			self.unused_ddw.setentries(self.toplevel.data_context.technology.names)
 		if DATID.upgrades in ids:
 			self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names)
 		if DATID.flingy in ids:

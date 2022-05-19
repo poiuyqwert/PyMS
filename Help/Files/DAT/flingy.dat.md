@@ -1,0 +1,4 @@
+# flingy.dat
+`flingy.dat` contains the movement settings for things like [Units](/Help/Files/DAT/units.dat.md), [Weapons](/Help/Files/DAT/weapons.dat.md) and [IScripts](/Help/Files/iscript.bin.md), as well as a refernece to a [Sprite](/Help/Files/DAT/sprites.dat.md). These movement settings may not all be used if the "Move Control" setting is not set to "Flingy.dat control" (for example "Iscript.bin control" means the [IScript](/Help/Files/iscript.bin.md) Entry of the [Image](/Help/Files/DAT/images.dat.md) referenced by the flingy's [Sprite](/Help/Files/DAT/sprites.dat.md) will control the movement).
+
+Edited by [PyDAT](/Help/Programs/PyDAT.md)

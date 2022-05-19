@@ -22,8 +22,8 @@ class Technology(AbstractDAT.AbstractDATEntry):
 		self.vespene_cost = 0
 		self.research_time = 0
 		self.energy_required = 0
-		self.research_requirements = 0
-		self.use_requirements = 0
+		self.research_requirements = 65535
+		self.use_requirements = 65535
 		self.icon = 0
 		self.label = 0
 		self.staredit_race = 0
