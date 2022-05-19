@@ -70,6 +70,7 @@ TILETYPE_MINI  = 2
 HEIGHT_LOW  = 0
 HEIGHT_MID  = (1 << 1)
 HEIGHT_HIGH = (1 << 2)
+HEIGHT_HIGHER = HEIGHT_MID | HEIGHT_HIGH
 
 def setting_import_extras_ignore(setting_count, tile_n, tile_count):
 	if tile_n == setting_count:
