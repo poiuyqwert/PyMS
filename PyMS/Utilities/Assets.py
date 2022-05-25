@@ -1,5 +1,7 @@
 
 from UIKit import PhotoImage as _PhotoImage
+from UIKit import PILImage as _PILImage
+from UIKit import ImageTk as _ImageTk
 
 import os as _os
 import sys as _sys
@@ -154,9 +156,9 @@ class HelpFile(object):
 		self.folder = folder
 
 _HELP_TREE = None
-def help_tree():
-	global _HELP_TREE
-	if _HELP_TREE != None:
+def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
+	global _HELP_TREE 
+	if _HELP_TREE != None and force_update == False:
 		return _HELP_TREE
 	root = None
 	parents = {} # type: dict[str, HelpFolder]
@@ -190,3 +192,31 @@ def help_file_path(path): # type: (str) -> (str | None)
 	if not _os.path.exists(full_path):
 		return None
 	return full_path
+
+_HELP_IMAGE_CACHE = {}
+def help_image(path): # type: (str) -> (_PhotoImage | None)
+	path_components = path.split('/')
+	if path_components[0] == '':
+		path_components.pop(0)
+	if path_components[0] == 'Help':
+		path_components.pop(0)
+	full_path = _os.path.join(help_dir, *path_components)
+	if not _os.path.exists(full_path):
+		return None
+	global _HELP_IMAGE_CACHE
+	if full_path in _HELP_IMAGE_CACHE:
+		return _HELP_IMAGE_CACHE[full_path]
+	try:
+		image = _PhotoImage(file=full_path)
+	except:
+		try:
+			pil_image = _PILImage.open(full_path)
+			image = _ImageTk.PhotoImage(pil_image)
+		except:
+			return None
+	_HELP_IMAGE_CACHE[full_path] = image
+	return image
+
+def clear_help_image_cache():
+	global _HELP_IMAGE_CACHE
+	_HELP_IMAGE_CACHE.clear()

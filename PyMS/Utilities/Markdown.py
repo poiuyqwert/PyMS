@@ -321,7 +321,9 @@ class ListItemBlock(ContainerBlock):
 # Inline content
 class Span(object):
 	def __init__(self, text): # type: (str) -> Span
-		self.contents = [text] # type: list[Span | str]
+		self.contents = [] # type: list[Span | str]
+		if text:
+			self.contents.append(text)
 
 	@staticmethod
 	def apply(text): # type: (str) -> (tuple[int, int, Span] | None)
@@ -437,27 +439,28 @@ class Link(Span):
 class Image(Span):
 	RE_MARKER = re.compile(r'!\[(.+?)\]\((\S+|<.+?>)(?: ([\'"])(.+?)\3)?\)')
 
-	def __init__(self, text, link, alt_text): # type: (str, str, str | None) -> Image
-		Span.__init__(self, text)
-		self.link = link
+	def __init__(self, alt_text, link, title): # type: (str, str, str | None) -> Image
+		Span.__init__(self, None)
 		self.alt_text = alt_text
+		self.link = link
+		self.title = title
 
 	@staticmethod
 	def apply(text): # type: (str) -> (tuple[int, int, Image] | None)
 		match = Image.RE_MARKER.search(text)
 		if not match:
 			return None
-		text = match.group(1)
+		alt_text = match.group(1)
 		link = match.group(2)
 		if link.startswith('<') and link.endswith('>'):
 			link = link[1:-1]
-		alt_text = match.group(4)
-		return (match.start(), match.end(), Image(text, link, alt_text))
+		title = match.group(4)
+		return (match.start(), match.end(), Image(alt_text, link, title))
 
 	def repr_params(self): # type () -> (str | None)
-		result = 'link="%s"' % self.link
-		if self.alt_text:
-			result += ' alt_text="%s"' % self.alt_text
+		result = 'link="%s" alt_text="%s"' % (self.link, self.alt_text)
+		if self.title:
+			result += ' title="%s"' % self.title
 		return result
 
 class Document(ContainerBlock):

@@ -32,7 +32,7 @@ class TextTooltip(Tooltip):
 		Tooltip.leave(self)
 
 class TextDynamicTooltip(TextTooltip):
-	def __init__(self, parent, tag, text_lookup, **kwargs): # type: (Text, str, Callable[[str, tuple[str, ...]], str], **Any) -> TextDynamicTooltip
+	def __init__(self, parent, tag, text_lookup, **kwargs): # type: (Text, str, Callable[[str | None, tuple[str, ...]], str], **Any) -> TextDynamicTooltip
 		self.text_lookup = text_lookup
 		TextTooltip.__init__(self, parent, tag, **kwargs)
 
@@ -42,10 +42,10 @@ class TextDynamicTooltip(TextTooltip):
 		tags = textview.tag_names(index)
 		if not self.tag in tags:
 			return
+		tag_text = None
 		tag_range = textview.tag_prevrange(self.tag, index)
-		if not tag_range or len(tag_range) != 2:
-			return
-		tag_text = textview.get(*tag_range)
+		if tag_range and len(tag_range) == 2:
+			tag_text = textview.get(*tag_range)
 		text = self.text_lookup(tag_text, tags)
 		if not text:
 			return

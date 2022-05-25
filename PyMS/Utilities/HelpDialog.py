@@ -21,10 +21,10 @@ class HelpDialog(PyMSDialog):
 
 	def setup_complete(self):
 		if self.initial_file_path:
-			self.load(self.initial_file_path)
+			self.load(self.initial_file_path, force_update=True)
 
-	def load(self, path): # type: (str) -> None
-		index = Assets.help_tree().index(path)
+	def load(self, path, force_update=False): # type: (str, bool) -> None
+		index = Assets.help_tree(force_update=force_update).index(path)
 		if not index:
 			return
 		self.treelist.select(index)
@@ -42,3 +42,7 @@ class HelpDialog(PyMSDialog):
 			return
 		with open(Assets.help_file_path(help_file.path), 'r') as f:
 			self.markdownview.load_markdown(f.read())
+
+	def destroy(self):
+		Assets.clear_help_image_cache()
+		PyMSDialog.destroy(self)

@@ -1,10 +1,11 @@
 # coding=utf-8
 
 from UIKit import *
-from TextTooltip import TextDynamicTooltip
+from TextTooltip import TextDynamicTooltip, TextTooltip
 from utils import is_mac
 # from AutohideScrollbar import AutohideScrollbar
 import Markdown
+import Assets
 
 import webbrowser, re, os
 
@@ -104,6 +105,7 @@ class MarkdownView(Frame):
 
 		self.links = {} # type: dict[str, Markdown.Link]
 		self.headers = {} # type: dict[str, str]
+		self.images = {} # type: dict[str, Markdown.Image]
 		def link_lookup(tags): # type: (tuple[str, ...]) -> (Markdown.Link | None)
 			for tag in tags:
 				if tag.startswith('link_'):
@@ -111,7 +113,7 @@ class MarkdownView(Frame):
 					if link:
 						return link
 			return None
-		def link_tooltip_lookup(_, tags):  # type: (str, tuple[str, ...]) -> (str | None)
+		def link_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
 			link = link_lookup(tags)
 			if not link:
 				return None
@@ -123,6 +125,17 @@ class MarkdownView(Frame):
 				tooltip = '%s (%s)' % (link.title, tooltip)
 			return tooltip
 		TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
+
+		def image_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
+			for tag in tags:
+				if tag.startswith('image_'):
+					image = self.images.get(tag)
+					tooltip = image.alt_text
+					if image.title:
+						tooltip += ' (%s)' % image.title
+					return tooltip
+			return None
+		TextDynamicTooltip(self.textview, 'image', image_tooltip_lookup)
 
 		def link_click(*_):
 			index = self.textview.index('current')
@@ -166,6 +179,7 @@ class MarkdownView(Frame):
 
 		self.links.clear()
 		self.headers.clear()
+		self.images.clear()
 		self._lists = [] # type: list[MarkdownView._ListDisplay]
 		self._lists_margin = 0
 		self._list_items_tags = [] # type: list[MarkdownView._ListItemTags]
@@ -263,6 +277,18 @@ class MarkdownView(Frame):
 				link_tag = 'link_%d' % len(self.links)
 				tags += ('link', link_tag)
 				self.links[link_tag] = item
+			elif isinstance(item, Markdown.Image):
+				# TODO: Move to callback to reduce dependence on PyMS
+				image = Assets.help_image(item.link)
+				if not image:
+					return
+				start_index = self.textview.index('%s -1chars' % END)
+				self.textview.image_create(END, image=image)
+				image_tag = 'image_%d' % len(self.images)
+				tags += ('image', image_tag)
+				for tag in tags:
+					self.textview.tag_add(tag, start_index, END)
+				self.images[image_tag] = item
 			if isinstance(item, Markdown.Span):
 				for sub_item in item.contents:
 					insert_item(sub_item, tags)
