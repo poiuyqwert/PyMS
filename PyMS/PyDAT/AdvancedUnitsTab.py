@@ -117,8 +117,8 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.unknown80 = IntVar()
 
 		l = LabelFrame(scrollview.content_view, text='Other Properties:')
-		s = Frame(l)
-		f = Frame(s)
+
+		f = Frame(l)
 		Label(f, text='Infestation:', width=9, anchor=E).pack(side=LEFT)
 		self.infestentryw = Entry(f, textvariable=self.infestentry, font=couriernew, width=5)
 		self.infestentryw.pack(side=LEFT)
@@ -129,53 +129,69 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.infestbtnw.pack(side=LEFT)
 		self.tip(f, 'Infestation', 'UnitInfestation')
 		f.pack(fill=X)
-		su = Frame(s)
-		f = Frame(su)
+
+		f = Frame(l)
 		Label(f, text='Subunit 1:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunitoneentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.subunitone_ddw = DropDown(f, self.subunitone, [], self.subunitoneentry)
 		self.subunitone_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.subunitone_btnw = Button(f, text='Jump ->', command=lambda: self.jump(DATID.units, self.subunitone.get()))
+		self.subunitone_btnw.pack(side=LEFT)
 		self.tip(f, 'Subunit 1', 'UnitSub1')
 		f.pack(fill=X)
-		f = Frame(su)
+
+		f = Frame(l)
 		Label(f, text='Subunit 2:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.subunittwoentry, font=couriernew, width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.subunittwo_ddw = DropDown(f, self.subunittwo, [], self.subunittwoentry)
 		self.subunittwo_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.subunittwo_btnw = Button(f, text='Jump ->', command=lambda: self.jump(DATID.units, self.subunittwo.get()))
+		self.subunittwo_btnw.pack(side=LEFT)
 		self.tip(f, 'Subunit 2', 'UnitSub2')
 		f.pack(fill=X)
-		f = Frame(su)
-		Label(f, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
-		self.tip(f, 'Requirements Index', 'UnitReq')
+
+		f = Frame(l)
+		r = Frame(f)
+		Label(r, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
+		Entry(r, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
+		self.tip(r, 'Requirements Index', 'UnitReq')
+		r.pack(side=LEFT)
+
+		unknowns = Frame(f)
+		self.makeCheckbox(unknowns, self.unknown1, '0x01', 'UnitMov01').grid(column=0,row=0)
+		self.makeCheckbox(unknowns, self.unknown2, '0x02', 'UnitMov02').grid(column=1,row=0)
+		self.makeCheckbox(unknowns, self.unknown4, '0x04', 'UnitMov04').grid(column=2,row=0)
+		self.makeCheckbox(unknowns, self.unknown8, '0x08', 'UnitMov08').grid(column=3,row=0)
+		self.makeCheckbox(unknowns, self.unknown10, '0x10', 'UnitMov10').grid(column=0,row=1)
+		self.makeCheckbox(unknowns, self.unknown20, '0x20', 'UnitMov20').grid(column=1,row=1)
+		self.makeCheckbox(unknowns, self.unknown40, '0x40', 'UnitMov40').grid(column=2,row=1)
+		self.makeCheckbox(unknowns, self.unknown80, '0x80', 'UnitMov80').grid(column=3,row=1)
+		# u = [
+		# 	[
+		# 		('01', self.unknown1),
+		# 		('02', self.unknown2),
+		# 		('04', self.unknown4),
+		# 		('08', self.unknown8),
+		# 	],[
+		# 		('10', self.unknown10),
+		# 		('20', self.unknown20),
+		# 		('40', self.unknown40),
+		# 		('80', self.unknown80),
+		# 	],
+		# ]
+		# for c in u:
+		# 	cc = Frame(unknowns)
+		# 	for t,v in c:
+		# 		f = Frame(cc)
+		# 		self.makeCheckbox(f,v,'0x'+t,'UnitMov'+t).pack(side=LEFT)
+		# 		f.pack(fill=X)
+		# 	cc.pack(side=LEFT)
+		unknowns.pack(side=RIGHT)
 		f.pack(fill=X)
-		su.pack(side=LEFT, fill=BOTH, expand=1)
-		unknown = Frame(s)
-		u = [
-			[
-				('01', self.unknown1),
-				('02', self.unknown2),
-				('04', self.unknown4),
-				('08', self.unknown8),
-			],[
-				('10', self.unknown10),
-				('20', self.unknown20),
-				('40', self.unknown40),
-				('80', self.unknown80),
-			],
-		]
-		for c in u:
-			cc = Frame(unknown)
-			for t,v in c:
-				f = Frame(cc)
-				self.makeCheckbox(f,v,'0x'+t,'UnitMov'+t).pack(side=LEFT)
-				f.pack(fill=X)
-			cc.pack(side=LEFT)
-		unknown.pack(side=LEFT)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
+
+		l.pack(fill=X, expand=1)
 
 		scrollview.pack(fill=BOTH, expand=1)
 

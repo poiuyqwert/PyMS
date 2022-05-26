@@ -121,10 +121,16 @@ class DATEntryName:
 				else:
 					tbl_name = tbl_name.rstrip('<0>')
 				if not tbl_raw_string:
-					tbl_name, group, _ = tbl_name.split('<0>')
+					pieces = tbl_name.split('<0>')
+					tbl_name = ''
+					special = '*'
+					if pieces:
+						tbl_name = pieces[0]
+					if len(pieces) > 1:
+						special = pieces[1]
 					tbl_name = DATEntryName.RE_TBL_CODES.sub('', tbl_name)
-					if group and group != '*':
-						tbl_name += ' (%s)' % DATEntryName.RE_TBL_CODES.sub('', group)
+					if special and special != '*':
+						tbl_name += ' (%s)' % DATEntryName.RE_TBL_CODES.sub('', special)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, UnitsDAT.FORMAT.entries, 'Unit')
 
 	@staticmethod
