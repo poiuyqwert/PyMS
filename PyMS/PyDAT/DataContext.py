@@ -266,6 +266,8 @@ class DataContext(object):
 		if not tbl_index:
 			return None
 		grp_path = self.imagestbl.strings[tbl_index - 1]
+		if grp_path.endswith('<0>'):
+			grp_path = grp_path[:-3]
 		if draw_function == None:
 			draw_function = image_entry.draw_function
 			if draw_function == Image.DrawFunction.use_remapping and remapping == None:
