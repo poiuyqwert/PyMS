@@ -36,12 +36,12 @@ class CodeGeneratorTypeMath(CodeGeneratorType):
 	def count(self):
 		return None
 
+	VARIABLE_RE = re.compile(r'\$([a-zA-Z0-9_]+)')
+	MATH_RE = re.compile(r'^[0-9.+-/*() \t]+$')
 	def value(self, lookup_value):
-		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
-		math_re = re.compile(r'^[0-9.+-/*() \t]+$')
-		math = variable_re.sub(lambda m: str(lookup_value(m.group(1))), self.math)
-		if not math_re.match(math):
-			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, and whitespace allowed)" % math)
+		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: str(lookup_value(m.group(1))), self.math)
+		if not CodeGeneratorTypeMath.MATH_RE.match(math):
+			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, (, ), and whitespace allowed)" % math)
 		try:
 			return eval(math)
 		except:

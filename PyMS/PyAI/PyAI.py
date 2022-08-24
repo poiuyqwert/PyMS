@@ -31,6 +31,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.HelpDialog import HelpDialog
 
 import os, shutil, webbrowser
 from collections import OrderedDict
@@ -141,7 +142,7 @@ class PyAI(MainWindow):
 		view_menu.add_radiobutton('Sort by Strings', self.sort, 'stringsort', underline='Strings')
 
 		help_menu = self.menu.add_cascade('Help')
-		help_menu.add_command('View Help File', self.help, Key.F1, bind_shortcut=False, underline='h')
+		help_menu.add_command('View Help', self.help, Key.F1, bind_shortcut=False, underline='h')
 		help_menu.add_separator()
 		help_menu.add_command('About PyAI', self.about, underline='a')
 
@@ -572,7 +573,7 @@ class PyAI(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % Assets.doc_path('PyAI.html'))
+		HelpDialog(self, 'Help/Programs/PyAI.md')
 
 	def about(self):
 		thanks = [

@@ -13,7 +13,7 @@ class HelpDialog(PyMSDialog):
 	def widgetize(self):
 		self.treelist = TreeList(self, width=30)
 		self.treelist.pack(side=LEFT, fill=Y)
-		self.treelist.build(((folder,True) for folder in Assets.help_tree().folders), lambda node: () if isinstance(node, Assets.HelpFile) else tuple((file,None) for file in node.files) + tuple((folder,True) for folder in node.folders), lambda node: node.name)
+		self.treelist.build(((folder,True) for folder in Assets.help_tree().folders), lambda node: () if isinstance(node, Assets.HelpFile) else tuple((file,None) for file in node.files) + tuple((folder,True) for folder in node.folders), lambda node: node.name.replace('_', ' '))
 		self.treelist.bind(WidgetEvent.Listbox.Select, lambda *_: self.load_help_file())
 
 		self.markdownview = MarkdownView(self, link_callback=self.load)
