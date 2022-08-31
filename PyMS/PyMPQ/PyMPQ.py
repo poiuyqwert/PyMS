@@ -1,13 +1,13 @@
 
-from CompressionSetting import CompressionType, CompressionSetting
-from Locales import LOCALE_CHOICES, find_locale_index
-from CheckThread import CheckThread
-from LocaleDialog import LocaleDialog
-from UpdateFiles import UpdateFiles
-from FolderDialog import FolderDialog
-from GeneralSettings import GeneralSettings
-from CompressionSettings import CompressionSettings
-from ListfileSettings import ListfileSettings
+from .CompressionSetting import CompressionType, CompressionSetting
+from .Locales import LOCALE_CHOICES, find_locale_index
+from .CheckThread import CheckThread
+from .LocaleDialog import LocaleDialog
+from .UpdateFiles import UpdateFiles
+from .FolderDialog import FolderDialog
+from .GeneralSettings import GeneralSettings
+from .CompressionSettings import CompressionSettings
+from .ListfileSettings import ListfileSettings
 
 from ..FileFormats.MPQ.SFmpq import *
 

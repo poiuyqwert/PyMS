@@ -1,5 +1,5 @@
 
-from CompressionSetting import CompressionType, CompressionSetting
+from .CompressionSetting import CompressionType, CompressionSetting
 
 from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *

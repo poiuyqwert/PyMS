@@ -1,6 +1,6 @@
 
-from utils import WIN_REG_AVAILABLE
-from Settings import Settings
+from .utils import WIN_REG_AVAILABLE
+from .Settings import Settings
 
 import os
 

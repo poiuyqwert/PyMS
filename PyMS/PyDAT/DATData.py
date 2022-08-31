@@ -1,5 +1,5 @@
 
-from DataID import DATID
+from .DataID import DATID
 
 from ..FileFormats.DAT import *
 

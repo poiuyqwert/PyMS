@@ -1,6 +1,6 @@
 
-from FramesDialog import FramesDialog
-from utils import grptobmp, bmptogrp
+from .FramesDialog import FramesDialog
+from .utils import grptobmp, bmptogrp
 
 from ..FileFormats import GRP
 from ..FileFormats import BMP

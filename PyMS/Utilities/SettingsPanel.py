@@ -8,12 +8,12 @@ from ..FileFormats import AIBIN
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
-from utils import BASE_DIR, isstr
-from Settings import SettingDict
-from MPQSelect import MPQSelect
-from ErrorDialog import ErrorDialog
-from PyMSError import PyMSError
-from UIKit import *
+from .utils import BASE_DIR, isstr
+from .Settings import SettingDict
+from .MPQSelect import MPQSelect
+from .ErrorDialog import ErrorDialog
+from .PyMSError import PyMSError
+from .UIKit import *
 
 import os
 

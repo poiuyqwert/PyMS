@@ -1,5 +1,5 @@
 
-from StringPreview import StringPreview
+from .StringPreview import StringPreview
 
 from ..FileFormats import DialogBIN, TBL, SMK, GRP, PCX, FNT
 

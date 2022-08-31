@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from InfoDialog import InfoDialog
+from .InfoDialog import InfoDialog
 
 from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt

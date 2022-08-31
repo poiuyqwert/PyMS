@@ -1,8 +1,8 @@
 
-from utils import BASE_DIR
-from PyMSDialog import PyMSDialog
-from Hotlink import Hotlink
-from UIKit import *
+from .utils import BASE_DIR
+from .PyMSDialog import PyMSDialog
+from .Hotlink import Hotlink
+from .UIKit import *
 
 import traceback, webbrowser, os
 

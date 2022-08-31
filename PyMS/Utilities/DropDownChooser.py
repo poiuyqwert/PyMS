@@ -1,7 +1,7 @@
 
-from utils import couriernew
-from UIKit import *
-from EventPattern import *
+from .utils import couriernew
+from .UIKit import *
+from .EventPattern import *
 
 class DropDownChooser(Toplevel):
 	def __init__(self, parent, list, select):

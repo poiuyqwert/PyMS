@@ -1,5 +1,5 @@
 
-from PyMSError import PyMSError
+from .PyMSError import PyMSError
 
 import struct
 

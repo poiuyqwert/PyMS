@@ -1,5 +1,5 @@
 
-from Tool import Tool
+from .Tool import Tool
 
 from ..FileFormats import SPK
 from ..FileFormats import BMP

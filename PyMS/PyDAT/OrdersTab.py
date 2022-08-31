@@ -1,8 +1,8 @@
 
-from DATTab import DATTab
-from DataID import DATID, DataID, UnitsTabID
-from DATRef import DATRefs, DATRef
-from IconSelectDialog import IconSelectDialog
+from .DATTab import DATTab
+from .DataID import DATID, DataID, UnitsTabID
+from .DATRef import DATRefs, DATRef
+from .IconSelectDialog import IconSelectDialog
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar

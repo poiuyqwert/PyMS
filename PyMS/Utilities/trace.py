@@ -1,7 +1,7 @@
 
-from utils import BASE_DIR
-from InternalErrorDialog import InternalErrorDialog
-from UIKit import Toplevel
+from .utils import BASE_DIR
+from .InternalErrorDialog import InternalErrorDialog
+from .UIKit import Toplevel
 
 import sys,os
 

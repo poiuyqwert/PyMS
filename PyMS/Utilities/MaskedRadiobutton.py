@@ -1,5 +1,5 @@
 
-from UIKit import Radiobutton, IntVar
+from .UIKit import Radiobutton, IntVar
 
 class MaskedRadiobutton(Radiobutton):
 	def __init__(self, parent, **options):

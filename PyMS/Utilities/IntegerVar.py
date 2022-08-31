@@ -1,5 +1,5 @@
 
-from UIKit import StringVar
+from .UIKit import StringVar
 
 class IntegerVar(StringVar):
 	class UpdateCase:

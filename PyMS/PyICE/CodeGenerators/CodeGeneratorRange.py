@@ -1,5 +1,5 @@
 
-from CodeGenerator import CodeGeneratorEditor, CodeGeneratorType
+from .CodeGenerator import CodeGeneratorEditor, CodeGeneratorType
 
 from ...Utilities.UIKit import *
 from ...Utilities.IntegerVar import *

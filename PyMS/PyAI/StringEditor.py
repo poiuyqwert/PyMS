@@ -1,6 +1,6 @@
 
-import FindDialog
-from EditStringDialog import EditStringDialog
+from . import FindDialog
+from .EditStringDialog import EditStringDialog
 
 from ..FileFormats import TBL
 

@@ -1,7 +1,7 @@
 
-from FindDialog import FindDialog
-from GotoDialog import GotoDialog
-from PreviewDialog import PreviewDialog
+from .FindDialog import FindDialog
+from .GotoDialog import GotoDialog
+from .PreviewDialog import PreviewDialog
 
 from ..FileFormats import TBL
 from ..FileFormats import PCX

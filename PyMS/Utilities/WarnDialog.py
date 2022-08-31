@@ -1,6 +1,6 @@
 
-from PyMSDialog import PyMSDialog
-from UIKit import *
+from .PyMSDialog import PyMSDialog
+from .UIKit import *
 
 class WarnDialog(PyMSDialog):
 	def __init__(self, parent, message, title='Warning!', show_dont_warn=False):

@@ -1,12 +1,12 @@
 
-from FlagEditor import FlagEditor
-from PyMS.Utilities.PyMSError import PyMSError
-from StringEditor import StringEditor
+from .FlagEditor import FlagEditor
+from .StringEditor import StringEditor
 
 from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.PyMSError import PyMSError
 
 class EditScriptDialog(PyMSDialog):
 	def __init__(self, parent, id='MYAI', flags=0, string=0, aiinfo='', title='Edit AI ID, String and Extra Info.', initial=''):

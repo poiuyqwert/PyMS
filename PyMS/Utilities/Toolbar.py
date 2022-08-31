@@ -1,10 +1,8 @@
 
-from utils import BASE_DIR, isstr
-from Tooltip import Tooltip
-from UIKit import *
-from TagStateManager import TagStateManager
-
-import os
+from .utils import BASE_DIR, isstr
+from .Tooltip import Tooltip
+from .UIKit import *
+from .TagStateManager import TagStateManager
 
 class Toolbar(Frame):
 	# Use `bind_target=<widget>` to adjust where shortcuts are bound, otherwise `self.master` will be used

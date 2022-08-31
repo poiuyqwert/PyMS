@@ -1,8 +1,8 @@
 
-from LOCodeText import LOCodeText
-from FindReplaceDialog import FindReplaceDialog
-from CodeColors import CodeColors
-from Constants import RE_COORDINATES, RE_DRAG_COORDS
+from .LOCodeText import LOCodeText
+from .FindReplaceDialog import FindReplaceDialog
+from .CodeColors import CodeColors
+from .Constants import RE_COORDINATES, RE_DRAG_COORDS
 
 from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette

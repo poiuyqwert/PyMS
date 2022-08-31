@@ -1,7 +1,7 @@
 
-from TRGCodeText import TRGCodeText
-from FindReplaceDialog import FindReplaceDialog
-from CodeColors import CodeColors
+from .TRGCodeText import TRGCodeText
+from .FindReplaceDialog import FindReplaceDialog
+from .CodeColors import CodeColors
 
 from ..FileFormats import TRG
 from ..FileFormats import TBL

@@ -1,11 +1,11 @@
 # coding=utf-8
 
-from UIKit import *
-from TextTooltip import TextDynamicTooltip, TextTooltip
-from utils import is_mac
+from .UIKit import *
+from .TextTooltip import TextDynamicTooltip, TextTooltip
+from .utils import is_mac
 # from AutohideScrollbar import AutohideScrollbar
-import Markdown
-import Assets
+from . import Markdown
+from . import Assets
 
 import webbrowser, re, os
 

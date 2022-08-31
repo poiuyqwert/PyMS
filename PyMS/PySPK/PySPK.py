@@ -1,10 +1,10 @@
 
-from Tool import Tool
-from LayerRow import LayerRow
-from PaletteTab import PaletteTab
-from StarsTab import StarsTab
-from PreviewDialog import PreviewDialog
-from LayerCountDialog import LayerCountDialog
+from .Tool import Tool
+from .LayerRow import LayerRow
+from .PaletteTab import PaletteTab
+from .StarsTab import StarsTab
+from .PreviewDialog import PreviewDialog
+from .LayerCountDialog import LayerCountDialog
 
 from ..FileFormats import SPK
 from ..FileFormats import Palette

@@ -1,5 +1,5 @@
 
-from DataID import DataID
+from .DataID import DataID
 
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 from ..FileFormats.PCX import PCX

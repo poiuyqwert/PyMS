@@ -1,8 +1,8 @@
 
-from PyMSDialog import PyMSDialog
-from WarningDialog import WarningDialog
-from InternalErrorDialog import InternalErrorDialog
-from UIKit import *
+from .PyMSDialog import PyMSDialog
+from .WarningDialog import WarningDialog
+from .InternalErrorDialog import InternalErrorDialog
+from .UIKit import *
 
 import sys, traceback
 

@@ -1,6 +1,6 @@
 
-from CodeTooltip import CodeTooltip
-from HelpText import *
+from .CodeTooltip import CodeTooltip
+from .HelpText import *
 
 from ..FileFormats import TRG
 

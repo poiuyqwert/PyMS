@@ -1,6 +1,6 @@
 
-from DATTabConveniences import DATTabConveniences
-from EntryCountDialog import EntryCountDialog
+from .DATTabConveniences import DATTabConveniences
+from .EntryCountDialog import EntryCountDialog
 
 from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.Notebook import NotebookTab

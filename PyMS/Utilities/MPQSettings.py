@@ -1,10 +1,10 @@
 
 from ..FileFormats.MPQ.SFmpq import *
 
-from utils import BASE_DIR
-from setutils import PYMS_SETTINGS
-from Tooltip import Tooltip
-from UIKit import *
+from .utils import BASE_DIR
+from .setutils import PYMS_SETTINGS
+from .Tooltip import Tooltip
+from .UIKit import *
 
 import os
 

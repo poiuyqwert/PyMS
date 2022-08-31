@@ -1,7 +1,7 @@
 
-from utils import is_mac
-from UIKit import *
-from EventPattern import *
+from .utils import is_mac
+from .UIKit import *
+from .EventPattern import *
 
 class Tooltip(object):
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is

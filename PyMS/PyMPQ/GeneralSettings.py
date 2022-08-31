@@ -1,5 +1,5 @@
 
-from LocaleDialog import LOCALE_CHOICES
+from .LocaleDialog import LOCALE_CHOICES
 
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar

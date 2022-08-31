@@ -1,6 +1,6 @@
 
-from utils import BASE_DIR
-from UIKit import *
+from .utils import BASE_DIR
+from .UIKit import *
 
 import os
 

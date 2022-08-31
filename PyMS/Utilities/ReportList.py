@@ -1,7 +1,7 @@
 
-from utils import isstr
-from RichList import RichList
-from UIKit import *
+from .utils import isstr
+from .RichList import RichList
+from .UIKit import *
 
 class EditableReportSubList(RichList):
 	def __init__(self, parent, selectmode, report, **kwargs):

@@ -1,6 +1,6 @@
 
-from utils import isstr
-from PyMSError import PyMSError
+from .utils import isstr
+from .PyMSError import PyMSError
 
 class BadFile:
 	def __init__(self, file):

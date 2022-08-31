@@ -1,7 +1,7 @@
 
-from DATTab import DATTab
-from DataID import DATID
-from DATRef import DATRefs, DATRef
+from .DATTab import DATTab
+from .DataID import DATID
+from .DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 

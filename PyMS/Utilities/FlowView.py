@@ -1,6 +1,6 @@
 
-from AutohideScrollbar import AutohideScrollbar
-from UIKit import *
+from .AutohideScrollbar import AutohideScrollbar
+from .UIKit import *
 
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView

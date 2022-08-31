@@ -1,9 +1,9 @@
 
-from utils import isstr, RE_GEOMETRY, parse_geometry
-from UIKit import FileDialog
-from FileType import FileType
-import Assets
-from WarnDialog import WarnDialog
+from .utils import isstr, RE_GEOMETRY, parse_geometry
+from .UIKit import FileDialog
+from .FileType import FileType
+from . import Assets
+from .WarnDialog import WarnDialog
 
 from numbers import Number
 import os, json

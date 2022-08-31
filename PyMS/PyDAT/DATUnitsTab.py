@@ -1,5 +1,5 @@
 
-from DATTabConveniences import DATTabConveniences
+from .DATTabConveniences import DATTabConveniences
 
 from ..Utilities.Notebook import NotebookTab
 

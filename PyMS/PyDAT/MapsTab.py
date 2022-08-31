@@ -1,6 +1,6 @@
 
-from DATTab import DATTab
-from DataID import DATID, DataID
+from .DATTab import DATTab
+from .DataID import DATID, DataID
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar

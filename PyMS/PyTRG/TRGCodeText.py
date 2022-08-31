@@ -1,5 +1,5 @@
 
-from Tooltips import ConditionsTooltip, ActionsTooltip, TrigPlugActionsTooltip
+from .Tooltips import ConditionsTooltip, ActionsTooltip, TrigPlugActionsTooltip
 
 from ..FileFormats import TRG
 

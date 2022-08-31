@@ -1,10 +1,10 @@
 
-from IScriptCodeText import IScriptCodeText
-from FindReplaceDialog import FindReplaceDialog
-from CodeColors import CodeColors
-from CodeGeneratorDialog import CodeGeneratorDialog
-from PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS
-from SoundDialog import SoundDialog
+from .IScriptCodeText import IScriptCodeText
+from .FindReplaceDialog import FindReplaceDialog
+from .CodeColors import CodeColors
+from .CodeGeneratorDialog import CodeGeneratorDialog
+from .PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS
+from .SoundDialog import SoundDialog
 
 from ..FileFormats import IScriptBIN
 from ..FileFormats import GRP

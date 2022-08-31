@@ -1,7 +1,7 @@
 
-from AutohideScrollbar import AutohideScrollbar
-from UIKit import *
-from ShowScrollbar import ShowScrollbar
+from .AutohideScrollbar import AutohideScrollbar
+from .UIKit import *
+from .ShowScrollbar import ShowScrollbar
 
 class ScrolledCanvas(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to

@@ -1,5 +1,5 @@
 
-from UIKit import Scrollbar
+from .UIKit import Scrollbar
 
 class AutohideScrollbar(Scrollbar):
 	def __init__(self, parent, **kwargs):

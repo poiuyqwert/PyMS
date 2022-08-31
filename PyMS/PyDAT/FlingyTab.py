@@ -1,7 +1,7 @@
 
-from DATTab import DATTab
-from DataID import DATID, UnitsTabID
-from DATRef import DATRefs, DATRef
+from .DATTab import DATTab
+from .DataID import DATID, UnitsTabID
+from .DATRef import DATRefs, DATRef
 
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar

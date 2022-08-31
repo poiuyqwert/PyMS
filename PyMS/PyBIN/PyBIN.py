@@ -1,6 +1,6 @@
 
-from WidgetNode import WidgetNode
-from WidgetSettings import WidgetSettings
+from .WidgetNode import WidgetNode
+from .WidgetSettings import WidgetSettings
 
 from ..FileFormats import DialogBIN
 from ..FileFormats import PCX

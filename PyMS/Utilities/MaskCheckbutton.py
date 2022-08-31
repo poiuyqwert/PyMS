@@ -1,5 +1,5 @@
 
-from UIKit import Checkbutton, IntVar
+from .UIKit import Checkbutton, IntVar
 
 class MaskCheckbutton(Checkbutton):
 	def __init__(self, parent, **options):

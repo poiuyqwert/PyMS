@@ -1,8 +1,7 @@
 
-from Tooltip import Tooltip
-
-from UIKit import Text
-from utils import apply_cursor
+from .Tooltip import Tooltip
+from .UIKit import Text
+from .utils import apply_cursor
 
 class TextTooltip(Tooltip):
 	def __init__(self, parent, tag, **kwargs): # type: (Text, str, **Any) -> TextTooltip

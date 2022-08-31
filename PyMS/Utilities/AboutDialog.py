@@ -1,7 +1,7 @@
 
-from PyMSDialog import PyMSDialog
-from Hotlink import Hotlink
-from UIKit import *
+from .PyMSDialog import PyMSDialog
+from .Hotlink import Hotlink
+from .UIKit import *
 
 import webbrowser
 

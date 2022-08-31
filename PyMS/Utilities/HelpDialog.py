@@ -1,9 +1,9 @@
 
-from UIKit import *
-from PyMSDialog import PyMSDialog
-from MarkdownView import MarkdownView
-from TreeList import TreeList
-import Assets
+from .UIKit import *
+from .PyMSDialog import PyMSDialog
+from .MarkdownView import MarkdownView
+from .TreeList import TreeList
+from . import Assets
 
 class HelpDialog(PyMSDialog):
 	def __init__(self, parent, help_file_path=None):

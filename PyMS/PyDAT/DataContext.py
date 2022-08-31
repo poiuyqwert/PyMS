@@ -1,8 +1,8 @@
 
-from DATData import *
-from TBLData import TBLData
-from IconData import IconData
-from DataID import DATID, DataID
+from .DATData import *
+from .TBLData import TBLData
+from .IconData import IconData
+from .DataID import DATID, DataID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette

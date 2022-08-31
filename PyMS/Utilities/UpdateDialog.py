@@ -1,9 +1,9 @@
 
-from utils import VERSIONS
-from setutils import PYMS_SETTINGS
-from PyMSDialog import PyMSDialog
-from Hotlink import Hotlink
-from UIKit import *
+from .utils import VERSIONS
+from .setutils import PYMS_SETTINGS
+from .PyMSDialog import PyMSDialog
+from .Hotlink import Hotlink
+from .UIKit import *
 
 import webbrowser, json, urllib
 from thread import start_new_thread

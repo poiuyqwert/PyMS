@@ -1,6 +1,6 @@
 
-from DATUnitsTab import DATUnitsTab
-from DataID import DATID
+from .DATUnitsTab import DATUnitsTab
+from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 

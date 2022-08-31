@@ -1,5 +1,5 @@
 
-from SMKSettings import SMKSettings
+from .SMKSettings import SMKSettings
 
 from ..FileFormats import DialogBIN, TBL
 

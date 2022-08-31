@@ -1,5 +1,5 @@
 
-from DATData import DATData
+from .DATData import DATData
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *

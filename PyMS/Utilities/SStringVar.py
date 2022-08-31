@@ -1,5 +1,5 @@
 
-from UIKit import StringVar
+from .UIKit import StringVar
 
 class SStringVar(StringVar):
 	def __init__(self, val='', length=0, callback=None):

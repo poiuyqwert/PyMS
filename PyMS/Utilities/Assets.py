@@ -1,7 +1,7 @@
 
-from UIKit import PhotoImage as _PhotoImage
-from UIKit import PILImage as _PILImage
-from UIKit import ImageTk as _ImageTk
+from .UIKit import PhotoImage as _PhotoImage
+from .UIKit import PILImage as _PILImage
+from .UIKit import ImageTk as _ImageTk
 
 import os as _os
 import sys as _sys

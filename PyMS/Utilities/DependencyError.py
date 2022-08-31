@@ -1,7 +1,7 @@
 
-from utils import BASE_DIR
-from Hotlink import Hotlink
-from UIKit import *
+from .utils import BASE_DIR
+from .Hotlink import Hotlink
+from .UIKit import *
 
 import os
 

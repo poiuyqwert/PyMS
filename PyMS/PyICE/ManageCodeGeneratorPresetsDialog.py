@@ -1,6 +1,6 @@
 
-from CodeGenerators import CodeGeneratorType
-from NameDialog import NameDialog
+from .CodeGenerators import CodeGeneratorType
+from .NameDialog import NameDialog
 
 from ..Utilities.utils import BASE_DIR, isstr
 from ..Utilities.UIKit import *

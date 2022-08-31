@@ -1,7 +1,7 @@
 
-from ImportListDialog import ImportListDialog
-from FindDialog import FindDialog
-from CodeEditDialog import CodeEditDialog
+from .ImportListDialog import ImportListDialog
+from .FindDialog import FindDialog
+from .CodeEditDialog import CodeEditDialog
 
 from ..FileFormats import IScriptBIN
 from ..FileFormats import TBL

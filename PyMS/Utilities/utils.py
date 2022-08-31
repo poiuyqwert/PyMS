@@ -1,5 +1,5 @@
 
-from PyMSError import PyMSError
+from .PyMSError import PyMSError
 
 from textwrap import wrap
 from thread import start_new_thread
@@ -99,7 +99,7 @@ def register_registry(prog,type,filetype,progpath,icon):
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, '"%s" "%s" --gui "%%1"' % (sys.executable.replace('python.exe','pythonw.exe'),progpath))
 	except:
 		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True)
-	from UIKit import MessageBox
+	from .UIKit import MessageBox
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
 def flags(value, length):

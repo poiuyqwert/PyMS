@@ -1,5 +1,5 @@
 
-from CodeTooltip import *
+from .CodeTooltip import *
 
 from ..FileFormats import AIBIN
 

@@ -1,6 +1,6 @@
 
-from DATUnitsTab import DATUnitsTab
-from DataID import DataID
+from .DATUnitsTab import DATUnitsTab
+from .DataID import DataID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 from ..FileFormats.DAT.ImagesDAT import Image as DATImage

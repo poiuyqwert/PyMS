@@ -1,10 +1,10 @@
 
 from ..FileFormats.MPQ.SFmpq import SFileListFiles
 
-from utils import BASE_DIR
-from PyMSDialog import PyMSDialog
-from TextDropDown import TextDropDown
-from UIKit import *
+from .utils import BASE_DIR
+from .PyMSDialog import PyMSDialog
+from .TextDropDown import TextDropDown
+from .UIKit import *
 
 import os
 

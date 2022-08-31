@@ -1,7 +1,7 @@
 
-from utils import BASE_DIR, parse_geometry, isstr
-from WarnDialog import WarnDialog
-from UIKit import FileDialog, HORIZONTAL
+from .utils import BASE_DIR, parse_geometry, isstr
+from .WarnDialog import WarnDialog
+from .UIKit import FileDialog, HORIZONTAL
 
 import os, copy, json
 

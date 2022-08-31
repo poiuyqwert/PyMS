@@ -1,6 +1,6 @@
 
-from UIKit import *
-from DropDown import DropDown
+from .UIKit import *
+from .DropDown import DropDown
 
 class EntryDropDown(Frame):
 	# `variable` should be an `IntegerVar`, and it's `callback` will be taken over by the `EntryDropDown`

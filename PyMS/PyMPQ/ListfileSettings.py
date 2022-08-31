@@ -1,8 +1,6 @@
 
-from PyMS.Utilities.Settings import SettingDict
 from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets

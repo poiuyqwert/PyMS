@@ -1,7 +1,7 @@
 
-from utils import BASE_DIR
-from ..Utilities.DropDownChooser import DropDownChooser
-from UIKit import *
+from .utils import BASE_DIR
+from .DropDownChooser import DropDownChooser
+from .UIKit import *
 
 import os
 

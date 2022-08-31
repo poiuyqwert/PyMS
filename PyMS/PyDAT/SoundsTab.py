@@ -1,7 +1,7 @@
 
-from DATTab import DATTab
-from DataID import DATID, DataID, UnitsTabID
-from DATRef import DATRefs, DATRef
+from .DATTab import DATTab
+from .DataID import DATID, DataID, UnitsTabID
+from .DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.SoundsDAT import Sound
 from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED

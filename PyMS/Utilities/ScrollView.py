@@ -1,7 +1,7 @@
 
-from UIKit import *
-from AutohideScrollbar import AutohideScrollbar
-from EventPattern import *
+from .UIKit import *
+from .AutohideScrollbar import AutohideScrollbar
+from .EventPattern import *
 
 
 # WARNING: You must use the `scrollView.content_view` as the master of the widgets placed into a ScrollView

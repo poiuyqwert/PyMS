@@ -1,7 +1,7 @@
 
-from CodeGenerators import *
-from NameDialog import NameDialog
-from ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
+from .CodeGenerators import *
+from .NameDialog import NameDialog
+from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
 
 from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *

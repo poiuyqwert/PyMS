@@ -1,6 +1,6 @@
 
-from CodeTooltip import CodeTooltip
-from Constants import SIGNED_INT
+from .CodeTooltip import CodeTooltip
+from .Constants import SIGNED_INT
 
 from ..Utilities.UIKit import *
 from ..Utilities.CodeText import CodeText

@@ -1,5 +1,5 @@
 
-from Tool import Tool
+from .Tool import Tool
 
 from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.UIKit import *

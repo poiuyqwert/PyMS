@@ -1,8 +1,8 @@
 
-from utils import BASE_DIR, couriernew
-from ..Utilities.DropDownChooser import DropDownChooser
-from UIKit import *
-from EventPattern import *
+from .utils import BASE_DIR, couriernew
+from .DropDownChooser import DropDownChooser
+from .UIKit import *
+from .EventPattern import *
 
 import os
 

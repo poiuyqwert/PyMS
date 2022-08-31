@@ -10,7 +10,7 @@ try:
 except:
 	import ImageTk
 
-from EventPattern import *
+from .EventPattern import *
 
 # TkinterExt wraps some Tkinter widgets to provide extensions
-from TkinterExt import *
+from .TkinterExt import *

@@ -1,11 +1,11 @@
 
-from DataContext import DataContext
-from PyMS.Utilities.ShowScrollbar import ShowScrollbar
+from .DataContext import DataContext
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledCanvas import ScrolledCanvas
 from ..Utilities.StatusBar import StatusBar
+from ..Utilities.ShowScrollbar import ShowScrollbar
 
 from math import floor, ceil
 

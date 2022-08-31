@@ -1,5 +1,5 @@
 
-from HelpContent import TYPE_HELP, CMD_HELP, DIRECTIVE_HELP
+from .HelpContent import TYPE_HELP, CMD_HELP, DIRECTIVE_HELP
 
 from ..FileFormats import TBL
 

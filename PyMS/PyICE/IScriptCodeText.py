@@ -1,5 +1,5 @@
 
-from CodeTooltip import AnimationTooltip, CommandTooltip
+from .CodeTooltip import AnimationTooltip, CommandTooltip
 
 from ..FileFormats import IScriptBIN
 

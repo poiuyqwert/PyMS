@@ -1,6 +1,6 @@
 
-from utils import create_temp_file
-from PyMSError import PyMSError
+from .utils import create_temp_file
+from .PyMSError import PyMSError
 
 import os, codecs
 

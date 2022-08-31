@@ -1,5 +1,5 @@
 
-from CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
+from .CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
 
 from ...Utilities.utils import isstr
 from ...Utilities.UIKit import *

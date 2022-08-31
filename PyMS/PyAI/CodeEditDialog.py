@@ -1,8 +1,8 @@
 
-from HelpContent import TYPE_HELP, CMD_HELP
-from AICodeText import AICodeText
-from FindReplaceDialog import FindReplaceDialog
-from CodeColors import CodeColors
+from .HelpContent import TYPE_HELP, CMD_HELP
+from .AICodeText import AICodeText
+from .FindReplaceDialog import FindReplaceDialog
+from .CodeColors import CodeColors
 
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL

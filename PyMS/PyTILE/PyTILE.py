@@ -1,9 +1,8 @@
 
-import imp
-from TilePaletteView import TilePaletteView
-from MegaEditorView import MegaEditorView
-from TilePalette import TilePalette
-from Placeability import Placeability
+from .TilePaletteView import TilePaletteView
+from .MegaEditorView import MegaEditorView
+from .TilePalette import TilePalette
+from .Placeability import Placeability
 
 from ..FileFormats.Tileset.Tileset import Tileset, TILETYPE_GROUP, TILETYPE_MEGA, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
 from ..FileFormats import TBL

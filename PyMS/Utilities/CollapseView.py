@@ -1,6 +1,6 @@
 
-from UIKit import *
-import Assets
+from .UIKit import *
+from . import Assets
 
 class CollapseView(Frame):
 	class Button(Button):

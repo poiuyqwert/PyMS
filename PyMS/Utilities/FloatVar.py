@@ -1,6 +1,6 @@
 
-from IntegerVar import IntegerVar
-from UIKit import StringVar
+from .IntegerVar import IntegerVar
+from .UIKit import StringVar
 
 class FloatVar(IntegerVar):
 	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, precision=None):

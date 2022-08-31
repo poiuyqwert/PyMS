@@ -1,6 +1,6 @@
 
-from utils import isstr
-from UIKit import *
+from .utils import isstr
+from .UIKit import *
 
 import re
 

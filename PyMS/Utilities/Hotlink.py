@@ -1,6 +1,6 @@
 
-from UIKit import Label, Font
-from EventPattern import *
+from .UIKit import Label, Font
+from .EventPattern import *
 
 class Hotlink(Label):
 	def __init__(self, parent, text, callback=None, font=None, hover_font=None):

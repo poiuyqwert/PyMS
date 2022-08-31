@@ -1,13 +1,13 @@
 
-from ListboxTooltip import ListboxTooltip
-from EditScriptDialog import EditScriptDialog
-from FindDialog import FindDialog
-from ContinueImportDialog import ContinueImportDialog
-from ImportListDialog import ImportListDialog
-from CodeEditDialog import CodeEditDialog
-from FlagEditor import FlagEditor
-from ExternalDefDialog import ExternalDefDialog
-from StringEditor import StringEditor
+from .ListboxTooltip import ListboxTooltip
+from .EditScriptDialog import EditScriptDialog
+from .FindDialog import FindDialog
+from .ContinueImportDialog import ContinueImportDialog
+from .ImportListDialog import ImportListDialog
+from .CodeEditDialog import CodeEditDialog
+from .FlagEditor import FlagEditor
+from .ExternalDefDialog import ExternalDefDialog
+from .StringEditor import StringEditor
 
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL

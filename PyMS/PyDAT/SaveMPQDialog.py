@@ -1,5 +1,5 @@
 
-from DataID import DATID, DataID
+from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.SFmpq import *
 
