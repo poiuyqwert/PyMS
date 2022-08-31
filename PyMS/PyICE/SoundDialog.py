@@ -16,7 +16,7 @@ class SoundDialog(PyMSDialog):
 		self.toplevel = parent.parent
 		self.id = IntVar()
 		self.id.set(id)
-		PyMSDialog.__init__(self, parent, "Sound Insert/Preview")
+		PyMSDialog.__init__(self, parent, "Sound Insert/Preview", grabwait=False, resizable=(False, False))
 
 	def widgetize(self):
 		f = Frame(self)
