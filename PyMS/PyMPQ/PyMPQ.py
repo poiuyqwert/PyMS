@@ -685,7 +685,7 @@ class PyMPQ(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyMPQ.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyMPQ.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyMPQ', LONG_VERSION)

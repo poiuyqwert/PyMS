@@ -678,7 +678,7 @@ BMP's must be imported with the same style they were exported as.""")
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyGRP.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyGRP.md')
 
 	def about(self, key=None):
 		self.stopframe()

@@ -522,7 +522,7 @@ class PyTBL(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyTBL.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyTBL.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTBL', LONG_VERSION)

@@ -391,7 +391,7 @@ class PyGOT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyGOT.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyGOT.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyGOT', LONG_VERSION)

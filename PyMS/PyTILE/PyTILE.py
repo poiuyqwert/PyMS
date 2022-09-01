@@ -825,7 +825,7 @@ class PyTILE(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyTILE.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyTILE.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTILE', LONG_VERSION, [('FaRTy1billion','Tileset file specs and HawtTiles.')])

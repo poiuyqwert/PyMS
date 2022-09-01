@@ -573,7 +573,7 @@ class PyAI(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyAI.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyAI.md')
 
 	def about(self):
 		thanks = [

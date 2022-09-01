@@ -497,7 +497,7 @@ class PyICE(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyICE.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyICE.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyICE', LONG_VERSION)

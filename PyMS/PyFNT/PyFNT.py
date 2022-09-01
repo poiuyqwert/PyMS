@@ -571,7 +571,7 @@ class PyFNT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyFNT.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyFNT.md')
 
 	def about(self, key=None):
 		thanks = [

@@ -500,7 +500,7 @@ class PyDAT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyDAT.md')
+		HelpDialog(self, self.data_context.settings, 'Help/Programs/PyDAT.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])

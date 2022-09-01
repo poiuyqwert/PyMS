@@ -6,7 +6,8 @@ from .TreeList import TreeList
 from . import Assets
 
 class HelpDialog(PyMSDialog):
-	def __init__(self, parent, help_file_path=None):
+	def __init__(self, parent, settings, help_file_path=None):
+		self.settings = settings
 		self.initial_file_path = help_file_path
 		PyMSDialog.__init__(self, parent, 'Help')
 
@@ -22,6 +23,7 @@ class HelpDialog(PyMSDialog):
 	def setup_complete(self):
 		if self.initial_file_path:
 			self.load(self.initial_file_path, force_update=True)
+		self.settings.windows.load_window_size('help', self)
 
 	def load(self, path, force_update=False): # type: (str, bool) -> None
 		index = Assets.help_tree(force_update=force_update).index(path)
@@ -46,3 +48,7 @@ class HelpDialog(PyMSDialog):
 	def destroy(self):
 		Assets.clear_help_image_cache()
 		PyMSDialog.destroy(self)
+
+	def dismiss(self):
+		self.settings.windows.save_window_size('help', self)
+		PyMSDialog.dismiss(self)

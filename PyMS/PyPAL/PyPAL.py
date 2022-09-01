@@ -274,7 +274,7 @@ class PyPAL(MainWindow):
 				break
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyPAL.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyPAL.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyPAL', LONG_VERSION)

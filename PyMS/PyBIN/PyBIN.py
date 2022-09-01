@@ -1131,7 +1131,7 @@ class PyBIN(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyBIN.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyBIN.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [

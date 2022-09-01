@@ -374,7 +374,7 @@ class PyTRG(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyTRG.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyTRG.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTRG', LONG_VERSION, [('FaRTy1billion','For creating TrigPlug and giving me the specs!')])

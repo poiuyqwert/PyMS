@@ -531,7 +531,7 @@ class PyLO(MainWindow):
 				break
 
 	def help(self, e=None):
-		HelpDialog(self, 'Help/Programs/PyLO.md')
+		HelpDialog(self, self.settings, 'Help/Programs/PyLO.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyLO', LONG_VERSION)
