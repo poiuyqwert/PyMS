@@ -216,7 +216,7 @@ class PyGOT(MainWindow):
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		for inp in ['name','id','sublabel','subvalue','subid','victory','resource','stats','fog','units','start','players','allies','teams','cheats','tourny']:
-			self.input[inp]['state'] = self.is_file_open()
+			self.input[inp]['state'] = NORMAL if self.is_file_open() else DISABLED
 		if self.got:
 			self.input['victoryvalue']['state'] = [DISABLED,NORMAL][self.victory.get() > 0 and not self.victory.get() % 3]
 			self.input['resourcevalue']['state'] = [DISABLED,NORMAL][self.resource.get() % 4 == 1]

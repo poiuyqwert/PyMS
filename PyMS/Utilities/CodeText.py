@@ -318,7 +318,7 @@ class CodeText(Frame):
 		self.tags['Update'] = {'foreground':None,'background':None,'font':None}
 		if not 'Selection' in self.tags:
 			self.tags['Selection'] = {'foreground':None,'background':'#C0C0C0','font':None}
-		for tag, cnf in self.tags.items():
+		for tag, cnf in self.tags.iteritems():
 			if cnf:
 				self.tag_configure(tag, **cnf)
 		self.tag_raise('Selection')
