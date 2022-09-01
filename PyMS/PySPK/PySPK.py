@@ -25,6 +25,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
 import os, webbrowser
 
@@ -676,7 +677,7 @@ class PySPK(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PySPK.html'))
+		HelpDialog(self, 'Help/Programs/PySPK.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PySPK', LONG_VERSION, [

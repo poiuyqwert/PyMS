@@ -1,0 +1,2 @@
+# PyLO
+PyLO is a tool used for editing offset data contained in the various [.lo?](/Help/Files/LO.md) files, which is used for various purposes like projectiles and overlays. PyLO decompiles the `.lo?` files into text source code, and compiles the text source code back into a `.lo?` file. There is a built in editor and preview to help with constructing the offsets.

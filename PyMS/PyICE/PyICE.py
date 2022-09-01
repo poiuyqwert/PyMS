@@ -24,8 +24,9 @@ from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -496,7 +497,7 @@ class PyICE(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open(os.path.join(BASE_DIR, 'Docs', 'PyICE.html'))
+		HelpDialog(self, 'Help/Programs/PyICE.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyICE', LONG_VERSION)

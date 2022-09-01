@@ -1,0 +1,2 @@
+# PyTBL
+PyTBL is a tool used for editing the text stored in [.tbl](/Help/Files/TBL.md) files. PyTBL provides an editor to modify the strings, a way to export to and import from `.txt` files, and a string previewer.

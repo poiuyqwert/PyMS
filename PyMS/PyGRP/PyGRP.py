@@ -22,9 +22,9 @@ from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, re, webbrowser
-from math import ceil
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyGRP']
 
@@ -678,7 +678,7 @@ BMP's must be imported with the same style they were exported as.""")
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyGRP.html'))
+		HelpDialog(self, 'Help/Programs/PyGRP.md')
 
 	def about(self, key=None):
 		self.stopframe()

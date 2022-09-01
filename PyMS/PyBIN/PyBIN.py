@@ -25,8 +25,9 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, time, webbrowser
+import os, time
 
 LONG_VERSION = 'v%s' % VERSIONS['PyBIN']
 
@@ -1130,7 +1131,7 @@ class PyBIN(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyBIN.html'))
+		HelpDialog(self, 'Help/Programs/PyBIN.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [

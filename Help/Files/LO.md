@@ -10,3 +10,5 @@
 - `.log`: Misc.
 - `.lol`: Misc.
 - `.lox`: Misc.
+
+Edited by [PyLO](/Help/Programs/PyLO.md)

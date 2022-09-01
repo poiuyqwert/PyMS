@@ -24,8 +24,9 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyTILE']
 
@@ -824,7 +825,7 @@ class PyTILE(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyTILE.html'))
+		HelpDialog(self, 'Help/Programs/PyTILE.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTILE', LONG_VERSION, [('FaRTy1billion','Tileset file specs and HawtTiles.')])

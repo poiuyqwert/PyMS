@@ -24,8 +24,9 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyTBL']
 
@@ -521,7 +522,7 @@ class PyTBL(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyTBL.html'))
+		HelpDialog(self, 'Help/Programs/PyTBL.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTBL', LONG_VERSION)

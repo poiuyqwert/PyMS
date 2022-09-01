@@ -18,8 +18,9 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyGOT']
 
@@ -390,7 +391,7 @@ class PyGOT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyGOT.html'))
+		HelpDialog(self, 'Help/Programs/PyGOT.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyGOT', LONG_VERSION)

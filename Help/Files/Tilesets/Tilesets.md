@@ -5,4 +5,6 @@ Tilesets are made up of a bunch of files, the main files are:
 - [.vr4](/Help/Files/Tilesets/VR4.md)
 - [.vf4](/Help/Files/Tilesets/VF4.md)
 - [dddata.bin](/Help/Files/Tilesets/dddata.bin.md)
-- [.wpe](/Help/Files/Palettes.md#wpe): The palette for the tileset
+- [.wpe](/Help/Files/Palettes.md#terrain-wpe): The palette for the tileset
+
+Edited by [PyTILE](/Help/Programs/PyTILE.md)

@@ -1,0 +1,2 @@
+# BMP
+`.bmp` files contain images in a Bitmap format. PyMS uses `.bmp` files are an intermediary for decompiling various graphical elements to and from their StarCraft formats (for example [.grp](/Help/Files/GRP.md) or [.fnt](/Help/Files/FNT.md) files).

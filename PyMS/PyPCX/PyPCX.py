@@ -16,8 +16,9 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyPCX']
 
@@ -244,7 +245,7 @@ class PyPCX(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open('file:///%s' % os.path.join(BASE_DIR, 'Docs', 'PyPCX.html'))
+		HelpDialog(self, 'Help/Programs/PyPCX.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyPCX', LONG_VERSION)

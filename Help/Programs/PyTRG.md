@@ -1,0 +1,2 @@
+# PyTRG
+PyTRG is a tool used for editing the triggers in [.trg](/Help/Files/TRG.md) files, used for [maps](/Help/Files/Maps.md) and for initialization of the [game modes](/Help/Files/GOT.md). PyTRG provides an editor to modify the triggers, and a way to export to and import from `.txt` files.

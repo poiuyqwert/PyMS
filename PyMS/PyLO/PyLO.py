@@ -24,8 +24,9 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import re, os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyLO']
 
@@ -530,7 +531,7 @@ class PyLO(MainWindow):
 				break
 
 	def help(self, e=None):
-		webbrowser.open(os.path.join(BASE_DIR, 'Docs', 'PyLO.html'))
+		HelpDialog(self, 'Help/Programs/PyLO.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyLO', LONG_VERSION)

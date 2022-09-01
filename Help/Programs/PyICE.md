@@ -1,0 +1,2 @@
+# PyICE
+PyICE is a tool used for editing animation scripts, contained in [iscript.bin](/Help/Files/iscript.bin.md). PyICE decompiles the `.bin` file into text source code, and compiles the text source code back into the `.bin` file.

@@ -1,5 +1,7 @@
 # TBL
-TBL files contain string content used for various aspects of the game.
+`.tbl` files contain string content used for various aspects of the game.
+
+Edited by [PyTBL](/Help/Programs/PyTBL.md)
 
 ## stat_txt.tbl
 `stat_txt.tbl` contains most of the basic strings in the game.

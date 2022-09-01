@@ -22,8 +22,9 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
+from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
@@ -373,7 +374,7 @@ class PyTRG(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None):
-		webbrowser.open(os.path.join(BASE_DIR, 'Docs', 'PyTRG.html'))
+		HelpDialog(self, 'Help/Programs/PyTRG.md')
 
 	def about(self, key=None):
 		AboutDialog(self, 'PyTRG', LONG_VERSION, [('FaRTy1billion','For creating TrigPlug and giving me the specs!')])
