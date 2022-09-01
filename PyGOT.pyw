@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyGOT.PyGOT import PyGOT, LONG_VERSION
 

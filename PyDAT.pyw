@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyDAT.PyDAT import PyDAT, LONG_VERSION
 

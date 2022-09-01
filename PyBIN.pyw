@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyBIN.PyBIN import PyBIN, LONG_VERSION
 

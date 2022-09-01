@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyFNT.PyFNT import PyFNT, LONG_VERSION
 

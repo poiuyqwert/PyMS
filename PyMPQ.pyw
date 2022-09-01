@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyMPQ.PyMPQ import PyMPQ, LONG_VERSION
 

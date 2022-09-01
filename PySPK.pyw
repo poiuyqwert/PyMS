@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PySPK.PySPK import PySPK, LONG_VERSION
 

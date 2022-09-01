@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyLO.PyLO import PyLO, LONG_VERSION
 

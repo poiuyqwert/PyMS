@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyGRP.PyGRP import PyGRP, LONG_VERSION
 from PyMS.PyGRP.utils import grptobmp, bmptogrp

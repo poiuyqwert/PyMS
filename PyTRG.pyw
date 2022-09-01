@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION
 

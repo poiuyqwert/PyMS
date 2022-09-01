@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyAI.PyAI import PyAI, LONG_VERSION
 

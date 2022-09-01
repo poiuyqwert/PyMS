@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 
 from PyMS.PyPAL.PyPAL import PyPAL, LONG_VERSION
 
