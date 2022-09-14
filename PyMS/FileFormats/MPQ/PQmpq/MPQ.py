@@ -346,6 +346,7 @@ class MPQ(object):
 		if block_entry.flags & MPQBlockFlag.adjust_key:
 			crypt_key = (crypt_key + block_entry.file_offset) ^ block_entry.file_size
 
+		read_size = block_entry.file_size
 		block_size = 512 << self.headerv1.sector_size_shift
 		if block_entry.flags & MPQBlockFlag.single_unit:
 			block_size = block_entry.file_size
@@ -369,12 +370,17 @@ class MPQ(object):
 		print(block_offsets)
 		file_data = ''
 		for index in range(0, len(block_offsets)-1):
-			size = block_offsets[index+1] - block_offsets[index]
+			raw_size = block_offsets[index+1] - block_offsets[index]
+			sector_size = block_size
+			# The last sector might be smaller than a full sector
+			if sector_size > read_size:
+				sector_size = read_size
 			self.file_handle.seek(self.mpq_offset + block_entry.file_offset + block_offsets[index])
-			block_data = self.file_handle.read(size)
+			block_data = self.file_handle.read(raw_size)
 			if block_entry.flags & MPQBlockFlag.encrypted:
 				block_data = MPQCrypt.decrypt(block_data, crypt_key + index)
-			if size != block_size:
+			# Some sectors might not be compressed, only decompress if the raw size is smaller than the sector size
+			if raw_size < sector_size:
 				algorithm_ids = None
 				if block_entry.flags & MPQBlockFlag.imploded:
 					algorithm_ids = MPQComp.AlgorithmID.pkware
@@ -384,6 +390,7 @@ class MPQ(object):
 				if algorithm_ids != None:
 					block_data = MPQComp.decompress(algorithm_ids, block_data)
 			file_data += block_data
+			read_size -= len(block_data)
 		return file_data
 
 	def _read_file_by_hash_entry(self, hash_entry, crypt_key=None):

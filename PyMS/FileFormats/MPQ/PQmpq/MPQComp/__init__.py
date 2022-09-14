@@ -1,7 +1,7 @@
 
 import pkware
 
-from ....Utilities.PyMSError import PyMSError
+from .....Utilities.PyMSError import PyMSError
 
 class AlgorithmID:
 	huffman     = 0x01

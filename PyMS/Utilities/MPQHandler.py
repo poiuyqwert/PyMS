@@ -115,9 +115,9 @@ class MPQHandler(object):
 		if self.open and self.open != True:
 			file_handle = SFileOpenFileEx(None, path, SFILE_SEARCH_ALL_OPEN)
 			if not SFInvalidHandle(file_handle):
-				file_contents = SFileReadFile(file_handle)
+				file_contents,_ = SFileReadFile(file_handle)
 				SFileCloseFile(file_handle)
-				file = SFile(file_contents[0], path)
+				file = SFile(file_contents, path)
 		if close:
 			self.close_mpqs()
 		return file

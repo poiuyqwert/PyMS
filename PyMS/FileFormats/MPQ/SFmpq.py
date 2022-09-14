@@ -50,42 +50,42 @@ class SFile:
 	def __str__(self):
 		return self.file
 
-MPQ_ERROR_MPQ_INVALID =	  0x85200065
-MPQ_ERROR_FILE_NOT_FOUND =   0x85200066
-MPQ_ERROR_DISK_FULL =		0x85200068 #Physical write file to MPQ failed
-MPQ_ERROR_HASH_TABLE_FULL =  0x85200069
-MPQ_ERROR_ALREADY_EXISTS =   0x8520006A
-MPQ_ERROR_BAD_OPEN_MODE =	0x8520006C #When MOAU_READ_ONLY is used without MOAU_OPEN_EXISTING
+MPQ_ERROR_MPQ_INVALID     = 0x85200065
+MPQ_ERROR_FILE_NOT_FOUND  = 0x85200066
+MPQ_ERROR_DISK_FULL       = 0x85200068 #Physical write file to MPQ failed
+MPQ_ERROR_HASH_TABLE_FULL = 0x85200069
+MPQ_ERROR_ALREADY_EXISTS  = 0x8520006A
+MPQ_ERROR_BAD_OPEN_MODE   = 0x8520006C #When MOAU_READ_ONLY is used without MOAU_OPEN_EXISTING
 
-MPQ_ERROR_COMPACT_ERROR =	0x85300001
+MPQ_ERROR_COMPACT_ERROR = 0x85300001
 
 # MpqOpenArchiveForUpdate flags
-MOAU_CREATE_NEW =		  0x00 #If archive does not exist, it will be created. If it exists, the function will fail
-MOAU_CREATE_ALWAYS =	   0x08 #Will always create a new archive
-MOAU_OPEN_EXISTING =	   0x04 #If archive exists, it will be opened. If it does not exist, the function will fail
-MOAU_OPEN_ALWAYS =		 0x20 #If archive exists, it will be opened. If it does not exist, it will be created
-MOAU_READ_ONLY =		   0x10 #Must be used with MOAU_OPEN_EXISTING. Archive will be opened without write access
+MOAU_CREATE_NEW          = 0x00 #If archive does not exist,                                            it will be created. If it exists,        the function will fail
+MOAU_CREATE_ALWAYS       = 0x08 #Will always create a new archive
+MOAU_OPEN_EXISTING       = 0x04 #If archive exists,                                                    it will be opened. If it does not exist, the function will fail
+MOAU_OPEN_ALWAYS         = 0x20 #If archive exists,                                                    it will be opened. If it does not exist, it will be created
+MOAU_READ_ONLY           = 0x10 #Must be used with MOAU_OPEN_EXISTING. Archive will be opened without write access
 MOAU_MAINTAIN_ATTRIBUTES = 0x02 #Will be used in a future version to create the (attributes) file
-MOAU_MAINTAIN_LISTFILE =   0x01 #Creates and maintains a list of files in archive when they are added, replaced, or deleted
+MOAU_MAINTAIN_LISTFILE   = 0x01 #Creates and maintains a list of files in archive when they are added, replaced,                                or deleted
 
 # MpqOpenArchiveForUpdateEx constants
-DEFAULT_BLOCK_SIZE = 3 # 512 << number = block size
+DEFAULT_BLOCK_SIZE     = 3 # 512 << number = block size
 USE_DEFAULT_BLOCK_SIZE = 0xFFFFFFFF # Use default block size that is defined internally
 
 # MpqAddFileToArchive flags
-MAFA_EXISTS =		   0x80000000 #This flag will be added if not present
-MAFA_UNKNOWN40000000 =  0x40000000 #Unknown flag
-MAFA_MODCRYPTKEY =	  0x00020000 #Used with MAFA_ENCRYPT. Uses an encryption key based on file position and size
-MAFA_ENCRYPT =		  0x00010000 #Encrypts the file. The file is still accessible when using this, so the use of this has depreciated
-MAFA_COMPRESS =		 0x00000200 #File is to be compressed when added. This is used for most of the compression methods
-MAFA_COMPRESS2 =		0x00000100 #File is compressed with standard compression only (was used in Diablo 1)
-MAFA_REPLACE_EXISTING = 0x00000001 #If file already exists, it will be replaced
+MAFA_EXISTS           = 0x80000000 #This flag will be added if not present
+MAFA_UNKNOWN40000000  = 0x40000000 #Unknown flag
+MAFA_MODCRYPTKEY      = 0x00020000 #Used with MAFA_ENCRYPT. Uses an encryption key based on file position and size
+MAFA_ENCRYPT          = 0x00010000 #Encrypts the file. The file is still accessible when using this, so the use of this has depreciated
+MAFA_COMPRESS         = 0x00000200 #File is to be compressed when added. This is used for most of the compression methods
+MAFA_COMPRESS2        = 0x00000100 #File is compressed with standard compression only (was used in Diablo 1)
+MAFA_REPLACE_EXISTING = 0x00000001 #If file already exists,                                          it will be replaced
 
 # MpqAddFileToArchiveEx compression flags
 MAFA_COMPRESS_STANDARD = 0x08 #Standard PKWare DCL compression
-MAFA_COMPRESS_DEFLATE =  0x02 #ZLib's deflate compression
-MAFA_COMPRESS_WAVE =	 0x81 #Standard wave compression
-MAFA_COMPRESS_WAVE2 =	0x41 #Unused wave compression
+MAFA_COMPRESS_DEFLATE  = 0x02 #ZLib's deflate compression
+MAFA_COMPRESS_WAVE     = 0x81 #Standard wave compression
+MAFA_COMPRESS_WAVE2    = 0x41 #Unused wave compression
 
 # Flags for individual compression types used for wave compression
 MAFA_COMPRESS_WAVECOMP1 = 0x80 #Main compressor for standard wave compression
@@ -93,48 +93,48 @@ MAFA_COMPRESS_WAVECOMP2 = 0x40 #Main compressor for unused wave compression
 MAFA_COMPRESS_WAVECOMP3 = 0x01 #Secondary compressor for wave compression
 
 # ZLib deflate compression level constants (used with MpqAddFileToArchiveEx and MpqAddFileFromBufferEx)
-Z_NO_COMPRESSION =		 0
-Z_BEST_SPEED =			 1
-Z_BEST_COMPRESSION =	   9
-Z_DEFAULT_COMPRESSION =	-1 #Default level is 6 with current ZLib version
+Z_NO_COMPRESSION      = 0
+Z_BEST_SPEED          = 1
+Z_BEST_COMPRESSION    = 9
+Z_DEFAULT_COMPRESSION = -1 #Default level is 6 with current ZLib version
 
 # MpqAddWaveToArchive quality flags
-MAWA_QUALITY_HIGH =	1 #Higher compression, lower quality
-MAWA_QUALITY_MEDIUM =  0 #Medium compression, medium quality
-MAWA_QUALITY_LOW =	 2 #Lower compression, higher quality
+MAWA_QUALITY_HIGH   = 1 #Higher compression, lower quality
+MAWA_QUALITY_MEDIUM = 0 #Medium compression, medium quality
+MAWA_QUALITY_LOW    = 2 #Lower compression,  higher quality
 
 # SFileGetFileInfo flags
-SFILE_INFO_BLOCK_SIZE =	  0x01 #Block size in MPQ
+SFILE_INFO_BLOCK_SIZE      = 0x01 #Block size in MPQ
 SFILE_INFO_HASH_TABLE_SIZE = 0x02 #Hash table size in MPQ
-SFILE_INFO_NUM_FILES =	   0x03 #Number of files in MPQ
-SFILE_INFO_TYPE =			0x04 #Is MPQHANDLE a file or an MPQ?
-SFILE_INFO_SIZE =			0x05 #Size of MPQ or uncompressed file
+SFILE_INFO_NUM_FILES       = 0x03 #Number of files in MPQ
+SFILE_INFO_TYPE            = 0x04 #Is MPQHANDLE a file or an MPQ?
+SFILE_INFO_SIZE            = 0x05 #Size of MPQ or uncompressed file
 SFILE_INFO_COMPRESSED_SIZE = 0x06 #Size of compressed file
-SFILE_INFO_FLAGS =		   0x07 #File flags (compressed, etc.), file attributes if a file not in an archive
-SFILE_INFO_PARENT =		  0x08 #Handle of MPQ that file is in
-SFILE_INFO_POSITION =		0x09 #Position of file pointer in files
-SFILE_INFO_LOCALEID =		0x0A #Locale ID of file in MPQ
-SFILE_INFO_PRIORITY =		0x0B #Priority of open MPQ
-SFILE_INFO_HASH_INDEX =	  0x0C #Hash table index of file in MPQ
-SFILE_INFO_BLOCK_INDEX =	 0x0D #Block table index of file in MPQ
+SFILE_INFO_FLAGS           = 0x07 #File flags (compressed, etc.), file attributes if a file not in an archive
+SFILE_INFO_PARENT          = 0x08 #Handle of MPQ that file is in
+SFILE_INFO_POSITION        = 0x09 #Position of file pointer in files
+SFILE_INFO_LOCALEID        = 0x0A #Locale ID of file in MPQ
+SFILE_INFO_PRIORITY        = 0x0B #Priority of open MPQ
+SFILE_INFO_HASH_INDEX      = 0x0C #Hash table index of file in MPQ
+SFILE_INFO_BLOCK_INDEX     = 0x0D #Block table index of file in MPQ
 
 # Return values of SFileGetFileInfo when SFILE_INFO_TYPE flag is used
-SFILE_TYPE_MPQ =  0x01
+SFILE_TYPE_MPQ  = 0x01
 SFILE_TYPE_FILE = 0x02
 
 # SFileListFiles flags
-SFILE_LIST_MEMORY_LIST =  0x01 # Specifies that lpFilelists is a file list from memory, rather than being a list of file lists
-SFILE_LIST_ONLY_KNOWN =   0x02 # Only list files that the function finds a name for
+SFILE_LIST_MEMORY_LIST  = 0x01 # Specifies that lpFilelists is a file list from memory, rather than being a list of file lists
+SFILE_LIST_ONLY_KNOWN   = 0x02 # Only list files that the function finds a name for
 SFILE_LIST_ONLY_UNKNOWN = 0x04 # Only list files that the function does not find a name for
 
 # SFileOpenArchive flags
 SFILE_OPEN_HARD_DISK_FILE = 0x0000 #Open archive without regard to the drive type it resides on
-SFILE_OPEN_CD_ROM_FILE =	0x0001 #Open the archive only if it is on a CD-ROM
-SFILE_OPEN_ALLOW_WRITE =	0x8000 #Open file with write access
+SFILE_OPEN_CD_ROM_FILE    = 0x0001 #Open the archive only if it is on a CD-ROM
+SFILE_OPEN_ALLOW_WRITE    = 0x8000 #Open file with write access
 
 # SFileOpenFileEx search scopes
 SFILE_SEARCH_CURRENT_ONLY = 0x00 #Used with SFileOpenFileEx; only the archive with the handle specified will be searched for the file
-SFILE_SEARCH_ALL_OPEN =	 0x01 #SFileOpenFileEx will look through all open archives for the file. This flag also allows files outside the archive to be used
+SFILE_SEARCH_ALL_OPEN     = 0x01 #SFileOpenFileEx will look through all open archives for the file. This flag also allows files outside the archive to be used
 
 class SFMPQVERSION(Structure):
 	_fields_ = [
@@ -153,6 +153,14 @@ class FILELISTENTRY(Structure):
 		('flags',c_uint32),
 		('fileName',c_char * 260)
 	]
+
+	def __init__(self):
+		self.fileExists = 0
+		self.locale = 0
+		self.compressedSize = 0
+		self.fullSize = 0
+		self.flags = 0
+		self.fileName =''
 
 	def get_compression_ratio(self):
 		if self.fullSize:
@@ -331,60 +339,56 @@ def SFGetLastError():
 	return _SFmpq.GetLastError()
 
 @debug_log
-def SFInvalidHandle(h):
+def SFInvalidHandle(h): # type: (MPQHANDLE) -> bool
 	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]
 
 @debug_log
-def MpqGetVersionString():
+def MpqGetVersionString(): # type: () -> str
 	return _SFmpq.MpqGetVersionString()
 
 @debug_log
-def MpqGetVersion():
+def MpqGetVersion(): # type: () -> float
 	return _SFmpq.MpqGetVersion()
 
 @debug_log
-def SFMpqGetVersionString():
+def SFMpqGetVersionString(): # type: () -> str
 	return _SFmpq.SFMpqGetVersionString()
 
 @debug_log
-def SFMpqGetVersion():
+def SFMpqGetVersion(): # type: () -> SFMPQVERSION
 	return _SFmpq.SFMpqGetVersion()
 
 @debug_log
-def SFileOpenArchive(path, priority=0, flags=SFILE_OPEN_HARD_DISK_FILE):
+def SFileOpenArchive(path, priority=0, flags=SFILE_OPEN_HARD_DISK_FILE): # type: (str, int, int) -> (MPQHANDLE | None)
 	f = MPQHANDLE()
 	if _SFmpq.SFileOpenArchive(path, priority, flags, byref(f)):
 		return f
 
 @debug_log
-def SFileCloseArchive(mpq):
+def SFileCloseArchive(mpq): # type: (MPQHANDLE) -> bool
 	return _SFmpq.SFileCloseArchive(mpq)
 
 @debug_log
-def SFileOpenFileEx(mpq, path, search=SFILE_SEARCH_CURRENT_ONLY):
+def SFileOpenFileEx(mpq, path, search=SFILE_SEARCH_CURRENT_ONLY): # type: (MPQHANDLE, str, int) -> (MPQHANDLE | None)
 	f = MPQHANDLE()
 	if _SFmpq.SFileOpenFileEx(mpq if mpq else None, path, search, byref(f)):
 		return f
 
 @debug_log
-def SFileCloseFile(file):
+def SFileCloseFile(file): # type: (MPQHANDLE) -> bool
 	return _SFmpq.SFileCloseFile(file)
 
 @debug_log
-def SFileGetFileSize(file, high=False):
-	s = c_uint32()
-	l = _SFmpq.SFileGetFileSize(file, byref(s))
-	if high:
-		return (l,s.value)
-	return l
+def SFileGetFileSize(file): # type: (MPQHANDLE) -> int
+	return _SFmpq.SFileGetFileSize(file, None)
 
 @debug_log
-def SFileReadFile(file, read=None):
+def SFileReadFile(file, read=None): # type: (MPQHANDLE, int) -> tuple[bytes | None, int]
 	all = read == None
 	if all:
 		read = SFileGetFileSize(file)
 		if read == -1:
-			return
+			return (None, 0)
 	data = create_string_buffer(read)
 	r = c_uint32()
 	total_read = 0
@@ -392,20 +396,20 @@ def SFileReadFile(file, read=None):
 		if _SFmpq.SFileReadFile(file, byref(data, total_read), read-total_read, byref(r), None):
 			total_read += r.value
 		else:
-			return
+			return (None, 0)
 	return (data.raw[:total_read],total_read)
 
 @debug_log
-def SFileSetLocale(locale):
+def SFileSetLocale(locale): # type: (int) -> int
 	return _SFmpq.SFileSetLocale(locale)
 
 @debug_log
-def SFileGetFileInfo(mpq, flags=SFILE_INFO_BLOCK_SIZE):
+def SFileGetFileInfo(mpq, flags=SFILE_INFO_BLOCK_SIZE): # type: (MPQHANDLE, int) -> int
 	return _SFmpq.SFileGetFileInfo(mpq, flags)
 
 # listfiles is either a list of file lists or a file list itself depending on flags, either are seperated by newlines (\n \r or \r\n?)
 @debug_log
-def SFileListFiles(mpq, listfiles='', flags=0):
+def SFileListFiles(mpq, listfiles='', flags=0): # type: (MPQHANDLE, str, int) -> list[FILELISTENTRY]
 	n = SFileGetFileInfo(mpq, SFILE_INFO_HASH_TABLE_SIZE)
 	if n < 1:
 		return []
@@ -414,45 +418,53 @@ def SFileListFiles(mpq, listfiles='', flags=0):
 	return filter(lambda e: e.fileExists,f)
 
 @debug_log
-def SFileSetArchivePriority(mpq, priority):
+def SFileSetArchivePriority(mpq, priority): # type: (MPQHANDLE, int) -> bool
 	return _SFmpq.SFileSetArchivePriority(mpq, priority)
 
 @debug_log
-def MpqOpenArchiveForUpdate(path, flags=MOAU_OPEN_ALWAYS, maxfiles=1024):
+def MpqOpenArchiveForUpdate(path, flags=MOAU_OPEN_ALWAYS, maxfiles=1024): # type: (str, int, int) -> (MPQHANDLE)
 	return _SFmpq.MpqOpenArchiveForUpdate(path, flags, maxfiles)
 
 @debug_log
-def MpqCloseUpdatedArchive(handle, unknown=0):
-	return _SFmpq.MpqCloseUpdatedArchive(handle, unknown)
+def MpqCloseUpdatedArchive(handle): # type: (MPQHANDLE) -> bool
+	return _SFmpq.MpqCloseUpdatedArchive(handle, 0)
 
 @debug_log
-def MpqAddFileToArchive(mpq, source, dest, flags=MAFA_REPLACE_EXISTING):
+def MpqAddFileToArchive(mpq, source, dest, flags=MAFA_REPLACE_EXISTING): # type: (MPQHANDLE, str, str, int) -> bool
 	return _SFmpq.MpqAddFileToArchive(mpq, source, dest, flags)
 
 @debug_log
-def MpqAddFileFromBuffer(mpq, buffer, file, flags=MAFA_REPLACE_EXISTING):
+def MpqAddFileFromBufferEx(mpq, buffer, file, flags=MAFA_REPLACE_EXISTING, comptype=0, complevel=0): # type: (MPQHANDLE, bytes, str, int, int, int) -> bool
+	return _SFmpq.MpqAddFileFromBufferEx(mpq, buffer, len(buffer), file, flags, comptype, complevel)
+
+@debug_log
+def MpqAddFileFromBuffer(mpq, buffer, file, flags=MAFA_REPLACE_EXISTING): # type: (MPQHANDLE, bytes, str, int) -> bool
 	return _SFmpq.MpqAddFileFromBuffer(mpq, buffer, len(buffer), file, flags)
 
 @debug_log
-def MpqCompactArchive(mpq):
+def MpqRenameFile(mpq, file_name, new_file_name): # type: (MPQHANDLE, str, str) -> bool
+	return _SFmpq.MpqRenameFile(mpq, file_name, new_file_name)
+
+@debug_log
+def MpqCompactArchive(mpq): # type: (MPQHANDLE) -> bool
 	return _SFmpq.MpqCompactArchive(mpq)
 
 @debug_log
-def MpqOpenArchiveForUpdateEx(mpq, flags=MOAU_OPEN_ALWAYS, maxfiles=1024, blocksize=3):
+def MpqOpenArchiveForUpdateEx(mpq, flags=MOAU_OPEN_ALWAYS, maxfiles=1024, blocksize=3): # type: (str, int, int, int) -> MPQHANDLE
 	return _SFmpq.MpqOpenArchiveForUpdateEx(mpq, flags, maxfiles, blocksize)
 
 @debug_log
-def MpqAddFileToArchiveEx(mpq, source, dest, flags=MAFA_REPLACE_EXISTING, comptype=0, complevel=0):
+def MpqAddFileToArchiveEx(mpq, source, dest, flags=MAFA_REPLACE_EXISTING, comptype=0, complevel=0): # type: (MPQHANDLE, str, str, int, int, int) -> bool
 	return _SFmpq.MpqAddFileToArchiveEx(mpq, source, dest, flags, comptype, complevel)
 
 @debug_log
-def MpqRenameAndSetFileLocale(mpq, oldname, newname, oldlocale, newlocale):
+def MpqRenameAndSetFileLocale(mpq, oldname, newname, oldlocale, newlocale): # type: (MPQHANDLE, str, str, int, int) -> bool
 	return _SFmpq.MpqRenameAndSetFileLocale(mpq, oldname, newname, oldlocale, newlocale)
 
 @debug_log
-def MpqDeleteFileWithLocale(mpq, file, locale):
+def MpqDeleteFileWithLocale(mpq, file, locale): # type: (MPQHANDLE, str, int) -> bool
 	return _SFmpq.MpqDeleteFileWithLocale(mpq, file, locale)
 
 @debug_log
-def MpqSetFileLocale(mpq, file, oldlocale, newlocale):
+def MpqSetFileLocale(mpq, file, oldlocale, newlocale): # type: (MPQHANDLE, str, int, int) -> bool
 	return _SFmpq.MpqSetFileLocale(mpq, file, oldlocale, newlocale)

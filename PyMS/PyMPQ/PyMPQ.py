@@ -471,11 +471,11 @@ class PyMPQ(MainWindow):
 				SFileSetLocale(file.locale)
 				fh = SFileOpenFileEx(h, file.fileName)
 				if fh:
-					r = SFileReadFile(fh)
+					data,_ = SFileReadFile(fh)
 					SFileCloseFile(fh)
 					filepath = os.path.join(self.temp_folder,file.fileName)
 					f = open(filepath, 'wb')
-					f.write(r[0])
+					f.write(data)
 					f.close()
 					start_file(filepath)
 			if not self.thread.is_running():
@@ -654,10 +654,10 @@ class PyMPQ(MainWindow):
 			SFileSetLocale(file.locale)
 			fh = SFileOpenFileEx(h, file.fileName)
 			if fh:
-				r = SFileReadFile(fh)
+				data,_ = SFileReadFile(fh)
 				SFileCloseFile(fh)
 				f = open(os.path.join(path,*path_components),'wb')
-				f.write(r[0])
+				f.write(data)
 				f.close()
 			else:
 				ErrorDialog(self, PyMSError('Extract', "Couldn't load file '%s'" % file.fileName))

@@ -2612,7 +2612,7 @@ class PyMAP(Tk):
 				if scmap:
 					chkfile = SFileOpenFileEx(scmap, 'staredit\\scenario.chk')
 					if not SFInvalidHandle(chkfile):
-						data = SFileReadFile(chkfile)[0]
+						data,_ = SFileReadFile(chkfile)
 						chk.load_data(data)
 						SFileCloseFile(chkfile)
 						chkfile = None

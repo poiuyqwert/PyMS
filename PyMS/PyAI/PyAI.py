@@ -462,12 +462,12 @@ class PyAI(MainWindow):
 					return
 				bw = None
 				continue
-			r = SFileReadFile(f)
+			data,_ = SFileReadFile(f)
 			SFileCloseFile(f)
 			if t == 'ai':
-				ai.text = r[0]
+				ai.text = data
 			else:
-				bw.text = r[0]
+				bw.text = data
 		SFileCloseArchive(h)
 		self.open(None,ai,bw)
 
