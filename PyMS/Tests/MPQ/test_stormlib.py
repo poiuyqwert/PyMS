@@ -57,7 +57,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
 		with mpq.open(read_only=True):
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([
@@ -74,7 +73,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		mpq.add_listfile(resource_path('listfile.txt', __file__))
 		with mpq.open(read_only=True):
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([
@@ -91,7 +89,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		with mpq.open(read_only=True):
 			mpq.add_listfile(resource_path('listfile.txt', __file__))
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([

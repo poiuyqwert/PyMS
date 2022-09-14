@@ -367,7 +367,6 @@ class CodeGeneratorDialog(PyMSDialog):
 		if offset == END:
 			index = listbox.size()-2
 		elif offset not in [0,END] and listbox.curselection():
-			print(listbox.curselection())
 			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
 		listbox.select_clear(0,END)
 		listbox.select_set(index)

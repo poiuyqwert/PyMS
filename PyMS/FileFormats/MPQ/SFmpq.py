@@ -11,10 +11,6 @@ else:
 _SFmpq = None
 if SFMPQ_DIR:
 	libraries = (
-		# 'StormLib.dll',
-		# 'StormLib64.dll',
-		# 'StormLib.dylib',
-
 		'SFmpq.dll',
 		'SFmpq64.dll',
 		'SFmpq.dylib',

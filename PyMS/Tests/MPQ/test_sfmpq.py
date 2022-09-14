@@ -57,7 +57,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		mpq = MPQ.SFMPQ(resource_path('test.mpq', __file__))
 		with mpq.open(read_only=True):
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([
@@ -74,7 +73,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		mpq.add_listfile(resource_path('listfile.txt', __file__))
 		with mpq.open(read_only=True):
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([
@@ -91,7 +89,6 @@ class Test_StormLib_Open(unittest.TestCase):
 		with mpq.open(read_only=True):
 			mpq.add_listfile(resource_path('listfile.txt', __file__))
 			files = mpq.list_files()
-		print(files)
 		self.assertEqual(
 			sorted(files),
 			sorted([
@@ -242,7 +239,6 @@ class Test_StormLib_Create(unittest.TestCase):
 		with mpq.create():
 			mpq.add_data('test', 'test.txt')
 		with mpq.open(read_only=False): # Not sure why it needs to be closed and re-opened (flushed) for the block count to update
-			print(mpq.list_files())
 			self.assertEqual(mpq.used_block_count(), 2) # `(listfile)` and `test.txt`
 			mpq.delete_file('test.txt')
 			self.assertEqual(mpq.used_block_count(), 2)

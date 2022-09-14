@@ -6,11 +6,11 @@ import re
 
 from ...Utilities.PyMSError import PyMSError
 
-# class MPQLibrary:
-# 	default = 0
+class MPQLibrary:
+	# default = 0
 
-# 	stormlib = 1
-# 	sfmpq = 2
+	stormlib = 1
+	sfmpq = 2
 
 class MPQLocale:
 	neutral    = 0 # Neutral (English US)
@@ -93,6 +93,15 @@ class MPQ(object):
 		else:
 			raise PyMSError('MPQ', "Couldn't load StormLib or SFmpq")
 
+	@staticmethod
+	def default_library(): # type: () -> (int | None)
+		if _StormLib.STORMLIB_LOADED:
+			return MPQLibrary.stormlib
+		elif _SFmpq.SFMPQ_LOADED:
+			return MPQLibrary.sfmpq
+		else:
+			return None
+
 	def __init__(self, path): # type: (str) -> MPQ
 		self.path = path
 
@@ -102,6 +111,9 @@ class MPQ(object):
 	def __exit__(self, exc_type, exc_value, traceback):
 		self.close()
 		return False
+
+	def library(self): # type: () -> int
+		raise NotImplementedError(self.__class__.__name__ + '.library()')
 
 	def is_open(self): # type: () -> bool
 		raise NotImplementedError(self.__class__.__name__ + '.is_open()')
@@ -157,6 +169,9 @@ class StormLibMPQ(MPQ):
 		self.mpq_handle = None # type: _StormLib.MPQHANDLE
 		self.read_only = True
 		self.listfiles = []
+
+	def library(self): # type: () -> int
+		return MPQLibrary.stormlib
 
 	def is_open(self): # type: () -> bool
 		return (self.mpq_handle != None)
@@ -383,6 +398,9 @@ class SFMPQ(MPQ):
 		self.mpq_handle = None # type: _StormLib.MPQHANDLE
 		self.read_only = True
 		self.listfiles = []
+
+	def library(self): # type: () -> int
+		return MPQLibrary.sfmpq
 
 	def is_open(self): # type: () -> bool
 		return (self.mpq_handle != None)

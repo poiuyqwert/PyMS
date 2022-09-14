@@ -859,22 +859,3 @@ def SFGetLastError():
 	if _StormLib.GetLastError == None:
 		return GetLastError()
 	return _StormLib.GetLastError()
-
-if __name__ == '__main__':
-	mpq = SFileOpenArchive('/Users/zachzahos/Applications/Wineskin/StarCraft.app/Contents/Resources/drive_c/Program Files/Starcraft/StarDat.mpq')
-	if SFInvalidHandle(mpq):
-		raise Exception('Invalid handle: %d' % SFGetLastError())
-
-	print(SFileGetFileInfo(mpq, SFileMpqBlockTableSize))
-
-	SFileAddListFile(mpq, '/Users/zachzahos/Documents/Personal/PyMS/PyMS/PyMS/Data/Listfile.txt')
-
-	find_handle,file_data = SFileFindFirstFile(mpq, '*')
-	if SFInvalidHandle(find_handle):
-		raise Exception('Invalid handle: %d' % SFGetLastError())
-
-	while file_data:
-		print(file_data.file_name)
-		file_data = SFileFindNextFile(find_handle)
-
-	SFileFindClose(find_handle)
