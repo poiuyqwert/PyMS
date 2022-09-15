@@ -282,6 +282,8 @@ class StormLibMPQ(MPQ):
 		return count
 
 	def add_listfile(self, listfile_path): # type: (str) -> None
+		if listfile_path in self.listfiles:
+			return
 		# TODO: Check if file exists?
 		self.listfiles.append(listfile_path)
 		if self.mpq_handle:
@@ -506,6 +508,8 @@ class SFMPQ(MPQ):
 		return count
 
 	def add_listfile(self, listfile_path): # type: (str) -> None
+		if listfile_path in self.listfiles:
+			return
 		# TODO: Check if file exists?
 		self.listfiles.append(listfile_path)
 

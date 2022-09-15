@@ -508,6 +508,12 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
+	def _update_listfiles(self):
+		if not self.mpq:
+			return
+		for listfile_path in self.settings.settings.listfiles:
+			self.mpq.add_listfile(listfile_path)
+
 	def new(self, key=None):
 		file = self.settings.lastpath.mpq.select_save_file(self, title='Create new MPQ', filetypes=[('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx')])
 		if file:
@@ -518,6 +524,7 @@ class PyMPQ(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.mpq = mpq
+			self._update_listfiles()
 			self.all_files = []
 			self.display_files = []
 			self.totalsize = 0
@@ -538,6 +545,7 @@ class PyMPQ(MainWindow):
 			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
 			return
 		self.mpq = mpq
+		self._update_listfiles()
 		self.title('PyMPQ %s (%s)' % (LONG_VERSION,file))
 		self.status.set('Load Successful!')
 		self.list_files()
@@ -654,6 +662,7 @@ class PyMPQ(MainWindow):
 	def mansets(self, key=None):
 		if key:
 			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, settings=self.settings)
+			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())
 
