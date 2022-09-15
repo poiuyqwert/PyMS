@@ -811,11 +811,12 @@ def SFileGetFileName(file): # type: (MPQHANDLE) -> (str | None)
 	if _StormLib.SFileGetFileName(file, byref(name)):
 		return str(name.raw)
 
-def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str, str) -> (tuple[MPQHANDLE, SFILE_FIND_DATA] | None)
+def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str, str) -> (tuple[MPQHANDLE | None, SFILE_FIND_DATA | None])
 	file_data = SFILE_FIND_DATA()
 	find_handle = _StormLib.SFileFindFirstFile(mpq, find_mask, byref(file_data), listfile_path)
 	if not SFInvalidHandle(find_handle):
 		return (find_handle, file_data)
+	return (None, None)
 
 def SFileFindNextFile(find_handle): # type: (MPQHANDLE) -> (SFILE_FIND_DATA | None)
 	file_data = SFILE_FIND_DATA()

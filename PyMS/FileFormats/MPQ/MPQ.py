@@ -2,7 +2,8 @@
 import StormLib as _StormLib
 import SFmpq as _SFmpq
 
-import re
+import re as _re
+import os as _os
 
 from ...Utilities.PyMSError import PyMSError
 
@@ -69,6 +70,7 @@ class MPQFileEntry(object):
 		self.compressed = None # type: bool 
 		self.encrypted = None # type: bool 
 		self.mod_crypt_key = None # type: bool 
+		self.flags = None
 
 	def get_compression_ratio(self):
 		if self.full_size:
@@ -81,7 +83,7 @@ class MPQFileEntry(object):
 		return self.file_name == other.file_name and self.locale == other.locale
 
 	def __repr__(self):
-		return "<MPQFileEntry object at %s: '%s', locale %d>" % (hex(id(self)), self.file_name, self.locale)
+		return "<MPQFileEntry object at %s: '%s', locale %d, flags %08X>" % (hex(id(self)), self.file_name, self.locale, self.flags)
 
 	def __lt__(self, other): # type: (MPQFileEntry) -> bool
 		if not isinstance(other, MPQFileEntry):
@@ -110,6 +112,10 @@ class MPQ(object):
 			return MPQLibrary.sfmpq
 		else:
 			return None
+
+	@staticmethod
+	def supported(): # type: () -> bool
+		return MPQ.default_library() != None
 
 	def __init__(self, path): # type: (str) -> MPQ
 		self.path = path
@@ -143,6 +149,12 @@ class MPQ(object):
 	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ._WithContextManager
 		raise NotImplementedError(self.__class__.__name__ + '.create()')
 
+	def open_or_create(self, max_files=1024, sector_size_shift=3): # type: (int, int) -> MPQ._WithContextManager
+		if _os.path.exists(self.path):
+			return self.open(read_only=False)
+		else:
+			return self.create(max_files, sector_size_shift)
+
 	def close(self):
 		raise NotImplementedError(self.__class__.__name__ + '.close()')
 
@@ -152,7 +164,7 @@ class MPQ(object):
 	def add_listfile(self, listfile_path): # type: (str) -> None
 		raise NotImplementedError(self.__class__.__name__ + '.add_listfile()')
 
-	def list_files(self, filter=None): # type: (str | re.Pattern[str]) -> list[MPQFileEntry]
+	def list_files(self, filter=None): # type: (str | _re.Pattern[str]) -> list[MPQFileEntry]
 		raise NotImplementedError(self.__class__.__name__ + '.list_files()')
 
 	def has_file(self, file_name, locale=MPQLocale.neutral): # type: (str, int) -> bool
@@ -291,19 +303,19 @@ class StormLibMPQ(MPQ):
 			if error:
 				raise PyMSError('MPQ', "Error adding listfile '%s' (%d)" % (listfile_path, error))
 
-	def list_files(self, filter=None): # type: (str | re.Pattern[str]) -> list[MPQFileEntry]
+	def list_files(self, filter=None): # type: (str | _re.Pattern[str]) -> list[MPQFileEntry]
 		self._check_open_status(editing=False)
 
 		mask = '*'
 		regex = None
 		if isinstance(filter, str):
 			mask = filter
-		elif isinstance(filter, re._pattern_type):
+		elif isinstance(filter, _re._pattern_type):
 			regex = filter
 		
 		find_handle,file_data = _StormLib.SFileFindFirstFile(self.mpq_handle, mask)
 		if _StormLib.SFInvalidHandle(find_handle):
-			raise PyMSError('MPQ', "Error finding file matching '%s' (%d)" % (mask, _StormLib.SFGetLastError()))
+			return []
 
 		def file_entry_from_file_data(file_data): # type: (_StormLib.SFILE_FIND_DATA) -> (MPQFileEntry)
 			file_entry = MPQFileEntry()
@@ -311,6 +323,7 @@ class StormLibMPQ(MPQ):
 			file_entry.full_size = file_data.file_size
 			file_entry.compressed_size = file_data.compressed_size
 			file_entry.locale = file_data.locale
+			file_entry.flags = file_data.file_flags
 			file_entry.compressed = (file_data.file_flags & _StormLib.MPQ_FILE_IMPLODE) == _StormLib.MPQ_FILE_IMPLODE or (file_data.file_flags & _StormLib.MPQ_FILE_COMPRESS) == _StormLib.MPQ_FILE_COMPRESS
 			file_entry.encrypted = (file_data.file_flags & _StormLib.MPQ_FILE_ENCRYPTED) == _StormLib.MPQ_FILE_ENCRYPTED
 			file_entry.mod_crypt_key = (file_data.file_flags & _StormLib.MPQ_FILE_FIX_KEY) == _StormLib.MPQ_FILE_FIX_KEY
@@ -513,13 +526,13 @@ class SFMPQ(MPQ):
 		# TODO: Check if file exists?
 		self.listfiles.append(listfile_path)
 
-	def list_files(self, filter=None): # type: (str | re.Pattern[str]) -> list[MPQFileEntry]
+	def list_files(self, filter=None): # type: (str | _re.Pattern[str]) -> list[MPQFileEntry]
 		self._check_open_status(editing=False)
 
 		regex = None
 		if isinstance(filter, str) and filter.replace('*',''):
-			regex = re.compile('^' + re.escape(filter).replace('\\?','.').replace('\\*','.*') + '$')
-		elif isinstance(filter, re._pattern_type):
+			regex = _re.compile('^' + _re.escape(filter).replace('\\?','.').replace('\\*','.*') + '$')
+		elif isinstance(filter, _re._pattern_type):
 			regex = filter
 		
 		list_entries = _SFmpq.SFileListFiles(self.mpq_handle, str('\r\n'.join(self.listfiles)))
@@ -530,6 +543,7 @@ class SFMPQ(MPQ):
 			file_entry.full_size = file_list_entry.fullSize
 			file_entry.compressed_size = file_list_entry.compressedSize
 			file_entry.locale = file_list_entry.locale
+			file_entry.flags = file_list_entry.flags
 			file_entry.compressed = (file_list_entry.flags & _SFmpq.MAFA_COMPRESS2) == _SFmpq.MAFA_COMPRESS2 or (file_list_entry.flags & _SFmpq.MAFA_COMPRESS) == _SFmpq.MAFA_COMPRESS
 			file_entry.encrypted = (file_list_entry.flags & _SFmpq.MAFA_ENCRYPT) == _SFmpq.MAFA_ENCRYPT
 			file_entry.mod_crypt_key = (file_list_entry.flags & _SFmpq.MAFA_MODCRYPTKEY) == _SFmpq.MAFA_MODCRYPTKEY

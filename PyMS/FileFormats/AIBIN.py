@@ -288,7 +288,7 @@ class AIBIN:
 		'stopcodesection',
 	]
 
-	def __init__(self, bwscript=None, units=None, upgrades=None, techs=None, stat_txt=None):
+	def __init__(self, bwscript=None, units=None, upgrades=None, techs=None, stat_txt=None, bwscript_is_data=False):
 		if bwscript == None:
 			bwscript = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts', 'bwscript.bin')
 		if units == None:
@@ -312,7 +312,10 @@ class AIBIN:
 		if bwscript != False:
 			self.bwscript = BWBIN()
 			if bwscript:
-				self.warnings = self.bwscript.load_file(bwscript)
+				if bwscript_is_data:
+					self.bwscript.load_data(bwscript)
+				else:
+					self.warnings = self.bwscript.load_file(bwscript)
 				self.externaljumps = self.bwscript.externaljumps
 		if isinstance(stat_txt, TBL.TBL):
 			self.tbl = stat_txt
@@ -495,6 +498,9 @@ class AIBIN:
 
 	def load_file(self, file, addstrings=False):
 		data = load_file(file, 'aiscript.bin')
+		self.load_data(data, addstrings)
+
+	def load_data(self, data, addstrings=False):
 		try:
 			offset = struct.unpack('<L', data[:4])[0]
 			ais = OrderedDict()
@@ -1755,14 +1761,8 @@ class AIBIN:
 		f.close()
 		return warnings
 
-	def compile(self, file, bwscript=None, extra=False):
-		if isstr(file):
-			try:
-				f = AtomicWriter(file, 'wb')
-			except:
-				raise PyMSError('Compile',"Could not load file '%s'" % file)
-		else:
-			f = file
+	def compile_data(self, extra=False): # type: (bool) -> tuple[bytes, list[PyMSWarning]]
+		data = ''
 		warnings = []
 		ais = ''
 		table = ''
@@ -1817,7 +1817,7 @@ class AIBIN:
 					offset += 1
 			else:
 				table += struct.pack('<4s3L', id, 0, string+1, flags)
-		f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
+		data += '%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table)
 		if extra and (self.varinfo or self.aiinfo):
 			info = ''
 			for var,dat in self.varinfo.iteritems():
@@ -1837,10 +1837,22 @@ class AIBIN:
 						else:
 							info += struct.pack(s,dat[1].index(label)+1)
 				info += '\x00'
-			f.write(compress(info + '\x00',9))
+			data += compress(info + '\x00',9)
+		return (data, warnings)
+
+	def compile(self, file, bwscript=None, extra=False):
+		if isstr(file):
+			try:
+				f = AtomicWriter(file, 'wb')
+			except:
+				raise PyMSError('Compile',"Could not load file '%s'" % file)
+		else:
+			f = file
+		data,warnings = self.compile_data(extra)
+		f.write(data)
 		f.close()
 		if bwscript:
-			self.bwscript.compile(bwscript, extra)
+			warnings.extend(self.bwscript.compile(bwscript, extra))
 		return warnings
 
 class BWBIN(AIBIN):
@@ -1849,6 +1861,9 @@ class BWBIN(AIBIN):
 
 	def load_file(self, file):
 		data = load_file(file, 'bwscript.bin')
+		self.load_data(data)
+
+	def load_data(self, data):
 		try:
 			offset = struct.unpack('<L', data[:4])[0]
 			ais = OrderedDict()
@@ -2116,14 +2131,8 @@ class BWBIN(AIBIN):
 			f.close()
 		return warnings
 
-	def compile(self, file, extra=False):
-		if isstr(file):
-			try:
-				f = AtomicWriter(file, 'wb')
-			except:
-				raise PyMSError('Compile',"Could not load file '%s'" % file)
-		else:
-			f = file
+	def compile_data(self, extra=False): # type: (bool) -> tuple[bytes, list[PyMSWarning]]
+		data = ''
 		ais = ''
 		table = ''
 		offset = 4
@@ -2170,7 +2179,7 @@ class BWBIN(AIBIN):
 							if not warnings:
 								warnings.append(e)
 				offset += 1
-		f.write('%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table))
+		data += '%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table)
 		if extra and self.aiinfo:
 			info = ''
 			for ai,dat in self.aiinfo.iteritems():
@@ -2184,9 +2193,21 @@ class BWBIN(AIBIN):
 					else:
 						info += struct.pack('<H',dat[1].index(label)+1)
 				info += '\x00'
-			f.write(compress(info + '\x00',9))
+			data += compress(info + '\x00',9)
+		return (data, warnings)
+
+	def compile(self, file, extra=False):
+		if isstr(file):
+			try:
+				f = AtomicWriter(file, 'wb')
+			except:
+				raise PyMSError('Compile',"Could not load file '%s'" % file)
+		else:
+			f = file
+		data,warnings = self.compile_data(extra)
+		f.write(data)
 		f.close()
-		return []
+		return warnings
 
 # gwarnings = []
 # try:

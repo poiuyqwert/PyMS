@@ -189,14 +189,17 @@ def implode(data):
 	pass
 
 BYTE = struct.Struct('<B')
-		
-debug = open('p_debug_explode.txt', 'w')
 
 class InputExhaustedException(Exception):
 	pass
 
 class Explode(object):
+	DEBUG = None
+
 	def __init__(self, data):
+		if Explode.DEBUG == None:
+			Explode.DEBUG = open('p_debug_explode.txt', 'w')
+
 		self.data = data
 
 		self.comp_type, self.dsize_bits, self.bit_buff = struct.unpack('<3B', data[:3])
@@ -218,21 +221,21 @@ class Explode(object):
 			raise InputExhaustedException()
 		byte = BYTE.unpack(self.data[self.offset])[0]
 		self.offset += 1
-		debug.write("  pos: %d\n" % self.offset)
+		Explode.DEBUG.write("  pos: %d\n" % self.offset)
 		return byte
 
 	def waste_bits(self, bits):
-		debug.write("waste: %d\n" % bits)
+		Explode.DEBUG.write("waste: %d\n" % bits)
 		if bits <= self.extra_bits:
 			self.extra_bits -= bits
 			self.bit_buff >>= bits
-			debug.write("1buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
+			Explode.DEBUG.write("1buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
 		else:
 			self.bit_buff >>= self.extra_bits
 			self.bit_buff |= (self.read_byte() << 8)
 			self.bit_buff >>= (bits - self.extra_bits)
 			self.extra_bits = (self.extra_bits - bits) + 8
-			debug.write("2buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
+			Explode.DEBUG.write("2buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
 
 	def decode_lit(self):
 		# If current bit is set, return that we will copy X bytes, otherwise return X as the raw byte
@@ -288,31 +291,31 @@ class Explode(object):
 		return pos + 1
 
 	def expand(self):
-		debug.write(' size: %d\n' % len(self.data))
-		debug.write('====\n')
+		Explode.DEBUG.write(' size: %d\n' % len(self.data))
+		Explode.DEBUG.write('====\n')
 		decompressed = ''
 		try:
 			while True:
 				lit, value = self.decode_lit()
 				if lit != Lit.done:
-					debug.write('  lit: %d %d\n'  % (lit, value))
+					Explode.DEBUG.write('  lit: %d %d\n'  % (lit, value))
 				if lit == Lit.done:
 					break
 				elif lit == Lit.copy:
 					move_back = self.decode_dist(value)
-					debug.write(' dist: %d\n' % move_back)
-					debug.write('write:')
+					Explode.DEBUG.write(' dist: %d\n' % move_back)
+					Explode.DEBUG.write('write:')
 					# `move_back` can be less than `value`, which means it will end up copying from the copied data. For example:
 					# If `decompressed == \x00\x01\x02\x03`, `move_back == 2`, and `value` == 4, the result would be `\x00\x01\x02\x03\x02\x03\x02\x03`
 					while value > 0:
 						copy_size = min(move_back, value)
 						for c in decompressed[-move_back:-move_back + copy_size or None]:
-							debug.write(' %d' % BYTE.unpack(c))
+							Explode.DEBUG.write(' %d' % BYTE.unpack(c))
 						decompressed += decompressed[-move_back:-move_back + copy_size or None]
 						value -= copy_size
-					debug.write('\n')
+					Explode.DEBUG.write('\n')
 				else:
-					debug.write('write: %d\n' % value)
+					Explode.DEBUG.write('write: %d\n' % value)
 					decompressed += BYTE.pack(value)
 		except InputExhaustedException:
 			pass

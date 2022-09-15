@@ -12,7 +12,7 @@ from .StringEditor import StringEditor
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL
 from ..FileFormats import DAT
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import *
 
 from ..Utilities.utils import VERSIONS, couriernew, register_registry, WIN_REG_AVAILABLE
 from ..Utilities.UIKit import *
@@ -33,7 +33,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-import os, shutil, webbrowser
+import os, shutil
 from collections import OrderedDict
 
 LONG_VERSION = 'v%s' % VERSIONS['PyAI']
@@ -102,10 +102,10 @@ class PyAI(MainWindow):
 		file_menu.add_command('New', self.new, Ctrl.n, bind_shortcut=False)
 		file_menu.add_command('Open', self.open, Ctrl.o, bind_shortcut=False)
 		file_menu.add_command('Open Default Scripts', self.open_default, Ctrl.d, bind_shortcut=False)
-		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=SFMPQ_LOADED, bind_shortcut=False, underline='m')
+		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
 		file_menu.add_command('Save', self.save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
 		file_menu.add_command('Save As...', self.saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
-		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=SFMPQ_LOADED, tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
+		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
 		file_menu.add_command('Close', self.close, Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
 		file_menu.add_separator()
 		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register, enabled=WIN_REG_AVAILABLE, underline='t')
@@ -150,7 +150,7 @@ class PyAI(MainWindow):
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
-		self.toolbar.add_button(Assets.get_image('openmpq'), self.open_mpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
+		self.toolbar.add_button(Assets.get_image('openmpq'), self.open_mpq, 'Open MPQ', Ctrl.Alt.o, enabled=MPQ.supported())
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=False, tags=('file_open','mpq_available'))
@@ -195,8 +195,8 @@ class PyAI(MainWindow):
 		self.toolbar.add_button(Assets.get_image('saveset'), self.saveset, 'Save TBL and DAT Settings')
 		self.toolbar.pack(side=TOP, fill=X)
 
-		self.menu.tag_enabled('mpq_available', SFMPQ_LOADED)
-		self.toolbar.tag_enabled('mpq_available', SFMPQ_LOADED)
+		self.menu.tag_enabled('mpq_available', MPQ.supported())
+		self.toolbar.tag_enabled('mpq_available', MPQ.supported())
 
 		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=couriernew, activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
@@ -241,7 +241,7 @@ class PyAI(MainWindow):
 		e = self.open_files()
 
 		if guifile:
-			self.open(aiscript=guifile)
+			self.open(aiscript_path=guifile)
 
 		UpdateDialog.check_update(self, 'PyAI')
 
@@ -399,19 +399,22 @@ class PyAI(MainWindow):
 			self.action_states()
 			self.scriptstatus.set('aiscript.bin: 0 (0 B)     bwscript.bin: 0 (0 B)')
 
-	def open(self, key=None, aiscript=None, bwscript=None):
+	def open(self, key=None, aiscript_data=None, aiscript_path=None, bwscript_data=None, bwscript_path=None): # type: (None, bytes, str, bytes, str) -> None
 		if not self.unsaved():
-			if not aiscript:
-				aiscript = self.settings.lastpath.bin.select_open_file(self, title='Open aiscript.bin', filetypes=[('AI Scripts','*.bin')])
-				if not aiscript:
+			if not aiscript_path:
+				aiscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open aiscript.bin', filetypes=[('AI Scripts','*.bin')])
+				if not aiscript_path:
 					return
-				if not bwscript:
-					bwscript = self.settings.lastpath.bin.select_open_file(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)', filetypes=[('AI Scripts','*.bin')])
+				if not bwscript_path:
+					bwscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)', filetypes=[('AI Scripts','*.bin')])
 			warnings = []
 			try:
-				ai = AIBIN.AIBIN(bwscript, self.unitsdat, self.upgradesdat, self.techdat, self.tbl)
+				ai = AIBIN.AIBIN(bwscript_data if bwscript_data else bwscript_path, self.unitsdat, self.upgradesdat, self.techdat, self.tbl, bwscript_is_data=not not bwscript_data)
 				warnings.extend(ai.warnings)
-				warnings.extend(ai.load_file(aiscript, True))
+				if aiscript_data:
+					warnings.extend(ai.load_data(aiscript_data))
+				else:
+					warnings.extend(ai.load_file(aiscript_path, True))
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -421,15 +424,15 @@ class PyAI(MainWindow):
 				if not ai[1] in self.strings:
 					self.strings[ai[1]] = []
 				self.strings[ai[1]].append(id)
-			self.aiscript = aiscript
-			self.bwscript = bwscript
+			self.aiscript = aiscript_path
+			self.bwscript = bwscript_path
 			self.edited = False
 			self.editstatus['state'] = DISABLED
 			self.undos = []
 			self.redos = []
-			if not bwscript:
-				bwscript = 'bwscript.bin'
-			self.title('%s, %s' % (aiscript,bwscript))
+			if not bwscript_path:
+				bwscript_path = 'bwscript.bin'
+			self.title('%s, %s' % (aiscript_path,bwscript_path))
 			self.status.set('Load Successful!')
 			self.resort()
 			self.action_states()
@@ -441,35 +444,26 @@ class PyAI(MainWindow):
 				WarningDialog(self, warnings)
 
 	def open_default(self, key=None):
-		self.open(key, Assets.mpq_file_path('Scripts','aiscript.bin'), Assets.mpq_file_path('Scripts','bwscript.bin'))
+		self.open(key, aiscript_path=Assets.mpq_file_path('Scripts','aiscript.bin'), bwscript_path=Assets.mpq_file_path('Scripts','bwscript.bin'))
 
 	def open_mpq(self):
 		file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
 		if not file:
 			return
-		h = SFileOpenArchive(file)
-		if SFInvalidHandle(h):
+		mpq = MPQ.of(file)
+		try:
+			mpq_ctx = mpq.open()
+		except:
 			ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % file))
 			return
-		ai = SFile(file='scripts\\aiscript.bin')
-		bw = SFile(file='scripts\\bwscirpt.bin')
-		for t in ['ai','bw']:
-			f = SFileOpenFileEx(h, 'scripts\\%sscript.bin' % t)
-			if f in [None,-1]:
-				if t == 'ai':
-					SFileCloseArchive(h)
-					ErrorDialog(self, PyMSError('Open','Could not find aiscript.bin in the MPQ.'))
-					return
-				bw = None
-				continue
-			data,_ = SFileReadFile(f)
-			SFileCloseFile(f)
-			if t == 'ai':
-				ai.text = data
-			else:
-				bw.text = data
-		SFileCloseArchive(h)
-		self.open(None,ai,bw)
+		with mpq_ctx:
+			ai = mpq.read_file('scripts\\aiscript.bin')
+			bw = None
+			try:
+				bw = mpq.read_file('scripts\\bwscript.bin')
+			except:
+				pass
+		self.open(aiscript_data=ai, aiscript_path='scripts\\aiscript.bin', bwscript_data=bw, bwscript_path='scripts\\bwscript.bin')
 
 	def save(self, key=None, ai=None, bw=None):
 		if key and self.buttons['save']['state'] != NORMAL:
@@ -518,35 +512,31 @@ class PyAI(MainWindow):
 	def savempq(self, key=None):
 		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq'),('Self-executing MPQ','*.exe')])
 		if file:
-			if file.endswith('%sexe' % os.extsep):
-				if os.path.exists(file):
-					h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-				else:
-					try:
-						shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
-						h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-					except:
-						h = -1
-			else:
-				h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-			if h == -1:
-				ErrorDialog(self, PyMSError('Saving','Could not open %sMPQ "%s".' % (['','SE'][file.endswith('%sexe' % os.extsep)],file)))
-				return
-			ai = SFile()
-			bw = SFile()
+			mpq = MPQ.of(file)
+			if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
+				try:
+					shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
+				except:
+					ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
+					return
+			not_saved = []
 			try:
-				self.ai.compile(ai, bw)
+				ai,_ = self.ai.compile_data()
+				bw,_ = self.ai.bwscript.compile_data()
+				with mpq.open_or_create():
+					try:
+						mpq.add_data(ai, 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
+					except:
+						not_saved.append('scripts\\aiscript.bin')
+					try:
+						mpq.add_data(bw, 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
+					except:
+						not_saved.append('scripts\\bwscript.bin')
 			except PyMSError as e:
 				ErrorDialog(self, e)
-			undone = []
-			for f,s in [('ai',ai),('bw',bw)]:
-				try:
-					MpqAddFileFromBuffer(h, s.text, 'scripts\\%sscript.bin' % f, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
-				except:
-					undone.append('scripts\\%sscript.bin' % f)
-			MpqCloseUpdatedArchive(h)
-			if undone:
-				MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(undone), type=MessageBox.OK)
+				return
+			if not_saved:
+				MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(not_saved), type=MessageBox.OK)
 
 	def close(self, key=None):
 		if key and self.buttons['close']['state'] != NORMAL:

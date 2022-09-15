@@ -181,6 +181,19 @@ class Test_StormLib_Create(unittest.TestCase):
 		mpq.close()
 		self.assertTrue(os.path.exists(self.path))
 
+	def test_open_or_create(self):
+		mpq = MPQ.SFMPQ(self.path)
+		self.assertFalse(os.path.exists(self.path))
+		mpq.open_or_create()
+		self.assertTrue(mpq.is_open())
+		self.assertFalse(mpq.is_read_only())
+		mpq.close()
+		self.assertTrue(os.path.exists(self.path))
+		mpq.open_or_create()
+		self.assertTrue(mpq.is_open())
+		self.assertFalse(mpq.is_read_only())
+		mpq.close()
+
 	def test_with(self):
 		mpq = MPQ.SFMPQ(self.path)
 		with mpq.create():
