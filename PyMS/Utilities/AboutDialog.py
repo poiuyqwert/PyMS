@@ -13,6 +13,7 @@ class AboutDialog(PyMSDialog):
 		self.thanks = thanks
 		self.thanks.extend([
 			('ShadowFlare','For SFmpq, some file specs, and all her tools!'),
+			('Ladislav Zezula','For StormLib'),
 			('BroodWarAI.com','Support and hosting of course!'),
 			('Blizzard','For creating StarCraft and BroodWar...'),
 		])

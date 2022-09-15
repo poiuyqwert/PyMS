@@ -1,39 +1,40 @@
 
-from ..FileFormats.MPQ.SFmpq import MAFA_COMPRESS_STANDARD, MAFA_COMPRESS_DEFLATE, MAFA_COMPRESS_WAVE, Z_BEST_SPEED, Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION, MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH
+from ..FileFormats.MPQ.SFmpq import Z_BEST_SPEED, Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION, MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH
+from ..FileFormats.MPQ.MPQ import MPQCompressionFlag
 
-class CompressionType(object):
+class CompressionOption(object):
 	def __init__(self, type):
 		self.type = type
 
 	def name(self):
-		if self == CompressionType.NoCompression:
+		if self == CompressionOption.NoCompression:
 			return 'None'
-		elif self == CompressionType.Standard:
+		elif self == CompressionOption.Standard:
 			return 'Standard'
-		elif self == CompressionType.Deflate:
+		elif self == CompressionOption.Deflate:
 			return 'Deflate'
-		elif self == CompressionType.Audio:
+		elif self == CompressionOption.Audio:
 			return 'Audio'
-		elif self == CompressionType.Auto:
+		elif self == CompressionOption.Auto:
 			return 'Auto'
 
-	def mafa_type(self):
-		if self == CompressionType.Standard:
-			return MAFA_COMPRESS_STANDARD
-		elif self == CompressionType.Deflate:
-			return MAFA_COMPRESS_DEFLATE
-		elif self == CompressionType.Audio:
-			return MAFA_COMPRESS_WAVE
+	def compression_type(self):
+		if self == CompressionOption.Standard:
+			return MPQCompressionFlag.pkware
+		elif self == CompressionOption.Deflate:
+			return MPQCompressionFlag.zlib
+		elif self == CompressionOption.Audio:
+			return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
 		else:
-			return 0
+			return MPQCompressionFlag.none
 
 	def level_count(self):
-		return len(self.mafa_levels())
+		return len(self.compression_levels())
 
-	def mafa_levels(self):
-		if self == CompressionType.Deflate:
+	def compression_levels(self):
+		if self == CompressionOption.Deflate:
 			return tuple(range(min(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION), max(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION)+1))
-		elif self == CompressionType.Audio:
+		elif self == CompressionOption.Audio:
 			return (MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH)
 		else:
 			return ()
@@ -42,49 +43,49 @@ class CompressionType(object):
 		return CompressionSetting(self, max(0, min(level, self.level_count()-1)))
 
 	def __eq__(self, other):
-		if not isinstance(other, CompressionType):
+		if not isinstance(other, CompressionOption):
 			return False
 		return self.type == other.type
 
 	def __str__(self):
 		return self.type
 
-CompressionType.NoCompression = CompressionType('none')
-CompressionType.Standard = CompressionType('standard')
-CompressionType.Deflate = CompressionType('deflate')
-CompressionType.Audio = CompressionType('audio')
-CompressionType.Auto = CompressionType('auto')
+CompressionOption.NoCompression = CompressionOption('none')
+CompressionOption.Standard = CompressionOption('standard')
+CompressionOption.Deflate = CompressionOption('deflate')
+CompressionOption.Audio = CompressionOption('audio')
+CompressionOption.Auto = CompressionOption('auto')
 
 class CompressionSetting(object):
 	def __init__(self, type, level):
 		self.type = type
 		self.level = level
 
-	def mafa_level(self):
-		mafa_levels = self.type.mafa_levels()
-		if not mafa_levels:
+	def compression_level(self):
+		compression_levels = self.type.compression_levels()
+		if not compression_levels:
 			return 0
-		return mafa_levels[self.level]
+		return compression_levels[self.level]
 
 	def level_name(self):
-		mafa_level = self.mafa_level()
-		if self == CompressionType.Deflate:
-			name = '%d' % mafa_level
-			if mafa_level == Z_DEFAULT_COMPRESSION:
+		compression_level = self.compression_level()
+		if self == CompressionOption.Deflate:
+			name = '%d' % compression_level
+			if compression_level == Z_DEFAULT_COMPRESSION:
 				name = 'Default'
-			elif mafa_level == Z_NO_COMPRESSION:
+			elif compression_level == Z_NO_COMPRESSION:
 				name += ' (None)'
-			elif mafa_level == Z_BEST_SPEED:
+			elif compression_level == Z_BEST_SPEED:
 				name += ' (Best Speed)'
-			elif mafa_level == Z_BEST_COMPRESSION:
+			elif compression_level == Z_BEST_COMPRESSION:
 				name += ' (Best Compression)'
 			return name
-		elif self == CompressionType.Audio:
-			if mafa_level == MAWA_QUALITY_LOW:
+		elif self == CompressionOption.Audio:
+			if compression_level == MAWA_QUALITY_LOW:
 				return 'Lowest (Best Quality)'
-			elif mafa_level == MAWA_QUALITY_MEDIUM:
+			elif compression_level == MAWA_QUALITY_MEDIUM:
 				return 'Medium'
-			elif mafa_level == MAWA_QUALITY_HIGH:
+			elif compression_level == MAWA_QUALITY_HIGH:
 				return 'Highest (Least Space)'
 		else:
 			return ''
@@ -95,16 +96,16 @@ class CompressionSetting(object):
 		level = 0
 		if ':' in menu_value:
 			type,level = menu_value.split(':')
-			type = CompressionType(type)
+			type = CompressionOption(type)
 			level = max(0, min(int(level), type.level_count()-1))
 		else:
-			type = CompressionType(type)
+			type = CompressionOption(type)
 		return type.setting(level)
 
 	def __eq__(self, other):
 		if isinstance(other, CompressionSetting):
 			return self.type == other.type and self.level == other.level
-		elif isinstance(other, CompressionType):
+		elif isinstance(other, CompressionOption):
 			return self.type == other
 		else:
 			return False

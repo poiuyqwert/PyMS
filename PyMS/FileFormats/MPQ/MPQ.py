@@ -12,9 +12,18 @@ class MPQLibrary:
 	stormlib = 1
 	sfmpq = 2
 
+	@staticmethod
+	def name(library): # type: (int) -> str
+		if library == MPQLibrary.stormlib:
+			return 'StormLib'
+		elif library == MPQLibrary.sfmpq:
+			return 'SFmpq'
+		else:
+			return 'None'
+
 class MPQLocale:
 	neutral    = 0 # Neutral (English US)
-	chinese    = 1028 # 0x404
+	chinese    = 1028 # 0x404 (Taiwan)
 	czech      = 1029 # 0x405
 	german     = 1031 # 0x407
 	english    = 1032 # 0x409
@@ -31,11 +40,11 @@ class MPQLocale:
 class MPQCompressionFlag:
 	none       = 0
 
-	huffman    = (1 << 0)
-	zlib       = (1 << 1)
-	pkware     = (1 << 3)
-	wav_mono   = (1 << 6)
-	wav_stereo = (1 << 7)
+	huffman    = (1 << 0) # 0x01
+	zlib       = (1 << 1) # 0x02
+	pkware     = (1 << 3) # 0x08
+	wav_mono   = (1 << 6) # 0x40
+	wav_stereo = (1 << 7) # 0x80
 	
 	implode    = (1 << 15) # This translates to a file flag, not a compression type
 
@@ -105,12 +114,18 @@ class MPQ(object):
 	def __init__(self, path): # type: (str) -> MPQ
 		self.path = path
 
-	def __enter__(self):
-		return self
+	class _WithContextManager(object):
+		def __init__(self, mpq, auto_close): # type: (MPQ, bool) -> MPQ._WithContextManager
+			self.mpq = mpq
+			self.auto_close = auto_close
 
-	def __exit__(self, exc_type, exc_value, traceback):
-		self.close()
-		return False
+		def __enter__(self):
+			return self
+
+		def __exit__(self, exc_type, exc_value, traceback):
+			if self.auto_close:
+				self.mpq.close()
+			return False
 
 	def library(self): # type: () -> int
 		raise NotImplementedError(self.__class__.__name__ + '.library()')
@@ -121,11 +136,11 @@ class MPQ(object):
 	def is_read_only(self): # type: () -> (bool | None)
 		raise NotImplementedError(self.__class__.__name__ + '.is_read_only()')
 
-	def open(self, read_only=True): # type: (bool) -> MPQ
+	def open(self, read_only=True): # type: (bool) -> MPQ._WithContextManager
 		raise NotImplementedError(self.__class__.__name__ + '.close()')
 
 	# `sector_size_shift` is used like `512 << sector_size_shift` to calculate the `sector_size`
-	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ
+	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ._WithContextManager
 		raise NotImplementedError(self.__class__.__name__ + '.create()')
 
 	def close(self):
@@ -157,11 +172,17 @@ class MPQ(object):
 	def rename_file(self, file_name, new_file_name, locale=MPQLocale.neutral): # type: (str, str, int) -> None
 		raise NotImplementedError(self.__class__.__name__ + '.rename_file()')
 
+	def change_file_locale(self, file_name, locale, new_locale): # type: (str, int, int) -> None
+		raise NotImplementedError(self.__class__.__name__ + '.change_file_locale()')
+
 	def delete_file(self, file_name, locale=MPQLocale.neutral): # type: (str, int) -> None
 		raise NotImplementedError(self.__class__.__name__ + '.delete_file()')
 
 	def compact(self):
 		raise NotImplementedError(self.__class__.__name__ + '.compact()')
+
+	def flush(self):
+		raise NotImplementedError(self.__class__.__name__ + '.flush()')
 
 class StormLibMPQ(MPQ):
 	def __init__(self, path): # type: (str) -> MPQ
@@ -189,7 +210,8 @@ class StormLibMPQ(MPQ):
 			if error:
 				raise PyMSError('MPQ', "Error adding listfile '%s' (%d)" % (listfile_path, error))
 
-	def open(self, read_only=True): # type: (bool) -> MPQ
+	def open(self, read_only=True): # type: (bool) -> MPQ._WithContextManager
+		auto_close = False
 		if not self.is_open():
 			mpq_handle = _StormLib.SFileOpenArchive(self.path, flags=(_StormLib.STREAM_FLAG_READ_ONLY if read_only else 0))
 			if _StormLib.SFInvalidHandle(mpq_handle):
@@ -197,11 +219,12 @@ class StormLibMPQ(MPQ):
 			self.mpq_handle = mpq_handle
 			self.read_only = read_only
 			self._add_listfiles()
+			auto_close = True
 		elif not read_only and self.read_only:
 			raise PyMSError('MPQ', "MPQ is already open as read-only")
-		return self
+		return MPQ._WithContextManager(self, auto_close)
 
-	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ
+	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ._WithContextManager
 		if self.mpq_handle:
 			raise PyMSError('MPQ', "MPQ is already open")
 		
@@ -235,7 +258,7 @@ class StormLibMPQ(MPQ):
 		else:
 			self.close()
 
-		return self
+		return MPQ._WithContextManager(self, auto_close=True)
 
 	def close(self):
 		if not self.is_open():
@@ -379,6 +402,22 @@ class StormLibMPQ(MPQ):
 		if not _StormLib.SFileRenameFile(self.mpq_handle, file_name, new_file_name):
 			raise PyMSError('MPQ', "Error renaming file '%s' to '%s' (%d)" % (file_name, new_file_name, _StormLib.SFGetLastError()))
 
+	def change_file_locale(self, file_name, locale, new_locale): # type: (str, int, int) -> None
+		self._check_open_status(editing=True)
+		_StormLib.SFileSetLocale(locale)
+		
+		file_handle = _StormLib.SFileOpenFileEx(self.mpq_handle, file_name)
+		if _StormLib.SFInvalidHandle(file_handle):
+			raise PyMSError('MPQ', "Error opening file '%s' (%d)" % (file_name, _StormLib.SFGetLastError()))
+
+		try:
+			if not _StormLib.SFileSetFileLocale(file_handle, new_locale):
+				raise PyMSError('MPQ', "Error setting locale of file '%s' with locale %d to locale %d (%d)" % (file_name, locale, new_locale, _StormLib.SFGetLastError()))
+		except:
+			raise
+		finally:
+			_StormLib.SFileCloseFile(file_handle)
+
 	def delete_file(self, file_name, locale=MPQLocale.neutral): # type: (str, int) -> None
 		self._check_open_status(editing=True)
 		_StormLib.SFileSetLocale(locale)
@@ -391,6 +430,11 @@ class StormLibMPQ(MPQ):
 
 		if not _StormLib.SFileCompactArchive(self.mpq_handle):
 			raise PyMSError('MPQ', "Error compacting MPQ (%d)" % _StormLib.SFGetLastError())
+
+	def flush(self):
+		if not self.is_open() or self.is_read_only():
+			return
+		_StormLib.SFileFlushArchive(self.mpq_handle)
 
 class SFMPQ(MPQ):
 	def __init__(self, path): # type: (str) -> MPQ
@@ -410,7 +454,8 @@ class SFMPQ(MPQ):
 			return None
 		return self.read_only
 
-	def open(self, read_only=True): # type: (bool) -> MPQ
+	def open(self, read_only=True): # type: (bool) -> MPQ._WithContextManager
+		auto_close = False
 		if not self.is_open():
 			if read_only:
 				mpq_handle = _SFmpq.SFileOpenArchive(self.path)
@@ -420,11 +465,12 @@ class SFMPQ(MPQ):
 				raise PyMSError('MPQ', "Error opening MPQ '%s' (%d)" % (self.path, _SFmpq.SFGetLastError()))
 			self.mpq_handle = mpq_handle
 			self.read_only = read_only
+			auto_close = True
 		elif not read_only and self.read_only:
 			raise PyMSError('MPQ', "MPQ is already open as read-only")
-		return self
+		return MPQ._WithContextManager(self, auto_close)
 
-	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ
+	def create(self, max_files=1024, sector_size_shift=3, stay_open=True): # type: (int, int, bool) -> MPQ._WithContextManager
 		if self.mpq_handle:
 			raise PyMSError('MPQ', "MPQ is already open")
 
@@ -436,7 +482,7 @@ class SFMPQ(MPQ):
 		if not stay_open:
 			self.close()
 
-		return self
+		return MPQ._WithContextManager(self, auto_close=True)
 
 	def close(self):
 		if not self.is_open():
@@ -485,7 +531,7 @@ class SFMPQ(MPQ):
 			file_entry.mod_crypt_key = (file_list_entry.flags & _SFmpq.MAFA_MODCRYPTKEY) == _SFmpq.MAFA_MODCRYPTKEY
 			return file_entry
 
-		return list(file_entry_from_file_list_entry(list_entry) for list_entry in list_entries if regex == None or regex.match(list_entry.fileName))
+		return list(file_entry_from_file_list_entry(list_entry) for list_entry in list_entries if list_entry.fileExists and (regex == None or regex.match(list_entry.fileName)))
 
 	def has_file(self, file_name, locale=MPQLocale.neutral): # type: (str, int) -> bool
 		self._check_open_status(editing=False)
@@ -554,6 +600,12 @@ class SFMPQ(MPQ):
 		if not _SFmpq.MpqRenameFile(self.mpq_handle, file_name, new_file_name):
 			raise PyMSError('MPQ', "Error renaming file '%s' to '%s' (%d)" % (file_name, new_file_name, _SFmpq.SFGetLastError()))
 
+	def change_file_locale(self, file_name, locale, new_locale): # type: (str, int, int) -> None
+		self._check_open_status(editing=True)
+
+		if not _SFmpq.MpqSetFileLocale(self.mpq_handle, file_name, locale, new_locale):
+			raise PyMSError('MPQ', "Error setting locale of file '%s' with locale %d to locale %d (%d)" % (file_name, locale, new_locale, _SFmpq.SFGetLastError()))
+
 	def delete_file(self, file_name, locale=MPQLocale.neutral): # type: (str, int) -> None
 		self._check_open_status(editing=True)
 
@@ -565,3 +617,9 @@ class SFMPQ(MPQ):
 
 		if not _SFmpq.MpqCompactArchive(self.mpq_handle):
 			raise PyMSError('MPQ', "Error compacting MPQ (%d)" % _SFmpq.SFGetLastError())
+
+	def flush(self):
+		if not self.is_open() or self.is_read_only():
+			return
+		self.close()
+		self.open(read_only=False)

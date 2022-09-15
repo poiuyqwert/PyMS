@@ -1,5 +1,5 @@
 
-from .CompressionSetting import CompressionType, CompressionSetting
+from .CompressionSetting import CompressionOption, CompressionSetting
 from .Locales import LOCALE_CHOICES, find_locale_index
 from .CheckThread import CheckThread
 from .LocaleDialog import LocaleDialog
@@ -9,7 +9,7 @@ from .GeneralSettings import GeneralSettings
 from .CompressionSettings import CompressionSettings
 from .ListfileSettings import ListfileSettings
 
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import *
 
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
@@ -30,11 +30,11 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-import sys, time, shutil
+import sys, time, shutil, os
 from thread import start_new_thread
 
-if not SFMPQ_LOADED:
-	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test SFmpq for your operating system, then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+if MPQ.default_library() == None:
+	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
 	e.startup()
 	sys.exit()
 
@@ -52,7 +52,7 @@ class PyMPQ(MainWindow):
 	def __init__(self, guifile=None):
 		self.settings = Settings('PyMPQ', '2')
 		self.settings.set_defaults({
-			'compression': str(CompressionType.Auto.setting()),
+			'compression': str(CompressionOption.Auto.setting()),
 			'encrypt': False,
 			'locale': 0
 		})
@@ -64,10 +64,10 @@ class PyMPQ(MainWindow):
 			'listfiles': [os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')]
 		})
 		self.settings.settings.autocompression.set_defaults({
-			'Default': str(CompressionType.Standard.setting()),
-			'.smk': str(CompressionType.NoCompression.setting()),
-			'.mpq': str(CompressionType.NoCompression.setting()),
-			'.wav': str(CompressionType.Audio.setting(level=1))
+			'Default': str(CompressionOption.Standard.setting()),
+			'.smk': str(CompressionOption.NoCompression.setting()),
+			'.mpq': str(CompressionOption.NoCompression.setting()),
+			'.wav': str(CompressionOption.Audio.setting(level=1))
 		})
 		self.settings.settings.defaults.set_defaults({
 			'maxfiles': 1024,
@@ -83,9 +83,9 @@ class PyMPQ(MainWindow):
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace(self, 'PyMPQ')
 
-		self.file = None
-		self.all_files = []
-		self.display_files = []
+		self.mpq = None # type: MPQ
+		self.all_files = [] # type: list[MPQFileEntry]
+		self.display_files = [] # type: list[MPQFileEntry]
 		self.totalsize = 0
 		self.temp_folder = os.path.join(BASE_DIR,'PyMS','Temp',str(int(time.time())),'')
 		self.thread = CheckThread(self, self.temp_folder)
@@ -145,23 +145,23 @@ class PyMPQ(MainWindow):
 		self.locale_menu = Menu(self.setmenu, tearoff=0)
 		
 		self.deflatemenu = Menu(self.compmenu, tearoff=0)
-		for level in range(0,CompressionType.Deflate.level_count()):
-			compression = CompressionType.Deflate.setting(level)
+		for level in range(0,CompressionOption.Deflate.level_count()):
+			compression = CompressionOption.Deflate.setting(level)
 			self.deflatemenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=Key.F9 if level == 0 else None, shortcut_widget=self)
 
 		self.audiomenu = Menu(self.compmenu, tearoff=0)
 		audio_compression = (
-			(CompressionType.Audio.setting(level=0), Key.F6),
-			(CompressionType.Audio.setting(level=1), Key.F7),
-			(CompressionType.Audio.setting(level=2), Key.F8),
+			(CompressionOption.Audio.setting(level=0), Key.F6),
+			(CompressionOption.Audio.setting(level=1), Key.F7),
+			(CompressionOption.Audio.setting(level=2), Key.F8),
 		)
 		for compression,shortcut in audio_compression:
 			self.audiomenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=shortcut, shortcut_widget=self)
 
-		self.compmenu.add_radiobutton(label='Auto-Select', underline=0, variable=self.compvar, value=str(CompressionType.Auto.setting()), shortcut=Key.F4, shortcut_widget=self)
+		self.compmenu.add_radiobutton(label='Auto-Select', underline=0, variable=self.compvar, value=str(CompressionOption.Auto.setting()), shortcut=Key.F4, shortcut_widget=self)
 		self.compmenu.add_separator()
-		self.compmenu.add_radiobutton(label='None', underline=0, variable=self.compvar, value=str(CompressionType.NoCompression.setting()), shortcut=Key.F2, shortcut_widget=self)
-		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionType.Standard.setting()), shortcut=Key.F3, shortcut_widget=self)
+		self.compmenu.add_radiobutton(label='None', underline=0, variable=self.compvar, value=str(CompressionOption.NoCompression.setting()), shortcut=Key.F2, shortcut_widget=self)
+		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionOption.Standard.setting()), shortcut=Key.F3, shortcut_widget=self)
 		self.compmenu.add_cascade(label='Deflate', menu=self.deflatemenu, underline=0)
 		self.compmenu.add_cascade(label='Audio', menu=self.audiomenu, underline=0)
 		
@@ -207,11 +207,14 @@ class PyMPQ(MainWindow):
 		self.selected = StringVar()
 		self.info = StringVar()
 		self.locale_status = StringVar()
+		self.library_status = StringVar()
+		self.library_status.set(MPQLibrary.name(MPQ.default_library()))
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=25)
 		statusbar.add_label(self.selected, width=30)
 		statusbar.add_label(self.info, width=30)
 		statusbar.add_label(self.locale_status, weight=1)
+		statusbar.add_label(self.library_status, width=10)
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		self.load_settings()
@@ -277,31 +280,31 @@ class PyMPQ(MainWindow):
 					image = self.listbox.descending_arrow
 			button['image'] = image
 
-	def is_mpq_open(self):
-		return not not self.file
+	def is_mpq_chosen(self):
+		return not not self.mpq
 
 	def is_file_selected(self):
 		return not not self.listbox.cur_selection()
 
 	def select(self):
-		if self.is_mpq_open():
+		if self.is_mpq_chosen():
 			selected_indexes = self.listbox.cur_selection()
 			total_size = 0
 			for index in selected_indexes:
-				total_size += self.display_files[index].fullSize
+				total_size += self.display_files[index].full_size
 			self.selected.set('Selected %s files, %s' % (len(selected_indexes), format_byte_size(total_size)))
 		else:
 			self.selected.set('')
 		self.action_states()
 
 	def action_states(self):
-		is_mpq_open = self.is_mpq_open()
-		self.toolbar.tag_enabled('mpq_open', is_mpq_open)
-		self.find_button['state'] = NORMAL if is_mpq_open else DISABLED
+		is_mpq_chosen = self.is_mpq_chosen()
+		self.toolbar.tag_enabled('mpq_open', is_mpq_chosen)
+		self.find_button['state'] = NORMAL if is_mpq_chosen else DISABLED
 		self.toolbar.tag_enabled('file_selected', self.is_file_selected())
 
 	def dofilter(self, e=None):
-		if not self.is_mpq_open():
+		if not self.is_mpq_chosen():
 			return
 		filter = self.filter.get()
 		filters = self.settings.get('filters', [])
@@ -312,32 +315,37 @@ class PyMPQ(MainWindow):
 			del filters[0]
 		self.update_list()
 
-	def list_files(self, h=-1):
-		close = False
-		if h == -1:
-			close = True
-			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Read MPQ (List Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+	def open_mpq(self, read_only=True): # type: (bool) -> MPQ._WithContextManager
+		try:
+			return self.mpq.open(read_only)
+		except:
+			raise PyMSError('MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ.")
+
+	def list_files(self):
+		if not self.is_mpq_chosen():
+			return
+		file_entries = []
+		try:
+			with self.open_mpq():
+				file_entries = self.mpq.list_files()
+		except PyMSError as e:
+			ErrorDialog(self, e)
 			return
 		self.all_files = []
 		self.totalsize = 0
-		for e in SFileListFiles(h, str('\r\n'.join(self.settings.settings.get('listfiles', [])))):
-			if e.fileExists:
-				self.all_files.append(e)
-				self.totalsize += e.fullSize
-		if close:
-			MpqCloseUpdatedArchive(h)
+		for file_entry in file_entries:
+			self.all_files.append(file_entry)
+			self.totalsize += file_entry.full_size
 
 	def reset_entry_background_color(self):
 		self.textdrop.entry['bg'] = self.textdrop.default_background_color
 		self.resettimer = None
 
-	def attributes_for_flags(self, flags):
+	def attributes_for_file_entry(self, file_entry): # type: (MPQFileEntry) -> str
 		attributes = ''
-		attributes += 'C' if (flags & (MAFA_COMPRESS | MAFA_COMPRESS2)) else '-'
-		attributes += 'E' if (flags & MAFA_ENCRYPT) else '-'
-		attributes += 'X' if (flags & MAFA_MODCRYPTKEY) else '-'
+		attributes += 'C' if file_entry.compressed else '-'
+		attributes += 'E' if file_entry.encrypted else '-'
+		attributes += 'X' if file_entry.mod_crypt_key else '-'
 		return attributes
 
 	def update_list(self):
@@ -348,7 +356,7 @@ class PyMPQ(MainWindow):
 			self.listbox.delete(ALL)
 		else:
 			return
-		if self.is_mpq_open() and self.all_files:
+		if self.is_mpq_chosen() and self.all_files:
 			self.display_files = self.all_files
 			filter = self.filter.get()
 			if not self.regex.get():
@@ -366,9 +374,9 @@ class PyMPQ(MainWindow):
 					self.resettimer = self.after(1000, self.reset_entry_background_color)
 					self.textdrop.entry['bg'] = '#FFB4B4'
 			if filter:
-				self.display_files = [file for file in self.display_files if filter.match(file.fileName)]
-			def keysort(file):
-				file_info = [file.fileName, file.fullSize, file.get_compression_ratio(), file.compressedSize, file.locale, file.flags]
+				self.display_files = [file_entry for file_entry in self.display_files if filter.match(file_entry.file_name)]
+			def keysort(file_entry): # type: (MPQFileEntry) -> tuple[str, int, float, int, int, str]
+				file_info = [file_entry.file_name, file_entry.full_size, file_entry.get_compression_ratio(), file_entry.compressed_size, file_entry.locale, self.attributes_for_file_entry(file_entry)]
 				# We only need to re-arrange the sort info if we are sorting by something other than the first column
 				if self.settings.sort.column:
 					# Move sort column to front of info to sort
@@ -376,63 +384,57 @@ class PyMPQ(MainWindow):
 					del file_info[self.settings.sort.column+1]
 				return tuple(file_info)
 			self.display_files.sort(key=keysort, reverse=not self.settings.sort.ascending)
-			for file in self.display_files:#fileName,fullSize,compresssionRatio,compressedSize,locale,flags in file_info:
+			for file_entry in self.display_files:
 				i = (
-					file.fileName,
-					format_byte_size(file.fullSize),
-					'%d%%' % int(file.get_compression_ratio()*100),
-					format_byte_size(file.compressedSize),
-					str(file.locale),
-					self.attributes_for_flags(file.flags),
+					file_entry.file_name,
+					format_byte_size(file_entry.full_size),
+					'%d%%' % int(file_entry.get_compression_ratio()*100),
+					format_byte_size(file_entry.compressed_size),
+					str(file_entry.locale),
+					self.attributes_for_file_entry(file_entry),
 					''
 				)
 				self.listbox.insert(END, i)
-				if file in previously_selected:
+				if file_entry in previously_selected:
 					self.listbox.select_set(END)
 		self.action_states()
 
-	def update_info(self, h=None):
-		if self.is_mpq_open() or h:
-			close = False
-			if h == None:
-				close = True
-				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
-			if SFInvalidHandle(h):
-				ErrorDialog(self, PyMSError('Read MPQ (Update Info)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-				return
-			files = SFileGetFileInfo(h,SFILE_INFO_NUM_FILES)
-			self.info.set('Total %s/%s files, %s' % (len(self.all_files),files,format_byte_size(self.totalsize)))
-			can_compact = files > len(self.all_files)
-			self.toolbar.tag_enabled('can_compact', can_compact)
-			if close:
-				MpqCloseUpdatedArchive(h)
-		else:
+	def update_info(self):
+		if not self.is_mpq_chosen():
 			self.info.set('')
+			return
+		try:
+			with self.open_mpq():
+				block_count = self.mpq.used_block_count()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.info.set('Total %s/%s files, %s' % (len(self.all_files), block_count, format_byte_size(self.totalsize)))
+		can_compact = block_count > len(self.all_files)
+		self.toolbar.tag_enabled('can_compact', can_compact)
 
 	def do_rename(self, index, new_filename):
-		file = self.display_files[index]
-		success = False
-		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-		if not SFInvalidHandle(h) and MpqRenameAndSetFileLocale(h, file.fileName, new_filename, file.locale, file.locale):
-			success = True
-		MpqCloseUpdatedArchive(h)
-		return success
+		if not self.is_mpq_chosen():
+			return False
+		file_entry = self.display_files[index]
+		try:
+			with self.open_mpq(read_only=False):
+				self.mpq.rename_file(file_entry.file_name, new_filename)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return False
+		return True
 
-	def mafa_settings(self, filename):
+	def compression_settings(self, filename): # type: (str) -> tuple[int, int]
 		compression = CompressionSetting.parse_value(self.compvar.get())
-		if compression.type == CompressionType.Auto:
+		if compression.type == CompressionOption.Auto:
 			extension = '.' + filename.split(os.extsep)[-1]
 			if extension in self.settings.settings.autocompression:
 				compression = CompressionSetting.parse_value(self.settings.settings.autocompression[extension])
 			else:
 				compression = CompressionSetting.parse_value(self.settings.autocompression.Default)
-		flags = MAFA_REPLACE_EXISTING
-		mafa_compression = compression.type.mafa_type()
-		if mafa_compression != 0:
-			flags |= MAFA_COMPRESS
-		if self.settings.encrypt:
-			flags |= MAFA_ENCRYPT
-		return (flags, mafa_compression, compression.mafa_level())
+		mpq_compression_flags = compression.type.compression_type()
+		return (mpq_compression_flags, compression.compression_level())
 
 	def popup(self, e, i):
 		if not self.listbox.cur_selection():
@@ -442,48 +444,46 @@ class PyMPQ(MainWindow):
 	def changelocale(self):
 		dialog = LocaleDialog(self)
 		if dialog.save:
-			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-			if SFInvalidHandle(h):
-				ErrorDialog(self, PyMSError('Write MPQ (Change Locale)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			new_locale = dialog.result.get()
+			try:
+				with self.open_mpq(read_only=False):
+					for i in self.listbox.cur_selection():
+						file_entry = self.display_files[i]
+						if file_entry.locale == new_locale:
+							continue
+						try:
+							self.mpq.change_file_locale(file_entry.file_name, file_entry.locale, new_locale)
+							file_entry.locale = new_locale
+						except:
+							# TODO: Warn about files not updated
+							pass
+					self.mpq.flush()
+					self.list_files()
+			except PyMSError as e:
+				ErrorDialog(self, e)
 				return
-			locale = dialog.result.get()
-			for i in self.listbox.cur_selection():
-				# TODO: Warn about files not updated
-				if self.display_files[i].locale != locale and MpqSetFileLocale(h, self.display_files[i].fileName, self.display_files[i].locale, locale):
-					self.display_files[i].locale = locale
-			self.list_files(h)
-			MpqCloseUpdatedArchive(h)
 			self.update_list()
 
 	def openfile(self, e=None):
-		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Open MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-			return
 		try:
-			for i in self.listbox.cur_selection():
-				file = self.display_files[i]
-				try:
-					os.makedirs(os.path.join(self.temp_folder,os.path.dirname(file.fileName)))
-				except (OSError, IOError) as e:
-					if e.errno != 17:
-						raise
-				SFileSetLocale(file.locale)
-				fh = SFileOpenFileEx(h, file.fileName)
-				if fh:
-					data,_ = SFileReadFile(fh)
-					SFileCloseFile(fh)
-					filepath = os.path.join(self.temp_folder,file.fileName)
-					f = open(filepath, 'wb')
-					f.write(data)
-					f.close()
-					start_file(filepath)
-			if not self.thread.is_running():
-				self.thread.start()
-		except:
-			raise
-		finally:
-			MpqCloseUpdatedArchive(h)
+			with self.open_mpq(read_only=False):
+				for i in self.listbox.cur_selection():
+					file_entry = self.display_files[i]
+					try:
+						os.makedirs(os.path.join(self.temp_folder,os.path.dirname(file_entry.file_name)))
+					except (OSError, IOError) as e:
+						if e.errno != 17:
+							raise
+					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
+					file_path = os.path.join(self.temp_folder,file_entry.file_name)
+					with open(file_path, 'wb') as f:
+						f.write(data)
+					start_file(file_path)
+				if not self.thread.is_running():
+					self.thread.start()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
 
 	def update_files(self, files):
 		if len(files) == 1:
@@ -494,28 +494,30 @@ class PyMPQ(MainWindow):
 			if not u.files:
 				return
 			files = u.files
-		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Write MPQ (Update Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+		try:
+			with self.open_mpq(read_only=False):
+				for file_name in files:
+					compression,compression_level = self.compression_settings(file_name)
+					self.mpq.add_file(os.path.join(self.temp_folder,file_name), file_name, compression=compression, compression_level=compression_level)
+				self.mpq.flush()
+				self.list_files()
+				self.update_info()
+		except PyMSError as e:
+			ErrorDialog(self, e)
 			return
-		for filename in files:
-			mafa_settings = self.mafa_settings(filename)
-			MpqAddFileToArchiveEx(h, os.path.join(self.temp_folder,filename), filename, *mafa_settings)
-		self.list_files(h)
-		self.update_info(h)
-		MpqCloseUpdatedArchive(h)
 		self.update_list()
 		self.select()
 
 	def new(self, key=None):
 		file = self.settings.lastpath.mpq.select_save_file(self, title='Create new MPQ', filetypes=[('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx')])
 		if file:
-			h = MpqOpenArchiveForUpdateEx(file, MOAU_CREATE_ALWAYS, self.settings.settings.defaults['maxfiles'], self.settings.settings.defaults['blocksize'])
-			if SFInvalidHandle(h):
-				ErrorDialog(self, PyMSError('New MPQ', "The MPQ could not be created/opened."))
+			mpq = MPQ.of(file)
+			try:
+				mpq.create(self.settings.settings.defaults['maxfiles'], self.settings.settings.defaults['blocksize'], stay_open=False)
+			except PyMSError as e:
+				ErrorDialog(self, e)
 				return
-			MpqCloseUpdatedArchive(h)
-			self.file = file
+			self.mpq = mpq
 			self.all_files = []
 			self.display_files = []
 			self.totalsize = 0
@@ -529,23 +531,26 @@ class PyMPQ(MainWindow):
 			file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('Any MPQ', '*.mpq;*.exe;*.scm;*.scx'),('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx')])
 			if not file:
 				return
-		h = MpqOpenArchiveForUpdateEx(file, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
-		if SFInvalidHandle(h):
-			MessageBox.askquestion(parent=self, title='Open', message='There is no MPQ in "%s".' % file, type=MessageBox.OK)
+		mpq = MPQ.of(file)
+		try:
+			mpq.open()
+		except PyMSError:
+			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
 			return
-		self.file = file
+		self.mpq = mpq
 		self.title('PyMPQ %s (%s)' % (LONG_VERSION,file))
 		self.status.set('Load Successful!')
-		self.list_files(h)
-		self.update_info(h)
-		MpqCloseUpdatedArchive(h)
+		self.list_files()
+		self.update_info()
+		self.mpq.close()
 		self.update_list()
 		self.select()
 
 	def close(self, key=None):
-		if not self.is_mpq_open():
+		if not self.is_mpq_chosen():
 			return
-		self.file = None
+		self.mpq.close()
+		self.mpq = None
 		self.all_files = []
 		self.display_files = []
 		self.title('PyMPQ %s' % LONG_VERSION)
@@ -556,70 +561,61 @@ class PyMPQ(MainWindow):
 		self.select()
 
 	def add(self, key=None):
-		if not self.is_mpq_open():
+		if not self.is_mpq_chosen():
 			return
 		files = self.settings.lastpath.files.select_open_files(self, key='import', title='Add files...')
-		if files:
-			f = FolderDialog(self)
-			if f.save:
-				h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-				if SFInvalidHandle(h):
-					ErrorDialog(self, PyMSError('Write MPQ (Add File)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-					return
-				SFileSetLocale(self.settings.locale)
-				for filepath in files:
-					filename = os.path.basename(filepath)
-					folder = self.settings['import'].get('add_folder', '')
-					if folder:
-						filename = folder + filename
-					mafa_settings = self.mafa_settings(filename)
-					MpqAddFileToArchiveEx(h, filepath, filename, *mafa_settings)
-				self.list_files(h)
-				self.update_info(h)
-				MpqCloseUpdatedArchive(h)
-				self.update_list()
-				self.select()
+		if not files:
+			return
+		f = FolderDialog(self)
+		if not f.save:
+			return
+		with self.open_mpq(read_only=False):
+			for filepath in files:
+				filename = os.path.basename(filepath)
+				folder = self.settings['import'].get('add_folder', '')
+				compression,compression_level = self.compression_settings(filename)
+				self.mpq.add_file(filepath, folder + filename, self.settings.locale, compression=compression, compression_level=compression_level)
+			self.mpq.flush()
+			self.list_files()
+			self.update_info()
+		self.update_list()
+		self.select()
 
 	def adddir(self, key=None):
-		if not self.is_mpq_open():
+		if not self.is_mpq_chosen():
 			return
 		path = self.settings.lastpath.files.select_directory(self, key='import_dir', title='Add files from folder...')
 		if not path:
 			return
 		path = os.path.join(path,'')
 		fo = FolderDialog(self)
-		if fo.save:
-			h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-			if SFInvalidHandle(h):
-				ErrorDialog(self, PyMSError('Write MPQ (Add Folder)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-				return
+		if not fo.save:
+			return
+		with self.open_mpq(read_only=False):
 			for root,_,filenames in os.walk(path):
 				folder = self.settings['import'].get('add_folder', '')
 				path_folder = root.replace(path,'')
 				if path_folder:
 					folder += '\\'.join(os.path.split(path_folder)) + '\\'
 				for filename in filenames:
-					mafa_settings = self.mafa_settings(filename)
-					MpqAddFileToArchiveEx(h, os.path.join(root,filename), folder + filename, *mafa_settings)
-			self.list_files(h)
-			self.update_info(h)
-			MpqCloseUpdatedArchive(h)
-			self.update_list()
-			self.select()
+					compression,compression_level = self.compression_settings(filename)
+					self.mpq.add_file(os.path.join(root,filename), folder + filename, self.settings.locale, compression=compression, compression_level=compression_level)
+			self.mpq.flush()
+			self.list_files()
+			self.update_info()
+		self.update_list()
+		self.select()
 
 	def remove(self, key=None):
 		if not self.is_file_selected():
 			return
-		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING | MOAU_MAINTAIN_LISTFILE)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Write MPQ (Remove Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-			return
-		for i in self.listbox.cur_selection():
-			filename,_,_,_,locale,_,_ = self.listbox.get(i)
-			MpqDeleteFileWithLocale(h, filename, int(locale))
-		self.list_files(h)
-		self.update_info(h)
-		MpqCloseUpdatedArchive(h)
+		with self.open_mpq(read_only=False):
+			for i in self.listbox.cur_selection():
+				file_entry = self.display_files[i]
+				self.mpq.delete_file(file_entry.file_name, file_entry.locale)
+			self.mpq.flush()
+			self.list_files()
+			self.update_info()
 		self.update_list()
 		self.select()
 
@@ -629,7 +625,7 @@ class PyMPQ(MainWindow):
 		self.listbox.columns[ColumnID.Filename][1].edit()
 
 	# def editlistfile(self, key=None):
-		# if not self.is_mpq_open():
+		# if not self.is_mpq_chosen():
 			# return
 		# pass
 
@@ -639,29 +635,21 @@ class PyMPQ(MainWindow):
 		path = self.settings.lastpath.files.select_directory(self, key='export', title='Extract files...')
 		if not path:
 			return
-		h = SFileOpenArchive(self.file)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Read MPQ (Extract Files)', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
-			return
-		for index in self.listbox.cur_selection():
-			file = self.display_files[index]
-			path_components = file.fileName.split('\\')
-			try:
-				os.makedirs(os.path.join(path,*path_components[:-1]))
-			except (OSError, IOError) as e:
-				if e.errno != 17:
-					raise
-			SFileSetLocale(file.locale)
-			fh = SFileOpenFileEx(h, file.fileName)
-			if fh:
-				data,_ = SFileReadFile(fh)
-				SFileCloseFile(fh)
-				f = open(os.path.join(path,*path_components),'wb')
-				f.write(data)
-				f.close()
-			else:
-				ErrorDialog(self, PyMSError('Extract', "Couldn't load file '%s'" % file.fileName))
-		SFileCloseArchive(h)
+		with self.open_mpq():
+			for index in self.listbox.cur_selection():
+				file_entry = self.display_files[index]
+				path_components = file_entry.file_name.split('\\')
+				try:
+					os.makedirs(os.path.join(path,*path_components[:-1]))
+				except (OSError, IOError) as e:
+					if e.errno != 17:
+						raise
+				try:
+					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
+				except:
+					ErrorDialog(self, PyMSError('Extract', "Couldn't read file '%s' from MPQ" % file_entry.file_name))
+				with open(os.path.join(path,*path_components),'wb') as f:
+					f.write(data)
 
 	def mansets(self, key=None):
 		if key:
@@ -670,13 +658,11 @@ class PyMPQ(MainWindow):
 			self.setmenu.post(*self.winfo_pointerxy())
 
 	def compact(self, key=None):
-		h = MpqOpenArchiveForUpdate(self.file, MOAU_OPEN_EXISTING)
-		if SFInvalidHandle(h):
-			ErrorDialog(self, PyMSError('Compact MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+		if not self.is_mpq_chosen():
 			return
-		MpqCompactArchive(h)
-		self.update_info(h)
-		MpqCloseUpdatedArchive(h)
+		with self.open_mpq(read_only=False):
+			self.mpq.compact()
+		self.update_info()
 
 	def register(self, e=None):
 		try:

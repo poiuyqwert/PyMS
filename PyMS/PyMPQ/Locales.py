@@ -1,19 +1,21 @@
 
+from ..FileFormats.MPQ.MPQ import MPQLocale
+
 LOCALE_CHOICES = (
-	('Neutral (English)', 0),
-	('Chinese (Taiwan)', 1028),
-	('Czech', 1029),
-	('German', 1031),
-	('English (US)', 1032),
-	('Spanish', 1034),
-	('French', 1036),
-	('Italian', 1040),
-	('Japanese', 1041),
-	('Korean', 1042),
-	('Polish', 1045),
-	('Portuguese', 1046),
-	('Russian', 1049),
-	('English (UK)', 2056),
+	('Neutral (English)', MPQLocale.neutral),
+	('Chinese (Taiwan)', MPQLocale.chinese),
+	('Czech', MPQLocale.czech),
+	('German', MPQLocale.german),
+	('English (US)', MPQLocale.english),
+	('Spanish', MPQLocale.spanish),
+	('French', MPQLocale.french),
+	('Italian', MPQLocale.italian),
+	('Japanese', MPQLocale.japanese),
+	('Korean', MPQLocale.korean),
+	('Polish', MPQLocale.polish),
+	('Portuguese', MPQLocale.portuguese),
+	('Russian', MPQLocale.russian),
+	('English (UK)', MPQLocale.english_uk),
 	('Other', None)
 )
 

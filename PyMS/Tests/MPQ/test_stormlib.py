@@ -44,18 +44,43 @@ class Test_StormLib_Open(unittest.TestCase):
 
 	def test_with(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
+			self.assertTrue(mpq.is_open())
+		self.assertFalse(mpq.is_open())
+
+	def test_with_auto_close(self):
+		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
+		mpq.open()
+		self.assertTrue(mpq.is_open())
+		with mpq.open():
+			self.assertTrue(mpq.is_open())
+		self.assertTrue(mpq.is_open())
+		with mpq.open():
+			self.assertTrue(mpq.is_open())
+		self.assertTrue(mpq.is_open())
+		mpq.close()
+		self.assertFalse(mpq.is_open())
+
+	def test_with_auto_close_override(self):
+		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
+		mpq.open()
+		self.assertTrue(mpq.is_open())
+		with mpq.open():
+			self.assertTrue(mpq.is_open())
+		self.assertTrue(mpq.is_open())
+		with mpq.open() as ctx:
+			ctx.auto_close = True
 			self.assertTrue(mpq.is_open())
 		self.assertFalse(mpq.is_open())
 
 	def test_used_block_count(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertEqual(mpq.used_block_count(), 5)
 
 	def test_list_files(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			files = mpq.list_files()
 		self.assertEqual(
 			sorted(files),
@@ -71,7 +96,7 @@ class Test_StormLib_Open(unittest.TestCase):
 	def test_listfile_open_list_files(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
 		mpq.add_listfile(resource_path('listfile.txt', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			files = mpq.list_files()
 		self.assertEqual(
 			sorted(files),
@@ -86,7 +111,7 @@ class Test_StormLib_Open(unittest.TestCase):
 
 	def test_open_listfile_list_files(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			mpq.add_listfile(resource_path('listfile.txt', __file__))
 			files = mpq.list_files()
 		self.assertEqual(
@@ -102,32 +127,32 @@ class Test_StormLib_Open(unittest.TestCase):
 
 	def test_has_file(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.neutral))
 
 	def test_has_file_no_locale_has_neutral(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.german))
 
 	def test_has_file_no_locale_no_neutral(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertFalse(mpq.has_file('unknown.txt', MPQ.MPQLocale.german))
 
 	def test_read_file(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), 'spanish')
 
 	def test_read_file_no_locale_has_neutral(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True):
+		with mpq.open():
 			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.german), 'english')
 
 	def test_read_file_no_locale_no_neutral(self):
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open(read_only=True) and self.assertRaises(PyMSError):
+		with mpq.open() and self.assertRaises(PyMSError):
 			mpq.read_file('unknown.txt', MPQ.MPQLocale.german)
 
 class Test_StormLib_Create(unittest.TestCase):
@@ -214,6 +239,16 @@ class Test_StormLib_Create(unittest.TestCase):
 			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.german))
 			self.assertFalse(mpq.has_file('test.txt', MPQ.MPQLocale.spanish))
 			self.assertTrue(mpq.has_file('rename.txt', MPQ.MPQLocale.spanish))
+
+	def test_change_locale(self):
+		mpq = MPQ.StormLibMPQ(self.path)
+		with mpq.create():
+			mpq.add_data('test', 'test.txt', MPQ.MPQLocale.spanish)
+			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.spanish))
+			self.assertFalse(mpq.has_file('test.txt', MPQ.MPQLocale.german))
+			mpq.change_file_locale('test.txt', MPQ.MPQLocale.spanish, MPQ.MPQLocale.german)
+			self.assertFalse(mpq.has_file('test.txt', MPQ.MPQLocale.spanish))
+			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.german))
 
 	def test_delete(self):
 		mpq = MPQ.StormLibMPQ(self.path)

@@ -1,5 +1,5 @@
 
-from .CompressionSetting import CompressionType, CompressionSetting
+from .CompressionSetting import CompressionOption, CompressionSetting
 
 from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *
@@ -10,10 +10,10 @@ import os
 
 class CompressionSettings(Frame):
 	COMPRESSION_CHOICES = (
-		CompressionType.NoCompression,
-		CompressionType.Standard,
-		CompressionType.Deflate,
-		CompressionType.Audio
+		CompressionOption.NoCompression,
+		CompressionOption.Standard,
+		CompressionOption.Deflate,
+		CompressionOption.Audio
 	)
 
 	def __init__(self, parent, setdlg=None):
