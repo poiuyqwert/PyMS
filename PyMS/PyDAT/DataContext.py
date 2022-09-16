@@ -7,7 +7,7 @@ from .DataID import DATID, DataID
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP, rle_normal, rle_outline, rle_shadow, OUTLINE_SELF
-from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
+from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN import IScriptBIN
 
 from ..Utilities.utils import BASE_DIR
@@ -107,8 +107,8 @@ class DataContext(object):
 
 	def load_mpqs(self):
 		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
-			self.settings.settings.mpqs = self.mpqhandler.mpqs
+		if not len(self.mpqhandler.mpq_paths()) and self.mpqhandler.add_defaults():
+			self.settings.settings.mpqs = self.mpqhandler.mpq_paths()
 
 	def dat_data(self, datid):
 		if datid == DATID.units:
@@ -228,7 +228,7 @@ class DataContext(object):
 				palette = ('o','g','b')[remapping-1] + 'fire'
 			else:
 				palette = 'Units'
-		if not SFMPQ_LOADED or not palette in self.palettes:
+		if not MPQ.supported() or not palette in self.palettes:
 			return None
 		if not is_full_path:
 			path = 'unit\\' + path

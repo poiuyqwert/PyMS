@@ -12,7 +12,7 @@ from .StringEditor import StringEditor
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL
 from ..FileFormats import DAT
-from ..FileFormats.MPQ.MPQ import *
+from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
 from ..Utilities.utils import VERSIONS, couriernew, register_registry, WIN_REG_AVAILABLE
 from ..Utilities.UIKit import *
@@ -237,7 +237,7 @@ class PyAI(MainWindow):
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpqs
+			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
 		e = self.open_files()
 
 		if guifile:
@@ -512,7 +512,6 @@ class PyAI(MainWindow):
 	def savempq(self, key=None):
 		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq'),('Self-executing MPQ','*.exe')])
 		if file:
-			mpq = MPQ.of(file)
 			if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
 				try:
 					shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
@@ -523,6 +522,7 @@ class PyAI(MainWindow):
 			try:
 				ai,_ = self.ai.compile_data()
 				bw,_ = self.ai.bwscript.compile_data()
+				mpq = MPQ.of(file)
 				with mpq.open_or_create():
 					try:
 						mpq.add_data(ai, 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)

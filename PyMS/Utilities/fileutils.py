@@ -12,6 +12,23 @@ class BadFile:
 	def __nonzero__(self):
 		return False
 
+class SFile:
+	def __init__(self, text='', file='<Internal SFile>'):
+		self.text = text
+		self.file = file
+
+	def write(self, text):
+		self.text += text
+
+	def read(self):
+		return self.text
+
+	def close(self):
+		pass
+
+	def __str__(self):
+		return self.file
+
 def load_file(file, file_type='file', mode='rb'):
 	try:
 		if isstr(file):

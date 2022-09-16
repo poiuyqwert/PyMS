@@ -16,7 +16,7 @@ from .SaveMPQDialog import SaveMPQDialog
 from .DATSettingsDialog import DATSettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
 
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
 
 from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
@@ -78,12 +78,12 @@ class PyDAT(MainWindow):
 		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', Ctrl.d)
 		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
-		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=SFMPQ_LOADED)
+		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=MPQ.supported())
 		toolbar.add_gap()
 		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
 		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
 		toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e)
-		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=SFMPQ_LOADED)
+		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=MPQ.supported())
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', Shift.Ctrl.n)
 		toolbar.add_section()
@@ -394,23 +394,17 @@ class PyDAT(MainWindow):
 	def _open_all(self, path, ismpq):
 		if not path:
 			return
-		mpq_handle = None
+		mpq = None
 		if ismpq:
-			mpq_handle = SFileOpenArchive(path)
-			if SFInvalidHandle(mpq_handle):
-				ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % path))
-				return
+			mpq = MPQ.of(path)
+			mpq.open()
 		found_normal = [] # type: list[str]
 		found_expanded = [] # type: list[str]
 		for _,(tab,_) in self.dattabs.pages.iteritems():
 			filename = tab.get_dat_data().dat_type.FILE_NAME
-			if mpq_handle:
-				file_handle = SFileOpenFileEx(mpq_handle, 'arr\\' + filename)
-				if SFInvalidHandle(file_handle):
-					continue
-				file_data,_ = SFileReadFile(file_handle)
-				SFileCloseFile(file_handle)
+			if mpq:
 				try:
+					file_data = mpq.read_file('arr\\' + filename)
 					tab.open_data(file_data)
 				except:
 					continue
@@ -426,8 +420,8 @@ class PyDAT(MainWindow):
 				found_expanded.append(filename)
 			else:
 				found_normal.append(filename)
-		if mpq_handle:
-			SFileCloseArchive(mpq_handle)
+		if mpq:
+			mpq.close()
 		if not found_normal and not found_expanded:
 			ErrorDialog(self, PyMSError('Open','No DAT files found in %s "%s"' % ('MPQ' if ismpq else 'directory', path)))
 			return
@@ -464,7 +458,7 @@ class PyDAT(MainWindow):
 		self.dattabs.active.export()
 
 	def savempq(self, key=None):
-		if SFMPQ_LOADED:
+		if MPQ.supported():
 			self.save_data()
 			SaveMPQDialog(self)
 

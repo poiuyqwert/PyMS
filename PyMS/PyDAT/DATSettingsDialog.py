@@ -10,7 +10,7 @@ class DATSettingsDialog(SettingsDialog):
 		self.custom = IntVar()
 		self.custom.set(self.settings.settings.get('customlabels', False))
 		self.tabs = Notebook(self)
-		self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpqs, self.settings)
+		self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings)
 		self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 		for d in self.data:
 			f = Frame(self.tabs)

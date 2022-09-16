@@ -29,23 +29,6 @@ if SFMPQ_DIR:
 
 SFMPQ_LOADED = (_SFmpq != None)
 
-class SFile:
-	def __init__(self, text='', file='<Internal SFile>'):
-		self.text = text
-		self.file = file
-
-	def write(self, text):
-		self.text += text
-
-	def read(self):
-		return self.text
-
-	def close(self):
-		pass
-
-	def __str__(self):
-		return self.file
-
 MPQ_ERROR_MPQ_INVALID     = 0x85200065
 MPQ_ERROR_FILE_NOT_FOUND  = 0x85200066
 MPQ_ERROR_DISK_FULL       = 0x85200068 #Physical write file to MPQ failed

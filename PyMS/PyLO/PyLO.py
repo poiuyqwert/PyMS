@@ -100,7 +100,7 @@ class PyLO(MainWindow):
 
 		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
 		if (not 'mpqs' in self.settings or not len(self.settings.settings.files['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings.settings.files['mpqs'] = self.mpqhandler.mpqs
+			self.settings.settings.files['mpqs'] = self.mpqhandler.mpq_paths()
 
 		self.usebasegrp = IntVar()
 		self.usebasegrp.set(not not self.settings.get('usebasegrp'))

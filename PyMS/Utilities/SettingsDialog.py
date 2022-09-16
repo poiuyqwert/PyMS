@@ -24,7 +24,7 @@ class SettingsDialog(PyMSDialog):
 		if self.data:
 			self.tabs = Notebook(self)
 			if self.mpqhandler:
-				self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpqs, self.settings)
+				self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings)
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if isinstance(d[1],list):
@@ -34,7 +34,7 @@ class SettingsDialog(PyMSDialog):
 				self.tabs.add_tab(self.pages[-1], d[0])
 			self.tabs.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		else:
-			self.mpqsettings = MPQSettings(self, self.mpqhandler.mpqs, self.settings, self)
+			self.mpqsettings = MPQSettings(self, self.mpqhandler.mpq_paths(), self.settings, self)
 			self.mpqsettings.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		btns = Frame(self)
 		ok = Button(btns, text='Ok', width=10, command=self.ok)
@@ -84,7 +84,7 @@ class SettingsDialog(PyMSDialog):
 					ErrorDialog(self, e)
 					return
 			if self.mpqhandler:
-				self.settings.settings.mpqs = self.mpqhandler.mpqs
+				self.settings.settings.mpqs = self.mpqhandler.mpq_paths()
 		PyMSDialog.ok(self)
 
 	def dismiss(self):

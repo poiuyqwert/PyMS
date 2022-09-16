@@ -146,7 +146,7 @@ class PyICE(MainWindow):
 
 		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
 		if (not 'mpqs' in self.settings.settings or not len(self.settings.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings.settings['mpqs'] = self.mpqhandler.mpqs
+			self.settings.settings['mpqs'] = self.mpqhandler.mpq_paths()
 		e = self.open_files()
 		if e:
 			self.tblbin(err=e)

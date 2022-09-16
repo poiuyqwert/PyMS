@@ -42,20 +42,34 @@ mpq_dir = _os.path.join(base_dir, 'PyMS', 'MPQ')
 def mpq_file_path(*path_components): # type: (*str) -> str
 	return _os.path.join(mpq_dir, *path_components)
 
-def mpq_file_ref(*path_components): # type: (*str) -> str
-	return 'MPQ:' + '\\'.join(path_components)
+def mpq_file_name(*path_components): # type: (*str) -> str
+	return '\\'.join(path_components)
 
-def mpq_file_to_ref(file_path): # type: (str) -> str
+def mpq_file_ref(*path_components): # type: (*str) -> str
+	return 'MPQ:' + mpq_file_name(*path_components)
+
+def mpq_file_path_to_file_name(file_path): # type: (str) -> str
+	if not file_path.startswith(mpq_dir):
+		return file_path
+	path_components = _os.path.split(_os.path.relpath(file_path, mpq_dir))
+	return mpq_file_name(*path_components)
+
+def mpq_file_path_to_ref(file_path): # type: (str) -> str
 	if not file_path.startswith(mpq_dir):
 		return file_path
 	path_components = _os.path.split(_os.path.relpath(file_path, mpq_dir))
 	return mpq_file_ref(*path_components)
 
-def mpq_ref_to_file(file_ref): # type: (str) -> str
+def mpq_ref_to_file_path(file_ref): # type: (str) -> str
 	if not file_ref.startswith('MPQ:'):
 		return file_ref
 	path_components = file_ref[4:].split('\\')
 	return mpq_file_path(*path_components)
+
+def mpq_ref_to_file_name(file_ref): # type: (str) -> str
+	if not file_ref.startswith('MPQ:'):
+		return file_ref
+	return file_ref[4:]
 
 ## Docs
 docs_dir = _os.path.join(base_dir, 'Docs')

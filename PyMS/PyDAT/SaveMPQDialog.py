@@ -1,7 +1,7 @@
 
 from .DataID import DATID, DataID
 
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
 from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -68,37 +68,34 @@ class SaveMPQDialog(PyMSDialog):
 			else:
 				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq')])
 			if file:
-				if self.sempq.get():
-					if os.path.exists(file):
-						h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-					else:
-						try:
-							shutil.copy(os.path.join(BASE_DIR,'PyMS','Data','SEMPQ.exe'), file)
-							h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-						except:
-							h = -1
-				else:
-					h = MpqOpenArchiveForUpdate(file, MOAU_OPEN_ALWAYS | MOAU_MAINTAIN_LISTFILE)
-				if SFInvalidHandle(h):
-					ErrorDialog(self, PyMSError('Saving','Could not open %sMPQ "%s".' % (['','SE'][self.sempq.get()],file)))
-					return
-				undone = []
-				buffer = None
-				for filename,filepath,id in selected_options:
+				if self.sempq.get() and not os.path.exists(file):
 					try:
-						if isinstance(id, DATID):
-							dat_data = self.parent.data_context.dat_data(id)
-							buffer = dat_data.save_data()
-						else:
-							data_data = self.parent.data_context.data_data(id)
-							buffer = data_data.save_data()
-						MpqAddFileFromBuffer(h, buffer, filepath, MAFA_COMPRESS | MAFA_REPLACE_EXISTING)
-						buffer = None
+						shutil.copy(os.path.join(BASE_DIR,'PyMS','Data','SEMPQ.exe'), file)
 					except:
-						undone.append(filename)
-				MpqCloseUpdatedArchive(h)
-				if undone:
-					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(undone))
+						ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
+						return
+				not_saved = []
+				try:
+					mpq = MPQ.of(file)
+					with mpq.open_or_create():
+						buffer = None
+						for filename,filepath,id in selected_options:
+							try:
+								if isinstance(id, DATID):
+									dat_data = self.parent.data_context.dat_data(id)
+									buffer = dat_data.save_data()
+								else:
+									data_data = self.parent.data_context.data_data(id)
+									buffer = data_data.save_data()
+								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)
+								buffer = None
+							except:
+								not_saved.append(filename)
+				except PyMSError as e:
+					ErrorDialog(self, e)
+					return
+				if not_saved:
+					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(not_saved))
 
 	def ok(self):
 		self.parent.data_context.settings.sempq = not not self.sempq.get()

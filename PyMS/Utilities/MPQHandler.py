@@ -1,20 +1,23 @@
 
-from utils import BASE_DIR
-from setutils import PYMS_SETTINGS
-from fileutils import BadFile
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import MPQ
+
+from .setutils import PYMS_SETTINGS
+from .fileutils import BadFile, SFile
+from . import Assets
 
 import os
 
 class MPQHandler(object):
-	def __init__(self, mpqs=[], listfiles=None):
-		self.mpqs = list(mpqs)
+	def __init__(self, mpq_paths=[], listfiles=None): # type: (list[str], list[str] | None) -> MPQHandler
+		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
 		if listfiles == None:
-			self.listfiles = [os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')]
+			self.listfiles = [Assets.data_file_path('Listfile.txt')]
 		else:
 			self.listfiles = listfiles
-		self.handles = {}
 		self.open = False
+
+	def mpq_paths(self): # type: () -> list[str]
+		return list(mpq.path for mpq in self.mpqs)
 
 	def clear(self):
 		if self.open:
@@ -22,56 +25,50 @@ class MPQHandler(object):
 		self.mpqs = []
 
 	def add_defaults(self):
-		changed = False
 		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
-		if scdir and os.path.isdir(scdir):
-			for f in ['Patch_rt','BrooDat','StarDat']:
-				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
-				if os.path.exists(p) and not p in self.mpqs:
-					h = SFileOpenArchive(p)
-					if not SFInvalidHandle(h):
-						SFileCloseArchive(h)
-						self.mpqs.append(p)
-						changed = True
+		if not scdir or not os.path.isdir(scdir):
+			return False
+		changed = False
+		for mpq_name in ['Patch_rt','BrooDat','StarDat']:
+			mpq_path = os.path.join(scdir, '%s%smpq' % (mpq_name, os.extsep))
+			if not os.path.exists(mpq_path) or not not [mpq for mpq in self.mpqs if mpq.path == mpq_path]:
+				continue
+			mpq = MPQ.of(mpq_path)
+			try:
+				mpq.open()
+				mpq.close()
+				self.mpqs.append(mpq)
+				changed = True
+			except:
+				pass
 		return changed
 
-	def set_mpqs(self, mpqs):
+	def set_mpqs(self, mpq_paths):
 		if self.open:
 			# raise PyMSError('MPQ','Cannot set mpqs when the current mpqs are open.')
 			self.close_mpqs()
-		self.mpqs = list(mpqs)
+		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
 
 	def open_mpqs(self):
-		missing = [[],[]]
-		if SFMPQ_LOADED:
-			handles = {}
+		failed = []
+		if MPQ.supported():
 			self.open = True
-			for m in self.mpqs:
-				if not os.path.exists(m):
-					missing[0].append(m)
-					continue
-				handles[m] = MpqOpenArchiveForUpdateEx(m, MOAU_OPEN_EXISTING | MOAU_READ_ONLY)
-				if SFInvalidHandle(handles[m]):
-					missing[1].append(m)
-				elif self.open == True:
-					self.open = handles[m]
-			self.handles = handles
-		return missing
-
-	def missing(self, missing):
-		t = ''
-		if missing[0]:
-			t = 'Could not find:\n\t' + '\n\t'.join(missing[0])
-		if missing[1]:
-			t += 'Error loading:\n\t' + '\n\t'.join(missing[1])
-		return t
+			for mpq in self.mpqs:
+				try:
+					for listfile_path in self.listfiles:
+						mpq.add_listfile(listfile_path)
+					mpq.open()
+				except:
+					failed.append(mpq.path)
+		return failed
 
 	def close_mpqs(self):
 		self.open = False
-		for h in self.handles.values():
-			if not SFInvalidHandle(h):
-				MpqCloseUpdatedArchive(h)
-		self.handles = {}
+		for mpq in self.mpqs:
+			try:
+				mpq.close()
+			except:
+				pass
 
 	_SOURCE_FOLDER = 'FOLDER'
 	_SOURCE_MPQ = 'MPQ'
@@ -104,7 +101,7 @@ class MPQHandler(object):
 
 	def get_file_mpq(self, path):
 		file = BadFile(path)
-		if not SFMPQ_LOADED:
+		if not MPQ.supported():
 			return file
 		if path.startswith('MPQ:'):
 			path = path[4:]
@@ -113,71 +110,64 @@ class MPQHandler(object):
 			self.open_mpqs()
 			close = True
 		if self.open and self.open != True:
-			file_handle = SFileOpenFileEx(None, path, SFILE_SEARCH_ALL_OPEN)
-			if not SFInvalidHandle(file_handle):
-				file_contents,_ = SFileReadFile(file_handle)
-				SFileCloseFile(file_handle)
-				file = SFile(file_contents, path)
+			for mpq in self.mpqs:
+				try:
+					file = SFile(mpq.read_file(path), path)
+					break
+				except:
+					pass
 		if close:
 			self.close_mpqs()
 		return file
 
 	def get_file_folder(self, path):
 		if path.startswith('MPQ:'):
-			path = os.path.join(BASE_DIR, 'PyMS', 'MPQ', *path[4:].split('\\'))
+			path = Assets.mpq_ref_to_file_path(path)
 		if os.path.exists(path):
 			return open(path, 'rb')
 		return BadFile(path)
 
 	def has_file(self, path, folder=None):
-		mpq = path.startswith('MPQ:')
-		if mpq:
-			path = path[4:].split('\\')
-		if SFMPQ_LOADED and not folder and mpq:
+		in_mpq = path.startswith('MPQ:')
+		if MPQ.supported() and not folder and in_mpq:
+			file_name = Assets.mpq_ref_to_file_name(path)
+			close = False
 			if self.open == False:
 				self.open_mpqs()
 				close = True
-			else:
-				close = False
-			if self.open and self.open != True:
-				f = SFileOpenFileEx(self.open, '\\'.join(path), SFILE_SEARCH_ALL_OPEN)
-				if not SFInvalidHandle(f):
-					SFileCloseFile(f)
-					return True
+			if not self.open:
+				return False
+			has_file = False
+			for mpq in self.mpqs:
+				try:
+					if mpq.has_file(file_name):
+						has_file = True
+						break
+				except:
+					pass
 			if close:
 				self.close_mpqs()
+			return has_file
 		if folder != False:
-			if mpq:
-				return os.path.exists(os.path.join(BASE_DIR, 'PyMS', 'MPQ', *path))
+			if in_mpq:
+				return os.path.exists(Assets.mpq_ref_to_file_path(path))
 			else:
 				return os.path.exists(path)
 		return False
 
-	# Type: 0 = structs, 1 = dict
-	def list_files(self, type=0, handles=None):
-		if type == 1:
-			files = {}
-		else:
-			files = []
-		if self.mpqs:
-			if handles == None:
-				handles = self.handles.values()
-			elif isinstance(handles, int):
-				handles = [handles]
-			if self.open == False:
-				self.open_mpqs()
-				close = True
-			else:
-				close = False
-			for h in handles:
-				for e in SFileListFiles(h, '\r\n'.join(self.listfiles)):
-					if e.fileExists:
-						if type == 1:
-							if not e.fileName in files:
-								files[e.fileName] = {}
-							files[e.locale] = e
-						else:
-							files.append(e)
-			if close:
-				self.close_mpqs()
+	def list_files(self):
+		close = False
+		if self.open == False:
+			self.open_mpqs()
+			close = True
+		files = []
+		for mpq in self.mpqs:
+			try:
+				for file in mpq.list_files():
+					if not file in files:
+						files.append(file)
+			except:
+				continue
+		if close:
+			self.close_mpqs()
 		return files

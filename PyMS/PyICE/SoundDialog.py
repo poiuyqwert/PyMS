@@ -1,7 +1,7 @@
 
 from ..FileFormats import IScriptBIN
 from ..FileFormats import TBL
-from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
+from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats import DAT
 
 from ..Utilities.utils import BASE_DIR, play_sound
@@ -23,7 +23,7 @@ class SoundDialog(PyMSDialog):
 		self.dd = DropDown(f, self.id, ['%03s %s' % (n,TBL.decompile_string(self.toplevel.sfxdatatbl.strings[self.toplevel.soundsdat.get_entry(n).sound_file-1][:-1])) for n in range(self.toplevel.soundsdat.entry_count())], width=30)
 		self.dd.pack(side=LEFT, padx=1)
 		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','fwp.gif'))
-		b = Button(f, image=i, width=20, height=20, command=self.play, state=NORMAL if (play_sound and SFMPQ_LOADED) else DISABLED)
+		b = Button(f, image=i, width=20, height=20, command=self.play, state=NORMAL if (play_sound and MPQ.supported()) else DISABLED)
 		b.image = i
 		b.pack(side=LEFT, padx=1)
 		f.pack(padx=5,pady=5)

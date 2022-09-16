@@ -9,7 +9,7 @@ from .GeneralSettings import GeneralSettings
 from .CompressionSettings import CompressionSettings
 from .ListfileSettings import ListfileSettings
 
-from ..FileFormats.MPQ.MPQ import *
+from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file

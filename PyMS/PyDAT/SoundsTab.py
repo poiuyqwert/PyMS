@@ -4,7 +4,7 @@ from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
 from ..FileFormats.DAT.SoundsDAT import Sound
-from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
+from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.utils import BASE_DIR, couriernew, play_sound
 from ..Utilities.IntegerVar import IntegerVar
@@ -121,7 +121,7 @@ class SoundsTab(DATTab):
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
-		self.playbtn['state'] = NORMAL if (play_sound and SFMPQ_LOADED and n > 0) else DISABLED
+		self.playbtn['state'] = NORMAL if (play_sound and MPQ.supported() and n > 0) else DISABLED
 
 	def play(self):
 		if play_sound:

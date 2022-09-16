@@ -1,10 +1,9 @@
 
-from ..FileFormats.MPQ.SFmpq import SFileListFiles
-
 from .utils import BASE_DIR
 from .PyMSDialog import PyMSDialog
 from .TextDropDown import TextDropDown
 from .UIKit import *
+from . import Assets
 
 import os
 
@@ -84,21 +83,16 @@ class MPQSelect(PyMSDialog):
 		self.listbox.see(a)
 
 	def listfiles(self):
-		filelists = os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')
 		self.files = []
-		self.mpqhandler.open_mpqs()
-		for h in self.mpqhandler.handles.values():
-			for e in SFileListFiles(h, filelists):
-				if e.fileName and not e.fileName in self.files:
-					self.files.append(e.fileName)
-		self.mpqhandler.close_mpqs()
-		m = os.path.join(BASE_DIR,'PyMS','MPQ','')
-		for p in os.walk(m):
-			folder = p[0].replace(m,'')
-			for f in p[2]:
-				a = '%s\\%s' % (folder,f)
-				if not a in self.files:
-					self.files.append(a)
+		for file_entry in self.mpqhandler.list_files():
+			if not file_entry.file_name in self.files:
+				self.files.append(file_entry.file_name)
+		mpq_path = os.path.join(BASE_DIR,'PyMS','MPQ','')
+		for path,_,filenames in os.walk(mpq_path):
+			for filename in filenames:
+				mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
+				if not mpq_filename in self.files:
+					self.files.append(mpq_filename)
 		self.files.sort()
 
 	def updatelist(self):

@@ -1,5 +1,5 @@
 
-from ..FileFormats.MPQ.SFmpq import *
+from ..FileFormats.MPQ.MPQ import MPQ
 
 from .utils import BASE_DIR
 from .setutils import PYMS_SETTINGS
@@ -125,14 +125,17 @@ class MPQSettings(Frame):
 		if add:
 			for i in add:
 				if not i in self.mpqs:
-					h = SFileOpenArchive(i)
-					if not SFInvalidHandle(h):
-						SFileCloseFile(h)
-						if n == END:
-							self.mpqs.append(i)
-						else:
-							self.mpqs.insert(int(n),i)
-						self.listbox.insert(n,i)
+					mpq = MPQ.of(i)
+					try:
+						mpq.open()
+						mpq.close()
+					except:
+						continue
+					if n == END:
+						self.mpqs.append(i)
+					else:
+						self.mpqs.insert(int(n),i)
+					self.listbox.insert(n,i)
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(s)
 			self.listbox.see(s)

@@ -358,7 +358,7 @@ class PyFNT(MainWindow):
 
 		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
 		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpqs
+			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
 		e = self.open_files()
 
 		if guifile:

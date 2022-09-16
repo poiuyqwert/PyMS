@@ -323,8 +323,8 @@ class PyBIN(MainWindow):
 		self.settings.windows.load_window_size('main', self)
 
 		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if not len(self.mpqhandler.mpqs) and self.mpqhandler.add_defaults():
-			self.settings.settings.mpqs = self.mpqhandler.mpqs
+		if not len(self.mpqhandler.mpq_paths()) and self.mpqhandler.add_defaults():
+			self.settings.settings.mpqs = self.mpqhandler.mpq_paths()
 		e = self.open_files()
 
 		if guifile:

@@ -3,7 +3,7 @@ from ..FileFormats import IScriptBIN
 from ..FileFormats import DAT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
-from ..FileFormats.MPQ.SFmpq import SFMPQ_LOADED
+from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.utils import BASE_DIR, couriernew
 from ..Utilities.UIKit import *
@@ -346,7 +346,7 @@ class PreviewerDialog(PyMSDialog):
 			self.prevto.set(0)
 
 	def grp(self, i, pal, frame, *path):
-		if SFMPQ_LOADED and pal in PALETTES:
+		if MPQ.supported() and pal in PALETTES:
 			p = os.path.join(BASE_DIR, 'PyMS','MPQ',os.path.join(*path))
 			path = '\\'.join(path)
 			draw = not path in GRP_CACHE or not frame in GRP_CACHE[path] or not pal in GRP_CACHE[path][frame]
