@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyFNT.PyFNT import PyFNT, LONG_VERSION
-
-from PyMS.FileFormats.FNT import FNT, fnttobmp, bmptofnt
-from PyMS.FileFormats.BMP import BMP
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat, Requirement
+check_compat('PyFNT', Requirement.PIL)
 
 def main():
-	import sys
+	from PyMS.PyFNT.PyFNT import PyFNT, LONG_VERSION
+
+	from PyMS.FileFormats.FNT import FNT, fnttobmp, bmptofnt
+	from PyMS.FileFormats.BMP import BMP
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyfnt.py','pyfnt.pyw','pyfnt.exe']):
 		gui = PyFNT()
 		gui.startup()

@@ -1,5 +1,5 @@
 
-import TBL
+from . import TBL
 
 from ..Utilities.utils import flags
 from ..Utilities.fileutils import load_file

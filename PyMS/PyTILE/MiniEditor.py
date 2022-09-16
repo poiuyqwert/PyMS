@@ -1,6 +1,4 @@
 
-import TilePalette
-
 from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -105,9 +103,10 @@ class MiniEditor(PyMSDialog):
 	def ok(self):
 		self.parent.tileset.vr4.set_image(self.id, self.indexs)
 		self.parent.mark_edited()
+		from .TilePalette import TilePalette
 		if hasattr(self.parent, 'megaload'):
 			self.parent.megaload()
-		elif isinstance(self.parent, TilePalette.TilePalette):
-			TilePalette.TilePalette.TILE_CACHE.clear()
+		elif isinstance(self.parent, TilePalette):
+			TilePalette.TILE_CACHE.clear()
 			self.parent.draw_tiles(force=True)
 		PyMSDialog.ok(self)

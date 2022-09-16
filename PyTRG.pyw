@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION
-
-from PyMS.FileFormats.TRG import TRG
-
-from PyMS.Utilities.utils import BASE_DIR
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyAI')
 
 def main():
-	import sys
+	from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION
+
+	from PyMS.FileFormats.TRG import TRG
+
+	from PyMS.Utilities.utils import BASE_DIR
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pytrg.py','pytrg.pyw','pytrg.exe']):
 		gui = PyTRG()
 		gui.startup()

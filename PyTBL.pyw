@@ -1,15 +1,17 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyTBL.PyTBL import PyTBL, LONG_VERSION
-
-from PyMS.FileFormats import TBL
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyTBL')
 
 def main():
-	import sys
+	from PyMS.PyTBL.PyTBL import PyTBL, LONG_VERSION
+
+	from PyMS.FileFormats import TBL
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pytbl.py','pytbl.pyw','pytbl.exe']):
 		gui = PyTBL()
 		gui.startup()

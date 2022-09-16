@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyICE.PyICE import PyICE, LONG_VERSION
-
-from PyMS.FileFormats import IScriptBIN
-
-from PyMS.Utilities.utils import BASE_DIR
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyICE')
 
 def main():
-	import sys
+	from PyMS.PyICE.PyICE import PyICE, LONG_VERSION
+
+	from PyMS.FileFormats import IScriptBIN
+
+	from PyMS.Utilities.utils import BASE_DIR
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyice.py','pyice.pyw','pyice.exe']):
 		gui = PyICE()
 		gui.startup()

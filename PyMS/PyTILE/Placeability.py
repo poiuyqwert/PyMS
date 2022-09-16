@@ -1,6 +1,4 @@
 
-import TilePalette
-
 from ..FileFormats.Tileset.Tileset import megatile_to_photo
 
 from ..Utilities.utils import couriernew
@@ -56,7 +54,8 @@ class Placeability(PyMSDialog):
 
 	def select(self, p):
 		self.selecting = p
-		TilePalette.TilePalette(self, self.settings, 0, self.groups[p[1]][p[0]].get())
+		from .TilePalette import TilePalette
+		TilePalette(self, self.settings, 0, self.groups[p[1]][p[0]].get())
 
 	def change(self, t, id):
 		self.groups[self.selecting[1]][self.selecting[0]].set(id)

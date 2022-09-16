@@ -1,6 +1,6 @@
 
-import StormLib as _StormLib
-import SFmpq as _SFmpq
+from . import StormLib as _StormLib
+from . import SFmpq as _SFmpq
 
 import re as _re
 import os as _os

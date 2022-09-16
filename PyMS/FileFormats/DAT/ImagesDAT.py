@@ -1,7 +1,7 @@
 
-import AbstractDAT
-import DATFormat
-import DATCoders
+from . import AbstractDAT
+from . import DATFormat
+from . import DATCoders
 
 class Image(AbstractDAT.AbstractDATEntry):
 	class Property:

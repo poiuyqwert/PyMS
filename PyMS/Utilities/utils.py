@@ -2,8 +2,14 @@
 from .PyMSError import PyMSError
 
 from textwrap import wrap
-from thread import start_new_thread
 import os, sys, platform, re, tempfile, errno
+
+try:
+	from thread import start_new_thread
+except:
+	import threading
+	def start_new_thread(target, args):
+		threading.Thread(target=target, args=args).start()
 
 WIN_REG_AVAILABLE = True
 try:
@@ -12,9 +18,9 @@ except:
 	WIN_REG_AVAILABLE = False
 
 if hasattr(sys, 'frozen'):
-	BASE_DIR = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
+	BASE_DIR = os.path.dirname(sys.executable)
 else:
-	BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))))
+	BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 import json
 with open(os.path.join(BASE_DIR, 'PyMS', 'versions.json'), 'r') as f:
@@ -61,8 +67,17 @@ def parse_geometry(geometry):
 def parse_scrollregion(scrollregion):
 	return tuple(int(v) for v in scrollregion.split(' '))
 
+def parse_resizable(resizable): # type: (tuple[int, int] | str) -> tuple[bool, bool]
+	if isinstance(resizable, str):
+		resizable = resizable.split(' ')
+	return tuple(bool(v) for v in resizable)
+
+try:
+	_unicode = unicode
+except:
+	_unicode = str
 def isstr(s):
-	return isinstance(s,str) or isinstance(s,unicode)
+	return isinstance(s,str) or isinstance(s, _unicode)
 
 def nearest_multiple(v, m, r=round):
 	return m * int(r(v / float(m)))

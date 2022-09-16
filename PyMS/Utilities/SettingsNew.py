@@ -1,5 +1,5 @@
 
-from .utils import isstr, RE_GEOMETRY, parse_geometry
+from .utils import isstr, RE_GEOMETRY, parse_geometry, parse_resizable
 from .UIKit import FileDialog
 from .FileType import FileType
 from . import Assets
@@ -126,7 +126,7 @@ class WindowGeometry(SettingObject):
 		self._default_centered = default_centered
 
 	def save(self, window, closing=True):
-		resizable_w,resizable_h = (bool(int(v)) for v in window.resizable().split(' '))
+		resizable_w,resizable_h = parse_resizable(window.resizable())
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
 			z = ''
@@ -147,7 +147,7 @@ class WindowGeometry(SettingObject):
 			w,h,x,y,fullscreen = parse_geometry(self._geometry)
 			# if position:
 			# 	x,y = position
-			resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
+			resizable_w,resizable_h = parse_resizable(window.resizable())
 			can_fullscreen = (resizable_w and resizable_h)
 			if (resizable_w or resizable_h) and w != None and h != None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())

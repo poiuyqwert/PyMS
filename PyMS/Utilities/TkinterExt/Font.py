@@ -1,5 +1,9 @@
 
-import tkFont as _Fonts
+try:
+	import tkFont as _Fonts
+except:
+	import tkinter.font as _Fonts
+
 from uuid import uuid4 as _uuid4
 
 class Font(_Fonts.Font):

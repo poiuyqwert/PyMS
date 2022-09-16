@@ -1,7 +1,7 @@
 
-from CHKRequirements import CHKRequirements
-from CHKSectionUnknown import CHKSectionUnknown
-from Sections import *
+from .CHKRequirements import CHKRequirements
+from .CHKSectionUnknown import CHKSectionUnknown
+from .Sections import *
 
 from ...FileFormats import TBL, AIBIN
 

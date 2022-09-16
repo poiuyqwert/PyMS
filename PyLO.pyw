@@ -1,15 +1,17 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyLO.PyLO import PyLO, LONG_VERSION
-
-from PyMS.FileFormats.LO import LO
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyLO')
 
 def main():
-	import sys
+	from PyMS.PyLO.PyLO import PyLO, LONG_VERSION
+
+	from PyMS.FileFormats.LO import LO
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pylo.py','pylo.pyw','pylo.exe']):
 		gui = PyLO()
 		gui.startup()

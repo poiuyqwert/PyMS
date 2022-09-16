@@ -1,5 +1,5 @@
 
-import GAField
+from . import GAField
 
 import urlparse, urllib, urllib2, platform, threading, time, sys
 

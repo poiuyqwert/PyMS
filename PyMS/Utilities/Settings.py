@@ -1,5 +1,5 @@
 
-from .utils import BASE_DIR, parse_geometry, isstr
+from .utils import BASE_DIR, parse_geometry, parse_resizable, isstr
 from .WarnDialog import WarnDialog
 from .UIKit import FileDialog, HORIZONTAL
 
@@ -140,7 +140,7 @@ class SettingDict(object):
 			panedwindow.sash_place(n, *size)
 
 	def save_window_size(self, key, window, closing=True):
-		resizable_w,resizable_h = (bool(int(v)) for v in window.resizable().split(' '))
+		resizable_w,resizable_h = parse_resizable(window.resizable())
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
 			z = ''
@@ -162,7 +162,7 @@ class SettingDict(object):
 			w,h,x,y,fullscreen = parse_geometry(geometry)
 			if position:
 				x,y = position
-			resizable_w,resizable_h = (bool(v) for v in window.resizable().split(' '))
+			resizable_w,resizable_h = parse_resizable(window.resizable())
 			can_fullscreen = (resizable_w and resizable_h)
 			if (resizable_w or resizable_h) and w != None and h != None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())

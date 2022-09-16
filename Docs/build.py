@@ -1,5 +1,5 @@
 PyMS = (1,2,1) * 2
-import PyMSUtils, re
+from . import PyMSUtils, re
 infoheaderstart = """<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">

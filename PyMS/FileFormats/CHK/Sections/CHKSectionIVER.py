@@ -23,7 +23,7 @@ class CHKSectionIVER(CHKSection):
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionIVER.RELEASE
-		from CHKSectionVER import CHKSectionVER
+		from .CHKSectionVER import CHKSectionVER
 		verSect = chk.sections.get(CHKSectionVER.NAME)
 		if verSect and verSect.version == CHKSectionVER.BETA:
 			self.version = CHKSectionIVER.BETA

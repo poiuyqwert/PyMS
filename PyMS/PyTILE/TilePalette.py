@@ -1,10 +1,5 @@
 
-import TilePaletteView
-import GraphicsImporter
-import MegaTileSettingsExporter
-import SettingsImporter
-import MegaEditor
-import MiniEditor
+from .TilePaletteView import TilePaletteView
 
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
 
@@ -93,7 +88,7 @@ class TilePalette(PyMSDialog):
 					Frame(toolbar, width=btn).pack(side=LEFT)
 			toolbar.pack(fill=X)
 
-		self.palette = TilePaletteView.TilePaletteView(self, self.tiletype, self.start_selected)
+		self.palette = TilePaletteView(self, self.tiletype, self.start_selected)
 		self.palette.pack(side=TOP, fill=BOTH, expand=1)
 
 		self.status = StringVar()
@@ -221,7 +216,8 @@ class TilePalette(PyMSDialog):
 			self.tileset.export_graphics(self.tiletype, path, self.palette.selected)
 
 	def import_graphics(self):
-		GraphicsImporter.GraphicsImporter(self, self.settings, self.tiletype, self.palette.selected)
+		from .GraphicsImporter import GraphicsImporter
+		GraphicsImporter(self, self.settings, self.tiletype, self.palette.selected)
 
 	def imported_graphics(self, new_ids):
 		TilePalette.TILE_CACHE.clear()
@@ -243,20 +239,24 @@ class TilePalette(PyMSDialog):
 			if path:
 				self.tileset.export_settings(TILETYPE_GROUP, path, self.palette.selected)
 		elif self.tiletype == TILETYPE_MEGA:
-			MegaTileSettingsExporter.MegaTileSettingsExporter(self, self.settings, self.palette.selected)
+			from .MegaTileSettingsExporter import MegaTileSettingsExporter
+			MegaTileSettingsExporter(self, self.settings, self.palette.selected)
 
 	def import_settings(self):
 		if not len(self.palette.selected):
 			return
-		SettingsImporter.SettingsImporter(self, self.settings, self.tiletype, self.palette.selected)
+		from .SettingsImporter import SettingsImporter
+		SettingsImporter(self, self.settings, self.tiletype, self.palette.selected)
 
 	def edit(self, e=None):
 		if not len(self.palette.selected):
 			return
 		if self.tiletype == TILETYPE_MEGA:
-			MegaEditor.MegaEditor(self, self.settings, self.palette.selected[0])
+			from .MegaEditor import MegaEditor
+			MegaEditor(self, self.settings, self.palette.selected[0])
 		elif self.tiletype == TILETYPE_MINI:
-			MiniEditor.MiniEditor(self, self.palette.selected[0])
+			from .MiniEditor import MiniEditor
+			MiniEditor(self, self.palette.selected[0])
 
 	def dismiss(self):
 		self.settings.windows.palette.save_window_size(('group','mega','mini')[self.tiletype], self)

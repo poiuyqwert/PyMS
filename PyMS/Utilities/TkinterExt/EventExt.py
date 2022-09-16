@@ -1,5 +1,8 @@
 
-import Tkinter as Tk
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 # Return from event callbacks to break further processing of the event
 Tk.Event.BREAK = 'break'

@@ -8,7 +8,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.AtomicWriter import AtomicWriter
 
-import struct, re, os, sys
+import struct, re, os
 from math import log, floor
 from zlib import compress, decompress
 from collections import OrderedDict
@@ -305,7 +305,6 @@ class AIBIN:
 		self.externaljumps = [[{},{}],[{},{}]]
 		self.varinfo = OrderedDict()
 		self.aiinfo = {}
-		self.warnings = None
 		self.bwscript = None
 		self.warnings = []
 		self.nobw = bwscript == None
@@ -498,7 +497,7 @@ class AIBIN:
 
 	def load_file(self, file, addstrings=False):
 		data = load_file(file, 'aiscript.bin')
-		self.load_data(data, addstrings)
+		return self.load_data(data, addstrings)
 
 	def load_data(self, data, addstrings=False):
 		try:
@@ -1861,7 +1860,7 @@ class BWBIN(AIBIN):
 
 	def load_file(self, file):
 		data = load_file(file, 'bwscript.bin')
-		self.load_data(data)
+		return self.load_data(data)
 
 	def load_data(self, data):
 		try:

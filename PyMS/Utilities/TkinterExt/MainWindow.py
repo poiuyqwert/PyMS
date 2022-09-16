@@ -1,5 +1,8 @@
 
-import Tkinter as Tk
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 class MainWindow(Tk.Tk):
 	def startup(self):

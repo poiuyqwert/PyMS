@@ -1,6 +1,6 @@
 
-import TBL
-import AIBIN
+from . import TBL
+from . import AIBIN
 
 from ..Utilities.utils import BASE_DIR, isstr, flags
 from ..Utilities.fileutils import load_file

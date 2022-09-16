@@ -1,6 +1,4 @@
 
-import TilePalette
-
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
 
 from ..Utilities.utils import BASE_DIR, couriernew
@@ -238,7 +236,8 @@ class GraphicsImporter(PyMSDialog):
 			id = self.megatiles_null_id.get()
 		elif tiletype == TILETYPE_MINI:
 			id = self.minitiles_null_id.get()
-		TilePalette.TilePalette(self, self.settings, tiletype, id)
+		from .TilePalette import TilePalette
+		TilePalette(self, self.settings, tiletype, id)
 	def change(self, tiletype, id):
 		if tiletype == TILETYPE_MEGA:
 			self.megatiles_null_id.set(id)

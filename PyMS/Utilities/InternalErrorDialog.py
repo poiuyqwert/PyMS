@@ -4,7 +4,7 @@ from .PyMSDialog import PyMSDialog
 from .Hotlink import Hotlink
 from .UIKit import *
 
-import traceback, webbrowser, os
+import traceback, os
 
 class InternalErrorDialog(PyMSDialog):
 	CAPTURE_NONE = 0
@@ -28,7 +28,7 @@ class InternalErrorDialog(PyMSDialog):
 		self.bind('<Control-a>', self.selectall)
 		Label(self, text='The PyMS program "%s" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information.' % self.prog, justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
 		r = Frame(self)
-		Hotlink(r, 'Contact', self.contact).pack(side=RIGHT, padx=10, pady=2)
+		Hotlink(r, 'Contact', 'file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')).pack(side=RIGHT, padx=10, pady=2)
 		r.pack(fill=X)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
@@ -64,9 +64,6 @@ class InternalErrorDialog(PyMSDialog):
 		if self.handler:
 			self.handler.clear_window()
 		PyMSDialog.ok(self)
-
-	def contact(self, e=None):
-		webbrowser.open(os.path.join(BASE_DIR, 'Docs', 'intro.html'))
 
 	def add_text(self, text):
 		self.text['state'] = NORMAL

@@ -19,7 +19,7 @@ class CHKSectionTYPE(CHKSection):
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
 		self.type = CHKSectionTYPE.BROODWAR
-		from CHKSectionVER import CHKSectionVER
+		from .CHKSectionVER import CHKSectionVER
 		verSect = chk.sections.get(CHKSectionVER.NAME)
 		if verSect and not verSect.type == CHKSectionVER.BW:
 			self.type = CHKSectionTYPE.STARCRAFT

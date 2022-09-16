@@ -1,5 +1,8 @@
 
-import Tkinter as Tk
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 def _clipboard_set(obj, text):
 	obj.clipboard_clear()

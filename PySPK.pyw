@@ -1,11 +1,13 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PySPK.PySPK import PySPK, LONG_VERSION
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat, Requirement
+check_compat('PySPK', Requirement.PIL)
 
 def main():
-	import sys
+	from PyMS.PySPK.PySPK import PySPK, LONG_VERSION
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyspk.py','pyspk.pyw','pyspk.exe']):
 		gui = PySPK()
 		gui.startup()

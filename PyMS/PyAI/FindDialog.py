@@ -1,6 +1,4 @@
 
-import StringEditor
-
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL
 
@@ -122,6 +120,7 @@ class FindDialog(PyMSDialog):
 			self.select['state'] = NORMAL
 
 	def browse(self):
+		from . import StringEditor
 		try:
 			s = int(self.stringid.get())
 		except:

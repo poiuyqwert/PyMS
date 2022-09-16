@@ -1,6 +1,6 @@
 
-import AbstractDAT
-import DATFormat
+from . import AbstractDAT
+from . import DATFormat
 
 class Map(AbstractDAT.AbstractDATEntry):
 	class Property:

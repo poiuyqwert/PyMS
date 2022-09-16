@@ -1,5 +1,5 @@
 
-from CHKSectionDIM import CHKSectionDIM
+from .CHKSectionDIM import CHKSectionDIM
 
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements

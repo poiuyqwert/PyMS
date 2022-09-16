@@ -1,7 +1,4 @@
 
-import MiniEditor
-import TilePalette
-
 from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TILETYPE_MINI
 
 from ..Utilities.utils import BASE_DIR, couriernew
@@ -124,7 +121,8 @@ class MegaEditorView(Frame):
 
 	def editor(self):
 		minitile_image_id = self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0]
-		MiniEditor.MiniEditor(self.delegate, minitile_image_id)
+		from .MiniEditor import MiniEditor
+		MiniEditor(self.delegate, minitile_image_id)
 
 	def set_enabled(self, enabled):
 		self.enabled = enabled
@@ -321,8 +319,9 @@ class MegaEditorView(Frame):
 		self.load_megatile()
 
 	def redraw_delegate(self):
-		if self.megatile_id in TilePalette.TilePalette.TILE_CACHE:
-			del TilePalette.TilePalette.TILE_CACHE[self.megatile_id]
+		from .TilePalette import TilePalette
+		if self.megatile_id in TilePalette.TILE_CACHE:
+			del TilePalette.TILE_CACHE[self.megatile_id]
 		if hasattr(self.delegate, 'draw_group'):
 			self.delegate.draw_group()
 
@@ -343,7 +342,8 @@ class MegaEditorView(Frame):
 		self.mark_edited()
 
 	def choose(self):
-		TilePalette.TilePalette(
+		from .TilePalette import TilePalette
+		TilePalette(
 			self.delegate,
 			self.settings,
 			TILETYPE_MINI,

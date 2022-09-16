@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyDAT.PyDAT import PyDAT, LONG_VERSION
-
-from PyMS.FileFormats.DAT import *
-
-from PyMS.Utilities.utils import BASE_DIR
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyDAT')
 
 def main():
-	import sys
+	from PyMS.PyDAT.PyDAT import PyDAT, LONG_VERSION
+
+	from PyMS.FileFormats import DAT
+
+	from PyMS.Utilities.utils import BASE_DIR
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pydat.py','pydat.pyw','pydat.exe']):
 		gui = PyDAT()
 		gui.startup()
@@ -43,7 +45,7 @@ def main():
 			path = os.path.dirname(args[0])
 			if not path:
 				path = os.path.abspath('')
-			dat = [UnitsDAT,WeaponsDAT,FlingyDAT,SpritesDAT,ImagesDAT,UpgradesDAT,TechDAT,SoundsDAT,PortraitsDAT,CampaignDAT,OrdersDAT][opt.type]()
+			dat = [DAT.UnitsDAT,DAT.WeaponsDAT,DAT.FlingyDAT,DAT.SpritesDAT,DAT.ImagesDAT,DAT.UpgradesDAT,DAT.TechDAT,DAT.SoundsDAT,DAT.PortraitsDAT,DAT.CampaignDAT,DAT.OrdersDAT][opt.type]()
 			if len(args) == 1:
 				if opt.convert:
 					ext = 'txt'

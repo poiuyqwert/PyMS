@@ -1,5 +1,5 @@
 
-from CHKSectionUPGS import CHKSectionUPGS
+from .CHKSectionUPGS import CHKSectionUPGS
 
 from ..CHKRequirements import CHKRequirements
 

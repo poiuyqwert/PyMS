@@ -1,5 +1,8 @@
 
-import Tkinter as Tk
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 class Toplevel(Tk.Toplevel):
 	def make_active(self):

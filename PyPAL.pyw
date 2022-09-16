@@ -1,15 +1,17 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyPAL.PyPAL import PyPAL, LONG_VERSION
-
-from PyMS.FileFormats.Palette import Palette
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyPAL')
 
 def main():
-	import sys
+	from PyMS.PyPAL.PyPAL import PyPAL, LONG_VERSION
+
+	from PyMS.FileFormats.Palette import Palette
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pypal.py','pypal.pyw','pypal.exe']):
 		gui = PyPAL()
 		gui.startup()

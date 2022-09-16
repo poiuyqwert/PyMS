@@ -1,15 +1,15 @@
 
-from UnitsDAT import UnitsDAT
-from WeaponsDAT import WeaponsDAT
-from ImagesDAT import ImagesDAT
-from SpritesDAT import SpritesDAT
-from FlingyDAT import FlingyDAT
-from UpgradesDAT import UpgradesDAT
-from TechDAT import TechDAT
-from SoundsDAT import SoundsDAT
-from OrdersDAT import OrdersDAT
-from CampaignDAT import CampaignDAT
-from PortraitsDAT import PortraitsDAT
+from .UnitsDAT import UnitsDAT
+from .WeaponsDAT import WeaponsDAT
+from .ImagesDAT import ImagesDAT
+from .SpritesDAT import SpritesDAT
+from .FlingyDAT import FlingyDAT
+from .UpgradesDAT import UpgradesDAT
+from .TechDAT import TechDAT
+from .SoundsDAT import SoundsDAT
+from .OrdersDAT import OrdersDAT
+from .CampaignDAT import CampaignDAT
+from .PortraitsDAT import PortraitsDAT
 
 from ..TBL import TBL, decompile_string
 

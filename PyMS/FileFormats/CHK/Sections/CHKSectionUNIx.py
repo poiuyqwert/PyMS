@@ -1,5 +1,5 @@
 
-from CHKSectionUNIS import CHKSectionUNIS
+from .CHKSectionUNIS import CHKSectionUNIS
 
 from ..CHKRequirements import CHKRequirements
 

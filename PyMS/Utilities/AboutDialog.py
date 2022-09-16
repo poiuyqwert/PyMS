@@ -3,8 +3,6 @@ from .PyMSDialog import PyMSDialog
 from .Hotlink import Hotlink
 from .UIKit import *
 
-import webbrowser
-
 # TODO: Update about dialog
 class AboutDialog(PyMSDialog):
 	def __init__(self, parent, program, version, thanks=[]):
@@ -25,8 +23,8 @@ class AboutDialog(PyMSDialog):
 		frame = Frame(self)
 		Label(frame, text='Author:').grid(sticky=E)
 		Label(frame, text='Homepage:').grid(sticky=E)
-		Hotlink(frame, 'poiuy_qwert (p.q.poiuy_qwert@gmail.com)', self.author).grid(row=0, column=1, sticky=W)
-		Hotlink(frame, 'https://github.com/poiuyqwert/PyMS', self.homepage).grid(row=1, column=1, sticky=W)
+		Hotlink(frame, 'poiuy_qwert (p.q.poiuy_qwert@gmail.com)', 'mailto:p.q.poiuy.qwert@hotmail.com').grid(row=0, column=1, sticky=W)
+		Hotlink(frame, 'https://github.com/poiuyqwert/PyMS', 'https://github.com/poiuyqwert/PyMS').grid(row=1, column=1, sticky=W)
 		frame.pack(padx=5, pady=2)
 		if self.thanks:
 			Label(self, text='Special Thanks To:', font=Font(bold=True)).pack(pady=2)
@@ -34,7 +32,7 @@ class AboutDialog(PyMSDialog):
 			row = 0
 			for who,why in self.thanks:
 				if who == 'BroodWarAI.com':
-					Hotlink(thanks, who, self.broodwarai, font=Font(bold=True), hover_font=Font(bold=True, underline=True)).grid(sticky=E)
+					Hotlink(thanks, who, 'http://www.broodwarai.com', font=Font(bold=True), hover_font=Font(bold=True, underline=True)).grid(sticky=E)
 				else:
 					Label(thanks, text=who).grid(sticky=E)
 				Label(thanks, text=why).grid(row=row, column=1, sticky=W)
@@ -43,12 +41,3 @@ class AboutDialog(PyMSDialog):
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=5)
 		return ok
-
-	def author(self, e=None):
-		webbrowser.open('mailto:p.q.poiuy.qwert@hotmail.com')
-
-	def homepage(self, e=None):
-		webbrowser.open('https://github.com/poiuyqwert/PyMS')
-
-	def broodwarai(self, e=None):
-		webbrowser.open('http://www.broodwarai.com')

@@ -1,5 +1,5 @@
 
-from DATFormat import DATTypeSize, DATTypePosition, DATTypeExtents, DATTypeHitPoints, DATTypeSupply
+from .DATFormat import DATTypeSize, DATTypePosition, DATTypeExtents, DATTypeHitPoints, DATTypeSupply
 
 from ...Utilities.PyMSError import PyMSError
 

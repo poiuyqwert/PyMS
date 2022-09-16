@@ -5,7 +5,7 @@ from .PyMSDialog import PyMSDialog
 from .Hotlink import Hotlink
 from .UIKit import *
 
-import webbrowser, json, urllib
+import json, urllib
 from thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
@@ -48,14 +48,11 @@ class UpdateDialog(PyMSDialog):
 		remindme = PYMS_SETTINGS.get('remindme', True)
 		self.remind.set(remindme == True or remindme != VERSIONS['PyMS'])
 		Checkbutton(f, text='Remind me later', variable=self.remind).pack(side=LEFT, padx=5)
-		Hotlink(f, 'Github', self.github).pack(side=RIGHT, padx=5)
+		Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=RIGHT, padx=5)
 		f.pack(fill=X, expand=1)
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=5)
 		return ok
-
-	def github(self, e=None):
-		webbrowser.open('https://github.com/poiuyqwert/PyMS')
 
 	def ok(self):
 		PYMS_SETTINGS.remindme = [VERSIONS['PyMS'],1][self.remind.get()]

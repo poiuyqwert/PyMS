@@ -25,7 +25,7 @@ class CHKSectionVER(CHKSection):
 	def __init__(self, chk):
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionVER.BW
-		from CHKSectionTYPE import CHKSectionTYPE
+		from .CHKSectionTYPE import CHKSectionTYPE
 		typeSect = chk.sections.get(CHKSectionTYPE.NAME)
 		if typeSect and not typeSect.type == CHKSectionTYPE.BROODWAR:
 			self.version = CHKSectionVER.SC104

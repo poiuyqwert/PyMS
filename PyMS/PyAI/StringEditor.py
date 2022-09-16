@@ -1,5 +1,4 @@
 
-from . import FindDialog
 from .EditStringDialog import EditStringDialog
 
 from ..FileFormats import TBL
@@ -90,6 +89,7 @@ class StringEditor(PyMSDialog):
 	def find(self, e=None):
 		if not self.listbox.size():
 			return
+		from . import FindDialog
 		FindDialog.FindDialog(self, True)
 
 	def ok(self):

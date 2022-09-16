@@ -103,19 +103,19 @@ class MPQHandler(object):
 		file = BadFile(path)
 		if not MPQ.supported():
 			return file
-		if path.startswith('MPQ:'):
-			path = path[4:]
+		path = Assets.mpq_ref_to_file_name(path)
 		close = False
 		if self.open == False:
 			self.open_mpqs()
 			close = True
-		if self.open and self.open != True:
-			for mpq in self.mpqs:
-				try:
-					file = SFile(mpq.read_file(path), path)
-					break
-				except:
-					pass
+		if not self.open:
+			return file
+		for mpq in self.mpqs:
+			try:
+				file = SFile(mpq.read_file(path), path)
+				break
+			except:
+				pass
 		if close:
 			self.close_mpqs()
 		return file

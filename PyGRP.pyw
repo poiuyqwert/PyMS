@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyGRP.PyGRP import PyGRP, LONG_VERSION
-from PyMS.PyGRP.utils import grptobmp, bmptogrp
-
-from PyMS.FileFormats.Palette import Palette
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat, Requirement
+check_compat('PyGRP', Requirement.PIL)
 
 def main():
-	import sys
+	from PyMS.PyGRP.PyGRP import PyGRP, LONG_VERSION
+	from PyMS.PyGRP.utils import grptobmp, bmptogrp
+
+	from PyMS.FileFormats.Palette import Palette
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pygrp.py','pygrp.pyw','pygrp.exe']):
 		gui = PyGRP()
 		gui.startup()

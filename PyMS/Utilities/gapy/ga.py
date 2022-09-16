@@ -1,5 +1,5 @@
 
-import GAField, GATarget
+from . import GAField, GATarget
 
 import platform, uuid
 

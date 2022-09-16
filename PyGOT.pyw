@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
-from PyMS.PyGOT.PyGOT import PyGOT, LONG_VERSION
-
-from PyMS.FileFormats.GOT import GOT
-from PyMS.FileFormats.TRG import TRG
-
-from PyMS.Utilities.PyMSError import PyMSError
-
-import os, optparse
+from PyMS.Utilities.Compatability import check_compat
+check_compat('PyGOT')
 
 def main():
-	import sys
+	from PyMS.PyGOT.PyGOT import PyGOT, LONG_VERSION
+
+	from PyMS.FileFormats.GOT import GOT
+	from PyMS.FileFormats.TRG import TRG
+
+	from PyMS.Utilities.PyMSError import PyMSError
+
+	import os, optparse, sys
+
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pygot.py','pygot.pyw','pygot.exe']):
 		gui = PyGOT()
 		gui.startup()

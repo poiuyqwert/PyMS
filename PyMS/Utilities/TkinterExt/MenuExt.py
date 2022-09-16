@@ -1,6 +1,10 @@
 
-import Tkinter as Tk
 from ..TagStateManager import TagStateManager
+
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 class Menu(Tk.Menu):
 	class Item(object):

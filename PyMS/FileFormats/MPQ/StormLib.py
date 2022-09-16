@@ -4,9 +4,9 @@ import os,sys
 
 STORMLIB_DIR = None
 if hasattr(sys, 'frozen'):
-	STORMLIB_DIR = os.path.join(os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding())) ,'PyMS','FileFormats','MPQ')
+	STORMLIB_DIR = os.path.join(os.path.dirname(sys.executable) ,'PyMS','FileFormats','MPQ')
 else:
-	STORMLIB_DIR = os.path.dirname(unicode(__file__, sys.getfilesystemencoding()))
+	STORMLIB_DIR = os.path.dirname(__file__)
 
 _StormLib = None
 if STORMLIB_DIR:

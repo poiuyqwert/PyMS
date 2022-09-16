@@ -1,7 +1,10 @@
 
 from ..utils import is_mac
 
-import Tkinter as Tk
+try:
+	import Tkinter as Tk
+except:
+	import tkinter as Tk
 
 class Canvas(Tk.Canvas):
 	class Item(object):

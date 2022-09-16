@@ -1,6 +1,6 @@
 
-import AbstractDAT
-import DATFormat
+from . import AbstractDAT
+from . import DATFormat
 
 class Flingy(AbstractDAT.AbstractDATEntry):
 	class Property:

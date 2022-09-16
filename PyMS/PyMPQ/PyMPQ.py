@@ -14,7 +14,7 @@ from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import SettingDict, Settings
+from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Toolbar import Toolbar

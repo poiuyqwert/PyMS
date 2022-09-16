@@ -2,6 +2,8 @@
 from .UIKit import Label, Font
 from .EventPattern import *
 
+import webbrowser
+
 class Hotlink(Label):
 	def __init__(self, parent, text, callback=None, font=None, hover_font=None):
 		self.font = font or Font()
@@ -10,7 +12,10 @@ class Hotlink(Label):
 		self.bind(Cursor.Enter, self.enter)
 		self.bind(Cursor.Leave, self.leave)
 		if callback:
-			self.bind(Mouse.Click_Left, callback)
+			if isinstance(callback, str):
+				self.bind(Mouse.Click_Left, lambda *_: webbrowser.open(callback))
+			else:
+				self.bind(Mouse.Click_Left, callback)
 
 	def enter(self, e):
 		self['font'] = self.hover_font

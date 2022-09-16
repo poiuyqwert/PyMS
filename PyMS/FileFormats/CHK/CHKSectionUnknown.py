@@ -1,5 +1,5 @@
 
-from CHKSection import CHKSection
+from .CHKSection import CHKSection
 
 class CHKSectionUnknown(CHKSection):
 	def __init__(self, chk, name):

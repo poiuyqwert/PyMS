@@ -1,5 +1,5 @@
 
-from CHKSectionPTEC import CHKSectionPTEC
+from .CHKSectionPTEC import CHKSectionPTEC
 
 from ..CHKRequirements import CHKRequirements
 

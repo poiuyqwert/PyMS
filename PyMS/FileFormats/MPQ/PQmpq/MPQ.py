@@ -1,7 +1,7 @@
 
 # MPQ functionality based off of SFmpq (by Quantam and ShadowFlare), which is based off StormLib (by Ladislav Zezula)
 
-import MPQCrypt, MPQComp
+from . import MPQCrypt, MPQComp
 
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.Struct import *

@@ -1,5 +1,5 @@
 
-from DATCoders import DATPropertyCoder
+from .DATCoders import DATPropertyCoder
 
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError

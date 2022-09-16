@@ -1,5 +1,5 @@
 
-from CHKSectionTECS import CHKSectionTECS
+from .CHKSectionTECS import CHKSectionTECS
 
 from ..CHKRequirements import CHKRequirements
 

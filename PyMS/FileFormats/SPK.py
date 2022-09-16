@@ -1,5 +1,5 @@
 
-import BMP
+from . import BMP
 
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError

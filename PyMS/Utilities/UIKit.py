@@ -1,14 +1,26 @@
 
-from Tkinter import *
-import tkFileDialog as FileDialog
-import tkMessageBox as MessageBox
-import tkColorChooser as ColorChooser
+try: # Python 2
+	from Tkinter import *
+	import tkFileDialog as FileDialog
+	import tkMessageBox as MessageBox
+	import tkColorChooser as ColorChooser
+except: # Python 3
+	from tkinter import * 
+	import tkinter.filedialog as FileDialog
+	import tkinter.messagebox as MessageBox
+	import tkinter.colorchooser as ColorChooser
 # import Tkdnd
-from PIL import Image as PILImage
 try:
-	from PIL import ImageTk
+	from PIL import Image as PILImage
+	try:
+		from PIL import ImageTk
+	except:
+		import ImageTk
 except:
-	import ImageTk
+	class PILImage(object):
+		pass
+	class ImageTk(object):
+		pass
 
 from .EventPattern import *
 

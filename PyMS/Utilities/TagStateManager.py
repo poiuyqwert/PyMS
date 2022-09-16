@@ -1,5 +1,8 @@
 
-import Tkinter as _Tk
+try:
+	import Tkinter as _Tk
+except:
+	import tkinter as _Tk
 
 class TagStateManager(object):
 	class Item(object):

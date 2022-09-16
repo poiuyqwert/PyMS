@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from utils import is_mac
+from .utils import is_mac
 
 import inspect
 

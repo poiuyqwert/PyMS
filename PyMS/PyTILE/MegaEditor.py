@@ -1,6 +1,5 @@
 
-import MegaEditorView
-import TilePalette
+from . import MegaEditorView
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -29,8 +28,9 @@ class MegaEditor(PyMSDialog):
 
 	def ok(self):
 		if self.edited:
-			if self.editor.megatile_id in TilePalette.TilePalette.TILE_CACHE:
-				del TilePalette.TilePalette.TILE_CACHE[self.editor.megatile_id]
+			from .TilePalette import TilePalette
+			if self.editor.megatile_id in TilePalette.TILE_CACHE:
+				del TilePalette.TILE_CACHE[self.editor.megatile_id]
 			if hasattr(self.parent, 'megaload'):
 				self.parent.megaload()
 			if hasattr(self.parent, 'draw_tiles'):

@@ -364,10 +364,10 @@ class PyBIN(MainWindow):
 		show = not self.show_preview_settings.get()
 		self.show_preview_settings.set(show)
 		if show:
-			self.widgets_toolbar.update_icon('settings_toggle', 'arrow')
+			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrow'))
 			self.preview_settings_frame.grid(sticky=EW)
 		else:
-			self.widgets_toolbar.update_icon('settings_toggle', 'arrowup')
+			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrowup'))
 			self.preview_settings_frame.grid_remove()
 
 	def add_node(self):

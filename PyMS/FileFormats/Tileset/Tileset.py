@@ -9,15 +9,15 @@ except:
 		from ...Utilities.utils import BASE_DIR
 		from ...Utilities.DependencyError import DependencyError
 		import sys, os
-		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', ('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', (('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')),))
 		e.startup()
 		sys.exit()
 
-from CV5 import CV5
-from VF4 import VF4
-from VX4 import VX4
-from VR4 import VR4
-from DDDataBIN import DDDataBIN
+from .CV5 import CV5
+from .VF4 import VF4
+from .VX4 import VX4
+from .VR4 import VR4
+from .DDDataBIN import DDDataBIN
 
 from ..Palette import Palette
 from ..BMP import BMP

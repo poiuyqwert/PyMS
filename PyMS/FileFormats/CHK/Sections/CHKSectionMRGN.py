@@ -1,6 +1,6 @@
 
-from CHKSectionSTR import CHKSectionSTR
-from CHKSectionVER import CHKSectionVER
+from .CHKSectionSTR import CHKSectionSTR
+from .CHKSectionVER import CHKSectionVER
 
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements

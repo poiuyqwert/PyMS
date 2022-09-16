@@ -7,9 +7,9 @@ import os as _os
 import sys as _sys
 
 if hasattr(_sys, 'frozen'):
-	base_dir = _os.path.dirname(unicode(_sys.executable, _sys.getfilesystemencoding()))
+	base_dir = _os.path.dirname(_sys.executable)
 else:
-	base_dir = _os.path.dirname(_os.path.dirname(_os.path.dirname(unicode(__file__, _sys.getfilesystemencoding()))))
+	base_dir = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
 
 ## Images
 images_dir = _os.path.join(base_dir, 'PyMS', 'Images')
