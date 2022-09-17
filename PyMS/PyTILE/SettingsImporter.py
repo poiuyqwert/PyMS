@@ -1,14 +1,12 @@
 
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-
-import os
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
@@ -41,13 +39,12 @@ class SettingsImporter(PyMSDialog):
 		self.auto_close = IntVar()
 		self.auto_close.set(self.settings['import'].settings.get('auto_close', True))
 
-		self.find = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'find.gif'))
 		f = Frame(self)
 		Label(f, text='TXT:', anchor=W).pack(side=TOP, fill=X, expand=1)
 		entryframe = Frame(f)
 		self.settings_entry = Entry(entryframe, textvariable=self.settings_path, state=DISABLED)
 		self.settings_entry.pack(side=LEFT, fill=X, expand=1)
-		Button(entryframe, image=self.find, width=20, height=20, command=self.select_path).pack(side=LEFT, padx=(1,0))
+		Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=self.select_path).pack(side=LEFT, padx=(1,0))
 		entryframe.pack(side=TOP, fill=X, expand=1)
 		f.pack(side=TOP, fill=X, padx=3)
 

@@ -8,12 +8,13 @@ from ..FileFormats import AIBIN
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
-from .utils import BASE_DIR, isstr
+from .utils import isstr
 from .Settings import SettingDict
 from .MPQSelect import MPQSelect
 from .ErrorDialog import ErrorDialog
 from .PyMSError import PyMSError
 from .UIKit import *
+from . import Assets
 
 import os
 
@@ -46,7 +47,6 @@ class SettingsPanel(Frame):
 			self.setdlg = setdlg
 		self.settings = settings
 		self.mpqhandler = mpqhandler
-		self.find = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','find.gif'))
 		self.variables = {}
 		inmpq = False
 		Frame.__init__(self, parent)
@@ -86,7 +86,7 @@ class SettingsPanel(Frame):
 				Label(datframe, text=f, anchor=W).pack(fill=X, expand=1)
 			entryframe = Frame(datframe)
 			e = Entry(entryframe, textvariable=self.variables[f][1], state=DISABLED)
-			b = Button(entryframe, image=self.find, width=20, height=20, command=lambda _f=f,_t=self.types[t],_e=e,_c=c: self.setting(_f,_t,_e,_c))
+			b = Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=lambda _f=f,_t=self.types[t],_e=e,_c=c: self.setting(_f,_t,_e,_c))
 			self.variables[f][2].extend([e,b])
 			if not t == 'Palette':
 				inmpq = True
@@ -109,7 +109,7 @@ class SettingsPanel(Frame):
 		if isinstance(self.settings, SettingDict):
 			return self.settings.lastpath.settings.select_open_file(self, key=t, title="Open a " + t, ext='.' + e, filetypes=f)
 		else:
-			path = self.settings.get('lastpath', BASE_DIR)
+			path = self.settings.get('lastpath', Assets.base_dir)
 			file = FileDialog.askopenfilename(parent=self, title="Open a " + t, defaultextension='.' + e, filetypes=f, initialdir=path)
 			if file:
 				self.settings['lastpath'] = os.path.dirname(file)

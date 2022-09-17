@@ -3,12 +3,10 @@ from .TilePaletteView import TilePaletteView
 
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
 
-from ..Utilities.utils import BASE_DIR
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Tooltip import Tooltip
-
-import os
+from ..Utilities import Assets
 
 class TilePalette(PyMSDialog):
 	OPEN_PALETTE_COUNT = 0
@@ -69,12 +67,11 @@ class TilePalette(PyMSDialog):
 					('import', self.import_settings, 'Import %s Settings (Ctrl+Shift+I)' % typename, NORMAL, 'Ctrl+Shift+I')
 				])
 			self.buttons = {}
+			# TODO: Use toolbar?
 			toolbar = Frame(self)
 			for btn in buttons:
 				if isinstance(btn, tuple):
-					image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', '%s.gif' % btn[0]))
-					button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-					button.image = image
+					button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
 					Tooltip(button, btn[2])
 					button.pack(side=LEFT)
 					self.buttons[btn[0]] = button

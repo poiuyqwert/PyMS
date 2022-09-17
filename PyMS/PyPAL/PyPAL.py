@@ -1,7 +1,7 @@
 
 from ..FileFormats.Palette import Palette
 
-from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -82,7 +82,7 @@ class PyPAL(MainWindow):
 		self.status.set('Load or create a Palette.')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=40)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -268,7 +268,7 @@ class PyPAL(MainWindow):
 	def register(self, e=None):
 		for type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
-				register_registry('PyPAL',type + 'Palette',ext,os.path.join(BASE_DIR, 'PyPAL.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyPAL.ico'))
+				register_registry('PyPAL', ext, type + 'Palette')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break

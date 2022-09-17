@@ -10,7 +10,7 @@ from ..FileFormats.GRP import frame_to_photo, CacheGRP, rle_normal, rle_outline,
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN import IScriptBIN
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.Settings import Settings
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
@@ -89,7 +89,7 @@ class DataContext(object):
 		self.load_hints()
 
 	def load_hints(self):
-		with open(os.path.join(BASE_DIR,'PyMS','Data','Hints.txt'),'r') as hints:
+		with open(Assets.data_file_path('Hints.txt'),'r') as hints:
 			for l in hints:
 				m = re.match('(\\S+)=(.+)\n?', l)
 				if m:
@@ -100,7 +100,7 @@ class DataContext(object):
 		pal = Palette()
 		for p in ['Units','bfire','gfire','ofire','Terrain','Icons']:
 			try:
-				pal.load_file(self.settings.settings.files.get(p, os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+				pal.load_file(self.settings.settings.files.get(p, Assets.palette_file_path('%s%spal' % (p,os.extsep))))
 			except:
 				continue
 			self.palettes[p] = pal.palette

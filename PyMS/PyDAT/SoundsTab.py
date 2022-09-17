@@ -6,13 +6,12 @@ from .DATRef import DATRefs, DATRef
 from ..FileFormats.DAT.SoundsDAT import Sound
 from ..FileFormats.MPQ.MPQ import MPQ
 
-from ..Utilities.utils import BASE_DIR, couriernew, play_sound
+from ..Utilities.utils import  couriernew, play_sound
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
-
-import os
+from ..Utilities import Assets
 
 class SoundsTab(DATTab):
 	DAT_ID = DATID.sfxdata
@@ -33,9 +32,7 @@ class SoundsTab(DATTab):
 		self.sounds = DropDown(f, self.sounddd, [], self.changesound, width=30)
 		self.soundentry.callback = self.sounds.set
 		self.sounds.pack(side=LEFT, fill=X, expand=1, padx=2)
-		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'fwp.gif'))
-		self.playbtn = Button(f, image=i, width=20, height=20, command=self.play)
-		self.playbtn.image = i
+		self.playbtn = Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play)
 		self.playbtn.pack(side=LEFT, padx=1)
 		self.tip(f, 'Sound File', 'SoundFile')
 		f.pack(fill=X)

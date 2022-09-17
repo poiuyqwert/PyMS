@@ -9,7 +9,7 @@ from ..FileFormats import FNT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -25,8 +25,6 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyTBL']
 
@@ -46,7 +44,7 @@ class PyTBL(MainWindow):
 			'font8':'MPQ:font\\font8.fnt',
 			'font10':'MPQ:font\\font10.fnt',
 			'icons':'MPQ:game\\icons.grp',
-			'unitpal':os.path.join(BASE_DIR,'Palettes','Units.pal'),
+			'unitpal':Assets.palette_file_path('Units.pal'),
 		})
 
 		self.tbl = None
@@ -161,7 +159,7 @@ class PyTBL(MainWindow):
 		self.stringstatus = StringVar()
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.stringstatus)
 		statusbar.grid(row=2,column=0, sticky=EW)
 
@@ -344,7 +342,7 @@ class PyTBL(MainWindow):
 			self.update()
 
 	def open_default(self, key=None):
-		self.open(key, os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez','stat_txt.tbl'))
+		self.open(key, Assets.mpq_file_path('rez','stat_txt.tbl'))
 
 	def iimport(self, key=None):
 		if not self.unsaved():
@@ -517,7 +515,7 @@ class PyTBL(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyTBL','','tbl',os.path.join(BASE_DIR, 'PyTBL.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyTBL.ico'))
+			register_registry('PyTBL', 'tbl', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

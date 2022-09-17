@@ -8,8 +8,8 @@ def main():
 
 	from PyMS.FileFormats import DAT
 
-	from PyMS.Utilities.utils import BASE_DIR
 	from PyMS.Utilities.PyMSError import PyMSError
+	from PyMS.Utilities import Assets
 
 	import os, optparse, sys
 
@@ -74,7 +74,7 @@ def main():
 					if opt.basedat:
 						basedat = os.path.abspath(opt.basedat)
 					else:
-						basedat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr','%s%sdat' % (['units','weapons','flingy','sprites','images','upgrades','techdata','sfxdata','portdata','mapdata','orders'][opt.type],os.extsep))
+						basedat = Assets.mpq_file_path('arr','%s%sdat' % (['units','weapons','flingy','sprites','images','upgrades','techdata','sfxdata','portdata','mapdata','orders'][opt.type],os.extsep))
 					print("Loading base DAT file '%s'..." % basedat)
 					dat.load_file(basedat)
 					print(" - '%s' read successfully\nInterpreting file '%s'..." % (basedat,args[0]))

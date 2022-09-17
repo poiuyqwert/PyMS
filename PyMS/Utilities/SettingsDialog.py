@@ -1,5 +1,5 @@
 
-from .utils import BASE_DIR
+from . import Assets
 from .PyMSDialog import PyMSDialog
 from .Notebook import Notebook
 from .MPQSettings import MPQSettings
@@ -7,7 +7,7 @@ from .SettingsPanel import SettingsPanel
 from .ErrorDialog import ErrorDialog
 from .UIKit import *
 
-import os, copy
+import copy
 
 class SettingsDialog(PyMSDialog):
 	def __init__(self, parent, data, min_size, err=None, settings=None, mpqhandler=None):
@@ -65,10 +65,9 @@ class SettingsDialog(PyMSDialog):
 	def save_settings(self):
 		if self.mpqhandler:
 			self.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
-		mpq_dir = os.path.join(BASE_DIR,'PyMS','MPQ','')
 		if self.data:
 			for page,page_data in zip(self.pages,self.data):
-				page.save(page_data,mpq_dir,self.settings)
+				page.save(page_data,Assets.mpq_dir(''),self.settings)
 
 	def ok(self):
 		if self.edited:

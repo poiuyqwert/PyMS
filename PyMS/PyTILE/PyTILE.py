@@ -7,7 +7,7 @@ from .Placeability import Placeability
 from ..FileFormats.Tileset.Tileset import Tileset, TILETYPE_GROUP, TILETYPE_MEGA, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
 from ..FileFormats import TBL
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, couriernew, FFile, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, FFile, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -26,8 +26,6 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-import os
-
 LONG_VERSION = 'v%s' % VERSIONS['PyTILE']
 
 class PyTILE(MainWindow):
@@ -44,7 +42,7 @@ class PyTILE(MainWindow):
 
 		self.stat_txt = TBL.TBL()
 		self.stat_txt_file = ''
-		filen = self.settings.files.get('stat_txt', os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl'))
+		filen = self.settings.files.get('stat_txt', Assets.mpq_file_path('rez', 'stat_txt.tbl'))
 		while True:
 			try:
 				self.stat_txt.load_file(filen)
@@ -173,8 +171,6 @@ class PyTILE(MainWindow):
 		self.copy_doodadgroup_group_string_id.set(self.settings['copy'].doodadgroup.get('group_string_id', True))
 		self.copy_doodadgroup_group_string_id.trace('w', self.action_states)
 
-		self.findimage = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','find.gif'))
-
 		mid = Frame(self)
 		self.palette = TilePaletteView(mid, TILETYPE_GROUP, delegate=self, multiselect=False, sub_select=True)
 		self.palette.pack(side=LEFT, fill=Y)
@@ -301,7 +297,7 @@ class PyTILE(MainWindow):
 		self.disable.append(Entry(f, textvariable=self.megatilee, font=couriernew, width=len(str(self.megatilee.range[1])), state=DISABLED))
 		self.disable[-1].pack(side=LEFT, padx=2)
 		Tooltip(self.disable[-1], 'MegaTile ID:\nID for the selected MegaTile in the current MegaTile Group')
-		self.disable.append(Button(f, image=self.findimage, width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
+		self.disable.append(Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))
 		self.disable[-1].pack(side=LEFT, padx=2)
 		Tooltip(self.disable[-1], 'MegaTile Palette')
 		f.pack(side=TOP, fill=X, padx=3)
@@ -556,9 +552,7 @@ class PyTILE(MainWindow):
 		self.expanded = StringVar()
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, width=45, anchor=W).pack(side=LEFT, padx=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','save.gif'))
-		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
-		self.editstatus.image = image
+		self.editstatus = Label(statusbar, image=Assets.get_image('save'), bd=0, state=DISABLED)
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
 		Label(statusbar, textvariable=self.expanded, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		self.status.set('Load a Tileset.')
@@ -820,7 +814,7 @@ class PyTILE(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyTILE','','cv5',os.path.join(BASE_DIR, 'PyTILE.pyw'),os.path.join(BASE_DIR,'Images','PyTILE.ico'))
+			register_registry('PyTILE', 'cv5', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

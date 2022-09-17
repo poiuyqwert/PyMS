@@ -3,13 +3,12 @@ from .SMKSettings import SMKSettings
 
 from ..FileFormats import DialogBIN, TBL
 
-from ..Utilities.utils import BASE_DIR, couriernew, parse_geometry
+from ..Utilities.utils import couriernew, parse_geometry
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
-
-import os
+from ..Utilities import Assets
 
 class WidgetSettings(PyMSDialog):
 	def __init__(self, parent, node):
@@ -89,10 +88,7 @@ class WidgetSettings(PyMSDialog):
 
 	def widgetize(self):
 		def calc_button(f, calc, orig, offset, direction, fix):
-			image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','debug.gif'))
-			button = Button(f, image=image, width=20, height=20, command=lambda calc=calc,orig=orig,offset=offset,direction=direction,fix=fix: self.calculate(calc,orig,offset,direction,fix))
-			button.image = image
-			return button
+			return Button(f, image=Assets.get_image('debug'), width=20, height=20, command=lambda calc=calc,orig=orig,offset=offset,direction=direction,fix=fix: self.calculate(calc,orig,offset,direction,fix))
 		boundsframe = LabelFrame(self, text="Bounds")
 		Label(boundsframe, text='Left:').grid(row=0,column=0, sticky=E)
 		Entry(boundsframe, textvariable=self.left, font=couriernew, width=5).grid(row=0,column=1)
@@ -182,9 +178,7 @@ class WidgetSettings(PyMSDialog):
 		self.string_label = Label(textframe, text='Image:' if isimage else 'Text:')
 		self.string_label.grid(row=0,column=0)
 		Entry(textframe, textvariable=self.string, font=couriernew).grid(row=0,column=1, sticky=EW)
-		icon = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','openmpq.gif'))
-		findimage = Button(textframe, image=icon, width=20, height=20)#, command=btn[1], state=btn[3])
-		findimage.icon = icon
+		findimage = Button(textframe, image=Assets.get_image('openmpq'), width=20, height=20)#, command=btn[1], state=btn[3])
 		findimage.grid(row=0, column=2)
 		textframe.grid_columnconfigure(1, weight=1)
 		textframe.grid(row=0,column=0, columnspan=5, sticky=EW)
@@ -227,13 +221,9 @@ class WidgetSettings(PyMSDialog):
 		smkframe = LabelFrame(self, text='SMK')
 		self.smks_dropdown = DropDown(smkframe, self.smk, ['None'], stay_right=False)
 		self.smks_dropdown.grid(row=0, column=0, padx=2,pady=2, sticky=EW)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','edit.gif'))
-		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
-		button.image = image
+		button = Button(smkframe, image=Assets.get_image('edit'), width=20, height=20, command=self.edit_smk)
 		button.grid(row=0, column=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','add.gif'))
-		button = Button(smkframe, image=image, width=20, height=20, command=self.add_smk)
-		button.image = image
+		button = Button(smkframe, image=Assets.get_image('add'), width=20, height=20, command=self.add_smk)
 		button.grid(row=0, column=2)
 		Checkbutton(smkframe, text='Translucent', variable=self.flag_translucent).grid(row=1,column=0, columnspan=3)
 		smkframe.grid_columnconfigure(0, weight=1)

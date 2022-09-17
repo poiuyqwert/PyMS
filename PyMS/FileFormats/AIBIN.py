@@ -2,11 +2,12 @@
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
-from ..Utilities.utils import BASE_DIR, isstr
+from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import Assets
 
 import struct, re, os
 from math import log, floor
@@ -290,15 +291,15 @@ class AIBIN:
 
 	def __init__(self, bwscript=None, units=None, upgrades=None, techs=None, stat_txt=None, bwscript_is_data=False):
 		if bwscript == None:
-			bwscript = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts', 'bwscript.bin')
+			bwscript = Assets.mpq_file_path('scripts', 'bwscript.bin')
 		if units == None:
-			units = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'units.dat')
+			units = Assets.mpq_file_path('arr', 'units.dat')
 		if upgrades == None:
-			upgrades = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'upgrades.dat')
+			upgrades = Assets.mpq_file_path('arr', 'upgrades.dat')
 		if techs == None:
-			techs = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'techdata.dat')
+			techs = Assets.mpq_file_path('arr', 'techdata.dat')
 		if stat_txt == None:
-			stat_txt = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl')
+			stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 		self.ais = OrderedDict()
 		self.aisizes = {}
 		self.bwsizes = {}
@@ -703,7 +704,7 @@ class AIBIN:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported aiscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
+			raise PyMSError('Load',"Unsupported aiscript.bin, could possibly be invalid or corrupt", capture_exception=True)
 
 	#Stages:
 	# 0 - Load file
@@ -1999,7 +2000,7 @@ class BWBIN(AIBIN):
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported bwscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
+			raise PyMSError('Load',"Unsupported bwscript.bin, could possibly be invalid or corrupt", capture_exception=True)
 
 	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None, close=True):
 		if isstr(filename):

@@ -7,7 +7,7 @@ from ..FileFormats import IScriptBIN
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -26,7 +26,6 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-import os
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -138,7 +137,7 @@ class PyICE(MainWindow):
 		self.selectstatus.set("IScript ID's Selected: None")
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, weight=1)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.selectstatus, weight=1)
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -355,7 +354,7 @@ class PyICE(MainWindow):
 			self.editstatus['state'] = DISABLED
 
 	def open_default(self, key=None):
-		self.open(key, os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts','iscript.bin'))
+		self.open(key, Assets.mpq_file_path('scripts','iscript.bin'))
 
 	def save(self, key=None):
 		if not self.is_file_open():
@@ -492,7 +491,7 @@ class PyICE(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyICE','','bin',os.path.join(BASE_DIR, 'PyICE.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images','PyICE.ico'))
+			register_registry('PyICE', 'bin', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

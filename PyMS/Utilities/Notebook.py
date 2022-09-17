@@ -1,13 +1,8 @@
 
-from .utils import BASE_DIR
+from . import Assets
 from .UIKit import *
 
-import os
-
 class Notebook(Frame):
-	ARROW = None
-	TRANS_FIX = None
-
 	def __init__(self, parent, relief=RAISED, switchcallback=None):
 		self.parent = parent
 		self.active = None
@@ -44,9 +39,7 @@ class Notebook(Frame):
 			overflowing = (self.tabs_container.winfo_reqwidth() > self.tabs_container.winfo_width())
 			if overflowing and not self.overflowing:
 				if not self.overflow_button:
-					if not Notebook.ARROW:
-						Notebook.ARROW = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'arrow.gif'))
-					self.overflow_button = Button(self.tabs_area, image=Notebook.ARROW, width=20, command=show_hidden_tabs)
+					self.overflow_button = Button(self.tabs_area, image=Assets.get_image('arrow'), width=20, command=show_hidden_tabs)
 				self.overflow_button.grid(row=0, column=1, sticky=NSEW)
 			elif not overflowing and self.overflowing:
 				self.overflow_button.grid_forget()
@@ -62,9 +55,7 @@ class Notebook(Frame):
 
 	def add_tab(self, frame, title, tab_id=None):
 		tab_id = tab_id or title
-		if not Notebook.TRANS_FIX:
-			Notebook.TRANS_FIX = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'trans_fix.gif'))
-		tab = Radiobutton(self.tabs_container, image=Notebook.TRANS_FIX, text=title, indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
+		tab = Radiobutton(self.tabs_container, image=Assets.get_image('trans_fix'), text=title, indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
 		tab.pack(side=LEFT)
 		self.tabs.append(tab)
 		self.pages[tab_id] = (frame, len(self.pages))

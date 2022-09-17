@@ -4,12 +4,11 @@ from ..FileFormats import TBL
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats import DAT
 
-from ..Utilities.utils import BASE_DIR, play_sound
+from ..Utilities.utils import play_sound
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
-
-import os
+from ..Utilities import Assets
 
 class SoundDialog(PyMSDialog):
 	def __init__(self, parent, id=0):
@@ -22,9 +21,7 @@ class SoundDialog(PyMSDialog):
 		f = Frame(self)
 		self.dd = DropDown(f, self.id, ['%03s %s' % (n,TBL.decompile_string(self.toplevel.sfxdatatbl.strings[self.toplevel.soundsdat.get_entry(n).sound_file-1][:-1])) for n in range(self.toplevel.soundsdat.entry_count())], width=30)
 		self.dd.pack(side=LEFT, padx=1)
-		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','fwp.gif'))
-		b = Button(f, image=i, width=20, height=20, command=self.play, state=NORMAL if (play_sound and MPQ.supported()) else DISABLED)
-		b.image = i
+		b = Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play, state=NORMAL if (play_sound and MPQ.supported()) else DISABLED)
 		b.pack(side=LEFT, padx=1)
 		f.pack(padx=5,pady=5)
 

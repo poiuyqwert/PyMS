@@ -2,7 +2,7 @@
 from .CodeGenerators import CodeGeneratorType
 from .NameDialog import NameDialog
 
-from ..Utilities.utils import BASE_DIR, isstr
+from ..Utilities.utils import isstr
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -12,7 +12,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
 
-import os, json
+import json
 
 class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 	def __init__(self, parent):

@@ -1,8 +1,7 @@
 
-from .utils import BASE_DIR, isstr
+from .utils import isstr
 from .UIKit import *
-
-import os
+from . import Assets
 
 class TreeNode:
 	def __init__(self, text, depth, entry):
@@ -44,10 +43,10 @@ class TreeList(Frame):
 		self.root = TreeGroup('<ROOT>', -1, -1, True)
 		self.entries = {}
 		if closeicon == None:
-			closeicon = os.path.join(BASE_DIR,'PyMS','Images','treeclose.gif')
+			closeicon = Assets.get_image('treeclose')
 		if openicon == None:
-			openicon = os.path.join(BASE_DIR,'PyMS','Images','treeopen.gif')
-		self.icons = [PhotoImage(file=closeicon),PhotoImage(file=openicon)]
+			openicon = Assets.get_image('treeopen')
+		self.icons = [closeicon,openicon]
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		font = ('courier', -12, 'normal')

@@ -7,7 +7,7 @@ from ..FileFormats import TRG
 from ..FileFormats import TBL
 from ..FileFormats import AIBIN
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -23,8 +23,6 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
@@ -114,7 +112,7 @@ class PyTRG(MainWindow):
 		self.codestatus.set('Line: 1  Column: 0  Selected: 0')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, weight=0.4)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.codestatus)
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -369,7 +367,7 @@ class PyTRG(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyTRG','','trg',os.path.join(BASE_DIR, 'PyTRG.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyTRG.ico'))
+			register_registry('PyTRG', 'trg', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

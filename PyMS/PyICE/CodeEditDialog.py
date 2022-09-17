@@ -9,13 +9,14 @@ from .SoundDialog import SoundDialog
 from ..FileFormats import IScriptBIN
 from ..FileFormats import GRP
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
+from ..Utilities import Assets
 
 import os
 
@@ -67,13 +68,12 @@ class CodeEditDialog(PyMSDialog):
 		bar = Frame(self)
 		for btn in buttons:
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % btn[0]))
+				image = Assets.get_image(btn[0])
 				if btn[3] == True:
 					button = Checkbutton(bar, image=image, width=20, height=20, indicatoron=0, variable=btn[1])
 				else:
 					button = Button(bar, image=image, width=20, height=20, command=btn[1])
 					self.bind(btn[3], btn[1])
-				button.image = image
 				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				if button.winfo_reqwidth() > 26:
@@ -97,9 +97,7 @@ class CodeEditDialog(PyMSDialog):
 
 		statusbar = Frame(self)
 		Label(statusbar, textvariable=self.status, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','save.gif'))
-		self.editstatus = Label(statusbar, image=image, bd=0, state=DISABLED)
-		self.editstatus.image = image
+		self.editstatus = Label(statusbar, image=Assets.get_image('save'), bd=0, state=DISABLED)
 		self.editstatus.pack(side=LEFT, padx=1, fill=Y)
 		Label(statusbar, textvariable=self.scriptstatus, bd=1, relief=SUNKEN, anchor=W).pack(side=LEFT, expand=1, padx=1, fill=X)
 		statusbar.pack(side=BOTTOM, fill=X)

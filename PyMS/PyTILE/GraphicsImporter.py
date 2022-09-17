@@ -1,7 +1,7 @@
 
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.IntegerVar import IntegerVar
@@ -9,8 +9,7 @@ from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-
-import os
+from ..Utilities import Assets
 
 class GraphicsImporter(PyMSDialog):
 	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, ids=None):
@@ -42,36 +41,27 @@ class GraphicsImporter(PyMSDialog):
 		self.minitiles_null_id = IntegerVar(0,[0,len(self.tileset.vr4.images)-1])
 		self.load_settings()
 
-		self.find = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'find.gif'))
 		frame = LabelFrame(self, text="BMP's:")
 		self.graphics_list = ScrolledListbox(frame, auto_bind=self, selectmode=EXTENDED, activestyle=DOTBOX, height=3, bd=0, highlightthickness=0, exportselection=0)
 		self.graphics_list.pack(side=TOP, fill=BOTH, expand=1, padx=2,pady=2)
 		self.graphics_list.bind('<<ListboxSelect>>', self.update_states)
 		buts = Frame(frame)
-		button = Button(buts, image=self.find, width=20, height=20, command=lambda *_: self.select_paths(replace=True))
+		button = Button(buts, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_paths(replace=True))
 		button.pack(side=LEFT, padx=(1,0))
 		Tooltip(button, "Set BMP's", mouse=True)
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'add.gif'))
-		button = Button(buts, image=image, width=20, height=20, command=lambda *_: self.select_paths(replace=False))
+		button = Button(buts, image=Assets.get_image('add'), width=20, height=20, command=lambda *_: self.select_paths(replace=False))
 		button.pack(side=LEFT)
-		button.image = image
 		Tooltip(button, "Add BMP's", mouse=True)
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'remove.gif'))
-		button = Button(buts, image=image, width=20, height=20, command=self.remove_paths)
+		button = Button(buts, image=Assets.get_image('remove'), width=20, height=20, command=self.remove_paths)
 		button.pack(side=LEFT)
-		button.image = image
 		Tooltip(button, "Remove BMP's", mouse=True)
 		self.sel_buttons = [button]
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','down.gif'))
-		button = Button(buts, image=image, width=20, height=20, command=self.shift_down)
+		button = Button(buts, image=Assets.get_image('down'), width=20, height=20, command=self.shift_down)
 		button.pack(side=RIGHT, padx=(0,1))
-		button.image = image
 		Tooltip(button, "Move Selections Down", mouse=True)
 		self.sel_buttons.append(button)
-		image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','up.gif'))
-		button = Button(buts, image=image, width=20, height=20, command=self.shift_up)
+		button = Button(buts, image=Assets.get_image('up'), width=20, height=20, command=self.shift_up)
 		button.pack(side=RIGHT)
-		button.image = image
 		Tooltip(button, "Move Selections Up", mouse=True)
 		self.sel_buttons.append(button)
 		buts.pack(fill=X)
@@ -89,7 +79,7 @@ class GraphicsImporter(PyMSDialog):
 			f = Frame(g)
 			Checkbutton(f, text='Null:', variable=self.megatiles_reuse_null, anchor=W).pack(side=LEFT)
 			Entry(f, textvariable=self.megatiles_null_id, font=couriernew, width=5).pack(side=LEFT)
-			Button(f, image=self.find, width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MEGA)).pack(side=LEFT, padx=1)
+			Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MEGA)).pack(side=LEFT, padx=1)
 			f.pack(side=TOP, fill=X)
 			g.grid(column=0,row=0, padx=(0,3), sticky=W+E)
 			sets.grid_columnconfigure(0, weight=1)
@@ -103,7 +93,7 @@ class GraphicsImporter(PyMSDialog):
 		f = Frame(g)
 		Checkbutton(f, text='Null:', variable=self.minitiles_reuse_null, anchor=W).pack(side=LEFT)
 		Entry(f, textvariable=self.minitiles_null_id, font=couriernew, width=5).pack(side=LEFT)
-		Button(f, image=self.find, width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MINI)).pack(side=LEFT, padx=1)
+		Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MINI)).pack(side=LEFT, padx=1)
 		f.pack(side=TOP, fill=X)
 		g.grid(column=1,row=0, sticky=W+E)
 		sets.grid_columnconfigure(1, weight=1)

@@ -1,5 +1,6 @@
 
 from .PyMSError import PyMSError
+from . import Assets
 
 from textwrap import wrap
 import os, sys, platform, re, tempfile, errno
@@ -17,19 +18,12 @@ try:
 except:
 	WIN_REG_AVAILABLE = False
 
-if hasattr(sys, 'frozen'):
-	BASE_DIR = os.path.dirname(sys.executable)
-else:
-	BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
 import json
-with open(os.path.join(BASE_DIR, 'PyMS', 'versions.json'), 'r') as f:
+with open(Assets.versions_file_path, 'r') as f:
 	VERSIONS = json.load(f)
 
 couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
-ARROW = None
-TRANS_FIX = None
 
 def is_windows():
 	return (platform.system().lower() == 'windows')
@@ -82,7 +76,7 @@ def isstr(s):
 def nearest_multiple(v, m, r=round):
 	return m * int(r(v / float(m)))
 
-def register_registry(prog,type,filetype,progpath,icon):
+def register_registry(program_name, extension, file_type_name=None): # type: (str, str, str | None) -> None
 	if not WIN_REG_AVAILABLE:
 		raise PyMSError('Registry', 'You can currently only set as the default program on Windows machines.')
 	def delkey(key,sub_key):
@@ -103,15 +97,23 @@ def register_registry(prog,type,filetype,progpath,icon):
 		h.Close()
 		DeleteKey(key,sub_key)
 
-	key = '%s:%s' % (prog,filetype)
+	key = '%s:%s' % (program_name,extension)
+	if file_type_name:
+		file_type_name = ' ' + file_type_name
+	else:
+		file_type_name = ''
+	if hasattr(sys, 'frozen'):
+		executable = '"%s"' % sys.executable
+	else:
+		executable = '"%s" "%s"' % (sys.executable.replace('python.exe','pythonw.exe'), os.path.join(Assets.base_dir, '%s.pyw' % program_name))
 	try:
-		delkey(HKEY_CLASSES_ROOT, '.' + filetype)
+		delkey(HKEY_CLASSES_ROOT, os.extsep + extension)
 		delkey(HKEY_CLASSES_ROOT, key)
-		SetValue(HKEY_CLASSES_ROOT, '.' + filetype, REG_SZ, key)
-		SetValue(HKEY_CLASSES_ROOT, key, REG_SZ, 'StarCraft %s *.%s file (%s)' % (type,filetype,prog))
-		SetValue(HKEY_CLASSES_ROOT, key + '\\DefaultIcon', REG_SZ, icon)
+		SetValue(HKEY_CLASSES_ROOT, '.' + extension, REG_SZ, key)
+		SetValue(HKEY_CLASSES_ROOT, key, REG_SZ, 'StarCraft%s *.%s file (%s)' % (file_type_name, extension, program_name))
+		SetValue(HKEY_CLASSES_ROOT, key + '\\DefaultIcon', REG_SZ, Assets.image_path('%s.ico' % program_name))
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell', REG_SZ, 'open')
-		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, '"%s" "%s" --gui "%%1"' % (sys.executable.replace('python.exe','pythonw.exe'),progpath))
+		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, '%s --gui "%%1"' % executable)
 	except:
 		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True)
 	from .UIKit import MessageBox

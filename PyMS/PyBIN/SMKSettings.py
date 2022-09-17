@@ -1,14 +1,13 @@
 
 from ..FileFormats import DialogBIN
 
-from ..Utilities.utils import BASE_DIR, couriernew, parse_geometry
+from ..Utilities.utils import couriernew, parse_geometry
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
 from ..Utilities.MPQSelect import MPQSelect
-
-import os
+from ..Utilities import Assets
 
 class SMKSettings(PyMSDialog):
 	def __init__(self, parent, smk, widget=None, window_pos=False):
@@ -37,9 +36,7 @@ class SMKSettings(PyMSDialog):
 		textframe = Frame(self)
 		Label(textframe, text='Filename:').pack(side=LEFT)
 		Entry(textframe, textvariable=self.filename, font=couriernew).pack(side=LEFT, fill=X, expand=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','find.gif'))
-		button = Button(textframe, image=image, width=20, height=20, command=self.find_smk)
-		button.image = image
+		button = Button(textframe, image=Assets.get_image('find'), width=20, height=20, command=self.find_smk)
 		button.pack(side=LEFT)
 		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=NSEW)
 
@@ -47,13 +44,9 @@ class SMKSettings(PyMSDialog):
 		smkframe = Frame(overlayframe)
 		self.smks_dropdown = DropDown(smkframe, self.overlay_smk, ['None'], stay_right=False)
 		self.smks_dropdown.pack(side=LEFT, fill=X, expand=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','edit.gif'))
-		button = Button(smkframe, image=image, width=20, height=20, command=self.edit_smk)
-		button.image = image
+		button = Button(smkframe, image=Assets.get_image('edit'), width=20, height=20, command=self.edit_smk)
 		button.pack(side=LEFT)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','add.gif'))
-		button = Button(smkframe, image=image, width=20, height=20, command=self.add_smk)
-		button.image = image
+		button = Button(smkframe, image=Assets.get_image('add'), width=20, height=20, command=self.add_smk)
 		button.pack(side=LEFT)
 		smkframe.pack(side=TOP, fill=X, expand=1)
 		offsetframe = Frame(overlayframe)

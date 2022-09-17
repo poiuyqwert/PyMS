@@ -2,12 +2,13 @@
 from .DATTabConveniences import DATTabConveniences
 from .EntryCountDialog import EntryCountDialog
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
+from ..Utilities import Assets
 
 import copy, os
 
@@ -56,9 +57,9 @@ class DATTab(NotebookTab, DATTabConveniences):
 		f = Frame(self)
 		h  = Frame(f)
 		if DATTab.ARROW_DOWN == None:
-			DATTab.ARROW_DOWN = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'arrow.gif'))
+			DATTab.ARROW_DOWN = Assets.get_image('arrow')
 		if DATTab.ARROW_UP == None:
-			DATTab.ARROW_UP = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'arrowup.gif'))
+			DATTab.ARROW_UP = Assets.get_image('arrowup')
 		self.used_by_collapse_button = Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
 		self.used_by_collapse_button.pack(side=LEFT, padx=(0, 5))
 		self.used_by_header = StringVar()

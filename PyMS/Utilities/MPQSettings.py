@@ -1,7 +1,7 @@
 
 from ..FileFormats.MPQ.MPQ import MPQ
 
-from .utils import BASE_DIR
+from . import Assets
 from .setutils import PYMS_SETTINGS
 from .Tooltip import Tooltip
 from .UIKit import *
@@ -55,12 +55,11 @@ class MPQSettings(Frame):
 			('down', lambda e=None,i=1: self.movempq(e,i), 'Move MPQ Down (Shift+Down)', DISABLED, 'Shift+Down', RIGHT),
 		]
 		self.buttons = {}
+		# TODO: Toolbar?
 		toolbar = Frame(self)
 		for btn in buttons:
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','%s.gif' % btn[0]))
-				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-				button.image = image
+				button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
 				Tooltip(button, btn[2])
 				button.pack(side=btn[5], padx=[0,10][btn[0] == 'opendefault'])
 				self.buttons[btn[0]] = button

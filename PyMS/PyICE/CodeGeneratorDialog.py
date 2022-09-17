@@ -3,7 +3,7 @@ from .CodeGenerators import *
 from .NameDialog import NameDialog
 from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Tooltip import Tooltip
@@ -154,6 +154,7 @@ class CodeGeneratorDialog(PyMSDialog):
 			menu.add_command(label='Manage Presets', command=self.manage_presets)
 			menu.post(*self.winfo_pointerxy())
 		buts = Frame(leftframe)
+		# TODO: Toolbar?
 		buttons = [
 			('add', 'Add Variable', LEFT, 0, add_pressed),
 			('remove', 'Remove Variable', LEFT, 0, self.remove),
@@ -163,9 +164,7 @@ class CodeGeneratorDialog(PyMSDialog):
 		]
 		self.buttons = {}
 		for icon,tip,side,padx,callback in buttons:
-			image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % icon))
-			button = Button(buts, image=image, width=20, height=20, command=callback)
-			button.image = image
+			button = Button(buts, image=Assets.get_image(icon), width=20, height=20, command=callback)
 			Tooltip(button, tip)
 			button.pack(side=side, padx=padx)
 			self.buttons[icon] = button

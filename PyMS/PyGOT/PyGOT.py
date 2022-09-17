@@ -2,7 +2,7 @@
 from ..FileFormats.GOT import GOT
 from ..FileFormats.TRG import TRG
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, fit, register_registry, couriernew
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, fit, register_registry, couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.Settings import Settings
@@ -19,8 +19,6 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyGOT']
 
@@ -164,7 +162,7 @@ class PyGOT(MainWindow):
 		self.status.set('Load or create a Game Template.')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=35)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -386,7 +384,7 @@ class PyGOT(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyGOT','','got',os.path.join(BASE_DIR, 'PyGOT.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyGOT.ico'))
+			register_registry('PyGOT', 'got', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

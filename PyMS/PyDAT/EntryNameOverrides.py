@@ -1,7 +1,5 @@
 
-from ..FileFormats.DAT import DATEntryName
-
-from ..Utilities.utils import BASE_DIR, couriernew, lpad
+from ..Utilities.utils import couriernew, lpad
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
@@ -12,7 +10,7 @@ from ..Utilities import Assets
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.PyMSError import PyMSError
 
-import os, re
+import re
 
 RE_OVERRIDE = re.compile(r'\s*(\d{1,5})\s*(\+?)\s*:(.*)')
 class EntryNameOverrides(PyMSDialog):
@@ -46,8 +44,7 @@ class EntryNameOverrides(PyMSDialog):
 		name_entry.pack(side=LEFT, fill=X, expand=1)
 		Checkbutton(f, text="Append", variable=self.append).pack(side=LEFT)
 		Button(f, text='Update', command=self.update).pack(side=LEFT, padx=3)
-		self.remove_image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','remove.gif'))
-		Button(f, image=self.remove_image, width=20, height=20, command=self.remove).pack(side=LEFT)
+		Button(f, image=Assets.get_image('remove'), width=20, height=20, command=self.remove).pack(side=LEFT)
 
 		f = Frame(self)
 		f.pack(side=TOP, fill=X, padx=3, pady=3)

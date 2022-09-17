@@ -3,12 +3,13 @@ from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities import Assets
 
 import os, shutil
 
@@ -70,7 +71,7 @@ class SaveMPQDialog(PyMSDialog):
 			if file:
 				if self.sempq.get() and not os.path.exists(file):
 					try:
-						shutil.copy(os.path.join(BASE_DIR,'PyMS','Data','SEMPQ.exe'), file)
+						shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
 					except:
 						ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
 						return

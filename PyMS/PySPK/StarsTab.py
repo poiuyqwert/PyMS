@@ -1,14 +1,12 @@
 
 from .Tool import Tool
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-
-import os
 
 class StarsTab(NotebookTab):
 	def __init__(self, parent, toplevel):

@@ -1,17 +1,17 @@
 
 from ..FileFormats import IScriptBIN
-from ..FileFormats import DAT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 from ..FileFormats.MPQ.MPQ import MPQ
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities import Assets
 
 import os
 
@@ -153,6 +153,7 @@ class PreviewerDialog(PyMSDialog):
 		p.pack()
 		self.buttons = {}
 		frameview = Frame(right)
+		# TODO: Toolbar?s
 		buttons = [
 			('begin', 'Jump to first frame'),
 			('frw', 'Jump 17 frames Left'),
@@ -168,9 +169,7 @@ class PreviewerDialog(PyMSDialog):
 		]
 		for n,btn in enumerate(buttons):
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % btn[0]))
-				button = Button(frameview, image=image, width=20, height=20, command=lambda i=n: self.frameset(i), state=DISABLED)
-				button.image = image
+				button = Button(frameview, image=Assets.get_image(btn[0]), width=20, height=20, command=lambda i=n: self.frameset(i), state=DISABLED)
 				Tooltip(button, btn[1])
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button
@@ -208,7 +207,8 @@ class PreviewerDialog(PyMSDialog):
 			pal = Palette.Palette()
 			for palname in ['Units','bfire','gfire','ofire','Terrain','Icons']:
 				try:
-					pal.load_file(self.toplevel.settings.palettes.get(palname,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (palname,os.extsep))))
+					
+					pal.load_file(self.toplevel.settings.palettes.get(palname,Assets.palette_file_path('%s%spal' % (palname,os.extsep))))
 				except Exception as e:
 					continue
 				PALETTES[palname] = pal.palette
@@ -347,7 +347,7 @@ class PreviewerDialog(PyMSDialog):
 
 	def grp(self, i, pal, frame, *path):
 		if MPQ.supported() and pal in PALETTES:
-			p = os.path.join(BASE_DIR, 'PyMS','MPQ',os.path.join(*path))
+			p = Assets.mpq_file_path(*path)
 			path = '\\'.join(path)
 			draw = not path in GRP_CACHE or not frame in GRP_CACHE[path] or not pal in GRP_CACHE[path][frame]
 			if draw or (not self.curgrp or i != self.curgrp[0]):

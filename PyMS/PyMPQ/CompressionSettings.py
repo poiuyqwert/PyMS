@@ -1,7 +1,7 @@
 
 from .CompressionSetting import CompressionOption, CompressionSetting
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.DropDown import DropDown
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -32,9 +32,7 @@ class CompressionSettings(Frame):
 		Label(left, text='File Extension:', anchor=W, justify=LEFT).pack(fill=X)
 		e = Frame(left)
 		Entry(e, textvariable=self.extension).pack(side=LEFT, fill=X, expand=1)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','add.gif'))
-		self.addbutton = Button(e, image=image, width=20, height=20, command=self.add, state=DISABLED)
-		self.addbutton.image = image
+		self.addbutton = Button(e, image=Assets.get_image('add'), width=20, height=20, command=self.add, state=DISABLED)
 		self.addbutton.pack(side=LEFT, padx=2)
 		e.pack(side=TOP)
 
@@ -48,9 +46,7 @@ class CompressionSettings(Frame):
 		self.listbox.insert(END, *extensions)
 		self.listbox.select_set(0)
 
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','remove.gif'))
-		self.rembutton = Button(left, image=image, width=20, height=20, command=self.remove, state=DISABLED)
-		self.rembutton.image = image
+		self.rembutton = Button(left, image=Assets.get_image('remove'), width=20, height=20, command=self.remove, state=DISABLED)
 		self.rembutton.pack()
 		left.pack(side=LEFT, fill=Y, padx=2)
 

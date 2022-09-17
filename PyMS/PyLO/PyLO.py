@@ -8,7 +8,7 @@ from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, register_registry, FFile
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry, FFile
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -25,8 +25,6 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyLO']
 
@@ -57,7 +55,7 @@ class PyLO(MainWindow):
 		self.basegrp = None
 		self.overlaygrp = None
 		self.unitpal = Palette()
-		self.unitpal.load_file(os.path.join(BASE_DIR,'Palettes','Units.pal'))
+		self.unitpal.load_file(Assets.palette_file_path('Units.pal'))
 		self.previewing = None
 		self.overlayframe = None
 		self.dragoffset = None
@@ -173,7 +171,7 @@ class PyLO(MainWindow):
 		self.codestatus.set('Line: 1  Column: 0  Selected: 0')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -525,7 +523,7 @@ class PyLO(MainWindow):
 	def register(self, e=None):
 		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
 			try:
-				register_registry('PyLO',type + ' Overlay','lo' + ext,os.path.join(BASE_DIR, 'PyLO.pyw'),os.path.join(BASE_DIR,'Images','PyLO.ico'))
+				register_registry('PyLO','lo' + ext, type + ' Overlay')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break
@@ -540,7 +538,8 @@ class PyLO(MainWindow):
 		if not self.unsaved():
 			self.settings.windows.save_window_size('main', self)
 			self.settings['highlights'] = self.text.highlights
-			m = os.path.join(BASE_DIR,'PyMS','MPQ','')
+			# TODO: Better logic
+			m = Assets.mpq_file_path('')
 			self.settings.settings.files['basegrp'] = ['','MPQ:'][self.grppanel.variables['Base GRP:'][0].get()] + self.grppanel.variables['Base GRP:'][1].get().replace(m,'MPQ:',1)
 			self.settings.settings.files['overlaygrp'] = ['','MPQ:'][self.grppanel.variables['Overlay GRP:'][0].get()] + self.grppanel.variables['Overlay GRP:'][1].get().replace(m,'MPQ:',1)
 			self.settings['usebasegrp'] = self.usebasegrp.get()

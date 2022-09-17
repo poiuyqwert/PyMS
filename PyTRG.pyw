@@ -8,7 +8,7 @@ def main():
 
 	from PyMS.FileFormats.TRG import TRG
 
-	from PyMS.Utilities.utils import BASE_DIR
+	from PyMS.Utilities import Assets
 	from PyMS.Utilities.PyMSError import PyMSError
 
 	import os, optparse, sys
@@ -22,8 +22,8 @@ def main():
 		p.add_option('-c', '--compile', action='store_false', dest='convert', help="Compile a TRG file")
 		p.add_option('-t', '--trig', action='store_true', help="Used to decompile/compile a GOT compatable TRG", default=False)
 		p.add_option('-r', '--reference', action='store_true', help="When decompiling, put a reference for parameter types, conditions and actions with parameter lists, and AIScripts [default: Off]", default=False)
-		p.add_option('-s', '--stattxt',  help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl'))
-		p.add_option('-a', '--aiscript', help="Used to signify the aiscript.bin file to use [default: Libs\\MPQ\\scripts\\aiscript.bin]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts', 'aiscript.bin'))
+		p.add_option('-s', '--stattxt',  help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=Assets.mpq_file_path('rez', 'stat_txt.tbl'))
+		p.add_option('-a', '--aiscript', help="Used to signify the aiscript.bin file to use [default: Libs\\MPQ\\scripts\\aiscript.bin]", default=Assets.mpq_file_path('scripts', 'aiscript.bin'))
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, args = p.parse_args()
 		if opt.gui:

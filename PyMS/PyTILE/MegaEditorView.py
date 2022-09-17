@@ -1,13 +1,12 @@
 
 from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TILETYPE_MINI
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.Tooltip import Tooltip
-
-import os
+from ..Utilities import Assets
 
 class MegaEditorView(Frame):
 	class Mode:
@@ -93,15 +92,11 @@ class MegaEditorView(Frame):
 		Tooltip(f, 'MiniTile ID:\nID for the selected MiniTile in the current MegaTile')
 		self.disable.append(f)
 		f.pack(side=LEFT, padx=2)
-		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'find.gif'))
-		b = Button(e, image=i, width=20, height=20, command=self.choose)
-		b.image = i
+		b = Button(e, image=Assets.get_image('find'), width=20, height=20, command=self.choose)
 		self.disable.append(b)
 		Tooltip(b, 'MiniTile Palette')
 		b.pack(side=LEFT, padx=2)
-		i = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'edit.gif'))
-		b = Button(e, image=i, width=20, height=20, command=self.editor)
-		b.image = i
+		b = Button(e, image=Assets.get_image('edit'), width=20, height=20, command=self.editor)
 		self.disable.append(b)
 		b.pack(side=LEFT, padx=2)
 		e.pack(fill=X)

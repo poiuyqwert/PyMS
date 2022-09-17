@@ -1,8 +1,6 @@
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.UIKit import *
-
-import os
 
 class LayerRow(Frame):
 	def __init__(self, parent, selvar=None, visvar=None, lockvar=None, layer=None, **kwargs):
@@ -16,13 +14,9 @@ class LayerRow(Frame):
 		self.locked = BooleanVar()
 		self.locked.set(False)
 		# TODO: Use Toolbar?
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','eye.gif'))
-		visbtn = Checkbutton(self, image=image, indicatoron=0, width=20, height=20, variable=self.visible, onvalue=True, offvalue=False, command=self.toggle_vis, highlightthickness=0)
-		visbtn.image = image
+		visbtn = Checkbutton(self, image=Assets.get_image('eye'), indicatoron=0, width=20, height=20, variable=self.visible, onvalue=True, offvalue=False, command=self.toggle_vis, highlightthickness=0)
 		visbtn.pack(side=LEFT)
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','lock.gif'))
-		lockbtn = Checkbutton(self, image=image, indicatoron=0, width=20, height=20, variable=self.locked, onvalue=True, offvalue=False, command=self.toggle_lock, highlightthickness=0)
-		lockbtn.image = image
+		lockbtn = Checkbutton(self, image=Assets.get_image('lock'), indicatoron=0, width=20, height=20, variable=self.locked, onvalue=True, offvalue=False, command=self.toggle_lock, highlightthickness=0)
 		lockbtn.pack(side=LEFT)
 		self.label = Label(self, text='Layer %d' % (layer+1))
 		self.label.pack(side=LEFT)

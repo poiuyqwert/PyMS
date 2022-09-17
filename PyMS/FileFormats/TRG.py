@@ -2,10 +2,11 @@
 from . import TBL
 from . import AIBIN
 
-from ..Utilities.utils import BASE_DIR, isstr, flags
+from ..Utilities.utils import isstr, flags
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import Assets
 
 import struct, re, os
 from collections import OrderedDict
@@ -1687,14 +1688,14 @@ class TRG:
 			self.stat_txt = stat_txt
 		else:
 			if stat_txt == None:
-				stat_txt = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl')
+				stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
 			self.stat_txt.load_file(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			ais = aiscript
 		else:
 			if aiscript == None:
-				aiscript = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'scripts', 'aiscript.bin')
+				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			ais = AIBIN.AIBIN(stat_txt=self.stat_txt)
 			ais.load_file(aiscript)
 		self.triggers_type = NORMAL_TRIGGERS

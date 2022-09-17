@@ -6,10 +6,10 @@ except:
 	try:
 		import ImageTk
 	except:
-		from ...Utilities.utils import BASE_DIR
+		from ...Utilities import Assets
 		from ...Utilities.DependencyError import DependencyError
 		import sys, os
-		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', (('Documentation','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')),))
+		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', (('Documentation','file:///%s' % Assets.doc_path('intro.html')),))
 		e.startup()
 		sys.exit()
 

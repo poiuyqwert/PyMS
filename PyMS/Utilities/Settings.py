@@ -1,7 +1,8 @@
 
-from .utils import BASE_DIR, parse_geometry, parse_resizable, isstr
+from .utils import parse_geometry, parse_resizable, isstr
 from .WarnDialog import WarnDialog
 from .UIKit import FileDialog, HORIZONTAL
+from . import Assets
 
 import os, copy, json
 
@@ -251,7 +252,7 @@ class SettingDict(object):
 			kwargs['defaultextension'] = ext
 		if initialfile:
 			kwargs['initialfile'] = initialfile
-		path = dialog(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store), **kwargs)
+		path = dialog(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store), **kwargs)
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = os.path.dirname(path)
@@ -272,7 +273,7 @@ class SettingDict(object):
 			kwargs['filetypes'] = filetypes
 		if ext:
 			kwargs['defaultextension'] = ext
-		paths = FileDialog.askopenfilename(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store), multiple=True, **kwargs)
+		paths = FileDialog.askopenfilename(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store), multiple=True, **kwargs)
 		parent._pyms__window_blocking = False
 		if isstr(paths):
 			if paths:
@@ -287,7 +288,7 @@ class SettingDict(object):
 
 	def select_directory(self, parent, key='dir', title='Select Folder', store=True):
 		parent._pyms__window_blocking = True
-		path = FileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, BASE_DIR, autosave=store))
+		path = FileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store))
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = path
@@ -308,7 +309,7 @@ class SettingEncoder(json.JSONEncoder):
 
 class Settings(SettingDict):
 	def __init__(self, program, settings_version):
-		self.__dict__['path'] = os.path.join(BASE_DIR,'Settings','%s.txt' % program)
+		self.__dict__['path'] = Assets.settings_file_path(program)
 		self.__dict__['version'] = settings_version
 		try:
 			with open(self.__dict__['path'], 'r') as f:

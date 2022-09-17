@@ -10,7 +10,7 @@ from ..FileFormats import SPK
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -26,8 +26,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-
-import os, webbrowser
 
 LONG_VERSION = 'v%s' % VERSIONS['PySPK']
 
@@ -191,7 +189,7 @@ class PySPK(MainWindow):
 		self.edit_status = StringVar()
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=35)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.edit_status, weight=1)
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -672,7 +670,7 @@ class PySPK(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PySPK','','spk',os.path.join(BASE_DIR, 'PySPK.pyw'),os.path.join(BASE_DIR,'Images','PyGOT.ico'))
+			register_registry('PySPK', 'spk', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

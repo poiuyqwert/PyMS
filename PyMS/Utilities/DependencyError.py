@@ -1,5 +1,5 @@
 
-from .utils import BASE_DIR
+from . import Assets
 from .Hotlink import Hotlink
 from .UIKit import *
 
@@ -12,10 +12,10 @@ class DependencyError(MainWindow):
 		self.resizable(False,False)
 		self.title('Dependency Error')
 		try:
-			self.icon = os.path.join(BASE_DIR,'PyMS','Images','%s.ico' % prog)
+			self.icon = Assets.image_path('%s.ico' % prog)
 			self.wm_iconbitmap(self.icon)
 		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR,'PyMS','Images','%s.xbm' % prog)
+			self.icon = '@%s' % Assets.image_path('%s.xbm' % prog)
 			self.wm_iconbitmap(self.icon)
 		frame = Frame(self)
 		frame.pack(side=TOP, padx=20,pady=20)

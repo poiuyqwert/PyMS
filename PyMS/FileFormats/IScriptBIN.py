@@ -3,14 +3,15 @@ from ..FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, Weapo
 from ..FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
 from ..FileFormats import TBL
 
-from ..Utilities.utils import BASE_DIR, isstr
+from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import Assets
 
-import struct, re, os
+import struct, re
 try:
 	import cPickle as pickle
 except ImportError:
@@ -239,7 +240,7 @@ def type_label(stage, bin):
 	"""Label"""
 	return 2
 
-def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
+def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""ImageID"""
 	if data == None:
 		return 2
@@ -253,7 +254,7 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Unio
 		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,bin.imagesdat.entry_count()))
 	return v
 
-def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
+def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""SpriteID"""
 	if data == None:
 		return 2
@@ -267,7 +268,7 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Uni
 		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,bin.spritesdat.entry_count()))
 	return v
 
-def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
+def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""FlingyID"""
 	if data == None:
 		return 2
@@ -314,7 +315,7 @@ def type_flipstate(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid FlipState value '%s', it must be a number in the range 0 to 255" % data)
 	return v
 
-def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
+def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""SoundID"""
 	if data == None:
 		return 2
@@ -370,7 +371,7 @@ def type_weapon(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid Weapon value '%s', it must be 1 for ground attack or not 1 for air attack." % data)
 	return v
 
-def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, Optional[Union[Int, str]]) -> Union[Int, (str,str)]
+def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""WeaponID"""
 	if data == None:
 		return 1
@@ -544,21 +545,21 @@ for o,c in enumerate(OPCODES):
 class IScriptBIN:
 	def __init__(self, weaponsdat=None, flingydat=None, imagesdat=None, spritesdat=None, soundsdat=None, stat_txt=None, imagestbl=None, sfxdatatbl=None):
 		if weaponsdat == None:
-			weaponsdat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'weapons.dat')
+			weaponsdat = Assets.mpq_file_path('arr', 'weapons.dat')
 		if flingydat == None:
-			flingydat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'flingy.dat')
+			flingydat = Assets.mpq_file_path('arr', 'flingy.dat')
 		if imagesdat == None:
-			imagesdat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'images.dat')
+			imagesdat = Assets.mpq_file_path('arr', 'images.dat')
 		if spritesdat == None:
-			spritesdat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sprites.dat')
+			spritesdat = Assets.mpq_file_path('arr', 'sprites.dat')
 		if soundsdat == None:
-			soundsdat = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sfxdata.dat')
+			soundsdat = Assets.mpq_file_path('arr', 'sfxdata.dat')
 		if stat_txt == None:
-			stat_txt = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez', 'stat_txt.tbl')
+			stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 		if imagestbl == None:
-			imagestbl = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'images.tbl')
+			imagestbl = Assets.mpq_file_path('arr', 'images.tbl')
 		if sfxdatatbl == None:
-			sfxdatatbl = os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sfxdata.tbl')
+			sfxdatatbl = Assets.mpq_file_path('arr', 'sfxdata.tbl')
 		self.headers = {}
 		self.offsets = {}
 		self.code = OrderedDict()
@@ -961,7 +962,7 @@ class IScriptBIN:
 			raise PyMSError('Interpreting', "The label '%s' was not found" % findlabels.keys()[0],n,line, warnings=warnings)
 		if unused:
 			for l in unused:
-				warnings.append(PyMSWarning('Interpeting', "The label '%s' is unused, label is discarded" % l))
+				warnings.append(PyMSWarning('Interpreting', "The label '%s' is unused, label is discarded" % l))
 				r = OrderedDict(sorted(code.iteritems(), key=lambda item: item[0]))
 				self.remove_code(labels[l], code=r, offsets=offsets)
 				code = deepcopy(r)

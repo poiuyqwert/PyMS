@@ -12,7 +12,7 @@ from .ListfileSettings import ListfileSettings
 from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 
 from ..Utilities.DependencyError import DependencyError
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -33,8 +33,8 @@ from ..Utilities.HelpDialog import HelpDialog
 import sys, time, shutil, os
 from thread import start_new_thread
 
-if MPQ.default_library() == None:
-	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', ('Contact','file:///%s' % os.path.join(BASE_DIR, 'Docs', 'intro.html')))
+if not MPQ.supported():
+	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', (('Contact','file:///%s' % Assets.doc_path('intro.html')),))
 	e.startup()
 	sys.exit()
 
@@ -61,7 +61,7 @@ class PyMPQ(MainWindow):
 			'ascending': True
 		})
 		self.settings.settings.set_defaults({
-			'listfiles': [os.path.join(BASE_DIR,'PyMS','Data','Listfile.txt')]
+			'listfiles': [Assets.data_file_path('Listfile.txt')]
 		})
 		self.settings.settings.autocompression.set_defaults({
 			'Default': str(CompressionOption.Standard.setting()),
@@ -87,7 +87,7 @@ class PyMPQ(MainWindow):
 		self.all_files = [] # type: list[MPQFileEntry]
 		self.display_files = [] # type: list[MPQFileEntry]
 		self.totalsize = 0
-		self.temp_folder = os.path.join(BASE_DIR,'PyMS','Temp',str(int(time.time())),'')
+		self.temp_folder = os.path.join(Assets.internal_temp_dir, str(int(time.time())))
 		self.thread = CheckThread(self, self.temp_folder)
 
 		#Toolbar
@@ -125,9 +125,7 @@ class PyMPQ(MainWindow):
 		self.textdrop.pack(side=LEFT, fill=X, expand=1)
 		self.textdrop.entry.bind(Key.Return, self.dofilter)
 		self.textdrop.default_background_color = self.textdrop.entry['bg']
-		image = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','find.gif'))
-		self.find_button = Button(filter, image=image, width=20, height=20, command=self.dofilter, state=DISABLED)
-		self.find_button.image = image
+		self.find_button = Button(filter, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=DISABLED)
 		Tooltip(self.find_button, 'List Matches')
 		self.find_button.pack(side=LEFT, padx=2)
 		Radiobutton(filter, text='Regex', variable=self.regex, value=1).pack(side=RIGHT)
@@ -188,9 +186,9 @@ class PyMPQ(MainWindow):
 		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
 		
 		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, self.select, self.do_rename, self.popup, self.openfile, min_widths=[50]*6)
-		self.listbox.ascending_arrow = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','arrow.gif'))
-		self.listbox.descending_arrow = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','arrowup.gif'))
-		self.listbox.blank_arrow = PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','arrowblank.gif'))
+		self.listbox.ascending_arrow = Assets.get_image('arrow.gif')
+		self.listbox.descending_arrow = Assets.get_image('arrowup.gif')
+		self.listbox.blank_arrow = Assets.get_image('arrowblank.gif')
 		for column,(button,_) in enumerate(self.listbox.columns):
 			if column <= ColumnID.Attributes:
 				button['command'] = lambda c=column: self.sort(c)
@@ -675,7 +673,7 @@ class PyMPQ(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyMPQ','','mpq',os.path.join(BASE_DIR, 'PyMPQ.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyMPQ.ico'))
+			register_registry('PyMPQ', 'mpq', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

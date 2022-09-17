@@ -6,7 +6,7 @@ from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -22,8 +22,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyFNT']
 
@@ -352,7 +350,7 @@ class PyFNT(MainWindow):
 		self.status.set('Load or create a Font.')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=35)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -566,7 +564,7 @@ class PyFNT(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyFNT','StarCraft Font','fnt',os.path.join(BASE_DIR, 'PyFNT.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyFNT.ico'))
+			register_registry('PyFNT', 'fnt', 'Font')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

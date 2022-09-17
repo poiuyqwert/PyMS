@@ -6,7 +6,7 @@ from ..FileFormats import GRP
 from ..FileFormats import BMP
 from ..FileFormats import Palette
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
 from ..Utilities.Settings import Settings
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
@@ -127,10 +127,10 @@ class PyGRP(MainWindow):
 		self.pallist.bind('<<ListboxSelect>>', self.changepalette)
 
 		s = -1
-		for pal in os.listdir(os.path.join(BASE_DIR, 'Palettes')):
+		for pal in os.listdir(Assets.palettes_dir):
 			try:
 				p = Palette.Palette()
-				p.load_file(os.path.join(BASE_DIR, 'Palettes', pal))
+				p.load_file(Assets.palette_file_path(pal))
 				if pal == self.settings.preview.get('palette', 'Units.pal'):
 					s = self.pallist.size()
 					self.pal = pal
@@ -229,7 +229,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.status.set('Load or create a GRP.')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=45)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -673,7 +673,7 @@ BMP's must be imported with the same style they were exported as.""")
 
 	def register(self, e=None):
 		try:
-			register_registry('PyGRP','','grp',os.path.join(BASE_DIR, 'PyGRP.pyw'),os.path.join(BASE_DIR, 'PyMS', 'Images', 'PyGRP.ico'))
+			register_registry('PyGRP', 'grp', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

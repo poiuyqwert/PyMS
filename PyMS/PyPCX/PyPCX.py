@@ -4,7 +4,7 @@ from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import BASE_DIR, VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -17,8 +17,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyPCX']
 
@@ -75,7 +73,7 @@ class PyPCX(MainWindow):
 		self.status.set('Load a PCX or import a BMP.')
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, weight=0.6)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 
 		self.settings.windows.load_window_size('main', self)
@@ -240,7 +238,7 @@ class PyPCX(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyPCX','StarCraft PCX','pcx',os.path.join(BASE_DIR, 'PyPCX.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyPCX.ico'))
+			register_registry('PyPCX', 'pcx')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

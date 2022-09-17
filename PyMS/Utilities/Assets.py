@@ -11,6 +11,9 @@ if hasattr(_sys, 'frozen'):
 else:
 	base_dir = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
 
+## Versions
+versions_file_path = _os.path.join(base_dir, 'PyMS', 'versions.json')
+
 ## Images
 images_dir = _os.path.join(base_dir, 'PyMS', 'Images')
 
@@ -100,6 +103,9 @@ logs_dir = _os.path.join(base_dir, 'PyMS', 'Logs')
 
 def log_file_path(filename): # type: (str) -> str
 	return _os.path.join(logs_dir, filename)
+
+## Internal Temp
+internal_temp_dir = _os.path.join(base_dir, 'PyMS', 'Temp')
 
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')

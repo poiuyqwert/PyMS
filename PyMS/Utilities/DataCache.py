@@ -1,7 +1,5 @@
 
-from utils import BASE_DIR
-
-import os
+from . import Assets
 
 DATA_REFERENCE = {
 	'SelCircleSize.txt':'Selection Circle Sizes',
@@ -34,6 +32,6 @@ DATA_REFERENCE = {
 
 DATA_CACHE = {}
 for d in DATA_REFERENCE.keys():
-	f = open(os.path.join(BASE_DIR, 'PyMS', 'Data', d),'r')
+	f = open(Assets.data_file_path(d),'r')
 	DATA_CACHE[d] = [l.rstrip() for l in f.readlines()]
 	f.close()

@@ -1,5 +1,4 @@
 
-from .utils import BASE_DIR, isstr
 from .Tooltip import Tooltip
 from .UIKit import *
 from .TagStateManager import TagStateManager

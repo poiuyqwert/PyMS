@@ -558,7 +558,7 @@ class PyAI(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyAI','AI','bin',os.path.join(Assets.base_dir(), 'PyAI.pyw'),Assets.image_path('PyAI.ico'))
+			register_registry('PyAI', 'bin', 'AI')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

@@ -1,13 +1,12 @@
 
-from .utils import BASE_DIR
+from . import Assets
 from .InternalErrorDialog import InternalErrorDialog
 from .UIKit import Toplevel
 
 import sys,os
 
-LOGS_FOLDER = os.path.join(BASE_DIR, 'PyMS','Logs')
 try:
-	os.makedirs(LOGS_FOLDER)
+	os.makedirs(Assets.logs_dir)
 except:
 	pass
 
@@ -23,7 +22,7 @@ class ErrorHandler:
 		self.creating_window = False
 		self.buffer = ''
 		try:
-			self.file = open(os.path.join(LOGS_FOLDER, '%s.txt' % prog),'w')
+			self.file = open(Assets.log_file_path('%s.txt' % prog),'w')
 		except OSError:
 			pass
 

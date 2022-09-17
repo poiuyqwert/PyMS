@@ -1,10 +1,9 @@
 
-from ..Utilities.utils import BASE_DIR, couriernew
+from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Tooltip import Tooltip
-
-import os
+from ..Utilities import Assets
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent, settings):
@@ -16,6 +15,7 @@ class ImportListDialog(PyMSDialog):
 		self.bind('<Delete>', self.remove)
 		self.bind('<Control-i>', self.iimport)
 
+		# TODO: Toolbar?
 		buttons = [
 			('add', self.add, 'Add File (Insert)', NORMAL),
 			('remove', self.remove, 'Remove File (Delete)', DISABLED),
@@ -26,9 +26,7 @@ class ImportListDialog(PyMSDialog):
 		toolbar = Frame(self)
 		for btn in buttons:
 			if isinstance(btn, tuple):
-				image = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images','%s.gif' % btn[0]))
-				button = Button(toolbar, image=image, width=20, height=20, command=btn[1], state=btn[3])
-				button.image = image
+				button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
 				Tooltip(button, btn[2], couriernew)
 				button.pack(side=LEFT)
 				self.buttons[btn[0]] = button

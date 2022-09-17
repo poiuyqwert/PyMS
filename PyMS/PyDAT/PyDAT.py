@@ -19,7 +19,7 @@ from .EntryNameOverrides import EntryNameOverrides
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
 
-from ..Utilities.utils import VERSIONS, BASE_DIR, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
+from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.IntegerVar import IntegerVar
@@ -38,7 +38,7 @@ from ..Utilities.CollapseView import CollapseView
 from ..Utilities.DropDown import DropDown
 from ..Utilities.HelpDialog import HelpDialog
 
-import os, webbrowser
+import os
 
 LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
 
@@ -190,7 +190,7 @@ class PyDAT(MainWindow):
 		#Statusbar
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, weight=0.60)
-		self.editstatus = statusbar.add_icon(PhotoImage(file=os.path.join(BASE_DIR,'PyMS','Images','save.gif')))
+		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.expanded)
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -489,7 +489,7 @@ class PyDAT(MainWindow):
 
 	def register(self, e=None):
 		try:
-			register_registry('PyDAT','','dat',os.path.join(BASE_DIR, 'PyDAT.pyw'),os.path.join(BASE_DIR,'PyMS','Images','PyDAT.ico'))
+			register_registry('PyDAT', 'dat', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

@@ -8,7 +8,7 @@ def main():
 
 	from PyMS.FileFormats import IScriptBIN
 
-	from PyMS.Utilities.utils import BASE_DIR
+	from PyMS.Utilities import Assets
 	from PyMS.Utilities.PyMSError import PyMSError
 
 	import os, optparse, sys
@@ -20,14 +20,14 @@ def main():
 		p = optparse.OptionParser(usage='usage: PyICE [options] <inp|iscriptin> [out|iscriptout]', version='PyICE %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile iscripts from iscript.bin [default]", default=True)
 		p.add_option('-c', '--compile', action='store_false', dest='convert', help="Compile iscripts to an iscript.bin")
-		p.add_option('-a', '--weapons', help="Specify your own weapons.dat file for weapon data lookups [default: Libs\\MPQ\\arr\\weapons.dat]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'weapons.dat'))
-		p.add_option('-l', '--flingy', help="Specify your own flingy.dat file for flingy data lookups [default: Libs\\MPQ\\arr\\flingy.dat]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'flingy.dat'))
-		p.add_option('-i', '--images', help="Specify your own images.dat file for image data lookups [default: Libs\\MPQ\\arr\\images.dat]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'images.dat'))
-		p.add_option('-p', '--sprites', help="Specify your own sprites.dat file for sprite data lookups [default: Libs\\MPQ\\arr\\sprite.dat]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sprites.dat'))
-		p.add_option('-f', '--sfxdata', help="Specify your own sfxdata.dat file for sound data lookups [default: Libs\\MPQ\\arr\\sfxdata.dat]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sfxdata.dat'))
-		p.add_option('-x', '--stattxt', help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'rez','stat_txt.tbl'))
-		p.add_option('-m', '--imagestbl', help="Used to signify the images.tbl file to use [default: Libs\\MPQ\\arr\\images.tbl]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'images.tbl'))
-		p.add_option('-t', '--sfxdatatbl', help="Used to signify the sfxdata.tbl file to use [default: Libs\\MPQ\\arr\\sfxdata.tbl]", default=os.path.join(BASE_DIR, 'PyMS', 'MPQ', 'arr', 'sfxdata.tbl'))
+		p.add_option('-a', '--weapons', help="Specify your own weapons.dat file for weapon data lookups [default: Libs\\MPQ\\arr\\weapons.dat]", default=Assets.mpq_file_path('arr', 'weapons.dat'))
+		p.add_option('-l', '--flingy', help="Specify your own flingy.dat file for flingy data lookups [default: Libs\\MPQ\\arr\\flingy.dat]", default=Assets.mpq_file_path('arr', 'flingy.dat'))
+		p.add_option('-i', '--images', help="Specify your own images.dat file for image data lookups [default: Libs\\MPQ\\arr\\images.dat]", default=Assets.mpq_file_path('arr', 'images.dat'))
+		p.add_option('-p', '--sprites', help="Specify your own sprites.dat file for sprite data lookups [default: Libs\\MPQ\\arr\\sprite.dat]", default=Assets.mpq_file_path('arr', 'sprites.dat'))
+		p.add_option('-f', '--sfxdata', help="Specify your own sfxdata.dat file for sound data lookups [default: Libs\\MPQ\\arr\\sfxdata.dat]", default=Assets.mpq_file_path('arr', 'sfxdata.dat'))
+		p.add_option('-x', '--stattxt', help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=Assets.mpq_file_path('rez','stat_txt.tbl'))
+		p.add_option('-m', '--imagestbl', help="Used to signify the images.tbl file to use [default: Libs\\MPQ\\arr\\images.tbl]", default=Assets.mpq_file_path('arr', 'images.tbl'))
+		p.add_option('-t', '--sfxdatatbl', help="Used to signify the sfxdata.tbl file to use [default: Libs\\MPQ\\arr\\sfxdata.tbl]", default=Assets.mpq_file_path('arr', 'sfxdata.tbl'))
 		p.add_option('-s', '--scripts', help="A list of iscript ID's to decompile (seperated by commas) [default: All]", default='')
 		p.add_option('-b', '--iscript', help="Used to signify the base iscript.bin file to compile on top of", default='')
 		p.add_option('-r', '--reference', action='store_true', help="When decompiling, put a reference for commands and parameters [default: Off]", default=False)

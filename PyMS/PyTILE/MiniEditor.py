@@ -1,9 +1,7 @@
 
-from ..Utilities.utils import BASE_DIR
+from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-
-import os
 
 class MiniEditor(PyMSDialog):
 	def __init__(self, parent, id, colors=[0,0]):
@@ -51,8 +49,7 @@ class MiniEditor(PyMSDialog):
 		self.canvas.create_rectangle(10, 98, 26, 114, fill=c, outline=c, tags='bg')
 		c = '#%02x%02x%02x' % tuple(self.parent.tileset.wpe.palette[self.colors[0]])
 		self.canvas.create_rectangle(2, 90, 18, 106, fill=c, outline=c, tags='fg')
-		self.eyedropper = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS', 'Images', 'eyedropper.gif'))
-		self.canvas.create_image(56, 101, image=self.eyedropper, tags='eyedropper')
+		self.canvas.create_image(56, 101, image=Assets.get_image('eyedropper'), tags='eyedropper')
 		self.canvas.tag_bind('eyedropper', '<Button-1>', self.dropper)
 		b = Frame(self)
 		ok = Button(b, text='Ok', width=10, command=self.ok)

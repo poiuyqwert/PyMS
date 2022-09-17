@@ -1,14 +1,11 @@
 
-from .utils import BASE_DIR, couriernew
+from .utils import couriernew
 from .DropDownChooser import DropDownChooser
 from .UIKit import *
 from .EventPattern import *
-
-import os
+from . import Assets
 
 class DropDown(Frame):
-	ARROW = None
-
 	def __init__(self, parent, variable, entries, display=None, width=1, state=NORMAL, stay_right=False, none_name='None', none_value=None):
 		self.variable = variable
 		self.variable.set = self.set
@@ -44,10 +41,7 @@ class DropDown(Frame):
 		self.entry.bind(Key.Pressed, self.key_pressed),
 		self.entry.bind(Key.Return, self.choose)
 		self.setentries(entries)
-		if DropDown.ARROW == None:
-			DropDown.ARROW = PhotoImage(file=os.path.join(BASE_DIR, 'PyMS','Images','arrow.gif'))
-		self.button = Button(self, image=DropDown.ARROW, command=self.choose, state=state)
-		self.button.image = DropDown.ARROW
+		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)
 		self.button.pack(side=RIGHT, fill=Y)
 
 		self.background_color = self.entry.cget('bg')
