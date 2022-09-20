@@ -48,7 +48,7 @@ class PyTRG(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
-		setup_trace(self, 'PyTRG')
+		setup_trace('PyTRG', self)
 
 		self.trg = None
 		self.file = None

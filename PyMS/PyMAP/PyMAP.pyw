@@ -2090,16 +2090,11 @@ class PyMAP(Tk):
 		)
 		#Window
 		Tk.__init__(self)
-		try:
-			self.icon = os.path.join(BASE_DIR,'Images','PyTILE.ico')
-			self.wm_iconbitmap(self.icon)
-		except:
-			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTILE.xbm')
-			self.wm_iconbitmap(self.icon)
+		self.set_icon('PyMAP')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyMAP', Assets.version('PyMAP'))
 		ga.track(GAScreen('PyMAP'))
-		setup_trace(self, 'PyMAP')
+		setup_trace('PyMAP', self)
 
 		self.action_manager = ActionManager()
 

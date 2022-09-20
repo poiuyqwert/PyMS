@@ -296,7 +296,7 @@ class PyFNT(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
-		setup_trace(self, 'PyFNT')
+		setup_trace('PyFNT', self)
 		self.resizable(False, False)
 
 		self.fnt = None

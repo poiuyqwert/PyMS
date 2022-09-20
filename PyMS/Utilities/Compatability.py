@@ -6,7 +6,7 @@ class Requirement:
 	PIL = (1 << 1)
 
 def check_compat(program_name, additional_requirements=Requirement.none): # type: (str, int) -> None
-	import sys, os
+	import sys
 
 	try:
 		from . import UIKit as _
@@ -18,7 +18,7 @@ def check_compat(program_name, additional_requirements=Requirement.none): # type
 	from .DependencyError import DependencyError
 
 	readmes = (
-		('Readme (Local)', 'file:///%s' % os.path.join(Assets.base_dir, 'README.md')),
+		('Readme (Local)', 'file:///%s' % Assets.readme_file_path),
 		('Readme (Online)', 'https://github.com/poiuyqwert/PyMS#installation')
 	)
 

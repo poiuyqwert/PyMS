@@ -31,7 +31,7 @@ class PyPAL(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
-		setup_trace(self, 'PyPAL')
+		setup_trace('PyPAL', self)
 		self.resizable(False, False)
 
 		self.palette = None

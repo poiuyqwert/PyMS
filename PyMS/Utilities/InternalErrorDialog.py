@@ -18,17 +18,17 @@ class InternalErrorDialog(PyMSDialog):
 		elif debug == InternalErrorDialog.CAPTURE_PRINT:
 			print(trace)
 
-	def __init__(self, parent, prog, handler=None, txt=None):
+	def __init__(self, parent, prog, txt=None):
 		self.prog = prog
-		self.handler = handler
 		self.txt = txt
-		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=True)
+		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=False)
 
 	def widgetize(self):
-		self.bind('<Control-a>', self.selectall)
-		Label(self, text='The PyMS program "%s" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information.' % self.prog, justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
+		self.bind(Ctrl.a, self.selectall)
+		Label(self, text='The PyMS program "%s" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information, see the Issues/Feedback section in the Readme for details.' % self.prog, justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
 		r = Frame(self)
-		Hotlink(r, 'Contact', 'file:///%s' % Assets.doc_path('intro.html')).pack(side=RIGHT, padx=10, pady=2)
+		Hotlink(r, 'Readme (Local)', 'file:///%s' % Assets.readme_file_path).pack(side=RIGHT, padx=10, pady=2)
+		Hotlink(r, 'Readme (Online)', 'https://github.com/poiuyqwert/PyMS#issuesfeedback').pack(side=RIGHT, padx=10, pady=2)
 		r.pack(fill=X)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
@@ -55,15 +55,6 @@ class InternalErrorDialog(PyMSDialog):
 	def selectall(self, key=None):
 		self.text.focus_set()
 		self.text.tag_add(SEL, 1.0, END)
-
-	def cancel(self):
-		if self.handler:
-			self.handler.clear_window()
-		PyMSDialog.cancel(self)
-	def ok(self):
-		if self.handler:
-			self.handler.clear_window()
-		PyMSDialog.ok(self)
 
 	def add_text(self, text):
 		self.text['state'] = NORMAL

@@ -11,12 +11,7 @@ class DependencyError(MainWindow):
 		MainWindow.__init__(self)
 		self.resizable(False,False)
 		self.title('Dependency Error')
-		try:
-			self.icon = Assets.image_path('%s.ico' % prog)
-			self.wm_iconbitmap(self.icon)
-		except:
-			self.icon = '@%s' % Assets.image_path('%s.xbm' % prog)
-			self.wm_iconbitmap(self.icon)
+		self.set_icon(prog)
 		frame = Frame(self)
 		frame.pack(side=TOP, padx=20,pady=20)
 		Label(frame, text=msg, anchor=W, justify=LEFT).pack(side=TOP,pady=2,padx=2)

@@ -23,6 +23,9 @@ def version(program_name): # type: (str) -> str
 			_VERSIONS = json.load(f)
 	return _VERSIONS[program_name]
 
+## Readme
+readme_file_path = _os.path.join(base_dir, 'README.md')
+
 ## Images
 images_dir = _os.path.join(base_dir, 'PyMS', 'Images')
 
@@ -30,7 +33,7 @@ def image_path(filename): # type: (str) -> str
 	return _os.path.join(images_dir, filename)
 
 _IMAGE_CACHE = {}
-def get_image(filename, cache=True): # type: (str, bool) -> _PhotoImage
+def get_image(filename, cache=True): # type: (str, bool) -> (_PhotoImage | None)
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	global _IMAGE_CACHE
@@ -39,7 +42,10 @@ def get_image(filename, cache=True): # type: (str, bool) -> _PhotoImage
 	path = image_path(filename)
 	if not _os.path.exists(path):
 		return None
-	image = _PhotoImage(file=path)
+	try:
+		image = _PhotoImage(file=path)
+	except:
+		return None
 	if cache:
 		_IMAGE_CACHE[filename] = image
 	return image

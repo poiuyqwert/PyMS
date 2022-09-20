@@ -36,7 +36,7 @@ class PyTBL(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
 		ga.track(GAScreen('PyTBL'))
-		setup_trace(self, 'PyTBL')
+		setup_trace('PyTBL', self)
 		
 		self.settings = Settings('PyTBL', '1')
 		self.settings.settings.files.set_defaults({

@@ -81,7 +81,7 @@ class PyMPQ(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
-		setup_trace(self, 'PyMPQ')
+		setup_trace('PyMPQ', self)
 
 		self.mpq = None # type: MPQ
 		self.all_files = [] # type: list[MPQFileEntry]

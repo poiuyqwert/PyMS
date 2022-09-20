@@ -31,7 +31,7 @@ class PyPCX(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
-		setup_trace(self, 'PyPCX')
+		setup_trace('PyPCX', self)
 
 		self.pcx = None
 		self.file = None

@@ -87,7 +87,7 @@ class PyBIN(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyBIN', Assets.version('PyBIN'))
 		ga.track(GAScreen('PyBIN'))
-		setup_trace(self, 'PyBIN')
+		setup_trace('PyBIN', self)
 
 		self.settings = Settings('PyBIN', '1')
 

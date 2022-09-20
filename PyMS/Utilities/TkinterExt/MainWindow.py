@@ -35,16 +35,33 @@ class MainWindow(Tk.Tk):
 			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
 		return is_maximized
 
-	def set_icon(self, name):
+	def set_icon(self, name): # type: (str) -> None
 		from ...Utilities import Assets
+		import os
 		try:
-			self.icon = Assets.get_image('%s.ico' % name)
-			if not self.icon:
-				self.icon = Assets.get_image('PyMS.ico')
-			self.wm_iconbitmap(self.icon)
+			icon = Assets.get_image('%s.ico' % name)
+			if not icon:
+				icon = Assets.get_image(name)
+			if not icon:
+				icon = Assets.get_image('PyMS.ico')
+			if not icon:
+				icon = Assets.get_image('PyMS')
+			try:
+				self.tk.call('wm', 'iconphoto', self._w, '-default', icon) # Python3: self.wm_iconphoto(True, icon)
+			except:
+				self.wm_iconbitmap(default=icon)
+			return
 		except:
-			self.icon = '@%s' % Assets.image_path('%s.xbm' % name)
-			self.wm_iconbitmap(self.icon)
+			pass
+		try:
+			icon_path = Assets.image_path('%s.xbm' % name)
+			if not os.path.exists(icon_path):
+				icon_path = Assets.image_path('PyMS.xbm')
+			icon_path = '@%s' % icon_path
+			self.wm_iconbitmap(default=icon_path)
+			return
+		except:
+			pass
 
 	def destroy(self):
 		from ...Utilities import Assets

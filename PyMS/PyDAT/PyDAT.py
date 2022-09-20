@@ -50,7 +50,7 @@ class PyDAT(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyDAT', Assets.version('PyDAT'))
 		ga.track(GAScreen('PyDAT'))
-		setup_trace(self, 'PyDAT')
+		setup_trace('PyDAT', self)
 
 		self.data_context = DataContext()
 	

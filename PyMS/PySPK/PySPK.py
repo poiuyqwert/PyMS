@@ -51,7 +51,7 @@ class PySPK(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
-		setup_trace(self, 'PySPK')
+		setup_trace('PySPK', self)
 
 		self.minsize(870, 547)
 		self.maxsize(1000, 547)

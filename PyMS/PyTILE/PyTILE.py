@@ -38,7 +38,7 @@ class PyTILE(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTILE', Assets.version('PyTILE'))
 		ga.track(GAScreen('PyTILE'))
-		setup_trace(self, 'PyTILE')
+		setup_trace('PyTILE', self)
 
 		self.stat_txt = TBL.TBL()
 		self.stat_txt_file = ''

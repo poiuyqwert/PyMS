@@ -56,7 +56,7 @@ class PyAI(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyAI', Assets.version('PyAI'))
 		ga.track(GAScreen('PyAI'))
-		setup_trace(self, 'PyAI')
+		setup_trace('PyAI', self)
 
 		self.aiscript = None
 		self.bwscript = None
@@ -1147,7 +1147,7 @@ class PyAI(MainWindow):
 			]
 			for n,s in enumerate(sets):
 				try:
-					s.load_file(files[n] % {'path': Assets.base_dir()})
+					s.load_file(files[n] % {'path': Assets.base_dir})
 				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
@@ -1164,5 +1164,5 @@ class PyAI(MainWindow):
 				set = open(file,'w')
 			except:
 				MessageBox.showerror('Invalid File',"Could not save to '%s'." % file)
-			set.write(('%s\n%s\n%s\n%s' % (self.stat_txt, self.settings.settings.filees.self.unitsdat, self.settings.settings.filees.self.upgradesdat, self.settings.settings.filees.self.techdat)).replace(Assets.base_dir(), '%(path)s'))
+			set.write(('%s\n%s\n%s\n%s' % (self.stat_txt, self.settings.settings.filees.self.unitsdat, self.settings.settings.filees.self.upgradesdat, self.settings.settings.filees.self.techdat)).replace(Assets.base_dir, '%(path)s'))
 			set.close()

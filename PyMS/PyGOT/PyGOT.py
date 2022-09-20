@@ -50,7 +50,7 @@ class PyGOT(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
-		setup_trace(self, 'PyGOT')
+		setup_trace('PyGOT', self)
 		self.resizable(False, False)
 
 		self.got = None

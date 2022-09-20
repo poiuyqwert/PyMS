@@ -7,7 +7,6 @@ class DATUnitsTab(NotebookTab, DATTabConveniences):
 	def __init__(self, parent, toplevel, parent_tab):
 		self.toplevel = toplevel
 		self.parent_tab = parent_tab
-		self.icon = self.toplevel.icon
 		self.tabcopy = None
 		self.edited = False
 		NotebookTab.__init__(self, parent)

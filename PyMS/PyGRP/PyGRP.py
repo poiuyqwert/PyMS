@@ -66,7 +66,7 @@ class PyGRP(MainWindow):
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyGRP', Assets.version('PyGRP'))
 		ga.track(GAScreen('PyGRP'))
-		setup_trace(self, 'PyGRP')
+		setup_trace('PyGRP', self)
 		self.resizable(False, False)
 
 		self.frame = None

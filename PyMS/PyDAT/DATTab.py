@@ -20,7 +20,6 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def __init__(self, parent, toplevel):
 		self.id = 0
 		self.toplevel = toplevel
-		self.icon = self.toplevel.icon
 		self.used_by_references = None
 		self.used_by_collapse_button = None
 		self.used_by_listbox = None

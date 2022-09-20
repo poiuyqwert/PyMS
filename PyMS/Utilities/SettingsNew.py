@@ -223,8 +223,8 @@ class File(SettingObject):
 
 class SelectFile(SettingObject):
 	def __init__(self, name, filetypes, initial_filename=None): # type: (str, list[FileType], str) -> SelectFile
-		self._open_directory = Assets.base_dir()
-		self._save_directory = Assets.base_dir()
+		self._open_directory = Assets.base_dir
+		self._save_directory = Assets.base_dir
 		self._name = name
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
@@ -277,7 +277,7 @@ class SelectFile(SettingObject):
 
 class SelectFiles(SettingObject):
 	def __init__(self, title, filetypes): # type: (str, list[FileType]) -> SelectFiles
-		self._directory = Assets.base_dir()
+		self._directory = Assets.base_dir
 		self._title = title
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
@@ -312,7 +312,7 @@ class SelectFiles(SettingObject):
 
 class SelectDirectory(SettingObject):
 	def __init__(self, title='Select Folder'): # type: (str) -> SelectDirectory
-		self._directory = Assets.base_dir()
+		self._directory = Assets.base_dir
 		self._title = title
 
 	def select_open(self, window):

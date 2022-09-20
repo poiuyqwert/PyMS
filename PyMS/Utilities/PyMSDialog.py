@@ -7,8 +7,6 @@ class PyMSDialog(Toplevel):
 		self._initial_max_size = None # type: tuple[int, int]
 		Toplevel.__init__(self, parent)
 		self.title(title)
-		self.icon = parent.icon
-		self.wm_iconbitmap(parent.icon)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
 			self.bind('<Escape>', self.cancel)
@@ -55,7 +53,7 @@ class PyMSDialog(Toplevel):
 	def dismiss(self):
 		self.withdraw()
 		self.update_idletasks()
-		self.parent.focus_set()
+		self.master.focus_set()
 		self.destroy()
 
 	def ok(self, event=None):

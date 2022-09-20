@@ -44,7 +44,7 @@ class PyLO(MainWindow):
 		ga.set_application('PyLO', Assets.version('PyLO'))
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
-		setup_trace(self, 'PyLO')
+		setup_trace('PyLO', self)
 
 		self.lo = None
 		self.file = None
