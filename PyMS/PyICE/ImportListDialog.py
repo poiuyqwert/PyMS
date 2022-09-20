@@ -2,8 +2,9 @@
 from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities import Assets
+from ..Utilities.Toolbar import Toolbar
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent, settings):
@@ -11,37 +12,16 @@ class ImportListDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'List Importing')
 
 	def widgetize(self):
-		self.bind('<Insert>', self.add)
-		self.bind('<Delete>', self.remove)
-		self.bind('<Control-i>', self.iimport)
-
-		# TODO: Toolbar?
-		buttons = [
-			('add', self.add, 'Add File (Insert)', NORMAL),
-			('remove', self.remove, 'Remove File (Delete)', DISABLED),
-			10,
-			('import', self.iimport, 'Import Selected Script (Ctrl+I)', DISABLED),
-		]
-		self.buttons = {}
-		toolbar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
-				Tooltip(button, btn[2], couriernew)
-				button.pack(side=LEFT)
-				self.buttons[btn[0]] = button
-			else:
-				Frame(toolbar, width=btn).pack(side=LEFT)
-		toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
-
+		self.toolbar = Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add File', Key.Insert, NORMAL)
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove File', Key.Delete, enabled=False, tags='has_selection')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Selected Script', Ctrl.i, enabled=False, tags='has_selection')
+		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
+ 
 		##Listbox
-		listframe = Frame(self, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, font=couriernew, activestyle=DOTBOX, yscrollcommand=scrollbar.set, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(fill=BOTH, expand=1)
+		self.listbox = ScrolledListbox(self, font=couriernew, activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox.pack(fill=BOTH, expand=1)
 
 		##Buttons
 		buttons = Frame(self)
@@ -60,7 +40,7 @@ class ImportListDialog(PyMSDialog):
 
 	def setup_complete(self):
 		self.minsize(200,150)
-		self.settings.windows.load_window_size('listimport')
+		self.settings.windows.load_window_size('listimport', self)
 
 	def add(self, key=None):
 		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[('Text Files','*.txt')])
@@ -74,8 +54,6 @@ class ImportListDialog(PyMSDialog):
 			self.listbox.see(END)
 
 	def remove(self, key=None):
-		if key and self.buttons['remove']['state'] == DISABLED:
-			return
 		index = int(self.listbox.curselection()[0])
 		del self.parent.imports[index]
 		if self.parent.imports and index == len(self.parent.imports):
@@ -84,12 +62,18 @@ class ImportListDialog(PyMSDialog):
 		self.update()
 
 	def iimport(self, key=None):
-		if key and self.buttons['import']['state'] == DISABLED:
-			return
 		self.parent.iimport(file=self.listbox.get(self.listbox.curselection()[0]), parent=self)
 
 	def iimportall(self):
 		self.parent.iimport(file=self.parent.imports, parent=self)
+
+	def update_states(self):
+		has_selection = not not self.listbox.curselection()
+		self.toolbar.tag_enabled('has_selection', has_selection)
+
+		can_import = not not self.parent.imports
+		self.toolbar.tag_enabled('can_import', can_import)
+		self.importbtn['state'] = NORMAL if can_import else DISABLED
 
 	def update(self):
 		sel = 0
@@ -97,16 +81,10 @@ class ImportListDialog(PyMSDialog):
 			sel = self.listbox.curselection()[0]
 			self.listbox.delete(0, END)
 		if self.parent.imports:
-			self.buttons['remove']['state'] = NORMAL
-			self.buttons['import']['state'] = NORMAL
-			self.importbtn['state'] = NORMAL
 			for file in self.parent.imports:
 				self.listbox.insert(END, file)
 			self.listbox.select_set(sel)
-		else:
-			self.buttons['remove']['state'] = DISABLED
-			self.buttons['import']['state'] = NORMAL
-			self.importbtn['state'] = DISABLED
+		self.update_states()
 
 	def dismiss(self):
 		self.settings.windows.save_window_size('listimport', self)

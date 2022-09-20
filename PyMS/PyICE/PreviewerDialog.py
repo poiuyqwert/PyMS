@@ -8,10 +8,10 @@ from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
+from ..Utilities.Toolbar import Toolbar
 
 import os
 
@@ -151,31 +151,20 @@ class PreviewerDialog(PyMSDialog):
 		self.scroll.set(0,1)
 		self.scroll.pack(fill=X)
 		p.pack()
-		self.buttons = {}
-		frameview = Frame(right)
-		# TODO: Toolbar?s
-		buttons = [
-			('begin', 'Jump to first frame'),
-			('frw', 'Jump 17 frames Left'),
-			('rw', 'Jump 1 frame Left'),
-			('frwp', 'Play every 17th frame going Left'),
-			('rwp', 'Play every frame going Left'),
-			('stop', 'Stop playing frames'),
-			('fwp', 'Play every frame going Right'),
-			('ffwp', 'Play every 17th frame going Right'),
-			('fw', 'Jump 1 frame Right'),
-			('ffw', 'Jump 17 frames Right'),
-			('end', 'Jump to last frame')
-		]
-		for n,btn in enumerate(buttons):
-			if isinstance(btn, tuple):
-				button = Button(frameview, image=Assets.get_image(btn[0]), width=20, height=20, command=lambda i=n: self.frameset(i), state=DISABLED)
-				Tooltip(button, btn[1])
-				button.pack(side=LEFT)
-				self.buttons[btn[0]] = button
-			else:
-				Frame(frameview, width=2).pack(side=LEFT)
-		frameview.pack(padx=1, pady=3)
+
+		self.toolbar = Toolbar(right)
+		self.toolbar.add_button(Assets.get_image('begin'), lambda: self.frameset(0), 'Jump to first frame', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('frw'), lambda: self.frameset(1), 'Jump 17 frames Left', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('rw'), lambda: self.frameset(2), 'Jump 1 frame Left', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('frwp'), lambda: self.frameset(3), 'Play every 17th frame going Left', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('rwp'), lambda: self.frameset(4), 'Play every frame going Left', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('stop'), lambda: self.frameset(5), 'Stop playing frames', enabled=False, tags='is_playing'),
+		self.toolbar.add_button(Assets.get_image('fwp'), lambda: self.frameset(6), 'Play every frame going Right', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('ffwp'), lambda: self.frameset(7), 'Play every 17th frame going Right', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('fw'), lambda: self.frameset(8), 'Jump 1 frame Right', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('ffw'), lambda: self.frameset(9), 'Jump 17 frames Right', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('end'), lambda: self.frameset(10), 'Jump to last frame', enabled=False, tags='can_preview')
+		self.toolbar.pack(padx=1, pady=3)
 
 		self.prevspeed = IntegerVar(self.toplevel.settings.previewer.get('previewspeed', 150), [1,5000])
 		self.showpreview = IntVar()
@@ -221,14 +210,17 @@ class PreviewerDialog(PyMSDialog):
 		self.updateframes()
 
 	def action_states(self):
-		btns = [DISABLED,NORMAL][not not (self.curgrp and self.curgrp[2] > 1 and self.showpreview.get())]
-		for btn in ['begin','frw','rw','frwp','rwp','fw','ffw','fwp','ffwp','end']:
-			self.buttons[btn]['state'] = btns
+		can_preview = not not (self.curgrp and self.curgrp[2] > 1 and self.showpreview.get())
+		self.toolbar.tag_enabled('can_preview', can_preview)
 
+		is_playing = not not self.play
+		self.toolbar.tag_enabled('is_playing', is_playing)
+
+	# TODO: Make this better
 	def frameset(self, n):
 		if not n in [3,4,5,6,7]:
 			if n in [0,10]:
-				s = [END,0][not n]
+				s = [self.curgrp[2]-1,0][not n]
 			elif n in [1,2,8,9]:
 				s = self.previewing[1] + [-17,-1,1,17][n % 5 - 1]
 				if s < 0 or s >= self.curgrp[2]:
@@ -242,18 +234,18 @@ class PreviewerDialog(PyMSDialog):
 			self.updateframes()
 			self.drawpreview()
 		if n in [3,4,6,7]:
-			self.buttons['stop']['state'] = NORMAL
 			self.speed = [-17,-1,None,1,17][n - 3]
 			self.play = self.after(int(self.prevspeed.get()), self.playframe)
 		elif self.speed or self.play:
 			self.stopframe()
+		self.action_states()
 
 	def stopframe(self):
 		if self.play:
-			self.buttons['stop']['state'] = DISABLED
 			self.speed = None
 			self.after_cancel(self.play)
 			self.play = None
+			self.action_states()
 
 	def playframe(self):
 		prevfrom = self.prevfrom.get()

@@ -94,11 +94,11 @@ class PyICE(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', Ctrl.Alt.e, enabled=False, tags='entries_selected')
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', Ctrl.e, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
 		self.toolbar.add_section()
@@ -465,8 +465,6 @@ class PyICE(MainWindow):
 
 	def codeedit(self, key=None):
 		selected_iscript_ids = self.selected_iscript_ids()
-		if not selected_iscript_ids:
-			return
 		CodeEditDialog(self, self.settings, selected_iscript_ids)
 
 	def tblbin(self, key=None, err=None):

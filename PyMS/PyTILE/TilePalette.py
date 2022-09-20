@@ -5,8 +5,8 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYP
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities import Assets
+from ..Utilities.Toolbar import Toolbar
 
 class TilePalette(PyMSDialog):
 	OPEN_PALETTE_COUNT = 0
@@ -40,50 +40,24 @@ class TilePalette(PyMSDialog):
 			smallertype = 'MiniTiles'
 		elif self.tiletype == TILETYPE_MINI:
 			typename = 'MiniTiles'
-		self.buttons = None
+		self.toolbar = None
 		if self.editing:
-			buttons = [
-				('add', self.add, 'Add (Insert)', NORMAL, 'Insert'),
-			]
+			self.toolbar = Toolbar(self)
+			self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add', Key.Insert, enabled=False, tags='can_add')
 			if self.tiletype != TILETYPE_MINI:
-				buttons.extend([
-					10,
-					('colors', self.select_smaller, 'Select %s (Ctrl+M)' % smallertype, NORMAL, 'Ctrl+M')
-				])
+				self.toolbar.add_section()
+				self.toolbar.add_button(Assets.get_image('colors'), self.select_smaller, 'Select %s' % smallertype, Ctrl.m)
 			if self.tiletype != TILETYPE_GROUP:
-				buttons.extend([
-					10,
-					('edit', self.edit, 'Edit %s (Enter)' % typename, NORMAL, 'Return')
-				])
-			buttons.extend([
-				20,
-				('exportc', self.export_graphics, 'Export %s Graphics (Ctrl+E)' % typename, NORMAL, 'Ctrl+E'),
-				('importc', self.import_graphics, 'Import %s Graphics (Ctrl+I)' % typename, NORMAL, 'Ctrl+I'),
-			])
+				self.toolbar.add_section()
+				self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit %s' % typename, Key.Return)
+			self.toolbar.add_spacer(20)
+			self.toolbar.add_button(Assets.get_image('exportc'), self.export_graphics, 'Export %s Graphics' % typename, Ctrl.e, enabled=False, tags='has_selection')
+			self.toolbar.add_button(Assets.get_image('importc'), self.import_graphics, 'Import %s Graphics' % typename, Ctrl.i)
 			if self.tiletype != TILETYPE_MINI:
-				buttons.extend([
-					10,
-					('export', self.export_settings, 'Export %s Settings (Ctrl+Shift+E)' % typename, NORMAL, 'Ctrl+Shift+E'),
-					('import', self.import_settings, 'Import %s Settings (Ctrl+Shift+I)' % typename, NORMAL, 'Ctrl+Shift+I')
-				])
-			self.buttons = {}
-			# TODO: Use toolbar?
-			toolbar = Frame(self)
-			for btn in buttons:
-				if isinstance(btn, tuple):
-					button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
-					Tooltip(button, btn[2])
-					button.pack(side=LEFT)
-					self.buttons[btn[0]] = button
-					a = btn[4]
-					if a:
-						if not a.startswith('F'):
-							self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
-						else:
-							self.bind('<%s>' % a, btn[1])
-				else:
-					Frame(toolbar, width=btn).pack(side=LEFT)
-			toolbar.pack(fill=X)
+				self.toolbar.add_section()
+				self.toolbar.add_button(Assets.get_image('export'), self.export_settings, 'Export %s Settings' % typename, Shift.Ctrl.e, enabled=False, tags='has_selection')
+				self.toolbar.add_button(Assets.get_image('import'), self.import_settings, 'Import %s Settings' % typename, Shift.Ctrl.i)
+			self.toolbar.pack(fill=X)
 
 		self.palette = TilePaletteView(self, self.tiletype, self.start_selected)
 		self.palette.pack(side=TOP, fill=BOTH, expand=1)
@@ -152,7 +126,7 @@ class TilePalette(PyMSDialog):
 		self.title(self.get_title())
 
 	def update_state(self):
-		if self.buttons == None:
+		if self.toolbar == None:
 			return
 		at_max = False
 		if self.tiletype == TILETYPE_GROUP:
@@ -161,11 +135,10 @@ class TilePalette(PyMSDialog):
 			at_max = (self.tileset.megatiles_remaining() == 0)
 		elif self.tiletype == TILETYPE_MINI:
 			at_max = (self.tileset.minitiles_remaining() == 0 and self.tileset.vx4.expanded)
-		self.buttons['add']['state'] == DISABLED if at_max else NORMAL
-		export_state = DISABLED if not self.palette.selected else NORMAL
-		self.buttons['exportc']['state'] = export_state
-		if 'export' in self.buttons:
-			self.buttons['export']['state'] = export_state
+		self.toolbar.tag_enabled('can_add', not at_max)
+
+		has_selection = not not self.palette.selected
+		self.toolbar.tag_enabled('has_selection', has_selection)
 
 	def update_status(self):
 		status = 'Selected: '

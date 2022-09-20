@@ -6,9 +6,10 @@ from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.Toolbar import Toolbar
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 import os
 
@@ -107,29 +108,11 @@ class CodeGeneratorDialog(PyMSDialog):
 		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
 		leftframe = Frame(self.hor_pane)
 		Label(leftframe, text='Variables:', anchor=W).pack(side=TOP, fill=X)
-		listframe = Frame(leftframe, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, bd=0, highlightthickness=0, yscrollcommand=scrollbar.set, exportselection=0)
-		bind = [
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda e,l=self.listbox,i=0: self.move(e,l,i)),
-			('<End>', lambda e,l=self.listbox,i=END: self.move(e,l,i)),
-			('<Up>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
-			('<Left>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
-			('<Down>', lambda e,l=self.listbox,i=1: self.move(e,l,i)),
-			('<Right>', lambda e,l=self.listbox,i=-1: self.move(e,l,i)),
-			('<Prior>', lambda e,l=self.listbox,i=-10: self.move(e,l,i)),
-			('<Next>', lambda e,l=self.listbox,i=10: self.move(e,l,i)),
-		]
-		for b in bind:
-			self.bind(*b)
-			self.listbox.bind(*b)
-		self.listbox.bind('<ButtonRelease-1>', self.update_states)
-		self.listbox.bind('<Double-Button-1>', self.edit)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
+		self.listbox = ScrolledListbox(leftframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, height=10, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox.bind(WidgetEvent.Listbox.Select, self.update_states)
+		self.listbox.bind(Double.Click_Left, self.edit)
+		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
+
 		def add_variable(generator_class, name):
 			id = len(self.variables)
 			self.variables.append(CodeGeneratorVariable(generator_class(), self.unique_name(name)))
@@ -153,22 +136,17 @@ class CodeGeneratorDialog(PyMSDialog):
 			menu.add_separator()
 			menu.add_command(label='Manage Presets', command=self.manage_presets)
 			menu.post(*self.winfo_pointerxy())
-		buts = Frame(leftframe)
-		# TODO: Toolbar?
-		buttons = [
-			('add', 'Add Variable', LEFT, 0, add_pressed),
-			('remove', 'Remove Variable', LEFT, 0, self.remove),
-			('save', 'Save Preset', LEFT, (5,0), self.save_preset),
-			('open', 'Load Preset', LEFT, 0, load_preset_pressed),
-			('edit', 'Edit Variable', RIGHT, 0, self.edit),
-		]
-		self.buttons = {}
-		for icon,tip,side,padx,callback in buttons:
-			button = Button(buts, image=Assets.get_image(icon), width=20, height=20, command=callback)
-			Tooltip(button, tip)
-			button.pack(side=side, padx=padx)
-			self.buttons[icon] = button
-		buts.pack(side=BOTTOM, fill=X)
+		
+		self.toolbar = Toolbar(leftframe)
+		self.toolbar.add_button(Assets.get_image('add'), add_pressed, 'Add Variable')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Variable', tags='has_selection')
+		self.toolbar.add_gap()
+		self.toolbar.add_button(Assets.get_image('save'), self.save_preset, 'Save Preset', tags='can_save')
+		self.toolbar.add_button(Assets.get_image('open'), load_preset_pressed, 'Load Preset', tags='has_presets')
+		self.toolbar.add_spacer(10, flexible=True)
+		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit Variable', tags='has_selection')
+		self.toolbar.pack(side=BOTTOM, fill=X)
+
 		self.hor_pane.add(leftframe, sticky=NSEW)
 
 		self.ver_pane = PanedWindow(self.hor_pane,orient=VERTICAL)
@@ -179,7 +157,6 @@ class CodeGeneratorDialog(PyMSDialog):
 		vscroll = Scrollbar(textframe)
 		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
 		self.text.grid(sticky=NSEW)
-		# self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
 		vscroll.config(command=self.text.yview)
@@ -210,7 +187,7 @@ class CodeGeneratorDialog(PyMSDialog):
 			text.tag_remove(SEL, '1.0', END)
 			text.tag_add(SEL, '1.0', END)
 			text.mark_set(INSERT, '1.0')
-		self.bind('<Control-a>', lambda *_: select_all(self.code))
+		self.bind(Ctrl.a, lambda *_: select_all(self.code))
 
 		buts = Frame(self)
 		self.insert_button = Button(buts, text='Insert', command=self.insert)
@@ -242,11 +219,14 @@ class CodeGeneratorDialog(PyMSDialog):
 			return ''
 
 	def update_states(self, *_):
-		selection = DISABLED if not self.listbox.curselection() else NORMAL
-		self.buttons['remove']['state'] = selection
-		self.buttons['save']['state'] = NORMAL if (self.variables and self.text.get(1.0,END)) else DISABLED
-		self.buttons['open']['state'] = NORMAL if self.settings.get('generator',{}).get('presets',None) else DISABLED
-		self.buttons['edit']['state'] = selection
+		has_selection = not not self.listbox.curselection()
+		self.toolbar.tag_enabled('has_selection', has_selection)
+
+		can_save = self.variables and self.text.get(1.0,END)
+		self.toolbar.tag_enabled('can_save', can_save)
+
+		has_presets = not not self.settings.get('generator',{}).get('presets',None)
+		self.toolbar.tag_enabled('has_presets', has_presets)
 
 	def remove(self, *_):
 		cont = MessageBox.askquestion(parent=self, title='Remove Variable?', message="The variable settings will be lost.", default=MessageBox.YES, type=MessageBox.YESNO)

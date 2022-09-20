@@ -67,7 +67,7 @@ class SettingsDialog(PyMSDialog):
 			self.mpqhandler.set_mpqs(self.mpqsettings.mpqs)
 		if self.data:
 			for page,page_data in zip(self.pages,self.data):
-				page.save(page_data,Assets.mpq_dir(''),self.settings)
+				page.save(page_data,Assets.mpq_file_path(''),self.settings)
 
 	def ok(self):
 		if self.edited:

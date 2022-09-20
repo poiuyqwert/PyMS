@@ -4,6 +4,10 @@ from .UIKit import *
 from .TagStateManager import TagStateManager
 
 class Toolbar(Frame):
+	BUTTON_SIZE = 20
+	RADIO_SIZE_ADJUST = None
+	CHECK_SIZE_ADJUST = None
+
 	# Use `bind_target=<widget>` to adjust where shortcuts are bound, otherwise `self.master` will be used
 	def __init__(self, *args, **kwargs):
 		self._buttons = {} # type: dict[str, Widget]
@@ -22,6 +26,18 @@ class Toolbar(Frame):
 		self._row = Frame(self)
 		self._row.pack(side=TOP, fill=X, pady=(0,2))
 
+	# Radiobutton and Checkbutton may not be the same size as a Button, so we calculate the difference to adjust the sizes to match
+	def _calculate_size_adjusts(self):
+		if Toolbar.RADIO_SIZE_ADJUST != None:
+			return
+		from . import Assets
+		icon = Assets.get_image('open')
+		button_size = Button(None, image=icon, width=20, height=20).winfo_reqheight()
+		radio_size = Radiobutton(None, image=icon, width=20, height=20, indicatoron=0).winfo_reqheight()
+		check_size = Checkbutton(None, image=icon, width=20, height=20, indicatoron=0).winfo_reqheight()
+		Toolbar.RADIO_SIZE_ADJUST = button_size - radio_size
+		Toolbar.CHECK_SIZE_ADJUST = button_size - check_size
+
 	def _add_button(self, button, tooltip, identifier, tags):
 		Tooltip(button, tooltip)
 		button.pack(side=LEFT)
@@ -31,7 +47,9 @@ class Toolbar(Frame):
 			self._tag_manager.add_item(button, tags)
 
 	def add_button(self, icon, callback, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
-		button = Button(self._row, image=icon, width=20, height=20, command=callback, state=NORMAL if enabled else DISABLED)
+		self._calculate_size_adjusts()
+		size = Toolbar.BUTTON_SIZE
+		button = Button(self._row, image=icon, width=size, height=size, command=callback, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:
@@ -46,7 +64,9 @@ class Toolbar(Frame):
 		return button
 
 	def add_radiobutton(self, icon, variable, value, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True):
-		button = Radiobutton(self._row, image=icon, width=20, height=20, variable=variable, value=value, indicatoron=0, state=NORMAL if enabled else DISABLED)
+		self._calculate_size_adjusts()
+		size = Toolbar.BUTTON_SIZE + Toolbar.RADIO_SIZE_ADJUST
+		button = Radiobutton(self._row, image=icon, width=size, height=size, variable=variable, value=value, indicatoron=0, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:
@@ -61,7 +81,9 @@ class Toolbar(Frame):
 		return button
 
 	def add_checkbutton(self, icon, variable, tooltip, shortcut=None, enabled=True, identifier=None, tags=None, add_shortcut_to_tooltip=True, bind_shortcut=True, onvalue=True, offvalue=False):
-		button = Checkbutton(self._row, image=icon, width=20, height=20, variable=variable, onvalue=onvalue, offvalue=offvalue, indicatoron=0, state=NORMAL if enabled else DISABLED)
+		self._calculate_size_adjusts()
+		size = Toolbar.BUTTON_SIZE + Toolbar.CHECK_SIZE_ADJUST
+		button = Checkbutton(self._row, image=icon, width=size, height=size, variable=variable, onvalue=onvalue, offvalue=offvalue, indicatoron=0, state=NORMAL if enabled else DISABLED)
 		button._image = icon
 		if shortcut:
 			if bind_shortcut:

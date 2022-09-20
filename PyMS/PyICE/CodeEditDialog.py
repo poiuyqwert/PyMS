@@ -9,14 +9,13 @@ from .SoundDialog import SoundDialog
 from ..FileFormats import IScriptBIN
 from ..FileFormats import GRP
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import Assets
+from ..Utilities.Toolbar import Toolbar
 
 import os
 
@@ -45,44 +44,27 @@ class CodeEditDialog(PyMSDialog):
 		self.previewer = None
 
 	def widgetize(self):
-		buttons = [
-			('save', self.save, 'Save (Ctrl+S)', '<Control-s>'),
-			('test', self.test, 'Test Code (Ctrl+T)', '<Control-t>'),
-			4,
-			('export', self.export, 'Export Code (Ctrl+E)', '<Control-e>'),
-			('saveas', self.exportas, 'Export As... (Ctrl+Alt+A)', '<Control-Alt-a>'),
-			('import', self.iimport, 'Import Code (Ctrl+I)', '<Control-i>'),
-			10,
-			('find', self.find, 'Find/Replace (Ctrl+F)', '<Control-f>'),
-			10,
-			('colors', self.colors, 'Color Settings (Ctrl+Alt+C)', '<Control-Alt-c>'),
-			10,
-			('debug', self.generate, 'Generate Code (Ctrl+G)', '<Control-g>'),
-			('insert', self.preview, 'Insert/Preview Window (Ctrl+W)', '<Control-w>'),
-			('fwp', self.sounds, 'Sound Previewer (Ctrl+Q)', '<Control-q>'),
-		]
-		self.bind('<Alt-Left>', lambda e,i=0: self.gotosection(e,i))
-		self.bind('<Alt-Right>', lambda e,i=1: self.gotosection(e,i))
-		self.bind('<Alt-Up>', lambda e,i=2: self.gotosection(e,i))
-		self.bind('<Alt-Down>', lambda e,i=3: self.gotosection(e,i))
-		bar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				image = Assets.get_image(btn[0])
-				if btn[3] == True:
-					button = Checkbutton(bar, image=image, width=20, height=20, indicatoron=0, variable=btn[1])
-				else:
-					button = Button(bar, image=image, width=20, height=20, command=btn[1])
-					self.bind(btn[3], btn[1])
-				Tooltip(button, btn[2], couriernew)
-				button.pack(side=LEFT)
-				if button.winfo_reqwidth() > 26:
-					button['width'] = 18
-				if button.winfo_reqheight() > 26:
-					button['height'] = 18
-			else:
-				Frame(bar, width=btn).pack(side=LEFT)
-		bar.pack(fill=X, padx=2, pady=2)
+		self.bind(Alt.Left, lambda e,i=0: self.gotosection(e,i))
+		self.bind(Alt.Right, lambda e,i=1: self.gotosection(e,i))
+		self.bind(Alt.Up, lambda e,i=2: self.gotosection(e,i))
+		self.bind(Alt.Down, lambda e,i=3: self.gotosection(e,i))
+
+		toolbar = Toolbar(self)
+		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
+		toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t)
+		toolbar.add_gap()
+		toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', Ctrl.e)
+		toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', Ctrl.Alt.a)
+		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', Ctrl.i)
+		toolbar.add_section()
+		toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f)
+		toolbar.add_section()
+		toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		toolbar.add_section()
+		toolbar.add_button(Assets.get_image('debug'), self.generate, 'Generate Code', Ctrl.g)
+		toolbar.add_button(Assets.get_image('insert'), self.preview, 'Insert/Preview Window', Ctrl.w)
+		toolbar.add_button(Assets.get_image('fwp'), self.sounds, 'Sound Previewer', Ctrl.q)
+		toolbar.pack(side=TOP, fill=X, padx=2, pady=2)
 
 		self.text = IScriptCodeText(self, self.parent.ibin, self.edited, highlights=self.parent.highlights)
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
@@ -285,7 +267,7 @@ class CodeEditDialog(PyMSDialog):
 	def find(self, e=None):
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self)
-			self.bind('<F3>', self.findwindow.findnext)
+			self.bind(Key.F3, self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 		self.findwindow.focus_set()

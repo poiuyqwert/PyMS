@@ -3,8 +3,9 @@ from ..FileFormats.MPQ.MPQ import MPQ
 
 from . import Assets
 from .setutils import PYMS_SETTINGS
-from .Tooltip import Tooltip
 from .UIKit import *
+from .Toolbar import Toolbar
+from .ScrolledListbox import ScrolledListbox
 
 import os
 
@@ -19,69 +20,31 @@ class MPQSettings(Frame):
 		Frame.__init__(self, parent)
 		Label(self, text='MPQ Settings:', font=('Courier', -12, 'bold'), anchor=W).pack(fill=X)
 		Label(self, text="Files will be read from the highest priority MPQ that contains them.\nThe higher an MPQ is on the list the higher its priority.", anchor=W, justify=LEFT).pack(fill=X)
-		self.listframe = Frame(self, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(self.listframe)
-		self.listbox = Listbox(self.listframe, width=35, height=1, bd=0, yscrollcommand=scrollbar.set, exportselection=0, activestyle=DOTBOX)
-		bind = [
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-            # TODO: What should Shift-Up/Down do?
-			# ('<Shift-Up>', lambda e,i=0: self.movestring(e,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			# ('<Shift-Down>', lambda e,i=1: self.movestring(e,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
-		]
-		for b in bind:
-			self.listframe.bind(*b)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		self.listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
+
+		self.listbox = ScrolledListbox(self, width=35, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		for mpq in self.mpqs:
 			self.listbox.insert(END,mpq)
 		if self.listbox.size():
 			self.listbox.select_set(0)
 
-		buttons = [
-			('add', self.add, 'Add MPQ (Insert)', NORMAL, 'Insert', LEFT),
-			('remove', self.remove, 'Remove MPQ (Delete)', DISABLED, 'Delete', LEFT),
-			('opendefault', self.adddefault, "Add default StarCraft MPQ's (Shift+Insert)", NORMAL, 'Shift+Insert', LEFT),
-			('up', lambda e=None,i=0: self.movempq(e,i), 'Move MPQ Up (Shift+Up)', DISABLED, 'Shift+Up', RIGHT),
-			('down', lambda e=None,i=1: self.movempq(e,i), 'Move MPQ Down (Shift+Down)', DISABLED, 'Shift+Down', RIGHT),
-		]
-		self.buttons = {}
-		# TODO: Toolbar?
-		toolbar = Frame(self)
-		for btn in buttons:
-			if isinstance(btn, tuple):
-				button = Button(toolbar, image=Assets.get_image(btn[0]), width=20, height=20, command=btn[1], state=btn[3])
-				Tooltip(button, btn[2])
-				button.pack(side=btn[5], padx=[0,10][btn[0] == 'opendefault'])
-				self.buttons[btn[0]] = button
-				a = btn[4]
-				if a:
-					if not a.startswith('F'):
-						self.bind('<%s%s>' % (a[:-1].replace('Ctrl','Control').replace('+','-'), a[-1].lower()), btn[1])
-					else:
-						self.bind('<%s>' % a, btn[1])
-			else:
-				Frame(toolbar, width=btn).pack(side=LEFT)
-		toolbar.pack(fill=X, padx=51, pady=1)
+		self.toolbar = Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add MPQ', Key.Insert),
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='has_selection'),
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.adddefault, "Add default StarCraft MPQ's", Shift.Insert),
+		self.toolbar.add_spacer(10, flexible=True)
+		self.toolbar.add_button(Assets.get_image('up'), lambda e=None,i=0: self.movempq(e,i), 'Move MPQ Up', Shift.Up, enabled=False, tags='has_selection'),
+		self.toolbar.add_button(Assets.get_image('down'), lambda e=None,i=1: self.movempq(e,i), 'Move MPQ Down', Shift.Down, enabled=False, tags='has_selection'),
+		self.toolbar.pack(fill=X, padx=51, pady=1)
 
 		self.action_states()
 
 	def activate(self):
-		self.listframe.focus_set()
+		self.listbox.focus_set()
 
 	def action_states(self):
-		select = [NORMAL,DISABLED][not self.listbox.curselection()]
-		for btn in ['remove','up','down']:
-			self.buttons[btn]['state'] = select
+		has_selection = not not self.listbox.curselection()
+		self.toolbar.tag_enabled('has_selection', has_selection)
 
 	def scroll(self, e):
 		if e.delta > 0:
@@ -99,8 +62,6 @@ class MPQSettings(Frame):
 		self.listbox.see(a)
 
 	def movempq(self, key=None, dir=0):
-		if key and self.buttons[['up','down'][dir]]['state'] != NORMAL:
-			return
 		i = int(self.listbox.curselection()[0])
 		if i == [0,self.listbox.size()-1][dir]:
 			return
@@ -142,8 +103,6 @@ class MPQSettings(Frame):
 			self.setdlg.edited = True
 
 	def remove(self, key=None):
-		if key and self.buttons['remove']['state'] != NORMAL:
-			return
 		i = int(self.listbox.curselection()[0])
 		del self.mpqs[i]
 		self.listbox.delete(i)
