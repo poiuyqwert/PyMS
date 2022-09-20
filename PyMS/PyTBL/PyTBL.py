@@ -111,7 +111,7 @@ class PyTBL(MainWindow):
 		self.listbox = ScrolledListbox(self.hor_pane, scroll_speed=2, width=35, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
 		self.hor_pane.add(self.listbox, sticky=NSEW, minsize=200)
-		self.listbox.bind('<<ListboxSelect>>', lambda e: self.update(e))
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda e: self.update(e))
 		self.listbox.bind(Mouse.Click_Right, self.popup)
 
 		# Textbox

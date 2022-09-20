@@ -329,7 +329,7 @@ class PyFNT(MainWindow):
 		#Listbox
 		Label(leftframe, text='Characters:', anchor=W).pack(side=TOP, fill=X)
 		self.listbox = ScrolledListbox(leftframe, width=15, height=17, bd=0, highlightthickness=0, exportselection=0)
-		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.preview())
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.preview())
 		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
 		leftframe.pack(side=LEFT, padx=1, pady=1, fill=Y)
 

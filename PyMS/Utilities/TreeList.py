@@ -187,15 +187,15 @@ class TreeList(Frame):
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 			self.text.image_create('entry%s.first -1c' % node.entry, image=self.icons[node.expanded])
 			self.text.tag_add('icon%s' % node.entry, 'entry%s.first -2c' % node.entry, 'entry%s.first -1c' % node.entry)
-			self.text.tag_bind('icon%s' % node.entry, '<Button-1>', lambda e,i=node.entry: self.toggle(i))
+			self.text.tag_bind('icon%s' % node.entry, Mouse.Click_Left, lambda e,i=node.entry: self.toggle(i))
 		else:
 			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
 			self.execute('insert',(pos, '  ' * (node.depth+1)))
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 		if selectable:
-			self.text.tag_bind('entry%s' % node.entry, '<Button-1>', lambda e,i=node.entry: self.select(i,0))
-			self.text.tag_bind('entry%s' % node.entry, '<Shift-Button-1>', lambda e,i=node.entry: self.select(i,1))
-			self.text.tag_bind('entry%s' % node.entry, '<Control-Button-1>', lambda e,i=node.entry,t=0: self.select(i,2))
+			self.text.tag_bind('entry%s' % node.entry, Mouse.Click_Left, lambda e,i=node.entry: self.select(i,0))
+			self.text.tag_bind('entry%s' % node.entry, Shift.Click_Left, lambda e,i=node.entry: self.select(i,1))
+			self.text.tag_bind('entry%s' % node.entry, Ctrl.Click_Left, lambda e,i=node.entry,t=0: self.select(i,2))
 
 	def erase_branch(self, node, eraseRoot):
 		end = 'entry%s.last lineend +1c' % node.entry

@@ -39,14 +39,14 @@ class TilePaletteView(Frame):
 
 		def canvas_resized(e):
 			self.update_size()
-		self.canvas.bind('<Configure>', canvas_resized)
+		self.canvas.bind(WidgetEvent.Configure, canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
-		binding_widget.bind('<MouseWheel>', lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)) if e.delta else 0,'units'))
+		binding_widget.bind(Mouse.Scroll, lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)) if e.delta else 0,'units'))
 		if not hasattr(self.delegate, 'tile_palette_bind_updown') or self.delegate.tile_palette_bind_updown():
-			binding_widget.bind('<Down>', lambda e: self.canvas.yview('scroll', 1,'units'))
-			binding_widget.bind('<Up>', lambda e: self.canvas.yview('scroll', -1,'units'))
-		binding_widget.bind('<Next>', lambda e: self.canvas.yview('scroll', 1,'page'))
-		binding_widget.bind('<Prior>', lambda e: self.canvas.yview('scroll', -1,'page'))
+			binding_widget.bind(Key.Down, lambda e: self.canvas.yview('scroll', 1,'units'))
+			binding_widget.bind(Key.Up, lambda e: self.canvas.yview('scroll', -1,'units'))
+		binding_widget.bind(Key.Next, lambda e: self.canvas.yview('scroll', 1,'page'))
+		binding_widget.bind(Key.Prior, lambda e: self.canvas.yview('scroll', -1,'page'))
 		def update_scrollbar(l,h,bar):
 			scrollbar.set(l,h)
 			self.draw_tiles()
@@ -55,8 +55,8 @@ class TilePaletteView(Frame):
 		self.initial_scroll_bind = None
 		def initial_scroll(_):
 			self.scroll_to_selection()
-			self.canvas.unbind('<Configure>', self.initial_scroll_bind)
-		self.initial_scroll_bind = self.canvas.bind('<Configure>', initial_scroll, add=True)
+			self.canvas.unbind(WidgetEvent.Configure, self.initial_scroll_bind)
+		self.initial_scroll_bind = self.canvas.bind(WidgetEvent.Configure, initial_scroll, add=True)
 
 
 	def get_tile_size(self, tiletype=None, group=False):
@@ -164,13 +164,11 @@ class TilePaletteView(Frame):
 										sub_select = id % 16
 									id /= 16
 								self.select(id, sub_select, modifier)
-							self.canvas.tag_bind(tag, '<Button-1>', lambda e,id=id: select(id,None))
-							self.canvas.tag_bind(tag, '<Shift-Button-1>', lambda e,id=id: select(id,'shift'))
-							self.canvas.tag_bind(tag, '<Control-Button-1>', lambda e,id=id: select(id,'cntrl'))
-							if is_mac():
-								self.canvas.tag_bind(tag, '<Command-Button-1>', lambda e,id=id: select(id,'cntrl'))
+							self.canvas.tag_bind(tag, Mouse.Click_Left, lambda e,id=id: select(id,None))
+							self.canvas.tag_bind(tag, Shift.Click_Left, lambda e,id=id: select(id,'shift'))
+							self.canvas.tag_bind(tag, Ctrl.Click_Left, lambda e,id=id: select(id,'cntrl'))
 							if hasattr(self.delegate, 'tile_palette_double_clicked'):
-								self.canvas.tag_bind(tag, '<Double-Button-1>', lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
+								self.canvas.tag_bind(tag, Double.Click_Left, lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
 			self.visible_range = visible_range
 			self.draw_selections()
 

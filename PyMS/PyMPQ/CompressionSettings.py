@@ -37,7 +37,7 @@ class CompressionSettings(Frame):
 		e.pack(side=TOP)
 
 		self.listbox = ScrolledListbox(left, width=15, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
-		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.select_extension())
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.select_extension())
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 
 		extensions = sorted(self.autocompression.keys())

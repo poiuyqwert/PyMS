@@ -112,7 +112,7 @@ class FindDialog(PyMSDialog):
 				self.lists[g].see(s)
 				c.append(g)
 			self.lists[g].select_set(s)
-			self.lists[g].listbox.event_generate('<<ListboxSelect>>')
+			self.lists[g].listbox.event_generate(WidgetEvent.Listbox.Select)
 		self.ok()
 
 	def dismiss(self):

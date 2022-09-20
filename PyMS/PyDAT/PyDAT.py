@@ -102,7 +102,7 @@ class PyDAT(MainWindow):
 		self.listbox = ScrolledListbox(left, scroll_speed=2, font=couriernew, width=45, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
-		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.changeid())
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.changeid())
 
 		f = Frame(left)
 		collapse_button = CollapseView.Button(f)

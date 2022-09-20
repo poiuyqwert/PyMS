@@ -1,6 +1,7 @@
 
 from .utils import parse_geometry
 from .UIKit import Toplevel
+from .EventPattern import *
 
 class PyMSDialog(Toplevel):
 	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True), set_min_size=(False,False)):
@@ -9,7 +10,7 @@ class PyMSDialog(Toplevel):
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
-			self.bind('<Escape>', self.cancel)
+			self.bind(Key.Escape, self.cancel)
 		#self.transient(parent)
 		self.parent = parent
 		focus = self.widgetize()

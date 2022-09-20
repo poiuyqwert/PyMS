@@ -131,7 +131,7 @@ class CodeGeneratorEditorList(CodeGeneratorEditor):
 		vscroll = Scrollbar(textframe)
 		self.text = Text(textframe, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
 		self.text.grid(sticky=NSEW)
-		# self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))
+		# self.text.bind(Ctrl.a, lambda e: self.after(1, self.selectall))
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
 		vscroll.config(command=self.text.yview)

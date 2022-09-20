@@ -15,7 +15,7 @@ class ListfileSettings(Frame):
 		Label(self, text="Note: Each file list added will increase the load time for archives", anchor=W, justify=LEFT).pack(fill=X)
 		self.listbox = ScrolledListbox(self, width=35, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
-		self.listbox.bind('<<ListboxSelect>>', lambda *e: self.action_states())
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.action_states())
 		for l in self.setdlg.settings.settings.get('listfiles', []):
 			self.listbox.insert(0,l)
 		if self.listbox.size():

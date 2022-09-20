@@ -4,6 +4,7 @@ from .CodeTooltip import AnimationTooltip, CommandTooltip
 from ..FileFormats import IScriptBIN
 
 from ..Utilities.CodeText import CodeText
+from ..Utilities.EventPattern import *
 
 import re
 from copy import deepcopy
@@ -30,7 +31,7 @@ class IScriptCodeText(CodeText):
 				'Warning':{'foreground':None,'background':'#FFC8C8','font':None},
 			}
 		CodeText.__init__(self, parent, ecallback, icallback, scallback)
-		self.text.bind('<Control-q>', self.commentrange)
+		self.text.bind(Ctrl.q, self.commentrange)
 
 	def setedit(self):
 		if self.ecallback != None:

@@ -63,8 +63,8 @@ class FindReplaceDialog(PyMSDialog):
 		Button(l, text='Close', command=self.ok).pack(fill=X, pady=4)
 		l.pack(side=LEFT, fill=Y, padx=2)
 
-		self.bind('<Return>', self.findnext)
-		self.bind('<FocusIn>', lambda e,i=3: self.check(i))
+		self.bind(Key.Return, self.findnext)
+		self.bind(Focus.In, lambda e,i=3: self.check(i))
 
 		return self.findentry
 

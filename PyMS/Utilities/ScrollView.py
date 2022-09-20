@@ -45,10 +45,10 @@ class ScrollView(Frame):
 			self.bind_all(Mouse.Scroll, scroll)
 		def unbind_scroll(*_):
 			self.unbind_all(Mouse.Scroll)
-		self.bind('<Activate>', bind_scroll)
-		self.bind('<Deactivate>', unbind_scroll)
-		self.bind('<Map>', bind_scroll)
-		self.bind('<Unmap>', unbind_scroll)
+		self.bind(WidgetEvent.Activate, bind_scroll)
+		self.bind(WidgetEvent.Deactivate, unbind_scroll)
+		self.bind(WidgetEvent.Map, bind_scroll)
+		self.bind(WidgetEvent.Unmap, unbind_scroll)
 
 		self._focus_bind_info = None
 		def check_focus():

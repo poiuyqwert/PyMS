@@ -14,7 +14,7 @@ class StarsTab(NotebookTab):
 		NotebookTab.__init__(self, parent)
 
 		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=couriernew, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
-		self.listbox.bind('<<ListboxSelect>>', self.select_updated)
+		self.listbox.bind(WidgetEvent.Listbox.Select, self.select_updated)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, expand=1)
 
 		self.toolbar = Toolbar(self, bind_target=self.toplevel)

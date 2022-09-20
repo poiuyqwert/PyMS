@@ -117,14 +117,14 @@ class PyGRP(MainWindow):
 		s.pack(side=TOP, fill=X)
 		self.listbox = ScrolledListbox(leftframe, scroll_speed=2, selectmode=EXTENDED, activestyle=DOTBOX, width=15, height=17, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(side=TOP, padx=1, pady=1, fill=X, expand=1)
-		self.listbox.bind('<<ListboxSelect>>', self.preview)
+		self.listbox.bind(WidgetEvent.Listbox.Select, self.preview)
 		self.bind(Ctrl.a, self.selectall)
 
 		#Palette
 		Label(leftframe, text='Palette:', anchor=W).pack(fill=X)
 		self.pallist = ScrolledListbox(leftframe, width=15, height=4, bd=0, activestyle=DOTBOX, highlightthickness=0, exportselection=0)
 		self.pallist.pack(side=BOTTOM, padx=1, pady=1, fill=BOTH, expand=1)
-		self.pallist.bind('<<ListboxSelect>>', self.changepalette)
+		self.pallist.bind(WidgetEvent.Listbox.Select, self.changepalette)
 
 		s = -1
 		for pal in os.listdir(Assets.palettes_dir):

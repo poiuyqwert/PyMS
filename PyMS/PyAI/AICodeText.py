@@ -34,7 +34,7 @@ class AICodeText(CodeText):
 				'Directives':{'foreground':'#0000FF','background':None,'font':self.boldfont}
 			}
 		CodeText.__init__(self, parent, ecallback, icallback, scallback)
-		self.text.bind('<Control-q>', self.commentrange)
+		self.text.bind(Ctrl.q, self.commentrange)
 
 	def setedit(self):
 		if self.ecallback != None:

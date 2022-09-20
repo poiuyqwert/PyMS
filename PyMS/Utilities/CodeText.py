@@ -31,9 +31,9 @@ class CodeText(Frame):
 		self.text = Text(frame, height=1, font=font, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
-		self.text.bind('<Control-a>', lambda e: self.after(1, self.selectall))
-		self.text.bind('<Shift-Tab>', lambda e,i=True: self.indent(e, i))
-		self.text.bind('<ButtonRelease-3>', self.popup)
+		self.text.bind(Ctrl.a, lambda e: self.after(1, self.selectall))
+		self.text.bind(Shift.Tab, lambda e,i=True: self.indent(e, i))
+		self.text.bind(ButtonRelease.Click_Right, self.popup)
 		frame.grid(sticky=NSEW)
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
@@ -61,7 +61,7 @@ class CodeText(Frame):
 				self.textmenu.add_separator()
 
 		self.lines.insert('1.0', '      1')
-		self.lines.bind('<FocusIn>', self.selectline)
+		self.lines.bind(Focus.In, self.selectline)
 		self.text.mark_set('return', '1.0')
 		self.text.orig = self.text._w + '_orig'
 		self.tk.call('rename', self.text._w, self.text.orig)
@@ -324,8 +324,8 @@ class CodeText(Frame):
 		self.tag_raise('Selection')
 		if r:
 			self.tag_add('Selection', *r)
-		self.text.tag_bind('Selection', '<ButtonPress-1>', self.selclick)
-		self.text.tag_bind('Selection', '<ButtonRelease-1>', self.selrelease)
+		self.text.tag_bind('Selection', Mouse.Click_Left, self.selclick)
+		self.text.tag_bind('Selection', ButtonRelease.Click_Left, self.selrelease)
 		self.text.focus_set()
 		self.update_range()
 
@@ -352,14 +352,14 @@ class CodeText(Frame):
 
 	def selclick(self, e):
 		self.dnd = True
-		self.text.bind('<Motion>', self.selmotion)
+		self.text.bind(Mouse.Motion, self.selmotion)
 
 	def selmotion(self, e):
 		self.text.mark_set(INSERT, '@%s,%s' % (e.x,e.y))
 
 	def selrelease(self, e):
 		self.dnd = False
-		self.text.unbind('<Motion>')
+		self.text.unbind(Mouse.Motion)
 		sel = self.tag_nextrange('Selection', '1.0')
 		text = self.text.get(*sel)
 		self.delete(*sel)

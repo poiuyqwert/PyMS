@@ -298,7 +298,7 @@ class CodeEditDialog(PyMSDialog):
 	def find(self, e=None):
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self)
-			self.bind('<F3>', self.findwindow.findnext)
+			self.bind(Key.F3, self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 		self.findwindow.focus_set()

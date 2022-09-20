@@ -46,7 +46,7 @@ class FindDialog(PyMSDialog):
 		Button(l, text='Close', command=self.ok).pack(fill=X, pady=4)
 		l.pack(side=LEFT, fill=Y, padx=2)
 
-		self.bind('<Return>', self.findnext)
+		self.bind(Key.Return, self.findnext)
 
 		return self.findentry
 

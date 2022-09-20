@@ -2,6 +2,7 @@
 from .Tooltip import Tooltip
 from .UIKit import Text
 from .utils import apply_cursor
+from .EventPattern import *
 
 class TextTooltip(Tooltip):
 	def __init__(self, parent, tag, **kwargs): # type: (Text, str, **Any) -> TextTooltip
@@ -12,12 +13,12 @@ class TextTooltip(Tooltip):
 		Tooltip.__init__(self, parent, **kwargs)
 
 	def setupbinds(self, press):
-		self.parent.tag_bind(self.tag, '<Enter>', self.enter, '+')
-		self.parent.tag_bind(self.tag, '<Leave>', self.leave, '+')
-		self.parent.tag_bind(self.tag, '<Motion>', self.motion, '+')
-		self.parent.tag_bind(self.tag, '<Button-1>', self.leave, '+')
+		self.parent.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
+		self.parent.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
+		self.parent.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
+		self.parent.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
 		if press:
-			self.parent.tag_bind(self.tag, '<ButtonPress>', self.leave)
+			self.parent.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
 
 	def enter(self, _=None):
 		if self.cursor:

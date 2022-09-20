@@ -19,7 +19,7 @@ class GotoDialog(PyMSDialog):
 		Button(f, text='Goto', command=self.jump).grid(row=0,column=2, padx=(4,0))
 		f.pack(padx=4,pady=4)
 
-		self.bind('<Return>', self.jump)
+		self.bind(Key.Return, self.jump)
 
 		return self.gotoentry
 

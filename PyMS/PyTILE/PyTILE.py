@@ -313,16 +313,12 @@ class PyTILE(MainWindow):
 		self.apply_all_btn = Button(megatile_group, text='Apply to Megas', state=DISABLED, command=megatile_apply_all_pressed)
 		self.disable.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
-		bind = (
-			('H', lambda e: self.megatile_apply_all(MegaEditorView.Mode.height)),
-			('W', lambda e: self.megatile_apply_all(MegaEditorView.Mode.walkability)),
-			('B', lambda e: self.megatile_apply_all(MegaEditorView.Mode.view_blocking)),
-			('R', lambda e: self.megatile_apply_all(MegaEditorView.Mode.ramp)),
-			('A', lambda e: self.megatile_apply_all(None)),
-			('N', lambda e: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
-		)
-		for key,func in bind:
-			self.bind('<Control-Shift-%s>' % key, func)
+		self.bind(Shift.Ctrl.h, lambda *_: self.megatile_apply_all(MegaEditorView.Mode.height))
+		self.bind(Shift.Ctrl.w, lambda *_: self.megatile_apply_all(MegaEditorView.Mode.walkability))
+		self.bind(Shift.Ctrl.b, lambda *_: self.megatile_apply_all(MegaEditorView.Mode.view_blocking))
+		self.bind(Shift.Ctrl.r, lambda *_: self.megatile_apply_all(MegaEditorView.Mode.ramp))
+		self.bind(Shift.Ctrl.a, lambda *_: self.megatile_apply_all(None))
+		self.bind(Shift.Ctrl.n, lambda *_: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
 		self.mega_editor = MegaEditorView(megatile_group, self.settings, self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
@@ -355,8 +351,8 @@ class PyTILE(MainWindow):
 			self.tileset.export_settings(TILETYPE_MEGA, f, [mega], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
-		self.copy_mega_btn = Button(copy_mega_group, text='Copy (Ctrl+Shift+C)', state=DISABLED, command=copy_mega)
-		self.bind('<Control-Shift-c>', copy_mega)
+		self.copy_mega_btn = Button(copy_mega_group, text='Copy (%s)' % Shift.Ctrl.c.description(), state=DISABLED, command=copy_mega)
+		self.bind(Shift.Ctrl.c, copy_mega)
 		self.copy_mega_btn.grid(sticky=E+W)
 		def paste_mega(*args):
 			if not self.tileset:
@@ -371,8 +367,8 @@ class PyTILE(MainWindow):
 				return
 			self.mega_editor.draw()
 			self.mark_edited()
-		btn = Button(copy_mega_group, text='Paste (Ctrl+Shift+V)', state=DISABLED, command=paste_mega)
-		self.bind('<Control-Shift-v>', paste_mega)
+		btn = Button(copy_mega_group, text='Paste (%s)' % Shift.Ctrl.v.description(), state=DISABLED, command=paste_mega)
+		self.bind(Shift.Ctrl.v, paste_mega)
 		btn.grid(sticky=E+W)
 		self.disable.append(btn)
 		self.normal_editors.append(copy_mega_group)
@@ -441,8 +437,8 @@ class PyTILE(MainWindow):
 			self.tileset.export_settings(TILETYPE_GROUP, f, [group], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
-		self.copy_tilegroup_btn = Button(copy_tilegroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
-		self.bind('<Control-Alt-c>', copy_tilegroup)
+		self.copy_tilegroup_btn = Button(copy_tilegroup_group, text='Copy (%s)' % Ctrl.Alt.c.description(), state=DISABLED, command=copy_tilegroup)
+		self.bind(Ctrl.Alt.c, copy_tilegroup)
 		self.copy_tilegroup_btn.grid(column=0,row=5, sticky=E+W)
 		def paste_tilegroup(*args):
 			if not self.tileset:
@@ -456,8 +452,8 @@ class PyTILE(MainWindow):
 				return
 			self.megaload()
 			self.mark_edited()
-		btn = Button(copy_tilegroup_group, text='Paste (Ctrl+Alt+V)', state=DISABLED, command=paste_tilegroup)
-		self.bind('<Control-Alt-v>', paste_tilegroup)
+		btn = Button(copy_tilegroup_group, text='Paste (%s)' % Ctrl.Alt.v.description(), state=DISABLED, command=paste_tilegroup)
+		self.bind(Ctrl.Alt.v, paste_tilegroup)
 		btn.grid(column=1,row=5, sticky=E+W)
 		self.disable.append(btn)
 		self.normal_editors.append(copy_tilegroup_group)
@@ -533,11 +529,11 @@ class PyTILE(MainWindow):
 				check = Checkbutton(copy_doodadgroup_group, text=name, variable=var, anchor=W, state=DISABLED)
 				check.grid(column=c,row=r, sticky=W)
 				self.disable.append(check)
-		self.copy_doodadgroup_btn = Button(copy_doodadgroup_group, text='Copy (Ctrl+Alt+C)', state=DISABLED, command=copy_tilegroup)
-		self.bind('<Control-Alt-c>', copy_tilegroup)
+		self.copy_doodadgroup_btn = Button(copy_doodadgroup_group, text='Copy (%s)' % Ctrl.Alt.c.description(), state=DISABLED, command=copy_tilegroup)
+		self.bind(Ctrl.Alt.c, copy_tilegroup)
 		self.copy_doodadgroup_btn.grid(column=0,row=5, sticky=E+W)
-		btn = Button(copy_doodadgroup_group, text='Paste (Ctrl+Alt+V)', state=DISABLED, command=paste_tilegroup)
-		self.bind('<Control-Alt-v>', paste_tilegroup)
+		btn = Button(copy_doodadgroup_group, text='Paste (%s)' % Ctrl.Alt.v.description(), state=DISABLED, command=paste_tilegroup)
+		self.bind(Ctrl.Alt.v, paste_tilegroup)
 		btn.grid(column=1,row=5, sticky=E+W)
 		self.disable.append(btn)
 		self.doodad_editors.append(copy_doodadgroup_group)

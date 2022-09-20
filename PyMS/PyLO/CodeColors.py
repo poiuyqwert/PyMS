@@ -22,7 +22,7 @@ class CodeColors(PyMSDialog):
 
 	def widgetize(self):
 		self.listbox = Listbox(self, font=couriernew, width=20, height=16, exportselection=0)
-		self.listbox.bind('<<ListboxSelect>>', lambda e: self.select())
+		self.listbox.bind(WidgetEvent.Listbox.Select, lambda e: self.select())
 		for t in self.info.keys():
 			self.listbox.insert(END, t)
 		self.listbox.select_set(0)

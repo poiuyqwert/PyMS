@@ -296,6 +296,13 @@ class Focus:
 
 class WidgetEvent:
 	Configure = EventPattern(Field('Configure'))
+
+	Activate = EventPattern(Field('Activate'))
+	Deactivate = EventPattern(Field('Deactivate'))
+
+	Map = EventPattern(Field('Map'))
+	Unmap = EventPattern(Field('Unmap'))
+
 	Scrolled = CustomEventPattern(Field('Scrolled'))
 
 	class Listbox:

@@ -21,7 +21,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 
 	def widgetize(self):
 		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, activestyle=DOTBOX, width=30, bd=0, highlightthickness=0, exportselection=0)
-		self.listbox.bind('<<ListboxSelect>>', self.update_states)
+		self.listbox.bind(WidgetEvent.Listbox.Select, self.update_states)
 		self.listbox.bind(Double.Click_Left, self.rename)
 		self.listbox.pack(side=TOP, padx=3, pady=3, fill=BOTH, expand=1)
 

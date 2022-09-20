@@ -9,7 +9,7 @@ class WarningDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Warning!', resizable=(False, False))
 
 	def widgetize(self):
-		self.bind('<Control-a>', self.selectall)
+		self.bind(Ctrl.a, self.selectall)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
 		vscroll = Scrollbar(frame)

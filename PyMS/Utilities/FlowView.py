@@ -33,7 +33,7 @@ class FlowView(Frame):
 				view('scroll', -1, 'units')
 			elif event.delta <= 0 and cur[1] < 1:
 				view('scroll', 1, 'units')
-		self.bind_all('<MouseWheel>', scroll)
+		self.bind_all(Mouse.Scroll, scroll)
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
 
@@ -55,7 +55,7 @@ class FlowView(Frame):
 				if len(self._viewport_widths) > 3:
 					del self._viewport_widths[0]
 				self.set_needs_update()
-		self._content_area.bind('<Configure>', resize)
+		self._content_area.bind(WidgetEvent.Configure, resize)
 
 		self._focus_bind_info = None
 		def check_focus():
@@ -63,18 +63,18 @@ class FlowView(Frame):
 			if self._focus_bind_info:
 				view,bind_id = self._focus_bind_info
 				try:
-					view.unbind('<FocusOut>', bind_id)
+					view.unbind(Focus.Out, bind_id)
 				except:
 					pass
 				self._focus_bind_info = None
 			def focus_out(*_):
 				check_focus()
 			if focused:
-				self._focus_bind_info = (focused,focused.bind('<FocusOut>', focus_out, True))
+				self._focus_bind_info = (focused,focused.bind(Focus.Out, focus_out, True))
 				self.scroll_to_view(focused)
 		def focus_in(*_):
 			check_focus()
-		self.content_view.bind('<FocusIn>', focus_in)
+		self.content_view.bind(Focus.In, focus_in)
 
 	def viewport_size(self):
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
@@ -142,7 +142,7 @@ class FlowView(Frame):
 		self._subview_configs[name]
 		view.grid(in_=self._staging_view)
 		self._update_view_size(view, update_idletasks=True)
-		self._bindings[name] = view.bind('<Configure>', lambda *_: self._update_view_size(view, set_needs_update=True), True)
+		self._bindings[name] = view.bind(WidgetEvent.Configure, lambda *_: self._update_view_size(view, set_needs_update=True), True)
 
 	def insert_subview(self, index, view, padx=0,pady=0, weight=0):
 		self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
@@ -164,7 +164,7 @@ class FlowView(Frame):
 			return
 		name = str(view)
 		view.place_forget()
-		view.unbind('<Configure>', self._bindings[name])
+		view.unbind(WidgetEvent.Configure, self._bindings[name])
 		del self._bindings[name]
 		del self._sizes[name]
 		del self._subview_configs[name]

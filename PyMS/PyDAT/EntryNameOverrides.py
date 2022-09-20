@@ -32,7 +32,7 @@ class EntryNameOverrides(PyMSDialog):
 
 		self.listbox = ScrolledListbox(self, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=3)
-		self.listbox.bind('<<ListboxSelect>>', self.selection_updated)
+		self.listbox.bind(WidgetEvent.Listbox.Select, self.selection_updated)
 
 		f = Frame(self)
 		f.pack(side=TOP, fill=X, padx=3)

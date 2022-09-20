@@ -38,7 +38,7 @@ class Placeability(PyMSDialog):
 							t = 'tile%s,%s' % (x,y)
 							self.canvass[-1].images.append(megatile_to_photo(self.tileset, g[13][x]))
 							self.canvass[-1].create_image(x * 33 + 18, 18, image=self.canvass[-1].images[-1], tags=t)
-							self.canvass[-1].tag_bind(t, '<Double-Button-1>', lambda e,p=(x,y): self.select(p))
+							self.canvass[-1].tag_bind(t, Double.Click_Left, lambda e,p=(x,y): self.select(p))
 						self.groups[-1].append(IntegerVar(c,[0,len(self.tileset.cv5.groups)]))
 						Entry(f, textvariable=self.groups[-1][-1], width=1, font=couriernew, bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
 			elif ty > 0:
@@ -46,7 +46,7 @@ class Placeability(PyMSDialog):
 					t = 'tile%s,%s' % (x,y)
 					self.canvass[h-ty].images.append(megatile_to_photo(self.tileset, g[13][x]))
 					self.canvass[h-ty].create_image(x * 33 + 18, 18, image=self.canvass[h-ty].images[-1], tags=t)
-					self.canvass[h-ty].tag_bind(t, '<Double-Button-1>', lambda e,p=(x,h-ty): self.select(p))
+					self.canvass[h-ty].tag_bind(t, Double.Click_Left, lambda e,p=(x,h-ty): self.select(p))
 				ty -= 1
 				if not ty:
 					break
