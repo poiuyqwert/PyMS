@@ -1,6 +1,6 @@
 
 from gapy.ga import *
-from utils import VERSIONS
+from . import Assets
 from setutils import PYMS_SETTINGS
 
 ga.set_tracking_id(PYMS_SETTINGS.analytics.get('tid', 'UA-42320973-2', autosave=False))

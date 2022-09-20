@@ -10,6 +10,7 @@ from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 from math import floor, sqrt
 

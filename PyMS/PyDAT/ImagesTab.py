@@ -8,6 +8,7 @@ from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 class ImagesTab(DATTab):
 	DAT_ID = DATID.images

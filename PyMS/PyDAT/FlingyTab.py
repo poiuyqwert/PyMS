@@ -9,6 +9,7 @@ from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
+from ..Utilities import Assets
 
 class FlingyTab(DATTab):
 	DAT_ID = DATID.flingy

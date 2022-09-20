@@ -1,5 +1,5 @@
 
-from .utils import VERSIONS
+from . import Assets
 from .setutils import PYMS_SETTINGS
 from .PyMSDialog import PyMSDialog
 from .Hotlink import Hotlink
