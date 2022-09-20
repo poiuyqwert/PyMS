@@ -4,7 +4,6 @@ from .DataID import DataID
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 from ..FileFormats.PCX import PCX
 
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
 
@@ -45,7 +44,7 @@ class IconData(object):
 		return self.grp.save_data()
 
 	def update_names(self):
-		names = DATA_CACHE['Icons.txt']
+		names = Assets.data_cache(Assets.DataReference.Icons)
 		if self.grp:
 			if self.grp.frames > len(names):
 				names += ['Unknown'] * (len(names)-self.grp.frames)

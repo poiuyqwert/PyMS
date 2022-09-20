@@ -14,6 +14,15 @@ else:
 ## Versions
 versions_file_path = _os.path.join(base_dir, 'PyMS', 'versions.json')
 
+_VERSIONS = None
+def version(program_name): # type: (str) -> str
+	global _VERSIONS
+	if _VERSIONS == None:
+		import json
+		with open(versions_file_path, 'r') as f:
+			_VERSIONS = json.load(f)
+	return _VERSIONS[program_name]
+
 ## Images
 images_dir = _os.path.join(base_dir, 'PyMS', 'Images')
 
@@ -85,6 +94,42 @@ data_dir = _os.path.join(base_dir, 'PyMS', 'Data')
 
 def data_file_path(filename): # type: (str) -> str
 	return _os.path.join(data_dir, filename)
+
+class DataReference:
+	SelCircleSize   = 'SelCircleSize' # Selection Circle Sizes
+	Rightclick      = 'Rightclick' # Right Click Actions
+	Flingy          = 'Flingy' # Flingy Entries
+	Behaviours      = 'Behaviours' # Behaviours
+	DamTypes        = 'DamTypes' # Damage Types
+	Mapdata         = 'Mapdata' # Campaign Names
+	Units           = 'Units' # Default Units
+	Remapping       = 'Remapping' # Remapping
+	DrawList        = 'DrawList' # Draw Types
+	FlingyControl   = 'FlingyControl' # Flingy Controlers
+	Sprites         = 'Sprites' # Default Sprites
+	Animations      = 'Animations' # IScript Animations
+	Orders          = 'Orders' # Default Orders
+	IscriptIDList   = 'IscriptIDList' # IScript ID's
+	Portdata        = 'Portdata' # Default Campaign
+	Weapons         = 'Weapons' # Default Weapons
+	UnitSize        = 'UnitSize' # Unit Sizes
+	Techdata        = 'Techdata' # Default Technologies
+	ElevationLevels = 'ElevationLevels' # Elevation Levels
+	Images          = 'Images' # Default Images
+	Upgrades        = 'Upgrades' # Default Upgrades
+	Explosions      = 'Explosions' # Explosion Types
+	Races           = 'Races' # Races
+	Icons           = 'Icons' # Icons
+	Sfxdata         = 'Sfxdata' # Sound Effects
+	ShieldSize      = 'ShieldSize' # Shield Sizes
+
+_DATA_CACHE = {}
+def data_cache(filename): # type: (str) -> list[str]
+	global _DATA_CACHE
+	if not filename in _DATA_CACHE:
+		with open(data_file_path('%s.txt' % filename), 'r') as f:
+			_DATA_CACHE[filename] = [l.rstrip() for l in f.readlines()]
+	return _DATA_CACHE[filename]
 
 ## Palettes
 palettes_dir = _os.path.join(base_dir, 'Palettes')

@@ -8,7 +8,6 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 
@@ -225,7 +224,7 @@ class BasicUnitsTab(DATUnitsTab):
 		s = Frame(l)
 		t = Frame(s)
 		Label(t, text='Unit Size:', anchor=E).pack(side=LEFT)
-		DropDown(t, self.unit_size, DATA_CACHE['UnitSize.txt']).pack(side=LEFT, fill=X, expand=1)
+		DropDown(t, self.unit_size, Assets.data_cache(Assets.DataReference.UnitSize)).pack(side=LEFT, fill=X, expand=1)
 		self.tip(t, 'Unit Size', 'UnitSize')
 		t.pack(side=LEFT, fill=X, expand=1)
 		t = Frame(s)

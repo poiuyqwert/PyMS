@@ -7,7 +7,7 @@ from ..FileFormats import IScriptBIN
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -20,7 +20,6 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
@@ -29,7 +28,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from copy import deepcopy
 from collections import OrderedDict
 
-LONG_VERSION = 'v%s' % VERSIONS['PyICE']
+LONG_VERSION = 'v%s' % Assets.version('PyICE')
 
 class ColumnID:
 	IScripts = 0
@@ -62,7 +61,7 @@ class PyICE(MainWindow):
 		self.title('PyICE %s (No files loaded)' % LONG_VERSION)
 		self.set_icon('PyICE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyICE', VERSIONS['PyICE'])
+		ga.set_application('PyICE', Assets.version('PyICE'))
 		ga.track(GAScreen('PyICE'))
 		setup_trace(self, 'PyICE')
 
@@ -205,13 +204,13 @@ class PyICE(MainWindow):
 		return err
 
 	def get_image_names(self):
-		return tuple(DAT.DATEntryName.image(entry_id, data_names=DATA_CACHE['Images.txt']) for entry_id in range(self.imagesdat.entry_count()))
+		return tuple(DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)) for entry_id in range(self.imagesdat.entry_count()))
 
 	def get_sprite_names(self):
-		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=DATA_CACHE['Sprites.txt']) for entry_id in range(self.spritesdat.entry_count()))
+		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)) for entry_id in range(self.spritesdat.entry_count()))
 
 	def get_flingy_names(self):
-		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=DATA_CACHE['Flingy.txt']) for entry_id in range(self.flingydat.entry_count()))
+		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)) for entry_id in range(self.flingydat.entry_count()))
 
 	def get_unit_names(self):
 		return tuple(DAT.DATEntryName.unit(entry_id, stat_txt=self.tbl, unitnamestbl=self.unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore) for entry_id in range(self.unitsdat.entry_count()))
@@ -234,8 +233,8 @@ class PyICE(MainWindow):
 		for iscript_id in self.ibin.headers.keys():
 			if iscript_id in self.ibin.extrainfo:
 				name = self.ibin.extrainfo[iscript_id]
-			elif iscript_id < len(DATA_CACHE['IscriptIDList.txt']):
-				name = DATA_CACHE['IscriptIDList.txt'][iscript_id]
+			elif iscript_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+				name = Assets.data_cache(Assets.DataReference.IscriptIDList)[iscript_id]
 			else:
 				name = 'Unnamed Custom Entry'
 			self.iscriptlist.insert(END, '%03s %s' % (iscript_id, name))

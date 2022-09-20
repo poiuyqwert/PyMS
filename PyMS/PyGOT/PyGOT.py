@@ -2,7 +2,7 @@
 from ..FileFormats.GOT import GOT
 from ..FileFormats.TRG import TRG
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, fit, register_registry, couriernew
+from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry, couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.Settings import Settings
@@ -20,7 +20,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyGOT']
+LONG_VERSION = 'v%s' % Assets.version('PyGOT')
 
 HINTS = {
 	'name':'The name of the Game Template listed in StarCraft',
@@ -48,7 +48,7 @@ class PyGOT(MainWindow):
 		self.title('PyGOT %s' % LONG_VERSION)
 		self.set_icon('PyGOT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyGOT', VERSIONS['PyGOT'])
+		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
 		setup_trace(self, 'PyGOT')
 		self.resizable(False, False)

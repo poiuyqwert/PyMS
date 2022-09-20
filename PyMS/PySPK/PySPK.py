@@ -10,7 +10,7 @@ from ..FileFormats import SPK
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -27,7 +27,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PySPK']
+LONG_VERSION = 'v%s' % Assets.version('PySPK')
 
 MOUSE_DOWN = 0
 MOUSE_MOVE = 1
@@ -49,7 +49,7 @@ class PySPK(MainWindow):
 		self.title('PySPK %s' % LONG_VERSION)
 		self.set_icon('PySPK')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PySPK', VERSIONS['PySPK'])
+		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
 		setup_trace(self, 'PySPK')
 

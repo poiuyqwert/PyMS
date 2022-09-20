@@ -8,7 +8,7 @@ from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry, FFile
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, FFile
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -26,7 +26,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyLO']
+LONG_VERSION = 'v%s' % Assets.version('PyLO')
 
 class PyLO(MainWindow):
 	def __init__(self, guifile=None):
@@ -41,7 +41,7 @@ class PyLO(MainWindow):
 		self.title('PyLO %s' % LONG_VERSION)
 		self.set_icon('PyLO')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyLO', VERSIONS['PyLO'])
+		ga.set_application('PyLO', Assets.version('PyLO'))
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace(self, 'PyLO')

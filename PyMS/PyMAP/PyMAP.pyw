@@ -18,7 +18,7 @@ from thread import start_new_thread
 from math import ceil
 import optparse, os, webbrowser, sys, time, random
 
-LONG_VERSION = 'v%s-DEV' % VERSIONS['PyMAP']
+LONG_VERSION = 'v%s-DEV' % Assets.version('PyMAP')
 
 FRAME_DELAY = 42
 
@@ -2097,7 +2097,7 @@ class PyMAP(Tk):
 			self.icon = '@%s' % os.path.join(BASE_DIR, 'Images','PyTILE.xbm')
 			self.wm_iconbitmap(self.icon)
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyMAP', VERSIONS['PyMAP'])
+		ga.set_application('PyMAP', Assets.version('PyMAP'))
 		ga.track(GAScreen('PyMAP'))
 		setup_trace(self, 'PyMAP')
 

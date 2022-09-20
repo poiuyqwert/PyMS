@@ -14,7 +14,7 @@ from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
-from ..Utilities.utils import VERSIONS, couriernew, register_registry, WIN_REG_AVAILABLE
+from ..Utilities.utils import couriernew, register_registry, WIN_REG_AVAILABLE
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities import Assets
@@ -36,7 +36,7 @@ from ..Utilities.HelpDialog import HelpDialog
 import os, shutil
 from collections import OrderedDict
 
-LONG_VERSION = 'v%s' % VERSIONS['PyAI']
+LONG_VERSION = 'v%s' % Assets.version('PyAI')
 
 class PyAI(MainWindow):
 	def __init__(self, guifile=None):
@@ -54,7 +54,7 @@ class PyAI(MainWindow):
 		self.title('No files loaded')
 		self.set_icon('PyAI')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyAI', VERSIONS['PyAI'])
+		ga.set_application('PyAI', Assets.version('PyAI'))
 		ga.track(GAScreen('PyAI'))
 		setup_trace(self, 'PyAI')
 

@@ -6,7 +6,7 @@ from ..FileFormats import GRP
 from ..FileFormats import BMP
 from ..FileFormats import Palette
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, register_registry
 from ..Utilities.Settings import Settings
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
@@ -26,7 +26,7 @@ from ..Utilities.HelpDialog import HelpDialog
 
 import os
 
-LONG_VERSION = 'v%s' % VERSIONS['PyGRP']
+LONG_VERSION = 'v%s' % Assets.version('PyGRP')
 
 class BMPStyle:
 	bmp_per_frame = 'bmp_per_frame'
@@ -64,7 +64,7 @@ class PyGRP(MainWindow):
 		self.title('PyGRP %s' % LONG_VERSION)
 		self.set_icon('PyGRP')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyGRP', VERSIONS['PyGRP'])
+		ga.set_application('PyGRP', Assets.version('PyGRP'))
 		ga.track(GAScreen('PyGRP'))
 		setup_trace(self, 'PyGRP')
 		self.resizable(False, False)

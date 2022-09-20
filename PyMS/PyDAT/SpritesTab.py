@@ -8,7 +8,6 @@ from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 
@@ -53,7 +52,7 @@ class SpritesTab(DATTab):
 		self.selentry = Entry(f, textvariable=self.selcircleentry, font=couriernew, width=5)
 		self.selentry.pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.seldd = DropDown(f, self.selcircledd, DATA_CACHE['SelCircleSize.txt'], self.selcircle, width=30)
+		self.seldd = DropDown(f, self.selcircledd, Assets.data_cache(Assets.DataReference.SelCircleSize), self.selcircle, width=30)
 		self.seldd.pack(side=LEFT, fill=X, expand=1, padx=2)
 		Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.selcircledd.get() + 561)).pack(side=LEFT, padx=2)
 		self.tip(f, 'Selection Circle', 'SpriteSelCircle')

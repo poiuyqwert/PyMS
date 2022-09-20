@@ -12,7 +12,7 @@ from .ListfileSettings import ListfileSettings
 from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 
 from ..Utilities.DependencyError import DependencyError
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
+from ..Utilities.utils import WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -38,7 +38,7 @@ if not MPQ.supported():
 	e.startup()
 	sys.exit()
 
-LONG_VERSION = 'v%s' % VERSIONS['PyMPQ']
+LONG_VERSION = 'v%s' % Assets.version('PyMPQ')
 
 class ColumnID:
 	Filename = 0
@@ -79,7 +79,7 @@ class PyMPQ(MainWindow):
 		self.title('PyMPQ %s' % LONG_VERSION)
 		self.set_icon('PyMPQ')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyMPQ', VERSIONS['PyMPQ'])
+		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace(self, 'PyMPQ')
 

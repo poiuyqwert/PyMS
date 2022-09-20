@@ -6,7 +6,6 @@ from .DATRef import DATRefs, DATRef
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 
@@ -100,14 +99,14 @@ class ImagesTab(DATTab):
 		Label(f, text='Function:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.functionentry, font=couriernew, width=2).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.functiondd, DATA_CACHE['DrawList.txt'], self.functionentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.functiondd, Assets.data_cache(Assets.DataReference.DrawList), self.functionentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Drawing Function', 'ImgDrawFunction')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Remapping:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.remapentry, font=couriernew, width=2).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.remapdd, DATA_CACHE['Remapping.txt'], self.remapentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.remapdd, Assets.data_cache(Assets.DataReference.Remapping), self.remapentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Remapping', 'ImgRemap')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -150,7 +149,7 @@ class ImagesTab(DATTab):
 			f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='', width=12).pack(side=LEFT)
-		self.sizedd = DropDown(f, self.shieldsizes, DATA_CACHE['ShieldSize.txt'], self.shieldupdate, width=6)
+		self.sizedd = DropDown(f, self.shieldsizes, Assets.data_cache(Assets.DataReference.ShieldSize), self.shieldupdate, width=6)
 		self.sizedd.pack(side=LEFT, padx=2)
 		self.tip(f, 'Shield Overlay', 'ImgShield')
 		f.pack(fill=X)
@@ -195,8 +194,8 @@ class ImagesTab(DATTab):
 					iscript_names.extend(['*Unused*'] * (id-last-1))
 				if id in self.toplevel.data_context.iscriptbin.extrainfo:
 					n = self.toplevel.data_context.iscriptbin.extrainfo[id]
-				elif id < len(DATA_CACHE['IscriptIDList.txt']):
-					n = DATA_CACHE['IscriptIDList.txt'][id]
+				elif id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
 				else:
 					n = 'Unnamed Custom Entry'
 				iscript_names.append(n)

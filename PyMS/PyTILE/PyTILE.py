@@ -7,7 +7,7 @@ from .Placeability import Placeability
 from ..FileFormats.Tileset.Tileset import Tileset, TILETYPE_GROUP, TILETYPE_MEGA, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
 from ..FileFormats import TBL
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, FFile, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, FFile, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -26,7 +26,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyTILE']
+LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
 class PyTILE(MainWindow):
 	def __init__(self, guifile=None):
@@ -36,7 +36,7 @@ class PyTILE(MainWindow):
 		self.title('PyTILE %s' % LONG_VERSION)
 		self.set_icon('PyTILE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyTILE', VERSIONS['PyTILE'])
+		ga.set_application('PyTILE', Assets.version('PyTILE'))
 		ga.track(GAScreen('PyTILE'))
 		setup_trace(self, 'PyTILE')
 

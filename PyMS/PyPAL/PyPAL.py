@@ -1,7 +1,7 @@
 
 from ..FileFormats.Palette import Palette
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -17,7 +17,7 @@ from ..Utilities.HelpDialog import HelpDialog
 
 import os
 
-LONG_VERSION = 'v%s' % VERSIONS['PyPAL']
+LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 
 class PyPAL(MainWindow):
 	def __init__(self, guifile=None):
@@ -29,7 +29,7 @@ class PyPAL(MainWindow):
 		self.title('PyPAL %s' % LONG_VERSION)
 		self.set_icon('PyPAL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyPAL', VERSIONS['PyPAL'])
+		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace(self, 'PyPAL')
 		self.resizable(False, False)

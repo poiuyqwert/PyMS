@@ -4,7 +4,7 @@ from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -18,7 +18,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyPCX']
+LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
 class PyPCX(MainWindow):
 	def __init__(self, guifile=None):
@@ -29,7 +29,7 @@ class PyPCX(MainWindow):
 		self.title('PyPCX %s' % LONG_VERSION)
 		self.set_icon('PyPCX')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyPCX', VERSIONS['PyPCX'])
+		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace(self, 'PyPCX')
 

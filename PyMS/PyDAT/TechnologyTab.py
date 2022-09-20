@@ -8,7 +8,6 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
@@ -115,7 +114,7 @@ class TechnologyTab(DATTab):
 		f = Frame(s)
 
 		Label(f, text='Race:', width=12, anchor=E).pack(side=LEFT)
-		DropDown(f, self.race, DATA_CACHE['Races.txt'], width=10).pack(side=LEFT, fill=X, expand=1)
+		DropDown(f, self.race, Assets.data_cache(Assets.DataReference.Races), width=10).pack(side=LEFT, fill=X, expand=1)
 		self.tip(f, 'Race', 'TechRace')
 		f.pack(fill=X)
 		f = Frame(s)

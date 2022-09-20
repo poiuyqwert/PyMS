@@ -6,7 +6,7 @@ from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -23,7 +23,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyFNT']
+LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
 DISPLAY_CHARS = [
 	'', # 0
@@ -294,7 +294,7 @@ class PyFNT(MainWindow):
 		self.title('PyFNT %s' % LONG_VERSION)
 		self.set_icon('PyFNT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyFNT', VERSIONS['PyFNT'])
+		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
 		setup_trace(self, 'PyFNT')
 		self.resizable(False, False)

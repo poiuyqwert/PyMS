@@ -8,7 +8,6 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 
@@ -57,7 +56,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackmove_ddw = add_dropdown('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove')
 		f = Frame(s)
 		Label(f, text='Right-Click Action:', width=16, anchor=E).pack(side=LEFT)
-		DropDown(f, self.rightclick, DATA_CACHE['Rightclick.txt'], width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.rightclick, Assets.data_cache(Assets.DataReference.Rightclick), width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Right-Click Action', 'UnitAIRightClick')
 		f.pack(fill=X, pady=5)
 

@@ -7,7 +7,6 @@ from .IconSelectDialog import IconSelectDialog
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
@@ -74,7 +73,7 @@ class OrdersTab(DATTab):
 		Label(f, text='Animation:', width=9, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.animationentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		DropDown(f, self.animation, DATA_CACHE['Animations.txt'], self.animationentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.animation, Assets.data_cache(Assets.DataReference.Animations), self.animationentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Animation', 'OrdAnimation')
 		f.pack(fill=X)
 		m = Frame(s)

@@ -7,7 +7,7 @@ from ..FileFormats import PCX
 from ..FileFormats import GRP
 from ..FileFormats import FNT
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry, parse_geometry, apply_cursor
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, parse_geometry, apply_cursor
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -29,7 +29,7 @@ from ..Utilities.HelpDialog import HelpDialog
 
 import time
 
-LONG_VERSION = 'v%s' % VERSIONS['PyBIN']
+LONG_VERSION = 'v%s' % Assets.version('PyBIN')
 
 FRAME_DELAY = 67
 
@@ -85,7 +85,7 @@ class PyBIN(MainWindow):
 		self.title('PyBIN %s' % LONG_VERSION)
 		self.set_icon('PyBIN')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyBIN', VERSIONS['PyBIN'])
+		ga.set_application('PyBIN', Assets.version('PyBIN'))
 		ga.track(GAScreen('PyBIN'))
 		setup_trace(self, 'PyBIN')
 

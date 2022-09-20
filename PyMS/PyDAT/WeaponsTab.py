@@ -10,7 +10,6 @@ from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
@@ -45,7 +44,7 @@ class WeaponsTab(DATTab):
 		ls.pack(side=LEFT)
 		ls = Frame(f)
 		Label(ls, text='Type:', width=9, anchor=E).pack(side=LEFT)
-		DropDown(ls, self.type, DATA_CACHE['DamTypes.txt'], width=20).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(ls, self.type, Assets.data_cache(Assets.DataReference.DamTypes), width=20).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(ls, 'Damage Type', 'WeapDamageType')
 		ls.pack(side=LEFT)
 		f.pack(fill=X)
@@ -57,7 +56,7 @@ class WeaponsTab(DATTab):
 		ls.pack(side=LEFT)
 		ls = Frame(f)
 		Label(ls, text='Explosion:', width=9, anchor=E).pack(side=LEFT)
-		DropDown(ls, self.explosion, DATA_CACHE['Explosions.txt'], width=20).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(ls, self.explosion, Assets.data_cache(Assets.DataReference.Explosions), width=20).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(ls, 'Explosion', 'WeapDamageExplosion')
 		ls.pack(side=LEFT)
 		f.pack(fill=X)
@@ -135,7 +134,7 @@ class WeaponsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Behaviour:', width=12, anchor=E).pack(side=LEFT)
-		DropDown(f, self.behaviour, DATA_CACHE['Behaviours.txt'], width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		DropDown(f, self.behaviour, Assets.data_cache(Assets.DataReference.Behaviours), width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Behaviour', 'WeapBehaviour')
 		f.pack(fill=X)
 		f = Frame(s)

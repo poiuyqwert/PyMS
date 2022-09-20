@@ -9,7 +9,7 @@ from ..FileFormats import FNT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -26,7 +26,7 @@ from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 
-LONG_VERSION = 'v%s' % VERSIONS['PyTBL']
+LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 
 class PyTBL(MainWindow):
 	def __init__(self, guifile=None):
@@ -34,7 +34,7 @@ class PyTBL(MainWindow):
 		self.title('PyTBL %s' % LONG_VERSION)
 		self.set_icon('PyTBL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyTBL', VERSIONS['PyTBL'])
+		ga.set_application('PyTBL', Assets.version('PyTBL'))
 		ga.track(GAScreen('PyTBL'))
 		setup_trace(self, 'PyTBL')
 		

@@ -7,7 +7,7 @@ from ..FileFormats import TRG
 from ..FileFormats import TBL
 from ..FileFormats import AIBIN
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -31,7 +31,7 @@ from ..Utilities.HelpDialog import HelpDialog
 	# trg.dynamic_actions[255] = ['StickUnit',[]]
 # TRG.REGISTER.append(customs)
 
-LONG_VERSION = 'v%s' % VERSIONS['PyTRG']
+LONG_VERSION = 'v%s' % Assets.version('PyTRG')
 
 class PyTRG(MainWindow):
 	def __init__(self, guifile=None):
@@ -46,7 +46,7 @@ class PyTRG(MainWindow):
 		self.title('PyTRG %s' % LONG_VERSION)
 		self.set_icon('PyTRG')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyTRG', VERSIONS['PyTRG'])
+		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace(self, 'PyTRG')
 

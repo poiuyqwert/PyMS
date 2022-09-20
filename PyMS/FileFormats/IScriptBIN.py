@@ -5,7 +5,6 @@ from ..FileFormats import TBL
 
 from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
@@ -245,7 +244,7 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | N
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data), DATEntryName.image(data, data_names=DATA_CACHE['Images.txt'], imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
+		return (str(data), DATEntryName.image(data, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.imagesdat.entry_count():
@@ -259,7 +258,7 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data), DATEntryName.sprite(data, data_names=DATA_CACHE['Sprites.txt'], spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
+		return (str(data), DATEntryName.sprite(data, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.spritesdat.entry_count():
@@ -273,7 +272,7 @@ def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 	if data == None:
 		return 2
 	if stage == 1:
-		return (str(data), DATEntryName.flingy(data, data_names=DATA_CACHE['Flingy.txt'], flingydat=bin.flingydat, spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
+		return (str(data), DATEntryName.flingy(data, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=bin.flingydat, spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.flingydat.entry_count():
@@ -376,7 +375,7 @@ def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 	if data == None:
 		return 1
 	if stage == 1:
-		return (str(data), DATEntryName.weapon(data, data_names=DATA_CACHE['Weapons.txt'], weaponsdat=bin.weaponsdat, stat_txt=bin.tbl, data_names_usage=DataNamesUsage.combine))
+		return (str(data), DATEntryName.weapon(data, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=bin.weaponsdat, stat_txt=bin.tbl, data_names_usage=DataNamesUsage.combine))
 	try:
 		v = int(data)
 		if 0 > v or v > bin.weaponsdat.entry_count():
@@ -1017,8 +1016,8 @@ class IScriptBIN:
 		def decompile_offset(o,code,local,id):
 			if id in self.extrainfo:
 				entry = self.extrainfo[id].replace(' ','_')
-			elif id < len(DATA_CACHE['IscriptIDList.txt']):
-				entry = DATA_CACHE['IscriptIDList.txt'][id]
+			elif id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+				entry = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
 			else:
 				entry = 'Unnamed Custom Entry'
 			if not o in completed:
@@ -1097,7 +1096,7 @@ class IScriptBIN:
 			if id in ids:
 				if not id in usedby:
 					usedby[id] = '# This header is used by images.dat entries:\n'
-				usedby[id] += '# %s %s\n' % (str(i).zfill(3), DATEntryName.image(i, data_names=DATA_CACHE['Images.txt'], imagesdat=self.imagesdat, imagestbl=self.imagestbl, data_names_usage=DataNamesUsage.combine))
+				usedby[id] += '# %s %s\n' % (str(i).zfill(3), DATEntryName.image(i, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=self.imagesdat, imagestbl=self.imagestbl, data_names_usage=DataNamesUsage.combine))
 		invalid = []
 		for id in ids:
 			code = ''
@@ -1118,12 +1117,12 @@ class IScriptBIN:
 				else:
 					if id in self.extrainfo:
 						entry = self.extrainfo[id].replace(' ','_')
-					elif id < len(DATA_CACHE['IscriptIDList.txt']):
-						entry = DATA_CACHE['IscriptIDList.txt'][id]
+					elif id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+						entry = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
 					else:
 						entry = 'Unnamed Custom Entry'
 					local += setlabel(o,local,entry)
-					label = labels[o]#'%s%s' % (DATA_CACHE['IscriptIDList.txt'][id],l[0])
+					label = labels[o]#'%s%s' % (Assets.data_cache(Assets.DataReference.IscriptIDList)[id],l[0])
 				f.write('%s%s	%s\n' % (l[0],' ' * (longheader-len(l[0])),label))
 				if o != None:
 					code,local,_curcmd = decompile_offset(o,code,local,id)

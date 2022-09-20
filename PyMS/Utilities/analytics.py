@@ -10,7 +10,7 @@ ga.Custom.register(2, 'PYTHON_VERSION')
 ga.Custom.register(3, 'OS_NAME')
 ga.Custom.register(4, 'OS_VERSION')
 ga.Custom.register(5, 'OS_BITS')
-ga[ga.Custom.PYMS_VERSION] = VERSIONS['PyMS']
+ga[ga.Custom.PYMS_VERSION] = Assets.version('PyMS')
 ga[ga.Custom.PYTHON_VERSION] = platform.python_version()
 ga[ga.Custom.OS_NAME] = GATarget.os_name()
 ga[ga.Custom.OS_VERSION] = GATarget.os_version()

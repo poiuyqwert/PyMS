@@ -8,7 +8,6 @@ from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
-from ..Utilities.DataCache import DATA_CACHE
 from ..Utilities.UIKit import *
 from ..Utilities.ScrollView import ScrollView
 
@@ -47,7 +46,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', jump_dat_id=DATID.flingy)
 		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', jump_dat_id=DATID.images)
 		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', none_value=65535, jump_dat_id=DATID.portdata)
-		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', values=DATA_CACHE['ElevationLevels.txt'])
+		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.direction, font=couriernew, width=3).pack(side=LEFT)

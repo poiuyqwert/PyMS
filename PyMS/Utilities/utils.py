@@ -1,6 +1,5 @@
 
 from .PyMSError import PyMSError
-from . import Assets
 
 from textwrap import wrap
 import os, sys, platform, re, tempfile, errno
@@ -17,10 +16,6 @@ try:
 	from _winreg import *
 except:
 	WIN_REG_AVAILABLE = False
-
-import json
-with open(Assets.versions_file_path, 'r') as f:
-	VERSIONS = json.load(f)
 
 couriernew = ('Courier', -12, 'normal')
 couriersmall = ('Courier', -8, 'normal')
@@ -97,6 +92,7 @@ def register_registry(program_name, extension, file_type_name=None): # type: (st
 		h.Close()
 		DeleteKey(key,sub_key)
 
+	from . import Assets
 	key = '%s:%s' % (program_name,extension)
 	if file_type_name:
 		file_type_name = ' ' + file_type_name

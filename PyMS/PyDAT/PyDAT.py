@@ -19,7 +19,7 @@ from .EntryNameOverrides import EntryNameOverrides
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
 
-from ..Utilities.utils import VERSIONS, WIN_REG_AVAILABLE, couriernew, register_registry, lpad
+from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, register_registry, lpad
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.IntegerVar import IntegerVar
@@ -40,7 +40,7 @@ from ..Utilities.HelpDialog import HelpDialog
 
 import os
 
-LONG_VERSION = 'v%s' % VERSIONS['PyDAT']
+LONG_VERSION = 'v%s' % Assets.version('PyDAT')
 
 class PyDAT(MainWindow):
 	def __init__(self, guifile=None):
@@ -48,7 +48,7 @@ class PyDAT(MainWindow):
 		self.title('PyDAT %s' % LONG_VERSION)
 		self.set_icon('PyDAT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
-		ga.set_application('PyDAT', VERSIONS['PyDAT'])
+		ga.set_application('PyDAT', Assets.version('PyDAT'))
 		ga.track(GAScreen('PyDAT'))
 		setup_trace(self, 'PyDAT')
 
