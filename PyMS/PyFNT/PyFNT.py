@@ -403,22 +403,6 @@ class PyFNT(MainWindow):
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 
-	def move(self, e, a):
-		if a == END:
-			a = self.listbox.size()-2
-		elif a not in [0,END]:
-			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-		self.listbox.select_clear(0,END)
-		self.listbox.select_set(a)
-		self.listbox.see(a)
-		self.preview()
-
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
 	def updatelist(self):
 		self.listbox.delete(0,END)
 		for l in range(len(self.fnt.letters)):

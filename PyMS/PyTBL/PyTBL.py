@@ -214,22 +214,6 @@ class PyTBL(MainWindow):
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
-	def move(self, e, a):
-		if a == END:
-			a = self.listbox.size()-2
-		elif a not in [0,END]:
-			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-		self.listbox.select_clear(0,END)
-		self.listbox.select_set(a)
-		self.listbox.see(a)
-		self.update()
-
 	def update(self, e=None, i=None, status=False):
 		if self.listbox.size():
 			if i:

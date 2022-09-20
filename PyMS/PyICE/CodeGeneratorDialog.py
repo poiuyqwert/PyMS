@@ -335,23 +335,6 @@ class CodeGeneratorDialog(PyMSDialog):
 		self.listbox.yview_moveto(y)
 		self.update_states()
 
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
-	def move(self, e, listbox, offset):
-		index = 0
-		if offset == END:
-			index = listbox.size()-2
-		elif offset not in [0,END] and listbox.curselection():
-			index = max(min(listbox.size()-1, int(listbox.curselection()[0]) + offset),0)
-		listbox.select_clear(0,END)
-		listbox.select_set(index)
-		listbox.see(index)
-		return "break"
-
 	def generate(self):
 		variable_re = re.compile(r'([$%])([a-zA-Z0-9_]+)')
 		code = self.text.get(1.0, END)

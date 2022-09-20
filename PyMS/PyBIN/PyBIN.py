@@ -606,12 +606,6 @@ class PyBIN(MainWindow):
 		]
 		SettingsDialog(self, data, (340,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
 	def unsaved(self):
 		if self.bin and self.edited:
 			file = self.file

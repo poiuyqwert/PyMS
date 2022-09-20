@@ -3,6 +3,7 @@ from .PyMSDialog import PyMSDialog
 from .TextDropDown import TextDropDown
 from .UIKit import *
 from . import Assets
+from .ScrolledListbox import ScrolledListbox
 
 import os
 
@@ -23,27 +24,10 @@ class MPQSelect(PyMSDialog):
 		PyMSDialog.__init__(self, parent, self.open_type + ' a ' + filetype)
 
 	def widgetize(self):
-		listframe = Frame(self, bd=2, relief=SUNKEN)
-		scrollbar = Scrollbar(listframe)
-		self.listbox = Listbox(listframe, width=35, height=10, bd=0, yscrollcommand=scrollbar.set, exportselection=0, activestyle=DOTBOX)
-		bind = [
-			('<MouseWheel>', self.scroll),
-			('<Home>', lambda a,i=0: self.move(a,i)),
-			('<End>', lambda a,i=END: self.move(a,i)),
-			('<Up>', lambda a,i=-1: self.move(a,i)),
-			('<Left>', lambda a,i=-1: self.move(a,i)),
-			('<Down>', lambda a,i=1: self.move(a,i)),
-			('<Right>', lambda a,i=-1: self.move(a,i)),
-			('<Prior>', lambda a,i=-10: self.move(a,i)),
-			('<Next>', lambda a,i=10: self.move(a,i)),
-		]
-		for b in bind:
-			listframe.bind(*b)
-		scrollbar.config(command=self.listbox.yview)
-		scrollbar.pack(side=RIGHT, fill=Y)
-		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		listframe.pack(fill=BOTH, padx=1, pady=1, expand=1)
-		listframe.focus_set()
+		self.listbox = ScrolledListbox(self, width=35, height=10, bd=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
+		self.listbox.focus_set()
+
 		s = Frame(self)
 		history = self.settings.settings.get('mpqselecthistory',[])[::-1]
 		self.textdrop = TextDropDown(s, self.search, history)
@@ -65,21 +49,6 @@ class MPQSelect(PyMSDialog):
 
 	def setup_complete(self):
 		self.settings.windows.settings.load_window_size('mpqselect', self)
-
-	def scroll(self, e):
-		if e.delta > 0:
-			self.listbox.yview('scroll', -2, 'units')
-		else:
-			self.listbox.yview('scroll', 2, 'units')
-
-	def move(self, e, a):
-		if a == END:
-			a = self.listbox.size()-2
-		elif a not in [0,END]:
-			a = max(min(self.listbox.size()-1, int(self.listbox.curselection()[0]) + a),0)
-		self.listbox.select_clear(0,END)
-		self.listbox.select_set(a)
-		self.listbox.see(a)
 
 	def listfiles(self):
 		self.files = []

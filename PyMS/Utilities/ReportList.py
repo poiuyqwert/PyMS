@@ -276,45 +276,9 @@ class ReportList(Frame):
 				self.panes.paneconfig(l, minsize=min_widths[n])
 			self.columns.append((b,lb))
 		self.panes.pack(fill=BOTH, expand=1)
-		# bind = [
-		# 	('<MouseWheel>', self.scroll),
-		# 	('<Home>', lambda a,i=0: self.move(a,i)),
-		# 	('<End>', lambda a,i=END: self.move(a,i)),
-		# 	('<Up>', lambda a,i=-1: self.move(a,i)),
-		# 	('<Left>', lambda a,i=-1: self.move(a,i)),
-		# 	('<Down>', lambda a,i=1: self.move(a,i)),
-		# 	('<Right>', lambda a,i=-1: self.move(a,i)),
-		# 	('<Prior>', lambda a,i=-10: self.move(a,i)),
-		# 	('<Next>', lambda a,i=10: self.move(a,i)),
-		# ]
-		# for d in bind:
-			# parent.bind(*d)
 
 	def select_set(self, i):
 		self.columns[0][1].select(i)
-
-	def scroll(self, e):
-		if e.delta > 0:
-			for c in self.columns:
-				c[1].yview('scroll', -1, 'units')
-		else:
-			for c in self.columns:
-				c[1].yview('scroll', 1, 'units')
-
-	def move(self, e, a):
-		s = self.cur_selection()
-		if s:
-			if a == END:
-				a = self.size()-2
-			elif a not in [0,END]:
-				if a > 0:
-					a = min(self.size()-1, int(s[-1]) + a)
-				else:
-					a = max(int(s[0]) + a,0)
-			for c in self.columns:
-				c[1].select_clear(0,END)
-				c[1].select_set(a)
-				c[1].see(a)
 
 	def bind(self, event, cb, col=None, btn=False):
 		if col != None:
