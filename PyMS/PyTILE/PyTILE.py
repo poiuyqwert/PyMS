@@ -265,12 +265,14 @@ class PyTILE(MainWindow):
 		))
 		self.normal_editors.append(group)
 		group = options_editor('Has Up', 'Edge piece has rows above it. Not completely understood.', self.hasup, (
+			('None', 0, 'Unknown', OPTION_RADIO, None),
 			('Basic edge piece', 1, 'Unknown', OPTION_RADIO, None),
 			('Right edge piece', 2, 'Unknown', OPTION_RADIO, None),
 			('Left edge piece', 3, 'Unknown', OPTION_RADIO, None)
 		))
 		self.normal_editors.append(group)
 		group = options_editor('Has Down', 'Edge piece has rows below it. Not completely understood.', self.hasdown, (
+			('None', 0, 'Unknown', OPTION_RADIO, None),
 			('Basic edge piece', 1, 'Unknown', OPTION_RADIO, None),
 			('Right edge piece', 2, 'Unknown', OPTION_RADIO, None),
 			('Left edge piece', 3, 'Unknown', OPTION_RADIO, None)
