@@ -52,7 +52,7 @@ class ScrolledCanvas(Frame):
 					view('scroll', -1 * scroll_speed, 'units')
 				elif event.delta <= 0 and cur[1] < 1:
 					view('scroll', scroll_speed, 'units')
-				return Event.BREAK
+				return EventPropogation.Break
 			# def move(event, offset):
 			# 	index = 0
 			# 	if offset == END:
@@ -63,7 +63,7 @@ class ScrolledCanvas(Frame):
 			# 	self.select_set(index)
 			# 	self.see(index)
 			# 	self.listbox.event_generate(WidgetEvent.Listbox.Select)
-			# 	return Event.BREAK
+			# 	return EventPropogation.Break
 			bind = [
 				(Mouse.Scroll, scroll),
 				# (Key.Home, lambda event: move(event, 0)),

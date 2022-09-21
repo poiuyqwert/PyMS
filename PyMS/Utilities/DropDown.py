@@ -94,7 +94,7 @@ class DropDown(Frame):
 			elif a:
 				a = max(min(len(self.entries)-1,self.variable.get() + a),0)
 			self.set(a)
-		return Event.BREAK
+		return EventPropogation.Break
 
 	def choose(self, e=None):
 		if self.entry['state'] == NORMAL:
@@ -122,7 +122,7 @@ class DropDown(Frame):
 		if event.keysym == Key.Backspace.name():
 			self._typed = self._typed[:-1]
 		elif event.keysym == Key.Tab.name() or event.char == '\t':
-			return Event.CONTINUE
+			return EventPropogation.Continue
 		elif event.char:
 			self._typed += event.char.lower()
 		if self._typed:
@@ -131,7 +131,7 @@ class DropDown(Frame):
 					self.set(index)
 					break
 			self._typed_timer = self.after(1000, self.clear_typed)
-		return Event.BREAK
+		return EventPropogation.Break
 
 	def clear_typed(self):
 		self._typed_timer = None

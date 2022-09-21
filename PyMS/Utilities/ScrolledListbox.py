@@ -89,12 +89,12 @@ class ScrolledListbox(Frame):
 					view('scroll', -1 * scroll_speed, 'units')
 				elif event.delta <= 0 and cur[1] < 1:
 					view('scroll', scroll_speed, 'units')
-				return Event.BREAK
+				return EventPropogation.Break
 			def move(event, offset):
 				if self.listbox['selectmode'] == MULTIPLE:
-					return Event.CONTINUE
+					return EventPropogation.Continue
 				if event.state & (Modifier.Shift.state | Modifier.Mac.Ctrl.state | Modifier.Alt.state | Modifier.Ctrl.state):
-					return Event.CONTINUE
+					return EventPropogation.Continue
 				index = 0
 				if offset == END:
 					index = self.size()-2
@@ -105,7 +105,7 @@ class ScrolledListbox(Frame):
 				self.see(index)
 				self.listbox.event_generate(WidgetEvent.Listbox.Select)
 				self.listbox.focus_set()
-				return Event.BREAK
+				return EventPropogation.Break
 			bind = [
 				(Mouse.Scroll, scroll),
 				(Key.Home, lambda event: move(event, 0)),

@@ -212,7 +212,7 @@ class CodeGeneratorDialog(PyMSDialog):
 
 	def code_dispatch(self, operation, *args):
 		if operation in ['insert','delete'] and not self.previewing:
-			return 'break'
+			return EventPropogation.Break
 		try:
 			return self.tk.call((self.code.orig, operation) + args)
 		except TclError:

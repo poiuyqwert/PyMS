@@ -312,6 +312,12 @@ class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4
 	Close = Ctrl.w if is_mac() else Key.Escape
 
+class EventPropogation:
+	# Return from event callbacks to break further processing of the event
+	Break = 'break'
+	# Return from event callbacks to leave current processing but continue processing other bindings
+	Continue = 'continue'
+
 def main():
 	events = [
 		Ctrl.a,
