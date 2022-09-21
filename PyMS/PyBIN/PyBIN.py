@@ -408,6 +408,7 @@ class PyBIN(MainWindow):
 		self.reload_list()
 		self.reload_canvas()
 		self.select_node(node)
+		self.mark_edited()
 
 	def remove_node(self):
 		self.selected_node.remove_display()
@@ -420,6 +421,7 @@ class PyBIN(MainWindow):
 		self.selected_node = None
 		self.update_selection_box()
 		self.reload_list()
+		self.mark_edited()
 
 	def move_node(self, delta):
 		index = self.selected_node.parent.children.index(self.selected_node)
@@ -430,6 +432,7 @@ class PyBIN(MainWindow):
 			self.reload_list()
 			self.action_states()
 			self.update_zorder()
+			self.mark_edited()
 
 	def update_background(self):
 		if self.bin and self.show_theme_index.get() and not self.background:
@@ -647,7 +650,7 @@ class PyBIN(MainWindow):
 
 		# self.scr_check['state'] = NORMAL if is_file_open and not self.bin.remastered_required() else DISABLED
 
-	def edit(self, n=None):
+	def mark_edited(self):
 		self.edited = True
 		self.editstatus['state'] = NORMAL
 		self.action_states()
@@ -805,6 +808,7 @@ class PyBIN(MainWindow):
 					highlight.parent.add_child(self.selected_node, highlight.parent.children.index(highlight) + below)
 				self.reload_list()
 				self.reload_canvas()
+				self.mark_edited()
 
 	def edit_event(self, x,y, node=None, prefer_selection=False):
 		if node == None:
@@ -928,6 +932,8 @@ class PyBIN(MainWindow):
 						if node == self.selected_node:
 							self.update_selection_box()
 					offset_node(self.edit_node, dx,dy)
+					if dx or dy:
+						self.mark_edited()
 				elif self.event_moved:
 					rdx2,rdy2 = 0,0
 					if EDIT_RESIZE_LEFT in self.current_event:
@@ -957,6 +963,7 @@ class PyBIN(MainWindow):
 					self.edit_node.update_display()
 					if self.edit_node == self.selected_node:
 						self.update_selection_box()
+					self.mark_edited()
 				check = self.edit_node
 				while check.parent and check.parent.widget == None:
 					check.parent.update_display()

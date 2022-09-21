@@ -398,63 +398,111 @@ class WidgetSettings(PyMSDialog):
 		self.flag_unk10.set((self.node.widget.flags & DialogBIN.BINWidget.FLAG_UNK10 == DialogBIN.BINWidget.FLAG_UNK10))
 
 	def save_property_smk(self):
+		edited = False
 		index = self.smk.get()-1
-		self.node.widget.smk = (None if index == -1 else self.parent.bin.smks[index])
+		smk = (None if index == -1 else self.parent.bin.smks[index])
+		if smk != self.node.widget.smk:
+			self.node.widget.smk = smk
+			edited = True
+		return edited
 	def save_properties(self):
-		self.node.widget.x1 = self.left.get()
-		self.node.widget.x2 = self.right.get()
-		self.node.widget.width = self.width.get()
-		self.node.widget.y1 = self.top.get()
-		self.node.widget.y2 = self.bottom.get()
-		self.node.widget.height = self.height.get()
-		self.node.widget.string = TBL.compile_string(self.string.get())
-		self.node.widget.identifier = self.identifier.get()
-		self.node.widget.scr_unknown1 = self.scr_unknown1.get()
-		self.save_property_smk()
-		self.node.widget.text_offset_x = self.text_offset_x.get()
-		self.node.widget.text_offset_y = self.text_offset_y.get()
-		self.node.widget.responsive_x1 = self.responsive_left.get()
-		self.node.widget.responsive_x2 = self.responsive_right.get()
-		self.node.widget.responsive_width = self.responsive_width.get()
-		self.node.widget.responsive_y1 = self.responsive_top.get()
-		self.node.widget.responsive_y2 = self.responsive_bottom.get()
-		self.node.widget.responsive_height = self.responsive_height.get()
+		edited = False
+		if self.left.get() != self.node.widget.x1:
+			self.node.widget.x1 = self.left.get()
+			edited = True
+		if self.right.get() != self.node.widget.x2:
+			self.node.widget.x2 = self.right.get()
+			edited = True
+		if self.width.get() != self.node.widget.width:
+			self.node.widget.width = self.width.get()
+			edited = True
+		if self.top.get() != self.node.widget.y1:
+			self.node.widget.y1 = self.top.get()
+			edited = True
+		if self.bottom.get() != self.node.widget.y2:
+			self.node.widget.y2 = self.bottom.get()
+			edited = True
+		if self.height.get() != self.node.widget.height:
+			self.node.widget.height = self.height.get()
+			edited = True
+		string = TBL.compile_string(self.string.get())
+		if string != self.node.widget.string:
+			self.node.widget.string = string
+			edited = True
+		if self.identifier.get() != self.node.widget.identifier:
+			self.node.widget.identifier = self.identifier.get()
+			edited = True
+		if self.scr_unknown1.get() != self.node.widget.scr_unknown1:
+			self.node.widget.scr_unknown1 = self.scr_unknown1.get()
+			edited = True
+		edited = edited or self.save_property_smk()
+		if self.text_offset_x.get() != self.node.widget.text_offset_x:
+			self.node.widget.text_offset_x = self.text_offset_x.get()
+			edited = True
+		if self.text_offset_y.get() != self.node.widget.text_offset_y:
+			self.node.widget.text_offset_y = self.text_offset_y.get()
+			edited = True
+		if self.responsive_left.get() != self.node.widget.responsive_x1:
+			self.node.widget.responsive_x1 = self.responsive_left.get()
+			edited = True
+		if self.responsive_right.get() != self.node.widget.responsive_x2:
+			self.node.widget.responsive_x2 = self.responsive_right.get()
+			edited = True
+		if self.responsive_width.get() != self.node.widget.responsive_width:
+			self.node.widget.responsive_width = self.responsive_width.get()
+			edited = True
+		if self.responsive_top.get() != self.node.widget.responsive_y1:
+			self.node.widget.responsive_y1 = self.responsive_top.get()
+			edited = True
+		if self.responsive_bottom.get() != self.node.widget.responsive_y2:
+			self.node.widget.responsive_y2 = self.responsive_bottom.get()
+			edited = True
+		if self.responsive_height.get() != self.node.widget.responsive_height:
+			self.node.widget.responsive_height = self.responsive_height.get()
+			edited = True
 
-		self.node.widget.flags = 0
-		self.node.widget.flags |= self.flag_unk1.get() * DialogBIN.BINWidget.FLAG_UNK1
-		self.node.widget.flags |= self.flag_disabled.get() * DialogBIN.BINWidget.FLAG_DISABLED
-		self.node.widget.flags |= self.flag_unk2.get() * DialogBIN.BINWidget.FLAG_UNK2
-		self.node.widget.flags |= self.flag_visible.get() * DialogBIN.BINWidget.FLAG_VISIBLE
-		self.node.widget.flags |= self.flag_responsive.get() * DialogBIN.BINWidget.FLAG_RESPONSIVE
-		self.node.widget.flags |= self.flag_unk3.get() * DialogBIN.BINWidget.FLAG_UNK3
-		self.node.widget.flags |= self.flag_cancel_btn.get() * DialogBIN.BINWidget.FLAG_CANCEL_BTN
-		self.node.widget.flags |= self.flag_no_hover_snd.get() * DialogBIN.BINWidget.FLAG_NO_HOVER_SND
-		self.node.widget.flags |= self.flag_virtual_hotkey.get() * DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY
-		self.node.widget.flags |= self.flag_has_hotkey.get() * DialogBIN.BINWidget.FLAG_HAS_HOTKEY
-		self.node.widget.flags |= self.flag_font_size_10.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_10
-		self.node.widget.flags |= self.flag_font_size_16.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16
-		self.node.widget.flags |= self.flag_unk4.get() * DialogBIN.BINWidget.FLAG_UNK4
-		self.node.widget.flags |= self.flag_transparency.get() * DialogBIN.BINWidget.FLAG_TRANSPARENCY
-		self.node.widget.flags |= self.flag_font_size_16x.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16x
-		self.node.widget.flags |= self.flag_unk5.get() * DialogBIN.BINWidget.FLAG_UNK5
-		self.node.widget.flags |= self.flag_font_size_14.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_14
-		self.node.widget.flags |= self.flag_unk6.get() * DialogBIN.BINWidget.FLAG_UNK6
-		self.node.widget.flags |= self.flag_translucent.get() * DialogBIN.BINWidget.FLAG_TRANSLUCENT
-		self.node.widget.flags |= self.flag_default_btn.get() * DialogBIN.BINWidget.FLAG_DEFAULT_BTN
-		self.node.widget.flags |= self.flag_on_top.get() * DialogBIN.BINWidget.FLAG_ON_TOP
-		self.node.widget.flags |= self.flag_text_align_center.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
-		self.node.widget.flags |= self.flag_text_align_right.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
-		self.node.widget.flags |= self.flag_text_align_center2.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2
-		self.node.widget.flags |= self.flag_align_top.get() * DialogBIN.BINWidget.FLAG_ALIGN_TOP
-		self.node.widget.flags |= self.flag_align_middle.get() * DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
-		self.node.widget.flags |= self.flag_align_bottom.get() * DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM
-		self.node.widget.flags |= self.flag_unk7.get() * DialogBIN.BINWidget.FLAG_UNK7
-		self.node.widget.flags |= self.flag_unk8.get() * DialogBIN.BINWidget.FLAG_UNK8
-		self.node.widget.flags |= self.flag_unk9.get() * DialogBIN.BINWidget.FLAG_UNK9
-		self.node.widget.flags |= self.flag_no_click_snd.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SND
-		self.node.widget.flags |= self.flag_unk10.get() * DialogBIN.BINWidget.FLAG_UNK10
+		flags = 0
+		flags |= self.flag_unk1.get() * DialogBIN.BINWidget.FLAG_UNK1
+		flags |= self.flag_disabled.get() * DialogBIN.BINWidget.FLAG_DISABLED
+		flags |= self.flag_unk2.get() * DialogBIN.BINWidget.FLAG_UNK2
+		flags |= self.flag_visible.get() * DialogBIN.BINWidget.FLAG_VISIBLE
+		flags |= self.flag_responsive.get() * DialogBIN.BINWidget.FLAG_RESPONSIVE
+		flags |= self.flag_unk3.get() * DialogBIN.BINWidget.FLAG_UNK3
+		flags |= self.flag_cancel_btn.get() * DialogBIN.BINWidget.FLAG_CANCEL_BTN
+		flags |= self.flag_no_hover_snd.get() * DialogBIN.BINWidget.FLAG_NO_HOVER_SND
+		flags |= self.flag_virtual_hotkey.get() * DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY
+		flags |= self.flag_has_hotkey.get() * DialogBIN.BINWidget.FLAG_HAS_HOTKEY
+		flags |= self.flag_font_size_10.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_10
+		flags |= self.flag_font_size_16.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16
+		flags |= self.flag_unk4.get() * DialogBIN.BINWidget.FLAG_UNK4
+		flags |= self.flag_transparency.get() * DialogBIN.BINWidget.FLAG_TRANSPARENCY
+		flags |= self.flag_font_size_16x.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16x
+		flags |= self.flag_unk5.get() * DialogBIN.BINWidget.FLAG_UNK5
+		flags |= self.flag_font_size_14.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_14
+		flags |= self.flag_unk6.get() * DialogBIN.BINWidget.FLAG_UNK6
+		flags |= self.flag_translucent.get() * DialogBIN.BINWidget.FLAG_TRANSLUCENT
+		flags |= self.flag_default_btn.get() * DialogBIN.BINWidget.FLAG_DEFAULT_BTN
+		flags |= self.flag_on_top.get() * DialogBIN.BINWidget.FLAG_ON_TOP
+		flags |= self.flag_text_align_center.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
+		flags |= self.flag_text_align_right.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
+		flags |= self.flag_text_align_center2.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2
+		flags |= self.flag_align_top.get() * DialogBIN.BINWidget.FLAG_ALIGN_TOP
+		flags |= self.flag_align_middle.get() * DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
+		flags |= self.flag_align_bottom.get() * DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM
+		flags |= self.flag_unk7.get() * DialogBIN.BINWidget.FLAG_UNK7
+		flags |= self.flag_unk8.get() * DialogBIN.BINWidget.FLAG_UNK8
+		flags |= self.flag_unk9.get() * DialogBIN.BINWidget.FLAG_UNK9
+		flags |= self.flag_no_click_snd.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SND
+		flags |= self.flag_unk10.get() * DialogBIN.BINWidget.FLAG_UNK10
+		if flags != self.node.widget.flags:
+			self.node.widget.flags = flags
+			edited = True
+
 		self.node.string = None
 		self.node.item_string_images = None
+
+		if edited:
+			self.mark_edited()
 
 	def update_preview(self):
 		self.save_properties()
@@ -469,7 +517,11 @@ class WidgetSettings(PyMSDialog):
 		smk = DialogBIN.BINSMK()
 		self.parent.bin.smks.append(smk)
 		self.node.widget.smk = smk
+		self.mark_edited()
 		SMKSettings(self, smk)
+
+	def mark_edited(self):
+		self.parent.mark_edited()
 
 	def update_smks(self):
 		self.load_property_smk()

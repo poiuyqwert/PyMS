@@ -112,23 +112,41 @@ class SMKSettings(PyMSDialog):
 		self.flag_unk4.set((self.smk.flags & DialogBIN.BINSMK.FLAG_UNK4 == DialogBIN.BINSMK.FLAG_UNK4))
 
 	def save_property_smk(self):
+		edited = False
 		index = self.overlay_smk.get()-1
-		self.smk.overlay_smk = (None if index == -1 else self.widget.parent.bin.smks[index])
+		smk = (None if index == -1 else self.widget.parent.bin.smks[index])
+		if smk != self.smk.overlay_smk:
+			self.smk.overlay_smk = smk
+			edited = True
+		return edited
 	def save_properties(self):
-		self.smk.filename = self.filename.get()
-		self.save_property_smk()
-		self.smk.offset_x = self.overlay_x.get()
-		self.smk.offset_y = self.overlay_y.get()
+		edited = False
+		if self.filename.get() != self.smk.filename:
+			self.smk.filename = self.filename.get()
+			edited = True
+		edited = edited or self.save_property_smk()
+		if self.overlay_x.get() != self.smk.offset_x:
+			self.smk.offset_x = self.overlay_x.get()
+			edited = True
+		if self.overlay_y.get() != self.smk.offset_y:
+			self.smk.offset_y = self.overlay_y.get()
+			edited = True
 
-		self.smk.flags = 0
-		self.smk.flags |= self.flag_fadein.get() * DialogBIN.BINSMK.FLAG_FADE_IN
-		self.smk.flags |= self.flag_dark.get() * DialogBIN.BINSMK.FLAG_DARK
-		self.smk.flags |= self.flag_repeat.get() * DialogBIN.BINSMK.FLAG_REPEATS
-		self.smk.flags |= self.flag_hover.get() * DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER
-		self.smk.flags |= self.flag_unk1.get() * DialogBIN.BINSMK.FLAG_UNK1
-		self.smk.flags |= self.flag_unk2.get() * DialogBIN.BINSMK.FLAG_UNK2
-		self.smk.flags |= self.flag_unk3.get() * DialogBIN.BINSMK.FLAG_UNK3
-		self.smk.flags |= self.flag_unk4.get() * DialogBIN.BINSMK.FLAG_UNK4
+		flags = 0
+		flags |= self.flag_fadein.get() * DialogBIN.BINSMK.FLAG_FADE_IN
+		flags |= self.flag_dark.get() * DialogBIN.BINSMK.FLAG_DARK
+		flags |= self.flag_repeat.get() * DialogBIN.BINSMK.FLAG_REPEATS
+		flags |= self.flag_hover.get() * DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER
+		flags |= self.flag_unk1.get() * DialogBIN.BINSMK.FLAG_UNK1
+		flags |= self.flag_unk2.get() * DialogBIN.BINSMK.FLAG_UNK2
+		flags |= self.flag_unk3.get() * DialogBIN.BINSMK.FLAG_UNK3
+		flags |= self.flag_unk4.get() * DialogBIN.BINSMK.FLAG_UNK4
+		if flags != self.smk.flags:
+			self.smk.flags = flags
+			edited = True
+		
+		if edited:
+			self.mark_edited()
 
 	def update_preview(self):
 		self.save_properties()
@@ -151,10 +169,14 @@ class SMKSettings(PyMSDialog):
 		self.smk.overlay_smk = smk
 		self.update_smks()
 		self.edit_smk()
+		self.mark_edited()
 
 	def update_smks(self):
 		self.load_property_smk()
 		self.parent.update_smks()
+
+	def mark_edited(self):
+		self.parent.mark_edited()
 
 	def ok(self):
 		self.update_preview()
