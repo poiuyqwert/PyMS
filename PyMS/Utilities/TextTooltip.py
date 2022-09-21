@@ -1,7 +1,6 @@
 
 from .Tooltip import Tooltip
-from .UIKit import Text
-from .utils import apply_cursor
+from .UIKit import Text, apply_cursor
 from .EventPattern import *
 
 class TextTooltip(Tooltip):

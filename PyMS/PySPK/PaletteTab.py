@@ -4,7 +4,6 @@ from .Tool import Tool
 from ..FileFormats import SPK
 from ..FileFormats import BMP
 
-from ..Utilities.utils import parse_scrollregion
 from ..Utilities.UIKit import *
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.Toolbar import Toolbar

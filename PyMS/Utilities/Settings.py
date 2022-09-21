@@ -1,7 +1,7 @@
 
-from .utils import parse_geometry, parse_resizable, isstr
+from .utils import isstr
 from .WarnDialog import WarnDialog
-from .UIKit import FileDialog, HORIZONTAL
+from .UIKit import FileDialog, HORIZONTAL, parse_geometry, parse_resizable
 from . import Assets
 
 import os, copy, json

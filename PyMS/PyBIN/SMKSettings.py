@@ -1,7 +1,6 @@
 
 from ..FileFormats import DialogBIN
 
-from ..Utilities.utils import parse_geometry
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog

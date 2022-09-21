@@ -7,7 +7,7 @@ from ..FileFormats import PCX
 from ..FileFormats import GRP
 from ..FileFormats import FNT
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, parse_geometry, apply_cursor
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace

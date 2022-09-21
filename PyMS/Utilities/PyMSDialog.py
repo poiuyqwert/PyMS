@@ -1,6 +1,5 @@
 
-from .utils import parse_geometry
-from .UIKit import Toplevel
+from .UIKit import Toplevel, parse_geometry
 from .EventPattern import *
 
 class PyMSDialog(Toplevel):

@@ -1,6 +1,6 @@
 
-from .utils import isstr, RE_GEOMETRY, parse_geometry, parse_resizable
-from .UIKit import FileDialog
+from .utils import isstr
+from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, parse_resizable
 from .FileType import FileType
 from . import Assets
 from .WarnDialog import WarnDialog
