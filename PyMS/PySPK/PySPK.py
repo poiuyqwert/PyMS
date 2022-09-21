@@ -110,7 +110,7 @@ class PySPK(MainWindow):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		frame = Frame(self)

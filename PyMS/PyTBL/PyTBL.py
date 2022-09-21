@@ -100,7 +100,7 @@ class PyTBL(MainWindow):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTBL')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
 
 		self.bind_all(Shift.Up, lambda e,i=0: self.movestring(e,i))

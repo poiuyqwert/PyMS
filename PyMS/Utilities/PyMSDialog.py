@@ -10,7 +10,7 @@ class PyMSDialog(Toplevel):
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
-			self.bind(Key.Escape, self.cancel)
+			self.bind(Shortcut.Close, self.cancel)
 		#self.transient(parent)
 		self.parent = parent
 		focus = self.widgetize()

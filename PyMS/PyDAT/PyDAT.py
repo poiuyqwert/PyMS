@@ -95,7 +95,7 @@ class PyDAT(MainWindow):
 		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
+		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)

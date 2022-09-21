@@ -110,7 +110,7 @@ class PyAI(MainWindow):
 		file_menu.add_separator()
 		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register, enabled=WIN_REG_AVAILABLE, underline='t')
 		file_menu.add_separator()
-		file_menu.add_command('Exit', self.exit, Alt.F4, underline='e')
+		file_menu.add_command('Exit', self.exit, Shortcut.Exit, underline='e')
 
 		edit_menu = self.menu.add_cascade('Edit')
 		edit_menu.add_command('Undo', self.undo, Ctrl.z, enabled=False, tags='can_undo', bind_shortcut=False, underline='u')
@@ -169,7 +169,7 @@ class PyAI(MainWindow):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyAI')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		
 		self.toolbar.add_row()
 		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Blank Script', Key.Insert, enabled=False, tags='file_open')

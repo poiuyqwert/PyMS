@@ -308,6 +308,10 @@ class WidgetEvent:
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))
 
+class Shortcut:
+	Exit = Ctrl.q if is_mac() else Alt.F4
+	Close = Ctrl.w if is_mac() else Key.Escape
+
 def main():
 	events = [
 		Ctrl.a,

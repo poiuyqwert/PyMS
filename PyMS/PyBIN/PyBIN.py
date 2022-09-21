@@ -137,7 +137,7 @@ class PyBIN(MainWindow):
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Alt.F4)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.show_preview_settings = BooleanVar()
