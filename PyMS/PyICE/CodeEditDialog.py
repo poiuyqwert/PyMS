@@ -16,6 +16,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import Assets
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities.FileType import FileType
 
 import os
 
@@ -246,14 +247,14 @@ class CodeEditDialog(PyMSDialog):
 			self.title('IScript Editor [%s]' % self.file)
 
 	def exportas(self, e=None):
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export Code', filetypes=[('Text Files','*.txt'),('All Files','*')])
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export Code', filetypes=[FileType.txt()])
 		if not file:
 			return
 		self.file = file
 		self.export()
 
 	def iimport(self, e=None):
-		iimport = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import From', filetypes=[('Text Files','*.txt'),('All Files','*')])
+		iimport = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
 		if iimport:
 			try:
 				f = open(iimport, 'r')

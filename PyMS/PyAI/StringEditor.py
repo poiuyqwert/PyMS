@@ -12,6 +12,7 @@ from ..Utilities.StatusBar import StatusBar
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
+from ..Utilities.FileType import FileType
 
 class StringEditor(PyMSDialog):
 	def __init__(self, parent, title='String Editor', cancel=False, index=0):
@@ -128,7 +129,7 @@ class StringEditor(PyMSDialog):
 				else:
 					self.saveas()
 		if file == None:
-			file = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[('TBL Files','*.tbl')])
+			file = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[FileType.tbl()])
 		if file:
 			tbl = TBL.TBL()
 			try:
@@ -172,7 +173,7 @@ class StringEditor(PyMSDialog):
 		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
 		# if key and self.buttons['saveas']['state'] != NORMAL:
 		# 	return
-		file = self.settings.lastpath.tbl.select_save_file(self, title='Save stat_txt.tbl', filetypes=[('TBL Files','*.tbl')])
+		file = self.settings.lastpath.tbl.select_save_file(self, title='Save stat_txt.tbl', filetypes=[FileType.tbl()])
 		if not file:
 			return
 		self.save(None, file)

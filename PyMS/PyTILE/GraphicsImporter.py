@@ -10,6 +10,7 @@ from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
+from ..Utilities.FileType import FileType
 
 class GraphicsImporter(PyMSDialog):
 	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, ids=None):
@@ -172,7 +173,7 @@ class GraphicsImporter(PyMSDialog):
 				self.ok()
 
 	def select_paths(self, replace=False):
-		paths = self.settings.lastpath.graphics.select_open_files(self, key='import', title='Choose Graphics', filetypes=[('256 Color BMP','*.bmp')])
+		paths = self.settings.lastpath.graphics.select_open_files(self, key='import', title='Choose Graphics', filetypes=[FileType.bmp()])
 		if paths:
 			if replace:
 				self.graphics_list.delete(0, END)

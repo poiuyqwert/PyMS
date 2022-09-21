@@ -15,29 +15,30 @@ from .ErrorDialog import ErrorDialog
 from .PyMSError import PyMSError
 from .UIKit import *
 from . import Assets
+from .FileType import FileType
 
 import os
 
 # TODO: Update settings handling once all programs use Settings objects
 class SettingsPanel(Frame):
 	types = {
-		'PCX':(PCX.PCX,'PCX','pcx',[('StarCraft Special Palette','*.pcx'),('All Files','*')]),
-		'FNT':(FNT.FNT,'FNT','fnt',[('StarCraft FNT','*.fnt'),('All Files','*')]),
-		'GRP':(GRP.GRP,'GRP','grp',[('StarCraft GRP','*.grp'),('All Files','*')]),
-		'CacheGRP':(GRP.CacheGRP,'GRP','grp',[('StarCraft GRP','*.grp'),('All Files','*')]),
-		'Palette':(Palette.Palette,'Palette','pal',[('RIFF, JASC, and StarCraft PAL','*.pal'),('StarCraft Tileset WPE','*.wpe'),('ZSoft PCX','*.pcx'),('All Files','*')]),
-		'WPE':(Palette.Palette,'Palette','wpe',[('StarCraft Tileset WPE','*.wpe'),('RIFF, JASC, and StarCraft PAL','*.pal'),('ZSoft PCX','*.pcx'),('All Files','*')]),
-		'TBL':(TBL.TBL,'TBL','tbl',[('StarCraft TBL Files','*.tbl'),('All Files','*')]),
-		'AIBIN':(AIBIN.AIBIN,'aiscript.bin','bin',[('AI Scripts','*.bin'),('All Files','*')]),
-		'UnitsDAT':(DAT.UnitsDAT,'units.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'WeaponsDAT':(DAT.WeaponsDAT,'weapons.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'FlingyDAT':(DAT.FlingyDAT,'flingy.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'SpritesDAT':(DAT.SpritesDAT,'sprites.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'ImagesDAT':(DAT.ImagesDAT,'images.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'UpgradesDAT':(DAT.UpgradesDAT,'uupgrades.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'TechDAT':(DAT.TechDAT,'techdata.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'SoundsDAT':(DAT.SoundsDAT,'sfxdata.dat','dat',[('StarCraft DAT files','*.dat'),('All Files','*')]),
-		'IScript':(IScriptBIN.IScriptBIN,'iscript.bin','bin',[('IScripts','*.bin'),('All Files','*')]),
+		'PCX':(PCX.PCX,'PCX','pcx',[FileType.pal_pcx()]),
+		'FNT':(FNT.FNT,'FNT','fnt',[FileType.fnt()]),
+		'GRP':(GRP.GRP,'GRP','grp',[FileType.grp()]),
+		'CacheGRP':(GRP.CacheGRP,'GRP','grp',[FileType.grp()]),
+		'Palette':(Palette.Palette,'Palette','pal',[FileType.pal(),FileType.wpe(),FileType.pcx()]),
+		'WPE':(Palette.Palette,'Palette','wpe',[FileType.wpe(),FileType.pal(),FileType.pcx()]),
+		'TBL':(TBL.TBL,'TBL','tbl',[FileType.tbl()]),
+		'AIBIN':(AIBIN.AIBIN,'aiscript.bin','bin',[FileType.bin_ai()]),
+		'UnitsDAT':(DAT.UnitsDAT,'units.dat','dat',[FileType.dat()]),
+		'WeaponsDAT':(DAT.WeaponsDAT,'weapons.dat','dat',[FileType.dat()]),
+		'FlingyDAT':(DAT.FlingyDAT,'flingy.dat','dat',[FileType.dat()]),
+		'SpritesDAT':(DAT.SpritesDAT,'sprites.dat','dat',[FileType.dat()]),
+		'ImagesDAT':(DAT.ImagesDAT,'images.dat','dat',[FileType.dat()]),
+		'UpgradesDAT':(DAT.UpgradesDAT,'uupgrades.dat','dat',[FileType.dat()]),
+		'TechDAT':(DAT.TechDAT,'techdata.dat','dat',[FileType.dat()]),
+		'SoundsDAT':(DAT.SoundsDAT,'sfxdata.dat','dat',[FileType.dat()]),
+		'IScript':(IScriptBIN.IScriptBIN,'iscript.bin','bin',[FileType.bin_iscript()]),
 	}
 
 	def __init__(self, parent, entries, settings, mpqhandler, setdlg=None):

@@ -25,6 +25,7 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PyLO')
 
@@ -369,7 +370,7 @@ class PyLO(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.lo.select_open_file(self, title='Open LO', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox')])
+				file = self.settings.lastpath.lo.select_open_file(self, title='Open LO', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
 				if not file:
 					return
 			lo = LO()
@@ -398,7 +399,7 @@ class PyLO(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 			if not file:
 				return
 			try:
@@ -440,7 +441,7 @@ class PyLO(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[('All StarCraft Overlays','*.loa;*.lob;*.lod;*.lof;*.loo;*.los;*.lou;*.log;*.lol;*.lox'),('StarCraft Attack Overlays','*.loa'),('StarCraft Birth Overloays','*.lob'),('StarCraft Landing Dust Overlays','*.lod'),('StarCraft Fire Overlays','*.lof'),('StarCraft Powerup Overlays','*.loo'),('StarCraft Shield/Smoke Overlays','*.los'),('StarCraft Lift-Off Dust Overlays','*.lou'),('Misc. StarCraft Overlay','*.log'),('Misc. StarCraft Overlay','*.lol'),('Misc. StarCraft Overlay','*.lox')])
+		file = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
 		if not file:
 			return True
 		self.file = file
@@ -449,7 +450,7 @@ class PyLO(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

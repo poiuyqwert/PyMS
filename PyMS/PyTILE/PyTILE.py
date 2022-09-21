@@ -25,6 +25,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
@@ -48,7 +49,7 @@ class PyTILE(MainWindow):
 				self.stat_txt.load_file(filen)
 				break
 			except:
-				filen = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[('StarCraft TBL files','*.tbl')])
+				filen = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[FileType.tbl()])
 				if not filen:
 					sys.exit()
 
@@ -749,7 +750,7 @@ class PyTILE(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.tileset.select_open_file(self, title='Open Complete Tileset', filetypes=[('Complete Tileset','*.cv5')])
+				file = self.settings.lastpath.tileset.select_open_file(self, title='Open Complete Tileset', filetypes=[FileType.cv5()])
 				if not file:
 					return
 			tileset = Tileset()
@@ -785,7 +786,7 @@ class PyTILE(MainWindow):
 	def saveas(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.tileset.select_save_file(self, title='Save Tileset As', filetypes=[('Complete Tileset','*.cv5')])
+		file = self.settings.lastpath.tileset.select_save_file(self, title='Save Tileset As', filetypes=[FileType.cv5()])
 		if not file:
 			return True
 		self.file = file

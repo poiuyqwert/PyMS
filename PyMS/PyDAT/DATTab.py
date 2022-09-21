@@ -9,6 +9,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
+from ..Utilities.FileType import FileType
 
 import copy, os
 
@@ -211,7 +212,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 				self.toplevel.tab_activated()
 
 	def iimport(self):
-		file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
+		file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 		if not file:
 			return
 		self.get_dat_data().dat.import_file(file)
@@ -232,7 +233,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.toplevel.update_status_bar()
 
 	def saveas(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME,'*.dat')], filename=self.get_dat_data().dat.FILE_NAME)
+		file = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME)], filename=self.get_dat_data().dat.FILE_NAME)
 		if not file:
 			return True
 		self.get_dat_data().file_path = file
@@ -240,7 +241,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toplevel.update_status_bar()
 
 	def export(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
+		file = self.toplevel.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

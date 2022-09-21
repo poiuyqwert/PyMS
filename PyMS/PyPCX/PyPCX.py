@@ -17,6 +17,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
@@ -115,7 +116,7 @@ class PyPCX(MainWindow):
 		if self.unsaved():
 			return
 		if file == None:
-			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=(('StarCraft PCX','*.pcx'),))
+			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=[FileType.pcx()])
 			if not file:
 				return
 		pcx = PCX()
@@ -149,7 +150,7 @@ class PyPCX(MainWindow):
 	def saveas(self, key=None, type=0):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=(('StarCraft PCX','*.pcx'),))
+		file = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=[FileType.pcx()])
 		if not file:
 			return True
 		self.file = file
@@ -189,7 +190,7 @@ class PyPCX(MainWindow):
 	def export(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export to BMP', filetypes=(('256 Color BMP','*.bmp'),))
+		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export to BMP', filetypes=[FileType.bmp()])
 		if not file:
 			return True
 		b = BMP()
@@ -204,7 +205,7 @@ class PyPCX(MainWindow):
 	def iimport(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import a BMP', filetypes=(('256 Color BMP','*.bmp'),))
+		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import a BMP', filetypes=[FileType.bmp()])
 		if not file:
 			return True
 		b = BMP()

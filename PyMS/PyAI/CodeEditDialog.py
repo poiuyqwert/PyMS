@@ -15,6 +15,7 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
+from ..Utilities.FileType import FileType
 
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, settings, ids):
@@ -277,14 +278,14 @@ class CodeEditDialog(PyMSDialog):
 			self.title('AI Script Editor [%s]' % self.file)
 
 	def exportas(self, e=None):
-		file = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export Code', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export Code', filetypes=[FileType.txt()])
 		if not file:
 			return
 		self.file = file
 		self.export()
 
 	def iimport(self, e=None):
-		iimport = self.settings.lastpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[('Text Files','*.txt')])
+		iimport = self.settings.lastpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
 		if iimport:
 			try:
 				f = open(iimport, 'r')

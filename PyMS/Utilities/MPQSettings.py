@@ -6,6 +6,7 @@ from .setutils import PYMS_SETTINGS
 from .UIKit import *
 from .Toolbar import Toolbar
 from .ScrolledListbox import ScrolledListbox
+from .FileType import FileType
 
 import os
 
@@ -64,7 +65,7 @@ class MPQSettings(Frame):
 	def add(self, key=None, add=None):
 		if add == None:
 			n,s = 0,0
-			add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=(('MPQ Files','*.mpq'),))
+			add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 		else:
 			n,s = END,self.listbox.size()
 		if add:

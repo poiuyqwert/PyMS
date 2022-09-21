@@ -14,7 +14,7 @@ class FileType(tuple):
 		return file_types + [all_files]
 
 	@staticmethod
-	def default_extension(file_types): # type: (list[FileType]) -> Optional[str]
+	def default_extension(file_types): # type: (list[FileType]) -> (str | None)
 		if not file_types:
 			return None
 		extension = file_types[0].extensions
@@ -57,6 +57,10 @@ class FileType(tuple):
 		return FileType(name, 'mpq')
 
 	@staticmethod
+	def mpq_all(name='All MPQ Files'):
+		return FileType(name, 'mpq', 'exe', 'scm', 'scx')
+
+	@staticmethod
 	def exe(name='Executables'):
 		return FileType(name, 'exe')
 
@@ -79,6 +83,10 @@ class FileType(tuple):
 	@staticmethod
 	def pal_sc(name='StarCraft Palettes'):
 		return FileType.pal(name)
+
+	@staticmethod
+	def pal_pcx(name='StarCraft Special Palettes'):
+		return FileType.pcx(name)
 
 	@staticmethod
 	def wpe(name='StarCraft Tileset Palettes'):

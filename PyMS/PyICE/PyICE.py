@@ -24,6 +24,7 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 from copy import deepcopy
 from collections import OrderedDict
@@ -334,7 +335,7 @@ class PyICE(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[('IScripts','*.bin')])
+				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
 				if not file:
 					return
 			ibin = self.create_iscriptbin()
@@ -373,7 +374,7 @@ class PyICE(MainWindow):
 	def saveas(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[('IScripts','*.bin')])
+		file = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[FileType.bin_iscript()])
 		if not file:
 			return True
 		self.file = file
@@ -384,7 +385,7 @@ class PyICE(MainWindow):
 		if not self.is_file_open():
 			return
 		if not file:
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 		if not file:
 			return
 		if parent == None:
@@ -431,7 +432,7 @@ class PyICE(MainWindow):
 		selected_iscript_ids = self.selected_iscript_ids()
 		if not selected_iscript_ids:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

@@ -7,6 +7,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.Toolbar import Toolbar
+from ..Utilities.FileType import FileType
 
 class TilePalette(PyMSDialog):
 	OPEN_PALETTE_COUNT = 0
@@ -181,7 +182,7 @@ class TilePalette(PyMSDialog):
 			typename = 'MegaTile'
 		elif self.tiletype == TILETYPE_MINI:
 			typename = 'MiniTile'
-		path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export %s Graphics' % typename, filetypes=[('256 Color BMP','*.bmp')])
+		path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export %s Graphics' % typename, filetypes=[FileType.bmp()])
 		if path:
 			self.tileset.export_graphics(self.tiletype, path, self.palette.selected)
 
@@ -205,7 +206,7 @@ class TilePalette(PyMSDialog):
 		if not len(self.palette.selected):
 			return
 		if self.tiletype == TILETYPE_GROUP:
-			path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export MegaTile Group Settings', filetypes=[('Text File','*.txt')])
+			path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export MegaTile Group Settings', filetypes=[FileType.txt()])
 			if path:
 				self.tileset.export_settings(TILETYPE_GROUP, path, self.palette.selected)
 		elif self.tiletype == TILETYPE_MEGA:

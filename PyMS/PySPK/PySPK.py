@@ -26,6 +26,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PySPK')
 
@@ -567,7 +568,7 @@ class PySPK(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[('StarCraft Parallax','*.spk')])
+				file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[FileType.spk()])
 				if not file:
 					return
 			spk = SPK.SPK()
@@ -594,7 +595,7 @@ class PySPK(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			filepath = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[('256 Color BMP','*.bmp')])
+			filepath = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
 			if not filepath:
 				return
 			t = LayerCountDialog(self)
@@ -640,7 +641,7 @@ class PySPK(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[('StarCraft Parallax','*.spk')])
+		file = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[FileType.spk()])
 		if not file:
 			return True
 		self.file = file
@@ -649,7 +650,7 @@ class PySPK(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		filepath = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[('256 Color BMP','*.bmp')])
+		filepath = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
 		if not filepath:
 			return True
 		try:

@@ -23,6 +23,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 import os
 
@@ -479,7 +480,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.grp.select_open_file(self, title='Open GRP', filetypes=(('GRP Files','*.grp'),))
+				file = self.settings.lastpath.grp.select_open_file(self, title='Open GRP', filetypes=[FileType.grp()])
 				if not file:
 					return
 			grp = GRP.GRP(self.palettes[self.pal])
@@ -524,7 +525,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if not self.is_file_open():
 			return
 		self.stopframe()
-		file = self.settings.lastpath.grp.select_save_file(self, title='Save GRP As', filetypes=(('GRP Files','*.grp'),))
+		file = self.settings.lastpath.grp.select_save_file(self, title='Save GRP As', filetypes=[FileType.grp()])
 		if not file:
 			return True
 		self.file = file
@@ -553,7 +554,7 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Frames To...', filetypes=(('256 Color BMP','*.bmp'),))
+		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Frames To...', filetypes=[FileType.bmp()])
 		if file:
 			self.status.set('Extracting frames, please wait...')
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
@@ -571,9 +572,9 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		update_preview_limit = self.prevto.get() == self.grp.frames
 		if self.bmp_style.get():
-			files = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import single BMP...', filetypes=(('256 Color BMP','*.bmp'),))
+			files = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import single BMP...', filetypes=[FileType.bmp()])
 		else:
-			files = self.settings.lastpath.bmp.select_open_files(self, key='import', title='Import frames...', filetypes=(('256 Color BMP','*.bmp'),))
+			files = self.settings.lastpath.bmp.select_open_files(self, key='import', title='Import frames...', filetypes=[FileType.bmp()])
 		if files:
 			frames = 0
 			if self.bmp_style.get():

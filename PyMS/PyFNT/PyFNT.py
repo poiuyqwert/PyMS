@@ -22,6 +22,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
@@ -446,7 +447,7 @@ class PyFNT(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.fnt.select_open_file(self, title='Open FNT', filetypes=[('StarCraft FNT','*.fnt')])
+				file = self.settings.lastpath.fnt.select_open_file(self, title='Open FNT', filetypes=[FileType.fnt()])
 				if not file:
 					return
 			if isinstance(file, FNT):
@@ -485,7 +486,7 @@ class PyFNT(MainWindow):
 	def saveas(self, key=None, type=0):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.fnt.select_save_file(self, title='Save FNT As', filetypes=[('StarCraft FNT','*.fnt')])
+		file = self.settings.lastpath.fnt.select_save_file(self, title='Save FNT As', filetypes=[FileType.fnt()])
 		if not file:
 			return True
 		self.file = file
@@ -513,7 +514,7 @@ class PyFNT(MainWindow):
 	def exports(self, key=None):
 		if key and self.buttons['exportc']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[('256 Color BMP','*.bmp')])
+		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
 		if file:
 			self.status.set('Extracting font, please wait...')
 			self.update_idletasks()
@@ -526,7 +527,7 @@ class PyFNT(MainWindow):
 	def imports(self, key=None):
 		if key and self.buttons['importc']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[('256 Color BMP','*.bmp')])
+		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
 		if file:
 			s = InfoDialog(self)
 			if s.size != None:

@@ -10,6 +10,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities import Assets
+from ..Utilities.FileType import FileType
 
 import os, shutil
 
@@ -65,9 +66,9 @@ class SaveMPQDialog(PyMSDialog):
 			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
 			if self.sempq.get():
-				file = self.parent.data_context.settings.lastpath.sempq.select_save_file(self, title='Save SEMPQ to...', filetypes=[('Executable Files','*.exe')])
+				file = self.parent.data_context.settings.lastpath.sempq.select_save_file(self, title='Save SEMPQ to...', filetypes=[FileType.exe_mpq()])
 			else:
-				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq')])
+				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq()])
 			if file:
 				if self.sempq.get() and not os.path.exists(file):
 					try:

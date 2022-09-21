@@ -27,11 +27,11 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 import os, shutil
 from collections import OrderedDict
@@ -259,7 +259,7 @@ class PyAI(MainWindow):
 			upgradesdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.upgradesdat))
 			techdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.techdatadat))
 			if not self.tbl:
-				file = self.settings.lastpath.tbl.select_open_file(self, title='Open a stat_txt.tbl first', filetypes=[('TBL Files','*.tbl')])
+				file = self.settings.lastpath.tbl.select_open_file(self, title='Open a stat_txt.tbl first', filetypes=[FileType.tbl()])
 				tbl = TBL.TBL()
 				tbl.load_file(file)
 				self.stat_txt = file
@@ -402,11 +402,11 @@ class PyAI(MainWindow):
 	def open(self, key=None, aiscript_data=None, aiscript_path=None, bwscript_data=None, bwscript_path=None): # type: (None, bytes, str, bytes, str) -> None
 		if not self.unsaved():
 			if not aiscript_path:
-				aiscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open aiscript.bin', filetypes=[('AI Scripts','*.bin')])
+				aiscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open aiscript.bin', filetypes=[FileType.bin_ai()])
 				if not aiscript_path:
 					return
 				if not bwscript_path:
-					bwscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)', filetypes=[('AI Scripts','*.bin')])
+					bwscript_path = self.settings.lastpath.bin.select_open_file(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)', filetypes=[FileType.bin_ai()])
 			warnings = []
 			try:
 				ai = AIBIN.AIBIN(bwscript_data if bwscript_data else bwscript_path, self.unitsdat, self.upgradesdat, self.techdat, self.tbl, bwscript_is_data=not not bwscript_data)
@@ -447,7 +447,7 @@ class PyAI(MainWindow):
 		self.open(key, aiscript_path=Assets.mpq_file_path('Scripts','aiscript.bin'), bwscript_path=Assets.mpq_file_path('Scripts','bwscript.bin'))
 
 	def open_mpq(self):
-		file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
+		file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq()])
 		if not file:
 			return
 		mpq = MPQ.of(file)
@@ -476,7 +476,7 @@ class PyAI(MainWindow):
 			self.saveas()
 			return
 		if self.tbledited:
-			file = self.settings.lastpath.tbl.select_save_file(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)", filetypes=[('TBL Files','*.tbl')])
+			file = self.settings.lastpath.tbl.select_save_file(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)", filetypes=[FileType.tbl()])
 			if file:
 				self.stat_txt = file
 				try:
@@ -499,18 +499,18 @@ class PyAI(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		aiscript = self.settings.lastpath.bin.select_save_file(self, title='Save aiscript.bin As', filetypes=[('AI Scripts','*.bin')])
+		aiscript = self.settings.lastpath.bin.select_save_file(self, title='Save aiscript.bin As', filetypes=[FileType.bin_ai()])
 		if not aiscript:
 			return True
 		bwscript = None
 		if self.ai.bwscript.ais:
-			bwscript = self.settings.lastpath.bin.select_save_file(self, title='Save bwscript.bin As (Cancel to save aiscript.bin only)', filetypes=[('AI Scripts','*.bin')])
+			bwscript = self.settings.lastpath.bin.select_save_file(self, title='Save bwscript.bin As (Cancel to save aiscript.bin only)', filetypes=[FileType.bin_ai()])
 		if self.save(ai=aiscript, bw=bwscript):
 			self.tbledited = False
 			self.title('%s, %s' % (self.aiscript,self.bwscript))
 
 	def savempq(self, key=None):
-		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[('MPQ Files','*.mpq'),('Self-executing MPQ','*.exe')])
+		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq(),FileType.exe_mpq()])
 		if file:
 			if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
 				try:
@@ -954,7 +954,7 @@ class PyAI(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		export = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export To', filetypes=[('Text Files','*.txt')])
+		export = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export To', filetypes=[FileType.txt()])
 		if export:
 			indexs = self.listbox.curselection()
 			external = []
@@ -988,7 +988,7 @@ class PyAI(MainWindow):
 		if parent == None:
 			parent = self
 		if not iimport:
-			iimport = self.settings.latpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[('Text Files','*.txt')])
+			iimport = self.settings.latpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
 		if iimport:
 			i = AIBIN.AIBIN(False, self.unitsdat, self.upgradesdat, self.techdat, self.stat_txt)
 			i.bwscript = AIBIN.BWBIN(self.unitsdat, self.upgradesdat, self.techdat, self.stat_txt)
@@ -1133,7 +1133,7 @@ class PyAI(MainWindow):
 		SettingsDialog(self, data, (340,295), err, mpqhandler=self.mpqhandler)
 
 	def openset(self, key=None):
-		file = self.settings.lastpath.set_txt.select_open_file(self, title='Load Settings', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.set_txt.select_open_file(self, title='Load Settings', filetypes=[FileType.txt()])
 		if file:
 			try:
 				files = open(file,'r').readlines()
@@ -1158,7 +1158,7 @@ class PyAI(MainWindow):
 			self.techdat = sets[3]
 
 	def saveset(self, key=None):
-		file = self.settings.lastpath.set_txt.select_save_file(self, title='Save Settings', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.set_txt.select_save_file(self, title='Save Settings', filetypes=[FileType.txt()])
 		if file:
 			try:
 				set = open(file,'w')

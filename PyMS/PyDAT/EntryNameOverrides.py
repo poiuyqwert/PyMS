@@ -9,6 +9,7 @@ from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities.FileType import FileType
 
 import re
 
@@ -84,7 +85,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.append.set(name_overrides[entry_id][0])
 
 	def open(self, _=None):
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_open_file(self, title='Open Name Overrides', filetypes=(('Text Files','*.txt'),))
+		path = self.data_context.settings.lastpath.entry_name_overrides.select_open_file(self, title='Open Name Overrides', filetypes=[FileType.txt()])
 		if not path:
 			return
 		try:
@@ -96,7 +97,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.refresh_list()
 
 	def saveas(self, _=None):
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_save_file(self, title='Save Name Overrides', filetypes=(('TXT files','*.txt'),), filename=self.dat_id.filename.replace('.dat', '.txt'))
+		path = self.data_context.settings.lastpath.entry_name_overrides.select_save_file(self, title='Save Name Overrides', filetypes=[FileType.txt()], filename=self.dat_id.filename.replace('.dat', '.txt'))
 		if not path:
 			return
 		try:

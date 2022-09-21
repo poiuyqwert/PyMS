@@ -37,6 +37,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.CollapseView import CollapseView
 from ..Utilities.DropDown import DropDown
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 import os
 
@@ -373,7 +374,7 @@ class PyDAT(MainWindow):
 
 	def open(self, key=None, file_path=None):
 		if file_path == None:
-			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[('StarCraft DAT files','*.dat')])
+			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[FileType.dat()])
 			if not file_path:
 				return
 		filename = os.path.basename(file_path)
@@ -435,7 +436,7 @@ class PyDAT(MainWindow):
 		MessageBox.showinfo('DAT Files Found', message)	
 
 	def openmpq(self, event=None):
-		path = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('MPQ Files','*.mpq'),('Embedded MPQ Files','*.exe')])
+		path = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq()])
 		self._open_all(path, True)
 
 	def opendirectory(self, event=None):

@@ -7,6 +7,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.FileType import FileType
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
@@ -72,7 +73,7 @@ class SettingsImporter(PyMSDialog):
 			typename = 'MegaTile Group'
 		elif self.tiletype == TILETYPE_MEGA:
 			typename = 'MegaTile'
-		path = self.settings.lastpath.settings.select_open_file(self, key='import', title='Import %s Settings' % typename, filetypes=[('Text File','*.txt')])
+		path = self.settings.lastpath.settings.select_open_file(self, key='import', title='Import %s Settings' % typename, filetypes=[FileType.txt()])
 		if path:
 			self.settings_path.set(path)
 			self.settings_entry.xview(END)

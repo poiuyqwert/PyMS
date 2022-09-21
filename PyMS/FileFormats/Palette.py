@@ -5,6 +5,7 @@ from ..FileFormats.BMP import BMP
 from ..Utilities.utils import PyMSError
 from ..Utilities.fileutils import load_file
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities.FileType import FileType
 
 import struct
 
@@ -26,11 +27,11 @@ class Palette:
 		@staticmethod
 		def load_types():
 			load_types = [
-				('RIFF, JASC, and StarCraft PAL','*.pal'),
-				('StarCraft Tileset WPE','*.wpe'),
-				('Adobe Color Table','*.act'),
-				('ZSoft PCX','*.pcx'),
-				('8-Bit BMP','*.bmp')
+				FileType.pal(),
+				FileType.wpe(),
+				FileType.act(),
+				FileType.pcx(),
+				FileType.bmp()
 			]
 			return tuple(load_types)
 
@@ -38,18 +39,18 @@ class Palette:
 		def save_types(format, ext):
 			save_types_lookup = {
 				Palette.Format.riff: {
-					None: [('RIFF PAL','*.pal')]
+					None: [FileType.pal_riff()]
 				},
 				Palette.Format.jasc: {
-					None: [('JASC PAL','*.pal')]
+					None: [FileType.pal_jasc()]
 				},
 				Palette.Format.raw_rgb: {
-					None: [('StarCraft PAL','*.pal'),('Adobe Color Table','*.act')],
-					Palette.FileType.sc_pal.ext: [('StarCraft PAL','*.pal')],
-					Palette.FileType.act.ext: [('Adobe Color Table','*.act')]
+					None: [FileType.pal_sc(),FileType.act()],
+					Palette.FileType.sc_pal.ext: [FileType.pal_sc()],
+					Palette.FileType.act.ext: [FileType.act()]
 				},
 				Palette.Format.raw_rgba: {
-					None: [('StarCraft Terrain WPE','*.wpe')]
+					None: [FileType.wpe()]
 				}
 			}
 			save_types_format = save_types_lookup.get(format)

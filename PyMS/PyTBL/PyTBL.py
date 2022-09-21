@@ -25,6 +25,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 
@@ -300,7 +301,7 @@ class PyTBL(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if not file:
-				file = self.settings.lastpath.tbl.select_open_file(self, title='Open TBL', filetypes=(('StarCraft TBL Files','*.tbl'),))
+				file = self.settings.lastpath.tbl.select_open_file(self, title='Open TBL', filetypes=[FileType.tbl()])
 				if not file:
 					return
 			tbl = TBL.TBL()
@@ -330,7 +331,7 @@ class PyTBL(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=(('Text Files','*.txt'),))
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 			if not file:
 				return
 			tbl = TBL.TBL()
@@ -372,7 +373,7 @@ class PyTBL(MainWindow):
 	def saveas(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=(('StarCraft TBL Files','*.tbl'),))
+		file = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=[FileType.tbl()])
 		if not file:
 			return True
 		self.file = file
@@ -381,7 +382,7 @@ class PyTBL(MainWindow):
 	def export(self, key=None):
 		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=(('Text Files','*.txt'),))
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

@@ -5,6 +5,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities.FileType import FileType
 
 class ExternalDefDialog(PyMSDialog):
 	def __init__(self, parent, settings):
@@ -40,7 +41,7 @@ class ExternalDefDialog(PyMSDialog):
 		self.toolbar.tag_enabled('def_selected', self.def_selected())
 
 	def add(self, key=None):
-		iimport = self.settings.lastpath.def_txt.select_open_file(self, title='Add External Definition File', filetypes=[('Text Files','*.txt')])
+		iimport = self.settings.lastpath.def_txt.select_open_file(self, title='Add External Definition File', filetypes=[FileType.txt()])
 		if iimport and iimport not in self.parent.extdefs:
 			self.parent.extdefs.append(iimport)
 			self.update()

@@ -11,6 +11,7 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities.FileType import FileType
 
 import json
 
@@ -60,7 +61,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 	def export(self):
 		if not self.listbox.curselection():
 			return
-		path = self.settings.lastpath.generators.txt.select_save_file(self, key='export', title='Export Preset', filetypes=[('Text Files','*.txt')])
+		path = self.settings.lastpath.generators.txt.select_save_file(self, key='export', title='Export Preset', filetypes=[FileType.txt()])
 		if not path:
 			return
 		selected = int(self.listbox.curselection()[0])
@@ -73,7 +74,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			ErrorDialog(self, PyMSError('Export',"Could not write to file '%s'" % path))
 
 	def iimport(self):
-		path = self.settings.lastpath.generators.txt.select_open_file(self, key='import', title='Import Preset', filetypes=[('Text Files','*.txt')])
+		path = self.settings.lastpath.generators.txt.select_open_file(self, key='import', title='Import Preset', filetypes=[FileType.txt()])
 		if not path:
 			return
 		try:

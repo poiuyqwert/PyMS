@@ -26,6 +26,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 import time
 
@@ -1011,7 +1012,7 @@ class PyBIN(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.bin.select_open_file(self, title='Open Dialog BIN', filetypes=[('StarCraft Dialogs','*.bin')])
+				file = self.settings.lastpath.bin.select_open_file(self, title='Open Dialog BIN', filetypes=[FileType.bin_dialog()])
 				if not file:
 					return
 			dbin = DialogBIN.DialogBIN()
@@ -1043,7 +1044,7 @@ class PyBIN(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[('Text Files','*.txt')])
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 			if not file:
 				return
 			dbin = DialogBIN.DialogBIN()
@@ -1089,7 +1090,7 @@ class PyBIN(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.bin.select_save_file(self, title='Save Dialog BIN As', filetypes=[('StarCraft Dialogs','*.bin')])
+		file = self.settings.lastpath.bin.select_save_file(self, title='Save Dialog BIN As', filetypes=[FileType.bin_dialog()])
 		if not file:
 			return True
 		self.file = file
@@ -1098,7 +1099,7 @@ class PyBIN(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[('Text Files','*.txt')])
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

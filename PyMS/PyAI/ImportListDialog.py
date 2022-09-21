@@ -5,6 +5,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities.FileType import FileType
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent):
@@ -50,7 +51,7 @@ class ImportListDialog(PyMSDialog):
 		self.importbtn['state'] = NORMAL if self.can_import() else DISABLED
 
 	def add(self, key=None):
-		iimport = self.parent.settings.lastpath.txt.select_open_files(self, key='import', title='Add Imports', filetypes=[('Text Files','*.txt')])
+		iimport = self.parent.settings.lastpath.txt.select_open_files(self, key='import', title='Add Imports', filetypes=[FileType.txt()])
 		if iimport:
 			for i in iimport:
 				if i not in self.parent.imports:

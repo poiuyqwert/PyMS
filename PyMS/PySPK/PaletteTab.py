@@ -11,6 +11,7 @@ from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.FileType import FileType
 
 class PaletteTab(NotebookTab):
 	MAX_SIZE = 150
@@ -112,14 +113,14 @@ class PaletteTab(NotebookTab):
 	def export_image(self, *args):
 		if not self.toplevel.is_image_selected():
 			return
-		filepath = self.toplevel.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Star To...', filetypes=[('256 Color BMP','*.bmp')])
+		filepath = self.toplevel.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Star To...', filetypes=[FileType.bmp()])
 		if filepath:
 			bmp = BMP.BMP()
 			bmp.set_pixels(self.toplevel.selected_image.pixels, self.toplevel.platformwpe.palette)
 			bmp.save_file(filepath)
 
 	def import_image(self, *args):
-		filepath = self.toplevel.settings.lastpath.bmp.select_open_file(self, key='import', title='Import Star From...', filetypes=[('256 Color BMP','*.bmp')])
+		filepath = self.toplevel.settings.lastpath.bmp.select_open_file(self, key='import', title='Import Star From...', filetypes=[FileType.bmp()])
 		if not filepath:
 			return
 		b = BMP.BMP()

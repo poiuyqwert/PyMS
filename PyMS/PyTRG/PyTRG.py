@@ -23,6 +23,7 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
@@ -199,7 +200,7 @@ class PyTRG(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=(('StarCraft TRG','*.trg'),))
+				file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
 				if not file:
 					return
 			trg = TRG.TRG()
@@ -228,7 +229,7 @@ class PyTRG(MainWindow):
 
 	def iimport(self, key=None):
 		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=(('Text Files','*.txt'),))
+			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 			if not file:
 				return
 			try:
@@ -267,7 +268,7 @@ class PyTRG(MainWindow):
 	def saveas(self, key=None):
 		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=(('StarCraft TRG','*.trg'),))
+		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=[FileType.trg()])
 		if not file:
 			return True
 		self.file = file
@@ -276,7 +277,7 @@ class PyTRG(MainWindow):
 	def savegottrg(self, key=None):
 		if key and self.buttons['savegottrg']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save *.got Compatable *.trg As', filetypes=(('StarCraft TRG','*.trg'),))
+		file = self.settings.lastpath.trg.select_save_file(self, title='Save *.got Compatable *.trg As', filetypes=[FileType.trg()])
 		if not file:
 			return True
 		try:
@@ -290,7 +291,7 @@ class PyTRG(MainWindow):
 	def export(self, key=None):
 		if key and self.buttons['export']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=(('Text Files','*.txt'),))
+		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
 		try:

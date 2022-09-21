@@ -3,6 +3,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
+from ..Utilities.FileType import FileType
 
 class ListfileSettings(Frame):
 	def __init__(self, parent, setdlg=None):
@@ -38,7 +39,7 @@ class ListfileSettings(Frame):
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
 	def add(self, key=None):
-		add = self.setdlg.settings.lastpath.settings.select_open_files(self, key='listfiles', title='Add Listfiles', filetypes=[('Text files','*.txt')])
+		add = self.setdlg.settings.lastpath.settings.select_open_files(self, key='listfiles', title='Add Listfiles', filetypes=[FileType.txt()])
 		if add:
 			for i in add:
 				self.listbox.insert(END,i)

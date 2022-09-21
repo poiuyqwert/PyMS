@@ -5,6 +5,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.Toolbar import Toolbar
 from ..Utilities.ScrolledListbox import ScrolledListbox
+from ..Utilities.FileType import FileType
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent, settings):
@@ -43,7 +44,7 @@ class ImportListDialog(PyMSDialog):
 		self.settings.windows.load_window_size('listimport', self)
 
 	def add(self, key=None):
-		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[('Text Files','*.txt')])
+		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[FileType.txt()])
 		if iimport:
 			for i in iimport:
 				if i not in self.parent.imports:

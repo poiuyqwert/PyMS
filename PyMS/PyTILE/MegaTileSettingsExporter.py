@@ -3,6 +3,7 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_MEGA
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.FileType import FileType
 
 class MegaTileSettingsExporter(PyMSDialog):
 	def __init__(self, parent, settings, ids):
@@ -47,7 +48,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 
 	def export(self):
-		path = self.settings.lastpath.settings.select_save_file(self, key='export', title='Export MegaTile Settings', filetypes=[('Text File','*.txt')])
+		path = self.settings.lastpath.settings.select_save_file(self, key='export', title='Export MegaTile Settings', filetypes=[FileType.txt()])
 		if path:
 			self.tileset.export_settings(TILETYPE_MEGA, path, self.ids)
 			self.ok()

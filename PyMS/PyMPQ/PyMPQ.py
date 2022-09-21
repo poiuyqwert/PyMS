@@ -29,6 +29,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.FileType import FileType
 
 import sys, time, shutil, os
 from thread import start_new_thread
@@ -513,7 +514,7 @@ class PyMPQ(MainWindow):
 			self.mpq.add_listfile(listfile_path)
 
 	def new(self, key=None):
-		file = self.settings.lastpath.mpq.select_save_file(self, title='Create new MPQ', filetypes=[('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx')])
+		file = self.settings.lastpath.mpq.select_save_file(self, title='Create new MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 		if file:
 			mpq = MPQ.of(file)
 			try:
@@ -533,7 +534,7 @@ class PyMPQ(MainWindow):
 
 	def open(self, key=None, file=None):
 		if file == None:
-			file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[('Any MPQ', '*.mpq;*.exe;*.scm;*.scx'),('StarCraft MPQ','*.mpq'),('Embedded MPQ','*.exe'),('StarCraft Map','*.scm'),('BroodWar Map','*.scx')])
+			file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 			if not file:
 				return
 		mpq = MPQ.of(file)
