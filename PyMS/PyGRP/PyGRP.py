@@ -6,7 +6,7 @@ from ..FileFormats import GRP
 from ..FileFormats import BMP
 from ..FileFormats import Palette
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.Settings import Settings
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
@@ -193,20 +193,20 @@ class PyGRP(MainWindow):
 		opts = Frame(rightframe)
 		s = Frame(opts)
 		Label(s, text='Preview Speed: ').pack(side=LEFT)
-		Entry(s, textvariable=self.prevspeed, font=couriernew, width=4).pack(side=LEFT)
+		Entry(s, textvariable=self.prevspeed, font=Font.fixed(), width=4).pack(side=LEFT)
 		Label(s, text='ms  ').pack(side=LEFT)
 		s.grid(row=0, column=0, sticky=W)
 		s = Frame(opts)
 		Label(s, text='Transparent Index: ').pack(side=LEFT)
-		self.transent = Entry(s, textvariable=self.transid, font=couriernew, width=3)
+		self.transent = Entry(s, textvariable=self.transid, font=Font.fixed(), width=3)
 		self.transent.pack(side=LEFT)
 		s.grid(row=0, column=1, sticky=W)
 		s = Frame(opts)
 		Label(s, text='Preview Between: ').pack(side=LEFT)
-		self.prevstart = Entry(s, textvariable=self.prevfrom, font=couriernew, width=3, state=DISABLED)
+		self.prevstart = Entry(s, textvariable=self.prevfrom, font=Font.fixed(), width=3, state=DISABLED)
 		self.prevstart.pack(side=LEFT)
 		Label(s, text=' - ').pack(side=LEFT)
-		self.prevend = Entry(s, textvariable=self.prevto, font=couriernew, width=3, state=DISABLED)
+		self.prevend = Entry(s, textvariable=self.prevto, font=Font.fixed(), width=3, state=DISABLED)
 		self.prevend.pack(side=LEFT)
 		s.grid(row=1, columnspan=2)
 		Checkbutton(opts, text='Show Preview', variable=self.showpreview, command=self.showprev).grid(row=2, column=0, sticky=W)

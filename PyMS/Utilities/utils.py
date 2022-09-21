@@ -18,7 +18,6 @@ except:
 	WIN_REG_AVAILABLE = False
 
 couriernew = ('Courier', -12, 'normal')
-couriersmall = ('Courier', -8, 'normal')
 
 def is_windows():
 	return (platform.system().lower() == 'windows')

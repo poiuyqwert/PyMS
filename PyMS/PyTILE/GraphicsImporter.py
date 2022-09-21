@@ -1,7 +1,6 @@
 
 from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.IntegerVar import IntegerVar
@@ -79,7 +78,7 @@ class GraphicsImporter(PyMSDialog):
 			f.pack(side=TOP, fill=X)
 			f = Frame(g)
 			Checkbutton(f, text='Null:', variable=self.megatiles_reuse_null, anchor=W).pack(side=LEFT)
-			Entry(f, textvariable=self.megatiles_null_id, font=couriernew, width=5).pack(side=LEFT)
+			Entry(f, textvariable=self.megatiles_null_id, font=Font.fixed(), width=5).pack(side=LEFT)
 			Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MEGA)).pack(side=LEFT, padx=1)
 			f.pack(side=TOP, fill=X)
 			g.grid(column=0,row=0, padx=(0,3), sticky=W+E)
@@ -93,7 +92,7 @@ class GraphicsImporter(PyMSDialog):
 		f.pack(side=TOP, fill=X)
 		f = Frame(g)
 		Checkbutton(f, text='Null:', variable=self.minitiles_reuse_null, anchor=W).pack(side=LEFT)
-		Entry(f, textvariable=self.minitiles_null_id, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.minitiles_null_id, font=Font.fixed(), width=5).pack(side=LEFT)
 		Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MINI)).pack(side=LEFT, padx=1)
 		f.pack(side=TOP, fill=X)
 		g.grid(column=1,row=0, sticky=W+E)

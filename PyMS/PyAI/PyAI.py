@@ -14,7 +14,7 @@ from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
-from ..Utilities.utils import couriernew, register_registry, WIN_REG_AVAILABLE
+from ..Utilities.utils import register_registry, WIN_REG_AVAILABLE
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities import Assets
@@ -198,7 +198,7 @@ class PyAI(MainWindow):
 		self.menu.tag_enabled('mpq_available', MPQ.supported())
 		self.toolbar.tag_enabled('mpq_available', MPQ.supported())
 
-		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=couriernew, activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=Font.fixed(), activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.get_entry = self.get_entry
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)

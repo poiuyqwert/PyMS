@@ -3,7 +3,6 @@ from .DATTab import DATTab
 from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -30,7 +29,7 @@ class PortraitsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.idle_entry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_entry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.idle_dd_view = DropDown(f, self.idle_dd, [], self.idle_entry, width=30)
 		self.idle_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -40,12 +39,12 @@ class PortraitsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Change:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.idle_change, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_change, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'SMK Change', 'PortSMKChange')
 		f.pack(side=LEFT)
 		f = Frame(s)
 		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.idle_unknown, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.idle_unknown, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'Unknown', 'PortUnk1')
 		f.pack(side=RIGHT)
 		s.pack(fill=BOTH, padx=5, pady=(0,5))
@@ -55,7 +54,7 @@ class PortraitsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Dir:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.talking_entry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_entry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.talking_dd_view = DropDown(f, self.talking_dd, [], self.talking_entry, width=30)
 		self.talking_dd_view.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -65,12 +64,12 @@ class PortraitsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='SMK Change:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.talking_change, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_change, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'SMK Change', 'PortSMKChange')
 		f.pack(side=LEFT)
 		f = Frame(s)
 		Label(f, text='Unknown:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.talking_unknown, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.talking_unknown, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'Unknown', 'PortUnk1')
 		f.pack(side=RIGHT)
 		s.pack(fill=BOTH, padx=5, pady=(0,5))

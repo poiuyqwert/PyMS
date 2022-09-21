@@ -2,7 +2,7 @@
 from ..FileFormats.PCX import PCX
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import PyMSError
+from ..Utilities.PyMSError import PyMSError
 from ..Utilities.fileutils import load_file
 from ..Utilities.AtomicWriter import AtomicWriter
 from ..Utilities.FileType import FileType

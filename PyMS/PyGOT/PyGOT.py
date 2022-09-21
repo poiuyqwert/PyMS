@@ -2,7 +2,7 @@
 from ..FileFormats.GOT import GOT
 from ..FileFormats.TRG import TRG
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry, couriernew
+from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Tooltip import Tooltip
 from ..Utilities.Settings import Settings
@@ -93,26 +93,26 @@ class PyGOT(MainWindow):
 		left = Frame(top)
 		l = LabelFrame(left, text='Template Info:', padx=2, pady=2)
 		Label(l, text='Name:').grid(sticky=E)
-		self.input['name'] = Entry(l, textvariable=self.name, font=couriernew, width=20, state=DISABLED)
+		self.input['name'] = Entry(l, textvariable=self.name, font=Font.fixed(), width=20, state=DISABLED)
 		tip(self.input['name'], 'name')
 		self.input['name'].grid(row=0, column=1, pady=1)
 		Label(l, text='ID:').grid(sticky=E)
-		self.input['id'] = Entry(l, textvariable=self.id, font=couriernew, width=2, state=DISABLED)
+		self.input['id'] = Entry(l, textvariable=self.id, font=Font.fixed(), width=2, state=DISABLED)
 		tip(self.input['id'], 'id')
 		self.input['id'].grid(row=1, column=1, sticky=W, pady=1)
 		l.pack(padx=1)
 		left.pack(side=LEFT, fill=Y)
 		l = LabelFrame(top, text='Variation Info:', padx=2, pady=2)
 		Label(l, text='Label:').grid(sticky=E)
-		self.input['sublabel'] = Entry(l, textvariable=self.sublabel, font=couriernew, width=20, state=DISABLED)
+		self.input['sublabel'] = Entry(l, textvariable=self.sublabel, font=Font.fixed(), width=20, state=DISABLED)
 		tip(self.input['sublabel'], 'sublabel')
 		self.input['sublabel'].grid(row=0, column=1, pady=1)
 		Label(l, text='Value:').grid(sticky=E)
-		self.input['subvalue'] = Entry(l, textvariable=self.subvalue, font=couriernew, width=10, state=DISABLED)
+		self.input['subvalue'] = Entry(l, textvariable=self.subvalue, font=Font.fixed(), width=10, state=DISABLED)
 		tip(self.input['subvalue'], 'subvalue')
 		self.input['subvalue'].grid(row=1, column=1, sticky=W, pady=1)
 		Label(l, text='ID:').grid(sticky=E)
-		self.input['subid'] = Entry(l, textvariable=self.subid, font=couriernew, width=1, state=DISABLED)
+		self.input['subid'] = Entry(l, textvariable=self.subid, font=Font.fixed(), width=1, state=DISABLED)
 		tip(self.input['subid'], 'subid')
 		self.input['subid'].grid(row=2, column=1, sticky=W, pady=1)
 		l.pack()
@@ -154,7 +154,7 @@ class PyGOT(MainWindow):
 			self.input[option[1]] = DropDown(b, option[2], get_info(option[0].replace(' ','')), c, width=25, state=DISABLED)
 			self.input[option[1]].grid(row=row, column=1, pady=1)
 			if len(option) > 3:
-				self.input[option[3]] = Entry(b, textvariable=option[4], font=couriernew, width=10, state=DISABLED)
+				self.input[option[3]] = Entry(b, textvariable=option[4], font=Font.fixed(), width=10, state=DISABLED)
 				self.input[option[3]].grid(row=row, column=2, pady=1)
 		b.pack()
 

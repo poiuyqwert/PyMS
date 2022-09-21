@@ -3,7 +3,6 @@ from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
-from ..Utilities.utils import couriernew
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -40,7 +39,7 @@ class SaveMPQDialog(PyMSDialog):
 
 	def widgetize(self):
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
-		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=couriernew, width=14, height=len(SaveMPQDialog.OPTIONS), bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=Font.fixed(), width=14, height=len(SaveMPQDialog.OPTIONS), bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, expand=1, padx=5)
 		sel = Frame(self)
 		Button(sel, text='Select All', command=lambda: self.listbox.select_set(0,END)).pack(side=LEFT, fill=X, expand=1)

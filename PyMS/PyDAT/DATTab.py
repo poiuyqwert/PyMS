@@ -2,7 +2,6 @@
 from .DATTabConveniences import DATTabConveniences
 from .EntryCountDialog import EntryCountDialog
 
-from ..Utilities.utils import couriernew
 from ..Utilities.Notebook import NotebookTab
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -65,7 +64,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.used_by_header = StringVar()
 		Label(h, textvariable=self.used_by_header).pack(side=LEFT)
 		h.pack(side=TOP, fill=X)
-		self.used_by_listbox = ScrolledListbox(f, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.used_by_listbox = ScrolledListbox(f, font=Font.fixed(), width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.used_by_listbox.bind(Double.Click_Left, self.used_by_jump)
 		self.used_by_listbox.bind(Key.Return, self.used_by_jump)
 		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)

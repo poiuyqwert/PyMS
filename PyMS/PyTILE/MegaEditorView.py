@@ -1,7 +1,6 @@
 
 from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TILETYPE_MINI
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
@@ -87,7 +86,7 @@ class MegaEditorView(Frame):
 		self.mini_tools = Frame(frame)
 		e = Frame(self.mini_tools)
 		Label(e, text='ID:').pack(side=LEFT)
-		f = Entry(e, textvariable=self.minitile, font=couriernew, width=5)
+		f = Entry(e, textvariable=self.minitile, font=Font.fixed(), width=5)
 		Tooltip(f, 'MiniTile ID:\nID for the selected MiniTile in the current MegaTile')
 		self.disable.append(f)
 		f.pack(side=LEFT, padx=2)

@@ -4,7 +4,6 @@ from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 from .IconSelectDialog import IconSelectDialog
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
@@ -32,7 +31,7 @@ class UpgradesTab(DATTab):
 		
 		f = Frame(ls)
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.iconentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.iconentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon, width=30)
 		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -42,7 +41,7 @@ class UpgradesTab(DATTab):
 		
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.labelentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.labels = DropDown(f, self.labeldd, [], self.labelentry, width=30)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -69,21 +68,21 @@ class UpgradesTab(DATTab):
 		
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.baseminerals, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.baseminerals, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Base Mineral Cost', 'UpgMinerals')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.basevespene, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.basevespene, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Base Vespene Cost', 'UpgVespene')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.basetime, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.basetime, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		Entry(f, textvariable=self.basesecs, font=couriernew, width=9).pack(side=LEFT)
+		Entry(f, textvariable=self.basesecs, font=Font.fixed(), width=9).pack(side=LEFT)
 		Label(f, text='secs.').pack(side=LEFT)
 		self.tip(f, 'Base Build Time', 'UpgTime')
 		f.pack(fill=X)
@@ -100,21 +99,21 @@ class UpgradesTab(DATTab):
 		
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.factorminerals, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.factorminerals, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Mineral Cost Factor', 'UpgFactorMinerals')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.factorvespene, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.factorvespene, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Vespene Cost Factor', 'UpgFactorVespene')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.factortime, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.factortime, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		Entry(f, textvariable=self.factorsecs, font=couriernew, width=9).pack(side=LEFT)
+		Entry(f, textvariable=self.factorsecs, font=Font.fixed(), width=9).pack(side=LEFT)
 		Label(f, text='secs.').pack(side=LEFT)
 		self.tip(f, 'Build Time Factor', 'UpgFactorTime')
 		f.pack(fill=X)
@@ -133,13 +132,13 @@ class UpgradesTab(DATTab):
 		
 		f = Frame(s)
 		Label(f, text='Max Repeats:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.maxrepeats, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.maxrepeats, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'Max Repeats', 'UpgRepeats')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='ReqIndex:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.reqIndex, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Requirements Index', 'UpgReq')
 		f.pack(fill=X)
 		

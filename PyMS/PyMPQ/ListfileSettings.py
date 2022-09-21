@@ -12,7 +12,7 @@ class ListfileSettings(Frame):
 		else:
 			self.setdlg = setdlg
 		Frame.__init__(self, parent)
-		Label(self, text='File Lists', font=('Courier', -12, 'bold'), anchor=W).pack(fill=X)
+		Label(self, text='File Lists', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text="Note: Each file list added will increase the load time for archives", anchor=W, justify=LEFT).pack(fill=X)
 		self.listbox = ScrolledListbox(self, width=35, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)

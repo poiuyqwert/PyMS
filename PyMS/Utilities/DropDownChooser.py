@@ -1,5 +1,4 @@
 
-from .utils import couriernew
 from .UIKit import *
 from .EventPattern import *
 
@@ -14,7 +13,7 @@ class DropDownChooser(Toplevel):
 		self.protocol('WM_LOSE_FOCUS', self.select)
 		self.wm_overrideredirect(1)
 		scrollbar = Scrollbar(self)
-		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), borderwidth=0, font=couriernew, highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
+		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), borderwidth=0, font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
 		for e in list:
 			self.listbox.insert(END,e)
 		if self.result > -1:

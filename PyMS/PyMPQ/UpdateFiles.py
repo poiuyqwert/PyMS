@@ -1,5 +1,4 @@
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -12,7 +11,7 @@ class UpdateFiles(PyMSDialog):
 	def widgetize(self):
 		Label(self, text='These files have been modified since they were extracted.\n\nChoose which files to update the archive with:', justify=LEFT, anchor=W).pack(fill=X)
 
-		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=couriernew, width=20, height=10, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=Font.fixed(), width=20, height=10, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, expand=1, padx=5)
 
 		sel = Frame(self)

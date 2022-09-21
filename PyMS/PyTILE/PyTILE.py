@@ -7,7 +7,7 @@ from .Placeability import Placeability
 from ..FileFormats.Tileset.Tileset import Tileset, TILETYPE_GROUP, TILETYPE_MEGA, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
 from ..FileFormats import TBL
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, couriernew, FFile, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, FFile, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -201,7 +201,7 @@ class PyTILE(MainWindow):
 				f.pack(side=TOP, fill=X)
 			f = Frame(c)
 			Label(f, text='Raw:').pack(side=LEFT)
-			self.disable.append(Entry(f, textvariable=variable, font=couriernew, width=len(str(variable.range[1])), state=DISABLED))
+			self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
 			self.disable[-1].pack(side=LEFT)
 			Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\nRaw:' + raw_tooltip)
 			f.pack(side=TOP, fill=X)
@@ -213,7 +213,7 @@ class PyTILE(MainWindow):
 			for r,row in enumerate(rows):
 				for c,(field_name, variable, field_tooltip) in enumerate(row):
 					Label(f, text=field_name + ':').grid(column=c*2, row=r, sticky=E)
-					self.disable.append(Entry(f, textvariable=variable, font=couriernew, width=len(str(variable.range[1])), state=DISABLED))
+					self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
 					self.disable[-1].grid(column=c*2+1, row=r, sticky=W)
 					if tooltip:
 						Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\n%s:\n  %s' % (field_name, field_tooltip))
@@ -230,7 +230,7 @@ class PyTILE(MainWindow):
 			Tooltip(self.disable[-1], name + ':\n' + tooltip)
 			f.grid_columnconfigure(1, weight=1)
 			Label(f, text='Raw:').grid(column=0,row=1, sticky=E)
-			self.disable.append(Entry(f, textvariable=variable, font=couriernew, width=len(str(variable.range[1])), state=DISABLED))
+			self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
 			self.disable[-1].grid(sticky=W, column=1,row=1)
 			Tooltip(self.disable[-1], name + ':\n' + tooltip)
 			f.pack(fill=BOTH, expand=1, padx=2,pady=2)
@@ -297,7 +297,7 @@ class PyTILE(MainWindow):
 		megatile_group = LabelFrame(self.flow_view.content_view, text='MegaTile')
 		f = Frame(megatile_group)
 		Label(f, text='ID:').pack(side=LEFT)
-		self.disable.append(Entry(f, textvariable=self.megatilee, font=couriernew, width=len(str(self.megatilee.range[1])), state=DISABLED))
+		self.disable.append(Entry(f, textvariable=self.megatilee, font=Font.fixed(), width=len(str(self.megatilee.range[1])), state=DISABLED))
 		self.disable[-1].pack(side=LEFT, padx=2)
 		Tooltip(self.disable[-1], 'MegaTile ID:\nID for the selected MegaTile in the current MegaTile Group')
 		self.disable.append(Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda i=1: self.choose(i), state=DISABLED))

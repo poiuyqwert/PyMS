@@ -6,7 +6,7 @@ from .DATRef import DATRefs, DATRef
 from ..FileFormats.DAT.SoundsDAT import Sound
 from ..FileFormats.MPQ.MPQ import MPQ
 
-from ..Utilities.utils import  couriernew, play_sound
+from ..Utilities.utils import play_sound
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -27,7 +27,7 @@ class SoundsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Sound File:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.soundentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.soundentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.sounds = DropDown(f, self.sounddd, [], self.changesound, width=30)
 		self.soundentry.callback = self.sounds.set
@@ -50,19 +50,19 @@ class SoundsTab(DATTab):
 		
 		f = Frame(s)
 		Label(f, text='Priority:', width=17, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.priority, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.priority, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Priority', 'SoundPriority')
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Portrait Length Adjust:', width=17, anchor=E).pack(side=LEFT)
 		self.tip(f, 'Portrait Length Adjust', 'SoundPortraitLengthAdjust')
-		Entry(f, textvariable=self.portrait_length_adjust, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.portrait_length_adjust, font=Font.fixed(), width=5).pack(side=LEFT)
 		f.pack(fill=X)
 		
 		f = Frame(s)
 		Label(f, text='Minimum Volume %:', width=17, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.minimum_volume, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.minimum_volume, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Minimum Volume %', 'SoundMinimumVolume')
 		f.pack(fill=X)
 		

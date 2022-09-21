@@ -1,5 +1,5 @@
 
-from ..Utilities.utils import couriernew, lpad
+from ..Utilities.utils import lpad
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
@@ -31,7 +31,7 @@ class EntryNameOverrides(PyMSDialog):
 		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
 		toolbar.pack(side=TOP, fill=X)
 
-		self.listbox = ScrolledListbox(self, font=couriernew, width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(self, font=Font.fixed(), width=1, height=6, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
 		self.listbox.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=3)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.selection_updated)
 

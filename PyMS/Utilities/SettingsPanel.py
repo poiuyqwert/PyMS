@@ -79,10 +79,10 @@ class SettingsPanel(Frame):
 			self.variables[f][1].trace('w', self.edited)
 			datframe = Frame(self)
 			if isstr(e):
-				Label(datframe, text=f, font=('Courier', -12, 'bold'), anchor=W).pack(fill=X, expand=1)
+				Label(datframe, text=f, font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 				Label(datframe, text=e, anchor=W).pack(fill=X, expand=1)
 			elif e:
-				Label(datframe, text=f, font=('Courier', -12, 'bold'), anchor=W).pack(fill=X, expand=1)
+				Label(datframe, text=f, font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 			else:
 				Label(datframe, text=f, anchor=W).pack(fill=X, expand=1)
 			entryframe = Frame(datframe)

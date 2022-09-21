@@ -1,7 +1,7 @@
 
 from ..FileFormats import DialogBIN
 
-from ..Utilities.utils import couriernew, parse_geometry
+from ..Utilities.utils import parse_geometry
 from ..Utilities.UIKit import *
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -35,7 +35,7 @@ class SMKSettings(PyMSDialog):
 	def widgetize(self):
 		textframe = Frame(self)
 		Label(textframe, text='Filename:').pack(side=LEFT)
-		Entry(textframe, textvariable=self.filename, font=couriernew).pack(side=LEFT, fill=X, expand=1)
+		Entry(textframe, textvariable=self.filename, font=Font.fixed()).pack(side=LEFT, fill=X, expand=1)
 		button = Button(textframe, image=Assets.get_image('find'), width=20, height=20, command=self.find_smk)
 		button.pack(side=LEFT)
 		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=NSEW)
@@ -51,9 +51,9 @@ class SMKSettings(PyMSDialog):
 		smkframe.pack(side=TOP, fill=X, expand=1)
 		offsetframe = Frame(overlayframe)
 		Label(offsetframe, text='Offset X:').pack(side=LEFT)
-		Entry(offsetframe, textvariable=self.overlay_x, font=couriernew, width=5).pack(side=LEFT)
+		Entry(offsetframe, textvariable=self.overlay_x, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(offsetframe, text='Offset Y:').pack(side=LEFT)
-		Entry(offsetframe, textvariable=self.overlay_y, font=couriernew, width=5).pack(side=LEFT)
+		Entry(offsetframe, textvariable=self.overlay_y, font=Font.fixed(), width=5).pack(side=LEFT)
 		offsetframe.pack(side=TOP, fill=X, expand=1)
 		overlayframe.grid(row=1,column=0, padx=5,pady=0, sticky=NSEW)
 

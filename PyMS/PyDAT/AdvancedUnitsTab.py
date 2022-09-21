@@ -4,7 +4,6 @@ from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
-from ..Utilities.utils import couriernew
 from ..Utilities.DropDown import DropDown
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.UIKit import *
@@ -120,7 +119,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		f = Frame(l)
 		Label(f, text='Infestation:', width=9, anchor=E).pack(side=LEFT)
-		self.infestentryw = Entry(f, textvariable=self.infestentry, font=couriernew, width=5)
+		self.infestentryw = Entry(f, textvariable=self.infestentry, font=Font.fixed(), width=5)
 		self.infestentryw.pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.infestddw = DropDown(f, self.infestdd, [], self.infestentry)
@@ -132,7 +131,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		f = Frame(l)
 		Label(f, text='Subunit 1:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.subunitoneentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.subunitoneentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.subunitone_ddw = DropDown(f, self.subunitone, [], self.subunitoneentry)
 		self.subunitone_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -143,7 +142,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		f = Frame(l)
 		Label(f, text='Subunit 2:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.subunittwoentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.subunittwoentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.subunittwo_ddw = DropDown(f, self.subunittwo, [], self.subunittwoentry)
 		self.subunittwo_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -155,7 +154,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		f = Frame(l)
 		r = Frame(f)
 		Label(r, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
-		Entry(r, textvariable=self.reqIndex, font=couriernew, width=5).pack(side=LEFT)
+		Entry(r, textvariable=self.reqIndex, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(r, 'Requirements Index', 'UnitReq')
 		r.pack(side=LEFT)
 

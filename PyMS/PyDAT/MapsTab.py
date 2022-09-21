@@ -2,7 +2,6 @@
 from .DATTab import DATTab
 from .DataID import DATID, DataID
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -22,7 +21,7 @@ class MapsTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.missionentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.missionentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.missions = DropDown(f, self.missiondd, [], self.missionentry, width=30)
 		self.missions.pack(side=LEFT, fill=X, expand=1, padx=2)

@@ -2,7 +2,6 @@
 from ..FileFormats import AIBIN
 from ..FileFormats import TBL
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.ScrolledListbox import ScrolledListbox
@@ -81,7 +80,7 @@ class FindDialog(PyMSDialog):
 		Checkbutton(options, text='Regular Expressions', variable=self.regex).pack(side=LEFT, padx=3)
 		options.pack(pady=3)
 
-		self.listbox = ScrolledListbox(self, selectmode=[EXTENDED,BROWSE][self.findstr], activestyle=DOTBOX, font=couriernew, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, selectmode=[EXTENDED,BROWSE][self.findstr], activestyle=DOTBOX, font=Font.fixed(), width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.update)
 

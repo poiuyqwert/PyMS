@@ -27,12 +27,12 @@ class AboutDialog(PyMSDialog):
 		Hotlink(frame, 'https://github.com/poiuyqwert/PyMS', 'https://github.com/poiuyqwert/PyMS').grid(row=1, column=1, sticky=W)
 		frame.pack(padx=5, pady=2)
 		if self.thanks:
-			Label(self, text='Special Thanks To:', font=Font(bold=True)).pack(pady=2)
+			Label(self, text='Special Thanks To:', font=Font.default().bolded()).pack(pady=2)
 			thanks = Frame(self)
 			row = 0
 			for who,why in self.thanks:
 				if who == 'BroodWarAI.com':
-					Hotlink(thanks, who, 'http://www.broodwarai.com', font=Font(bold=True), hover_font=Font(bold=True, underline=True)).grid(sticky=E)
+					Hotlink(thanks, who, 'http://www.broodwarai.com', font=Font.default().bolded(), hover_font=Font.default().bolded().underline()).grid(sticky=E)
 				else:
 					Label(thanks, text=who).grid(sticky=E)
 				Label(thanks, text=why).grid(row=row, column=1, sticky=W)

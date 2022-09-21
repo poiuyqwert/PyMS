@@ -3,7 +3,6 @@ from .DATTab import DATTab
 from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -26,7 +25,7 @@ class ImagesTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='GRP:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.grpentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.grpentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.grps = DropDown(f, self.grpdd, [], self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
@@ -42,7 +41,7 @@ class ImagesTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Iscript ID:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.iscriptentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.iscriptentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, [], self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -98,14 +97,14 @@ class ImagesTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Function:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.functionentry, font=couriernew, width=2).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.functionentry, font=Font.fixed(), width=2).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		DropDown(f, self.functiondd, Assets.data_cache(Assets.DataReference.DrawList), self.functionentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Drawing Function', 'ImgDrawFunction')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Remapping:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.remapentry, font=couriernew, width=2).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.remapentry, font=Font.fixed(), width=2).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		DropDown(f, self.remapdd, Assets.data_cache(Assets.DataReference.Remapping), self.remapentry, width=15).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Remapping', 'ImgRemap')
@@ -141,7 +140,7 @@ class ImagesTab(DATTab):
 		for t,e,d,h in ols:
 			f = Frame(s)
 			Label(f, text=t + ':', width=12, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=e, font=couriernew, width=5).pack(side=LEFT, padx=2)
+			Entry(f, textvariable=e, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 			Label(f, text='=').pack(side=LEFT)
 			dd = DropDown(f, d, [], e, width=15)
 			dd.pack(side=LEFT, fill=X, expand=1, padx=2)

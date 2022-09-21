@@ -17,8 +17,7 @@ class EditableReportSubList(RichList):
 		self.lineselect = False
 
 		Frame.__init__(self, parent)
-		font = ('courier', -11, 'normal')
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
 		self.text.pack(fill=BOTH, expand=1)
 
 		self.text.orig = self.text._w + '_orig'
@@ -198,8 +197,7 @@ class ReportSubList(RichList):
 		self.entry = 0
 		self.entries = []
 		Frame.__init__(self, parent)
-		font = ('courier', -11, 'normal')
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=0, **kwargs)
 		self.text.pack(fill=BOTH, expand=1)
 
 		self.text.orig = self.text._w + '_orig'

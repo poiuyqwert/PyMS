@@ -3,9 +3,6 @@ from .DATTab import DATTab
 from .DataID import DATID
 from .DATRef import DATRefs, DATRef
 
-from ..FileFormats.DAT.ImagesDAT import Image as DATImage
-
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -33,7 +30,7 @@ class SpritesTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Image:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.imageentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.imageentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.image_ddw = DropDown(f, self.imagedd, [], self.imageentry, width=30)
 		self.image_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -50,7 +47,7 @@ class SpritesTab(DATTab):
 		f.pack()
 		f = Frame(s)
 		Label(f, text='Sel. Circle:', width=12, anchor=E).pack(side=LEFT)
-		self.selentry = Entry(f, textvariable=self.selcircleentry, font=couriernew, width=5)
+		self.selentry = Entry(f, textvariable=self.selcircleentry, font=Font.fixed(), width=5)
 		self.selentry.pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.seldd = DropDown(f, self.selcircledd, Assets.data_cache(Assets.DataReference.SelCircleSize), self.selcircle, width=30)
@@ -60,17 +57,17 @@ class SpritesTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Health Bar:', width=12, anchor=E).pack(side=LEFT)
-		self.hpentry = Entry(f, textvariable=self.healthbar, font=couriernew, width=5)
+		self.hpentry = Entry(f, textvariable=self.healthbar, font=Font.fixed(), width=5)
 		self.hpentry.pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
-		self.hpboxes = Entry(f, textvariable=self.boxes, font=couriernew, width=2)
+		self.hpboxes = Entry(f, textvariable=self.boxes, font=Font.fixed(), width=2)
 		self.hpboxes.pack(side=LEFT, padx=2)
 		Label(f, text='boxes').pack(side=LEFT)
 		self.tip(f, 'Health Bar', 'SpriteHPBar')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Vert. Position:', width=12, anchor=E).pack(side=LEFT)
-		self.vertentry = Entry(f, textvariable=self.vertpos, font=couriernew, width=5)
+		self.vertentry = Entry(f, textvariable=self.vertpos, font=Font.fixed(), width=5)
 		self.vertentry.pack(side=LEFT, padx=2)
 		self.tip(f, 'Vertical Position', 'SpriteCircleOff')
 		f.pack(fill=X)

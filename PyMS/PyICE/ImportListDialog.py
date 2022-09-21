@@ -1,5 +1,4 @@
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
@@ -21,7 +20,7 @@ class ImportListDialog(PyMSDialog):
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
  
 		##Listbox
-		self.listbox = ScrolledListbox(self, font=couriernew, activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, font=Font.fixed(), activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
 		self.listbox.pack(fill=BOTH, expand=1)
 
 		##Buttons

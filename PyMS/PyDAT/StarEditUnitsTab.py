@@ -3,9 +3,7 @@ from .DATUnitsTab import DATUnitsTab
 from .DataID import DataID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
-from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -89,7 +87,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Rank/Sublabel:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.rankentry, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.rankentry, font=Font.fixed(), width=3).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.ranks = DropDown(f, self.rankdd, [], self.rankentry)
 		self.ranks.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -97,7 +95,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Map String:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.mapstring, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.mapstring, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Map String', 'UnitMapString')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -114,12 +112,12 @@ class StarEditUnitsTab(DATUnitsTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Width:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.width, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.width, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Placement Width', 'UnitSEPlaceWidth')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Height:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.height, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.height, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Placement Height', 'UnitSEPlaceHeight')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)

@@ -4,7 +4,6 @@ from ..FileFormats import Palette
 from ..FileFormats import GRP
 from ..FileFormats.MPQ.MPQ import MPQ
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.DropDown import DropDown
@@ -177,16 +176,16 @@ class PreviewerDialog(PyMSDialog):
 		opts = Frame(right)
 		speedview = Frame(opts)
 		Checkbutton(speedview, text='Show Preview at Speed:', variable=self.showpreview, command=self.display).pack(side=LEFT)
-		Entry(speedview, textvariable=self.prevspeed, font=couriernew, width=4).pack(side=LEFT)
+		Entry(speedview, textvariable=self.prevspeed, font=Font.fixed(), width=4).pack(side=LEFT)
 		Label(speedview, text='ms').pack(side=LEFT)
 		speedview.grid()
 		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(column=1, row=0) # , command=self.drawpreview
 		s = Frame(opts)
 		Label(s, text='Preview Between: ').pack(side=LEFT)
-		self.prevstart = Entry(s, textvariable=self.prevfrom, font=couriernew, width=3, state=DISABLED)
+		self.prevstart = Entry(s, textvariable=self.prevfrom, font=Font.fixed(), width=3, state=DISABLED)
 		self.prevstart.pack(side=LEFT)
 		Label(s, text=' - ').pack(side=LEFT)
-		self.prevend = Entry(s, textvariable=self.prevto, font=couriernew, width=3, state=DISABLED)
+		self.prevend = Entry(s, textvariable=self.prevto, font=Font.fixed(), width=3, state=DISABLED)
 		self.prevend.pack(side=LEFT)
 		s.grid(row=1, columnspan=2)
 		opts.pack(fill=X)

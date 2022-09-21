@@ -4,7 +4,6 @@ from .DataID import DATID, DataID
 from .DATRef import DATRefs, DATRef
 from .IconSelectDialog import IconSelectDialog
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.FloatVar import FloatVar
 from ..Utilities.DropDown import DropDown
@@ -32,7 +31,7 @@ class TechnologyTab(DATTab):
 		ls = Frame(s)
 		f = Frame(ls)
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.iconentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.iconentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.icon_ddw = DropDown(f, self.icondd, [], self.selicon, width=30)
 		self.icon_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -41,7 +40,7 @@ class TechnologyTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.labelentry, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
 		self.labels = DropDown(f, self.labeldd, [], self.labelentry, width=30)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -67,25 +66,25 @@ class TechnologyTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.minerals, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.minerals, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Mineral Cost', 'TechMinerals')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.vespene, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.vespene, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Vespene Cost', 'TechVespene')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.time, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.time, font=Font.fixed(), width=5).pack(side=LEFT)
 		Label(f, text='=').pack(side=LEFT)
-		Entry(f, textvariable=self.secs, font=couriernew, width=9).pack(side=LEFT)
+		Entry(f, textvariable=self.secs, font=Font.fixed(), width=9).pack(side=LEFT)
 		Label(f, text='secs.').pack(side=LEFT)
 		self.tip(f, 'Build Time', 'TechTime')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Energy:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.energy, font=couriernew, width=5).pack(side=LEFT)
+		Entry(f, textvariable=self.energy, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Energy Cost', 'TechVespene')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -102,13 +101,13 @@ class TechnologyTab(DATTab):
 		f = Frame(s)
 		
 		Label(f, text='ResearchReq:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.researchReq, font=couriernew, width=10).pack(side=LEFT)
+		Entry(f, textvariable=self.researchReq, font=Font.fixed(), width=10).pack(side=LEFT)
 		self.tip(f, 'Research Requirements', 'TechReq')
 		f.pack(fill=X)
 		f = Frame(s)
 
 		Label(f, text='UseReq:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.useReq, font=couriernew, width=10).pack(side=LEFT)
+		Entry(f, textvariable=self.useReq, font=Font.fixed(), width=10).pack(side=LEFT)
 		self.tip(f, 'Usage Requirements', 'TechUseReq')
 		f.pack(fill=X)
 		f = Frame(s)

@@ -4,7 +4,6 @@ from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.TextTooltip import TextTooltip
@@ -42,7 +41,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		def add_dropdown(title, entry_variable, dropdown_variable, hint_name):
 			f = Frame(s)
 			Label(f, text=title + ':', width=16, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=entry_variable, font=couriernew, width=3).pack(side=LEFT)
+			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=3).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
 			dropdown = DropDown(f, dropdown_variable, [], entry_variable, width=30)
 			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -71,7 +70,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		l.pack(fill=X, side=TOP)
 
 		l = LabelFrame(scrollview.content_view, text='AI Force Values:')
-		self.force_value_text = Text(l, state=DISABLED, height=11, font=('Courier New', -12, 'normal'))
+		self.force_value_text = Text(l, state=DISABLED, height=11, font=Font.fixed())
 		self.force_value_text.pack(fill=BOTH, padx=5,pady=5)
 		l.pack(fill=X, side=TOP)
 
@@ -98,7 +97,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.parent_tab.dattabs.display('Basic')
 			self.toplevel.changeid(unit_id)
 
-		bold = ('Courier New', -12, 'bold')
+		bold = Font.fixed().bolded()
 		self.force_value_text.tag_configure('force_type', underline=1)
 		values = (
 			('force_value', '#000000', '#E8E8E8', None, 'Used to calculate the strength of a force of units'),

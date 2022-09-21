@@ -49,11 +49,10 @@ class TreeList(Frame):
 		self.icons = [closeicon,openicon]
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
-		font = ('courier', -12, 'normal')
 		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
-		self.text = Text(self, cursor='arrow', height=height, width=width, font=font, bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
-		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", self, '  ')+9)
+		self.text = Text(self, cursor='arrow', height=height, width=width, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=0)
+		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", self, '  ') + openicon.width())
 		self.text.grid(sticky=NSEW)
 		self.hscroll.config(command=self.text.xview)
 		self.hscroll.grid(sticky=EW)
@@ -183,14 +182,14 @@ class TreeList(Frame):
 		if isinstance(node, TreeGroup):
 			selectable = self.groupsel
 			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
-			self.execute('insert',(pos, '  ' * node.depth + '  '))
+			self.execute('insert',(pos, '\t' * node.depth + '  '))
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 			self.text.image_create('entry%s.first -1c' % node.entry, image=self.icons[node.expanded])
 			self.text.tag_add('icon%s' % node.entry, 'entry%s.first -2c' % node.entry, 'entry%s.first -1c' % node.entry)
 			self.text.tag_bind('icon%s' % node.entry, Mouse.Click_Left, lambda e,i=node.entry: self.toggle(i))
 		else:
 			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
-			self.execute('insert',(pos, '  ' * (node.depth+1)))
+			self.execute('insert',(pos, '\t' * (node.depth+1)))
 			self.execute('insert',('entry%s.last' % node.entry, '\n'))
 		if selectable:
 			self.text.tag_bind('entry%s' % node.entry, Mouse.Click_Left, lambda e,i=node.entry: self.select(i,0))

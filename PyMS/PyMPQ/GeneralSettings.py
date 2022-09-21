@@ -22,13 +22,13 @@ class GeneralSettings(Frame):
 		self.blocksize.trace('w', self.changed)
 
 		f = Frame(self)
-		Label(f, text='Max Files', font=Font(bold=True), anchor=W).pack(fill=X, expand=1)
+		Label(f, text='Max Files', font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 		Label(f, text='Max file capacity for new archives (cannot be changed for an existing archive)', anchor=W).pack(fill=X, expand=1)
 		Entry(f, textvariable=self.maxfiles, width=5).pack(side=LEFT)
 		f.pack(side=TOP, fill=X)
 
 		f = Frame(self)
-		Label(f, text='Block Size', font=Font(bold=True), anchor=W).pack(fill=X, expand=1)
+		Label(f, text='Block Size', font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 		Label(f, text='Block size for new archives (default is 3)', anchor=W).pack(fill=X, expand=1)
 		Entry(f, textvariable=self.blocksize, width=2).pack(side=LEFT)
 		f.pack(side=TOP, fill=X)

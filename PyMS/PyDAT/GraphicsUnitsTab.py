@@ -3,9 +3,7 @@ from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
-from ..FileFormats.DAT.ImagesDAT import Image as DATImage
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -35,7 +33,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, values=[], jump_dat_id=None):
 			f = Frame(s)
 			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=entry_variable, font=couriernew, width=5).pack(side=LEFT)
+			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=5).pack(side=LEFT)
 			Label(f, text='=').pack(side=LEFT)
 			dropdown = DropDown(f, dropdown_variable, values, entry_variable, width=30, none_value=none_value)
 			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -50,7 +48,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.direction, font=couriernew, width=3).pack(side=LEFT)
+		Entry(f, textvariable=self.direction, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'Direction', 'UnitDirection')
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -87,7 +85,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		for t,v in dims:
 			f = Frame(s)
 			Label(f, text='%s:' % t, width=13, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=v, font=couriernew, width=5).pack(side=LEFT)
+			Entry(f, textvariable=v, font=Font.fixed(), width=5).pack(side=LEFT)
 			self.tip(f, t + ' Dimension', 'UnitDim' + t)
 			f.pack(fill=X)
 		s.pack(padx=5, pady=5)
@@ -96,13 +94,13 @@ class GraphicsUnitsTab(DATUnitsTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Horizontal:', width=13, anchor=E).pack(side=LEFT)
-		self.horizontalw = Entry(f, textvariable=self.horizontal, font=couriernew, width=5)
+		self.horizontalw = Entry(f, textvariable=self.horizontal, font=Font.fixed(), width=5)
 		self.horizontalw.pack(side=LEFT)
 		self.tip(f, 'Addons Horizontal Position', 'UnitAddPosX')
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Vertical:', width=13, anchor=E).pack(side=LEFT)
-		self.verticalw = Entry(f, textvariable=self.vertical, font=couriernew, width=5)
+		self.verticalw = Entry(f, textvariable=self.vertical, font=Font.fixed(), width=5)
 		self.verticalw.pack(side=LEFT)
 		self.tip(f, 'Addons Vertical Position', 'UnitAddPosY')
 		f.pack(fill=X)
@@ -124,7 +122,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		a = Frame(s)
 		self.show_addon_placement_checkbox = Checkbutton(a, text='Show Addon Placement (Yellow) with parent building:', variable=self.show_addon_placement, command=self.drawpreview)
 		self.show_addon_placement_checkbox.pack(side=LEFT)
-		self.addon_parent_id_entry = Entry(a, textvariable=self.addon_parent_id, font=couriernew, width=3)
+		self.addon_parent_id_entry = Entry(a, textvariable=self.addon_parent_id, font=Font.fixed(), width=3)
 		self.addon_parent_id_entry.pack(side=LEFT)
 		a.pack(side=BOTTOM)
 		s.pack()

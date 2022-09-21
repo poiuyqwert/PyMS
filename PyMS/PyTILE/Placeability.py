@@ -1,7 +1,6 @@
 
 from ..FileFormats.Tileset.Tileset import megatile_to_photo
 
-from ..Utilities.utils import couriernew
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.IntegerVar import IntegerVar
@@ -40,7 +39,7 @@ class Placeability(PyMSDialog):
 							self.canvass[-1].create_image(x * 33 + 18, 18, image=self.canvass[-1].images[-1], tags=t)
 							self.canvass[-1].tag_bind(t, Double.Click_Left, lambda e,p=(x,y): self.select(p))
 						self.groups[-1].append(IntegerVar(c,[0,len(self.tileset.cv5.groups)]))
-						Entry(f, textvariable=self.groups[-1][-1], width=1, font=couriernew, bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
+						Entry(f, textvariable=self.groups[-1][-1], width=1, font=Font.fixed(), bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
 			elif ty > 0:
 				for x in range(self.width):
 					t = 'tile%s,%s' % (x,y)

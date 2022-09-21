@@ -4,7 +4,6 @@ from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 from .IconSelectDialog import IconSelectDialog
 
-from ..Utilities.utils import couriernew
 from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
@@ -36,7 +35,7 @@ class OrdersTab(DATTab):
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Targeting:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.targetingentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.targetingentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.targeting_ddw = DropDown(f, self.targeting, [], self.targetingentry, width=25)
 		self.targeting_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -45,7 +44,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Energy:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.energyentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.energyentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.energy_ddw = DropDown(f, self.energy, [], self.energyentry, width=25)
 		self.energy_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -54,7 +53,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Obscured:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.obscuredentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.obscuredentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.obscured_ddw = DropDown(f, self.obscured, [], self.obscuredentry, width=25)
 		self.obscured_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -63,7 +62,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Label:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.labelentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.labelentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.labels = DropDown(f, self.label, [], self.labelentry, width=25)
 		self.labels.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -71,7 +70,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(s)
 		Label(f, text='Animation:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.animationentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.animationentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		DropDown(f, self.animation, Assets.data_cache(Assets.DataReference.Animations), self.animationentry, width=25).pack(side=LEFT, fill=X, expand=1, padx=2)
 		self.tip(f, 'Animation', 'OrdAnimation')
@@ -80,7 +79,7 @@ class OrdersTab(DATTab):
 		ls = Frame(m)
 		f = Frame(ls)
 		Label(f, text='Highlight:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.highlightentry, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.highlightentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		Label(f, text='=').pack(side=LEFT)
 		self.highlight_ddw = DropDown(f, self.highlightdd, [], self.highlightentry, width=25, none_value=65535)
 		self.highlight_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
@@ -89,7 +88,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		f = Frame(ls)
 		Label(f, text='ReqIndex:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.requirements, font=couriernew, width=5).pack(side=LEFT, padx=2)
+		Entry(f, textvariable=self.requirements, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
 		self.tip(f, 'ReqIndex', 'OrdReq')
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
