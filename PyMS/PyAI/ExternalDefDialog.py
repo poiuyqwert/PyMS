@@ -17,7 +17,7 @@ class ExternalDefDialog(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove File', Key.Insert, tags='def_selected')
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
 
-		self.listbox = ScrolledListbox(self, font=Font.fixed(), activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, font=Font.fixed(), width=1, height=1)
 		self.listbox.pack(fill=BOTH, expand=1)
 		self.update()
 		self.listbox.bind(WidgetEvent.Listbox.Select, lambda _: self.action_states())

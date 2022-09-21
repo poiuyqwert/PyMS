@@ -12,7 +12,7 @@ class StarsTab(NotebookTab):
 		self.toplevel = toplevel
 		NotebookTab.__init__(self, parent)
 
-		self.listbox = ScrolledListbox(self, activestyle=DOTBOX, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.select_updated)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, expand=1)
 

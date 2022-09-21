@@ -115,7 +115,7 @@ class PyICE(MainWindow):
 		def listbox_colum(name):
 			f = Frame(listframes)
 			Label(f, text=name + ':', anchor=W).pack(fill=X)
-			listbox = ScrolledListbox(f, activestyle=DOTBOX, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+			listbox = ScrolledListbox(f, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1)
 			listbox.bind(WidgetEvent.Listbox.Select, lambda _,l=listbox: self.listbox_selection_changed(l))
 			listbox.pack(fill=BOTH, expand=1)
 			Button(f, text='Unselect All', command=lambda l=listbox: self.unselect(l)).pack(fill=X)

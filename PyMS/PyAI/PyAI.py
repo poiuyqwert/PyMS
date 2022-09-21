@@ -198,7 +198,7 @@ class PyAI(MainWindow):
 		self.menu.tag_enabled('mpq_available', MPQ.supported())
 		self.toolbar.tag_enabled('mpq_available', MPQ.supported())
 
-		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=Font.fixed(), activestyle=DOTBOX, width=1, height=1, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=Font.fixed(), width=1, height=1)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.get_entry = self.get_entry
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)

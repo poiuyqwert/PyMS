@@ -8,6 +8,15 @@ class ScrolledListbox(Frame):
 	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=ShowScrollbar.when_needed, vertical=ShowScrollbar.when_needed, auto_bind=True, scroll_speed=1, **kwargs):
 		Frame.__init__(self, parent, **frame_config)
 
+		if not 'exportselection' in kwargs:
+			kwargs['exportselection'] = 0
+		if not 'highlightthickness' in kwargs:
+			kwargs['highlightthickness'] = 0
+		if not 'bd' in kwargs:
+			kwargs['bd'] = 0
+		if not 'activestyle' in kwargs:
+			kwargs['activestyle'] = DOTBOX
+
 		self.listbox = Listbox(self, **kwargs)
 		self.listbox.grid(column=0,row=0, sticky=NSEW)
 

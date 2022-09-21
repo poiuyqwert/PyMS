@@ -108,7 +108,7 @@ class CodeGeneratorDialog(PyMSDialog):
 		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
 		leftframe = Frame(self.hor_pane)
 		Label(leftframe, text='Variables:', anchor=W).pack(side=TOP, fill=X)
-		self.listbox = ScrolledListbox(leftframe, selectmode=EXTENDED, activestyle=DOTBOX, width=15, height=10, bd=0, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(leftframe, selectmode=EXTENDED, width=15, height=10)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.update_states)
 		self.listbox.bind(Double.Click_Left, self.edit)
 		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)

@@ -100,7 +100,7 @@ class PyDAT(MainWindow):
 
 		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)
 		left = Frame(self.hor_pane)
-		self.listbox = ScrolledListbox(left, scroll_speed=2, font=Font.fixed(), width=45, height=1, bd=0, highlightthickness=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(left, scroll_speed=2, font=Font.fixed(), width=45, height=1)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
 		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.changeid())

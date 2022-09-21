@@ -4,6 +4,7 @@ from ..FileFormats import AIBIN
 from ..Utilities.utils import couriernew, fit
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.ScrolledListbox import ScrolledListbox
 
 import copy
 from collections import OrderedDict
@@ -32,7 +33,7 @@ class CodeColors(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Color Settings', resizable=(False, False))
 
 	def widgetize(self):
-		self.listbox = Listbox(self, font=couriernew, width=20, height=16, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(self, font=couriernew, width=20, height=16)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.select)
 		for t in self.info.keys():
 			self.listbox.insert(END, t)

@@ -22,7 +22,7 @@ class MPQSettings(Frame):
 		Label(self, text='MPQ Settings:', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text="Files will be read from the highest priority MPQ that contains them.\nThe higher an MPQ is on the list the higher its priority.", anchor=W, justify=LEFT).pack(fill=X)
 
-		self.listbox = ScrolledListbox(self, width=35, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(self, width=35, height=1)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		for mpq in self.mpqs:
 			self.listbox.insert(END,mpq)

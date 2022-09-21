@@ -24,7 +24,7 @@ class MPQSelect(PyMSDialog):
 		PyMSDialog.__init__(self, parent, self.open_type + ' a ' + filetype)
 
 	def widgetize(self):
-		self.listbox = ScrolledListbox(self, width=35, height=10, bd=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(self, width=35, height=10)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
 

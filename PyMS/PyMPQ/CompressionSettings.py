@@ -36,7 +36,7 @@ class CompressionSettings(Frame):
 		self.addbutton.pack(side=LEFT, padx=2)
 		e.pack(side=TOP)
 
-		self.listbox = ScrolledListbox(left, width=15, height=1, bd=0, exportselection=0, activestyle=DOTBOX)
+		self.listbox = ScrolledListbox(left, width=15, height=1)
 		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.select_extension())
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 

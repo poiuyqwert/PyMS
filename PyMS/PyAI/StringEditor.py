@@ -43,7 +43,7 @@ class StringEditor(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit String', Ctrl.e)
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
 
-		self.listbox = ScrolledListbox(self, font=Font.fixed(), bd=0, activestyle=DOTBOX, highlightthickness=0, exportselection=0)
+		self.listbox = ScrolledListbox(self, font=Font.fixed())
 		self.listbox.pack(fill=BOTH, expand=1)
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
 		self.listbox.bind(Double.Click_Left, self.edit)
