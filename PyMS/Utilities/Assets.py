@@ -11,8 +11,11 @@ if hasattr(_sys, 'frozen'):
 else:
 	base_dir = _os.path.dirname(_os.path.dirname(_os.path.dirname(__file__)))
 
+## Internals
+internals_dir = _os.path.join(base_dir, 'PyMS')
+
 ## Versions
-versions_file_path = _os.path.join(base_dir, 'PyMS', 'versions.json')
+versions_file_path = _os.path.join(internals_dir, 'versions.json')
 
 _VERSIONS = None
 def version(program_name): # type: (str) -> str
@@ -27,7 +30,7 @@ def version(program_name): # type: (str) -> str
 readme_file_path = _os.path.join(base_dir, 'README.md')
 
 ## Images
-images_dir = _os.path.join(base_dir, 'PyMS', 'Images')
+images_dir = _os.path.join(internals_dir, 'Images')
 
 def image_path(filename): # type: (str) -> str
 	return _os.path.join(images_dir, filename)
@@ -55,7 +58,7 @@ def clear_image_cache():
 	_IMAGE_CACHE.clear()
 
 ## MPQ
-mpq_dir = _os.path.join(base_dir, 'PyMS', 'MPQ')
+mpq_dir = _os.path.join(internals_dir, 'MPQ')
 
 def mpq_file_path(*path_components): # type: (*str) -> str
 	return _os.path.join(mpq_dir, *path_components)
@@ -96,7 +99,7 @@ def doc_path(filename): # type: (str) -> str
 	return _os.path.join(docs_dir, filename)
 
 ## Data
-data_dir = _os.path.join(base_dir, 'PyMS', 'Data')
+data_dir = _os.path.join(internals_dir, 'Data')
 
 def data_file_path(filename): # type: (str) -> str
 	return _os.path.join(data_dir, filename)
@@ -150,13 +153,13 @@ def settings_file_path(name): # type: (str) -> str
 	return _os.path.join(settings_dir, '%s%stxt' % (name, _os.extsep))
 
 ## Logs
-logs_dir = _os.path.join(base_dir, 'PyMS', 'Logs')
+logs_dir = _os.path.join(internals_dir, 'Logs')
 
 def log_file_path(filename): # type: (str) -> str
 	return _os.path.join(logs_dir, filename)
 
 ## Internal Temp
-internal_temp_dir = _os.path.join(base_dir, 'PyMS', 'Temp')
+internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')

@@ -26,13 +26,13 @@ from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 
 class PyTBL(MainWindow):
 	def __init__(self, guifile=None):
 		MainWindow.__init__(self)
-		self.title('PyTBL %s' % LONG_VERSION)
 		self.set_icon('PyTBL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
@@ -60,6 +60,8 @@ class PyTBL(MainWindow):
 		self.font10 = None
 		self.unitpal = None
 		self.icons = None
+
+		self.update_title()
 
 		self.listmenu = Menu(self, tearoff=0)
 		self.listmenu.add_command(label='Add String', command=self.add, shortcut=Key.Insert, bind_shortcut=False)
@@ -284,14 +286,26 @@ class PyTBL(MainWindow):
 			self.listbox.select_set(i)
 		return r
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.tbl'
+		if not file_path:
+			self.title('PyTBL %s' % LONG_VERSION)
+		else:
+			self.title('PyTBL %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.tbl = TBL.TBL()
 			self.file = None
 			self.status.set('Editing new TBL.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
-			self.title('PyTBL %s (Unnamed.tbl)' % LONG_VERSION)
+			self.mark_edited(False)
+			self.update_title()
 			if self.listbox.size():
 				self.text_delete('1.0', END)
 			self.listbox.delete(0, END)
@@ -311,7 +325,6 @@ class PyTBL(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.tbl = tbl
-			self.title('PyTBL %s (%s)' % (LONG_VERSION,file))
 			self.listbox.delete(0, END)
 			self.text_delete('1.0', END)
 			for string in self.tbl.strings:
@@ -320,9 +333,9 @@ class PyTBL(MainWindow):
 				self.listbox.select_set(0)
 				self.listbox.see(0)
 			self.file = file
+			self.update_title()
 			self.status.set('Load Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 			self.update()
 
@@ -341,7 +354,6 @@ class PyTBL(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.tbl = tbl
-			self.title('PyTBL %s (%s)' % (LONG_VERSION,file))
 			self.listbox.delete(0, END)
 			self.text_delete('1.0', END)
 			for string in self.tbl.strings:
@@ -350,34 +362,31 @@ class PyTBL(MainWindow):
 				self.listbox.select_set(0)
 				self.listbox.see(0)
 			self.file = file
+			self.update_title()
 			self.status.set('Import Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 			self.update()
 
 	def save(self, key=None):
-		if not self.is_file_open():
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=[FileType.tbl()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.tbl.compile(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.tbl.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if not self.is_file_open():
 			return
-		file = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=[FileType.tbl()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
+		self.file = file_path
+		self.update_title()
 
 	def export(self, key=None):
 		if not self.is_file_open():
@@ -396,11 +405,10 @@ class PyTBL(MainWindow):
 			return
 		if not self.unsaved():
 			self.tbl = None
-			self.title('PyTBL %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a TBL.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.listbox.delete(0, END)
 			self.text_delete('1.0', END)
 			self.stringstatus.set('')
@@ -417,8 +425,7 @@ class PyTBL(MainWindow):
 		self.listbox.select_clear(0, END)
 		self.listbox.select_set(i)
 		self.listbox.see(i)
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.action_states()
 		self.update()
 
@@ -437,8 +444,7 @@ class PyTBL(MainWindow):
 			i = min(i,self.listbox.size()-1)
 			self.listbox.select_set(i)
 			self.listbox.see(i)
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.action_states()
 		self.update()
 
@@ -457,8 +463,7 @@ class PyTBL(MainWindow):
 		self.listbox.see(n)
 		self.tbl.strings[i] = self.tbl.strings[n]
 		self.tbl.strings[n] = s
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.action_states()
 		self.update(status=True)
 

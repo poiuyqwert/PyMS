@@ -14,8 +14,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
-
-import os
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 
@@ -26,7 +25,6 @@ class PyPAL(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyPAL %s' % LONG_VERSION)
 		self.set_icon('PyPAL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
@@ -37,9 +35,10 @@ class PyPAL(MainWindow):
 		self.palette = None
 		self.file = None
 		self.format = None
-		self.ext = None
 		self.edited = False
 		self.selected = None
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -145,8 +144,7 @@ class PyPAL(MainWindow):
 			self.select(None,i)
 			c = ColorChooser.askcolor(parent=self, initialcolor='#%02X%02X%02X' % tuple(self.palette.palette[i]), title='Select Color')
 			if c[1]:
-				self.edited = True
-				self.editstatus['state'] = NORMAL
+				self.mark_edited()
 				self.canvas.itemconfigure(i+1, fill=c[1], outline=c[1])
 				self.palette.palette[i] = c[0]
 
@@ -177,8 +175,20 @@ class PyPAL(MainWindow):
 				if rgb:
 					self.palette.palette[self.selected] = rgb
 					self.canvas.itemconfigure(self.selected+1, fill=c, outline=c)
-					self.edited = True
-					self.editstatus['state'] = NORMAL
+					self.mark_edited()
+
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.pal'
+		if not file_path:
+			self.title('PyPAL %s' % LONG_VERSION)
+		else:
+			self.title('PyPAL %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def new(self, key=None):
 		if not self.unsaved():
@@ -186,9 +196,8 @@ class PyPAL(MainWindow):
 			self.file = None
 			self.format = None
 			self.status.set('Editing new Palette.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
-			self.title('PyPAL %s (Unnamed.pal)' % LONG_VERSION)
+			self.mark_edited(False)
+			self.update_title()
 			if self.selected == None:
 				self.selected = 0
 				self.select(None,0)
@@ -206,16 +215,14 @@ class PyPAL(MainWindow):
 			try:
 				pal.load_file(file)
 				self.format = pal.format
-				self.ext = os.path.splitext(file)[-1][1:]
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
 			self.palette = pal
-			self.title('PyPAL %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Load Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			if self.selected == None:
 				self.selected = 0
 				self.select(None,0)
@@ -224,30 +231,26 @@ class PyPAL(MainWindow):
 			self.colorstatus(None, 0)
 
 	def save(self, key=None):
-		if not self.is_file_open() or self.format == None:
+		self.saveas(file_path=self.file, file_format=self.format)
+
+	def saveas(self, key=None, file_path=None, file_format=None, file_type=Palette.FileType.sc_pal):
+		if not file_path:
+			file_path = self.settings.lastpath.select_save_file(self, title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
-		if self.file == None:
-			self.saveas()
-			return
+		if not file_format:
+			file_format = file_type.format
 		try:
-			self.palette.save(self.file, self.format)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.palette.save(file_path, file_format)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None, file_type=Palette.FileType.sc_pal):
-		if not self.is_file_open():
-			return
-		file = self.settings.lastpath.select_save_file(self, title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
-		if not file:
-			return True
-		self.file = file
-		self.title('PyPAL %s (%s)' % (LONG_VERSION,self.file))
-		self.format = file_type.format
-		self.ext = os.path.splitext(file)[-1][1:]
-		self.save()
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
+		self.file = file_path
+		self.format = file_format
+		self.update_title()
 		self.action_states()
 
 	def close(self, key=None):
@@ -255,11 +258,10 @@ class PyPAL(MainWindow):
 			return
 		if not self.unsaved():
 			self.palette = None
-			self.title('PyPAL %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a palette.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.selected = None
 			self.canvas.coords(self.sel, 0, 0, 0, 0)
 			self.update()

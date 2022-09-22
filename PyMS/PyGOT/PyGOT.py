@@ -20,6 +20,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyGOT')
 
@@ -46,7 +47,6 @@ class PyGOT(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyGOT %s' % LONG_VERSION)
 		self.set_icon('PyGOT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
@@ -57,6 +57,8 @@ class PyGOT(MainWindow):
 		self.got = None
 		self.file = None
 		self.edited = False
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -224,8 +226,7 @@ class PyGOT(MainWindow):
 		self.input[['victoryvalue','resourcevalue'][i]]['state'] = [DISABLED,NORMAL][[n > 0 and not n % 3,n % 4 == 1][i]]
 
 	def edit(self, n=None):
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 
 	def reset(self):
 		self.name.check = False
@@ -254,14 +255,26 @@ class PyGOT(MainWindow):
 			var.check = False
 			var.set(0)
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.got'
+		if not file_path:
+			self.title('PyGOT %s' % LONG_VERSION)
+		else:
+			self.title('PyGOT %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.got = GOT()
 			self.file = None
 			self.status.set('Editing new Game Template.')
-			self.title('PyGOT %s (Unnamed.got)' % LONG_VERSION)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.update_title()
+			self.mark_edited(False)
 			self.reset()
 			self.action_states()
 
@@ -278,15 +291,14 @@ class PyGOT(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.got = got
-			self.title('PyGOT %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			for var,val in zip(self.values,self.got.template):
 				if var == self.teams and val > 1:
 					val -= 1
 				var.set(val)
 			self.status.set('Load Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def iimport(self, key=None):
@@ -301,22 +313,25 @@ class PyGOT(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.got = got
-			self.title('PyGOT %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			for var,val in zip(self.values,self.got.template):
 				if var == self.teams and val > 1:
 					val -= 1
 				var.set(val)
 			self.status.set('Import Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.got.select_save_file(self, title='Save GOT As', filetypes=[FileType.got()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
 			for n,var in enumerate(self.values):
@@ -324,25 +339,16 @@ class PyGOT(MainWindow):
 				if var == self.teams and val > 0:
 					val += 1
 				self.got.template[n] = val
-			self.got.compile(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.got.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.got.select_save_file(self, title='Save GOT As', filetypes=[FileType.got()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.file = file_path
+		self.update_title()
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
@@ -353,15 +359,12 @@ class PyGOT(MainWindow):
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.got = None
-			self.title('PyGOT %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a Game Template.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.reset()
 			self.action_states()
 

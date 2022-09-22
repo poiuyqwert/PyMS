@@ -23,6 +23,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
@@ -292,7 +293,6 @@ class PyFNT(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyFNT %s' % LONG_VERSION)
 		self.set_icon('PyFNT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
@@ -304,6 +304,8 @@ class PyFNT(MainWindow):
 		self.file = None
 		self.edited = False
 		self.palette = None
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar()
@@ -426,6 +428,19 @@ class PyFNT(MainWindow):
 					item = self.canvas.find_withtag('%d,%d' % (x,y))
 					self.canvas.itemconfigure(item, fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][c]]))
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.fnt'
+		if not file_path:
+			self.title('PyFNT %s' % LONG_VERSION)
+		else:
+			self.title('PyFNT %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	def new(self, key=None):
 		if not self.unsaved():
 			s = InfoDialog(self,True)
@@ -437,9 +452,8 @@ class PyFNT(MainWindow):
 				self.updatelist()
 				self.file = None
 				self.status.set('Editing new Font.')
-				self.edited = False
-				self.editstatus['state'] = DISABLED
-				self.title('PyFNT %s (Unnamed.fnt)' % LONG_VERSION)
+				self.mark_edited(False)
+				self.update_title()
 				self.action_states()
 				self.resize()
 				self.preview()
@@ -459,61 +473,52 @@ class PyFNT(MainWindow):
 				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
-				self.title('PyFNT %s (%s)' % (LONG_VERSION,file))
 				self.file = file
 			self.fnt = fnt
 			self.updatelist()
+			self.update_title()
 			self.status.set('Load Successful!')
-			self.edited = False
+			self.mark_edited(False)
 			self.action_states()
 			self.resize()
 			self.preview()
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.fnt.select_save_file(self, title='Save FNT As', filetypes=[FileType.fnt()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.fnt.save_file(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.fnt.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None, type=0):
-		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.fnt.select_save_file(self, title='Save FNT As', filetypes=[FileType.fnt()])
-		if not file:
-			return True
-		self.file = file
-		self.title('PyFNT %s (%s)' % (LONG_VERSION,self.file))
-		self.type = type
-		self.save()
+		self.file = file_path
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
+		self.update_title()
 		self.action_states()
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.fnt = None
-			self.title('PyFNT %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a FNT.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
+			self.listbox.delete(0, END)
 			self.canvas.delete(ALL)
 			self.canvas['width'] = 0
 			self.canvas['height'] = 0
 			self.firstbox = None
 
 	def exports(self, key=None):
-		if key and self.buttons['exportc']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
 		if file:
 			self.status.set('Extracting font, please wait...')
@@ -525,8 +530,6 @@ class PyFNT(MainWindow):
 			self.status.set('Font exported successfully!')
 
 	def imports(self, key=None):
-		if key and self.buttons['importc']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
 		if file:
 			s = InfoDialog(self)
@@ -540,8 +543,7 @@ class PyFNT(MainWindow):
 					ErrorDialog(self, e)
 				else:
 					self.open(file=fnt)
-					self.edited = True
-					self.editstatus['state'] = NORMAL
+					self.mark_edited()
 					self.status.set('Font imported successfully!')
 
 	def special(self, key=None, err=None):

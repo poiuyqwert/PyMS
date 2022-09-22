@@ -32,6 +32,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import os, shutil
 from collections import OrderedDict
@@ -380,6 +381,10 @@ class PyAI(MainWindow):
 				self.listmenu.entryconfig(i, state=s)
 			self.listmenu.post(e.x_root, e.y_root)
 
+	def mark_edited(self, edited=False):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	# Acitions
 	def new(self, key=None):
 		if not self.unsaved():
@@ -389,8 +394,7 @@ class PyAI(MainWindow):
 			self.strings = {}
 			self.aiscript = None
 			self.bwscript = None
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.undos = []
 			self.redos = []
 			self.title('aiscript.bin, bwscript.bin')
@@ -426,8 +430,7 @@ class PyAI(MainWindow):
 				self.strings[ai[1]].append(id)
 			self.aiscript = aiscript_path
 			self.bwscript = bwscript_path
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.undos = []
 			self.redos = []
 			if not bwscript_path:
@@ -466,88 +469,78 @@ class PyAI(MainWindow):
 		self.open(aiscript_data=ai, aiscript_path='scripts\\aiscript.bin', bwscript_data=bw, bwscript_path='scripts\\bwscript.bin')
 
 	def save(self, key=None, ai=None, bw=None):
-		if key and self.buttons['save']['state'] != NORMAL:
+		self.saveas(ai_path=self.aiscript, bw_path=self.bwscript)
+
+	def saveas(self, key=None, ai_path=None, bw_path=None):
+		if not ai_path:
+			ai_path = self.settings.lastpath.bin.select_save_file(self, title='Save aiscript.bin As', filetypes=[FileType.bin_ai()])
+			if not ai_path:
+				return
+		elif not check_allow_overwrite_internal_file(ai_path):
 			return
-		if ai == None:
-			ai = self.aiscript
-		if bw == None and self.ai.bwscript.ais:
-			bw = self.bwscript
-		if ai == None:
-			self.saveas()
+		if self.ai.bwscript.ais and not bw_path:
+			bw_path = self.settings.lastpath.bin.select_save_file(self, title='Save bwscript.bin As (Cancel to save aiscript.bin only)', filetypes=[FileType.bin_ai()])
+		elif not check_allow_overwrite_internal_file(bw_path):
 			return
 		if self.tbledited:
-			file = self.settings.lastpath.tbl.select_save_file(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)", filetypes=[FileType.tbl()])
-			if file:
-				self.stat_txt = file
+			tbl_path = self.settings.lastpath.tbl.select_save_file(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)", filetypes=[FileType.tbl()])
+			if tbl_path:
 				try:
-					self.tbl.compile(file)
+					self.tbl.compile(tbl_path)
 				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
+				self.stat_txt = tbl_path
 				self.tbledited = False
 		try:
-			self.ai.compile(ai, bw)
-			self.aiscript = ai
-			if bw != None:
-				self.bwscript = bw
-			self.edited = False
-			self.editstatus['state'] = DISABLED
-			self.status.set('Save Successful!')
+			self.ai.compile(ai_path, bw_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		aiscript = self.settings.lastpath.bin.select_save_file(self, title='Save aiscript.bin As', filetypes=[FileType.bin_ai()])
-		if not aiscript:
-			return True
-		bwscript = None
-		if self.ai.bwscript.ais:
-			bwscript = self.settings.lastpath.bin.select_save_file(self, title='Save bwscript.bin As (Cancel to save aiscript.bin only)', filetypes=[FileType.bin_ai()])
-		if self.save(ai=aiscript, bw=bwscript):
-			self.tbledited = False
-			self.title('%s, %s' % (self.aiscript,self.bwscript))
+		self.aiscript = ai_path
+		if bw_path != None:
+			self.bwscript = bw_path
+		self.mark_edited(False)
+		self.status.set('Save Successful!')
+		self.title('%s, %s' % (self.aiscript,self.bwscript))
 
 	def savempq(self, key=None):
 		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq(),FileType.exe_mpq()])
-		if file:
-			if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
-				try:
-					shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
-				except:
-					ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
-					return
-			not_saved = []
+		if not file:
+			return
+		if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
 			try:
-				ai,_ = self.ai.compile_data()
-				bw,_ = self.ai.bwscript.compile_data()
-				mpq = MPQ.of(file)
-				with mpq.open_or_create():
-					try:
-						mpq.add_data(ai, 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
-					except:
-						not_saved.append('scripts\\aiscript.bin')
-					try:
-						mpq.add_data(bw, 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
-					except:
-						not_saved.append('scripts\\bwscript.bin')
-			except PyMSError as e:
-				ErrorDialog(self, e)
+				shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
+			except:
+				ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
 				return
-			if not_saved:
-				MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(not_saved), type=MessageBox.OK)
+		not_saved = []
+		try:
+			ai,_ = self.ai.compile_data()
+			bw,_ = self.ai.bwscript.compile_data()
+			mpq = MPQ.of(file)
+			with mpq.open_or_create():
+				try:
+					mpq.add_data(ai, 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
+				except:
+					not_saved.append('scripts\\aiscript.bin')
+				try:
+					mpq.add_data(bw, 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
+				except:
+					not_saved.append('scripts\\bwscript.bin')
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if not_saved:
+			MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(not_saved), type=MessageBox.OK)
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.ai = None
 			self.strings = {}
 			self.aiscript = None
 			self.bwscript = None
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.undos = []
 			self.redos = []
 			self.title('No files loaded')
@@ -692,8 +685,6 @@ class PyAI(MainWindow):
 				self.listbox.select_set(0)
 
 	def undo(self, key=None):
-		if key and self.buttons['undo']['state'] != NORMAL:
-			return
 		max = self.settings.get('redohistory', 10)
 		undo = self.undos.pop()
 		if max:
@@ -706,8 +697,7 @@ class PyAI(MainWindow):
 		if not self.undos:
 			self.toolbar.tag_enabled('can_undo', False)
 			self.menu.tag_enabled('can_undo', False)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 		if undo[0] == 'remove':
 			start = self.listbox.size()
 			for id,ai,bw,info,s in undo[1]:
@@ -771,10 +761,7 @@ class PyAI(MainWindow):
 			self.resort()
 
 	def redo(self, key=None):
-		if key and self.buttons['redo']['state'] != NORMAL:
-			return
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		max = self.settings.get('undohistory', 10)
 		redo = self.redos.pop()
 		if max:
@@ -850,8 +837,6 @@ class PyAI(MainWindow):
 		self.listbox.select_set(0, END)
 
 	def add(self, key=None):
-		if key and self.buttons['add']['state'] != NORMAL:
-			return
 		s = 2+sum(self.ai.aisizes.values())
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
@@ -876,8 +861,7 @@ class PyAI(MainWindow):
 			self.resort()
 			self.listbox.see(self.listbox.curselection()[0])
 			self.action_states()
-			self.edited = True
-			self.editstatus['state'] = NORMAL
+			self.mark_edited()
 			self.add_undo('add', [id, ai, e.aiinfo])
 			s = 'aiscript.bin: %s (%s B) ' % (len(self.ai.ais),sum(self.ai.aisizes.values()))
 			if self.ai.bwscript:
@@ -885,8 +869,6 @@ class PyAI(MainWindow):
 				self.scriptstatus.set(s)
 
 	def remove(self, key=None):
-		if key and self.buttons['remove']['state'] != NORMAL:
-			return
 		indexs = self.listbox.curselection()
 		ids = []
 		cantremove = {}
@@ -938,8 +920,7 @@ class PyAI(MainWindow):
 			else:
 				self.listbox.select_set(0)
 		self.action_states()
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.add_undo('remove', undo)
 		s = 'aiscript.bin: %s (%s B) ' % (len(self.ai.ais),sum(self.ai.aisizes.values()))
 		if self.ai.bwscript:
@@ -947,44 +928,39 @@ class PyAI(MainWindow):
 		self.scriptstatus.set(s)
 
 	def find(self, key=None):
-		if key and self.buttons['find']['state'] != NORMAL:
-			return
 		FindDialog(self)
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		export = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export To', filetypes=[FileType.txt()])
-		if export:
-			indexs = self.listbox.curselection()
-			external = []
-			ids = []
-			for index in indexs:
-				e = self.get_entry(index)
-				ids.append(e[0])
-				if ids[-1] in self.ai.externaljumps[e[1]][1]:
-					for id in self.ai.externaljumps[e[1]][1][ids[-1]]:
-						if not id in external:
-							external.append(id)
+		if not export:
+			return
+		indexs = self.listbox.curselection()
+		external = []
+		ids = []
+		for index in indexs:
+			e = self.get_entry(index)
+			ids.append(e[0])
+			if ids[-1] in self.ai.externaljumps[e[1]][1]:
+				for id in self.ai.externaljumps[e[1]][1][ids[-1]]:
+					if not id in external:
+						external.append(id)
+		if external:
+			for i in ids:
+				if i in external:
+					external.remove(i)
 			if external:
-				for i in ids:
-					if i in external:
-						external.remove(i)
-				if external:
-					ids.extend(external)
-			try:
-				warnings = self.ai.decompile(export, self.extdefs, self.reference.get(), 1, ids)
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			if warnings:
-				WarningDialog(self, warnings)
-			if external:
-				MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(external), type=MessageBox.OK)
+				ids.extend(external)
+		try:
+			warnings = self.ai.decompile(export, self.extdefs, self.reference.get(), 1, ids)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if warnings:
+			WarningDialog(self, warnings)
+		if external:
+			MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(external), type=MessageBox.OK)
 
 	def iimport(self, key=None, iimport=None, c=True, parent=None):
-		if key and self.buttons['import']['state'] != NORMAL:
-			return
 		if parent == None:
 			parent = self
 		if not iimport:
@@ -1042,18 +1018,13 @@ class PyAI(MainWindow):
 				s += '     bwscript.bin: %s (%s B)' % (len(self.ai.bwscript.ais),sum(self.ai.bwscript.aisizes.values()))
 			self.scriptstatus.set(s)
 			self.action_states()
-			self.edited = True
-			self.editstatus['state'] = NORMAL
+			self.mark_edited()
 			return cont
 
 	def listimport(self, key=None):
-		if key and self.buttons['listimport']['state'] != NORMAL:
-			return
 		ImportListDialog(self)
 
 	def codeedit(self, key=None):
-		if key and self.buttons['codeedit']['state'] != NORMAL:
-			return
 		indexs = self.listbox.curselection()
 		external = []
 		ids = []
@@ -1071,8 +1042,6 @@ class PyAI(MainWindow):
 		CodeEditDialog(self, self.settings, ids)
 
 	def edit(self, key=None):
-		if key and self.buttons['edit']['state'] != NORMAL:
-			return
 		id = self.get_entry(self.listbox.curselection()[0])[0]
 		aiinfo = ''
 		if id in self.ai.aiinfo:
@@ -1100,20 +1069,15 @@ class PyAI(MainWindow):
 			self.resort()
 
 	def editflags(self, key=None):
-		if key and self.buttons['flags']['state'] != NORMAL:
-			return
 		id = self.get_entry(self.listbox.curselection()[0])[0]
 		f = FlagEditor(self, self.ai.ais[id][2])
 		if f.flags != None:
 			self.add_undo('flags', [id,self.ai.ais[id][2],f.flags])
 			self.ai.ais[id][2] = f.flags
 			self.resort()
-			self.edited = True
-			self.editstatus['state'] = NORMAL
+			self.mark_edited()
 
 	def extdef(self, key=None):
-		if key and self.buttons['extdef']['state'] != NORMAL:
-			return
 		ExternalDefDialog(self, self.settings)
 
 	def managetbl(self, key=None):

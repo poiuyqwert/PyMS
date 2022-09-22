@@ -24,6 +24,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import os
 
@@ -507,29 +508,25 @@ BMP's must be imported with the same style they were exported as.""")
 				MessageBox.showinfo(parent=self, title='Uncompressed GRP', message='You have opened an uncompresed GRP.\nWhen saving make sure you select the "Save Uncompressed" option.')
 
 	def save(self, key=None):
-		if not self.is_file_open():
-			return
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
 		self.stopframe()
-		if self.file == None:
-			self.saveas()
+		if not file_path:
+			file_path = self.settings.lastpath.grp.select_save_file(self, title='Save GRP As', filetypes=[FileType.grp()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.grp.save_file(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.action_states()
+			self.grp.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if not self.is_file_open():
 			return
-		self.stopframe()
-		file = self.settings.lastpath.grp.select_save_file(self, title='Save GRP As', filetypes=[FileType.grp()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.file = file_path
+		self.status.set('Save Successful!')
+		self.edited = False
+		self.action_states()
 
 	def close(self, key=None):
 		if not self.is_file_open():

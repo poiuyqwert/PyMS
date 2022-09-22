@@ -24,6 +24,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
@@ -44,7 +45,6 @@ class PyTRG(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyTRG %s' % LONG_VERSION)
 		self.set_icon('PyTRG')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
@@ -59,6 +59,8 @@ class PyTRG(MainWindow):
 		self.findhistory = []
 		self.replacehistory = []
 		self.findwindow = None
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -183,7 +185,20 @@ class PyTRG(MainWindow):
 		if not self.completing:
 			self.text.taboverride = False
 			self.complete = [None, 0]
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
+
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.trg'
+		if not file_path:
+			self.title('PyTRG %s' % LONG_VERSION)
+		else:
+			self.title('PyTRG %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def new(self, key=None):
 		if not self.unsaved():
@@ -191,11 +206,10 @@ class PyTRG(MainWindow):
 			self.trg = TRG.TRG(self.tbl,self.aibin)
 			self.file = None
 			self.status.set('Editing new TRG.')
-			self.title('PyTRG %s (Unnamed.trg)' % LONG_VERSION)
+			self.update_title()
 			self.action_states()
 			self.text.delete('1.0', END)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
@@ -216,7 +230,7 @@ class PyTRG(MainWindow):
 					return
 			self.text.re = None
 			self.trg = trg
-			self.title('PyTRG %s (%s)' % (LONG_VERSION,file))
+			self.update_title()
 			self.file = file
 			self.status.set('Load Successful!')
 			self.action_states()
@@ -224,8 +238,7 @@ class PyTRG(MainWindow):
 			self.text.insert('1.0', data.rstrip('\n'))
 			self.text.edit_reset()
 			self.text.see('1.0')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def iimport(self, key=None):
 		if not self.unsaved():
@@ -239,44 +252,37 @@ class PyTRG(MainWindow):
 				return
 			self.text.re = None
 			self.trg = TRG.TRG()
-			self.title('PyTRG %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Import Successful!')
 			self.action_states()
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', text.rstrip('\n'))
 			self.text.edit_reset()
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=[FileType.trg()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
 			self.trg.interpret(self.text)
-			self.trg.compile(self.file)
+			self.trg.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.status.set('Save Successful!')
-		self.edited = False
-		self.editstatus['state'] = DISABLED
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
-			return
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=[FileType.trg()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.mark_edited(False)
+		self.file = file_path
+		self.update_title()
 
 	def savegottrg(self, key=None):
-		if key and self.buttons['savegottrg']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.trg.select_save_file(self, title='Save *.got Compatable *.trg As', filetypes=[FileType.trg()])
 		if not file:
 			return True
@@ -289,8 +295,6 @@ class PyTRG(MainWindow):
 		self.status.set('*.got Compatable *.trg Saved Successfully!')
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
@@ -329,21 +333,16 @@ class PyTRG(MainWindow):
 			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.trg = None
-			self.title('PyTRG %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a TRG.')
 			self.text.delete('1.0', END)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def find(self, key=None):
-		if key and self.buttons['find']['state'] != NORMAL:
-			return
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self)
 			self.bind(Key.F3, self.findwindow.findnext)

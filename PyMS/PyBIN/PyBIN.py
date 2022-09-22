@@ -27,6 +27,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import time
 
@@ -83,7 +84,6 @@ class PyBIN(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyBIN %s' % LONG_VERSION)
 		self.set_icon('PyBIN')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyBIN', Assets.version('PyBIN'))
@@ -97,6 +97,8 @@ class PyBIN(MainWindow):
 		self.edited = False
 		self.dialog = None
 		self.widget_map = None
+
+		self.update_title()
 
 		self.tfont = None
 		self.dlggrp = None
@@ -650,9 +652,9 @@ class PyBIN(MainWindow):
 
 		# self.scr_check['state'] = NORMAL if is_file_open and not self.bin.remastered_required() else DISABLED
 
-	def mark_edited(self):
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
 		self.action_states()
 
 	def setup_nodes(self):
@@ -980,6 +982,8 @@ class PyBIN(MainWindow):
 		self.dialog = None
 		self.widget_map = None
 
+		self.update_title()
+
 		self.selected_node = None
 		self.old_cursor = None
 		self.edit_node = None
@@ -994,6 +998,15 @@ class PyBIN(MainWindow):
 
 		self.widgetTree.delete(ALL)
 		self.widgetCanvas.delete(ALL)
+
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.bin'
+		if not file_path:
+			self.title('PyBIN %s' % LONG_VERSION)
+		else:
+			self.title('PyBIN %s (%s)' % (LONG_VERSION, file_path))
 
 	def new(self, key=None):
 		if not self.unsaved():
@@ -1010,9 +1023,8 @@ class PyBIN(MainWindow):
 			self.reload_canvas()
 			self.file = None
 			self.status.set('Editing new Dialog.')
-			self.title('PyBIN %s (Unnamed.bin)' % LONG_VERSION)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.update_title()
+			self.mark_edited(False)
 			self.action_states()
 			self.tick(True)
 
@@ -1039,12 +1051,11 @@ class PyBIN(MainWindow):
 			self.setup_nodes()
 			self.reload_list()
 			self.reload_canvas()
-			self.title('PyBIN %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.scr_enabled.set(self.bin.remastered)
 			self.status.set('Load Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.select_node(self.dialog)
 			self.action_states()
 			self.tick(True)
@@ -1071,41 +1082,35 @@ class PyBIN(MainWindow):
 			self.setup_nodes()
 			self.reload_list()
 			self.reload_canvas()
-			self.title('PyBIN %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.scr_enabled.set(self.bin.remastered)
 			self.status.set('Import Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 			self.tick(True)
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.bin.select_save_file(self, title='Save Dialog BIN As', filetypes=[FileType.bin_dialog()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.bin.save_file(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.bin.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
 			return
-		file = self.settings.lastpath.bin.select_save_file(self, title='Save Dialog BIN As', filetypes=[FileType.bin_dialog()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
+		self.file = file_path
+		self.update_title()
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
@@ -1116,13 +1121,10 @@ class PyBIN(MainWindow):
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.clear()
-			self.title('PyBIN %s' % LONG_VERSION)
 			self.status.set('Load or create a Dialog BIN.')
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.scr_enabled.set(False)
 			self.action_states()
 

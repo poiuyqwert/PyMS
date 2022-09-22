@@ -26,6 +26,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyLO')
 
@@ -39,7 +40,6 @@ class PyLO(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyLO %s' % LONG_VERSION)
 		self.set_icon('PyLO')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyLO', Assets.version('PyLO'))
@@ -62,6 +62,8 @@ class PyLO(MainWindow):
 		self.dragoffset = None
 		self.pauseupdate = False
 		self.grp_cache = [{},{}]
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -346,15 +348,28 @@ class PyLO(MainWindow):
 			self.previewing = [f,self.overlayframe]+offset
 
 	def edit(self):
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.previewupdate()
+
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.lo?'
+		if not file_path:
+			self.title('PyLO %s' % LONG_VERSION)
+		else:
+			self.title('PyLO %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def new(self, key=None):
 		if not self.unsaved():
 			self.lo = LO()
 			self.file = None
 			self.status.set('Editing new LO?.')
-			self.title('PyLO %s (Unnamed.loa)' % LONG_VERSION)
+			self.update_title()
 			self.grp_cache = [{},{}]
 			self.overlayframe = 0
 			self.previewupdate()
@@ -364,8 +379,7 @@ class PyLO(MainWindow):
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', 'Frame:\n\t(0, 0)')
 			self.text.edit_reset()
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
@@ -382,8 +396,8 @@ class PyLO(MainWindow):
 				ErrorDialog(self, e)
 				return
 			self.lo = lo
-			self.title('PyLO %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Load Successful!')
 			self.overlayframe = 0
 			self.previewupdate()
@@ -394,8 +408,7 @@ class PyLO(MainWindow):
 			self.text.edit_reset()
 			self.text.see('1.0')
 			self.text.mark_set('insert', '2.0 lineend')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def iimport(self, key=None):
 		if not self.unsaved():
@@ -408,8 +421,8 @@ class PyLO(MainWindow):
 				ErrorDialog(self, PyMSError('Import', "Couldn't import file '%s'" % file))
 				return
 			self.lo = LO()
-			self.title('PyLO %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Import Successful!')
 			self.overlayframe = 0
 			self.previewupdate()
@@ -419,37 +432,30 @@ class PyLO(MainWindow):
 			self.text.delete('1.0', END)
 			self.text.insert('1.0', text.rstrip('\n'))
 			self.text.edit_reset()
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
 			self.lo.interpret(self.text)
-			self.lo.compile(self.file)
+			self.lo.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		self.file = file_path
+		self.update_title()
 		self.status.set('Save Successful!')
-		self.edited = False
-		self.editstatus['state'] = DISABLED
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
-			return
-		file = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.mark_edited(False)
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return True
@@ -486,12 +492,10 @@ class PyLO(MainWindow):
 			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.lo = None
-			self.title('PyLO %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a LO?.')
 			self.overlayframe = None
 			self.previewupdate()
@@ -499,13 +503,10 @@ class PyLO(MainWindow):
 			self.framesupdate()
 			self.grp_cache = [{},{}]
 			self.text.delete('1.0', END)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def find(self, key=None):
-		if key and self.buttons['find']['state'] != NORMAL:
-			return
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self)
 			self.bind(Key.F3, self.findwindow.findnext)

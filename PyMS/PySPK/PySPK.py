@@ -27,6 +27,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PySPK')
 
@@ -47,7 +48,6 @@ class PySPK(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PySPK %s' % LONG_VERSION)
 		self.set_icon('PySPK')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PySPK', Assets.version('PySPK'))
@@ -60,6 +60,8 @@ class PySPK(MainWindow):
 		self.spk = None
 		self.file = None
 		self.edited = False
+
+		self.update_title()
 
 		self.platformwpe = None
 
@@ -307,8 +309,7 @@ class PySPK(MainWindow):
 		self.stars_tab.action_states()
 
 	def edit(self, n=None):
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 		self.action_states()
 
 	def reload_list(self):
@@ -533,7 +534,9 @@ class PySPK(MainWindow):
 	def clear(self):
 		self.spk = None
 		self.file = None
-		self.edited = False
+		self.mark_edited(False)
+		
+		self.update_title()
 		
 		self.selected_image = None
 		self.selected_stars = []
@@ -552,6 +555,19 @@ class PySPK(MainWindow):
 		self.palette_tab.clear()
 		self.stars_tab.clear()
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.spk'
+		if not file_path:
+			self.title('PySPK %s' % LONG_VERSION)
+		else:
+			self.title('PySPK %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.clear()
@@ -560,9 +576,8 @@ class PySPK(MainWindow):
 			self.update_stars()
 			self.file = None
 			self.status.set('Editing new Parallax.')
-			self.title('PySPK %s (Unnamed.spk)' % LONG_VERSION)
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.update_title()
+			self.mark_edited(False)
 			self.action_states()
 
 	def open(self, key=None, file=None):
@@ -586,11 +601,10 @@ class PySPK(MainWindow):
 				self.selected_image = self.spk.images[0]
 			self.palette_tab.reload_palette()
 			self.update_stars()
-			self.title('PySPK %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Load Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def iimport(self, key=None):
@@ -617,39 +631,32 @@ class PySPK(MainWindow):
 				self.selected_image = self.spk.images[0]
 			self.palette_tab.reload_palette()
 			self.update_stars()
-			self.title('PySPK %s (%s)' % (LONG_VERSION,filepath))
 			self.file = None
+			self.update_title()
 			self.status.set('Import Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.action_states()
 
 	def save(self, key=None):
-		if key and self.buttons['save']['state'] != NORMAL:
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[FileType.spk()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.spk.save_file(self.file)
-			self.status.set('Save Successful!')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.spk.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if key and self.buttons['saveas']['state'] != NORMAL:
-			return
-		file = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[FileType.spk()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.file = file_path
+		self.update_title()
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
 
 	def export(self, key=None):
-		if key and self.buttons['export']['state'] != NORMAL:
-			return
 		filepath = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
 		if not filepath:
 			return True
@@ -660,11 +667,8 @@ class PySPK(MainWindow):
 			ErrorDialog(self, e)
 
 	def close(self, key=None):
-		if key and self.buttons['close']['state'] != NORMAL:
-			return
 		if not self.unsaved():
 			self.clear()
-			self.title('PySPK %s' % LONG_VERSION)
 			self.status.set('Load or create a Parallax SPK.')
 			self.editstatus['state'] = DISABLED
 			self.action_states()

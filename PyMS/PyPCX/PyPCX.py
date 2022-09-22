@@ -18,6 +18,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
@@ -27,7 +28,6 @@ class PyPCX(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyPCX %s' % LONG_VERSION)
 		self.set_icon('PyPCX')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
@@ -37,6 +37,8 @@ class PyPCX(MainWindow):
 		self.pcx = None
 		self.file = None
 		self.edited = False
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -112,6 +114,15 @@ class PyPCX(MainWindow):
 				else:
 					self.saveas()
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.pcx'
+		if not file_path:
+			self.title('PyPCX %s' % LONG_VERSION)
+		else:
+			self.title('PyPCX %s (%s)' % (LONG_VERSION, file_path))
+
 	def open(self, key=None, file=None):
 		if self.unsaved():
 			return
@@ -126,36 +137,32 @@ class PyPCX(MainWindow):
 			ErrorDialog(self, e)
 			return
 		self.pcx = pcx
-		self.title('PyPCX %s (%s)' % (LONG_VERSION,file))
 		self.file = file
+		self.update_title()
 		self.edited = False
 		self.status.set('Load Successful!')
 		self.preview()
 
 	def save(self, key=None):
-		if not self.is_file_open():
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=[FileType.pcx()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.pcx.save_file(self.file)
+			self.pcx.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.edited = False
 		self.status.set('Save Successful!')
 		self.action_states()
-
-	def saveas(self, key=None, type=0):
-		if not self.is_file_open():
-			return
-		file = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=[FileType.pcx()])
-		if not file:
-			return True
-		self.file = file
-		self.title('PyPCX %s (%s)' % (LONG_VERSION,self.file))
-		self.save()
+		self.file = file_path
+		self.update_title()
 
 	def loadpal(self, key=None):
 		if not self.is_file_open():
@@ -217,7 +224,7 @@ class PyPCX(MainWindow):
 		if not self.pcx:
 			self.pcx = PCX()
 			self.file = 'Unnamed.pcx'
-			self.title('PyPCX %s (%s)' % (LONG_VERSION,self.file))
+			self.update_title()
 		self.pcx.load_data(b.image,b.palette)
 		self.edited = False
 		self.preview()
@@ -229,8 +236,8 @@ class PyPCX(MainWindow):
 		if not self.is_file_open():
 			return
 		self.pcx = None
-		self.title('PyPCX %s' % LONG_VERSION)
 		self.file = None
+		self.update_title()
 		self.status.set('Load a PCX or import a BMP.')
 		self.canvas.delete(ALL)
 		self.canvas.forget()

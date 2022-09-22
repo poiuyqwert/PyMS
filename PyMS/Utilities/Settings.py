@@ -3,6 +3,7 @@ from .utils import isstr
 from .WarnDialog import WarnDialog
 from .UIKit import FileDialog, HORIZONTAL, parse_geometry, parse_resizable
 from . import Assets
+from .fileutils import check_allow_overwrite_internal_file
 
 import os, copy, json
 
@@ -253,6 +254,8 @@ class SettingDict(object):
 		if initialfile:
 			kwargs['initialfile'] = initialfile
 		path = dialog(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store), **kwargs)
+		if save and path and not check_allow_overwrite_internal_file(path):
+			path = None
 		parent._pyms__window_blocking = False
 		if path and store:
 			self[key] = os.path.dirname(path)

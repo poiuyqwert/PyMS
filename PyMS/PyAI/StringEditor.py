@@ -155,9 +155,6 @@ class StringEditor(PyMSDialog):
 		self.open(Assets.mpq_file_path('rez', 'stat_txt.tbl'))
 
 	def save(self, key=None, file=None):
-		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
-		# if key and self.buttons['save']['state'] != NORMAL:
-		# 	return
 		if file == None:
 			file = self.parent.stattxt()
 		try:
@@ -169,18 +166,12 @@ class StringEditor(PyMSDialog):
 		self.tbledited = False
 
 	def saveas(self, key=None):
-		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
-		# if key and self.buttons['saveas']['state'] != NORMAL:
-		# 	return
 		file = self.settings.lastpath.tbl.select_save_file(self, title='Save stat_txt.tbl', filetypes=[FileType.tbl()])
 		if not file:
 			return
 		self.save(None, file)
 
 	def add(self, key=None):
-		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
-		# if key and self.buttons['add']['state'] != NORMAL:
-		# 	return
 		e = EditStringDialog(self, '', 'Add String')
 		if e.string:
 			self.parent.tbl.strings.append(e.string)
@@ -193,9 +184,6 @@ class StringEditor(PyMSDialog):
 				self.parent.resort()
 
 	def remove(self, key=None):
-		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
-		# if key and self.buttons['remove']['state'] != NORMAL:
-		# 	return
 		string = int(self.listbox.curselection()[0])
 		if self.parent.ai:
 			ids = {}
@@ -248,9 +236,6 @@ class StringEditor(PyMSDialog):
 		self.update()
 
 	def edit(self, key=None):
-		# TODO: Is this needed now that Toolbar manages callback being called when button disabled? Or what logic to put here?
-		# if key and self.buttons['edit']['state'] != NORMAL:
-		# 	return
 		id = int(self.listbox.curselection()[0])
 		string = TBL.decompile_string(self.parent.tbl.strings[id])
 		e = EditStringDialog(self, string)

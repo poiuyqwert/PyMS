@@ -18,11 +18,11 @@ class Palette:
 
 	class FileType:
 		# Values intialized at end of file (need to refer to Palette type)
-		riff = None
-		jasc = None
-		sc_pal = None
-		wpe = None
-		act = None
+		riff = None # type: Palette.FileType
+		jasc = None # type: Palette.FileType
+		sc_pal = None # type: Palette.FileType
+		wpe = None # type: Palette.FileType
+		act = None # type: Palette.FileType
 
 		@staticmethod
 		def load_types():
@@ -36,7 +36,7 @@ class Palette:
 			return tuple(load_types)
 
 		@staticmethod
-		def save_types(format, ext):
+		def save_types(format, ext): # type: (str, str | None) -> tuple[FileType]
 			save_types_lookup = {
 				Palette.Format.riff: {
 					None: [FileType.pal_riff()]
@@ -59,7 +59,7 @@ class Palette:
 			save_types = save_types_format.get(ext, save_types_format.get(None))
 			return tuple(save_types)
 
-		def __init__(self, format, ext):
+		def __init__(self, format, ext): # type: (str, str) -> Palette.FileType
 			self.format = format
 			self.ext = ext
 

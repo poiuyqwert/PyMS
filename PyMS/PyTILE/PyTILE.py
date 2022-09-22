@@ -26,6 +26,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
@@ -618,7 +619,7 @@ class PyTILE(MainWindow):
 
 	def mark_edited(self, edited=True):
 		self.edited = edited
-		self.editstatus['state'] = [DISABLED,NORMAL][edited]
+		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def gettile(self, id, cache=False):
 		to_photo = [megatile_to_photo,minitile_to_photo][isinstance(id,tuple) or isinstance(id,list)]
@@ -771,26 +772,22 @@ class PyTILE(MainWindow):
 				self.settings.dont_warn.warn('expanded_vx4', self, "This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 
 	def save(self, key=None):
-		if not self.is_file_open():
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.tileset.select_save_file(self, title='Save Tileset As', filetypes=[FileType.cv5()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.tileset.save_file(self.file)
-			self.status.set('Save Successful!')
-			self.mark_edited(False)
+			self.tileset.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-
-	def saveas(self, key=None):
-		if not self.is_file_open():
-			return
-		file = self.settings.lastpath.tileset.select_save_file(self, title='Save Tileset As', filetypes=[FileType.cv5()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.file = file_path
+		self.status.set('Save Successful!')
+		self.mark_edited(False)
 
 	def close(self, key=None):
 		if not self.is_file_open():

@@ -9,8 +9,9 @@ from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
-import copy, os
+import copy
 
 class DATTab(NotebookTab, DATTabConveniences):
 	ARROW_DOWN = None
@@ -220,23 +221,22 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toplevel.tab_activated()
 
 	def save(self, key=None):
-		if self.get_dat_data().file_path == None:
-			self.saveas()
+		self.saveas(file_path=self.get_dat_data().file_path)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME)], filename=self.get_dat_data().dat.FILE_NAME)
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.get_dat_data().save_file(self.get_dat_data().file_path)
+			self.get_dat_data().save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-		else:
-			self.edited = False
-			self.toplevel.update_status_bar()
-
-	def saveas(self, key=None):
-		file = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME)], filename=self.get_dat_data().dat.FILE_NAME)
-		if not file:
-			return True
-		self.get_dat_data().file_path = file
-		self.save()
+			return
+		self.get_dat_data().file_path = file_path
+		self.edited = False
 		self.toplevel.update_status_bar()
 
 	def export(self, key=None):

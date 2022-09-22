@@ -4,6 +4,7 @@ from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, parse_resizable
 from .FileType import FileType
 from . import Assets
 from .WarnDialog import WarnDialog
+from .fileutils import check_allow_overwrite_internal_file
 
 from numbers import Number
 import os, json
@@ -244,6 +245,8 @@ class SelectFile(SettingObject):
 			defaultextension=self._default_extension,
 			**kwargs
 		)
+		if save and path and not check_allow_overwrite_internal_file(path):
+			path = None
 		window._pyms__window_blocking = False
 		if path:
 			directory = os.path.dirname(path)

@@ -25,6 +25,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.FileType import FileType
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 from copy import deepcopy
 from collections import OrderedDict
@@ -59,7 +60,6 @@ class PyICE(MainWindow):
 
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyICE %s (No files loaded)' % LONG_VERSION)
 		self.set_icon('PyICE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyICE', Assets.version('PyICE'))
@@ -78,6 +78,8 @@ class PyICE(MainWindow):
 		self.spritesdat = None
 		self.imagesdat = None
 		self.soundsdat = None
+
+		self.update_title()
 
 		self.highlights = self.settings.get('highlights', None)
 		self.findhistory = []
@@ -321,16 +323,28 @@ class PyICE(MainWindow):
 				sfxdatatbl=self.sfxdatatbl
 			)
 
+	def update_title(self):
+		file_path = self.file
+		if not file_path and self.is_file_open():
+			file_path = 'Untitled.bin'
+		if not file_path:
+			self.title('PyICE %s' % LONG_VERSION)
+		else:
+			self.title('PyICE %s (%s)' % (LONG_VERSION, file_path))
+
+	def mark_edited(self, edited=True):
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+
 	def new(self, key=None):
 		if not self.unsaved():
 			self.iscriptlist.delete(0,END)
 			self.ibin = self.create_iscriptbin()
 			self.file = None
 			self.status.set('Editing new BIN.')
-			self.title('PyICE %s (Unnamed.bin)' % LONG_VERSION)
+			self.update_title()
 			self.action_states()
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
@@ -346,39 +360,34 @@ class PyICE(MainWindow):
 				return
 			self.ibin = ibin
 			self.update_iscrips_list()
-			self.title('PyICE %s (%s)' % (LONG_VERSION,file))
 			self.file = file
+			self.update_title()
 			self.status.set('Load Successful!')
 			self.action_states()
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 
 	def open_default(self, key=None):
 		self.open(key, Assets.mpq_file_path('scripts','iscript.bin'))
 
 	def save(self, key=None):
-		if not self.is_file_open():
-			return
-		if self.file == None:
-			self.saveas()
+		self.saveas(file_path=self.file)
+
+	def saveas(self, key=None, file_path=None):
+		if not file_path:
+			file_path = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[FileType.bin_iscript()])
+			if not file_path:
+				return
+		elif not check_allow_overwrite_internal_file(file_path):
 			return
 		try:
-			self.ibin.compile(self.file)
+			self.ibin.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		self.file = file_path
+		self.update_title()
 		self.status.set('Save Successful!')
-		self.edited = False
-		self.editstatus['state'] = DISABLED
-
-	def saveas(self, key=None):
-		if not self.is_file_open():
-			return
-		file = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[FileType.bin_iscript()])
-		if not file:
-			return True
-		self.file = file
-		self.save()
+		self.mark_edited(False)
 
 	# TODO: Cleanup
 	def iimport(self, key=None, file=None, parent=None):
@@ -425,8 +434,7 @@ class PyICE(MainWindow):
 		self.update_iscrips_list()
 		self.status.set('Import Successful!')
 		self.action_states()
-		self.edited = True
-		self.editstatus['state'] = NORMAL
+		self.mark_edited()
 
 	def export(self, key=None):
 		selected_iscript_ids = self.selected_iscript_ids()
@@ -452,11 +460,10 @@ class PyICE(MainWindow):
 		if not self.unsaved():
 			self.iscriptlist.delete(0,END)
 			self.ibin = None
-			self.title('PyICE %s' % LONG_VERSION)
 			self.file = None
+			self.update_title()
 			self.status.set('Load or create a BIN.')
-			self.edited = False
-			self.editstatus['state'] = DISABLED
+			self.mark_edited(False)
 			self.listbox_selection_changed()
 
 	def find(self, key=None):
