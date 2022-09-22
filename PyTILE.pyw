@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from PyMS.Utilities.Compatability import check_compat, Requirement
+from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyAI', Requirement.PIL)
 
 def main():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from PyMS.Utilities.Compatability import check_compat
+from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyTBL')
 
 def main():
