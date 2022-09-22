@@ -783,11 +783,10 @@ class AIBIN:
 		else:
 			try:
 				v = int(data)
-				# TODO: Expanded DAT
-				if -1 > v or v > DAT.UnitsDAT.FORMAT.entries:
+				if -1 > v or v > self.unitsdat.entry_count():
 					raise Exception()
 			except:
-				# TODO: Expanded DAT
+				# TODO: unitnames.tbl support?
 				for i,name in enumerate(self.tbl.strings[:DAT.UnitsDAT.FORMAT.entries]):
 					n = name.split('\x00')[:2]
 					if TBL.compile_string(data) == n[0] or (n[1] != '*' and TBL.compile_string(data) == '\x00'.join(n)):
@@ -870,8 +869,7 @@ class AIBIN:
 		else:
 			try:
 				v = int(data)
-				# TODO: Expanded DAT
-				if -1 > v or v > DAT.UpgradesDAT.FORMAT.entries:
+				if -1 > v or v > self.upgradesdat.entry_count():
 					raise Exception()
 			except:
 				for i in range(len(self.upgradesdat.entries)):
@@ -893,8 +891,7 @@ class AIBIN:
 		else:
 			try:
 				v = int(data)
-				# TODO: Expanded DAT
-				if -1 > v or v > DAT.TechDAT.FORMAT.entries:
+				if -1 > v or v > self.techdat.entry_count():
 					raise Exception()
 			except:
 				for i in range(len(self.techdat.entries)):
