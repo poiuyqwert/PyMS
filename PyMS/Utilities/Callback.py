@@ -13,8 +13,17 @@ class Callback(object):
 		self.add(callback)
 		return self
 
+	def remove(self, callback):
+		if not callback in self.callbacks:
+			return
+		self.callbacks.remove(callback)
+
+	def __sub__(self, callback):
+		self.remove(callback)
+		return self
+
 	def set(self, callback):
-		self.callbacks =  [callback]
+		self.callbacks = [callback]
 
 	def __call__(self, *args, **kwargs):
 		for callback in self.callbacks:
