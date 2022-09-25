@@ -25,7 +25,9 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 
 ## Installation
 1. **Install Python.** You should get the latest Python 2.7.x, currently that is [Python 2.7.12](https://www.python.org/downloads/release/python-2712/)
-2. **Install PILLOW.** Use PIP, the Python package manager, to [install PILLOW](https://pillow.readthedocs.io/en/latest/installation.html#basic-installation) (PIL will also work)
+   
+   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/2.7/using/windows.html#excursus-setting-environment-variables).
+2. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python2.7 -m pip install -r requirements.txt`
 3. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
 
 ## Issues/Feedback
@@ -65,46 +67,46 @@ Even though the analytics is anonamous and has no sensitive information, you can
 PyMS contains 16 programs to edit most of the file types you will encounter while modding.
 
 ### PyAI
-PyAI is used for editing AI .bin files.
+[PyAI](/Help/Programs/PyAI.md) is used for editing AI [.bin](/Help/Files/aiscript.bin.md) files.
 
 ### PyBIN
-PyBIN is used for editing dialog .bin files.
+[PyBIN](/Help/Programs/PyBIN.md) is used for editing dialog [.bin](/Help/Files/UI_BIN.md) files.
 
 ### PyDAT
-PyDAT is used for editing the various .dat files.
+[PyDAT](/Help/Programs/PyDAT.md) is used for editing the various [.dat](/Help/Files/DAT/units.dat.md) files.
 
 ### PyFNT
-PyFNT is used for converting .fnt Font files to and from .bmp files.
+[PyFNT](/Help/Programs/PyFNT.md) is used for converting [.fnt](/Help/Files/FNT.md) Font files to and from [.bmp](/Help/Files/BMP.md) files.
 
 ### PyGOT
-PyGOT is used for editing the Game Template .got files.
+[PyGOT](/Help/Programs/PyGOT.md) is used for editing the Game Template [.got](/Help/Files/GOT.md) files.
 
 ### PyGRP
-PyGRP is used for editing various graphics in .grp files.
+[PyGRP](/Help/Programs/PyGRP.md) is used for editing various graphics in [.grp](/Help/Files/GRP.md) files.
 
 ### PyICE
-PyICE is used for editing the graphics animation script .bin files.
+[PyICE](/Help/Programs/PyICE.md) is used for editing the graphics animation script [.bin](/Help/Files/iscript.bin.md) files.
 
 ### PyLO
-PyLO is used for editing the various offset .lo? files.
+[PyLO](/Help/Programs/PyLO.md) is used for editing the various offset [.lo?](/Help/Files/LO.md) files.
 
 ### PyMPQ
-PyMPQ is used for editing .mpq files.
+[PyMPQ](/Help/Programs/PyMPQ.md) is used for editing [.mpq](/Help/Files/MPQ.md) files.
 
 ### PyPAL
-PyPAL is used for editing the various image palette files (.pal, .wpe, etc.)
+[PyPAL](/Help/Programs/PyPAL.md) is used for editing the various image [palette](/Help/Files/Palettes.md) files (.pal, .wpe, etc.)
 
 ### PyPCX
-PyPAL is used for converting .pcx files to and from .bmp files.
+[PyPAL](/Help/Programs/PyPAL.md) is used for converting [.pcx](/Help/Files/PCX.md) files to and from [.bmp](/Help/Files/BMP.md) files.
 
 ### PySPK
-PySPK is used for editing the space paralax .spk files.
+[PySPK](/Help/Programs/PySPK.md) is used for editing the space paralax [.spk](/Help/Files/SPK.md) files.
 
 ### PyTBL
-PyTBL is used for editing the strings .tbl files.
+[PyTBL](/Help/Programs/PyTBL.md) is used for editing the strings [.tbl](/Help/Files/TBL.md) files.
 
 ### PyTILE
-PyTILE is used for editing the tileset files (.cv5, .vx4, .vf4, .vr4, .dddata)
+[PyTILE](/Help/Programs/PyTILE.md) is used for editing the [tileset](/Help/Files/Tilesets/Tilesets.md) files ([.cv5](/Help/Files/Tilesets/CV5.md), .vx4, .vf4, .vr4, .dddata)
 
 ### PyTRG
-PyTRG is used for editing triggers (.trg files)
+[PyTRG](/Help/Programs/PyTRG.md) is used for editing triggers ([.trg](/Help/Files/TRG.md) files)

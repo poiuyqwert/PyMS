@@ -1,5 +1,5 @@
 PyMS = (1,2,1) * 2
-import PyMSUtils, re
+from . import PyMSUtils, re
 infoheaderstart = """<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -68,7 +68,7 @@ for c in compile:
 			name = l
 			out.write(infoheaderstart % name)
 			for n,d in files.iteritems():
-				print '%s - %s' % (name, '%s %s' % (n,d[0]))
+				print('%s - %s' % (name, '%s %s' % (n,d[0])))
 				if name.split(' ')[0] == n:
 					out.write('				<li><b>%s</b>\n' % name)
 				else:

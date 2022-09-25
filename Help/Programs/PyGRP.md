@@ -1,0 +1,2 @@
+# PyGRP
+PyGRP is a tool for editing various graphics in [.grp](/Help/Files/GRP.md) files, which are used by things like [unit](/Help/Files/DAT/units.dat.md)/[sprite](/Help/Files/DAT/sprites.dat.md) [images](/Help/Files/DAT/images.dat.md), [cmdicons](/Help/Files/GRP.md#cmdicongrp), and much more. PyGRP provides a way to convert `.grp` files to and from [.bmp](/Help/Files/BMP.md) files (in multiple configurations), as well as a way to preview the graphics.

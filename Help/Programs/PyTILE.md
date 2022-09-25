@@ -1,0 +1,2 @@
+# PyTILE
+PyTILE is a tool used for editing the [tilesets](/Help/Files/Tilesets/Tilesets.md), which are stored in a handful of different files types, with [.cv5](/Help/Files/Tilesets/CV5.md) being used as the "main" file. PyTILE provides an editor and a comprehensive export and import system for the graphics and settings.

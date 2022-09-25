@@ -1,5 +1,8 @@
 *.pyc
 stdeo.txt
-Libs/WORKING/*
-Libs/Logs/*
-test.py
+PyMS/WORKING/*
+PyMS/Logs/*
+playground.py
+**/__pycache__
+.vscode/*
+.python-version

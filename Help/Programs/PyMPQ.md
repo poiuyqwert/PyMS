@@ -1,0 +1,2 @@
+# PyMPQ
+PyMPQ is a tool used for editing [.mpq](/Help/Files/MPQ.md) files, which are the containers for all the data files in the game. PyMPQ allows you to view all the files in an `.mpq`, extract files from them, and add new files to them.

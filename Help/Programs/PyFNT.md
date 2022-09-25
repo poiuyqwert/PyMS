@@ -1,0 +1,2 @@
+# PyFNT
+PyFNT is a tool used for fonts contained in [.fnt](/Help/Files/FNT.md) files. PyFNT provides a basic editor, as well as a way to export the `.fnt` files into [.bmp](/Help/Files/BMP.md) images, and import a `.bmp` into a `.fnt` file.

@@ -1,0 +1,18 @@
+Normal
+Normal (No Hallucination)
+Non-Vision Cloaking
+Non-Vision Cloaked
+Non-Vision Decloaking
+Vision Cloaking
+Vision Cloaked
+Vision Decloaking (Crash?)
+EMP Shockwave
+Use Remapping
+Shadow
+HP Bar
+Warp Flash (StarEdit crash)
+Seletion Circle
+Player Color Override
+Hide GFX, Show Size Rect
+Hallucination
+Warp Flash
