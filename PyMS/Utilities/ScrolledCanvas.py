@@ -42,7 +42,7 @@ class ScrolledCanvas(Frame):
 				bind_to = auto_bind
 			def scroll(event):
 				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0):
+				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 					horizontal = True
 				view = self.canvas.yview
 				if horizontal:

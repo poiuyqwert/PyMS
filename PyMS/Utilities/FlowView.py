@@ -23,7 +23,7 @@ class FlowView(Frame):
 		self._content_area.config(xscrollcommand=lambda l,h,s=xscrollbar: scrolled(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scrolled(l,h,s))
 		def scroll(event):
 			horizontal = False
-			if hasattr(event, 'state') and getattr(event, 'state', 0):
+			if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 				horizontal = True
 			view = self._content_area.yview
 			if horizontal:

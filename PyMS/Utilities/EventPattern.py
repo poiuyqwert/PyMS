@@ -65,12 +65,17 @@ class Field(object):
 		else:
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
+class ModifiedField(Field):
+	def __init__(self, value, description=None, state=0):
+		self.state = state
+		Field.__init__(self, value, description)
+
 class Modifier:
-	Shift = Field('Shift', '⇧' if is_mac() else None)
-	Ctrl = Field('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl')
-	Alt = Field('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None)
+	Shift = ModifiedField('Shift', '⇧' if is_mac() else None, state=0x01)
+	Ctrl = ModifiedField('Command' if is_mac() else 'Control', '⌘' if is_mac() else 'Ctrl', state=0x08 if is_mac() else 0x04)
+	Alt = ModifiedField('Option' if is_mac() else 'Alt', '⌥' if is_mac() else None, state=0x10)
 	class Mac:
-		Ctrl = Field('Control', '⌃' if is_mac() else 'Ctrl')
+		Ctrl = ModifiedField('Control', '⌃' if is_mac() else 'Ctrl', state=0x04)
 
 	Double = Field('Double')
 	Triple = Field('Triple')
@@ -81,11 +86,6 @@ class Modifier:
 	Click_Left = Field('B1', 'Left-Click')
 	Click_Middle = Field('B2', 'Middle-Click')
 	Click_Right = Field('B2' if is_mac() else 'B3', 'Right-Click')
-
-Modifier.Shift.state = 0x1
-Modifier.Ctrl.state = 0x8 if is_mac() else 0x4
-Modifier.Alt.state = 0x10
-Modifier.Mac.Ctrl.state = 0x4
 
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`

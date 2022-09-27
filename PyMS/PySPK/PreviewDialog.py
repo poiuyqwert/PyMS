@@ -32,7 +32,7 @@ class PreviewDialog(PyMSDialog):
 		def scroll_map(event=None, horizontal=None,delta=None):
 			if event:
 				horizontal = False
-				if hasattr(event, 'state') and getattr(event, 'state', 0):
+				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 					horizontal = True
 				delta = event.delta
 			view = self.canvas.yview

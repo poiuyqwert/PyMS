@@ -31,3 +31,34 @@ def apply_cursor(widget, cursors):
 			return cursor
 		except:
 			pass
+
+EVENT_ATTRS = [
+	'serial',
+	'num',
+	'focus',
+	'height',
+	'width',
+	'keycode',
+	'state',
+	'time',
+	'x',
+	'y',
+	'x_root',
+	'y_root',
+	'char',
+	'send_event',
+	'keysym',
+	'keysym_num',
+	'type',
+	'widget',
+	'delta',
+]
+def repr_event(event):
+	result = '<Event'
+	for attr in EVENT_ATTRS:
+		if hasattr(event, attr):
+			value = getattr(event, attr)
+			result += '\n\t%s = %s' % (attr, repr(value))
+			if attr == 'widget':
+				result += ' (%s)' % value
+	return result + '\n>'
