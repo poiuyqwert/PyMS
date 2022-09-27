@@ -161,6 +161,9 @@ def log_file_path(filename): # type: (str) -> str
 ## Internal Temp
 internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
+def internal_temp_file(filename):
+	return _os.path.join(internal_temp_dir, filename)
+
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')
 

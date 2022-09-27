@@ -219,6 +219,7 @@ try:
 except:
 	import subprocess
 	def osx_play(raw_audio):
+		from . import Assets
 		def do_play(path):
 			try:
 				subprocess.call(["afplay", temp_file])
@@ -228,7 +229,7 @@ except:
 				os.remove(path)
 			except:
 				pass
-		temp_file = create_temp_file('audio')
+		temp_file = create_temp_file(Assets.internal_temp_file('audio'))
 		handle = open(temp_file, 'wb')
 		handle.write(raw_audio)
 		handle.flush()

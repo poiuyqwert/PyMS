@@ -122,7 +122,10 @@ class SoundsTab(DATTab):
 
 	def play(self):
 		if play_sound:
-			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1])
+			tbl_string = self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
+			if tbl_string.endswith('<0>'):
+				tbl_string = tbl_string[:-3]
+			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
 			if f:
 				play_sound(f.read())
 
