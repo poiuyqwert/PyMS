@@ -72,7 +72,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toggle_used_by(toggle=False)
 		self.update_used_by_header()
 
-	def check_used_by_references(self, lookup_id=None, used_by=None):
+	def check_used_by_references(self, lookup_id=None, used_by=None, force_open=False):
 		self.used_by_data = []
 		if not self.used_by_listbox:
 			return
@@ -86,6 +86,8 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if self.used_by_data:
 			self.used_by_listbox.insert(END, *self.used_by_data)
 		self.update_used_by_header()
+		if force_open and not self.toplevel.data_context.settings.get('show_used_by', True):
+			self.toggle_used_by()
 
 	def used_by_jump(self, *_):
 		selections = self.used_by_listbox.curselection()

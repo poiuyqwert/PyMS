@@ -33,9 +33,11 @@ class ImagesTab(DATTab):
 		def check_grp_ref():
 			grp_id = self.grpdd.get()
 			refs = (
-				(DATID.images, lambda image: (image.grp_file,)),
+				DATRefs(DATID.images, lambda image: (
+					DATRef('GRP File', image.grp_file),
+				)),
 			)
-			self.check_used_by_references(grp_id, refs)
+			self.check_used_by_references(grp_id, refs, force_open=True)
 		Button(f, text='Check', command=check_grp_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'GRP File', 'ImgGRP')
 		f.pack(fill=X)
@@ -48,9 +50,11 @@ class ImagesTab(DATTab):
 		def check_iscript_ref():
 			iscript_id = self.iscriptdd.get()
 			refs = (
-				(DATID.images, lambda image: (image.iscript_id,)),
+				DATRefs(DATID.images, lambda image: (
+					DATRef('IScript ID', image.iscript_id),
+				)),
 			)
-			self.check_used_by_references(iscript_id, refs)
+			self.check_used_by_references(iscript_id, refs, force_open=True)
 		Button(f, text='Check', command=check_iscript_ref).pack(side=LEFT, padx=2)
 		self.tip(f, 'Iscript ID', 'ImgIscriptID')
 		f.pack(fill=X)

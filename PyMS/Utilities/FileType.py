@@ -4,7 +4,7 @@ import operator as _operator
 class FileType(tuple):
 	WILDCARD = '*'
 	EXTSEP = '.' # Does Tkinter expect `os.extsep` or '.'?
-	SEPARATOR = ','
+	SEPARATOR = ';'
 
 	@staticmethod
 	def include_all_files(file_types): # type: (list[FileType]) -> list[FileType]
@@ -203,7 +203,7 @@ class FileType(tuple):
 	def __new__(self, name, *extensions): # tyoe: (str, *str) -> FileType
 		extensions = list(extensions) # type: list[str]
 		for i, extension in enumerate(extensions):
-			if extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
+			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension
 		name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
 		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions)))
