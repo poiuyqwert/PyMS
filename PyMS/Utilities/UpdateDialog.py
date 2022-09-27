@@ -9,7 +9,7 @@ import json, urllib
 from thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
-	BRANCH = 'expanded_dat_files' # Default to `master` branch, but can be update for long-lived branches
+	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
 	def check_update(window, program):
