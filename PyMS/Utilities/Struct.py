@@ -1,7 +1,7 @@
 
 from .PyMSError import PyMSError
 
-import struct
+import struct, sys
 
 class Endian:
 	native = '@'
@@ -11,6 +11,11 @@ class Endian:
 	network = '!'
 
 class Type:
+	FLOAT_MIN = None # type: float
+	FLOAT_MAX = None # type: float
+	DOUBLE_MIN = None # type: float
+	DOUBLE_MAX = None # type: float
+
 	@staticmethod
 	def format(char, count):
 		if count == 1:
@@ -71,7 +76,51 @@ class Type:
 
 	@staticmethod
 	def str_pascal(count):
-		return Type.format('p', count)
+		return Type.format('p', count) 
+
+	@staticmethod
+	def size(type):
+		return struct.calcsize(type)
+
+	@staticmethod
+	def numeric_limits(type): # type: (str) -> tuple[int, int]
+		if type == 'f':
+			if Type.FLOAT_MIN == None:
+				Type.FLOAT_MIN = struct.unpack('>f', b'\xff\x7f\xff\xff')
+				Type.FLOAT_MAX = struct.unpack('>f', b'\x7f\x7f\xff\xff')
+			return (Type.FLOAT_MIN, Type.FLOAT_MAX)
+		elif type == 'd':
+			if Type.DOUBLE_MIN == None:
+				Type.DOUBLE_MAX = struct.unpack('>d', b'\x7f\xef\xff\xff\xff\xff\xff\xff')
+				Type.DOUBLE_MIN = struct.unpack('>d', b'\xff\xef\xff\xff\xff\xff\xff\xff')
+			return (Type.DOUBLE_MIN, Type.DOUBLE_MAX)
+		elif type in 'sp':
+			type = Type.char()
+		min = 0
+		max = 2 ** Type.size(type)
+		if type.isupper():
+			min = -max/2
+			max = max/2 - 1
+		else:
+			max -= 1
+		return (min, max)
+
+class Value:
+	@staticmethod
+	def unpack(data, type, offset=0, endian=Endian.little): # type: (bytes, str, int, str) -> Any
+		size = struct.calcsize(type)
+		if len(data) < offset + size:
+			raise PyMSError('Value', 'Not enough data (expected %d, got %d)' % (size, len(data) - offset))
+		result = struct.unpack(endian + type, data[offset:offset + size])
+		if len(result) == 1:
+			return result[-1]
+		return result
+
+	@staticmethod
+	def pack(value, type, endian=Endian.little): # type: (Any, str, str) -> bytes
+		if not isinstance(value, tuple):
+			value = (value,)
+		return struct.pack(endian + type, *value)
 
 class Struct(object):
 	_endian = Endian.little
