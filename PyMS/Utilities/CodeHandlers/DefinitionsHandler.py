@@ -92,7 +92,8 @@ class DefinitionsHandler(object):
 					raise PyMSError('Parse', "Expected integer value but got '%s'" % token.raw_value, line=lexer.line)
 				value = type.parse(token.raw_value)
 				self.set_variable(name, value, type)
-				if not lexer.expect_token((NewlineToken, EOFToken)):
+				token = lexer.next_token()
+				if not isinstance(token, (NewlineToken, EOFToken)):
 					raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
 				continue
 			if isinstance(token, DefinitionsHandler.SymbolToken) and token.raw_value == '@':
@@ -114,7 +115,8 @@ class DefinitionsHandler(object):
 				token = lexer.next_token()
 				if not isinstance(token, DefinitionsHandler.SymbolToken) or not token.raw_value == ')':
 					raise PyMSError('Parse', "Expected end brace ')' but got '%s'" % token.raw_value, line=lexer.line)
-				if not lexer.expect_token((NewlineToken, EOFToken)):
+				token = lexer.next_token()
+				if not isinstance(token, (NewlineToken, EOFToken)):
 					raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
 				continue
 			if isinstance(token, NewlineToken):

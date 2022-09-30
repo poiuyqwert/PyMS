@@ -72,6 +72,17 @@ class CodeCommand(object):
 			result += param_type.serialize(param, context)
 		return result
 
+	@classmethod
+	def parse(cls, lexer): # type: (_Lexer.Lexer) -> Self
+		# TODO: Support braces?
+		params = []
+		for param_type in cls._param_types:
+			params.append(param_type.lex(lexer))
+		token = lexer.next_token()
+		if not isinstance(token, (_Lexer.NewlineToken, _Lexer.EOFToken)):
+			raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
+		return cls(params)
+
 class CodeType(object):
 	_name = None # type: str
 	_bytecode_type = None # type: str
@@ -102,7 +113,7 @@ class CodeType(object):
 		raise NotImplementedError(cls.__name__ + '.parse()')
 
 class IntCodeType(CodeType):
-	_limits = (0,0) # type: tuple[int, int]
+	_limits = None # type: tuple[int, int]
 
 	@classmethod
 	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any

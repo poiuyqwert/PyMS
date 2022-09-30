@@ -16,7 +16,7 @@ class Lexer(object):
 		if skip:
 			self.skip_tokens.append(token_type)
 		if token_type == NewlineToken:
-			self.line = 1
+			self.line = 0 # TODO: PyMSError currently expects 0-indexed lines and reports them as 1-indexed
 
 	def next_token(self): # type: () -> Token
 		token = None
@@ -50,10 +50,6 @@ class Lexer(object):
 		if token:
 			self.offset += len(token.raw_value)
 		return token
-
-	def expect_token(self, token_types): # type: (list[Type[Token]]) -> (Token | None)
-		token = self.next_token()
-		return type(token) in token_types
 
 	# Read all tokens as a string until EOF or the `stop` callback returns `True`
 	def read_open_string(self, stop): # type: (Callable[Token, bool]) -> StringToken
@@ -132,4 +128,4 @@ class UnknownToken(RegexToken):
 	_regexp = re.compile(r'\s+|\S+')
 
 class BooleanToken(RegexToken):
-	_regexp = re.compile(r'true|false')
+	_regexp = re.compile(r'true|false|1|0')

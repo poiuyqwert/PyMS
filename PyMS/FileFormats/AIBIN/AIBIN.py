@@ -104,6 +104,8 @@ class _AIBIN(object):
 				token = lexer.next_token()
 				if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
 					break
+				if not isinstance(token, IdentifierToken):
+					raise PyMSError('Parse', "Expected a script header command, got '%s' instead" % token.raw_value, line=lexer.line)
 			# TODO: Validate header
 			return script_header
 		while True:

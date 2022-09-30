@@ -7,6 +7,7 @@ from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ...Utilities.CodeHandlers.ParseContext import ParseContext
 from ...Utilities.CodeHandlers.Lexer import *
+from ...Utilities.CodeHandlers.SourceCodeHandler import SourceCodeHandler
 
 import re
 
@@ -741,7 +742,7 @@ class AIByteCodeHandler(ByteCodeHandler):
 
 class AILexer(Lexer):
 	class SymbolToken(LiteralsToken):
-		_literals = ('=', '@', '(', ')', ',', '{', '}')
+		_literals = (':', '=', '@', '(', ')', ',', '{', '}')
 
 	class ScriptIDToken(RegexToken):
 		_regexp = re.compile(r'\S{4}')
@@ -756,3 +757,226 @@ class AILexer(Lexer):
 		self.register_token_type(IdentifierToken)
 		self.register_token_type(StringToken)
 		self.register_token_type(NewlineToken)
+
+class BinFileCodeType(EnumCodeType):
+	_name = 'bin_file'
+	_cases = {
+		'aiscript': 0,
+		'bwscript': 1
+	}
+
+class HeaderScriptName(CodeCommand):
+	_name = 'script_name'
+	_param_types = [StringCodeType]
+
+class HeaderBinFile(CodeCommand):
+	_name = 'bin_file'
+	_param_types = [BinFileCodeType]
+
+class BroodwarOnly(CodeCommand):
+	_name = 'broodwar_only'
+	_param_types = [BooleanToken]
+
+class StarEditHidden(CodeCommand):
+	_name = 'staredit_hidden'
+	_param_types = [BooleanToken]
+
+class RequiresLocation(CodeCommand):
+	_name = 'requires_location'
+	_param_types = [BooleanToken]
+
+class EntryPoint(CodeCommand):
+	_name = 'requires_location'
+	_param_types = [BlockCodeType]
+
+class AIHeaderSourceCodeHandler(SourceCodeHandler):
+	class AIScriptHeader(object):
+		def __init__(self):
+			self.string = None
+			self.bwscript = None
+			self.broodwar_only = None
+			self.staredit_hidden = None
+			self.requires_location = None
+			self.entry_point = None
+
+	def __init__(self, lexer): # type: (AILexer) -> AIHeaderSourceCodeHandler
+		SourceCodeHandler.__init__(self, lexer)
+		self.register_command(HeaderScriptName)
+		self.register_command(HeaderBinFile)
+		self.register_command(BroodwarOnly)
+		self.register_command(StarEditHidden)
+		self.register_command(RequiresLocation)
+		self.register_command(EntryPoint)
+
+	def parse(self): # type: () -> AIHeaderSourceCodeHandler.AIScriptHeader
+		script_header = AIHeaderSourceCodeHandler.AIScriptHeader()
+		token = self.lexer.next_token()
+		if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
+			raise PyMSError('Parse', "Expected a '{' to start the script header, got '%s' instead" % token.raw_value, line=self.lexer.line)
+		while True:
+			token = self.lexer.next_token()
+			if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
+				break
+			if not isinstance(token, IdentifierToken):
+				raise PyMSError('Parse', "Expected a script header command, got '%s' instead" % token.raw_value, line=self.lexer.line)
+			command = self.parse_command(token)
+			if isinstance(command, HeaderScriptName):
+				# TODO: Overwrite warning
+				script_header.string = command.params[0]
+			elif isinstance(command, HeaderBinFile):
+				# TODO: Overwrite warning
+				script_header.bwscript = command.params[0]
+			elif isinstance(command, BroodwarOnly):
+				# TODO: Overwrite warning
+				script_header.broodwar_only = command.params[0]
+			elif isinstance(command, StarEditHidden):
+				# TODO: Overwrite warning
+				script_header.staredit_hidden = command.params[0]
+			elif isinstance(command, RequiresLocation):
+				# TODO: Overwrite warning
+				script_header.requires_location = command.params[0]
+			elif isinstance(command, EntryPoint):
+				# TODO: Overwrite warning
+				script_header.entry_point = command.params[0]
+			token = self.lexer.next_token()
+			if not isinstance(token, NewlineToken):
+				raise PyMSError('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value, line=self.lexer.line)
+		return script_header
+
+class AISourceCodeHandler(SourceCodeHandler):
+	def __init__(self, lexer): # type: (AILexer) -> AISourceCodeHandler
+		SourceCodeHandler.__init__(self, lexer)
+		self.script_headers = {} # type: dict[str, tuple[AIHeaderSourceCodeHandler.AIScriptHeader, int]]
+		self.register_command(Goto)
+		self.register_command(NoTownsJump)
+		self.register_command(Wait)
+		self.register_command(StartTown)
+		self.register_command(StartAreaTown)
+		self.register_command(Expand)
+		self.register_command(Build)
+		self.register_command(Upgrade)
+		self.register_command(Tech)
+		self.register_command(WaitBuild)
+		self.register_command(WaitBuildStart)
+		self.register_command(AttackClear)
+		self.register_command(AttackAdd)
+		self.register_command(AttackPrepare)
+		self.register_command(AttackDo)
+		self.register_command(WaitSecure)
+		self.register_command(CaptExpand)
+		self.register_command(BuildBunkers)
+		self.register_command(WaitBunkers)
+		self.register_command(DefenseBuildGG)
+		self.register_command(DefenseBuildAG)
+		self.register_command(DefenseBuildGA)
+		self.register_command(DefenseBuildAA)
+		self.register_command(DefenseUseGG)
+		self.register_command(DefenseUseAG)
+		self.register_command(DefenseUseGA)
+		self.register_command(DefenseUseAA)
+		self.register_command(DefenseClearGG)
+		self.register_command(DefenseClearAG)
+		self.register_command(DefenseClearGA)
+		self.register_command(DefenseClearAA)
+		self.register_command(SendSuicide)
+		self.register_command(PlayerEnemy)
+		self.register_command(PlayerAlly)
+		self.register_command(DefaultMin)
+		self.register_command(DefaultBuildOff)
+		self.register_command(Stop)
+		self.register_command(SwitchRescue)
+		self.register_command(MoveDT)
+		self.register_command(Debug)
+		self.register_command(FatalError)
+		self.register_command(EnterBunker)
+		self.register_command(ValueArea)
+		self.register_command(TransportsOff)
+		self.register_command(CheckTransports)
+		self.register_command(NukeRate)
+		self.register_command(MaxForce)
+		self.register_command(ClearCombatData)
+		self.register_command(RandomJump)
+		self.register_command(TimeJump)
+		self.register_command(FarmsNoTiming)
+		self.register_command(FarmsTiming)
+		self.register_command(BuildTurrets)
+		self.register_command(WaitTurrets)
+		self.register_command(DefaultBuild)
+		self.register_command(HarassFactor)
+		self.register_command(StartCampaign)
+		self.register_command(RaceJump)
+		self.register_command(RegionSize)
+		self.register_command(GetOldPeons)
+		self.register_command(GroundMapJump)
+		self.register_command(PlaceGuard)
+		self.register_command(WaitForce)
+		self.register_command(GuardResources)
+		self.register_command(Call)
+		self.register_command(Return)
+		self.register_command(EvalHarass)
+		self.register_command(Creep)
+		self.register_command(Panic)
+		self.register_command(PlayerNeed)
+		self.register_command(DoMorph)
+		self.register_command(WaitUpgrades)
+		self.register_command(MultiRun)
+		self.register_command(Rush)
+		self.register_command(ScoutWith)
+		self.register_command(DefineMax)
+		self.register_command(Train)
+		self.register_command(TargetExpansion)
+		self.register_command(WaitTrain)
+		self.register_command(SetAttacks)
+		self.register_command(SetGenCMD)
+		self.register_command(MakePatrol)
+		self.register_command(GiveMoney)
+		self.register_command(PrepDown)
+		self.register_command(ResourcesJump)
+		self.register_command(EnterTransport)
+		self.register_command(ExitTransport)
+		self.register_command(SharedVisionOn)
+		self.register_command(SharedVisionOff)
+		self.register_command(NukeLocation)
+		self.register_command(HarassLocation)
+		self.register_command(Implode)
+		self.register_command(GuardAll)
+		self.register_command(EnemyownsJump)
+		self.register_command(EnemyResourcesJump)
+		self.register_command(IfDif)
+		self.register_command(EasyAttack)
+		self.register_command(KillThread)
+		self.register_command(Killable)
+		self.register_command(WaitFinishAttack)
+		self.register_command(QuickAttack)
+		self.register_command(JunkyardDog)
+		self.register_command(FakeNuke)
+		self.register_command(DisruptionWeb)
+		self.register_command(RecallLocation)
+		self.register_command(SetRandomSeed)
+		self.register_command(IfOwned)
+		self.register_command(CreateNuke)
+		self.register_command(CreateUnit)
+		self.register_command(NukePos)
+		self.register_command(HelpIfTrouble)
+		self.register_command(AlliesWatch)
+		self.register_command(TryTownPoint)
+		self.register_command(IfTowns)
+
+	def parse_custom(self, token):
+		if isinstance(token, IdentifierToken) and token.raw_value == 'script':
+			token = self.lexer.get_token(AILexer.ScriptIDToken)
+			if not isinstance(token, AILexer.ScriptIDToken):
+				raise PyMSError('Parse', "Expected script ID, got '%s' instead" % token.raw_value, line=self.lexer.line)
+			line = self.lexer.line
+			script_id = token.raw_value
+			if script_id in self.script_headers:
+				_,existing_line = self.script_headers[script_id]
+				raise PyMSError('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line), line=self.lexer.line)
+			code_handler = AIHeaderSourceCodeHandler(self.lexer)
+			script_header = code_handler.parse()
+			# TODO: Validate header
+			if not script_header.entry_point:
+				raise PyMSError('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id, line=self.lexer.line)
+			self.script_headers[script_id] = (script_header, line)
+			return True
+		return False

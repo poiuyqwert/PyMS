@@ -8,7 +8,7 @@ from ..PyMSError import PyMSError
 class ByteCodeHandler(object):
 	def __init__(self, data): # type: (bytes) -> ByteCodeHandler
 		self.data = data
-		self.cmd_defs = {} # type: dict[type, Type[CodeCommand]]
+		self.cmd_defs = {} # type: dict[int, Type[CodeCommand]]
 		self.block_refs = {} # type: dict[int, CodeBlock]
 		self.cmd_refs = {} # type: dict[int, tuple[CodeBlock, CodeCommand]]
 
