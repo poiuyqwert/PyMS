@@ -79,8 +79,8 @@ class Type:
 		return Type.format('p', count) 
 
 	@staticmethod
-	def size(type):
-		return struct.calcsize(type)
+	def size(type, endian=Endian.little):
+		return struct.calcsize(endian + type)
 
 	@staticmethod
 	def numeric_limits(type): # type: (str) -> tuple[int, int]
@@ -108,7 +108,7 @@ class Type:
 class Value:
 	@staticmethod
 	def unpack(data, type, offset=0, endian=Endian.little): # type: (bytes, str, int, str) -> Any
-		size = struct.calcsize(type)
+		size = struct.calcsize(endian + type)
 		if len(data) < offset + size:
 			raise PyMSError('Value', 'Not enough data (expected %d, got %d)' % (size, len(data) - offset))
 		result = struct.unpack(endian + type, data[offset:offset + size])
