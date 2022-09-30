@@ -40,7 +40,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 				name = '%s %s%sbmp' % (bmpname, str(n).zfill(3), os.extsep)
 				if not mute:
 					print("Writing BMP '%s'..." % name)
-				out.load_data(frame)
+				out.set_pixels(frame)
 				out.save_file(os.path.join(path,name))
 				if not mute:
 					print(" - '%s' written succesfully" % name)
