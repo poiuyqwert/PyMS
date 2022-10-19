@@ -2,6 +2,7 @@
 from . import SerializeContext
 from .Scanner import Scanner
 from . import Lexer as _Lexer
+from .ParseContext import ParseContext, CommandParamBlockReferenceResolver
 
 from .. import Struct
 from ..PyMSError import PyMSError
@@ -47,6 +48,7 @@ class CodeCommand(object):
 	_param_types = [] # type: list[Type[CodeType]]
 	_ends_flow = False
 	_separate = False
+	_ephemeral = False # Command is ephemeral, so will not take part in things like block reference resolving
 
 	def __init__(self, params): # type: (list[CodeType], int | None) -> None
 		self.params = params
@@ -73,15 +75,28 @@ class CodeCommand(object):
 		return result
 
 	@classmethod
-	def parse(cls, lexer): # type: (_Lexer.Lexer) -> Self
+	def parse(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Self
 		# TODO: Support braces?
 		params = []
-		for param_type in cls._param_types:
-			params.append(param_type.lex(lexer))
+		missing_blocks = [] # type: tuple[str, int, int | None]
+		for param_index,param_type in enumerate(cls._param_types):
+			value = param_type.lex(lexer, parse_context)
+			if issubclass(param_type, AddressCodeType):
+				block = parse_context.lookup_block(value)
+				if not block:
+					missing_blocks.append((value, param_index, lexer.line))
+				else:
+					value = block
+			params.append(value)
 		token = lexer.next_token()
 		if not isinstance(token, (_Lexer.NewlineToken, _Lexer.EOFToken)):
 			raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
-		return cls(params)
+		cmd = cls(params)
+		if not cls._ephemeral:
+			for block_name,param_index,source_line in missing_blocks:
+				parse_context.missing_block(block_name, CommandParamBlockReferenceResolver(cmd, param_index, source_line))
+		return cmd
+
 
 class CodeType(object):
 	_name = None # type: str
@@ -105,25 +120,25 @@ class CodeType(object):
 		return str(value)
 
 	@classmethod
-	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
 		raise NotImplementedError(cls.__name__ + '.lex()')
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> Any
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> Any
 		raise NotImplementedError(cls.__name__ + '.parse()')
 
 class IntCodeType(CodeType):
 	_limits = None # type: tuple[int, int]
 
 	@classmethod
-	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
 		token = lexer.next_token()
 		if not isinstance(token, _Lexer.IntegerToken):
 			raise PyMSError('Parse', "Expected integer value but got '%s'" % token.raw_value, line=lexer.line)
-		return cls.parse(token.raw_value)
+		return cls.parse(token.raw_value, parse_context)
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> Any
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> Any
 		try:
 			num = int(token)
 		except:
@@ -140,14 +155,14 @@ class IntCodeType(CodeType):
 
 class FloatCodeType(CodeType):
 	@classmethod
-	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
 		token = lexer.next_token()
 		if not isinstance(token, _Lexer.FloatToken):
 			raise PyMSError('Parse', "Expected float value but got '%s'" % token.raw_value, line=lexer.line)
-		return cls.parse(token.raw_value)
+		return cls.parse(token.raw_value, parse_context)
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> Any
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> Any
 		try:
 			num = float(token)
 		except:
@@ -166,7 +181,16 @@ class AddressCodeType(CodeType):
 	def serialize(cls, block, context): # type: (CodeBlock, SerializeContext.SerializeContext) -> str
 		return context.block_label(block)
 	
-	# TODO: Lex and parse
+	@classmethod
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
+		token = lexer.next_token()
+		if not isinstance(token, _Lexer.IdentifierToken):
+			raise PyMSError('Parse', "Expected block label identifier but got '%s'" % token.raw_value, line=lexer.line)
+		return cls.parse(token.raw_value, parse_context)
+
+	@classmethod
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> str
+		return token # TODO: Should this do logic of converting to CodeBlock if the block has already been parsed?
 
 class StrCodeType(CodeType):
 	@classmethod
@@ -185,14 +209,14 @@ class StrCodeType(CodeType):
 		return result
 
 	@classmethod
-	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
 		token = lexer.next_token()
 		if not isinstance(token, _Lexer.StringToken):
 			raise PyMSError('Parse', "Expected string value but got '%s'" % token.raw_value, line=lexer.line)
-		return cls.parse(token.raw_value)
+		return cls.parse(token.raw_value, parse_context)
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> str
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> str
 		import ast
 		try:
 			string = ast.literal_eval(token)
@@ -200,6 +224,7 @@ class StrCodeType(CodeType):
 				raise Exception()
 		except:
 			PyMSError('Parse', "Value '%s' is not a valid string" % token)
+		return string
 
 class EnumCodeType(IntCodeType):
 	_cases = {} # type: dict[str, int]
@@ -218,14 +243,28 @@ class EnumCodeType(IntCodeType):
 		raise PyMSError('Serialize', "Value '%s' has no case for '%s'" % (value, cls._name))
 
 	@classmethod
-	def lex(cls, lexer): # type: (_Lexer.Lexer) -> Any
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
 		token = lexer.next_token()
 		if not isinstance(token, _Lexer.IdentifierToken):
 			raise PyMSError('Parse', "Expected an enum identifier but got '%s'" % token.raw_value, line=lexer.line)
-		return cls.parse(token.raw_value)
+		return cls.parse(token.raw_value, parse_context)
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> int
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> int
 		if not token in cls._cases:
 			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s'" % (token, cls._name))
 		return cls._cases[token]
+
+class BooleanCodeType(IntCodeType):
+	_limits = (0, 1)
+
+	@classmethod
+	def lex(cls, lexer, parse_context): # type: (_Lexer.Lexer, ParseContext) -> Any
+		token = lexer.next_token()
+		if not isinstance(token, _Lexer.BooleanToken) and not isinstance(token, _Lexer.IntegerToken):
+			raise PyMSError('Parse', "Expected a boolean but got '%s'" % token.raw_value, line=lexer.line)
+		return cls.parse(token.raw_value, parse_context)
+
+	@classmethod
+	def parse(cls, token, parse_context): # type: (str, ParseContext) -> int
+		return token == 'true' or token == '1'

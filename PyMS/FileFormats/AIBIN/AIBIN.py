@@ -1,5 +1,5 @@
 
-from AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AILexer
+from AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler
 
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
@@ -89,32 +89,6 @@ class _AIBIN(object):
 			raise PyMSError('Decompile', "The script with ID '%s' is not in %s" % self.FILE_NAME)
 		return self.entry_points[script_id].serialize(serialize_context)
 
-	def compile(self, code, parse_context): # type: (str, AIParseContext) -> list[PyMSWarning]
-		lexer = AILexer(code)
-		def parse_script_header():
-			token = lexer.get_token(AILexer.ScriptIDToken)
-			if not isinstance(token, AILexer.ScriptIDToken):
-				raise PyMSError('Parse', "Expected script ID, got '%s' instead" % token.raw_value, line=lexer.line)
-			script_header = AIScriptHeader()
-			script_header.id = token.raw_value
-			token = lexer.next_token()
-			if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
-				raise PyMSError('Parse', "Expected a '{' to start the script header, got '%s' instead" % token.raw_value, line=lexer.line)
-			while True:
-				token = lexer.next_token()
-				if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
-					break
-				if not isinstance(token, IdentifierToken):
-					raise PyMSError('Parse', "Expected a script header command, got '%s' instead" % token.raw_value, line=lexer.line)
-			# TODO: Validate header
-			return script_header
-		while True:
-			token = lexer.next_token()
-			if isinstance(token, IdentifierToken) and token.raw_value == 'script':
-				script_header = parse_script_header()
-				continue
-			
-
 class BWBIN(_AIBIN):
 	ScriptHeader = BWScriptHeader
 	FILE_NAME = 'bwscript.bin'
@@ -177,3 +151,8 @@ class AIBIN(_AIBIN):
 			else:
 				result += self.decompile_blocks(script_id, serialize_context)
 		return result
+
+	def compile(self, code, parse_context): # type: (str, AIParseContext) -> list[PyMSWarning]
+		lexer = AILexer(code)
+		source_handler = AISourceCodeHandler(lexer)
+		source_handler.parse(parse_context)

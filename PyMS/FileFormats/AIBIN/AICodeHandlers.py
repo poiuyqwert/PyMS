@@ -5,7 +5,7 @@ from ...Utilities.CodeHandlers.CodeDefs import *
 from ...Utilities.CodeHandlers.ByteCodeHandler import ByteCodeHandler
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
-from ...Utilities.CodeHandlers.ParseContext import ParseContext
+from ...Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceResolver
 from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities.CodeHandlers.SourceCodeHandler import SourceCodeHandler
 
@@ -765,29 +765,43 @@ class BinFileCodeType(EnumCodeType):
 		'bwscript': 1
 	}
 
-class HeaderScriptName(CodeCommand):
-	_name = 'script_name'
+class HeaderNameString(CodeCommand):
+	_name = 'name_string'
 	_param_types = [StringCodeType]
+	_ephemeral = True
 
 class HeaderBinFile(CodeCommand):
 	_name = 'bin_file'
 	_param_types = [BinFileCodeType]
+	_ephemeral = True
 
 class BroodwarOnly(CodeCommand):
 	_name = 'broodwar_only'
-	_param_types = [BooleanToken]
+	_param_types = [BooleanCodeType]
+	_ephemeral = True
 
 class StarEditHidden(CodeCommand):
 	_name = 'staredit_hidden'
-	_param_types = [BooleanToken]
+	_param_types = [BooleanCodeType]
+	_ephemeral = True
 
 class RequiresLocation(CodeCommand):
 	_name = 'requires_location'
-	_param_types = [BooleanToken]
+	_param_types = [BooleanCodeType]
+	_ephemeral = True
 
 class EntryPoint(CodeCommand):
-	_name = 'requires_location'
+	_name = 'entry_point'
 	_param_types = [BlockCodeType]
+	_ephemeral = True
+
+class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
+	def __init__(self, header, source_line): # type: (AIHeaderSourceCodeHandler.AIScriptHeader, int | None) -> AIHeaderEntryPointBlockReferenceResolver
+		BlockReferenceResolver.__init__(self, source_line)
+		self.header = header
+
+	def block_defined(self, block):
+		self.header.entry_point = block
 
 class AIHeaderSourceCodeHandler(SourceCodeHandler):
 	class AIScriptHeader(object):
@@ -801,26 +815,30 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 
 	def __init__(self, lexer): # type: (AILexer) -> AIHeaderSourceCodeHandler
 		SourceCodeHandler.__init__(self, lexer)
-		self.register_command(HeaderScriptName)
+		self.register_command(HeaderNameString)
 		self.register_command(HeaderBinFile)
 		self.register_command(BroodwarOnly)
 		self.register_command(StarEditHidden)
 		self.register_command(RequiresLocation)
 		self.register_command(EntryPoint)
 
-	def parse(self): # type: () -> AIHeaderSourceCodeHandler.AIScriptHeader
+	def parse(self, parse_context): # type: (ParseContext) -> AIHeaderSourceCodeHandler.AIScriptHeader
 		script_header = AIHeaderSourceCodeHandler.AIScriptHeader()
 		token = self.lexer.next_token()
 		if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
 			raise PyMSError('Parse', "Expected a '{' to start the script header, got '%s' instead" % token.raw_value, line=self.lexer.line)
+		token = self.lexer.next_token()
+		if not isinstance(token, NewlineToken):
+			raise PyMSError('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value, line=self.lexer.line)
 		while True:
 			token = self.lexer.next_token()
+			line = self.lexer.line
 			if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
 				break
 			if not isinstance(token, IdentifierToken):
 				raise PyMSError('Parse', "Expected a script header command, got '%s' instead" % token.raw_value, line=self.lexer.line)
-			command = self.parse_command(token)
-			if isinstance(command, HeaderScriptName):
+			command = self.parse_command(token, parse_context)
+			if isinstance(command, HeaderNameString):
 				# TODO: Overwrite warning
 				script_header.string = command.params[0]
 			elif isinstance(command, HeaderBinFile):
@@ -838,9 +856,8 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 			elif isinstance(command, EntryPoint):
 				# TODO: Overwrite warning
 				script_header.entry_point = command.params[0]
-			token = self.lexer.next_token()
-			if not isinstance(token, NewlineToken):
-				raise PyMSError('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value, line=self.lexer.line)
+				if not isinstance(script_header.entry_point, BlockCodeType):
+					parse_context.missing_block(script_header.entry_point, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
 		return script_header
 
 class AISourceCodeHandler(SourceCodeHandler):
@@ -962,7 +979,7 @@ class AISourceCodeHandler(SourceCodeHandler):
 		self.register_command(TryTownPoint)
 		self.register_command(IfTowns)
 
-	def parse_custom(self, token):
+	def parse_custom(self, token, parse_context): # type: (Token, ParseContext) -> bool
 		if isinstance(token, IdentifierToken) and token.raw_value == 'script':
 			token = self.lexer.get_token(AILexer.ScriptIDToken)
 			if not isinstance(token, AILexer.ScriptIDToken):
@@ -973,7 +990,7 @@ class AISourceCodeHandler(SourceCodeHandler):
 				_,existing_line = self.script_headers[script_id]
 				raise PyMSError('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line), line=self.lexer.line)
 			code_handler = AIHeaderSourceCodeHandler(self.lexer)
-			script_header = code_handler.parse()
+			script_header = code_handler.parse(parse_context)
 			# TODO: Validate header
 			if not script_header.entry_point:
 				raise PyMSError('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id, line=self.lexer.line)

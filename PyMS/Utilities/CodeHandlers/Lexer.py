@@ -42,6 +42,14 @@ class Lexer(object):
 	def get_token(self, token_type): # type: (Type[Token]) -> Token
 		if self.offset == len(self.code):
 			return EOFToken()
+		while True:
+			for skip_token_type in self.skip_tokens:
+				token = skip_token_type.match(self.code, self.offset) # type: Token
+				if token:
+					self.offset += len(token.raw_value)
+					break
+			else:
+				break
 		token = token_type.match(self.code, self.offset)
 		if not token:
 			token = UnknownToken.match(self.code, self.offset)
