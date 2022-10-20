@@ -54,6 +54,7 @@ class PyDAT(MainWindow):
 		setup_trace('PyDAT', self)
 
 		self.data_context = DataContext()
+		load_theme(self.data_context.settings.get('theme', 'dark'), self)
 	
 		self.updates = []
 		self.update_after_id = None

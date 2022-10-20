@@ -65,6 +65,7 @@ class PyICE(MainWindow):
 		ga.set_application('PyICE', Assets.version('PyICE'))
 		ga.track(GAScreen('PyICE'))
 		setup_trace('PyICE', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.file = None
 		self.ibin = None

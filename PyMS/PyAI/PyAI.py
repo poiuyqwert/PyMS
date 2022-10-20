@@ -58,6 +58,7 @@ class PyAI(MainWindow):
 		ga.set_application('PyAI', Assets.version('PyAI'))
 		ga.track(GAScreen('PyAI'))
 		setup_trace('PyAI', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.aiscript = None
 		self.bwscript = None

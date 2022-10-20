@@ -298,6 +298,7 @@ class PyFNT(MainWindow):
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
 		setup_trace('PyFNT', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.fnt = None

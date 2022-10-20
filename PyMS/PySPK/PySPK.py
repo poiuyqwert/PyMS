@@ -53,6 +53,7 @@ class PySPK(MainWindow):
 		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
 		setup_trace('PySPK', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.minsize(870, 547)
 		self.maxsize(1000, 547)

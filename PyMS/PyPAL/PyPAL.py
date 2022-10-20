@@ -30,6 +30,7 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.palette = None

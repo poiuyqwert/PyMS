@@ -52,6 +52,7 @@ class PyGOT(MainWindow):
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
 		setup_trace('PyGOT', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.got = None

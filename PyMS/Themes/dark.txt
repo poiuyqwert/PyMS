@@ -1,0 +1,7 @@
+{
+	"*": {
+		"bg": "#181a1e",
+		"highlightbackground": "#181a1e",
+		"fg": "#cccccc"
+	}
+}

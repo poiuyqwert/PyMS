@@ -297,3 +297,10 @@ def help_image(path): # type: (str) -> (_PhotoImage | None)
 def clear_help_image_cache():
 	global _HELP_IMAGE_CACHE
 	_HELP_IMAGE_CACHE.clear()
+
+## Themes
+
+themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
+
+def theme_file_path(name): # type: (str) -> (str)
+	return _os.path.join(themes_dir, '%s.txt' % name)

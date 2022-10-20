@@ -50,6 +50,7 @@ class PyTRG(MainWindow):
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace('PyTRG', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.trg = None
 		self.file = None

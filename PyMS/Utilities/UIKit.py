@@ -26,3 +26,5 @@ from .EventPattern import *
 
 # TkinterExt wraps some Tkinter widgets to provide extensions
 from .TkinterExt import *
+
+from TkTheme import *

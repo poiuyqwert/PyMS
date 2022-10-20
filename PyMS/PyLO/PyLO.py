@@ -46,6 +46,7 @@ class PyLO(MainWindow):
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace('PyLO', self)
+		load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.lo = None
 		self.file = None
