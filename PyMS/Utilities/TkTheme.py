@@ -8,14 +8,46 @@ except: # Python 3
 import inspect as _inspect
 
 _THEME = [] # type: list[tuple[_Selector, dict[str, str | int]]]
+_WIDGET_TYPES = None
 
+def _resolve_widget_types():
+	global _WIDGET_TYPES
+	_WIDGET_TYPES = {
+		'Tk': _tk.Tk,
+		'Toplevel': TkinterExt.Toplevel,
+		'MainWindow': TkinterExt.MainWindow,
+		'Frame': _tk.Frame,
+		'Button': _tk.Button,
+		'Checkbutton': _tk.Checkbutton,
+		'Radiobutton': _tk.Radiobutton,
+		'Label': _tk.Label,
+		'Text': _tk.Text,
+		'Entry': _tk.Entry,
+		'Canvas': TkinterExt.Canvas,
+		'Listbox': _tk.Listbox,
+		'Menu': TkinterExt.Menu,
+		'Scrollbar': _tk.Scrollbar,
+		'LabelFrame': _tk.LabelFrame,
+		'PanedWindow': _tk.PanedWindow,
+	}
+	from DropDown import DropDown
+	from Toolbar import Toolbar
+	from StatusBar import StatusBar
+	_WIDGET_TYPES.update({
+		'DropDown': DropDown,
+		'Toolbar': Toolbar,
+		'StatusBar': StatusBar
+	})
 
 class _Selector(object):
 	def __init__(self, definition): # type: (str) -> _Selector
+		global _WIDGET_TYPES
+		if _WIDGET_TYPES == None:
+			_resolve_widget_types()
 		self.components = []
 		for component in definition.split(' '):
 			if not component in '**':
-				component = globals()[component]
+				component = _WIDGET_TYPES[component]
 			self.components.insert(0, component)
 
 	def is_default(self):
