@@ -1,5 +1,6 @@
 
-from .CodeDefs import CodeBlock, CodeCommand
+from .CodeBlock import CodeBlock
+from .CodeCommand import CodeCommandDefinition, CodeCommand
 from .Scanner import Scanner
 
 from .. import Struct
@@ -8,11 +9,11 @@ from ..PyMSError import PyMSError
 class ByteCodeHandler(object):
 	def __init__(self, data): # type: (bytes) -> ByteCodeHandler
 		self.data = data
-		self.cmd_defs = {} # type: dict[int, Type[CodeCommand]]
+		self.cmd_defs = {} # type: dict[int, CodeCommandDefinition]
 		self.block_refs = {} # type: dict[int, CodeBlock]
 		self.cmd_refs = {} # type: dict[int, tuple[CodeBlock, CodeCommand]]
 
-	def register_command(self, cmd_def): # type: (Type[CodeCommand]) -> None
+	def register_command(self, cmd_def): # type: (CodeCommandDefinition) -> None
 		if cmd_def._id in self.cmd_defs:
 			raise PyMSError('Internal', "Command with id '%d' ('%s') already exists" % (cmd_def._id, self.cmd_defs[cmd_def._id]._name))
 		self.cmd_defs[cmd_def._id] = cmd_def

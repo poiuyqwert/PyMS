@@ -21,18 +21,18 @@ class DefinitionsHandler(object):
 			self.register_token_type(NewlineToken)
 
 	class Variable(object):
-		def __init__(self, name, value, type): # type: (str, Any, Type[CodeType]) -> DefinitionsHandler.Variable
+		def __init__(self, name, value, type): # type: (str, Any, CodeType) -> DefinitionsHandler.Variable
 			self.name = name
 			self.value = value
 			self.type = type
 
 	def __init__(self):
-		self.types = {} # type: dict[str, Type[CodeType]]
+		self.types = {} # type: dict[str, CodeType]
 		self.variables = {} # type: dict[str, DefinitionsHandler.Variable]
 		self.accepted_annotations = set() # type: set[str]
-		self.annotations = {} # type: dict[tuple(Any, Type[CodeType]), list[str]]
+		self.annotations = {} # type: dict[tuple(Any, CodeType), list[str]]
 
-	def register_type(self, type): # type: (Type[CodeType]) -> None
+	def register_type(self, type): # type: (CodeType) -> None
 		if type._name in self.types:
 			raise PyMSError('Internal', "Type with name '%s' already exists" % type._name)
 		self.types[type._name] = type
@@ -40,25 +40,25 @@ class DefinitionsHandler(object):
 	def register_annotation(self, name): # type: (str) -> None
 		self.accepted_annotations.add(name)
 
-	def set_variable(self, name, value, type): # type: (str, Any, Type[CodeType]) -> None
+	def set_variable(self, name, value, type): # type: (str, Any, CodeType) -> None
 		self.variables[name] = DefinitionsHandler.Variable(name, value, type)
 
 	def get_variable(self, name): # type: (str) -> (DefinitionsHandler.Variable | None)
 		return self.variables.get(name, None)
 
-	def lookup_variable(self, value, type): # type: (Any, Type[CodeType]) -> (DefinitionsHandler.Variable | None)
+	def lookup_variable(self, value, type): # type: (Any, CodeType) -> (DefinitionsHandler.Variable | None)
 		for variable in self.variables.values():
 			if variable.type == type and variable.value == value:
 				return variable
 		return None
 
-	def set_annotation(self, annotation_name, value, type): # type: (str, Any, Type[CodeType]) -> None
+	def set_annotation(self, annotation_name, value, type): # type: (str, Any, CodeType) -> None
 			annotation_info = (value, type)
 			if not annotation_info in self.annotations:
 				self.annotations[annotation_info] = []
 			self.annotations[annotation_info].append(annotation_name)
 
-	def get_annotations(self, value, type): # type: (Any, Type[CodeType]) -> list[str]
+	def get_annotations(self, value, type): # type: (Any, CodeType) -> list[str]
 		annotation_info = (value, type)
 		if not annotation_info in self.annotations:
 			return []

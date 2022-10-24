@@ -22,30 +22,29 @@ class AIParseContext(ParseContext):
 		self.data_context = data_context
 
 class ByteCodeType(IntCodeType):
-	_name = 'byte'
-	_bytecode_type = Struct.Type.u8()
+	def __init__(self, name='byte', limits=None): # type: (str, tuple[int, int] | None) -> ByteCodeType
+		IntCodeType.__init__(self, name, Struct.Type.u8(), limits=limits)
 
 class WordCodeType(IntCodeType):
-	_name = 'word'
-	_bytecode_type = Struct.Type.u16()
+	def __init__(self, name='word', limits=None): # type: (str, tuple[int, int] | None) -> WordCodeType
+		IntCodeType.__init__(self, name, Struct.Type.u16(), limits=limits)
 
 class DWordCodeType(IntCodeType):
-	_name = 'dword'
-	_bytecode_type = Struct.Type.u32()
+	def __init__(self, name='dword', limits=None): # type: (str, tuple[int, int] | None) -> DWordCodeType
+		IntCodeType.__init__(self, name, Struct.Type.u32(), limits=limits)
 
 class BlockCodeType(AddressCodeType):
-	_name = 'block'
-	_bytecode_type = Struct.Type.u16()
+	def __init__(self): # type: () -> BlockCodeType
+		AddressCodeType.__init__(self, 'block', Struct.Type.u16())
 
 class UnitCodeType(WordCodeType):
-	_name = 'unit'
-	_limits = (0, 227) # TODO: Expanded DAT
-	# TODO: Custom
+	def __init__(self, name='unit'): # type: (str) -> UnitCodeType
+		# TODO: Expanded DAT
+		WordCodeType.__init__(self, name, limits=(0, 227))
 
-	@classmethod
-	def serialize(cls, value, context): # type: (int, AISerializeContext) -> str
+	def serialize(self, value, context): # type: (int, AISerializeContext) -> str
 		if context.definitions:
-			variable = context.definitions.lookup_variable(value, cls)
+			variable = context.definitions.lookup_variable(value, self)
 			if variable:
 				return variable.name
 		if isinstance(context, AISerializeContext) and context.data_context:
@@ -55,65 +54,74 @@ class UnitCodeType(WordCodeType):
 		return str(value)
 
 class BuildingCodeType(UnitCodeType):
-	_name = 'building'
+	def __init__(self): # type: () -> BuildingCodeType
+		UnitCodeType.__init__(self, 'building')
 	# TODO: Custom
 
 class MilitaryCodeType(UnitCodeType):
-	_name = 'military'
+	def __init__(self, name='military'): # type: (str) -> MilitaryCodeType
+		UnitCodeType.__init__(self, name)
 	# TODO: Custom
 
 class GGMilitaryCodeType(MilitaryCodeType):
-	_name = 'gg_military'
+	def __init__(self): # type: () -> GGMilitaryCodeType
+		MilitaryCodeType.__init__(self, 'gg_military')
 	# TODO: Custom
 
 class GAMilitaryCodeType(MilitaryCodeType):
-	_name = 'ga_military'
+	def __init__(self): # type: () -> GAMilitaryCodeType
+		MilitaryCodeType.__init__(self, 'ga_military')
 	# TODO: Custom
 
 class AGMilitaryCodeType(MilitaryCodeType):
-	_name = 'ag_military'
+	def __init__(self): # type: () -> AGMilitaryCodeType
+		MilitaryCodeType.__init__(self, 'ag_military')
 	# TODO: Custom
 
 class AAMilitaryCodeType(MilitaryCodeType):
-	_name = 'aa_military'
+	def __init__(self): # type: () -> AAMilitaryCodeType
+		MilitaryCodeType.__init__(self, 'aa_military')
 	# TODO: Custom
 
 class UpgradeCodeType(WordCodeType):
-	_name = 'upgrade'
-	_limits = (0, 60) # TODO: Expanded DAT
+	def __init__(self): # type: () -> UpgradeCodeType
+		# TODO: Expanded DAT
+		WordCodeType.__init__(self, 'upgrade', limits=(0, 60))
 	# TODO: Custom
 
 class TechnologyCodeType(WordCodeType):
-	_name = 'technology'
-	_limits = (0, 43) # TODO: Expanded DAT
+	def __init__(self): # type: () -> TechnologyCodeType
+		# TODO: Expanded DAT
+		WordCodeType.__init__(self, 'technology', limits=(0, 43))
 	# TODO: Custom
 
 class StringCodeType(StrCodeType):
-	_name = 'string'
+	def __init__(self): # type: () -> StringCodeType
+		StrCodeType.__init__(self, 'string')
 
 class CompareCodeType(EnumCodeType):
-	_name = 'compare'
-	_bytecode_type = Struct.Type.u8()
-	_cases = {
-		'GreaterThan': 1,
-		'LessThan': 0
-	}
+	def __init__(self): # type: () -> CompareCodeType
+		cases = {
+			'GreaterThan': 1,
+			'LessThan': 0
+		}
+		EnumCodeType.__init__(self, 'compare', Struct.Type.u8(), cases)
 
 class Goto(CodeCommand):
 	_id = 0
 	_name = 'goto'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 	_ends_flow = True
 
 class NoTownsJump(CodeCommand):
 	_id = 1
 	_name = 'notowns_jump'
-	_param_types = [UnitCodeType, BlockCodeType]
+	_param_types = [UnitCodeType(), BlockCodeType()]
 
 class Wait(CodeCommand):
 	_id = 2
 	_name = 'wait'
-	_param_types = [WordCodeType]
+	_param_types = [WordCodeType()]
 	_separate = True
 
 class StartTown(CodeCommand):
@@ -127,32 +135,32 @@ class StartAreaTown(CodeCommand):
 class Expand(CodeCommand):
 	_id = 5
 	_name = 'expand'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class Build(CodeCommand):
 	_id = 6
 	_name = 'build'
-	_param_types = [ByteCodeType, BuildingCodeType, ByteCodeType]
+	_param_types = [ByteCodeType(), BuildingCodeType(), ByteCodeType()]
 
 class Upgrade(CodeCommand):
 	_id = 7
 	_name = 'upgrade'
-	_param_types = [ByteCodeType, UpgradeCodeType, ByteCodeType]
+	_param_types = [ByteCodeType(), UpgradeCodeType(), ByteCodeType()]
 
 class Tech(CodeCommand):
 	_id = 8
 	_name = 'tech'
-	_param_types = [TechnologyCodeType, ByteCodeType]
+	_param_types = [TechnologyCodeType(), ByteCodeType()]
 
 class WaitBuild(CodeCommand):
 	_id = 9
 	_name = 'wait_build'
-	_param_types = [ByteCodeType, BuildingCodeType]
+	_param_types = [ByteCodeType(), BuildingCodeType()]
 
 class WaitBuildStart(CodeCommand):
 	_id = 10
 	_name = 'wait_buildstart'
-	_param_types = [ByteCodeType, UnitCodeType]
+	_param_types = [ByteCodeType(), UnitCodeType()]
 
 class AttackClear(CodeCommand):
 	_id = 11
@@ -161,7 +169,7 @@ class AttackClear(CodeCommand):
 class AttackAdd(CodeCommand):
 	_id = 12
 	_name = 'attack_add'
-	_param_types = [ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), MilitaryCodeType()]
 	
 class AttackPrepare(CodeCommand):
 	_id = 13
@@ -190,42 +198,42 @@ class WaitBunkers(CodeCommand):
 class DefenseBuildGG(CodeCommand):
 	_id = 19
 	_name = 'defensebuild_gg'
-	_param_types = [ByteCodeType, GGMilitaryCodeType]
+	_param_types = [ByteCodeType(), GGMilitaryCodeType()]
 
 class DefenseBuildAG(CodeCommand):
 	_id = 20
 	_name = 'defensebuild_ag'
-	_param_types = [ByteCodeType, AGMilitaryCodeType]
+	_param_types = [ByteCodeType(), AGMilitaryCodeType()]
 
 class DefenseBuildGA(CodeCommand):
 	_id = 21
 	_name = 'defensebuild_ga'
-	_param_types = [ByteCodeType, GAMilitaryCodeType]
+	_param_types = [ByteCodeType(), GAMilitaryCodeType()]
 
 class DefenseBuildAA(CodeCommand):
 	_id = 22
 	_name = 'defensebuild_aa'
-	_param_types = [ByteCodeType, AAMilitaryCodeType]
+	_param_types = [ByteCodeType(), AAMilitaryCodeType()]
 
 class DefenseUseGG(CodeCommand):
 	_id = 23
 	_name = 'defenseuse_gg'
-	_param_types = [ByteCodeType, GGMilitaryCodeType]
+	_param_types = [ByteCodeType(), GGMilitaryCodeType()]
 
 class DefenseUseAG(CodeCommand):
 	_id = 24
 	_name = 'defenseuse_ag'
-	_param_types = [ByteCodeType, AGMilitaryCodeType]
+	_param_types = [ByteCodeType(), AGMilitaryCodeType()]
 
 class DefenseUseGA(CodeCommand):
 	_id = 25
 	_name = 'defenseuse_ga'
-	_param_types = [ByteCodeType, GAMilitaryCodeType]
+	_param_types = [ByteCodeType(), GAMilitaryCodeType()]
 
 class DefenseUseAA(CodeCommand):
 	_id = 26
 	_name = 'defenseuse_aa'
-	_param_types = [ByteCodeType, AAMilitaryCodeType]
+	_param_types = [ByteCodeType(), AAMilitaryCodeType()]
 
 class DefenseClearGG(CodeCommand):
 	_id = 27
@@ -246,7 +254,7 @@ class DefenseClearAA(CodeCommand):
 class SendSuicide(CodeCommand):
 	_id = 31
 	_name = 'send_suicide'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class PlayerEnemy(CodeCommand):
 	_id = 32
@@ -259,7 +267,7 @@ class PlayerAlly(CodeCommand):
 class DefaultMin(CodeCommand):
 	_id = 34
 	_name = 'default_min'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class DefaultBuildOff(CodeCommand):
 	_id = 35
@@ -281,7 +289,7 @@ class MoveDT(CodeCommand):
 class Debug(CodeCommand):
 	_id = 39
 	_name = 'debug'
-	_param_types = [BlockCodeType,StringCodeType]
+	_param_types = [BlockCodeType(),StringCodeType()]
 	_ends_flow = True
 
 class FatalError(CodeCommand):
@@ -307,12 +315,12 @@ class CheckTransports(CodeCommand):
 class NukeRate(CodeCommand):
 	_id = 45
 	_name = 'nuke_rate'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class MaxForce(CodeCommand):
 	_id = 46
 	_name = 'max_force'
-	_param_types = [WordCodeType]
+	_param_types = [WordCodeType()]
 
 class ClearCombatData(CodeCommand):
 	_id = 47
@@ -321,12 +329,12 @@ class ClearCombatData(CodeCommand):
 class RandomJump(CodeCommand):
 	_id = 48
 	_name = 'random_jump'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class TimeJump(CodeCommand):
 	_id = 49
 	_name = 'time_jump'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class FarmsNoTiming(CodeCommand):
 	_id = 50
@@ -351,7 +359,7 @@ class DefaultBuild(CodeCommand):
 class HarassFactor(CodeCommand):
 	_id = 55
 	_name = 'harass_factor'
-	_param_types = [WordCodeType]
+	_param_types = [WordCodeType()]
 
 class StartCampaign(CodeCommand):
 	_id = 56
@@ -360,43 +368,43 @@ class StartCampaign(CodeCommand):
 class RaceJump(CodeCommand):
 	_id = 57
 	_name = 'race_jump'
-	_param_types = [BlockCodeType, BlockCodeType, BlockCodeType]
+	_param_types = [BlockCodeType(), BlockCodeType(), BlockCodeType()]
 	_ends_flow = True
 
 class RegionSize(CodeCommand):
 	_id = 58
 	_name = 'region_size'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class GetOldPeons(CodeCommand):
 	_id = 59
 	_name = 'get_oldpeons'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class GroundMapJump(CodeCommand):
 	_id = 60
 	_name = 'groundmap_jump'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 
 class PlaceGuard(CodeCommand):
 	_id = 61
 	_name = 'place_guard'
-	_param_types = [UnitCodeType, ByteCodeType]
+	_param_types = [UnitCodeType(), ByteCodeType()]
 
 class WaitForce(CodeCommand):
 	_id = 62
 	_name = 'wait_force'
-	_param_types = [ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), MilitaryCodeType()]
 
 class GuardResources(CodeCommand):
 	_id = 63
 	_name = 'guard_resources'
-	_param_types = [MilitaryCodeType]
+	_param_types = [MilitaryCodeType()]
 
 class Call(CodeCommand):
 	_id = 64
 	_name = 'call'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 
 class Return(CodeCommand):
 	_id = 65
@@ -406,27 +414,27 @@ class Return(CodeCommand):
 class EvalHarass(CodeCommand):
 	_id = 66
 	_name = 'eval_harass'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 
 class Creep(CodeCommand):
 	_id = 67
 	_name = 'creep'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class Panic(CodeCommand):
 	_id = 68
 	_name = 'panic'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 
 class PlayerNeed(CodeCommand):
 	_id = 69
 	_name = 'player_need'
-	_param_types = [ByteCodeType,BuildingCodeType]
+	_param_types = [ByteCodeType(),BuildingCodeType()]
 
 class DoMorph(CodeCommand):
 	_id = 70
 	_name = 'do_morph'
-	_param_types = [ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), MilitaryCodeType()]
 
 class WaitUpgrades(CodeCommand):
 	_id = 71
@@ -435,27 +443,27 @@ class WaitUpgrades(CodeCommand):
 class MultiRun(CodeCommand):
 	_id = 72
 	_name = 'multirun'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 
 class Rush(CodeCommand):
 	_id = 73
 	_name = 'rush'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class ScoutWith(CodeCommand):
 	_id = 74
 	_name = 'scout_with'
-	_param_types = [MilitaryCodeType]
+	_param_types = [MilitaryCodeType()]
 
 class DefineMax(CodeCommand):
 	_id = 75
 	_name = 'define_max'
-	_param_types = [ByteCodeType, UnitCodeType]
+	_param_types = [ByteCodeType(), UnitCodeType()]
 
 class Train(CodeCommand):
 	_id = 76
 	_name = 'train'
-	_param_types = [ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), MilitaryCodeType()]
 
 class TargetExpansion(CodeCommand):
 	_id = 77
@@ -464,12 +472,12 @@ class TargetExpansion(CodeCommand):
 class WaitTrain(CodeCommand):
 	_id = 78
 	_name = 'wait_train'
-	_param_types = [ByteCodeType, UnitCodeType]
+	_param_types = [ByteCodeType(), UnitCodeType()]
 
 class SetAttacks(CodeCommand):
 	_id = 79
 	_name = 'set_attacks'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class SetGenCMD(CodeCommand):
 	_id = 80
@@ -486,12 +494,12 @@ class GiveMoney(CodeCommand):
 class PrepDown(CodeCommand):
 	_id = 83
 	_name = 'prep_down'
-	_param_types = [ByteCodeType, ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), ByteCodeType(), MilitaryCodeType()]
 
 class ResourcesJump(CodeCommand):
 	_id = 84
 	_name = 'resources_jump'
-	_param_types = [WordCodeType, WordCodeType, BlockCodeType]
+	_param_types = [WordCodeType(), WordCodeType(), BlockCodeType()]
 
 class EnterTransport(CodeCommand):
 	_id = 85
@@ -504,12 +512,12 @@ class ExitTransport(CodeCommand):
 class SharedVisionOn(CodeCommand):
 	_id = 87
 	_name = 'sharedvision_on'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class SharedVisionOff(CodeCommand):
 	_id = 88
 	_name = 'sharedvision_off'
-	_param_types = [ByteCodeType]
+	_param_types = [ByteCodeType()]
 
 class NukeLocation(CodeCommand):
 	_id = 89
@@ -530,22 +538,22 @@ class GuardAll(CodeCommand):
 class EnemyownsJump(CodeCommand):
 	_id = 93
 	_name = 'enemyowns_jump'
-	_param_types = [UnitCodeType, BlockCodeType]
+	_param_types = [UnitCodeType(), BlockCodeType()]
 
 class EnemyResourcesJump(CodeCommand):
 	_id = 94
 	_name = 'enemyresources_jump'
-	_param_types = [WordCodeType, WordCodeType, BlockCodeType]
+	_param_types = [WordCodeType(), WordCodeType(), BlockCodeType()]
 
 class IfDif(CodeCommand):
 	_id = 95
 	_name = 'if_dif'
-	_param_types = [CompareCodeType, ByteCodeType, BlockCodeType]
+	_param_types = [CompareCodeType(), ByteCodeType(), BlockCodeType()]
 
 class EasyAttack(CodeCommand):
 	_id = 96
 	_name = 'easy_attack'
-	_param_types = [ByteCodeType, MilitaryCodeType]
+	_param_types = [ByteCodeType(), MilitaryCodeType()]
 
 class KillThread(CodeCommand):
 	_id = 97
@@ -583,12 +591,12 @@ class RecallLocation(CodeCommand):
 class SetRandomSeed(CodeCommand):
 	_id = 105
 	_name = 'set_randomseed'
-	_param_types = [DWordCodeType]
+	_param_types = [DWordCodeType()]
 
 class IfOwned(CodeCommand):
 	_id = 106
 	_name = 'if_owned'
-	_param_types = [UnitCodeType,BlockCodeType]
+	_param_types = [UnitCodeType(),BlockCodeType()]
 
 class CreateNuke(CodeCommand):
 	_id = 107
@@ -597,12 +605,12 @@ class CreateNuke(CodeCommand):
 class CreateUnit(CodeCommand):
 	_id = 108
 	_name = 'create_unit'
-	_param_types = [UnitCodeType, WordCodeType, WordCodeType]
+	_param_types = [UnitCodeType(), WordCodeType(), WordCodeType()]
 
 class NukePos(CodeCommand):
 	_id = 109
 	_name = 'nuke_pos'
-	_param_types = [WordCodeType, WordCodeType]
+	_param_types = [WordCodeType(), WordCodeType()]
 
 class HelpIfTrouble(CodeCommand):
 	_id = 110
@@ -611,12 +619,12 @@ class HelpIfTrouble(CodeCommand):
 class AlliesWatch(CodeCommand):
 	_id = 111
 	_name = 'allies_watch'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class TryTownPoint(CodeCommand):
 	_id = 112
 	_name = 'try_townpoint'
-	_param_types = [ByteCodeType, BlockCodeType]
+	_param_types = [ByteCodeType(), BlockCodeType()]
 
 class IfTowns(CodeCommand):
 	_id = 113
@@ -759,40 +767,45 @@ class AILexer(Lexer):
 		self.register_token_type(NewlineToken)
 
 class BinFileCodeType(EnumCodeType):
-	_name = 'bin_file'
-	_cases = {
-		'aiscript': 0,
-		'bwscript': 1
-	}
+	def __init__(self): # type: () -> BinFileCodeType
+		cases = {
+			'aiscript': 0,
+			'bwscript': 1
+		}
+		EnumCodeType.__init__(self, 'bin_file', None, cases)
 
 class HeaderNameString(CodeCommand):
 	_name = 'name_string'
-	_param_types = [StringCodeType]
+	_param_types = [StringCodeType()]
 	_ephemeral = True
 
 class HeaderBinFile(CodeCommand):
 	_name = 'bin_file'
-	_param_types = [BinFileCodeType]
+	_param_types = [BinFileCodeType()]
 	_ephemeral = True
+
+class BoolCodeType(BooleanCodeType):
+	def __init__(self): # type: () -> BoolCodeType
+		BooleanCodeType.__init__(self, 'bool', None)
 
 class BroodwarOnly(CodeCommand):
 	_name = 'broodwar_only'
-	_param_types = [BooleanCodeType]
+	_param_types = [BoolCodeType()]
 	_ephemeral = True
 
 class StarEditHidden(CodeCommand):
 	_name = 'staredit_hidden'
-	_param_types = [BooleanCodeType]
+	_param_types = [BoolCodeType()]
 	_ephemeral = True
 
 class RequiresLocation(CodeCommand):
 	_name = 'requires_location'
-	_param_types = [BooleanCodeType]
+	_param_types = [BoolCodeType()]
 	_ephemeral = True
 
 class EntryPoint(CodeCommand):
 	_name = 'entry_point'
-	_param_types = [BlockCodeType]
+	_param_types = [BlockCodeType()]
 	_ephemeral = True
 
 class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
