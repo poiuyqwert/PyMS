@@ -53,7 +53,7 @@ class Tooltip(object):
 		if is_mac():
 			self.tip.wm_transient(self.parent.winfo_toplevel())
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
-		Label(frame, text=self.text, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+		Label(frame, text=self.text, justify=LEFT, font=self.font, foreground='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
 		pos = list(self.parent.winfo_pointerxy())
 		self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
@@ -61,7 +61,7 @@ class Tooltip(object):
 		move = False
 		if not self.mouse:
 			move = True
-			pos = [self.parent.winfo_rootx() + self.parent.winfo_reqwidth(), self.parent.winfo_rooty() + self.parent.winfo_reqheight()]
+			pos = [rootx(self.parent) + self.parent.winfo_reqwidth(), rooty(self.parent) + self.parent.winfo_reqheight()]
 		if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
 			move = True
 			pos[0] = self.tip.winfo_screenwidth() - self.tip.winfo_reqwidth()

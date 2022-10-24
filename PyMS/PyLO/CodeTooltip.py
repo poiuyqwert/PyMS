@@ -22,7 +22,7 @@ class CodeTooltip(Tooltip):
 		if self.tip:
 			return
 		pos = list(self.parent.winfo_pointerxy())
-		head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
+		head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - rootx(self.parent),pos[1] - rooty(self.parent))))
 		m = RE_COORDINATES.match(self.parent.get(head,tail))
 		if not m:
 			return

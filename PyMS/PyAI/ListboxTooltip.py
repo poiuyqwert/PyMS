@@ -34,7 +34,7 @@ class ListboxTooltip(Tooltip):
 		self.tip.maxsize(640,400)
 		self.tip.wm_overrideredirect(1)
 		pos = list(self.parent.winfo_pointerxy())
-		self.index = self.parent.nearest(pos[1] - self.parent.winfo_rooty())
+		self.index = self.parent.nearest(pos[1] - rooty(self.parent))
 		item = self.parent.get_entry(self.index)
 		id = item[0]
 		flags = ''
