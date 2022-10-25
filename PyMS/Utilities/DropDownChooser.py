@@ -10,6 +10,10 @@ class DropDownChooser(Toplevel):
 		self._typed = ''
 		self._typed_timer = None
 		Toplevel.__init__(self, parent, relief=SOLID, borderwidth=1)
+		self.wm_overrideredirect(1)
+		parent_toplevel = parent.winfo_toplevel()
+		if is_mac():
+			self.transient(parent_toplevel)
 		scrollbar = Scrollbar(self)
 		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), borderwidth=0, font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
 		for e in list:
@@ -41,21 +45,17 @@ class DropDownChooser(Toplevel):
 		if len(list) > 10:
 			scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
-		self.focus_set()
-		self.update_idletasks()
-		y = rooty(self.parent)
-		if y + self.winfo_height() > self.winfo_screenheight():
-			self.geometry('%sx%s+%d+%d' % (self.parent.winfo_width(),self.winfo_height(),rootx(self.parent), y - self.winfo_height()))
-		else:
-			self.geometry('%sx%s+%d+%d' % (self.parent.winfo_width(),self.winfo_height(),rootx(self.parent), y + self.parent.winfo_height()))
-		self.update_idletasks()
-		parent_toplevel = parent.winfo_toplevel()
-		if is_mac():
-			self.transient(parent_toplevel)
+		w = parent.winfo_width()
+		h = self.listbox.winfo_reqheight()
+		x = parent.winfo_rootx()
+		y = parent.winfo_rooty() + parent.winfo_height()
+		if y + h > self.winfo_screenheight():
+			y -= parent.winfo_height() + h
+		self.geometry('%dx%d+%d+%d' % (w,h,x, y))
 		self.focus_binding = None
 		self.focus_binding = parent_toplevel.bind(Mouse.ButtonPress, self.select, True)
 		self.bind(Focus.Out, self.select)
-		self.wm_overrideredirect(1)
+		self.focus_set()
 		self.wait_window(self)
 
 	def enter(self, e, f):

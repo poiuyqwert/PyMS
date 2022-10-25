@@ -72,15 +72,3 @@ def unbind(widget, sequence, funcid): # type: (Tk.Misc, str, str) -> None
 		funcs = widget.tk.call('bind', widget._w, sequence, None).split('\n')
 		bound = '\n'.join([f for f in funcs if not f.startswith('if {{"[{0}'.format(funcid))])
 	widget.tk.call('bind', widget._w, sequence, bound)
-
-def rootx(widget): # type: (Tk.Misc) -> int
-	toplevel = widget.winfo_toplevel()
-	_,_,x,_,_ = parse_geometry(toplevel.winfo_geometry())
-	x += (widget.winfo_rootx() - toplevel.winfo_rootx())
-	return x
-
-def rooty(widget): # type: (Tk.Misc) -> int
-	toplevel = widget.winfo_toplevel()
-	_,_,_,y,_ = parse_geometry(toplevel.winfo_geometry())
-	y += (widget.winfo_rooty() - toplevel.winfo_rooty())
-	return y
