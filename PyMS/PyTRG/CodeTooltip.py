@@ -27,7 +27,7 @@ class CodeTooltip(Tooltip):
 			self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
 			self.tip.wm_overrideredirect(1)
 			frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
-			Label(frame, text=t, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+			Label(frame, text=t, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 			frame.pack()
 			pos = list(self.parent.winfo_pointerxy())
 			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))

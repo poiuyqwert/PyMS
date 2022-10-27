@@ -5,7 +5,7 @@ from .EventPattern import *
 
 class Tooltip(object):
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
-	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=False, attach_to_parent=True): # type: (Widget, str, (Font | tuple[str, int, str]), int, bool, bool, bool) -> Tooltip
+	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=True, attach_to_parent=True): # type: (Widget, str, (Font | tuple[str, int, str]), int, bool, bool, bool) -> Tooltip
 		self.parent = parent
 		self.setupbinds(press)
 		self.text = text
@@ -53,23 +53,21 @@ class Tooltip(object):
 		if is_mac():
 			self.tip.wm_transient(self.parent.winfo_toplevel())
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
-		Label(frame, text=self.text, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+		Label(frame, text=self.text, justify=LEFT, font=self.font, foreground='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
-		pos = list(self.parent.winfo_pointerxy())
-		self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+		x,y = tuple(self.parent.winfo_pointerxy())
 		self.tip.update_idletasks()
-		move = False
 		if not self.mouse:
-			move = True
-			pos = [self.parent.winfo_rootx() + self.parent.winfo_reqwidth(), self.parent.winfo_rooty() + self.parent.winfo_reqheight()]
-		if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
-			move = True
-			pos[0] = self.tip.winfo_screenwidth() - self.tip.winfo_reqwidth()
-		if pos[1] + self.tip.winfo_reqheight() + 22 > self.tip.winfo_screenheight():
-			move = True
-			pos[1] -= self.tip.winfo_reqheight() + 44
-		if move:
-			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+			x = self.parent.winfo_rootx() + self.parent.winfo_width() + 5
+			y = self.parent.winfo_rooty() + self.parent.winfo_height() + 5
+		else:
+			x += 10
+			y += 20
+		if x + self.tip.winfo_width() > self.tip.winfo_screenwidth():
+			x = self.tip.winfo_screenwidth() - self.tip.winfo_width()
+		if y + self.tip.winfo_height() > self.tip.winfo_screenheight():
+			y = self.tip.winfo_screenheight() - self.tip.winfo_height()
+		self.tip.wm_geometry('+%d+%d' % (x,y))
 
 	def hidetip(self):
 		if self.tip:

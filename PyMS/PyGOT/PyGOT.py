@@ -32,7 +32,7 @@ HINTS = {
 	'subid':'An ID used to define the order of the variation when its listed in StarCraft',
 }
 def tip(o, h):
-	Tooltip(o, fit('', HINTS[h], end=True)[:-1], mouse=True)
+	Tooltip(o, fit('', HINTS[h], end=True)[:-1])
 
 def get_info(label):
 	if label == 'TeamMode':

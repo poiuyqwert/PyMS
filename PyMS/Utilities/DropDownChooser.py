@@ -10,8 +10,10 @@ class DropDownChooser(Toplevel):
 		self._typed = ''
 		self._typed_timer = None
 		Toplevel.__init__(self, parent, relief=SOLID, borderwidth=1)
-		self.protocol('WM_LOSE_FOCUS', self.select)
 		self.wm_overrideredirect(1)
+		parent_toplevel = parent.winfo_toplevel()
+		if is_mac():
+			self.transient(parent_toplevel)
 		scrollbar = Scrollbar(self)
 		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), borderwidth=0, font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
 		for e in list:
@@ -43,15 +45,17 @@ class DropDownChooser(Toplevel):
 		if len(list) > 10:
 			scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
+		w = parent.winfo_width()
+		h = self.listbox.winfo_reqheight()
+		x = parent.winfo_rootx()
+		y = parent.winfo_rooty() + parent.winfo_height()
+		if y + h > self.winfo_screenheight():
+			y -= parent.winfo_height() + h
+		self.geometry('%dx%d+%d+%d' % (w,h,x, y))
+		self.focus_binding = None
+		self.focus_binding = parent_toplevel.bind(Mouse.ButtonPress, self.select, True)
+		self.bind(Focus.Out, self.select)
 		self.focus_set()
-		self.update_idletasks()
-		size = self.parent.winfo_geometry().split('+',1)[0].split('x')
-		if self.parent.winfo_rooty() + self.parent.winfo_reqheight() + self.winfo_reqheight() > self.winfo_screenheight():
-			self.geometry('%sx%s+%d+%d' % (size[0],self.winfo_reqheight(),self.parent.winfo_rootx(), self.parent.winfo_rooty() - self.winfo_reqheight()))
-		else:
-			self.geometry('%sx%s+%d+%d' % (size[0],self.winfo_reqheight(),self.parent.winfo_rootx(), self.parent.winfo_rooty() + self.parent.winfo_reqheight()))
-		self.grab_set()
-		self.update_idletasks()
 		self.wait_window(self)
 
 	def enter(self, e, f):
@@ -127,3 +131,9 @@ class DropDownChooser(Toplevel):
 	def clear_typed(self):
 		self._typed_timer = None
 		self._typed = ''
+
+	def destroy(self):
+		if self.focus_binding:
+			parent_toplevel = self.parent.winfo_toplevel()
+			unbind(parent_toplevel, Mouse.ButtonPress, self.focus_binding)
+		Toplevel.destroy(self)

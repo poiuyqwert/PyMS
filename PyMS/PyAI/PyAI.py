@@ -205,6 +205,7 @@ class PyAI(MainWindow):
 		self.listbox.get_entry = self.get_entry
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
 		self.listbox.bind(Double.Click_Left, self.codeedit)
+		self.listbox._tooltip = ListboxTooltip(self.listbox)
 
 		# TODO: Cleanup
 		listmenu = [
