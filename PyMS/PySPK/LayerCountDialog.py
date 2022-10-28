@@ -1,7 +1,6 @@
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
 
 class LayerCountDialog(PyMSDialog):
 	def __init__(self, parent):

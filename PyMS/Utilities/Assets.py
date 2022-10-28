@@ -1,8 +1,4 @@
 
-from .UIKit import PhotoImage as _PhotoImage
-from .UIKit import PILImage as _PILImage
-from .UIKit import ImageTk as _ImageTk
-
 import os as _os
 import sys as _sys
 
@@ -37,6 +33,7 @@ def image_path(filename): # type: (str) -> str
 
 _IMAGE_CACHE = {}
 def get_image(filename, cache=True): # type: (str, bool) -> (_PhotoImage | None)
+	from .UIKit import PhotoImage as _PhotoImage
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	global _IMAGE_CACHE
@@ -272,6 +269,9 @@ def help_file_path(path): # type: (str) -> (str | None)
 
 _HELP_IMAGE_CACHE = {}
 def help_image(path): # type: (str) -> (_PhotoImage | None)
+	from .UIKit import PhotoImage as _PhotoImage
+	from .UIKit import PILImage as _PILImage
+	from .UIKit import ImageTk as _ImageTk
 	path_components = path.split('/')
 	if path_components[0] == '':
 		path_components.pop(0)

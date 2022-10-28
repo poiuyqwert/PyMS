@@ -7,7 +7,6 @@ from ..FileFormats import DAT
 from ..Utilities.utils import play_sound
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
 from ..Utilities import Assets
 
 class SoundDialog(PyMSDialog):

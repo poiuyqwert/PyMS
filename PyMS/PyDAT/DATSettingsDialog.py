@@ -1,6 +1,5 @@
 
 from ..Utilities.SettingsDialog import SettingsDialog
-from ..Utilities.Notebook import Notebook
 from ..Utilities.MPQSettings import MPQSettings
 from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.UIKit import *

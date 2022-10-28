@@ -3,7 +3,6 @@ from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 
 class ListboxTooltip(Tooltip):
 	def __init__(self, parent, font=None, delay=750, press=False):

@@ -17,19 +17,13 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.TextDropDown import TextDropDown
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.ReportList import ReportList
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 
 import sys, time, shutil, os
 from thread import start_new_thread
@@ -83,7 +77,7 @@ class PyMPQ(MainWindow):
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace('PyMPQ', self)
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.mpq = None # type: MPQ
 		self.all_files = [] # type: list[MPQFileEntry]

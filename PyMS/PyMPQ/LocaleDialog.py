@@ -2,9 +2,7 @@
 from .Locales import LOCALE_CHOICES
 
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.EntryDropDown import EntryDropDown
 
 class LocaleDialog(PyMSDialog):
 	def __init__(self, parent, locale=0, title='Change locale for files', message='Type or choose the new locale id for the select files'):

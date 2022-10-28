@@ -1,9 +1,6 @@
 
 from ..Utilities.UIKit import *
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 
 class ListfileSettings(Frame):
 	def __init__(self, parent, setdlg=None):

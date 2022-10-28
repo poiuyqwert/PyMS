@@ -1,7 +1,6 @@
 
 from . import Assets
 from .PyMSDialog import PyMSDialog
-from .Notebook import Notebook
 from .MPQSettings import MPQSettings
 from .SettingsPanel import SettingsPanel
 from .ErrorDialog import ErrorDialog

@@ -4,9 +4,7 @@ from .SMKSettings import SMKSettings
 from ..FileFormats import DialogBIN, TBL
 
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
 from ..Utilities import Assets
 
 class WidgetSettings(PyMSDialog):

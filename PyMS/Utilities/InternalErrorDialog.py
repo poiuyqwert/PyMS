@@ -1,7 +1,6 @@
 
 from . import Assets
 from .PyMSDialog import PyMSDialog
-from .Hotlink import Hotlink
 from .UIKit import *
 
 import traceback

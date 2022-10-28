@@ -12,20 +12,12 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.FlowView import FlowView
-from ..Utilities.MaskCheckbutton import MaskCheckbutton
-from ..Utilities.MaskedRadiobutton import MaskedRadiobutton
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.DropDown import DropDown
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
@@ -41,7 +33,7 @@ class PyTILE(MainWindow):
 		ga.set_application('PyTILE', Assets.version('PyTILE'))
 		ga.track(GAScreen('PyTILE'))
 		setup_trace('PyTILE', self)
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.stat_txt = TBL.TBL()
 		self.stat_txt_file = ''
@@ -195,7 +187,7 @@ class PyTILE(MainWindow):
 					continue
 				f = Frame(c)
 				if option_type == OPTION_CHECK:
-					self.disable.append(MaskCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED))
+					self.disable.append(MaskedCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED))
 				else:
 					self.disable.append(MaskedRadiobutton(f, text=option_name, variable=variable, value=option_value, mask=option_mask if option_mask else variable.range[1], state=DISABLED))
 				self.disable[-1].pack(side=LEFT)

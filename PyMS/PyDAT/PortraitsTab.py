@@ -3,10 +3,7 @@ from .DATTab import DATTab
 from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 
 class PortraitsTab(DATTab):
 	DAT_ID = DATID.portdata

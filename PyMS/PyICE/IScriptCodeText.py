@@ -3,8 +3,7 @@ from .CodeTooltip import AnimationTooltip, CommandTooltip
 
 from ..FileFormats import IScriptBIN
 
-from ..Utilities.CodeText import CodeText
-from ..Utilities.EventPattern import *
+from ..Utilities.UIKit import *
 
 import re
 from copy import deepcopy

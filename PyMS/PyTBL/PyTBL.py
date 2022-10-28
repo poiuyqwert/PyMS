@@ -14,7 +14,6 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
@@ -22,10 +21,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyTBL')
@@ -47,7 +43,7 @@ class PyTBL(MainWindow):
 			'icons':'MPQ:game\\icons.grp',
 			'unitpal':Assets.palette_file_path('Units.pal'),
 		})
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.tbl = None
 		self.file = None

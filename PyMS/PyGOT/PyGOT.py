@@ -4,22 +4,15 @@ from ..FileFormats.TRG import TRG
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.SStringVar import SStringVar
-from ..Utilities.DropDown import DropDown
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyGOT')
@@ -52,7 +45,7 @@ class PyGOT(MainWindow):
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
 		setup_trace('PyGOT', self)
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.got = None

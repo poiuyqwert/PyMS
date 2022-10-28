@@ -6,13 +6,11 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
@@ -30,7 +28,7 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.palette = None

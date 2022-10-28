@@ -4,7 +4,6 @@ from ..FileFormats import AIBIN
 from ..Utilities.utils import couriernew, fit
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
 
 import copy
 from collections import OrderedDict

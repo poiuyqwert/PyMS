@@ -12,18 +12,11 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import os
@@ -69,7 +62,7 @@ class PyGRP(MainWindow):
 		ga.set_application('PyGRP', Assets.version('PyGRP'))
 		ga.track(GAScreen('PyGRP'))
 		setup_trace('PyGRP', self)
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 		self.resizable(False, False)
 
 		self.frame = None

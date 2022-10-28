@@ -12,7 +12,7 @@ def check_compat(program_name, additional_requirements=Requirement.none): # type
 		from . import UIKit as _
 	except:
 		print('Tkinter is missing. Please consult the Installation section of the README.md in your PyMS folder, or online at https://github.com/poiuyqwert/PyMS#installation')
-		sys.exit()
+		raise
 
 	from . import Assets
 	from .DependencyError import DependencyError

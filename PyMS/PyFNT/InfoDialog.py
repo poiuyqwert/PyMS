@@ -1,6 +1,5 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.UIKit import *
 
 class InfoDialog(PyMSDialog):

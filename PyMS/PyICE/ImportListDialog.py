@@ -2,9 +2,6 @@
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.FileType import FileType
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent, settings):

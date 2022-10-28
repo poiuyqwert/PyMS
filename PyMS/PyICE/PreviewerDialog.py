@@ -6,11 +6,8 @@ from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
-from ..Utilities.Toolbar import Toolbar
 
 import os
 

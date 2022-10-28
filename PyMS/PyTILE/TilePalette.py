@@ -6,8 +6,6 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYP
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.FileType import FileType
 
 class TilePalette(PyMSDialog):
 	OPEN_PALETTE_COUNT = 0

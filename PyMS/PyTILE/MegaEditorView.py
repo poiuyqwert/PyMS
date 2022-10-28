@@ -2,9 +2,6 @@
 from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TILETYPE_MINI
 
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities import Assets
 
 class MegaEditorView(Frame):

@@ -4,10 +4,7 @@ from .DataID import DataID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 
 from math import floor, ceil
 

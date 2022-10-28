@@ -6,11 +6,7 @@ from .IconSelectDialog import IconSelectDialog
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.FloatVar import FloatVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class WeaponsTab(DATTab):

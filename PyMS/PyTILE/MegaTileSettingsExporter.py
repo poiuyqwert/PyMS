@@ -3,7 +3,6 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_MEGA
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.FileType import FileType
 
 class MegaTileSettingsExporter(PyMSDialog):
 	def __init__(self, parent, settings, ids):

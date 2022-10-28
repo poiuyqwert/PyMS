@@ -15,8 +15,6 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import Assets
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.FileType import FileType
 
 import os
 

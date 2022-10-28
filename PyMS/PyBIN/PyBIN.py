@@ -12,12 +12,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.TreeList import TreeList
-from ..Utilities.DropDown import DropDown
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.InternalErrorDialog import InternalErrorDialog
@@ -26,7 +21,6 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import time
@@ -91,7 +85,7 @@ class PyBIN(MainWindow):
 		setup_trace('PyBIN', self)
 
 		self.settings = Settings('PyBIN', '1')
-		load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme', 'dark'), self)
 
 		self.bin = None
 		self.file = None
@@ -878,7 +872,7 @@ class PyBIN(MainWindow):
 					self.edit_status.set('Edit ' + node.get_name())
 			else:
 				self.edit_status.set('')
-			apply_cursor(self.widgetCanvas, cursor)
+			self.widgetCanvas.apply_cursor(cursor)
 
 	def mouse_event(self, event, button_event, modifier):
 		RESTRICT_TO_WINDOW = True

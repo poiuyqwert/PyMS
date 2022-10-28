@@ -5,12 +5,9 @@ from ..FileFormats import SPK
 from ..FileFormats import BMP
 
 from ..Utilities.UIKit import *
-from ..Utilities.Notebook import NotebookTab
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.FileType import FileType
 
 class PaletteTab(NotebookTab):
 	MAX_SIZE = 150

@@ -2,7 +2,6 @@
 from . import Assets
 from .setutils import PYMS_SETTINGS
 from .PyMSDialog import PyMSDialog
-from .Hotlink import Hotlink
 from .UIKit import *
 
 import json, urllib

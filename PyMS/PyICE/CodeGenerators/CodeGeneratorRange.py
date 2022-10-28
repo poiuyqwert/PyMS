@@ -2,7 +2,6 @@
 from .CodeGenerator import CodeGeneratorEditor, CodeGeneratorType
 
 from ...Utilities.UIKit import *
-from ...Utilities.IntegerVar import *
 
 class CodeGeneratorEditorRange(CodeGeneratorEditor):
 	RESIZABLE = (False,False)

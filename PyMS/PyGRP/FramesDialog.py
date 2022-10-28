@@ -1,7 +1,6 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
 
 class FramesDialog(PyMSDialog):
 	def __init__(self, parent):

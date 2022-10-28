@@ -1,6 +1,5 @@
 
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 
 # TODO: Generalize
 class CodeTooltip(Tooltip):
