@@ -26,7 +26,8 @@ class DropDown(Frame):
 		self._typed_timer = None
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN, takefocus=False)
 		self.text = StringVar()
-		self.entry = Entry(self, textvariable=self.text, font=Font.fixed(), width=width, borderwidth=0, highlightthickness=0, cursor='arrow', insertontime=0)
+		self.entry = Entry(self, textvariable=self.text, font=Font.fixed(), width=width, highlightthickness=0, cursor='arrow', insertontime=0)
+		self.entry.config(bd=0)
 		self.entry.pack(side=LEFT, fill=X, expand=1)
 		self.entry['state'] = state
 		self.entry.bind(Mouse.Click_Left, self.choose)

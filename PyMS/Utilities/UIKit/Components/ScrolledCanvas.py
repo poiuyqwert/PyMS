@@ -12,6 +12,8 @@ class ScrolledCanvas(Frame):
 		if not 'highlightthickness' in kwargs:
 			kwargs['highlightthickness'] = 0
 		self.canvas = Canvas(self, **kwargs)
+		if not 'bd' in kwargs:
+			self.canvas.config(bd=0)
 		self.canvas.grid(column=0,row=0, sticky=NSEW)
 
 		def scroll_update(low, high, scrollbar):

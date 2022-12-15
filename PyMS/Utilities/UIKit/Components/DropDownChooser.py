@@ -16,7 +16,8 @@ class DropDownChooser(Toplevel):
 		if is_mac():
 			self.transient(parent_toplevel)
 		scrollbar = Scrollbar(self)
-		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), borderwidth=0, font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
+		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(list)), font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
+		self.listbox.config(bd=0)
 		for e in list:
 			self.listbox.insert(END,e)
 		if self.result > -1:

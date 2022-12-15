@@ -1,12 +1,74 @@
 
+from ..utils import isstr
+
 try: # Python 2
-	import Tkinter as _tk
+	import Tkinter as _Tk
 except: # Python 3
-	import tkinter as _tk
+	import tkinter as _Tk
 import inspect as _inspect
+import re as _re
 
 _THEME = [] # type: list[tuple[_Selector, dict[str, str | int]]]
 _WIDGET_TYPES = None
+
+class _SettingType(object):
+	@staticmethod
+	def integer(value):
+		return isinstance(value, int)
+
+	RE_COLOR = _re.compile(r'#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})')
+	@staticmethod
+	def color(value):
+		# TODO: Support color names?
+		if not isstr(value):
+			return False
+		return not not _SettingType.RE_COLOR.match(value)
+
+	@staticmethod
+	def relief(value):
+		return value in ('raised', 'sunken', 'flat', 'ridge', 'solid', 'groove')
+
+	@staticmethod
+	def anchor(value):
+		return value in ('n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw', 'center')
+
+	@staticmethod
+	def active_style(value):
+		return value in ('dotbox', 'none', 'underline')
+
+# TODO: Proper types for things like `relief` and `anchor` settings
+_ALLOWED_SETTINGS = {
+	'activeborderwidth': _SettingType.integer,
+	'activeforeground': _SettingType.color,
+	'activestyle': _SettingType.active_style,
+	'background': _SettingType.color,
+	'bg': _SettingType.color,
+	'borderwidth': _SettingType.integer,
+	'bd': _SettingType.integer,
+	'disabledbackground': _SettingType.color,
+	'disabledforeground': _SettingType.color,
+	'foreground': _SettingType.color,
+	'fg': _SettingType.color,
+	'highlightbackground': _SettingType.color,
+	'highlightcolor': _SettingType.color,
+	'highlightthickness': _SettingType.integer,
+	'inactiveselectbackground': _SettingType.color,
+	'insertbackground': _SettingType.color,
+	'insertborderwidth': _SettingType.integer,
+	'insertofftime': _SettingType.integer,
+	'insertontime': _SettingType.integer,
+	'insertwidth': _SettingType.integer,
+	'labelanchor': _SettingType.anchor,
+	'offrelief': _SettingType.relief,
+	'overrelief': _SettingType.relief,
+	'readonlybackground': _SettingType.color,
+	'relief': _SettingType.relief,
+	'selectbackground': _SettingType.color,
+	'selectborderwidth': _SettingType.integer,
+	'selectcolor': _SettingType.color,
+	'selectforeground': _SettingType.color,
+	'troughcolor': _SettingType.color,
+}
 
 def _resolve_widget_types():
 	global _WIDGET_TYPES
@@ -56,47 +118,144 @@ def _resolve_widget_types():
 		'TreeList': Components.TreeList,
 	})
 
+class _Priority:
+	program_specific = 1000
+	tag_specific = 10
+	depth_specific = 100
+
+class _Matcher(object):
+	class Result(object):
+		def __init__(self, success, consume_widget): # type: (bool, bool) -> _Matcher.Result
+			self.success = success
+			self.consume_widget = consume_widget
+
+	@classmethod
+	def parse(cls, token): # type: (str) -> (_Matcher | None)
+		matcher_types = [_ProgramMatcher, _WidgetMatcher, _WildcardMatcher]
+		for matcher_type in matcher_types:
+			matcher = matcher_type.parse(token)
+			if matcher:
+				return matcher
+		return None
+
+	def priority(self): # type: () -> int
+		raise NotImplementedError(self.__class__.__name__ + '.priority()')
+
+	def matches(self, widget): # type: (_Tk.Widget) -> _Matcher.Result
+		raise NotImplementedError(self.__class__.__name__ + '.matches()')
+
+	def __repr__(self):
+		raise NotImplementedError(self.__class__.__name__ + '.__repr__()')
+
+class _ProgramMatcher(_Matcher):
+	PARSE_RE = _re.compile(r'\[(\w+)\]')
+	@classmethod
+	def parse(cls, token): # type: (str) -> (_ProgramMatcher | None)
+		match = _ProgramMatcher.PARSE_RE.match(token)
+		if not match:
+			return None
+		return _ProgramMatcher(match.group(1))
+
+	def __init__(self, program_name): # type: (str) -> _ProgramMatcher
+		self.program_name = program_name
+
+	def priority(self):
+		return _Priority.program_specific
+
+	def matches(self, widget): # type: (_Tk.Widget) -> _Matcher.Result
+		return _Matcher.Result(True, False)
+
+	def __repr__(self):
+		return '[%s]' % self.program_name
+
+class _WidgetMatcher(_Matcher):
+	PARSE_RE = _re.compile(r'(\w+)(?:\.(\w+))?')
+	@classmethod
+	def parse(cls, token): # type: (str) -> (_WidgetMatcher | None)
+		match = _WidgetMatcher.PARSE_RE.match(token)
+		if not match:
+			return None
+		widget_type = _WIDGET_TYPES.get(match.group(1))
+		if not widget_type:
+			return None
+		return _WidgetMatcher(widget_type, match.group(2))
+
+	def __init__(self, widget_type, tag_name): # type: (Type[_Tk.Widget], str | None) -> _WidgetMatcher
+		self.widget_type = widget_type
+		self.tag_name = tag_name
+
+	def priority(self):
+		priority = len(_inspect.getmro(self.widget_type))
+		if self.tag_name:
+			priority += _Priority.tag_specific
+		return priority
+
+	def matches(self, widget): # type: (_Tk.Widget) -> _Matcher.Result
+		return (isinstance(widget, self.widget_type), True)
+
+	def __repr__(self):
+		return self.widget_type.__name__ + ('.%s' % self.tag_name if self.tag_name else '')
+
+class _WildcardMatcher(_Matcher):
+	@classmethod
+	def parse(cls, token): # type: (str) -> (_WildcardMatcher | None)
+		if not token in '**':
+			return None
+		return _WildcardMatcher(token == '**')
+
+	def __init__(self, many): # type: (bool) -> _WildcardMatcher
+		self.many = many
+
+	def priority(self):
+		return 0
+
+	def matches(self, widget): # type: (_Tk.Widget) -> _Matcher.Result
+		return _Matcher.Result(True, True)
+
+	def __repr__(self):
+		return '*' + ('*' if self.many else '')
+
 class _Selector(object):
 	def __init__(self, definition): # type: (str) -> _Selector
 		global _WIDGET_TYPES
 		if _WIDGET_TYPES == None:
 			_resolve_widget_types()
-		self.components = []
+		self.matchers = [] # type: list[_Matcher]
 		for component in definition.split(' '):
-			if not component in '**':
-				component = _WIDGET_TYPES[component]
-			self.components.insert(0, component)
+			matcher = _Matcher.parse(component)
+			if not matcher:
+				raise Exception() # TODO: Error handling
+			self.matchers.append(matcher)
 
 	def is_default(self):
-		return len(self.components) == 1 and self.components[0] == '*'
+		return len(self.matchers) == 1 and isinstance(self.matchers[0], _WildcardMatcher) and not self.matchers[0].many
 
 	def priority(self):
-		if self.is_default():
-			return 0
-		priority = 0
-		for component in self.components:
-			if isinstance(component, str):
-				continue
-			priority += len(_inspect.getmro(component))
-		return priority + 100 * len(self.components)
+		priority = _Priority.depth_specific * len(self.matchers)
+		for matcher in self.matchers:
+			priority += matcher.priority()
+		return priority
 
-	def matches(self, widget): # type: (_tk.Misc) -> bool
+	def matches(self, widget): # type: (_Tk.Widget) -> bool
 		if self.is_default():
 			return True
-		component_index = 0
+		matcher_index = -1
 		wildcard = False
-		while component_index < len(self.components):
-			component = self.components[component_index]
-			if component == '*':
-				widget = widget.master
-				component_index += 1
-			elif component == '**':
-				wildcard = True
-				component_index += 1
-			else:
-				if isinstance(widget, component):
+		while matcher_index >= -len(self.matchers):
+			matcher = self.matchers[matcher_index]
+			if isinstance(matcher, _WildcardMatcher):
+				if matcher.many:
+					wildcard = True
+					matcher_index -= 1
+				else:
 					widget = widget.master
-					component_index += 1
+					matcher_index -= 1
+			else:
+				success,consume_widget = matcher.matches(widget)
+				if success:
+					if consume_widget:
+						widget = widget.master
+					matcher_index -= 1
 					wildcard = False
 				elif wildcard:
 					widget = widget.master
@@ -104,7 +263,10 @@ class _Selector(object):
 					return False
 		return True
 
-def load_theme(name, main_window): # type: (str, _tk.Tk) -> None
+	def __repr__(self):
+		return "<Theme.Selector '%s'>" % ' '.join(repr(matcher) for matcher in self.matchers)
+
+def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
 	global _THEME
 	_THEME = []
 
@@ -127,10 +289,15 @@ def load_theme(name, main_window): # type: (str, _tk.Tk) -> None
 
 	apply_theme(main_window)
 
-def apply_theme(widget): # type: (_tk.Misc) -> None
+def apply_theme(widget): # type: (_Tk.Misc) -> None
 	for selector,styles in _THEME:
 		if selector.matches(widget):
 			for key,value in styles.items():
+				key_type = _ALLOWED_SETTINGS.get(key)
+				if not key_type:
+					continue
+				if not key_type(value):
+					continue
 				if not key in widget.keys():
 					continue
 				widget.config({key: value})

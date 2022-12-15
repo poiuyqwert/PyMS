@@ -9,7 +9,8 @@ class TextDropDown(Frame):
 		self.set = self.variable.set
 		self.history = history
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
-		self.entry = Entry(self, textvariable=self.variable, width=width, bd=0)
+		self.entry = Entry(self, textvariable=self.variable, width=width, highlightthickness=0)
+		self.entry.config(bd=0)
 		self.entry.pack(side=LEFT, fill=X, expand=1)
 		self.entry['state'] = state
 		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)

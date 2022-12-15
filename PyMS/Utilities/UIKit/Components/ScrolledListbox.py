@@ -13,12 +13,12 @@ class ScrolledListbox(Frame):
 			kwargs['exportselection'] = 0
 		if not 'highlightthickness' in kwargs:
 			kwargs['highlightthickness'] = 0
-		if not 'bd' in kwargs:
-			kwargs['bd'] = 0
 		if not 'activestyle' in kwargs:
 			kwargs['activestyle'] = DOTBOX
 
 		self.listbox = Listbox(self, **kwargs)
+		if not 'bd' in kwargs:
+			self.listbox.config(bd=0)
 		self.listbox.grid(column=0,row=0, sticky=NSEW)
 
 		if horizontal != ShowScrollbar.never:

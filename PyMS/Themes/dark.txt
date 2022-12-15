@@ -1,17 +1,14 @@
 {
     "*": {
-        "activeborderwidth": 0,
         "activebackground": "#3b4754",
         "activeforeground": "#96989d",
         "bg": "#292b2f",
-        "borderwidth": 1,
         "highlightbackground": "#292b2f",
         "fg": "#96989d",
         "selectbackground": "#3b4754",
         "selectcolor": "#202225",
-        "disabledforeground": "#4a4a4c"
-    },
-	"DropDown Entry": {
-		"bd": 0
-	}
+        "disabledforeground": "#4a4a4c",
+        "borderwidth": 1,
+        "highlightthickness": 0
+    }
 }

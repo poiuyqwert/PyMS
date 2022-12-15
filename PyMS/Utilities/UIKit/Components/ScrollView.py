@@ -3,6 +3,7 @@ from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import *
 from ..EventPattern import *
 
+# TODO: PyDAT switching units tabs to a tab that was already displyed before, nothing is displayed, unless clicked again
 
 # WARNING: You must use the `scrollView.content_view` as the master of the widgets placed into a ScrollView
 # WARNING: ScrollView relies on `bind_all` for scrolling, only 1 can be used per window
@@ -47,7 +48,7 @@ class ScrollView(Frame):
 			self.unbind_all(Mouse.Scroll)
 		self.bind(WidgetEvent.Activate, bind_scroll)
 		self.bind(WidgetEvent.Deactivate, unbind_scroll)
-		self.bind(WidgetEvent.Map, bind_scroll)
+		self.bind(WidgetEvent.Map, bind_scroll, True)
 		self.bind(WidgetEvent.Unmap, unbind_scroll)
 
 		self._focus_bind_info = None
@@ -72,7 +73,7 @@ class ScrollView(Frame):
 	def viewport_size(self):
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
 	def content_size(self):
-		x,y,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
+		_,_,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)
 	def content_offset(self):
 		w,h = self.content_size()
