@@ -1,17 +1,21 @@
 {
-    "*": {
-        "activebackground": "#3b4754",
-        "activeforeground": "#96989d",
-        "bg": "#292b2f",
-        "highlightbackground": "#292b2f",
-        "fg": "#96989d",
-        "selectbackground": "#3b4754",
-        "selectcolor": "#202225",
-        "disabledforeground": "#4a4a4c",
-        "borderwidth": 1,
-        "highlightthickness": 0
-    },
-    "Canvas.preview": {
-        "bg": "#000000"
+    "author": "poiuy_qwert",
+    "description": "Adjust colors to have dark backgrounds and light text.",
+    "widgets": {
+        "*": {
+            "activebackground": "#3b4754",
+            "activeforeground": "#96989d",
+            "background": "#292b2f",
+            "highlightbackground": "#292b2f",
+            "foreground": "#96989d",
+            "selectbackground": "#3b4754",
+            "selectcolor": "#202225",
+            "disabledforeground": "#4a4a4c",
+            "borderwidth": 1,
+            "highlightthickness": 0
+        },
+        "Canvas.preview": {
+            "background": "#000000"
+        }
     }
 }

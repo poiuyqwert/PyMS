@@ -476,7 +476,8 @@ class PyDAT(MainWindow):
 				('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
 				('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
 				('Icons', 'Used to display icon previews', 'Icons', 'Palette')
-			])
+			]),
+			'Theme'
 		]
 		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 

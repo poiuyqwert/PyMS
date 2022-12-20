@@ -8,8 +8,44 @@ except: # Python 3
 	import tkinter as _Tk
 import inspect as _inspect
 import re as _re
+import traceback as _traceback
 
-_THEME = [] # type: list[tuple[_Selector, dict[str, str | int]]]
+class Theme(object):
+	def __init__(self, name):
+		self.name = name
+
+		from .. import Assets
+		import json
+
+		try:
+			with open(Assets.theme_file_path(name), 'r') as f:
+				theme = json.load(f) # type: dict[str, dict[str, str | int]]
+		except:
+			print("Theme '%s' does not exist or has an invalid format" % name)
+			print(_traceback.format_exc())
+			raise
+
+		self.author = theme.get('author', 'None')
+		self.description = theme.get('description', 'None')
+
+		self.widget_styles = [] # type: list[tuple[_Selector, dict[str, str | int]]]
+		try:
+			widget_styles = theme['widgets'].items()
+		except:
+			print("Theme '%s' missing 'widgets' or they are invalid" % name)
+			print(_traceback.format_exc())
+			raise
+		if not widget_styles:
+			print("Theme '%s' has an empty set of 'widgets'" % name)
+		for selector,styles in widget_styles:
+			try:
+				selector = _Selector(selector)
+				self.widget_styles.append((selector, styles))
+			except:
+				continue
+		self.widget_styles.sort(key=lambda item: item[0].priority())
+
+_THEME = None # type: Theme | None
 _WIDGET_TYPES = None
 
 class _SettingType(object):
@@ -43,13 +79,10 @@ _ALLOWED_SETTINGS = {
 	'activeforeground': _SettingType.color,
 	'activestyle': _SettingType.active_style,
 	'background': _SettingType.color,
-	'bg': _SettingType.color,
 	'borderwidth': _SettingType.integer,
-	'bd': _SettingType.integer,
 	'disabledbackground': _SettingType.color,
 	'disabledforeground': _SettingType.color,
 	'foreground': _SettingType.color,
-	'fg': _SettingType.color,
 	'highlightbackground': _SettingType.color,
 	'highlightcolor': _SettingType.color,
 	'highlightthickness': _SettingType.integer,
@@ -231,6 +264,7 @@ class _Selector(object):
 		for component in definition.split(' '):
 			matcher = _Matcher.parse(component)
 			if not matcher:
+				print("Theme selecter '%s' doesn't correspond to any matcher" % definition)
 				raise Exception() # TODO: Error handling
 			self.matchers.append(matcher)
 
@@ -270,8 +304,11 @@ class _Selector(object):
 					return False
 		return True
 
+	def describe(self): # type: () -> str
+		return ' '.join(repr(matcher) for matcher in self.matchers)
+
 	def __repr__(self):
-		return "<Theme.Selector '%s'>" % ' '.join(repr(matcher) for matcher in self.matchers)
+		return "<Theme.Selector '%s'>" % self.describe()
 
 def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
 	if not name:
@@ -279,35 +316,44 @@ def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
 	if not name:
 		return
 	global _THEME
-	_THEME = []
-
-	from .. import Assets
-	import json
 
 	try:
-		with open(Assets.theme_file_path(name), 'r') as f:
-			theme = json.load(f) # type: dict[str, dict[str, str | int]]
+		_THEME = Theme(name)
 	except:
-		raise # TODO: Handle better?
-
-	for selector,styles in theme.items():
-		try:
-			selector = _Selector(selector)
-			_THEME.append((selector, styles))
-		except:
-			raise # TODO: Handle better?
-	_THEME.sort(key=lambda item: item[0].priority())
+		return
 
 	apply_theme(main_window)
 
+_INVALID_STYLES = []
+_INVALID_SETTINGS = []
+_INVALID_VALUES = {}
 def apply_theme(widget): # type: (_Tk.Misc) -> None
-	for selector,styles in _THEME:
+	if not _THEME:
+		return
+	for selector,styles in _THEME.widget_styles:
 		if selector.matches(widget):
-			for key,value in styles.items():
+			try:
+				styles = styles.items()
+			except:
+				if not selector.describe() in _INVALID_SETTINGS:
+					print("Theme '%s' selector '%s' has invalid settings" % (_THEME.name, selector.describe()))
+					_INVALID_SETTINGS.append(selector.describe())
+				continue
+			for key,value in styles:
 				key_type = _ALLOWED_SETTINGS.get(key)
 				if not key_type:
+					global _INVALID_SETTINGS
+					if not key in _INVALID_SETTINGS:
+						print("Theme '%s' setting '%s' invalid" % (_THEME.name, key))
+						_INVALID_SETTINGS.append(key)
 					continue
 				if not key_type(value):
+					global _INVALID_VALUES
+					if not key_type in _INVALID_VALUES:
+						_INVALID_VALUES[key_type] = []
+					if not value in _INVALID_VALUES[key_type]:
+						print("Theme '%s' value '%s' for setting '%s' invalid" % (_THEME.name, value, key))
+						_INVALID_VALUES[key_type].append(value)
 					continue
 				if not key in widget.keys():
 					continue

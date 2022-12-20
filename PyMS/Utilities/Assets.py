@@ -304,3 +304,15 @@ themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
 
 def theme_file_path(name): # type: (str) -> (str)
 	return _os.path.join(themes_dir, '%s.txt' % name)
+
+_THEME_LIST = None
+def theme_list(): # type: () -> list[str]
+	global _THEME_LIST
+	if not _THEME_LIST:
+		_THEME_LIST = []
+		for filename in _os.listdir(themes_dir):
+			if not filename.endswith('.txt'):
+				continue
+			_THEME_LIST.append(filename[:-4])
+		_THEME_LIST.sort()
+	return _THEME_LIST
