@@ -115,5 +115,6 @@ class ThemeSettingView(SettingsView):
 		if self.default.get():
 			self.settings['theme'] = None
 			PYMS_SETTINGS['theme'] = theme
+			PYMS_SETTINGS.save()
 		else:
 			self.settings['theme'] = theme

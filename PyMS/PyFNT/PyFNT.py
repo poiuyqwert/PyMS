@@ -285,7 +285,7 @@ DISPLAY_CHARS = [
 class PyFNT(MainWindow):
 	def __init__(self, guifile=None):
 		self.settings = Settings('PyFNT', '1')
-		self.settings.set_defaults({'tfontgam':'MPQ:game\\tfontgam.pcx'})
+		self.settings.settings.files.set_defaults({'tfontgam':'MPQ:game\\tfontgam.pcx'})
 
 		#Window
 		MainWindow.__init__(self)
@@ -374,7 +374,7 @@ class PyFNT(MainWindow):
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(self.mpqhandler.get_file(self.settings['tfontgam']))
+			palette.load_file(self.mpqhandler.get_file(self.settings.settings.files.tfontgam))
 		except PyMSError as e:
 			err = e
 		else:
@@ -544,7 +544,7 @@ class PyFNT(MainWindow):
 					self.status.set('Font imported successfully!')
 
 	def special(self, key=None, err=None):
-		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')])], (340,215), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')]),('Theme',)], (550,380), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

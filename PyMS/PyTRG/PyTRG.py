@@ -359,9 +359,10 @@ class PyTRG(MainWindow):
 			('File Settings',[
 				('stat_txt.tbl', 'Contains Unit and AI Script names', 'stat_txt', 'TBL'),
 				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", 'aiscript', 'AIBIN'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,215), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

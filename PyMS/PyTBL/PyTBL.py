@@ -496,9 +496,10 @@ class PyTBL(MainWindow):
 				('font10.fnt','The font used to preview strings other than hotkeys','font10','FNT'),
 				('icons.grp','The icons used to preview hotkeys','icons','GRP'),
 				('Unit Palette','The palette used to display icons.grp','unitpal','Palette'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,430), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,430), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

@@ -518,7 +518,7 @@ class PyLO(MainWindow):
 			self.text.setup(c.cont)
 
 	def mpqsettings(self, key=None):
-		SettingsDialog(self, None, (340,215), mpqhandler=self.mpqhandler)
+		SettingsDialog(self, [('Theme',)], (550,380), mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:

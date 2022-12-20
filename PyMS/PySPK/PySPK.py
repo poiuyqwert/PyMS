@@ -152,7 +152,7 @@ class PySPK(MainWindow):
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
 		rightframe = Frame(frame, bd=1, relief=SUNKEN)
-		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1])
+		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1], theme_tag='preview')
 		self.skyCanvas.pack(fill=BOTH)
 		self.skyCanvas.focus_set()
 		self.skyCanvas.bind(Mouse.Motion, lambda e,m=0: self.mouse_move(e,m))
@@ -262,9 +262,10 @@ class PySPK(MainWindow):
 		data = [
 			('Preview Settings',[
 				('platform.wpe','The palette which holds the star palette.','platformwpe','WPE')
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def unsaved(self):
 		if self.spk and self.edited:

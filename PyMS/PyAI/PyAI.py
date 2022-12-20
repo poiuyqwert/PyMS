@@ -1090,9 +1090,10 @@ class PyAI(MainWindow):
 				('units.dat', 'Used to check if a unit is a Building or has Air/Ground attacks', 'unitsdat', 'UnitsDAT'),
 				('upgrades.dat', 'Used to specify upgrade string entries in stat_txt.tbl', 'upgradesdat', 'UpgradesDAT'),
 				('techdata.dat', 'Used to specify technology string entries in stat_txt.tbl', 'techdatadat', 'TechDAT')
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,295), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
 
 	def openset(self, key=None):
 		file = self.settings.lastpath.set_txt.select_open_file(self, title='Load Settings', filetypes=[FileType.txt()])

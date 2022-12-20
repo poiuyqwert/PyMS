@@ -18,6 +18,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 import os
 
@@ -93,6 +94,8 @@ class PyGRP(MainWindow):
 		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, tags='can_move_up')
 		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, tags='can_move_down')
 		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
@@ -146,7 +149,8 @@ class PyGRP(MainWindow):
 
 		rightframe = Frame(frame)
 		#Canvas
-		self.canvas = Canvas(rightframe, width=258, height=258, background=self.settings.preview.get('bgcolor','#000000'))
+		self.canvas = Canvas(rightframe, width=258, height=258)
+		self.canvas.configure(background=self.settings.preview.get('bgcolor','#000000'))
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		self.canvas.bind(Double.Click_Left, self.bgcolor)
 		self.grpbrdr = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00')
@@ -668,6 +672,9 @@ BMP's must be imported with the same style they were exported as.""")
 			register_registry('PyGRP', 'grp', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyGRP.md')

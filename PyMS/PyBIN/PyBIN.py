@@ -273,7 +273,7 @@ class PyBIN(MainWindow):
 		rightframe = Frame(frame)
 		Label(rightframe, text='Canvas:', anchor=W).pack(side=TOP, fill=X)
 		bdframe = Frame(rightframe, borderwidth=1, relief=SUNKEN)
-		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480)
+		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview')
 		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
 		bdframe.pack(side=TOP)
@@ -603,9 +603,10 @@ class PyBIN(MainWindow):
 				('font14.fnt','Size 14 font','font14','FNT'),
 				('font16.fnt','Size 16 font','font16','FNT'),
 				('font16x.fnt','Size 16x font','font16x','FNT'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def unsaved(self):
 		if self.bin and self.edited:

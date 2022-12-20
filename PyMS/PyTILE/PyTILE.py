@@ -19,6 +19,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
@@ -62,6 +63,8 @@ class PyTILE(MainWindow):
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TILETYPE_GROUP), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.cv5 editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -806,6 +809,9 @@ class PyTILE(MainWindow):
 			register_registry('PyTILE', 'cv5', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyTILE.md')

@@ -26,7 +26,7 @@ class CodeText(Frame):
 		frame = Frame(self)
 		font = ('Courier New', -12, 'normal')
 		self.lines = Text(frame, height=1, font=font, bg='#E4E4E4', fg='#808080', width=8, cursor='')
-		self.line.config(bd=0)
+		self.lines.config(bd=0)
 		self.lines.pack(side=LEFT, fill=Y)
 		hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)

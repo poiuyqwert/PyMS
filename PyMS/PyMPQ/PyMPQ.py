@@ -655,7 +655,7 @@ class PyMPQ(MainWindow):
 
 	def mansets(self, key=None):
 		if key:
-			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings)], (400,255), None, settings=self.settings)
+			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings),('Theme',)], (550,380), None, settings=self.settings)
 			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())

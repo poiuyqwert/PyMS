@@ -14,6 +14,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyGOT')
 
@@ -69,6 +70,8 @@ class PyGOT(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(True), 'Convert *.trg to GOT compatable', Ctrl.t)
 		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(False), 'Revert GOT compatable *.trg', Ctrl.Alt.t)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.got editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -385,6 +388,9 @@ class PyGOT(MainWindow):
 			register_registry('PyGOT', 'got', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyGOT.md')

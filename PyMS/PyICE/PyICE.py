@@ -487,9 +487,10 @@ class PyICE(MainWindow):
 				('sprites.dat', 'Contains link to images.dat entries', 'spritesdat', 'SpritesDAT'),
 				('images.dat', 'Contains link to IScript entries and images.tbl string indexs', 'imagesdat', 'ImagesDAT'),
 				('sfxdata.dat', 'Contains sfxdata.tbl string entries for mpq file paths', 'sfxdatadat', 'SoundsDAT'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:
