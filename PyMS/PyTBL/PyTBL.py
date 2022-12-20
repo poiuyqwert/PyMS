@@ -43,7 +43,7 @@ class PyTBL(MainWindow):
 			'icons':'MPQ:game\\icons.grp',
 			'unitpal':Assets.palette_file_path('Units.pal'),
 		})
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.tbl = None
 		self.file = None

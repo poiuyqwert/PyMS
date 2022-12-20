@@ -53,7 +53,7 @@ class MegaEditorView(Frame):
 		self.delegate.bind(Key.b, lambda _: set_edit_mode(MegaEditorView.Mode.view_blocking)),
 		self.delegate.bind(Key.r, lambda _: set_edit_mode(MegaEditorView.Mode.ramp))
 
-		self.canvas = Canvas(frame, width=96, height=96, background='#000000')
+		self.canvas = Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview')
 		def mouse_to_mini(e):
 			if e.x < 1 or e.x > 96 or e.y < 1 or e.y > 96:
 				return None

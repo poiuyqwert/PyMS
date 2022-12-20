@@ -85,7 +85,7 @@ class PyBIN(MainWindow):
 		setup_trace('PyBIN', self)
 
 		self.settings = Settings('PyBIN', '1')
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.bin = None
 		self.file = None

@@ -294,7 +294,7 @@ class PyFNT(MainWindow):
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
 		setup_trace('PyFNT', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.fnt = None
@@ -338,7 +338,7 @@ class PyFNT(MainWindow):
 		#Canvas
 		Label(rightframe, text='Display:', anchor=W).pack(side=TOP, fill=X)
 		t = Frame(rightframe)
-		self.canvas = Canvas(t, width=0, height=0, background='#000000')
+		self.canvas = Canvas(t, width=0, height=0, background='#000000', theme_tag='preview')
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		t.pack(side=LEFT, fill=Y)
 		rightframe.pack(side=LEFT, fill=BOTH, expand=1, padx=1, pady=1)

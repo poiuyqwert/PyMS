@@ -77,7 +77,7 @@ class PyMPQ(MainWindow):
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace('PyMPQ', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.mpq = None # type: MPQ
 		self.all_files = [] # type: list[MPQFileEntry]

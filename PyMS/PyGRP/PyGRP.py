@@ -62,7 +62,7 @@ class PyGRP(MainWindow):
 		ga.set_application('PyGRP', Assets.version('PyGRP'))
 		ga.track(GAScreen('PyGRP'))
 		setup_trace('PyGRP', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.frame = None

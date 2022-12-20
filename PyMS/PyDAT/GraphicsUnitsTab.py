@@ -106,7 +106,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		left.pack(side=LEFT, fill=BOTH, expand=1)
 		l = LabelFrame(bottom, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
 		self.preview.pack(side=TOP)
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')

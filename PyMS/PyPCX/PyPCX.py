@@ -30,7 +30,7 @@ class PyPCX(MainWindow):
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.pcx = None
 		self.file = None

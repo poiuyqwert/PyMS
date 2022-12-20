@@ -62,6 +62,7 @@ class Canvas(_Tk.Canvas, Extensions):
 
 	def __init__(self, master=None, cnf={}, coordinate_adjust=None, **kw):
 		self.coordinate_adjust = coordinate_adjust or Canvas.coordinate_adjust_none
+		kw, self.theme_tag = Theme.get_tag(kw)
 		_Tk.Canvas.__init__(self, master, cnf, **kw)
 		Theme.apply_theme(self)
 

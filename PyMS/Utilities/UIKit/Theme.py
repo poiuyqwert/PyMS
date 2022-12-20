@@ -1,5 +1,6 @@
 
 from ..utils import isstr
+from ..setutils import PYMS_SETTINGS
 
 try: # Python 2
 	import Tkinter as _Tk
@@ -191,7 +192,13 @@ class _WidgetMatcher(_Matcher):
 		return priority
 
 	def matches(self, widget): # type: (_Tk.Widget) -> _Matcher.Result
-		return (isinstance(widget, self.widget_type), True)
+		matches = isinstance(widget, self.widget_type)
+		if matches and self.tag_name:
+			if hasattr(widget, 'theme_tag'):
+				matches = widget.theme_tag == self.tag_name
+			else:
+				matches = False
+		return (matches, True)
 
 	def __repr__(self):
 		return self.widget_type.__name__ + ('.%s' % self.tag_name if self.tag_name else '')
@@ -267,6 +274,10 @@ class _Selector(object):
 		return "<Theme.Selector '%s'>" % ' '.join(repr(matcher) for matcher in self.matchers)
 
 def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
+	if not name:
+		name = PYMS_SETTINGS.get('theme')
+	if not name:
+		return
 	global _THEME
 	_THEME = []
 
@@ -301,3 +312,9 @@ def apply_theme(widget): # type: (_Tk.Misc) -> None
 				if not key in widget.keys():
 					continue
 				widget.config({key: value})
+
+def get_tag(kwargs): # type: (dict[str, Any]) -> tuple[dict[str, Any], str | None]
+	theme_tag = kwargs.get('theme_tag')
+	if 'theme_tag' in kwargs:
+		del kwargs['theme_tag']
+	return (kwargs, theme_tag)

@@ -141,7 +141,7 @@ class PreviewerDialog(PyMSDialog):
 		self.showpreview = IntVar()
 		self.showpreview.set(self.toplevel.settings.previewer.get('showpreview',1))
 		p = Frame(right)
-		self.preview = Canvas(p, width=257, height=257, background='#000000')
+		self.preview = Canvas(p, width=257, height=257, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		self.scroll = Scrollbar(p, orient=HORIZONTAL, command=self.selectframe)
 		self.scroll.set(0,1)

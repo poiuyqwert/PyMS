@@ -164,7 +164,7 @@ class ImagesTab(DATTab):
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
 		s.pack()

@@ -44,7 +44,7 @@ class TechnologyTab(DATTab):
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
 		ls = Frame(s, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)

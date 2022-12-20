@@ -43,7 +43,7 @@ class PyLO(MainWindow):
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace('PyLO', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.lo = None
 		self.file = None
@@ -117,7 +117,7 @@ class PyLO(MainWindow):
 		Label(l, textvariable=self.baseframes, anchor=W).pack(side=LEFT)
 		Label(l, textvariable=self.overlayframes, anchor=W).pack(side=RIGHT)
 		l.pack(fill=X, expand=1)
-		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0)
+		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0, theme_tag='preview')
 		for tt in [0,1]:
 			self.canvas.bind(Mouse.Click_Left, lambda e,t=tt: self.drag(e,t,0))
 			self.canvas.bind(Mouse.Drag_Left, lambda e,t=tt: self.drag(e,t,1))

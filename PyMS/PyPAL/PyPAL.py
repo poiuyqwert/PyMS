@@ -28,7 +28,7 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
-		Theme.load_theme(self.settings.get('theme', 'dark'), self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.palette = None
@@ -63,7 +63,7 @@ class PyPAL(MainWindow):
 		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=Ctrl.p, tags='paste')
 
 		#Canvas
-		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os)
+		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os, theme_tag='preview')
 		self.canvas.pack(padx=2, pady=2)
 		for n in range(256):
 			x,y = 3+17*(n%16),3+17*(n/16)

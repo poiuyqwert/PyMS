@@ -19,7 +19,7 @@ class PaletteTab(NotebookTab):
 		NotebookTab.__init__(self, parent)
 
 		scrollframe = Frame(self, bd=2, relief=SUNKEN)
-		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2)
+		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview')
 		def scroll_palette(event):
 			if self.toplevel.spk:
 				if event.delta > 0:

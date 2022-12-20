@@ -10,5 +10,8 @@
         "disabledforeground": "#4a4a4c",
         "borderwidth": 1,
         "highlightthickness": 0
+    },
+    "Canvas.preview": {
+        "bg": "#000000"
     }
 }
