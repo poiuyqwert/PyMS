@@ -19,5 +19,5 @@ from .StatusBar import StatusBar
 from .TextDropDown import TextDropDown
 from .TextTooltip import TextTooltip, TextDynamicTooltip
 from .Toolbar import Toolbar
-from .Tooltip import Tooltip
+from .Tooltip import Tooltip, TooltipWindow
 from .TreeList import TreeList

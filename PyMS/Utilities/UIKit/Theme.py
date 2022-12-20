@@ -32,7 +32,7 @@ class Theme(object):
 		try:
 			widget_styles = theme['widgets'].items()
 		except:
-			print("Theme '%s' missing 'widgets' or they are invalid" % name)
+			print("Theme '%s' missing 'widgets' or it is invalid" % name)
 			print(_traceback.format_exc())
 			raise
 		if not widget_styles:
@@ -44,6 +44,13 @@ class Theme(object):
 			except:
 				continue
 		self.widget_styles.sort(key=lambda item: item[0].priority())
+		
+		colors = theme.get('colors')
+		self.colors = None
+		if isinstance(colors, dict):
+			self.colors = colors
+		elif colors:
+			print("Theme '%s' has invalid 'colors'" % name)
 
 _THEME = None # type: Theme | None
 _WIDGET_TYPES = None
@@ -73,8 +80,8 @@ class _SettingType(object):
 	def active_style(value):
 		return value in ('dotbox', 'none', 'underline')
 
-# TODO: Proper types for things like `relief` and `anchor` settings
 _ALLOWED_SETTINGS = {
+	'activebackground': _SettingType.color,
 	'activeborderwidth': _SettingType.integer,
 	'activeforeground': _SettingType.color,
 	'activestyle': _SettingType.active_style,
@@ -92,7 +99,7 @@ _ALLOWED_SETTINGS = {
 	'insertofftime': _SettingType.integer,
 	'insertontime': _SettingType.integer,
 	'insertwidth': _SettingType.integer,
-	'labelanchor': _SettingType.anchor,
+	# 'labelanchor': _SettingType.anchor,
 	'offrelief': _SettingType.relief,
 	'overrelief': _SettingType.relief,
 	'readonlybackground': _SettingType.color,
@@ -148,7 +155,7 @@ def _resolve_widget_types():
 		'TextTooltip': Components.TextTooltip,
 		'TextDynamicTooltip': Components.TextDynamicTooltip,
 		'Toolbar': Components.Toolbar,
-		'Tooltip': Components.Tooltip,
+		'Tooltip': Components.TooltipWindow,
 		'TreeList': Components.TreeList,
 	})
 
@@ -324,10 +331,10 @@ def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
 
 	apply_theme(main_window)
 
-_INVALID_STYLES = []
 _INVALID_SETTINGS = []
 _INVALID_VALUES = {}
 def apply_theme(widget): # type: (_Tk.Misc) -> None
+	global _THEME, _INVALID_SETTINGS, _INVALID_VALUES
 	if not _THEME:
 		return
 	for selector,styles in _THEME.widget_styles:
@@ -342,17 +349,15 @@ def apply_theme(widget): # type: (_Tk.Misc) -> None
 			for key,value in styles:
 				key_type = _ALLOWED_SETTINGS.get(key)
 				if not key_type:
-					global _INVALID_SETTINGS
 					if not key in _INVALID_SETTINGS:
-						print("Theme '%s' setting '%s' invalid" % (_THEME.name, key))
+						print("Theme '%s' setting '%s' is invalid" % (_THEME.name, key))
 						_INVALID_SETTINGS.append(key)
 					continue
 				if not key_type(value):
-					global _INVALID_VALUES
 					if not key_type in _INVALID_VALUES:
 						_INVALID_VALUES[key_type] = []
 					if not value in _INVALID_VALUES[key_type]:
-						print("Theme '%s' value '%s' for setting '%s' invalid" % (_THEME.name, value, key))
+						print("Theme '%s' value '%s' for setting '%s' is invalid" % (_THEME.name, value, key))
 						_INVALID_VALUES[key_type].append(value)
 					continue
 				if not key in widget.keys():
@@ -364,3 +369,23 @@ def get_tag(kwargs): # type: (dict[str, Any]) -> tuple[dict[str, Any], str | Non
 	if 'theme_tag' in kwargs:
 		del kwargs['theme_tag']
 	return (kwargs, theme_tag)
+
+_INVALID_COLORS = []
+def get_color(*keys, **kwargs): # type: (*str, str) -> (str | None)
+	global _THEME
+	default = kwargs.get('default')
+	if not _THEME:
+		return default
+	color = _THEME.colors
+	for key in keys:
+		if not isinstance(color, dict):
+			color = None
+			break
+		color = color.get(key)
+	if not _SettingType.color(color):
+		name = '.'.join(keys)
+		if not name in _INVALID_COLORS:
+			print("Theme '%s' has invalid/missing color '%s'" % (_THEME.name, name))
+			_INVALID_COLORS.append(name)
+		return default
+	return color

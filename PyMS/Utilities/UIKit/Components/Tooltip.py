@@ -3,6 +3,9 @@ from ..Widgets import *
 from ..EventPattern import *
 from ...utils import is_mac
 
+class TooltipWindow(Toplevel):
+	pass
+
 class Tooltip(object):
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
 	def __init__(self, parent, text='', font=None, delay=750, press=False, mouse=True, attach_to_parent=True): # type: (Widget, str, (Font | tuple[str, int, str]), int, bool, bool, bool) -> Tooltip
@@ -48,7 +51,7 @@ class Tooltip(object):
 	def showtip(self):
 		if self.tip:
 			return
-		self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
+		self.tip = TooltipWindow(self.parent, relief=SOLID, borderwidth=1)
 		self.tip.wm_overrideredirect(1)
 		if is_mac():
 			self.tip.wm_transient(self.parent.winfo_toplevel())

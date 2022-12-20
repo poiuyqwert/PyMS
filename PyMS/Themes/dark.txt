@@ -17,5 +17,11 @@
         "Canvas.preview": {
             "background": "#000000"
         }
+    },
+    "colors": {
+        "help": {
+            "linkforeground": "#68779c",
+            "codebackground": "#35383d"
+        }
     }
 }
