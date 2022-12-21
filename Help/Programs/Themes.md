@@ -47,9 +47,6 @@ These selectors have a defined collection of settings which will apply only to t
 Any `Label` in a `StatusBar` will have the background color `#333333`, and the text color `#FFFFFF`. Any `Label` not inside a `StatusBar` will have the background color `#222222`, and the text color `#FFFFFF`. Every other widget will have the background color `#111111`, and the text color `#FFFFFF`.
 
 
-Some widgets are built as a component comprised of muliple other widgets. Usually these component widgets are based off of a `Frame` with other widgets inside itself. These types of component widgets will match their "super types" as well as their specific types, with their super types being cosidered less specific. So `Frame` would match a `Toolbar`, but if you use `Toolbar` it will be higher priority than `Frame`.
-
-
 ## Settings
 There is a defined set of settings which can be appled to widgets. Note that not all settings will have an effect on all widget types.
 - **foreground**: The text [Color](#values)
@@ -90,7 +87,9 @@ Each settings value has a specific type (see the [Settings](#settings) for which
 
 
 ## Widgets
-The widget types that can be used for your [Selectors](#selectors):
+This section lists the widget types that can be used for your [Selectors](#selectors). Some widgets are built as a component comprised of muliple other widgets. Usually these component widgets are based off of a `Frame` with other widgets inside itself. These types of component widgets will match their "super types" as well as their specific types, with their super types being cosidered less specific. So `Frame` would match a `Toolbar`, but if you use `Toolbar` it is more specific and thus has a higher priority than `Frame`.
+
+Widgets:
 - `MainWindow`: The main window of the program
 - `Toplevel`: Child windows of the program
 - `Frame`: A generic container used to group other widgets
@@ -104,6 +103,7 @@ The widget types that can be used for your [Selectors](#selectors):
 - `Scrollbar`: A standard scrollbar
 - `LabelFrame`: A frame that has a label to group items under, usually with a border
 - `PanedWindow`: A resizable pane, that you can drag to make either side larger or smaller
+
 Components:
 - `DropDown`: A standard preset options dropdown. Made from a `Frame`, with an `Entry` and a `Button` as children
 - `TextDropDown`: Like a basic `Entry` you can type in but with a dropdown (usually for a history of previous entries). Made from a `Frame`, with an `Entry` and a `Button` as children
@@ -125,6 +125,6 @@ Components:
 Some internal parts of widgets can be customized with colors. They are grouped in the `"colors"` section. 
 
 ### "help"
-The `"help"` group has colors used in the help dialog (this dialog):
+The `"help"` group has colors used in the help dialog:
 - `"linkforeground"`: The text [Color](#values) to apply to links
 - `"codebackground"`: The background [Color](#values) to apply to code spans/blocks

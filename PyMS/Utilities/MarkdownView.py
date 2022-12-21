@@ -96,6 +96,7 @@ class MarkdownView(Frame):
 		self.textview.tag_configure('bottom_spacing', spacing3=16)
 		self.textview.tag_configure('bold', font=Font.default().sized(_em()).bolded())
 		self.textview.tag_configure('top_margin', spacing1=64)
+		self.textview.tag_configure('bottom_margin', spacing3=64)
 		self.set_link_foreground('#6A5EFF')
 		self.set_code_background('#EEEEEE')
 		self.textview.tag_raise(SEL)
@@ -186,6 +187,7 @@ class MarkdownView(Frame):
 		self.textview.delete('1.0', END)
 		self.insert_block(document)
 		self.textview.tag_add('line_spacing', '1.0', END)
+		self.textview.insert(END, '\n', 'bottom_margin')
 		self._read_only = True
 
 	def set_link_foreground(self, color): # type: (str) -> None
