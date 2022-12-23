@@ -31,8 +31,7 @@ class DataContext(object):
 	def __init__(self):
 		self.settings = Settings('PyDAT', '1')
 		self.settings.settings.set_defaults({
-			'customlabels': False,
-			'simple_labels': False
+			'customlabels': False
 		})
 
 		self.mpqhandler = None
