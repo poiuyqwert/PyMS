@@ -3,6 +3,7 @@ from .DATData import *
 from .TBLData import TBLData
 from .IconData import IconData
 from .DataID import DATID, DataID
+from .Settings import Settings as SettingsNew
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
@@ -33,6 +34,8 @@ class DataContext(object):
 		self.settings.settings.set_defaults({
 			'customlabels': False
 		})
+
+		self.settings_new = SettingsNew()
 
 		self.mpqhandler = None
 

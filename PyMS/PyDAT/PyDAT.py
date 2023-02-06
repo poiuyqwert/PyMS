@@ -13,7 +13,7 @@ from .OrdersTab import OrdersTab
 from .DataContext import DataContext
 from .DATData import NamesDisplaySetting
 from .SaveMPQDialog import SaveMPQDialog
-from .DATSettingsDialog import DATSettingsDialog
+from .SettingsDialog import SettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
 
 from ..FileFormats.MPQ.MPQ import MPQ
@@ -456,30 +456,31 @@ class PyDAT(MainWindow):
 			SaveMPQDialog(self)
 
 	def mpqtbl(self, key=None, err=None):
-		data = [
-			('TBL Settings',[
-				('stat_txt.tbl', 'Contains Unit, Weapon, Upgrade, Tech, and Order names', 'stat_txt', 'TBL'),
-				('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
-				('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
-				('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
-				('portdata.tbl', 'Contains Portrait mpq file paths', 'portdatatbl', 'TBL'),
-				('mapdata.tbl', 'Contains Campign map mpq file paths', 'mapdatatbl', 'TBL'),
-			]),
-			('Other Settings',[
-				('cmdicons.grp', 'Contains icon images', 'cmdicons', 'CacheGRP'),
-				('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
-			]),
-			('Palette Settings',[
-				('Unit', 'Used to display normal graphics previews', 'Units', 'Palette'),
-				('bfire', 'Used to display graphics previews with bfire.pcx remapping', 'bfire', 'Palette'),
-				('gfire', 'Used to display graphics previews with gfire.pcx remapping', 'gfire', 'Palette'),
-				('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
-				('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
-				('Icons', 'Used to display icon previews', 'Icons', 'Palette')
-			]),
-			'Theme'
-		]
-		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
+		SettingsDialog(self, self.data_context.settings_new, mpqhandler=self.data_context.mpqhandler)
+		# data = [
+		# 	('TBL Settings',[
+		# 		('stat_txt.tbl', 'Contains Unit, Weapon, Upgrade, Tech, and Order names', 'stat_txt', 'TBL'),
+		# 		('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
+		# 		('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
+		# 		('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
+		# 		('portdata.tbl', 'Contains Portrait mpq file paths', 'portdatatbl', 'TBL'),
+		# 		('mapdata.tbl', 'Contains Campign map mpq file paths', 'mapdatatbl', 'TBL'),
+		# 	]),
+		# 	('Other Settings',[
+		# 		('cmdicons.grp', 'Contains icon images', 'cmdicons', 'CacheGRP'),
+		# 		('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
+		# 	]),
+		# 	('Palette Settings',[
+		# 		('Unit', 'Used to display normal graphics previews', 'Units', 'Palette'),
+		# 		('bfire', 'Used to display graphics previews with bfire.pcx remapping', 'bfire', 'Palette'),
+		# 		('gfire', 'Used to display graphics previews with gfire.pcx remapping', 'gfire', 'Palette'),
+		# 		('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
+		# 		('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
+		# 		('Icons', 'Used to display icon previews', 'Icons', 'Palette')
+		# 	]),
+		# 	'Theme'
+		# ]
+		# DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 
 	def register(self, e=None):
 		try:

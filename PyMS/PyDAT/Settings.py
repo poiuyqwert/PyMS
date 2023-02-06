@@ -3,6 +3,7 @@ from .DATData import NamesDisplaySetting
 
 from ..Utilities import SettingsFile
 from ..Utilities.UIKit.FileType import FileType
+from ..Utilities import Assets
 
 def migrate_from_v1(data):
 	try:
@@ -133,11 +134,34 @@ class Settings(SettingsFile.SettingsFile):
 			SettingsFile.Group.__init__(self)
 
 	class Files(SettingsFile.Group):
+		class Palettes(SettingsFile.Group):
+			def __init__(self):
+				self.icons = SettingsFile.File(default=Assets.palette_file_path('Icons.pal'))
+				self.terrain = SettingsFile.File(default=Assets.palette_file_path('Terrain.pal'))
+				self.units = SettingsFile.File(default=Assets.palette_file_path('Units.pal'))
+				self.bfire = SettingsFile.File(default=Assets.palette_file_path('bfire.pal'))
+				self.gfire = SettingsFile.File(default=Assets.palette_file_path('gfire.pal'))
+				self.ofire = SettingsFile.File(default=Assets.palette_file_path('ofire.pal'))
+				self.ticon = SettingsFile.File(default=Assets.mpq_file_ref('unit', 'cmdbtns', 'ticon.pcx'))
+				SettingsFile.Group.__init__(self)
+		class TBLs(SettingsFile.Group):
+			def __init__(self):
+				self.images = SettingsFile.File(default=Assets.mpq_file_ref('arr', 'images.tbl'))
+				self.mapdata = SettingsFile.File(default=Assets.mpq_file_ref('arr', 'mapdata.tbl'))
+				self.portdata = SettingsFile.File(default=Assets.mpq_file_ref('arr', 'portdata.tbl'))
+				self.sfxdata = SettingsFile.File(default=Assets.mpq_file_ref('arr', 'sfxdata.tbl'))
+				self.stat_txt = SettingsFile.File(default=Assets.mpq_file_ref('rez', 'stat_txt.tbl'))
+				self.unitnames = SettingsFile.File()
+				SettingsFile.Group.__init__(self)
 		def __init__(self):
-			# TODO: Files
+			self.palettes = Settings.Files.Palettes()
+			self.tbls = Settings.Files.TBLs()
+			self.cmdicons_grp = SettingsFile.File(default=Assets.mpq_file_ref('unit', 'cmdbtns', 'cmdicons.grp'))
+			self.iscript_bin = SettingsFile.File(default=Assets.mpq_file_ref('scripts', 'iscript.bin'))
 			SettingsFile.Group.__init__(self)
 
 	def __init__(self):
+		self.dont_warn = Settings.DontWarn()
 		self.windows = Settings.Windows()
 		self.lastpath = Settings.LastPath()
 		self.listbox = Settings.Listbox()
