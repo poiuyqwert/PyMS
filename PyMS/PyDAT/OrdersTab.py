@@ -4,10 +4,7 @@ from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 from .IconSelectDialog import IconSelectDialog
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class OrdersTab(DATTab):
@@ -93,7 +90,7 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
 		ls = Frame(m, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)

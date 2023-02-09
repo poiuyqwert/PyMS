@@ -1,15 +1,10 @@
 
 from ..Utilities.utils import lpad
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.EventPattern import *
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.FileType import FileType
 
 import re
 

@@ -9,13 +9,10 @@ from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
-from ..Utilities.FileType import FileType
 
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, settings, ids):

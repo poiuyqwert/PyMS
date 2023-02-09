@@ -1,6 +1,5 @@
 
 from . import Assets
-from .Hotlink import Hotlink
 from .UIKit import *
 
 import os

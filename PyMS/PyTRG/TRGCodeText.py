@@ -3,7 +3,6 @@ from .Tooltips import ConditionsTooltip, ActionsTooltip, TrigPlugActionsTooltip
 
 from ..FileFormats import TRG
 
-from ..Utilities.CodeText import CodeText
 from ..Utilities.UIKit import *
 
 from copy import deepcopy

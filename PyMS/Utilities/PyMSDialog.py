@@ -1,6 +1,5 @@
 
-from .UIKit import Toplevel, parse_geometry
-from .EventPattern import *
+from .UIKit import *
 
 class PyMSDialog(Toplevel):
 	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True), set_min_size=(False,False)):

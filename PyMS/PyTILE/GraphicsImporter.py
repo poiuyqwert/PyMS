@@ -3,13 +3,9 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYP
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 
 class GraphicsImporter(PyMSDialog):
 	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, ids=None):

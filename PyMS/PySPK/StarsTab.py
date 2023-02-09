@@ -2,9 +2,6 @@
 from .Tool import Tool
 
 from ..Utilities.UIKit import *
-from ..Utilities.Notebook import NotebookTab
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 
 class StarsTab(NotebookTab):

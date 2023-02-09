@@ -1,8 +1,6 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.UIKit import *
-from ..Utilities.TextDropDown import TextDropDown
 
 class GotoDialog(PyMSDialog):
 	def __init__(self, parent):

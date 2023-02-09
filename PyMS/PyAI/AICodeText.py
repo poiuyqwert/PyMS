@@ -3,7 +3,7 @@ from .CodeTooltip import *
 
 from ..FileFormats import AIBIN
 
-from ..Utilities.CodeText import CodeText
+from ..Utilities.UIKit import *
 
 import re, copy
 

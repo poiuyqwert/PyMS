@@ -7,9 +7,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
-from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 
 import os, shutil
 

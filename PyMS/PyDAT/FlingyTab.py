@@ -3,11 +3,7 @@ from .DATTab import DATTab
 from .DataID import DATID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.FloatVar import FloatVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class FlingyTab(DATTab):

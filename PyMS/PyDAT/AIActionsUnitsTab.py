@@ -4,11 +4,7 @@ from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
-from ..Utilities.TextTooltip import TextTooltip
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 from math import floor, sqrt

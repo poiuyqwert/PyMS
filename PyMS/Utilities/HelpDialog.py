@@ -2,7 +2,6 @@
 from .UIKit import *
 from .PyMSDialog import PyMSDialog
 from .MarkdownView import MarkdownView
-from .TreeList import TreeList
 from . import Assets
 
 class HelpDialog(PyMSDialog):
@@ -18,6 +17,8 @@ class HelpDialog(PyMSDialog):
 		self.treelist.bind(WidgetEvent.Listbox.Select, lambda *_: self.load_help_file())
 
 		self.markdownview = MarkdownView(self, link_callback=self.load)
+		self.markdownview.set_link_foreground(Theme.get_color('help', 'linkforeground', default='#6A5EFF'))
+		self.markdownview.set_code_background(Theme.get_color('help', 'codebackground', default='#EEEEEE'))
 		self.markdownview.pack(side=LEFT, fill=BOTH, expand=1)
 
 	def setup_complete(self):

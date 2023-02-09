@@ -1,7 +1,6 @@
 
 from ..Utilities.utils import fit, float_to_str
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.UIKit import Checkbutton
+from ..Utilities.UIKit import *
 
 class DATTabConveniences(object):
 	def tip(self, obj, tipname, hint):

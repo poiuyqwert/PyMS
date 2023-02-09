@@ -6,11 +6,8 @@ from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
-from ..Utilities.Toolbar import Toolbar
 
 import os
 
@@ -144,7 +141,7 @@ class PreviewerDialog(PyMSDialog):
 		self.showpreview = IntVar()
 		self.showpreview.set(self.toplevel.settings.previewer.get('showpreview',1))
 		p = Frame(right)
-		self.preview = Canvas(p, width=257, height=257, background='#000000')
+		self.preview = Canvas(p, width=257, height=257, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		self.scroll = Scrollbar(p, orient=HORIZONTAL, command=self.selectframe)
 		self.scroll.set(0,1)

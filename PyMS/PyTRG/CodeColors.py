@@ -2,7 +2,6 @@
 from ..Utilities.utils import couriernew, fit
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.ScrolledListbox import ScrolledListbox
 
 from collections import OrderedDict
 from copy import deepcopy

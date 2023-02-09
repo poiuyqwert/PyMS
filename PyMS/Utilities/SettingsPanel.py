@@ -15,7 +15,6 @@ from .ErrorDialog import ErrorDialog
 from .PyMSError import PyMSError
 from .UIKit import *
 from . import Assets
-from .FileType import FileType
 
 import os
 

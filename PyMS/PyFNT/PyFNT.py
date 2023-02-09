@@ -10,10 +10,7 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.Settings import Settings
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
@@ -22,7 +19,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
@@ -289,7 +285,7 @@ DISPLAY_CHARS = [
 class PyFNT(MainWindow):
 	def __init__(self, guifile=None):
 		self.settings = Settings('PyFNT', '1')
-		self.settings.set_defaults({'tfontgam':'MPQ:game\\tfontgam.pcx'})
+		self.settings.settings.files.set_defaults({'tfontgam':'MPQ:game\\tfontgam.pcx'})
 
 		#Window
 		MainWindow.__init__(self)
@@ -298,6 +294,7 @@ class PyFNT(MainWindow):
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
 		setup_trace('PyFNT', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.fnt = None
@@ -341,7 +338,7 @@ class PyFNT(MainWindow):
 		#Canvas
 		Label(rightframe, text='Display:', anchor=W).pack(side=TOP, fill=X)
 		t = Frame(rightframe)
-		self.canvas = Canvas(t, width=0, height=0, background='#000000')
+		self.canvas = Canvas(t, width=0, height=0, background='#000000', theme_tag='preview')
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		t.pack(side=LEFT, fill=Y)
 		rightframe.pack(side=LEFT, fill=BOTH, expand=1, padx=1, pady=1)
@@ -377,7 +374,7 @@ class PyFNT(MainWindow):
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(self.mpqhandler.get_file(self.settings['tfontgam']))
+			palette.load_file(self.mpqhandler.get_file(self.settings.settings.files.tfontgam))
 		except PyMSError as e:
 			err = e
 		else:
@@ -547,7 +544,7 @@ class PyFNT(MainWindow):
 					self.status.set('Font imported successfully!')
 
 	def special(self, key=None, err=None):
-		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')])], (340,215), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')]),('Theme',)], (550,380), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

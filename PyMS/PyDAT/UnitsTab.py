@@ -9,7 +9,6 @@ from .AIActionsUnitsTab import AIActionsUnitsTab
 from .DataID import DATID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.Notebook import Notebook
 from ..Utilities.UIKit import *
 
 class UnitsTab(DATTab):

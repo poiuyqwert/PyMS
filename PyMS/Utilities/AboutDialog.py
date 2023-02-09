@@ -1,6 +1,5 @@
 
 from .PyMSDialog import PyMSDialog
-from .Hotlink import Hotlink
 from .UIKit import *
 
 # TODO: Update about dialog

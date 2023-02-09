@@ -4,7 +4,6 @@ from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
 
 class FindDialog(PyMSDialog):
 	def __init__(self, parent, findstr=False):

@@ -4,10 +4,8 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYP
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.FileType import FileType
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (

@@ -22,22 +22,13 @@ from ..FileFormats.DAT import *
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, lpad
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.TextDropDown import TextDropDown
-from ..Utilities.Notebook import Notebook
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.StatusBar import StatusBar
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
-from ..Utilities.CollapseView import CollapseView
-from ..Utilities.DropDown import DropDown
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 
 import os
 
@@ -54,6 +45,7 @@ class PyDAT(MainWindow):
 		setup_trace('PyDAT', self)
 
 		self.data_context = DataContext()
+		Theme.load_theme(self.data_context.settings.get('theme'), self)
 	
 		self.updates = []
 		self.update_after_id = None
@@ -484,7 +476,8 @@ class PyDAT(MainWindow):
 				('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
 				('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
 				('Icons', 'Used to display icon previews', 'Icons', 'Palette')
-			])
+			]),
+			'Theme'
 		]
 		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 

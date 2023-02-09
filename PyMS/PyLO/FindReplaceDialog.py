@@ -1,7 +1,6 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.TextDropDown import TextDropDown
 
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent):

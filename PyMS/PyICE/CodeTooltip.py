@@ -3,7 +3,6 @@ from ..FileFormats import IScriptBIN
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 
 class CodeTooltip(Tooltip):
 	tag = ''
@@ -22,7 +21,7 @@ class CodeTooltip(Tooltip):
 		t = ''
 		if self.tag:
 			pos = list(self.parent.winfo_pointerxy())
-			head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx()),pos[1] - self.parent.winfo_rooty()))
+			head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
 			t = self.parent.get(head,tail)
 		try:
 			t = self.gettext(t)

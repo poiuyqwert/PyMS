@@ -2,10 +2,7 @@
 from .DATTab import DATTab
 from .DataID import DATID, DataID
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata

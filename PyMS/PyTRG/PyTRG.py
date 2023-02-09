@@ -12,9 +12,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -23,7 +21,6 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 # def customs(trg):
@@ -50,6 +47,7 @@ class PyTRG(MainWindow):
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace('PyTRG', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.trg = None
 		self.file = None
@@ -361,9 +359,10 @@ class PyTRG(MainWindow):
 			('File Settings',[
 				('stat_txt.tbl', 'Contains Unit and AI Script names', 'stat_txt', 'TBL'),
 				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", 'aiscript', 'AIBIN'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,215), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

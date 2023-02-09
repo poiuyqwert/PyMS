@@ -3,10 +3,7 @@ from .DATTab import DATTab
 from .DataID import DATID
 from .DATRef import DATRefs, DATRef
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class SpritesTab(DATTab):
@@ -81,7 +78,7 @@ class SpritesTab(DATTab):
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
 		s.pack()

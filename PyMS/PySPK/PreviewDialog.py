@@ -15,7 +15,7 @@ class PreviewDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Parallax Preview', center=False, resizable=(False, False))
 
 	def widgetize(self):
-		self.canvas = Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT))
+		self.canvas = Canvas(self, background='#000000', highlightthickness=0, width=640, height=480, scrollregion=(0,0,PreviewDialog.MAP_WIDTH,PreviewDialog.MAP_HEIGHT), theme_tag='preview')
 		self.canvas.grid(row=0,column=0)
 		xscrollbar = Scrollbar(self, orient=HORIZONTAL, command=self.canvas.xview)
 		xscrollbar.grid(row=1,column=0, sticky=EW)

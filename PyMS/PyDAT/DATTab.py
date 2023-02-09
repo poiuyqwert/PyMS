@@ -2,13 +2,10 @@
 from .DATTabConveniences import DATTabConveniences
 from .EntryCountDialog import EntryCountDialog
 
-from ..Utilities.Notebook import NotebookTab
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import copy

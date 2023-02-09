@@ -4,10 +4,7 @@ from .DataID import DATID
 
 from ..FileFormats.DAT.UnitsDAT import Unit
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 
 class SoundsUnitsTab(DATUnitsTab):
 	def __init__(self, parent, toplevel, parent_tab):

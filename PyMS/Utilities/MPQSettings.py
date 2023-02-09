@@ -4,9 +4,6 @@ from ..FileFormats.MPQ.MPQ import MPQ
 from . import Assets
 from .setutils import PYMS_SETTINGS
 from .UIKit import *
-from .Toolbar import Toolbar
-from .ScrolledListbox import ScrolledListbox
-from .FileType import FileType
 
 import os
 

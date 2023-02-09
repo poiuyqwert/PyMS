@@ -1,9 +1,7 @@
 # coding=utf-8
 
 from .UIKit import *
-from .TextTooltip import TextDynamicTooltip, TextTooltip
 from .utils import is_mac
-# from AutohideScrollbar import AutohideScrollbar
 from . import Markdown
 from . import Assets
 
@@ -94,13 +92,13 @@ class MarkdownView(Frame):
 		self.textview.tag_configure('h5', font=Font.default().sized(_em(0.875)).bolded(), spacing1=24, spacing3=16)
 		self.textview.tag_configure('h6', font=Font.default().sized(_em(0.85)).bolded(), spacing1=24, spacing3=16)
 		self.textview.tag_configure('p', font=Font.default().sized(_em()))
-		self.textview.tag_configure('code', font=Font.fixed().sized(_em()), background='#EEEEEE', lmargin1=16,lmargin2=16, rmargin=16, wrap=NONE)
 		self.textview.tag_configure('top_spacing', spacing1=16)
 		self.textview.tag_configure('bottom_spacing', spacing3=16)
 		self.textview.tag_configure('bold', font=Font.default().sized(_em()).bolded())
-		self.textview.tag_configure('link', foreground='#6A5EFF', underline=1)
-		self.textview.tag_configure('codespan', font=Font.fixed().sized(_em()), background='#EEEEEE')
 		self.textview.tag_configure('top_margin', spacing1=64)
+		self.textview.tag_configure('bottom_margin', spacing3=64)
+		self.set_link_foreground('#6A5EFF')
+		self.set_code_background('#EEEEEE')
 		self.textview.tag_raise(SEL)
 
 		self.links = {} # type: dict[str, Markdown.Link]
@@ -189,7 +187,15 @@ class MarkdownView(Frame):
 		self.textview.delete('1.0', END)
 		self.insert_block(document)
 		self.textview.tag_add('line_spacing', '1.0', END)
+		self.textview.insert(END, '\n', 'bottom_margin')
 		self._read_only = True
+
+	def set_link_foreground(self, color): # type: (str) -> None
+		self.textview.tag_configure('link', foreground=color, underline=1)
+
+	def set_code_background(self, color): # type: (str) -> None
+		self.textview.tag_configure('codespan', font=Font.fixed().sized(_em()), background=color)
+		self.textview.tag_configure('code', font=Font.fixed().sized(_em()), background=color, lmargin1=16,lmargin2=16, rmargin=16, wrap=NONE)
 
 	def insert_block(self, block): # type: (Markdown.Block) -> None
 		tags = ()
@@ -217,7 +223,8 @@ class MarkdownView(Frame):
 			self.insert_content(block, tags, additional_last_line_tags=additional_last_line_tags)
 		elif isinstance(block, Markdown.IndentedCodeBlock) or isinstance(block, Markdown.FencedCodeBlock):
 			self.insert_content(block, tags + ('code',), additional_first_line_tags=('top_spacing',), additional_last_line_tags=('bottom_spacing',))
-			self._next_tags = ('top_spacing',)
+			# self._next_tags = ('top_spacing',)
+			self.textview.insert(END, '\n')
 		elif isinstance(block, Markdown.ListBlock):
 			index = min(len(self._lists), 2)
 			if block.marker == Markdown.ListBlock.MARKER_BULLET:

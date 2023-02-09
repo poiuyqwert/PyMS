@@ -6,15 +6,14 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 
@@ -30,6 +29,7 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.palette = None
@@ -52,6 +52,8 @@ class PyPAL(MainWindow):
 		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.saveas(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
@@ -64,7 +66,7 @@ class PyPAL(MainWindow):
 		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=Ctrl.p, tags='paste')
 
 		#Canvas
-		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os)
+		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os, theme_tag='preview')
 		self.canvas.pack(padx=2, pady=2)
 		for n in range(256):
 			x,y = 3+17*(n%16),3+17*(n/16)
@@ -274,6 +276,9 @@ class PyPAL(MainWindow):
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyPAL.md')

@@ -3,7 +3,6 @@ from ..FileFormats.Tileset.Tileset import megatile_to_photo
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
 
 class Placeability(PyMSDialog):
 	def __init__(self, parent, settings, id=0):

@@ -9,7 +9,6 @@ from Libs.analytics import *
 from Tkinter import *
 from tkMessageBox import *
 import tkFileDialog,tkColorChooser
-from Libs.SpecialLists import TreeList
 from PIL import Image as PILImage
 from PIL import ImageDraw as PILDraw
 from PIL import ImageTk
@@ -2401,9 +2400,10 @@ class PyMAP(Tk):
 			('File Settings',[
 				('stat_txt.tbl', 'Contains Unit and AI Script names', ('profile','stat_txt'), 'TBL'),
 				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", ('profile','aiscript'), 'AIBIN'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,215), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
 
 	def add_undo(self, action):
 		self.action_manager.add_action(action)

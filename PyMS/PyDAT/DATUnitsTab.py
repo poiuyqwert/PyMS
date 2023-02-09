@@ -1,7 +1,7 @@
 
 from .DATTabConveniences import DATTabConveniences
 
-from ..Utilities.Notebook import NotebookTab
+from ..Utilities.UIKit import *
 
 class DATUnitsTab(NotebookTab, DATTabConveniences):
 	def __init__(self, parent, toplevel, parent_tab):

@@ -1,7 +1,5 @@
 
 from .utils import isstr
-from .WarnDialog import WarnDialog
-from .UIKit import FileDialog, HORIZONTAL, parse_geometry, parse_resizable
 from . import Assets
 from .fileutils import check_allow_overwrite_internal_file
 
@@ -109,10 +107,12 @@ class SettingDict(object):
 		self.get(key, get_default)
 
 	def save_pane_size(self, key, panedwindow, index=0):
+		from .UIKit import HORIZONTAL
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		self[key] = panedwindow.sash_coord(index)[axis]
 
 	def save_pane_sizes(self, key, panedwindow):
+		from .UIKit import HORIZONTAL
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		sizes = []
 		o = 0
@@ -126,12 +126,14 @@ class SettingDict(object):
 		if not key in self and default == None:
 			return
 		panedwindow.update()
+		from .UIKit import HORIZONTAL
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		size = [0,0]
 		size[axis] = self.get(key, default)
 		panedwindow.sash_place(index, *size)
 
 	def load_pane_sizes(self, key, panedwindow, defaults):
+		from .UIKit import HORIZONTAL
 		axis = 0 if panedwindow.cget('orient') == HORIZONTAL else 1
 		o = 0
 		panedwindow.update()
@@ -142,6 +144,7 @@ class SettingDict(object):
 			panedwindow.sash_place(n, *size)
 
 	def save_window_size(self, key, window, closing=True):
+		from .UIKit import parse_resizable, parse_geometry
 		resizable_w,resizable_h = parse_resizable(window.resizable())
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
@@ -159,6 +162,7 @@ class SettingDict(object):
 			self[key] = '+%d+%d' % (x,y)
 
 	def load_window_size(self, key, window, position=None, default_center=True, default_size=None):
+		from .UIKit import parse_geometry, parse_resizable
 		geometry = self.get(key)
 		if geometry:
 			w,h,x,y,fullscreen = parse_geometry(geometry)
@@ -236,6 +240,7 @@ class SettingDict(object):
 		return ext
 
 	def _select_file(self, parent, key, title, ext, filetypes, filename, store, include_all_filetype, save):
+		from .UIKit import FileDialog
 		dialog = FileDialog.asksaveasfilename if save else FileDialog.askopenfilename
 		filetypes = self._process_filetypes(filetypes, include_all_filetype)
 		ext = self._process_extension(ext, filetypes)
@@ -276,6 +281,7 @@ class SettingDict(object):
 			kwargs['filetypes'] = filetypes
 		if ext:
 			kwargs['defaultextension'] = ext
+		from .UIKit import FileDialog
 		paths = FileDialog.askopenfilename(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store), multiple=True, **kwargs)
 		parent._pyms__window_blocking = False
 		if isstr(paths):
@@ -291,6 +297,7 @@ class SettingDict(object):
 
 	def select_directory(self, parent, key='dir', title='Select Folder', store=True):
 		parent._pyms__window_blocking = True
+		from .UIKit import FileDialog
 		path = FileDialog.askdirectory(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store))
 		parent._pyms__window_blocking = False
 		if path and store:
@@ -300,6 +307,7 @@ class SettingDict(object):
 	def warn(self, key, parent, message, title='Warning!'):
 		if self.get(key):
 			return
+		from .WarnDialog import WarnDialog
 		w = WarnDialog(parent, message, title, show_dont_warn=True)
 		if w.dont_warn.get():
 			self[key] = True

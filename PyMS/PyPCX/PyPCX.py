@@ -9,16 +9,14 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
@@ -33,6 +31,7 @@ class PyPCX(MainWindow):
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.pcx = None
 		self.file = None
@@ -56,6 +55,8 @@ class PyPCX(MainWindow):
 		self.toolbar.add_button(Assets.get_image('savepal'), lambda: self.savepal(file_type=Palette.FileType.sc_pal), 'Save Palette as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savewpe'), lambda: self.savepal(file_type=Palette.FileType.wpe), 'Save Palette as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveact'), lambda: self.savepal(file_type=Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.pcx editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -249,6 +250,9 @@ class PyPCX(MainWindow):
 			register_registry('PyPCX', 'pcx')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyPCX.md')
