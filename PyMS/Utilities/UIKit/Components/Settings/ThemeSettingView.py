@@ -15,21 +15,19 @@ class ThemeSettingView(SettingsView):
 		self.default = BooleanVar()
 		self.default.trace('w', self.default_updated)
 		self.author = StringVar()
-		self.author.set('Test')
 		self.description = StringVar()
-		self.description.set('Test')
 
 		Label(self, text='Theme:', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text='Choose a default theme for all programs or override the theme for this program.\nNote: If you change the theme you will need to restart the program for it to apply.', anchor=W, justify=LEFT).pack(fill=X, pady=(0,10))
 
 		frame = Frame(self)
-		frame.pack(fill=X, expand=1)
+		frame.pack(fill=BOTH, expand=1)
 
 		listbox_frame = Frame(frame)
-		listbox_frame.pack(side=LEFT)
+		listbox_frame.pack(side=LEFT, fill=Y)
 		self.listbox = ScrolledListbox(listbox_frame, width=20, height=10)
 		self.listbox.bind(WidgetEvent.Listbox.Select, self.selection_updated)
-		self.listbox.pack()
+		self.listbox.pack(fill=Y, expand=1)
 		Checkbutton(listbox_frame, text='Default', variable=self.default).pack()
 
 		detail_frame = Frame(frame)
@@ -71,7 +69,7 @@ class ThemeSettingView(SettingsView):
 		return theme
 
 	def theme_index(self, theme):
-		if theme == None:
+		if theme == None or not theme in Assets.theme_list():
 			return 0
 		return 1 + Assets.theme_list().index(theme)
 

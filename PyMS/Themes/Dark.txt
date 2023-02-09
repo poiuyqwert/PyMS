@@ -1,0 +1,30 @@
+{
+    "author": "Corbo",
+    "description": "Adjust colors to have dark backgrounds and light text",
+    "widgets": {
+        "*": {
+            "activebackground": "#27292a",
+            "activeforeground": "#bbbbbb",
+            "background": "#2b2b2b",
+            "foreground": "#bbbbbb",
+            "selectbackground": "#344134",
+            "selectcolor": "#4e5254",
+            "disabledforeground": "#606060",
+            "borderwidth": 1,
+            "highlightthickness": 0,
+            "disabledbackground": "#242424"
+        },
+        "Canvas.preview": {
+            "background": "#000000"
+        },
+        "LabelFrame": {
+            "relief": "groove"
+        }
+    },
+    "colors": {
+        "help": {
+            "linkforeground": "#68779c",
+            "codebackground": "#35383d"
+        }
+    }
+}
