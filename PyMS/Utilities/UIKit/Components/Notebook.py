@@ -57,12 +57,12 @@ class Notebook(Frame):
 
 	def add_tab(self, frame, title, tab_id=None):
 		tab_id = tab_id or title
-		tab = Radiobutton(self.tabs_container, image=Assets.get_image('trans_fix'), text=title, fg='#000', indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
+		tab = Radiobutton(self.tabs_container, image=Assets.get_image('trans_fix'), text=title, fg='#000', indicatoron=0, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(tab_id))
 		tab.pack(side=LEFT)
 		self.tabs.append(tab)
 		self.pages[tab_id] = (frame, len(self.pages))
 		if not self.active:
-			self.display(title)
+			self.display(tab_id)
 		return tab
 
 	def display(self, tab_id):

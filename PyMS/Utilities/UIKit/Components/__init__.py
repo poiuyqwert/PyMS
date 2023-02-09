@@ -21,3 +21,4 @@ from .TextTooltip import TextTooltip, TextDynamicTooltip
 from .Toolbar import Toolbar
 from .Tooltip import Tooltip, TooltipWindow
 from .TreeList import TreeList
+from .ScrolledText import ScrolledText
