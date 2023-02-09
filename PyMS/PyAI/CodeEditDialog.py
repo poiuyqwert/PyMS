@@ -337,9 +337,11 @@ class CodeEditDialog(PyMSDialog):
 			elif line.strip():
 				d = line.lstrip().split(';',1)[0].strip().split(' ')
 				if d[0] in AIBIN.AIBIN.short_labels:
+					if d[0] == 'debug' and len(d) >= 3:
+						d = [d[0], d[1], '"%s"' % ' '.join(d[2:])]
 					data += '    %s(%s)' % (d[0], ', '.join(d[1:]))
 					if ';' in line:
-						data += ' # ' + line.split('#',1)[1]
+						data += ' # ' + line.split(';',1)[1]
 				else:
 					if not None in headerinfo:
 						data += '# ' + line

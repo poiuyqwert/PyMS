@@ -17,7 +17,7 @@ class DATSettingsDialog(SettingsDialog):
 			if d == 'Theme':
 				tab = SettingsTab(self.tabs)
 				theme_view = ThemeSettingView(tab, self.settings)
-				theme_view.pack(fill=X)
+				theme_view.pack(fill=BOTH, expand=1)
 				tab.register_settings_view(theme_view)
 				self.pages.append(tab)
 				self.tabs.add_tab(tab, d)

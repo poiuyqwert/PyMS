@@ -31,7 +31,7 @@ class SettingsDialog(PyMSDialog):
 				if len(d) == 1:
 					tab = SettingsTab(self.tabs)
 					theme_view = ThemeSettingView(tab, self.settings)
-					theme_view.pack(fill=X)
+					theme_view.pack(fill=BOTH, expand=1)
 					tab.register_settings_view(theme_view)
 					self.pages.append(tab)
 				elif isinstance(d[1],list):
