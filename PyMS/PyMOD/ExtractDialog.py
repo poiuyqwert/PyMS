@@ -25,39 +25,45 @@ class ExtractDialog(PyMSDialog):
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
 
-		s = Frame(self)
+		frame = Frame(self)
 		history = self.settings.extract.get('history',[])[::-1]
-		self.textdrop = TextDropDown(s, self.search, history)
+		self.textdrop = TextDropDown(frame, self.search, history)
 		self.textdrop.entry.c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
-		self.open = Button(s, text='Extract', width=10, command=self.ok)
-		self.open.pack(side=RIGHT, padx=1, pady=3)
-		s.pack(fill=X)
-		s = Frame(self)
-		Radiobutton(s, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		Radiobutton(s, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		Button(s, text='Cancel', width=10, command=self.cancel).pack(side=RIGHT, padx=1, pady=3)
-		s.pack(fill=X)
+		Radiobutton(frame, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
+		Radiobutton(frame, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
+		frame.pack(fill=X)
+
+		frame = Frame(self)
+		self.extract_button = Button(frame, text='Extract', width=10, command=self.extract)
+		self.extract_button.pack(side=LEFT, padx=1, pady=3)
+		Button(frame, text='Done', width=10, command=self.cancel).pack(side=LEFT, padx=1, pady=3)
+		frame.pack(side=BOTTOM)
 
 		self.listfiles()
-		self.updatelist()
 
-		return self.open
+		return self.extract_button
 
 	def setup_complete(self):
 		self.settings.windows.load_window_size('extract', self)
 
 	def listfiles(self):
-		self.files = []
-		for file_entry in self.mpqhandler.list_files():
-			if not file_entry.file_name in self.files:
-				self.files.append(file_entry.file_name)
-		for path,_,filenames in os.walk(Assets.mpq_dir):
-			for filename in filenames:
-				mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
-				if not mpq_filename in self.files:
-					self.files.append(mpq_filename)
-		self.files.sort()
+		def get_files_list(mpqhandler):
+			files = []
+			for file_entry in mpqhandler.list_files():
+				if not file_entry.file_name in files:
+					files.append(file_entry.file_name)
+			for path,_,filenames in os.walk(Assets.mpq_dir):
+				for filename in filenames:
+					mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
+					if not mpq_filename in files:
+						files.append(mpq_filename)
+			files.sort()
+			return files
+		def update_files_list(files):
+			self.files = files
+			self.updatelist()
+		self.after_background(update_files_list, get_files_list, self.mpqhandler)
 
 	def updatelist(self):
 		if self.searchtimer:
@@ -77,9 +83,9 @@ class ExtractDialog(PyMSDialog):
 				self.listbox.insert(END,f)
 		if self.listbox.size():
 			self.listbox.select_set(0)
-			self.open['state'] = NORMAL
+			self.extract_button['state'] = NORMAL
 		else:
-			self.open['state'] = DISABLED
+			self.extract_button['state'] = DISABLED
 
 	def updatecolor(self):
 		if self.resettimer:
@@ -92,16 +98,8 @@ class ExtractDialog(PyMSDialog):
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
-	def ok(self):
-		f = self.listbox.get(self.listbox.curselection()[0])
-		self.file = 'MPQ:' + f
-		history = self.settings.extract.get('history', [])
-		if f in history:
-			history.remove(f)
-		history.append(f)
-		if len(history) > 10:
-			del history[0]
-		PyMSDialog.ok(self)
+	def extract(self):
+		pass
 
 	def dismiss(self):
 		self.settings.windows.save_window_size('extract', self)

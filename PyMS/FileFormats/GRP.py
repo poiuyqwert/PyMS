@@ -453,3 +453,20 @@ class GRP:
 		image_data = self.save_data()
 		f.write(image_data)
 		f.close()
+
+	def add_frame(self, frame):
+		if self.frames:
+			if len(frame) != self.height:
+				raise PyMSError('Add Frame', "Frame height doesn't match (expected %d, got %d)" % (len(frame), self.height))
+			for line in frame:
+				if len(line) != self.width:
+					raise PyMSError('Add Frame', "Frame width doesn't match (expected %d, got %d)" % (len(frame), self.width))
+		else:
+			self.height = len(frame)
+			self.width = len(frame[0])
+			for line in frame:
+				if len(line) != self.width:
+					raise PyMSError('Add Frame', "Frame has a line with incorrect width (expected %d, got %d)" % (len(frame), self.width))
+		self.frames += 1
+		self.images.append(frame)
+		self.images_bounds.append(image_bounds(frame))

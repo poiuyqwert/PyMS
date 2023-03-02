@@ -163,7 +163,7 @@ class PyMOD(MainWindow):
 			return
 		self.refresh_files()
 		self.notebook.display(TabID.logs)
-		self.logs_textview.delete(0, END)
+		self.logs_textview.delete('1.0', END)
 		self.compile_thread = CompileThread(self.project_path, self.source_graph)
 		self.compile_thread.start()
 		self.update_states()
@@ -182,6 +182,7 @@ class PyMOD(MainWindow):
 				break
 			if isinstance(message, CompileThread.OutputMessage.Log):
 				self.logs_textview.insert(END, message.text + '\n', message.tag)
+				self.logs_textview.textview.see(END)
 			self.compile_thread.output_queue.task_done()
 		if not self.compile_thread.is_alive():
 			self.compile_thread = None

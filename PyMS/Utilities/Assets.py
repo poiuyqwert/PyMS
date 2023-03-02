@@ -69,13 +69,13 @@ def mpq_file_ref(*path_components): # type: (*str) -> str
 def mpq_file_path_to_file_name(file_path): # type: (str) -> str
 	if not file_path.startswith(mpq_dir):
 		return file_path
-	path_components = _os.path.split(_os.path.relpath(file_path, mpq_dir))
+	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
 	return mpq_file_name(*path_components)
 
 def mpq_file_path_to_ref(file_path): # type: (str) -> str
 	if not file_path.startswith(mpq_dir):
 		return file_path
-	path_components = _os.path.split(_os.path.relpath(file_path, mpq_dir))
+	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
 	return mpq_file_ref(*path_components)
 
 def mpq_ref_to_file_path(file_ref): # type: (str) -> str
