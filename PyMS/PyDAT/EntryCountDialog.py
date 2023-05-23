@@ -3,7 +3,6 @@ from .DATData import DATData
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.Settings import Settings
 
 class EntryCountDialog(PyMSDialog):

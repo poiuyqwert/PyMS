@@ -13,19 +13,16 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PyLO')
@@ -46,6 +43,7 @@ class PyLO(MainWindow):
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace('PyLO', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.lo = None
 		self.file = None
@@ -119,7 +117,7 @@ class PyLO(MainWindow):
 		Label(l, textvariable=self.baseframes, anchor=W).pack(side=LEFT)
 		Label(l, textvariable=self.overlayframes, anchor=W).pack(side=RIGHT)
 		l.pack(fill=X, expand=1)
-		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0)
+		self.canvas = Canvas(c, borderwidth=0, width=275, height=275, background='#000000', highlightthickness=0, theme_tag='preview')
 		for tt in [0,1]:
 			self.canvas.bind(Mouse.Click_Left, lambda e,t=tt: self.drag(e,t,0))
 			self.canvas.bind(Mouse.Drag_Left, lambda e,t=tt: self.drag(e,t,1))
@@ -520,7 +518,7 @@ class PyLO(MainWindow):
 			self.text.setup(c.cont)
 
 	def mpqsettings(self, key=None):
-		SettingsDialog(self, None, (340,215), mpqhandler=self.mpqhandler)
+		SettingsDialog(self, [('Theme',)], (550,380), mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:

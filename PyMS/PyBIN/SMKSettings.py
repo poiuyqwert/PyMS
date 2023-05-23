@@ -2,9 +2,7 @@
 from ..FileFormats import DialogBIN
 
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.DropDown import DropDown
 from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities import Assets
 

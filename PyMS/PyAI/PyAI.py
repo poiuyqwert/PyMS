@@ -20,9 +20,6 @@ from ..Utilities.Settings import Settings
 from ..Utilities import Assets
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -31,7 +28,6 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import os, shutil
@@ -58,6 +54,7 @@ class PyAI(MainWindow):
 		ga.set_application('PyAI', Assets.version('PyAI'))
 		ga.track(GAScreen('PyAI'))
 		setup_trace('PyAI', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.aiscript = None
 		self.bwscript = None
@@ -204,6 +201,7 @@ class PyAI(MainWindow):
 		self.listbox.get_entry = self.get_entry
 		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
 		self.listbox.bind(Double.Click_Left, self.codeedit)
+		self.listbox._tooltip = ListboxTooltip(self.listbox)
 
 		# TODO: Cleanup
 		listmenu = [
@@ -1092,9 +1090,10 @@ class PyAI(MainWindow):
 				('units.dat', 'Used to check if a unit is a Building or has Air/Ground attacks', 'unitsdat', 'UnitsDAT'),
 				('upgrades.dat', 'Used to specify upgrade string entries in stat_txt.tbl', 'upgradesdat', 'UpgradesDAT'),
 				('techdata.dat', 'Used to specify technology string entries in stat_txt.tbl', 'techdatadat', 'TechDAT')
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,295), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
 
 	def openset(self, key=None):
 		file = self.settings.lastpath.set_txt.select_open_file(self, title='Load Settings', filetypes=[FileType.txt()])

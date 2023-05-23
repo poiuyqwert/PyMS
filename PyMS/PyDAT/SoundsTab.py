@@ -7,10 +7,7 @@ from ..FileFormats.DAT.SoundsDAT import Sound
 from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.utils import play_sound
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class SoundsTab(DATTab):
@@ -122,7 +119,10 @@ class SoundsTab(DATTab):
 
 	def play(self):
 		if play_sound:
-			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1])
+			tbl_string = self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
+			if tbl_string.endswith('<0>'):
+				tbl_string = tbl_string[:-3]
+			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
 			if f:
 				play_sound(f.read())
 

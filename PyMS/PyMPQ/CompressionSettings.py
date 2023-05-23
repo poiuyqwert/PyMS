@@ -3,8 +3,6 @@ from .CompressionSetting import CompressionOption, CompressionSetting
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
-from ..Utilities.DropDown import DropDown
-from ..Utilities.ScrolledListbox import ScrolledListbox
 
 import os
 

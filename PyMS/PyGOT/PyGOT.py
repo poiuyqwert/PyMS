@@ -4,23 +4,17 @@ from ..FileFormats.TRG import TRG
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.SStringVar import SStringVar
-from ..Utilities.DropDown import DropDown
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.SettingsDialog import SettingsDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyGOT')
 
@@ -32,7 +26,7 @@ HINTS = {
 	'subid':'An ID used to define the order of the variation when its listed in StarCraft',
 }
 def tip(o, h):
-	Tooltip(o, fit('', HINTS[h], end=True)[:-1], mouse=True)
+	Tooltip(o, fit('', HINTS[h], end=True)[:-1])
 
 def get_info(label):
 	if label == 'TeamMode':
@@ -52,6 +46,7 @@ class PyGOT(MainWindow):
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
 		setup_trace('PyGOT', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 		self.resizable(False, False)
 
 		self.got = None
@@ -75,6 +70,8 @@ class PyGOT(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(True), 'Convert *.trg to GOT compatable', Ctrl.t)
 		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(False), 'Revert GOT compatable *.trg', Ctrl.Alt.t)
+		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.got editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -391,6 +388,9 @@ class PyGOT(MainWindow):
 			register_registry('PyGOT', 'got', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
+
+	def sets(self, key=None, err=None):
+		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self, e=None):
 		HelpDialog(self, self.settings, 'Help/Programs/PyGOT.md')

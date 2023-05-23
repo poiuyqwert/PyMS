@@ -31,6 +31,7 @@ class LayerRow(Frame):
 	def update_state(self, *args, **kwargs):
 		self.visible.set((self.visvar.get() & (1 << self.layer)) != 0)
 		self.locked.set((self.lockvar.get() & (1 << self.layer)) != 0)
+		# TODO: Support theme
 		if self.selvar.get() == self.layer:
 			self.config(background=Colors.SystemHighlight)
 			self.label.config(background=Colors.SystemHighlight)

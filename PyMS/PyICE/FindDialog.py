@@ -1,8 +1,6 @@
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.TextDropDown import TextDropDown
-from ..Utilities.TreeList import TreeList
 
 class FindDialog(PyMSDialog):
 	def __init__(self, parent):

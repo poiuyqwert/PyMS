@@ -3,13 +3,9 @@ from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYP
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 
 class GraphicsImporter(PyMSDialog):
 	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, ids=None):
@@ -48,21 +44,21 @@ class GraphicsImporter(PyMSDialog):
 		buts = Frame(frame)
 		button = Button(buts, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_paths(replace=True))
 		button.pack(side=LEFT, padx=(1,0))
-		Tooltip(button, "Set BMP's", mouse=True)
+		Tooltip(button, "Set BMP's")
 		button = Button(buts, image=Assets.get_image('add'), width=20, height=20, command=lambda *_: self.select_paths(replace=False))
 		button.pack(side=LEFT)
-		Tooltip(button, "Add BMP's", mouse=True)
+		Tooltip(button, "Add BMP's")
 		button = Button(buts, image=Assets.get_image('remove'), width=20, height=20, command=self.remove_paths)
 		button.pack(side=LEFT)
-		Tooltip(button, "Remove BMP's", mouse=True)
+		Tooltip(button, "Remove BMP's")
 		self.sel_buttons = [button]
 		button = Button(buts, image=Assets.get_image('down'), width=20, height=20, command=self.shift_down)
 		button.pack(side=RIGHT, padx=(0,1))
-		Tooltip(button, "Move Selections Down", mouse=True)
+		Tooltip(button, "Move Selections Down")
 		self.sel_buttons.append(button)
 		button = Button(buts, image=Assets.get_image('up'), width=20, height=20, command=self.shift_up)
 		button.pack(side=RIGHT)
-		Tooltip(button, "Move Selections Up", mouse=True)
+		Tooltip(button, "Move Selections Up")
 		self.sel_buttons.append(button)
 		buts.pack(fill=X)
 		frame.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=2)

@@ -1,7 +1,6 @@
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
 
 class UpdateFiles(PyMSDialog):
 	def __init__(self, parent, files):

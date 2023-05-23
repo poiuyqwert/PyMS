@@ -1,3 +1,4 @@
+None
 tutorial
 terran01
 terran02
@@ -62,4 +63,3 @@ BW - zerg08
 BW - zerg09
 BW - bonus
 BW - zerg10
-Unknown

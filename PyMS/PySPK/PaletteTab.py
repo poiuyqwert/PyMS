@@ -5,12 +5,9 @@ from ..FileFormats import SPK
 from ..FileFormats import BMP
 
 from ..Utilities.UIKit import *
-from ..Utilities.Notebook import NotebookTab
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.FileType import FileType
 
 class PaletteTab(NotebookTab):
 	MAX_SIZE = 150
@@ -22,7 +19,7 @@ class PaletteTab(NotebookTab):
 		NotebookTab.__init__(self, parent)
 
 		scrollframe = Frame(self, bd=2, relief=SUNKEN)
-		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2)
+		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview')
 		def scroll_palette(event):
 			if self.toplevel.spk:
 				if event.delta > 0:

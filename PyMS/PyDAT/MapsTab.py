@@ -2,10 +2,7 @@
 from .DATTab import DATTab
 from .DataID import DATID, DataID
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata
@@ -34,7 +31,7 @@ class MapsTab(DATTab):
 
 	def updated_pointer_entries(self, ids):
 		if DataID.mapdatatbl in ids:
-			self.missions.setentries(self.toplevel.data_context.mapdatatbl.strings + ('None',))
+			self.missions.setentries(('None',) + self.toplevel.data_context.mapdatatbl.strings)
 			self.missionentry.range[1] = len(self.toplevel.data_context.mapdatatbl.strings)
 
 	def load_entry(self, entry):

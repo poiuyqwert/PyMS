@@ -41,7 +41,7 @@ def main():
 				try:
 					pcx.load_file(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
-					bmp.load_data(pcx.image,pcx.palette)
+					bmp.set_pixels(pcx.image,pcx.palette)
 					bmp.save_file(args[1])
 				except PyMSError as e:
 					print(repr(e))

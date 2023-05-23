@@ -1,7 +1,6 @@
 
 from .Constants import RE_COORDINATES
 
-from ..Utilities.Tooltip import Tooltip
 from ..Utilities.UIKit import *
 
 class CodeTooltip(Tooltip):

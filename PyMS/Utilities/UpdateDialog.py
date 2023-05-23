@@ -2,14 +2,13 @@
 from . import Assets
 from .setutils import PYMS_SETTINGS
 from .PyMSDialog import PyMSDialog
-from .Hotlink import Hotlink
 from .UIKit import *
 
 import json, urllib
 from thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
-	BRANCH = 'expanded_dat_files' # Default to `master` branch, but can be update for long-lived branches
+	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
 	def check_update(window, program):

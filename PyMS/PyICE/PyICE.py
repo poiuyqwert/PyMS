@@ -12,10 +12,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -24,7 +21,6 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 from copy import deepcopy
@@ -65,6 +61,7 @@ class PyICE(MainWindow):
 		ga.set_application('PyICE', Assets.version('PyICE'))
 		ga.track(GAScreen('PyICE'))
 		setup_trace('PyICE', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.file = None
 		self.ibin = None
@@ -490,9 +487,10 @@ class PyICE(MainWindow):
 				('sprites.dat', 'Contains link to images.dat entries', 'spritesdat', 'SpritesDAT'),
 				('images.dat', 'Contains link to IScript entries and images.tbl string indexs', 'imagesdat', 'ImagesDAT'),
 				('sfxdata.dat', 'Contains sfxdata.tbl string entries for mpq file paths', 'sfxdatadat', 'SoundsDAT'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def register(self, e=None):
 		try:

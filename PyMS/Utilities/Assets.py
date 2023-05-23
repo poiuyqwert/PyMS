@@ -1,8 +1,4 @@
 
-from .UIKit import PhotoImage as _PhotoImage
-from .UIKit import PILImage as _PILImage
-from .UIKit import ImageTk as _ImageTk
-
 import os as _os
 import sys as _sys
 
@@ -37,6 +33,7 @@ def image_path(filename): # type: (str) -> str
 
 _IMAGE_CACHE = {}
 def get_image(filename, cache=True): # type: (str, bool) -> (_PhotoImage | None)
+	from .UIKit import PhotoImage as _PhotoImage
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	global _IMAGE_CACHE
@@ -161,6 +158,9 @@ def log_file_path(filename): # type: (str) -> str
 ## Internal Temp
 internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
+def internal_temp_file(filename):
+	return _os.path.join(internal_temp_dir, filename)
+
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')
 
@@ -269,6 +269,9 @@ def help_file_path(path): # type: (str) -> (str | None)
 
 _HELP_IMAGE_CACHE = {}
 def help_image(path): # type: (str) -> (_PhotoImage | None)
+	from .UIKit import PhotoImage as _PhotoImage
+	from .UIKit import PILImage as _PILImage
+	from .UIKit import ImageTk as _ImageTk
 	path_components = path.split('/')
 	if path_components[0] == '':
 		path_components.pop(0)
@@ -294,3 +297,22 @@ def help_image(path): # type: (str) -> (_PhotoImage | None)
 def clear_help_image_cache():
 	global _HELP_IMAGE_CACHE
 	_HELP_IMAGE_CACHE.clear()
+
+## Themes
+
+themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
+
+def theme_file_path(name): # type: (str) -> (str)
+	return _os.path.join(themes_dir, '%s.txt' % name)
+
+_THEME_LIST = None
+def theme_list(): # type: () -> list[str]
+	global _THEME_LIST
+	if not _THEME_LIST:
+		_THEME_LIST = []
+		for filename in _os.listdir(themes_dir):
+			if not filename.endswith('.txt'):
+				continue
+			_THEME_LIST.append(filename[:-4])
+		_THEME_LIST.sort()
+	return _THEME_LIST

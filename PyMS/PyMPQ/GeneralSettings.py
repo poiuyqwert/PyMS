@@ -2,8 +2,6 @@
 from .LocaleDialog import LOCALE_CHOICES
 
 from ..Utilities.UIKit import *
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.EntryDropDown import EntryDropDown
 
 class GeneralSettings(Frame):
 	def __init__(self, parent, setdlg=None):

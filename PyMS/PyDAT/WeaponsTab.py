@@ -6,11 +6,7 @@ from .IconSelectDialog import IconSelectDialog
 
 from ..FileFormats.DAT.WeaponsDAT import Weapon
 
-from ..Utilities.IntegerVar import IntegerVar
-from ..Utilities.FloatVar import FloatVar
-from ..Utilities.DropDown import DropDown
 from ..Utilities.UIKit import *
-from ..Utilities.ScrollView import ScrollView
 from ..Utilities import Assets
 
 class WeaponsTab(DATTab):
@@ -185,7 +181,7 @@ class WeaponsTab(DATTab):
 		rs.pack(side=TOP)
 		ls.pack(side=LEFT)
 		ls = Frame(f, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
 		self.preview.pack()
 		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)

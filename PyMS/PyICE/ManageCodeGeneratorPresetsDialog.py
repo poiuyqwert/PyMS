@@ -5,13 +5,10 @@ from .NameDialog import NameDialog
 from ..Utilities.utils import isstr
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities.FileType import FileType
 
 import json
 

@@ -12,12 +12,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.Settings import Settings
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.TreeList import TreeList
-from ..Utilities.DropDown import DropDown
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.InternalErrorDialog import InternalErrorDialog
@@ -26,7 +21,6 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 import time
@@ -91,6 +85,7 @@ class PyBIN(MainWindow):
 		setup_trace('PyBIN', self)
 
 		self.settings = Settings('PyBIN', '1')
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.bin = None
 		self.file = None
@@ -278,7 +273,7 @@ class PyBIN(MainWindow):
 		rightframe = Frame(frame)
 		Label(rightframe, text='Canvas:', anchor=W).pack(side=TOP, fill=X)
 		bdframe = Frame(rightframe, borderwidth=1, relief=SUNKEN)
-		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480)
+		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview')
 		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
 		bdframe.pack(side=TOP)
@@ -608,9 +603,10 @@ class PyBIN(MainWindow):
 				('font14.fnt','Size 14 font','font14','FNT'),
 				('font16.fnt','Size 16 font','font16','FNT'),
 				('font16x.fnt','Size 16x font','font16x','FNT'),
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def unsaved(self):
 		if self.bin and self.edited:
@@ -877,7 +873,7 @@ class PyBIN(MainWindow):
 					self.edit_status.set('Edit ' + node.get_name())
 			else:
 				self.edit_status.set('')
-			apply_cursor(self.widgetCanvas, cursor)
+			self.widgetCanvas.apply_cursor(cursor)
 
 	def mouse_event(self, event, button_event, modifier):
 		RESTRICT_TO_WINDOW = True

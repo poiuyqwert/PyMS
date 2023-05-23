@@ -3,10 +3,11 @@ from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
-from ..Utilities.Tooltip import Tooltip
 
 class ListboxTooltip(Tooltip):
 	def __init__(self, parent, font=None, delay=750, press=False):
+		if font == None:
+			font = Font.fixed()
 		Tooltip.__init__(self, parent, '', font, delay, press)
 		self.index = None
 
@@ -51,14 +52,14 @@ class ListboxTooltip(Tooltip):
 		if flags:
 			flags += '\n'
 		text = "Script ID         : %s\nIn bwscript.bin   : %s\n%sString ID         : %s\n" % (id, ['No','Yes'][item[1]], flags, item[3])
-		ai = self.parent.master.master.ai
+		ai = self.parent.master.ai
 		text += fit('String            : ', TBL.decompile_string(ai.tbl.strings[ai.ais[id][1]]), end=True)
 		if id in ai.aiinfo and ai.aiinfo[id][0]:
 			text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
 		else:
 			text = text[:-1]
 		frame = Frame(self.tip, background='#FFFFC8', relief=SOLID, borderwidth=1)
-		Label(frame, text=text, justify=LEFT, font=self.font, background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+		Label(frame, text=text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
 		self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
 		self.tip.update_idletasks()

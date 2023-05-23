@@ -5,13 +5,9 @@ from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Toolbar import Toolbar
-from ..Utilities.ScrolledListbox import ScrolledListbox
-from ..Utilities.StatusBar import StatusBar
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
-from ..Utilities.FileType import FileType
 
 class StringEditor(PyMSDialog):
 	def __init__(self, parent, title='String Editor', cancel=False, index=0):

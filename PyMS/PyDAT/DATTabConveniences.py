@@ -1,11 +1,10 @@
 
 from ..Utilities.utils import fit, float_to_str
-from ..Utilities.Tooltip import Tooltip
-from ..Utilities.UIKit import Checkbutton
+from ..Utilities.UIKit import *
 
 class DATTabConveniences(object):
 	def tip(self, obj, tipname, hint):
-		Tooltip(obj, '%s:\n' % tipname + fit('  ', self.toplevel.data_context.hints[hint], end=True)[:-1], mouse=True)
+		Tooltip(obj, '%s:\n' % tipname + fit('  ', self.toplevel.data_context.hints[hint], end=True)[:-1])
 
 	def makeCheckbox(self, frame, var, txt, hint):
 		c = Checkbutton(frame, text=txt, variable=var)

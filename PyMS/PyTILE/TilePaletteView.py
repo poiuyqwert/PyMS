@@ -31,7 +31,7 @@ class TilePaletteView(Frame):
 		self.gettile = self.delegate.tile_palette_get_tile()
 
 		tile_size = self.get_tile_size()
-		self.canvas = Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000')
+		self.canvas = Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000', theme_tag='preview')
 		self.canvas.images = {}
 		self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
 		scrollbar = Scrollbar(self, command=self.canvas.yview)

@@ -15,10 +15,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Toolbar import Toolbar
 from ..Utilities import Assets
-from ..Utilities.StatusBar import StatusBar
-from ..Utilities.Notebook import Notebook
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -26,7 +23,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.FileType import FileType
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
 LONG_VERSION = 'v%s' % Assets.version('PySPK')
@@ -53,6 +49,7 @@ class PySPK(MainWindow):
 		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
 		setup_trace('PySPK', self)
+		Theme.load_theme(self.settings.get('theme'), self)
 
 		self.minsize(870, 547)
 		self.maxsize(1000, 547)
@@ -155,7 +152,7 @@ class PySPK(MainWindow):
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
 		rightframe = Frame(frame, bd=1, relief=SUNKEN)
-		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1])
+		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1], theme_tag='preview')
 		self.skyCanvas.pack(fill=BOTH)
 		self.skyCanvas.focus_set()
 		self.skyCanvas.bind(Mouse.Motion, lambda e,m=0: self.mouse_move(e,m))
@@ -265,9 +262,10 @@ class PySPK(MainWindow):
 		data = [
 			('Preview Settings',[
 				('platform.wpe','The palette which holds the star palette.','platformwpe','WPE')
-			])
+			]),
+			('Theme',)
 		]
-		SettingsDialog(self, data, (340,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
 	def unsaved(self):
 		if self.spk and self.edited:
