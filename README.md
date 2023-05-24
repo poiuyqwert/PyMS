@@ -33,7 +33,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
 1. Create an issue [on github](https://github.com/poiuyqwert/PyMS/issues)
-2. Join the [SEN Discord](https://discord.gg/Bzba93Z5r9) and report iit
+2. Join the [SEN Discord](https://discord.gg/Bzba93Z5r9) and chat about it in `#starcraft-tools` or `#mod-discussion`
 3. Post in [this thread](http://www.staredit.net/topic/17719/) on [StarEdit.net](http://www.staredit.net)
 4. [Email me](mailto:p.q.poiuy.qwert@gmail.com)
 
