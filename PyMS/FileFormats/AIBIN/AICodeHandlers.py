@@ -1,7 +1,8 @@
 
 from .DataContext import DataContext
 
-from ...Utilities.CodeHandlers.CodeDefs import *
+from ...Utilities.CodeHandlers.CodeType import *
+from ...Utilities.CodeHandlers.CodeCommand import *
 from ...Utilities.CodeHandlers.ByteCodeHandler import ByteCodeHandler
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler

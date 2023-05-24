@@ -5,7 +5,7 @@ from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.CodeHandlers.Scanner import Scanner
-from ...Utilities.CodeHandlers.CodeDefs import CodeBlock, StrCodeType
+from ...Utilities.CodeHandlers.CodeType import CodeBlock, StrCodeType
 from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities import Struct
 

@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "~/.pyenv/versions/2.7.16/bin/python2.7",
+    "python.defaultInterpreterPath": "~/.pyenv/versions/2.7.16/bin/python2.7",
 
     "python.analysis.autoImportCompletions": false,
 
