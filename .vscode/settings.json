@@ -1,0 +1,24 @@
+{
+    "python.pythonPath": "~/.pyenv/versions/2.7.16/bin/python2.7",
+
+    "python.analysis.autoImportCompletions": false,
+
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--disable=all",
+        "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
+        "--disable=print-statement"
+    ],
+
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.linting.mypyEnabled": false,
+}

@@ -4,5 +4,3 @@ PyMS/WORKING/*
 PyMS/Logs/*
 playground.py
 **/__pycache__
-.vscode/*
-.python-version
