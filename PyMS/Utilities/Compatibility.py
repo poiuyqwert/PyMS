@@ -8,11 +8,21 @@ class Requirement:
 def check_compat(program_name, additional_requirements=Requirement.none): # type: (str, int) -> None
 	import sys
 
+	tcl_version = None
 	try:
-		from . import UIKit as _
+		import tkinter
+		tcl_version = tkinter.Tcl().call("info", "patchlevel")
 	except:
 		print('Tkinter is missing. Please consult the Installation section of the README.md in your PyMS folder, or online at https://github.com/poiuyqwert/PyMS#installation')
 		raise
+
+	from .utils import is_mac
+	unsupported_tkinter = [
+		(True, '8.6.13')
+	]
+	if (is_mac(), tcl_version) in unsupported_tkinter:
+		print('Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
+		sys.exit()
 
 	from . import Assets
 	from .DependencyError import DependencyError
@@ -22,8 +32,10 @@ def check_compat(program_name, additional_requirements=Requirement.none): # type
 		('Readme (Online)', 'https://github.com/poiuyqwert/PyMS#installation')
 	)
 
-	if sys.version_info.major != 3 or sys.version_info.minor != 11:
-		DependencyError(program_name, 'Incorrect Python version (%d.%d instead of 3.11). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor), readmes).startup()
+	required_major = 3
+	required_minor = 11
+	if sys.version_info.major != required_major or sys.version_info.minor != required_minor:
+		DependencyError(program_name, 'Incorrect Python version (%d.%d instead of %d.%d). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor, required_major, required_minor), readmes).startup()
 		sys.exit()
 
 	if additional_requirements & Requirement.MPQ:
