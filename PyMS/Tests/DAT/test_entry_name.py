@@ -1208,9 +1208,9 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial',
-			'BW - protoss02',
-			'Unknown',
+			'No map',
+			'BW - protoss01',
+			'BW - zerg10',
 			'Expanded Map #65',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
@@ -1220,10 +1220,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1232,10 +1232,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		decompiled_mapdatatbl = TBL()
 		decompiled_mapdatatbl.strings = [decompile_string(string) for string in mapdatatbl.strings]
@@ -1246,10 +1246,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial)',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02)',
-			'Unknown',
-			'Expanded Map #65 (campaign\\terran\\terran01)',
+			'No map (null)',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01)',
+			'BW - zerg10 (campaign\\expzerg\\zerg10)',
+			'Expanded Map #65 (campaign\\terran\\tutorial)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1276,10 +1276,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial) [V1]',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02) [V2]',
-			'Unknown [V3]',
-			'Expanded Map #65 (campaign\\terran\\terran01) [V4]',
+			'No map (null) [V1]',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01) [V2]',
+			'BW - zerg10 (campaign\\expzerg\\zerg10) [V3]',
+			'Expanded Map #65 (campaign\\terran\\tutorial) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),

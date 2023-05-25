@@ -1,4 +1,4 @@
-None
+No map
 tutorial
 terran01
 terran02

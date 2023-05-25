@@ -302,7 +302,7 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if mapdatadat and mapdatatbl and data_names_usage != DataNamesUsage.use and entry_id < mapdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, None, True, tbl_decompile, offset=0)
+			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, None, True, tbl_decompile)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, CampaignDAT.FORMAT.entries, 'Map')
 
 	@staticmethod
