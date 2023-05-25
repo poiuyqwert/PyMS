@@ -24,11 +24,11 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 
 
 ## Installation
-1. **Install Python.** You should get the latest Python 2.7.x, currently that is [Python 2.7.12](https://www.python.org/downloads/release/python-2712/)
+1. **Install Python.** You should get the latest Python 3.11.x, currently that is [Python 3.11.3](https://www.python.org/downloads/release/python-3113/)
    
-   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/2.7/using/windows.html#excursus-setting-environment-variables).
+   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables).
 2. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
-3. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python2.7 -m pip install -r requirements.txt`. If you get an error like `python2.7 is not found`, try `python -m pip install -r requirements.txt` (just make sure you are using PIP that is installed with Python 2.7 and not another verson of Python on your machine).
+3. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python3 -m pip install -r requirements.txt`. If you get an error like `python3 is not found`, try `python -m pip install -r requirements.txt` (just make sure you are using PIP that is installed with Python 3.11 and not another verson of Python on your machine).
 
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
