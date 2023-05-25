@@ -43,9 +43,6 @@ class SaveMPQDialog(PyMSDialog):
 		Button(sel, text='Select All', command=lambda: self.listbox.select_set(0,END)).pack(side=LEFT, fill=X, expand=1)
 		Button(sel, text='Unselect All', command=lambda: self.listbox.select_clear(0,END)).pack(side=LEFT, fill=X, expand=1)
 		sel.pack(fill=X, padx=5)
-		self.sempq = IntVar()
-		self.sempq.set(self.parent.data_context.settings.get('sempq', False))
-		Checkbutton(self, text='Self-executing MPQ (SEMPQ)', variable=self.sempq).pack(pady=3)
 		for filename,_,_ in SaveMPQDialog.OPTIONS:
 			self.listbox.insert(END, filename)
 			if filename in self.parent.mpq_export:
@@ -62,17 +59,8 @@ class SaveMPQDialog(PyMSDialog):
 		if not selected_options:
 			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
-			if self.sempq.get():
-				file = self.parent.data_context.settings.lastpath.sempq.select_save_file(self, title='Save SEMPQ to...', filetypes=[FileType.exe_mpq()])
-			else:
-				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq()])
+			file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq()])
 			if file:
-				if self.sempq.get() and not os.path.exists(file):
-					try:
-						shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
-					except:
-						ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
-						return
 				not_saved = []
 				try:
 					mpq = MPQ.of(file)
@@ -97,6 +85,5 @@ class SaveMPQDialog(PyMSDialog):
 					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(not_saved))
 
 	def ok(self):
-		self.parent.data_context.settings.sempq = not not self.sempq.get()
 		self.parent.mpq_export = [self.listbox.get(i) for i in self.listbox.curselection()]
 		PyMSDialog.ok(self)
