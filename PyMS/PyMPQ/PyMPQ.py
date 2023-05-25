@@ -25,8 +25,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
-import sys, time, shutil, os
-from _thread import start_new_thread
+import sys, time, shutil, os, re
 
 if not MPQ.supported():
 	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', (('Contact','file:///%s' % Assets.doc_path('intro.html')),))

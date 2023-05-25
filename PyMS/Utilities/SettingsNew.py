@@ -1,6 +1,6 @@
 
 from .utils import isstr
-from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, parse_resizable
+from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, parse_resizable, FileType
 from . import Assets
 from .WarnDialog import WarnDialog
 from .fileutils import check_allow_overwrite_internal_file

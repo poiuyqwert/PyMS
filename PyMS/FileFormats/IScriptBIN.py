@@ -663,7 +663,7 @@ class IScriptBIN:
 					break
 				if id in headers:
 					raise PyMSError('Load',"Duplicate entry ID's, could possibly be a corrupt iscript.bin")
-				if data[offset:offset+4] != 'SCPE':
+				if data[offset:offset+4] != b'SCPE':
 					raise PyMSError('Load','Invalid iscript entry (missing header), could possibly be a corrupt iscript.bin')
 				try:
 					header = [data[offset+4],offset,[]]

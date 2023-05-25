@@ -3,7 +3,7 @@ from .PyMSDialog import PyMSDialog
 from .UIKit import *
 from . import Assets
 
-import os
+import os, re
 
 class MPQSelect(PyMSDialog):
 	def __init__(self, parent, mpqhandler, filetype, search, settings, open_type='Open'):

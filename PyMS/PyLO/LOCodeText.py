@@ -4,6 +4,7 @@ from .Constants import SIGNED_INT
 
 from ..Utilities.UIKit import *
 
+import re
 from copy import deepcopy
 
 class LOCodeText(CodeText):

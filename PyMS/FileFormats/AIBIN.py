@@ -510,7 +510,7 @@ class AIBIN:
 			aioffsets = []
 			offsets = [offset]
 			warnings = []
-			while data[offset:offset+4] != '\x00\x00\x00\x00':
+			while data[offset:offset+4] != b'\x00\x00\x00\x00':
 				id,loc,string,flags = struct.unpack('<4s3L', data[offset:offset+16])
 				if id in ais:
 					raise PyMSError('Load',"Duplicate AI ID '%s'" % id)
@@ -649,12 +649,12 @@ class AIBIN:
 						varinfo[name] = [t,val[1],desc]
 						t = info[offset]-1
 					offset += 1
-					while info[offset] != '\x00':
+					while info[offset] != b'\x00':
 						id = info[offset:offset+4]
 						offset += 4
 						desc,offset = getstr(info,offset)
 						aiinfo[id] = [desc,OrderedDict(),[]]
-						while info[offset] != '\x00':
+						while info[offset] != b'\x00':
 							label,offset = getstr(info,offset)
 							desc,offset = getstr(info,offset)
 							aiinfo[id][1][label] = desc
@@ -1868,7 +1868,7 @@ class BWBIN(AIBIN):
 			aiinfo = {}
 			aioffsets = []
 			offsets = [offset]
-			while data[offset:offset+4] != '\x00\x00\x00\x00':
+			while data[offset:offset+4] != b'\x00\x00\x00\x00':
 				id,loc = struct.unpack('<4sL', data[offset:offset+8])
 				if id in ais:
 					raise PyMSError('Load',"Duplicate AI ID '%s'" % id)
@@ -1971,19 +1971,19 @@ class BWBIN(AIBIN):
 				try:
 					info = decompress(data[offset:])
 					offset = 0
-					while info[offset] != '\x00':
+					while info[offset] != b'\x00':
 						id = info[offset:offset+4]
 						offset += 4
 						desc,offset = getstr(info,offset)
 						aiinfo[id] = [desc,OrderedDict(),[]]
-						while info[offset] != '\x00':
+						while info[offset] != 'b\x00':
 							label,offset = getstr(info,offset)
 							desc,offset = getstr(info,offset)
 							aiinfo[id][1][label] = desc
 						offset += 1
 						p = int(floor(log(len(aiinfo),256)))
 						s,n = '<' + ['B','H','L','L'][p],[1,2,4,4][p]
-						while info[offset] != '\x00':
+						while info[offset] != b'\x00':
 							aiinfo[id][2].append(list(aiinfo[id][1].keys())[struct.unpack(s,info[offset:offset+n])[0]-1])
 							offset += n
 						offset += 1

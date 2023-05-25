@@ -81,7 +81,7 @@ class Block(object):
 	def __repr__(self):
 		info = '-> ' if self.open else '   '
 		info += self.__class__.__name__
-		repr_params = self.repr_params()
+		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
 			info += ' (%s)' % repr_params
 		return info
@@ -355,7 +355,7 @@ class Span(object):
 
 	def __repr__(self):
 		result = '<%s' % self.__class__.__name__
-		repr_params = self.repr_params()
+		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
 			result += ' ' + repr_params
 		result += '>'

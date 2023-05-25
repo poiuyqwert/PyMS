@@ -30,7 +30,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 
-import os, shutil
+import os, shutil, re
 from collections import OrderedDict
 
 LONG_VERSION = 'v%s' % Assets.version('PyAI')

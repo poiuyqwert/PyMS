@@ -1726,7 +1726,7 @@ class TRG:
 		try:
 			offset = 0
 			if not TRIG:
-				if data[:8] != 'qw\x986\x18\x00\x00\x00':
+				if data[:8] != b'qw\x986\x18\x00\x00\x00':
 					raise PyMSError('Load',"Not a TRG file (no TRG header). It could possibly be a .got TRG file, try using the -t option when decompiling")
 				offset = 8
 			triggers_type = MISSION_BRIEFING if MBRF else NORMAL_TRIGGERS

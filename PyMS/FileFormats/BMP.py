@@ -20,7 +20,7 @@ class BMP:
 		self.load_data(data, issize=issize)
 
 	def load_data(self, data, issize=None):
-		if data[:2] != 'BM':
+		if data[:2] != b'BM':
 			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
 		try:
 			pixels_offset, dib_header_size, width, height, bitcount, compression, colors_used = \
@@ -47,9 +47,9 @@ class BMP:
 				x = pixels_offset
 				image.append([])
 				while True:
-					if data[x] == '\x00':
+					if data[x] == b'\x00':
 						if data[x+1] < 3:
-							if data[x+1] == '\x02':
+							if data[x+1] == b'\x02':
 								xoffset, yoffset = data[x+2], data[x+3]
 								if not image[-1]:
 									image.pop()
@@ -60,7 +60,7 @@ class BMP:
 							else:
 								if image[-1] and len(image[-1]) < width:
 									image[-1].extend([0] * (width - len(image[-1])))
-								if data[x+1] == '\x01':
+								if data[x+1] == b'\x01':
 									if len(image) < height:
 										image.extend([[0] * width] * (height - len(image)))
 									break

@@ -3,7 +3,7 @@ from . import Assets
 from .InternalErrorDialog import InternalErrorDialog
 from .UIKit import MainWindow, Toplevel
 
-import sys, os, traceback
+import sys, os
 
 try:
 	os.makedirs(Assets.logs_dir)

@@ -9,6 +9,8 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 
+import re
+
 class SoundDialog(PyMSDialog):
 	def __init__(self, parent, id=0):
 		self.toplevel = parent.parent

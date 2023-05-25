@@ -22,8 +22,8 @@ def check_compat(program_name, additional_requirements=Requirement.none): # type
 		('Readme (Online)', 'https://github.com/poiuyqwert/PyMS#installation')
 	)
 
-	if sys.version_info.major != 2 or sys.version_info.minor != 7:
-		DependencyError(program_name, 'Incorrect Python version (%d.%d instead of 2.7). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor), readmes).startup()
+	if sys.version_info.major != 3 or sys.version_info.minor != 11:
+		DependencyError(program_name, 'Incorrect Python version (%d.%d instead of 3.11). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor), readmes).startup()
 		sys.exit()
 
 	if additional_requirements & Requirement.MPQ:

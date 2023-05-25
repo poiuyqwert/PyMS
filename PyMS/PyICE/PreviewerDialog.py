@@ -9,7 +9,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
 
-import os
+import os, re
 
 PREVIEWER_CMDS = [[],[],[],[]]
 for n,p in IScriptBIN.OPCODES:

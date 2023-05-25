@@ -2,7 +2,7 @@
 from .PyMSError import PyMSError
 
 from textwrap import wrap
-import os, sys, platform, re, tempfile, errno
+import os, sys, platform, tempfile, errno
 
 try:
 	from _thread import start_new_thread

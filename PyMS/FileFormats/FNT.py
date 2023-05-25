@@ -125,7 +125,7 @@ class FNT:
 
 	def load_file(self, file):
 		data = load_file(file, 'FNT')
-		if data[:4] != 'FONT':
+		if data[:4] != b'FONT':
 			raise PyMSError('Load',"Invalid FNT file '%s' (invalid header)" % file)
 		try:
 			lowi,highi,maxw,maxh = struct.unpack('<4B',data[4:8])

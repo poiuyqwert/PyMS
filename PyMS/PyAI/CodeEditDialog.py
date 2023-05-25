@@ -14,6 +14,8 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 
+import re
+
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, settings, ids):
 		self.settings = settings

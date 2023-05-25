@@ -9,7 +9,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
-import os
+import re
 
 class CodeGeneratorDialog(PyMSDialog):
 	PRESETS = [

@@ -2,6 +2,8 @@
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
 
+import re
+
 class CodeGeneratorVariable:
 	def __init__(self, generator, name='variable'):
 		self.generator = generator

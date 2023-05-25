@@ -51,7 +51,7 @@ class GOT:
 	def load_file(self, file):
 		data = load_file(file, 'GOT')
 		try:
-			if data[0] != '\x03':
+			if data[0] != b'\x03':
 				raise Exception()
 			template = list(struct.unpack('<32s32sBxBxHxx11BLL', data[1:-5]))
 			template[0] = template[0].rstrip('\x00')

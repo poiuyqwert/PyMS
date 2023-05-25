@@ -4,6 +4,8 @@ from .CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
 from ...Utilities.utils import isstr
 from ...Utilities.UIKit import *
 
+import re
+
 class CodeGeneratorTypeListRepeater(object):
 	def count(self, list_size):
 		raise NotImplementedError(self.__class__.__name__ + '.count(list_size)')

@@ -15,6 +15,8 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.SettingsDialog import SettingsDialog
 
+import re
+
 LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 
 class PyPAL(MainWindow):

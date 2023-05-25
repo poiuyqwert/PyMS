@@ -18,11 +18,13 @@ class UpdateDialog(PyMSDialog):
 			if remindme == True or remindme != Assets.version('PyMS'):
 				try:
 					versions = json.loads(urllib.request.urlopen(VERSIONS_URL).read())
-					PyMS_version = SemVer(versions['PyMS'])
-					program_version = SemVer(versions[program])
+					latest_PyMS_version = SemVer(versions['PyMS'])
+					latest_program_version = SemVer(versions[program])
+					PyMS_version = SemVer(Assets.version('PyMS'))
+					program_version = SemVer(Assets.version(program))
 				except:
 					return
-				if Assets.version('PyMS') < PyMS_version or Assets.version(program) < program_version:
+				if PyMS_version < latest_PyMS_version or program_version < latest_program_version:
 					def callback():
 						if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
 							window.after(1000, callback)

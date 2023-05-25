@@ -16,7 +16,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import Assets
 
-import os
+import os, re
 
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent, settings, ids):

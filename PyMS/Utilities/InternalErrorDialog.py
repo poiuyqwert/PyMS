@@ -3,7 +3,7 @@ from . import Assets
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 
-import traceback
+import traceback, sys
 
 class InternalErrorDialog(PyMSDialog):
 	CAPTURE_NONE = 0

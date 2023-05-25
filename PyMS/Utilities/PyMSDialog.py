@@ -11,7 +11,7 @@ class PyMSDialog(Toplevel):
 			self.bind(Shortcut.Close, self.cancel)
 		#self.transient(parent)
 		self.parent = parent
-		focus = self.widgetize()
+		focus = self.widgetize() # pylint: disable=assignment-from-none
 		self.update_idletasks()
 		if not focus:
 			focus = self
@@ -45,7 +45,7 @@ class PyMSDialog(Toplevel):
 		self.wait_window(self)
 
 	def widgetize(self):
-		pass
+		return None
 	def setup_complete(self):
 		pass
 
