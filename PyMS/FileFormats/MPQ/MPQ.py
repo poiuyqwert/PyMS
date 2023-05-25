@@ -61,8 +61,8 @@ class MPQInternalFile:
 	signature = "(signature)"
 
 class MPQFileEntry(object):
-	def __init__(self, file_name=None, locale=None):
-		self.file_name = file_name # type: str
+	def __init__(self, file_name=None, locale=None): # type: (str | bytes | None, int | None) -> MPQFileEntry
+		self.file_name = file_name.encode('utf-8') if isinstance(file_name, str) else file_name # type: bytes
 		self.full_size = None # type: int
 		self.compressed_size = None # type: int
 		self.locale = locale # type: int
@@ -83,7 +83,7 @@ class MPQFileEntry(object):
 		return self.file_name == other.file_name and self.locale == other.locale
 
 	def __repr__(self):
-		return "<MPQFileEntry object at %s: '%s', locale %d, flags %08X>" % (hex(id(self)), self.file_name, self.locale, self.flags)
+		return "<MPQFileEntry object at %s: '%s', locale %d, flags %08X>" % (hex(id(self)), self.file_name.decode('utf-8'), self.locale, self.flags)
 
 	def __lt__(self, other): # type: (MPQFileEntry) -> bool
 		if not isinstance(other, MPQFileEntry):
@@ -310,7 +310,7 @@ class StormLibMPQ(MPQ):
 		regex = None
 		if isinstance(filter, str):
 			mask = filter
-		elif isinstance(filter, _re._pattern_type):
+		elif isinstance(filter, _re.Pattern):
 			regex = filter
 		
 		find_handle,file_data = _StormLib.SFileFindFirstFile(self.mpq_handle, mask)
@@ -532,7 +532,7 @@ class SFMPQ(MPQ):
 		regex = None
 		if isinstance(filter, str) and filter.replace('*',''):
 			regex = _re.compile('^' + _re.escape(filter).replace('\\?','.').replace('\\*','.*') + '$')
-		elif isinstance(filter, _re._pattern_type):
+		elif isinstance(filter, _re.Pattern):
 			regex = filter
 		
 		list_entries = _SFmpq.SFileListFiles(self.mpq_handle, str('\r\n'.join(self.listfiles)))

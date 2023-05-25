@@ -144,35 +144,35 @@ class RLE:
 	STATIC_MAX_LENGTH = REPEAT_FLAG - 1
 
 	@staticmethod
-	def encode_transparent(count): # type: (int) -> str
-		encoded = ''
+	def encode_transparent(count): # type: (int) -> bytes
+		encoded = b''
 		while count > 0:
 			encoded += struct.pack('<B', RLE.TRANSPARENT_FLAG | min(RLE.TRANSPARENT_MAX_LENGTH, count))
 			count -= RLE.TRANSPARENT_MAX_LENGTH
 		return encoded
 
 	@staticmethod
-	def encode_repeat(index, count): # type: (int, int) -> str
-		encoded = ''
+	def encode_repeat(index, count): # type: (int, int) -> bytes
+		encoded = b''
 		while count > 0:
 			encoded += struct.pack('<BB', RLE.REPEAT_FLAG | min(RLE.REPEAT_MAX_LENGTH, count), index)
 			count -= RLE.REPEAT_MAX_LENGTH
 		return encoded
 
 	@staticmethod
-	def encode_static(line): # type: (list[int]) -> str
-		encoded = ''
+	def encode_static(line): # type: (list[int]) -> bytes
+		encoded = b''
 		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
 			run = line[x:x+RLE.STATIC_MAX_LENGTH]
 			encoded += struct.pack('<%dB' % (1 + len(run)), len(run), *run)
 		return encoded
 
 	@staticmethod
-	def compress_line(line, transparent_index): # type: (list[int], int) -> str
+	def compress_line(line, transparent_index): # type: (list[int], int) -> bytes
 		last_index = line[0]
 		repeat_count = 0
 		static_len = 0
-		compressed = ''
+		compressed = b''
 		for (x,index) in enumerate(line):
 			if index == last_index:
 				repeat_count += 1
@@ -396,7 +396,7 @@ class GRP:
 		if uncompressed == None:
 			uncompressed = self.uncompressed
 		header_data = struct.pack('<3H', self.frames, self.width, self.height)
-		image_data = ''
+		image_data = b''
 		offset = 6 + 8 * self.frames
 		frame_history = {}
 		for z,frame in enumerate(self.images):
@@ -420,7 +420,7 @@ class GRP:
 					frame_data = struct.pack('<4BL', x_min, y_min, x_max - x_min, y_max - y_min, offset)
 					frame_history[frame_hash] = frame_data
 					header_data += frame_data
-					line_data = ''
+					line_data = b''
 					line_offset = 2 * (y_max - y_min)
 					line_offsets = []
 					line_history = {}
@@ -437,7 +437,7 @@ class GRP:
 							line_offsets.append(struct.pack('<H', line_offset))
 							line_history[line_hash] = line_offsets[-1]
 							line_offset += len(data)
-					line_data = ''.join(line_offsets) + line_data
+					line_data = b''.join(line_offsets) + line_data
 					image_data += line_data
 					offset += len(line_data)
 		return header_data + image_data

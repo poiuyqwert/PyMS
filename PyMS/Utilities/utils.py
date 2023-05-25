@@ -239,8 +239,8 @@ except:
 	play_sound = osx_play
 
 class FFile:
-	def __init__(self):
-		self.data = ''
+	def __init__(self, bytes=True):
+		self.data = b'' if bytes else ''
 
 	def read(self):
 		return self.data

@@ -79,7 +79,7 @@ class AbstractDAT(object):
 		entry_count = self.entry_count()
 		is_expanded = entry_count > self.FORMAT.entries
 		all_values = list(zip(*(entry.save_values() for entry in self.entries)))
-		data = ''.join(prop.save_data(values, is_expanded) for prop,values in zip(self.FORMAT.properties, all_values))
+		data = b''.join(prop.save_data(values, is_expanded) for prop,values in zip(self.FORMAT.properties, all_values))
 		data_size = len(data)
 		expected_data_size = self.FORMAT.file_size(expanded_entry_count=entry_count if is_expanded else None)
 		if data_size != expected_data_size:

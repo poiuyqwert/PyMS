@@ -24,7 +24,7 @@ if STORMLIB_DIR:
 		try:
 			_StormLib = CDLL(os.path.join(STORMLIB_DIR, library), RTLD_GLOBAL)
 			break
-		except Exception:
+		except Exception as error:
 			pass
 
 STORMLIB_LOADED = (_StormLib != None)
@@ -384,8 +384,8 @@ class SFILE_FIND_DATA(Structure):
 	]
 
 	def __init__(self):
-		self.file_name = ''
-		self.plain_name = ''
+		self.file_name = b''
+		self.plain_name = b''
 		self.hash_index = 0
 		self.block_index = 0
 		self.file_size = 0
@@ -707,18 +707,18 @@ def SFileSetLocale(locale): # type: (int) -> int
 
 def SFileOpenArchive(mpq_path, priority=0, flags=STREAM_FLAG_READ_ONLY): # type: (str, int, int) -> (MPQHANDLE | None)
 	h = MPQHANDLE()
-	if _StormLib.SFileOpenArchive(mpq_path, priority, flags, byref(h)):
+	if _StormLib.SFileOpenArchive(mpq_path.encode('utf-8'), priority, flags, byref(h)):
 		return h
 
 def SFileCreateArchive(mpq_path, flags=0, max_files=1024): # type: (str, int, int) -> (MPQHANDLE | None)
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateArchive(mpq_path, flags, max_files, byref(h)):
+	if _StormLib.SFileCreateArchive(mpq_path.encode('utf-8'), flags, max_files, byref(h)):
 		return h
 
 def SFileCreateArchive2(mpq_path, create_info): # type: (str, SFILE_CREATE_MPQ) -> (MPQHANDLE | None)
 	create_info.size = sizeof(SFILE_CREATE_MPQ)
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateArchive2(mpq_path, byref(create_info), byref(h)):
+	if _StormLib.SFileCreateArchive2(mpq_path.encode('utf-8'), byref(create_info), byref(h)):
 		return h
 
 def SFileFlushArchive(mpq): # type: (MPQHANDLE) -> bool
@@ -728,10 +728,10 @@ def SFileCloseArchive(mpq): # type: (MPQHANDLE) -> bool
 	return _StormLib.SFileCloseArchive(mpq)
 
 def SFileAddListFile(mpq, listfile_path): # type: (MPQHANDLE, str) -> int
-	return _StormLib.SFileAddListFile(mpq, listfile_path)
+	return _StormLib.SFileAddListFile(mpq, listfile_path.encode('utf-8'))
 
 def SFileCompactArchive(mpq, listfile_path=None): # type: (MPQHANDLE, str) -> bool
-	return _StormLib.SFileCompactArchive(mpq, listfile_path, True)
+	return _StormLib.SFileCompactArchive(mpq, listfile_path.encode('utf-8') if listfile_path else None, True)
 
 def SFileGetMaxFileCount(mpq): # type: (MPQHANDLE) -> int
 	return _StormLib.SFileGetMaxFileCount(mpq)
@@ -746,20 +746,20 @@ def SFileSetAttributes(mpq, attributes): # type: (MPQHANDLE, int) -> bool
 	return _StormLib.SFileSetAttributes(mpq, attributes)
 
 def SFileUpdateFileAttributes(mpq, attributes_file_path): # type: (MPQHANDLE, str) -> bool
-	return _StormLib.SFileUpdateFileAttributes(mpq, attributes_file_path)
+	return _StormLib.SFileUpdateFileAttributes(mpq, attributes_file_path.encode('utf-8'))
 
 def SFileOpenPatchArchive(mpq, patch_mpq_path, patch_path_prefix, flags=0): # type: (MPQHANDLE, str, str, int) -> bool
-	return _StormLib.SFileOpenPatchArchive(mpq, patch_mpq_path, patch_path_prefix, flags)
+	return _StormLib.SFileOpenPatchArchive(mpq, patch_mpq_path.encode('utf-8'), patch_path_prefix.encode('utf-8'), flags)
 
 def SFileIsPatchedArchive(mpq): # type: (MPQHANDLE) -> bool
 	return _StormLib.SFileIsPatchedArchive(mpq)
 
 def SFileHasFile(mpq, file_name): # type: (MPQHANDLE, str) -> bool
-	return _StormLib.SFileHasFile(mpq, file_name)
+	return _StormLib.SFileHasFile(mpq, file_name.encode('utf-8'))
 
 def SFileOpenFileEx(mpq, file_name, search=SFILE_OPEN_FROM_MPQ): # type: (MPQHANDLE, str, int) -> (MPQHANDLE | None)
 	h = MPQHANDLE()
-	if _StormLib.SFileOpenFileEx(mpq, file_name, search, byref(h)):
+	if _StormLib.SFileOpenFileEx(mpq, file_name.encode('utf-8'), search, byref(h)):
 		return h
 
 def SFileGetFileSize(file): # type: (MPQHANDLE) -> (int | None)
@@ -809,11 +809,11 @@ def SFileGetFileInfo(mpq, info_class): # type: (MPQHANDLE, int) -> (int | long |
 def SFileGetFileName(file): # type: (MPQHANDLE) -> (str | None)
 	name = create_string_buffer(MAX_NAME_SIZE)
 	if _StormLib.SFileGetFileName(file, byref(name)):
-		return str(name.raw)
+		return name.raw.decode('utf-8')
 
 def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str, str) -> (tuple[MPQHANDLE | None, SFILE_FIND_DATA | None])
 	file_data = SFILE_FIND_DATA()
-	find_handle = _StormLib.SFileFindFirstFile(mpq, find_mask, byref(file_data), listfile_path)
+	find_handle = _StormLib.SFileFindFirstFile(mpq, find_mask.encode('utf-8'), byref(file_data), listfile_path.encode('utf-8') if listfile_path else None)
 	if not SFInvalidHandle(find_handle):
 		return (find_handle, file_data)
 	return (None, None)
@@ -828,7 +828,7 @@ def SFileFindClose(find_handle): # type: (MPQHANDLE) -> bool
 
 def SFileCreateFile(mpq, file_name, file_time, file_size, locale, flags): # type: (MPQHANDLE, str, int, int, int, int) -> (MPQHANDLE | None)
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateFile(mpq, file_name, file_time, file_size, locale, flags, byref(h)):
+	if _StormLib.SFileCreateFile(mpq, file_name.encode('utf-8'), file_time, file_size, locale, flags, byref(h)):
 		return h
 
 def SFileWriteFile(file, data, compression): # type: (MPQHANDLE, bytes, int) -> (bool)
@@ -838,13 +838,13 @@ def SFileFinishFile(file): # type: (MPQHANDLE) -> (bool)
 	return _StormLib.SFileFinishFile(file)
 
 def SFileAddFileEx(mpq, file_path, file_name, flags=MPQ_FILE_REPLACEEXISTING, compression=0, compression_next=MPQ_COMPRESSION_NEXT_SAME): # type: (MPQHANDLE, str, str, int, int, int) -> (bool)
-	return _StormLib.SFileAddFileEx(mpq, file_path, file_name, flags, compression, compression_next)
+	return _StormLib.SFileAddFileEx(mpq, file_path.encode('utf-8'), file_name.encode('utf-8'), flags, compression, compression_next)
 
 def SFileRemoveFile(mpq, file_name): # type: (MPQHANDLE, str) -> (bool)
-	return _StormLib.SFileRemoveFile(mpq, file_name, 0)
+	return _StormLib.SFileRemoveFile(mpq, file_name.encode('utf-8'), 0)
 
 def SFileRenameFile(mpq, file_name, new_file_name): # type: (MPQHANDLE, str, str) -> (bool)
-	return _StormLib.SFileRenameFile(mpq, file_name, new_file_name)
+	return _StormLib.SFileRenameFile(mpq, file_name.encode('utf-8'), new_file_name.encode('utf-8'))
 
 def SFileSetFileLocale(file, locale): # type: (MPQHANDLE, int) -> (bool)
 	return _StormLib.SFileSetFileLocale(file, locale)

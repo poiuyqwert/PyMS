@@ -226,7 +226,7 @@ class DATProperty(object):
 		# If DATType is a scalar we need to convert the raw scalar back to its DATType for saving
 		if issubclass(dat_type, DATTypeScalar):
 			values = (dat_type(value) for value in values)
-		return ''.join(value.save_data() for value in values)
+		return b''.join(value.save_data() for value in values)
 
 	# Whether this property is on an entry with `id` (non-expanded, as expanded dats have all entries)
 	def is_on_entry(self, id):

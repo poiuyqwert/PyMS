@@ -6,7 +6,7 @@ from ..utils import resource_path
 
 import unittest, tempfile, os
 
-class Test_StormLib_Open(unittest.TestCase):
+class Test_SFMPQ_Open(unittest.TestCase):
 	def test_open_readonly(self):
 		mpq = MPQ.SFMPQ(resource_path('test.mpq', __file__))
 		mpq.open(read_only=True)
@@ -155,7 +155,7 @@ class Test_StormLib_Open(unittest.TestCase):
 		with mpq.open() and self.assertRaises(PyMSError):
 			mpq.read_file('unknown.txt', MPQ.MPQLocale.german)
 
-class Test_StormLib_Create(unittest.TestCase):
+class Test_SFMPQ_Create(unittest.TestCase):
 	def __init__(self, methodName='runTest'):
 		unittest.TestCase.__init__(self, methodName)
 		self.path = None # type: str
