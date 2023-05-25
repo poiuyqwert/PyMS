@@ -312,7 +312,7 @@ class CodeText(Frame):
 	def setup(self, tags=None):
 		r = self.tag_ranges('Selection')
 		if self.tags:
-			for tag in self.tags.keys():
+			for tag in list(self.tags.keys()):
 				self.tag_delete(tag)
 		if tags:
 			self.tags = tags
@@ -321,7 +321,7 @@ class CodeText(Frame):
 		self.tags['Update'] = {'foreground':None,'background':None,'font':None}
 		if not 'Selection' in self.tags:
 			self.tags['Selection'] = {'foreground':None,'background':'#C0C0C0','font':None}
-		for tag, cnf in self.tags.iteritems():
+		for tag, cnf in self.tags.items():
 			if cnf:
 				self.tag_configure(tag, **cnf)
 		self.tag_raise('Selection')

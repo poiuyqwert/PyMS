@@ -90,7 +90,7 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
 		if n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]:
 			alpha = 255
 		pal.append((c[0],c[1],c[2],alpha))
-	i.putdata(map(lambda i: pal[palette.image[color_map[0]][color_map[1]*8+i]], data))
+	i.putdata([pal[palette.image[color_map[0]][color_map[1]*8+i]] for i in data])
 	return ImageTk.PhotoImage(i)
 
 def fnttobmp(fnt,pal,file=None):
@@ -139,7 +139,7 @@ class FNT:
 					pxls = [[]]
 					o += 4
 					while len(pxls) < height or (len(pxls) == height and len(pxls[-1]) < width):
-						c = ord(data[o])
+						c = data[o]
 						co,col = (c & 248) >> 3,c & 7
 						if len(pxls[-1])+co > width:
 							e = width-len(pxls[-1])

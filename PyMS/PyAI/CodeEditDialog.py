@@ -20,7 +20,7 @@ class CodeEditDialog(PyMSDialog):
 		self.ids = ids
 		self.decompile = ''
 		self.file = None
-		self.autocomptext = TYPE_HELP.keys()
+		self.autocomptext = list(TYPE_HELP.keys())
 		self.completing = False
 		self.complete = [None, 0]
 		t = ''
@@ -130,8 +130,8 @@ class CodeEditDialog(PyMSDialog):
 			ac = list(self.autocomptext)
 			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
 			if not m:
-				for _,c in CMD_HELP.iteritems():
-					ac.extend(c.keys())
+				for _,c in CMD_HELP.items():
+					ac.extend(list(c.keys()))
 				ac.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
 			for ns in self.parent.tbl.strings[:228]:
 				cs = ns.split('\x00')
@@ -174,8 +174,8 @@ class CodeEditDialog(PyMSDialog):
 			ac.sort()
 			if m:
 				x = []
-				for _,c in CMD_HELP.iteritems():
-					x.extend(c.keys())
+				for _,c in CMD_HELP.items():
+					x.extend(list(c.keys()))
 				x.sort()
 				ac = x + ac
 			r = False
@@ -237,9 +237,9 @@ class CodeEditDialog(PyMSDialog):
 		i.bwscript = AIBIN.BWBIN(self.parent.unitsdat, self.parent.upgradesdat, self.parent.techdat, self.parent.tbl)
 		try:
 			warnings = i.interpret(self, self.parent.extdefs)
-			for id in i.ais.keys():
+			for id in list(i.ais.keys()):
 				if id in self.parent.ai.externaljumps[0]:
-					for _,l in self.parent.ai.externaljumps[0].iteritems():
+					for _,l in self.parent.ai.externaljumps[0].items():
 						for cid in l:
 							if not cid in i.ais:
 								raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally with out editing the scripts with the external references (%s) at the same time." % (id,cid))
@@ -385,7 +385,7 @@ class CodeEditDialog(PyMSDialog):
 		}
 		header = re.compile(r'\A([^(]{4})\([^)]+\):\s*(?:\{.+\})?(?:\s*#.*)?\Z')
 		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\\Z')
-		jump = re.compile(r'\A(\s*)(%s)\((.+)\)(\s*#.*)?\Z' % '|'.join(debug.keys()))
+		jump = re.compile(r'\A(\s*)(%s)\((.+)\)(\s*#.*)?\Z' % '|'.join(list(debug.keys())))
 		script,block = '',''
 		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
 			m = header.match(line)

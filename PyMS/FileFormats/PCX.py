@@ -37,10 +37,10 @@ class PCX:
 			image = [[]]
 			x = 128
 			while x < len(data) - 769:
-				c = ord(data[x])
+				c = data[x]
 				x += 1
 				if c & 192 == 192:
-					image[-1].extend([ord(data[x])] * (63 & c))
+					image[-1].extend([data[x]] * (63 & c))
 					x += 1
 				else:
 					image[-1].append(c)

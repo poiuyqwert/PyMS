@@ -1,7 +1,7 @@
 
-from gapy.ga import *
+from .gapy.ga import *
 from . import Assets
-from setutils import PYMS_SETTINGS
+from .setutils import PYMS_SETTINGS
 
 ga.set_tracking_id(PYMS_SETTINGS.analytics.get('tid', 'UA-42320973-2', autosave=False))
 PYMS_SETTINGS.analytics.cid = ga.set_client_id(PYMS_SETTINGS.analytics.get('cid', autosave=False))

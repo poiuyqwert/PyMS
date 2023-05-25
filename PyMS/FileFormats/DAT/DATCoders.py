@@ -31,9 +31,9 @@ class DATFlagsCoder(DATPropertyCoder):
 	RE_FLAG = re.compile(r'^flag_0x([0-9a-fA-F]{2})$')
 	def decode(self, values): # type: (dict[str, bool]) -> int
 		flags = 0
-		flag_list = self.flag_mapping.keys()
-		name_list = self.flag_mapping.values()
-		for (name, enabled) in values.items():
+		flag_list = list(self.flag_mapping.keys())
+		name_list = list(self.flag_mapping.values())
+		for (name, enabled) in list(values.items()):
 			if not enabled:
 				continue
 			if name in name_list:

@@ -414,7 +414,7 @@ class PyTRG(MainWindow):
 			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
 			if not m:
 				ac.extend(self.autocompfuncs)
-			for id,ai in self.aibin.ais.iteritems():
+			for id,ai in self.aibin.ais.items():
 				if not id in ac:
 					ac.append(id)
 				cs = TBL.decompile_string(self.tbl.strings[ai[1]][:-1], '\x0A\x28\x29\x2C')

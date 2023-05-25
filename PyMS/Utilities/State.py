@@ -1,5 +1,5 @@
 
-from Callback import Callback
+from .Callback import Callback
 
 class State(object):
 	@staticmethod
@@ -47,7 +47,7 @@ class State(object):
 
 	def remove_observer(self, callback, *fields): # type: (Callable[None,None], *str) -> None
 		if not fields:
-			fields = self.__callbacks.keys()
+			fields = list(self.__callbacks.keys())
 		for field in fields:
 			if not field in self.__callbacks:
 				continue
@@ -68,9 +68,9 @@ def main():
 		file_path = State.property(Field.file_path) # type: str
 
 	state = MyState()
-	print(state.file)
+	print((state.file))
 	state.file = 'test'
-	print(state.file)
+	print((state.file))
 
 	def update_title():
 		print('Update title')

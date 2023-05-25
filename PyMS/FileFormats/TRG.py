@@ -1708,7 +1708,7 @@ class TRG:
 		self.ais_rev = [[OrderedDict(),OrderedDict()],[OrderedDict(),OrderedDict()]]
 		# self.ais = [[{},{}],[{},{}]]
 		# self.ais_rev = [[{},{}],[{},{}]]
-		for name,data in ais.ais.iteritems():
+		for name,data in ais.ais.items():
 			string = TBL.decompile_string(self.stat_txt.strings[data[1]].split('\x00',1)[0])
 			self.ais[not not data[2] & 4][data[2] & 1][name] = string
 			self.ais_rev[not not data[2] & 4][data[2] & 1][string] = name
@@ -1831,10 +1831,10 @@ class TRG:
 			except:
 				pass
 		rev_dynamic_conditions = {}
-		for i,c in self.dynamic_conditions.iteritems():
+		for i,c in self.dynamic_conditions.items():
 			rev_dynamic_conditions[c[0]] = i
 		rev_dynamic_actions = {}
-		for i,a in self.dynamic_actions.iteritems():
+		for i,a in self.dynamic_actions.items():
 			rev_dynamic_actions[a[0]] = i
 		loaded = []
 		if isstr(file):
@@ -2229,19 +2229,19 @@ class TRG:
 			result += ')\n'
 		if self.ais[0][0] or self.ais[1][0]:
 			result += '#\n# AIScripts (Without Location):\n'
-			for name,string in self.ais[0][0].iteritems():
+			for name,string in self.ais[0][0].items():
 				result += '#    %s    |    %s\n' % (name, string)
 			if self.ais[1][0]:
 				result += '#        -- BroodWar Only --\n'
-				for name,string in self.ais[1][0].iteritems():
+				for name,string in self.ais[1][0].items():
 					result += '#    %s    |    %s\n' % (name, string)
 		if self.ais[0][1] or self.ais[1][1]:
 			result += '#\n# AIScripts (Requires a Location):\n'
-			for name,string in self.ais[0][1].iteritems():
+			for name,string in self.ais[0][1].items():
 				result += '#    %s    |    %s\n' % (name, string)
 			if self.ais[1][1]:
 				result += '#        -- BroodWar Only --\n'
-				for name,string in self.ais[1][1].iteritems():
+				for name,string in self.ais[1][1].items():
 					result += '#    %s    |    %s\n' % (name, string)
 		result += '#----------------------------------------------------\n\n'
 		return result
@@ -2264,9 +2264,9 @@ class TRG:
 			result = 'MISSION_BRIEFING()\n\n'
 		if ref:
 			result += self.reference()
-		for n,string in self.strings.iteritems():
+		for n,string in self.strings.items():
 			result += 'String %s:\n%s\n\n' % (n, TBL.decompile_string(string, '\x0A'))
-		for n,property in self.properties.iteritems():
+		for n,property in self.properties.items():
 			result += 'Property %s:\n\tValidProperties(' % n
 			comma = False
 			for n in range(16):

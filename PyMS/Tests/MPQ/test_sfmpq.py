@@ -89,7 +89,7 @@ class Test_StormLib_Open(unittest.TestCase):
 				MPQ.MPQFileEntry(file_name=MPQ.MPQInternalFile.listfile, locale=MPQ.MPQLocale.spanish),
 				MPQ.MPQFileEntry(file_name='test.txt', locale=MPQ.MPQLocale.neutral),
 				MPQ.MPQFileEntry(file_name='test.txt', locale=MPQ.MPQLocale.spanish),
-				MPQ.MPQFileEntry(file_name='~unknowns\unknown_000001e0', locale=MPQ.MPQLocale.spanish),
+				MPQ.MPQFileEntry(file_name='~unknowns\\unknown_000001e0', locale=MPQ.MPQLocale.spanish),
 			])
 		)
 

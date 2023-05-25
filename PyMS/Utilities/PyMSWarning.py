@@ -1,5 +1,5 @@
 
-from utils import fit
+from .utils import fit
 
 class PyMSWarning(Exception):
 	def __init__(self, type, warning, line=None, code=None, extra=None, level=0, id=None, sub_warnings=None):

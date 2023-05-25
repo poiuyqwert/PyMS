@@ -4,8 +4,8 @@ from .setutils import PYMS_SETTINGS
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 
-import json, urllib
-from thread import start_new_thread
+import json, urllib.request, urllib.parse, urllib.error
+from _thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
 	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
@@ -17,7 +17,7 @@ class UpdateDialog(PyMSDialog):
 			remindme = PYMS_SETTINGS.get('remindme', True)
 			if remindme == True or remindme != Assets.version('PyMS'):
 				try:
-					versions = json.loads(urllib.urlopen(VERSIONS_URL).read())
+					versions = json.loads(urllib.request.urlopen(VERSIONS_URL).read())
 					PyMS_version = SemVer(versions['PyMS'])
 					program_version = SemVer(versions[program])
 				except:

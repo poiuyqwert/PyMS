@@ -226,10 +226,10 @@ class FileType(tuple):
 
 def _main():
 	f = FileType.maps()
-	print(f[0])
-	print(f.name)
-	print(f[1])
-	print(f.extensions)
+	print((f[0]))
+	print((f.name))
+	print((f[1]))
+	print((f.extensions))
 
 if __name__ == '__main__':
 	_main()

@@ -301,10 +301,10 @@ def debug_log(func):
 	if DEBUG:
 		def do_log(*args, **kwargs):
 			result = func(*args, **kwargs)
-			print("Func  : %s" % func.__name__)
-			print("Args  : %s" % (args,))
-			print("kwargs: %s" % kwargs)
-			print("Result: %s" % (result,))
+			print(("Func  : %s" % func.__name__))
+			print(("Args  : %s" % (args,)))
+			print(("kwargs: %s" % kwargs))
+			print(("Result: %s" % (result,)))
 			return result
 		return do_log
 	else:
@@ -394,7 +394,7 @@ def SFileListFiles(mpq, listfiles='', flags=0): # type: (MPQHANDLE, str, int) ->
 		return []
 	f = (FILELISTENTRY * n)()
 	_SFmpq.SFileListFiles(mpq, listfiles, f, flags)
-	return filter(lambda e: e.fileExists,f)
+	return [e for e in f if e.fileExists]
 
 @debug_log
 def SFileSetArchivePriority(mpq, priority): # type: (MPQHANDLE, int) -> bool

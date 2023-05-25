@@ -370,7 +370,7 @@ class PyDAT(MainWindow):
 			if not file_path:
 				return
 		filename = os.path.basename(file_path)
-		for page,_ in sorted(self.dattabs.pages.values(), key=lambda d: d[1]):
+		for page,_ in sorted(list(self.dattabs.pages.values()), key=lambda d: d[1]):
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
 					page.open_file(file_path)
@@ -393,7 +393,7 @@ class PyDAT(MainWindow):
 			mpq.open()
 		found_normal = [] # type: list[str]
 		found_expanded = [] # type: list[str]
-		for _,(tab,_) in self.dattabs.pages.iteritems():
+		for _,(tab,_) in self.dattabs.pages.items():
 			filename = tab.get_dat_data().dat_type.FILE_NAME
 			if mpq:
 				try:

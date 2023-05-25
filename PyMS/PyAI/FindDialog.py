@@ -175,7 +175,7 @@ class FindDialog(PyMSDialog):
 					self.reset = e
 					self.resettimer = self.after(1000, self.updatecolor)
 					return
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				flags = AIBIN.convflags(ai[2])
 				string = TBL.decompile_string(self.tbl.strings[ai[1]])
 				if m[0].match(id) and (not self.bw.get() or min(ai[0],1) != self.bw.get()-1) and m[1].match(flags) and m[2].match(str(ai[1])) and m[3].match(string):

@@ -112,13 +112,13 @@ class TBL:
 			findlen = list(offsets) + [len(data)]
 			findlen.sort(reverse=True)
 			lengths = {}
-			for i in xrange(1,len(findlen)):
+			for i in range(1,len(findlen)):
 				start = findlen[i]
 				if not start in lengths:
 					end = findlen[i-1]
 					lengths[start] = end-start
 			strings = []
-			for i in xrange(len(offsets)):
+			for i in range(len(offsets)):
 				o = offsets[i]
 				l = lengths[o]
 				strings.append(data[o:o+l].decode('latin-1'))

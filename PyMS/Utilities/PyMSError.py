@@ -21,7 +21,7 @@ class PyMSError(Exception):
 		return r
 
 	def __repr__(self):
-		from utils import fit
+		from .utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
 			if self.code != None:

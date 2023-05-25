@@ -422,7 +422,7 @@ class PyAI(MainWindow):
 				return
 			self.ai = ai
 			self.strings = {}
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				if not ai[1] in self.strings:
 					self.strings[ai[1]] = []
 				self.strings[ai[1]].append(id)
@@ -588,7 +588,7 @@ class PyAI(MainWindow):
 					except:
 						pass
 				self.listbox.delete(0, END)
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				self.set_entry(END, id, not ai[0], AIBIN.convflags(ai[2]), ai[1])
 				if sel and id in sel:
 					self.listbox.select_set(END)
@@ -625,7 +625,7 @@ class PyAI(MainWindow):
 						pass
 				self.listbox.delete(0, END)
 			ais = []
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				ais.append('%s %s' % (ai[0], id))
 			ais.sort()
 			for a in ais:
@@ -647,7 +647,7 @@ class PyAI(MainWindow):
 						pass
 				self.listbox.delete(0, END)
 			ais = []
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				ais.append('%s %s' % (AIBIN.convflags(ai[2]), id))
 			ais.sort()
 			ais.reverse()
@@ -670,7 +670,7 @@ class PyAI(MainWindow):
 						pass
 				self.listbox.delete(0, END)
 			ais = []
-			for id,ai in self.ai.ais.iteritems():
+			for id,ai in self.ai.ais.items():
 				ais.append('%s\x00%s' % (TBL.decompile_string(self.ai.tbl.strings[ai[1]]), id))
 			ais.sort()
 			for a in ais:
@@ -874,7 +874,7 @@ class PyAI(MainWindow):
 			external = []
 			e = self.get_entry(index)
 			if e[0] in self.ai.externaljumps[e[1]][0]:
-				for d in self.ai.externaljumps[e[1]][0][e[0]].iteritems():
+				for d in self.ai.externaljumps[e[1]][0][e[0]].items():
 					for id in d[1]:
 						if not id in external:
 							external.append(id)
@@ -884,7 +884,7 @@ class PyAI(MainWindow):
 				ids.append(index)
 		if cantremove:
 			more = len(cantremove) != len(indexs)
-			t = '\n'.join(['\t%s referenced by: %s' % (id,', '.join(refs)) for id,refs in cantremove.iteritems()])
+			t = '\n'.join(['\t%s referenced by: %s' % (id,', '.join(refs)) for id,refs in cantremove.items()])
 			# TODO: Figure out how this `cont` is supposed to be used
 			cont = MessageBox.askquestion(parent=self, title='Removing', message="These scripts can not be removed because they are referenced by other scripts:\n%s%s" % (t,['','\n\nContinue removing the other scripts?'][more]), default=[None,MessageBox.YES][more], type=[MessageBox.OK,MessageBox.YESNOCANCEL][more])
 		undo = []
@@ -968,7 +968,7 @@ class PyAI(MainWindow):
 			i.bwscript = AIBIN.BWBIN(self.unitsdat, self.upgradesdat, self.techdat, self.stat_txt)
 			try:
 				warnings = i.interpret(iimport, self.extdefs)
-				for id in i.ais.keys():
+				for id in list(i.ais.keys()):
 					if id in self.ai.externaljumps[0]:
 						for _,l in self.ai.externaljumps[0]:
 							for cid in l:
@@ -982,7 +982,7 @@ class PyAI(MainWindow):
 				w = WarningDialog(parent, warnings, True)
 				cont = w.cont
 			if cont:
-				for id,ai in i.ais.iteritems():
+				for id,ai in i.ais.items():
 					if id in self.ai.ais and (cont == True or cont != 2):
 						x = ContinueImportDialog(parent, id)
 						cont = x.cont

@@ -1,6 +1,6 @@
 
 import os, time
-from thread import start_new_thread
+from _thread import start_new_thread
 
 class CheckThread:
 	delay = 1
@@ -39,7 +39,7 @@ class CheckThread:
 				break
 			elif u:
 				# u.append('test')
-				self.parent.after(1, self.parent.update_files, map(lambda f: f.replace(self.path,''),u))
+				self.parent.after(1, self.parent.update_files, [f.replace(self.path,'') for f in u])
 			time.sleep(self.delay)
 		self.thread = None
 

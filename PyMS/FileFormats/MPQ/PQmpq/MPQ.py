@@ -163,7 +163,7 @@ class Listfiles(object):
 			self.add_listfile_file(file)
 
 	def get_filenames(self):
-		return self.filenames.values()
+		return list(self.filenames.values())
 
 BYTE = struct.Struct('<B')
 

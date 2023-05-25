@@ -64,9 +64,9 @@ class TRGCodeText(CodeText):
 		dyn = '|'
 		if self.toplevel.trg:
 			if self.toplevel.trg.dynamic_conditions:
-				dyn += r'\b(?P<DynamicConditions>%s)\b|' % '|'.join([n[0] for n in self.toplevel.trg.dynamic_conditions.values()])
+				dyn += r'\b(?P<DynamicConditions>%s)\b|' % '|'.join([n[0] for n in list(self.toplevel.trg.dynamic_conditions.values())])
 			if self.toplevel.trg.dynamic_actions:
-				dyn += r'\b(?P<DynamicActions>%s)\b|' % '|'.join([n[0] for n in self.toplevel.trg.dynamic_actions.values()])
+				dyn += r'\b(?P<DynamicActions>%s)\b|' % '|'.join([n[0] for n in list(self.toplevel.trg.dynamic_actions.values())])
 		self.re = re.compile(''.join((self.basic,dyn,r'(?P<Newline>\n)')), re.M)
 
 	def colorize(self):
@@ -96,13 +96,13 @@ class TRGCodeText(CodeText):
 				line = self.get(mark, next)
 				if not line:
 					return
-				for tag in self.tags.keys():
+				for tag in list(self.tags.keys()):
 					if tag != 'Selection':
 						self.tag_remove(tag, mark, next)
 				chars = chars + line
 				m = self.re.search(chars)
 				while m:
-					for key, value in m.groupdict().items():
+					for key, value in list(m.groupdict().items()):
 						if value != None:
 							a, b = m.span(key)
 							self.tag_add(key, head + '+%dc' % a, head + '+%dc' % b)

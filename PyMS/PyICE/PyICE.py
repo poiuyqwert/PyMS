@@ -230,7 +230,7 @@ class PyICE(MainWindow):
 
 	def update_iscrips_list(self):
 		self.iscriptlist.delete(0,END)
-		for iscript_id in self.ibin.headers.keys():
+		for iscript_id in list(self.ibin.headers.keys()):
 			if iscript_id in self.ibin.extrainfo:
 				name = self.ibin.extrainfo[iscript_id]
 			elif iscript_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
@@ -242,7 +242,7 @@ class PyICE(MainWindow):
 	def iscript_id_from_selection_index(self, index, column):
 		index = int(index)
 		if column == ColumnID.IScripts:
-			return self.ibin.headers.keys()[index]
+			return list(self.ibin.headers.keys())[index]
 		if column >= ColumnID.Units:
 			index = self.unitsdat.get_entry(index).graphics
 		if column >= ColumnID.Flingys:
@@ -399,7 +399,7 @@ class PyICE(MainWindow):
 		ibin = self.create_iscriptbin()
 		try:
 			if self.ibin.code:
-				s = self.ibin.code.keys()[-1] + 10
+				s = list(self.ibin.code.keys())[-1] + 10
 			else:
 				s = 0
 			w = ibin.interpret(file, s)
@@ -410,23 +410,23 @@ class PyICE(MainWindow):
 			w = WarningDialog(self, w, True)
 			if not w.cont:
 				return
-		for id in ibin.headers.keys():
+		for id in list(ibin.headers.keys()):
 			if id in self.ibin.headers:
 				for o in self.ibin.headers[id][2]:
 					if o != None and o in self.ibin.offsets:
 						self.ibin.remove_code(o,id)
 			self.ibin.headers[id] = ibin.headers[id]
-		for o,i in ibin.offsets.iteritems():
+		for o,i in ibin.offsets.items():
 			if o in self.ibin.offsets:
 				self.ibin.offsets[o].extend(i)
 			else:
 				self.ibin.offsets[o] = i
 		c = deepcopy(self.ibin.code)
-		for o,cmd in ibin.code.iteritems():
+		for o,cmd in ibin.code.items():
 			c[o] = cmd
-		k = c.keys()
+		k = list(c.keys())
 		k.sort()
-		self.ibin.code = OrderedDict(sorted(c.iteritems(), key=lambda item: item[0]))
+		self.ibin.code = OrderedDict(sorted(c.items(), key=lambda item: item[0]))
 		self.ibin.extrainfo.update(ibin.extrainfo)
 		self.update_iscrips_list()
 		self.status.set('Import Successful!')

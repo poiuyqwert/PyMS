@@ -53,7 +53,7 @@ class CompressionSettings(Frame):
 
 		right = Frame(self)
 		Label(right, text='Compression Type:', anchor=W, justify=LEFT).pack(fill=X)
-		DropDown(right, self.compression_index, map(lambda type: type.name(), CompressionSettings.COMPRESSION_CHOICES), self.choose_compression).pack(fill=X)
+		DropDown(right, self.compression_index, [type.name() for type in CompressionSettings.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
 		
 		self.levels_frame = Frame(right)
 		Label(self.levels_frame, text='Compression Level:', anchor=W, justify=LEFT).pack(side=TOP, fill=X)

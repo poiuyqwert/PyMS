@@ -48,9 +48,9 @@ class BMP:
 				image.append([])
 				while True:
 					if data[x] == '\x00':
-						if ord(data[x+1]) < 3:
+						if data[x+1] < 3:
 							if data[x+1] == '\x02':
-								xoffset, yoffset = ord(data[x+2]), ord(data[x+3])
+								xoffset, yoffset = data[x+2], data[x+3]
 								if not image[-1]:
 									image.pop()
 								elif len(image[-1]) < width and yoffset > 0:
@@ -66,11 +66,11 @@ class BMP:
 									break
 								image.append([])
 						else:
-							n = ord(data[x+1])
-							image[-1].extend([ord(i) for i in data[x+2:x+2+n]])
+							n = data[x+1]
+							image[-1].extend(data[x+2:x+2+n])
 							x += n + getPadding(n,2)
 					else:
-						image[-1].extend([ord(data[x+1])] * ord(data[x]))
+						image[-1].extend([data[x+1]] * data[x])
 					x += 2
 			image.reverse()
 			for y in range(len(image)):

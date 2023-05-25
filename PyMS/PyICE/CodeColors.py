@@ -27,7 +27,7 @@ class CodeColors(PyMSDialog):
 	def widgetize(self):
 		self.listbox = ScrolledListbox(self, font=couriernew, width=20, height=16)
 		self.listbox.bind(ButtonRelease.Click_Left, self.select)
-		for t in self.info.keys():
+		for t in list(self.info.keys()):
 			self.listbox.insert(END, t)
 		self.listbox.select_set(0)
 		self.listbox.pack(side=LEFT, fill=Y, padx=2, pady=2)
@@ -70,7 +70,7 @@ class CodeColors(PyMSDialog):
 		return ok
 
 	def select(self, e=None, n=None):
-		i = self.info.keys()[int(self.listbox.curselection()[0])]
+		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
 		s = self.tags[i.replace(' ', '')]
 		if n == None:
 			if isinstance(self.info[i], list):
@@ -114,7 +114,7 @@ class CodeColors(PyMSDialog):
 			c = ColorChooser.askcolor(parent=self, initialcolor=v['background'], title='Select %s color' % g)
 			if c[1]:
 				v['background'] = c[1]
-				k = self.info.keys()[int(self.listbox.curselection()[0])].replace(' ','')
+				k = list(self.info.keys())[int(self.listbox.curselection()[0])].replace(' ','')
 				self.tags[k][g] = c[1]
 				if isinstance(self.info[k], list):
 					self.tags[self.info[k][1]][g] = c[1]

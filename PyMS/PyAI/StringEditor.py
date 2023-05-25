@@ -134,7 +134,7 @@ class StringEditor(PyMSDialog):
 				return
 			max = len(tbl.strings)
 			ids = {}
-			for s,i in self.parent.strings.iteritems():
+			for s,i in self.parent.strings.items():
 				if s >= max:
 					ids[s] = i
 			if ids:
@@ -183,14 +183,14 @@ class StringEditor(PyMSDialog):
 		string = int(self.listbox.curselection()[0])
 		if self.parent.ai:
 			ids = {}
-			for s,i in self.parent.strings.iteritems():
+			for s,i in self.parent.strings.items():
 				if s > string:
 					ids[s] = i
 			if ids:
 				plural = 0
 				i = ''
 				e = 0
-				for s,x in ids.iteritems():
+				for s,x in ids.items():
 					if e < 6:
 						i += '    '
 					comma = False

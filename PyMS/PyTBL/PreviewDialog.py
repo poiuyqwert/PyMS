@@ -6,6 +6,8 @@ from ..FileFormats import FNT
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 
+import re
+
 class PreviewDialog(PyMSDialog):
 	letter_space = 1
 	space_space = 4

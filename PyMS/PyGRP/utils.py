@@ -12,10 +12,10 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 	if isstr(grp):
 		inp = GRP.GRP(pal.palette, uncompressed)
 		if not mute:
-			print("Reading GRP '%s'..." % grp)
+			print(("Reading GRP '%s'..." % grp))
 		inp.load_file(grp)
 		if not mute:
-			print(" - '%s' read successfully" % grp)
+			print((" - '%s' read successfully" % grp))
 	else:
 		inp = grp
 	if bmp:
@@ -24,7 +24,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 		bmpname = os.path.join(path,os.extsep.join(os.path.basename(grp).split(os.extsep)[:-1]))
 	out = BMP.BMP(pal.palette)
 	if frames == None:
-		frames = range(inp.frames)
+		frames = list(range(inp.frames))
 	n = 0
 	for f,frame in enumerate(inp.images):
 		if f in frames:
@@ -39,11 +39,11 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 			else:
 				name = '%s %s%sbmp' % (bmpname, str(n).zfill(3), os.extsep)
 				if not mute:
-					print("Writing BMP '%s'..." % name)
+					print(("Writing BMP '%s'..." % name))
 				out.set_pixels(frame)
 				out.save_file(os.path.join(path,name))
 				if not mute:
-					print(" - '%s' written succesfully" % name)
+					print((" - '%s' written succesfully" % name))
 			n += 1
 	if onebmp:
 		if onebmp == 1 and len(frames) % 17 and len(frames) / 17:
@@ -54,7 +54,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 		name = '%s%sbmp' % (bmpname, os.extsep)
 		out.save_file(os.path.join(path,name))
 		if not mute:
-			print(" - '%s' written succesfully" % name)
+			print((" - '%s' written succesfully" % name))
 
 def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=False, mute=False, vertical=False, transindex=0):
 	out = GRP.GRP(pal.palette, uncompressed, transindex)
@@ -63,7 +63,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 		if frames:
 			fullfile = os.path.join(path,bmp)
 			if not mute:
-				print("Reading BMP '%s'..." % fullfile)
+				print(("Reading BMP '%s'..." % fullfile))
 			inp.load_file(fullfile)
 			out.frames = frames
 			if vertical:
@@ -86,7 +86,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 						out.images[-1].append(inp.image[(n / 17) * out.height + y][x:x+out.width])
 				out.images_bounds.append(GRP.image_bounds(out.images[-1]))
 			if not mute:
-				print(" - '%s' read successfully" % fullfile)
+				print((" - '%s' read successfully" % fullfile))
 			if ret:
 				return out
 		else:
@@ -111,7 +111,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 					if found > 1 or (f.startswith(name) and len(f) > len(name)+2):
 						fullfile = os.path.join(path,f)
 						if not mute:
-							print("Reading BMP '%s'..." % fullfile)
+							print(("Reading BMP '%s'..." % fullfile))
 						inp.load_file(fullfile)
 						if found % 2:
 							if issize and inp.width != issize[0] and inp.height != issize[1]:
@@ -129,7 +129,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 							out.load_data([inp.image])
 							found += 1
 						if not mute:
-							print(" - '%s' read successfully" % fullfile)
+							print((" - '%s' read successfully" % fullfile))
 						if single:
 							break
 					else:
@@ -146,7 +146,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 		else:
 			fullfile = os.path.join(path,'%s%sgrp' % (name, os.extsep))
 		if not mute:
-			print("Writing GRP '%s'..." % fullfile)
+			print(("Writing GRP '%s'..." % fullfile))
 		out.save_file(fullfile)
 		if not mute:
-			print(" - '%s' written successfully" % fullfile)
+			print((" - '%s' written successfully" % fullfile))

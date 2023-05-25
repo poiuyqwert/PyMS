@@ -571,7 +571,7 @@ class AIBIN:
 							del findoffset[curoffset]
 						totaloffsets[curoffset+loc] = [id,len(cmdoffsets)]
 						cmdoffsets.append(curoffset)
-						cmd,curoffset = ord(curdata[curoffset]),curoffset + 1
+						cmd,curoffset = curdata[curoffset],curoffset + 1
 						#print(id,loc,curoffset,self.short_labels[cmd])
 						if not cmd and curoffset == len(curdata):
 							break
@@ -639,7 +639,7 @@ class AIBIN:
 				try:
 					info = decompress(data[offset:])
 					offset = 0
-					t = ord(info[offset])-1
+					t = info[offset]-1
 					while t > -1:
 						offset += 1
 						name,offset = getstr(info,offset)
@@ -647,7 +647,7 @@ class AIBIN:
 						offset += o
 						desc,offset = getstr(info,offset)
 						varinfo[name] = [t,val[1],desc]
-						t = ord(info[offset])-1
+						t = info[offset]-1
 					offset += 1
 					while info[offset] != '\x00':
 						id = info[offset:offset+4]
@@ -662,7 +662,7 @@ class AIBIN:
 						p = int(floor(log(len(aiinfo[id][1]),256)))
 						s,n = '<' + ['B','H','L','L'][p],[1,2,4,4][p]
 						while info[offset:offset+n].replace('\x00',''):
-							aiinfo[id][2].append(aiinfo[id][1].keys()[struct.unpack(s,info[offset:offset+n])[0]-1])
+							aiinfo[id][2].append(list(aiinfo[id][1].keys())[struct.unpack(s,info[offset:offset+n])[0]-1])
 							offset += n
 						offset += 1
 				except:
@@ -714,7 +714,7 @@ class AIBIN:
 	def ai_byte(self, data, stage=0):
 		"""byte        - A number in the range 0 to 255"""
 		if not stage:
-			v = ord(data[0])
+			v = data[0]
 		elif stage == 1:
 			v = str(data)
 		elif stage == 2:
@@ -771,7 +771,7 @@ class AIBIN:
 	def ai_unit(self, data, stage=0):
 		"""unit        - A unit ID from 0 to 227, or a full unit name from stat_txt.tbl"""
 		if not stage:
-			v = ord(data[0])
+			v = data[0]
 		elif stage == 1:
 			s = self.tbl.strings[data].split('\x00')
 			if s[1] != '*':
@@ -861,7 +861,7 @@ class AIBIN:
 	def ai_upgrade(self, data, stage=0):
 		"""upgrade     - An upgrade ID from 0 to 60, or a full upgrade name from stat_txt.tbl"""
 		if not stage:
-			v = ord(data[0])
+			v = data[0]
 		elif stage == 1:
 			v = TBL.decompile_string(self.tbl.strings[self.upgradesdat.get_entry(data).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 		elif stage == 2:
@@ -883,7 +883,7 @@ class AIBIN:
 	def ai_technology(self, data, stage=0):
 		"""technology  - An technology ID from 0 to 43, or a full technology name from stat_txt.tbl"""
 		if not stage:
-			v = ord(data[0])
+			v = data[0]
 		elif stage == 1:
 			v = TBL.decompile_string(self.tbl.strings[self.techdat.get_entry(data).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 		elif stage == 2:
@@ -919,7 +919,7 @@ class AIBIN:
 	def ai_compare(self, data, stage=0):
 		"""compare        - Either LessThan or GreaterThan"""
 		if not stage:
-			v = ord(data[0])
+			v = data[0]
 		elif stage == 1:
 			v = 'GreaterThan' if data else 'LessThan'
 		elif stage == 2:
@@ -1173,12 +1173,12 @@ class AIBIN:
 										if isstr(dat):
 											raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 									if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
-										n = findtotaljumps[ai[0]].keys()[0]
+										n = list(findtotaljumps[ai[0]].keys())[0]
 										raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
 									if ai[4][-1][0] not in self.script_endings:
 										add_warning(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1, id='end'))
 									if ai[0] in findgoto:
-										for l,f in findgoto[ai[0]].iteritems():
+										for l,f in findgoto[ai[0]].items():
 											if f[0]:
 												del findgoto[ai[0]][l]
 										if not findgoto[ai[0]]:
@@ -1423,12 +1423,12 @@ class AIBIN:
 				if isstr(dat):
 					raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 			if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
-				n = findtotaljumps[ai[0]].keys()[0]
+				n = list(findtotaljumps[ai[0]].keys())[0]
 				raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (n,ai[0]), warnings=warnings)
 			if ai[4][-1][0] not in self.script_endings:
 				add_warning(PyMSWarning('Interpreting', "The AI with ID '%s' does not end with a stop or definite loop. To ensure your script doesn't run into the next script, it must end with one of: goto(), stop(), debug(), time_jump(), or race_jump()" % ai[0], level=1, id='end'))
 			if ai[0] in findgoto:
-				for l,f in findgoto[ai[0]].iteritems():
+				for l,f in findgoto[ai[0]].items():
 					if f[0]:
 						del findgoto[ai[0]][l]
 				if not findgoto[ai[0]]:
@@ -1444,8 +1444,8 @@ class AIBIN:
 				if not l in curinfo[ai[0]][1]:
 					curinfo[ai[0]][1][l] = ''
 		if findtotaljumps:
-			i = (findtotaljumps.keys()[0], findtotaljumps.values()[0])
-			l = (i[1].keys()[0], i[1].values()[0])
+			i = (list(findtotaljumps.keys())[0], list(findtotaljumps.values())[0])
+			l = (list(i[1].keys())[0], list(i[1].values())[0])
 			raise PyMSError('Interpreting',"The external jump '%s:%s' in AI script '%s' jumps to an AI script that was not found while interpreting (you must include the scripts for all external jumps)" % (i[0],l[0],l[1][0][4]), warnings=warnings)
 		s = 2+sum(aisizes.values())
 		if s > 65535:
@@ -1455,10 +1455,10 @@ class AIBIN:
 			raise PyMSError('Interpreting',"There is not enough room in your bwscript.bin to compile these changes. The current file is %sB out of the max 65535B, these changes would make the file %sB." % (2+sum(self.bwsizes.values()),s))
 		if findgoto:
 			remove = [{},{}]
-			for i in findgoto.iteritems():
+			for i in findgoto.items():
 				if not i[0] in remove:
 					remove[i[0] not in aiinfo][i[0]] = []
-				for l,f in i[1].iteritems():
+				for l,f in i[1].items():
 					if not f[0]:
 						add_warning(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is unused, label is discarded" % (l,i[0])))
 						remove[i[0] not in aiinfo][i[0]].append(f[1])
@@ -1468,7 +1468,7 @@ class AIBIN:
 							bwinfo[i[0]][1].remove(l)
 			# print(remove)
 			for b,r in enumerate(remove):
-				for i in r.iterkeys():
+				for i in r.keys():
 					if r[i]:
 						r[i].sort()
 						n = 0
@@ -1478,23 +1478,23 @@ class AIBIN:
 							else:
 								del ais[i][4][x-n]
 							n += 1
-		for id,u in unused.iteritems():
+		for id,u in unused.items():
 			if u and (not id[0] in findgoto or not id[1] in findgoto[id[0]]):
 				add_warning(PyMSWarning('Interpeting',"The label '%s' in AI script '%s' is only referenced by commands that cannot be reached and is therefore unused" % (id[1],id[0])))
 		if self.ais:
-			for id,dat in ais.iteritems():
+			for id,dat in ais.items():
 				self.ais[id] = dat
 		else:
 			self.ais = ais
 		self.aisizes = aisizes
 		for a,b in ((0,0),(0,1),(1,0),(1,1)):
 			if self.externaljumps[a][b]:
-				for id,dat in externaljumps[a][b].iteritems():
+				for id,dat in externaljumps[a][b].items():
 					self.externaljumps[a][b][id] = dat
 			else:
 				self.externaljumps[a][b] = externaljumps[a][b]
 		if self.bwscript.ais:
-			for id,dat in bwais.iteritems():
+			for id,dat in bwais.items():
 				self.bwscript.ais[id] = dat
 		else:
 			self.bwscript.ais = bwais
@@ -1554,7 +1554,7 @@ class AIBIN:
 		else:
 			f = file
 		if scripts == None:
-			scripts = self.ais.keys()
+			scripts = list(self.ais.keys())
 		if shortlabel:
 			labels = self.short_labels
 		else:
@@ -1622,7 +1622,7 @@ class AIBIN:
 				loaded.append(dname)
 			f.write('\n')
 		values = {}
-		for name,dat in self.varinfo.iteritems():
+		for name,dat in self.varinfo.items():
 			vtype = types[dat[0]]
 			if dat[2] != None:
 				f.write('%s %s = %s' % (vtype,name,dat[1]))
@@ -1681,7 +1681,7 @@ class AIBIN:
 						f.write('\n')
 					elif cmdn in jumps:
 						if labelnames:
-							jump[cmdn] = labelnames.keys()[namenum]
+							jump[cmdn] = list(labelnames.keys())[namenum]
 						else:
 							jump[cmdn] = '%s %04d' % (id,j)
 						if cmdn:
@@ -1765,7 +1765,7 @@ class AIBIN:
 		table = ''
 		offset = 4
 		totaloffsets = {}
-		for id in self.ais.keys():
+		for id in list(self.ais.keys()):
 			loc,string,flags,ai,jumps = self.ais[id]
 			if loc:
 				cmdn = 0
@@ -1787,7 +1787,7 @@ class AIBIN:
 					cmdn += 1
 					offset += 1
 		offset = 4
-		for id in self.ais.keys():
+		for id in list(self.ais.keys()):
 			loc,string,flags,ai,jumps = self.ais[id]
 			if loc:
 				table += struct.pack('<4s3L', id, offset, string+1, flags)
@@ -1817,13 +1817,13 @@ class AIBIN:
 		data += '%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table)
 		if extra and (self.varinfo or self.aiinfo):
 			info = ''
-			for var,dat in self.varinfo.iteritems():
+			for var,dat in self.varinfo.items():
 				if dat[2] != None:
 					info += '%s%s\x00%s%s\x00' % (chr(dat[0]+1),var,self.types[types[dat[0]]][0](dat[1],2)[1],dat[2])
 			info += '\x00'
-			for ai,dat in self.aiinfo.iteritems():
+			for ai,dat in self.aiinfo.items():
 				info += '%s%s\x00' % (ai,dat[0])
-				for label,desc in dat[1].iteritems():
+				for label,desc in dat[1].items():
 					info += '%s\x00%s\x00' % (label,desc)
 				info += '\x00'
 				if dat[2]:
@@ -1913,7 +1913,7 @@ class BWBIN(AIBIN):
 							del findoffset[curoffset]
 						totaloffsets[curoffset+loc] = [id,len(cmdoffsets)]
 						cmdoffsets.append(curoffset)
-						cmd,curoffset = ord(curdata[curoffset]),curoffset + 1
+						cmd,curoffset = curdata[curoffset],curoffset + 1
 						if not cmd and curoffset == len(curdata):
 							break
 						if cmd > len(self.labels):
@@ -1984,7 +1984,7 @@ class BWBIN(AIBIN):
 						p = int(floor(log(len(aiinfo),256)))
 						s,n = '<' + ['B','H','L','L'][p],[1,2,4,4][p]
 						while info[offset] != '\x00':
-							aiinfo[id][2].append(aiinfo[id][1].keys()[struct.unpack(s,info[offset:offset+n])[0]-1])
+							aiinfo[id][2].append(list(aiinfo[id][1].keys())[struct.unpack(s,info[offset:offset+n])[0]-1])
 							offset += n
 						offset += 1
 				except:
@@ -2008,7 +2008,7 @@ class BWBIN(AIBIN):
 		else:
 			f = filename
 		if scripts == None:
-			scripts = self.ais.keys()
+			scripts = list(self.ais.keys())
 		if shortlabel:
 			labels = self.short_labels
 		else:
@@ -2057,7 +2057,7 @@ class BWBIN(AIBIN):
 					f.write('\n')
 				elif cmdn in jumps:
 					if labelnames:
-						jump[cmdn] = labelnames.keys()[namenum]
+						jump[cmdn] = list(labelnames.keys())[namenum]
 						namenum += 1
 					else:
 						jump[cmdn] = '%s %04d' % (id,j)
@@ -2135,7 +2135,7 @@ class BWBIN(AIBIN):
 		offset = 4
 		totaloffsets = {}
 		warnings = []
-		for id in self.ais.keys():
+		for id in list(self.ais.keys()):
 			loc,ai,_jumps = self.ais[id]
 			if loc:
 				cmdn = 0
@@ -2155,7 +2155,7 @@ class BWBIN(AIBIN):
 					cmdn += 1
 					offset += 1
 		offset = 4
-		for id in self.ais.keys():
+		for id in list(self.ais.keys()):
 			loc,ai,_ = self.ais[id]
 			table += struct.pack('<4sL', id, offset)
 			for cmd in ai:
@@ -2179,9 +2179,9 @@ class BWBIN(AIBIN):
 		data += '%s%s%s\x00\x00\x00\x00' % (struct.pack('<L', offset),ais,table)
 		if extra and self.aiinfo:
 			info = ''
-			for ai,dat in self.aiinfo.iteritems():
+			for ai,dat in self.aiinfo.items():
 				info += '%s%s\x00' % (ai,dat[0])
-				for label,desc in dat[1].iteritems():
+				for label,desc in dat[1].items():
 					info += '%s\x00%s\x00' % (label,desc)
 				info += '\x00'
 				for label in dat[2]:

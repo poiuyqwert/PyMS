@@ -1,6 +1,6 @@
 
 try:
-	import tkFont as _Fonts
+	import tkinter.font as _Fonts
 except:
 	import tkinter.font as _Fonts
 

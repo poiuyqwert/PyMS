@@ -1,6 +1,6 @@
 
 try: # Python 2
-	from Tkinter import *
+	from tkinter import *
 except: # Python 3
 	from tkinter import *
 

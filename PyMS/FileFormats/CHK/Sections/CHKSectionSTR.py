@@ -72,7 +72,7 @@ class CHKSectionSTR(CHKSection):
 		return string_id in self.strings
 
 	def lookup_string(self, text):
-		for string in self.strings.values():
+		for string in list(self.strings.values()):
 			if string.text == text:
 				return string
 		return None
@@ -126,6 +126,6 @@ class CHKSectionSTR(CHKSection):
 	
 	def decompile(self):
 		result = '%s:\n' % (self.NAME)
-		for n,string in self.strings.iteritems():
+		for n,string in self.strings.items():
 			result += '\t%s"%s"\n' % (pad('String %d' % (n+1)), string.text.replace('\\','\\\\').replace('"','\\"'))
 		return result

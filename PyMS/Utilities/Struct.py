@@ -1,7 +1,7 @@
 
 from .PyMSError import PyMSError
 
-import struct
+from . import struct
 
 class Endian:
 	native = '@'

@@ -1,7 +1,7 @@
 
 from . import GAField
 
-import urlparse, urllib, urllib2, platform, threading, time, sys
+import urllib.parse, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, platform, threading, time, sys
 
 
 class GATarget:
@@ -58,11 +58,11 @@ class GAAPITarget(threading.Thread):
 		threading.Thread.__init__(self)
 		self.daemon = True
 		if debug:
-			self._url_collect = urlparse.urlunparse((debug_protocol or GAAPITarget.DEBUG_PROTOCOL, host or GAAPITarget.HOST, debug_path or GAAPITarget.DEBUG_PATH, '', '', ''))
+			self._url_collect = urllib.parse.urlunparse((debug_protocol or GAAPITarget.DEBUG_PROTOCOL, host or GAAPITarget.HOST, debug_path or GAAPITarget.DEBUG_PATH, '', '', ''))
 			self._url_batch = None
 		else:
-			self._url_collect = urlparse.urlunparse((protocol or GAAPITarget.PROTOCOL, host or GAAPITarget.HOST, collect_path or GAAPITarget.COLLECT_PATH, '', '', ''))
-			self._url_batch = urlparse.urlunparse((protocol or GAAPITarget.PROTOCOL, host or GAAPITarget.HOST, batch_path or GAAPITarget.BATCH_PATH, '', '', ''))
+			self._url_collect = urllib.parse.urlunparse((protocol or GAAPITarget.PROTOCOL, host or GAAPITarget.HOST, collect_path or GAAPITarget.COLLECT_PATH, '', '', ''))
+			self._url_batch = urllib.parse.urlunparse((protocol or GAAPITarget.PROTOCOL, host or GAAPITarget.HOST, batch_path or GAAPITarget.BATCH_PATH, '', '', ''))
 		self._useragent = useragent or build_user_agent()
 		self._track = []
 		self._running = False
@@ -75,7 +75,7 @@ class GAAPITarget(threading.Thread):
 		# print(self._useragent)
 
 	def _body(self, data):
-		return urllib.urlencode(data)
+		return urllib.parse.urlencode(data)
 
 	def _time(self):
 		return int(time.time() * 1000)
@@ -84,16 +84,16 @@ class GAAPITarget(threading.Thread):
 		try:
 			# print(batch)
 			# print(repr(body))
-			request = urllib2.Request(self._url_batch if len(batch) > 1 else self._url_collect, body)
+			request = urllib.request.Request(self._url_batch if len(batch) > 1 else self._url_collect, body)
 			request.add_header('User-Agent', self._useragent)
-			_ = urllib2.urlopen(request)
+			_ = urllib.request.urlopen(request)
 			# print('done: ' + result.read())
 			if self._backlog:
 				retry_at = self._time()
 				for data,failed_at in self._backlog:
 					data[GAField.QueueTime] = retry_at - failed_at
 					self._track.append(data)
-		except urllib2.URLError:
+		except urllib.error.URLError:
 			for data in batch:
 				self._backlog.append((data, self._time()))
 		except Exception:

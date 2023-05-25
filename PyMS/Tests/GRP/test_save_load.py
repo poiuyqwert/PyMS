@@ -8,7 +8,7 @@ class Test_Save_And_Load(unittest.TestCase):
 	def test_single_frame(self):
 		width = 16
 		height = 16
-		image = list(range(y*width,(y+1)*width) for y in range(height))
+		image = list(list(range(y*width,(y+1)*width)) for y in range(height))
 
 		saved_file = FFile()
 
@@ -26,7 +26,7 @@ class Test_Save_And_Load(unittest.TestCase):
 	def test_two_frames(self):
 		width = 16
 		height = 16
-		image = list(range(y*width,(y+1)*width) for y in range(height))
+		image = list(list(range(y*width,(y+1)*width)) for y in range(height))
 
 		saved_file = FFile()
 

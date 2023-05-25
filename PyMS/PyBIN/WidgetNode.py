@@ -73,7 +73,7 @@ class WidgetNode:
 	def bounding_box(self):
 		if self.widget:
 			return self.widget.bounding_box()
-		bounding_box = [sys.maxint,sys.maxint,0,0]
+		bounding_box = [sys.maxsize,sys.maxsize,0,0]
 		for node in self.children:
 			x1,y1,x2,y2 = node.bounding_box()
 			if x1 < bounding_box[0]:
@@ -307,7 +307,7 @@ class WidgetNode:
 		if SHOW_SMKS and SHOW_ANIMATED and self.smks:
 			self.frame_waited += dt
 			if self.frame_waited > self.frame_delay:
-				for smk in self.smks.values():
+				for smk in list(self.smks.values()):
 					if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
 						# while self.frame_waited > self.frame_delay:
 							smk.next_frame()

@@ -3,7 +3,7 @@ from ..utils import isstr
 from ..setutils import PYMS_SETTINGS
 
 try: # Python 2
-	import Tkinter as _Tk
+	import tkinter as _Tk
 except: # Python 3
 	import tkinter as _Tk
 import inspect as _inspect
@@ -21,8 +21,8 @@ class Theme(object):
 			with open(Assets.theme_file_path(name), 'r') as f:
 				theme = json.load(f) # type: dict[str, dict[str, str | int]]
 		except:
-			print("Theme '%s' does not exist or has an invalid format" % name)
-			print(_traceback.format_exc())
+			print(("Theme '%s' does not exist or has an invalid format" % name))
+			print((_traceback.format_exc()))
 			raise
 
 		self.author = theme.get('author', 'None')
@@ -30,13 +30,13 @@ class Theme(object):
 
 		self.widget_styles = [] # type: list[tuple[_Selector, dict[str, str | int]]]
 		try:
-			widget_styles = theme['widgets'].items()
+			widget_styles = list(theme['widgets'].items())
 		except:
-			print("Theme '%s' missing 'widgets' or it is invalid" % name)
-			print(_traceback.format_exc())
+			print(("Theme '%s' missing 'widgets' or it is invalid" % name))
+			print((_traceback.format_exc()))
 			raise
 		if not widget_styles:
-			print("Theme '%s' has an empty set of 'widgets'" % name)
+			print(("Theme '%s' has an empty set of 'widgets'" % name))
 		for selector,styles in widget_styles:
 			try:
 				selector = _Selector(selector)
@@ -50,7 +50,7 @@ class Theme(object):
 		if isinstance(colors, dict):
 			self.colors = colors
 		elif colors:
-			print("Theme '%s' has invalid 'colors'" % name)
+			print(("Theme '%s' has invalid 'colors'" % name))
 
 _THEME = None # type: Theme | None
 _WIDGET_TYPES = None
@@ -271,7 +271,7 @@ class _Selector(object):
 		for component in definition.split(' '):
 			matcher = _Matcher.parse(component)
 			if not matcher:
-				print("Theme selecter '%s' doesn't correspond to any matcher" % definition)
+				print(("Theme selecter '%s' doesn't correspond to any matcher" % definition))
 				raise Exception() # TODO: Error handling
 			self.matchers.append(matcher)
 
@@ -340,27 +340,27 @@ def apply_theme(widget): # type: (_Tk.Misc) -> None
 	for selector,styles in _THEME.widget_styles:
 		if selector.matches(widget):
 			try:
-				styles = styles.items()
+				styles = list(styles.items())
 			except:
 				if not selector.describe() in _INVALID_SETTINGS:
-					print("Theme '%s' selector '%s' has invalid settings" % (_THEME.name, selector.describe()))
+					print(("Theme '%s' selector '%s' has invalid settings" % (_THEME.name, selector.describe())))
 					_INVALID_SETTINGS.append(selector.describe())
 				continue
 			for key,value in styles:
 				key_type = _ALLOWED_SETTINGS.get(key)
 				if not key_type:
 					if not key in _INVALID_SETTINGS:
-						print("Theme '%s' setting '%s' is invalid" % (_THEME.name, key))
+						print(("Theme '%s' setting '%s' is invalid" % (_THEME.name, key)))
 						_INVALID_SETTINGS.append(key)
 					continue
 				if not key_type(value):
 					if not key_type in _INVALID_VALUES:
 						_INVALID_VALUES[key_type] = []
 					if not value in _INVALID_VALUES[key_type]:
-						print("Theme '%s' value '%s' for setting '%s' is invalid" % (_THEME.name, value, key))
+						print(("Theme '%s' value '%s' for setting '%s' is invalid" % (_THEME.name, value, key)))
 						_INVALID_VALUES[key_type].append(value)
 					continue
-				if not key in widget.keys():
+				if not key in list(widget.keys()):
 					continue
 				widget.config({key: value})
 
@@ -385,7 +385,7 @@ def get_color(*keys, **kwargs): # type: (*str, str) -> (str | None)
 	if not _SettingType.color(color):
 		name = '.'.join(keys)
 		if not name in _INVALID_COLORS:
-			print("Theme '%s' has invalid/missing color '%s'" % (_THEME.name, name))
+			print(("Theme '%s' has invalid/missing color '%s'" % (_THEME.name, name)))
 			_INVALID_COLORS.append(name)
 		return default
 	return color

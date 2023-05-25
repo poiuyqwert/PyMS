@@ -67,8 +67,8 @@ for c in compile:
 		elif n == 1:
 			name = l
 			out.write(infoheaderstart % name)
-			for n,d in files.iteritems():
-				print('%s - %s' % (name, '%s %s' % (n,d[0])))
+			for n,d in files.items():
+				print(('%s - %s' % (name, '%s %s' % (n,d[0]))))
 				if name.split(' ')[0] == n:
 					out.write('				<li><b>%s</b>\n' % name)
 				else:
@@ -193,4 +193,4 @@ for c in compile:
 			else:
 				comp += tags(l) + '<br>\n'
 
-raw_input()
+input()

@@ -339,10 +339,10 @@ def _main():
 	]
 	for event in events:
 		print(event)
-		print(event.name())
-		print(event.description())
+		print((event.name()))
+		print((event.description()))
 
-	import Tkinter as Tk
+	import tkinter as Tk
 
 	root = Tk.Tk()
 	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')

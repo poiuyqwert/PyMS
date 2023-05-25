@@ -78,7 +78,7 @@ class AbstractDAT(object):
 	def save_data(self):
 		entry_count = self.entry_count()
 		is_expanded = entry_count > self.FORMAT.entries
-		all_values = zip(*(entry.save_values() for entry in self.entries))
+		all_values = list(zip(*(entry.save_values() for entry in self.entries)))
 		data = ''.join(prop.save_data(values, is_expanded) for prop,values in zip(self.FORMAT.properties, all_values))
 		data_size = len(data)
 		expected_data_size = self.FORMAT.file_size(expanded_entry_count=entry_count if is_expanded else None)
@@ -186,7 +186,7 @@ class AbstractDAT(object):
 
 	def export_entries(self, ids=None, export_properties=None, export_type=ExportType.text, json_dump=False, json_indent=4):
 		if not ids:
-			ids = range(self.entry_count())
+			ids = list(range(self.entry_count()))
 		data = []
 		for id in ids:
 			if id < 0 or id >= self.entry_count():
@@ -204,7 +204,7 @@ class AbstractDAT(object):
 			if not isinstance(data, list):
 				data = [data]
 			def flatten(fields, breadcrumbs, lines): # type: (OrderedDict[str, Any], tuple[str], list[str]) -> None
-				for key, value in fields.items():
+				for key, value in list(fields.items()):
 					if key.startswith('_'):
 						continue
 					if isinstance(value, OrderedDict):
@@ -285,7 +285,7 @@ class AbstractDATEntry(object):
 		if type_name != self.EXPORT_NAME:
 			raise PyMSError('Import', "Invalid type (expected '%s', got '%s')" % (self.EXPORT_NAME, type_name))
 		self._import_data(data)
-		for key in data.keys():
+		for key in list(data.keys()):
 			if key.startswith('_'):
 				continue
 			raise PyMSError('Import', "Unrecognized property '%s'" % key)

@@ -12,9 +12,9 @@ from .ShowScrollbar import *
 
 
 try: # Python 2
-	import tkFileDialog as FileDialog
-	import tkMessageBox as MessageBox
-	import tkColorChooser as ColorChooser
+	import tkinter.filedialog as FileDialog
+	import tkinter.messagebox as MessageBox
+	import tkinter.colorchooser as ColorChooser
 except: # Python 3
 	import tkinter.filedialog as FileDialog
 	import tkinter.messagebox as MessageBox

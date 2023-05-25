@@ -1,6 +1,6 @@
 
 try: # Python 2
-	from Tkinter import StringVar
+	from tkinter import StringVar
 except: # Python 3
 	from tkinter import StringVar
 

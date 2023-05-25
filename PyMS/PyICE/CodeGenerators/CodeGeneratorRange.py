@@ -44,11 +44,11 @@ class CodeGeneratorTypeRange(CodeGeneratorType):
 		self.step = save.get('step',1)
 
 	def count(self):
-		return len(range(self.start,self.stop+1,self.step))
+		return len(list(range(self.start,self.stop+1,self.step)))
 
 	def value(self, lookup_value):
 		n = lookup_value('n')
-		r = range(self.start,self.stop+1,self.step)
+		r = list(range(self.start,self.stop+1,self.step))
 		if n >= len(r):
 			return ''
 		return r[n]

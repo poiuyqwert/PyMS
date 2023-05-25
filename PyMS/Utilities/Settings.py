@@ -54,7 +54,7 @@ class SettingDict(object):
 			return memo[id(self)]
 		result = SettingDict()
 		memo[id(self)] = result
-		for key,value in self.iteritems():
+		for key,value in self.items():
 			result[key] = copy.deepcopy(value, memo)
 		return result
 
@@ -62,19 +62,19 @@ class SettingDict(object):
 		return copy.deepcopy(self)
 
 	def iteritems(self):
-		return self.__dict__['_settings'].iteritems()
+		return iter(self.__dict__['_settings'].items())
 
 	def keys(self):
-		return self.__dict__['_settings'].keys()
+		return list(self.__dict__['_settings'].keys())
 
 	def values(self):
-		return self.__dict__['_settings'].values()
+		return list(self.__dict__['_settings'].values())
 
 	def update(self, settings, set=False):
 		if set:
 			self.__dict__['_settings'] = copy.deepcopy(settings.__dict__['_settings'])
 		else:
-			for key,value in settings.iteritems():
+			for key,value in settings.items():
 				if isinstance(value, SettingDict):
 					if key in self:
 						self[key].update(value, set=set)
@@ -84,7 +84,7 @@ class SettingDict(object):
 					self[key] = value
 
 	def set_defaults(self, settings):
-		for key,value in settings.iteritems():
+		for key,value in settings.items():
 			if not key in self:
 				self[key] = value
 

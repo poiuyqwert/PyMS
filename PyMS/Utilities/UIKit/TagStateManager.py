@@ -1,6 +1,6 @@
 
 try:
-	import Tkinter as _Tk
+	import tkinter as _Tk
 except:
 	import tkinter as _Tk
 

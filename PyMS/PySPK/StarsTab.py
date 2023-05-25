@@ -78,9 +78,9 @@ class StarsTab(NotebookTab):
 			return
 		for layer in self.toplevel.spk.layers:
 			if delta > 0:
-				r = range(len(layer.stars)-1,-1,-1)
+				r = list(range(len(layer.stars)-1,-1,-1))
 			else:
-				r = range(0,len(layer.stars))
+				r = list(range(0,len(layer.stars)))
 			update = False
 			for i in r:
 				if layer.stars[i] in self.toplevel.selected_stars:

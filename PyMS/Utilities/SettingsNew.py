@@ -28,7 +28,7 @@ class Group(SettingObject):
 	def decode(self, data):
 		if not isinstance(data, dict):
 			return
-		for attr, attr_data in data.items():
+		for attr, attr_data in list(data.items()):
 			if not isstr(attr) or not attr.startswith('_') or not hasattr(self, attr):
 				continue
 			object = getattr(self, attr)

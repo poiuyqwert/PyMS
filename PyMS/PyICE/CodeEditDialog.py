@@ -24,7 +24,7 @@ class CodeEditDialog(PyMSDialog):
 		self.ids = ids
 		self.decompile = ''
 		self.file = None
-		self.autocomptext = IScriptBIN.TYPE_HELP.keys() + ['.headerstart','.headerend']
+		self.autocomptext = list(IScriptBIN.TYPE_HELP.keys()) + ['.headerstart','.headerend']
 		for o in IScriptBIN.OPCODES:
 			self.autocomptext.extend(o[0])
 		for a in IScriptBIN.HEADER:

@@ -9,7 +9,7 @@ class BadFile:
 	def __str__(self):
 		return self.file
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return False
 
 class SFile:

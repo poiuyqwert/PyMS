@@ -5,7 +5,7 @@ from textwrap import wrap
 import os, sys, platform, re, tempfile, errno
 
 try:
-	from thread import start_new_thread
+	from _thread import start_new_thread
 except:
 	import threading
 	def start_new_thread(target, args):
@@ -13,7 +13,7 @@ except:
 
 WIN_REG_AVAILABLE = True
 try:
-	from _winreg import *
+	from winreg import *
 except:
 	WIN_REG_AVAILABLE = False
 
@@ -32,23 +32,23 @@ def debug_func_log(should_log_call=None):
 			ref = uuid.uuid4().hex
 			log = not should_log_call or should_log_call(func, args, kwargs)
 			if log:
-				print("Func  : %s (%s)" % (func.__name__, ref))
-				print("\tArgs  : %s" % (args,))
-				print("\tkwargs: %s" % kwargs)
+				print(("Func  : %s (%s)" % (func.__name__, ref)))
+				print(("\tArgs  : %s" % (args,)))
+				print(("\tkwargs: %s" % kwargs))
 			result = func(*args, **kwargs)
 			if log:
-				print("Func  : %s (%s)" % (func.__name__, ref))
-				print("\tResult: %s" % (result,))
+				print(("Func  : %s (%s)" % (func.__name__, ref)))
+				print(("\tResult: %s" % (result,)))
 			return result
 		return do_log
 	return decorator
 def debug_state(states, history=[]):
 	n = len(history)
-	print('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown'))
+	print(('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')))
 	history.append(None)
 
 try:
-	_unicode = unicode
+	_unicode = str
 except:
 	_unicode = str
 def isstr(s):
@@ -128,7 +128,7 @@ def binary(flags, count):
 
 def flags_code(flags, name_map):
 	names = []
-	for (flag, name) in sorted(name_map.iteritems(), key=lambda p: p[0]):
+	for (flag, name) in sorted(name_map.items(), key=lambda p: p[0]):
 		if flags & flag:
 			names.append(name)
 	if not names:

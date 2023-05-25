@@ -624,7 +624,7 @@ class IScriptBIN:
 					co = curoffset
 					if co in code:
 						break
-					c,curoffset = ord(data[curoffset]),co + 1
+					c,curoffset = data[curoffset],co + 1
 					if c >= len(OPCODES):
 						raise PyMSError('Load','Invalid command, could possibly be a corrrupt iscript.bin')
 					cmd = [c]
@@ -638,7 +638,8 @@ class IScriptBIN:
 								curoffset += p
 						else:
 							secondparam = params[1](0, self)
-							a,curoffset = ord(data[curoffset:curoffset-firstparam]),curoffset - firstparam
+							a = int.from_bytes(data[curoffset:curoffset-firstparam], "little")
+							curoffset -= firstparam
 							cmd.extend((a,) + struct.unpack('<%s%s' % (a,['','B','H'][secondparam]), data[curoffset:curoffset+secondparam*a]))
 							curoffset += secondparam*a
 					code[co] = cmd
@@ -665,7 +666,7 @@ class IScriptBIN:
 				if data[offset:offset+4] != 'SCPE':
 					raise PyMSError('Load','Invalid iscript entry (missing header), could possibly be a corrupt iscript.bin')
 				try:
-					header = [ord(data[offset+4]),offset,[]]
+					header = [data[offset+4],offset,[]]
 					for n,p in enumerate(struct.unpack('<%sH' % ENTRY_TYPES[header[0]],data[offset+8:offset+8+2*ENTRY_TYPES[header[0]]])):
 						if p:
 							header[2].append(p)
@@ -679,7 +680,7 @@ class IScriptBIN:
 					raise PyMSError('Load','Invalid iscript entry header, could possibly be a corrupt iscript.bin')
 				headers[id] = header
 				cur_offset += 4
-			for id,dat in headers.iteritems():
+			for id,dat in headers.items():
 				for n,o in enumerate(dat[2]):
 					if o != None:
 						if not o in offsets:
@@ -687,7 +688,7 @@ class IScriptBIN:
 						elif not [id,n] in offsets[o]:
 							offsets[o].append([id,n])
 						load_offset(o, id)
-			ocode = OrderedDict(sorted(code.iteritems(), key=lambda item: item[0]))
+			ocode = OrderedDict(sorted(code.items(), key=lambda item: item[0]))
 			self.headers = headers
 			self.offsets = offsets
 			self.code = ocode
@@ -711,9 +712,9 @@ class IScriptBIN:
 		if (not o in offsets and id == None) or not offsets[o]:
 			if o in offsets :
 				del offsets[o]
-			curcmd = code.keys().index(o)
+			curcmd = list(code.keys()).index(o)
 			while curcmd < len(code):
-				co = code.keys()[curcmd]
+				co = list(code.keys())[curcmd]
 				if co != o and co in offsets:
 					self.remove_code(co,id,code,offsets)
 					break
@@ -781,7 +782,7 @@ class IScriptBIN:
 		flowthrough = 1
 		if offset == None:
 			try:
-				offset = self.code.keys()[len(self.code)-1]
+				offset = list(self.code.keys())[len(self.code)-1]
 				cmd = self.code[offset]
 				ps = OPCODES[cmd[0]][1]
 				if ps:
@@ -854,7 +855,7 @@ class IScriptBIN:
 								if not type in ENTRY_TYPES:
 									raise Exception()
 							except:
-								raise PyMSError('Interpreting', 'Invalid Type value, must be one of the numbers: %s' % ', '.join([str(n) for n in ENTRY_TYPES.keys()]))
+								raise PyMSError('Interpreting', 'Invalid Type value, must be one of the numbers: %s' % ', '.join([str(n) for n in list(ENTRY_TYPES.keys())]))
 							header.extend([type,0,[]])
 							state = 3
 						elif state == 3:
@@ -958,11 +959,11 @@ class IScriptBIN:
 		if state == 3:
 			raise PyMSError('Interpreting', 'Unexpected end of file, expected "%s" header descriptor' % HEADER[len(header[3])][0],n,line, warnings=warnings)
 		if findlabels:
-			raise PyMSError('Interpreting', "The label '%s' was not found" % findlabels.keys()[0],n,line, warnings=warnings)
+			raise PyMSError('Interpreting', "The label '%s' was not found" % list(findlabels.keys())[0],n,line, warnings=warnings)
 		if unused:
 			for l in unused:
 				warnings.append(PyMSWarning('Interpreting', "The label '%s' is unused, label is discarded" % l))
-				r = OrderedDict(sorted(code.iteritems(), key=lambda item: item[0]))
+				r = OrderedDict(sorted(code.items(), key=lambda item: item[0]))
 				self.remove_code(labels[l], code=r, offsets=offsets)
 				code = deepcopy(r)
 		# print('Headers: ' + pprint(headers))
@@ -970,20 +971,20 @@ class IScriptBIN:
 		# print('Code   : ' + pprint(code))
 		# print('Labels : ' + pprint(labels))
 		# print('FLabels: ' + pprint(findlabels))
-		for id in headers.keys():
+		for id in list(headers.keys()):
 			if id in self.headers:
 				for o in self.headers[id][2]:
 					if o != None and o in self.offsets:
 						self.remove_code(o,id)
 			self.headers[id] = headers[id]
-		for o,i in offsets.iteritems():
+		for o,i in offsets.items():
 			self.offsets[o] = i
 		c = deepcopy(self.code)
-		for o,cmd in code.iteritems():
+		for o,cmd in code.items():
 			c[o] = cmd
-		k = c.keys()
+		k = list(c.keys())
 		k.sort()
-		self.code = OrderedDict(sorted(c.iteritems(), key=lambda item: item[0]))
+		self.code = OrderedDict(sorted(c.items(), key=lambda item: item[0]))
 		self.extrainfo.update(extrainfo)
 		return warnings
 
@@ -996,7 +997,7 @@ class IScriptBIN:
 		else:
 			f = file
 		if ids == None:
-			ids = self.headers.keys()
+			ids = list(self.headers.keys())
 		longheader = max([len(h[0]) for h in HEADER] + [13]) + 1
 		longopcode = max([len(o[0][0]) for o in OPCODES] + [13]) + 1
 		labels = {}
@@ -1026,18 +1027,18 @@ class IScriptBIN:
 					labels[o] = re.sub(r'[^a-zA-Z0-9]','_',entry.replace(' ','').replace("'",'')) + 'Local%s' % local
 					local += 1
 				code += labels[o] + ':\n'
-				curcmd = self.code.keys().index(o)
+				curcmd = list(self.code.keys()).index(o)
 				# print('\t%s' % o)
 				donext = []
 				while True:
 					# print(curcmd)
-					co = self.code.keys()[curcmd]
+					co = list(self.code.keys())[curcmd]
 					# print(co)
 					if co in self.offsets and not co in labels:
 						local += setlabel(co,local,entry)
 						completed.append(co)
 						code += '%s:\n' % labels[co]
-					cmd = self.code[self.code.keys()[curcmd]]
+					cmd = self.code[list(self.code.keys())[curcmd]]
 					c = OPCODES[cmd[0]][0][0]
 					if cmd[0] == 7:
 						if not cmd[1] in labels:
@@ -1139,7 +1140,7 @@ class IScriptBIN:
 		code = ''
 		offsets = {}
 		offset = 1372
-		for o,cmd in self.code.iteritems():
+		for o,cmd in self.code.items():
 			offsets[o] = offset
 			#print(sum([1] + [p(0,self) for p in OPCODES[cmd[0]][1]]))
 			offset += 1
@@ -1150,7 +1151,7 @@ class IScriptBIN:
 					offset += sum([-p1,ps[1](0,self)*cmd[1]])
 				else:
 					offset += sum([p(0,self) for p in ps])
-		for o,cmd in self.code.iteritems():
+		for o,cmd in self.code.items():
 			ps = OPCODES[cmd[0]][1]
 			if ps:
 				p1 = ps[0](0,self)
@@ -1168,7 +1169,7 @@ class IScriptBIN:
 		# print(offset-1372)
 		# print(len(code))
 		table = ''
-		for id,dat in self.headers.iteritems():
+		for id,dat in self.headers.items():
 			table += struct.pack('<HH', id,offset)
 			entry = 'SCPE%s\x00\x00\x00' % chr(dat[0])
 			for o in dat[2]:

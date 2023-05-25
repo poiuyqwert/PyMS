@@ -190,7 +190,7 @@ class ImagesTab(DATTab):
 		if DataID.iscriptbin in ids:
 			iscript_names = []
 			last = -1
-			for id in self.toplevel.data_context.iscriptbin.headers.keys():
+			for id in list(self.toplevel.data_context.iscriptbin.headers.keys()):
 				if id-last > 1:
 					iscript_names.extend(['*Unused*'] * (id-last-1))
 				if id in self.toplevel.data_context.iscriptbin.extrainfo:

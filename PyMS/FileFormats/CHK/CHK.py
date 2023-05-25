@@ -140,7 +140,7 @@ class CHK:
 		result = ''
 		order = []
 		order.extend(self.section_order)
-		for name in self.sections.keys():
+		for name in list(self.sections.keys()):
 			if not name in order:
 				order.append(name)
 		for name in order:

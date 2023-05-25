@@ -65,7 +65,7 @@ class CommandCodeTooltip(CodeTooltip):
 	tag = 'Commands'
 
 	def gettext(self, cmd):
-		for help,info in CMD_HELP.iteritems():
+		for help,info in CMD_HELP.items():
 			if cmd in info:
 				text = '%s Command:\n  %s(' % (help, cmd)
 				break

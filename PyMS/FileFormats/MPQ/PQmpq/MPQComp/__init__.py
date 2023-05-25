@@ -1,5 +1,5 @@
 
-import pkware
+from . import pkware
 
 from .....Utilities.PyMSError import PyMSError
 

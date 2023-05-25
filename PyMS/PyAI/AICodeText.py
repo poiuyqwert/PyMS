@@ -102,13 +102,13 @@ class AICodeText(CodeText):
 				line = self.get(mark, next)
 				if not line:
 					return
-				for tag in self.tags.keys():
+				for tag in list(self.tags.keys()):
 					if tag != 'Selection':
 						self.tag_remove(tag, mark, next)
 				chars = chars + line
 				m = self.basic.search(chars)
 				while m:
-					for key, value in m.groupdict().items():
+					for key, value in list(m.groupdict().items()):
 						if value != None:
 							a, b = m.span(key)
 							self.tag_add(key, head + '+%dc' % a, head + '+%dc' % b)

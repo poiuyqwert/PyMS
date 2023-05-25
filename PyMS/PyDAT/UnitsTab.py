@@ -44,7 +44,7 @@ class UnitsTab(DATTab):
 		self.dattabs.display(sub_tab_id.id)
 
 	def updated_pointer_entries(self, ids):
-		for tab,_ in self.dattabs.pages.values():
+		for tab,_ in list(self.dattabs.pages.values()):
 			tab.updated_pointer_entries(ids)
 
 	def load_data(self, id=None):
@@ -68,5 +68,5 @@ class UnitsTab(DATTab):
 	def save(self, key=None):
 		DATTab.save(self)
 		if not self.edited:
-			for tab,_ in self.dattabs.pages.values():
+			for tab,_ in list(self.dattabs.pages.values()):
 				tab.edited = False

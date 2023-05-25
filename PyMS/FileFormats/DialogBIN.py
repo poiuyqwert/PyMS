@@ -825,7 +825,7 @@ class DialogBIN:
 					value = int(value)
 			setattr(working, attr, value)
 		if backfill_smks:
-			raise PyMSError('Interpreting',"SMK %s is missing" % backfill_smks.keys()[0])
+			raise PyMSError('Interpreting',"SMK %s is missing" % list(backfill_smks.keys())[0])
 		for i in range(len(widgets)):
 			widget = widgets[i]
 			if widget.type == BINWidget.TYPE_DIALOG:
@@ -835,7 +835,7 @@ class DialogBIN:
 		else:
 			raise PyMSError('Interpreting','No dialog found.')
 		self.widgets = widgets
-		self.smks = list(smk for i,smk in sorted(smks.iteritems(),key=lambda s: s[1]))
+		self.smks = list(smk for i,smk in sorted(smks.items(),key=lambda s: s[1]))
 		self.remastered = remastered
 
 	def decompile_file(self, file, remastered=None):

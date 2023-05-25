@@ -3,7 +3,7 @@ from .. import Theme
 from .Extensions import Extensions
 
 try: # Python 2
-	import Tkinter as _Tk
+	import tkinter as _Tk
 except: # Python 3
 	import tkinter as _Tk
 

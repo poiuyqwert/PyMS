@@ -74,7 +74,7 @@ class MPQSelect(PyMSDialog):
 			self.resettimer = self.after(1000, self.updatecolor)
 			self.textdrop.entry['bg'] = '#FFB4B4'
 		else:
-			for f in filter(lambda p: r.match(p), self.files):
+			for f in [p for p in self.files if r.match(p)]:
 				self.listbox.insert(END,f)
 		if self.listbox.size():
 			self.listbox.select_set(0)
