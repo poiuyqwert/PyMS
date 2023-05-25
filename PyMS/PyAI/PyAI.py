@@ -503,15 +503,9 @@ class PyAI(MainWindow):
 		self.title('%s, %s' % (self.aiscript,self.bwscript))
 
 	def savempq(self, key=None):
-		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq(),FileType.exe_mpq()])
+		file = self.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq()])
 		if not file:
 			return
-		if file.endswith('%sexe' % os.extsep) and not os.path.exists(file):
-			try:
-				shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
-			except:
-				ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
-				return
 		not_saved = []
 		try:
 			ai,_ = self.ai.compile_data()
