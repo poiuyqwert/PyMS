@@ -15,30 +15,19 @@ from ..TBL import TBL, decompile_string
 
 from ...Utilities.PyMSError import PyMSError
 
+from enum import Enum
 import re
 
 
-class DataNamesUsage:
-	use = None # type: DataNamesUsage
+class DataNamesUsage(Enum):
+	use = 'use'
 	"""Use Data Name if available, never use TBL Name"""
-	ignore = None # type: DataNamesUsage
+	ignore = 'ignore'
 	"""Ignore Data Name, use TBL Name if available"""
-	combine = None # type: DataNamesUsage
+	combine = 'combine'
 	"""Combine the Data Name with the TBL Name:
 	
 	Data Name (TBL Name)"""
-
-	def __init__(self, value):
-		self.value = value
-
-	def __eq__(self, other):
-		return isinstance(other, DataNamesUsage) and other.value == self.value
-
-	def __hash__(self):
-		return hash(self.value)
-DataNamesUsage.use = DataNamesUsage('use')
-DataNamesUsage.ignore = DataNamesUsage('ignore')
-DataNamesUsage.combine = DataNamesUsage('combine')
 
 class DATEntryName:
 	RE_NAME_OVERRIDE = re.compile(r'\s*(\d{1,5})\s*(\+?)\s*:(.*)')
@@ -65,7 +54,7 @@ class DATEntryName:
 		return name_overrides
 
 	@staticmethod
-	def _build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, id_count, type): # type: (int, str, str, str, DataNamesUsage, int, str) -> str
+	def _build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, id_count, type): # type: (int, str | None, str | None, str | None, DataNamesUsage, int, str) -> str
 		default_name = '%s #%d' % (type, entry_id)
 		if entry_id >= id_count:
 			default_name = 'Expanded ' + default_name
@@ -88,7 +77,7 @@ class DATEntryName:
 		return name
 
 	@staticmethod
-	def generic(entry_id, type, id_count, data_names=None, name_overrides=None): # type: (int, str, int, list[str], dict[int, tuple[bool, str]]) -> str
+	def generic(entry_id, type, id_count, data_names=None, name_overrides=None): # type: (int, str, int, list[str] | None, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -100,7 +89,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, None, override_name, DataNamesUsage.use, id_count, type)
 
 	@staticmethod
-	def unit(entry_id, data_names=None, stat_txt=None, unitnamestbl=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], TBL, TBL, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def unit(entry_id, data_names=None, stat_txt=None, unitnamestbl=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, TBL | None, TBL | None, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]] | None) -> str
 		if UnitsDAT.FORMAT.expanded_entries_reserved and entry_id in UnitsDAT.FORMAT.expanded_entries_reserved:
 			return 'Reserved Unit #%d' % entry_id
 		override_append, override_name = None, None
@@ -108,14 +97,18 @@ class DATEntryName:
 			override_append, override_name = name_overrides[entry_id]
 			if not override_append:
 				return override_name
-		data_name = None
-		tbl_name = None
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
+		else:
+			data_name = None
 		if (stat_txt or unitnamestbl) and data_names_usage != DataNamesUsage.use:
-			strings = unitnamestbl.strings if unitnamestbl else stat_txt.strings[:228]
+			strings = [] # type: list[str]
+			if unitnamestbl:
+				strings = unitnamestbl.strings
+			elif stat_txt:
+				strings = stat_txt.strings[:228]
 			if entry_id < len(strings):
-				tbl_name = strings[entry_id] # type: str
+				tbl_name = strings[entry_id]
 				if tbl_decompile:
 					tbl_name = decompile_string(tbl_name[:-1])
 				else:
@@ -131,6 +124,10 @@ class DATEntryName:
 					tbl_name = DATEntryName.RE_TBL_CODES.sub('', tbl_name)
 					if special and special != '*':
 						tbl_name += ' (%s)' % DATEntryName.RE_TBL_CODES.sub('', special)
+			else:
+				tbl_name = None
+		else:
+			tbl_name = None
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, UnitsDAT.FORMAT.entries, 'Unit')
 
 	@staticmethod
@@ -150,7 +147,7 @@ class DATEntryName:
 		return tbl_name
 
 	@staticmethod
-	def weapon(entry_id, data_names=None, weaponsdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], WeaponsDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def weapon(entry_id, data_names=None, weaponsdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, WeaponsDAT | None, TBL | None, str | None, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -165,7 +162,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, WeaponsDAT.FORMAT.entries, 'Weapon')
 
 	@staticmethod
-	def grp_image(entry_id, imagesdat, imagestbl): # type: (int, ImagesDAT, TBL) -> str
+	def grp_image(entry_id, imagesdat, imagestbl): # type: (int, ImagesDAT, TBL) -> (str | None)
 		if entry_id >= imagesdat.entry_count():
 			return None
 		tbl_id = imagesdat.get_entry(entry_id).grp_file-1
@@ -174,7 +171,7 @@ class DATEntryName:
 		return decompile_string(imagestbl.strings[tbl_id][:-1])
 
 	@staticmethod
-	def image(entry_id, data_names=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str], ImagesDAT, TBL, DataNamesUsage, dict[int, tuple[bool, str]]) -> str
+	def image(entry_id, data_names=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str] | None, ImagesDAT | None, TBL | None, DataNamesUsage, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -189,13 +186,13 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, ImagesDAT.FORMAT.entries, 'Image')
 
 	@staticmethod
-	def grp_sprite(entry_id, spritesdat, imagesdat, imagestbl): # type: (int, SpritesDAT, ImagesDAT, TBL) -> str
+	def grp_sprite(entry_id, spritesdat, imagesdat, imagestbl): # type: (int, SpritesDAT, ImagesDAT, TBL) -> (str | None)
 		if entry_id >= spritesdat.entry_count():
 			return None
 		return DATEntryName.grp_image(spritesdat.get_entry(entry_id).image, imagesdat, imagestbl)
 
 	@staticmethod
-	def sprite(entry_id, data_names=None, spritesdat=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str], SpritesDAT, ImagesDAT, TBL, DataNamesUsage, dict[int, tuple[bool, str]]) -> str
+	def sprite(entry_id, data_names=None, spritesdat=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str] | None, SpritesDAT | None, ImagesDAT | None, TBL | None, DataNamesUsage, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -210,13 +207,13 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, SpritesDAT.FORMAT.entries, 'Sprite')
 
 	@staticmethod
-	def grp_flingy(entry_id, flingydat, spritesdat, imagesdat, imagestbl): # type: (int, FlingyDAT, SpritesDAT, ImagesDAT, TBL) -> str
+	def grp_flingy(entry_id, flingydat, spritesdat, imagesdat, imagestbl): # type: (int, FlingyDAT, SpritesDAT, ImagesDAT, TBL) -> (str | None)
 		if entry_id > flingydat.entry_count():
 			return None
 		return DATEntryName.grp_sprite(flingydat.get_entry(entry_id).sprite, spritesdat, imagesdat, imagestbl)
 
 	@staticmethod
-	def flingy(entry_id, data_names=None, flingydat=None, spritesdat=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str], FlingyDAT, SpritesDAT, ImagesDAT, TBL, DataNamesUsage, dict[int, tuple[bool, str]]) -> str
+	def flingy(entry_id, data_names=None, flingydat=None, spritesdat=None, imagesdat=None, imagestbl=None, data_names_usage=DataNamesUsage.combine, name_overrides=None): # type: (int, list[str] | None, FlingyDAT | None, SpritesDAT | None, ImagesDAT | None, TBL | None, DataNamesUsage, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -231,7 +228,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, FlingyDAT.FORMAT.entries, 'Flingy')
 
 	@staticmethod
-	def upgrade(entry_id, data_names=None, upgradesdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], UpgradesDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def upgrade(entry_id, data_names=None, upgradesdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, UpgradesDAT | None, TBL | None, str | None, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -246,7 +243,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, UpgradesDAT.FORMAT.entries, 'Upgrade')
 
 	@staticmethod
-	def tech(entry_id, data_names=None, techdatadat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], TechDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def tech(entry_id, data_names=None, techdatadat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, TechDAT | None, TBL | None, str | None, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -261,7 +258,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, TechDAT.FORMAT.entries, 'Tech')
 
 	@staticmethod
-	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], SoundsDAT, TBL, str, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
+	def sound(entry_id, data_names=None, sfxdatadat=None, sfxdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, SoundsDAT | None, TBL | None, str | None, DataNamesUsage, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -276,7 +273,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, SoundsDAT.FORMAT.entries, 'Sound')
 
 	@staticmethod
-	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], PortraitsDAT, TBL, str, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
+	def portrait(entry_id, data_names=None, portdatadat=None, portdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, PortraitsDAT | None, TBL | None, str | None, DataNamesUsage, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -291,7 +288,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, PortraitsDAT.FORMAT.entries, 'Portrait')
 
 	@staticmethod
-	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
+	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, CampaignDAT | None, TBL | None, DataNamesUsage, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -306,7 +303,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, CampaignDAT.FORMAT.entries, 'Map')
 
 	@staticmethod
-	def order(entry_id, data_names=None, ordersdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str], OrdersDAT, TBL, str, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]]) -> str
+	def order(entry_id, data_names=None, ordersdat=None, stat_txt=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_raw_string=True, tbl_decompile=True, name_overrides=None): # type: (int, list[str] | None, OrdersDAT | None, TBL | None, str | None, DataNamesUsage, bool, bool, dict[int, tuple[bool, str]] | None) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]

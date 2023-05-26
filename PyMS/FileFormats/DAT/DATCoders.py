@@ -6,6 +6,10 @@ from ...Utilities.PyMSError import PyMSError
 import re
 from collections import OrderedDict
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any
+
 class DATPropertyCoder(object):
 	def encode(self, value):
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
@@ -14,7 +18,7 @@ class DATPropertyCoder(object):
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 class DATFlagsCoder(DATPropertyCoder):
-	def __init__(self, bit_count, flag_mapping): # type: (int, dict[int, str]) -> DATFlagsCoder
+	def __init__(self, bit_count, flag_mapping): # type: (int, dict[int, str]) -> None
 		self.bit_count = bit_count
 		self.flag_mapping = flag_mapping
 

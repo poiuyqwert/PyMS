@@ -371,7 +371,7 @@ def get_tag(kwargs): # type: (dict[str, Any]) -> tuple[dict[str, Any], str | Non
 	return (kwargs, theme_tag)
 
 _INVALID_COLORS = []
-def get_color(*keys, **kwargs): # type: (*str, str) -> (str | None)
+def get_color(*keys, **kwargs): # type: (str, str) -> (str | None)
 	global _THEME
 	default = kwargs.get('default')
 	if not _THEME:
