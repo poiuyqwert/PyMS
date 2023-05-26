@@ -291,7 +291,7 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, PortraitsDAT.FORMAT.entries, 'Portrait')
 
 	@staticmethod
-	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
+	def map(entry_id, data_names=None, mapdatadat=None, mapdatatbl=None, none_name=None, data_names_usage=DataNamesUsage.use, tbl_decompile=True, name_overrides=None): # type: (int, list[str], CampaignDAT, TBL, str, DataNamesUsage, bool, dict[int, tuple[bool, str]]) -> str
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -302,7 +302,7 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if mapdatadat and mapdatatbl and data_names_usage != DataNamesUsage.use and entry_id < mapdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, None, True, tbl_decompile)
+			tbl_name = DATEntryName._entry_label(mapdatadat.get_entry(entry_id).map_file, mapdatatbl, none_name, True, tbl_decompile)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, CampaignDAT.FORMAT.entries, 'Map')
 
 	@staticmethod
