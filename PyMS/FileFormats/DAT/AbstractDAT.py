@@ -230,7 +230,7 @@ class AbstractDAT(object):
 		raise PyMSError('Export', 'Invalid export type %s' % export_type)
 
 	def import_file(self, file_path): # type: (str) -> None
-		data = load_file(file_path)
+		data = load_file(file_path).decode('utf-8')
 		self.import_entries(data)
 
 	def import_entries(self, data, export_type=ExportType.text): # type: (str | list[dict[str, Any]], ExportType) -> None

@@ -1,7 +1,6 @@
 
 from .CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
 
-from ...Utilities.utils import isstr
 from ...Utilities.UIKit import *
 
 import re
@@ -176,7 +175,7 @@ class CodeGeneratorTypeList(CodeGeneratorType):
 				or not 'repeater' in save or not save['repeater'] in CodeGeneratorTypeList.REPEATERS:
 			return False
 		for val in save['list']:
-			if not isstr(val):
+			if not isinstance(val, str):
 				return False
 		return True
 

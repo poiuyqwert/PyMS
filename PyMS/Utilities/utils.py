@@ -47,13 +47,6 @@ def debug_state(states, history=[]):
 	print(('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')))
 	history.append(None)
 
-try:
-	_unicode = str
-except:
-	_unicode = str
-def isstr(s):
-	return isinstance(s,str) or isinstance(s, _unicode)
-
 def nearest_multiple(v, m, r=round):
 	return m * int(r(v / float(m)))
 
@@ -102,7 +95,7 @@ def register_registry(program_name, extension, file_type_name=None): # type: (st
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
 def flags(value, length):
-	if isstr(value):
+	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
 			raise PyMSError('Flags', 'Invalid flags')
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))

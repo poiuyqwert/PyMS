@@ -1,7 +1,6 @@
 
 from ..Widgets import *
 from ..EventPattern import *
-from ...utils import isstr
 
 import re
 
@@ -90,7 +89,7 @@ class RichList(Frame):
 		self.text.tag_bind(e, Mouse.Click_Left, self.select)
 		if tags is None:
 			tags = e
-		elif isstr(tags):
+		elif isinstance(tags, str):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))

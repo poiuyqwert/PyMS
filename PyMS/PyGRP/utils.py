@@ -2,14 +2,13 @@
 from ..FileFormats import GRP
 from ..FileFormats import BMP
 
-from ..Utilities.utils import isstr
 from ..Utilities.PyMSError import PyMSError
 
 import os, re
 from math import ceil
 
 def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=False):
-	if isstr(grp):
+	if isinstance(grp, str):
 		inp = GRP.GRP(pal.palette, uncompressed)
 		if not mute:
 			print(("Reading GRP '%s'..." % grp))

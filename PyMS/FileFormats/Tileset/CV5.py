@@ -1,5 +1,4 @@
 
-from ...Utilities.utils import isstr
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -48,7 +47,7 @@ class CV5:
 		data = ''
 		for d in self.groups:
 			data += struct.pack('<HBB24H', *[d[0],(d[1] << 4) + d[2],(d[3] << 4) + d[4]] + d[5:13] + d[13])
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

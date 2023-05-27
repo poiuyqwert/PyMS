@@ -3,15 +3,12 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	try:
-		import ImageTk
-	except:
-		from ...Utilities import Assets
-		from ...Utilities.DependencyError import DependencyError
-		import sys, os
-		e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', (('Documentation','file:///%s' % Assets.doc_path('intro.html')),))
-		e.startup()
-		sys.exit()
+	from ...Utilities import Assets
+	from ...Utilities.DependencyError import DependencyError
+	import sys, os
+	e = DependencyError('PyMS', 'Pillow is missing. Consult the Source Installation section of the README.', (('README','file:///%s' % Assets.readme_file_path),))
+	e.startup()
+	sys.exit()
 
 from .CV5 import CV5
 from .VF4 import VF4
@@ -22,7 +19,6 @@ from .DDDataBIN import DDDataBIN
 from ..Palette import Palette
 from ..BMP import BMP
 
-from ...Utilities.utils import isstr
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
 
@@ -157,7 +153,7 @@ class Tileset:
 	def load_file(self, cv5, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
 		path = None
 		name = None
-		if isstr(cv5):
+		if isinstance(cv5, str):
 			path = os.path.dirname(cv5)
 			name = os.path.basename(cv5)
 			if name.split(os.extsep)[-1].lower() == 'cv5':
@@ -197,12 +193,12 @@ class Tileset:
 		self.dddata.load_file(dddata)
 		self.wpe = Palette()
 		self.wpe.load_file(wpe)
-		self.cv5_path = cv5 if isstr(cv5) else None
-		self.vf4_path = vf4 if isstr(vf4) else None
-		self.vx4_path = vx4 if isstr(vx4) else None
-		self.vr4_path = vr4 if isstr(vr4) else None
-		self.dddata_path = dddata if isstr(dddata) else None
-		self.wpe_path = wpe if isstr(wpe) else None
+		self.cv5_path = cv5 if isinstance(cv5, str) else None
+		self.vf4_path = vf4 if isinstance(vf4, str) else None
+		self.vx4_path = vx4 if isinstance(vx4, str) else None
+		self.vr4_path = vr4 if isinstance(vr4, str) else None
+		self.dddata_path = dddata if isinstance(dddata, str) else None
+		self.wpe_path = wpe if isinstance(wpe, str) else None
 
 	def save_file(self, cv5, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
 		path = os.path.dirname(cv5)
@@ -493,7 +489,7 @@ class Tileset:
 	# options.megatiles_export_block_sight
 	# options.megatiles_export_ramp
 	def export_settings(self, tiletype, path_or_file, ids, options={}):
-		if isstr(path_or_file):
+		if isinstance(path_or_file, str):
 			close = True
 			file = AtomicWriter(path_or_file, 'w')
 		else:

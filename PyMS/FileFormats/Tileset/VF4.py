@@ -1,5 +1,4 @@
 
-from ...Utilities.utils import isstr
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -32,7 +31,7 @@ class VF4:
 		data = ''
 		for d in self.flags:
 			data += struct.pack('<16H', *d)
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

@@ -1,5 +1,4 @@
 
-from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
@@ -26,7 +25,7 @@ class LO:
 			raise PyMSError('Load',"Unsupported LO* file '%s', could possibly be corrupt" % file)
 
 	def interpret(self, file):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = open(file,'r')
 				data = f.readlines()
@@ -71,7 +70,7 @@ class LO:
 		self.frames = frames
 
 	def decompile(self, file):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'w')
 			except:

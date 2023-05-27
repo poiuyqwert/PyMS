@@ -1,5 +1,4 @@
 
-from .utils import isstr
 from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, parse_resizable, FileType
 from . import Assets
 from .WarnDialog import WarnDialog
@@ -29,7 +28,7 @@ class Group(SettingObject):
 		if not isinstance(data, dict):
 			return
 		for attr, attr_data in list(data.items()):
-			if not isstr(attr) or not attr.startswith('_') or not hasattr(self, attr):
+			if not isinstance(attr, str) or not attr.startswith('_') or not hasattr(self, attr):
 				continue
 			object = getattr(self, attr)
 			if not isinstance(object, SettingObject):
@@ -79,7 +78,7 @@ class String(SettingObject):
 		return self.value
 
 	def decode(self, value):
-		if not isstr(value):
+		if not isinstance(value, str):
 			return
 		self.value = value
 
@@ -202,7 +201,7 @@ class WindowGeometry(SettingObject):
 		return self._geometry
 
 	def decode(self, geometry):
-		if not isstr(geometry) or not RE_GEOMETRY.match(geometry):
+		if not isinstance(geometry, str) or not RE_GEOMETRY.match(geometry):
 			return
 		self._geometry = geometry
 
@@ -215,7 +214,7 @@ class File(SettingObject):
 		return self._file_path
 
 	def decode(self, file_path):
-		if not isstr(file_path):
+		if not isinstance(file_path, str):
 			return
 		if not file_path.startswith('MPQ:') and not os.path.exists(file_path):
 			return
@@ -271,10 +270,10 @@ class SelectFile(SettingObject):
 		if not isinstance(data, dict):
 			return
 		open_directory = data.get('open')
-		if isstr(open_directory) and os.path.exists(open_directory):
+		if isinstance(open_directory, str) and os.path.exists(open_directory):
 			self._open_directory = open_directory
 		save_directory = data.get('save')
-		if isstr(save_directory) and os.path.exists(save_directory):
+		if isinstance(save_directory, str) and os.path.exists(save_directory):
 			self._save_directory = save_directory
 
 class SelectFiles(SettingObject):
@@ -295,7 +294,7 @@ class SelectFiles(SettingObject):
 			defaultextension=self._default_extension
 		)
 		window._pyms__window_blocking = False
-		if isstr(paths):
+		if isinstance(paths, str):
 			if paths:
 				paths = [paths]
 			else:
@@ -308,7 +307,7 @@ class SelectFiles(SettingObject):
 		return self._directory
 
 	def decode(self, directory):
-		if not isstr(directory) or not os.path.exists(directory):
+		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
 		self._directory = directory
 
@@ -329,7 +328,7 @@ class SelectDirectory(SettingObject):
 		return self._directory
 
 	def decode(self, directory):
-		if not isstr(directory) or not os.path.exists(directory):
+		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
 		self._directory = directory
 

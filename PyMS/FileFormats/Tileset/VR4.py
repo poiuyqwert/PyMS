@@ -1,5 +1,4 @@
 
-from ...Utilities.utils import isstr
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -90,7 +89,7 @@ class VR4:
 			for l in d:
 				i.extend(l)
 			data += struct.pack('64B', *i)
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

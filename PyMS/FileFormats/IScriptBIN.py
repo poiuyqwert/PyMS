@@ -3,7 +3,6 @@ from ..FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, Weapo
 from ..FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
 from ..FileFormats import TBL
 
-from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.PyMSError import PyMSError
@@ -737,7 +736,7 @@ class IScriptBIN:
 		alldata = []
 		for file in files:
 			try:
-				if isstr(file):
+				if isinstance(file, str):
 					f = open(file,'r')
 					alldata.append(f.readlines())
 					f.close()
@@ -989,7 +988,7 @@ class IScriptBIN:
 		return warnings
 
 	def decompile(self, file, reference=False, ids=None):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'w')
 			except:

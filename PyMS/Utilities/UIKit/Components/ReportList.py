@@ -3,7 +3,6 @@ from .RichList import RichList
 from ..Widgets import *
 from ..Font import Font
 from ..EventPattern import *
-from ...utils import isstr
 
 class EditableReportSubList(RichList):
 	def __init__(self, parent, selectmode, report, **kwargs):
@@ -60,7 +59,7 @@ class EditableReportSubList(RichList):
 		self.text.tag_bind(e, Ctrl.Click_Left, lambda e,i=e: self.doselect(i,2))
 		if tags is None:
 			tags = e
-		elif isstr(tags):
+		elif isinstance(tags, str):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))
@@ -229,7 +228,7 @@ class ReportSubList(RichList):
 		self.text.tag_bind(e, Mouse.Click_Left, self.select)
 		if tags is None:
 			tags = e
-		elif isstr(tags):
+		elif isinstance(tags, str):
 			tags = '%s %s' % (e,tags)
 		else:
 			tags = '%s %s' % (e,' '.join(tags))
@@ -305,7 +304,7 @@ class ReportList(Frame):
 				c[1].select_set(s)
 
 	def insert(self, index, text):
-		if isstr(text):
+		if isinstance(text, str):
 			text = [text]
 		if len(text) < len(self.columns):
 			for _ in range(len(self.columns) - len(text)):

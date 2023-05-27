@@ -3,7 +3,6 @@ from ..Widgets import *
 from ..Font import Font
 from ... import Assets
 from ..EventPattern import *
-from ...utils import isstr
 
 import re
 
@@ -96,7 +95,7 @@ class TreeList(Frame):
 
 	def index(self, entry):
 		index = None
-		if isstr(entry) and entry.startswith('@'):
+		if isinstance(entry, str) and entry.startswith('@'):
 			entries = [int(n[5:]) for n in self.text.tag_names(entry) if n.startswith('entry')]
 			if entries:
 				entry = entries[0]
@@ -114,7 +113,7 @@ class TreeList(Frame):
 		node = None
 		if isinstance(index, int):
 			node = self.entries[index]
-		elif isstr(index):
+		elif isinstance(index, str):
 			node = self.root
 			if index:
 				indices = [int(i) for i in index.split('.')]
@@ -240,7 +239,7 @@ class TreeList(Frame):
 		else:
 			eraseRoot = True
 			# print(index)
-			if isstr(index):
+			if isinstance(index, str):
 				indices = index.split('.')
 				if indices[-1] == ALL:
 					eraseRoot = False

@@ -2,7 +2,6 @@
 from .CodeGenerators import CodeGeneratorType
 from .NameDialog import NameDialog
 
-from ..Utilities.utils import isstr
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
@@ -81,12 +80,12 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 					preset = json.loads(f.read())
 			except:
 				raise PyMSError('Import',"Could not read preset '%s'" % path, capture_exception=True)
-			if not 'name' in preset or not isstr(preset['name']) \
-					or not 'code' in preset or not isstr(preset['code']) \
+			if not 'name' in preset or not isinstance(preset['name'], str) \
+					or not 'code' in preset or not isinstance(preset['code'], str) \
 					or not 'variables' in preset or not isinstance(preset['variables'], list):
 				raise PyMSError('Import',"Invalid preset format in file '%s'" % path)
 			for variable in preset['variables']:
-				if not 'name' in variable or not isstr(variable['name']) \
+				if not 'name' in variable or not isinstance(variable['name'], str) \
 						or not 'generator' in variable or not isinstance(variable['generator'], dict) \
 						or not 'type' in variable['generator'] or not variable['generator']['type'] in CodeGeneratorType.TYPES \
 						or not CodeGeneratorType.TYPES[variable['generator']['type']].validate(variable['generator']):

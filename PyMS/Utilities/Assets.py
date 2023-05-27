@@ -89,12 +89,6 @@ def mpq_ref_to_file_name(file_ref): # type: (str) -> str
 		return file_ref
 	return file_ref[4:]
 
-## Docs
-docs_dir = _os.path.join(base_dir, 'Docs')
-
-def doc_path(filename): # type: (str) -> str
-	return _os.path.join(docs_dir, filename)
-
 ## Data
 data_dir = _os.path.join(internals_dir, 'Data')
 

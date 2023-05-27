@@ -1,11 +1,8 @@
 
-from . import Assets
 from .UIKit import *
 
-import os
-
 class DependencyError(MainWindow):
-	def __init__(self, prog, msg, hotlinks=None): # type: (str, str, list[tuple[str, str]] | None) -> DependencyError
+	def __init__(self, prog, msg, hotlinks=None): # type: (str, str, tuple[tuple[str, str], ...] | None) -> None
 		#Window
 		MainWindow.__init__(self)
 		self.resizable(False,False)

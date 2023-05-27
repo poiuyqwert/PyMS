@@ -2,7 +2,6 @@
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
-from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.PyMSWarning import PyMSWarning
@@ -35,7 +34,7 @@ types = [
 ]
 
 def convflags(num):
-	if isstr(num):
+	if isinstance(num, str):
 		b = list(num)
 		b.reverse()
 		return sum([int(x)*(2**n) for n,x in enumerate(b)])
@@ -936,7 +935,7 @@ class AIBIN:
 		alldata = []
 		for file in files:
 			try:
-				if isstr(file):
+				if isinstance(file, str):
 					f = open(file,'r')
 					alldata.append(f.readlines())
 					f.close()
@@ -1066,7 +1065,7 @@ class AIBIN:
 							raise PyMSError('External Definition','Invalid syntax, unknown line format',n,l, warnings=warnings)
 			loaded.append(deffile)
 		if defs:
-			if isstr(defs):
+			if isinstance(defs, str):
 				defs = defs.split(',')
 			
 			for deffile in defs:
@@ -1170,7 +1169,7 @@ class AIBIN:
 										raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 									if None in ai[5]:
 										dat = blocknames[ai[5].index(None)]
-										if isstr(dat):
+										if isinstance(dat, str):
 											raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 									if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 										n = list(findtotaljumps[ai[0]].keys())[0]
@@ -1420,7 +1419,7 @@ class AIBIN:
 				raise PyMSError('Interpreting',"AI with ID '%s' has no commands" % ai[0], warnings=warnings)
 			if None in ai[5]:
 				dat = blocknames[ai[5].index(None)]
-				if isstr(dat):
+				if isinstance(dat, str):
 					raise PyMSError('Interpreting',"There is no block with name '%s' in AI with ID '%s'" % (dat,ai[0]), warnings=warnings)
 			if ai[0] in findtotaljumps and findtotaljumps[ai[0]]:
 				n = list(findtotaljumps[ai[0]].keys())[0]
@@ -1546,7 +1545,7 @@ class AIBIN:
 		file.write('#----------------------------------------------------\n\n')
 
 	def decompile(self, file, defs=None, ref=False, shortlabel=True, scripts=None):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'w')
 			except:
@@ -1565,7 +1564,7 @@ class AIBIN:
 		extjumps = {}
 		if defs:
 			variables = {}
-			if isstr(defs):
+			if isinstance(defs, str):
 				defs = defs.split(',')
 			loaded = []
 			for dname in defs:
@@ -1838,7 +1837,7 @@ class AIBIN:
 		return (data, warnings)
 
 	def compile(self, file, bwscript=None, extra=False):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:
@@ -2000,7 +1999,7 @@ class BWBIN(AIBIN):
 			raise PyMSError('Load',"Unsupported bwscript.bin, could possibly be invalid or corrupt", capture_exception=True)
 
 	def decompile(self, filename, extjumps, values, shortlabel=True, scripts=None, close=True):
-		if isstr(filename):
+		if isinstance(filename, str):
 			try:
 				f = AtomicWriter(filename, 'w')
 			except:
@@ -2194,7 +2193,7 @@ class BWBIN(AIBIN):
 		return (data, warnings)
 
 	def compile(self, file, extra=False):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

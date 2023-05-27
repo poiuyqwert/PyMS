@@ -8,7 +8,6 @@ from ..FileFormats import AIBIN
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
-from .utils import isstr
 from .Settings import SettingDict
 from .MPQSelect import MPQSelect
 from .ErrorDialog import ErrorDialog
@@ -77,7 +76,7 @@ class SettingsPanel(Frame):
 				self.variables[f][1].set(v)
 			self.variables[f][1].trace('w', self.edited)
 			datframe = Frame(self)
-			if isstr(e):
+			if isinstance(e, str):
 				Label(datframe, text=f, font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 				Label(datframe, text=e, anchor=W).pack(fill=X, expand=1)
 			elif e:

@@ -1,5 +1,4 @@
 
-from .utils import isstr
 from . import Assets
 from .fileutils import check_allow_overwrite_internal_file
 
@@ -284,7 +283,7 @@ class SettingDict(object):
 		from .UIKit import FileDialog
 		paths = FileDialog.askopenfilename(parent=parent, title=title, initialdir=self.get(key, Assets.base_dir, autosave=store), multiple=True, **kwargs)
 		parent._pyms__window_blocking = False
-		if isstr(paths):
+		if isinstance(paths, str):
 			if paths:
 				paths = [paths]
 			else:

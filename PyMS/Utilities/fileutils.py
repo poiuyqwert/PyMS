@@ -1,6 +1,9 @@
 
-from .utils import isstr
 from .PyMSError import PyMSError
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from typing import BinaryIO
 
 class BadFile:
 	def __init__(self, file):
@@ -29,16 +32,16 @@ class SFile:
 	def __str__(self):
 		return self.file
 
-def load_file(file, file_type='file', mode='rb'):
+def load_file(file, file_type='file', mode='rb'): # type: (str | BinaryIO, str, str) -> bytes
 	try:
-		if isstr(file):
-			f = open(file,mode)
+		if isinstance(file, str):
+			f = open(file, mode)
 		else:
 			f = file
 		data = f.read()
 	except:
 		name = ''
-		if isstr(file):
+		if isinstance(file, str):
 			name = " '%s'" % file
 		elif isinstance(file, BadFile):
 			name = " '%s'" % file.file

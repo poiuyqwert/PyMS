@@ -1,4 +1,8 @@
 
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from .CHK import CHK
+
 class CHKRequirements(object):
 	VER_NONE = 0
 	VER_VANILLA = (1 << 0)
@@ -13,9 +17,9 @@ class CHKRequirements(object):
 	MODE_UMS = (1 << 1)
 	MODE_ALL = MODE_MELEE | MODE_UMS
 
-	def __init__(self, vers=VER_ALL, modes=MODE_ALL):
+	def __init__(self, vers=VER_ALL, modes=MODE_ALL): # type: (int, int) -> None
 		from .Sections.CHKSectionVER import CHKSectionVER
-		self.vers = []
+		self.vers = [] # type: list[int]
 		if vers & CHKRequirements.VER_VANILLA:
 			self.vers.append(CHKSectionVER.SC100)
 		if vers & CHKRequirements.VER_HYBRID:
@@ -25,9 +29,12 @@ class CHKRequirements(object):
 
 		self.modes = modes
 
-	def is_required(self, chk, game_mode=MODE_ALL):
+	def is_required(self, chk, game_mode=MODE_ALL): # type: (CHK, int) -> bool
 		from .Sections.CHKSectionVER import CHKSectionVER
 		verSect = chk.get_section(CHKSectionVER.NAME)
+		if not verSect:
+			return False
+		verSect = cast(CHKSectionVER, verSect)
 		if verSect.version in self.vers and game_mode & self.modes:
 			return True
 		return False

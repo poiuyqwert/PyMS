@@ -1,5 +1,4 @@
 
-from ..Utilities.utils import isstr
 
 class ID(object):
 	def __init__(self, id):
@@ -8,7 +7,7 @@ class ID(object):
 	def __eq__(self, other):
 		if isinstance(other, type(self)):
 			return other.id == self.id
-		if isstr(other):
+		if isinstance(other, str):
 			return other == self.id
 		return False
 

@@ -1,7 +1,6 @@
 
 from .CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
 
-from ...Utilities.utils import isstr
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSError import PyMSError
 
@@ -28,7 +27,7 @@ class CodeGeneratorTypeMath(CodeGeneratorType):
 
 	@classmethod
 	def validate(cls, save):
-		return 'math' in save and isstr(save['math'])
+		return 'math' in save and isinstance(save['math'], str)
 
 	def __init__(self, save={}):
 		self.math = save.get('math', '')

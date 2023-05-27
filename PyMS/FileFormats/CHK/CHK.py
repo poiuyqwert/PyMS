@@ -10,10 +10,15 @@ from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
 
-import struct, math, os
+import struct
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from typing import Type, BinaryIO
+	from .CHKSection import CHKSection
 
 class CHK:
-	SECTION_TYPES = {
+	SECTION_TYPES: dict[str, Type[CHKSection]] = {
 		CHKSectionTYPE.NAME:CHKSectionTYPE,
 		CHKSectionVER.NAME:CHKSectionVER,
 		CHKSectionIVER.NAME:CHKSectionIVER,
@@ -54,7 +59,7 @@ class CHK:
 		CHKSectionTECx.NAME:CHKSectionTECx
 	}
 
-	def __init__(self, stat_txt=None, aiscript=None):
+	def __init__(self, stat_txt=None, aiscript=None): # type: (TBL.TBL | str | None, AIBIN.AIBIN | str | None) -> None
 		if isinstance(stat_txt, TBL.TBL):
 			self.stat_txt = stat_txt
 		else:
@@ -69,10 +74,10 @@ class CHK:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			self.aiscript = AIBIN.AIBIN(stat_txt=self.stat_txt)
 			self.aiscript.load_file(aiscript)
-		self.sections = {}
-		self.section_order = []
+		self.sections = {} # type: dict[str, CHKSection]
+		self.section_order = [] # type: list[str]
 
-	def get_section(self, name, game_mode=CHKRequirements.MODE_ALL):
+	def get_section(self, name, game_mode=CHKRequirements.MODE_ALL): # type: (str, int) -> (CHKSection | None)
 		sect_class = CHK.SECTION_TYPES[name]
 		required = False
 
@@ -86,15 +91,15 @@ class CHK:
 			self.sections[name] = sect
 		return sect
 
-	def player_color(self, player):
+	def player_color(self, player): # type: (int) -> int
 		colors = CHKSectionCOLR.DEFAULT_COLORS
 		colr = self.get_section(CHKSectionCOLR.NAME)
 		if colr:
-			colors = colr.colors
+			colors = cast(CHKSectionCOLR, colr).colors
 		colors.extend((CHKSectionCOLR.GREEN,CHKSectionCOLR.PALE_YELLOW,CHKSectionCOLR.TAN,CHKSectionCOLR.NEUTRAL))
 		return colors[player]
 
-	def load_file(self, file):
+	def load_file(self, file): # type: (str | BinaryIO) -> None
 		data = load_file(file, 'CHK')
 		try:
 			self.load_data(data)
@@ -103,23 +108,25 @@ class CHK:
 		except:
 			raise PyMSError('Load',"Unsupported CHK file '%s', could possibly be corrupt" % file)
 
-	def load_data(self, data):
+	def load_data(self, data): # type: (bytes) -> None
 		offset = 0
-		sections = {}
-		section_order = []
-		toProcess = []
+		sections = {} # type: dict[str, CHKSection]
+		section_order = [] # type: list[str]
+		toProcess = [] # type: list[CHKSection]
 		while offset < len(data)-8:
-			name,length = struct.unpack('<4sL', data[offset:offset+8])
+			header = struct.unpack('<4sL', data[offset:offset+8])
+			name = str(header[0])
+			length = int(header[1])
 			offset += 8
 			sect_class = CHK.SECTION_TYPES.get(name)
 			if not sect_class:
-				sect = CHKSectionUnknown(self, name)
+				sect = CHKSectionUnknown(self, name) # type: CHKSection
 			else:
 				sect = sect_class(self)
 			sect.load_data(data[offset:offset+min(length,len(data)-offset)])
 			sections[name] = sect
 			section_order.append(name)
-			if hasattr(sect, "process_data"):
+			if sect.requires_post_processing():
 				toProcess.append(sect)
 			offset += length
 		self.sections = sections
@@ -127,7 +134,7 @@ class CHK:
 		for sect in toProcess:
 			sect.process_data()
 
-	def save_file(self, file):
+	def save_file(self, file): # type: (str) -> None
 		data = self.save_data()
 		try:
 			f = AtomicWriter(file, 'wb')
@@ -136,9 +143,9 @@ class CHK:
 		f.write(data)
 		f.close()
 
-	def save_data(self):
-		result = ''
-		order = []
+	def save_data(self): # type: () -> bytes
+		result = b''
+		order = [] # type: list[str]
 		order.extend(self.section_order)
 		for name in list(self.sections.keys()):
 			if not name in order:
@@ -147,6 +154,6 @@ class CHK:
 			section = self.sections.get(name)
 			if section:
 				data = section.save_data()
-				result += struct.pack('<4sL', section.name, len(data))
+				result += struct.pack('<4sL', section.NAME, len(data))
 				result += data
 		return result

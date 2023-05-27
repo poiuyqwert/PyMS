@@ -1,7 +1,6 @@
 
 from ..Widgets import *
 from ..EventPattern import *
-from ...utils import isstr
 
 import re
 
@@ -273,7 +272,7 @@ class CodeText(Frame):
 		a = []
 		if args:
 			for n in args:
-				if isstr(n):
+				if isinstance(n, str):
 					a.append(self.selregex.sub('Selection', n))
 		a = tuple(a)
 		# if self.dispatch_output:

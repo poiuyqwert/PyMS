@@ -2,7 +2,7 @@
 from . import TBL
 from . import AIBIN
 
-from ..Utilities.utils import isstr, flags
+from ..Utilities.utils import flags
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
@@ -1817,7 +1817,7 @@ class TRG:
 			raise PyMSError('Load',"Unsupported TRG file, could possibly be corrupt")
 
 	def interpret(self, file): 
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = open(file,'r')
 				data = f.readlines()
@@ -1837,7 +1837,7 @@ class TRG:
 		for i,a in self.dynamic_actions.items():
 			rev_dynamic_actions[a[0]] = i
 		loaded = []
-		if isstr(file):
+		if isinstance(file, str):
 			loaded.append(file)
 		warnings = []
 		triggers = []
@@ -2248,7 +2248,7 @@ class TRG:
 
 	def decompile(self, file, ref=False):
 		data = self.decompile_data(ref)
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'w')
 			except:

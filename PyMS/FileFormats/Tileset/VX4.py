@@ -1,5 +1,4 @@
 
-from ...Utilities.utils import isstr
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -59,7 +58,7 @@ class VX4:
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
 	def load_file(self, file, expanded=None):
-		if expanded is None and isstr(file):
+		if expanded is None and isinstance(file, str):
 			expanded = (file[-6:].lower() == '.vx4ex')
 		data = load_file(file, 'VX4')
 		struct_size = (64 if expanded else 32)
@@ -88,7 +87,7 @@ class VX4:
 		struct_frmt = '<16L' if self.expanded else '<16H'
 		for d in self.graphics:
 			data += struct.pack(struct_frmt, *[g*2 + h for g,h in d])
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

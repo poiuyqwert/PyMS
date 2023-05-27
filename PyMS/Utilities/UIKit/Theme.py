@@ -1,5 +1,4 @@
 
-from ..utils import isstr
 from ..setutils import PYMS_SETTINGS
 
 try: # Python 2
@@ -64,7 +63,7 @@ class _SettingType(object):
 	@staticmethod
 	def color(value):
 		# TODO: Support color names?
-		if not isstr(value):
+		if not isinstance(value, str):
 			return False
 		return not not _SettingType.RE_COLOR.match(value)
 

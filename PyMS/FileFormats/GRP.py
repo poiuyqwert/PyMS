@@ -13,7 +13,6 @@ except:
 		e.startup()
 		sys.exit()
 
-from ..Utilities.utils import isstr
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
@@ -443,7 +442,7 @@ class GRP:
 		return header_data + image_data
 
 	def save_file(self, file, uncompressed=None):
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:

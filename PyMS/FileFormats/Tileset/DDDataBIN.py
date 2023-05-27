@@ -1,5 +1,4 @@
 
-from ...Utilities.utils import isstr
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
@@ -28,7 +27,7 @@ class DDDataBIN:
 		data = ''
 		for d in self.doodads:
 			data += struct.pack('<256H', *d)
-		if isstr(file):
+		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 			except:
