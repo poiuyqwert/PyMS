@@ -221,7 +221,7 @@ class DataContext(object):
 		return image
 
 	def get_grp_frame(self, path, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0, is_full_path=False):
-		if palette == None:
+		if palette is None:
 			if path.startswith('thingy\\tileset\\'):
 				palette = 'Terrain'
 			elif draw_function == Image.DrawFunction.use_remapping and remapping >= Image.Remapping.ofire and remapping <= Image.Remapping.bfire:
@@ -247,11 +247,11 @@ class DataContext(object):
 				self.grp_cache[path][palette] = {}
 			if draw_function == Image.DrawFunction.selection_circle:
 				rle_function = rle_outline
-				if draw_info == None:
+				if draw_info is None:
 					draw_info = OUTLINE_SELF
 			elif draw_function == Image.DrawFunction.shadow:
 				rle_function = rle_shadow
-				if draw_info == None:
+				if draw_info is None:
 					draw_info = (50,50,50, 255)
 			else:
 				rle_function = rle_normal
@@ -268,8 +268,8 @@ class DataContext(object):
 		grp_path = self.imagestbl.strings[tbl_index - 1]
 		if grp_path.endswith('<0>'):
 			grp_path = grp_path[:-3]
-		if draw_function == None:
+		if draw_function is None:
 			draw_function = image_entry.draw_function
-			if draw_function == Image.DrawFunction.use_remapping and remapping == None:
+			if draw_function == Image.DrawFunction.use_remapping and remapping is None:
 				remapping = image_entry.remapping
 		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)

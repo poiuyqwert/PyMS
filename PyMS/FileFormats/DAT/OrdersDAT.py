@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Order(AbstractDAT.AbstractDATEntry):
 	class Property:
 		label = 'label'
@@ -134,43 +136,43 @@ class Order(AbstractDAT.AbstractDATEntry):
 		requirements = self._import_property_value(data, Order.Property.requirements)
 		obscured_order = self._import_property_value(data, Order.Property.obscured_order)
 
-		if label != None:
+		if label is not None:
 			self.label = label
-		if use_weapon_targeting != None:
+		if use_weapon_targeting is not None:
 			self.use_weapon_targeting = use_weapon_targeting
-		if unused_is_secondary != None:
+		if unused_is_secondary is not None:
 			self.unused_is_secondary = unused_is_secondary
-		if unused_allow_non_subunits != None:
+		if unused_allow_non_subunits is not None:
 			self.unused_allow_non_subunits = unused_allow_non_subunits
-		if changes_subunit_order != None:
+		if changes_subunit_order is not None:
 			self.changes_subunit_order = changes_subunit_order
-		if unused_allow_subunits != None:
+		if unused_allow_subunits is not None:
 			self.unused_allow_subunits = unused_allow_subunits
-		if interruptable != None:
+		if interruptable is not None:
 			self.interruptable = interruptable
-		if waypoints_slowdown != None:
+		if waypoints_slowdown is not None:
 			self.waypoints_slowdown = waypoints_slowdown
-		if queueable != None:
+		if queueable is not None:
 			self.queueable = queueable
-		if disabled_maintain_unit_target != None:
+		if disabled_maintain_unit_target is not None:
 			self.disabled_maintain_unit_target = disabled_maintain_unit_target
-		if obstructable != None:
+		if obstructable is not None:
 			self.obstructable = obstructable
-		if flee_unreturnable_damage != None:
+		if flee_unreturnable_damage is not None:
 			self.flee_unreturnable_damage = flee_unreturnable_damage
-		if unused_requires_movable_unit != None:
+		if unused_requires_movable_unit is not None:
 			self.unused_requires_movable_unit = unused_requires_movable_unit
-		if weapon_targeting != None:
+		if weapon_targeting is not None:
 			self.weapon_targeting = weapon_targeting
-		if technology_energy != None:
+		if technology_energy is not None:
 			self.technology_energy = technology_energy
-		if iscript_animation != None:
+		if iscript_animation is not None:
 			self.iscript_animation = iscript_animation
-		if highlight_icon != None:
+		if highlight_icon is not None:
 			self.highlight_icon = highlight_icon
-		if requirements != None:
+		if requirements is not None:
 			self.requirements = requirements
-		if obscured_order != None:
+		if obscured_order is not None:
 			self.obscured_order = obscured_order
 
 class _OrderPropertyCoder:
@@ -275,4 +277,4 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "orders.dat"
 
 	def get_entry(self, index): # type: (int) -> Order
-		return super(OrdersDAT, self).get_entry(index)
+		return cast(Order, super(OrdersDAT, self).get_entry(index))

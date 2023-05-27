@@ -9,9 +9,9 @@ class CollapseView(Frame):
 
 		def __init__(self, parent): # type (Widget) -> CollapseView.Button
 			self.collapse_view = None # type: CollapseView
-			if CollapseView.Button.ARROW_DOWN == None:
+			if CollapseView.Button.ARROW_DOWN is None:
 				CollapseView.Button.ARROW_DOWN = Assets.get_image('arrow')
-			if CollapseView.Button.ARROW_UP == None:
+			if CollapseView.Button.ARROW_UP is None:
 				CollapseView.Button.ARROW_UP = Assets.get_image('arrowup')
 			Button.__init__(self, parent, image=CollapseView.Button.ARROW_DOWN, command=self.toggle)
 

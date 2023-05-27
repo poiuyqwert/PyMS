@@ -2,6 +2,8 @@
 from . import AbstractDAT
 from . import DATFormat
 
+from typing import cast
+
 class Flingy(AbstractDAT.AbstractDATEntry):
 	class Property:
 		sprite = 'sprite'
@@ -61,19 +63,19 @@ class Flingy(AbstractDAT.AbstractDATEntry):
 		iscript_mask = self._import_property_value(data, Flingy.Property.iscript_mask)
 		movement_control = self._import_property_value(data, Flingy.Property.movement_control)
 
-		if sprite != None:
+		if sprite is not None:
 			self.sprite = sprite
-		if speed != None:
+		if speed is not None:
 			self.speed = speed
-		if acceleration != None:
+		if acceleration is not None:
 			self.acceleration = acceleration
-		if halt_distance != None:
+		if halt_distance is not None:
 			self.halt_distance = halt_distance
-		if turn_radius != None:
+		if turn_radius is not None:
 			self.turn_radius = turn_radius
-		if iscript_mask != None:
+		if iscript_mask is not None:
 			self.iscript_mask = iscript_mask
-		if movement_control != None:
+		if movement_control is not None:
 			self.movement_control = movement_control
 
 # flingy.dat file handler
@@ -116,4 +118,4 @@ class FlingyDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "flingy.dat"
 
 	def get_entry(self, index): # type: (int) -> Flingy
-		return super(FlingyDAT, self).get_entry(index)
+		return cast(Flingy, super(FlingyDAT, self).get_entry(index))

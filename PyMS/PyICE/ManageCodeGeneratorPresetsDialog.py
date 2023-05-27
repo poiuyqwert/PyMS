@@ -125,9 +125,9 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		selected = None
 		if self.listbox.curselection():
 			selected = int(self.listbox.curselection()[0])
-		self.toolbar.tag_enabled('preset_selected', selected != None)
+		self.toolbar.tag_enabled('preset_selected', selected is not None)
 		self.toolbar.tag_enabled('can_move_up', not not selected)
-		self.toolbar.tag_enabled('can_move_down', selected != None and selected+1 < len(self.settings.generator.presets))
+		self.toolbar.tag_enabled('can_move_down', selected is not None and selected+1 < len(self.settings.generator.presets))
 
 	def update_list(self):
 		select = None
@@ -137,7 +137,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.listbox.delete(0,END)
 		for preset in self.settings.generator.get('presets',[]):
 			self.listbox.insert(END, preset['name'])
-		if select != None:
+		if select is not None:
 			self.listbox.select_set(select)
 		self.listbox.yview_moveto(y)
 		self.update_states()

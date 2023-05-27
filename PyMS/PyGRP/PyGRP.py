@@ -478,7 +478,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def open(self, key=None, file=None):
 		self.stopframe()
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.grp.select_open_file(self, title='Open GRP', filetypes=[FileType.grp()])
 				if not file:
 					return
@@ -657,12 +657,12 @@ BMP's must be imported with the same style they were exported as.""")
 		s.sort()
 		for f in s[::d]:
 			self.swap(f,f+d)
-		if self.frame != None:
+		if self.frame is not None:
 			self.frame += d
 		self.listbox.select_clear(0,END)
 		for f in s:
 			self.listbox.select_set(f+d)
-		if self.frame != None:
+		if self.frame is not None:
 			self.listbox.see(self.frame)
 		self.edited = True
 		self.action_states()

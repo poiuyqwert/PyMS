@@ -42,7 +42,7 @@ class Settings(Group):
 
 	def __init__(self): # type: () -> Settings
 		Group.__init__(self)
-		if self._name == None or self._version == None:
+		if self._name is None or self._version is None:
 			raise NotImplementedError('`_name` and/or `_version` are not set for `%s`' % self.__class__.__name__)
 		self.load()
 
@@ -149,7 +149,7 @@ class WindowGeometry(SettingObject):
 			# 	x,y = position
 			resizable_w,resizable_h = parse_resizable(window.resizable())
 			can_fullscreen = (resizable_w and resizable_h)
-			if (resizable_w or resizable_h) and w != None and h != None:
+			if (resizable_w or resizable_h) and w is not None and h is not None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
 				min_w,min_h = window.minsize()
 				# max_w,max_h = window.maxsize()

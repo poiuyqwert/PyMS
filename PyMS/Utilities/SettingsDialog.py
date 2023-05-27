@@ -18,7 +18,7 @@ class SettingsDialog(PyMSDialog):
 		self.err = err
 		self.mpqhandler = mpqhandler
 		self.edited = False
-		self.settings = parent.settings if settings == None else settings
+		self.settings = parent.settings if settings is None else settings
 		PyMSDialog.__init__(self, parent, 'Settings')
 
 	def widgetize(self):
@@ -84,7 +84,7 @@ class SettingsDialog(PyMSDialog):
 			if hasattr(self.parent, 'open_files'):
 				e = self.parent.open_files()
 				if e:
-					if old_mpqs != None:
+					if old_mpqs is not None:
 						self.mpqhandler.set_mpqs(old_mpqs)
 					self.settings.update(old_settings, set=True)
 					ErrorDialog(self, e)

@@ -123,7 +123,7 @@ class SettingDict(object):
 		self[key] = sizes
 
 	def load_pane_size(self, key, panedwindow, default=None, index=0):
-		if not key in self and default == None:
+		if not key in self and default is None:
 			return
 		panedwindow.update()
 		from .UIKit import HORIZONTAL
@@ -170,7 +170,7 @@ class SettingDict(object):
 				x,y = position
 			resizable_w,resizable_h = parse_resizable(window.resizable())
 			can_fullscreen = (resizable_w and resizable_h)
-			if (resizable_w or resizable_h) and w != None and h != None:
+			if (resizable_w or resizable_h) and w is not None and h is not None:
 				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
 				min_w,min_h = window.minsize()
 				# max_w,max_h = window.maxsize()

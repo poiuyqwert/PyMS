@@ -82,7 +82,7 @@ class EditScriptDialog(PyMSDialog):
 
 	def editflags(self):
 		f = FlagEditor(self, self.flags)
-		if f.flags != None:
+		if f.flags is not None:
 			self.flags = f.flags
 
 	def editid(self, *_):
@@ -118,7 +118,7 @@ class EditScriptDialog(PyMSDialog):
 
 	def browse(self):
 		s = StringEditor(self, 'Select a String', True, self.string.get())
-		if s.result != None:
+		if s.result is not None:
 			self.string.set(s.result)
 
 	def ok(self):

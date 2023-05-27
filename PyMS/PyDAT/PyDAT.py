@@ -299,7 +299,7 @@ class PyDAT(MainWindow):
 
 	def changeid(self, entry_id=None, focus_list=True):
 		show_selection = True
-		if entry_id == None:
+		if entry_id is None:
 			entry_id = int(self.listbox.curselection()[0])
 			show_selection = False
 		if entry_id != self.dattabs.active.id:
@@ -365,7 +365,7 @@ class PyDAT(MainWindow):
 		self.dattabs.active.new()
 
 	def open(self, key=None, file_path=None):
-		if file_path == None:
+		if file_path is None:
 			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[FileType.dat()])
 			if not file_path:
 				return

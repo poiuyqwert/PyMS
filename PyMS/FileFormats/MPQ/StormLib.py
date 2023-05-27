@@ -1,6 +1,5 @@
 
-from ctypes import *
-import os,sys
+import ctypes, os, sys
 
 STORMLIB_DIR = None
 if hasattr(sys, 'frozen'):
@@ -16,18 +15,19 @@ if STORMLIB_DIR:
 		'StormLib.dylib',
 	)
 	for library in libraries:
+		if hasattr(ctypes, 'WinDLL'):
+			try:
+				_StormLib = ctypes.WinDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
+				break
+			except Exception:
+				pass
 		try:
-			_StormLib = WinDLL(os.path.join(STORMLIB_DIR, library), RTLD_GLOBAL)
-			break
-		except Exception:
-			pass
-		try:
-			_StormLib = CDLL(os.path.join(STORMLIB_DIR, library), RTLD_GLOBAL)
+			_StormLib = ctypes.CDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
 			break
 		except Exception as error:
 			pass
 
-STORMLIB_LOADED = (_StormLib != None)
+STORMLIB_LOADED = (_StormLib is not None)
 
 ERROR_AVI_FILE               = 10000  # Not a MPQ file, but an AVI file.
 ERROR_UNKNOWN_FILE_KEY       = 10001  # Returned by SFileReadFile when can't find file key
@@ -365,22 +365,22 @@ SFileInfoEncryptionKeyRaw     = 55 # Unfixed value of the file key
 SFileInfoCRC32                = 56 # CRC32 of the file
 
 
-class MPQHANDLE(c_void_p):
+class MPQHANDLE(ctypes.c_void_p):
 	def __repr__(self):
 		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
 
-class SFILE_FIND_DATA(Structure):
+class SFILE_FIND_DATA(ctypes.Structure):
 	_fields_ = [
-		('file_name', c_char * MAX_NAME_SIZE),
-		('plain_name', c_char_p),
-		('hash_index', c_uint32),
-		('block_index', c_uint32),
-		('file_size', c_uint32),
-		('file_flags', c_uint32),
-		('compressed_size', c_uint32),
-		('file_time_lo', c_uint32),
-		('file_time_hi', c_uint32),
-		('locale', c_uint32),
+		('file_name', ctypes.c_char * MAX_NAME_SIZE),
+		('plain_name', ctypes.c_char_p),
+		('hash_index', ctypes.c_uint32),
+		('block_index', ctypes.c_uint32),
+		('file_size', ctypes.c_uint32),
+		('file_flags', ctypes.c_uint32),
+		('compressed_size', ctypes.c_uint32),
+		('file_time_lo', ctypes.c_uint32),
+		('file_time_hi', ctypes.c_uint32),
+		('locale', ctypes.c_uint32),
 	]
 
 	def __init__(self):
@@ -395,20 +395,20 @@ class SFILE_FIND_DATA(Structure):
 		self.file_time_hi = 0
 		self.locale = 0
 
-class SFILE_CREATE_MPQ(Structure):
+class SFILE_CREATE_MPQ(ctypes.Structure):
 	_fields_ = [
-		('size', c_uint32),
-		('mpq_version', c_uint32),
-		('user_data1', c_void_p),
-		('user_data2', c_uint32),
-		('stream_flags', c_uint32),
-		('file_flags_listfile', c_uint32),
-		('file_flags_attributes', c_uint32),
-		('file_flags_signature', c_uint32),
-		('attributes_flags', c_uint32),
-		('sector_size', c_uint32),
-		('raw_chunk_size', c_uint32),
-		('max_file_count', c_uint32),
+		('size', ctypes.c_uint32),
+		('mpq_version', ctypes.c_uint32),
+		('user_data1', ctypes.c_void_p),
+		('user_data2', ctypes.c_uint32),
+		('stream_flags', ctypes.c_uint32),
+		('file_flags_listfile', ctypes.c_uint32),
+		('file_flags_attributes', ctypes.c_uint32),
+		('file_flags_signature', ctypes.c_uint32),
+		('attributes_flags', ctypes.c_uint32),
+		('sector_size', ctypes.c_uint32),
+		('raw_chunk_size', ctypes.c_uint32),
+		('max_file_count', ctypes.c_uint32),
 	]
 
 	def __init__(self):
@@ -425,7 +425,7 @@ class SFILE_CREATE_MPQ(Structure):
 		self.raw_chunk_size = 0
 		self.max_file_count = 0
 
-if STORMLIB_LOADED:
+if _StormLib is not None:
 	# # UNICODE versions of the file access functions
 	# TFileStream * FileStream_CreateFile(const TCHAR * szFileName, DWORD dwStreamFlags);
 	# TFileStream * FileStream_OpenFile(const TCHAR * szFileName, DWORD dwStreamFlags);
@@ -455,7 +455,7 @@ if STORMLIB_LOADED:
 	# typedef bool  (WINAPI * SFILEOPENFILEEX)(HANDLE, const char *, DWORD, HANDLE *);
 	# typedef bool  (WINAPI * SFILECLOSEFILE)(HANDLE);
 	# typedef DWORD (WINAPI * SFILEGETFILESIZE)(HANDLE, LPDWORD);
-	# typedef DWORD (WINAPI * SFILESETFILEPOINTER)(HANDLE, LONG, LONG *, DWORD);
+	# typedef DWORD (WINAPI * SFILESETFILEctypes.POINTER)(HANDLE, LONG, LONG *, DWORD);
 	# typedef bool  (WINAPI * SFILEREADFILE)(HANDLE, void *, DWORD, LPDWORD, LPOVERLAPPED);
 
 	# #-----------------------------------------------------------------------------
@@ -467,120 +467,120 @@ if STORMLIB_LOADED:
 
 	# # Call before SFileOpenFileEx
 	# LCID   WINAPI SFileGetLocale();
-	_StormLib.SFileGetLocale.restype = c_uint32
+	_StormLib.SFileGetLocale.restype = ctypes.c_uint32
 
 	# LCID   WINAPI SFileSetLocale(LCID lcNewLocale);
-	_StormLib.SFileSetLocale.argtypes = [c_uint32]
-	_StormLib.SFileSetLocale.restype = c_uint32
+	_StormLib.SFileSetLocale.argtypes = [ctypes.c_uint32]
+	_StormLib.SFileSetLocale.restype = ctypes.c_uint32
 
 	# #-----------------------------------------------------------------------------
 	# # Functions for archive manipulation
 
 	# bool   WINAPI SFileOpenArchive(const TCHAR * szMpqName, DWORD dwPriority, DWORD dwFlags, HANDLE * phMpq);
-	_StormLib.SFileOpenArchive.argtypes = [c_char_p, c_int32, c_uint32, POINTER(MPQHANDLE)]
-	_StormLib.SFileOpenArchive.restype = c_bool
+	_StormLib.SFileOpenArchive.argtypes = [ctypes.c_char_p, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileOpenArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCreateArchive(const TCHAR * szMpqName, DWORD dwCreateFlags, DWORD dwMaxFileCount, HANDLE * phMpq);
-	_StormLib.SFileCreateArchive.argtypes = [c_char_p, c_int32, c_uint32, POINTER(MPQHANDLE)]
-	_StormLib.SFileCreateArchive.restype = c_bool
+	_StormLib.SFileCreateArchive.argtypes = [ctypes.c_char_p, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileCreateArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCreateArchive2(const TCHAR * szMpqName, PSFILE_CREATE_MPQ pCreateInfo, HANDLE * phMpq);
-	_StormLib.SFileCreateArchive2.argtypes = [c_char_p, POINTER(SFILE_CREATE_MPQ), POINTER(MPQHANDLE)]
-	_StormLib.SFileCreateArchive2.restype = c_bool
+	_StormLib.SFileCreateArchive2.argtypes = [ctypes.c_char_p, ctypes.POINTER(SFILE_CREATE_MPQ), ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileCreateArchive2.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileSetDownloadCallback(HANDLE hMpq, SFILE_DOWNLOAD_CALLBACK DownloadCB, void * pvUserData);
 
 	# bool   WINAPI SFileFlushArchive(HANDLE hMpq);
 	_StormLib.SFileFlushArchive.argtypes = [MPQHANDLE]
-	_StormLib.SFileFlushArchive.restype = c_bool
+	_StormLib.SFileFlushArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCloseArchive(HANDLE hMpq);
 	_StormLib.SFileCloseArchive.argtypes = [MPQHANDLE]
-	_StormLib.SFileCloseArchive.restype = c_bool
+	_StormLib.SFileCloseArchive.restype = ctypes.c_bool
 
 	# # Adds another listfile into MPQ. The currently added listfile(s) remain,
 	# # so you can use this API to combining more listfiles.
 	# # Note that this function is internally called by SFileFindFirstFile
 	# DWORD  WINAPI SFileAddListFile(HANDLE hMpq, const TCHAR * szListFile);
-	_StormLib.SFileAddListFile.argtypes = [MPQHANDLE, c_char_p]
-	_StormLib.SFileAddListFile.restype = c_uint32
+	_StormLib.SFileAddListFile.argtypes = [MPQHANDLE, ctypes.c_char_p]
+	_StormLib.SFileAddListFile.restype = ctypes.c_uint32
 
 	# # Archive compacting
 	# bool   WINAPI SFileSetCompactCallback(HANDLE hMpq, SFILE_COMPACT_CALLBACK CompactCB, void * pvUserData);
 
 	# bool   WINAPI SFileCompactArchive(HANDLE hMpq, const TCHAR * szListFile, bool bReserved);
-	_StormLib.SFileCompactArchive.argtypes = [MPQHANDLE, c_char_p, c_bool]
-	_StormLib.SFileCompactArchive.restype = c_bool
+	_StormLib.SFileCompactArchive.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_bool]
+	_StormLib.SFileCompactArchive.restype = ctypes.c_bool
 
 	# # Changing the maximum file count
 	# DWORD  WINAPI SFileGetMaxFileCount(HANDLE hMpq);
 	_StormLib.SFileGetMaxFileCount.argtypes = [MPQHANDLE]
-	_StormLib.SFileGetMaxFileCount.restype = c_uint32
+	_StormLib.SFileGetMaxFileCount.restype = ctypes.c_uint32
 
 	# bool   WINAPI SFileSetMaxFileCount(HANDLE hMpq, DWORD dwMaxFileCount);
-	_StormLib.SFileSetMaxFileCount.argtypes = [MPQHANDLE, c_uint32]
-	_StormLib.SFileSetMaxFileCount.restype = c_bool
+	_StormLib.SFileSetMaxFileCount.argtypes = [MPQHANDLE, ctypes.c_uint32]
+	_StormLib.SFileSetMaxFileCount.restype = ctypes.c_bool
 
 	# # Changing (attributes) file
 	# DWORD  WINAPI SFileGetAttributes(HANDLE hMpq);
 	_StormLib.SFileGetAttributes.argtypes = [MPQHANDLE]
-	_StormLib.SFileGetAttributes.restype = c_uint32
+	_StormLib.SFileGetAttributes.restype = ctypes.c_uint32
 
 	# bool   WINAPI SFileSetAttributes(HANDLE hMpq, DWORD dwFlags);
-	_StormLib.SFileSetAttributes.argtypes = [MPQHANDLE, c_uint32]
-	_StormLib.SFileSetAttributes.restype = c_bool
+	_StormLib.SFileSetAttributes.argtypes = [MPQHANDLE, ctypes.c_uint32]
+	_StormLib.SFileSetAttributes.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileUpdateFileAttributes(HANDLE hMpq, const char * szFileName);
-	_StormLib.SFileUpdateFileAttributes.argtypes = [MPQHANDLE, c_char_p]
-	_StormLib.SFileUpdateFileAttributes.restype = c_bool
+	_StormLib.SFileUpdateFileAttributes.argtypes = [MPQHANDLE, ctypes.c_char_p]
+	_StormLib.SFileUpdateFileAttributes.restype = ctypes.c_bool
 
 	# #-----------------------------------------------------------------------------
 	# # Functions for manipulation with patch archives
 
 	# bool   WINAPI SFileOpenPatchArchive(HANDLE hMpq, const TCHAR * szPatchMpqName, const char * szPatchPathPrefix, DWORD dwFlags);
-	_StormLib.SFileOpenPatchArchive.argtypes = [MPQHANDLE, c_char_p, c_char_p, c_uint32]
-	_StormLib.SFileOpenPatchArchive.restype = c_bool
+	_StormLib.SFileOpenPatchArchive.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32]
+	_StormLib.SFileOpenPatchArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileIsPatchedArchive(HANDLE hMpq);
 	_StormLib.SFileIsPatchedArchive.argtypes = [MPQHANDLE]
-	_StormLib.SFileIsPatchedArchive.restype = c_bool
+	_StormLib.SFileIsPatchedArchive.restype = ctypes.c_bool
 
 	# #-----------------------------------------------------------------------------
 	# # Functions for file manipulation
 
 	# # Reading from MPQ file
 	# bool   WINAPI SFileHasFile(HANDLE hMpq, const char * szFileName);
-	_StormLib.SFileHasFile.argtypes = [MPQHANDLE, c_char_p]
-	_StormLib.SFileHasFile.restype = c_bool
+	_StormLib.SFileHasFile.argtypes = [MPQHANDLE, ctypes.c_char_p]
+	_StormLib.SFileHasFile.restype = ctypes.c_bool
 	
 	# bool   WINAPI SFileOpenFileEx(HANDLE hMpq, const char * szFileName, DWORD dwSearchScope, HANDLE * phFile);
-	_StormLib.SFileOpenFileEx.argtypes = [MPQHANDLE, c_char_p, c_uint32, POINTER(MPQHANDLE)]
-	_StormLib.SFileOpenFileEx.restype = c_bool
+	_StormLib.SFileOpenFileEx.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileOpenFileEx.restype = ctypes.c_bool
 
 	# DWORD  WINAPI SFileGetFileSize(HANDLE hFile, LPDWORD pdwFileSizeHigh);
-	_StormLib.SFileGetFileSize.argtypes = [MPQHANDLE, POINTER(c_uint32)]
-	_StormLib.SFileGetFileSize.restype = c_uint32
+	_StormLib.SFileGetFileSize.argtypes = [MPQHANDLE, ctypes.POINTER(ctypes.c_uint32)]
+	_StormLib.SFileGetFileSize.restype = ctypes.c_uint32
 
 	# DWORD  WINAPI SFileSetFilePointer(HANDLE hFile, LONG lFilePos, LONG * plFilePosHigh, DWORD dwMoveMethod);
-	_StormLib.SFileSetFilePointer.argtypes = [MPQHANDLE, c_int32, POINTER(c_int32), c_uint32]
-	_StormLib.SFileSetFilePointer.restype = c_uint32
+	_StormLib.SFileSetFilePointer.argtypes = [MPQHANDLE, ctypes.c_int32, ctypes.POINTER(ctypes.c_int32), ctypes.c_uint32]
+	_StormLib.SFileSetFilePointer.restype = ctypes.c_uint32
 
 	# bool   WINAPI SFileReadFile(HANDLE hFile, void * lpBuffer, DWORD dwToRead, LPDWORD pdwRead, LPOVERLAPPED lpOverlapped);
-	_StormLib.SFileReadFile.argtypes = [MPQHANDLE, c_void_p, c_uint32, POINTER(c_uint32), c_void_p]
-	_StormLib.SFileReadFile.restype = c_bool
+	_StormLib.SFileReadFile.argtypes = [MPQHANDLE, ctypes.c_void_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint32), ctypes.c_void_p]
+	_StormLib.SFileReadFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCloseFile(HANDLE hFile);
 	_StormLib.SFileCloseFile.argtypes = [MPQHANDLE]
-	_StormLib.SFileCloseFile.restype = c_bool
+	_StormLib.SFileCloseFile.restype = ctypes.c_bool
 
 	# # Retrieve information about an archive or about a file within the archive
 	# bool   WINAPI SFileGetFileInfo(HANDLE hMpqOrFile, SFileInfoClass InfoClass, void * pvFileInfo, DWORD cbFileInfo, LPDWORD pcbLengthNeeded);
-	_StormLib.SFileGetFileInfo.argtypes = [MPQHANDLE, c_int32, c_void_p, c_uint32, POINTER(c_uint32)]
-	_StormLib.SFileGetFileInfo.restype = c_bool
+	_StormLib.SFileGetFileInfo.argtypes = [MPQHANDLE, ctypes.c_int32, ctypes.c_void_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint32)]
+	_StormLib.SFileGetFileInfo.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileGetFileName(HANDLE hFile, char * szFileName);
-	_StormLib.SFileGetFileName.argtypes = [MPQHANDLE, c_char_p]
-	_StormLib.SFileGetFileName.restype = c_bool
+	_StormLib.SFileGetFileName.argtypes = [MPQHANDLE, ctypes.c_char_p]
+	_StormLib.SFileGetFileName.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileFreeFileInfo(void * pvFileInfo, SFileInfoClass InfoClass);
 
@@ -608,16 +608,16 @@ if STORMLIB_LOADED:
 	# # Functions for file searching
 
 	# HANDLE WINAPI SFileFindFirstFile(HANDLE hMpq, const char * szMask, SFILE_FIND_DATA * lpFindFileData, const TCHAR * szListFile);
-	_StormLib.SFileFindFirstFile.argtypes = [MPQHANDLE, c_char_p, POINTER(SFILE_FIND_DATA), c_char_p]
+	_StormLib.SFileFindFirstFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.POINTER(SFILE_FIND_DATA), ctypes.c_char_p]
 	_StormLib.SFileFindFirstFile.restype = MPQHANDLE
 
 	# bool   WINAPI SFileFindNextFile(HANDLE hFind, SFILE_FIND_DATA * lpFindFileData);
-	_StormLib.SFileFindNextFile.argtypes = [MPQHANDLE, POINTER(SFILE_FIND_DATA)]
-	_StormLib.SFileFindNextFile.restype = c_bool
+	_StormLib.SFileFindNextFile.argtypes = [MPQHANDLE, ctypes.POINTER(SFILE_FIND_DATA)]
+	_StormLib.SFileFindNextFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileFindClose(HANDLE hFind);
 	_StormLib.SFileFindClose.argtypes = [MPQHANDLE]
-	_StormLib.SFileFindClose.restype = c_bool
+	_StormLib.SFileFindClose.restype = ctypes.c_bool
 
 	# HANDLE WINAPI SListFileFindFirstFile(HANDLE hMpq, const TCHAR * szListFile, const char * szMask, SFILE_FIND_DATA * lpFindFileData);
 	# bool   WINAPI SListFileFindNextFile(HANDLE hFind, SFILE_FIND_DATA * lpFindFileData);
@@ -630,44 +630,44 @@ if STORMLIB_LOADED:
 	# # Support for adding files to the MPQ
 
 	# bool   WINAPI SFileCreateFile(HANDLE hMpq, const char * szArchivedName, ULONGLONG FileTime, DWORD dwFileSize, LCID lcLocale, DWORD dwFlags, HANDLE * phFile);
-	_StormLib.SFileCreateFile.argtypes = [MPQHANDLE, c_char_p, c_ulonglong, c_uint32, c_uint32, c_uint32, POINTER(MPQHANDLE)]
-	_StormLib.SFileCreateFile.restype = c_bool
+	_StormLib.SFileCreateFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_ulonglong, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileCreateFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileWriteFile(HANDLE hFile, const void * pvData, DWORD dwSize, DWORD dwCompression);
-	_StormLib.SFileWriteFile.argtypes = [MPQHANDLE, c_void_p, c_uint32, c_uint32]
-	_StormLib.SFileWriteFile.restype = c_bool
+	_StormLib.SFileWriteFile.argtypes = [MPQHANDLE, ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32]
+	_StormLib.SFileWriteFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileFinishFile(HANDLE hFile);
 	_StormLib.SFileFinishFile.argtypes = [MPQHANDLE]
-	_StormLib.SFileFinishFile.restype = c_bool
+	_StormLib.SFileFinishFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddFileEx(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags, DWORD dwCompression, DWORD dwCompressionNext);
-	_StormLib.SFileAddFileEx.argtypes = [MPQHANDLE, c_char_p, c_char_p, c_uint32, c_uint32, c_uint32]
-	_StormLib.SFileAddFileEx.restype = c_bool
+	_StormLib.SFileAddFileEx.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32]
+	_StormLib.SFileAddFileEx.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddFile(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags);
-	# _StormLib.SFileAddFile.argtypes = [MPQHANDLE, c_char_p, c_char_p, c_uint32]
-	# _StormLib.SFileAddFile.restype = c_bool
+	# _StormLib.SFileAddFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32]
+	# _StormLib.SFileAddFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddWave(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags, DWORD dwQuality);
-	# _StormLib.SFileAddWave.argtypes = [MPQHANDLE, c_char_p, c_char_p, c_uint32, c_uint32]
-	# _StormLib.SFileAddWave.restype = c_bool
+	# _StormLib.SFileAddWave.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32]
+	# _StormLib.SFileAddWave.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileRemoveFile(HANDLE hMpq, const char * szFileName, DWORD dwSearchScope);
-	_StormLib.SFileRemoveFile.argtypes = [MPQHANDLE, c_char_p, c_uint32]
-	_StormLib.SFileRemoveFile.restype = c_bool
+	_StormLib.SFileRemoveFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_uint32]
+	_StormLib.SFileRemoveFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileRenameFile(HANDLE hMpq, const char * szOldFileName, const char * szNewFileName);
-	_StormLib.SFileRenameFile.argtypes = [MPQHANDLE, c_char_p, c_char_p]
-	_StormLib.SFileRenameFile.restype = c_bool
+	_StormLib.SFileRenameFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p]
+	_StormLib.SFileRenameFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileSetFileLocale(HANDLE hFile, LCID lcNewLocale);
-	_StormLib.SFileSetFileLocale.argtypes = [MPQHANDLE, c_uint32]
-	_StormLib.SFileSetFileLocale.restype = c_bool
+	_StormLib.SFileSetFileLocale.argtypes = [MPQHANDLE, ctypes.c_uint32]
+	_StormLib.SFileSetFileLocale.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileSetDataCompression(DWORD DataCompression);
-	# _StormLib.SFileSetDataCompression.argtypes = [c_uint32]
-	# _StormLib.SFileSetDataCompression.restype = c_bool
+	# _StormLib.SFileSetDataCompression.argtypes = [ctypes.c_uint32]
+	# _StormLib.SFileSetDataCompression.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileSetAddFileCallback(HANDLE hMpq, SFILE_ADDFILE_CALLBACK AddFileCB, void * pvUserData);
 
@@ -686,177 +686,224 @@ if STORMLIB_LOADED:
 
 	# void  SetLastError(DWORD dwErrCode);
 	# try:
-	# 	_StormLib.SetLastError.argtypes = [c_uint32]
+	# 	_StormLib.SetLastError.argtypes = [ctypes.c_uint32]
 	# except:
 	# 	_StormLib.SetLastError = None
 
 	# DWORD GetLastError();
 	try:
-		_StormLib.GetLastError.restype = c_uint32
+		_StormLib.GetLastError.restype = ctypes.c_uint32
 	except:
 		_StormLib.GetLastError = None
+
+def _file_name(file_name): # type: (str | bytes) -> bytes
+	if isinstance(file_name, str):
+		return file_name.encode('utf-8')
+	return file_name
 
 def SFInvalidHandle(h):
 	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]
 
 def SFileGetLocale():
+	assert _StormLib is not None
 	return _StormLib.SFileGetLocale()
 
 def SFileSetLocale(locale): # type: (int) -> int
+	assert _StormLib is not None
 	return _StormLib.SFileSetLocale(locale)
 
 def SFileOpenArchive(mpq_path, priority=0, flags=STREAM_FLAG_READ_ONLY): # type: (str, int, int) -> (MPQHANDLE | None)
+	assert _StormLib is not None
 	h = MPQHANDLE()
-	if _StormLib.SFileOpenArchive(mpq_path.encode('utf-8'), priority, flags, byref(h)):
-		return h
+	if not _StormLib.SFileOpenArchive(mpq_path.encode('utf-8'), priority, flags, ctypes.byref(h)):
+		return None
+	return h
 
 def SFileCreateArchive(mpq_path, flags=0, max_files=1024): # type: (str, int, int) -> (MPQHANDLE | None)
+	assert _StormLib is not None
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateArchive(mpq_path.encode('utf-8'), flags, max_files, byref(h)):
-		return h
+	if not _StormLib.SFileCreateArchive(mpq_path.encode('utf-8'), flags, max_files, ctypes.byref(h)):
+		return None
+	return h
 
 def SFileCreateArchive2(mpq_path, create_info): # type: (str, SFILE_CREATE_MPQ) -> (MPQHANDLE | None)
-	create_info.size = sizeof(SFILE_CREATE_MPQ)
+	assert _StormLib is not None
+	create_info.size = ctypes.sizeof(SFILE_CREATE_MPQ)
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateArchive2(mpq_path.encode('utf-8'), byref(create_info), byref(h)):
-		return h
+	if not _StormLib.SFileCreateArchive2(mpq_path.encode('utf-8'), ctypes.byref(create_info), ctypes.byref(h)):
+		return None
+	return h
 
 def SFileFlushArchive(mpq): # type: (MPQHANDLE) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileFlushArchive(mpq)
 
 def SFileCloseArchive(mpq): # type: (MPQHANDLE) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileCloseArchive(mpq)
 
 def SFileAddListFile(mpq, listfile_path): # type: (MPQHANDLE, str) -> int
+	assert _StormLib is not None
 	return _StormLib.SFileAddListFile(mpq, listfile_path.encode('utf-8'))
 
-def SFileCompactArchive(mpq, listfile_path=None): # type: (MPQHANDLE, str) -> bool
+def SFileCompactArchive(mpq, listfile_path=None): # type: (MPQHANDLE, str | None) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileCompactArchive(mpq, listfile_path.encode('utf-8') if listfile_path else None, True)
 
 def SFileGetMaxFileCount(mpq): # type: (MPQHANDLE) -> int
+	assert _StormLib is not None
 	return _StormLib.SFileGetMaxFileCount(mpq)
 
 def SFileSetMaxFileCount(mpq, file_count): # type: (MPQHANDLE, int) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileSetMaxFileCount(mpq, file_count)
 
 def SFileGetAttributes(mpq): # type: (MPQHANDLE) -> int
+	assert _StormLib is not None
 	return _StormLib.SFileGetAttributes(mpq)
 
 def SFileSetAttributes(mpq, attributes): # type: (MPQHANDLE, int) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileSetAttributes(mpq, attributes)
 
 def SFileUpdateFileAttributes(mpq, attributes_file_path): # type: (MPQHANDLE, str) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileUpdateFileAttributes(mpq, attributes_file_path.encode('utf-8'))
 
 def SFileOpenPatchArchive(mpq, patch_mpq_path, patch_path_prefix, flags=0): # type: (MPQHANDLE, str, str, int) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileOpenPatchArchive(mpq, patch_mpq_path.encode('utf-8'), patch_path_prefix.encode('utf-8'), flags)
 
 def SFileIsPatchedArchive(mpq): # type: (MPQHANDLE) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileIsPatchedArchive(mpq)
 
-def SFileHasFile(mpq, file_name): # type: (MPQHANDLE, str) -> bool
-	return _StormLib.SFileHasFile(mpq, file_name.encode('utf-8'))
+def SFileHasFile(mpq, file_name): # type: (MPQHANDLE, str | bytes) -> bool
+	assert _StormLib is not None
+	return _StormLib.SFileHasFile(mpq, _file_name(file_name))
 
-def SFileOpenFileEx(mpq, file_name, search=SFILE_OPEN_FROM_MPQ): # type: (MPQHANDLE, str, int) -> (MPQHANDLE | None)
+def SFileOpenFileEx(mpq, file_name, search=SFILE_OPEN_FROM_MPQ): # type: (MPQHANDLE, str | bytes, int) -> (MPQHANDLE | None)
+	assert _StormLib is not None
 	h = MPQHANDLE()
-	if _StormLib.SFileOpenFileEx(mpq, file_name.encode('utf-8'), search, byref(h)):
-		return h
+	if not _StormLib.SFileOpenFileEx(mpq, _file_name(file_name), search, ctypes.byref(h)):
+		return None
+	return h
 
 def SFileGetFileSize(file): # type: (MPQHANDLE) -> (int | None)
+	assert _StormLib is not None
 	size = _StormLib.SFileGetFileSize(file, None)
-	if size == SFILE_INVALID_SIZE:
+	if size == SFILE_INVALID_SIZE or size == -1:
 		return None
 	return size
 
 def SFileSetFilePointer(file, position, move_method=FILE_BEGIN): # type: (MPQHANDLE, int, int) -> (int | None)
-	size = _StormLib.SFileSetFilePointer(file, position, None, move_method)
-	if size == SFILE_INVALID_SIZE:
+	assert _StormLib is not None
+	pointer = _StormLib.SFileSetFilePointer(file, position, None, move_method)
+	if pointer == SFILE_INVALID_POS or pointer == -1:
 		return None
-	return size
+	return pointer
 
-def SFileReadFile(file, read=None): # type: (MPQHANDLE, int) -> (tuple[bytes | None, int])
-	all = read == None
-	if all:
+def SFileReadFile(file, read=None): # type: (MPQHANDLE, int | None) -> (tuple[bytes | None, int])
+	assert _StormLib is not None
+	if read is None:
 		read = SFileGetFileSize(file)
-		if read == -1:
+		if read is None:
 			return (None, 0)
-	data = create_string_buffer(read)
-	r = c_uint32()
+	data = ctypes.create_string_buffer(read)
+	r = ctypes.c_uint32()
 	total_read = 0
 	while total_read < read:
-		if _StormLib.SFileReadFile(file, byref(data, total_read), read-total_read, byref(r), None):
+		if _StormLib.SFileReadFile(file, ctypes.byref(data, total_read), read-total_read, ctypes.byref(r), None):
 			total_read += r.value
 		else:
 			return (None, 0)
 	return (data.raw[:total_read],total_read)
 
 def SFileCloseFile(file): # type: (MPQHANDLE) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileCloseFile(file)
 
-def SFileGetFileInfo(mpq, info_class): # type: (MPQHANDLE, int) -> (int | long | str | None)
+def SFileGetFileInfo(mpq, info_class): # type: (MPQHANDLE, int) -> (int | str | None)
+	assert _StormLib is not None
 	info_container = None
 	if info_class == SFileMpqBlockTableSize:
-		info_container = c_uint32()
+		info_container = ctypes.c_uint32()
 	# TODO: Implement more info types
-	if info_container == None:
+	if info_container is None:
 		raise NotImplementedError('Info class %d not implemented in SFileGetFileInfo' % info_class)
-	length_needed = c_uint32()
-	if not _StormLib.SFileGetFileInfo(mpq, info_class, byref(info_container), sizeof(info_container), byref(length_needed)):
+	length_needed = ctypes.c_uint32()
+	if not _StormLib.SFileGetFileInfo(mpq, info_class, ctypes.byref(info_container), ctypes.sizeof(info_container), ctypes.byref(length_needed)):
 		return None
-	if isinstance(info_container, c_uint):
-		return info_container.value
+	if not isinstance(info_container, ctypes.c_uint):
+		return None
+	return info_container.value
 
-def SFileGetFileName(file): # type: (MPQHANDLE) -> (str | None)
-	name = create_string_buffer(MAX_NAME_SIZE)
-	if _StormLib.SFileGetFileName(file, byref(name)):
-		return name.raw.decode('utf-8')
+def SFileGetFileName(file): # type: (MPQHANDLE) -> (bytes | None)
+	assert _StormLib is not None
+	name = ctypes.create_string_buffer(MAX_NAME_SIZE)
+	if not _StormLib.SFileGetFileName(file, ctypes.byref(name)):
+		return None
+	return name.raw
 
-def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str, str) -> (tuple[MPQHANDLE | None, SFILE_FIND_DATA | None])
+def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str | bytes, str | None) -> (tuple[MPQHANDLE | None, SFILE_FIND_DATA | None])
+	assert _StormLib is not None
 	file_data = SFILE_FIND_DATA()
-	find_handle = _StormLib.SFileFindFirstFile(mpq, find_mask.encode('utf-8'), byref(file_data), listfile_path.encode('utf-8') if listfile_path else None)
+	find_handle = _StormLib.SFileFindFirstFile(mpq, _file_name(find_mask), ctypes.byref(file_data), listfile_path.encode('utf-8') if listfile_path else None)
 	if not SFInvalidHandle(find_handle):
 		return (find_handle, file_data)
 	return (None, None)
 
 def SFileFindNextFile(find_handle): # type: (MPQHANDLE) -> (SFILE_FIND_DATA | None)
+	assert _StormLib is not None
 	file_data = SFILE_FIND_DATA()
-	if _StormLib.SFileFindNextFile(find_handle, byref(file_data)):
-		return file_data
+	if not _StormLib.SFileFindNextFile(find_handle, ctypes.byref(file_data)):
+		return None
+	return file_data
 
 def SFileFindClose(find_handle): # type: (MPQHANDLE) -> bool
+	assert _StormLib is not None
 	return _StormLib.SFileFindClose(find_handle)
 
-def SFileCreateFile(mpq, file_name, file_time, file_size, locale, flags): # type: (MPQHANDLE, str, int, int, int, int) -> (MPQHANDLE | None)
+def SFileCreateFile(mpq, file_name, file_time, file_size, locale, flags): # type: (MPQHANDLE, str | bytes, int, int, int, int) -> (MPQHANDLE | None)
+	assert _StormLib is not None
 	h = MPQHANDLE()
-	if _StormLib.SFileCreateFile(mpq, file_name.encode('utf-8'), file_time, file_size, locale, flags, byref(h)):
-		return h
+	if not _StormLib.SFileCreateFile(mpq, _file_name(file_name), file_time, file_size, locale, flags, ctypes.byref(h)):
+		return None
+	return h
 
 def SFileWriteFile(file, data, compression): # type: (MPQHANDLE, bytes, int) -> (bool)
+	assert _StormLib is not None
 	return _StormLib.SFileWriteFile(file, data, len(data), compression)
 
 def SFileFinishFile(file): # type: (MPQHANDLE) -> (bool)
+	assert _StormLib is not None
 	return _StormLib.SFileFinishFile(file)
 
-def SFileAddFileEx(mpq, file_path, file_name, flags=MPQ_FILE_REPLACEEXISTING, compression=0, compression_next=MPQ_COMPRESSION_NEXT_SAME): # type: (MPQHANDLE, str, str, int, int, int) -> (bool)
-	return _StormLib.SFileAddFileEx(mpq, file_path.encode('utf-8'), file_name.encode('utf-8'), flags, compression, compression_next)
+def SFileAddFileEx(mpq, file_path, file_name, flags=MPQ_FILE_REPLACEEXISTING, compression=0, compression_next=MPQ_COMPRESSION_NEXT_SAME): # type: (MPQHANDLE, str, str | bytes, int, int, int) -> (bool)
+	assert _StormLib is not None
+	return _StormLib.SFileAddFileEx(mpq, file_path.encode('utf-8'), _file_name(file_name), flags, compression, compression_next)
 
-def SFileRemoveFile(mpq, file_name): # type: (MPQHANDLE, str) -> (bool)
-	return _StormLib.SFileRemoveFile(mpq, file_name.encode('utf-8'), 0)
+def SFileRemoveFile(mpq, file_name): # type: (MPQHANDLE, str | bytes) -> (bool)
+	assert _StormLib is not None
+	return _StormLib.SFileRemoveFile(mpq, _file_name(file_name), 0)
 
-def SFileRenameFile(mpq, file_name, new_file_name): # type: (MPQHANDLE, str, str) -> (bool)
-	return _StormLib.SFileRenameFile(mpq, file_name.encode('utf-8'), new_file_name.encode('utf-8'))
+def SFileRenameFile(mpq, file_name, new_file_name): # type: (MPQHANDLE, str | bytes, str | bytes) -> (bool)
+	assert _StormLib is not None
+	return _StormLib.SFileRenameFile(mpq, _file_name(file_name), _file_name(new_file_name))
 
 def SFileSetFileLocale(file, locale): # type: (MPQHANDLE, int) -> (bool)
+	assert _StormLib is not None
 	return _StormLib.SFileSetFileLocale(file, locale)
 
 # def SFSetLastError(error): # type: (int) -> None
+#	assert _StormLib is not None
 # 	# StormLib only implements its own SetLastError on platforms other than windows
-# 	if _StormLib.SetLastError == None:
+# 	if _StormLib.SetLastError is None:
 # 		windll.kernel32.SetLastError(error)
 # 	return _StormLib.SetLastError(error)
 
 def SFGetLastError():
 	# StormLib only implements its own GetLastError on platforms other than windows
-	if _StormLib.GetLastError == None:
-		return GetLastError()
+	if _StormLib.GetLastError is None:
+		return ctypes.GetLastError()
 	return _StormLib.GetLastError()

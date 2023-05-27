@@ -37,17 +37,17 @@ class TRGCodeText(CodeText):
 		CodeText.__init__(self, parent, ecallback, state=state)
 
 	def setedit(self):
-		if self.ecallback != None:
+		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
 	def setupparser(self):
 		comment = r'(?P<Comment>#[^\n]*$)'
 		header = r'^[ \t]*(?P<Headers>Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:))'
-		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([x for x in TRG.TRG.conditions if x != None])
-		actions = r'\b(?P<Actions>%s)\b' % '|'.join([x for x in TRG.TRG.actions if x != None])
-		#trigplugconditions = r'\b(?P<TrigPlugConditions>%s)\b' % '|'.join([x for x in AIBIN.AIBIN.short_labels if x != None])
-		trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x != None])
+		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([x for x in TRG.TRG.conditions if x is not None])
+		actions = r'\b(?P<Actions>%s)\b' % '|'.join([x for x in TRG.TRG.actions if x is not None])
+		#trigplugconditions = r'\b(?P<TrigPlugConditions>%s)\b' % '|'.join([x for x in AIBIN.AIBIN.short_labels if x is not None])
+		trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x is not None])
 		constants = r'(?P<Constants>\{\w+\})'
 		constdef = r'(?<=Constant )(?P<ConstDef>\w+)(?=:)'
 		keywords = r'\b(?P<Keywords>%s)(?=[ \),])' % '|'.join(TRG.keywords)
@@ -103,7 +103,7 @@ class TRGCodeText(CodeText):
 				m = self.re.search(chars)
 				while m:
 					for key, value in list(m.groupdict().items()):
-						if value != None:
+						if value is not None:
 							a, b = m.span(key)
 							self.tag_add(key, head + '+%dc' % a, head + '+%dc' % b)
 					m = self.re.search(chars, m.end())

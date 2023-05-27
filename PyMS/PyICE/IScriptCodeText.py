@@ -33,7 +33,7 @@ class IScriptCodeText(CodeText):
 		self.text.bind(Ctrl.q, self.commentrange)
 
 	def setedit(self):
-		if self.ecallback != None:
+		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
@@ -102,7 +102,7 @@ class IScriptCodeText(CodeText):
 				m = self.basic.search(chars)
 				while m:
 					for key, value in list(m.groupdict().items()):
-						if value != None:
+						if value is not None:
 							a, b = m.span(key)
 							self.tag_add(key, head + '+%dc' % a, head + '+%dc' % b)
 					m = self.basic.search(chars, m.end())

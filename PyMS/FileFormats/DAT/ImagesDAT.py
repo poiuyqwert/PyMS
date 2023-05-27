@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Image(AbstractDAT.AbstractDATEntry):
 	class Property:
 		grp_file = 'grp_file'
@@ -136,33 +138,33 @@ class Image(AbstractDAT.AbstractDATEntry):
 		landing_dust_overlay = self._import_property_value(data, Image.Property.landing_dust_overlay)
 		lift_off_dust_overlay = self._import_property_value(data, Image.Property.lift_off_dust_overlay)
 
-		if grp_file != None:
+		if grp_file is not None:
 			self.grp_file = grp_file
-		if gfx_turns != None:
+		if gfx_turns is not None:
 			self.gfx_turns = gfx_turns
-		if clickable != None:
+		if clickable is not None:
 			self.clickable = clickable
-		if use_full_iscript != None:
+		if use_full_iscript is not None:
 			self.use_full_iscript = use_full_iscript
-		if draw_if_cloaked != None:
+		if draw_if_cloaked is not None:
 			self.draw_if_cloaked = draw_if_cloaked
-		if draw_function != None:
+		if draw_function is not None:
 			self.draw_function = draw_function
-		if remapping != None:
+		if remapping is not None:
 			self.remapping = remapping
-		if iscript_id != None:
+		if iscript_id is not None:
 			self.iscript_id = iscript_id
-		if shield_overlay != None:
+		if shield_overlay is not None:
 			self.shield_overlay = shield_overlay
-		if attack_overlay != None:
+		if attack_overlay is not None:
 			self.attack_overlay = attack_overlay
-		if damage_overlay != None:
+		if damage_overlay is not None:
 			self.damage_overlay = damage_overlay
-		if special_overlay != None:
+		if special_overlay is not None:
 			self.special_overlay = special_overlay
-		if landing_dust_overlay != None:
+		if landing_dust_overlay is not None:
 			self.landing_dust_overlay = landing_dust_overlay
-		if lift_off_dust_overlay != None:
+		if lift_off_dust_overlay is not None:
 			self.lift_off_dust_overlay = lift_off_dust_overlay
 
 class _ImagePropertyCoder:
@@ -239,4 +241,4 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "images.dat"
 
 	def get_entry(self, index): # type: (int) -> Image
-		return super(ImagesDAT, self).get_entry(index)
+		return cast(Image, super(ImagesDAT, self).get_entry(index))

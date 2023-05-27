@@ -416,7 +416,7 @@ class PySPK(MainWindow):
 		self.stars_tab.update_selection()
 
 	# def edit_star_settings(self, star=None):
-	# 	if star == None:
+	# 	if star is None:
 	# 		star = self.selected_stars[0]
 	# 	if star and star.widget:
 	# 		StarSettings(self, star)
@@ -451,14 +451,14 @@ class PySPK(MainWindow):
 		if button_event == MOUSE_DOWN:
 			self.selecting_start = (event.x,event.y)
 		elif button_event == MOUSE_MOVE:
-			if self.item_selecting_box == None:
+			if self.item_selecting_box is None:
 				self.item_selecting_box = self.skyCanvas.create_rectangle(event.x,event.y, event.x,event.y, outline='#FF0000')
 			else:
 				self.skyCanvas.itemconfig(self.item_selecting_box, state=NORMAL)
 			self.skyCanvas.coords(self.item_selecting_box, self.selecting_start[0],self.selecting_start[1], event.x,event.y)
 		else:
 			x,y = event.x,event.y
-			if self.selecting_start != None:
+			if self.selecting_start is not None:
 				x,y = self.selecting_start
 			self.skyCanvas.itemconfig(self.item_selecting_box, state=HIDDEN)
 			items = self.skyCanvas.find_overlapping(x,y, event.x,event.y)
@@ -580,7 +580,7 @@ class PySPK(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[FileType.spk()])
 				if not file:
 					return

@@ -123,7 +123,7 @@ class StringEditor(PyMSDialog):
 					self.save()
 				else:
 					self.saveas()
-		if file == None:
+		if file is None:
 			file = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[FileType.tbl()])
 		if file:
 			tbl = TBL.TBL()
@@ -151,7 +151,7 @@ class StringEditor(PyMSDialog):
 		self.open(Assets.mpq_file_path('rez', 'stat_txt.tbl'))
 
 	def save(self, key=None, file=None):
-		if file == None:
+		if file is None:
 			file = self.parent.stattxt()
 		try:
 			self.tbl.compile(file)

@@ -126,7 +126,7 @@ class FindDialog(PyMSDialog):
 		except:
 			s = 0
 		s = StringEditor.StringEditor(self, 'Select a String', True, s)
-		if s.result != None:
+		if s.result is not None:
 			self.stringid.set(s.result)
 
 	def find(self, _=None):

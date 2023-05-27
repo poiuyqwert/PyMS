@@ -390,7 +390,7 @@ class PreviewerDialog(PyMSDialog):
 		self.drawpreview()
 
 	def drawpreview(self):
-		if self.previewnext != self.previewing or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
+		if self.previewnext != self.previewing or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
 				self.previewing = list(self.previewnext)

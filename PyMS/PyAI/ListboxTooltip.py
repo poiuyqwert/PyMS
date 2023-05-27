@@ -6,7 +6,7 @@ from ..Utilities.UIKit import *
 
 class ListboxTooltip(Tooltip):
 	def __init__(self, parent, font=None, delay=750, press=False):
-		if font == None:
+		if font is None:
 			font = Font.fixed()
 		Tooltip.__init__(self, parent, '', font, delay, press)
 		self.index = None

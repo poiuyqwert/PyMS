@@ -29,7 +29,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 import os, re, math
 
 def megatile_to_photo(t, m=None):
-	if m != None:
+	if m is not None:
 		try:
 			d = t.vx4.graphics[m]
 		except:
@@ -209,17 +209,17 @@ class Tileset:
 		name = os.path.basename(cv5)
 		if name.endswith(os.extsep + 'cv5'):
 			name = name[:-4]
-		if vf4 == None:
+		if vf4 is None:
 			vf4 = os.path.join(path, '%s%svf4' % (name,os.extsep))
-		if vx4 == None:
+		if vx4 is None:
 			expanded = 'ex' if self.vx4.expanded else ''
 			vx4 = os.path.join(path, '%s%svx4%s' % (name,os.extsep,expanded))
-		if vr4 == None:
+		if vr4 is None:
 			vr4 = os.path.join(path, '%s%svr4' % (name,os.extsep))
 		dddir = os.path.join(path, name)
-		if dddata == None:
+		if dddata is None:
 			dddata = os.path.join(dddir, 'dddata%sbin' % os.extsep)
-		if wpe == None:
+		if wpe is None:
 			wpe = os.path.join(path, '%s%swpe' % (name,os.extsep))
 		self.cv5.save_file(cv5)
 		self.vf4.save_file(vf4)
@@ -499,9 +499,9 @@ class Tileset:
 		else:
 			close = False
 			file = path_or_file
-		if tiletype == TILETYPE_GROUP and self.cv5_path != None:
+		if tiletype == TILETYPE_GROUP and self.cv5_path is not None:
 			file.write("# Exported from %s\n" % self.cv5_path)
-		elif tiletype == TILETYPE_MEGA and self.vf4_path != None:
+		elif tiletype == TILETYPE_MEGA and self.vf4_path is not None:
 			file.write("# Exported from %s\n" % self.vf4_path)
 		groups_export_index = options.get('groups_export_index',True)
 		groups_export_buildable = options.get('groups_export_buildable',True)
@@ -698,7 +698,7 @@ MegaTile:""" % id)
 				importing[-1][2][index] = int(m.group(2)) # TODO: storage limits
 			elif tiletype == TILETYPE_MEGA:
 				if line == 'MegaTile:':
-					if len(importing) and all(flag == None for flag in importing[-1]):
+					if len(importing) and all(flag is None for flag in importing[-1]):
 						raise PyMSError('Importing', 'Previous MegaTile is empty.', last_line-len(lines), line)
 					importing.append([None]*4)
 					continue
@@ -728,7 +728,7 @@ MegaTile:""" % id)
 					raise PyMSError('Importing', 'Unknown line format, expected a setting header (Height, Walkability, Block Sight, or Ramp).', last_line-len(lines), line)
 		if not len(importing):
 			raise PyMSError('Importing', 'Nothing to import.')
-		if len(importing) and all(flag == None for flag in importing[-1]):
+		if len(importing) and all(flag is None for flag in importing[-1]):
 			raise PyMSError('Importing', 'Last %s is empty.' % (''))
 		repeater = options.get('repeater', setting_import_extras_ignore)
 		setting_count = len(importing)
@@ -736,7 +736,7 @@ MegaTile:""" % id)
 		if tiletype == TILETYPE_GROUP:
 			for tile_n,id in enumerate(ids):
 				settings_n = repeater(setting_count, tile_n, tile_count)
-				if settings_n == None:
+				if settings_n is None:
 					break
 				doodad,line_n,_ = importing[settings_n]
 				if doodad and id < 1024:
@@ -745,31 +745,31 @@ MegaTile:""" % id)
 					raise PyMSError('Importing', 'Attempting to import TileGroup onto DoodadGroup %s' % id, line_n)
 		for tile_n,id in enumerate(ids):
 			settings_n = repeater(setting_count, tile_n, tile_count)
-			if settings_n == None:
+			if settings_n is None:
 				break
 			data = importing[settings_n]
 			if tiletype == TILETYPE_GROUP:
 				_,_,data = data
 				for n in range(13):
-					if data[n] != None:
+					if data[n] is not None:
 						self.cv5.groups[id][n] = data[n]
 			else:
 				for mini_n in range(16):
 					flags = self.vf4.flags[id][mini_n]
-					if data[0] != None and data[0][mini_n] != None:
+					if data[0] is not None and data[0][mini_n] is not None:
 						flags &= ~(HEIGHT_MID | HEIGHT_HIGH)
 						flags |= data[0][mini_n]
-					if data[1] != None and data[1][mini_n] != None:
+					if data[1] is not None and data[1][mini_n] is not None:
 						if data[1][mini_n]:
 							flags |= 1
 						else:
 							flags &= ~1
-					if data[2] != None and data[2][mini_n] != None:
+					if data[2] is not None and data[2][mini_n] is not None:
 						if data[2][mini_n]:
 							flags |= 8
 						else:
 							flags &= ~8
-					if data[3] != None and data[3][mini_n] != None:
+					if data[3] is not None and data[3][mini_n] is not None:
 						if data[3][mini_n]:
 							flags |= 16
 						else:

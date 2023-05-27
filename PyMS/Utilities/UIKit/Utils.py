@@ -9,7 +9,7 @@ import re as _re
 RE_GEOMETRY = _re.compile(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?')
 def parse_geometry(geometry): # type: (str) -> tuple[int,int, int,int, bool]
 	match = RE_GEOMETRY.match(geometry)
-	return tuple(None if v == None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
+	return tuple(None if v is None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
 
 def parse_scrollregion(scrollregion): # type: (str) -> tuple[int, int]
 	return tuple(int(v) for v in scrollregion.split(' '))

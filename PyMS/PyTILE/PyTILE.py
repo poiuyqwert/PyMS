@@ -746,7 +746,7 @@ class PyTILE(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.tileset.select_open_file(self, title='Open Complete Tileset', filetypes=[FileType.cv5()])
 				if not file:
 					return

@@ -17,7 +17,7 @@ class FloatVar(IntegerVar):
 			s = self.get(True)
 			if s:
 				try:
-					if self.range[0] != None and self.range[0] >= 0 and self.get(True).startswith('-'):
+					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
 						raise Exception()
 					isfloat = self.get(True)
 					s = self.get()
@@ -34,14 +34,14 @@ class FloatVar(IntegerVar):
 				except:
 					s = self.lastvalid
 				else:
-					if self.range[0] != None and s < self.range[0]:
+					if self.range[0] is not None and s < self.range[0]:
 						s = self.range[0]
-					elif self.range[1] != None and s > self.range[1]:
+					elif self.range[1] is not None and s > self.range[1]:
 						s = self.range[1]
 				self.set(s)
 				if self.callback:
 					self.callback(s)
-			elif self.range[0] != None:
+			elif self.range[0] is not None:
 				s = self.range[0]
 			else:
 				s = self.defaultval

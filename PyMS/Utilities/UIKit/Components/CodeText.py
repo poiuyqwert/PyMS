@@ -216,7 +216,7 @@ class CodeText(Frame):
 				if self.indent():
 					self.setedit()
 				return
-			if self.acallback != None and self.acallback():
+			if self.acallback is not None and self.acallback():
 				self.setedit()
 				return
 		elif self.taboverride and text in self.taboverride and self.last_delete:
@@ -262,11 +262,11 @@ class CodeText(Frame):
 			self.afterid = self.after(1, self.docolor)
 
 	def update_insert(self):
-		if self.icallback != None:
+		if self.icallback is not None:
 			self.icallback()
 
 	def update_selection(self):
-		if self.scallback != None:
+		if self.scallback is not None:
 			self.scallback()
 
 	def dispatch(self, cmd, *args):

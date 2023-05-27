@@ -7,7 +7,7 @@ class SettingsTab(NotebookTab):
 		NotebookTab.__init__(self, notebook)
 		self.settings_views = []
 		# TODO: Remove compat once SettingsDialog rewritten
-		if setdlg_compat == None:
+		if setdlg_compat is None:
 			self.setdlg_compat = notebook.parent
 		else:
 			self.setdlg_compat = setdlg_compat

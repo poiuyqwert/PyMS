@@ -47,7 +47,7 @@ class Tracer(object):
 	def _present(self):
 		if self.creating_window:
 			return
-		if self.window == None:
+		if self.window is None:
 			self.creating_window = True
 			def present():
 				presenter = self._find_presenter()

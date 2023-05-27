@@ -55,7 +55,7 @@ class LayerRow(Frame):
 			self.lockvar.set(self.lockvar.get() & ~(1 << self.layer))
 
 	def hide(self):
-		if self.hide_widget == None:
+		if self.hide_widget is None:
 			self.hide_widget = Frame(self)
 		self.hide_widget.place(in_=self, relwidth=1, relheight=1)
 

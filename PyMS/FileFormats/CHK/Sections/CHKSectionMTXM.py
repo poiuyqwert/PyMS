@@ -21,7 +21,7 @@ class CHKSectionMTXM(CHKSection):
 		self.raw_map = data
 	
 	def process_data(self):
-		if self.map != None:
+		if self.map is not None:
 			return
 		self.map = []
 		dims = self.chk.get_section(CHKSectionDIM.NAME)

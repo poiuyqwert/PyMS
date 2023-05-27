@@ -111,7 +111,7 @@ class SoundsTab(DATTab):
 			self.check_used_by_references()
 
 	def changesound(self, n=None):
-		if n == None:
+		if n is None:
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)

@@ -6,7 +6,7 @@ class PyMSError(Exception):
 		self.type = type
 		self.error = error
 		self.line = line
-		if self.line != None:
+		if self.line is not None:
 			self.line += 1
 		self.code = code
 		self.warnings = warnings
@@ -24,7 +24,7 @@ class PyMSError(Exception):
 		from .utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
-			if self.code != None:
+			if self.code is not None:
 				r += fit('    Line %s: ' % self.line, self.code)
 			else:
 				r += '    Line %s' % self.line

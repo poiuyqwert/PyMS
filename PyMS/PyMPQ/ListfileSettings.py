@@ -4,7 +4,7 @@ from ..Utilities import Assets
 
 class ListfileSettings(Frame):
 	def __init__(self, parent, setdlg=None):
-		if setdlg == None:
+		if setdlg is None:
 			self.setdlg = parent.parent
 		else:
 			self.setdlg = setdlg

@@ -195,7 +195,7 @@ class PyLO(MainWindow):
 		self.framesupdate()
 
 	def updatescroll(self):
-		if self.overlayframe != None and self.overlaygrp != None:
+		if self.overlayframe is not None and self.overlaygrp is not None:
 			frames = float(self.overlaygrp.frames)
 			step = 1 / frames
 			self.framescroll.set(self.overlayframe*step, (self.overlayframe+1)*step)
@@ -296,7 +296,7 @@ class PyLO(MainWindow):
 			b = self.previewing[0] + 1
 		if self.overlaygrp:
 			om = self.overlaygrp.frames
-		if self.overlayframe != None:
+		if self.overlayframe is not None:
 			o = self.overlayframe + 1
 		self.baseframes.set('Base Frame: %s / %s' % (b,bm))
 		self.overlayframes.set('Overlay Frame: %s / %s' % (o,om))
@@ -320,7 +320,7 @@ class PyLO(MainWindow):
 			self.previewing = None
 
 	def grp(self, f, t):
-		if f != None:
+		if f is not None:
 			if not f in self.grp_cache[t]:
 				try:
 					self.grp_cache[t][f] = frame_to_photo(self.unitpal.palette, [self.basegrp,self.overlaygrp][t], f, True, False)
@@ -381,7 +381,7 @@ class PyLO(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.lo.select_open_file(self, title='Open LO', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
 				if not file:
 					return
@@ -468,19 +468,19 @@ class PyLO(MainWindow):
 		try:
 			warnings = i.interpret(self)
 		except PyMSError as e:
-			if e.line != None:
+			if e.line is not None:
 				self.text.see('%s.0' % e.line)
 				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
 			if e.warnings:
 				for w in e.warnings:
-					if w.line != None:
+					if w.line is not None:
 						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
 			ErrorDialog(self, e)
 			return
 		if warnings:
 			c = False
 			for w in warnings:
-				if w.line != None:
+				if w.line is not None:
 					if not c:
 						self.text.see('%s.0' % w.line)
 						c = True

@@ -143,12 +143,12 @@ class Test_SFMPQ_Open(unittest.TestCase):
 	def test_read_file(self):
 		mpq = MPQ.SFMPQ(resource_path('test.mpq', __file__))
 		with mpq.open():
-			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), 'spanish')
+			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), b'spanish')
 
 	def test_read_file_no_locale_has_neutral(self):
 		mpq = MPQ.SFMPQ(resource_path('test.mpq', __file__))
 		with mpq.open():
-			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.german), 'english')
+			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.german), b'english')
 
 	def test_read_file_no_locale_no_neutral(self):
 		mpq = MPQ.SFMPQ(resource_path('test.mpq', __file__))
@@ -207,7 +207,7 @@ class Test_SFMPQ_Create(unittest.TestCase):
 		with mpq.create():
 			mpq.add_file(resource_path('listfile.txt', __file__), 'test.txt')
 			self.assertTrue(mpq.has_file('test.txt'))
-			self.assertEqual(mpq.read_file('test.txt'), 'unknown.txt')
+			self.assertEqual(mpq.read_file('test.txt'), b'unknown.txt')
 
 	def test_add_file_locale(self):
 		mpq = MPQ.SFMPQ(self.path)
@@ -215,22 +215,22 @@ class Test_SFMPQ_Create(unittest.TestCase):
 			mpq.add_file(resource_path('listfile.txt', __file__), 'test.txt', MPQ.MPQLocale.spanish)
 			self.assertFalse(mpq.has_file('test.txt'))
 			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.spanish))
-			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), 'unknown.txt')
+			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), b'unknown.txt')
 
 	def test_add_data(self):
 		mpq = MPQ.SFMPQ(self.path)
 		with mpq.create():
-			mpq.add_data('test', 'test.txt')
+			mpq.add_data(b'test', 'test.txt')
 			self.assertTrue(mpq.has_file('test.txt'))
-			self.assertEqual(mpq.read_file('test.txt'), 'test')
+			self.assertEqual(mpq.read_file('test.txt'), b'test')
 
 	def test_add_data_locale(self):
 		mpq = MPQ.SFMPQ(self.path)
 		with mpq.create():
-			mpq.add_data('test', 'test.txt', MPQ.MPQLocale.spanish)
+			mpq.add_data(b'test', 'test.txt', MPQ.MPQLocale.spanish)
 			self.assertFalse(mpq.has_file('test.txt'))
 			self.assertTrue(mpq.has_file('test.txt', MPQ.MPQLocale.spanish))
-			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), 'test')
+			self.assertEqual(mpq.read_file('test.txt', MPQ.MPQLocale.spanish), b'test')
 
 	def test_rename(self):
 		mpq = MPQ.SFMPQ(self.path)

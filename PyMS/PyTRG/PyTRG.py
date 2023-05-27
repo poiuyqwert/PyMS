@@ -211,7 +211,7 @@ class PyTRG(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
 				if not file:
 					return
@@ -309,19 +309,19 @@ class PyTRG(MainWindow):
 		try:
 			warnings = i.interpret(self)
 		except PyMSError as e:
-			if e.line != None:
+			if e.line is not None:
 				self.text.see('%s.0' % e.line)
 				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
 			if e.warnings:
 				for w in e.warnings:
-					if w.line != None:
+					if w.line is not None:
 						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
 			ErrorDialog(self, e)
 			return
 		if warnings:
 			c = False
 			for w in warnings:
-				if w.line != None:
+				if w.line is not None:
 					if not c:
 						self.text.see('%s.0' % w.line)
 						c = True
@@ -399,12 +399,12 @@ class PyTRG(MainWindow):
 			self.text.insert(s, v)
 			self.text.tag_remove('Selection', '1.0', END)
 			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] == None:
+			if self.complete[0] is None:
 				self.complete = [t, 1, s, se]
 			else:
 				self.complete[1] += 1
 				self.complete[3] = se
-		if self.complete[0] != None:
+		if self.complete[0] is not None:
 			t,f,s,e = self.complete
 		else:
 			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
@@ -449,7 +449,7 @@ class PyTRG(MainWindow):
 				if f < len(matches):
 					docomplete(s,e,matches[f],t)
 					self.text.taboverride = ' (,):'
-				elif self.complete[0] != None:
+				elif self.complete[0] is not None:
 					docomplete(s,e,t,t)
 					self.complete[1] = 0
 				r = True

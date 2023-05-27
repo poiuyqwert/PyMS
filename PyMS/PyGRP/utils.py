@@ -23,7 +23,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 	else:
 		bmpname = os.path.join(path,os.extsep.join(os.path.basename(grp).split(os.extsep)[:-1]))
 	out = BMP.BMP(pal.palette)
-	if frames == None:
+	if frames is None:
 		frames = list(range(inp.frames))
 	n = 0
 	for f,frame in enumerate(inp.images):

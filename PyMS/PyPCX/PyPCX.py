@@ -127,7 +127,7 @@ class PyPCX(MainWindow):
 	def open(self, key=None, file=None):
 		if self.unsaved():
 			return
-		if file == None:
+		if file is None:
 			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=[FileType.pcx()])
 			if not file:
 				return

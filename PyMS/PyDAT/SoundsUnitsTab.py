@@ -176,7 +176,7 @@ class SoundsUnitsTab(DATUnitsTab):
 			(entry.yes_sound_end, self.yes_sound_end, (self.yes_sound_end_entry_widget, self.yes_sound_end_dropdown_widget, self.yes_sound_end_button_widget))
 		)
 		for (sound, variable, widgets) in fields:
-			has_sound = sound != None
+			has_sound = sound is not None
 			variable.set(sound if has_sound else 0)
 			state = NORMAL if has_sound else DISABLED
 			for widget in widgets:
@@ -184,28 +184,28 @@ class SoundsUnitsTab(DATUnitsTab):
 
 	def save_data(self, entry):
 		edited = False
-		if entry.ready_sound != None and self.ready_sound.get() != entry.ready_sound:
+		if entry.ready_sound is not None and self.ready_sound.get() != entry.ready_sound:
 			entry.ready_sound = self.ready_sound.get()
 			edited = True
 
-		if entry.what_sound_start != None and self.what_sound_start.get() != entry.what_sound_start:
+		if entry.what_sound_start is not None and self.what_sound_start.get() != entry.what_sound_start:
 			entry.what_sound_start = self.what_sound_start.get()
 			edited = True
-		if entry.what_sound_end != None and self.what_sound_end.get() != entry.what_sound_end:
+		if entry.what_sound_end is not None and self.what_sound_end.get() != entry.what_sound_end:
 			entry.what_sound_end = self.what_sound_end.get()
 			edited = True
 
-		if entry.pissed_sound_start != None and self.pissed_sound_start.get() != entry.pissed_sound_start:
+		if entry.pissed_sound_start is not None and self.pissed_sound_start.get() != entry.pissed_sound_start:
 			entry.pissed_sound_start = self.pissed_sound_start.get()
 			edited = True
-		if entry.pissed_sound_end != None and self.pissed_sound_end.get() != entry.pissed_sound_end:
+		if entry.pissed_sound_end is not None and self.pissed_sound_end.get() != entry.pissed_sound_end:
 			entry.pissed_sound_end = self.pissed_sound_end.get()
 			edited = True
 
-		if entry.yes_sound_start != None and self.yes_sound_start.get() != entry.yes_sound_start:
+		if entry.yes_sound_start is not None and self.yes_sound_start.get() != entry.yes_sound_start:
 			entry.yes_sound_start = self.yes_sound_start.get()
 			edited = True
-		if entry.yes_sound_end != None and self.yes_sound_end.get() != entry.yes_sound_end:
+		if entry.yes_sound_end is not None and self.yes_sound_end.get() != entry.yes_sound_end:
 			entry.yes_sound_end = self.yes_sound_end.get()
 			edited = True
 

@@ -296,7 +296,7 @@ class WidgetNode:
 					else:
 						self.item_dialog = self.toplevel.widgetCanvas.create_image(x,y, image=self.dialog_image, anchor=anchor)
 						reorder = True
-		if self.dialog_image == None and self.item_dialog:
+		if self.dialog_image is None and self.item_dialog:
 			self.toplevel.widgetCanvas.delete(self.item_dialog)
 			self.item_dialog = None
 		return reorder
@@ -319,7 +319,7 @@ class WidgetNode:
 		SHOW_HOVER_SMKS = self.toplevel.show_hover_smks.get()
 		showing = []
 		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk and self.visible():
-			if self.smks == None:
+			if self.smks is None:
 				self.smks = {}
 			check = self.widget.smk
 			while check:
@@ -329,7 +329,7 @@ class WidgetNode:
 							smk = SMK.SMK()
 							smk.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + check.filename))
 							delay = int(1000 / float(smk.fps))
-							if self.frame_delay == None:
+							if self.frame_delay is None:
 								self.frame_delay = delay
 							else:
 								self.frame_delay = min(self.frame_delay,delay)
@@ -372,7 +372,7 @@ class WidgetNode:
 		SHOW_IMAGES = self.toplevel.show_images.get()
 		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.visible() and self.widget.string:
 			photo_change = False
-			if self.photo == None:
+			if self.photo is None:
 				try:
 					pcx = PCX.PCX()
 					pcx.load_file(self.toplevel.mpqhandler.get_file('MPQ:' + self.widget.string))
@@ -399,7 +399,7 @@ class WidgetNode:
 		reorder = False
 		SHOW_TEXT = self.toplevel.show_text.get()
 		if SHOW_TEXT and self.widget and self.widget.display_text() and self.visible():
-			if self.string == None:
+			if self.string is None:
 				if self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
 					font = self.toplevel.font10
 				elif self.widget.flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
@@ -471,7 +471,7 @@ class WidgetNode:
 	def update_text_bounds(self):
 		reorder = False
 		SHOW_TEXT_BOUNDS = self.toplevel.show_bounds_text.get()
-		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() != None:
+		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() is not None:
 			x1,y1,x2,y2 = self.text_box()
 			if self.item_text_bounds:
 				self.toplevel.widgetCanvas.coords(self.item_text_bounds, x1,y1, x2,y2)

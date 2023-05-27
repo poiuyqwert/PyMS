@@ -34,13 +34,13 @@ class EntryDropDown(Frame):
 			index = self.value_to_index_map[value]
 		elif None in self.value_to_index_map:
 			index = self.value_to_index_map[None]
-		if index == None:
+		if index is None:
 			self.variable.set(self.index_to_value_map[self.dropdown_variable.get()])
 		else:
 			self.dropdown_variable.set(index)
 
 	def _dropdown_chosen(self, index):
-		if self.index_to_value_map[index] == None:
+		if self.index_to_value_map[index] is None:
 			return
 		self.variable.set(self.index_to_value_map[index])
 

@@ -32,7 +32,7 @@ class DATFormat(object):
 	def file_size(self, expanded_entry_count=None): # type: (int | None) -> int
 		size = 0
 		for prop in self.properties:
-			size += prop.total_size(expanded_entry_count or self.entries, expanded_entry_count != None)
+			size += prop.total_size(expanded_entry_count or self.entries, expanded_entry_count is not None)
 		return size
 
 	def get_property(self, name): # type: (str) -> (DATProperty | None)

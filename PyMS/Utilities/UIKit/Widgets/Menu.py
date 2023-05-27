@@ -42,7 +42,7 @@ class Menu(_Tk.Menu, Extensions):
 		find = None 
 		if isinstance(underline, str):
 			find = underline
-		elif shortcut != None:
+		elif shortcut is not None:
 			keysym = shortcut.get_keysym()
 			if not keysym:
 				return

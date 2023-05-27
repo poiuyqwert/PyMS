@@ -120,7 +120,7 @@ class SpritesTab(DATTab):
 		self.drawpreview()
 
 	def drawpreview(self, e=None):
-		if self.previewing != self.id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
+		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
 				i = int(self.selentry.get())
@@ -158,7 +158,7 @@ class SpritesTab(DATTab):
 			(entry.selection_circle_offset, self.vertpos, (self.vertentry,)),
 		)
 		for (value, variable, widgets) in fields:
-			has_value = value != None
+			has_value = value is not None
 			variable.set(value if has_value else 0)
 			state = NORMAL if has_value else DISABLED
 			for widget in widgets:
@@ -177,13 +177,13 @@ class SpritesTab(DATTab):
 			entry.is_visible = self.visible.get()
 			self.edited = True
 		
-		if entry.health_bar != None and self.healthbar.get() != entry.health_bar:
+		if entry.health_bar is not None and self.healthbar.get() != entry.health_bar:
 			entry.health_bar = self.healthbar.get()
 			self.edited = True
-		if entry.selection_circle_image != None and self.selcircleentry.get() != entry.selection_circle_image:
+		if entry.selection_circle_image is not None and self.selcircleentry.get() != entry.selection_circle_image:
 			entry.selection_circle_image = self.selcircleentry.get()
 			self.edited = True
-		if entry.selection_circle_offset != None and self.vertpos.get() != entry.selection_circle_offset:
+		if entry.selection_circle_offset is not None and self.vertpos.get() != entry.selection_circle_offset:
 			entry.selection_circle_offset = self.vertpos.get()
 			self.edited = True
 

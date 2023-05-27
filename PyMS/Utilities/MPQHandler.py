@@ -10,7 +10,7 @@ import os
 class MPQHandler(object):
 	def __init__(self, mpq_paths=[], listfiles=None): # type: (list[str], list[str] | None) -> MPQHandler
 		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
-		if listfiles == None:
+		if listfiles is None:
 			self.listfiles = [Assets.data_file_path('Listfile.txt')]
 		else:
 			self.listfiles = listfiles
@@ -85,7 +85,7 @@ class MPQHandler(object):
 	# folder(None)=Get from either, MPQ first, folder second
 	# folder(False)=Get only from MPQ
 	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER):
-		if folder != None:
+		if folder is not None:
 			sources = MPQHandler.GET_FROM_FOLDER if folder else MPQHandler.GET_FROM_MPQ
 		file = BadFile(path)
 		for source in sources:

@@ -302,7 +302,7 @@ def condition_location(trg, decompile, condition, data=None):
 				l = int(data)
 		except:
 			pass
-		if l != None and 0 <= l < 255:
+		if l is not None and 0 <= l < 255:
 			condition[0] = l + 1
 			return
 	raise PyMSError('Parameter',"'%s' is an invalid Location (value must be in the range 0 to 254, or the keyword Anywhere, which is Location 63)" % data)
@@ -337,7 +337,7 @@ def condition_switch(trg, decompile, condition, data=None):
 			l = int(data)
 	except:
 		pass
-	if l != None and -1 < l < 256:
+	if l is not None and -1 < l < 256:
 		condition[6] = l
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid Switch (value must be in the range 0 to 255)" % data)
@@ -397,7 +397,7 @@ def action_string(trg, decompile, action, strings, properties, data=None):
 			s = int(data)
 	except:
 		pass
-	if s != None and s in strings:
+	if s is not None and s in strings:
 		action[1] = s
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid String (value must be a number corrisponding to a string)" % data)
@@ -419,7 +419,7 @@ def action_dstring(trg, decompile, action, strings, properties, data=None):
 			s = int(data)
 	except:
 		pass
-	if s != None and s in strings:
+	if s is not None and s in strings:
 		action[1] = s
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid String (value must be a number corrisponding to a string)" % data)
@@ -465,7 +465,7 @@ def action_location(trg, decompile, action, strings, properties, data=None):
 			l = int(data)
 	except:
 		pass
-	if l != None and 0 <= l < 255:
+	if l is not None and 0 <= l < 255:
 		action[0] = l + 1
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid Location (value must be in the range 0 to 254, or the keyword Anywhere, which is Location 63)" % data)
@@ -487,7 +487,7 @@ def action_destlocation(trg, decompile, action, strings, properties, data=None):
 			l = int(data)
 	except:
 		pass
-	if l != None and 0 <= l < 255:
+	if l is not None and 0 <= l < 255:
 		action[5] = l + 1
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid DestLocation (value must be in the range 0 to 254, or the keyword Anywhere)" % data)
@@ -524,7 +524,7 @@ def action_wav(trg, decompile, action, strings, properties, data=None):
 			s = int(data)
 	except:
 		pass
-	if s != None and s in strings:
+	if s is not None and s in strings:
 		action[2] = s
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid WAV (value must be a number corrisponding to a string)" % data)
@@ -621,7 +621,7 @@ def action_property(trg, decompile, action, strings, properties, data=None):
 			p = int(data)
 	except:
 		pass
-	if p != None and p in properties:
+	if p is not None and p in properties:
 		action[5] = p
 		action[9] ^= 8
 		return
@@ -922,7 +922,7 @@ def new_location(trg, decompile, action, strings, properties, data=None):
 			l = int(data)
 	except:
 		pass
-	if l != None and 0 <= l < 255:
+	if l is not None and 0 <= l < 255:
 		action[0] = l + 1
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid Location (value must be in the range 0 to 254, or the keyword Anywhere)" % data)
@@ -1271,7 +1271,7 @@ def new_locationend(trg, decompile, action, strings, properties, data=None):
 			l = int(data)
 	except:
 		pass
-	if l != None and 0 <= l < 255:
+	if l is not None and 0 <= l < 255:
 		action[5] = l + 1
 		return
 	raise PyMSError('Parameter',"'%s' is an invalid EndLocation (value must be in the range 0 to 254, or the keyword Anywhere, which is Location 63)" % data)
@@ -1687,14 +1687,14 @@ class TRG:
 		if isinstance(stat_txt, TBL.TBL):
 			self.stat_txt = stat_txt
 		else:
-			if stat_txt == None:
+			if stat_txt is None:
 				stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
 			self.stat_txt.load_file(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			ais = aiscript
 		else:
-			if aiscript == None:
+			if aiscript is None:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			ais = AIBIN.AIBIN(stat_txt=self.stat_txt)
 			ais.load_file(aiscript)
@@ -1861,7 +1861,7 @@ class TRG:
 				if l:
 					line = l.strip().split('#',1)[0]
 					if line:
-						if triggers_type == None:
+						if triggers_type is None:
 							if line == 'MISSION_BRIEFING()':
 								triggers_type = MISSION_BRIEFING
 								continue
@@ -1886,7 +1886,7 @@ class TRG:
 								cmd = match.group(1)
 								dat = match.group(2)
 								if cmd == 'ValidProperties':
-									if properties[id][0] != None:
+									if properties[id][0] is not None:
 										raise PyMSError('Interpreter',"Property '%s' has more then one ValidProperties setting" % id,n,line)
 									properties[id][0] = 0
 									if dat:
@@ -1896,7 +1896,7 @@ class TRG:
 												raise PyMSError('Interpreter',"Property '%s' has an invalid ValidProperties value: '%s'" % (id,param),n,line)
 											properties[id][0] ^= 2 ** unit_properties.index(param)
 								elif cmd == 'ValidUnitData':
-									if properties[id][1] != None:
+									if properties[id][1] is not None:
 										raise PyMSError('Interpreter',"Property '%s' has more then one ValidUnitData setting" % id,n,line)
 									properties[id][1] = 0
 									if dat:
@@ -1909,9 +1909,9 @@ class TRG:
 										if not properties[id][1] & (2 ** n):
 											properties[id][2 + n] = 0
 								elif cmd == 'Properties':
-									if properties[id][0] == None:
+									if properties[id][0] is None:
 										raise PyMSError('Interpreter',"Property '%s' is trying to set the Properties before declaring the ValidProperties" % id,n,line)
-									if properties[id][8] != None:
+									if properties[id][8] is not None:
 										raise PyMSError('Interpreter',"Property '%s' has more then one Properties setting" % id,n,line)
 									properties[id][8] = 0
 									if dat:
@@ -1921,9 +1921,9 @@ class TRG:
 												raise PyMSError('Interpreter',"Property '%s' has an invalid Properties value: '%s'" % (id,param),n,line)
 											properties[id][8] ^= 2 ** unit_properties.index(param)
 								elif cmd in unit_data:
-									if properties[id][1] == None:
+									if properties[id][1] is None:
 										raise PyMSError('Interpreter',"Property '%s' is trying to set some unit data before declaring the ValidUnitData" % id,n,line)
-									if properties[id][unit_data.index(cmd) + 2] != None:
+									if properties[id][unit_data.index(cmd) + 2] is not None:
 										raise PyMSError('Interpreter',"Property '%s' has more then on %s setting" % (id,cmd),n,line)
 									if cmd in ['Owner', 'Resources', 'AmountInHanger', 'Unknown']:
 										try:

@@ -441,7 +441,7 @@ class PyFNT(MainWindow):
 	def new(self, key=None):
 		if not self.unsaved():
 			s = InfoDialog(self,True)
-			if s.size != None:
+			if s.size is not None:
 				self.fnt = FNT()
 				self.fnt.width,self.fnt.height,self.fnt.start = s.width.get(),s.height.get(),s.lowi.get()
 				for _ in range(s.letters.get()):
@@ -457,7 +457,7 @@ class PyFNT(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.fnt.select_open_file(self, title='Open FNT', filetypes=[FileType.fnt()])
 				if not file:
 					return
@@ -530,7 +530,7 @@ class PyFNT(MainWindow):
 		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
 		if file:
 			s = InfoDialog(self)
-			if s.size != None:
+			if s.size is not None:
 				self.status.set('Importing FNT, please wait...')
 				b = BMP()
 				try:

@@ -38,7 +38,7 @@ class HelpDialog(PyMSDialog):
 
 	def load_help_file(self):
 		index = self.treelist.cur_selection()[-1]
-		if index == None:
+		if index is None:
 			return
 		help_file = Assets.help_tree().get_file(self.treelist.index(index))
 		if not help_file:

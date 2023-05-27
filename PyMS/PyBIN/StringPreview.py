@@ -14,7 +14,7 @@ class StringPreview:
 		self.glyphs = None
 
 	def get_glyphs(self):
-		if self.glyphs == None:
+		if self.glyphs is None:
 			self.glyphs = []
 			color = self.default_color
 			for c in self.text:

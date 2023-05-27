@@ -2,6 +2,8 @@
 from . import AbstractDAT
 from . import DATFormat
 
+from typing import cast
+
 class Map(AbstractDAT.AbstractDATEntry):
 	class Property:
 		map_file = 'map_file'
@@ -22,7 +24,7 @@ class Map(AbstractDAT.AbstractDATEntry):
 	def _import_data(self, data):
 		map_file = self._import_property_value(data, Map.Property.map_file)
 
-		if map_file != None:
+		if map_file is not None:
 			self.map_file = map_file
 
 # mapdata.dat file handler
@@ -40,4 +42,4 @@ class CampaignDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "mapdata.dat"
 
 	def get_entry(self, index): # type: (int) -> Map
-		return super(CampaignDAT, self).get_entry(index)
+		return cast(Map, super(CampaignDAT, self).get_entry(index))

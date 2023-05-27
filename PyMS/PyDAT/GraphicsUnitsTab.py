@@ -230,7 +230,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.down.set(entry.unit_extents.down)
 		self.portraitsentry.set(entry.portrait)
 
-		has_addon_positon = entry.addon_position != None
+		has_addon_positon = entry.addon_position is not None
 		self.horizontal.set(entry.addon_position.x if has_addon_positon else 0)
 		self.vertical.set(entry.addon_position.y if has_addon_positon else 0)
 		state = (DISABLED,NORMAL)[has_addon_positon]
@@ -276,7 +276,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			entry.portrait = self.portraitsentry.get()
 			edited = True
 
-		if entry.addon_position != None:
+		if entry.addon_position is not None:
 			if self.horizontal.get() != entry.addon_position.x:
 				entry.addon_position.x = self.horizontal.get()
 				edited = True

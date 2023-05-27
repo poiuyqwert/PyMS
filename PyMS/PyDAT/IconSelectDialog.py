@@ -59,19 +59,19 @@ class IconSelectDialog(PyMSDialog):
 
 	def _icon_count(self):
 		icon_count = self.data_context.cmdicons.frame_count()
-		if self.none_index != None:
+		if self.none_index is not None:
 			icon_count += 1
 		return icon_count
 
 	def _display_index_to_frame_index(self, display_index):
 		frame_index = display_index
-		if self.none_index != None:
+		if self.none_index is not None:
 			frame_index -= 1
 		return frame_index
 
 	def _selected_index_to_display_index(self, selected_index):
 		display_index = selected_index
-		if self.none_index != None:
+		if self.none_index is not None:
 			if display_index == self.none_index:
 				display_index = 0
 			else:
@@ -80,7 +80,7 @@ class IconSelectDialog(PyMSDialog):
 
 	def _display_index_to_selected_index(self, display_index):
 		selected_index = display_index
-		if self.none_index != None:
+		if self.none_index is not None:
 			if selected_index == 0:
 				selected_index = self.none_index
 			else:
@@ -149,7 +149,7 @@ class IconSelectDialog(PyMSDialog):
 		end_index = max(visible_end_index, last_end_index)
 		icon_size = self._icon_size()
 		for index in range(start_index, end_index + 1):
-			if self.none_index != None and index == 0:
+			if self.none_index is not None and index == 0:
 				continue
 			was_visible = (index >= last_start_index and index <= last_end_index)
 			is_visible = (index >= visible_start_index and index <= visible_end_index)
@@ -211,7 +211,7 @@ class IconSelectDialog(PyMSDialog):
 
 	def _select_icon(self, event):
 		display_index = self._coords_to_display_index(event.x, event.y)
-		if display_index == None or display_index < 0 or display_index >= self._icon_count():
+		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			return
 		selected_index = self._display_index_to_selected_index(display_index)
 		if selected_index == self.selected_index:
@@ -226,7 +226,7 @@ class IconSelectDialog(PyMSDialog):
 
 	def _update_status_hover(self, event):
 		display_index = self._coords_to_display_index(event.x, event.y)
-		if display_index == None or display_index < 0 or display_index >= self._icon_count():
+		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			self._clear_status_hover()
 			return
 		selection_index = self._display_index_to_selected_index(display_index)

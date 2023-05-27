@@ -265,7 +265,7 @@ class _WildcardMatcher(_Matcher):
 class _Selector(object):
 	def __init__(self, definition): # type: (str) -> _Selector
 		global _WIDGET_TYPES
-		if _WIDGET_TYPES == None:
+		if _WIDGET_TYPES is None:
 			_resolve_widget_types()
 		self.matchers = [] # type: list[_Matcher]
 		for component in definition.split(' '):

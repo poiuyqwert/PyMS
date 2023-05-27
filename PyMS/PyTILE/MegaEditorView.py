@@ -60,12 +60,12 @@ class MegaEditorView(Frame):
 			return (e.y - 1) / 24 * 4 + (e.x - 1) / 24
 		def click(e):
 			mini = mouse_to_mini(e)
-			if mini != None:
+			if mini is not None:
 				self.last_click = mouse_to_mini(e)
 				self.click_minitile(self.last_click)
 		def move(e):
 			mini = mouse_to_mini(e)
-			if mini != None and mini != self.last_click:
+			if mini is not None and mini != self.last_click:
 				self.last_click = mini
 				self.click_minitile(mini)
 		def release(_):
@@ -73,7 +73,7 @@ class MegaEditorView(Frame):
 			self.toggle_on = None
 		def fill(e):
 			mini = mouse_to_mini(e)
-			if mini != None:
+			if mini is not None:
 				self.fill_minitiles(mini)
 		self.canvas.bind(Mouse.Click_Left, click)
 		self.canvas.bind(Mouse.Drag_Left, move)
@@ -184,7 +184,7 @@ class MegaEditorView(Frame):
 
 	def draw_edit_mode(self):
 		self.canvas.delete('mode')
-		if not self.delegate.tileset or self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id is None:
 			return
 		mode = self.edit_mode.get()
 		if mode == MegaEditorView.Mode.mini:
@@ -222,7 +222,7 @@ class MegaEditorView(Frame):
 			self.mark_edited()
 
 	def click_flag(self, minitile_n, flag):
-		if self.toggle_on == None:
+		if self.toggle_on is None:
 			self.toggle_on = not (self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] & flag)
 		if self.toggle_on:
 			self.delegate.tileset.vf4.flags[self.megatile_id][minitile_n] |= flag
@@ -232,7 +232,7 @@ class MegaEditorView(Frame):
 		self.mark_edited()
 
 	def click_minitile(self, minitile_n):
-		if not self.delegate.tileset or self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id is None:
 			return
 		mode = self.edit_mode.get()
 		if mode == MegaEditorView.Mode.mini:
@@ -272,7 +272,7 @@ class MegaEditorView(Frame):
 		self.mark_edited()
 
 	def fill_minitiles(self, minitile_n):
-		if not self.delegate.tileset or self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id is None:
 			return
 		mode = self.edit_mode.get()
 		if mode == MegaEditorView.Mode.height:
@@ -287,7 +287,7 @@ class MegaEditorView(Frame):
 	def draw_minitiles(self):
 		self.canvas.delete('tile')
 		self.canvas.images = []
-		if not self.delegate.tileset or self.megatile_id == None:
+		if not self.delegate.tileset or self.megatile_id is None:
 			return
 		for n,m in enumerate(self.delegate.tileset.vx4.graphics[self.megatile_id]):
 			self.canvas.images.append(self.delegate.gettile(m))
@@ -298,7 +298,7 @@ class MegaEditorView(Frame):
 		self.draw_edit_mode()
 
 	def load_megatile(self):
-		if self.delegate.tileset and self.megatile_id != None:
+		if self.delegate.tileset and self.megatile_id is not None:
 			self.minitile.set(self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0])
 		else:
 			self.minitile.set(0)
@@ -321,7 +321,7 @@ class MegaEditorView(Frame):
 	def change(self, tiletype, minitile_id):
 		if tiletype == TILETYPE_MINI:
 			self.minitile.set(minitile_id)
-		elif tiletype != None:
+		elif tiletype is not None:
 			return
 		megatile = list(self.delegate.tileset.vx4.graphics[self.megatile_id])
 		minitile = megatile[self.minitile_n]

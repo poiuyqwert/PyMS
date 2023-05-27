@@ -158,7 +158,7 @@ def float_to_str(value, strip_zero_decimals=True, max_decimals=4):
 	result = str(value)
 	if result.endswith('.0') and strip_zero_decimals:
 		result = result[:-2]
-	elif max_decimals != None and '.' in result and len(result.split('.')[-1]) > max_decimals:
+	elif max_decimals is not None and '.' in result and len(result.split('.')[-1]) > max_decimals:
 		result = result[:result.index('.') + max_decimals + 1]
 	return result
 
@@ -196,7 +196,7 @@ def create_temp_file(name, createmode=None):
 		if e.errno != errno.ENOENT:
 			raise
 		mode = createmode
-		if mode == None:
+		if mode is None:
 			mode = ~get_umask()
 		mode &= 0o666
 	os.chmod(temp_file, mode)

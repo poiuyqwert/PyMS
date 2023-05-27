@@ -59,7 +59,7 @@ class VX4:
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
 	def load_file(self, file, expanded=None):
-		if expanded == None and isstr(file):
+		if expanded is None and isstr(file):
 			expanded = (file[-6:].lower() == '.vx4ex')
 		data = load_file(file, 'VX4')
 		struct_size = (64 if expanded else 32)

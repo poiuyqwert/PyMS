@@ -2,8 +2,13 @@
 from .PyMSError import PyMSError
 
 import struct
+from enum import StrEnum
 
-class Endian:
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from typing import Self, BinaryIO
+
+class Endian(StrEnum):
 	native = '@'
 	native_standard = '='
 	little = '<'
@@ -12,7 +17,7 @@ class Endian:
 
 class Type:
 	@staticmethod
-	def format(char, count):
+	def format(char, count): # type: (str, int) -> str
 		if count == 1:
 			return char
 		return '%d%s' % (count, char)
@@ -66,31 +71,31 @@ class Type:
 		return Type.format('c', count)
 
 	@staticmethod
-	def str(count):
-		return Type.format('s', count)
+	def str_pascal(count): # type: (int) -> str
+		return Type.format('p', count)
 
 	@staticmethod
-	def str_pascal(count):
-		return Type.format('p', count)
+	def str(count): # type: (int) -> str
+		return Type.format('s', count)
 
 class Struct(object):
 	_endian = Endian.little
-	_fields = () # ( ('name', 'struct c type'), ... )
+	_fields = () # type: tuple[tuple[str, str], ...]
 
-	_struct = None 
+	_struct = None # type: struct.Struct
 
 	@classmethod
-	def build_struct(cls):
-		if cls._struct == None:
+	def build_struct(cls): # type: () -> None
+		if cls._struct is None:
 			cls._struct = struct.Struct(cls._endian + ''.join(ctype for _,ctype in cls._fields))
 
 	@classmethod
-	def size(cls):
+	def size(cls): # type: () -> int
 		cls.build_struct()
 		return cls._struct.size
 
 	@classmethod
-	def unpack(cls, data, offset=0):
+	def unpack(cls, data, offset=0): # type: (bytes, int) -> Self
 		cls.build_struct()
 		if len(data) < offset + cls._struct.size:
 			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls._struct.size, len(data) - offset))
@@ -101,7 +106,7 @@ class Struct(object):
 		return obj
 
 	@classmethod
-	def unpack_array(cls, data, count, offset=0):
+	def unpack_array(cls, data, count, offset=0): # type: (bytes, int, int) -> list[Self]
 		cls.build_struct()
 		if len(data) < offset + cls._struct.size * count:
 			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls._struct.size * count, len(data) - offset))
@@ -112,7 +117,7 @@ class Struct(object):
 		return array
 
 	@classmethod
-	def unpack_file(cls, file_handle):
+	def unpack_file(cls, file_handle): # type: (BinaryIO) -> Self
 		cls.build_struct()
 		try:
 			data = file_handle.read(cls._struct.size)
@@ -120,7 +125,7 @@ class Struct(object):
 			raise PyMSError('Struct', 'Not enough data (expected %d)' % (cls._struct.size))
 		return cls.unpack(data)
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		result = """<%s.%s struct = '%s'
 """ % (self.__class__.__module__, self.__class__.__name__, self._struct.format)
 		for (name, _) in self._fields:

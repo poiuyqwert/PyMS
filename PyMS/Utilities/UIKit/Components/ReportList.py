@@ -58,7 +58,7 @@ class EditableReportSubList(RichList):
 		self.text.tag_bind(e, Mouse.Click_Right, lambda e,i=e: self.popup(e,i))
 		self.text.tag_bind(e, Shift.Click_Left, lambda e,i=e: self.doselect(i,1))
 		self.text.tag_bind(e, Ctrl.Click_Left, lambda e,i=e: self.doselect(i,2))
-		if tags == None:
+		if tags is None:
 			tags = e
 		elif isstr(tags):
 			tags = '%s %s' % (e,tags)
@@ -119,7 +119,7 @@ class EditableReportSubList(RichList):
 			self.text.tag_remove('Selection', '1.0', END)
 			self.report.scmd()
 			return
-		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel == None) or (t == 2 and self.selectmode != SINGLE):
+		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel is None) or (t == 2 and self.selectmode != SINGLE):
 			if self.selectmode != MULTIPLE and t != 2:
 				self.text.tag_remove('Selection', '1.0', END)
 			if self.selectmode == EXTENDED:
@@ -158,7 +158,7 @@ class EditableReportSubList(RichList):
 		self.editing = True
 		if isinstance(e,int):
 			tag_name = 'entry%s' % self.entries[e]
-		elif e == None:
+		elif e is None:
 			tag_name = [n for n in self.text.tag_names('Selection.first') if n.startswith('entry')][0]
 		else:
 			c = '@%s,%s' % (e.x,e.y)
@@ -227,7 +227,7 @@ class ReportSubList(RichList):
 			index = -1
 		e = 'entry%s' % self.entry
 		self.text.tag_bind(e, Mouse.Click_Left, self.select)
-		if tags == None:
+		if tags is None:
 			tags = e
 		elif isstr(tags):
 			tags = '%s %s' % (e,tags)
@@ -260,7 +260,7 @@ class ReportList(Frame):
 		self.vscroll.pack(side=RIGHT, fill=Y)
 		for n,title in enumerate(columns):
 			l = Frame(self.panes)
-			if title == None:
+			if title is None:
 				b = Button(l, text=' ', state=DISABLED)
 			else:
 				b = Button(l, text=title)
@@ -282,7 +282,7 @@ class ReportList(Frame):
 		self.columns[0][1].select(i)
 
 	def bind(self, event, cb, col=None, btn=False):
-		if col != None:
+		if col is not None:
 			self.columns[col][not btn].bind(event,cb,True)
 		else:
 			for c in self.columns:

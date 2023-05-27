@@ -5,7 +5,7 @@ import platform, uuid
 
 class GAData:
 	def __init__(self, data=None):
-		if data == None:
+		if data is None:
 			self._data = {}
 		else:
 			self._data = data.copy()
@@ -30,11 +30,11 @@ class GAData:
 
 	def set_application(self, name, version=None, appId=None, installerId=None):
 		self[GAField.App.Name] = name
-		if version != None:
+		if version is not None:
 			self[GAField.App.Version] = version
-		if appId != None:
+		if appId is not None:
 			self[GAField.App.ID] = appId
-		if installerId != None:
+		if installerId is not None:
 			self[GAField.App.InstallerID] = installerId
 		return self
 
@@ -49,7 +49,7 @@ class GAHit(GAData):
 	TYPE = None
 
 	def _build_data(self, data):
-		if self.TYPE != None:
+		if self.TYPE is not None:
 			data[GAField.HitType] = self.TYPE
 	def tracking_data(self):
 		data = self._data.copy()
@@ -90,7 +90,7 @@ class GoogleAnalytics(GAData):
 	def set_tracking_id(self, tracking_id):
 		self[GAField.TrackingID] = tracking_id
 	def set_client_id(self, client_id=None):
-		if client_id == None:
+		if client_id is None:
 			client_id = str(uuid.uuid4())
 		self[GAField.ClientID] = client_id
 		return client_id
@@ -121,7 +121,7 @@ class GoogleAnalytics(GAData):
 			raise AttributeError("'%s' is already an attribute so can\'t be registered" % name)
 		self._registered[name] = hit
 		def _execute_registered(args, kwargs, self=self, hit=hit):
-			if kwargs != None:
+			if kwargs is not None:
 				hit = hit.copy()
 				hit.update_data(kwargs)
 			self.track(hit)

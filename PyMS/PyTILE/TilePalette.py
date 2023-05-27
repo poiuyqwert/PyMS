@@ -16,7 +16,7 @@ class TilePalette(PyMSDialog):
 		self.settings = settings
 		self.tiletype = tiletype
 		self.start_selected = []
-		if select != None:
+		if select is not None:
 			if isinstance(select, list):
 				self.start_selected.extend(sorted(select))
 			else:
@@ -125,7 +125,7 @@ class TilePalette(PyMSDialog):
 		self.title(self.get_title())
 
 	def update_state(self):
-		if self.toolbar == None:
+		if self.toolbar is None:
 			return
 		at_max = False
 		if self.tiletype == TILETYPE_GROUP:

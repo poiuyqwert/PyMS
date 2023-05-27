@@ -3,6 +3,10 @@ from . import pkware
 
 from .....Utilities.PyMSError import PyMSError
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from typing import Callable
+
 class AlgorithmID:
 	huffman     = 0x01
 	zlib        = 0x02
@@ -11,6 +15,10 @@ class AlgorithmID:
 	# sparse      = 0x20
 	wave_mono   = 0x40
 	wave_stereo = 0x80
+
+	COMPRESSION_ORDER: list[int]
+	COMPRESSION_ALGORITHM: dict[int, Callable[[bytes], bytes]]
+	DECOMPRESSION_ALGORITHM: dict[int, Callable[[bytes], bytes]]
 
 AlgorithmID.COMPRESSION_ORDER = [
 	# AlgorithmID.sparse,
@@ -29,22 +37,22 @@ AlgorithmID.DECOMPRESSION_ALGORITHM = {
 	AlgorithmID.pkware: pkware.explode
 }
 
-def compress(algorithm_ids, data):
+def compress(algorithm_ids, data): # type: (int, bytes) -> bytes
 	for algorithm_id in AlgorithmID.COMPRESSION_ORDER:
 		if not (algorithm_id & algorithm_ids):
 			continue
 		algorithm = AlgorithmID.COMPRESSION_ALGORITHM.get(algorithm_id)
-		if algorithm == None:
+		if algorithm is None:
 			raise PyMSError('Compression', "Unsupported or invalid algorithm ID '0x%02X'" % algorithm_id)
 		data = algorithm(data)
 	return data
 
-def decompress(algorithm_ids, data):
+def decompress(algorithm_ids, data): # type: (int, bytes) -> bytes
 	for algorithm_id in reversed(AlgorithmID.COMPRESSION_ORDER):
 		if not (algorithm_id & algorithm_ids):
 			continue
 		algorithm = AlgorithmID.DECOMPRESSION_ALGORITHM.get(algorithm_id)
-		if algorithm == None:
+		if algorithm is None:
 			raise PyMSError('Decompression', "Unsupported or invalid algorithm ID '0x%02X'" % algorithm_id)
 		data = algorithm(data)
 	return data

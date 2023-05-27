@@ -254,7 +254,7 @@ class CodeGeneratorDialog(PyMSDialog):
 
 	def insert(self, *_):
 		code = self.generate()
-		if code == None:
+		if code is None:
 			return
 		self.parent.text.insert(INSERT, code)
 		self.ok()
@@ -289,7 +289,7 @@ class CodeGeneratorDialog(PyMSDialog):
 				self.settings['generator'] = {}
 			if not 'presets' in self.settings['generator']:
 				self.settings['generator']['presets'] = []
-			if replace == None:
+			if replace is None:
 				self.settings['generator']['presets'].insert(0, preset)
 			else:
 				self.settings['generator']['presets'][replace] = preset
@@ -315,20 +315,20 @@ class CodeGeneratorDialog(PyMSDialog):
 
 	def preview(self, *_):
 		code = self.generate()
-		if code != None:
+		if code is not None:
 			self.previewing = True
 			self.code.delete(1.0, END)
 			self.code.insert(END, code)
 			self.previewing = False
 
 	def update_list(self, select=None):
-		if select == None and self.listbox.curselection():
+		if select is None and self.listbox.curselection():
 			select = self.listbox.curselection()[0]
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
 		for v in self.variables:
 			self.listbox.insert(END, '$%s = %s' % (v.name, v.generator.description()))
-		if select != None:
+		if select is not None:
 			self.listbox.select_set(select)
 		self.listbox.yview_moveto(y)
 		self.update_states()
@@ -340,12 +340,12 @@ class CodeGeneratorDialog(PyMSDialog):
 		count = None
 		for v in self.variables:
 			c = v.generator.count()
-			if c != None:
-				if count == None:
+			if c is not None:
+				if count is None:
 					count = c
 				else:
 					count = max(count,c)
-		if count == None:
+		if count is None:
 			ErrorDialog(self, PyMSError('Generate','No finite variables to generate with'))
 			return
 		def calculate_variable(variable, values, lookup):

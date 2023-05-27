@@ -88,7 +88,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.parent_tab.dattabs.display('Basic')
 		def view_weapon_override_unit(force_type):
 			unit_id,_ = self.force_weapon_id(force_type)
-			if unit_id == None:
+			if unit_id is None:
 				return
 			self.parent_tab.dattabs.display('Basic')
 			self.toplevel.changeid(unit_id)
@@ -258,7 +258,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
 		text.insert(END, ')')
-		if force_type == FORCETYPE_AIR and override_unit_id != None:
+		if force_type == FORCETYPE_AIR and override_unit_id is not None:
 			text.insert(END, '\n\nUsing weapons from Unit: ')
 			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
 

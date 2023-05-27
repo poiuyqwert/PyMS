@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Upgrade(AbstractDAT.AbstractDATEntry):
 	class Property:
 		mineral_cost_base = 'mineral_cost_base'
@@ -92,29 +94,29 @@ class Upgrade(AbstractDAT.AbstractDATEntry):
 		max_repeats = self._import_property_value(data, Upgrade.Property.max_repeats)
 		broodwar_only = self._import_property_value(data, Upgrade.Property.broodwar_only, _UpgradePropertyCoder.broodwar_only)
 
-		if mineral_cost_base != None:
+		if mineral_cost_base is not None:
 			self.mineral_cost_base = mineral_cost_base
-		if mineral_cost_factor != None:
+		if mineral_cost_factor is not None:
 			self.mineral_cost_factor = mineral_cost_factor
-		if vespene_cost_base != None:
+		if vespene_cost_base is not None:
 			self.vespene_cost_base = vespene_cost_base
-		if vespene_cost_factor != None:
+		if vespene_cost_factor is not None:
 			self.vespene_cost_factor = vespene_cost_factor
-		if research_time_base != None:
+		if research_time_base is not None:
 			self.research_time_base = research_time_base
-		if research_time_factor != None:
+		if research_time_factor is not None:
 			self.research_time_factor = research_time_factor
-		if requirements != None:
+		if requirements is not None:
 			self.requirements = requirements
-		if icon != None:
+		if icon is not None:
 			self.icon = icon
-		if label != None:
+		if label is not None:
 			self.label = label
-		if staredit_race != None:
+		if staredit_race is not None:
 			self.staredit_race = staredit_race
-		if max_repeats != None:
+		if max_repeats is not None:
 			self.max_repeats = max_repeats
-		if broodwar_only != None:
+		if broodwar_only is not None:
 			self.broodwar_only = broodwar_only
 
 class _UpgradePropertyCoder:
@@ -180,4 +182,4 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "upgrades.dat"
 
 	def get_entry(self, index): # type: (int) -> Upgrade
-		return super(UpgradesDAT, self).get_entry(index)
+		return cast(Upgrade, super(UpgradesDAT, self).get_entry(index))

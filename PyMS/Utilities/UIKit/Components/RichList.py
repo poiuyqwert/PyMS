@@ -88,7 +88,7 @@ class RichList(Frame):
 			index = -1
 		e = 'entry%s' % self.entry
 		self.text.tag_bind(e, Mouse.Click_Left, self.select)
-		if tags == None:
+		if tags is None:
 			tags = e
 		elif isstr(tags):
 			tags = '%s %s' % (e,tags)

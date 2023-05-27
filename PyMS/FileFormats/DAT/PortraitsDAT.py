@@ -6,6 +6,7 @@ from . import DATCoders
 from ...Utilities.PyMSError import PyMSError
 
 from collections import OrderedDict
+from typing import cast
 
 class Portrait(object):
 	def __init__(self):
@@ -50,9 +51,9 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 		idle = self._import_property_value(data, Portraits.Property.idle, _PortraitsPropertyCoder.idle)
 		talking = self._import_property_value(data, Portraits.Property.talking, _PortraitsPropertyCoder.talking)
 
-		if idle != None:
+		if idle is not None:
 			self.idle = idle
-		if talking != None:
+		if talking is not None:
 			self.talking = talking
 
 class DATPortraitCoder(DATCoders.DATPropertyCoder):
@@ -116,4 +117,4 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "portdata.dat"
 
 	def get_entry(self, index): # type: (int) -> Portraits
-		return super(PortraitsDAT, self).get_entry(index)
+		return cast(Portraits, super(PortraitsDAT, self).get_entry(index))

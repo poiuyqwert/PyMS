@@ -359,12 +359,12 @@ class PyAI(MainWindow):
 					return self.saveas()
 
 	def edittbl(self, edited=None):
-		if edited == None:
+		if edited is None:
 			return self.tbledited
 		self.tbledited = edited
 
 	def stattxt(self, file=None):
-		if file == None:
+		if file is None:
 			return self.stat_txt
 		self.stat_txt = file
 
@@ -496,7 +496,7 @@ class PyAI(MainWindow):
 			ErrorDialog(self, e)
 			return
 		self.aiscript = ai_path
-		if bw_path != None:
+		if bw_path is not None:
 			self.bwscript = bw_path
 		self.mark_edited(False)
 		self.status.set('Save Successful!')
@@ -953,7 +953,7 @@ class PyAI(MainWindow):
 			MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(external), type=MessageBox.OK)
 
 	def iimport(self, key=None, iimport=None, c=True, parent=None):
-		if parent == None:
+		if parent is None:
 			parent = self
 		if not iimport:
 			iimport = self.settings.latpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
@@ -1063,7 +1063,7 @@ class PyAI(MainWindow):
 	def editflags(self, key=None):
 		id = self.get_entry(self.listbox.curselection()[0])[0]
 		f = FlagEditor(self, self.ai.ais[id][2])
-		if f.flags != None:
+		if f.flags is not None:
 			self.add_undo('flags', [id,self.ai.ais[id][2],f.flags])
 			self.ai.ais[id][2] = f.flags
 			self.resort()

@@ -38,7 +38,7 @@ class _Scanner(object):
 		return self.is_empty() or self.owned
 
 	def is_blank(self):
-		return _Scanner.RE_BLANK.match(self.line) != None
+		return _Scanner.RE_BLANK.match(self.line) is not None
 
 	def end(self):
 		self.offset = len(self.line)-1
@@ -127,7 +127,7 @@ class ContentBlock(LeafBlock):
 	def __init__(self, span=None): # type: (str | Span) -> ContentBlock
 		LeafBlock.__init__(self)
 		self.spans = [] # type: list[Span]
-		if span != None:
+		if span is not None:
 			if not isinstance(span, Span):
 				span = Span(span)
 			self.spans.append(span)

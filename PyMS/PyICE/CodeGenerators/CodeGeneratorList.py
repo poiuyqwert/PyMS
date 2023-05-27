@@ -189,7 +189,7 @@ class CodeGeneratorTypeList(CodeGeneratorType):
 
 	def value(self, lookup_value):
 		n = self.repeater.index(len(self.list), lookup_value('n'))
-		if n == None:
+		if n is None:
 			return ''
 		value = self.list[n]
 		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')

@@ -58,14 +58,14 @@ class CHK:
 		if isinstance(stat_txt, TBL.TBL):
 			self.stat_txt = stat_txt
 		else:
-			if stat_txt == None:
+			if stat_txt is None:
 				stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
 			self.stat_txt.load_file(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			self.aiscript = aiscript
 		else:
-			if aiscript == None:
+			if aiscript is None:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			self.aiscript = AIBIN.AIBIN(stat_txt=self.stat_txt)
 			self.aiscript.load_file(aiscript)
@@ -81,7 +81,7 @@ class CHK:
 		elif sect_class:
 			required = sect_class.REQUIREMENTS.is_required(self, game_mode)
 		sect = self.sections.get(name)
-		if required and sect == None and sect_class:
+		if required and sect is None and sect_class:
 			sect = sect_class(self)
 			self.sections[name] = sect
 		return sect

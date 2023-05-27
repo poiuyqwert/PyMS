@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Sprite(AbstractDAT.AbstractDATEntry):
 	class Property:
 		image = 'image'
@@ -63,23 +65,23 @@ class Sprite(AbstractDAT.AbstractDATEntry):
 
 	def _import_data(self, data):
 		image = self._import_property_value(data, Sprite.Property.image)
-		health_bar = self._import_property_value(data, Sprite.Property.health_bar, allowed=(self.health_bar != None))
+		health_bar = self._import_property_value(data, Sprite.Property.health_bar, allowed=(self.health_bar is not None))
 		unused = self._import_property_value(data, Sprite.Property.unused, _SpritePropertyCoder.unused)
 		is_visible = self._import_property_value(data, Sprite.Property.is_visible, _SpritePropertyCoder.is_visible)
-		selection_circle_image = self._import_property_value(data, Sprite.Property.selection_circle_image, allowed=(self.selection_circle_image != None))
-		selection_circle_offset = self._import_property_value(data, Sprite.Property.selection_circle_offset, allowed=(self.selection_circle_offset != None))
+		selection_circle_image = self._import_property_value(data, Sprite.Property.selection_circle_image, allowed=(self.selection_circle_image is not None))
+		selection_circle_offset = self._import_property_value(data, Sprite.Property.selection_circle_offset, allowed=(self.selection_circle_offset is not None))
 
-		if image != None:
+		if image is not None:
 			self.image = image
-		if health_bar != None:
+		if health_bar is not None:
 			self.health_bar = health_bar
-		if unused != None:
+		if unused is not None:
 			self.unused = unused
-		if is_visible != None:
+		if is_visible is not None:
 			self.is_visible = is_visible
-		if selection_circle_image != None:
+		if selection_circle_image is not None:
 			self.selection_circle_image = selection_circle_image
-		if selection_circle_offset != None:
+		if selection_circle_offset is not None:
 			self.selection_circle_offset = selection_circle_offset
 
 class _SpritePropertyCoder:
@@ -128,4 +130,4 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "sprites.dat"
 
 	def get_entry(self, index): # type: (int) -> Sprite
-		return super(SpritesDAT, self).get_entry(index)
+		return cast(Sprite, super(SpritesDAT, self).get_entry(index))

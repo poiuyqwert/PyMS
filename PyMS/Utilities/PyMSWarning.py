@@ -6,7 +6,7 @@ class PyMSWarning(Exception):
 		self.type = type
 		self.warning = warning
 		self.line = line
-		if self.line != None:
+		if self.line is not None:
 			self.line += 1
 		self.code = code
 		self.extra = extra

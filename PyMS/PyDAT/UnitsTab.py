@@ -50,7 +50,7 @@ class UnitsTab(DATTab):
 	def load_data(self, id=None):
 		if not self.toplevel.data_context.units.dat:
 			return
-		if id != None:
+		if id is not None:
 			self.id = id
 		entry = self.toplevel.data_context.units.dat.get_entry(self.id)
 		self.dattabs.active.load_data(entry)

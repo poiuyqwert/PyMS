@@ -277,7 +277,7 @@ class PyGOT(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.got.select_open_file(self, title='Open GOT', filetypes=[FileType.got()])
 				if not file:
 					return

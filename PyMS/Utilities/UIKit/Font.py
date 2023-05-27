@@ -58,17 +58,17 @@ class Font(_Fonts.Font):
 
 	def __init__(self, family=None, size=None, bold=None, italic=None, underline=None, overstrike=None, name=None, only_existing=False): # type: (str, int, bool, bool, bool, bool, str, bool) -> Font
 		options = {}
-		if family != None:
+		if family is not None:
 			options['family'] = family
-		if size != None:
+		if size is not None:
 			options['size'] = size
-		if bold != None:
+		if bold is not None:
 			options['weight'] = _Fonts.BOLD if bold else _Fonts.NORMAL
-		if italic != None:
+		if italic is not None:
 			options['slant'] = _Fonts.ITALIC if italic else _Fonts.ROMAN
-		if underline != None:
+		if underline is not None:
 			options['underline'] = underline
-		if overstrike != None:
+		if overstrike is not None:
 			options['overstrike'] = overstrike
 		if not name:
 			# In Python2.7 with Tkinter 8.5rev81008 (at least) the auto-generated `name` under the hood is somehow not unique, so we create our own unique name if None is supplied

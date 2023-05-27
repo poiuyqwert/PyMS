@@ -115,7 +115,7 @@ class PyPAL(MainWindow):
 
 	def action_states(self):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('format_known', self.format != None)
+		self.toolbar.tag_enabled('format_known', self.format is not None)
 
 	def popup(self, e, i):
 		if self.palette:
@@ -153,13 +153,13 @@ class PyPAL(MainWindow):
 				self.palette.palette[i] = c[0]
 
 	def copy(self, key=None):
-		if self.palette and self.selected != None:
+		if self.palette and self.selected is not None:
 			self.clipboard_clear()
 			self.clipboard_append('#%02X%02X%02X' % tuple(self.palette.palette[self.selected]))
 
 	def canpaste(self, c=None):
 		try:
-			if c == None:
+			if c is None:
 				c = self.selection_get(selection='CLIPBOARD')
 		except:
 			pass
@@ -169,7 +169,7 @@ class PyPAL(MainWindow):
 				return [int(c,16) for c in m.groups()]
 
 	def paste(self, key=None):
-		if self.palette and self.selected != None:
+		if self.palette and self.selected is not None:
 			try:
 				c = self.selection_get(selection='CLIPBOARD')
 			except:
@@ -202,7 +202,7 @@ class PyPAL(MainWindow):
 			self.status.set('Editing new Palette.')
 			self.mark_edited(False)
 			self.update_title()
-			if self.selected == None:
+			if self.selected is None:
 				self.selected = 0
 				self.select(None,0)
 			self.update()
@@ -211,7 +211,7 @@ class PyPAL(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.select_open_file(self, title='Open Palette', filetypes=Palette.FileType.load_types())
 				if not file:
 					return
@@ -227,7 +227,7 @@ class PyPAL(MainWindow):
 			self.update_title()
 			self.status.set('Load Successful!')
 			self.mark_edited(False)
-			if self.selected == None:
+			if self.selected is None:
 				self.selected = 0
 				self.select(None,0)
 			self.update()

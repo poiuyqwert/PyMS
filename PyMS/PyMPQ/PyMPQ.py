@@ -160,7 +160,7 @@ class PyMPQ(MainWindow):
 		
 		for index,(locale_name,locale) in enumerate(LOCALE_CHOICES):
 			command = None
-			if locale != None:
+			if locale is not None:
 				locale_name += ' [%d]' % locale
 			else:
 				command = self.choose_other_locale
@@ -231,7 +231,7 @@ class PyMPQ(MainWindow):
 	def locale_changed(self, *_):
 		locale_index = self.locale_menu_choice.get()
 		_,locale = LOCALE_CHOICES[locale_index]
-		if locale != None:
+		if locale is not None:
 			self.settings.locale = locale
 		self.update_locale_status()
 
@@ -527,7 +527,7 @@ class PyMPQ(MainWindow):
 			self.select()
 
 	def open(self, key=None, file=None):
-		if file == None:
+		if file is None:
 			file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 			if not file:
 				return

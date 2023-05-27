@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Sound(AbstractDAT.AbstractDATEntry):
 	class Property:
 		sound_file = 'sound_file'
@@ -58,15 +60,15 @@ class Sound(AbstractDAT.AbstractDATEntry):
 		portrait_length_adjust = self._import_property_value(data, Sound.Property.portrait_length_adjust)
 		minimum_volume = self._import_property_value(data, Sound.Property.minimum_volume)
 
-		if sound_file != None:
+		if sound_file is not None:
 			self.sound_file = sound_file
-		if priority != None:
+		if priority is not None:
 			self.priority = priority
-		if flags != None:
+		if flags is not None:
 			self.flags = flags
-		if portrait_length_adjust != None:
+		if portrait_length_adjust is not None:
 			self.portrait_length_adjust = portrait_length_adjust
-		if minimum_volume != None:
+		if minimum_volume is not None:
 			self.minimum_volume = minimum_volume
 
 class _SoundPropertyCoder:
@@ -109,4 +111,4 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "sfxdata.dat"
 
 	def get_entry(self, index): # type: (int) -> Sound
-		return super(SoundsDAT, self).get_entry(index)
+		return cast(Sound, super(SoundsDAT, self).get_entry(index))

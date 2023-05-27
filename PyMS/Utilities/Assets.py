@@ -16,7 +16,7 @@ versions_file_path = _os.path.join(internals_dir, 'versions.json')
 _VERSIONS = None
 def version(program_name): # type: (str) -> str
 	global _VERSIONS
-	if _VERSIONS == None:
+	if _VERSIONS is None:
 		import json
 		with open(versions_file_path, 'r') as f:
 			_VERSIONS = json.load(f)
@@ -197,7 +197,7 @@ class HelpFolder(object):
 			for index, folder in enumerate(self.folders):
 				if path_components[0] == folder.name:
 					sub_index = folder._index(path_components[1:])
-					if sub_index == None:
+					if sub_index is None:
 						return None
 					return '%d.%s' % (index + len(self.files), sub_index)
 		return None
@@ -232,14 +232,14 @@ class HelpFile(object):
 _HELP_TREE = None
 def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
 	global _HELP_TREE 
-	if _HELP_TREE != None and force_update == False:
+	if _HELP_TREE is not None and force_update == False:
 		return _HELP_TREE
 	root = None
 	parents = {} # type: dict[str, HelpFolder]
 	for path, _, filenames in _os.walk(help_dir):
 		folder = HelpFolder(_os.path.split(path)[-1])
 		parents[path] = folder
-		if root == None:
+		if root is None:
 			root = folder
 		else:
 			parent_path,_ = _os.path.split(path)

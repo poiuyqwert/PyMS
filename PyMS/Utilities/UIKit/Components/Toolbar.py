@@ -28,7 +28,7 @@ class Toolbar(Frame):
 
 	# Radiobutton and Checkbutton may not be the same size as a Button, so we calculate the difference to adjust the sizes to match
 	def _calculate_size_adjusts(self):
-		if Toolbar.RADIO_SIZE_ADJUST != None:
+		if Toolbar.RADIO_SIZE_ADJUST is not None:
 			return
 		from ... import Assets
 		icon = Assets.get_image('open')

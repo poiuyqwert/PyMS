@@ -69,12 +69,12 @@ class ThemeSettingView(SettingsView):
 		return theme
 
 	def theme_index(self, theme):
-		if theme == None or not theme in Assets.theme_list():
+		if theme is None or not theme in Assets.theme_list():
 			return 0
 		return 1 + Assets.theme_list().index(theme)
 
 	def default_updated(self, *_):
-		is_default = self.current_theme() == None
+		is_default = self.current_theme() is None
 		if is_default != self.default.get():
 			self.mark_edited()
 		if self.default.get():

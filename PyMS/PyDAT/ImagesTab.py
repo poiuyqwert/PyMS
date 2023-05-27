@@ -211,7 +211,7 @@ class ImagesTab(DATTab):
 		self.shieldentry.set([0,133,2,184][n])
 
 	def drawpreview(self, e=None):
-		if self.previewing != self.id or (self.previewing != None and not self.showpreview.get()) or (self.previewing == None and self.showpreview.get()):
+		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
 				frame = self.toplevel.data_context.get_image_frame(self.id)

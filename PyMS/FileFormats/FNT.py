@@ -74,7 +74,7 @@ COLOR_OVERPOWER = [5,11,20]
 
 def letter_to_photo(palette, letter, color, remap=None, remap_palette=None):
 	i = PILImage.new('RGBA', (len(letter[0]),len(letter)))
-	if remap == None:
+	if remap is None:
 		remap = COLOR_CODES_INGAME
 	if remap_palette:
 		palette = remap_palette
@@ -100,7 +100,7 @@ def fnttobmp(fnt,pal,file=None):
 		for y,yd in enumerate(l):
 			b.image[y].extend(yd)
 	b.width = len(b.image[0])
-	if file == None:
+	if file is None:
 		return b
 	b.save_file(file)
 
@@ -111,7 +111,7 @@ def bmptofnt(bmp,lowi,letters,file=None):
 		f.letters.append([])
 		for y in bmp.image:
 			f.letters[-1].append(y[f.width * l:f.width * (l+1)])
-	if file == None:
+	if file is None:
 		return f
 	f.save_file(file)
 

@@ -41,7 +41,7 @@ class SettingsPanel(Frame):
 	}
 
 	def __init__(self, parent, entries, settings, mpqhandler, setdlg=None):
-		if setdlg == None:
+		if setdlg is None:
 			self.setdlg = parent.parent
 		else:
 			self.setdlg = setdlg

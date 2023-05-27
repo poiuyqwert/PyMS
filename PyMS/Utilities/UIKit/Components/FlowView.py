@@ -186,11 +186,11 @@ class FlowView(Frame):
 		if not view in self.subviews:
 			return
 		name = str(view)
-		if padx != None:
+		if padx is not None:
 			self._subview_configs[name]['padx'] = padx
-		if pady != None:
+		if pady is not None:
 			self._subview_configs[name]['pady'] = pady
-		if weight != None:
+		if weight is not None:
 			self._subview_configs[name]['weight'] = weight
 		self.set_needs_update()
 

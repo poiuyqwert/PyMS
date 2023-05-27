@@ -45,7 +45,7 @@ class IntegerVar(StringVar):
 					s = self.get()
 					# if self._tag:
 					# 	print(s, self.range)
-					if self.range[0] != None and self.range[0] >= 0 and self.get(True).startswith('-'):
+					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
 						# if self._tag:
 						# 	print('at 1')
 						raise Exception()
@@ -58,15 +58,15 @@ class IntegerVar(StringVar):
 					#raise
 					s = self.lastvalid
 				else:
-					if self.range[0] != None and s < self.range[0]:
+					if self.range[0] is not None and s < self.range[0]:
 						# if self._tag:
 						# 	print('at 3')
 						s = self.range[0]
 						refresh = True
-					elif self.range[1] != None and s > self.range[1]:
+					elif self.range[1] is not None and s > self.range[1]:
 						# if self._tag:
 						# 	print('at 4')
-						if self.maxout != None:
+						if self.maxout is not None:
 							s = self.maxout
 						else:
 							s = self.range[1]
@@ -83,7 +83,7 @@ class IntegerVar(StringVar):
 						self.set(s, update_case=IntegerVar.UpdateCase.internal)
 				if self.callback and self.callback_when & self.update_case:
 					self.callback(s)
-			elif self.range[0] != None:
+			elif self.range[0] is not None:
 				s = self.range[0]
 			else:
 				s = self.defaultval
@@ -139,7 +139,7 @@ class IntegerVar(StringVar):
 		# if self._tag:
 		# 	print(value, self.range)
 		min,max = self.range
-		if min != None and min >= 0 and self.get(True).startswith('-'):
+		if min is not None and min >= 0 and self.get(True).startswith('-'):
 			# if self._tag:
 			# 	print('Invalid negative')
 			value = self.lastvalid
@@ -147,14 +147,14 @@ class IntegerVar(StringVar):
 			# if self._tag:
 			# 	print('Exclude')
 			value = self.lastvalid
-		elif min != None and value < min:
+		elif min is not None and value < min:
 			# if self._tag:
 			# 	print('Minimum')
 			value = min
-		elif max != None and value > max:
+		elif max is not None and value > max:
 			# if self._tag:
 			# 	print('Maximum')
-			if self.maxout != None:
+			if self.maxout is not None:
 				value = self.maxout
 			else:
 				value = max

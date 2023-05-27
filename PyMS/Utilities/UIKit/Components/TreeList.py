@@ -46,9 +46,9 @@ class TreeList(Frame):
 		self.entry = 0
 		self.root = TreeGroup('<ROOT>', -1, -1, True)
 		self.entries = {}
-		if closeicon == None:
+		if closeicon is None:
 			closeicon = Assets.get_image('treeclose')
-		if openicon == None:
+		if openicon is None:
 			openicon = Assets.get_image('treeopen')
 		self.icons = [closeicon,openicon]
 
@@ -140,7 +140,7 @@ class TreeList(Frame):
 
 	def highlight(self, index):
 		self.text.tag_remove('Hightlight', '1.0', END)
-		if index == None:
+		if index is None:
 			return
 		node = self.get_node(index)
 		self.text.tag_add('Hightlight',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
@@ -152,7 +152,7 @@ class TreeList(Frame):
 		return s
 
 	def select(self, index, modifier=0):
-		if index == None:
+		if index is None:
 			self.text.tag_remove('Selection', '1.0', END)
 			self.lastsel = None
 			self.text.event_generate(WidgetEvent.Listbox.Select)
@@ -276,7 +276,7 @@ class TreeList(Frame):
 			insert_index = len(parent.children)
 			indices[-1] = insert_index
 		node = None
-		if groupExpanded != None:
+		if groupExpanded is not None:
 			node = TreeGroup(text, parent.depth+1, self.entry, groupExpanded)
 		else:
 			node = TreeNode(text, parent.depth+1, self.entry)

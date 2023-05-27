@@ -135,7 +135,7 @@ class AbstractDAT(object):
 		entry_starts = {} # type: dict[int, int]
 		entry = None # type: dict[str, Any] | None
 		def check_entry():
-			if entry == None:
+			if entry is None:
 				return
 			if len(entry) < 3:
 				raise PyMSError('Import', 'Entry %d is empty' % entry['_id'], line=entry_starts[entry['_id']])
@@ -166,7 +166,7 @@ class AbstractDAT(object):
 				else:
 					value = int(value)
 				# TODO: Validate property, subproperty, value?
-				if subproperty != None:
+				if subproperty is not None:
 					subobject = entry.get(name, {}) # type: dict[str, Any]
 					if not name in entry:
 						entry[name] = subobject
@@ -290,7 +290,7 @@ class AbstractDATEntry(object):
 	def export_data(self, id=None, export_properties=None): # type: (int | None, list[str] | None) -> OrderedDict[str, Any]
 		data = OrderedDict() # type: OrderedDict[str, Any]
 		data["_type"] = self.EXPORT_NAME
-		if id != None:
+		if id is not None:
 			data["_id"] = id
 		self._export_data(export_properties, data)
 		return data
@@ -312,7 +312,7 @@ class AbstractDATEntry(object):
 		pass
 
 	def _export_property_value(self, export_properties, prop, value, data, property_encoder=None): # type: (list[str], str, Any, dict[str, Any], DATPropertyCoder | None) -> None
-		if value == None or (export_properties and not prop in export_properties):
+		if value is None or (export_properties and not prop in export_properties):
 			return
 		if property_encoder:
 			value = property_encoder.encode(value)

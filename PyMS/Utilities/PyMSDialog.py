@@ -62,14 +62,14 @@ class PyMSDialog(Toplevel):
 		self.dismiss()
 
 	def maxsize(self, width=None, height=None):
-		if width and height and self._initial_max_size == None:
+		if width and height and self._initial_max_size is None:
 			self._initial_max_size = Toplevel.maxsize(self)
 		return Toplevel.maxsize(self, width, height)
 
 	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized
 	def is_maximized(self):
 		is_maximized = (self.wm_state() == 'zoomed')
-		if is_maximized and self._initial_max_size != None:
+		if is_maximized and self._initial_max_size is not None:
 			cur_max_width, cur_max_height = self.maxsize()
 			initial_max_width, initial_max_height = self._initial_max_size
 			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)

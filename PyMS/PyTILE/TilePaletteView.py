@@ -13,7 +13,7 @@ class TilePaletteView(Frame):
 		self.selected = []
 		self.last_selection = None # (index, on_or_off)
 		self.sub_selection = 0
-		if select != None:
+		if select is not None:
 			if isinstance(select, list):
 				self.selected.extend(sorted(select))
 			else:
@@ -60,7 +60,7 @@ class TilePaletteView(Frame):
 
 
 	def get_tile_size(self, tiletype=None, group=False):
-		tiletype = self.tiletype if tiletype == None else tiletype
+		tiletype = self.tiletype if tiletype is None else tiletype
 		if tiletype == TILETYPE_GROUP:
 			return [32.0 * (16 if group else 1),33.0]
 		elif tiletype == TILETYPE_MEGA:
@@ -175,7 +175,7 @@ class TilePaletteView(Frame):
 	def select(self, select, sub_select=None, modifier=None, scroll_to=False):
 		if self.multiselect:
 			if modifier == 'shift':
-				if self.last_selection != None:
+				if self.last_selection is not None:
 					last_select,enable = self.last_selection
 					start = min(last_select,select)
 					end = max(last_select,select)
@@ -198,7 +198,7 @@ class TilePaletteView(Frame):
 					self.selected.append(select)
 					self.selected.sort()
 					self.last_selection = (select, True)
-			elif select != None:
+			elif select is not None:
 				if isinstance(select, list):
 					select = sorted(select)
 				else:
@@ -212,7 +212,7 @@ class TilePaletteView(Frame):
 			if isinstance(select, list):
 				select = select[0] if select else 0
 			self.selected = [select]
-			if sub_select != None:
+			if sub_select is not None:
 				self.sub_selection = sub_select
 		self.draw_selections()
 		if scroll_to:

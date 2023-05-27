@@ -25,7 +25,7 @@ class LOCodeText(CodeText):
 		CodeText.__init__(self, parent, ecallback, icallback, state=state)
 
 	def setedit(self):
-		if self.ecallback != None:
+		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
@@ -70,7 +70,7 @@ class LOCodeText(CodeText):
 				m = self.basic.search(chars)
 				while m:
 					for key, value in list(m.groupdict().items()):
-						if value != None:
+						if value is not None:
 							a, b = m.span(key)
 							self.tag_add(key, head + '+%dc' % a, head + '+%dc' % b)
 					m = self.basic.search(chars, m.end())

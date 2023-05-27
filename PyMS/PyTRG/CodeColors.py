@@ -82,7 +82,7 @@ class CodeColors(PyMSDialog):
 	def select(self, e=None, n=None):
 		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
 		s = self.tags[i.replace(' ', '')]
-		if n == None:
+		if n is None:
 			if isinstance(self.info[i], list):
 				t = self.info[i][0].split('\n')
 			else:
@@ -95,19 +95,19 @@ class CodeColors(PyMSDialog):
 				d = ''
 			text += fit(d, t[-1], 35, True)[:-1]
 			self.infotext.set(text)
-			if s['foreground'] == None:
+			if s['foreground'] is None:
 				self.fg.set(0)
 				self.fgcanvas['background'] = '#000000'
 			else:
 				self.fg.set(1)
 				self.fgcanvas['background'] = s['foreground']
-			if s['background'] == None:
+			if s['background'] is None:
 				self.bg.set(0)
 				self.bgcanvas['background'] = '#000000'
 			else:
 				self.bg.set(1)
 				self.bgcanvas['background'] = s['background']
-			self.bold.set(s['font'] != None)
+			self.bold.set(s['font'] is not None)
 		else:
 			v = [self.fg,self.bg,self.bold][n].get()
 			if n == 2:

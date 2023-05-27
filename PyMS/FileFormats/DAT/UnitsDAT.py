@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Unit(AbstractDAT.AbstractDATEntry):
 	class Property:
 		graphics = 'graphics'
@@ -385,7 +387,7 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		graphics = self._import_property_value(data, Unit.Property.graphics)
 		subunit1 = self._import_property_value(data, Unit.Property.subunit1)
 		subunit2 = self._import_property_value(data, Unit.Property.subunit2)
-		infestation = self._import_property_value(data, Unit.Property.infestation, allowed=(self.infestation != None))
+		infestation = self._import_property_value(data, Unit.Property.infestation, allowed=(self.infestation is not None))
 		construction_animation = self._import_property_value(data, Unit.Property.construction_animation)
 		unit_direction = self._import_property_value(data, Unit.Property.unit_direction)
 		shield_enabled = self._import_property_value(data, Unit.Property.shield_enabled)
@@ -411,15 +413,15 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		unit_size = self._import_property_value(data, Unit.Property.unit_size)
 		armor = self._import_property_value(data, Unit.Property.armor)
 		right_click_action = self._import_property_value(data, Unit.Property.right_click_action)
-		ready_sound = self._import_property_value(data, Unit.Property.ready_sound, allowed=(self.ready_sound != None))
+		ready_sound = self._import_property_value(data, Unit.Property.ready_sound, allowed=(self.ready_sound is not None))
 		what_sound_start = self._import_property_value(data, Unit.Property.what_sound_start)
 		what_sound_end = self._import_property_value(data, Unit.Property.what_sound_end)
-		pissed_sound_start = self._import_property_value(data, Unit.Property.pissed_sound_start, allowed=(self.pissed_sound_start != None))
-		pissed_sound_end = self._import_property_value(data, Unit.Property.pissed_sound_end, allowed=(self.pissed_sound_end != None))
-		yes_sound_start = self._import_property_value(data, Unit.Property.yes_sound_start, allowed=(self.yes_sound_start != None))
-		yes_sound_end = self._import_property_value(data, Unit.Property.yes_sound_end, allowed=(self.yes_sound_end != None))
+		pissed_sound_start = self._import_property_value(data, Unit.Property.pissed_sound_start, allowed=(self.pissed_sound_start is not None))
+		pissed_sound_end = self._import_property_value(data, Unit.Property.pissed_sound_end, allowed=(self.pissed_sound_end is not None))
+		yes_sound_start = self._import_property_value(data, Unit.Property.yes_sound_start, allowed=(self.yes_sound_start is not None))
+		yes_sound_end = self._import_property_value(data, Unit.Property.yes_sound_end, allowed=(self.yes_sound_end is not None))
 		staredit_placement_size = self._import_property_value(data, Unit.Property.staredit_placement_size, _UnitPropertyCoder.staredit_placement_size)
-		addon_position = self._import_property_value(data, Unit.Property.addon_position, _UnitPropertyCoder.addon_position, allowed=(self.addon_position != None))
+		addon_position = self._import_property_value(data, Unit.Property.addon_position, _UnitPropertyCoder.addon_position, allowed=(self.addon_position is not None))
 		unit_extents = self._import_property_value(data, Unit.Property.unit_extents, _UnitPropertyCoder.unit_extents)
 		portrait = self._import_property_value(data, Unit.Property.portrait)
 		mineral_cost = self._import_property_value(data, Unit.Property.mineral_cost)
@@ -437,113 +439,113 @@ class Unit(AbstractDAT.AbstractDATEntry):
 		broodwar_unit_flag = self._import_property_value(data, Unit.Property.broodwar_unit_flag)
 		staredit_availability_flags = self._import_property_value(data, Unit.Property.staredit_availability_flags, _UnitPropertyCoder.staredit_availability_flags)
 
-		if graphics != None:
+		if graphics is not None:
 			self.graphics = graphics
-		if subunit1 != None:
+		if subunit1 is not None:
 			self.subunit1 = subunit1
-		if subunit2 != None:
+		if subunit2 is not None:
 			self.subunit2 = subunit2
-		if infestation != None:
+		if infestation is not None:
 			self.infestation = infestation
-		if construction_animation != None:
+		if construction_animation is not None:
 			self.construction_animation = construction_animation
-		if unit_direction != None:
+		if unit_direction is not None:
 			self.unit_direction = unit_direction
-		if shield_enabled != None:
+		if shield_enabled is not None:
 			self.shield_enabled = shield_enabled
-		if shield_amount != None:
+		if shield_amount is not None:
 			self.shield_amount = shield_amount
-		if hit_points != None:
+		if hit_points is not None:
 			self.hit_points = hit_points
-		if elevation_level != None:
+		if elevation_level is not None:
 			self.elevation_level = elevation_level
-		if unknown_flags != None:
+		if unknown_flags is not None:
 			self.unknown_flags = unknown_flags
-		if sublabel != None:
+		if sublabel is not None:
 			self.sublabel = sublabel
-		if comp_ai_idle != None:
+		if comp_ai_idle is not None:
 			self.comp_ai_idle = comp_ai_idle
-		if human_ai_idle != None:
+		if human_ai_idle is not None:
 			self.human_ai_idle = human_ai_idle
-		if return_to_idle != None:
+		if return_to_idle is not None:
 			self.return_to_idle = return_to_idle
-		if attack_unit != None:
+		if attack_unit is not None:
 			self.attack_unit = attack_unit
-		if attack_move != None:
+		if attack_move is not None:
 			self.attack_move = attack_move
-		if ground_weapon != None:
+		if ground_weapon is not None:
 			self.ground_weapon = ground_weapon
-		if max_ground_hits != None:
+		if max_ground_hits is not None:
 			self.max_ground_hits = max_ground_hits
-		if air_weapon != None:
+		if air_weapon is not None:
 			self.air_weapon = air_weapon
-		if max_air_hits != None:
+		if max_air_hits is not None:
 			self.max_air_hits = max_air_hits
-		if ai_internal != None:
+		if ai_internal is not None:
 			self.ai_internal = ai_internal
-		if special_ability_flags != None:
+		if special_ability_flags is not None:
 			self.special_ability_flags = special_ability_flags
-		if target_acquisition_range != None:
+		if target_acquisition_range is not None:
 			self.target_acquisition_range = target_acquisition_range
-		if sight_range != None:
+		if sight_range is not None:
 			self.sight_range = sight_range
-		if armor_upgrade != None:
+		if armor_upgrade is not None:
 			self.armor_upgrade = armor_upgrade
-		if unit_size != None:
+		if unit_size is not None:
 			self.unit_size = unit_size
-		if armor != None:
+		if armor is not None:
 			self.armor = armor
-		if right_click_action != None:
+		if right_click_action is not None:
 			self.right_click_action = right_click_action
-		if ready_sound != None:
+		if ready_sound is not None:
 			self.ready_sound = ready_sound
-		if what_sound_start != None:
+		if what_sound_start is not None:
 			self.what_sound_start = what_sound_start
-		if what_sound_end != None:
+		if what_sound_end is not None:
 			self.what_sound_end = what_sound_end
-		if pissed_sound_start != None:
+		if pissed_sound_start is not None:
 			self.pissed_sound_start = pissed_sound_start
-		if pissed_sound_end != None:
+		if pissed_sound_end is not None:
 			self.pissed_sound_end = pissed_sound_end
-		if yes_sound_start != None:
+		if yes_sound_start is not None:
 			self.yes_sound_start = yes_sound_start
-		if yes_sound_end != None:
+		if yes_sound_end is not None:
 			self.yes_sound_end = yes_sound_end
-		if staredit_placement_size != None:
+		if staredit_placement_size is not None:
 			self.staredit_placement_size = staredit_placement_size
-		if addon_position != None:
+		if addon_position is not None:
 			self.addon_position = addon_position
-		if unit_extents != None:
+		if unit_extents is not None:
 			self.unit_extents = unit_extents
-		if portrait != None:
+		if portrait is not None:
 			self.portrait = portrait
-		if mineral_cost != None:
+		if mineral_cost is not None:
 			self.mineral_cost = mineral_cost
-		if vespene_cost != None:
+		if vespene_cost is not None:
 			self.vespene_cost = vespene_cost
-		if build_time != None:
+		if build_time is not None:
 			self.build_time = build_time
-		if requirements != None:
+		if requirements is not None:
 			self.requirements = requirements
-		if staredit_group_flags != None:
+		if staredit_group_flags is not None:
 			self.staredit_group_flags = staredit_group_flags
-		if supply_provided != None:
+		if supply_provided is not None:
 			self.supply_provided = supply_provided
-		if supply_required != None:
+		if supply_required is not None:
 			self.supply_required = supply_required
-		if space_required != None:
+		if space_required is not None:
 			self.space_required = space_required
-		if space_provided != None:
+		if space_provided is not None:
 			self.space_provided = space_provided
-		if build_score != None:
+		if build_score is not None:
 			self.build_score = build_score
-		if destroy_score != None:
+		if destroy_score is not None:
 			self.destroy_score = destroy_score
-		if unit_map_string != None:
+		if unit_map_string is not None:
 			self.unit_map_string = unit_map_string
-		if broodwar_unit_flag != None:
+		if broodwar_unit_flag is not None:
 			self.broodwar_unit_flag = broodwar_unit_flag
-		if staredit_availability_flags != None:
+		if staredit_availability_flags is not None:
 			self.staredit_availability_flags = staredit_availability_flags
 
 
@@ -882,4 +884,4 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "units.dat"
 
 	def get_entry(self, index): # type: (int) -> Unit
-		return super(UnitsDAT, self).get_entry(index)
+		return cast(Unit, super(UnitsDAT, self).get_entry(index))

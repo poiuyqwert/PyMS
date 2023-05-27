@@ -21,5 +21,5 @@ LOCALE_CHOICES = (
 
 def find_locale_index(find_locale):
 	for index,(_, locale) in enumerate(LOCALE_CHOICES):
-		if find_locale == locale or locale == None:
+		if find_locale == locale or locale is None:
 			return index

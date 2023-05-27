@@ -522,8 +522,8 @@ class PyTBL(MainWindow):
 			self.destroy()
 
 	def destroy(self):
-		if self.gotowindow != None:
+		if self.gotowindow is not None:
 			Toplevel.destroy(self.gotowindow)
-		if self.findwindow != None:
+		if self.findwindow is not None:
 			Toplevel.destroy(self.findwindow)
 		MainWindow.destroy(self)

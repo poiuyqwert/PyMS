@@ -51,7 +51,7 @@ class DATData(object):
 			pass
 		else:
 			self.default_dat = dat
-		if self.dat == None:
+		if self.dat is None:
 			self.new_file()
 		else:
 			self.update_names()

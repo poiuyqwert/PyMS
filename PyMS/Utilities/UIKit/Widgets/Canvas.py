@@ -27,7 +27,7 @@ class Canvas(_Tk.Canvas, Extensions):
 
 		def coords(self, x,y, x2=None,y2=None):
 			x,y = self.canvas.coordinate_adjust(x, y)
-			if x2 != None and y2 != None:
+			if x2 is not None and y2 is not None:
 				x2,y2 = self.canvas.coordinate_adjust(x2, y2)
 			self.canvas.coords(self.item_id, x,y, x2,y2)
 
@@ -125,6 +125,6 @@ class Canvas(_Tk.Canvas, Extensions):
 
 	def coords(self, item_id, x,y, x2=None,y2=None):
 		x,y = self.coordinate_adjust(x, y)
-		if x2 != None and y2 != None:
+		if x2 is not None and y2 is not None:
 			x2,y2 = self.coordinate_adjust(x2, y2)
 		_Tk.Canvas.coords(self, item_id, x,y, x2,y2)

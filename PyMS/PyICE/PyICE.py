@@ -345,7 +345,7 @@ class PyICE(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
 				if not file:
 					return
@@ -394,7 +394,7 @@ class PyICE(MainWindow):
 			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 		if not file:
 			return
-		if parent == None:
+		if parent is None:
 			parent = self
 		ibin = self.create_iscriptbin()
 		try:
@@ -413,7 +413,7 @@ class PyICE(MainWindow):
 		for id in list(ibin.headers.keys()):
 			if id in self.ibin.headers:
 				for o in self.ibin.headers[id][2]:
-					if o != None and o in self.ibin.offsets:
+					if o is not None and o in self.ibin.offsets:
 						self.ibin.remove_code(o,id)
 			self.ibin.headers[id] = ibin.headers[id]
 		for o,i in ibin.offsets.items():

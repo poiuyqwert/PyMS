@@ -35,7 +35,7 @@ class CheckThread:
 				break
 			#print('-----')
 			u = check_dir(self.path, True)
-			if u == None:
+			if u is None:
 				break
 			elif u:
 				# u.append('test')
@@ -44,14 +44,14 @@ class CheckThread:
 		self.thread = None
 
 	def start(self):
-		if self.thread == None:
+		if self.thread is None:
 			self.thread = start_new_thread(self.check_update,(0,))
 		else:
 			self.cont = True
 
 	def end(self):
-		if self.thread != None:
+		if self.thread is not None:
 			self.cont = False
 
 	def is_running(self):
-		return self.thread != None and self.cont
+		return self.thread is not None and self.cont

@@ -337,7 +337,7 @@ class PyBIN(MainWindow):
 		if self.tick_alarm or start:
 			if self.bin:
 				now = int(time.time() * 1000)
-				if self.last_tick == None:
+				if self.last_tick is None:
 					self.last_tick = now
 				dt = now - self.last_tick
 				self.last_tick = now
@@ -350,7 +350,7 @@ class PyBIN(MainWindow):
 				self.tick_alarm = None
 
 	def stop_tick(self):
-		if self.tick_alarm != None:
+		if self.tick_alarm is not None:
 			cancel = self.tick_alarm
 			self.tick_alarm = None
 			self.after_cancel(cancel)
@@ -375,7 +375,7 @@ class PyBIN(MainWindow):
 		parent = self.dialog
 		index = 0
 		if self.selected_node:
-			if self.selected_node.children != None:
+			if self.selected_node.children is not None:
 				parent = self.selected_node
 			else:
 				parent = self.selected_node.parent
@@ -626,7 +626,7 @@ class PyBIN(MainWindow):
 		return not not self.bin
 
 	def has_selected_node(self):
-		return self.selected_node != None
+		return self.selected_node is not None
 
 	def action_states(self):
 		is_file_open = self.is_file_open()
@@ -656,7 +656,7 @@ class PyBIN(MainWindow):
 	def setup_nodes(self):
 		for widget in self.bin.widgets:
 			node = WidgetNode(self, widget)
-			if self.dialog == None:
+			if self.dialog is None:
 				self.dialog = node
 			else:
 				self.dialog.add_child(node)
@@ -678,7 +678,7 @@ class PyBIN(MainWindow):
 		self.widgetTree.delete(ALL)
 		def list_node(index, node):
 			group = None
-			if node.children != None:
+			if node.children is not None:
 				group = True
 			node.index = self.widgetTree.insert(index, node.get_name(), group)
 			if node == self.selected_node:
@@ -730,7 +730,7 @@ class PyBIN(MainWindow):
 			self.widgetTree.select(None)
 
 	def edit_node_settings(self, node=None):
-		if node == None:
+		if node is None:
 			node = self.selected_node
 		if node and node.widget:
 			WidgetSettings(self, node)
@@ -752,7 +752,7 @@ class PyBIN(MainWindow):
 					if node.children and (not prefer_selection or node != self.selected_node):
 						for child in reversed(node.children):
 							found_child = check_clicked(child, x,y)
-							if found_child != None:
+							if found_child is not None:
 								found = found_child
 				return found
 			node = check_clicked(self.dialog, e.x,e.y)
@@ -800,7 +800,7 @@ class PyBIN(MainWindow):
 						if check == self.selected_node:
 							return
 						check = check.parent
-				if highlight.children != None:
+				if highlight.children is not None:
 					highlight.add_child(self.selected_node)
 				else:
 					highlight.parent.add_child(self.selected_node, highlight.parent.children.index(highlight) + below)
@@ -809,7 +809,7 @@ class PyBIN(MainWindow):
 				self.mark_edited()
 
 	def edit_event(self, x,y, node=None, prefer_selection=False):
-		if node == None:
+		if node is None:
 			node = self.dialog
 		found = [None,[]]
 		x1,y1,x2,y2 = node.bounding_box()
@@ -818,25 +818,25 @@ class PyBIN(MainWindow):
 			y1 = node.widget.y1
 			x2 = node.widget.x2
 			y2 = node.widget.y2
-		event = edit_event(x1,y1,x2,y2, x,y, node.widget != None)
+		event = edit_event(x1,y1,x2,y2, x,y, node.widget is not None)
 		if event:
 			found[0] = node
 			found[1] = event
 		if node.children and (not prefer_selection or node != self.selected_node):
 			for child in reversed(node.children):
 				found_child = self.edit_event(x,y, node=child, prefer_selection=prefer_selection)
-				if found_child[0] != None:
+				if found_child[0] is not None:
 					found = found_child
 					break
 		return found
 
 	def mouse_motion(self, event):
 		if self.bin:
-			if self.old_cursor == None:
+			if self.old_cursor is None:
 				self.old_cursor = self.widgetCanvas.cget('cursor')
 			cursor = [self.old_cursor]
 			node,mouse_event = self.edit_event(event.x,event.y)
-			if node != None:
+			if node is not None:
 				if node.widget:
 					if node.widget.x1 > node.widget.x2:
 						if EDIT_RESIZE_LEFT in mouse_event:
@@ -963,7 +963,7 @@ class PyBIN(MainWindow):
 						self.update_selection_box()
 					self.mark_edited()
 				check = self.edit_node
-				while check.parent and check.parent.widget == None:
+				while check.parent and check.parent.widget is None:
 					check.parent.update_display()
 					check = check.parent
 				if button_event == MOUSE_UP:
@@ -1026,7 +1026,7 @@ class PyBIN(MainWindow):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.settings.lastpath.bin.select_open_file(self, title='Open Dialog BIN', filetypes=[FileType.bin_dialog()])
 				if not file:
 					return

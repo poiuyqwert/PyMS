@@ -146,7 +146,7 @@ CMD_HELP = [
 #stages: 0 = size, 1 = decompile, 2 = interpret
 def type_frame(stage, bin, data=None):
 	"""Frame"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		if data % 17:
@@ -171,7 +171,7 @@ def type_frame(stage, bin, data=None):
 
 def type_frameset(stage, bin, data=None):
 	"""Frameset"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'Frame set %s' % data)
@@ -191,7 +191,7 @@ def type_frameset(stage, bin, data=None):
 
 def type_bframe(stage, bin, data=None):
 	"""BFrame"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -205,7 +205,7 @@ def type_bframe(stage, bin, data=None):
 
 def type_byte(stage, bin, data=None):
 	"""Byte"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -219,7 +219,7 @@ def type_byte(stage, bin, data=None):
 
 def type_sbyte(stage, bin, data=None):
 	"""SByte"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		if data > 127:
@@ -241,7 +241,7 @@ def type_label(stage, bin):
 
 def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""ImageID"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data), DATEntryName.image(data, data_names=Assets.data_cache(Assets.DataReference.Images), imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
@@ -255,7 +255,7 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | N
 
 def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""SpriteID"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data), DATEntryName.sprite(data, data_names=Assets.data_cache(Assets.DataReference.Sprites), spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
@@ -269,7 +269,7 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 
 def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""FlingyID"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data), DATEntryName.flingy(data, data_names=Assets.data_cache(Assets.DataReference.Flingy), flingydat=bin.flingydat, spritesdat=bin.spritesdat, imagesdat=bin.imagesdat, imagestbl=bin.imagestbl, data_names_usage=DataNamesUsage.combine))
@@ -283,7 +283,7 @@ def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 
 def type_overlayid(stage, bin, data=None):
 	"""OverlayID"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -302,7 +302,7 @@ def type_overlayid(stage, bin, data=None):
 
 def type_flipstate(stage, bin, data=None):
 	"""FlipState"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -316,7 +316,7 @@ def type_flipstate(stage, bin, data=None):
 
 def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""SoundID"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data), TBL.decompile_string(bin.sfxdatatbl.strings[bin.soundsdat.get_entry(data).sound_file-1][:-1]))
@@ -330,7 +330,7 @@ def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | N
 
 def type_sounds(stage, bin, data=None):
 	"""Sounds"""
-	if data == None:
+	if data is None:
 		return -1
 	if stage == 1:
 		return (str(data),'')
@@ -344,7 +344,7 @@ def type_sounds(stage, bin, data=None):
 
 def type_signalid(stage, bin, data=None):
 	"""SignalID"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -358,7 +358,7 @@ def type_signalid(stage, bin, data=None):
 
 def type_weapon(stage, bin, data=None):
 	"""Weapon"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -372,7 +372,7 @@ def type_weapon(stage, bin, data=None):
 
 def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
 	"""WeaponID"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data), DATEntryName.weapon(data, data_names=Assets.data_cache(Assets.DataReference.Weapons), weaponsdat=bin.weaponsdat, stat_txt=bin.tbl, data_names_usage=DataNamesUsage.combine))
@@ -386,7 +386,7 @@ def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 
 def type_speed(stage, bin, data=None):
 	"""Speed"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data),'')
@@ -400,7 +400,7 @@ def type_speed(stage, bin, data=None):
 
 def type_gasoverlay(stage, bin, data=None):
 	"""GasOverlay"""
-	if data == None:
+	if data is None:
 		return 1
 	if stage == 1:
 		return (str(data),'')
@@ -414,7 +414,7 @@ def type_gasoverlay(stage, bin, data=None):
 
 def type_short(stage, bin, data=None):
 	"""Short"""
-	if data == None:
+	if data is None:
 		return 2
 	if stage == 1:
 		return (str(data),'')
@@ -543,21 +543,21 @@ for o,c in enumerate(OPCODES):
 
 class IScriptBIN:
 	def __init__(self, weaponsdat=None, flingydat=None, imagesdat=None, spritesdat=None, soundsdat=None, stat_txt=None, imagestbl=None, sfxdatatbl=None):
-		if weaponsdat == None:
+		if weaponsdat is None:
 			weaponsdat = Assets.mpq_file_path('arr', 'weapons.dat')
-		if flingydat == None:
+		if flingydat is None:
 			flingydat = Assets.mpq_file_path('arr', 'flingy.dat')
-		if imagesdat == None:
+		if imagesdat is None:
 			imagesdat = Assets.mpq_file_path('arr', 'images.dat')
-		if spritesdat == None:
+		if spritesdat is None:
 			spritesdat = Assets.mpq_file_path('arr', 'sprites.dat')
-		if soundsdat == None:
+		if soundsdat is None:
 			soundsdat = Assets.mpq_file_path('arr', 'sfxdata.dat')
-		if stat_txt == None:
+		if stat_txt is None:
 			stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
-		if imagestbl == None:
+		if imagestbl is None:
 			imagestbl = Assets.mpq_file_path('arr', 'images.tbl')
-		if sfxdatatbl == None:
+		if sfxdatatbl is None:
 			sfxdatatbl = Assets.mpq_file_path('arr', 'sfxdata.tbl')
 		self.headers = {}
 		self.offsets = {}
@@ -682,7 +682,7 @@ class IScriptBIN:
 				cur_offset += 4
 			for id,dat in headers.items():
 				for n,o in enumerate(dat[2]):
-					if o != None:
+					if o is not None:
 						if not o in offsets:
 							offsets[o] = [[id,n]]
 						elif not [id,n] in offsets[o]:
@@ -699,17 +699,17 @@ class IScriptBIN:
 			raise PyMSError('Load',"Unsupported iscript.bin '%s', could possibly be invalid or corrupt" % file, capture_exception=True)
 
 	def remove_code(self, o, id=None, code=None, offsets=None):
-		if code == None:
+		if code is None:
 			code = self.code
-		if offsets == None:
+		if offsets is None:
 			offsets = self.offsets
-		if o in offsets and id != None:
+		if o in offsets and id is not None:
 			x = 0
 			for n,i in enumerate(list(offsets[o])):
 				if (isinstance(i,list) and i[0] == id) or (isinstance(i,int) and i == id):
 					del offsets[o][n-x]
 					x += 1
-		if (not o in offsets and id == None) or not offsets[o]:
+		if (not o in offsets and id is None) or not offsets[o]:
 			if o in offsets :
 				del offsets[o]
 			curcmd = list(code.keys()).index(o)
@@ -780,7 +780,7 @@ class IScriptBIN:
 		findlabels = OrderedDict()
 		unused = []
 		flowthrough = 1
-		if offset == None:
+		if offset is None:
 			try:
 				offset = list(self.code.keys())[len(self.code)-1]
 				cmd = self.code[offset]
@@ -974,7 +974,7 @@ class IScriptBIN:
 		for id in list(headers.keys()):
 			if id in self.headers:
 				for o in self.headers[id][2]:
-					if o != None and o in self.offsets:
+					if o is not None and o in self.offsets:
 						self.remove_code(o,id)
 			self.headers[id] = headers[id]
 		for o,i in offsets.items():
@@ -996,7 +996,7 @@ class IScriptBIN:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		if ids == None:
+		if ids is None:
 			ids = list(self.headers.keys())
 		longheader = max([len(h[0]) for h in HEADER] + [13]) + 1
 		longopcode = max([len(o[0][0]) for o in OPCODES] + [13]) + 1
@@ -1111,7 +1111,7 @@ class IScriptBIN:
 				u = usedby[id]
 			f.write('# ----------------------------------------------------------------------------- #\n%s.headerstart\nIsId          	%s\nType          	%s\n' % (u, id, type))
 			for o,l in zip(header,HEADER[:ENTRY_TYPES[type]]):
-				if o == None:
+				if o is None:
 					label = '[NONE]'
 				elif o in labels:
 					label = labels[o]
@@ -1125,7 +1125,7 @@ class IScriptBIN:
 					local += setlabel(o,local,entry)
 					label = labels[o]#'%s%s' % (Assets.data_cache(Assets.DataReference.IscriptIDList)[id],l[0])
 				f.write('%s%s	%s\n' % (l[0],' ' * (longheader-len(l[0])),label))
-				if o != None:
+				if o is not None:
 					code,local,_curcmd = decompile_offset(o,code,local,id)
 			if id in self.extrainfo:
 				f.write('##Name: %s\n' % self.extrainfo[id])
@@ -1173,7 +1173,7 @@ class IScriptBIN:
 			table += struct.pack('<HH', id,offset)
 			entry = 'SCPE%s\x00\x00\x00' % chr(dat[0])
 			for o in dat[2]:
-				if o == None:
+				if o is None:
 					entry += '\x00\x00'
 				else:
 					entry += struct.pack('<H', offsets[o])

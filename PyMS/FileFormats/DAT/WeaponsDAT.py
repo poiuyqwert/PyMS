@@ -3,6 +3,8 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
+from typing import cast
+
 class Weapon(AbstractDAT.AbstractDATEntry):
 	class Property:
 		label = 'label'
@@ -176,53 +178,53 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 		target_error_message = self._import_property_value(data, Weapon.Property.target_error_message)
 		icon = self._import_property_value(data, Weapon.Property.icon)
 
-		if label != None:
+		if label is not None:
 			self.label = label
-		if graphics != None:
+		if graphics is not None:
 			self.graphics = graphics
-		if unused_technology != None:
+		if unused_technology is not None:
 			self.unused_technology = unused_technology
-		if target_flags != None:
+		if target_flags is not None:
 			self.target_flags = target_flags
-		if minimum_range != None:
+		if minimum_range is not None:
 			self.minimum_range = minimum_range
-		if maximum_range != None:
+		if maximum_range is not None:
 			self.maximum_range = maximum_range
-		if damage_upgrade != None:
+		if damage_upgrade is not None:
 			self.damage_upgrade = damage_upgrade
-		if weapon_type != None:
+		if weapon_type is not None:
 			self.weapon_type = weapon_type
-		if weapon_behavior != None:
+		if weapon_behavior is not None:
 			self.weapon_behavior = weapon_behavior
-		if remove_after != None:
+		if remove_after is not None:
 			self.remove_after = remove_after
-		if explosion_type != None:
+		if explosion_type is not None:
 			self.explosion_type = explosion_type
-		if inner_splash_range != None:
+		if inner_splash_range is not None:
 			self.inner_splash_range = inner_splash_range
-		if medium_splash_range != None:
+		if medium_splash_range is not None:
 			self.medium_splash_range = medium_splash_range
-		if outer_splash_range != None:
+		if outer_splash_range is not None:
 			self.outer_splash_range = outer_splash_range
-		if damage_amount != None:
+		if damage_amount is not None:
 			self.damage_amount = damage_amount
-		if damage_bonus != None:
+		if damage_bonus is not None:
 			self.damage_bonus = damage_bonus
-		if weapon_cooldown != None:
+		if weapon_cooldown is not None:
 			self.weapon_cooldown = weapon_cooldown
-		if damage_factor != None:
+		if damage_factor is not None:
 			self.damage_factor = damage_factor
-		if attack_angle != None:
+		if attack_angle is not None:
 			self.attack_angle = attack_angle
-		if launch_spin != None:
+		if launch_spin is not None:
 			self.launch_spin = launch_spin
-		if forward_offset != None:
+		if forward_offset is not None:
 			self.forward_offset = forward_offset
-		if upward_offset != None:
+		if upward_offset is not None:
 			self.upward_offset = upward_offset
-		if target_error_message != None:
+		if target_error_message is not None:
 			self.target_error_message = target_error_message
-		if icon != None:
+		if icon is not None:
 			self.icon = icon
 
 class _WeaponPropertyCoder:
@@ -346,4 +348,4 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "weapons.dat"
 
 	def get_entry(self, index): # type: (int) -> Weapon
-		return super(WeaponsDAT, self).get_entry(index)
+		return cast(Weapon, super(WeaponsDAT, self).get_entry(index))

@@ -290,15 +290,15 @@ class AIBIN:
 	]
 
 	def __init__(self, bwscript=None, units=None, upgrades=None, techs=None, stat_txt=None, bwscript_is_data=False):
-		if bwscript == None:
+		if bwscript is None:
 			bwscript = Assets.mpq_file_path('scripts', 'bwscript.bin')
-		if units == None:
+		if units is None:
 			units = Assets.mpq_file_path('arr', 'units.dat')
-		if upgrades == None:
+		if upgrades is None:
 			upgrades = Assets.mpq_file_path('arr', 'upgrades.dat')
-		if techs == None:
+		if techs is None:
 			techs = Assets.mpq_file_path('arr', 'techdata.dat')
-		if stat_txt == None:
+		if stat_txt is None:
 			stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 		self.ais = OrderedDict()
 		self.aisizes = {}
@@ -308,7 +308,7 @@ class AIBIN:
 		self.aiinfo = {}
 		self.bwscript = None
 		self.warnings = []
-		self.nobw = bwscript == None
+		self.nobw = bwscript is None
 		if bwscript != False:
 			self.bwscript = BWBIN()
 			if bwscript:
@@ -1553,7 +1553,7 @@ class AIBIN:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
 			f = file
-		if scripts == None:
+		if scripts is None:
 			scripts = list(self.ais.keys())
 		if shortlabel:
 			labels = self.short_labels
@@ -1624,7 +1624,7 @@ class AIBIN:
 		values = {}
 		for name,dat in self.varinfo.items():
 			vtype = types[dat[0]]
-			if dat[2] != None:
+			if dat[2] is not None:
 				f.write('%s %s = %s' % (vtype,name,dat[1]))
 				if dat[2] and not '\n' in dat[2]:
 					f.write(' {%s}' % dat[2])
@@ -1818,7 +1818,7 @@ class AIBIN:
 		if extra and (self.varinfo or self.aiinfo):
 			info = ''
 			for var,dat in self.varinfo.items():
-				if dat[2] != None:
+				if dat[2] is not None:
 					info += '%s%s\x00%s%s\x00' % (chr(dat[0]+1),var,self.types[types[dat[0]]][0](dat[1],2)[1],dat[2])
 			info += '\x00'
 			for ai,dat in self.aiinfo.items():
@@ -2007,7 +2007,7 @@ class BWBIN(AIBIN):
 				raise PyMSError('Decompile',"Could not load file '%s'" % filename)
 		else:
 			f = filename
-		if scripts == None:
+		if scripts is None:
 			scripts = list(self.ais.keys())
 		if shortlabel:
 			labels = self.short_labels

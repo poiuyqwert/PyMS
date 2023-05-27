@@ -53,9 +53,9 @@ class DATTab(NotebookTab, DATTabConveniences):
 
 		f = Frame(self)
 		h  = Frame(f)
-		if DATTab.ARROW_DOWN == None:
+		if DATTab.ARROW_DOWN is None:
 			DATTab.ARROW_DOWN = Assets.get_image('arrow')
-		if DATTab.ARROW_UP == None:
+		if DATTab.ARROW_UP is None:
 			DATTab.ARROW_UP = Assets.get_image('arrowup')
 		self.used_by_collapse_button = Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
 		self.used_by_collapse_button.pack(side=LEFT, padx=(0, 5))
@@ -115,7 +115,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def load_data(self, id=None):
 		if not self.get_dat_data().dat:
 			return
-		if id != None:
+		if id is not None:
 			self.id = id
 		entry = self.get_dat_data().dat.get_entry(self.id)
 		self.load_entry(entry)

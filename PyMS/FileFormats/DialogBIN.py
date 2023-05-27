@@ -654,7 +654,7 @@ class DialogBIN:
 		f.close()
 
 	def save_data(self, remastered=None):
-		remastered = (self.remastered or self.remastered_required()) if remastered == None else remastered
+		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		widget_struct = BINWidget.STRUCT_REMASTERED if remastered else BINWidget.STRUCT
 		widget_size = BINWidget.BYTE_SIZE_REMASTERED if remastered else BINWidget.BYTE_SIZE
 		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
@@ -681,11 +681,11 @@ class DialogBIN:
 				attrs = BINSMK.ATTR_NAMES
 				for attr in attrs:
 					value = getattr(smk, attr)
-					if attr == 'overlay_smk' and value != None:
+					if attr == 'overlay_smk' and value is not None:
 						value,data = save_smk(value)
 					elif attr == 'filename':
 						value = save_string(value)
-					if value == None:
+					if value is None:
 						value = 0
 					smk_info.append(value)
 				data = struct.pack('<LH3LHHLL', *smk_info) + data
@@ -703,7 +703,7 @@ class DialogBIN:
 				elif attr == 'smk':
 					if widget.type == BINWidget.TYPE_DIALOG:
 						value = next_offset
-					elif value != None:
+					elif value is not None:
 						value,data = save_smk(value)
 						results[1] += data
 				elif widget.type == BINWidget.TYPE_DIALOG:
@@ -719,7 +719,7 @@ class DialogBIN:
 					value -= self.widgets[0].x1
 				elif attr in ('y1','y2'):
 					value -= self.widgets[0].y1
-				if value == None:
+				if value is None:
 					value = 0
 				widget_info.append(value)
 			offsets[0] += widget_size
@@ -793,7 +793,7 @@ class DialogBIN:
 							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
 						value = get_smk(smk_id)
 				elif attr == 'string':
-					if value == None:
+					if value is None:
 						value = ''
 					else:
 						value = TBL.compile_string(value)
@@ -848,7 +848,7 @@ class DialogBIN:
 		f.close()
 
 	def decompile_data(self, remastered=None):
-		remastered = (self.remastered or self.remastered_required()) if remastered == None else remastered
+		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		result = ''
 		attrs = BINSMK.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
@@ -857,7 +857,7 @@ class DialogBIN:
 			for attr in attrs:
 				value = getattr(smk, attr)
 				hint = ''
-				if attr == 'overlay_smk' and value != None:
+				if attr == 'overlay_smk' and value is not None:
 					value = self.smks.index(value)
 				elif attr == 'filename':
 					value = TBL.decompile_string(value)
@@ -872,9 +872,9 @@ class DialogBIN:
 			for attr in attrs:
 				value = getattr(widget, attr)
 				hint = ''
-				if attr == 'smk' and value != None:
+				if attr == 'smk' and value is not None:
 					value = self.smks.index(value)
-				elif attr == 'string' and value != None:
+				elif attr == 'string' and value is not None:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
 					value = flags(value, 27)

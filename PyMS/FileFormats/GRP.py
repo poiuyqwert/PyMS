@@ -23,7 +23,7 @@ from copy import deepcopy
 
 def rle_normal(pal, index, player_colors=None):
 	rgb = pal[index]
-	if player_colors != None and len(player_colors) >= 8 and 8 <= index <= 15:
+	if player_colors is not None and len(player_colors) >= 8 and 8 <= index <= 15:
 		rgb = player_colors[index - 8]
 	return (rgb[0],rgb[1],rgb[2], 255)
 
@@ -75,7 +75,7 @@ def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False,
 	i = PILImage.new('RGBA', (width,height))
 	data = []
 	pal = [draw_function(palette,i,draw_info) for i in range(len(palette))]
-	if transindex != None:
+	if transindex is not None:
 		pal[transindex] = (0,0,0,0)
 	if flipHor:
 		image = list(map(reversed, image))
@@ -89,7 +89,7 @@ def image_to_tk(image, palette, transindex=0, image_bounds=None, flipHor=False, 
 	return ImageTk.PhotoImage(pil)
 
 def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=None, draw_info=None):
-	if f != None:
+	if f is not None:
 		if buffered:
 			d = g[f]
 		elif f == -1:
@@ -102,7 +102,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	i = PILImage.new('RGBA', (len(d[0]),len(d)))
 	data = []
 	pal = []
-	if draw_function == None:
+	if draw_function is None:
 		draw_function = rle_normal
 	pal = list(map(lambda i,p=p,e=draw_info: draw_function(p,i,e), list(range(len(p)))))
 	pal[transindex] = (0,0,0,0)
@@ -266,10 +266,10 @@ class CacheGRP:
 								linedata.extend(list(map(ord, self.databuffer[offset+1:offset+1+o])))
 								offset += o + 1
 						image.append(linedata[:xoffset+linewidth] + [0] * (self.width-linewidth-xoffset))
-					if self.uncompressed == None:
+					if self.uncompressed is None:
 						self.uncompressed = False
 				except:
-					if self.uncompressed == None:
+					if self.uncompressed is None:
 						self.uncompressed = True
 					else:
 						raise PyMSError('Decompile','Could not decompile frame %s, GRP could be corrupt.' % frame)
@@ -349,7 +349,7 @@ class GRP:
 										offset += o + 1
 								image.append(linedata[:xoffset+linewidth] + [transindex] * (width-linewidth-xoffset))
 						except:
-							if uncompressed == None:
+							if uncompressed is None:
 								uncompressed = True
 								break
 							raise
@@ -393,7 +393,7 @@ class GRP:
 		self.transindex = transindex
 
 	def save_data(self, uncompressed=None):
-		if uncompressed == None:
+		if uncompressed is None:
 			uncompressed = self.uncompressed
 		header_data = struct.pack('<3H', self.frames, self.width, self.height)
 		image_data = b''

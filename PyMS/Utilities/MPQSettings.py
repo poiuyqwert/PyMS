@@ -9,7 +9,7 @@ import os
 
 class MPQSettings(Frame):
 	def __init__(self, parent, mpqs, settings, setdlg=None):
-		if setdlg == None:
+		if setdlg is None:
 			self.setdlg = parent.parent
 		else:
 			self.setdlg = setdlg
@@ -60,7 +60,7 @@ class MPQSettings(Frame):
 		self.setdlg.edited = True
 
 	def add(self, key=None, add=None):
-		if add == None:
+		if add is None:
 			n,s = 0,0
 			add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 		else:

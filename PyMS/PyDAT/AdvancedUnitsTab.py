@@ -278,7 +278,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		for (variable, flag) in special_ability_flags_fields:
 			variable.set(entry.special_ability_flags & flag == flag)
 
-		infestable = (entry.infestation != None)
+		infestable = (entry.infestation is not None)
 		self.infestentry.set(entry.infestation if infestable else 0)
 		state = (DISABLED,NORMAL)[infestable]
 		self.infestentryw['state'] = state
@@ -356,7 +356,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 			entry.special_ability_flags = special_ability_flags
 			edited = True
 
-		if entry.infestation != None and self.infestentry.get() != entry.infestation:
+		if entry.infestation is not None and self.infestentry.get() != entry.infestation:
 			entry.infestation = self.infestentry.get()
 			edited = True
 		if self.reqIndex.get() != entry.requirements:

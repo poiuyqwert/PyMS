@@ -66,7 +66,7 @@ class MiniEditor(PyMSDialog):
 
 	def motion(self, e):
 		o = self.canvas.find_overlapping(e.x,e.y,e.x,e.y)
-		if self.click != None and o and len(o) == 1:
+		if self.click is not None and o and len(o) == 1:
 			t = self.canvas.gettags(o[0])
 			if t and len(t) == 1 and t[0].startswith('tile'):
 				self.color(tuple(int(n) for n in t[0][4:].split(',')),self.click)
