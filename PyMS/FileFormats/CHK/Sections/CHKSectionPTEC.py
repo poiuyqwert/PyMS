@@ -6,8 +6,12 @@ from ....Utilities.utils import pad
 
 import struct
 
-class CHKTechAvailability:
-	def __init__(self):
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
+class CHKTechAvailability(object):
+	def __init__(self): # type: () -> None
 		self.available = 3
 		self.researched = 0
 		self.default = True
@@ -18,38 +22,38 @@ class CHKSectionPTEC(CHKSection):
 
 	TECHS = 24
 	
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
-		self.availability = []
+		self.availability = [] # type: list[list[CHKTechAvailability]]
 		for _ in range(self.TECHS):
 			self.availability.append([])
 			for _ in range(12):
 				self.availability[-1].append(CHKTechAvailability())
-		self.globalAvailability = []
-		self.globallyResearched = []
+		self.globalAvailability = [] # type: list[int]
+		self.globallyResearched = [] # type: list[int]
 	
 	def load_data(self, data):
 		o = 0
 		for p in range(12):
-			availability = list(struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
+			availability = list(int(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 			o += self.TECHS
-			researched = list(struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
+			researched = list(int(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 			o += self.TECHS
 			for u in range(self.TECHS):
 				self.availability[u][p].available = availability[u]
 				self.availability[u][p].researched = researched[u]
-		self.globalAvailability = list(struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
+		self.globalAvailability = list(int(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 		o += self.TECHS
-		self.globallyResearched = list(struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
+		self.globallyResearched = list(int(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 		o += self.TECHS
 		for p in range(12):
-			defaults = list(struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
+			defaults = list(bool(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 			o += self.TECHS
 			for u in range(self.TECHS):
 				self.availability[u][p].default = defaults[u]
 
-	def save_data(self):
-		result = ''
+	def save_data(self): # type: () -> bytes
+		result = b''
 		for p in range(12):
 			availability = [self.availability[u][p].available for u in range(self.TECHS)]
 			researched = [self.availability[u][p].researched for u in range(self.TECHS)]
@@ -62,7 +66,7 @@ class CHKSectionPTEC(CHKSection):
 			result += struct.pack('<%dB' % self.TECHS, *defaults)
 		return result
 	
-	def decompile(self):
+	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Available','Researched','Use Defaults']:

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKDoodadVisual:
+class CHKDoodadVisual(object):
 	def __init__(self, chk): # type: (CHK) -> None
 		self.chk = chk
 		self.doodadID = 0
@@ -38,11 +38,11 @@ class CHKSectionDD2(CHKSection):
 	NAME = 'DD2 '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 	
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
-		self.doodads = []
+		self.doodads = [] # type: list[CHKDoodadVisual]
 	
-	def load_data(self, data):
+	def load_data(self, data): # type: (bytes) -> None
 		self.doodads = []
 		o = 0
 		while o+8 <= len(data):
@@ -51,13 +51,13 @@ class CHKSectionDD2(CHKSection):
 			self.doodads.append(doodad)
 			o += 8
 	
-	def save_data(self):
-		result = ''
+	def save_data(self): # type: () -> bytes
+		result = b''
 		for doodad in self.doodads:
 			result += doodad.save_data()
 		return result
 	
-	def decompile(self):
+	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		for doodad in self.doodads:
 			result += doodad.decompile()

@@ -5,6 +5,10 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionVER(CHKSection):
 	NAME = "VER "
 
@@ -13,7 +17,7 @@ class CHKSectionVER(CHKSection):
 	SC104 = 63
 	BW = 205
 	@staticmethod
-	def VER_NAME(v):
+	def VER_NAME(v): # type: (int) -> str
 		names = {
 			CHKSectionVER.BETA:'Beta',
 			CHKSectionVER.SC100:'StarCraft 1.00',
@@ -22,13 +26,15 @@ class CHKSectionVER(CHKSection):
 		}
 		return names.get(v,'Unknown')
 
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionVER.BW
 		from .CHKSectionTYPE import CHKSectionTYPE
 		typeSect = chk.sections.get(CHKSectionTYPE.NAME)
-		if typeSect and not typeSect.type == CHKSectionTYPE.BROODWAR:
-			self.version = CHKSectionVER.SC104
+		if typeSect:
+			typeSect = cast(CHKSectionTYPE, typeSect)
+			if not typeSect.type == CHKSectionTYPE.BROODWAR:
+				self.version = CHKSectionVER.SC104
 
 	def load_data(self, data):
 		self.version = struct.unpack('<H', data[:2])[0]

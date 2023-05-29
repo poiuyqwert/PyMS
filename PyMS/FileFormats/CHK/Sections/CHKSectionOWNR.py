@@ -6,6 +6,10 @@ from ....Utilities.utils import pad
 
 import struct
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
 class CHKSectionOWNR(CHKSection):
 	NAME = 'OWNR'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
@@ -20,7 +24,7 @@ class CHKSectionOWNR(CHKSection):
 	NEUTRAL = 7
 	CLOSED_INVALID = 8 # INVALID
 	@staticmethod
-	def OWNER_NAME(v):
+	def OWNER_NAME(v): # type: (int) -> str
 		names = {
 			CHKSectionOWNR.INACTIVE:'Inactive',
 			CHKSectionOWNR.COMPUTER_GAME_INVALID:'Occupied by Computer (Invalid)',
@@ -34,17 +38,17 @@ class CHKSectionOWNR(CHKSection):
 		}
 		return names.get(v,'Unknown')
 	
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
 		self.owners = [CHKSectionOWNR.HUMAN]*8 + [CHKSectionOWNR.INACTIVE]*3 + [CHKSectionOWNR.NEUTRAL]
 	
-	def load_data(self, data):
-		self.owners = list(struct.unpack('<12B', data[:12]))
+	def load_data(self, data): # type: (bytes) -> None
+		self.owners = list(int(o) for o in struct.unpack('<12B', data[:12]))
 	
-	def save_data(self):
+	def save_data(self): # type: () -> bytes
 		return struct.pack('<12B', *self.owners)
 
-	def decompile(self):
+	def decompile(self): # type: () -> str
 		result = '%s:\n' % self.NAME
 		for n,value in enumerate(self.owners):
 			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionOWNR.OWNER_NAME(value))

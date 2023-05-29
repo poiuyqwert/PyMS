@@ -6,8 +6,12 @@ from ....Utilities.utils import pad
 
 import struct
 
-class CHKUpgradeStats:
-	def __init__(self):
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
+class CHKUpgradeStats(object):
+	def __init__(self): # type: () -> None
 		self.default = True
 		self.costMinerals = 0
 		self.costMineralsIncrease = 0
@@ -23,39 +27,39 @@ class CHKSectionUPGS(CHKSection):
 	UPGRADES = 46
 	PAD = False
 	
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
-		self.stats = []
+		self.stats = [] # type: list[CHKUpgradeStats]
 		for _ in range(self.UPGRADES):
 			self.stats.append(CHKUpgradeStats())
 	
-	def load_data(self, data):
+	def load_data(self, data): # type: (bytes) -> None
 		o = 0
-		defaults = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+		defaults = list(bool(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 		o += self.UPGRADES+self.PAD
-		costMinerals = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		costMinerals = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		o += self.UPGRADES*2
-		costMineralsIncreases = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		costMineralsIncreases = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		o += self.UPGRADES*2
-		costGas = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		costGas = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		o += self.UPGRADES*2
-		costGasIncreases = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		costGasIncreases = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		o += self.UPGRADES*2
-		buildTimes = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		buildTimes = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		o += self.UPGRADES*2
-		buildTimeIncreases = list(struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
+		buildTimeIncreases = list(int(v) for v in struct.unpack('<%dH' % self.UPGRADES, data[o:o+self.UPGRADES*2]))
 		for n,values in enumerate(zip(defaults,costMinerals,costMineralsIncreases,costGas,costGasIncreases,buildTimes,buildTimeIncreases)):
 			stat = self.stats[n]
 			stat.default,stat.costMinerals,stat.costMineralsIncrease,stat.costGas,stat.costGasIncrease,stat.buildTime,stat.buildTimeIncrease = values
 
-	def save_data(self):
-		defaults = []
-		costMinerals = []
-		costMineralsIncreases = []
-		costGas = []
-		costGasIncreases = []
-		buildTimes = []
-		buildTimeIncreases = []
+	def save_data(self): # type: () -> bytes
+		defaults = [] # type: list[bool]
+		costMinerals = [] # type: list[int]
+		costMineralsIncreases = [] # type: list[int]
+		costGas = [] # type: list[int]
+		costGasIncreases = [] # type: list[int]
+		buildTimes = [] # type: list[int]
+		buildTimeIncreases = [] # type: list[int]
 		for stat in self.stats:
 			defaults.append(stat.default)
 			costMinerals.append(stat.costMinerals)
@@ -66,7 +70,7 @@ class CHKSectionUPGS(CHKSection):
 			buildTimeIncreases.append(stat.buildTimeIncrease)
 		result = struct.pack('<%dB' % self.UPGRADES, *defaults)
 		if self.PAD:
-			result += '\0'
+			result += b'\0'
 		result += struct.pack('<%dH' % self.UPGRADES, *costMinerals)
 		result += struct.pack('<%dH' % self.UPGRADES, *costMineralsIncreases)
 		result += struct.pack('<%dH' % self.UPGRADES, *costGas)
@@ -75,7 +79,7 @@ class CHKSectionUPGS(CHKSection):
 		result += struct.pack('<%dH' % self.UPGRADES, *buildTimeIncreases)
 		return result
 	
-	def decompile(self):
+	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Minerals','Minerals Increase','Gas','Gas Increase','Build Time','Build Time Increase']:

@@ -6,8 +6,12 @@ from ....Utilities.utils import pad
 
 import struct
 
-class CHKUpgradeLevels:
-	def __init__(self):
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
+class CHKUpgradeLevels(object):
+	def __init__(self): # type: () -> None
 		self.maxLevel = 3
 		self.startLevel = 0
 		self.default = True
@@ -18,38 +22,38 @@ class CHKSectionUPGR(CHKSection):
 
 	UPGRADES = 46
 	
-	def __init__(self, chk):
+	def __init__(self, chk): # type: (CHK) -> None
 		CHKSection.__init__(self, chk)
-		self.levels = []
+		self.levels = [] # type: list[list[CHKUpgradeLevels]]
 		for _ in range(self.UPGRADES):
 			self.levels.append([])
 			for _ in range(12):
 				self.levels[-1].append(CHKUpgradeLevels())
-		self.maxLevels = []
-		self.startLevels = []
+		self.maxLevels = [] # type: list[int]
+		self.startLevels = [] # type: list[int]
 	
-	def load_data(self, data):
+	def load_data(self, data): # type: (bytes) -> None
 		o = 0
 		for p in range(12):
-			maxLevels = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+			maxLevels = list(int(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 			o += self.UPGRADES
-			startLevels = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+			startLevels = list(int(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 			o += self.UPGRADES
 			for u in range(self.UPGRADES):
 				self.levels[u][p].maxLevel = maxLevels[u]
 				self.levels[u][p].startLevel = startLevels[u]
-		self.maxLevels = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+		self.maxLevels = list(int(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 		o += self.UPGRADES
-		self.startLevels = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+		self.startLevels = list(int(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 		o += self.UPGRADES
 		for p in range(12):
-			defaults = list(struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
+			defaults = list(bool(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 			o += self.UPGRADES
 			for u in range(self.UPGRADES):
 				self.levels[u][p].default = defaults[u]
 
-	def save_data(self):
-		result = ''
+	def save_data(self): # type: () -> bytes
+		result = b''
 		for p in range(12):
 			maxLevels = [self.levels[u][p].maxLevel for u in range(self.UPGRADES)]
 			startLevels = [self.levels[u][p].startLevel for u in range(self.UPGRADES)]
@@ -62,7 +66,7 @@ class CHKSectionUPGR(CHKSection):
 			result += struct.pack('<%dB' % self.UPGRADES, *defaults)
 		return result
 	
-	def decompile(self):
+	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Max Levels','Start Level','Use Defaults']:
