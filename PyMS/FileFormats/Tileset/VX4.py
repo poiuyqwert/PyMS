@@ -5,14 +5,45 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-class VX4:
+class VX4Minitile(object):
+	def __init__(self):
+		self.flipped = False
+		self.image_id = 0
+
+	def load_data(self, data): # type: (bytes) -> None
+		value = int(struct.unpack('<H', data[:2])[0])
+		self.flipped = bool(value & 1)
+		self.image_id = value >> 1
+
+	def save_data(self): # type: () -> bytes
+		return struct.pack('<H', int(self.flipped) | (self.image_id << 1))
+
+class VX4Megatile(object):
+	def __init__(self): # type: () -> None
+		self.minitiles = [] # type: list[VX4Minitile]
+
+	def load_data(self, data): # type: (bytes) -> None
+		o = 0
+		for _ in range(16):
+			minitile = VX4Minitile()
+			minitile.load_data(data[o:o+2])
+			o += 2
+
+	def save_data(self): # type: () -> bytes
+		data = b''
+		for minitile in self.minitiles:
+			data += minitile.save_data()
+		return data
+
+class VX4(object):
 	MAX_ID = 65535
-	def __init__(self, expanded=False):
-		self.graphics = []
-		self.lookup = {}
+
+	def __init__(self, expanded=False): # type: (bool) -> None
+		self.megatiles = [] # type: list[VX4Megatile]
+		self.lookup = {} # type: dict[int, list[int]]
 		self.expanded = expanded
 
-	def graphics_remaining(self):
+	def graphics_remaining(self): # type: () -> int
 		return (VX4.MAX_ID+1) - len(self.graphics)
 
 	def find_tile(self, tile):
@@ -57,7 +88,7 @@ class VX4:
 		self.lookup[tile_hash].append(id)
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
-	def load_file(self, file, expanded=None):
+	def load_file(self, file, expanded=None): # type: (str | BinaryIO, bool | None) -> None
 		if expanded is None and isinstance(file, str):
 			expanded = (file[-6:].lower() == '.vx4ex')
 		data = load_file(file, 'VX4')

@@ -24,46 +24,43 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import os, re, math
 
-def megatile_to_photo(t, m=None):
-	if m is not None:
-		try:
-			d = t.vx4.graphics[m]
-		except:
-			return
-	else:
-		d = t
+# from typing import TYPE_CHECKING
+# if TYPE_CHECKING:
+	
+
+def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.PhotoImage | None)
+	try:
+		graphics = tileset.vx4.graphics[megatile_id]
+	except:
+		return None
 	pi = PILImage.new('P', (32,32))
-	pal = []
-	for c in t.wpe.palette:
+	pal = [] # type: list[int]
+	for c in tileset.wpe.palette:
 		pal.extend(c)
 	pi.putpalette(pal)
-	image = [[] for _ in range(32)]
-	for m,mini in enumerate(d):
-		for y,p in enumerate(t.vr4.images[mini[0]]):
+	image = [[] for _ in range(32)] # type: list[list[int]]
+	for m,mini in enumerate(graphics):
+		for y,p in enumerate(tileset.vr4.images[mini[0]]):
 			if mini[1]:
 				p = p[::-1]
-			image[(m/4)*8+y].extend(p)
-	put = []
-	for y in image:
-		put.extend(y)
+			image[int(m/4)*8+y].extend(p)
+	put = [] # type: list[int]
+	for row in image:
+		put.extend(row)
 	pi.putdata(put)
 	return ImageTk.PhotoImage(pi)
 
-def minitile_to_photo(t, m=None):
-	if isinstance(m, tuple) or isinstance(m, list):
-		d = t.vr4.images[m[0]]
-		f = m[1]
-	else:
-		d = t
-		f = m
+def minitile_to_photo(tileset, minitile): # type: (Tileset, tuple[int, bool]) -> ImageTk.PhotoImage
+	graphics = tileset.vr4.images[minitile[0]]
+	flip = minitile[1]
 	pi = PILImage.new('P', (24,24))
-	pal = []
-	for c in t.wpe.palette:
+	pal = [] # type: list[int]
+	for c in tileset.wpe.palette:
 		pal.extend(c)
 	pi.putpalette(pal)
-	put = []
-	for _y,p in enumerate(d):
-		if f:
+	put = [] # type: list[int]
+	for _y,p in enumerate(graphics):
+		if flip:
 			p = p[::-1]
 		for x in p * 3:
 			put.extend((x,x,x))
@@ -78,53 +75,61 @@ HEIGHT_LOW  = 0
 HEIGHT_MID  = (1 << 1)
 HEIGHT_HIGH = (1 << 2)
 
-def setting_import_extras_ignore(setting_count, tile_n, tile_count):
+def setting_import_extras_ignore(setting_count, tile_n, tile_count): # type: (int, int, int) -> (int | None)
 	if tile_n == setting_count:
 		return None
 	return tile_n
 
-def setting_import_extras_repeat_all(setting_count, tile_n, tile_count):
+def setting_import_extras_repeat_all(setting_count, tile_n, tile_count): # type: (int, int, int) -> int
 	return tile_n % setting_count
 
-def setting_import_extras_repeat_last(setting_count, tile_n, tile_count):
+def setting_import_extras_repeat_last(setting_count, tile_n, tile_count): # type: (int, int, int) -> int
 	return min(tile_n, setting_count-1)
 
-class Tileset:
-	def __init__(self):
-		self.cv5 = None
-		self.cv5_path = None
-		self.vf4 = None
-		self.vf4_path = None
-		self.vx4 = None
-		self.vx4_path = None
-		self.vr4 = None
-		self.vr4_path = None
-		self.dddata = None
-		self.dddata_path = None
-		self.wpe = None
-		self.wpe_path = None
+class Tileset(object):
+	cv5: CV5
+	cv5_path: str
+	vf4: VF4
+	vf4_path: str
+	vx4: VX4
+	vx4_path: str
+	vr4: VR4
+	vr4_path: str
+	dddata: DDDataBIN
+	dddata_path: str
+	wpe: Palette
+	wpe_path: str
 
-	def groups_max(self):
+	# def __init__(self):
+	# 	self.cv5 = None
+	# 	self.cv5_path = None
+	# 	self.vf4 = None
+	# 	self.vf4_path = None
+	# 	self.vx4 = None
+	# 	self.vx4_path = None
+	# 	self.vr4 = None
+	# 	self.vr4_path = None
+	# 	self.dddata = None
+	# 	self.dddata_path = None
+	# 	self.wpe = None
+	# 	self.wpe_path = None
+
+	def groups_max(self): # type: () -> int
 		return CV5.MAX_ID+1
-	def groups_remaining(self):
-		if self.cv5:
-			return self.cv5.groups_remaining()
+	def groups_remaining(self): # type: () -> int
+		return self.cv5.groups_remaining()
 
-	def megatiles_max(self):
+	def megatiles_max(self): # type: () -> int
 		return VX4.MAX_ID+1
-	def megatiles_remaining(self):
-		if self.vx4:
-			return self.vx4.graphics_remaining()
+	def megatiles_remaining(self): # type: () -> int
+		return self.vx4.graphics_remaining()
 
-	def minitiles_max(self):
-		if self.vr4:
-			return self.vr4.max_id(self.vx4.expanded)+1
-		return VR4.MAX_ID+1
-	def minitiles_remaining(self):
-		if self.vr4:
-			return self.vr4.images_remaining(expanded_vx4=self.vx4.expanded)
+	def minitiles_max(self): # type: () -> int
+		return self.vr4.max_id(self.vx4.expanded)+1
+	def minitiles_remaining(self): # type: () -> int
+		return self.vr4.images_remaining(expanded_vx4=self.vx4.expanded)
 
-	def new_file(self, cv5=None, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
+	def new_file(self, cv5=None, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None): # type: (CV5 | None, VF4 | None, VX4 | None, VR4 | None, DDDataBIN | None, Palette | None) -> None
 		if cv5:
 			self.cv5 = cv5
 		else:
@@ -150,81 +155,68 @@ class Tileset:
 		else:
 			self.wpe = Palette()
 
-	def load_file(self, cv5, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
-		path = None
-		name = None
-		if isinstance(cv5, str):
-			path = os.path.dirname(cv5)
-			name = os.path.basename(cv5)
-			if name.split(os.extsep)[-1].lower() == 'cv5':
-				name = name[:-4]
-		if not vf4:
-			if not path or not name:
-				raise PyMSError('Load', "No .vf4 file found")
-			vf4 = os.path.join(path, '%s%svf4' % (name,os.extsep))
-		if not vx4:
-			if not path or not name:
-				raise PyMSError('Load', "No .vx4 file found")
-			vx4 = os.path.join(path, '%s%svx4ex' % (name,os.extsep))
+	def load_file(self, cv5_path, vf4_path=None, vx4_path=None, vr4_path=None, dddata_path=None, wpe_path=None): # type: (str, str | None, str | None, str | None, str | None, str | None) -> None
+		path = os.path.dirname(cv5_path)
+		name = os.path.basename(cv5_path)
+		if name.split(os.extsep)[-1].lower() == 'cv5':
+			name = name[:-4]
+		if not vf4_path:
+			vf4_path = os.path.join(path, '%s%svf4' % (name,os.extsep))
+		if not vx4_path:
+			vx4_path = os.path.join(path, '%s%svx4ex' % (name,os.extsep))
 			# Check for and prefer expanded vx4 files
-			if not os.path.exists(vx4):
-				vx4 = os.path.join(path, '%s%svx4' % (name,os.extsep))
-		if not vr4:
-			if not path or not name:
-				raise PyMSError('Load', "No .vr4 file found")
-			vr4 = os.path.join(path, '%s%svr4' % (name,os.extsep))
-		if not dddata:
-			if not path or not name:
-				raise PyMSError('Load', "No dddata.bin file found")
-			dddata = os.path.join(path, name, 'dddata%sbin' % os.extsep)
-		if not wpe:
-			if not path or not name:
-				raise PyMSError('Load', "No .wpe file found")
-			wpe = os.path.join(path, '%s%swpe' % (name,os.extsep))
+			if not os.path.exists(vx4_path):
+				vx4_path = os.path.join(path, '%s%svx4' % (name,os.extsep))
+		if not vr4_path:
+			vr4_path = os.path.join(path, '%s%svr4' % (name,os.extsep))
+		if not dddata_path:
+			dddata_path = os.path.join(path, name, 'dddata%sbin' % os.extsep)
+		if not wpe_path:
+			wpe_path = os.path.join(path, '%s%swpe' % (name,os.extsep))
 		self.cv5 = CV5()
-		self.cv5.load_file(cv5)
+		self.cv5.load_file(cv5_path)
 		self.vf4 = VF4()
-		self.vf4.load_file(vf4)
+		self.vf4.load_file(vf4_path)
 		self.vx4 = VX4()
-		self.vx4.load_file(vx4)
+		self.vx4.load_file(vx4_path)
 		self.vr4 = VR4()
-		self.vr4.load_file(vr4)
+		self.vr4.load_file(vr4_path)
 		self.dddata = DDDataBIN()
-		self.dddata.load_file(dddata)
+		self.dddata.load_file(dddata_path)
 		self.wpe = Palette()
-		self.wpe.load_file(wpe)
-		self.cv5_path = cv5 if isinstance(cv5, str) else None
-		self.vf4_path = vf4 if isinstance(vf4, str) else None
-		self.vx4_path = vx4 if isinstance(vx4, str) else None
-		self.vr4_path = vr4 if isinstance(vr4, str) else None
-		self.dddata_path = dddata if isinstance(dddata, str) else None
-		self.wpe_path = wpe if isinstance(wpe, str) else None
+		self.wpe.load_file(wpe_path)
+		self.cv5_path = cv5_path
+		self.vf4_path = vf4_path
+		self.vx4_path = vx4_path
+		self.vr4_path = vr4_path
+		self.dddata_path = dddata_path
+		self.wpe_path = wpe_path
 
-	def save_file(self, cv5, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None):
-		path = os.path.dirname(cv5)
-		name = os.path.basename(cv5)
+	def save_file(self, cv5_path, vf4_path=None, vx4_path=None, vr4_path=None, dddata_path=None, wpe_path=None): # type: (str, str | None, str | None, str | None, str | None, str | None) -> None
+		path = os.path.dirname(cv5_path)
+		name = os.path.basename(cv5_path)
 		if name.endswith(os.extsep + 'cv5'):
 			name = name[:-4]
-		if vf4 is None:
-			vf4 = os.path.join(path, '%s%svf4' % (name,os.extsep))
-		if vx4 is None:
+		if vf4_path is None:
+			vf4_path = os.path.join(path, '%s%svf4' % (name,os.extsep))
+		if vx4_path is None:
 			expanded = 'ex' if self.vx4.expanded else ''
-			vx4 = os.path.join(path, '%s%svx4%s' % (name,os.extsep,expanded))
-		if vr4 is None:
-			vr4 = os.path.join(path, '%s%svr4' % (name,os.extsep))
+			vx4_path = os.path.join(path, '%s%svx4%s' % (name,os.extsep,expanded))
+		if vr4_path is None:
+			vr4_path = os.path.join(path, '%s%svr4' % (name,os.extsep))
 		dddir = os.path.join(path, name)
-		if dddata is None:
-			dddata = os.path.join(dddir, 'dddata%sbin' % os.extsep)
-		if wpe is None:
-			wpe = os.path.join(path, '%s%swpe' % (name,os.extsep))
-		self.cv5.save_file(cv5)
-		self.vf4.save_file(vf4)
-		self.vx4.save_file(vx4)
-		self.vr4.save_file(vr4)
+		if dddata_path is None:
+			dddata_path = os.path.join(dddir, 'dddata%sbin' % os.extsep)
+		if wpe_path is None:
+			wpe_path = os.path.join(path, '%s%swpe' % (name,os.extsep))
+		self.cv5.save_file(cv5_path)
+		self.vf4.save_file(vf4_path)
+		self.vx4.save_file(vx4_path)
+		self.vr4.save_file(vr4_path)
 		if not os.path.exists(dddir):
 			os.mkdir(dddir)
-		self.dddata.save_file(dddata)
-		self.wpe.save_sc_wpe(wpe)
+		self.dddata.save_file(dddata_path)
+		self.wpe.save_sc_wpe(wpe_path)
 
 	# options.groups_ignore_extra                  - Ignore extra groups (Boolean, default: False)
 	# options.megatiles_ignore_extra               - Ignore extra megatiles (Boolean, default: False)
@@ -237,13 +229,13 @@ class Tileset:
 	# options.minitiles_reuse_null_with_id         - Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
 	# options.minitiles_reuse_duplicates_flipped   - Check flipped versions of tiles for duplicates (Boolean, default: True)
 	# options.minitiles_expand_allowed             - Whether importing too many minitiles will expand VX4 or not (True, False, or callback, default: False)
-	def import_graphics(self, tiletype, bmpfiles, ids=None, options={}):
+	def import_graphics(self, tiletype, bmpfiles, ids=None, options={}): # type: (int, list[str], list[int] | None, dict) -> None
 		if ids:
 			ids = list(ids)
 		else:
 			ids = []
-		new_ids = []
-		pixels = []
+		new_ids = [] # type: list[int]
+		pixels = [] # type: list[list[int]]
 		for path in bmpfiles:
 			bmp = BMP()
 			bmp.load_file(path)
@@ -254,29 +246,29 @@ class Tileset:
 			elif tiletype == TILETYPE_MINI and (bmp.width % 8 or bmp.height % 8):
 				raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
 			pixels.extend(bmp.image)
-		new_images = []
-		mini_lookup = {}
-		update_images = [] # (id,image)
-		new_megatiles = []
-		mega_lookup = {}
-		update_megatiles = [] # (id,tile)
-		new_groups = []
-		update_groups = [] # (id,group)
+		new_images = [] # type: list[tuple[tuple[int, ...], ...]]
+		mini_lookup = {} # type: dict[int, list[int]]
+		update_images = [] # type: list[tuple[int, tuple[tuple[int,...], ...]]]
+		new_megatiles = [] # type: list[tuple[int, ...]]
+		mega_lookup = {} # type: dict[int, list[int]]
+		update_megatiles = [] # type: list[tuple[int, list[tuple[int, ...]]]]
+		new_groups = [] # type: list[int]
+		update_groups = [] # # type: list[tuple[int, list[int]]]
 
-		minis_w = len(pixels[0]) / 8
-		minis_h = len(pixels) / 8
+		minis_w = int(len(pixels[0]) / 8)
+		minis_h = int(len(pixels) / 8)
 		for iy in range(minis_h):
 			py = iy * 8
 			for ix in range(minis_w):
 				px = ix * 8
 				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in range(8))
 				new_images.append(image)
-		image_details = [] # (id,isFlipped)
+		image_details = [] # type: list[tuple[int, bool]]
 		new_id = len(self.vr4.images)
 		i = 0
-		minitiles_reuse_null_with_id = options.get('minitiles_reuse_null_with_id', 0)
-		minitiles_reuse_duplicates_old = options.get('minitiles_reuse_duplicates_old', True)
-		minitiles_reuse_duplicates_new = options.get('minitiles_reuse_duplicates_new', True)
+		minitiles_reuse_null_with_id = int(options.get('minitiles_reuse_null_with_id', 0))
+		minitiles_reuse_duplicates_old = bool(options.get('minitiles_reuse_duplicates_old', True))
+		minitiles_reuse_duplicates_new = bool(options.get('minitiles_reuse_duplicates_new', True))
 		# minitiles_reuse_duplicates_flipped = options.get('minitiles_reuse_duplicates_flipped', True) # TODO: Figure out why this is not used
 		if tiletype == TILETYPE_MINI and options.get('minitiles_ignore_extra', False) and len(new_images) > len(ids):
 			new_images = new_images[:len(ids)]
@@ -322,8 +314,8 @@ class Tileset:
 				raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (len(self.vr4.images),len(new_images),VR4.MAX_ID+1))
 			self.vx4.expanded = True
 		if tiletype == TILETYPE_GROUP or tiletype == TILETYPE_MEGA:
-			megas_w = minis_w / 4
-			megas_h = minis_h / 4
+			megas_w = int(minis_w / 4)
+			megas_h = int(minis_h / 4)
 			for y in range(megas_h):
 				for x in range(megas_w):
 					minitiles = []
