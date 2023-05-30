@@ -131,11 +131,10 @@ class DATEntryName:
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, UnitsDAT.FORMAT.entries, 'Unit')
 
 	@staticmethod
-	def _entry_label(label_id, stat_txt, none_name, tbl_raw_string, tbl_decompile, offset=1): # type: (int, TBL, str | None, bool, bool, int) -> (str | None)
-		if offset:
-			if label_id < offset:
-				return none_name
-			label_id -= offset
+	def _entry_label(label_id, stat_txt, none_name, tbl_raw_string, tbl_decompile): # type: (int, TBL, str | None, bool, bool) -> (str | None)
+		if not label_id:
+			return none_name
+		label_id -= 1
 		if label_id >= len(stat_txt.strings):
 			return None
 		tbl_name = DATEntryName.RE_STR_END.sub('', stat_txt.strings[label_id])
@@ -284,7 +283,7 @@ class DATEntryName:
 		if data_names and data_names_usage != DataNamesUsage.ignore and entry_id < len(data_names):
 			data_name = data_names[entry_id]
 		if portdatadat and portdatatbl and data_names_usage != DataNamesUsage.use and entry_id < portdatadat.entry_count():
-			tbl_name = DATEntryName._entry_label(portdatadat.get_entry(entry_id).idle.portrait_file, portdatatbl, none_name, True, tbl_decompile, offset=0)
+			tbl_name = DATEntryName._entry_label(portdatadat.get_entry(entry_id).idle.portrait_file, portdatatbl, none_name, True, tbl_decompile)
 		return DATEntryName._build_name(entry_id, data_name, tbl_name, override_name, data_names_usage, PortraitsDAT.FORMAT.entries, 'Portrait')
 
 	@staticmethod
