@@ -186,10 +186,21 @@ class CV5(object):
 	MAX_ID = 4095
 
 	def __init__(self): # type: () -> None
-		self.groups = [] # type: list[CV5Group]
+		self._groups = [] # type: list[CV5Group]
+
+	def group_count(self): # type: () -> int
+		return len(self._groups)
 
 	def groups_remaining(self): # type: () -> int
-		return (CV5.MAX_ID+1) - len(self.groups)
+		return (CV5.MAX_ID+1) - len(self._groups)
+
+	def get_group(self, id): # type: (int) -> CV5Group
+		return self._groups[id]
+
+	def add_group(self, group): # type: (CV5Group) -> int
+		id = len(self._groups)
+		self._groups.append(group)
+		return id
 
 	def load_file(self, file): # type: (str | BinaryIO) -> None
 		data = load_file(file, 'CV5')
@@ -205,11 +216,11 @@ class CV5(object):
 				o += 52
 		except:
 			raise PyMSError('Load',"Unsupported CV5 file '%s', could possibly be corrupt" % file)
-		self.groups = groups
+		self._groups = groups
 
 	def save_file(self, file): # type: (str | BinaryIO) -> None
 		data = b''
-		for group in self.groups:
+		for group in self._groups:
 			data += group.save_data()
 		if isinstance(file, str):
 			try:

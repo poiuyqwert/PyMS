@@ -30,7 +30,7 @@ import os, re, math
 
 def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.PhotoImage | None)
 	try:
-		graphics = tileset.vx4.graphics[megatile_id]
+		megatile = tileset.vx4.megatiles[megatile_id]
 	except:
 		return None
 	pi = PILImage.new('P', (32,32))
@@ -39,9 +39,9 @@ def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.
 		pal.extend(c)
 	pi.putpalette(pal)
 	image = [[] for _ in range(32)] # type: list[list[int]]
-	for m,mini in enumerate(graphics):
-		for y,p in enumerate(tileset.vr4.images[mini[0]]):
-			if mini[1]:
+	for m,minitile in enumerate(megatile.minitiles):
+		for y,p in enumerate(tileset.vr4.get_image(minitile.image_id)):
+			if minitile.flipped:
 				p = p[::-1]
 			image[int(m/4)*8+y].extend(p)
 	put = [] # type: list[int]
@@ -51,7 +51,7 @@ def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.
 	return ImageTk.PhotoImage(pi)
 
 def minitile_to_photo(tileset, minitile): # type: (Tileset, tuple[int, bool]) -> ImageTk.PhotoImage
-	graphics = tileset.vr4.images[minitile[0]]
+	image = tileset.vr4.get_image(minitile[0])
 	flip = minitile[1]
 	pi = PILImage.new('P', (24,24))
 	pal = [] # type: list[int]
@@ -59,7 +59,7 @@ def minitile_to_photo(tileset, minitile): # type: (Tileset, tuple[int, bool]) ->
 		pal.extend(c)
 	pi.putpalette(pal)
 	put = [] # type: list[int]
-	for _y,p in enumerate(graphics):
+	for _y,p in enumerate(image):
 		if flip:
 			p = p[::-1]
 		for x in p * 3:
@@ -249,7 +249,7 @@ class Tileset(object):
 		new_images = [] # type: list[tuple[tuple[int, ...], ...]]
 		mini_lookup = {} # type: dict[int, list[int]]
 		update_images = [] # type: list[tuple[int, tuple[tuple[int,...], ...]]]
-		new_megatiles = [] # type: list[tuple[int, ...]]
+		new_megatiles = [] # type: list[tuple[tuple[int, bool], ...]]
 		mega_lookup = {} # type: dict[int, list[int]]
 		update_megatiles = [] # type: list[tuple[int, list[tuple[int, ...]]]]
 		new_groups = [] # type: list[int]
@@ -264,7 +264,7 @@ class Tileset(object):
 				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in range(8))
 				new_images.append(image)
 		image_details = [] # type: list[tuple[int, bool]]
-		new_id = len(self.vr4.images)
+		new_id = self.vr4.images_count()
 		i = 0
 		minitiles_reuse_null_with_id = int(options.get('minitiles_reuse_null_with_id', 0))
 		minitiles_reuse_duplicates_old = bool(options.get('minitiles_reuse_duplicates_old', True))
@@ -274,23 +274,26 @@ class Tileset(object):
 			new_images = new_images[:len(ids)]
 		while i < len(new_images):
 			image = new_images[i]
-			image_hash = hash(image)
+			image_hash = VR4.image_hash(image)
 			found = False
 			if tiletype != TILETYPE_MINI or not len(ids):
-				flipped_hash = hash(tuple(tuple(reversed(r)) for r in image))
-				existing_ids = self.vr4.lookup.get(image_hash,[]) + self.vr4.lookup.get(flipped_hash,[])
-				if len(existing_ids) and (minitiles_reuse_duplicates_old or minitiles_reuse_null_with_id in existing_ids):
-					normal_found = image_hash in self.vr4.lookup
+				existing_normal_ids, existing_flipped_ids = self.vr4.find_image(image)
+				existing_all_ids = existing_normal_ids + existing_flipped_ids
+				if existing_all_ids and (minitiles_reuse_duplicates_old or minitiles_reuse_null_with_id in existing_all_ids):
+					flipped = not len(existing_normal_ids)
 					found = True
 					del new_images[i]
-					image_details.append((existing_ids[0],int(not normal_found)))
+					image_details.append((existing_all_ids[0], flipped))
 				if not found:
-					existing_ids = mini_lookup.get(image_hash,[]) + mini_lookup.get(flipped_hash,[])
-					if len(existing_ids) and (minitiles_reuse_duplicates_new or minitiles_reuse_null_with_id in existing_ids):
-						normal_found = image_hash in mini_lookup
+					existing_normal_ids = mini_lookup.get(image_hash,[])
+					flipped_hash = VR4.image_hash(image, True)
+					existing_flipped_ids = mini_lookup.get(flipped_hash,[])
+					existing_all_ids = existing_normal_ids + existing_flipped_ids
+					if existing_all_ids and (minitiles_reuse_duplicates_new or minitiles_reuse_null_with_id in existing_all_ids):
+						flipped = not len(existing_normal_ids)
 						found = True
 						del new_images[i]
-						image_details.append((existing_ids[0],int(not normal_found)))
+						image_details.append((existing_all_ids[0], flipped))
 			if not found:
 				id = new_id
 				if tiletype == TILETYPE_MINI and len(ids):
@@ -303,7 +306,7 @@ class Tileset(object):
 						new_ids.append(new_id)
 					new_id += 1
 					i += 1
-				image_details.append((id,0))
+				image_details.append((id,False))
 				if image_hash in mini_lookup:
 					mini_lookup[image_hash].append(id)
 				else:
@@ -318,13 +321,13 @@ class Tileset(object):
 			megas_h = int(minis_h / 4)
 			for y in range(megas_h):
 				for x in range(megas_w):
-					minitiles = []
+					minitiles = [] # type: list[tuple[int, bool]]
 					for oy in range(4):
 						o = (y*4+oy)*minis_w + x*4
 						minitiles.extend(image_details[o:o+4])
 					new_megatiles.append(tuple(minitiles))
 			megatile_ids = []
-			new_id = len(self.vx4.graphics)
+			new_id = len(self.vx4.megatiles)
 			i = 0
 			megatiles_reuse_null_with_id = options.get('megatiles_reuse_null_with_id', 0)
 			megatiles_reuse_duplicates_old = options.get('megatiles_reuse_duplicates_old', True)
@@ -335,13 +338,13 @@ class Tileset(object):
 				tile_hash = hash(new_megatiles[i])
 				found = False
 				if tiletype != TILETYPE_MEGA or not len(ids):
-					existing_ids = self.vx4.lookup.get(tile_hash,None)
+					existing_ids = self.vx4.lookup.get(tile_hash,[])
 					if existing_ids and (megatiles_reuse_duplicates_old or megatiles_reuse_null_with_id in existing_ids):
 						del new_megatiles[i]
 						megatile_ids.append(existing_ids[0])
 						found = True
 					if not found:
-						existing_ids = mega_lookup.get(tile_hash,None)
+						existing_ids = mega_lookup.get(tile_hash,[])
 						if existing_ids and (megatiles_reuse_duplicates_old or megatiles_reuse_null_with_id in existing_ids):
 							del new_megatiles[i]
 							megatile_ids.append(existing_ids[0])
@@ -391,7 +394,8 @@ class Tileset(object):
 			else:
 				self.vr4.lookup[image_hash] = mini_lookup[image_hash]
 		# Update megatiles
-		self.vx4.graphics.extend(new_megatiles)
+		for megatile in new_megatiles:
+			self.vx4.megatiles.add_tile(megatile)
 		self.vf4.flags.extend([0]*16 for _ in range(len(new_megatiles)))
 		for id,tile in update_megatiles:
 			self.vx4.set_tile(id, tile)
