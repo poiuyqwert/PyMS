@@ -5,6 +5,8 @@ from .Sections import *
 
 from ...FileFormats import TBL, AIBIN
 
+from .CHKSection import CHKSection
+
 from ...Utilities import Assets
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
@@ -12,10 +14,9 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Type
 if TYPE_CHECKING:
-	from typing import Type, BinaryIO
-	from .CHKSection import CHKSection
+	from typing import BinaryIO
 
 class CHK:
 	SECTION_TYPES: dict[str, Type[CHKSection]] = {

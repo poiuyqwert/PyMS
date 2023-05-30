@@ -1,8 +1,9 @@
 
+from .CHKRequirements import CHKRequirements
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .CHK import CHK
-	from .CHKRequirements import CHKRequirements
 
 class CHKSection(object):
 	NAME: str

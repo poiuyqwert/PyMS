@@ -3,9 +3,7 @@ from . import pkware
 
 from .....Utilities.PyMSError import PyMSError
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import Callable
+from typing import Callable
 
 class AlgorithmID:
 	huffman     = 0x01
