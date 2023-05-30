@@ -1,7 +1,7 @@
 
 from .TilePaletteView import TilePaletteView
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
+from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -11,7 +11,7 @@ class TilePalette(PyMSDialog):
 	OPEN_PALETTE_COUNT = 0
 	TILE_CACHE = {}
 
-	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, select=None, delegate=None, editing=False):
+	def __init__(self, parent, settings, tiletype=TileType.group, select=None, delegate=None, editing=False):
 		TilePalette.OPEN_PALETTE_COUNT += 1
 		self.settings = settings
 		self.tiletype = tiletype
@@ -26,33 +26,33 @@ class TilePalette(PyMSDialog):
 		self.gettile = parent.gettile
 		self.editing = editing
 		self.edited = False
-		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TILETYPE_GROUP,True), set_min_size=(True,True))
+		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TileType.group,True), set_min_size=(True,True))
 
 	def widgetize(self):
 		typename = ''
 		smallertype = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			typename = 'MegaTile Groups'
 			smallertype = 'MegaTiles'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			typename = 'MegaTiles'
 			smallertype = 'MiniTiles'
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			typename = 'MiniTiles'
 		self.toolbar = None
 		if self.editing:
 			self.toolbar = Toolbar(self)
 			self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add', Key.Insert, enabled=False, tags='can_add')
-			if self.tiletype != TILETYPE_MINI:
+			if self.tiletype != TileType.mini:
 				self.toolbar.add_section()
 				self.toolbar.add_button(Assets.get_image('colors'), self.select_smaller, 'Select %s' % smallertype, Ctrl.m)
-			if self.tiletype != TILETYPE_GROUP:
+			if self.tiletype != TileType.group:
 				self.toolbar.add_section()
 				self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit %s' % typename, Key.Return)
 			self.toolbar.add_spacer(20)
 			self.toolbar.add_button(Assets.get_image('exportc'), self.export_graphics, 'Export %s Graphics' % typename, Ctrl.e, enabled=False, tags='has_selection')
 			self.toolbar.add_button(Assets.get_image('importc'), self.import_graphics, 'Import %s Graphics' % typename, Ctrl.i)
-			if self.tiletype != TILETYPE_MINI:
+			if self.tiletype != TileType.mini:
 				self.toolbar.add_section()
 				self.toolbar.add_button(Assets.get_image('export'), self.export_settings, 'Export %s Settings' % typename, Shift.Ctrl.e, enabled=False, tags='has_selection')
 				self.toolbar.add_button(Assets.get_image('import'), self.import_settings, 'Import %s Settings' % typename, Shift.Ctrl.i)
@@ -95,15 +95,15 @@ class TilePalette(PyMSDialog):
 	def select_smaller(self):
 		ids = []
 		for id in self.palette.selected:
-			if self.tiletype == TILETYPE_GROUP:
+			if self.tiletype == TileType.group:
 				for sid in self.tileset.cv5.groups[id][13]:
 					if sid and not sid in ids:
 						ids.append(sid)
-			elif self.tiletype == TILETYPE_MEGA:
+			elif self.tiletype == TileType.mega:
 				for sid,_ in self.tileset.vx4.graphics[id]:
 					if not sid in ids:
 						ids.append(sid)
-		TilePalette(self, self.settings, TILETYPE_MEGA if self.tiletype == TILETYPE_GROUP else TILETYPE_MINI, ids, editing=True)
+		TilePalette(self, self.settings, TileType.mega if self.tiletype == TileType.group else TileType.mini, ids, editing=True)
 
 	def mark_edited(self):
 		self.edited = True
@@ -111,13 +111,13 @@ class TilePalette(PyMSDialog):
 	def get_title(self):
 		count = 0
 		max_count = 0
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			count = len(self.tileset.cv5.groups)
 			max_count = self.tileset.groups_max()
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			count = len(self.tileset.vx4.graphics)
 			max_count = self.tileset.megatiles_max()
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			count = len(self.tileset.vr4.images)
 			max_count = self.tileset.minitiles_max()
 		return '%s Palette [%d/%d]' % (['Group','MegaTile','MiniTile Image'][self.tiletype], count,max_count)
@@ -128,11 +128,11 @@ class TilePalette(PyMSDialog):
 		if self.toolbar is None:
 			return
 		at_max = False
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			at_max = (self.tileset.groups_remaining() == 0)
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			at_max = (self.tileset.megatiles_remaining() == 0)
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			at_max = (self.tileset.minitiles_remaining() == 0 and self.tileset.vx4.expanded)
 		self.toolbar.tag_enabled('can_add', not at_max)
 
@@ -150,10 +150,10 @@ class TilePalette(PyMSDialog):
 
 	def add(self):
 		select = 0
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			self.tileset.cv5.groups.append([0] * 13 + [[0] * 16])
 			select = len(self.tileset.cv5.groups)-1
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			self.tileset.vf4.flags.append([0]*16)
 			self.tileset.vx4.add_tile(((0,0),)*16)
 			select = len(self.tileset.vx4.graphics)-1
@@ -174,11 +174,11 @@ class TilePalette(PyMSDialog):
 
 	def export_graphics(self):
 		typename = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			typename = 'MegaTile'
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			typename = 'MiniTile'
 		path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export %s Graphics' % typename, filetypes=[FileType.bmp()])
 		if path:
@@ -203,11 +203,11 @@ class TilePalette(PyMSDialog):
 	def export_settings(self):
 		if not len(self.palette.selected):
 			return
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export MegaTile Group Settings', filetypes=[FileType.txt()])
 			if path:
-				self.tileset.export_settings(TILETYPE_GROUP, path, self.palette.selected)
-		elif self.tiletype == TILETYPE_MEGA:
+				self.tileset.export_settings(TileType.group, path, self.palette.selected)
+		elif self.tiletype == TileType.mega:
 			from .MegaTileSettingsExporter import MegaTileSettingsExporter
 			MegaTileSettingsExporter(self, self.settings, self.palette.selected)
 
@@ -220,10 +220,10 @@ class TilePalette(PyMSDialog):
 	def edit(self, e=None):
 		if not len(self.palette.selected):
 			return
-		if self.tiletype == TILETYPE_MEGA:
+		if self.tiletype == TileType.mega:
 			from .MegaEditor import MegaEditor
 			MegaEditor(self, self.settings, self.palette.selected[0])
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			from .MiniEditor import MiniEditor
 			MiniEditor(self, self.palette.selected[0])
 

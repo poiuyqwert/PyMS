@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 	from typing import BinaryIO
 
 class VX4Minitile(object):
-	def __init__(self):
-		self.flipped = False
-		self.image_id = 0
+	def __init__(self, image_id=0, flipped=False): # type: (int, bool) -> None 
+		self.image_id = image_id
+		self.flipped = flipped
 
 	def load_data(self, data): # type: (bytes) -> None
 		if len(data) == 2:
@@ -31,11 +31,11 @@ class VX4Minitile(object):
 		return struct.pack(format, int(self.flipped) | (self.image_id << 1))
 
 	def __hash__(self) -> int:
-		return hash((self.flipped, self.image_id))
+		return hash((self.image_id, self.flipped))
 
 class VX4Megatile(object):
-	def __init__(self): # type: () -> None
-		self.minitiles = [] # type: list[VX4Minitile]
+	def __init__(self, minitiles=[]): # type: (list[VX4Minitile]) -> None
+		self.minitiles = minitiles
 
 	def load_data(self, data): # type: (bytes) -> None
 		size = int(len(data) / 16)
@@ -58,38 +58,46 @@ class VX4(object):
 	MAX_ID = 65535
 
 	def __init__(self, expanded=False): # type: (bool) -> None
-		self.megatiles = [] # type: list[VX4Megatile]
-		self.lookup = {} # type: dict[int, list[int]]
-		self.expanded = expanded
+		self._megatiles = [] # type: list[VX4Megatile]
+		self._lookup = {} # type: dict[int, list[int]]
+		self._expanded = expanded
 
-	def graphics_remaining(self): # type: () -> int
-		return (VX4.MAX_ID+1) - len(self.megatiles)
+	def is_expanded(self): # type: () -> bool
+		return self._expanded
 
-	# def find_tile(self, tile):
-	# 	tile = tuple(tuple(r) for r in tile)
-	# 	tile_hash = hash(tile)
-	# 	if tile_hash in self.lookup:
-	# 		return self.lookup[tile_hash]
-	# 	return None
+	def expand(self): # type: () -> None
+		self._expanded = True
+
+	def megatile_count(self): # type: () -> int
+		return len(self._megatiles)
+
+	def megatiles_remaining(self): # type: () -> int
+		return (VX4.MAX_ID+1) - len(self._megatiles)
+
+	def find_tile_ids(self, tile): # type: (VX4Megatile) -> list[int]
+		return self._lookup.get(hash(tile), [])
+
+	def get_tile(self, id): # type: (int) -> VX4Megatile
+		return self._megatiles[id]
 
 	def add_tile(self, tile): # type: (VX4Megatile) -> None
-		id = len(self.megatiles)
-		self.megatiles.append(tile)
+		id = len(self._megatiles)
+		self._megatiles.append(tile)
 		tile_hash = hash(tile)
-		if not tile_hash in self.lookup:
-			self.lookup[tile_hash] = []
-		self.lookup[tile_hash].append(id)
+		if not tile_hash in self._lookup:
+			self._lookup[tile_hash] = []
+		self._lookup[tile_hash].append(id)
 
 	def set_tile(self, id, tile): # type: (int, VX4Megatile) -> None
-		old_hash = hash(self.megatiles[id])
-		self.lookup[old_hash].remove(id)
-		if len(self.lookup[old_hash]) == 0:
-			del self.lookup[old_hash]
-		self.megatiles[id] = tile
+		old_hash = hash(self._megatiles[id])
+		self._lookup[old_hash].remove(id)
+		if len(self._lookup[old_hash]) == 0:
+			del self._lookup[old_hash]
+		self._megatiles[id] = tile
 		tile_hash = hash(tile)
-		if not tile_hash in self.lookup:
-			self.lookup[tile_hash] = []
-		self.lookup[tile_hash].append(id)
+		if not tile_hash in self._lookup:
+			self._lookup[tile_hash] = []
+		self._lookup[tile_hash].append(id)
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
 	def load_file(self, file, expanded=None): # type: (str | BinaryIO, bool | None) -> None
@@ -110,21 +118,21 @@ class VX4(object):
 				megatile = VX4Megatile()
 				megatile.load_data(data[o:o+struct_size])
 				o += struct_size
-				self.megatiles.append(megatile)
+				self._megatiles.append(megatile)
 				tile_hash = hash(megatile)
 				if not tile_hash in lookup:
 					lookup[tile_hash] = []
 				lookup[tile_hash].append(id)
 		except:
 			raise PyMSError('Load',"Unsupported %s '%s', could possibly be corrupt" % (file_type, file))
-		self.megatiles = megatiles
-		self.lookup = lookup
-		self.expanded = expanded
+		self._megatiles = megatiles
+		self._lookup = lookup
+		self._expanded = expanded
 
 	def save_file(self, file): # type: (str | BinaryIO) -> None
 		data = b''
-		for megatile in self.megatiles:
-			data += megatile.save_data(self.expanded)
+		for megatile in self._megatiles:
+			data += megatile.save_data(self._expanded)
 		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')

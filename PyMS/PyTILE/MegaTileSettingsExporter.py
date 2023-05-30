@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_MEGA
+from ..FileFormats.Tileset.Tileset import TileType.mega
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -49,7 +49,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 	def export(self):
 		path = self.settings.lastpath.settings.select_save_file(self, key='export', title='Export MegaTile Settings', filetypes=[FileType.txt()])
 		if path:
-			self.tileset.export_settings(TILETYPE_MEGA, path, self.ids)
+			self.tileset.export_settings(TileType.mega, path, self.ids)
 			self.ok()
 
 	def dismiss(self):

@@ -1,13 +1,13 @@
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
+from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini
 
 from ..Utilities.UIKit import *
 
 from math import ceil, floor
 
 class TilePaletteView(Frame):
-	# sub_select currently only supported by TILETYPE_GROUP when multiselect=False
-	def __init__(self, parent, tiletype=TILETYPE_GROUP, select=None, delegate=None, multiselect=True, sub_select=False):
+	# sub_select currently only supported by TileType.group when multiselect=False
+	def __init__(self, parent, tiletype=TileType.group, select=None, delegate=None, multiselect=True, sub_select=False):
 		Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected = []
@@ -61,21 +61,21 @@ class TilePaletteView(Frame):
 
 	def get_tile_size(self, tiletype=None, group=False):
 		tiletype = self.tiletype if tiletype is None else tiletype
-		if tiletype == TILETYPE_GROUP:
+		if tiletype == TileType.group:
 			return [32.0 * (16 if group else 1),33.0]
-		elif tiletype == TILETYPE_MEGA:
+		elif tiletype == TileType.mega:
 			return [32.0 + (0 if group else 1),32.0 + (0 if group else 1)]
-		elif tiletype == TILETYPE_MINI:
+		elif tiletype == TileType.mini:
 			return [25.0,25.0]
 	def get_tile_count(self):
 		tileset = self.delegate.tile_palette_get_tileset()
 		if not tileset:
 			return 0
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			return len(tileset.cv5.groups) * 16
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			return len(tileset.vx4.graphics)
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			return len(tileset.vr4.images)
 	def get_total_size(self):
 		tile_size = self.get_tile_size()
@@ -95,7 +95,7 @@ class TilePaletteView(Frame):
 	def draw_selections(self):
 		self.canvas.delete('selection')
 		self.canvas.delete('sub_selection')
-		tile_size = self.get_tile_size(group=self.tiletype == TILETYPE_GROUP)
+		tile_size = self.get_tile_size(group=self.tiletype == TileType.group)
 		columns = int(floor(self.canvas.winfo_width() / tile_size[0]))
 		if columns:
 			for id in self.selected:
@@ -103,7 +103,7 @@ class TilePaletteView(Frame):
 				y = (id / columns) * tile_size[1]
 				self.canvas.create_rectangle(x, y, x+tile_size[0], y+tile_size[1], outline='#AAAAAA' if self.sub_select else '#FFFFFF', tags='selection')
 				if self.sub_select:
-					mega_size = self.get_tile_size(TILETYPE_MEGA, group=True)
+					mega_size = self.get_tile_size(TileType.mega, group=True)
 					x += mega_size[0] * self.sub_selection
 					self.canvas.create_rectangle(x, y, x+mega_size[0]+1, y+mega_size[1]+1, outline='#FFFFFF', tags='sub_selection')
 
@@ -147,19 +147,19 @@ class TilePaletteView(Frame):
 						if self.visible_range and id >= self.visible_range[0] and id <= self.visible_range[1]:
 							self.canvas.coords('tile%s' % id, x,y)
 						else:
-							if self.tiletype == TILETYPE_GROUP:
+							if self.tiletype == TileType.group:
 								group = int(id / 16.0)
 								megatile = tileset.cv5.groups[group][13][id % 16]
 								self.canvas.images[id] = self.gettile(megatile,cache=True)
-							elif self.tiletype == TILETYPE_MEGA:
+							elif self.tiletype == TileType.mega:
 								self.canvas.images[id] = self.gettile(id,cache=True)
-							elif self.tiletype == TILETYPE_MINI:
+							elif self.tiletype == TileType.mini:
 								self.canvas.images[id] = self.gettile((id,0),cache=True)
 							tag = 'tile%s' % id
 							self.canvas.create_image(x,y, image=self.canvas.images[id], tags=tag, anchor=NW)
 							def select(id, modifier):
 								sub_select = None
-								if self.tiletype == TILETYPE_GROUP:
+								if self.tiletype == TileType.group:
 									if self.sub_select:
 										sub_select = id % 16
 									id /= 16
@@ -168,7 +168,7 @@ class TilePaletteView(Frame):
 							self.canvas.tag_bind(tag, Shift.Click_Left, lambda e,id=id: select(id,'shift'))
 							self.canvas.tag_bind(tag, Ctrl.Click_Left, lambda e,id=id: select(id,'cntrl'))
 							if hasattr(self.delegate, 'tile_palette_double_clicked'):
-								self.canvas.tag_bind(tag, Double.Click_Left, lambda e,id=id / (16 if self.tiletype == TILETYPE_GROUP else 1): self.delegate.tile_palette_double_clicked(id))
+								self.canvas.tag_bind(tag, Double.Click_Left, lambda e,id=id / (16 if self.tiletype == TileType.group else 1): self.delegate.tile_palette_double_clicked(id))
 			self.visible_range = visible_range
 			self.draw_selections()
 

@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TILETYPE_MINI
+from ..FileFormats.Tileset.Tileset import HEIGHT_LOW, HEIGHT_MID, HEIGHT_HIGH, TileType.mini
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -319,7 +319,7 @@ class MegaEditorView(Frame):
 		self.delegate.mark_edited()
 
 	def change(self, tiletype, minitile_id):
-		if tiletype == TILETYPE_MINI:
+		if tiletype == TileType.mini:
 			self.minitile.set(minitile_id)
 		elif tiletype is not None:
 			return
@@ -336,7 +336,7 @@ class MegaEditorView(Frame):
 		TilePalette(
 			self.delegate,
 			self.settings,
-			TILETYPE_MINI,
+			TileType.mini,
 			self.delegate.tileset.vx4.graphics[self.megatile_id][self.minitile_n][0],
 			self,
 			editing=self.palette_editable

@@ -9,13 +9,15 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from typing import BinaryIO
 
+
+
 class CV5Flag:
 	walkable          = 0x0001 # Walkable (gets overwritten by SC based on VF4 flags)
-	# unknown_0002      = 0x0002
+	unknown_0002      = 0x0002
 	unwalkable        = 0x0004 # Unwalkable (gets overwritten by SC based on VF4 flags)
-	# unknown_0008      = 0x0008
+	unknown_0008      = 0x0008
 	has_doodad_cover  = 0x0010 # Has doodad cover
-	# unknown_0020      = 0x0020
+	unknown_0020      = 0x0020
 	creep             = 0x0040 # Creep (Zerg can build here when this flag is combined with the Temporary creep flag)
 	unbuildable       = 0x0080
 	blocks_view       = 0x0100 # Blocks view (gets overwritten by SC based on VF4 flags)
@@ -28,6 +30,8 @@ class CV5Flag:
 	special_placeable = 0x8000 # Allow Beacons/Start Locations to be placeable
 
 class CV5Group(object):
+	TYPE_DOODAD = 1
+
 	def __init__(self): # type: () -> None
 		self.type = 0 
 		self.flags = 0
@@ -68,6 +72,18 @@ class CV5Group(object):
 			self._piece_down_or_unknown8
 		] + self.megatile_ids
 		return struct.pack('<26H', *values)
+
+	def update_settings(self, group): # type: (CV5Group) -> None
+		self.type = group.type
+		self.flags = group.flags
+		self._edge_left_or_overlay_id = group._edge_left_or_overlay_id
+		self._edge_up_or_scr = group._edge_up_or_scr
+		self._edge_right_or_string_id = group._edge_right_or_string_id
+		self._edge_down_or_unknown4 = group._edge_down_or_unknown4
+		self._piece_left_or_dddata_id = group._piece_left_or_dddata_id
+		self._piece_up_or_width = group._piece_up_or_width
+		self._piece_right_or_height = group._piece_right_or_height
+		self._piece_down_or_unknown8 = group._piece_down_or_unknown8
 
 	@property
 	def basic_edge_left(self): # type: () -> int
@@ -193,7 +209,7 @@ class CV5(object):
 
 	def groups_remaining(self): # type: () -> int
 		return (CV5.MAX_ID+1) - len(self._groups)
-
+ 
 	def get_group(self, id): # type: (int) -> CV5Group
 		return self._groups[id]
 

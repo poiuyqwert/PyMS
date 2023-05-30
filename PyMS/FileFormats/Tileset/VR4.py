@@ -20,10 +20,11 @@ class VR4(object):
 		self._images = [] # type: list[VR4Image]
 		self._lookup = {} # type: dict[int, list[int]]
 
-	def max_id(self, expanded_vx4=False): # type: (bool) -> int
+	@staticmethod
+	def max_id(expanded_vx4=False): # type: (bool) -> int
 		return VR4.MAX_ID_EXPANDED_VX4 if expanded_vx4 else VR4.MAX_ID
 
-	def images_count(self): # type: () -> int
+	def image_count(self): # type: () -> int
 		return len(self._images)
 
 	def images_remaining(self, expanded_vx4=False): # type: (bool) -> int
@@ -38,7 +39,7 @@ class VR4(object):
 		return (VR4.image_hash(image), VR4.image_hash(image, True))
 
 	# returns ([normal_ids],[flipped_ids])
-	def find_image(self, image): # type: (VR4ImageInput) -> tuple[list[int], list[int]]
+	def find_image_ids(self, image): # type: (VR4ImageInput) -> tuple[list[int], list[int]]
 		image = tuple(tuple(r) for r in image)
 		image_hash, flipped_hash = self.image_hashes(image)
 		return (self._lookup.get(image_hash, []), self._lookup.get(flipped_hash, []))

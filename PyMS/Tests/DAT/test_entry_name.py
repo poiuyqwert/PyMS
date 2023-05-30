@@ -1086,7 +1086,7 @@ class Test_Entry_Name(unittest.TestCase):
 		portdatadat = PortraitsDAT()
 		portdatadat.load_file(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
-		portdatadat.get_entry(110).idle.portrait_file = 3 # tmarine\\TMaFid0
+		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\TGhFid0
 
 		expected_names = (
 			'Portrait #0',

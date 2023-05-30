@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI
+from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -8,18 +8,18 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
 
 class GraphicsImporter(PyMSDialog):
-	def __init__(self, parent, settings, tiletype=TILETYPE_GROUP, ids=None):
+	def __init__(self, parent, settings, tiletype=TileType.group, ids=None):
 		self.settings = settings
 		self.tiletype = tiletype
 		self.ids = ids
 		self.tileset = parent.tileset
 		self.gettile = parent.gettile
 		title = 'Import '
-		if tiletype == TILETYPE_GROUP:
+		if tiletype == TileType.group:
 			title += 'MegaTile Group'
-		elif tiletype == TILETYPE_MEGA:
+		elif tiletype == TileType.mega:
 			title += 'MegaTile'
-		elif tiletype == TILETYPE_MINI:
+		elif tiletype == TileType.mini:
 			title += 'MiniTile'
 		title += ' Graphics'
 		PyMSDialog.__init__(self, parent, title, resizable=(True,True), set_min_size=(True,True))
@@ -64,7 +64,7 @@ class GraphicsImporter(PyMSDialog):
 		frame.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=2)
 		self.settings_frame = LabelFrame(self, text='Settings')
 		sets = Frame(self.settings_frame)
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			g = LabelFrame(sets, text='Reuse MegaTiles')
 			f = Frame(g)
 			Checkbutton(f, text='Duplicates (Old)', variable=self.megatiles_reuse_duplicates_old, anchor=W).pack(side=LEFT)
@@ -75,7 +75,7 @@ class GraphicsImporter(PyMSDialog):
 			f = Frame(g)
 			Checkbutton(f, text='Null:', variable=self.megatiles_reuse_null, anchor=W).pack(side=LEFT)
 			Entry(f, textvariable=self.megatiles_null_id, font=Font.fixed(), width=5).pack(side=LEFT)
-			Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MEGA)).pack(side=LEFT, padx=1)
+			Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TileType.mega)).pack(side=LEFT, padx=1)
 			f.pack(side=TOP, fill=X)
 			g.grid(column=0,row=0, padx=(0,3), sticky=W+E)
 			sets.grid_columnconfigure(0, weight=1)
@@ -89,7 +89,7 @@ class GraphicsImporter(PyMSDialog):
 		f = Frame(g)
 		Checkbutton(f, text='Null:', variable=self.minitiles_reuse_null, anchor=W).pack(side=LEFT)
 		Entry(f, textvariable=self.minitiles_null_id, font=Font.fixed(), width=5).pack(side=LEFT)
-		Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TILETYPE_MINI)).pack(side=LEFT, padx=1)
+		Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda *_: self.select_null(TileType.mini)).pack(side=LEFT, padx=1)
 		f.pack(side=TOP, fill=X)
 		g.grid(column=1,row=0, sticky=W+E)
 		sets.grid_columnconfigure(1, weight=1)
@@ -119,11 +119,11 @@ class GraphicsImporter(PyMSDialog):
 
 	def load_settings(self):
 		type_key = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			type_key = 'groups'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			type_key = 'megatiles'
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			type_key = 'minitiles'
 		type_settings = self.settings['import'].graphics[type_key]
 		self.megatiles_reuse_duplicates_old.set(type_settings.get('megatiles_reuse_duplicates_old',False))
@@ -218,26 +218,26 @@ class GraphicsImporter(PyMSDialog):
 
 	def select_null(self, tiletype):
 		id = 0
-		if tiletype == TILETYPE_MEGA:
+		if tiletype == TileType.mega:
 			id = self.megatiles_null_id.get()
-		elif tiletype == TILETYPE_MINI:
+		elif tiletype == TileType.mini:
 			id = self.minitiles_null_id.get()
 		from .TilePalette import TilePalette
 		TilePalette(self, self.settings, tiletype, id)
 	def change(self, tiletype, id):
-		if tiletype == TILETYPE_MEGA:
+		if tiletype == TileType.mega:
 			self.megatiles_null_id.set(id)
-		elif tiletype == TILETYPE_MINI:
+		elif tiletype == TileType.mini:
 			self.minitiles_null_id.set(id)
 
 	def reset_options(self):
 		if 'import' in self.settings:
 			type_key = ''
-			if self.tiletype == TILETYPE_GROUP:
+			if self.tiletype == TileType.group:
 				type_key = 'groups'
-			elif self.tiletype == TILETYPE_MEGA:
+			elif self.tiletype == TileType.mega:
 				type_key = 'megatiles'
-			elif self.tiletype == TILETYPE_MINI:
+			elif self.tiletype == TileType.mini:
 				type_key = 'minitiles'
 			del self.settings['import'].graphics[type_key]
 		self.load_settings()
@@ -251,17 +251,17 @@ class GraphicsImporter(PyMSDialog):
 			'replace_selections': not not self.replace_selections.get(),
 			'auto_close': not not self.auto_close.get()
 		}
-		if self.tiletype != TILETYPE_MINI:
+		if self.tiletype != TileType.mini:
 			type_settings['megatiles_reuse_duplicates_old'] = not not self.megatiles_reuse_duplicates_old.get()
 			type_settings['megatiles_reuse_duplicates_new'] = not not self.megatiles_reuse_duplicates_new.get()
 			type_settings['megatiles_reuse_null'] = not not self.megatiles_reuse_null.get()
 			type_settings['megatiles_null_id'] = self.megatiles_null_id.get()
 		type_key = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			type_key = 'groups'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			type_key = 'megatiles'
-		elif self.tiletype == TILETYPE_MINI:
+		elif self.tiletype == TileType.mini:
 			type_key = 'minitiles'
 		self.settings['import'].graphics[type_key] = type_settings
 		self.settings.windows['import'].graphics.save_window_size(('group','mega','mini')[self.tiletype], self)

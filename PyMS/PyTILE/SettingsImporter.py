@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_GROUP, TILETYPE_MEGA, TILETYPE_MINI, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
+from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
@@ -19,9 +19,9 @@ class SettingsImporter(PyMSDialog):
 		self.ids = ids
 		self.tileset = parent.tileset
 		typename = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			typename = 'MegaTile'
 		PyMSDialog.__init__(self, parent, 'Import %s Settings' % typename, resizable=(True,False), set_min_size=(True,True))
 
@@ -67,9 +67,9 @@ class SettingsImporter(PyMSDialog):
 
 	def select_path(self):
 		typename = ''
-		if self.tiletype == TILETYPE_GROUP:
+		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
-		elif self.tiletype == TILETYPE_MEGA:
+		elif self.tiletype == TileType.mega:
 			typename = 'MegaTile'
 		path = self.settings.lastpath.settings.select_open_file(self, key='import', title='Import %s Settings' % typename, filetypes=[FileType.txt()])
 		if path:

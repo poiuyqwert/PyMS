@@ -22,7 +22,7 @@ class VF4(object):
 	def __init__(self): # type: () -> None
 		self._flags = [] # type: list[list[int]]
 
-	def flags_count(self): # type: () -> int
+	def flag_count(self): # type: () -> int
 		return len(self._flags)
 
 	def flags_remaining(self): # type: () -> int

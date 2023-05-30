@@ -4,7 +4,7 @@ from .MegaEditorView import MegaEditorView
 from .TilePalette import TilePalette
 from .Placeability import Placeability
 
-from ..FileFormats.Tileset.Tileset import Tileset, TILETYPE_GROUP, TILETYPE_MEGA, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
+from ..FileFormats.Tileset.Tileset import Tileset, TileType.group, TileType.mega, megatile_to_photo, minitile_to_photo, HEIGHT_MID, HEIGHT_HIGH
 from ..FileFormats import TBL
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, FFile, register_registry
@@ -62,7 +62,7 @@ class PyTILE(MainWindow):
 		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TILETYPE_GROUP), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TileType.group), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
@@ -75,7 +75,7 @@ class PyTILE(MainWindow):
 
 		self.disable = []
 
-		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TILETYPE_MEGA, int(id)))
+		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TileType.mega, int(id)))
 		self.index = IntegerVar(0,[0,65535],callback=self.group_values_changed)
 		self.flags = IntegerVar(0,[0,15],callback=self.group_values_changed)
 		self.groundheight = IntegerVar(0,[0,15],callback=self.group_values_changed)
@@ -170,7 +170,7 @@ class PyTILE(MainWindow):
 		self.copy_doodadgroup_group_string_id.trace('w', self.action_states)
 
 		mid = Frame(self)
-		self.palette = TilePaletteView(mid, TILETYPE_GROUP, delegate=self, multiselect=False, sub_select=True)
+		self.palette = TilePaletteView(mid, TileType.group, delegate=self, multiselect=False, sub_select=True)
 		self.palette.pack(side=LEFT, fill=Y)
 
 		settings = Frame(mid)
@@ -348,7 +348,7 @@ class PyTILE(MainWindow):
 			group = self.tileset.cv5.groups[self.palette.selected[0]]
 			mega = group[13][self.palette.sub_selection]
 			f = FFile()
-			self.tileset.export_settings(TILETYPE_MEGA, f, [mega], options)
+			self.tileset.export_settings(TileType.mega, f, [mega], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
 		self.copy_mega_btn = Button(copy_mega_group, text='Copy (%s)' % Shift.Ctrl.c.description(), state=DISABLED, command=copy_mega)
@@ -361,7 +361,7 @@ class PyTILE(MainWindow):
 			mega = group[13][self.palette.sub_selection]
 			settings = self.clipboard_get()
 			try:
-				self.tileset.import_settings(TILETYPE_MEGA, settings, [mega])
+				self.tileset.import_settings(TileType.mega, settings, [mega])
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -434,7 +434,7 @@ class PyTILE(MainWindow):
 			if not max(options.values()):
 				return
 			f = FFile()
-			self.tileset.export_settings(TILETYPE_GROUP, f, [group], options)
+			self.tileset.export_settings(TileType.group, f, [group], options)
 			self.clipboard_clear()
 			self.clipboard_append(f.data)
 		self.copy_tilegroup_btn = Button(copy_tilegroup_group, text='Copy (%s)' % Ctrl.Alt.c.description(), state=DISABLED, command=copy_tilegroup)
@@ -446,7 +446,7 @@ class PyTILE(MainWindow):
 			group = self.palette.selected[0]
 			settings = self.clipboard_get()
 			try:
-				self.tileset.import_settings(TILETYPE_GROUP, settings, [group])
+				self.tileset.import_settings(TileType.group, settings, [group])
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -720,16 +720,16 @@ class PyTILE(MainWindow):
 			self,
 			self.settings,
 			tile_type,
-			self.palette.selected[0] if tile_type == TILETYPE_GROUP else self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection],
+			self.palette.selected[0] if tile_type == TileType.group else self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection],
 			editing=True
 		)
 
 	def change(self, tiletype, id):
 		if not self.tileset:
 			return
-		if tiletype == TILETYPE_GROUP:
+		if tiletype == TileType.group:
 			self.palette.select(id, sub_select=0, scroll_to=True)
-		elif tiletype == TILETYPE_MEGA and not self.loading_megas:
+		elif tiletype == TileType.mega and not self.loading_megas:
 			self.tileset.cv5.groups[self.palette.selected[0]][13][self.palette.sub_selection] = id
 			self.palette.draw_tiles(force=True)
 			self.mega_editor.set_megatile(id)
