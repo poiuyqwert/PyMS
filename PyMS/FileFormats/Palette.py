@@ -1,6 +1,7 @@
 
-from ..FileFormats.PCX import PCX
-from ..FileFormats.BMP import BMP
+from .Images import RawPalette
+from .PCX import PCX
+from .BMP import BMP
 
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.fileutils import load_file
@@ -10,10 +11,7 @@ from ..Utilities.UIKit.FileType import FileType
 import struct
 from enum import Enum
 
-from typing import List, Tuple, BinaryIO
-
-RGB = Tuple[int, int, int]
-RawPalette = List[RGB]
+from typing import BinaryIO
 
 class Palette:
 	class Format(Enum):

@@ -1,5 +1,6 @@
 
 from .Palette import RawPalette
+from .Images import Pixels, RawPalette
 
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
@@ -7,9 +8,7 @@ from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct, math
 
-from typing import List, BinaryIO
-
-Pixels = List[List[int]]
+from typing import BinaryIO
 
 def getPadding(value,alignment): # type: (int, int) -> int
 	return int(math.ceil(value/float(alignment)))*alignment - value

@@ -5,26 +5,28 @@ from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct, re
 
+from typing import BinaryIO, TextIO, cast
+
 class LO:
-	def __init__(self):
+	def __init__(self): # type: () -> None
 		self.frames = [[[0,0]]]
 
-	def load_file(self, file):
+	def load_file(self, file): # type: (str | BinaryIO) -> None
 		data = load_file(file, 'LO*')
 		try:
-			frames,overlays = struct.unpack('<LL', data[:8])
-			framedata = []
+			frames,overlays = tuple(int(v) for v in struct.unpack('<LL', data[:8]))
+			framedata = [] # type: list[list[list[int]]]
 			for frame in range(frames):
 				framedata.append([])
 				offset = struct.unpack('<L', data[8+4*frame:12+4*frame])[0]
-				for _overlay in range(overlays):
-					framedata[-1].append(list(struct.unpack('bb', data[offset:offset+2])))
+				for _ in range(overlays):
+					framedata[-1].append(list(int(v) for v in struct.unpack('bb', data[offset:offset+2])))
 					offset += 2
 			self.frames = framedata
 		except:
 			raise PyMSError('Load',"Unsupported LO* file '%s', could possibly be corrupt" % file)
 
-	def interpret(self, file):
+	def interpret(self, file): # type: (str | TextIO) -> None
 		if isinstance(file, str):
 			try:
 				f = open(file,'r')
@@ -34,7 +36,7 @@ class LO:
 				raise PyMSError('Interpreting',"Could not load file '%s'" % file)
 		else:
 			data = file.readlines()
-		frames = []
+		frames = [] # type: list[list[list[int]]]
 		framedata = False
 		overlays = -1
 		for n,l in enumerate(data):
@@ -69,10 +71,10 @@ class LO:
 						raise PyMSError('Interpreting',"Unknown line format",n,line)
 		self.frames = frames
 
-	def decompile(self, file):
+	def decompile(self, file): # type: (str | TextIO) -> None
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'w')
+				f = cast(TextIO, AtomicWriter(file, 'w'))
 			except:
 				raise PyMSError('Decompile',"Could not open file '%s'" % file)
 		else:
@@ -84,15 +86,15 @@ class LO:
 			f.write('\n')
 		f.close()
 
-	def compile(self, file):
+	def compile(self, file): # type: (str) -> None
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
 			raise PyMSError('Compile',"Could not open file '%s'" % file)
 		overlays = len(self.frames[0])
 		f.write(struct.pack('<LL', len(self.frames), overlays))
-		data = ''
-		offsets = ''
+		data = b''
+		offsets = b''
 		offset = 8 + 4 * len(self.frames)
 		for frame in self.frames:
 			offsets += struct.pack('<L', offset)
