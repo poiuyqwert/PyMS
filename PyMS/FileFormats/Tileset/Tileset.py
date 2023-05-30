@@ -470,9 +470,9 @@ class Tileset(object):
 		bmp.image = [[] for _ in range(bmp.height)]
 		if tiletype == TileType.mega:
 			for mega_n,mega_id in enumerate(ids):
-				mega_y = (mega_n / tiles_wide) * tile_height
+				mega_y = int(mega_n / tiles_wide) * tile_height
 				for mini_n in range(16):
-					mini_y = (mini_n / 4) * 8
+					mini_y = int(mini_n / 4) * 8
 					minitile = self.vx4.get_tile(mega_id).minitiles[mini_n]
 					image = self.vr4.get_image(minitile.image_id)
 					for row_y,row in enumerate(image):
