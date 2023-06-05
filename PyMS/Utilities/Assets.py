@@ -2,6 +2,12 @@
 import os as _os
 import sys as _sys
 
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from .UIKit import PhotoImage
+	from .UIKit import Image
+	from .UIKit import ImageTk
+
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
 else:
@@ -13,10 +19,10 @@ internals_dir = _os.path.join(base_dir, 'PyMS')
 ## Versions
 versions_file_path = _os.path.join(internals_dir, 'versions.json')
 
-_VERSIONS = None
+_VERSIONS = {} # type: dict[str, str]
 def version(program_name): # type: (str) -> str
 	global _VERSIONS
-	if _VERSIONS is None:
+	if not _VERSIONS:
 		import json
 		with open(versions_file_path, 'r') as f:
 			_VERSIONS = json.load(f)
@@ -31,21 +37,19 @@ images_dir = _os.path.join(internals_dir, 'Images')
 def image_path(filename): # type: (str) -> str
 	return _os.path.join(images_dir, filename)
 
-_IMAGE_CACHE = {}
-def get_image(filename, cache=True): # type: (str, bool) -> (_PhotoImage | None)
-	from .UIKit import PhotoImage as _PhotoImage
+_IMAGE_CACHE = {} # type: dict[str, Image]
+def get_image(filename, cache=True): # type: (str, bool) -> Image
+	from .UIKit import PhotoImage
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	global _IMAGE_CACHE
 	if filename in _IMAGE_CACHE:
 		return _IMAGE_CACHE[filename]
 	path = image_path(filename)
-	if not _os.path.exists(path):
-		return None
 	try:
-		image = _PhotoImage(file=path)
+		image = PhotoImage(file=path)
 	except:
-		return None
+		image = PhotoImage()
 	if cache:
 		_IMAGE_CACHE[filename] = image
 	return image
@@ -123,7 +127,7 @@ class DataReference:
 	Sfxdata         = 'Sfxdata' # Sound Effects
 	ShieldSize      = 'ShieldSize' # Shield Sizes
 
-_DATA_CACHE = {}
+_DATA_CACHE = {} # type: dict[str, list[str]]
 def data_cache(filename): # type: (str) -> list[str]
 	global _DATA_CACHE
 	if not filename in _DATA_CACHE:
@@ -159,7 +163,7 @@ def internal_temp_file(filename):
 help_dir = _os.path.join(base_dir, 'Help')
 
 class HelpFolder(object):
-	def __init__(self, name): # type: (str) -> HelpFolder
+	def __init__(self, name): # type: (str) -> None
 		self.name = name
 		self.parent = None # type: (HelpFolder | None)
 		self.folders = [] # type: list[HelpFolder]
@@ -218,13 +222,13 @@ class HelpFolder(object):
 			result += '\n > ' + repr(folder).replace('\n', '\n  ')
 		return result
 class HelpFile(object):
-	def __init__(self, path, folder): # type: (str, HelpFolder) -> HelpFile
+	def __init__(self, path, folder): # type: (str, HelpFolder) -> None
 		self.path = '/'.join(_os.path.split(path))
 		self.name = _os.path.splitext(path.split('/')[-1])[0]
 		self.folder = folder
 
-_HELP_TREE = None
-def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
+_HELP_TREE = None # type: HelpFolder | None
+def help_tree(force_update=False): # type: (bool) -> HelpFolder
 	global _HELP_TREE 
 	if _HELP_TREE is not None and force_update == False:
 		return _HELP_TREE
@@ -245,6 +249,7 @@ def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
 			if ext != _os.extsep + 'md':
 				continue
 			folder.add_file(HelpFile(_os.path.relpath(_os.path.join(path, filename), help_dir), folder))
+	assert root is not None
 	_HELP_TREE = root
 	return root
 
@@ -261,8 +266,8 @@ def help_file_path(path): # type: (str) -> (str | None)
 		return None
 	return full_path
 
-_HELP_IMAGE_CACHE = {}
-def help_image(path): # type: (str) -> (_PhotoImage | None)
+_HELP_IMAGE_CACHE = {} # type: dict[str, Image]
+def help_image(path): # type: (str) -> (Image | None)
 	from .UIKit import PhotoImage as _PhotoImage
 	from .UIKit import PILImage as _PILImage
 	from .UIKit import ImageTk as _ImageTk
@@ -277,12 +282,13 @@ def help_image(path): # type: (str) -> (_PhotoImage | None)
 	global _HELP_IMAGE_CACHE
 	if full_path in _HELP_IMAGE_CACHE:
 		return _HELP_IMAGE_CACHE[full_path]
+	image: Image
 	try:
 		image = _PhotoImage(file=full_path)
 	except:
 		try:
 			pil_image = _PILImage.open(full_path)
-			image = _ImageTk.PhotoImage(pil_image)
+			image = cast(Image, _ImageTk.PhotoImage(pil_image))
 		except:
 			return None
 	_HELP_IMAGE_CACHE[full_path] = image
@@ -299,7 +305,7 @@ themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
 def theme_file_path(name): # type: (str) -> (str)
 	return _os.path.join(themes_dir, '%s.txt' % name)
 
-_THEME_LIST = None
+_THEME_LIST = None # type: list[str] | None
 def theme_list(): # type: () -> list[str]
 	global _THEME_LIST
 	if not _THEME_LIST:

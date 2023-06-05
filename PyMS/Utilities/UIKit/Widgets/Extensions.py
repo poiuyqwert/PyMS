@@ -4,6 +4,10 @@ try:
 except:
 	import tkinter as _Tk
 
+from typing import TYPE_CHECKING, Callable, Literal
+if TYPE_CHECKING:
+	from ..EventPattern import EventPattern
+
 class Extensions(_Tk.Misc):
 	def remove_bind(self, sequence, funcid): # type: (str, str) -> None
 		"""Unbind for this widget for event SEQUENCE  the

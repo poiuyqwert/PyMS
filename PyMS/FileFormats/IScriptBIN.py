@@ -179,9 +179,9 @@ def type_frameset(stage, bin, data=None):
 		if 0 > v or v > 255:
 			raise Exception()
 		if bin and bin.grpframes and v*17 > bin.grpframes:
-			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, int((bin.grpframes - 17) / 17)),extra=v)
+			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
 		if bin and bin.grpframes and v*17 > bin.grpframes - 17:
-			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, int((bin.grpframes - 17) / 17)),extra=v)
+			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
 	except PyMSWarning:
 		raise
 	except:

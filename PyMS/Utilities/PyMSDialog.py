@@ -44,7 +44,7 @@ class PyMSDialog(Toplevel):
 		self.grab_set()
 		self.wait_window(self)
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Widget | None)
 		return None
 	def setup_complete(self):
 		pass
@@ -55,10 +55,10 @@ class PyMSDialog(Toplevel):
 		self.master.focus_set()
 		self.destroy()
 
-	def ok(self, event=None):
+	def ok(self, event=None): # type: (Event | None) -> None
 		self.dismiss()
 
-	def cancel(self, event=None):
+	def cancel(self, event=None): # type: (Event | None) -> None
 		self.dismiss()
 
 	def maxsize(self, width=None, height=None):

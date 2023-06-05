@@ -34,11 +34,11 @@ class VX4Minitile(object):
 		return hash((self.image_id, self.flipped))
 
 class VX4Megatile(object):
-	def __init__(self, minitiles=[]): # type: (list[VX4Minitile]) -> None
+	def __init__(self, minitiles=[VX4Minitile()]*16): # type: (list[VX4Minitile]) -> None
 		self.minitiles = minitiles
 
 	def load_data(self, data): # type: (bytes) -> None
-		size = int(len(data) / 16)
+		size = len(data) // 16
 		o = 0
 		for _ in range(16):
 			minitile = VX4Minitile()
@@ -74,30 +74,30 @@ class VX4(object):
 	def megatiles_remaining(self): # type: () -> int
 		return (VX4.MAX_ID+1) - len(self._megatiles)
 
-	def find_tile_ids(self, tile): # type: (VX4Megatile) -> list[int]
-		return self._lookup.get(hash(tile), [])
+	def find_megatile_ids(self, megatile): # type: (VX4Megatile) -> list[int]
+		return self._lookup.get(hash(megatile), [])
 
-	def get_tile(self, id): # type: (int) -> VX4Megatile
+	def get_megatile(self, id): # type: (int) -> VX4Megatile
 		return self._megatiles[id]
 
-	def add_tile(self, tile): # type: (VX4Megatile) -> None
+	def add_megatile(self, megatile): # type: (VX4Megatile) -> None
 		id = len(self._megatiles)
-		self._megatiles.append(tile)
-		tile_hash = hash(tile)
-		if not tile_hash in self._lookup:
-			self._lookup[tile_hash] = []
-		self._lookup[tile_hash].append(id)
+		self._megatiles.append(megatile)
+		megatile_hash = hash(megatile)
+		if not megatile_hash in self._lookup:
+			self._lookup[megatile_hash] = []
+		self._lookup[megatile_hash].append(id)
 
-	def set_tile(self, id, tile): # type: (int, VX4Megatile) -> None
+	def set_megatile(self, id, megatile): # type: (int, VX4Megatile) -> None
 		old_hash = hash(self._megatiles[id])
 		self._lookup[old_hash].remove(id)
 		if len(self._lookup[old_hash]) == 0:
 			del self._lookup[old_hash]
-		self._megatiles[id] = tile
-		tile_hash = hash(tile)
-		if not tile_hash in self._lookup:
-			self._lookup[tile_hash] = []
-		self._lookup[tile_hash].append(id)
+		self._megatiles[id] = megatile
+		megatile_hash = hash(megatile)
+		if not megatile_hash in self._lookup:
+			self._lookup[megatile_hash] = []
+		self._lookup[megatile_hash].append(id)
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
 	def load_file(self, file, expanded=None): # type: (str | BinaryIO, bool | None) -> None
@@ -114,15 +114,15 @@ class VX4(object):
 		lookup = {} # type: dict[int, list[int]]
 		try:
 			o = 0
-			for id in range(int(len(data) / struct_size)):
+			for id in range(len(data) // struct_size):
 				megatile = VX4Megatile()
 				megatile.load_data(data[o:o+struct_size])
 				o += struct_size
 				self._megatiles.append(megatile)
-				tile_hash = hash(megatile)
-				if not tile_hash in lookup:
-					lookup[tile_hash] = []
-				lookup[tile_hash].append(id)
+				megatile_hash = hash(megatile)
+				if not megatile_hash in lookup:
+					lookup[megatile_hash] = []
+				lookup[megatile_hash].append(id)
 		except:
 			raise PyMSError('Load',"Unsupported %s '%s', could possibly be corrupt" % (file_type, file))
 		self._megatiles = megatiles

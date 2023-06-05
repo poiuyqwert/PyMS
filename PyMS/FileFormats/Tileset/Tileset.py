@@ -1,5 +1,6 @@
 
 try:
+	from tkinter import Image
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
@@ -26,14 +27,11 @@ import os, re, math
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Callable
+from typing import Callable, cast
 
 
-def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.PhotoImage | None)
-	try:
-		megatile = tileset.vx4.get_tile(megatile_id)
-	except:
-		return None
+def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> Image
+	megatile = tileset.vx4.get_megatile(megatile_id)
 	pi = PILImage.new('P', (32,32))
 	pal = [] # type: list[int]
 	for c in tileset.wpe.palette:
@@ -44,16 +42,15 @@ def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> (ImageTk.
 		for y,p in enumerate(tileset.vr4.get_image(minitile.image_id)):
 			if minitile.flipped:
 				p = p[::-1]
-			image[int(m/4)*8+y].extend(p)
+			image[(m // 4)*8+y].extend(p)
 	put = [] # type: list[int]
 	for row in image:
 		put.extend(row)
 	pi.putdata(put)
-	return ImageTk.PhotoImage(pi)
+	return cast(Image, ImageTk.PhotoImage(pi))
 
-def minitile_to_photo(tileset, minitile): # type: (Tileset, tuple[int, bool]) -> ImageTk.PhotoImage
-	image = tileset.vr4.get_image(minitile[0])
-	flip = minitile[1]
+def minitile_to_photo(tileset, minitile): # type: (Tileset, VX4Minitile) -> Image
+	image = tileset.vr4.get_image(minitile.image_id)
 	pi = PILImage.new('P', (24,24))
 	pal = [] # type: list[int]
 	for c in tileset.wpe.palette:
@@ -61,21 +58,21 @@ def minitile_to_photo(tileset, minitile): # type: (Tileset, tuple[int, bool]) ->
 	pi.putpalette(pal)
 	put = [] # type: list[int]
 	for _y,p in enumerate(image):
-		if flip:
+		if minitile.flipped:
 			p = p[::-1]
 		for x in p * 3:
 			put.extend((x,x,x))
 	pi.putdata(put)
-	return ImageTk.PhotoImage(pi)
+	return cast(Image, ImageTk.PhotoImage(pi))
 
 class TileType(Enum):
 	group = 0
 	mega = 1
 	mini = 2
 
-HEIGHT_LOW  = 0
-HEIGHT_MID  = (1 << 1)
-HEIGHT_HIGH = (1 << 2)
+# HEIGHT_LOW  = 0
+# HEIGHT_MID  = (1 << 1)
+# HEIGHT_HIGH = (1 << 2)
 
 @dataclass
 class ImportGraphicsOptions:
@@ -296,8 +293,8 @@ class Tileset(object):
 		new_groups = [] # type: list[list[int]]
 		update_groups = [] # # type: list[tuple[int, list[int]]]
 
-		minis_w = int(len(pixels[0]) / 8)
-		minis_h = int(len(pixels) / 8)
+		minis_w = len(pixels[0]) // 8
+		minis_h = len(pixels) // 8
 		for iy in range(minis_h):
 			py = iy * 8
 			for ix in range(minis_w):
@@ -355,8 +352,8 @@ class Tileset(object):
 				raise PyMSError('Importing','Import aborted because it exceeded the maximum minitile image count (%d + %d > %d)' % (self.vr4.image_count(),len(new_images),VR4.MAX_ID+1))
 			self.vx4.expand()
 		if tiletype == TileType.group or tiletype == TileType.mega:
-			megas_w = int(minis_w / 4)
-			megas_h = int(minis_h / 4)
+			megas_w = minis_w // 4
+			megas_h = minis_h // 4
 			for y in range(megas_h):
 				for x in range(megas_w):
 					minitiles = [] # type: list[VX4Minitile]
@@ -373,7 +370,7 @@ class Tileset(object):
 				tile_hash = hash(new_megatiles[i])
 				found = False
 				if tiletype != TileType.mega or not len(ids):
-					existing_ids = self.vx4.find_tile_ids(new_megatiles[i])
+					existing_ids = self.vx4.find_megatile_ids(new_megatiles[i])
 					if len(existing_ids) and (options.megatiles_reuse_duplicates_old or options.megatiles_reuse_null_with_id in existing_ids):
 						del new_megatiles[i]
 						megatile_ids.append(existing_ids[0])
@@ -426,11 +423,11 @@ class Tileset(object):
 			self.vr4.set_image(id, image)
 		# Update megatiles
 		for megatile in new_megatiles:
-			self.vx4.add_tile(megatile)
+			self.vx4.add_megatile(megatile)
 		for _ in range(len(new_megatiles)):
 			self.vf4.add_flags([0]*16)
 		for id,tile in update_megatiles:
-			self.vx4.set_tile(id, tile)
+			self.vx4.set_megatile(id, tile)
 		# Update megatile groups
 		for megatile_ids in new_groups:
 			group = CV5Group()
@@ -470,10 +467,10 @@ class Tileset(object):
 		bmp.image = [[] for _ in range(bmp.height)]
 		if tiletype == TileType.mega:
 			for mega_n,mega_id in enumerate(ids):
-				mega_y = int(mega_n / tiles_wide) * tile_height
+				mega_y = (mega_n // tiles_wide) * tile_height
 				for mini_n in range(16):
-					mini_y = int(mini_n / 4) * 8
-					minitile = self.vx4.get_tile(mega_id).minitiles[mini_n]
+					mini_y = (mini_n // 4) * 8
+					minitile = self.vx4.get_megatile(mega_id).minitiles[mini_n]
 					image = self.vr4.get_image(minitile.image_id)
 					for row_y,row in enumerate(image):
 						if minitile.flipped:
@@ -567,7 +564,7 @@ class Tileset(object):
 MegaTile:""" % id)
 				layers = [] # type: list[tuple[str, tuple[tuple[int, str], ...], str]]
 				if options.megatiles_export_height:
-					layers.append(('Height', ((HEIGHT_HIGH,'H'),(HEIGHT_MID,'M')), 'L'))
+					layers.append(('Height', ((2,'H'),(1,'M')), 'L'))
 				if options.megatiles_export_walkability:
 					layers.append(('Walkability', ((1,'1'),), '0'))
 				if options.megatiles_export_block_sight:

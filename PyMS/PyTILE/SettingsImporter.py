@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
+from ..FileFormats.Tileset.Tileset import TileType, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *

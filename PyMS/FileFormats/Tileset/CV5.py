@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from typing import BinaryIO
 
-
-
 class CV5Flag:
 	walkable          = 0x0001 # Walkable (gets overwritten by SC based on VF4 flags)
 	unknown_0002      = 0x0002

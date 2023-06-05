@@ -4,24 +4,26 @@ from ..utils import is_mac
 
 import inspect
 
+from typing import Any, Type
+
 # https://www.tcl-lang.org/man/tcl8.4/TkCmd/bind.htm
 
 class EventPattern(object):
-	def __init__(self, *fields):
+	def __init__(self, *fields): # type: (Field) -> None
 		# TODO: Validate fields make sense?
 		self.fields = fields
 
-	def name(self):
+	def name(self): # type: () -> str
 		return '-'.join(field.value for field in self.fields)
 
-	def event(self):
+	def event(self): # type: () -> str
 		return '<%s>' % self.name()
 
-	def description(self):
+	def description(self): # type: () -> str
 		return ('' if is_mac() else '+').join(field.description for field in self.fields)
 
 	# Return the last field if it is a `Keysym`
-	def get_keysym(self):
+	def get_keysym(self): # type: () -> (Field | None)
 		if not self.fields:
 			return None
 		field = self.fields[-1]
@@ -29,13 +31,13 @@ class EventPattern(object):
 			return None
 		return field
 
-	def __str__(self):
+	def __str__(self): # type: () -> str
 		return self.event()
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		return '<%s %s>' % (self.__class__.__name__, self)
 
-	def __add__(self, other):
+	def __add__(self, other): # type: (EventPattern | Field) -> EventPattern
 		if isinstance(other, EventPattern):
 			return EventPattern(*(self.fields + other.fields))
 		elif isinstance(other, Field):
@@ -43,21 +45,24 @@ class EventPattern(object):
 		else:
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
+	def __call__(self): # type: () -> str
+		return self.event()
+
 class CustomEventPattern(EventPattern):
-	def event(self):
+	def event(self): # type: () -> str
 		return '<<%s>>' % self.name()
 
 class Field(object):
-	def __init__(self, value, description=None):
+	def __init__(self, value, description=None): # type: (str, str | None) -> None
 		self.value = value
 		self.description = description or value
 
-	def __eq__(self, other):
+	def __eq__(self, other): # type: (object) -> bool
 		if not isinstance(other, Field):
 			return False
 		return other.value == self.value
 
-	def __add__(self, other):
+	def __add__(self, other): # type: (EventPattern | Field) -> EventPattern
 		if isinstance(other, EventPattern):
 			return EventPattern(*((self,) + other.fields))
 		elif isinstance(other, Field):
@@ -66,7 +71,7 @@ class Field(object):
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
 class ModifiedField(Field):
-	def __init__(self, value, description=None, state=0):
+	def __init__(self, value, description=None, state=0): # type: (str, str | None, int) -> None
 		self.state = state
 		Field.__init__(self, value, description)
 
@@ -90,24 +95,24 @@ class Modifier:
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
 	# So Keysym's specify their capitalized versions (if applicable) to automatically be adjusted for Shift modifiers
-	def __init__(self, key, description=None, capitalized_key=None, capitalized_key_description=None):
+	def __init__(self, key, description=None, capitalized_key=None, capitalized_key_description=None): # type: (str, str | None, str | None, str | None) -> None
 		value = key
 		description = description or key.capitalize()
 		Field.__init__(self, value, description)
 		self._capitalized_key = capitalized_key
 		self._capitalized_key_description = capitalized_key_description
 
-	def capitalized(self):
+	def capitalized(self): # type: () -> Keysym
 		if not self._capitalized_key:
 			return self
 		return Keysym(self._capitalized_key, self._capitalized_key_description)
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		return "<Keysym '%s'>" % self.value
 
 class Events(object):
 	@classmethod
-	def modify(cls, *modifiers):
+	def modify(cls, *modifiers): # type: (Type[Events], Field) -> None
 		for attr, value in inspect.getmembers(cls, lambda member: not inspect.ismethod(member)):
 			if attr.startswith('_') or not isinstance(value, EventPattern):
 				continue

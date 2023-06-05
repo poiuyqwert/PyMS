@@ -20,7 +20,7 @@ class DATFormat(object):
 			return (self.entries, False)
 		expanded_entry_size = self.expanded_entry_size()
 		if size % expanded_entry_size == 0:
-			return (int(size / expanded_entry_size), True)
+			return (size // expanded_entry_size, True)
 		return None
 
 	def expanded_entry_size(self): # type: () -> int

@@ -1,23 +1,37 @@
 
-try:
-	import tkinter as _Tk
-except:
-	import tkinter as _Tk
-
+import tkinter as _Tk
 import re as _re
 
+from typing import Tuple
+
+Geometry = Tuple[int,int, int,int, bool]
+
 RE_GEOMETRY = _re.compile(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?')
-def parse_geometry(geometry): # type: (str) -> tuple[int,int, int,int, bool]
+def parse_geometry(geometry, default=(200,200,200,200,False)): # type: (str, Geometry) -> Geometry
 	match = RE_GEOMETRY.match(geometry)
-	return tuple(None if v is None else int(v) for v in match.groups()[:-1]) + (True if match.group(5) else False,)
+	if not match:
+		return default
+	return (int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4)), True if match.group(5) else False)
 
-def parse_scrollregion(scrollregion): # type: (str) -> tuple[int, int]
-	return tuple(int(v) for v in scrollregion.split(' '))
+ScrollRegion = Tuple[int, int]
 
-def parse_resizable(resizable): # type: (tuple[int, int] | str) -> tuple[bool, bool]
-	if isinstance(resizable, str):
-		resizable = resizable.split(' ')
-	return tuple(bool(v) for v in resizable)
+RE_SCROLLREGION = _re.compile(r'(\d+) (\d+)')
+def parse_scrollregion(scrollregion, default=(0, 0)): # type: (str, ScrollRegion) -> ScrollRegion
+	match = RE_SCROLLREGION.match(scrollregion)
+	if not match:
+		return default
+	return (int(match.group(1)), int(match.group(2)))
+
+Resizable = Tuple[bool, bool]
+
+RE_RESIZABLE = _re.compile(r'([01]) ([01])')
+def parse_resizable(resizable, default=(False, False)): # type: (tuple[int, int] | str, Resizable) -> Resizable
+	if isinstance(resizable, tuple):
+		return (bool(resizable[0]), bool(resizable[1]))
+	match = RE_RESIZABLE.match(resizable)
+	if not match:
+		return default
+	return (bool(match.group(1)), bool(match.group(2)))
 
 EVENT_ATTRS = [
 	'serial',
@@ -40,7 +54,7 @@ EVENT_ATTRS = [
 	'widget',
 	'delta',
 ]
-def repr_event(event):
+def repr_event(event): # type: (_Tk.Event) -> str
 	result = '<Event'
 	for attr in EVENT_ATTRS:
 		if hasattr(event, attr):

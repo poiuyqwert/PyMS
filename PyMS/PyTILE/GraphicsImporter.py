@@ -1,5 +1,5 @@
 
-from ..FileFormats.Tileset.Tileset import TileType.group, TileType.mega, TileType.mini
+from ..FileFormats.Tileset.Tileset import TileType
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog

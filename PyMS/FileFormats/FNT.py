@@ -111,7 +111,7 @@ def fnttobmp(fnt,pal,file=None): # type: (FNT, RawPalette, str | None) -> (BMP.B
 
 def bmptofnt(bmp,lowi,letters,file=None): # type: (BMP.BMP, int, int, str | None) -> (FNT | None)
 	f = FNT()
-	f.start,f.width,f.height = lowi,int(bmp.width / letters),bmp.height
+	f.start,f.width,f.height = lowi,bmp.width // letters,bmp.height
 	for l in range(letters):
 		f.letters.append([])
 		for y in bmp.image:
@@ -152,7 +152,7 @@ class FNT:
 						if len(pxls[-1])+co > width:
 							e = width-len(pxls[-1])
 							pxls[-1].extend([0] * e)
-							pxls.extend([[0] * width for _ in range(min(int((co-e)/width),height-len(pxls)))])
+							pxls.extend([[0] * width for _ in range(min((co-e) // width,height-len(pxls)))])
 							if (co-e)%width and len(pxls) < height:
 								pxls.append([0] * ((co-e)%width))
 						elif co:

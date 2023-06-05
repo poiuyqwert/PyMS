@@ -13,8 +13,8 @@ VR4Image = Tuple[Tuple[int, ...], ...]
 VR4ImageInput = Sequence[Sequence[int]]
 
 class VR4(object):
-	MAX_ID 				= int(0xFFFE / 2)
-	MAX_ID_EXPANDED_VX4 = int(0xFFFFFFFE / 2)
+	MAX_ID 				= 0xFFFE // 2
+	MAX_ID_EXPANDED_VX4 = 0xFFFFFFFE // 2
 
 	def __init__(self): # type: () -> None
 		self._images = [] # type: list[VR4Image]
@@ -89,7 +89,7 @@ class VR4(object):
 		images = [] # type: list[VR4Image]
 		lookup = {} # type: dict[int, list[int]]
 		try:
-			for id in range(int(len(data) / 64)):
+			for id in range(len(data) // 64):
 				d = tuple(int(v) for v in struct.unpack('64B', data[id*64:(id+1)*64]))
 				images.append(tuple(tuple(d[y:y+8]) for y in range(0,64,8)))
 				image_hash = self.image_hash(images[-1])
