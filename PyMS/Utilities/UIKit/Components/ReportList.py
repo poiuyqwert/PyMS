@@ -316,7 +316,7 @@ class ReportList(Frame):
 		for c in self.columns:
 			c[1].delete(index)
 
-	def cur_selection(self):
+	def cur_selection(self): # type: () -> list[int]
 		return self.columns[0][1].cur_selection()
 
 	def get(self, index):

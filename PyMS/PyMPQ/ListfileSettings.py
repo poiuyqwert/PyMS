@@ -1,19 +1,18 @@
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
+from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.Settings import Settings
 
 class ListfileSettings(Frame):
-	def __init__(self, parent, setdlg=None):
-		if setdlg is None:
-			self.setdlg = parent.parent
-		else:
-			self.setdlg = setdlg
+	def __init__(self, parent, setdlg): # type: (Misc, SettingsDialog) -> None
+		self.setdlg = setdlg
 		Frame.__init__(self, parent)
 		Label(self, text='File Lists', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text="Note: Each file list added will increase the load time for archives", anchor=W, justify=LEFT).pack(fill=X)
 		self.listbox = ScrolledListbox(self, width=35, height=1)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
-		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.action_states())
+		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.action_states())
 		for l in self.setdlg.settings.settings.get('listfiles', []):
 			self.listbox.insert(0,l)
 		if self.listbox.size():
@@ -29,13 +28,13 @@ class ListfileSettings(Frame):
 
 		self.action_states()
 
-	def is_listfile_selected(self):
+	def is_listfile_selected(self): # type: () -> bool
 		return not not self.listbox.curselection()
 
-	def action_states(self):
+	def action_states(self): # type: () -> None
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
-	def add(self, key=None):
+	def add(self, key=None): # type: (Event | None) -> None
 		add = self.setdlg.settings.lastpath.settings.select_open_files(self, key='listfiles', title='Add Listfiles', filetypes=[FileType.txt()])
 		if add:
 			for i in add:
@@ -43,19 +42,19 @@ class ListfileSettings(Frame):
 			self.action_states()
 			self.setdlg.edited = True
 
-	def remove(self, key=None):
+	def remove(self, key=None): # type: (Event | None) -> None
 		if not self.is_listfile_selected():
 			return
 		i = int(self.listbox.curselection()[0])
 		self.listbox.delete(i)
 		if self.listbox.size():
-			i = min(i,self.listbox.size()-1)
+			i = min(i,self.listbox.size()-1) # type: ignore
 			self.listbox.select_set(i)
 			self.listbox.see(i)
 		self.action_states()
 		self.setdlg.edited = True
 
-	def save(self, page_data, mpq_dir, settings):
+	def save(self, page_data, mpq_dir, settings): # type: (Any, str, Settings) -> None
 		settings.settings.listfiles = []
-		for i in range(self.listbox.size()):
+		for i in range(self.listbox.size()): # type: ignore
 			settings.settings.listfiles.append(self.listbox.get(i))

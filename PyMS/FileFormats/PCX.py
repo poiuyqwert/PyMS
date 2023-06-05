@@ -20,17 +20,20 @@ class PCX:
 
 	def load_file(self, file, pal=False): # type: (str | BinaryIO, bool) -> None
 		data = load_file(file, 'PCX')
+		self.load_data(data, pal)
+
+	def load_data(self, data, pal=False): # type: (bytes, bool) -> None
 		if data[:4] != b'\x0A\x05\x01\x08':
-			raise PyMSError('Load',"'%s' is not a PCX file (no PCX header)" % file)
+			raise PyMSError('Load',"Not a PCX file (no PCX header)")
 		try:
 			xmin,ymin,xmax,ymax,_hdpi,_vdpi = struct.unpack('<6H',data[4:16])
 			planes,_bytesperline,_palinfo,_hscreensize,_vscreensize = struct.unpack('<B4H', data[65:74])
 			xmax = (xmax-xmin)+1
 			ymax = (ymax-ymin)+1
 			if data[-769] != b'\x0C':
-				raise PyMSError('Load', "Unsupported PCX file '%s', the palette information is missing" % file)
+				raise PyMSError('Load', "Unsupported PCX file, the palette information is missing")
 			if pal and (xmax > 256 or ymax > 256 or planes != 1):
-				raise PyMSError('Load', "Unsupported special palette (PCX) file '%s'" % file)
+				raise PyMSError('Load', "Unsupported special palette (PCX) file")
 			palette = [] # type: RawPalette
 			for x in range(0,768,3):
 				if x == 765:
@@ -73,9 +76,9 @@ class PCX:
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported PCX file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt")
 
-	def load_data(self, image, palette=None): # type: (Pixels, RawPalette | None) -> None
+	def load_pixels(self, image, palette=None): # type: (Pixels, RawPalette | None) -> None
 		self.height = len(image)
 		self.width = len(image[0])
 		if palette:

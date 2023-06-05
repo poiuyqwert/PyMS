@@ -37,7 +37,7 @@ class SettingsDialog(PyMSDialog):
 				elif isinstance(d[1],list):
 					self.pages.append(SettingsPanel(self.tabs, d[1], self.settings, self.mpqhandler))
 				else:
-					self.pages.append(d[1](self.tabs))
+					self.pages.append(d[1](self.tabs, self))
 				self.tabs.add_tab(self.pages[-1], d[0])
 			self.tabs.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		else:

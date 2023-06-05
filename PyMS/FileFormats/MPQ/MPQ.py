@@ -11,6 +11,12 @@ class MPQLibrary(Enum):
 	StormLib = 1
 	SFmpq = 2
 
+	@staticmethod
+	def display_name(library): # type: (MPQLibrary | None) -> str 
+		if library is None:
+			return 'None'
+		return library.name
+
 class MPQLocale:
 	neutral    = 0 # Neutral (English US)
 	chinese    = 1028 # 0x404 (Taiwan)

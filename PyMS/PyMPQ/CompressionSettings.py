@@ -3,6 +3,8 @@ from .CompressionSetting import CompressionOption, CompressionSetting
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
+from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.Settings import Settings
 
 import os
 
@@ -14,13 +16,10 @@ class CompressionSettings(Frame):
 		CompressionOption.Audio
 	)
 
-	def __init__(self, parent, setdlg=None):
+	def __init__(self, parent, setdlg): # type: (Misc, SettingsDialog) -> None
+		self.setdlg = setdlg
 		Frame.__init__(self, parent)
 
-		if setdlg is None:
-			self.setdlg = parent.parent
-		else:
-			self.setdlg = setdlg
 		self.autocompression = self.setdlg.settings.settings.autocompression.deepcopy()
 
 		self.extension = StringVar()
@@ -35,7 +34,7 @@ class CompressionSettings(Frame):
 		e.pack(side=TOP)
 
 		self.listbox = ScrolledListbox(left, width=15, height=1)
-		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.select_extension())
+		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.select_extension())
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 
 		extensions = sorted(self.autocompression.keys())
@@ -53,7 +52,7 @@ class CompressionSettings(Frame):
 
 		right = Frame(self)
 		Label(right, text='Compression Type:', anchor=W, justify=LEFT).pack(fill=X)
-		DropDown(right, self.compression_index, [type.name() for type in CompressionSettings.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
+		DropDown(right, self.compression_index, [type.display_name() for type in CompressionSettings.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
 		
 		self.levels_frame = Frame(right)
 		Label(self.levels_frame, text='Compression Level:', anchor=W, justify=LEFT).pack(side=TOP, fill=X)
@@ -63,22 +62,22 @@ class CompressionSettings(Frame):
 
 		self.select_extension()
 
-	def action_states(self):
+	def action_states(self): # type: () -> None
 		self.addbutton['state'] = NORMAL if self.extension.get() else DISABLED
 		selected_index = int(self.listbox.curselection()[0])
 		self.rembutton['state'] = NORMAL if selected_index else DISABLED
 
-	def get_selected_extension(self):
+	def get_selected_extension(self): # type: () -> str
 		extension_index = int(self.listbox.curselection()[0])
 		return self.listbox.get(extension_index)
 
-	def select_extension(self):
+	def select_extension(self): # type: () -> None
 		compression = CompressionSetting.parse_value(self.autocompression[self.get_selected_extension()])
 		self.compression_index.set(CompressionSettings.COMPRESSION_CHOICES.index(compression.type))
 		self.update_levels(compression)
 		self.action_states()
 
-	def choose_compression(self, compression_type_index):
+	def choose_compression(self, compression_type_index): # type: (int) -> None
 		compression_type = CompressionSettings.COMPRESSION_CHOICES[compression_type_index]
 		extension = self.get_selected_extension()
 		if CompressionSetting.parse_value(self.autocompression[extension]) == compression_type:
@@ -88,7 +87,7 @@ class CompressionSettings(Frame):
 		self.autocompression[extension] = str(compression)
 		self.update_levels(compression)
 
-	def update_levels(self, compression):
+	def update_levels(self, compression): # type: (CompressionSetting) -> None
 		if compression.type.level_count() > 0:
 			level_names = []
 			for level in range(compression.type.level_count()):
@@ -99,14 +98,14 @@ class CompressionSettings(Frame):
 		else:
 			self.levels_frame.forget()
 
-	def choose_level(self, level):
+	def choose_level(self, level): # type: (int) -> None
 		extension = self.get_selected_extension()
 		compression = CompressionSetting.parse_value(self.autocompression[extension])
 		if level != compression.level:
 			self.autocompression[extension] = str(compression.type.setting(level))
 			self.setdlg.edited = True
 	
-	def add(self, key=None):
+	def add(self, key=None): # type: (Event | None) -> None
 		if self.addbutton['state'] == DISABLED:
 			return
 		e = self.extension.get()
@@ -124,7 +123,7 @@ class CompressionSettings(Frame):
 			self.setdlg.edited = True
 			self.action_states()
 
-	def remove(self, key=None):
+	def remove(self, key=None): # type: (Event | None) -> None
 		if self.rembutton['state'] == DISABLED:
 			return
 		s = int(self.listbox.curselection()[0])
@@ -137,5 +136,5 @@ class CompressionSettings(Frame):
 		self.setdlg.edited = True
 		self.action_states()
 
-	def save(self, page_data, mpq_dir, settings):
+	def save(self, page_data, mpq_dir, settings): # type: (Any, str, Settings) -> None
 		settings.settings.autocompression = self.autocompression

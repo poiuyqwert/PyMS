@@ -1,5 +1,4 @@
 
-from .Palette import RawPalette
 from .Images import Pixels, RawPalette
 
 from ..Utilities.fileutils import load_file

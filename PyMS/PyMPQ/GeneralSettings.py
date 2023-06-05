@@ -1,14 +1,11 @@
 
-from .LocaleDialog import LOCALE_CHOICES
-
 from ..Utilities.UIKit import *
+from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.Settings import Settings
 
 class GeneralSettings(Frame):
-	def __init__(self, parent, setdlg=None):
-		if setdlg is None:
-			self.setdlg = parent.parent
-		else:
-			self.setdlg = setdlg
+	def __init__(self, parent, setdlg): # type: (Misc, SettingsDialog) -> None
+		self.setdlg = setdlg
 		Frame.__init__(self, parent)
 
 		self.maxfiles = IntegerVar(1,[1,65535])
@@ -34,6 +31,6 @@ class GeneralSettings(Frame):
 	def changed(self, *_):
 		self.setdlg.edited = True
 
-	def save(self, page_data, mpq_dir, settings):
+	def save(self, page_data, mpq_dir, settings): # type: (Any, str, Settings) -> None
 		settings.settings.defaults.maxfiles = self.maxfiles.get()
 		settings.settings.defaults.blocksize = self.blocksize.get()

@@ -226,7 +226,7 @@ class PyPCX(MainWindow):
 			self.pcx = PCX()
 			self.file = 'Unnamed.pcx'
 			self.update_title()
-		self.pcx.load_data(b.image,b.palette)
+		self.pcx.load_pixels(b.image,b.palette)
 		self.edited = False
 		self.preview()
 		self.status.set('Image imported successfully!')
