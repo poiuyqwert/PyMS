@@ -32,7 +32,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 					out.image.extend([list(y) for y in frame])
 				else:
 					for y,d in enumerate(frame):
-						out.image[(n / 17) * inp.height + y].extend(d)
+						out.image[(n // 17) * inp.height + y].extend(d)
 			elif onebmp == 2:
 				out.image.extend([list(y) for y in frame])
 			else:
@@ -45,7 +45,7 @@ def grptobmp(path, pal, uncompressed, onebmp, grp, bmp='', frames=None, mute=Fal
 					print((" - '%s' written succesfully" % name))
 			n += 1
 	if onebmp:
-		if onebmp == 1 and len(frames) % 17 and len(frames) / 17:
+		if onebmp == 1 and len(frames) % 17 and len(frames) // 17:
 			for y in range(inp.height):
 				out.image[-y-1].extend([inp.transindex] * inp.width * (17 - len(frames) % 17))
 		out.height = len(out.image)
@@ -67,10 +67,10 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 			out.frames = frames
 			if vertical:
 				out.width = inp.width
-				out.height = inp.height / frames
+				out.height = inp.height // frames
 			else:
-				out.width = inp.width / min(frames,17)
-				out.height = inp.height / int(ceil(frames / 17.0))
+				out.width = inp.width // min(frames,17)
+				out.height = inp.height // int(ceil(frames / 17.0))
 			if out.width > 256 or out.height > 256:
 				raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 256x256, got %sx%s)" % (fullfile,out.width,out.height))
 			if issize and out.width != issize[0] and out.height != issize[1]:
@@ -82,7 +82,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 						out.images[-1].append(inp.image[n * out.height + y])
 					else:
 						x = (n % 17) * out.width
-						out.images[-1].append(inp.image[(n / 17) * out.height + y][x:x+out.width])
+						out.images[-1].append(inp.image[(n // 17) * out.height + y][x:x+out.width])
 				out.images_bounds.append(GRP.image_bounds(out.images[-1]))
 			if not mute:
 				print((" - '%s' read successfully" % fullfile))

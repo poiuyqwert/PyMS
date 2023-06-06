@@ -139,7 +139,7 @@ class SPK:
 					image.height = h
 					image.pixels = pixels
 					images[check] = image
-				l = sy1 / height
+				l = sy1 // height
 				star = SPKStar()
 				star.x = sx1
 				star.y = sy1 - height * l

@@ -6,7 +6,7 @@ from .Placeability import Placeability
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
-from ..FileFormats.Tileset.CV5 import CV5Group
+from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
 from ..FileFormats.Tileset.VF4 import VF4Flag
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 from ..FileFormats import TBL
@@ -28,7 +28,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 import sys
 from enum import Enum
 
-from typing import Self, cast
+from typing import Self, cast, Callable
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
@@ -91,20 +91,21 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.disable = [] # type: list[Widget]
 
 		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TileType.mega, int(id)))
-		self.index = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.flags = IntegerVar(0,[0,15],callback=self.group_values_changed)
-		self.groundheight = IntegerVar(0,[0,15],callback=self.group_values_changed)
-		self.buildable = IntegerVar(0,[0,15],callback=self.group_values_changed)
-		self.buildable2 = IntegerVar(0,[0,15],callback=self.group_values_changed)
-		self.edgeleft = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.edgeright = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.edgeup = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.edgedown = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.hasup = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.hasdown = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.unknown9 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.unknown11 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
-		self.doodad = False
+
+		self.group_type = IntegerVar(0,[0,65535],callback=self.group_type_changed)
+		self.group_flags = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_edge_left_or_overlay_id = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_edge_up_or_scr = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_edge_right_or_string_id = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_edge_down_or_unknown4 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_piece_left_or_dddata_id = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_piece_up_or_width = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_piece_right_or_height = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+		self.group_piece_down_or_unknown8 = IntegerVar(0,[0,65535],callback=self.group_values_changed)
+
+		self.doodad = BooleanVar()
+		self.doodad.set(False)
+		self.doodad.trace('w', self.group_doodad_changed)
 
 		self.apply_all_exclude_nulls = IntVar()
 		self.apply_all_exclude_nulls.set(self.settings.mega_edit.get('apply_all_exclude_nulls', True))
@@ -195,31 +196,34 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		OPTION_RADIO = 0
 		OPTION_CHECK = 1
-		def options_editor(name, tooltip, variable, options):
+		def options_editor(name, tooltip, variable, options): # type: (str, str, IntegerVar, tuple[tuple[str, int, str, int, int | None, bool], ...]) -> Widget
 			group = LabelFrame(self.flow_view.content_view, text=name)
 			c = Frame(group)
 			raw_tooltip = ''
-			for option_name,option_value,option_tooltip,option_type,option_mask in options:
+			for option_name,option_value,option_tooltip,option_type,option_mask,editable in options:
 				raw_tooltip += '\n  %d = %s' % (option_value, option_name)
 				if option_type == OPTION_CHECK and not option_value:
 					continue
 				f = Frame(c)
+				widget: Widget
 				if option_type == OPTION_CHECK:
-					self.disable.append(MaskedCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED))
+					widget = MaskedCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED)
 				else:
-					self.disable.append(MaskedRadiobutton(f, text=option_name, variable=variable, value=option_value, mask=option_mask if option_mask else variable.range[1], state=DISABLED))
-				self.disable[-1].pack(side=LEFT)
-				Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\n%s:\n  %s' % (option_name, option_tooltip))
+					widget = MaskedRadiobutton(f, text=option_name, variable=variable, value=option_value, mask=option_mask if option_mask else variable.range[1], state=DISABLED)
+				widget.pack(side=LEFT)
+				if editable:
+					self.disable.append(widget)
+				Tooltip(widget, name + ':\n  ' + tooltip + '\n\n%s:\n  %s' % (option_name, option_tooltip))
 				f.pack(side=TOP, fill=X)
-			f = Frame(c)
-			Label(f, text='Raw:').pack(side=LEFT)
-			self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
-			self.disable[-1].pack(side=LEFT)
-			Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\nRaw:' + raw_tooltip)
-			f.pack(side=TOP, fill=X)
+			# f = Frame(c)
+			# Label(f, text='Raw:').pack(side=LEFT)
+			# self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
+			# self.disable[-1].pack(side=LEFT)
+			# Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\nRaw:' + raw_tooltip)
+			# f.pack(side=TOP, fill=X)
 			c.pack(padx=2,pady=2)
 			return group
-		def entries_editor(name, tooltip, rows):
+		def entries_editor(name, tooltip, rows): # type: (str, str, tuple[tuple[tuple[str, IntegerVar, str], ...], ...]) -> Widget
 			group = LabelFrame(self.flow_view.content_view, text=name)
 			f = Frame(group)
 			for r,row in enumerate(rows):
@@ -228,18 +232,18 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 					self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
 					self.disable[-1].grid(column=c*2+1, row=r, sticky=W)
 					if tooltip:
-						Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\n%s:\n  %s' % (field_name, field_tooltip))
+						Tooltip(self.disable[-1], name + ':\n  ' + tooltip + '\n\n%s:\n  %s' % (field_name, field_tooltip))
 					else:
-						Tooltip(self.disable[-1], field_name + ':\n' + field_tooltip)
+						Tooltip(self.disable[-1], field_name + ':\n  ' + field_tooltip)
 			f.pack(padx=2,pady=2)
 			return group
-		def string_editor(name, tooltip, variable):
+		def string_editor(name, tooltip, variable): # type: (str, str, IntegerVar) -> Widget
 			group = LabelFrame(self.flow_view.content_view, text=name)
 			f = Frame(group)
 			Label(f, text='String:').grid(column=0,row=0, sticky=E)
 			self.disable.append(DropDown(f, IntVar(), ['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings], variable, width=20))
 			self.disable[-1].grid(sticky=W+E, column=1,row=0)
-			Tooltip(self.disable[-1], name + ':\n' + tooltip)
+			Tooltip(self.disable[-1], name + ':\n  ' + tooltip)
 			f.grid_columnconfigure(1, weight=1)
 			Label(f, text='Raw:').grid(column=0,row=1, sticky=E)
 			self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
@@ -247,65 +251,73 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			Tooltip(self.disable[-1], name + ':\n' + tooltip)
 			f.pack(fill=BOTH, expand=1, padx=2,pady=2)
 			return group
-		def actions_editor(name, actions):
+		def actions_editor(name, actions): # type: (str, tuple[tuple[str, str, Callable[[], None]], ...]) -> Widget
 			group = LabelFrame(self.flow_view.content_view, text=name)
 			f = Frame(group)
 			for action_name,tooltip,callback in actions:
 				self.disable.append(Button(f, text=action_name, command=callback))
 				self.disable[-1].pack(fill=X, pady=(0,2))
-				Tooltip(self.disable[-1], action_name + ':\n' + tooltip)
+				Tooltip(self.disable[-1], action_name + ':\n  ' + tooltip)
 			f.pack(fill=BOTH, expand=1, padx=2,pady=(2,0))
+			return group
+		def group_type_editor(): # type: () -> Widget
+			group = LabelFrame(self.flow_view.content_view, text='Group')
+			f = Frame(group)
+			row = Frame(f)
+			self.disable.append(Checkbutton(row, text='Doodad', variable=self.doodad, state=DISABLED))
+			self.disable[-1].pack(side=LEFT)
+			row.pack(side=TOP, fill=X)
+			Tooltip(self.disable[-1], 'Doodad:\n  Whether this group is a doodad group or not.')
+			row = Frame(group)
+			Label(row, text='Type:').pack(side=LEFT)
+			self.disable.append(Entry(row, textvariable=self.group_type, font=Font.fixed(), width=len(str(self.group_type.range[1])), state=DISABLED))
+			self.disable[-1].pack(side=LEFT)
+			Tooltip(self.disable[-1], 'Type:\n  Type - 0 for unused/unplaceable, 1 for doodads, 2+ for basic terrain and edges')
+			row.pack(side=TOP, fill=X)
+			f.pack(padx=2,pady=2)
 			return group
 
 		self.editor_configs = []
 
-		self.normal_editors = []
-		group = options_editor('Flags', 'Unknown', self.flags, (
-			('Normal?', 0, 'Unknown', OPTION_RADIO, None),
-			('Edge?', 1, 'Unknown', OPTION_RADIO, None),
-			('Cliff?', 4, 'Unknown', OPTION_RADIO, None)
-		))
-		self.normal_editors.append(group)
-		group = options_editor('Buildable', 'Default buildability property', self.buildable, (
-			('Buildable', 0, 'All buildings buildable', OPTION_RADIO, None),
-			('Creep', 4, 'Only Zerg buildings buildable', OPTION_RADIO, None),
-			('Unbuildable', 8, 'No buildings buildable', OPTION_RADIO, None)
-		))
-		self.normal_editors.append(group)
-		group = options_editor('Buildable 2', 'Buildability for Beacons/Start Location', self.buildable2, (
-			('Default', 0, 'Use default buildability', OPTION_RADIO, None),
-			('Buildable', 8, 'Beacons and Start Location are Buildable', OPTION_RADIO, None)
-		))
-		self.normal_editors.append(group)
-		group = options_editor('Has Up', 'Edge piece has rows above it. Not completely understood.', self.hasup, (
-			('None', 0, 'Unknown', OPTION_RADIO, None),
-			('Basic edge piece', 1, 'Unknown', OPTION_RADIO, None),
-			('Right edge piece', 2, 'Unknown', OPTION_RADIO, None),
-			('Left edge piece', 3, 'Unknown', OPTION_RADIO, None)
-		))
-		self.normal_editors.append(group)
-		group = options_editor('Has Down', 'Edge piece has rows below it. Not completely understood.', self.hasdown, (
-			('None', 0, 'Unknown', OPTION_RADIO, None),
-			('Basic edge piece', 1, 'Unknown', OPTION_RADIO, None),
-			('Right edge piece', 2, 'Unknown', OPTION_RADIO, None),
-			('Left edge piece', 3, 'Unknown', OPTION_RADIO, None)
-		))
-		self.normal_editors.append(group)
-		group = entries_editor('Edges?', 'Unknown. Seems to be related to surrounding tiles & ISOM.', (
-			(('Left?', self.edgeleft, 'Unknown.'), ('Up?', self.edgeup, 'Unknown.')),
-			(('Right?', self.edgeright, 'Unknown.'), ('Down?', self.edgedown, 'Unknown.')),
-		))
-		self.normal_editors.append(group)
-		group = entries_editor('Misc.', None, (
-			(('Index', self.index, 'Group Index? Not completely understood'),),
-			(('Ground Height', self.groundheight, 'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),),
-		))
-		self.normal_editors.append(group)
-		group = entries_editor('Unknowns', None, (
-			(('Unknown 9', self.unknown9, 'Unknown'),),
-			(('Unknown 11', self.unknown11, 'Unknown'),)
-		))
-		self.normal_editors.append(group)
+		self.normal_editors = [] # type: list[Widget]
+		self.normal_editors.append(options_editor('Walkable', 'Settings for walkability', self.group_flags, (
+			('Walkable', CV5Flag.walkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('Unwalkable', CV5Flag.unwalkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(options_editor('Buildable', 'Whether buildings can be placed/built', self.group_flags, (
+			('Unbuildable', CV5Flag.unbuildable, 'No buildings buildable', OPTION_CHECK, None, True),
+			('Occupied', CV5Flag.occupied, 'Unbuildable until a building on this tile gets removed', OPTION_CHECK, None, True),
+			('Special', CV5Flag.special_placeable, 'Allow Beacons/Start Locations to be placeable', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(options_editor('Creep', 'Only Zerg can build on creep', self.group_flags, (
+			('Creep', CV5Flag.creep, 'Zerg can build here when this flag is combined with the Temporary creep flag', OPTION_CHECK, None, True),
+			('Receding', CV5Flag.creep_receding, 'Receding creep', OPTION_CHECK, None, True),
+			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(options_editor('Height', 'Terrain height', self.group_flags, (
+			('Mid Ground', CV5Flag.mid_ground, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags (priority over Mid Ground)', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(options_editor('Misc.', 'Misc. flags', self.group_flags, (
+			('Has Doodad Cover', CV5Flag.has_doodad_cover, 'Has doodad cover', OPTION_CHECK, None, True),
+			('Blocks View', CV5Flag.blocks_view, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('Cliff Edge', CV5Flag.cliff_edge, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(options_editor('Unknown', 'Unknown/unused flags', self.group_flags, (
+			('0002', CV5Flag.unknown_0002, 'Unknown/unused flag 0x0002', OPTION_CHECK, None, True),
+			('0008', CV5Flag.unknown_0008, 'Unknown/unused flag 0x0008', OPTION_CHECK, None, True),
+			('0020', CV5Flag.unknown_0020, 'Unknown/unused flag 0x0020', OPTION_CHECK, None, True),
+		)))
+		self.normal_editors.append(entries_editor('Edge Types', 'Determines what tile types can be adjacent to tiles in this group.\n  Unsure if StarEdit actually uses these, or if they are just reference/outdated values.', (
+			(('Left', self.group_edge_left_or_overlay_id, 'What tile types can be to the left of tiles in this group.'), ('Up', self.group_edge_up_or_scr, 'What tile types can be above tiles in this group.')),
+			(('Right', self.group_edge_right_or_string_id, 'What tile types can be to the right of tiles in this group.'), ('Down', self.group_edge_down_or_unknown4, 'What tile types can be below tiles in this group.')),
+		)))
+		self.normal_editors.append(entries_editor('Piece Types', 'Determines multi-tile blocks of terrain (e.g. 2x3 cliff pieces).\n  A value of 0 can match any appropriate tile, otherwise the edge only pairs with a matching Terrain Piece Type value and tile index.\n  Unsure if StarEdit actually uses these, or if they are just reference/outdated values.', (
+			(('Left', self.group_piece_left_or_dddata_id, 'Edge only pairs with a matching Terrain Piece Type value and tile index on the left.'), ('Up', self.group_piece_up_or_width, 'Edge only pairs with a matching Terrain Piece Type value and tile index above.')),
+			(('Right', self.group_piece_right_or_height, 'Edge only pairs with a matching Terrain Piece Type value and tile index on the right.'), ('Down', self.group_piece_down_or_unknown8, 'Edge only pairs with a matching Terrain Piece Type value and tile index below.')),
+		)))
+		self.normal_editors.append(group_type_editor())
+
 		megatile_group = LabelFrame(self.flow_view.content_view, text='MegaTile')
 		f = Frame(megatile_group)
 		Label(f, text='ID:').pack(side=LEFT)
@@ -318,8 +330,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		f.pack(side=TOP, fill=X, padx=3)
 		def megatile_apply_all_pressed():
 			menu = Menu(self, tearoff=0)
-			mode = self.mega_editor.edit_mode.get()
-			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode]
+			mode = self.mega_editor.get_edit_mode()
+			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode.value]
 			menu.add_command(label="Apply %s flags to Megatiles in Group (Control+Shift+%s)" % (name, name[0]), command=lambda m=mode: self.megatile_apply_all(mode))
 			menu.add_command(label="Apply all flags to Megatiles in Group (Control+Shift+A)", command=self.megatile_apply_all)
 			menu.add_separator()
@@ -474,45 +486,57 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.normal_editors.append(copy_tilegroup_group)
 
 
-		self.doodad_editors = []
+		self.doodad_editors = [] # type: list[Widget]
 
-		group = entries_editor('Doodad', 'Basic doodad properties', (
-			(('ID', self.edgeright, 'Each doodad must have a unique Doodad ID.\n  All MegaTile Groups in the doodad must have the same ID.'),),
-			(('Width', self.edgeup, 'Total width of the doodad in MegaTiles'),),
-			(('Height', self.edgedown, 'Total height of the doodad in MegaTiles'),),
-		))
-		self.doodad_editors.append(group)
-		group = options_editor('Has Overlay', 'Doodad overlay settings', self.buildable2, (
-			('None', 0, 'No overlay', OPTION_RADIO, 3),
-			('Sprites.dat', 1, 'The overlay ID is a Sprites.dat reference.', OPTION_RADIO, 3),
-			('Units.dat', 2, 'The overlay ID is a Units.dat reference', OPTION_RADIO, 3),
-			('Flipped', 4, 'The overlay is flipped.', OPTION_CHECK, None),
-		))
-		self.doodad_editors.append(group)
-		group = entries_editor('Overlay', None, (
-			(('ID', self.hasup, 'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),),
-		))
-		self.doodad_editors.append(group)
-		group = options_editor('Buildable', 'Default buildability property', self.buildable, (
-			('Buildable', 0, 'All buildings buildable', OPTION_CHECK, None),
-			('Unknown', 1, 'Unknown', OPTION_CHECK, None),
-			('Creep', 4, 'Only Zerg buildings buildable', OPTION_RADIO, 12),
-			('Unbuildable', 8, 'No buildings buildable', OPTION_RADIO, 12),
-		))
-		self.doodad_editors.append(group)
-		group = entries_editor('Unknowns', None, (
-			(('Unknown 1', self.flags, 'Unknown'),),
-			(('Unknown 6', self.hasdown, 'Unknown'),),
-			(('Unknown 8', self.unknown9, 'Unknown'),),
-			(('Unknown 12', self.unknown11, 'Unknown'),)
-		))
-		self.doodad_editors.append(group)
-		group = entries_editor('Misc.', None, (
-			(('Index', self.index, 'Group Index? Not completely understood'),),
-			(('Ground Height', self.groundheight, 'Shows ground height. Does not seem to be completely valid.\n  May be used by StarEdit/deprecated?'),),
-		))
-		self.doodad_editors.append(group)
-		group = string_editor('Group', 'Doodad group string from stat_txt.tbl', self.edgeleft)
+		self.doodad_editors.append(entries_editor('Doodad', 'Basic doodad properties', (
+			(('ID', self.group_piece_left_or_dddata_id, 'Each doodad must have a unique Doodad ID.\n  All MegaTile Groups in the doodad must have the same ID.'),),
+			(('Width', self.group_piece_up_or_width, 'Total width of the doodad in MegaTiles'),),
+			(('Height', self.group_piece_right_or_height, 'Total height of the doodad in MegaTiles'),),
+		)))
+		self.doodad_editors.append(options_editor('Has Overlay', 'Doodad overlay settings', self.group_flags, (
+			('None', 0, 'No overlay', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
+			('Sprites.dat', CV5DoodadFlag.has_overlay_sprite, 'The overlay ID is a Sprites.dat reference. (is not cleared by SC, so this flag also counts as Receding creep)', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
+			('Units.dat', CV5DoodadFlag.has_overlay_unit, 'The overlay ID is a Units.dat reference', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
+			('Flipped', CV5DoodadFlag.overlay_flipped, 'The overlay is flipped. (unused) (is not cleared SC, so this flag also counts as Temporary creep)', OPTION_CHECK, None, True),
+		)))
+		self.doodad_editors.append(entries_editor('Overlay', 'Doodad overlay settings', (
+			(('ID', self.group_edge_left_or_overlay_id, 'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),),
+		)))
+		self.doodad_editors.append(options_editor('Walkable', 'Settings for walkability', self.group_flags, (
+			('Walkable', CV5Flag.walkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('Unwalkable', CV5Flag.unwalkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+		)))
+		self.doodad_editors.append(options_editor('Buildable', 'Whether buildings can be placed/built', self.group_flags, (
+			('Unbuildable', CV5Flag.unbuildable, 'No buildings buildable', OPTION_CHECK, None, True),
+			('Occupied', CV5Flag.occupied, 'Unbuildable until a building on this tile gets removed', OPTION_CHECK, None, True),
+			('Special', CV5Flag.special_placeable, 'Allow Beacons/Start Locations to be placeable', OPTION_CHECK, None, True),
+		)))
+		self.doodad_editors.append(options_editor('Creep', 'Only Zerg can build on creep', self.group_flags, (
+			('Creep', CV5Flag.creep, 'Zerg can build here when this flag is combined with the Temporary creep flag', OPTION_CHECK, None, True),
+			('Receding', CV5Flag.creep_receding, 'Receding creep (overlap with Has Overlay Sprites.dat flag)', OPTION_CHECK, None, False),
+			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag (overlap with Has Overlay Flipped flag)', OPTION_CHECK, None, False),
+		)))
+		self.doodad_editors.append(options_editor('Height', 'Terrain height', self.group_flags, (
+			('Mid Ground', CV5Flag.mid_ground, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags (priority over Mid Ground)', OPTION_CHECK, None, True),
+		)))
+		self.doodad_editors.append(options_editor('Misc.', 'Misc. flags', self.group_flags, (
+			('Has Doodad Cover', CV5Flag.has_doodad_cover, 'Has doodad cover', OPTION_CHECK, None, True),
+			('Blocks View', CV5Flag.blocks_view, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
+			('Cliff Edge', CV5Flag.cliff_edge, 'Gets overwritten by SC based on minitile flags (overlap with Has Overlay Units.dat flag)', OPTION_CHECK, None, False),
+		)))
+		self.doodad_editors.append(options_editor('Unknown', 'Unknown/unused flags', self.group_flags, (
+			('0002', CV5Flag.unknown_0002, 'Unknown/unused flag 0x0002', OPTION_CHECK, None, True),
+			('0008', CV5Flag.unknown_0008, 'Unknown/unused flag 0x0008', OPTION_CHECK, None, True),
+			('0020', CV5Flag.unknown_0020, 'Unknown/unused flag 0x0020', OPTION_CHECK, None, True),
+		)))
+		self.doodad_editors.append(entries_editor('Unknowns', 'Unknown/unused fields', (
+			(('Unknown 4', self.group_edge_down_or_unknown4, 'Unknown'),),
+			(('Unknown 8', self.group_piece_down_or_unknown8, 'Unknown'),)
+		)))
+
+		self.doodad_editors.append(group_type_editor())
+		group = string_editor('Group', 'Doodad group string from stat_txt.tbl', self.group_edge_right_or_string_id)
 		self.doodad_editors.append(group)
 		self.editor_configs.append((group, {'weight': 1}))
 		group = actions_editor('Other', (
@@ -632,7 +656,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def get_tile(self, id_or_minitile): # type: (int | VX4Minitile) -> Image
-		if TilePalette.TILE_CACHE[id_or_minitile]:
+		if id_or_minitile in TilePalette.TILE_CACHE:
 			return TilePalette.TILE_CACHE[id_or_minitile]
 		assert self.tileset is not None
 		if isinstance(id_or_minitile, VX4Minitile):
@@ -672,7 +696,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def doodad_apply_all(self): # type: () -> None
 		if not self.tileset:
 			return
-		doodad_id = self.edgeright.get()
+		doodad_id = self.group_piece_left_or_dddata_id.get()
 		copy_group = self.tileset.cv5.get_group(self.palette.selected[0])
 		for group_id in range(self.tileset.cv5.group_count()):
 			group = self.tileset.cv5.get_group(group_id)
@@ -695,7 +719,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.palette.selected[0], d)
  
 	def update_editor(self, doodad=False): # type: (bool) -> None
-		if self.doodad == doodad:
+		if self.doodad.get() == doodad:
 			return
 		if doodad:
 			self.flow_view.remove_all_subviews()
@@ -707,7 +731,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.flow_view.add_subviews(self.normal_editors, padx=2)
 			for view,config in self.editor_configs:
 				self.flow_view.update_subview_config(view, **config)
-		self.doodad = doodad
+		self.doodad.set(doodad)
 
 	def megaload(self): # type: () -> None
 		if not self.tileset:
@@ -718,11 +742,26 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if self.megatilee.get() != mega:
 			self.megatilee.set(mega)
 		self.update_editor(group.type == CV5Group.TYPE_DOODAD)
-		# TODO: Load settings
-		# if group.type == CV5Group.TYPE_DOODAD:
-			# o = [self.index,self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
-		# else:
-			# o = [self.index,self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
+		self.group_type.set(group.type)
+		self.group_flags.set(group.flags)
+		if group.type == CV5Group.TYPE_DOODAD:
+			self.group_edge_left_or_overlay_id.set(group.doodad_overlay_id)
+			self.group_edge_up_or_scr.set(group.doodad_scr)
+			self.group_edge_right_or_string_id.set(group.doodad_string_id)
+			self.group_edge_down_or_unknown4.set(group.doodad_unknown4)
+			self.group_piece_left_or_dddata_id.set(group.doodad_dddata_id)
+			self.group_piece_up_or_width.set(group.doodad_width)
+			self.group_piece_right_or_height.set(group.doodad_height)
+			self.group_piece_down_or_unknown8.set(group.doodad_unknown8)
+		else:
+			self.group_edge_left_or_overlay_id.set(group.basic_edge_left)
+			self.group_edge_up_or_scr.set(group.basic_edge_up)
+			self.group_edge_right_or_string_id.set(group.basic_edge_right)
+			self.group_edge_down_or_unknown4.set(group.basic_edge_down)
+			self.group_piece_left_or_dddata_id.set(group.basic_piece_left)
+			self.group_piece_up_or_width.set(group.basic_piece_up)
+			self.group_piece_right_or_height.set(group.basic_piece_right)
+			self.group_piece_down_or_unknown8.set(group.basic_piece_down)
 		self.miniload()
 		self.update_group_label()
 		self.loading_megas = False
@@ -731,6 +770,12 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if not self.tileset:
 			return
 		self.mega_editor.set_megatile(self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection])
+
+	def group_type_changed(self, *_): # type: (Any) -> None
+		pass
+
+	def group_doodad_changed(self, *_): # type: (Any) -> None
+		pass
 
 	def group_values_changed(self, *_): # type: (Any) -> None
 		if not self.tileset or self.loading_megas:
@@ -770,7 +815,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.mark_edited()
 
 	def placeability(self): # type: () -> None
-		Placeability(self, self.settings, self, self.edgeright.get())
+		Placeability(self, self.settings, self, self.group_piece_left_or_dddata_id.get())
 
 	def update_ranges(self): # type: () -> None
 		if not self.tileset:
@@ -837,7 +882,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.groupid['text'] = 'MegaTile Group'
 		self.update_editor()
 		self.mega_editor.set_megatile(None)
-		for v in [self.index,self.megatilee,self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]:
+		for v in [self.group_type,self.group_flags,self.group_edge_left_or_overlay_id,self.group_edge_up_or_scr,self.group_edge_right_or_string_id,self.group_edge_down_or_unknown4,self.group_piece_left_or_dddata_id,self.group_piece_up_or_width,self.group_piece_right_or_height,self.group_piece_down_or_unknown8]:
 			v.set(0)
 		self.palette.draw_tiles()
 		self.action_states()

@@ -45,8 +45,8 @@ class TilePaletteView(Frame):
 			self.update_size()
 		self.canvas.bind(WidgetEvent.Configure(), canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
-		binding_widget.bind(Mouse.Scroll(), lambda e: self.canvas.yview('scroll', -(e.delta / abs(e.delta)) if e.delta else 0,'units'))
-		if not hasattr(self.delegate, 'tile_palette_bind_updown') or self.delegate.tile_palette_bind_updown():
+		binding_widget.bind(Mouse.Scroll(), lambda e: self.canvas.yview('scroll', -(e.delta // abs(e.delta)) if e.delta else 0,'units'))
+		if self.delegate.tile_palette_bind_updown():
 			binding_widget.bind(Key.Down(), lambda e: self.canvas.yview('scroll', 1,'units'))
 			binding_widget.bind(Key.Up(), lambda e: self.canvas.yview('scroll', -1,'units'))
 		binding_widget.bind(Key.Next(), lambda e: self.canvas.yview('scroll', 1,'page'))
@@ -91,10 +91,10 @@ class TilePaletteView(Frame):
 		tile_size = self.get_tile_size()
 		tile_count = self.get_tile_count()
 		width = self.canvas.winfo_width()
-		columns = floor(width / tile_size[0])
+		columns = width // tile_size[0]
 		if not columns:
 			return (0, 0)
-		return (width, int(ceil(tile_count / columns)) * tile_size[1] + 1)
+		return (width, int(ceil(tile_count / float(columns))) * tile_size[1] + 1)
 
 	def update_size(self): # type: () -> None
 		total_size = self.get_total_size()
@@ -110,7 +110,7 @@ class TilePaletteView(Frame):
 			return
 		for id in self.selected:
 			x = (id % columns) * tile_size[0]
-			y = (id / columns) * tile_size[1]
+			y = (id // columns) * tile_size[1]
 			self.canvas.create_rectangle(x, y, x+tile_size[0], y+tile_size[1], outline='#AAAAAA' if self.sub_select else '#FFFFFF', tags='selection')
 			if self.sub_select:
 				mega_size = self.get_tile_size(TileType.mega, group=True)
@@ -128,11 +128,11 @@ class TilePaletteView(Frame):
 		viewport_size = (self.canvas.winfo_width(), self.canvas.winfo_height())
 		tile_size = self.get_tile_size()
 		tile_count = self.get_tile_count()
-		_,total_height = parse_scrollregion(self.canvas.cget('scrollregion'))
+		_,_,_,total_height = parse_scrollregion(self.canvas.cget('scrollregion'))
 		topy = int(self.canvas.yview()[0] * total_height)
 		start_row = topy // tile_size[1]
 		start_y = start_row * int(tile_size[1])
-		tiles_size = (viewport_size[0] // tile_size[0], int(ceil((viewport_size[1] + topy-start_y) / tile_size[1])))
+		tiles_size = (viewport_size[0] // tile_size[0], int(ceil((viewport_size[1] + topy-start_y) / float(tile_size[1]))))
 		first = start_row * tiles_size[0]
 		last = min(tile_count,first + tiles_size[0] * tiles_size[1]) - 1
 		visible_range = (first, last)
@@ -153,7 +153,7 @@ class TilePaletteView(Frame):
 					else:
 						n = id - visible_range[0]
 						x = 1 + (n % tiles_size[0]) * tile_size[0]
-						y = 1 + start_y + floor(n / tiles_size[0]) * tile_size[1]
+						y = 1 + start_y + (n // tiles_size[0]) * tile_size[1]
 						if self.visible_range and id >= self.visible_range[0] and id <= self.visible_range[1]:
 							self.canvas.coords('tile%s' % id, x,y)
 						else:
@@ -169,13 +169,13 @@ class TilePaletteView(Frame):
 							self.canvas.create_image(x,y, image=self.canvas_images[id], tags=tag, anchor=NW)
 							def select_callback(id, modifier): # type: (int, str | None) -> Callable[[Event], None]
 								def select(_): # type: (Event) -> None
-									nonlocal id
+									select_id = id
 									sub_select = None
 									if self.tiletype == TileType.group:
 										if self.sub_select:
 											sub_select = id % 16
-										id //= 16
-									self.select(id, sub_select, modifier)
+										select_id //= 16
+									self.select(select_id, sub_select, modifier)
 								return select
 							self.canvas.tag_bind(tag, Mouse.Click_Left(), select_callback(id,'set'))
 							self.canvas.tag_bind(tag, Shift.Click_Left(), select_callback(id,'shift'))
@@ -183,7 +183,6 @@ class TilePaletteView(Frame):
 							def double_click_callback(id): # type: (int) -> Callable[[Event], None]
 								id //= (16 if self.tiletype == TileType.group else 1)
 								def double_click(_): # type: (Event) -> None
-									nonlocal id
 									self.delegate.tile_palette_double_clicked(id)
 								return double_click
 							self.canvas.tag_bind(tag, Double.Click_Left(), double_click_callback(id))
@@ -254,5 +253,5 @@ class TilePaletteView(Frame):
 		total_size = self.get_total_size()
 		max_y = total_size[1] - viewport_size[1]
 		id = self.selected[0]
-		y = max(0,min(max_y,(id / columns + 0.5) * tile_size[1] - viewport_size[1]/2.0))
-		self.canvas.yview_moveto(y / total_size[1])
+		y = max(0,min(max_y,(id // columns + 0.5) * tile_size[1] - viewport_size[1]/2.0))
+		self.canvas.yview_moveto(y // total_size[1])

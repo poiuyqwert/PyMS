@@ -29,7 +29,6 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 		ty = -1
 		def select_callback(pos): # type: (tuple[int, int]) -> Callable[[Event], None]
 			def select(_): # type: (Event) -> None
-				nonlocal pos
 				self.select(pos)
 			return select
 		for group_id in range(tileset.cv5.group_count()):
@@ -104,9 +103,6 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 
 	def get_tile(self, id): # type: (int | VX4Minitile) -> Image
 		return self.delegate.get_tile(id)
-
-	def set_selecting(self, selecting): # type: (bool | None) -> None
-		pass
 
 	def megaload(self): # type: () -> None
 		pass

@@ -53,7 +53,7 @@ class PaletteTab(NotebookTab):
 			height = min(img.height,PaletteTab.MAX_SIZE)+PaletteTab.PAD*2
 			image = self.toplevel.get_image(img)
 
-			self.starsCanvas.create_image(PaletteTab.MAX_SIZE/2+PaletteTab.PAD,y + height/2, image=image)
+			self.starsCanvas.create_image(PaletteTab.MAX_SIZE//2+PaletteTab.PAD,y + height//2, image=image)
 			y += height
 		self.starsCanvas.config(scrollregion=(0,0,PaletteTab.MAX_SIZE,y))
 		self.update_palette_selection(scroll)
@@ -78,10 +78,10 @@ class PaletteTab(NotebookTab):
 				miny,maxy = self.starsCanvas.yview()
 				area = maxy-miny
 				maxy = 1-area
-				center = y + (y2-y)/2
+				center = y + (y2-y)//2
 				_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
 				vis = height * area
-				top = center - vis/2
+				top = center - vis//2
 				y = top/height
 				self.starsCanvas.yview_moveto(y)
 		elif self.item_palette_box:

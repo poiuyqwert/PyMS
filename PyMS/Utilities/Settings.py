@@ -215,7 +215,7 @@ class SettingDict(object):
 				window.update_idletasks()
 				screen_w = window.winfo_screenwidth()
 				screen_h = window.winfo_screenheight()
-				geometry += '+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2)
+				geometry += '+%d+%d' % ((screen_w-w)//2,(screen_h-h)//2)
 			window.geometry(geometry)
 
 	def _process_filetypes(self, filetypes, include_all_filetype):

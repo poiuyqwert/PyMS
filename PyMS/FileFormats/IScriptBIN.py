@@ -149,8 +149,8 @@ def type_frame(stage, bin, data=None):
 		return 2
 	if stage == 1:
 		if data % 17:
-			return (str(data),'Frame set %s, direction %s' % (data/17,data%17))
-		return ('0x' + hex(data)[2:].zfill(2),'Frame set %s' % (data/17))
+			return (str(data),'Frame set %s, direction %s' % (data//17,data%17))
+		return ('0x' + hex(data)[2:].zfill(2),'Frame set %s' % (data//17))
 	try:
 		if data.startswith('0x'):
 			v = int(data[2:], 16)
@@ -159,9 +159,9 @@ def type_frame(stage, bin, data=None):
 		if 0 > v or v > 65535:
 			raise Exception()
 		if bin and bin.grpframes and v > bin.grpframes:
-			raise PyMSWarning('Parameter',"'%s' is an invalid frame for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes, (bin.grpframes - 17) / 17 * 17),extra=v)
+			raise PyMSWarning('Parameter',"'%s' is an invalid frame for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes, (bin.grpframes - 17) // 17 * 17),extra=v)
 		if bin and bin.grpframes and v > bin.grpframes - 17:
-			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes , (bin.grpframes - 17) / 17 * 17),extra=v)
+			raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes , (bin.grpframes - 17) // 17 * 17),extra=v)
 	except PyMSWarning:
 		raise
 	except:

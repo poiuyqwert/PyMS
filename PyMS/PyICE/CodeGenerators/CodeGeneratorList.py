@@ -105,7 +105,7 @@ class CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd(CodeGeneratorT
 		return None
 
 	def index(self, list_size, n):
-		if (n / list_size) % 2:
+		if (n // list_size) % 2:
 			return list_size-(n % list_size + 1)
 		return n % list_size
 

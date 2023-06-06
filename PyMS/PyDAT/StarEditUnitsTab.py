@@ -155,8 +155,8 @@ class StarEditUnitsTab(DATUnitsTab):
 
 	def drawboxes(self):
 		if self.showpreview.get():
-			w = self.width.get() / 2
-			h = self.height.get() / 2
+			w = self.width.get() // 2
+			h = self.height.get() // 2
 			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
 			self.preview.lift('place')
 		else:

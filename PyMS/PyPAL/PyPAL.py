@@ -71,7 +71,7 @@ class PyPAL(MainWindow):
 		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os, theme_tag='preview')
 		self.canvas.pack(padx=2, pady=2)
 		for n in range(256):
-			x,y = 3+17*(n%16),3+17*(n/16)
+			x,y = 3+17*(n%16),3+17*(n//16)
 			self.canvas.create_rectangle(x, y, x+15, y+15, fill='#000000', outline='#000000')
 			self.canvas.tag_bind(n+1, Cursor.Enter, lambda e,i=n: self.colorstatus(e,i))
 			self.canvas.tag_bind(n+1, Cursor.Leave, lambda e,i=-1: self.colorstatus(e,i))
@@ -140,7 +140,7 @@ class PyPAL(MainWindow):
 	def select(self, e, i):
 		if self.palette:
 			self.selected = i
-			x,y = 2+17*(i%16),2+17*(i/16)
+			x,y = 2+17*(i%16),2+17*(i//16)
 			self.canvas.coords(self.sel, x, y, x+17, y+17)
 
 	def changecolor(self, e, i):

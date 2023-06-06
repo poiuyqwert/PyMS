@@ -15,9 +15,6 @@ class TilePaletteDelegate(Protocol):
 	def get_tile(self, id): # type: (int | VX4Minitile) -> Image
 		...
 
-	def set_selecting(self, selecting): # type: (bool | None) -> None
-		...
-
 	def change(self, tile_type, id): # type: (TileType, int) -> None
 		...
 

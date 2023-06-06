@@ -84,7 +84,7 @@ class GAAPITarget(threading.Thread):
 		try:
 			# print(batch)
 			# print(repr(body))
-			request = urllib.request.Request(self._url_batch if len(batch) > 1 else self._url_collect, body)
+			request = urllib.request.Request(self._url_batch if len(batch) > 1 else self._url_collect, body.encode('utf-8'))
 			request.add_header('User-Agent', self._useragent)
 			_ = urllib.request.urlopen(request)
 			# print('done: ' + result.read())

@@ -492,8 +492,8 @@ class PySPK(MainWindow):
 				and not self.locked.get() & (1 << self.layer.get()):
 			star = SPK.SPKStar()
 			star.image = self.selected_image
-			star.x = max(0,event.x - star.image.width/2)
-			star.y = max(0,event.y - star.image.height/2)
+			star.x = max(0,event.x - star.image.width//2)
+			star.y = max(0,event.y - star.image.height//2)
 			self.spk.layers[self.layer.get()].stars.append(star)
 			self.update_star(star, self.layer.get())
 			self.update_zorder()
@@ -511,11 +511,11 @@ class PySPK(MainWindow):
 		if self.tool.get() == Tool.Draw and self.layer.get() > -1 and self.selected_image:
 			x,y = event.x,event.y
 			if modifier == MODIFIER_SHIFT:
-				x += self.selected_image.width/2
-				y += self.selected_image.height/2
+				x += self.selected_image.width//2
+				y += self.selected_image.height//2
 			else:
-				x = max(self.selected_image.width/2,x)
-				y = max(self.selected_image.height/2,y)
+				x = max(self.selected_image.width//2,x)
+				y = max(self.selected_image.height//2,y)
 			if not self.item_place_image:
 				image = self.get_image(self.selected_image)
 				self.item_place_image = self.skyCanvas.create_image(x,y, image=image)

@@ -271,9 +271,9 @@ class SMK:
 		if smk_flags & SMK.SMK_FLAG_RING_FRAME:
 			frames += 1
 		if framerate > 0:
-			fps = 1000 / framerate
+			fps = 1000 // framerate
 		elif framerate < 0:
-			fps = 100000 / -framerate
+			fps = 100000 // -framerate
 		else:
 			fps = 10
 		_audio_sizes = struct.unpack('<7L', data[24:52]) # Unused?

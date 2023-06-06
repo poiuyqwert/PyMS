@@ -92,14 +92,14 @@ class IconSelectDialog(PyMSDialog):
 		icon_size = self._icon_size()
 		icon_count = self._icon_count()
 		width = self.scrolled_canvas.canvas.winfo_width()
-		columns = int(floor(width / icon_size[0]))
+		columns = width // icon_size[0]
 		if not columns:
 			return (0, 0, 0, 0, 0)
 		total_rows = int(ceil(icon_count / float(columns)))
 		total_height = total_rows * icon_size[1]
 		top_y = int(self.scrolled_canvas.canvas.yview()[0] * total_height)
-		start_y = floor(top_y / icon_size[1]) * icon_size[1]
-		visible_start_row = int(floor(start_y / icon_size[1]))
+		start_y = (top_y // icon_size[1]) * icon_size[1]
+		visible_start_row = start_y // icon_size[1]
 		height = self.scrolled_canvas.canvas.winfo_height()
 		visible_row_count = int(ceil((height + top_y - start_y) / float(icon_size[1])))
 		visible_start_index = columns * visible_start_row
@@ -113,8 +113,8 @@ class IconSelectDialog(PyMSDialog):
 		if columns == 0:
 			return
 		viewport_height = self.scrolled_canvas.canvas.winfo_height()
-		y = max(0,min(total_height,(display_index / columns + 0.5) * icon_size[1] - viewport_height/2.0))
-		self.scrolled_canvas.canvas.yview_moveto(y / total_height)
+		y = max(0,min(total_height,(display_index // columns + 0.5) * icon_size[1] - viewport_height/2.0))
+		self.scrolled_canvas.canvas.yview_moveto(y // total_height)
 
 	def _calculate_scrollregion(self):
 		columns, height, _, _, _ = self._calculate_visibility()
@@ -159,8 +159,8 @@ class IconSelectDialog(PyMSDialog):
 				y = start_y + floor((index - visible_start_index) / float(columns)) * icon_size[1]
 				frame_index = self._display_index_to_frame_index(index)
 				icon, dx, dx2, dy, dy2 = tuple(self.data_context.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index)))
-				x += icon_size[0] / 2 - dx - (dx2 - dx) / 2
-				y += icon_size[1] / 2 - dy - (dy2 - dy) / 2
+				x += icon_size[0] // 2 - dx - (dx2 - dx) // 2
+				y += icon_size[1] // 2 - dy - (dy2 - dy) // 2
 				if was_visible:
 					self.scrolled_canvas.canvas.coords(tag, x,y)
 				else:
@@ -201,12 +201,12 @@ class IconSelectDialog(PyMSDialog):
 	def _coords_to_display_index(self, x, y, add_scroll_offset=True):
 		columns, total_height, _, _, _ = self._calculate_visibility()
 		icon_size = self._icon_size()
-		column = int(floor(x / icon_size[0]))
+		column = x // icon_size[0]
 		if column < 0 or column >= columns:
 			return None
 		if add_scroll_offset:
 			y += int(self.scrolled_canvas.canvas.yview()[0] * total_height)
-		row = int(floor(y / icon_size[1]))
+		row = y // icon_size[1]
 		return column + row * columns
 
 	def _select_icon(self, event):

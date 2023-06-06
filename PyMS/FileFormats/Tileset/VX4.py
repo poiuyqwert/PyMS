@@ -34,15 +34,17 @@ class VX4Minitile(object):
 		return hash((self.image_id, self.flipped))
 
 class VX4Megatile(object):
-	def __init__(self, minitiles=[VX4Minitile()]*16): # type: (list[VX4Minitile]) -> None
-		self.minitiles = minitiles
+	def __init__(self, minitiles=None): # type: (list[VX4Minitile] | None) -> None
+		if minitiles is None:
+			self.minitiles = list(VX4Minitile() for _ in range(16))
+		else:
+			self.minitiles = minitiles
 
 	def load_data(self, data): # type: (bytes) -> None
 		size = len(data) // 16
 		o = 0
-		for _ in range(16):
-			minitile = VX4Minitile()
-			minitile.load_data(data[o:o+size])
+		for n in range(16):
+			self.minitiles[n].load_data(data[o:o+size])
 			o += size
 
 	def save_data(self, expanded): # type: (bool) -> bytes
@@ -105,7 +107,7 @@ class VX4(object):
 			expanded = (file[-6:].lower() == '.vx4ex')
 		data = load_file(file, 'VX4')
 		if expanded is None:
-			expanded = (len(data) / 32 >= VX4.MAX_ID)
+			expanded = (len(data) // 32 >= VX4.MAX_ID)
 		struct_size = (64 if expanded else 32)
 		file_type = 'Expanded VX4 file' if expanded else 'VX4 file'
 		if data and len(data) % struct_size:
@@ -118,7 +120,7 @@ class VX4(object):
 				megatile = VX4Megatile()
 				megatile.load_data(data[o:o+struct_size])
 				o += struct_size
-				self._megatiles.append(megatile)
+				megatiles.append(megatile)
 				megatile_hash = hash(megatile)
 				if not megatile_hash in lookup:
 					lookup[megatile_hash] = []

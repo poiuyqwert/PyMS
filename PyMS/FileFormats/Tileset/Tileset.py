@@ -447,7 +447,7 @@ class Tileset(object):
 		def calc_dims(tiles):
 			for f in range(int(math.sqrt(tiles)),0,-1):
 				if not tiles % f:
-					return (tiles / f, f)
+					return (tiles // f, f)
 			return (tiles,1)
 		if tiletype == TileType.group:
 			tiles_wide,tiles_high = 16,len(ids)

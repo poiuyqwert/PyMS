@@ -70,7 +70,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		self.update_status()
 		self.update_state()
 
-		statusbar = StatusBar()
+		statusbar = StatusBar(self)
 		statusbar.add_label(self.status)
 		statusbar.pack(side=BOTTOM, fill=X)
 
@@ -260,16 +260,13 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 
 	def dismiss(self): # type: () -> None
 		self.settings.windows.palette.save_window_size(('group','mega','mini')[self.tiletype.value], self)
-		self.delegate.set_selecting(None)
-		self.delegate.megaload()
-		self.delegate.mark_edited()
+		if self.edited:
+			self.delegate.megaload()
+			self.delegate.mark_edited()
 		TilePalette.OPEN_PALETTE_COUNT -= 1
 		if not TilePalette.OPEN_PALETTE_COUNT:
 			TilePalette.TILE_CACHE.clear()
 		PyMSDialog.dismiss(self)
 
-	def set_selecting(self, selecting: bool | None) -> None:
-		pass
-
 	def draw_tiles(self, force: bool) -> None:
-		pass
+		self.palette.draw_tiles(force)

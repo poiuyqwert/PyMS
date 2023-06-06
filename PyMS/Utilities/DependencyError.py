@@ -19,4 +19,4 @@ class DependencyError(MainWindow):
 		Button(frame, text='Ok', width=10, command=self.destroy).pack(side=TOP, pady=2)
 		self.update_idletasks()
 		w,h = self.winfo_width(),self.winfo_height()
-		self.geometry('%ix%i+%i+%i' % (w,h,(self.winfo_screenwidth() - w)/2,(self.winfo_screenheight() - h)/2))
+		self.geometry('%ix%i+%i+%i' % (w,h,(self.winfo_screenwidth() - w)//2,(self.winfo_screenheight() - h)//2))

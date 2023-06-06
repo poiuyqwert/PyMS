@@ -43,12 +43,10 @@ class MiniEditor(PyMSDialog):
 		self.indexs = []
 		def color_callback(pos, click): # type: (tuple[int, int], Click) -> Callable[[Event], None]
 			def color(_): # type: (Event) -> None
-				nonlocal pos, click
 				self.color(pos, click)
 			return color
 		def pen_callback(index, click): # type: (int, Click) -> Callable[[Event], None]
 			def pen(_) : # type: (Event) -> None
-				nonlocal index, click
 				self.pencolor(index, click)
 			return pen
 		for y,row in enumerate(d):
@@ -131,8 +129,8 @@ class MiniEditor(PyMSDialog):
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
-		tileset.vr4.set_image(self.id, self.indexs)
 		if self.edited:
+			tileset.vr4.set_image(self.id, self.indexs)
 			self.delegate.mark_edited()
 			from .TilePalette import TilePalette
 			TilePalette.TILE_CACHE.clear()

@@ -27,6 +27,11 @@ class CV5Flag:
 	creep_temp        = 0x4000 # Temporary creep (Zerg can build here when this flag is combined with the Creep flag)
 	special_placeable = 0x8000 # Allow Beacons/Start Locations to be placeable
 
+class CV5DoodadFlag:
+	has_overlay_sprite = 0x1000 # Has Sprites.dat overlay (is not cleared by SC, so this flag also counts as Receding creep)
+	has_overlay_unit   = 0x2000 # Has Units.dat overlay
+	overlay_flipped    = 0x4000 # Overlay is flipped (unused) (is not cleared SC, so this flag also counts as Temporary creep)
+
 class CV5Group(object):
 	TYPE_DOODAD = 1
 
@@ -53,8 +58,8 @@ class CV5Group(object):
 			self._piece_left_or_dddata_id,\
 			self._piece_up_or_width,\
 			self._piece_right_or_height,\
-			self._piece_down_or_unknown8 = list(int(v) for v in struct.unpack('<10H', data[:10]))
-		self.megatile_ids = list(int(v) for v in struct.unpack('<16H', data[10:42]))
+			self._piece_down_or_unknown8 = list(int(v) for v in struct.unpack('<10H', data[:20]))
+		self.megatile_ids = list(int(v) for v in struct.unpack('<16H', data[20:]))
 
 	def save_data(self): # type: () -> bytes
 		values = [

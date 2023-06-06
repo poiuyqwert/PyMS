@@ -17,7 +17,8 @@ class UpdateDialog(PyMSDialog):
 			remindme = PYMS_SETTINGS.get('remindme', True)
 			if remindme == True or remindme != Assets.version('PyMS'):
 				try:
-					versions = json.loads(urllib.request.urlopen(VERSIONS_URL).read())
+					import ssl
+					versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
 					latest_PyMS_version = SemVer(versions['PyMS'])
 					latest_program_version = SemVer(versions[program])
 					PyMS_version = SemVer(Assets.version('PyMS'))

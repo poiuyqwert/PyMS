@@ -159,7 +159,7 @@ class TechnologyTab(DATTab):
 		index = self.iconentry.get()
 		image = self.toplevel.data_context.get_cmdicon(index)
 		if image:
-			self.preview.create_image(19-image[1]/2+(image[0].width()-image[2])/2, 19-image[3]/2+(image[0].height()-image[4])/2, image=image[0])
+			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
 	def load_entry(self, entry):
 		self.minerals.set(entry.mineral_cost)

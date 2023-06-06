@@ -199,11 +199,11 @@ class GraphicsUnitsTab(DATUnitsTab):
 			parent_entry = self.toplevel.data_context.units.dat.get_entry(parent_id)
 			parent_w = parent_entry.staredit_placement_size.width
 			parent_h = parent_entry.staredit_placement_size.height
-			x = 129 - w/2 - self.horizontal.get()
-			y = 129 - h/2 - self.vertical.get()
+			x = 129 - w//2 - self.horizontal.get()
+			y = 129 - h//2 - self.vertical.get()
 			parent_flingy = self.toplevel.data_context.flingy.dat.get_entry(parent_entry.graphics)
 			parent_sprite = self.toplevel.data_context.sprites.dat.get_entry(parent_flingy.sprite)
-			self.draw_image(parent_sprite.image, 'addon_parent', x=x+parent_w/2, y=y+parent_h/2)
+			self.draw_image(parent_sprite.image, 'addon_parent', x=x+parent_w//2, y=y+parent_h//2)
 			self.preview.coords('addon_parent_size', x, y, x+parent_w, y+parent_h)
 			self.preview.lift('addon_parent_size')
 		else:

@@ -297,7 +297,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def grpoutline(self):
 		if self.grpo.get() and self.listbox.curselection() and self.showpreview.get():
 			if self.grp:
-				x,y = 131 - self.grp.width/2, 131 - self.grp.height/2
+				x,y = 131 - self.grp.width//2, 131 - self.grp.height/2
 				w,h = x + self.grp.width + 1, y + self.grp.height + 1
 			else:
 				x,y,w,h = 0,0,0,0
@@ -310,8 +310,8 @@ BMP's must be imported with the same style they were exported as.""")
 		if self.grp and self.frameo.get() and self.listbox.curselection() and self.showpreview.get():
 			frame = int(self.listbox.curselection()[0])
 			x1,y1,x2,y2 = self.grp.images_bounds[frame]
-			dx = 131 - self.grp.width/2
-			dy = 131 - self.grp.height/2
+			dx = 131 - self.grp.width//2
+			dy = 131 - self.grp.height//2
 			x1 += dx
 			x2 += dx + 1
 			y1 += dy
@@ -445,7 +445,7 @@ BMP's must be imported with the same style they were exported as.""")
 		f = frame
 		if self.hex.get():
 			f = '0x%02X' % frame
-		self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame / 17 % 2), f))
+		self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame // 17 % 2), f))
 	def update_list(self):
 		s = self.listbox.curselection()
 		y = self.listbox.yview()[0]

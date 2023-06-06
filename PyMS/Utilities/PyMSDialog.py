@@ -20,7 +20,7 @@ class PyMSDialog(Toplevel):
 		screen_w = self.winfo_screenwidth()
 		screen_h = self.winfo_screenheight()
 		if center:
-			self.geometry('+%d+%d' % ((screen_w-w)/2,(screen_h-h)/2))
+			self.geometry('+%d+%d' % ((screen_w-w)//2,(screen_h-h)//2))
 		self.resizable(*resizable)
 		min_w = 0
 		max_w = screen_w

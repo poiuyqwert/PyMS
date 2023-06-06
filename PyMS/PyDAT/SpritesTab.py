@@ -116,7 +116,7 @@ class SpritesTab(DATTab):
 			self.healthbar.set((num + 1) * 3)
 		else:
 			self.boxes.check = False
-			self.boxes.set(max(1,(num - 1) / 3))
+			self.boxes.set(max(1,(num - 1) // 3))
 		self.drawpreview()
 
 	def drawpreview(self, e=None):
@@ -131,7 +131,7 @@ class SpritesTab(DATTab):
 						y = 130+int(self.vertpos.get())
 						self.preview.create_image(130, y, image=frame[0])
 						w = 3*int(self.boxes.get())
-						hp = [130-(w/2),y+6+(frame[4]-frame[3])/2]
+						hp = [130-(w//2),y+6+(frame[4]-frame[3])//2]
 						self.preview.create_rectangle(hp[0], hp[1], hp[0]+w, hp[1]+4, fill='#000000')
 						hp[0] += 1
 						hp[1] += 1

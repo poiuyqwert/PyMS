@@ -13,14 +13,14 @@ def parse_geometry(geometry, default=(200,200,200,200,False)): # type: (str, Geo
 		return default
 	return (int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4)), True if match.group(5) else False)
 
-ScrollRegion = Tuple[int, int]
+ScrollRegion = Tuple[int, int, int, int]
 
-RE_SCROLLREGION = _re.compile(r'(\d+) (\d+)')
-def parse_scrollregion(scrollregion, default=(0, 0)): # type: (str, ScrollRegion) -> ScrollRegion
+RE_SCROLLREGION = _re.compile(r'(\d+) (\d+) (\d+) (\d+)')
+def parse_scrollregion(scrollregion, default=(0, 0, 0, 0)): # type: (str, ScrollRegion) -> ScrollRegion
 	match = RE_SCROLLREGION.match(scrollregion)
 	if not match:
 		return default
-	return (int(match.group(1)), int(match.group(2)))
+	return (int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4)))
 
 Resizable = Tuple[bool, bool]
 

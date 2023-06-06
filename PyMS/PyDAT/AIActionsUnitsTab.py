@@ -228,7 +228,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		hp = unit.hit_points.whole
 		shields = unit.shield_amount if unit.shield_enabled else 0
 		reduction = reductions.get(unit_id, 1.0)
-		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) / 256)) * 7.58) * reduction)
+		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) // 256)) * 7.58) * reduction)
 
 		def fstr(f):
 			return ('%f' % f).rstrip('0').rstrip('.')

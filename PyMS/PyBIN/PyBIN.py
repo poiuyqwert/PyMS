@@ -222,7 +222,7 @@ class PyBIN(MainWindow):
 		)
 		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
 		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5)
@@ -233,7 +233,7 @@ class PyBIN(MainWindow):
 		)
 		for i,(name,setting_name,variable) in enumerate(fields):
 			check = Checkbutton(smkframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		smkframe.grid_columnconfigure(0, weight=1)
 		smkframe.grid_columnconfigure(1, weight=1)
 		smkframe.grid(row=1, column=0, sticky=NSEW, padx=5)
@@ -247,7 +247,7 @@ class PyBIN(MainWindow):
 		for i,(name,setting_name,variable,state) in enumerate(fields):
 			check = Checkbutton(boundsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
 			check['state'] = state
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
 		boundsframe.grid(row=2, column=0, sticky=NSEW, padx=5)
@@ -388,8 +388,8 @@ class PyBIN(MainWindow):
 			widget = DialogBIN.BINWidget(ctrl_type)
 			widget.width = 201
 			widget.height = 101
-			widget.x1 = x1 + (x2-x1-(widget.width-1)) / 2
-			widget.y1 = y1 + (y2-y1-(widget.height-1)) / 2
+			widget.x1 = x1 + (x2-x1-(widget.width-1)) // 2
+			widget.y1 = y1 + (y2-y1-(widget.height-1)) // 2
 			widget.x2 = widget.x1 + widget.width-1
 			widget.y2 = widget.y1 + widget.height-1
 			if widget.flags & DialogBIN.BINWidget.FLAG_RESPONSIVE:
