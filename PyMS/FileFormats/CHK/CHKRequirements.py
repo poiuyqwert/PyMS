@@ -1,5 +1,5 @@
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .CHK import CHK
 
@@ -31,10 +31,9 @@ class CHKRequirements(object):
 
 	def is_required(self, chk, game_mode=MODE_ALL): # type: (CHK, int) -> bool
 		from .Sections.CHKSectionVER import CHKSectionVER
-		verSect = chk.get_section(CHKSectionVER.NAME)
+		verSect = chk.get_section(CHKSectionVER)
 		if not verSect:
 			return False
-		verSect = cast(CHKSectionVER, verSect)
 		if verSect.version in self.vers and game_mode & self.modes:
 			return True
 		return False

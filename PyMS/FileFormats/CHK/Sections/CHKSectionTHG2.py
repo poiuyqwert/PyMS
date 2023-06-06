@@ -30,9 +30,9 @@ class CHKDoodad(object):
 
 	def decompile(self): # type: () -> str
 		result = "\t#\n"
-		result += '\t%s\n' % pad('DoodadID', self.doodadID)
+		result += '\t%s\n' % pad('DoodadID', str(self.doodadID))
 		result += '\t%s\n' % pad('Position', '%s,%s' % (self.position[0],self.position[1]))
-		result += '\t%s\n' % pad('Owner', self.owner)
+		result += '\t%s\n' % pad('Owner', str(self.owner))
 		header,values = named_flags(self.flags, ["Sprite",None,None,"Disabled"], 16, 12)
 		result += '\t%s%s\n' % (pad('#'), header)
 		result += '\t%s\n' % pad('Flags', values)

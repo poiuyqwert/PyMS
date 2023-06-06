@@ -39,4 +39,4 @@ class CHKSectionTYPE(CHKSection):
 		return self.type
 
 	def decompile(self): # type: () -> str
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',self.type), CHKSectionTYPE.TYPE_NAME(self.type))
+		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',str(self.type)), CHKSectionTYPE.TYPE_NAME(self.type))

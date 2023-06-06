@@ -54,7 +54,7 @@ class CHKSectionFORC(CHKSection):
 		result = '%s:\n' % (self.NAME)
 		result += '\t%s\n' % pad('#', 'Force')
 		for p in range(8):
-			result += '\t%s\n' % pad('Player %d' % (p+1), self.playerForces[p]+1)
+			result += '\t%s\n' % pad('Player %d' % (p+1), str(self.playerForces[p]+1))
 		properties = ''
 		for f,force in enumerate(self.forces):
 			result += '\t%s\n' % pad('Name%d' % (f+1), 'String %d' % force.name)

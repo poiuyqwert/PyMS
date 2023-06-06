@@ -27,5 +27,5 @@ class CHKSectionUPUS(CHKSection):
 	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		for n,u in enumerate(self.properties_used):
-			result += '\t%s\n' % pad('Properties%02d' % n, u)
+			result += '\t%s\n' % pad('Properties%02d' % n, str(u))
 		return result

@@ -51,5 +51,5 @@ class CHKSectionOWNR(CHKSection):
 	def decompile(self): # type: () -> str
 		result = '%s:\n' % self.NAME
 		for n,value in enumerate(self.owners):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionOWNR.OWNER_NAME(value))
+			result += '\t%s # %s\n' % (pad('Slot%02d' % n,str(value)), CHKSectionOWNR.OWNER_NAME(value))
 		return result

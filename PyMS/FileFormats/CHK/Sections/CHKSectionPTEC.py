@@ -76,8 +76,8 @@ class CHKSectionPTEC(CHKSection):
 			result += '\t# Player %d\n' % (p+1)
 			for u in range(self.TECHS):
 				result += '\t' + pad('Tech%02d' % u)
-				result += pad(self.availability[u][p].available)
-				result += pad(self.availability[u][p].researched)
+				result += pad(str(self.availability[u][p].available))
+				result += pad(str(self.availability[u][p].researched))
 				result += '%s\n' % self.availability[u][p].default
 		result += '\t' + pad('# Global')
 		for name in ['Available','Researched']:
@@ -85,6 +85,6 @@ class CHKSectionPTEC(CHKSection):
 		result += '\n'
 		for u in range(self.TECHS):
 			result += '\t' + pad('Tech%02d' % u)
-			result += pad(self.globalAvailability[u])
+			result += pad(str(self.globalAvailability[u]))
 			result += '%s\n' % self.globallyResearched[u]
 		return result

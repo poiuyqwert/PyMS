@@ -76,7 +76,7 @@ class CHKUnit(object):
 			if isinstance(value, tuple):
 				result += '\t%s%s\n' % (pad('#'), value[0])
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += '\t%s\n' % pad(key, str(value))
 		return result
 
 class CHKSectionUNIT(CHKSection):

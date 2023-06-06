@@ -87,11 +87,11 @@ class CHKSectionUPGS(CHKSection):
 		result += '\n'
 		for n,stat in enumerate(self.stats):
 			result += '\t' + pad('Upgrade%02d' % n)
-			result += pad(stat.default)
-			result += pad(stat.costMinerals)
-			result += pad(stat.costMineralsIncrease)
-			result += pad(stat.costGas)
-			result += pad(stat.costGasIncrease)
-			result += pad(stat.buildTime)
+			result += pad(str(stat.default))
+			result += pad(str(stat.costMinerals))
+			result += pad(str(stat.costMineralsIncrease))
+			result += pad(str(stat.costGas))
+			result += pad(str(stat.costGasIncrease))
+			result += pad(str(stat.buildTime))
 			result += '%s\n' % stat.buildTimeIncrease
 		return result

@@ -8,8 +8,6 @@ from ....Utilities.utils import pad
 
 import struct
 
-from typing import cast
-
 class CHKSectionTILE(CHKSection):
 	NAME = 'TILE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
@@ -27,7 +25,8 @@ class CHKSectionTILE(CHKSection):
 		if self.map is not None:
 			return
 		self.map = []
-		dims = cast(CHKSectionDIM, self.chk.get_section(CHKSectionDIM.NAME))
+		dims = self.chk.get_section(CHKSectionDIM)
+		assert dims is not None
 		diff = dims.width*dims.height - len(self.raw_map)
 		if diff > 0:
 			self.raw_map += b'\0' * diff
@@ -38,7 +37,8 @@ class CHKSectionTILE(CHKSection):
 			self.map.append([[(v & 0xFFF0) >> 4,v & 0xF] for v in values])
 
 	def save_data(self): # type: () -> bytes
-		dims = cast(CHKSectionDIM, self.chk.get_section(CHKSectionDIM.NAME))
+		dims = self.chk.get_section(CHKSectionDIM)
+		assert dims is not None
 		result = b''
 		struct_format = '<%dH' % dims.width
 		for r in self.map:
@@ -50,6 +50,6 @@ class CHKSectionTILE(CHKSection):
 		result = '%s:\n' % self.NAME
 		for row in self.map:
 			for t in row:
-				result += pad(t,span=6)
+				result += pad('%d,%d' % t,span=6)
 			result += '\n'
 		return result

@@ -32,4 +32,4 @@ class CHKSectionDIM(CHKSection):
 		return struct.pack('<2H', self.width, self.height)
 	
 	def decompile(self): # type: () -> str
-		return '%s:\n\t%s\n\t%s\n' % (self.NAME, pad('Width',self.width), pad('Height',self.height))
+		return '%s:\n\t%s\n\t%s\n' % (self.NAME, pad('Width',str(self.width)), pad('Height',str(self.height)))

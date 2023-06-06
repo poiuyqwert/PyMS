@@ -8,8 +8,6 @@ from ....Utilities.utils import pad, binary
 
 import struct
 
-from typing import cast
-
 class CHKSectionMASK(CHKSection):
 	NAME = 'MASK'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
@@ -41,7 +39,8 @@ class CHKSectionMASK(CHKSection):
 			self.map.append(list(int(t) for t in struct.unpack(struct_format, self.raw_map[offset:offset+dims.width])))
 	
 	def save_data(self): # type: () -> bytes
-		dims = cast(CHKSectionDIM, self.chk.get_section(CHKSectionDIM.NAME))
+		dims = self.chk.get_section(CHKSectionDIM)
+		assert dims is not None
 		result = b''
 		struct_format = '<%dB' % dims.width
 		for r in self.map:

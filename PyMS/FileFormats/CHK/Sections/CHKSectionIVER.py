@@ -39,4 +39,4 @@ class CHKSectionIVER(CHKSection):
 		return struct.pack('<H', self.version)
 
 	def decompile(self): # type: () -> str
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',self.version), CHKSectionIVER.VER_NAME(self.version))
+		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',str(self.version)), CHKSectionIVER.VER_NAME(self.version))

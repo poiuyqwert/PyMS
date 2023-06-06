@@ -49,5 +49,5 @@ class CHKSectionSIDE(CHKSection):
 	def decompile(self): # type: () -> str
 		result = '%s:\n' % self.NAME
 		for n,value in enumerate(self.sides):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionSIDE.SIDE_NAME(value))
+			result += '\t%s # %s\n' % (pad('Slot%02d' % n,str(value)), CHKSectionSIDE.SIDE_NAME(value))
 		return result

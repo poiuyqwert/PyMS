@@ -68,5 +68,5 @@ class CHKSectionPUNI(CHKSection):
 				result += '%s\n' % self.availability[u][p].default
 		result += '\t%s\n' % pad('# Global','Available')
 		for u in range(228):
-			result += '\t%s\n' % pad('Unit%03d' % u, self.globalAvailability[u])
+			result += '\t%s\n' % pad('Unit%03d' % u, str(self.globalAvailability[u]))
 		return result

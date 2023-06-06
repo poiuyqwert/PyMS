@@ -76,8 +76,8 @@ class CHKSectionUPGR(CHKSection):
 			result += '\t# Player %d\n' % (p+1)
 			for u in range(self.UPGRADES):
 				result += '\t' + pad('Upgrade%02d' % u)
-				result += pad(self.levels[u][p].maxLevel)
-				result += pad(self.levels[u][p].startLevel)
+				result += pad(str(self.levels[u][p].maxLevel))
+				result += pad(str(self.levels[u][p].startLevel))
 				result += '%s\n' % self.levels[u][p].default
 		result += '\t' + pad('# Global')
 		for name in ['Max Levels','Start Level']:
@@ -85,6 +85,6 @@ class CHKSectionUPGR(CHKSection):
 		result += '\n'
 		for u in range(self.UPGRADES):
 			result += '\t' + pad('Upgrade%02d' % u)
-			result += pad(self.maxLevels[u])
+			result += pad(str(self.maxLevels[u]))
 			result += '%s\n' % self.startLevels[u]
 		return result

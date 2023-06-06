@@ -32,5 +32,5 @@ class CHKSectionVCOD(CHKSection):
 	def decompile(self): # type: () -> str
 		result = '%s:\n\t%s\n' % (self.NAME, pad('Code',self.code.hex()))
 		for n,opcode in enumerate(self.opcodes):
-			result += '\t%s\n' % (pad('Opcode%02d' % n, opcode))
+			result += '\t%s\n' % (pad('Opcode%02d' % n, str(opcode)))
 		return result

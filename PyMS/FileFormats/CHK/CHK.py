@@ -14,9 +14,11 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING, cast, Type
+from typing import TYPE_CHECKING, Type, TypeVar
 if TYPE_CHECKING:
 	from typing import BinaryIO
+
+S = TypeVar('S', bound=CHKSection)
 
 class CHK:
 	SECTION_TYPES: dict[str, Type[CHKSection]] = {
@@ -78,7 +80,7 @@ class CHK:
 		self.sections = {} # type: dict[str, CHKSection]
 		self.section_order = [] # type: list[str]
 
-	def get_section(self, name, game_mode=CHKRequirements.MODE_ALL): # type: (str, int) -> (CHKSection | None)
+	def get_section_named(self, name, game_mode=CHKRequirements.MODE_ALL): # type: (str, int) -> (CHKSection | None)
 		sect_class = CHK.SECTION_TYPES[name]
 		required = False
 
@@ -92,11 +94,20 @@ class CHK:
 			self.sections[name] = sect
 		return sect
 
+	def get_section(self, section_type, game_mode=CHKRequirements.MODE_ALL): # type: (Type[S], int) -> (S | None)
+		required = section_type.REQUIREMENTS.is_required(self, game_mode)
+		sect = self.sections.get(section_type.NAME)
+		if not isinstance(sect, section_type):
+			return None
+		if required and sect is None:
+			sect = section_type(self)
+			self.sections[section_type.name] = sect
+		return sect
+
 	def player_color(self, player): # type: (int) -> int
 		colors = CHKSectionCOLR.DEFAULT_COLORS
-		colr = self.get_section(CHKSectionCOLR.NAME)
-		if colr:
-			colors = cast(CHKSectionCOLR, colr).colors
+		if colr := self.get_section(CHKSectionCOLR):
+			colors = colr.colors
 		colors.extend((CHKSectionCOLR.GREEN,CHKSectionCOLR.PALE_YELLOW,CHKSectionCOLR.TAN,CHKSectionCOLR.NEUTRAL))
 		return colors[player]
 

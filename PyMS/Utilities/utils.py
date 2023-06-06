@@ -117,14 +117,16 @@ def flags(value, length): # type: (int, int) -> str
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
 	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
 
-def named_flags(flags, names, count, skip=0): # type: (int, Sequence[str], int, int) -> tuple[str, str]
+def named_flags(flags, names, count, skip=0): # type: (int, Sequence[str | None], int, int) -> tuple[str, str]
 	header = ''
 	values = ''
 	for n in range(count):
 		f = flags & (1 << n)
 		name = 'Unknown%d' % n
-		if n >= skip and n-skip < len(names) and names[n-skip]:
-			name = names[n-skip]
+		if n >= skip and n-skip < len(names):
+			possible_name = names[n-skip]
+			if possible_name:
+				name = possible_name
 		header += pad(name)
 		values += pad('1' if f else '0')
 	return (header,values)

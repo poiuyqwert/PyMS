@@ -11,7 +11,7 @@ from ....Utilities.utils import pad, named_flags
 
 import struct
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
@@ -42,7 +42,8 @@ class CHKLocation(object):
 	def decompile(self): # type: () -> str
 		result = '\t#\n'
 		string = ''
-		strings = cast(CHKSectionSTR, self.chk.get_section(CHKSectionSTR.NAME))
+		strings = self.chk.get_section(CHKSectionSTR)
+		assert strings is not None
 		if strings and self.name > -1 and self.name < len(strings.strings):
 			string = ' # ' + decompile_string(strings.strings[self.name].text)
 		data = {
@@ -56,7 +57,7 @@ class CHKLocation(object):
 			if isinstance(value, tuple):
 				result += '\t%s%s\n' % (pad('#'), value[0])
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += '\t%s\n' % pad(key, str(value))
 		return result
 
 	def in_use(self): # type: () -> bool
@@ -92,7 +93,8 @@ class CHKSectionMRGN(CHKSection):
 		return True
 
 	def process_data(self): # type: () -> None
-		ver = cast(CHKSectionVER, self.chk.get_section(CHKSectionVER.NAME))
+		ver = self.chk.get_section(CHKSectionVER)
+		assert ver is not None
 		count = 255 if ver.version >= CHKSectionVER.SC104 else 64
 		while len(self.locations) < count:
 			self.locations.append(CHKLocation(self.chk))
