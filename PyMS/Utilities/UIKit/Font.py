@@ -1,10 +1,9 @@
 
-try:
-	import tkinter.font as _Fonts
-except:
-	import tkinter.font as _Fonts
+import tkinter.font as _Fonts
 
 from uuid import uuid4 as _uuid4
+
+from typing import Sequence
 
 class Font(_Fonts.Font):
 	@staticmethod
@@ -12,52 +11,52 @@ class Font(_Fonts.Font):
 		return Font(name=name, only_existing=True)
 
 	@staticmethod
-	def families(): # type: () -> list[str]
+	def families(): # type: () -> Sequence[str]
 		return _Fonts.families()
 
 	@staticmethod
-	def names(): # type: () -> list[str]
+	def names(): # type: () -> Sequence[str]
 		return _Fonts.names()
 
 	# Default fonts
 	@staticmethod
 	def default(): # type: () -> Font
-		return Font.named('TkDefaultFont')
+		return Font.named('TkDefaultFont') or Font()
 
 	@staticmethod
 	def text(): # type: () -> Font
-		return Font.named('TkTextFont')
+		return Font.named('TkTextFont') or Font()
 
 	@staticmethod
 	def fixed(): # type: () -> Font
-		return Font.named('TkFixedFont')
+		return Font.named('TkFixedFont') or Font()
 
 	@staticmethod
 	def menu(): # type: () -> Font
-		return Font.named('TkMenuFont')
+		return Font.named('TkMenuFont') or Font()
 
 	@staticmethod
 	def heading(): # type: () -> Font
-		return Font.named('TkHeadingFont')
+		return Font.named('TkHeadingFont') or Font()
 
 	@staticmethod
 	def caption(): # type: () -> Font
-		return Font.named('TkCaptionFont')
+		return Font.named('TkCaptionFont') or Font()
 
 	@staticmethod
 	def small_caption(): # type: () -> Font
-		return Font.named('TkSmallCaptionFont')
+		return Font.named('TkSmallCaptionFont') or Font()
 
 	@staticmethod
 	def icon(): # type: () -> Font
-		return Font.named('TkIconFont')
+		return Font.named('TkIconFont') or Font()
 
 	@staticmethod
 	def tooltip(): # type: () -> Font
-		return Font.named('TkTooltipFont')
+		return Font.named('TkTooltipFont') or Font()
 
-	def __init__(self, family=None, size=None, bold=None, italic=None, underline=None, overstrike=None, name=None, only_existing=False): # type: (str, int, bool, bool, bool, bool, str, bool) -> Font
-		options = {}
+	def __init__(self, family=None, size=None, bold=None, italic=None, underline=None, overstrike=None, name=None, only_existing=False): # type: (str | None, int | None, bool | None, bool | None, bool | None, bool | None, str | None, bool | None) -> None
+		options = {} # type: dict
 		if family is not None:
 			options['family'] = family
 		if size is not None:

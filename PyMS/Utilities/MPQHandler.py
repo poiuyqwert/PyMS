@@ -1,5 +1,5 @@
 
-from ..FileFormats.MPQ.MPQ import MPQ
+from ..FileFormats.MPQ.MPQ import MPQ, MPQFileEntry
 
 from .setutils import PYMS_SETTINGS
 from .fileutils import BadFile, SFile
@@ -7,8 +7,12 @@ from . import Assets
 
 import os
 
+from typing import BinaryIO
+
+ReadFile = BinaryIO | SFile | BadFile
+
 class MPQHandler(object):
-	def __init__(self, mpq_paths=[], listfiles=None): # type: (list[str], list[str] | None) -> MPQHandler
+	def __init__(self, mpq_paths=[], listfiles=None): # type: (list[str], list[str] | None) -> None
 		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
 		if listfiles is None:
 			self.listfiles = [Assets.data_file_path('Listfile.txt')]
@@ -19,12 +23,12 @@ class MPQHandler(object):
 	def mpq_paths(self): # type: () -> list[str]
 		return list(mpq.path for mpq in self.mpqs)
 
-	def clear(self):
+	def clear(self): # type: () -> None
 		if self.open:
 			self.close_mpqs()
 		self.mpqs = []
 
-	def add_defaults(self):
+	def add_defaults(self): # type: () -> bool
 		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
 		if not scdir or not os.path.isdir(scdir):
 			return False
@@ -43,13 +47,13 @@ class MPQHandler(object):
 				pass
 		return changed
 
-	def set_mpqs(self, mpq_paths):
+	def set_mpqs(self, mpq_paths): # type: (list[str]) -> None
 		if self.open:
 			# raise PyMSError('MPQ','Cannot set mpqs when the current mpqs are open.')
 			self.close_mpqs()
 		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
 
-	def open_mpqs(self):
+	def open_mpqs(self): # type: () -> list[str]
 		failed = []
 		if MPQ.supported():
 			self.open = True
@@ -62,7 +66,7 @@ class MPQHandler(object):
 					failed.append(mpq.path)
 		return failed
 
-	def close_mpqs(self):
+	def close_mpqs(self): # type: () -> None
 		self.open = False
 		for mpq in self.mpqs:
 			try:
@@ -84,10 +88,10 @@ class MPQHandler(object):
 	# folder(True)=Get only from folder
 	# folder(None)=Get from either, MPQ first, folder second
 	# folder(False)=Get only from MPQ
-	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER):
+	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER): # type: (str, str | None, list[str]) -> ReadFile
 		if folder is not None:
 			sources = MPQHandler.GET_FROM_FOLDER if folder else MPQHandler.GET_FROM_MPQ
-		file = BadFile(path)
+		file: ReadFile = BadFile(path)
 		for source in sources:
 			if source == MPQHandler._SOURCE_MPQ:
 				file = self.get_file_mpq(path)
@@ -99,8 +103,8 @@ class MPQHandler(object):
 					return file
 		return file
 
-	def get_file_mpq(self, path):
-		file = BadFile(path)
+	def get_file_mpq(self, path): # type: (str) -> ReadFile
+		file: SFile | BadFile = BadFile(path)
 		if not MPQ.supported():
 			return file
 		path = Assets.mpq_ref_to_file_name(path)
@@ -120,14 +124,14 @@ class MPQHandler(object):
 			self.close_mpqs()
 		return file
 
-	def get_file_folder(self, path):
+	def get_file_folder(self, path): # type: (str) -> ReadFile
 		if path.startswith('MPQ:'):
 			path = Assets.mpq_ref_to_file_path(path)
 		if os.path.exists(path):
 			return open(path, 'rb')
 		return BadFile(path)
 
-	def has_file(self, path, folder=None):
+	def has_file(self, path, folder=None): # type: (str, str | None) -> bool
 		in_mpq = path.startswith('MPQ:')
 		if MPQ.supported() and not folder and in_mpq:
 			file_name = Assets.mpq_ref_to_file_name(path)
@@ -155,7 +159,7 @@ class MPQHandler(object):
 				return os.path.exists(path)
 		return False
 
-	def list_files(self):
+	def list_files(self): # type: () -> list[MPQFileEntry]
 		close = False
 		if self.open == False:
 			self.open_mpqs()

@@ -4,24 +4,40 @@ from .PyMSError import PyMSError
 from textwrap import wrap
 import os, sys, platform, tempfile, errno
 
+from typing import Callable, Any, Sequence
+
 try:
 	from _thread import start_new_thread
 except:
 	import threading
-	def start_new_thread(target, args):
-		threading.Thread(target=target, args=args).start()
+	def start_new_thread(function: Callable[..., object], args: tuple[Any, ...], kwargs: dict[str, Any] = {}) -> int:
+		thread = threading.Thread(target=function, args=args)
+		thread.start()
+		return thread.ident or 0
 
 WIN_REG_AVAILABLE = True
 try:
 	from winreg import *
 except:
 	WIN_REG_AVAILABLE = False
+	WindowsError = Exception
+	def OpenKey(_a,_b) -> None:
+		return None
+	def EnumKey(_a,_b) -> None:
+		return None
+	def DeleteKey(_a,_b) -> None:
+		pass
+	HKEY_CLASSES_ROOT = ''
+	REG_SZ = ''
+	def SetValue(_a,_b,_c,_d) -> None:
+		pass
 
 couriernew = ('Courier', -12, 'normal')
 
-def is_windows():
+def is_windows(): # type: () -> bool
 	return (platform.system().lower() == 'windows')
-def is_mac():
+
+def is_mac(): # type: () -> bool
 	return (platform.system().lower() == 'darwin')
 
 # Decorator
@@ -47,7 +63,7 @@ def debug_state(states, history=[]):
 	print(('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')))
 	history.append(None)
 
-def nearest_multiple(v, m, r=round):
+def nearest_multiple(v, m, r=round): # type: (int, int, Callable[[float], float]) -> int
 	return m * int(r(v / float(m)))
 
 def register_registry(program_name, extension, file_type_name=None): # type: (str, str, str | None) -> None
@@ -94,14 +110,14 @@ def register_registry(program_name, extension, file_type_name=None): # type: (st
 	from .UIKit import MessageBox
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
-def flags(value, length):
+def flags(value, length): # type: (int, int) -> str
 	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
 			raise PyMSError('Flags', 'Invalid flags')
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
 	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
 
-def named_flags(flags, names, count, skip=0):
+def named_flags(flags, names, count, skip=0): # type: (int, Sequence[str], int, int) -> tuple[str, str]
 	header = ''
 	values = ''
 	for n in range(count):
@@ -110,25 +126,25 @@ def named_flags(flags, names, count, skip=0):
 		if n >= skip and n-skip < len(names) and names[n-skip]:
 			name = names[n-skip]
 		header += pad(name)
-		values += pad(1 if f else 0)
+		values += pad('1' if f else '0')
 	return (header,values)
 
-def binary(flags, count):
+def binary(flags, count): # type: (int, int) -> str
 	result = ''
 	for n in range(count):
 		result = ('1' if flags & (1 << n) else '0') + result
 	return result
 
-def flags_code(flags, name_map):
+def flags_code(flags, name_map): # type: (int, dict[int, str]) -> str
 	names = []
 	for (flag, name) in sorted(name_map.items(), key=lambda p: p[0]):
 		if flags & flag:
 			names.append(name)
 	if not names:
-		return 0
+		return '0'
 	return ' | '.join(names)
 
-def fit(label, text, width=80, end=False, indent=0):
+def fit(label, text, width=80, end=False, indent=0): # type: (str, str, int, bool, int) -> str
 	r = label
 	if not indent:
 		s = len(r)
@@ -147,7 +163,7 @@ def fit(label, text, width=80, end=False, indent=0):
 			r += '\n'
 	return r.rstrip('\n') + ('\n' if end else '')
 
-def float_to_str(value, strip_zero_decimals=True, max_decimals=4):
+def float_to_str(value, strip_zero_decimals=True, max_decimals=4): # type: (float, bool, int) -> str
 	result = str(value)
 	if result.endswith('.0') and strip_zero_decimals:
 		result = result[:-2]
@@ -155,22 +171,22 @@ def float_to_str(value, strip_zero_decimals=True, max_decimals=4):
 		result = result[:result.index('.') + max_decimals + 1]
 	return result
 
-def rpad(label, value='', span=20, padding=' '):
+def rpad(label, value='', span=20, padding=' '): # type: (str, str, int, str) -> str
 	label = str(label)
 	return '%s%s%s' % (label, padding * (span - len(label)), value)
 pad = rpad
 
-def lpad(label, span=20, padding=' '):
+def lpad(label, span=20, padding=' '): # type: (str, int, str) -> str
 	label = str(label)
 	return '%s%s' % (padding * (span - len(label)), label)
 
-def get_umask():
+def get_umask(): # type: () -> int
 	umask = os.umask(0)
 	os.umask(umask)
 	return umask
 
 BYTE_UNITS = ('B','KB','MB','GB')
-def format_byte_size(bytes):
+def format_byte_size(bytes): # type: (float) -> str
 	value = bytes
 	unit_id = 0
 	while value / 1024.0 >= 1 and unit_id < len(BYTE_UNITS)-1:
@@ -178,7 +194,7 @@ def format_byte_size(bytes):
 		unit_id += 1
 	return float_to_str(value, max_decimals=2) + BYTE_UNITS[unit_id]
 
-def create_temp_file(name, createmode=None):
+def create_temp_file(name, createmode=None): # type: (str, int | None) -> str
 	directory, filename = os.path.split(name)
 	handle, temp_file = tempfile.mkstemp(prefix=".%s-" % filename, dir=directory)
 	os.close(handle)
@@ -188,16 +204,17 @@ def create_temp_file(name, createmode=None):
 	except OSError as e:
 		if e.errno != errno.ENOENT:
 			raise
-		mode = createmode
-		if mode is None:
+		if createmode is None:
 			mode = ~get_umask()
+		else:
+			mode = createmode
 		mode &= 0o666
 	os.chmod(temp_file, mode)
 
 	return temp_file
 
-def start_file(filepath):
-	if is_windows():
+def start_file(filepath): # type: (str) -> None
+	if hasattr(os, 'startfile'):
 		os.startfile(filepath)
 	else:
 		cmd = 'open' if is_mac() else 'xdg-open'
@@ -205,7 +222,7 @@ def start_file(filepath):
 
 play_sound = None
 try:
-	from winsound import PlaySound, SND_MEMORY
+	from winsound import PlaySound, SND_MEMORY # type: ignore[attr-defined]
 	def win_play(raw_audio):
 		start_new_thread(PlaySound, (raw_audio, SND_MEMORY))
 	play_sound = win_play

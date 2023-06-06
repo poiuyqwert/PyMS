@@ -11,8 +11,8 @@ class UpdateDialog(PyMSDialog):
 	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
-	def check_update(window, program):
-		def do_check_update(window, program):
+	def check_update(window, program): # type: (AnyWindow, str) -> None
+		def do_check_update(window, program): # type: (AnyWindow, str) -> None
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
 			remindme = PYMS_SETTINGS.get('remindme', True)
 			if remindme == True or remindme != Assets.version('PyMS'):
@@ -34,12 +34,12 @@ class UpdateDialog(PyMSDialog):
 					window.after(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
-	def __init__(self, parent, program, versions):
+	def __init__(self, parent, program, versions): # type: (Misc, str, dict[str, str]) -> None
 		self.program = program
 		self.versions = versions
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
 			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,Assets.version(self.program),self.versions[self.program])	
 		else:
@@ -56,20 +56,20 @@ class UpdateDialog(PyMSDialog):
 		ok.pack(pady=5)
 		return ok
 
-	def ok(self):
+	def ok(self, _=None): # type: (Event | None) -> None
 		PYMS_SETTINGS.remindme = [Assets.version('PyMS'),1][self.remind.get()]
 		PYMS_SETTINGS.save()
 		PyMSDialog.ok(self)
 
 class SemVer(object):
-	def __init__(self, version):
+	def __init__(self, version): # type: (str) -> None
 		self.meta = None
 		if '-' in version:
 			version,self.meta = version.split('-')
 		components = (int(c) for c in version.split('.'))
 		self.major, self.minor, self.patch = components
 
-	def __lt__(self, other):
+	def __lt__(self, other): # type: (Any) -> bool
 		if not isinstance(other, SemVer):
 			return False
 		if self.major < other.major:
@@ -84,3 +84,4 @@ class SemVer(object):
 			return True
 		elif self.patch > other.patch:
 			return False
+		return False

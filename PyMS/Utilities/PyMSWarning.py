@@ -2,7 +2,7 @@
 from .utils import fit
 
 class PyMSWarning(Exception):
-	def __init__(self, type, warning, line=None, code=None, extra=None, level=0, id=None, sub_warnings=None):
+	def __init__(self, type, warning, line=None, code=None, extra=None, level=0, id=None, sub_warnings=None): # type: (str, str, int | None, str | None, str | None, int, int | None, list[PyMSWarning] | None) -> None
 		self.type = type
 		self.warning = warning
 		self.line = line
@@ -14,7 +14,7 @@ class PyMSWarning(Exception):
 		self.id = id
 		self.sub_warnings = [] if not sub_warnings else sub_warnings
 
-	def repr(self):
+	def repr(self): # type: () -> str
 		r = fit('%s Warning%s: ' % (self.type, ' (%s)' % self.id if self.id else ''), self.warning, end=True)
 		if self.line:
 			r += fit('    Line %s: ' % self.line, self.code, end=True)
@@ -22,7 +22,7 @@ class PyMSWarning(Exception):
 			r += w.repr()
 		return r
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		r = fit('%s Warning%s: ' % (self.type, ' (%s)' % self.id if self.id else ''), self.warning)
 		if self.line:
 			r += fit('    Line %s: ' % self.line, self.code)
@@ -31,10 +31,10 @@ class PyMSWarning(Exception):
 		return r[:-1]
 
 class PyMSWarnList(Exception):
-	def __init__(self, warnings):
+	def __init__(self, warnings): # type: (list[PyMSWarning]) -> None
 		self.warnings = warnings
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		r = ''
 		for w in self.warnings:
 			r += repr(w)

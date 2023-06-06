@@ -4,7 +4,7 @@ from .UIKit import *
 
 # TODO: Update about dialog
 class AboutDialog(PyMSDialog):
-	def __init__(self, parent, program, version, thanks=[]):
+	def __init__(self, parent, program, version, thanks=[]): # type: (Misc, str, str, list[tuple[str, str]]) -> None
 		self.program = program
 		self.version = version
 		self.thanks = thanks
@@ -16,7 +16,7 @@ class AboutDialog(PyMSDialog):
 		])
 		PyMSDialog.__init__(self, parent, 'About %s' % program, resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		name = Label(self, text='%s %s' % (self.program, self.version), font=Font(size=18))
 		name.pack(pady=5)
 		frame = Frame(self)

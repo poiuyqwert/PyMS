@@ -497,7 +497,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			('None', 0, 'No overlay', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
 			('Sprites.dat', CV5DoodadFlag.has_overlay_sprite, 'The overlay ID is a Sprites.dat reference. (is not cleared by SC, so this flag also counts as Receding creep)', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
 			('Units.dat', CV5DoodadFlag.has_overlay_unit, 'The overlay ID is a Units.dat reference', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
-			('Flipped', CV5DoodadFlag.overlay_flipped, 'The overlay is flipped. (unused) (is not cleared SC, so this flag also counts as Temporary creep)', OPTION_CHECK, None, True),
+			('Flipped', CV5DoodadFlag.overlay_flipped, 'The overlay is flipped. (Unused) (is not cleared SC, so this flag also counts as Temporary creep)', OPTION_CHECK, None, True),
 		)))
 		self.doodad_editors.append(entries_editor('Overlay', 'Doodad overlay settings', (
 			(('ID', self.group_edge_left_or_overlay_id, 'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),),
@@ -514,16 +514,16 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.doodad_editors.append(options_editor('Creep', 'Only Zerg can build on creep', self.group_flags, (
 			('Creep', CV5Flag.creep, 'Zerg can build here when this flag is combined with the Temporary creep flag', OPTION_CHECK, None, True),
 			('Receding', CV5Flag.creep_receding, 'Receding creep (overlap with Has Overlay Sprites.dat flag)', OPTION_CHECK, None, False),
-			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag (overlap with Has Overlay Flipped flag)', OPTION_CHECK, None, False),
+			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag\n  Overlaps with Has Overlay Flipped flag', OPTION_CHECK, None, False),
 		)))
 		self.doodad_editors.append(options_editor('Height', 'Terrain height', self.group_flags, (
 			('Mid Ground', CV5Flag.mid_ground, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags (priority over Mid Ground)', OPTION_CHECK, None, True),
+			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags\n  Priority over Mid Ground)', OPTION_CHECK, None, True),
 		)))
 		self.doodad_editors.append(options_editor('Misc.', 'Misc. flags', self.group_flags, (
 			('Has Doodad Cover', CV5Flag.has_doodad_cover, 'Has doodad cover', OPTION_CHECK, None, True),
 			('Blocks View', CV5Flag.blocks_view, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('Cliff Edge', CV5Flag.cliff_edge, 'Gets overwritten by SC based on minitile flags (overlap with Has Overlay Units.dat flag)', OPTION_CHECK, None, False),
+			('Cliff Edge', CV5Flag.cliff_edge, 'Overlaps with Has Overlay Units.dat flag', OPTION_CHECK, None, False),
 		)))
 		self.doodad_editors.append(options_editor('Unknown', 'Unknown/unused flags', self.group_flags, (
 			('0002', CV5Flag.unknown_0002, 'Unknown/unused flag 0x0002', OPTION_CHECK, None, True),

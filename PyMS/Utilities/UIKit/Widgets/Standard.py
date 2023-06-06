@@ -1,11 +1,8 @@
 
 from .. import Theme
-from .Extensions import Extensions
+from .Extensions import Extensions, WindowExtensions
 
-try: # Python 2
-	import tkinter as _Tk
-except: # Python 3
-	import tkinter as _Tk
+import tkinter as _Tk
 
 Widget = _Tk.Widget # For type hinting
 
@@ -72,3 +69,6 @@ class PanedWindow(_Tk.PanedWindow, Extensions):
 	def __init__(self, *args, **kwargs):
 		_Tk.PanedWindow.__init__(self, *args, **kwargs)
 		Theme.apply_theme(self)
+
+class AnyWindow(_Tk.Misc, WindowExtensions):
+	pass

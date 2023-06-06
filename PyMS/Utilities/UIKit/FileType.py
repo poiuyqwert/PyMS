@@ -1,7 +1,7 @@
 
 import operator as _operator
 
-class FileType(tuple):
+class FileType(tuple[str, str]):
 	WILDCARD = '*'
 	EXTSEP = '.' # Does Tkinter expect `os.extsep` or '.'?
 	SEPARATOR = ';'
@@ -208,9 +208,13 @@ class FileType(tuple):
 		name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
 		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions)))
 
-	name = property(_operator.itemgetter(0)) # type: str
+	@property
+	def name(self) -> str:
+		return self[0]
 	
-	extensions = property(_operator.itemgetter(1)) #type: str
+	@property
+	def extensions(self) -> str:
+		return self[1]
 
 	# Both `name` and `extensions` must be equal, unless `extensions == FileType.WILDCARD` then the names don't need to match
 	def __eq__(self, other):

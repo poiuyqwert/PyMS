@@ -1,14 +1,11 @@
 
 from .. import Theme
-from .Extensions import Extensions
+from .Extensions import Extensions, WindowExtensions
 
-try: # Python 2
-	import tkinter as _Tk
-except: # Python 3
-	import tkinter as _Tk
+import tkinter as _Tk
 
 
-class Toplevel(_Tk.Toplevel, Extensions):
+class Toplevel(_Tk.Toplevel, Extensions, WindowExtensions):
 	def __init__(self, *args, **kwargs):
 		_Tk.Toplevel.__init__(self, *args, **kwargs)
 		Theme.apply_theme(self)

@@ -1,8 +1,10 @@
 
+from .PyMSWarning import PyMSWarning
+
 import sys
 
 class PyMSError(Exception):
-	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False):
+	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False): # type: (str, str, int | None, str | None, list[PyMSWarning], bool) -> None
 		self.type = type
 		self.error = error
 		self.line = line
@@ -14,13 +16,13 @@ class PyMSError(Exception):
 		if capture_exception:
 			self.exception = sys.exc_info()
 
-	def repr(self):
+	def repr(self): # type: () -> str
 		r = '%s Error: %s' % (self.type, self.error)
 		if self.line:
 			r += '\n    Line %s: %s' % (self.line, self.code)
 		return r
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		from .utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
@@ -33,5 +35,5 @@ class PyMSError(Exception):
 				r += repr(w)
 		return r
 
-	def __str__(self):
+	def __str__(self): # type: () -> str
 		return repr(self)

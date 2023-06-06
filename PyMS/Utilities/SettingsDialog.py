@@ -25,7 +25,7 @@ class SettingsDialog(PyMSDialog):
 		if self.data:
 			self.tabs = Notebook(self)
 			if self.mpqhandler:
-				self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings)
+				self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings, self)
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if len(d) == 1:

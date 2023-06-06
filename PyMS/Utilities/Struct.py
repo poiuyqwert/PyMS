@@ -23,51 +23,51 @@ class Type:
 		return '%d%s' % (count, char)
 
 	@staticmethod
-	def pad(count=1):
+	def pad(count=1): # type: (int) -> str
 		return Type.format('x', count)
 
 	@staticmethod
-	def s8(count=1):
+	def s8(count=1): # type: (int) -> str
 		return Type.format('b', count)
 
 	@staticmethod
-	def u8(count=1):
+	def u8(count=1): # type: (int) -> str
 		return Type.format('B', count)
 
 	@staticmethod
-	def s16(count=1):
+	def s16(count=1): # type: (int) -> str
 		return Type.format('h', count)
 
 	@staticmethod
-	def u16(count=1):
+	def u16(count=1): # type: (int) -> str
 		return Type.format('H', count)
 
 	@staticmethod
-	def s32(count=1):
+	def s32(count=1): # type: (int) -> str
 		return Type.format('l', count)
 
 	@staticmethod
-	def u32(count=1):
+	def u32(count=1): # type: (int) -> str
 		return Type.format('L', count)
 
 	@staticmethod
-	def s64(count=1):
+	def s64(count=1): # type: (int) -> str
 		return Type.format('q', count)
 
 	@staticmethod
-	def u64(count=1):
+	def u64(count=1): # type: (int) -> str
 		return Type.format('Q', count)
 
 	@staticmethod
-	def float(count=1):
+	def float(count=1): # type: (int) -> str
 		return Type.format('f', count)
 
 	@staticmethod
-	def double(count=1):
+	def double(count=1): # type: (int) -> str
 		return Type.format('d', count)
 
 	@staticmethod
-	def char(count=1):
+	def char(count=1): # type: (int) -> str
 		return Type.format('c', count)
 
 	@staticmethod

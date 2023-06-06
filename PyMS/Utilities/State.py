@@ -1,16 +1,18 @@
 
 from .Callback import Callback
 
+from typing import Any, Callable
+
 class State(object):
 	@staticmethod
-	def _get(field):
+	def _get(field): # type: (str) -> Callable[[State], Any]
 		attr = '_' + field
 		def _get(self): # type: (State) -> Any
 			return getattr(self, attr)
 		return _get
 
 	@staticmethod
-	def _set(field):
+	def _set(field): # type: (str) -> Callable[[State, Any], None]
 		attr = '_' + field
 		def _set(self, value): # type: (State, Any) -> None
 			if getattr(self, attr) == value:
@@ -20,10 +22,10 @@ class State(object):
 		return _set
 
 	@staticmethod
-	def property(field):
+	def property(field): # type: (str) -> property
 		return property(State._get(field), State._set(field))
 
-	def __init__(self):
+	def __init__(self): # type: () -> None
 		self.__callbacks = {} # type: dict[str | None, Callback]
 
 	def __field_updated(self, field): # type: (str) -> None
@@ -34,7 +36,7 @@ class State(object):
 		if callback:
 			callback()
 
-	def observe(self, callback, *fields): # type: (Callable[None,None], *str) -> None
+	def observe(self, callback, *fields): # type: (Callable[[None], None], *str) -> None
 		if not fields:
 			if not None in self.__callbacks:
 				self.__callbacks[None] = Callback()
@@ -45,9 +47,10 @@ class State(object):
 				self.__callbacks[field] = Callback()
 			self.__callbacks[field] += callback
 
-	def remove_observer(self, callback, *fields): # type: (Callable[None,None], *str) -> None
+	def remove_observer(self, callback, *_fields): # type: (Callable[[None], None], *str) -> None
+		fields: tuple[str | None, ...] = _fields
 		if not fields:
-			fields = list(self.__callbacks.keys())
+			fields = tuple(self.__callbacks.keys())
 		for field in fields:
 			if not field in self.__callbacks:
 				continue

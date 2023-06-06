@@ -5,6 +5,8 @@ from .UIKit import MainWindow, Toplevel
 
 import sys, os
 
+from typing import TextIO
+
 try:
 	os.makedirs(Assets.logs_dir)
 except:
@@ -12,7 +14,7 @@ except:
 
 class Tracer(object):
 	class STDStream(object):
-		def __init__(self, tracer, stream): # type: (Tracer, TextIO) -> Tracer.STDStream
+		def __init__(self, tracer, stream): # type: (Tracer, TextIO) -> None
 			self.tracer = tracer
 			self.stream = stream
 
@@ -23,12 +25,12 @@ class Tracer(object):
 		def flush(self):
 			pass
 
-	def __init__(self, program_name, main_window): # type: (str, MainWindow) -> Tracer
+	def __init__(self, program_name, main_window): # type: (str, MainWindow) -> None
 		self.stdout = Tracer.STDStream(self, sys.stdout)
-		self.stderr =Tracer.STDStream(self, sys.stderr)
+		self.stderr = Tracer.STDStream(self, sys.stderr)
 		self.program_name = program_name
 		self.main_window = main_window
-		self.window = None # type: InternalErrorDialog
+		self.window = None # type: InternalErrorDialog | None
 		self.creating_window = False
 		self.buffer = ''
 		try:
@@ -44,12 +46,12 @@ class Tracer(object):
 			children = presenter.winfo_children()
 		return presenter
 
-	def _present(self):
+	def _present(self): # type: () -> None
 		if self.creating_window:
 			return
 		if self.window is None:
 			self.creating_window = True
-			def present():
+			def present(): # type: () -> None
 				presenter = self._find_presenter()
 				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking:
 					self.main_window.after(1000, present)
@@ -78,9 +80,14 @@ class Tracer(object):
 			return
 		self.file.flush()
 
+_TRACER: Tracer | None = None
 def setup_trace(program_name, main_window):
-	if isinstance(sys.stdout, Tracer):
+	global _TRACER
+	if _TRACER is not None:
 		return
-	tracer = Tracer(program_name, main_window)
-	sys.stdout = tracer.stdout
-	sys.stderr = tracer.stderr
+	_TRACER = Tracer(program_name, main_window)
+	sys.stdout = _TRACER.stdout
+	sys.stderr = _TRACER.stderr
+
+def get_tracer(): # type: () -> (Tracer | None)
+	return _TRACER

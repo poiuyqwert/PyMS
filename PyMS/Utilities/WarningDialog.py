@@ -1,19 +1,20 @@
 
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
+from .PyMSWarning import PyMSWarning
 
 class WarningDialog(PyMSDialog):
-	def __init__(self, parent, warnings, cont=False):
+	def __init__(self, parent, warnings, cont=False): # type: (Misc, list[PyMSWarning], bool) -> None
 		self.warnings = warnings
 		self.cont = cont
 		PyMSDialog.__init__(self, parent, 'Warning!', resizable=(False, False))
 
-	def widgetize(self):
-		self.bind(Ctrl.a, self.selectall)
+	def widgetize(self): # type: () -> (Misc | None)
+		self.bind(Ctrl.a(), self.selectall)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
 		vscroll = Scrollbar(frame)
-		self.warntext = Text(frame, bd=0, highlightthickness=0, width=60, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=NONE, exportselection=0)
+		self.warntext = Text(frame, bd=0, highlightthickness=0, width=60, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=NONE, exportselection=False)
 		self.warntext.tag_config('highlevel', foreground='#960000')
 		self.warntext.grid()
 		hscroll.config(command=self.warntext.xview)
@@ -35,14 +36,14 @@ class WarningDialog(PyMSDialog):
 		buttonbar.pack(pady=10)
 		return ok
 
-	def selectall(self, key=None):
+	def selectall(self, key=None): # type: (Event | None) -> None
 		self.warntext.focus_set()
 		self.warntext.tag_add(SEL, 1.0, END)
 
-	def ok(self):
+	def ok(self, _=None): # type: (Event | None) -> None
 		self.cont = True
 		PyMSDialog.ok(self)
 
-	def cancel(self):
+	def cancel(self, _=None): # type: (Event | None) -> None
 		self.cont = False
 		PyMSDialog.ok(self)

@@ -1,11 +1,13 @@
 
-class Requirement:
+from enum import Flag, auto
+
+class Requirement(Flag):
 	none = 0
 
-	MPQ = (1 << 0)
-	PIL = (1 << 1)
+	MPQ = auto()
+	PIL = auto()
 
-def check_compat(program_name, additional_requirements=Requirement.none): # type: (str, int) -> None
+def check_compat(program_name, additional_requirements=Requirement.none): # type: (str, Requirement) -> None
 	import sys
 
 	tcl_version = None
@@ -46,11 +48,8 @@ def check_compat(program_name, additional_requirements=Requirement.none): # type
 
 	if additional_requirements & Requirement.PIL:
 		try:
-			from PIL import Image as PILImage
-			try:
-				from PIL import ImageTk
-			except:
-				import ImageTk
+			from PIL import Image
+			from PIL import ImageTk
 		except:
 			DependencyError(program_name, 'PIL/PILLOW is missing. Please consult the Installation section of the Readme.', readmes).startup()
 			sys.exit()

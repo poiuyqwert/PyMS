@@ -3,10 +3,7 @@ from ...utils import is_mac
 from .. import Theme
 from .Extensions import Extensions
 
-try:
-	import tkinter as _Tk
-except:
-	import tkinter as _Tk
+import tkinter as _Tk
 
 
 class Canvas(_Tk.Canvas, Extensions):

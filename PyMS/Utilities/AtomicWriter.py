@@ -4,10 +4,12 @@ from .PyMSError import PyMSError
 
 import os, codecs
 
+from typing import IO
+
 class AtomicWriter:
-	def __init__(self, path, mode="w+b", createmode=None, encoding=None):
+	def __init__(self, path, mode="w+b", createmode=None, encoding=None): # type: (str, str, int | None, str | None) -> None
 		self.real_file = path
-		self.handle = None
+		self.handle: IO
 		self.temp_file = None
 		
 		if os.path.isfile(path):
@@ -23,7 +25,7 @@ class AtomicWriter:
 		self.write = self.handle.write
 		self.fileno = self.handle.fileno
 
-	def close(self):
+	def close(self): # type: () -> None
 		if self.handle and not self.handle.closed:
 			self.handle.flush()
 			os.fsync(self.handle.fileno())
@@ -57,7 +59,7 @@ class AtomicWriter:
 					except:
 						pass
 
-	def discard(self):
+	def discard(self): # type: () -> None
 		if self.handle and not self.handle.closed:
 			self.handle.close()
 		if self.temp_file:
@@ -66,5 +68,5 @@ class AtomicWriter:
 			except:
 				pass
 
-	def __del__(self):
+	def __del__(self): # type: () -> None
 		self.discard()

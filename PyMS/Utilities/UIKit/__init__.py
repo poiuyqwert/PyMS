@@ -10,26 +10,15 @@ from .EventPattern import *
 from .FileType import *
 from .ShowScrollbar import *
 
-
-try: # Python 2
-	import tkinter.filedialog as FileDialog
-	import tkinter.messagebox as MessageBox
-	import tkinter.colorchooser as ColorChooser
-except: # Python 3
-	import tkinter.filedialog as FileDialog
-	import tkinter.messagebox as MessageBox
-	import tkinter.colorchooser as ColorChooser
-# import Tkdnd
-
+import tkinter.filedialog as FileDialog
+import tkinter.messagebox as MessageBox
+import tkinter.colorchooser as ColorChooser
 
 try:
 	from PIL import Image as PILImage
-	try:
-		from PIL import ImageTk
-	except:
-		import ImageTk
+	from PIL import ImageTk
 except:
-	class PILImage(object):
+	class PILImage(object): # type: ignore
 		pass
-	class ImageTk(object):
+	class ImageTk(object): # type: ignore
 		pass

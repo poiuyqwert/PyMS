@@ -3,10 +3,7 @@ from ..TagStateManager import TagStateManager
 from .. import Theme
 from .Extensions import Extensions
 
-try:
-	import tkinter as _Tk
-except:
-	import tkinter as _Tk
+import tkinter as _Tk
 
 
 class Menu(_Tk.Menu, Extensions):

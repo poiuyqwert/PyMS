@@ -1,6 +1,8 @@
 
 import re
 
+from typing import cast, Sequence, Type
+
 # Based on githubs GFM: https://github.github.com/gfm/
 # This is not a complete implementation, it is a simplified implementation, mainly enough to satisfy my current use cases
 #  - setext heading is not supported
@@ -13,8 +15,8 @@ import re
 class _Scanner(object):
 	RE_BLANK = re.compile(r'^[ \t]*$')
 
-	def __init__(self):
-		self.line = None # type: str
+	def __init__(self): # type: () -> None
+		self.line = ''
 		self.offset = 0
 		self.length = 0
 		self.owned = False
@@ -31,23 +33,23 @@ class _Scanner(object):
 	def rcut(self, char_count): # type: (int) -> None
 		self.length -= char_count
 
-	def is_empty(self):
+	def is_empty(self): # type: () -> bool
 		return not self.line or self.length == 0
 
-	def is_done(self):
+	def is_done(self): # type: () -> bool
 		return self.is_empty() or self.owned
 
-	def is_blank(self):
+	def is_blank(self): # type: () -> bool
 		return _Scanner.RE_BLANK.match(self.line) is not None
 
-	def end(self):
+	def end(self): # type: () -> None
 		self.offset = len(self.line)-1
 		self.length = 0
 
-	def own(self):
+	def own(self): # type: () -> None
 		self.owned = True
 
-	def remainder(self):
+	def remainder(self): # type: () -> str
 		if not self.line:
 			return ''
 		return self.line[self.offset:self.offset+self.length]
@@ -60,9 +62,9 @@ class _Scanner(object):
 
 # Block content
 class Block(object):
-	def __init__(self): # type () -> Block
+	def __init__(self): # type: () -> None
 		self.open = True
-		self.parent = None # type: Block
+		self.parent = None # type: Block | None
 		# self.children = [] # type: list[Block]
 
 	@staticmethod
@@ -72,24 +74,24 @@ class Block(object):
 	def is_continued(self, scanner): # type: (_Scanner) -> bool
 		return False
 
-	def close(self):
+	def close(self): # type: () -> None
 		self.open = False
 
-	def repr_params(self):
+	def repr_params(self): # type: () -> (str | None)
 		return None
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		info = '-> ' if self.open else '   '
 		info += self.__class__.__name__
-		repr_params = self.repr_params() # pylint: disable=assignment-from-none
+		repr_params = self.repr_params()
 		if repr_params:
 			info += ' (%s)' % repr_params
 		return info
 
 class ContainerBlock(Block):
-	def __init__(self): # type: () -> ContainerBlock
+	def __init__(self): # type: () -> None
 		Block.__init__(self)
-		self.children = []
+		self.children = [] # type: list[Block]
 
 	def add_child(self, block): # type: (Block) -> None
 		self.children.append(block)
@@ -105,16 +107,16 @@ class ContainerBlock(Block):
 			return None
 		return child
 
-	def close_children(self):
+	def close_children(self): # type: () -> None
 		open_child = self.get_open_child()
 		if open_child:
 			open_child.close()
 
-	def close(self):
+	def close(self): # type: () -> None
 		Block.close(self)
 		self.close_children()
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		info = Block.__repr__(self)
 		for child in self.children:
 			info += '\r\n  ' + repr(child).replace('\r\n', '\r\n  ')
@@ -124,7 +126,7 @@ class LeafBlock(Block):
 	pass
 
 class ContentBlock(LeafBlock):
-	def __init__(self, span=None): # type: (str | Span) -> ContentBlock
+	def __init__(self, span=None): # type: (str | Span | None) -> None
 		LeafBlock.__init__(self)
 		self.spans = [] # type: list[Span]
 		if span is not None:
@@ -137,7 +139,7 @@ class ContentBlock(LeafBlock):
 			span = Span(span)
 		self.spans.append(span)
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		info = Block.__repr__(self)
 		# TODO: Update
 		for span in self.spans:
@@ -159,7 +161,7 @@ class ATXHeading(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(#{1,6})(?:( +).+?( +#+ *)?)?$')
 	RE_ANCHOR_CLEAN = re.compile(r'[^a-zA-Z ]')
 
-	def __init__(self, level): # type: (int) -> ATXHeading
+	def __init__(self, level): # type: (int) -> None
 		ContentBlock.__init__(self)
 		self.level = level
 		self.open = False
@@ -176,11 +178,11 @@ class ATXHeading(ContentBlock):
 			scanner.rcut(len(match.group(4)))
 		return ATXHeading(len(match.group(2)))
 
-	def repr_params(self):
+	def repr_params(self): # type: () -> str
 		return 'level=%d' % self.level
 
-	def anchor(self):
-		def collapse(items): # type: (list[Span | str]) -> None
+	def anchor(self): # type: () -> str
+		def collapse(items): # type: (Sequence[Span | str]) -> str
 			anchor = ''
 			for item in items:
 				if isinstance(item, Span):
@@ -213,7 +215,7 @@ class IndentedCodeBlock(ContentBlock):
 class FencedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(`{3,}|~{3,})([^`~][^`~]*?)?\s*$')
 	
-	def __init__(self, indent, fence, info_string):
+	def __init__(self, indent, fence, info_string): # type: (int, str, str) -> None
 		ContentBlock.__init__(self)
 		self.indent = indent
 		self._re_closing = re.compile(' {0,3}%s+\\s*$' % fence)
@@ -262,7 +264,7 @@ class ListBlock(ContainerBlock):
 	MARKER_BULLET = '-'
 	MARKER_NUMERIC = '#'
 
-	def __init__(self, marker, level): # type: (str, int) -> ListBlock
+	def __init__(self, marker, level): # type: (str, int) -> None
 		ContainerBlock.__init__(self)
 		self.marker = marker
 		self.level = level
@@ -312,7 +314,7 @@ class ListItemBlock(ContainerBlock):
 
 	def is_continued(self, scanner): # type: (_Scanner) -> bool
 		match = scanner.match(ListItemBlock.RE_LEVEL)
-		parent = self.parent # type: ListBlock
+		parent = cast(ListBlock, self.parent)
 		if not match or len(match.group(0)) < parent.level:
 			return False
 		scanner.lcut(parent.level)
@@ -320,7 +322,7 @@ class ListItemBlock(ContainerBlock):
 
 # Inline content
 class Span(object):
-	def __init__(self, text): # type: (str) -> Span
+	def __init__(self, text): # type: (str | None) -> None
 		self.contents = [] # type: list[Span | str]
 		if text:
 			self.contents.append(text)
@@ -353,7 +355,7 @@ class Span(object):
 	def repr_params(self): # type: () -> (str | None)
 		return None
 
-	def __repr__(self):
+	def __repr__(self): # type: () -> str
 		result = '<%s' % self.__class__.__name__
 		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
@@ -413,7 +415,7 @@ class Strikethrough(Span):
 class Link(Span):
 	RE_MARKER = re.compile(r'(?<!!)\[(.+?)\]\((\S+?|<.+?>)(?: ([\'"])(.+?)\3)?\)')
 
-	def __init__(self, text, link, title): # type: (str, str, str | None) -> Link
+	def __init__(self, text, link, title): # type: (str, str, str | None) -> None
 		Span.__init__(self, text)
 		self.link = link
 		self.title = title
@@ -439,7 +441,7 @@ class Link(Span):
 class Image(Span):
 	RE_MARKER = re.compile(r'!\[(.+?)\]\((\S+|<.+?>)(?: ([\'"])(.+?)\3)?\)')
 
-	def __init__(self, alt_text, link, title): # type: (str, str, str | None) -> Image
+	def __init__(self, alt_text, link, title): # type: (str, str, str | None) -> None
 		Span.__init__(self, None)
 		self.alt_text = alt_text
 		self.link = link
@@ -465,7 +467,7 @@ class Image(Span):
 
 class Document(ContainerBlock):
 	RE_NEWLINE = re.compile(r'\r?\n')
-	BLOCK_PRIORITY = (
+	BLOCK_PRIORITY: Sequence[Type[Block]] = (
 		ThematicBreak,
 		ATXHeading,
 		# SetextHeading,
@@ -475,7 +477,7 @@ class Document(ContainerBlock):
 		BlockQuote,
 		# Paragraph
 	)
-	SPAN_PRIORITY = (
+	SPAN_PRIORITY: Sequence[Type[Span]] = (
 		CodeSpan,
 		Link,
 		Image,
@@ -494,8 +496,8 @@ class Document(ContainerBlock):
 			scanner.set_line(line)
 			# print('\r\n' + repr(document))
 			# 1. Check for continuations
-			working_block = document
-			open_block = document
+			working_block: Block = document
+			open_block: Block | None = document
 			while True:
 				next_block = open_block.get_open_child() if isinstance(open_block, ContainerBlock) else None
 				if not next_block:
@@ -511,8 +513,9 @@ class Document(ContainerBlock):
 					if block:
 						if isinstance(block, ListBlock) and isinstance(working_block, ListBlock) and block.marker == working_block.marker:
 							block = block.children[-1]
-						working_block.close_children()
-						working_block.add_child(block)
+						if isinstance(working_block, ContainerBlock):
+							working_block.close_children()
+							working_block.add_child(block)
 						# print('\r\n' + repr(document))
 						open_block = block
 						while isinstance(open_block, ContainerBlock) and open_block.children:
@@ -525,11 +528,12 @@ class Document(ContainerBlock):
 				if isinstance(open_block, ContentBlock):
 					open_block.add_span(scanner.remainder())
 				else:
-					if isinstance(open_block, ListItemBlock) and open_block.children and working_block != open_block:
+					if isinstance(open_block, ListItemBlock) and open_block.children and working_block != open_block and open_block.parent:
 						open_block.parent.close()
 						open_block = open_block.parent.parent
 					content_block = Paragraph(scanner.remainder())
-					open_block.add_child(content_block)
+					if isinstance(open_block, ContainerBlock):
+						open_block.add_child(content_block)
 			elif scanner.is_blank() and isinstance(open_block, ContentBlock):
 				open_block.close()
 		# print('\r\n' + repr(document))
@@ -550,5 +554,5 @@ class Document(ContainerBlock):
 	def is_continued(self, scanner): # type: (_Scanner) -> bool
 		return True
 
-	def close(self):
+	def close(self): # type: () -> None
 		self.close_children()

@@ -2,11 +2,13 @@
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 from . import Assets
+from .MPQHandler import MPQHandler
+from .Settings import Settings
 
 import os, re
 
 class MPQSelect(PyMSDialog):
-	def __init__(self, parent, mpqhandler, filetype, search, settings, open_type='Open'):
+	def __init__(self, parent, mpqhandler, filetype, search, settings, open_type='Open'): # type: (Misc, MPQHandler, str, str, Settings, str) -> None
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
 		self.search.set(search)
@@ -14,14 +16,14 @@ class MPQSelect(PyMSDialog):
 		self.settings = settings
 		self.regex = IntVar()
 		self.regex.set(0)
-		self.files = []
-		self.file = None
-		self.resettimer = None
-		self.searchtimer = None
+		self.files = [] # type: list[str]
+		self.file = None # type: str | None
+		self.resettimer = None # type: str | None
+		self.searchtimer = None # type: str | None
 		self.open_type = open_type
 		PyMSDialog.__init__(self, parent, self.open_type + ' a ' + filetype)
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		self.listbox = ScrolledListbox(self, width=35, height=10)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
@@ -45,14 +47,14 @@ class MPQSelect(PyMSDialog):
 
 		return self.open
 
-	def setup_complete(self):
+	def setup_complete(self): # type: () -> None
 		self.settings.windows.settings.load_window_size('mpqselect', self)
 
-	def listfiles(self):
+	def listfiles(self): # type: () -> None
 		self.files = []
 		for file_entry in self.mpqhandler.list_files():
 			if not file_entry.file_name in self.files:
-				self.files.append(file_entry.file_name)
+				self.files.append(file_entry.file_name.decode('utf-8'))
 		for path,_,filenames in os.walk(Assets.mpq_dir):
 			for filename in filenames:
 				mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
@@ -60,7 +62,7 @@ class MPQSelect(PyMSDialog):
 					self.files.append(mpq_filename)
 		self.files.sort()
 
-	def updatelist(self):
+	def updatelist(self): # type: () -> None
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 			self.searchtimer = None
@@ -82,18 +84,18 @@ class MPQSelect(PyMSDialog):
 		else:
 			self.open['state'] = DISABLED
 
-	def updatecolor(self):
+	def updatecolor(self): # type: () -> None
 		if self.resettimer:
 			self.after_cancel(self.resettimer)
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop.entry.c
 
-	def updatesearch(self, *_):
+	def updatesearch(self, *_): # type: (Event) -> None
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
-	def ok(self):
+	def ok(self, _=None): # type: (Event | None) -> None
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
 		history = self.settings.settings.get('mpqselecthistory', [])
@@ -104,6 +106,6 @@ class MPQSelect(PyMSDialog):
 			del history[0]
 		PyMSDialog.ok(self)
 
-	def dismiss(self):
+	def dismiss(self): # type: () -> None
 		self.settings.windows.settings.save_window_size('mpqselect', self)
 		PyMSDialog.dismiss(self)
