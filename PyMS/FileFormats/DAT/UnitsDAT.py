@@ -5,7 +5,7 @@ from . import DATCoders
 
 from typing import cast
 
-class Unit(AbstractDAT.AbstractDATEntry):
+class DATUnit(AbstractDAT.AbstractDATEntry):
 	class Property:
 		graphics = 'graphics'
 		subunit1 = 'subunit1'
@@ -328,116 +328,116 @@ class Unit(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Unit'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Unit.Property.graphics, self.graphics, data)
-		self._export_property_value(export_properties, Unit.Property.subunit1, self.subunit1, data)
-		self._export_property_value(export_properties, Unit.Property.subunit2, self.subunit2, data)
-		self._export_property_value(export_properties, Unit.Property.infestation, self.infestation, data)
-		self._export_property_value(export_properties, Unit.Property.construction_animation, self.construction_animation, data)
-		self._export_property_value(export_properties, Unit.Property.unit_direction, self.unit_direction, data)
-		self._export_property_value(export_properties, Unit.Property.shield_enabled, self.shield_enabled, data)
-		self._export_property_value(export_properties, Unit.Property.shield_amount, self.shield_amount, data)
-		self._export_property_value(export_properties, Unit.Property.hit_points, self.hit_points, data, _UnitPropertyCoder.hit_points)
-		self._export_property_value(export_properties, Unit.Property.elevation_level, self.elevation_level, data)
-		self._export_property_value(export_properties, Unit.Property.unknown_flags, self.unknown_flags, data, _UnitPropertyCoder.unknown_flags)
-		self._export_property_value(export_properties, Unit.Property.sublabel, self.sublabel, data)
-		self._export_property_value(export_properties, Unit.Property.comp_ai_idle, self.comp_ai_idle, data)
-		self._export_property_value(export_properties, Unit.Property.human_ai_idle, self.human_ai_idle, data)
-		self._export_property_value(export_properties, Unit.Property.return_to_idle, self.return_to_idle, data)
-		self._export_property_value(export_properties, Unit.Property.attack_unit, self.attack_unit, data)
-		self._export_property_value(export_properties, Unit.Property.attack_move, self.attack_move, data)
-		self._export_property_value(export_properties, Unit.Property.ground_weapon, self.ground_weapon, data)
-		self._export_property_value(export_properties, Unit.Property.max_ground_hits, self.max_ground_hits, data)
-		self._export_property_value(export_properties, Unit.Property.air_weapon, self.air_weapon, data)
-		self._export_property_value(export_properties, Unit.Property.max_air_hits, self.max_air_hits, data)
-		self._export_property_value(export_properties, Unit.Property.ai_internal, self.ai_internal, data)
-		self._export_property_value(export_properties, Unit.Property.special_ability_flags, self.special_ability_flags, data, _UnitPropertyCoder.special_ability_flags)
-		self._export_property_value(export_properties, Unit.Property.target_acquisition_range, self.target_acquisition_range, data)
-		self._export_property_value(export_properties, Unit.Property.sight_range, self.sight_range, data)
-		self._export_property_value(export_properties, Unit.Property.armor_upgrade, self.armor_upgrade, data)
-		self._export_property_value(export_properties, Unit.Property.unit_size, self.unit_size, data)
-		self._export_property_value(export_properties, Unit.Property.armor, self.armor, data)
-		self._export_property_value(export_properties, Unit.Property.right_click_action, self.right_click_action, data)
-		self._export_property_value(export_properties, Unit.Property.ready_sound, self.ready_sound, data)
-		self._export_property_value(export_properties, Unit.Property.what_sound_start, self.what_sound_start, data)
-		self._export_property_value(export_properties, Unit.Property.what_sound_end, self.what_sound_end, data)
-		self._export_property_value(export_properties, Unit.Property.pissed_sound_start, self.pissed_sound_start, data)
-		self._export_property_value(export_properties, Unit.Property.pissed_sound_end, self.pissed_sound_end, data)
-		self._export_property_value(export_properties, Unit.Property.yes_sound_start, self.yes_sound_start, data)
-		self._export_property_value(export_properties, Unit.Property.yes_sound_end, self.yes_sound_end, data)
-		self._export_property_value(export_properties, Unit.Property.staredit_placement_size, self.staredit_placement_size, data, _UnitPropertyCoder.staredit_placement_size)
-		self._export_property_value(export_properties, Unit.Property.addon_position, self.addon_position, data, _UnitPropertyCoder.addon_position)
-		self._export_property_value(export_properties, Unit.Property.unit_extents, self.unit_extents, data, _UnitPropertyCoder.unit_extents)
-		self._export_property_value(export_properties, Unit.Property.portrait, self.portrait, data)
-		self._export_property_value(export_properties, Unit.Property.mineral_cost, self.mineral_cost, data)
-		self._export_property_value(export_properties, Unit.Property.vespene_cost, self.vespene_cost, data)
-		self._export_property_value(export_properties, Unit.Property.build_time, self.build_time, data)
-		self._export_property_value(export_properties, Unit.Property.requirements, self.requirements, data)
-		self._export_property_value(export_properties, Unit.Property.staredit_group_flags, self.staredit_group_flags, data, _UnitPropertyCoder.staredit_group_flags)
-		self._export_property_value(export_properties, Unit.Property.supply_provided, self.supply_provided, data, _UnitPropertyCoder.supply_provided)
-		self._export_property_value(export_properties, Unit.Property.supply_required, self.supply_required, data, _UnitPropertyCoder.supply_required)
-		self._export_property_value(export_properties, Unit.Property.space_required, self.space_required, data)
-		self._export_property_value(export_properties, Unit.Property.space_provided, self.space_provided, data)
-		self._export_property_value(export_properties, Unit.Property.build_score, self.build_score, data)
-		self._export_property_value(export_properties, Unit.Property.destroy_score, self.destroy_score, data)
-		self._export_property_value(export_properties, Unit.Property.unit_map_string, self.unit_map_string, data)
-		self._export_property_value(export_properties, Unit.Property.broodwar_unit_flag, self.broodwar_unit_flag, data)
-		self._export_property_value(export_properties, Unit.Property.staredit_availability_flags, self.staredit_availability_flags, data, _UnitPropertyCoder.staredit_availability_flags)
+		self._export_property_value(export_properties, DATUnit.Property.graphics, self.graphics, data)
+		self._export_property_value(export_properties, DATUnit.Property.subunit1, self.subunit1, data)
+		self._export_property_value(export_properties, DATUnit.Property.subunit2, self.subunit2, data)
+		self._export_property_value(export_properties, DATUnit.Property.infestation, self.infestation, data)
+		self._export_property_value(export_properties, DATUnit.Property.construction_animation, self.construction_animation, data)
+		self._export_property_value(export_properties, DATUnit.Property.unit_direction, self.unit_direction, data)
+		self._export_property_value(export_properties, DATUnit.Property.shield_enabled, self.shield_enabled, data)
+		self._export_property_value(export_properties, DATUnit.Property.shield_amount, self.shield_amount, data)
+		self._export_property_value(export_properties, DATUnit.Property.hit_points, self.hit_points, data, _UnitPropertyCoder.hit_points)
+		self._export_property_value(export_properties, DATUnit.Property.elevation_level, self.elevation_level, data)
+		self._export_property_value(export_properties, DATUnit.Property.unknown_flags, self.unknown_flags, data, _UnitPropertyCoder.unknown_flags)
+		self._export_property_value(export_properties, DATUnit.Property.sublabel, self.sublabel, data)
+		self._export_property_value(export_properties, DATUnit.Property.comp_ai_idle, self.comp_ai_idle, data)
+		self._export_property_value(export_properties, DATUnit.Property.human_ai_idle, self.human_ai_idle, data)
+		self._export_property_value(export_properties, DATUnit.Property.return_to_idle, self.return_to_idle, data)
+		self._export_property_value(export_properties, DATUnit.Property.attack_unit, self.attack_unit, data)
+		self._export_property_value(export_properties, DATUnit.Property.attack_move, self.attack_move, data)
+		self._export_property_value(export_properties, DATUnit.Property.ground_weapon, self.ground_weapon, data)
+		self._export_property_value(export_properties, DATUnit.Property.max_ground_hits, self.max_ground_hits, data)
+		self._export_property_value(export_properties, DATUnit.Property.air_weapon, self.air_weapon, data)
+		self._export_property_value(export_properties, DATUnit.Property.max_air_hits, self.max_air_hits, data)
+		self._export_property_value(export_properties, DATUnit.Property.ai_internal, self.ai_internal, data)
+		self._export_property_value(export_properties, DATUnit.Property.special_ability_flags, self.special_ability_flags, data, _UnitPropertyCoder.special_ability_flags)
+		self._export_property_value(export_properties, DATUnit.Property.target_acquisition_range, self.target_acquisition_range, data)
+		self._export_property_value(export_properties, DATUnit.Property.sight_range, self.sight_range, data)
+		self._export_property_value(export_properties, DATUnit.Property.armor_upgrade, self.armor_upgrade, data)
+		self._export_property_value(export_properties, DATUnit.Property.unit_size, self.unit_size, data)
+		self._export_property_value(export_properties, DATUnit.Property.armor, self.armor, data)
+		self._export_property_value(export_properties, DATUnit.Property.right_click_action, self.right_click_action, data)
+		self._export_property_value(export_properties, DATUnit.Property.ready_sound, self.ready_sound, data)
+		self._export_property_value(export_properties, DATUnit.Property.what_sound_start, self.what_sound_start, data)
+		self._export_property_value(export_properties, DATUnit.Property.what_sound_end, self.what_sound_end, data)
+		self._export_property_value(export_properties, DATUnit.Property.pissed_sound_start, self.pissed_sound_start, data)
+		self._export_property_value(export_properties, DATUnit.Property.pissed_sound_end, self.pissed_sound_end, data)
+		self._export_property_value(export_properties, DATUnit.Property.yes_sound_start, self.yes_sound_start, data)
+		self._export_property_value(export_properties, DATUnit.Property.yes_sound_end, self.yes_sound_end, data)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_placement_size, self.staredit_placement_size, data, _UnitPropertyCoder.staredit_placement_size)
+		self._export_property_value(export_properties, DATUnit.Property.addon_position, self.addon_position, data, _UnitPropertyCoder.addon_position)
+		self._export_property_value(export_properties, DATUnit.Property.unit_extents, self.unit_extents, data, _UnitPropertyCoder.unit_extents)
+		self._export_property_value(export_properties, DATUnit.Property.portrait, self.portrait, data)
+		self._export_property_value(export_properties, DATUnit.Property.mineral_cost, self.mineral_cost, data)
+		self._export_property_value(export_properties, DATUnit.Property.vespene_cost, self.vespene_cost, data)
+		self._export_property_value(export_properties, DATUnit.Property.build_time, self.build_time, data)
+		self._export_property_value(export_properties, DATUnit.Property.requirements, self.requirements, data)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_group_flags, self.staredit_group_flags, data, _UnitPropertyCoder.staredit_group_flags)
+		self._export_property_value(export_properties, DATUnit.Property.supply_provided, self.supply_provided, data, _UnitPropertyCoder.supply_provided)
+		self._export_property_value(export_properties, DATUnit.Property.supply_required, self.supply_required, data, _UnitPropertyCoder.supply_required)
+		self._export_property_value(export_properties, DATUnit.Property.space_required, self.space_required, data)
+		self._export_property_value(export_properties, DATUnit.Property.space_provided, self.space_provided, data)
+		self._export_property_value(export_properties, DATUnit.Property.build_score, self.build_score, data)
+		self._export_property_value(export_properties, DATUnit.Property.destroy_score, self.destroy_score, data)
+		self._export_property_value(export_properties, DATUnit.Property.unit_map_string, self.unit_map_string, data)
+		self._export_property_value(export_properties, DATUnit.Property.broodwar_unit_flag, self.broodwar_unit_flag, data)
+		self._export_property_value(export_properties, DATUnit.Property.staredit_availability_flags, self.staredit_availability_flags, data, _UnitPropertyCoder.staredit_availability_flags)
 
 	def _import_data(self, data):
-		graphics = self._import_property_value(data, Unit.Property.graphics)
-		subunit1 = self._import_property_value(data, Unit.Property.subunit1)
-		subunit2 = self._import_property_value(data, Unit.Property.subunit2)
-		infestation = self._import_property_value(data, Unit.Property.infestation, allowed=(self.infestation is not None))
-		construction_animation = self._import_property_value(data, Unit.Property.construction_animation)
-		unit_direction = self._import_property_value(data, Unit.Property.unit_direction)
-		shield_enabled = self._import_property_value(data, Unit.Property.shield_enabled)
-		shield_amount = self._import_property_value(data, Unit.Property.shield_amount)
-		hit_points = self._import_property_value(data, Unit.Property.hit_points, _UnitPropertyCoder.hit_points)
-		elevation_level = self._import_property_value(data, Unit.Property.elevation_level)
-		unknown_flags = self._import_property_value(data, Unit.Property.unknown_flags, _UnitPropertyCoder.unknown_flags)
-		sublabel = self._import_property_value(data, Unit.Property.sublabel)
-		comp_ai_idle = self._import_property_value(data, Unit.Property.comp_ai_idle)
-		human_ai_idle = self._import_property_value(data, Unit.Property.human_ai_idle)
-		return_to_idle = self._import_property_value(data, Unit.Property.return_to_idle)
-		attack_unit = self._import_property_value(data, Unit.Property.attack_unit)
-		attack_move = self._import_property_value(data, Unit.Property.attack_move)
-		ground_weapon = self._import_property_value(data, Unit.Property.ground_weapon)
-		max_ground_hits = self._import_property_value(data, Unit.Property.max_ground_hits)
-		air_weapon = self._import_property_value(data, Unit.Property.air_weapon)
-		max_air_hits = self._import_property_value(data, Unit.Property.max_air_hits)
-		ai_internal = self._import_property_value(data, Unit.Property.ai_internal)
-		special_ability_flags = self._import_property_value(data, Unit.Property.special_ability_flags, _UnitPropertyCoder.special_ability_flags)
-		target_acquisition_range = self._import_property_value(data, Unit.Property.target_acquisition_range)
-		sight_range = self._import_property_value(data, Unit.Property.sight_range)
-		armor_upgrade = self._import_property_value(data, Unit.Property.armor_upgrade)
-		unit_size = self._import_property_value(data, Unit.Property.unit_size)
-		armor = self._import_property_value(data, Unit.Property.armor)
-		right_click_action = self._import_property_value(data, Unit.Property.right_click_action)
-		ready_sound = self._import_property_value(data, Unit.Property.ready_sound, allowed=(self.ready_sound is not None))
-		what_sound_start = self._import_property_value(data, Unit.Property.what_sound_start)
-		what_sound_end = self._import_property_value(data, Unit.Property.what_sound_end)
-		pissed_sound_start = self._import_property_value(data, Unit.Property.pissed_sound_start, allowed=(self.pissed_sound_start is not None))
-		pissed_sound_end = self._import_property_value(data, Unit.Property.pissed_sound_end, allowed=(self.pissed_sound_end is not None))
-		yes_sound_start = self._import_property_value(data, Unit.Property.yes_sound_start, allowed=(self.yes_sound_start is not None))
-		yes_sound_end = self._import_property_value(data, Unit.Property.yes_sound_end, allowed=(self.yes_sound_end is not None))
-		staredit_placement_size = self._import_property_value(data, Unit.Property.staredit_placement_size, _UnitPropertyCoder.staredit_placement_size)
-		addon_position = self._import_property_value(data, Unit.Property.addon_position, _UnitPropertyCoder.addon_position, allowed=(self.addon_position is not None))
-		unit_extents = self._import_property_value(data, Unit.Property.unit_extents, _UnitPropertyCoder.unit_extents)
-		portrait = self._import_property_value(data, Unit.Property.portrait)
-		mineral_cost = self._import_property_value(data, Unit.Property.mineral_cost)
-		vespene_cost = self._import_property_value(data, Unit.Property.vespene_cost)
-		build_time = self._import_property_value(data, Unit.Property.build_time)
-		requirements = self._import_property_value(data, Unit.Property.requirements)
-		staredit_group_flags = self._import_property_value(data, Unit.Property.staredit_group_flags, _UnitPropertyCoder.staredit_group_flags)
-		supply_provided = self._import_property_value(data, Unit.Property.supply_provided, _UnitPropertyCoder.supply_provided)
-		supply_required = self._import_property_value(data, Unit.Property.supply_required, _UnitPropertyCoder.supply_required)
-		space_required = self._import_property_value(data, Unit.Property.space_required)
-		space_provided = self._import_property_value(data, Unit.Property.space_provided)
-		build_score = self._import_property_value(data, Unit.Property.build_score)
-		destroy_score = self._import_property_value(data, Unit.Property.destroy_score)
-		unit_map_string = self._import_property_value(data, Unit.Property.unit_map_string)
-		broodwar_unit_flag = self._import_property_value(data, Unit.Property.broodwar_unit_flag)
-		staredit_availability_flags = self._import_property_value(data, Unit.Property.staredit_availability_flags, _UnitPropertyCoder.staredit_availability_flags)
+		graphics = self._import_property_value(data, DATUnit.Property.graphics)
+		subunit1 = self._import_property_value(data, DATUnit.Property.subunit1)
+		subunit2 = self._import_property_value(data, DATUnit.Property.subunit2)
+		infestation = self._import_property_value(data, DATUnit.Property.infestation, allowed=(self.infestation is not None))
+		construction_animation = self._import_property_value(data, DATUnit.Property.construction_animation)
+		unit_direction = self._import_property_value(data, DATUnit.Property.unit_direction)
+		shield_enabled = self._import_property_value(data, DATUnit.Property.shield_enabled)
+		shield_amount = self._import_property_value(data, DATUnit.Property.shield_amount)
+		hit_points = self._import_property_value(data, DATUnit.Property.hit_points, _UnitPropertyCoder.hit_points)
+		elevation_level = self._import_property_value(data, DATUnit.Property.elevation_level)
+		unknown_flags = self._import_property_value(data, DATUnit.Property.unknown_flags, _UnitPropertyCoder.unknown_flags)
+		sublabel = self._import_property_value(data, DATUnit.Property.sublabel)
+		comp_ai_idle = self._import_property_value(data, DATUnit.Property.comp_ai_idle)
+		human_ai_idle = self._import_property_value(data, DATUnit.Property.human_ai_idle)
+		return_to_idle = self._import_property_value(data, DATUnit.Property.return_to_idle)
+		attack_unit = self._import_property_value(data, DATUnit.Property.attack_unit)
+		attack_move = self._import_property_value(data, DATUnit.Property.attack_move)
+		ground_weapon = self._import_property_value(data, DATUnit.Property.ground_weapon)
+		max_ground_hits = self._import_property_value(data, DATUnit.Property.max_ground_hits)
+		air_weapon = self._import_property_value(data, DATUnit.Property.air_weapon)
+		max_air_hits = self._import_property_value(data, DATUnit.Property.max_air_hits)
+		ai_internal = self._import_property_value(data, DATUnit.Property.ai_internal)
+		special_ability_flags = self._import_property_value(data, DATUnit.Property.special_ability_flags, _UnitPropertyCoder.special_ability_flags)
+		target_acquisition_range = self._import_property_value(data, DATUnit.Property.target_acquisition_range)
+		sight_range = self._import_property_value(data, DATUnit.Property.sight_range)
+		armor_upgrade = self._import_property_value(data, DATUnit.Property.armor_upgrade)
+		unit_size = self._import_property_value(data, DATUnit.Property.unit_size)
+		armor = self._import_property_value(data, DATUnit.Property.armor)
+		right_click_action = self._import_property_value(data, DATUnit.Property.right_click_action)
+		ready_sound = self._import_property_value(data, DATUnit.Property.ready_sound, allowed=(self.ready_sound is not None))
+		what_sound_start = self._import_property_value(data, DATUnit.Property.what_sound_start)
+		what_sound_end = self._import_property_value(data, DATUnit.Property.what_sound_end)
+		pissed_sound_start = self._import_property_value(data, DATUnit.Property.pissed_sound_start, allowed=(self.pissed_sound_start is not None))
+		pissed_sound_end = self._import_property_value(data, DATUnit.Property.pissed_sound_end, allowed=(self.pissed_sound_end is not None))
+		yes_sound_start = self._import_property_value(data, DATUnit.Property.yes_sound_start, allowed=(self.yes_sound_start is not None))
+		yes_sound_end = self._import_property_value(data, DATUnit.Property.yes_sound_end, allowed=(self.yes_sound_end is not None))
+		staredit_placement_size = self._import_property_value(data, DATUnit.Property.staredit_placement_size, _UnitPropertyCoder.staredit_placement_size)
+		addon_position = self._import_property_value(data, DATUnit.Property.addon_position, _UnitPropertyCoder.addon_position, allowed=(self.addon_position is not None))
+		unit_extents = self._import_property_value(data, DATUnit.Property.unit_extents, _UnitPropertyCoder.unit_extents)
+		portrait = self._import_property_value(data, DATUnit.Property.portrait)
+		mineral_cost = self._import_property_value(data, DATUnit.Property.mineral_cost)
+		vespene_cost = self._import_property_value(data, DATUnit.Property.vespene_cost)
+		build_time = self._import_property_value(data, DATUnit.Property.build_time)
+		requirements = self._import_property_value(data, DATUnit.Property.requirements)
+		staredit_group_flags = self._import_property_value(data, DATUnit.Property.staredit_group_flags, _UnitPropertyCoder.staredit_group_flags)
+		supply_provided = self._import_property_value(data, DATUnit.Property.supply_provided, _UnitPropertyCoder.supply_provided)
+		supply_required = self._import_property_value(data, DATUnit.Property.supply_required, _UnitPropertyCoder.supply_required)
+		space_required = self._import_property_value(data, DATUnit.Property.space_required)
+		space_provided = self._import_property_value(data, DATUnit.Property.space_provided)
+		build_score = self._import_property_value(data, DATUnit.Property.build_score)
+		destroy_score = self._import_property_value(data, DATUnit.Property.destroy_score)
+		unit_map_string = self._import_property_value(data, DATUnit.Property.unit_map_string)
+		broodwar_unit_flag = self._import_property_value(data, DATUnit.Property.broodwar_unit_flag)
+		staredit_availability_flags = self._import_property_value(data, DATUnit.Property.staredit_availability_flags, _UnitPropertyCoder.staredit_availability_flags)
 
 		if graphics is not None:
 			self.graphics = graphics
@@ -553,65 +553,65 @@ class _UnitPropertyCoder:
 	hit_points = DATCoders.DATHitPointsCoder()
 	unknown_flags = DATCoders.DATFlagsCoder(8, {})
 	special_ability_flags = DATCoders.DATFlagsCoder(32, {
-		Unit.SpecialAbilityFlag.building: 'building',
-		Unit.SpecialAbilityFlag.addon: 'addon',
-		Unit.SpecialAbilityFlag.flyer: 'flyer',
-		Unit.SpecialAbilityFlag.resource_miner: 'resource_miner',
-		Unit.SpecialAbilityFlag.subunit: 'subunit',
-		Unit.SpecialAbilityFlag.flying_building: 'flying_building',
-		Unit.SpecialAbilityFlag.hero: 'hero',
-		Unit.SpecialAbilityFlag.regenerate: 'regenerate',
-		Unit.SpecialAbilityFlag.animated_idle: 'animated_idle',
-		Unit.SpecialAbilityFlag.cloakable: 'cloakable',
-		Unit.SpecialAbilityFlag.two_units_in_one_egg: 'two_units_in_one_egg',
-		Unit.SpecialAbilityFlag.single_entity: 'single_entity',
-		Unit.SpecialAbilityFlag.resource_depot: 'resource_depot',
-		Unit.SpecialAbilityFlag.resource_container: 'resource_container',
-		Unit.SpecialAbilityFlag.robotic: 'robotic',
-		Unit.SpecialAbilityFlag.detector: 'detector',
-		Unit.SpecialAbilityFlag.organic: 'organic',
-		Unit.SpecialAbilityFlag.requires_creep: 'requires_creep',
-		Unit.SpecialAbilityFlag.unused: 'unused',
-		Unit.SpecialAbilityFlag.requires_psi: 'requires_psi',
-		Unit.SpecialAbilityFlag.burrowable: 'burrowable',
-		Unit.SpecialAbilityFlag.spellcaster: 'spellcaster',
-		Unit.SpecialAbilityFlag.permanent_cloak: 'permanent_cloak',
-		Unit.SpecialAbilityFlag.pickup_item: 'pickup_item',
-		Unit.SpecialAbilityFlag.ignores_supply_check: 'ignores_supply_check',
-		Unit.SpecialAbilityFlag.use_medium_overlays: 'use_medium_overlays',
-		Unit.SpecialAbilityFlag.use_large_overlays: 'use_large_overlays',
-		Unit.SpecialAbilityFlag.battle_reactions: 'battle_reactions',
-		Unit.SpecialAbilityFlag.full_auto_attack: 'full_auto_attack',
-		Unit.SpecialAbilityFlag.invincible: 'invincible',
-		Unit.SpecialAbilityFlag.mechanical: 'mechanical',
-		Unit.SpecialAbilityFlag.produces_units: 'produces_units',
+		DATUnit.SpecialAbilityFlag.building: 'building',
+		DATUnit.SpecialAbilityFlag.addon: 'addon',
+		DATUnit.SpecialAbilityFlag.flyer: 'flyer',
+		DATUnit.SpecialAbilityFlag.resource_miner: 'resource_miner',
+		DATUnit.SpecialAbilityFlag.subunit: 'subunit',
+		DATUnit.SpecialAbilityFlag.flying_building: 'flying_building',
+		DATUnit.SpecialAbilityFlag.hero: 'hero',
+		DATUnit.SpecialAbilityFlag.regenerate: 'regenerate',
+		DATUnit.SpecialAbilityFlag.animated_idle: 'animated_idle',
+		DATUnit.SpecialAbilityFlag.cloakable: 'cloakable',
+		DATUnit.SpecialAbilityFlag.two_units_in_one_egg: 'two_units_in_one_egg',
+		DATUnit.SpecialAbilityFlag.single_entity: 'single_entity',
+		DATUnit.SpecialAbilityFlag.resource_depot: 'resource_depot',
+		DATUnit.SpecialAbilityFlag.resource_container: 'resource_container',
+		DATUnit.SpecialAbilityFlag.robotic: 'robotic',
+		DATUnit.SpecialAbilityFlag.detector: 'detector',
+		DATUnit.SpecialAbilityFlag.organic: 'organic',
+		DATUnit.SpecialAbilityFlag.requires_creep: 'requires_creep',
+		DATUnit.SpecialAbilityFlag.unused: 'unused',
+		DATUnit.SpecialAbilityFlag.requires_psi: 'requires_psi',
+		DATUnit.SpecialAbilityFlag.burrowable: 'burrowable',
+		DATUnit.SpecialAbilityFlag.spellcaster: 'spellcaster',
+		DATUnit.SpecialAbilityFlag.permanent_cloak: 'permanent_cloak',
+		DATUnit.SpecialAbilityFlag.pickup_item: 'pickup_item',
+		DATUnit.SpecialAbilityFlag.ignores_supply_check: 'ignores_supply_check',
+		DATUnit.SpecialAbilityFlag.use_medium_overlays: 'use_medium_overlays',
+		DATUnit.SpecialAbilityFlag.use_large_overlays: 'use_large_overlays',
+		DATUnit.SpecialAbilityFlag.battle_reactions: 'battle_reactions',
+		DATUnit.SpecialAbilityFlag.full_auto_attack: 'full_auto_attack',
+		DATUnit.SpecialAbilityFlag.invincible: 'invincible',
+		DATUnit.SpecialAbilityFlag.mechanical: 'mechanical',
+		DATUnit.SpecialAbilityFlag.produces_units: 'produces_units',
 	})
 	staredit_placement_size = DATCoders.DATSizeCoder()
 	addon_position = DATCoders.DATPositionCoder()
 	unit_extents = DATCoders.DATExtentsCoder()
 	staredit_group_flags = DATCoders.DATFlagsCoder(8, {
-		Unit.StarEditGroupFlag.zerg: 'zerg',
-		Unit.StarEditGroupFlag.terran: 'terran',
-		Unit.StarEditGroupFlag.protoss: 'protoss',
-		Unit.StarEditGroupFlag.men: 'men',
-		Unit.StarEditGroupFlag.building: 'building',
-		Unit.StarEditGroupFlag.factory: 'factory',
-		Unit.StarEditGroupFlag.independent: 'independent',
-		Unit.StarEditGroupFlag.neutral: 'neutral',
+		DATUnit.StarEditGroupFlag.zerg: 'zerg',
+		DATUnit.StarEditGroupFlag.terran: 'terran',
+		DATUnit.StarEditGroupFlag.protoss: 'protoss',
+		DATUnit.StarEditGroupFlag.men: 'men',
+		DATUnit.StarEditGroupFlag.building: 'building',
+		DATUnit.StarEditGroupFlag.factory: 'factory',
+		DATUnit.StarEditGroupFlag.independent: 'independent',
+		DATUnit.StarEditGroupFlag.neutral: 'neutral',
 	})
 	supply_provided = DATCoders.DATSupplyCoder()
 	supply_required = DATCoders.DATSupplyCoder()
 	staredit_availability_flags = DATCoders.DATFlagsCoder(10, {
-		Unit.StarEditAvailabilityFlag.non_neutral: 'non_neutral',
-		Unit.StarEditAvailabilityFlag.unit_listing: 'unit_listing',
-		Unit.StarEditAvailabilityFlag.mission_briefing: 'mission_briefing',
-		Unit.StarEditAvailabilityFlag.player_settings: 'player_settings',
-		Unit.StarEditAvailabilityFlag.all_races: 'all_races',
-		Unit.StarEditAvailabilityFlag.set_doodad_state: 'set_doodad_state',
-		Unit.StarEditAvailabilityFlag.non_location_triggers: 'non_location_triggers',
-		Unit.StarEditAvailabilityFlag.unit_hero_settings: 'unit_hero_settings',
-		Unit.StarEditAvailabilityFlag.location_triggers: 'location_triggers',
-		Unit.StarEditAvailabilityFlag.broodwar_only: 'broodwar_only',
+		DATUnit.StarEditAvailabilityFlag.non_neutral: 'non_neutral',
+		DATUnit.StarEditAvailabilityFlag.unit_listing: 'unit_listing',
+		DATUnit.StarEditAvailabilityFlag.mission_briefing: 'mission_briefing',
+		DATUnit.StarEditAvailabilityFlag.player_settings: 'player_settings',
+		DATUnit.StarEditAvailabilityFlag.all_races: 'all_races',
+		DATUnit.StarEditAvailabilityFlag.set_doodad_state: 'set_doodad_state',
+		DATUnit.StarEditAvailabilityFlag.non_location_triggers: 'non_location_triggers',
+		DATUnit.StarEditAvailabilityFlag.unit_hero_settings: 'unit_hero_settings',
+		DATUnit.StarEditAvailabilityFlag.location_triggers: 'location_triggers',
+		DATUnit.StarEditAvailabilityFlag.broodwar_only: 'broodwar_only',
 	})
 
 # units.dat file handler
@@ -880,8 +880,8 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Unit
+	ENTRY_STRUCT = DATUnit
 	FILE_NAME = "units.dat"
 
-	def get_entry(self, index): # type: (int) -> Unit
-		return cast(Unit, super(UnitsDAT, self).get_entry(index))
+	def get_entry(self, index): # type: (int) -> DATUnit
+		return cast(DATUnit, super(UnitsDAT, self).get_entry(index))

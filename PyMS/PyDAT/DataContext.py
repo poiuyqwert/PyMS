@@ -224,7 +224,7 @@ class DataContext(object):
 		if palette is None:
 			if path.startswith('thingy\\tileset\\'):
 				palette = 'Terrain'
-			elif draw_function == Image.DrawFunction.use_remapping and remapping >= Image.Remapping.ofire and remapping <= Image.Remapping.bfire:
+			elif draw_function == DATImage.DrawFunction.use_remapping and remapping >= DATImage.Remapping.ofire and remapping <= DATImage.Remapping.bfire:
 				palette = ('o','g','b')[remapping-1] + 'fire'
 			else:
 				palette = 'Units'
@@ -232,8 +232,8 @@ class DataContext(object):
 			return None
 		if not is_full_path:
 			path = 'unit\\' + path
-		if not draw_function in (Image.DrawFunction.selection_circle, Image.DrawFunction.shadow):
-			draw_function = Image.DrawFunction.normal
+		if not draw_function in (DATImage.DrawFunction.selection_circle, DATImage.DrawFunction.shadow):
+			draw_function = DATImage.DrawFunction.normal
 		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
 			p = self.mpqhandler.get_file('MPQ:' + path)
 			try:
@@ -245,11 +245,11 @@ class DataContext(object):
 				self.grp_cache[path] = {}
 			if not palette in self.grp_cache[path]:
 				self.grp_cache[path][palette] = {}
-			if draw_function == Image.DrawFunction.selection_circle:
+			if draw_function == DATImage.DrawFunction.selection_circle:
 				rle_function = rle_outline
 				if draw_info is None:
 					draw_info = Outline.self
-			elif draw_function == Image.DrawFunction.shadow:
+			elif draw_function == DATImage.DrawFunction.shadow:
 				rle_function = rle_shadow
 				if draw_info is None:
 					draw_info = (50,50,50, 255)
@@ -270,6 +270,6 @@ class DataContext(object):
 			grp_path = grp_path[:-3]
 		if draw_function is None:
 			draw_function = image_entry.draw_function
-			if draw_function == Image.DrawFunction.use_remapping and remapping is None:
+			if draw_function == DATImage.DrawFunction.use_remapping and remapping is None:
 				remapping = image_entry.remapping
 		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)

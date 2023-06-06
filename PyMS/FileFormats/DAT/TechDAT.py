@@ -5,7 +5,7 @@ from . import DATCoders
 
 from typing import cast
 
-class Technology(AbstractDAT.AbstractDATEntry):
+class DATTechnology(AbstractDAT.AbstractDATEntry):
 	class Property:
 		mineral_cost = 'mineral_cost'
 		vespene_cost = 'vespene_cost'
@@ -63,30 +63,30 @@ class Technology(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Technology'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Technology.Property.mineral_cost, self.mineral_cost, data)
-		self._export_property_value(export_properties, Technology.Property.vespene_cost, self.vespene_cost, data)
-		self._export_property_value(export_properties, Technology.Property.research_time, self.research_time, data)
-		self._export_property_value(export_properties, Technology.Property.energy_required, self.energy_required, data)
-		self._export_property_value(export_properties, Technology.Property.research_requirements, self.research_requirements, data)
-		self._export_property_value(export_properties, Technology.Property.use_requirements, self.use_requirements, data)
-		self._export_property_value(export_properties, Technology.Property.icon, self.icon, data)
-		self._export_property_value(export_properties, Technology.Property.label, self.label, data)
-		self._export_property_value(export_properties, Technology.Property.staredit_race, self.staredit_race, data)
-		self._export_property_value(export_properties, Technology.Property.researched, self.researched, data, _TechnologyPropertyCoder.researched)
-		self._export_property_value(export_properties, Technology.Property.broodwar_only, self.broodwar_only, data, _TechnologyPropertyCoder.broodwar_only)
+		self._export_property_value(export_properties, DATTechnology.Property.mineral_cost, self.mineral_cost, data)
+		self._export_property_value(export_properties, DATTechnology.Property.vespene_cost, self.vespene_cost, data)
+		self._export_property_value(export_properties, DATTechnology.Property.research_time, self.research_time, data)
+		self._export_property_value(export_properties, DATTechnology.Property.energy_required, self.energy_required, data)
+		self._export_property_value(export_properties, DATTechnology.Property.research_requirements, self.research_requirements, data)
+		self._export_property_value(export_properties, DATTechnology.Property.use_requirements, self.use_requirements, data)
+		self._export_property_value(export_properties, DATTechnology.Property.icon, self.icon, data)
+		self._export_property_value(export_properties, DATTechnology.Property.label, self.label, data)
+		self._export_property_value(export_properties, DATTechnology.Property.staredit_race, self.staredit_race, data)
+		self._export_property_value(export_properties, DATTechnology.Property.researched, self.researched, data, _TechnologyPropertyCoder.researched)
+		self._export_property_value(export_properties, DATTechnology.Property.broodwar_only, self.broodwar_only, data, _TechnologyPropertyCoder.broodwar_only)
 
 	def _import_data(self, data):
-		mineral_cost = self._import_property_value(data, Technology.Property.mineral_cost)
-		vespene_cost = self._import_property_value(data, Technology.Property.vespene_cost)
-		research_time = self._import_property_value(data, Technology.Property.research_time)
-		energy_required = self._import_property_value(data, Technology.Property.energy_required)
-		research_requirements = self._import_property_value(data, Technology.Property.research_requirements)
-		use_requirements = self._import_property_value(data, Technology.Property.use_requirements)
-		icon = self._import_property_value(data, Technology.Property.icon)
-		label = self._import_property_value(data, Technology.Property.label)
-		staredit_race = self._import_property_value(data, Technology.Property.staredit_race)
-		researched = self._import_property_value(data, Technology.Property.researched, _TechnologyPropertyCoder.researched)
-		broodwar_only = self._import_property_value(data, Technology.Property.broodwar_only, _TechnologyPropertyCoder.broodwar_only)
+		mineral_cost = self._import_property_value(data, DATTechnology.Property.mineral_cost)
+		vespene_cost = self._import_property_value(data, DATTechnology.Property.vespene_cost)
+		research_time = self._import_property_value(data, DATTechnology.Property.research_time)
+		energy_required = self._import_property_value(data, DATTechnology.Property.energy_required)
+		research_requirements = self._import_property_value(data, DATTechnology.Property.research_requirements)
+		use_requirements = self._import_property_value(data, DATTechnology.Property.use_requirements)
+		icon = self._import_property_value(data, DATTechnology.Property.icon)
+		label = self._import_property_value(data, DATTechnology.Property.label)
+		staredit_race = self._import_property_value(data, DATTechnology.Property.staredit_race)
+		researched = self._import_property_value(data, DATTechnology.Property.researched, _TechnologyPropertyCoder.researched)
+		broodwar_only = self._import_property_value(data, DATTechnology.Property.broodwar_only, _TechnologyPropertyCoder.broodwar_only)
 
 		if mineral_cost is not None:
 			self.mineral_cost = mineral_cost
@@ -167,8 +167,8 @@ class TechDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Technology
+	ENTRY_STRUCT = DATTechnology
 	FILE_NAME = "techdata.dat"
 
-	def get_entry(self, index): # type: (int) -> Technology
-		return cast(Technology, super(TechDAT, self).get_entry(index))
+	def get_entry(self, index): # type: (int) -> DATTechnology
+		return cast(DATTechnology, super(TechDAT, self).get_entry(index))

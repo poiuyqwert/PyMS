@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 
@@ -193,12 +193,12 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.subunit1,
-			Unit.Property.subunit2,
-			Unit.Property.unknown_flags,
-			Unit.Property.special_ability_flags,
-			Unit.Property.infestation,
-			Unit.Property.requirements,
+			DATUnit.Property.subunit1,
+			DATUnit.Property.subunit2,
+			DATUnit.Property.unknown_flags,
+			DATUnit.Property.special_ability_flags,
+			DATUnit.Property.infestation,
+			DATUnit.Property.requirements,
 		])
 		self.clipboard_set(text)
 
@@ -229,51 +229,51 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunittwo.set(entry.subunit2)
 
 		unknown_flags_fields = (
-			(self.unknown1, Unit.UnknownFlags.unknown0x01),
-			(self.unknown2, Unit.UnknownFlags.unknown0x02),
-			(self.unknown4, Unit.UnknownFlags.unknown0x04),
-			(self.unknown8, Unit.UnknownFlags.unknown0x08),
-			(self.unknown10, Unit.UnknownFlags.unknown0x10),
-			(self.unknown20, Unit.UnknownFlags.unknown0x20),
-			(self.unknown40, Unit.UnknownFlags.unknown0x40),
-			(self.unknown80, Unit.UnknownFlags.unknown0x80)
+			(self.unknown1, DATUnit.UnknownFlags.unknown0x01),
+			(self.unknown2, DATUnit.UnknownFlags.unknown0x02),
+			(self.unknown4, DATUnit.UnknownFlags.unknown0x04),
+			(self.unknown8, DATUnit.UnknownFlags.unknown0x08),
+			(self.unknown10, DATUnit.UnknownFlags.unknown0x10),
+			(self.unknown20, DATUnit.UnknownFlags.unknown0x20),
+			(self.unknown40, DATUnit.UnknownFlags.unknown0x40),
+			(self.unknown80, DATUnit.UnknownFlags.unknown0x80)
 		)
 		for (variable, flag) in unknown_flags_fields:
 			variable.set(entry.unknown_flags & flag == flag)
 
 		special_ability_flags_fields = (
-			(self.building, Unit.SpecialAbilityFlag.building),
-			(self.addon, Unit.SpecialAbilityFlag.addon),
-			(self.flyer, Unit.SpecialAbilityFlag.flyer),
-			(self.resource_miner, Unit.SpecialAbilityFlag.resource_miner),
-			(self.subunit, Unit.SpecialAbilityFlag.subunit),
-			(self.flying_building, Unit.SpecialAbilityFlag.flying_building),
-			(self.hero, Unit.SpecialAbilityFlag.hero),
-			(self.regenerate, Unit.SpecialAbilityFlag.regenerate),
-			(self.animated_idle, Unit.SpecialAbilityFlag.animated_idle),
-			(self.cloakable, Unit.SpecialAbilityFlag.cloakable),
-			(self.two_units_in_one_egg, Unit.SpecialAbilityFlag.two_units_in_one_egg),
-			(self.single_entity, Unit.SpecialAbilityFlag.single_entity),
-			(self.resource_depot, Unit.SpecialAbilityFlag.resource_depot),
-			(self.resource_containter, Unit.SpecialAbilityFlag.resource_container),
-			(self.robotic, Unit.SpecialAbilityFlag.robotic),
-			(self.detector, Unit.SpecialAbilityFlag.detector),
-			(self.organic, Unit.SpecialAbilityFlag.organic),
-			(self.requires_creep, Unit.SpecialAbilityFlag.requires_creep),
-			(self.unused, Unit.SpecialAbilityFlag.unused),
-			(self.requires_psi, Unit.SpecialAbilityFlag.requires_psi),
-			(self.burrowable, Unit.SpecialAbilityFlag.burrowable),
-			(self.spellcaster, Unit.SpecialAbilityFlag.spellcaster),
-			(self.permanent_cloak, Unit.SpecialAbilityFlag.permanent_cloak),
-			(self.pickup_item, Unit.SpecialAbilityFlag.pickup_item),
-			(self.ignore_supply_check, Unit.SpecialAbilityFlag.ignores_supply_check),
-			(self.use_medium_overlays, Unit.SpecialAbilityFlag.use_medium_overlays),
-			(self.use_large_overlays, Unit.SpecialAbilityFlag.use_large_overlays),
-			(self.battlereactions, Unit.SpecialAbilityFlag.battle_reactions),
-			(self.fullautoattack, Unit.SpecialAbilityFlag.full_auto_attack),
-			(self.invincible, Unit.SpecialAbilityFlag.invincible),
-			(self.mechanical, Unit.SpecialAbilityFlag.mechanical),
-			(self.produces_units, Unit.SpecialAbilityFlag.produces_units)
+			(self.building, DATUnit.SpecialAbilityFlag.building),
+			(self.addon, DATUnit.SpecialAbilityFlag.addon),
+			(self.flyer, DATUnit.SpecialAbilityFlag.flyer),
+			(self.resource_miner, DATUnit.SpecialAbilityFlag.resource_miner),
+			(self.subunit, DATUnit.SpecialAbilityFlag.subunit),
+			(self.flying_building, DATUnit.SpecialAbilityFlag.flying_building),
+			(self.hero, DATUnit.SpecialAbilityFlag.hero),
+			(self.regenerate, DATUnit.SpecialAbilityFlag.regenerate),
+			(self.animated_idle, DATUnit.SpecialAbilityFlag.animated_idle),
+			(self.cloakable, DATUnit.SpecialAbilityFlag.cloakable),
+			(self.two_units_in_one_egg, DATUnit.SpecialAbilityFlag.two_units_in_one_egg),
+			(self.single_entity, DATUnit.SpecialAbilityFlag.single_entity),
+			(self.resource_depot, DATUnit.SpecialAbilityFlag.resource_depot),
+			(self.resource_containter, DATUnit.SpecialAbilityFlag.resource_container),
+			(self.robotic, DATUnit.SpecialAbilityFlag.robotic),
+			(self.detector, DATUnit.SpecialAbilityFlag.detector),
+			(self.organic, DATUnit.SpecialAbilityFlag.organic),
+			(self.requires_creep, DATUnit.SpecialAbilityFlag.requires_creep),
+			(self.unused, DATUnit.SpecialAbilityFlag.unused),
+			(self.requires_psi, DATUnit.SpecialAbilityFlag.requires_psi),
+			(self.burrowable, DATUnit.SpecialAbilityFlag.burrowable),
+			(self.spellcaster, DATUnit.SpecialAbilityFlag.spellcaster),
+			(self.permanent_cloak, DATUnit.SpecialAbilityFlag.permanent_cloak),
+			(self.pickup_item, DATUnit.SpecialAbilityFlag.pickup_item),
+			(self.ignore_supply_check, DATUnit.SpecialAbilityFlag.ignores_supply_check),
+			(self.use_medium_overlays, DATUnit.SpecialAbilityFlag.use_medium_overlays),
+			(self.use_large_overlays, DATUnit.SpecialAbilityFlag.use_large_overlays),
+			(self.battlereactions, DATUnit.SpecialAbilityFlag.battle_reactions),
+			(self.fullautoattack, DATUnit.SpecialAbilityFlag.full_auto_attack),
+			(self.invincible, DATUnit.SpecialAbilityFlag.invincible),
+			(self.mechanical, DATUnit.SpecialAbilityFlag.mechanical),
+			(self.produces_units, DATUnit.SpecialAbilityFlag.produces_units)
 		)
 		for (variable, flag) in special_ability_flags_fields:
 			variable.set(entry.special_ability_flags & flag == flag)
@@ -298,14 +298,14 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		unknown_flags = 0
 		unknown_flags_fields = (
-			(self.unknown1, Unit.UnknownFlags.unknown0x01),
-			(self.unknown2, Unit.UnknownFlags.unknown0x02),
-			(self.unknown4, Unit.UnknownFlags.unknown0x04),
-			(self.unknown8, Unit.UnknownFlags.unknown0x08),
-			(self.unknown10, Unit.UnknownFlags.unknown0x10),
-			(self.unknown20, Unit.UnknownFlags.unknown0x20),
-			(self.unknown40, Unit.UnknownFlags.unknown0x40),
-			(self.unknown80, Unit.UnknownFlags.unknown0x80)
+			(self.unknown1, DATUnit.UnknownFlags.unknown0x01),
+			(self.unknown2, DATUnit.UnknownFlags.unknown0x02),
+			(self.unknown4, DATUnit.UnknownFlags.unknown0x04),
+			(self.unknown8, DATUnit.UnknownFlags.unknown0x08),
+			(self.unknown10, DATUnit.UnknownFlags.unknown0x10),
+			(self.unknown20, DATUnit.UnknownFlags.unknown0x20),
+			(self.unknown40, DATUnit.UnknownFlags.unknown0x40),
+			(self.unknown80, DATUnit.UnknownFlags.unknown0x80)
 		)
 		for (variable, flag) in unknown_flags_fields:
 			if variable.get():
@@ -316,38 +316,38 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		special_ability_flags = 0
 		special_ability_flags_fields = (
-			(self.building, Unit.SpecialAbilityFlag.building),
-			(self.addon, Unit.SpecialAbilityFlag.addon),
-			(self.flyer, Unit.SpecialAbilityFlag.flyer),
-			(self.resource_miner, Unit.SpecialAbilityFlag.resource_miner),
-			(self.subunit, Unit.SpecialAbilityFlag.subunit),
-			(self.flying_building, Unit.SpecialAbilityFlag.flying_building),
-			(self.hero, Unit.SpecialAbilityFlag.hero),
-			(self.regenerate, Unit.SpecialAbilityFlag.regenerate),
-			(self.animated_idle, Unit.SpecialAbilityFlag.animated_idle),
-			(self.cloakable, Unit.SpecialAbilityFlag.cloakable),
-			(self.two_units_in_one_egg, Unit.SpecialAbilityFlag.two_units_in_one_egg),
-			(self.single_entity, Unit.SpecialAbilityFlag.single_entity),
-			(self.resource_depot, Unit.SpecialAbilityFlag.resource_depot),
-			(self.resource_containter, Unit.SpecialAbilityFlag.resource_container),
-			(self.robotic, Unit.SpecialAbilityFlag.robotic),
-			(self.detector, Unit.SpecialAbilityFlag.detector),
-			(self.organic, Unit.SpecialAbilityFlag.organic),
-			(self.requires_creep, Unit.SpecialAbilityFlag.requires_creep),
-			(self.unused, Unit.SpecialAbilityFlag.unused),
-			(self.requires_psi, Unit.SpecialAbilityFlag.requires_psi),
-			(self.burrowable, Unit.SpecialAbilityFlag.burrowable),
-			(self.spellcaster, Unit.SpecialAbilityFlag.spellcaster),
-			(self.permanent_cloak, Unit.SpecialAbilityFlag.permanent_cloak),
-			(self.pickup_item, Unit.SpecialAbilityFlag.pickup_item),
-			(self.ignore_supply_check, Unit.SpecialAbilityFlag.ignores_supply_check),
-			(self.use_medium_overlays, Unit.SpecialAbilityFlag.use_medium_overlays),
-			(self.use_large_overlays, Unit.SpecialAbilityFlag.use_large_overlays),
-			(self.battlereactions, Unit.SpecialAbilityFlag.battle_reactions),
-			(self.fullautoattack, Unit.SpecialAbilityFlag.full_auto_attack),
-			(self.invincible, Unit.SpecialAbilityFlag.invincible),
-			(self.mechanical, Unit.SpecialAbilityFlag.mechanical),
-			(self.produces_units, Unit.SpecialAbilityFlag.produces_units)
+			(self.building, DATUnit.SpecialAbilityFlag.building),
+			(self.addon, DATUnit.SpecialAbilityFlag.addon),
+			(self.flyer, DATUnit.SpecialAbilityFlag.flyer),
+			(self.resource_miner, DATUnit.SpecialAbilityFlag.resource_miner),
+			(self.subunit, DATUnit.SpecialAbilityFlag.subunit),
+			(self.flying_building, DATUnit.SpecialAbilityFlag.flying_building),
+			(self.hero, DATUnit.SpecialAbilityFlag.hero),
+			(self.regenerate, DATUnit.SpecialAbilityFlag.regenerate),
+			(self.animated_idle, DATUnit.SpecialAbilityFlag.animated_idle),
+			(self.cloakable, DATUnit.SpecialAbilityFlag.cloakable),
+			(self.two_units_in_one_egg, DATUnit.SpecialAbilityFlag.two_units_in_one_egg),
+			(self.single_entity, DATUnit.SpecialAbilityFlag.single_entity),
+			(self.resource_depot, DATUnit.SpecialAbilityFlag.resource_depot),
+			(self.resource_containter, DATUnit.SpecialAbilityFlag.resource_container),
+			(self.robotic, DATUnit.SpecialAbilityFlag.robotic),
+			(self.detector, DATUnit.SpecialAbilityFlag.detector),
+			(self.organic, DATUnit.SpecialAbilityFlag.organic),
+			(self.requires_creep, DATUnit.SpecialAbilityFlag.requires_creep),
+			(self.unused, DATUnit.SpecialAbilityFlag.unused),
+			(self.requires_psi, DATUnit.SpecialAbilityFlag.requires_psi),
+			(self.burrowable, DATUnit.SpecialAbilityFlag.burrowable),
+			(self.spellcaster, DATUnit.SpecialAbilityFlag.spellcaster),
+			(self.permanent_cloak, DATUnit.SpecialAbilityFlag.permanent_cloak),
+			(self.pickup_item, DATUnit.SpecialAbilityFlag.pickup_item),
+			(self.ignore_supply_check, DATUnit.SpecialAbilityFlag.ignores_supply_check),
+			(self.use_medium_overlays, DATUnit.SpecialAbilityFlag.use_medium_overlays),
+			(self.use_large_overlays, DATUnit.SpecialAbilityFlag.use_large_overlays),
+			(self.battlereactions, DATUnit.SpecialAbilityFlag.battle_reactions),
+			(self.fullautoattack, DATUnit.SpecialAbilityFlag.full_auto_attack),
+			(self.invincible, DATUnit.SpecialAbilityFlag.invincible),
+			(self.mechanical, DATUnit.SpecialAbilityFlag.mechanical),
+			(self.produces_units, DATUnit.SpecialAbilityFlag.produces_units)
 		)
 		for (variable, flag) in special_ability_flags_fields:
 			if variable.get():

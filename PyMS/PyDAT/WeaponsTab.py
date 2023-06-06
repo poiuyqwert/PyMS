@@ -4,7 +4,7 @@ from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 from .IconSelectDialog import IconSelectDialog
 
-from ..FileFormats.DAT.WeaponsDAT import Weapon
+from ..FileFormats.DAT.WeaponsDAT import DATWeapon
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -334,15 +334,15 @@ class WeaponsTab(DATTab):
 		self.unused.set(entry.unused_technology)
 
 		target_flags_fields = (
-			(self.air, Weapon.TargetFlag.air),
-			(self.ground, Weapon.TargetFlag.ground),
-			(self.mechanical, Weapon.TargetFlag.mechanical),
-			(self.organic, Weapon.TargetFlag.organic),
-			(self.nonbuilding, Weapon.TargetFlag.non_building),
-			(self.nonrobotic, Weapon.TargetFlag.non_robotic),
-			(self.terrain, Weapon.TargetFlag.terrain),
-			(self.orgormech, Weapon.TargetFlag.organic_or_mechanical),
-			(self.own, Weapon.TargetFlag.own )
+			(self.air, DATWeapon.TargetFlag.air),
+			(self.ground, DATWeapon.TargetFlag.ground),
+			(self.mechanical, DATWeapon.TargetFlag.mechanical),
+			(self.organic, DATWeapon.TargetFlag.organic),
+			(self.nonbuilding, DATWeapon.TargetFlag.non_building),
+			(self.nonrobotic, DATWeapon.TargetFlag.non_robotic),
+			(self.terrain, DATWeapon.TargetFlag.terrain),
+			(self.orgormech, DATWeapon.TargetFlag.organic_or_mechanical),
+			(self.own, DATWeapon.TargetFlag.own )
 		)
 		for (variable, flag) in target_flags_fields:
 			variable.set(entry.target_flags & flag == flag)
@@ -383,17 +383,17 @@ class WeaponsTab(DATTab):
 			entry.unused_technology = self.unused.get()
 			self.edited = True
 
-		target_flags = entry.target_flags & ~Weapon.TargetFlag.ALL_FLAGS
+		target_flags = entry.target_flags & ~DATWeapon.TargetFlag.ALL_FLAGS
 		target_flags_fields = (
-			(self.air, Weapon.TargetFlag.air),
-			(self.ground, Weapon.TargetFlag.ground),
-			(self.mechanical, Weapon.TargetFlag.mechanical),
-			(self.organic, Weapon.TargetFlag.organic),
-			(self.nonbuilding, Weapon.TargetFlag.non_building),
-			(self.nonrobotic, Weapon.TargetFlag.non_robotic),
-			(self.terrain, Weapon.TargetFlag.terrain),
-			(self.orgormech, Weapon.TargetFlag.organic_or_mechanical),
-			(self.own, Weapon.TargetFlag.own )
+			(self.air, DATWeapon.TargetFlag.air),
+			(self.ground, DATWeapon.TargetFlag.ground),
+			(self.mechanical, DATWeapon.TargetFlag.mechanical),
+			(self.organic, DATWeapon.TargetFlag.organic),
+			(self.nonbuilding, DATWeapon.TargetFlag.non_building),
+			(self.nonrobotic, DATWeapon.TargetFlag.non_robotic),
+			(self.terrain, DATWeapon.TargetFlag.terrain),
+			(self.orgormech, DATWeapon.TargetFlag.organic_or_mechanical),
+			(self.own, DATWeapon.TargetFlag.own )
 		)
 		for (variable, flag) in target_flags_fields:
 			if variable.get():

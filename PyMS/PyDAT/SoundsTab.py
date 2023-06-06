@@ -3,7 +3,7 @@ from .DATTab import DATTab
 from .DataID import DATID, DataID, UnitsTabID
 from .DATRef import DATRefs, DATRef
 
-from ..FileFormats.DAT.SoundsDAT import Sound
+from ..FileFormats.DAT.SoundsDAT import DATSound
 from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.utils import play_sound
@@ -131,10 +131,10 @@ class SoundsTab(DATTab):
 		self.priority.set(entry.priority)
 
 		flags_fields = (
-			(self.preload, Sound.Flag.preload),
-			(self.unit_speech, Sound.Flag.unit_speech),
-			(self.one_at_a_time, Sound.Flag.one_at_a_time),
-			(self.never_preempt, Sound.Flag.never_preempt)
+			(self.preload, DATSound.Flag.preload),
+			(self.unit_speech, DATSound.Flag.unit_speech),
+			(self.one_at_a_time, DATSound.Flag.one_at_a_time),
+			(self.never_preempt, DATSound.Flag.never_preempt)
 		)
 		for (variable, flag) in flags_fields:
 			variable.set(entry.flags & flag == flag)
@@ -155,12 +155,12 @@ class SoundsTab(DATTab):
 			entry.priority = self.priority.get()
 			self.edited = True
 
-		flags = entry.flags & ~Sound.Flag.ALL_FLAGS
+		flags = entry.flags & ~DATSound.Flag.ALL_FLAGS
 		flags_fields = (
-			(self.preload, Sound.Flag.preload),
-			(self.unit_speech, Sound.Flag.unit_speech),
-			(self.one_at_a_time, Sound.Flag.one_at_a_time),
-			(self.never_preempt, Sound.Flag.never_preempt)
+			(self.preload, DATSound.Flag.preload),
+			(self.unit_speech, DATSound.Flag.unit_speech),
+			(self.one_at_a_time, DATSound.Flag.one_at_a_time),
+			(self.never_preempt, DATSound.Flag.never_preempt)
 		)
 		for (variable, flag) in flags_fields:
 			if variable.get():

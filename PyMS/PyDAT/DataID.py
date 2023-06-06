@@ -1,98 +1,77 @@
 
+from enum import Enum
 
-class ID(object):
-	def __init__(self, id):
-		self.id = id
+class DATID(Enum):
+	units = 'Units'
+	weapons = 'Weapons'
+	flingy = 'Flingy'
+	sprites = 'Sprites'
+	images = 'Images'
+	upgrades = 'Upgrades'
+	techdata = 'Techdata'
+	sfxdata = 'Sfxdata'
+	portdata = 'Portdata'
+	mapdata = 'Mapdata'
+	orders = 'Orders'
 
-	def __eq__(self, other):
-		if isinstance(other, type(self)):
-			return other.id == self.id
-		if isinstance(other, str):
-			return other == self.id
-		return False
+	ALL: list['DATID']
 
-	def __repr__(self):
-		return '<%s "%s">' % (type(self).__name__, self.id)
+	@property
+	def filename(self): # type: () -> str
+		if self == DATID.units:
+			return 'units.dat'
+		elif self == DATID.weapons:
+			return 'weapons.dat'
+		elif self == DATID.flingy:
+			return 'flingy.dat'
+		elif self == DATID.sprites:
+			return 'sprites.dat'
+		elif self == DATID.images:
+			return 'images.dat'
+		elif self == DATID.upgrades:
+			return 'upgrades.dat'
+		elif self == DATID.techdata:
+			return 'techdata.dat'
+		elif self == DATID.sfxdata:
+			return 'sfxdata.dat'
+		elif self == DATID.portdata:
+			return 'portdata.dat'
+		elif self == DATID.mapdata:
+			return 'mapdata.dat'
+		else: #if self == DATID.orders:
+			return 'orders.dat'
 
-
-class DATID(ID):
-	# Initialized here to None for intellisense, real value assigned later
-	units = None
-	weapons = None
-	flingy = None
-	sprites = None
-	images = None
-	upgrades = None
-	techdata = None
-	sfxdata = None
-	portdata = None
-	mapdata = None
-	orders = None
-	ALL = None
-
-	def __init__(self, id, filename, tab_id=None):
-		self.filename = filename
-		self.tab_id = tab_id or id
-		ID.__init__(self, id)
-
-DATID.units = DATID('Units', 'units.dat')
-DATID.weapons = DATID('Weapons', 'weapons.dat')
-DATID.flingy = DATID('Flingy', 'flingy.dat')
-DATID.sprites = DATID('Sprites', 'sprites.dat')
-DATID.images = DATID('Images', 'images.dat')
-DATID.upgrades = DATID('Upgrades', 'upgrades.dat')
-DATID.techdata = DATID('Techdata', 'techdata.dat')
-DATID.sfxdata = DATID('Sfxdata', 'sfxdata.dat')
-DATID.portdata = DATID('Portdata', 'portdata.dat')
-DATID.mapdata = DATID('Mapdata', 'mapdata.dat')
-DATID.orders = DATID('Orders', 'orders.dat')
+	@property
+	def tab_id(self): # type: () -> str
+		return self.value
 
 DATID.ALL = [DATID.units, DATID.weapons, DATID.flingy, DATID.sprites, DATID.images, DATID.upgrades, DATID.techdata, DATID.sfxdata, DATID.portdata, DATID.mapdata, DATID.orders]
 
 
-class UnitsTabID(ID):
-	# Initialized here to None for intellisense, real value assigned later
-	basic = None
-	advanced = None
-	sounds = None
-	graphics = None
-	staredit = None
-	ai_actions = None
+class UnitsTabID(Enum):
+	basic = 'Basic'
+	advanced = 'Advanced'
+	sounds = 'Sounds'
+	graphics = 'Graphics'
+	staredit = 'StarEdit'
+	ai_actions = 'AI Actions'
 
-	def __init__(self, id, tab_name=None):
-		self.tab_name = tab_name or id
-		ID.__init__(self, id)
-
-UnitsTabID.basic = UnitsTabID('Basic')
-UnitsTabID.advanced = UnitsTabID('Advanced')
-UnitsTabID.sounds = UnitsTabID('Sounds')
-UnitsTabID.graphics = UnitsTabID('Graphics')
-UnitsTabID.staredit = UnitsTabID('StarEdit')
-UnitsTabID.ai_actions = UnitsTabID('AI Actions')
+	@property
+	def tab_name(self): # type: () -> str
+		return self.value
 
 
-class DataID(ID):
-	# Initialized here to None for intellisense, real value assigned later
-	stat_txt = None
-	unitnamestbl = None
-	imagestbl = None
-	sfxdatatbl = None
-	portdatatbl = None
-	mapdatatbl = None
+class DataID(Enum):
+	stat_txt = 'stat_txt'
+	unitnamestbl = 'unitnamestbl'
+	imagestbl = 'imagestbl'
+	sfxdatatbl = 'sfxdatatbl'
+	portdatatbl = 'portdatatbl'
+	mapdatatbl = 'mapdatatbl'
 
-	cmdicons = None
-	iscriptbin = None
+	cmdicons = 'cmdicons'
+	iscriptbin = 'iscriptbin'
 
-	ALL = None
-
-DataID.stat_txt = DataID('stat_txt')
-DataID.unitnamestbl = DataID('unitnamestbl')
-DataID.imagestbl = DataID('imagestbl')
-DataID.sfxdatatbl = DataID('sfxdatatbl')
-DataID.portdatatbl = DataID('portdatatbl')
-DataID.mapdatatbl = DataID('mapdatatbl')
-
-DataID.cmdicons = DataID('cmdicons')
-DataID.iscriptbin = DataID('iscriptbin')
+	ALL: list['DataID']
 
 DataID.ALL = [DataID.stat_txt, DataID.unitnamestbl, DataID.imagestbl, DataID.sfxdatatbl, DataID.portdatatbl, DataID.mapdatatbl, DataID.cmdicons, DataID.iscriptbin]

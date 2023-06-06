@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DataID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 
@@ -137,11 +137,11 @@ class StarEditUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.staredit_group_flags,
-			Unit.Property.staredit_availability_flags,
-			Unit.Property.sublabel,
-			Unit.Property.unit_map_string,
-			Unit.Property.staredit_placement_size,
+			DATUnit.Property.staredit_group_flags,
+			DATUnit.Property.staredit_availability_flags,
+			DATUnit.Property.sublabel,
+			DATUnit.Property.unit_map_string,
+			DATUnit.Property.staredit_placement_size,
 		])
 		self.clipboard_set(text)
 
@@ -177,22 +177,22 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.drawboxes()
 
 	def load_data(self, entry):
-		self.men.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.men == Unit.StarEditGroupFlag.men)
-		self.building.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.building == Unit.StarEditGroupFlag.building)
-		self.factory.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.factory == Unit.StarEditGroupFlag.factory)
-		self.independent.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.independent == Unit.StarEditGroupFlag.independent)
-		self.neutral.set(entry.staredit_group_flags & Unit.StarEditGroupFlag.neutral == Unit.StarEditGroupFlag.neutral)
+		self.men.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.men == DATUnit.StarEditGroupFlag.men)
+		self.building.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.building == DATUnit.StarEditGroupFlag.building)
+		self.factory.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.factory == DATUnit.StarEditGroupFlag.factory)
+		self.independent.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.independent == DATUnit.StarEditGroupFlag.independent)
+		self.neutral.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.neutral == DATUnit.StarEditGroupFlag.neutral)
 
-		self.nonneutral.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.non_neutral == Unit.StarEditAvailabilityFlag.non_neutral)
-		self.unitlisting.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.unit_listing == Unit.StarEditAvailabilityFlag.unit_listing)
-		self.missionbriefing.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.mission_briefing == Unit.StarEditAvailabilityFlag.mission_briefing)
-		self.playersettings.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.player_settings == Unit.StarEditAvailabilityFlag.player_settings)
-		self.allraces.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.all_races == Unit.StarEditAvailabilityFlag.all_races)
-		self.setdoodadstate.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.set_doodad_state == Unit.StarEditAvailabilityFlag.set_doodad_state)
-		self.nonlocationtriggers.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.non_location_triggers == Unit.StarEditAvailabilityFlag.non_location_triggers)
-		self.unitherosettings.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.unit_hero_settings == Unit.StarEditAvailabilityFlag.unit_hero_settings)
-		self.locationtriggers.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.location_triggers == Unit.StarEditAvailabilityFlag.location_triggers)
-		self.broodwaronly.set(entry.staredit_availability_flags & Unit.StarEditAvailabilityFlag.broodwar_only == Unit.StarEditAvailabilityFlag.broodwar_only)
+		self.nonneutral.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.non_neutral == DATUnit.StarEditAvailabilityFlag.non_neutral)
+		self.unitlisting.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.unit_listing == DATUnit.StarEditAvailabilityFlag.unit_listing)
+		self.missionbriefing.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.mission_briefing == DATUnit.StarEditAvailabilityFlag.mission_briefing)
+		self.playersettings.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.player_settings == DATUnit.StarEditAvailabilityFlag.player_settings)
+		self.allraces.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.all_races == DATUnit.StarEditAvailabilityFlag.all_races)
+		self.setdoodadstate.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.set_doodad_state == DATUnit.StarEditAvailabilityFlag.set_doodad_state)
+		self.nonlocationtriggers.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.non_location_triggers == DATUnit.StarEditAvailabilityFlag.non_location_triggers)
+		self.unitherosettings.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.unit_hero_settings == DATUnit.StarEditAvailabilityFlag.unit_hero_settings)
+		self.locationtriggers.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.location_triggers == DATUnit.StarEditAvailabilityFlag.location_triggers)
+		self.broodwaronly.set(entry.staredit_availability_flags & DATUnit.StarEditAvailabilityFlag.broodwar_only == DATUnit.StarEditAvailabilityFlag.broodwar_only)
 
 		self.rankentry.set(entry.sublabel)
 		self.mapstring.set(entry.unit_map_string)
@@ -204,13 +204,13 @@ class StarEditUnitsTab(DATUnitsTab):
 	def save_data(self, entry):
 		edited = False
 
-		staredit_group_flags = entry.staredit_group_flags & Unit.StarEditGroupFlag.RACE_FLAGS
+		staredit_group_flags = entry.staredit_group_flags & DATUnit.StarEditGroupFlag.RACE_FLAGS
 		staredit_group_flags_fields = (
-			(self.men, Unit.StarEditGroupFlag.men),
-			(self.building, Unit.StarEditGroupFlag.building),
-			(self.factory, Unit.StarEditGroupFlag.factory),
-			(self.independent, Unit.StarEditGroupFlag.independent),
-			(self.neutral, Unit.StarEditGroupFlag.neutral)
+			(self.men, DATUnit.StarEditGroupFlag.men),
+			(self.building, DATUnit.StarEditGroupFlag.building),
+			(self.factory, DATUnit.StarEditGroupFlag.factory),
+			(self.independent, DATUnit.StarEditGroupFlag.independent),
+			(self.neutral, DATUnit.StarEditGroupFlag.neutral)
 		)
 		for variable,flag in staredit_group_flags_fields:
 			if variable.get():
@@ -219,18 +219,18 @@ class StarEditUnitsTab(DATUnitsTab):
 			entry.staredit_group_flags = staredit_group_flags
 			edited = True
 
-		staredit_availability_flags = entry.staredit_availability_flags & ~Unit.StarEditAvailabilityFlag.ALL_FLAGS
+		staredit_availability_flags = entry.staredit_availability_flags & ~DATUnit.StarEditAvailabilityFlag.ALL_FLAGS
 		staredit_availability_flags_fields = (
-			(self.nonneutral, Unit.StarEditAvailabilityFlag.non_neutral),
-			(self.unitlisting, Unit.StarEditAvailabilityFlag.unit_listing),
-			(self.missionbriefing, Unit.StarEditAvailabilityFlag.mission_briefing),
-			(self.playersettings, Unit.StarEditAvailabilityFlag.player_settings),
-			(self.allraces, Unit.StarEditAvailabilityFlag.all_races),
-			(self.setdoodadstate, Unit.StarEditAvailabilityFlag.set_doodad_state),
-			(self.nonlocationtriggers, Unit.StarEditAvailabilityFlag.non_location_triggers),
-			(self.unitherosettings, Unit.StarEditAvailabilityFlag.unit_hero_settings),
-			(self.locationtriggers, Unit.StarEditAvailabilityFlag.location_triggers),
-			(self.broodwaronly, Unit.StarEditAvailabilityFlag.broodwar_only),
+			(self.nonneutral, DATUnit.StarEditAvailabilityFlag.non_neutral),
+			(self.unitlisting, DATUnit.StarEditAvailabilityFlag.unit_listing),
+			(self.missionbriefing, DATUnit.StarEditAvailabilityFlag.mission_briefing),
+			(self.playersettings, DATUnit.StarEditAvailabilityFlag.player_settings),
+			(self.allraces, DATUnit.StarEditAvailabilityFlag.all_races),
+			(self.setdoodadstate, DATUnit.StarEditAvailabilityFlag.set_doodad_state),
+			(self.nonlocationtriggers, DATUnit.StarEditAvailabilityFlag.non_location_triggers),
+			(self.unitherosettings, DATUnit.StarEditAvailabilityFlag.unit_hero_settings),
+			(self.locationtriggers, DATUnit.StarEditAvailabilityFlag.location_triggers),
+			(self.broodwaronly, DATUnit.StarEditAvailabilityFlag.broodwar_only),
 		)
 		for variable,flag in staredit_availability_flags_fields:
 			if variable.get():

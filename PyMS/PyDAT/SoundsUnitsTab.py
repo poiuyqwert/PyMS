@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 
@@ -120,13 +120,13 @@ class SoundsUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.ready_sound,
-			Unit.Property.what_sound_start,
-			Unit.Property.what_sound_end,
-			Unit.Property.pissed_sound_start,
-			Unit.Property.pissed_sound_end,
-			Unit.Property.yes_sound_start,
-			Unit.Property.yes_sound_end,
+			DATUnit.Property.ready_sound,
+			DATUnit.Property.what_sound_start,
+			DATUnit.Property.what_sound_end,
+			DATUnit.Property.pissed_sound_start,
+			DATUnit.Property.pissed_sound_end,
+			DATUnit.Property.yes_sound_start,
+			DATUnit.Property.yes_sound_end,
 		])
 		self.clipboard_set(text)
 

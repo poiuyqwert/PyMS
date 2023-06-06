@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -241,29 +241,29 @@ class BasicUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.hit_points,
-			Unit.Property.shield_amount,
-			Unit.Property.shield_enabled,
-			Unit.Property.armor,
-			Unit.Property.armor_upgrade,
-			Unit.Property.mineral_cost,
-			Unit.Property.vespene_cost,
-			Unit.Property.build_time,
-			Unit.Property.broodwar_unit_flag,
-			Unit.Property.ground_weapon,
-			Unit.Property.max_ground_hits,
-			Unit.Property.air_weapon,
-			Unit.Property.max_air_hits,
-			Unit.Property.space_required,
-			Unit.Property.space_provided,
-			Unit.Property.build_score,
-			Unit.Property.destroy_score,
-			Unit.Property.unit_size,
-			Unit.Property.sight_range,
-			Unit.Property.target_acquisition_range,
-			Unit.Property.supply_required,
-			Unit.Property.supply_provided,
-			Unit.Property.staredit_group_flags,
+			DATUnit.Property.hit_points,
+			DATUnit.Property.shield_amount,
+			DATUnit.Property.shield_enabled,
+			DATUnit.Property.armor,
+			DATUnit.Property.armor_upgrade,
+			DATUnit.Property.mineral_cost,
+			DATUnit.Property.vespene_cost,
+			DATUnit.Property.build_time,
+			DATUnit.Property.broodwar_unit_flag,
+			DATUnit.Property.ground_weapon,
+			DATUnit.Property.max_ground_hits,
+			DATUnit.Property.air_weapon,
+			DATUnit.Property.max_air_hits,
+			DATUnit.Property.space_required,
+			DATUnit.Property.space_provided,
+			DATUnit.Property.build_score,
+			DATUnit.Property.destroy_score,
+			DATUnit.Property.unit_size,
+			DATUnit.Property.sight_range,
+			DATUnit.Property.target_acquisition_range,
+			DATUnit.Property.supply_required,
+			DATUnit.Property.supply_provided,
+			DATUnit.Property.staredit_group_flags,
 		])
 		self.clipboard_set(text)
 
@@ -311,9 +311,9 @@ class BasicUnitsTab(DATUnitsTab):
 		self.supply_required_half.set(entry.supply_required.half)
 		self.supply_provided.set(entry.supply_provided.whole)
 		self.supply_provided_half.set(entry.supply_provided.half)
-		self.zerg.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.zerg) == Unit.StarEditGroupFlag.zerg)
-		self.terran.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.terran) == Unit.StarEditGroupFlag.terran)
-		self.protoss.set((entry.staredit_group_flags & Unit.StarEditGroupFlag.protoss) == Unit.StarEditGroupFlag.protoss)
+		self.zerg.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.zerg) == DATUnit.StarEditGroupFlag.zerg)
+		self.terran.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.terran) == DATUnit.StarEditGroupFlag.terran)
+		self.protoss.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.protoss) == DATUnit.StarEditGroupFlag.protoss)
 
 	def save_data(self, entry):
 		edited = False
@@ -392,13 +392,13 @@ class BasicUnitsTab(DATUnitsTab):
 		if self.supply_provided_half.get() != entry.supply_provided.half:
 			entry.supply_provided.half = self.supply_provided_half.get()
 			edited = True
-		staredit_group_flags = entry.staredit_group_flags & Unit.StarEditGroupFlag.GROUP_FLAGS
+		staredit_group_flags = entry.staredit_group_flags & DATUnit.StarEditGroupFlag.GROUP_FLAGS
 		if self.zerg.get():
-			staredit_group_flags |= Unit.StarEditGroupFlag.zerg
+			staredit_group_flags |= DATUnit.StarEditGroupFlag.zerg
 		if self.terran.get():
-			staredit_group_flags |= Unit.StarEditGroupFlag.terran
+			staredit_group_flags |= DATUnit.StarEditGroupFlag.terran
 		if self.protoss.get():
-			staredit_group_flags |= Unit.StarEditGroupFlag.protoss
+			staredit_group_flags |= DATUnit.StarEditGroupFlag.protoss
 		if staredit_group_flags != entry.staredit_group_flags:
 			entry.staredit_group_flags = staredit_group_flags
 			edited = True

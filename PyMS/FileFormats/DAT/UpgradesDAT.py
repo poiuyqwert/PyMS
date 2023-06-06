@@ -5,7 +5,7 @@ from . import DATCoders
 
 from typing import cast
 
-class Upgrade(AbstractDAT.AbstractDATEntry):
+class DATUpgrade(AbstractDAT.AbstractDATEntry):
 	class Property:
 		mineral_cost_base = 'mineral_cost_base'
 		mineral_cost_factor = 'mineral_cost_factor'
@@ -67,32 +67,32 @@ class Upgrade(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Upgrade'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Upgrade.Property.mineral_cost_base, self.mineral_cost_base, data)
-		self._export_property_value(export_properties, Upgrade.Property.mineral_cost_factor, self.mineral_cost_factor, data)
-		self._export_property_value(export_properties, Upgrade.Property.vespene_cost_base, self.vespene_cost_base, data)
-		self._export_property_value(export_properties, Upgrade.Property.vespene_cost_factor, self.vespene_cost_factor, data)
-		self._export_property_value(export_properties, Upgrade.Property.research_time_base, self.research_time_base, data)
-		self._export_property_value(export_properties, Upgrade.Property.research_time_factor, self.research_time_factor, data)
-		self._export_property_value(export_properties, Upgrade.Property.requirements, self.requirements, data)
-		self._export_property_value(export_properties, Upgrade.Property.icon, self.icon, data)
-		self._export_property_value(export_properties, Upgrade.Property.label, self.label, data)
-		self._export_property_value(export_properties, Upgrade.Property.staredit_race, self.staredit_race, data)
-		self._export_property_value(export_properties, Upgrade.Property.max_repeats, self.max_repeats, data)
-		self._export_property_value(export_properties, Upgrade.Property.broodwar_only, self.broodwar_only, data, _UpgradePropertyCoder.broodwar_only)
+		self._export_property_value(export_properties, DATUpgrade.Property.mineral_cost_base, self.mineral_cost_base, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.mineral_cost_factor, self.mineral_cost_factor, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.vespene_cost_base, self.vespene_cost_base, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.vespene_cost_factor, self.vespene_cost_factor, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.research_time_base, self.research_time_base, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.research_time_factor, self.research_time_factor, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.requirements, self.requirements, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.icon, self.icon, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.label, self.label, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.staredit_race, self.staredit_race, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.max_repeats, self.max_repeats, data)
+		self._export_property_value(export_properties, DATUpgrade.Property.broodwar_only, self.broodwar_only, data, _UpgradePropertyCoder.broodwar_only)
 
 	def _import_data(self, data):
-		mineral_cost_base = self._import_property_value(data, Upgrade.Property.mineral_cost_base)
-		mineral_cost_factor = self._import_property_value(data, Upgrade.Property.mineral_cost_factor)
-		vespene_cost_base = self._import_property_value(data, Upgrade.Property.vespene_cost_base)
-		vespene_cost_factor = self._import_property_value(data, Upgrade.Property.vespene_cost_factor)
-		research_time_base = self._import_property_value(data, Upgrade.Property.research_time_base)
-		research_time_factor = self._import_property_value(data, Upgrade.Property.research_time_factor)
-		requirements = self._import_property_value(data, Upgrade.Property.requirements)
-		icon = self._import_property_value(data, Upgrade.Property.icon)
-		label = self._import_property_value(data, Upgrade.Property.label)
-		staredit_race = self._import_property_value(data, Upgrade.Property.staredit_race)
-		max_repeats = self._import_property_value(data, Upgrade.Property.max_repeats)
-		broodwar_only = self._import_property_value(data, Upgrade.Property.broodwar_only, _UpgradePropertyCoder.broodwar_only)
+		mineral_cost_base = self._import_property_value(data, DATUpgrade.Property.mineral_cost_base)
+		mineral_cost_factor = self._import_property_value(data, DATUpgrade.Property.mineral_cost_factor)
+		vespene_cost_base = self._import_property_value(data, DATUpgrade.Property.vespene_cost_base)
+		vespene_cost_factor = self._import_property_value(data, DATUpgrade.Property.vespene_cost_factor)
+		research_time_base = self._import_property_value(data, DATUpgrade.Property.research_time_base)
+		research_time_factor = self._import_property_value(data, DATUpgrade.Property.research_time_factor)
+		requirements = self._import_property_value(data, DATUpgrade.Property.requirements)
+		icon = self._import_property_value(data, DATUpgrade.Property.icon)
+		label = self._import_property_value(data, DATUpgrade.Property.label)
+		staredit_race = self._import_property_value(data, DATUpgrade.Property.staredit_race)
+		max_repeats = self._import_property_value(data, DATUpgrade.Property.max_repeats)
+		broodwar_only = self._import_property_value(data, DATUpgrade.Property.broodwar_only, _UpgradePropertyCoder.broodwar_only)
 
 		if mineral_cost_base is not None:
 			self.mineral_cost_base = mineral_cost_base
@@ -178,8 +178,8 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Upgrade
+	ENTRY_STRUCT = DATUpgrade
 	FILE_NAME = "upgrades.dat"
 
-	def get_entry(self, index): # type: (int) -> Upgrade
-		return cast(Upgrade, super(UpgradesDAT, self).get_entry(index))
+	def get_entry(self, index): # type: (int) -> DATUpgrade
+		return cast(DATUpgrade, super(UpgradesDAT, self).get_entry(index))

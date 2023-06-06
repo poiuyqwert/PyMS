@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -135,13 +135,13 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.graphics,
-			Unit.Property.construction_animation,
-			Unit.Property.unit_direction,
-			Unit.Property.elevation_level,
-			Unit.Property.unit_extents,
-			Unit.Property.portrait,
-			Unit.Property.addon_position,
+			DATUnit.Property.graphics,
+			DATUnit.Property.construction_animation,
+			DATUnit.Property.unit_direction,
+			DATUnit.Property.elevation_level,
+			DATUnit.Property.unit_extents,
+			DATUnit.Property.portrait,
+			DATUnit.Property.addon_position,
 		])
 		self.clipboard_set(text)
 

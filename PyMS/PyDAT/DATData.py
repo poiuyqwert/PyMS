@@ -142,8 +142,8 @@ class UnitsDATData(DATData):
 				data_names=Assets.data_cache(self.data_file),
 				stat_txt=self.data_context.stat_txt,
 				unitnamestbl=self.data_context.unitnamestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -163,8 +163,8 @@ class WeaponsDATData(DATData):
 				weaponsdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -185,7 +185,7 @@ class FlingyDATData(DATData):
 				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -204,7 +204,7 @@ class SpritesDATData(DATData):
 				spritesdat=self.dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -222,7 +222,7 @@ class ImagesDATData(DATData):
 				data_names=Assets.data_cache(self.data_file),
 				imagesdat=self.dat,
 				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -241,8 +241,8 @@ class UpgradesDATData(DATData):
 				upgradesdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -262,8 +262,8 @@ class TechDATData(DATData):
 				techdatadat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -283,7 +283,7 @@ class SoundsDATData(DATData):
 				sfxdatadat=self.dat,
 				sfxdatatbl=self.data_context.sfxdatatbl,
 				none_name='No sound',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -303,7 +303,7 @@ class PortraitsDATData(DATData):
 				portdatadat=self.dat,
 				portdatatbl=self.data_context.portdatatbl,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -322,7 +322,7 @@ class CampaignDATData(DATData):
 				data_names=Assets.data_cache(self.data_file),
 				mapdatadat=self.dat,
 				mapdatatbl=self.data_context.mapdatatbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -342,8 +342,8 @@ class OrdersDATData(DATData):
 				ordersdat=self.dat,
 				stat_txt=self.data_context.stat_txt,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic)],
+				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))

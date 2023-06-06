@@ -5,7 +5,7 @@ from . import DATCoders
 
 from typing import cast
 
-class Sound(AbstractDAT.AbstractDATEntry):
+class DATSound(AbstractDAT.AbstractDATEntry):
 	class Property:
 		sound_file = 'sound_file'
 		priority = 'priority'
@@ -47,18 +47,18 @@ class Sound(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Sound'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Sound.Property.sound_file, self.sound_file, data)
-		self._export_property_value(export_properties, Sound.Property.priority, self.priority, data)
-		self._export_property_value(export_properties, Sound.Property.flags, self.flags, data, _SoundPropertyCoder.flags)
-		self._export_property_value(export_properties, Sound.Property.portrait_length_adjust, self.portrait_length_adjust, data)
-		self._export_property_value(export_properties, Sound.Property.minimum_volume, self.minimum_volume, data)
+		self._export_property_value(export_properties, DATSound.Property.sound_file, self.sound_file, data)
+		self._export_property_value(export_properties, DATSound.Property.priority, self.priority, data)
+		self._export_property_value(export_properties, DATSound.Property.flags, self.flags, data, _SoundPropertyCoder.flags)
+		self._export_property_value(export_properties, DATSound.Property.portrait_length_adjust, self.portrait_length_adjust, data)
+		self._export_property_value(export_properties, DATSound.Property.minimum_volume, self.minimum_volume, data)
 
 	def _import_data(self, data):
-		sound_file = self._import_property_value(data, Sound.Property.sound_file)
-		priority = self._import_property_value(data, Sound.Property.priority)
-		flags = self._import_property_value(data, Sound.Property.flags, _SoundPropertyCoder.flags)
-		portrait_length_adjust = self._import_property_value(data, Sound.Property.portrait_length_adjust)
-		minimum_volume = self._import_property_value(data, Sound.Property.minimum_volume)
+		sound_file = self._import_property_value(data, DATSound.Property.sound_file)
+		priority = self._import_property_value(data, DATSound.Property.priority)
+		flags = self._import_property_value(data, DATSound.Property.flags, _SoundPropertyCoder.flags)
+		portrait_length_adjust = self._import_property_value(data, DATSound.Property.portrait_length_adjust)
+		minimum_volume = self._import_property_value(data, DATSound.Property.minimum_volume)
 
 		if sound_file is not None:
 			self.sound_file = sound_file
@@ -73,10 +73,10 @@ class Sound(AbstractDAT.AbstractDATEntry):
 
 class _SoundPropertyCoder:
 	flags = DATCoders.DATFlagsCoder(6, {
-		Sound.Flag.preload: 'preload',
-		Sound.Flag.unit_speech: 'unit_speech',
-		Sound.Flag.one_at_a_time: 'one_at_a_time',
-		Sound.Flag.never_preempt: 'never_preempt'
+		DATSound.Flag.preload: 'preload',
+		DATSound.Flag.unit_speech: 'unit_speech',
+		DATSound.Flag.one_at_a_time: 'one_at_a_time',
+		DATSound.Flag.never_preempt: 'never_preempt'
 	})
 
 # sfxdata.dat file handler
@@ -107,8 +107,8 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Sound
+	ENTRY_STRUCT = DATSound
 	FILE_NAME = "sfxdata.dat"
 
-	def get_entry(self, index): # type: (int) -> Sound
-		return cast(Sound, super(SoundsDAT, self).get_entry(index))
+	def get_entry(self, index): # type: (int) -> DATSound
+		return cast(DATSound, super(SoundsDAT, self).get_entry(index))

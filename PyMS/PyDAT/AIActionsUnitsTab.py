@@ -2,7 +2,7 @@
 from .DATUnitsTab import DATUnitsTab
 from .DataID import DATID
 
-from ..FileFormats.DAT.UnitsDAT import Unit
+from ..FileFormats.DAT.UnitsDAT import DATUnit
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -141,13 +141,13 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 	def copy(self):
 		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
-			Unit.Property.comp_ai_idle,
-			Unit.Property.human_ai_idle,
-			Unit.Property.return_to_idle,
-			Unit.Property.attack_unit,
-			Unit.Property.attack_move,
-			Unit.Property.right_click_action,
-			Unit.Property.ai_internal,
+			DATUnit.Property.comp_ai_idle,
+			DATUnit.Property.human_ai_idle,
+			DATUnit.Property.return_to_idle,
+			DATUnit.Property.attack_unit,
+			DATUnit.Property.attack_move,
+			DATUnit.Property.right_click_action,
+			DATUnit.Property.ai_internal,
 		])
 		self.clipboard_set(text)
 
@@ -278,8 +278,8 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackunit.set(entry.attack_unit)
 		self.attackmove.set(entry.attack_move)
 		self.rightclick.set(entry.right_click_action)
-		self.AI_NoSuicide.set(entry.ai_internal & Unit.AIInternalFlag.no_suicide == Unit.AIInternalFlag.no_suicide)
-		self.AI_NoGuard.set(entry.ai_internal & Unit.AIInternalFlag.no_guard == Unit.AIInternalFlag.no_guard)
+		self.AI_NoSuicide.set(entry.ai_internal & DATUnit.AIInternalFlag.no_suicide == DATUnit.AIInternalFlag.no_suicide)
+		self.AI_NoGuard.set(entry.ai_internal & DATUnit.AIInternalFlag.no_guard == DATUnit.AIInternalFlag.no_guard)
 		self.build_force_values()
 
 	def save_data(self, entry):
@@ -303,11 +303,11 @@ class AIActionsUnitsTab(DATUnitsTab):
 			entry.right_click_action = self.rightclick.get()
 			edited = True
 
-		ai_internal = entry.ai_internal & ~Unit.AIInternalFlag.ALL_FLAGS
+		ai_internal = entry.ai_internal & ~DATUnit.AIInternalFlag.ALL_FLAGS
 		if self.AI_NoSuicide.get():
-			ai_internal |= Unit.AIInternalFlag.no_suicide
+			ai_internal |= DATUnit.AIInternalFlag.no_suicide
 		if self.AI_NoGuard.get():
-			ai_internal |= Unit.AIInternalFlag.no_guard
+			ai_internal |= DATUnit.AIInternalFlag.no_guard
 		if ai_internal != entry.ai_internal:
 			entry.ai_internal = ai_internal
 			edited = True

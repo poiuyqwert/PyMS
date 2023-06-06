@@ -15,6 +15,8 @@ from .DATData import NamesDisplaySetting
 from .SaveMPQDialog import SaveMPQDialog
 from .DATSettingsDialog import DATSettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
+from .DataID import DataID
+from .DATTab import DATTab
 
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
@@ -32,10 +34,12 @@ from ..Utilities.HelpDialog import HelpDialog
 
 import os
 
+from typing import cast, Callable
+
 LONG_VERSION = 'v%s' % Assets.version('PyDAT')
 
 class PyDAT(MainWindow):
-	def __init__(self, guifile=None):
+	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
 		self.set_icon('PyDAT')
@@ -47,9 +51,9 @@ class PyDAT(MainWindow):
 		self.data_context = DataContext()
 		Theme.load_theme(self.data_context.settings.get('theme'), self)
 	
-		self.updates = []
+		self.updates = [] # type: list[DataID]
 		self.update_after_id = None
-		def buffer_updates(id):
+		def buffer_updates(id): # type: (DataID) -> None
 			if id in self.updates:
 				return
 			self.updates.append(id)
@@ -81,9 +85,13 @@ class PyDAT(MainWindow):
 		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', Shift.Ctrl.n)
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
-		toolbar.add_button(Assets.get_image('debug'), self.open_files, 'Reload data files', Ctrl.r)
+		def open_files_callback(): # type: () -> Callable[[], None]
+			def open_files(): # type: () -> None
+				self.open_files()
+			return open_files
+		toolbar.add_button(Assets.get_image('debug'), open_files_callback(), 'Reload data files', Ctrl.r)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		toolbar.add_section()
@@ -94,8 +102,8 @@ class PyDAT(MainWindow):
 		left = Frame(self.hor_pane)
 		self.listbox = ScrolledListbox(left, scroll_speed=2, font=Font.fixed(), width=45, height=1)
 		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
-		self.listbox.bind(ButtonRelease.Click_Right, self.popup)
-		self.listbox.bind(WidgetEvent.Listbox.Select, lambda *e: self.changeid())
+		self.listbox.bind(ButtonRelease.Click_Right(), self.popup)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.changeid())
 
 		f = Frame(left)
 		collapse_button = CollapseView.Button(f)
@@ -109,7 +117,7 @@ class PyDAT(MainWindow):
 
 		collapse_view.set_collapsed(not self.data_context.settings.get('show_listbox_options', True))
 
-		self.findhistory = []
+		self.findhistory = [] # type: list[str]
 		self.find = StringVar()
 		Label(collapse_view, text='Find:').grid(column=0,row=0, sticky=E)
 		find = Frame(collapse_view)
@@ -126,7 +134,7 @@ class PyDAT(MainWindow):
 		jump = Frame(collapse_view)
 		jump_entry = Entry(jump, textvariable=self.jumpid, width=5)
 		jump_entry.pack(side=LEFT)
-		jump_entry.bind(Key.Return, self.jump)
+		jump_entry.bind(Key.Return(), self.jump)
 		Button(jump, text='Go', command=self.jump).pack(side=LEFT)
 		jump.grid(column=1,row=1, sticky=W)
 
@@ -142,22 +150,22 @@ class PyDAT(MainWindow):
 		self.hor_pane.add(left, sticky=NSEW, minsize=300)
 
 		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c)
-		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y, tags='can_copy_sub_tab')
-		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p)
+		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y, tags='can_copy_sub_tab') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p) # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r)
+		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r) # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a, tags='can_expand')
-		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s, tags='can_expand')
+		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a, tags='can_expand') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s, tags='can_expand') # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=Shift.Ctrl.n)
+		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=Shift.Ctrl.n) # type: ignore[call-arg]
 
 		self.status = StringVar()
 		self.expanded = StringVar()
 
 		self.dattabs = Notebook(self.hor_pane)
-		self.pages = []
+		self.pages = [] # type: list[DATTab]
 		tabs = (
 			('Units', UnitsTab),
 			('Weapons', WeaponsTab),
@@ -203,21 +211,24 @@ class PyDAT(MainWindow):
 
 		UpdateDialog.check_update(self, 'PyDAT')
 
-	def tab_activated(self, event=None):
+	def active_tab(self): # type: () -> DATTab
+		return cast(DATTab, self.dattabs.active)
+
+	def tab_activated(self, event=None): # type: (Event | None) -> None
 		self.update_entry_listing(True)
 		self.update_name_settings()
 		self.update_status_bar()
-		self.dattabs.active.load_data()
+		self.active_tab().load_data()
 
-	def update_entry_listing(self, update_scroll=False):
+	def update_entry_listing(self, update_scroll=False): # type: (bool) -> None
 		self.listbox.delete(0,END)
-		tab = self.dattabs.active
+		tab = self.active_tab()
 		dat_data = tab.get_dat_data()
 		if dat_data.dat:
 			max_id = dat_data.dat.entry_count() - 1
 			self.jumpid.range[1] = max_id
 			self.jumpid.editvalue()
-			self.listbox.insert(END, *[' %s  %s' % (lpad(id, min(4,len(str(max_id)))), name) for id,name in enumerate(dat_data.names)])
+			self.listbox.insert(END, *[' %s  %s' % (lpad(str(id), min(4,len(str(max_id)))), name) for id,name in enumerate(dat_data.names)])
 			self.listbox.select_set(tab.id)
 			if update_scroll:
 				self.listbox.see(tab.id)
@@ -232,8 +243,8 @@ class PyDAT(MainWindow):
 		NamesDisplaySetting.tbl,
 		NamesDisplaySetting.combine
 	]
-	def update_name_settings(self):
-		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+	def update_name_settings(self): # type: () -> None
+		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
 		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[name_settings.display])
 		if 'simple' in name_settings:
 			self.simple_names_checkbox['state'] = NORMAL
@@ -241,22 +252,22 @@ class PyDAT(MainWindow):
 		else:
 			self.simple_names_checkbox['state'] = DISABLED
 			self.simple_names.set(False)
-	def change_names_display(self, *_):
-		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+	def change_names_display(self, *_): # type: (Any) -> None
+		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
 		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
 		if new_setting == name_settings.display:
 			return
 		name_settings.display = new_setting
-		self.dattabs.active.get_dat_data().update_names()
-	def change_simple_names(self, *_):
-		name_settings = self.data_context.settings.names[self.dattabs.active.DAT_ID.id]
+		self.active_tab().get_dat_data().update_names()
+	def change_simple_names(self, *_): # type: (Any) -> None
+		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
 		if not 'simple' in name_settings or self.simple_names.get() == name_settings.simple:
 			return
 		name_settings.simple = self.simple_names.get()
-		self.dattabs.active.get_dat_data().update_names()
+		self.active_tab().get_dat_data().update_names()
 
-	def update_status_bar(self):
-		tab = self.dattabs.active
+	def update_status_bar(self): # type: () -> None
+		tab = self.active_tab()
 		dat_data = tab.get_dat_data()
 		if dat_data.file_path:
 			self.status.set(dat_data.file_path)
@@ -268,13 +279,13 @@ class PyDAT(MainWindow):
 		else:
 			self.expanded.set('')
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[DataID]) -> None
 		for page in self.pages:
 			page.updated_pointer_entries(ids)
-			if self.dattabs.active == page and page.page_title in ids:
+			if self.active_tab() == page and page.page_title in ids:
 				self.update_entry_listing(True)
 
-	def open_files(self, dat_files=False):
+	def open_files(self, dat_files=False): # type: (bool) -> (PyMSError | None)
 		err = None
 		try:
 			self.data_context.load_additional_files()
@@ -286,23 +297,24 @@ class PyDAT(MainWindow):
 			self.tab_activated()
 		return err
 
-	def unsaved(self):
+	def unsaved(self): # type: () -> (bool | None)
 		for page in self.pages:
 			if page.unsaved():
 				return True
+		return None
 
-	def load_data(self, id=None):
-		self.dattabs.active.load_data(id)
-	def save_data(self):
-		self.dattabs.active.save_data()
+	def load_data(self, id=None): # type: (int | None) -> None
+		self.active_tab().load_data(id)
+	def save_data(self): # type: () -> None
+		self.active_tab().save_data()
 		self.update_status_bar()
 
-	def changeid(self, entry_id=None, focus_list=True):
+	def changeid(self, entry_id=None, focus_list=True): # type: (int | None, bool) -> None
 		show_selection = True
 		if entry_id is None:
 			entry_id = int(self.listbox.curselection()[0])
 			show_selection = False
-		if entry_id != self.dattabs.active.id:
+		if entry_id != self.active_tab().id:
 			self.save_data()
 			self.load_data(entry_id)
 			self.listbox.select_clear(0,END)
@@ -312,59 +324,60 @@ class PyDAT(MainWindow):
 			if focus_list:
 				self.listbox.focus_set()
 
-	def findnext(self, key=None):
+	def findnext(self, key=None): # type: (Event | None) -> None
 		find = self.find.get()
 		if find in self.findhistory:
 			self.findhistory.remove(find)
 		self.findhistory.insert(0, find)
 		find = find.lower()
 		start = int(self.listbox.curselection()[0])
-		cur = (start + 1) % self.listbox.size()
+		cur = (start + 1) % self.listbox.size() # type: ignore[operator]
 		while cur != start:
 			if find in self.listbox.get(cur).lower():
 				self.changeid(cur, focus_list=False)
 				return
-			cur = (cur+1) % self.listbox.size()
+			cur = (cur+1) % self.listbox.size() # type: ignore[operator]
 		MessageBox.showinfo('Find', "Can't find '%s'." % self.find.get())
 
-	def jump(self, key=None):
+	def jump(self, key=None): # type: (Event | None) -> None
 		self.changeid(self.jumpid.get())
 
-	def popup(self, e):
-		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.dattabs.active, 'copy_subtab'))
-		self.listmenu.tag_enabled('can_expand', self.dattabs.active.get_dat_data().dat.can_expand())
+	def popup(self, e): # type: (Event) -> None
+		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.active_tab(), 'copy_subtab')) # type: ignore[attr-defined]
+		self.listmenu.tag_enabled('can_expand', self.active_tab().get_dat_data().dat.can_expand()) # type: ignore[attr-defined]
 		self.listmenu.post(e.x_root, e.y_root)
 
-	def copy(self):
-		self.dattabs.active.copy()
+	def copy(self): # type: () -> None
+		self.active_tab().copy()
 
-	def copy_subtab(self):
-		self.dattabs.active.copy_subtab()
+	def copy_subtab(self): # type: () -> None
+		tab = cast(UnitsTab, self.dattabs.active)
+		tab.copy_subtab()
 
-	def paste(self):
+	def paste(self): # type: () -> None
 		try:
-			self.dattabs.active.paste()
+			self.active_tab().paste()
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		except:
 			raise
 
-	def reload(self):
-		self.dattabs.active.reload()
+	def reload(self): # type: () -> None
+		self.active_tab().reload()
 
-	def add_entry(self):
-		self.dattabs.active.add_entry()
+	def add_entry(self): # type: () -> None
+		self.active_tab().add_entry()
 
-	def set_entry_count(self):
-		self.dattabs.active.set_entry_count()
+	def set_entry_count(self): # type: () -> None
+		self.active_tab().set_entry_count()
 
-	def override_name(self):
-		EntryNameOverrides(self, self.data_context, self.dattabs.active.DAT_ID, self.dattabs.active.id)
+	def override_name(self): # type: () -> None
+		EntryNameOverrides(self, self.data_context, self.active_tab().DAT_ID, self.active_tab().id)
 
-	def new(self, key=None):
-		self.dattabs.active.new()
+	def new(self, key=None): # type: (Event | None) -> None
+		self.active_tab().new()
 
-	def open(self, key=None, file_path=None):
+	def open(self, key=None, file_path=None): # type: (Event | None, str | None) -> None
 		if file_path is None:
 			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[FileType.dat()])
 			if not file_path:
@@ -384,7 +397,7 @@ class PyDAT(MainWindow):
 		else:
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % file_path))
 
-	def _open_all(self, path, ismpq):
+	def _open_all(self, path, ismpq): # type: (str, bool) -> None
 		if not path:
 			return
 		mpq = None
@@ -394,6 +407,7 @@ class PyDAT(MainWindow):
 		found_normal = [] # type: list[str]
 		found_expanded = [] # type: list[str]
 		for _,(tab,_) in self.dattabs.pages.items():
+			tab = cast(DATTab, tab)
 			filename = tab.get_dat_data().dat_type.FILE_NAME
 			if mpq:
 				try:
@@ -427,35 +441,35 @@ class PyDAT(MainWindow):
 			message += "Expanded DAT Files found:\n\t%s\n\nExpanded DAT files require a plugin like 'DatExtend'." % ', '.join(found_expanded)
 		MessageBox.showinfo('DAT Files Found', message)	
 
-	def openmpq(self, event=None):
+	def openmpq(self, event=None): # type: (Event | None) -> None
 		path = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq()])
 		self._open_all(path, True)
 
-	def opendirectory(self, event=None):
+	def opendirectory(self, event=None): # type: (Event | None) -> None
 		path = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
 		self._open_all(path, False)
 
-	def iimport(self, key=None):
-		self.dattabs.active.iimport()
+	def iimport(self, key=None): # type: (Event | None) -> None
+		self.active_tab().iimport()
 
-	def save(self, key=None):
+	def save(self, key=None): # type: (Event | None) -> None
 		self.save_data()
-		self.dattabs.active.save()
+		self.active_tab().save()
 
-	def saveas(self, key=None):
+	def saveas(self, key=None): # type: (Event | None) -> None
 		self.save_data()
-		self.dattabs.active.saveas()
+		self.active_tab().saveas()
 
-	def export(self, key=None):
+	def export(self, key=None): # type: (Event | None) -> None
 		self.save_data()
-		self.dattabs.active.export()
+		self.active_tab().export()
 
-	def savempq(self, key=None):
+	def savempq(self, key=None): # type: (Event | None) -> None
 		if MPQ.supported():
 			self.save_data()
 			SaveMPQDialog(self)
 
-	def mpqtbl(self, key=None, err=None):
+	def mpqtbl(self, key=None, err=None): # type: (Event | None, PyMSError | None) -> None
 		data = [
 			('TBL Settings',[
 				('stat_txt.tbl', 'Contains Unit, Weapon, Upgrade, Tech, and Order names', 'stat_txt', 'TBL'),
@@ -481,19 +495,19 @@ class PyDAT(MainWindow):
 		]
 		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
 
-	def register(self, e=None):
+	def register_registry(self, e=None): # type: (Event | None) -> None
 		try:
 			register_registry('PyDAT', 'dat', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e=None):
+	def help(self, e=None): # type: (Event | None) -> None
 		HelpDialog(self, self.data_context.settings, 'Help/Programs/PyDAT.md')
 
-	def about(self, key=None):
+	def about(self, key=None): # type: (Event | None) -> None
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
 
-	def exit(self, e=None):
+	def exit(self, e=None): # type: (Event | None) -> None
 		if not self.unsaved():
 			self.data_context.settings.windows.save_window_size('main', self)
 			self.data_context.settings.save_pane_size('list_size', self.hor_pane)
