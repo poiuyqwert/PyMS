@@ -9,7 +9,7 @@ from ..Utilities.InternalErrorDialog import InternalErrorDialog
 import sys
 
 class WidgetNode:
-	SMK_FRAME_CACHE = {}
+	SMK_FRAME_CACHE = {} # type: dict[str, dict[int, Image]]
 
 	def __init__(self, toplevel, widget=None):
 		self.toplevel = toplevel

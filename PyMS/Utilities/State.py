@@ -56,39 +56,39 @@ class State(object):
 				continue
 			self.__callbacks[field] -= callback
 
-def main():
-	class MyState(State):
-		class Field:
-			file = 'file'
-			file_path = 'file_path'
+# def main():
+# 	class MyState(State):
+# 		class Field:
+# 			file = 'file'
+# 			file_path = 'file_path'
 
-		def __init__(self):
-			State.__init__(self)
-			self._file = None # type: str
-			self._file_path = None
+# 		def __init__(self): # type: () -> None
+# 			State.__init__(self)
+# 			self._file = None # type: str | None
+# 			self._file_path = None
 
-		file = State.property(Field.file) # type: str
-		file_path = State.property(Field.file_path) # type: str
+# 		file = State.property(Field.file) # type: str
+# 		file_path = State.property(Field.file_path) # type: str
 
-	state = MyState()
-	print((state.file))
-	state.file = 'test'
-	print((state.file))
+# 	state = MyState()
+# 	print((state.file))
+# 	state.file = 'test'
+# 	print((state.file))
 
-	def update_title():
-		print('Update title')
-	state.observe(update_title, MyState.Field.file)
-	state.file = 'test2'
-	state.remove_observer(update_title, MyState.Field.file_path)
-	state.file = 'test'
-	state.remove_observer(update_title, MyState.Field.file)
-	state.file = 'test2'
+# 	def update_title():
+# 		print('Update title')
+# 	state.observe(update_title, MyState.Field.file)
+# 	state.file = 'test2'
+# 	state.remove_observer(update_title, MyState.Field.file_path)
+# 	state.file = 'test'
+# 	state.remove_observer(update_title, MyState.Field.file)
+# 	state.file = 'test2'
 
-	state.observe(update_title)
-	state.file = 'test'
-	state.file_path = 'test'
-	state.remove_observer(update_title)
-	state.file_path = 'test2'
+# 	state.observe(update_title)
+# 	state.file = 'test'
+# 	state.file_path = 'test'
+# 	state.remove_observer(update_title)
+# 	state.file_path = 'test2'
 
-if __name__ == '__main__':
-	main()
+# if __name__ == '__main__':
+# 	main()

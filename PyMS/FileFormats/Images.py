@@ -1,9 +1,9 @@
 
-from typing import List, Tuple
+Pixels = list[list[int]]
 
-Pixels = List[List[int]]
+RGB = tuple[int, int, int]
+RGBA = tuple[int, int, int, int]
 
-RGB = Tuple[int, int, int]
-RGBA = Tuple[int, int, int, int]
+RawPalette = list[RGB]
 
-RawPalette = List[RGB]
+Bounds = tuple[int, int, int, int]

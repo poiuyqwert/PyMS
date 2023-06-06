@@ -40,4 +40,5 @@ class ErrorDialog(PyMSDialog):
 		program_name = 'PyMS'
 		if tracer := get_tracer():
 			program_name = tracer.program_name
+		assert self.error.exception is not None
 		InternalErrorDialog(self, program_name, txt=''.join(traceback.format_exception(*self.error.exception)))

@@ -11,8 +11,8 @@ class UpdateDialog(PyMSDialog):
 	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
-	def check_update(window, program): # type: (AnyWindow, str) -> None
-		def do_check_update(window, program): # type: (AnyWindow, str) -> None
+	def check_update(window, program): # type: (WindowExtensions, str) -> None
+		def do_check_update(window, program): # type: (WindowExtensions, str) -> None
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
 			remindme = PYMS_SETTINGS.get('remindme', True)
 			if remindme == True or remindme != Assets.version('PyMS'):

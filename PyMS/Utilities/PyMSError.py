@@ -1,7 +1,9 @@
 
-from .PyMSWarning import PyMSWarning
-
 import sys
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from .PyMSWarning import PyMSWarning
 
 class PyMSError(Exception):
 	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False): # type: (str, str, int | None, str | None, list[PyMSWarning], bool) -> None

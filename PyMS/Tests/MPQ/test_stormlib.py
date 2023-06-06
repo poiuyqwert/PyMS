@@ -156,9 +156,7 @@ class Test_StormLib_Open(unittest.TestCase):
 			mpq.read_file('unknown.txt', MPQ.MPQLocale.german)
 
 class Test_StormLib_Create(unittest.TestCase):
-	def __init__(self, methodName='runTest'):
-		unittest.TestCase.__init__(self, methodName)
-		self.path = None # type: str
+	path: str
 
 	def setUp(self):
 		self.path = tempfile.mktemp()

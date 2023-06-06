@@ -6,7 +6,7 @@ from .DataID import DATID, DataID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
-from ..FileFormats.GRP import frame_to_photo, CacheGRP, rle_normal, rle_outline, rle_shadow, OUTLINE_SELF
+from ..FileFormats.GRP import frame_to_photo, CacheGRP, rle_normal, rle_outline, rle_shadow, Outline
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.IScriptBIN import IScriptBIN
 
@@ -248,7 +248,7 @@ class DataContext(object):
 			if draw_function == Image.DrawFunction.selection_circle:
 				rle_function = rle_outline
 				if draw_info is None:
-					draw_info = OUTLINE_SELF
+					draw_info = Outline.self
 			elif draw_function == Image.DrawFunction.shadow:
 				rle_function = rle_shadow
 				if draw_info is None:

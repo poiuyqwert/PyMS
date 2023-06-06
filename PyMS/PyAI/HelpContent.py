@@ -161,7 +161,7 @@ It seems that AI difficulty is mostly an unused concept. The AI Difficulty now i
 		('wait_upgrades','The definition of this command is unknown. It is never used in Blizzard scripts.'),
 	]),
 ]
-CMD_HELP = OrderedDict()
+CMD_HELP = OrderedDict() # type: OrderedDict[str, OrderedDict[str, str]]
 for s,cmdl in _cmds:
 	CMD_HELP[s] = OrderedDict()
 	for c,h in cmdl:

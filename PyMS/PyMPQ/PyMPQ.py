@@ -386,9 +386,9 @@ class PyMPQ(MainWindow):
 			for file_entry in self.display_files:
 				info = (
 					file_entry.file_name.decode('utf-8'),
-					format_byte_size(file_entry.full_size),
+					format_byte_size(file_entry.full_size or 0),
 					'%d%%' % int(file_entry.get_compression_ratio()*100),
-					format_byte_size(file_entry.compressed_size),
+					format_byte_size(file_entry.compressed_size or 0),
 					str(file_entry.locale),
 					self.attributes_for_file_entry(file_entry),
 					''

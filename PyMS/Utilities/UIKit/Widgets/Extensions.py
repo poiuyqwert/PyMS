@@ -25,7 +25,7 @@ class Extensions(_Tk.Misc):
 		self.clipboard_clear()
 		self.clipboard_append(text)
 
-class WindowExtensions(_Tk.Wm):
+class WindowExtensions(_Tk.Misc, _Tk.Wm):
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
 		if width and height and not hasattr(self, '_initial_max_size'):
 			self._initial_max_size = _Tk.Toplevel.maxsize(self)

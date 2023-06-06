@@ -1,5 +1,5 @@
 
-from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, build_geometry, parse_resizable, FileType, AnyWindow
+from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, build_geometry, parse_resizable, FileType, WindowExtensions
 from . import Assets
 from .WarnDialog import WarnDialog
 from .fileutils import check_allow_overwrite_internal_file
@@ -131,7 +131,7 @@ class WindowGeometry(SettingObject):
 		self._default_size = default_size
 		self._default_centered = default_centered
 
-	def save(self, window, closing=True): # type: (AnyWindow, bool) -> None
+	def save(self, window, closing=True): # type: (WindowExtensions, bool) -> None
 		resizable_w,resizable_h = parse_resizable(window.resizable())
 		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
 		if resizable_w or resizable_h:
@@ -148,7 +148,7 @@ class WindowGeometry(SettingObject):
 		else:
 			self._geometry = build_geometry(pos=(x,y))
 
-	def load(self, window): # type: (AnyWindow) -> None
+	def load(self, window): # type: (WindowExtensions) -> None
 		if self._geometry:
 			w,h,x,y,fullscreen = parse_geometry(self._geometry)
 			# if position:
@@ -233,7 +233,7 @@ class SelectFile(SettingObject):
 		self._default_extension = FileType.default_extension(filetypes)
 		self._initial_filename = initial_filename
 
-	def _select_file(self, window, save): # type: (AnyWindow, bool) -> (str | None)
+	def _select_file(self, window, save): # type: (WindowExtensions, bool) -> (str | None)
 		setattr(window, '_pyms__window_blocking', True)
 		path: str | None
 		if save:
@@ -265,10 +265,10 @@ class SelectFile(SettingObject):
 				self._open_directory = directory
 		return path
 
-	def select_open(self, window): # type: (AnyWindow) -> (str | None)
+	def select_open(self, window): # type: (WindowExtensions) -> (str | None)
 		return self._select_file(window, False)
 
-	def select_save(self, window): # type: (AnyWindow) -> (str | None)
+	def select_save(self, window): # type: (WindowExtensions) -> (str | None)
 		return self._select_file(window, True)
 
 	def encode(self): # type: () -> JSONValue
@@ -294,7 +294,7 @@ class SelectFiles(SettingObject):
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
 
-	def select_open(self, window): # type: (AnyWindow) -> list[str]
+	def select_open(self, window): # type: (WindowExtensions) -> list[str]
 		setattr(window, '_pyms__window_blocking', True)
 		paths: list[str] | str = FileDialog.askopenfilename(
 			parent=window,
@@ -327,7 +327,7 @@ class SelectDirectory(SettingObject):
 		self._directory = Assets.base_dir
 		self._title = title
 
-	def select_open(self, window): # type: (AnyWindow) -> (str | None)
+	def select_open(self, window): # type: (WindowExtensions) -> (str | None)
 		setattr(window, '_pyms__window_blocking', True)
 		path = FileDialog.askdirectory(parent=window, title=self._title, initialdir=self._directory)
 		setattr(window, '_pyms__window_blocking', False)
@@ -350,7 +350,7 @@ class Warning(SettingObject):
 		self._title = title
 		self._remember_version = remember_version
 
-	def present(self, window): # type: (AnyWindow) -> None
+	def present(self, window): # type: (WindowExtensions) -> None
 		if self._remember_version <= self._seen_version:
 			return
 		dialog = WarnDialog(window, self._message, self._title, show_dont_warn=True)
