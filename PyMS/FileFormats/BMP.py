@@ -52,7 +52,7 @@ class BMP:
 				while True:
 					if data[x] == 0:
 						if data[x+1] < 3:
-							if data[x+1] == b'\x02':
+							if data[x+1] == 0x02:
 								xoffset, yoffset = data[x+2], data[x+3]
 								if not image[-1]:
 									image.pop()
@@ -63,7 +63,7 @@ class BMP:
 							else:
 								if image[-1] and len(image[-1]) < width:
 									image[-1].extend([0] * (width - len(image[-1])))
-								if data[x+1] == b'\x01':
+								if data[x+1] == 0x01:
 									if len(image) < height:
 										image.extend([[0] * width] * (height - len(image)))
 									break

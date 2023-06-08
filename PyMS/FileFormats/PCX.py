@@ -30,7 +30,7 @@ class PCX:
 			planes,_bytesperline,_palinfo,_hscreensize,_vscreensize = struct.unpack('<B4H', data[65:74])
 			xmax = (xmax-xmin)+1
 			ymax = (ymax-ymin)+1
-			if data[-769] != b'\x0C':
+			if data[-769] != 0x0C:
 				raise PyMSError('Load', "Unsupported PCX file, the palette information is missing")
 			if pal and (xmax > 256 or ymax > 256 or planes != 1):
 				raise PyMSError('Load', "Unsupported special palette (PCX) file")

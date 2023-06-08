@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from .DataContext import DataContext
@@ -6,9 +8,9 @@ if TYPE_CHECKING:
     from .Tabs.DATTab import DATTab
 
 class MainDelegate(Protocol):
-    data_context: 'DataContext'
+    data_context: DataContext
 
-    def change_tab(self, dat_id: 'DATID') -> None:
+    def change_tab(self, dat_id: DATID) -> DATTab:
         ...
 
     def change_id(self, entry_id: int) -> None:
@@ -17,7 +19,7 @@ class MainDelegate(Protocol):
     def update_status_bar(self) -> None:
         ...
 
-    def active_tab(self) -> 'DATTab':
+    def active_tab(self) -> DATTab:
         ...
 
     def refresh(self) -> None:

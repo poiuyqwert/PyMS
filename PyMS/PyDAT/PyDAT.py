@@ -6,7 +6,7 @@ from .DATData import NamesDisplaySetting
 from .SaveMPQDialog import SaveMPQDialog
 from .DATSettingsDialog import DATSettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
-from .DataID import DataID, AnyID
+from .DataID import DataID, DATID, AnyID
 from .Delegates import MainDelegate
 
 from ..FileFormats.MPQ.MPQ import MPQ
@@ -312,6 +312,9 @@ class PyDAT(MainWindow, MainDelegate):
 				self.listbox.see(entry_id)
 			if focus_list:
 				self.listbox.focus_set()
+
+	def change_tab(self, dat_id: DATID) -> DATTab:
+		return cast(DATTab, self.dattabs.display(dat_id.tab_id))
 
 	def change_id(self, entry_id): # type: (int) -> None
 		self.changeid(entry_id)

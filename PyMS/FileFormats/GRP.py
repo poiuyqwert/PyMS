@@ -133,7 +133,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 				line = list(reversed(line))
 			for x,xd in enumerate(line):
 				if xd != transindex:
-					if bounds[0] == -1 or x < bounds[9]:
+					if bounds[0] == -1 or x < bounds[0]:
 						bounds[0] = x
 					if x >= bounds[1]:
 						bounds[1] = x + 1
@@ -218,8 +218,8 @@ class RLE:
 				line.extend([data[offset]] * (byte - RLE.REPEAT_FLAG))
 				offset += 1
 			else:
-				line.extend(data[offset:offset+byte+1])
-				offset += byte + 1
+				line.extend(data[offset:offset+byte])
+				offset += byte
 		if len(line) > width:
 			line = line[:width]
 		return line

@@ -111,7 +111,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		selected = selections[0]
 		if selected < len(self.used_by_data):
 			match = self.used_by_data[selected]
-			tab = cast(DATTab, self.delegate.change_tab(match.dat_id))
+			tab = cast(DATTab, self.delegate.change_tab(match.dat_id)) # 
 			self.delegate.change_id(match.entry_id)
 			if match.dat_sub_tab_id:
 				tab.change_sub_tab(match.dat_sub_tab_id)

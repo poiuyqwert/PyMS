@@ -6,7 +6,7 @@ from ..utils import data_to_hex
 import unittest
 
 class Test_RLE_Compress_Line(unittest.TestCase):
-	def test_encoding_permutation_0_1_2(self):
+	def test_permutation_0_1_2(self):
 		line = (0, 0, 0, 0, 1, 1, 1, 1, 2, 3, 4, 5)
 		expected = '84 44 01 04 02 03 04 05'
 
@@ -14,7 +14,7 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_encoding_permutation_1_0_2(self):
+	def test_permutation_1_0_2(self):
 		line = (1, 1, 1, 1, 0, 0, 0, 0, 2, 3, 4, 5)
 		expected = '44 01 84 04 02 03 04 05'
 
@@ -22,7 +22,7 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_encoding_permutation_2_0_1(self):
+	def test_permutation_2_0_1(self):
 		line = (2, 3, 4, 5, 0, 0, 0, 0, 1, 1, 1, 1)
 		expected = '04 02 03 04 05 84 44 01'
 
@@ -30,7 +30,7 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_encoding_permutation_0_2_1(self):
+	def test_permutation_0_2_1(self):
 		line = (0, 0, 0, 0, 2, 3, 4, 5, 1, 1, 1, 1)
 		expected = '84 04 02 03 04 05 44 01'
 
@@ -38,7 +38,7 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_encoding_permutation_1_2_0(self):
+	def test_permutation_1_2_0(self):
 		line = (1, 1, 1, 1, 2, 3, 4, 5, 0, 0, 0, 0)
 		expected = '44 01 04 02 03 04 05 84'
 
@@ -46,7 +46,7 @@ class Test_RLE_Compress_Line(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_encoding_permutation_2_1_0(self):
+	def test_permutation_2_1_0(self):
 		line = (2, 3, 4, 5, 1, 1, 1, 1, 0, 0, 0, 0)
 		expected = '04 02 03 04 05 44 01 84'
 

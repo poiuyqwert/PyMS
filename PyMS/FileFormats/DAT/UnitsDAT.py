@@ -138,8 +138,8 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 
 	def __init__(self):
 		self.graphics = 0
-		self.subunit1 = 0
-		self.subunit2 = 0
+		self.subunit1 = 228
+		self.subunit2 = 228
 		self.infestation = 0
 		self.construction_animation = 0
 		self.unit_direction = 0
