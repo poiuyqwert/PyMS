@@ -1,20 +1,24 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
 
-from ..FileFormats.DAT.SoundsDAT import DATSound
-from ..FileFormats.MPQ.MPQ import MPQ
+from ...FileFormats.DAT import DATSound, DATUnit
+from ...FileFormats.MPQ.MPQ import MPQ
 
-from ..Utilities.utils import play_sound
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...Utilities.utils import play_sound
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast, BinaryIO
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class SoundsTab(DATTab):
 	DAT_ID = DATID.sfxdata
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.soundentry = IntegerVar(0, [0,0])
@@ -95,38 +99,38 @@ class SoundsTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Ready', unit.ready_sound, dat_sub_tab=UnitsTabID.sounds),
-				DATRef('What', unit.what_sound_start, unit.what_sound_end, dat_sub_tab=UnitsTabID.sounds),
-				DATRef('Annoyed', unit.pissed_sound_start, unit.pissed_sound_end, dat_sub_tab=UnitsTabID.sounds),
-				DATRef('Yes', unit.yes_sound_start, unit.yes_sound_end, dat_sub_tab=UnitsTabID.sounds)
+				DATRef('Ready', cast(DATUnit, unit).ready_sound, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('What', cast(DATUnit, unit).what_sound_start, cast(DATUnit, unit).what_sound_end, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('Annoyed', cast(DATUnit, unit).pissed_sound_start, cast(DATUnit, unit).pissed_sound_end, dat_sub_tab=UnitsTabID.sounds),
+				DATRef('Yes', cast(DATUnit, unit).yes_sound_start, cast(DATUnit, unit).yes_sound_end, dat_sub_tab=UnitsTabID.sounds)
 			)),
 		))
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.sfxdatatbl in ids:
-			self.sounds.setentries(('None',) + self.toplevel.data_context.sfxdatatbl.strings)
-			self.soundentry.range[1] = len(self.toplevel.data_context.sfxdatatbl.strings)
+			self.sounds.setentries(('None',) + self.delegate.data_context.sfxdatatbl.strings)
+			self.soundentry.range[1] = len(self.delegate.data_context.sfxdatatbl.strings)
 
-		if DATID.units in ids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def changesound(self, n=None):
+	def changesound(self, n=None): # type: (int | None) -> None
 		if n is None:
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
 		self.playbtn['state'] = NORMAL if (play_sound and MPQ.supported() and n > 0) else DISABLED
 
-	def play(self):
+	def play(self): # type: () -> None
 		if play_sound:
-			tbl_string = self.toplevel.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
+			tbl_string = self.delegate.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
 			if tbl_string.endswith('<0>'):
 				tbl_string = tbl_string[:-3]
-			f = self.toplevel.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
+			f = self.delegate.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
 			if f:
-				play_sound(f.read())
+				play_sound(cast(BinaryIO, f).read())
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATSound) -> None
 		self.soundentry.set(entry.sound_file)
 		self.priority.set(entry.priority)
 
@@ -145,12 +149,12 @@ class SoundsTab(DATTab):
 
 		self.changesound()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATSound) -> None
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.data_context.dat_data(DATID.sfxdata).update_names()
+			if self.delegate.data_context.settings.settings.get('customlabels'):
+				self.delegate.data_context.dat_data(DATID.sfxdata).update_names()
 		if self.priority.get() != entry.priority:
 			entry.priority = self.priority.get()
 			self.edited = True

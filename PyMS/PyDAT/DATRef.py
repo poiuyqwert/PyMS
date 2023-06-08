@@ -1,10 +1,11 @@
 
 from .DataID import DATID
-from .DataContext import DataContext
 
-from ..FileFormats.DAT import AbstractDATEntry
+from ..FileFormats.DAT.AbstractDAT import AbstractDATEntry
 
-from typing import Callable, Any
+from typing import TYPE_CHECKING, Callable, Any
+if TYPE_CHECKING:
+	from .DataContext import DataContext
 
 class DATRefs(object):
 	def __init__(self, dat_id, refs_lookup): # type: (DATID, Callable[[AbstractDATEntry], tuple[DATRef, ...]]) -> None

@@ -1,16 +1,22 @@
 
 from .DATTab import DATTab
-from .DataID import DATID
-from .DATRef import DATRefs, DATRef
+from ..DataID import DATID, AnyID
+from ..DATRef import DATRefs, DATRef
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...FileFormats.DAT import DATSprite, DATFlingy
+
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class SpritesTab(DATTab):
 	DAT_ID = DATID.sprites
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.imageentry = IntegerVar(0, [0,998])
@@ -71,14 +77,14 @@ class SpritesTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		self.previewing = None
+		self.previewing = None # type: int | None
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.data_context.settings.preview.sprite.get('show', False))
+		self.showpreview.set(self.delegate.data_context.settings.preview.sprite.get('show', False))
 
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
 		s.pack()
@@ -88,45 +94,47 @@ class SpritesTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.flingy, lambda flingy: (
-				DATRef('Sprite', flingy.sprite),
+				DATRef('Sprite', cast(DATFlingy, flingy).sprite),
 			)),
 		))
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
-	def updated_pointer_entries(self, ids):
-		if DATID.flingy in ids and self.toplevel.dattabs.active == self:
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+		if DATID.flingy in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.images in ids:
-			self.image_ddw.setentries(self.toplevel.data_context.images.names)
+			self.image_ddw.setentries(self.delegate.data_context.images.names)
 
 		if DATID.images in ids:
-			self.imageentry.range[1] = self.toplevel.data_context.images.entry_count() - 1
+			self.imageentry.range[1] = self.delegate.data_context.images.entry_count() - 1
 
-	def selcircle(self, n, t=0):
+	def selcircle(self, n, t=0): # type: (int, int) -> None
 		if t:
 			self.selcircledd.set(n)
 		else:
 			self.selcircleentry.set(n)
 		self.drawpreview()
 
-	def updatehealth(self, num, type):
+	def updatehealth(self, num, type): # type: (int, bool) -> None
 		if type:
-			self.healthbar.check = False
+			# self.healthbar.check = False
 			self.healthbar.set((num + 1) * 3)
 		else:
-			self.boxes.check = False
+			# self.boxes.check = False
 			self.boxes.set(max(1,(num - 1) // 3))
 		self.drawpreview()
 
-	def drawpreview(self, e=None):
+	def drawpreview(self, e=None): # type: (Event | None) -> None
+		if not self.delegate.data_context.sprites.dat:
+			return
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
 				i = int(self.selentry.get())
 				if self.selentry['state'] == NORMAL:
 					image_id = 561 + i
-					frame = self.toplevel.data_context.get_image_frame(image_id)
+					frame = self.delegate.data_context.get_image_frame(image_id)
 					if frame:
 						y = 130+int(self.vertpos.get())
 						self.preview.create_image(130, y, image=frame[0])
@@ -138,15 +146,15 @@ class SpritesTab(DATTab):
 						for _ in range(int(self.boxes.get())):
 							self.preview.create_rectangle(hp[0], hp[1], hp[0]+1, hp[1]+2, outline='#008000', fill='#008000')
 							hp[0] += 3
-				image_id = self.toplevel.data_context.sprites.dat.get_entry(self.id).image
-				frame = self.toplevel.data_context.get_image_frame(image_id)
+				image_id = self.delegate.data_context.sprites.dat.get_entry(self.id).image
+				frame = self.delegate.data_context.get_image_frame(image_id)
 				if frame:
 					self.preview.create_image(130, 130, image=frame[0])
 				self.previewing = i
 			else:
 				self.previewing = None
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATSprite) -> None
 		self.imageentry.set(entry.image)
 		self.unused.set(entry.unused)
 		self.visible.set(entry.is_visible)
@@ -166,7 +174,7 @@ class SpritesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATSprite) -> None
 		if self.imageentry.get() != entry.image:
 			entry.image = self.imageentry.get()
 			self.edited = True
@@ -187,4 +195,4 @@ class SpritesTab(DATTab):
 			entry.selection_circle_offset = self.vertpos.get()
 			self.edited = True
 
-		self.toplevel.data_context.settings.preview.sprite.show = not not self.showpreview.get()
+		self.delegate.data_context.settings.preview.sprite.show = not not self.showpreview.get()

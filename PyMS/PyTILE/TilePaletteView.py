@@ -69,23 +69,25 @@ class TilePaletteView(Frame):
 
 	def get_tile_size(self, tiletype=None, group=False): # type: (TileType | None, bool) -> tuple[int, int]
 		tiletype = self.tiletype if tiletype is None else tiletype
-		if tiletype == TileType.group:
-			return (32 * (16 if group else 1), 33)
-		elif tiletype == TileType.mega:
-			return (32 + (0 if group else 1), 32 + (0 if group else 1))
-		else: # if tiletype == TileType.mini:
-			return (25, 25)
+		match tiletype:
+			case TileType.group:
+				return (32 * (16 if group else 1), 33)
+			case TileType.mega:
+				return (32 + (0 if group else 1), 32 + (0 if group else 1))
+			case TileType.mini:
+				return (25, 25)
 
 	def get_tile_count(self): # type: () -> int
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return 0
-		if self.tiletype == TileType.group:
-			return tileset.cv5.group_count() * 16
-		elif self.tiletype == TileType.mega:
-			return tileset.vx4.megatile_count()
-		else: # if self.tiletype == TileType.mini:
-			return tileset.vr4.image_count()
+		match self.tiletype:
+			case TileType.group:
+				return tileset.cv5.group_count() * 16
+			case TileType.mega:
+				return tileset.vx4.megatile_count()
+			case TileType.mini:
+				return tileset.vr4.image_count()
 
 	def get_total_size(self): # type: () -> tuple[int,int]
 		tile_size = self.get_tile_size()

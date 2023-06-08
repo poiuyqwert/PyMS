@@ -1,15 +1,20 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DATID
+from ...DataID import DATID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
+from ....Utilities.UIKit import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
 
 class SoundsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 		
 		self.ready_sound = IntegerVar(0, [0,0])
@@ -118,8 +123,10 @@ class SoundsUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.ready_sound,
 			DATUnit.Property.what_sound_start,
 			DATUnit.Property.what_sound_end,
@@ -128,13 +135,13 @@ class SoundsUnitsTab(DATUnitsTab):
 			DATUnit.Property.yes_sound_start,
 			DATUnit.Property.yes_sound_end,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if not DATID.sfxdata in ids:
 			return
 
-		names = self.toplevel.data_context.sounds.names
+		names = self.delegate.data_context.sounds.names
 		dropdowns = (
 			self.ready_sound_dropdown_widget,
 			self.yes_sound_start_dropdown_widget,
@@ -148,8 +155,8 @@ class SoundsUnitsTab(DATUnitsTab):
 			dropdown.setentries(names)
 
 		limit = 65535
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			limit = self.toplevel.data_context.sounds.entry_count() - 1
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+			limit = self.delegate.data_context.sounds.entry_count() - 1
 		variables = (
 			self.ready_sound,
 			self.yes_sound_start,
@@ -162,7 +169,7 @@ class SoundsUnitsTab(DATUnitsTab):
 		for variable in variables:
 			variable.range[1] = limit
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		fields = (
 			(entry.ready_sound, self.ready_sound, (self.ready_sound_entry_widget, self.ready_sound_dropdown_widget, self.ready_sound_button_widget)),
 
@@ -182,7 +189,7 @@ class SoundsUnitsTab(DATUnitsTab):
 			for widget in widgets:
 				widget['state'] = state
 
-	def save_data(self, entry):
+	def save_data(self, entry): # type: (DATUnit) -> bool
 		edited = False
 		if entry.ready_sound is not None and self.ready_sound.get() != entry.ready_sound:
 			entry.ready_sound = self.ready_sound.get()

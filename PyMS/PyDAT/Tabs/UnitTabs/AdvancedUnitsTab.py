@@ -1,15 +1,20 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DATID
+from ...DataID import DATID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
+from ....Utilities.UIKit import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
 
 class AdvancedUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
 		self.flyer = IntVar()
@@ -164,26 +169,6 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.makeCheckbox(unknowns, self.unknown20, '0x20', 'UnitMov20').grid(column=1,row=1)
 		self.makeCheckbox(unknowns, self.unknown40, '0x40', 'UnitMov40').grid(column=2,row=1)
 		self.makeCheckbox(unknowns, self.unknown80, '0x80', 'UnitMov80').grid(column=3,row=1)
-		# u = [
-		# 	[
-		# 		('01', self.unknown1),
-		# 		('02', self.unknown2),
-		# 		('04', self.unknown4),
-		# 		('08', self.unknown8),
-		# 	],[
-		# 		('10', self.unknown10),
-		# 		('20', self.unknown20),
-		# 		('40', self.unknown40),
-		# 		('80', self.unknown80),
-		# 	],
-		# ]
-		# for c in u:
-		# 	cc = Frame(unknowns)
-		# 	for t,v in c:
-		# 		f = Frame(cc)
-		# 		self.makeCheckbox(f,v,'0x'+t,'UnitMov'+t).pack(side=LEFT)
-		# 		f.pack(fill=X)
-		# 	cc.pack(side=LEFT)
 		unknowns.pack(side=RIGHT)
 		f.pack(fill=X)
 
@@ -191,8 +176,10 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.subunit1,
 			DATUnit.Property.subunit2,
 			DATUnit.Property.unknown_flags,
@@ -200,15 +187,15 @@ class AdvancedUnitsTab(DATUnitsTab):
 			DATUnit.Property.infestation,
 			DATUnit.Property.requirements,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if not DATID.units in ids:
 			return
 
-		names = list(self.toplevel.data_context.units.names)
-		if self.toplevel.data_context.units.is_expanded():
-			names[self.toplevel.data_context.units.dat_type.FORMAT.entries] = 'None'
+		names = list(self.delegate.data_context.units.names)
+		if self.delegate.data_context.units.is_expanded():
+			names[self.delegate.data_context.units.dat_type.FORMAT.entries] = 'None'
 		else:
 			names.append('None')
 		self.infestddw.setentries(names)
@@ -216,15 +203,15 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunittwo_ddw.setentries(names)
 
 		limit = 65535
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			limit = self.toplevel.data_context.units.entry_count()
-			if self.toplevel.data_context.units.is_expanded():
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+			limit = self.delegate.data_context.units.entry_count()
+			if self.delegate.data_context.units.is_expanded():
 				limit -= 1
 		self.infestentry.range[1] = limit
 		self.subunitoneentry.range[1] = limit
 		self.subunittwoentry.range[1] = limit
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		self.subunitone.set(entry.subunit1)
 		self.subunittwo.set(entry.subunit2)
 
@@ -287,7 +274,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		self.reqIndex.set(entry.requirements)
 
-	def save_data(self, entry):
+	def save_data(self, entry): # type: (DATUnit) -> bool
 		edited = False
 		if self.subunitone.get() != entry.subunit1:
 			entry.subunit1 = self.subunitone.get()

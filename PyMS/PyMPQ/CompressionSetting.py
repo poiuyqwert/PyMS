@@ -12,26 +12,28 @@ class CompressionOption(Enum):
 	Auto = 'auto'
 
 	def display_name(self): # type: () -> str
-		if self == CompressionOption.NoCompression:
-			return 'None'
-		elif self == CompressionOption.Standard:
-			return 'Standard'
-		elif self == CompressionOption.Deflate:
-			return 'Deflate'
-		elif self == CompressionOption.Audio:
-			return 'Audio'
-		else: # if self == CompressionOption.Auto:
-			return 'Auto'
+		match self:
+			case CompressionOption.NoCompression:
+				return 'None'
+			case CompressionOption.Standard:
+				return 'Standard'
+			case CompressionOption.Deflate:
+				return 'Deflate'
+			case CompressionOption.Audio:
+				return 'Audio'
+			case CompressionOption.Auto:
+				return 'Auto'
 
 	def compression_type(self): # type: () -> int
-		if self == CompressionOption.Standard:
-			return MPQCompressionFlag.pkware
-		elif self == CompressionOption.Deflate:
-			return MPQCompressionFlag.zlib
-		elif self == CompressionOption.Audio:
-			return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
-		else:
-			return MPQCompressionFlag.none
+		match self:
+			case CompressionOption.Standard:
+				return MPQCompressionFlag.pkware
+			case CompressionOption.Deflate:
+				return MPQCompressionFlag.zlib
+			case CompressionOption.Audio:
+				return MPQCompressionFlag.huffman | MPQCompressionFlag.wav_mono
+			case _:
+				return MPQCompressionFlag.none
 
 	def level_count(self): # type: () -> int
 		return len(self.compression_levels())

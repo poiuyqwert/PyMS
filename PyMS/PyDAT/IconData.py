@@ -1,27 +1,32 @@
 
 from .DataID import DataID
 
-from ..FileFormats.GRP import CacheGRP, frame_to_photo
+from ..FileFormats.GRP import CacheGRP, ImageWithBounds
 from ..FileFormats.PCX import PCX
 
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
+from ..Utilities.UIKit import Image
+
+from typing import TYPE_CHECKING, cast, BinaryIO
+if TYPE_CHECKING:
+	from .DataContext import DataContext
 
 class IconData(object):
-	def __init__(self, data_context):
+	def __init__(self, data_context): # type: (DataContext) -> None
 		self.data_context = data_context
-		self.grp = None
-		self.ticon_pcx = None
-		self.names = ()
-		self.images = {}
+		self.grp = None # type: CacheGRP | None
+		self.ticon_pcx = None # type: PCX | None
+		self.names = () # type: tuple[str, ...]
+		self.images = {} # type: dict[bool, dict[int, ImageWithBounds]]
 
 		self.update_cb = Callback()
 
-	def load_grp(self):
+	def load_grp(self): # type: () -> None
 		try:
 			grp = CacheGRP()
 			path = self.data_context.settings.settings.files.get('cmdicons', Assets.mpq_file_ref('unit', 'cmdbtns', 'cmdicons.grp'))
-			grp.load_file(self.data_context.mpqhandler.get_file(path))
+			grp.load_file(cast(BinaryIO, self.data_context.mpqhandler.get_file(path)))
 		except:
 			pass
 		else:
@@ -29,21 +34,22 @@ class IconData(object):
 			self.images = {}
 			self.update_names()
 
-	def load_ticon_pcx(self):
+	def load_ticon_pcx(self): # type: () -> None
 		try:
 			pcx = PCX()
 			path = self.data_context.settings.settings.files.get('ticon', Assets.mpq_file_ref('unit', 'cmdbtns', 'ticon.pcx'))
-			pcx.load_file(self.data_context.mpqhandler.get_file(path))
+			pcx.load_file(cast(BinaryIO, self.data_context.mpqhandler.get_file(path)))
 		except:
 			pass
 		else:
 			self.ticon_pcx = pcx
 			self.images = {}
 
-	def save_data(self):
+	def save_data(self): # type: () -> bytes
+		assert self.grp is not None
 		return self.grp.save_data()
 
-	def update_names(self):
+	def update_names(self): # type: () -> None
 		names = Assets.data_cache(Assets.DataReference.Icons)
 		if self.grp:
 			if self.grp.frames > len(names):
@@ -53,12 +59,12 @@ class IconData(object):
 		self.names = tuple(names)
 		self.update_cb(DataID.cmdicons)
 
-	def frame_count(self):
+	def frame_count(self): # type: () -> int
 		if self.grp:
 			return self.grp.frames
 		return len(self.names)
 
-	def frame_size(self):
+	def frame_size(self): # type: () -> tuple[int, int]
 		if self.grp:
 			return (self.grp.width, self.grp.height)
 		return (36, 34)

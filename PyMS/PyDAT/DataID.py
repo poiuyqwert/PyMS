@@ -14,38 +14,39 @@ class DATID(Enum):
 	mapdata = 'Mapdata'
 	orders = 'Orders'
 
-	ALL: list['DATID']
+	@property
+	def ALL(self): # type: () -> tuple['DATID', ...]
+		return (DATID.units, DATID.weapons, DATID.flingy, DATID.sprites, DATID.images, DATID.upgrades, DATID.techdata, DATID.sfxdata, DATID.portdata, DATID.mapdata, DATID.orders)
 
 	@property
 	def filename(self): # type: () -> str
-		if self == DATID.units:
-			return 'units.dat'
-		elif self == DATID.weapons:
-			return 'weapons.dat'
-		elif self == DATID.flingy:
-			return 'flingy.dat'
-		elif self == DATID.sprites:
-			return 'sprites.dat'
-		elif self == DATID.images:
-			return 'images.dat'
-		elif self == DATID.upgrades:
-			return 'upgrades.dat'
-		elif self == DATID.techdata:
-			return 'techdata.dat'
-		elif self == DATID.sfxdata:
-			return 'sfxdata.dat'
-		elif self == DATID.portdata:
-			return 'portdata.dat'
-		elif self == DATID.mapdata:
-			return 'mapdata.dat'
-		else: #if self == DATID.orders:
-			return 'orders.dat'
+		match self:
+			case DATID.units:
+				return 'units.dat'
+			case DATID.weapons:
+				return 'weapons.dat'
+			case DATID.flingy:
+				return 'flingy.dat'
+			case DATID.sprites:
+				return 'sprites.dat'
+			case DATID.images:
+				return 'images.dat'
+			case DATID.upgrades:
+				return 'upgrades.dat'
+			case DATID.techdata:
+				return 'techdata.dat'
+			case DATID.sfxdata:
+				return 'sfxdata.dat'
+			case DATID.portdata:
+				return 'portdata.dat'
+			case DATID.mapdata:
+				return 'mapdata.dat'
+			case DATID.orders:
+				return 'orders.dat'
 
 	@property
 	def tab_id(self): # type: () -> str
 		return self.value
-
-DATID.ALL = [DATID.units, DATID.weapons, DATID.flingy, DATID.sprites, DATID.images, DATID.upgrades, DATID.techdata, DATID.sfxdata, DATID.portdata, DATID.mapdata, DATID.orders]
 
 
 class UnitsTabID(Enum):
@@ -72,6 +73,8 @@ class DataID(Enum):
 	cmdicons = 'cmdicons'
 	iscriptbin = 'iscriptbin'
 
-	ALL: list['DataID']
+	@property
+	def ALL(self): # type: () -> tuple['DataID', ...]
+		return (DataID.stat_txt, DataID.unitnamestbl, DataID.imagestbl, DataID.sfxdatatbl, DataID.portdatatbl, DataID.mapdatatbl, DataID.cmdicons, DataID.iscriptbin)
 
-DataID.ALL = [DataID.stat_txt, DataID.unitnamestbl, DataID.imagestbl, DataID.sfxdatatbl, DataID.portdatatbl, DataID.mapdatatbl, DataID.cmdicons, DataID.iscriptbin]
+AnyID = DATID | DataID

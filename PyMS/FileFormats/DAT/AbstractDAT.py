@@ -9,7 +9,7 @@ from copy import deepcopy
 from enum import Enum
 import json, re
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, BinaryIO
 if TYPE_CHECKING:
     from typing import Any, Callable
     from .DATFormat import DATFormat
@@ -40,7 +40,7 @@ class AbstractDAT(object):
 			for id,entry in enumerate(self.entries):
 				entry.limit(id)
 
-	def load_file(self, file): # type: (str) -> None
+	def load_file(self, file): # type: (str | BinaryIO) -> None
 		data = load_file(file, self.FILE_NAME)
 		try:
 			self.load_data(data)
@@ -100,7 +100,7 @@ class AbstractDAT(object):
 	def set_entry(self, index, entry): # type: (int, AbstractDATEntry) -> None
 		self.entries[index] = entry
 
-	def is_expanded(self): # type: () -> int
+	def is_expanded(self): # type: () -> bool
 		return self.entry_count() > self.FORMAT.entries
 
 	def expanded_count(self, count): # type: (int) -> int

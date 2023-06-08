@@ -1,21 +1,36 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DATID
+from ...DataID import DATID, UnitsTabID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ....Utilities.UIKit import *
+from ....Utilities import Assets
 
 from math import floor, sqrt
+from enum import Enum
 
-FORCETYPE_GROUND = 0
-FORCETYPE_AIR = 1
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
+
+class ForceType(Enum):
+	ground = 0
+	air = 1
+
+	@property
+	def display_name(self):
+		match self:
+			case ForceType.ground:
+				return 'Ground'
+			case ForceType.air:
+				return 'Air'
 
 class AIActionsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
 		self.computeridleentry = IntegerVar(0,[0,189])
@@ -75,26 +90,26 @@ class AIActionsUnitsTab(DATUnitsTab):
 		def show_arrow_cursor(*_):
 			self.force_value_text.config(cursor='arrow')
 		def view_ground_weapon(*_):
-			_,weapon_id = self.force_weapon_id(FORCETYPE_GROUND)
+			_,weapon_id = self.force_weapon_id(ForceType.ground)
 			if weapon_id != 130:
-				self.toplevel.dattabs.display('Weapons')
-				self.toplevel.changeid(weapon_id)
+				self.delegate.change_tab(DATID.weapons)
+				self.delegate.change_id(weapon_id)
 		def view_air_weapon(*_):
-			_,weapon_id = self.force_weapon_id(FORCETYPE_AIR)
+			_,weapon_id = self.force_weapon_id(ForceType.air)
 			if weapon_id != 130:
-				self.toplevel.dattabs.display('Weapons')
-				self.toplevel.changeid(weapon_id)
+				self.delegate.change_tab(DATID.weapons)
+				self.delegate.change_id(weapon_id)
 		def view_basic_unit(*_):
-			self.parent_tab.dattabs.display('Basic')
+			self.sub_delegate.change_sub_tab(UnitsTabID.basic)
 		def view_weapon_override_unit(force_type):
 			unit_id,_ = self.force_weapon_id(force_type)
 			if unit_id is None:
 				return
-			self.parent_tab.dattabs.display('Basic')
-			self.toplevel.changeid(unit_id)
+			self.sub_delegate.change_sub_tab(UnitsTabID.basic)
+			self.delegate.change_id(unit_id)
 
 		bold = Font.fixed().bolded()
-		self.force_value_text.tag_configure('force_type', underline=1)
+		self.force_value_text.tag_configure('force_type', underline=True)
 		values = (
 			('force_value', '#000000', '#E8E8E8', None, 'Used to calculate the strength of a force of units'),
 			('ground_range', '#911EB4', '#EBD6F1', view_ground_weapon, 'Ground Weapon Range'),
@@ -116,13 +131,13 @@ class AIActionsUnitsTab(DATUnitsTab):
   - Reaver: 0.1
   - Everything Else: 1"""
   			),
-  			('ground_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_GROUND), \
+  			('ground_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(ForceType.ground), \
 """Weapons Override:
   - Carrier/Gantrithor: Uses Interceptor weapons
   - Reaver/Warbringer: Uses Scarab weapons
   - Has a subunit: Uses subunit weapons"""
 			),
-  			('air_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(FORCETYPE_AIR), \
+  			('air_weapon_override', '#000000', '#F3F3F3', lambda *args: view_weapon_override_unit(ForceType.air), \
 """Weapons Override:
   - Carrier/Gantrithor: Uses Interceptor weapons
   - Reaver/Warbringer: Uses Scarab weapons
@@ -133,14 +148,16 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.force_value_text.tag_configure(tag, foreground=fg, background=bg, font=bold)
 			TextTooltip(self.force_value_text, tag, text=tooltip)
 			if action:
-				self.force_value_text.tag_bind(tag, Cursor.Enter, show_hand_cursor, '+')
-				self.force_value_text.tag_bind(tag, Cursor.Leave, show_arrow_cursor, '+')
-				self.force_value_text.tag_bind(tag, Mouse.Click_Left, action)
+				self.force_value_text.tag_bind(tag, Cursor.Enter(), show_hand_cursor, '+')
+				self.force_value_text.tag_bind(tag, Cursor.Leave(), show_arrow_cursor, '+')
+				self.force_value_text.tag_bind(tag, Mouse.Click_Left(), action)
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.comp_ai_idle,
 			DATUnit.Property.human_ai_idle,
 			DATUnit.Property.return_to_idle,
@@ -149,14 +166,14 @@ class AIActionsUnitsTab(DATUnitsTab):
 			DATUnit.Property.right_click_action,
 			DATUnit.Property.ai_internal,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if not DATID.orders in ids:
 			return
 
 		# TODO: None for expanded dat?
-		names = self.toplevel.data_context.orders.names + ('None',)
+		names = self.delegate.data_context.orders.names + ('None',)
 		self.computeridle_ddw.setentries(names)
 		self.humanidle_ddw.setentries(names)
 		self.returntoidle_ddw.setentries(names)
@@ -164,35 +181,38 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackmove_ddw.setentries(names)
 
 		count = 255
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-			count = self.toplevel.data_context.orders.entry_count()
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+			count = self.delegate.data_context.orders.entry_count()
 		self.computeridleentry.range[1] = count
 		self.humanidleentry.range[1] = count
 		self.returntoidleentry.range[1] = count
 		self.attackunitentry.range[1] = count
 		self.attackmoveentry.range[1] = count
 
-	def force_weapon_id(self, force_type):
-		unit_id = self.parent_tab.id
+	def force_weapon_id(self, force_type): # type: (ForceType) -> tuple[int | None, int]
+		assert self.delegate.data_context.units.dat is not None
+		unit_id = self.sub_delegate.id
 		if unit_id == 72 or unit_id == 82: # Carrier/Gantrithor
 			unit_id = 73 # Intercepter
 		elif unit_id == 81 or unit_id == 83: # Reaver/Warbringer
 			unit_id = 85 # Scarab
 		else:
-			entry = self.toplevel.data_context.units.dat.get_entry(unit_id)
+			entry = self.delegate.data_context.units.dat.get_entry(unit_id)
 			if entry.subunit1 != 228:
 				unit_id = entry.subunit1
-		entry = self.toplevel.data_context.units.dat.get_entry(unit_id)
-		if force_type == FORCETYPE_AIR:
+		entry = self.delegate.data_context.units.dat.get_entry(unit_id)
+		if force_type == ForceType.air:
 			weapon_id = entry.air_weapon
 		else:
 			weapon_id = entry.ground_weapon
-		return (unit_id if unit_id != self.parent_tab.id else None, weapon_id)
+		return (unit_id if unit_id != self.sub_delegate.id else None, weapon_id)
 
-	def build_force_value(self, force_type):
-		force_type_name = ('Ground','Air')[force_type]
+	def build_force_value(self, force_type): # type: (ForceType) -> None
+		assert self.delegate.data_context.units.dat is not None
+		assert self.delegate.data_context.weapons.dat is not None
+		force_type_name = force_type.display_name
 
-		unit_id = self.parent_tab.id
+		unit_id = self.sub_delegate.id
 		reductions = {
 			7: 0.25, # SCV
 			41: 0.25, # Drone
@@ -219,12 +239,12 @@ class AIActionsUnitsTab(DATUnitsTab):
 		factor = 0
 		damage = 0
 		if weapon_id != 130:
-			weapon = self.toplevel.data_context.weapons.dat.get_entry(weapon_id)
+			weapon = self.delegate.data_context.weapons.dat.get_entry(weapon_id)
 			attack_range = weapon.maximum_range
 			cooldown = weapon.weapon_cooldown
 			factor = weapon.damage_factor
 			damage = weapon.damage_amount
-		unit = self.toplevel.data_context.units.dat.get_entry(unit_id)
+		unit = self.delegate.data_context.units.dat.get_entry(unit_id)
 		hp = unit.hit_points.whole
 		shields = unit.shield_amount if unit.shield_enabled else 0
 		reduction = reductions.get(unit_id, 1.0)
@@ -258,20 +278,20 @@ class AIActionsUnitsTab(DATUnitsTab):
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
 		text.insert(END, ')')
-		if force_type == FORCETYPE_AIR and override_unit_id is not None:
+		if force_type == ForceType.air and override_unit_id is not None:
 			text.insert(END, '\n\nUsing weapons from Unit: ')
 			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
 
-	def build_force_values(self):
+	def build_force_values(self): # type: () -> None
 		text = self.force_value_text
 		text["state"] = NORMAL
 		text.delete('1.0', END)
-		self.build_force_value(FORCETYPE_GROUND)
+		self.build_force_value(ForceType.ground)
 		text.insert(END, '\n\n')
-		self.build_force_value(FORCETYPE_AIR)
+		self.build_force_value(ForceType.air)
 		text["state"] = DISABLED
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		self.computeridle.set(entry.comp_ai_idle)
 		self.humanidle.set(entry.human_ai_idle)
 		self.returntoidle.set(entry.return_to_idle)
@@ -282,7 +302,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.AI_NoGuard.set(entry.ai_internal & DATUnit.AIInternalFlag.no_guard == DATUnit.AIInternalFlag.no_guard)
 		self.build_force_values()
 
-	def save_data(self, entry):
+	def save_data(self, entry): # type: (DATUnit) -> bool
 		edited = False
 		if self.computeridle.get() != entry.comp_ai_idle:
 			entry.comp_ai_idle = self.computeridle.get()

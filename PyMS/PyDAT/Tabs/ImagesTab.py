@@ -1,16 +1,22 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...FileFormats.DAT import DATUnit, DATSprite, DATImage
+
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class ImagesTab(DATTab):
 	DAT_ID = DATID.images
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.grpentry = IntegerVar(0, [0, 0])
@@ -157,14 +163,14 @@ class ImagesTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		self.previewing = None
+		self.previewing = None # type: int | None
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.data_context.settings.preview.image.get('show', False))
+		self.showpreview.set(self.delegate.data_context.settings.preview.image.get('show', False))
 
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
 		s.pack()
@@ -174,27 +180,27 @@ class ImagesTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Construction', unit.construction_animation, dat_sub_tab=UnitsTabID.graphics),
+				DATRef('Construction', cast(DATUnit, unit).construction_animation, dat_sub_tab=UnitsTabID.graphics),
 			)),
 			DATRefs(DATID.sprites, lambda sprite: (
-				DATRef('Image', sprite.image),
+				DATRef('Image', cast(DATSprite, sprite).image),
 			)),
 		))
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.imagestbl in ids:
-			image_names = ('None',) + self.toplevel.data_context.imagestbl.strings
+			image_names = ('None',) + self.delegate.data_context.imagestbl.strings
 			for dropdown,entry_var in self.grpdds:
 				dropdown.setentries(image_names)
-				entry_var.range[1] = len(self.toplevel.data_context.imagestbl.strings)
+				entry_var.range[1] = len(self.delegate.data_context.imagestbl.strings)
 		if DataID.iscriptbin in ids:
 			iscript_names = []
 			last = -1
-			for id in list(self.toplevel.data_context.iscriptbin.headers.keys()):
+			for id in list(self.delegate.data_context.iscriptbin.headers.keys()):
 				if id-last > 1:
 					iscript_names.extend(['*Unused*'] * (id-last-1))
-				if id in self.toplevel.data_context.iscriptbin.extrainfo:
-					n = self.toplevel.data_context.iscriptbin.extrainfo[id]
+				if id in self.delegate.data_context.iscriptbin.extrainfo:
+					n = self.delegate.data_context.iscriptbin.extrainfo[id]
 				elif id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
 					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
 				else:
@@ -204,24 +210,24 @@ class ImagesTab(DATTab):
 			self.iscripts.setentries(iscript_names)
 			self.iscriptentry.range[1] = len(iscript_names)-1
 
-		if (DATID.units in ids or DATID.sprites in ids) and self.toplevel.dattabs.active == self:
+		if (DATID.units in ids or DATID.sprites in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def shieldupdate(self, n):
+	def shieldupdate(self, n): # type: (int) -> None
 		self.shieldentry.set([0,133,2,184][n])
 
-	def drawpreview(self, e=None):
+	def drawpreview(self, e=None): # type: (Event | None) -> None
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
-				frame = self.toplevel.data_context.get_image_frame(self.id)
+				frame = self.delegate.data_context.get_image_frame(self.id)
 				if frame:
 					self.preview.create_image(130, 130, image=frame[0])
 				self.previewing = self.id
 			else:
 				self.previewing = None
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATImage) -> None
 		self.grpentry.set(entry.grp_file)
 		self.graphicsturns.set(entry.gfx_turns)
 		self.clickable.set(entry.clickable)
@@ -243,7 +249,7 @@ class ImagesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATImage) -> None
 		if self.grpentry.get() != entry.grp_file:
 			entry.grp_file = self.grpentry.get()
 			self.edited = True
@@ -287,4 +293,4 @@ class ImagesTab(DATTab):
 			entry.lift_off_dust_overlay = self.liftoffentry.get()
 			self.edited = True
 
-		self.toplevel.data_context.settings.preview.image.show = not not self.showpreview.get()
+		self.delegate.data_context.settings.preview.image.show = not not self.showpreview.get()

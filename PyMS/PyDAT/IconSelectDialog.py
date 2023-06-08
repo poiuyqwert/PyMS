@@ -1,23 +1,25 @@
 
-from .DataContext import DataContext
-
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 from math import floor, ceil
 
+from typing import TYPE_CHECKING, Callable
+if TYPE_CHECKING:
+	from .DataContext import DataContext
+
 class IconSelectDialog(PyMSDialog):
 	# If `none_index` is not `None`, then an empty icon will be shown and its index when selected will be `none_index`
-	def __init__(self, parent, data_context, delegate, selected_index, none_index=None): # type: (Toplevel, DataContext, Callable[[int], None], int, int) -> IconSelectDialog
+	def __init__(self, parent, data_context, delegate, selected_index, none_index=None): # type: (Misc, DataContext, Callable[[int], None], int, int | None) -> None
 		self.data_context = data_context
 		self.delegate = delegate
 		self._initial_selection = selected_index
 		self.selected_index = selected_index
 		self.none_index = none_index
-		self._last_display_parameters = None
+		self._last_display_parameters = None # type: tuple[int, int, int] | None
 		PyMSDialog.__init__(self, parent, 'Choose Icon', set_min_size=(True,True))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		icon_size = self.data_context.cmdicons.frame_size()
 		self.scrolled_canvas = ScrolledCanvas(self, horizontal=ShowScrollbar.never, width=icon_size[0] * 10, height=icon_size[1] * 5, background='#000000')
 		self.scrolled_canvas.pack(side=TOP, fill=BOTH, expand=1)
@@ -36,7 +38,9 @@ class IconSelectDialog(PyMSDialog):
 		statusbar.add_label(self.status_hover, weight=0.5)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-	def setup_complete(self):
+		return None
+
+	def setup_complete(self): # type: () -> None
 		icon_size = self.data_context.cmdicons.frame_size()
 		max_width = self.winfo_width() + 5 * icon_size[0]
 		max_height = self.winfo_height() + 10 * icon_size[1]
@@ -54,22 +58,22 @@ class IconSelectDialog(PyMSDialog):
 		self.scrolled_canvas.canvas.update_idletasks()
 		self._scroll_to_selection()
 
-	def _icon_size(self):
+	def _icon_size(self): # type: () -> tuple[int, int]
 		return self.data_context.cmdicons.frame_size()
 
-	def _icon_count(self):
+	def _icon_count(self): # type: () -> int
 		icon_count = self.data_context.cmdicons.frame_count()
 		if self.none_index is not None:
 			icon_count += 1
 		return icon_count
 
-	def _display_index_to_frame_index(self, display_index):
+	def _display_index_to_frame_index(self, display_index): # type: (int) -> int
 		frame_index = display_index
 		if self.none_index is not None:
 			frame_index -= 1
 		return frame_index
 
-	def _selected_index_to_display_index(self, selected_index):
+	def _selected_index_to_display_index(self, selected_index): # type: (int) -> int
 		display_index = selected_index
 		if self.none_index is not None:
 			if display_index == self.none_index:
@@ -78,7 +82,7 @@ class IconSelectDialog(PyMSDialog):
 				display_index += 1
 		return display_index
 
-	def _display_index_to_selected_index(self, display_index):
+	def _display_index_to_selected_index(self, display_index): # type: (int) -> int
 		selected_index = display_index
 		if self.none_index is not None:
 			if selected_index == 0:
@@ -106,7 +110,7 @@ class IconSelectDialog(PyMSDialog):
 		visible_icon_count = min(icon_count - visible_start_index, visible_row_count * columns)
 		return (columns, total_height, start_y, visible_start_index, visible_start_index + visible_icon_count - 1)
 
-	def _scroll_to_selection(self):
+	def _scroll_to_selection(self): # type: () -> None
 		display_index = self._selected_index_to_display_index(self.selected_index)
 		icon_size = self._icon_size()
 		columns, total_height, _, _, _ = self._calculate_visibility()
@@ -116,14 +120,14 @@ class IconSelectDialog(PyMSDialog):
 		y = max(0,min(total_height,(display_index // columns + 0.5) * icon_size[1] - viewport_height/2.0))
 		self.scrolled_canvas.canvas.yview_moveto(y // total_height)
 
-	def _calculate_scrollregion(self):
+	def _calculate_scrollregion(self): # type: () -> tuple[int, int]
 		columns, height, _, _, _ = self._calculate_visibility()
 		if not columns:
 			return (0,0)
 		icon_size = self._icon_size()
 		return (columns * icon_size[0], height)
 
-	def _update_selection_box(self):
+	def _update_selection_box(self): # type: () -> None
 		display_index = self._selected_index_to_display_index(self.selected_index)
 		columns, _, start_y, visible_start_index, _ = self._calculate_visibility()
 		icon_size = self._icon_size()
@@ -132,10 +136,10 @@ class IconSelectDialog(PyMSDialog):
 		self.selection_box_item.coords(x, y, x + icon_size[0], y + icon_size[1])
 		self.selection_box_item.tag_lower()
 
-	def _display_index_to_tag(self, display_index):
+	def _display_index_to_tag(self, display_index): # type: (int) -> str
 		return 'icon%d' % display_index
 
-	def _draw_icons(self, force=False):
+	def _draw_icons(self, force=False): # type: (bool) -> None
 		columns, _, start_y, visible_start_index, visible_end_index = self._calculate_visibility()
 		display_parameters = (columns, visible_start_index, visible_end_index)
 		if force or display_parameters == self._last_display_parameters:
@@ -158,7 +162,10 @@ class IconSelectDialog(PyMSDialog):
 				x = ((index - visible_start_index) % columns) * icon_size[0]
 				y = start_y + floor((index - visible_start_index) / float(columns)) * icon_size[1]
 				frame_index = self._display_index_to_frame_index(index)
-				icon, dx, dx2, dy, dy2 = tuple(self.data_context.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index)))
+				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=(self._display_index_to_selected_index(index) == self.selected_index))
+				if not image_with_bounds:
+					continue
+				icon, dx, dx2, dy, dy2 = image_with_bounds
 				x += icon_size[0] // 2 - dx - (dx2 - dx) // 2
 				y += icon_size[1] // 2 - dy - (dy2 - dy) // 2
 				if was_visible:
@@ -169,36 +176,41 @@ class IconSelectDialog(PyMSDialog):
 				self.scrolled_canvas.canvas.delete(tag)
 		self.selection_box_item.tag_raise()
 
-	def _redraw_selection(self, old_selection, new_selection):
-		_, start_index, end_index = self._last_display_parameters
-		old_display_index = self._selected_index_to_display_index(old_selection)
-		if old_display_index >= start_index and old_display_index <= end_index:
-			frame_index = self._display_index_to_frame_index(old_display_index)
-			icon, _, _, _, _ = tuple(self.data_context.get_cmdicon(frame_index, highlighted=False))
-			self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
+	def _redraw_selection(self, old_selection, new_selection): # type: (int, int) -> None
+		if self._last_display_parameters:
+			_, start_index, end_index = self._last_display_parameters
+			old_display_index = self._selected_index_to_display_index(old_selection)
+			if old_display_index >= start_index and old_display_index <= end_index:
+				frame_index = self._display_index_to_frame_index(old_display_index)
+				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=False)
+				if image_with_bounds:
+					icon, _, _, _, _ = image_with_bounds
+					self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
 		new_display_index = self._selected_index_to_display_index(new_selection)
 		if new_display_index >= start_index and new_display_index <= end_index:
 			frame_index = self._display_index_to_frame_index(new_display_index)
-			icon, _, _, _, _ = tuple(self.data_context.get_cmdicon(frame_index, highlighted=True))
-			self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(new_display_index), image=icon)
+			image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=True)
+			if image_with_bounds:
+				icon, _, _, _, _ = image_with_bounds
+				self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(new_display_index), image=icon)
 
-	def _canvas_resized(self):
+	def _canvas_resized(self): # type: () -> None
 		scrollregion = self._calculate_scrollregion()
 		self.scrolled_canvas.canvas.config(scrollregion=(0,0,scrollregion[0],scrollregion[1]))
 		self._draw_icons()
 		self._update_selection_box()
 
-	def _selected_index_to_name(self, selected_index):
+	def _selected_index_to_name(self, selected_index): # type: (int) -> str
 		if selected_index == self.none_index:
 			return 'None'
 		if selected_index < 0 or selected_index >= len(self.data_context.cmdicons.names):
 			return 'Unknown'
 		return self.data_context.cmdicons.names[selected_index]
 
-	def _update_status_selection(self):
+	def _update_status_selection(self): # type: () -> None
 		self.status_selection.set('Selected: %d (%s)' % (self.selected_index, self._selected_index_to_name(self.selected_index)))
 
-	def _coords_to_display_index(self, x, y, add_scroll_offset=True):
+	def _coords_to_display_index(self, x, y, add_scroll_offset=True): # type: (int, int, bool) -> (int | None)
 		columns, total_height, _, _, _ = self._calculate_visibility()
 		icon_size = self._icon_size()
 		column = x // icon_size[0]
@@ -209,7 +221,7 @@ class IconSelectDialog(PyMSDialog):
 		row = y // icon_size[1]
 		return column + row * columns
 
-	def _select_icon(self, event):
+	def _select_icon(self, event): # type: (Event) -> None
 		display_index = self._coords_to_display_index(event.x, event.y)
 		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			return
@@ -221,10 +233,10 @@ class IconSelectDialog(PyMSDialog):
 		self._update_selection_box()
 		self._update_status_selection()
 
-	def _clear_status_hover(self):
+	def _clear_status_hover(self): # type: () -> None
 		self.status_hover.set('')
 
-	def _update_status_hover(self, event):
+	def _update_status_hover(self, event): # type: (Event) -> None
 		display_index = self._coords_to_display_index(event.x, event.y)
 		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			self._clear_status_hover()
@@ -232,11 +244,11 @@ class IconSelectDialog(PyMSDialog):
 		selection_index = self._display_index_to_selected_index(display_index)
 		self.status_hover.set('Hovering: %d (%s)' % (selection_index, self._selected_index_to_name(selection_index)))
 
-	def ok(self):
+	def ok(self, _=None): # type: (Event | None) -> None
 		if self.selected_index != self._initial_selection:
 			self.delegate(self.selected_index)
 		PyMSDialog.ok(self)
 
-	def dismiss(self):
+	def dismiss(self): # type: () -> None
 		self.data_context.settings.windows.save_window_size('icon_select', self)
 		PyMSDialog.dismiss(self)

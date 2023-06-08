@@ -7,9 +7,10 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
-from ..Utilities import Assets
 
-import os, shutil
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from .Delegates import MainDelegate
 
 class SaveMPQDialog(PyMSDialog):
 	OPTIONS = (
@@ -32,10 +33,11 @@ class SaveMPQDialog(PyMSDialog):
 		('cmdicons.grp', 'unit\\cmdbtns\\cmdicons.grp', DataID.cmdicons)
 	)
 
-	def __init__(self, parent):
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Save MPQ', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
 		self.listbox = ScrolledListbox(self, selectmode=MULTIPLE, font=Font.fixed(), width=14, height=len(SaveMPQDialog.OPTIONS))
 		self.listbox.pack(fill=BOTH, expand=1, padx=5)
@@ -45,7 +47,7 @@ class SaveMPQDialog(PyMSDialog):
 		sel.pack(fill=X, padx=5)
 		for filename,_,_ in SaveMPQDialog.OPTIONS:
 			self.listbox.insert(END, filename)
-			if filename in self.parent.mpq_export:
+			if filename in self.delegate.data_context.settings.get('mpqexport',[]):
 				self.listbox.select_set(END)
 		btns = Frame(self)
 		save = Button(btns, text='Save', width=10, command=self.save)
@@ -85,5 +87,5 @@ class SaveMPQDialog(PyMSDialog):
 					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(not_saved))
 
 	def ok(self):
-		self.parent.mpq_export = [self.listbox.get(i) for i in self.listbox.curselection()]
+		self.delegate.data_context.settings.mpqexport = [self.listbox.get(i) for i in self.listbox.curselection()]
 		PyMSDialog.ok(self)

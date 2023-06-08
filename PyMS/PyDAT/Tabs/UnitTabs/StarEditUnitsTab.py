@@ -1,17 +1,22 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DataID
+from ...DataID import DataID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
+from ....Utilities.UIKit import *
 
 from math import floor, ceil
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
+
 class StarEditUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
 		self.nonneutral = IntVar()
@@ -101,11 +106,11 @@ class StarEditUnitsTab(DATUnitsTab):
 		self.width = IntegerVar(0, [0,65535])
 		self.height = IntegerVar(0, [0,65535])
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.data_context.settings.preview.staredit.get('show', False))
+		self.showpreview.set(self.delegate.data_context.settings.preview.staredit.get('show', False))
 
 		bottom = Frame(scrollview.content_view)
-		t = Frame(bottom)
-		l = LabelFrame(t, text='Placement Box (Pixels):')
+		r = Frame(bottom)
+		l = LabelFrame(r, text='Placement Box (Pixels):')
 		s = Frame(l)
 		f = Frame(s)
 		Label(f, text='Width:', width=13, anchor=E).pack(side=LEFT)
@@ -119,9 +124,9 @@ class StarEditUnitsTab(DATUnitsTab):
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=TOP)
-		t.pack(side=LEFT, fill=Y)
+		r.pack(side=LEFT, fill=Y)
 		l = LabelFrame(bottom, text='Preview:')
-		self.preview = Canvas(l, width=257, height=257, background='#000000', theme_tag='preview')
+		self.preview = Canvas(l, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack(side=TOP)
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')
@@ -132,28 +137,30 @@ class StarEditUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-		for v in (self.width, self.height):
-			v.trace('w', lambda *_: self.drawpreview())
+		for var in (self.width, self.height):
+			var.trace('w', lambda *_: self.drawpreview())
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.staredit_group_flags,
 			DATUnit.Property.staredit_availability_flags,
 			DATUnit.Property.sublabel,
 			DATUnit.Property.unit_map_string,
 			DATUnit.Property.staredit_placement_size,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.stat_txt in ids:
-			count = min(255,len(self.toplevel.data_context.stat_txt.strings)-1302)
-			ranks = ('No Sublabel',) + self.toplevel.data_context.stat_txt.strings[1302:1302+count]
+			count = min(255,len(self.delegate.data_context.stat_txt.strings)-1302)
+			ranks = ('No Sublabel',) + self.delegate.data_context.stat_txt.strings[1302:1302+count]
 			self.ranks.setentries(ranks)
 			self.rankentry.range[1] = count
 			self.rankentry.editvalue()
 
-	def drawboxes(self):
+	def drawboxes(self): # type: () -> None
 		if self.showpreview.get():
 			w = self.width.get() // 2
 			h = self.height.get() // 2
@@ -162,21 +169,23 @@ class StarEditUnitsTab(DATUnitsTab):
 		else:
 			self.preview.coords('place', 0, 0, 0, 0)
 
-	def draw_image(self, image_id, tag, x=130, y=130):
-		frame = self.toplevel.data_context.get_image_frame(image_id)
+	def draw_image(self, image_id, tag, x=130, y=130): # type: (int, str, int, int) -> None
+		frame = self.delegate.data_context.get_image_frame(image_id)
 		if frame:
 			self.preview.create_image(x, y, image=frame[0], tags=tag)
 
-	def drawpreview(self):
+	def drawpreview(self): # type: () -> None
+		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
+			return
 		self.preview.delete('unit')
 		if self.showpreview.get():
-			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
-			flingy = self.toplevel.data_context.flingy.dat.get_entry(entry.graphics)
-			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
+			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
+			flingy = self.delegate.data_context.flingy.dat.get_entry(entry.graphics)
+			sprite = self.delegate.data_context.sprites.dat.get_entry(flingy.sprite)
 			self.draw_image(sprite.image, 'unit')
 		self.drawboxes()
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		self.men.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.men == DATUnit.StarEditGroupFlag.men)
 		self.building.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.building == DATUnit.StarEditGroupFlag.building)
 		self.factory.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.factory == DATUnit.StarEditGroupFlag.factory)
@@ -201,7 +210,7 @@ class StarEditUnitsTab(DATUnitsTab):
 
 		self.drawpreview()
 
-	def save_data(self, entry):
+	def save_data(self, entry): # type: (DATUnit) -> bool
 		edited = False
 
 		staredit_group_flags = entry.staredit_group_flags & DATUnit.StarEditGroupFlag.RACE_FLAGS
@@ -252,6 +261,6 @@ class StarEditUnitsTab(DATUnitsTab):
 			entry.staredit_placement_size.height = self.height.get()
 			edited = True
 		
-		self.toplevel.data_context.settings.preview.staredit.show = not not self.showpreview.get()
+		self.delegate.data_context.settings.preview.staredit.show = not not self.showpreview.get()
 		return edited
 	

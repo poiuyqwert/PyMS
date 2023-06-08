@@ -1,15 +1,21 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
 
-from ..Utilities.UIKit import *
+from ...FileFormats.DAT import DATUnit, DATPortraits
+
+from ...Utilities.UIKit import *
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class PortraitsTab(DATTab):
 	DAT_ID = DATID.portdata
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.idle_entry = IntegerVar(0, [0,0])
@@ -76,23 +82,23 @@ class PortraitsTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Portrait', unit.portrait, dat_sub_tab=UnitsTabID.graphics),
+				DATRef('Portrait', cast(DATUnit, unit).portrait, dat_sub_tab=UnitsTabID.graphics),
 			)),
 		))
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.portdatatbl in ids:
-			portdata = ('None',) + self.toplevel.data_context.portdatatbl.strings
-			limit = len(self.toplevel.data_context.portdatatbl.strings)
+			portdata = ('None',) + self.delegate.data_context.portdatatbl.strings
+			limit = len(self.delegate.data_context.portdatatbl.strings)
 			self.idle_dd_view.setentries(portdata)
 			self.idle_entry.range[1] = limit
 			self.talking_dd_view.setentries(portdata)
 			self.talking_entry.range[1] = limit
 
-		if DATID.units in ids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATPortraits) -> None
 		self.idle_entry.set(entry.idle.portrait_file)
 		self.idle_change.set(entry.idle.smk_change)
 		self.idle_unknown.set(entry.idle.unknown)
@@ -100,7 +106,7 @@ class PortraitsTab(DATTab):
 		self.talking_change.set(entry.talking.smk_change)
 		self.talking_unknown.set(entry.talking.unknown)
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATPortraits) -> None
 		if self.idle_entry.get() != entry.idle.portrait_file:
 			entry.idle.portrait_file = self.idle_entry.get()
 			self.edited = True

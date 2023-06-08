@@ -1,30 +1,33 @@
 
-from .DATTabConveniences import DATTabConveniences
-from .EntryCountDialog import EntryCountDialog
-from .DataID import DATID, DataID
-from .DATRef import DATRefs, DATRefMatch
-from .DATData import DATData
+from __future__ import annotations
 
-from ..Utilities.PyMSError import PyMSError
-from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
-from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..DATTabConveniences import DATTabConveniences
+from ..EntryCountDialog import EntryCountDialog
+from ..DataID import DATID, AnyID
+
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+from ...Utilities.fileutils import check_allow_overwrite_internal_file
 
 import copy
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
-	from .PyDAT import PyDAT
+	from ..Delegates import MainDelegate
+	from ..DATRef import DATRefs, DATRefMatch
+	from ..DATData import DATData
 
 class DATTab(NotebookTab, DATTabConveniences):
+	ARROWS_LOADED = False
 	ARROW_DOWN: Image
 	ARROW_UP: Image
 	DAT_ID: DATID
 
-	def __init__(self, parent, toplevel): # type: (Misc, PyDAT) -> None
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
 		self.id = 0
-		self.toplevel = toplevel
+		self.delegate = delegate
 		self.used_by_references = None # type: tuple[DATRefs, ...] | None
 		self.used_by_collapse_button = None # type: Button | None
 		self.used_by_listbox = None # type: ScrolledListbox | None
@@ -35,21 +38,21 @@ class DATTab(NotebookTab, DATTabConveniences):
 		NotebookTab.__init__(self, parent)
 
 	def get_dat_data(self): # type: () -> DATData
-		return self.toplevel.data_context.dat_data(self.DAT_ID)
+		return self.delegate.data_context.dat_data(self.DAT_ID)
 
 	def update_used_by_header(self): # type: () -> None
 		if not self.used_by_header:
 			return
 		text = 'Used By (%d)' % len(self.used_by_data)
-		if  self.toplevel.data_context.settings.get('show_used_by', True):
+		if  self.delegate.data_context.settings.get('show_used_by', True):
 			text += ':'
 		self.used_by_header.set(text)
 
 	def toggle_used_by(self, toggle=True): # type: (bool) -> None
-		visible = self.toplevel.data_context.settings.get('show_used_by', True)
+		visible = self.delegate.data_context.settings.get('show_used_by', True)
 		if toggle:
 			visible = not visible
-			self.toplevel.data_context.settings.show_used_by = visible
+			self.delegate.data_context.settings.show_used_by = visible
 			self.update_used_by_header()
 		assert self.used_by_listbox is not None
 		assert self.used_by_collapse_button is not None
@@ -65,10 +68,10 @@ class DATTab(NotebookTab, DATTabConveniences):
 
 		f = Frame(self)
 		h  = Frame(f)
-		if DATTab.ARROW_DOWN is None:
+		if not DATTab.ARROWS_LOADED:
 			DATTab.ARROW_DOWN = Assets.get_image('arrow')
-		if DATTab.ARROW_UP is None:
 			DATTab.ARROW_UP = Assets.get_image('arrowup')
+			DATTab.ARROWS_LOADED = True
 		self.used_by_collapse_button = Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
 		self.used_by_collapse_button.pack(side=LEFT, padx=(0, 5))
 		self.used_by_header = StringVar()
@@ -92,11 +95,11 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if not lookup_id:
 			lookup_id = self.id
 		for dat_refs in used_by:
-			self.used_by_data.extend(dat_refs.matching(self.toplevel.data_context, lookup_id))
+			self.used_by_data.extend(dat_refs.matching(self.delegate.data_context, lookup_id))
 		if self.used_by_data:
 			self.used_by_listbox.insert(END, *self.used_by_data)
 		self.update_used_by_header()
-		if force_open and not self.toplevel.data_context.settings.get('show_used_by', True):
+		if force_open and not self.delegate.data_context.settings.get('show_used_by', True):
 			self.toggle_used_by()
 
 	def used_by_jump(self, *_): # type: (Event) -> None
@@ -108,31 +111,32 @@ class DATTab(NotebookTab, DATTabConveniences):
 		selected = selections[0]
 		if selected < len(self.used_by_data):
 			match = self.used_by_data[selected]
-			tab = cast(DATTab, self.toplevel.dattabs.display(match.dat_id.tab_id))
-			self.toplevel.changeid(match.entry_id)
+			tab = cast(DATTab, self.delegate.change_tab(match.dat_id))
+			self.delegate.change_id(match.entry_id)
 			if match.dat_sub_tab_id:
 				tab.change_sub_tab(match.dat_sub_tab_id)
 
 	def jump(self, datid, entry_id): # type: (DATID, int) -> None
-		if entry_id < self.toplevel.data_context.dat_data(datid).entry_count() - 1:
-			self.toplevel.dattabs.display(datid.tab_id)
-			self.toplevel.changeid(entry_id)
+		if entry_id < self.delegate.data_context.dat_data(datid).entry_count() - 1:
+			self.delegate.change_tab(datid)
+			self.delegate.change_id(entry_id)
 
 	def change_sub_tab(self, sub_tab_id):
 		pass
 
-	def updated_pointer_entries(self, ids): # type: (list[DataID]) -> None
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		pass
 
 	def deactivate(self): # type: () -> None
 		self.save_data()
 
 	def load_data(self, id=None): # type: (int | None) -> None
-		if not self.get_dat_data().dat:
+		dat = self.get_dat_data().dat
+		if not dat:
 			return
 		if id is not None:
 			self.id = id
-		entry = self.get_dat_data().dat.get_entry(self.id)
+		entry = dat.get_entry(self.id)
 		self.load_entry(entry)
 		self.check_used_by_references()
 
@@ -140,24 +144,28 @@ class DATTab(NotebookTab, DATTabConveniences):
 		pass
 
 	def save_data(self): # type: () -> None
-		if not self.get_dat_data().dat:
+		dat = self.get_dat_data().dat
+		if not dat:
 			return
-		entry = self.get_dat_data().dat.get_entry(self.id)
+		entry = dat.get_entry(self.id)
 		self.save_entry(entry)
 		self.check_used_by_references()
 		if self.edited:
-			self.toplevel.update_status_bar()
+			self.delegate.update_status_bar()
 
 	def save_entry(self, entry):
 		pass
 
 	def unsaved(self): # type: () -> (bool | None)
-		if self == self.toplevel.dattabs.active:
+		dat = self.get_dat_data().dat
+		if not dat:
+			return None
+		if self == self.delegate.active_tab():
 			self.save_data()
 		if self.edited:
 			file = self.get_dat_data().file_path
 			if not file:
-				file = self.get_dat_data().dat.FILE_NAME
+				file = dat.FILE_NAME
 			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 			if save != MessageBox.NO:
 				if save == MessageBox.CANCEL:
@@ -166,37 +174,50 @@ class DATTab(NotebookTab, DATTabConveniences):
 		return None
 
 	def copy(self): # type: () -> None
-		text = self.get_dat_data().dat.export_entry(self.id)
+		dat = self.get_dat_data().dat
+		if not dat:
+			return
+		text = dat.export_entry(self.id)
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
 	def paste(self): # type: () -> None
+		dat = self.get_dat_data().dat
+		if not dat:
+			return
 		text = self.clipboard_get()
-		self.get_dat_data().dat.import_entry(self.id, text)
+		dat.import_entry(self.id, text)
 		self.edited = True
-		self.toplevel.update_status_bar()
-		self.toplevel.tab_activated()
+		self.delegate.refresh()
 
 	def reload(self): # type: () -> None
-		self.get_dat_data().dat.set_entry(self.id, copy.deepcopy(self.get_dat_data().default_dat.get_entry(self.id)))
-		self.toplevel.tab_activated()
+		dat = self.get_dat_data().dat
+		default_dat = self.get_dat_data().default_dat
+		if not dat or not default_dat:
+			return
+		dat.set_entry(self.id, copy.deepcopy(default_dat.get_entry(self.id)))
+		self.delegate.refresh()
 
 	def _expand_entries(self, add): # type: (int) -> None
 		dat_data = self.get_dat_data()
 		if not dat_data.expand_entries(add):
 			return
 		self.edited = True
-		self.toplevel.update_status_bar()
+		self.delegate.update_status_bar()
 		entry_count = dat_data.entry_count()
-		self.toplevel.changeid(entry_count - 1)
+		self.delegate.change_id(entry_count - 1)
 
 	def add_entry(self): # type: () -> None
 		dat_data = self.get_dat_data()
+		if not dat_data.dat:
+			return
 		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		self._expand_entries(1)
 
 	def set_entry_count(self): # type: () -> None
 		dat_data = self.get_dat_data()
+		if not dat_data.dat:
+			return
 		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		def _set_entry_count(count):
@@ -204,43 +225,48 @@ class DATTab(NotebookTab, DATTabConveniences):
 			if add < 1:
 				return
 			self._expand_entries(add)
-		EntryCountDialog(self, _set_entry_count, dat_data, self.toplevel.data_context.settings)
+		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.settings)
 
 	def new(self, key=None): # type: (Event | None) -> None
 		if not self.unsaved():
 			self.get_dat_data().new_file()
 			self.id = 0
-			self.toplevel.tab_activated()
+			self.delegate.refresh()
 
 	def open_file(self, file, save=True): # type: (str, bool) -> None
 		if not save or not self.unsaved():
 			self.get_dat_data().load_file(file)
 			self.id = 0
-			if self.toplevel.dattabs.active == self:
-				self.toplevel.tab_activated()
+			if self.delegate.active_tab() == self:
+				self.delegate.refresh()
 
 	def open_data(self, file_data, save=True): # type: (bytes, bool) -> None
 		if not save or not self.unsaved():
 			self.get_dat_data().load_data(file_data)
 			self.id = 0
-			if self.toplevel.dattabs.active == self:
-				self.toplevel.tab_activated()
+			if self.delegate.active_tab() == self:
+				self.delegate.refresh()
 
 	def iimport(self): # type: () -> None
-		file = self.toplevel.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		dat = self.get_dat_data().dat
+		if not dat:
+			return
+		file = self.delegate.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
 		if not file:
 			return
-		self.get_dat_data().dat.import_file(file)
+		dat.import_file(file)
 		self.edited = True
-		self.toplevel.update_status_bar()
-		self.toplevel.tab_activated()
+		self.delegate.refresh()
 
 	def save(self, key=None): # type: (Event | None) -> None
 		self.saveas(file_path=self.get_dat_data().file_path)
 
 	def saveas(self, key=None, file_path=None): # type: (Event | None, str | None) -> None
+		dat = self.get_dat_data().dat
+		if not dat:
+			return
 		if not file_path:
-			file_path = self.toplevel.data_context.settings.lastpath.dat.save.select_save_file(self, key=self.get_dat_data().dat.FILE_NAME, title='Save %s As' % self.get_dat_data().dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % self.get_dat_data().dat.FILE_NAME)], filename=self.get_dat_data().dat.FILE_NAME)
+			file_path = self.delegate.data_context.settings.lastpath.dat.save.select_save_file(self, key=dat.FILE_NAME, title='Save %s As' % dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % dat.FILE_NAME)], filename=dat.FILE_NAME)
 			if not file_path:
 				return
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -252,13 +278,16 @@ class DATTab(NotebookTab, DATTabConveniences):
 			return
 		self.get_dat_data().file_path = file_path
 		self.edited = False
-		self.toplevel.update_status_bar()
+		self.delegate.update_status_bar()
 
 	def export(self, key=None): # type: (Event | None) -> None
-		file = self.toplevel.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		dat = self.get_dat_data().dat
+		if not dat:
+			return
+		file = self.delegate.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
 			return
 		try:
-			self.get_dat_data().dat.export_file(file)
+			dat.export_file(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)

@@ -1,16 +1,22 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, UnitsTabID
-from .DATRef import DATRefs, DATRef
+from ..DataID import DATID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...FileFormats.DAT import DATUnit, DATWeapon, DATFlingy
+
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class FlingyTab(DATTab):
 	DAT_ID = DATID.flingy
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.spriteentry = IntegerVar(0, [0,516])
@@ -77,26 +83,26 @@ class FlingyTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Graphics', unit.graphics, dat_sub_tab=UnitsTabID.graphics),
+				DATRef('Graphics', cast(DATUnit, unit).graphics, dat_sub_tab=UnitsTabID.graphics),
 			)),
 			DATRefs(DATID.weapons, lambda weapon: (
-				DATRef('Graphics', weapon.graphics),
+				DATRef('Graphics', cast(DATWeapon, weapon).graphics),
 			)),
 		))
 
-	def updated_pointer_entries(self, ids):
-		if (DATID.units in ids or DATID.weapons in ids) and self.toplevel.dattabs.active == self:
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+		if (DATID.units in ids or DATID.weapons in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.sprites in ids:
-			self.sprite_ddw.setentries(self.toplevel.data_context.sprites.names)
-			if self.toplevel.data_context.settings.settings.get('reference_limits', True):
-				self.spriteentry.range[1] = self.toplevel.data_context.sprites.entry_count() - 1
+			self.sprite_ddw.setentries(self.delegate.data_context.sprites.names)
+			if self.delegate.data_context.settings.settings.get('reference_limits', True):
+				self.spriteentry.range[1] = self.delegate.data_context.sprites.entry_count() - 1
 			else:
 				self.spriteentry.range[1] = 65535
 
-	def updatespeed(self, num, type):
+	def updatespeed(self, num, type): # type: (int, bool) -> None
 		if type:
-			self.topspeed.check = False
+			# self.topspeed.check = False
 			self.topspeed.set(int((float(num) * 320 / 3.0)))
 		else:
 			self.speed.check = False
@@ -107,9 +113,9 @@ class FlingyTab(DATTab):
 				s = s[:s.index('.')+4]
 			self.speed.set(s)
 
-	def updatehalt(self, num, type):
+	def updatehalt(self, num, type): # type: (int, bool) -> None
 		if type:
-			self.haltdistance.check = False
+			# self.haltdistance.check = False
 			self.haltdistance.set(int((float(num) * 256)))
 		else:
 			self.halt.check = False
@@ -120,7 +126,7 @@ class FlingyTab(DATTab):
 				s = s[:s.index('.')+5]
 			self.halt.set(s)
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATFlingy) -> None
 		self.spriteentry.set(entry.sprite)
 		self.topspeed.set(entry.speed)
 		self.acceleration.set(entry.acceleration)
@@ -129,7 +135,7 @@ class FlingyTab(DATTab):
 		self.unused.set(entry.iscript_mask)
 		self.movecontrol.set(entry.movement_control)
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATFlingy) -> None
 		if self.spriteentry.get() != entry.sprite:
 			entry.sprite = self.spriteentry.get()
 			self.edited = True

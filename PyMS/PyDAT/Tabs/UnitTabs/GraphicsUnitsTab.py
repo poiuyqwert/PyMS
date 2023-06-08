@@ -1,18 +1,23 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DATID
+from ...DataID import DATID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ....Utilities.UIKit import *
+from ....Utilities import Assets
 
 from math import floor, ceil
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
+
 class GraphicsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
 		self.graphicsentry = IntegerVar(0, [0,208])
@@ -59,15 +64,15 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.vertical = IntegerVar(0, [0,65535])
 		self.previewing = None
 		self.showpreview = IntVar()
-		self.showpreview.set(self.toplevel.data_context.settings.preview.unit.get('show', False))
+		self.showpreview.set(self.delegate.data_context.settings.preview.unit.get('show', False))
 		self.showplace = IntVar()
-		self.showplace.set(self.toplevel.data_context.settings.preview.unit.get('show_placement', False))
+		self.showplace.set(self.delegate.data_context.settings.preview.unit.get('show_placement', False))
 		self.showdims = IntVar()
-		self.showdims.set(self.toplevel.data_context.settings.preview.unit.get('show_dimensions', False))
+		self.showdims.set(self.delegate.data_context.settings.preview.unit.get('show_dimensions', False))
 		self.show_addon_placement = IntVar()
-		self.show_addon_placement.set(self.toplevel.data_context.settings.preview.unit.get('show_addon_placement', False))
+		self.show_addon_placement.set(self.delegate.data_context.settings.preview.unit.get('show_addon_placement', False))
 		self.addon_parent_id = IntegerVar(0, [0,228])
-		self.addon_parent_id.set(self.toplevel.data_context.settings.preview.unit.get('addon_parent_unit_id', 106))
+		self.addon_parent_id.set(self.delegate.data_context.settings.preview.unit.get('addon_parent_unit_id', 106))
 
 		bottom = Frame(scrollview.content_view)
 		left = Frame(bottom)
@@ -106,7 +111,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		left.pack(side=LEFT, fill=BOTH, expand=1)
 		l = LabelFrame(bottom, text='Preview:')
 		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview')
+		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack(side=TOP)
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
 		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')
@@ -133,8 +138,10 @@ class GraphicsUnitsTab(DATUnitsTab):
 		for v in (self.left, self.up, self.right, self.down):
 			v.trace('w', lambda *_: self.drawboxes())
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.graphics,
 			DATUnit.Property.construction_animation,
 			DATUnit.Property.unit_direction,
@@ -143,31 +150,33 @@ class GraphicsUnitsTab(DATUnitsTab):
 			DATUnit.Property.portrait,
 			DATUnit.Property.addon_position,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DATID.flingy in ids:
-			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
 		if DATID.images in ids:
-			self.construction_ddw.setentries(self.toplevel.data_context.images.names)
+			self.construction_ddw.setentries(self.delegate.data_context.images.names)
 		if DATID.portdata in ids:
-			self.portraits_ddw.setentries(self.toplevel.data_context.portraits.names + ('None',))
+			self.portraits_ddw.setentries(self.delegate.data_context.portraits.names + ('None',))
 
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
 			if DATID.flingy in ids:
-				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
+				self.graphicsentry.range[1] = self.delegate.data_context.flingy.entry_count() - 1
 			if DATID.images in ids:
-				self.constructionentry.range[1] = self.toplevel.data_context.images.entry_count() - 1
+				self.constructionentry.range[1] = self.delegate.data_context.images.entry_count() - 1
 			if DATID.portdata in ids:
-				self.portraitsentry.range[1] = self.toplevel.data_context.portraits.entry_count()
+				self.portraitsentry.range[1] = self.delegate.data_context.portraits.entry_count()
 		else:
-			self.graphicsentry.range[1] = 65535 if self.toplevel.data_context.units.is_expanded() else 255
+			self.graphicsentry.range[1] = 65535 if self.delegate.data_context.units.is_expanded() else 255
 			self.constructionentry.range[1] = 4294967295
 			self.portraitsentry.range[1] = 65535
 
-	def drawboxes(self):
+	def drawboxes(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
 		if self.showpreview.get() and self.showplace.get():
-			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
+			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
 			w = entry.staredit_placement_size.width / 2.0
 			h = entry.staredit_placement_size.height / 2.0
 			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
@@ -180,46 +189,50 @@ class GraphicsUnitsTab(DATUnitsTab):
 		else:
 			self.preview.coords('size', 0, 0, 0 ,0)
 
-	def draw_image(self, image_id, tag, x=130, y=130):
-		frame = self.toplevel.data_context.get_image_frame(image_id)
+	def draw_image(self, image_id, tag, x=130, y=130): # type: (int, str, int, int) -> None
+		frame = self.delegate.data_context.get_image_frame(image_id)
 		if frame:
 			self.preview.create_image(x, y, image=frame[0], tags=tag)
 
-	def draw_addon_preview(self):
+	def draw_addon_preview(self): # type: () -> None
+		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
+			return
 		self.preview.delete('addon_parent')
 		addon_preview = self.showpreview.get()
 		addon_preview = addon_preview and self.show_addon_placement_checkbox['state'] == NORMAL
 		addon_preview = addon_preview and self.show_addon_placement.get()
 		addon_preview = addon_preview and (self.horizontal.get() or self.vertical.get())
 		if addon_preview:
-			entry = self.toplevel.data_context.units.dat.get_entry(self.parent_tab.id)
+			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
 			w = entry.staredit_placement_size.width
 			h = entry.staredit_placement_size.height
 			parent_id = self.addon_parent_id.get()
-			parent_entry = self.toplevel.data_context.units.dat.get_entry(parent_id)
+			parent_entry = self.delegate.data_context.units.dat.get_entry(parent_id)
 			parent_w = parent_entry.staredit_placement_size.width
 			parent_h = parent_entry.staredit_placement_size.height
 			x = 129 - w//2 - self.horizontal.get()
 			y = 129 - h//2 - self.vertical.get()
-			parent_flingy = self.toplevel.data_context.flingy.dat.get_entry(parent_entry.graphics)
-			parent_sprite = self.toplevel.data_context.sprites.dat.get_entry(parent_flingy.sprite)
+			parent_flingy = self.delegate.data_context.flingy.dat.get_entry(parent_entry.graphics)
+			parent_sprite = self.delegate.data_context.sprites.dat.get_entry(parent_flingy.sprite)
 			self.draw_image(parent_sprite.image, 'addon_parent', x=x+parent_w//2, y=y+parent_h//2)
 			self.preview.coords('addon_parent_size', x, y, x+parent_w, y+parent_h)
 			self.preview.lift('addon_parent_size')
 		else:
 			self.preview.coords('addon_parent_size', 0, 0, 0 ,0)
 
-	def drawpreview(self):
+	def drawpreview(self): # type: () -> None
+		if not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
+			return
 		self.draw_addon_preview()
 		self.preview.delete('unit')
 		if self.showpreview.get():
 			flingy_id = self.graphicsentry.get()
-			flingy = self.toplevel.data_context.flingy.dat.get_entry(flingy_id)
-			sprite = self.toplevel.data_context.sprites.dat.get_entry(flingy.sprite)
+			flingy = self.delegate.data_context.flingy.dat.get_entry(flingy_id)
+			sprite = self.delegate.data_context.sprites.dat.get_entry(flingy.sprite)
 			self.draw_image(sprite.image, 'unit')
 		self.drawboxes()
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		self.graphicsentry.set(entry.graphics)
 		self.constructionentry.set(entry.construction_animation)
 		self.direction.set(entry.unit_direction)
@@ -240,12 +253,12 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.addon_parent_id_entry['state'] = state
 		self.drawpreview()
 
-	def save_data(self, entry):
-		self.toplevel.data_context.settings.preview.unit.show = not not self.showpreview.get()
-		self.toplevel.data_context.settings.preview.unit.show_placement = not not self.showplace.get()
-		self.toplevel.data_context.settings.preview.unit.show_dimensions = not not self.showdims.get()
-		self.toplevel.data_context.settings.preview.unit.show_addon_placement = not not self.show_addon_placement.get()
-		self.toplevel.data_context.settings.preview.unit.addon_parent_id = self.addon_parent_id.get()
+	def save_data(self, entry): # type: (DATUnit) -> bool
+		self.delegate.data_context.settings.preview.unit.show = not not self.showpreview.get()
+		self.delegate.data_context.settings.preview.unit.show_placement = not not self.showplace.get()
+		self.delegate.data_context.settings.preview.unit.show_dimensions = not not self.showdims.get()
+		self.delegate.data_context.settings.preview.unit.show_addon_placement = not not self.show_addon_placement.get()
+		self.delegate.data_context.settings.preview.unit.addon_parent_id = self.addon_parent_id.get()
 
 		edited = False
 		if self.graphicsentry.get() != entry.graphics:

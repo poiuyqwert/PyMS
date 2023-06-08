@@ -1,17 +1,23 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
-from .IconSelectDialog import IconSelectDialog
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
+from ..IconSelectDialog import IconSelectDialog
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...FileFormats.DAT import DATUnit, DATOrder
+
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class OrdersTab(DATTab):
 	DAT_ID = DATID.orders
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.targetingentry = IntegerVar(0,[0,130])
@@ -90,9 +96,9 @@ class OrdersTab(DATTab):
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
 		ls = Frame(m, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
-		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
+		self.preview.bind(Mouse.Click_Left(), lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		m.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=5)
@@ -146,60 +152,59 @@ class OrdersTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Computer Idle', unit.comp_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
-				DATRef('Human Idle', unit.human_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
-				DATRef('Return to Idle', unit.return_to_idle, dat_sub_tab=UnitsTabID.ai_actions),
-				DATRef('Attach Unit', unit.attack_unit, dat_sub_tab=UnitsTabID.ai_actions),
-				DATRef('Attack Move', unit.attack_move, dat_sub_tab=UnitsTabID.ai_actions)
+				DATRef('Computer Idle', cast(DATUnit, unit).comp_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Human Idle', cast(DATUnit, unit).human_ai_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Return to Idle', cast(DATUnit, unit).return_to_idle, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Attach Unit', cast(DATUnit, unit).attack_unit, dat_sub_tab=UnitsTabID.ai_actions),
+				DATRef('Attack Move', cast(DATUnit, unit).attack_move, dat_sub_tab=UnitsTabID.ai_actions)
 			)),
 		))
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.stat_txt in ids:
-			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
-			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
+			self.labels.setentries(('None',) + self.delegate.data_context.stat_txt.strings)
+			self.labelentry.range[1] = len(self.delegate.data_context.stat_txt.strings)
 		if DataID.cmdicons in ids:
-			self.highlight_ddw.setentries(self.toplevel.data_context.cmdicons.names + ('None',))
+			self.highlight_ddw.setentries(self.delegate.data_context.cmdicons.names + ('None',))
 			# TODO: Limit-1 while supporting none_value
-			# self.highlightentry.range[1] = self.toplevel.data_context.cmdicons.frame_count()
+			# self.highlightentry.range[1] = self.delegate.data_context.cmdicons.frame_count()
 
-		if DATID.units in ids and self.toplevel.dattabs.active == self:
+		if DATID.units in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.weapons in ids:
-			self.targeting_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
+			self.targeting_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
 		if DATID.techdata in ids:
-			self.energy_ddw.setentries(self.toplevel.data_context.technology.names + ('None',))
+			self.energy_ddw.setentries(self.delegate.data_context.technology.names + ('None',))
 		if DATID.orders in ids:
-			self.obscured_ddw.setentries(self.toplevel.data_context.orders.names + ('None',))
+			self.obscured_ddw.setentries(self.delegate.data_context.orders.names + ('None',))
 
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
 			if DATID.weapons in ids:
-				self.targetingentry.range[1] = self.toplevel.data_context.weapons.entry_count()
+				self.targetingentry.range[1] = self.delegate.data_context.weapons.entry_count()
 			if DATID.techdata in ids:
-				self.energyentry.range[1] = self.toplevel.data_context.technology.entry_count()
+				self.energyentry.range[1] = self.delegate.data_context.technology.entry_count()
 			if DATID.orders in ids:
-				self.obscuredentry.range[1] = self.toplevel.data_context.orders.entry_count()
+				self.obscuredentry.range[1] = self.delegate.data_context.orders.entry_count()
 		else:
 			self.targetingentry.range[1] = 255
 			self.energyentry.range[1] = 255
 			self.obscuredentry.range[1] = 255
 
-
-	def choose_icon(self):
+	def choose_icon(self): # type: () -> None
 		def update_icon(index):
 			self.highlightentry.set(index)
-		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.highlightentry.get(), none_index=65535)
+		IconSelectDialog(self, self.delegate.data_context, update_icon, self.highlightentry.get(), none_index=65535)
 
-	def drawpreview(self):
+	def drawpreview(self): # type: () -> None
 		self.preview.delete(ALL)
 		index = self.highlightentry.get()
-		image = self.toplevel.data_context.get_cmdicon(index)
+		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATOrder) -> None
 		self.label.set(entry.label)
 		self.weapontargeting.set(entry.use_weapon_targeting)
 		self.is_secondary.set(entry.unused_is_secondary)
@@ -222,12 +227,12 @@ class OrdersTab(DATTab):
 		
 		self.drawpreview()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATOrder) -> None
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.data_context.dat_data(DATID.orders).update_names()
+			if self.delegate.data_context.settings.settings.get('customlabels'):
+				self.delegate.data_context.dat_data(DATID.orders).update_names()
 		if self.weapontargeting.get() != entry.use_weapon_targeting:
 			entry.use_weapon_targeting = self.weapontargeting.get()
 			self.edited = True

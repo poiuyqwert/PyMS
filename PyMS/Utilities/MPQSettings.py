@@ -4,12 +4,13 @@ from ..FileFormats.MPQ.MPQ import MPQ
 from . import Assets
 from .setutils import PYMS_SETTINGS
 from .UIKit import *
-from .Settings import Settings
-from .SettingsDialog import SettingsDialog
 
 import os
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
+if TYPE_CHECKING:
+	from .Settings import Settings
+	from .SettingsDialog import SettingsDialog
 
 class MPQSettings(Frame):
 	def __init__(self, parent, mpqs, settings, setdlg): # type: (Misc, list[str], Settings, SettingsDialog) -> None

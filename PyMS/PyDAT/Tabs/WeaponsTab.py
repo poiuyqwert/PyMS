@@ -1,19 +1,23 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
-from .IconSelectDialog import IconSelectDialog
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
+from ..IconSelectDialog import IconSelectDialog
 
-from ..FileFormats.DAT.WeaponsDAT import DATWeapon
+from ...FileFormats.DAT import DATWeapon, DATUnit, DATOrder
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class WeaponsTab(DATTab):
 	DAT_ID = DATID.weapons
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.amount = IntegerVar(0, [0,65535])
@@ -22,8 +26,9 @@ class WeaponsTab(DATTab):
 		self.explosion = IntVar()
 		self.factor = IntegerVar(0, [0,255])
 		self.unused = IntVar()
-		self.cooldown = IntegerVar(0, [1,255], callback=lambda ticks: self.update_time(ticks, self.seconds))
+		self.cooldown = IntegerVar(0, [1,255])
 		self.seconds = FloatVar(1, [1/24.0,255/24.0], callback=lambda time: self.update_ticks(time, self.cooldown), precision=2)
+		self.cooldown.callback = lambda ticks: self.update_time(ticks, self.seconds)
 		self.upgradeentry = IntegerVar(0,[0,61])
 		self.upgrade = IntVar()
 
@@ -181,9 +186,9 @@ class WeaponsTab(DATTab):
 		rs.pack(side=TOP)
 		ls.pack(side=LEFT)
 		ls = Frame(f, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
-		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
+		self.preview.bind(Mouse.Click_Left(), lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		f.pack(fill=X)
 		f = Frame(s)
@@ -269,66 +274,66 @@ class WeaponsTab(DATTab):
 		data.pack(pady=5)
 		scrollview.pack(fill=BOTH, expand=1)
 
-		self.setup_used_by([
+		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Ground Weapon', unit.ground_weapon, dat_sub_tab=UnitsTabID.basic),
-				DATRef('Air Weapon', unit.air_weapon, dat_sub_tab=UnitsTabID.basic)
+				DATRef('Ground Weapon', cast(DATUnit, unit).ground_weapon, dat_sub_tab=UnitsTabID.basic),
+				DATRef('Air Weapon', cast(DATUnit, unit).air_weapon, dat_sub_tab=UnitsTabID.basic)
 			)),
 			DATRefs(DATID.orders, lambda order: (
-				DATRef('Targeting', order.weapon_targeting),
+				DATRef('Targeting', cast(DATOrder, order).weapon_targeting),
 			)),
-		])
+		))
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.stat_txt in ids:
-			strings = ('None',) + self.toplevel.data_context.stat_txt.strings
+			strings = ('None',) + self.delegate.data_context.stat_txt.strings
 			self.labels.setentries(strings)
 			self.errormsgs.setentries(strings)
 		if DataID.cmdicons in ids:
-			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+			self.icon_ddw.setentries(self.delegate.data_context.cmdicons.names)
 
-		if (DATID.units in ids or DATID.orders in ids) and self.toplevel.dattabs.active == self:
+		if (DATID.units in ids or DATID.orders in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.techdata in ids:
-			self.unused_ddw.setentries(self.toplevel.data_context.technology.names + ('None',))
+			self.unused_ddw.setentries(self.delegate.data_context.technology.names + ('None',))
 		if DATID.upgrades in ids:
-			self.upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names + ('None',))
+			self.upgrade_ddw.setentries(self.delegate.data_context.upgrades.names + ('None',))
 		if DATID.flingy in ids:
-			self.graphics_ddw.setentries(self.toplevel.data_context.flingy.names)
+			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
 
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
 			if DATID.upgrades in ids:
-				self.upgradeentry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
+				self.upgradeentry.range[1] = self.delegate.data_context.upgrades.entry_count() - 1
 			if DATID.flingy in ids:
-				self.graphicsentry.range[1] = self.toplevel.data_context.flingy.entry_count() - 1
+				self.graphicsentry.range[1] = self.delegate.data_context.flingy.entry_count() - 1
 		else:
 			self.upgradeentry.range[1] = 255
 			self.graphicsentry.range[1] = 4294967295
-		string_limit = len(self.toplevel.data_context.stat_txt.strings) - 1
+		string_limit = len(self.delegate.data_context.stat_txt.strings) - 1
 		self.labelentry.range[1] = string_limit
 		self.errormsgentry.range[1] = string_limit
-		self.iconentry.range[1] = self.toplevel.data_context.cmdicons.frame_count() - 1
+		self.iconentry.range[1] = self.delegate.data_context.cmdicons.frame_count() - 1
 
-	def selicon(self, n, t=0):
+	def selicon(self, n, t=0): # type: (int, int) -> None
 		if t:
 			self.icondd.set(n)
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
 
-	def choose_icon(self):
-		def update_icon(index):
+	def choose_icon(self): # type: () -> None
+		def update_icon(index): # type: (int) -> None
 			self.iconentry.set(index)
-		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.iconentry.get())
+		IconSelectDialog(self, self.delegate.data_context, update_icon, self.iconentry.get())
 
-	def drawpreview(self):
+	def drawpreview(self): # type: () -> None
 		self.preview.delete(ALL)
 		index = self.iconentry.get()
-		image = self.toplevel.data_context.get_cmdicon(index)
+		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATWeapon) -> None
 		self.label.set(entry.label)
 		self.graphicsentry.set(entry.graphics)
 		self.unused.set(entry.unused_technology)
@@ -370,12 +375,12 @@ class WeaponsTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATWeapon) -> None
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.data_context.dat_data(DATID.weapons).update_names()
+			if self.delegate.data_context.settings.settings.get('customlabels'):
+				self.delegate.data_context.dat_data(DATID.weapons).update_names()
 		if self.graphicsentry.get() != entry.graphics:
 			entry.graphics = self.graphicsentry.get()
 			self.edited = True

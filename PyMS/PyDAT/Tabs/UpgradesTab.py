@@ -1,17 +1,23 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID, UnitsTabID
-from .DATRef import DATRefs, DATRef
-from .IconSelectDialog import IconSelectDialog
+from ..DataID import DATID, DataID, UnitsTabID, AnyID
+from ..DATRef import DATRefs, DATRef
+from ..IconSelectDialog import IconSelectDialog
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ...FileFormats.DAT import DATUnit, DATWeapon, DATUpgrade
+
+from ...Utilities.UIKit import *
+from ...Utilities import Assets
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class UpgradesTab(DATTab):
 	DAT_ID = DATID.upgrades
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.iconentry = IntegerVar(0, [0,389], callback=lambda n: self.selicon(n,1))
@@ -46,17 +52,18 @@ class UpgradesTab(DATTab):
 		ls.pack(side=LEFT, fill=X)
 		
 		ls = Frame(s, relief=SUNKEN, bd=1)
-		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview')
+		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
-		self.preview.bind(Mouse.Click_Left, lambda *_: self.choose_icon())
+		self.preview.bind(Mouse.Click_Left(), lambda *_: self.choose_icon())
 		ls.pack(side=RIGHT)
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
 		self.baseminerals = IntegerVar(0, [0,65535])
 		self.basevespene = IntegerVar(0, [0,65535])
-		self.basetime = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.basesecs))
+		self.basetime = IntegerVar(24, [0,65535])
 		self.basesecs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.basetime), precision=4)
+		self.basetime.callback = lambda ticks: self.update_time(ticks, self.basesecs)
 
 		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Base Cost:')
@@ -87,8 +94,9 @@ class UpgradesTab(DATTab):
 
 		self.factorminerals = IntegerVar(0, [0,65535])
 		self.factorvespene = IntegerVar(0, [0,65535])
-		self.factortime = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.factorsecs))
+		self.factortime = IntegerVar(24, [0,65535])
 		self.factorsecs = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.factortime), precision=4)
+		self.factortime.callback = lambda ticks: self.update_time(ticks, self.factorsecs)
 
 		l = LabelFrame(m, text='Factor Cost:')
 		s = Frame(l)
@@ -152,43 +160,43 @@ class UpgradesTab(DATTab):
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
-				DATRef('Upgrade', unit.armor_upgrade, dat_sub_tab=UnitsTabID.basic),
+				DATRef('Upgrade', cast(DATUnit, unit).armor_upgrade, dat_sub_tab=UnitsTabID.basic),
 			)),
 			DATRefs(DATID.weapons, lambda weapon: (
-				DATRef('Upgrade', weapon.damage_upgrade),
+				DATRef('Upgrade', cast(DATWeapon, weapon).damage_upgrade),
 			)),
 		))
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.cmdicons in ids:
-			self.icon_ddw.setentries(self.toplevel.data_context.cmdicons.names)
+			self.icon_ddw.setentries(self.delegate.data_context.cmdicons.names)
 		if DataID.stat_txt in ids:
-			self.labels.setentries(('None',) + self.toplevel.data_context.stat_txt.strings)
-			self.labelentry.range[1] = len(self.toplevel.data_context.stat_txt.strings)
+			self.labels.setentries(('None',) + self.delegate.data_context.stat_txt.strings)
+			self.labelentry.range[1] = len(self.delegate.data_context.stat_txt.strings)
 
-		if (DATID.units in ids or DATID.weapons in ids) and self.toplevel.dattabs.active == self:
+		if (DATID.units in ids or DATID.weapons in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def selicon(self, n, t=0):
+	def selicon(self, n, t=0): # type: (int, int) -> None
 		if t:
 			self.icondd.set(n)
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
 
-	def choose_icon(self):
+	def choose_icon(self): # type: () -> None
 		def update_icon(index):
 			self.iconentry.set(index)
-		IconSelectDialog(self, self.toplevel.data_context, update_icon, self.iconentry.get())
+		IconSelectDialog(self, self.delegate.data_context, update_icon, self.iconentry.get())
 
-	def drawpreview(self):
+	def drawpreview(self): # type: () -> None
 		self.preview.delete(ALL)
 		index = self.iconentry.get()
-		image = self.toplevel.data_context.get_cmdicon(index)
+		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATUpgrade) -> None
 		self.baseminerals.set(entry.mineral_cost_base)
 		self.factorminerals.set(entry.mineral_cost_factor)
 		self.basevespene.set(entry.vespene_cost_base)
@@ -204,7 +212,7 @@ class UpgradesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATUpgrade) -> None
 		if self.baseminerals.get() != entry.mineral_cost_base:
 			entry.mineral_cost_base = self.baseminerals.get()
 			self.edited = True
@@ -232,8 +240,8 @@ class UpgradesTab(DATTab):
 		if self.labelentry.get() != entry.label:
 			entry.label = self.labelentry.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.data_context.dat_data(DATID.upgrades).update_names()
+			if self.delegate.data_context.settings.settings.get('customlabels'):
+				self.delegate.data_context.dat_data(DATID.upgrades).update_names()
 		if self.race.get() != entry.staredit_race:
 			entry.staredit_race = self.race.get()
 			self.edited = True

@@ -1,16 +1,21 @@
 
+from __future__ import annotations
+
 from .DATUnitsTab import DATUnitsTab
-from .DataID import DATID
+from ...DataID import DATID, AnyID
 
-from ..FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ....Utilities.UIKit import *
+from ....Utilities import Assets
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ...Delegates import MainDelegate, SubDelegate
 
 class BasicUnitsTab(DATUnitsTab):
-	def __init__(self, parent, toplevel, parent_tab):
-		DATUnitsTab.__init__(self, parent, toplevel, parent_tab)
-		self.toplevel = toplevel
+	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
 		self.hit_points_whole = IntegerVar(0,[0,4294967295])
@@ -66,8 +71,9 @@ class BasicUnitsTab(DATUnitsTab):
 
 		self.mineral_cost = IntegerVar(0, [0,65535])
 		self.vespene_cost = IntegerVar(0, [0,65535])
-		self.build_time = IntegerVar(24, [0,65535], callback=lambda ticks: self.update_time(ticks, self.build_time_seconds))
+		self.build_time = IntegerVar(24, [0,65535])
 		self.build_time_seconds = FloatVar(1, [0,65535/24.0], callback=lambda time: self.update_ticks(time, self.build_time), precision=4)
+		self.build_time.callback = lambda ticks: self.update_time(ticks, self.build_time_seconds)
 		self.broodwar_unit_flag = IntVar()
 
 		l = LabelFrame(statframe, text='Build Cost')
@@ -239,8 +245,10 @@ class BasicUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self):
-		text = self.toplevel.data_context.units.dat.export_entry(self.parent_tab.id, export_properties=[
+	def copy(self): # type: () -> None
+		if not self.delegate.data_context.units.dat:
+			return
+		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
 			DATUnit.Property.hit_points,
 			DATUnit.Property.shield_amount,
 			DATUnit.Property.shield_enabled,
@@ -265,27 +273,27 @@ class BasicUnitsTab(DATUnitsTab):
 			DATUnit.Property.supply_provided,
 			DATUnit.Property.staredit_group_flags,
 		])
-		self.clipboard_set(text)
+		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DATID.upgrades in ids:
-			self.armor_upgrade_ddw.setentries(self.toplevel.data_context.upgrades.names + ('None',))
+			self.armor_upgrade_ddw.setentries(self.delegate.data_context.upgrades.names + ('None',))
 		if DATID.weapons in ids:
-			self.ground_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
-			self.air_weapon_ddw.setentries(self.toplevel.data_context.weapons.names + ('None',))
+			self.ground_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
+			self.air_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
 
-		if self.toplevel.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.settings.settings.get('reference_limits', True):
 			if DATID.upgrades in ids:
-				self.armor_upgrade_entry.range[1] = self.toplevel.data_context.upgrades.entry_count() - 1
+				self.armor_upgrade_entry.range[1] = self.delegate.data_context.upgrades.entry_count() - 1
 			if DATID.weapons in ids:
-				self.ground_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
-				self.air_weapon_entry.range[1] = self.toplevel.data_context.weapons.entry_count()
+				self.ground_weapon_entry.range[1] = self.delegate.data_context.weapons.entry_count()
+				self.air_weapon_entry.range[1] = self.delegate.data_context.weapons.entry_count()
 		else:
 			self.armor_upgrade_entry.range[1] = 255
 			self.ground_weapon_entry.range[1] = 255
 			self.air_weapon_entry.range[1] = 255
 
-	def load_data(self, entry):
+	def load_data(self, entry): # type: (DATUnit) -> None
 		self.hit_points_whole.set(entry.hit_points.whole)
 		self.hit_points_fraction.set(entry.hit_points.fraction)
 		self.shield_amount.set(entry.shield_amount)
@@ -315,7 +323,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.terran.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.terran) == DATUnit.StarEditGroupFlag.terran)
 		self.protoss.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.protoss) == DATUnit.StarEditGroupFlag.protoss)
 
-	def save_data(self, entry):
+	def save_data(self, entry): # type: (DATUnit) -> bool
 		edited = False
 		if self.hit_points_whole.get() != entry.hit_points.whole:
 			entry.hit_points.whole = self.hit_points_whole.get()

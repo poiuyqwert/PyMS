@@ -1,14 +1,20 @@
 
 from .DATTab import DATTab
-from .DataID import DATID, DataID
+from ..DataID import DATID, DataID, AnyID
 
-from ..Utilities.UIKit import *
+from ...FileFormats.DAT import DATMap
+
+from ...Utilities.UIKit import *
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..Delegates import MainDelegate
 
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata
 
-	def __init__(self, parent, toplevel):
-		DATTab.__init__(self, parent, toplevel)
+	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
 		self.missionentry = IntegerVar(0, [0,0])
@@ -29,17 +35,17 @@ class MapsTab(DATTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def updated_pointer_entries(self, ids):
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		if DataID.mapdatatbl in ids:
-			self.missions.setentries(('None',) + self.toplevel.data_context.mapdatatbl.strings)
-			self.missionentry.range[1] = len(self.toplevel.data_context.mapdatatbl.strings)
+			self.missions.setentries(('None',) + self.delegate.data_context.mapdatatbl.strings)
+			self.missionentry.range[1] = len(self.delegate.data_context.mapdatatbl.strings)
 
-	def load_entry(self, entry):
+	def load_entry(self, entry): # type: (DATMap) -> None
 		self.missionentry.set(entry.map_file)
 
-	def save_entry(self, entry):
+	def save_entry(self, entry): # type: (DATMap) -> None
 		if self.missionentry.get() != entry.map_file:
 			entry.map_file = self.missionentry.get()
 			self.edited = True
-			if self.toplevel.data_context.settings.settings.get('customlabels'):
-				self.toplevel.data_context.dat_data(DATID.mapdata).update_names()
+			if self.delegate.data_context.settings.settings.get('customlabels'):
+				self.delegate.data_context.dat_data(DATID.mapdata).update_names()

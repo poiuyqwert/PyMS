@@ -100,7 +100,9 @@ def image_to_tk(image, palette, transindex=0, image_bounds=None, flipHor=False, 
 	pil = image_to_pil(image, palette, transindex, image_bounds, flipHor, draw_function, draw_info)
 	return cast(Image, ImageTk.PhotoImage(pil))
 
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=rle_normal, draw_info=None): # type: (RawPalette, GRP | CacheGRP | BMP | PCX | Pixels, int | None, bool, bool, bool, int, bool, RLEFunc, T | None) -> (Image | tuple[Image, int, int, int, int])
+ImageWithBounds = tuple[Image, int, int, int, int]
+
+def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=rle_normal, draw_info=None): # type: (RawPalette, GRP | CacheGRP | BMP | PCX | Pixels, int | None, bool, bool, bool, int, bool, RLEFunc, T | None) -> (Image | ImageWithBounds)
 	if isinstance(g, CacheGRP):
 		d = g[f or 0]
 	elif isinstance(g, GRP):

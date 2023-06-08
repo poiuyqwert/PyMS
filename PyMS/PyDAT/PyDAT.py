@@ -1,22 +1,13 @@
 
-from .UnitsTab import UnitsTab
-from .WeaponsTab import WeaponsTab
-from .FlingyTab import FlingyTab
-from .SpritesTab import SpritesTab
-from .ImagesTab import ImagesTab
-from .UpgradesTab import UpgradesTab
-from .TechnologyTab import TechnologyTab
-from .SoundsTab import SoundsTab
-from .PortraitsTab import PortraitsTab
-from .MapsTab import MapsTab
-from .OrdersTab import OrdersTab
+from .Tabs import *
+from .Tabs.DATTab import DATTab
 from .DataContext import DataContext
 from .DATData import NamesDisplaySetting
 from .SaveMPQDialog import SaveMPQDialog
 from .DATSettingsDialog import DATSettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
-from .DataID import DataID
-from .DATTab import DATTab
+from .DataID import DataID, AnyID
+from .Delegates import MainDelegate
 
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
@@ -38,7 +29,7 @@ from typing import cast, Callable
 
 LONG_VERSION = 'v%s' % Assets.version('PyDAT')
 
-class PyDAT(MainWindow):
+class PyDAT(MainWindow, MainDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
@@ -143,7 +134,7 @@ class PyDAT(MainWindow):
 		self.simple_names = BooleanVar()
 		self.simple_names.trace('w', self.change_simple_names)
 		Label(collapse_view, text='Names:').grid(column=0,row=2, sticky=E)
-		DropDown(collapse_view, self.names_display, ['Basic', 'TBL Based', 'Combined']).grid(column=1,row=2, sticky=EW)
+		DropDown(collapse_view, self.names_display, ['Basic', 'TBL d', 'Combined']).grid(column=1,row=2, sticky=EW)
 		self.simple_names_checkbox = Checkbutton(collapse_view, text='Simple TBL Names', variable=self.simple_names)
 		self.simple_names_checkbox.grid(column=1,row=3, sticky=W)
 
@@ -184,7 +175,7 @@ class PyDAT(MainWindow):
 			page.page_title = name
 			self.pages.append(page)
 			self.dattabs.add_tab(page, name)
-		self.dattabs.bind('<<TabActivated>>', self.tab_activated)
+		self.dattabs.bind('<<TabActivated>>', lambda _: self.refresh())
 		self.hor_pane.add(self.dattabs.notebook, sticky=NSEW)
 		self.hor_pane.pack(fill=BOTH, expand=1)
 
@@ -194,8 +185,6 @@ class PyDAT(MainWindow):
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.expanded)
 		statusbar.pack(side=BOTTOM, fill=X)
-
-		self.mpq_export = self.data_context.settings.get('mpqexport',[])
 
 		self.data_context.load_mpqs()
 
@@ -214,7 +203,7 @@ class PyDAT(MainWindow):
 	def active_tab(self): # type: () -> DATTab
 		return cast(DATTab, self.dattabs.active)
 
-	def tab_activated(self, event=None): # type: (Event | None) -> None
+	def refresh(self): # type: () -> None
 		self.update_entry_listing(True)
 		self.update_name_settings()
 		self.update_status_bar()
@@ -245,7 +234,7 @@ class PyDAT(MainWindow):
 	]
 	def update_name_settings(self): # type: () -> None
 		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
-		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[name_settings.display])
+		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[NamesDisplaySetting(name_settings.display)])
 		if 'simple' in name_settings:
 			self.simple_names_checkbox['state'] = NORMAL
 			self.simple_names.set(name_settings.simple)
@@ -255,9 +244,9 @@ class PyDAT(MainWindow):
 	def change_names_display(self, *_): # type: (Any) -> None
 		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
 		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
-		if new_setting == name_settings.display:
+		if new_setting == NamesDisplaySetting(name_settings.display):
 			return
-		name_settings.display = new_setting
+		name_settings.display = new_setting.value
 		self.active_tab().get_dat_data().update_names()
 	def change_simple_names(self, *_): # type: (Any) -> None
 		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
@@ -271,7 +260,7 @@ class PyDAT(MainWindow):
 		dat_data = tab.get_dat_data()
 		if dat_data.file_path:
 			self.status.set(dat_data.file_path)
-		else:
+		elif dat_data.dat:
 			self.status.set(dat_data.dat.FILE_NAME)
 		self.editstatus['state'] = NORMAL if tab.edited else DISABLED
 		if dat_data.is_expanded():
@@ -279,7 +268,7 @@ class PyDAT(MainWindow):
 		else:
 			self.expanded.set('')
 
-	def updated_pointer_entries(self, ids): # type: (list[DataID]) -> None
+	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
 		for page in self.pages:
 			page.updated_pointer_entries(ids)
 			if self.active_tab() == page and page.page_title in ids:
@@ -294,7 +283,7 @@ class PyDAT(MainWindow):
 		else:
 			if dat_files:
 				self.data_context.load_dat_files()
-			self.tab_activated()
+			self.refresh()
 		return err
 
 	def unsaved(self): # type: () -> (bool | None)
@@ -324,6 +313,9 @@ class PyDAT(MainWindow):
 			if focus_list:
 				self.listbox.focus_set()
 
+	def change_id(self, entry_id): # type: (int) -> None
+		self.changeid(entry_id)
+
 	def findnext(self, key=None): # type: (Event | None) -> None
 		find = self.find.get()
 		if find in self.findhistory:
@@ -343,8 +335,12 @@ class PyDAT(MainWindow):
 		self.changeid(self.jumpid.get())
 
 	def popup(self, e): # type: (Event) -> None
+		can_expand = False
+		dat = self.active_tab().get_dat_data().dat
+		if dat:
+			can_expand = dat.can_expand()
 		self.listmenu.tag_enabled('can_copy_sub_tab', hasattr(self.active_tab(), 'copy_subtab')) # type: ignore[attr-defined]
-		self.listmenu.tag_enabled('can_expand', self.active_tab().get_dat_data().dat.can_expand()) # type: ignore[attr-defined]
+		self.listmenu.tag_enabled('can_expand', can_expand) # type: ignore[attr-defined]
 		self.listmenu.post(e.x_root, e.y_root)
 
 	def copy(self): # type: () -> None
@@ -467,7 +463,7 @@ class PyDAT(MainWindow):
 	def savempq(self, key=None): # type: (Event | None) -> None
 		if MPQ.supported():
 			self.save_data()
-			SaveMPQDialog(self)
+			SaveMPQDialog(self, self)
 
 	def mpqtbl(self, key=None, err=None): # type: (Event | None, PyMSError | None) -> None
 		data = [
@@ -511,6 +507,5 @@ class PyDAT(MainWindow):
 		if not self.unsaved():
 			self.data_context.settings.windows.save_window_size('main', self)
 			self.data_context.settings.save_pane_size('list_size', self.hor_pane)
-			self.data_context.settings.mpqexport = self.mpq_export
 			self.data_context.settings.save()
 			self.destroy()
