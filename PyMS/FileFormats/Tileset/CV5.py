@@ -34,6 +34,7 @@ class CV5DoodadFlag:
 
 class CV5Group(object):
 	TYPE_DOODAD = 1
+	SCR = 1
 
 	def __init__(self): # type: () -> None
 		self.type = 0 

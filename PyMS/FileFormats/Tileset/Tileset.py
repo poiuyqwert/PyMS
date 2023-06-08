@@ -27,7 +27,7 @@ import os, re, math
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Callable, cast
+from typing import Callable, cast, TextIO
 
 
 def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> Image
@@ -483,12 +483,12 @@ class Tileset(object):
 					bmp.image[mini_y+row_y].extend(row)
 		bmp.save_file(path)
 
-	def export_settings(self, tiletype, path_or_file, ids, options=ExportSettingsOptions()): # type: (TileType, str, list[int], ExportSettingsOptions) -> None
+	def export_settings(self, tiletype, path_or_file, ids, options=ExportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ExportSettingsOptions) -> None
 		if tiletype == TileType.mini:
 			raise PyMSError('Export', "Can't export settings for minitiles")
 		if isinstance(path_or_file, str):
 			close = True
-			file = AtomicWriter(path_or_file, 'w')
+			file = cast(TextIO, AtomicWriter(path_or_file, 'w'))
 		else:
 			close = False
 			file = path_or_file
@@ -580,7 +580,7 @@ MegaTile:""" % id)
 	_line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
 	_group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')
 	# TODO: Re-write import settings
-	def import_settings(self, tiletype, path_or_text, ids, options=ImportSettingsOptions()): # type: (TileType, str, list[int], ImportSettingsOptions) -> None
+	def import_settings(self, tiletype, path_or_text, ids, options=ImportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ImportSettingsOptions) -> None
 		raise PyMSError('Internal', 'Need to re-write settings import')
 		# if tiletype == TileType.mini:
 		# 	raise PyMSError('Import', "Can't import settings for minitiles")

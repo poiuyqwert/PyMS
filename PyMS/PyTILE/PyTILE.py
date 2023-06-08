@@ -5,7 +5,7 @@ from .TilePalette import TilePalette
 from .Placeability import Placeability
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate
 
-from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
+from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo, ExportSettingsOptions
 from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
 from ..FileFormats.Tileset.VF4 import VF4Flag
 from ..FileFormats.Tileset.VX4 import VX4Minitile
@@ -25,16 +25,127 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.SettingsDialog import SettingsDialog
 
-import sys
+import sys, io
 from enum import Enum
 
-from typing import Self, cast, Callable
+from typing import Self, cast, Callable, TextIO
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
 class CheckSaved(Enum):
 	cancelled = 0
 	saved = 1 # Also covers not open, not edited, and chose to ignore changes
+
+class EditorGroup:
+	class EditorWidget:
+		def __init__(self, group: 'EditorGroup', widget: Widget):
+			self.group = group
+			self.widget = widget
+
+		def add(self, sticky: str = W, span: int = 1, weight: int | None = None, new_row: bool = True) -> 'EditorGroup':
+			self.widget.grid(row=self.group.row, column=self.group.column, sticky=sticky, columnspan=span)
+			if weight is not None:
+				self.group.container.grid_columnconfigure(self.group.column, weight=weight)
+			if new_row:
+				self.group.row += 1
+				self.group.column = 0
+			else:
+				self.group.column += span
+			return self.group
+
+	def __init__(self, parent: Misc, name: str, tooltip: str | None = None, weight: int = 0):
+		self.container = LabelFrame(parent, text=name)
+		self.content = Frame(self.container)
+		self.content.pack(padx=2, pady=2)
+		self.tooltip = tooltip
+		self.weight = weight
+		self.row = 0
+		self.column = 0
+		self.editors = [] # type: list[Widget]
+
+	def _tip(self, widget: Widget, tooltip: str) -> None:
+		if self.tooltip:
+			tooltip += '\n' + self.tooltip
+		Tooltip(widget, tooltip)
+
+	def skip(self, columns=1) -> Self:
+		self.column += columns
+		return self
+
+	def label(self, text: str, add_colon: bool = True) -> EditorWidget:
+		if add_colon:
+			text += ':'
+		widget = Label(self.content, text=text)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def check(self, name: str, tooltip: str, variable: BooleanVar) -> EditorWidget:
+		widget = Checkbutton(self.content, text=name, variable=variable, state=DISABLED)
+		self._tip(widget, tooltip)
+		self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def check_flag(self, name: str, tooltip: str, variable: IntegerVar, value: int, editable: bool = True) -> EditorWidget:
+		widget = MaskedCheckbutton(self.content, text=name, variable=variable, value=value, state=DISABLED)
+		self._tip(widget, tooltip)
+		if editable:
+			self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def radio_flag(self, name: str, tooltip: str, variable: IntegerVar, value: int, mask: int | None = None, editable: bool = True) -> EditorWidget:
+		widget = MaskedRadiobutton(self.content, text=name, variable=variable, value=value, mask=mask if mask else variable.range[1], state=DISABLED)
+		self._tip(widget, tooltip)
+		if editable:
+			self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def entry(self, tooltip: str, variable: IntegerVar) -> EditorWidget:
+		widget = Entry(self.content, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED)
+		self._tip(widget, tooltip)
+		self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def dropdown(self, tooltip: str, options: list[str], variable: IntegerVar) -> EditorWidget:
+		widget = DropDown(self.content, IntVar(), options, variable, width=20)
+		self._tip(widget, tooltip)
+		self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def button(self, name: str, tooltip: str, callback: Callable[[], None]) -> EditorWidget:
+		widget = Button(self.content, text=name, command=callback, state=DISABLED)
+		self._tip(widget, tooltip)
+		self.editors.append(widget)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def widget(self, widget: Widget, editors: list[Widget]) -> EditorWidget:
+		self.editors.extend(editors)
+		return EditorGroup.EditorWidget(self, widget)
+
+	def enabled(self, enabled: bool) -> None:
+		for editor in self.editors:
+			editor['state'] = NORMAL if enabled else DISABLED
+
+class CopyOptions:
+	def __init__(self, group: str, settings: Settings, callback: Callable[[], None], reset_key: str | None = None):
+		self.group = group
+		self.settings = settings
+		self.callback = callback
+		self.options: list[tuple[str, BooleanVar]] = []
+		if reset_key and reset_key in self.settings['copy'][group]:
+			del self.settings['copy'][group]
+			
+	def option(self, name: str) -> BooleanVar:
+		variable = BooleanVar()
+		self.options.append((name, variable))
+		variable.set(self.settings['copy'][self.group].get(name, True))
+		variable.trace('w', self.callback)
+		return variable
+
+	def any_enabled(self) -> bool:
+		return any(var.get() for _,var in self.options)
+
+	def save(self) -> None:
+		for name,var in self.options:
+			self.settings['copy'][self.group][name] = var.get()
 
 class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
@@ -88,7 +199,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
-		self.disable = [] # type: list[Widget]
+		# self.disable = [] # type: list[Widget]
 
 		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TileType.mega, int(id)))
 
@@ -110,80 +221,35 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.apply_all_exclude_nulls = IntVar()
 		self.apply_all_exclude_nulls.set(self.settings.mega_edit.get('apply_all_exclude_nulls', True))
 
-		self.copy_mega_height = IntVar()
-		self.copy_mega_height.set(self.settings['copy'].mega.get('height', True))
-		self.copy_mega_height.trace('w', self.action_states)
-		self.copy_mega_walkable = IntVar()
-		self.copy_mega_walkable.set(self.settings['copy'].mega.get('walkable', True))
-		self.copy_mega_walkable.trace('w', self.action_states)
-		self.copy_mega_sight = IntVar()
-		self.copy_mega_sight.set(self.settings['copy'].mega.get('sight', True))
-		self.copy_mega_sight.trace('w', self.action_states)
-		self.copy_mega_ramp = IntVar()
-		self.copy_mega_ramp.set(self.settings['copy'].mega.get('ramp', True))
-		self.copy_mega_ramp.trace('w', self.action_states)
+		self.options_copy_mega = CopyOptions('mega', self.settings, self.action_states)
+		self.copy_mega_height = self.options_copy_mega.option('height')
+		self.copy_mega_walkable = self.options_copy_mega.option('walkable')
+		self.copy_mega_sight = self.options_copy_mega.option('sight')
+		self.copy_mega_ramp = self.options_copy_mega.option('ramp')
 
-		self.copy_tilegroup_flags = IntVar()
-		self.copy_tilegroup_flags.set(self.settings['copy'].tilegroup.get('flags', True))
-		self.copy_tilegroup_flags.trace('w', self.action_states)
-		self.copy_tilegroup_buildable = IntVar()
-		self.copy_tilegroup_buildable.set(self.settings['copy'].tilegroup.get('buildable', True))
-		self.copy_tilegroup_buildable.trace('w', self.action_states)
-		self.copy_tilegroup_hasup = IntVar()
-		self.copy_tilegroup_hasup.set(self.settings['copy'].tilegroup.get('hasup', True))
-		self.copy_tilegroup_hasup.trace('w', self.action_states)
-		self.copy_tilegroup_edges = IntVar()
-		self.copy_tilegroup_edges.set(self.settings['copy'].tilegroup.get('edges', True))
-		self.copy_tilegroup_edges.trace('w', self.action_states)
-		self.copy_tilegroup_unknown9 = IntVar()
-		self.copy_tilegroup_unknown9.set(self.settings['copy'].tilegroup.get('unknown9', True))
-		self.copy_tilegroup_unknown9.trace('w', self.action_states)
-		self.copy_tilegroup_index = IntVar()
-		self.copy_tilegroup_index.set(self.settings['copy'].tilegroup.get('index', True))
-		self.copy_tilegroup_index.trace('w', self.action_states)
-		self.copy_tilegroup_buildable2 = IntVar()
-		self.copy_tilegroup_buildable2.set(self.settings['copy'].tilegroup.get('buildable2', True))
-		self.copy_tilegroup_buildable2.trace('w', self.action_states)
-		self.copy_tilegroup_hasdown = IntVar()
-		self.copy_tilegroup_hasdown.set(self.settings['copy'].tilegroup.get('hasdown', True))
-		self.copy_tilegroup_hasdown.trace('w', self.action_states)
-		self.copy_tilegroup_ground_height = IntVar()
-		self.copy_tilegroup_ground_height.set(self.settings['copy'].tilegroup.get('ground_height', True))
-		self.copy_tilegroup_ground_height.trace('w', self.action_states)
-		self.copy_tilegroup_unknown11 = IntVar()
-		self.copy_tilegroup_unknown11.set(self.settings['copy'].tilegroup.get('unknown11', True))
-		self.copy_tilegroup_unknown11.trace('w', self.action_states)
+		self.options_copy_tilegroup = CopyOptions('tilegroup', self.settings, self.action_states)
+		self.copy_tilegroup_walkability = self.options_copy_tilegroup.option('walkability')
+		self.copy_tilegroup_buildability = self.options_copy_tilegroup.option('buildability')
+		self.copy_tilegroup_creep = self.options_copy_tilegroup.option('creep')
+		self.copy_tilegroup_height = self.options_copy_tilegroup.option('height')
+		self.copy_tilegroup_misc = self.options_copy_tilegroup.option('misc')
+		self.copy_tilegroup_unknown = self.options_copy_tilegroup.option('unknown')
+		self.copy_tilegroup_edit_types = self.options_copy_tilegroup.option('edit_types')
+		self.copy_tilegroup_piece_types = self.options_copy_tilegroup.option('piece_types')
+		self.copy_tilegroup_group_type = self.options_copy_tilegroup.option('group_type')
 
-		self.copy_doodadgroup_doodad = IntVar()
-		self.copy_doodadgroup_doodad.set(self.settings['copy'].doodadgroup.get('doodad', True))
-		self.copy_doodadgroup_doodad.trace('w', self.action_states)
-		self.copy_doodadgroup_overlay = IntVar()
-		self.copy_doodadgroup_overlay.set(self.settings['copy'].doodadgroup.get('overlay', True))
-		self.copy_doodadgroup_overlay.trace('w', self.action_states)
-		self.copy_doodadgroup_buildable = IntVar()
-		self.copy_doodadgroup_buildable.set(self.settings['copy'].doodadgroup.get('buildable', True))
-		self.copy_doodadgroup_buildable.trace('w', self.action_states)
-		self.copy_doodadgroup_unknown1 = IntVar()
-		self.copy_doodadgroup_unknown1.set(self.settings['copy'].doodadgroup.get('unknown1', True))
-		self.copy_doodadgroup_unknown1.trace('w', self.action_states)
-		self.copy_doodadgroup_unknown6 = IntVar()
-		self.copy_doodadgroup_unknown6.set(self.settings['copy'].doodadgroup.get('unknown6', True))
-		self.copy_doodadgroup_unknown6.trace('w', self.action_states)
-		self.copy_doodadgroup_unknown8 = IntVar()
-		self.copy_doodadgroup_unknown8.set(self.settings['copy'].doodadgroup.get('unknown8', True))
-		self.copy_doodadgroup_unknown8.trace('w', self.action_states)
-		self.copy_doodadgroup_unknown12 = IntVar()
-		self.copy_doodadgroup_unknown12.set(self.settings['copy'].doodadgroup.get('unknown12', True))
-		self.copy_doodadgroup_unknown12.trace('w', self.action_states)
-		self.copy_doodadgroup_index = IntVar()
-		self.copy_doodadgroup_index.set(self.settings['copy'].doodadgroup.get('index', True))
-		self.copy_doodadgroup_index.trace('w', self.action_states)
-		self.copy_doodadgroup_ground_height = IntVar()
-		self.copy_doodadgroup_ground_height.set(self.settings['copy'].doodadgroup.get('ground_height', True))
-		self.copy_doodadgroup_ground_height.trace('w', self.action_states)
-		self.copy_doodadgroup_group_string_id = IntVar()
-		self.copy_doodadgroup_group_string_id.set(self.settings['copy'].doodadgroup.get('group_string_id', True))
-		self.copy_doodadgroup_group_string_id.trace('w', self.action_states)
+		self.options_copy_doodadgroup = CopyOptions('doodadgroup', self.settings, self.action_states)
+		self.copy_doodadgroup_doodad = self.options_copy_doodadgroup.option('doodad')
+		self.copy_doodadgroup_overlay = self.options_copy_doodadgroup.option('overlay')
+		self.copy_doodadgroup_walkability = self.options_copy_doodadgroup.option('walkability')
+		self.copy_doodadgroup_buildability = self.options_copy_doodadgroup.option('buildability')
+		self.copy_doodadgroup_creep = self.options_copy_doodadgroup.option('creep')
+		self.copy_doodadgroup_height = self.options_copy_doodadgroup.option('height')
+		self.copy_doodadgroup_misc = self.options_copy_doodadgroup.option('misc')
+		self.copy_doodadgroup_unknown = self.options_copy_doodadgroup.option('unknown')
+		self.copy_doodadgroup_group_type = self.options_copy_doodadgroup.option('group_type')
+		self.copy_doodadgroup_scr = self.options_copy_doodadgroup.option('scr')
+		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option('name')
 
 		mid = Frame(self)
 		self.palette = TilePaletteView(mid, self, TileType.group, multiselect=False, sub_select=True)
@@ -194,139 +260,68 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.flow_view = FlowView(self.groupid, width=300)
 		self.flow_view.pack(fill=BOTH, expand=1, padx=2)
 
-		OPTION_RADIO = 0
-		OPTION_CHECK = 1
-		def options_editor(name, tooltip, variable, options): # type: (str, str, IntegerVar, tuple[tuple[str, int, str, int, int | None, bool], ...]) -> Widget
-			group = LabelFrame(self.flow_view.content_view, text=name)
-			c = Frame(group)
-			raw_tooltip = ''
-			for option_name,option_value,option_tooltip,option_type,option_mask,editable in options:
-				raw_tooltip += '\n  %d = %s' % (option_value, option_name)
-				if option_type == OPTION_CHECK and not option_value:
-					continue
-				f = Frame(c)
-				widget: Widget
-				if option_type == OPTION_CHECK:
-					widget = MaskedCheckbutton(f, text=option_name, variable=variable, value=option_value, state=DISABLED)
-				else:
-					widget = MaskedRadiobutton(f, text=option_name, variable=variable, value=option_value, mask=option_mask if option_mask else variable.range[1], state=DISABLED)
-				widget.pack(side=LEFT)
-				if editable:
-					self.disable.append(widget)
-				Tooltip(widget, name + ':\n  ' + tooltip + '\n\n%s:\n  %s' % (option_name, option_tooltip))
-				f.pack(side=TOP, fill=X)
-			# f = Frame(c)
-			# Label(f, text='Raw:').pack(side=LEFT)
-			# self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
-			# self.disable[-1].pack(side=LEFT)
-			# Tooltip(self.disable[-1], name + ':\n' + tooltip + '\n\nRaw:' + raw_tooltip)
-			# f.pack(side=TOP, fill=X)
-			c.pack(padx=2,pady=2)
-			return group
-		def entries_editor(name, tooltip, rows): # type: (str, str, tuple[tuple[tuple[str, IntegerVar, str], ...], ...]) -> Widget
-			group = LabelFrame(self.flow_view.content_view, text=name)
-			f = Frame(group)
-			for r,row in enumerate(rows):
-				for c,(field_name, variable, field_tooltip) in enumerate(row):
-					Label(f, text=field_name + ':').grid(column=c*2, row=r, sticky=E)
-					self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
-					self.disable[-1].grid(column=c*2+1, row=r, sticky=W)
-					if tooltip:
-						Tooltip(self.disable[-1], name + ':\n  ' + tooltip + '\n\n%s:\n  %s' % (field_name, field_tooltip))
-					else:
-						Tooltip(self.disable[-1], field_name + ':\n  ' + field_tooltip)
-			f.pack(padx=2,pady=2)
-			return group
-		def string_editor(name, tooltip, variable): # type: (str, str, IntegerVar) -> Widget
-			group = LabelFrame(self.flow_view.content_view, text=name)
-			f = Frame(group)
-			Label(f, text='String:').grid(column=0,row=0, sticky=E)
-			self.disable.append(DropDown(f, IntVar(), ['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings], variable, width=20))
-			self.disable[-1].grid(sticky=W+E, column=1,row=0)
-			Tooltip(self.disable[-1], name + ':\n  ' + tooltip)
-			f.grid_columnconfigure(1, weight=1)
-			Label(f, text='Raw:').grid(column=0,row=1, sticky=E)
-			self.disable.append(Entry(f, textvariable=variable, font=Font.fixed(), width=len(str(variable.range[1])), state=DISABLED))
-			self.disable[-1].grid(sticky=W, column=1,row=1)
-			Tooltip(self.disable[-1], name + ':\n' + tooltip)
-			f.pack(fill=BOTH, expand=1, padx=2,pady=2)
-			return group
-		def actions_editor(name, actions): # type: (str, tuple[tuple[str, str, Callable[[], None]], ...]) -> Widget
-			group = LabelFrame(self.flow_view.content_view, text=name)
-			f = Frame(group)
-			for action_name,tooltip,callback in actions:
-				self.disable.append(Button(f, text=action_name, command=callback))
-				self.disable[-1].pack(fill=X, pady=(0,2))
-				Tooltip(self.disable[-1], action_name + ':\n  ' + tooltip)
-			f.pack(fill=BOTH, expand=1, padx=2,pady=(2,0))
-			return group
-		def group_type_editor(): # type: () -> Widget
-			group = LabelFrame(self.flow_view.content_view, text='Group')
-			f = Frame(group)
-			row = Frame(f)
-			self.disable.append(Checkbutton(row, text='Doodad', variable=self.doodad, state=DISABLED))
-			self.disable[-1].pack(side=LEFT)
-			row.pack(side=TOP, fill=X)
-			Tooltip(self.disable[-1], 'Doodad:\n  Whether this group is a doodad group or not.')
-			row = Frame(group)
-			Label(row, text='Type:').pack(side=LEFT)
-			self.disable.append(Entry(row, textvariable=self.group_type, font=Font.fixed(), width=len(str(self.group_type.range[1])), state=DISABLED))
-			self.disable[-1].pack(side=LEFT)
-			Tooltip(self.disable[-1], 'Type:\n  Type - 0 for unused/unplaceable, 1 for doodads, 2+ for basic terrain and edges')
-			row.pack(side=TOP, fill=X)
-			f.pack(padx=2,pady=2)
-			return group
+		self.normal_editors = [] # type: list[EditorGroup]
+		walkability_editor = EditorGroup(self.flow_view.content_view, 'Walkability')\
+			.check_flag('Walkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.walkable).add()\
+			.check_flag('Unwalkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.unwalkable).add()
+		self.normal_editors.append(walkability_editor)
+		buildability_editor = EditorGroup(self.flow_view.content_view, 'Buildability')\
+			.check_flag('Unbuildable', 'No buildings buildable', self.group_flags, CV5Flag.unbuildable).add()\
+			.check_flag('Occupied', 'Unbuildable until a building on this tile gets removed', self.group_flags, CV5Flag.occupied).add()\
+			.check_flag('Special', 'Allow Beacons/Start Locations to be placeable', self.group_flags, CV5Flag.special_placeable).add()
+		self.normal_editors.append(buildability_editor)
+		self.normal_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Creep')
+			.check_flag('Creep', 'Zerg can build here when this flag is combined with the Temporary creep flag', self.group_flags, CV5Flag.creep).add()
+			.check_flag('Receding', 'Receding creep', self.group_flags, CV5Flag.creep_receding).add()
+			.check_flag('Temporary', 'Zerg can build here when this flag is combined with the Creep flag', self.group_flags, CV5Flag.creep_temp).add()
+		)
+		height_editor = EditorGroup(self.flow_view.content_view, 'Height')\
+			.check_flag('Mid Ground*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.mid_ground).add()\
+			.check_flag('High Ground*', '*Gets overwritten by SC based on minitile flags (priority over Mid Ground)', self.group_flags, CV5Flag.high_ground).add()
+		self.normal_editors.append(height_editor)
+		self.normal_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Misc.')
+			.check_flag('Has Doodad Cover', 'Provides cover for hit calculations', self.group_flags, CV5Flag.has_doodad_cover).add()
+			.check_flag('Blocks View*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.blocks_view).add()
+			.check_flag('Cliff Edge*', '*Gets overwritten by SC based on minitile flagsg', self.group_flags, CV5Flag.cliff_edge).add()
+		)
+		self.normal_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Unknown')
+			.check_flag('0002', 'Unknown/unused flag 0x0002', self.group_flags, CV5Flag.unknown_0002).add()
+			.check_flag('0008', 'Unknown/unused flag 0x0008', self.group_flags, CV5Flag.unknown_0008).add()
+			.check_flag('0020', 'Unknown/unused flag 0x0020', self.group_flags, CV5Flag.unknown_0020).add()
+		)
+		self.normal_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Edge Types*', '*Unsure if StarEdit actually uses these, or if they are just reference/outdated values.')
+			.label('Left').add(new_row=False).entry('What tile types can be to the left of tiles in this group.', self.group_edge_left_or_overlay_id).add(new_row=False)
+			.label('Up').add(new_row=False).entry('What tile types can be above tiles in this group.', self.group_edge_up_or_scr).add()
+			.label('Right').add(new_row=False).entry('What tile types can be to the left of tiles in this group.', self.group_edge_right_or_string_id).add(new_row=False)
+			.label('Down').add(new_row=False).entry('What tile types can be below tiles in this group.', self.group_edge_down_or_unknown4).add()
+		)
+		self.normal_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Piece Types*', 'A value of 0 can match any appropriate tile, otherwise the edge only pairs with a matching Terrain Piece Type value and tile index.\n*Unsure if StarEdit actually uses these, or if they are just reference/outdated values.')
+			.label('Left').add(new_row=False).entry('Edge only pairs with a matching Terrain Piece Type value and tile index on the left.', self.group_piece_left_or_dddata_id).add(new_row=False)
+			.label('Up').add(new_row=False).entry('Edge only pairs with a matching Terrain Piece Type value and tile index above.', self.group_piece_up_or_width).add()
+			.label('Right').add(new_row=False).entry('Edge only pairs with a matching Terrain Piece Type value and tile index on the right.', self.group_piece_right_or_height).add(new_row=False)
+			.label('Down').add(new_row=False).entry('Edge only pairs with a matching Terrain Piece Type value and tile index below.', self.group_piece_down_or_unknown8).add()
+		)
+		group_type_editor = EditorGroup(self.flow_view.content_view, 'Group')\
+			.label('Type').add(new_row=False).entry('0 for unused/unplaceable, 1 for doodads, 2+ for basic terrain and edges', self.group_type).add()\
+			.check('Doodad', 'Whether this group is a doodad group or not.', self.doodad).add(span=2)
+		self.normal_editors.append(group_type_editor)
 
-		self.editor_configs = []
-
-		self.normal_editors = [] # type: list[Widget]
-		self.normal_editors.append(options_editor('Walkable', 'Settings for walkability', self.group_flags, (
-			('Walkable', CV5Flag.walkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('Unwalkable', CV5Flag.unwalkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(options_editor('Buildable', 'Whether buildings can be placed/built', self.group_flags, (
-			('Unbuildable', CV5Flag.unbuildable, 'No buildings buildable', OPTION_CHECK, None, True),
-			('Occupied', CV5Flag.occupied, 'Unbuildable until a building on this tile gets removed', OPTION_CHECK, None, True),
-			('Special', CV5Flag.special_placeable, 'Allow Beacons/Start Locations to be placeable', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(options_editor('Creep', 'Only Zerg can build on creep', self.group_flags, (
-			('Creep', CV5Flag.creep, 'Zerg can build here when this flag is combined with the Temporary creep flag', OPTION_CHECK, None, True),
-			('Receding', CV5Flag.creep_receding, 'Receding creep', OPTION_CHECK, None, True),
-			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(options_editor('Height', 'Terrain height', self.group_flags, (
-			('Mid Ground', CV5Flag.mid_ground, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags (priority over Mid Ground)', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(options_editor('Misc.', 'Misc. flags', self.group_flags, (
-			('Has Doodad Cover', CV5Flag.has_doodad_cover, 'Has doodad cover', OPTION_CHECK, None, True),
-			('Blocks View', CV5Flag.blocks_view, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('Cliff Edge', CV5Flag.cliff_edge, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(options_editor('Unknown', 'Unknown/unused flags', self.group_flags, (
-			('0002', CV5Flag.unknown_0002, 'Unknown/unused flag 0x0002', OPTION_CHECK, None, True),
-			('0008', CV5Flag.unknown_0008, 'Unknown/unused flag 0x0008', OPTION_CHECK, None, True),
-			('0020', CV5Flag.unknown_0020, 'Unknown/unused flag 0x0020', OPTION_CHECK, None, True),
-		)))
-		self.normal_editors.append(entries_editor('Edge Types', 'Determines what tile types can be adjacent to tiles in this group.\n  Unsure if StarEdit actually uses these, or if they are just reference/outdated values.', (
-			(('Left', self.group_edge_left_or_overlay_id, 'What tile types can be to the left of tiles in this group.'), ('Up', self.group_edge_up_or_scr, 'What tile types can be above tiles in this group.')),
-			(('Right', self.group_edge_right_or_string_id, 'What tile types can be to the right of tiles in this group.'), ('Down', self.group_edge_down_or_unknown4, 'What tile types can be below tiles in this group.')),
-		)))
-		self.normal_editors.append(entries_editor('Piece Types', 'Determines multi-tile blocks of terrain (e.g. 2x3 cliff pieces).\n  A value of 0 can match any appropriate tile, otherwise the edge only pairs with a matching Terrain Piece Type value and tile index.\n  Unsure if StarEdit actually uses these, or if they are just reference/outdated values.', (
-			(('Left', self.group_piece_left_or_dddata_id, 'Edge only pairs with a matching Terrain Piece Type value and tile index on the left.'), ('Up', self.group_piece_up_or_width, 'Edge only pairs with a matching Terrain Piece Type value and tile index above.')),
-			(('Right', self.group_piece_right_or_height, 'Edge only pairs with a matching Terrain Piece Type value and tile index on the right.'), ('Down', self.group_piece_down_or_unknown8, 'Edge only pairs with a matching Terrain Piece Type value and tile index below.')),
-		)))
-		self.normal_editors.append(group_type_editor())
-
-		megatile_group = LabelFrame(self.flow_view.content_view, text='MegaTile')
+		megatile_editor = EditorGroup(self.flow_view.content_view, 'MegaTile')
+		megatile_group = Frame(megatile_editor.content)
+		megatile_editors = [] # type: list[Widget]
 		f = Frame(megatile_group)
 		Label(f, text='ID:').pack(side=LEFT)
-		self.disable.append(Entry(f, textvariable=self.megatilee, font=Font.fixed(), width=len(str(self.megatilee.range[1])), state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=2)
-		Tooltip(self.disable[-1], 'MegaTile ID:\nID for the selected MegaTile in the current MegaTile Group')
-		self.disable.append(Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda: self.choose(TileType.mega), state=DISABLED))
-		self.disable[-1].pack(side=LEFT, padx=2)
-		Tooltip(self.disable[-1], 'MegaTile Palette')
+		megatile_editors.append(Entry(f, textvariable=self.megatilee, font=Font.fixed(), width=len(str(self.megatilee.range[1])), state=DISABLED))
+		megatile_editors[-1].pack(side=LEFT, padx=2)
+		Tooltip(megatile_editors[-1], 'MegaTile ID:\nID for the selected MegaTile in the current MegaTile Group')
+		megatile_editors.append(Button(f, image=Assets.get_image('find'), width=20, height=20, command=lambda: self.choose(TileType.mega), state=DISABLED))
+		megatile_editors[-1].pack(side=LEFT, padx=2)
+		Tooltip(megatile_editors[-1], 'MegaTile Palette')
 		f.pack(side=TOP, fill=X, padx=3)
 		def megatile_apply_all_pressed():
 			menu = Menu(self, tearoff=0)
@@ -338,7 +333,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			menu.add_checkbutton(label="Exclude Null Tiles (Control+Shift+N)", variable=self.apply_all_exclude_nulls)
 			menu.post(*self.winfo_pointerxy())
 		self.apply_all_btn = Button(megatile_group, text='Apply to Megas', state=DISABLED, command=megatile_apply_all_pressed)
-		self.disable.append(self.apply_all_btn)
+		megatile_editors.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
 		self.bind(Shift.Ctrl.h(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.height))
 		self.bind(Shift.Ctrl.w(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.walkability))
@@ -349,18 +344,9 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.mega_editor = MegaEditorView(megatile_group, self.settings, self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
-		self.normal_editors.append(megatile_group)
-		copy_mega_group = LabelFrame(self.flow_view.content_view, text='Copy MegaTile Flags')
-		copy_mega_opts = (
-			('Height', self.copy_mega_height),
-			('Walkable', self.copy_mega_walkable),
-			('Blocks Sight', self.copy_mega_sight),
-			('Ramp', self.copy_mega_ramp)
-		)
-		for name,var in copy_mega_opts:
-			check = Checkbutton(copy_mega_group, text=name, variable=var, anchor=W, state=DISABLED)
-			check.grid(sticky=W)
-			self.disable.append(check)
+		megatile_editor.widget(megatile_group, megatile_editors).add()
+		self.normal_editors.append(megatile_editor)
+
 		def copy_mega(*args):
 			if not self.tileset:
 				return
@@ -374,13 +360,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 				return
 			group = self.tileset.cv5.groups[self.palette.selected[0]]
 			mega = group[13][self.palette.sub_selection]
-			f = FFile()
+			f = io.StringIO()
 			self.tileset.export_settings(TileType.mega, f, [mega], options)
 			self.clipboard_clear()
-			self.clipboard_append(f.data)
-		self.copy_mega_btn = Button(copy_mega_group, text='Copy (%s)' % Shift.Ctrl.c.description(), state=DISABLED, command=copy_mega)
-		self.bind(Shift.Ctrl.c(), copy_mega)
-		self.copy_mega_btn.grid(sticky=E+W)
+			self.clipboard_append(f.getvalue())
 		def paste_mega(*args):
 			if not self.tileset:
 				return
@@ -394,80 +377,53 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 				return
 			self.mega_editor.draw()
 			self.mark_edited()
-		btn = Button(copy_mega_group, text='Paste (%s)' % Shift.Ctrl.v.description(), state=DISABLED, command=paste_mega)
+		copy_mega_editor = EditorGroup(self.flow_view.content_view, 'Copy MegaTile Flags')\
+			.check('Height', 'Copy Height settings for MegaTile', self.copy_mega_height).add()\
+			.check('Walkable', 'Copy Walkable settings for MegaTile', self.copy_mega_walkable).add()\
+			.check('Blocks Sight', 'Copy Blocks Sight settings for MegaTile', self.copy_mega_sight).add()\
+			.check('Ramp', 'Copy Ramp settings for MegaTile', self.copy_mega_ramp).add()
+		copy_mega_btn = copy_mega_editor.button('Copy (%s)' % Shift.Ctrl.c.description(), 'Copy chosen settings to clipboard', copy_mega)
+		self.copy_mega_btn = copy_mega_btn.widget
+		copy_mega_btn.add()
+		copy_mega_editor.button('Paste (%s)' % Shift.Ctrl.v.description(), 'Paste settings from clipboard', paste_mega).add()
+		self.normal_editors.append(copy_mega_editor)
+		self.bind(Shift.Ctrl.c(), copy_mega)
 		self.bind(Shift.Ctrl.v(), paste_mega)
-		btn.grid(sticky=E+W)
-		self.disable.append(btn)
-		self.normal_editors.append(copy_mega_group)
-		copy_tilegroup_group = LabelFrame(self.flow_view.content_view, text='Copy Group Settings')
-		copy_tilegroup_opts = (
-			(
-				('Flags', self.copy_tilegroup_flags),
-				('Buildable', self.copy_tilegroup_buildable),
-				('Has Up', self.copy_tilegroup_hasup),
-				('Edges', self.copy_tilegroup_edges),
-				('Unknown 9', self.copy_tilegroup_unknown9),
-			),
-			(
-				('Index', self.copy_tilegroup_index),
-				('Buildable 2', self.copy_tilegroup_buildable2),
-				('Has Down', self.copy_tilegroup_hasdown),
-				('Ground Height', self.copy_tilegroup_ground_height),
-				('Unknown 11', self.copy_tilegroup_unknown11)
-			)
-		)
-		for c,rows in enumerate(copy_tilegroup_opts):
-			for r,(name,var) in enumerate(rows):
-				check = Checkbutton(copy_tilegroup_group, text=name, variable=var, anchor=W, state=DISABLED)
-				check.grid(column=c,row=r, sticky=W)
-				self.disable.append(check)
-		def copy_tilegroup(*args):
+	
+		def copy_tilegroup(*args): # type: (Any) -> None
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
-			options = {}
-			if group < 1024:
-				options = {
-					'groups_export_index': self.copy_tilegroup_index.get(),
-					'groups_export_buildable': self.copy_tilegroup_buildable.get(),
-					'groups_export_flags': self.copy_tilegroup_flags.get(),
-					'groups_export_buildable2': self.copy_tilegroup_buildable2.get(),
-					'groups_export_ground_height': self.copy_tilegroup_ground_height.get(),
-					'groups_export_edge_left': self.copy_tilegroup_edges.get(),
-					'groups_export_edge_up': self.copy_tilegroup_edges.get(),
-					'groups_export_edge_right': self.copy_tilegroup_edges.get(),
-					'groups_export_edge_down': self.copy_tilegroup_edges.get(),
-					'groups_export_unknown9': self.copy_tilegroup_unknown9.get(),
-					'groups_export_has_up': self.copy_tilegroup_hasup.get(),
-					'groups_export_unknown11': self.copy_tilegroup_unknown11.get(),
-					'groups_export_has_down': self.copy_tilegroup_hasdown.get(),
-				}
-			else:
-				options = {
-					'groups_export_index': self.copy_doodadgroup_index.get(),
-					'groups_export_buildable': self.copy_doodadgroup_buildable.get(),
-					'groups_export_unknown1': self.copy_doodadgroup_unknown1.get(),
-					'groups_export_overlay_flags': self.copy_doodadgroup_overlay.get(),
-					'groups_export_ground_height': self.copy_doodadgroup_ground_height.get(),
-					'groups_export_overlay_id': self.copy_doodadgroup_overlay.get(),
-					'groups_export_unknown6': self.copy_doodadgroup_unknown6.get(),
-					'groups_export_doodad_group_string': self.copy_doodadgroup_group_string_id.get(),
-					'groups_export_unknown8': self.copy_doodadgroup_unknown8.get(),
-					'groups_export_dddata_id': self.copy_doodadgroup_doodad.get(),
-					'groups_export_doodad_width': self.copy_doodadgroup_doodad.get(),
-					'groups_export_doodad_height': self.copy_doodadgroup_doodad.get(),
-					'groups_export_unknown12': self.copy_doodadgroup_unknown12.get(),
-				}
-			if not max(options.values()):
-				return
-			f = FFile()
+			options = ExportSettingsOptions()
+			# if self.doodad.get():
+			# 	options.groups_type = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_flags = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_overlay_id = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_scr = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_string_id = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_unknown4 = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_dddata_id = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_width = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_height = self.copy_doodadgroup_group_type.get()
+			# 	options.groups_doodad_unknown8 = self.copy_doodadgroup_group_type.get()
+			# else:
+			# 	options.groups_type: bool = True
+			# 	options.groups_flags: bool = True
+			# 	options.groups_basic_edge_left: bool = True
+			# 	options.groups_basic_edge_up: bool = True
+			# 	options.groups_basic_edge_right: bool = True
+			# 	options.groups_basic_edge_down: bool = True
+			# 	options.groups_basic_piece_left: bool = True
+			# 	options.groups_basic_piece_up: bool = True
+			# 	options.groups_basic_piece_right: bool = True
+			# 	options.groups_basic_piece_down: bool = True
+			# if not max(options.values()):
+			# 	return
+			f = io.StringIO()
 			self.tileset.export_settings(TileType.group, f, [group], options)
 			self.clipboard_clear()
-			self.clipboard_append(f.data)
-		self.copy_tilegroup_btn = Button(copy_tilegroup_group, text='Copy (%s)' % Ctrl.Alt.c.description(), state=DISABLED, command=copy_tilegroup)
-		self.bind(Ctrl.Alt.c(), copy_tilegroup)
-		self.copy_tilegroup_btn.grid(column=0,row=5, sticky=E+W)
-		def paste_tilegroup(*args):
+			self.clipboard_append(f.getvalue())
+		def paste_tilegroup(*args): # type: (Any) -> None
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -479,104 +435,100 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 				return
 			self.megaload()
 			self.mark_edited()
-		btn = Button(copy_tilegroup_group, text='Paste (%s)' % Ctrl.Alt.v.description(), state=DISABLED, command=paste_tilegroup)
-		self.bind(Ctrl.Alt.v(), paste_tilegroup)
-		btn.grid(column=1,row=5, sticky=E+W)
-		self.disable.append(btn)
-		self.normal_editors.append(copy_tilegroup_group)
-
-
-		self.doodad_editors = [] # type: list[Widget]
-
-		self.doodad_editors.append(entries_editor('Doodad', 'Basic doodad properties', (
-			(('ID', self.group_piece_left_or_dddata_id, 'Each doodad must have a unique Doodad ID.\n  All MegaTile Groups in the doodad must have the same ID.'),),
-			(('Width', self.group_piece_up_or_width, 'Total width of the doodad in MegaTiles'),),
-			(('Height', self.group_piece_right_or_height, 'Total height of the doodad in MegaTiles'),),
-		)))
-		self.doodad_editors.append(options_editor('Has Overlay', 'Doodad overlay settings', self.group_flags, (
-			('None', 0, 'No overlay', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
-			('Sprites.dat', CV5DoodadFlag.has_overlay_sprite, 'The overlay ID is a Sprites.dat reference. (is not cleared by SC, so this flag also counts as Receding creep)', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
-			('Units.dat', CV5DoodadFlag.has_overlay_unit, 'The overlay ID is a Units.dat reference', OPTION_RADIO, CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit, True),
-			('Flipped', CV5DoodadFlag.overlay_flipped, 'The overlay is flipped. (Unused) (is not cleared SC, so this flag also counts as Temporary creep)', OPTION_CHECK, None, True),
-		)))
-		self.doodad_editors.append(entries_editor('Overlay', 'Doodad overlay settings', (
-			(('ID', self.group_edge_left_or_overlay_id, 'Sprite or Unit ID (depending on the Has Overlay flag) of the doodad overlay.'),),
-		)))
-		self.doodad_editors.append(options_editor('Walkable', 'Settings for walkability', self.group_flags, (
-			('Walkable', CV5Flag.walkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('Unwalkable', CV5Flag.unwalkable, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-		)))
-		self.doodad_editors.append(options_editor('Buildable', 'Whether buildings can be placed/built', self.group_flags, (
-			('Unbuildable', CV5Flag.unbuildable, 'No buildings buildable', OPTION_CHECK, None, True),
-			('Occupied', CV5Flag.occupied, 'Unbuildable until a building on this tile gets removed', OPTION_CHECK, None, True),
-			('Special', CV5Flag.special_placeable, 'Allow Beacons/Start Locations to be placeable', OPTION_CHECK, None, True),
-		)))
-		self.doodad_editors.append(options_editor('Creep', 'Only Zerg can build on creep', self.group_flags, (
-			('Creep', CV5Flag.creep, 'Zerg can build here when this flag is combined with the Temporary creep flag', OPTION_CHECK, None, True),
-			('Receding', CV5Flag.creep_receding, 'Receding creep (overlap with Has Overlay Sprites.dat flag)', OPTION_CHECK, None, False),
-			('Temporary', CV5Flag.creep_temp, 'Zerg can build here when this flag is combined with the Creep flag\n  Overlaps with Has Overlay Flipped flag', OPTION_CHECK, None, False),
-		)))
-		self.doodad_editors.append(options_editor('Height', 'Terrain height', self.group_flags, (
-			('Mid Ground', CV5Flag.mid_ground, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('High Ground', CV5Flag.high_ground, 'Gets overwritten by SC based on minitile flags\n  Priority over Mid Ground)', OPTION_CHECK, None, True),
-		)))
-		self.doodad_editors.append(options_editor('Misc.', 'Misc. flags', self.group_flags, (
-			('Has Doodad Cover', CV5Flag.has_doodad_cover, 'Has doodad cover', OPTION_CHECK, None, True),
-			('Blocks View', CV5Flag.blocks_view, 'Gets overwritten by SC based on minitile flags', OPTION_CHECK, None, True),
-			('Cliff Edge', CV5Flag.cliff_edge, 'Overlaps with Has Overlay Units.dat flag', OPTION_CHECK, None, False),
-		)))
-		self.doodad_editors.append(options_editor('Unknown', 'Unknown/unused flags', self.group_flags, (
-			('0002', CV5Flag.unknown_0002, 'Unknown/unused flag 0x0002', OPTION_CHECK, None, True),
-			('0008', CV5Flag.unknown_0008, 'Unknown/unused flag 0x0008', OPTION_CHECK, None, True),
-			('0020', CV5Flag.unknown_0020, 'Unknown/unused flag 0x0020', OPTION_CHECK, None, True),
-		)))
-		self.doodad_editors.append(entries_editor('Unknowns', 'Unknown/unused fields', (
-			(('Unknown 4', self.group_edge_down_or_unknown4, 'Unknown'),),
-			(('Unknown 8', self.group_piece_down_or_unknown8, 'Unknown'),)
-		)))
-
-		self.doodad_editors.append(group_type_editor())
-		group = string_editor('Group', 'Doodad group string from stat_txt.tbl', self.group_edge_right_or_string_id)
-		self.doodad_editors.append(group)
-		self.editor_configs.append((group, {'weight': 1}))
-		group = actions_editor('Other', (
-			('Placeability', 'Modify which megatile groups the doodad must be placed on.', self.placeability),
-			('Apply All', 'Apply these MegaTile Group settings to all the MegaTile Groups with the same Doodad ID', self.doodad_apply_all)
-		))
-		self.doodad_editors.append(group)
-		self.doodad_editors.append(megatile_group)
-		self.doodad_editors.append(copy_mega_group)
-		copy_doodadgroup_group = LabelFrame(self.flow_view.content_view, text='Copy Group Settings')
-		opts = (
-			(
-				('Doodad', self.copy_doodadgroup_doodad),
-				('Buildable', self.copy_doodadgroup_buildable),
-				('Index', self.copy_doodadgroup_index),
-				('Unknown 1', self.copy_doodadgroup_unknown1),
-				('Unknown 6', self.copy_doodadgroup_unknown6),
-			),
-			(
-				('Overlay', self.copy_doodadgroup_overlay),
-				('Ground Height', self.copy_doodadgroup_ground_height),
-				('Group String', self.copy_doodadgroup_group_string_id),
-				('Unknown 8', self.copy_doodadgroup_unknown8),
-				('Unknown 12', self.copy_doodadgroup_unknown12),
-			)
-		)
-		for c,rows in enumerate(opts):
-			for r,(name,var) in enumerate(rows):
-				check = Checkbutton(copy_doodadgroup_group, text=name, variable=var, anchor=W, state=DISABLED)
-				check.grid(column=c,row=r, sticky=W)
-				self.disable.append(check)
-		self.copy_doodadgroup_btn = Button(copy_doodadgroup_group, text='Copy (%s)' % Ctrl.Alt.c.description(), state=DISABLED, command=copy_tilegroup)
+		copy_tilegroup_settings_editor = EditorGroup(self.flow_view.content_view, 'Copy Group Settings')\
+			.check('Walkability', 'Copy settings from Walkability', self.copy_tilegroup_walkability).add(new_row=False)\
+			.check('Buildability', 'Copy settings from Buildability', self.copy_tilegroup_buildability).add()\
+			.check('Creep', 'Copy settings from Creep', self.copy_tilegroup_creep).add(new_row=False)\
+			.check('Height', 'Copy settings from Height', self.copy_tilegroup_height).add()\
+			.check('Misc.', 'Copy settings from Misc.', self.copy_tilegroup_misc).add(new_row=False)\
+			.check('Unknown', 'Copy settings from Unknown', self.copy_tilegroup_unknown).add()\
+			.check('Edge Types', 'Copy settings from Edge Types', self.copy_tilegroup_edit_types).add(new_row=False)\
+			.check('Piece Types', 'Copy settings from Piece Types', self.copy_tilegroup_piece_types).add()\
+			.check('Group Type', 'Copy Group Type setting', self.copy_tilegroup_group_type).add()
+		copy_tilegroup_btn = copy_tilegroup_settings_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
+		self.copy_tilegroup_btn = copy_tilegroup_btn.widget
+		copy_tilegroup_btn.add(new_row=False)
+		copy_tilegroup_settings_editor.button('Paste (%s)' % Ctrl.Alt.v.description(), 'Paste settings from clipboard', paste_tilegroup).add()
+		self.normal_editors.append(copy_tilegroup_settings_editor)
 		self.bind(Ctrl.Alt.c(), copy_tilegroup)
-		self.copy_doodadgroup_btn.grid(column=0,row=5, sticky=E+W)
-		btn = Button(copy_doodadgroup_group, text='Paste (%s)' % Ctrl.Alt.v.description(), state=DISABLED, command=paste_tilegroup)
 		self.bind(Ctrl.Alt.v(), paste_tilegroup)
-		btn.grid(column=1,row=5, sticky=E+W)
-		self.disable.append(btn)
-		self.doodad_editors.append(copy_doodadgroup_group)
-		self.flow_view.add_subviews(self.normal_editors, padx=2)
+
+		self.doodad_editors = [] # type: list[EditorGroup]
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Doodad')
+			.label('ID').add(new_row=False).entry('Each doodad must have a unique Doodad ID.\nAll MegaTile Groups in the doodad must have the same ID.', self.group_piece_left_or_dddata_id).add()
+			.label('Width').add(new_row=False).entry('Total width of the doodad in MegaTiles', self.group_piece_up_or_width).add()
+			.label('Height').add(new_row=False).entry('Total height of the doodad in MegaTiles', self.group_piece_right_or_height).add()
+		)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Overlay')
+			.label('ID').add(new_row=False).entry('Sprite or Unit ID (depending on the following flags) for the overlay', self.group_edge_left_or_overlay_id).add(new_row=False)
+			.radio_flag('None', 'No overlay', self.group_flags, 0, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
+			.check_flag('Flipped*', 'The overlay is flipped. (*Unused)\n*Not cleared SC, so this flag also counts as Temporary creep', self.group_flags, CV5DoodadFlag.overlay_flipped).add(span=2, new_row=False)
+			.radio_flag('Sprites.dat*', 'The overlay ID is a Sprites.dat reference.\n*Not cleared by SC, so this flag also counts as Receding creep', self.group_flags, CV5DoodadFlag.has_overlay_sprite, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
+			.skip(2).radio_flag('Units.dat', 'The overlay ID is a Units.dat reference', self.group_flags, CV5DoodadFlag.has_overlay_unit, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add()
+		)
+		self.doodad_editors.append(walkability_editor)
+		self.doodad_editors.append(buildability_editor)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Creep')
+			.check_flag('Creep', 'Zerg can build here when this flag is combined with the Temporary creep flag', self.group_flags, CV5Flag.creep).add()
+			.check_flag('Receding*', 'Receding creep\n*Overlaps with Has Overlay Sprites.dat flag', self.group_flags, CV5Flag.creep_receding, editable=False).add()
+			.check_flag('Temporary*', 'Zerg can build here when this flag is combined with the Creep flag\n*Overlaps with Has Overlay Flipped flag', self.group_flags, CV5Flag.creep_temp, editable=False).add()
+		)
+		self.doodad_editors.append(height_editor)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Misc.')
+			.check_flag('Has Doodad Cover', 'Provides cover for hit calculations', self.group_flags, CV5Flag.has_doodad_cover).add()
+			.check_flag('Blocks View*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.blocks_view).add()
+			.check_flag('Cliff Edge*', '*Overlaps with Has Overlay Units.dat flag', self.group_flags, CV5Flag.cliff_edge, editable=False).add()
+		)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Unknown')
+			.label('Unknown 4').add(new_row=False).entry('Unknown/unused', self.group_edge_down_or_unknown4).add(new_row=False)
+			.check_flag('0002', 'Unknown/unused flag 0x0002', self.group_flags, CV5Flag.unknown_0002).add(span=2)
+			.label('Unknown 8').add(new_row=False).entry('Unknown/unused', self.group_piece_down_or_unknown8).add(new_row=False)
+			.check_flag('0008', 'Unknown/unused flag 0x0008', self.group_flags, CV5Flag.unknown_0008).add(span=2)
+			.skip(2).check_flag('0020', 'Unknown/unused flag 0x0020', self.group_flags, CV5Flag.unknown_0020).add(span=2)
+		)
+		self.doodad_editors.append(group_type_editor)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'SC:R')
+			.check_flag('SC:R', 'Added in StarCraft: Remastered', self.group_edge_up_or_scr, CV5Group.SCR).add(span=2)
+			.label('Raw').add(new_row=False).entry('Raw value of added in StarCraft: Remastered (1 = Added in SC:R)', self.group_edge_up_or_scr).add()
+		)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Name')
+			.label('String').add(new_row=False).dropdown('Doodad group string from stat_txt.tbl',['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings], self.group_edge_right_or_string_id).add(sticky=EW, weight=1)
+			.label('Raw').add(new_row=False).entry('Doodad group string from stat_txt.tbl', self.group_edge_right_or_string_id).add()
+		)
+		self.doodad_editors.append(
+			EditorGroup(self.flow_view.content_view, 'Other')
+			.button('Placeability', 'Modify which megatile groups the doodad must be placed on.', self.placeability).add(sticky=EW)
+			.button('Apply All', 'Apply these MegaTile Group settings to all the MegaTile Groups with the same Doodad ID', self.doodad_apply_all).add(sticky=EW)
+		)
+		self.doodad_editors.append(megatile_editor)
+		self.doodad_editors.append(copy_mega_editor)
+
+		copy_doodadgroup_editor = EditorGroup(self.flow_view.content_view, 'Copy Group Settings')\
+			.check('Doodad', 'Copy settings from Doodad', self.copy_doodadgroup_doodad).add(new_row=False)\
+			.check('Overlay', 'Copy settings from Overlay', self.copy_doodadgroup_overlay).add()\
+			.check('Walkability', 'Copy settings from Walkability', self.copy_doodadgroup_walkability).add(new_row=False)\
+			.check('Buildability', 'Copy settings from Buildability', self.copy_doodadgroup_buildability).add()\
+			.check('Creep', 'Copy settings from Creep', self.copy_doodadgroup_creep).add(new_row=False)\
+			.check('Height', 'Copy settings from Height', self.copy_doodadgroup_height).add()\
+			.check('Misc.', 'Copy settings from Misc.', self.copy_doodadgroup_misc).add(new_row=False)\
+			.check('Unknown', 'Copy settings from Unknown', self.copy_doodadgroup_unknown).add()\
+			.check('Group Type', 'Copy Group Type setting', self.copy_doodadgroup_group_type).add(new_row=False)\
+			.check('SC:R', 'Copy settings from SC:R', self.copy_doodadgroup_scr).add()\
+			.check('Name', 'Copy settings from Name', self.copy_doodadgroup_name).add()
+		copy_doodadgroup_btn = copy_doodadgroup_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
+		self.copy_doodadgroup_btn = copy_doodadgroup_btn.widget
+		copy_doodadgroup_btn.add(new_row=False)
+		copy_doodadgroup_editor.button('Paste (%s)' % Ctrl.Alt.v.description(), 'Paste settings from clipboard', paste_tilegroup).add()
+		self.doodad_editors.append(copy_doodadgroup_editor)
+
+		self.update_editor(force=True)
 
 		self.groupid.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		settings.pack(side=LEFT, fill=BOTH, expand=1)
@@ -635,20 +587,20 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
-		for w in self.disable:
-			w['state'] = NORMAL if is_file_open else DISABLED
+		for editor in self.normal_editors + self.doodad_editors:
+			editor.enabled(is_file_open)
 		self.mega_editor.set_enabled(is_file_open)
 
 		if is_file_open and cast(Tileset, self.tileset).vx4.is_expanded():
 			self.expanded.set('VX4 Expanded')
 		
-		can_copy_mega = is_file_open and (self.copy_mega_height.get() or self.copy_mega_walkable.get() or self.copy_mega_sight.get() or self.copy_mega_ramp.get())
+		can_copy_mega = is_file_open and self.options_copy_mega.any_enabled()
 		self.copy_mega_btn['state'] = NORMAL if can_copy_mega else DISABLED
 
-		can_copy_group = is_file_open and (self.copy_tilegroup_flags.get() or self.copy_tilegroup_buildable.get() or self.copy_tilegroup_hasup.get() or self.copy_tilegroup_edges.get() or self.copy_tilegroup_unknown9.get() or self.copy_tilegroup_index.get() or self.copy_tilegroup_buildable2.get() or self.copy_tilegroup_hasdown.get() or self.copy_tilegroup_ground_height.get() or self.copy_tilegroup_unknown11.get())
+		can_copy_group = is_file_open and self.options_copy_tilegroup.any_enabled()
 		self.copy_tilegroup_btn['state'] = NORMAL if can_copy_group else DISABLED
 
-		can_copy_doodadgroup = is_file_open and (self.copy_doodadgroup_doodad.get() or self.copy_doodadgroup_overlay.get() or self.copy_doodadgroup_buildable.get() or self.copy_doodadgroup_unknown1.get() or self.copy_doodadgroup_unknown6.get() or self.copy_doodadgroup_unknown8.get() or self.copy_doodadgroup_unknown12.get() or self.copy_doodadgroup_index.get() or self.copy_doodadgroup_ground_height.get() or self.copy_doodadgroup_group_string_id.get())
+		can_copy_doodadgroup = is_file_open and self.options_copy_doodadgroup.any_enabled()
 		self.copy_doodadgroup_btn['state'] = NORMAL if can_copy_doodadgroup else DISABLED
 
 	def mark_edited(self, edited=True): # type: (bool) -> None
@@ -718,19 +670,16 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		d = ['',' - Doodad'][group.type == CV5Group.TYPE_DOODAD]
 		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.palette.selected[0], d)
  
-	def update_editor(self, doodad=False): # type: (bool) -> None
-		if self.doodad.get() == doodad:
+	def update_editor(self, doodad=False, force=False): # type: (bool, bool) -> None
+		if self.doodad.get() == doodad and not force:
 			return
 		if doodad:
-			self.flow_view.remove_all_subviews()
-			self.flow_view.add_subviews(self.doodad_editors, padx=2)
-			for view,config in self.editor_configs:
-				self.flow_view.update_subview_config(view, **config)
+			editors = self.doodad_editors
 		else:
-			self.flow_view.remove_all_subviews()
-			self.flow_view.add_subviews(self.normal_editors, padx=2)
-			for view,config in self.editor_configs:
-				self.flow_view.update_subview_config(view, **config)
+			editors = self.normal_editors
+		self.flow_view.remove_all_subviews()
+		for editor in editors:
+			self.flow_view.add_subview(editor.container, padx=2, weight=editor.weight)
 		self.doodad.set(doodad)
 
 	def megaload(self): # type: () -> None
@@ -907,29 +856,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			return
 		self.settings.windows.save_window_size('main', self)
 		self.settings.mega_edit.apply_all_exclude_nulls = not not self.apply_all_exclude_nulls.get()
-		self.settings['copy'].mega.height = not not self.copy_mega_height.get()
-		self.settings['copy'].mega.walkable = not not self.copy_mega_walkable.get()
-		self.settings['copy'].mega.sight = not not self.copy_mega_sight.get()
-		self.settings['copy'].mega.ramp = not not self.copy_mega_ramp.get()
-		self.settings['copy'].tilegroup.flags = not not self.copy_tilegroup_flags.get()
-		self.settings['copy'].tilegroup.buildable = not not self.copy_tilegroup_buildable.get()
-		self.settings['copy'].tilegroup.hasup = not not self.copy_tilegroup_hasup.get()
-		self.settings['copy'].tilegroup.edges = not not self.copy_tilegroup_edges.get()
-		self.settings['copy'].tilegroup.unknown9 = not not self.copy_tilegroup_unknown9.get()
-		self.settings['copy'].tilegroup.index = not not self.copy_tilegroup_index.get()
-		self.settings['copy'].tilegroup.buildable2 = not not self.copy_tilegroup_buildable2.get()
-		self.settings['copy'].tilegroup.hasdown = not not self.copy_tilegroup_hasdown.get()
-		self.settings['copy'].tilegroup.ground_height = not not self.copy_tilegroup_ground_height.get()
-		self.settings['copy'].tilegroup.unknown11 = not not self.copy_tilegroup_unknown11.get()
-		self.settings['copy'].doodadgroup.doodad = not not self.copy_doodadgroup_doodad.get()
-		self.settings['copy'].doodadgroup.overlay = not not self.copy_doodadgroup_overlay.get()
-		self.settings['copy'].doodadgroup.buildable = not not self.copy_doodadgroup_buildable.get()
-		self.settings['copy'].doodadgroup.unknown1 = not not self.copy_doodadgroup_unknown1.get()
-		self.settings['copy'].doodadgroup.unknown6 = not not self.copy_doodadgroup_unknown6.get()
-		self.settings['copy'].doodadgroup.unknown8 = not not self.copy_doodadgroup_unknown8.get()
-		self.settings['copy'].doodadgroup.unknown12 = not not self.copy_doodadgroup_unknown12.get()
-		self.settings['copy'].doodadgroup.index = not not self.copy_doodadgroup_index.get()
-		self.settings['copy'].doodadgroup.ground_height = not not self.copy_doodadgroup_ground_height.get()
-		self.settings['copy'].doodadgroup.group_string_id = not not self.copy_doodadgroup_group_string_id.get()
+		self.options_copy_mega.save()
+		self.options_copy_tilegroup.save()
+		self.options_copy_doodadgroup.save()
 		self.settings.save()
 		self.destroy()
