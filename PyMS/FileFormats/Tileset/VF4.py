@@ -13,49 +13,59 @@ class VF4Flag:
 	walkable    = 0x0001
 	mid_ground  = 0x0002
 	high_ground = 0x0004
-	blocks_view = 0x0008
+	blocks_sight = 0x0008
 	ramp        = 0x0010
-	
+
+class VF4Megatile:
+	def __init__(self) -> None:
+		self.flags = [0] * 16
+
+	def load_data(self, data: bytes) -> None:
+		self.flags = list(int(v) for v in struct.unpack('<16H', data))
+
+	def save_data(self) -> bytes:
+		return struct.pack('<16H', *self.flags)
+
 class VF4(object):
 	MAX_ID = 65535
 
 	def __init__(self): # type: () -> None
-		self._flags = [] # type: list[list[int]]
+		self._megatile = [] # type: list[VF4Megatile]
 
-	def flag_count(self): # type: () -> int
-		return len(self._flags)
+	def megatile_count(self): # type: () -> int
+		return len(self._megatile)
 
-	def flags_remaining(self): # type: () -> int
-		return (VF4.MAX_ID+1) - len(self._flags)
+	def megatiles_remaining(self): # type: () -> int
+		return (VF4.MAX_ID+1) - len(self._megatile)
 
-	def get_flags(self, id): # type: (int) -> list[int]
-		return self._flags[id]
+	def get_megatile(self, id): # type: (int) -> VF4Megatile
+		return self._megatile[id]
 
-	def add_flags(self, flags): # type: (list[int]) -> int
-		if len(flags) != 16:
-			raise PyMSError('Add Flags', 'Invalid minitile flags (expected list of size 16, got %d)' % len(flags))
-		id = len(self._flags)
-		self._flags.append(flags)
+	def add_megatile(self, flags): # type: (VF4Megatile) -> int
+		id = len(self._megatile)
+		self._megatile.append(flags)
 		return id
 
 	def load_file(self, file): # type: (str | BinaryIO) -> None
 		data = load_file(file, 'VF4')
 		if data and len(data) % 32:
-			raise PyMSError('Load',"'%s' is an invalid VF$ file" % file)
-		flags = [] # type: list[list[int]]
+			raise PyMSError('Load',"'%s' is an invalid VF4 file" % file)
+		all_megatile = [] # type: list[VF4Megatile]
 		try:
 			o = 0
 			while o + 31 < len(data):
-				flags.append(list(int(v) for v in struct.unpack('<16H', data[o:o+32])))
+				flags = VF4Megatile()
+				flags.load_data(data[o:o+32])
+				all_megatile.append(flags)
 				o += 32
 		except:
 			raise PyMSError('Load',"Unsupported VF4 file '%s', could possibly be corrupt" % file)
-		self._flags = flags
+		self._megatile = all_megatile
 
 	def save_file(self, file): # type: (str | BinaryIO) -> None
 		data = b''
-		for d in self._flags:
-			data += struct.pack('<16H', *d)
+		for flags in self._megatile:
+			data += flags.save_data()
 		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')

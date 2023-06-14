@@ -5,13 +5,14 @@ from .TilePalette import TilePalette
 from .Placeability import Placeability
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate
 
-from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo, ExportSettingsOptions
+from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
 from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
 from ..FileFormats.Tileset.VF4 import VF4Flag
 from ..FileFormats.Tileset.VX4 import VX4Minitile
+from ..FileFormats.Tileset.Serialize import TileGroupField, DoodadGroupField, MegatileField
 from ..FileFormats import TBL
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, FFile, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
@@ -24,6 +25,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities import Serialize
 
 import sys, io
 from enum import Enum
@@ -234,7 +236,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.copy_tilegroup_height = self.options_copy_tilegroup.option('height')
 		self.copy_tilegroup_misc = self.options_copy_tilegroup.option('misc')
 		self.copy_tilegroup_unknown = self.options_copy_tilegroup.option('unknown')
-		self.copy_tilegroup_edit_types = self.options_copy_tilegroup.option('edit_types')
+		self.copy_tilegroup_edge_types = self.options_copy_tilegroup.option('edge_types')
 		self.copy_tilegroup_piece_types = self.options_copy_tilegroup.option('piece_types')
 		self.copy_tilegroup_group_type = self.options_copy_tilegroup.option('group_type')
 
@@ -247,7 +249,6 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.copy_doodadgroup_height = self.options_copy_doodadgroup.option('height')
 		self.copy_doodadgroup_misc = self.options_copy_doodadgroup.option('misc')
 		self.copy_doodadgroup_unknown = self.options_copy_doodadgroup.option('unknown')
-		self.copy_doodadgroup_group_type = self.options_copy_doodadgroup.option('group_type')
 		self.copy_doodadgroup_scr = self.options_copy_doodadgroup.option('scr')
 		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option('name')
 
@@ -394,47 +395,86 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
-			options = ExportSettingsOptions()
-			# if self.doodad.get():
-			# 	options.groups_type = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_flags = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_overlay_id = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_scr = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_string_id = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_unknown4 = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_dddata_id = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_width = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_height = self.copy_doodadgroup_group_type.get()
-			# 	options.groups_doodad_unknown8 = self.copy_doodadgroup_group_type.get()
-			# else:
-			# 	options.groups_type: bool = True
-			# 	options.groups_flags: bool = True
-			# 	options.groups_basic_edge_left: bool = True
-			# 	options.groups_basic_edge_up: bool = True
-			# 	options.groups_basic_edge_right: bool = True
-			# 	options.groups_basic_edge_down: bool = True
-			# 	options.groups_basic_piece_left: bool = True
-			# 	options.groups_basic_piece_up: bool = True
-			# 	options.groups_basic_piece_right: bool = True
-			# 	options.groups_basic_piece_down: bool = True
-			# if not max(options.values()):
-			# 	return
+			fields: Serialize.Fields
+			if self.doodad.get():
+				if not self.options_copy_doodadgroup.any_enabled():
+					return
+				fields = {
+					DoodadGroupField.flags: {
+						DoodadGroupField.Flag.walkable: self.copy_doodadgroup_walkability.get(),
+						DoodadGroupField.Flag.unknown_0002: self.copy_doodadgroup_unknown.get(),
+						DoodadGroupField.Flag.unwalkable: self.copy_doodadgroup_walkability.get(),
+						DoodadGroupField.Flag.unknown_0008: self.copy_doodadgroup_unknown.get(),
+						DoodadGroupField.Flag.has_doodad_cover: self.copy_doodadgroup_misc.get(),
+						DoodadGroupField.Flag.unknown_0020: self.copy_doodadgroup_unknown.get(),
+						DoodadGroupField.Flag.creep: self.copy_doodadgroup_creep.get(),
+						DoodadGroupField.Flag.unbuildable: self.copy_doodadgroup_buildability.get(),
+						DoodadGroupField.Flag.blocks_view: self.copy_doodadgroup_misc.get(),
+						DoodadGroupField.Flag.mid_ground: self.copy_doodadgroup_height.get(),
+						DoodadGroupField.Flag.high_ground: self.copy_doodadgroup_height.get(),
+						DoodadGroupField.Flag.occupied: self.copy_doodadgroup_buildability.get(),
+						DoodadGroupField.Flag.has_overlay_sprite: self.copy_doodadgroup_overlay.get(),
+						DoodadGroupField.Flag.has_overlay_unit: self.copy_doodadgroup_overlay.get(),
+						DoodadGroupField.Flag.overlay_flipped: self.copy_doodadgroup_overlay.get(),
+						DoodadGroupField.Flag.special_placeable: self.copy_doodadgroup_buildability.get()
+					},
+					DoodadGroupField.overlay_id: self.copy_doodadgroup_overlay.get(),
+					DoodadGroupField.scr: self.copy_doodadgroup_scr.get(),
+					DoodadGroupField.string_id: self.copy_doodadgroup_name.get(),
+					DoodadGroupField.unknown4: self.copy_doodadgroup_unknown.get(),
+					DoodadGroupField.dddata_id: self.copy_doodadgroup_doodad.get(),
+					DoodadGroupField.width: self.copy_doodadgroup_doodad.get(),
+					DoodadGroupField.height: self.copy_doodadgroup_doodad.get(),
+					DoodadGroupField.unknown8: self.copy_doodadgroup_unknown.get(),
+				}
+			else:
+				if not self.options_copy_tilegroup.any_enabled():
+					return
+				fields = {
+					TileGroupField.type: self.copy_tilegroup_group_type.get(),
+					TileGroupField.flags: {
+						TileGroupField.Flag.walkable: self.copy_tilegroup_walkability.get(),
+						TileGroupField.Flag.unknown_0002: self.copy_tilegroup_unknown.get(),
+						TileGroupField.Flag.unwalkable: self.copy_tilegroup_walkability.get(),
+						TileGroupField.Flag.unknown_0008: self.copy_tilegroup_unknown.get(),
+						TileGroupField.Flag.has_doodad_cover: self.copy_tilegroup_misc.get(),
+						TileGroupField.Flag.unknown_0020: self.copy_tilegroup_unknown.get(),
+						TileGroupField.Flag.creep: self.copy_tilegroup_creep.get(),
+						TileGroupField.Flag.unbuildable: self.copy_tilegroup_buildability.get(),
+						TileGroupField.Flag.blocks_view: self.copy_tilegroup_misc.get(),
+						TileGroupField.Flag.mid_ground: self.copy_tilegroup_height.get(),
+						TileGroupField.Flag.high_ground: self.copy_tilegroup_height.get(),
+						TileGroupField.Flag.occupied: self.copy_tilegroup_buildability.get(),
+						TileGroupField.Flag.creep_receding: self.copy_tilegroup_creep.get(),
+						TileGroupField.Flag.cliff_edge: self.copy_tilegroup_misc.get(),
+						TileGroupField.Flag.creep_temp: self.copy_tilegroup_creep.get(),
+						TileGroupField.Flag.special_placeable: self.copy_tilegroup_buildability.get()
+					},
+					TileGroupField.edge_left: self.copy_tilegroup_edge_types.get(),
+					TileGroupField.edge_up: self.copy_tilegroup_edge_types.get(),
+					TileGroupField.edge_right: self.copy_tilegroup_edge_types.get(),
+					TileGroupField.edge_down: self.copy_tilegroup_edge_types.get(),
+					TileGroupField.piece_left: self.copy_tilegroup_piece_types.get(),
+					TileGroupField.piece_up: self.copy_tilegroup_piece_types.get(),
+					TileGroupField.piece_right: self.copy_tilegroup_piece_types.get(),
+					TileGroupField.piece_down: self.copy_tilegroup_piece_types.get(),
+				}
 			f = io.StringIO()
-			self.tileset.export_settings(TileType.group, f, [group], options)
+			self.tileset.export_group_settings(f, [group], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
 		def paste_tilegroup(*args): # type: (Any) -> None
 			if not self.tileset:
 				return
-			group = self.palette.selected[0]
-			settings = self.clipboard_get()
-			try:
-				self.tileset.import_settings(TileType.group, settings, [group])
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			self.megaload()
-			self.mark_edited()
+			# group = self.palette.selected[0]
+			# settings = self.clipboard_get()
+			# try:
+			# 	self.tileset.import_settings(TileType.group, settings, [group])
+			# except PyMSError as e:
+			# 	ErrorDialog(self, e)
+			# 	return
+			# self.megaload()
+			# self.mark_edited()
 		copy_tilegroup_settings_editor = EditorGroup(self.flow_view.content_view, 'Copy Group Settings')\
 			.check('Walkability', 'Copy settings from Walkability', self.copy_tilegroup_walkability).add(new_row=False)\
 			.check('Buildability', 'Copy settings from Buildability', self.copy_tilegroup_buildability).add()\
@@ -442,7 +482,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check('Height', 'Copy settings from Height', self.copy_tilegroup_height).add()\
 			.check('Misc.', 'Copy settings from Misc.', self.copy_tilegroup_misc).add(new_row=False)\
 			.check('Unknown', 'Copy settings from Unknown', self.copy_tilegroup_unknown).add()\
-			.check('Edge Types', 'Copy settings from Edge Types', self.copy_tilegroup_edit_types).add(new_row=False)\
+			.check('Edge Types', 'Copy settings from Edge Types', self.copy_tilegroup_edge_types).add(new_row=False)\
 			.check('Piece Types', 'Copy settings from Piece Types', self.copy_tilegroup_piece_types).add()\
 			.check('Group Type', 'Copy Group Type setting', self.copy_tilegroup_group_type).add()
 		copy_tilegroup_btn = copy_tilegroup_settings_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
@@ -519,7 +559,6 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check('Height', 'Copy settings from Height', self.copy_doodadgroup_height).add()\
 			.check('Misc.', 'Copy settings from Misc.', self.copy_doodadgroup_misc).add(new_row=False)\
 			.check('Unknown', 'Copy settings from Unknown', self.copy_doodadgroup_unknown).add()\
-			.check('Group Type', 'Copy Group Type setting', self.copy_doodadgroup_group_type).add(new_row=False)\
 			.check('SC:R', 'Copy settings from SC:R', self.copy_doodadgroup_scr).add()\
 			.check('Name', 'Copy settings from Name', self.copy_doodadgroup_name).add()
 		copy_doodadgroup_btn = copy_doodadgroup_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
@@ -627,20 +666,20 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		elif mode == MegaEditorView.Mode.walkability:
 			copy_mask = VF4Flag.walkable
 		elif mode == MegaEditorView.Mode.view_blocking:
-			copy_mask = VF4Flag.blocks_view
+			copy_mask = VF4Flag.blocks_sight
 		elif mode == MegaEditorView.Mode.ramp:
 			copy_mask = VF4Flag.ramp
 		copy_megatile_id = self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection]
 		edited = False
-		copy_flags_list = self.tileset.vf4.get_flags(copy_megatile_id)
+		copy_megatile = self.tileset.vf4.get_megatile(copy_megatile_id)
 		for megatile_id in self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids:
 			if megatile_id == copy_megatile_id or (megatile_id == 0 and self.apply_all_exclude_nulls.get()):
 				continue
-			set_flags_list = self.tileset.vf4.get_flags(megatile_id)
+			megatile = self.tileset.vf4.get_megatile(megatile_id)
 			for n in range(16):
-				new_flags = (set_flags_list[n] & ~copy_mask) | (copy_flags_list[n] & copy_mask)
-				if new_flags != set_flags_list[n]:
-					set_flags_list[n] = new_flags
+				new_flags = (megatile.flags[n] & ~copy_mask) | (copy_megatile.flags[n] & copy_mask)
+				if new_flags != megatile.flags[n]:
+					megatile.flags[n] = new_flags
 					edited = True
 		if edited:
 			self.mark_edited()
@@ -769,7 +808,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def update_ranges(self): # type: () -> None
 		if not self.tileset:
 			return
-		self.megatilee.setrange([0,self.tileset.vf4.flag_count()-1])
+		self.megatilee.setrange([0,self.tileset.vf4.megatile_count()-1])
 		self.mega_editor.update_mini_range()
 		self.palette.update_size()
 		self.palette.draw_tiles(force=True)

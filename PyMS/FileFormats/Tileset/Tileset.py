@@ -11,23 +11,26 @@ except:
 	e.startup()
 	sys.exit()
 
-from .CV5 import CV5, CV5Group, CV5Flag
-from .VF4 import VF4
+from .CV5 import CV5, CV5Group
+from .VF4 import VF4, VF4Megatile
 from .VX4 import VX4, VX4Megatile, VX4Minitile
 from .VR4 import VR4, VR4Image
 from .DDDataBIN import DDDataBIN
+from .Serialize import TileGroupField, TileGroupDef, DoodadGroupField, DoodadGroupDef, MegatileField, MegatileDef
 
 from ..Palette import Palette
 from ..BMP import BMP
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import Serialize
+from ...Utilities import IO
 
-import os, re, math
+import os, math
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Callable, cast, TextIO
+from typing import Callable, cast, Sequence
 
 
 def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> Image
@@ -87,34 +90,6 @@ class ImportGraphicsOptions:
 	minitiles_reuse_null_with_id: int | None = 0 # Reuse "null" minitile with id even if find duplicates is off (None or int, default: 0)
 	minitiles_reuse_duplicates_flipped: bool = True # Check flipped versions of tiles for duplicates (Boolean, default: True)
 	minitiles_expand_allowed: bool | Callable[[], bool] = False # Whether importing too many minitiles will expand VX4 or not (True, False, or callback, default: False)
-
-@dataclass
-class ExportSettingsOptions:
-	groups_type: bool = True
-	groups_flags: bool = True
-
-	groups_basic_edge_left: bool = True
-	groups_basic_edge_up: bool = True
-	groups_basic_edge_right: bool = True
-	groups_basic_edge_down: bool = True
-	groups_basic_piece_left: bool = True
-	groups_basic_piece_up: bool = True
-	groups_basic_piece_right: bool = True
-	groups_basic_piece_down: bool = True
-
-	groups_doodad_overlay_id: bool = True
-	groups_doodad_scr: bool = True
-	groups_doodad_string_id: bool = True
-	groups_doodad_unknown4: bool = True
-	groups_doodad_dddata_id: bool = True
-	groups_doodad_width: bool = True
-	groups_doodad_height: bool = True
-	groups_doodad_unknown8: bool = True
-
-	megatiles_export_height: bool = True
-	megatiles_export_walkability: bool = True
-	megatiles_export_block_sight: bool = True
-	megatiles_export_ramp: bool = True
 
 def setting_import_extras_ignore(setting_count, tile_n, tile_count): # type: (int, int, int) -> (int | None)
 	if tile_n == setting_count:
@@ -399,7 +374,7 @@ class Tileset(object):
 					else:
 						mega_lookup[tile_hash] = [id]
 			if len(new_megatiles) > self.megatiles_remaining():
-				raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile count (%d + %d > %d)' % (self.vf4.flag_count(),len(new_megatiles),VF4.MAX_ID+1))
+				raise PyMSError('Importing','Import aborted because it exceeded the maximum megatile count (%d + %d > %d)' % (self.vf4.megatile_count(),len(new_megatiles),VF4.MAX_ID+1))
 			if tiletype == TileType.group:
 				groups = megas_h
 				if tiletype == TileType.group and options.groups_ignore_extra and groups > len(ids):
@@ -425,7 +400,7 @@ class Tileset(object):
 		for megatile in new_megatiles:
 			self.vx4.add_megatile(megatile)
 		for _ in range(len(new_megatiles)):
-			self.vf4.add_flags([0]*16)
+			self.vf4.add_megatile(VF4Megatile())
 		for id,tile in update_megatiles:
 			self.vx4.set_megatile(id, tile)
 		# Update megatile groups
@@ -483,105 +458,133 @@ class Tileset(object):
 					bmp.image[mini_y+row_y].extend(row)
 		bmp.save_file(path)
 
-	def export_settings(self, tiletype, path_or_file, ids, options=ExportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ExportSettingsOptions) -> None
-		if tiletype == TileType.mini:
-			raise PyMSError('Export', "Can't export settings for minitiles")
-		if isinstance(path_or_file, str):
-			close = True
-			file = cast(TextIO, AtomicWriter(path_or_file, 'w'))
-		else:
-			close = False
-			file = path_or_file
-		if tiletype == TileType.group and self.cv5_path is not None:
-			file.write("# Exported from %s\n" % self.cv5_path)
-		elif tiletype == TileType.mega and self.vf4_path is not None:
-			file.write("# Exported from %s\n" % self.vf4_path)
-		for id in ids:
-			if tiletype == TileType.group:
-				group = self.cv5.get_group(id)
-				def write_int(name, value, export):
-					if not export:
-						return
-					file.write("\n\t%s:%s%d" % (name, ' ' * (23-len(name)), value))
-				def write_flag(name, value, flag, export):
-					if not export:
-						return
-					file.write("\n\tflag.%s:%s%s" % (name, ' ' * (18-len(name)), '1' if value & flag else '0'))
-				file.write("""\
-# Export of MegaTile Group %s
-%sGroup:""" % (id, 'Tile' if group.type != CV5Group.TYPE_DOODAD else 'Doodad'))
-				write_int('type', group.type, options.groups_type)
-				write_flag('walkable', group.flags, CV5Flag.walkable, options.groups_flags)
-				write_flag('walkable', group.flags, CV5Flag.walkable, options.groups_flags)
-				write_flag('unknown_0002', group.flags, CV5Flag.unknown_0002, options.groups_flags)
-				write_flag('unwalkable', group.flags, CV5Flag.unwalkable, options.groups_flags)
-				write_flag('unknown_0008', group.flags, CV5Flag.unknown_0008, options.groups_flags)
-				write_flag('has_doodad_cover', group.flags, CV5Flag.has_doodad_cover, options.groups_flags)
-				write_flag('unknown_0020', group.flags, CV5Flag.unknown_0020, options.groups_flags)
-				write_flag('creep', group.flags, CV5Flag.creep, options.groups_flags)
-				write_flag('unbuildable', group.flags, CV5Flag.unbuildable, options.groups_flags)
-				write_flag('blocks_view', group.flags, CV5Flag.blocks_view, options.groups_flags)
-				write_flag('mid_ground', group.flags, CV5Flag.mid_ground, options.groups_flags)
-				write_flag('high_ground', group.flags, CV5Flag.high_ground, options.groups_flags)
-				write_flag('occupied', group.flags, CV5Flag.occupied, options.groups_flags)
-				write_flag('creep_receding', group.flags, CV5Flag.creep_receding, options.groups_flags)
-				write_flag('cliff_edge', group.flags, CV5Flag.cliff_edge, options.groups_flags)
-				write_flag('creep_temp', group.flags, CV5Flag.creep_temp, options.groups_flags)
-				write_flag('special_placeable', group.flags, CV5Flag.special_placeable, options.groups_flags)
-				if group.type != CV5Group.TYPE_DOODAD:
-					write_int('edge_left', group.basic_edge_left, options.groups_basic_edge_left)
-					write_int('edge_up', group.basic_edge_up, options.groups_basic_edge_up)
-					write_int('edge_right', group.basic_edge_right, options.groups_basic_edge_right)
-					write_int('edge_down', group.basic_edge_down, options.groups_basic_edge_down)
-					write_int('piece_left', group.basic_piece_left, options.groups_basic_piece_left)
-					write_int('piece_up', group.basic_piece_up, options.groups_basic_piece_up)
-					write_int('piece_right', group.basic_piece_right, options.groups_basic_piece_right)
-					write_int('piece_down', group.basic_piece_down, options.groups_basic_piece_down)
-				else:
-					write_int('overlay_id', group.doodad_overlay_id, options.groups_doodad_overlay_id)
-					write_int('scr', group.doodad_scr, options.groups_doodad_scr)
-					write_int('string_id', group.doodad_string_id, options.groups_doodad_string_id)
-					write_int('unknown4', group.doodad_unknown4, options.groups_doodad_unknown4)
-					write_int('dddata_id', group.doodad_dddata_id, options.groups_doodad_dddata_id)
-					write_int('width', group.doodad_width, options.groups_doodad_width)
-					write_int('height', group.doodad_height, options.groups_doodad_height)
-					write_int('unknown8', group.doodad_unknown8, options.groups_doodad_unknown8)
-			elif tiletype == TileType.mega:
-				def write_flags(id, name, mask_values, else_value): # type: (int, str, tuple[tuple[int, str], ...], str) -> None
-					file.write('\n\t%s:' % name)
-					for n in range(16):
-						if not n % 4:
-							file.write('\n\t\t')
-						flags = self.vf4.get_flags(id)[n]
-						for mask,value in mask_values:
-							if (flags & mask) == mask:
-								file.write(value)
-								break
-						else:
-							file.write(else_value)
-				file.write("""\
-# Export of MegaTile %s
-MegaTile:""" % id)
-				layers = [] # type: list[tuple[str, tuple[tuple[int, str], ...], str]]
-				if options.megatiles_export_height:
-					layers.append(('Height', ((2,'H'),(1,'M')), 'L'))
-				if options.megatiles_export_walkability:
-					layers.append(('Walkability', ((1,'1'),), '0'))
-				if options.megatiles_export_block_sight:
-					layers.append(('Block Sight', ((8,'1'),), '0'))
-				if options.megatiles_export_ramp:
-					layers.append(('Ramp', ((16,'1'),), '0'))
-				for layer in layers:
-					write_flags(id, *layer)
-				file.write('\n\n')
-		if close:
-			file.close()
+	def export_group_settings(self, output: IO.AnyOutputText, ids: Sequence[int], fields: Serialize.Fields | None = None) -> None:
+		with IO.OutputText(output) as file:
+			if self.cv5_path is not None:
+				file.write("# Exported from %s\n" % self.cv5_path)
+			groups = list((self.cv5.get_group(id), id) for id in ids)
+			def get_definition(group: object) -> (Serialize.Definition | None):
+				if not isinstance(group, CV5Group):
+					return None
+				if group.type == CV5Group.TYPE_DOODAD:
+					return DoodadGroupDef
+				return TileGroupDef
+			file.write(Serialize.encode_texts(groups, get_definition, fields))
 
-	_line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
-	_group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')
-	# TODO: Re-write import settings
-	def import_settings(self, tiletype, path_or_text, ids, options=ImportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ImportSettingsOptions) -> None
-		raise PyMSError('Internal', 'Need to re-write settings import')
+	def import_group_settings(self, input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
+		with IO.InputText(input) as file:
+			text = file.read()
+		
+		# def get_group(decoder):
+
+		# Serialize.decode_text(text, [TileGroupDef, DoodadGroupDef],)
+
+	def export_megatile_settings(self, output: IO.AnyOutputText, ids: list[int], fields: Serialize.Fields | None = None) -> None:
+		with IO.OutputText(output) as file:
+			if self.vf4_path is not None:
+				file.write("# Exported from %s\n" % self.vf4_path)
+			megatiles = list((self.vf4.get_megatile(id), id) for id in ids)
+			file.write(Serialize.encode_texts(megatiles, lambda _: MegatileDef, fields))
+
+# 	def export_settings(self, tiletype, path_or_file, ids, options=ExportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ExportSettingsOptions) -> None
+# 		if tiletype == TileType.mini:
+# 			raise PyMSError('Export', "Can't export settings for minitiles")
+# 		if isinstance(path_or_file, str):
+# 			close = True
+# 			file = cast(TextIO, AtomicWriter(path_or_file, 'w'))
+# 		else:
+# 			close = False
+# 			file = path_or_file
+# 		if tiletype == TileType.group and self.cv5_path is not None:
+# 			file.write("# Exported from %s\n" % self.cv5_path)
+# 		elif tiletype == TileType.mega and self.vf4_path is not None:
+# 			file.write("# Exported from %s\n" % self.vf4_path)
+# 		for id in ids:
+# 			if tiletype == TileType.group:
+# 				group = self.cv5.get_group(id)
+# 				def write_int(name, value, export):
+# 					if not export:
+# 						return
+# 					file.write("\n\t%s:%s%d" % (name, ' ' * (23-len(name)), value))
+# 				def write_flag(name, value, flag, export):
+# 					if not export:
+# 						return
+# 					file.write("\n\tflag.%s:%s%s" % (name, ' ' * (18-len(name)), '1' if value & flag else '0'))
+# 				file.write("""\
+# # Export of MegaTile Group %s
+# %sGroup:""" % (id, 'Tile' if group.type != CV5Group.TYPE_DOODAD else 'Doodad'))
+# 				write_int('type', group.type, options.groups_type)
+# 				write_flag('walkable', group.flags, CV5Flag.walkable, options.groups_flags)
+# 				write_flag('walkable', group.flags, CV5Flag.walkable, options.groups_flags)
+# 				write_flag('unknown_0002', group.flags, CV5Flag.unknown_0002, options.groups_flags)
+# 				write_flag('unwalkable', group.flags, CV5Flag.unwalkable, options.groups_flags)
+# 				write_flag('unknown_0008', group.flags, CV5Flag.unknown_0008, options.groups_flags)
+# 				write_flag('has_doodad_cover', group.flags, CV5Flag.has_doodad_cover, options.groups_flags)
+# 				write_flag('unknown_0020', group.flags, CV5Flag.unknown_0020, options.groups_flags)
+# 				write_flag('creep', group.flags, CV5Flag.creep, options.groups_flags)
+# 				write_flag('unbuildable', group.flags, CV5Flag.unbuildable, options.groups_flags)
+# 				write_flag('blocks_view', group.flags, CV5Flag.blocks_view, options.groups_flags)
+# 				write_flag('mid_ground', group.flags, CV5Flag.mid_ground, options.groups_flags)
+# 				write_flag('high_ground', group.flags, CV5Flag.high_ground, options.groups_flags)
+# 				write_flag('occupied', group.flags, CV5Flag.occupied, options.groups_flags)
+# 				write_flag('creep_receding', group.flags, CV5Flag.creep_receding, options.groups_flags)
+# 				write_flag('cliff_edge', group.flags, CV5Flag.cliff_edge, options.groups_flags)
+# 				write_flag('creep_temp', group.flags, CV5Flag.creep_temp, options.groups_flags)
+# 				write_flag('special_placeable', group.flags, CV5Flag.special_placeable, options.groups_flags)
+# 				if group.type != CV5Group.TYPE_DOODAD:
+# 					write_int('edge_left', group.basic_edge_left, options.groups_basic_edge_left)
+# 					write_int('edge_up', group.basic_edge_up, options.groups_basic_edge_up)
+# 					write_int('edge_right', group.basic_edge_right, options.groups_basic_edge_right)
+# 					write_int('edge_down', group.basic_edge_down, options.groups_basic_edge_down)
+# 					write_int('piece_left', group.basic_piece_left, options.groups_basic_piece_left)
+# 					write_int('piece_up', group.basic_piece_up, options.groups_basic_piece_up)
+# 					write_int('piece_right', group.basic_piece_right, options.groups_basic_piece_right)
+# 					write_int('piece_down', group.basic_piece_down, options.groups_basic_piece_down)
+# 				else:
+# 					write_int('overlay_id', group.doodad_overlay_id, options.groups_doodad_overlay_id)
+# 					write_int('scr', group.doodad_scr, options.groups_doodad_scr)
+# 					write_int('string_id', group.doodad_string_id, options.groups_doodad_string_id)
+# 					write_int('unknown4', group.doodad_unknown4, options.groups_doodad_unknown4)
+# 					write_int('dddata_id', group.doodad_dddata_id, options.groups_doodad_dddata_id)
+# 					write_int('width', group.doodad_width, options.groups_doodad_width)
+# 					write_int('height', group.doodad_height, options.groups_doodad_height)
+# 					write_int('unknown8', group.doodad_unknown8, options.groups_doodad_unknown8)
+# 			elif tiletype == TileType.mega:
+# 				def write_flags(id, name, mask_values, else_value): # type: (int, str, tuple[tuple[int, str], ...], str) -> None
+# 					file.write('\n\t%s:' % name)
+# 					for n in range(16):
+# 						if not n % 4:
+# 							file.write('\n\t\t')
+# 						flags = self.vf4.get_megatile(id).flags[n]
+# 						for mask,value in mask_values:
+# 							if (flags & mask) == mask:
+# 								file.write(value)
+# 								break
+# 						else:
+# 							file.write(else_value)
+# 				file.write("""\
+# # Export of MegaTile %s
+# MegaTile:""" % id)
+# 				layers = [] # type: list[tuple[str, tuple[tuple[int, str], ...], str]]
+# 				if options.megatiles_export_height:
+# 					layers.append(('Height', ((2,'H'),(1,'M')), 'L'))
+# 				if options.megatiles_export_walkability:
+# 					layers.append(('Walkability', ((1,'1'),), '0'))
+# 				if options.megatiles_export_block_sight:
+# 					layers.append(('Block Sight', ((8,'1'),), '0'))
+# 				if options.megatiles_export_ramp:
+# 					layers.append(('Ramp', ((16,'1'),), '0'))
+# 				for layer in layers:
+# 					write_flags(id, *layer)
+# 				file.write('\n\n')
+# 		if close:
+# 			file.close()
+
+# 	_line_re = re.compile(r'^\s*(.*?)\s*(?:#.*)?\s*$')
+# 	_group_re = re.compile(r'^\s*(Tile|Doodad)Group:\s*$')
+# 	# TODO: Re-write import settings
+# 	def import_settings(self, tiletype, path_or_text, ids, options=ImportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ImportSettingsOptions) -> None
+# 		raise PyMSError('Internal', 'Need to re-write settings import')
 		# if tiletype == TileType.mini:
 		# 	raise PyMSError('Import', "Can't import settings for minitiles")
 		# if '\r' in path_or_text or '\n' in path_or_text:

@@ -184,9 +184,9 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id)
 		for n in range(16):
-			flags = all_flags[n]
+			flags = all_flags.flags[n]
 			color = '#FF0000'
 			if flags & VF4Flag.mid_ground:
 				color = '#FFA500'
@@ -198,27 +198,27 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id)
 		for n in range(16):
-			flags = all_flags[n]
+			flags = all_flags.flags[n]
 			self.draw_border(n, '#00FF00' if flags & VF4Flag.walkable else '#FF0000')
 
 	def draw_blocking(self): # type: () -> None
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id)
 		for n in range(16):
-			flags = all_flags[n]
-			self.draw_border(n, '#FF0000' if flags & VF4Flag.blocks_view else '#00FF00')
+			flags = all_flags.flags[n]
+			self.draw_border(n, '#FF0000' if flags & VF4Flag.blocks_sight else '#00FF00')
 
 	def draw_ramp(self): # type: () -> None
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id)
 		for n in range(16):
-			flags = all_flags[n]
+			flags = all_flags.flags[n]
 			self.draw_border(n, '#00FF00' if flags & VF4Flag.ramp else '#FF0000')
 
 	def draw_edit_mode(self): # type: () -> None
@@ -260,7 +260,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id).flags
 		flags = all_flags[minitile_n]
 		new_flags = flags & ~(VF4Flag.mid_ground | VF4Flag.high_ground)
 		new_flags |= [0,VF4Flag.mid_ground,VF4Flag.high_ground][self.height.get()]
@@ -273,7 +273,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		flags = tileset.vf4.get_flags(self.megatile_id)
+		flags = tileset.vf4.get_megatile(self.megatile_id).flags
 		if self.toggle_on is None:
 			self.toggle_on = not (flags[minitile_n] & flag)
 		if self.toggle_on:
@@ -296,7 +296,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		elif mode == MegaEditorView.Mode.walkability:
 			self.click_flag(minitile_n, VF4Flag.walkable)
 		elif mode == MegaEditorView.Mode.view_blocking:
-			self.click_flag(minitile_n, VF4Flag.blocks_view)
+			self.click_flag(minitile_n, VF4Flag.blocks_sight)
 		elif mode == MegaEditorView.Mode.ramp:
 			self.click_flag(minitile_n, VF4Flag.ramp)
 
@@ -305,7 +305,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		if not tileset or self.megatile_id is None:
 			return
 		edited = False
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id).flags
 		for n in range(16):
 			flags = all_flags[n]
 			new_flags = flags & ~(VF4Flag.mid_ground | VF4Flag.high_ground)
@@ -321,7 +321,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		all_flags = tileset.vf4.get_flags(self.megatile_id)
+		all_flags = tileset.vf4.get_megatile(self.megatile_id).flags
 		enable = not (all_flags[minitile_n] & flag)
 		edited = False
 		for n in range(16):

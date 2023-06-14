@@ -5,6 +5,7 @@ from .TilePaletteView import TilePaletteView
 from ..FileFormats.Tileset.Tileset import Tileset, TileType
 from ..FileFormats.Tileset.CV5 import CV5Group
 from ..FileFormats.Tileset.VX4 import VX4Megatile, VX4Minitile
+from ..FileFormats.Tileset.VF4 import VF4Megatile
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -181,7 +182,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			tileset.cv5.add_group(CV5Group())
 		elif self.tiletype == TileType.mega:
 			select = tileset.vx4.megatile_count()
-			tileset.vf4.add_flags([0]*16)
+			tileset.vf4.add_megatile(VF4Megatile())
 			tileset.vx4.add_megatile(VX4Megatile())
 		else:
 			if tileset.minitiles_remaining() == 0:
