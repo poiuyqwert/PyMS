@@ -279,8 +279,8 @@ class EnumNameEncoder(Encoder[E,E]):
 		return value
 
 class RenameEncoder(Encoder[V,D]):
-	def __init__(self, name: str, encoder: Encoder) -> None:
-		self.name = name
+	def __init__(self, attr: str, encoder: Encoder) -> None:
+		self.attr = attr
 		self.encoder = encoder
 
 	def encode(self, value: V) -> JSONValue:
@@ -320,7 +320,7 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 		if isinstance(encoder, SplitEncoder):
 			attr = encoder.attr
 		if isinstance(encoder, RenameEncoder):
-			key = encoder.name
+			attr = encoder.attr
 		if isinstance(encoder, JoinEncoder):
 			sub_json: OrderedDict[str, JSONValue] = OrderedDict()
 			for attr,sub_key,sub_encoder in encoder.fields:
@@ -453,7 +453,7 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 			elif isinstance(decoder, SplitEncoder):
 				if len(key_path) > 0:
 					raise PyMSError('Decode', f"'{key}' can't have sub-fields")
-				json[decoder.attr] = decoder.decode(value, json.get(decoder.attr))
+				json[key] = decoder.decode(value, json.get(key))
 			elif isinstance(decoder, JoinEncoder):
 				if len(key_path) == 0:
 					raise PyMSError('Decode', f"'{key}' needs a sub-field")
@@ -585,16 +585,21 @@ def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[
 					setattr(obj, attr, sub_value)
 					continue
 			else:
-				if not hasattr(obj, key):
-					raise PyMSError('Decode', f"'{key}' is not a valid field name")
+				attr = key
+				if isinstance(decoder, SplitEncoder):
+					attr = decoder.attr
+				elif isinstance(decoder, RenameEncoder):
+					attr = decoder.attr
+				if not hasattr(obj, attr):
+					raise PyMSError('Decode', f"'{attr}' is not a valid field name")
 				if isinstance(decoder, dict):
 					if not isinstance(value, dict):
-						raise PyMSError('Decode', f"Expected '{key}' to not be an object")
-					_apply(value, getattr(obj, key), decoder)
+						raise PyMSError('Decode', f"Expected '{attr}' to not be an object")
+					_apply(value, getattr(obj, attr), decoder)
 				else:
-					current = getattr(obj, key)
+					current = getattr(obj, attr)
 					value = decoder.apply(value, current)
-					setattr(obj, key, value)
+					setattr(obj, attr, value)
 	jsons = _decode_text_to_json(text, definitions)
 	decode_count = len(jsons)
 	definition_map = {definition.name: definition for definition in definitions}

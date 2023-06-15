@@ -5,7 +5,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
 	from typing import BinaryIO
 
@@ -201,6 +201,33 @@ class CV5Group(object):
 	@doodad_unknown8.setter
 	def doodad_unknown8(self, value): # type: (int) -> None
 		self._piece_down_or_unknown8 = value
+
+	def __eq__(self, other: Any) -> bool:
+		if not isinstance(other, CV5Group):
+			return False
+		if other.type != self.type:
+			return False
+		if other.flags != self.flags:
+			return False
+		if other._edge_left_or_overlay_id != self._edge_left_or_overlay_id:
+			return False
+		if other._edge_up_or_scr != self._edge_up_or_scr:
+			return False
+		if other._edge_right_or_string_id != self._edge_right_or_string_id:
+			return False
+		if other._edge_down_or_unknown4 != self._edge_down_or_unknown4:
+			return False
+		if other._piece_left_or_dddata_id != self._piece_left_or_dddata_id:
+			return False
+		if other._piece_up_or_width != self._piece_up_or_width:
+			return False
+		if other._piece_right_or_height != self._piece_right_or_height:
+			return False
+		if other._piece_down_or_unknown8 != self._piece_down_or_unknown8:
+			return False
+		if other.megatile_ids != self.megatile_ids:
+			return False
+		return True
 
 class CV5(object):
 	MAX_ID = 4095

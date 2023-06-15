@@ -9,7 +9,7 @@ from ..utils import resource_path
 import unittest
 
 class Test_Entry_Name(unittest.TestCase):
-	def test_generic_name(self):
+	def test_generic_name(self) -> None:
 		entry_ids = (0, 1, 2, 3)
 		type = 'Entry'
 		id_count = 3
@@ -73,7 +73,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name,
 			)
 
-	def test_unit_name(self):
+	def test_unit_name(self) -> None:
 		entry_ids = (0, 114, 227, 228, 250, 251)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -276,7 +276,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name,
 			)
 
-	def test_weapon_name(self):
+	def test_weapon_name(self) -> None:
 		entry_ids = (0, 61, 129, 130)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -407,7 +407,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_image_name(self):
+	def test_image_name(self) -> None:
 		entry_ids = (0, 499, 998, 999)
 		imagesdat = ImagesDAT()
 		imagesdat.load_file(resource_path('images.dat', __file__))
@@ -500,7 +500,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_sprite_name(self):
+	def test_sprite_name(self) -> None:
 		entry_ids = (0, 258, 516, 517)
 		spritesdat = SpritesDAT()
 		spritesdat.load_file(resource_path('sprites.dat', __file__))
@@ -597,7 +597,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_flingy_name(self):
+	def test_flingy_name(self) -> None:
 		entry_ids = (0, 104, 208, 209)
 		flingydat = FlingyDAT()
 		flingydat.load_file(resource_path('flingy.dat', __file__))
@@ -698,7 +698,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_upgrade_name(self):
+	def test_upgrade_name(self) -> None:
 		entry_ids = (0, 30, 60, 61)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -829,7 +829,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_tech_name(self):
+	def test_tech_name(self) -> None:
 		entry_ids = (0, 21, 43, 44)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -960,7 +960,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_sound_name(self):
+	def test_sound_name(self) -> None:
 		entry_ids = (0, 571, 1143, 1144)
 		sfxdatatbl = TBL()
 		sfxdatatbl.load_file(resource_path('sfxdata.tbl', __file__))
@@ -1079,7 +1079,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_portrait_name(self):
+	def test_portrait_name(self) -> None:
 		entry_ids = (0, 54, 109, 110)
 		portdatatbl = TBL()
 		portdatatbl.load_file(resource_path('portdata.tbl', __file__))
@@ -1186,7 +1186,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_map_name(self):
+	def test_map_name(self) -> None:
 		entry_ids = (0, 32, 64, 65)
 		mapdatatbl = TBL()
 		mapdatatbl.load_file(resource_path('mapdata.tbl', __file__))
@@ -1293,7 +1293,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_order_name(self):
+	def test_order_name(self) -> None:
 		entry_ids = (0, 94, 188, 189)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))

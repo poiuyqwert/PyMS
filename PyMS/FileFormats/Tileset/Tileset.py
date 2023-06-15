@@ -97,31 +97,17 @@ class ImportSettingsOptions:
 
 class Tileset(object):
 	cv5: CV5
-	cv5_path: str
+	cv5_path: str | None
 	vf4: VF4
-	vf4_path: str
+	vf4_path: str | None
 	vx4: VX4
-	vx4_path: str
+	vx4_path: str | None
 	vr4: VR4
-	vr4_path: str
+	vr4_path: str | None
 	dddata: DDDataBIN
-	dddata_path: str
+	dddata_path: str | None
 	wpe: Palette
-	wpe_path: str
-
-	# def __init__(self):
-	# 	self.cv5 = None
-	# 	self.cv5_path = None
-	# 	self.vf4 = None
-	# 	self.vf4_path = None
-	# 	self.vx4 = None
-	# 	self.vx4_path = None
-	# 	self.vr4 = None
-	# 	self.vr4_path = None
-	# 	self.dddata = None
-	# 	self.dddata_path = None
-	# 	self.wpe = None
-	# 	self.wpe_path = None
+	wpe_path: str | None
 
 	def groups_max(self): # type: () -> int
 		return CV5.MAX_ID+1
@@ -143,26 +129,32 @@ class Tileset(object):
 			self.cv5 = cv5
 		else:
 			self.cv5 = CV5()
+		self.cv5_path = None
 		if vf4:
 			self.vf4 = vf4
 		else:
 			self.vf4 = VF4()
+		self.vf4_path = None
 		if vx4:
 			self.vx4 = vx4
 		else:
 			self.vx4 = VX4()
+		self.vx4_path = None
 		if vr4:
 			self.vr4 = vr4
 		else:
 			self.vr4 = VR4()
+		self.vr4_path = None
 		if dddata:
 			self.dddata = dddata
 		else:
 			self.dddata = DDDataBIN()
+		self.dddata_path = None
 		if wpe:
 			self.wpe = wpe
 		else:
 			self.wpe = Palette()
+		self.wpe_path = None
 
 	def load_file(self, cv5_path, vf4_path=None, vx4_path=None, vr4_path=None, dddata_path=None, wpe_path=None): # type: (str, str | None, str | None, str | None, str | None, str | None) -> None
 		path = os.path.dirname(cv5_path)
@@ -481,6 +473,16 @@ class Tileset(object):
 				file.write("# Exported from %s\n" % self.vf4_path)
 			megatiles = list((self.vf4.get_megatile(id), id) for id in ids)
 			file.write(Serialize.encode_texts(megatiles, lambda _: MegatileDef, fields))
+
+	def import_megatile_settings(self, input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
+		with IO.InputText(input) as file:
+			text = file.read()
+
+		def get_megatile(n: int, definition: Serialize.Definition) -> VF4Megatile:
+			if n >= len(ids):
+				raise PyMSError('Internal', f'Attempted to import on group {n} with only {len(ids)} being imported')
+			return self.vf4.get_megatile(ids[n])
+		Serialize.decode_text(text, [MegatileDef], get_megatile, len(ids), options.repeater)
 
 # 	def export_settings(self, tiletype, path_or_file, ids, options=ExportSettingsOptions()): # type: (TileType, str | TextIO, list[int], ExportSettingsOptions) -> None
 # 		if tiletype == TileType.mini:

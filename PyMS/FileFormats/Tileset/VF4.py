@@ -26,6 +26,11 @@ class VF4Megatile:
 	def save_data(self) -> bytes:
 		return struct.pack('<16H', *self.flags)
 
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, VF4Megatile):
+			return False
+		return other.flags == self.flags
+
 class VF4(object):
 	MAX_ID = 65535
 

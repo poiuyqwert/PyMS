@@ -145,9 +145,9 @@ class DATEntryName:
 			return none_name
 		strings: Sequence[str]
 		if isinstance(stat_txt, TBL):
-			strings = stat_txt.strings[:228]
+			strings = stat_txt.strings
 		else:
-			strings = stat_txt[:228]
+			strings = stat_txt
 		label_id -= 1
 		if label_id >= len(strings):
 			return None

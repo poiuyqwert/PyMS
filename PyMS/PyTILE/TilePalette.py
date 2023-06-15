@@ -238,7 +238,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		if self.tiletype == TileType.group:
 			path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export MegaTile Group Settings', filetypes=[FileType.txt()])
 			if path:
-				tileset.export_settings(TileType.group, path, self.palette.selected)
+				tileset.export_group_settings(path, self.palette.selected)
 		elif self.tiletype == TileType.mega:
 			from .MegaTileSettingsExporter import MegaTileSettingsExporter
 			MegaTileSettingsExporter(self, self.settings, self.palette.selected)

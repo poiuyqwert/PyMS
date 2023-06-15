@@ -453,4 +453,3 @@ class GRP:
 				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
 		else:
 			file.write(image_data)
-			file.close()

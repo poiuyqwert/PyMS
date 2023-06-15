@@ -1,7 +1,7 @@
 
 import os, io, tempfile
 
-from typing import IO
+from typing import IO, Callable
 
 AnyInputText = str | IO[str]
 AnyInputBytes = str | bytes | IO[bytes]
@@ -95,3 +95,13 @@ class OutputBytes:
 		if self.atomic_paths is not None:
 			temp_path, final_path = self.atomic_paths
 			os.rename(temp_path, final_path)
+
+def output_text(func: Callable[[IO[str]], None]) -> str:
+	output = io.StringIO()
+	func(output)
+	return output.getvalue()
+
+def output_bytes(func: Callable[[IO[bytes]], None]) -> bytes:
+	output = io.BytesIO()
+	func(output)
+	return output.getvalue()

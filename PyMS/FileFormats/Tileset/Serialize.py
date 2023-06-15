@@ -34,14 +34,14 @@ class TileGroupField:
 
 class DoodadGroupField:
 	flags = 'flags'
-	overlay_id = '_edge_left_or_overlay_id'
-	scr = '_edge_up_or_scr'
-	string_id = '_edge_right_or_string_id'
-	unknown4 = '_edge_down_or_unknown4'
-	dddata_id = '_piece_left_or_dddata_id'
-	width = '_piece_up_or_width'
-	height = '_piece_right_or_height'
-	unknown8 = '_piece_down_or_unknown8'
+	overlay_id = 'overlay_id'
+	scr = 'scr'
+	string_id = 'string_id'
+	unknown4 = 'unknown4'
+	dddata_id = 'dddata_id'
+	width = 'width'
+	height = 'height'
+	unknown8 = 'unknown8'
 
 	class Flag:
 		walkable = 'walkable'
@@ -75,8 +75,7 @@ class GroupTypeEncoder(Serialize.IntEncoder):
 			raise PyMSError('Decode', f"'TileGroup' can't have type 1 (doodad type). Must be a 'DoodadGroup' to be doodad type.")
 		return value
 
-MiniFlagsMap = OrderedDict[int, list[bool]]
-class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], MiniFlagsMap]):
+class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], list[bool]]):
 	def __init__(self, flag: int) -> None:
 		self.attr = 'flags'
 		self.flag = flag
@@ -91,7 +90,7 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], MiniFlagsMap]):
 		return result
 	
 	RE_LINE = re.compile(r'\s*([TtFf01]{4})\s*')
-	def decode(self, value: Serialize.JSONValue, current: MiniFlagsMap | None) -> MiniFlagsMap:
+	def decode(self, value: Serialize.JSONValue, current: list[bool] | None) -> list[bool]:
 		if not isinstance(value, str):
 			raise PyMSError('Decoding', f"Expected a string, got '{value}'")
 		lines = value.splitlines()
@@ -100,46 +99,44 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], MiniFlagsMap]):
 		if current is not None:
 			result = current
 		else:
-			result = OrderedDict()
-		result[self.flag] = []
+			result = []
 		for line in lines:
 			match = MiniFlagsMultiEncoder.RE_LINE.match(line)
 			if not match:
 				raise PyMSError('Decoding', f"Expected 4 flags, got '{line}'")
 			line = match.group(1)
 			for flag in line:
-				result[self.flag].append(Serialize.BoolEncoder.parse(flag))
+				result.append(Serialize.BoolEncoder.parse(flag))
 		return result
 
-	def apply(self, value: MiniFlagsMap, current: list[int]) -> list[int]:
+	def apply(self, value: list[bool], current: list[int]) -> list[int]:
 		result = list(current)
-		for flag,has_flags in value.items():
-			for index,has_flag in enumerate(has_flags):
-				if has_flag:
-					result[index] |= flag
-				else:
-					result[index] &= ~flag
+		for index,has_flag in enumerate(value):
+			if has_flag:
+				result[index] |= self.flag
+			else:
+				result[index] &= ~self.flag
 		return result
 
 TileGroupDef = Serialize.Definition('TileGroup', Serialize.IDMode.comment, {
 	TileGroupField.type: GroupTypeEncoder(),
 	TileGroupField.flags: Serialize.IntFlagEncoder({
-		'walkable': CV5Flag.walkable,
-		'unknown_0002': CV5Flag.unknown_0002,
-		'unwalkable': CV5Flag.unwalkable,
-		'unknown_0008': CV5Flag.unknown_0008,
-		'has_doodad_cover': CV5Flag.has_doodad_cover,
-		'unknown_0020': CV5Flag.unknown_0020,
-		'creep': CV5Flag.creep,
-		'unbuildable': CV5Flag.unbuildable,
-		'blocks_view': CV5Flag.blocks_view,
-		'mid_ground': CV5Flag.mid_ground,
-		'high_ground': CV5Flag.high_ground,
-		'occupied': CV5Flag.occupied,
-		'creep_receding': CV5Flag.creep_receding,
-		'cliff_edge': CV5Flag.cliff_edge,
-		'creep_temp': CV5Flag.creep_temp,
-		'special_placeable': CV5Flag.special_placeable,
+		TileGroupField.Flag.walkable: CV5Flag.walkable,
+		TileGroupField.Flag.unknown_0002: CV5Flag.unknown_0002,
+		TileGroupField.Flag.unwalkable: CV5Flag.unwalkable,
+		TileGroupField.Flag.unknown_0008: CV5Flag.unknown_0008,
+		TileGroupField.Flag.has_doodad_cover: CV5Flag.has_doodad_cover,
+		TileGroupField.Flag.unknown_0020: CV5Flag.unknown_0020,
+		TileGroupField.Flag.creep: CV5Flag.creep,
+		TileGroupField.Flag.unbuildable: CV5Flag.unbuildable,
+		TileGroupField.Flag.blocks_view: CV5Flag.blocks_view,
+		TileGroupField.Flag.mid_ground: CV5Flag.mid_ground,
+		TileGroupField.Flag.high_ground: CV5Flag.high_ground,
+		TileGroupField.Flag.occupied: CV5Flag.occupied,
+		TileGroupField.Flag.creep_receding: CV5Flag.creep_receding,
+		TileGroupField.Flag.cliff_edge: CV5Flag.cliff_edge,
+		TileGroupField.Flag.creep_temp: CV5Flag.creep_temp,
+		TileGroupField.Flag.special_placeable: CV5Flag.special_placeable,
 	}),
 	TileGroupField.edge: Serialize.JoinEncoder((
 		('_edge_left_or_overlay_id', 'left', Serialize.IntEncoder()),
@@ -157,31 +154,31 @@ TileGroupDef = Serialize.Definition('TileGroup', Serialize.IDMode.comment, {
 
 DoodadGroupDef = Serialize.Definition('DoodadGroup', Serialize.IDMode.comment, {
 	DoodadGroupField.flags: Serialize.IntFlagEncoder({
-		'walkable': CV5Flag.walkable,
-		'unknown_0002': CV5Flag.unknown_0002,
-		'unwalkable': CV5Flag.unwalkable,
-		'unknown_0008': CV5Flag.unknown_0008,
-		'has_doodad_cover': CV5Flag.has_doodad_cover,
-		'unknown_0020': CV5Flag.unknown_0020,
-		'creep': CV5Flag.creep,
-		'unbuildable': CV5Flag.unbuildable,
-		'blocks_view': CV5Flag.blocks_view,
-		'mid_ground': CV5Flag.mid_ground,
-		'high_ground': CV5Flag.high_ground,
-		'occupied': CV5Flag.occupied,
-		'has_overlay_sprite': CV5DoodadFlag.has_overlay_sprite,
-		'has_overlay_unit': CV5DoodadFlag.has_overlay_unit,
-		'overlay_flipped': CV5DoodadFlag.overlay_flipped,
-		'special_placeable': CV5Flag.special_placeable,
+		DoodadGroupField.Flag.walkable: CV5Flag.walkable,
+		DoodadGroupField.Flag.unknown_0002: CV5Flag.unknown_0002,
+		DoodadGroupField.Flag.unwalkable: CV5Flag.unwalkable,
+		DoodadGroupField.Flag.unknown_0008: CV5Flag.unknown_0008,
+		DoodadGroupField.Flag.has_doodad_cover: CV5Flag.has_doodad_cover,
+		DoodadGroupField.Flag.unknown_0020: CV5Flag.unknown_0020,
+		DoodadGroupField.Flag.creep: CV5Flag.creep,
+		DoodadGroupField.Flag.unbuildable: CV5Flag.unbuildable,
+		DoodadGroupField.Flag.blocks_view: CV5Flag.blocks_view,
+		DoodadGroupField.Flag.mid_ground: CV5Flag.mid_ground,
+		DoodadGroupField.Flag.high_ground: CV5Flag.high_ground,
+		DoodadGroupField.Flag.occupied: CV5Flag.occupied,
+		DoodadGroupField.Flag.has_overlay_sprite: CV5DoodadFlag.has_overlay_sprite,
+		DoodadGroupField.Flag.has_overlay_unit: CV5DoodadFlag.has_overlay_unit,
+		DoodadGroupField.Flag.overlay_flipped: CV5DoodadFlag.overlay_flipped,
+		DoodadGroupField.Flag.special_placeable: CV5Flag.special_placeable,
 	}),
-	DoodadGroupField.overlay_id: Serialize.RenameEncoder('overlay_id', Serialize.IntEncoder()),
-	DoodadGroupField.scr: Serialize.RenameEncoder('scr', Serialize.IntEncoder()),
-	DoodadGroupField.string_id: Serialize.RenameEncoder('string_id', Serialize.IntEncoder()),
-	DoodadGroupField.unknown4: Serialize.RenameEncoder('unknown4', Serialize.IntEncoder()),
-	DoodadGroupField.dddata_id: Serialize.RenameEncoder('dddata_id', Serialize.IntEncoder()),
-	DoodadGroupField.width: Serialize.RenameEncoder('width', Serialize.IntEncoder()),
-	DoodadGroupField.height: Serialize.RenameEncoder('height', Serialize.IntEncoder()),
-	DoodadGroupField.unknown8: Serialize.RenameEncoder('unknown8', Serialize.IntEncoder()),
+	DoodadGroupField.overlay_id: Serialize.RenameEncoder('_edge_left_or_overlay_id', Serialize.IntEncoder()),
+	DoodadGroupField.scr: Serialize.RenameEncoder('_edge_up_or_scr', Serialize.IntEncoder()),
+	DoodadGroupField.string_id: Serialize.RenameEncoder('_edge_right_or_string_id', Serialize.IntEncoder()),
+	DoodadGroupField.unknown4: Serialize.RenameEncoder('_edge_down_or_unknown4', Serialize.IntEncoder()),
+	DoodadGroupField.dddata_id: Serialize.RenameEncoder('_piece_left_or_dddata_id', Serialize.IntEncoder()),
+	DoodadGroupField.width: Serialize.RenameEncoder('_piece_up_or_width', Serialize.IntEncoder()),
+	DoodadGroupField.height: Serialize.RenameEncoder('_piece_right_or_height', Serialize.IntEncoder()),
+	DoodadGroupField.unknown8: Serialize.RenameEncoder('_piece_down_or_unknown8', Serialize.IntEncoder()),
 })
 
 MegatileDef = Serialize.Definition('MegaTile', Serialize.IDMode.comment, {

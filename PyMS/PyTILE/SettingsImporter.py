@@ -1,17 +1,18 @@
 
-from ..FileFormats.Tileset.Tileset import TileType, setting_import_extras_ignore, setting_import_extras_repeat_all, setting_import_extras_repeat_last
+from ..FileFormats.Tileset.Tileset import TileType
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities import Serialize
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
-		('Ignore',				'ignore',		setting_import_extras_ignore),
-		('Repeat All Settings',	'repeat_all',	setting_import_extras_repeat_all),
-		('Repeat Last Setting',	'repeat_last',	setting_import_extras_repeat_last)
+		('Ignore',				'ignore',		Serialize.repeater_ignore),
+		('Repeat All Settings',	'repeat_all',	Serialize.repeater_loop),
+		('Repeat Last Setting',	'repeat_last',	Serialize.repeater_repeat_last)
 	)
 	def __init__(self, parent, settings, tiletype, ids):
 		self.settings = settings

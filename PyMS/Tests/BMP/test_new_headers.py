@@ -6,7 +6,7 @@ from ..utils import resource_path
 import unittest
 
 class Test_New_Headers(unittest.TestCase):
-	def test_load(self):
+	def test_load(self) -> None:
 		expected = [
 			[138, 138, 117, 117, 117, 117, 117, 117, 138, 138],
 			[138, 117, 117, 255, 117, 117, 255, 117, 117, 138],

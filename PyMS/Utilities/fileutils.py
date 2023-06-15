@@ -39,7 +39,7 @@ def load_file(file, file_type='file', mode='rb'): # type: (str | BinaryIO, str, 
 		else:
 			f = file
 		data = f.read()
-	except:
+	except Exception as e:
 		name = ''
 		if isinstance(file, str):
 			name = " '%s'" % file
