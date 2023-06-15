@@ -91,21 +91,9 @@ class ImportGraphicsOptions:
 	minitiles_reuse_duplicates_flipped: bool = True # Check flipped versions of tiles for duplicates (Boolean, default: True)
 	minitiles_expand_allowed: bool | Callable[[], bool] = False # Whether importing too many minitiles will expand VX4 or not (True, False, or callback, default: False)
 
-def setting_import_extras_ignore(setting_count, tile_n, tile_count): # type: (int, int, int) -> (int | None)
-	if tile_n == setting_count:
-		return None
-	return tile_n
-
-def setting_import_extras_repeat_all(setting_count, tile_n, tile_count): # type: (int, int, int) -> (int | None)
-	return tile_n % setting_count
-
-def setting_import_extras_repeat_last(setting_count, tile_n, tile_count): # type: (int, int, int) -> (int | None)
-	return min(tile_n, setting_count-1)
-
 @dataclass
 class ImportSettingsOptions:
-	repeater: Callable[[int, int, int], int | None] = setting_import_extras_ignore
-	# options.repeater (Func, default: setting_import_extras_ignore)
+	repeater: Serialize.Repeater = Serialize.repeater_ignore
 
 class Tileset(object):
 	cv5: CV5
@@ -474,10 +462,18 @@ class Tileset(object):
 	def import_group_settings(self, input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
 		with IO.InputText(input) as file:
 			text = file.read()
-		
-		# def get_group(decoder):
 
-		# Serialize.decode_text(text, [TileGroupDef, DoodadGroupDef],)
+		def get_group(n: int, definition: Serialize.Definition) -> CV5Group:
+			if n >= len(ids):
+				raise PyMSError('Internal', f'Attempted to import on group {n} with only {len(ids)} being imported')
+			id = ids[n]
+			group = self.cv5.get_group(id)
+			if definition == TileGroupDef and group.type == CV5Group.TYPE_DOODAD:
+				raise PyMSError('Import', f'Attempting to import TileGroup onto DoodadGroup {id}')
+			elif definition == DoodadGroupDef and group.type != CV5Group.TYPE_DOODAD:
+				raise PyMSError('Import', f'Attempting to import DoodadGroup onto TileGroup {id}')
+			return group
+		Serialize.decode_text(text, [TileGroupDef, DoodadGroupDef], get_group, len(ids), options.repeater)
 
 	def export_megatile_settings(self, output: IO.AnyOutputText, ids: list[int], fields: Serialize.Fields | None = None) -> None:
 		with IO.OutputText(output) as file:

@@ -450,14 +450,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 						TileGroupField.Flag.creep_temp: self.copy_tilegroup_creep.get(),
 						TileGroupField.Flag.special_placeable: self.copy_tilegroup_buildability.get()
 					},
-					TileGroupField.edge_left: self.copy_tilegroup_edge_types.get(),
-					TileGroupField.edge_up: self.copy_tilegroup_edge_types.get(),
-					TileGroupField.edge_right: self.copy_tilegroup_edge_types.get(),
-					TileGroupField.edge_down: self.copy_tilegroup_edge_types.get(),
-					TileGroupField.piece_left: self.copy_tilegroup_piece_types.get(),
-					TileGroupField.piece_up: self.copy_tilegroup_piece_types.get(),
-					TileGroupField.piece_right: self.copy_tilegroup_piece_types.get(),
-					TileGroupField.piece_down: self.copy_tilegroup_piece_types.get(),
+					TileGroupField.edge: self.copy_tilegroup_edge_types.get(),
+					TileGroupField.piece: self.copy_tilegroup_piece_types.get(),
 				}
 			f = io.StringIO()
 			self.tileset.export_group_settings(f, [group], fields)
@@ -466,15 +460,15 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		def paste_tilegroup(*args): # type: (Any) -> None
 			if not self.tileset:
 				return
-			# group = self.palette.selected[0]
-			# settings = self.clipboard_get()
-			# try:
-			# 	self.tileset.import_settings(TileType.group, settings, [group])
-			# except PyMSError as e:
-			# 	ErrorDialog(self, e)
-			# 	return
-			# self.megaload()
-			# self.mark_edited()
+			group = self.palette.selected[0]
+			settings = self.clipboard_get()
+			try:
+				self.tileset.import_group_settings(settings, [group])
+			except PyMSError as e:
+				ErrorDialog(self, e)
+				return
+			self.megaload()
+			self.mark_edited()
 		copy_tilegroup_settings_editor = EditorGroup(self.flow_view.content_view, 'Copy Group Settings')\
 			.check('Walkability', 'Copy settings from Walkability', self.copy_tilegroup_walkability).add(new_row=False)\
 			.check('Buildability', 'Copy settings from Buildability', self.copy_tilegroup_buildability).add()\

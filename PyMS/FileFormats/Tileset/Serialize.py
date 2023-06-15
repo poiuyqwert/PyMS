@@ -6,18 +6,13 @@ from ...Utilities import Serialize
 from ...Utilities.PyMSError import PyMSError
 
 import re
+from collections import OrderedDict
 
 class TileGroupField:
 	type = 'type'
 	flags = 'flags'
-	edge_left = '_edge_left_or_overlay_id'
-	edge_up = '_edge_up_or_scr'
-	edge_right = '_edge_right_or_string_id'
-	edge_down = '_edge_down_or_unknown4'
-	piece_left = '_piece_left_or_dddata_id'
-	piece_up = '_piece_up_or_width'
-	piece_right = '_piece_right_or_height'
-	piece_down = '_piece_down_or_unknown8'
+	edge = 'edge'
+	piece = 'piece'
 
 	class Flag:
 		walkable = 'walkable'
@@ -80,7 +75,8 @@ class GroupTypeEncoder(Serialize.IntEncoder):
 			raise PyMSError('Decode', f"'TileGroup' can't have type 1 (doodad type). Must be a 'DoodadGroup' to be doodad type.")
 		return value
 
-class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int]]):
+MiniFlagsMap = OrderedDict[int, list[bool]]
+class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], MiniFlagsMap]):
 	def __init__(self, flag: int) -> None:
 		self.attr = 'flags'
 		self.flag = flag
@@ -94,8 +90,8 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int]]):
 			result += '1' if has_flag else '0'
 		return result
 	
-	RE_LINE = re.compile(r'\s*([01]{4})\s*')
-	def decode(self, value: Serialize.JSONValue, current: list[int] | None) -> list[int]:
+	RE_LINE = re.compile(r'\s*([TtFf01]{4})\s*')
+	def decode(self, value: Serialize.JSONValue, current: MiniFlagsMap | None) -> MiniFlagsMap:
 		if not isinstance(value, str):
 			raise PyMSError('Decoding', f"Expected a string, got '{value}'")
 		lines = value.splitlines()
@@ -104,17 +100,25 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int]]):
 		if current is not None:
 			result = current
 		else:
-			result = [0] * 16
-		for x,line in enumerate(lines):
+			result = OrderedDict()
+		result[self.flag] = []
+		for line in lines:
 			match = MiniFlagsMultiEncoder.RE_LINE.match(line)
 			if not match:
 				raise PyMSError('Decoding', f"Expected 4 flags, got '{line}'")
 			line = match.group(1)
-			for y,flag in enumerate(line):
-				if flag == '0':
-					continue
-				n = (y * 4) + x
-				result[n] |= self.flag
+			for flag in line:
+				result[self.flag].append(Serialize.BoolEncoder.parse(flag))
+		return result
+
+	def apply(self, value: MiniFlagsMap, current: list[int]) -> list[int]:
+		result = list(current)
+		for flag,has_flags in value.items():
+			for index,has_flag in enumerate(has_flags):
+				if has_flag:
+					result[index] |= flag
+				else:
+					result[index] &= ~flag
 		return result
 
 TileGroupDef = Serialize.Definition('TileGroup', Serialize.IDMode.comment, {
@@ -137,14 +141,18 @@ TileGroupDef = Serialize.Definition('TileGroup', Serialize.IDMode.comment, {
 		'creep_temp': CV5Flag.creep_temp,
 		'special_placeable': CV5Flag.special_placeable,
 	}),
-	TileGroupField.edge_left: Serialize.JoinEncoder('edge', 'left', Serialize.IntEncoder()),
-	TileGroupField.edge_up: Serialize.JoinEncoder('edge', 'up', Serialize.IntEncoder()),
-	TileGroupField.edge_right: Serialize.JoinEncoder('edge', 'right', Serialize.IntEncoder()),
-	TileGroupField.edge_down: Serialize.JoinEncoder('edge', 'down', Serialize.IntEncoder()),
-	TileGroupField.piece_left: Serialize.JoinEncoder('piece', 'left', Serialize.IntEncoder()),
-	TileGroupField.piece_up: Serialize.JoinEncoder('piece', 'up', Serialize.IntEncoder()),
-	TileGroupField.piece_right: Serialize.JoinEncoder('piece', 'right', Serialize.IntEncoder()),
-	TileGroupField.piece_down: Serialize.JoinEncoder('piece', 'down', Serialize.IntEncoder()),
+	TileGroupField.edge: Serialize.JoinEncoder((
+		('_edge_left_or_overlay_id', 'left', Serialize.IntEncoder()),
+		('_edge_up_or_scr', 'up', Serialize.IntEncoder()),
+		('_edge_right_or_string_id', 'right', Serialize.IntEncoder()),
+		('_edge_down_or_unknown4', 'down', Serialize.IntEncoder()),
+	)),
+	TileGroupField.piece: Serialize.JoinEncoder((
+		('_piece_left_or_dddata_id', 'left', Serialize.IntEncoder()),
+		('_piece_up_or_width', 'up', Serialize.IntEncoder()),
+		('_piece_right_or_height', 'right', Serialize.IntEncoder()),
+		('_piece_down_or_unknown8', 'down', Serialize.IntEncoder()),
+	)),
 })
 
 DoodadGroupDef = Serialize.Definition('DoodadGroup', Serialize.IDMode.comment, {

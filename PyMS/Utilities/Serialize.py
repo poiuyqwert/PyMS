@@ -17,30 +17,60 @@ SubFields = dict[str, bool]
 Fields = dict[str, bool | SubFields]
 
 V = TypeVar('V')
-class Encoder(Generic[V]):
+D = TypeVar('D')
+class Encoder(Generic[V,D]):
 	def encode(self, value: V) -> JSONValue:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue) -> V:
+	def decode(self, value: JSONValue) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
-class GroupEncoder(Generic[V]):
+	def apply(self, value: D, current: V) -> V:
+		raise NotImplementedError(self.__class__.__name__ + '.decode()')
+
+class GroupEncoder(Generic[V,D]):
 	def encode(self, value: V, fields: Fields | SubFields | None) -> JSONValue:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue, field: str, current: Any | None) -> V:
+	def decode(self, value: JSONValue, field: str, current: D | None) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
-class SplitEncoder(Generic[V]):
+	def apply(self, value: D, current: V) -> V:
+		raise NotImplementedError(self.__class__.__name__ + '.decode()')
+
+class SplitEncoder(Generic[V,D]):
 	attr: str
 
 	def encode(self, value: V) -> JSONValue:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue, current: Any | None) -> V:
+	def decode(self, value: JSONValue, current: D | None) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
-class IntEncoder(Encoder[int]):
+	def apply(self, value: D, current: V) -> V:
+		raise NotImplementedError(self.__class__.__name__ + '.decode()')
+
+class JoinEncoder(Generic[V,D]):
+	def __init__(self, fields: Sequence[tuple[str, str, Encoder]]) -> None:
+		self.fields = fields
+
+	# def encode(self, value: V, field: str) -> JSONValue:
+	# 	for _,field_name,encoder in self.fields:
+	# 		if field_name != field:
+	# 			continue
+	# 		return encoder.encode(value)
+
+	# def decode(self, value: JSONValue, field: str) -> D:
+	# 	for _,field_name,encoder in self.fields:
+	# 		if field_name != field:
+	# 			continue
+	# 		return encoder.decode(value)
+	# 	raise PyMSError('Decode', f"Field '{field}' does not exist")
+
+	# def apply(self, value: D, field: str, current: V) -> V:
+	# 	return self.fields[field][1].apply(value, current)
+
+class IntEncoder(Encoder[int,int]):
 	_RE = re.compile(r'^\d+$')
 	def __init__(self, min: int | None = None, max: int | None = None):
 		self.min = min
@@ -62,7 +92,10 @@ class IntEncoder(Encoder[int]):
 			raise PyMSError('Decode', f'{self.max} is the maximum value, got {value}')
 		return value
 
-class FloatEncoder(Encoder[float]):
+	def apply(self, value: int, current: int) -> int:
+		return value
+
+class FloatEncoder(Encoder[float,float]):
 	def __init__(self, min: float | None = None, max: float | None = None):
 		self.min = min
 		self.max = max
@@ -79,7 +112,10 @@ class FloatEncoder(Encoder[float]):
 			raise PyMSError('Decode', f'{self.max} is the maximum value, got {value}')
 		return value
 
-class BoolEncoder(Encoder[bool]):
+	def apply(self, value: float, current: float) -> float:
+		return value
+
+class BoolEncoder(Encoder[bool,bool]):
 	def encode(self, value: bool) -> JSONValue:
 		return value
 
@@ -100,8 +136,11 @@ class BoolEncoder(Encoder[bool]):
 
 	def decode(self, value: JSONValue) -> bool:
 		return BoolEncoder.parse(value)
+	
+	def apply(self, value: bool, current: bool) -> bool:
+		return value
 
-class StrEncoder(Encoder[str]):
+class StrEncoder(Encoder[str,str]):
 	def __init__(self, max_length: int | None = None):
 		self.max_length = max_length
 
@@ -115,8 +154,12 @@ class StrEncoder(Encoder[str]):
 			raise PyMSError('Decode', f'{self.max_length} is the maximum length, got {len(value)}')
 		return value
 
+	def apply(self, value: str, current: str) -> str:
+		return value
+
 F = TypeVar('F', bound=Flag)
-class FlagEncoder(GroupEncoder[F]):
+FlagsMap = OrderedDict[str, bool]
+class FlagEncoder(GroupEncoder[F,FlagsMap]):
 	def __init__(self, zero_flags: F):
 		self.zero_flags = zero_flags
 
@@ -135,23 +178,32 @@ class FlagEncoder(GroupEncoder[F]):
 			flags[flag_name] = has_flag
 		return flags
 
-	def decode(self, value: JSONValue, field: str, current: F | None) -> F:
+	def decode(self, value: JSONValue, field: str, current: FlagsMap | None) -> FlagsMap:
 		if current is not None:
 			result = current
 		else:
-			result = self.zero_flags
+			result = OrderedDict()
 		f_type = type(self.zero_flags)
 		if not hasattr(f_type, field):
 			raise PyMSError('Decode', f"'{field}' is not a valid flag name")
 		flag = getattr(f_type, field)
 		if not isinstance(flag, f_type):
 			raise PyMSError('Decode', f"'{field}' is not a valid flag name")
-		has_flag = BoolEncoder.parse(value)
-		if has_flag:
-			result |= flag
+		result[field] = BoolEncoder.parse(value)
 		return result
 
-class IntFlagEncoder(GroupEncoder[int]):
+	def apply(self, value: FlagsMap, current: F) -> F:
+		result = current
+		f_type = type(self.zero_flags)
+		for flag_name,has_flag in value.items():
+			flag = getattr(f_type, flag_name)
+			if has_flag:
+				result |= flag
+			else:
+				result &= ~flag
+		return result
+
+class IntFlagEncoder(GroupEncoder[int,FlagsMap]):
 	def __init__(self, flags: dict[str, int]) -> None:
 		self.flags = flags
 
@@ -164,23 +216,33 @@ class IntFlagEncoder(GroupEncoder[int]):
 			flags[flag_name] = has_flag
 		return flags
 
-	def decode(self, value: JSONValue, field: str, current: int | None) -> int:
+	def decode(self, value: JSONValue, field: str, current: FlagsMap | None) -> FlagsMap:
 		if current is not None:
 			result = current
 		else:
-			result = 0
-		for flag_name,flag in self.flags.items():
+			result = OrderedDict()
+		for flag_name,_ in self.flags.items():
 			if field == flag_name:
-				has_flag = BoolEncoder.parse(value)
-				if has_flag:
-					result |= flag
+				result[field] = BoolEncoder.parse(value)
 				break
 		else:
 			raise PyMSError('Decode', f"'{field}' is not a valid flag name")
 		return result
 
+	def apply(self, value: FlagsMap, current: int) -> int:
+		result = current
+		for flag_name,flag in self.flags.items():
+			if not flag_name in value:
+				continue
+			has_flag = value[flag_name]
+			if has_flag:
+				result |= flag
+			else:
+				result &= ~flag
+		return result
+
 E = TypeVar('E', bound=Enum)
-class EnumValueEncoder(Encoder[E]):
+class EnumValueEncoder(Encoder[E,E]):
 	def __init__(self, enum_type: Type[E]) -> None:
 		self.enum_type = enum_type
 
@@ -193,7 +255,10 @@ class EnumValueEncoder(Encoder[E]):
 		except:
 			raise PyMSError('Decode', f"'{value}' is not a valid option")
 
-class EnumNameEncoder(Encoder[E]):
+	def apply(self, value: E, current: E) -> E:
+		return value
+
+class EnumNameEncoder(Encoder[E,E]):
 	def __init__(self, enum_type: Type[E]) -> None:
 		self.enum_type = enum_type
 
@@ -210,30 +275,24 @@ class EnumNameEncoder(Encoder[E]):
 			raise PyMSError('Decode', f"'{value}' is not a valid option")
 		return value
 
-class JoinEncoder(Encoder[V]):
-	def __init__(self, join_name: str, field_name: str, encoder: Encoder[V]) -> None:
-		self.join_name = join_name
-		self.field_name = field_name
-		self.encoder = encoder
+	def apply(self, value: E, current: E) -> E:
+		return value
 
-	def encode(self, value: V) -> JSONValue:
-		return self.encoder.encode(value)
-
-	def decode(self, value: JSONValue) -> V:
-		return self.encoder.decode(value)
-
-class RenameEncoder(Encoder[V]):
-	def __init__(self, name: str, encoder: Encoder[V]) -> None:
+class RenameEncoder(Encoder[V,D]):
+	def __init__(self, name: str, encoder: Encoder) -> None:
 		self.name = name
 		self.encoder = encoder
 
 	def encode(self, value: V) -> JSONValue:
 		return self.encoder.encode(value)
 
-	def decode(self, value: JSONValue) -> V:
+	def decode(self, value: JSONValue) -> D:
 		return self.encoder.decode(value)
 
-AnyEncoder = Encoder | GroupEncoder | SplitEncoder
+	def apply(self, value: D, current: V) -> V:
+		return self.encoder.apply(value, current)
+
+AnyEncoder = Encoder | GroupEncoder | SplitEncoder | JoinEncoder
 SubStructure = dict[str, AnyEncoder]
 Structure = dict[str, AnyEncoder | SubStructure]
 
@@ -262,20 +321,19 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 			attr = encoder.attr
 		if isinstance(encoder, RenameEncoder):
 			key = encoder.name
+		if isinstance(encoder, JoinEncoder):
+			sub_json: OrderedDict[str, JSONValue] = OrderedDict()
+			for attr,sub_key,sub_encoder in encoder.fields:
+				if not hasattr(obj, attr):
+					raise PyMSError('Internal', f"'{attr}' is not a valid attribute name")
+				value = getattr(obj, attr)
+				sub_json[sub_key] = sub_encoder.encode(value)
+			json[key] = sub_json
+			continue
 		if not hasattr(obj, attr):
 			raise PyMSError('Internal', f"'{attr}' is not a valid attribute name")
 		value = getattr(obj, attr)
-		if isinstance(encoder, JoinEncoder):
-			if encoder.join_name in json:
-				group = json[encoder.join_name]
-				if not isinstance(group, dict):
-					raise PyMSError('Internal', f"Group '{encoder.join_name}' has value '{group}' instead of map")
-			else:
-				group = OrderedDict()
-				json[encoder.join_name] = group
-			group[encoder.field_name] = encoder.encode(value)
-			continue
-		elif isinstance(encoder, GroupEncoder):
+		if isinstance(encoder, GroupEncoder):
 			if not isinstance(field, dict):
 				field = None
 			value = encoder.encode(value, field)
@@ -379,7 +437,7 @@ _RE_TYPE = re.compile(r'^([A-Z]\w+)(?:\((\d+)\))?:$')
 _RE_FIELD_FLAT = re.compile(r'^([a-z]\w*(?:\.[a-z]\w*)*)\s+(.+?)$')
 _RE_FIELD_MULTI = re.compile(r'^([a-z]\w*(?:\.[a-z]\w*)*):$')
 def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[OrderedDict]:
-	def _decode_value(key_path: list[str], value: str, obj: dict, structure: Structure | SubStructure) -> None:
+	def _decode_value(key_path: list[str], value: str, json: OrderedDict, structure: Structure | SubStructure) -> None:
 		while len(key_path):
 			key = key_path.pop(0)
 			decoder = structure.get(key)
@@ -391,33 +449,51 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 				sub_key = key_path.pop(0)
 				if len(key_path) > 0:
 					raise PyMSError('Decode', f"'{key}.{sub_key}' can't have sub-fields")
-				obj[key] = decoder.decode(value, sub_key, obj.get(key))
+				json[key] = decoder.decode(value, sub_key, json.get(key))
 			elif isinstance(decoder, SplitEncoder):
 				if len(key_path) > 0:
 					raise PyMSError('Decode', f"'{key}' can't have sub-fields")
-				obj[decoder.attr] = decoder.decode(value, obj.get(decoder.attr))
+				json[decoder.attr] = decoder.decode(value, json.get(decoder.attr))
+			elif isinstance(decoder, JoinEncoder):
+				if len(key_path) == 0:
+					raise PyMSError('Decode', f"'{key}' needs a sub-field")
+				sub_key = key_path.pop(0)
+				if len(key_path) > 0:
+					raise PyMSError('Decode', f"'{key}.{sub_key}' can't have sub-fields")
+				sub_json = json.get(key)
+				if not sub_json:
+					sub_json = OrderedDict()
+					json[key] = sub_json
+				elif not isinstance(sub_json, OrderedDict):
+					raise PyMSError('Decode', f"Expected '{key}' to be an object but got '{sub_json}'")
+				for attr,field,sub_decoder in decoder.fields:
+					if sub_key == field:
+						sub_json[sub_key] = sub_decoder.decode(value)
+						break
+				else:
+					raise PyMSError('Decode', f"'{key}' is not a valid field name")
 			elif isinstance(decoder, dict):
 				if len(key_path) == 0:
 					raise PyMSError('Decode', f"'{key}' needs a sub-field")
-				sub_obj = obj.get(key)
-				if not sub_obj:
-					sub_obj = OrderedDict()
-					obj[key] = sub_obj
-					obj = sub_obj
-				elif isinstance(sub_obj, dict):
-					obj = sub_obj
+				sub_json = json.get(key)
+				if not sub_json:
+					sub_json = OrderedDict()
+					json[key] = sub_json
+					json = sub_json
+				elif isinstance(sub_json, OrderedDict):
+					json = sub_json
 				else:
-					raise PyMSError('Decode', f"Expected '{key}' to be an object but got '{sub_obj}'")
+					raise PyMSError('Decode', f"Expected '{key}' to be an object but got '{sub_json}'")
 			else:
 				if len(key_path) > 0:
 					raise PyMSError('Decode', f"'{key}' can't have sub-fields")
-				obj[key] = decoder.decode(value)
-	def _add_obj(obj: OrderedDict, definition: Definition, result: list[OrderedDict]) -> None:
-		if len(obj) == 0:
+				json[key] = decoder.decode(value)
+	def _add_json(json: OrderedDict, definition: Definition, result: list[OrderedDict]) -> None:
+		if len(json) == 0:
 			raise PyMSError('Decode', f"'{definition.name}' object is empty")
-		obj['_type'] = definition.name
-		obj.move_to_end('_type', last=False)
-		result.append(obj)
+		json['_type'] = definition.name
+		json.move_to_end('_type', last=False)
+		result.append(json)
 	definition_map = {definition.name: definition for definition in definitions}
 	working: OrderedDict | None = None
 	definition: Definition | None = None
@@ -434,7 +510,7 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 				raise PyMSError('Decode', f"Can't find definition for '{match.group(1)}' type")
 			if working:
 				assert definition is not None
-				_add_obj(working, definition, result)
+				_add_json(working, definition, result)
 			working = OrderedDict()
 			definition = new_definition
 			continue
@@ -468,12 +544,12 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 				scanner.skip()
 			_decode_value(key_path, value, obj, structure)
 			continue
-		raise PyMSError('Decoding', f"Unexpected line '{line}'")
+		raise PyMSError('Decode', f"Unexpected line '{line}'")
 	if working:
 		assert definition is not None
-		_add_obj(working, definition, result)
+		_add_json(working, definition, result)
 	if not len(result):
-		raise PyMSError('Decoding', 'Nothing to decode.')
+		raise PyMSError('Decode', 'Nothing to decode.')
 	return result
 
 Repeater = Callable[[int, int, int], int | None]
@@ -490,17 +566,35 @@ def repeater_repeat_last(decode_count: int, obj_n: int, obj_count: int) -> (int 
 	return min(obj_n, decode_count-1)
 
 O = TypeVar('O')
-def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[[Definition], O], objs: int | None = None, repeater: Repeater = repeater_ignore) -> list[O]:
-	def _apply(json: dict[str, Any], obj: object):
+def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[[int, Definition], O], objs: int | None = None, repeater: Repeater = repeater_ignore) -> list[O]:
+	def _apply(json: dict[str, Any], obj: object, structure: Structure | SubStructure):
 		for key,value in json.items():
-			if key.startswith('_'):
+			if key in ('_type', '_id'):
 				continue
-			if not hasattr(obj, key):
-				raise PyMSError('Decode', f"'{key}' is not a valid field name")
-			if isinstance(value, dict):
-				_apply(value, getattr(obj, key))
+			decoder = structure.get(key)
+			if not decoder:
+				raise PyMSError('Decode', f"Unexpected field '{key}'")
+			if isinstance(decoder, JoinEncoder):
+				if not isinstance(value, dict):
+					raise PyMSError('Decode', f"Expected '{key}' to not be an object")
+				for attr,sub_key,sub_decoder in decoder.fields:
+					if not sub_key in value:
+						continue
+					current = getattr(obj, attr)
+					sub_value = sub_decoder.apply(value[sub_key], current)
+					setattr(obj, attr, sub_value)
+					continue
 			else:
-				setattr(obj, key, value)
+				if not hasattr(obj, key):
+					raise PyMSError('Decode', f"'{key}' is not a valid field name")
+				if isinstance(decoder, dict):
+					if not isinstance(value, dict):
+						raise PyMSError('Decode', f"Expected '{key}' to not be an object")
+					_apply(value, getattr(obj, key), decoder)
+				else:
+					current = getattr(obj, key)
+					value = decoder.apply(value, current)
+					setattr(obj, key, value)
 	jsons = _decode_text_to_json(text, definitions)
 	decode_count = len(jsons)
 	definition_map = {definition.name: definition for definition in definitions}
@@ -524,7 +618,7 @@ def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[
 		definition = definition_map.get(json_type)
 		if definition is None:
 			raise PyMSError('Decode', f"Unrecognized object type '{json_type}'")
-		obj = builder(definition)
-		_apply(json, obj)
+		obj = builder(raw_n, definition)
+		_apply(json, obj, definition.structure)
 		result.append(obj)
 	return result
