@@ -1,5 +1,5 @@
 
-from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorDelegate, MiniEditorDelegate
+from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate
 from .TilePaletteView import TilePaletteView
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType
@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..Utilities.Settings import Settings
 
-class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate):
+class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
 	TILE_CACHE = {} # type: dict[int | VX4Minitile, Image]
 
@@ -217,7 +217,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 
 	def import_graphics(self): # type: () -> None
 		from .GraphicsImporter import GraphicsImporter
-		GraphicsImporter(self, self.settings, self.tiletype, self.palette.selected)
+		GraphicsImporter(self, self.settings, self, self.tiletype, self.palette.selected)
 
 	def imported_graphics(self, new_ids): # type: (list[int]) -> None
 		TilePalette.TILE_CACHE.clear()
@@ -241,13 +241,13 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				tileset.export_group_settings(path, self.palette.selected)
 		elif self.tiletype == TileType.mega:
 			from .MegaTileSettingsExporter import MegaTileSettingsExporter
-			MegaTileSettingsExporter(self, self.settings, self.palette.selected)
+			MegaTileSettingsExporter(self, self.settings, self.palette.selected, self)
 
 	def import_settings(self): # type: () -> None
 		if not len(self.palette.selected):
 			return
 		from .SettingsImporter import SettingsImporter
-		SettingsImporter(self, self.settings, self.tiletype, self.palette.selected)
+		SettingsImporter(self, self.settings, self.tiletype, self.palette.selected, self)
 
 	def edit(self, e=None): # type: (Any) -> None
 		if not len(self.palette.selected):

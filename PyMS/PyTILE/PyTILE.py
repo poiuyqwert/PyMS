@@ -3,7 +3,7 @@ from .TilePaletteView import TilePaletteView
 from .MegaEditorView import MegaEditorView
 from .TilePalette import TilePalette
 from .Placeability import Placeability
-from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate
+from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
 from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
@@ -149,7 +149,7 @@ class CopyOptions:
 		for name,var in self.options:
 			self.settings['copy'][self.group][name] = var.get()
 
-class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, PlaceabilityDelegate):
+class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
 

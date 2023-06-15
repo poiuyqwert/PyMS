@@ -6,7 +6,7 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 
-from math import ceil, floor
+from math import ceil
 
 from typing import Callable
 

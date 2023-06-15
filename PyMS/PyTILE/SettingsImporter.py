@@ -1,5 +1,7 @@
 
-from ..FileFormats.Tileset.Tileset import TileType
+from .Delegates import MainDelegate
+
+from ..FileFormats.Tileset.Tileset import TileType, ImportSettingsOptions
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
@@ -8,17 +10,21 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Serialize
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..Utilities.Settings import Settings
+
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
 		('Ignore',				'ignore',		Serialize.repeater_ignore),
 		('Repeat All Settings',	'repeat_all',	Serialize.repeater_loop),
 		('Repeat Last Setting',	'repeat_last',	Serialize.repeater_repeat_last)
 	)
-	def __init__(self, parent, settings, tiletype, ids):
+	def __init__(self, parent, settings, tiletype, ids, delegate): # type: (Misc, Settings, TileType, list[int], MainDelegate) -> None
 		self.settings = settings
 		self.tiletype = tiletype
 		self.ids = ids
-		self.tileset = parent.tileset
+		self.delegate = delegate
 		typename = ''
 		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
@@ -26,7 +32,7 @@ class SettingsImporter(PyMSDialog):
 			typename = 'MegaTile'
 		PyMSDialog.__init__(self, parent, 'Import %s Settings' % typename, resizable=(True,False), set_min_size=(True,True))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		self.settings_path = StringVar()
 		self.repeater = IntVar()
 		repeater_n = 0
@@ -66,28 +72,37 @@ class SettingsImporter(PyMSDialog):
 
 		return self.import_button
 
-	def select_path(self):
+	def select_path(self): # type: () -> None
 		typename = ''
 		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
 		elif self.tiletype == TileType.mega:
 			typename = 'MegaTile'
 		path = self.settings.lastpath.settings.select_open_file(self, key='import', title='Import %s Settings' % typename, filetypes=[FileType.txt()])
-		if path:
-			self.settings_path.set(path)
-			self.settings_entry.xview(END)
-			self.update_states()
+		if not path:
+			return
+		self.settings_path.set(path)
+		self.settings_entry.xview(END)
+		self.update_states()
 
-	def update_states(self, *_):
+	def update_states(self, *_): # type: (Any) -> None
 		self.import_button['state'] = NORMAL if self.settings_path.get() else DISABLED
 
-	def iimport(self):
+	def iimport(self): # type: () -> None
+		tileset = self.delegate.get_tileset()
+		if not tileset:
+			return
+		options = ImportSettingsOptions()
+		options.repeater = SettingsImporter.REPEATERS[self.repeater.get()][2]
 		try:
-			self.tileset.import_settings(self.tiletype, self.settings_path.get(), self.ids, {'repeater': SettingsImporter.REPEATERS[self.repeater.get()][2]})
+			if self.tiletype == TileType.group:
+				tileset.import_group_settings(self.settings_path.get(), self.ids, options)
+			elif self.tiletype == TileType.mega:
+				tileset.import_megatile_settings(self.settings_path.get(), self.ids, options)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:
-			self.parent.mark_edited()
+			self.delegate.mark_edited()
 			if self.auto_close.get():
 				self.ok()
 

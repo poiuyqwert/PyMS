@@ -1,5 +1,5 @@
 
-from .Delegates import PlaceabilityDelegate, TilePaletteDelegate
+from .Delegates import MainDelegate, TilePaletteDelegate
 
 from ..FileFormats.Tileset.Tileset import Tileset, megatile_to_photo, TileType
 from ..FileFormats.Tileset.VX4 import VX4Minitile
@@ -11,7 +11,7 @@ from ..Utilities.Settings import Settings
 from typing import Callable
 
 class Placeability(PyMSDialog, TilePaletteDelegate):
-	def __init__(self, parent, settings, delegate, id=0): # type: (Misc, Settings, PlaceabilityDelegate, int) -> None
+	def __init__(self, parent, settings, delegate, id=0): # type: (Misc, Settings, MainDelegate, int) -> None
 		self.settings = settings
 		self.delegate = delegate
 		self.id = id

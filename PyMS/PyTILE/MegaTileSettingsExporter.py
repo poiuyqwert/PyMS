@@ -1,17 +1,23 @@
 
+from .Delegates import MainDelegate
+
 from ..FileFormats.Tileset.Tileset import TileType
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..Utilities.Settings import Settings
+
 class MegaTileSettingsExporter(PyMSDialog):
-	def __init__(self, parent, settings, ids):
+	def __init__(self, parent, settings, ids, delegate): # type: (Misc, Settings, list[int], MainDelegate) -> None
 		self.settings = settings
 		self.ids = ids
-		self.tileset = parent.tileset
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Export MegaTile Settings', resizable=(False,False))
 
-	def widgetize(self):
+	def widgetize(self): # type: () -> (Misc | None)
 		self.height = IntVar()
 		self.height.set(self.settings.export.megatiles.get('height',True))
 		self.walkability = IntVar()
@@ -42,17 +48,21 @@ class MegaTileSettingsExporter(PyMSDialog):
 
 		return self.export_button
 
-	def update_states(self, *_):
+	def update_states(self, *_): # type: (Any) -> None
 		any_on = self.height.get() or self.walkability.get() or self.block_sight.get() or self.ramp.get()
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 
-	def export(self):
+	def export(self): # type: () -> None
+		tileset = self.delegate.get_tileset()
+		if not tileset:
+			return
 		path = self.settings.lastpath.settings.select_save_file(self, key='export', title='Export MegaTile Settings', filetypes=[FileType.txt()])
-		if path:
-			self.tileset.export_settings(TileType.mega, path, self.ids)
-			self.ok()
+		if not path:
+			return
+		tileset.export_megatile_settings(path, self.ids)
+		self.ok()
 
-	def dismiss(self):
+	def dismiss(self): # type: () -> None
 		self.settings.export.megatiles.height = not not self.height.get()
 		self.settings.export.megatiles.walkability = not not self.walkability.get()
 		self.settings.export.megatiles.block_sight = not not self.block_sight.get()
