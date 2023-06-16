@@ -1,5 +1,6 @@
 
 from .DATTab import DATTab
+from .UnitTabs.DATUnitsTab import DATUnitsTab
 from .UnitTabs import *
 from ..DataID import DATID, UnitsTabID, AnyID
 from ..DATRef import DATRefs, DATRef

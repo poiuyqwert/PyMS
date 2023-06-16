@@ -1,5 +1,8 @@
 
+from ...FileFormats.Tileset.Tileset import ImportSettingsOptions
 from ...FileFormats.Tileset.VF4 import VF4Flag
+
+from ...Utilities.Serialize import repeater_ignore, repeater_loop, repeater_repeat_last
 
 from .utils import *
 
@@ -598,6 +601,238 @@ TileGroup:
 
 		self.assertEqual(result, expected)
 
+	def test_repeat_not_needed(self) -> None:
+		tileset = test_tileset()
+		settings = """
+TileGroup:
+	type 0
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.creep_receding 0
+	flags.cliff_edge 0
+	flags.creep_temp 0
+	flags.special_placeable 0
+	edge.left 0
+	edge.up 0
+	edge.right 0
+	edge.down 0
+	piece.left 0
+	piece.up 0
+	piece.right 0
+	piece.down 0
+TileGroup:
+	type 65535
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.creep_receding 1
+	flags.cliff_edge 1
+	flags.creep_temp 1
+	flags.special_placeable 1
+	edge.left 65535
+	edge.up 65535
+	edge.right 65535
+	edge.down 65535
+	piece.left 65535
+	piece.up 65535
+	piece.right 65535
+	piece.down 65535
+"""
+		expected = (group_empty(), group_full())
+		
+		tileset.import_group_settings(settings, [ID.basic_full,ID.basic_empty])
+		result = (tileset.cv5.get_group(ID.basic_full), tileset.cv5.get_group(ID.basic_empty))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_ignore(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_ignore
+		settings = """
+TileGroup:
+	type 0
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.creep_receding 0
+	flags.cliff_edge 0
+	flags.creep_temp 0
+	flags.special_placeable 0
+	edge.left 0
+	edge.up 0
+	edge.right 0
+	edge.down 0
+	piece.left 0
+	piece.up 0
+	piece.right 0
+	piece.down 0
+"""
+		expected = (group_empty(), group_inc())
+		
+		tileset.import_group_settings(settings, [ID.basic_full,ID.basic_inc], options)
+		result = (tileset.cv5.get_group(ID.basic_full), tileset.cv5.get_group(ID.basic_inc))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_loop(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_loop
+		settings = """
+TileGroup:
+	type 0
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.creep_receding 0
+	flags.cliff_edge 0
+	flags.creep_temp 0
+	flags.special_placeable 0
+	edge.left 0
+	edge.up 0
+	edge.right 0
+	edge.down 0
+	piece.left 0
+	piece.up 0
+	piece.right 0
+	piece.down 0
+TileGroup:
+	type 65535
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.creep_receding 1
+	flags.cliff_edge 1
+	flags.creep_temp 1
+	flags.special_placeable 1
+	edge.left 65535
+	edge.up 65535
+	edge.right 65535
+	edge.down 65535
+	piece.left 65535
+	piece.up 65535
+	piece.right 65535
+	piece.down 65535
+"""
+		expected = (group_empty(), group_full(), group_empty(), group_full())
+		
+		tileset.import_group_settings(settings, [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags], options)
+		result = tuple(tileset.cv5.get_group(id) for id in [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags])
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_last(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_repeat_last
+		settings = """
+TileGroup:
+	type 0
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.creep_receding 0
+	flags.cliff_edge 0
+	flags.creep_temp 0
+	flags.special_placeable 0
+	edge.left 0
+	edge.up 0
+	edge.right 0
+	edge.down 0
+	piece.left 0
+	piece.up 0
+	piece.right 0
+	piece.down 0
+TileGroup:
+	type 65535
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.creep_receding 1
+	flags.cliff_edge 1
+	flags.creep_temp 1
+	flags.special_placeable 1
+	edge.left 65535
+	edge.up 65535
+	edge.right 65535
+	edge.down 65535
+	piece.left 65535
+	piece.up 65535
+	piece.right 65535
+	piece.down 65535
+"""
+		expected = (group_empty(), group_full(), group_full(), group_full())
+		
+		tileset.import_group_settings(settings, [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags], options)
+		result = tuple(tileset.cv5.get_group(id) for id in [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags])
+
+		self.assertEqual(result, expected)
+
 class Test_Import_DoodadGroup(unittest.TestCase):
 	def test_all_empty(self) -> None:
 		tileset = test_tileset()
@@ -1050,6 +1285,231 @@ DoodadGroup:
 
 		self.assertEqual(result, expected)
 
+	def test_repeat_not_needed(self) -> None:
+		tileset = test_tileset()
+		settings = """
+DoodadGroup:
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.has_overlay_sprite 0
+	flags.has_overlay_unit 0
+	flags.overlay_flipped 0
+	flags.special_placeable 0
+	overlay_id 0
+	scr 0
+	string_id 0
+	unknown4 0
+	dddata_id 0
+	width 0
+	height 0
+	unknown8 0
+DoodadGroup:
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.has_overlay_sprite 1
+	flags.has_overlay_unit 1
+	flags.overlay_flipped 1
+	flags.special_placeable 1
+	overlay_id 65535
+	scr 65535
+	string_id 65535
+	unknown4 65535
+	dddata_id 65535
+	width 65535
+	height 65535
+	unknown8 65535
+"""
+		expected = (group_empty(True), group_full(True))
+		
+		tileset.import_group_settings(settings, [ID.doodad_full,ID.doodad_empty])
+		result = (tileset.cv5.get_group(ID.doodad_full), tileset.cv5.get_group(ID.doodad_empty))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_ignore(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_ignore
+		settings = """
+DoodadGroup:
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.has_overlay_sprite 0
+	flags.has_overlay_unit 0
+	flags.overlay_flipped 0
+	flags.special_placeable 0
+	overlay_id 0
+	scr 0
+	string_id 0
+	unknown4 0
+	dddata_id 0
+	width 0
+	height 0
+	unknown8 0
+"""
+		expected = (group_empty(True), group_inc(True))
+		
+		tileset.import_group_settings(settings, [ID.doodad_full,ID.doodad_inc], options)
+		result = (tileset.cv5.get_group(ID.doodad_full), tileset.cv5.get_group(ID.doodad_inc))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_loop(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_loop
+		settings = """
+DoodadGroup:
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.has_overlay_sprite 0
+	flags.has_overlay_unit 0
+	flags.overlay_flipped 0
+	flags.special_placeable 0
+	overlay_id 0
+	scr 0
+	string_id 0
+	unknown4 0
+	dddata_id 0
+	width 0
+	height 0
+	unknown8 0
+DoodadGroup:
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.has_overlay_sprite 1
+	flags.has_overlay_unit 1
+	flags.overlay_flipped 1
+	flags.special_placeable 1
+	overlay_id 65535
+	scr 65535
+	string_id 65535
+	unknown4 65535
+	dddata_id 65535
+	width 65535
+	height 65535
+	unknown8 65535
+"""
+		expected = (group_empty(True), group_full(True), group_empty(True), group_full(True))
+		
+		tileset.import_group_settings(settings, [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags], options)
+		result = tuple(tileset.cv5.get_group(id) for id in [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags])
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_last(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_repeat_last
+		settings = """
+DoodadGroup:
+	flags.walkable 0
+	flags.unknown_0002 0
+	flags.unwalkable 0
+	flags.unknown_0008 0
+	flags.has_doodad_cover 0
+	flags.unknown_0020 0
+	flags.creep 0
+	flags.unbuildable 0
+	flags.blocks_view 0
+	flags.mid_ground 0
+	flags.high_ground 0
+	flags.occupied 0
+	flags.has_overlay_sprite 0
+	flags.has_overlay_unit 0
+	flags.overlay_flipped 0
+	flags.special_placeable 0
+	overlay_id 0
+	scr 0
+	string_id 0
+	unknown4 0
+	dddata_id 0
+	width 0
+	height 0
+	unknown8 0
+DoodadGroup:
+	flags.walkable 1
+	flags.unknown_0002 1
+	flags.unwalkable 1
+	flags.unknown_0008 1
+	flags.has_doodad_cover 1
+	flags.unknown_0020 1
+	flags.creep 1
+	flags.unbuildable 1
+	flags.blocks_view 1
+	flags.mid_ground 1
+	flags.high_ground 1
+	flags.occupied 1
+	flags.has_overlay_sprite 1
+	flags.has_overlay_unit 1
+	flags.overlay_flipped 1
+	flags.special_placeable 1
+	overlay_id 65535
+	scr 65535
+	string_id 65535
+	unknown4 65535
+	dddata_id 65535
+	width 65535
+	height 65535
+	unknown8 65535
+"""
+		expected = (group_empty(True), group_full(True), group_full(True), group_full(True))
+		
+		tileset.import_group_settings(settings, [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags], options)
+		result = tuple(tileset.cv5.get_group(id) for id in [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags])
+
+		self.assertEqual(result, expected)
+
 class Test_Import_Megatile(unittest.TestCase):
 	def test_all_empty(self) -> None:
 		tileset = test_tileset()
@@ -1386,5 +1846,237 @@ MegaTile:
 
 		tileset.import_megatile_settings(settings, [ID.mega_empty])
 		result = tileset.vf4.get_megatile(ID.mega_empty)
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_not_needed(self) -> None:
+		tileset = test_tileset()
+		settings = """
+MegaTile:
+	mid_ground:
+		0000
+		0000
+		0000
+		0000
+	high_ground:
+		0000
+		0000
+		0000
+		0000
+	walkable:
+		0000
+		0000
+		0000
+		0000
+	blocks_sight:
+		0000
+		0000
+		0000
+		0000
+	ramp:
+		0000
+		0000
+		0000
+		0000
+MegaTile:
+	mid_ground:
+		1111
+		1111
+		1111
+		1111
+	high_ground:
+		1111
+		1111
+		1111
+		1111
+	walkable:
+		1111
+		1111
+		1111
+		1111
+	blocks_sight:
+		1111
+		1111
+		1111
+		1111
+	ramp:
+		1111
+		1111
+		1111
+		1111
+"""
+		expected = (mega_empty(), mega_full())
+		
+		tileset.import_megatile_settings(settings, [ID.mega_full,ID.mega_empty])
+		result = (tileset.vf4.get_megatile(ID.mega_full), tileset.vf4.get_megatile(ID.mega_empty))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_ignore(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_ignore
+		settings = """
+MegaTile:
+	mid_ground:
+		0000
+		0000
+		0000
+		0000
+	high_ground:
+		0000
+		0000
+		0000
+		0000
+	walkable:
+		0000
+		0000
+		0000
+		0000
+	blocks_sight:
+		0000
+		0000
+		0000
+		0000
+	ramp:
+		0000
+		0000
+		0000
+		0000
+"""
+		expected = (mega_empty(), mega_crosshatch())
+		
+		tileset.import_megatile_settings(settings, [ID.mega_full,ID.mega_crosshatch], options)
+		result = (tileset.vf4.get_megatile(ID.mega_full), tileset.vf4.get_megatile(ID.mega_crosshatch))
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_loop(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_loop
+		settings = """
+MegaTile:
+	mid_ground:
+		0000
+		0000
+		0000
+		0000
+	high_ground:
+		0000
+		0000
+		0000
+		0000
+	walkable:
+		0000
+		0000
+		0000
+		0000
+	blocks_sight:
+		0000
+		0000
+		0000
+		0000
+	ramp:
+		0000
+		0000
+		0000
+		0000
+MegaTile:
+	mid_ground:
+		1111
+		1111
+		1111
+		1111
+	high_ground:
+		1111
+		1111
+		1111
+		1111
+	walkable:
+		1111
+		1111
+		1111
+		1111
+	blocks_sight:
+		1111
+		1111
+		1111
+		1111
+	ramp:
+		1111
+		1111
+		1111
+		1111
+"""
+		expected = (mega_empty(), mega_full(), mega_empty(), mega_full())
+		
+		tileset.import_megatile_settings(settings, [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2], options)
+		result = tuple(tileset.vf4.get_megatile(id) for id in [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2])
+
+		self.assertEqual(result, expected)
+
+	def test_repeat_last(self) -> None:
+		tileset = test_tileset()
+		options = ImportSettingsOptions()
+		options.repeater = repeater_repeat_last
+		settings = """
+MegaTile:
+	mid_ground:
+		0000
+		0000
+		0000
+		0000
+	high_ground:
+		0000
+		0000
+		0000
+		0000
+	walkable:
+		0000
+		0000
+		0000
+		0000
+	blocks_sight:
+		0000
+		0000
+		0000
+		0000
+	ramp:
+		0000
+		0000
+		0000
+		0000
+MegaTile:
+	mid_ground:
+		1111
+		1111
+		1111
+		1111
+	high_ground:
+		1111
+		1111
+		1111
+		1111
+	walkable:
+		1111
+		1111
+		1111
+		1111
+	blocks_sight:
+		1111
+		1111
+		1111
+		1111
+	ramp:
+		1111
+		1111
+		1111
+		1111
+"""
+		expected = (mega_empty(), mega_full(), mega_full(), mega_full())
+		
+		tileset.import_megatile_settings(settings, [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2], options)
+		result = tuple(tileset.vf4.get_megatile(id) for id in [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2])
 
 		self.assertEqual(result, expected)
