@@ -1086,7 +1086,7 @@ class Test_Entry_Name(unittest.TestCase):
 		portdatadat = PortraitsDAT()
 		portdatadat.load_file(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
-		portdatadat.get_entry(110).sound_file = 2 # tmarine\\TMaFid0
+		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\TGhFid0
 
 		expected_names = (
 			'Portrait #0',
@@ -1113,10 +1113,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tmarine\\TMaTlk0',
-			'UTassadar\\UTaTlk0',
-			'UFlag12\\UF12Tlk0',
 			'tmarine\\TMaFid0',
+			'UTassadar\\UTaFid0',
+			'UFlag12\\UF12Fid0',
+			'tghost\TGhFid0',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1125,10 +1125,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tmarine\\TMaTlk0',
-			'UTassadar\\UTaTlk0',
-			'UFlag12\\UF12Tlk0',
 			'tmarine\\TMaFid0',
+			'UTassadar\\UTaFid0',
+			'UFlag12\\UF12Fid0',
+			'tghost\TGhFid0',
 		)
 		decompiled_portdatatbl = TBL()
 		decompiled_portdatatbl.strings = [decompile_string(string) for string in portdatatbl.strings]
@@ -1139,10 +1139,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaTlk0)',
-			'Gantrithor (UTassadar\\UTaTlk0)',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0)',
-			'Expanded Portrait #110 (tmarine\\TMaFid0)',
+			'Marine (tmarine\\TMaFid0)',
+			'Gantrithor (UTassadar\\UTaFid0)',
+			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0)',
+			'Expanded Portrait #110 (tghost\TGhFid0)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1169,10 +1169,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaTlk0) [V1]',
-			'Gantrithor (UTassadar\\UTaTlk0) [V2]',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0) [V3]',
-			'Expanded Portrait #110 (tmarine\\TMaFid0) [V4]',
+			'Marine (tmarine\\TMaFid0) [V1]',
+			'Gantrithor (UTassadar\\UTaFid0) [V2]',
+			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0) [V3]',
+			'Expanded Portrait #110 (tghost\TGhFid0) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1208,9 +1208,9 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial',
-			'BW - protoss02',
-			'Unknown',
+			'No map',
+			'BW - protoss01',
+			'BW - zerg10',
 			'Expanded Map #65',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
@@ -1220,10 +1220,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1232,10 +1232,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		decompiled_mapdatatbl = TBL()
 		decompiled_mapdatatbl.strings = [decompile_string(string) for string in mapdatatbl.strings]
@@ -1246,10 +1246,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial)',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02)',
-			'Unknown',
-			'Expanded Map #65 (campaign\\terran\\terran01)',
+			'No map (null)',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01)',
+			'BW - zerg10 (campaign\\expzerg\\zerg10)',
+			'Expanded Map #65 (campaign\\terran\\tutorial)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1276,10 +1276,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial) [V1]',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02) [V2]',
-			'Unknown [V3]',
-			'Expanded Map #65 (campaign\\terran\\terran01) [V4]',
+			'No map (null) [V1]',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01) [V2]',
+			'BW - zerg10 (campaign\\expzerg\\zerg10) [V3]',
+			'Expanded Map #65 (campaign\\terran\\tutorial) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
