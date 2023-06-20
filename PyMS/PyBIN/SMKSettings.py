@@ -158,8 +158,10 @@ class SMKSettings(PyMSDialog):
 
 	def edit_smk(self):
 		if self.overlay_smk.get():
-			_,_,x,y,_ = parse_geometry(self.winfo_geometry())
-			SMKSettings(self, self.widget.parent.bin.smks[self.overlay_smk.get()-1], self.widget, (x+20,y+20))
+			pos = Geometry.of(self).pos
+			pos.x += 20
+			pos.y += 20
+			SMKSettings(self, self.widget.parent.bin.smks[self.overlay_smk.get()-1], self.widget, pos)
 
 	def add_smk(self):
 		smk = DialogBIN.BINSMK()

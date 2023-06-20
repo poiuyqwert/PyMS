@@ -46,7 +46,7 @@ class GAData:
 		return GAData(self._data)
 
 class GAHit(GAData):
-	TYPE = None
+	TYPE: str | None = None
 
 	def _build_data(self, data):
 		if self.TYPE is not None:

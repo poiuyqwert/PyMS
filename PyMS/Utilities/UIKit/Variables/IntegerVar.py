@@ -1,8 +1,5 @@
 
-try: # Python 2
-	from tkinter import StringVar
-except: # Python 3
-	from tkinter import StringVar
+from tkinter import StringVar
 
 class IntegerVar(StringVar):
 	class UpdateCase:

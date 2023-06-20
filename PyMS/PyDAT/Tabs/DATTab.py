@@ -97,7 +97,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		for dat_refs in used_by:
 			self.used_by_data.extend(dat_refs.matching(self.delegate.data_context, lookup_id))
 		if self.used_by_data:
-			self.used_by_listbox.insert(END, *self.used_by_data)
+			self.used_by_listbox.insert(END, *tuple(str(r) for r in self.used_by_data))
 		self.update_used_by_header()
 		if force_open and not self.delegate.data_context.settings.get('show_used_by', True):
 			self.toggle_used_by()

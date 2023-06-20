@@ -16,24 +16,24 @@ class PyMSDialog(Toplevel):
 		if not focus:
 			focus = self
 		focus.focus_set()
-		w,h,_,_,_ = parse_geometry(self.winfo_geometry())
-		screen_w = self.winfo_screenwidth()
-		screen_h = self.winfo_screenheight()
+		screen_size = Size(self.winfo_screenwidth(), self.winfo_screenheight())
+		geometry = Geometry.of(self)
+		assert geometry.size is not None
 		if center:
-			self.geometry(build_geometry(pos=((screen_w - w) // 2, (screen_h - h) // 2)))
+			self.geometry(GeometryAdjust(pos=geometry.size.centered_in(screen_size)).text)
 		self.resizable(*resizable)
 		min_w = 0
-		max_w = screen_w
+		max_w = screen_size.width
 		min_h = 0
-		max_h = screen_h
+		max_h = screen_size.height
 		if not resizable[0]:
-			min_w = max_w = w
+			min_w = max_w = geometry.size.width
 		elif set_min_size[0]:
-			min_w = w
+			min_w = geometry.size.width
 		if not resizable[1]:
-			min_h = max_h = h
+			min_h = max_h = geometry.size.height
 		elif set_min_size[1]:
-			min_h = h
+			min_h = geometry.size.height
 		self.minsize(min_w, min_h)
 		self.maxsize(max_w, max_h)
 		self.setup_complete()

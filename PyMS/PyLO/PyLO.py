@@ -335,14 +335,14 @@ class PyLO(MainWindow):
 			if self.usebasegrp.get() and base:
 				self.canvas.create_image(138, 138, image=base)
 			else:
-				self.canvas.create_line(133,138,144,138,fill='#00FF00')
-				self.canvas.create_line(138,133,138,144,fill='#00FF00')
+				self.canvas.create_line((133,138),(144,138),fill='#00FF00')
+				self.canvas.create_line((138,133),(138,144),fill='#00FF00')
 			if self.useoverlaygrp.get() and overlay:
 				self.canvas.create_image(138 + offset[0], 138 + offset[1], image=overlay)
 			else:
 				x,y = offset
-				self.canvas.create_line(x+133,y+138,x+144,y+138,fill='#0000FF')
-				self.canvas.create_line(x+138,y+133,x+138,y+144,fill='#0000FF')
+				self.canvas.create_line((x+133,y+138),(x+144,y+138),fill='#0000FF')
+				self.canvas.create_line((x+138,y+133),(x+138,y+144),fill='#0000FF')
 			self.previewing = [f,self.overlayframe]+offset
 
 	def edit(self):

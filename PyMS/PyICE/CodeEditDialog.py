@@ -163,7 +163,7 @@ class CodeEditDialog(PyMSDialog):
 
 	def statusupdate(self):
 		if not self.completing:
-			self.text.taboverride = False
+			self.text.taboverride = None
 			self.complete = [None, 0]
 		i = self.text.index(INSERT).split('.') + [0]
 		item = self.text.tag_ranges('Selection')
@@ -173,7 +173,7 @@ class CodeEditDialog(PyMSDialog):
 
 	def edited(self):
 		if not self.completing:
-			self.text.taboverride = False
+			self.text.taboverride = None
 			self.complete = [None, 0]
 		self.editstatus['state'] = NORMAL
 		if self.file:

@@ -8,8 +8,12 @@ from ...Theme import Theme
 from .... import Assets
 from ....setutils import PYMS_SETTINGS
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ....Settings import Settings
+
 class ThemeSettingView(SettingsView):
-	def __init__(self, parent, settings):
+	def __init__(self, parent: Misc, settings: Settings):
 		SettingsView.__init__(self, parent, settings)
 
 		self.default = BooleanVar()
@@ -26,7 +30,7 @@ class ThemeSettingView(SettingsView):
 		listbox_frame = Frame(frame)
 		listbox_frame.pack(side=LEFT, fill=Y)
 		self.listbox = ScrolledListbox(listbox_frame, width=20, height=10)
-		self.listbox.bind(WidgetEvent.Listbox.Select, self.selection_updated)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), self.selection_updated)
 		self.listbox.pack(fill=Y, expand=1)
 		Checkbutton(listbox_frame, text='Default', variable=self.default).pack()
 
@@ -55,25 +59,25 @@ class ThemeSettingView(SettingsView):
 		self.listbox.see(theme_index)
 		self.selection_updated()
 
-	def current_default(self):
+	def current_default(self) -> (str | None):
 		return PYMS_SETTINGS.get('theme')
 
-	def current_theme(self):
+	def current_theme(self) -> (str | None):
 		return self.settings.get('theme')
 
-	def selected_theme(self):
+	def selected_theme(self) -> (str | None):
 		theme = None
 		theme_index = self.listbox.curselection()[0]
 		if theme_index > 0:
 			theme = Assets.theme_list()[theme_index - 1]
 		return theme
 
-	def theme_index(self, theme):
+	def theme_index(self, theme: str | None) -> int:
 		if theme is None or not theme in Assets.theme_list():
 			return 0
 		return 1 + Assets.theme_list().index(theme)
 
-	def default_updated(self, *_):
+	def default_updated(self, *_) -> None:
 		is_default = self.current_theme() is None
 		if is_default != self.default.get():
 			self.mark_edited()
@@ -84,10 +88,10 @@ class ThemeSettingView(SettingsView):
 			self.listbox.select_set(theme_index)
 			self.listbox.see(theme_index)
 
-	def selection_updated(self, _=None):
+	def selection_updated(self, _=None) -> None:
 		self.preview_theme()
 
-	def preview_theme(self):
+	def preview_theme(self) -> None:
 		theme_name = None
 		theme_index = self.listbox.curselection()[0]
 		if theme_index > 0:
@@ -105,7 +109,7 @@ class ThemeSettingView(SettingsView):
 				self.author.set('ERROR')
 				self.description.set("Couldn't load theme")
 
-	def save(self):
+	def save(self) -> None:
 		theme = None
 		theme_index = self.listbox.curselection()[0]
 		if theme_index > 0:

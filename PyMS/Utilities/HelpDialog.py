@@ -39,10 +39,13 @@ class HelpDialog(PyMSDialog):
 			self.markdownview.view_fragment(fragment)
 
 	def load_help_file(self): # type: () -> None
-		index = self.treelist.cur_selection()[-1]
+		entry = self.treelist.cur_selection()[-1]
+		if entry is None:
+			return
+		index = self.treelist.index(entry)
 		if index is None:
 			return
-		help_file = Assets.help_tree().get_file(self.treelist.index(index))
+		help_file = Assets.help_tree().get_file(index)
 		if not help_file:
 			return
 		if help_file_path := Assets.help_file_path(help_file.path):

@@ -200,13 +200,13 @@ class FileType(tuple[str, str]):
 	def cv5(name='StarCraft Tilesets'):
 		return FileType(name, 'cv5')
 
-	def __new__(self, name, *extensions): # tyoe: (str, *str) -> FileType
-		extensions = list(extensions) # type: list[str]
+	def __new__(self, name, *exts): # type: (str, *str) -> FileType
+		extensions = list(exts) # type: list[str]
 		for i, extension in enumerate(extensions):
 			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension
 		name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
-		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions)))
+		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions))) # type: ignore[type-var]
 
 	@property
 	def name(self) -> str:

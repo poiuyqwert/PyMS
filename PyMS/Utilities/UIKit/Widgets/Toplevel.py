@@ -10,7 +10,7 @@ class Toplevel(_Tk.Toplevel, Extensions, WindowExtensions):
 		_Tk.Toplevel.__init__(self, *args, **kwargs)
 		Theme.apply_theme(self)
 
-	def make_active(self):
+	def make_active(self) -> None:
 		if self.state() == 'withdrawn':
 			self.deiconify()
 		self.lift()

@@ -171,7 +171,7 @@ class PyTRG(MainWindow):
 
 	def statusupdate(self):
 		if not self.completing:
-			self.text.taboverride = False
+			self.text.taboverride = None
 			self.complete = [None, 0]
 		i = self.text.index(INSERT).split('.') + [0]
 		item = self.text.tag_ranges('Selection')
@@ -181,7 +181,7 @@ class PyTRG(MainWindow):
 
 	def edit(self):
 		if not self.completing:
-			self.text.taboverride = False
+			self.text.taboverride = None
 			self.complete = [None, 0]
 		self.mark_edited()
 

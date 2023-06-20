@@ -3,7 +3,7 @@ from ..Widgets import *
 from ..Widgets.Extensions import WindowExtensions
 
 class MainWindow(Tk, WindowExtensions):
-	def startup(self):
+	def startup(self) -> None:
 		self.lift()
 		self.call('wm', 'attributes', '.', '-topmost', True)
 		self.after_idle(self.call, 'wm', 'attributes', '.', '-topmost', False)
@@ -19,7 +19,7 @@ class MainWindow(Tk, WindowExtensions):
 			pass
 		self.mainloop()
 
-	def set_icon(self, name): # type: (str) -> None
+	def set_icon(self, name: str) -> None:
 		from ... import Assets
 		import os
 		try:
@@ -47,7 +47,7 @@ class MainWindow(Tk, WindowExtensions):
 		except:
 			pass
 
-	def destroy(self):
+	def destroy(self) -> None:
 		from ... import Assets
 		Assets.clear_image_cache()
 		return Tk.destroy(self)

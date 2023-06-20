@@ -297,12 +297,10 @@ class WidgetSettings(PyMSDialog):
 		self.load_properties()
 		self.update_advanced()
 
-	def update_advanced(self):
+	def update_advanced(self) -> None:
 		self.minsize(0,0)
 		self.maxsize(9999, 9999)
-		w,h,x,y,_ = parse_geometry(self.geometry())
-		center_x = x + w/2.0
-		center_y = y + h/2.0
+		initial_geometry = Geometry.of(self)
 		show = self.show_advanced.get()
 		if show and not self.advanced_shown:
 			for widget in self.advanced_widgets:
@@ -315,12 +313,10 @@ class WidgetSettings(PyMSDialog):
 			self.string_label['text'] = 'Image:' if self.node.widget.type == DialogBIN.BINWidget.TYPE_IMAGE else 'Text:'
 			self.advanced_shown = False
 		self.update_idletasks()
-		w,h,x,y,_ = parse_geometry(self.geometry())
-		center_x -= w/2.0
-		center_y -= h/2.0
-		self.geometry('+%d+%d' % (int(center_x),int(center_y)))
-		self.minsize(w,h)
-		self.maxsize(w,h)
+		updated_geometry = Geometry.of(self)
+		self.geometry(updated_geometry.adjust_center_at(initial_geometry.pos).text)
+		self.minsize(updated_geometry.size.width, updated_geometry.size.height)
+		self.maxsize(updated_geometry.size.width, updated_geometry.size.height)
 
 	def calculate(self, calc, orig, offset, direction, fix, allow_advanced=True):
 		if not self.show_advanced.get() or allow_advanced:

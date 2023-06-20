@@ -18,5 +18,6 @@ class DependencyError(MainWindow):
 				f.pack(side=TOP,fill=X)
 		Button(frame, text='Ok', width=10, command=self.destroy).pack(side=TOP, pady=2)
 		self.update_idletasks()
-		w,h = self.winfo_width(),self.winfo_height()
-		self.geometry(build_geometry(pos=((self.winfo_screenwidth() - w) // 2, (self.winfo_screenheight() - h) // 2), size=(w, h)))
+		geometry = Geometry.of(self)
+		screen_size = Size(self.winfo_screenwidth(), self.winfo_screenheight())
+		self.geometry(geometry.adjust_center_in(screen_size).text)

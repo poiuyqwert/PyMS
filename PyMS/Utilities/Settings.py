@@ -1,8 +1,14 @@
 
+from __future__ import annotations
+
 from . import Assets
 from .fileutils import check_allow_overwrite_internal_file
 
 import os, copy, json
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from .UIKit import AnyWindow, Point, Size
 
 class SettingDict(object):
 	def __init__(self, settings=None):
@@ -143,80 +149,61 @@ class SettingDict(object):
 			panedwindow.sash_place(n, *size)
 
 	def save_window_size(self, key, window, closing=True):
-		from .UIKit import parse_resizable, parse_geometry
+		from .UIKit import Geometry, GeometryAdjust, parse_resizable
 		resizable_w,resizable_h = parse_resizable(window.resizable())
-		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
+		geometry = Geometry.of(window)
 		if resizable_w or resizable_h:
-			z = ''
-			if window.is_maximized():
-				z = '^'
+			if geometry.maximized:
 				window.wm_state('normal')
 				window.update_idletasks()
-				w,h,x,y,_ = parse_geometry(window.winfo_geometry())
-				if not closing:
-					window.wm_state('zoomed')
-					window.update_idletasks()
-			self[key] = '%sx%s+%d+%d%s' % (w,h,x,y,z)
+				geometry = Geometry.of(window)
+				geometry.maximized = True
+			self[key] = geometry.text
 		else:
-			self[key] = '+%d+%d' % (x,y)
+			self[key] = GeometryAdjust(pos=geometry.pos).text
 
-	def load_window_size(self, key, window, position=None, default_center=True, default_size=None):
-		from .UIKit import parse_geometry, parse_resizable
-		geometry = self.get(key)
-		if geometry:
-			w,h,x,y,fullscreen = parse_geometry(geometry)
+	def load_window_size(self, key: str, window: AnyWindow, position: Point | None = None, default_center=True, default_size: Size | None = None) -> None:
+		from .UIKit import Geometry, GeometryAdjust, Size, parse_resizable
+		geometry_text = self.get(key)
+		if geometry_text and (geometry_adjust := GeometryAdjust.parse(geometry_text)):
 			if position:
-				x,y = position
+				geometry_adjust.pos = position
 			resizable_w,resizable_h = parse_resizable(window.resizable())
-			can_fullscreen = (resizable_w and resizable_h)
-			if (resizable_w or resizable_h) and w is not None and h is not None:
-				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
-				min_w,min_h = window.minsize()
+			can_maximize = (resizable_w and resizable_h)
+			if (resizable_w or resizable_h) and (geometry := geometry_adjust.geometry):
+				cur_geometry = Geometry.of(window)
+				min_size = Size.of(window.minsize())
 				# max_w,max_h = window.maxsize()
-				screen_w = window.winfo_screenwidth()
-				screen_h = window.winfo_screenheight()
-				if resizable_w:
-					if x+w > screen_w:
-						x = screen_w-w
-					if x < 0:
-						x = 0
-					w = max(min_w,min(screen_w,w))
-				else:
-					w = cur_w
-				if resizable_h:
-					if y+h > screen_h:
-						y = screen_h-h
-					if y < 0:
-						y = 0
-					h = max(min_h,min(screen_h,h))
-				else:
-					h = cur_h
-				window.geometry('%dx%d+%d+%d' % (w,h, x,y))
+				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				geometry.clamp(size=screen_size, min_size=min_size)
+				if not resizable_w:
+					geometry.size.width = cur_geometry.size.width
+				if not resizable_h:
+					geometry.size.height = cur_geometry.size.height
+				window.geometry(geometry.text)
 			else:
-				window.geometry('+%d+%d' % (x,y))
+				if geometry_adjust.size is not None:
+					geometry_adjust.size = None
+				window.geometry(geometry_adjust.text)
 			window.update_idletasks()
-			if fullscreen and can_fullscreen:
+			if geometry_adjust.maximized and can_maximize:
 				try:
 					window.wm_state('zoomed')
 				except:
 					pass
 		else:
 			window.update_idletasks()
-			w,h,x,y,_ = parse_geometry(window.winfo_geometry())
-			geometry = ''
+			geometry = Geometry.of(window)
+			geometry_adjust = GeometryAdjust()
 			if default_size:
-				w,h = default_size
-				geometry = '%dx%d' % default_size
-			else:
-				geometry = '%dx%d' % (w,h)
+				geometry.size = default_size
+				geometry_adjust.size = default_size
 			if position:
-				geometry += '+%d+%d' % position
-			elif default_center or geometry:
-				window.update_idletasks()
-				screen_w = window.winfo_screenwidth()
-				screen_h = window.winfo_screenheight()
-				geometry += '+%d+%d' % ((screen_w-w)//2,(screen_h-h)//2)
-			window.geometry(geometry)
+				geometry_adjust.pos = position
+			elif default_center:
+				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				geometry_adjust.pos = screen_size.center - geometry.size // 2
+			window.geometry(geometry_adjust.text)
 
 	def _process_filetypes(self, filetypes, include_all_filetype):
 		if include_all_filetype and filetypes:

@@ -121,7 +121,7 @@ class PyMPQ(MainWindow):
 		Label(filter, text='Filter: ').pack(side=LEFT)
 		self.textdrop = TextDropDown(filter, self.filter, self.settings.get('filters', []))
 		self.textdrop.pack(side=LEFT, fill=X, expand=1)
-		self.textdrop.entry.bind(Key.Return, self.dofilter)
+		self.textdrop.entry.bind(Key.Return(), self.dofilter)
 		self.default_background_color = self.textdrop.entry['bg']
 		self.find_button = Button(filter, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=DISABLED)
 		Tooltip(self.find_button, 'List Matches')
@@ -352,8 +352,8 @@ class PyMPQ(MainWindow):
 			for i in self.listbox.cur_selection():
 				previously_selected.append(self.display_files[i])
 			self.listbox.delete(ALL)
-		else:
-			return
+		# else:
+		# 	return
 		if self.is_mpq_chosen() and self.all_files:
 			self.display_files = self.all_files
 			filter_str = self.filter.get()
@@ -384,7 +384,7 @@ class PyMPQ(MainWindow):
 				return tuple(file_info)
 			self.display_files.sort(key=keysort, reverse=not self.settings.sort.ascending)
 			for file_entry in self.display_files:
-				info = (
+				info = [
 					file_entry.file_name.decode('utf-8'),
 					format_byte_size(file_entry.full_size or 0),
 					'%d%%' % int(file_entry.get_compression_ratio()*100),
@@ -392,7 +392,7 @@ class PyMPQ(MainWindow):
 					str(file_entry.locale),
 					self.attributes_for_file_entry(file_entry),
 					''
-				)
+				]
 				self.listbox.insert(END, info)
 				if file_entry in previously_selected:
 					self.listbox.select_set(END)
@@ -645,7 +645,10 @@ class PyMPQ(MainWindow):
 	def rename(self, key=None): # type: (Event | None) -> None
 		if not self.is_file_selected():
 			return
-		self.listbox.columns[ColumnID.Filename][1].edit()
+		listbox = self.listbox.columns[ColumnID.Filename][1]
+		if not isinstance(listbox, EditableReportSubList):
+			return
+		listbox.edit()
 
 	# def editlistfile(self, key=None):
 		# if not self.is_mpq_chosen():

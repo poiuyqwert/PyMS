@@ -1,17 +1,21 @@
 
 from ..Widgets import *
 from ..EventPattern import *
+from ..Utils import remove_bind
+from ..Types import WidgetState
 
 import re
+
+from typing import Callable
 
 class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent, ecallback=None, icallback=None, scallback=None, acallback=None, state=NORMAL):
+	def __init__(self, parent: Misc, ecallback: Callable[[], None] | None = None, icallback: Callable[[], None] | None = None, scallback: Callable[[], None] | None = None, acallback: Callable[[], None] | None = None, state: WidgetState = NORMAL) -> None:
 		self.dispatch_output = False
 		self.edited = False
-		self.taboverride = False
+		self.taboverride: str | None = None
 		# Edit Callback
 		# INSERT Callback
 		# Selection Callback
@@ -29,13 +33,15 @@ class CodeText(Frame):
 		self.lines.pack(side=LEFT, fill=Y)
 		hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
-		self.text = Text(frame, height=1, font=font, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=0)
+		self.text = Text(frame, height=1, font=font, undo=True, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=self.yscroll, exportselection=False)
 		self.text.config(bd=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
-		self.text.bind(Ctrl.a, lambda e: self.after(1, self.selectall))
-		self.text.bind(Shift.Tab, lambda e,i=True: self.indent(e, i))
-		self.text.bind(ButtonRelease.Click_Right, self.popup)
+		self.text.bind(Ctrl.a(), lambda e: self.after(1, self.selectall))
+		def tab_callback(e: Event) -> None:
+			self.indent(e, True)
+		self.text.bind(Shift.Tab(), tab_callback)
+		self.text.bind(ButtonRelease.Click_Right(), self.popup)
 		frame.grid(sticky=NSEW)
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
@@ -63,11 +69,11 @@ class CodeText(Frame):
 				self.textmenu.add_separator()
 
 		self.lines.insert('1.0', '      1')
-		self.lines.bind(Focus.In, self.selectline)
+		self.lines.bind(Focus.In(), self.selectline)
 		self.text.mark_set('return', '1.0')
-		self.text.orig = self.text._w + '_orig'
-		self.tk.call('rename', self.text._w, self.text.orig)
-		self.tk.createcommand(self.text._w, self.dispatch)
+		self.text_orig = getattr(self.text, '_w') + '_orig'
+		self.tk.call('rename', getattr(self.text, '_w'), self.text_orig)
+		self.tk.createcommand(getattr(self.text, '_w'), self.dispatch)
 
 		self['state'] = state
 
@@ -87,16 +93,17 @@ class CodeText(Frame):
 		self.see = self.text.see
 		self.compare = self.text.compare
 		self.edited = False
-		self.afterid = None
-		self.last_delete = None
-		self.tags = {}
+		self.afterid: str | None = None
+		self.last_delete: tuple[str, str, str] | None = None
+		self.tags: dict[str, dict] = {}
 		# None - Nothing, True - Continue coloring, False - Stop coloring
-		self.coloring = None
+		self.coloring: bool | None = None
 		self.dnd = False
+		self.motion_bind: str | None = None
 
 		self.setup()
 
-	def popup(self, e):
+	def popup(self, e: Event) -> None:
 		if self.text['state'] == NORMAL:
 			s,i,r = self.text.index('@1,1'),self.text.index(INSERT),self.text.tag_ranges('Selection')
 			try:
@@ -111,28 +118,29 @@ class CodeText(Frame):
 			self.text.mark_set(INSERT,i)
 			self.text.yview_pickplace(s)
 			s = s.split('.')[0]
-			if s in '1 2 3 4 5 6 7 8':
-				self.text.yview_scroll(s, 'lines')
+			if s in ('1','2','3','4','5','6','7','8'):
+				self.text.yview_scroll(int(s), 'units')
+			sel: str
 			if not self.text.tag_ranges('Selection'):
 				sel = DISABLED
 			else:
 				sel = NORMAL
-			for i in [2,3,5]:
-				self.textmenu.entryconfig(i, state=sel)
+			for n in [2,3,5]:
+				self.textmenu.entryconfig(n, state=sel)
 			try:
 				c = not self.selection_get(selection='CLIPBOARD')
 			except:
-				c = 1
-			self.textmenu.entryconfig(4, state=[NORMAL,DISABLED][c])
+				c = True
+			self.textmenu.entryconfig(4, state=DISABLED if c else NORMAL)
 			self.textmenu.post(e.x_root, e.y_root)
 
-	def undo(self):
+	def undo(self) -> None:
 		self.text.edit_undo()
 
-	def edit_reset(self):
+	def edit_reset(self) -> None:
 		self.text.edit_reset()
 
-	def copy(self, cut=False):
+	def copy(self, cut=False) -> None:
 		self.clipboard_clear()
 		self.clipboard_append(self.text.get('Selection.first','Selection.last'))
 		if cut:
@@ -141,7 +149,7 @@ class CodeText(Frame):
 			self.update_lines()
 			self.update_range('%s linestart' % r[0], '%s lineend' % r[1])
 
-	def paste(self):
+	def paste(self) -> None:
 		try:
 			text = self.selection_get(selection='CLIPBOARD')
 		except:
@@ -152,51 +160,52 @@ class CodeText(Frame):
 				self.text.delete('Selection.first','Selection.last')
 			i = self.text.index(INSERT)
 			try:
-				self.tk.call(self.text.orig, 'insert', INSERT, text)
+				self.tk.call(self.text_orig, 'insert', INSERT, text)
 			except:
 				pass
 			self.update_lines()
 			self.update_range(i, i + "+%dc" % len(text))
 
-	def focus_set(self):
+	def focus_set(self) -> None:
 		self.text.focus_set()
 
-	def __setitem__(self, item, value):
+	def __setitem__(self, item: str, value: Any) -> None:
 		if item == 'state':
 			self.lines['state'] = value
 			self.text['state'] = value
 		else:
 			Frame.__setitem__(self, item, value)
 
-	def selectall(self, e=None):
+	def selectall(self, e: Event | None = None) -> None:
 		self.text.tag_remove('Selection', '1.0', END)
 		self.text.tag_add('Selection', '1.0', END)
 		self.text.mark_set(INSERT, '1.0')
 
-	def indent(self, e=None, dedent=False):
+	def indent(self, e: Event | None = None, dedent: bool = False) -> bool:
 		item = self.text.tag_ranges('Selection')
 		if item and not self.taboverride:
 			head,tail = self.index('%s linestart' % item[0]),self.index('%s linestart' % item[1])
 			while self.text.compare(head, '!=', END) and self.text.compare(head, '<=', tail):
 				if dedent and self.text.get(head) in ' \t':
-					self.tk.call(self.text.orig, 'delete', head)
+					self.tk.call(self.text_orig, 'delete', head)
 				elif not dedent:
-					self.tk.call(self.text.orig, 'insert', head, '\t')
+					self.tk.call(self.text_orig, 'insert', head, '\t')
 				head = self.index('%s +1line' % head)
 			self.update_range(self.index('%s linestart' % item[0]), self.index('%s lineend' % item[1]))
 			return True
 		elif not item and self.taboverride:
-			self.taboverride = False
+			self.taboverride = None
+		return False
 
-	def yview(self, *args):
+	def yview(self, *args: float) -> None:
 		self.lines.yview(*args)
 		self.text.yview(*args)
 
-	def yscroll(self, *args):
+	def yscroll(self, *args: float) -> None:
 		self.vscroll.set(*args)
 		self.lines.yview(MOVETO, args[0])
 
-	def selectline(self, e=None):
+	def selectline(self, e: Event | None = None) -> None:
 		self.text.tag_remove('Selection', '1.0', END)
 		head = self.lines.index('current linestart')
 		tail = self.index('%s lineend+1c' % head)
@@ -204,13 +213,13 @@ class CodeText(Frame):
 		self.text.mark_set(INSERT, tail)
 		self.text.focus_set()
 
-	def setedit(self):
+	def setedit(self) -> None:
 		self.edited = True
 
-	def insert(self, index, text, tags=None):
+	def insert(self, index: str, text: str, *tags: str) -> None:
 		if text == '\t':
 			if self.last_delete and '\n' in self.last_delete[2]:
-				self.tk.call(self.text.orig, 'insert', self.last_delete[0], self.last_delete[2])
+				self.tk.call(self.text_orig, 'insert', self.last_delete[0], self.last_delete[2])
 				self.tag_add('Selection', self.last_delete[0], self.last_delete[1])
 				if self.indent():
 					self.setedit()
@@ -219,8 +228,8 @@ class CodeText(Frame):
 				self.setedit()
 				return
 		elif self.taboverride and text in self.taboverride and self.last_delete:
-			self.tk.call(self.text.orig, 'insert', self.last_delete[0], self.last_delete[2])
-			self.taboverride = False
+			self.tk.call(self.text_orig, 'insert', self.last_delete[0], self.last_delete[2])
+			self.taboverride = None
 		self.last_delete = None
 		self.setedit()
 		if text == '\n':
@@ -231,21 +240,21 @@ class CodeText(Frame):
 			if m:
 				text += m.group(1)
 		i = self.text.index(index)
-		self.tk.call(self.text.orig, 'insert', i, text, tags)
+		self.tk.call(self.text_orig, 'insert', i, text, tags)
 		self.update_lines()
 		self.update_range(i, i + "+%dc" % len(text))
 
-	def delete(self, start, end=None):
+	def delete(self, start: str, end: str | None = None) -> None:
 		self.after(1, self.setedit)
 		try:
-			self.tk.call(self.text.orig, 'delete', start, end)
+			self.tk.call(self.text_orig, 'delete', start, end)
 		except:
 			pass
 		else:
 			self.update_lines()
 			self.update_range(start)
 
-	def update_lines(self):
+	def update_lines(self) -> None:
 		lines = self.lines.get('1.0', END).count('\n')
 		dif = self.text.get('1.0', END).count('\n') - lines
 		if dif > 0:
@@ -253,34 +262,35 @@ class CodeText(Frame):
 		elif dif:
 			self.lines.delete('%s%slines' % (END,dif),END)
 
-	def update_range(self, start='1.0', end=END):
+	def update_range(self, start: str = '1.0', end: str = END) -> None:
 		self.tag_add("Update", start, end)
 		if self.coloring:
 			self.coloring = False
 		if not self.afterid:
 			self.afterid = self.after(1, self.docolor)
 
-	def update_insert(self):
+	def update_insert(self) -> None:
 		if self.icallback is not None:
 			self.icallback()
 
-	def update_selection(self):
+	def update_selection(self) -> None:
 		if self.scallback is not None:
 			self.scallback()
 
-	def dispatch(self, cmd, *args):
-		a = []
+	def dispatch(self, cmd: str, *args: str) -> str:
+		l = []
 		if args:
 			for n in args:
 				if isinstance(n, str):
-					a.append(self.selregex.sub('Selection', n))
-		a = tuple(a)
+					l.append(self.selregex.sub('Selection', n))
+		a = tuple(l)
 		# if self.dispatch_output:
 			# sys.stderr.write('%s %s' % (cmd, a))
 		if cmd == 'insert':
 			self.after(1, self.update_insert)
 			self.after(1, self.update_selection)
-			return self.insert(*a)
+			self.insert(*a)
+			return ''
 		elif cmd == 'delete':
 			self.after(1, self.update_insert)
 			self.after(1, self.update_selection)
@@ -291,7 +301,8 @@ class CodeText(Frame):
 				def remove_last_delete(*_):
 					self.last_delete = None
 				self.after(1, remove_last_delete)
-			return self.delete(*a)
+			self.delete(*a)
+			return ''
 		elif cmd == 'edit' and a[0] != 'separator':
 			self.after(1, self.update_lines)
 			self.after(1, self.update_range)
@@ -304,11 +315,11 @@ class CodeText(Frame):
 				return ''
 			self.after(1, self.update_selection)
 		try:
-			return self.tk.call((self.text.orig, cmd) + a)
+			return self.tk.call((self.text_orig, cmd) + a)
 		except TclError:
 			return ""
 
-	def setup(self, tags=None):
+	def setup(self, tags: dict[str, dict] | None = None) -> None:
 		r = self.tag_ranges('Selection')
 		if self.tags:
 			for tag in list(self.tags.keys()):
@@ -326,12 +337,12 @@ class CodeText(Frame):
 		self.tag_raise('Selection')
 		if r:
 			self.tag_add('Selection', *r)
-		self.text.tag_bind('Selection', Mouse.Click_Left, self.selclick)
-		self.text.tag_bind('Selection', ButtonRelease.Click_Left, self.selrelease)
+		self.text.tag_bind('Selection', Mouse.Click_Left(), self.selclick)
+		self.text.tag_bind('Selection', ButtonRelease.Click_Left(), self.selrelease)
 		self.text.focus_set()
 		self.update_range()
 
-	def docolor(self):
+	def docolor(self) -> None:
 		self.afterid = None
 		if self.coloring:
 			return
@@ -341,27 +352,29 @@ class CodeText(Frame):
 		if self.tag_nextrange('Update', '1.0'):
 			self.after_id = self.after(1, self.docolor)
 
-	def setupparser(self):
+	def setupparser(self) -> None:
 		# Overload to setup your own parser
 		pass
 
-	def colorize(self):
+	def colorize(self) -> None:
 		# Overload to do parsing
 		pass
 
-	def readlines(self):
+	def readlines(self) -> list[str]:
 		return self.text.get('1.0',END).split('\n')
 
-	def selclick(self, e):
+	def selclick(self, e: Event) -> None:
 		self.dnd = True
-		self.text.bind(Mouse.Motion, self.selmotion)
+		self.motion_bind = self.text.bind(Mouse.Motion(), self.selmotion)
 
-	def selmotion(self, e):
+	def selmotion(self, e: Event) -> None:
 		self.text.mark_set(INSERT, '@%s,%s' % (e.x,e.y))
 
-	def selrelease(self, e):
+	def selrelease(self, e: Event) -> None:
 		self.dnd = False
-		self.text.unbind(Mouse.Motion)
+		if self.motion_bind:
+			remove_bind(self.text, Mouse.Motion(), self.motion_bind)
+			self.motion_bind = None
 		sel = self.tag_nextrange('Selection', '1.0')
 		text = self.text.get(*sel)
 		self.delete(*sel)

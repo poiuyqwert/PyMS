@@ -115,7 +115,7 @@ class MarkdownView(Frame):
 					if link:
 						return link
 			return None
-		def link_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
+		def link_tooltip_lookup(_, tags): # type: (str | None, tuple[str, ...]) -> (str | None)
 			link = link_lookup(tags)
 			if not link:
 				return None
@@ -128,7 +128,7 @@ class MarkdownView(Frame):
 			return tooltip
 		TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
 
-		def image_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
+		def image_tooltip_lookup(_, tags): # type: (str | None, tuple[str, ...]) -> (str | None)
 			for tag in tags:
 				if not tag.startswith('image_'):
 					continue

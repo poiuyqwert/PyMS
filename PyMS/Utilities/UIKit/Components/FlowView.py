@@ -2,11 +2,14 @@
 from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import *
 from ..EventPattern import *
+from ..Utils import remove_bind
+
+from typing import Callable
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
 # TODO: Subclass ScrollView?
 class FlowView(Frame):
-	def __init__(self, parent, **config):
+	def __init__(self, parent: Misc, **config) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
@@ -17,11 +20,13 @@ class FlowView(Frame):
 		xscrollbar.grid(sticky=EW)
 		yscrollbar = AutohideScrollbar(self, command=self._content_area.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
-		def scrolled(l,h,bar):
-			bar.set(l,h)
-			# self.update_viewport()
-		self._content_area.config(xscrollcommand=lambda l,h,s=xscrollbar: scrolled(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scrolled(l,h,s))
-		def scroll(event):
+		def scrolled_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
+			def scrolled(l: float, h: float):
+				scrollbar.set(l,h)
+				# self.update_viewport()
+			return scrolled
+		self._content_area.config(xscrollcommand=scrolled_callback(xscrollbar),yscrollcommand=scrolled_callback(yscrollbar))
+		def scroll(event: Event) -> None:
 			horizontal = False
 			if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 				horizontal = True
@@ -33,32 +38,31 @@ class FlowView(Frame):
 				view('scroll', -1, 'units')
 			elif event.delta <= 0 and cur[1] < 1:
 				view('scroll', 1, 'units')
-		self.bind_all(Mouse.Scroll, scroll)
+		self.bind_all(Mouse.Scroll(), scroll)
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
 
 		self._staging_view = Frame(self.content_view)
 		self._staging_view.place()
 
-		self.subviews = []
-		self._sizes = {}
-		self._size_adjustments = {}
-		self._subview_configs = {}
-		self._bindings = {}
+		self.subviews: list[Widget] = []
+		self._sizes: dict[str, tuple[int, int]] = {}
+		self._subview_configs: dict[str, dict] = {}
+		self._bindings: dict[str, str] = {}
 		self._update = False
 		self.bind('<<Update>>', self._update_layout)
-		self._viewport_widths = []
-		def resize(*_):
+		self._viewport_widths: list[int] = []
+		def resize(e: Event) -> None:
 			viewport_width = self.viewport_size()[0]
 			if not viewport_width in self._viewport_widths or self._viewport_widths.count(viewport_width) < 2:
 				self._viewport_widths.append(viewport_width)
 				if len(self._viewport_widths) > 3:
 					del self._viewport_widths[0]
 				self.set_needs_update()
-		self._content_area.bind(WidgetEvent.Configure, resize)
+		self._content_area.bind(WidgetEvent.Configure(), resize)
 
 		self._focus_bind_info = None
-		def check_focus():
+		def check_focus() -> None:
 			focused = self.content_view.focus_displayof()
 			if self._focus_bind_info:
 				view,bind_id = self._focus_bind_info
@@ -67,33 +71,33 @@ class FlowView(Frame):
 				except:
 					pass
 				self._focus_bind_info = None
-			def focus_out(*_):
+			def focus_out(e: Event) -> None:
 				check_focus()
 			if focused:
-				self._focus_bind_info = (focused,focused.bind(Focus.Out, focus_out, True))
+				self._focus_bind_info = (focused,focused.bind(Focus.Out(), focus_out, True))
 				self.scroll_to_view(focused)
-		def focus_in(*_):
+		def focus_in(e: Event) -> None:
 			check_focus()
-		self.content_view.bind(Focus.In, focus_in)
+		self.content_view.bind(Focus.In(), focus_in)
 
-	def viewport_size(self):
+	def viewport_size(self) -> tuple[int, int]:
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
-	def content_size(self):
+	def content_size(self) -> tuple[int, int]:
 		_,_,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)
-	def content_offset(self):
+	def content_offset(self) -> tuple[int, int]:
 		w,h = self.content_size()
 		x = w * self._content_area.xview()[0]
 		y = h * self._content_area.yview()[0]
-		return (x,y)
+		return (int(x), int(y))
 
-	def set_needs_update(self):
+	def set_needs_update(self) -> None:
 		# import inspect
 		# print(inspect.stack()[1][3])
 		self._update = True
 		self.event_generate('<<Update>>')
 
-	def scroll_to_view(self, view):
+	def scroll_to_view(self, view: Misc) -> None:
 		offset_x = 0
 		offset_y = 0
 		view_w = view.winfo_width()
@@ -127,7 +131,7 @@ class FlowView(Frame):
 			y_span = yview[1] - yview[0]
 			self._content_area.yview_moveto(view_y2 / float(content_h) - y_span)
 
-	def _insert_subview(self, index, view, padx=0,pady=0, weight=0):
+	def _insert_subview(self, index: int, view: Widget, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self.subviews.insert(index, view)
 		if not isinstance(padx, tuple):
 			padx = (padx,padx)
@@ -142,47 +146,47 @@ class FlowView(Frame):
 		self._subview_configs[name]
 		view.grid(in_=self._staging_view)
 		self._update_view_size(view, update_idletasks=True)
-		self._bindings[name] = view.bind(WidgetEvent.Configure, lambda *_: self._update_view_size(view, set_needs_update=True), True)
+		self._bindings[name] = view.bind(WidgetEvent.Configure(), lambda *_: self._update_view_size(view, set_needs_update=True), True)
 
-	def insert_subview(self, index, view, padx=0,pady=0, weight=0):
+	def insert_subview(self, index: int, view: Widget, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()
 
-	def insert_subviews(self, index, views, padx=0,pady=0, weight=0):
+	def insert_subviews(self, index: int, views: list[Widget], padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		for view in reversed(views):
 			self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()
 
-	def add_subview(self, view, padx=0,pady=0, weight=0):
+	def add_subview(self, view: Widget, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self.insert_subview(len(self.subviews), view, padx=padx,pady=pady, weight=weight)
 
-	def add_subviews(self, views, padx=0,pady=0, weight=0):
+	def add_subviews(self, views: list[Widget], padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self.insert_subviews(len(self.subviews), views, padx=padx,pady=pady, weight=weight)
 
-	def _remove_subview(self, view):
+	def _remove_subview(self, view: Widget) -> None:
 		if not view in self.subviews:
 			return
 		name = str(view)
 		view.place_forget()
-		view.unbind(WidgetEvent.Configure, self._bindings[name])
+		remove_bind(view, WidgetEvent.Configure(), self._bindings[name])
 		del self._bindings[name]
 		del self._sizes[name]
 		del self._subview_configs[name]
 		self.subviews.remove(view)
 
-	def remove_subview(self, view):
+	def remove_subview(self, view: Widget) -> None:
 		self._remove_subview(view)
 		self.set_needs_update()
 
-	def remove_subviews(self, views):
+	def remove_subviews(self, views: list[Widget]) -> None:
 		for view in views:
 			self._remove_subview(view)
 		self.set_needs_update()
 
-	def remove_all_subviews(self):
+	def remove_all_subviews(self) -> None:
 		self.remove_subviews(list(self.subviews))
 
-	def update_subview_config(self, view, padx=None,pady=None, weight=None):
+	def update_subview_config(self, view: Widget, padx: tuple[int, int] | None = None, pady: tuple[int, int] | None = None, weight: float | None = None) -> None:
 		if not view in self.subviews:
 			return
 		name = str(view)
@@ -194,7 +198,7 @@ class FlowView(Frame):
 			self._subview_configs[name]['weight'] = weight
 		self.set_needs_update()
 
-	def _update_view_size(self, view, update_idletasks=False, set_needs_update=False):
+	def _update_view_size(self, view: Widget, update_idletasks: bool = False, set_needs_update: bool = False) -> None:
 		if update_idletasks:
 			view.update_idletasks()
 		name = str(view)
@@ -205,7 +209,8 @@ class FlowView(Frame):
 		self._sizes[name] = size
 		if changed and set_needs_update:
 			self.set_needs_update()
-	def _update_layout(self, *_):
+
+	def _update_layout(self, *_) -> None:
 		if not self._update:
 			return
 		self._update = False
@@ -214,7 +219,7 @@ class FlowView(Frame):
 		x = 0
 		y = 0
 		w = 0
-		rows = [[]]
+		rows: list[list[list]] = [[]]
 		row_widths = []
 		row_h = 0
 		def place(view, x,y, width):

@@ -1,5 +1,5 @@
 
-from .UIKit import FileDialog, RE_GEOMETRY, parse_geometry, build_geometry, parse_resizable, FileType, WindowExtensions
+from .UIKit import FileDialog, parse_resizable, FileType, WindowExtensions, Geometry, GeometryAdjust, Size
 from . import Assets
 from .WarnDialog import WarnDialog
 from .fileutils import check_allow_overwrite_internal_file
@@ -126,86 +126,68 @@ class Boolean(SettingObject):
 		self.value = bool(value)
 
 class WindowGeometry(SettingObject):
-	def __init__(self, default_size=None, default_centered=True): # type: (tuple[int, int] | None, bool) -> None
+	def __init__(self, default_size=None, default_centered=True): # type: (Size | None, bool) -> None
 		self._geometry = None # type: str | None
 		self._default_size = default_size
 		self._default_centered = default_centered
 
 	def save(self, window, closing=True): # type: (WindowExtensions, bool) -> None
 		resizable_w,resizable_h = parse_resizable(window.resizable())
-		w,h,x,y,_ = parse_geometry(window.winfo_geometry())
+		geometry = Geometry.of(window)
 		if resizable_w or resizable_h:
-			maximized = False
-			if window.is_maximized():
-				maximized = True
+			if geometry.maximized:
 				window.wm_state('normal')
 				window.update_idletasks()
-				w,h,x,y,_ = parse_geometry(window.winfo_geometry())
-				if not closing:
-					window.wm_state('zoomed')
-					window.update_idletasks()
-			self._geometry = build_geometry(pos=(x,y), size=(w,h), maximized=maximized)
+				geometry = Geometry.of(window)
+				geometry.maximized = True
+			self._geometry = geometry.text
 		else:
-			self._geometry = build_geometry(pos=(x,y))
+			self._geometry = GeometryAdjust(pos=geometry.pos).text
 
 	def load(self, window): # type: (WindowExtensions) -> None
-		if self._geometry:
-			w,h,x,y,fullscreen = parse_geometry(self._geometry)
+		if self._geometry and (geometry_adjust := GeometryAdjust.parse(self._geometry)):
 			# if position:
-			# 	x,y = position
+			# 	geometry_adjust.pos = position
 			resizable_w,resizable_h = parse_resizable(window.resizable())
-			can_fullscreen = (resizable_w and resizable_h)
-			if (resizable_w or resizable_h) and w is not None and h is not None:
-				cur_w,cur_h,_,_,_ = parse_geometry(window.winfo_geometry())
-				min_w,min_h = window.minsize()
+			can_maximize = (resizable_w and resizable_h)
+			if (resizable_w or resizable_h) and (geometry := geometry_adjust.geometry):
+				cur_geometry = Geometry.of(window)
+				min_size = Size.of(window.minsize())
 				# max_w,max_h = window.maxsize()
-				screen_w = window.winfo_screenwidth()
-				screen_h = window.winfo_screenheight()
-				if resizable_w:
-					if x+w > screen_w:
-						x = screen_w-w
-					if x < 0:
-						x = 0
-					w = max(min_w,min(screen_w,w))
-				else:
-					w = cur_w
-				if resizable_h:
-					if y+h > screen_h:
-						y = screen_h-h
-					if y < 0:
-						y = 0
-					h = max(min_h,min(screen_h,h))
-				else:
-					h = cur_h
-				window.geometry(build_geometry(pos=(x,y), size=(w,h)))
+				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				geometry.clamp(size=screen_size, min_size=min_size)
+				if not resizable_w:
+					geometry.size.width = cur_geometry.size.width
+				if not resizable_h:
+					geometry.size.height = cur_geometry.size.height
+				window.geometry(geometry.text)
 			else:
-				window.geometry(build_geometry(pos=(x,y)))
+				if geometry_adjust.size is not None:
+					geometry_adjust.size = None
+				window.geometry(geometry_adjust.text)
 			window.update_idletasks()
-			if fullscreen and can_fullscreen:
+			if geometry_adjust.maximized and can_maximize:
 				try:
 					window.wm_state('zoomed')
 				except:
 					pass
 		else:
 			window.update_idletasks()
-			w,h,x,y,_ = parse_geometry(window.winfo_geometry())
+			geometry = Geometry.of(window)
+			geometry_adjust = GeometryAdjust()
 			if self._default_size:
-				size = self._default_size
-			else:
-				size = (w,h)
-			pos: tuple[int, int] | None = None
+				geometry.size = self._default_size
+				geometry_adjust.size = self._default_size
 			if self._default_centered:
-				window.update_idletasks()
-				screen_w = window.winfo_screenwidth()
-				screen_h = window.winfo_screenheight()
-				pos = ((screen_w - w) // 2, (screen_h - h) // 2)
-			window.geometry(build_geometry(pos=pos, size=size))
+				screen_size = Size(window.winfo_screenwidth(), window.winfo_screenheight())
+				geometry_adjust.pos = screen_size.center - geometry.size // 2
+			window.geometry(geometry_adjust.text)
 
 	def encode(self): # type: () -> JSONValue
 		return self._geometry
 
 	def decode(self, geometry): # type: (JSONValue) -> None
-		if not isinstance(geometry, str) or not RE_GEOMETRY.match(geometry):
+		if not isinstance(geometry, str) or Geometry.parse(geometry) is None:
 			return
 		self._geometry = geometry
 

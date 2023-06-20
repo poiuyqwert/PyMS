@@ -4,9 +4,11 @@ from ..Widgets import *
 from ..ShowScrollbar import ShowScrollbar
 from ..EventPattern import *
 
+from typing import Callable
+
 class ScrolledCanvas(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=ShowScrollbar.when_needed, vertical=ShowScrollbar.when_needed, auto_bind=True, scroll_speed=1, **kwargs):
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] = {'bd': 2, 'relief': SUNKEN}, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: bool = True, scroll_speed: int = 1, **kwargs) -> None:
 		Frame.__init__(self, parent, **frame_config)
 
 		if not 'highlightthickness' in kwargs:
@@ -16,9 +18,11 @@ class ScrolledCanvas(Frame):
 			self.canvas.config(bd=0)
 		self.canvas.grid(column=0,row=0, sticky=NSEW)
 
-		def scroll_update(low, high, scrollbar):
-			scrollbar.set(low, high)
-			self.canvas.event_generate(WidgetEvent.Scrolled)
+		def scroll_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
+			def scroll_update(low, high):
+				scrollbar.set(low, high)
+				self.canvas.event_generate(WidgetEvent.Scrolled)
+			return scroll_update
 
 		if horizontal != ShowScrollbar.never:
 			if horizontal == ShowScrollbar.always:
@@ -26,7 +30,7 @@ class ScrolledCanvas(Frame):
 			else:
 				scrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self.canvas.xview)
 			scrollbar.grid(column=0,row=1, sticky=EW)
-			self.canvas.config(xscrollcommand=lambda low,high,_scrollbar=scrollbar: scroll_update(low, high, _scrollbar))
+			self.canvas.config(xscrollcommand=scroll_callback(scrollbar))
 		
 		if vertical != ShowScrollbar.never:
 			if horizontal == ShowScrollbar.always:
@@ -34,7 +38,7 @@ class ScrolledCanvas(Frame):
 			else:
 				scrollbar = AutohideScrollbar(self, command=self.canvas.yview)
 			scrollbar.grid(column=1,row=0, sticky=NS)
-			self.canvas.config(yscrollcommand=lambda low,high,_scrollbar=scrollbar: scroll_update(low, high, _scrollbar))
+			self.canvas.config(yscrollcommand=scroll_callback(scrollbar))
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(0, weight=1)
@@ -43,7 +47,7 @@ class ScrolledCanvas(Frame):
 			bind_to = self.canvas
 			if isinstance(auto_bind, Widget):
 				bind_to = auto_bind
-			def scroll(event):
+			def scroll(event: Event) -> str:
 				horizontal = False
 				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 					horizontal = True
@@ -68,7 +72,7 @@ class ScrolledCanvas(Frame):
 			# 	self.listbox.event_generate(WidgetEvent.Listbox.Select)
 			# 	return EventPropogation.Break
 			bind = [
-				(Mouse.Scroll, scroll),
+				(Mouse.Scroll(), scroll),
 				# (Key.Home, lambda event: move(event, 0)),
 				# (Key.End, lambda event: move(event, END)),
 				# (Key.Up, lambda event: move(event, -1)),

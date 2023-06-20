@@ -31,7 +31,7 @@ class MPQSelect(PyMSDialog):
 		s = Frame(self)
 		history = self.settings.settings.get('mpqselecthistory',[])[::-1]
 		self.textdrop = TextDropDown(s, self.search, history)
-		self.textdrop.entry.c = self.textdrop.entry['bg']
+		self.textdrop_entry_c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
 		self.open = Button(s, text=self.open_type, width=10, command=self.ok)
 		self.open.pack(side=RIGHT, padx=1, pady=3)
@@ -88,7 +88,7 @@ class MPQSelect(PyMSDialog):
 		if self.resettimer:
 			self.after_cancel(self.resettimer)
 			self.resettimer = None
-		self.textdrop.entry['bg'] = self.textdrop.entry.c
+		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
 	def updatesearch(self, *_): # type: (Event) -> None
 		if self.searchtimer:

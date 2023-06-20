@@ -9,6 +9,7 @@ from . import Theme
 from .EventPattern import *
 from .FileType import *
 from .ShowScrollbar import *
+from .Types import *
 
 import tkinter.filedialog as FileDialog
 import tkinter.messagebox as MessageBox

@@ -316,8 +316,8 @@ class PyBIN(MainWindow):
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		self.update_idletasks()
-		w,h,_,_,_ = parse_geometry(self.winfo_geometry())
-		self.minsize(w,h)
+		geometry = Geometry.of(self)
+		self.minsize(geometry.size.width, geometry.size.height)
 		self.settings.windows.load_window_size('main', self)
 
 		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))

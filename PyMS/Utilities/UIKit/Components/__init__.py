@@ -10,7 +10,7 @@ from .MainWindow import MainWindow
 from .MaskedCheckbutton import MaskedCheckbutton
 from .MaskedRadiobutton import MaskedRadiobutton
 from .Notebook import NotebookTab, Notebook
-from .ReportList import ReportList
+from .ReportList import ReportList, EditableReportSubList
 from .RichList import RichList
 from .ScrolledCanvas import ScrolledCanvas
 from .ScrolledListbox import ScrolledListbox

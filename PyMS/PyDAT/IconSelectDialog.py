@@ -17,6 +17,7 @@ class IconSelectDialog(PyMSDialog):
 		self.selected_index = selected_index
 		self.none_index = none_index
 		self._last_display_parameters = None # type: tuple[int, int, int] | None
+		self.selection_box_item: Canvas.Item # type: ignore[name-defined]
 		PyMSDialog.__init__(self, parent, 'Choose Icon', set_min_size=(True,True))
 
 	def widgetize(self): # type: () -> (Misc | None)
@@ -47,12 +48,12 @@ class IconSelectDialog(PyMSDialog):
 		self.maxsize(max_width, max_height)
 		self.data_context.settings.windows.load_window_size('icon_select', self)
 
-		self.scrolled_canvas.canvas.bind(Mouse.Click_Left, self._select_icon)
-		self.scrolled_canvas.canvas.bind(Double.Click_Left, lambda *_: self.ok())
-		self.scrolled_canvas.canvas.bind(Mouse.Motion, self._update_status_hover)
-		self.scrolled_canvas.canvas.bind(Cursor.Leave, lambda *_: self._clear_status_hover())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure, lambda *_: self._canvas_resized())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled, lambda *_: self._draw_icons())
+		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
+		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
+		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
+		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
 		
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()

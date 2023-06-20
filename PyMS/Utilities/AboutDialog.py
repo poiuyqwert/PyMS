@@ -4,7 +4,7 @@ from .UIKit import *
 
 # TODO: Update about dialog
 class AboutDialog(PyMSDialog):
-	def __init__(self, parent, program, version, thanks=[]): # type: (Misc, str, str, list[tuple[str, str]]) -> None
+	def __init__(self, parent: Misc, program: str, version: str, thanks: list[tuple[str, str]]=[]) -> None:
 		self.program = program
 		self.version = version
 		self.thanks = thanks

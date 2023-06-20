@@ -114,7 +114,7 @@ class PyDAT(MainWindow, MainDelegate):
 		find = Frame(collapse_view)
 		find_tdd = TextDropDown(find, self.find, self.findhistory, 5)
 		find_tdd.pack(side=LEFT, fill=X, expand=1)
-		find_tdd.entry.bind(Key.Return, self.findnext)
+		find_tdd.entry.bind(Key.Return(), self.findnext)
 		Button(find, text='Next', command=self.findnext).pack(side=LEFT)
 		find.grid(column=1,row=0, sticky=EW)
 
@@ -382,7 +382,8 @@ class PyDAT(MainWindow, MainDelegate):
 			if not file_path:
 				return
 		filename = os.path.basename(file_path)
-		for page,_ in sorted(list(self.dattabs.pages.values()), key=lambda d: d[1]):
+		for frame,_ in sorted(list(self.dattabs.pages.values()), key=lambda d: d[1]):
+			page = cast(DATTab, frame)
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
 					page.open_file(file_path)
@@ -390,7 +391,7 @@ class PyDAT(MainWindow, MainDelegate):
 					ErrorDialog(self, e)
 				else:
 					self.dattabs.display(page.page_title)
-					if page.get_dat_data().dat.is_expanded():
+					if (dat := page.get_dat_data().dat) and dat.is_expanded():
 						self.data_context.settings.dont_warn.warn('expanded_dat', self, "This %s file is expanded and will require a plugin like 'DatExtend'." % filename)
 				break
 		else:

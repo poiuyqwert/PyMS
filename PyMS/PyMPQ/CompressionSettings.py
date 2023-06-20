@@ -115,7 +115,7 @@ class CompressionSettings(Frame):
 		self.action_states()
 		if not e in self.autocompression:
 			self.autocompression[e] = [0,0]
-			s = self.listbox.size()
+			s: int = self.listbox.size() # type: ignore[assignment]
 			self.listbox.insert(END,e)
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(s)

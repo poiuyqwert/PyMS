@@ -3,9 +3,9 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyGRP', Requirement.PIL)
 
-def main():
+def main() -> None:
 	from PyMS.PyGRP.PyGRP import PyGRP, LONG_VERSION
-	from PyMS.PyGRP.utils import grptobmp, bmptogrp
+	from PyMS.PyGRP.utils import BMPStyle, grptobmp, bmptogrp
 
 	from PyMS.FileFormats.Palette import Palette
 
@@ -32,6 +32,18 @@ def main():
 		else:
 			if not len(args) in [1,2]:
 				p.error('Invalid amount of arguments')
+			if opt.convert:
+				grp = args[0]
+				if len(args) > 1:
+					bmp = args[1]
+				else:
+					bmp = None
+			else:
+				bmp = args[0]
+				if len(args) > 1:
+					grp = args[1]
+				else:
+					grp = None
 			pal = Palette()
 			fullfile = os.path.abspath(os.path.join('Palettes',opt.palette))
 			ext = os.extsep + 'pal'
@@ -46,9 +58,15 @@ def main():
 					path = os.path.abspath('')
 				args[0] = os.path.join(path,os.path.basename(args[0]))
 				if opt.convert:
-					grptobmp(path, pal, opt.uncompressed, opt.onebmp, *args)
+					assert grp is not None
+					if opt.onebmp:
+						bmp_style = BMPStyle.single_bmp_vertical
+					else:
+						bmp_style = BMPStyle.bmp_per_frame
+					grptobmp(path, pal, opt.uncompressed, bmp_style, grp, bmp)
 				else:
-					bmptogrp(path, pal, opt.uncompressed, opt.frames, *args)
+					assert bmp is not None
+					bmptogrp(path, pal, opt.uncompressed, opt.frames, bmp, grp)
 			except PyMSError as e:
 				print(repr(e))
 

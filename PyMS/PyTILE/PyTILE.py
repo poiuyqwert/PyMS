@@ -847,6 +847,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			return CheckSaved.cancelled
 		self.file = file_path
 		self.status.set('Save Successful!')
 		self.mark_edited(False)
@@ -894,3 +895,9 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.options_copy_doodadgroup.save()
 		self.settings.save()
 		self.destroy()
+
+	def draw_group(self):
+		pass
+
+	def tile_palette_double_clicked(self):
+		pass

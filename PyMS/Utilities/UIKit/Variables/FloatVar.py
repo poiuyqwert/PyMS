@@ -1,10 +1,7 @@
 
 from .IntegerVar import IntegerVar
 
-try: # Python 2
-	from tkinter import StringVar
-except: # Python 3
-	from tkinter import StringVar
+from tkinter import StringVar
 
 class FloatVar(IntegerVar):
 	def __init__(self, val='0', range=[None,None], exclude=[], callback=None, precision=None):
