@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyGOT')
 
-def main():
+def main() -> None:
 	from PyMS.PyGOT.PyGOT import PyGOT, LONG_VERSION
 
 	from PyMS.FileFormats.GOT import GOT

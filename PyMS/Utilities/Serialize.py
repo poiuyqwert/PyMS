@@ -297,8 +297,9 @@ SubStructure = dict[str, AnyEncoder]
 Structure = dict[str, AnyEncoder | SubStructure]
 
 class IDMode(Enum):
-	comment = 0
-	header = 1
+	none = 0
+	comment = 1
+	header = 2
 
 class Definition:
 	def __init__(self, name: str, id_mode: IDMode, structure: Structure):

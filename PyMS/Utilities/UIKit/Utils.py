@@ -161,7 +161,7 @@ class GeometryAdjust:
 	_RE = _re.compile(r'(?:(\d+)x(\d+))?\+(-?\d+)\+(-?\d+)(\^)?')
 	@staticmethod
 	def parse(text: str) -> (GeometryAdjust | None):
-		match = Geometry._RE.match(text)
+		match = GeometryAdjust._RE.match(text)
 		if not match:
 			return None
 		if match.group(1):
