@@ -58,7 +58,7 @@ class Size:
 		return Point(self.width // 2, self.height // 2)
 
 	def centered_in(self, other: Size) -> Point:
-		return Point((self.width - other.width) // 2, (self.height - other.height) // 2)
+		return Point((other.width - self.width) // 2, (other.height - self.height) // 2)
 
 	def __eq__(self, other) -> bool:
 		if isinstance(other, Sequence) and len(other) == 2:

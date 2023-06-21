@@ -12,6 +12,8 @@ except:
 	sys.exit()
 	
 from .Images import Pixels, RawPalette, RGBA, RGB, Bounds
+from .BMP import BMP
+from .PCX import PCX
 
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
@@ -21,10 +23,7 @@ import struct
 from copy import deepcopy
 from enum import Enum
 
-from typing import TYPE_CHECKING, Callable, TypeVar, cast, BinaryIO, Sequence
-if TYPE_CHECKING:
-	from .BMP import BMP
-	from .PCX import PCX
+from typing import Callable, TypeVar, cast, BinaryIO, Sequence
 
 T = TypeVar('T')
 RLEFunc = Callable[[RawPalette, int, T], RGBA]

@@ -110,7 +110,7 @@ def register_registry(program_name, extension, file_type_name=None): # type: (st
 	from .UIKit import MessageBox
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
-def flags(value, length): # type: (int, int) -> str
+def flags(value, length): # type: (int | str, int) -> str
 	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
 			raise PyMSError('Flags', 'Invalid flags')

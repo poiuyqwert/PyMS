@@ -11,7 +11,9 @@ WidgetState = _Literal['normal', 'disabled']
 
 Relief = _Literal['raised', 'sunken', 'flat', 'ridge', 'solid', 'groove']
 
-# Anchor = Sticky = _Literal['n', 's', 'w', 'e', 'nw', 'sw', 'ne', 'se', 'ns', 'ew', 'nsew', 'center']
+Anchor = _Literal['n', 's', 'w', 'e', 'nw', 'sw', 'ne', 'se', 'ns', 'ew', 'nsew', 'center']
+
+Sticky = _Literal['n', 's', 'w', 'e', 'nw', 'sw', 'ne', 'se', 'ns', 'ew', 'nsew', 'center']
 
 # Fill = _Literal['none', 'x', 'y', 'both']
 

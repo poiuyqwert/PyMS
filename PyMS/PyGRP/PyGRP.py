@@ -76,7 +76,9 @@ class PyGRP(MainWindow):
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		def save() -> None:
+			self.save()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
 		def save_as() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
@@ -246,7 +248,7 @@ BMP's must be imported with the same style they were exported as.""")
 			if save == MessageBox.CANCEL:
 				return CheckSaved.cancelled
 			if self.file:
-				self.save()
+				return self.save()
 			else:
 				return self.saveas()
 		return CheckSaved.saved
@@ -517,8 +519,8 @@ BMP's must be imported with the same style they were exported as.""")
 		if grp.uncompressed:
 			MessageBox.showinfo(parent=self, title='Uncompressed GRP', message='You have opened an uncompresed GRP.\nWhen saving make sure you select the "Save Uncompressed" option.')
 
-	def save(self, key: Event | None = None) -> None:
-		self.saveas(file_path=self.file)
+	def save(self, key: Event | None = None) -> CheckSaved:
+		return self.saveas(file_path=self.file)
 
 	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.grp:

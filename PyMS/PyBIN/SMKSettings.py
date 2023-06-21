@@ -1,17 +1,27 @@
 
+from __future__ import annotations
+
+from .Delegates import MainDelegate
+
 from ..FileFormats import DialogBIN
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities import Assets
+from ..Utilities.Settings import Settings
+from ..Utilities.MPQHandler import MPQHandler
 
-class SMKSettings(PyMSDialog):
-	def __init__(self, parent, smk, widget=None, window_pos=False):
-		self.widget = (widget if widget else parent)
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from .WidgetNode import WidgetNode
+
+class SMKSettings(PyMSDialog, MainDelegate):
+	def __init__(self, parent: Misc, smk: DialogBIN.BINSMK, widget: WidgetNode, delegate: MainDelegate, window_pos: Point | None = None) -> None:
 		self.smk = smk
+		self.widget = widget
+		self.delegate = delegate
 		self.window_pos = window_pos
-		self.settings = parent.settings
 
 		self.filename = StringVar()
 		self.overlay_smk = IntVar()
@@ -29,7 +39,7 @@ class SMKSettings(PyMSDialog):
 
 		PyMSDialog.__init__(self, parent, 'Edit SMK', center=False, resizable=(True, False))
 
-	def widgetize(self):
+	def widgetize(self) -> (Misc | None):
 		textframe = Frame(self)
 		Label(textframe, text='Filename:').pack(side=LEFT)
 		Entry(textframe, textvariable=self.filename, font=Font.fixed()).pack(side=LEFT, fill=X, expand=1)
@@ -73,28 +83,38 @@ class SMKSettings(PyMSDialog):
 
 		self.grid_columnconfigure(0, weight=1)
 
-	def setup_complete(self):
+		return None
+
+	def setup_complete(self) -> None:
 		self.minsize(400,160)
 		self.maxsize(9999,160)
+		if self.window_pos:
+			self.geometry(GeometryAdjust(pos=self.window_pos).text)
 		self.load_settings()
 		self.load_properties()
 
-	def load_settings(self):
-		self.settings.windows.edit.load_window_size('smk', self)
-	def save_settings(self):
-		self.settings.windows.edit.save_window_size('smk', self)
+	def load_settings(self) -> None:
+		self.delegate.get_settings().windows.edit.load_window_size('smk', self)
 
-	def load_property_smk(self):
+	def save_settings(self) -> None:
+		self.delegate.get_settings().windows.edit.save_window_size('smk', self)
+
+	def load_property_smk(self) -> None:
 		smks = ['None']
-		for smk in self.widget.parent.bin.smks:
-			name = smk.filename
-			if smk.overlay_smk:
-				name += " (Overlay: %s)" % smk.overlay_smk.filename
-			smks.append(name)
+		overlay_id = 0
+		if bin := self.delegate.get_bin():
+			if self.smk.overlay_smk:
+				overlay_id = bin.smks.index(self.smk.overlay_smk) + 1
+			for smk in bin.smks:
+				name = smk.filename
+				if smk.overlay_smk:
+					name += " (Overlay: %s)" % smk.overlay_smk.filename
+				smks.append(name)
 		self.smks_dropdown.setentries(smks)
 
-		self.overlay_smk.set(0 if not self.smk.overlay_smk else self.widget.parent.bin.smks.index(self.smk.overlay_smk)+1)
-	def load_properties(self):
+		self.overlay_smk.set(0 if not self.smk.overlay_smk else overlay_id)
+
+	def load_properties(self) -> None:
 		self.filename.set(self.smk.filename)
 		self.load_property_smk()
 		self.overlay_x.set(self.smk.offset_x)
@@ -109,15 +129,17 @@ class SMKSettings(PyMSDialog):
 		self.flag_unk3.set((self.smk.flags & DialogBIN.BINSMK.FLAG_UNK3 == DialogBIN.BINSMK.FLAG_UNK3))
 		self.flag_unk4.set((self.smk.flags & DialogBIN.BINSMK.FLAG_UNK4 == DialogBIN.BINSMK.FLAG_UNK4))
 
-	def save_property_smk(self):
+	def save_property_smk(self) -> bool:
+		assert (bin := self.delegate.get_bin())
 		edited = False
 		index = self.overlay_smk.get()-1
-		smk = (None if index == -1 else self.widget.parent.bin.smks[index])
+		smk = (None if index == -1 else bin.smks[index])
 		if smk != self.smk.overlay_smk:
 			self.smk.overlay_smk = smk
 			edited = True
 		return edited
-	def save_properties(self):
+
+	def save_properties(self) -> None:
 		edited = False
 		if self.filename.get() != self.smk.filename:
 			self.smk.filename = self.filename.get()
@@ -144,47 +166,72 @@ class SMKSettings(PyMSDialog):
 			edited = True
 		
 		if edited:
-			self.mark_edited()
+			self.delegate.mark_edited()
 
-	def update_preview(self):
+	def update_preview(self) -> None:
 		self.save_properties()
-		self.update_smks()
-		self.widget.parent.reload_canvas()
+		self.refresh_smks()
+		self.delegate.refresh_preview()
+		# self.widget.parent.reload_canvas()
 
-	def find_smk(self):
-		m = MPQSelect(self, self.widget.parent.mpqhandler, 'SMK', '*.smk', self.settings, 'Select')
+	def find_smk(self) -> None:
+		m = MPQSelect(self, self.delegate.get_mpqhandler(), 'SMK', '*.smk', self.delegate.get_settings(), 'Select')
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 
-	def edit_smk(self):
-		if self.overlay_smk.get():
-			pos = Geometry.of(self).pos
-			pos.x += 20
-			pos.y += 20
-			SMKSettings(self, self.widget.parent.bin.smks[self.overlay_smk.get()-1], self.widget, pos)
+	def edit_smk(self) -> None:
+		if not self.overlay_smk.get():
+			return
+		if not (bin := self.delegate.get_bin()):
+			return
+		pos = Geometry.of(self).pos
+		pos.x += 20
+		pos.y += 20
+		SMKSettings(self, bin.smks[self.overlay_smk.get()-1], self.widget, self, pos)
 
-	def add_smk(self):
+	def add_smk(self) -> None:
+		if not (bin := self.delegate.get_bin()):
+			return
 		smk = DialogBIN.BINSMK()
-		self.widget.parent.bin.smks.append(smk)
+		bin.smks.append(smk)
 		self.smk.overlay_smk = smk
-		self.update_smks()
+		self.refresh_smks()
 		self.edit_smk()
-		self.mark_edited()
+		self.delegate.mark_edited()
 
-	def update_smks(self):
-		self.load_property_smk()
-		self.parent.update_smks()
-
-	def mark_edited(self):
-		self.parent.mark_edited()
-
-	def ok(self):
+	def ok(self, e: Event | None = None) -> None:
 		self.update_preview()
 		PyMSDialog.ok(self)
 
-	def cancel(self):
+	def cancel(self, e: Event | None = None) -> None:
 		self.ok()
 
-	def dismiss(self):
+	def dismiss(self) -> None:
 		self.save_settings()
 		PyMSDialog.dismiss(self)
+
+	# MainDelegate
+	def get_bin(self) -> (DialogBIN.DialogBIN | None):
+		return self.delegate.get_bin()
+
+	def get_settings(self) -> Settings:
+		return self.delegate.get_settings()
+
+	def get_mpqhandler(self) -> MPQHandler:
+		return self.delegate.get_mpqhandler()
+
+	def get_scr_enabled(self) -> bool:
+		return self.delegate.get_scr_enabled()
+
+	def mark_edited(self) -> None:
+		self.delegate.mark_edited()
+
+	def refresh_preview(self) -> None:
+		self.delegate.refresh_preview()
+
+	def refresh_smks(self) -> None:
+		self.load_property_smk()
+		self.delegate.refresh_smks()
+
+	def refresh_nodes(self) -> None:
+		self.delegate.refresh_nodes()

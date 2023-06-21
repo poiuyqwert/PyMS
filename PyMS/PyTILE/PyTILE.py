@@ -184,7 +184,9 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		#Toolbar
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		def save() -> None:
+			self.save()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
 		def save_as(): # type: () -> None
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
@@ -611,7 +613,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			if save == MessageBox.CANCEL:
 				return CheckSaved.cancelled
 			if self.file:
-				self.save()
+				return self.save()
 			else:
 				return self.saveas()
 		return CheckSaved.saved
@@ -831,8 +833,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if self.tileset.vx4.is_expanded():
 			self.settings.dont_warn.warn('expanded_vx4', self, "This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 
-	def save(self, key=None): # type: (Any) -> None
-		self.saveas(file_path=self.file)
+	def save(self, key=None) -> CheckSaved:
+		return self.saveas(file_path=self.file)
 
 	def saveas(self, key=None, file_path=None): # type: (Any, str | None) -> CheckSaved
 		if not self.tileset:

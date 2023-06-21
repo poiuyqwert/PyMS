@@ -88,7 +88,7 @@ class MPQHandler(object):
 	# folder(True)=Get only from folder
 	# folder(None)=Get from either, MPQ first, folder second
 	# folder(False)=Get only from MPQ
-	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER): # type: (str, str | None, list[str]) -> ReadFile
+	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER): # type: (str, bool | None, list[str]) -> ReadFile
 		if folder is not None:
 			sources = MPQHandler.GET_FROM_FOLDER if folder else MPQHandler.GET_FROM_MPQ
 		file: ReadFile = BadFile(path)

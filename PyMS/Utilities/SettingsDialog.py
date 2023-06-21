@@ -5,8 +5,6 @@ from .MPQSettings import MPQSettings
 from .SettingsPanel import SettingsPanel
 from .ErrorDialog import ErrorDialog
 from .UIKit import *
-from .UIKit.Components.Settings.SettingsTab import SettingsTab
-from .UIKit.Components.Settings.ThemeSettingView import ThemeSettingView
 
 import copy
 
@@ -29,6 +27,8 @@ class SettingsDialog(PyMSDialog):
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if len(d) == 1:
+					from .UIKit.Components.Settings.SettingsTab import SettingsTab
+					from .UIKit.Components.Settings.ThemeSettingView import ThemeSettingView
 					tab = SettingsTab(self.tabs)
 					theme_view = ThemeSettingView(tab, self.settings)
 					theme_view.pack(fill=BOTH, expand=1)

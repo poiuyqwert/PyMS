@@ -1,10 +1,9 @@
 
 from ..Notebook import Notebook, NotebookTab
+from ....SettingsDialog import SettingsDialog
+from .SettingsView import SettingsView
 
-from typing import TYPE_CHECKING, cast
-if TYPE_CHECKING:
-	from ....SettingsDialog import SettingsDialog
-	from .SettingsView import SettingsView
+from typing import cast
 
 class SettingsTab(NotebookTab):
 	# TODO: Remove compat once SettingsDialog rewritten
