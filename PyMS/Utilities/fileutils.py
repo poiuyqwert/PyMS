@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .PyMSError import PyMSError
 
 from typing import TYPE_CHECKING

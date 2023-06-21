@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DataID import DataID
 
 from ..FileFormats.GRP import CacheGRP, ImageWithBounds

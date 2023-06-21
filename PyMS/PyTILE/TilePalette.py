@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate
 from .TilePaletteView import TilePaletteView
 

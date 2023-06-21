@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 

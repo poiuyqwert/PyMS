@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DATTab import DATTab
 from ..DataID import DATID, DataID, UnitsTabID, AnyID
 from ..DATRef import DATRefs, DATRef

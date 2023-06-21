@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyPAL')
 
-def main():
+def main() -> None:
 	from PyMS.PyPAL.PyPAL import PyPAL, LONG_VERSION
 
 	from PyMS.FileFormats.Palette import Palette

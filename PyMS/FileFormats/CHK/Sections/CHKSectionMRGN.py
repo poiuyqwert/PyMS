@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .CHKSectionSTR import CHKSectionSTR
 from .CHKSectionVER import CHKSectionVER
 

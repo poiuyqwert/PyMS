@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .CHKRequirements import CHKRequirements
 from .CHKSectionUnknown import CHKSectionUnknown
 from .Sections import *

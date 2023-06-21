@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .CHKSection import CHKSection
 
 from ...Utilities.utils import pad

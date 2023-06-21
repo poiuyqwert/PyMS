@@ -26,6 +26,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities import Serialize
+from ..Utilities.CheckSaved import CheckSaved
 
 import sys, io
 from enum import Enum
@@ -33,10 +34,6 @@ from enum import Enum
 from typing import Self, cast, Callable, TextIO
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
-
-class CheckSaved(Enum):
-	cancelled = 0
-	saved = 1 # Also covers not open, not edited, and chose to ignore changes
 
 class EditorGroup:
 	class EditorWidget:

@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+from __future__ import annotations
+
 from ..Utilities.utils import fit, float_to_str
 from ..Utilities.UIKit import *
 

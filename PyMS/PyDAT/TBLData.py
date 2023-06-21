@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..FileFormats.TBL import TBL, decompile_string, compile_string
 
 from ..Utilities.Callback import Callback

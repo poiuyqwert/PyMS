@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..FileFormats.Tileset.Tileset import Tileset, TileType
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 

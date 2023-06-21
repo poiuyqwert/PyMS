@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DATFormat import DATTypeSize, DATTypePosition, DATTypeExtents, DATTypeHitPoints, DATTypeSupply
 
 from ...Utilities.PyMSError import PyMSError

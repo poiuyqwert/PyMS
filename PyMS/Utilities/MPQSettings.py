@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..FileFormats.MPQ.MPQ import MPQ
 
 from . import Assets

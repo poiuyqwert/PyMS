@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from PyMS.FileFormats.Tileset.Tileset import Tileset
 from PyMS.FileFormats.Tileset.VX4 import VX4Minitile
 from PyMS.Utilities.UIKit import Image

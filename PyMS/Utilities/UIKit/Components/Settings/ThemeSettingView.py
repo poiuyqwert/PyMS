@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .SettingsView import SettingsView
 from ..ScrolledListbox import ScrolledListbox
 from ...Widgets import *

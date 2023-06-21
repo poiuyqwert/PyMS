@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 # MPQ functionality based off of SFmpq (by Quantam and ShadowFlare), which is based off StormLib (by Ladislav Zezula)
 
 from . import MPQCrypt, MPQComp

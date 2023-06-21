@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .CHKRequirements import CHKRequirements
 
 from typing import TYPE_CHECKING

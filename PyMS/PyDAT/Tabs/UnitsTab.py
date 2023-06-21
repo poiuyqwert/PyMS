@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DATTab import DATTab
 from .UnitTabs.DATUnitsTab import DATUnitsTab
 from .UnitTabs import *

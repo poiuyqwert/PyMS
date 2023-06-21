@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..Utilities.utils import lpad
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *

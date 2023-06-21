@@ -24,7 +24,8 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
-from ..Utilities.fileutils import check_allow_overwrite_internal_file, BadFile
+from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.CheckSaved import CheckSaved
 
 import time
 from enum import Enum
@@ -83,10 +84,6 @@ class ClickModifier(Enum):
 	none = 0
 	shift = 1
 	ctrl = 2
-
-class CheckSaved(Enum):
-	cancelled = 0
-	saved = 1 # Also covers not open, not edited, and chose to ignore changes
 
 class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 	def __init__(self, guifile: str | None = None) -> None:

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ...Widgets import Frame, Misc
 
 from typing import TYPE_CHECKING, Callable

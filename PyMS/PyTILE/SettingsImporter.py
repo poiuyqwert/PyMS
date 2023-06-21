@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .Delegates import MainDelegate
 
 from ..FileFormats.Tileset.Tileset import TileType, ImportSettingsOptions

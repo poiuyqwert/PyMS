@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter

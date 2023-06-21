@@ -3,7 +3,6 @@ from .FramesDialog import FramesDialog
 from .utils import BMPStyle, grptobmp, bmptogrp
 
 from ..FileFormats import GRP
-from ..FileFormats import BMP
 from ..FileFormats import Palette
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
@@ -19,6 +18,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.CheckSaved import CheckSaved
 
 import os
 from enum import Flag, Enum
@@ -41,10 +41,6 @@ class FrameSet(Flag):
 	last                = 1 << 10
 
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
-
-class CheckSaved(Enum):
-	cancelled = 0
-	saved = 1 # Also covers not open, not edited, and chose to ignore changes
 
 class PyGRP(MainWindow):
 	def __init__(self, guifile: str | None =None):

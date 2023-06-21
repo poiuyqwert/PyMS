@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag

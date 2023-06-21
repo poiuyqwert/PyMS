@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .DataID import DATID
 
 from ..FileFormats.DAT.AbstractDAT import AbstractDATEntry
