@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyFNT', Requirement.PIL)
 
-def main():
+def main() -> None:
 	from PyMS.PyFNT.PyFNT import PyFNT, LONG_VERSION
 
 	from PyMS.FileFormats.FNT import FNT, fnttobmp, bmptofnt

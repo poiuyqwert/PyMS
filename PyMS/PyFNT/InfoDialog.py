@@ -3,20 +3,20 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 
 class InfoDialog(PyMSDialog):
-	def __init__(self, parent, size=False):
+	def __init__(self, parent: Misc, need_size: bool = False) -> None:
 		self.lowi = IntegerVar(32, [1,255], callback=self.check)
 		self.letters = IntegerVar(208, [1,224])
-		self.size = size
+		self.need_size: bool | None = need_size
 		self.width = IntegerVar(8, [1,255])
 		self.height = IntegerVar(11, [1,255])
 		PyMSDialog.__init__(self, parent, 'FNT Specifications')
 
-	def widgetize(self):
+	def widgetize(self) -> (Misc | None):
 		Label(self, text='Whats the ASCII code of the lowest character?').pack(padx=5, pady=5)
 		Entry(self, textvariable=self.lowi).pack(padx=5, fill=X)
 		Label(self, text='How many letters are in the font?').pack(padx=5, pady=5)
 		Entry(self, textvariable=self.letters).pack(padx=5, fill=X)
-		if self.size:
+		if self.need_size:
 			Label(self, text='What is the max width of each character?').pack(padx=5, pady=5)
 			Entry(self, textvariable=self.width).pack(padx=5, fill=X)
 			Label(self, text='What is the max width of each character?').pack(padx=5, pady=5)
@@ -29,10 +29,10 @@ class InfoDialog(PyMSDialog):
 
 		return ok
 
-	def check(self,i):
+	def check(self, i: int) -> None:
 		self.letters.range[1] = 256 - i
 		self.letters.editvalue()
 
-	def cancel(self):
-		self.size = None
+	def cancel(self, e: Event | None = None) -> None:
+		self.need_size = None
 		PyMSDialog.cancel(self)
