@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PySPK', Requirement.PIL)
 
-def main():
+def main() -> None:
 	from PyMS.PySPK.PySPK import PySPK, LONG_VERSION
 
 	import os, optparse, sys

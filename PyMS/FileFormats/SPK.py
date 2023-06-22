@@ -1,47 +1,51 @@
 
-from . import BMP
+from __future__ import annotations
 
-from ..Utilities.fileutils import load_file
+from . import BMP
+from . import Palette
+from .Images import Pixels
+
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct
 
 class SPKLayer:
-	def __init__(self):
-		self.stars = []
+	def __init__(self) -> None:
+		self.stars: list[SPKStar] = []
 
 class SPKStar:
-	def __init__(self):
+	def __init__(self, image: SPKImage | None = None):
 		self.x = 0
 		self.y = 0
-		self.image = None
+		self.image = image if image else SPKImage()
 
 class SPKImage:
-	def __init__(self):
+	def __init__(self, pixels: Pixels | None = None):
 		self.width = 0
 		self.height = 0
-		self.pixels = None
+		self.pixels: Pixels = pixels if pixels else [[]]
 
 class SPK:
 	LAYER_ORIGIN = (-8, -8)
 	LAYER_SIZE = (648, 488)
 	PARALLAX_RATIOS = [16/256.0, 21/256.0, 26/256.0, 31/256.0, 36/256.0]
 
-	def __init__(self):
-		self.layers = []
-		self.images = []
+	def __init__(self) -> None:
+		self.layers: list[SPKLayer] = []
+		self.images: list[SPKImage] = []
 
-	def load_file(self, file):
-		data = load_file(file, 'SPK')
+	def load_file(self, input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(input) as f:
+			data = f.read()
 		try:
 			self.load_data(data)
 		except PyMSError as e:
 			raise e
 		except:
-			raise PyMSError('Load',"Unsupported SPK file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported SPK file, could possibly be corrupt")
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		layer_count = struct.unpack('<H', data[:2])[0]
 		star_counts = []
 		o = 2
@@ -56,17 +60,17 @@ class SPK:
 			layers.append(layer)
 			for _ in range(count):
 				star = SPKStar()
-				star.x,star.y,offset = struct.unpack('<HHL', data[o:o+8])
+				star.x,star.y,offset = tuple(int(v) for v in struct.unpack('<HHL', data[o:o+8]))
 				maxx = max(star.x,maxx)
 				maxy = max(star.y,maxy)
 				o += 8
 				if not offset in images:
 					image = SPKImage()
-					image.width,image.height = struct.unpack('<HH', data[offset:offset+4])
+					image.width,image.height = tuple(int(v) for v in struct.unpack('<HH', data[offset:offset+4]))
 					image.pixels = []
 					p = offset + 4
 					for _ in range(image.height):
-						image.pixels.append(data[p:p+image.width])
+						image.pixels.append(list(int(i) for i in data[p:p+image.width]))
 						p += image.width
 					images[offset] = image
 				star.image = images[offset]
@@ -74,7 +78,7 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def interpret_file(self, filepath, layer_count):
+	def interpret_file(self, filepath: str, layer_count: int) -> None:
 		bmp = BMP.BMP()
 		try:
 			bmp.load_file(filepath)
@@ -85,11 +89,11 @@ class SPK:
 			raise PyMSError('Interpreting',"Image is not the correct height to fit %d layers" % layer_count)
 		layers = list(SPKLayer() for _ in range(layer_count))
 		runs_by_row = []
-		for row in bmp.image:
-			runs = []
+		for bmp_row in bmp.image:
+			runs: list[list[int]] = []
 			runs_by_row.append(runs)
-			run = []
-			for x,i in enumerate(row):
+			run: list[int] | None = []
+			for x,i in enumerate(bmp_row):
 				if i and not run:
 					run = [x,x]
 					runs.append(run)
@@ -97,8 +101,8 @@ class SPK:
 					run[1] = x-1
 					run = None
 			if run:
-				run[1] = len(row)
-		images = {}
+				run[1] = len(bmp_row)
+		images: dict[tuple[tuple[int, ...], ...], SPKImage] = {}
 		for y,row in enumerate(runs_by_row):
 			for x1,x2 in row:
 				sx1,sy1,sx2,sy2 = x1,y,x2,y
@@ -148,24 +152,20 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def save_file(self, file):
+	def save_file(self, output: IO.AnyOutputBytes) -> None:
 		data = self.save_data()
-		try:
-			f = AtomicWriter(file, 'wb')
-		except:
-			raise PyMSError('Save',"Could not save SPK to file '%s'" % file)
-		f.write(data)
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(data)
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		headers = struct.pack('<H', len(self.layers))
-		pixels = ''
+		pixels = b''
 		pixels_offset = 2
 		for layer in self.layers:
 			stars = len(layer.stars)
 			headers += struct.pack('<H', stars)
 			pixels_offset += 2+8*stars
-		images = {}
+		images: dict[tuple[tuple[int, ...], ...], int] = {}
 		for layer in self.layers:
 			for star in layer.stars:
 				lookup = tuple(tuple(row) for row in star.image.pixels)
@@ -179,7 +179,7 @@ class SPK:
 				headers += struct.pack('<HHL', star.x, star.y, images[lookup])
 		return headers + pixels
 
-	def decompile_file(self, filepath, palette):
+	def decompile_file(self, filepath: str, palette: Palette.Palette) -> None:
 		width = 0
 		height = 0
 		for layer in self.layers:

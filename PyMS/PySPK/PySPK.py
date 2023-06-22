@@ -1,4 +1,5 @@
 
+from .Delegates import MainDelegate
 from .Tool import Tool
 from .LayerRow import LayerRow
 from .PaletteTab import PaletteTab
@@ -24,19 +25,26 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.CheckSaved import CheckSaved
+
+from enum import Enum
+
+from typing import Callable, cast, BinaryIO
 
 LONG_VERSION = 'v%s' % Assets.version('PySPK')
 
-MOUSE_DOWN = 0
-MOUSE_MOVE = 1
-MOUSE_UP = 2
+class MouseEvent(Enum):
+	down = 0
+	move = 1
+	up = 2
 
-MODIFIER_NONE = 0
-MODIFIER_SHIFT = 1
-MODIFIER_CTRL = 2
+class ClickModifier(Enum):
+	none = 0
+	shift = 1
+	ctrl = 2
 
-class PySPK(MainWindow):
-	def __init__(self, guifile=None):
+class PySPK(MainWindow, MainDelegate):
+	def __init__(self, guifile: str | None = None) -> None:
 		self.settings = Settings('PySPK', '1')
 		self.settings.settings.files.set_defaults({
 			'platformwpe':'MPQ:tileset\\platform.wpe'
@@ -54,24 +62,24 @@ class PySPK(MainWindow):
 		self.minsize(870, 547)
 		self.maxsize(1000, 547)
 
-		self.spk = None
-		self.file = None
+		self.spk: SPK.SPK | None = None
+		self.file: str | None = None
 		self.edited = False
 
 		self.update_title()
 
-		self.platformwpe = None
+		self.platformwpe: Palette.Palette
 
-		self.images = {}
-		self.star_map = {}
-		self.item_map = {}
+		self.images: dict[SPK.SPKImage, Image] = {}
+		self.star_map: dict[Canvas.Item, SPK.SPKStar] = {} # type: ignore[name-defined]
+		self.item_map: dict[SPK.SPKStar, Canvas.Item] = {} # type: ignore[name-defined]
 
-		self.selected_image = None
-		self.item_place_image = None
-		self.selecting_start = None
-		self.item_selecting_box = None
-		self.selected_stars = []
-		self.item_selection_boxs = []
+		self.selected_image: SPK.SPKImage | None = None
+		self.item_place_image: Canvas.Item | None = None # type: ignore[name-defined]
+		self.selecting_start: tuple[int, int] | None = None
+		self.item_selecting_box: Canvas.Item | None = None # type: ignore[name-defined]
+		self.selected_stars: list[SPK.SPKStar] = []
+		self.item_selection_boxs: list[Canvas.Item] = [] # type: ignore[name-defined]
 
 		self.layer = IntVar()
 		self.layer.trace('w', self.layer_updated)
@@ -84,7 +92,7 @@ class PySPK(MainWindow):
 		self.autolock = BooleanVar()
 		self.autolock.trace('w', self.autolock_updated)
 		self.tool = IntVar()
-		self.tool.set(Tool.Select)
+		self.tool.set(Tool.select.value)
 
 		self.load_settings()
 
@@ -95,8 +103,12 @@ class PySPK(MainWindow):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		def save():
+			self.save()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		def saveas():
+			self.saveas()
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
@@ -105,7 +117,7 @@ class PySPK(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_section()
@@ -117,7 +129,7 @@ class PySPK(MainWindow):
 		layersframe = LabelFrame(leftframe, text='Layers:')
 		f = Frame(layersframe)
 		listbox = Frame(f, border=2, relief=SUNKEN)
-		self.rows = []
+		self.rows: list[LayerRow] = []
 		for l in range(5):
 			row = LayerRow(listbox, selvar=self.layer, visvar=self.visible, lockvar=self.locked, layer=l)
 			row.hide()
@@ -142,7 +154,7 @@ class PySPK(MainWindow):
 		notebook = Notebook(leftframe)
 		self.palette_tab = PaletteTab(notebook, self)
 		notebook.add_tab(self.palette_tab, 'Palette')
-		self.stars_tab = StarsTab(notebook, self)
+		self.stars_tab = StarsTab(notebook, self, self)
 		notebook.add_tab(self.stars_tab, 'Stars')
 		notebook.grid(row=1,column=0, stick=NSEW, padx=(2,0), pady=(4,0))
 
@@ -152,36 +164,40 @@ class PySPK(MainWindow):
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
 		rightframe = Frame(frame, bd=1, relief=SUNKEN)
-		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1], theme_tag='preview')
+		self.skyCanvas = Canvas(rightframe, background='#000000', highlightthickness=0, width=SPK.SPK.LAYER_SIZE[0], height=SPK.SPK.LAYER_SIZE[1], theme_tag='preview') # type: ignore[call-arg]
 		self.skyCanvas.pack(fill=BOTH)
 		self.skyCanvas.focus_set()
-		self.skyCanvas.bind(Mouse.Motion, lambda e,m=0: self.mouse_move(e,m))
-		self.skyCanvas.bind(Shift.Motion, lambda e,m=MODIFIER_SHIFT: self.mouse_move(e,m))
-		self.skyCanvas.bind(Cursor.Leave, self.mouse_leave)
-		self.bind(Key.Up, lambda _: self.move_stars((0, -1)))
-		self.bind(Key.Down, lambda _: self.move_stars((0, 1)))
-		self.bind(Key.Left, lambda _: self.move_stars((-1, 0)))
-		self.bind(Key.Right, lambda _: self.move_stars((1, 0)))
-		self.bind(Key.Delete, lambda _: self.delete_stars())
-		self.bind(Key.Backspace, lambda _: self.delete_stars())
+		self.skyCanvas.bind(Mouse.Motion(), lambda e: self.mouse_move(e,ClickModifier.none))
+		self.skyCanvas.bind(Shift.Motion(), lambda e: self.mouse_move(e,ClickModifier.shift))
+		self.skyCanvas.bind(Cursor.Leave(), self.mouse_leave)
+		self.bind(Key.Up(), lambda _: self.move_stars((0, -1)))
+		self.bind(Key.Down(), lambda _: self.move_stars((0, 1)))
+		self.bind(Key.Left(), lambda _: self.move_stars((-1, 0)))
+		self.bind(Key.Right(), lambda _: self.move_stars((1, 0)))
+		self.bind(Key.Delete(), lambda _: self.delete_stars())
+		self.bind(Key.Backspace(), lambda _: self.delete_stars())
 		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=NSEW)
 		frame.pack(fill=X)
 		mouse_events = (
-			(Mouse.Click_Left, MOUSE_DOWN),
-			(Mouse.Drag_Left, MOUSE_MOVE),
-			(ButtonRelease.Click_Left, MOUSE_UP),
+			(Mouse.Click_Left, MouseEvent.down),
+			(Mouse.Drag_Left, MouseEvent.move),
+			(ButtonRelease.Click_Left, MouseEvent.up),
 		)
 		mouse_modifiers = (
-			(None,0),
-			(Modifier.Shift,MODIFIER_SHIFT),
-			(Modifier.Ctrl,MODIFIER_CTRL)
+			(None,ClickModifier.none),
+			(Modifier.Shift,ClickModifier.shift),
+			(Modifier.Ctrl,ClickModifier.ctrl)
 		)
-		for base_event,etype in mouse_events:
-			for event_mod,mod in mouse_modifiers:
+		def mouse_event_callback(mouse_event: MouseEvent, click_modifier: ClickModifier) -> Callable[[Event], None]:
+			def _mouse_event(event: Event) -> None:
+				self.mouse_event(event, mouse_event, click_modifier)
+			return _mouse_event
+		for base_event,mouse_event in mouse_events:
+			for event_mod,click_modifier in mouse_modifiers:
 				event = base_event
 				if event_mod:
 					event = event_mod + event
-				self.skyCanvas.bind(event, lambda e,t=etype,m=mod: self.mouse_event(e,t,m))
+				self.skyCanvas.bind(event(), mouse_event_callback(mouse_event, click_modifier))
 
 		#Statusbar
 		self.status = StringVar()
@@ -206,7 +222,12 @@ class PySPK(MainWindow):
 		if e:
 			self.mpqsettings(err=e)
 
-	def add_layer(self):
+	def get_tool(self) -> Tool:
+		return Tool(self.tool.get())
+
+	def add_layer(self) -> None:
+		if not self.spk:
+			return
 		layer = SPK.SPKLayer()
 		self.spk.layers.append(layer)
 		l = len(self.spk.layers)-1
@@ -215,22 +236,29 @@ class PySPK(MainWindow):
 		self.action_states()
 		self.edit()
 
-	def remove_layer(self):
+	def remove_layer(self) -> None:
+		if not self.spk:
+			return
 		layer = self.layer.get()
-		if layer > -1 and (not len(self.spk.layers[layer].stars) or MessageBox.askyesno(parent=self, title='Delete Layer', message="Are you sure you want to delete the layer?")):
-			del self.spk.layers[layer]
-			self.skyCanvas.delete('layer%d' % layer)
-			if layer < len(self.spk.layers):
-				for i in range(layer+1,len(self.spk.layers)+1):
-					self.skyCanvas.addtag_withtag('layer%d' % (i-1), 'layer%d' % i)
-					self.skyCanvas.dtag('layer%d' % i)
-			else:
-				self.layer.set(layer-1)
-			self.rows[len(self.spk.layers)].hide()
-			self.action_states()
-			self.edit()
+		if layer < 0 or layer >= len(self.spk.layers):
+			return
+		if len(self.spk.layers[layer].stars) and not MessageBox.askyesno(parent=self, title='Delete Layer', message="Are you sure you want to delete the layer?"):
+			return
+		del self.spk.layers[layer]
+		self.skyCanvas.delete('layer%d' % layer)
+		if layer < len(self.spk.layers):
+			for i in range(layer+1,len(self.spk.layers)+1):
+				self.skyCanvas.addtag_withtag('layer%d' % (i-1), 'layer%d' % i)
+				self.skyCanvas.dtag('layer%d' % i)
+		else:
+			self.layer.set(layer-1)
+		self.rows[len(self.spk.layers)].hide()
+		self.action_states()
+		self.edit()
 
-	def move_layer(self, delta):
+	def move_layer(self, delta: int) -> None:
+		if not self.spk:
+			return
 		cur_layer = self.layer.get()
 		swap_layer = cur_layer + delta
 		self.layer.set(swap_layer)
@@ -245,12 +273,12 @@ class PySPK(MainWindow):
 		self.skyCanvas.dtag('temp')
 		self.edit()
 
-	def open_files(self):
+	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
 		err = None
 		try:
 			platformwpe = Palette.Palette()
-			platformwpe.load_file(self.mpqhandler.get_file(self.settings.settings.files.platformwpe))
+			platformwpe.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.platformwpe)))
 		except PyMSError as e:
 			err = e
 		else:
@@ -258,7 +286,7 @@ class PySPK(MainWindow):
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def mpqsettings(self, key=None, err=None):
+	def mpqsettings(self, err: PyMSError | None = None) -> None:
 		data = [
 			('Preview Settings',[
 				('platform.wpe','The palette which holds the star palette.','platformwpe','WPE')
@@ -267,57 +295,61 @@ class PySPK(MainWindow):
 		]
 		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
-	def unsaved(self):
-		if self.spk and self.edited:
-			file = self.file
-			if not file:
-				file = 'Unnamed.spk'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					self.saveas()
+	def check_saved(self) -> CheckSaved:
+		if not self.spk or not self.edited:
+			return CheckSaved.saved
+		file = self.file
+		if not file:
+			file = 'Unnamed.spk'
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
-	def is_file_open(self):
+	def is_file_open(self) -> bool:
 		return not not self.spk
 
-	def are_stars_selected(self):
+	def are_stars_selected(self) -> bool:
 		return len(self.selected_stars) > 0
 
-	def is_layer_selected(self):
+	def is_layer_selected(self) -> bool:
 		return self.layer.get() > -1
 
-	def is_image_selected(self):
+	def is_image_selected(self) -> bool:
 		return not not self.selected_image
 
-	def action_states(self):
+	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		self.toolbar.tag_enabled('has_layers', self.spk and len(self.spk.layers) > 0)
+		self.toolbar.tag_enabled('has_layers', not not self.spk and len(self.spk.layers) > 0)
 
 		self.edit_toolbar.tag_enabled('file_open', self.is_file_open())
-		self.edit_toolbar.tag_enabled('can_add_layers', self.spk and len(self.spk.layers) < 5)
+		self.edit_toolbar.tag_enabled('can_add_layers', not not self.spk and len(self.spk.layers) < 5)
 		self.edit_toolbar.tag_enabled('layer_selected', self.is_layer_selected())
 		self.edit_toolbar.tag_enabled('can_move_up', self.is_layer_selected() and self.layer.get() > 0)
-		self.edit_toolbar.tag_enabled('can_move_down', self.is_layer_selected() and self.layer.get() < len(self.spk.layers)-1)
+		self.edit_toolbar.tag_enabled('can_move_down', self.is_layer_selected() and not not self.spk and self.layer.get() < len(self.spk.layers)-1)
 
 		self.palette_tab.action_states()
 		self.stars_tab.action_states()
 
-	def edit(self, n=None):
+	def edit(self) -> None:
 		self.mark_edited()
 		self.action_states()
 
-	def reload_list(self):
+	def reload_list(self) -> None:
+		if not self.spk:
+			return
 		for l,row in enumerate(self.rows):
 			if l < len(self.spk.layers):
 				row.show()
 			else:
 				row.hide()
 
-	def layer_updated(self, *args):
+	def layer_updated(self, *args) -> None:
 		if not self.is_file_open():
 			return
 		layer = self.layer.get()
@@ -329,8 +361,8 @@ class PySPK(MainWindow):
 			self.locked.set((1+2+4+8+16) & ~(1 << layer))
 		self.action_states()
 
-	def visible_updated(self, *args):
-		if not self.is_file_open():
+	def visible_updated(self, *args) -> None:
+		if not self.spk:
 			return
 		visible = self.visible.get()
 		update_sel = False
@@ -344,8 +376,8 @@ class PySPK(MainWindow):
 		if update_sel:
 			self.update_selection()
 
-	def locked_updated(self, *args):
-		if not self.is_file_open():
+	def locked_updated(self, *args) -> None:
+		if not self.spk:
 			return
 		updated_sel = False
 		for layer in self.spk.layers:
@@ -357,28 +389,30 @@ class PySPK(MainWindow):
 		if updated_sel:
 			self.update_selection()
 
-	def autovis_updated(self, *args):
+	def autovis_updated(self, *args) -> None:
 		if not self.is_file_open() or not self.autovis.get():
 			return
 		self.layer_updated()
 
-	def autolock_updated(self, *args):
+	def autolock_updated(self, *args) -> None:
 		if not self.is_file_open() or not self.autolock.get():
 			return
 		self.layer_updated()
 
-	def update_zorder(self):
+	def update_zorder(self) -> None:
+		if not self.spk:
+			return
 		for l in range(len(self.spk.layers)):
 			self.skyCanvas.tag_lower('layer%d' % l)
 		self.skyCanvas.lift('selection')
 
-	def get_image(self, spkimage):
+	def get_image(self, spkimage: SPK.SPKImage) -> (Image | None):
 		if not spkimage in self.images:
-			image = GRP.frame_to_photo(self.platformwpe.palette, spkimage.pixels, None, size=False)
+			image = cast(Image, GRP.frame_to_photo(self.platformwpe.palette, spkimage.pixels, None, size=False))
 			self.images[spkimage] = image
 		return self.images.get(spkimage)
 
-	def update_star(self, star, layer):
+	def update_star(self, star: SPK.SPKStar, layer: int) -> None:
 		visible = (self.visible.get() & (1 << layer))
 		if star in self.item_map:
 			item = self.item_map[star]
@@ -389,19 +423,20 @@ class PySPK(MainWindow):
 			item = self.skyCanvas.create_image(star.x,star.y, image=image, anchor=NW, tags='layer%d' % layer, state=(NORMAL if visible else HIDDEN))
 			self.star_map[item] = star
 			self.item_map[star] = item
-	def update_canvas(self):
-		if not self.is_file_open():
+
+	def update_canvas(self) -> None:
+		if not self.spk:
 			return
 		for l,layer in enumerate(self.spk.layers):
 			for star in layer.stars:
 				self.update_star(star, l)
 		self.update_selection()
 
-	def update_stars(self):
+	def update_stars(self) -> None:
 		self.update_canvas()
 		self.stars_tab.update_list()
 
-	def update_selection(self):
+	def update_selection(self) -> None:
 		while len(self.selected_stars) < len(self.item_selection_boxs):
 			self.skyCanvas.delete(self.item_selection_boxs[-1])
 			del self.item_selection_boxs[-1]
@@ -421,7 +456,7 @@ class PySPK(MainWindow):
 	# 	if star and star.widget:
 	# 		StarSettings(self, star)
 
-	def move_stars(self, delta):
+	def move_stars(self, delta: tuple[int, int]) -> None:
 		if not len(self.selected_stars):
 			return
 		for star in self.selected_stars:
@@ -431,7 +466,9 @@ class PySPK(MainWindow):
 		self.stars_tab.update_list()
 		self.edit()
 
-	def delete_stars(self):
+	def delete_stars(self) -> None:
+		if not self.spk:
+			return
 		if not len(self.selected_stars) or not MessageBox.askyesno(parent=self, title='Delete Stars', message="Are you sure you want to delete the stars?"):
 			return
 		for star in self.selected_stars:
@@ -447,22 +484,23 @@ class PySPK(MainWindow):
 		self.stars_tab.update_list()
 		self.edit()
 
-	def select_event(self, event, button_event, modifier):
-		if button_event == MOUSE_DOWN:
+	def select_event(self, event: Event, mouse_event, click_modifier):
+		if mouse_event == MouseEvent.down:
 			self.selecting_start = (event.x,event.y)
-		elif button_event == MOUSE_MOVE:
+		elif mouse_event == MouseEvent.move and self.selecting_start:
 			if self.item_selecting_box is None:
 				self.item_selecting_box = self.skyCanvas.create_rectangle(event.x,event.y, event.x,event.y, outline='#FF0000')
 			else:
 				self.skyCanvas.itemconfig(self.item_selecting_box, state=NORMAL)
 			self.skyCanvas.coords(self.item_selecting_box, self.selecting_start[0],self.selecting_start[1], event.x,event.y)
-		else:
+		elif mouse_event == MouseEvent.up:
 			x,y = event.x,event.y
 			if self.selecting_start is not None:
 				x,y = self.selecting_start
-			self.skyCanvas.itemconfig(self.item_selecting_box, state=HIDDEN)
+			if self.item_selecting_box:
+				self.item_selecting_box.config(state=HIDDEN)
 			items = self.skyCanvas.find_overlapping(x,y, event.x,event.y)
-			if modifier == MODIFIER_NONE:
+			if click_modifier == ClickModifier.none:
 				self.selected_stars = []
 			for item in items:
 				if item in self.star_map:
@@ -477,40 +515,52 @@ class PySPK(MainWindow):
 							self.selected_stars.append(star)
 			self.update_selection()
 			self.selecting_start = None
-	def move_event(self, event, button_event, modifier):
-		if button_event == MOUSE_DOWN:
+
+	def move_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
+		if mouse_event == MouseEvent.down:
 			self.last_pos = (event.x,event.y)
 		else:
 			dx,dy = event.x-self.last_pos[0],event.y-self.last_pos[1]
 			self.move_stars((dx,dy))
 			self.last_pos = (event.x,event.y)
-	def draw_event(self, event, button_event, modifier):
-		if button_event == MOUSE_UP \
-				and self.selected_image \
-				and len(self.spk.layers) \
-				and self.layer.get() > -1 \
-				and not self.locked.get() & (1 << self.layer.get()):
-			star = SPK.SPKStar()
-			star.image = self.selected_image
-			star.x = max(0,event.x - star.image.width//2)
-			star.y = max(0,event.y - star.image.height//2)
-			self.spk.layers[self.layer.get()].stars.append(star)
-			self.update_star(star, self.layer.get())
-			self.update_zorder()
-			self.stars_tab.update_list()
-			if not self.visible.get() & (1 << self.layer.get()):
-				self.visible.set(self.visible.get() | (1 << self.layer.get()))
-			self.edit()
-	def mouse_event(self, event, button_event, modifier):
+
+	def draw_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
+		if not self.spk:
+			return
+		if mouse_event != MouseEvent.up \
+				or not self.selected_image \
+				or not len(self.spk.layers) \
+				or self.layer.get() < 0 \
+				or self.locked.get() & (1 << self.layer.get()):
+			return
+		star = SPK.SPKStar()
+		star.image = self.selected_image
+		star.x = max(0,event.x - star.image.width//2)
+		star.y = max(0,event.y - star.image.height//2)
+		self.spk.layers[self.layer.get()].stars.append(star)
+		self.update_star(star, self.layer.get())
+		self.update_zorder()
+		self.stars_tab.update_list()
+		if not self.visible.get() & (1 << self.layer.get()):
+			self.visible.set(self.visible.get() | (1 << self.layer.get()))
+		self.edit()
+
+	def mouse_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
 		if not self.is_file_open():
 			return
-		f = [self.select_event,self.move_event,self.draw_event][self.tool.get()]
-		f(event, button_event, modifier)
+		match self.get_tool():
+			case Tool.select:
+				f = self.select_event
+			case Tool.move:
+				f = self.move_event
+			case Tool.draw:
+				f = self.draw_event
+		f(event, mouse_event, click_modifier)
 
-	def mouse_move(self, event, modifier):
-		if self.tool.get() == Tool.Draw and self.layer.get() > -1 and self.selected_image:
+	def mouse_move(self, event: Event, click_modifier: ClickModifier) -> None:
+		if self.get_tool() == Tool.draw and self.layer.get() > -1 and self.selected_image:
 			x,y = event.x,event.y
-			if modifier == MODIFIER_SHIFT:
+			if click_modifier == ClickModifier.shift:
 				x += self.selected_image.width//2
 				y += self.selected_image.height//2
 			else:
@@ -521,15 +571,16 @@ class PySPK(MainWindow):
 				self.item_place_image = self.skyCanvas.create_image(x,y, image=image)
 			else:
 				self.skyCanvas.coords(self.item_place_image, x,y)
-	def mouse_leave(self, event):
+
+	def mouse_leave(self, event: Event) -> None:
 		if self.item_place_image:
 			self.skyCanvas.delete(self.item_place_image)
 			self.item_place_image = None
 
-	def preview(self):
-		PreviewDialog(self)
+	def preview(self) -> None:
+		PreviewDialog(self, self)
 
-	def clear(self):
+	def clear(self) -> None:
 		self.spk = None
 		self.file = None
 		self.mark_edited(False)
@@ -553,7 +604,7 @@ class PySPK(MainWindow):
 		self.palette_tab.clear()
 		self.stars_tab.clear()
 
-	def update_title(self):
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.spk'
@@ -562,142 +613,152 @@ class PySPK(MainWindow):
 		else:
 			self.title('PySPK %s (%s)' % (LONG_VERSION, file_path))
 
-	def mark_edited(self, edited=True):
+	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
-	def new(self, key=None):
-		if not self.unsaved():
-			self.clear()
-			self.spk = SPK.SPK()
-			self.reload_list()
-			self.update_stars()
-			self.file = None
-			self.status.set('Editing new Parallax.')
-			self.update_title()
-			self.mark_edited(False)
-			self.action_states()
+	def new(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.clear()
+		self.spk = SPK.SPK()
+		self.reload_list()
+		self.update_stars()
+		self.file = None
+		self.status.set('Editing new Parallax.')
+		self.update_title()
+		self.mark_edited(False)
+		self.action_states()
 
-	def open(self, key=None, file=None):
-		if not self.unsaved():
-			if file is None:
-				file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[FileType.spk()])
-				if not file:
-					return
-			spk = SPK.SPK()
-			try:
-				spk.load_file(file)
-			except PyMSError as e:
-				ErrorDialog(self, e)
+	def open(self, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if file is None:
+			file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[FileType.spk()])
+			if not file:
 				return
-			self.clear()
-			self.spk = spk
-			if len(self.spk.layers):
-				self.layer.set(0)
-			self.reload_list()
-			if len(self.spk.images):
-				self.selected_image = self.spk.images[0]
-			self.palette_tab.reload_palette()
-			self.update_stars()
-			self.file = file
-			self.update_title()
-			self.status.set('Load Successful!')
-			self.mark_edited(False)
-			self.action_states()
+		spk = SPK.SPK()
+		try:
+			spk.load_file(file)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.clear()
+		self.spk = spk
+		if len(self.spk.layers):
+			self.layer.set(0)
+		self.reload_list()
+		if len(self.spk.images):
+			self.selected_image = self.spk.images[0]
+		self.palette_tab.reload_palette()
+		self.update_stars()
+		self.file = file
+		self.update_title()
+		self.status.set('Load Successful!')
+		self.mark_edited(False)
+		self.action_states()
 
-	def iimport(self, key=None):
-		if not self.unsaved():
-			filepath = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
-			if not filepath:
-				return
-			t = LayerCountDialog(self)
-			layer_count = t.result.get()
-			if not layer_count:
-				return
-			spk = SPK.SPK()
-			try:
-				spk.interpret_file(filepath, layer_count)
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			self.clear()
-			self.spk = spk
-			if len(self.spk.layers):
-				self.layer.set(0)
-			self.reload_list()
-			if len(self.spk.images):
-				self.selected_image = self.spk.images[0]
-			self.palette_tab.reload_palette()
-			self.update_stars()
-			self.file = None
-			self.update_title()
-			self.status.set('Import Successful!')
-			self.mark_edited(False)
-			self.action_states()
+	def iimport(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		filepath = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
+		if not filepath:
+			return
+		t = LayerCountDialog(self)
+		layer_count = t.result.get()
+		if not layer_count:
+			return
+		spk = SPK.SPK()
+		try:
+			spk.interpret_file(filepath, layer_count)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.clear()
+		self.spk = spk
+		if len(self.spk.layers):
+			self.layer.set(0)
+		self.reload_list()
+		if len(self.spk.images):
+			self.selected_image = self.spk.images[0]
+		self.palette_tab.reload_palette()
+		self.update_stars()
+		self.file = None
+		self.update_title()
+		self.status.set('Import Successful!')
+		self.mark_edited(False)
+		self.action_states()
 
-	def save(self, key=None):
-		self.saveas(file_path=self.file)
+	def save(self) -> CheckSaved:
+		return self.saveas(file_path=self.file)
 
-	def saveas(self, key=None, file_path=None):
+	def saveas(self, file_path: str | None = None) -> CheckSaved:
+		if not self.spk:
+			return CheckSaved.saved
 		if not file_path:
 			file_path = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[FileType.spk()])
 			if not file_path:
-				return
+				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
-			return
+			return CheckSaved.cancelled
 		try:
 			self.spk.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			return CheckSaved.cancelled
 		self.file = file_path
 		self.update_title()
 		self.status.set('Save Successful!')
 		self.mark_edited(False)
+		return CheckSaved.saved
 
-	def export(self, key=None):
+	def export(self) -> None:
+		if not self.spk:
+			return
 		filepath = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
 		if not filepath:
-			return True
+			return
 		try:
 			self.spk.decompile_file(filepath, self.platformwpe)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def close(self, key=None):
-		if not self.unsaved():
-			self.clear()
-			self.status.set('Load or create a Parallax SPK.')
-			self.editstatus['state'] = DISABLED
-			self.action_states()
+	def close(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.clear()
+		self.status.set('Load or create a Parallax SPK.')
+		self.editstatus['state'] = DISABLED
+		self.action_states()
 
-	def register(self, e=None):
+	def register_registry(self) -> None:
 		try:
 			register_registry('PySPK', 'spk', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e=None):
+	def help(self) -> None:
 		HelpDialog(self, self.settings, 'Help/Programs/PySPK.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PySPK', LONG_VERSION, [
 			('FaRTy1billion','File Specs and SPKEdit')
 		])
 
-	def load_settings(self):
+	def load_settings(self) -> None:
 		self.settings.windows.load_window_size('main', self)
 		self.autovis.set(self.settings.get('autovis', False))
 		self.autolock.set(self.settings.get('autolock', True))
 
-	def save_settings(self):
+	def save_settings(self) -> None:
 		self.settings.windows.save_window_size('main', self)
 		self.settings.autovis = self.autovis.get()
 		self.settings.autolock = self.autolock.get()
 		self.settings.save()
 
-	def exit(self, e=None):
-		if self.unsaved():
+	def exit(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.save_settings()
 		self.destroy()

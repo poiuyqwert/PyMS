@@ -35,9 +35,9 @@ class PaletteTab(NotebookTab):
 		scrollframe.pack(side=TOP, padx=2, fill=Y, expand=1)
 
 		self.toolbar = Toolbar(self, bind_target=self.toplevel)
-		self.toolbar.add_radiobutton(Assets.get_image('select'), self.toplevel.tool, Tool.Select, 'Select', Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.toplevel.tool, Tool.Move, 'Move', Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.toplevel.tool, Tool.Draw, 'Draw', Key.p, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.toplevel.tool, Tool.select, 'Select', Key.m, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.toplevel.tool, Tool.move, 'Move', Key.v, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.toplevel.tool, Tool.draw, 'Draw', Key.p, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(2, flexible=True)
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
 		self.toolbar.add_button(Assets.get_image('importc'), self.import_image, 'Import Star', enabled=False, tags='file_open')
