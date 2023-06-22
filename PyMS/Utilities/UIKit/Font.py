@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 import tkinter.font as _Fonts
 
 from uuid import uuid4 as _uuid4
@@ -137,3 +139,9 @@ class Font(_Fonts.Font):
 
 	def __repr__(self): # type: () -> str
 		return "<Font family='%s' size=%d weight=%s slant=%s underline=%s overstrike=%s %s>" % (self.family(), self.size(), self.weight(), self.slant(), self.is_underlined(), self.has_overstrike(), self.actual())
+
+	def __copy__(self) -> Font:
+		return self.copy()
+
+	def __deepcopy__(self, memo) -> Font:
+		return self.copy()

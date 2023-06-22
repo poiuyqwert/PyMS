@@ -7,38 +7,40 @@ from ..Utilities.UIKit import *
 import re
 from copy import deepcopy
 
+from typing import Callable, cast
+
 class LOCodeText(CodeText):
-	def __init__(self, parent, ecallback=None, icallback=None, highlights=None, state=NORMAL):
-		self.boldfont = ('Courier New', -11, 'bold')
+	def __init__(self, parent: Misc, ecallback: Callable[[], None] | None = None, icallback=None, highlights: Highlights | None = None, state: WidgetState = NORMAL) -> None:
+		boldfont = Font.fixed().bolded()
 		if highlights:
 			self.highlights = highlights
 		else:
 			self.highlights = {
 				'Comment':{'foreground':'#008000','background':None,'font':None},
-				'Header':{'foreground':'#FF00FF','background':None,'font':self.boldfont},
+				'Header':{'foreground':'#FF00FF','background':None,'font':boldfont},
 				'Number':{'foreground':'#FF0000','background':None,'font':None},
-				'Operators':{'foreground':'#0000FF','background':None,'font':self.boldfont},
+				'Operators':{'foreground':'#0000FF','background':None,'font':boldfont},
 				'Newline':{'foreground':None,'background':None,'font':None},
 				'Error':{'foreground':None,'background':'#FF8C8C','font':None},
 				'Warning':{'foreground':None,'background':'#FFC8C8','font':None},
 			}
 		CodeText.__init__(self, parent, ecallback, icallback, state=state)
 
-	def setedit(self):
+	def setedit(self) -> None:
 		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
-	def setupparser(self):
+	def setupparser(self) -> None:
 		comment = '(?P<Comment>#[^\\n]*$)'
 		header = '^(?P<Header>Frame:)(?=[ \\t]*(#[^\\n]*)?)'
 		num = '(?<!\\w)(?P<Number>%s)(?!\\w)' % SIGNED_INT
 		operators = '(?P<Operators>[():,])'
 		self.basic = re.compile('|'.join((comment, header, num, operators, '(?P<Newline>\\n)')), re.M)
-		CodeTooltip(self)
+		CodeTooltip(cast(Text, self))
 		self.tags = deepcopy(self.highlights)
 
-	def colorize(self):
+	def colorize(self) -> None:
 		next = '1.0'
 		while next:
 			item = self.tag_nextrange("Update", next)

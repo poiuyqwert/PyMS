@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyLO')
 
-def main():
+def main() -> None:
 	from PyMS.PyLO.PyLO import PyLO, LONG_VERSION
 
 	from PyMS.FileFormats.LO import LO

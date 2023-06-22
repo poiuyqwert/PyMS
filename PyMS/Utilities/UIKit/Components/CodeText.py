@@ -3,10 +3,13 @@ from ..Widgets import *
 from ..EventPattern import *
 from ..Utils import remove_bind
 from ..Types import WidgetState
+from ..Font import Font
 
 import re
 
 from typing import Callable
+
+Highlights = dict[str, dict[str, str | Font | tuple[str, int, str] | None]]
 
 class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
@@ -319,7 +322,7 @@ class CodeText(Frame):
 		except TclError:
 			return ""
 
-	def setup(self, tags: dict[str, dict] | None = None) -> None:
+	def setup(self, tags: Highlights | None = None) -> None:
 		r = self.tag_ranges('Selection')
 		if self.tags:
 			for tag in list(self.tags.keys()):

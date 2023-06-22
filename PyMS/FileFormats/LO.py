@@ -1,7 +1,7 @@
 
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, re
 
@@ -11,8 +11,9 @@ class LO:
 	def __init__(self): # type: () -> None
 		self.frames = [[[0,0]]]
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
-		data = load_file(file, 'LO*')
+	def load_file(self, input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(input) as f:
+			data = f.read()
 		try:
 			frames,overlays = tuple(int(v) for v in struct.unpack('<LL', data[:8]))
 			framedata = [] # type: list[list[list[int]]]
@@ -24,18 +25,11 @@ class LO:
 					offset += 2
 			self.frames = framedata
 		except:
-			raise PyMSError('Load',"Unsupported LO* file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported LO* file, could possibly be corrupt")
 
-	def interpret(self, file): # type: (str | TextIO) -> None
-		if isinstance(file, str):
-			try:
-				f = open(file,'r')
-				data = f.readlines()
-				f.close()
-			except:
-				raise PyMSError('Interpreting',"Could not load file '%s'" % file)
-		else:
-			data = file.readlines()
+	def interpret(self, input: IO.AnyInputText) -> None:
+		with IO.InputText(input) as f:
+			data = f.readlines()
 		frames = [] # type: list[list[list[int]]]
 		framedata = False
 		overlays = -1
@@ -71,35 +65,24 @@ class LO:
 						raise PyMSError('Interpreting',"Unknown line format",n,line)
 		self.frames = frames
 
-	def decompile(self, file): # type: (str | TextIO) -> None
-		if isinstance(file, str):
-			try:
-				f = cast(TextIO, AtomicWriter(file, 'w'))
-			except:
-				raise PyMSError('Decompile',"Could not open file '%s'" % file)
-		else:
-			f = file
-		for frame in self.frames:
-			f.write('Frame:\n')
-			for overlay in frame:
-				f.write('    (%s, %s)\n' % tuple(overlay))
-			f.write('\n')
-		f.close()
+	def decompile(self, output: IO.AnyOutputText) -> None:
+		with IO.OutputText(output) as f:
+			for frame in self.frames:
+				f.write('Frame:\n')
+				for overlay in frame:
+					f.write('    (%s, %s)\n' % tuple(overlay))
+				f.write('\n')
 
-	def compile(self, file): # type: (str) -> None
-		try:
-			f = AtomicWriter(file, 'wb')
-		except:
-			raise PyMSError('Compile',"Could not open file '%s'" % file)
-		overlays = len(self.frames[0])
-		f.write(struct.pack('<LL', len(self.frames), overlays))
-		data = b''
-		offsets = b''
-		offset = 8 + 4 * len(self.frames)
-		for frame in self.frames:
-			offsets += struct.pack('<L', offset)
-			for overlay in frame:
-				data += struct.pack('<bb', *overlay)
-			offset += 2 * overlays
-		f.write(offsets + data)
-		f.close()
+	def compile(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			overlays = len(self.frames[0])
+			f.write(struct.pack('<LL', len(self.frames), overlays))
+			data = b''
+			offsets = b''
+			offset = 8 + 4 * len(self.frames)
+			for frame in self.frames:
+				offsets += struct.pack('<L', offset)
+				for overlay in frame:
+					data += struct.pack('<bb', *overlay)
+				offset += 2 * overlays
+			f.write(offsets + data)
