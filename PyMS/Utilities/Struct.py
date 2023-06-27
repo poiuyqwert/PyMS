@@ -6,9 +6,7 @@ from .PyMSError import PyMSError
 import struct
 from enum import StrEnum
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import Self, BinaryIO
+from typing import TYPE_CHECKING, Any, Self, BinaryIO
 
 class Endian(StrEnum):
 	native = '@'
@@ -18,6 +16,11 @@ class Endian(StrEnum):
 	network = '!'
 
 class Type:
+	FLOAT_MIN = None # type: float
+	FLOAT_MAX = None # type: float
+	DOUBLE_MIN = None # type: float
+	DOUBLE_MAX = None # type: float
+
 	@staticmethod
 	def format(char, count): # type: (str, int) -> str
 		if count == 1:
@@ -61,11 +64,11 @@ class Type:
 		return Type.format('Q', count)
 
 	@staticmethod
-	def float(count=1): # type: (int) -> str
+	def sfloat(count=1): # type: (int) -> str
 		return Type.format('f', count)
 
 	@staticmethod
-	def double(count=1): # type: (int) -> str
+	def sdouble(count=1): # type: (int) -> str
 		return Type.format('d', count)
 
 	@staticmethod
@@ -77,8 +80,52 @@ class Type:
 		return Type.format('p', count)
 
 	@staticmethod
-	def str(count): # type: (int) -> str
+	def string(count): # type: (int) -> str
 		return Type.format('s', count)
+
+	@staticmethod
+	def size(type, endian=Endian.little):
+		return struct.calcsize(endian + type)
+
+	@staticmethod
+	def numeric_limits(type: str) -> tuple[int | float, int | float]:
+		if type == 'f':
+			if Type.FLOAT_MIN == None:
+				Type.FLOAT_MIN = struct.unpack('>f', b'\xff\x7f\xff\xff')[0]
+				Type.FLOAT_MAX = struct.unpack('>f', b'\x7f\x7f\xff\xff')[0]
+			return (Type.FLOAT_MIN, Type.FLOAT_MAX)
+		elif type == 'd':
+			if Type.DOUBLE_MIN == None:
+				Type.DOUBLE_MAX = struct.unpack('>d', b'\x7f\xef\xff\xff\xff\xff\xff\xff')[0]
+				Type.DOUBLE_MIN = struct.unpack('>d', b'\xff\xef\xff\xff\xff\xff\xff\xff')[0]
+			return (Type.DOUBLE_MIN, Type.DOUBLE_MAX)
+		elif type in 'sp':
+			type = Type.char()
+		min = 0
+		max = 2 ** Type.size(type)
+		if type.isupper():
+			min = -max/2
+			max = max/2 - 1
+		else:
+			max -= 1
+		return (min, max)
+
+class Value:
+	@staticmethod
+	def unpack(data, type, offset=0, endian=Endian.little): # type: (bytes, str, int, str) -> Any
+		size = struct.calcsize(endian + type)
+		if len(data) < offset + size:
+			raise PyMSError('Value', 'Not enough data (expected %d, got %d)' % (size, len(data) - offset))
+		result = struct.unpack(endian + type, data[offset:offset + size])
+		if len(result) == 1:
+			return result[-1]
+		return result
+
+	@staticmethod
+	def pack(value, type, endian=Endian.little): # type: (Any, str, str) -> bytes
+		if not isinstance(value, tuple):
+			value = (value,)
+		return struct.pack(endian + type, *value)
 
 class Struct(object):
 	_endian = Endian.little

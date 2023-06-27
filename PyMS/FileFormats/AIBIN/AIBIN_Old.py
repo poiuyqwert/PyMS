@@ -1,12 +1,12 @@
 
-from ..FileFormats import TBL
-from ..FileFormats import DAT
+from ...FileFormats import TBL
+from ...FileFormats import DAT
 
-from ..Utilities.fileutils import load_file
-from ..Utilities.PyMSError import PyMSError
-from ..Utilities.PyMSWarning import PyMSWarning
-from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities import Assets
+from ...Utilities.fileutils import load_file
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.PyMSWarning import PyMSWarning
+from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import Assets
 
 import struct, re, os
 from math import log, floor
@@ -570,7 +570,8 @@ class AIBIN:
 							del findoffset[curoffset]
 						totaloffsets[curoffset+loc] = [id,len(cmdoffsets)]
 						cmdoffsets.append(curoffset)
-						cmd,curoffset = curdata[curoffset],curoffset + 1
+						cmd,curoffset = ord(curdata[curoffset]),curoffset + 1
+						print("%d %d (%s)" % (loc+curoffset-1, cmd, self.short_labels[cmd]))
 						#print(id,loc,curoffset,self.short_labels[cmd])
 						if not cmd and curoffset == len(curdata):
 							break

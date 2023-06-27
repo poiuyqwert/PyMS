@@ -4,7 +4,7 @@ from ..FileFormats import FNT
 from ..FileFormats import GRP
 from ..FileFormats import Palette
 from ..FileFormats import TBL
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
