@@ -1,8 +1,12 @@
 
-from ....FileFormats import TRG
-
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
+
+from ....FileFormats.TRG import TRG
+
+from ....Utilities import IO
+
+import io
 
 class CHKSectionMBRF(CHKSection):
 	NAME = 'MBRF'
@@ -12,15 +16,18 @@ class CHKSectionMBRF(CHKSection):
 	
 	def load_data(self, data): # type: (bytes) -> None
 		self.trg = TRG.TRG(self.chk.stat_txt, self.chk.aiscript)
-		self.trg.load_data(data, True, True)
+		self.trg.load(data, TRG.Format.briefing)
 	
 	def save_data(self): # type: () -> bytes
 		if self.trg:
-			return self.trg.compile_data(True)
+			f = io.BytesIO()
+			# TODO: Deal with warnings?
+			warnings = self.trg.save(f)
+			return f.getvalue()
 		return b''
 	
 	def decompile(self): # type: () -> str
 		result = '%s:\n' % (self.NAME)
 		if self.trg:
-			result += self.trg.decompile_data()
+			result += IO.output_to_text(lambda f: self.trg.decompile(f))
 		return result

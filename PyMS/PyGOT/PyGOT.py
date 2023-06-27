@@ -1,6 +1,6 @@
 
 from ..FileFormats import GOT
-from ..FileFormats import TRG
+from ..FileFormats.TRG import TRG
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry
 from ..Utilities.UIKit import *
@@ -56,8 +56,8 @@ class PyGOT(MainWindow):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(True), 'Convert *.trg to GOT compatable', Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(False), 'Revert GOT compatable *.trg', Ctrl.Alt.t)
+		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatable', Ctrl.t)
+		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatable *.trg', Ctrl.Alt.t)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
@@ -455,13 +455,13 @@ class PyGOT(MainWindow):
 		self.reset()
 		self.action_states()
 
-	def trg(self, t=0) -> None:
+	def trg(self, format: TRG.Format) -> None:
 		file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
 		if not file:
 			return
 		trg = TRG.TRG()
 		try:
-			trg.load_file(file)
+			trg.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -469,7 +469,7 @@ class PyGOT(MainWindow):
 		if not file:
 			return
 		try:
-			trg.compile(file, t)
+			trg.save(file, format)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

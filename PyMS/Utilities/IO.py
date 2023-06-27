@@ -1,7 +1,9 @@
 
+from __future__ import annotations
+
 import os, io, tempfile
 
-from typing import IO, Callable
+from typing import IO, Callable, TypeAlias
 
 AnyInputText = str | IO[str]
 AnyInputBytes = str | bytes | IO[bytes]
@@ -11,6 +13,7 @@ AnyOutputBytes = str | IO[bytes]
 
 class InputText:
 	def __init__(self, input: AnyInputText):
+		self.entered = 0
 		self.close = False
 		self.file: IO[str]
 		if isinstance(input, str):
@@ -23,14 +26,17 @@ class InputText:
 			self.file = input
 
 	def __enter__(self) -> IO[str]:
+		self.entered += 1
 		return self.file
 
 	def __exit__(self, exc_type, exc_value, traceback):
-		if self.close:
+		self.entered -= 1
+		if self.entered == 0 and self.close:
 			self.file.close()
 
 class InputBytes:
 	def __init__(self, input: AnyInputBytes):
+		self.entered = 0
 		self.close = False
 		self.file: IO[bytes]
 		if isinstance(input, str):
@@ -42,10 +48,12 @@ class InputBytes:
 			self.file = input
 
 	def __enter__(self) -> IO[bytes]:
+		self.entered += 1
 		return self.file
 
 	def __exit__(self, exc_type, exc_value, traceback):
-		if self.close:
+		self.entered -= 1
+		if self.entered == 0 and self.close:
 			self.file.close()
 
 class OutputText:
@@ -96,12 +104,12 @@ class OutputBytes:
 			temp_path, final_path = self.atomic_paths
 			os.rename(temp_path, final_path)
 
-def output_text(func: Callable[[IO[str]], None]) -> str:
+def output_to_text(func: Callable[[IO[str]], None]) -> str:
 	output = io.StringIO()
 	func(output)
 	return output.getvalue()
 
-def output_bytes(func: Callable[[IO[bytes]], None]) -> bytes:
+def output_to_bytes(func: Callable[[IO[bytes]], None]) -> bytes:
 	output = io.BytesIO()
 	func(output)
 	return output.getvalue()

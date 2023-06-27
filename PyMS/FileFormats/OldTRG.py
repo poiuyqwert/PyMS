@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from . import TBL
 from . import AIBIN
 
@@ -203,7 +205,7 @@ unit_data = [
 
 TYPE_HELP = {}
 
-def condition_number(trg, decompile, condition, data=None):
+def condition_number(trg: TRG, decompile: bool, condition, data=None):
 	"""Number         - Any number in the range 0 to 4294967295"""
 	if decompile:
 		return condition[2]

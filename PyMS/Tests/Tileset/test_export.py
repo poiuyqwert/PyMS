@@ -40,7 +40,7 @@ TileGroup:
 	piece.down 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -76,7 +76,7 @@ TileGroup:
 	piece.down 9
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_inc]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_inc]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -112,7 +112,7 @@ TileGroup:
 	piece.down 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -148,7 +148,7 @@ TileGroup:
 	piece.down 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -160,7 +160,7 @@ TileGroup:
 	type 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.type: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.type: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -187,7 +187,7 @@ TileGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -199,7 +199,7 @@ TileGroup:
 	flags.walkable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -211,7 +211,7 @@ TileGroup:
 	flags.unknown_0002 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -223,7 +223,7 @@ TileGroup:
 	flags.unwalkable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -235,7 +235,7 @@ TileGroup:
 	flags.unknown_0008 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -247,7 +247,7 @@ TileGroup:
 	flags.has_doodad_cover 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -259,7 +259,7 @@ TileGroup:
 	flags.unknown_0020 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -271,7 +271,7 @@ TileGroup:
 	flags.creep 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -283,7 +283,7 @@ TileGroup:
 	flags.unbuildable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -295,7 +295,7 @@ TileGroup:
 	flags.blocks_view 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -307,7 +307,7 @@ TileGroup:
 	flags.mid_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -319,7 +319,7 @@ TileGroup:
 	flags.high_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -331,7 +331,7 @@ TileGroup:
 	flags.occupied 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -343,7 +343,7 @@ TileGroup:
 	flags.creep_receding 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -355,7 +355,7 @@ TileGroup:
 	flags.cliff_edge 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -367,7 +367,7 @@ TileGroup:
 	flags.creep_temp 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -379,7 +379,7 @@ TileGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -394,7 +394,7 @@ TileGroup:
 	edge.down 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.edge: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.edge: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -409,7 +409,7 @@ TileGroup:
 	piece.down 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.piece: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_empty], {TileGroupField.piece: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -421,7 +421,7 @@ TileGroup:
 	type 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.type: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.type: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -448,7 +448,7 @@ TileGroup:
 	flags.special_placeable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -460,7 +460,7 @@ TileGroup:
 	flags.walkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -472,7 +472,7 @@ TileGroup:
 	flags.unknown_0002 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -484,7 +484,7 @@ TileGroup:
 	flags.unwalkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -496,7 +496,7 @@ TileGroup:
 	flags.unknown_0008 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -508,7 +508,7 @@ TileGroup:
 	flags.has_doodad_cover 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -520,7 +520,7 @@ TileGroup:
 	flags.unknown_0020 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -532,7 +532,7 @@ TileGroup:
 	flags.creep 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -544,7 +544,7 @@ TileGroup:
 	flags.unbuildable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -556,7 +556,7 @@ TileGroup:
 	flags.blocks_view 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -568,7 +568,7 @@ TileGroup:
 	flags.mid_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -580,7 +580,7 @@ TileGroup:
 	flags.high_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -592,7 +592,7 @@ TileGroup:
 	flags.occupied 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -604,7 +604,7 @@ TileGroup:
 	flags.creep_receding 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -616,7 +616,7 @@ TileGroup:
 	flags.cliff_edge 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -628,7 +628,7 @@ TileGroup:
 	flags.creep_temp 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -640,7 +640,7 @@ TileGroup:
 	flags.special_placeable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -655,7 +655,7 @@ TileGroup:
 	edge.down 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.edge: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.edge: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -670,7 +670,7 @@ TileGroup:
 	piece.down 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.piece: True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_full], {TileGroupField.piece: True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -697,7 +697,7 @@ TileGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -709,7 +709,7 @@ TileGroup:
 	flags.walkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -721,7 +721,7 @@ TileGroup:
 	flags.unknown_0002 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -733,7 +733,7 @@ TileGroup:
 	flags.unwalkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -745,7 +745,7 @@ TileGroup:
 	flags.unknown_0008 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -757,7 +757,7 @@ TileGroup:
 	flags.has_doodad_cover 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -769,7 +769,7 @@ TileGroup:
 	flags.unknown_0020 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -781,7 +781,7 @@ TileGroup:
 	flags.creep 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -793,7 +793,7 @@ TileGroup:
 	flags.unbuildable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -805,7 +805,7 @@ TileGroup:
 	flags.blocks_view 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -817,7 +817,7 @@ TileGroup:
 	flags.mid_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -829,7 +829,7 @@ TileGroup:
 	flags.high_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -841,7 +841,7 @@ TileGroup:
 	flags.occupied 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -853,7 +853,7 @@ TileGroup:
 	flags.creep_receding 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep_receding:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -865,7 +865,7 @@ TileGroup:
 	flags.cliff_edge 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.cliff_edge:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -877,7 +877,7 @@ TileGroup:
 	flags.creep_temp 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.creep_temp:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -889,7 +889,7 @@ TileGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.basic_flags], fields={TileGroupField.flags:{TileGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -926,7 +926,7 @@ DoodadGroup:
 	unknown8 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -961,7 +961,7 @@ DoodadGroup:
 	unknown8 9
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_inc]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_inc]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -996,7 +996,7 @@ DoodadGroup:
 	unknown8 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1031,7 +1031,7 @@ DoodadGroup:
 	unknown8 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags]))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1058,7 +1058,7 @@ DoodadGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -1070,7 +1070,7 @@ DoodadGroup:
 	flags.walkable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1082,7 +1082,7 @@ DoodadGroup:
 	flags.unknown_0002 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1094,7 +1094,7 @@ DoodadGroup:
 	flags.unwalkable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1106,7 +1106,7 @@ DoodadGroup:
 	flags.unknown_0008 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1118,7 +1118,7 @@ DoodadGroup:
 	flags.has_doodad_cover 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1130,7 +1130,7 @@ DoodadGroup:
 	flags.unknown_0020 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1142,7 +1142,7 @@ DoodadGroup:
 	flags.creep 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1154,7 +1154,7 @@ DoodadGroup:
 	flags.unbuildable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1166,7 +1166,7 @@ DoodadGroup:
 	flags.blocks_view 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1178,7 +1178,7 @@ DoodadGroup:
 	flags.mid_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1190,7 +1190,7 @@ DoodadGroup:
 	flags.high_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1202,7 +1202,7 @@ DoodadGroup:
 	flags.occupied 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1214,7 +1214,7 @@ DoodadGroup:
 	flags.has_overlay_sprite 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1226,7 +1226,7 @@ DoodadGroup:
 	flags.has_overlay_unit 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1238,7 +1238,7 @@ DoodadGroup:
 	flags.overlay_flipped 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1250,7 +1250,7 @@ DoodadGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1262,7 +1262,7 @@ DoodadGroup:
 	overlay_id 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.overlay_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.overlay_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1274,7 +1274,7 @@ DoodadGroup:
 	scr 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.scr:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.scr:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1286,7 +1286,7 @@ DoodadGroup:
 	string_id 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.string_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.string_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1298,7 +1298,7 @@ DoodadGroup:
 	unknown4 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.unknown4:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.unknown4:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1310,7 +1310,7 @@ DoodadGroup:
 	dddata_id 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.dddata_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.dddata_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1322,7 +1322,7 @@ DoodadGroup:
 	width 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.width:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.width:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1334,7 +1334,7 @@ DoodadGroup:
 	height 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.height:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.height:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1346,7 +1346,7 @@ DoodadGroup:
 	unknown8 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.unknown8:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_empty], fields={DoodadGroupField.unknown8:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1373,7 +1373,7 @@ DoodadGroup:
 	flags.special_placeable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -1385,7 +1385,7 @@ DoodadGroup:
 	flags.walkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1397,7 +1397,7 @@ DoodadGroup:
 	flags.unknown_0002 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1409,7 +1409,7 @@ DoodadGroup:
 	flags.unwalkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1421,7 +1421,7 @@ DoodadGroup:
 	flags.unknown_0008 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1433,7 +1433,7 @@ DoodadGroup:
 	flags.has_doodad_cover 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1445,7 +1445,7 @@ DoodadGroup:
 	flags.unknown_0020 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1457,7 +1457,7 @@ DoodadGroup:
 	flags.creep 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1469,7 +1469,7 @@ DoodadGroup:
 	flags.unbuildable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1481,7 +1481,7 @@ DoodadGroup:
 	flags.blocks_view 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1493,7 +1493,7 @@ DoodadGroup:
 	flags.mid_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1505,7 +1505,7 @@ DoodadGroup:
 	flags.high_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1517,7 +1517,7 @@ DoodadGroup:
 	flags.occupied 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1529,7 +1529,7 @@ DoodadGroup:
 	flags.has_overlay_sprite 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1541,7 +1541,7 @@ DoodadGroup:
 	flags.has_overlay_unit 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1553,7 +1553,7 @@ DoodadGroup:
 	flags.overlay_flipped 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1565,7 +1565,7 @@ DoodadGroup:
 	flags.special_placeable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1577,7 +1577,7 @@ DoodadGroup:
 	overlay_id 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.overlay_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.overlay_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1589,7 +1589,7 @@ DoodadGroup:
 	scr 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.scr:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.scr:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1601,7 +1601,7 @@ DoodadGroup:
 	string_id 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.string_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.string_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1613,7 +1613,7 @@ DoodadGroup:
 	unknown4 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.unknown4:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.unknown4:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1625,7 +1625,7 @@ DoodadGroup:
 	dddata_id 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.dddata_id:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.dddata_id:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1637,7 +1637,7 @@ DoodadGroup:
 	width 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.width:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.width:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1649,7 +1649,7 @@ DoodadGroup:
 	height 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.height:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.height:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1661,7 +1661,7 @@ DoodadGroup:
 	unknown8 65535
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.unknown8:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_full], fields={DoodadGroupField.unknown8:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1688,7 +1688,7 @@ DoodadGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:True}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 	
@@ -1700,7 +1700,7 @@ DoodadGroup:
 	flags.walkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.walkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1712,7 +1712,7 @@ DoodadGroup:
 	flags.unknown_0002 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0002:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1724,7 +1724,7 @@ DoodadGroup:
 	flags.unwalkable 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unwalkable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1736,7 +1736,7 @@ DoodadGroup:
 	flags.unknown_0008 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0008:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1748,7 +1748,7 @@ DoodadGroup:
 	flags.has_doodad_cover 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_doodad_cover:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1760,7 +1760,7 @@ DoodadGroup:
 	flags.unknown_0020 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unknown_0020:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1772,7 +1772,7 @@ DoodadGroup:
 	flags.creep 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.creep:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1784,7 +1784,7 @@ DoodadGroup:
 	flags.unbuildable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.unbuildable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1796,7 +1796,7 @@ DoodadGroup:
 	flags.blocks_view 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.blocks_view:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1808,7 +1808,7 @@ DoodadGroup:
 	flags.mid_ground 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.mid_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1820,7 +1820,7 @@ DoodadGroup:
 	flags.high_ground 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.high_ground:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1832,7 +1832,7 @@ DoodadGroup:
 	flags.occupied 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.occupied:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1844,7 +1844,7 @@ DoodadGroup:
 	flags.has_overlay_sprite 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_sprite:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1856,7 +1856,7 @@ DoodadGroup:
 	flags.has_overlay_unit 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.has_overlay_unit:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1868,7 +1868,7 @@ DoodadGroup:
 	flags.overlay_flipped 1
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.overlay_flipped:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1880,7 +1880,7 @@ DoodadGroup:
 	flags.special_placeable 0
 """
 
-		result = IO.output_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
+		result = IO.output_to_text(lambda s: tileset.export_group_settings(s, [ID.doodad_flags], fields={DoodadGroupField.flags:{DoodadGroupField.Flag.special_placeable:True}}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1917,7 +1917,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty]))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1953,7 +1953,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full]))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -1989,7 +1989,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch]))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2025,7 +2025,7 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2]))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2]))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2041,7 +2041,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.mid_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.mid_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2057,7 +2057,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.high_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.high_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2073,7 +2073,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.walkable:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.walkable:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2089,7 +2089,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.blocks_sight:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.blocks_sight:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2105,7 +2105,7 @@ MegaTile:
 		0000
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.ramp:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_empty], fields={MegatileField.ramp:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2121,7 +2121,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.mid_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.mid_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2137,7 +2137,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.high_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.high_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2153,7 +2153,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.walkable:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.walkable:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2169,7 +2169,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.blocks_sight:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.blocks_sight:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2185,7 +2185,7 @@ MegaTile:
 		1111
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.ramp:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_full], fields={MegatileField.ramp:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2201,7 +2201,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.mid_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.mid_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2217,7 +2217,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.high_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.high_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2233,7 +2233,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.walkable:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.walkable:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2249,7 +2249,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.blocks_sight:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.blocks_sight:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2265,7 +2265,7 @@ MegaTile:
 		0101
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.ramp:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch], fields={MegatileField.ramp:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2281,7 +2281,7 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.mid_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.mid_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2297,7 +2297,7 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.high_ground:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.high_ground:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2313,7 +2313,7 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.walkable:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.walkable:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2329,7 +2329,7 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.blocks_sight:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.blocks_sight:True}))
 
 		self.assertEqual(result.strip(), expected.strip())
 
@@ -2345,6 +2345,6 @@ MegaTile:
 		1010
 """
 
-		result = IO.output_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.ramp:True}))
+		result = IO.output_to_text(lambda s: tileset.export_megatile_settings(s, [ID.mega_crosshatch2], fields={MegatileField.ramp:True}))
 
 		self.assertEqual(result.strip(), expected.strip())

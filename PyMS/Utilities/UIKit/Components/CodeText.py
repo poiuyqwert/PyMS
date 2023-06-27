@@ -15,7 +15,7 @@ class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent: Misc, ecallback: Callable[[], None] | None = None, icallback: Callable[[], None] | None = None, scallback: Callable[[], None] | None = None, acallback: Callable[[], None] | None = None, state: WidgetState = NORMAL) -> None:
+	def __init__(self, parent: Misc, ecallback: Callable[[], None] | None = None, icallback: Callable[[], None] | None = None, scallback: Callable[[], None] | None = None, acallback: Callable[[], bool] | None = None, state: WidgetState = NORMAL) -> None:
 		self.dispatch_output = False
 		self.edited = False
 		self.taboverride: str | None = None
