@@ -6,7 +6,7 @@ from __future__ import annotations
 from . import MPQCrypt, MPQComp
 
 from ....Utilities.PyMSError import PyMSError
-from ....Utilities.Struct import *
+from ....Utilities import Struct
 from ....Utilities.utils import flags_code
 
 import re, math, struct
@@ -15,20 +15,20 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from typing import TextIO, BinaryIO
 
-class MPQHeaderV1(Struct):
+class MPQHeaderV1(Struct.Struct):
 	ID_MPQ = b'MPQ\x1A'
 	ID_BN3 = b'BN3\x1A'
 
 	_fields = (
-		('type_id', Type.str(4)),
-		('header_size', Type.u32()),
-		('archive_size', Type.u32()),
-		('format_version', Type.u16()),
-		('sector_size_shift', Type.u16()),
-		('hash_table_offset', Type.u32()),
-		('block_table_offset', Type.u32()),
-		('hash_table_entries', Type.u32()),
-		('block_table_entries', Type.u32()),
+		('type_id', Struct.t_cstr(4)),
+		('header_size', Struct.t_u32),
+		('archive_size', Struct.t_u32),
+		('format_version', Struct.t_u16),
+		('sector_size_shift', Struct.t_u16),
+		('hash_table_offset', Struct.t_u32),
+		('block_table_offset', Struct.t_u32),
+		('hash_table_entries', Struct.t_u32),
+		('block_table_entries', Struct.t_u32),
 	)
 
 	type_id: str
@@ -57,16 +57,16 @@ class MPQLocale:
 	russian    = 1049 # 0x419
 	english_uk = 2056 # 0x808
 
-class MPQHashEntry(Struct):
+class MPQHashEntry(Struct.Struct):
 	BLOCK_INDEX_EMPTY   = 0xFFFFFFFF
 	BLOCK_INDEX_DELETED = 0xFFFFFFFE
 
 	_fields = (
-		('hash_name_a', Type.u32()),
-		('hash_name_b', Type.u32()),
-		('locale', Type.u16()),
-		('platform', Type.u16()),
-		('block_index', Type.u32())
+		('hash_name_a', Struct.t_u32),
+		('hash_name_b', Struct.t_u32),
+		('locale', Struct.t_u16),
+		('platform', Struct.t_u16),
+		('block_index', Struct.t_u32)
 	)
 
 	hash_name_a: int
@@ -86,12 +86,12 @@ class MPQBlockFlag:
 	sector_crc    = 0x04000000
 	exists        = 0x80000000
 
-class MPQBlockEntry(Struct):
+class MPQBlockEntry(Struct.Struct):
 	_fields = (
-		('file_offset', Type.u32()),
-		('compressed_size', Type.u32()),
-		('file_size', Type.u32()),
-		('flags', Type.u32())
+		('file_offset', Struct.t_u32),
+		('compressed_size', Struct.t_u32),
+		('file_size', Struct.t_u32),
+		('flags', Struct.t_u32)
 	)
 
 	file_offset: int

@@ -11,6 +11,7 @@ from ...Utilities.PyMSError import PyMSError
 from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities import Serialize
+from ...Utilities import Struct
 
 import enum, struct, re
 
@@ -49,7 +50,7 @@ class TRG:
 				if format != Format.got:
 					for action in trigger.actions:
 						if action.string_index:
-							strings[action.string_index] = scanner.scan_str(2048)
+							strings[action.string_index] = scanner.scan(Struct.l_str(2048))
 						if action.flags & ActionFlag.unit_property_used:
 							props = UnitProperties()
 							props.load_data(scanner)
@@ -62,7 +63,7 @@ class TRG:
 		self.format = format
 
 	def save(self, output: IO.AnyOutputBytes, format: Format | None = None) -> list[PyMSWarning]:
-		save_format = self.format if format == None else format
+		save_format = self.format if format is None else format
 		warnings: list[PyMSWarning] = []
 		is_missiong_briefing: bool | None = None
 		with IO.OutputBytes(output) as f:

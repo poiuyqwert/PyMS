@@ -1,15 +1,19 @@
 
-from . import SerializeContext
-from .CodeCommand import CodeCommand
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+	from .SerializeContext import SerializeContext
+	from .CodeCommand import CodeCommand
 
 class CodeBlock(object):
-	def __init__(self):
-		self.commands = [] # type: list[CodeCommand]
-		self.prev_block = None # type: CodeBlock
-		self.next_block = None # type: CodeBlock
-		self.owners = set()
+	def __init__(self) -> None:
+		self.commands: list[CodeCommand] = []
+		self.prev_block: CodeBlock | None = None
+		self.next_block: CodeBlock | None = None
+		self.owners: set[Any] = set()
 
-	def serialize(self, context, add_label=True): # type: (SerializeContext.SerializeContext, bool) -> str
+	def serialize(self, context: SerializeContext, add_label: bool = True) -> str:
 		result = ''
 		if add_label:
 			result = ':' + context.block_label(self)
@@ -20,7 +24,7 @@ class CodeBlock(object):
 			if len(result):
 				result += '\n'
 			result += cmd.serialize(context)
-			if cmd._separate or cmd._ends_flow:
+			if cmd.definition.separate or cmd.definition.ends_flow:
 				result += '\n'
 			for param in cmd.params:
 				if isinstance(param, CodeBlock) and not context.is_block_serialized(param):

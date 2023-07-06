@@ -3,24 +3,24 @@ from ..TBL import TBL, decompile_string, compile_string
 from ..DAT import UnitsDAT, UpgradesDAT, TechDAT
 
 class DataContext(object):
-	def __init__(self, stattxt_tbl=None, unitnames_tbl=None, units_dat=None, upgrades_dat=None, techdata_dat=None): # type: (TBL | None, TBL | None, UnitsDAT | None, UpgradesDAT | None, TechDAT | None) -> DataContext
+	def __init__(self, stattxt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None) -> None:
 		self.stattxt_tbl = stattxt_tbl
 		self.unitnames_tbl = unitnames_tbl
 		self.units_dat = units_dat
-		self._unit_names = None # type: list[str]
+		self._unit_names: list[str] | None = None
 		self.upgrades_dat = upgrades_dat
-		self._upgrade_names = None # type: list[str]
+		self._upgrade_names: list[str | None] | None = None
 		self.techdata_dat = techdata_dat
-		self._technology_names = None # type: list[str]
+		self._technology_names: list[str | None] | None = None
 
-	def stattxt_string(self, string_id): # type: (int) -> (str | None)
+	def stattxt_string(self, string_id: int) -> str | None:
 		if not self.stattxt_tbl:
 			return None
 		if string_id >= len(self.stattxt_tbl.strings):
 			return None
 		return decompile_string(self.stattxt_tbl.strings[string_id][:-1])
 
-	def stattxt_id(self, string): # type: (str) -> (int | None)
+	def stattxt_id(self, string: str) -> int | None:
 		if not self.stattxt_tbl:
 			return None
 		string = compile_string(string)
@@ -29,7 +29,7 @@ class DataContext(object):
 		except:
 			return None
 
-	def _unit_name(self, raw_string): # type: (str) -> str
+	def _unit_name(self, raw_string: str) -> str:
 		name = raw_string
 		components = raw_string.split('\x00')
 		if len(components) > 1 and components[1] != '*':
@@ -38,7 +38,7 @@ class DataContext(object):
 			name = components[0]
 		return decompile_string(name, exclude='\x0A\x28\x29\x2C').strip()
 
-	def _get_unit_names(self): # type: () -> (list[str] | None)
+	def _get_unit_names(self) -> (list[str] | None):
 		if self._unit_names:
 			return self._unit_names
 		strings = None
@@ -53,7 +53,7 @@ class DataContext(object):
 			self._unit_names.append(self._unit_name(raw_string))
 		return self._unit_names
 
-	def unit_name(self, unit_id): # type: (int) -> (str | None)
+	def unit_name(self, unit_id: int) -> (str | None):
 		unit_names = self._get_unit_names()
 		if not unit_names:
 			return None
@@ -61,7 +61,7 @@ class DataContext(object):
 			return None
 		return unit_names[unit_id]
 
-	def unit_id(self, unit_name): # type: (str) -> (int | None)
+	def unit_id(self, unit_name: str) -> (int | None):
 		unit_names = self._get_unit_names()
 		if not unit_names:
 			return None
@@ -70,10 +70,10 @@ class DataContext(object):
 		except:
 			return None
 
-	def _upgrade_name(self, raw_string): # type: (str) -> str
+	def _upgrade_name(self, raw_string: str) -> str:
 		return decompile_string(raw_string.split('\x00')[0], exclude='\x0A\x28\x29\x2C').strip()
 
-	def _get_upgrade_names(self): # type: () -> (list[str] | None)
+	def _get_upgrade_names(self) -> (list[str | None] | None):
 		if self._upgrade_names:
 			return self._upgrade_names
 		if not self.upgrades_dat:
@@ -89,7 +89,7 @@ class DataContext(object):
 				self._upgrade_names.append(self._upgrade_name(self.stattxt_tbl.strings[string_id]))
 		return self._upgrade_names
 
-	def upgrade_name(self, upgrade_id): # type: (int) -> (str | None)
+	def upgrade_name(self, upgrade_id: int) -> (str | None):
 		upgrade_names = self._get_upgrade_names()
 		if not upgrade_names:
 			return None
@@ -97,7 +97,7 @@ class DataContext(object):
 			return None
 		return upgrade_names[upgrade_id]
 
-	def upgrade_id(self, upgrade_name): # type: (str) -> (int | None)
+	def upgrade_id(self, upgrade_name: str) -> (int | None):
 		upgrade_names = self._get_upgrade_names()
 		if not upgrade_names:
 			return None
@@ -106,10 +106,10 @@ class DataContext(object):
 		except:
 			return None
 
-	def _technology_name(self, raw_string): # type: (str) -> str
+	def _technology_name(self, raw_string: str) -> str:
 		return decompile_string(raw_string.split('\x00')[0], exclude='\x0A\x28\x29\x2C').strip()
 
-	def _get_technology_names(self): # type: () -> (list[str] | None)
+	def _get_technology_names(self) -> (list[str | None] | None):
 		if self._technology_names:
 			return self._technology_names
 		if not self.techdata_dat:
@@ -125,7 +125,7 @@ class DataContext(object):
 				self._technology_names.append(self._technology_name(self.stattxt_tbl.strings[string_id]))
 		return self._technology_names
 
-	def technology_name(self, technology_id): # type: (int) -> (str | None)
+	def technology_name(self, technology_id: int) -> (str | None):
 		technology_names = self._get_technology_names()
 		if not technology_names:
 			return None
@@ -133,7 +133,7 @@ class DataContext(object):
 			return None
 		return technology_names[technology_id]
 
-	def technology_id(self, technology_name): # type: (str) -> (int | None)
+	def technology_id(self, technology_name: str) -> (int | None):
 		technology_names = self._get_technology_names()
 		if not technology_names:
 			return None

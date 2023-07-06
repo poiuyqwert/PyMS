@@ -1,24 +1,28 @@
 
 from .CodeBlock import CodeBlock
 from .CodeCommand import CodeCommandDefinition, CodeCommand
-from .Scanner import Scanner
 
 from .. import Struct
 from ..PyMSError import PyMSError
+from ..BytesScanner import BytesScanner
+
+from typing import Any
 
 class ByteCodeHandler(object):
-	def __init__(self, data): # type: (bytes) -> ByteCodeHandler
+	def __init__(self, data: bytes) -> None:
 		self.data = data
-		self.cmd_defs = {} # type: dict[int, CodeCommandDefinition]
-		self.block_refs = {} # type: dict[int, CodeBlock]
-		self.cmd_refs = {} # type: dict[int, tuple[CodeBlock, CodeCommand]]
+		self.cmd_defs: dict[int, CodeCommandDefinition] = {}
+		self.block_refs: dict[int, CodeBlock] = {}
+		self.cmd_refs: dict[int, tuple[CodeBlock, CodeCommand]] = {}
 
-	def register_command(self, cmd_def): # type: (CodeCommandDefinition) -> None
-		if cmd_def._id in self.cmd_defs:
-			raise PyMSError('Internal', "Command with id '%d' ('%s') already exists" % (cmd_def._id, self.cmd_defs[cmd_def._id]._name))
-		self.cmd_defs[cmd_def._id] = cmd_def
+	def register_command(self, cmd_def: CodeCommandDefinition) -> None:
+		if cmd_def.byte_code_id in self.cmd_defs:
+			raise PyMSError('Internal', "Command with id '%d' ('%s') already exists" % (cmd_def.byte_code_id, self.cmd_defs[cmd_def.byte_code_id].name))
+		if cmd_def.byte_code_id is None:
+			raise PyMSError('Internal', f"Command '{cmd_def.name}' does not support byte code")
+		self.cmd_defs[cmd_def.byte_code_id] = cmd_def
 
-	def decompile_block(self, address, owner=None): # type: (int, Any | None) -> CodeBlock
+	def decompile_block(self, address: int, owner: Any | None = None) -> CodeBlock:
 		if address in self.block_refs:
 			block = self.block_refs[address]
 			if owner:
@@ -37,13 +41,14 @@ class ByteCodeHandler(object):
 			index = prev_block.commands.index(start_cmd)
 			while index < len(prev_block.commands):
 				cmd = prev_block.commands.pop(index)
+				assert cmd.original_address is not None
 				self.cmd_refs[cmd.original_address] = (block, cmd)
 				block.commands.append(cmd)
 			block.prev_block = prev_block
 			prev_block.next_block = block
 			return block
 		else:
-			scanner = Scanner(self.data, address)
+			scanner = BytesScanner(self.data, address)
 			block = CodeBlock()
 			self.block_refs[address] = block
 			if owner:
@@ -52,7 +57,7 @@ class ByteCodeHandler(object):
 					print(block)
 			while not scanner.at_end():
 				cmd_address = scanner.address
-				cmd_id = scanner.scan(Struct.Type.u8())
+				cmd_id = scanner.scan_int(Struct.l_u8)
 				cmd_def = self.cmd_defs.get(cmd_id)
 				if not cmd_def:
 					# print('%d %d' % (cmd_address, cmd_id))
@@ -62,10 +67,10 @@ class ByteCodeHandler(object):
 				cmd.original_address = cmd_address
 				block.commands.append(cmd)
 				self.cmd_refs[cmd_address] = (block, cmd)
-				for n,param_type in enumerate(cmd._param_types):
+				for n,param_type in enumerate(cmd.definition.param_types):
 					if param_type._block_reference:
 						cmd.params[n] = self.decompile_block(cmd.params[n])
-				if cmd._ends_flow:
+				if cmd.definition.ends_flow:
 					break
 				if scanner.address in self.block_refs:
 					block.next_block = self.block_refs[scanner.address]
