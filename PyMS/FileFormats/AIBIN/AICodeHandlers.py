@@ -31,19 +31,19 @@ class AIParseContext(ParseContext):
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'byte', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.FieldType.u8(endian=Struct.Endian.little), limits=limits)
+		CodeType.IntCodeType.__init__(self, name, Struct.l_u8, limits=limits)
 
 class WordCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'word', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.FieldType.u16(endian=Struct.Endian.little), limits=limits)
+		CodeType.IntCodeType.__init__(self, name, Struct.l_u16, limits=limits)
 
 class DWordCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'dword', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.FieldType.u32(endian=Struct.Endian.little), limits=limits)
+		CodeType.IntCodeType.__init__(self, name, Struct.l_u32, limits=limits)
 
 class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
-		CodeType.AddressCodeType.__init__(self, 'block', Struct.FieldType.u16(endian=Struct.Endian.little))
+		CodeType.AddressCodeType.__init__(self, 'block', Struct.l_u16)
 
 class UnitCodeType(WordCodeType):
 	def __init__(self, name: str = 'unit') -> None:
@@ -113,7 +113,7 @@ class CompareCodeType(CodeType.EnumCodeType):
 			'GreaterThan': 1,
 			'LessThan': 0
 		}
-		CodeType.EnumCodeType.__init__(self, 'compare', Struct.FieldType.u8(endian=Struct.Endian.little), cases)
+		CodeType.EnumCodeType.__init__(self, 'compare', Struct.l_u8, cases)
 
 Goto = CodeCommandDefinition('goto', 0, (BlockCodeType(),), ends_flow=True)
 NoTownsJump = CodeCommandDefinition('notowns_jump', 1, (UnitCodeType(), BlockCodeType(),))
@@ -372,11 +372,11 @@ class BinFileCodeType(CodeType.EnumCodeType):
 			'aiscript': 0,
 			'bwscript': 1
 		}
-		CodeType.EnumCodeType.__init__(self, 'bin_file', '', cases) # TODO: bytecode_type
+		CodeType.EnumCodeType.__init__(self, 'bin_file', Struct.l_u8, cases) # TODO: bytecode_type
 
 class BoolCodeType(CodeType.BooleanCodeType):
 	def __init__(self) -> None:
-		CodeType.BooleanCodeType.__init__(self, 'bool', '') # TODO: bytecode_type
+		CodeType.BooleanCodeType.__init__(self, 'bool', Struct.l_u8) # TODO: bytecode_type
 
 HeaderNameString = CodeCommandDefinition('name_string', None, (StringCodeType(),), ephemeral=True)
 HeaderBinFile = CodeCommandDefinition('bin_file', None, (BinFileCodeType(),), ephemeral=True)

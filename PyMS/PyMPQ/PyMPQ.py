@@ -244,7 +244,7 @@ class PyMPQ(MainWindow):
 		self.locale_status.set('Locale: %s [%d]' % (locale_name, self.settings.locale))
 
 	def load_settings(self): # type: () -> None
-		self.settings.windows.load_window_size('main', self, default_size=(700,500))
+		self.settings.windows.load_window_size('main', self, default_size=Size(700,500))
 		self.settings.load_pane_sizes('list_sizes', self.listbox.panes, (317,74,45,67,52,64))
 		self.compvar.set(self.settings.compression)
 		self.encvar.set(self.settings.encrypt)

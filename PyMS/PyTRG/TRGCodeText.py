@@ -1,17 +1,19 @@
 
+from .Delegates import MainDelegate
 from .Tooltips import ConditionsTooltip, ActionsTooltip, TrigPlugActionsTooltip
 
-from ..FileFormats import TRG
+from ..FileFormats.TRG import TRG, Conditions, Actions
 
 from ..Utilities.UIKit import *
 
 from copy import deepcopy
+import re
 
 class TRGCodeText(CodeText):
-	def __init__(self, parent, ecallback=None, highlights=None, state=NORMAL):
-		self.toplevel = parent
+	def __init__(self, parent: Misc, delegate: MainDelegate, ecallback=None, highlights=None, state: WidgetState = NORMAL) -> None:
+		self.delegate = delegate
 		self.boldfont = ('Courier New', -11, 'bold')
-		self.re = None
+		self.re: re.Pattern | None = None
 		if highlights:
 			self.highlights = highlights
 		else:
@@ -36,42 +38,34 @@ class TRGCodeText(CodeText):
 			}
 		CodeText.__init__(self, parent, ecallback, state=state)
 
-	def setedit(self):
+	def setedit(self) -> None:
 		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
-	def setupparser(self):
+	def setupparser(self) -> None:
 		comment = r'(?P<Comment>#[^\n]*$)'
 		header = r'^[ \t]*(?P<Headers>Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:))'
-		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([x for x in TRG.TRG.conditions if x is not None])
-		actions = r'\b(?P<Actions>%s)\b' % '|'.join([x for x in TRG.TRG.actions if x is not None])
+		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([condition.name for condition in Conditions._CONDITION_DEFINITIONS_REGISTRY])
+		actions = r'\b(?P<Actions>%s)\b' % '|'.join([action.name for action in Actions._ACTION_DEFINITIONS_REGISTRY])
 		#trigplugconditions = r'\b(?P<TrigPlugConditions>%s)\b' % '|'.join([x for x in AIBIN.AIBIN.short_labels if x is not None])
-		trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x is not None])
+		# trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x is not None])
 		constants = r'(?P<Constants>\{\w+\})'
 		constdef = r'(?<=Constant )(?P<ConstDef>\w+)(?=:)'
-		keywords = r'\b(?P<Keywords>%s)(?=[ \),])' % '|'.join(TRG.keywords)
+		# keywords = r'\b(?P<Keywords>%s)(?=[ \),])' % '|'.join(TRG.keywords)
 		tblformat = r'(?P<TBLFormat><0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>)'
 		num = r'\b(?P<Number>\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+)\b'
 		operators = r'(?P<Operators>[():,\-])'
-		self.basic = '|'.join((comment, header, keywords, conditions, actions, trigplugactions, constants, constdef, tblformat, num, operators))
+		# self.basic = '|'.join((comment, header, keywords, conditions, actions, trigplugactions, constants, constdef, tblformat, num, operators))
+		self.basic = '|'.join((comment, header, conditions, actions, constants, constdef, tblformat, num, operators))
 		ConditionsTooltip(self)
 		ActionsTooltip(self)
 		TrigPlugActionsTooltip(self)
 		self.tags = deepcopy(self.highlights)
 
-	def dynamic(self):
-		dyn = '|'
-		if self.toplevel.trg:
-			if self.toplevel.trg.dynamic_conditions:
-				dyn += r'\b(?P<DynamicConditions>%s)\b|' % '|'.join([n[0] for n in list(self.toplevel.trg.dynamic_conditions.values())])
-			if self.toplevel.trg.dynamic_actions:
-				dyn += r'\b(?P<DynamicActions>%s)\b|' % '|'.join([n[0] for n in list(self.toplevel.trg.dynamic_actions.values())])
-		self.re = re.compile(''.join((self.basic,dyn,r'(?P<Newline>\n)')), re.M)
-
-	def colorize(self):
+	def colorize(self) -> None:
 		if not self.re:
-			self.dynamic()
+			self.re = re.compile('|'.join((self.basic,r'(?P<Newline>\n)')), re.M)
 		next = '1.0'
 		while True:
 			item = self.tag_nextrange("Update", next)

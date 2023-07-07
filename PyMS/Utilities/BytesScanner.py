@@ -11,7 +11,7 @@ from typing import Any, Type, TypeVar, TypeAlias, overload
 AnyStruct = str | struct.Struct
 
 S = TypeVar('S', bound=Struct.Struct)
-AnyFormat: TypeAlias = str | struct.Struct | Struct.IntField | Struct.FloatField | Struct.StringField | Struct.IntArrayField | Struct.FloatArrayField | Type[Struct.Struct]
+AnyFormat: TypeAlias = str | struct.Struct | Struct.Field | Type[Struct.Struct]
 
 class BytesScanner(object):
 	def __init__(self, data: bytes, address: int = 0) -> None:
@@ -42,21 +42,15 @@ class BytesScanner(object):
 	@overload
 	def peek(self, format: Struct.FloatArrayField) -> list[float]: ...
 	@overload
+	def peek(self, format: Struct.Field) -> Any: ...
+	@overload
 	def peek(self, format: Type[S]) -> S: ...
 	def peek(self, format: AnyFormat) -> Any:
 		if isinstance(format, str):
 			return struct.unpack_from(format, self.data, self.address)
 		elif isinstance(format, struct.Struct):
 			return format.unpack_from(self.data, self.address)
-		elif isinstance(format, Struct.IntField):
-			return format.unpack(self.data, self.address)
-		elif isinstance(format, Struct.FloatField):
-			return format.unpack(self.data, self.address)
-		elif isinstance(format, Struct.StringField):
-			return format.unpack(self.data, self.address)
-		elif isinstance(format, Struct.IntArrayField):
-			return format.unpack(self.data, self.address)
-		elif isinstance(format, Struct.FloatArrayField):
+		elif isinstance(format, Struct.Field):
 			return format.unpack(self.data, self.address)
 		else: # if is Type[S]
 			return format.unpack(self.data, self.address)
@@ -76,6 +70,8 @@ class BytesScanner(object):
 	@overload
 	def scan(self, format: Struct.FloatArrayField) -> list[float]: ...
 	@overload
+	def scan(self, format: Struct.Field) -> Any: ...
+	@overload
 	def scan(self, format: Type[S]) -> S: ...
 	def scan(self, format: AnyFormat) -> Any:
 		result = self.peek(format)
@@ -84,15 +80,7 @@ class BytesScanner(object):
 			size = struct.calcsize(format)
 		elif isinstance(format, struct.Struct):
 			size = format.size
-		elif isinstance(format, Struct.IntField):
-			size = format.size
-		elif isinstance(format, Struct.FloatField):
-			size = format.size
-		elif isinstance(format, Struct.StringField):
-			size = format.size
-		elif isinstance(format, Struct.IntArrayField):
-			size = format.size
-		elif isinstance(format, Struct.FloatArrayField):
+		elif isinstance(format, Struct.Field):
 			size = format.size
 		else: # if is Type[S]
 			size = format.calcsize()

@@ -19,8 +19,8 @@ class BaseScriptHeader(Struct.Struct):
 
 class BWScriptHeader(BaseScriptHeader):
 	_fields = (
-		('id', Struct.FieldType.string(4)),
-		('address', Struct.FieldType.u32())
+		('id', Struct.t_str(4)),
+		('address', Struct.t_u32)
 	)
 
 class AIScriptHeader(BaseScriptHeader):
@@ -28,10 +28,10 @@ class AIScriptHeader(BaseScriptHeader):
 	flags: int 
 
 	_fields = (
-		('id', Struct.FieldType.string(4)),
-		('address', Struct.FieldType.u32()),
-		('string_id', Struct.FieldType.u32()),
-		('flags', Struct.FieldType.u32()),
+		('id', Struct.t_str(4)),
+		('address', Struct.t_u32),
+		('string_id', Struct.t_u32),
+		('flags', Struct.t_u32),
 	)
 
 class AIFlag:
@@ -53,11 +53,11 @@ class _AIBIN(Generic[H]):
 		bytecode_handler = AIByteCodeHandler(data)
 		scanner = BytesScanner(data)
 		try:
-			headers_offset = scanner.scan_int(Struct.FieldType.u32(endian=Struct.Endian.little))
+			headers_offset = scanner.scan(Struct.l_u32)
 			scanner.jump_to(headers_offset)
 			script_headers: OrderedDict[str, H] = OrderedDict()
-			while not scanner.at_end() and scanner.peek_int(Struct.FieldType.u32(endian=Struct.Endian.little)):
-				header: H = scanner.scan_obj(self.header_type)
+			while not scanner.at_end() and scanner.peek(Struct.l_u32):
+				header: H = scanner.scan(self.header_type)
 				if header.id in script_headers:
 					raise PyMSError('Load',"Duplicate AI ID '%s'" % id)
 				script_headers[header.id] = header

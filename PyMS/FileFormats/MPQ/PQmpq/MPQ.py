@@ -20,7 +20,7 @@ class MPQHeaderV1(Struct.Struct):
 	ID_BN3 = b'BN3\x1A'
 
 	_fields = (
-		('type_id', Struct.t_cstr(4)),
+		('type_id', Struct.t_str(4)),
 		('header_size', Struct.t_u32),
 		('archive_size', Struct.t_u32),
 		('format_version', Struct.t_u16),
@@ -195,7 +195,7 @@ class MPQ(object):
 
 			# Find MPQ offset
 			mpq_offset = 0
-			max_offset = file_size - MPQHeaderV1.size()
+			max_offset = file_size - MPQHeaderV1.calcsize()
 			while mpq_offset < max_offset:
 				file_handle.seek(mpq_offset)
 				type_id = file_handle.read(4)
@@ -217,7 +217,7 @@ class MPQ(object):
 			# Load hash table
 			try:
 				file_handle.seek(mpq_offset + headerv1.hash_table_offset)
-				hash_table_data = file_handle.read(MPQHashEntry.size() * headerv1.hash_table_entries)
+				hash_table_data = file_handle.read(MPQHashEntry.calcsize() * headerv1.hash_table_entries)
 			except:
 				raise PyMSError('Load', "Couldn't read hash table")
 			hash_table_data = MPQCrypt.decrypt(hash_table_data, MPQTableKey.hash_table)
@@ -229,7 +229,7 @@ class MPQ(object):
 			# Load block table
 			try:
 				file_handle.seek(mpq_offset + headerv1.block_table_offset)
-				block_table_data = file_handle.read(MPQBlockEntry.size() * headerv1.block_table_entries)
+				block_table_data = file_handle.read(MPQBlockEntry.calcsize() * headerv1.block_table_entries)
 			except:
 				raise PyMSError('Load', "Couldn't read block table")
 			block_table_data = MPQCrypt.decrypt(block_table_data, MPQTableKey.block_table)

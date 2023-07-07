@@ -4,7 +4,7 @@ from .UnitProperties import UnitProperties, UnitPropertiesDefinition
 from .Constants import ActionFlag
 
 from ...FileFormats import TBL
-from ...FileFormats import AIBIN
+from ...FileFormats.AIBIN import AIBIN
 
 from ...Utilities import IO
 from ...Utilities.PyMSError import PyMSError
@@ -13,7 +13,7 @@ from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities import Serialize
 from ...Utilities import Struct
 
-import enum, struct, re
+import enum, re
 
 class Format(enum.Enum):
 	normal = 0
@@ -32,7 +32,7 @@ class TRG:
 		self.stat_txt: TBL.TBL | None = stat_txt
 		self.aiscript: AIBIN.AIBIN | None = aiscript
 
-	STRING_STRUCT = struct.Struct('<2048s')
+	STRING_STRUCT = Struct.l_str(2048)
 	def load(self, input: IO.AnyInputBytes, format: Format = Format.normal) -> None:
 		with IO.InputBytes(input) as f:
 			data = f.read()
@@ -44,16 +44,18 @@ class TRG:
 		unit_properties: dict[int, UnitProperties] = {}
 		try:
 			while not scanner.at_end():
-				trigger = Trigger()
-				trigger.load_data(scanner)
+				# trigger = Trigger()
+				# trigger.load_data(scanner)
+				trigger = scanner.scan(Trigger)
 				triggers.append(trigger)
 				if format != Format.got:
 					for action in trigger.actions:
 						if action.string_index:
-							strings[action.string_index] = scanner.scan(Struct.l_str(2048))
+							strings[action.string_index] = scanner.scan(TRG.STRING_STRUCT)
 						if action.flags & ActionFlag.unit_property_used:
-							props = UnitProperties()
-							props.load_data(scanner)
+							props = scanner.scan(UnitProperties)
+							# props = UnitProperties()
+							# props.load_data(scanner)
 							unit_properties[action.unit_properties_index] = props
 		except Exception as e:
 			raise PyMSError('Load', 'Unsupported TRG file, could possibly be corrupt')
@@ -70,7 +72,7 @@ class TRG:
 			if save_format != Format.got:
 				f.write(TRG.HEADER)
 			for trigger in self.triggers:
-				trigger.save_data(f)
+				f.write(trigger.pack())
 				if is_missiong_briefing is None:
 					is_missiong_briefing = trigger.is_missing_briefing
 				elif trigger.is_missing_briefing != is_missiong_briefing:
@@ -83,7 +85,7 @@ class TRG:
 						else:
 							string = ''
 							warnings.append(PyMSWarning('Save', f'String {action.string_index} is missing, saving an empty string'))
-						f.write(TRG.STRING_STRUCT.pack(string.encode('utf-8')))
+						f.write(TRG.STRING_STRUCT.pack(string))
 					if action.flags & ActionFlag.unit_property_used:
 						properties: UnitProperties
 						if action.flags & ActionFlag.unit_property_used:
@@ -91,11 +93,12 @@ class TRG:
 						else:
 							properties = UnitProperties()
 							warnings.append(PyMSWarning('Save', f'Unit properties {action.unit_properties_index} is missing, saving empty properties'))
-						properties.save_data(f)
+						f.write(properties.pack())
+						# properties.save_data(f)
 		return warnings
 
 	RE_NEWLINES = re.compile(r'(\r\n|\r|\n)')
-	def decompile(self, output: IO.AnyOutputText) -> None:
+	def decompile(self, output: IO.AnyOutputText, reference: bool = False) -> None:
 		with IO.OutputText(output) as f:
 			for string_index,raw_string in self.strings.items():
 				string = TRG.RE_NEWLINES.sub('\\1  ', TBL.decompile_string(raw_string, '\r\n'))
@@ -109,5 +112,5 @@ class TRG:
 				f.write('\n\n')
 
 	# TODO: Compile
-	def compile(self, input: IO.AnyInputText) -> None:
-		pass
+	def compile(self, input: IO.AnyInputText) -> list[PyMSWarning]:
+		return []

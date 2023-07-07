@@ -58,7 +58,8 @@ class CodeCommand(object):
 		self.original_address = originl_address
 
 	def compile(self) -> bytes:
-		data = Struct.Value.pack(self.definition.byte_code_id, Struct.FieldType.u8())
+		assert self.definition.byte_code_id is not None
+		data = Struct.l_u8.pack(self.definition.byte_code_id)
 		for param,param_type in zip(self.params, self.definition.param_types):
 			data += param_type.compile(param)
 		return data

@@ -57,7 +57,7 @@ class ByteCodeHandler(object):
 					print(block)
 			while not scanner.at_end():
 				cmd_address = scanner.address
-				cmd_id = scanner.scan_int(Struct.l_u8)
+				cmd_id = scanner.scan(Struct.l_u8)
 				cmd_def = self.cmd_defs.get(cmd_id)
 				if not cmd_def:
 					# print('%d %d' % (cmd_address, cmd_id))

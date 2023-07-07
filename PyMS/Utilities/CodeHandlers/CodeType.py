@@ -7,6 +7,7 @@ from .CodeBlock import CodeBlock
 from .. import Struct
 from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
+from .. import Struct
 
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 if TYPE_CHECKING:
@@ -17,16 +18,16 @@ if TYPE_CHECKING:
 I = TypeVar('I')
 O = TypeVar('O')
 class CodeType(Generic[I, O]):
-	def __init__(self, name: str, bytecode_type: str, block_reference: bool) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
 		self._name = name
 		self._bytecode_type = bytecode_type
 		self._block_reference = block_reference
 
 	def decompile(self, scanner: BytesScanner) -> I:
-		return scanner.scan(self._bytecode_type)[0]
+		return scanner.scan(self._bytecode_type)
 
 	def compile(self, value: I) -> bytes:
-		return Struct.Value.pack(value, self._bytecode_type)
+		return self._bytecode_type.pack(value)
 
 	def serialize(self, value: I, context: SerializeContext) -> str:
 		if context.definitions:
@@ -42,11 +43,9 @@ class CodeType(Generic[I, O]):
 		raise NotImplementedError(self.__class__.__name__ + '.parse()')
 
 class IntCodeType(CodeType[int, int]):
-	def __init__(self, name: str, bytecode_type: str, limits: tuple[int, int ] | None = None) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None) -> None:
 		CodeType.__init__(self, name, bytecode_type, False)
-		if limits is None:
-			limits = cast(tuple[int,int], Struct.FieldType.numeric_limits(self._bytecode_type))
-		self._limits = limits
+		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> int:
 		token = lexer.next_token()
@@ -67,11 +66,9 @@ class IntCodeType(CodeType[int, int]):
 		return num
 
 class FloatCodeType(CodeType[float, float]):
-	def __init__(self, name: str, bytecode_type: str, limits: tuple[float, float] | None = None) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
 		CodeType.__init__(self, name, bytecode_type, False)
-		if limits is None:
-			limits = cast(tuple[float, float], Struct.FieldType.numeric_limits(self._bytecode_type))
-		self._limits = limits
+		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> float:
 		token = lexer.next_token()
@@ -92,7 +89,7 @@ class FloatCodeType(CodeType[float, float]):
 		return num
 
 class AddressCodeType(CodeType[CodeBlock, str]):
-	def __init__(self, name: str, bytecode_type: str) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
 		CodeType.__init__(self, name, bytecode_type, True)
 
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
@@ -109,7 +106,7 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 
 class StrCodeType(CodeType[str, str]):
 	def __init__(self, name: str) -> None:
-		CodeType.__init__(self, name, 's', False)
+		CodeType.__init__(self, name, Struct.l_str(0), False) # TODO: We don't actually use the Struct field
 
 	@staticmethod
 	def serialize_string(string: str) -> str:
@@ -149,12 +146,12 @@ class StrCodeType(CodeType[str, str]):
 		return StrCodeType.parse_string(token)
 
 class EnumCodeType(CodeType[int, int]):
-	def __init__(self, name: str, bytecode_type: str, cases: dict[str, int]) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.IntField, cases: dict[str, int]) -> None:
 		CodeType.__init__(self, name, bytecode_type, False)
 		self._cases = cases
 
 	def decompile(self, scanner: BytesScanner) -> int:
-		value = scanner.scan_int(self._bytecode_type)
+		value = scanner.scan(self._bytecode_type)
 		# TODO: Check if value is valid
 		return value
 
@@ -176,7 +173,7 @@ class EnumCodeType(CodeType[int, int]):
 		return self._cases[token]
 
 class BooleanCodeType(IntCodeType):
-	def __init__(self, name: str, bytecode_type: str) -> None:
+	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
 		IntCodeType.__init__(self, name, bytecode_type, limits=(0, 1))
 
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> bool:

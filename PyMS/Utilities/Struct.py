@@ -6,7 +6,7 @@ from .PyMSError import PyMSError
 import struct
 from enum import StrEnum
 
-from typing import Self, BinaryIO, Literal, Sequence
+from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar
 
 class Endian(StrEnum):
 	native = '@'
@@ -63,6 +63,11 @@ class Format(StrEnum):
 			case Format.str:
 				return False
 
+@runtime_checkable
+class Processed(Protocol):
+	def prepare_to_pack(self, value: Any) -> Any: ...
+	def finalize_unpack(self, value: Any) -> Any: ...
+
 class Type:
 	def __init__(self, format: Format) -> None:
 		self._format = format
@@ -75,16 +80,30 @@ class Type:
 	def format(self) -> str:
 		return self._format.value
 
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, Type):
+			return False
+		return other._format == self._format
+
 class PadType(Type):
-	def __init__(self, format: Literal[Format.pad], size: int):
+	def __init__(self, format: Literal[Format.pad], length: int):
 		Type.__init__(self, format)
-		self.size = size
+		self.length = length
 
 	@property
 	def format(self) -> str:
-		if self.size == 1:
+		if self.length == 1:
 			return self._format.value
-		return f'{self.size}{self._format}'
+		return f'{self.length}{self._format}'
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, PadType):
+			return False
+		if other._format != self._format:
+			return False
+		if other.length != self.length:
+			return False
+		return True
 
 class IntType(Type):
 	def __init__(self, format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
@@ -94,19 +113,42 @@ class FloatType(Type):
 	def __init__(self, format: Literal[Format.float, Format.double]):
 		Type.__init__(self, format)
 
-class StringType(Type):
-	def __init__(self, format: Literal[Format.char, Format.pstr, Format.str], size: int):
+class StringType(Type, Processed):
+	def __init__(self, format: Literal[Format.char, Format.pstr, Format.str], length: int, strip: bool = True, encoding: str = 'utf-8'):
 		Type.__init__(self, format)
-		self.size = size
+		self.length = length
+		self.strip = strip
+		self.encoding = encoding
 
 	@property
 	def format(self) -> str:
-		if self._format == Format.char and self.size == 1:
+		if self._format == Format.char and self.length == 1:
 			return self._format.value
-		return f'{self.size}{self._format}'
+		return f'{self.length}{self._format}'
 
-def t_pad(size: int = 1) -> PadType:
-	return PadType(Format.pad, size)
+	def prepare_to_pack(self, value: str) -> bytes:
+		return value.encode(self.encoding)
+
+	def finalize_unpack(self, value: bytes) -> str:
+		if self.strip:
+			value = value.rstrip(b'\x00')
+		return value.decode(self.encoding)
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, StringType):
+			return False
+		if other._format != self._format:
+			return False
+		if other.length != self.length:
+			return False
+		if other.strip != self.strip:
+			return False
+		if other.encoding != self.encoding:
+			return False
+		return True
+
+def t_pad(length: int = 1) -> PadType:
+	return PadType(Format.pad, length)
 t_s8 = IntType(Format.s8)
 t_u8 = IntType(Format.u8)
 t_s16 = IntType(Format.s16)
@@ -118,48 +160,48 @@ t_u64 = IntType(Format.u64)
 t_float = FloatType(Format.float)
 t_double = FloatType(Format.double)
 t_char = StringType(Format.char, 1)
-def t_pstr(size: int) -> StringType:
-	return StringType(Format.pstr, size)
-def t_str(size: int) -> StringType:
-	return StringType(Format.str, size)
+def t_pstr(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringType:
+	return StringType(Format.pstr, length, strip, encoding)
+def t_str(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringType:
+	return StringType(Format.str, length, strip, encoding)
 
 class Array(Type):
-	def __init__(self, format: Format, size: int):
+	def __init__(self, format: Format, length: int):
 		Type.__init__(self, format)
-		self.size = size
+		self.length = length
 
 	@property
 	def format(self) -> str:
-		return f'{self.size}{self._format}'
+		return f'{self.length}{self._format}'
 
 class IntArray(Array):
-	def __init__(self, format: Literal[Format.pad, Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64], size: int):
-		Array.__init__(self, format, size)
+	def __init__(self, format: Literal[Format.pad, Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64], length: int):
+		Array.__init__(self, format, length)
 
 class FloatArray(Array):
-	def __init__(self, format: Literal[Format.float, Format.double], size: int):
-		Array.__init__(self, format, size)
+	def __init__(self, format: Literal[Format.float, Format.double], length: int):
+		Array.__init__(self, format, length)
 
-def t_as8(size: int) -> IntArray:
-	return IntArray(Format.s8, size)
-def t_au8(size: int) -> IntArray:
-	return IntArray(Format.u8, size)
-def t_as16(size: int) -> IntArray:
-	return IntArray(Format.s16, size)
-def t_au16(size: int) -> IntArray:
-	return IntArray(Format.u16, size)
-def t_as32(size: int) -> IntArray:
-	return IntArray(Format.s32, size)
-def t_au32(size: int) -> IntArray:
-	return IntArray(Format.u32, size)
-def t_as64(size: int) -> IntArray:
-	return IntArray(Format.s64, size)
-def t_au64(size: int) -> IntArray:
-	return IntArray(Format.u64, size)
-def t_afloat(size: int) -> FloatArray:
-	return FloatArray(Format.float, size)
-def t_adouble(size: int) -> FloatArray:
-	return FloatArray(Format.double, size)
+def t_as8(length: int) -> IntArray:
+	return IntArray(Format.s8, length)
+def t_au8(length: int) -> IntArray:
+	return IntArray(Format.u8, length)
+def t_as16(length: int) -> IntArray:
+	return IntArray(Format.s16, length)
+def t_au16(length: int) -> IntArray:
+	return IntArray(Format.u16, length)
+def t_as32(length: int) -> IntArray:
+	return IntArray(Format.s32, length)
+def t_au32(length: int) -> IntArray:
+	return IntArray(Format.u32, length)
+def t_as64(length: int) -> IntArray:
+	return IntArray(Format.s64, length)
+def t_au64(length: int) -> IntArray:
+	return IntArray(Format.u64, length)
+def t_afloat(length: int) -> FloatArray:
+	return FloatArray(Format.float, length)
+def t_adouble(length: int) -> FloatArray:
+	return FloatArray(Format.double, length)
 
 class Field:
 	def __init__(self, field_type: Type, endian: Endian = Endian.little) -> None:
@@ -178,44 +220,11 @@ class Field:
 	def format(self) -> str:
 		return f'{self.endian}{self.field_type.format}'
 
-	# _FLOAT_LIMITS: tuple[float, float] | None = None
-	# _DOUBLE_LIMITS: tuple[float, float] | None = None
-	# @overload
-	# @staticmethod
-	# def field_limits(field: IntField) -> tuple[int, int]: ...
-	# @overload
-	# @staticmethod
-	# def field_limits(field: FloatField) -> tuple[float, float]: ...
-	# @overload
-	# @staticmethod
-	# def field_limits(field: StringField) -> tuple[int, int]: ...
-	# @staticmethod
-	# def field_limits(field: IntField | FloatField | StringField) -> tuple[int | float, int | float]:
-	# 	if field.field_type.format == _Format.float:
-	# 		if FloatField._FLOAT_LIMITS is not None:
-	# 			return FloatField._FLOAT_LIMITS
-	# 		min = float(struct.unpack('>f', b'\xff\x7f\xff\xff')[0])
-	# 		max = float(struct.unpack('>f', b'\x7f\x7f\xff\xff')[0])
-	# 		FloatField._FLOAT_LIMITS = (min, max)
-	# 		return (min, max)
-	# 	elif field.field_type.format == _Format.double:
-	# 		if FloatField._DOUBLE_LIMITS is not None:
-	# 			return FloatField._DOUBLE_LIMITS
-	# 		min = float(struct.unpack('>d', b'\xff\xef\xff\xff\xff\xff\xff\xff')[0])
-	# 		max = float(struct.unpack('>d', b'\x7f\xef\xff\xff\xff\xff\xff\xff')[0])
-	# 		FloatField._DOUBLE_LIMITS = (min, max)
-	# 		return (min, max)
-	# 	elif isinstance(field, StringField):
-	# 		char_field = IntField(t_char, field.endian)
-	# 		return (0, 2 ** char_field.size - 1)
-	# 	else:
-	# 		min = 0
-	# 		max = 2 ** field.size
-	# 		if field.is_signed:
-	# 			min = -(max // 2)
-	# 			max = (max // 2)
-	# 		max -= 1
-	# 		return (min, max)
+	def pack(self, value: Any) -> bytes:
+		return struct.pack(self.format, value)
+
+	def unpack(self, data: bytes, offset: int = 0) -> Any:
+		return struct.unpack_from(self.format, data, offset)[0]
 
 class IntField(Field):
 	def __init__(self, field_type: IntType, endian: Endian = Endian.little) -> None:
@@ -287,18 +296,17 @@ class FloatField(Field):
 			return max
 
 class StringField(Field):
-	def __init__(self, field_type: StringType, endian: Endian = Endian.little, strip: bool = True) -> None:
+	def __init__(self, field_type: StringType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
-		self.strip = strip
 
-	def pack(self, value: str, encoding: str = 'utf-8') -> bytes:
-		return struct.pack(self.format, value.encode(encoding))
+	def pack(self, value: str) -> bytes:
+		assert isinstance(self.field_type, Processed)
+		return struct.pack(self.format, self.field_type.prepare_to_pack(value))
 
-	def unpack(self, data: bytes, offset: int = 0, encoding: str = 'utf-8') -> str:
+	def unpack(self, data: bytes, offset: int = 0) -> str:
+		assert isinstance(self.field_type, Processed)
 		unpacked: bytes = struct.unpack_from(self.format, data, offset)[0]
-		if self.strip:
-			unpacked = unpacked.rstrip(b'\x00')
-		return unpacked.decode(encoding)
+		return self.field_type.finalize_unpack(unpacked)
 
 	@property
 	def min(self) -> int:
@@ -318,11 +326,11 @@ l_s64 = IntField(t_s64, Endian.little)
 l_u64 = IntField(t_u64, Endian.little)
 l_float = FloatField(t_float, Endian.little)
 l_double = FloatField(t_double, Endian.little)
-l_char = StringField(t_str(1), Endian.little)
-def l_pstr(count: int, strip: bool = True) -> StringField:
-	return StringField(t_pstr(count), Endian.little, strip)
-def l_str(count: int, strip: bool = True) -> StringField:
-	return StringField(t_str(count), Endian.little, strip)
+l_char = StringField(t_char, Endian.little)
+def l_pstr(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringField:
+	return StringField(t_pstr(length, strip, encoding), Endian.little)
+def l_str(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringField:
+	return StringField(t_str(length, strip, encoding), Endian.little)
 
 class ArrayField(Field):
 	def __init__(self, field_type: Array, endian: Endian = Endian.little) -> None:
@@ -333,6 +341,9 @@ class IntArrayField(ArrayField):
 		ArrayField.__init__(self, field_type, endian)
 
 	def pack(self, value: Sequence[int]) -> bytes:
+		assert isinstance(self.field_type, Array)
+		if len(value) != self.field_type.length:
+			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
 		return struct.pack(self.format, *value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> list[int]:
@@ -343,131 +354,259 @@ class FloatArrayField(ArrayField):
 		ArrayField.__init__(self, field_type, endian)
 
 	def pack(self, value: Sequence[float]) -> bytes:
+		assert isinstance(self.field_type, Array)
+		if len(value) != self.field_type.length:
+			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
 		return struct.pack(self.format, *value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> list[float]:
 		return list(struct.unpack_from(self.format, data, offset))
 
-def l_as8(size: int) -> IntArrayField:
-	return IntArrayField(t_as8(size))
-def l_au8(size: int) -> IntArrayField:
-	return IntArrayField(t_au8(size))
-def l_as16(size: int) -> IntArrayField:
-	return IntArrayField(t_as16(size))
-def l_au16(size: int) -> IntArrayField:
-	return IntArrayField(t_au16(size))
-def l_as32(size: int) -> IntArrayField:
-	return IntArrayField(t_as32(size))
-def l_au32(size: int) -> IntArrayField:
-	return IntArrayField(t_au32(size))
-def l_as64(size: int) -> IntArrayField:
-	return IntArrayField(t_as64(size))
-def l_au64(size: int) -> IntArrayField:
-	return IntArrayField(t_au64(size))
-def l_afloat(size: int) -> FloatArrayField:
-	return FloatArrayField(t_afloat(size))
-def l_adouble(size: int) -> FloatArrayField:
-	return FloatArrayField(t_adouble(size))
+AnyField = IntField | FloatField | StringField
 
-class Struct(object):
-	_endian = Endian.little
-	_fields: tuple[tuple[str, Type] | PadType, ...] = ()
+def l_as8(count: int) -> IntArrayField:
+	return IntArrayField(t_as8(count))
+def l_au8(count: int) -> IntArrayField:
+	return IntArrayField(t_au8(count))
+def l_as16(count: int) -> IntArrayField:
+	return IntArrayField(t_as16(count))
+def l_au16(count: int) -> IntArrayField:
+	return IntArrayField(t_au16(count))
+def l_as32(count: int) -> IntArrayField:
+	return IntArrayField(t_as32(count))
+def l_au32(count: int) -> IntArrayField:
+	return IntArrayField(t_au32(count))
+def l_as64(count: int) -> IntArrayField:
+	return IntArrayField(t_as64(count))
+def l_au64(count: int) -> IntArrayField:
+	return IntArrayField(t_au64(count))
+def l_afloat(count: int) -> FloatArrayField:
+	return FloatArrayField(t_afloat(count))
+def l_adouble(count: int) -> FloatArrayField:
+	return FloatArrayField(t_adouble(count))
 
+class MixedInts:
 	_struct: struct.Struct | None = None
 
+	def __init__(self, types: Sequence[IntType | IntArray | PadType]):
+		self.types = types
+
+	def format(self, endian: Endian) -> str:
+		format = endian.value
+		for type in self.types:
+			format += type.format
+		return format
+
+	def size(self, endian: Endian) -> int:
+		return struct.calcsize(self.format(endian))
+
+	def pack(self, value: Sequence[int], endian: Endian) -> bytes:
+		return struct.pack(self.format(endian), *value)
+
+	def unpack(self, data: bytes, offset: int, endian: Endian) -> list[int]:
+		return list(struct.unpack_from(self.format(endian), data, offset))
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, MixedInts):
+			return False
+		if other.types != self.types:
+			return False
+		return True
+
+class Struct:
+	Format = tuple['str | type[Struct] | StructArray | MixedInts', ...]
+	Processors = tuple['struct.Struct | type[Struct] | StructArray | MixedInts', ...]
+	FieldInfo = tuple[str, 'Type | type[Struct] | StructArray | MixedInts']
+	PaddedFieldInfo = FieldInfo | PadType
+
+	_endian = Endian.little
+	_fields: tuple[PaddedFieldInfo, ...]
+
+	_processors: Processors | None = None
+	_size: int | None = None
+
 	@classmethod
-	def format(cls) -> str:
-		format: str = cls._endian
+	def format(cls) -> Struct.Format:
+		format: list[str | type[Struct] | StructArray | MixedInts] = []
+		format_str = ''
 		for field_def in cls._fields:
 			ctype: Type
 			if isinstance(field_def, tuple):
-				ctype = field_def[1]
+				if isinstance(field_def[1], Type):
+					ctype = field_def[1]
+				else:
+					if format_str:
+						format.append(format_str)
+						format_str = ''
+					format.append(field_def[1])
+					continue
 			else:
 				ctype = field_def
-			format += ctype.format
-		return format
+			if not format_str:
+				format_str += cls._endian
+			format_str += ctype.format
+		if format_str:
+			format.append(format_str)
+		return tuple(format)
 
 	@classmethod
-	def build_struct(cls) -> None:
-		if cls._struct is None:
-			cls._struct = struct.Struct(cls.format())
+	def get_processors(cls) -> Struct.Processors:
+		if cls._processors is not None:
+			return cls._processors
+		processors: list[struct.Struct | type[Struct] | StructArray | MixedInts] = []
+		for format in cls.format():
+			if isinstance(format, str):
+				processors.append(struct.Struct(format))
+			else:
+				processors.append(format)
+		_processors = tuple(processors)
+		cls._processors = _processors
+		return _processors
 
 	@classmethod
 	def calcsize(cls) -> int:
-		cls.build_struct()
-		assert cls._struct is not None
-		return cls._struct.size
+		if cls._size is not None:
+			return cls._size
+		processors = cls.get_processors()
+		size = 0
+		for processor in processors:
+			if isinstance(processor, struct.Struct):
+				size += processor.size
+			elif isinstance(processor, StructArray):
+				size += processor.size
+			elif isinstance(processor, MixedInts):
+				size += processor.size(cls._endian)
+			else:
+				size += processor.calcsize()
+		cls._size = size
+		return size
 
 	@property
 	def size(self) -> int:
 		return self.calcsize()
 
 	def pack(self) -> bytes:
-		self.build_struct()
-		assert self._struct is not None
+		result = b''
+		processors = self.get_processors()
+		processor_index = 0
 		values = []
 		for field_def in self._fields:
 			if not isinstance(field_def, tuple):
 				continue
 			name,type = field_def
-			if isinstance(type, Array):
-				values.extend(getattr(self, name))
-			elif isinstance(type, StringType):
-				string: str = getattr(self, name)
-				values.append(string.encode('utf-8'))
+			if isinstance(type, Type):
+				if isinstance(type, Array):
+					values.extend(getattr(self, name))
+				else:
+					value = getattr(self, name)
+					if isinstance(type, Processed):
+						value = type.prepare_to_pack(value)
+					values.append(value)
 			else:
-				values.append(getattr(self, name))
-		return self._struct.pack(*values)
+				if values:
+					processor = processors[processor_index]
+					processor_index += 1
+					assert isinstance(processor, struct.Struct)
+					result += processor.pack(*values)
+					values.clear()
+				value = getattr(self, name)
+				if isinstance(type, StructArray):
+					assert isinstance(value, list)
+					result += type.pack(value)
+				elif isinstance(type, MixedInts):
+					assert isinstance(value, list)
+					result += type.pack(value, self._endian)
+				else:
+					assert isinstance(value, Struct)
+					result += value.pack()
+				processor_index += 1
+		if values:
+			processor = processors[processor_index]
+			assert isinstance(processor, struct.Struct)
+			result += processor.pack(*values)
+		return result
 
 	@classmethod
 	def unpack(cls, data: bytes, offset: int = 0) -> Self:
-		cls.build_struct()
-		assert cls._struct is not None
-		if len(data) < offset + cls._struct.size:
-			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls._struct.size, len(data) - offset))
-		values = cls._struct.unpack_from(data, offset)
+		processors = cls.get_processors()
+		if len(data) < offset + cls.calcsize():
+			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls.calcsize(), len(data) - offset))
 		obj = cls()
-		index = 0
-		for field_def in cls._fields:
-			if not isinstance(field_def, tuple):
-				continue
-			name,type = field_def
-			if isinstance(type, Array):
-				value = list(values[index:index+type.size])
-				index += type.size
+		field_index = 0
+		def next_field() -> Struct.FieldInfo:
+			nonlocal field_index
+			field_info = cls._fields[field_index]
+			field_index += 1
+			while isinstance(field_info, PadType):
+				field_info = cls._fields[field_index]
+				field_index += 1
+			return field_info
+		for processor in processors:
+			value: Any
+			if isinstance(processor, struct.Struct):
+				values = processor.unpack_from(data, offset)
+				offset += processor.size
+				value_index = 0
+				while value_index < len(values):
+					name,type = next_field()
+					assert isinstance(type, Type)
+					if isinstance(type, Array):
+						value = list(values[value_index:value_index+type.length])
+						value_index += type.length
+					else:
+						value = values[value_index]
+						if isinstance(type, Processed):
+							value = type.finalize_unpack(value)
+						value_index += 1
+					setattr(obj, name, value)
 			else:
-				value = values[index]
-				index += 1
-			setattr(obj, name, value)
+				if isinstance(processor, MixedInts):
+					value = processor.unpack(data, offset, cls._endian)
+					offset += processor.size(cls._endian)
+				else:
+					value = processor.unpack(data, offset)
+					if isinstance(processor, StructArray):
+						offset += processor.size
+					else:
+						offset += processor.calcsize()
+				name,_ = next_field()
+				setattr(obj, name, value)
+		obj.post_unpack()
 		return obj
 
 	@classmethod
 	def unpack_array(cls, data: bytes, count: int, offset: int = 0) -> list[Self]:
-		cls.build_struct()
-		assert cls._struct is not None
-		if len(data) < offset + cls._struct.size * count:
-			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls._struct.size * count, len(data) - offset))
+		if len(data) < offset + cls.calcsize() * count:
+			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls.calcsize() * count, len(data) - offset))
 		array = []
 		for _ in range(count):
 			array.append(cls.unpack(data, offset))
-			offset += cls._struct.size
+			offset += cls.calcsize()
 		return array
 
 	@classmethod
 	def unpack_file(cls, file_handle: BinaryIO) -> Self:
-		cls.build_struct()
-		assert cls._struct is not None
 		try:
-			data = file_handle.read(cls._struct.size)
+			data = file_handle.read(cls.calcsize())
 		except:
-			raise PyMSError('Struct', 'Not enough data (expected %d)' % (cls._struct.size))
+			raise PyMSError('Struct', 'Not enough data (expected %d)' % (cls.calcsize()))
 		return cls.unpack(data)
 
 	def __repr__(self) -> str:
-		self.build_struct()
-		assert self._struct is not None
+		format = ''
+		for format_piece in self.format():
+			if format:
+				format += ' '
+			if isinstance(format_piece, str):
+				format += format_piece
+			elif isinstance(format_piece, StructArray):
+				format += f'{format_piece.struct_type.__name__}[]'
+			elif isinstance(format_piece, MixedInts):
+				format += format_piece.format(self._endian)
+			else:
+				format += format_piece.__name__
 		result = """<%s.%s struct = '%s'
-""" % (self.__class__.__module__, self.__class__.__name__, self._struct.format)
+""" % (self.__class__.__module__, self.__class__.__name__, format)
 		for field_def in self._fields:
 			if not isinstance(field_def, tuple):
 				continue
@@ -477,3 +616,36 @@ class Struct(object):
 				value = value.encode('unicode_escape')
 			result += "\t%s = %s\n" % (name, value)
 		return result + ">"
+
+	def post_unpack(self) -> None:
+		pass
+
+S = TypeVar('S', bound=Struct)
+class StructArray:
+	def __init__(self, struct_type: type[S], count: int) -> None:
+		self.struct_type = struct_type
+		self.count = count
+
+	@property
+	def size(self) -> int:
+		return self.struct_type.calcsize() * self.count
+
+	def pack(self, value: Sequence[S]) -> bytes:
+		if len(value) != self.count:
+			raise PyMSError('Pack', f"Array of '{self.struct_type.__name__}' is length {self.count}, but got {len(value)}")
+		result = b''
+		for struct in value:
+			result += struct.pack()
+		return result
+
+	def unpack(self, data: bytes, offset: int = 0) -> list[S]:
+		return self.struct_type.unpack_array(data, self.count, offset)
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, StructArray):
+			return False
+		if other.struct_type != self.struct_type:
+			return False
+		if other.count != self.count:
+			return False
+		return True

@@ -5,7 +5,8 @@ from .CHKRequirements import CHKRequirements
 from .CHKSectionUnknown import CHKSectionUnknown
 from .Sections import *
 
-from ...FileFormats import TBL, AIBIN
+from ...FileFormats import TBL
+from ...FileFormats.AIBIN import AIBIN
 
 from .CHKSection import CHKSection
 
@@ -77,8 +78,8 @@ class CHK:
 		else:
 			if aiscript is None:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
-			self.aiscript = AIBIN.AIBIN(stat_txt=self.stat_txt)
-			self.aiscript.load_file(aiscript)
+			self.aiscript = AIBIN.AIBIN()#stat_txt=self.stat_txt)
+			self.aiscript.load(aiscript)
 		self.sections = {} # type: dict[str, CHKSection]
 		self.section_order = [] # type: list[str]
 

@@ -1,11 +1,13 @@
 
+from PyMS.FileFormats.TRG import TRG
+from .Delegates import MainDelegate
 from .TRGCodeText import TRGCodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
 
-from ..FileFormats import TRG
+from ..FileFormats.TRG import TRG, Conditions, Actions
 from ..FileFormats import TBL
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
@@ -23,8 +25,11 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities import IO
 
 from typing import cast, BinaryIO
+from dataclasses import dataclass
+import re
 
 # def customs(trg):
 	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
@@ -35,7 +40,23 @@ from typing import cast, BinaryIO
 
 LONG_VERSION = 'v%s' % Assets.version('PyTRG')
 
-class PyTRG(MainWindow):
+@dataclass
+class Completing:
+	initial_text: str
+	initial_start: str
+	initial_end: str
+	options: list[str]
+	option_index: int
+	current_end: str
+	current_text: str
+
+	def next_option(self) -> str:
+		self.option_index += 1
+		if self.option_index == len(self.options):
+			self.option_index = 0
+		return self.options[self.option_index]
+
+class PyTRG(MainWindow, MainDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.settings = Settings('PyTRG', '1')
 		self.settings.settings.files.set_defaults({
@@ -95,19 +116,20 @@ class PyTRG(MainWindow):
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
-		self.completing = False
-		self.complete = [None, 0]
-		self.autocomptext = list(TRG.keywords) + ['Trigger','Conditions','Actions']
+		self.complete: Completing | None = None
+		self.autocomptext = ['Trigger', 'BriefingTrigger', 'Conditions','Actions'] #+ TRG.keywords
 		self.autocompfuncs: list[str] = []
-		self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.NORMAL_TRIGGERS] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.MISSION_BRIEFING] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.NORMAL_TRIGGERS] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.MISSION_BRIEFING] if name)
-		self.autocompfuncs.extend(name for name in TRG.TRG.new_actions if name)
+		self.autocompfuncs.extend(condition.name for condition in Conditions._CONDITION_DEFINITIONS_REGISTRY)
+		self.autocompfuncs.extend(action.name for action in Actions._ACTION_DEFINITIONS_REGISTRY)
+		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.NORMAL_TRIGGERS] if name)
+		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.MISSION_BRIEFING] if name)
+		# self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.NORMAL_TRIGGERS] if name)
+		# self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.MISSION_BRIEFING] if name)
+		# self.autocompfuncs.extend(name for name in TRG.TRG.new_actions if name)
 		self.autocompfuncs.sort()
 
 		# Text editor
-		self.text = TRGCodeText(self, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
+		self.text = TRGCodeText(self, self, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate
@@ -146,7 +168,7 @@ class PyTRG(MainWindow):
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
 			tbl.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['stat_txt'])))
-			aibin.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['aiscript'])))
+			aibin.load(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['aiscript'])))
 		except PyMSError as e:
 			err = e
 		else:
@@ -179,9 +201,6 @@ class PyTRG(MainWindow):
 		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
 
 	def statusupdate(self) -> None:
-		if not self.completing:
-			self.text.taboverride = None
-			self.complete = [None, 0]
 		i = self.text.index(INSERT).split('.') + [0]
 		item = self.text.tag_ranges('Selection')
 		if item:
@@ -189,9 +208,6 @@ class PyTRG(MainWindow):
 		self.codestatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
 
 	def edit(self) -> None:
-		if not self.completing:
-			self.text.taboverride = None
-			self.complete = [None, 0]
 		self.mark_edited()
 
 	def update_title(self) -> None:
@@ -228,12 +244,12 @@ class PyTRG(MainWindow):
 				return
 		trg = TRG.TRG()
 		try:
-			trg.load_file(file)
-			data = trg.decompile_data()
+			trg.load(file)
+			data = IO.output_to_text(lambda f: trg.decompile(f))
 		except PyMSError as e:
 			try:
-				trg.load_file(file, True)
-				data = trg.decompile_data()
+				trg.load(file, TRG.Format.got)
+				data = IO.output_to_text(lambda f: trg.decompile(f))
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -284,8 +300,9 @@ class PyTRG(MainWindow):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.trg.interpret(self.text)
-			self.trg.compile(file_path)
+			text = self.text.get('1.0', END)
+			self.trg.compile(text) # TODO: Warnings
+			self.trg.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -303,8 +320,8 @@ class PyTRG(MainWindow):
 			return
 		try:
 			text = self.text.get('1.0', END)
-			self.trg.interpret(text)
-			self.trg.compile(file, True)
+			self.trg.compile(text) # TODO: Warnings
+			self.trg.save(file, TRG.Format.got)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -326,7 +343,7 @@ class PyTRG(MainWindow):
 		i = TRG.TRG()
 		try:
 			text = self.text.get('1.0', END)
-			warnings = i.interpret(text)
+			warnings = i.compile(text)
 		except PyMSError as e:
 			if e.line is not None:
 				self.text.see('%s.0' % e.line)
@@ -408,44 +425,45 @@ class PyTRG(MainWindow):
 		i = self.text.tag_ranges('Selection')
 		if i and '\n' in self.text.get(*i):
 			return False
-		self.completing = True
 		self.text.taboverride = ' (,):'
-		def docomplete(s, e, v, t):
-			ss = '%s+%sc' % (s,len(t))
-			se = '%s+%sc' % (s,len(v))
-			self.text.delete(s, ss)
-			self.text.insert(s, v)
+		def docomplete() -> None:
+			if not self.complete:
+				return
+			complete_text = self.complete.next_option()
+			current_end = '%s+%sc' % (self.complete.initial_start, len(self.complete.initial_text))
+			complete_end = '%s+%sc' % (self.complete.initial_start, len(complete_text))
+			self.text.delete(self.complete.initial_start, current_end)
+			self.text.insert(self.complete.initial_start, complete_text)
 			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] is None:
-				self.complete = [t, 1, s, se]
+			self.text.tag_add('Selection', self.complete.initial_end, complete_end)
+		start = self.text.index('%s -1c wordstart' % INSERT)
+		end = self.text.index('%s -1c wordend' % INSERT)
+		text = self.text.get(start, end)
+		if self.complete is not None:
+			if self.complete.initial_start != start or self.complete.initial_end != end or self.complete.initial_text != text:
+				self.complete = None
 			else:
-				self.complete[1] += 1
-				self.complete[3] = se
-		if self.complete[0] is not None:
-			t,f,s,e = self.complete
-		else:
-			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
-			t,f = self.text.get(s,e),0
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
+				docomplete()
+				return True
+		if text and text[0].lower() in 'abcdefghijklmnopqrstuvwxyz{':
 			ac = list(self.autocomptext)
-			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
+			m = re.match(r'\A\s*[a-z\{]+\Z', text)
 			if not m:
 				ac.extend(self.autocompfuncs)
-			for id,ai in self.aibin.ais.items():
+			for id,header in self.aibin.script_headers.items():
 				if not id in ac:
 					ac.append(id)
-				cs = TBL.decompile_string(self.tbl.strings[ai[1]][:-1], '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			for ns in self.tbl.strings[:228]:
-				cs = ns.split('\x00')
-				if cs[1] != '*':
-					cs = TBL.decompile_string('\x00'.join(cs[:2]), '\x0A\x28\x29\x2C')
+				components = ns.split('\x00')
+				if components[1] != '*':
+					name = TBL.decompile_string('\x00'.join(components[:2]), '\x0A\x28\x29\x2C')
 				else:
-					cs = TBL.decompile_string(cs[0], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
+					name = TBL.decompile_string(components[0], '\x0A\x28\x29\x2C')
+				if not name in ac:
+					ac.append(name)
 			head = '1.0'
 			while True:
 				item = self.text.tag_nextrange('ConstDef', head)
@@ -461,24 +479,21 @@ class PyTRG(MainWindow):
 			r = False
 			matches = []
 			for v in ac:
-				if v and v.lower().startswith(t.lower()):
+				if v and v.lower().startswith(text.lower()):
 					matches.append(v)
 			if matches:
-				if f < len(matches):
-					docomplete(s,e,matches[f],t)
-					self.text.taboverride = ' (,):'
-				elif self.complete[0] is not None:
-					docomplete(s,e,t,t)
-					self.complete[1] = 0
+				self.complete = Completing(text, start, end, [text] + matches, 0, end, text)
+				docomplete()
 				r = True
-			self.after(1, self.completed)
 			return r
 		return False
-
-	def completed(self) -> None:
-		self.completing = False
 
 	def destroy(self) -> None:
 		if self.findwindow:
 			Toplevel.destroy(self.findwindow)
 		MainWindow.destroy(self)
+
+	# MainDelegate
+	def get_trg(self) -> TRG.TRG:
+		assert self.trg is not None
+		return self.trg

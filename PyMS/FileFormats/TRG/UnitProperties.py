@@ -2,8 +2,7 @@
 from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities import Serialize
 from ...Utilities import IO
-
-import struct
+from ...Utilities import Struct
 
 class StateFlag:
 	cloaked = (1 << 0)
@@ -20,7 +19,30 @@ class FieldFlag:
 	resources = (1 << 4)
 	hanger_count = (1 << 5)
 
-class UnitProperties:
+class UnitProperties(Struct.Struct):
+	states_available_flags: int
+	fields_available_flags: int
+	owner: int
+	hit_points: int
+	shield_points: int
+	energy: int
+	resources: int
+	hanger_count: int
+	state_flags: int
+
+	_fields = (
+		('states_available_flags', Struct.t_u16),
+		('fields_available_flags', Struct.t_u16),
+		('owner', Struct.t_u8),
+		('hit_points', Struct.t_u8),
+		('shield_points', Struct.t_u8),
+		('energy', Struct.t_u8),
+		('resources', Struct.t_u32),
+		('hanger_count', Struct.t_u16),
+		('state_flags', Struct.t_u16),
+		Struct.t_pad(4)
+	)
+
 	def __init__(self) -> None:
 		self.states_available_flags = 0
 		self.fields_available_flags = 0
@@ -32,14 +54,14 @@ class UnitProperties:
 		self.hanger_count = 0
 		self.state_flags = 0
 
-	STRUCT = struct.Struct('<2L4BH2LH')
-	def load_data(self, scanner: BytesScanner) -> None:
-		self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags = scanner.scan_ints(UnitProperties.STRUCT)
+	# STRUCT = struct.Struct('<2L4BH2LH')
+	# def load_data(self, scanner: BytesScanner) -> None:
+	# 	self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags = scanner.scan_ints(UnitProperties.STRUCT)
 
-	def save_data(self, output: IO.AnyOutputBytes):
-		data = UnitProperties.STRUCT.pack(self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags)
-		with IO.OutputBytes(output) as f:
-			f.write(data)
+	# def save_data(self, output: IO.AnyOutputBytes):
+	# 	data = UnitProperties.STRUCT.pack(self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags)
+	# 	with IO.OutputBytes(output) as f:
+	# 		f.write(data)
 
 UnitPropertiesDefinition = Serialize.Definition('Properties', Serialize.IDMode.header, {
 	'states_available_flags': Serialize.IntFlagEncoder({

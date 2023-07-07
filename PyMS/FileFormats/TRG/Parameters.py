@@ -956,15 +956,15 @@ class RawFieldParameter(ConditionParameter, ActionParameter):
 
 	CONDITION_LIMITS = (4294967295, 4294967295, 4294967295, 65535, 255, 255, 255, 255, 65535)
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
-		condition._fields[self.field_index] = self._compile(value, RawFieldParameter.CONDITION_LIMITS[self.field_index])
+		condition.fields[self.field_index] = self._compile(value, RawFieldParameter.CONDITION_LIMITS[self.field_index])
 		return None
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
-		return str(action._fields[self.field_index])
+		return str(action.fields[self.field_index])
 
 	ACTION_LIMITS = (4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 65535, 255, 255, 255, 65535)
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
-		action._fields[self.field_index] = self._compile(value, RawFieldParameter.ACTION_LIMITS[self.field_index])
+		action.fields[self.field_index] = self._compile(value, RawFieldParameter.ACTION_LIMITS[self.field_index])
 		return None
 
 # def action_raw(trg, decompile, action, strings, properties, data=None, place=0):
