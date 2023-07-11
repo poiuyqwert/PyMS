@@ -4,7 +4,7 @@ from __future__ import annotations
 from .PyMSError import PyMSError
 
 import struct
-from enum import StrEnum
+from enum import StrEnum, Enum
 
 from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar
 
@@ -109,12 +109,26 @@ class IntType(Type):
 	def __init__(self, format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
 		Type.__init__(self, format)
 
+class BoolType(Type, Processed):
+	def __init__(self, format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
+		Type.__init__(self, format)
+
+	def prepare_to_pack(self, value: bool) -> int:
+		return int(value)
+
+	def finalize_unpack(self, value: int) -> bool:
+		return bool(value)
+
 class FloatType(Type):
 	def __init__(self, format: Literal[Format.float, Format.double]):
 		Type.__init__(self, format)
 
+class Strip(Enum):
+	none = 0
+	right = 1
+	from_first = 2
 class StringType(Type, Processed):
-	def __init__(self, format: Literal[Format.char, Format.pstr, Format.str], length: int, strip: bool = True, encoding: str = 'utf-8'):
+	def __init__(self, format: Literal[Format.char, Format.pstr, Format.str], length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8'):
 		Type.__init__(self, format)
 		self.length = length
 		self.strip = strip
@@ -130,8 +144,18 @@ class StringType(Type, Processed):
 		return value.encode(self.encoding)
 
 	def finalize_unpack(self, value: bytes) -> str:
-		if self.strip:
-			value = value.rstrip(b'\x00')
+		match self.strip:
+			case Strip.none:
+				pass
+			case Strip.right:
+				value = value.rstrip(b'\x00')
+			case Strip.from_first:
+				try:
+					index = value.index(b'\x00')
+				except:
+					pass
+				else:
+					value = value[:index]
 		return value.decode(self.encoding)
 
 	def __eq__(self, other) -> bool:
@@ -151,6 +175,7 @@ def t_pad(length: int = 1) -> PadType:
 	return PadType(Format.pad, length)
 t_s8 = IntType(Format.s8)
 t_u8 = IntType(Format.u8)
+t_b8 = BoolType(Format.u8)
 t_s16 = IntType(Format.s16)
 t_u16 = IntType(Format.u16)
 t_s32 = IntType(Format.s32)
@@ -160,9 +185,9 @@ t_u64 = IntType(Format.u64)
 t_float = FloatType(Format.float)
 t_double = FloatType(Format.double)
 t_char = StringType(Format.char, 1)
-def t_pstr(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringType:
+def t_pstr(length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8') -> StringType:
 	return StringType(Format.pstr, length, strip, encoding)
-def t_str(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringType:
+def t_str(length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8') -> StringType:
 	return StringType(Format.str, length, strip, encoding)
 
 class Array(Type):
@@ -178,6 +203,13 @@ class IntArray(Array):
 	def __init__(self, format: Literal[Format.pad, Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64], length: int):
 		Array.__init__(self, format, length)
 
+class BoolArray(IntArray, Processed):
+	def prepare_to_pack(self, value: list[bool]) -> list[int]:
+		return [int(b) for b in value]
+
+	def finalize_unpack(self, value: list[int]) -> list[bool]:
+		return [bool(b) for b in value]
+
 class FloatArray(Array):
 	def __init__(self, format: Literal[Format.float, Format.double], length: int):
 		Array.__init__(self, format, length)
@@ -186,6 +218,8 @@ def t_as8(length: int) -> IntArray:
 	return IntArray(Format.s8, length)
 def t_au8(length: int) -> IntArray:
 	return IntArray(Format.u8, length)
+def t_ab8(length: int) -> BoolArray:
+	return BoolArray(Format.u8, length)
 def t_as16(length: int) -> IntArray:
 	return IntArray(Format.s16, length)
 def t_au16(length: int) -> IntArray:
@@ -235,6 +269,31 @@ class IntField(Field):
 
 	def unpack(self, data: bytes, offset: int = 0) -> int:
 		return int(struct.unpack_from(self.format, data, offset)[0])
+
+	@property
+	def min(self) -> int:
+		min = 0
+		if self.is_signed:
+			min = -((2 ** (self.size * 8)) // 2)
+		return min
+	
+	@property
+	def max(self) -> int:
+		max = 2 ** (self.size * 8)
+		if self.is_signed:
+			max = (max // 2)
+		max -= 1
+		return max
+
+class BoolField(Field):
+	def __init__(self, field_type: BoolType, endian: Endian = Endian.little) -> None:
+		Field.__init__(self, field_type, endian)
+
+	def pack(self, value: int) -> bytes:
+		return struct.pack(self.format, value)
+
+	def unpack(self, data: bytes, offset: int = 0) -> bool:
+		return bool(struct.unpack_from(self.format, data, offset)[0])
 
 	@property
 	def min(self) -> int:
@@ -318,6 +377,7 @@ class StringField(Field):
 
 l_s8 = IntField(t_s8, Endian.little)
 l_u8 = IntField(t_u8, Endian.little)
+l_b8 = BoolField(t_b8, Endian.little)
 l_s16 = IntField(t_s16, Endian.little)
 l_u16 = IntField(t_u16, Endian.little)
 l_s32 = IntField(t_s32, Endian.little)
@@ -327,9 +387,9 @@ l_u64 = IntField(t_u64, Endian.little)
 l_float = FloatField(t_float, Endian.little)
 l_double = FloatField(t_double, Endian.little)
 l_char = StringField(t_char, Endian.little)
-def l_pstr(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringField:
+def l_pstr(length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8') -> StringField:
 	return StringField(t_pstr(length, strip, encoding), Endian.little)
-def l_str(length: int, strip: bool = True, encoding: str = 'utf-8') -> StringField:
+def l_str(length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8') -> StringField:
 	return StringField(t_str(length, strip, encoding), Endian.little)
 
 class ArrayField(Field):
@@ -349,6 +409,19 @@ class IntArrayField(ArrayField):
 	def unpack(self, data: bytes, offset: int = 0) -> list[int]:
 		return list(struct.unpack_from(self.format, data, offset))
 
+class BoolArrayField(ArrayField):
+	def __init__(self, field_type: IntArray, endian: Endian = Endian.little) -> None:
+		ArrayField.__init__(self, field_type, endian)
+
+	def pack(self, value: Sequence[int]) -> bytes:
+		assert isinstance(self.field_type, Array)
+		if len(value) != self.field_type.length:
+			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
+		return struct.pack(self.format, *value)
+
+	def unpack(self, data: bytes, offset: int = 0) -> list[bool]:
+		return list(struct.unpack_from(self.format, data, offset))
+
 class FloatArrayField(ArrayField):
 	def __init__(self, field_type: FloatArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
@@ -364,26 +437,28 @@ class FloatArrayField(ArrayField):
 
 AnyField = IntField | FloatField | StringField
 
-def l_as8(count: int) -> IntArrayField:
-	return IntArrayField(t_as8(count))
-def l_au8(count: int) -> IntArrayField:
-	return IntArrayField(t_au8(count))
-def l_as16(count: int) -> IntArrayField:
-	return IntArrayField(t_as16(count))
-def l_au16(count: int) -> IntArrayField:
-	return IntArrayField(t_au16(count))
-def l_as32(count: int) -> IntArrayField:
-	return IntArrayField(t_as32(count))
-def l_au32(count: int) -> IntArrayField:
-	return IntArrayField(t_au32(count))
-def l_as64(count: int) -> IntArrayField:
-	return IntArrayField(t_as64(count))
-def l_au64(count: int) -> IntArrayField:
-	return IntArrayField(t_au64(count))
-def l_afloat(count: int) -> FloatArrayField:
-	return FloatArrayField(t_afloat(count))
-def l_adouble(count: int) -> FloatArrayField:
-	return FloatArrayField(t_adouble(count))
+def l_as8(length: int) -> IntArrayField:
+	return IntArrayField(t_as8(length))
+def l_au8(length: int) -> IntArrayField:
+	return IntArrayField(t_au8(length))
+def l_ab8(length: int) -> BoolArrayField:
+	return BoolArrayField(t_ab8(length))
+def l_as16(length: int) -> IntArrayField:
+	return IntArrayField(t_as16(length))
+def l_au16(length: int) -> IntArrayField:
+	return IntArrayField(t_au16(length))
+def l_as32(length: int) -> IntArrayField:
+	return IntArrayField(t_as32(length))
+def l_au32(length: int) -> IntArrayField:
+	return IntArrayField(t_au32(length))
+def l_as64(length: int) -> IntArrayField:
+	return IntArrayField(t_as64(length))
+def l_au64(length: int) -> IntArrayField:
+	return IntArrayField(t_au64(length))
+def l_afloat(length: int) -> FloatArrayField:
+	return FloatArrayField(t_afloat(length))
+def l_adouble(length: int) -> FloatArrayField:
+	return FloatArrayField(t_adouble(length))
 
 class MixedInts:
 	_struct: struct.Struct | None = None

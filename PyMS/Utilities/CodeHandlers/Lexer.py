@@ -6,11 +6,18 @@ from .Tokens import Token, EOFToken, UnknownToken, NewlineToken, StringToken
 from ..PyMSError import PyMSError
 
 from typing import Type, TypeVar, Callable
+from enum import Enum
+
+class Stop(Enum):
+	proceed = 0
+	exclude = 1
+	include = 2
 
 T = TypeVar('T', bound=Token)
 class Lexer(object):
 	def __init__(self, code: str) -> None:
 		self.code = code
+		# self.prev_offsets: list[int] = []
 		self.offset = 0
 		self.line = 0 # TODO: PyMSError currently expects 0-indexed lines and reports them as 1-indexed
 		self.token_types: list[Type[Token]] = []
@@ -21,7 +28,12 @@ class Lexer(object):
 		if skip:
 			self.skip_tokens.append(token_type)
 
-	def next_token(self) -> Token:
+	def _check_token(self, token: Token) -> None:
+		if isinstance(token, NewlineToken):
+			self.line += 1
+
+	def next_token(self, peek: bool = False) -> Token:
+		# start_offset = self.offset
 		token: Token | None = None
 		while not token:
 			if self.offset == len(self.code):
@@ -35,20 +47,25 @@ class Lexer(object):
 				if not token:
 					raise PyMSError('Parse', 'Could not match token')
 			if token:
-				self.offset += len(token.raw_value)
-				if isinstance(token, NewlineToken):
-					self.line += 1
+				if not peek:
+					self.offset += len(token.raw_value)
+				self._check_token(token)
 				if type(token) in self.skip_tokens:
 					token = None
+		# self.prev_offsets.append(start_offset)
 		return token
 
 	def get_token(self, token_type: Type[T]) -> T:
+		# start_offset = self.offset
 		if self.offset == len(self.code):
 			raise PyMSError('Parse', 'End of file')
 		while True:
 			for skip_token_type in self.skip_tokens:
+				if skip_token_type == token_type:
+					continue
 				skip_token = skip_token_type.match(self.code, self.offset)
 				if skip_token:
+					self._check_token(skip_token)
 					self.offset += len(skip_token.raw_value)
 					break
 			else:
@@ -58,17 +75,42 @@ class Lexer(object):
 			# token = UnknownToken.match(self.code, self.offset)
 			# if not token:
 			raise PyMSError('Parse', 'Could not match token')
+		self._check_token(token)
 		self.offset += len(token.raw_value)
+		# self.prev_offsets.append(start_offset)
 		return token
 
 	# Read all tokens as a string until EOF or the `stop` callback returns `True`
-	def read_open_string(self, stop: Callable[[Token], bool]) -> StringToken:
+	def read_open_string(self, stop: Callable[[Token], Stop]) -> StringToken:
+		# start_offset = self.offset
 		raw_string = ''
 		while True:
 			token = self.next_token()
-			if isinstance(token, EOFToken) or stop(token):
+			if isinstance(token, EOFToken):
+				break
+			self._check_token(token)
+			should_stop = stop(token)
+			if should_stop != Stop.proceed:
+				if should_stop == Stop.include:
+					raw_string += token.raw_value
 				break
 			raw_string += token.raw_value
-		from .CodeType import StrCodeType
-		from .ParseContext import ParseContext
-		return StringToken(StrCodeType.parse_string(raw_string))
+		# self.prev_offsets.append(start_offset)
+		return StringToken(raw_string)
+
+	def skip(self, skip_token_types: Type[Token] | tuple[Type[Token], ...]) -> Token:
+		# start_offset = self.offset
+		if not isinstance(skip_token_types, tuple):
+			skip_token_types = (skip_token_types,)
+		token = self.next_token()
+		while isinstance(token, skip_token_types):
+			self._check_token(token)
+			token = self.next_token()
+		self._check_token(token)
+		# self.prev_offsets.append(start_offset)
+		return token
+
+	# def rewind(self) -> None:
+	# 	if not self.prev_offsets:
+	# 		return
+	# 	self.offset = self.prev_offsets.pop()

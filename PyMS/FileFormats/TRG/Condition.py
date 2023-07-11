@@ -120,3 +120,10 @@ class Condition(Struct.Struct):
 	# def save_data(self, output: IO.AnyOutputBytes):
 	# 	with IO.OutputBytes(output) as f:
 	# 		f.write(Condition.STRUCT.pack(*self.fields))
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, Condition):
+			return False
+		if other.fields != self.fields:
+			return False
+		return True

@@ -1,5 +1,4 @@
 
-from PyMS.FileFormats.TRG import TRG
 from .Delegates import MainDelegate
 from .TRGCodeText import TRGCodeText
 from .FindReplaceDialog import FindReplaceDialog
@@ -30,13 +29,6 @@ from ..Utilities import IO
 from typing import cast, BinaryIO
 from dataclasses import dataclass
 import re
-
-# def customs(trg):
-	# trg.dynamic_actions[1] = ['MySetLocationTo',[TRG.new_location,TRG.new_x1,TRG.new_y1,TRG.new_x2,TRG.new_y2,TRG.new_flags,TRG.new_properties]]
-	# trg.dynamic_actions[2] = ['MySetLocationFromDeaths',[TRG.new_location,TRG.action_tunit]]
-	# trg.dynamic_actions[3] = ['MyRemoveUnit',[TRG.action_player,TRG.action_tunit,TRG.action_location]]
-	# trg.dynamic_actions[255] = ['StickUnit',[]]
-# TRG.REGISTER.append(customs)
 
 LONG_VERSION = 'v%s' % Assets.version('PyTRG')
 
@@ -119,8 +111,8 @@ class PyTRG(MainWindow, MainDelegate):
 		self.complete: Completing | None = None
 		self.autocomptext = ['Trigger', 'BriefingTrigger', 'Conditions','Actions'] #+ TRG.keywords
 		self.autocompfuncs: list[str] = []
-		self.autocompfuncs.extend(condition.name for condition in Conditions._CONDITION_DEFINITIONS_REGISTRY)
-		self.autocompfuncs.extend(action.name for action in Actions._ACTION_DEFINITIONS_REGISTRY)
+		self.autocompfuncs.extend(condition.name for condition in Conditions.condition_definitions_registry)
+		self.autocompfuncs.extend(action.name for action in Actions.action_definitions_registry)
 		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.NORMAL_TRIGGERS] if name)
 		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.MISSION_BRIEFING] if name)
 		# self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.NORMAL_TRIGGERS] if name)

@@ -87,6 +87,18 @@ class ActionType:
 	disable_debug_mode = 58
 	enable_debug_mode = 59
 
+class BriefingActionType:
+	no_action = 0
+	wait = 1
+	play_wav = 2
+	text_message = 3
+	mission_objective = 4
+	show_portrait = 5
+	hide_portrait = 6
+	display_speaking_portrait = 7
+	transmission = 8
+	skip_tutorial_enabled = 9
+
 
 class Comparison:
 	at_least = 0
@@ -99,7 +111,7 @@ class SwitchState:
 
 class ConditionFlag:
 	disabled = (1 << 1)
-	unit_type_used = (1 << 4)
+	unit_used = (1 << 4)
 
 class PlayerGroup:
 	p1 = 0
@@ -157,18 +169,6 @@ class AllianceStatus:
 	ally = 1
 	allied_victory = 2
 
-class BriefingActionType:
-	no_action = 0
-	wait = 1
-	play_wav = 2
-	text_message = 3
-	mission_objective = 4
-	show_portrait = 5
-	hide_portrait = 6
-	display_speaking_portrait = 7
-	transmission = 8
-	skip_tutorial_enabled = 9
-
 class SwitchAction:
 	set = 4
 	clear = 5
@@ -195,7 +195,7 @@ class ActionFlag:
 	disabled = (1 << 1)
 	always_display = (1 << 2)
 	unit_property_used = (1 << 3)
-	unit_type_used = (1 << 4)
+	unit_used = (1 << 4)
 
 Masked = 0x4353
 

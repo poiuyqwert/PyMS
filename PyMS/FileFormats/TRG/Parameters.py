@@ -240,10 +240,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter):
 
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		condition.unit_type = self._compile(value, trg)
-		if UnitType.none <= condition.unit_type <= UnitType.factories:
-			condition.flags |= ConditionFlag.unit_type_used
-		else:
-			condition.flags &= ~ConditionFlag.unit_type_used
+		condition.flags |= ConditionFlag.unit_used
 		return None
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
@@ -251,10 +248,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter):
 
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		action.unit_type = self._compile(value, trg)
-		if UnitType.none <= action.unit_type <= UnitType.factories:
-			action.flags |= ActionFlag.unit_type_used
-		else:
-			action.flags &= ~ActionFlag.unit_type_used
+		action.flags |= ActionFlag.unit_used
 		return None
 
 class LocationParameter(ConditionParameter, ActionParameter):
@@ -481,6 +475,9 @@ class TimeParameter(ActionParameter):
 	def help() -> str:
 		return 'Can be any number in the range 0 to 4294967295'
 	
+	def __init__(self, wav: bool = False) -> None:
+		self.wav = wav
+
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		return str(action.duration)
 
@@ -488,7 +485,7 @@ class TimeParameter(ActionParameter):
 		try:
 			duration = int(value)
 			if -1 < duration < 4294967296:
-				action.duration = duration
+				action.duration = duration # TODO: Which field for `self.wav`?
 				return None
 		except:
 			pass
@@ -564,6 +561,7 @@ class UnitParameter(ActionParameter):
 		if unit_type is None:
 			raise PyMSError('Parameter',f"'{value}' is an invalid Unit (value must be in the range 0 to 227, or a full unit name)")
 		action.unit_type = unit_type
+		action.flags |= ActionFlag.unit_used
 		return None
 
 class ModifierParameter(ActionParameter):
@@ -649,7 +647,9 @@ class DisplayParameter(ActionParameter):
 			action.flags |= ActionFlag.always_display
 		elif value == 'Only With Subtitles':
 			action.flags &= ~ActionFlag.always_display
-		raise PyMSError('Parameter', f"'{value}' is an invalid Display type (value must be one of the keywords: Always Display, Only With Subtitles)")
+		else:
+			raise PyMSError('Parameter', f"'{value}' is an invalid Display type (value must be one of the keywords: Always Display, Only With Subtitles)")
+		return None
 
 class QuantityParameter(ActionParameter):
 	@staticmethod
@@ -668,10 +668,11 @@ class QuantityParameter(ActionParameter):
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		if value == 'All':
 			action.quantity = 0
+			return None
 		try:
 			number = int(value)
 			if -1 < number < 4294967296:
-				action.number = number
+				action.quantity = number
 				if number == 0:
 					return PyMSWarning('Parameter', 'Quantity 0 means "all"')
 				return None

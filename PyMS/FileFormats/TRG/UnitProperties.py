@@ -1,8 +1,8 @@
 
-from ...Utilities.BytesScanner import BytesScanner
-from ...Utilities import Serialize
-from ...Utilities import IO
+from __future__ import annotations
+
 from ...Utilities import Struct
+from ...Utilities import IO
 
 class StateFlag:
 	cloaked = (1 << 0)
@@ -18,6 +18,36 @@ class FieldFlag:
 	energy = (1 << 3)
 	resources = (1 << 4)
 	hanger_count = (1 << 5)
+
+class PropertyDefinition:
+	def __init__(self, name: str):
+		self.name = name
+
+class PropertyFieldDefinition(PropertyDefinition):
+	def __init__(self, name: str, attr: str, parameter: Struct.IntField, flag: int):
+		super().__init__(name)
+		self.attr = attr
+		self.parameter = parameter
+		self.flag = flag
+
+class PropertyStateDefinition(PropertyDefinition):
+	def __init__(self, name: str, flag: int):
+		super().__init__(name)
+		self.flag = flag
+
+properties_definitions: tuple[PropertyDefinition, ...] = (
+	PropertyFieldDefinition('Owner', 'owner', Struct.l_u8, FieldFlag.owner),
+	PropertyFieldDefinition('Health', 'hit_points', Struct.l_u8, FieldFlag.hit_points),
+	PropertyFieldDefinition('Shields', 'shield_points', Struct.l_u8, FieldFlag.shield_points),
+	PropertyFieldDefinition('Energy', 'energy', Struct.l_u8, FieldFlag.energy),
+	PropertyFieldDefinition('Resources', 'resources', Struct.l_u32, FieldFlag.resources),
+	PropertyFieldDefinition('HangerCount', 'hanger_count', Struct.l_u16, FieldFlag.hanger_count),
+	PropertyStateDefinition('Cloaked', StateFlag.cloaked),
+	PropertyStateDefinition('Burrowed', StateFlag.burrowed),
+	PropertyStateDefinition('InTransit', StateFlag.in_transit),
+	PropertyStateDefinition('Hallucinated', StateFlag.hallucinated),
+	PropertyStateDefinition('Invincible', StateFlag.invincible)
+)
 
 class UnitProperties(Struct.Struct):
 	states_available_flags: int
@@ -54,42 +84,32 @@ class UnitProperties(Struct.Struct):
 		self.hanger_count = 0
 		self.state_flags = 0
 
-	# STRUCT = struct.Struct('<2L4BH2LH')
-	# def load_data(self, scanner: BytesScanner) -> None:
-	# 	self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags = scanner.scan_ints(UnitProperties.STRUCT)
+	def decompile(self, id: int, output: IO.AnyOutputText) -> None:
+		with IO.OutputText(output) as f:
+			f.write(f'Properties({id}):')
+			for definition in properties_definitions:
+				if isinstance(definition, PropertyFieldDefinition) and self.fields_available_flags & definition.flag:
+					f.write(f'\n  {definition.name}({getattr(self, definition.attr)})')
+				elif isinstance(definition, PropertyStateDefinition) and self.state_flags & definition.flag:
+					f.write(f'\n  {definition.name}()')
 
-	# def save_data(self, output: IO.AnyOutputBytes):
-	# 	data = UnitProperties.STRUCT.pack(self.states_available_flags,self.fields_available_flags,self.owner,self.hit_points,self.shield_points,self.energy,self.resources,self.hanger_count,self.state_flags)
-	# 	with IO.OutputBytes(output) as f:
-	# 		f.write(data)
-
-UnitPropertiesDefinition = Serialize.Definition('Properties', Serialize.IDMode.header, {
-	'states_available_flags': Serialize.IntFlagEncoder({
-		'cloaked': StateFlag.cloaked,
-		'burrowed': StateFlag.burrowed,
-		'in_transit': StateFlag.in_transit,
-		'hallucinated': StateFlag.hallucinated,
-		'invincible': StateFlag.invincible,
-	}),
-	'fields_available_flags': Serialize.IntFlagEncoder({
-		'owner': FieldFlag.owner,
-		'hit_points': FieldFlag.hit_points,
-		'shield_points': FieldFlag.shield_points,
-		'energy': FieldFlag.energy,
-		'resources': FieldFlag.resources,
-		'hanger_count': FieldFlag.hanger_count,
-	}),
-	'owner': Serialize.IntEncoder(),
-	'hit_points': Serialize.IntEncoder(),
-	'shield_points': Serialize.IntEncoder(),
-	'energy': Serialize.IntEncoder(),
-	'resources': Serialize.IntEncoder(),
-	'hanger_count': Serialize.IntEncoder(),
-	'states_flags': Serialize.IntFlagEncoder({
-		'cloaked': StateFlag.cloaked,
-		'burrowed': StateFlag.burrowed,
-		'in_transit': StateFlag.in_transit,
-		'hallucinated': StateFlag.hallucinated,
-		'invincible': StateFlag.invincible,
-	}),
-})
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, UnitProperties):
+			return False
+		if other.fields_available_flags != self.fields_available_flags:
+			return False
+		if other.state_flags != self.state_flags:
+			return False
+		if other.fields_available_flags & FieldFlag.owner and other.owner != self.owner:
+			return False
+		if other.fields_available_flags & FieldFlag.hit_points and other.hit_points != self.hit_points:
+			return False
+		if other.fields_available_flags & FieldFlag.shield_points and other.shield_points != self.shield_points:
+			return False
+		if other.fields_available_flags & FieldFlag.energy and other.energy != self.energy:
+			return False
+		if other.fields_available_flags & FieldFlag.resources and other.resources != self.resources:
+			return False
+		if other.fields_available_flags & FieldFlag.hanger_count and other.hanger_count != self.hanger_count:
+			return False
+		return True

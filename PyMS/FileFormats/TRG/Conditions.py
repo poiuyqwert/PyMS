@@ -31,6 +31,9 @@ class ConditionDefinition(Protocol):
 				has_parameters = True
 			f.write(')')
 
+	def new_condition(self) -> Condition:
+		...
+
 class BasicConditionDefinition(ConditionDefinition):
 	def __init__(self, name: str, condition_type: int, parameters: tuple[ConditionParameter, ...] = ()) -> None:
 		self.name = name
@@ -42,6 +45,11 @@ class BasicConditionDefinition(ConditionDefinition):
 			return Matches.low
 		return Matches.no
 
+	def new_condition(self) -> Condition:
+		condition = Condition()
+		condition.condition_type = self.condition_type
+		return condition
+
 class RawConditionDefinition(ConditionDefinition):
 	name = 'Raw'
 
@@ -51,7 +59,10 @@ class RawConditionDefinition(ConditionDefinition):
 	def matches(self, condition: Condition) -> int:
 		return 1
 
-_CONDITION_DEFINITIONS_REGISTRY: list[ConditionDefinition] = [
+	def new_condition(self) -> Condition:
+		return Condition()
+
+condition_definitions_registry: list[ConditionDefinition] = [
 	BasicConditionDefinition('NoCondition', ConditionType.no_condition),
 	BasicConditionDefinition('CountdownTimer', ConditionType.countdown_timer, (ComparisonParameter(), NumberParameter())),
 	BasicConditionDefinition('Command', ConditionType.command, (PlayerParameter(), ComparisonParameter(), NumberParameter(), UnitTypeParameter())),
@@ -75,18 +86,25 @@ _CONDITION_DEFINITIONS_REGISTRY: list[ConditionDefinition] = [
 	BasicConditionDefinition('Score', ConditionType.score, (PlayerParameter(), ComparisonParameter(), NumberParameter(), ScoreTypeParameter())),
 	BasicConditionDefinition('Always', ConditionType.always),
 	BasicConditionDefinition('Never', ConditionType.never),
+
 	RawConditionDefinition()
 ]
 
 def register_definition(definition: ConditionDefinition) -> None:
-	_CONDITION_DEFINITIONS_REGISTRY.append(definition)
+	condition_definitions_registry.append(definition)
 
 def get_definition(condition: Condition) -> ConditionDefinition:
 	result_definition: ConditionDefinition
 	result_matches = Matches.no
-	for definition in _CONDITION_DEFINITIONS_REGISTRY:
+	for definition in condition_definitions_registry:
 		matches = definition.matches(condition)
 		if matches > result_matches:
 			result_definition = definition
 			result_matches = matches
 	return result_definition
+
+def get_definition_named(name: str) -> (ConditionDefinition | None):
+	for definition in condition_definitions_registry:
+		if definition.name == name:
+			return definition
+	return None

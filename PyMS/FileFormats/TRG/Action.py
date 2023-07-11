@@ -1,17 +1,13 @@
 
 from __future__ import annotations
 
-from ...Utilities.BytesScanner import BytesScanner
-from ...Utilities import IO
 from ...Utilities import Struct
-
-# import struct
 
 class Action(Struct.Struct):
 	fields: list[int]
 
 	_fields = ( # 6LH3B1xH
-		('fields', Struct.MixedInts((Struct.t_au32(6), Struct.t_u32, Struct.t_au8(3), Struct.t_pad(), Struct.t_u32))),
+		('fields', Struct.MixedInts((Struct.t_au32(6), Struct.t_u16, Struct.t_au8(3), Struct.t_pad(), Struct.t_u16))),
 	)
 
 	def __init__(self):
@@ -189,10 +185,14 @@ class Action(Struct.Struct):
 	def masked(self, masked: int) -> None:
 		self.fields[10] = masked
 
-	# STRUCT = struct.Struct('<6LH3B1xH')
-	# def load_data(self, scanner: BytesScanner):
-	# 	self.fields = list(scanner.scan_ints(Action.STRUCT))
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, Action):
+			return False
+		if other.fields != self.fields:
+			return False
+		return True
 
-	# def save_data(self, output: IO.AnyOutputBytes):
-	# 	with IO.OutputBytes(output) as f:
-	# 		f.write(Action.STRUCT.pack(*self.fields))
+	def __repr__(self) -> str:
+		from .Actions import get_definition
+		definition = get_definition(self)
+		return f'<{definition.name} action = {self.fields}>'

@@ -5,10 +5,10 @@ from .Condition import Condition
 from . import Conditions
 from .Action import Action
 from . import Actions
+from . import BriefingActions
 from .Parameters import PlayerParameter
 from .Constants import ConditionType, ActionType
 
-from ...Utilities.BytesScanner import BytesScanner
 from ...Utilities import IO
 from ...Utilities import Struct
 
@@ -24,7 +24,8 @@ class Execution(Struct.Struct):
 
 	_fields = (
 		('flags', Struct.t_u32),
-		('player_groups', Struct.t_au8(28))
+		('player_groups', Struct.t_au8(27)),
+		Struct.t_pad()
 	)
 
 	class Flags:
@@ -37,7 +38,7 @@ class Execution(Struct.Struct):
 
 	def __init__(self) -> None:
 		self.flags = 0
-		self.player_groups = [0] * 28
+		self.player_groups = [0] * 27
 
 	# STRUCT = struct.Struct('<L28B')
 	# def load_data(self, scanner: BytesScanner) -> None:
@@ -48,6 +49,15 @@ class Execution(Struct.Struct):
 	# def save_data(self, output: IO.AnyOutputBytes):
 	# 	with IO.OutputBytes(output) as f:
 	# 		f.write(Execution.STRUCT.pack(self.flags, *self.player_groups))
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, Execution):
+			return False
+		if other.flags != self.flags:
+			return False
+		if other.player_groups != self.player_groups:
+			return False
+		return True
 
 class Trigger(Struct.Struct):
 	CONDITION_COUNT = 16
@@ -76,9 +86,21 @@ class Trigger(Struct.Struct):
 	def conditions_free(self) -> int:
 		return Trigger.CONDITION_COUNT - len(self.conditions)
 
+	def add_condition(self, condition: Condition) -> bool:
+		if not self.conditions_free:
+			return False
+		self.conditions.append(condition)
+		return True
+
 	@property
 	def actions_free(self) -> int:
 		return Trigger.ACTION_COUNT - len(self.actions)
+
+	def add_action(self, action: Action) -> bool:
+		if not self.actions_free:
+			return False
+		self.actions.append(action)
+		return True
 
 	@property
 	def is_missing_briefing(self) -> bool:
@@ -155,7 +177,10 @@ class Trigger(Struct.Struct):
 			if not self.actions:
 				no_action = Action.no_action()
 				f.write('    ')
-				action_definition = Actions.get_definition(no_action)
+				if self.is_missing_briefing:
+					action_definition = BriefingActions.get_definition(no_action)
+				else:
+					action_definition = Actions.get_definition(no_action)
 				action_definition.decompile(no_action, trg, f)
 			else:
 				has_action = False
@@ -163,6 +188,20 @@ class Trigger(Struct.Struct):
 					if has_action:
 						f.write('\n')
 					f.write('    ')
-					action_definition = Actions.get_definition(action)
+					if self.is_missing_briefing:
+						action_definition = BriefingActions.get_definition(action)
+					else:
+						action_definition = Actions.get_definition(action)
 					action_definition.decompile(action, trg, f)
 					has_action = True
+
+	def __eq__(self, other) -> bool:
+		if not isinstance(other, Trigger):
+			return False
+		if other.execution != self.execution:
+			return False
+		if other.conditions != self.conditions:
+			return False
+		if other.actions != self.actions:
+			return False
+		return True

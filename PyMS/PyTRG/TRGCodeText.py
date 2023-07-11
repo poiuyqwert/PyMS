@@ -46,8 +46,8 @@ class TRGCodeText(CodeText):
 	def setupparser(self) -> None:
 		comment = r'(?P<Comment>#[^\n]*$)'
 		header = r'^[ \t]*(?P<Headers>Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:))'
-		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([condition.name for condition in Conditions._CONDITION_DEFINITIONS_REGISTRY])
-		actions = r'\b(?P<Actions>%s)\b' % '|'.join([action.name for action in Actions._ACTION_DEFINITIONS_REGISTRY])
+		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([condition.name for condition in Conditions.condition_definitions_registry])
+		actions = r'\b(?P<Actions>%s)\b' % '|'.join([action.name for action in Actions.action_definitions_registry])
 		#trigplugconditions = r'\b(?P<TrigPlugConditions>%s)\b' % '|'.join([x for x in AIBIN.AIBIN.short_labels if x is not None])
 		# trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x is not None])
 		constants = r'(?P<Constants>\{\w+\})'
