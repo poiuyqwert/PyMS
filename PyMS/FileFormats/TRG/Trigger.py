@@ -12,8 +12,6 @@ from .Constants import ConditionType, ActionType
 from ...Utilities import IO
 from ...Utilities import Struct
 
-# import struct
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .TRG import TRG
@@ -39,16 +37,6 @@ class Execution(Struct.Struct):
 	def __init__(self) -> None:
 		self.flags = 0
 		self.player_groups = [0] * 27
-
-	# STRUCT = struct.Struct('<L28B')
-	# def load_data(self, scanner: BytesScanner) -> None:
-	# 	fields = scanner.scan_ints(Execution.STRUCT)
-	# 	self.flags = fields[0]
-	# 	self.player_groups = list(fields[1:])
-
-	# def save_data(self, output: IO.AnyOutputBytes):
-	# 	with IO.OutputBytes(output) as f:
-	# 		f.write(Execution.STRUCT.pack(self.flags, *self.player_groups))
 
 	def __eq__(self, other) -> bool:
 		if not isinstance(other, Execution):
@@ -82,6 +70,16 @@ class Trigger(Struct.Struct):
 		self.conditions = list(condition for condition in self.conditions if condition.condition_type != ConditionType.no_condition)
 		self.actions = list(action for action in self.actions if action.action_type != ActionType.no_action)
 
+	def pre_pack(self) -> None:
+		while self.conditions_free:
+			self.conditions.append(Condition.no_condition())
+		while self.actions_free:
+			self.actions.append(Action.no_action())
+
+	def post_pack(self) -> None:
+		self.conditions = list(condition for condition in self.conditions if condition.condition_type != ConditionType.no_condition)
+		self.actions = list(action for action in self.actions if action.action_type != ActionType.no_action)
+
 	@property
 	def conditions_free(self) -> int:
 		return Trigger.CONDITION_COUNT - len(self.conditions)
@@ -108,42 +106,6 @@ class Trigger(Struct.Struct):
 			if condition.condition_type == ConditionType.is_mission_briefing:
 				return True
 		return False
-
-	# def load_data(self, scanner: BytesScanner) -> None:
-	# 	conditions: list[Condition] = []
-	# 	actions: list[Action] = []
-	# 	execution = Execution()
-	# 	for _ in range(16):
-	# 		condition = Condition()
-	# 		condition.load_data(scanner)
-	# 		if condition.condition_type != ConditionType.no_condition:
-	# 			conditions.append(condition)
-	# 	for _ in range(64):
-	# 		action = Action()
-	# 		action.load_data(scanner)
-	# 		if action.action_type != ActionType.no_action:
-	# 			actions.append(action)
-	# 	execution.load_data(scanner)
-
-	# 	self.conditions = conditions
-	# 	self.actions = actions
-	# 	self.execution = execution
-
-	# def save_data(self, output: IO.AnyOutputBytes):
-	# 	with IO.OutputBytes(output) as f:
-	# 		for condition in self.conditions:
-	# 			condition.save_data(f)
-	# 		if len(self.conditions) < Trigger.CONDITION_COUNT:
-	# 			no_condition = Condition.no_condition()
-	# 			for _ in range(self.conditions_free):
-	# 				no_condition.save_data(f)
-	# 		for action in self.actions:
-	# 			action.save_data(f)
-	# 		if len(self.actions) < Trigger.ACTION_COUNT:
-	# 			no_action = Action.no_action()
-	# 			for _ in range(self.actions_free):
-	# 				no_action.save_data(f)
-	# 		self.execution.save_data(f)
 
 	def decompile(self, trg: TRG, output: IO.AnyOutputText):
 		with IO.OutputText(output) as f:

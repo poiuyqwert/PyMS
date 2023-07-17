@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from PyMS.Utilities.Compatibility import check_compat
-check_compat('PyAI')
+check_compat('PyTRG')
 
 def main() -> None:
 	from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION

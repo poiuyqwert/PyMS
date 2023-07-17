@@ -32,8 +32,24 @@ class Lexer(object):
 		if isinstance(token, NewlineToken):
 			self.line += 1
 
+	def _skip(self, dont_skip: Type[Token] | None = None) -> None:
+		while True:
+			if self.offset == len(self.code):
+				return
+			for skip_token_type in self.skip_tokens:
+				if skip_token_type == dont_skip:
+					continue
+				skip_token = skip_token_type.match(self.code, self.offset)
+				if skip_token:
+					self._check_token(skip_token)
+					self.offset += len(skip_token.raw_value)
+					break
+			else:
+				break
+
 	def next_token(self, peek: bool = False) -> Token:
 		# start_offset = self.offset
+		self._skip()
 		token: Token | None = None
 		while not token:
 			if self.offset == len(self.code):
@@ -55,28 +71,32 @@ class Lexer(object):
 		# self.prev_offsets.append(start_offset)
 		return token
 
-	def get_token(self, token_type: Type[T]) -> T:
+	def get_token(self, token_type: Type[T]) -> T | None:
 		# start_offset = self.offset
+		self._skip(dont_skip=token_type)
 		if self.offset == len(self.code):
-			raise PyMSError('Parse', 'End of file')
-		while True:
-			for skip_token_type in self.skip_tokens:
-				if skip_token_type == token_type:
-					continue
-				skip_token = skip_token_type.match(self.code, self.offset)
-				if skip_token:
-					self._check_token(skip_token)
-					self.offset += len(skip_token.raw_value)
-					break
-			else:
-				break
+			return None
 		token = token_type.match(self.code, self.offset)
 		if not token:
 			# token = UnknownToken.match(self.code, self.offset)
 			# if not token:
-			raise PyMSError('Parse', 'Could not match token')
+			return None
 		self._check_token(token)
 		self.offset += len(token.raw_value)
+		# self.prev_offsets.append(start_offset)
+		return token
+
+	def check_token(self, token_type: Type[T]) -> Token:
+		# start_offset = self.offset
+		self._skip(dont_skip=token_type)
+		if self.offset == len(self.code):
+			return EOFToken()
+		token: Token | None = token_type.match(self.code, self.offset)
+		if token:
+			self._check_token(token)
+			self.offset += len(token.raw_value)
+		else:
+			token = self.next_token()
 		# self.prev_offsets.append(start_offset)
 		return token
 
@@ -88,7 +108,6 @@ class Lexer(object):
 			token = self.next_token()
 			if isinstance(token, EOFToken):
 				break
-			self._check_token(token)
 			should_stop = stop(token)
 			if should_stop != Stop.proceed:
 				if should_stop == Stop.include:
@@ -104,9 +123,7 @@ class Lexer(object):
 			skip_token_types = (skip_token_types,)
 		token = self.next_token()
 		while isinstance(token, skip_token_types):
-			self._check_token(token)
 			token = self.next_token()
-		self._check_token(token)
 		# self.prev_offsets.append(start_offset)
 		return token
 

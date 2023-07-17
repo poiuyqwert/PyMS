@@ -10,22 +10,21 @@ from ...FileFormats import TBL
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.Bidict import Bidict
+from ...Utilities import Struct
 
 import struct
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 if TYPE_CHECKING:
 	from .TRG import TRG
 	from .Condition import Condition
 	from .Action import Action
 
 class _Parameter(Protocol):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		...
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		...
 
 class ConditionParameter(_Parameter, Protocol):
@@ -42,13 +41,16 @@ class ActionParameter(_Parameter, Protocol):
 	def action_compile(self, value: str, action: Action, trg: TRG) -> (PyMSWarning | None):
 		...
 
+@runtime_checkable
+class HasKeywords(Protocol):
+	def keywords(self) -> tuple[str, ...]:
+		...
+
 class NumberParameter(ConditionParameter, ActionParameter):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Number'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'Any number in the range 0 to 4294967295'
 
 	def _decompile(self, number: int) -> str:
@@ -77,7 +79,7 @@ class NumberParameter(ConditionParameter, ActionParameter):
 		action.number = self._compile(value)
 		return None
 
-class PlayerParameter(ConditionParameter):
+class PlayerParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		PlayerGroup.p1: 'Player 1',
 		PlayerGroup.p2: 'Player 2',
@@ -107,13 +109,14 @@ class PlayerParameter(ConditionParameter):
 		PlayerGroup.non_allied_victory_players: 'Non Allied Victory Players'
 	})
 	
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Player'
 	
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number in the range 0 to 255 (with or without the keyword Player before it), or any keyword from this list: Current Player, Foes, Allies, Neutral Players, All Players, Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4, Non Allied Victory Players'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Current Player', 'Neutral Players', 'All Players', 'Non Allied Victory Players', 'Player', 'Foes', 'Allies', 'Force', 'Unused')
 
 	def __init__(self, *, target: bool = False):
 		self.target = target
@@ -156,19 +159,20 @@ class PlayerParameter(ConditionParameter):
 			action.player_group = self._compile(value)
 		return None
 
-class ComparisonParameter(ConditionParameter):
+class ComparisonParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		Comparison.at_least: 'At Least',
 		Comparison.at_most: 'At Most',
 		Comparison.exactly: 'Exactly'
 	})
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Comparison'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: At Least, Exactly, At Most'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(ComparisonParameter.OPTIONS.values())
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		if condition.comparison in ComparisonParameter.OPTIONS:
@@ -188,7 +192,7 @@ class ComparisonParameter(ConditionParameter):
 			pass
 		raise PyMSError('Parameter',f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
 
-class UnitTypeParameter(ConditionParameter, ActionParameter):
+class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		UnitType.none: 'None',
 		UnitType.any: 'Any Unit',
@@ -197,13 +201,14 @@ class UnitTypeParameter(ConditionParameter, ActionParameter):
 		UnitType.factories: 'Factories'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'TUnit'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A unit ID from 0 to 227 (and extended unit ID 233 to 65535), a full unit name (in the TBL, its the part before the first <0>), or a type from the list: None, Any Unit, Men, Buildings, Factories'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(UnitTypeParameter.OPTIONS.values())
 
 	@staticmethod
 	def unit_name(tbl_string: str) -> str:
@@ -251,14 +256,15 @@ class UnitTypeParameter(ConditionParameter, ActionParameter):
 		action.flags |= ActionFlag.unit_used
 		return None
 
-class LocationParameter(ConditionParameter, ActionParameter):
-	@staticmethod
-	def name() -> str:
+class LocationParameter(ConditionParameter, ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Location'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number in the range 0 to 254 (with or without the keyword Location before it), or the keyword Anywhere (Anywhere is Location 63)'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Location', 'Anywhere')
 
 	def __init__(self, *, destination: bool = False) -> None:
 		self.destination = destination
@@ -301,20 +307,21 @@ class LocationParameter(ConditionParameter, ActionParameter):
 			action.location_index = self._compile(value)
 		return None
 
-class ResourceTypeParameter(ConditionParameter, ActionParameter):
+class ResourceTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		ResourceType.ore: 'Ore',
 		ResourceType.gas: 'Gas',
 		ResourceType.ore_and_gas: 'Ore and Gas'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'ResType'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Ore, Gas, Ore and Gas'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(sorted(ResourceTypeParameter.OPTIONS.values(), key=len, reverse=True))
 
 	def _decompile(self, resource_type: int) -> str:
 		if resource_type in ResourceTypeParameter.OPTIONS:
@@ -346,7 +353,7 @@ class ResourceTypeParameter(ConditionParameter, ActionParameter):
 		action.resource_type, warning = self._compile(value)
 		return warning
 
-class ScoreTypeParameter(ConditionParameter, ActionParameter):
+class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		ScoreType.total: 'Total',
 		ScoreType.units: 'Units',
@@ -358,13 +365,14 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter):
 		ScoreType.custom: 'Custom'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'ScoreType'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Total, Units, Buildings, Units and Buildings, Kills, Razings, Kills and Razings, Custom'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(sorted(ScoreTypeParameter.OPTIONS.values(), key=len, reverse=True))
 
 	def _decompile(self, score_type: int) -> str:
 		if score_type in ScoreTypeParameter.OPTIONS:
@@ -396,14 +404,15 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter):
 		action.score_type, warning = self._compile(value)
 		return warning
 
-class SwitchParameter(ConditionParameter, ActionParameter):
-	@staticmethod
-	def name() -> str:
+class SwitchParameter(ConditionParameter, ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Switch'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number in the range 0 to 255 (with or without the keyword Switch before it)'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Switch',)
 
 	def _decompile(self, switch_index: int) -> str:
 		return f'Switch {switch_index}'
@@ -433,19 +442,20 @@ class SwitchParameter(ConditionParameter, ActionParameter):
 		action.switch_index = self._compile(value)
 		return None
 
-class SwitchStateParameter(ConditionParameter):
+class SwitchStateParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		SwitchState.set: 'Set',
 		SwitchState.cleared: 'Cleared'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'SwitchState'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'Either the keyword Set, or Cleared'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(SwitchStateParameter.OPTIONS.values())
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		if condition.switch_state in SwitchStateParameter.OPTIONS:
@@ -467,38 +477,42 @@ class SwitchStateParameter(ConditionParameter):
 
 # TODO: Support time formats?
 class TimeParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Time'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'Can be any number in the range 0 to 4294967295'
 	
-	def __init__(self, wav: bool = False) -> None:
-		self.wav = wav
+	def __init__(self, transmission: bool = False) -> None:
+		self.transmission = transmission
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
+		if self.transmission:
+			return str(action.transmission_duration)
 		return str(action.duration)
 
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		try:
 			duration = int(value)
 			if -1 < duration < 4294967296:
-				action.duration = duration # TODO: Which field for `self.wav`?
+				if self.transmission:
+					action.transmission_duration = duration
+				else:
+					action.duration = duration
 				return None
 		except:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is not a valid Time (value must be a number in the range 0 to 4294967295)")
 
-class StringParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class StringParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'String'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number corresponding to a string index (with or without the keyword String before it), or the keyword No String'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('String',)
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.string_index == 0:
@@ -523,12 +537,10 @@ class StringParameter(ActionParameter):
 		raise PyMSError('Parameter', f"'{value}' is an invalid String (value must be in the range 0 to 4294967296), or the keyword No String")
 
 class UnitParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Unit'
 	
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A unit ID from 0 to 227 (and extended unit ID 233 to 65535), or a full unit name (in the TBL, its the part before the first <0>)'
 
 	@staticmethod
@@ -564,20 +576,21 @@ class UnitParameter(ActionParameter):
 		action.flags |= ActionFlag.unit_used
 		return None
 
-class ModifierParameter(ActionParameter):
+class ModifierParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		NumberModifier.set: 'Set To',
 		NumberModifier.add: 'Add',
 		NumberModifier.subtract: 'Subtract'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Modifier'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Set To, Add, Subtract'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(ModifierParameter.OPTIONS.values())
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.number_modifier in ModifierParameter.OPTIONS:
@@ -597,14 +610,15 @@ class ModifierParameter(ActionParameter):
 			pass
 		raise PyMSError('Parameter',f"'{value}' is an invalid Modifier (value must be one of the keywords: Set To, Add, Subtract)")
 
-class WAVParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class WAVParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'WAV'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number corresponding to a WAV string index (with or without the keyword WAV before it), or the keyword No WAV'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('No WAV', 'WAV')
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.wav_string_index == 0:
@@ -622,20 +636,21 @@ class WAVParameter(ActionParameter):
 			if -1 < wav_string_index < 4294967296:
 				action.wav_string_index = wav_string_index
 				if wav_string_index == 0:
-					return PyMSWarning('Parameter', 'WAV 0 means "no WAV"')
+					return PyMSWarning('Parameter', 'WAV 0 means "No WAV"')
 				return None
 		except:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid WAV (value must be in the range 1 to 4294967296, or the keyword No WAV)")
 
-class DisplayParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class DisplayParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Display'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'Either the keyword Always Display, or Only With Subtitles'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Always Display', 'Only With Subtitles')
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.flags & ActionFlag.always_display:
@@ -651,15 +666,16 @@ class DisplayParameter(ActionParameter):
 			raise PyMSError('Parameter', f"'{value}' is an invalid Display type (value must be one of the keywords: Always Display, Only With Subtitles)")
 		return None
 
-class QuantityParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class QuantityParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Quantity'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'Can be any number in the range 1 to 4294967295, or the keyword All'
 	
+	def keywords(self) -> tuple[str, ...]:
+		return ('All',)
+
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.quantity == 0:
 			return 'All'
@@ -680,14 +696,15 @@ class QuantityParameter(ActionParameter):
 			pass
 		raise PyMSError('Parameter', f"'{value}' is not a valid Quantity (value must be a number in the range 1 to 4294967295, or the keyword All)")
 
-class PropertiesParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class PropertiesParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Properties'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number corresponding to a unit Properties index (1-64, with or without the keyword Properties before it)'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Properties',)
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		return f'Properties {action.unit_properties_index+1}'
@@ -705,7 +722,7 @@ class PropertiesParameter(ActionParameter):
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid unit Properties index (value must be in the range 1 to 64, with or without the keyword Properties before it)")
 
-class SwitchActionParameter(ActionParameter):
+class SwitchActionParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		SwitchAction.set: 'Set',
 		SwitchAction.clear: 'Clear',
@@ -713,13 +730,14 @@ class SwitchActionParameter(ActionParameter):
 		SwitchAction.randomize: 'Randomize'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'SwitchAction'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Set, Clear, Toggle, Randomize'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(SwitchActionParameter.OPTIONS.values())
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.switch_action in SwitchActionParameter.OPTIONS:
@@ -739,20 +757,21 @@ class SwitchActionParameter(ActionParameter):
 			pass
 		raise PyMSError('Parameter',f"'{value}' is an invalid SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
 
-class StateActionParameter(ActionParameter):
+class StateActionParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		StateAction.set: 'Set',
 		StateAction.clear: 'Clear',
 		StateAction.toggle: 'Toggle'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'StateAction'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Set, Clear, Toggle'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(StateActionParameter.OPTIONS.values())
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.state_action in StateActionParameter.OPTIONS:
@@ -774,12 +793,10 @@ class StateActionParameter(ActionParameter):
 
 # TODO: AIScript
 class AIScriptParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'AIScript'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'The name of an AIScript, or the four character AIScript ID'
 
 	def __init__(self, *, location_based: bool) -> None:
@@ -813,20 +830,21 @@ class AIScriptParameter(ActionParameter):
 		# 	return PyMSWarning('Parameter', f"AIScript '{value}' uses a location")
 		return None
 
-class OrderParameter(ActionParameter):
+class OrderParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		Order.move: 'Move',
 		Order.patrol: 'Patrol',
 		Order.attack: 'Attack',
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Order'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Move, Patrol, Attack'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(OrderParameter.OPTIONS.values())
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.order in OrderParameter.OPTIONS:
@@ -847,12 +865,10 @@ class OrderParameter(ActionParameter):
 		raise PyMSError('Parameter',f"'{value}' is an invalid Order (value must be one of the keywords: Move, Patrol, Attack)")
 
 class PercentageParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'Percentage'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number from 0 to 100 (with or without a trailing %)'
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
@@ -872,20 +888,21 @@ class PercentageParameter(ActionParameter):
 			pass
 		raise PyMSError('Paramater', f"'{value}' is not a valid Number (value must be a number in the range 0 to 4294967295)")
 
-class AllianceStatusParameter(ActionParameter):
+class AllianceStatusParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
 		AllianceStatus.enemy: 'Enemy',
 		AllianceStatus.ally: 'Ally',
 		AllianceStatus.allied_victory: 'Allied Victory'
 	})
 
-	@staticmethod
-	def name() -> str:
+	def name(self) -> str:
 		return 'AllyStatus'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'One of the keywords: Enemy, Ally, Allied Victory'
+
+	def keywords(self) -> tuple[str, ...]:
+		return tuple(AllianceStatusParameter.OPTIONS.values())
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		if action.alliance_status in AllianceStatusParameter.OPTIONS:
@@ -905,14 +922,15 @@ class AllianceStatusParameter(ActionParameter):
 			pass
 		raise PyMSError('Parameter',f"'{value}' is an invalid AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
 
-class SlotParameter(ActionParameter):
-	@staticmethod
-	def name() -> str:
+class SlotParameter(ActionParameter, HasKeywords):
+	def name(self) -> str:
 		return 'Slot'
 
-	@staticmethod
-	def help() -> str:
+	def help(self) -> str:
 		return 'A number from 1 to 4 (with or without they keyword Slot before it)'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('Slot',)
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		return f'Slot {action.slot + 1}'
@@ -932,52 +950,104 @@ class SlotParameter(ActionParameter):
 		raise PyMSError('Parameter', f"'{value}' is an invalid Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
 
 class RawFieldParameter(ConditionParameter, ActionParameter):
-	@staticmethod
-	def name() -> str:
+	limit: int 
+
+	def name(self) -> str:
 		return 'Raw'
 
-	@staticmethod
-	def help() -> str:
-		return 'A raw value'
+	def help(self) -> str:
+		return f'Any number in the range 0 to {self.limit}'
 
 	def __init__(self, field_index: int) -> None:
 		self.field_index = field_index
 
-	def _compile(self, value: str, limit: int) -> int:
+	def _compile(self, value: str) -> int:
 		try:
 			number = int(value)
-			if -1 < number <= limit:
+			if -1 < number <= self.limit:
 				return number
 		except:
 			pass
-		raise PyMSError('Paramater', f"'{value}' is not a valid Raw number for this field (value must be a number in the range 0 to {limit})")
+		raise PyMSError('Paramater', f"'{value}' is not a valid Raw number for this field (value must be a number in the range 0 to {self.limit})")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return str(condition._fields[self.field_index])
 
-	CONDITION_LIMITS = (4294967295, 4294967295, 4294967295, 65535, 255, 255, 255, 255, 65535)
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
-		condition.fields[self.field_index] = self._compile(value, RawFieldParameter.CONDITION_LIMITS[self.field_index])
+		condition.fields[self.field_index] = self._compile(value)
 		return None
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
 		return str(action.fields[self.field_index])
 
-	ACTION_LIMITS = (4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 4294967295, 65535, 255, 255, 255, 65535)
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
-		action.fields[self.field_index] = self._compile(value, RawFieldParameter.ACTION_LIMITS[self.field_index])
+		action.fields[self.field_index] = self._compile(value)
 		return None
 
-# def action_raw(trg, decompile, action, strings, properties, data=None, place=0):
-# 	"""Raw            - A raw value."""
-# 	if decompile:
-# 		return action[place]
-# 	s = ([4294967296]*6+ [65535,255,255,255])[place]
-# 	try:
-# 		n = int(data)
-# 		if -1 < n < s:
-# 			action[place] = n
-# 			return
-# 	except:
-# 		pass
-# 	raise PyMSError('Parameter',"'%s' is an invalid Raw (value at that position must be in the range 0 to %s)" % (data,s))
+class LongParameter(RawFieldParameter):
+	limit = 4294967295
+
+	def name(self) -> str:
+		return 'Long'
+
+class ShortParamater(RawFieldParameter):
+	limit = 65535
+
+	def name(self) -> str:
+		return 'Short'
+
+class ByteParameter(RawFieldParameter):
+	limit = 255
+
+	def name(self) -> str:
+		return 'Byte'
+
+class MemoryParameter(ConditionParameter, ActionParameter):
+	def name(self) -> str:
+		return 'Memory'
+
+	def help(self) -> str:
+		return 'A memory address in hex (prefixed with 0x), or decimal'
+
+	def _decompile(self, unit: int, player: int) -> str:
+		address = 0x0058A364 + (unit * 48) + (player * 4)
+		address %= Struct.l_u32.max + 1
+		return f"{address:#010X}"
+
+	def _compile(self, value: str) -> int:
+		try:
+			if value.startswith('0x'):
+				address = int(value, 16)
+			else:
+				address = int(value)
+		except:
+			raise PyMSError('Paramater', f"'{value}' is not a valid Memory (value must be in hex prefixed with 0x, or decimal")
+		if address % 4:
+			raise PyMSError('Parameter', 'Memory must be a multiple of 4')
+		address -= 0x0058A364
+		while address < 0:
+			address += Struct.l_u32.max + 1
+		player = address // 4
+		if player > Struct.l_u32.max:
+			raise PyMSError('Parameter', 'Memory address is too high')
+		return player
+
+	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
+		return self._decompile(condition.unit_type, condition.player_group)
+
+	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
+		player = self._compile(value)
+		condition.unit_type = 0
+		condition.flags |= ConditionFlag.unit_used
+		condition.player_group = player
+		return None
+
+	def action_decompile(self, action: Action, trg: TRG) -> str:
+		return self._decompile(action.unit_type, action.player_group)
+
+	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
+		player = self._compile(value)
+		action.unit_type = 0
+		action.flags |= ActionFlag.unit_used
+		action.player_group = player
+		return None

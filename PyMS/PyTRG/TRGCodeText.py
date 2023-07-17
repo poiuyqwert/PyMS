@@ -1,8 +1,8 @@
 
 from .Delegates import MainDelegate
-from .Tooltips import ConditionsTooltip, ActionsTooltip, TrigPlugActionsTooltip
+from .Tooltips import ConditionsTooltip, ActionsTooltip
 
-from ..FileFormats.TRG import TRG, Conditions, Actions
+from ..FileFormats.TRG import Conditions, Actions
 
 from ..Utilities.UIKit import *
 
@@ -10,8 +10,9 @@ from copy import deepcopy
 import re
 
 class TRGCodeText(CodeText):
-	def __init__(self, parent: Misc, delegate: MainDelegate, ecallback=None, highlights=None, state: WidgetState = NORMAL) -> None:
+	def __init__(self, parent: Misc, delegate: MainDelegate, keywords: list[str], ecallback=None, highlights=None, state: WidgetState = NORMAL) -> None:
 		self.delegate = delegate
+		self.keywords = keywords
 		self.boldfont = ('Courier New', -11, 'bold')
 		self.re: re.Pattern | None = None
 		if highlights:
@@ -46,21 +47,21 @@ class TRGCodeText(CodeText):
 	def setupparser(self) -> None:
 		comment = r'(?P<Comment>#[^\n]*$)'
 		header = r'^[ \t]*(?P<Headers>Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:))'
-		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([condition.name for condition in Conditions.condition_definitions_registry])
-		actions = r'\b(?P<Actions>%s)\b' % '|'.join([action.name for action in Actions.action_definitions_registry])
+		conditions = r'\b(?P<Conditions>%s)\b' % '|'.join([condition.name for condition in Conditions.definitions_registry])
+		actions = r'\b(?P<Actions>%s)\b' % '|'.join([action.name for action in Actions.definitions_registry])
 		#trigplugconditions = r'\b(?P<TrigPlugConditions>%s)\b' % '|'.join([x for x in AIBIN.AIBIN.short_labels if x is not None])
 		# trigplugactions = r'\b(?P<TrigPlugActions>%s)\b' % '|'.join([x for x in TRG.TRG.new_actions if x is not None])
 		constants = r'(?P<Constants>\{\w+\})'
 		constdef = r'(?<=Constant )(?P<ConstDef>\w+)(?=:)'
-		# keywords = r'\b(?P<Keywords>%s)(?=[ \),])' % '|'.join(TRG.keywords)
+		keywords = r'\b(?P<Keywords>%s)(?=[ \),])' % '|'.join(self.keywords)
 		tblformat = r'(?P<TBLFormat><0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>)'
 		num = r'\b(?P<Number>\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+)\b'
 		operators = r'(?P<Operators>[():,\-])'
 		# self.basic = '|'.join((comment, header, keywords, conditions, actions, trigplugactions, constants, constdef, tblformat, num, operators))
-		self.basic = '|'.join((comment, header, conditions, actions, constants, constdef, tblformat, num, operators))
+		self.basic = '|'.join((comment, header, keywords, conditions, actions, constants, constdef, tblformat, num, operators))
 		ConditionsTooltip(self)
 		ActionsTooltip(self)
-		TrigPlugActionsTooltip(self)
+		# TrigPlugActionsTooltip(self)
 		self.tags = deepcopy(self.highlights)
 
 	def colorize(self) -> None:

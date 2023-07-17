@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from .Constants import ConditionType
 
-from ...Utilities.BytesScanner import BytesScanner
-from ...Utilities import IO
 from ...Utilities import Struct
-
-# import struct
 
 class Condition(Struct.Struct):
 	fields: list[int]
@@ -113,17 +109,14 @@ class Condition(Struct.Struct):
 	def masked(self, masked: int) -> None:
 		self.fields[8] = masked
 
-	# STRUCT = struct.Struct('<3LH4BH')
-	# def load_data(self, scanner: BytesScanner):
-	# 	self.fields = list(scanner.scan_ints(Condition.STRUCT))
-
-	# def save_data(self, output: IO.AnyOutputBytes):
-	# 	with IO.OutputBytes(output) as f:
-	# 		f.write(Condition.STRUCT.pack(*self.fields))
-
 	def __eq__(self, other) -> bool:
 		if not isinstance(other, Condition):
 			return False
 		if other.fields != self.fields:
 			return False
 		return True
+
+	def __repr__(self) -> str:
+		from .Conditions import get_definition
+		definition = get_definition(self)
+		return f'<{definition.name} condition = {self.fields}>'

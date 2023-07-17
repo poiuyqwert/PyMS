@@ -572,7 +572,7 @@ class AISourceCodeHandler(SourceCodeHandler):
 
 	def parse_custom(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
 		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script':
-			token = self.lexer.get_token(AILexer.ScriptIDToken)
+			token = self.lexer.next_token()
 			if not isinstance(token, AILexer.ScriptIDToken):
 				raise PyMSError('Parse', "Expected script ID, got '%s' instead" % token.raw_value, line=self.lexer.line)
 			line = self.lexer.line

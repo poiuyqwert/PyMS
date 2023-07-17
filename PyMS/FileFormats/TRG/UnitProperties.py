@@ -86,7 +86,7 @@ class UnitProperties(Struct.Struct):
 
 	def decompile(self, id: int, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
-			f.write(f'Properties({id}):')
+			f.write(f'UnitProperties({id}):')
 			for definition in properties_definitions:
 				if isinstance(definition, PropertyFieldDefinition) and self.fields_available_flags & definition.flag:
 					f.write(f'\n  {definition.name}({getattr(self, definition.attr)})')

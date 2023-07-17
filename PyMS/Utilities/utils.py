@@ -165,6 +165,45 @@ def fit(label, text, width=80, end=False, indent=0): # type: (str, str, int, boo
 			r += '\n'
 	return r.rstrip('\n') + ('\n' if end else '')
 
+def fit2(text: str, width: int = 80, indent: str | int = '', label: str | None = None) -> str:
+	if isinstance(indent, int):
+		break_indent = ' ' * indent
+	else:
+		break_indent = indent
+	label_indent = ''
+	if label:
+		label_indent = ' ' * len(label)
+	label_line_width = width - len(label_indent)
+	break_line_width = label_line_width - len(break_indent)
+	result = ''
+	first_line = True
+	for line in text.splitlines():
+		if line:
+			if first_line and label:
+				result += label
+			else:
+				result += label_indent
+			line_width = label_line_width
+			if len(line) > line_width:
+				add_space = False
+				for word in line.split(' '):
+					if len(word) < line_width:
+						if add_space:
+							result += ' '
+						result += word
+						line_width -= len(word) + 1
+						add_space = True
+					else:
+						line_width = break_line_width - len(word)
+						result += '\n' + label_indent + break_indent + word
+			else:
+				result += line
+			result += '\n'
+		else:
+			result += '\n'
+		first_line = False
+	return result[:-1]
+
 def float_to_str(value, strip_zero_decimals=True, max_decimals=4): # type: (float, bool, int) -> str
 	result = str(value)
 	if result.endswith('.0') and strip_zero_decimals:

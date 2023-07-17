@@ -102,6 +102,13 @@ class Action(Struct.Struct):
 		self.fields[5] = index
 
 	@property
+	def transmission_duration(self) -> int:
+		return self.fields[5]
+	@transmission_duration.setter
+	def transmission_duration(self, duration: int) -> None:
+		self.fields[5] = duration
+
+	@property
 	def unit_type(self) -> int:
 		return self.fields[6]
 	@unit_type.setter

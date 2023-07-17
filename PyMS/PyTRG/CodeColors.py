@@ -1,16 +1,21 @@
 
+from .TRGCodeText import TRGCodeText
+
 from ..Utilities.utils import couriernew, fit
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
+from ..Utilities.Settings import Settings
 
 from collections import OrderedDict
 from copy import deepcopy
 
 class CodeColors(PyMSDialog):
-	def __init__(self, parent):
-		self.cont = False
-		self.tags = deepcopy(parent.text.tags)
-		self.info = OrderedDict()
+	def __init__(self, parent: Misc, text: TRGCodeText, settings: Settings) -> None:
+		self.text = text
+		self.settings = settings
+		self.cont: dict[str, dict] | None = None
+		self.tags = deepcopy(text.tags)
+		self.info: OrderedDict[str, str | list[str]] = OrderedDict()
 		self.info['Comment'] = 'The color of a comment.'
 		self.info['Headers'] = 'The color of any header.'
 		self.info['Conditions'] = 'All Condition names'
@@ -28,9 +33,9 @@ class CodeColors(PyMSDialog):
 		self.info['Selection'] = 'The color of selected text in the editor.'
 		PyMSDialog.__init__(self, parent, 'Color Settings', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		self.listbox = ScrolledListbox(self, font=couriernew, width=20, height=16)
-		self.listbox.bind(ButtonRelease.Click_Left, self.select)
+		self.listbox.bind(ButtonRelease.Click_Left(), self.select)
 		for t in list(self.info.keys()):
 			if isinstance(t, list):
 				self.listbox.insert(END, t[0])
@@ -48,19 +53,19 @@ class CodeColors(PyMSDialog):
 		opt = LabelFrame(r, text='Style:', padx=5, pady=5)
 		f = Frame(opt)
 		c = Checkbutton(f, text='Foreground', variable=self.fg, width=20, anchor=W)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=0: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda e: self.select(e,0))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Background', variable=self.bg)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=1: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda e: self.select(e,1))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Bold', variable=self.bold)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=2: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda e: self.select(e,2))
 		c.grid(sticky=W)
 		self.fgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.fgcanvas.bind(Mouse.Click_Left, lambda e,i=0: self.colorselect(e, i))
+		self.fgcanvas.bind(Mouse.Click_Left(), lambda e: self.colorselect(e, 0))
 		self.fgcanvas.grid(column=1, row=0)
 		self.bgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.bgcanvas.bind(Mouse.Click_Left, lambda e,i=1: self.colorselect(e, i))
+		self.bgcanvas.bind(Mouse.Click_Left(), lambda e: self.colorselect(e, 1))
 		self.bgcanvas.grid(column=1, row=1)
 		f.pack(side=TOP)
 		Label(opt, textvariable=self.infotext, height=6, justify=LEFT).pack(side=BOTTOM, fill=X)
@@ -76,17 +81,18 @@ class CodeColors(PyMSDialog):
 
 		return ok
 
-	def setup_complete(self):
-		self.parent.settings.windows.load_window_size('colors', self)
+	def setup_complete(self) -> None:
+		self.settings.windows.load_window_size('colors', self)
 
-	def select(self, e=None, n=None):
+	def select(self, e: Event | None = None, n: int | None = None) -> None:
 		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
 		s = self.tags[i.replace(' ', '')]
 		if n is None:
-			if isinstance(self.info[i], list):
-				t = self.info[i][0].split('\n')
+			info = self.info[i]
+			if isinstance(info, list):
+				t = info[0].split('\n')
 			else:
-				t = self.info[i].split('\n')
+				t = info.split('\n')
 			text = ''
 			if len(t) == 2:
 				d = '  '
@@ -111,13 +117,13 @@ class CodeColors(PyMSDialog):
 		else:
 			v = [self.fg,self.bg,self.bold][n].get()
 			if n == 2:
-				s['font'] = [self.parent.text.boldfont,couriernew][v]
+				s['font'] = [self.text.boldfont,couriernew][v]
 			else:
 				s[['foreground','background'][n]] = ['#000000',None][v]
 				if v:
 					[self.fgcanvas,self.bgcanvas][n]['background'] = '#000000'
 
-	def colorselect(self, e, i):
+	def colorselect(self, e: Event, i: int) -> None:
 		if [self.fg,self.bg][i].get():
 			v = [self.fgcanvas,self.bgcanvas][i]
 			g = ['foreground','background'][i]
@@ -130,14 +136,10 @@ class CodeColors(PyMSDialog):
 					self.tags[self.info[k][1]][g] = c[1]
 			self.focus_set()
 
-	def ok(self):
+	def ok(self, event: Event | None = None) -> None:
 		self.cont = self.tags
 		PyMSDialog.ok(self)
 
-	def cancel(self):
-		self.cont = False
-		PyMSDialog.ok(self)
-
-	def dismiss(self):
-		self.parent.settings.windows.save_window_size('colors', self)
+	def dismiss(self) -> None:
+		self.settings.windows.save_window_size('colors', self)
 		PyMSDialog.dismiss(self)

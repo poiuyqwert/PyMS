@@ -4,7 +4,7 @@ from .TRGCodeText import TRGCodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
 
-from ..FileFormats.TRG import TRG, Conditions, Actions
+from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
 from ..FileFormats.AIBIN import AIBIN
 
@@ -70,8 +70,6 @@ class PyTRG(MainWindow, MainDelegate):
 		self.edited = False
 		self.tbl: TBL.TBL
 		self.aibin: AIBIN.AIBIN
-		# self.findhistory = []
-		# self.replacehistory = []
 		self.findwindow: FindReplaceDialog | None = None
 
 		self.update_title()
@@ -109,19 +107,28 @@ class PyTRG(MainWindow, MainDelegate):
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.complete: Completing | None = None
-		self.autocomptext = ['Trigger', 'BriefingTrigger', 'Conditions','Actions'] #+ TRG.keywords
-		self.autocompfuncs: list[str] = []
-		self.autocompfuncs.extend(condition.name for condition in Conditions.condition_definitions_registry)
-		self.autocompfuncs.extend(action.name for action in Actions.action_definitions_registry)
-		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.NORMAL_TRIGGERS] if name)
-		# self.autocompfuncs.extend(name for name in TRG.TRG.conditions[TRG.MISSION_BRIEFING] if name)
-		# self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.NORMAL_TRIGGERS] if name)
-		# self.autocompfuncs.extend(name for name in TRG.TRG.actions[TRG.MISSION_BRIEFING] if name)
-		# self.autocompfuncs.extend(name for name in TRG.TRG.new_actions if name)
+		keywords: dict[str, None] = dict.fromkeys(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
+		functions: dict[str, None] = {}
+		for condition in Conditions.definitions_registry:
+			functions[condition.name] = None
+			for cparameter in condition.parameters:
+				if isinstance(cparameter, Parameters.HasKeywords):
+					for keyword in cparameter.keywords():
+						keywords[keyword] = None
+		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
+			functions[action.name] = None
+			for aparameter in action.parameters:
+				if isinstance(aparameter, Parameters.HasKeywords):
+					for keyword in aparameter.keywords():
+						keywords[keyword] = None
+		for property in UnitProperties.properties_definitions:
+			functions[property.name] = None
+		self.autocomptext = list(keywords.keys())
+		self.autocompfuncs: list[str] = list(functions.keys())
 		self.autocompfuncs.sort()
 
 		# Text editor
-		self.text = TRGCodeText(self, self, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
+		self.text = TRGCodeText(self, self, self.autocomptext, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate
@@ -371,14 +378,14 @@ class PyTRG(MainWindow, MainDelegate):
 
 	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
+			self.findwindow = FindReplaceDialog(self, self.text, self.settings)
 			self.bind(Key.F3(), self.findwindow.findnext)
 		else:
 			self.findwindow.make_active() # type: ignore[attr-defined]
 			self.findwindow.findentry.focus_set(highlight=True)
 
 	def colors(self) -> None:
-		c = CodeColors(self)
+		c = CodeColors(self, self.text, self.settings)
 		if c.cont:
 			self.text.setup(c.cont)
 			self.highlights = c.cont

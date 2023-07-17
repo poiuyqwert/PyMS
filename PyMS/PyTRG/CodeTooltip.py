@@ -3,32 +3,38 @@ from ..Utilities.UIKit import *
 
 # TODO: Generalize
 class CodeTooltip(Tooltip):
-	tag = ''
+	tag: str
 
-	def setupbinds(self, press):
+	def __init__(self, parent: CodeText, text: str = '', font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
+		self.code_text = parent
+		super().__init__(parent, text, font, delay, press, mouse, attach_to_parent)
+
+	def setupbinds(self, press: bool) -> None:
 		if self.tag:
-			self.parent.tag_bind(self.tag, Cursor.Enter, self.enter, '+')
-			self.parent.tag_bind(self.tag, Cursor.Leave, self.leave, '+')
-			self.parent.tag_bind(self.tag, Mouse.Motion, self.motion, '+')
-			self.parent.tag_bind(self.tag, Mouse.Click_Left, self.leave, '+')
-			self.parent.tag_bind(self.tag, Mouse.ButtonPress, self.leave)
+			self.code_text.tag_bind(self.tag, Cursor.Enter(), self.enter, '+')
+			self.code_text.tag_bind(self.tag, Cursor.Leave(), self.leave, '+')
+			self.code_text.tag_bind(self.tag, Mouse.Motion(), self.motion, '+')
+			self.code_text.tag_bind(self.tag, Mouse.Click_Left(), self.leave, '+')
+			self.code_text.tag_bind(self.tag, Mouse.ButtonPress(), self.leave)
 
-	def showtip(self):
+	def showtip(self) -> None:
 		if self.tip:
 			return
 		t = ''
 		if self.tag:
-			pos = list(self.parent.winfo_pointerxy())
-			head,tail = self.parent.tag_prevrange(self.tag,self.parent.index('@%s,%s+1c' % (pos[0] - self.parent.winfo_rootx(),pos[1] - self.parent.winfo_rooty())))
-			t = self.parent.get(head,tail)
+			pos = list(self.code_text.winfo_pointerxy())
+			tag_range = self.code_text.tag_prevrange(self.tag,self.code_text.index('@%s,%s+1c' % (pos[0] - self.code_text.winfo_rootx(),pos[1] - self.code_text.winfo_rooty())))
+			if tag_range:
+				head,tail = tag_range
+				t = self.code_text.get(head,tail)
 		try:
 			t = self.gettext(t)
-			self.tip = Toplevel(self.parent, relief=SOLID, borderwidth=1)
-			self.tip.wm_overrideredirect(1)
+			self.tip = TooltipWindow(self.code_text, relief=SOLID, borderwidth=1)
+			self.tip.wm_overrideredirect(True)
 			frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
-			Label(frame, text=t, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+			Label(frame, text=t, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1) # type: ignore[arg-type]
 			frame.pack()
-			pos = list(self.parent.winfo_pointerxy())
+			pos = list(self.code_text.winfo_pointerxy())
 			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
 			self.tip.update_idletasks()
 			move = False

@@ -561,6 +561,7 @@ class Struct:
 		return self.calcsize()
 
 	def pack(self) -> bytes:
+		self.pre_pack()
 		result = b''
 		processors = self.get_processors()
 		processor_index = 0
@@ -599,6 +600,7 @@ class Struct:
 			processor = processors[processor_index]
 			assert isinstance(processor, struct.Struct)
 			result += processor.pack(*values)
+		self.post_pack()
 		return result
 
 	@classmethod
@@ -693,6 +695,12 @@ class Struct:
 		return result + ">"
 
 	def post_unpack(self) -> None:
+		pass
+
+	def pre_pack(self) -> None:
+		pass
+
+	def post_pack(self) -> None:
 		pass
 
 S = TypeVar('S', bound=Struct)
