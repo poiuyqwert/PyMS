@@ -25,6 +25,13 @@ class Action(Struct.Struct):
 		self.fields[0] = index
 
 	@property
+	def mask(self) -> int:
+		return self.fields[0]
+	@mask.setter
+	def mask(self, mask: int) -> None:
+		self.fields[0] = mask
+
+	@property
 	def string_index(self) -> int:
 		return self.fields[1]
 	@string_index.setter

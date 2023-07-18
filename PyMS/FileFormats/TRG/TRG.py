@@ -6,6 +6,7 @@ from .CodeHandler import TRGLexer
 from .Parameters import PlayerParameter, PlayerGroup
 from . import Conditions
 from . import Actions
+from .Condition import Condition
 
 from ...FileFormats import TBL
 from ...FileFormats.AIBIN import AIBIN
@@ -144,7 +145,7 @@ class TRG:
 				token = lexer.check_token(TRGLexer.ParameterToken)
 				for parameter in definition.parameters:
 					if not isinstance(token, TRGLexer.ParameterToken):
-						raise PyMSError('Compile', f"Expected a parameter, got '{token.raw_value}' instead", lexer.line)
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", lexer.line)
 					try:
 						if warning := parameter.condition_compile(token.raw_value, condition, self):
 							warnings.append(warning)
@@ -190,7 +191,7 @@ class TRG:
 				token = lexer.check_token(TRGLexer.ParameterToken)
 				for parameter in definition.parameters:
 					if not isinstance(token, TRGLexer.ParameterToken):
-						raise PyMSError('Compile', f"Expected a parameter, got '{token.raw_value}' instead", lexer.line)
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", lexer.line)
 					try:
 						if warning := parameter.action_compile(token.raw_value, action, self):
 							warnings.append(warning)
@@ -260,6 +261,8 @@ class TRG:
 				if not isinstance(token, Tokens.NewlineToken):
 					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
 				token = process_conditions(trigger)
+			else:
+				trigger.add_condition(Condition.mission_briefing())
 			if not isinstance(token, TRGLexer.KeywordsToken) or token.raw_value != 'Actions:':
 				raise PyMSError('Compile', f"Expected 'Actions:' to start list of actions", lexer.line)
 			token = process_actions(trigger)

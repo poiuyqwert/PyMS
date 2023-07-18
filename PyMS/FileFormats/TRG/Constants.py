@@ -197,7 +197,9 @@ class ActionFlag:
 	unit_property_used = (1 << 3)
 	unit_used = (1 << 4)
 
-Masked = 0x4353
+class Mask:
+	enabled = 0x4353
+	disabled = 0
 
 
 

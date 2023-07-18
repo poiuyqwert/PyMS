@@ -20,7 +20,7 @@ class Condition(Struct.Struct):
 		return Condition()
 
 	@staticmethod
-	def is_mission_briefing() -> Condition:
+	def mission_briefing() -> Condition:
 		condition = Condition()
 		condition.condition_type = ConditionType.is_mission_briefing
 		return condition
@@ -31,6 +31,13 @@ class Condition(Struct.Struct):
 	@location_index.setter
 	def location_index(self, index: int) -> None:
 		self.fields[0] = index
+
+	@property
+	def mask(self) -> int:
+		return self.fields[0]
+	@mask.setter
+	def mask(self, mask: int) -> None:
+		self.fields[0] = mask
 
 	@property
 	def player_group(self) -> int:

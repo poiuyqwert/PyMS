@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from PyMS.Utilities import IO
 
-from .Parameters import ActionParameter, LongParameter, ShortParamater, ByteParameter, MemoryParameter, ModifierParameter, NumberParameter
+from .Parameters import ActionParameter, LongParameter, ShortParamater, ByteParameter, MemoryParameter, ModifierParameter, NumberParameter, MaskParameter
 from .Action import Action
-from .Constants import Matches, ActionType, ActionFlag, PlayerGroup
+from .Constants import Matches, ActionType, ActionFlag, PlayerGroup, Mask
 
 from ...Utilities import IO
 
@@ -82,11 +82,11 @@ class BasicActionDefinition(ActionDefinition):
 
 class MemoryActionDefinition(ActionDefinition):
 	name = 'SetMemory'
-	description = 'Modify value at {0}: {1} {2}'
-	parameters = (MemoryParameter(), ModifierParameter(), NumberParameter())
+	description = 'Modify value at {0}: {1} {2} with {3}'
+	parameters = (MemoryParameter(), ModifierParameter(), NumberParameter(), MaskParameter())
 
 	def matches(self, action: Action) -> int:
-		if action.action_type == ActionType.set_deaths and action.player_group > PlayerGroup.non_allied_victory_players:
+		if action.action_type == ActionType.set_deaths and (action.player_group > PlayerGroup.non_allied_victory_players or action.masked == Mask.enabled):
 			return Matches.low+1
 		return Matches.no
 

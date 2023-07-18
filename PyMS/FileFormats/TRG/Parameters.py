@@ -1021,7 +1021,7 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 			else:
 				address = int(value)
 		except:
-			raise PyMSError('Paramater', f"'{value}' is not a valid Memory (value must be in hex prefixed with 0x, or decimal")
+			raise PyMSError('Paramater', f"'{value}' is not a valid Memory (value must be in hex prefixed with 0x, or decimal)")
 		if address % 4:
 			raise PyMSError('Parameter', 'Memory must be a multiple of 4')
 		address -= 0x0058A364
@@ -1050,4 +1050,51 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 		action.unit_type = 0
 		action.flags |= ActionFlag.unit_used
 		action.player_group = player
+		return None
+
+class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
+	def name(self) -> str:
+		return 'Mask'
+
+	def help(self) -> str:
+		return 'Value to mask value against in hex (prefixed with 0x) or decimal, or the keyword No Mask'
+
+	def keywords(self) -> tuple[str, ...]:
+		return ('No Mask',)
+
+	def _decompile(self, mask: int, masked: int) -> str:
+		if masked != Mask.enabled:
+			return 'No Mask'
+		return f"{mask:#010X}"
+
+	def _compile(self, raw_mask: str) -> int:
+		if raw_mask == 'No Mask':
+			return 0
+		try:
+			if raw_mask.startswith('0x'):
+				mask = int(raw_mask, 16)
+			else:
+				mask = int(raw_mask)
+		except:
+			raise PyMSError('Paramater', f"'{raw_mask}' is not a valid Mask (value must be in hex or decimal, or the keyword No Mask)")
+		if mask > Struct.l_u32.max:
+			raise PyMSError('Parameter', 'Mask is too high')
+		return mask
+
+	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
+		return self._decompile(condition.mask, condition.masked)
+
+	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
+		mask = self._compile(value)
+		condition.mask = mask
+		condition.masked = Mask.enabled if mask else Mask.disabled
+		return None
+
+	def action_decompile(self, action: Action, trg: TRG) -> str:
+		return self._decompile(action.mask, action.masked)
+
+	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
+		mask = self._compile(value)
+		action.mask = mask
+		action.masked = Mask.enabled if mask else Mask.disabled
 		return None

@@ -79,11 +79,11 @@ class BasicConditionDefinition(ConditionDefinition):
 
 class MemoryConditionDefinition(ConditionDefinition):
 	name = 'Memory'
-	description = 'Check value at {0} is {1} {2}'
-	parameters = (MemoryParameter(), ComparisonParameter(), NumberParameter())
+	description = 'Check value at {0} is {1} {2} with {3}'
+	parameters = (MemoryParameter(), ComparisonParameter(), NumberParameter(), MaskParameter())
 
 	def matches(self, condition: Condition) -> int:
-		if condition.condition_type == ConditionType.deaths and condition.player_group > PlayerGroup.non_allied_victory_players:
+		if condition.condition_type == ConditionType.deaths and (condition.player_group > PlayerGroup.non_allied_victory_players or condition.masked == Mask.enabled):
 			return Matches.low+1
 		return Matches.no
 
