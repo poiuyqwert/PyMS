@@ -2,14 +2,12 @@
 from ..FileFormats.MPQ.MPQ import MPQ, MPQFileEntry
 
 from .setutils import PYMS_SETTINGS
-from .fileutils import BadFile, SFile
 from . import Assets
+from .PyMSError import PyMSError
 
-import os
+import os, io
 
 from typing import BinaryIO
-
-ReadFile = BinaryIO | SFile | BadFile
 
 class MPQHandler(object):
 	def __init__(self, mpq_paths=[], listfiles=None): # type: (list[str], list[str] | None) -> None
@@ -88,23 +86,29 @@ class MPQHandler(object):
 	# folder(True)=Get only from folder
 	# folder(None)=Get from either, MPQ first, folder second
 	# folder(False)=Get only from MPQ
-	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER): # type: (str, bool | None, list[str]) -> ReadFile
+	def get_file(self, path, folder=None, sources=GET_FROM_MPQ_OR_FOLDER): # type: (str, bool | None, list[str]) -> BinaryIO | None
 		if folder is not None:
 			sources = MPQHandler.GET_FROM_FOLDER if folder else MPQHandler.GET_FROM_MPQ
-		file: ReadFile = BadFile(path)
+		file: BinaryIO | None = None
 		for source in sources:
 			if source == MPQHandler._SOURCE_MPQ:
 				file = self.get_file_mpq(path)
-				if not isinstance(file, BadFile):
+				if file:
 					return file
 			elif source == MPQHandler._SOURCE_FOLDER:
 				file = self.get_file_folder(path)
-				if not isinstance(file, BadFile):
+				if file:
 					return file
 		return file
 
-	def get_file_mpq(self, path): # type: (str) -> ReadFile
-		file: SFile | BadFile = BadFile(path)
+	def load_file(self, path: str, folder: bool | None = None, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO:
+		file = self.get_file(path, folder, sources)
+		if not file:
+			raise PyMSError('Load', f"Couldn't load '{path}' from MPQ")
+		return file
+
+	def get_file_mpq(self, path): # type: (str) -> BinaryIO | None
+		file: BinaryIO | None = None
 		if not MPQ.supported():
 			return file
 		path = Assets.mpq_ref_to_file_name(path)
@@ -116,7 +120,7 @@ class MPQHandler(object):
 			return file
 		for mpq in self.mpqs:
 			try:
-				file = SFile(mpq.read_file(path), path)
+				file = io.BytesIO(mpq.read_file(path))
 				break
 			except:
 				pass
@@ -124,12 +128,12 @@ class MPQHandler(object):
 			self.close_mpqs()
 		return file
 
-	def get_file_folder(self, path): # type: (str) -> ReadFile
+	def get_file_folder(self, path): # type: (str) -> BinaryIO | None
 		if path.startswith('MPQ:'):
 			path = Assets.mpq_ref_to_file_path(path)
 		if os.path.exists(path):
 			return open(path, 'rb')
-		return BadFile(path)
+		return None
 
 	def has_file(self, path, folder=None): # type: (str, str | None) -> bool
 		in_mpq = path.startswith('MPQ:')

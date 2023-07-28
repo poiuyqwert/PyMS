@@ -13,7 +13,7 @@ from ..Utilities import Assets
 import copy
 from enum import Enum
 
-from typing import TYPE_CHECKING, Generic, TypeVar, Type, BinaryIO, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, Type
 if TYPE_CHECKING:
 	from .DataContext import DataContext
 
@@ -62,8 +62,7 @@ class DATData(Generic[DAT]):
 	def load_defaults(self, mpqhandler): # type: (MPQHandler) -> None
 		try:
 			dat = self.dat_type()
-			file = mpqhandler.get_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ)
-			dat.load_file(cast(BinaryIO, file))
+			dat.load_file(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
 		except:
 			pass
 		else:

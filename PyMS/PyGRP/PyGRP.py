@@ -21,7 +21,7 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 import os
-from enum import Flag, Enum
+from enum import Flag
 
 from typing import Literal
 
@@ -240,14 +240,14 @@ BMP's must be imported with the same style they were exported as.""")
 		if not file:
 			file = 'Unnamed.grp'
 		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save != MessageBox.NO:
-			if save == MessageBox.CANCEL:
-				return CheckSaved.cancelled
-			if self.file:
-				return self.save()
-			else:
-				return self.saveas()
-		return CheckSaved.saved
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.grp

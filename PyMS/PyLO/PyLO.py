@@ -20,7 +20,6 @@ from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
-from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
@@ -30,7 +29,7 @@ from ..Utilities.CheckSaved import CheckSaved
 import io
 from enum import Enum
 
-from typing import cast, BinaryIO, Callable
+from typing import cast, Callable
 
 LONG_VERSION = 'v%s' % Assets.version('PyLO')
 
@@ -166,7 +165,7 @@ class PyLO(MainWindow, FindDelegate):
 		f.grid(row=0, column=1, sticky=NS)
 		try:
 			g = CacheGRP()
-			g.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['basegrp'])))
+			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['basegrp']))
 			self.updatebasegrp(g)
 		except PyMSError as e:
 			if self.usebasegrp.get():
@@ -174,7 +173,7 @@ class PyLO(MainWindow, FindDelegate):
 				ErrorDialog(self, e)
 		try:
 			g = CacheGRP()
-			g.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['overlaygrp'])))
+			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['overlaygrp']))
 			self.updateoverlaygrp(g)
 		except PyMSError as e:
 			if self.useoverlaygrp.get():
@@ -253,7 +252,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.updategrps()
 		try:
 			g = CacheGRP()
-			g.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['basegrp'])))
+			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['basegrp']))
 			self.updatebasegrp(g)
 		except PyMSError as e:
 			if self.usebasegrp.get():
@@ -264,7 +263,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.updategrps()
 		try:
 			g = CacheGRP()
-			g.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['overlaygrp'])))
+			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['overlaygrp']))
 			self.updateoverlaygrp(g)
 		except PyMSError as e:
 			if self.useoverlaygrp.get():
@@ -296,14 +295,14 @@ class PyLO(MainWindow, FindDelegate):
 		if not file:
 			file = 'Unnamed.loa'
 		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save != MessageBox.NO:
-			if save == MessageBox.CANCEL:
-				return CheckSaved.cancelled
-			if self.file:
-				return self.save()
-			else:
-				return self.saveas()
-		return CheckSaved.saved
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.lo

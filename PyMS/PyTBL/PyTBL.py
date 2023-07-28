@@ -26,7 +26,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 
-from typing import cast, BinaryIO, Literal
+from typing import Literal
 
 LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 
@@ -199,17 +199,17 @@ class PyTBL(MainWindow, MainDelegate):
 			font10 = FNT.FNT()
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
-			tfontgam.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('tfontgam'))))
+			tfontgam.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('tfontgam')))
 			try:
-				font8.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('font8'), False)))
+				font8.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font8'), False))
 			except:
-				font8.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('font8'), True)))
+				font8.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font8'), True))
 			try:
-				font10.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('font10'), False)))
+				font10.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font10'), False))
 			except:
-				font10.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('font10'), True)))
-			unitpal.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('unitpal'))))
-			icons.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('icons'))))
+				font10.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font10'), True))
+			unitpal.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('unitpal')))
+			icons.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('icons')))
 		except PyMSError as e:
 			err = e
 		else:

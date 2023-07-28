@@ -261,7 +261,7 @@ def start_file(filepath): # type: (str) -> None
 		cmd = 'open' if is_mac() else 'xdg-open'
 		start_new_thread(os.system, ('%s "%s"' % (cmd, filepath),))
 
-play_sound = None
+play_sound: Callable[[bytes], None] | None = None
 try:
 	from winsound import PlaySound, SND_MEMORY # type: ignore[attr-defined]
 	def win_play(raw_audio):

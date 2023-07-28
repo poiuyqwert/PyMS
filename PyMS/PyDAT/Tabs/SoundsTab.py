@@ -12,7 +12,7 @@ from ...Utilities.utils import play_sound
 from ...Utilities.UIKit import *
 from ...Utilities import Assets
 
-from typing import TYPE_CHECKING, cast, BinaryIO
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 
@@ -130,7 +130,7 @@ class SoundsTab(DATTab):
 				tbl_string = tbl_string[:-3]
 			f = self.delegate.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
 			if f:
-				play_sound(cast(BinaryIO, f).read())
+				play_sound(f.read())
 
 	def load_entry(self, entry): # type: (DATSound) -> None
 		self.soundentry.set(entry.sound_file)

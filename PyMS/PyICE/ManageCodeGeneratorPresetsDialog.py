@@ -1,4 +1,5 @@
 
+from .Delegates import CodeGeneratorDelegate
 from .CodeGenerators import CodeGeneratorType
 from .NameDialog import NameDialog
 
@@ -8,18 +9,20 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities.Settings import Settings
 
 import json
 
 class ManageCodeGeneratorPresetsDialog(PyMSDialog):
-	def __init__(self, parent):
-		self.settings = parent.settings
+	def __init__(self, parent: Misc, settings: Settings, delegate: CodeGeneratorDelegate):
+		self.settings = settings
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Manage Presets', grabwait=True)
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, width=30)
-		self.listbox.bind(WidgetEvent.Listbox.Select, self.update_states)
-		self.listbox.bind(Double.Click_Left, self.rename)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), self.update_states)
+		self.listbox.bind(Double.Click_Left(), self.rename)
 		self.listbox.pack(side=TOP, padx=3, pady=3, fill=BOTH, expand=1)
 
 		self.toolbar = Toolbar(self)
@@ -41,11 +44,11 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 
 		return done
 
-	def setup_complete(self):
+	def setup_complete(self) -> None:
 		self.settings.windows.generator.load_window_size('presets', self)
 		self.update_list()
 
-	def remove(self):
+	def remove(self) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.settings.generator.presets[selected]
 		cont = MessageBox.askquestion(parent=self, title='Remove Preset?', message="'%s' will be removed and you won't be able to get it back. Continue?" % preset['name'], default=MessageBox.OK, type=MessageBox.OKCANCEL)
@@ -54,7 +57,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		del self.settings.generator.presets[selected]
 		self.update_list()
 
-	def export(self):
+	def export(self) -> None:
 		if not self.listbox.curselection():
 			return
 		path = self.settings.lastpath.generators.txt.select_save_file(self, key='export', title='Export Preset', filetypes=[FileType.txt()])
@@ -69,7 +72,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		except:
 			ErrorDialog(self, PyMSError('Export',"Could not write to file '%s'" % path))
 
-	def iimport(self):
+	def iimport(self) -> None:
 		path = self.settings.lastpath.generators.txt.select_open_file(self, key='import', title='Import Preset', filetypes=[FileType.txt()])
 		if not path:
 			return
@@ -106,7 +109,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 	
-	def rename(self):
+	def rename(self, event: Event | None = None) -> None:
 		if not self.listbox.curselection():
 			return
 		selected = int(self.listbox.curselection()[0])
@@ -118,9 +121,9 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			self.settings.generator.presets[selected]['name'] = name
 			self.update_list()
 		name = self.settings.generator.presets[selected]['name']
-		NameDialog(self, title='Rename Preset', value=name, done='Rename', callback=do_rename)
+		NameDialog(self, self.settings, title='Rename Preset', value=name, done='Rename', callback=do_rename)
 
-	def update_states(self, *_):
+	def update_states(self, event: Event | None = None) -> None:
 		selected = None
 		if self.listbox.curselection():
 			selected = int(self.listbox.curselection()[0])
@@ -128,7 +131,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.toolbar.tag_enabled('can_move_up', not not selected)
 		self.toolbar.tag_enabled('can_move_down', selected is not None and selected+1 < len(self.settings.generator.presets))
 
-	def update_list(self):
+	def update_list(self) -> None:
 		select = None
 		if self.listbox.curselection():
 			select = self.listbox.curselection()[0]
@@ -141,7 +144,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.listbox.yview_moveto(y)
 		self.update_states()
 
-	def move(self, move):
+	def move(self, move: int) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.settings.generator.presets.pop(selected)
 		index = selected+move
@@ -150,12 +153,12 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.listbox.select_set(index)
 		self.update_list()
 
-	def select(self):
+	def select(self) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.settings.generator.presets[selected]
-		if self.parent.load_preset(preset, self):
+		if self.delegate.load_preset(preset, self):
 			self.ok()
 
-	def dismiss(self):
+	def dismiss(self) -> None:
 		self.settings.windows.generator.save_window_size('presets', self)
 		PyMSDialog.dismiss(self)

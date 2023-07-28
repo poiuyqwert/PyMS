@@ -198,11 +198,11 @@ class CodeEditDialog(PyMSDialog):
 		PyMSDialog.dismiss(self)
 
 	def checkframes(self, grp):
-		if os.path.exists(grp):
-			p = grp
-		else:
-			p = self.parent.mpqhandler.get_file('MPQ:unit\\' + grp)
 		try:
+			if os.path.exists(grp):
+				p = grp
+			else:
+				p = self.parent.mpqhandler.load_file('MPQ:unit\\' + grp)
 			grp = GRP.CacheGRP()
 			grp.load_file(p)
 		except PyMSError:

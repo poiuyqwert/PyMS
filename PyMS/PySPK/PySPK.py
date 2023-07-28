@@ -29,7 +29,7 @@ from ..Utilities.CheckSaved import CheckSaved
 
 from enum import Enum
 
-from typing import Callable, cast, BinaryIO
+from typing import Callable, cast
 
 LONG_VERSION = 'v%s' % Assets.version('PySPK')
 
@@ -278,7 +278,7 @@ class PySPK(MainWindow, MainDelegate):
 		err = None
 		try:
 			platformwpe = Palette.Palette()
-			platformwpe.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.platformwpe)))
+			platformwpe.load_file(self.mpqhandler.load_file(self.settings.settings.files.platformwpe))
 		except PyMSError as e:
 			err = e
 		else:

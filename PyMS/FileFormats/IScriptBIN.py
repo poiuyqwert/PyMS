@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, WeaponsDAT
 from ..FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
 from ..FileFormats import TBL
@@ -17,6 +19,8 @@ except ImportError:
 from zlib import compress, decompress
 from collections import OrderedDict
 from copy import deepcopy
+
+from typing import Callable, Any
 
 TYPE_HELP = {
 	'Frame':'The index of a frame in a GRP, in decimal or hexadecimal (number in the range 0 to 65535. framesets are increments of 17, so 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)',
@@ -234,7 +238,7 @@ def type_sbyte(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid SByte value '%s', it must be a number in the range -128 to 127" % data)
 	return v
 
-def type_label(stage, bin):
+def type_label(stage, bin, data=None):
 	"""Label"""
 	return 2
 
@@ -458,76 +462,76 @@ HEADER = [
 	('Enable',),
 ]
 
-OPCODES = [
-	[('playfram',), [type_frame]],               #0
-	[('playframtile',), [type_frame]],
-	[('sethorpos',), [type_sbyte]],
-	[('setvertpos',), [type_sbyte]],
-	[('setpos',), [type_sbyte,type_sbyte]],
-	[('wait',), [type_byte]],
-	[('waitrand',), [type_byte,type_byte]],
-	[('goto',), [type_label]],                                 #7
-	[('imgol',), [type_imageid,type_sbyte,type_sbyte]],
-	[('imgul',), [type_imageid,type_sbyte,type_sbyte]],
-	[('imgolorig',), [type_imageid]],
-	[('switchul',), [type_imageid]],
-	[('__0c',), []],
-	[('imgoluselo',), [type_imageid,type_sbyte,type_sbyte]],
-	[('imguluselo',), [type_imageid,type_sbyte,type_sbyte]],
-	[('sprol',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('highsprol',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('lowsprul',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('uflunstable',), [type_flingyid]],
-	[('spruluselo',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('sprul',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('sproluselo',), [type_spriteid,type_overlayid]],
-	[('end',), []],                     #22
-	[('setflipstate',), [type_flipstate]],
-	[('playsnd',), [type_soundid]],
-	[('playsndrand',), [type_sounds,type_soundid]],
-	[('playsndbtwn',), [type_soundid,type_soundid]],
-	[('domissiledmg',), []],
-	[('attackmelee',), [type_sounds,type_soundid]],
-	[('followmaingraphic',), []],
-	[('randcondjmp',), [type_byte,type_label]],         #30
-	[('turnccwise',), [type_byte]],
-	[('turncwise',), [type_byte]],
-	[('turn1cwise', 'turnlcwise',), []],
-	[('turnrand',), [type_byte]],
-	[('setspawnframe',), [type_byte]],
-	[('sigorder',), [type_signalid]],
-	[('attackwith',), [type_weapon]],
-	[('attack',), []],
-	[('castspell',), []],
-	[('useweapon',), [type_weaponid]],
-	[('move',), [type_byte]],
-	[('gotorepeatattk',), []],
-	[('engframe',), [type_bframe]],
-	[('engset',), [type_frameset]],
-	[('__2d',), []],
-	[('nobrkcodestart',), []],
-	[('nobrkcodeend',), []],
-	[('ignorerest',), []],
-	[('attkshiftproj',), [type_byte]],
-	[('tmprmgraphicstart',), []],
-	[('tmprmgraphicend',), []],
-	[('setfldirect',), [type_byte]],
-	[('call',), [type_label]],                   #53
-	[('return',), []],                  #54
-	[('setflspeed',), [type_speed]],
-	[('creategasoverlays',), [type_gasoverlay]],
-	[('pwrupcondjmp',), [type_label]],           #57
-	[('trgtrangecondjmp',), [type_short,type_label]],    #
-	[('trgtarccondjmp',), [type_short,type_short,type_label]],   #
-	[('curdirectcondjmp',), [type_short,type_short,type_label]], #
-	[('imgulnextid',), [type_sbyte,type_sbyte]],
-	[('__3e',), []],
-	[('liftoffcondjmp',), [type_label]],
-	[('warpoverlay',), [type_frame]],
-	[('orderdone',), [type_signalid]],
-	[('grdsprol',), [type_spriteid,type_sbyte,type_sbyte]],
-	[('__43',), []],
-	[('dogrddamage',), []],
+OPCODES: list[tuple[tuple[str, ...], tuple[Callable[[Any, Any, Any], Any], ...]]] = [
+	(('playfram',), (type_frame,)),               #0
+	(('playframtile',), (type_frame,)),
+	(('sethorpos',), (type_sbyte,)),
+	(('setvertpos',), (type_sbyte,)),
+	(('setpos',), (type_sbyte,type_sbyte)),
+	(('wait',), (type_byte,)),
+	(('waitrand',), (type_byte,type_byte)),
+	(('goto',), (type_label,)),                                 #7
+	(('imgol',), (type_imageid,type_sbyte,type_sbyte)),
+	(('imgul',), (type_imageid,type_sbyte,type_sbyte)),
+	(('imgolorig',), (type_imageid,)),
+	(('switchul',), (type_imageid,)),
+	(('__0c',), ()),
+	(('imgoluselo',), (type_imageid,type_sbyte,type_sbyte)),
+	(('imguluselo',), (type_imageid,type_sbyte,type_sbyte)),
+	(('sprol',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('highsprol',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('lowsprul',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('uflunstable',), (type_flingyid,)),
+	(('spruluselo',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('sprul',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('sproluselo',), (type_spriteid,type_overlayid)),
+	(('end',), ()),                     #22
+	(('setflipstate',), (type_flipstate,)),
+	(('playsnd',), (type_soundid,)),
+	(('playsndrand',), (type_sounds,type_soundid)),
+	(('playsndbtwn',), (type_soundid,type_soundid)),
+	(('domissiledmg',), ()),
+	(('attackmelee',), (type_sounds,type_soundid)),
+	(('followmaingraphic',), ()),
+	(('randcondjmp',), (type_byte,type_label)),         #30
+	(('turnccwise',), (type_byte,)),
+	(('turncwise',), (type_byte,)),
+	(('turn1cwise', 'turnlcwise',), ()),
+	(('turnrand',), (type_byte,)),
+	(('setspawnframe',), (type_byte,)),
+	(('sigorder',), (type_signalid,)),
+	(('attackwith',), (type_weapon,)),
+	(('attack',), ()),
+	(('castspell',), ()),
+	(('useweapon',), (type_weaponid,)),
+	(('move',), (type_byte,)),
+	(('gotorepeatattk',), ()),
+	(('engframe',), (type_bframe,)),
+	(('engset',), (type_frameset,)),
+	(('__2d',), ()),
+	(('nobrkcodestart',), ()),
+	(('nobrkcodeend',), ()),
+	(('ignorerest',), ()),
+	(('attkshiftproj',), (type_byte,)),
+	(('tmprmgraphicstart',), ()),
+	(('tmprmgraphicend',), ()),
+	(('setfldirect',), (type_byte,)),
+	(('call',), (type_label,)),                   #53
+	(('return',), ()),                  #54
+	(('setflspeed',), (type_speed,)),
+	(('creategasoverlays',), (type_gasoverlay,)),
+	(('pwrupcondjmp',), (type_label,)),           #57
+	(('trgtrangecondjmp',), (type_short,type_label)),    #
+	(('trgtarccondjmp',), (type_short,type_short,type_label)),   #
+	(('curdirectcondjmp',), (type_short,type_short,type_label)), #
+	(('imgulnextid',), (type_sbyte,type_sbyte)),
+	(('__3e',), ()),
+	(('liftoffcondjmp',), (type_label,)),
+	(('warpoverlay',), (type_frame,)),
+	(('orderdone',), (type_signalid,)),
+	(('grdsprol',), (type_spriteid,type_sbyte,type_sbyte)),
+	(('__43',), ()),
+	(('dogrddamage',), ()),
 ]
 
 REV_HEADER = {'IsId':-2,'Type':-1}

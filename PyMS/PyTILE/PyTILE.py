@@ -606,14 +606,14 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if not file:
 			file = 'Unnamed.cv5'
 		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save != MessageBox.NO:
-			if save == MessageBox.CANCEL:
-				return CheckSaved.cancelled
-			if self.file:
-				return self.save()
-			else:
-				return self.saveas()
-		return CheckSaved.saved
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
 	def action_states(self, *args, **kwargs): # type: (Any, Any) -> None
 		is_file_open = self.is_file_open()

@@ -26,7 +26,6 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 
-from typing import cast, BinaryIO
 from dataclasses import dataclass
 import re
 
@@ -166,8 +165,8 @@ class PyTRG(MainWindow, MainDelegate):
 		try:
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
-			tbl.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['stat_txt'])))
-			aibin.load(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files['aiscript'])))
+			tbl.load_file(self.mpqhandler.load_file(self.settings.settings.files['stat_txt']))
+			aibin.load(self.mpqhandler.load_file(self.settings.settings.files['aiscript']))
 		except PyMSError as e:
 			err = e
 		else:

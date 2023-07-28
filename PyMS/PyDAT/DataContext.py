@@ -19,7 +19,7 @@ from ..Utilities.Callback import Callback
 
 import os, re
 
-from typing import cast, Any, BinaryIO
+from typing import cast, Any
 
 class TicksPerSecond:
 	fastest = 24
@@ -191,7 +191,7 @@ class DataContext(object):
 			self.portdatatbl.load_strings()
 			self.mapdatatbl.load_strings()
 			iscriptbin = IScriptBIN()
-			iscriptbin.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
+			iscriptbin.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
 			self.update_cb(DataID.iscriptbin)
 		except:
 			raise
@@ -261,10 +261,9 @@ class DataContext(object):
 		if not draw_function in (DATImage.DrawFunction.selection_circle, DATImage.DrawFunction.shadow):
 			draw_function = DATImage.DrawFunction.normal
 		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
-			p = self.mpqhandler.get_file('MPQ:' + path)
 			try:
 				grp = CacheGRP()
-				grp.load_file(cast(BinaryIO, p),restrict=1)
+				grp.load_file(self.mpqhandler.load_file('MPQ:' + path),restrict=1)
 			except PyMSError:
 				return None
 			if not path in self.grp_cache:

@@ -10,7 +10,7 @@ from ..Utilities.Callback import Callback
 from ..Utilities import Assets
 from ..Utilities.UIKit import Image
 
-from typing import TYPE_CHECKING, cast, BinaryIO
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .DataContext import DataContext
 
@@ -28,7 +28,7 @@ class IconData(object):
 		try:
 			grp = CacheGRP()
 			path = self.data_context.settings.settings.files.get('cmdicons', Assets.mpq_file_ref('unit', 'cmdbtns', 'cmdicons.grp'))
-			grp.load_file(cast(BinaryIO, self.data_context.mpqhandler.get_file(path)))
+			grp.load_file(self.data_context.mpqhandler.load_file(path))
 		except:
 			pass
 		else:
@@ -40,7 +40,7 @@ class IconData(object):
 		try:
 			pcx = PCX()
 			path = self.data_context.settings.settings.files.get('ticon', Assets.mpq_file_ref('unit', 'cmdbtns', 'ticon.pcx'))
-			pcx.load_file(cast(BinaryIO, self.data_context.mpqhandler.get_file(path)))
+			pcx.load_file(self.data_context.mpqhandler.load_file(path))
 		except:
 			pass
 		else:

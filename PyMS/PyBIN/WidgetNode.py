@@ -10,7 +10,7 @@ from ..Utilities.UIKit import *
 
 import sys
 
-from typing import cast, BinaryIO
+from typing import cast
 
 class WidgetNode:
 	SMK_FRAME_CACHE = {} # type: dict[str, dict[int, ImageTk.PhotoImage]]
@@ -388,7 +388,7 @@ class WidgetNode:
 			if self.photo is None:
 				try:
 					pcx = PCX.PCX()
-					pcx.load_file(cast(BinaryIO, self.delegate.get_mpqhandler().get_file('MPQ:' + self.widget.string)))
+					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans))
 					photo_change = True

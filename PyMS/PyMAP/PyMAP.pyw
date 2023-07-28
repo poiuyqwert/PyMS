@@ -2630,13 +2630,13 @@ class PyMAP(Tk):
 					for pathFormat in tilesetPaths:
 						path = pathFormat % tilesetName
 						tilesetFile = self.mpqhandler.get_file(path)
-						# if isinstance(tilesetFile, BadFile):
+						# if not tilesetFile:
 						# 	path = pathFormat % (tilesetName + '-nc')
 						# 	tilesetFile = self.mpqhandler.get_file(path)
-						# 	if isinstance(tilesetFile, BadFile):
+						# 	if not tilesetFile:
 						# 		path = pathFormat % (tilesetName[0].upper() + tilesetName[1:])
 						# 		tilesetFile = self.mpqhandler.get_file(path)
-						if isinstance(tilesetFile, BadFile):
+						if not tilesetFile:
 							break
 						tilesetFiles.append(tilesetFile)
 					if len(tilesetFiles) == len(tilesetPaths):

@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyICE')
 
-def main():
+def main() -> None:
 	from PyMS.PyICE.PyICE import PyICE, LONG_VERSION
 
 	from PyMS.FileFormats import IScriptBIN

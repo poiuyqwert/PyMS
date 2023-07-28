@@ -22,8 +22,6 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 
-from typing import cast, BinaryIO
-
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
 DISPLAY_CHARS = [
@@ -381,7 +379,7 @@ class PyFNT(MainWindow):
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.tfontgam)))
+			palette.load_file(self.mpqhandler.load_file(self.settings.settings.files.tfontgam))
 		except PyMSError as e:
 			err = e
 		else:
@@ -397,14 +395,14 @@ class PyFNT(MainWindow):
 		if not file:
 			file = 'Unnamed.fnt'
 		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save != MessageBox.NO:
-			if save == MessageBox.CANCEL:
-				return CheckSaved.cancelled
-			if self.file:
-				return self.save()
-			else:
-				return self.saveas()
-		return CheckSaved.saved
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.fnt

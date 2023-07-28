@@ -254,9 +254,9 @@ class PyAI(MainWindow):
 			unitsdat = DAT.UnitsDAT()
 			upgradesdat = DAT.UpgradesDAT()
 			techdat = DAT.TechDAT()
-			unitsdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.unitsdat))
-			upgradesdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.upgradesdat))
-			techdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.techdatadat))
+			unitsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.unitsdat))
+			upgradesdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.upgradesdat))
+			techdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.techdatadat))
 			if not self.tbl:
 				file = self.settings.lastpath.tbl.select_open_file(self, title='Open a stat_txt.tbl first', filetypes=[FileType.tbl()])
 				tbl = TBL.TBL()

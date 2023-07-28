@@ -1,4 +1,5 @@
 
+from .Delegates import MainDelegate, ImportListDelegate
 from .ImportListDialog import ImportListDialog
 from .FindDialog import FindDialog
 from .CodeEditDialog import CodeEditDialog
@@ -22,21 +23,33 @@ from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.CheckSaved import CheckSaved
 
 from copy import deepcopy
 from collections import OrderedDict
+from enum import IntEnum
 
 LONG_VERSION = 'v%s' % Assets.version('PyICE')
 
-class ColumnID:
+class ColumnID(IntEnum):
 	IScripts = 0
 	Images = 1
 	Sprites = 2
 	Flingys = 3
 	Units = 4
 
-class PyICE(MainWindow):
-	def __init__(self, guifile=None):
+class PyICE(MainWindow, MainDelegate, ImportListDelegate):
+	tbl: TBL.TBL
+	imagestbl: TBL.TBL
+	sfxdatatbl: TBL.TBL
+	unitsdat: DAT.UnitsDAT
+	weaponsdat: DAT.WeaponsDAT
+	flingydat: DAT.FlingyDAT
+	spritesdat: DAT.SpritesDAT
+	imagesdat: DAT.ImagesDAT
+	soundsdat: DAT.SoundsDAT
+
+	def __init__(self, guifile: str | None = None) -> None:
 		self.settings = Settings('PyICE', '1')
 		self.settings.set_defaults({
 			'findhistory':[],
@@ -63,33 +76,28 @@ class PyICE(MainWindow):
 		setup_trace('PyICE', self)
 		Theme.load_theme(self.settings.get('theme'), self)
 
-		self.file = None
-		self.ibin = None
+		self.file: str | None = None
+		self.ibin: IScriptBIN.IScriptBIN | None = None
 		self.edited = False
-		self.tbl = None
-		self.imagestbl = None
-		self.sfxdatatbl = None
-		self.unitsdat = None
-		self.weaponsdat = None
-		self.flingydat = None
-		self.spritesdat = None
-		self.imagesdat = None
-		self.soundsdat = None
 
 		self.update_title()
 
 		self.highlights = self.settings.get('highlights', None)
-		self.findhistory = []
-		self.replacehistory = []
-		self.imports = []
+		self.findhistory: list[str] = []
+		self.replacehistory: list[str] = []
+		self.imports: list[str] = []
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n),
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		def save():
+			self.save()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		def saveas():
+			self.saveas()
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', Ctrl.Alt.e, enabled=False, tags='entries_selected')
@@ -102,7 +110,7 @@ class PyICE(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE),
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE),
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE'),
 		self.toolbar.add_section()
@@ -127,7 +135,7 @@ class PyICE(MainWindow):
 		self.unitlist = listbox_colum('Units')
 		listframes.pack(fill=BOTH, pady=2, expand=1)
 
-		self.bind(Ctrl.a, lambda *e: self.select_all())
+		self.bind(Ctrl.a(), lambda *e: self.select_all())
 
 		#Statusbar
 		self.status = StringVar()
@@ -154,13 +162,13 @@ class PyICE(MainWindow):
 
 		UpdateDialog.check_update(self, 'PyICE')
 
-	def select_all(self):
+	def select_all(self) -> None:
 		self.iscriptlist.select_set(0, END)
 		self.action_states()
 
-	def open_files(self):
+	def open_files(self) -> PyMSError | None:
 		self.mpqhandler.open_mpqs()
-		err = None
+		err: PyMSError | None = None
 		try:
 			tbl = TBL.TBL()
 			imagestbl = TBL.TBL()
@@ -171,15 +179,15 @@ class PyICE(MainWindow):
 			spritesdat = DAT.SpritesDAT()
 			imagesdat = DAT.ImagesDAT()
 			soundsdat = DAT.SoundsDAT()
-			tbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.stat_txt))
-			imagestbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.imagestbl))
-			sfxdatatbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.sfxdatatbl))
-			unitsdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.unitsdat))
-			weaponsdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.weaponsdat))
-			flingydat.load_file(self.mpqhandler.get_file(self.settings.settings.files.flingydat))
-			spritesdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.spritesdat))
-			imagesdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.imagesdat))
-			soundsdat.load_file(self.mpqhandler.get_file(self.settings.settings.files.sfxdatadat))
+			tbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.stat_txt))
+			imagestbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.imagestbl))
+			sfxdatatbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.sfxdatatbl))
+			unitsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.unitsdat))
+			weaponsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.weaponsdat))
+			flingydat.load_file(self.mpqhandler.load_file(self.settings.settings.files.flingydat))
+			spritesdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.spritesdat))
+			imagesdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.imagesdat))
+			soundsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.sfxdatadat))
 		except PyMSError as e:
 			err = e
 		else:
@@ -194,7 +202,7 @@ class PyICE(MainWindow):
 			self.soundsdat = soundsdat
 			try:
 				unitnamestbl = TBL.TBL()
-				unitnamestbl.load_file(self.mpqhandler.get_file(self.settings.settings.files.unitnamestbl))
+				unitnamestbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.unitnamestbl))
 			except:
 				self.unitnamestbl = None
 			else:
@@ -203,19 +211,19 @@ class PyICE(MainWindow):
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def get_image_names(self):
+	def get_image_names(self) -> tuple[str, ...]:
 		return tuple(DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)) for entry_id in range(self.imagesdat.entry_count()))
 
-	def get_sprite_names(self):
+	def get_sprite_names(self) -> tuple[str, ...]:
 		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)) for entry_id in range(self.spritesdat.entry_count()))
 
-	def get_flingy_names(self):
+	def get_flingy_names(self) -> tuple[str, ...]:
 		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)) for entry_id in range(self.flingydat.entry_count()))
 
-	def get_unit_names(self):
+	def get_unit_names(self) -> tuple[str, ...]:
 		return tuple(DAT.DATEntryName.unit(entry_id, stat_txt=self.tbl, unitnamestbl=self.unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore) for entry_id in range(self.unitsdat.entry_count()))
 
-	def update_dat_lists(self):
+	def update_dat_lists(self) -> None:
 		updates = (
 			(self.get_image_names(), ColumnID.Images, self.imageslist),
 			(self.get_sprite_names(), ColumnID.Sprites, self.spriteslist),
@@ -228,8 +236,10 @@ class PyICE(MainWindow):
 				listbox.insert(END, '%03s %s [%s]' % (index, name, self.iscript_id_from_selection_index(index, column)))
 		self.action_states()
 
-	def update_iscrips_list(self):
+	def update_iscrips_list(self) -> None:
 		self.iscriptlist.delete(0,END)
+		if not self.ibin:
+			return
 		for iscript_id in list(self.ibin.headers.keys()):
 			if iscript_id in self.ibin.extrainfo:
 				name = self.ibin.extrainfo[iscript_id]
@@ -239,8 +249,8 @@ class PyICE(MainWindow):
 				name = 'Unnamed Custom Entry'
 			self.iscriptlist.insert(END, '%03s %s' % (iscript_id, name))
 
-	def iscript_id_from_selection_index(self, index, column):
-		index = int(index)
+	def iscript_id_from_selection_index(self, index: int, column: ColumnID) -> int:
+		assert self.ibin is not None
 		if column == ColumnID.IScripts:
 			return list(self.ibin.headers.keys())[index]
 		if column >= ColumnID.Units:
@@ -251,8 +261,8 @@ class PyICE(MainWindow):
 			index = self.spritesdat.get_entry(index).image
 		return self.imagesdat.get_entry(index).iscript_id
 
-	def selected_iscript_ids(self):
-		iscript_ids = []
+	def selected_iscript_ids(self) -> list[int]:
+		iscript_ids: list[int] = []
 		lists = (
 			(ColumnID.IScripts, self.iscriptlist),
 			(ColumnID.Units, self.unitlist),
@@ -268,11 +278,11 @@ class PyICE(MainWindow):
 					iscript_ids.append(iscript_id)
 		return sorted(iscript_ids)
 
-	def unselect(self, listbox):
+	def unselect(self, listbox) -> None:
 		listbox.select_clear(0, END)
 		self.listbox_selection_changed()
 
-	def listbox_selection_changed(self, listbox=None):
+	def listbox_selection_changed(self, listbox: Listbox | None = None) -> None:
 		iscript_ids = self.selected_iscript_ids()
 		if iscript_ids:
 			self.selectstatus.set("IScript ID's Selected: %s" % ', '.join([str(i) for i in iscript_ids]))
@@ -282,10 +292,10 @@ class PyICE(MainWindow):
 		if listbox:
 			listbox.focus_set()
 
-	def is_file_open(self):
+	def is_file_open(self) -> bool:
 		return not not self.ibin
 
-	def action_states(self):
+	def action_states(self) -> None:
 		is_file_open = self.is_file_open()
 		for listbox in [self.imageslist,self.spriteslist,self.flingylist,self.unitlist]:
 			listbox.listbox['state'] = NORMAL if is_file_open else DISABLED
@@ -294,21 +304,23 @@ class PyICE(MainWindow):
 		entries_selected = not not self.selected_iscript_ids()
 		self.toolbar.tag_enabled('entries_selected', entries_selected)
 
-	def unsaved(self):
-		if self.is_file_open() and self.edited:
-			iscript = self.file
-			if not iscript:
-				iscript = 'iscript.bin'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % iscript, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					return self.saveas()
+	def check_saved(self) -> CheckSaved:
+		if not self.ibin or not self.edited:
+			return CheckSaved.saved
+		iscript = self.file
+		if not iscript:
+			iscript = 'iscript.bin'
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % iscript, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
-	def create_iscriptbin(self):
+	def create_iscriptbin(self) -> IScriptBIN.IScriptBIN:
 		return IScriptBIN.IScriptBIN(
 				weaponsdat=self.weaponsdat,
 				flingydat=self.flingydat,
@@ -320,7 +332,7 @@ class PyICE(MainWindow):
 				sfxdatatbl=self.sfxdatatbl
 			)
 
-	def update_title(self):
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.bin'
@@ -329,80 +341,88 @@ class PyICE(MainWindow):
 		else:
 			self.title('PyICE %s (%s)' % (LONG_VERSION, file_path))
 
-	def mark_edited(self, edited=True):
+	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
-	def new(self, key=None):
-		if not self.unsaved():
-			self.iscriptlist.delete(0,END)
-			self.ibin = self.create_iscriptbin()
-			self.file = None
-			self.status.set('Editing new BIN.')
-			self.update_title()
-			self.action_states()
-			self.mark_edited(False)
+	def new(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.iscriptlist.delete(0,END)
+		self.ibin = self.create_iscriptbin()
+		self.file = None
+		self.status.set('Editing new BIN.')
+		self.update_title()
+		self.action_states()
+		self.mark_edited(False)
 
-	def open(self, key=None, file=None):
-		if not self.unsaved():
-			if file is None:
-				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
-				if not file:
-					return
-			ibin = self.create_iscriptbin()
-			try:
-				ibin.load_file(file)
-			except PyMSError as e:
-				ErrorDialog(self, e)
+	def open(self, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if file is None:
+			file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
+			if not file:
 				return
-			self.ibin = ibin
-			self.update_iscrips_list()
-			self.file = file
-			self.update_title()
-			self.status.set('Load Successful!')
-			self.action_states()
-			self.mark_edited(False)
+		ibin = self.create_iscriptbin()
+		try:
+			ibin.load_file(file)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.ibin = ibin
+		self.update_iscrips_list()
+		self.file = file
+		self.update_title()
+		self.status.set('Load Successful!')
+		self.action_states()
+		self.mark_edited(False)
 
-	def open_default(self, key=None):
-		self.open(key, Assets.mpq_file_path('scripts','iscript.bin'))
+	def open_default(self) -> None:
+		self.open(Assets.mpq_file_path('scripts','iscript.bin'))
 
-	def save(self, key=None):
-		self.saveas(file_path=self.file)
+	def save(self) -> CheckSaved:
+		return self.saveas(self.file)
 
-	def saveas(self, key=None, file_path=None):
+	def saveas(self, file_path: str | None = None) -> CheckSaved:
+		if not self.ibin:
+			return CheckSaved.saved
 		if not file_path:
 			file_path = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[FileType.bin_iscript()])
 			if not file_path:
-				return
+				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
-			return
+			return CheckSaved.cancelled
 		try:
 			self.ibin.compile(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
+			return CheckSaved.cancelled
 		self.file = file_path
 		self.update_title()
 		self.status.set('Save Successful!')
 		self.mark_edited(False)
+		return CheckSaved.saved
 
 	# TODO: Cleanup
-	def iimport(self, key=None, file=None, parent=None):
-		if not self.is_file_open():
+	def iimport(self, files: str | list[str] | None = None, parent: Misc | None = None) -> None:
+		if not self.ibin:
 			return
-		if not file:
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
-		if not file:
+		if not files:
+			files = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		if not files:
 			return
+		if not isinstance(files, list):
+			files = [files]
 		if parent is None:
 			parent = self
 		ibin = self.create_iscriptbin()
 		try:
-			if self.ibin.code:
-				s = list(self.ibin.code.keys())[-1] + 10
-			else:
-				s = 0
-			w = ibin.interpret(file, s)
+			for file in files:
+				if self.ibin.code:
+					s = list(self.ibin.code.keys())[-1] + 10
+				else:
+					s = 0
+				w = ibin.interpret(file, s)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -433,46 +453,49 @@ class PyICE(MainWindow):
 		self.action_states()
 		self.mark_edited()
 
-	def export(self, key=None):
+	def export(self) -> None:
+		if not self.ibin:
+			return
 		selected_iscript_ids = self.selected_iscript_ids()
 		if not selected_iscript_ids:
 			return
 		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
 		if not file:
-			return True
+			return
 		try:
 			self.ibin.decompile(file, ids=selected_iscript_ids)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def listimport(self, key=None):
+	def listimport(self) -> None:
 		if not self.is_file_open():
 			return
-		ImportListDialog(self, self.settings)
+		ImportListDialog(self, self.settings, self)
 
-	def close(self, key=None):
+	def close(self) -> None:
 		if not self.is_file_open():
 			return
-		if not self.unsaved():
-			self.iscriptlist.delete(0,END)
-			self.ibin = None
-			self.file = None
-			self.update_title()
-			self.status.set('Load or create a BIN.')
-			self.mark_edited(False)
-			self.listbox_selection_changed()
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.iscriptlist.delete(0,END)
+		self.ibin = None
+		self.file = None
+		self.update_title()
+		self.status.set('Load or create a BIN.')
+		self.mark_edited(False)
+		self.listbox_selection_changed()
 
-	def find(self, key=None):
+	def find(self) -> None:
 		if not self.is_file_open():
 			return
-		FindDialog(self)
+		FindDialog(self, self)
 
-	def codeedit(self, key=None):
+	def codeedit(self) -> None:
 		selected_iscript_ids = self.selected_iscript_ids()
 		CodeEditDialog(self, self.settings, selected_iscript_ids)
 
-	def tblbin(self, key=None, err=None):
+	def tblbin(self, err: PyMSError | None = None) -> None:
 		data = [
 			('TBL Settings',[
 				('stat_txt.tbl', 'Contains Unit names', 'stat_txt', 'TBL'),
@@ -492,21 +515,22 @@ class PyICE(MainWindow):
 		]
 		SettingsDialog(self, data, (550,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
 
-	def register(self, e=None):
+	def register_registry(self) -> None:
 		try:
 			register_registry('PyICE', 'bin', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e=None):
+	def help(self) -> None:
 		HelpDialog(self, self.settings, 'Help/Programs/PyICE.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PyICE', LONG_VERSION)
 
-	def exit(self, e=None):
-		if not self.unsaved():
-			self.settings.windows.save_window_size('main', self)
-			self.settings.highlights = self.highlights
-			self.settings.save()
-			self.destroy()
+	def exit(self) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.settings.windows.save_window_size('main', self)
+		self.settings.highlights = self.highlights
+		self.settings.save()
+		self.destroy()

@@ -30,7 +30,7 @@ from ..Utilities.CheckSaved import CheckSaved
 import time
 from enum import Enum
 
-from typing import Callable, cast, BinaryIO
+from typing import Callable, cast
 
 LONG_VERSION = 'v%s' % Assets.version('PyBIN')
 
@@ -479,7 +479,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 			try:
 				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
-				background.load_file(cast(BinaryIO, self.mpqhandler.get_file(path)))
+				background.load_file(self.mpqhandler.load_file(path))
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -510,7 +510,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 		for path in check:
 			try:
 				dlggrp = GRP.GRP()
-				dlggrp.load_file(cast(BinaryIO, self.mpqhandler.get_file(path)), uncompressed=True)
+				dlggrp.load_file(self.mpqhandler.load_file(path), uncompressed=True)
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -531,7 +531,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 		for path in check:
 			try:
 				tilegrp = GRP.GRP()
-				tilegrp.load_file(cast(BinaryIO, self.mpqhandler.get_file(path)))
+				tilegrp.load_file(self.mpqhandler.load_file(path))
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -552,7 +552,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 		for path in check:
 			try:
 				tfont = PCX.PCX()
-				tfont.load_file(cast(BinaryIO, self.mpqhandler.get_file(path)))
+				tfont.load_file(self.mpqhandler.load_file(path))
 			except:
 				tfont = None
 			else:
@@ -586,27 +586,27 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 			font16 = FNT.FNT()
 			font16x = FNT.FNT()
 
-			tfontgam.load_file(cast(BinaryIO, self.mpqhandler.get_file(self.settings.settings.files.get('tfontgam', 'MPQ:game\\tfontgam.pcx'))))
+			tfontgam.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('tfontgam', 'MPQ:game\\tfontgam.pcx')))
 			path = self.settings.settings.files.get('font10', 'MPQ:font\\font10.fnt')
 			try:
-				font10.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, False)))
+				font10.load_file(self.mpqhandler.load_file(path, False))
 			except:
-				font10.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, True)))
+				font10.load_file(self.mpqhandler.load_file(path, True))
 			path = self.settings.settings.files.get('font14', 'MPQ:font\\font14.fnt')
 			try:
-				font14.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, False)))
+				font14.load_file(self.mpqhandler.load_file(path, False))
 			except:
-				font14.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, True)))
+				font14.load_file(self.mpqhandler.load_file(path, True))
 			path = self.settings.settings.files.get('font16', 'MPQ:font\\font16.fnt')
 			try:
-				font16.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, False)))
+				font16.load_file(self.mpqhandler.load_file(path, False))
 			except:
-				font16.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, True)))
+				font16.load_file(self.mpqhandler.load_file(path, True))
 			path = self.settings.settings.files.get('font16x', 'MPQ:font\\font16x.fnt')
 			try:
-				font16x.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, False)))
+				font16x.load_file(self.mpqhandler.load_file(path, False))
 			except:
-				font16x.load_file(cast(BinaryIO, self.mpqhandler.get_file(path, True)))
+				font16x.load_file(self.mpqhandler.load_file(path, True))
 		except PyMSError as e:
 			err = e
 		else:
@@ -638,14 +638,14 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate):
 		if not file:
 			file = 'Unnamed.bin'
 		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save != MessageBox.NO:
-			if save == MessageBox.CANCEL:
-				return CheckSaved.cancelled
-			if self.file:
-				return self.save()
-			else:
-				return self.saveas()
-		return CheckSaved.saved
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.bin
