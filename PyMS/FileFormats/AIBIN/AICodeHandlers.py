@@ -4,7 +4,7 @@ from __future__ import annotations
 from ...Utilities.CodeHandlers import CodeType
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 from ...Utilities.CodeHandlers.ByteCodeHandler import ByteCodeHandler
-from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
+from ...Utilities.CodeHandlers.SerializeContext import SerializeContext, Formatters
 from ...Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ...Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceResolver
 from ...Utilities.CodeHandlers.Lexer import Lexer
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 	from .DataContext import DataContext
 
 class AISerializeContext(SerializeContext):
-	def __init__(self, definitions: DefinitionsHandler, data_context: DataContext) -> None:
-		SerializeContext.__init__(self, definitions)
+	def __init__(self, definitions: DefinitionsHandler, formatters: Formatters, data_context: DataContext) -> None:
+		SerializeContext.__init__(self, definitions, formatters)
 		self.data_context = data_context
 
 class AIParseContext(ParseContext):
@@ -37,9 +37,35 @@ class WordCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'word', limits: tuple[int, int] | None = None) -> None:
 		CodeType.IntCodeType.__init__(self, name, Struct.l_u16, limits=limits)
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (WordCodeType, ByteCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case WordCodeType():
+				return 2
+			case ByteCodeType():
+				return 1
+			case _:
+				return 0
+
 class DWordCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'dword', limits: tuple[int, int] | None = None) -> None:
 		CodeType.IntCodeType.__init__(self, name, Struct.l_u32, limits=limits)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (DWordCodeType, WordCodeType, ByteCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case DWordCodeType():
+				return 3
+			case WordCodeType():
+				return 2
+			case ByteCodeType():
+				return 1
+			case _:
+				return 0
 
 class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
@@ -49,6 +75,12 @@ class UnitCodeType(WordCodeType):
 	def __init__(self, name: str = 'unit') -> None:
 		# TODO: Expanded DAT
 		WordCodeType.__init__(self, name, limits=(0, 227))
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (UnitCodeType, BuildingCodeType, MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, UnitCodeType)
 
 	def serialize(self, value: int, context: SerializeContext) -> str:
 		if context.definitions:
@@ -66,30 +98,118 @@ class BuildingCodeType(UnitCodeType):
 		UnitCodeType.__init__(self, 'building')
 	# TODO: Custom
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(self, BuildingCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case BuildingCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
 class MilitaryCodeType(UnitCodeType):
 	def __init__(self, name: str = 'military') -> None:
 		UnitCodeType.__init__(self, name)
 	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
 
 class GGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'gg_military')
 	# TODO: Custom
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (GGMilitaryCodeType, GAMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case GGMilitaryCodeType():
+				return 4
+			case GAMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
 class GAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'ga_military')
 	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (GAMilitaryCodeType, GGMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case GAMilitaryCodeType():
+				return 4
+			case GGMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
 
 class AGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'ag_military')
 	# TODO: Custom
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (AGMilitaryCodeType, AAMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case AGMilitaryCodeType():
+				return 4
+			case AAMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
 class AAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'aa_military')
 	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (AAMilitaryCodeType, AGMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case AAMilitaryCodeType():
+				return 4
+			case AGMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
 
 class UpgradeCodeType(WordCodeType):
 	def __init__(self) -> None:
@@ -97,15 +217,33 @@ class UpgradeCodeType(WordCodeType):
 		WordCodeType.__init__(self, 'upgrade', limits=(0, 60))
 	# TODO: Custom
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, UpgradeCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, UpgradeCodeType)
+
 class TechnologyCodeType(WordCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
 		WordCodeType.__init__(self, 'technology', limits=(0, 43))
 	# TODO: Custom
 
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, TechnologyCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, TechnologyCodeType)
+
 class StringCodeType(CodeType.StrCodeType):
 	def __init__(self) -> None:
 		CodeType.StrCodeType.__init__(self, 'string')
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, StringCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, StringCodeType)
 
 class CompareCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
@@ -114,6 +252,12 @@ class CompareCodeType(CodeType.EnumCodeType):
 			'LessThan': 0
 		}
 		CodeType.EnumCodeType.__init__(self, 'compare', Struct.l_u8, cases)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, CompareCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, CompareCodeType)
 
 Goto = CodeCommandDefinition('goto', 0, (BlockCodeType(),), ends_flow=True)
 NoTownsJump = CodeCommandDefinition('notowns_jump', 1, (UnitCodeType(), BlockCodeType(),))
@@ -187,7 +331,7 @@ Panic = CodeCommandDefinition('panic', 68, (BlockCodeType(),))
 PlayerNeed = CodeCommandDefinition('player_need', 69, (ByteCodeType(),BuildingCodeType(),))
 DoMorph = CodeCommandDefinition('do_morph', 70, (ByteCodeType(), MilitaryCodeType(),))
 WaitUpgrades = CodeCommandDefinition('wait_upgrades', 71)
-MultiRun = CodeCommandDefinition('multirun', 72, (BlockCodeType(),))
+MultiRun = CodeCommandDefinition('multirun', 72, (BlockCodeType(),), separate=True)
 Rush = CodeCommandDefinition('rush', 73, (ByteCodeType(), BlockCodeType(),))
 ScoutWith = CodeCommandDefinition('scout_with', 74, (MilitaryCodeType(),))
 DefineMax = CodeCommandDefinition('define_max', 75, (ByteCodeType(), UnitCodeType(),))
@@ -350,7 +494,7 @@ class AIByteCodeHandler(ByteCodeHandler):
 
 class AILexer(Lexer):
 	class SymbolToken(Tokens.LiteralsToken):
-		_literals = (':', '=', '@', '(', ')', ',', '{', '}')
+		_literals = (':', '=', '@', '(', ')', ',', '{', '}', '--')
 
 	class ScriptIDToken(Tokens.RegexToken):
 		_regexp = re.compile(r'\S{4}')
@@ -366,6 +510,15 @@ class AILexer(Lexer):
 		self.register_token_type(Tokens.StringToken)
 		self.register_token_type(Tokens.NewlineToken)
 
+class TBLStringCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'tbl_string', Struct.l_u32)
+
+	def comment(self, value: int, context: SerializeContext) -> str | None:
+		if not isinstance(context, AISerializeContext):
+			return None
+		return context.data_context.stattxt_string(value - 1)
+
 class BinFileCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
 		cases = {
@@ -378,7 +531,7 @@ class BoolCodeType(CodeType.BooleanCodeType):
 	def __init__(self) -> None:
 		CodeType.BooleanCodeType.__init__(self, 'bool', Struct.l_u8) # TODO: bytecode_type
 
-HeaderNameString = CodeCommandDefinition('name_string', None, (StringCodeType(),), ephemeral=True)
+HeaderNameString = CodeCommandDefinition('name_string', None, (TBLStringCodeType(),), ephemeral=True)
 HeaderBinFile = CodeCommandDefinition('bin_file', None, (BinFileCodeType(),), ephemeral=True)
 BroodwarOnly = CodeCommandDefinition('broodwar_only', None, (BoolCodeType(),), ephemeral=True)
 StarEditHidden = CodeCommandDefinition('staredit_hidden', None, (BoolCodeType(),), ephemeral=True)
@@ -572,7 +725,7 @@ class AISourceCodeHandler(SourceCodeHandler):
 
 	def parse_custom(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
 		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script':
-			token = self.lexer.next_token()
+			token = self.lexer.check_token(AILexer.ScriptIDToken)
 			if not isinstance(token, AILexer.ScriptIDToken):
 				raise PyMSError('Parse', "Expected script ID, got '%s' instead" % token.raw_value, line=self.lexer.line)
 			line = self.lexer.line
@@ -590,3 +743,13 @@ class AISourceCodeHandler(SourceCodeHandler):
 			self.script_headers[script_id] = (code_handler.script_header, line)
 			return True
 		return False
+
+class AIDefinitionsHandler(DefinitionsHandler):
+	def __init__(self):
+		super().__init__()
+		self.register_type(MilitaryCodeType())
+		self.register_type(BuildingCodeType())
+		self.register_type(UpgradeCodeType())
+		self.register_type(TechnologyCodeType())
+
+		self.register_annotation('spellcaster')

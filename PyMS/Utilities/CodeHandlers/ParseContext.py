@@ -38,7 +38,7 @@ class ParseContext(object):
 		block_info = self.defined_blocks.get(name)
 		if not block_info:
 			return None
-		if use:
+		if use and name in self.unused_blocks:
 			self.unused_blocks.remove(name)
 		return block_info[0]
 

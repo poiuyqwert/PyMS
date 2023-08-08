@@ -23,6 +23,12 @@ class CodeType(Generic[I, O]):
 		self._bytecode_type = bytecode_type
 		self._block_reference = block_reference
 
+	def accepts(self, other_type: CodeType) -> bool:
+		return type(other_type) == type(self)
+
+	def compatible(self, other_type: CodeType) -> int:
+		return type(other_type) == type(self)
+
 	def decompile(self, scanner: BytesScanner) -> I:
 		return scanner.scan(self._bytecode_type)
 
@@ -36,11 +42,20 @@ class CodeType(Generic[I, O]):
 				return variable.name
 		return str(value)
 
+	def comment(self, value: I, context: SerializeContext) -> str | None:
+		return None
+
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.lex()')
 
 	def parse(self, token: str, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.parse()')
+
+	def __eq__(self, other) -> bool:
+		return type(other) == type(self)
+
+	def __hash__(self) -> int:
+		return hash(type(self))
 
 class IntCodeType(CodeType[int, int]):
 	def __init__(self, name: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None) -> None:

@@ -1,11 +1,13 @@
 
 from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler
+from .AICodeHandlers import HeaderNameString, HeaderBinFile, BroodwarOnly, StarEditHidden, RequiresLocation, EntryPoint
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.BytesScanner import  BytesScanner
 from ...Utilities.CodeHandlers.CodeType import CodeBlock, StrCodeType
 from ...Utilities.CodeHandlers.Lexer import *
+from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities import Struct
 from ...Utilities import IO
 
@@ -67,8 +69,8 @@ class _AIBIN(Generic[H]):
 			self.script_headers = script_headers
 		except PyMSError:
 			raise
-		# except:
-		# 	raise PyMSError('Load',f"Unsupported {self.file_name}, could possibly be invalid or corrupt", capture_exception=True)
+		except:
+			raise PyMSError('Load',f"Unsupported {self.file_name}, could possibly be invalid or corrupt", capture_exception=True)
 
 	def list_scripts(self) -> list[H]:
 		return list(self.script_headers.values())
@@ -79,12 +81,16 @@ class _AIBIN(Generic[H]):
 	def get_entry_point(self, script_id: str) -> CodeBlock | None:
 		return self.entry_points.get(script_id)
 
-	def decompile_blocks(self, script_id: str, serialize_context: AISerializeContext) -> str:
+	def decompile_blocks(self, output: IO.AnyOutputText, script_id: str, serialize_context: AISerializeContext) -> None:
 		if not script_id in self.script_headers:
 			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
 		if not script_id in self.entry_points:
 			raise PyMSError('Decompile', "The script with ID '%s' is not in %s" % self.file_name)
-		return self.entry_points[script_id].serialize(serialize_context)
+		block = self.entry_points[script_id]
+		if serialize_context.is_block_serialized(block):
+			return
+		with IO.OutputText(output) as f:
+			f.write(block.decompile(serialize_context))
 
 class BWBIN(_AIBIN[BWScriptHeader]):
 	def __init__(self) -> None:
@@ -95,7 +101,7 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 		_AIBIN.__init__(self, AIScriptHeader, 'aiscript.bin')
 		self.bw_bin = bw_bin
 
-	def decompile_script_header(self, script_id: str, serialize_context: AISerializeContext) -> str:
+	def decompile_script_header(self, output: IO.AnyOutputText, script_id: str, serialize_context: AISerializeContext) -> None:
 		if not script_id in self.script_headers:
 			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
 		script_header = self.script_headers[script_id]
@@ -113,44 +119,40 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 			block = self.bw_bin.get_entry_point(script_id)
 		if not block:
 			raise PyMSError('Decompile', f"Script with ID '{script_id}' was not found")
-		return """script %s {
-    name_string %s
-    bin_file %s
-    broodwar_only %d
-    staredit_hidden %d
-    requires_location %d
-    entry_point %s
-}""" % (
-			script_header.id,
-			string_info,
-			'aiscript' if script_header.address else 'bwscript',
-			not not script_header.flags & AIFlag.broodwar_only,
-			not not script_header.flags & AIFlag.staredit_hidden,
-			not not script_header.flags & AIFlag.requires_location,
-			serialize_context.block_label(block)
-		)
+		with IO.OutputText(output) as f:
+			f.write(f"""script {script_header.id} {{
+    {CodeCommand(HeaderNameString, [script_header.string_id]).serialize(serialize_context)}
+    {CodeCommand(HeaderBinFile, [1 if script_header.address else 0]).serialize(serialize_context)}
+    {CodeCommand(BroodwarOnly, [1 if script_header.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)}
+    {CodeCommand(StarEditHidden, [1 if script_header.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)}
+    {CodeCommand(RequiresLocation, [1 if script_header.flags & AIFlag.requires_location else 0]).serialize(serialize_context)}
+    {CodeCommand(EntryPoint, [block]).serialize(serialize_context)}
+}}""")
 
-	def decompile(self, serialize_context, script_ids=None): # type: (AISerializeContext, list[str] | None) -> str
+	def decompile(self, output: IO.AnyOutputText, serialize_context: AISerializeContext, script_ids: list[str] | None = None) -> None:
 		if script_ids is None:
 			script_ids = list(script.id for script in self.list_scripts())
-		result = ''
-		for script_id in script_ids:
-			script_header = self.get_script_header(script_id)
-			if not script_header:
-				raise PyMSError('Decompile', "There is no AI Script with ID '%s'" % script_id)
-			if len(result):
-				result += '\n\n'
-			result += self.decompile_script_header(script_id, serialize_context)
-			result += '\n'
-			if script_header.address == 0:
-				if self.bw_bin is None:
-					raise PyMSError('Decompile', f"Script with ID '{script_id}' is in bwscript.bin but only aiscript.bin is loaded")
-				result += self.bw_bin.decompile_blocks(script_id, serialize_context)
-			else:
-				result += self.decompile_blocks(script_id, serialize_context)
-		return result
+		with IO.OutputText(output) as f:
+			add_newlines = False
+			for script_id in script_ids:
+				script_header = self.get_script_header(script_id)
+				if not script_header:
+					raise PyMSError('Decompile', "There is no AI Script with ID '%s'" % script_id)
+				if add_newlines:
+					f.write('\n\n')
+				add_newlines = True
+				self.decompile_script_header(f, script_id, serialize_context)
+				f.write('\n')
+				if script_header.address == 0:
+					if self.bw_bin is None:
+						raise PyMSError('Decompile', f"Script with ID '{script_id}' is in bwscript.bin but only aiscript.bin is loaded")
+					self.bw_bin.decompile_blocks(f, script_id, serialize_context)
+				else:
+					self.decompile_blocks(f, script_id, serialize_context)
 
-	def compile(self, code: str, parse_context: AIParseContext) -> list[PyMSWarning]:
+	def compile(self, input: IO.AnyInputText, parse_context: AIParseContext) -> list[PyMSWarning]:
+		with IO.InputText(input) as f:
+			code = f.read()
 		lexer = AILexer(code)
 		source_handler = AISourceCodeHandler(lexer)
 		source_handler.parse(parse_context)

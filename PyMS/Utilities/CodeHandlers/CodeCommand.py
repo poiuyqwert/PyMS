@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from . import Tokens
-from .CodeType import CodeType, AddressCodeType
+from .CodeType import CodeType, AddressCodeType, CodeBlock
 from .ParseContext import ParseContext, CommandParamBlockReferenceResolver
 
 from .. import Struct
@@ -30,11 +30,28 @@ class CodeCommandDefinition(object):
 		return CodeCommand(self, params)
 
 	def parse(self, lexer: Lexer, parse_context: ParseContext) -> CodeCommand:
-		# TODO: Support braces?
+		# TODO: Support braces
+		parens = False
 		params: list[Any] = []
+		token = lexer.next_token(peek=True)
+		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
+			_ = lexer.next_token()
+			parens = True
 		missing_blocks: list[tuple[str, int, int | None]] = []
 		for param_index,param_type in enumerate(self.param_types):
-			value = param_type.lex(lexer, parse_context)
+			if param_index > 0:
+				token = lexer.next_token()
+				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
+					raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
+			token = lexer.next_token(peek=True)
+			value: Any | None = None
+			if isinstance(token, Tokens.IdentifierToken) and parse_context.definitions:
+				variable = parse_context.definitions.get_variable(token.raw_value)
+				if variable and param_type.accepts(variable.type):
+					value = variable.value
+					_ = lexer.next_token()
+			if value is None:
+				value = param_type.lex(lexer, parse_context)
 			if isinstance(param_type, AddressCodeType):
 				block = parse_context.lookup_block(value)
 				if not block:
@@ -42,6 +59,10 @@ class CodeCommandDefinition(object):
 				else:
 					value = block
 			params.append(value)
+		if parens:
+			token = lexer.next_token()
+			if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
+				raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
 			raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
@@ -65,8 +86,16 @@ class CodeCommand(object):
 		return data
 
 	def serialize(self, context: SerializeContext) -> str:
-		result = self.definition.name
+		parameters: list[str] = []
+		comments: list[str] = []
 		for param,param_type in zip(self.params, self.definition.param_types):
-			result += ' '
-			result += param_type.serialize(param, context)
+			parameters.append(param_type.serialize(param, context))
+			comment = param_type.comment(param, context)
+			if comment is not None:
+				comments.append(comment)
+			if isinstance(param, CodeBlock):
+				context.add_next_block(param)
+		result = context.formatters.command.serialize(self.definition.name, parameters)
+		if comments:
+			result += f' {context.formatters.comment.serialize(comments)}'
 		return result

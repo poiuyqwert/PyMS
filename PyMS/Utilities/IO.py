@@ -76,9 +76,9 @@ class OutputText:
 	def __exit__(self, exc_type, exc_value, traceback):
 		if self.close:
 			self.file.close()
-		if self.atomic_paths is not None:
-			temp_path, final_path = self.atomic_paths
-			os.rename(temp_path, final_path)
+			if self.atomic_paths is not None:
+				temp_path, final_path = self.atomic_paths
+				os.rename(temp_path, final_path)
 
 class OutputBytes:
 	def __init__(self, output: AnyOutputBytes):

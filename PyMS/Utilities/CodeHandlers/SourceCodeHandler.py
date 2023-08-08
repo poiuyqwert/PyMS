@@ -34,7 +34,8 @@ class SourceCodeHandler(object):
 				break
 			if self.parse_custom(token, parse_context):
 				continue
-			if isinstance(token, Tokens.LiteralsToken) and token.raw_value == ':':
+			if isinstance(token, Tokens.LiteralsToken) and (token.raw_value == ':' or token.raw_value == '--'):
+				hyphens = (token.raw_value == '--')
 				token = self.lexer.next_token()
 				if not isinstance(token, Tokens.IdentifierToken):
 					raise PyMSError('Parse', "Expected block name, got '%s' instead" % token.raw_value, line=self.lexer.line)
@@ -44,6 +45,10 @@ class SourceCodeHandler(object):
 				if existing_line is not None:
 					raise PyMSError('Parse', "A block named '%s' is already defined on line %d" % (name, existing_line), line=self.lexer.line)
 				token = self.lexer.next_token()
+				if hyphens:
+					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != '--':
+						raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `--` to end the block name)", line=self.lexer.line)
+					token = self.lexer.next_token()
 				if not isinstance(token, Tokens.NewlineToken):
 					raise PyMSError('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value, line=self.lexer.line)
 				block = CodeBlock()

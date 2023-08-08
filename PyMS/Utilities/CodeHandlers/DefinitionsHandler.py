@@ -54,10 +54,13 @@ class DefinitionsHandler(object):
 		return self.variables.get(name, None)
 
 	def lookup_variable(self, value: Any, type: CodeType) -> (Variable | None):
+		matching_variable: Variable | None = None
+		matching_priority: int = 0
 		for variable in self.variables.values():
-			if variable.type == type and variable.value == value:
-				return variable
-		return None
+			if variable.value == value and (priority := type.compatible(variable.type)) and priority > matching_priority:
+				matching_variable = variable
+				matching_priority = priority
+		return matching_variable
 
 	def set_annotation(self, annotation_name: str, value: Any, type: CodeType) -> None:
 			annotation_info = (value, type)

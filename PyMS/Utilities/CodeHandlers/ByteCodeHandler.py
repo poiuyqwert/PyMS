@@ -22,21 +22,17 @@ class ByteCodeHandler(object):
 			raise PyMSError('Internal', f"Command '{cmd_def.name}' does not support byte code")
 		self.cmd_defs[cmd_def.byte_code_id] = cmd_def
 
-	def decompile_block(self, address: int, owner: Any | None = None) -> CodeBlock:
+	def _decompile_block(self, address: int, owner: Any | None = None) -> tuple[CodeBlock, CodeBlock | None]:
 		if address in self.block_refs:
 			block = self.block_refs[address]
 			if owner:
 				block.owners.add(owner)
-				if len(block.owners) > 1:
-					print(block)
-			return block
+			return (block, None)
 		elif address in self.cmd_refs:
 			block = CodeBlock()
 			self.block_refs[address] = block
 			if owner:
 				block.owners.add(owner)
-				if len(block.owners) > 1:
-					print(block)
 			prev_block, start_cmd = self.cmd_refs[address]
 			index = prev_block.commands.index(start_cmd)
 			while index < len(prev_block.commands):
@@ -45,35 +41,41 @@ class ByteCodeHandler(object):
 				self.cmd_refs[cmd.original_address] = (block, cmd)
 				block.commands.append(cmd)
 			block.prev_block = prev_block
+			if prev_block.next_block:
+				block.next_block = prev_block.next_block
 			prev_block.next_block = block
-			return block
+			return (block, prev_block)
 		else:
 			scanner = BytesScanner(self.data, address)
 			block = CodeBlock()
+			active_block = block
 			self.block_refs[address] = block
 			if owner:
 				block.owners.add(owner)
-				if len(block.owners) > 1:
-					print(block)
 			while not scanner.at_end():
 				cmd_address = scanner.address
 				cmd_id = scanner.scan(Struct.l_u8)
 				cmd_def = self.cmd_defs.get(cmd_id)
 				if not cmd_def:
-					# print('%d %d' % (cmd_address, cmd_id))
 					raise PyMSError('Byte Code', "Invalid command id '%d'" % cmd_id)
-				# print('%d %d (%s)' % (cmd_address, cmd_id, cmd_def._name))
 				cmd = cmd_def.decompile(scanner)
 				cmd.original_address = cmd_address
-				block.commands.append(cmd)
-				self.cmd_refs[cmd_address] = (block, cmd)
 				for n,param_type in enumerate(cmd.definition.param_types):
 					if param_type._block_reference:
-						cmd.params[n] = self.decompile_block(cmd.params[n])
+						new_block, split_block = self._decompile_block(cmd.params[n])
+						cmd.params[n] = new_block
+						if split_block == active_block:
+							active_block = new_block
+				active_block.commands.append(cmd)
+				self.cmd_refs[cmd_address] = (active_block, cmd)
 				if cmd.definition.ends_flow:
 					break
 				if scanner.address in self.block_refs:
-					block.next_block = self.block_refs[scanner.address]
-					block.next_block.prev_block = block
+					active_block.next_block = self.block_refs[scanner.address]
+					active_block.next_block.prev_block = active_block
 					break
-			return block
+			return (block, None)
+
+	def decompile_block(self, address: int, owner: Any | None = None) -> CodeBlock:
+		block, _ = self._decompile_block(address, owner)
+		return block
