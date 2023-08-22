@@ -1,5 +1,5 @@
 
-import operator as _operator
+from ..utils import is_mac
 
 class FileType(tuple[str, str]):
 	WILDCARD = '*'
@@ -205,7 +205,8 @@ class FileType(tuple[str, str]):
 		for i, extension in enumerate(extensions):
 			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension
-		name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
+		if not is_mac():
+			name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
 		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions))) # type: ignore[type-var]
 
 	@property

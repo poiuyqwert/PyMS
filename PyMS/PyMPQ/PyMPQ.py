@@ -433,7 +433,7 @@ class PyMPQ(MainWindow):
 			if extension in self.settings.settings.autocompression:
 				compression = CompressionSetting.parse_value(self.settings.settings.autocompression[extension])
 			else:
-				compression = CompressionSetting.parse_value(self.settings.autocompression.Default)
+				compression = CompressionSetting.parse_value(self.settings.settings.autocompression.Default)
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
@@ -534,6 +534,7 @@ class PyMPQ(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		self.close()
 		self.mpq = mpq
 		self._update_listfiles()
 		self.all_files = []
@@ -555,6 +556,7 @@ class PyMPQ(MainWindow):
 		except PyMSError:
 			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
 			return
+		self.close()
 		self.mpq = mpq
 		self._update_listfiles()
 		self.title('PyMPQ %s (%s)' % (LONG_VERSION,file))
@@ -573,11 +575,12 @@ class PyMPQ(MainWindow):
 		self.mpq = None
 		self.all_files = []
 		self.display_files = []
+		self.listbox.delete(ALL)
 		self.title('PyMPQ %s' % LONG_VERSION)
 		self.status.set('Open or create an MPQ.')
 		self.cleanup_temp()
 		self.update_info()
-		self.update_list()
+		# self.update_list()
 		self.select()
 
 	def add(self, key=None): # type: (Event | None) -> None

@@ -30,18 +30,18 @@ class AIParseContext(ParseContext):
 		self.data_context = data_context
 
 class ByteCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str = 'byte', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.l_u8, limits=limits)
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'byte', Struct.l_u8)
 
 class WordCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str = 'word', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.l_u16, limits=limits)
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'word', Struct.l_u16)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (WordCodeType, ByteCodeType))
 
 	def compatible(self, other_type: CodeType.CodeType) -> int:
-		match other_type:
+		match type(other_type):
 			case WordCodeType():
 				return 2
 			case ByteCodeType():
@@ -50,8 +50,8 @@ class WordCodeType(CodeType.IntCodeType):
 				return 0
 
 class DWordCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str = 'dword', limits: tuple[int, int] | None = None) -> None:
-		CodeType.IntCodeType.__init__(self, name, Struct.l_u32, limits=limits)
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'dword', Struct.l_u32)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (DWordCodeType, WordCodeType, ByteCodeType))
@@ -71,10 +71,10 @@ class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
 		CodeType.AddressCodeType.__init__(self, 'block', Struct.l_u16)
 
-class UnitCodeType(WordCodeType):
+class UnitCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'unit') -> None:
 		# TODO: Expanded DAT
-		WordCodeType.__init__(self, name, limits=(0, 227))
+		CodeType.IntCodeType.__init__(self, name, bytecode_type=Struct.l_u16, limits=(0, 227))
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (UnitCodeType, BuildingCodeType, MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
@@ -211,10 +211,10 @@ class AAMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-class UpgradeCodeType(WordCodeType):
+class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
-		WordCodeType.__init__(self, 'upgrade', limits=(0, 60))
+		CodeType.IntCodeType.__init__(self, 'upgrade', Struct.l_u16, limits=(0, 60))
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -223,10 +223,10 @@ class UpgradeCodeType(WordCodeType):
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		return isinstance(other_type, UpgradeCodeType)
 
-class TechnologyCodeType(WordCodeType):
+class TechnologyCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
-		WordCodeType.__init__(self, 'technology', limits=(0, 43))
+		CodeType.IntCodeType.__init__(self, 'technology', Struct.l_u16, limits=(0, 43))
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -522,8 +522,8 @@ class TBLStringCodeType(CodeType.IntCodeType):
 class BinFileCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
 		cases = {
-			'aiscript': 0,
-			'bwscript': 1
+			'aiscript': 1,
+			'bwscript': 0
 		}
 		CodeType.EnumCodeType.__init__(self, 'bin_file', Struct.l_u8, cases) # TODO: bytecode_type
 
