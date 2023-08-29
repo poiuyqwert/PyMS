@@ -8,7 +8,7 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -16,7 +16,7 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 from typing import cast

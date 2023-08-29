@@ -11,7 +11,7 @@ from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, FFile
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -20,7 +20,7 @@ from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file

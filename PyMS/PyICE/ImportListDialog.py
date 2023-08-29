@@ -4,7 +4,7 @@ from .Delegates import ImportListDelegate
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 class ImportListDialog(PyMSDialog):
 	def __init__(self, parent: Misc, settings: Settings, delegate: ImportListDelegate) -> None:

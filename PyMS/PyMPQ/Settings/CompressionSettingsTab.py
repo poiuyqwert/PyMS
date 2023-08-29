@@ -1,14 +1,15 @@
 
-from .CompressionSetting import CompressionOption, CompressionSetting
+from ..CompressionSetting import CompressionOption, CompressionSetting
 
-from ..Utilities import Assets
-from ..Utilities.UIKit import *
-from ..Utilities.SettingsDialog import SettingsDialog
-from ..Utilities.Settings import Settings
+from ...Utilities import Assets
+from ...Utilities.UIKit import *
+from ...Utilities import Config
+from ...Utilities.SettingsUI.SettingsTab import SettingsTab
+from ...Utilities.EditedState import EditedState
 
 import os
 
-class CompressionSettings(Frame):
+class CompressionSettingsTab(SettingsTab):
 	COMPRESSION_CHOICES = (
 		CompressionOption.NoCompression,
 		CompressionOption.Standard,
@@ -16,11 +17,12 @@ class CompressionSettings(Frame):
 		CompressionOption.Audio
 	)
 
-	def __init__(self, parent, setdlg): # type: (Misc, SettingsDialog) -> None
-		self.setdlg = setdlg
-		Frame.__init__(self, parent)
+	def __init__(self, notebook: Notebook, edited_state: EditedState, autocompression_config: Config.Dictionary) -> None:
+		super().__init__(notebook)
+		self.edited_state = edited_state
+		self.autocompression_config = autocompression_config
 
-		self.autocompression = self.setdlg.settings.settings.autocompression.deepcopy()
+		self.autocompression = dict(self.autocompression_config.data)
 
 		self.extension = StringVar()
 		self.extension.trace('w', lambda *e: self.action_states())
@@ -48,11 +50,11 @@ class CompressionSettings(Frame):
 		left.pack(side=LEFT, fill=Y, padx=2)
 
 		self.compression_index = IntVar()
-		self.compression_level= IntVar()
+		self.compression_level = IntVar()
 
 		right = Frame(self)
 		Label(right, text='Compression Type:', anchor=W, justify=LEFT).pack(fill=X)
-		DropDown(right, self.compression_index, [type.display_name() for type in CompressionSettings.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
+		DropDown(right, self.compression_index, [type.display_name() for type in CompressionSettingsTab.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
 		
 		self.levels_frame = Frame(right)
 		Label(self.levels_frame, text='Compression Level:', anchor=W, justify=LEFT).pack(side=TOP, fill=X)
@@ -73,16 +75,16 @@ class CompressionSettings(Frame):
 
 	def select_extension(self): # type: () -> None
 		compression = CompressionSetting.parse_value(self.autocompression[self.get_selected_extension()])
-		self.compression_index.set(CompressionSettings.COMPRESSION_CHOICES.index(compression.type))
+		self.compression_index.set(CompressionSettingsTab.COMPRESSION_CHOICES.index(compression.type))
 		self.update_levels(compression)
 		self.action_states()
 
 	def choose_compression(self, compression_type_index): # type: (int) -> None
-		compression_type = CompressionSettings.COMPRESSION_CHOICES[compression_type_index]
+		compression_type = CompressionSettingsTab.COMPRESSION_CHOICES[compression_type_index]
 		extension = self.get_selected_extension()
 		if CompressionSetting.parse_value(self.autocompression[extension]) == compression_type:
 			return
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 		compression = compression_type.setting()
 		self.autocompression[extension] = str(compression)
 		self.update_levels(compression)
@@ -103,7 +105,7 @@ class CompressionSettings(Frame):
 		compression = CompressionSetting.parse_value(self.autocompression[extension])
 		if level != compression.level:
 			self.autocompression[extension] = str(compression.type.setting(level))
-			self.setdlg.edited = True
+			self.edited_state.mark_edited()
 	
 	def add(self, key=None): # type: (Event | None) -> None
 		if self.addbutton['state'] == DISABLED:
@@ -120,7 +122,7 @@ class CompressionSettings(Frame):
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(s)
 			self.listbox.see(s)
-			self.setdlg.edited = True
+			self.edited_state.mark_edited()
 			self.action_states()
 
 	def remove(self, key=None): # type: (Event | None) -> None
@@ -133,8 +135,8 @@ class CompressionSettings(Frame):
 			s -= 1
 		self.listbox.select_set(s)
 		self.listbox.see(s)
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 		self.action_states()
 
-	def save(self, page_data, mpq_dir, settings): # type: (Any, str, Settings) -> None
-		settings.settings.autocompression = self.autocompression
+	def save(self) -> None:
+		self.autocompression_config.data = self.autocompression

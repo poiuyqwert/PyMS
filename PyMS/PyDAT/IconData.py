@@ -22,7 +22,7 @@ class IconData(object):
 		self.names = () # type: tuple[str, ...]
 		self.images = {} # type: dict[bool, dict[int, ImageWithBounds]]
 
-		self.update_cb = Callback()
+		self.update_cb: Callback[DataID] = Callback()
 
 	def load_grp(self): # type: () -> None
 		try:

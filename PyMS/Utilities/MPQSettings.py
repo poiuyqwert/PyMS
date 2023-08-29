@@ -4,15 +4,15 @@ from __future__ import annotations
 from ..FileFormats.MPQ.MPQ import MPQ
 
 from . import Assets
-from .setutils import PYMS_SETTINGS
+from .setutils import PYMS_CONFIG
 from .UIKit import *
 
 import os
 
 from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
-	from .Settings import Settings
-	from .SettingsDialog import SettingsDialog
+	from . import Config
+	from .SettingsDialog_Old import SettingsDialog
 
 class MPQSettings(Frame):
 	def __init__(self, parent, mpqs, settings, setdlg): # type: (Misc, list[str], Settings, SettingsDialog) -> None
@@ -108,17 +108,17 @@ class MPQSettings(Frame):
 		self.setdlg.edited = True
 
 	def adddefault(self, key=None): # type: (Event | None) -> None
-		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
-		if not scdir or not os.path.isdir(scdir):
-			scdir = PYMS_SETTINGS.select_directory(self, key='scdir', title='Choose StarCraft Directory', store=False)
+		scdir = PYMS_CONFIG.scdir.path
+		PYMS_CONFIG.save_state()
+		if scdir is None or not os.path.isdir(scdir):
+			scdir = PYMS_CONFIG.scdir.select_open(self)
 		if scdir and os.path.isdir(scdir):
 			a = []
 			for f in ['Patch_rt','BrooDat','StarDat']:
 				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
 				if os.path.exists(p) and not p in self.mpqs:
 					a.append(p)
-			if len(a) == 3 and not 'scdir' in PYMS_SETTINGS:
-				PYMS_SETTINGS.scdir = scdir
-				PYMS_SETTINGS.save()
+			if len(a) != 3:
+				PYMS_CONFIG.reset_state()
 			if a:
 				self.add(add=a)

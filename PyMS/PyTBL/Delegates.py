@@ -5,7 +5,7 @@ from ..FileFormats import GRP
 from ..FileFormats import FNT
 from ..FileFormats import PCX
 
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.UIKit import Text, ScrolledListbox
 
 from typing import Protocol

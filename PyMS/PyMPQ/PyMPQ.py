@@ -5,23 +5,20 @@ from .CheckThread import CheckThread
 from .LocaleDialog import LocaleDialog
 from .UpdateFiles import UpdateFiles
 from .FolderDialog import FolderDialog
-from .GeneralSettings import GeneralSettings
-from .CompressionSettings import CompressionSettings
-from .ListfileSettings import ListfileSettings
+from .Settings.SettingsDialog import SettingsDialog, SettingsDialogDelegate
+from .Config import PyMPQConfig
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 
@@ -42,31 +39,9 @@ class ColumnID:
 	Locale = 4
 	Attributes = 5
 
-class PyMPQ(MainWindow):
+class PyMPQ(MainWindow, SettingsDialogDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
-		self.settings = Settings('PyMPQ', '2')
-		self.settings.set_defaults({
-			'compression': str(CompressionOption.Auto.setting()),
-			'encrypt': False,
-			'locale': 0
-		})
-		self.settings.sort.set_defaults({
-			'column': 0,
-			'ascending': True
-		})
-		self.settings.settings.set_defaults({
-			'listfiles': [Assets.data_file_path('Listfile.txt')]
-		})
-		self.settings.settings.autocompression.set_defaults({
-			'Default': str(CompressionOption.Standard.setting()),
-			'.smk': str(CompressionOption.NoCompression.setting()),
-			'.mpq': str(CompressionOption.NoCompression.setting()),
-			'.wav': str(CompressionOption.Audio.setting(level=1))
-		})
-		self.settings.settings.defaults.set_defaults({
-			'maxfiles': 1024,
-			'blocksize': 3
-		})
+		self.config_ = PyMPQConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -76,7 +51,7 @@ class PyMPQ(MainWindow):
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace('PyMPQ', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.mpq = None # type: MPQ | None
 		self.all_files = [] # type: list[MPQFileEntry]
@@ -114,12 +89,12 @@ class PyMPQ(MainWindow):
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
 		self.regex = IntVar()
-		self.regex.set(self.settings.get('regex', False))
+		self.regex.set(self.config_.filter.regex.value)
 		self.filter = StringVar()
 		self.filter.set(['*','.+'][self.regex.get()])
 		filter = Frame(self)
 		Label(filter, text='Filter: ').pack(side=LEFT)
-		self.textdrop = TextDropDown(filter, self.filter, self.settings.get('filters', []))
+		self.textdrop = TextDropDown(filter, self.filter, self.config_.filter.history.data)
 		self.textdrop.pack(side=LEFT, fill=X, expand=1)
 		self.textdrop.entry.bind(Key.Return(), self.dofilter)
 		self.default_background_color = self.textdrop.entry['bg']
@@ -224,53 +199,53 @@ class PyMPQ(MainWindow):
 		locale_dialog = LocaleDialog(self, title='Change locale', message='Type a custom locale or choose an existing locale')
 		if locale_dialog.save:
 			locale = locale_dialog.result.get()
-			self.settings.locale = locale
+			self.config_.locale.value = locale
 			self.update_locale_status()
 		else:
-			locale_index = find_locale_index(self.settings.locale)
-			_,locale = LOCALE_CHOICES[locale_index]
+			locale_index = find_locale_index(self.config_.locale.value)
+			# _,locale = LOCALE_CHOICES[locale_index]
 			self.after(1, lambda: self.locale_menu_choice.set(locale_index))
 
 	def locale_changed(self, *_): # type: (Any) -> None
 		locale_index = self.locale_menu_choice.get()
 		_name,locale = LOCALE_CHOICES[locale_index]
 		if locale is not None:
-			self.settings.locale = locale
+			self.config_.locale.value = locale
 		self.update_locale_status()
 
 	def update_locale_status(self): # type: () -> None
-		locale_index = find_locale_index(self.settings.locale)
+		locale_index = find_locale_index(self.config_.locale.value)
 		locale_name,_ = LOCALE_CHOICES[locale_index]
-		self.locale_status.set('Locale: %s [%d]' % (locale_name, self.settings.locale))
+		self.locale_status.set('Locale: %s [%d]' % (locale_name, self.config_.locale.value))
 
 	def load_settings(self): # type: () -> None
-		self.settings.windows.load_window_size('main', self, default_size=Size(700,500))
-		self.settings.load_pane_sizes('list_sizes', self.listbox.panes, (317,74,45,67,52,64))
-		self.compvar.set(self.settings.compression)
-		self.encvar.set(self.settings.encrypt)
-		self.locale_menu_choice.set(find_locale_index(self.settings.locale))
+		self.config_.windows.main.load(self)
+		self.config_.list_sizes.load(self.listbox.panes)
+		self.compvar.set(self.config_.compression.value)
+		self.encvar.set(self.config_.encrypt.value)
+		self.locale_menu_choice.set(find_locale_index(self.config_.locale.value))
 
 	def save_settings(self): # type: () -> None
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save_pane_sizes('list_sizes', self.listbox.panes)
-		self.settings.compression = self.compvar.get()
-		self.settings.encrypt = self.encvar.get()
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.list_sizes.save(self.listbox.panes)
+		self.config_.compression.value = self.compvar.get()
+		self.config_.encrypt.value = self.encvar.get()
+		self.config_.save()
 
 	def sort(self, column): # type: (int) -> None
-		if column == self.settings.sort.column:
-			self.settings.sort.ascending = not self.settings.sort.ascending
+		if column == self.config_.sort.column.value:
+			self.config_.sort.ascending.value = not self.config_.sort.ascending.value
 		else:
-			self.settings.sort.column = column
-			self.settings.sort.ascending = True
+			self.config_.sort.column.value = column
+			self.config_.sort.ascending.value = True
 		self.update_columns()
 		self.update_list()
 
 	def update_columns(self): # type: () -> None
 		for column,(button,_) in enumerate(self.listbox.columns):
 			image = self.listbox_blank_arrow
-			if column == self.settings.sort.column:
-				if self.settings.sort.ascending:
+			if column == self.config_.sort.column.value:
+				if self.config_.sort.ascending.value:
 					image = self.listbox_ascending_arrow
 				else:
 					image = self.listbox_descending_arrow
@@ -303,7 +278,7 @@ class PyMPQ(MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		filter = self.filter.get()
-		filters = self.settings.get('filters', [])
+		filters = self.config_.filter.history.data
 		if filter in filters:
 			filters.remove(filter)
 		filters.append(filter)
@@ -377,12 +352,12 @@ class PyMPQ(MainWindow):
 			def keysort(file_entry): # type: (MPQFileEntry) -> tuple
 				file_info = [file_entry.file_name, file_entry.full_size, file_entry.get_compression_ratio(), file_entry.compressed_size, file_entry.locale, self.attributes_for_file_entry(file_entry)]
 				# We only need to re-arrange the sort info if we are sorting by something other than the first column
-				if self.settings.sort.column:
+				if self.config_.sort.column.value:
 					# Move sort column to front of info to sort
-					file_info.insert(0, file_info[self.settings.sort.column])
-					del file_info[self.settings.sort.column+1]
+					file_info.insert(0, file_info[self.config_.sort.column.value])
+					del file_info[self.config_.sort.column.value+1]
 				return tuple(file_info)
-			self.display_files.sort(key=keysort, reverse=not self.settings.sort.ascending)
+			self.display_files.sort(key=keysort, reverse=not self.config_.sort.ascending.value)
 			for file_entry in self.display_files:
 				info = [
 					file_entry.file_name.decode('utf-8'),
@@ -430,10 +405,10 @@ class PyMPQ(MainWindow):
 		compression = CompressionSetting.parse_value(self.compvar.get())
 		if compression.type == CompressionOption.Auto:
 			extension = '.' + filename.split(os.extsep)[-1]
-			if extension in self.settings.settings.autocompression:
-				compression = CompressionSetting.parse_value(self.settings.settings.autocompression[extension])
+			if extension in self.config_.settings.autocompression.data:
+				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data[extension])
 			else:
-				compression = CompressionSetting.parse_value(self.settings.settings.autocompression.Default)
+				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data['Default'])
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
@@ -521,16 +496,16 @@ class PyMPQ(MainWindow):
 	def _update_listfiles(self): # type: () -> None
 		if not self.mpq:
 			return
-		for listfile_path in self.settings.settings.listfiles:
+		for listfile_path in self.config_.settings.listfiles.data:
 			self.mpq.add_listfile(listfile_path)
 
 	def new(self, key=None): # type: (Event | None) -> None
-		file = self.settings.lastpath.mpq.select_save_file(self, title='Create new MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+		file = self.config_.last_path.mpq.select_save(self)
 		if not file:
 			return
 		mpq = MPQ.of(file)
 		try:
-			mpq.create(self.settings.settings.defaults['maxfiles'], self.settings.settings.defaults['blocksize'], stay_open=False)
+			mpq.create(self.config_.settings.defaults.maxfiles.value, self.config_.settings.defaults.blocksize.value, stay_open=False)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -547,7 +522,7 @@ class PyMPQ(MainWindow):
 
 	def open(self, key=None, file=None): # type: (Event | None, str | None) -> None
 		if file is None:
-			file = self.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+			file = self.config_.last_path.mpq.select_open(self)
 			if not file:
 				return
 		mpq = MPQ.of(file)
@@ -587,18 +562,18 @@ class PyMPQ(MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
-		files = self.settings.lastpath.files.select_open_files(self, key='import', title='Add files...')
+		files = self.config_.last_path.add.files.select_open(self)
 		if not files:
 			return
-		f = FolderDialog(self, self.settings)
+		f = FolderDialog(self, self.config_.import_.files_prefix)
 		if not f.save:
 			return
 		with self.open_mpq(read_only=False):
 			for filepath in files:
 				filename = os.path.basename(filepath)
-				folder = self.settings['import'].get('add_folder', '')
+				folder = self.config_.import_.files_prefix.value
 				compression,compression_level = self.compression_settings(filename)
-				self.mpq.add_file(filepath, folder + filename, self.settings.locale, compression=compression, compression_level=compression_level)
+				self.mpq.add_file(filepath, folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
 			self.mpq.flush()
 			self.list_files()
 			self.update_info()
@@ -609,22 +584,22 @@ class PyMPQ(MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
-		path = self.settings.lastpath.files.select_directory(self, key='import_dir', title='Add files from folder...')
+		path = self.config_.last_path.add.folder.select_open(self)
 		if not path:
 			return
 		path = os.path.join(path,'')
-		fo = FolderDialog(self, self.settings)
+		fo = FolderDialog(self, self.config_.import_.folder_prefix)
 		if not fo.save:
 			return
 		with self.open_mpq(read_only=False):
 			for root,_,filenames in os.walk(path):
-				folder = self.settings['import'].get('add_folder', '')
+				folder = self.config_.import_.folder_prefix.value
 				path_folder = root.replace(path,'')
 				if path_folder:
 					folder += '\\'.join(os.path.split(path_folder)) + '\\'
 				for filename in filenames:
 					compression,compression_level = self.compression_settings(filename)
-					self.mpq.add_file(os.path.join(root,filename), folder + filename, self.settings.locale, compression=compression, compression_level=compression_level)
+					self.mpq.add_file(os.path.join(root,filename), folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
 			self.mpq.flush()
 			self.list_files()
 			self.update_info()
@@ -662,7 +637,7 @@ class PyMPQ(MainWindow):
 		if not self.is_file_selected():
 			return
 		assert self.mpq is not None
-		path = self.settings.lastpath.files.select_directory(self, key='export', title='Extract files...')
+		path = self.config_.last_path.export.select_open(self)
 		if not path:
 			return
 		with self.open_mpq():
@@ -683,7 +658,7 @@ class PyMPQ(MainWindow):
 
 	def mansets(self, key=None): # type: (Event | None) -> None
 		if key:
-			SettingsDialog(self, [('General',GeneralSettings),('List Files',ListfileSettings),('Compression Auto-Selection',CompressionSettings),('Theme',)], (550,380), None, settings=self.settings)
+			SettingsDialog(self, self, self.config_)
 			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())
@@ -703,7 +678,7 @@ class PyMPQ(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self, e=None): # type: (Event | None) -> None
-		HelpDialog(self, self.settings, 'Help/Programs/PyMPQ.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyMPQ.md')
 
 	def about(self, key=None): # type: (Event | None) -> None
 		AboutDialog(self, 'PyMPQ', LONG_VERSION)

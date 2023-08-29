@@ -1,6 +1,8 @@
 
 from tkinter import StringVar
 
+from typing import overload, Literal
+
 class IntegerVar(StringVar):
 	class UpdateCase:
 		internal = 0
@@ -103,7 +105,11 @@ class IntegerVar(StringVar):
 		# if self._tag:
 		# 	print('Set %s done' % value)
 
-	def get(self, s=False):
+	@overload # type: ignore[override]
+	def get(self, s: Literal[False] = False) -> int: ...
+	@overload
+	def get(self, s: Literal[True]) -> str: ...
+	def get(self, s: bool = False) -> int | str:
 		try:
 			string = StringVar.get(self)
 		except:

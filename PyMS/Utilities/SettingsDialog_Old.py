@@ -27,10 +27,10 @@ class SettingsDialog(PyMSDialog):
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if len(d) == 1:
-					from .UIKit.Components.Settings.SettingsTab import SettingsTab
-					from .UIKit.Components.Settings.ThemeSettingView import ThemeSettingView
+					from .SettingsUI.SettingsTab import SettingsTab
+					from .SettingsUI.ThemeSettingsTab import ThemeSettingsTab
 					tab = SettingsTab(self.tabs)
-					theme_view = ThemeSettingView(tab, self.settings)
+					theme_view = ThemeSettingsTab(tab, self.settings)
 					theme_view.pack(fill=BOTH, expand=1)
 					tab.register_settings_view(theme_view)
 					self.pages.append(tab)

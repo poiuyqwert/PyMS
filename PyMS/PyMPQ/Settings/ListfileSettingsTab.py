@@ -1,19 +1,23 @@
 
-from ..Utilities.UIKit import *
-from ..Utilities import Assets
-from ..Utilities.SettingsDialog import SettingsDialog
-from ..Utilities.Settings import Settings
+from ..Config import PyMPQConfig
 
-class ListfileSettings(Frame):
-	def __init__(self, parent, setdlg): # type: (Misc, SettingsDialog) -> None
-		self.setdlg = setdlg
-		Frame.__init__(self, parent)
+from ...Utilities.UIKit import *
+from ...Utilities.SettingsUI.SettingsTab import SettingsTab
+from ...Utilities.EditedState import EditedState
+from ...Utilities import Assets
+
+class ListfileSettingsTab(SettingsTab):
+	def __init__(self, notebook: Notebook, edited_state: EditedState, config: PyMPQConfig):
+		super().__init__(notebook)
+		self.edited_state = edited_state
+		self.config_ = config
+
 		Label(self, text='File Lists', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text="Note: Each file list added will increase the load time for archives", anchor=W, justify=LEFT).pack(fill=X)
 		self.listbox = ScrolledListbox(self, width=35, height=1)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.action_states())
-		for l in self.setdlg.settings.settings.get('listfiles', []):
+		for l in self.config_.settings.listfiles.data:
 			self.listbox.insert(0,l)
 		if self.listbox.size():
 			self.listbox.select_set(0)
@@ -35,12 +39,12 @@ class ListfileSettings(Frame):
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
 	def add(self, key=None): # type: (Event | None) -> None
-		add = self.setdlg.settings.lastpath.settings.select_open_files(self, key='listfiles', title='Add Listfiles', filetypes=[FileType.txt()])
+		add = self.config_.settings.last_path.listfiles.select_open(self)
 		if add:
 			for i in add:
 				self.listbox.insert(END,i)
 			self.action_states()
-			self.setdlg.edited = True
+			self.edited_state.mark_edited()
 
 	def remove(self, key=None): # type: (Event | None) -> None
 		if not self.is_listfile_selected():
@@ -52,9 +56,9 @@ class ListfileSettings(Frame):
 			self.listbox.select_set(i)
 			self.listbox.see(i)
 		self.action_states()
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 
-	def save(self, page_data, mpq_dir, settings): # type: (Any, str, Settings) -> None
-		settings.settings.listfiles = []
+	def save(self) -> None:
+		self.config_.settings.listfiles.data.remove()
 		for i in range(self.listbox.size()): # type: ignore
-			settings.settings.listfiles.append(self.listbox.get(i))
+			self.config_.settings.listfiles.data.append(self.listbox.get(i))

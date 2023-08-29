@@ -4,7 +4,7 @@ from .TRGCodeText import TRGCodeText
 from ..Utilities.utils import couriernew, fit
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from collections import OrderedDict
 from copy import deepcopy

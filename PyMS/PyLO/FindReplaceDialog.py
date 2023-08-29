@@ -3,7 +3,7 @@ from .Delegates import FindDelegate
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 import re
 

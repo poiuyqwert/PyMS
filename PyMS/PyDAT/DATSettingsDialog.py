@@ -1,10 +1,10 @@
 
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.MPQSettings import MPQSettings
 from ..Utilities.SettingsPanel import SettingsPanel
 from ..Utilities.UIKit import *
-from ..Utilities.UIKit.Components.Settings.SettingsTab import SettingsTab
-from ..Utilities.UIKit.Components.Settings.ThemeSettingView import ThemeSettingView
+from ..Utilities.SettingsUI.SettingsTab import SettingsTab
+from ..Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
 
 class DATSettingsDialog(SettingsDialog):
 	def widgetize(self):
@@ -16,7 +16,7 @@ class DATSettingsDialog(SettingsDialog):
 		for d in self.data:
 			if d == 'Theme':
 				tab = SettingsTab(self.tabs)
-				theme_view = ThemeSettingView(tab, self.settings)
+				theme_view = ThemeSettingsTab(tab, self.settings)
 				theme_view.pack(fill=BOTH, expand=1)
 				tab.register_settings_view(theme_view)
 				self.pages.append(tab)

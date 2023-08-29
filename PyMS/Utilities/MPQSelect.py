@@ -3,7 +3,7 @@ from .PyMSDialog import PyMSDialog
 from .UIKit import *
 from . import Assets
 from .MPQHandler import MPQHandler
-from .Settings import Settings
+from . import Config
 
 import os, re
 

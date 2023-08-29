@@ -5,7 +5,7 @@ from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc
 

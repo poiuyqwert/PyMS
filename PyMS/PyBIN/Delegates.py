@@ -2,7 +2,7 @@
 from ..FileFormats.DialogBIN import DialogBIN
 from ..FileFormats.FNT import FNT
 from ..FileFormats.PCX import PCX
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UIKit import PILImage, ImageTk, Anchor, Canvas
 

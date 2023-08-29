@@ -7,7 +7,7 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from enum import Enum
 

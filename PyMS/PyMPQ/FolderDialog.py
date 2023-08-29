@@ -1,14 +1,14 @@
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 class FolderDialog(PyMSDialog):
-	def __init__(self, parent, settings): # type: (Misc, Settings) -> None
-		self.settings = settings
+	def __init__(self, parent: Misc, prefix_config: Config.String) -> None:
+		self.prefix_config = prefix_config
 		self.save = True
 		self.result = StringVar()
-		self.result.set(self.settings['import'].get('add_folder', ''))
+		self.result.set(self.prefix_config.value or '')
 		PyMSDialog.__init__(self, parent, 'Folder name...')
 
 	def widgetize(self): # type: () -> (Widget | None)
@@ -35,5 +35,5 @@ class FolderDialog(PyMSDialog):
 		PyMSDialog.cancel(self)
 
 	def ok(self, *_): # type: (Event | None) -> None
-		self.settings['import'].add_folder = self.result.get()
+		self.prefix_config.value = self.result.get()
 		PyMSDialog.ok(self)

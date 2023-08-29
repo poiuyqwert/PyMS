@@ -1,7 +1,7 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 class FramesDialog(PyMSDialog):
 	def __init__(self, parent: Misc, settings: Settings):

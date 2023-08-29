@@ -1,7 +1,7 @@
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQFileEntry
 
-from .setutils import PYMS_SETTINGS
+from .setutils import PYMS_CONFIG
 from . import Assets
 from .PyMSError import PyMSError
 
@@ -27,8 +27,8 @@ class MPQHandler(object):
 		self.mpqs = []
 
 	def add_defaults(self): # type: () -> bool
-		scdir = PYMS_SETTINGS.get('scdir', autosave=False)
-		if not scdir or not os.path.isdir(scdir):
+		scdir = PYMS_CONFIG.scdir.value
+		if scdir is None or not os.path.isdir(scdir):
 			return False
 		changed = False
 		for mpq_name in ['Patch_rt','BrooDat','StarDat']:

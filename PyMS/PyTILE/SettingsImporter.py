@@ -14,7 +14,7 @@ from ..Utilities import Serialize
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from ..Utilities.Settings import Settings
+	from ..Utilities import Config
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (

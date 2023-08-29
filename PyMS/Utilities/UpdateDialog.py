@@ -1,6 +1,6 @@
 
 from . import Assets
-from .setutils import PYMS_SETTINGS
+from .setutils import PYMS_CONFIG
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 
@@ -14,8 +14,8 @@ class UpdateDialog(PyMSDialog):
 	def check_update(window, program): # type: (WindowExtensions, str) -> None
 		def do_check_update(window, program): # type: (WindowExtensions, str) -> None
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
-			remindme = PYMS_SETTINGS.get('remindme', True)
-			if remindme == True or remindme != Assets.version('PyMS'):
+			remindme = PYMS_CONFIG.remind_me.value
+			if remindme is None or remindme != Assets.version('PyMS'):
 				try:
 					import ssl
 					versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
@@ -47,8 +47,8 @@ class UpdateDialog(PyMSDialog):
 		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
 		f = Frame(self)
 		self.remind = IntVar()
-		remindme = PYMS_SETTINGS.get('remindme', True)
-		self.remind.set(remindme == True or remindme != Assets.version('PyMS'))
+		remindme = PYMS_CONFIG.remind_me.value
+		self.remind.set(remindme is None or remindme != Assets.version('PyMS'))
 		Checkbutton(f, text='Remind me later', variable=self.remind).pack(side=LEFT, padx=5)
 		Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=RIGHT, padx=5)
 		f.pack(fill=X, expand=1)
@@ -57,8 +57,8 @@ class UpdateDialog(PyMSDialog):
 		return ok
 
 	def ok(self, _=None): # type: (Event | None) -> None
-		PYMS_SETTINGS.remindme = [Assets.version('PyMS'),1][self.remind.get()]
-		PYMS_SETTINGS.save()
+		PYMS_CONFIG.remind_me.value = None if self.remind.get() else Assets.version('PyMS')
+		PYMS_CONFIG.save()
 		PyMSDialog.ok(self)
 
 class SemVer(object):

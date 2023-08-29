@@ -2,7 +2,7 @@
 from ..FileFormats import SPK
 
 from ..Utilities.UIKit import IntVar, Image
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from typing import Protocol
 

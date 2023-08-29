@@ -9,7 +9,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities import Assets
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 
 from typing import TYPE_CHECKING

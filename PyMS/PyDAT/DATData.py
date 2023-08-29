@@ -57,7 +57,7 @@ class DATData(Generic[DAT]):
 		self.names = () # type: tuple[str, ...]
 		self.name_overrides = {} # type: dict[int, tuple[bool, str]]
 
-		self.update_cb = Callback()
+		self.update_cb: Callback[DATID] = Callback()
 
 	def load_defaults(self, mpqhandler): # type: (MPQHandler) -> None
 		try:

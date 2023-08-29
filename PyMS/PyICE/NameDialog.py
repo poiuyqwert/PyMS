@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from typing import Callable
 

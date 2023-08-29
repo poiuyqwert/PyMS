@@ -18,7 +18,7 @@ class TBLData(object):
 		self.path = path
 		self.strings = () # type: tuple[str, ...]
 
-		self.update_cb = Callback()
+		self.update_cb: Callback[DataID] = Callback()
 
 	def load_strings(self): # type: () -> None
 		path = self.data_context.settings.settings.files.get(self.setting, 'MPQ:' + self.path)

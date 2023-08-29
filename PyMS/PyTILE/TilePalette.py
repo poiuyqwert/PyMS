@@ -15,7 +15,7 @@ from ..Utilities import Assets
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
-	from ..Utilities.Settings import Settings
+	from ..Utilities import Config
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0

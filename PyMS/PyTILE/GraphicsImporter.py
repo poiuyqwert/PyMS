@@ -16,7 +16,7 @@ from ..Utilities import Assets
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from ..Utilities.Settings import Settings
+	from ..Utilities import Config
 
 class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 	def __init__(self, parent, settings, delegate, tiletype=TileType.group, ids=None): # type: (Misc, Settings, GraphicsImporterDelegate, TileType, list[int] | None) -> None

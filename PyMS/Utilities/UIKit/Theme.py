@@ -1,6 +1,4 @@
 
-from ..setutils import PYMS_SETTINGS
-
 import tkinter as _Tk
 import inspect as _inspect
 import re as _re
@@ -323,7 +321,8 @@ class _Selector(object):
 
 def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
 	if not name:
-		name = PYMS_SETTINGS.get('theme')
+		from ..setutils import PYMS_CONFIG
+		name = PYMS_CONFIG.theme.value
 	if not name:
 		return
 	global _THEME

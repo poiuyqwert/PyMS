@@ -16,7 +16,7 @@ from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
 from ..Utilities.utils import register_registry, WIN_REG_AVAILABLE
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -26,7 +26,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.SettingsDialog import SettingsDialog
+from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 

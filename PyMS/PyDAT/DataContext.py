@@ -2,7 +2,7 @@
 from .DATData import DATData, UnitsDATData, WeaponsDATData, FlingyDATData, SpritesDATData, ImagesDATData, UpgradesDATData, TechDATData, SoundsDATData, PortraitsDATData, CampaignDATData, OrdersDATData
 from .TBLData import TBLData
 from .IconData import IconData
-from .DataID import DATID, DataID
+from .DataID import DATID, DataID, AnyID
 
 from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
@@ -12,7 +12,7 @@ from ..FileFormats.IScriptBIN import IScriptBIN
 from ..FileFormats.Images import RawPalette
 
 from ..Utilities import Assets
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
@@ -41,7 +41,7 @@ class DataContext(object):
 			'simple_labels': False
 		})
 
-		self.update_cb = Callback()
+		self.update_cb: Callback[AnyID] = Callback()
 
 		self.stat_txt = TBLData(self, DataID.stat_txt, 'stat_txt', 'rez\\stat_txt.tbl')
 		self.stat_txt.update_cb += self.update_cb

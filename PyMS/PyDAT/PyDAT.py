@@ -42,9 +42,9 @@ class PyDAT(MainWindow, MainDelegate):
 		self.data_context = DataContext()
 		Theme.load_theme(self.data_context.settings.get('theme'), self)
 	
-		self.updates = [] # type: list[DataID]
+		self.updates = [] # type: list[AnyID]
 		self.update_after_id = None
-		def buffer_updates(id): # type: (DataID) -> None
+		def buffer_updates(id: AnyID) -> None:
 			if id in self.updates:
 				return
 			self.updates.append(id)

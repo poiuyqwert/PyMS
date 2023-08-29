@@ -6,7 +6,7 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from typing import Callable
 

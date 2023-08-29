@@ -10,7 +10,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from ..Utilities.Settings import Settings
+	from ..Utilities import Config
 
 class MegaTileSettingsExporter(PyMSDialog):
 	def __init__(self, parent, settings, ids, delegate): # type: (Misc, Settings, list[int], MainDelegate) -> None

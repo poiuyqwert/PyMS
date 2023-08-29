@@ -9,7 +9,7 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 import json
 

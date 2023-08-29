@@ -3,11 +3,11 @@ from .UIKit import *
 from .PyMSDialog import PyMSDialog
 from .MarkdownView import MarkdownView
 from . import Assets
-from .Settings import Settings
+from . import Config
 
 class HelpDialog(PyMSDialog):
-	def __init__(self, parent, settings, help_file_path=None): # type: (Misc, Settings, str | None) -> None
-		self.settings = settings
+	def __init__(self, parent, window_geometry_config, help_file_path=None): # type: (Misc, Config.WindowGeometry, str | None) -> None
+		self.window_geometry_config = window_geometry_config
 		self.initial_file_path = help_file_path
 		PyMSDialog.__init__(self, parent, 'Help')
 
@@ -26,7 +26,7 @@ class HelpDialog(PyMSDialog):
 	def setup_complete(self): # type: () -> None
 		if self.initial_file_path:
 			self.load(self.initial_file_path, force_update=True)
-		self.settings.windows.load_window_size('help', self)
+		self.window_geometry_config.load(self)
 
 	def load(self, path, force_update=False): # type: (str, bool) -> None
 		index = Assets.help_tree(force_update=force_update).index(path)
@@ -57,5 +57,5 @@ class HelpDialog(PyMSDialog):
 		PyMSDialog.destroy(self)
 
 	def dismiss(self): # type: () -> None
-		self.settings.windows.save_window_size('help', self)
+		self.window_geometry_config.save(self)
 		PyMSDialog.dismiss(self)

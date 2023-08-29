@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 
 from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:

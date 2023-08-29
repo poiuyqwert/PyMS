@@ -1,22 +1,19 @@
 
 from __future__ import annotations
 
-from .SettingsView import SettingsView
-from ..ScrolledListbox import ScrolledListbox
-from ...Widgets import *
-from ...EventPattern import *
-from ...Font import Font
-from ...Theme import Theme
-from .... import Assets
-from ....setutils import PYMS_SETTINGS
+from .SettingsTab import SettingsTab
+from ..UIKit import *
+from .. import Config
+from .. import Assets
+from ..setutils import PYMS_CONFIG
+from ..EditedState import EditedState
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from ....Settings import Settings
+class ThemeSettingsTab(SettingsTab):
+	def __init__(self, parent: Notebook, edited_state: EditedState, setting: Config.String):
+		super().__init__(parent)
 
-class ThemeSettingView(SettingsView):
-	def __init__(self, parent: Misc, settings: Settings):
-		SettingsView.__init__(self, parent, settings)
+		self.edited_state = edited_state
+		self.setting = setting
 
 		self.default = BooleanVar()
 		self.default.trace('w', self.default_updated)
@@ -62,10 +59,10 @@ class ThemeSettingView(SettingsView):
 		self.selection_updated()
 
 	def current_default(self) -> (str | None):
-		return PYMS_SETTINGS.get('theme')
+		return PYMS_CONFIG.theme.value
 
 	def current_theme(self) -> (str | None):
-		return self.settings.get('theme')
+		return self.setting.value
 
 	def selected_theme(self) -> (str | None):
 		theme = None
@@ -82,7 +79,7 @@ class ThemeSettingView(SettingsView):
 	def default_updated(self, *_) -> None:
 		is_default = self.current_theme() is None
 		if is_default != self.default.get():
-			self.mark_edited()
+			self.edited_state.mark_edited()
 		if self.default.get():
 			theme = self.current_default()
 			theme_index = self.theme_index(theme)
@@ -98,13 +95,13 @@ class ThemeSettingView(SettingsView):
 		theme_index = self.listbox.curselection()[0]
 		if theme_index > 0:
 			theme_name = Assets.theme_list()[theme_index - 1]
-		self.mark_edited()
+		self.edited_state.mark_edited()
 		if not theme_name:
 			self.author.set('None')
 			self.description.set('Use the default style applied by your OS')
 		else:
 			try:
-				theme = Theme(theme_name)
+				theme = Theme.Theme(theme_name)
 				self.author.set(theme.author)
 				self.description.set(theme.description)
 			except:
@@ -117,8 +114,8 @@ class ThemeSettingView(SettingsView):
 		if theme_index > 0:
 			theme = Assets.theme_list()[theme_index - 1]
 		if self.default.get():
-			self.settings['theme'] = None
-			PYMS_SETTINGS['theme'] = theme
-			PYMS_SETTINGS.save()
+			self.setting.value = None
+			PYMS_CONFIG.theme.value = theme
+			PYMS_CONFIG.save()
 		else:
-			self.settings['theme'] = theme
+			self.setting.value = theme
