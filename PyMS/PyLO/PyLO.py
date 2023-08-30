@@ -16,7 +16,7 @@ from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.SettingsPanel import SettingsPanel
+from ..Utilities.SettingsPanel_Old import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog

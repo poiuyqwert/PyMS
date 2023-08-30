@@ -1,4 +1,7 @@
 
+from .Config import PyPCXConfig
+from .SettingsDialog import SettingsDialog
+
 from ..FileFormats.PCX import PCX
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo
@@ -8,7 +11,6 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
@@ -16,7 +18,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 from typing import cast
@@ -25,7 +26,7 @@ LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
 class PyPCX(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyPCX', '1')
+		self.config_ = PyPCXConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -34,7 +35,7 @@ class PyPCX(MainWindow):
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.pcx: PCX | None = None
 		self.file: str | None = None
@@ -88,7 +89,7 @@ class PyPCX(MainWindow):
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 
-		self.settings.windows.load_window_size('main', self, default_size=Size(600, 400))
+		self.config_.windows.main.load(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -140,7 +141,7 @@ class PyPCX(MainWindow):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.pcx.select_open_file(self, title='Open PCX', filetypes=[FileType.pcx()])
+			file = self.config_.last_path.pcx.select_open(self)
 			if not file:
 				return
 		pcx = PCX()
@@ -163,7 +164,7 @@ class PyPCX(MainWindow):
 		if not self.pcx:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.pcx.select_save_file(self, title='Save PCX As', filetypes=[FileType.pcx()])
+			file_path = self.config_.last_path.pcx.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -183,7 +184,7 @@ class PyPCX(MainWindow):
 	def loadpal(self) -> None:
 		if not self.pcx:
 			return
-		file = self.settings.lastpath.pal.select_open_file(self, key='import', title='Import Palette', filetypes=Palette.FileType.load_types())
+		file = self.config_.last_path.pal.select_open(self)
 		if not file:
 			return
 		pal = Palette()
@@ -199,7 +200,7 @@ class PyPCX(MainWindow):
 	def savepal(self, file_type: Palette.FileType = Palette.FileType.sc_pal) -> None:
 		if not self.pcx:
 			return
-		file = self.settings.lastpath.pal.select_save_file(self, key='export', title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
+		file = self.config_.last_path.pal.select_save(self, filetypes=list(Palette.FileType.save_types(file_type.format, file_type.ext)))
 		if not file:
 			return
 		p = Palette()
@@ -213,7 +214,7 @@ class PyPCX(MainWindow):
 	def export(self) -> None:
 		if not self.pcx:
 			return
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export to BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_save(self)
 		if not file:
 			return
 		b = BMP()
@@ -228,7 +229,7 @@ class PyPCX(MainWindow):
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import a BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_open(self)
 		if not file:
 			return
 		b = BMP()
@@ -264,11 +265,12 @@ class PyPCX(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def sets(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def sets(self) -> None:
+		SettingsDialog(self, self.config_)
+		# SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyPCX.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyPCX.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyPCX', LONG_VERSION)
@@ -276,6 +278,6 @@ class PyPCX(MainWindow):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.save()
 		self.destroy()

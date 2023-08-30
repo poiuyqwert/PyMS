@@ -1,17 +1,46 @@
 
-from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL
+from __future__ import annotations
+
+from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL, Misc
 from . import Assets
-from .WarnDialog import WarnDialog
-from .fileutils import check_allow_overwrite_internal_file
+from .MPQHandler import MPQHandler
 
 from numbers import Number
 import os, json
+from enum import Enum
 
-from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Iterable, Iterator
+from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable
 
 JSONValue: TypeAlias = 'int | float | str | bool | None | JSONObject | JSONArray'
 JSONObject = dict[str, JSONValue]
 JSONArray = Sequence[JSONValue]
+
+def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
+	'''Ensure there are nested `dict` objects in all parts of the keypath'''
+	for key in keypath:
+		sub_data = data.get(key)
+		if not isinstance(sub_data, dict):
+			sub_data = {}
+			data[key] = sub_data
+		data = sub_data
+	return data
+
+def migrate_field(data: dict, from_keypath: tuple[str, ...], to_keypath: tuple[str, ...]) -> None:
+	value: Any | None = None
+	obj: Any = data
+	for key in from_keypath:
+		if not isinstance(obj, dict):
+			return
+		if not key in obj:
+			return
+		value = obj[key]
+	if len(to_keypath) > 1:
+		data = migrate_nest(data, to_keypath[:-1])
+	data[to_keypath[-1]] = value
+
+def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]):
+	for from_keypath,to_keypath in keypaths:
+		migrate_field(data, from_keypath, to_keypath)
 
 @runtime_checkable
 class ConfigObject(Protocol):
@@ -329,24 +358,84 @@ class PaneSizes(ConfigObject):
 			sizes.append(size)
 		self._sizes = sizes
 
-# TODO: This simply replicates the old Settings use case, but should this be more complicated like `SelectFile`?
 class File(ConfigObject):
-	def __init__(self, default: str | None = None) -> None:
-		self._file_path = default
-		self._saved_state = self._file_path
+	def __init__(self, default: str, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
+		self.file_path = default
+		self._name = name
+		self._filetypes = FileType.include_all_files(filetypes)
+		self._default_extension = FileType.default_extension(filetypes)
+		self._initial_filename = initial_filename or os.path.basename(self.file_path)
+		self._saved_state = self.file_path
+
+	def select_file(self, parent: Misc, name: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
+		window = parent.winfo_toplevel()
+		setattr(window, '_pyms__window_blocking', True)
+		initial_dir: str | None = None # TODO: Initial dir
+		path = FileDialog.askopenfilename(
+			parent=window,
+			title=f'Select {name or self._name}',
+			initialdir=initial_dir or Assets.base_dir,
+			filetypes=filetypes or self._filetypes,
+			defaultextension=self._default_extension,
+			initialfile=self._initial_filename
+		)
+		setattr(window, '_pyms__window_blocking', False)
+		# if path:
+		# 	self.file_path = path
+		return path
+
+	def select_mpq(self, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
+		from .MPQSelect import MPQSelect
+		mpq_select = MPQSelect(parent, mpq_handler, name or self._name, filetype or self._filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
+		return mpq_select.file
 
 	def encode(self) -> JSONValue:
-		return self._file_path
+		return self.file_path
 
 	def decode(self, file_path: JSONValue) -> None:
 		if not isinstance(file_path, str):
 			return
 		if not file_path.startswith('MPQ:') and not os.path.exists(file_path):
 			return
-		self._file_path = file_path
+		self.file_path = file_path
+
+	def save_state(self) -> None:
+		self._saved_state = self.file_path
+
+	def reset_state(self) -> None:
+		self.file_path = self._saved_state
+
+class FileOpType(Enum):
+	open_save = 0
+	import_export = 1
+
+	def title(self, name: str, save: bool) -> str:
+		op_name: str
+		match self:
+			case FileOpType.open_save:
+				op_name = 'Save' if save else 'Open'
+			case FileOpType.import_export:
+				op_name = 'Export' if save else 'Import'
+		return f'{op_name} {name}'
+
+	@property
+	def save_key(self) -> str:
+		match self:
+			case FileOpType.open_save:
+				return 'save'
+			case FileOpType.import_export:
+				return 'export'
+
+	@property
+	def open_key(self) -> str:
+		match self:
+			case FileOpType.open_save:
+				return 'open'
+			case FileOpType.import_export:
+				return 'import'
 
 class SelectFile(ConfigObject):
-	def __init__(self, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
+	def __init__(self, name: str, filetypes: list[FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:
 		self._open_directory = Assets.base_dir
 		self._saved_state_open = self._open_directory
 		self._save_directory = Assets.base_dir
@@ -354,29 +443,32 @@ class SelectFile(ConfigObject):
 		self._name = name
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
+		self._op_type = op_type
 		self._initial_filename = initial_filename
 
-	def _select_file(self, window: AnyWindow, save: bool) -> str | None:
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None) -> str | None:
+		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		path: str | None
 		if save:
 			path = FileDialog.asksaveasfilename(
 				parent=window,
-				title='%s %s' % ('Save' if save else 'Open', self._name),
+				title=title or self._op_type.title(self._name, save),
 				initialdir=self._save_directory if save else self._open_directory,
-				filetypes=self._filetypes,
+				filetypes=filetypes or self._filetypes,
 				defaultextension=self._default_extension,
 				initialfile=self._initial_filename
 			)
 		else:
 			path = FileDialog.askopenfilename(
 				parent=window,
-				title='%s %s' % ('Save' if save else 'Open', self._name),
+				title=title or self._op_type.title(self._name, save),
 				initialdir=self._save_directory if save else self._open_directory,
-				filetypes=self._filetypes,
+				filetypes=filetypes or self._filetypes,
 				defaultextension=self._default_extension,
 				initialfile=self._initial_filename
 			)
+		from .fileutils import check_allow_overwrite_internal_file
 		if save and path and not check_allow_overwrite_internal_file(path):
 			path = None
 		setattr(window, '_pyms__window_blocking', False)
@@ -388,25 +480,25 @@ class SelectFile(ConfigObject):
 				self._open_directory = directory
 		return path
 
-	def select_open(self, window: AnyWindow) -> str | None:
-		return self._select_file(window, False)
+	def select_open(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
+		return self._select_file(parent, False, title, filetypes)
 
-	def select_save(self, window: AnyWindow) -> str | None:
-		return self._select_file(window, True)
+	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
+		return self._select_file(parent, True, title, filetypes)
 
 	def encode(self) -> JSONValue:
 		return {
-			'open': self._open_directory,
-			'save': self._save_directory
+			self._op_type.open_key: self._open_directory,
+			self._op_type.save_key: self._save_directory
 		}
 
 	def decode(self, data: JSONValue) -> None:
 		if not isinstance(data, dict):
 			return
-		open_directory = data.get('open')
+		open_directory = data.get(self._op_type.open_key)
 		if isinstance(open_directory, str) and os.path.exists(open_directory):
 			self._open_directory = open_directory
-		save_directory = data.get('save')
+		save_directory = data.get(self._op_type.save_key)
 		if isinstance(save_directory, str) and os.path.exists(save_directory):
 			self._save_directory = save_directory
 
@@ -426,14 +518,15 @@ class SelectFiles(ConfigObject):
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
 
-	def select_open(self, window: AnyWindow) -> list[str]:
+	def select_open(self, parent: Misc, filetypes: list[FileType] | None = None) -> list[str]:
+		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		paths: list[str] | str = FileDialog.askopenfilename(
 			parent=window,
 			multiple=True,
 			title=self._title,
 			initialdir=self._directory,
-			filetypes=self._filetypes,
+			filetypes=filetypes or self._filetypes,
 			defaultextension=self._default_extension
 		) # type: ignore[call-arg]
 		setattr(window, '_pyms__window_blocking', False)
@@ -466,7 +559,8 @@ class SelectDirectory(ConfigObject):
 		self._saved_state = self.path
 		self._title = title
 
-	def select_open(self, window: AnyWindow) -> str | None:
+	def select_open(self, parent: Misc) -> str | None:
+		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		path = FileDialog.askdirectory(parent=window, title=self._title, initialdir=self.path or Assets.base_dir)
 		setattr(window, '_pyms__window_blocking', False)
@@ -496,10 +590,11 @@ class Warning(ConfigObject):
 		self._title = title
 		self._remember_version = remember_version
 
-	def present(self, window: AnyWindow) -> None:
+	def present(self, parent: Misc) -> None:
 		if self._remember_version <= self._seen_version:
 			return
-		dialog = WarnDialog(window, self._message, self._title, show_dont_warn=True)
+		from .WarnDialog import WarnDialog
+		dialog = WarnDialog(parent, self._message, self._title, show_dont_warn=True)
 		if dialog.dont_warn.get():
 			self._seen_version = self._remember_version
 
@@ -517,7 +612,7 @@ class Warning(ConfigObject):
 	def reset_state(self) -> None:
 		self._seen_version = self._saved_state
 
-V = TypeVar('V', int, float, str, bool)
+V = TypeVar('V', int, float, str, bool, dict)
 class Dictionary(ConfigObject, Generic[V]):
 	def __init__(self, value_type: type[V], defaults: dict[str, V] = {}) -> None:
 		self.value_type: type[V] = value_type

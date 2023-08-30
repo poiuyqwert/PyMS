@@ -12,10 +12,10 @@ class Update(Enum):
 	selection = 3
 
 class FindReplaceDialog(PyMSDialog):
-	def __init__(self, parent: Misc, text: CodeText, settings: Settings) -> None:
+	def __init__(self, parent: Misc, text: CodeText, window_geometry_config: Config.WindowGeometry) -> None:
 		self.text = text
 		self.resettimer: str | None = None
-		self.settings = settings
+		self.window_geometry_config = window_geometry_config
 		self.find_history: list[str] = []
 		self.replace_history: list[str] = []
 		PyMSDialog.__init__(self, parent, 'Find/Replace', grabwait=False, resizable=(True, False))
@@ -82,7 +82,7 @@ class FindReplaceDialog(PyMSDialog):
 		return self.findentry
 
 	def setup_complete(self) -> None:
-		self.settings.windows.load_window_size('findreplace', self)
+		self.window_geometry_config.load(self)
 
 	def check(self, update: Update):
 		if update == Update.regex:
@@ -231,5 +231,5 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def dismiss(self) -> None:
-		self.settings.windows.save_window_size('findreplace', self)
+		self.window_geometry_config.save(self)
 		PyMSDialog.dismiss(self)

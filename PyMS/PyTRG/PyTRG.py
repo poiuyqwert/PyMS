@@ -1,8 +1,10 @@
 
+from .Config import PyTRGConfig
 from .Delegates import MainDelegate
 from .TRGCodeText import TRGCodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
@@ -12,14 +14,12 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
@@ -49,11 +49,7 @@ class Completing:
 
 class PyTRG(MainWindow, MainDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyTRG', '1')
-		self.settings.settings.files.set_defaults({
-			'stat_txt':'MPQ:rez\\stat_txt.tbl',
-			'aiscript':'MPQ:scripts\\aiscript.bin',
-		})
+		self.config_ = PyTRGConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -62,7 +58,7 @@ class PyTRG(MainWindow, MainDelegate):
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace('PyTRG', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.trg: TRG.TRG | None = None
 		self.file: str | None = None
@@ -96,7 +92,7 @@ class PyTRG(MainWindow, MainDelegate):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -127,7 +123,7 @@ class PyTRG(MainWindow, MainDelegate):
 		self.autocompfuncs.sort()
 
 		# Text editor
-		self.text = TRGCodeText(self, self, self.autocomptext, self.edit, highlights=self.settings.get('highlights'), state=DISABLED)
+		self.text = TRGCodeText(self, self, self.autocomptext, self.edit, highlights=self.config_.highlights.data, state=DISABLED)
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate
@@ -144,11 +140,10 @@ class PyTRG(MainWindow, MainDelegate):
 		statusbar.add_label(self.codestatus)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpqhandler = MPQHandler(self.config_.mpqs)
+
 		e = self.open_files()
 
 		if guifile:
@@ -157,7 +152,7 @@ class PyTRG(MainWindow, MainDelegate):
 		UpdateDialog.check_update(self, 'PyTRG')
 
 		if e:
-			self.tblbin(err=e)
+			self.settings(err=e)
 
 	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
@@ -165,8 +160,8 @@ class PyTRG(MainWindow, MainDelegate):
 		try:
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
-			tbl.load_file(self.mpqhandler.load_file(self.settings.settings.files['stat_txt']))
-			aibin.load(self.mpqhandler.load_file(self.settings.settings.files['aiscript']))
+			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -237,7 +232,7 @@ class PyTRG(MainWindow, MainDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
+			file = self.config_.last_path.trg.select_open(self)
 			if not file:
 				return
 		trg = TRG.TRG()
@@ -266,7 +261,7 @@ class PyTRG(MainWindow, MainDelegate):
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_open(self)
 		if not file:
 			return
 		try:
@@ -292,7 +287,7 @@ class PyTRG(MainWindow, MainDelegate):
 		if not self.trg:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.trg.select_save_file(self, title='Save TRG As', filetypes=[FileType.trg()])
+			file_path = self.config_.last_path.trg.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -313,7 +308,7 @@ class PyTRG(MainWindow, MainDelegate):
 	def savegottrg(self) -> None:
 		if not self.trg:
 			return
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save *.got Compatable *.trg As', filetypes=[FileType.trg()])
+		file = self.config_.last_path.trg.select_save(self, title='Save GOT Compatable TRG')
 		if not file:
 			return
 		try:
@@ -323,10 +318,10 @@ class PyTRG(MainWindow, MainDelegate):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.status.set('*.got Compatable *.trg Saved Successfully!')
+		self.status.set('GOT Compatable TRG Saved Successfully!')
 
 	def export(self) -> None:
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		try:
@@ -377,27 +372,20 @@ class PyTRG(MainWindow, MainDelegate):
 
 	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self, self.text, self.settings)
+			self.findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
 			self.bind(Key.F3(), self.findwindow.findnext)
 		else:
 			self.findwindow.make_active() # type: ignore[attr-defined]
 			self.findwindow.findentry.focus_set(highlight=True)
 
 	def colors(self) -> None:
-		c = CodeColors(self, self.text, self.settings)
+		c = CodeColors(self, self.text, self.config_.windows.colors)
 		if c.cont:
 			self.text.setup(c.cont)
 			self.highlights = c.cont
 
-	def tblbin(self, err: PyMSError | None = None) -> None:
-		data = [
-			('File Settings',[
-				('stat_txt.tbl', 'Contains Unit and AI Script names', 'stat_txt', 'TBL'),
-				('aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", 'aiscript', 'AIBIN'),
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
+	def settings(self, err: PyMSError | None = None) -> None:
+		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
 
 	def register_registry(self) -> None:
 		try:
@@ -406,7 +394,7 @@ class PyTRG(MainWindow, MainDelegate):
 			ErrorDialog(self, e)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyTRG.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTRG.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyTRG', LONG_VERSION, [('FaRTy1billion','For creating TrigPlug and giving me the specs!')])
@@ -414,9 +402,9 @@ class PyTRG(MainWindow, MainDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings['highlights'] = self.text.highlights
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.highlights.data = dict(self.text.highlights)
+		self.config_.save()
 		self.destroy()
 
 	def autocomplete(self) -> bool:

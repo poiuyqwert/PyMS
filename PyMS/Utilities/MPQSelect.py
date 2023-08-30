@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 from . import Assets
@@ -6,22 +8,43 @@ from .MPQHandler import MPQHandler
 from . import Config
 
 import os, re
+from enum import Enum
 
 class MPQSelect(PyMSDialog):
-	def __init__(self, parent, mpqhandler, filetype, search, settings, open_type='Open'): # type: (Misc, MPQHandler, str, str, Settings, str) -> None
+	class Action(Enum):
+		open = 0
+		save = 1
+		select = 2
+
+		@property
+		def cta(self) -> str:
+			match self:
+				case MPQSelect.Action.open:
+					return 'Open'
+				case MPQSelect.Action.save:
+					return 'Save'
+				case MPQSelect.Action.select:
+					return 'Select'
+
+		def title(self, name: str) -> str:
+			return f'{self.cta} {name}'
+
+	def __init__(self, parent: Misc, mpqhandler: MPQHandler, name: str, filetype: FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
+		search = default_search or filetype.extensions[0]
 		self.search.set(search)
 		self.search.trace('w', self.updatesearch)
-		self.settings = settings
+		self.history_config = history_config
+		self.window_geometry_config = window_geometry_config
 		self.regex = IntVar()
 		self.regex.set(0)
 		self.files = [] # type: list[str]
 		self.file = None # type: str | None
 		self.resettimer = None # type: str | None
 		self.searchtimer = None # type: str | None
-		self.open_type = open_type
-		PyMSDialog.__init__(self, parent, self.open_type + ' a ' + filetype)
+		self.action = action
+		PyMSDialog.__init__(self, parent, self.action.title(name))
 
 	def widgetize(self): # type: () -> (Misc | None)
 		self.listbox = ScrolledListbox(self, width=35, height=10)
@@ -29,11 +52,11 @@ class MPQSelect(PyMSDialog):
 		self.listbox.focus_set()
 
 		s = Frame(self)
-		history = self.settings.settings.get('mpqselecthistory',[])[::-1]
+		history = self.history_config.data[::-1]
 		self.textdrop = TextDropDown(s, self.search, history)
 		self.textdrop_entry_c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
-		self.open = Button(s, text=self.open_type, width=10, command=self.ok)
+		self.open = Button(s, text=self.action.cta, width=10, command=self.ok)
 		self.open.pack(side=RIGHT, padx=1, pady=3)
 		s.pack(fill=X)
 		s = Frame(self)
@@ -48,7 +71,7 @@ class MPQSelect(PyMSDialog):
 		return self.open
 
 	def setup_complete(self): # type: () -> None
-		self.settings.windows.settings.load_window_size('mpqselect', self)
+		self.window_geometry_config.load(self)
 
 	def listfiles(self): # type: () -> None
 		self.files = []
@@ -98,7 +121,7 @@ class MPQSelect(PyMSDialog):
 	def ok(self, _=None): # type: (Event | None) -> None
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
-		history = self.settings.settings.get('mpqselecthistory', [])
+		history = self.history_config.data
 		if f in history:
 			history.remove(f)
 		history.append(f)
@@ -107,5 +130,5 @@ class MPQSelect(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self): # type: () -> None
-		self.settings.windows.settings.save_window_size('mpqselect', self)
+		self.window_geometry_config.save(self)
 		PyMSDialog.dismiss(self)

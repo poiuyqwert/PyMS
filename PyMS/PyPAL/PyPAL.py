@@ -1,10 +1,12 @@
 
+from .Config import PyPALConfig
+from .SettingsDialog import SettingsDialog
+
 from ..FileFormats.Palette import Palette
 from ..FileFormats.Images import RGB
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -14,7 +16,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 import re
@@ -26,7 +27,7 @@ LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 class PyPAL(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
 		#Config
-		self.settings = Settings('PyPAL', '1')
+		self.config_ = PyPALConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -35,7 +36,7 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.palette: Palette | None = None
@@ -118,7 +119,7 @@ class PyPAL(MainWindow):
 		if guifile:
 			self.open(file=guifile)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
 		UpdateDialog.check_update(self, 'PyPAL')
 
@@ -248,7 +249,7 @@ class PyPAL(MainWindow):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.select_open_file(self, title='Open Palette', filetypes=Palette.FileType.load_types())
+			file = self.config_.last_path.pal.select_open(self)
 			if not file:
 				return
 		pal = Palette()
@@ -277,7 +278,7 @@ class PyPAL(MainWindow):
 		if not self.palette:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.select_save_file(self, title='Save Palette As', filetypes=Palette.FileType.save_types(file_type.format, file_type.ext))
+			file_path = self.config_.last_path.pal.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -320,11 +321,11 @@ class PyPAL(MainWindow):
 				ErrorDialog(self, e)
 				break
 
-	def sets(self, err: Exception | None = None) -> None:
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def sets(self) -> None:
+		SettingsDialog(self, self.config_)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyPAL.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyPAL.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyPAL', LONG_VERSION)
@@ -332,6 +333,6 @@ class PyPAL(MainWindow):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.save()
 		self.destroy()

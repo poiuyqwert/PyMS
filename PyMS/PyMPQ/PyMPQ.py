@@ -5,7 +5,7 @@ from .CheckThread import CheckThread
 from .LocaleDialog import LocaleDialog
 from .UpdateFiles import UpdateFiles
 from .FolderDialog import FolderDialog
-from .Settings.SettingsDialog import SettingsDialog, SettingsDialogDelegate
+from .SettingsUI.SettingsDialog import SettingsDialog
 from .Config import PyMPQConfig
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
@@ -39,7 +39,7 @@ class ColumnID:
 	Locale = 4
 	Attributes = 5
 
-class PyMPQ(MainWindow, SettingsDialogDelegate):
+class PyMPQ(MainWindow):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		self.config_ = PyMPQConfig()
 
@@ -658,7 +658,7 @@ class PyMPQ(MainWindow, SettingsDialogDelegate):
 
 	def mansets(self, key=None): # type: (Event | None) -> None
 		if key:
-			SettingsDialog(self, self, self.config_)
+			SettingsDialog(self, self.config_)
 			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())

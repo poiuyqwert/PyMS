@@ -1,7 +1,7 @@
 
 from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.MPQSettings import MPQSettings
-from ..Utilities.SettingsPanel import SettingsPanel
+from ..Utilities.SettingsPanel_Old import SettingsPanel
 from ..Utilities.UIKit import *
 from ..Utilities.SettingsUI.SettingsTab import SettingsTab
 from ..Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab

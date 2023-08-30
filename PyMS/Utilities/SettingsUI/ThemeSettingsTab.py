@@ -76,26 +76,32 @@ class ThemeSettingsTab(SettingsTab):
 			return 0
 		return 1 + Assets.theme_list().index(theme)
 
+	def check_edited(self) -> None:
+		edited = False
+		if (self.current_theme() is None) != self.default.get():
+			edited = True
+		if self.current_theme() != self.selected_theme():
+			edited = True
+		self.edited_state.mark_edited(edited)
+
 	def default_updated(self, *_) -> None:
-		is_default = self.current_theme() is None
-		if is_default != self.default.get():
-			self.edited_state.mark_edited()
 		if self.default.get():
 			theme = self.current_default()
 			theme_index = self.theme_index(theme)
 			self.listbox.select_clear(0, END)
 			self.listbox.select_set(theme_index)
 			self.listbox.see(theme_index)
+		self.check_edited()
 
 	def selection_updated(self, _=None) -> None:
 		self.preview_theme()
+		self.check_edited()
 
 	def preview_theme(self) -> None:
 		theme_name = None
 		theme_index = self.listbox.curselection()[0]
 		if theme_index > 0:
 			theme_name = Assets.theme_list()[theme_index - 1]
-		self.edited_state.mark_edited()
 		if not theme_name:
 			self.author.set('None')
 			self.description.set('Use the default style applied by your OS')

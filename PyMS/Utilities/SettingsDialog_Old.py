@@ -2,7 +2,7 @@
 from . import Assets
 from .PyMSDialog import PyMSDialog
 from .MPQSettings import MPQSettings
-from .SettingsPanel import SettingsPanel
+from .SettingsPanel_Old import SettingsPanel
 from .ErrorDialog import ErrorDialog
 from .UIKit import *
 

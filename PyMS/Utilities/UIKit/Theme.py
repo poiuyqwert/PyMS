@@ -319,7 +319,7 @@ class _Selector(object):
 	def __repr__(self): # type: () -> str
 		return "<Theme.Selector '%s'>" % self.describe()
 
-def load_theme(name, main_window): # type: (str, _Tk.Tk) -> None
+def load_theme(name, main_window): # type: (str | None, _Tk.Tk) -> None
 	if not name:
 		from ..setutils import PYMS_CONFIG
 		name = PYMS_CONFIG.theme.value

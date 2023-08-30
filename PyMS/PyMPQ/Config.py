@@ -6,34 +6,15 @@ from ..Utilities import Assets
 from ..Utilities.UIKit import FileType, Size
 
 def _migrate_2_to_3(data: dict) -> None:
-	try:
-		data['filter']['history'] = data['filters']
-	except:
-		pass
-	try:
-		data['filter']['regex'] = data['regex']
-	except:
-		pass
-	try:
-		data['last_path'] = data['lastpath']
-	except:
-		pass
-	try:
-		data['last_path']['import']['files']['open'] = data['lastpath']['files']['import']
-	except:
-		pass
-	try:
-		data['last_path']['import']['files']['save'] = data['lastpath']['files']['export']
-	except:
-		pass
-	try:
-		data['last_path']['import']['folder'] = data['lastpath']['files']['import_dir']
-	except:
-		pass
-	try:
-		data['import']['folder_prefix'] = data['import']['add_folder']
-	except:
-		pass
+	Config.migrate_fields(data, (
+		(('filters',), ('filter', 'history')),
+		(('regex',), ('filter', 'regex')),
+		(('lastpath',), ('last_path',)),
+		(('lastpath','files','import'), ('last_path','import','files','import')),
+		(('lastpath','files','export'), ('last_path','import','files','export')),
+		(('lastpath','files','import_dir'), ('last_path','import','folder')),
+		(('import','add_folder'), ('import','folder_prefix'))
+	))
 
 class PyMPQConfig(Config.Config):
 	_name = 'PyMPQ'

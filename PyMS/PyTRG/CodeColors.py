@@ -10,9 +10,9 @@ from collections import OrderedDict
 from copy import deepcopy
 
 class CodeColors(PyMSDialog):
-	def __init__(self, parent: Misc, text: TRGCodeText, settings: Settings) -> None:
+	def __init__(self, parent: Misc, text: TRGCodeText, window_geometry_config: Config.WindowGeometry) -> None:
 		self.text = text
-		self.settings = settings
+		self.window_geometry_config = window_geometry_config
 		self.cont: dict[str, dict] | None = None
 		self.tags = deepcopy(text.tags)
 		self.info: OrderedDict[str, str | list[str]] = OrderedDict()
@@ -82,7 +82,7 @@ class CodeColors(PyMSDialog):
 		return ok
 
 	def setup_complete(self) -> None:
-		self.settings.windows.load_window_size('colors', self)
+		self.window_geometry_config.save(self)
 
 	def select(self, e: Event | None = None, n: int | None = None) -> None:
 		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
@@ -141,5 +141,5 @@ class CodeColors(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:
-		self.settings.windows.save_window_size('colors', self)
+		self.window_geometry_config.load(self)
 		PyMSDialog.dismiss(self)
