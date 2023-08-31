@@ -1,26 +1,22 @@
 
 from __future__ import annotations
 
-from PyMS.FileFormats.Tileset.Tileset import Tileset
-from PyMS.FileFormats.Tileset.VX4 import VX4Minitile
-from PyMS.Utilities.UIKit import Image
+from .Config import PyTILEConfig
 from .Delegates import GraphicsImporterDelegate, TilePaletteDelegate
 
-from ..FileFormats.Tileset.Tileset import TileType, ImportGraphicsOptions
+from ..FileFormats.Tileset.Tileset import Tileset, TileType, ImportGraphicsOptions
+from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Assets
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from ..Utilities import Config
+from ..Utilities import Config
 
 class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
-	def __init__(self, parent, settings, delegate, tiletype=TileType.group, ids=None): # type: (Misc, Settings, GraphicsImporterDelegate, TileType, list[int] | None) -> None
-		self.settings = settings
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: GraphicsImporterDelegate, tiletype: TileType = TileType.group, ids: list[int] | None = None) -> None:
+		self.config_ = config
 		self.tiletype = tiletype
 		self.ids = ids
 		self.delegate = delegate
@@ -128,27 +124,41 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		return self.import_button
 
 	def setup_complete(self): # type: () -> None
-		self.settings.windows['import'].graphics.load_window_size(('group','mega','mini')[self.tiletype.value], self)
+		self.window_geometry_config.load(self)
 
-	def load_settings(self): # type: () -> None
+	@property
+	def window_geometry_config(self) -> Config.WindowGeometry:
 		match self.tiletype:
 			case TileType.group:
-				type_key = 'groups'
+				return self.config_.windows.import_.graphics.group
 			case TileType.mega:
-				type_key = 'megatiles' 
+				return self.config_.windows.import_.graphics.mega
 			case TileType.mini:
-				type_key = 'minitiles'
-		type_settings = self.settings['import'].graphics[type_key]
-		self.megatiles_reuse_duplicates_old.set(type_settings.get('megatiles_reuse_duplicates_old',False))
-		self.megatiles_reuse_duplicates_new.set(type_settings.get('megatiles_reuse_duplicates_new',False))
-		self.megatiles_reuse_null.set(type_settings.get('megatiles_reuse_null',True))
-		self.megatiles_null_id.set(type_settings.get('megatiles_null_id',0))
-		self.minitiles_reuse_duplicates_old.set(type_settings.get('minitiles_reuse_duplicates_old',True))
-		self.minitiles_reuse_duplicates_new.set(type_settings.get('minitiles_reuse_duplicates_new',True))
-		self.minitiles_reuse_null.set(type_settings.get('minitiles_reuse_null',True))
-		self.minitiles_null_id.set(type_settings.get('minitiles_null_id',0))
-		self.replace_selections.set(type_settings.get('replace_selections',True))
-		self.auto_close.set(type_settings.get('auto_close',True))
+				return self.config_.windows.import_.graphics.mini
+
+	@property
+	def type_config(self) -> PyTILEConfig.Import.Graphics.MegaSettings | PyTILEConfig.Import.Graphics.MiniSettings:
+		match self.tiletype:
+			case TileType.group:
+				return self.config_.import_.graphics.group
+			case TileType.mega:
+				return self.config_.import_.graphics.mega
+			case TileType.mini:
+				return self.config_.import_.graphics.mini
+
+	def load_settings(self): # type: () -> None
+		config = self.type_config
+		if isinstance(config, PyTILEConfig.Import.Graphics.MegaSettings):
+			self.megatiles_reuse_duplicates_old.set(config.megatiles_reuse_duplicates_old.value)
+			self.megatiles_reuse_duplicates_new.set(config.megatiles_reuse_duplicates_new.value)
+			self.megatiles_reuse_null.set(config.megatiles_reuse_null.value)
+			self.megatiles_null_id.set(config.megatiles_null_id.value)
+		self.minitiles_reuse_duplicates_old.set(config.minitiles_reuse_duplicates_old.value)
+		self.minitiles_reuse_duplicates_new.set(config.minitiles_reuse_duplicates_new.value)
+		self.minitiles_reuse_null.set(config.minitiles_reuse_null.value)
+		self.minitiles_null_id.set(config.minitiles_null_id.value)
+		self.replace_selections.set(config.replace_selections.value)
+		self.auto_close.set(config.auto_close.value)
 
 	def update_states(self, *_): # type: (Any) -> None
 		self.import_button['state'] = NORMAL if self.graphics_list.size() else DISABLED
@@ -183,7 +193,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 				self.ok()
 
 	def select_paths(self, replace=False): # type: (bool) -> None
-		paths = self.settings.lastpath.graphics.select_open_files(self, key='import', title='Choose Graphics', filetypes=[FileType.bmp()])
+		paths = self.config_.last_path.graphics.select_open(self)
 		if paths:
 			if replace:
 				self.graphics_list.delete(0, END)
@@ -238,7 +248,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		elif tiletype == TileType.mini:
 			id = self.minitiles_null_id.get()
 		from .TilePalette import TilePalette
-		TilePalette(self, self.settings, self, tiletype, id)
+		TilePalette(self, self.config_, self, tiletype, id)
 
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
@@ -262,38 +272,22 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		pass
 
 	def reset_options(self): # type: () -> None
-		if 'import' in self.settings:
-			match self.tiletype:
-				case TileType.group:
-					type_key = 'groups'
-				case TileType.mega:
-					type_key = 'megatiles'
-				case TileType.mini:
-					type_key = 'minitiles'
-			del self.settings['import'].graphics[type_key]
+		self.type_config.reset()
 		self.load_settings()
 
 	def dismiss(self): # type: () -> None
-		type_settings = {
-			'minitiles_reuse_duplicates_old': not not self.minitiles_reuse_duplicates_old.get(),
-			'minitiles_reuse_duplicates_new': not not self.minitiles_reuse_duplicates_new.get(),
-			'minitiles_reuse_null': not not self.minitiles_reuse_null.get(),
-			'minitiles_null_id': self.minitiles_null_id.get(),
-			'replace_selections': not not self.replace_selections.get(),
-			'auto_close': not not self.auto_close.get()
-		}
-		if self.tiletype != TileType.mini:
-			type_settings['megatiles_reuse_duplicates_old'] = not not self.megatiles_reuse_duplicates_old.get()
-			type_settings['megatiles_reuse_duplicates_new'] = not not self.megatiles_reuse_duplicates_new.get()
-			type_settings['megatiles_reuse_null'] = not not self.megatiles_reuse_null.get()
-			type_settings['megatiles_null_id'] = self.megatiles_null_id.get()
-		match self.tiletype:
-			case TileType.group:
-				type_key = 'groups'
-			case TileType.mega:
-				type_key = 'megatiles'
-			case TileType.mini:
-				type_key = 'minitiles'
-		self.settings['import'].graphics[type_key] = type_settings
-		self.settings.windows['import'].graphics.save_window_size(('group','mega','mini')[self.tiletype.value], self)
+		config = self.type_config
+		if isinstance(config, PyTILEConfig.Import.Graphics.MegaSettings):
+			config.megatiles_reuse_duplicates_old.value = not not self.megatiles_reuse_duplicates_old.get()
+			config.megatiles_reuse_duplicates_new.value = not not self.megatiles_reuse_duplicates_new.get()
+			config.megatiles_reuse_null.value = not not self.megatiles_reuse_null.get()
+			config.megatiles_null_id.value = self.megatiles_null_id.get()
+		config.minitiles_reuse_duplicates_old.value = not not self.minitiles_reuse_duplicates_old.get()
+		config.minitiles_reuse_duplicates_new.value = not not self.minitiles_reuse_duplicates_new.get()
+		config.minitiles_reuse_null.value = not not self.minitiles_reuse_null.get()
+		config.minitiles_null_id.value = self.minitiles_null_id.get()
+		config.replace_selections.value = not not self.replace_selections.get()
+		config.auto_close.value = not not self.auto_close.get()
+		self.config_.windows.import_.graphics
+		self.window_geometry_config.save(self)
 		PyMSDialog.dismiss(self)

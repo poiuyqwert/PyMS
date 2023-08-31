@@ -85,10 +85,10 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 
 	def ok(self):
 		if self.edited_state.is_edited:
-			self.config_.save_state()
+			self.config_.store_state()
 			self.save()
 			if err := self.delegate.open_files():
-				self.config_.reset_state()
+				self.config_.restore_state()
 				ErrorDialog(self, err)
 				return
 		PyMSDialog.ok(self)

@@ -5,7 +5,6 @@ from ..Utilities.UIKit import Size, FileType
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
 		(('lastpath',), ('last_path',)),
-		(('lastpath',), ('last_path',)),
 		(('windows', 'findreplace'), ('windows', 'find_replace')),
 		(('windows', 'mpqselect'), ('windows', 'mpq_select')),
 		(('mpqselecthistory',), ('mpq_select_history',))

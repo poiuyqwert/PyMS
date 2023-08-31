@@ -1,4 +1,5 @@
 
+from .Config import PyTILEConfig
 from .Delegates import MainDelegate, TilePaletteDelegate
 
 from ..FileFormats.Tileset.Tileset import Tileset, megatile_to_photo, TileType
@@ -6,13 +7,12 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities import Config
 
 from typing import Callable
 
 class Placeability(PyMSDialog, TilePaletteDelegate):
-	def __init__(self, parent, settings, delegate, id=0): # type: (Misc, Settings, MainDelegate, int) -> None
-		self.settings = settings
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MainDelegate, id: int = 0) -> None:
+		self.config_ = config
 		self.delegate = delegate
 		self.id = id
 		self.canvass = [] # type: list[Canvas]
@@ -69,7 +69,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 	def select(self, pos): # type: (tuple[int, int]) -> None
 		self.selecting = pos
 		from .TilePalette import TilePalette
-		TilePalette(self, self.settings, self, TileType.group, self.groups[pos[1]][pos[0]].get())
+		TilePalette(self, self.config_, self, TileType.group, self.groups[pos[1]][pos[0]].get())
 
 	def change(self, _, id): # type: (TileType, int) -> None
 		if self.selecting is None:

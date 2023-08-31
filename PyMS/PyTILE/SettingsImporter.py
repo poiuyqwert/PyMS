@@ -1,7 +1,9 @@
 
 from __future__ import annotations
 
+from .Config import PyTILEConfig
 from .Delegates import MainDelegate
+from .RepeaterID import RepeaterID
 
 from ..FileFormats.Tileset.Tileset import TileType, ImportSettingsOptions
 
@@ -12,18 +14,16 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Serialize
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from ..Utilities import Config
+from enum import Enum
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
-		('Ignore',				'ignore',		Serialize.repeater_ignore),
-		('Repeat All Settings',	'repeat_all',	Serialize.repeater_loop),
-		('Repeat Last Setting',	'repeat_last',	Serialize.repeater_repeat_last)
+		('Ignore',				RepeaterID.ignore,		Serialize.repeater_ignore),
+		('Repeat All Settings',	RepeaterID.repeat_all,	Serialize.repeater_loop),
+		('Repeat Last Setting',	RepeaterID.repeat_last,	Serialize.repeater_repeat_last)
 	)
-	def __init__(self, parent, settings, tiletype, ids, delegate): # type: (Misc, Settings, TileType, list[int], MainDelegate) -> None
-		self.settings = settings
+	def __init__(self, parent: Misc, config: PyTILEConfig, tiletype: TileType, ids: list[int], delegate: MainDelegate) -> None:
+		self.config_ = config
 		self.tiletype = tiletype
 		self.ids = ids
 		self.delegate = delegate
@@ -38,14 +38,14 @@ class SettingsImporter(PyMSDialog):
 		self.settings_path = StringVar()
 		self.repeater = IntVar()
 		repeater_n = 0
-		repeater_setting = self.settings['import'].settings.get('repeater',SettingsImporter.REPEATERS[0][1])
+		repeater_setting = self.config_.import_.settings.repeater.value
 		for n,(_,setting,_) in enumerate(SettingsImporter.REPEATERS):
 			if setting == repeater_setting:
 				repeater_n = n
 				break
 		self.repeater.set(repeater_n)
 		self.auto_close = IntVar()
-		self.auto_close.set(self.settings['import'].settings.get('auto_close', True))
+		self.auto_close.set(self.config_.import_.settings.auto_close.value)
 
 		f = Frame(self)
 		Label(f, text='TXT:', anchor=W).pack(side=TOP, fill=X, expand=1)
@@ -80,7 +80,7 @@ class SettingsImporter(PyMSDialog):
 			typename = 'MegaTile Group'
 		elif self.tiletype == TileType.mega:
 			typename = 'MegaTile'
-		path = self.settings.lastpath.settings.select_open_file(self, key='import', title='Import %s Settings' % typename, filetypes=[FileType.txt()])
+		path = self.config_.last_path.settings.select_open(self, title='Import %s Settings' % typename)
 		if not path:
 			return
 		self.settings_path.set(path)
@@ -109,6 +109,6 @@ class SettingsImporter(PyMSDialog):
 				self.ok()
 
 	def dismiss(self):
-		self.settings['import'].settings.repeater = SettingsImporter.REPEATERS[self.repeater.get()][1]
-		self.settings['import'].settings.auto_close = not not self.auto_close.get()
+		self.config_.import_.settings.repeater.value = SettingsImporter.REPEATERS[self.repeater.get()][1]
+		self.config_.import_.settings.auto_close.value = not not self.auto_close.get()
 		PyMSDialog.dismiss(self)

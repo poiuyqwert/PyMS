@@ -1,4 +1,6 @@
 
+from .Config import PyTILEConfig
+from .MegaEditorMode import MegaEditorMode
 from . import MegaEditorView
 from .Delegates import MegaEditorDelegate, MegaEditorViewDelegate
 
@@ -7,30 +9,29 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities import Config
 
 class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
-	def __init__(self, parent, settings, delegate, id): # type: (Misc, Settings, MegaEditorDelegate, int) -> None
-		self.settings = settings
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MegaEditorDelegate, id: int) -> None:
+		self.config_ = config
 		self.delegate = delegate
 		self.id = id
 		self.edited = False
 		PyMSDialog.__init__(self, parent, 'MegaTile Editor [%s]' % id)
 
 	def widgetize(self):
-		self.editor = MegaEditorView.MegaEditorView(self, self.settings, self, self.id)
+		self.editor = MegaEditorView.MegaEditorView(self, self.config_, self, self.id)
 		self.editor.pack(side=TOP, padx=3, pady=(3,0))
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(side=BOTTOM, padx=3, pady=3)
 		return ok
 
-	def get_tileset(self): # type: () -> (Tileset | None)
+	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id): # type: (int | VX4Minitile) -> Image
+	def get_tile(self, id: int | VX4Minitile) -> Image:
 		return self.delegate.get_tile(id)
 
-	def mega_edit_mode_updated(self, mode): # type: (MegaEditorView.MegaEditorView.Mode) -> None
+	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
 		pass
 
 	def draw_group(self): # type: () -> None

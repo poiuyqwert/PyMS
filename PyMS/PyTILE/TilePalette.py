@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from .Config import PyTILEConfig
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate
 from .TilePaletteView import TilePaletteView
 
@@ -12,18 +13,16 @@ from ..FileFormats.Tileset.VF4 import VF4Megatile
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
+from ..Utilities import Config
 
-from typing import TYPE_CHECKING, cast
-if TYPE_CHECKING:
-	from ..Utilities import Config
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
 	TILE_CACHE = {} # type: dict[int | VX4Minitile, Image]
 
-	def __init__(self, parent, settings, delegate, tiletype=TileType.group, select=None, editing=False): # type: (Misc, Settings, TilePaletteDelegate, TileType, int | list[int] | None, bool) -> None
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
 		TilePalette.OPEN_PALETTE_COUNT += 1
-		self.settings = settings
+		self.config_ = config
 		self.tiletype = tiletype
 		self.start_selected = [] # type: list[int]
 		if select is not None:
@@ -107,8 +106,18 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 	def update_ranges(self): # type () -> None
 		pass
 
+	@property
+	def window_geometry_config(self) -> Config.WindowGeometry:
+		match self.tiletype:
+			case TileType.group:
+				return self.config_.windows.palette.group
+			case TileType.mega:
+				return self.config_.windows.palette.mega
+			case TileType.mini:
+				return self.config_.windows.palette.mini
+
 	def setup_complete(self): # type: () -> None
-		self.settings.windows.palette.load_window_size(('group','mega','mini')[self.tiletype.value], self)
+		self.window_geometry_config.load(self)
 
 	def select_smaller(self): # type: () -> None
 		tileset = self.get_tileset()
@@ -124,7 +133,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				for minitile in tileset.vx4.get_megatile(id).minitiles:
 					if not minitile.image_id in ids:
 						ids.append(minitile.image_id)
-		TilePalette(self, self.settings, self, TileType.mega if self.tiletype == TileType.group else TileType.mini, ids, editing=True)
+		TilePalette(self, self.config_, self, TileType.mega if self.tiletype == TileType.group else TileType.mini, ids, editing=True)
 
 	def mark_edited(self): # type: () -> None
 		self.edited = True
@@ -213,13 +222,13 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			typename = 'MegaTile'
 		elif self.tiletype == TileType.mini:
 			typename = 'MiniTile'
-		path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export %s Graphics' % typename, filetypes=[FileType.bmp()])
+		path = self.config_.last_path.graphics.select_save(self, title='Export %s Graphics' % typename)
 		if path:
 			tileset.export_graphics(self.tiletype, path, self.palette.selected)
 
 	def import_graphics(self): # type: () -> None
 		from .GraphicsImporter import GraphicsImporter
-		GraphicsImporter(self, self.settings, self, self.tiletype, self.palette.selected)
+		GraphicsImporter(self, self.config_, self, self.tiletype, self.palette.selected)
 
 	def imported_graphics(self, new_ids): # type: (list[int]) -> None
 		TilePalette.TILE_CACHE.clear()
@@ -238,31 +247,31 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		if not tileset or not len(self.palette.selected):
 			return
 		if self.tiletype == TileType.group:
-			path = self.settings.lastpath.graphics.select_save_file(self, key='export', title='Export MegaTile Group Settings', filetypes=[FileType.txt()])
+			path = self.config_.last_path.settings.select_save(self, title='Export MegaTile Group Settings')
 			if path:
 				tileset.export_group_settings(path, self.palette.selected)
 		elif self.tiletype == TileType.mega:
 			from .MegaTileSettingsExporter import MegaTileSettingsExporter
-			MegaTileSettingsExporter(self, self.settings, self.palette.selected, self)
+			MegaTileSettingsExporter(self, self.config_, self.palette.selected, self)
 
 	def import_settings(self): # type: () -> None
 		if not len(self.palette.selected):
 			return
 		from .SettingsImporter import SettingsImporter
-		SettingsImporter(self, self.settings, self.tiletype, self.palette.selected, self)
+		SettingsImporter(self, self.config_, self.tiletype, self.palette.selected, self)
 
 	def edit(self, e=None): # type: (Any) -> None
 		if not len(self.palette.selected):
 			return
 		if self.tiletype == TileType.mega:
 			from .MegaEditor import MegaEditor
-			MegaEditor(self, self.settings, self, self.palette.selected[0])
+			MegaEditor(self, self.config_, self, self.palette.selected[0])
 		elif self.tiletype == TileType.mini:
 			from .MiniEditor import MiniEditor
 			MiniEditor(self, self.palette.selected[0], self)
 
 	def dismiss(self): # type: () -> None
-		self.settings.windows.palette.save_window_size(('group','mega','mini')[self.tiletype.value], self)
+		self.window_geometry_config.save(self)
 		if self.edited:
 			self.delegate.megaload()
 			self.delegate.mark_edited()

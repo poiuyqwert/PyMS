@@ -109,7 +109,7 @@ class MPQSettings(Frame):
 
 	def adddefault(self, key=None): # type: (Event | None) -> None
 		scdir = PYMS_CONFIG.scdir.path
-		PYMS_CONFIG.save_state()
+		PYMS_CONFIG.store_state()
 		if scdir is None or not os.path.isdir(scdir):
 			scdir = PYMS_CONFIG.scdir.select_open(self)
 		if scdir and os.path.isdir(scdir):
@@ -119,6 +119,6 @@ class MPQSettings(Frame):
 				if os.path.exists(p) and not p in self.mpqs:
 					a.append(p)
 			if len(a) != 3:
-				PYMS_CONFIG.reset_state()
+				PYMS_CONFIG.restore_state()
 			if a:
 				self.add(add=a)

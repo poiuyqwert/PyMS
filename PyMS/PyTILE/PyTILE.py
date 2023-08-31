@@ -1,20 +1,22 @@
 
+from .Config import PyTILEConfig
 from .TilePaletteView import TilePaletteView
+from .MegaEditorMode import MegaEditorMode
 from .MegaEditorView import MegaEditorView
 from .TilePalette import TilePalette
 from .Placeability import Placeability
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate
+from .SettingsDialog import SettingsDialog
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
 from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
 from ..FileFormats.Tileset.VF4 import VF4Flag
 from ..FileFormats.Tileset.VX4 import VX4Minitile
-from ..FileFormats.Tileset.Serialize import TileGroupField, DoodadGroupField, MegatileField
+from ..FileFormats.Tileset.Serialize import TileGroupField, DoodadGroupField
 from ..FileFormats import TBL
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -24,14 +26,13 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities import Serialize
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities import Config
 
 import sys, io
-from enum import Enum
 
-from typing import Self, cast, Callable, TextIO
+from typing import Self, cast, Callable, Generic, TypeVar
 
 LONG_VERSION = 'v%s' % Assets.version('PyTILE')
 
@@ -123,19 +124,18 @@ class EditorGroup:
 		for editor in self.editors:
 			editor['state'] = NORMAL if enabled else DISABLED
 
-class CopyOptions:
-	def __init__(self, group: str, settings: Settings, callback: Callable[[], None], reset_key: str | None = None):
+G = TypeVar('G', bound=Config.Group)
+class CopyOptions(Generic[G]):
+	def __init__(self, group: G, callback: Callable[[], None]):
 		self.group = group
-		self.settings = settings
 		self.callback = callback
-		self.options: list[tuple[str, BooleanVar]] = []
-		if reset_key and reset_key in self.settings['copy'][group]:
-			del self.settings['copy'][group]
+		self.options: list[tuple[Config.Boolean, BooleanVar]] = []
 			
-	def option(self, name: str) -> BooleanVar:
+	def option(self, get_config: Callable[[G], Config.Boolean]) -> BooleanVar:
+		config = get_config(self.group)
 		variable = BooleanVar()
-		self.options.append((name, variable))
-		variable.set(self.settings['copy'][self.group].get(name, True))
+		self.options.append((config, variable))
+		variable.set(config.value)
 		variable.trace('w', self.callback)
 		return variable
 
@@ -143,31 +143,30 @@ class CopyOptions:
 		return any(var.get() for _,var in self.options)
 
 	def save(self) -> None:
-		for name,var in self.options:
-			self.settings['copy'][self.group][name] = var.get()
+		for config,var in self.options:
+			config.value = var.get()
 
 class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
+		self.config_ = PyTILEConfig()
 
-		self.settings = Settings('PyTILE', '1')
 		self.title('PyTILE %s' % LONG_VERSION)
 		self.set_icon('PyTILE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTILE', Assets.version('PyTILE'))
 		ga.track(GAScreen('PyTILE'))
 		setup_trace('PyTILE', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.stat_txt = TBL.TBL()
 		self.stat_txt_file = ''
-		filen = str(self.settings.files.get('stat_txt', Assets.mpq_file_path('rez', 'stat_txt.tbl')))
 		while True:
 			try:
-				self.stat_txt.load_file(filen)
+				self.stat_txt.load_file(self.config_.settings.files.stat_txt.file_path)
 				break
 			except:
-				filen = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[FileType.tbl()])
+				filen = self.config_.last_path.tbl.select_open(self, title='Open stat_txt.tbl')
 				if not filen:
 					sys.exit()
 
@@ -191,7 +190,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('find'), lambda *_: self.choose(TileType.group), 'MegaTile Group Palette', Ctrl.p, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.cv5 editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -220,36 +219,36 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.doodad.trace('w', self.group_doodad_changed)
 
 		self.apply_all_exclude_nulls = IntVar()
-		self.apply_all_exclude_nulls.set(self.settings.mega_edit.get('apply_all_exclude_nulls', True))
+		self.apply_all_exclude_nulls.set(self.config_.mega_edit.apply_all_exclude_nulls.value)
 
-		self.options_copy_mega = CopyOptions('mega', self.settings, self.action_states)
-		self.copy_mega_height = self.options_copy_mega.option('height')
-		self.copy_mega_walkable = self.options_copy_mega.option('walkable')
-		self.copy_mega_sight = self.options_copy_mega.option('sight')
-		self.copy_mega_ramp = self.options_copy_mega.option('ramp')
+		self.options_copy_mega = CopyOptions(self.config_.copy.mega, self.action_states)
+		self.copy_mega_height = self.options_copy_mega.option(lambda g: g.height)
+		self.copy_mega_walkable = self.options_copy_mega.option(lambda g: g.walkable)
+		self.copy_mega_sight = self.options_copy_mega.option(lambda g: g.sight)
+		self.copy_mega_ramp = self.options_copy_mega.option(lambda g: g.ramp)
 
-		self.options_copy_tilegroup = CopyOptions('tilegroup', self.settings, self.action_states)
-		self.copy_tilegroup_walkability = self.options_copy_tilegroup.option('walkability')
-		self.copy_tilegroup_buildability = self.options_copy_tilegroup.option('buildability')
-		self.copy_tilegroup_creep = self.options_copy_tilegroup.option('creep')
-		self.copy_tilegroup_height = self.options_copy_tilegroup.option('height')
-		self.copy_tilegroup_misc = self.options_copy_tilegroup.option('misc')
-		self.copy_tilegroup_unknown = self.options_copy_tilegroup.option('unknown')
-		self.copy_tilegroup_edge_types = self.options_copy_tilegroup.option('edge_types')
-		self.copy_tilegroup_piece_types = self.options_copy_tilegroup.option('piece_types')
-		self.copy_tilegroup_group_type = self.options_copy_tilegroup.option('group_type')
+		self.options_copy_tilegroup = CopyOptions(self.config_.copy.tilegroup, self.action_states)
+		self.copy_tilegroup_walkability = self.options_copy_tilegroup.option(lambda g: g.walkability)
+		self.copy_tilegroup_buildability = self.options_copy_tilegroup.option(lambda g: g.buildability)
+		self.copy_tilegroup_creep = self.options_copy_tilegroup.option(lambda g: g.creep)
+		self.copy_tilegroup_height = self.options_copy_tilegroup.option(lambda g: g.height)
+		self.copy_tilegroup_misc = self.options_copy_tilegroup.option(lambda g: g.misc)
+		self.copy_tilegroup_unknown = self.options_copy_tilegroup.option(lambda g: g.unknown)
+		self.copy_tilegroup_edge_types = self.options_copy_tilegroup.option(lambda g: g.edge_types)
+		self.copy_tilegroup_piece_types = self.options_copy_tilegroup.option(lambda g: g.piece_types)
+		self.copy_tilegroup_group_type = self.options_copy_tilegroup.option(lambda g: g.group_type)
 
-		self.options_copy_doodadgroup = CopyOptions('doodadgroup', self.settings, self.action_states)
-		self.copy_doodadgroup_doodad = self.options_copy_doodadgroup.option('doodad')
-		self.copy_doodadgroup_overlay = self.options_copy_doodadgroup.option('overlay')
-		self.copy_doodadgroup_walkability = self.options_copy_doodadgroup.option('walkability')
-		self.copy_doodadgroup_buildability = self.options_copy_doodadgroup.option('buildability')
-		self.copy_doodadgroup_creep = self.options_copy_doodadgroup.option('creep')
-		self.copy_doodadgroup_height = self.options_copy_doodadgroup.option('height')
-		self.copy_doodadgroup_misc = self.options_copy_doodadgroup.option('misc')
-		self.copy_doodadgroup_unknown = self.options_copy_doodadgroup.option('unknown')
-		self.copy_doodadgroup_scr = self.options_copy_doodadgroup.option('scr')
-		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option('name')
+		self.options_copy_doodadgroup = CopyOptions(self.config_.copy.doodadgroup, self.action_states)
+		self.copy_doodadgroup_doodad = self.options_copy_doodadgroup.option(lambda g: g.doodad)
+		self.copy_doodadgroup_overlay = self.options_copy_doodadgroup.option(lambda g: g.overlay)
+		self.copy_doodadgroup_walkability = self.options_copy_doodadgroup.option(lambda g: g.walkability)
+		self.copy_doodadgroup_buildability = self.options_copy_doodadgroup.option(lambda g: g.buildability)
+		self.copy_doodadgroup_creep = self.options_copy_doodadgroup.option(lambda g: g.creep)
+		self.copy_doodadgroup_height = self.options_copy_doodadgroup.option(lambda g: g.height)
+		self.copy_doodadgroup_misc = self.options_copy_doodadgroup.option(lambda g: g.misc)
+		self.copy_doodadgroup_unknown = self.options_copy_doodadgroup.option(lambda g: g.unknown)
+		self.copy_doodadgroup_scr = self.options_copy_doodadgroup.option(lambda g: g.scr)
+		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option(lambda g: g.name)
 
 		mid = Frame(self)
 		self.palette = TilePaletteView(mid, self, TileType.group, multiselect=False, sub_select=True)
@@ -335,13 +334,13 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.apply_all_btn = Button(megatile_group, text='Apply to Megas', state=DISABLED, command=megatile_apply_all_pressed)
 		megatile_editors.append(self.apply_all_btn)
 		self.apply_all_btn.pack(side=BOTTOM, padx=3, pady=(0,3), fill=X)
-		self.bind(Shift.Ctrl.h(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.height))
-		self.bind(Shift.Ctrl.w(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.walkability))
-		self.bind(Shift.Ctrl.b(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.view_blocking))
-		self.bind(Shift.Ctrl.r(), lambda *_: self.megatile_apply_all(MegaEditorView.Mode.ramp))
+		self.bind(Shift.Ctrl.h(), lambda *_: self.megatile_apply_all(MegaEditorMode.height))
+		self.bind(Shift.Ctrl.w(), lambda *_: self.megatile_apply_all(MegaEditorMode.walkability))
+		self.bind(Shift.Ctrl.b(), lambda *_: self.megatile_apply_all(MegaEditorMode.view_blocking))
+		self.bind(Shift.Ctrl.r(), lambda *_: self.megatile_apply_all(MegaEditorMode.ramp))
 		self.bind(Shift.Ctrl.a(), lambda *_: self.megatile_apply_all(None))
 		self.bind(Shift.Ctrl.n(), lambda *_: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
-		self.mega_editor = MegaEditorView(megatile_group, self.settings, self, palette_editable=True)
+		self.mega_editor = MegaEditorView(megatile_group, self.config_, self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
 		megatile_editor.widget(megatile_group, megatile_editors).add()
@@ -577,7 +576,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.status.set('Load a Tileset.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -650,17 +649,17 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		TilePalette.TILE_CACHE[id_or_minitile] = image
 		return image
 
-	def megatile_apply_all(self, mode=None): # type: (MegaEditorView.Mode | None) -> None
+	def megatile_apply_all(self, mode=None): # type: (MegaEditorMode | None) -> None
 		if not self.tileset:
 			return
 		copy_mask = ~0
-		if mode == MegaEditorView.Mode.height:
+		if mode == MegaEditorMode.height:
 			copy_mask = VF4Flag.mid_ground | VF4Flag.high_ground
-		elif mode == MegaEditorView.Mode.walkability:
+		elif mode == MegaEditorMode.walkability:
 			copy_mask = VF4Flag.walkable
-		elif mode == MegaEditorView.Mode.view_blocking:
+		elif mode == MegaEditorMode.view_blocking:
 			copy_mask = VF4Flag.blocks_sight
-		elif mode == MegaEditorView.Mode.ramp:
+		elif mode == MegaEditorMode.ramp:
 			copy_mask = VF4Flag.ramp
 		copy_megatile_id = self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection]
 		edited = False
@@ -689,8 +688,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			if group_id != self.palette.selected[0] and group.doodad_dddata_id == doodad_id:
 				group.update_settings(copy_group)
 
-	def mega_edit_mode_updated(self, mode): # type: (MegaEditorView.Mode) -> None
-		if mode == MegaEditorView.Mode.mini or mode == MegaEditorView.Mode.flip:
+	def mega_edit_mode_updated(self, mode): # type: (MegaEditorMode) -> None
+		if mode == MegaEditorMode.mini or mode == MegaEditorMode.flip:
 			self.apply_all_btn.pack_forget()
 		else:
 			self.apply_all_btn.pack()
@@ -777,7 +776,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			return
 		TilePalette(
 			self,
-			self.settings,
+			self.config_,
 			self,
 			tile_type,
 			self.palette.selected[0] if tile_type == TileType.group else self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection],
@@ -796,7 +795,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.mark_edited()
 
 	def placeability(self): # type: () -> None
-		Placeability(self, self.settings, self, self.group_piece_left_or_dddata_id.get())
+		Placeability(self, self.config_, self, self.group_piece_left_or_dddata_id.get())
 
 	def update_ranges(self): # type: () -> None
 		if not self.tileset:
@@ -810,7 +809,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.tileset.select_open_file(self, title='Open Complete Tileset', filetypes=[FileType.cv5()])
+			file = self.config_.last_path.tileset.select_open(self)
 			if not file:
 				return
 		tileset = Tileset()
@@ -828,7 +827,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.palette.update_size()
 		self.palette.select(0)
 		if self.tileset.vx4.is_expanded():
-			self.settings.dont_warn.warn('expanded_vx4', self, "This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
+			self.config_.dont_warn.expanded_vx4.present(self)
 
 	def save(self, key=None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
@@ -837,7 +836,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if not self.tileset:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.tileset.select_save_file(self, title='Save Tileset As', filetypes=[FileType.cv5()])
+			file_path = self.config_.last_path.tileset.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -875,11 +874,11 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def sets(self, key=None, err=None): # type: (Any, Exception | None) -> None
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def settings(self) -> None:
+		SettingsDialog(self, self.config_)
 
 	def help(self, e=None): # type: (Any) -> None
-		HelpDialog(self, self.settings, 'Help/Programs/PyTILE.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTILE.md')
 
 	def about(self, key=None): # type: (Any) -> None
 		AboutDialog(self, 'PyTILE', LONG_VERSION, [('FaRTy1billion','Tileset file specs and HawtTiles.')])
@@ -887,12 +886,12 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def exit(self, e=None): # type: (Any) -> None
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.mega_edit.apply_all_exclude_nulls = not not self.apply_all_exclude_nulls.get()
+		self.config_.windows.main.save(self)
+		self.config_.mega_edit.apply_all_exclude_nulls.value = not not self.apply_all_exclude_nulls.get()
 		self.options_copy_mega.save()
 		self.options_copy_tilegroup.save()
 		self.options_copy_doodadgroup.save()
-		self.settings.save()
+		self.config_.save()
 		self.destroy()
 
 	def draw_group(self):

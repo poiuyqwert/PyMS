@@ -7,9 +7,9 @@ from .MPQHandler import MPQHandler
 
 from numbers import Number
 import os, json
-from enum import Enum
+import enum
 
-from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable
+from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator
 
 JSONValue: TypeAlias = 'int | float | str | bool | None | JSONObject | JSONArray'
 JSONObject = dict[str, JSONValue]
@@ -50,23 +50,30 @@ class ConfigObject(Protocol):
 	def decode(self, data: JSONValue) -> None:
 		...
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
 		...
 
-	def reset_state(self) -> None:
+	def store_state(self) -> None:
+		...
+
+	def restore_state(self) -> None:
 		...
 
 class Group(ConfigObject):
-	def encode(self) -> JSONValue:
+	@staticmethod
+	def _fields(group: Group) -> Generator[tuple[str, ConfigObject], None, None]:
 		import inspect
-		data = {}
-		for attr, _ in inspect.getmembers(self, lambda member: not inspect.ismethod(member) and not inspect.isclass(member)):
+		for attr, _ in inspect.getmembers(group, lambda member: not inspect.ismethod(member) and not inspect.isclass(member)):
 			if attr.startswith('_'):
 				continue
-			value = getattr(self, attr)
+			value = getattr(group, attr)
 			if not isinstance(value, ConfigObject):
 				continue
-			key = attr.rstrip('_')
+			yield (attr.rstrip('_'), value)
+
+	def encode(self) -> JSONValue:
+		data = {}
+		for key, value in Group._fields(self):
 			data[key] = value.encode()
 		return data
 
@@ -85,25 +92,17 @@ class Group(ConfigObject):
 				continue
 			object.decode(attr_data)
 
-	def save_state(self) -> None:
-		import inspect
-		for attr, _ in inspect.getmembers(self, lambda member: not inspect.ismethod(member) and not inspect.isclass(member)):
-			if attr.startswith('_'):
-				continue
-			value = getattr(self, attr)
-			if not isinstance(value, ConfigObject):
-				continue
-			value.save_state()
+	def reset(self) -> None:
+		for _, value in Group._fields(self):
+			value.reset()
 
-	def reset_state(self) -> None:
-		import inspect
-		for attr, _ in inspect.getmembers(self, lambda member: not inspect.ismethod(member) and not inspect.isclass(member)):
-			if attr.startswith('_'):
-				continue
-			value = getattr(self, attr)
-			if not isinstance(value, ConfigObject):
-				continue
-			value.reset_state()
+	def store_state(self) -> None:
+		for _, value in Group._fields(self):
+			value.store_state()
+
+	def restore_state(self) -> None:
+		for _, value in Group._fields(self):
+			value.restore_state()
 
 class Config(Group):
 	_name: str
@@ -154,8 +153,9 @@ class Config(Group):
 			pass
 
 class String(ConfigObject):
-	def __init__(self, default: str | None = None) -> None:
-		self.value = default
+	def __init__(self, *, default: str | None = None) -> None:
+		self._default = default
+		self.value = self._default
 		self._saved_state = self.value
 
 	def encode(self) -> JSONValue:
@@ -166,15 +166,19 @@ class String(ConfigObject):
 			return
 		self.value = value
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
 		self._saved_state = self.value
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.value = self._saved_state
 
 class Int(ConfigObject):
-	def __init__(self, default: int | None = None, limits: tuple[int, int] | None = None) -> None:
-		self.value = default
+	def __init__(self, *, default: int, limits: tuple[int, int] | None = None) -> None:
+		self._default = default
+		self.value = self._default
 		self._saved_state = self.value
 		self.limits = limits
 
@@ -188,15 +192,19 @@ class Int(ConfigObject):
 		if self.limits is not None:
 			self.value = min(self.limits[1], max(self.limits[0], self.value))
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
 		self._saved_state = self.value
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.value = self._saved_state
 
 class Float(ConfigObject):
-	def __init__(self, default: float | None = None, limits: tuple[float, float] | None = None) -> None:
-		self.value = default
+	def __init__(self, *, default: float, limits: tuple[float, float] | None = None) -> None:
+		self._default = default
+		self.value = self._default
 		self._saved_state = self.value
 		self.limits = limits
 
@@ -210,15 +218,19 @@ class Float(ConfigObject):
 		if self.limits is not None:
 			self.value = min(self.limits[1], max(self.limits[0], self.value))
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
 		self._saved_state = self.value
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.value = self._saved_state
 
 class Boolean(ConfigObject):
-	def __init__(self, default: bool | None = None) -> None:
-		self.value = default
+	def __init__(self, *, default: bool) -> None:
+		self._default = default
+		self.value = self._default
 		self._saved_state = self.value
 
 	def encode(self) -> JSONValue:
@@ -229,14 +241,17 @@ class Boolean(ConfigObject):
 			return
 		self.value = bool(value)
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
 		self._saved_state = self.value
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.value = self._saved_state
 
 class WindowGeometry(ConfigObject):
-	def __init__(self, default_size: Size | None = None, default_centered: bool = True) -> None:
+	def __init__(self, *, default_size: Size | None = None, default_centered: bool = True) -> None:
 		self._geometry: str | None = None
 		self._saved_state: str | None = self._geometry
 		self._default_size = default_size
@@ -302,15 +317,19 @@ class WindowGeometry(ConfigObject):
 			return
 		self._geometry = geometry
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self._geometry = None
+
+	def store_state(self) -> None:
 		self._saved_state = self._geometry
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self._geometry = self._saved_state
 
 class PaneSizes(ConfigObject):
-	def __init__(self, defaults: list[int] = [], pane_index: int | None = None) -> None:
-		self._sizes: list[int] = defaults
+	def __init__(self, *, defaults: list[int] = [], pane_index: int | None = None) -> None:
+		self._defaults = defaults
+		self._sizes: list[int] = self._defaults
 		self._pane_index = pane_index
 		self._saved_state: list[int] = list(self._sizes)
 
@@ -358,9 +377,19 @@ class PaneSizes(ConfigObject):
 			sizes.append(size)
 		self._sizes = sizes
 
+	def reset(self) -> None:
+		self._sizes = self._defaults
+
+	def store_state(self) -> None:
+		self._saved_state = self._sizes
+
+	def restore_state(self) -> None:
+		self._sizes = self._saved_state
+
 class File(ConfigObject):
-	def __init__(self, default: str, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
-		self.file_path = default
+	def __init__(self, *, default: str, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
+		self._default = default
+		self.file_path = self._default
 		self._name = name
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
@@ -399,13 +428,16 @@ class File(ConfigObject):
 			return
 		self.file_path = file_path
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.file_path = self._default
+
+	def store_state(self) -> None:
 		self._saved_state = self.file_path
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.file_path = self._saved_state
 
-class FileOpType(Enum):
+class FileOpType(enum.Enum):
 	open_save = 0
 	import_export = 1
 
@@ -435,7 +467,7 @@ class FileOpType(Enum):
 				return 'import'
 
 class SelectFile(ConfigObject):
-	def __init__(self, name: str, filetypes: list[FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:
+	def __init__(self, *, name: str, filetypes: list[FileType], op_type: FileOpType = FileOpType.open_save, initial_filename: str | None = None) -> None:
 		self._open_directory = Assets.base_dir
 		self._saved_state_open = self._open_directory
 		self._save_directory = Assets.base_dir
@@ -502,18 +534,22 @@ class SelectFile(ConfigObject):
 		if isinstance(save_directory, str) and os.path.exists(save_directory):
 			self._save_directory = save_directory
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self._open_directory = Assets.base_dir
+		self._save_directory = Assets.base_dir
+
+	def store_state(self) -> None:
 		self._saved_state_open = self._open_directory
 		self._saved_state_save = self._save_directory
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self._open_directory = self._saved_state_open
 		self._save_directory = self._saved_state_save
 
 class SelectFiles(ConfigObject):
-	def __init__(self, title: str, filetypes: list[FileType]) -> None:
-		self._directory = Assets.base_dir
-		self._saved_state = self._directory
+	def __init__(self, *, title: str, filetypes: list[FileType]) -> None:
+		self.directory = Assets.base_dir
+		self._saved_state = self.directory
 		self._title = title
 		self._filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
@@ -525,7 +561,7 @@ class SelectFiles(ConfigObject):
 			parent=window,
 			multiple=True,
 			title=self._title,
-			initialdir=self._directory,
+			initialdir=self.directory,
 			filetypes=filetypes or self._filetypes,
 			defaultextension=self._default_extension
 		) # type: ignore[call-arg]
@@ -536,26 +572,29 @@ class SelectFiles(ConfigObject):
 			else:
 				paths = []
 		if paths:
-			self._directory = os.path.dirname(paths[0])
+			self.directory = os.path.dirname(paths[0])
 		return paths
 
 	def encode(self) -> JSONValue:
-		return self._directory
+		return self.directory
 
 	def decode(self, directory: JSONValue) -> None:
 		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
-		self._directory = directory
+		self.directory = directory
 
-	def save_state(self) -> None:
-		self._saved_state = self._directory
+	def reset(self) -> None:
+		self.directory = Assets.base_dir
 
-	def reset_state(self) -> None:
-		self._directory = self._saved_state
+	def store_state(self) -> None:
+		self._saved_state = self.directory
+
+	def restore_state(self) -> None:
+		self.directory = self._saved_state
 
 class SelectDirectory(ConfigObject):
-	def __init__(self, title: str = 'Select Folder', default: str | None = None) -> None:
-		self.path = default
+	def __init__(self, *, title: str = 'Select Folder') -> None:
+		self.path = Assets.base_dir
 		self._saved_state = self.path
 		self._title = title
 
@@ -576,14 +615,17 @@ class SelectDirectory(ConfigObject):
 			return
 		self.path = directory
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.path = Assets.base_dir
+
+	def store_state(self) -> None:
 		self._saved_state = self.path
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.path = self._saved_state
 
 class Warning(ConfigObject):
-	def __init__(self, message: str, title: str = 'Warning!', remember_version: int = 1) -> None:
+	def __init__(self, *, message: str, title: str = 'Warning!', remember_version: int = 1) -> None:
 		self._seen_version = 0
 		self._saved_state = self._seen_version
 		self._message = message
@@ -606,17 +648,21 @@ class Warning(ConfigObject):
 			return
 		self._seen_version = seen_version
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self._seen_version = 0
+
+	def store_state(self) -> None:
 		self._saved_state = self._seen_version
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self._seen_version = self._saved_state
 
 V = TypeVar('V', int, float, str, bool, dict)
 class Dictionary(ConfigObject, Generic[V]):
-	def __init__(self, value_type: type[V], defaults: dict[str, V] = {}) -> None:
+	def __init__(self, *, value_type: type[V], defaults: dict[str, V] = {}) -> None:
 		self.value_type: type[V] = value_type
-		self.data: dict[str, V] = defaults
+		self._defaults: dict[str, V] = dict(defaults)
+		self.data: dict[str, V] = dict(self._defaults)
 		self._saved_state: dict[str, V] = self.data
 
 	def encode(self) -> JSONValue:
@@ -630,16 +676,20 @@ class Dictionary(ConfigObject, Generic[V]):
 				continue
 			self.data[key] = value
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.data = dict(self._defaults)
+
+	def store_state(self) -> None:
 		self._saved_state = dict(self.data)
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.data = dict(self._saved_state)
 
 class List(ConfigObject, Generic[V]):
-	def __init__(self, value_type: type[V], defaults: list[V] = []) -> None:
+	def __init__(self, *, value_type: type[V], defaults: list[V] = []) -> None:
 		self.value_type: type[V] = value_type
-		self.data: list[V] = defaults
+		self._defaults: list[V] = list(defaults)
+		self.data: list[V] = list(self._defaults)
 		self._saved_state: list[V] = self.data
 
 	def encode(self) -> JSONValue:
@@ -654,8 +704,38 @@ class List(ConfigObject, Generic[V]):
 				continue
 			self.data.append(value)
 
-	def save_state(self) -> None:
+	def reset(self) -> None:
+		self.data = list(self._defaults)
+
+	def store_state(self) -> None:
 		self._saved_state = list(self.data)
 
-	def reset_state(self) -> None:
+	def restore_state(self) -> None:
 		self.data = list(self._saved_state)
+
+E = TypeVar('E', bound=enum.Enum)
+class Enum(ConfigObject, Generic[E]):
+	def __init__(self, *, enum_type: type[E], default: E) -> None:
+		self._enum_type = enum_type
+		self._default = default
+		self.value = self._default
+		self._saved_state = self.value
+
+	def encode(self) -> JSONValue:
+		return self.value.value
+
+	def decode(self, data: JSONValue) -> None:
+		try:
+			value = self._enum_type(data)
+		except:
+			return
+		self.value = value
+
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
+		self._saved_state = self.value
+
+	def restore_state(self) -> None:
+		self.value = self._saved_state

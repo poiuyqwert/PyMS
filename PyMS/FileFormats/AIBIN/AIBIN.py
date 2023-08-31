@@ -106,11 +106,11 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
 		script_header = self.script_headers[script_id]
 		serialize_context.set_label_prefix(script_id)
-		string_info = str(script_header.string_id)
-		if serialize_context.data_context:
-			string = serialize_context.data_context.stattxt_string(script_header.string_id)
-			if string:
-				string_info = StrCodeType.serialize_string(string)
+		# string_info = str(script_header.string_id)
+		# if serialize_context.data_context:
+		# 	string = serialize_context.data_context.stattxt_string(script_header.string_id)
+		# 	if string:
+		# 		string_info = StrCodeType.serialize_string(string)
 		if script_header.address:
 			block = self.get_entry_point(script_id)
 		else:
