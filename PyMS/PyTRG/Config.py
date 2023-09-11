@@ -7,7 +7,8 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('lastpath',), ('last_path',)),
 		(('windows', 'findreplace'), ('windows', 'find_replace')),
 		(('windows', 'mpqselect'), ('windows', 'mpq_select')),
-		(('mpqselecthistory',), ('mpq_select_history',))
+		(('mpqselecthistory',), ('mpq_select_history',)),
+		(('settings', 'lastpath'), ('settings', 'last_path'))
 	))
 
 class PyTRGConfig(Config.Config):
@@ -45,11 +46,18 @@ class PyTRGConfig(Config.Config):
 				super().__init__()
 				self.stat_txt = Config.File(default='MPQ:rez\\stat_txt.tbl', name='TBL', filetypes=[FileType.tbl()])
 				self.aiscript = Config.File(default='MPQ:scripts\\aiscript.bin', name='aiscript.bin', filetypes=[FileType.bin_ai()])
+		
+		class LastPath(Config.Group):
+			def __init__(self) -> None:
+				super().__init__()
+				self.mpqs = Config.SelectFiles(title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 
 		def __init__(self) -> None:
 			super().__init__()
 			self.files = PyTRGConfig.Settings.Files()
 			self.mpq_select_history = Config.List(value_type=str)
+			self.mpqs = Config.List(value_type=str)
+			self.last_path = PyTRGConfig.Settings.LastPath()
 
 	def __init__(self) -> None:
 		super().__init__()

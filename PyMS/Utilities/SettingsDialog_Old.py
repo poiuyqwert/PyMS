@@ -1,7 +1,7 @@
 
 from . import Assets
 from .PyMSDialog import PyMSDialog
-from .MPQSettings import MPQSettings
+from .SettingsUI.MPQSettingsTab import MPQSettingsTab
 from .SettingsPanel_Old import SettingsPanel
 from .ErrorDialog import ErrorDialog
 from .UIKit import *
@@ -23,7 +23,7 @@ class SettingsDialog(PyMSDialog):
 		if self.data:
 			self.tabs = Notebook(self)
 			if self.mpqhandler:
-				self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings, self)
+				self.mpqsettings = MPQSettingsTab(self.tabs, self.mpqhandler.mpq_paths(), self.settings, self)
 				self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 			for d in self.data:
 				if len(d) == 1:
@@ -41,7 +41,7 @@ class SettingsDialog(PyMSDialog):
 				self.tabs.add_tab(self.pages[-1], d[0])
 			self.tabs.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		else:
-			self.mpqsettings = MPQSettings(self, self.mpqhandler.mpq_paths(), self.settings, self)
+			self.mpqsettings = MPQSettingsTab(self, self.mpqhandler.mpq_paths(), self.settings, self)
 			self.mpqsettings.pack(fill=BOTH, expand=1, padx=5, pady=5)
 		btns = Frame(self)
 		ok = Button(btns, text='Ok', width=10, command=self.ok)

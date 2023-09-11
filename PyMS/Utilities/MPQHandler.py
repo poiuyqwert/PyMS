@@ -20,13 +20,15 @@ class MPQHandler(object):
 		else:
 			self.listfiles = listfiles
 		self.open = False
-		self.startup()
+		self.refresh()
 
-	def startup(self) -> None:
+	def refresh(self) -> None:
+		if self.open:
+			self.close_mpqs()
 		if not self.mpqs_config.data:
 			self.add_defaults()
 		else:
-			self.set_mpqs(self.mpqs_config.data)
+			self.mpqs = list(MPQ.of(mpq_path) for mpq_path in self.mpqs_config.data)
 
 	def clear(self) -> None:
 		if self.open:
@@ -48,15 +50,8 @@ class MPQHandler(object):
 				mpq.close()
 				self.mpqs.append(mpq)
 				self.mpqs_config.data.append(mpq_path)
-				changed = True
 			except:
 				pass
-
-	def set_mpqs(self, mpq_paths: list[str]) -> None:
-		if self.open:
-			self.close_mpqs()
-		self.mpqs = list(MPQ.of(mpq_path) for mpq_path in mpq_paths)
-		self.mpqs_config.data = list(mpq_paths)
 
 	def open_mpqs(self) -> list[str]:
 		failed = []

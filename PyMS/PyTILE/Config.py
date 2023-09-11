@@ -65,10 +65,17 @@ class PyTILEConfig(Config.Config):
 				super().__init__()
 				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='TBL', filetypes=[FileType.tbl()])
 
+		class LastPath(Config.Group):
+			def __init__(self) -> None:
+				super().__init__()
+				self.mpqs = Config.SelectFiles(title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+
 		def __init__(self) -> None:
 			super().__init__()
 			self.files = PyTILEConfig.Settings.Files()
 			self.mpq_select_history = Config.List(value_type=str)
+			self.mpqs = Config.List(value_type=str)
+			self.last_path = PyTILEConfig.Settings.LastPath()
 
 	class MegaEdit(Config.Group):
 		def __init__(self) -> None:

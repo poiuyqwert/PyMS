@@ -1,6 +1,6 @@
 
-from .FilesSettingsTab import FilesSettingsTab
-from ..Config import PyTRGConfig
+from .FileSettingsTab import FilesSettingsTab
+from ..Config import PyTILEConfig
 
 from ...Utilities.SettingsUI.BaseSettingsDialog import BaseErrorableSettingsDialog, ErrorableSettingsDialogDelegate
 from ...Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
@@ -9,8 +9,8 @@ from ...Utilities.UIKit import *
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.MPQHandler import MPQHandler
 
-class SettingsDialog(BaseErrorableSettingsDialog[PyTRGConfig]):
-	def __init__(self, parent: Misc, config: PyTRGConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
+class SettingsDialog(BaseErrorableSettingsDialog[PyTILEConfig]):
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
 		self.mpq_handler = mpq_handler
 		super().__init__(parent, config, delegate, err)
 

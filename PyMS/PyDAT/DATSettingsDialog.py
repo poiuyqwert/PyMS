@@ -1,6 +1,6 @@
 
 from ..Utilities.SettingsDialog_Old import SettingsDialog
-from ..Utilities.MPQSettings import MPQSettings
+from ..Utilities.SettingsUI.MPQSettingsTab import MPQSettingsTab
 from ..Utilities.SettingsPanel_Old import SettingsPanel
 from ..Utilities.UIKit import *
 from ..Utilities.SettingsUI.SettingsTab import SettingsTab
@@ -11,7 +11,7 @@ class DATSettingsDialog(SettingsDialog):
 		self.custom = IntVar()
 		self.custom.set(self.settings.settings.get('customlabels', False))
 		self.tabs = Notebook(self)
-		self.mpqsettings = MPQSettings(self.tabs, self.mpqhandler.mpq_paths(), self.settings, self)
+		self.mpqsettings = MPQSettingsTab(self.tabs, self.mpqhandler.mpq_paths(), self.settings, self)
 		self.tabs.add_tab(self.mpqsettings, 'MPQ Settings')
 		for d in self.data:
 			if d == 'Theme':

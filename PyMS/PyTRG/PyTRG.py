@@ -145,14 +145,13 @@ class PyTRG(MainWindow, MainDelegate):
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
 
 		e = self.open_files()
+		if e:
+			self.settings(err=e)
 
 		if guifile:
 			self.open(file=guifile)
 
 		UpdateDialog.check_update(self, 'PyTRG')
-
-		if e:
-			self.settings(err=e)
 
 	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()

@@ -1,31 +1,35 @@
 
 from __future__ import annotations
 
-from ..FileFormats.MPQ.MPQ import MPQ
+from .SettingsTab import SettingsTab
 
-from . import Assets
-from .setutils import PYMS_CONFIG
-from .UIKit import *
+from ...FileFormats.MPQ.MPQ import MPQ
+
+from .. import Assets
+from ..setutils import PYMS_CONFIG
+from ..UIKit import *
+from .. import Config
+from ..EditedState import EditedState
+from ..MPQHandler import MPQHandler
 
 import os
 
-from typing import TYPE_CHECKING, Callable
-if TYPE_CHECKING:
-	from . import Config
-	from .SettingsDialog_Old import SettingsDialog
+from typing import Callable
 
-class MPQSettings(Frame):
-	def __init__(self, parent, mpqs, settings, setdlg): # type: (Misc, list[str], Settings, SettingsDialog) -> None
-		self.mpqs = list(mpqs)
-		self.settings = settings
-		self.setdlg = setdlg
-		Frame.__init__(self, parent)
+class MPQSettingsTab(SettingsTab):
+	def __init__(self, parent: Notebook, edited_state: EditedState, mpq_hander: MPQHandler, mpqs_config: Config.List[str], mpqs_select_config: Config.SelectFiles) -> None:
+		self.edited_state = edited_state
+		self.mpq_handler = mpq_hander
+		self.mpqs_config = mpqs_config
+		self.mpqs_select_config = mpqs_select_config
+
+		SettingsTab.__init__(self, parent)
 		Label(self, text='MPQ Settings:', font=Font.default().bolded(), anchor=W).pack(fill=X)
 		Label(self, text="Files will be read from the highest priority MPQ that contains them.\nThe higher an MPQ is on the list the higher its priority.", anchor=W, justify=LEFT).pack(fill=X)
 
 		self.listbox = ScrolledListbox(self, width=35, height=1)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
-		for mpq in self.mpqs:
+		for mpq in self.mpqs_config.data:
 			self.listbox.insert(END,mpq)
 		if self.listbox.size():
 			self.listbox.select_set(0)
@@ -58,27 +62,28 @@ class MPQSettings(Frame):
 			return
 		s = self.listbox.get(i)
 		n = i + [-1,1][dir]
-		self.mpqs[i] = self.mpqs[n]
-		self.mpqs[n] = s
+		self.mpqs_config.data[i] = self.mpqs_config.data[n]
+		self.mpqs_config.data[n] = s
 		self.listbox.delete(i)
 		self.listbox.insert(n, s)
 		self.listbox.select_clear(0, END)
 		self.listbox.select_set(n)
 		self.listbox.see(n)
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 
 	def add(self, key=None, add=None): # type: (Event | None, list[str] | None) -> None
 		n: str | int = 0
 		s: int = 0
 		if add is None:
-			add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+			add = self.mpqs_select_config.select_open(self)
+			# add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
 		else:
 			n = END
 			s = self.listbox.size() # type: ignore[assignment]
 		if not add:
 			return
 		for i in add:
-			if not i in self.mpqs:
+			if not i in self.mpqs_config.data:
 				mpq = MPQ.of(i)
 				try:
 					mpq.open()
@@ -86,26 +91,26 @@ class MPQSettings(Frame):
 				except:
 					continue
 				if n == END:
-					self.mpqs.append(i)
+					self.mpqs_config.data.append(i)
 				else:
-					self.mpqs.insert(int(n),i)
+					self.mpqs_config.data.insert(int(n),i)
 				self.listbox.insert(n,i)
 		self.listbox.select_clear(0,END)
 		self.listbox.select_set(s)
 		self.listbox.see(s)
 		self.action_states()
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 
 	def remove(self, key=None): # type: (Event | None) -> None
 		i = int(self.listbox.curselection()[0])
-		del self.mpqs[i]
+		del self.mpqs_config.data[i]
 		self.listbox.delete(i)
 		if self.listbox.size():
 			i = min(i,self.listbox.size()-1) # type: ignore[operator]
 			self.listbox.select_set(i)
 			self.listbox.see(i)
 		self.action_states()
-		self.setdlg.edited = True
+		self.edited_state.mark_edited()
 
 	def adddefault(self, key=None): # type: (Event | None) -> None
 		scdir = PYMS_CONFIG.scdir.path
@@ -116,9 +121,14 @@ class MPQSettings(Frame):
 			a = []
 			for f in ['Patch_rt','BrooDat','StarDat']:
 				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
-				if os.path.exists(p) and not p in self.mpqs:
+				if os.path.exists(p) and not p in self.mpqs_config.data:
 					a.append(p)
 			if len(a) != 3:
 				PYMS_CONFIG.restore_state()
 			if a:
 				self.add(add=a)
+
+	def save(self):
+		if self.edited_state.is_edited:
+			self.mpq_handler.refresh()
+		super().save()

@@ -6,7 +6,7 @@ from .MegaEditorView import MegaEditorView
 from .TilePalette import TilePalette
 from .Placeability import Placeability
 from .Delegates import TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate
-from .SettingsDialog import SettingsDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.Tileset.Tileset import Tileset, TileType, megatile_to_photo, minitile_to_photo
 from ..FileFormats.Tileset.CV5 import CV5Group, CV5Flag, CV5DoodadFlag
@@ -29,6 +29,8 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities import Serialize
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import Config
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.MPQHandler import MPQHandler
 
 import sys, io
 
@@ -104,10 +106,12 @@ class EditorGroup:
 		self.editors.append(widget)
 		return EditorGroup.EditorWidget(self, widget)
 
-	def dropdown(self, tooltip: str, options: list[str], variable: IntegerVar) -> EditorWidget:
+	def dropdown(self, tooltip: str, options: list[str], variable: IntegerVar, dropdown_callback: Callable[[DropDown], None] | None = None) -> EditorWidget:
 		widget = DropDown(self.content, IntVar(), options, variable, width=20)
 		self._tip(widget, tooltip)
 		self.editors.append(widget)
+		if dropdown_callback:
+			dropdown_callback(widget)
 		return EditorGroup.EditorWidget(self, widget)
 
 	def button(self, name: str, tooltip: str, callback: Callable[[], None]) -> EditorWidget:
@@ -146,7 +150,7 @@ class CopyOptions(Generic[G]):
 		for config,var in self.options:
 			config.value = var.get()
 
-class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate):
+class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
 		self.config_ = PyTILEConfig()
@@ -159,16 +163,9 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		setup_trace('PyTILE', self)
 		Theme.load_theme(self.config_.theme.value, self)
 
-		self.stat_txt = TBL.TBL()
-		self.stat_txt_file = ''
-		while True:
-			try:
-				self.stat_txt.load_file(self.config_.settings.files.stat_txt.file_path)
-				break
-			except:
-				filen = self.config_.last_path.tbl.select_open(self, title='Open stat_txt.tbl')
-				if not filen:
-					sys.exit()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
+
+		self.stat_txt: TBL.TBL
 
 		self.loading_megas = False
 		self.loading_minis = False
@@ -198,8 +195,6 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
-
-		# self.disable = [] # type: list[Widget]
 
 		self.megatilee = IntegerVar(0,[0,4095],callback=lambda id: self.change(TileType.mega, int(id)))
 
@@ -529,9 +524,12 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check_flag('SC:R', 'Added in StarCraft: Remastered', self.group_edge_up_or_scr, CV5Group.SCR).add(span=2)
 			.label('Raw').add(new_row=False).entry('Raw value of added in StarCraft: Remastered (1 = Added in SC:R)', self.group_edge_up_or_scr).add()
 		)
+		self.doodad_group_dropdown: DropDown
+		def store_dropdown(dropdown: DropDown):
+			self.doodad_group_dropdown = dropdown
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Name')
-			.label('String').add(new_row=False).dropdown('Doodad group string from stat_txt.tbl',['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings], self.group_edge_right_or_string_id).add(sticky=EW, weight=1)
+			.label('String').add(new_row=False).dropdown('Doodad group string from stat_txt.tbl',['None'], self.group_edge_right_or_string_id, store_dropdown).add(sticky=EW, weight=1)
 			.label('Raw').add(new_row=False).entry('Doodad group string from stat_txt.tbl', self.group_edge_right_or_string_id).add()
 		)
 		self.doodad_editors.append(
@@ -578,10 +576,24 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.config_.windows.main.load(self)
 
+		e = self.open_files()
+		if e:
+			self.settings(e)
+
 		if guifile:
 			self.open(file=guifile)
 
 		UpdateDialog.check_update(self, 'PyTILE')
+
+	def open_files(self) -> PyMSError | None:
+		try:
+			stat_txt = TBL.TBL()
+			stat_txt.load_file(self.config_.settings.files.stat_txt.file_path)
+		except PyMSError as e:
+			return e
+		self.stat_txt = stat_txt
+		self.doodad_group_dropdown.setentries(['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings])
+		return None
 
 	def get_tileset(self): # type: () -> (Tileset | None)
 		return self.tileset
@@ -761,14 +773,26 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if not self.tileset or self.loading_megas:
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])
-		# TODO: Save settings
-		# group[0] = self.index.get()
-		# if self.palette.selected[0] >= 1024:
-		# 	o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.hasup,self.hasdown,self.edgeleft,self.unknown9,self.edgeright,self.edgeup,self.edgedown,self.unknown11]
-		# else:
-		# 	o = [self.buildable,self.flags,self.buildable2,self.groundheight,self.edgeleft,self.edgeup,self.edgeright,self.edgedown,self.unknown9,self.hasup,self.unknown11,self.hasdown]
-		# for n,v in enumerate(o):
-		# 	group[n+1] = v.get()
+		group.type = self.group_type.get()
+		group.flags = self.group_flags.get()
+		if group.type == CV5Group.TYPE_DOODAD:
+			group.doodad_overlay_id = self.group_edge_left_or_overlay_id.get()
+			group.doodad_scr = self.group_edge_up_or_scr.get()
+			group.doodad_string_id = self.group_edge_right_or_string_id.get()
+			group.doodad_unknown4 = self.group_edge_down_or_unknown4.get()
+			group.doodad_dddata_id = self.group_piece_left_or_dddata_id.get()
+			group.doodad_width = self.group_piece_up_or_width.get()
+			group.doodad_height = self.group_piece_right_or_height.get()
+			group.doodad_unknown8 = self.group_piece_down_or_unknown8.get()
+		else:
+			group.basic_edge_left = self.group_edge_left_or_overlay_id.get()
+			group.basic_edge_up = self.group_edge_up_or_scr.get()
+			group.basic_edge_right = self.group_edge_right_or_string_id.get()
+			group.basic_edge_down = self.group_edge_down_or_unknown4.get()
+			group.basic_piece_left = self.group_piece_left_or_dddata_id.get()
+			group.basic_piece_up = self.group_piece_up_or_width.get()
+			group.basic_piece_right = self.group_piece_right_or_height.get()
+			group.basic_piece_down = self.group_piece_down_or_unknown8.get()
 		self.mark_edited()
 
 	def choose(self, tile_type): # type: (TileType) -> None
@@ -874,8 +898,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def settings(self) -> None:
-		SettingsDialog(self, self.config_)
+	def settings(self, err: PyMSError | None = None) -> None:
+		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
 	def help(self, e=None): # type: (Any) -> None
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTILE.md')
