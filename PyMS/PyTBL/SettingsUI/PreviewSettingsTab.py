@@ -7,7 +7,7 @@ from ...Utilities.SettingsUI.FileSettingView import FileSettingView
 from ...Utilities.EditedState import EditedState
 from ...Utilities.MPQHandler import MPQHandler
 
-class FilesSettingsTab(SettingsTab):
+class PreviewSettingsTab(SettingsTab):
 	def __init__(self, notebook: Notebook, edited_state: EditedState, config: PyTBLConfig, mpq_handler: MPQHandler):
 		super().__init__(notebook)
 

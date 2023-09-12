@@ -153,6 +153,7 @@ class CopyOptions(Generic[G]):
 class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
+		self.guifile = guifile
 		self.config_ = PyTILEConfig()
 
 		self.title('PyTILE %s' % LONG_VERSION)
@@ -576,23 +577,28 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.config_.windows.main.load(self)
 
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
+
+	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
 			self.settings(e)
-
-		if guifile:
-			self.open(file=guifile)
-
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTILE')
 
 	def open_files(self) -> PyMSError | None:
+		err: PyMSError | None = None
+		self.mpq_handler.open_mpqs()
 		try:
 			stat_txt = TBL.TBL()
-			stat_txt.load_file(self.config_.settings.files.stat_txt.file_path)
+			stat_txt.load_file(self.mpq_handler.load_file(self.config_.settings.files.stat_txt.file_path))
 		except PyMSError as e:
-			return e
-		self.stat_txt = stat_txt
-		self.doodad_group_dropdown.setentries(['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings])
+			err = e
+		else:
+			self.stat_txt = stat_txt
+			self.doodad_group_dropdown.setentries(['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings])
+		self.mpq_handler.close_mpqs()
 		return None
 
 	def get_tileset(self): # type: () -> (Tileset | None)

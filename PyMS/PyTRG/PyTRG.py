@@ -49,10 +49,10 @@ class Completing:
 
 class PyTRG(MainWindow, MainDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
+		MainWindow.__init__(self)
+		self.guifile = guifile
 		self.config_ = PyTRGConfig()
 
-		#Window
-		MainWindow.__init__(self)
 		self.set_icon('PyTRG')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
@@ -144,13 +144,12 @@ class PyTRG(MainWindow, MainDelegate):
 
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
 
+	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
 			self.settings(err=e)
-
-		if guifile:
-			self.open(file=guifile)
-
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTRG')
 
 	def open_files(self) -> (PyMSError | None):

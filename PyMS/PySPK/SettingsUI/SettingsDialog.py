@@ -1,6 +1,6 @@
 
 from .PreviewSettingsTab import PreviewSettingsTab
-from ..Config import PyTBLConfig
+from ..Config import PySPKConfig
 
 from ...Utilities.SettingsUI.BaseSettingsDialog import BaseErrorableSettingsDialog, ErrorableSettingsDialogDelegate
 from ...Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
@@ -9,8 +9,8 @@ from ...Utilities.UIKit import *
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.MPQHandler import MPQHandler
 
-class SettingsDialog(BaseErrorableSettingsDialog[PyTBLConfig]):
-	def __init__(self, parent: Misc, config: PyTBLConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
+class SettingsDialog(BaseErrorableSettingsDialog[PySPKConfig]):
+	def __init__(self, parent: Misc, config: PySPKConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
 		self.mpq_handler = mpq_handler
 		super().__init__(parent, config, delegate, err)
 

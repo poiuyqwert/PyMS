@@ -56,19 +56,19 @@ class PyMPQConfig(Config.Config):
 		def __init__(self) -> None:
 			super().__init__()
 			self.defaults = PyMPQConfig.Settings.Defaults()
-			self.autocompression = Config.Dictionary(str, {
+			self.autocompression = Config.Dictionary(value_type=str, defaults={
 				'Default': str(CompressionOption.Standard.setting()),
 				'.smk': str(CompressionOption.NoCompression.setting()),
 				'.mpq': str(CompressionOption.NoCompression.setting()),
 				'.wav': str(CompressionOption.Audio.setting(level=1))
 			})
-			self.listfiles = Config.List(str, [Assets.data_file_path('Listfile.txt')])
+			self.listfiles = Config.List(value_type=str, defaults=[Assets.data_file_path('Listfile.txt')])
 			self.last_path = PyMPQConfig.Settings.LastPath()
 
 	class Filter(Config.Group):
 		def __init__(self) -> None:
 			super().__init__()
-			self.history = Config.List(str)
+			self.history = Config.List(value_type=str)
 			self.regex = Config.Boolean(default=False)
 
 	class LastPath(Config.Group):

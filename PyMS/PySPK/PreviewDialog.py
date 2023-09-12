@@ -59,7 +59,7 @@ class PreviewDialog(PyMSDialog):
 		return None
 
 	def setup_complete(self) -> None:
-		self.delegate.settings.windows.load_window_size('preview', self)
+		self.delegate.config_.windows.preview.load(self)
 
 		self.load_viewport()
 
@@ -97,5 +97,5 @@ class PreviewDialog(PyMSDialog):
 				self.canvas.coords(self.items[star], x+px,y+py)
 
 	def dismiss(self) -> None:
-		self.delegate.settings.windows.save_window_size('preview', self)
+		self.delegate.config_.windows.preview.save(self)
 		PyMSDialog.dismiss(self)

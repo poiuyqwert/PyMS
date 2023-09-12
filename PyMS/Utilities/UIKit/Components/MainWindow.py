@@ -3,6 +3,9 @@ from ..Widgets import *
 from ..Widgets.Extensions import WindowExtensions
 
 class MainWindow(Tk, WindowExtensions):
+	def initialize(self) -> None:
+		pass
+
 	def startup(self) -> None:
 		self.lift()
 		self.call('wm', 'attributes', '.', '-topmost', True)
@@ -17,6 +20,7 @@ class MainWindow(Tk, WindowExtensions):
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
 		except:
 			pass
+		self.after(1, self.initialize)
 		self.mainloop()
 
 	def set_icon(self, name: str) -> None:

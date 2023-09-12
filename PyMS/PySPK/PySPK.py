@@ -1,4 +1,5 @@
 
+from .Config import PySPKConfig
 from .Delegates import MainDelegate
 from .Tool import Tool
 from .LayerRow import LayerRow
@@ -6,6 +7,7 @@ from .PaletteTab import PaletteTab
 from .StarsTab import StarsTab
 from .PreviewDialog import PreviewDialog
 from .LayerCountDialog import LayerCountDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats import SPK
 from ..FileFormats import Palette
@@ -13,7 +15,6 @@ from ..FileFormats import GRP
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -21,11 +22,11 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 from enum import Enum
 
@@ -43,12 +44,10 @@ class ClickModifier(Enum):
 	shift = 1
 	ctrl = 2
 
-class PySPK(MainWindow, MainDelegate):
+class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PySPK', '1')
-		self.settings.settings.files.set_defaults({
-			'platformwpe':'MPQ:tileset\\platform.wpe'
-		})
+		self.guifile = guifile
+		self.config_ = PySPKConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -57,7 +56,7 @@ class PySPK(MainWindow, MainDelegate):
 		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
 		setup_trace('PySPK', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.minsize(870, 547)
 		self.maxsize(1000, 547)
@@ -68,7 +67,7 @@ class PySPK(MainWindow, MainDelegate):
 
 		self.update_title()
 
-		self.platformwpe: Palette.Palette
+		self.platform_wpe: Palette.Palette
 
 		self.images: dict[SPK.SPKImage, Image] = {}
 		self.star_map: dict[Canvas.Item, SPK.SPKStar] = {} # type: ignore[name-defined]
@@ -152,7 +151,7 @@ class PySPK(MainWindow, MainDelegate):
 		layersframe.grid(row=0,column=0, sticky=NSEW, padx=(2,0))
 
 		notebook = Notebook(leftframe)
-		self.palette_tab = PaletteTab(notebook, self)
+		self.palette_tab = PaletteTab(notebook, self, self)
 		notebook.add_tab(self.palette_tab, 'Palette')
 		self.stars_tab = StarsTab(notebook, self, self)
 		notebook.add_tab(self.stars_tab, 'Stars')
@@ -209,18 +208,15 @@ class PySPK(MainWindow, MainDelegate):
 		statusbar.add_label(self.edit_status, weight=1)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
+
+	def initialize(self) -> None:
 		e = self.open_files()
-
-		if guifile:
-			self.open(file=guifile)
-
-		UpdateDialog.check_update(self, 'PySPK')
-
 		if e:
 			self.mpqsettings(err=e)
+		if self.guifile:
+			self.open(file=self.guifile)
+		UpdateDialog.check_update(self, 'PySPK')
 
 	def get_tool(self) -> Tool:
 		return Tool(self.tool.get())
@@ -274,26 +270,20 @@ class PySPK(MainWindow, MainDelegate):
 		self.edit()
 
 	def open_files(self) -> (PyMSError | None):
-		self.mpqhandler.open_mpqs()
+		self.mpq_handler.open_mpqs()
 		err = None
 		try:
 			platformwpe = Palette.Palette()
-			platformwpe.load_file(self.mpqhandler.load_file(self.settings.settings.files.platformwpe))
+			platformwpe.load_file(self.mpq_handler.load_file(self.config_.settings.files.platform_wpe.file_path))
 		except PyMSError as e:
 			err = e
 		else:
-			self.platformwpe = platformwpe
-		self.mpqhandler.close_mpqs()
+			self.platform_wpe = platformwpe
+		self.mpq_handler.close_mpqs()
 		return err
 
 	def mpqsettings(self, err: PyMSError | None = None) -> None:
-		data = [
-			('Preview Settings',[
-				('platform.wpe','The palette which holds the star palette.','platformwpe','WPE')
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
 	def check_saved(self) -> CheckSaved:
 		if not self.spk or not self.edited:
@@ -408,7 +398,7 @@ class PySPK(MainWindow, MainDelegate):
 
 	def get_image(self, spkimage: SPK.SPKImage) -> (Image | None):
 		if not spkimage in self.images:
-			image = cast(Image, GRP.frame_to_photo(self.platformwpe.palette, spkimage.pixels, None, size=False))
+			image = cast(Image, GRP.frame_to_photo(self.platform_wpe.palette, spkimage.pixels, None, size=False))
 			self.images[spkimage] = image
 		return self.images.get(spkimage)
 
@@ -634,7 +624,7 @@ class PySPK(MainWindow, MainDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.spk.select_open_file(self, title='Open Parallax SPK', filetypes=[FileType.spk()])
+			file = self.config_.last_path.spk.select_open(self)
 			if not file:
 				return
 		spk = SPK.SPK()
@@ -661,7 +651,7 @@ class PySPK(MainWindow, MainDelegate):
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		filepath = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
+		filepath = self.config_.last_path.bmp.select_open(self)
 		if not filepath:
 			return
 		t = LayerCountDialog(self)
@@ -696,7 +686,7 @@ class PySPK(MainWindow, MainDelegate):
 		if not self.spk:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.spk.select_save_file(self, title='Save Parallax SPK As', filetypes=[FileType.spk()])
+			file_path = self.config_.last_path.spk.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -715,11 +705,11 @@ class PySPK(MainWindow, MainDelegate):
 	def export(self) -> None:
 		if not self.spk:
 			return
-		filepath = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
+		filepath = self.config_.last_path.bmp.select_save(self)
 		if not filepath:
 			return
 		try:
-			self.spk.decompile_file(filepath, self.platformwpe)
+			self.spk.decompile_file(filepath, self.platform_wpe)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -739,7 +729,7 @@ class PySPK(MainWindow, MainDelegate):
 			ErrorDialog(self, e)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PySPK.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PySPK.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PySPK', LONG_VERSION, [
@@ -747,15 +737,15 @@ class PySPK(MainWindow, MainDelegate):
 		])
 
 	def load_settings(self) -> None:
-		self.settings.windows.load_window_size('main', self)
-		self.autovis.set(self.settings.get('autovis', False))
-		self.autolock.set(self.settings.get('autolock', True))
+		self.config_.windows.main.load(self)
+		self.autovis.set(self.config_.auto.visibility.value)
+		self.autolock.set(self.config_.auto.lock.value)
 
 	def save_settings(self) -> None:
-		self.settings.windows.save_window_size('main', self)
-		self.settings.autovis = self.autovis.get()
-		self.settings.autolock = self.autolock.get()
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.auto.visibility.value = self.autovis.get()
+		self.config_.auto.lock.value = self.autolock.get()
+		self.config_.save()
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

@@ -76,8 +76,7 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 	def cancel(self, event: Event | None = None) -> None:
 		if self.err:
 			if MessageBox.askyesno(parent=self, title='Exit?', message="One or more files required for this program can not be found and must be chosen. Canceling will close the program, do you wish to continue?"):
-				self.parent.after(1, self.delegate.exit)
-				PyMSDialog.cancel(self)
+				self.delegate.exit()
 			else:
 				pass
 		elif not self.edited_state.is_edited or MessageBox.askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):

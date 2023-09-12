@@ -34,6 +34,8 @@ LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
+		self.guifile = guifile
+
 		self.set_icon('PyTBL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
@@ -172,13 +174,13 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.config_.panes.color_list.load(self.ver_pane)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
+	
+	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
 			self.mpqsettings(err=e)
-
-		if guifile:
-			self.open(file=guifile)
-
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTBL')
 
 	def open_files(self) -> (PyMSError | None):
