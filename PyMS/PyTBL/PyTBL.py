@@ -1,8 +1,10 @@
 
+from .Config import PyTBLConfig
 from .Delegates import MainDelegate
 from .FindDialog import FindDialog
 from .GotoDialog import GotoDialog
 from .PreviewDialog import PreviewDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats import TBL
 from ..FileFormats import PCX
@@ -14,23 +16,22 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 from typing import Literal
 
 LONG_VERSION = 'v%s' % Assets.version('PyTBL')
 
-class PyTBL(MainWindow, MainDelegate):
+class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
 		self.set_icon('PyTBL')
@@ -39,15 +40,8 @@ class PyTBL(MainWindow, MainDelegate):
 		ga.track(GAScreen('PyTBL'))
 		setup_trace('PyTBL', self)
 		
-		self.settings = Settings('PyTBL', '1')
-		self.settings.settings.files.set_defaults({
-			'tfontgam':'MPQ:game\\tfontgam.pcx',
-			'font8':'MPQ:font\\font8.fnt',
-			'font10':'MPQ:font\\font10.fnt',
-			'icons':'MPQ:game\\icons.grp',
-			'unitpal':Assets.palette_file_path('Units.pal'),
-		})
-		Theme.load_theme(self.settings.get('theme'), self)
+		self.config_ = PyTBLConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.tbl: TBL.TBL | None = None
 		self.file: str | None = None
@@ -173,25 +167,22 @@ class PyTBL(MainWindow, MainDelegate):
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(1, weight=1)
 
-		self.settings.windows.load_window_size('main', self)
-		self.settings.panes.load_pane_size('stringlist', self.hor_pane)
-		self.settings.panes.load_pane_size('colorlist', self.ver_pane)
+		self.config_.windows.main.load(self)
+		self.config_.panes.string_list.load(self.hor_pane)
+		self.config_.panes.color_list.load(self.ver_pane)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
 		e = self.open_files()
+		if e:
+			self.mpqsettings(err=e)
 
 		if guifile:
 			self.open(file=guifile)
 
 		UpdateDialog.check_update(self, 'PyTBL')
 
-		if e:
-			self.mpqsettings(err=e)
-
 	def open_files(self) -> (PyMSError | None):
-		self.mpqhandler.open_mpqs()
+		self.mpq_handler.open_mpqs()
 		err: PyMSError | None = None
 		try:
 			tfontgam = PCX.PCX()
@@ -199,17 +190,17 @@ class PyTBL(MainWindow, MainDelegate):
 			font10 = FNT.FNT()
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
-			tfontgam.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('tfontgam')))
+			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 			try:
-				font8.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font8'), False))
+				font8.load_file(self.mpq_handler.load_file(self.config_.settings.files.font8.file_path, False))
 			except:
-				font8.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font8'), True))
+				font8.load_file(self.mpq_handler.load_file(self.config_.settings.files.font8.file_path, True))
 			try:
-				font10.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font10'), False))
+				font10.load_file(self.mpq_handler.load_file(self.config_.settings.files.font10.file_path, False))
 			except:
-				font10.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('font10'), True))
-			unitpal.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('unitpal')))
-			icons.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('icons')))
+				font10.load_file(self.mpq_handler.load_file(self.config_.settings.files.font10.file_path, True))
+			unitpal.load_file(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
+			icons.load_file(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -218,7 +209,7 @@ class PyTBL(MainWindow, MainDelegate):
 			self.font10 = font10
 			self.unitpal = unitpal
 			self.icons = icons
-		self.mpqhandler.close_mpqs()
+		self.mpq_handler.close_mpqs()
 		return err
 
 	def update_string_status(self) -> None:
@@ -335,7 +326,7 @@ class PyTBL(MainWindow, MainDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file:
-			file = self.settings.lastpath.tbl.select_open_file(self, title='Open TBL', filetypes=[FileType.tbl()])
+			file = self.config_.last_path.tbl.select_open(self)
 			if not file:
 				return
 		tbl = TBL.TBL()
@@ -365,7 +356,7 @@ class PyTBL(MainWindow, MainDelegate):
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_open(self)
 		if not file:
 			return
 		tbl = TBL.TBL()
@@ -396,7 +387,7 @@ class PyTBL(MainWindow, MainDelegate):
 		if not self.tbl:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.tbl.select_save_file(self, title='Save TBL As', filetypes=[FileType.tbl()])
+			file_path = self.config_.last_path.tbl.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -415,7 +406,7 @@ class PyTBL(MainWindow, MainDelegate):
 	def export(self) -> None:
 		if not self.tbl:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		try:
@@ -517,17 +508,7 @@ class PyTBL(MainWindow, MainDelegate):
 		PreviewDialog(self, self)
 
 	def mpqsettings(self, err: PyMSError | None = None) -> None:
-		data = [
-			('Preview Settings',[
-				('tfontgam.pcx','The special palette which holds text colors.','tfontgam','PCX'),
-				('font8.fnt','The font used to preview hotkeys','font8','FNT'),
-				('font10.fnt','The font used to preview strings other than hotkeys','font10','FNT'),
-				('icons.grp','The icons used to preview hotkeys','icons','GRP'),
-				('Unit Palette','The palette used to display icons.grp','unitpal','Palette'),
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,430), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:
@@ -536,7 +517,7 @@ class PyTBL(MainWindow, MainDelegate):
 			ErrorDialog(self, e)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyTBL.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTBL.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyTBL', LONG_VERSION)
@@ -544,10 +525,10 @@ class PyTBL(MainWindow, MainDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.panes.save_pane_size('stringlist', self.hor_pane)
-		self.settings.panes.save_pane_size('colorlist', self.ver_pane)
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.panes.string_list.save(self.hor_pane)
+		self.config_.panes.color_list.save(self.ver_pane)
+		self.config_.windows.main.save(self)
+		self.config_.save()
 		self.destroy()
 
 	def destroy(self) -> None:

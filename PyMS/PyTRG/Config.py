@@ -7,7 +7,7 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('lastpath',), ('last_path',)),
 		(('windows', 'findreplace'), ('windows', 'find_replace')),
 		(('windows', 'mpqselect'), ('windows', 'mpq_select')),
-		(('mpqselecthistory',), ('mpq_select_history',)),
+		(('settings', 'mpqselecthistory',), ('settings', 'mpq_select_history',)),
 		(('settings', 'lastpath'), ('settings', 'last_path'))
 	))
 
@@ -22,7 +22,7 @@ class PyTRGConfig(Config.Config):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
 				super().__init__()
-				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				self.main = Config.WindowGeometry(default_size=Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 
 		def __init__(self) -> None:

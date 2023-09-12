@@ -8,7 +8,7 @@ from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats import DAT
 from ..FileFormats import IScriptBIN
 
-from .Config import SettingDict
+from .Settings_Old import SettingDict
 from .MPQSelect import MPQSelect
 from .ErrorDialog import ErrorDialog
 from .PyMSError import PyMSError

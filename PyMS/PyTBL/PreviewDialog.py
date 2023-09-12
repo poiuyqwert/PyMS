@@ -22,10 +22,10 @@ class PreviewDialog(PyMSDialog):
 		self.delegate = delegate
 		self.icons: dict[str, tuple[Image, tuple[int, int, int, int]]] = {}
 		self.characters: dict[str, dict[int, Character]] = {}
-		self.hotkey = IntVar()
-		self.hotkey.set(self.delegate.settings.preview.get('hotkey',1))
-		self.endatnull = IntVar()
-		self.endatnull.set(self.delegate.settings.preview.get('endatnull',1))
+		self.hotkey = BooleanVar()
+		self.hotkey.set(self.delegate.config_.preview.hotkey.value)
+		self.endatnull = BooleanVar()
+		self.endatnull.set(self.delegate.config_.preview.end_at_null.value)
 		PyMSDialog.__init__(self, parent, 'Text Previewer', resizable=(False,False))
 
 	def geticon(self, icon_name: str, frame_index: int) -> tuple[Image, tuple[int, int, int, int]]:
@@ -116,6 +116,6 @@ class PreviewDialog(PyMSDialog):
 		return ok
 
 	def ok(self, event: Event | None = None) -> None:
-		self.delegate.settings.preview['hotkey'] = self.hotkey.get()
-		self.delegate.settings.preview['endatnull'] = self.endatnull.get()
+		self.delegate.config_.preview.hotkey.value = self.hotkey.get()
+		self.delegate.config_.preview.end_at_null.value = self.endatnull.get()
 		PyMSDialog.ok(self)

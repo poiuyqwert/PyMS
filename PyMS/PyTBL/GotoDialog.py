@@ -25,8 +25,8 @@ class GotoDialog(PyMSDialog):
 
 		return self.gotoentry
 
-	def setup_complete(self):
-		self.delegate.settings.windows.load_window_size('goto', self)
+	def setup_complete(self) -> None:
+		self.delegate.config_.windows.goto.load(self)
 
 	def jump(self, event: Event | None = None) -> None:
 		if not self.delegate.tbl:
@@ -40,6 +40,6 @@ class GotoDialog(PyMSDialog):
 		self.delegate.listbox.see(i)
 		self.delegate.update()
 
-	def dismiss(self):
-		self.delegate.settings.windows.save_window_size('goto', self)
+	def dismiss(self) -> None:
+		self.delegate.config_.windows.goto.save(self)
 		PyMSDialog.dismiss(self)
