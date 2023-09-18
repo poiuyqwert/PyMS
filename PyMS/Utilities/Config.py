@@ -138,11 +138,15 @@ class Config(Group):
 				if data is not None:
 					del data['version']
 		except:
+			from . import trace
+			if tracer := trace.get_tracer():
+				tracer.trace_error()
 			data = None
 		if data:
 			self.decode(data)
 
 	def save(self) -> None:
+		import os
 		try:
 			data = self.encode()
 			assert isinstance(data, dict)
@@ -150,7 +154,9 @@ class Config(Group):
 			with open(Assets.settings_file_path(self._name), 'w') as f:
 				json.dump(data, f, sort_keys=True, indent=4)
 		except:
-			pass
+			from . import trace
+			if tracer := trace.get_tracer():
+				tracer.trace_error()
 
 class String(ConfigObject):
 	def __init__(self, *, default: str | None = None) -> None:
@@ -739,3 +745,38 @@ class Enum(ConfigObject, Generic[E]):
 
 	def restore_state(self) -> None:
 		self.value = self._saved_state
+
+class Highlights(Dictionary[dict]):
+	def __init__(self, *, defaults: dict[str, dict] = {}) -> None:
+		super().__init__(value_type=dict, defaults=defaults)
+
+	def encode(self) -> JSONValue:
+		from .UIKit.Font import Font
+		def fix_fonts(data: dict):
+			for key,value in data.items():
+				if isinstance(value, dict):
+					fix_fonts(value)
+				elif isinstance(value, Font):
+					data[key] = (value.family(), value.size(), 'bold' if value.is_bold() else 'normal')
+		data = dict(self.data)
+		fix_fonts(data)
+		return dict(self.data)
+
+	def decode(self, data: JSONValue) -> None:
+		from .UIKit.Font import Font
+		if not isinstance(data, dict):
+			return
+		def fix_fonts(data: dict):
+			for key,value in data.items():
+				if key == 'font':
+					try:
+						data[key] = Font(family=value[0], size=value[1], bold=value[2] == 'bold')
+					except:
+						data[key] = None
+				elif isinstance(value, dict):
+					fix_fonts(value)
+		for key,value in data.items():
+			if not isinstance(key, str) or not isinstance(value, dict):
+				continue
+			fix_fonts(value)
+			self.data[key] = value

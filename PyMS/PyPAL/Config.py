@@ -20,22 +20,22 @@ class PyPALConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				super().__init__()
 				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				super().__init__()
 
 		def __init__(self) -> None:
-			super().__init__()
 			self.main = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
 			self.settings = PyPALConfig.Windows.Settings()
+			super().__init__()
 
 	class LastPath(Config.Group):
 		def __init__(self) -> None:
-			super().__init__()
 			self.pal = Config.SelectFile(name='Palette', filetypes=list(Palette.FileType.load_types()))
+			super().__init__()
 
 	def __init__(self) -> None:
-		super().__init__()
 		self.theme = Config.String()
 		self.windows = PyPALConfig.Windows()
 		self.last_path = PyPALConfig.LastPath()
+		super().__init__()

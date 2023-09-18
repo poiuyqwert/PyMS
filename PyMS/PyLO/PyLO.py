@@ -1,30 +1,31 @@
 
+from .Config import PyLOConfig
 from .Delegates import FindDelegate
 from .LOCodeText import LOCodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
 from .Constants import RE_COORDINATES, RE_DRAG_COORDS
+from .SettingsDialog import SettingsDialog
 
 from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, FFile
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.SettingsPanel_Old import SettingsPanel
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UpdateDialog import UpdateDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SettingsUI.FileSettingView import FileSettingView
+from ..Utilities.EditedState import EditedState
 
 import io
 from enum import Enum
@@ -40,21 +41,19 @@ class MouseEvent(Enum):
 
 class PyLO(MainWindow, FindDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyLO', '1')
-		self.settings.settings.files.set_defaults({
-			'basegrp':'MPQ:unit\\terran\\wessel.grp',
-			'overlaygrp':'MPQ:unit\\terran\\wesselt.grp',
-		})
+		MainWindow.__init__(self)
+		self.guifile = guifile
+
+		self.config_ = PyLOConfig()
 
 		#Window
-		MainWindow.__init__(self)
 		self.set_icon('PyLO')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyLO', Assets.version('PyLO'))
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace('PyLO', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.lo: LO | None = None
 		self.file: str | None = None
@@ -97,7 +96,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage MPQ Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ Settings', Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -108,19 +107,19 @@ class PyLO(MainWindow, FindDelegate):
 
 		m = Frame(self)
 		# Text editor
-		self.text = LOCodeText(m, self.edit, highlights=self.settings.settings.get('highlights'), state=DISABLED)
+		self.text = LOCodeText(m, self.edit, highlights=self.config_.highlights.data, state=DISABLED)
 		self.text.grid(sticky=NSEW)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate
 	
-		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings.settings.files['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings.settings.files['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
-		self.usebasegrp = IntVar()
-		self.usebasegrp.set(not not self.settings.get('usebasegrp'))
-		self.useoverlaygrp = IntVar()
-		self.useoverlaygrp.set(not not self.settings.get('useoverlaygrp'))
+		self.usebasegrp = BooleanVar()
+		self.usebasegrp.set(self.config_.preview.use_base_grp.value)
+		self.usebasegrp.trace('w', self.update_grp_field_states)
+		self.useoverlaygrp = BooleanVar()
+		self.useoverlaygrp.set(self.config_.preview.use_overlay_grp.value)
+		self.useoverlaygrp.trace('w', self.update_grp_field_states)
 		self.baseframes = StringVar()
 		self.baseframes.set('Base Frame: - / -')
 		self.overlayframes = StringVar()
@@ -147,39 +146,20 @@ class PyLO(MainWindow, FindDelegate):
 		self.framescroll.set(0,1)
 		self.framescroll.pack(side=TOP, fill=X)
 		c.pack(side=TOP)
-		self.grppanel = SettingsPanel(
-			f,
-			(
-				('Base GRP:',False,'basegrp','CacheGRP',self.updatebasegrp),
-				('Overlay GRP:',False,'overlaygrp','CacheGRP',self.updateoverlaygrp)
-			),
-			self.settings,
-			self.mpqhandler,
-			self
-		)
-		self.grppanel.pack(side=TOP)
+
+		edited_state = EditedState()
+		self.base_grp_field = FileSettingView(f, edited_state, 'Base GRP', None, self.config_.settings.files.base_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.base_grp_field.set_editable(False)
+		self.base_grp_field.pack(side=TOP, fill=X, padx=5)
+		self.overlay_grp_field = FileSettingView(f, edited_state, 'Overlay GRP', None, self.config_.settings.files.overlay_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.overlay_grp_field.set_editable(False)
+		self.overlay_grp_field.pack(side=TOP, fill=X, padx=5)
+
 		x = Frame(f)
 		Checkbutton(x, text='Use base GRP', variable=self.usebasegrp, command=self.updateusebase).pack(side=LEFT)
 		Checkbutton(x, text='Use overlay GRP', variable=self.useoverlaygrp, command=self.updateuseoverlay).pack(side=RIGHT)
 		x.pack(side=TOP, fill=X, padx=5, pady=2)
 		f.grid(row=0, column=1, sticky=NS)
-		try:
-			g = CacheGRP()
-			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['basegrp']))
-			self.updatebasegrp(g)
-		except PyMSError as e:
-			if self.usebasegrp.get():
-				self.usebasegrp.set(0)
-				ErrorDialog(self, e)
-		try:
-			g = CacheGRP()
-			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['overlaygrp']))
-			self.updateoverlaygrp(g)
-		except PyMSError as e:
-			if self.useoverlaygrp.get():
-				self.useoverlaygrp.set(0)
-				ErrorDialog(self, e)
-		self.updategrps()
 
 		m.grid_rowconfigure(0,weight=1)
 		m.grid_columnconfigure(0,weight=1)
@@ -196,11 +176,14 @@ class PyLO(MainWindow, FindDelegate):
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
-		if guifile:
-			self.open(file=guifile)
-
+	def initialize(self) -> None:
+		self.update_grp_field_states()
+		self.updateusebase()
+		self.updateuseoverlay()
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyLO')
 
 	def scrolling(self, scroll_type: str, amount: str, increment: str | None = None):
@@ -222,9 +205,9 @@ class PyLO(MainWindow, FindDelegate):
 		step = 1 / float(self.overlaygrp.frames)
 		self.framescroll.set(self.overlayframe*step, (self.overlayframe+1)*step)
 
-	def updategrps(self) -> None:
-		self.grppanel.variables['Base GRP:'][2][1]['state'] = NORMAL if self.usebasegrp.get() else DISABLED
-		self.grppanel.variables['Overlay GRP:'][2][1]['state'] = NORMAL if self.useoverlaygrp.get() else DISABLED
+	def update_grp_field_states(self, *_) -> None:
+		self.base_grp_field.set_enabled(self.usebasegrp.get())
+		self.overlay_grp_field.set_enabled(self.useoverlaygrp.get())
 
 	# TODO: What is `t` for?
 	def drag(self, event: Event, t, mouse_event: MouseEvent) -> None:
@@ -235,7 +218,6 @@ class PyLO(MainWindow, FindDelegate):
 			self.text.text.edit_separator()
 		elif mouse_event == MouseEvent.drag and self.dragoffset:
 			offset = (max(-128,min(127,event.x + self.dragoffset[0])), max(-128,min(127,event.y + self.dragoffset[1])))
-			print(offset)
 			self.drawpreview(self.previewing_basegrp_frame, offset)
 		elif mouse_event == MouseEvent.release:
 			s = self.text.index('%s linestart' % INSERT)
@@ -249,28 +231,32 @@ class PyLO(MainWindow, FindDelegate):
 			self.text.text.edit_separator()
 
 	def updateusebase(self) -> None:
-		self.updategrps()
+		if not self.usebasegrp.get():
+			self.updatebasegrp(None)
+			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['basegrp']))
+			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.base_grp.file_path))
 			self.updatebasegrp(g)
 		except PyMSError as e:
 			if self.usebasegrp.get():
-				self.usebasegrp.set(0)
-			ErrorDialog(self, e)
+				self.usebasegrp.set(False)
+				ErrorDialog(self, e)
 
 	def updateuseoverlay(self) -> None:
-		self.updategrps()
+		if not self.useoverlaygrp.get():
+			self.updateoverlaygrp(None)
+			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpqhandler.load_file(self.settings.settings.files['overlaygrp']))
+			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.overlay_grp.file_path))
 			self.updateoverlaygrp(g)
 		except PyMSError as e:
 			if self.useoverlaygrp.get():
-				self.useoverlaygrp.set(0)
-			ErrorDialog(self, e)
+				self.useoverlaygrp.set(False)
+				ErrorDialog(self, e)
 
-	def updatebasegrp(self, grp: CacheGRP) -> None:
+	def updatebasegrp(self, grp: CacheGRP | None) -> None:
 		self.basegrp = grp
 		self.basegrp_cache.clear()
 		self.previewing_basegrp_frame = None
@@ -279,7 +265,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.previewupdate()
 		self.framesupdate()
 
-	def updateoverlaygrp(self, grp: CacheGRP) -> None:
+	def updateoverlaygrp(self, grp: CacheGRP | None) -> None:
 		self.overlaygrp = grp
 		self.overlaygrp_cache.clear()
 		self.previewing_basegrp_frame = None
@@ -440,7 +426,7 @@ class PyLO(MainWindow, FindDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.lo.select_open_file(self, title='Open LO', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
+			file = self.config_.last_path.lo.select_open(self)
 			if not file:
 				return
 		lo = LO()
@@ -498,7 +484,7 @@ class PyLO(MainWindow, FindDelegate):
 		if not self.lo:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.lo.select_save_file(self, title='Save LO As', filetypes=[FileType.lo(),FileType.loa(),FileType.lob(),FileType.lod(),FileType.lof(),FileType.loo(),FileType.los(),FileType.lou(),FileType.log(),FileType.lol(),FileType.lox()])
+			file_path = self.config_.last_path.lo.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -519,7 +505,7 @@ class PyLO(MainWindow, FindDelegate):
 	def export(self) -> None:
 		if not self.lo:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		try:
@@ -563,7 +549,7 @@ class PyLO(MainWindow, FindDelegate):
 
 	def find(self) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self, self.settings, self)
+			self.findwindow = FindReplaceDialog(self, self.config_.windows.find, self)
 			self.bind(Key.F3(), self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
@@ -574,8 +560,8 @@ class PyLO(MainWindow, FindDelegate):
 		if c.cont:
 			self.text.setup(c.cont)
 
-	def mpqsettings(self) -> None:
-		SettingsDialog(self, [('Theme',)], (550,380), mpqhandler=self.mpqhandler)
+	def settings(self) -> None:
+		SettingsDialog(self, self.config_, self.mpq_handler)
 
 	def register_registry(self) -> None:
 		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
@@ -586,7 +572,7 @@ class PyLO(MainWindow, FindDelegate):
 				break
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyLO.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyLO.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyLO', LONG_VERSION)
@@ -594,15 +580,13 @@ class PyLO(MainWindow, FindDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings['highlights'] = self.text.highlights
-		# TODO: Better logic
-		m = Assets.mpq_file_path('')
-		self.settings.settings.files['basegrp'] = ['','MPQ:'][self.grppanel.variables['Base GRP:'][0].get()] + self.grppanel.variables['Base GRP:'][1].get().replace(m,'MPQ:',1)
-		self.settings.settings.files['overlaygrp'] = ['','MPQ:'][self.grppanel.variables['Overlay GRP:'][0].get()] + self.grppanel.variables['Overlay GRP:'][1].get().replace(m,'MPQ:',1)
-		self.settings['usebasegrp'] = self.usebasegrp.get()
-		self.settings['useoverlaygrp'] = self.useoverlaygrp.get()
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.highlights.data = self.text.highlights
+		self.base_grp_field.save()
+		self.overlay_grp_field.save()
+		self.config_.preview.use_base_grp.value = self.usebasegrp.get()
+		self.config_.preview.use_overlay_grp.value = self.useoverlaygrp.get()
+		self.config_.save()
 		self.destroy()
 
 	def destroy(self) -> None:

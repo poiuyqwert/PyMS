@@ -26,35 +26,34 @@ class PyMPQConfig(Config.Config):
 	class Windows(Config.Group):
 		class Settings(Config.Group):
 			def __init__(self) -> None:
-				super().__init__()
 				self.main = Config.WindowGeometry(default_size=Size(550,380))
+				super().__init__()
 
 		def __init__(self) -> None:
-			super().__init__()
 			self.main = Config.WindowGeometry(default_size=Size(700,500))
 			self.help = Config.WindowGeometry()
 			self.settings = PyMPQConfig.Windows.Settings()
+			super().__init__()
 
 	class Sort(Config.Group):
 		def __init__(self) -> None:
-			super().__init__()
 			self.ascending = Config.Boolean(default=False)
 			self.column = Config.Int(default=0, limits=(0,6))
+			super().__init__()
 
 	class Settings(Config.Group):
 		class Defaults(Config.Group):
 			def __init__(self) -> None:
-				super().__init__()
 				self.maxfiles = Config.Int(default=1024, limits=(1,65535))
 				self.blocksize = Config.Int(default=3, limits=(1,23))
+				super().__init__()
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				super().__init__()
 				self.listfiles = Config.SelectFiles(title='Add Listfiles', filetypes=[FileType.txt()])
+				super().__init__()
 
 		def __init__(self) -> None:
-			super().__init__()
 			self.defaults = PyMPQConfig.Settings.Defaults()
 			self.autocompression = Config.Dictionary(value_type=str, defaults={
 				'Default': str(CompressionOption.Standard.setting()),
@@ -64,34 +63,34 @@ class PyMPQConfig(Config.Config):
 			})
 			self.listfiles = Config.List(value_type=str, defaults=[Assets.data_file_path('Listfile.txt')])
 			self.last_path = PyMPQConfig.Settings.LastPath()
+			super().__init__()
 
 	class Filter(Config.Group):
 		def __init__(self) -> None:
-			super().__init__()
 			self.history = Config.List(value_type=str)
 			self.regex = Config.Boolean(default=False)
+			super().__init__()
 
 	class LastPath(Config.Group):
 		class Import(Config.Group):
 			def __init__(self) -> None:
-				super().__init__()
 				self.files = Config.SelectFiles(title='Add files...', filetypes=[FileType.all_files()])
 				self.folder = Config.SelectDirectory(title='Add files from folder...')
+				super().__init__()
 
 		def __init__(self) -> None:
-			super().__init__()
 			self.import_ = PyMPQConfig.LastPath.Import()
 			self.export = Config.SelectDirectory(title='Extract files...')
 			self.mpq = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+			super().__init__()
 
 	class Import(Config.Group):
 		def __init__(self) -> None:
-			super().__init__()
 			self.files_prefix = Config.String()
 			self.folder_prefix = Config.String()
+			super().__init__()
 
 	def __init__(self):
-		super().__init__()
 		self.compression = Config.String(default=str(CompressionOption.Auto.setting()))
 		self.encrypt = Config.Boolean(default=False)
 		self.locale = Config.Int(default=0, limits=(0,65535))
@@ -103,3 +102,4 @@ class PyMPQConfig(Config.Config):
 		self.windows = PyMPQConfig.Windows()
 		self.last_path = PyMPQConfig.LastPath()
 		self.import_ = PyMPQConfig.Import()
+		super().__init__()

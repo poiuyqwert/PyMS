@@ -10,8 +10,8 @@ import re
 from typing import Callable, cast
 
 class FindReplaceDialog(PyMSDialog):
-	def __init__(self, parent: Misc, settings: Settings, delegate: FindDelegate) -> None:
-		self.settings = settings
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, delegate: FindDelegate) -> None:
+		self.window_geometry_config = window_geometry_config
 		self.delegate = delegate
 		self.resettimer: str | None = None
 		self.find_history: list[str] = []
@@ -84,7 +84,7 @@ class FindReplaceDialog(PyMSDialog):
 		return self.findentry
 
 	def setup_complete(self) -> None:
-		self.settings.windows.load_window_size('findreplacewindow', self)
+		self.window_geometry_config.load(self)
 
 	def check(self, i: int) -> None:
 		if i == 1:
@@ -223,5 +223,5 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def destroy(self) -> None:
-		self.settings['findreplacewindow'] = self.winfo_geometry()
+		self.window_geometry_config.save(self)
 		PyMSDialog.withdraw(self)

@@ -75,10 +75,14 @@ class Tracer(object):
 			if source == self.stderr:
 				self._present()
 
-	def flush(self):
+	def flush(self) -> None:
 		if not self.file:
 			return
 		self.file.flush()
+
+	def trace_error(self) -> None:
+		import traceback
+		self.write(''.join(traceback.format_exception(*sys.exc_info())))
 
 _TRACER: Tracer | None = None
 def setup_trace(program_name, main_window):
