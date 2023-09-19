@@ -1,6 +1,8 @@
 # coding: utf-8
 
+from .Config import PyFNTConfig
 from .InfoDialog import InfoDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt
@@ -11,16 +13,15 @@ from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
-from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
@@ -283,11 +284,9 @@ DISPLAY_CHARS = [
 	'', # 255
 ]
 
-class PyFNT(MainWindow):
+class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyFNT', '1')
-		self.settings.settings.files.set_defaults({'tfontgam':'MPQ:game\\tfontgam.pcx'})
-
+		self.guifile = guifile
 		#Window
 		MainWindow.__init__(self)
 		self.set_icon('PyFNT')
@@ -295,7 +294,9 @@ class PyFNT(MainWindow):
 		ga.set_application('PyFNT', Assets.version('PyFNT'))
 		ga.track(GAScreen('PyFNT'))
 		setup_trace('PyFNT', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+
+		self.config_ = PyFNTConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.fnt: FNT | None = None
@@ -320,7 +321,7 @@ class PyFNT(MainWindow):
 		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Font', Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Font', Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.special, "Manage MPQ's and Special Palette", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage MPQ's and Special Palette", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -359,33 +360,30 @@ class PyFNT(MainWindow):
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.mpqhandler = MPQHandler(self.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
+
+		self.config_.windows.main.load(self)
+
+	def initialize(self) -> None:
 		e = self.open_files()
-
-		if guifile:
-			self.open(file=guifile)
-
-		self.settings.windows.load_window_size('main', self)
-
+		if e:
+			self.settings(err=e)
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyFNT')
 
-		if e:
-			self.special(err=e)
-
 	def open_files(self) -> (PyMSError | None):
-		self.mpqhandler.open_mpqs()
+		self.mpq_handler.open_mpqs()
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(self.mpqhandler.load_file(self.settings.settings.files.tfontgam))
+			palette.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 		except PyMSError as e:
 			err = e
 		else:
 			self.palette = palette
 			self.palette.palette[self.palette.image[0][0]] = (50,100,50)
-		self.mpqhandler.close_mpqs()
+		self.mpq_handler.close_mpqs()
 		return err
 
 	def check_saved(self) -> CheckSaved:
@@ -474,7 +472,7 @@ class PyFNT(MainWindow):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.fnt.select_open_file(self, title='Open FNT', filetypes=[FileType.fnt()])
+			file = self.config_.last_path.fnt.select_open(self)
 			if not file:
 				return
 		if isinstance(file, FNT):
@@ -503,7 +501,7 @@ class PyFNT(MainWindow):
 		if not self.fnt:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.fnt.select_save_file(self, title='Save FNT As', filetypes=[FileType.fnt()])
+			file_path = self.config_.last_path.fnt.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -538,7 +536,7 @@ class PyFNT(MainWindow):
 	def exports(self) -> None:
 		if not self.fnt:
 			return
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_save(self)
 		if not file:
 			return
 		self.status.set('Extracting font, please wait...')
@@ -552,7 +550,7 @@ class PyFNT(MainWindow):
 	def imports(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import BMP', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_open(self)
 		if not file:
 			return
 		s = InfoDialog(self)
@@ -570,8 +568,8 @@ class PyFNT(MainWindow):
 		self.mark_edited()
 		self.status.set('Font imported successfully!')
 
-	def special(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, [('Palette Settings',[('tfontgam.pcx','The special palette which holds the text color.','tfontgam','PCX')]),('Theme',)], (550,380), err, settings=self.settings, mpqhandler=self.mpqhandler)
+	def settings(self, err: PyMSError | None = None) -> None:
+		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:
@@ -580,18 +578,18 @@ class PyFNT(MainWindow):
 			ErrorDialog(self, e)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyFNT.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyFNT.md')
 
 	def about(self) -> None:
 		thanks = [
 			('FaRTy1billion','Help with file format and example FNT previewer'),
-			('StormCost-Fortress.net','FNT specs')
+			('StormCoast-Fortress.net','FNT specs')
 		]
 		AboutDialog(self, 'PyFNT', LONG_VERSION, thanks)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.save()
 		self.destroy()
