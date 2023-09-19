@@ -1,12 +1,13 @@
 
+from .Config import PyGRPConfig
 from .FramesDialog import FramesDialog
 from .utils import BMPStyle, grptobmp, bmptogrp
+from .SettingsDialog import SettingsDialog
 
 from ..FileFormats import GRP
 from ..FileFormats import Palette
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
-from ..Utilities import Config
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
@@ -17,7 +18,6 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 import os
@@ -43,9 +43,7 @@ class FrameSet(Flag):
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
 
 class PyGRP(MainWindow):
-	def __init__(self, guifile: str | None =None):
-		self.settings = Settings('PyGRP', '1')
-
+	def __init__(self, guifile: str | None = None):
 		#Window
 		MainWindow.__init__(self)
 		self.title('PyGRP %s' % LONG_VERSION)
@@ -54,7 +52,9 @@ class PyGRP(MainWindow):
 		ga.set_application('PyGRP', Assets.version('PyGRP'))
 		ga.track(GAScreen('PyGRP'))
 		setup_trace('PyGRP', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+
+		self.config_ = PyGRPConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.frame_index: int | None = None
@@ -87,7 +87,7 @@ class PyGRP(MainWindow):
 		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, tags='can_move_up')
 		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, tags='can_move_down')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
@@ -98,8 +98,8 @@ class PyGRP(MainWindow):
 
 		frame = Frame(self)
 
-		self.hex = IntVar()
-		self.hex.set(self.settings.get('hex', False))
+		self.hex = BooleanVar()
+		self.hex.set(self.config_.hex.value)
 
 		leftframe = Frame(frame)
 		#Listbox
@@ -123,7 +123,7 @@ class PyGRP(MainWindow):
 			try:
 				p = Palette.Palette()
 				p.load_file(Assets.palette_file_path(pal))
-				if pal == self.settings.preview.get('palette', 'Units.pal'):
+				if pal == self.config_.preview.palette.value:
 					s = self.pallist.size() # type: ignore[assignment]
 					self.pal = pal
 				if not self.pal:
@@ -135,7 +135,7 @@ class PyGRP(MainWindow):
 		if not self.pal:
 			raise PyMSError('PyGRP', "Couldn't load palettes")
 		if s == -1:
-			self.settings.preview.palette = self.pal
+			self.config_.preview.palette.value = self.pal
 			s = 0
 		self.pallist.select_set(s)
 		self.pallist.see(s)
@@ -143,7 +143,7 @@ class PyGRP(MainWindow):
 		rightframe = Frame(frame)
 		#Canvas
 		self.canvas = Canvas(rightframe, width=258, height=258)
-		self.canvas.configure(background=self.settings.preview.get('bgcolor','#000000'))
+		self.canvas.configure(background=self.config_.preview.bg_color.value)
 		self.canvas.pack(side=TOP, padx=2, pady=2)
 		self.canvas.bind(Double.Click_Left(), self.bgcolor)
 		self.grpbrdr: Canvas.Item = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00') # type: ignore[name-defined]
@@ -164,22 +164,22 @@ class PyGRP(MainWindow):
 		self.controls.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.controls.pack(padx=1, pady=1)
 
-		self.prevspeed = IntegerVar(self.settings.preview.get('speed', 150), [1,5000])
-		self.transid = IntegerVar(self.settings.get('transid', 0), [0,255])
+		self.prevspeed = IntegerVar(self.config_.preview.speed.value, [1,5000])
+		self.transid = IntegerVar(self.config_.transparent_index.value, [0,255])
 		self.prevfrom = IntegerVar(0, [0,0])
 		self.prevto = IntegerVar(0, [0,0])
-		self.showpreview = IntVar()
-		self.showpreview.set(self.settings.preview.get('show', 1))
-		self.looppreview = IntVar()
-		self.looppreview.set(self.settings.preview.get('loop', 1))
-		self.grpo = IntVar()
-		self.grpo.set(self.settings.preview.get('grpoutline', 1))
-		self.frameo = IntVar()
-		self.frameo.set(self.settings.preview.get('frameoutline', 1))
+		self.showpreview = BooleanVar()
+		self.showpreview.set(self.config_.preview.show.value)
+		self.looppreview = BooleanVar()
+		self.looppreview.set(self.config_.preview.loop.value)
+		self.grpo = BooleanVar()
+		self.grpo.set(self.config_.preview.outline.grp.value)
+		self.frameo = BooleanVar()
+		self.frameo.set(self.config_.preview.outline.frame.value)
 		self.bmp_style = IntVar()
-		self.bmp_style.set(BMPStyle(self.settings.get('bmpstyle', BMPStyle.single_bmp_framesets.value)).index)
+		self.bmp_style.set(self.config_.bmp_style.value.index)
 		self.uncompressed = BooleanVar()
-		self.uncompressed.set(self.settings.get('uncompressed', 0))
+		self.uncompressed.set(self.config_.uncompressed.value)
 
 		#Options
 		opts = Frame(rightframe)
@@ -226,7 +226,7 @@ BMP's must be imported with the same style they were exported as.""")
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.window.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -489,7 +489,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.grp.select_open_file(self, title='Open GRP', filetypes=[FileType.grp()])
+			file = self.config_.last_path.grp.select_open(self)
 			if not file:
 				return
 		grp = GRP.GRP(self.palettes[self.pal].palette)
@@ -523,7 +523,7 @@ BMP's must be imported with the same style they were exported as.""")
 			return CheckSaved.saved
 		self.stopframe()
 		if not file_path:
-			file_path = self.settings.lastpath.grp.select_save_file(self, title='Save GRP As', filetypes=[FileType.grp()])
+			file_path = self.config_.last_path.grp.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -563,7 +563,7 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		indexs = [int(i) for i in self.listbox.curselection()]
-		file = self.settings.lastpath.bmp.select_save_file(self, key='export', title='Export Frames To...', filetypes=[FileType.bmp()])
+		file = self.config_.last_path.bmp.select_save(self, title='Export Frames To...')
 		if file:
 			self.status.set('Extracting frames, please wait...')
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
@@ -580,15 +580,18 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		update_preview_limit = self.prevto.get() == self.grp.frames
+		files: list[str] | None = None
 		if self.get_bmp_style() == BMPStyle.bmp_per_frame:
-			files = self.settings.lastpath.bmp.select_open_files(self, key='import', title='Import frames...', filetypes=[FileType.bmp()])
+			files = self.config_.last_path.bmp.select_open_multiple(self, title='Import frames...')
 		else:
-			files = self.settings.lastpath.bmp.select_open_file(self, key='import', title='Import single BMP...', filetypes=[FileType.bmp()])
+			file = self.config_.last_path.bmp.select_open(self)
+			if file is not None:
+				files = [file]
 		if not files:
 			return
 		frames = 0
 		if self.get_bmp_style() != BMPStyle.bmp_per_frame:
-			t = FramesDialog(self, self.settings)
+			t = FramesDialog(self, self.config_.windows.frames)
 			if not t.result.get():
 				return
 			frames = t.result.get()
@@ -695,11 +698,11 @@ BMP's must be imported with the same style they were exported as.""")
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def sets(self, key: Event | None = None, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+	def settings(self) -> None:
+		SettingsDialog(self, self.config_)
 
 	def help(self, e: Event | None = None) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyGRP.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyGRP.md')
 
 	def about(self, key: Event | None = None) -> None:
 		self.stopframe()
@@ -709,17 +712,17 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.window.save_window_size('main', self)
-		self.settings.hex = not not self.hex.get()
-		self.settings.preview.bgcolor = self.canvas['background']
-		self.settings.preview.speed = int(self.prevspeed.get())
-		self.settings.preview.show = not not self.showpreview.get()
-		self.settings.preview.loop = not not self.looppreview.get()
-		self.settings.preview.grpoutline = not not self.grpo.get()
-		self.settings.preview.frameoutline = not not self.frameo.get()
-		self.settings.preview.palette = self.pal
-		self.settings.bmpstyle = self.get_bmp_style().value
-		self.settings.uncompressed = not not self.uncompressed.get()
-		self.settings.transid = self.transid.get()
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.hex.value = self.hex.get()
+		self.config_.preview.bg_color.value = self.canvas['background']
+		self.config_.preview.speed.value = int(self.prevspeed.get())
+		self.config_.preview.show.value = self.showpreview.get()
+		self.config_.preview.loop.value = self.looppreview.get()
+		self.config_.preview.outline.grp.value = self.grpo.get()
+		self.config_.preview.outline.frame.value = self.frameo.get()
+		self.config_.preview.palette.value = self.pal
+		self.config_.bmp_style.value = self.get_bmp_style()
+		self.config_.uncompressed.value = self.uncompressed.get()
+		self.config_.transparent_index.value = self.transid.get()
+		self.config_.save()
 		self.destroy()

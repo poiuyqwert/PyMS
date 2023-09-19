@@ -154,7 +154,6 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def __init__(self, guifile=None): # type: (str | None) -> None
 		MainWindow.__init__(self)
 		self.guifile = guifile
-		self.config_ = PyTILEConfig()
 
 		self.title('PyTILE %s' % LONG_VERSION)
 		self.set_icon('PyTILE')
@@ -162,6 +161,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		ga.set_application('PyTILE', Assets.version('PyTILE'))
 		ga.track(GAScreen('PyTILE'))
 		setup_trace('PyTILE', self)
+
+		self.config_ = PyTILEConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)

@@ -6,10 +6,9 @@ from . import Assets
 from .MPQHandler import MPQHandler
 
 from numbers import Number
-import os, json
-import enum
+import os, json, re, enum
 
-from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator
+from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
 
 JSONValue: TypeAlias = 'int | float | str | bool | None | JSONObject | JSONArray'
 JSONObject = dict[str, JSONValue]
@@ -447,14 +446,15 @@ class FileOpType(enum.Enum):
 	open_save = 0
 	import_export = 1
 
-	def title(self, name: str, save: bool) -> str:
+	def title(self, name: str, save: bool, multiple: bool = False) -> str:
 		op_name: str
 		match self:
 			case FileOpType.open_save:
 				op_name = 'Save' if save else 'Open'
 			case FileOpType.import_export:
 				op_name = 'Export' if save else 'Import'
-		return f'{op_name} {name}'
+		plural = ('s' if name[-1].islower() else "'s") if multiple else ''
+		return f'{op_name} {name}{plural}'
 
 	@property
 	def save_key(self) -> str:
@@ -484,34 +484,47 @@ class SelectFile(ConfigObject):
 		self._op_type = op_type
 		self._initial_filename = initial_filename
 
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None) -> str | None:
+	@overload
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False) -> str | None: ...
+	@overload
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True]) -> list[str] | None: ...
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
-		path: str | None
+		path: str | list[str] | None
 		if save:
 			path = FileDialog.asksaveasfilename(
 				parent=window,
-				title=title or self._op_type.title(self._name, save),
+				title=title or self._op_type.title(self._name, True),
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
 				defaultextension=self._default_extension,
 				initialfile=self._initial_filename
 			)
 		else:
-			path = FileDialog.askopenfilename(
+			path = cast(str | list[str] | None, FileDialog.askopenfilename(
 				parent=window,
-				title=title or self._op_type.title(self._name, save),
+				multiple=multiple,
+				title=title or self._op_type.title(self._name, False, multiple),
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
 				defaultextension=self._default_extension,
 				initialfile=self._initial_filename
-			)
+			)) # type: ignore[call-arg]
 		from .fileutils import check_allow_overwrite_internal_file
-		if save and path and not check_allow_overwrite_internal_file(path):
-			path = None
+		if save and path is not None:
+			if isinstance(path, list):
+				path = list(p for p in path if check_allow_overwrite_internal_file(p))
+				if not path:
+					path = None
+			elif check_allow_overwrite_internal_file(path):
+				path = None
 		setattr(window, '_pyms__window_blocking', False)
-		if path:
-			directory = os.path.dirname(path)
+		if path is not None:
+			if isinstance(path, list):
+				directory = os.path.dirname(path[0])
+			else:
+				directory = os.path.dirname(path)
 			if save:
 				self._save_directory = directory
 			else:
@@ -520,6 +533,9 @@ class SelectFile(ConfigObject):
 
 	def select_open(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
 		return self._select_file(parent, False, title, filetypes)
+
+	def select_open_multiple(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> list[str] | None:
+		return self._select_file(parent, False, title, filetypes, True)
 
 	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
 		return self._select_file(parent, True, title, filetypes)
@@ -552,51 +568,51 @@ class SelectFile(ConfigObject):
 		self._open_directory = self._saved_state_open
 		self._save_directory = self._saved_state_save
 
-class SelectFiles(ConfigObject):
-	def __init__(self, *, title: str, filetypes: list[FileType]) -> None:
-		self.directory = Assets.base_dir
-		self._saved_state = self.directory
-		self._title = title
-		self._filetypes = FileType.include_all_files(filetypes)
-		self._default_extension = FileType.default_extension(filetypes)
+# class SelectFiles(ConfigObject):
+# 	def __init__(self, *, title: str, filetypes: list[FileType]) -> None:
+# 		self.directory = Assets.base_dir
+# 		self._saved_state = self.directory
+# 		self._title = title
+# 		self._filetypes = FileType.include_all_files(filetypes)
+# 		self._default_extension = FileType.default_extension(filetypes)
 
-	def select_open(self, parent: Misc, filetypes: list[FileType] | None = None) -> list[str]:
-		window = parent.winfo_toplevel()
-		setattr(window, '_pyms__window_blocking', True)
-		paths: list[str] | str = FileDialog.askopenfilename(
-			parent=window,
-			multiple=True,
-			title=self._title,
-			initialdir=self.directory,
-			filetypes=filetypes or self._filetypes,
-			defaultextension=self._default_extension
-		) # type: ignore[call-arg]
-		setattr(window, '_pyms__window_blocking', False)
-		if isinstance(paths, str):
-			if paths:
-				paths = [paths]
-			else:
-				paths = []
-		if paths:
-			self.directory = os.path.dirname(paths[0])
-		return paths
+# 	def select_open(self, parent: Misc, filetypes: list[FileType] | None = None) -> list[str]:
+# 		window = parent.winfo_toplevel()
+# 		setattr(window, '_pyms__window_blocking', True)
+# 		paths: list[str] | str = FileDialog.askopenfilename(
+# 			parent=window,
+# 			multiple=True,
+# 			title=self._title,
+# 			initialdir=self.directory,
+# 			filetypes=filetypes or self._filetypes,
+# 			defaultextension=self._default_extension
+# 		) # type: ignore[call-arg]
+# 		setattr(window, '_pyms__window_blocking', False)
+# 		if isinstance(paths, str):
+# 			if paths:
+# 				paths = [paths]
+# 			else:
+# 				paths = []
+# 		if paths:
+# 			self.directory = os.path.dirname(paths[0])
+# 		return paths
 
-	def encode(self) -> JSONValue:
-		return self.directory
+# 	def encode(self) -> JSONValue:
+# 		return self.directory
 
-	def decode(self, directory: JSONValue) -> None:
-		if not isinstance(directory, str) or not os.path.exists(directory):
-			return
-		self.directory = directory
+# 	def decode(self, directory: JSONValue) -> None:
+# 		if not isinstance(directory, str) or not os.path.exists(directory):
+# 			return
+# 		self.directory = directory
 
-	def reset(self) -> None:
-		self.directory = Assets.base_dir
+# 	def reset(self) -> None:
+# 		self.directory = Assets.base_dir
 
-	def store_state(self) -> None:
-		self._saved_state = self.directory
+# 	def store_state(self) -> None:
+# 		self._saved_state = self.directory
 
-	def restore_state(self) -> None:
-		self.directory = self._saved_state
+# 	def restore_state(self) -> None:
+# 		self.directory = self._saved_state
 
 class SelectDirectory(ConfigObject):
 	def __init__(self, *, title: str = 'Select Folder') -> None:
@@ -780,3 +796,30 @@ class Highlights(Dictionary[dict]):
 				continue
 			fix_fonts(value)
 			self.data[key] = value
+
+class Color(ConfigObject):
+	RE_MATCH = re.compile(r'#?[a-zA-Z0-9]{6}')
+
+	def __init__(self, *, default: str) -> None:
+		self._default = default
+		self.value = self._default
+		self._saved_state = self.value
+
+	def encode(self) -> JSONValue:
+		return self.value
+
+	def decode(self, value: JSONValue) -> None:
+		if not isinstance(value, str):
+			return
+		if not Color.RE_MATCH.match(value):
+			return
+		self.value = value
+
+	def reset(self) -> None:
+		self.value = self._default
+
+	def store_state(self) -> None:
+		self._saved_state = self.value
+
+	def restore_state(self) -> None:
+		self.value = self._saved_state

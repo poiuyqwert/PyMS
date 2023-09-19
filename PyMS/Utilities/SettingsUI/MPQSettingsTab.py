@@ -17,7 +17,7 @@ import os
 from typing import Callable
 
 class MPQSettingsTab(SettingsTab):
-	def __init__(self, parent: Notebook, edited_state: EditedState, mpq_hander: MPQHandler, mpqs_config: Config.List[str], mpqs_select_config: Config.SelectFiles) -> None:
+	def __init__(self, parent: Notebook, edited_state: EditedState, mpq_hander: MPQHandler, mpqs_config: Config.List[str], mpqs_select_config: Config.SelectFile) -> None:
 		self.edited_state = edited_state
 		self.mpq_handler = mpq_hander
 		self.mpqs_config = mpqs_config
@@ -75,8 +75,7 @@ class MPQSettingsTab(SettingsTab):
 		n: str | int = 0
 		s: int = 0
 		if add is None:
-			add = self.mpqs_select_config.select_open(self)
-			# add = self.settings.lastpath.settings.select_open_files(self, key='mpqs', title="Add MPQ's", filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])
+			add = self.mpqs_select_config.select_open_multiple(self)
 		else:
 			n = END
 			s = self.listbox.size() # type: ignore[assignment]

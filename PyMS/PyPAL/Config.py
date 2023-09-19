@@ -6,6 +6,7 @@ from ..Utilities.UIKit import Size
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (
+		(('lastpath',), ('last_path',)),
 		(('lastpath','open'), ('last_path','pal','open')),
 		(('lastpath','save'), ('last_path','pal','save')),
 	))

@@ -41,8 +41,6 @@ class ColumnID:
 
 class PyMPQ(MainWindow):
 	def __init__(self, guifile=None): # type: (str | None) -> None
-		self.config_ = PyMPQConfig()
-
 		#Window
 		MainWindow.__init__(self)
 		self.title('PyMPQ %s' % LONG_VERSION)
@@ -51,6 +49,8 @@ class PyMPQ(MainWindow):
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace('PyMPQ', self)
+		
+		self.config_ = PyMPQConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.mpq = None # type: MPQ | None

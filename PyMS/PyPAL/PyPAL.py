@@ -26,9 +26,6 @@ LONG_VERSION = 'v%s' % Assets.version('PyPAL')
 
 class PyPAL(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
-		#Config
-		self.config_ = PyPALConfig()
-
 		#Window
 		MainWindow.__init__(self)
 		self.set_icon('PyPAL')
@@ -36,6 +33,8 @@ class PyPAL(MainWindow):
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
 		ga.track(GAScreen('PyPAL'))
 		setup_trace('PyPAL', self)
+
+		self.config_ = PyPALConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 

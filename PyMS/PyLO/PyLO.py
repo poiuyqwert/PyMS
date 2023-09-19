@@ -44,8 +44,6 @@ class PyLO(MainWindow, FindDelegate):
 		MainWindow.__init__(self)
 		self.guifile = guifile
 
-		self.config_ = PyLOConfig()
-
 		#Window
 		self.set_icon('PyLO')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
@@ -53,6 +51,8 @@ class PyLO(MainWindow, FindDelegate):
 		ga.track(GAScreen('PyLO'))
 		self.minsize(435,470)
 		setup_trace('PyLO', self)
+
+		self.config_ = PyLOConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.lo: LO | None = None

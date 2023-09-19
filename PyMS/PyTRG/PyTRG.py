@@ -51,13 +51,14 @@ class PyTRG(MainWindow, MainDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
 		self.guifile = guifile
-		self.config_ = PyTRGConfig()
 
 		self.set_icon('PyTRG')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTRG', Assets.version('PyTRG'))
 		ga.track(GAScreen('PyTRG'))
 		setup_trace('PyTRG', self)
+
+		self.config_ = PyTRGConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.trg: TRG.TRG | None = None

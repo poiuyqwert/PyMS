@@ -4,8 +4,8 @@ from ..Utilities.UIKit import *
 from ..Utilities import Config
 
 class FramesDialog(PyMSDialog):
-	def __init__(self, parent: Misc, settings: Settings):
-		self.settings = settings
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry):
+		self.window_geometry_config = window_geometry_config
 		self.result = IntegerVar(1, [1,None])
 		PyMSDialog.__init__(self, parent, 'How many frames?', resizable=(True,False))
 
@@ -22,12 +22,12 @@ class FramesDialog(PyMSDialog):
 		return ok
 
 	def setup_complete(self) -> None:
-		self.settings.window.load_window_size('frames', self)
+		self.window_geometry_config.load(self)
 
 	def cancel(self, e: Event | None = None) -> None:
 		self.result.set(0)
 		PyMSDialog.cancel(self)
 
 	def dismiss(self) -> None:
-		self.settings.window.save_window_size('frames', self)
+		self.window_geometry_config.save(self)
 		PyMSDialog.dismiss(self)

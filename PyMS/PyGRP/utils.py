@@ -64,6 +64,7 @@ class BMPStyle(Enum):
 			case BMPStyle.single_bmp_vertical:
 				return True
 
+# TODO: Improve
 def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMPStyle, grp: str | GRP.GRP, bmp: str | None = None, frames: Sequence[int] | None = None, mute: bool = False) -> None:
 	if isinstance(grp, str):
 		inp = GRP.GRP(pal.palette, uncompressed)
@@ -114,11 +115,13 @@ def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMP
 		if not mute:
 			print((" - '%s' written succesfully" % name))
 
-def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str, grp: str | None = None, issize: tuple[int,int] | None = None, ret=False, mute=False, vertical=False, transindex=0) -> (GRP.GRP | None):
+# TODO: Improve
+def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str | list[str], grp: str | None = None, issize: tuple[int,int] | None = None, ret=False, mute=False, vertical=False, transindex=0) -> (GRP.GRP | None):
 	out = GRP.GRP(pal.palette, uncompressed, transindex)
 	inp = BMP.BMP()
 	try:
 		if frames:
+			assert isinstance(bmp, str)
 			fullfile = os.path.join(path,bmp)
 			if not mute:
 				print(("Reading BMP '%s'..." % fullfile))

@@ -26,8 +26,6 @@ LONG_VERSION = 'v%s' % Assets.version('PyPCX')
 
 class PyPCX(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.config_ = PyPCXConfig()
-
 		#Window
 		MainWindow.__init__(self)
 		self.set_icon('PyPCX')
@@ -35,6 +33,8 @@ class PyPCX(MainWindow):
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
+		
+		self.config_ = PyPCXConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.pcx: PCX | None = None

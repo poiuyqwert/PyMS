@@ -50,7 +50,7 @@ class PyMPQConfig(Config.Config):
 
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
-				self.listfiles = Config.SelectFiles(title='Add Listfiles', filetypes=[FileType.txt()])
+				self.listfiles = Config.SelectFile(name='Listfile', filetypes=[FileType.txt()])
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -74,7 +74,7 @@ class PyMPQConfig(Config.Config):
 	class LastPath(Config.Group):
 		class Import(Config.Group):
 			def __init__(self) -> None:
-				self.files = Config.SelectFiles(title='Add files...', filetypes=[FileType.all_files()])
+				self.files = Config.SelectFile(name='files', filetypes=[FileType.all_files()])
 				self.folder = Config.SelectDirectory(title='Add files from folder...')
 				super().__init__()
 

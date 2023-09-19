@@ -47,7 +47,6 @@ class ClickModifier(Enum):
 class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
-		self.config_ = PySPKConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -56,6 +55,8 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		ga.set_application('PySPK', Assets.version('PySPK'))
 		ga.track(GAScreen('PySPK'))
 		setup_trace('PySPK', self)
+
+		self.config_ = PySPKConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.minsize(870, 547)
