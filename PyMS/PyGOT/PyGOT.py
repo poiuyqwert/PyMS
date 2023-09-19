@@ -1,4 +1,7 @@
 
+from .Config import PyGOTConfig
+from .SettingsDialog import SettingsDialog
+
 from ..FileFormats import GOT
 from ..FileFormats.TRG import TRG
 
@@ -14,15 +17,12 @@ from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.CheckSaved import CheckSaved
 
 LONG_VERSION = 'v%s' % Assets.version('PyGOT')
 
 class PyGOT(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyGOT', '1')
-
 		#Window
 		MainWindow.__init__(self)
 		self.set_icon('PyGOT')
@@ -30,7 +30,9 @@ class PyGOT(MainWindow):
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
 		ga.track(GAScreen('PyGOT'))
 		setup_trace('PyGOT', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+
+		self.config_ = PyGOTConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.got: GOT.GOT | None = None
@@ -200,7 +202,7 @@ class PyGOT(MainWindow):
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -371,7 +373,7 @@ class PyGOT(MainWindow):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.got.select_open_file(self, title='Open GOT', filetypes=[FileType.got()])
+			file = self.config_.last_path.got.select_open(self)
 			if not file:
 				return
 		got = GOT.GOT()
@@ -391,7 +393,7 @@ class PyGOT(MainWindow):
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_open(self)
 		if not file:
 			return
 		got = GOT.GOT()
@@ -415,7 +417,7 @@ class PyGOT(MainWindow):
 		if not self.got:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.got.select_save_file(self, title='Save GOT As', filetypes=[FileType.got()])
+			file_path = self.config_.last_path.got.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -435,7 +437,7 @@ class PyGOT(MainWindow):
 	def export(self) -> None:
 		if not self.got:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		try:
@@ -456,7 +458,7 @@ class PyGOT(MainWindow):
 		self.action_states()
 
 	def trg(self, format: TRG.Format) -> None:
-		file = self.settings.lastpath.trg.select_open_file(self, title='Open TRG', filetypes=[FileType.trg()])
+		file = self.config_.last_path.trg.select_open(self)
 		if not file:
 			return
 		trg = TRG.TRG()
@@ -465,7 +467,7 @@ class PyGOT(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		file = self.settings.lastpath.trg.select_save_file(self, title='Save TRG', filetypes=[FileType.trg()])
+		file = self.config_.last_path.trg.select_save(self)
 		if not file:
 			return
 		try:
@@ -480,10 +482,10 @@ class PyGOT(MainWindow):
 			ErrorDialog(self, e)
 
 	def sets(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings)
+		SettingsDialog(self, self.config_)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyGOT.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyGOT.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyGOT', LONG_VERSION)
@@ -491,6 +493,6 @@ class PyGOT(MainWindow):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+		self.config_.windows.main.save(self)
+		self.config_.save()
 		self.destroy()

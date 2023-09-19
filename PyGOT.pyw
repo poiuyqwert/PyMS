@@ -51,19 +51,19 @@ def main() -> None:
 					print("Interpreting file '%s'..." % args[0])
 					got.interpret(args[0])
 					print(" - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0]))
-					got.compile(args[1])
+					got.save_file(args[1])
 					print(" - '%s' written succesfully" % args[1])
 					if opt.trig:
 						print("Reading TRG '%s'..." % args[0])
-						trg = TRG()
-						trg.load_file(opt.trig)
+						trg = TRG.TRG()
+						trg.load(opt.trig)
 						print(" - '%s' read successfully" % args[0])
 						path = os.path.dirname(opt.trig)
 						if not path:
 							path = os.path.abspath('')
 						file = '%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[1]).split(os.extsep)[:-1])), os.extsep, 'trg')
 						print("Compiling file '%s' to GOT compatable TRG..." % file)
-						trg.compile(file, True)
+						trg.save(file, TRG.Format.got)
 						print(" - '%s' written succesfully" % file)
 			except PyMSError as e:
 				print(repr(e))
