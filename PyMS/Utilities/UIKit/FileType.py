@@ -217,6 +217,10 @@ class FileType(tuple[str, str]):
 	def extensions(self) -> str:
 		return self[1]
 
+	@property
+	def extensions_tuple(self) -> tuple[str, ...]:
+		return tuple(self.extensions.split(FileType.SEPARATOR))
+
 	# Both `name` and `extensions` must be equal, unless `extensions == FileType.WILDCARD` then the names don't need to match
 	def __eq__(self, other):
 		if not isinstance(other, FileType):

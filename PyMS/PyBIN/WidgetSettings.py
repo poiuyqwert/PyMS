@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from .Config import PyBINConfig
 from .Delegates import MainDelegate
 from .SMKSettings import SMKSettings
 
@@ -339,14 +340,14 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 			calc.set(orig.get() + offset.get() * direction + fix)
 
 	def load_settings(self) -> None:
-		settings = self.delegate.get_settings()
-		self.show_advanced.set(settings.edit.widget.get('advanced',False))
-		settings.windows.edit.load_window_size('widget', self)
+		config = self.delegate.get_config()
+		self.show_advanced.set(config.edit.widget.advanced.value)
+		config.windows.edit.widget.load_size(self)
 
 	def save_settings(self) -> None:
-		settings = self.delegate.get_settings()
-		settings.edit.widget.advanced = not not self.show_advanced.get()
-		settings.windows.edit.save_window_size('widget', self)
+		config = self.delegate.get_config()
+		config.edit.widget.advanced.value = self.show_advanced.get()
+		config.windows.edit.widget.save_size(self)
 
 	def load_property_smk(self) -> None:
 		smks = ['None']
@@ -558,8 +559,8 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 	def get_bin(self) -> (DialogBIN.DialogBIN | None):
 		return self.delegate.get_bin()
 
-	def get_settings(self) -> Settings:
-		return self.delegate.get_settings()
+	def get_config(self) -> PyBINConfig:
+		return self.delegate.get_config()
 
 	def get_mpqhandler(self) -> MPQHandler:
 		return self.delegate.get_mpqhandler()

@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from .Config import PyBINConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats import DialogBIN
@@ -94,10 +95,10 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.load_properties()
 
 	def load_settings(self) -> None:
-		self.delegate.get_settings().windows.edit.load_window_size('smk', self)
+		self.delegate.get_config().windows.edit.smk.main.load_size(self)
 
 	def save_settings(self) -> None:
-		self.delegate.get_settings().windows.edit.save_window_size('smk', self)
+		self.delegate.get_config().windows.edit.smk.main.save_size(self)
 
 	def load_property_smk(self) -> None:
 		smks = ['None']
@@ -172,10 +173,10 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.save_properties()
 		self.refresh_smks()
 		self.delegate.refresh_preview()
-		# self.widget.parent.reload_canvas()
 
 	def find_smk(self) -> None:
-		m = MPQSelect(self, self.delegate.get_mpqhandler(), 'SMK', '*.smk', self.delegate.get_settings(), 'Select')
+		config = self.delegate.get_config()
+		m = MPQSelect(self, self.delegate.get_mpqhandler(), 'SMK', FileType.smk(), config.edit.smk.mpq_select_history, config.windows.edit.smk.mpq_select)
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 
@@ -214,8 +215,8 @@ class SMKSettings(PyMSDialog, MainDelegate):
 	def get_bin(self) -> (DialogBIN.DialogBIN | None):
 		return self.delegate.get_bin()
 
-	def get_settings(self) -> Settings:
-		return self.delegate.get_settings()
+	def get_config(self) -> PyBINConfig:
+		return self.delegate.get_config()
 
 	def get_mpqhandler(self) -> MPQHandler:
 		return self.delegate.get_mpqhandler()

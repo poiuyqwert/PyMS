@@ -1,8 +1,9 @@
 
+from .Config import PyBINConfig
+
 from ..FileFormats.DialogBIN import DialogBIN
 from ..FileFormats.FNT import FNT
 from ..FileFormats.PCX import PCX
-from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UIKit import PILImage, ImageTk, Anchor, Canvas
 
@@ -12,7 +13,7 @@ class MainDelegate(Protocol):
 	def get_bin(self) -> (DialogBIN | None):
 		...
 
-	def get_settings(self) -> Settings:
+	def get_config(self) -> PyBINConfig:
 		...
 
 	def get_mpqhandler(self) -> MPQHandler:

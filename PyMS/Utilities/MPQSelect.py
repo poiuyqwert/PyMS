@@ -32,7 +32,7 @@ class MPQSelect(PyMSDialog):
 	def __init__(self, parent: Misc, mpqhandler: MPQHandler, name: str, filetype: FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
-		search = default_search or filetype.extensions[0]
+		search = default_search or filetype.extensions_tuple[0]
 		self.search.set(search)
 		self.search.trace('w', self.updatesearch)
 		self.history_config = history_config
