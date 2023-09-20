@@ -82,7 +82,7 @@ class FindReplaceDialog(PyMSDialog):
 		return self.findentry
 
 	def setup_complete(self) -> None:
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	def check(self, update: Update):
 		if update == Update.regex:
@@ -231,5 +231,5 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def dismiss(self) -> None:
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

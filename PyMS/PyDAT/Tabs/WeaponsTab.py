@@ -303,7 +303,7 @@ class WeaponsTab(DATTab):
 		if DATID.flingy in ids:
 			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
 
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			if DATID.upgrades in ids:
 				self.upgradeentry.range[1] = self.delegate.data_context.upgrades.entry_count() - 1
 			if DATID.flingy in ids:
@@ -381,7 +381,7 @@ class WeaponsTab(DATTab):
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
-			if self.delegate.data_context.settings.settings.get('customlabels'):
+			if self.delegate.data_context.config.settings.labels.custom.value:
 				self.delegate.data_context.dat_data(DATID.weapons).update_names()
 		if self.graphicsentry.get() != entry.graphics:
 			entry.graphics = self.graphicsentry.get()

@@ -203,7 +203,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunittwo_ddw.setentries(names)
 
 		limit = 65535
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			limit = self.delegate.data_context.units.entry_count()
 			if self.delegate.data_context.units.is_expanded():
 				limit -= 1

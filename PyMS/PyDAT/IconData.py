@@ -27,8 +27,8 @@ class IconData(object):
 	def load_grp(self): # type: () -> None
 		try:
 			grp = CacheGRP()
-			path = self.data_context.settings.settings.files.get('cmdicons', Assets.mpq_file_ref('unit', 'cmdbtns', 'cmdicons.grp'))
-			grp.load_file(self.data_context.mpqhandler.load_file(path))
+			path = self.data_context.config.settings.files.cmdicons.file_path
+			grp.load_file(self.data_context.mpq_handler.load_file(path))
 		except:
 			pass
 		else:
@@ -39,8 +39,8 @@ class IconData(object):
 	def load_ticon_pcx(self): # type: () -> None
 		try:
 			pcx = PCX()
-			path = self.data_context.settings.settings.files.get('ticon', Assets.mpq_file_ref('unit', 'cmdbtns', 'ticon.pcx'))
-			pcx.load_file(self.data_context.mpqhandler.load_file(path))
+			path = self.data_context.config.settings.files.ticon.file_path
+			pcx.load_file(self.data_context.mpq_handler.load_file(path))
 		except:
 			pass
 		else:

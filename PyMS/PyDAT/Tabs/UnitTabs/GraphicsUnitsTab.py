@@ -63,16 +63,16 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.horizontal = IntegerVar(0, [0,65535])
 		self.vertical = IntegerVar(0, [0,65535])
 		self.previewing = None
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.data_context.settings.preview.unit.get('show', False))
-		self.showplace = IntVar()
-		self.showplace.set(self.delegate.data_context.settings.preview.unit.get('show_placement', False))
-		self.showdims = IntVar()
-		self.showdims.set(self.delegate.data_context.settings.preview.unit.get('show_dimensions', False))
-		self.show_addon_placement = IntVar()
-		self.show_addon_placement.set(self.delegate.data_context.settings.preview.unit.get('show_addon_placement', False))
+		self.showpreview = BooleanVar()
+		self.showpreview.set(self.delegate.data_context.config.preview.unit.show.value)
+		self.showplace = BooleanVar()
+		self.showplace.set(self.delegate.data_context.config.preview.unit.show_placement.value)
+		self.showdims = BooleanVar()
+		self.showdims.set(self.delegate.data_context.config.preview.unit.show_dimensions.value)
+		self.show_addon_placement = BooleanVar()
+		self.show_addon_placement.set(self.delegate.data_context.config.preview.unit.show_addon_placement.value)
 		self.addon_parent_id = IntegerVar(0, [0,228])
-		self.addon_parent_id.set(self.delegate.data_context.settings.preview.unit.get('addon_parent_unit_id', 106))
+		self.addon_parent_id.set(self.delegate.data_context.config.preview.unit.addon_parent_unit_id.value)
 
 		bottom = Frame(scrollview.content_view)
 		left = Frame(bottom)
@@ -160,7 +160,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		if DATID.portdata in ids:
 			self.portraits_ddw.setentries(self.delegate.data_context.portraits.names + ('None',))
 
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			if DATID.flingy in ids:
 				self.graphicsentry.range[1] = self.delegate.data_context.flingy.entry_count() - 1
 			if DATID.images in ids:
@@ -201,7 +201,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		addon_preview = self.showpreview.get()
 		addon_preview = addon_preview and self.show_addon_placement_checkbox['state'] == NORMAL
 		addon_preview = addon_preview and self.show_addon_placement.get()
-		addon_preview = addon_preview and (self.horizontal.get() or self.vertical.get())
+		addon_preview = addon_preview and not not (self.horizontal.get() or self.vertical.get())
 		if addon_preview:
 			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
 			w = entry.staredit_placement_size.width
@@ -254,11 +254,11 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.drawpreview()
 
 	def save_data(self, entry): # type: (DATUnit) -> bool
-		self.delegate.data_context.settings.preview.unit.show = not not self.showpreview.get()
-		self.delegate.data_context.settings.preview.unit.show_placement = not not self.showplace.get()
-		self.delegate.data_context.settings.preview.unit.show_dimensions = not not self.showdims.get()
-		self.delegate.data_context.settings.preview.unit.show_addon_placement = not not self.show_addon_placement.get()
-		self.delegate.data_context.settings.preview.unit.addon_parent_id = self.addon_parent_id.get()
+		self.delegate.data_context.config.preview.unit.show.value = not not self.showpreview.get()
+		self.delegate.data_context.config.preview.unit.show_placement.value = not not self.showplace.get()
+		self.delegate.data_context.config.preview.unit.show_dimensions.value = not not self.showdims.get()
+		self.delegate.data_context.config.preview.unit.show_addon_placement.value = not not self.show_addon_placement.get()
+		self.delegate.data_context.config.preview.unit.addon_parent_unit_id.value = self.addon_parent_id.get()
 
 		edited = False
 		if self.graphicsentry.get() != entry.graphics:

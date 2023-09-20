@@ -1,4 +1,5 @@
 
+from .Config import PyDATConfig
 from .DATData import DATData, UnitsDATData, WeaponsDATData, FlingyDATData, SpritesDATData, ImagesDATData, UpgradesDATData, TechDATData, SoundsDATData, PortraitsDATData, CampaignDATData, OrdersDATData
 from .TBLData import TBLData
 from .IconData import IconData
@@ -12,7 +13,6 @@ from ..FileFormats.IScriptBIN import IScriptBIN
 from ..FileFormats.Images import RawPalette
 
 from ..Utilities import Assets
-from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
@@ -31,29 +31,25 @@ class TicksPerSecond:
 	slowest = 6
 
 class DataContext(object):
-	mpqhandler: MPQHandler
+	mpq_handler: MPQHandler
 	iscriptbin: IScriptBIN
 
 	def __init__(self): # type: () -> None
-		self.settings = Settings('PyDAT', '1')
-		self.settings.settings.set_defaults({
-			'customlabels': False,
-			'simple_labels': False
-		})
+		self.config = PyDATConfig()
 
 		self.update_cb: Callback[AnyID] = Callback()
 
-		self.stat_txt = TBLData(self, DataID.stat_txt, 'stat_txt', 'rez\\stat_txt.tbl')
+		self.stat_txt = TBLData(self, DataID.stat_txt, self.config.settings.files.tbls.stat_txt)
 		self.stat_txt.update_cb += self.update_cb
-		self.unitnamestbl = TBLData(self, DataID.unitnamestbl, 'unitnamestbl', 'rez\\unitnames.tbl') # Expanded unit names
+		self.unitnamestbl = TBLData(self, DataID.unitnamestbl, self.config.settings.files.tbls.unitnames) # Expanded unit names
 		self.unitnamestbl.update_cb += self.update_cb
-		self.imagestbl = TBLData(self, DataID.imagestbl, 'imagestbl', 'arr\\images.tbl')
+		self.imagestbl = TBLData(self, DataID.imagestbl, self.config.settings.files.tbls.images)
 		self.imagestbl.update_cb += self.update_cb
-		self.sfxdatatbl = TBLData(self, DataID.sfxdatatbl, 'sfxdatatbl', 'arr\\sfxdata.tbl')
+		self.sfxdatatbl = TBLData(self, DataID.sfxdatatbl, self.config.settings.files.tbls.sfxdata)
 		self.sfxdatatbl.update_cb += self.update_cb
-		self.portdatatbl = TBLData(self, DataID.portdatatbl, 'portdatatbl', 'arr\\portdata.tbl')
+		self.portdatatbl = TBLData(self, DataID.portdatatbl, self.config.settings.files.tbls.portdata)
 		self.portdatatbl.update_cb += self.update_cb
-		self.mapdatatbl = TBLData(self, DataID.mapdatatbl, 'mapdatatbl', 'arr\\mapdata.tbl')
+		self.mapdatatbl = TBLData(self, DataID.mapdatatbl, self.config.settings.files.tbls.mapdata)
 		self.mapdatatbl.update_cb += self.update_cb
 
 		self.cmdicons = IconData(self)
@@ -101,17 +97,23 @@ class DataContext(object):
 	def load_palettes(self): # type: () -> None
 		self.palettes = {}
 		pal = Palette()
-		for p in ['Units','bfire','gfire','ofire','Terrain','Icons']:
+		palette_configs = [
+			('Units', self.config.settings.files.palettes.units),
+			('bfire', self.config.settings.files.palettes.bfire),
+			('gfire', self.config.settings.files.palettes.gfire),
+			('ofire', self.config.settings.files.palettes.ofire),
+			('Terrain', self.config.settings.files.palettes.terrain),
+			('Icons', self.config.settings.files.palettes.icons),
+		]
+		for name,palette_config in palette_configs:
 			try:
-				pal.load_file(self.settings.settings.files.get(p, Assets.palette_file_path('%s%spal' % (p,os.extsep))))
+				pal.load_file(palette_config.file_path)
 			except:
 				continue
-			self.palettes[p] = pal.palette
+			self.palettes[name] = pal.palette
 
 	def load_mpqs(self): # type: () -> None
-		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if not len(self.mpqhandler.mpq_paths()) and self.mpqhandler.add_defaults():
-			self.settings.settings.mpqs = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config.mpqs)
 
 	# @overload
 	# def dat_data(self, datid: Literal[DATID.units]) -> UnitsDATData: ...
@@ -179,7 +181,7 @@ class DataContext(object):
 				return self.iscriptbin
 
 	def load_additional_files(self): # type: () -> None
-		self.mpqhandler.open_mpqs()
+		self.mpq_handler.open_mpqs()
 		try:
 			self.unitnamestbl.load_strings()
 		except:
@@ -191,12 +193,12 @@ class DataContext(object):
 			self.portdatatbl.load_strings()
 			self.mapdatatbl.load_strings()
 			iscriptbin = IScriptBIN()
-			iscriptbin.load_file(self.mpqhandler.load_file(self.settings.settings.files.get('iscriptbin', 'MPQ:scripts\\iscript.bin')))
+			iscriptbin.load_file(self.mpq_handler.load_file(self.config.settings.files.iscript_bin.file_path))
 			self.update_cb(DataID.iscriptbin)
 		except:
 			raise
 		finally:
-			self.mpqhandler.close_mpqs()
+			self.mpq_handler.close_mpqs()
 		self.load_palettes()
 		self.cmdicons.load_grp()
 		self.cmdicons.load_ticon_pcx()
@@ -215,7 +217,6 @@ class DataContext(object):
 
 	def load_dat_files(self): # type: () -> None
 		defaultmpqs = MPQHandler()
-		defaultmpqs.add_defaults()
 		defaultmpqs.open_mpqs()
 		self.units.load_defaults(defaultmpqs)
 		self.weapons.load_defaults(defaultmpqs)
@@ -263,7 +264,7 @@ class DataContext(object):
 		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
 			try:
 				grp = CacheGRP()
-				grp.load_file(self.mpqhandler.load_file('MPQ:' + path),restrict=1)
+				grp.load_file(self.mpq_handler.load_file('MPQ:' + path),restrict=1)
 			except PyMSError:
 				return None
 			if not path in self.grp_cache:

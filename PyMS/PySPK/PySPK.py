@@ -738,12 +738,12 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		])
 
 	def load_settings(self) -> None:
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 		self.autovis.set(self.config_.auto.visibility.value)
 		self.autolock.set(self.config_.auto.lock.value)
 
 	def save_settings(self) -> None:
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.auto.visibility.value = self.autovis.get()
 		self.config_.auto.lock.value = self.autolock.get()
 		self.config_.save()

@@ -141,7 +141,7 @@ class PyTRG(MainWindow, MainDelegate):
 		statusbar.add_label(self.codestatus)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
 
@@ -401,7 +401,7 @@ class PyTRG(MainWindow, MainDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.highlights.data = dict(self.text.highlights)
 		self.config_.save()
 		self.destroy()

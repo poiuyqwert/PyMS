@@ -219,15 +219,15 @@ class PyMPQ(MainWindow):
 		self.locale_status.set('Locale: %s [%d]' % (locale_name, self.config_.locale.value))
 
 	def load_settings(self): # type: () -> None
-		self.config_.windows.main.load(self)
-		self.config_.list_sizes.load(self.listbox.panes)
+		self.config_.windows.main.load_size(self)
+		self.config_.list_sizes.load_size(self.listbox.panes)
 		self.compvar.set(self.config_.compression.value)
 		self.encvar.set(self.config_.encrypt.value)
 		self.locale_menu_choice.set(find_locale_index(self.config_.locale.value))
 
 	def save_settings(self): # type: () -> None
-		self.config_.windows.main.save(self)
-		self.config_.list_sizes.save(self.listbox.panes)
+		self.config_.windows.main.save_size(self)
+		self.config_.list_sizes.save_size(self.listbox.panes)
 		self.config_.compression.value = self.compvar.get()
 		self.config_.encrypt.value = self.encvar.get()
 		self.config_.save()

@@ -14,24 +14,34 @@ class UpdateDialog(PyMSDialog):
 	def check_update(window, program): # type: (WindowExtensions, str) -> None
 		def do_check_update(window, program): # type: (WindowExtensions, str) -> None
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
-			remindme = PYMS_CONFIG.remind_me.value
-			if remindme is None or remindme != Assets.version('PyMS'):
-				try:
-					import ssl
-					versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
-					latest_PyMS_version = SemVer(versions['PyMS'])
-					latest_program_version = SemVer(versions[program])
-					PyMS_version = SemVer(Assets.version('PyMS'))
-					program_version = SemVer(Assets.version(program))
-				except:
+			try:
+				import ssl
+				versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
+				latest_PyMS_version = SemVer(versions['PyMS'])
+				latest_program_version = SemVer(versions[program])
+				PyMS_version = SemVer(Assets.version('PyMS'))
+				program_version = SemVer(Assets.version(program))
+			except:
+				return
+			if PyMS_version >= latest_PyMS_version and program_version >= latest_program_version:
+				return
+			show = 2
+			if PyMS_dont_remind_me_raw := PYMS_CONFIG.dont_remind_me.data.get('PyMS'):
+				PyMS_dont_remind_me = SemVer(PyMS_dont_remind_me_raw)
+				if PyMS_dont_remind_me >= latest_PyMS_version:
+					show -= 1
+			if program_dont_remind_me_raw := PYMS_CONFIG.dont_remind_me.data.get(program):
+				program_dont_remind_me = SemVer(program_dont_remind_me_raw)
+				if program_dont_remind_me >= latest_program_version:
+					show -= 1
+			if not show:
+				return
+			def callback():
+				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
+					window.after(1000, callback)
 					return
-				if PyMS_version < latest_PyMS_version or program_version < latest_program_version:
-					def callback():
-						if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
-							window.after(1000, callback)
-							return
-						UpdateDialog(window,program,versions)
-					window.after(1, callback)
+				UpdateDialog(window,program,versions)
+			window.after(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
 	def __init__(self, parent, program, versions): # type: (Misc, str, dict[str, str]) -> None
@@ -46,10 +56,8 @@ class UpdateDialog(PyMSDialog):
 			text = "Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (Assets.version('PyMS'),self.versions['PyMS'])
 		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
 		f = Frame(self)
-		self.remind = IntVar()
-		remindme = PYMS_CONFIG.remind_me.value
-		self.remind.set(remindme is None or remindme != Assets.version('PyMS'))
-		Checkbutton(f, text='Remind me later', variable=self.remind).pack(side=LEFT, padx=5)
+		self.dont_remind_me = BooleanVar()
+		Checkbutton(f, text="Don't remind me for this version", variable=self.dont_remind_me).pack(side=LEFT, padx=5)
 		Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=RIGHT, padx=5)
 		f.pack(fill=X, expand=1)
 		ok = Button(self, text='Ok', width=10, command=self.ok)
@@ -57,8 +65,10 @@ class UpdateDialog(PyMSDialog):
 		return ok
 
 	def ok(self, _=None): # type: (Event | None) -> None
-		PYMS_CONFIG.remind_me.value = None if self.remind.get() else Assets.version('PyMS')
-		PYMS_CONFIG.save()
+		if self.dont_remind_me.get():
+			PYMS_CONFIG.dont_remind_me.data['PyMS'] = self.versions['PyMS']
+			PYMS_CONFIG.dont_remind_me.data[self.program] = self.versions[self.program]
+			PYMS_CONFIG.save()
 		PyMSDialog.ok(self)
 
 class SemVer(object):
@@ -85,3 +95,38 @@ class SemVer(object):
 		elif self.patch > other.patch:
 			return False
 		return False
+
+	def __gt__(self, other): # type: (Any) -> bool
+		if not isinstance(other, SemVer):
+			return False
+		if self.major > other.major:
+			return True
+		elif self.major < other.major:
+			return False
+		if self.minor > other.minor:
+			return True
+		elif self.minor < other.minor:
+			return False
+		if self.patch > other.patch:
+			return True
+		elif self.patch < other.patch:
+			return False
+		return False
+
+	def __eq__(self, other): # type: (Any) -> bool
+		if not isinstance(other, SemVer):
+			return False
+		if self.major != other.major:
+			return False
+		if self.minor != other.minor:
+			return False
+		if self.patch != other.patch:
+			return False
+		return True
+
+	def __ge__(self, other): # type: (Any) -> bool
+		return self.__gt__(other) or self.__eq__(other)
+
+	def __repr__(self) -> str:
+		meta = f'-{self.meta}' if self.meta else ''
+		return f'<SemVer {self.major}.{self.minor}.{self.patch}{meta}>'

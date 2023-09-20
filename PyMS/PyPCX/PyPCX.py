@@ -89,7 +89,7 @@ class PyPCX(MainWindow):
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -278,6 +278,6 @@ class PyPCX(MainWindow):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.save()
 		self.destroy()

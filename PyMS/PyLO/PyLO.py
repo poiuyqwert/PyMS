@@ -176,7 +176,7 @@ class PyLO(MainWindow, FindDelegate):
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 	def initialize(self) -> None:
 		self.update_grp_field_states()
@@ -580,7 +580,7 @@ class PyLO(MainWindow, FindDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.highlights.data = self.text.highlights
 		self.base_grp_field.save()
 		self.overlay_grp_field.save()

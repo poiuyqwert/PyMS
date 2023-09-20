@@ -128,7 +128,7 @@ class SoundsTab(DATTab):
 			tbl_string = self.delegate.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
 			if tbl_string.endswith('<0>'):
 				tbl_string = tbl_string[:-3]
-			f = self.delegate.data_context.mpqhandler.get_file('MPQ:sound\\' + tbl_string)
+			f = self.delegate.data_context.mpq_handler.get_file('MPQ:sound\\' + tbl_string)
 			if f:
 				play_sound(f.read())
 
@@ -155,7 +155,7 @@ class SoundsTab(DATTab):
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True
-			if self.delegate.data_context.settings.settings.get('customlabels'):
+			if self.delegate.data_context.config.settings.labels.custom:
 				self.delegate.data_context.dat_data(DATID.sfxdata).update_names()
 		if self.priority.get() != entry.priority:
 			entry.priority = self.priority.get()

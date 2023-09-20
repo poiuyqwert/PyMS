@@ -24,9 +24,9 @@ class SettingsDialog(BaseErrorableSettingsDialog[PyFNTConfig]):
 		return widget
 
 	def setup_complete(self) -> None:
-		self.config_.windows.settings.main.load(self)
+		self.config_.windows.settings.main.load_size(self)
 		super().setup_complete()
 
 	def dismiss(self) -> None:
-		self.config_.windows.settings.main.save(self)
+		self.config_.windows.settings.main.save_size(self)
 		super().dismiss()

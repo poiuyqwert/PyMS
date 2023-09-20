@@ -362,7 +362,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 	def initialize(self) -> None:
 		e = self.open_files()
@@ -590,6 +590,6 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.save()
 		self.destroy()

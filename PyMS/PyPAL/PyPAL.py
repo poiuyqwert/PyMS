@@ -118,7 +118,7 @@ class PyPAL(MainWindow):
 		if guifile:
 			self.open(file=guifile)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 		UpdateDialog.check_update(self, 'PyPAL')
 
@@ -332,6 +332,6 @@ class PyPAL(MainWindow):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.save()
 		self.destroy()

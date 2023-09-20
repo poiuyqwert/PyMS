@@ -84,7 +84,7 @@ class FindReplaceDialog(PyMSDialog):
 		return self.findentry
 
 	def setup_complete(self) -> None:
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	def check(self, i: int) -> None:
 		if i == 1:
@@ -223,5 +223,5 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def destroy(self) -> None:
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.withdraw(self)

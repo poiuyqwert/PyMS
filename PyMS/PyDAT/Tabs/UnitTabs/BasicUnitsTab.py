@@ -282,7 +282,7 @@ class BasicUnitsTab(DATUnitsTab):
 			self.ground_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
 			self.air_weapon_ddw.setentries(self.delegate.data_context.weapons.names + ('None',))
 
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			if DATID.upgrades in ids:
 				self.armor_upgrade_entry.range[1] = self.delegate.data_context.upgrades.entry_count() - 1
 			if DATID.weapons in ids:

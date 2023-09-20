@@ -242,7 +242,7 @@ class UpgradesTab(DATTab):
 		if self.labelentry.get() != entry.label:
 			entry.label = self.labelentry.get()
 			self.edited = True
-			if self.delegate.data_context.settings.settings.get('customlabels'):
+			if self.delegate.data_context.config.settings.labels.custom:
 				self.delegate.data_context.dat_data(DATID.upgrades).update_names()
 		if self.race.get() != entry.staredit_race:
 			entry.staredit_race = self.race.get()

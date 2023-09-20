@@ -226,7 +226,7 @@ BMP's must be imported with the same style they were exported as.""")
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 		if guifile:
 			self.open(file=guifile)
@@ -712,7 +712,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.hex.value = self.hex.get()
 		self.config_.preview.bg_color.value = self.canvas['background']
 		self.config_.preview.speed.value = int(self.prevspeed.get())

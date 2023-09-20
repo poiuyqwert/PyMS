@@ -49,5 +49,5 @@ class MapsTab(DATTab):
 		if self.missionentry.get() != entry.map_file:
 			entry.map_file = self.missionentry.get()
 			self.edited = True
-			if self.delegate.data_context.settings.settings.get('customlabels'):
+			if self.delegate.data_context.config.settings.labels.custom:
 				self.delegate.data_context.dat_data(DATID.mapdata).update_names()

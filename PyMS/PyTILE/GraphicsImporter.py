@@ -124,7 +124,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		return self.import_button
 
 	def setup_complete(self): # type: () -> None
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	@property
 	def window_geometry_config(self) -> Config.WindowGeometry:
@@ -289,5 +289,5 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		config.replace_selections.value = not not self.replace_selections.get()
 		config.auto_close.value = not not self.auto_close.get()
 		self.config_.windows.import_.graphics
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

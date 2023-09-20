@@ -12,17 +12,17 @@ class PyMSConfig(Config.Config):
 
 	class Analytics(Config.Group):
 		def __init__(self):
-			super().__init__()
 			self.allow = Config.Boolean(default=True)
 			self.tid = Config.String(default='UA-42320973-2')
 			self.cid = Config.String()
+			super().__init__()
 
 	def __init__(self):
-		super().__init__()
 		self.analytics = PyMSConfig.Analytics()
 		self.scdir = Config.SelectDirectory(title='Choose StarCraft Directory')
-		self.remind_me = Config.String()
+		self.dont_remind_me = Config.Dictionary(value_type=str)
 		self.theme = Config.String()
+		super().__init__()
 
 PYMS_CONFIG = PyMSConfig()
 

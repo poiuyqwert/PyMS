@@ -182,7 +182,7 @@ class OrdersTab(DATTab):
 		if DATID.orders in ids:
 			self.obscured_ddw.setentries(self.delegate.data_context.orders.names + ('None',))
 
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			if DATID.weapons in ids:
 				self.targetingentry.range[1] = self.delegate.data_context.weapons.entry_count()
 			if DATID.techdata in ids:
@@ -233,7 +233,7 @@ class OrdersTab(DATTab):
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True
-			if self.delegate.data_context.settings.settings.get('customlabels'):
+			if self.delegate.data_context.config.settings.labels.custom.value:
 				self.delegate.data_context.dat_data(DATID.orders).update_names()
 		if self.weapontargeting.get() != entry.use_weapon_targeting:
 			entry.use_weapon_targeting = self.weapontargeting.get()

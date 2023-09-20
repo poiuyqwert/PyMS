@@ -4,6 +4,7 @@ from __future__ import annotations
 from ..FileFormats.TBL import TBL, decompile_string, compile_string
 
 from ..Utilities.Callback import Callback
+from ..Utilities import Config
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -11,18 +12,16 @@ if TYPE_CHECKING:
 	from .DataID import DataID
 
 class TBLData(object):
-	def __init__(self, data_context, data_id, setting, path): # type: (DataContext, DataID, str, str) -> None
+	def __init__(self, data_context, data_id, tbl_config): # type: (DataContext, DataID, Config.File) -> None
 		self.data_context = data_context
 		self.data_id = data_id
-		self.setting = setting
-		self.path = path
+		self.tbl_config = tbl_config
 		self.strings = () # type: tuple[str, ...]
 
 		self.update_cb: Callback[DataID] = Callback()
 
 	def load_strings(self): # type: () -> None
-		path = self.data_context.settings.settings.files.get(self.setting, 'MPQ:' + self.path)
-		file = self.data_context.mpqhandler.get_file(path)
+		file = self.data_context.mpq_handler.get_file(self.tbl_config.file_path)
 		if file:
 			tbl = TBL()
 			tbl.load_file(file)

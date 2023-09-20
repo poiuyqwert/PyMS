@@ -576,7 +576,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.status.set('Load a Tileset.')
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.config_.windows.main.load(self)
+		self.config_.windows.main.load_size(self)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
@@ -917,7 +917,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def exit(self, e=None): # type: (Any) -> None
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.windows.main.save(self)
+		self.config_.windows.main.save_size(self)
 		self.config_.mega_edit.apply_all_exclude_nulls.value = not not self.apply_all_exclude_nulls.get()
 		self.options_copy_mega.save()
 		self.options_copy_tilegroup.save()

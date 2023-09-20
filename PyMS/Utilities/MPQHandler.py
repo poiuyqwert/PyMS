@@ -12,7 +12,7 @@ import os, io
 from typing import BinaryIO
 
 class MPQHandler(object):
-	def __init__(self, mpqs_config: Config.List[str], listfiles: list[str] | None = None) -> None:
+	def __init__(self, mpqs_config: Config.List[str] | None = None, listfiles: list[str] | None = None) -> None:
 		self.mpqs_config = mpqs_config
 		self.mpqs: list[MPQ] = []
 		if listfiles is None:
@@ -25,7 +25,7 @@ class MPQHandler(object):
 	def refresh(self) -> None:
 		if self.open:
 			self.close_mpqs()
-		if not self.mpqs_config.data:
+		if self.mpqs_config is None or not self.mpqs_config.data:
 			self.add_defaults()
 		else:
 			self.mpqs = list(MPQ.of(mpq_path) for mpq_path in self.mpqs_config.data)
@@ -49,7 +49,8 @@ class MPQHandler(object):
 				mpq.open()
 				mpq.close()
 				self.mpqs.append(mpq)
-				self.mpqs_config.data.append(mpq_path)
+				if self.mpqs_config is not None:
+					self.mpqs_config.data.append(mpq_path)
 			except:
 				pass
 

@@ -105,8 +105,8 @@ class StarEditUnitsTab(DATUnitsTab):
 
 		self.width = IntegerVar(0, [0,65535])
 		self.height = IntegerVar(0, [0,65535])
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.data_context.settings.preview.staredit.get('show', False))
+		self.showpreview = BooleanVar()
+		self.showpreview.set(self.delegate.data_context.config.preview.staredit.show.value)
 
 		bottom = Frame(scrollview.content_view)
 		r = Frame(bottom)
@@ -261,6 +261,6 @@ class StarEditUnitsTab(DATUnitsTab):
 			entry.staredit_placement_size.height = self.height.get()
 			edited = True
 		
-		self.delegate.data_context.settings.preview.staredit.show = not not self.showpreview.get()
+		self.delegate.data_context.config.preview.staredit.show.value = self.showpreview.get()
 		return edited
 	

@@ -4,7 +4,7 @@ from . import Assets
 from .setutils import PYMS_CONFIG
 
 ga.set_tracking_id(PYMS_CONFIG.analytics.tid.value)
-PYMS_CONFIG.analytics.cid = ga.set_client_id(PYMS_CONFIG.analytics.cid.value)
+cid = ga.set_client_id(PYMS_CONFIG.analytics.cid.value)
 ga.Custom.register(1, 'PYMS_VERSION')
 ga.Custom.register(2, 'PYTHON_VERSION')
 ga.Custom.register(3, 'OS_NAME')
@@ -17,4 +17,7 @@ ga[ga.Custom.OS_VERSION] = GATarget.os_version()
 ga[ga.Custom.OS_BITS] = GATarget.os_bits()
 
 ga.enabled = PYMS_CONFIG.analytics.allow.value
-PYMS_CONFIG.save()
+
+if cid != PYMS_CONFIG.analytics.cid.value:
+	PYMS_CONFIG.analytics.cid.value = cid
+	PYMS_CONFIG.save()

@@ -1,6 +1,8 @@
 
-from .PreviewSettingsTab import PreviewSettingsTab
-from ..Config import PyTBLConfig
+from .TBLSettingsTab import TBLSettingsTab
+from .OtherSettingsTab import OtherSettingsTab
+from .PaletteSettingsTab import PaletteSettingsTab
+from ..Config import PyDATConfig
 
 from ...Utilities.SettingsUI.BaseSettingsDialog import BaseErrorableSettingsDialog, ErrorableSettingsDialogDelegate
 from ...Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
@@ -9,8 +11,8 @@ from ...Utilities.UIKit import *
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.MPQHandler import MPQHandler
 
-class SettingsDialog(BaseErrorableSettingsDialog[PyTBLConfig]):
-	def __init__(self, parent: Misc, config: PyTBLConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
+class SettingsDialog(BaseErrorableSettingsDialog[PyDATConfig]):
+	def __init__(self, parent: Misc, config: PyDATConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
 		self.mpq_handler = mpq_handler
 		super().__init__(parent, config, delegate, err)
 
@@ -18,7 +20,9 @@ class SettingsDialog(BaseErrorableSettingsDialog[PyTBLConfig]):
 		widget = super().widgetize()
 
 		self.add_tab('MPQ Settings', MPQSettingsTab(self.notebook, self.edited_state.sub_state(), self.mpq_handler, self.config_.settings.mpqs, self.config_.settings.last_path.mpqs))
-		self.add_tab('Preview Settings', PreviewSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
+		self.add_tab('TBL Settings', TBLSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
+		self.add_tab('Other Settings', OtherSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
+		self.add_tab('Palette Settings', PaletteSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
 		self.add_tab('Theme', ThemeSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_.theme))
 
 		return widget

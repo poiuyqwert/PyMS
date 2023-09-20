@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 	from .DATData import DATData
 
 class EntryCountDialog(PyMSDialog):
-	def __init__(self, parent, callback, dat_data, settings): # type: (Widget, Callable[[int], None], DATData, Settings) -> None
+	def __init__(self, parent, callback, dat_data, window_geometry_config): # type: (Widget, Callable[[int], None], DATData, Config.WindowGeometry) -> None
 		assert dat_data.dat is not None
 		self.callback = callback
 		self.dat_data = dat_data
 		self.resulting_count_var = None # type: StringVar | None
 		self.result = IntegerVar(dat_data.entry_count(), [1,dat_data.dat.FORMAT.expanded_max_entries])
-		self.settings = settings
+		self.window_geometry_config = window_geometry_config
 		PyMSDialog.__init__(self, parent, 'How many entries?', resizable=(True,False))
 
 	def widgetize(self): # type: () -> (Misc | None)
@@ -56,7 +56,7 @@ class EntryCountDialog(PyMSDialog):
 		self.resulting_count_var.set('Resulting entry count: %d' % resulting_count)
 
 	def setup_complete(self): # type: () -> None
-		self.settings.window.load_window_size('entry_count', self)
+		self.window_geometry_config.load_size(self)
 
 	def ok(self, _=None): # type: (Event | None) -> None
 		current_entry_count = self.dat_data.entry_count()
@@ -68,5 +68,5 @@ class EntryCountDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self): # type: () -> None
-		self.settings.window.save_window_size('entry_count', self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

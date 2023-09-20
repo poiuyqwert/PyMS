@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .DataID import DATID
+from .NameDisplaySetting import NamesDisplaySetting
 
 from ..FileFormats.DAT import *
 from ..FileFormats.DAT.AbstractDAT import AbstractDAT
@@ -11,36 +12,10 @@ from ..Utilities.Callback import Callback
 from ..Utilities import Assets
 
 import copy
-from enum import Enum
 
 from typing import TYPE_CHECKING, Generic, TypeVar, Type
 if TYPE_CHECKING:
 	from .DataContext import DataContext
-
-class NamesDisplaySetting(Enum):
-	basic = 'basic'
-	tbl = 'tbl'
-	combine = 'combine'
-
-	@property
-	def data_names_usage(self) -> DataNamesUsage:
-		match self:
-			case NamesDisplaySetting.basic:
-				return DataNamesUsage.use
-			case NamesDisplaySetting.tbl:
-				return DataNamesUsage.ignore
-			case NamesDisplaySetting.combine:
-				return DataNamesUsage.combine
-
-	@staticmethod
-	def from_data_names_usage(data_names_usage: DataNamesUsage) -> 'NamesDisplaySetting':
-		match data_names_usage:
-			case DataNamesUsage.use:
-				return NamesDisplaySetting.basic
-			case DataNamesUsage.ignore:
-				return NamesDisplaySetting.tbl
-			case DataNamesUsage.combine:
-				return NamesDisplaySetting.combine
 
 DAT = TypeVar('DAT', bound=AbstractDAT)
 
@@ -158,14 +133,13 @@ class UnitsDATData(DATData[UnitsDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.unit(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				stat_txt=self.data_context.stat_txt.strings,
 				unitnamestbl=self.data_context.unitnamestbl.strings,
-				data_names_usage=display_setting.data_names_usage,
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
+				data_names_usage=self.data_context.config.names.units.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.units.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -179,15 +153,14 @@ class WeaponsDATData(DATData[WeaponsDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.weapon(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				weaponsdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=display_setting.data_names_usage,
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
+				data_names_usage=self.data_context.config.names.weapons.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.weapons.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -201,7 +174,6 @@ class FlingyDATData(DATData[FlingyDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.flingy(entry_id,
 				data_names=Assets.data_cache(self.data_file),
@@ -209,7 +181,7 @@ class FlingyDATData(DATData[FlingyDAT]):
 				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl.strings,
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.flingy.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -222,14 +194,13 @@ class SpritesDATData(DATData[SpritesDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.sprite(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				spritesdat=self.dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
 				imagestbl=self.data_context.imagestbl.strings,
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.sprites.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -242,13 +213,12 @@ class ImagesDATData(DATData[ImagesDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.image(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				imagesdat=self.dat,
 				imagestbl=self.data_context.imagestbl.strings,
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.images.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
@@ -261,15 +231,14 @@ class UpgradesDATData(DATData[UpgradesDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.upgrade(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				upgradesdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=display_setting.data_names_usage,
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
+				data_names_usage=self.data_context.config.names.upgrades.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.upgrades.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -283,15 +252,14 @@ class TechDATData(DATData[TechDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.tech(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				techdatadat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=display_setting.data_names_usage,
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
+				data_names_usage=self.data_context.config.names.techdata.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.techdata.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -305,14 +273,13 @@ class SoundsDATData(DATData[SoundsDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.sound(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				sfxdatadat=self.dat,
 				sfxdatatbl=self.data_context.sfxdatatbl.strings,
 				none_name='No sound',
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.sfxdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -326,14 +293,13 @@ class PortraitsDATData(DATData[PortraitsDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.portrait(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				portdatadat=self.dat,
 				portdatatbl=self.data_context.portdatatbl.strings,
 				none_name='None',
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.portdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -347,13 +313,12 @@ class CampaignDATData(DATData[CampaignDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.map(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				mapdatadat=self.dat,
 				mapdatatbl=self.data_context.mapdatatbl.strings,
-				data_names_usage=display_setting.data_names_usage,
+				data_names_usage=self.data_context.config.names.mapdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
@@ -367,15 +332,14 @@ class OrdersDATData(DATData[OrdersDAT]):
 	def update_names(self): # type: () -> None
 		names = []
 		entry_count = self.entry_count()
-		display_setting = NamesDisplaySetting(self.data_context.settings.names[self.dat_id.value].get('display', NamesDisplaySetting.basic.value))
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.order(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				ordersdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=display_setting.data_names_usage,
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.value].get('simple', False),
+				data_names_usage=self.data_context.config.names.orders.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.orders.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))

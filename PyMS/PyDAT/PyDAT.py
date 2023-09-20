@@ -1,10 +1,11 @@
 
+from .Config import PyDATConfig
 from .Tabs import *
 from .Tabs.DATTab import DATTab
 from .DataContext import DataContext
 from .DATData import NamesDisplaySetting
 from .SaveMPQDialog import SaveMPQDialog
-from .DATSettingsDialog import DATSettingsDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 from .EntryNameOverrides import EntryNameOverrides
 from .DataID import DataID, DATID, AnyID
 from .Delegates import MainDelegate
@@ -22,6 +23,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 import os
 
@@ -29,8 +31,9 @@ from typing import cast, Callable
 
 LONG_VERSION = 'v%s' % Assets.version('PyDAT')
 
-class PyDAT(MainWindow, MainDelegate):
+class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile=None): # type: (str | None) -> None
+		self.guifile = guifile
 		MainWindow.__init__(self)
 		self.title('PyDAT %s' % LONG_VERSION)
 		self.set_icon('PyDAT')
@@ -40,7 +43,7 @@ class PyDAT(MainWindow, MainDelegate):
 		setup_trace('PyDAT', self)
 
 		self.data_context = DataContext()
-		Theme.load_theme(self.data_context.settings.get('theme'), self)
+		Theme.load_theme(self.data_context.config.theme.value, self)
 	
 		self.updates = [] # type: list[AnyID]
 		self.update_after_id = None
@@ -75,7 +78,7 @@ class PyDAT(MainWindow, MainDelegate):
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', Shift.Ctrl.n)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqtbl, 'Manage MPQ and TBL files', Ctrl.m)
+		toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and TBL files', Ctrl.m)
 		def open_files_callback(): # type: () -> Callable[[], None]
 			def open_files(): # type: () -> None
 				self.open_files()
@@ -106,7 +109,7 @@ class PyDAT(MainWindow, MainDelegate):
 		collapse_view = CollapseView(left, collapse_button, callback=_update_collapse_setting)
 		collapse_view.pack(fill=X, padx=2, pady=2)
 
-		collapse_view.set_collapsed(not self.data_context.settings.get('show_listbox_options', True))
+		collapse_view.set_collapsed(not self.data_context.config.show_listbox_options.value)
 
 		self.findhistory = [] # type: list[str]
 		self.find = StringVar()
@@ -188,16 +191,15 @@ class PyDAT(MainWindow, MainDelegate):
 
 		self.data_context.load_mpqs()
 
+		self.data_context.config.windows.main.load_size(self)
+		self.data_context.config.list_size.load_size(self.hor_pane)
+
+	def initialize(self) -> None:
 		e = self.open_files(dat_files=True)
 		if e:
-			self.mpqtbl(err=e)
-
-		self.data_context.settings.windows.load_window_size('main', self)
-		self.data_context.settings.load_pane_size('list_size', self.hor_pane, 300)
-
-		if guifile:
-			self.open(file_path=guifile)
-
+			self.settings(err=e)
+		if self.guifile:
+			self.open(file_path=self.guifile)
 		UpdateDialog.check_update(self, 'PyDAT')
 
 	def active_tab(self): # type: () -> DATTab
@@ -233,26 +235,26 @@ class PyDAT(MainWindow, MainDelegate):
 		NamesDisplaySetting.combine
 	]
 	def update_name_settings(self): # type: () -> None
-		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
-		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[NamesDisplaySetting(name_settings.display)])
-		if 'simple' in name_settings:
+		name_settings = self.active_tab().get_names_settings()
+		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[name_settings.display.value])
+		if isinstance(name_settings, PyDATConfig.Names.SimpleOptions):
 			self.simple_names_checkbox['state'] = NORMAL
-			self.simple_names.set(name_settings.simple)
+			self.simple_names.set(name_settings.simple.value)
 		else:
 			self.simple_names_checkbox['state'] = DISABLED
 			self.simple_names.set(False)
 	def change_names_display(self, *_): # type: (Any) -> None
-		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
+		name_settings = self.active_tab().get_names_settings()
 		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
-		if new_setting == NamesDisplaySetting(name_settings.display):
+		if new_setting == name_settings.display.value:
 			return
-		name_settings.display = new_setting.value
+		name_settings.display.value = new_setting
 		self.active_tab().get_dat_data().update_names()
 	def change_simple_names(self, *_): # type: (Any) -> None
-		name_settings = self.data_context.settings.names[self.active_tab().DAT_ID.value]
-		if not 'simple' in name_settings or self.simple_names.get() == name_settings.simple:
+		name_settings = self.active_tab().get_names_settings()
+		if not isinstance(name_settings, PyDATConfig.Names.SimpleOptions) or self.simple_names.get() == name_settings.simple.value:
 			return
-		name_settings.simple = self.simple_names.get()
+		name_settings.simple.value = self.simple_names.get()
 		self.active_tab().get_dat_data().update_names()
 
 	def update_status_bar(self): # type: () -> None
@@ -378,7 +380,7 @@ class PyDAT(MainWindow, MainDelegate):
 
 	def open(self, key=None, file_path=None): # type: (Event | None, str | None) -> None
 		if file_path is None:
-			file_path = self.data_context.settings.lastpath.dat.select_open_file(self, title='Open DAT file', filetypes=[FileType.dat()])
+			file_path = self.data_context.config.last_path.dat.select_open(self)
 			if not file_path:
 				return
 		filename = os.path.basename(file_path)
@@ -392,7 +394,7 @@ class PyDAT(MainWindow, MainDelegate):
 				else:
 					self.dattabs.display(page.page_title)
 					if (dat := page.get_dat_data().dat) and dat.is_expanded():
-						self.data_context.settings.dont_warn.warn('expanded_dat', self, "This %s file is expanded and will require a plugin like 'DatExtend'." % filename)
+						self.data_context.config.dont_warn.expanded_dat.present(self)
 				break
 		else:
 			ErrorDialog(self, PyMSError('Open',"Unrecognized DAT filename '%s'" % file_path))
@@ -442,12 +444,14 @@ class PyDAT(MainWindow, MainDelegate):
 		MessageBox.showinfo('DAT Files Found', message)	
 
 	def openmpq(self, event=None): # type: (Event | None) -> None
-		path = self.data_context.settings.lastpath.mpq.select_open_file(self, title='Open MPQ', filetypes=[FileType.mpq(),FileType.exe_mpq()])
-		self._open_all(path, True)
+		path = self.data_context.config.last_path.mpq.select_open(self, filetypes=[FileType.mpq(),FileType.exe_mpq()])
+		if path:
+			self._open_all(path, True)
 
 	def opendirectory(self, event=None): # type: (Event | None) -> None
-		path = self.data_context.settings.lastpath.select_directory(self, title='Open Directory')
-		self._open_all(path, False)
+		path = self.data_context.config.last_path.dir.select_open(self)
+		if path:
+			self._open_all(path, False)
 
 	def iimport(self, key=None): # type: (Event | None) -> None
 		self.active_tab().iimport()
@@ -469,31 +473,8 @@ class PyDAT(MainWindow, MainDelegate):
 			self.save_data()
 			SaveMPQDialog(self, self)
 
-	def mpqtbl(self, key=None, err=None): # type: (Event | None, PyMSError | None) -> None
-		data = [
-			('TBL Settings',[
-				('stat_txt.tbl', 'Contains Unit, Weapon, Upgrade, Tech, and Order names', 'stat_txt', 'TBL'),
-				('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
-				('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
-				('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
-				('portdata.tbl', 'Contains Portrait mpq file paths', 'portdatatbl', 'TBL'),
-				('mapdata.tbl', 'Contains Campign map mpq file paths', 'mapdatatbl', 'TBL'),
-			]),
-			('Other Settings',[
-				('cmdicons.grp', 'Contains icon images', 'cmdicons', 'CacheGRP'),
-				('iscript.bin', 'Contains iscript entries for images.dat', 'iscriptbin', 'IScript'),
-			]),
-			('Palette Settings',[
-				('Unit', 'Used to display normal graphics previews', 'Units', 'Palette'),
-				('bfire', 'Used to display graphics previews with bfire.pcx remapping', 'bfire', 'Palette'),
-				('gfire', 'Used to display graphics previews with gfire.pcx remapping', 'gfire', 'Palette'),
-				('ofire', 'Used to display graphics previews with ofire.pcx remapping', 'ofire', 'Palette'),
-				('Terrain', 'Used to display terrain based graphics previews', 'Terrain', 'Palette'),
-				('Icons', 'Used to display icon previews', 'Icons', 'Palette')
-			]),
-			'Theme'
-		]
-		DATSettingsDialog(self, data, (640,600), err, settings=self.data_context.settings, mpqhandler=self.data_context.mpqhandler)
+	def settings(self, key=None, err=None): # type: (Event | None, PyMSError | None) -> None
+		SettingsDialog(self, self.data_context.config, self, err, self.data_context.mpq_handler)
 
 	def register_registry(self, e=None): # type: (Event | None) -> None
 		try:
@@ -502,14 +483,14 @@ class PyDAT(MainWindow, MainDelegate):
 			ErrorDialog(self, e)
 
 	def help(self, e=None): # type: (Event | None) -> None
-		HelpDialog(self, self.data_context.settings, 'Help/Programs/PyDAT.md')
+		HelpDialog(self, self.data_context.config.windows.help, 'Help/Programs/PyDAT.md')
 
 	def about(self, key=None): # type: (Event | None) -> None
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
 
 	def exit(self, e=None): # type: (Event | None) -> None
 		if not self.unsaved():
-			self.data_context.settings.windows.save_window_size('main', self)
-			self.data_context.settings.save_pane_size('list_size', self.hor_pane)
-			self.data_context.settings.save()
+			self.data_context.config.windows.main.save_size(self)
+			self.data_context.config.list_size.save_size(self.hor_pane)
+			self.data_context.config.save()
 			self.destroy()

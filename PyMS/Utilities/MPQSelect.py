@@ -71,7 +71,7 @@ class MPQSelect(PyMSDialog):
 		return self.open
 
 	def setup_complete(self): # type: () -> None
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	def listfiles(self): # type: () -> None
 		self.files = []
@@ -130,5 +130,5 @@ class MPQSelect(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self): # type: () -> None
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

@@ -48,7 +48,7 @@ class IconSelectDialog(PyMSDialog):
 		max_width = self.winfo_width() + 5 * icon_size[0]
 		max_height = self.winfo_height() + 10 * icon_size[1]
 		self.maxsize(max_width, max_height)
-		self.data_context.settings.windows.load_window_size('icon_select', self)
+		self.data_context.config.windows.icon_select.load_size(self)
 
 		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
 		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
@@ -253,5 +253,5 @@ class IconSelectDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self): # type: () -> None
-		self.data_context.settings.windows.save_window_size('icon_select', self)
+		self.data_context.config.windows.icon_select.save_size(self)
 		PyMSDialog.dismiss(self)

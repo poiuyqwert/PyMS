@@ -11,6 +11,6 @@ class PaletteSettingsTab(SettingsTab):
 	def __init__(self, notebook: Notebook, edited_state: EditedState, config: PyFNTConfig, mpq_handler: MPQHandler):
 		super().__init__(notebook)
 
-		unit_pal = FileSettingView(self, edited_state, 'tfontgam.pcx', 'The special palette which holds the text color.', config.settings.files.tfontgam, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
-		unit_pal.pack(side=TOP, fill=X)
-		self.register_settings_view(unit_pal)
+		tfontgam = FileSettingView(self, edited_state, 'tfontgam.pcx', 'The special palette which holds the text color.', config.settings.files.tfontgam, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
+		tfontgam.pack(side=TOP, fill=X)
+		self.register_settings_view(tfontgam)

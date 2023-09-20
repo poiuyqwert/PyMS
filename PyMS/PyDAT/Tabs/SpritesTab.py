@@ -80,8 +80,8 @@ class SpritesTab(DATTab):
 		l.pack(fill=X)
 
 		self.previewing = None # type: int | None
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.data_context.settings.preview.sprite.get('show', False))
+		self.showpreview = BooleanVar()
+		self.showpreview.set(self.delegate.data_context.config.preview.sprite.show.value)
 
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
@@ -197,4 +197,4 @@ class SpritesTab(DATTab):
 			entry.selection_circle_offset = self.vertpos.get()
 			self.edited = True
 
-		self.delegate.data_context.settings.preview.sprite.show = not not self.showpreview.get()
+		self.delegate.data_context.config.preview.sprite.show.value = self.showpreview.get()

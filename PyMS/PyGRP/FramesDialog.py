@@ -22,12 +22,12 @@ class FramesDialog(PyMSDialog):
 		return ok
 
 	def setup_complete(self) -> None:
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	def cancel(self, e: Event | None = None) -> None:
 		self.result.set(0)
 		PyMSDialog.cancel(self)
 
 	def dismiss(self) -> None:
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

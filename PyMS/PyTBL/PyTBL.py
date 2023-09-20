@@ -169,9 +169,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(1, weight=1)
 
-		self.config_.windows.main.load(self)
-		self.config_.panes.string_list.load(self.hor_pane)
-		self.config_.panes.color_list.load(self.ver_pane)
+		self.config_.windows.main.load_size(self)
+		self.config_.panes.string_list.load_size(self.hor_pane)
+		self.config_.panes.color_list.load_size(self.ver_pane)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
 	
@@ -527,9 +527,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.config_.panes.string_list.save(self.hor_pane)
-		self.config_.panes.color_list.save(self.ver_pane)
-		self.config_.windows.main.save(self)
+		self.config_.panes.string_list.save_size(self.hor_pane)
+		self.config_.panes.color_list.save_size(self.ver_pane)
+		self.config_.windows.main.save_size(self)
 		self.config_.save()
 		self.destroy()
 

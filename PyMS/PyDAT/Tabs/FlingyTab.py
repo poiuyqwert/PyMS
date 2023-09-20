@@ -97,7 +97,7 @@ class FlingyTab(DATTab):
 			self.check_used_by_references()
 		if DATID.sprites in ids:
 			self.sprite_ddw.setentries(self.delegate.data_context.sprites.names)
-			if self.delegate.data_context.settings.settings.get('reference_limits', True):
+			if self.delegate.data_context.config.settings.reference_limits.value:
 				self.spriteentry.range[1] = self.delegate.data_context.sprites.entry_count() - 1
 			else:
 				self.spriteentry.range[1] = 65535

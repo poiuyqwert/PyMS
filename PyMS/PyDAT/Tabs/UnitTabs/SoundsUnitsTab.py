@@ -155,7 +155,7 @@ class SoundsUnitsTab(DATUnitsTab):
 			dropdown.setentries(names)
 
 		limit = 65535
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			limit = self.delegate.data_context.sounds.entry_count() - 1
 		variables = (
 			self.ready_sound,

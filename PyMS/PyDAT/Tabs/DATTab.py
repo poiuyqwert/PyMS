@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from ..Config import PyDATConfig
 from ..DATTabConveniences import DATTabConveniences
 from ..EntryCountDialog import EntryCountDialog
 from ..DataID import DATID, AnyID
@@ -40,19 +41,44 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def get_dat_data(self): # type: () -> DATData
 		return self.delegate.data_context.dat_data(self.DAT_ID)
 
+	def get_names_settings(self) -> PyDATConfig.Names.Options | PyDATConfig.Names.SimpleOptions:
+		match self.DAT_ID:
+			case DATID.units:
+				return self.delegate.data_context.config.names.units
+			case DATID.weapons:
+				return self.delegate.data_context.config.names.weapons
+			case DATID.flingy:
+				return self.delegate.data_context.config.names.flingy
+			case DATID.sprites:
+				return self.delegate.data_context.config.names.sprites
+			case DATID.images:
+				return self.delegate.data_context.config.names.images
+			case DATID.upgrades:
+				return self.delegate.data_context.config.names.upgrades
+			case DATID.techdata:
+				return self.delegate.data_context.config.names.techdata
+			case DATID.sfxdata:
+				return self.delegate.data_context.config.names.sfxdata
+			case DATID.portdata:
+				return self.delegate.data_context.config.names.portdata
+			case DATID.mapdata:
+				return self.delegate.data_context.config.names.mapdata
+			case DATID.orders:
+				return self.delegate.data_context.config.names.orders
+
 	def update_used_by_header(self): # type: () -> None
 		if not self.used_by_header:
 			return
 		text = 'Used By (%d)' % len(self.used_by_data)
-		if  self.delegate.data_context.settings.get('show_used_by', True):
+		if  self.delegate.data_context.config.show_used_by.value:
 			text += ':'
 		self.used_by_header.set(text)
 
 	def toggle_used_by(self, toggle=True): # type: (bool) -> None
-		visible = self.delegate.data_context.settings.get('show_used_by', True)
+		visible = self.delegate.data_context.config.show_used_by.value
 		if toggle:
 			visible = not visible
-			self.delegate.data_context.settings.show_used_by = visible
+			self.delegate.data_context.config.show_used_by.value = visible
 			self.update_used_by_header()
 		assert self.used_by_listbox is not None
 		assert self.used_by_collapse_button is not None
@@ -99,7 +125,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if self.used_by_data:
 			self.used_by_listbox.insert(END, *tuple(str(r) for r in self.used_by_data))
 		self.update_used_by_header()
-		if force_open and not self.delegate.data_context.settings.get('show_used_by', True):
+		if force_open and not self.delegate.data_context.config.show_used_by.value:
 			self.toggle_used_by()
 
 	def used_by_jump(self, *_): # type: (Event) -> None
@@ -225,7 +251,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			if add < 1:
 				return
 			self._expand_entries(add)
-		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.settings)
+		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.config.windows.entry_count)
 
 	def new(self, key=None): # type: (Event | None) -> None
 		if not self.unsaved():
@@ -251,7 +277,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
-		file = self.delegate.data_context.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.delegate.data_context.config.last_path.txt.select_open(self)
 		if not file:
 			return
 		dat.import_file(file)
@@ -266,7 +292,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if not dat:
 			return
 		if not file_path:
-			file_path = self.delegate.data_context.settings.lastpath.dat.save.select_save_file(self, key=dat.FILE_NAME, title='Save %s As' % dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % dat.FILE_NAME)], filename=dat.FILE_NAME)
+			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title='Save %s As' % dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % dat.FILE_NAME)], filename=dat.FILE_NAME)
 			if not file_path:
 				return
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -284,7 +310,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
-		file = self.delegate.data_context.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+		file = self.delegate.data_context.config.last_path.txt.select_save(self)
 		if not file:
 			return
 		try:

@@ -72,7 +72,7 @@ class EntryNameOverrides(PyMSDialog):
 		return None
 
 	def setup_complete(self): # type: () -> None
-		self.data_context.settings.windows.load_window_size('entry_name_overrides', self)
+		self.data_context.config.windows.entry_name_overrides.load_size(self)
 
 	def refresh_list(self): # type: () -> None
 		y = self.listbox.yview()[0]
@@ -89,7 +89,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.append.set(name_overrides[entry_id][0])
 
 	def open(self, _=None): # type: (Event | None) -> None
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_open_file(self, title='Open Name Overrides', filetypes=[FileType.txt()])
+		path = self.data_context.config.last_path.entry_name_overrides.select_open(self)
 		if not path:
 			return
 		try:
@@ -101,7 +101,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.refresh_list()
 
 	def saveas(self, _=None): # type: (Event | None) -> None
-		path = self.data_context.settings.lastpath.entry_name_overrides.select_save_file(self, title='Save Name Overrides', filetypes=[FileType.txt()], filename=self.dat_id.filename.replace('.dat', '.txt'))
+		path = self.data_context.config.last_path.entry_name_overrides.select_save(self, filename=self.dat_id.filename.replace('.dat', '.txt'))
 		if not path:
 			return
 		try:
@@ -128,6 +128,6 @@ class EntryNameOverrides(PyMSDialog):
 		self.refresh_list()
 
 	def dismiss(self): # type: () -> None
-		self.data_context.settings.windows.save_window_size('entry_name_overrides', self)
+		self.data_context.config.windows.entry_name_overrides.save_size(self)
 		self.data_context.dat_data(self.dat_id).update_names()
 		PyMSDialog.dismiss(self)

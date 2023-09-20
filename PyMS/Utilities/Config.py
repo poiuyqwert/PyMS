@@ -262,7 +262,7 @@ class WindowGeometry(ConfigObject):
 		self._default_size = default_size
 		self._default_centered = default_centered
 
-	def save(self, window: AnyWindow, closing: bool = True) -> None:
+	def save_size(self, window: AnyWindow, closing: bool = True) -> None:
 		resizable_w,resizable_h = parse_resizable(window.resizable())
 		geometry = Geometry.of(window)
 		if resizable_w or resizable_h:
@@ -275,7 +275,7 @@ class WindowGeometry(ConfigObject):
 		else:
 			self._geometry = GeometryAdjust(pos=geometry.pos).text
 
-	def load(self, window: AnyWindow) -> None:
+	def load_size(self, window: AnyWindow) -> None:
 		if self._geometry and (geometry_adjust := GeometryAdjust.parse(self._geometry)):
 			# if position:
 			# 	geometry_adjust.pos = position
@@ -338,7 +338,7 @@ class PaneSizes(ConfigObject):
 		self._pane_index = pane_index
 		self._saved_state: list[int] = list(self._sizes)
 
-	def save(self, paned_window: PanedWindow) -> None:
+	def save_size(self, paned_window: PanedWindow) -> None:
 		paned_window.update()
 		axis_index = 0 if paned_window.cget('orient') == HORIZONTAL else 1
 		if self._pane_index is not None:
@@ -353,7 +353,7 @@ class PaneSizes(ConfigObject):
 			offset = coord
 		self._sizes = sizes
 
-	def load(self, paned_window: PanedWindow) -> None:
+	def load_size(self, paned_window: PanedWindow) -> None:
 		if not self._sizes:
 			return
 		paned_window.update()
@@ -488,7 +488,7 @@ class SelectFile(ConfigObject):
 	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False) -> str | None: ...
 	@overload
 	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True]) -> list[str] | None: ...
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False) -> str | list[str] | None:
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		path: str | list[str] | None
@@ -499,7 +499,7 @@ class SelectFile(ConfigObject):
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
 				defaultextension=self._default_extension,
-				initialfile=self._initial_filename
+				initialfile=filename or self._initial_filename
 			)
 		else:
 			path = cast(str | list[str] | None, FileDialog.askopenfilename(
@@ -508,8 +508,7 @@ class SelectFile(ConfigObject):
 				title=title or self._op_type.title(self._name, False, multiple),
 				initialdir=self._save_directory if save else self._open_directory,
 				filetypes=filetypes or self._filetypes,
-				defaultextension=self._default_extension,
-				initialfile=self._initial_filename
+				defaultextension=self._default_extension
 			)) # type: ignore[call-arg]
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
@@ -537,7 +536,7 @@ class SelectFile(ConfigObject):
 	def select_open_multiple(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> list[str] | None:
 		return self._select_file(parent, False, title, filetypes, True)
 
-	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
+	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None, filename: str | None = None) -> str | None:
 		return self._select_file(parent, True, title, filetypes)
 
 	def encode(self) -> JSONValue:

@@ -14,8 +14,8 @@ class SettingsDialog(BaseSettingsDialog[PyGRPConfig]):
 		return widget
 
 	def setup_complete(self) -> None:
-		self.config_.windows.settings.main.load(self)
+		self.config_.windows.settings.main.load_size(self)
 
 	def dismiss(self) -> None:
-		self.config_.windows.settings.main.save(self)
+		self.config_.windows.settings.main.save_size(self)
 		super().dismiss()

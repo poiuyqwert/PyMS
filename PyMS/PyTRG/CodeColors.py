@@ -82,7 +82,7 @@ class CodeColors(PyMSDialog):
 		return ok
 
 	def setup_complete(self) -> None:
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 
 	def select(self, e: Event | None = None, n: int | None = None) -> None:
 		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
@@ -141,5 +141,5 @@ class CodeColors(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 		PyMSDialog.dismiss(self)

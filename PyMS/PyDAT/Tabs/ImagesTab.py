@@ -166,8 +166,8 @@ class ImagesTab(DATTab):
 		l.pack(fill=X)
 
 		self.previewing = None # type: int | None
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.data_context.settings.preview.image.get('show', False))
+		self.showpreview = BooleanVar()
+		self.showpreview.set(self.delegate.data_context.config.preview.image.show.value)
 
 		x = Frame(scrollview.content_view)
 		l = LabelFrame(x, text='Preview:')
@@ -295,4 +295,4 @@ class ImagesTab(DATTab):
 			entry.lift_off_dust_overlay = self.liftoffentry.get()
 			self.edited = True
 
-		self.delegate.data_context.settings.preview.image.show = not not self.showpreview.get()
+		self.delegate.data_context.config.preview.image.show.value = self.showpreview.get()

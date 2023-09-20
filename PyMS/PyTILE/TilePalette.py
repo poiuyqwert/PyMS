@@ -117,7 +117,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				return self.config_.windows.palette.mini
 
 	def setup_complete(self): # type: () -> None
-		self.window_geometry_config.load(self)
+		self.window_geometry_config.load_size(self)
 
 	def select_smaller(self): # type: () -> None
 		tileset = self.get_tileset()
@@ -271,7 +271,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			MiniEditor(self, self.palette.selected[0], self)
 
 	def dismiss(self): # type: () -> None
-		self.window_geometry_config.save(self)
+		self.window_geometry_config.save_size(self)
 		if self.edited:
 			self.delegate.megaload()
 			self.delegate.mark_edited()

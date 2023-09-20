@@ -181,7 +181,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackmove_ddw.setentries(names)
 
 		count = 255
-		if self.delegate.data_context.settings.settings.get('reference_limits', True):
+		if self.delegate.data_context.config.settings.reference_limits.value:
 			count = self.delegate.data_context.orders.entry_count()
 		self.computeridleentry.range[1] = count
 		self.humanidleentry.range[1] = count
