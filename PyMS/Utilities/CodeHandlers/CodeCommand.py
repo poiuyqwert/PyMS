@@ -12,6 +12,7 @@ from ..BytesScanner import BytesScanner
 from typing import TYPE_CHECKING, Sequence, Any
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
+	from .BuilderContext import BuilderContext
 	from .Lexer import Lexer
 
 class CodeCommandDefinition(object):
@@ -31,12 +32,12 @@ class CodeCommandDefinition(object):
 
 	def parse(self, lexer: Lexer, parse_context: ParseContext) -> CodeCommand:
 		# TODO: Support braces
-		parens = False
+		parse_context.command_in_parens = False
 		params: list[Any] = []
 		token = lexer.next_token(peek=True)
 		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
 			_ = lexer.next_token()
-			parens = True
+			parse_context.command_in_parens = True
 		missing_blocks: list[tuple[str, int, int | None]] = []
 		for param_index,param_type in enumerate(self.param_types):
 			if param_index > 0:
@@ -59,7 +60,7 @@ class CodeCommandDefinition(object):
 				else:
 					value = block
 			params.append(value)
-		if parens:
+		if parse_context.command_in_parens:
 			token = lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
 				raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
@@ -78,12 +79,11 @@ class CodeCommand(object):
 		self.params = params
 		self.original_address = originl_address
 
-	def compile(self) -> bytes:
+	def compile(self, context: BuilderContext) -> None:
 		assert self.definition.byte_code_id is not None
-		data = Struct.l_u8.pack(self.definition.byte_code_id)
+		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
 		for param,param_type in zip(self.params, self.definition.param_types):
-			data += param_type.compile(param)
-		return data
+			param_type.compile(param, context)
 
 	def serialize(self, context: SerializeContext) -> str:
 		parameters: list[str] = []

@@ -8,7 +8,7 @@ from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
-from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats import AIBIN
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *

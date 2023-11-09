@@ -105,10 +105,12 @@ class Lexer(object):
 		# start_offset = self.offset
 		raw_string = ''
 		while True:
-			token = self.next_token()
+			token = self.next_token(peek=True)
 			if isinstance(token, EOFToken):
 				break
 			should_stop = stop(token)
+			if should_stop != Stop.exclude:
+				self.next_token()
 			if should_stop != Stop.proceed:
 				if should_stop == Stop.include:
 					raw_string += token.raw_value

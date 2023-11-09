@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from . import Tokens
 from .CodeBlock import CodeBlock
+from .BuilderContext import BuilderContext
+from .Lexer import Stop
 
 from .. import Struct
 from ..PyMSError import PyMSError
@@ -32,8 +34,8 @@ class CodeType(Generic[I, O]):
 	def decompile(self, scanner: BytesScanner) -> I:
 		return scanner.scan(self._bytecode_type)
 
-	def compile(self, value: I) -> bytes:
-		return self._bytecode_type.pack(value)
+	def compile(self, value: I, context: BuilderContext) -> None:
+		context.add_data(self._bytecode_type.pack(value))
 
 	def serialize(self, value: I, context: SerializeContext) -> str:
 		if context.definitions:
@@ -107,6 +109,9 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
 		CodeType.__init__(self, name, bytecode_type, True)
 
+	def compile(self, block: CodeBlock, context: BuilderContext) -> None:
+		context.add_block_ref(block, cast(Struct.IntField, self._bytecode_type))
+
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
 		return context.block_label(block)
 	
@@ -136,29 +141,38 @@ class StrCodeType(CodeType[str, str]):
 		import ast
 		try:
 			result = ast.literal_eval(string)
-			if not isinstance(string, str):
+			if not isinstance(result, str):
 				raise Exception()
 		except:
-			PyMSError('Parse', "Value '%s' is not a valid string" % string)
+			raise PyMSError('Parse', "Value '%s' is not a valid string" % string)
 		return result
 
 	def decompile(self, scanner: BytesScanner) -> str:
 		return scanner.scan_cstr()
 
-	def compile(self, value: str) -> bytes:
-		return value.encode('utf-8') + b'\x00'
+	def compile(self, value: str, context: BuilderContext) -> None:
+		context.add_data(value.encode('utf-8') + b'\x00')
 
 	def serialize(self, value: str, context: SerializeContext) -> str:
 		return StrCodeType.serialize_string(value)
 
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> str:
-		token = lexer.next_token()
-		if not isinstance(token, Tokens.StringToken):
-			raise PyMSError('Parse', "Expected string value but got '%s'" % token.raw_value, line=lexer.line)
+		token: Tokens.Token
+		if parse_context.command_in_parens:
+			token = lexer.read_open_string(lambda token: Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Stop.proceed)
+		else:
+			token = lexer.next_token()
+			if not isinstance(token, Tokens.StringToken):
+				raise PyMSError('Parse', "Expected string value but got '%s'" % token.raw_value, line=lexer.line)
 		return self.parse(token.raw_value, parse_context)
 
 	def parse(self, token: str, parse_context: ParseContext) -> str:
-		return StrCodeType.parse_string(token)
+		try:
+			return StrCodeType.parse_string(token)
+		except:
+			if parse_context.command_in_parens:
+				return token
+			raise
 
 class EnumCodeType(CodeType[int, int]):
 	def __init__(self, name: str, bytecode_type: Struct.IntField, cases: dict[str, int]) -> None:
@@ -176,15 +190,23 @@ class EnumCodeType(CodeType[int, int]):
 				return case_name
 		raise PyMSError('Serialize', "Value '%s' has no case for '%s'" % (value, self._name))
 
+	def _possible_values(self) -> str:
+		values = ''
+		for name in self._cases.keys():
+			if values:
+				values += ', '
+			values += name
+		return values
+
 	def lex(self, lexer: Lexer, parse_context: ParseContext) -> int:
 		token = lexer.next_token()
 		if not isinstance(token, Tokens.IdentifierToken):
-			raise PyMSError('Parse', "Expected an enum identifier but got '%s'" % token.raw_value, line=lexer.line)
+			raise PyMSError('Parse', "Expected a '%s' enum identifier but got '%s' (possible values: %s)" % (self._name, token.raw_value, self._possible_values()), line=lexer.line)
 		return self.parse(token.raw_value, parse_context)
 
 	def parse(self, token: str, parse_context: ParseContext) -> int:
 		if not token in self._cases:
-			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s'" % (token, self._name))
+			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s' (possible values: %s)" % (token, self._name, self._possible_values()))
 		return self._cases[token]
 
 class BooleanCodeType(IntCodeType):

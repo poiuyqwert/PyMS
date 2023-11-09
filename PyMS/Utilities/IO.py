@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os, io, tempfile
 
-from typing import IO, Callable, TypeAlias
+from typing import IO, Callable
 
 AnyInputText = str | IO[str]
 AnyInputBytes = str | bytes | IO[bytes]

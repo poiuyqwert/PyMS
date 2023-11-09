@@ -28,6 +28,7 @@ class CommandParamBlockReferenceResolver(BlockReferenceResolver):
 
 class ParseContext(object):
 	def __init__(self, definitions: DefinitionsHandler | None = None) -> None:
+		self.command_in_parens = False
 		self.definitions = definitions
 		self.warnings: list[PyMSWarning] = []
 		self.missing_blocks: dict[str, list[BlockReferenceResolver]] = {}

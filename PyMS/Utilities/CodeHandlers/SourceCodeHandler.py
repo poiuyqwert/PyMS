@@ -5,12 +5,15 @@ from . import Tokens
 
 from ..PyMSError import PyMSError
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar, Generic, Protocol
 if TYPE_CHECKING:
 	from .CodeBlock import CodeBlock
 	from .CodeCommand import CodeCommand, CodeCommandDefinition
 	from .ParseContext import ParseContext
 	from .Lexer import Lexer
+
+# class SourceMode(Protocol):
+
 
 class SourceCodeHandler(object):
 	def __init__(self, lexer: Lexer) -> None:

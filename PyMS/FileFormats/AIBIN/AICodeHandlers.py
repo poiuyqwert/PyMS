@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+from .AIFlag import AIFlag
+
 from ...Utilities.CodeHandlers import CodeType
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 from ...Utilities.CodeHandlers.ByteCodeHandler import ByteCodeHandler
@@ -10,6 +12,7 @@ from ...Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceR
 from ...Utilities.CodeHandlers.Lexer import Lexer
 from ...Utilities.CodeHandlers import Tokens
 from ...Utilities.CodeHandlers.SourceCodeHandler import SourceCodeHandler
+from ...Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ...Utilities import Struct
 from ...Utilities.PyMSError import PyMSError
 
@@ -522,8 +525,8 @@ class TBLStringCodeType(CodeType.IntCodeType):
 class BinFileCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
 		cases = {
-			'aiscript': 1,
-			'bwscript': 0
+			'aiscript': 0,
+			'bwscript': 1
 		}
 		CodeType.EnumCodeType.__init__(self, 'bin_file', Struct.l_u8, cases) # TODO: bytecode_type
 
@@ -548,13 +551,18 @@ class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
 
 class AIHeaderSourceCodeHandler(SourceCodeHandler):
 	class AIScriptHeader(object):
-		def __init__(self):
-			self.string = None
-			self.bwscript = None
-			self.broodwar_only = None
-			self.staredit_hidden = None
-			self.requires_location = None
-			self.entry_point = None
+		def __init__(self) -> None:
+			self.string_id: int | None = None
+			self.bwscript: bool | None = None
+			self.broodwar_only: bool | None = None
+			self.staredit_hidden: bool | None = None
+			self.requires_location: bool | None = None
+			self.entry_point_name: str | None = None
+			self.entry_point: CodeBlock | None = None
+		
+		@property
+		def flags(self) -> int:
+			return (AIFlag.requires_location if self.requires_location else 0) | (AIFlag.staredit_hidden if self.staredit_hidden else 0) | (AIFlag.broodwar_only if self.broodwar_only else 0)
 
 	def __init__(self, lexer: AILexer) -> None:
 		SourceCodeHandler.__init__(self, lexer)
@@ -584,10 +592,10 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 			command = self.parse_command(token, parse_context)
 			if command.definition == HeaderNameString:
 				# TODO: Overwrite warning
-				script_header.string = command.params[0]
+				script_header.string_id = command.params[0]
 			elif command.definition == HeaderBinFile:
 				# TODO: Overwrite warning
-				script_header.bwscript = command.params[0]
+				script_header.bwscript = bool(command.params[0])
 			elif command.definition == BroodwarOnly:
 				# TODO: Overwrite warning
 				script_header.broodwar_only = command.params[0]
@@ -599,9 +607,12 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 				script_header.requires_location = command.params[0]
 			elif command.definition == EntryPoint:
 				# TODO: Overwrite warning
-				script_header.entry_point = command.params[0]
-				if not isinstance(script_header.entry_point, BlockCodeType):
-					parse_context.missing_block(script_header.entry_point, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
+				entry_point_name: str = command.params[0]
+				script_header.entry_point_name = entry_point_name
+				if entry_point := parse_context.lookup_block(entry_point_name):
+					script_header.entry_point = entry_point
+				else:
+					parse_context.missing_block(entry_point_name, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
 		self.script_header = script_header
 
 class AISourceCodeHandler(SourceCodeHandler):
@@ -738,7 +749,7 @@ class AISourceCodeHandler(SourceCodeHandler):
 			# TODO: Validate header
 			if not code_handler.script_header:
 				raise PyMSError('Parse', "No script header found")
-			if not code_handler.script_header.entry_point:
+			if not code_handler.script_header.entry_point_name:
 				raise PyMSError('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id, line=self.lexer.line)
 			self.script_headers[script_id] = (code_handler.script_header, line)
 			return True
