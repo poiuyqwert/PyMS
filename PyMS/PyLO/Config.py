@@ -1,7 +1,6 @@
 
 from ..Utilities import Config
 from ..Utilities.UIKit import Size, FileType
-from ..Utilities import Assets
 
 def _migrate_1_to_2(data: dict) -> None:
 	Config.migrate_fields(data, (

@@ -15,6 +15,8 @@ import tkinter.filedialog as FileDialog
 import tkinter.messagebox as MessageBox
 import tkinter.colorchooser as ColorChooser
 
+from tkinter.ttk import Style
+
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk

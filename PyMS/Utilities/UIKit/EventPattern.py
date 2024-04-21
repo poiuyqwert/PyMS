@@ -312,6 +312,11 @@ class WidgetEvent:
 
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))
+	
+	class Treeview:
+		Select = CustomEventPattern(Field('TreeviewSelect'))
+		Open = CustomEventPattern(Field('TreeviewOpen'))
+		Close = CustomEventPattern(Field('TreeviewClose'))
 
 class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4

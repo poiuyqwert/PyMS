@@ -200,6 +200,10 @@ class FileType(tuple[str, str]):
 	def cv5(name='StarCraft Tilesets'):
 		return FileType(name, 'cv5')
 
+	@staticmethod
+	def json(name='JSON'):
+		return FileType(name, 'json')
+
 	def __new__(self, name, *exts): # type: (str, *str) -> FileType
 		extensions = list(exts) # type: list[str]
 		for i, extension in enumerate(extensions):
