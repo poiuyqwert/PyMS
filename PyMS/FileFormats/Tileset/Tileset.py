@@ -417,6 +417,7 @@ class Tileset(object):
 			tile_width,tile_height = 32,32
 		elif tiletype == TileType.mini:
 			tiles_wide,tiles_high = calc_dims(len(ids))
+			tile_width,tile_height = 8,8
 		bmp.width = tile_width * tiles_wide
 		bmp.height = tile_height * tiles_high
 		bmp.image = [[] for _ in range(bmp.height)]
@@ -432,7 +433,8 @@ class Tileset(object):
 							row = tuple(reversed(row))
 						bmp.image[mega_y+mini_y+row_y].extend(row)
 		elif tiletype == TileType.mini:
-			for mini_y,mini_id in enumerate(ids):
+			for mini_n,mini_id in enumerate(ids):
+				mini_y = (mini_n // tiles_wide) * tile_height
 				image = self.vr4.get_image(mini_id)
 				for row_y,row in enumerate(image):
 					bmp.image[mini_y+row_y].extend(row)

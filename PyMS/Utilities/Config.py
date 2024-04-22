@@ -516,7 +516,7 @@ class SelectFile(ConfigObject):
 				path = list(p for p in path if check_allow_overwrite_internal_file(p))
 				if not path:
 					path = None
-			elif check_allow_overwrite_internal_file(path):
+			elif not check_allow_overwrite_internal_file(path):
 				path = None
 		setattr(window, '_pyms__window_blocking', False)
 		if path is not None:
