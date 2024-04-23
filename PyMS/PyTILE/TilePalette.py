@@ -239,3 +239,6 @@ class TilePalette(PyMSDialog):
 		if not TilePalette.OPEN_PALETTE_COUNT:
 			TilePalette.TILE_CACHE.clear()
 		PyMSDialog.dismiss(self)
+
+	def update_ranges(self):
+		self.parent.update_ranges()

@@ -651,7 +651,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.grp.images_bounds[d] = t
 
 	def shift(self, d=1):
-		if (d == -1 and not self.can_shift_up()) or (d == 1 and not self.can_shift_down()):
+		if (d == -1 and not self.can_move_up()) or (d == 1 and not self.can_move_down()):
 			return
 		s = [int(i) for i in self.listbox.curselection()]
 		s.sort()
