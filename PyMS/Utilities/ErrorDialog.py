@@ -35,4 +35,4 @@ class ErrorDialog(PyMSDialog):
 		WarningDialog(self, self.error.warnings)
 
 	def internal(self):
-		InternalErrorDialog(self, sys.stderr.prog, txt=''.join(traceback.format_exception(*self.error.exception)))
+		InternalErrorDialog(self, sys.stderr.tracer.program_name, txt=''.join(traceback.format_exception(*self.error.exception)))

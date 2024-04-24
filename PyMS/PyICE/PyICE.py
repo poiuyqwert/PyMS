@@ -346,7 +346,7 @@ class PyICE(MainWindow):
 	def open(self, key=None, file=None):
 		if not self.unsaved():
 			if file == None:
-				file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
+				file = self.settings.lastpath.bin.select_open_file(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
 				if not file:
 					return
 			ibin = self.create_iscriptbin()
