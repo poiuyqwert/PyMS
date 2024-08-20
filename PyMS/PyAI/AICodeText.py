@@ -1,74 +1,83 @@
 
 from .CodeTooltip import *
 
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes
 
 from ..Utilities.UIKit import *
+from ..Utilities.utils import couriernew_bold
 
 import re, copy
 
 class AICodeText(CodeText):
-	def __init__(self, parent, ai, ecallback=None, icallback=None, scallback=None, highlights=None):
+	def __init__(self, parent: AnyWindow, ai: AIBIN.AIBIN, ecallback=None, icallback=None, scallback=None, highlights=None):
 		self.ai = ai
-		self.boldfont = ('Courier New', -11, 'bold')
 		if highlights:
 			self.highlights = highlights
 		else:
 			self.highlights = {
 				'Block':{'foreground':'#FF00FF','background':None,'font':None},
-				'Keywords':{'foreground':'#0000FF','background':None,'font':self.boldfont},
-				'Types':{'foreground':'#0000FF','background':None,'font':self.boldfont},
+				'Keywords':{'foreground':'#0000FF','background':None,'font':couriernew_bold},
+				'Types':{'foreground':'#0000FF','background':None,'font':couriernew_bold},
 				'Commands':{'foreground':'#0000AA','background':None,'font':None},
 				'Number':{'foreground':'#FF0000','background':None,'font':None},
 				'TBLFormat':{'foreground':None,'background':'#E6E6E6','font':None},
 				'InfoComment':{'foreground':'#FF963C','background':None,'font':None},
 				'MultiInfoComment':{'foreground':'#FF963C','background':None,'font':None},
 				'Comment':{'foreground':'#008000','background':None,'font':None},
-				'AIID':{'foreground':'#FF00FF','background':None,'font':self.boldfont},
-				'HeaderString':{'foreground':'#FF0000','background':None,'font':self.boldfont},
-				'HeaderFlags':{'foreground':'#8000FF','background':None,'font':self.boldfont},
-				'Operators':{'foreground':'#0000FF','background':None,'font':self.boldfont},
+				'Header':{'foreground':'#0000FF','background':None,'font':couriernew_bold},
+				'AIID':{'foreground':'#FF00FF','background':None,'font':couriernew_bold},
+				'HeaderString':{'foreground':'#FF0000','background':None,'font':couriernew_bold},
+				'HeaderFlags':{'foreground':'#8000FF','background':None,'font':couriernew_bold},
+				'Operators':{'foreground':'#0000FF','background':None,'font':couriernew_bold},
 				'Newline':{'foreground':None,'background':None,'font':None},
 				'Error':{'foreground':None,'background':'#FF8C8C','font':None},
 				'Warning':{'foreground':None,'background':'#FFC8C8','font':None},
-				'Directives':{'foreground':'#0000FF','background':None,'font':self.boldfont}
+				'Directives':{'foreground':'#0000FF','background':None,'font':couriernew_bold}
 			}
 		CodeText.__init__(self, parent, ecallback, icallback, scallback)
-		self.text.bind(Ctrl.q, self.commentrange)
+		self.text.bind(Ctrl.q(), self.commentrange)
 
-	def setedit(self):
+	def setedit(self) -> None:
 		if self.ecallback is not None:
 			self.ecallback()
 		self.edited = True
 
-	def commentrange(self, e=None):
+	def commentrange(self, e=None) -> None:
 		item = self.tag_ranges('Selection')
 		if item:
 			head,tail = self.index('%s linestart' % item[0]),self.index('%s linestart' % item[1])
 			while self.text.compare(head, '<=', tail):
 				m = re.match(r'(\s*)(#?)(.*)', self.get(head, '%s lineend' % head))
-				if m.group(2):
-					self.tk.call(self.text.orig, 'delete', '%s +%sc' % (head, len(m.group(1))))
-				elif m.group(3):
-					self.tk.call(self.text.orig, 'insert', head, '#')
+				if m:
+					if m.group(2):
+						self.tk.call(self.text_orig, 'delete', '%s +%sc' % (head, len(m.group(1))))
+					elif m.group(3):
+						self.tk.call(self.text_orig, 'insert', head, '#')
 				head = self.index('%s +1line' % head)
 			self.update_range(self.index('%s linestart' % item[0]), self.index('%s lineend' % item[1]))
 
-	def setupparser(self):
+	def setupparser(self) -> None:
 		infocomment = '(?P<InfoComment>\\{[^\\n]+\\})'
 		multiinfocomment = '^[ \\t]*(?P<MultiInfoComment>\\{[ \\t]*(?:\\n[^}]*)?\\}?)$'
 		comment = '(?P<Comment>#[^\\n]*$)'
-		header = '^(?P<AIID>[^\n\x00,():]{4})(?=\\([^#]+,[^#]+,[^#]+\\):.+$)'
+		header = '^[ \\t]*(?P<Header>script)[ \\t]+(?P<AIID>[^\n\x00,():]{4})(?=[ \\t]+\{[ \\t]*$)'
 		header_string = '\\b(?P<HeaderString>\\d+)(?=,[^#]+,[^#]+\\):.+$)'
 		header_flags = '\\b(?P<HeaderFlags>[01]{3})(?=,[^#]+\\):.+$)'
-		block = '^[ \\t]*(?P<Block>--[^\x00:(),\\n]+--)(?=.+$)'
-		cmds = '\\b(?P<Commands>%s)\\b' % '|'.join(AIBIN.AIBIN.short_labels)
+		block = '^[ \\t]*(?P<Block>--[^\x00:(),\\n]+--|:[^\x00:(),\\n]+)(?=.+$)'
+		# TODO: Why do we need a full handler/lexer to get commands?
+		# source_handler = AICodeHandlers.AISourceCodeHandler(AIBIN.AILexer(''))
+		# header_source_handler = AICodeHandlers.AIHeaderSourceCodeHandler(AIBIN.AILexer(''))
+		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
+		cmds = '\\b(?P<Commands>%s)\\b' % '|'.join(cmd_names)
 		num = '\\b(?P<Number>\\d+)\\b'
 		tbl = r'(?P<TBLFormat><0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>)'
 		operators = '(?P<Operators>[():,=])'
-		kw = '\\b(?P<Keywords>extdef|aiscript|bwscript|LessThan|GreaterThan)\\b'
-		types = '\\b(?P<Types>%s)\\b' % '|'.join(AIBIN.types)
-		directives = r'(?P<Directives>@(?:spellcaster|supress_all|suppress_next_line))\b'
+		# TODO: Make keywords more dynamic?
+		kw = '\\b(?P<Keywords>script|extdef|aiscript|bwscript|LessThan|GreaterThan)\\b'
+		# types_handler = AICodeHandlers.AIDefinitionsHandler()
+		types = '\\b(?P<Types>%s)\\b' % '|'.join(type.name for type in CodeTypes.all_basic_types)
+		directives = r'(?P<Directives>@(?:supress_all|suppress_next_line))\b'
 		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
 		CommandCodeTooltip(self.text,self.ai)
 		TypeCodeTooltip(self.text,self.ai)
@@ -77,7 +86,7 @@ class AICodeText(CodeText):
 		DirectiveTooltip(self.text,self.ai)
 		self.tags = copy.deepcopy(self.highlights)
 
-	def colorize(self):
+	def colorize(self) -> None:
 		next = '1.0'
 		while True:
 			item = self.tag_nextrange("Update", next)

@@ -40,9 +40,13 @@ class DefinitionsHandler(object):
 		self.annotations: dict[tuple[Any, CodeType], list[str]] = {}
 
 	def register_type(self, type: CodeType) -> None:
-		if type._name in self.types:
-			raise PyMSError('Internal', "Type with name '%s' already exists" % type._name)
-		self.types[type._name] = type
+		if type.name in self.types:
+			raise PyMSError('Internal', "Type with name '%s' already exists" % type.name)
+		self.types[type.name] = type
+
+	def register_types(self, types: list[CodeType]) -> None:
+		for type in types:
+			self.register_type(type)
 
 	def register_annotation(self, name: str) -> None:
 		self.accepted_annotations.add(name)
@@ -79,7 +83,7 @@ class DefinitionsHandler(object):
 			code = f.read()
 		warnings: list[PyMSWarning] = []
 		lexer = DefinitionsHandler.Lexer(code)
-		parse_context = ParseContext()
+		parse_context = ParseContext(lexer)
 		while True:
 			token = lexer.next_token()
 			if isinstance(token, Tokens.EOFToken):

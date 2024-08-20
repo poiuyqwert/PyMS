@@ -1,17 +1,10 @@
 
+from .Delegates import ActionDelegate
+
 from ..FileFormats.AIBIN import AIBIN
 
 from ..Utilities.ActionManager import Action
 from ..Utilities.CodeHandlers.CodeBlock import CodeBlock
-
-from typing import Protocol
-
-class ActionDelegate(Protocol):
-	def get_ai_bin(self) -> AIBIN.AIBIN:
-		...
-
-	def refresh_scripts(self, select_script_ids: list[str] | None = None) -> None:
-		...
 
 class AddScriptAction(Action):
 	def __init__(self, delegate: ActionDelegate, header: AIBIN.AIScriptHeader, last_selected_script_id: str | None) -> None:

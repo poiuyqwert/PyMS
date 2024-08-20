@@ -24,6 +24,14 @@ for t,h in _types:
 
 _cmds = [
 	('Header',[
+		('name_string', 'Sets the index of a string from stat_txt.tbl to label the script in StarEdit'),
+		('bin_file', 'Sets which file (aiscript/bwscript) the script will be saved in'),
+		('broodwar_only', 'Sets whether the script is only available in BroodWar'),
+		('staredit_hidden', 'Sets whether the script is hidden in StarEdit'),
+		('requires_location', 'Sets whether the script requires to be run at a location'),
+		('entry_point', 'Sets the block which is the entry point (start) of the script'),
+	]),
+	('Setup',[
 		('farms_notiming','Build necessary farms only when it hits the maximum supply available.'),
 		('farms_timing','Build necessary farms with a correct timing, so nothing is paused by a maximum supply limit hit.'),
 		('start_areatown','Starts the AI Script for area town management.'),

@@ -1,7 +1,7 @@
 
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN. AICodeHandlers import CodeTypes
 
-from ..Utilities.utils import couriernew, fit
+from ..Utilities.utils import couriernew, couriernew_bold, fit
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
@@ -9,13 +9,13 @@ import copy
 from collections import OrderedDict
 
 class CodeColors(PyMSDialog):
-	def __init__(self, parent):
-		self.cont = False
-		self.tags = copy.deepcopy(parent.text.tags)
+	def __init__(self, parent: AnyWindow, tags: dict[str, dict]):
+		self.cont: dict[str, dict] | None = None
+		self.tags = copy.deepcopy(tags)
 		self.info = OrderedDict()
-		self.info['Block'] = 'The color of a --block-- in the code.'
+		self.info['Block'] = 'The color of a --block-- or :block in the code.'
 		self.info['Keywords'] = 'Keywords:\n    extdef  aiscript  bwscript'
-		self.info['Types'] = 'Variable types:\n    ' + '  '.join(AIBIN.types)
+		self.info['Types'] = 'Variable types:\n    ' + '  '.join(type.name for type in CodeTypes.all_basic_types)
 		self.info['Commands'] = 'The color of all the commands.'
 		self.info['Number'] = 'The color of all numbers.'
 		self.info['TBL Format'] = 'The color of TBL formatted characters, like null: <0>'
@@ -31,9 +31,9 @@ class CodeColors(PyMSDialog):
 		self.info['Selection'] = 'The color of selected text in the editor.'
 		PyMSDialog.__init__(self, parent, 'Color Settings', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		self.listbox = ScrolledListbox(self, font=couriernew, width=20, height=16)
-		self.listbox.bind(WidgetEvent.Listbox.Select, self.select)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda _: self.select())
 		for t in list(self.info.keys()):
 			self.listbox.insert(END, t)
 		self.listbox.select_set(0)
@@ -48,19 +48,19 @@ class CodeColors(PyMSDialog):
 		opt = LabelFrame(r, text='Style:', padx=5, pady=5)
 		f = Frame(opt)
 		c = Checkbutton(f, text='Foreground', variable=self.fg, width=20, anchor=W)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=0: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda _: self.select(0))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Background', variable=self.bg)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=1: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda _: self.select(1))
 		c.grid(sticky=W)
 		c = Checkbutton(f, text='Bold', variable=self.bold)
-		c.bind(ButtonRelease.Click_Left, lambda e,i=2: self.select(e,i))
+		c.bind(ButtonRelease.Click_Left(), lambda _: self.select(2))
 		c.grid(sticky=W)
 		self.fgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.fgcanvas.bind(Mouse.Click_Left, lambda e,i=0: self.colorselect(e, i))
+		self.fgcanvas.bind(Mouse.Click_Left(), lambda _: self.colorselect(0))
 		self.fgcanvas.grid(column=1, row=0)
 		self.bgcanvas = Canvas(f, width=32, height=32, background='#000000')
-		self.bgcanvas.bind(Mouse.Click_Left, lambda e,i=1: self.colorselect(e, i))
+		self.bgcanvas.bind(Mouse.Click_Left(), lambda _: self.colorselect(1))
 		self.bgcanvas.grid(column=1, row=1)
 		f.pack(side=TOP)
 		Label(opt, textvariable=self.infotext, height=6, justify=LEFT).pack(side=BOTTOM, fill=X)
@@ -76,7 +76,7 @@ class CodeColors(PyMSDialog):
 
 		return ok
 
-	def select(self, e=None, n=None):
+	def select(self, n: int | None = None) -> None:
 		i = list(self.info.keys())[int(self.listbox.curselection()[0])]
 		s = self.tags[i.replace(' ', '')]
 		if n is None:
@@ -105,13 +105,13 @@ class CodeColors(PyMSDialog):
 		else:
 			v = [self.fg,self.bg,self.bold][n].get()
 			if n == 2:
-				s['font'] = [self.parent.text.boldfont,couriernew][v]
+				s['font'] = [couriernew_bold,couriernew][v]
 			else:
 				s[['foreground','background'][n]] = ['#000000',None][v]
 				if v:
 					[self.fgcanvas,self.bgcanvas][n]['background'] = '#000000'
 
-	def colorselect(self, e, i):
+	def colorselect(self, i: int) -> None:
 		if [self.fg,self.bg][i].get():
 			v = [self.fgcanvas,self.bgcanvas][i]
 			g = ['foreground','background'][i]
@@ -126,5 +126,5 @@ class CodeColors(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def cancel(self):
-		self.cont = False
+		self.cont = None
 		PyMSDialog.ok(self)

@@ -5,6 +5,7 @@ from .Tokens import Token, EOFToken, UnknownToken, NewlineToken, StringToken
 
 from ..PyMSError import PyMSError
 
+import re
 from typing import Type, TypeVar, Callable
 from enum import Enum
 
@@ -17,11 +18,19 @@ T = TypeVar('T', bound=Token)
 class Lexer(object):
 	def __init__(self, code: str) -> None:
 		self.code = code
-		# self.prev_offsets: list[int] = []
+		self._lines_of_code_cache: list[str] | None = None
 		self.offset = 0
-		self.line = 0 # TODO: PyMSError currently expects 0-indexed lines and reports them as 1-indexed
+		self.line = 0
 		self.token_types: list[Type[Token]] = []
 		self.skip_tokens: list[Type[Token]] = []
+
+	_newline_regexp = re.compile(r'\r?\n|\r(?!=\n)')
+	def get_line_of_code(self, line: int) -> str | None:
+		if self._lines_of_code_cache is None:
+			self._lines_of_code_cache = Lexer._newline_regexp.split(self.code)
+		if line >= 0 and line < len(self._lines_of_code_cache):
+			return self._lines_of_code_cache[line]
+		return None
 
 	def register_token_type(self, token_type: Type[Token], skip: bool = False) -> None:
 		self.token_types.append(token_type)
@@ -30,11 +39,11 @@ class Lexer(object):
 
 	def _check_token(self, token: Token) -> None:
 		if isinstance(token, NewlineToken):
-			self.line += 1
+			self.line += token.newline_count()
 
 	def _skip(self, dont_skip: Type[Token] | None = None) -> None:
 		while True:
-			if self.offset == len(self.code):
+			if self.is_at_end():
 				return
 			for skip_token_type in self.skip_tokens:
 				if skip_token_type == dont_skip:
@@ -48,11 +57,10 @@ class Lexer(object):
 				break
 
 	def next_token(self, peek: bool = False) -> Token:
-		# start_offset = self.offset
 		self._skip()
 		token: Token | None = None
 		while not token:
-			if self.offset == len(self.code):
+			if self.is_at_end():
 				return EOFToken()
 			for token_type in self.token_types:
 				token = token_type.match(self.code, self.offset)
@@ -65,31 +73,25 @@ class Lexer(object):
 			if token:
 				if not peek:
 					self.offset += len(token.raw_value)
-				self._check_token(token)
+					self._check_token(token)
 				if type(token) in self.skip_tokens:
 					token = None
-		# self.prev_offsets.append(start_offset)
 		return token
 
 	def get_token(self, token_type: Type[T]) -> T | None:
-		# start_offset = self.offset
 		self._skip(dont_skip=token_type)
-		if self.offset == len(self.code):
+		if self.is_at_end():
 			return None
 		token = token_type.match(self.code, self.offset)
 		if not token:
-			# token = UnknownToken.match(self.code, self.offset)
-			# if not token:
 			return None
 		self._check_token(token)
 		self.offset += len(token.raw_value)
-		# self.prev_offsets.append(start_offset)
 		return token
 
 	def check_token(self, token_type: Type[T]) -> Token:
-		# start_offset = self.offset
 		self._skip(dont_skip=token_type)
-		if self.offset == len(self.code):
+		if self.is_at_end():
 			return EOFToken()
 		token: Token | None = token_type.match(self.code, self.offset)
 		if token:
@@ -97,12 +99,10 @@ class Lexer(object):
 			self.offset += len(token.raw_value)
 		else:
 			token = self.next_token()
-		# self.prev_offsets.append(start_offset)
 		return token
 
 	# Read all tokens as a string until EOF or the `stop` callback returns `True`
 	def read_open_string(self, stop: Callable[[Token], Stop]) -> StringToken:
-		# start_offset = self.offset
 		raw_string = ''
 		while True:
 			token = self.next_token(peek=True)
@@ -116,20 +116,15 @@ class Lexer(object):
 					raw_string += token.raw_value
 				break
 			raw_string += token.raw_value
-		# self.prev_offsets.append(start_offset)
 		return StringToken(raw_string)
 
 	def skip(self, skip_token_types: Type[Token] | tuple[Type[Token], ...]) -> Token:
-		# start_offset = self.offset
 		if not isinstance(skip_token_types, tuple):
 			skip_token_types = (skip_token_types,)
 		token = self.next_token()
 		while isinstance(token, skip_token_types):
 			token = self.next_token()
-		# self.prev_offsets.append(start_offset)
 		return token
 
-	# def rewind(self) -> None:
-	# 	if not self.prev_offsets:
-	# 		return
-	# 	self.offset = self.prev_offsets.pop()
+	def is_at_end(self) -> bool:
+		return self.offset == len(self.code)

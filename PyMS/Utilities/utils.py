@@ -32,7 +32,9 @@ except:
 	def SetValue(_a,_b,_c,_d) -> None:
 		pass
 
+# TODO: Remove
 couriernew = ('Courier', -12, 'normal')
+couriernew_bold = ('Courier New', -11, 'bold')
 
 def is_windows(): # type: () -> bool
 	return (platform.system().lower() == 'windows')

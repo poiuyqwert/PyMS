@@ -10,11 +10,14 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('lastpath',), ('last_path',)),
 		(('lastpath', 'ai_txt'), ('last_path', 'txt', 'ai')),
 		(('lastpath', 'set_txt'), ('last_path', 'txt', 'settings')),
+		(('lastpath', 'def_txt'), ('last_path', 'txt', 'extdefs')),
 		(('settings', 'files', 'unitsdat'), ('settings', 'files', 'dat', 'units')),
 		(('settings', 'files', 'upgradesdat'), ('settings', 'files', 'dat', 'upgrades')),
 		(('settings', 'files', 'techdatadat'), ('settings', 'files', 'dat', 'techdata')),
 		(('undohistory',), ('max_undos',)),
 		(('redohistory',), ('max_redos',)),
+		(('windows', 'external_def'), ('windows', 'extdefs')),
+		(('stat_txt',), ('settings', 'files', 'stat_txt')),
 	))
 
 class PyAIConfig(Config.Config):
@@ -35,6 +38,8 @@ class PyAIConfig(Config.Config):
 			self.main = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
 			self.settings = PyAIConfig.Windows.Settings()
+			self.code_edit = Config.WindowGeometry()
+			self.extdefs = Config.WindowGeometry()
 			super().__init__()
 
 	class LastPath(Config.Group):
@@ -42,6 +47,7 @@ class PyAIConfig(Config.Config):
 			def __init__(self) -> None:
 				self.ai = Config.SelectFile(name='AI TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
 				self.settings = Config.SelectFile(name='Settings TXT', filetypes=[FileType.txt()])
+				self.extdefs = Config.SelectFile(name='External Definitions TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -62,6 +68,7 @@ class PyAIConfig(Config.Config):
 
 			def __init__(self) -> None:
 				self.dat = PyAIConfig.Settings.Files.DAT()
+				self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[FileType.tbl()])
 				super().__init__()
 
 		class LastPath(Config.Group):
@@ -82,7 +89,6 @@ class PyAIConfig(Config.Config):
 		self.last_path = PyAIConfig.LastPath()
 		self.mpqs = Config.List(value_type=str)
 		self.settings = PyAIConfig.Settings()
-		self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[FileType.tbl()])
 		self.imports = Config.List(value_type=str)
 		self.extdefs = Config.List(value_type=str)
 		self.highlights = Config.Highlights()

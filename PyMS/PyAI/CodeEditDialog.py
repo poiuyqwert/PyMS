@@ -3,8 +3,10 @@ from .HelpContent import TYPE_HELP, CMD_HELP
 from .AICodeText import AICodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
+from .Config import PyAIConfig
+from .Delegates import MainDelegate
 
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
@@ -13,15 +15,17 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
+from ..Utilities import IO
 
 import re
 
 class CodeEditDialog(PyMSDialog):
-	def __init__(self, parent, settings, ids):
-		self.settings = settings
+	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
+		self.delegate = delegate
+		self.config_ = config
 		self.ids = ids
 		self.decompile = ''
-		self.file = None
+		self.file: str | None = None
 		self.autocomptext = list(TYPE_HELP.keys())
 		self.completing = False
 		self.complete = [None, 0]
@@ -33,13 +37,13 @@ class CodeEditDialog(PyMSDialog):
 			t += ' - '
 		t += 'AI Script Editor'
 		PyMSDialog.__init__(self, parent, t, grabwait=False)
-		self.findwindow = None
+		self.findwindow: FindReplaceDialog | None = None
 
-	def widgetize(self):
-		self.bind(Alt.Left, lambda e,i=0: self.gotosection(e,i))
-		self.bind(Alt.Right, lambda e,i=1: self.gotosection(e,i))
-		self.bind(Alt.Up, lambda e,i=2: self.gotosection(e,i))
-		self.bind(Alt.Down, lambda e,i=3: self.gotosection(e,i))
+	def widgetize(self) -> Widget:
+		self.bind(Alt.Left(), lambda _: self.gotosection(0))
+		self.bind(Alt.Right(), lambda _: self.gotosection(1))
+		self.bind(Alt.Up(), lambda _: self.gotosection(2))
+		self.bind(Alt.Down(), lambda _: self.gotosection(3))
 
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
@@ -57,7 +61,7 @@ class CodeEditDialog(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
 		self.toolbar.pack(fill=X, padx=2, pady=2)
 
-		self.text = AICodeText(self, self.parent.ai, self.edited, highlights=self.parent.highlights)
+		self.text = AICodeText(self, self.delegate.get_ai_bin(), self.edited, highlights=self.delegate.get_highlights())
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate
@@ -80,18 +84,18 @@ class CodeEditDialog(PyMSDialog):
 
 		return self.text
 
-	def setup_complete(self):
-		self.settings.windows.load_window_size('code_edit', self)
+	def setup_complete(self) -> None:
+		self.config_.windows.code_edit.load_size(self)
 
 	# TODO: Cleanup
-	def gotosection(self, e, i):
+	def gotosection(self, i: int) -> None:
 		c = [self.text.tag_prevrange, self.text.tag_nextrange][i % 2]
 		t = [('Error','Warning'),('AIID','Block')][i > 1]
 		a = c(t[0], INSERT)
 		b = c(t[1], INSERT)
 		s = None
 		if a:
-			if not b or self.text.compare(a[0], ['>','<'][i % 2], b[0]):
+			if not b or self.text.compare(a[0], '<' if i % 2 else '>', b[0]):
 				s = a
 			else:
 				s = b
@@ -101,7 +105,7 @@ class CodeEditDialog(PyMSDialog):
 			self.text.see(s[0])
 			self.text.mark_set(INSERT, s[0])
 
-	def autocomplete(self):
+	def autocomplete(self) -> bool:
 		i = self.text.tag_ranges('Selection')
 		if i and '\n' in self.text.get(*i):
 			return False
@@ -135,7 +139,7 @@ class CodeEditDialog(PyMSDialog):
 				for _,c in CMD_HELP.items():
 					ac.extend(list(c.keys()))
 				ac.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
-			for ns in self.parent.tbl.strings[:228]:
+			for ns in self.delegate.get_tbl().strings[:228]:
 				cs = ns.split('\x00')
 				if cs[1] != '*':
 					cs = TBL.decompile_string('\x00'.join(cs[:2]), '\x0A\x28\x29\x2C')
@@ -144,11 +148,11 @@ class CodeEditDialog(PyMSDialog):
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(61):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.upgradesdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_upgrades_dat().get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			for i in range(44):
-				cs = TBL.decompile_string(self.parent.tbl.strings[self.parent.techdat.get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				cs = TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_tech_dat().get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)
 			aiid = ''
@@ -195,11 +199,12 @@ class CodeEditDialog(PyMSDialog):
 				r = True
 			self.after(1, self.completed)
 			return r
+		return False
 
-	def completed(self):
+	def completed(self) -> None:
 		self.completing = False
 
-	def statusupdate(self):
+	def statusupdate(self) -> None:
 		if not self.completing:
 			self.text.taboverride = None
 			self.complete = [None, 0]
@@ -209,7 +214,7 @@ class CodeEditDialog(PyMSDialog):
 			i[2] = len(self.text.get(*item))
 		self.scriptstatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
 
-	def edited(self):
+	def edited(self) -> None:
 		if not self.completing:
 			self.text.taboverride = None
 			self.complete = [None, 0]
@@ -217,7 +222,7 @@ class CodeEditDialog(PyMSDialog):
 		if self.file:
 			self.title('AI Script Editor [*%s*]' % self.file)
 
-	def cancel(self):
+	def cancel(self, _: Event | None = None) -> None:
 		if self.text.edited:
 			save = MessageBox.askquestion(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 			if save != MessageBox.NO:
@@ -226,25 +231,24 @@ class CodeEditDialog(PyMSDialog):
 				self.save()
 		self.ok()
 
-	def save(self, e=None):
-		if self.parent.iimport(iimport=self, parent=self):
+	def save(self, _: Event | None = None) -> None:
+		code = self.text.get('1.0', END)
+		if self.delegate.save_code(code, self):
 			self.text.edited = False
 			self.editstatus['state'] = DISABLED
 
-	def ok(self):
-		PyMSDialog.ok(self)
-
-	def test(self, e=None):
-		i = AIBIN.AIBIN(False, self.parent.unitsdat, self.parent.upgradesdat, self.parent.techdat, self.parent.tbl)
-		i.bwscript = AIBIN.BWBIN(self.parent.unitsdat, self.parent.upgradesdat, self.parent.techdat, self.parent.tbl)
+	def test(self, _: Event | None = None) -> None:
+		aibin = AIBIN.AIBIN(AIBIN.BWBIN())
+		code = self.text.get('1.0', END)
+		parse_context = self.delegate.get_parse_context(code)
 		try:
-			warnings = i.interpret(self, self.parent.extdefs)
-			for id in list(i.ais.keys()):
-				if id in self.parent.ai.externaljumps[0]:
-					for _,l in self.parent.ai.externaljumps[0].items():
-						for cid in l:
-							if not cid in i.ais:
-								raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally with out editing the scripts with the external references (%s) at the same time." % (id,cid))
+			aibin.compile(parse_context)
+			# for id in list(i.ais.keys()):
+			# 	if id in self.delegate.get_ai_bin().externaljumps[0]:
+			# 		for _,l in self.delegate.get_ai_bin().externaljumps[0].items():
+			# 			for cid in l:
+			# 				if not cid in i.ais:
+			# 					raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally without editing the scripts with the external references (%s) at the same time." % (id,cid))
 		except PyMSError as e:
 			if e.line is not None:
 				self.text.see('%s.0' % e.line)
@@ -255,19 +259,19 @@ class CodeEditDialog(PyMSDialog):
 						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
 			ErrorDialog(self, e)
 			return
-		if warnings:
+		if parse_context.warnings:
 			c = False
-			for w in warnings:
+			for w in parse_context.warnings:
 				if w.line is not None:
 					if not c:
 						self.text.see('%s.0' % w.line)
 						c = True
 					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
-			WarningDialog(self, warnings, True)
+			WarningDialog(self, parse_context.warnings, True)
 		else:
 			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
 
-	def export(self, e=None):
+	def export(self, _: Event | None = None) -> None:
 		if not self.file:
 			self.exportas()
 		else:
@@ -276,15 +280,15 @@ class CodeEditDialog(PyMSDialog):
 			f.close()
 			self.title('AI Script Editor [%s]' % self.file)
 
-	def exportas(self, e=None):
-		file = self.settings.lastpath.ai_txt.select_save_file(self, key='export', title='Export Code', filetypes=[FileType.txt()])
+	def exportas(self, _: Event | None = None) -> None:
+		file = self.config_.last_path.txt.ai.select_save(self)
 		if not file:
 			return
 		self.file = file
 		self.export()
 
-	def iimport(self, e=None):
-		iimport = self.settings.lastpath.ai_txt.select_open_file(self, key='import', title='Import From', filetypes=[FileType.txt()])
+	def iimport(self, _: Event | None = None) -> None:
+		iimport = self.config_.last_path.txt.ai.select_save(self)
 		if iimport:
 			try:
 				f = open(iimport, 'r')
@@ -295,21 +299,21 @@ class CodeEditDialog(PyMSDialog):
 			except:
 				ErrorDialog(self, PyMSError('Import',"Could not import file '%s'" % iimport))
 
-	def find(self, e=None):
+	def find(self, _: Event | None = None) -> None:
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self)
-			self.bind(Key.F3, self.findwindow.findnext)
+			self.bind(Key.F3(), self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 		self.findwindow.focus_set()
 
-	def colors(self, e=None):
-		c = CodeColors(self)
+	def colors(self, _: Event | None = None) -> None:
+		c = CodeColors(self, self.text.tags)
 		if c.cont:
 			self.text.setup(c.cont)
-			self.parent.highlights = c.cont
+			self.delegate.set_highlights(c.cont)
 
-	def asc3topyai(self, e=None):
+	def asc3topyai(self, _: Event | None = None) -> None:
 		beforeheader = ''
 		header = '### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!\n###       please update the header below appropriately!\n%s(%s, 111, %s): # Script Name: %s'
 		headerinfo = [None,None,None,None]
@@ -328,7 +332,7 @@ class CodeEditDialog(PyMSDialog):
 					headerinfo[2] = 'bwscript'
 				else:
 					headerinfo[2] = 'aiscript'
-				for n,string in enumerate(self.parent.tbl.strings):
+				for n,string in enumerate(self.delegate.get_tbl().strings):
 					if headerinfo[3] + '\x00' == string:
 						headerinfo[1] = n
 						break
@@ -360,7 +364,7 @@ class CodeEditDialog(PyMSDialog):
 		self.text.edited = True
 		self.editstatus['state'] = NORMAL
 
-	def debuggerize(self):
+	def debuggerize(self) -> None:
 		d = 0
 		data = ''
 		debug = {
@@ -413,7 +417,7 @@ class CodeEditDialog(PyMSDialog):
 					's':'[Line: %s | Inside script "%s"%s]' % (n, script, inblock),
 					'c':m.group(4) or '',
 				}
-				params = self.parent.ai.parameters[self.parent.ai.short_labels.index(m.group(2))]
+				params = self.delegate.get_ai_bin().parameters[self.delegate.get_ai_bin().short_labels.index(m.group(2))]
 				if params:
 					p = re.match('\\A%s\\Z' % ','.join(['\\s*(.+)\\s*'] * len(params)), m.group(3))
 					if not p:
@@ -430,22 +434,22 @@ class CodeEditDialog(PyMSDialog):
 		self.text.edited = True
 		self.editstatus['state'] = NORMAL
 
-	def load(self):
+	def load(self) -> None:
 		try:
-			warnings = self.parent.ai.decompile(self, self.parent.extdefs, self.parent.reference.get(), 1, self.ids)
+			serialize_context = self.delegate.get_serialize_context()
+			code = IO.output_to_text(lambda f: self.delegate.get_ai_bin().decompile(f, serialize_context, self.ids))
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if warnings:
-			WarningDialog(self, warnings)
+		self.text.delete('1.0', END)
+		self.text.insert(END, code)
+		self.text.edited = False
+		self.editstatus['state'] = DISABLED
+		# TODO: Warnings?
+		# if warnings:
+		# 	WarningDialog(self, warnings)
 
-	def write(self, text):
-		self.decompile += text
-
-	def readlines(self):
-		return self.text.get('1.0', END).split('\n')
-
-	def close(self):
+	def close(self) -> None:
 		if self.decompile:
 			self.text.insert('1.0', self.decompile.strip())
 			self.decompile = ''
@@ -455,11 +459,11 @@ class CodeEditDialog(PyMSDialog):
 			self.text.edited = False
 			self.editstatus['state'] = DISABLED
 
-	def destroy(self):
+	def destroy(self) -> None:
 		if self.findwindow:
 			Toplevel.destroy(self.findwindow)
 		Toplevel.destroy(self)
 
-	def dismiss(self):
-		self.settings.windows.save_window_size('code_edit', self)
+	def dismiss(self) -> None:
+		self.config_.windows.code_edit.save_size(self)
 		PyMSDialog.dismiss(self)

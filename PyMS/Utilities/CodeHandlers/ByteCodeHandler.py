@@ -22,6 +22,10 @@ class ByteCodeHandler(object):
 			raise PyMSError('Internal', f"Command '{cmd_def.name}' does not support byte code")
 		self.cmd_defs[cmd_def.byte_code_id] = cmd_def
 
+	def register_commands(self, cmd_defs: list[CodeCommandDefinition]) -> None:
+		for cmd_def in cmd_defs:
+			self.register_command(cmd_def)
+
 	def _decompile_block(self, address: int, owner: Any | None = None) -> tuple[CodeBlock, CodeBlock | None]:
 		if address in self.block_refs:
 			block = self.block_refs[address]
@@ -37,8 +41,8 @@ class ByteCodeHandler(object):
 			index = prev_block.commands.index(start_cmd)
 			while index < len(prev_block.commands):
 				cmd = prev_block.commands.pop(index)
-				assert cmd.original_address is not None
-				self.cmd_refs[cmd.original_address] = (block, cmd)
+				assert cmd.original_location is not None
+				self.cmd_refs[cmd.original_location] = (block, cmd)
 				block.commands.append(cmd)
 			block.prev_block = prev_block
 			if prev_block.next_block:
@@ -59,7 +63,7 @@ class ByteCodeHandler(object):
 				if not cmd_def:
 					raise PyMSError('Byte Code', "Invalid command id '%d'" % cmd_id)
 				cmd = cmd_def.decompile(scanner)
-				cmd.original_address = cmd_address
+				cmd.original_location = cmd_address
 				for n,param_type in enumerate(cmd.definition.param_types):
 					if param_type._block_reference:
 						new_block, split_block = self._decompile_block(cmd.params[n])

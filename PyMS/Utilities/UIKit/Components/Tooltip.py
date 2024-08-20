@@ -13,7 +13,7 @@ class Tooltip(object):
 		self.parent = parent
 		self.setupbinds(press)
 		self.text = text
-		self.font = font
+		self.font = font or Font.fixed()
 		self.delay = delay
 		self.mouse = mouse
 		self.id: str | None = None

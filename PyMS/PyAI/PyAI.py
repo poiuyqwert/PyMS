@@ -1,20 +1,20 @@
 
-from PyMS.FileFormats.AIBIN import AIBIN
 from .Config import PyAIConfig
 from .ListboxTooltip import ListboxTooltip
 from .EditScriptDialog import EditScriptDialog
 from .FindDialog import FindDialog
-from .ContinueImportDialog import ContinueImportDialog
 from .ImportListDialog import ImportListDialog
 from .CodeEditDialog import CodeEditDialog
 from .FlagEditor import FlagEditor
 from .ExternalDefDialog import ExternalDefDialog
-from .StringEditor import StringEditor
+from .SettingsUI.SettingsDialog import SettingsDialog
+# from .StringEditor import StringEditor
 from .Sort import SortBy
+from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIDefinitionsHandler, AIParseContext
+from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIDefinitionsHandler, AIParseContext, AILexer
 from ..FileFormats.AIBIN.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
@@ -31,19 +31,19 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.AboutDialog import AboutDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 import os
 
 LONG_VERSION = 'v%s' % Assets.version('PyAI')
 
-class PyAI(MainWindow, Actions.ActionDelegate):
+class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
 		self.aiscript: str | None = None
@@ -60,18 +60,20 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		self.config_ = PyAIConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
-		self.stat_txt: str | None = self.config_.stat_txt.file_path
-		self.tbl: TBL.TBL | None = TBL.TBL()
-		try:
-			self.tbl.load_file(self.stat_txt)
-		except:
-			self.stat_txt = None
-			self.tbl = None
-		self.tbledited = False
+		# self.stat_txt: str | None = self.config_.stat_txt.file_path
+		# self.tbl: TBL.TBL | None = TBL.TBL()
+		# try:
+		# 	self.tbl.load_file(self.stat_txt)
+		# except:
+		# 	self.stat_txt = None
+		# 	self.tbl = None
+		# self.tbledited = False
+		self.tbl: TBL.TBL | None = None
 		self.unitsdat: DAT.UnitsDAT | None = None
 		self.upgradesdat: DAT.UpgradesDAT | None = None
 		self.techdat: DAT.TechDAT | None = None
 		self.ai: AIBIN.AIBIN | None = None
+
 		self.strings: dict[int, list[str]] = {}
 		self.script_list: list[AIBIN.AIScriptHeader] = []
 		self.edited = False
@@ -79,7 +81,6 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
 		self.imports = list(file_path for file_path in self.config_.imports.data if os.path.exists(file_path))
-		self.extdefs = list(file_path for file_path in self.config_.extdefs.data if os.path.exists(file_path))
 		self.highlights = self.config_.highlights.data
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
@@ -128,8 +129,8 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		edit_menu.add_command('Edit Flags', self.editflags, Ctrl.g, enabled=False, tags='scripts_selected', bind_shortcut=False)
 		edit_menu.add_separator()
 		edit_menu.add_command('Manage External Definition Files', self.extdef, Ctrl.x, bind_shortcut=False)
-		edit_menu.add_command('Manage TBL File', self.managetbl, Ctrl.t, bind_shortcut=False)
-		edit_menu.add_command('Manage MPQ and DAT Settings', self.settings, Ctrl.u, bind_shortcut=False, underline='m')
+		# edit_menu.add_command('Manage TBL File', self.managetbl, Ctrl.t, bind_shortcut=False)
+		edit_menu.add_command('Manage Settings', self.settings, Ctrl.u, bind_shortcut=False, underline='m')
 
 		view_menu = self.menu.add_cascade('View') # type: ignore[func-returns-value, arg-type]
 		view_menu.add_radiobutton('File Order', self.sort, SortBy.file_order.value, underline='Order')
@@ -189,8 +190,8 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		self.toolbar.add_button(Assets.get_image('flags'), self.editflags, 'Edit Flags', Ctrl.g, enabled=False, tags='scripts_selected')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('extdef'), self.extdef, 'Manage External Definition Files', Ctrl.x)
-		self.toolbar.add_button(Assets.get_image('tbl'), self.managetbl, 'Manage TBL file', Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and DAT Settings', Ctrl.u)
+		# self.toolbar.add_button(Assets.get_image('tbl'), self.managetbl, 'Manage TBL file', Ctrl.t)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', Ctrl.u)
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('openset'), self.openset, 'Open TBL and DAT Settings')
 		self.toolbar.add_button(Assets.get_image('saveset'), self.saveset, 'Save TBL and DAT Settings')
@@ -201,9 +202,10 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 
 		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=Font.fixed(), width=1, height=1)
 		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda _: self.action_states())
 		self.listbox.bind(ButtonRelease.Click_Right(), self.popup)
 		self.listbox.bind(Double.Click_Left(), self.codeedit)
-		ListboxTooltip(self.listbox)
+		ListboxTooltip(self.listbox, self)
 
 		self.listmenu = Menu(self, tearoff=0)
 		self.listmenu.add_command('Add Blank Script', self.add, Key.Insert, underline='b') # type: ignore
@@ -247,21 +249,24 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 			unitsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
 			upgradesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.upgrades.file_path))
 			techdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.techdata.file_path))
-			if not self.tbl:
-				file = self.config_.last_path.tbl.select_open(self)
-				# TODO: We need stat_txt but if it fails to load we present settings but you don't manage it in settings?
-				if not file:
-					raise PyMSError('Load', 'You must load a stat_txt.tbl file')
-				tbl = TBL.TBL()
-				tbl.load_file(file)
-				self.stat_txt = file
-				self.tbl = tbl
+			tbl = TBL.TBL()
+			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			# if not self.tbl:
+			# 	file = self.config_.last_path.tbl.select_open(self)
+			# 	# TODO: We need stat_txt but if it fails to load we present settings but you don't manage it in settings?
+			# 	if not file:
+			# 		raise PyMSError('Load', 'You must load a stat_txt.tbl file')
+			# 	tbl = TBL.TBL()
+			# 	tbl.load_file(file)
+			# 	self.stat_txt = file
+			# 	self.tbl = tbl
 		except PyMSError as e:
 			err = e
 		else:
 			self.unitsdat = unitsdat
 			self.upgradesdat = upgradesdat
 			self.techdat = techdat
+			self.tbl = tbl
 			# TODO: DAT usage?
 			# if self.ai:
 			# 	self.ai.unitsdat = unitsdat
@@ -350,13 +355,13 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		self.menu.tag_enabled('can_redo', self.action_manager.can_redo()) # type: ignore[attr-defined]
 
 	def check_saved(self) -> CheckSaved:
-		if self.tbledited:
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % self.stat_txt, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return CheckSaved.cancelled
-				self.tbl.compile(self.stat_txt)
-				self.tbledited = False
+		# if self.tbledited:
+		# 	save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % self.stat_txt, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		# 	if save != MessageBox.NO:
+		# 		if save == MessageBox.CANCEL:
+		# 			return CheckSaved.cancelled
+		# 		self.tbl.compile(self.stat_txt)
+		# 		self.tbledited = False
 		if not self.ai or not self.edited:
 			return CheckSaved.saved
 		aiscript = self.aiscript
@@ -375,17 +380,17 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		else:
 			return self.saveas()
 
-	def is_tbl_edited(self) -> bool:
-		return self.tbledited
+	# def is_tbl_edited(self) -> bool:
+	# 	return self.tbledited
 
-	def mark_tbl_edited(self, edited: bool = True) -> None:
-		self.tbledited = edited
+	# def mark_tbl_edited(self, edited: bool = True) -> None:
+	# 	self.tbledited = edited
 
-	def get_stat_txt_path(self) -> str:
-		return self.stat_txt
+	# def get_stat_txt_path(self) -> str:
+	# 	return self.stat_txt
 
-	def set_stat_txt_path(self, file_path: str) -> None:
-		self.stat_txt = file_path
+	# def set_stat_txt_path(self, file_path: str) -> None:
+	# 	self.stat_txt = file_path
 
 	def popup(self, event: Event) -> None:
 		if not self.ai:
@@ -511,18 +516,18 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 			bw_path = self.config_.last_path.bin.select_save(self, title='Save bwscript.bin (Cancel to save aiscript.bin only)')
 		if bw_path and not check_allow_overwrite_internal_file(bw_path):
 			return CheckSaved.cancelled
-		if self.tbl and self.tbledited:
-			tbl_path = self.config_.last_path.tbl.select_save(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)")
-			if tbl_path:
-				if not check_allow_overwrite_internal_file(tbl_path):
-					return CheckSaved.cancelled
-				try:
-					self.tbl.compile(tbl_path)
-				except PyMSError as e:
-					ErrorDialog(self, e)
-					return CheckSaved.cancelled
-				self.stat_txt = tbl_path
-				self.tbledited = False
+		# if self.tbl and self.tbledited:
+		# 	tbl_path = self.config_.last_path.tbl.select_save(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)")
+		# 	if tbl_path:
+		# 		if not check_allow_overwrite_internal_file(tbl_path):
+		# 			return CheckSaved.cancelled
+		# 		try:
+		# 			self.tbl.compile(tbl_path)
+		# 		except PyMSError as e:
+		# 			ErrorDialog(self, e)
+		# 			return CheckSaved.cancelled
+		# 		self.stat_txt = tbl_path
+		# 		self.tbledited = False
 		try:
 			self.ai.save(ai_path)
 			if self.ai.bw_bin and bw_path:
@@ -607,11 +612,10 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
-		self.config_.stat_txt.file_path = self.stat_txt
+		# self.config_.stat_txt.file_path = self.stat_txt
 		self.config_.highlights.data = self.highlights
 		self.config_.reference.value = self.reference.get()
 		self.config_.imports.data = self.imports
-		self.config_.extdefs.data = self.extdefs
 		self.config_.save()
 		self.destroy()
 
@@ -619,7 +623,9 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 		self.listbox.select_set(0, END)
 
 	def add(self) -> None:
-		s = 2+sum(self.ai.aisizes.values())
+		if not self.ai:
+			return
+		s = 2 + self.ai.calculate_size()
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
@@ -660,10 +666,7 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 			return
 		script_ids = list(header.id for header in headers)
 		try:
-			definitions = AIDefinitionsHandler()
-			formatters = Formatters()
-			data_context = DataContext()
-			serialize_context = AISerializeContext(definitions, formatters, data_context)
+			serialize_context = self.get_serialize_context()
 			self.ai.decompile(export_path, serialize_context, script_ids)
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -680,10 +683,8 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 			iimport_path = self.config_.last_path.txt.ai.select_open(self)
 		if not iimport_path:
 			return
-		definitions = AIDefinitionsHandler()
-		data_context = DataContext()
-		parse_context = AIParseContext(definitions, data_context)
-		self.ai.compile(iimport_path, parse_context)
+		parse_context = self.get_parse_context(iimport_path)
+		self.ai.compile(parse_context)
 		if parse_context.warnings:
 			WarningDialog(parent, parse_context.warnings, True)
 		self.update_script_status()
@@ -695,7 +696,7 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 
 	def codeedit(self, event: Event | None = None) -> None:
 		headers = self.get_selected_headers()
-		CodeEditDialog(self, self.config_, list(header.id for header in headers))
+		CodeEditDialog(self, self, self.config_, list(header.id for header in headers))
 
 	def edit(self):
 		headers = self.get_selected_headers()
@@ -725,22 +726,14 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 	def extdef(self) -> None:
 		ExternalDefDialog(self, self.config_)
 
-	def managetbl(self) -> None:
-		headers = self.get_selected_headers()
-		if not headers:
-			return
-		StringEditor(self, index=headers[0].id)
+	# def managetbl(self) -> None:
+	# 	headers = self.get_selected_headers()
+	# 	if not headers:
+	# 		return
+	# 	StringEditor(self, index=headers[0].id)
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		data = [
-			('DAT  Settings',[
-				('units.dat', 'Used to check if a unit is a Building or has Air/Ground attacks', 'unitsdat', 'UnitsDAT'),
-				('upgrades.dat', 'Used to specify upgrade string entries in stat_txt.tbl', 'upgradesdat', 'UpgradesDAT'),
-				('techdata.dat', 'Used to specify technology string entries in stat_txt.tbl', 'techdatadat', 'TechDAT')
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,380), err, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
 
 	def openset(self) -> None:
 		file = self.config_.last_path.txt.settings.select_open(self)
@@ -750,23 +743,38 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 			files = open(file,'r').readlines()
 		except:
 			MessageBox.showerror('Invalid File',"Could not open '%s'." % file)
-		sets = [
-			TBL.TBL(),
-			DAT.UnitsDAT(),
-			DAT.UpgradesDAT(),
-			DAT.TechDAT(),
-		]
-		for n,s in enumerate(sets):
-			try:
-				s.load_file(files[n] % {'path': Assets.base_dir})
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-		self.tbl = sets[0]
-		self.stat_txt = files[0]
-		self.unitsdat = sets[1]
-		self.upgradesdat = sets[2]
-		self.techdat = sets[3]
+
+		tbl = TBL.TBL()
+		try:
+			tbl.load_file(files[0] % {'path': Assets.base_dir})
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.tbl = tbl
+		
+		unitsdat = DAT.UnitsDAT()
+		try:
+			unitsdat.load_file(files[1] % {'path': Assets.base_dir})
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.unitsdat = unitsdat
+		
+		upgradesdat = DAT.UpgradesDAT()
+		try:
+			upgradesdat.load_file(files[2] % {'path': Assets.base_dir})
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.upgradesdat = upgradesdat
+
+		techdat = DAT.TechDAT()
+		try:
+			techdat.load_file(files[3] % {'path': Assets.base_dir})
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		self.techdat = techdat
 
 	def saveset(self) -> None:
 		file = self.config_.last_path.txt.settings.select_save(self)
@@ -775,7 +783,12 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 				set = open(file,'w')
 			except:
 				MessageBox.showerror('Invalid File',"Could not save to '%s'." % file)
-			set.write(('%s\n%s\n%s\n%s' % (self.stat_txt, self.config_.settings.files.dat.units.file_path, self.config_.settings.files.dat.upgrades, self.config_.settings.files.dat.techdata)).replace(Assets.base_dir, '%(path)s'))
+			set.write(('%s\n%s\n%s\n%s' % (
+					self.config_.settings.files.stat_txt.file_path,
+					self.config_.settings.files.dat.units.file_path,
+					self.config_.settings.files.dat.upgrades,
+					self.config_.settings.files.dat.techdata
+				)).replace(Assets.base_dir, '%(path)s'))
 			set.close()
 
 	# ActionsDelegate
@@ -791,3 +804,78 @@ class PyAI(MainWindow, Actions.ActionDelegate):
 				if not header.id in select_script_ids:
 					continue
 				self.listbox.select_set(index)
+
+	# Main Delegate
+	def get_highlights(self) -> Any:
+		return self.highlights
+
+	def set_highlights(self, highlights: Any) -> None:
+		self.highlights = highlights
+
+	def get_tbl(self) -> TBL.TBL:
+		assert self.tbl is not None
+		return self.tbl
+
+	def get_upgrades_dat(self) -> DAT.UpgradesDAT:
+		assert self.upgradesdat is not None
+		return self.upgradesdat
+
+	def get_tech_dat(self) -> DAT.TechDAT:
+		assert self.techdat is not None
+		return self.techdat
+
+	def save_code(self, code: str, parent: AnyWindow) -> bool:
+		if not self.ai:
+			return False
+		parse_context = self.get_parse_context(code)
+		try:
+			self.ai.compile(parse_context)
+		except PyMSError as e:
+			ErrorDialog(parent, e)
+			return False
+		if parse_context.warnings:
+			WarningDialog(parent, parse_context.warnings, True)
+		self.update_script_status()
+		self.refresh_listbox()
+		self.mark_edited()
+		return True
+
+	def get_export_references(self) -> bool:
+		return self.reference.get()
+
+	def _get_data_context(self) -> DataContext:
+		return DataContext(
+			stattxt_tbl = self.tbl,
+			unitnames_tbl = None,
+			units_dat = self.unitsdat,
+			upgrades_dat = self.upgradesdat,
+			techdata_dat = self.techdat
+		)
+
+	def _get_definitions_handler(self) -> AIDefinitionsHandler:
+		# TODO: Load definitions files
+		defs = AIDefinitionsHandler()
+		for extdef in self.config_.extdefs.data:
+			defs.parse(extdef)
+		return defs
+
+	def _get_formatters(self) -> Formatters:
+		return Formatters()
+
+	def get_serialize_context(self) -> AISerializeContext:
+		definitions = self._get_definitions_handler()
+		formatters = self._get_formatters()
+		data_context = self._get_data_context()
+		return AISerializeContext(definitions, formatters, data_context)
+
+	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
+		definitions = self._get_definitions_handler()
+		data_context = self._get_data_context()
+		with IO.InputText(input) as f:
+			code = f.read()
+		lexer = AILexer(code)
+		return AIParseContext(lexer, definitions, data_context)
+
+	# Tooltip Delegate
+	def get_list_entry(self, index: int) -> AIBIN.AIScriptHeader:
+		return self.script_list[index]

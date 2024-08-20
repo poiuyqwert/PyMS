@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Sequence, Any
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
 	from .BuilderContext import BuilderContext
-	from .Lexer import Lexer
 
 class CodeCommandDefinition(object):
 	def __init__(self, name: str, byte_code_id: int | None, param_types: Sequence[CodeType] = (), *, ends_flow: bool = False, separate: bool = False, ephemeral: bool = False) -> None:
@@ -30,43 +29,49 @@ class CodeCommandDefinition(object):
 			params.append(param_type.decompile(scanner))
 		return CodeCommand(self, params)
 
-	def parse(self, lexer: Lexer, parse_context: ParseContext) -> CodeCommand:
-		# TODO: Support braces
+	def parse(self, parse_context: ParseContext) -> CodeCommand:
 		parse_context.command_in_parens = False
 		params: list[Any] = []
-		token = lexer.next_token(peek=True)
+		token = parse_context.lexer.next_token(peek=True)
 		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
-			_ = lexer.next_token()
+			_ = parse_context.lexer.next_token()
 			parse_context.command_in_parens = True
 		missing_blocks: list[tuple[str, int, int | None]] = []
 		for param_index,param_type in enumerate(self.param_types):
-			if param_index > 0:
-				token = lexer.next_token()
+			if parse_context.command_in_parens and param_index > 0:
+				token = parse_context.lexer.next_token()
 				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
-					raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
-			token = lexer.next_token(peek=True)
+					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
+			token = parse_context.lexer.next_token(peek=True)
 			value: Any | None = None
 			if isinstance(token, Tokens.IdentifierToken) and parse_context.definitions:
 				variable = parse_context.definitions.get_variable(token.raw_value)
 				if variable and param_type.accepts(variable.type):
 					value = variable.value
-					_ = lexer.next_token()
+					param_type.validate(value, parse_context, token.raw_value)
+					_ = parse_context.lexer.next_token()
 			if value is None:
-				value = param_type.lex(lexer, parse_context)
+				try:
+					value = param_type.lex(parse_context)
+				except PyMSError as e:
+					parse_context.attribute_error(e)
+					raise e
+				except:
+					raise
 			if isinstance(param_type, AddressCodeType):
 				block = parse_context.lookup_block(value)
 				if not block:
-					missing_blocks.append((value, param_index, lexer.line))
+					missing_blocks.append((value, param_index, parse_context.lexer.line))
 				else:
 					value = block
 			params.append(value)
 		if parse_context.command_in_parens:
-			token = lexer.next_token()
+			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
-				raise PyMSError('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
-		token = lexer.next_token()
+				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-			raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
+			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
 		cmd = CodeCommand(self, params)
 		if not self.ephemeral:
 			for block_name,param_index,source_line in missing_blocks:
@@ -74,10 +79,10 @@ class CodeCommandDefinition(object):
 		return cmd
 
 class CodeCommand(object):
-	def __init__(self, definition: CodeCommandDefinition, params: list[Any], originl_address: int | None = None) -> None:
+	def __init__(self, definition: CodeCommandDefinition, params: list[Any]) -> None:
 		self.definition = definition
 		self.params = params
-		self.original_address = originl_address
+		self.original_location: int | None = None # Byte address or Source line
 
 	def compile(self, context: BuilderContext) -> None:
 		assert self.definition.byte_code_id is not None

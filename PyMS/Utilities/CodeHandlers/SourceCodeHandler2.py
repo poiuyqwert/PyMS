@@ -5,13 +5,23 @@ from . import Tokens
 
 from ..PyMSError import PyMSError
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
 	from .CodeCommand import CodeCommand, CodeCommandDefinition
 	from .CodeDirective import CodeDirectiveDefinition
 	from .ParseContext import ParseContext, BlockMetadata
 
-class SourceCodeHandler(object):
+class SourceCodeParser(Protocol):
+	def handles_token(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
+		...
+
+	def parse(self, parse_context: ParseContext) -> Tokens.Token | None:
+		...
+
+	def finalize(self, parse_context: ParseContext) -> None:
+		...
+
+class BasicSourceCodeParser(SourceCodeParser):
 	def __init__(self) -> None:
 		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
 		self.directive_defs: dict[str, CodeDirectiveDefinition] = {}
@@ -34,17 +44,15 @@ class SourceCodeHandler(object):
 		for directive_def in directive_defs:
 			self.register_directive(directive_def)
 
-	def parse_custom(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
-		return False
+	def handles_token(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
+		return True
 
-	def parse(self, parse_context: ParseContext) -> None:
+	def parse(self, parse_context: ParseContext) -> Tokens.Token | None:
 		from .CodeBlock import CodeBlock
 		while True:
 			token = parse_context.lexer.next_token()
 			if isinstance(token, Tokens.EOFToken):
 				break
-			if self.parse_custom(token, parse_context):
-				continue
 			if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
 				self.parse_directive(parse_context)
 				continue
@@ -84,7 +92,10 @@ class SourceCodeHandler(object):
 				continue
 			if isinstance(token, Tokens.NewlineToken):
 				continue
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected a block or command definition)" % token.raw_value)
+			return token
+		return None
+
+	def finalize(self, parse_context: ParseContext) -> None:
 		if parse_context.active_block:
 			block_metadata = parse_context.lookup_block_metadata(parse_context.active_block)
 			assert block_metadata is not None
@@ -105,3 +116,38 @@ class SourceCodeHandler(object):
 		directive_def = self.directive_defs[token.raw_value]
 		directive = directive_def.parse(parse_context)
 		parse_context.handle_directive(directive)
+
+class SourceCodeHandler2:
+	def __init__(self) -> None:
+		self.parsers: list[SourceCodeParser] = []
+
+	def register_parser(self, parser: SourceCodeParser) -> None:
+		self.parsers.append(parser)
+
+	def parse(self, parse_context: ParseContext) -> None:
+		continue_token: Tokens.Token | None = None
+		while True:
+			if continue_token is not None:
+				token = continue_token
+			else:
+				token = parse_context.lexer.next_token()
+			if isinstance(token, Tokens.EOFToken):
+				break
+			error: PyMSError | None = None
+			for parser in self.parsers:
+				if parser.handles_token(token, parse_context):
+					try:
+						continue_token = parser.parse(parse_context)
+						error = None
+						break
+					except PyMSError as e:
+						if error is None:
+							error = e
+			else:
+				if error:
+					raise error
+				raise parse_context.error('Parse', "Unexpected token '%s'" % token.raw_value)
+			if parse_context.lexer.is_at_end():
+				break
+		for parser in self.parsers:
+			parser.finalize(parse_context)

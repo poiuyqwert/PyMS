@@ -62,6 +62,10 @@ class WhitespaceToken(RegexToken):
 class NewlineToken(RegexToken):
 	_regexp = re.compile(r'[\r\n]+')
 
+	def newline_count(self) -> int:
+		newlines = self.raw_value.replace('\r\n', '\n')
+		return len(newlines)
+
 class CommentToken(RegexToken):
 	_regexp = re.compile(r'#[^\r\n]*')
 

@@ -1,0 +1,409 @@
+
+from . import WarningID
+from .AISerializeContext import AISerializeContext
+from .AIParseContext import AIParseContext
+
+from ....FileFormats.DAT.UnitsDAT import DATUnit
+
+from ....Utilities.CodeHandlers import CodeType
+from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
+from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities import Struct
+from ....Utilities.PyMSError import PyMSError
+from ....Utilities.PyMSWarning import PyMSWarning
+
+class ByteCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'byte', Struct.l_u8)
+
+class WordCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'word', Struct.l_u16)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (WordCodeType, ByteCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match type(other_type):
+			case WordCodeType():
+				return 2
+			case ByteCodeType():
+				return 1
+			case _:
+				return 0
+
+class DWordCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'dword', Struct.l_u32)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (DWordCodeType, WordCodeType, ByteCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case DWordCodeType():
+				return 3
+			case WordCodeType():
+				return 2
+			case ByteCodeType():
+				return 1
+			case _:
+				return 0
+
+class BlockCodeType(CodeType.AddressCodeType):
+	def __init__(self) -> None:
+		CodeType.AddressCodeType.__init__(self, 'block', Struct.l_u16)
+
+class UnitCodeType(CodeType.IntCodeType):
+	def __init__(self, name: str = 'unit') -> None:
+		# TODO: Expanded DAT
+		CodeType.IntCodeType.__init__(self, name, bytecode_type=Struct.l_u16, limits=(0, 227))
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (UnitCodeType, BuildingCodeType, MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, UnitCodeType)
+
+	def serialize(self, value: int, context: SerializeContext) -> str:
+		if context.definitions:
+			variable = context.definitions.lookup_variable(value, self)
+			if variable:
+				return variable.name
+		if isinstance(context, AISerializeContext) and context.data_context:
+			name = context.data_context.unit_name(value)
+			if name:
+				return StringCodeType.serialize_string(name)
+		return str(value)
+
+	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		token = token or str(num)
+		if num < 0:
+			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		if num > parse_context.data_context.units_dat.entry_count():
+			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
+
+class BuildingCodeType(UnitCodeType):
+	def __init__(self) -> None:
+		UnitCodeType.__init__(self, 'building')
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(self, BuildingCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case BuildingCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		if unit_id == 42: # Overlord
+			return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building) or (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.resource_miner):
+			return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, id=WarningID.building))
+
+class MilitaryCodeType(UnitCodeType):
+	def __init__(self, name: str = 'military') -> None:
+		UnitCodeType.__init__(self, name)
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if not (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building):
+			return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' Unit is a building", level=1, id=WarningID.military))
+
+class GGMilitaryCodeType(MilitaryCodeType):
+	def __init__(self) -> None:
+		MilitaryCodeType.__init__(self, 'gg_military')
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (GGMilitaryCodeType, GAMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case GGMilitaryCodeType():
+				return 4
+			case GAMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		definitions = parse_context.definitions
+		if definitions is not None:
+			annotations = definitions.get_annotations(unit_id, self)
+			if annotations and 'spellcaster' in annotations:
+				return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
+			return
+		if entry.subunit1 is not None and entry.subunit1 != 228:
+			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
+			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
+				return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.gg_military))
+
+class AGMilitaryCodeType(MilitaryCodeType):
+	def __init__(self) -> None:
+		MilitaryCodeType.__init__(self, 'ag_military')
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (AGMilitaryCodeType, AAMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case AGMilitaryCodeType():
+				return 4
+			case AAMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		definitions = parse_context.definitions
+		if definitions is not None:
+			annotations = definitions.get_annotations(unit_id, self)
+			if annotations and 'spellcaster' in annotations:
+				return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if entry.air_weapon != 130 or entry.attack_unit != 53:
+			return
+		if entry.subunit1 is not None and entry.subunit1 != 228:
+			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
+			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
+				return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ag_military))
+
+class GAMilitaryCodeType(MilitaryCodeType):
+	def __init__(self) -> None:
+		MilitaryCodeType.__init__(self, 'ga_military')
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (GAMilitaryCodeType, GGMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case GAMilitaryCodeType():
+				return 4
+			case GGMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		definitions = parse_context.definitions
+		if definitions is not None:
+			annotations = definitions.get_annotations(unit_id, self)
+			if annotations and 'spellcaster' in annotations:
+				return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
+			return
+		if entry.subunit1 is not None and entry.subunit1 != 228:
+			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
+			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
+				return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ga_military))
+
+class AAMilitaryCodeType(MilitaryCodeType):
+	def __init__(self) -> None:
+		MilitaryCodeType.__init__(self, 'aa_military')
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (AAMilitaryCodeType, AGMilitaryCodeType, MilitaryCodeType))
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		match other_type:
+			case AAMilitaryCodeType():
+				return 4
+			case AGMilitaryCodeType():
+				return 3
+			case MilitaryCodeType():
+				return 2
+			case UnitCodeType():
+				return 1
+			case _:
+				return 0
+
+	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		UnitCodeType.validate(self, unit_id, parse_context, token)
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		definitions = parse_context.definitions
+		if definitions is not None:
+			annotations = definitions.get_annotations(unit_id, self)
+			if annotations and 'spellcaster' in annotations:
+				return
+		entry = parse_context.data_context.units_dat.get_entry(unit_id)
+		if entry.air_weapon != 130 or entry.attack_unit != 53:
+			return
+		if entry.subunit1 is not None and entry.subunit1 != 228:
+			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
+			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
+				return
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.aa_military))
+
+class UpgradeCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		# TODO: Expanded DAT
+		CodeType.IntCodeType.__init__(self, 'upgrade', Struct.l_u16, limits=(0, 60))
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, UpgradeCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, UpgradeCodeType)
+
+	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		token = token or str(num)
+		if num < 0:
+			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.upgrades_dat is None:
+			return
+		if num > parse_context.data_context.upgrades_dat.entry_count():
+			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
+
+class TechnologyCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		# TODO: Expanded DAT
+		CodeType.IntCodeType.__init__(self, 'technology', Struct.l_u16, limits=(0, 43))
+	# TODO: Custom
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, TechnologyCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, TechnologyCodeType)
+
+	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+		token = token or str(num)
+		if num < 0:
+			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
+		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.techdata_dat is None:
+			return
+		if num > parse_context.data_context.techdata_dat.entry_count():
+			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
+
+class StringCodeType(CodeType.StrCodeType):
+	def __init__(self) -> None:
+		CodeType.StrCodeType.__init__(self, 'string')
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, StringCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, StringCodeType)
+
+class CompareCodeType(CodeType.EnumCodeType):
+	def __init__(self) -> None:
+		cases = {
+			'GreaterThan': 1,
+			'LessThan': 0
+		}
+		CodeType.EnumCodeType.__init__(self, 'compare', Struct.l_u8, cases)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, CompareCodeType)
+
+	def compatible(self, other_type: CodeType.CodeType) -> int:
+		return isinstance(other_type, CompareCodeType)
+
+all_basic_types: list[CodeType.CodeType] = [
+	ByteCodeType(),
+	WordCodeType(),
+	DWordCodeType(),
+	BlockCodeType(),
+	UnitCodeType(),
+	BuildingCodeType(),
+	MilitaryCodeType(),
+	GGMilitaryCodeType(),
+	GAMilitaryCodeType(),
+	AGMilitaryCodeType(),
+	AAMilitaryCodeType(),
+	UpgradeCodeType(),
+	TechnologyCodeType(),
+	StringCodeType(),
+	CompareCodeType(),
+]
+
+# Types used by header
+
+class TBLStringCodeType(CodeType.IntCodeType):
+	def __init__(self) -> None:
+		CodeType.IntCodeType.__init__(self, 'tbl_string', Struct.l_u32)
+
+	def comment(self, value: int, context: SerializeContext) -> str | None:
+		if not isinstance(context, AISerializeContext):
+			return None
+		return context.data_context.stattxt_string(value - 1)
+
+class BinFileCodeType(CodeType.EnumCodeType):
+	def __init__(self) -> None:
+		cases = {
+			'aiscript': 0,
+			'bwscript': 1
+		}
+		CodeType.EnumCodeType.__init__(self, 'bin_file', Struct.l_u8, cases) # TODO: bytecode_type
+
+class BoolCodeType(CodeType.BooleanCodeType):
+	def __init__(self) -> None:
+		CodeType.BooleanCodeType.__init__(self, 'bool', Struct.l_u8) # TODO: bytecode_type
+
+all_header_types: list[CodeType.CodeType] = [
+	TBLStringCodeType(),
+	BinFileCodeType(),
+	BoolCodeType(),
+]

@@ -1,10 +1,12 @@
 
 from __future__ import annotations
 
+from PyMS.Utilities.CodeHandlers.ParseContext import ParseContext
+
 from . import Tokens
 from .CodeBlock import CodeBlock
 from .BuilderContext import BuilderContext
-from .Lexer import Stop
+from . import Lexer
 
 from .. import Struct
 from ..PyMSError import PyMSError
@@ -14,14 +16,13 @@ from .. import Struct
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
-	from .Lexer import Lexer
 	from .ParseContext import ParseContext
 
 I = TypeVar('I')
 O = TypeVar('O')
 class CodeType(Generic[I, O]):
 	def __init__(self, name: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
-		self._name = name
+		self.name = name
 		self._bytecode_type = bytecode_type
 		self._block_reference = block_reference
 
@@ -47,11 +48,14 @@ class CodeType(Generic[I, O]):
 	def comment(self, value: I, context: SerializeContext) -> str | None:
 		return None
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> O:
+	def lex(self, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.lex()')
 
-	def parse(self, token: str, parse_context: ParseContext) -> O:
+	def parse(self, token: str, parse_context: ParseContext | None) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.parse()')
+
+	def validate(self, value: O, parse_context: ParseContext | None, token: str | None = None) -> None:
+		pass
 
 	def __eq__(self, other) -> bool:
 		return type(other) == type(self)
@@ -64,46 +68,52 @@ class IntCodeType(CodeType[int, int]):
 		CodeType.__init__(self, name, bytecode_type, False)
 		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> int:
-		token = lexer.next_token()
+	def lex(self, parse_context: ParseContext) -> int:
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.IntegerToken):
-			raise PyMSError('Parse', "Expected integer value but got '%s'" % token.raw_value, line=lexer.line)
+			raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> int:
+	def parse(self, token: str, parse_context: ParseContext | None) -> int:
 		try:
 			num = int(token)
 		except:
-			raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self._name))
+			raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))
+		self.validate(num, parse_context)
+		return num
+
+	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		min,max = self._limits
 		if num < min:
-			raise PyMSError('Parse', "Value is too small for '%s' (got '%d', minimum is '%d')" % (self._name, num, min))
+			raise PyMSError('Parse', "Value is too small for '%s' (got '%d', minimum is '%d')" % (self.name, num, min))
 		if num > max:
-			raise PyMSError('Parse', "Value is too large for '%s' (got '%d', maximum is '%d')" % (self._name, num, max))
-		return num
+			raise PyMSError('Parse', "Value is too large for '%s' (got '%d', maximum is '%d')" % (self.name, num, max))
 
 class FloatCodeType(CodeType[float, float]):
 	def __init__(self, name: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
 		CodeType.__init__(self, name, bytecode_type, False)
 		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> float:
-		token = lexer.next_token()
+	def lex(self, parse_context: ParseContext) -> float:
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.FloatToken):
-			raise PyMSError('Parse', "Expected float value but got '%s'" % token.raw_value, line=lexer.line)
+			raise parse_context.error('Parse', "Expected float value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> float:
+	def parse(self, token: str, parse_context: ParseContext | None) -> float:
 		try:
 			num = float(token)
 		except:
-			raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self._name))
+			raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))
+		self.validate(num, parse_context)
+		return num
+
+	def validate(self, num: float, parse_context: ParseContext | None, token: str | None = None) -> None:
 		min,max = self._limits
 		if num < min:
-			raise PyMSError('Parse', "Value is too small for '%s' (got '%f', minimum is '%f')" % (self._name, num, min))
+			raise PyMSError('Parse', "Value is too small for '%s' (got '%f', minimum is '%f')" % (self.name, num, min))
 		if num > max:
-			raise PyMSError('Parse', "Value is too large for '%s' (got '%f', maximum is '%f')" % (self._name, num, max))
-		return num
+			raise PyMSError('Parse', "Value is too large for '%s' (got '%f', maximum is '%f')" % (self.name, num, max))
 
 class AddressCodeType(CodeType[CodeBlock, str]):
 	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
@@ -115,13 +125,13 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
 		return context.block_label(block)
 	
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> str:
-		token = lexer.next_token()
+	def lex(self, parse_context: ParseContext) -> str:
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.IdentifierToken):
-			raise PyMSError('Parse', "Expected block label identifier but got '%s'" % token.raw_value, line=lexer.line)
+			raise parse_context.error('Parse', "Expected block label identifier but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> str:
+	def parse(self, token: str, parse_context: ParseContext | None) -> str:
 		return token # TODO: Should this do logic of converting to CodeBlock if the block has already been parsed?
 
 class StrCodeType(CodeType[str, str]):
@@ -156,21 +166,21 @@ class StrCodeType(CodeType[str, str]):
 	def serialize(self, value: str, context: SerializeContext) -> str:
 		return StrCodeType.serialize_string(value)
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> str:
+	def lex(self, parse_context: ParseContext) -> str:
 		token: Tokens.Token
 		if parse_context.command_in_parens:
-			token = lexer.read_open_string(lambda token: Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Stop.proceed)
+			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 		else:
-			token = lexer.next_token()
+			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.StringToken):
-				raise PyMSError('Parse', "Expected string value but got '%s'" % token.raw_value, line=lexer.line)
+				raise parse_context.error('Parse', "Expected string value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> str:
+	def parse(self, token: str, parse_context: ParseContext | None) -> str:
 		try:
 			return StrCodeType.parse_string(token)
 		except:
-			if parse_context.command_in_parens:
+			if parse_context and parse_context.command_in_parens:
 				return token
 			raise
 
@@ -188,7 +198,7 @@ class EnumCodeType(CodeType[int, int]):
 		for case_name,case_value in self._cases.items():
 			if value == case_value:
 				return case_name
-		raise PyMSError('Serialize', "Value '%s' has no case for '%s'" % (value, self._name))
+		raise PyMSError('Serialize', "Value '%s' has no case for '%s'" % (value, self.name))
 
 	def _possible_values(self) -> str:
 		values = ''
@@ -198,30 +208,30 @@ class EnumCodeType(CodeType[int, int]):
 			values += name
 		return values
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> int:
-		token = lexer.next_token()
+	def lex(self, parse_context: ParseContext) -> int:
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.IdentifierToken):
-			raise PyMSError('Parse', "Expected a '%s' enum identifier but got '%s' (possible values: %s)" % (self._name, token.raw_value, self._possible_values()), line=lexer.line)
+			raise parse_context.error('Parse', "Expected a '%s' enum identifier but got '%s' (possible values: %s)" % (self.name, token.raw_value, self._possible_values()))
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> int:
+	def parse(self, token: str, parse_context: ParseContext | None) -> int:
 		if not token in self._cases:
-			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s' (possible values: %s)" % (token, self._name, self._possible_values()))
+			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s' (possible values: %s)" % (token, self.name, self._possible_values()))
 		return self._cases[token]
 
 class BooleanCodeType(IntCodeType):
 	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
 		IntCodeType.__init__(self, name, bytecode_type, limits=(0, 1))
 
-	def lex(self, lexer: Lexer, parse_context: ParseContext) -> bool:
-		token = lexer.next_token()
+	def lex(self, parse_context: ParseContext) -> bool:
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.BooleanToken) and not isinstance(token, Tokens.IntegerToken):
-			raise PyMSError('Parse', "Expected a boolean but got '%s'" % token.raw_value, line=lexer.line)
+			raise parse_context.error('Parse', "Expected a boolean but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext) -> bool:
+	def parse(self, token: str, parse_context: ParseContext | None) -> bool:
 		if token == 'true' or token == '1':
 			return True
 		elif token == 'false' or token == '0':
 			return False
-		raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self._name))
+		raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))

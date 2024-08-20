@@ -1,13 +1,14 @@
 
 from .AIFlag import AIFlag
+
 from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler
-from .AICodeHandlers import HeaderNameString, HeaderBinFile, BroodwarOnly, StarEditHidden, RequiresLocation, EntryPoint
+from .AICodeHandlers.CodeCommands import HeaderNameString, HeaderBinFile, BroodwarOnly, StarEditHidden, RequiresLocation, EntryPoint
 
 from ...Utilities.PyMSError import PyMSError
 # from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.BytesScanner import  BytesScanner
 from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
-from ...Utilities.CodeHandlers.CodeType import CodeBlock#, StrCodeType
+from ...Utilities.CodeHandlers.CodeType import CodeBlock
 from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities import Struct
@@ -190,11 +191,8 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 				else:
 					self.decompile_blocks(f, script_id, serialize_context)
 
-	def compile(self, input: IO.AnyInputText, parse_context: AIParseContext) -> None:
-		with IO.InputText(input) as f:
-			code = f.read()
-		lexer = AILexer(code)
-		source_handler = AISourceCodeHandler(lexer)
+	def compile(self, parse_context: AIParseContext) -> None:
+		source_handler = AISourceCodeHandler()
 		source_handler.parse(parse_context)
 		parse_context.finalize()
 		# TODO: Complete
