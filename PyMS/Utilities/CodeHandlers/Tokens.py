@@ -67,7 +67,7 @@ class NewlineToken(RegexToken):
 		return len(newlines)
 
 class CommentToken(RegexToken):
-	_regexp = re.compile(r'#[^\r\n]*')
+	_regexp = re.compile(r'(?:#|;)[^\r\n]*')
 
 class UnknownToken(RegexToken):
 	_regexp = re.compile(r'\s+|\S+')

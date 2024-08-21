@@ -21,8 +21,9 @@ if TYPE_CHECKING:
 I = TypeVar('I')
 O = TypeVar('O')
 class CodeType(Generic[I, O]):
-	def __init__(self, name: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
 		self.name = name
+		self.help_text = help_text
 		self._bytecode_type = bytecode_type
 		self._block_reference = block_reference
 
@@ -64,8 +65,8 @@ class CodeType(Generic[I, O]):
 		return hash(type(self))
 
 class IntCodeType(CodeType[int, int]):
-	def __init__(self, name: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None) -> None:
-		CodeType.__init__(self, name, bytecode_type, False)
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None) -> None:
+		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
 	def lex(self, parse_context: ParseContext) -> int:
@@ -90,8 +91,8 @@ class IntCodeType(CodeType[int, int]):
 			raise PyMSError('Parse', "Value is too large for '%s' (got '%d', maximum is '%d')" % (self.name, num, max))
 
 class FloatCodeType(CodeType[float, float]):
-	def __init__(self, name: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
-		CodeType.__init__(self, name, bytecode_type, False)
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
+		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._limits = limits or (bytecode_type.min, bytecode_type.max)
 
 	def lex(self, parse_context: ParseContext) -> float:
@@ -116,8 +117,8 @@ class FloatCodeType(CodeType[float, float]):
 			raise PyMSError('Parse', "Value is too large for '%s' (got '%f', maximum is '%f')" % (self.name, num, max))
 
 class AddressCodeType(CodeType[CodeBlock, str]):
-	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
-		CodeType.__init__(self, name, bytecode_type, True)
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
+		CodeType.__init__(self, name, help_text, bytecode_type, True)
 
 	def compile(self, block: CodeBlock, context: BuilderContext) -> None:
 		context.add_block_ref(block, cast(Struct.IntField, self._bytecode_type))
@@ -135,8 +136,8 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 		return token # TODO: Should this do logic of converting to CodeBlock if the block has already been parsed?
 
 class StrCodeType(CodeType[str, str]):
-	def __init__(self, name: str) -> None:
-		CodeType.__init__(self, name, Struct.l_str(0), False) # TODO: We don't actually use the Struct field
+	def __init__(self, name: str, help_text: str) -> None:
+		CodeType.__init__(self, name, help_text, Struct.l_str(0), False) # TODO: We don't actually use the Struct field
 
 	@staticmethod
 	def serialize_string(string: str) -> str:
@@ -185,8 +186,8 @@ class StrCodeType(CodeType[str, str]):
 			raise
 
 class EnumCodeType(CodeType[int, int]):
-	def __init__(self, name: str, bytecode_type: Struct.IntField, cases: dict[str, int]) -> None:
-		CodeType.__init__(self, name, bytecode_type, False)
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, cases: dict[str, int]) -> None:
+		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._cases = cases
 
 	def decompile(self, scanner: BytesScanner) -> int:
@@ -220,8 +221,8 @@ class EnumCodeType(CodeType[int, int]):
 		return self._cases[token]
 
 class BooleanCodeType(IntCodeType):
-	def __init__(self, name: str, bytecode_type: Struct.IntField) -> None:
-		IntCodeType.__init__(self, name, bytecode_type, limits=(0, 1))
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
+		IntCodeType.__init__(self, name, help_text, bytecode_type, limits=(0, 1))
 
 	def lex(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.next_token()

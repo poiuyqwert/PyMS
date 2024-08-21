@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 	from .PyMSWarning import PyMSWarning
 
 class PyMSError(Exception):
-	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False): # type: (str, str, int | None, str | None, list[PyMSWarning], bool) -> None
+	def __init__(self, type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] = [], capture_exception = False, level=1):
 		self.type = type
 		self.error = error
 		self.line = line
@@ -19,6 +19,7 @@ class PyMSError(Exception):
 		self.exception = None
 		if capture_exception:
 			self.exception = sys.exc_info()
+		self.level = level
 
 	def repr(self): # type: () -> str
 		r = '%s Error: %s' % (self.type, self.error)

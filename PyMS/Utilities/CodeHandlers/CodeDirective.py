@@ -23,6 +23,9 @@ class DirectiveType(Generic[O]):
 	def parse(self, token: str, parse_context: ParseContext | None) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.parse()')
 
+	def validate(self, value: O, parse_context: ParseContext | None, token: str | None = None) -> None:
+		raise NotImplementedError(self.__class__.__name__ + '.validate()')
+
 class CodeDirectiveDefinition(object):
 	def __init__(self, name: str, param_types: Sequence[DirectiveType] = ()) -> None:
 		self.name = name
@@ -30,7 +33,7 @@ class CodeDirectiveDefinition(object):
 
 	def parse(self, parse_context: ParseContext) -> CodeDirective:
 		params: list[Any] = []
-		token = parse_context.lexer.next_token(peek=True)
+		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '(':
 			raise parse_context.error('Parse', "Expected '(' but got '%s'" % token.raw_value)
 		for param_index,param_type in enumerate(self.param_types):

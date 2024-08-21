@@ -132,36 +132,36 @@ class TRG:
 					enabled = False
 					token = lexer.next_token()
 				if not isinstance(token, Tokens.IdentifierToken):
-					raise PyMSError('Compile', f"Expected a condition, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected a condition, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				definition = Conditions.get_definition_named(token.raw_value)
 				if not definition:
-					raise PyMSError('Compile', f"Unknown condition name '{token.raw_value}'", lexer.line)
+					raise PyMSError('Compile', f"Unknown condition name '{token.raw_value}'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				condition = definition.new_condition()
 				if not enabled:
 					condition.flags |= ConditionFlag.disabled
 				token = lexer.check_token(TRGLexer.ParameterToken)
 				for parameter in definition.parameters:
 					if not isinstance(token, TRGLexer.ParameterToken):
-						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", lexer.line)
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 					try:
 						if warning := parameter.condition_compile(token.raw_value, condition, self):
 							warnings.append(warning)
 					except PyMSError as e:
-						e.line = lexer.line
+						e.line = lexer.state.line
 						raise e
 					except:
-						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", lexer.line)
+						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 					token = lexer.next_token()
 					if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
 						token = lexer.check_token(TRGLexer.ParameterToken)
 				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, Tokens.NewlineToken):
-					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				if condition.condition_type != ConditionType.no_condition:
 					trigger.add_condition(condition)
 				token = lexer.skip(Tokens.NewlineToken)
@@ -178,36 +178,36 @@ class TRG:
 					enabled = False
 					token = lexer.next_token()
 				if not isinstance(token, Tokens.IdentifierToken):
-					raise PyMSError('Compile', f"Expected an action, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected an action, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				definition = Actions.get_definition_named(token.raw_value)
 				if not definition:
-					raise PyMSError('Compile', f"Unknown action name '{token.raw_value}'", lexer.line)
+					raise PyMSError('Compile', f"Unknown action name '{token.raw_value}'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected '(' to start parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				action = definition.new_action()
 				if not enabled:
 					action.flags |= ActionFlag.disabled
 				token = lexer.check_token(TRGLexer.ParameterToken)
 				for parameter in definition.parameters:
 					if not isinstance(token, TRGLexer.ParameterToken):
-						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", lexer.line)
+						raise PyMSError('Compile', f"Expected a '{parameter.name()}' parameter, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 					try:
 						if warning := parameter.action_compile(token.raw_value, action, self):
 							warnings.append(warning)
 					except PyMSError as e:
-						e.line = lexer.line
+						e.line = lexer.state.line
 						raise e
 					except:
-						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", lexer.line)
+						raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 					token = lexer.next_token()
 					if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
 						token = lexer.check_token(TRGLexer.ParameterToken)
 				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected ')' to end parameters, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, Tokens.NewlineToken):
-					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				if action.action_type != ActionType.no_action:
 					trigger.add_action(action)
 				token = lexer.skip(Tokens.NewlineToken)
@@ -219,7 +219,7 @@ class TRG:
 			nonlocal triggers
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-				raise PyMSError('Compile', "Expected a '(' to start the list of players for trigger", lexer.line)
+				raise PyMSError('Compile', "Expected a '(' to start the list of players for trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			trigger = Trigger()
 			triggers.append(trigger)
 			player_param = PlayerParameter()
@@ -229,42 +229,42 @@ class TRG:
 				try:
 					player = player_param._compile(token.raw_value)
 				except PyMSError as e:
-					e.line = lexer.line
+					e.line = lexer.state.line
 					raise e
 				except:
-					raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", lexer.line)
+					raise PyMSError('Compile', f"Couldn't parse '{token.raw_value}' as parameter", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				if player > PlayerGroup.non_allied_victory_players:
-					raise PyMSError('Compile', f"'{token.raw_value}' is an invalid player for a trigger", lexer.line)
+					raise PyMSError('Compile', f"'{token.raw_value}' is an invalid player for a trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				if trigger.execution.player_groups[player]:
-					raise PyMSError('Compile', f"'{token.raw_value}' already specified for trigger", lexer.line)
+					raise PyMSError('Compile', f"'{token.raw_value}' already specified for trigger", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				trigger.execution.player_groups[player] = 1
 				found_players = True
 				token = lexer.next_token()
 				if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
 					token = lexer.check_token(TRGLexer.ParameterToken)
 			if not found_players:
-				warnings.append(PyMSWarning('Trigger', 'There are no player groups applied to trigger', lexer.line))
-				# raise PyMSError('Compile', f"Expected player for trigger, got '{token.raw_value}' instead", lexer.line)
+				warnings.append(PyMSWarning('Trigger', 'There are no player groups applied to trigger', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)))
+				# raise PyMSError('Compile', f"Expected player for trigger, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-				raise PyMSError('Compile', f"Expected ')' to end player list, got '{token.raw_value}' instead", lexer.line)
+				raise PyMSError('Compile', f"Expected ')' to end player list, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
-				raise PyMSError('Compile', f"Expected ':' to start trigger body", lexer.line)
+				raise PyMSError('Compile', f"Expected ':' to start trigger body", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
-				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
+				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.skip(Tokens.NewlineToken)
 			if format == Format.normal:
 				if not isinstance(token, TRGLexer.KeywordsToken) or token.raw_value != 'Conditions:':
-					raise PyMSError('Compile', f"Expected 'Conditions:' to start list of conditions", lexer.line)
+					raise PyMSError('Compile', f"Expected 'Conditions:' to start list of conditions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, Tokens.NewlineToken):
-					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
+					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = process_conditions(trigger)
 			else:
 				trigger.add_condition(Condition.mission_briefing())
 			if not isinstance(token, TRGLexer.KeywordsToken) or token.raw_value != 'Actions:':
-				raise PyMSError('Compile', f"Expected 'Actions:' to start list of actions", lexer.line)
+				raise PyMSError('Compile', f"Expected 'Actions:' to start list of actions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = process_actions(trigger)
 			return token
 
@@ -272,26 +272,26 @@ class TRG:
 			nonlocal strings
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-				raise PyMSError('Compile', "Expected a '(' to start the string id", lexer.line)
+				raise PyMSError('Compile', "Expected a '(' to start the string id", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			id_token = lexer.get_token(Tokens.IntegerToken)
 			if not id_token:
-				raise PyMSError('Compile', 'Expected a numeric string id', lexer.line)
+				raise PyMSError('Compile', 'Expected a numeric string id', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-				raise PyMSError('Compile', f"Expected ')' to end string id, got '{token.raw_value}' instead", lexer.line)
+				raise PyMSError('Compile', f"Expected ')' to end string id, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
-				raise PyMSError('Compile', f"Expected ':' to start string definition", lexer.line)
+				raise PyMSError('Compile', f"Expected ':' to start string definition", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
-				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", lexer.line)
+				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			string_id = int(id_token.raw_value)
 			if string_id in strings:
-				raise PyMSError('Compile', f"String with id {string_id} already defined", lexer.line)
+				raise PyMSError('Compile', f"String with id {string_id} already defined", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			string = ''
 			indent_token = lexer.get_token(Tokens.WhitespaceToken)
 			if not indent_token:
-				raise PyMSError('Compile', 'Expected indentation for string', lexer.line)
+				raise PyMSError('Compile', 'Expected indentation for string', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			while True:
 				string_token = lexer.read_open_string(lambda token: Stop.include if isinstance(token, Tokens.NewlineToken) else Stop.proceed)
 				whitespace_token = lexer.get_token(Tokens.WhitespaceToken)
@@ -305,24 +305,24 @@ class TRG:
 			nonlocal unit_properties
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-				raise PyMSError('Compile', "Expected a '(' to start the unit properties id", lexer.line)
+				raise PyMSError('Compile', "Expected a '(' to start the unit properties id", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			id_token = lexer.get_token(Tokens.IntegerToken)
 			if not id_token:
-				raise PyMSError('Compile', 'Expected a properties id', lexer.line)
+				raise PyMSError('Compile', 'Expected a properties id', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-				raise PyMSError('Compile', 'Expected closing parenthesis', lexer.line)
+				raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
-				raise PyMSError('Compile', 'Expected start of properties', lexer.line)
+				raise PyMSError('Compile', 'Expected start of properties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
-				raise PyMSError('Compile', 'Expected end of line', lexer.line)
+				raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			properties_id = int(id_token.raw_value) - 1
 			if properties_id < 0 or properties_id > 63:
-				raise PyMSError('Compile', 'Properties id is not valid', lexer.line)
+				raise PyMSError('Compile', 'Properties id is not valid', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			if properties_id in unit_properties:
-				raise PyMSError('Compile', 'Properties with id already defined', lexer.line)
+				raise PyMSError('Compile', 'Properties with id already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			properties = UnitProperties()
 			token = lexer.next_token()
 			property_found = False
@@ -331,45 +331,45 @@ class TRG:
 					if token.raw_value == definition.name:
 						if isinstance(definition, PropertyFieldDefinition):
 							if properties.fields_available_flags & definition.flag:
-								raise PyMSError('Compile', 'Property already defined', lexer.line)
+								raise PyMSError('Compile', 'Property already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-								raise PyMSError('Compile', 'Expected open parenthesis', lexer.line)
+								raise PyMSError('Compile', 'Expected open parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							value_token = lexer.get_token(Tokens.IntegerToken)
 							if not value_token:
-								raise PyMSError('Compile', 'Expected an integer parameter', lexer.line)
+								raise PyMSError('Compile', 'Expected an integer parameter', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							value = int(value_token.raw_value)
 							if value < 0 or definition.parameter.max < value:
-								raise PyMSError('Compile', 'Integer parameter too large', lexer.line)
+								raise PyMSError('Compile', 'Integer parameter too large', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-								raise PyMSError('Compile', 'Expected closing parenthesis', lexer.line)
+								raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, Tokens.NewlineToken):
-								raise PyMSError('Compile', 'Expected end of line', lexer.line)
+								raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							setattr(properties, definition.attr, value)
 							properties.fields_available_flags |= definition.flag
 							property_found = True
 						elif isinstance(definition, PropertyStateDefinition):
 							if properties.state_flags & definition.flag:
-								raise PyMSError('Compile', 'Property already defined', lexer.line)
+								raise PyMSError('Compile', 'Property already defined', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
-								raise PyMSError('Compile', 'Expected open parenthesis', lexer.line)
+								raise PyMSError('Compile', 'Expected open parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
-								raise PyMSError('Compile', 'Expected closing parenthesis', lexer.line)
+								raise PyMSError('Compile', 'Expected closing parenthesis', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							token = lexer.next_token()
 							if not isinstance(token, Tokens.NewlineToken):
-								raise PyMSError('Compile', 'Expected end of line', lexer.line)
+								raise PyMSError('Compile', 'Expected end of line', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 							properties.state_flags |= definition.flag
 							property_found = True
 						break
 				else:
-					raise PyMSError('Compile', 'Expected a property', lexer.line)
+					raise PyMSError('Compile', 'Expected a property', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 			if not property_found:
-				raise PyMSError('Compile', 'No properties defined for Properties', lexer.line)
+				raise PyMSError('Compile', 'No properties defined for Properties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			unit_properties[properties_id] = properties
 			return token
 
@@ -378,13 +378,13 @@ class TRG:
 			if isinstance(token, Tokens.EOFToken):
 				break
 			if not isinstance(token, TRGLexer.KeywordsToken):
-				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', lexer.line)
+				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			if token.raw_value == 'Trigger' or token.raw_value == 'BriefingTrigger':
 				trigger_format = Format.briefing if token.raw_value == 'BriefingTrigger' else Format.normal
 				if format == None:
 					format = trigger_format
 				elif format != trigger_format:
-					raise PyMSError('Compile', 'Invalid mix of Triggers and BriefingTriggers', lexer.line)
+					raise PyMSError('Compile', 'Invalid mix of Triggers and BriefingTriggers', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = process_trigger()
 			elif token.raw_value == 'String':
 				process_string()
@@ -392,7 +392,7 @@ class TRG:
 			elif token.raw_value == 'UnitProperties':
 				token = process_properties()
 			else:
-				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', lexer.line)
+				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 		if not triggers:
 			raise PyMSError('Compile', 'No triggers')
 		

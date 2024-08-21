@@ -9,12 +9,13 @@ from .FlagEditor import FlagEditor
 from .ExternalDefDialog import ExternalDefDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 # from .StringEditor import StringEditor
+from .DecompilingFormatDialog import DecompilingFormatDialog
 from .Sort import SortBy
 from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIDefinitionsHandler, AIParseContext, AILexer
+from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIDefinitionsHandler, AIDefinitionsSourceCodeParser, AIParseContext, AILexer
 from ..FileFormats.AIBIN.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
@@ -37,6 +38,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
+from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsSourceCodeParser
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 import os
@@ -81,7 +83,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
 		self.imports = list(file_path for file_path in self.config_.imports.data if os.path.exists(file_path))
-		self.highlights = self.config_.highlights.data
+		self.highlights = self.config_.code.highlights.data
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
 
@@ -122,7 +124,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		edit_menu.add_command('Export Scripts', self.export, Ctrl.Alt.e, enabled=False, tags='scripts_selected', bind_shortcut=False)
 		edit_menu.add_command('Import Scripts', self.iimport, Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_command('Import a List of Files', self.listimport, Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_separator()
 		edit_menu.add_checkbutton('Print Reference when Decompiling', self.reference, underline='p')
+		edit_menu.add_command('Decompiling Format', self.decompiling_format)
 		edit_menu.add_separator()
 		edit_menu.add_command('Edit AI Script', self.codeedit, Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_command('Edit AI ID, String, and Extra Info.', self.edit, Ctrl.i, enabled=False, tags='scripts_selected', bind_shortcut=False, underline='ID')
@@ -182,8 +186,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Scripts', Ctrl.Alt.e, enabled=False, tags='scripts_selected')
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Scripts', Ctrl.Alt.i, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='file_open')
-		self.toolbar.add_gap()
+		self.toolbar.add_section()
 		self.toolbar.add_checkbutton(Assets.get_image('reference'), self.reference, 'Print Reference when Decompiling')
+		self.toolbar.add_button(Assets.get_image('debug'), self.decompiling_format, 'Decompiling Format')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', Ctrl.e, enabled=False, tags='scripts_selected')
 		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit AI ID, String, and Extra Info.', Ctrl.i, enabled=False, tags='scripts_selected')
@@ -613,7 +618,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		self.config_.windows.main.save_size(self)
 		# self.config_.stat_txt.file_path = self.stat_txt
-		self.config_.highlights.data = self.highlights
+		self.config_.code.highlights.data = self.highlights
 		self.config_.reference.value = self.reference.get()
 		self.config_.imports.data = self.imports
 		self.config_.save()
@@ -725,6 +730,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def extdef(self) -> None:
 		ExternalDefDialog(self, self.config_)
+
+	def decompiling_format(self) -> None:
+		DecompilingFormatDialog(self, self.config_.code.decomp_format)
 
 	# def managetbl(self) -> None:
 	# 	headers = self.get_selected_headers()
@@ -852,25 +860,34 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			techdata_dat = self.techdat
 		)
 
-	def _get_definitions_handler(self) -> AIDefinitionsHandler:
+	def _get_definitions_handler(self, data_context: DataContext) -> AIDefinitionsHandler:
 		# TODO: Load definitions files
 		defs = AIDefinitionsHandler()
+		parser = AIDefinitionsSourceCodeParser()
 		for extdef in self.config_.extdefs.data:
-			defs.parse(extdef)
+			with IO.InputText(extdef) as f:
+				code = f.read()
+			lexer = AILexer(code)
+			parse_context = AIParseContext(lexer, defs, data_context)
+			parser.parse(parse_context)
 		return defs
 
 	def _get_formatters(self) -> Formatters:
-		return Formatters()
+		return Formatters(
+			block = self.config_.code.decomp_format.block.value.formatter,
+			command = self.config_.code.decomp_format.command.value.formatter,
+			comment = self.config_.code.decomp_format.comment.value.formatter,
+		)
 
 	def get_serialize_context(self) -> AISerializeContext:
-		definitions = self._get_definitions_handler()
-		formatters = self._get_formatters()
 		data_context = self._get_data_context()
+		definitions = self._get_definitions_handler(data_context)
+		formatters = self._get_formatters()
 		return AISerializeContext(definitions, formatters, data_context)
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
-		definitions = self._get_definitions_handler()
 		data_context = self._get_data_context()
+		definitions = self._get_definitions_handler(data_context)
 		with IO.InputText(input) as f:
 			code = f.read()
 		lexer = AILexer(code)

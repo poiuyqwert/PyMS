@@ -22,6 +22,8 @@ TYPE_HELP = OrderedDict()
 for t,h in _types:
 	TYPE_HELP[t] = h
 
+# I would move allies_watch and try_townpoint to Multiple Threads, if_owned to Flow Control, player_need, set_attacks, target_expansion and wait_force to Build/Attack/Defense Order, default_min and defaultbuild_off to Header, scout_with to Unused, and the rest to Miscellanious. 
+# again I would move build_bunkers, build_turrets, wait_bunkers, wait_force, wait_turrets, quick_attack to Build/Attack/Defense order, default_build to Header, if_towns to Unused, the rest to Miscellanious
 _cmds = [
 	('Header',[
 		('name_string', 'Sets the index of a string from stat_txt.tbl to label the script in StarEdit'),

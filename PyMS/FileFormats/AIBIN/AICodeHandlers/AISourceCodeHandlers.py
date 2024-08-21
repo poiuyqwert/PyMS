@@ -2,66 +2,53 @@
 from . import CodeCommands
 from . import CodeDirectives
 from .AILexer import AILexer
-from ..AIFlag import AIFlag
+from .AIParseContext import AIParseContext, ParsedScriptHeader
+from .AIDefinitionsHandler import AIDefinitionsSourceCodeParser
 
-from ....Utilities.CodeHandlers.SourceCodeHandler import SourceCodeHandler
+from ....Utilities.CodeHandlers.SourceCodeHandler import SourceCodeHandler, BasicSourceCodeParser
 from ....Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceResolver
-from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ....Utilities.CodeHandlers import Tokens
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
-from ....Utilities.PyMSError import PyMSError
+from ....Utilities.CodeHandlers.DefinitionsHandler import DefinitionsSourceCodeParser
 
-class AISourceCodeHandler(SourceCodeHandler):
+class AISourceCodeParser(BasicSourceCodeParser):
 	def __init__(self) -> None:
-		SourceCodeHandler.__init__(self)
-		self.script_headers: dict[str, tuple[AIHeaderSourceCodeHandler.AIScriptHeader, int]] = {}
+		BasicSourceCodeParser.__init__(self)
 		self.register_commands(CodeCommands.all_basic_commands)
 		self.register_directives(CodeDirectives.all_basic_directives)
 
-	def parse_custom(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script':
-			parse_context.next_line()
-			token = parse_context.lexer.check_token(AILexer.ScriptIDToken)
-			if not isinstance(token, AILexer.ScriptIDToken):
-				raise parse_context.error('Parse', "Expected script ID, got '%s' instead" % token.raw_value)
-			line = parse_context.lexer.line
-			script_id = token.raw_value
-			if script_id in self.script_headers:
-				_,existing_line = self.script_headers[script_id]
-				raise parse_context.error('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line))
-			code_handler = AIHeaderSourceCodeHandler()
-			code_handler.parse(parse_context)
-			# TODO: Validate header
-			if not code_handler.script_header:
-				raise PyMSError('Parse', "No script header found")
-			if not code_handler.script_header.entry_point_name:
-				raise parse_context.error('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id)
-			self.script_headers[script_id] = (code_handler.script_header, line)
-			return True
-		return False
+class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
+	def __init__(self, header: ParsedScriptHeader, source_line: int | None) -> None:
+		BlockReferenceResolver.__init__(self, source_line)
+		self.header = header
 
-class AIHeaderSourceCodeHandler(SourceCodeHandler):
-	class AIScriptHeader(object):
-		def __init__(self) -> None:
-			self.string_id: int | None = None
-			self.bwscript: bool | None = None
-			self.broodwar_only: bool | None = None
-			self.staredit_hidden: bool | None = None
-			self.requires_location: bool | None = None
-			self.entry_point_name: str | None = None
-			self.entry_point: CodeBlock | None = None
-		
-		@property
-		def flags(self) -> int:
-			return (AIFlag.requires_location if self.requires_location else 0) | (AIFlag.staredit_hidden if self.staredit_hidden else 0) | (AIFlag.broodwar_only if self.broodwar_only else 0)
+	def block_defined(self, block):
+		self.header.entry_point = block
 
+class AIHeaderSourceCodeParser(BasicSourceCodeParser):
 	def __init__(self) -> None:
-		SourceCodeHandler.__init__(self)
+		BasicSourceCodeParser.__init__(self)
 		self.register_commands(CodeCommands.all_header_commands)
-		self.script_header: AIHeaderSourceCodeHandler.AIScriptHeader | None = None
 
-	def parse(self, parse_context: ParseContext) -> None:
-		script_header = AIHeaderSourceCodeHandler.AIScriptHeader()
+	def handles_token(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
+		return isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script'
+
+	def parse(self, parse_context: ParseContext) -> bool:
+		rollback = parse_context.lexer.get_rollback()
+		token = parse_context.lexer.skip(Tokens.NewlineToken)
+		if not isinstance(token, Tokens.IdentifierToken) or not token.raw_value == 'script':
+			parse_context.lexer.rollback(rollback)
+			return False
+		assert isinstance(parse_context, AIParseContext)
+		token = parse_context.lexer.check_token(AILexer.ScriptIDToken)
+		if not isinstance(token, AILexer.ScriptIDToken):
+			raise parse_context.error('Parse', "Expected script ID, got '%s' instead" % token.raw_value)
+		line = parse_context.lexer.state.line
+		script_id = token.raw_value
+		if script_id in parse_context.script_headers:
+			_,existing_line = parse_context.script_headers[script_id]
+			raise parse_context.error('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line))
+		script_header = ParsedScriptHeader()
 		commands_parsed: list[CodeCommandDefinition] = []
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
@@ -71,7 +58,7 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
 		while True:
 			token = parse_context.lexer.next_token()
-			line = parse_context.lexer.line
+			line = parse_context.lexer.state.line
 			if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
 				break
 			if not isinstance(token, Tokens.IdentifierToken):
@@ -97,12 +84,14 @@ class AIHeaderSourceCodeHandler(SourceCodeHandler):
 					script_header.entry_point = entry_point
 				else:
 					parse_context.missing_block(entry_point_name, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
-		self.script_header = script_header
+		if not script_header.entry_point_name:
+			raise parse_context.error('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id, line=line)
+		parse_context.script_headers[script_id] = (script_header, line)
+		return True
 
-class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
-	def __init__(self, header: AIHeaderSourceCodeHandler.AIScriptHeader, source_line: int | None) -> None:
-		BlockReferenceResolver.__init__(self, source_line)
-		self.header = header
-
-	def block_defined(self, block):
-		self.header.entry_point = block
+class AISourceCodeHandler(SourceCodeHandler):
+	def __init__(self) -> None:
+		super().__init__()
+		self.register_parser(AISourceCodeParser())
+		self.register_parser(AIHeaderSourceCodeParser())
+		self.register_parser(AIDefinitionsSourceCodeParser())

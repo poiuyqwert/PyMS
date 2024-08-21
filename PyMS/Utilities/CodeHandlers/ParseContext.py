@@ -105,24 +105,24 @@ class ParseContext(object):
 	def handle_directive(self, directive: CodeDirective) -> None:
 		pass
 
-	def error(self, type: str, error: str, line: int | None = None) -> PyMSError:
+	def error(self, type: str, error: str, line: int | None = None, level=1) -> PyMSError:
 		if line is None:
-			line = self.lexer.line
-		return PyMSError(type, error, line, self.lexer.get_line_of_code(line))
+			line = self.lexer.state.line
+		return PyMSError(type, error, line, self.lexer.get_line_of_code(line), level=level)
 
 	def attribute_error(self, error: PyMSError) -> None:
 		if error.line is None:
-			error.line = self.lexer.line
+			error.line = self.lexer.state.line
 		error.code = self.lexer.get_line_of_code(error.line)
 
 	def warning(self, type: str, warning: str, line: int | None = None, level: int = 0, id: str | None = None) -> PyMSWarning:
 		if line is None:
-			line = self.lexer.line
+			line = self.lexer.state.line
 		return PyMSWarning(type, warning, line=line, code=self.lexer.get_line_of_code(line), level=level, id=id)
 
 	def attribute_warning(self, warning: PyMSWarning) -> None:
 		if warning.line is None:
-			warning.line = self.lexer.line
+			warning.line = self.lexer.state.line
 		warning.code = self.lexer.get_line_of_code(warning.line)
 
 	def add_warning(self, warning: PyMSWarning) -> None:

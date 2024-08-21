@@ -189,7 +189,7 @@ class EditableReportSubList(RichList):
 			return endedit
 		entry.bind(Key.Return(), endedit_callback(index,tag_name))
 		entry.bind(Focus.Out(), endedit_callback(index,tag_name))
-		self.text.window_create('%s.first' % tag_name, window=e)
+		self.text.window_create('%s.first' % tag_name, window=entry)
 		entry.focus_set()
 		self.execute('delete',(tag_name + '.first', tag_name + '.last'))
 		self.text.tag_remove('Selection', '1.0', END)

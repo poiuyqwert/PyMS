@@ -14,11 +14,11 @@ from ....Utilities.PyMSWarning import PyMSWarning
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		CodeType.IntCodeType.__init__(self, 'byte', Struct.l_u8)
+		CodeType.IntCodeType.__init__(self, 'byte', 'A number in the range 0 to 255', Struct.l_u8)
 
 class WordCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		CodeType.IntCodeType.__init__(self, 'word', Struct.l_u16)
+		CodeType.IntCodeType.__init__(self, 'word', 'A number in the range 0 to 65535', Struct.l_u16)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (WordCodeType, ByteCodeType))
@@ -34,7 +34,7 @@ class WordCodeType(CodeType.IntCodeType):
 
 class DWordCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		CodeType.IntCodeType.__init__(self, 'dword', Struct.l_u32)
+		CodeType.IntCodeType.__init__(self, 'dword', 'A number in the range 0 to 4294967295', Struct.l_u32)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (DWordCodeType, WordCodeType, ByteCodeType))
@@ -52,12 +52,12 @@ class DWordCodeType(CodeType.IntCodeType):
 
 class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
-		CodeType.AddressCodeType.__init__(self, 'block', Struct.l_u16)
+		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
 
 class UnitCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str = 'unit') -> None:
+	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227, or a full unit name from stat_txt.tbl') -> None:
 		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, name, bytecode_type=Struct.l_u16, limits=(0, 227))
+		CodeType.IntCodeType.__init__(self, name, help_text, bytecode_type=Struct.l_u16, limits=(0, 227))
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (UnitCodeType, BuildingCodeType, MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
@@ -87,7 +87,7 @@ class UnitCodeType(CodeType.IntCodeType):
 
 class BuildingCodeType(UnitCodeType):
 	def __init__(self) -> None:
-		UnitCodeType.__init__(self, 'building')
+		UnitCodeType.__init__(self, 'building', 'Same as unit type, but only units that are Buildings, Resource Miners, and Overlords')
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -114,8 +114,8 @@ class BuildingCodeType(UnitCodeType):
 		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, id=WarningID.building))
 
 class MilitaryCodeType(UnitCodeType):
-	def __init__(self, name: str = 'military') -> None:
-		UnitCodeType.__init__(self, name)
+	def __init__(self, name: str = 'military', help_text: str = 'Same as unit type, but only for a unit to train (not a Building, Resource Miners, or Overlords)') -> None:
+		UnitCodeType.__init__(self, name, help_text)
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -141,7 +141,7 @@ class MilitaryCodeType(UnitCodeType):
 
 class GGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
-		MilitaryCodeType.__init__(self, 'gg_military')
+		MilitaryCodeType.__init__(self, 'gg_military', 'Same as Military type, but only for defending against an enemy Ground unit attacking your Ground unit')
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -164,11 +164,8 @@ class GGMilitaryCodeType(MilitaryCodeType):
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
-		definitions = parse_context.definitions
-		if definitions is not None:
-			annotations = definitions.get_annotations(unit_id, self)
-			if annotations and 'spellcaster' in annotations:
-				return
+		if unit_id in parse_context.spellcasters:
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
@@ -180,7 +177,7 @@ class GGMilitaryCodeType(MilitaryCodeType):
 
 class AGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
-		MilitaryCodeType.__init__(self, 'ag_military')
+		MilitaryCodeType.__init__(self, 'ag_military', 'Same as Military type, but only for defending against an enemy Air unit attacking your Ground unit')
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -203,11 +200,8 @@ class AGMilitaryCodeType(MilitaryCodeType):
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
-		definitions = parse_context.definitions
-		if definitions is not None:
-			annotations = definitions.get_annotations(unit_id, self)
-			if annotations and 'spellcaster' in annotations:
-				return
+		if unit_id in parse_context.spellcasters:
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
@@ -219,7 +213,7 @@ class AGMilitaryCodeType(MilitaryCodeType):
 
 class GAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
-		MilitaryCodeType.__init__(self, 'ga_military')
+		MilitaryCodeType.__init__(self, 'ga_military', 'Same as Military type, but only for defending against an enemy Ground unit attacking your Air unit')
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -242,11 +236,8 @@ class GAMilitaryCodeType(MilitaryCodeType):
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
-		definitions = parse_context.definitions
-		if definitions is not None:
-			annotations = definitions.get_annotations(unit_id, self)
-			if annotations and 'spellcaster' in annotations:
-				return
+		if unit_id in parse_context.spellcasters:
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
@@ -258,7 +249,7 @@ class GAMilitaryCodeType(MilitaryCodeType):
 
 class AAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
-		MilitaryCodeType.__init__(self, 'aa_military')
+		MilitaryCodeType.__init__(self, 'aa_military', 'Same as Military type, but only for defending against an enemy Air unit attacking your Air unit')
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -281,11 +272,8 @@ class AAMilitaryCodeType(MilitaryCodeType):
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
-		definitions = parse_context.definitions
-		if definitions is not None:
-			annotations = definitions.get_annotations(unit_id, self)
-			if annotations and 'spellcaster' in annotations:
-				return
+		if unit_id in parse_context.spellcasters:
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
@@ -298,7 +286,7 @@ class AAMilitaryCodeType(MilitaryCodeType):
 class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, 'upgrade', Struct.l_u16, limits=(0, 60))
+		CodeType.IntCodeType.__init__(self, 'upgrade', 'An upgrade ID from 0 to 60, or a full upgrade name from stat_txt.tbl', Struct.l_u16, limits=(0, 60))
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -319,7 +307,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 class TechnologyCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, 'technology', Struct.l_u16, limits=(0, 43))
+		CodeType.IntCodeType.__init__(self, 'technology', 'An technology ID from 0 to 43, or a full technology name from stat_txt.tbl', Struct.l_u16, limits=(0, 43))
 	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
@@ -339,7 +327,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 
 class StringCodeType(CodeType.StrCodeType):
 	def __init__(self) -> None:
-		CodeType.StrCodeType.__init__(self, 'string')
+		CodeType.StrCodeType.__init__(self, 'string', "A string of any characters (except for nulls: <0>) in TBL string formatting (use <40> for an open parenthesis '(', <41> for a close parenthesis ')', and <44> for a comma ',')")
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, StringCodeType)
@@ -353,7 +341,7 @@ class CompareCodeType(CodeType.EnumCodeType):
 			'GreaterThan': 1,
 			'LessThan': 0
 		}
-		CodeType.EnumCodeType.__init__(self, 'compare', Struct.l_u8, cases)
+		CodeType.EnumCodeType.__init__(self, 'compare', 'Either LessThan or GreaterThan', Struct.l_u8, cases)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, CompareCodeType)
@@ -383,7 +371,7 @@ all_basic_types: list[CodeType.CodeType] = [
 
 class TBLStringCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		CodeType.IntCodeType.__init__(self, 'tbl_string', Struct.l_u32)
+		CodeType.IntCodeType.__init__(self, 'tbl_string', 'Index of a string in stat_txt.tbl', Struct.l_u32)
 
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if not isinstance(context, AISerializeContext):
@@ -396,11 +384,11 @@ class BinFileCodeType(CodeType.EnumCodeType):
 			'aiscript': 0,
 			'bwscript': 1
 		}
-		CodeType.EnumCodeType.__init__(self, 'bin_file', Struct.l_u8, cases) # TODO: bytecode_type
+		CodeType.EnumCodeType.__init__(self, 'bin_file', 'Either aiscript or bwscript', Struct.l_u8, cases) # TODO: bytecode_type
 
 class BoolCodeType(CodeType.BooleanCodeType):
 	def __init__(self) -> None:
-		CodeType.BooleanCodeType.__init__(self, 'bool', Struct.l_u8) # TODO: bytecode_type
+		CodeType.BooleanCodeType.__init__(self, 'bool', 'A value of either true/1 or false/0', Struct.l_u8) # TODO: bytecode_type
 
 all_header_types: list[CodeType.CodeType] = [
 	TBLStringCodeType(),

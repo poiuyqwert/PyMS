@@ -5,13 +5,20 @@ from . import Tokens
 
 from ..PyMSError import PyMSError
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
 	from .CodeCommand import CodeCommand, CodeCommandDefinition
 	from .CodeDirective import CodeDirectiveDefinition
-	from .ParseContext import ParseContext, BlockMetadata
+	from .ParseContext import ParseContext
 
-class SourceCodeHandler(object):
+class SourceCodeParser(Protocol):
+	def parse(self, parse_context: ParseContext) -> bool:
+		...
+
+	def finalize(self, parse_context: ParseContext) -> None:
+		...
+
+class BasicSourceCodeParser(SourceCodeParser):
 	def __init__(self) -> None:
 		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
 		self.directive_defs: dict[str, CodeDirectiveDefinition] = {}
@@ -34,57 +41,64 @@ class SourceCodeHandler(object):
 		for directive_def in directive_defs:
 			self.register_directive(directive_def)
 
-	def parse_custom(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
-		return False
-
-	def parse(self, parse_context: ParseContext) -> None:
+	def parse(self, parse_context: ParseContext) -> bool:
 		from .CodeBlock import CodeBlock
+		from .ParseContext import BlockMetadata
+		parsed = False
 		while True:
-			token = parse_context.lexer.next_token()
-			if isinstance(token, Tokens.EOFToken):
-				break
-			if self.parse_custom(token, parse_context):
-				continue
-			if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
-				self.parse_directive(parse_context)
-				continue
-			if isinstance(token, Tokens.LiteralsToken) and (token.raw_value == ':' or token.raw_value == '--'):
-				hyphens = (token.raw_value == '--')
-				token = parse_context.lexer.next_token()
-				if not isinstance(token, Tokens.IdentifierToken):
-					raise parse_context.error('Parse', "Expected block name, got '%s' instead" % token.raw_value)
-				name = token.raw_value
-				line = parse_context.lexer.line
-				metadata = parse_context.lookup_block_metadata_by_name(name)
-				if metadata is not None:
-					raise parse_context.error('Parse', "A block named '%s' is already defined on line %d" % (name, metadata.source_line))
-				token = parse_context.lexer.next_token()
-				if hyphens:
-					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != '--':
-						raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `--` to end the block name)")
+			rollback = parse_context.lexer.get_rollback()
+			try:
+				token = parse_context.lexer.skip(Tokens.NewlineToken)
+				if isinstance(token, Tokens.EOFToken):
+					break
+				if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
+					self.parse_directive(parse_context)
+					continue
+				if isinstance(token, Tokens.LiteralsToken) and (token.raw_value == ':' or token.raw_value == '--'):
+					hyphens = (token.raw_value == '--')
 					token = parse_context.lexer.next_token()
-				if not isinstance(token, Tokens.NewlineToken):
-					raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
-				block = CodeBlock()
-				if parse_context.active_block:
-					parse_context.active_block.next_block = block
-					block.prev_block = parse_context.active_block
-				parse_context.active_block = block
-				parse_context.define_block(block, BlockMetadata(name, line))
-				parse_context.next_line()
-				continue
-			if isinstance(token, Tokens.IdentifierToken):
-				command = self.parse_command(token, parse_context)
-				if not parse_context.active_block:
-					raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
-				parse_context.active_block.commands.append(command)
-				if command.definition.ends_flow:
-					parse_context.active_block = None
-				parse_context.next_line()
-				continue
-			if isinstance(token, Tokens.NewlineToken):
-				continue
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected a block or command definition)" % token.raw_value)
+					if not isinstance(token, Tokens.IdentifierToken):
+						raise parse_context.error('Parse', "Expected block name, got '%s' instead" % token.raw_value)
+					name = token.raw_value
+					line = parse_context.lexer.state.line
+					metadata = parse_context.lookup_block_metadata_by_name(name)
+					if metadata is not None:
+						raise parse_context.error('Parse', "A block named '%s' is already defined on line %d" % (name, metadata.source_line))
+					token = parse_context.lexer.next_token()
+					if hyphens:
+						if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != '--':
+							raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `--` to end the block name)")
+						token = parse_context.lexer.next_token()
+					if not isinstance(token, Tokens.NewlineToken):
+						raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
+					block = CodeBlock()
+					if parse_context.active_block:
+						parse_context.active_block.next_block = block
+						block.prev_block = parse_context.active_block
+					parse_context.active_block = block
+					parse_context.define_block(block, BlockMetadata(name, line))
+					parse_context.next_line()
+					parsed = True
+					continue
+				if isinstance(token, Tokens.IdentifierToken):
+					command = self.parse_command(token, parse_context)
+					if not parse_context.active_block:
+						raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
+					parse_context.active_block.commands.append(command)
+					if command.definition.ends_flow:
+						parse_context.active_block = None
+					parse_context.next_line()
+					parsed = True
+					continue
+				parse_context.lexer.rollback(rollback)
+				break
+				# raise parse_context.error('Parse', "Unexpected token '%s'" % token.raw_value)
+			except PyMSError:
+				parse_context.lexer.rollback(rollback)
+				raise
+		return parsed
+
+	def finalize(self, parse_context: ParseContext) -> None:
 		if parse_context.active_block:
 			block_metadata = parse_context.lookup_block_metadata(parse_context.active_block)
 			assert block_metadata is not None
@@ -92,7 +106,7 @@ class SourceCodeHandler(object):
 
 	def parse_command(self, identifier: Tokens.IdentifierToken, parse_context: ParseContext) -> CodeCommand:
 		if not identifier.raw_value in self.cmd_defs:
-			raise parse_context.error('Parse', "Unknown command '%s'" % identifier.raw_value)
+			raise parse_context.error('Parse', "Unknown command '%s'" % identifier.raw_value, level=0)
 		cmd_def = self.cmd_defs[identifier.raw_value]
 		return cmd_def.parse(parse_context)
 
@@ -105,3 +119,32 @@ class SourceCodeHandler(object):
 		directive_def = self.directive_defs[token.raw_value]
 		directive = directive_def.parse(parse_context)
 		parse_context.handle_directive(directive)
+
+class SourceCodeHandler:
+	def __init__(self) -> None:
+		self.parsers: list[SourceCodeParser] = []
+
+	def register_parser(self, parser: SourceCodeParser) -> None:
+		self.parsers.append(parser)
+
+	def parse(self, parse_context: ParseContext) -> None:
+		while True:
+			error: PyMSError | None = None
+			for parser in self.parsers:
+				try:
+					parsed = parser.parse(parse_context)
+					if parsed:
+						error = None
+						break
+				except PyMSError as e:
+					if error is None or e.level > error.level:
+						error = e
+			else:
+				if error is not None:
+					raise error
+				if not parsed:
+					raise parse_context.error('Parse', f"Unexpected token")
+			if parse_context.lexer.is_at_end():
+				break
+		for parser in self.parsers:
+			parser.finalize(parse_context)

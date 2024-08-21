@@ -2,7 +2,7 @@
 from .CodeTooltip import *
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes
+from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives, AIDefinitionsHandler
 
 from ..Utilities.UIKit import *
 from ..Utilities.utils import couriernew_bold
@@ -60,14 +60,9 @@ class AICodeText(CodeText):
 	def setupparser(self) -> None:
 		infocomment = '(?P<InfoComment>\\{[^\\n]+\\})'
 		multiinfocomment = '^[ \\t]*(?P<MultiInfoComment>\\{[ \\t]*(?:\\n[^}]*)?\\}?)$'
-		comment = '(?P<Comment>#[^\\n]*$)'
+		comment = '(?P<Comment>(?:#|;)[^\\n]*$)'
 		header = '^[ \\t]*(?P<Header>script)[ \\t]+(?P<AIID>[^\n\x00,():]{4})(?=[ \\t]+\{[ \\t]*$)'
-		header_string = '\\b(?P<HeaderString>\\d+)(?=,[^#]+,[^#]+\\):.+$)'
-		header_flags = '\\b(?P<HeaderFlags>[01]{3})(?=,[^#]+\\):.+$)'
 		block = '^[ \\t]*(?P<Block>--[^\x00:(),\\n]+--|:[^\x00:(),\\n]+)(?=.+$)'
-		# TODO: Why do we need a full handler/lexer to get commands?
-		# source_handler = AICodeHandlers.AISourceCodeHandler(AIBIN.AILexer(''))
-		# header_source_handler = AICodeHandlers.AIHeaderSourceCodeHandler(AIBIN.AILexer(''))
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
 		cmds = '\\b(?P<Commands>%s)\\b' % '|'.join(cmd_names)
 		num = '\\b(?P<Number>\\d+)\\b'
@@ -75,14 +70,14 @@ class AICodeText(CodeText):
 		operators = '(?P<Operators>[():,=])'
 		# TODO: Make keywords more dynamic?
 		kw = '\\b(?P<Keywords>script|extdef|aiscript|bwscript|LessThan|GreaterThan)\\b'
-		# types_handler = AICodeHandlers.AIDefinitionsHandler()
 		types = '\\b(?P<Types>%s)\\b' % '|'.join(type.name for type in CodeTypes.all_basic_types)
-		directives = r'(?P<Directives>@(?:supress_all|suppress_next_line))\b'
-		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, header_string, header_flags, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
+		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
+		directives = '(?P<Directives>@(?:%s))\\b' % '|'.join(directive_names)
+		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
 		CommandCodeTooltip(self.text,self.ai)
 		TypeCodeTooltip(self.text,self.ai)
-		StringCodeTooltip(self.text,self.ai)
-		FlagCodeTooltip(self.text,self.ai)
+		# StringCodeTooltip(self.text,self.ai)
+		# FlagCodeTooltip(self.text,self.ai)
 		DirectiveTooltip(self.text,self.ai)
 		self.tags = copy.deepcopy(self.highlights)
 

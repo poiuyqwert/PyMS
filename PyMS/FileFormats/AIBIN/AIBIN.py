@@ -196,7 +196,7 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 		source_handler.parse(parse_context)
 		parse_context.finalize()
 		# TODO: Complete
-		for id,(parse_header, _) in source_handler.script_headers.items():
+		for id,(parse_header, _) in parse_context.script_headers.items():
 			if parse_header.bwscript and not self.bw_bin:
 				raise PyMSError('Compile', f"Script '{id}' has 'bin_file' set to 'bwscript', but there is no bwscript.bin loaded")
 			ai_header = AIScriptHeader()

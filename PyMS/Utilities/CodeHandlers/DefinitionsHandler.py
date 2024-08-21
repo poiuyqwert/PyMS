@@ -1,13 +1,12 @@
 
 from __future__ import annotations
 
-from .Lexer import Lexer as _Lexer
 from . import Tokens
 from .ParseContext import ParseContext
+from .SourceCodeHandler import SourceCodeParser
+from .CodeDirective import CodeDirectiveDefinition
 
 from ..PyMSError import PyMSError
-from ..PyMSWarning import PyMSWarning
-from .. import IO
 
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
@@ -23,21 +22,9 @@ class DefinitionsHandler(object):
 	class SymbolToken(Tokens.LiteralsToken):
 		_literals = ('=', '@', '(', ')')
 
-	class Lexer(_Lexer):
-		def __init__(self, code: str) -> None:
-			_Lexer.__init__(self, code)
-			self.register_token_type(Tokens.WhitespaceToken, skip=True)
-			self.register_token_type(Tokens.CommentToken, skip=True)
-			self.register_token_type(Tokens.IdentifierToken)
-			self.register_token_type(DefinitionsHandler.SymbolToken)
-			self.register_token_type(Tokens.IntegerToken)
-			self.register_token_type(Tokens.NewlineToken)
-
 	def __init__(self) -> None:
 		self.types: dict[str, CodeType] = {}
 		self.variables: dict[str, Variable] = {}
-		self.accepted_annotations: set[str] = set()
-		self.annotations: dict[tuple[Any, CodeType], list[str]] = {}
 
 	def register_type(self, type: CodeType) -> None:
 		if type.name in self.types:
@@ -47,9 +34,6 @@ class DefinitionsHandler(object):
 	def register_types(self, types: list[CodeType]) -> None:
 		for type in types:
 			self.register_type(type)
-
-	def register_annotation(self, name: str) -> None:
-		self.accepted_annotations.add(name)
 
 	def set_variable(self, name: str, value: Any, type: CodeType) -> None:
 		self.variables[name] = Variable(name, value, type)
@@ -66,73 +50,78 @@ class DefinitionsHandler(object):
 				matching_priority = priority
 		return matching_variable
 
-	def set_annotation(self, annotation_name: str, value: Any, type: CodeType) -> None:
-			annotation_info = (value, type)
-			if not annotation_info in self.annotations:
-				self.annotations[annotation_info] = []
-			self.annotations[annotation_info].append(annotation_name)
+class DefinitionsSourceCodeParser(SourceCodeParser):
+	def __init__(self) -> None:
+		self.directive_defs: dict[str, CodeDirectiveDefinition] = {}
 
-	def get_annotations(self, value: Any, type: CodeType) -> list[str]:
-		annotation_info = (value, type)
-		if not annotation_info in self.annotations:
-			return []
-		return self.annotations[annotation_info]
+	def register_directive(self, directive_def: CodeDirectiveDefinition) -> None:
+		if directive_def.name in self.directive_defs:
+			raise PyMSError('Internal', f"Directive with name '{directive_def.name}' already exists")
+		self.directive_defs[directive_def.name] = directive_def
 
-	def parse(self, input: IO.AnyInputText) -> list[PyMSWarning]:
-		with IO.InputText(input) as f:
-			code = f.read()
-		warnings: list[PyMSWarning] = []
-		lexer = DefinitionsHandler.Lexer(code)
-		parse_context = ParseContext(lexer)
+	def register_directives(self, directive_defs: list[CodeDirectiveDefinition]) -> None:
+		for directive_def in directive_defs:
+			self.register_directive(directive_def)
+
+	def handles_token(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
+		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
+			return True
+		if isinstance(token, Tokens.IdentifierToken):
+			return True
+		return False
+
+	def parse(self, parse_context: ParseContext) -> bool:
+		definitions = parse_context.definitions
+		assert definitions is not None
+		parsed = False
 		while True:
-			token = lexer.next_token()
-			if isinstance(token, Tokens.EOFToken):
+			rollback = parse_context.lexer.get_rollback()
+			try:
+				token = parse_context.lexer.skip(Tokens.NewlineToken)
+				if isinstance(token, Tokens.EOFToken):
+					break
+				if isinstance(token, Tokens.IdentifierToken) and token.raw_value in definitions.types:
+					type = definitions.types[token.raw_value]
+					token = parse_context.lexer.next_token()
+					if not isinstance(token, Tokens.IdentifierToken):
+						raise parse_context.error('Parse', "Expected variable name but got '%s'" % token.raw_value)
+					name = token.raw_value
+					if name in definitions.variables:
+						raise parse_context.error('Parse', "Variable named '%s' is already defined" % name)
+					token = parse_context.lexer.next_token()
+					if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '=':
+						raise parse_context.error('Parse', "Expected '=' but got '%s'" % token.raw_value)
+					token = parse_context.lexer.next_token()
+					# TODO: Use type to parse?
+					if not isinstance(token, Tokens.IntegerToken):
+						raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
+					value = type.parse(token.raw_value, parse_context)
+					definitions.set_variable(name, value, type)
+					token = parse_context.lexer.next_token()
+					if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
+						raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
+					parsed = True
+					continue
+				if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
+					self.parse_directive(parse_context)
+					continue
+				parse_context.lexer.rollback(rollback)
 				break
-			if isinstance(token, Tokens.IdentifierToken) and token.raw_value in self.types:
-				type = self.types[token.raw_value]
-				token = lexer.next_token()
-				if not isinstance(token, Tokens.IdentifierToken):
-					raise PyMSError('Parse', "Expected variable name but got '%s'" % token.raw_value, line=lexer.line)
-				name = token.raw_value
-				if name in self.variables:
-					raise PyMSError('Parse', "Variable named '%s' is already defined" % name, line=lexer.line)
-				token = lexer.next_token()
-				if not isinstance(token, DefinitionsHandler.SymbolToken) or not token.raw_value == '=':
-					raise PyMSError('Parse', "Expected '=' but got '%s'" % token.raw_value, line=lexer.line)
-				token = lexer.next_token()
-				# TODO: Use type to parse?
-				if not isinstance(token, Tokens.IntegerToken):
-					raise PyMSError('Parse', "Expected integer value but got '%s'" % token.raw_value, line=lexer.line)
-				value = type.parse(token.raw_value, parse_context)
-				self.set_variable(name, value, type)
-				token = lexer.next_token()
-				if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-					raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
-				continue
-			if isinstance(token, DefinitionsHandler.SymbolToken) and token.raw_value == '@':
-				token = lexer.next_token()
-				annotation_name = token.raw_value
-				if not annotation_name in self.accepted_annotations:
-					warnings.append(PyMSWarning('Parse', "Unknown annotation '@%s'" % token.raw_value, line=lexer.line))
-				token = lexer.next_token()
-				if not isinstance(token, DefinitionsHandler.SymbolToken) or not token.raw_value == '(':
-					raise PyMSError('Parse', "Expected '(' but got '%s'" % token.raw_value, line=lexer.line)
-				token = lexer.next_token()
-				# TODO: Annotate raw values and not just variables? Use type to parse?
-				if not isinstance(token, Tokens.IdentifierToken):
-					raise PyMSError('Parse', "Expected variable name but got '%s'" % token.raw_value, line=lexer.line)
-				name = token.raw_value
-				if not name in self.variables:
-					raise PyMSError('Parse', "Variable named '%s' is not defined" % name, line=lexer.line)
-				self.set_annotation(annotation_name, self.variables[name].value, self.variables[name].type)
-				token = lexer.next_token()
-				if not isinstance(token, DefinitionsHandler.SymbolToken) or not token.raw_value == ')':
-					raise PyMSError('Parse', "Expected end brace ')' but got '%s'" % token.raw_value, line=lexer.line)
-				token = lexer.next_token()
-				if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-					raise PyMSError('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value, line=lexer.line)
-				continue
-			if isinstance(token, Tokens.NewlineToken):
-				continue
-			raise PyMSError('Parse', "Unexpected token '%s' (expected a variable definition or annotation)" % token.raw_value, line=lexer.line)
-		return warnings
+				# raise parse_context.error('Parse', "Unexpected token '%s'" % token.raw_value)
+			except PyMSError:
+				parse_context.lexer.rollback(rollback)
+				raise
+		return parsed
+
+	def finalize(self, parse_context: ParseContext) -> None:
+		pass
+
+	def parse_directive(self, parse_context: ParseContext) -> None:
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IdentifierToken):
+			raise parse_context.error('Parse', "Expected directive name, got '%s' instead" % token.raw_value)
+		if not token.raw_value in self.directive_defs:
+			raise parse_context.error('Parse', "Unknown directive '%s'" % token.raw_value)
+		directive_def = self.directive_defs[token.raw_value]
+		directive = directive_def.parse(parse_context)
+		parse_context.handle_directive(directive)

@@ -1,5 +1,6 @@
 
 from .Sort import SortBy
+from .DecompilingFormat import BlockFormat, CommandFormat, CommentFormat
 
 from ..Utilities import Config
 from ..Utilities.UIKit import Size, FileType
@@ -18,6 +19,7 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('redohistory',), ('max_redos',)),
 		(('windows', 'external_def'), ('windows', 'extdefs')),
 		(('stat_txt',), ('settings', 'files', 'stat_txt')),
+		(('highlights',), ('code', 'highlights')),
 	))
 
 class PyAIConfig(Config.Config):
@@ -83,6 +85,19 @@ class PyAIConfig(Config.Config):
 			self.last_path = PyAIConfig.Settings.LastPath()
 			super().__init__()
 
+	class Code(Config.Group):
+		class DecompFormat(Config.Group):
+			def __init__(self) -> None:
+				self.block = Config.Enum(enum_type=BlockFormat, default=BlockFormat.hyphens)
+				self.command = Config.Enum(enum_type=CommandFormat, default=CommandFormat.parens)
+				self.comment = Config.Enum(enum_type=CommentFormat, default=CommentFormat.hash)
+				super().__init__()
+
+		def __init__(self) -> None:
+			self.decomp_format = PyAIConfig.Code.DecompFormat()
+			self.highlights = Config.Highlights()
+			super().__init__()
+
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyAIConfig.Windows()
@@ -91,9 +106,9 @@ class PyAIConfig(Config.Config):
 		self.settings = PyAIConfig.Settings()
 		self.imports = Config.List(value_type=str)
 		self.extdefs = Config.List(value_type=str)
-		self.highlights = Config.Highlights()
 		self.reference = Config.Boolean(default=False)
 		self.max_undos = Config.Int(default=10)
 		self.max_redos = Config.Int(default=10)
 		self.sort = Config.Enum(enum_type=SortBy, default=SortBy.file_order)
+		self.code = PyAIConfig.Code()
 		super().__init__()

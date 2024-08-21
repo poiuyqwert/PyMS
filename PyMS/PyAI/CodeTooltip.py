@@ -9,7 +9,7 @@ from ..Utilities.UIKit import *
 class CodeTooltip(Tooltip):
 	tag = ''
 
-	def __init__(self, parent, ai):
+	def __init__(self, parent: Misc, ai):
 		self.ai = ai
 		Tooltip.__init__(self, parent)
 
@@ -90,28 +90,28 @@ class TypeCodeTooltip(CodeTooltip):
 	def gettext(self, type):
 		return '%s:\n%s' % (type, fit('    ', TYPE_HELP[type], end=True)[:-1])
 
-class StringCodeTooltip(CodeTooltip):
-	tag = 'HeaderString'
+# class StringCodeTooltip(CodeTooltip):
+# 	tag = 'HeaderString'
 
-	def gettext(self, stringid):
-		stringid = int(stringid)
-		m = len(self.ai.tbl.strings)
-		if stringid > m:
-			text = 'Invalid String ID (Range is 0 to %s)' % (m-1)
-		else:
-			text = 'String %s:\n  %s' % (stringid, TBL.decompile_string(self.ai.tbl.strings[stringid]))
-		return text
+# 	def gettext(self, stringid):
+# 		stringid = int(stringid)
+# 		m = len(self.ai.tbl.strings)
+# 		if stringid > m:
+# 			text = 'Invalid String ID (Range is 0 to %s)' % (m-1)
+# 		else:
+# 			text = 'String %s:\n  %s' % (stringid, TBL.decompile_string(self.ai.tbl.strings[stringid]))
+# 		return text
 
-class FlagCodeTooltip(CodeTooltip):
-	tag = 'HeaderFlags'
+# class FlagCodeTooltip(CodeTooltip):
+# 	tag = 'HeaderFlags'
 
-	def gettext(self, flags):
-		text = 'AI Script Flags:\n  %s:\n    ' % flags
-		if flags == '000':
-			text += 'None'
-		else:
-			text += '\n    '.join([d for d,f in zip(['BroodWar Only','Invisible in StarEdit','Requires a Location'], flags) if f == '1'])
-		return text
+# 	def gettext(self, flags):
+# 		text = 'AI Script Flags:\n  %s:\n    ' % flags
+# 		if flags == '000':
+# 			text += 'None'
+# 		else:
+# 			text += '\n    '.join([d for d,f in zip(['BroodWar Only','Invisible in StarEdit','Requires a Location'], flags) if f == '1'])
+# 		return text
 
 class DirectiveTooltip(CodeTooltip):
 	tag = 'Directives'

@@ -5,7 +5,7 @@ from .Tokens import Token, EOFToken, UnknownToken, NewlineToken, StringToken
 
 from ..PyMSError import PyMSError
 
-import re
+import re, dataclasses
 from typing import Type, TypeVar, Callable
 from enum import Enum
 
@@ -14,15 +14,20 @@ class Stop(Enum):
 	exclude = 1
 	include = 2
 
+@dataclasses.dataclass
+class State:
+	offset: int = 0
+	line: int = 0
+
 T = TypeVar('T', bound=Token)
 class Lexer(object):
 	def __init__(self, code: str) -> None:
 		self.code = code
 		self._lines_of_code_cache: list[str] | None = None
-		self.offset = 0
-		self.line = 0
+		self.state = State()
 		self.token_types: list[Type[Token]] = []
 		self.skip_tokens: list[Type[Token]] = []
+		self.rollbacks: list[State] = []
 
 	_newline_regexp = re.compile(r'\r?\n|\r(?!=\n)')
 	def get_line_of_code(self, line: int) -> str | None:
@@ -39,7 +44,7 @@ class Lexer(object):
 
 	def _check_token(self, token: Token) -> None:
 		if isinstance(token, NewlineToken):
-			self.line += token.newline_count()
+			self.state.line += token.newline_count()
 
 	def _skip(self, dont_skip: Type[Token] | None = None) -> None:
 		while True:
@@ -48,10 +53,10 @@ class Lexer(object):
 			for skip_token_type in self.skip_tokens:
 				if skip_token_type == dont_skip:
 					continue
-				skip_token = skip_token_type.match(self.code, self.offset)
+				skip_token = skip_token_type.match(self.code, self.state.offset)
 				if skip_token:
 					self._check_token(skip_token)
-					self.offset += len(skip_token.raw_value)
+					self.state.offset += len(skip_token.raw_value)
 					break
 			else:
 				break
@@ -63,16 +68,16 @@ class Lexer(object):
 			if self.is_at_end():
 				return EOFToken()
 			for token_type in self.token_types:
-				token = token_type.match(self.code, self.offset)
+				token = token_type.match(self.code, self.state.offset)
 				if token:
 					break
 			if not token:
-				token = UnknownToken.match(self.code, self.offset)
+				token = UnknownToken.match(self.code, self.state.offset)
 				if not token:
 					raise PyMSError('Parse', 'Could not match token')
 			if token:
 				if not peek:
-					self.offset += len(token.raw_value)
+					self.state.offset += len(token.raw_value)
 					self._check_token(token)
 				if type(token) in self.skip_tokens:
 					token = None
@@ -82,21 +87,21 @@ class Lexer(object):
 		self._skip(dont_skip=token_type)
 		if self.is_at_end():
 			return None
-		token = token_type.match(self.code, self.offset)
+		token = token_type.match(self.code, self.state.offset)
 		if not token:
 			return None
 		self._check_token(token)
-		self.offset += len(token.raw_value)
+		self.state.offset += len(token.raw_value)
 		return token
 
 	def check_token(self, token_type: Type[T]) -> Token:
 		self._skip(dont_skip=token_type)
 		if self.is_at_end():
 			return EOFToken()
-		token: Token | None = token_type.match(self.code, self.offset)
+		token: Token | None = token_type.match(self.code, self.state.offset)
 		if token:
 			self._check_token(token)
-			self.offset += len(token.raw_value)
+			self.state.offset += len(token.raw_value)
 		else:
 			token = self.next_token()
 		return token
@@ -126,5 +131,14 @@ class Lexer(object):
 			token = self.next_token()
 		return token
 
+	def drop_token(self) -> None:
+		_ = self.next_token()
+
 	def is_at_end(self) -> bool:
-		return self.offset == len(self.code)
+		return self.state.offset == len(self.code)
+
+	def get_rollback(self) -> State:
+		return dataclasses.replace(self.state)
+
+	def rollback(self, state: State) -> None:
+		self.state = state
