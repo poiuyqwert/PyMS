@@ -53,8 +53,9 @@ class ListboxTooltip(Tooltip):
 		if flags:
 			flags = f'Flags             : {flags}\n'
 		text = f"Script ID         : {ai_header.id}\nIn bwscript.bin   : {in_bwbin}\n{flags}String ID         : {ai_header.string_id}\n"
-		tbl = self.delegate.get_tbl()
-		text += fit('String            : ', TBL.decompile_string(tbl.strings[ai_header.string_id]), end=True)
+		data_context = self.delegate.get_data_context()
+		if (string := data_context.stattxt_string(ai_header.string_id)):
+			text += fit('String            : ', string, end=True)
 		# if id in ai.aiinfo and ai.aiinfo[id][0]:
 		# 	text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
 		# else:

@@ -1,5 +1,4 @@
 
-from .HelpContent import TYPE_HELP, CMD_HELP
 from .AICodeText import AICodeText
 from .FindReplaceDialog import FindReplaceDialog
 from .CodeColors import CodeColors
@@ -7,6 +6,7 @@ from .Config import PyAIConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
 from ..FileFormats import TBL
 
 from ..Utilities.UIKit import *
@@ -16,8 +16,17 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import IO
+from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 
 import re
+from dataclasses import dataclass
+
+@dataclass
+class AutocompleteState:
+	text_prefix: str
+	option_index: int
+	start_index: str
+	end_index: str
 
 class CodeEditDialog(PyMSDialog):
 	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
@@ -26,9 +35,9 @@ class CodeEditDialog(PyMSDialog):
 		self.ids = ids
 		self.decompile = ''
 		self.file: str | None = None
-		self.autocomptext = list(TYPE_HELP.keys())
+		self.autocomptext = list(type.name for type in CodeTypes.all_basic_types)
 		self.completing = False
-		self.complete = [None, 0]
+		self.complete: AutocompleteState | None = None
 		t = ''
 		if ids:
 			t = ', '.join(ids[:5])
@@ -111,50 +120,53 @@ class CodeEditDialog(PyMSDialog):
 			return False
 		self.completing = True
 		self.text.taboverride = ' (,)'
-		def docomplete(s, e, v, t):
-			ss = '%s+%sc' % (s,len(t))
-			se = '%s+%sc' % (s,len(v))
-			self.text.delete(s, ss)
-			self.text.insert(s, v)
+		def docomplete(start_index: str, end_index: str, text_autocomplete: str, text_prefix: str):
+			prefix_end_index = '%s+%sc' % (start_index,len(text_prefix))
+			autocomplete_end_index = '%s+%sc' % (start_index,len(text_autocomplete))
+			self.text.delete(start_index, prefix_end_index)
+			self.text.insert(start_index, text_autocomplete)
 			self.text.tag_remove('Selection', '1.0', END)
-			self.text.tag_add('Selection', ss, se)
-			if self.complete[0] is None:
-				self.complete = [t, 1, s, se]
+			self.text.tag_add('Selection', prefix_end_index, autocomplete_end_index)
+			if self.complete is None:
+				self.complete = AutocompleteState(text_prefix, 1, start_index, autocomplete_end_index)
 			else:
-				self.complete[1] += 1
-				self.complete[3] = se
-		if self.complete[0] is not None:
-			t,f,s,e = self.complete
+				self.complete.option_index += 1
+				self.complete.end_index = autocomplete_end_index
+		if self.complete is not None:
+			text_prefix = self.complete.text_prefix
+			option_index = self.complete.option_index
+			start_index = self.complete.start_index
+			end_index = self.complete.end_index
 		else:
-			s,e = self.text.index('%s -1c wordstart' % INSERT),self.text.index('%s -1c wordend' % INSERT)
-			t,f = self.text.get(s,e),0
-			prefix = self.text.get('%s -1c' % s, s)
-			if prefix == '@':
-				s = self.text.index('%s -1c' % s)
-				t = prefix + t
-		if t and t[0].lower() in 'abcdefghijklmnopqrstuvwxyz@':
-			ac = list(self.autocomptext)
-			m = re.match('\\A\\s*[a-z\\{]+\\Z',t)
-			if not m:
-				for _,c in CMD_HELP.items():
-					ac.extend(list(c.keys()))
-				ac.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
-			for ns in self.delegate.get_tbl().strings[:228]:
-				cs = ns.split('\x00')
-				if cs[1] != '*':
-					cs = TBL.decompile_string('\x00'.join(cs[:2]), '\x0A\x28\x29\x2C')
-				else:
-					cs = TBL.decompile_string(cs[0], '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for i in range(61):
-				cs = TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_upgrades_dat().get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
-			for i in range(44):
-				cs = TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_tech_dat().get_entry(i).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
-				if not cs in ac:
-					ac.append(cs)
+			start_index = self.text.index('%s -1c wordstart' % INSERT)
+			end_index = self.text.index('%s -1c wordend' % INSERT)
+			text_prefix = self.text.get(start_index,end_index)
+			option_index = 0
+			symbol_prefix = self.text.get('%s -1c' % start_index, start_index)
+			if symbol_prefix == '@':
+				start_index = self.text.index('%s -1c' % start_index)
+				text_prefix = symbol_prefix + text_prefix
+		if text_prefix and text_prefix[0].lower() in 'abcdefghijklmnopqrstuvwxyz@':
+			autocompete_options = list(self.autocomptext)
+			match = re.match('\\A\\s*[a-z\\{]+\\Z', text_prefix)
+			if not match:
+				autocompete_options.extend([cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands])
+				autocompete_options.extend(('extdef','aiscript','bwscript','LessThan','GreaterThan'))
+			data_context = self.delegate.get_data_context()
+			for unit_id in range(228):
+				unit_name = data_context.unit_name(unit_id)
+				if unit_name and not unit_name in autocompete_options:
+					autocompete_options.append(unit_name)
+			for upgrade_id in range(61):
+				upgrade_name = data_context.upgrade_name(upgrade_id)
+				# TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_upgrades_dat().get_entry(upgrade_id).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				if upgrade_name and not upgrade_name in autocompete_options:
+					autocompete_options.append(upgrade_name)
+			for tech_id in range(44):
+				tech_name = data_context.technology_name(tech_id)
+				# TBL.decompile_string(self.delegate.get_tbl().strings[self.delegate.get_tech_dat().get_entry(tech_id).label - 1].split('\x00',1)[0].strip(), '\x0A\x28\x29\x2C')
+				if tech_name and not tech_name in autocompete_options:
+					autocompete_options.append(tech_name)
 			aiid = ''
 			item = self.text.tag_prevrange('AIID', INSERT)
 			if item:
@@ -173,29 +185,27 @@ class CodeEditDialog(PyMSDialog):
 						if id != aiid:
 							block = id + ':'
 				block += self.text.get('%s +2c' % head,'%s -2c' % tail)
-				if not block in ac:
-					ac.append(block)
+				if not block in autocompete_options:
+					autocompete_options.append(block)
 				head = tail
-			ac.extend(('@spellcaster','@supress_all','@suppress_next_line'))
-			ac.sort()
-			if m:
-				x = []
-				for _,c in CMD_HELP.items():
-					x.extend(list(c.keys()))
-				x.sort()
-				ac = x + ac
+			autocompete_options.extend(('@spellcaster','@supress_all','@suppress_next_line'))
+			autocompete_options.sort()
+			if match:
+				command_names = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
+				command_names.sort()
+				autocompete_options = command_names + autocompete_options
 			r = False
 			matches = []
-			for v in ac:
-				if v and v.lower().startswith(t.lower()):
-					matches.append(v)
+			for autocomplete_option in autocompete_options:
+				if autocomplete_option and autocomplete_option.lower().startswith(text_prefix.lower()):
+					matches.append(autocomplete_option)
 			if matches:
-				if f < len(matches):
-					docomplete(s,e,matches[f],t)
+				if option_index < len(matches):
+					docomplete(start_index,end_index,matches[option_index],text_prefix)
 					self.text.taboverride = ' (,)'
-				elif self.complete[0] is not None:
-					docomplete(s,e,t,t)
-					self.complete[1] = 0
+				elif self.complete is not None:
+					docomplete(start_index,end_index,text_prefix,text_prefix)
+					self.complete.option_index = 0
 				r = True
 			self.after(1, self.completed)
 			return r
@@ -207,7 +217,7 @@ class CodeEditDialog(PyMSDialog):
 	def statusupdate(self) -> None:
 		if not self.completing:
 			self.text.taboverride = None
-			self.complete = [None, 0]
+			self.complete = None
 		i = self.text.index(INSERT).split('.') + [0]
 		item = self.text.tag_ranges('Selection')
 		if item:
@@ -217,7 +227,7 @@ class CodeEditDialog(PyMSDialog):
 	def edited(self) -> None:
 		if not self.completing:
 			self.text.taboverride = None
-			self.complete = [None, 0]
+			self.complete = None
 		self.editstatus['state'] = NORMAL
 		if self.file:
 			self.title('AI Script Editor [*%s*]' % self.file)
@@ -316,51 +326,50 @@ class CodeEditDialog(PyMSDialog):
 	def asc3topyai(self, _: Event | None = None) -> None:
 		beforeheader = ''
 		header = '### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!\n###       please update the header below appropriately!\n%s(%s, 111, %s): # Script Name: %s'
-		headerinfo = [None,None,None,None]
+		# headerinfo = [None,None,None,None]
+		header_id: str | None = None
+		header_bin_file: str | None = None
+		header_string: str | None = None
+		header_string_index: int | None = None
 		data = ''
 		for line in self.text.text.get('1.0',END).split('\n'):
 			if line.lstrip().startswith(';'):
-				if not None in headerinfo:
+				if not None in (header_id, header_bin_file, header_string_index, header_string):
 					data += line.replace(';','#',1) + '\n'
 				else:
 					beforeheader += line.replace(';','#',1) + '\n'
 			elif line.lstrip().startswith(':'):
 				data += '        --%s--\n' % line.split('#',1)[0].strip()[1:]
-			elif line.lstrip().startswith('script_name ') and headerinfo[3] is None:
-				headerinfo[3] = line.lstrip()[12:]
-				if re.match('bw|brood ?war',headerinfo[3],re.I):
-					headerinfo[2] = 'bwscript'
+			elif line.lstrip().startswith('script_name ') and header_string is None:
+				header_string = line.lstrip()[12:]
+				if re.match('bw|brood ?war',header_string,re.I):
+					header_bin_file = 'bwscript'
 				else:
-					headerinfo[2] = 'aiscript'
-				for n,string in enumerate(self.delegate.get_tbl().strings):
-					if headerinfo[3] + '\x00' == string:
-						headerinfo[1] = n
-						break
-				else:
-					headerinfo[1] = 0
-			elif line.lstrip().startswith('script_id ') and headerinfo[0] is None:
-				headerinfo[0] = line.lstrip()[10:]
+					header_bin_file = 'aiscript'
+				header_string_index = self.delegate.get_data_context().stattxt_id(header_string) or 0
+			elif line.lstrip().startswith('script_id ') and header_id is None:
+				header_id = line.lstrip()[10:]
 			elif line.strip():
 				d = line.lstrip().split(';',1)[0].strip().split(' ')
-				if d[0] in AIBIN.AIBIN.short_labels:
+				if d[0] in CodeCommands.all_basic_commands:
 					if d[0] == 'debug' and len(d) >= 3:
 						d = [d[0], d[1], '"%s"' % ' '.join(d[2:])]
 					data += '    %s(%s)' % (d[0], ', '.join(d[1:]))
 					if ';' in line:
 						data += ' # ' + line.split(';',1)[1]
 				else:
-					if not None in headerinfo:
+					if not None in (header_id, header_bin_file, header_string_index, header_string):
 						data += '# ' + line
 					else:
 						beforeheader += '# ' + line + '\n'
 				data += '\n'
 			else:
 				data += '\n'
-		if None in headerinfo:
+		if None in (header_id, header_bin_file, header_string_index, header_string):
 			MessageBox.askquestion(parent=self, title='Invalid Header', message='The script is either missing a script_name or a script_id.', type=MessageBox.OK)
 			return
 		self.text.delete('1.0', END)
-		self.text.insert(END, beforeheader + '\n' + header % tuple(headerinfo) + data)
+		self.text.insert(END, beforeheader + '\n' + header % (header_id, header_bin_file, header_string_index, header_string) + data)
 		self.text.edited = True
 		self.editstatus['state'] = NORMAL
 
@@ -417,9 +426,9 @@ class CodeEditDialog(PyMSDialog):
 					's':'[Line: %s | Inside script "%s"%s]' % (n, script, inblock),
 					'c':m.group(4) or '',
 				}
-				params = self.delegate.get_ai_bin().parameters[self.delegate.get_ai_bin().short_labels.index(m.group(2))]
-				if params:
-					p = re.match('\\A%s\\Z' % ','.join(['\\s*(.+)\\s*'] * len(params)), m.group(3))
+				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)
+				if cmd_def is not None and cmd_def.param_types:
+					p = re.match('\\A%s\\Z' % ','.join(['\\s*(.+)\\s*'] * len(cmd_def.param_types)), m.group(3))
 					if not p:
 						data += line + '\n'
 						continue

@@ -24,7 +24,7 @@ class AutohideScrollbar(Scrollbar):
 		self._show = self.grid
 		Scrollbar.grid(self, **kwargs)
 
-	def set(self, lo: float, hi: float) -> None:
+	def set(self, lo: float, hi: float) -> None:  # type: ignore[override]
 		if float(lo) <= 0.0 and float(hi) >= 1.0:
 			if self._hide:
 				self._hide()

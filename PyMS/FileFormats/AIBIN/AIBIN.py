@@ -1,7 +1,7 @@
 
 from .AIFlag import AIFlag
 
-from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler
+from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler
 from .AICodeHandlers.CodeCommands import HeaderNameString, HeaderBinFile, BroodwarOnly, StarEditHidden, RequiresLocation, EntryPoint
 
 from ...Utilities.PyMSError import PyMSError
@@ -15,13 +15,15 @@ from ...Utilities import Struct
 from ...Utilities import IO
 
 from collections import OrderedDict
-from dataclasses import dataclass
+# from dataclasses import dataclass
 
 from typing import Type, TypeVar, Generic
 
 class BaseScriptHeader(Struct.Struct):
-	id: str
-	address: int
+	def __init__(self, id: str = '', address: int = 0) -> None:
+		super().__init__()
+		self.id = id
+		self.address = address
 
 class BWScriptHeader(BaseScriptHeader):
 	_fields = (
@@ -30,9 +32,6 @@ class BWScriptHeader(BaseScriptHeader):
 	)
 
 class AIScriptHeader(BaseScriptHeader):
-	string_id: int
-	flags: int 
-
 	_fields = (
 		('id', Struct.t_str(4)),
 		('address', Struct.t_u32),
@@ -44,12 +43,20 @@ class AIScriptHeader(BaseScriptHeader):
 	def is_in_bw(self) -> bool:
 		return (self.address == 0)
 
+	def __init__(self, id: str = '', address: int = 0, string_id: int = 0, flags: int = 0) -> None:
+		super().__init__(id, address)
+		self.string_id = string_id
+		self.flags = flags
+
 H = TypeVar('H', bound=BaseScriptHeader)
 
-@dataclass
-class Script(Generic[H]):
-	header: H
-	entry_point: CodeBlock
+# @dataclass
+# class AIScript:
+# 	id: str
+# 	flags: int
+# 	string_id: int
+# 	entry_point: CodeBlock | None
+# 	in_bwscript: bool
 
 class _AIBIN(Generic[H]):
 	def __init__(self, header_type: Type[H], file_name: str) -> None:
@@ -58,7 +65,7 @@ class _AIBIN(Generic[H]):
 		self._script_headers: OrderedDict[str, H] = OrderedDict()
 		self._entry_points: dict[str, CodeBlock] = {}
 
-	def load(self, input: IO.AnyInputBytes, addstrings: bool = False) -> None:
+	def load(self, input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(input) as f:
 			data = f.read()
 		bytecode_handler = AIByteCodeHandler(data)
@@ -71,6 +78,8 @@ class _AIBIN(Generic[H]):
 				header: H = scanner.scan(self.header_type)
 				if header.id in script_headers:
 					raise PyMSError('Load',"Duplicate AI ID '%s'" % id)
+				if isinstance(header, AIScriptHeader):
+					header.string_id -= 1 # WARNING: string id's are 1 indexed in the file
 				script_headers[header.id] = header
 				if header.address:
 					self._entry_points[header.id] = bytecode_handler.decompile_block(header.address, owner=header)
@@ -89,8 +98,12 @@ class _AIBIN(Generic[H]):
 			if not block:
 				continue
 			header.address = builder.compile_block(block)
+			if isinstance(header, AIScriptHeader):
+				header.string_id += 1 # WARNING: string id's are 1 indexed in the file
 			headers += header.pack()
-		builder.data[:4] = Struct.l_u32.pack(builder.current_offset) # Update offset to headers array
+			if isinstance(header, AIScriptHeader):
+				header.string_id -= 1 # WARNING: string id's are 1 indexed in the file
+		builder.data[:Struct.l_u32.size] = Struct.l_u32.pack(builder.current_offset) # Update offset to headers array
 		headers += b'\x00\x00\x00\x00' # Terminator for headers array
 		with IO.OutputBytes(output) as f:
 			f.write(builder.data)
@@ -111,9 +124,12 @@ class _AIBIN(Generic[H]):
 		if script_id in self._entry_points:
 			del self._entry_points[script_id]
 
-	def add_script(self, header: H, entry_point: CodeBlock) -> None:
-		if header.id in self._script_headers:
+	def add_script(self, header: H, entry_point: CodeBlock, allow_replace: bool = True) -> None:
+		if not allow_replace and header.id in self._script_headers:
 			raise PyMSError('Internal', f"Script with ID '{header.id}' already exists")
+		# TODO: Check size
+		# TODO: How does overwritten scripts affect size check?
+		# TODO: Cleanup overwritten scripts
 		self._script_headers[header.id] = header
 		self._entry_points[header.id] = entry_point
 
@@ -130,8 +146,14 @@ class _AIBIN(Generic[H]):
 
 	def calculate_size(self) -> int:
 		# TODO: Should this be calculated without saving?
+		# TODO: Cache file size?
 		data = IO.output_to_bytes(lambda f: self.save(f))
 		return len(data)
+
+	def calculate_size_of_blocks(self, entry_point: CodeBlock) -> int:
+		builder = ByteCodeBuilder()
+		builder.compile_block(entry_point)
+		return len(builder.data)
 
 class BWBIN(_AIBIN[BWScriptHeader]):
 	def __init__(self) -> None:
@@ -147,11 +169,6 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
 		script_header = self._script_headers[script_id]
 		serialize_context.set_label_prefix(script_id)
-		# string_info = str(script_header.string_id)
-		# if serialize_context.data_context:
-		# 	string = serialize_context.data_context.stattxt_string(script_header.string_id)
-		# 	if string:
-		# 		string_info = StrCodeType.serialize_string(string)
 		if script_header.address:
 			block = self.get_entry_point(script_id)
 		else:
@@ -163,7 +180,7 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 		with IO.OutputText(output) as f:
 			f.write(f"""script {script_header.id} {{
     {CodeCommand(HeaderNameString, [script_header.string_id]).serialize(serialize_context)}
-    {CodeCommand(HeaderBinFile, [1 if script_header.address else 0]).serialize(serialize_context)}
+    {CodeCommand(HeaderBinFile, [0 if script_header.address else 1]).serialize(serialize_context)}
     {CodeCommand(BroodwarOnly, [1 if script_header.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)}
     {CodeCommand(StarEditHidden, [1 if script_header.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)}
     {CodeCommand(RequiresLocation, [1 if script_header.flags & AIFlag.requires_location else 0]).serialize(serialize_context)}
@@ -199,16 +216,14 @@ class AIBIN(_AIBIN[AIScriptHeader]):
 		for id,(parse_header, _) in parse_context.script_headers.items():
 			if parse_header.bwscript and not self.bw_bin:
 				raise PyMSError('Compile', f"Script '{id}' has 'bin_file' set to 'bwscript', but there is no bwscript.bin loaded")
-			ai_header = AIScriptHeader()
-			ai_header.id = id
+			ai_header = AIScriptHeader(id)
 			assert parse_header.string_id is not None
 			ai_header.string_id = parse_header.string_id
 			ai_header.flags = parse_header.flags
 			assert parse_header.entry_point is not None
 			if parse_header.bwscript:
 				assert self.bw_bin is not None
-				bw_header = BWScriptHeader()
-				bw_header.id = id
+				bw_header = BWScriptHeader(id)
 				self.bw_bin.add_script(bw_header, parse_header.entry_point)
 				self._script_headers[id] = ai_header
 			else:

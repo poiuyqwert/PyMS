@@ -376,7 +376,7 @@ class TBLStringCodeType(CodeType.IntCodeType):
 	def comment(self, value: int, context: SerializeContext) -> str | None:
 		if not isinstance(context, AISerializeContext):
 			return None
-		return context.data_context.stattxt_string(value - 1)
+		return context.data_context.stattxt_string(value)
 
 class BinFileCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:

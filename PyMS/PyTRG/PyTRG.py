@@ -8,7 +8,7 @@ from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
-from ..FileFormats import AIBIN
+from ..FileFormats.AIBIN import AIBIN
 
 from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
@@ -435,9 +435,9 @@ class PyTRG(MainWindow, MainDelegate):
 			m = re.match(r'\A\s*[a-z\{]+\Z', text)
 			if not m:
 				ac.extend(self.autocompfuncs)
-			for id,header in self.aibin.script_headers.items():
-				if not id in ac:
-					ac.append(id)
+			for header in self.aibin.list_scripts():
+				if not header.id in ac:
+					ac.append(header.id)
 				cs = TBL.decompile_string(self.tbl.strings[header.string_id][:-1], '\x0A\x28\x29\x2C')
 				if not cs in ac:
 					ac.append(cs)

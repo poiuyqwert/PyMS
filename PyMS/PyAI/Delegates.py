@@ -1,8 +1,7 @@
 
 from ..FileFormats.AIBIN import AIBIN
+from ..FileFormats.AIBIN.DataContext import DataContext
 from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContext
-from ..FileFormats import TBL
-from ..FileFormats import DAT
 
 from ..Utilities.UIKit import AnyWindow
 from ..Utilities import IO
@@ -20,13 +19,7 @@ class MainDelegate(Protocol):
 	def set_highlights(self, highlights: dict[str, dict]) -> None:
 		...
 
-	def get_tbl(self) -> TBL.TBL:
-		...
-
-	def get_upgrades_dat(self) -> DAT.UpgradesDAT:
-		...
-
-	def get_tech_dat(self) -> DAT.TechDAT:
+	def get_data_context(self) -> DataContext:
 		...
 
 	def save_code(self, code: str, parent: AnyWindow) -> bool:
@@ -52,7 +45,7 @@ class TooltipDelegate(Protocol):
 	def get_ai_bin(self) -> AIBIN.AIBIN:
 		...
 
-	def get_tbl(self) -> TBL.TBL:
+	def get_data_context(self) -> DataContext:
 		...
 
 	def get_list_entry(self, index: int) -> AIBIN.AIScriptHeader:

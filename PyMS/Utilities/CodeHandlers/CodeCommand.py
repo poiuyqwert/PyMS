@@ -16,6 +16,13 @@ if TYPE_CHECKING:
 	from .BuilderContext import BuilderContext
 
 class CodeCommandDefinition(object):
+	@staticmethod
+	def find_by_name(name: str, cmd_defs: list[CodeCommandDefinition]) -> CodeCommandDefinition | None:
+		for cmd_def in cmd_defs:
+			if cmd_def.name == name:
+				return cmd_def
+		return None
+
 	def __init__(self, name: str, help_text: str, byte_code_id: int | None, param_types: Sequence[CodeType] = (), *, ends_flow: bool = False, separate: bool = False, ephemeral: bool = False) -> None:
 		self.name = name
 		self.help_text = help_text
@@ -46,6 +53,7 @@ class CodeCommandDefinition(object):
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
 			token = parse_context.lexer.next_token(peek=True)
 			value: Any | None = None
+			# TODO: Should variable resolution be done inside the type?
 			if isinstance(token, Tokens.IdentifierToken) and parse_context.definitions:
 				variable = parse_context.definitions.get_variable(token.raw_value)
 				if variable:
@@ -92,7 +100,7 @@ class CodeCommandDefinition(object):
 		params_help = ''
 		type_counts: dict[str, int] = {}
 		for param_type in self.param_types:
-			type_counts[param_type.name] += type_counts.get(param_type.name, 0) + 1
+			type_counts[param_type.name] = type_counts.get(param_type.name, 0) + 1
 		param_counts: dict[str, int] = {}
 		for n, param_type in enumerate(self.param_types):
 			param_name = param_type.name

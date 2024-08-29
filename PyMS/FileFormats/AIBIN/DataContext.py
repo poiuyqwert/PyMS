@@ -13,6 +13,10 @@ class DataContext(object):
 		self.techdata_dat = techdata_dat
 		self._technology_names: list[str | None] | None = None
 
+	def set_stattxt_tbl(self, stattxt_tbl: TBL | None) -> None:
+		self.stattxt_tbl = stattxt_tbl
+		self._unit_names = None
+
 	def stattxt_string(self, string_id: int) -> str | None:
 		if not self.stattxt_tbl:
 			return None
@@ -24,10 +28,19 @@ class DataContext(object):
 		if not self.stattxt_tbl:
 			return None
 		string = compile_string(string)
+		if not string.endswith('\x00'):
+			string += '\x00'
 		try:
 			return self.stattxt_tbl.strings.index(string)
 		except:
 			return None
+
+	def set_unitnames_tbl(self, unitnames_tbl: TBL | None) -> None:
+		self.unitnames_tbl = unitnames_tbl
+		self._unit_names = None
+
+	def set_units_dat(self, units_dat: UnitsDAT | None) -> None:
+		self.units_dat = units_dat
 
 	def _unit_name(self, raw_string: str) -> str:
 		name = raw_string
@@ -70,6 +83,10 @@ class DataContext(object):
 		except:
 			return None
 
+	def set_upgrades_dat(self, upgrades_dat: UpgradesDAT | None) -> None:
+		self.upgrades_dat = upgrades_dat
+		self._upgrade_names = None
+
 	def _upgrade_name(self, raw_string: str) -> str:
 		return decompile_string(raw_string.split('\x00')[0], exclude='\x0A\x28\x29\x2C').strip()
 
@@ -105,6 +122,10 @@ class DataContext(object):
 			return upgrade_names.index(upgrade_name)
 		except:
 			return None
+
+	def set_techdata_dat(self, techdata_dat: TechDAT | None) -> None:
+		self.techdata_dat = techdata_dat
+		self._technology_names = None
 
 	def _technology_name(self, raw_string: str) -> str:
 		return decompile_string(raw_string.split('\x00')[0], exclude='\x0A\x28\x29\x2C').strip()

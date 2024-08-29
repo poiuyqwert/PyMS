@@ -15,7 +15,7 @@ from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIDefinitionsHandler, AIDefinitionsSourceCodeParser, AIParseContext, AILexer
+from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler, AIDefsSourceCodeHandler, AIDefinitionsHandler
 from ..FileFormats.AIBIN.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
@@ -38,7 +38,6 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
-from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsSourceCodeParser
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
 import os
@@ -70,10 +69,11 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		# 	self.stat_txt = None
 		# 	self.tbl = None
 		# self.tbledited = False
-		self.tbl: TBL.TBL | None = None
-		self.unitsdat: DAT.UnitsDAT | None = None
-		self.upgradesdat: DAT.UpgradesDAT | None = None
-		self.techdat: DAT.TechDAT | None = None
+		# self.tbl: TBL.TBL | None = None
+		# self.unitsdat: DAT.UnitsDAT | None = None
+		# self.upgradesdat: DAT.UpgradesDAT | None = None
+		# self.techdat: DAT.TechDAT | None = None
+		self.data_context = DataContext()
 		self.ai: AIBIN.AIBIN | None = None
 
 		self.strings: dict[int, list[str]] = {}
@@ -190,7 +190,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_checkbutton(Assets.get_image('reference'), self.reference, 'Print Reference when Decompiling')
 		self.toolbar.add_button(Assets.get_image('debug'), self.decompiling_format, 'Decompiling Format')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', Ctrl.e, enabled=False, tags='scripts_selected')
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit AI ID, String, and Extra Info.', Ctrl.i, enabled=False, tags='scripts_selected')
 		self.toolbar.add_button(Assets.get_image('flags'), self.editflags, 'Edit Flags', Ctrl.g, enabled=False, tags='scripts_selected')
 		self.toolbar.add_section()
@@ -248,6 +248,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.mpqhandler.open_mpqs()
 		err = None
 		try:
+			# TODO: Dat files are not "required"?
 			unitsdat = DAT.UnitsDAT()
 			upgradesdat = DAT.UpgradesDAT()
 			techdat = DAT.TechDAT()
@@ -256,27 +257,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			techdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.techdata.file_path))
 			tbl = TBL.TBL()
 			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
-			# if not self.tbl:
-			# 	file = self.config_.last_path.tbl.select_open(self)
-			# 	# TODO: We need stat_txt but if it fails to load we present settings but you don't manage it in settings?
-			# 	if not file:
-			# 		raise PyMSError('Load', 'You must load a stat_txt.tbl file')
-			# 	tbl = TBL.TBL()
-			# 	tbl.load_file(file)
-			# 	self.stat_txt = file
-			# 	self.tbl = tbl
 		except PyMSError as e:
 			err = e
 		else:
-			self.unitsdat = unitsdat
-			self.upgradesdat = upgradesdat
-			self.techdat = techdat
-			self.tbl = tbl
-			# TODO: DAT usage?
-			# if self.ai:
-			# 	self.ai.unitsdat = unitsdat
-			# 	self.ai.upgradesdat = upgradesdat
-			# 	self.ai.techdat = techdat
+			self.data_context.set_stattxt_tbl(tbl)
+			self.data_context.set_units_dat(unitsdat)
+			self.data_context.set_upgrades_dat(upgradesdat)
+			self.data_context.set_techdata_dat(techdat)
 		self.mpqhandler.close_mpqs()
 		return err
 
@@ -291,8 +278,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def entry_text(self, header: AIBIN.AIScriptHeader) -> str:
 		string = f'String {header.string_id}'
-		if self.tbl:
-			string = TBL.decompile_string(self.tbl.strings[header.string_id])
+		if (tbl_string := self.data_context.stattxt_string(header.string_id)):
+			string = tbl_string
 		if len(string) > 50:
 			string = string[:47] + '...'
 		return f'{header.id}     {"BW" if header.is_in_bw else "  "}     {binary(header.flags, 3)}     {string}'
@@ -315,27 +302,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.listbox.delete(0, END)
 		if not self.ai:
 			return
-		self.script_list = self.get_sortby().sort(self.ai.list_scripts(), self.tbl)
+		self.script_list = self.get_sortby().sort(self.ai.list_scripts(), self.data_context.stattxt_tbl)
 		for header in self.script_list:
 			self.listbox.insert(END, self.entry_text(header))
 			if header in was_selected:
 				self.listbox.select_set(END)
 		self.listbox.yview_moveto(yview[0])
-
-	# def add_undo(self, type: str, data: Any) -> None:
-	# 	max = self.config_.max_undos.value
-	# 	if not max:
-	# 		return
-	# 	if self.redos:
-	# 		self.redos = []
-	# 		self.toolbar.tag_enabled('can_redo', False)
-	# 		self.menu.tag_enabled('can_redo', False) # type: ignore[attr-defined]
-	# 	if not self.undos:
-	# 		self.toolbar.tag_enabled('can_undo', True)
-	# 		self.menu.tag_enabled('can_undo', True) # type: ignore[attr-defined]
-	# 	self.undos.append((type, data))
-	# 	if len(self.undos) > max:
-	# 		del self.undos[0]
 
 	def is_file_open(self) -> bool:
 		return not not self.ai
@@ -360,13 +332,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.menu.tag_enabled('can_redo', self.action_manager.can_redo()) # type: ignore[attr-defined]
 
 	def check_saved(self) -> CheckSaved:
-		# if self.tbledited:
-		# 	save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % self.stat_txt, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		# 	if save != MessageBox.NO:
-		# 		if save == MessageBox.CANCEL:
-		# 			return CheckSaved.cancelled
-		# 		self.tbl.compile(self.stat_txt)
-		# 		self.tbledited = False
 		if not self.ai or not self.edited:
 			return CheckSaved.saved
 		aiscript = self.aiscript
@@ -384,18 +349,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return self.save()
 		else:
 			return self.saveas()
-
-	# def is_tbl_edited(self) -> bool:
-	# 	return self.tbledited
-
-	# def mark_tbl_edited(self, edited: bool = True) -> None:
-	# 	self.tbledited = edited
-
-	# def get_stat_txt_path(self) -> str:
-	# 	return self.stat_txt
-
-	# def set_stat_txt_path(self, file_path: str) -> None:
-	# 	self.stat_txt = file_path
 
 	def popup(self, event: Event) -> None:
 		if not self.ai:
@@ -521,18 +474,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			bw_path = self.config_.last_path.bin.select_save(self, title='Save bwscript.bin (Cancel to save aiscript.bin only)')
 		if bw_path and not check_allow_overwrite_internal_file(bw_path):
 			return CheckSaved.cancelled
-		# if self.tbl and self.tbledited:
-		# 	tbl_path = self.config_.last_path.tbl.select_save(self, title="Save stat_txt.tbl (Cancel doesn't stop bin saving)")
-		# 	if tbl_path:
-		# 		if not check_allow_overwrite_internal_file(tbl_path):
-		# 			return CheckSaved.cancelled
-		# 		try:
-		# 			self.tbl.compile(tbl_path)
-		# 		except PyMSError as e:
-		# 			ErrorDialog(self, e)
-		# 			return CheckSaved.cancelled
-		# 		self.stat_txt = tbl_path
-		# 		self.tbledited = False
 		try:
 			self.ai.save(ai_path)
 			if self.ai.bw_bin and bw_path:
@@ -638,10 +579,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		id = e.id.get()
 		if not id:
 			return
-		header = AIBIN.AIScriptHeader()
-		header.id = id
-		header.string_id = int(e.string.get())
-		header.flags = e.flags
+		header = AIBIN.AIScriptHeader(id, string_id=int(e.string.get()), flags=e.flags)
 		action = Actions.AddScriptAction(self, header, None)
 		self.action_manager.add_action(action)
 
@@ -758,7 +696,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.tbl = tbl
 		
 		unitsdat = DAT.UnitsDAT()
 		try:
@@ -766,7 +703,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.unitsdat = unitsdat
 		
 		upgradesdat = DAT.UpgradesDAT()
 		try:
@@ -774,7 +710,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.upgradesdat = upgradesdat
 
 		techdat = DAT.TechDAT()
 		try:
@@ -782,7 +717,11 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.techdat = techdat
+		
+		self.data_context.set_stattxt_tbl(tbl)
+		self.data_context.set_units_dat(unitsdat)
+		self.data_context.set_upgrades_dat(upgradesdat)
+		self.data_context.set_techdata_dat(techdat)
 
 	def saveset(self) -> None:
 		file = self.config_.last_path.txt.settings.select_save(self)
@@ -820,17 +759,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def set_highlights(self, highlights: Any) -> None:
 		self.highlights = highlights
 
-	def get_tbl(self) -> TBL.TBL:
-		assert self.tbl is not None
-		return self.tbl
-
-	def get_upgrades_dat(self) -> DAT.UpgradesDAT:
-		assert self.upgradesdat is not None
-		return self.upgradesdat
-
-	def get_tech_dat(self) -> DAT.TechDAT:
-		assert self.techdat is not None
-		return self.techdat
+	def get_data_context(self) -> DataContext:
+		return self.data_context
 
 	def save_code(self, code: str, parent: AnyWindow) -> bool:
 		if not self.ai:
@@ -851,25 +781,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def get_export_references(self) -> bool:
 		return self.reference.get()
 
-	def _get_data_context(self) -> DataContext:
-		return DataContext(
-			stattxt_tbl = self.tbl,
-			unitnames_tbl = None,
-			units_dat = self.unitsdat,
-			upgrades_dat = self.upgradesdat,
-			techdata_dat = self.techdat
-		)
-
-	def _get_definitions_handler(self, data_context: DataContext) -> AIDefinitionsHandler:
-		# TODO: Load definitions files
+	def _get_definitions_handler(self) -> AIDefinitionsHandler:
 		defs = AIDefinitionsHandler()
-		parser = AIDefinitionsSourceCodeParser()
+		handler = AIDefsSourceCodeHandler()
 		for extdef in self.config_.extdefs.data:
 			with IO.InputText(extdef) as f:
 				code = f.read()
 			lexer = AILexer(code)
-			parse_context = AIParseContext(lexer, defs, data_context)
-			parser.parse(parse_context)
+			parse_context = AIParseContext(lexer, defs, self.data_context)
+			handler.parse(parse_context)
+			parse_context.finalize()
 		return defs
 
 	def _get_formatters(self) -> Formatters:
@@ -880,18 +801,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		)
 
 	def get_serialize_context(self) -> AISerializeContext:
-		data_context = self._get_data_context()
-		definitions = self._get_definitions_handler(data_context)
+		definitions = self._get_definitions_handler()
 		formatters = self._get_formatters()
-		return AISerializeContext(definitions, formatters, data_context)
+		return AISerializeContext(definitions, formatters, self.data_context)
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
-		data_context = self._get_data_context()
-		definitions = self._get_definitions_handler(data_context)
+		definitions = self._get_definitions_handler()
 		with IO.InputText(input) as f:
 			code = f.read()
 		lexer = AILexer(code)
-		return AIParseContext(lexer, definitions, data_context)
+		return AIParseContext(lexer, definitions, self.data_context)
 
 	# Tooltip Delegate
 	def get_list_entry(self, index: int) -> AIBIN.AIScriptHeader:

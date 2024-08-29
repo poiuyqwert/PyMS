@@ -2,7 +2,7 @@
 from .CodeTooltip import *
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives, AIDefinitionsHandler
+from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
 from ..Utilities.utils import couriernew_bold
@@ -74,11 +74,11 @@ class AICodeText(CodeText):
 		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
 		directives = '(?P<Directives>@(?:%s))\\b' % '|'.join(directive_names)
 		self.basic = re.compile('|'.join((infocomment, multiinfocomment, comment, header, block, cmds, num, tbl, operators, kw, types, directives, '(?P<Newline>\\n)')), re.S | re.M)
-		CommandCodeTooltip(self.text,self.ai)
-		TypeCodeTooltip(self.text,self.ai)
-		# StringCodeTooltip(self.text,self.ai)
-		# FlagCodeTooltip(self.text,self.ai)
-		DirectiveTooltip(self.text,self.ai)
+		CommandCodeTooltip(self.text)
+		TypeCodeTooltip(self.text)
+		# StringCodeTooltip(self.text)
+		# FlagCodeTooltip(self.text)
+		DirectiveTooltip(self.text)
 		self.tags = copy.deepcopy(self.highlights)
 
 	def colorize(self) -> None:

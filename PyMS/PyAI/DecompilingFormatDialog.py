@@ -16,7 +16,7 @@ class DecompilingFormatDialog(PyMSDialog):
 		self.comment_index.set(CommentFormat.all().index(config.comment.value))
 		PyMSDialog.__init__(self, parent, 'Decompiling Format', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Widget | None:
 		frame = Frame(self)
 		Label(frame, text='Block:', anchor=E).grid(row=0, column=0, sticky=EW)
 		DropDown(frame, self.block_index, [format.label for format in BlockFormat.all()]).grid(row=0, column=1, sticky=EW)
@@ -38,7 +38,7 @@ class DecompilingFormatDialog(PyMSDialog):
 
 		return ok
 
-	def ok(self):
+	def ok(self, event: Event | None = None) -> None:
 		self.config_.block.value = BlockFormat.all()[self.block_index.get()]
 		self.config_.command.value = CommandFormat.all()[self.command_index.get()]
 		self.config_.comment.value = CommentFormat.all()[self.comment_index.get()]

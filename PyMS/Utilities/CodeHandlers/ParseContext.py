@@ -90,6 +90,9 @@ class ParseContext(object):
 			block = self.defined_blocks[block_name]
 			block_metadata = self.block_metadata[block]
 			self.add_warning(PyMSWarning('Parse', "Block with name '%s' is unused and will be discarded" % block_name, line=block_metadata.source_line, id='block_unused'))
+		if self.active_block:
+			block_metadata = self.block_metadata[self.active_block]
+			raise self.error('Parse', "The last block (named '%s') does not end" % block_metadata.name, line=block_metadata.source_line)
 		self.unused_blocks.clear()
 		if self.missing_blocks:
 			earliest_line = None

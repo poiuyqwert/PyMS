@@ -121,10 +121,10 @@ class CodeColors(PyMSDialog):
 				self.tags[list(self.info.keys())[int(self.listbox.curselection()[0])].replace(' ','')][g] = c[1]
 			self.focus_set()
 
-	def ok(self):
+	def ok(self, event: Event | None = None) -> None:
 		self.cont = self.tags
 		PyMSDialog.ok(self)
 
-	def cancel(self):
+	def cancel(self, event: Event | None = None) -> None:
 		self.cont = None
 		PyMSDialog.ok(self)

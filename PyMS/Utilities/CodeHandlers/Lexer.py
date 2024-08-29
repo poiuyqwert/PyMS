@@ -141,4 +141,4 @@ class Lexer(object):
 		return dataclasses.replace(self.state)
 
 	def rollback(self, state: State) -> None:
-		self.state = state
+		self.state = dataclasses.replace(state)

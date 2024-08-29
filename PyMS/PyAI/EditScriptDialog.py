@@ -9,29 +9,19 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 
 class EditScriptDialog(PyMSDialog):
-	def __init__(self, parent, id='MYAI', flags=0, string=0, aiinfo='', title='Edit AI ID, String and Extra Info.', initial=''):
+	def __init__(self, parent: AnyWindow, id: str = 'MYAI', flags: int = 0, string_index: int = 0, title='Edit AI', initial=''):
 		self.initialid = initial
 		self.validid = id
 		self.id = StringVar()
 		self.id.set(id)
 		self.id.trace('w', self.editid)
 		self.flags = flags
-		self.validstring = string
+		self.validstring = string_index
 		self.string = StringVar()
-		self.string.set(string)
-		self.string.trace('w', self.editstring)
+		self.string.set(str(string_index))
+		self.string.trace_add('write', self.editstring)
 		self.actualstring = StringVar()
 		self.actualstring.set(TBL.decompile_string(parent.ai.tbl.strings[string]))
-		self.aiinfo = aiinfo
-
-		# TODO: How are these used?
-		self.ai = parent.ai
-		self.tbl = parent.tbl
-		self.settings = parent.settings
-		self.edittbl = parent.edittbl
-		self.stattxt = parent.stattxt
-		self.strings = parent.strings
-		self.resort = parent.resort
 
 		PyMSDialog.__init__(self, parent, title)
 
