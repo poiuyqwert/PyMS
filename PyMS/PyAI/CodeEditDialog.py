@@ -248,7 +248,7 @@ class CodeEditDialog(PyMSDialog):
 			self.editstatus['state'] = DISABLED
 
 	def test(self, _: Event | None = None) -> None:
-		aibin = AIBIN.AIBIN(AIBIN.BWBIN())
+		aibin = AIBIN.AIBIN()
 		code = self.text.get('1.0', END)
 		parse_context = self.delegate.get_parse_context(code)
 		try:

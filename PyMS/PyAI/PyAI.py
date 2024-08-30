@@ -15,7 +15,7 @@ from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContext, AILexer, AISourceCodeHandler, AIDefsSourceCodeHandler, AIDefinitionsHandler
+from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, AIDefinitionsHandler
 from ..FileFormats.AIBIN.DataContext import DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
@@ -40,7 +40,7 @@ from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
-import os
+import os, io
 
 LONG_VERSION = 'v%s' % Assets.version('PyAI')
 
@@ -61,23 +61,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.config_ = PyAIConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
-		# self.stat_txt: str | None = self.config_.stat_txt.file_path
-		# self.tbl: TBL.TBL | None = TBL.TBL()
-		# try:
-		# 	self.tbl.load_file(self.stat_txt)
-		# except:
-		# 	self.stat_txt = None
-		# 	self.tbl = None
-		# self.tbledited = False
-		# self.tbl: TBL.TBL | None = None
-		# self.unitsdat: DAT.UnitsDAT | None = None
-		# self.upgradesdat: DAT.UpgradesDAT | None = None
-		# self.techdat: DAT.TechDAT | None = None
 		self.data_context = DataContext()
 		self.ai: AIBIN.AIBIN | None = None
 
-		self.strings: dict[int, list[str]] = {}
-		self.script_list: list[AIBIN.AIScriptHeader] = []
+		self.script_list: list[AIBIN.AIScript] = []
 		self.edited = False
 	
 		self.action_manager = ActionManager()
@@ -248,7 +235,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.mpqhandler.open_mpqs()
 		err = None
 		try:
-			# TODO: Dat files are not "required"?
+			# TODO: Files are not "required"?
 			unitsdat = DAT.UnitsDAT()
 			upgradesdat = DAT.UpgradesDAT()
 			techdat = DAT.TechDAT()
@@ -276,19 +263,19 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				details += f' ({self.bwscript})'
 		self.title(f'PyAI {LONG_VERSION}{details}')
 
-	def entry_text(self, header: AIBIN.AIScriptHeader) -> str:
-		string = f'String {header.string_id}'
-		if (tbl_string := self.data_context.stattxt_string(header.string_id)):
+	def entry_text(self, script: AIBIN.AIScript) -> str:
+		string = f'String {script.string_id}'
+		if (tbl_string := self.data_context.stattxt_string(script.string_id)):
 			string = tbl_string
 		if len(string) > 50:
 			string = string[:47] + '...'
-		return f'{header.id}     {"BW" if header.is_in_bw else "  "}     {binary(header.flags, 3)}     {string}'
+		return f'{script.id}     {"BW" if script.in_bwscript else "  "}     {binary(script.flags, 3)}     {string}'
 
 	def get_sortby(self) -> SortBy:
 		return SortBy(self.sort.get())
 
-	def get_selected_headers(self) -> list[AIBIN.AIScriptHeader]:
-		selected = []
+	def get_selected_scripts(self) -> list[AIBIN.AIScript]:
+		selected: list[AIBIN.AIScript] = []
 		for index in self.listbox.curselection():
 			try:
 				selected.append(self.script_list[index])
@@ -298,7 +285,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def refresh_listbox(self) -> None:
 		yview = self.listbox.yview()
-		was_selected = self.get_selected_headers()
+		was_selected = self.get_selected_scripts()
 		self.listbox.delete(0, END)
 		if not self.ai:
 			return
@@ -365,18 +352,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			self.scriptstatus.set('')
 			return
 		# TODO: Calculate sizes
-		s = f'aiscript.bin: {len(self.ai._script_headers)} (? B)'
-		if self.ai.bw_bin:
-			s += f'     bwscript.bin: {len(self.ai.bw_bin._script_headers)} (? B)'
+		ai_count,bw_count = self.ai.count_scripts()
+		ai_size,bw_size = self.ai.calculate_sizes()
+		s = f'aiscript.bin: {ai_count} ({ai_size} B)     bwscript.bin: {bw_count} ({bw_size} B)'
 		self.scriptstatus.set(s)
 
 	# Acitions
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		bwscript = AIBIN.BWBIN()
-		self.ai = AIBIN.AIBIN(bwscript)
-		self.strings = {}
+		self.ai = AIBIN.AIBIN()
 		self.aiscript = None
 		self.bwscript = None
 		self.mark_edited(False)
@@ -403,26 +388,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			bwscript_file,bwscript_path = bwscript
 		if not bwscript:
 			bwscript_path = self.config_.last_path.bin.select_open(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)')
-		# warnings = []
 		try:
-			bw: AIBIN.BWBIN | None = None
-			if bwscript_file is not None:
-				bw = AIBIN.BWBIN()
-				bw.load(bwscript_file)
-			elif bwscript_path is not None:
-				bw = AIBIN.BWBIN()
-				bw.load(bwscript_path)
-			ai = AIBIN.AIBIN(bw)
-			ai.load(aiscript_file or aiscript_path)
+			ai = AIBIN.AIBIN()
+			ai.load(aiscript_file or aiscript_path, bwscript_file or bwscript_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 		self.ai = ai
-		self.strings = {}
-		for id,header in self.ai._script_headers.items():
-			if not header.string_id in self.strings:
-				self.strings[header.string_id] = []
-			self.strings[header.string_id].append(id)
 		self.aiscript = aiscript_path
 		self.bwscript = bwscript_path
 		self.mark_edited(False)
@@ -433,8 +405,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.refresh_listbox()
 		self.action_states()
 		self.update_script_status()
-		# if warnings:
-		# 	WarningDialog(self, warnings)
 
 	def open_default(self) -> None:
 		self.open(aiscript=(None, Assets.mpq_file_path('Scripts','aiscript.bin')), bwscript=(None, Assets.mpq_file_path('Scripts','bwscript.bin')))
@@ -470,14 +440,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				return CheckSaved.cancelled
 		if not check_allow_overwrite_internal_file(ai_path):
 			return CheckSaved.cancelled
-		if self.ai.bw_bin and self.ai.bw_bin._script_headers and not bw_path:
+		if self.ai.has_bwscripts() and not bw_path:
 			bw_path = self.config_.last_path.bin.select_save(self, title='Save bwscript.bin (Cancel to save aiscript.bin only)')
 		if bw_path and not check_allow_overwrite_internal_file(bw_path):
 			return CheckSaved.cancelled
 		try:
-			self.ai.save(ai_path)
-			if self.ai.bw_bin and bw_path:
-				self.ai.bw_bin.save(bw_path)
+			self.ai.save(ai_path, bw_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -498,20 +466,20 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		not_saved = []
 		try:
 			ai_bin = self.ai
-			ai = IO.output_to_bytes(lambda f: ai_bin.save(f))
-			bw: bytes | None = None
-			if self.ai.bw_bin:
-				bw_bin = self.ai.bw_bin
-				bw = IO.output_to_bytes(lambda f: bw_bin.save(f))
+			ai_bytes = io.BytesIO()
+			bw_bytes: io.BytesIO | None = None
+			if self.ai.has_bwscripts():
+				bw_bytes = io.BytesIO()
+			ai_bin.save(ai_bytes, bw_bytes)
 			mpq = MPQ.of(file)
 			with mpq.open_or_create():
 				try:
-					mpq.add_data(ai, 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
+					mpq.add_data(ai_bytes.getvalue(), 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
 				except:
 					not_saved.append('scripts\\aiscript.bin')
-				if bw:
+				if bw_bytes:
 					try:
-						mpq.add_data(bw, 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
+						mpq.add_data(bw_bytes.getvalue(), 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
 					except:
 						not_saved.append('scripts\\bwscript.bin')
 		except PyMSError as e:
@@ -524,7 +492,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.ai = None
-		self.strings = {}
 		self.aiscript = None
 		self.bwscript = None
 		self.mark_edited(False)
@@ -558,7 +525,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
-		# self.config_.stat_txt.file_path = self.stat_txt
 		self.config_.code.highlights.data = self.highlights
 		self.config_.reference.value = self.reference.get()
 		self.config_.imports.data = self.imports
@@ -571,28 +537,24 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def add(self) -> None:
 		if not self.ai:
 			return
-		s = 2 + self.ai.calculate_size()
+		# TODO: Fix size calcs
+		s = 2 + self.ai.calculate_sizes()[0]
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
-		e = EditScriptDialog(self, title='Adding New AI Script')
+		e = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
 		id = e.id.get()
 		if not id:
 			return
-		header = AIBIN.AIScriptHeader(id, string_id=int(e.string.get()), flags=e.flags)
-		action = Actions.AddScriptAction(self, header, None)
+		# TODO: In bwscript?
+		script = AIBIN.AIScript(id, e.flags, int(e.string.get()), AIBIN.AIScript.blank_entry_point(), False)
+		action = Actions.AddScriptAction(self, script, None)
 		self.action_manager.add_action(action)
 
 	def remove(self) -> None:
 		if not self.ai:
 			return
-		scripts = []
-		for header in self.get_selected_headers():
-			entry_point = self.ai.get_entry_point(header.id)
-			if not entry_point:
-				continue
-			scripts.append((header, entry_point))
-		action = Actions.RemoveScriptsAction(self, scripts)
+		action = Actions.RemoveScriptsAction(self, self.get_selected_scripts())
 		self.action_manager.add_action(action)
 
 	def find(self) -> None:
@@ -601,7 +563,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def export(self) -> None:
 		if not self.ai:
 			return
-		headers = self.get_selected_headers()
+		headers = self.get_selected_scripts()
 		if not headers:
 			return
 		export_path = self.config_.last_path.txt.ai.select_save(self)
@@ -638,25 +600,22 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ImportListDialog(self)
 
 	def codeedit(self, event: Event | None = None) -> None:
-		headers = self.get_selected_headers()
+		headers = self.get_selected_scripts()
 		CodeEditDialog(self, self, self.config_, list(header.id for header in headers))
 
-	def edit(self):
-		headers = self.get_selected_headers()
-		if not headers:
+	def edit(self) -> None:
+		scripts = self.get_selected_scripts()
+		if not scripts:
 			return
-		header = headers[0]
-		entry_point = self.ai.get_entry_point(header.id)
-		if not entry_point:
-			return
-		e = EditScriptDialog(self, header.id, header.flags, header.string_id, initial=header.id)
+		script = scripts[0]
+		e = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
 		if not e.id.get():
 			return
-		action = Actions.EditScriptAction(self, header, entry_point, e.id.get(), e.flags, int(e.string.get()))
+		action = Actions.EditScriptAction(self, script, e.id.get(), e.flags, int(e.string.get()))
 		self.action_manager.add_action(action)
 
-	def editflags(self):
-		headers = self.get_selected_headers()
+	def editflags(self) -> None:
+		headers = self.get_selected_scripts()
 		if not headers:
 			return
 		header = headers[0]
@@ -673,7 +632,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		DecompilingFormatDialog(self, self.config_.code.decomp_format)
 
 	# def managetbl(self) -> None:
-	# 	headers = self.get_selected_headers()
+	# 	headers = self.get_selected_scripts()
 	# 	if not headers:
 	# 		return
 	# 	StringEditor(self, index=headers[0].id)
@@ -813,5 +772,5 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		return AIParseContext(lexer, definitions, self.data_context)
 
 	# Tooltip Delegate
-	def get_list_entry(self, index: int) -> AIBIN.AIScriptHeader:
+	def get_list_entry(self, index: int) -> AIBIN.AIScript:
 		return self.script_list[index]

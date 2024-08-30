@@ -14,7 +14,7 @@ class SortBy(Enum):
 	string = 'string'
 
 	@property
-	def sort(self) -> Callable[[list[AIBIN.AIScriptHeader], TBL.TBL | None], list[AIBIN.AIScriptHeader]]:
+	def sort(self) -> Callable[[list[AIBIN.AIScript], TBL.TBL | None], list[AIBIN.AIScript]]:
 		match self:
 			case SortBy.file_order:
 				return Sort.by_file_order
@@ -29,21 +29,21 @@ class SortBy(Enum):
 
 class Sort:
 	@staticmethod
-	def by_file_order(headers: list[AIBIN.AIScriptHeader], tbl: TBL.TBL | None) -> list[AIBIN.AIScriptHeader]:
+	def by_file_order(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return headers
 
 	@staticmethod
-	def by_id(headers: list[AIBIN.AIScriptHeader], tbl: TBL.TBL | None) -> list[AIBIN.AIScriptHeader]:
+	def by_id(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: header.id)
 
 	@staticmethod
-	def by_bw(headers: list[AIBIN.AIScriptHeader], tbl: TBL.TBL | None) -> list[AIBIN.AIScriptHeader]:
-		return sorted(headers, key=lambda header: (header.is_in_bw, header.id))
+	def by_bw(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
+		return sorted(headers, key=lambda header: (header.in_bwscript, header.id))
 
 	@staticmethod
-	def by_flags(headers: list[AIBIN.AIScriptHeader], tbl: TBL.TBL | None) -> list[AIBIN.AIScriptHeader]:
+	def by_flags(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: (header.flags, header.id))
 
 	@staticmethod
-	def by_string(headers: list[AIBIN.AIScriptHeader], tbl: TBL.TBL | None) -> list[AIBIN.AIScriptHeader]:
+	def by_string(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: (tbl.strings[header.string_id] if tbl else header.string_id, header.id))

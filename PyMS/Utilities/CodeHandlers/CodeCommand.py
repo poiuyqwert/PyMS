@@ -76,10 +76,12 @@ class CodeCommandDefinition(object):
 					raise
 			if isinstance(param_type, AddressCodeType):
 				block = parse_context.lookup_block(value)
-				if not block:
-					missing_blocks.append((value, param_index, parse_context.lexer.state.line))
-				else:
+				if block:
 					value = block
+					if (reference := parse_context.active_block):
+						block.references.append(reference)
+				else:
+					missing_blocks.append((value, param_index, parse_context.lexer.state.line))
 			params.append(value)
 		if parse_context.command_in_parens:
 			token = parse_context.lexer.next_token()
@@ -88,7 +90,7 @@ class CodeCommandDefinition(object):
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
 			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
-		cmd = CodeCommand(self, params)
+		cmd = CodeCommand(self, params, parse_context.active_block)
 		if not self.ephemeral:
 			for block_name,param_index,source_line in missing_blocks:
 				parse_context.missing_block(block_name, CommandParamBlockReferenceResolver(cmd, param_index, source_line))
@@ -121,9 +123,10 @@ class CodeCommandDefinition(object):
 		return help_text
 
 class CodeCommand(object):
-	def __init__(self, definition: CodeCommandDefinition, params: list[Any]) -> None:
+	def __init__(self, definition: CodeCommandDefinition, params: list[Any], parent_block: CodeBlock | None = None) -> None:
 		self.definition = definition
 		self.params = params
+		self.parent_block = parent_block
 		self.original_location: int | None = None # Byte address or Source line
 
 	def compile(self, context: BuilderContext) -> None:

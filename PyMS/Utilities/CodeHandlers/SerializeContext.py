@@ -27,8 +27,9 @@ class SerializeContext(object):
 	def block_label(self, block: CodeBlock) -> str:
 		if not block in self._block_labels:
 			prefix = self._label_prefix
-			if len(block.owners) > 1:
-				prefix = 'shared'
+			# TODO: Better owners
+			# if len(block.owners) > 1:
+			# 	prefix = 'shared'
 			if not prefix in self._label_counts:
 				self._label_counts[prefix] = 0
 			index = self._label_counts[prefix]

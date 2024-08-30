@@ -7,6 +7,7 @@ from ....Utilities.CodeHandlers.SourceCodeParser import CommandSourceCodeParser
 from ....Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceResolver
 from ....Utilities.CodeHandlers import Tokens
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 
 class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
 	def __init__(self, header: ParsedScriptHeader, source_line: int | None) -> None:
@@ -37,7 +38,14 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		if script_id in parse_context.script_headers:
 			_,existing_line = parse_context.script_headers[script_id]
 			raise parse_context.error('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line))
-		script_header = ParsedScriptHeader()
+
+		string_id: int | None = None
+		bwscript: bool | None = None
+		broodwar_only: bool | None = None
+		staredit_hidden: bool | None = None
+		requires_location: bool | None = None
+		entry_point: str | CodeBlock | None = None
+
 		commands_parsed: list[CodeCommandDefinition] = []
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
@@ -58,23 +66,32 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 				raise parse_context.error('Parse', f"Duplicate script header command '{command.definition.name}'")
 			commands_parsed.append(command.definition)
 			if command.definition == CodeCommands.HeaderNameString:
-				script_header.string_id = command.params[0]
+				string_id = command.params[0]
 			elif command.definition == CodeCommands.HeaderBinFile:
-				script_header.bwscript = bool(command.params[0])
+				bwscript = bool(command.params[0])
 			elif command.definition == CodeCommands.BroodwarOnly:
-				script_header.broodwar_only = command.params[0]
+				broodwar_only = command.params[0]
 			elif command.definition == CodeCommands.StarEditHidden:
-				script_header.staredit_hidden = command.params[0]
+				staredit_hidden = command.params[0]
 			elif command.definition == CodeCommands.RequiresLocation:
-				script_header.requires_location = command.params[0]
+				requires_location = command.params[0]
 			elif command.definition == CodeCommands.EntryPoint:
-				entry_point_name: str = command.params[0]
-				script_header.entry_point_name = entry_point_name
-				if entry_point := parse_context.lookup_block(entry_point_name):
-					script_header.entry_point = entry_point
-				else:
-					parse_context.missing_block(entry_point_name, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
-		if not script_header.entry_point_name:
-			raise parse_context.error('Parse', "Script with ID '%s' is missing an 'entry_point'" % script_id, line=line)
+				entry_point = command.params[0]
+		if string_id is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.HeaderNameString.name}'", line=line)
+		if bwscript is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.HeaderBinFile.name}'", line=line)
+		if broodwar_only is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.BroodwarOnly.name}'", line=line)
+		if staredit_hidden is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.StarEditHidden.name}'", line=line)
+		if requires_location is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.RequiresLocation.name}'", line=line)
+		if entry_point is None:
+			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.EntryPoint.name}'", line=line)
+		
+		script_header = ParsedScriptHeader(string_id, bwscript, broodwar_only, staredit_hidden, requires_location, entry_point if isinstance(entry_point, CodeBlock) else None)
+		if isinstance(entry_point, str):
+			parse_context.missing_block(entry_point, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
 		parse_context.script_headers[script_id] = (script_header, line)
 		return True

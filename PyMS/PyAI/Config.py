@@ -41,6 +41,7 @@ class PyAIConfig(Config.Config):
 			self.help = Config.WindowGeometry()
 			self.settings = PyAIConfig.Windows.Settings()
 			self.code_edit = Config.WindowGeometry()
+			self.script_edit = Config.WindowGeometry()
 			self.extdefs = Config.WindowGeometry()
 			super().__init__()
 

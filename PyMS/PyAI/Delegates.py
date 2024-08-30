@@ -48,5 +48,12 @@ class TooltipDelegate(Protocol):
 	def get_data_context(self) -> DataContext:
 		...
 
-	def get_list_entry(self, index: int) -> AIBIN.AIScriptHeader:
+	def get_list_entry(self, index: int) -> AIBIN.AIScript:
+		...
+
+class EditScriptDelegate(Protocol):
+	def get_ai_bin(self) -> AIBIN.AIBIN:
+		...
+
+	def get_data_context(self) -> DataContext:
 		...

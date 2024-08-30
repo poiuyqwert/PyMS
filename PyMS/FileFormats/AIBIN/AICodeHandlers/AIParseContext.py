@@ -9,16 +9,17 @@ from ....Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ....Utilities.CodeHandlers.CodeDirective import CodeDirective
 
+from dataclasses import dataclass
+
+@dataclass
 class ParsedScriptHeader(object):
-	def __init__(self) -> None:
-		self.string_id: int | None = None
-		self.bwscript: bool | None = None
-		self.broodwar_only: bool | None = None
-		self.staredit_hidden: bool | None = None
-		self.requires_location: bool | None = None
-		self.entry_point_name: str | None = None
-		self.entry_point: CodeBlock | None = None
-	
+	string_id: int
+	bwscript: bool
+	broodwar_only: bool
+	staredit_hidden: bool
+	requires_location: bool
+	entry_point: CodeBlock | None
+
 	@property
 	def flags(self) -> int:
 		return (AIFlag.requires_location if self.requires_location else 0) | (AIFlag.staredit_hidden if self.staredit_hidden else 0) | (AIFlag.broodwar_only if self.broodwar_only else 0)

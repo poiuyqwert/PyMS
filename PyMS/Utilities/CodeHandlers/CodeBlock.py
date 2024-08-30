@@ -11,7 +11,7 @@ class CodeBlock(object):
 		self.commands: list[CodeCommand] = []
 		self.prev_block: CodeBlock | None = None
 		self.next_block: CodeBlock | None = None
-		self.owners: set[Any] = set()
+		self.references: list[CodeBlock] = []
 
 	def serialize(self, context: SerializeContext, add_label: bool = True) -> str:
 		context.mark_block_serialized(self)

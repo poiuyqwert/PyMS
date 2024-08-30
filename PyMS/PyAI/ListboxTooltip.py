@@ -41,20 +41,20 @@ class ListboxTooltip(Tooltip):
 		self.tip.wm_overrideredirect(True)
 		pos = list(self.parent.winfo_pointerxy())
 		index = self.scrolled_listbox.listbox.nearest(pos[1] - self.parent.winfo_rooty())
-		ai_header = self.delegate.get_list_entry(index)
+		script = self.delegate.get_list_entry(index)
 		self.index = index
-		in_bwbin = 'Yes' if ai_header.is_in_bw else 'No'
+		in_bwbin = 'Yes' if script.in_bwscript else 'No'
 		flags = ''
 		for name,flag in (('BroodWar Only',AIFlag.broodwar_only),('Invisible in StarEdit',AIFlag.staredit_hidden),('Requires a Location',AIFlag.requires_location)):
-			if ai_header.flags & flag:
+			if script.flags & flag:
 				if flags:
 					flags += ', '
 				flags += name
 		if flags:
 			flags = f'Flags             : {flags}\n'
-		text = f"Script ID         : {ai_header.id}\nIn bwscript.bin   : {in_bwbin}\n{flags}String ID         : {ai_header.string_id}\n"
+		text = f"Script ID         : {script.id}\nIn bwscript.bin   : {in_bwbin}\n{flags}String ID         : {script.string_id}\n"
 		data_context = self.delegate.get_data_context()
-		if (string := data_context.stattxt_string(ai_header.string_id)):
+		if (string := data_context.stattxt_string(script.string_id)):
 			text += fit('String            : ', string, end=True)
 		# if id in ai.aiinfo and ai.aiinfo[id][0]:
 		# 	text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')

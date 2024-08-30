@@ -6,9 +6,7 @@ from .. import Struct
 from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
 
-from typing import Any
-
-class ByteCodeHandler(object):
+class ByteCodeHandler:
 	def __init__(self, data: bytes) -> None:
 		self.data = data
 		self.cmd_defs: dict[int, CodeCommandDefinition] = {}
@@ -26,17 +24,13 @@ class ByteCodeHandler(object):
 		for cmd_def in cmd_defs:
 			self.register_command(cmd_def)
 
-	def _decompile_block(self, address: int, owner: Any | None = None) -> tuple[CodeBlock, CodeBlock | None]:
+	def _decompile_block(self, address: int) -> tuple[CodeBlock, CodeBlock | None]:
 		if address in self.block_refs:
 			block = self.block_refs[address]
-			if owner:
-				block.owners.add(owner)
 			return (block, None)
 		elif address in self.cmd_refs:
 			block = CodeBlock()
 			self.block_refs[address] = block
-			if owner:
-				block.owners.add(owner)
 			prev_block, start_cmd = self.cmd_refs[address]
 			index = prev_block.commands.index(start_cmd)
 			while index < len(prev_block.commands):
@@ -54,8 +48,6 @@ class ByteCodeHandler(object):
 			block = CodeBlock()
 			active_block = block
 			self.block_refs[address] = block
-			if owner:
-				block.owners.add(owner)
 			while not scanner.at_end():
 				cmd_address = scanner.address
 				cmd_id = scanner.scan(Struct.l_u8)
@@ -80,6 +72,6 @@ class ByteCodeHandler(object):
 					break
 			return (block, None)
 
-	def decompile_block(self, address: int, owner: Any | None = None) -> CodeBlock:
-		block, _ = self._decompile_block(address, owner)
+	def decompile_block(self, address: int) -> CodeBlock:
+		block, _ = self._decompile_block(address)
 		return block
