@@ -2,68 +2,37 @@
 from __future__ import annotations
 
 from .Formatters import Formatters
+from .DecompileStrategy import DecompileStrategy
 
 import re
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, IO
 if TYPE_CHECKING:
 	from .DefinitionsHandler import DefinitionsHandler
-	from .CodeBlock import CodeBlock
+	from .DecompileStrategy import DecompileStrategy
 
-class SerializeContext(object):
-	def __init__(self, definitions: DefinitionsHandler | None = None, formatters: Formatters = Formatters()) -> None:
+class SerializeContext:
+	def __init__(self, output: IO[str], definitions: DefinitionsHandler | None = None, formatters: Formatters = Formatters()) -> None:
+		self._output = output
 		self.definitions = definitions
 		self.formatters = formatters
-		self._label_prefix: str = 'label'
-		self._label_counts: dict[str, int] = {}
-		self._block_labels: dict[CodeBlock, str] = {}
-		self._blocks_serialized: set[CodeBlock] = set()
-		self._next_blocks: list[CodeBlock] = []
+		self.strategy = DecompileStrategy.empty()
+		self._indent_level = 0
+		self._indent_next = False
 
-	RE_SANITIZE = re.compile(r'^[^a-zA-Z]|[^a-zA-Z0-9]')
-	def set_label_prefix(self, label_prefix: str) -> None:
-		self._label_prefix = SerializeContext.RE_SANITIZE.sub('_', label_prefix)
+	RE_INDENT_NEWLINE = re.compile(r'\n(?=\s*\S)')
+	def write(self, text: str, force_indent = False) -> None:
+		indent = '    ' * self._indent_level
+		if force_indent or self._indent_next and self._indent_level:
+			self._output.write(indent)
+		if self._indent_level:
+			text = SerializeContext.RE_INDENT_NEWLINE.sub('\n' + indent, text)
+		self._output.write(text)
+		self._indent_next = text.endswith('\n')
 
-	def block_label(self, block: CodeBlock) -> str:
-		if not block in self._block_labels:
-			prefix = self._label_prefix
-			# TODO: Better owners
-			# if len(block.owners) > 1:
-			# 	prefix = 'shared'
-			if not prefix in self._label_counts:
-				self._label_counts[prefix] = 0
-			index = self._label_counts[prefix]
-			self._label_counts[prefix] += 1
-			self._block_labels[block] = '%s_%04d' % (prefix, index)
-		return self._block_labels[block]
+	def indent(self, levels = 1) -> None:
+		self._indent_level += levels
 
-	def is_block_serialized(self, block: CodeBlock) -> bool:
-		return block in self._blocks_serialized
-
-	def mark_block_serialized(self, block: CodeBlock) -> None:
-		self._blocks_serialized.add(block)
-		if block in self._next_blocks:
-			self._next_blocks.remove(block)
-
-	def set_next_block(self, block: CodeBlock) -> None:
-		if self.is_block_serialized(block):
-			return
-		if block in self._next_blocks:
-			return
-		self._next_blocks.insert(0, block)
-		if block.prev_block:
-			self.set_next_block(block.prev_block)
-
-	def add_next_block(self, block: CodeBlock) -> None:
-		if self.is_block_serialized(block):
-			return
-		if block in self._next_blocks:
-			return
-		if block.prev_block:
-			self.add_next_block(block.prev_block)
-		self._next_blocks.append(block)
-
-	def get_next_block(self) -> CodeBlock | None:
-		if not self._next_blocks:
-			return None
-		return self._next_blocks.pop(0)
+	def dedent(self, levels = 1) -> None:
+		self._indent_level = max(0, self._indent_level - levels)
+		self._indent_next = False # Should this be cleared or not?

@@ -29,8 +29,6 @@ class CommandParamBlockReferenceResolver(BlockReferenceResolver):
 
 	def block_defined(self, block: CodeBlock) -> None:
 		self.cmd.params[self.param_index] = block
-		if self.cmd.parent_block is not None:
-			block.references.append(self.cmd.parent_block)
 
 @dataclass
 class BlockMetadata:

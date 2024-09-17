@@ -44,11 +44,11 @@ class CommentFormatter(Protocol):
 
 class HashCommentFormatter(CommentFormatter):
 	def serialize(self, comments: list[str]) -> str:
-		return f'# {", ".join(comments)}'
+		return f' # {", ".join(comments)}'
 
 class SemicolonCommentFormatter(CommentFormatter):
 	def serialize(self, comments: list[str]) -> str:
-		return f'; {", ".join(comments)}'
+		return f' ; {", ".join(comments)}'
 
 @dataclass
 class Formatters:

@@ -124,7 +124,7 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 		context.add_block_ref(block, cast(Struct.IntField, self._bytecode_type))
 
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
-		return context.block_label(block)
+		return context.strategy.block_label(block)
 	
 	def lex(self, parse_context: ParseContext) -> str:
 		token = parse_context.lexer.next_token()

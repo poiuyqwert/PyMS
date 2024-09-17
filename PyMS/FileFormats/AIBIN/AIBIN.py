@@ -2,15 +2,16 @@
 from .AIFlag import AIFlag
 
 from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler, CodeCommands
-# from .AICodeHandlers. import Stop, HeaderNameString, HeaderBinFile, BroodwarOnly, StarEditHidden, RequiresLocation, EntryPoint
 
 from ...Utilities.PyMSError import PyMSError
-# from ...Utilities.PyMSWarning import PyMSWarning
 from ...Utilities.BytesScanner import  BytesScanner
 from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
 from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
+from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
+from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
+from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
 from ...Utilities import Struct
 from ...Utilities import IO
 
@@ -52,7 +53,7 @@ class _AIScriptHeader(_BaseScriptHeader):
 H = TypeVar('H', bound=_BaseScriptHeader)
 
 @dataclass
-class AIScript:
+class AIScript(CodeHeader):
 	id: str
 	flags: int
 	string_id: int
@@ -66,6 +67,24 @@ class AIScript:
 			CodeCommand(CodeCommands.Stop, [])
 		]
 		return entry_point
+
+	def get_name(self) -> str:
+		return self.id
+
+	def get_entry_points(self) -> list[CodeBlock]:
+		return [self.entry_point]
+
+	def serialize(self, serialize_context: CodeCommands.SerializeContext) -> None:
+		serialize_context.write(f'\nscript {self.id} {{\n')
+		serialize_context.indent()
+		CodeCommand(CodeCommands.HeaderNameString, [self.string_id]).serialize(serialize_context)
+		CodeCommand(CodeCommands.HeaderBinFile, [self.in_bwscript]).serialize(serialize_context)
+		CodeCommand(CodeCommands.BroodwarOnly, [1 if self.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)
+		CodeCommand(CodeCommands.StarEditHidden, [1 if self.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)
+		CodeCommand(CodeCommands.RequiresLocation, [1 if self.flags & AIFlag.requires_location else 0]).serialize(serialize_context)
+		CodeCommand(CodeCommands.EntryPoint, [self.entry_point]).serialize(serialize_context)
+		serialize_context.dedent()
+		serialize_context.write('}\n')
 
 class AIBIN:
 	def __init__(self) -> None:
@@ -125,7 +144,9 @@ class AIBIN:
 			if not entry_point:
 				raise PyMSError('Internal', f'Entry point for script {id} missing')
 			# WARNING: string id's are 1 indexed in the file
-			scripts[id] = AIScript(id, header.flags, header.string_id - 1, entry_point, header.is_in_bw)
+			script = AIScript(id, header.flags, header.string_id - 1, entry_point, header.is_in_bw)
+			entry_point.owners.append(script)
+			scripts[id] = script
 		self._scripts = scripts
 
 	@staticmethod
@@ -172,6 +193,8 @@ class AIBIN:
 		return self._scripts.get(script_id)
 
 	def remove_script(self, script_id: str) -> None:
+		script = self._scripts[script_id]
+		script.entry_point.owners.remove(script)
 		del self._scripts[script_id]
 
 	def add_script(self, script: AIScript, allow_replace: bool = True) -> None:
@@ -212,45 +235,17 @@ class AIBIN:
 				ai_scripts += 1
 		return (ai_scripts, bw_scripts)
 
-	def _decompile_blocks(self, output: IO.AnyOutputText, script_id: str, serialize_context: AISerializeContext) -> None:
-		script = self._scripts.get(script_id)
-		if not script:
-			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
-		if serialize_context.is_block_serialized(script.entry_point):
-			return
-		with IO.OutputText(output) as f:
-			f.write(script.entry_point.decompile(serialize_context))
-
-	def _decompile_script_header(self, output: IO.AnyOutputText, script_id: str, serialize_context: AISerializeContext) -> None:
-		script = self._scripts.get(script_id)
-		if not script:
-			raise PyMSError('Decompile',"There is no AI Script with ID '%s'" % script_id)
-		serialize_context.set_label_prefix(script_id)
-		with IO.OutputText(output) as f:
-			f.write(f"""script {script.id} {{
-    {CodeCommand(CodeCommands.HeaderNameString, [script.string_id]).serialize(serialize_context)}
-    {CodeCommand(CodeCommands.HeaderBinFile, [script.in_bwscript]).serialize(serialize_context)}
-    {CodeCommand(CodeCommands.BroodwarOnly, [1 if script.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)}
-    {CodeCommand(CodeCommands.StarEditHidden, [1 if script.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)}
-    {CodeCommand(CodeCommands.RequiresLocation, [1 if script.flags & AIFlag.requires_location else 0]).serialize(serialize_context)}
-    {CodeCommand(CodeCommands.EntryPoint, [script.entry_point]).serialize(serialize_context)}
-}}""")
-
-	def decompile(self, output: IO.AnyOutputText, serialize_context: AISerializeContext, script_ids: list[str] | None = None) -> None:
+	def decompile(self, serialize_context: AISerializeContext, script_ids: list[str] | None = None) -> None:
 		if script_ids is None:
 			script_ids = list(self._scripts.keys())
-		with IO.OutputText(output) as f:
-			add_newlines = False
-			for script_id in script_ids:
-				script = self._scripts.get(script_id)
-				if not script:
-					raise PyMSError('Decompile', "There is no AI Script with ID '%s'" % script_id)
-				if add_newlines:
-					f.write('\n\n')
-				add_newlines = True
-				self._decompile_script_header(f, script_id, serialize_context)
-				f.write('\n')
-				self._decompile_blocks(f, script_id, serialize_context)
+		strategy_builder = DecompileStrategyBuilder()
+		for script_id in script_ids:
+			script = self._scripts.get(script_id)
+			if not script:
+				raise PyMSError('Decompile', "There is no AI Script with ID '%s'" % script_id)
+			strategy_builder.add_header(script)
+		source_serializer = SourceCodeSerializer()
+		source_serializer.decompile(serialize_context, strategy_builder.build())
 
 	def compile(self, parse_context: AIParseContext) -> None:
 		source_handler = AISourceCodeHandler()
@@ -260,4 +255,5 @@ class AIBIN:
 		for id,(parse_header, _) in parse_context.script_headers.items():
 			assert parse_header.entry_point is not None
 			script = AIScript(id, parse_header.flags, parse_header.string_id, parse_header.entry_point, parse_header.bwscript)
+			parse_header.entry_point.owners.append(script)
 			self.add_script(script)

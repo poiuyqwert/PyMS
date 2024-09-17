@@ -78,8 +78,6 @@ class CodeCommandDefinition(object):
 				block = parse_context.lookup_block(value)
 				if block:
 					value = block
-					if (reference := parse_context.active_block):
-						block.references.append(reference)
 				else:
 					missing_blocks.append((value, param_index, parse_context.lexer.state.line))
 			params.append(value)
@@ -135,7 +133,7 @@ class CodeCommand(object):
 		for param,param_type in zip(self.params, self.definition.param_types):
 			param_type.compile(param, context)
 
-	def serialize(self, context: SerializeContext) -> str:
+	def serialize(self, context: SerializeContext) -> None:
 		parameters: list[str] = []
 		comments: list[str] = []
 		for param,param_type in zip(self.params, self.definition.param_types):
@@ -143,9 +141,7 @@ class CodeCommand(object):
 			comment = param_type.comment(param, context)
 			if comment is not None:
 				comments.append(comment)
-			if isinstance(param, CodeBlock):
-				context.add_next_block(param)
-		result = context.formatters.command.serialize(self.definition.name, parameters)
+		context.write(context.formatters.command.serialize(self.definition.name, parameters))
 		if comments:
-			result += f' {context.formatters.comment.serialize(comments)}'
-		return result
+			context.write(context.formatters.comment.serialize(comments))
+		context.write('\n')

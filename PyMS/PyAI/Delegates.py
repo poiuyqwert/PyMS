@@ -6,7 +6,7 @@ from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContex
 from ..Utilities.UIKit import AnyWindow
 from ..Utilities import IO
 
-from typing import Protocol
+from typing import Protocol, IO as BuiltinIO
 
 class MainDelegate(Protocol):
 	def get_ai_bin(self) -> AIBIN.AIBIN:
@@ -28,7 +28,7 @@ class MainDelegate(Protocol):
 	def get_export_references(self) -> bool:
 		...
 
-	def get_serialize_context(self) -> AISerializeContext:
+	def get_serialize_context(self, output: BuiltinIO[str]) -> AISerializeContext:
 		...
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:

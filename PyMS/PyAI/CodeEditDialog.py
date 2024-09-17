@@ -18,7 +18,7 @@ from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities import IO
 from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 
-import re
+import re, io
 from dataclasses import dataclass
 
 @dataclass
@@ -445,8 +445,10 @@ class CodeEditDialog(PyMSDialog):
 
 	def load(self) -> None:
 		try:
-			serialize_context = self.delegate.get_serialize_context()
-			code = IO.output_to_text(lambda f: self.delegate.get_ai_bin().decompile(f, serialize_context, self.ids))
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			self.delegate.get_ai_bin().decompile(serialize_context, self.ids)
+			code = output.getvalue()
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return

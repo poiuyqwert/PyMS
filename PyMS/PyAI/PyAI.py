@@ -42,6 +42,8 @@ from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDel
 
 import os, io
 
+from typing import IO as BuiltinIO
+
 LONG_VERSION = 'v%s' % Assets.version('PyAI')
 
 class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
@@ -571,13 +573,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		script_ids = list(header.id for header in headers)
 		try:
-			serialize_context = self.get_serialize_context()
-			self.ai.decompile(export_path, serialize_context, script_ids)
+			with IO.OutputTextFile(export_path) as output:
+				serialize_context = self.get_serialize_context(output)
+				self.ai.decompile(serialize_context, script_ids)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		# if external:
-		# 	MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(external), type=MessageBox.OK)
+		if serialize_context.strategy.external_headers:
+			MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers), type=MessageBox.OK)
 
 	def iimport(self, iimport_path: str | None = None, c: bool = True, parent: Misc | None = None) -> None:
 		if not self.ai:
@@ -759,10 +762,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			comment = self.config_.code.decomp_format.comment.value.formatter,
 		)
 
-	def get_serialize_context(self) -> AISerializeContext:
+	def get_serialize_context(self, output: BuiltinIO[str]) -> AISerializeContext:
 		definitions = self._get_definitions_handler()
 		formatters = self._get_formatters()
-		return AISerializeContext(definitions, formatters, self.data_context)
+		return AISerializeContext(output, definitions, formatters, self.data_context)
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
 		definitions = self._get_definitions_handler()
