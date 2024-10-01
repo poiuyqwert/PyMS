@@ -49,21 +49,7 @@ class CodeCommandDefinition(object):
 				token = parse_context.lexer.next_token()
 				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
-			token = parse_context.lexer.next_token(peek=True)
-			value: Any | None = None
-			# TODO: Should variable resolution be done inside the type?
-			if isinstance(token, Tokens.IdentifierToken) and parse_context.definitions:
-				variable = parse_context.definitions.get_variable(token.raw_value)
-				if variable:
-					if not param_type.accepts(variable.type):
-						raise parse_context.error('Parse', f"Incorrect type on varaible '{variable.name}'. Excpected '{param_type.name}' but got '{variable.type.name}'")
-					value = variable.value
-					try:
-						param_type.validate(value, parse_context, token.raw_value)
-					except PyMSError as e:
-						e.warnings.append(PyMSWarning('Variable', f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
-						raise
-					_ = parse_context.lexer.next_token()
+			value: Any | None = parse_context.lookup_param_value(param_type)
 			if value is None:
 				try:
 					value = param_type.lex(parse_context)

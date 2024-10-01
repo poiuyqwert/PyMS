@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import sys
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .PyMSWarning import PyMSWarning
 

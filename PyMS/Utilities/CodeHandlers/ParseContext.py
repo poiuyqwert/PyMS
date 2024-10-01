@@ -2,18 +2,20 @@
 from __future__ import annotations
 
 from .CodeBlock import CodeBlock
+from . import Tokens
 
 from ..PyMSError import PyMSError
 from ..PyMSWarning import PyMSWarning
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
 	from .CodeHeader import CodeHeader
 	from .DefinitionsHandler import DefinitionsHandler
 	from .CodeDirective import CodeDirective
 	from .Lexer import Lexer
+	from .CodeType import CodeType
 
 # class BlockReferenceResolver(object):
 # 	def __init__(self, source_line: int | None) -> None:
@@ -147,8 +149,9 @@ class ParseContext(object):
 
 	def attribute_error(self, error: PyMSError) -> None:
 		if error.line is None:
-			error.line = self.lexer.state.line
-		error.code = self.lexer.get_line_of_code(error.line)
+			error.line = self.lexer.state.line + 1
+		if error.code is None:
+			error.code = self.lexer.get_line_of_code(error.line - 1)
 
 	def warning(self, type: str, warning: str, line: int | None = None, level: int = 0, id: str | None = None) -> PyMSWarning:
 		if line is None:
@@ -174,3 +177,21 @@ class ParseContext(object):
 
 	def next_line(self) -> None:
 		self.suppress_warnings_next_line = []
+
+	def lookup_param_value(self, param_type: CodeType) -> Any | None:
+		value: Any | None = None
+		token = self.lexer.next_token(peek=True)
+		# TODO: Should variable resolution be done inside the type?
+		if isinstance(token, Tokens.IdentifierToken) and self.definitions:
+			variable = self.definitions.get_variable(token.raw_value)
+			if variable:
+				if not param_type.accepts(variable.type):
+					raise self.error('Parse', f"Incorrect type on varaible '{variable.name}'. Excpected '{param_type.name}' but got '{variable.type.name}'")
+				value = variable.value
+				try:
+					param_type.validate(value, self, token.raw_value)
+				except PyMSError as e:
+					e.warnings.append(PyMSWarning('Variable', f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
+					raise
+				_ = self.lexer.next_token()
+		return value

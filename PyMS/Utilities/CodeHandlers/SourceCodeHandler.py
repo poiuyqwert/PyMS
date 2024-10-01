@@ -1,9 +1,8 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities.CodeHandlers.ParseContext import ParseContext
-
 from .SourceCodeParser import SourceCodeParser
+from . import Tokens
 
 from ..PyMSError import PyMSError
 
@@ -26,6 +25,7 @@ class SourceCodeHandler(SourceCodeParser):
 		any_parsed = False
 		while True:
 			error: PyMSError | None = None
+			parse_context.lexer.skip((Tokens.WhitespaceToken, Tokens.NewlineToken, Tokens.CommentToken), peek=True)
 			rollback = parse_context.lexer.get_rollback()
 			for parser in self.parsers:
 				try:

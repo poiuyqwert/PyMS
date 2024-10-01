@@ -66,7 +66,7 @@ class CodeEditDialog(PyMSDialog):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.asc3topyai, 'Compile ASC3 to PyAI', Ctrl.Alt.p)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', Ctrl.Alt.p)
 		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
 		self.toolbar.pack(fill=X, padx=2, pady=2)
 
@@ -323,53 +323,72 @@ class CodeEditDialog(PyMSDialog):
 			self.text.setup(c.cont)
 			self.delegate.set_highlights(c.cont)
 
-	def asc3topyai(self, _: Event | None = None) -> None:
-		beforeheader = ''
-		header = '### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!\n###       please update the header below appropriately!\n%s(%s, 111, %s): # Script Name: %s'
-		# headerinfo = [None,None,None,None]
-		header_id: str | None = None
-		header_bin_file: str | None = None
-		header_string: str | None = None
-		header_string_index: int | None = None
-		data = ''
-		for line in self.text.text.get('1.0',END).split('\n'):
-			if line.lstrip().startswith(';'):
-				if not None in (header_id, header_bin_file, header_string_index, header_string):
-					data += line.replace(';','#',1) + '\n'
-				else:
-					beforeheader += line.replace(';','#',1) + '\n'
-			elif line.lstrip().startswith(':'):
-				data += '        --%s--\n' % line.split('#',1)[0].strip()[1:]
-			elif line.lstrip().startswith('script_name ') and header_string is None:
-				header_string = line.lstrip()[12:]
-				if re.match('bw|brood ?war',header_string,re.I):
-					header_bin_file = 'bwscript'
-				else:
-					header_bin_file = 'aiscript'
-				header_string_index = self.delegate.get_data_context().stattxt_id(header_string) or 0
-			elif line.lstrip().startswith('script_id ') and header_id is None:
-				header_id = line.lstrip()[10:]
-			elif line.strip():
-				d = line.lstrip().split(';',1)[0].strip().split(' ')
-				if d[0] in CodeCommands.all_basic_commands:
-					if d[0] == 'debug' and len(d) >= 3:
-						d = [d[0], d[1], '"%s"' % ' '.join(d[2:])]
-					data += '    %s(%s)' % (d[0], ', '.join(d[1:]))
-					if ';' in line:
-						data += ' # ' + line.split(';',1)[1]
-				else:
-					if not None in (header_id, header_bin_file, header_string_index, header_string):
-						data += '# ' + line
-					else:
-						beforeheader += '# ' + line + '\n'
-				data += '\n'
+	RE_ASC3_HEADER = re.compile(r'^\s*script_name\s+([^;\n]+)\s*(?:;[^\n]+)?$.+?^\s*script_id\s+(....)', re.MULTILINE | re.DOTALL)
+	RE_OLD_PYAI_HEADER = re.compile(r'^(?:\s*# stat_txt.tbl entry \d+:\s*(.+?))?\s*(....)\(\s*(\d+)\s*,\s*([01])([01])([01])\s*,\s*((?:bw|ai)script)\s*\):', re.MULTILINE)
+	RE_OLD_PYAI_BLOCK = re.compile(r'^(\s*--)([^-]+)--', re.MULTILINE)
+	RE_OLD_PYAI_COMMAND = re.compile(r'^(\s*)([\w]+)\(([^)]*)\)(.*)', re.MULTILINE)
+	RE_COMMA = re.compile(r'\s*,\s*')
+	def transpile_to_pyai(self, _: Event | None = None) -> None:
+		code = self.text.text.get('1.0',END)
+
+		def replace_asc3_header(match: re.Match) -> str:
+			header_string = match.group(1)
+			if re.match('bw|brood ?war', header_string, re.I):
+				header_bin_file = 'bwscript'
 			else:
-				data += '\n'
-		if None in (header_id, header_bin_file, header_string_index, header_string):
-			MessageBox.askquestion(parent=self, title='Invalid Header', message='The script is either missing a script_name or a script_id.', type=MessageBox.OK)
-			return
+				header_bin_file = 'aiscript'
+			header_string_index = self.delegate.get_data_context().stattxt_id(header_string) or 0
+			header_id = match.group(2)
+			return f"""### NOTE: There is no way to determine the scripts flags or if it is a BW script or not!
+###       please update the header below appropriately!
+script {header_id} {{
+    name_string {header_string_index} # {header_string}
+    bin_file {header_bin_file}
+    broodwar_only 1
+    staredit_hidden 1
+    requires_location 1
+    entry_point {header_id}_entry_point
+}}
+
+:{header_id}_entry_point"""
+		code = CodeEditDialog.RE_ASC3_HEADER.sub(replace_asc3_header, code)
+
+		def replace_old_pyai_header(match: re.Match) -> str:
+			return f"""script {match.group(2)} {{
+    name_string {match.group(3)} # {match.group(1)}
+    bin_file {match.group(7)}
+    broodwar_only {match.group(4)}
+    staredit_hidden {match.group(5)}
+    requires_location {match.group(6)}
+    entry_point {match.group(2)}_entry_point
+}}
+
+--{match.group(2)}_entry_point--"""
+		code = CodeEditDialog.RE_OLD_PYAI_HEADER.sub(replace_old_pyai_header, code)
+
+		def replace_old_pyai_block(match: re.Match) -> str:
+			return match.group(1) + str(match.group(2)).replace(' ', '_') + '--'
+		code = CodeEditDialog.RE_OLD_PYAI_BLOCK.sub(replace_old_pyai_block, code)
+
+		def replace_old_pyai_command(match: re.Match) -> str:
+			cmd_name = match.group(2)
+			for cmd_def in CodeCommands.all_basic_commands:
+				if cmd_def.name == cmd_name:
+					result = match.group(1) + match.group(2) + '('
+					params = CodeEditDialog.RE_COMMA.split(match.group(3))
+					for n,(param,param_type) in enumerate(zip(params, cmd_def.param_types)):
+						if n > 0:
+							result += ', '
+						if isinstance(param_type, CodeTypes.BlockCodeType):
+							result += str(param).replace(' ', '_')
+						else:
+							result += param
+					return result + ')' + match.group(4)
+			return match.group(0)
+		code = CodeEditDialog.RE_OLD_PYAI_COMMAND.sub(replace_old_pyai_command, code)
+
 		self.text.delete('1.0', END)
-		self.text.insert(END, beforeheader + '\n' + header % (header_id, header_bin_file, header_string_index, header_string) + data)
+		self.text.insert(END, code)
 		self.text.edited = True
 		self.editstatus['state'] = NORMAL
 

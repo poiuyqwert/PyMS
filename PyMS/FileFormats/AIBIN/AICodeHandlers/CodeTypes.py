@@ -8,6 +8,8 @@ from ....FileFormats.DAT.UnitsDAT import DATUnit
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers import Lexer
+from ....Utilities.CodeHandlers import Tokens
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
@@ -76,6 +78,21 @@ class UnitCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
+	def lex(self, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			unit_name: str | None = None
+			if parse_context.command_in_parens:
+				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
+				unit_name = token.raw_value
+			else:
+				token = parse_context.lexer.get_token(Tokens.StringToken)
+				if token:
+					unit_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			if unit_name and (unit_id := parse_context.data_context.unit_id(unit_name)):
+				self.validate(unit_id, parse_context, unit_name)
+				return unit_id
+		return super().lex(parse_context)
+
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
 		if num < 0:
@@ -88,7 +105,6 @@ class UnitCodeType(CodeType.IntCodeType):
 class BuildingCodeType(UnitCodeType):
 	def __init__(self) -> None:
 		UnitCodeType.__init__(self, 'building', 'Same as unit type, but only units that are Buildings, Resource Miners, and Overlords')
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(self, BuildingCodeType)
@@ -116,7 +132,6 @@ class BuildingCodeType(UnitCodeType):
 class MilitaryCodeType(UnitCodeType):
 	def __init__(self, name: str = 'military', help_text: str = 'Same as unit type, but only for a unit to train (not a Building, Resource Miners, or Overlords)') -> None:
 		UnitCodeType.__init__(self, name, help_text)
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
@@ -142,7 +157,6 @@ class MilitaryCodeType(UnitCodeType):
 class GGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'gg_military', 'Same as Military type, but only for defending against an enemy Ground unit attacking your Ground unit')
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (GGMilitaryCodeType, GAMilitaryCodeType, MilitaryCodeType))
@@ -178,7 +192,6 @@ class GGMilitaryCodeType(MilitaryCodeType):
 class AGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'ag_military', 'Same as Military type, but only for defending against an enemy Air unit attacking your Ground unit')
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (AGMilitaryCodeType, AAMilitaryCodeType, MilitaryCodeType))
@@ -214,7 +227,6 @@ class AGMilitaryCodeType(MilitaryCodeType):
 class GAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'ga_military', 'Same as Military type, but only for defending against an enemy Ground unit attacking your Air unit')
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (GAMilitaryCodeType, GGMilitaryCodeType, MilitaryCodeType))
@@ -250,7 +262,6 @@ class GAMilitaryCodeType(MilitaryCodeType):
 class AAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
 		MilitaryCodeType.__init__(self, 'aa_military', 'Same as Military type, but only for defending against an enemy Air unit attacking your Air unit')
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (AAMilitaryCodeType, AGMilitaryCodeType, MilitaryCodeType))
@@ -287,13 +298,27 @@ class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
 		CodeType.IntCodeType.__init__(self, 'upgrade', 'An upgrade ID from 0 to 60, or a full upgrade name from stat_txt.tbl', Struct.l_u16, limits=(0, 60))
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, UpgradeCodeType)
 
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		return isinstance(other_type, UpgradeCodeType)
+
+	def lex(self, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			upgrade_name: str | None = None
+			if parse_context.command_in_parens:
+				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
+				upgrade_name = token.raw_value
+			else:
+				token = parse_context.lexer.get_token(Tokens.StringToken)
+				if token:
+					upgrade_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			if upgrade_name and (upgrade_id := parse_context.data_context.upgrade_id(upgrade_name)):
+				self.validate(upgrade_id, parse_context, upgrade_name)
+				return upgrade_id
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
@@ -308,13 +333,27 @@ class TechnologyCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		# TODO: Expanded DAT
 		CodeType.IntCodeType.__init__(self, 'technology', 'An technology ID from 0 to 43, or a full technology name from stat_txt.tbl', Struct.l_u16, limits=(0, 43))
-	# TODO: Custom
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, TechnologyCodeType)
 
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		return isinstance(other_type, TechnologyCodeType)
+
+	def lex(self, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			technology_name: str | None = None
+			if parse_context.command_in_parens:
+				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
+				technology_name = token.raw_value
+			else:
+				token = parse_context.lexer.get_token(Tokens.StringToken)
+				if token:
+					technology_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			if technology_name and (technology_id := parse_context.data_context.technology_id(technology_name)):
+				self.validate(technology_id, parse_context, technology_name)
+				return technology_id
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)

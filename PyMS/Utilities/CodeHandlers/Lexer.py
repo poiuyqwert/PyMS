@@ -108,7 +108,8 @@ class Lexer(object):
 
 	# Read all tokens as a string until EOF or the `stop` callback returns `True`
 	def read_open_string(self, stop: Callable[[Token], Stop]) -> StringToken:
-		raw_string = ''
+		self._skip()
+		start = self.state.offset
 		while True:
 			token = self.next_token(peek=True)
 			if isinstance(token, EOFToken):
@@ -117,18 +118,17 @@ class Lexer(object):
 			if should_stop != Stop.exclude:
 				self.next_token()
 			if should_stop != Stop.proceed:
-				if should_stop == Stop.include:
-					raw_string += token.raw_value
 				break
-			raw_string += token.raw_value
-		return StringToken(raw_string)
+		return StringToken(self.code[start:self.state.offset])
 
-	def skip(self, skip_token_types: Type[Token] | tuple[Type[Token], ...]) -> Token:
+	def skip(self, skip_token_types: Type[Token] | tuple[Type[Token], ...], peek: bool = False) -> Token:
 		if not isinstance(skip_token_types, tuple):
 			skip_token_types = (skip_token_types,)
-		token = self.next_token()
+		token = self.next_token(peek=peek)
 		while isinstance(token, skip_token_types):
-			token = self.next_token()
+			if peek:
+				self.next_token()
+			token = self.next_token(peek=peek)
 		return token
 
 	def drop_token(self) -> None:

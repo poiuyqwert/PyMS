@@ -2,8 +2,6 @@
 from . import CodeCommands
 from .AILexer import AILexer
 from .AIParseContext import AIParseContext
-from ..AIScript import AIScript
-from ..AIFlag import AIFlag
 
 from ....Utilities.CodeHandlers.SourceCodeParser import CommandSourceCodeParser
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
@@ -20,6 +18,8 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		return isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script'
 
 	def parse(self, parse_context: ParseContext) -> bool:
+		from ..AIScript import AIScript
+		from ..AIFlag import AIFlag
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if not isinstance(token, Tokens.IdentifierToken) or not token.raw_value == 'script':
 			return False
