@@ -65,7 +65,6 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 			if not mute:
 				print("Reading BMP '%s'..." % fullfile)
 			inp.load_file(fullfile)
-			out.frames = frames
 			if vertical:
 				out.width = inp.width
 				out.height = inp.height / frames
@@ -76,15 +75,15 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 				raise PyMSError('Load', "Invalid dimensions in the BMP '%s' (Frames have a maximum size of 256x256, got %sx%s)" % (fullfile,out.width,out.height))
 			if issize and out.width != issize[0] and out.height != issize[1]:
 				raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],out.width,out.height))
+			image = []
 			for n in range(frames):
-				out.images.append([])
 				for y in range(out.height):
 					if vertical:
-						out.images[-1].append(inp.image[n * out.height + y])
+						image.append(inp.image[n * out.height + y])
 					else:
 						x = (n % 17) * out.width
-						out.images[-1].append(inp.image[(n / 17) * out.height + y][x:x+out.width])
-				out.images_bounds.append(GRP.image_bounds(out.images[-1]))
+						image.append(inp.image[(n / 17) * out.height + y][x:x+out.width])
+			out.add_frame(image)
 			if not mute:
 				print(" - '%s' read successfully" % fullfile)
 			if ret:
@@ -118,9 +117,7 @@ def bmptogrp(path, pal, uncompressed, frames, bmp, grp='', issize=None, ret=Fals
 								raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],inp.width,inp.height))
 							if inp.width != out.width or inp.height != out.height:
 								raise PyMSError('Input',"Incorrect frame dimensions in BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,out.width,out.height,inp.width,inp.height))
-							out.frames += 1
-							out.images.append(inp.image)
-							out.images_bounds.append(GRP.image_bounds(out.images[-1]))
+							out.add_frame(inp.image)
 						else:
 							if issize and inp.width != issize[0] and inp.height != issize[1]:
 								raise PyMSError('Load',"Invalid dimensions in the BMP '%s' (Expected %sx%s, got %sx%s)" % (fullfile,issize[0],issize[1],inp.width,inp.height))

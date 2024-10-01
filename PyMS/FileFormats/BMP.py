@@ -58,7 +58,7 @@ class BMP:
 								image.extend([[0] * width] * yoffset + [[0] * xoffset])
 								x += 2
 							else:
-								if image[-1] and len(image[-1]) < width:
+								if len(image[-1]) < width:
 									image[-1].extend([0] * (width - len(image[-1])))
 								if data[x+1] == '\x01':
 									if len(image) < height:
