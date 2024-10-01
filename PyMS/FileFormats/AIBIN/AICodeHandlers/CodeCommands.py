@@ -244,12 +244,12 @@ all_basic_commands: list[CodeCommandDefinition] = [
 
 # Commands used by header
 
-HeaderNameString = CodeCommandDefinition('name_string', 'Set the name displayed in StarEdit for this script to string with index {1} in stat_txt.tbl', None, (TBLStringCodeType(),), ephemeral=True)
-HeaderBinFile = CodeCommandDefinition('bin_file', 'Set which file this script is saved in to {1}', None, (BinFileCodeType(),), ephemeral=True)
-BroodwarOnly = CodeCommandDefinition('broodwar_only', 'Set the flag for if this script is only available in BroodWar to {1}', None, (BoolCodeType(),), ephemeral=True)
-StarEditHidden = CodeCommandDefinition('staredit_hidden', 'Set the flag for if this script is hidden in StarEdit to {1}', None, (BoolCodeType(),), ephemeral=True)
-RequiresLocation = CodeCommandDefinition('requires_location', 'Set the flag for if this script requires a locaiton to {1}', None, (BoolCodeType(),), ephemeral=True)
-EntryPoint = CodeCommandDefinition('entry_point', 'Set where the script will start to {1}', None, (BlockCodeType(),), ephemeral=True)
+HeaderNameString = CodeCommandDefinition('name_string', 'Set the name displayed in StarEdit for this script to string with index {1} in stat_txt.tbl', None, (TBLStringCodeType(),))
+HeaderBinFile = CodeCommandDefinition('bin_file', 'Set which file this script is saved in to {1}', None, (BinFileCodeType(),))
+BroodwarOnly = CodeCommandDefinition('broodwar_only', 'Set the flag for if this script is only available in BroodWar to {1}', None, (BoolCodeType(),))
+StarEditHidden = CodeCommandDefinition('staredit_hidden', 'Set the flag for if this script is hidden in StarEdit to {1}', None, (BoolCodeType(),))
+RequiresLocation = CodeCommandDefinition('requires_location', 'Set the flag for if this script requires a locaiton to {1}', None, (BoolCodeType(),))
+EntryPoint = CodeCommandDefinition('entry_point', 'Set where the script will start to {1}', None, (BlockCodeType(),))
 
 all_header_commands: list[CodeCommandDefinition] = [
 	HeaderNameString,

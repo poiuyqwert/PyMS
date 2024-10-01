@@ -28,7 +28,6 @@ class SourceCodeHandler(SourceCodeParser):
 			error: PyMSError | None = None
 			rollback = parse_context.lexer.get_rollback()
 			for parser in self.parsers:
-				parse_context.lexer.rollback(rollback)
 				try:
 					parsed = parser.parse(parse_context)
 					if parsed:
@@ -38,6 +37,7 @@ class SourceCodeHandler(SourceCodeParser):
 				except PyMSError as e:
 					if error is None or e.level > error.level:
 						error = e
+				parse_context.lexer.rollback(rollback)
 			else:
 				if error is not None:
 					raise error

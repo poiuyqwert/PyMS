@@ -171,13 +171,62 @@ class Test_Shared_Blocks(unittest.TestCase):
 	def test_cross_references_invalid(self) -> None:
 		code = f"""
 {Header.BASE}
-{Block.shared_0000()}
+{Block.shared_0000(['BASE', 'BWSS'])}
 
 {Header.BWSS('shared_0000')}
 """
 		print(code)
-		parse_context = utils.parse_context(Scripts.full_ai_script)
+		parse_context = utils.parse_context(code)
 		ai = AIBIN.AIBIN()
 		with self.assertRaises(PyMSError) as error_context:
 			ai.compile(parse_context)
-		self.assertTrue('aiscript.bin references a script in bwscript.bin' in str(error_context.exception))
+		print(str(error_context.exception))
+		self.assertTrue('is cross referenced by scripts' in str(error_context.exception))
+
+	def test_indirect_cross_references_invalid(self) -> None:
+		code = """
+:shared_0000
+stop
+
+:BASE_0000
+goto BASE_0001
+
+:BASE_0002
+goto shared_0000
+
+:BASE_0001
+goto BASE_0002
+
+script BASE {
+    name_string 0
+    bin_file aiscript
+    broodwar_only 0
+    staredit_hidden 0
+    requires_location 0
+    entry_point BASE_0000
+}
+
+script BWSS {
+    name_string 0
+    bin_file bwscript
+    broodwar_only 0
+    staredit_hidden 0
+    requires_location 0
+    entry_point BWSS_0000
+}
+:BWSS_0000
+goto BWSS_0001
+
+:BWSS_0002
+goto shared_0000
+
+:BWSS_0001
+goto BWSS_0002
+"""
+		print(code)
+		parse_context = utils.parse_context(code)
+		ai = AIBIN.AIBIN()
+		with self.assertRaises(PyMSError) as error_context:
+			ai.compile(parse_context)
+		print(str(error_context.exception))
+		self.assertTrue('is cross referenced by scripts' in str(error_context.exception))

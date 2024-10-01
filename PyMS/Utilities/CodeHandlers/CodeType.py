@@ -52,10 +52,10 @@ class CodeType(Generic[I, O]):
 	def lex(self, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.lex()')
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> O:
+	def parse(self, token: str, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.parse()')
 
-	def validate(self, value: O, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, value: O, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
 
 	def __eq__(self, other) -> bool:
@@ -75,7 +75,7 @@ class IntCodeType(CodeType[int, int]):
 			raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> int:
+	def parse(self, token: str, parse_context: ParseContext) -> int:
 		try:
 			num = int(token)
 		except:
@@ -83,7 +83,7 @@ class IntCodeType(CodeType[int, int]):
 		self.validate(num, parse_context)
 		return num
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		min,max = self._limits
 		if num < min:
 			raise PyMSError('Parse', "Value is too small for '%s' (got '%d', minimum is '%d')" % (self.name, num, min))
@@ -101,7 +101,7 @@ class FloatCodeType(CodeType[float, float]):
 			raise parse_context.error('Parse', "Expected float value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> float:
+	def parse(self, token: str, parse_context: ParseContext) -> float:
 		try:
 			num = float(token)
 		except:
@@ -109,14 +109,14 @@ class FloatCodeType(CodeType[float, float]):
 		self.validate(num, parse_context)
 		return num
 
-	def validate(self, num: float, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: float, parse_context: ParseContext, token: str | None = None) -> None:
 		min,max = self._limits
 		if num < min:
 			raise PyMSError('Parse', "Value is too small for '%s' (got '%f', minimum is '%f')" % (self.name, num, min))
 		if num > max:
 			raise PyMSError('Parse', "Value is too large for '%s' (got '%f', maximum is '%f')" % (self.name, num, max))
 
-class AddressCodeType(CodeType[CodeBlock, str]):
+class AddressCodeType(CodeType[CodeBlock, CodeBlock]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, True)
 
@@ -126,14 +126,14 @@ class AddressCodeType(CodeType[CodeBlock, str]):
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
 		return context.strategy.block_label(block)
 	
-	def lex(self, parse_context: ParseContext) -> str:
+	def lex(self, parse_context: ParseContext) -> CodeBlock:
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.IdentifierToken):
 			raise parse_context.error('Parse', "Expected block label identifier but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> str:
-		return token # TODO: Should this do logic of converting to CodeBlock if the block has already been parsed?
+	def parse(self, token: str, parse_context: ParseContext) -> CodeBlock:
+		return parse_context.get_block(token)
 
 class StrCodeType(CodeType[str, str]):
 	def __init__(self, name: str, help_text: str) -> None:
@@ -177,7 +177,7 @@ class StrCodeType(CodeType[str, str]):
 				raise parse_context.error('Parse', "Expected string value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> str:
+	def parse(self, token: str, parse_context: ParseContext) -> str:
 		try:
 			return StrCodeType.parse_string(token)
 		except:
@@ -215,7 +215,7 @@ class EnumCodeType(CodeType[int, int]):
 			raise parse_context.error('Parse', "Expected a '%s' enum identifier but got '%s' (possible values: %s)" % (self.name, token.raw_value, self._possible_values()))
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> int:
+	def parse(self, token: str, parse_context: ParseContext) -> int:
 		if not token in self._cases:
 			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s' (possible values: %s)" % (token, self.name, self._possible_values()))
 		return self._cases[token]
@@ -230,7 +230,7 @@ class BooleanCodeType(IntCodeType):
 			raise parse_context.error('Parse', "Expected a boolean but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> bool:
+	def parse(self, token: str, parse_context: ParseContext) -> bool:
 		if token == 'true' or token == '1':
 			return True
 		elif token == 'false' or token == '0':

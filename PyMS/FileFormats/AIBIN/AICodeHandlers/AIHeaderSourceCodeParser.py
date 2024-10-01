@@ -1,21 +1,15 @@
 
 from . import CodeCommands
 from .AILexer import AILexer
-from .AIParseContext import AIParseContext, ParsedScriptHeader
+from .AIParseContext import AIParseContext
+from ..AIScript import AIScript
+from ..AIFlag import AIFlag
 
 from ....Utilities.CodeHandlers.SourceCodeParser import CommandSourceCodeParser
-from ....Utilities.CodeHandlers.ParseContext import ParseContext, BlockReferenceResolver
+from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers import Tokens
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
-
-class AIHeaderEntryPointBlockReferenceResolver(BlockReferenceResolver):
-	def __init__(self, header: ParsedScriptHeader, source_line: int | None) -> None:
-		BlockReferenceResolver.__init__(self, source_line)
-		self.header = header
-
-	def block_defined(self, block):
-		self.header.entry_point = block
 
 class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 	def __init__(self) -> None:
@@ -35,16 +29,16 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 			raise parse_context.error('Parse', "Expected script ID, got '%s' instead" % token.raw_value)
 		line = parse_context.lexer.state.line
 		script_id = token.raw_value
-		if script_id in parse_context.script_headers:
-			_,existing_line = parse_context.script_headers[script_id]
+		if script_id in parse_context.scripts:
+			_,existing_line = parse_context.scripts[script_id]
 			raise parse_context.error('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line))
 
 		string_id: int | None = None
-		bwscript: bool | None = None
+		in_bwscript: bool | None = None
 		broodwar_only: bool | None = None
 		staredit_hidden: bool | None = None
 		requires_location: bool | None = None
-		entry_point: str | CodeBlock | None = None
+		entry_point: CodeBlock | None = None
 
 		commands_parsed: list[CodeCommandDefinition] = []
 		token = parse_context.lexer.next_token()
@@ -68,7 +62,7 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 			if command.definition == CodeCommands.HeaderNameString:
 				string_id = command.params[0]
 			elif command.definition == CodeCommands.HeaderBinFile:
-				bwscript = bool(command.params[0])
+				in_bwscript = bool(command.params[0])
 			elif command.definition == CodeCommands.BroodwarOnly:
 				broodwar_only = command.params[0]
 			elif command.definition == CodeCommands.StarEditHidden:
@@ -79,7 +73,7 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 				entry_point = command.params[0]
 		if string_id is None:
 			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.HeaderNameString.name}'", line=line)
-		if bwscript is None:
+		if in_bwscript is None:
 			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.HeaderBinFile.name}'", line=line)
 		if broodwar_only is None:
 			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.BroodwarOnly.name}'", line=line)
@@ -89,9 +83,8 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.RequiresLocation.name}'", line=line)
 		if entry_point is None:
 			raise parse_context.error('Parse', f"Script with ID '{script_id}' is missing '{CodeCommands.EntryPoint.name}'", line=line)
-		
-		script_header = ParsedScriptHeader(string_id, bwscript, broodwar_only, staredit_hidden, requires_location, entry_point if isinstance(entry_point, CodeBlock) else None)
-		if isinstance(entry_point, str):
-			parse_context.missing_block(entry_point, AIHeaderEntryPointBlockReferenceResolver(script_header, line))
-		parse_context.script_headers[script_id] = (script_header, line)
+
+		script = AIScript(script_id, AIFlag.flags(requires_location, staredit_hidden, broodwar_only), string_id, entry_point, in_bwscript)
+		parse_context.add_block_owner(entry_point, script)
+		parse_context.scripts[script_id] = (script, line)
 		return True

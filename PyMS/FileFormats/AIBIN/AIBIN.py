@@ -1,15 +1,13 @@
 
-from .AIFlag import AIFlag
+from .AIScript import AIScript
 
-from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler, CodeCommands
+from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.BytesScanner import  BytesScanner
 from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
 from ...Utilities.CodeHandlers.Lexer import *
-from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
-from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
 from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
 from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
 from ...Utilities import Struct
@@ -17,9 +15,8 @@ from ...Utilities import IO
 
 import io
 from collections import OrderedDict
-from dataclasses import dataclass
 
-from typing import Type, TypeVar, Iterable
+from typing import Type, TypeVar, Iterable, Mapping
 
 class _BaseScriptHeader(Struct.Struct):
 	def __init__(self, id: str = '', address: int = 0) -> None:
@@ -51,40 +48,6 @@ class _AIScriptHeader(_BaseScriptHeader):
 		self.flags = flags
 
 H = TypeVar('H', bound=_BaseScriptHeader)
-
-@dataclass
-class AIScript(CodeHeader):
-	id: str
-	flags: int
-	string_id: int
-	entry_point: CodeBlock
-	in_bwscript: bool
-
-	@staticmethod
-	def blank_entry_point() -> CodeBlock:
-		entry_point = CodeBlock()
-		entry_point.commands = [
-			CodeCommand(CodeCommands.Stop, [])
-		]
-		return entry_point
-
-	def get_name(self) -> str:
-		return self.id
-
-	def get_entry_points(self) -> list[CodeBlock]:
-		return [self.entry_point]
-
-	def serialize(self, serialize_context: CodeCommands.SerializeContext) -> None:
-		serialize_context.write(f'\nscript {self.id} {{\n')
-		serialize_context.indent()
-		CodeCommand(CodeCommands.HeaderNameString, [self.string_id]).serialize(serialize_context)
-		CodeCommand(CodeCommands.HeaderBinFile, [self.in_bwscript]).serialize(serialize_context)
-		CodeCommand(CodeCommands.BroodwarOnly, [1 if self.flags & AIFlag.broodwar_only else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.StarEditHidden, [1 if self.flags & AIFlag.staredit_hidden else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.RequiresLocation, [1 if self.flags & AIFlag.requires_location else 0]).serialize(serialize_context)
-		CodeCommand(CodeCommands.EntryPoint, [self.entry_point]).serialize(serialize_context)
-		serialize_context.dedent()
-		serialize_context.write('}\n')
 
 class AIBIN:
 	def __init__(self) -> None:
@@ -169,10 +132,10 @@ class AIBIN:
 			f.write(headers)
 
 	@staticmethod
-	def _save_scripts(scripts: Iterable[AIScript], ai_output: IO.AnyOutputBytes, bw_output: IO.AnyOutputBytes | None) -> None:
+	def _save_scripts(scripts: Mapping[str, AIScript], ai_output: IO.AnyOutputBytes, bw_output: IO.AnyOutputBytes | None) -> None:
 		ai_scripts: list[AIScript] = []
 		bw_scripts: list[AIScript] = []
-		for script in scripts:
+		for script in scripts.values():
 			if script.in_bwscript:
 				bw_scripts.append(script)
 			else:
@@ -184,7 +147,7 @@ class AIBIN:
 		AIBIN._save(_AIScriptHeader, ai_scripts, ai_output)
 
 	def save(self, ai_output: IO.AnyOutputBytes, bw_output: IO.AnyOutputBytes | None) -> None:
-		AIBIN._save_scripts(self._scripts.values(), ai_output, bw_output)
+		AIBIN._save_scripts(self._scripts, ai_output, bw_output)
 
 	def list_scripts(self) -> list[AIScript]:
 		return list(self._scripts.values())
@@ -198,12 +161,17 @@ class AIBIN:
 		del self._scripts[script_id]
 
 	def add_script(self, script: AIScript, allow_replace: bool = True) -> None:
-		if not allow_replace and script.id in self._scripts:
-			raise PyMSError('Internal', f"Script with ID '{script.id}' already exists")
+		self.add_scripts([script], allow_replace)
+
+	def add_scripts(self, add_scripts: Iterable[AIScript], allow_replace: bool = True) -> None:
+		scripts = self._scripts.copy()
+		for script in add_scripts:
+			if not allow_replace and script.id in scripts:
+				raise PyMSError('Internal', f"Script with ID '{script.id}' already exists")
+			scripts[script.id] = script
+		ai_size, bw_size = self._calculate_sizes(scripts)
 		# TODO: Check size
-		# TODO: How does overwritten scripts affect size check?
-		# TODO: Cleanup overwritten scripts
-		self._scripts[script.id] = script
+		self._scripts = scripts
 
 	def has_bwscripts(self) -> bool:
 		for script in self._scripts.values():
@@ -211,10 +179,8 @@ class AIBIN:
 				return True
 		return False
 
-	# 59,610 bytes
-	# 26,458 bytes
 	@staticmethod
-	def _calculate_sizes(scripts: Iterable[AIScript]) -> tuple[int, int]:
+	def _calculate_sizes(scripts: Mapping[str, AIScript]) -> tuple[int, int]:
 		ai_output = io.BytesIO()
 		bw_output = io.BytesIO()
 		AIBIN._save_scripts(scripts, ai_output, bw_output)
@@ -223,7 +189,7 @@ class AIBIN:
 	def calculate_sizes(self) -> tuple[int, int]:
 		# TODO: Should this be calculated without saving?
 		# TODO: Cache file size?
-		return AIBIN._calculate_sizes(self._scripts.values())
+		return AIBIN._calculate_sizes(self._scripts)
 
 	def count_scripts(self) -> tuple[int, int]:
 		ai_scripts = 0
@@ -252,8 +218,4 @@ class AIBIN:
 		source_handler.parse(parse_context)
 		parse_context.finalize()
 		# TODO: Complete
-		for id,(parse_header, _) in parse_context.script_headers.items():
-			assert parse_header.entry_point is not None
-			script = AIScript(id, parse_header.flags, parse_header.string_id, parse_header.entry_point, parse_header.bwscript)
-			parse_header.entry_point.owners.append(script)
-			self.add_script(script)
+		self.add_scripts(script for script,_ in parse_context.scripts.values())

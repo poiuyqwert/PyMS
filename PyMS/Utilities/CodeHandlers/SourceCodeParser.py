@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from . import Tokens
 from ..PyMSError import PyMSError
-from .ParseContext import BlockMetadata
+from .CodeBlock import CodeBlock
 
 from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
 	from .ParseContext import ParseContext
-	from .CodeCommand import CodeCommandDefinition, CodeCommand
+	from .CodeCommand import CodeCommandDefinition
 	from .CodeDirective import CodeDirectiveDefinition
 
 class SourceCodeParser(Protocol):
@@ -27,10 +27,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 			if not isinstance(token, Tokens.IdentifierToken):
 				raise parse_context.error('Parse', "Expected block name, got '%s' instead" % token.raw_value)
 			name = token.raw_value
-			line = parse_context.lexer.state.line
-			metadata = parse_context.lookup_block_metadata_by_name(name)
-			if metadata is not None:
-				raise parse_context.error('Parse', "A block named '%s' is already defined on line %d" % (name, metadata.source_line))
+			block = parse_context.define_block(name, parse_context.lexer.state.line)
 			token = parse_context.lexer.next_token()
 			if hyphens:
 				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != '--':
@@ -38,12 +35,10 @@ class BlockSourceCodeParser(SourceCodeParser):
 				token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
 				raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
-			block = CodeBlock()
 			if parse_context.active_block:
 				parse_context.active_block.next_block = block
 				block.prev_block = parse_context.active_block
 			parse_context.active_block = block
-			parse_context.define_block(block, BlockMetadata(name, line))
 			parse_context.next_line()
 			return True
 		return False
@@ -74,6 +69,9 @@ class CommandSourceCodeParser(SourceCodeParser):
 			if not parse_context.active_block:
 				raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
 			parse_context.active_block.commands.append(command)
+			for param in command.params:
+				if isinstance(param, CodeBlock):
+					parse_context.add_block_use_block(param, parse_context.active_block)
 			if command.definition.ends_flow:
 				parse_context.active_block = None
 			parse_context.next_line()

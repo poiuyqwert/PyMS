@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+from .CodeBlock import CodeBlock
+
 from ..PyMSError import PyMSError
 from ..PyMSWarning import PyMSWarning
 
@@ -8,32 +10,38 @@ from dataclasses import dataclass
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-	from .CodeBlock import CodeBlock
-	from .CodeCommand import CodeCommand
+	from .CodeHeader import CodeHeader
 	from .DefinitionsHandler import DefinitionsHandler
 	from .CodeDirective import CodeDirective
 	from .Lexer import Lexer
 
-class BlockReferenceResolver(object):
-	def __init__(self, source_line: int | None) -> None:
-		self.source_line = source_line
+# class BlockReferenceResolver(object):
+# 	def __init__(self, source_line: int | None) -> None:
+# 		self.source_line = source_line
 
-	def block_defined(self, block: CodeBlock) -> None:
-		raise NotImplementedError(self.__class__.__name__ + '.block_defined()')
+# 	def block_defined(self, block: CodeBlock) -> None:
+# 		raise NotImplementedError(self.__class__.__name__ + '.block_defined()')
 
-class CommandParamBlockReferenceResolver(BlockReferenceResolver):
-	def __init__(self, cmd: CodeCommand, param_index: int, source_line: int | None) -> None:
-		BlockReferenceResolver.__init__(self, source_line)
-		self.cmd = cmd
-		self.param_index = param_index
+# class CommandParamBlockReferenceResolver(BlockReferenceResolver):
+# 	def __init__(self, cmd: CodeCommand, param_index: int, source_line: int | None) -> None:
+# 		BlockReferenceResolver.__init__(self, source_line)
+# 		self.cmd = cmd
+# 		self.param_index = param_index
 
-	def block_defined(self, block: CodeBlock) -> None:
-		self.cmd.params[self.param_index] = block
+# 	def block_defined(self, block: CodeBlock) -> None:
+# 		self.cmd.params[self.param_index] = block
 
 @dataclass
 class BlockMetadata:
 	name: str
-	source_line: int
+	definition_line: int | None
+	uses: list[CodeHeader]
+
+	def merge(self, other: BlockMetadata):
+		self.definition_line = other.definition_line
+		for use in other.uses:
+			if not use in self.uses:
+				self.uses.append(use)
 
 class ParseContext(object):
 	def __init__(self, lexer: Lexer, definitions: DefinitionsHandler | None = None) -> None:
@@ -44,17 +52,20 @@ class ParseContext(object):
 		self.command_in_parens = False
 		self.warnings: list[PyMSWarning] = []
 		self.block_metadata: dict[CodeBlock, BlockMetadata] = {}
-		self.missing_blocks: dict[str, list[BlockReferenceResolver]] = {}
-		self.defined_blocks: dict[str, CodeBlock] = {}
+		self.missing_blocks: dict[str, list[int]] = {}
+		self.blocks: dict[str, CodeBlock] = {}
 		self.unused_blocks: set[str] = set()
 		self.suppress_warnings: list[str] = []
 		self.suppress_warnings_next_line: list[str] = []
 
-	def lookup_block(self, name: str, use: bool = True) -> CodeBlock | None:
-		block = self.defined_blocks.get(name)
+	def get_block(self, name: str) -> CodeBlock:
+		block = self.blocks.get(name)
 		if not block:
-			return None
-		if use and name in self.unused_blocks:
+			block = CodeBlock()
+			self.blocks[name] = block
+			self.block_metadata[block] = BlockMetadata(name, None, [])
+			self.missing_block(name, self.lexer.state.line)
+		elif name in self.unused_blocks:
 			self.unused_blocks.remove(name)
 		return block
 
@@ -62,46 +73,67 @@ class ParseContext(object):
 		return self.block_metadata.get(block)
 
 	def lookup_block_metadata_by_name(self, name: str) -> BlockMetadata | None:
-		if block := self.lookup_block(name):
+		if block := self.blocks.get(name):
 			return self.lookup_block_metadata(block)
 		return None
 
-	def define_block(self, block: CodeBlock, metadata: BlockMetadata) -> None:
-		if metadata.name in self.defined_blocks:
-			raise PyMSError('Parse', "Block with name '%s' is already defined" % metadata.name)
-		self.block_metadata[block] = metadata
-		self.defined_blocks[metadata.name] = block
-		if metadata.name in self.missing_blocks:
-			for resolver in self.missing_blocks[metadata.name]:
-				resolver.block_defined(block)
-			del self.missing_blocks[metadata.name]
+	def define_block(self, name: str, line: int) -> CodeBlock:
+		metadata = self.lookup_block_metadata_by_name(name)
+		if metadata is not None and metadata.definition_line is not None:
+			raise self.error('Parse', "A block named '%s' is already defined on line %d" % (name, metadata.definition_line))
+		block = self.get_block(name)
+		self.block_metadata[block].definition_line = line
+		if name in self.missing_blocks:
+			del self.missing_blocks[name]
 		else:
-			self.unused_blocks.add(metadata.name)
+			self.unused_blocks.add(name)
+		return block
 
-	def missing_block(self, name: str, reference_resolver: BlockReferenceResolver) -> None:
-		if name in self.defined_blocks:
-			raise PyMSError('Internal', "Block with name '%s' is being set as missing but is already defined" % name, line=reference_resolver.source_line)
+	def add_block_owner(self, block: CodeBlock, owner: CodeHeader) -> None:
+		block.owners.append(owner)
+		self.add_block_use(block, owner)
+
+	def add_block_use(self, block: CodeBlock, use: CodeHeader) -> None:
+		if use in self.block_metadata[block].uses:
+			return
+		self.block_metadata[block].uses.append(use)
+		if block.next_block is not None:
+			self.add_block_use(block.next_block, use)
+		for command in block.commands:
+			for param in command.params:
+				if isinstance(param, CodeBlock):
+					self.add_block_use(param, use)
+
+	def add_block_use_block(self, block: CodeBlock, use_block: CodeBlock) -> None:
+		metadata = self.block_metadata[use_block]
+		for use in metadata.uses:
+			self.add_block_use(block, use)
+
+	def missing_block(self, name: str, source_line: int) -> None:
+		block_metadata = self.lookup_block_metadata_by_name(name)
+		if block_metadata and block_metadata.definition_line is not None:
+			raise PyMSError('Internal', "Block with name '%s' is being set as missing but is already defined" % name, line=source_line)
 		if not name in self.missing_blocks:
 			self.missing_blocks[name] = []
-		self.missing_blocks[name].append(reference_resolver)
+		self.missing_blocks[name].append(source_line)
 
 	def finalize(self) -> None:
 		for block_name in self.unused_blocks:
-			block = self.defined_blocks[block_name]
+			block = self.blocks[block_name]
 			block_metadata = self.block_metadata[block]
-			self.add_warning(PyMSWarning('Parse', "Block with name '%s' is unused and will be discarded" % block_name, line=block_metadata.source_line, id='block_unused'))
+			self.add_warning(PyMSWarning('Parse', "Block with name '%s' is unused and will be discarded" % block_name, line=block_metadata.definition_line, id='block_unused'))
 		if self.active_block:
 			block_metadata = self.block_metadata[self.active_block]
-			raise self.error('Parse', "The last block (named '%s') does not end" % block_metadata.name, line=block_metadata.source_line)
+			raise self.error('Parse', "The last block (named '%s') does not end" % block_metadata.name, line=block_metadata.definition_line)
 		self.unused_blocks.clear()
 		if self.missing_blocks:
 			earliest_line = None
 			earliest_block_name = None
-			for block_name,resolvers in self.missing_blocks.items():
-				for resolver in resolvers:
-					if earliest_line is None or (resolver.source_line is not None and resolver.source_line < earliest_line):
-						earliest_line = resolver.source_line
-						earliest_block_name = block_name
+			for block_name,lines in self.missing_blocks.items():
+				first_line = min(lines)
+				if earliest_line is None or first_line < earliest_line:
+					earliest_line = first_line
+					earliest_block_name = block_name
 			raise PyMSError('Parse', "Block with name '%s' is not defined" % earliest_block_name, line=earliest_line)
 		self.warnings = list(warning for warning in self.warnings if warning.id not in self.suppress_warnings)
 

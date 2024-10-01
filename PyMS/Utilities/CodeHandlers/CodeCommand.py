@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from . import Tokens
 from .CodeType import CodeType, AddressCodeType, CodeBlock
-from .ParseContext import ParseContext, CommandParamBlockReferenceResolver
+from .ParseContext import ParseContext
 
 from .. import Struct
 from ..PyMSError import PyMSError
@@ -23,14 +23,13 @@ class CodeCommandDefinition(object):
 				return cmd_def
 		return None
 
-	def __init__(self, name: str, help_text: str, byte_code_id: int | None, param_types: Sequence[CodeType] = (), *, ends_flow: bool = False, separate: bool = False, ephemeral: bool = False) -> None:
+	def __init__(self, name: str, help_text: str, byte_code_id: int | None, param_types: Sequence[CodeType] = (), *, ends_flow: bool = False, separate: bool = False) -> None:
 		self.name = name
 		self.help_text = help_text
 		self.byte_code_id = byte_code_id
 		self.param_types = param_types
 		self.ends_flow = ends_flow
 		self.separate = separate
-		self.ephemeral = ephemeral # Command is ephemeral, so will not take part in things like block reference resolving
 
 	def decompile(self, scanner: BytesScanner) -> CodeCommand:
 		params = []
@@ -45,7 +44,6 @@ class CodeCommandDefinition(object):
 		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
 			_ = parse_context.lexer.next_token()
 			parse_context.command_in_parens = True
-		missing_blocks: list[tuple[str, int, int | None]] = []
 		for param_index,param_type in enumerate(self.param_types):
 			if parse_context.command_in_parens and param_index > 0:
 				token = parse_context.lexer.next_token()
@@ -74,12 +72,6 @@ class CodeCommandDefinition(object):
 					raise e
 				except:
 					raise
-			if isinstance(param_type, AddressCodeType):
-				block = parse_context.lookup_block(value)
-				if block:
-					value = block
-				else:
-					missing_blocks.append((value, param_index, parse_context.lexer.state.line))
 			params.append(value)
 		if parse_context.command_in_parens:
 			token = parse_context.lexer.next_token()
@@ -88,11 +80,7 @@ class CodeCommandDefinition(object):
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
 			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
-		cmd = CodeCommand(self, params, parse_context.active_block)
-		if not self.ephemeral:
-			for block_name,param_index,source_line in missing_blocks:
-				parse_context.missing_block(block_name, CommandParamBlockReferenceResolver(cmd, param_index, source_line))
-		return cmd
+		return CodeCommand(self, params, parse_context.active_block)
 
 	def full_help_text(self) -> str:
 		command = f'{self.name}('

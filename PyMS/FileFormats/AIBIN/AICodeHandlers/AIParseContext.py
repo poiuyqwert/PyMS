@@ -1,35 +1,25 @@
 
+from __future__ import annotations
+
 from . import CodeDirectives
 from ..DataContext import DataContext
-from ..AIFlag import AIFlag
 
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers.Lexer import Lexer
 from ....Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
-from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ....Utilities.CodeHandlers.CodeDirective import CodeDirective
+from ....Utilities.PyMSError import PyMSError
 
-from dataclasses import dataclass
-
-@dataclass
-class ParsedScriptHeader(object):
-	string_id: int
-	bwscript: bool
-	broodwar_only: bool
-	staredit_hidden: bool
-	requires_location: bool
-	entry_point: CodeBlock | None
-
-	@property
-	def flags(self) -> int:
-		return (AIFlag.requires_location if self.requires_location else 0) | (AIFlag.staredit_hidden if self.staredit_hidden else 0) | (AIFlag.broodwar_only if self.broodwar_only else 0)
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from ..AIScript import AIScript
 
 class AIParseContext(ParseContext):
 	def __init__(self, lexer: Lexer, definitions: DefinitionsHandler, data_context: DataContext) -> None:
 		ParseContext.__init__(self, lexer, definitions)
 		self.data_context = data_context
 		self.spellcasters: list[int] = []
-		self.script_headers: dict[str, tuple[ParsedScriptHeader, int]] = {}
+		self.scripts: dict[str, tuple[AIScript, int]] = {}
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		if directive.definition == CodeDirectives.Spellcaster:
@@ -41,3 +31,18 @@ class AIParseContext(ParseContext):
 			self.add_supressed_warning_id(directive.params[0])
 		elif directive.definition == CodeDirectives.SupressNextLine:
 			self.add_supressed_warning_id(directive.params[0], True)
+
+	def finalize(self) -> None:
+		from ..AIScript import AIScript
+		for block_metadata in self.block_metadata.values():
+			if not block_metadata.uses:
+				# TODO: Should have warning here?
+				continue
+			uses = cast(list[AIScript], block_metadata.uses)
+			aiscripts = list(script.id for script in uses if not script.in_bwscript)
+			bwscripts = list(script.id for script in uses if script.in_bwscript)
+			if aiscripts and bwscripts:
+				raise PyMSError('Parse', f"Block '{block_metadata.name}' is cross referenced by scripts in aiscript.bin ({', '.join(aiscripts)}) and bwscript.bin ({', '.join(bwscripts)})")
+		# TODO: Check for loops without waits
+		# TODO: Check for other issues with scripts
+		return super().finalize()
