@@ -12,6 +12,48 @@ from typing import BinaryIO
 def getPadding(value,alignment): # type: (int, int) -> int
 	return int(math.ceil(value/float(alignment)))*alignment - value
 
+class RLE:
+	ABSOLUTE_MODE = 0
+	ABSOLUTE_EOL = 0
+	ABSOLUTE_EOF = 1
+	ABSOLUTE_DELTA = 2
+
+	@staticmethod
+	def decompress(data, width, height): # type: (bytes, int, int) -> Pixels
+		image = [[]] # type: Pixels
+		offset = 0
+		while True:
+			if data[offset] == RLE.ABSOLUTE_MODE:
+				if data[offset+1] <= RLE.ABSOLUTE_DELTA:
+					if data[offset+1] == RLE.ABSOLUTE_DELTA:
+						xoffset, yoffset = data[offset+2], data[offset+3]
+						if not image[-1]:
+							image.pop()
+						elif len(image[-1]) < width and yoffset > 0:
+							image[-1].extend([0] * (width - len(image[-1])))
+						image.extend([[0] * width] * yoffset + [[0] * xoffset])
+						offset += 2
+					else:
+						if len(image[-1]) < width:
+							image[-1].extend([0] * (width - len(image[-1])))
+						if data[offset+1] == RLE.ABSOLUTE_EOF:
+							if len(image) < height:
+								image.extend([[0] * width] * (height - len(image)))
+							break
+						image.append([])
+				else:
+					n = data[offset+1]
+					image[-1].extend(data[offset+2:offset+2+n])
+					offset += n + getPadding(n,2)
+			else:
+				image[-1].extend([data[offset+1]] * data[offset])
+			offset += 2
+		image.reverse()
+		for y in range(len(image)):
+			if len(image[y]) > width:
+				del image[y][width:]
+		return image
+
 class BMP:
 	def __init__(self, palette=[]): # type: (RawPalette) -> None
 		self.width = 0
@@ -40,45 +82,18 @@ class BMP:
 				b,g,r = tuple(int(c) for c in struct.unpack('<3B',data[14+dib_header_size+x:17+dib_header_size+x]))
 				palette.append((r,g,b))
 			palette.extend([(0,0,0)] * (256-colors_used))
-			image = [] # type: Pixels
 			if not compression:
+				image = [] # type: Pixels
 				pad = getPadding(width,4)
 				for y in range(height):
 					x = pixels_offset+(width+pad)*y
 					image.append(list(int(v) for v in struct.unpack('%sB%s' % (width, 'x' * pad),data[x:x+width+pad])))
+				image.reverse()
+				for y in range(len(image)):
+					if len(image[y]) > width:
+						del image[y][width:]
 			else:
-				x = pixels_offset
-				image.append([])
-				while True:
-					if data[x] == 0:
-						if data[x+1] < 3:
-							if data[x+1] == 0x02:
-								xoffset, yoffset = data[x+2], data[x+3]
-								if not image[-1]:
-									image.pop()
-								elif len(image[-1]) < width and yoffset > 0:
-									image[-1].extend([0] * (width - len(image[-1])))
-								image.extend([[0] * width] * yoffset + [[0] * xoffset])
-								x += 2
-							else:
-								if image[-1] and len(image[-1]) < width:
-									image[-1].extend([0] * (width - len(image[-1])))
-								if data[x+1] == 0x01:
-									if len(image) < height:
-										image.extend([[0] * width] * (height - len(image)))
-									break
-								image.append([])
-						else:
-							n = data[x+1]
-							image[-1].extend(data[x+2:x+2+n])
-							x += n + getPadding(n,2)
-					else:
-						image[-1].extend([data[x+1]] * data[x])
-					x += 2
-			image.reverse()
-			for y in range(len(image)):
-				if len(image[y]) > width:
-					del image[y][width:]
+				image = RLE.decompress(data[pixels_offset:], width, height)
 		except PyMSError:
 			raise
 		except:

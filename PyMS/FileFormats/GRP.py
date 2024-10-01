@@ -391,6 +391,20 @@ class GRP:
 		self.images_bounds = [image_bounds(frame, transindex) for frame in frames]
 		self.transindex = transindex
 
+	def add_frame(self, frame: Pixels, validate: bool = True) -> None:
+		if validate and self.images:
+			frame_index = len(self.images)
+			frame_height = len(frame)
+			if frame_height != self.height:
+				raise PyMSError('GRP', 'Adding frame %d has unexpected height (got %d, expected %d)' % (frame_index, frame_height, self.height))
+			for (y, line) in enumerate(frame):
+				line_width = len(line)
+				if line_width != self.width:
+					raise PyMSError('GRP', 'Adding frame %d line %d has unexpected width (got %d, expected %d)' % (frame_index, y, line_width, self.width))
+		self.frames += 1
+		self.images.append(deepcopy(frame))
+		self.images_bounds.append(image_bounds(frame, self.transindex))
+
 	def save_data(self, uncompressed=None): # type: (bool | None) -> bytes
 		if uncompressed is None:
 			uncompressed = self.uncompressed

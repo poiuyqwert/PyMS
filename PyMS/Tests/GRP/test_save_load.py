@@ -123,3 +123,37 @@ class Test_Save_And_Load(unittest.TestCase):
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
 		self.assertEqual(load_grp.images[0], image)
+
+	def test_full_and_empty_frame(self) -> None:
+		width = 5
+		height = 5
+		images = [
+			[
+				[1,1,1,1,1],
+				[1,1,1,1,1],
+				[1,1,1,1,1],
+				[1,1,1,1,1],
+				[1,1,1,1,1],
+			],
+			[
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+			],
+		]
+
+		saved_file = io.BytesIO()
+		save_grp = GRP.GRP()
+		save_grp.load_data(images)
+		save_grp.save_file(saved_file)
+
+		saved_file.seek(0)
+		load_grp = GRP.GRP()
+		load_grp.load_file(saved_file)
+
+		self.assertEqual(load_grp.width, width)
+		self.assertEqual(load_grp.height, height)
+		self.assertEqual(load_grp.images[0], images[0])
+		self.assertEqual(load_grp.images[1], images[1])

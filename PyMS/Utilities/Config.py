@@ -512,7 +512,7 @@ class SelectFile(ConfigObject):
 			)) # type: ignore[call-arg]
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
-			if isinstance(path, list):
+			if isinstance(path, (list, tuple)):
 				path = list(p for p in path if check_allow_overwrite_internal_file(p))
 				if not path:
 					path = None
@@ -520,7 +520,7 @@ class SelectFile(ConfigObject):
 				path = None
 		setattr(window, '_pyms__window_blocking', False)
 		if path is not None:
-			if isinstance(path, list):
+			if isinstance(path, (list, tuple)):
 				directory = os.path.dirname(path[0])
 			else:
 				directory = os.path.dirname(path)
