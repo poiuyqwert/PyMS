@@ -52,6 +52,7 @@ H = TypeVar('H', bound=_BaseScriptHeader)
 class AIBIN:
 	def __init__(self) -> None:
 		self._scripts: OrderedDict[str, AIScript] = OrderedDict()
+		self._cached_sizes: tuple[int, int] | None = None
 
 	@staticmethod
 	def _load(header_type: Type[H], file_name: str, input: IO.AnyInputBytes) -> OrderedDict[str, tuple[H, CodeBlock | None]]:
@@ -111,6 +112,7 @@ class AIBIN:
 			entry_point.owners.append(script)
 			scripts[id] = script
 		self._scripts = scripts
+		self._cached_sizes = None
 
 	@staticmethod
 	def _save(header_type: Type[H], scripts: Iterable[AIScript], output: IO.AnyOutputBytes) -> None:
@@ -159,6 +161,16 @@ class AIBIN:
 		script = self._scripts[script_id]
 		script.entry_point.owners.remove(script)
 		del self._scripts[script_id]
+		self._cached_sizes = None
+
+	def can_add_scripts(self, add_scripts: Iterable[AIScript], allow_replace: bool = True) -> tuple[int | None, int | None]:
+		scripts = self._scripts.copy()
+		for script in add_scripts:
+			if not allow_replace and script.id in scripts:
+				raise PyMSError('Internal', f"Script with ID '{script.id}' already exists")
+			scripts[script.id] = script
+		ai_size, bw_size = self._calculate_sizes(scripts)
+		return (ai_size if ai_size > Struct.l_u16.max else None, bw_size if bw_size > Struct.l_u16.max else None)
 
 	def add_script(self, script: AIScript, allow_replace: bool = True) -> None:
 		self.add_scripts([script], allow_replace)
@@ -169,9 +181,15 @@ class AIBIN:
 			if not allow_replace and script.id in scripts:
 				raise PyMSError('Internal', f"Script with ID '{script.id}' already exists")
 			scripts[script.id] = script
-		ai_size, bw_size = self._calculate_sizes(scripts)
-		# TODO: Check size
+		new_ai_size, new_bw_size = self._calculate_sizes(scripts)
+		if new_ai_size > Struct.l_u16.max:
+			ai_size, _ = self.calculate_sizes()
+			raise PyMSError('Internal', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
+		if new_bw_size > Struct.l_u16.max:
+			_, bw_size = self.calculate_sizes()
+			raise PyMSError('Internal', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
 		self._scripts = scripts
+		self._cached_sizes = (new_ai_size, new_bw_size)
 
 	def has_bwscripts(self) -> bool:
 		for script in self._scripts.values():
@@ -181,15 +199,16 @@ class AIBIN:
 
 	@staticmethod
 	def _calculate_sizes(scripts: Mapping[str, AIScript]) -> tuple[int, int]:
+		# TODO: Should this be calculated without saving?
 		ai_output = io.BytesIO()
 		bw_output = io.BytesIO()
 		AIBIN._save_scripts(scripts, ai_output, bw_output)
 		return (len(ai_output.getvalue()), len(bw_output.getvalue()))
 
 	def calculate_sizes(self) -> tuple[int, int]:
-		# TODO: Should this be calculated without saving?
-		# TODO: Cache file size?
-		return AIBIN._calculate_sizes(self._scripts)
+		if self._cached_sizes is None:
+			self._cached_sizes = AIBIN._calculate_sizes(self._scripts)
+		return self._cached_sizes
 
 	def count_scripts(self) -> tuple[int, int]:
 		ai_scripts = 0
@@ -213,9 +232,9 @@ class AIBIN:
 		source_serializer = SourceCodeSerializer()
 		source_serializer.decompile(serialize_context, strategy_builder.build())
 
-	def compile(self, parse_context: AIParseContext) -> None:
+	@staticmethod
+	def compile(parse_context: AIParseContext) -> list[AIScript]:
 		source_handler = AISourceCodeHandler()
 		source_handler.parse(parse_context)
 		parse_context.finalize()
-		# TODO: Complete
-		self.add_scripts(script for script,_ in parse_context.scripts.values())
+		return list(script for script,_ in parse_context.scripts.values())

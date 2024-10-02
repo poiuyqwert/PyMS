@@ -254,7 +254,7 @@ class Field:
 	def format(self) -> str:
 		return f'{self.endian}{self.field_type.format}'
 
-	def pack(self, value: Any) -> bytes:
+	def pack(self, value: Any, clamp: bool = False) -> bytes:
 		return struct.pack(self.format, value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> Any:
@@ -264,7 +264,9 @@ class IntField(Field):
 	def __init__(self, field_type: IntType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
 
-	def pack(self, value: int) -> bytes:
+	def pack(self, value: int, clamp: bool = False) -> bytes:
+		if clamp:
+			value = max(self.min, min(value, self.max))
 		return struct.pack(self.format, value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> int:
@@ -289,7 +291,9 @@ class BoolField(Field):
 	def __init__(self, field_type: BoolType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
 
-	def pack(self, value: int) -> bytes:
+	def pack(self, value: int, clamp: bool = False) -> bytes:
+		if clamp:
+			value = max(self.min, min(value, self.max))
 		return struct.pack(self.format, value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> bool:
@@ -314,7 +318,9 @@ class FloatField(Field):
 	def __init__(self, field_type: FloatType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
 
-	def pack(self, value: float) -> bytes:
+	def pack(self, value: float, clamp: bool = False) -> bytes:
+		if clamp:
+			value = max(self.min, min(value, self.max))
 		return struct.pack(self.format, value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> float:
@@ -358,7 +364,7 @@ class StringField(Field):
 	def __init__(self, field_type: StringType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
 
-	def pack(self, value: str) -> bytes:
+	def pack(self, value: str, clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Processed)
 		return struct.pack(self.format, self.field_type.prepare_to_pack(value))
 

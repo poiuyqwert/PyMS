@@ -729,12 +729,20 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return False
 		parse_context = self.get_parse_context(code)
 		try:
-			self.ai.compile(parse_context)
+			scripts = AIBIN.AIBIN.compile(parse_context)
+			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
+			if new_ai_size is not None:
+				ai_size, _ = self.ai.calculate_sizes()
+				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
+			if new_bw_size is not None:
+				_, bw_size = self.ai.calculate_sizes()
+				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
 		except PyMSError as e:
 			ErrorDialog(parent, e)
 			return False
 		if parse_context.warnings:
 			WarningDialog(parent, parse_context.warnings, True)
+		self.ai.add_scripts(scripts)
 		self.update_script_status()
 		self.refresh_listbox()
 		self.mark_edited()

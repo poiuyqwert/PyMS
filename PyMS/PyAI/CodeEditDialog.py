@@ -248,17 +248,10 @@ class CodeEditDialog(PyMSDialog):
 			self.editstatus['state'] = DISABLED
 
 	def test(self, _: Event | None = None) -> None:
-		aibin = AIBIN.AIBIN()
 		code = self.text.get('1.0', END)
 		parse_context = self.delegate.get_parse_context(code)
 		try:
-			aibin.compile(parse_context)
-			# for id in list(i.ais.keys()):
-			# 	if id in self.delegate.get_ai_bin().externaljumps[0]:
-			# 		for _,l in self.delegate.get_ai_bin().externaljumps[0].items():
-			# 			for cid in l:
-			# 				if not cid in i.ais:
-			# 					raise PyMSError('Interpreting',"You can't edit scripts (%s) that are referenced externally without editing the scripts with the external references (%s) at the same time." % (id,cid))
+			AIBIN.AIBIN.compile(parse_context)
 		except PyMSError as e:
 			if e.line is not None:
 				self.text.see('%s.0' % e.line)

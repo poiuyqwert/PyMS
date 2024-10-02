@@ -10,6 +10,8 @@ from ....Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ....Utilities.CodeHandlers.CodeDirective import CodeDirective
 from ....Utilities.PyMSError import PyMSError
 
+from collections import OrderedDict
+
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..AIScript import AIScript
@@ -19,7 +21,7 @@ class AIParseContext(ParseContext):
 		ParseContext.__init__(self, lexer, definitions)
 		self.data_context = data_context
 		self.spellcasters: list[int] = []
-		self.scripts: dict[str, tuple[AIScript, int]] = {}
+		self.scripts: OrderedDict[str, tuple[AIScript, int]] = {}
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		if directive.definition == CodeDirectives.Spellcaster:

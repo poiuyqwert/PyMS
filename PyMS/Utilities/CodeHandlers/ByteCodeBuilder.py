@@ -26,7 +26,9 @@ class ByteCodeBuilder(BuilderContext):
 			block_address = self._get_block_offset(block)
 			if not block_address:
 				raise PyMSError('Internal', 'Block is not compiled')
-			self.data[ref_address: ref_address + type.size] = type.pack(block_address)
+			# Clamp offset to allow saving to check file size
+			# TODO: Is there a better way?
+			self.data[ref_address: ref_address + type.size] = type.pack(block_address, clamp=True)
 
 	def _compile_block(self, block: CodeBlock) -> None:
 		if block in self.block_offsets:
@@ -52,7 +54,9 @@ class ByteCodeBuilder(BuilderContext):
 
 	def add_block_ref(self, block: CodeBlock, type: Struct.IntField) -> None:
 		if block in self.block_offsets:
-			self.add_data(type.pack(self.block_offsets[block]))
+			# Clamp offset to allow saving to check file size
+			# TODO: Is there a better way?
+			self.add_data(type.pack(self.block_offsets[block], clamp=True))
 		else:
 			if not block in self.block_refs:
 				self.block_refs[block] = []
