@@ -1,7 +1,6 @@
 
 from .CodeTooltip import *
 
-from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
@@ -10,8 +9,7 @@ from ..Utilities.utils import couriernew_bold
 import re, copy
 
 class AICodeText(CodeText):
-	def __init__(self, parent: AnyWindow, ai: AIBIN.AIBIN, ecallback=None, icallback=None, scallback=None, highlights=None):
-		self.ai = ai
+	def __init__(self, parent: AnyWindow, ecallback=None, icallback=None, scallback=None, highlights=None):
 		if highlights:
 			self.highlights = highlights
 		else:

@@ -3,7 +3,7 @@ from . import Assets
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 
-import traceback, sys
+import traceback, sys, platform
 
 class InternalErrorDialog(PyMSDialog):
 	CAPTURE_NONE = 0
@@ -33,10 +33,16 @@ class InternalErrorDialog(PyMSDialog):
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
 		vscroll = Scrollbar(frame)
 		self.text = Text(frame, bd=0, highlightthickness=0, width=70, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=NONE, exportselection=False, state=DISABLED)
+		self.add_text(f'PyMS: {Assets.version("PyMS")}')
+		self.add_text(f'{self.prog}: {Assets.version(self.prog)}')
+		self.add_text(f'Python: {sys.version}')
+		try:
+			self.add_text(f'Tcl/Tk: {Tcl().call("info", "patchlevel")}')
+		except:
+			pass
+		self.add_text(f'Platform: {platform.system()}')
 		if self.txt:
-			self.text['state'] = NORMAL
-			self.text.insert(END, self.txt)
-			self.text['state'] = DISABLED
+			self.add_text(self.txt)
 		self.text.grid(sticky=NSEW)
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
@@ -55,7 +61,9 @@ class InternalErrorDialog(PyMSDialog):
 		self.text.focus_set()
 		self.text.tag_add(SEL, 1.0, END)
 
-	def add_text(self, text): # type: (str) -> None
+	def add_text(self, text: str, newline: bool = True) -> None:
 		self.text['state'] = NORMAL
 		self.text.insert(END, text)
+		if newline:
+			self.text.insert(END, '\n')
 		self.text['state'] = DISABLED

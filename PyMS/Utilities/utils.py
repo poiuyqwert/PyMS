@@ -10,7 +10,7 @@ try:
 	from _thread import start_new_thread
 except:
 	import threading
-	def start_new_thread(function: Callable[..., object], args: tuple[Any, ...], kwargs: dict[str, Any] = {}) -> int:
+	def start_new_thread(function: Callable[..., object], args: tuple[Any, ...], kwargs: dict[str, Any] = {}) -> int: # type: ignore[no-redef]
 		thread = threading.Thread(target=function, args=args)
 		thread.start()
 		return thread.ident or 0

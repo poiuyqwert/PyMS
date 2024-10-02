@@ -1,12 +1,9 @@
 {
     "python.analysis.autoImportCompletions": false,
 
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.pylintArgs": [
+    "pylint.args": [
         "--disable=all",
-        "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
-        "--disable=print-statement"
+        "--enable=unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
     ],
 
     "python.testing.unittestArgs": [
@@ -18,7 +15,4 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true,
-    "python.linting.mypyEnabled": true,
-
-    "mypy.runUsingActiveInterpreter": true,
 }

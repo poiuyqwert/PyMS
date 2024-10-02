@@ -1,19 +1,18 @@
 
+from ..FileFormats.AIBIN.AIFlag import AIFlag
+
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class FlagEditor(PyMSDialog):
-	def __init__(self, parent, flags):
+	def __init__(self, parent: AnyWindow, flags: int) -> None:
 		self.flags = flags
-		self.location = IntVar()
-		self.location.set(not not flags & 1)
-		self.visible = IntVar()
-		self.visible.set(not not flags & 2)
-		self.bwonly = IntVar()
-		self.bwonly.set(not not flags & 4)
+		self.location = BooleanVar(value=not not flags & AIFlag.requires_location)
+		self.visible = BooleanVar(value=not not flags & AIFlag.staredit_hidden)
+		self.bwonly = BooleanVar(value=not not flags & AIFlag.broodwar_only)
 		PyMSDialog.__init__(self, parent, 'Flag Editor', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		choices = Frame(self)
 		Checkbutton(choices, text='Requires a Location', variable=self.location).grid(sticky=W)
 		Checkbutton(choices, text='Invisible in StarEdit', variable=self.visible).grid(sticky=W)
@@ -26,6 +25,6 @@ class FlagEditor(PyMSDialog):
 		buttons.pack(pady=3, padx=3)
 		return ok
 
-	def ok(self):
-		self.flags = self.location.get() + 2 * self.visible.get() + 4 * self.bwonly.get()
+	def ok(self, event: Event | None = None) -> None:
+		self.flags = AIFlag.flags(self.location.get(), self.visible.get(), self.bwonly.get())
 		PyMSDialog.ok(self)

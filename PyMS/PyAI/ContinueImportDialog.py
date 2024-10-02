@@ -15,7 +15,7 @@ class ContinueImportDialog(PyMSDialog):
 		self.cont = ContinueImportDialog.Result.cancel
 		PyMSDialog.__init__(self, parent, 'Continue Importing?')
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		Label(self, text="The AI Script with ID '%s' already exists, overwrite it?" % self.script_id).pack(pady=10)
 		frame = Frame(self)
 		yes = Button(frame, text='Yes', width=10, command=self.yes)
@@ -26,14 +26,14 @@ class ContinueImportDialog(PyMSDialog):
 		frame.pack(pady=10, padx=3)
 		return yes
 
-	def yes(self):
+	def yes(self) -> None:
 		self.cont = ContinueImportDialog.Result.yes
 		self.ok()
 
-	def yestoall(self):
+	def yestoall(self) -> None:
 		self.cont = ContinueImportDialog.Result.yes_to_all
 		self.ok()
 
-	def cancel(self):
+	def cancel(self, event: Event | None = None) -> None:
 		self.cont = ContinueImportDialog.Result.cancel
 		self.ok()

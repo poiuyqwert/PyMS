@@ -70,7 +70,7 @@ class CodeEditDialog(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
 		self.toolbar.pack(fill=X, padx=2, pady=2)
 
-		self.text = AICodeText(self, self.delegate.get_ai_bin(), self.edited, highlights=self.delegate.get_highlights())
+		self.text = AICodeText(self, self.edited, highlights=self.delegate.get_highlights())
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
 		self.text.icallback = self.statusupdate
 		self.text.scallback = self.statusupdate

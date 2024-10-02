@@ -2,7 +2,7 @@
 from .Config import PyAIConfig
 from .ListboxTooltip import ListboxTooltip
 from .EditScriptDialog import EditScriptDialog
-from .FindDialog import FindDialog
+from .FindScriptDialog import FindScriptDialog
 from .ImportListDialog import ImportListDialog
 from .CodeEditDialog import CodeEditDialog
 from .FlagEditor import FlagEditor
@@ -79,8 +79,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.sort = StringVar()
 		self.sort.set(self.config_.sort.value.value)
 		self.sort.trace('w', lambda *_: self.refresh_listbox())
-		self.reference = BooleanVar()
-		self.reference.set(self.config_.reference.value)
+		# self.reference = BooleanVar()
+		# self.reference.set(self.config_.reference.value)
 
 		# Note: Toolbar will bind the shortcuts below
 		# TODO: Check for items not bound by `Toolbar`
@@ -114,7 +114,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		edit_menu.add_command('Import Scripts', self.iimport, Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_command('Import a List of Files', self.listimport, Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_separator()
-		edit_menu.add_checkbutton('Print Reference when Decompiling', self.reference, underline='p')
+		# edit_menu.add_checkbutton('Print Reference when Decompiling', self.reference, underline='p')
 		edit_menu.add_command('Decompiling Format', self.decompiling_format)
 		edit_menu.add_separator()
 		edit_menu.add_command('Edit AI Script', self.codeedit, Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
@@ -176,7 +176,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Scripts', Ctrl.Alt.i, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_checkbutton(Assets.get_image('reference'), self.reference, 'Print Reference when Decompiling')
+		# self.toolbar.add_checkbutton(Assets.get_image('reference'), self.reference, 'Print Reference when Decompiling')
 		self.toolbar.add_button(Assets.get_image('debug'), self.decompiling_format, 'Decompiling Format')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', Ctrl.e, enabled=False, tags='file_open')
@@ -258,7 +258,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	# Misc. functions
 	def update_title(self) -> None:
-		details = 'No Files Loaded'
+		details = ' (No Files Loaded)'
 		if self.aiscript:
 			details = f' ({self.aiscript})'
 			if self.bwscript:
@@ -528,7 +528,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		self.config_.windows.main.save_size(self)
 		self.config_.code.highlights.data = self.highlights
-		self.config_.reference.value = self.reference.get()
+		# self.config_.reference.value = self.reference.get()
 		self.config_.imports.data = self.imports
 		self.config_.save()
 		self.destroy()
@@ -560,7 +560,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.action_manager.add_action(action)
 
 	def find(self) -> None:
-		FindDialog(self)
+		FindScriptDialog(self, self.config_.windows.find.script, self)
 
 	def export(self) -> None:
 		if not self.ai:
@@ -748,8 +748,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.mark_edited()
 		return True
 
-	def get_export_references(self) -> bool:
-		return self.reference.get()
+	# def get_export_references(self) -> bool:
+	# 	return self.reference.get()
 
 	def _get_definitions_handler(self) -> AIDefinitionsHandler:
 		defs = AIDefinitionsHandler()
@@ -781,6 +781,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			code = f.read()
 		lexer = AILexer(code)
 		return AIParseContext(lexer, definitions, self.data_context)
+
+	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
+		if not keep_existing:
+			self.listbox.select_clear(0, END)
+		for index,script in enumerate(self.script_list):
+			if script.id in ids:
+				self.listbox.select_set(index)
 
 	# Tooltip Delegate
 	def get_list_entry(self, index: int) -> AIBIN.AIScript:

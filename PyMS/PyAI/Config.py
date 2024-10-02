@@ -35,6 +35,12 @@ class PyAIConfig(Config.Config):
 				self.main = Config.WindowGeometry(default_size=Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
+		
+		class Find(Config.Group):
+			def __init__(self) -> None:
+				self.script = Config.WindowGeometry()
+				self.string = Config.WindowGeometry()
+				super().__init__()
 
 		def __init__(self) -> None:
 			self.main = Config.WindowGeometry()
@@ -43,6 +49,7 @@ class PyAIConfig(Config.Config):
 			self.code_edit = Config.WindowGeometry()
 			self.script_edit = Config.WindowGeometry()
 			self.extdefs = Config.WindowGeometry()
+			self.find = PyAIConfig.Windows.Find()
 			super().__init__()
 
 	class LastPath(Config.Group):

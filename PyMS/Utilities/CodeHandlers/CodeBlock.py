@@ -15,6 +15,7 @@ class CodeBlock:
 		self.owners: list[CodeHeader] = []
 
 	def serialize(self, context: SerializeContext) -> None:
+		context.write('\n')
 		context.write(context.formatters.block.serialize(context.strategy.block_label(self)))
 		if (comment := context.strategy.block_comment(self)):
 			context.write(context.formatters.comment.serialize([comment]))

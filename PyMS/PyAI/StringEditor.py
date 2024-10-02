@@ -85,8 +85,8 @@ class StringEditor(PyMSDialog):
 	def find(self, e=None):
 		if not self.listbox.size():
 			return
-		from . import FindDialog
-		FindDialog.FindDialog(self, True)
+		from . import FindStringDialog
+		FindStringDialog.FindStringDialog(self)
 
 	def ok(self):
 		self.result = int(self.listbox.curselection()[0])
