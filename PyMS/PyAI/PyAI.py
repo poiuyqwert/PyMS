@@ -71,7 +71,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
-		self.imports = list(file_path for file_path in self.config_.imports.data if os.path.exists(file_path))
 		self.highlights = self.config_.code.highlights.data
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
@@ -529,7 +528,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.config_.windows.main.save_size(self)
 		self.config_.code.highlights.data = self.highlights
 		# self.config_.reference.value = self.reference.get()
-		self.config_.imports.data = self.imports
 		self.config_.save()
 		self.destroy()
 
@@ -582,25 +580,35 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if serialize_context.strategy.external_headers:
 			MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers), type=MessageBox.OK)
 
-	def iimport(self, iimport_path: str | None = None, c: bool = True, parent: Misc | None = None) -> None:
+	def iimport(self, import_paths: list[str] | None = None,  parent: AnyWindow | None = None) -> None:
 		if not self.ai:
 			return
 		if parent is None:
 			parent = self
-		if not iimport_path:
-			iimport_path = self.config_.last_path.txt.ai.select_open(self)
-		if not iimport_path:
-			return
-		parse_context = self.get_parse_context(iimport_path)
-		self.ai.compile(parse_context)
-		if parse_context.warnings:
-			WarningDialog(parent, parse_context.warnings, True)
+		if not import_paths:
+			import_path = self.config_.last_path.txt.ai.select_open(self)
+			if not import_path:
+				return
+			import_paths = [import_path]
+		for import_path in import_paths:
+			parse_context = self.get_parse_context(import_path)
+			scripts = self.ai.compile(parse_context)
+			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
+			if new_ai_size is not None:
+				ai_size, _ = self.ai.calculate_sizes()
+				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
+			if new_bw_size is not None:
+				_, bw_size = self.ai.calculate_sizes()
+				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
+			if parse_context.warnings:
+				WarningDialog(parent, parse_context.warnings, True)
+			self.ai.add_scripts(scripts)
 		self.update_script_status()
 		self.refresh_listbox()
 		self.mark_edited()
 
 	def listimport(self) -> None:
-		ImportListDialog(self)
+		ImportListDialog(self, self, self.config_)
 
 	def codeedit(self, event: Event | None = None) -> None:
 		headers = self.get_selected_scripts()

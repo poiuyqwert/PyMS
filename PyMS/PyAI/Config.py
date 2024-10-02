@@ -50,6 +50,7 @@ class PyAIConfig(Config.Config):
 			self.script_edit = Config.WindowGeometry()
 			self.extdefs = Config.WindowGeometry()
 			self.find = PyAIConfig.Windows.Find()
+			self.list_import = Config.WindowGeometry()
 			super().__init__()
 
 	class LastPath(Config.Group):
@@ -58,6 +59,7 @@ class PyAIConfig(Config.Config):
 				self.ai = Config.SelectFile(name='AI TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
 				self.settings = Config.SelectFile(name='Settings TXT', filetypes=[FileType.txt()])
 				self.extdefs = Config.SelectFile(name='External Definitions TXT', filetypes=[FileType.txt()], op_type=Config.FileOpType.import_export)
+				self.import_ = Config.SelectFile(name='Imports', filetypes=[FileType.txt()])
 				super().__init__()
 
 		def __init__(self) -> None:

@@ -41,6 +41,9 @@ class MainDelegate(Protocol):
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
 		...
 
+	def iimport(self, import_paths: list[str] | None, parent: AnyWindow | None) -> None:
+		...
+
 class ActionDelegate(Protocol):
 	def get_ai_bin(self) -> AIBIN.AIBIN:
 		...

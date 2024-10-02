@@ -23,27 +23,41 @@ def main() -> None:
 	from PyMS.Utilities.CodeHandlers import Formatters
 
 	import os, optparse, sys
+	from dataclasses import dataclass
+
+	@dataclass
+	class Options(optparse.Values):
+		decompile = True
+		units = Assets.mpq_file_path('arr', 'units.dat')
+		upgrades = Assets.mpq_file_path('arr', 'upgrades.dat')
+		techdata = Assets.mpq_file_path('arr', 'techdata.dat')
+		stattxt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
+		scripts: str | None = None
+		aiscript: str | None = None
+		bwscript: str | None = None
+		hidewarns = False
+		deffile: str | None = None
+		gui: str | None = None
 
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyai.py','pyai.pyw','pyai.exe']):
 		gui = PyAI()
 		gui.startup()
 	else:
 		p = optparse.OptionParser(usage='usage: PyAI [options] <inp|aiscriptin bwscriptin> [out|aiscriptout bwscriptout]', version='PyAI %s' % LONG_VERSION)
-		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile AI's from aiscript.bin and/or bwscript.bin [default]", default=True)
-		p.add_option('-c', '--compile', action='store_false', dest='convert', help="Compile AI's to an aiscript.bin and/or bwscript.bin")
-		p.add_option('-u', '--units', help="Specify your own units.dat file for unit data lookups [default: PyMS\\MPQ\\arr\\units.dat]", default=Assets.mpq_file_path('arr', 'units.dat'))
-		p.add_option('-g', '--upgrades', help="Specify your own upgrades.dat file for upgrade data lookups [default: PyMS\\MPQ\\arr\\upgrades.dat]", default=Assets.mpq_file_path('arr', 'upgrades.dat'))
-		p.add_option('-t', '--techdata', help="Specify your own techdata.dat file for technology data lookups [default: PyMS\\MPQ\\arr\\techdata.dat]", default=Assets.mpq_file_path('arr', 'techdata.dat'))
-		p.add_option('-s', '--scripts', help="A list of AI Script ID's to decompile (seperated by commas) [default: All]", default='')
-		p.add_option('-a', '--aiscript', help="Used to signify the base aiscript.bin file to compile on top of", default=None)
-		p.add_option('-b', '--bwscript', help="Used to signify the base bwscript.bin file to compile on top of (aiscript required if bwscript is used)", default=None)
-		p.add_option('-l', '--longlabels', action='store_false', help="Used to signify that you want decompiled scripts to use desriptive command names [default: Off]", default=True)
-		p.add_option('-x', '--stattxt', help="Used to signify the stat_txt.tbl file to use [default: PyMS\\MPQ\\rez\\stat_txt.tbl]", default=Assets.mpq_file_path('rez', 'stat_txt.tbl'))
-		p.add_option('-r', '--reference', action='store_true', help="When decompiling, put a reference for commands and parameters [default: Off]", default=False)
-		p.add_option('-w', '--hidewarns', action='store_true', help="Hides any warning produced by compiling your code [default: Off]", default=False)
-		p.add_option('-f', '--deffile', help="Specify an External Definition file containing variables to be used when interpreting/decompiling [default: None]", default=None)
-		p.add_option('--gui', help="Opens a file with the GUI", default='')
-		opt, args = p.parse_args()
+		p.add_option('-d', '--decompile', action='store_true', dest='decompile', help="Decompile AI's from aiscript.bin and/or bwscript.bin [default]")
+		p.add_option('-c', '--compile', action='store_false', dest='decompile', help="Compile AI's to an aiscript.bin and/or bwscript.bin")
+		p.add_option('-u', '--units', help="Specify your own units.dat file for unit data lookups [default: PyMS\\MPQ\\arr\\units.dat]")
+		p.add_option('-g', '--upgrades', help="Specify your own upgrades.dat file for upgrade data lookups [default: PyMS\\MPQ\\arr\\upgrades.dat]")
+		p.add_option('-t', '--techdata', help="Specify your own techdata.dat file for technology data lookups [default: PyMS\\MPQ\\arr\\techdata.dat]")
+		p.add_option('-s', '--scripts', help="A list of AI Script ID's to decompile (seperated by commas) [default: All]")
+		p.add_option('-a', '--aiscript', help="Used to signify the base aiscript.bin file to compile on top of")
+		p.add_option('-b', '--bwscript', help="Used to signify the base bwscript.bin file to compile on top of (aiscript required if bwscript is used)")
+		p.add_option('-x', '--stattxt', help="Used to signify the stat_txt.tbl file to use [default: PyMS\\MPQ\\rez\\stat_txt.tbl]")
+		p.add_option('-w', '--hidewarns', action='store_true', help="Hides any warning produced by compiling your code [default: Off]")
+		p.add_option('-f', '--deffile', help="Specify an External Definition file containing variables to be used when interpreting/decompiling [default: None]")
+		p.add_option('--gui', help="Opens a file with the GUI")
+		opt = Options()
+		_, args = p.parse_args(values=opt)
 		if opt.gui:
 			gui = PyAI(opt.gui)
 			gui.startup()
@@ -54,7 +68,7 @@ def main() -> None:
 			if not path:
 				path = os.path.abspath('')
 			if len(args) != 3:
-				if opt.convert:
+				if opt.decompile:
 					if len(args) < 2:
 						p.error('Invalid amount of arguments, missing bwscript.bin')
 					args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, 'txt'))
@@ -89,7 +103,7 @@ def main() -> None:
 					handler.parse(parse_context)
 					parse_context.finalize()
 					print('- Loading finished successfully')
-				if opt.convert:
+				if opt.decompile:
 					ids: list[str] | None = None
 					if opt.scripts:
 						ids = []
