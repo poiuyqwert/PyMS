@@ -6,8 +6,7 @@ from .Config import PyAIConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
-from ..FileFormats import TBL
+from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -15,8 +14,8 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
-from ..Utilities import IO
 from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+from ..Utilities import ItemSelectDialog
 
 import re, io
 from dataclasses import dataclass
@@ -28,7 +27,7 @@ class AutocompleteState:
 	start_index: str
 	end_index: str
 
-class CodeEditDialog(PyMSDialog):
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
 		self.delegate = delegate
 		self.config_ = config
@@ -66,6 +65,7 @@ class CodeEditDialog(PyMSDialog):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
 		self.toolbar.add_section()
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', Ctrl.Alt.i, enabled=self.delegate.get_data_context().stattxt_tbl is not None)
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', Ctrl.Alt.p)
 		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
 		self.toolbar.pack(fill=X, padx=2, pady=2)
@@ -490,3 +490,41 @@ script {header_id} {{
 	def dismiss(self) -> None:
 		self.config_.windows.code_edit.save_size(self)
 		PyMSDialog.dismiss(self)
+
+	RE_NAME_STRING_COMMAND: re.Pattern | None = None
+	def re_name_string_command(self) -> re.Pattern:
+		if CodeEditDialog.RE_NAME_STRING_COMMAND is None:
+			CodeEditDialog.RE_NAME_STRING_COMMAND = re.compile(rf'(\s*{CodeCommands.HeaderNameString.name}\s+)(\d+)')
+		return CodeEditDialog.RE_NAME_STRING_COMMAND
+
+	def insert_string_id(self) -> None:
+		initial_selection = []
+		line = self.text.get(f'{INSERT} linestart', f'{INSERT} lineend')
+		if match := self.re_name_string_command().match(line):
+			initial_selection.append(int(match.group(2)))
+		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
+
+	# ItemSelectDialog.Delegate
+	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
+		strings = self.delegate.get_data_context().stattxt_strings()
+		if not strings:
+			return []
+		# return [ItemSelectDialog.DisplayItem(string, f'{index}: {string}') for index, string in enumerate(strings)]
+		return strings
+
+	def item_selected(self, index: int) -> bool:
+		line = self.text.get(f'{INSERT} linestart', f'{INSERT} lineend')
+		insert_index: str = self.text.index(INSERT)
+		if match := self.re_name_string_command().match(line):
+			insert_index = f'{INSERT} linestart +{len(match.group(1))}c'
+			self.text.delete(insert_index, f'{INSERT} lineend')
+		str_index = str(index)
+		comment = ''
+		if string := self.delegate.get_data_context().stattxt_string(index):
+			comment = self.delegate.get_formatters().comment.serialize([string])
+		self.text.insert(insert_index, str_index + comment)
+		self.text.mark_set(INSERT, f'{insert_index} +{len(str_index)}c')
+		return True
+
+	def items_selected(self, indexes: list[int]) -> bool:
+		return True

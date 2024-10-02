@@ -71,7 +71,7 @@ class CommandCodeTooltip(CodeTooltip):
 		cmd_defs = CodeCommands.all_basic_commands + CodeCommands.all_header_commands
 		for cmd_def in cmd_defs:
 			if cmd_def.name == cmd_name:
-				return fit('    ', cmd_def.full_help_text())
+				return fit('', cmd_def.full_help_text())
 		return None
 
 class TypeCodeTooltip(CodeTooltip):
@@ -114,5 +114,5 @@ class DirectiveTooltip(CodeTooltip):
 		directive_defs = CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives
 		for directive_def in directive_defs:
 			if directive_def.name == directive_name:
-				return fit('    ', directive_def.full_help_text())
+				return fit('', directive_def.full_help_text())
 		return None

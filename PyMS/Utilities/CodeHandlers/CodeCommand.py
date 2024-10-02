@@ -83,7 +83,7 @@ class CodeCommandDefinition(object):
 				params_help += f'\n{param_type.name}: {param_type.help_text}'
 			if type_counts[param_type.name] > 1:
 				param_name += f'({param_counts[param_name]})'
-			description = description.replace(f'{{{n}}}', f'`{param_name}`')
+			description = description.replace(f'{{{n + 1}}}', f'`{param_name}`')
 			if n:
 				command += ', '
 			command += param_name

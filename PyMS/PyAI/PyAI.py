@@ -763,7 +763,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			parse_context.finalize()
 		return defs
 
-	def _get_formatters(self) -> Formatters:
+	def get_formatters(self) -> Formatters:
 		return Formatters(
 			block = self.config_.code.decomp_format.block.value.formatter,
 			command = self.config_.code.decomp_format.command.value.formatter,
@@ -772,7 +772,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def get_serialize_context(self, output: BuiltinIO[str]) -> AISerializeContext:
 		definitions = self._get_definitions_handler()
-		formatters = self._get_formatters()
+		formatters = self.get_formatters()
 		return AISerializeContext(output, definitions, formatters, self.data_context)
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:

@@ -7,6 +7,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.Config import WindowGeometry
 from ..Utilities.utils import binary
+from ..Utilities import ItemSelectDialog
 
 import re
 
@@ -15,7 +16,7 @@ class ScriptLocation:
 	bwscript = 2
 	either = aiscript | bwscript
 
-class FindScriptDialog(PyMSDialog):
+class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def __init__(self, parent: AnyWindow, config: WindowGeometry, delegate: MainDelegate):
 		self.config_ = config
 		self.delegate = delegate
@@ -58,7 +59,7 @@ class FindScriptDialog(PyMSDialog):
 		frame = Frame(self)
 		self.stringidentry = Entry(frame, textvariable=self.stringid)
 		self.stringidentry.pack(side=LEFT, fill=X, expand=1)
-		Button(frame, text='Browse...', width=10, command=self.browse).pack(side=RIGHT)
+		Button(frame, text='Browse...', width=10, command=self.browse, state=ACTIVE if self.delegate.get_data_context().stattxt_tbl is not None else DISABLED).pack(side=RIGHT)
 		frame.pack(fill=X)
 
 		Label(self, text='String', anchor=W).pack(fill=X)
@@ -106,14 +107,11 @@ class FindScriptDialog(PyMSDialog):
 			self.select['state'] = NORMAL
 
 	def browse(self) -> None:
-		from . import StringEditor
 		try:
-			s = int(self.stringid.get())
+			initial_selection = [int(self.stringid.get())]
 		except:
-			s = 0
-		s = StringEditor.StringEditor(self, 'Select a String', True, s)
-		if s.result is not None:
-			self.stringid.set(s.result)
+			initial_selection = []
+		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
 
 	def update_listbox(self) -> None:
 		self.listbox.delete(0, END)
@@ -180,3 +178,18 @@ class FindScriptDialog(PyMSDialog):
 	def dismiss(self) -> None:
 		self.config_.save_size(self)
 		PyMSDialog.dismiss(self)
+
+	# ItemSelectDialog.Delegate
+	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
+		strings = self.delegate.get_data_context().stattxt_strings()
+		if not strings:
+			return []
+		# return [ItemSelectDialog.DisplayItem(string, f'{index}: {string}') for index, string in enumerate(strings)]
+		return strings
+
+	def item_selected(self, index: int) -> bool:
+		self.stringid.set(str(index))
+		return True
+
+	def items_selected(self, indexes: list[int]) -> bool:
+		return True

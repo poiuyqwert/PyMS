@@ -24,6 +24,11 @@ class DataContext(object):
 			return None
 		return decompile_string(self.stattxt_tbl.strings[string_id][:-1])
 
+	def stattxt_strings(self) -> list[str] | None:
+		if not self.stattxt_tbl:
+			return None
+		return [decompile_string(string[:-1]) for string in self.stattxt_tbl.strings]
+
 	def stattxt_id(self, string: str) -> int | None:
 		if not self.stattxt_tbl:
 			return None
