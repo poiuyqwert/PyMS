@@ -5,6 +5,8 @@ from ... import Assets
 from ..EventPattern import *
 from ...utils import isstr
 
+import re
+
 class TreeNode:
 	def __init__(self, text, depth, entry):
 		self.text = text
