@@ -16,6 +16,7 @@ import tkinter.messagebox as MessageBox
 import tkinter.colorchooser as ColorChooser
 
 from tkinter.ttk import Style
+READONLY = 'readonly'
 
 try:
 	from PIL import Image as PILImage

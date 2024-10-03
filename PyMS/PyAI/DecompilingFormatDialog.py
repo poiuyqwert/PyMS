@@ -8,22 +8,23 @@ from ..Utilities.PyMSDialog import PyMSDialog
 class DecompilingFormatDialog(PyMSDialog):
 	def __init__(self, parent, config: PyAIConfig.Code.DecompFormat):
 		self.config_ = config
-		self.block_index = IntVar()
-		self.block_index.set(BlockFormat.all().index(config.block.value))
-		self.command_index = IntVar()
-		self.command_index.set(CommandFormat.all().index(config.command.value))
-		self.comment_index = IntVar()
-		self.comment_index.set(CommentFormat.all().index(config.comment.value))
 		PyMSDialog.__init__(self, parent, 'Decompiling Format', resizable=(False, False))
 
 	def widgetize(self) -> Widget | None:
 		frame = Frame(self)
 		Label(frame, text='Block:', anchor=E).grid(row=0, column=0, sticky=EW)
-		DropDown(frame, self.block_index, [format.label for format in BlockFormat.all()]).grid(row=0, column=1, sticky=EW)
+		self.block_combobox = Combobox(frame, state=READONLY, values=[format.label for format in BlockFormat.all()])
+		print(self.block_combobox.winfo_class())
+		self.block_combobox.current(BlockFormat.all().index(self.config_.block.value))
+		self.block_combobox.grid(row=0, column=1, sticky=EW)
 		Label(frame, text='Command:', anchor=E).grid(row=1, column=0, sticky=EW)
-		DropDown(frame, self.command_index, [format.label for format in CommandFormat.all()]).grid(row=1, column=1, sticky=EW)
+		self.command_combobox = Combobox(frame, state=READONLY, values=[format.label for format in CommandFormat.all()])
+		self.command_combobox.current(CommandFormat.all().index(self.config_.command.value))
+		self.command_combobox.grid(row=1, column=1, sticky=EW)
 		Label(frame, text='Comment:', anchor=E).grid(row=2, column=0, sticky=EW)
-		DropDown(frame, self.comment_index, [format.label for format in CommentFormat.all()]).grid(row=2, column=1, sticky=EW)
+		self.comment_combobox = Combobox(frame, state=READONLY, values=[format.label for format in CommentFormat.all()])
+		self.comment_combobox.current(CommentFormat.all().index(self.config_.comment.value))
+		self.comment_combobox.grid(row=2, column=1, sticky=EW)
 		frame.grid_columnconfigure(0, weight=0)
 		frame.grid_columnconfigure(1, weight=1)
 		frame.pack(pady=3, padx=3, fill=X)
@@ -39,7 +40,7 @@ class DecompilingFormatDialog(PyMSDialog):
 		return ok
 
 	def ok(self, event: Event | None = None) -> None:
-		self.config_.block.value = BlockFormat.all()[self.block_index.get()]
-		self.config_.command.value = CommandFormat.all()[self.command_index.get()]
-		self.config_.comment.value = CommentFormat.all()[self.comment_index.get()]
+		self.config_.block.value = BlockFormat.all()[self.block_combobox.current()]
+		self.config_.command.value = CommandFormat.all()[self.command_combobox.current()]
+		self.config_.comment.value = CommentFormat.all()[self.comment_combobox.current()]
 		PyMSDialog.ok(self)

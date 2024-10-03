@@ -318,6 +318,9 @@ class WidgetEvent:
 		Open = CustomEventPattern(Field('TreeviewOpen'))
 		Close = CustomEventPattern(Field('TreeviewClose'))
 
+	class Combobox:
+		Selected = CustomEventPattern(Field('ComboboxSelected'))
+
 class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4
 	Close = Ctrl.w if is_mac() else Key.Escape
