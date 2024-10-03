@@ -3,20 +3,19 @@ from __future__ import annotations
 
 import os, io, tempfile
 
-from typing import IO, Callable, Iterable, Iterator
-from typing_extensions import Buffer
+from typing import TextIO, BinaryIO, Callable, Iterable, Iterator
 
-AnyInputText = str | IO[str]
-AnyInputBytes = str | bytes | IO[bytes]
+AnyInputText = str | TextIO
+AnyInputBytes = str | bytes | BinaryIO
 
-AnyOutputText = str | IO[str]
-AnyOutputBytes = str | IO[bytes]
+AnyOutputText = str | TextIO
+AnyOutputBytes = str | BinaryIO
 
 class InputText:
 	def __init__(self, input: AnyInputText):
 		self.entered = 0
 		self.close = False
-		self.file: IO[str]
+		self.file: TextIO
 		if isinstance(input, str):
 			if os.path.exists(input):
 				self.file = open(input, 'r')
@@ -26,7 +25,7 @@ class InputText:
 		else:
 			self.file = input
 
-	def __enter__(self) -> IO[str]:
+	def __enter__(self) -> TextIO:
 		self.entered += 1
 		return self.file
 
@@ -40,7 +39,7 @@ class InputBytes:
 	def __init__(self, input: AnyInputBytes):
 		self.entered = 0
 		self.close = False
-		self.file: IO[bytes]
+		self.file: BinaryIO
 		if isinstance(input, str):
 			self.file = open(input, 'rb')
 			self.close = True
@@ -49,7 +48,7 @@ class InputBytes:
 		else:
 			self.file = input
 
-	def __enter__(self) -> IO[bytes]:
+	def __enter__(self) -> BinaryIO:
 		self.entered += 1
 		return self.file
 
@@ -59,7 +58,7 @@ class InputBytes:
 			self.file.close()
 			self.close = False
 
-class OutputTextFile(IO[str]):
+class OutputTextFile(TextIO):
 	def __init__(self, path: str) -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
@@ -125,7 +124,7 @@ class OutputTextFile(IO[str]):
 	def writelines(self, lines: Iterable[str]) -> None:
 		self.temp_file.writelines(lines)
 
-	def __enter__(self) -> IO[str]:
+	def __enter__(self) -> TextIO:
 		return self
 
 	def __exit__(self, type, value, traceback) -> None:
@@ -137,7 +136,7 @@ class OutputTextFile(IO[str]):
 	def __next__(self) -> str:
 		raise Exception(f'Attempting to next a {self.__class__.__name__}')
 
-class OutputBytesFile(IO[bytes]):
+class OutputBytesFile(BinaryIO):
 	def __init__(self, path: str) -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
@@ -197,13 +196,13 @@ class OutputBytesFile(IO[bytes]):
 	def writable(self) -> bool:
 		return self.temp_file.writable()
 
-	def write(self, b: bytes | Buffer) -> int:
+	def write(self, b: bytes | bytearray) -> int: # type: ignore[override]
 		return self.temp_file.write(b)
 
-	def writelines(self, lines: Iterable[bytes | Buffer]) -> None:
+	def writelines(self, lines: Iterable[bytes | bytearray]) -> None: # type: ignore[override]
 		self.temp_file.writelines(lines)
 
-	def __enter__(self) -> IO[bytes]:
+	def __enter__(self) -> BinaryIO:
 		return self
 
 	def __exit__(self, type, value, traceback) -> None:
@@ -218,14 +217,14 @@ class OutputBytesFile(IO[bytes]):
 class OutputText:
 	def __init__(self, output: AnyOutputText):
 		self.close = False
-		self.file: IO[str]
+		self.file: TextIO
 		if isinstance(output, str):
 			self.file = OutputTextFile(output)
 			self.close = True
 		else:
 			self.file = output
 
-	def __enter__(self) -> IO[str]:
+	def __enter__(self) -> TextIO:
 		return self.file
 
 	def __exit__(self, exc_type, exc_value, traceback):
@@ -236,14 +235,14 @@ class OutputText:
 class OutputBytes:
 	def __init__(self, output: AnyOutputBytes):
 		self.close = False
-		self.file: IO[bytes]
+		self.file: BinaryIO
 		if isinstance(output, str):
 			self.file = OutputBytesFile(output)
 			self.close = True
 		else:
 			self.file = output
 
-	def __enter__(self) -> IO[bytes]:
+	def __enter__(self) -> BinaryIO:
 		return self.file
 
 	def __exit__(self, exc_type, exc_value, traceback):
@@ -251,7 +250,7 @@ class OutputBytes:
 			self.file.close()
 			self.close = False
 
-def open_input_text(input: AnyInputText) -> IO[str]:
+def open_input_text(input: AnyInputText) -> TextIO:
 	if isinstance(input, str):
 		if os.path.exists(input):
 			return open(input, 'r')
@@ -260,7 +259,7 @@ def open_input_text(input: AnyInputText) -> IO[str]:
 	else:
 		return input
 
-def open_input_bytes(input: AnyInputBytes) -> IO[bytes]:
+def open_input_bytes(input: AnyInputBytes) -> BinaryIO:
 	if isinstance(input, str):
 		return open(input, 'rb')
 	elif isinstance(input, bytes):
@@ -268,24 +267,24 @@ def open_input_bytes(input: AnyInputBytes) -> IO[bytes]:
 	else:
 		return input
 
-def open_output_text(output: AnyOutputText) -> IO[str]:
+def open_output_text(output: AnyOutputText) -> TextIO:
 	if isinstance(output, str):
 		return OutputTextFile(output)
 	else:
 		return output
 
-def open_output_bytes(output: AnyOutputBytes) -> IO[bytes]:
+def open_output_bytes(output: AnyOutputBytes) -> BinaryIO:
 	if isinstance(output, str):
 		return OutputBytesFile(output)
 	else:
 		return output
 
-def output_to_text(func: Callable[[IO[str]], None]) -> str:
+def output_to_text(func: Callable[[TextIO], None]) -> str:
 	output = io.StringIO()
 	func(output)
 	return output.getvalue()
 
-def output_to_bytes(func: Callable[[IO[bytes]], None]) -> bytes:
+def output_to_bytes(func: Callable[[BinaryIO], None]) -> bytes:
 	output = io.BytesIO()
 	func(output)
 	return output.getvalue()
