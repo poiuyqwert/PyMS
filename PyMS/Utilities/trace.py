@@ -1,7 +1,9 @@
 
+from __future__ import annotations
+
 from . import Assets
 from .InternalErrorDialog import InternalErrorDialog
-from .UIKit import MainWindow, Toplevel
+from .UIKit import MainWindow, Toplevel, AnyWindow
 
 import sys, os
 
@@ -14,31 +16,32 @@ except:
 
 class Tracer(object):
 	class STDStream(object):
-		def __init__(self, tracer, stream): # type: (Tracer, TextIO) -> None
+		def __init__(self, tracer: Tracer, stream: TextIO) -> None:
 			self.tracer = tracer
 			self.stream = stream
 
-		def write(self, text): # (str) -> None
+		def write(self, text: str) -> None:
 			self.stream.write(text)
 			self.tracer.write(text, self)
 
-		def flush(self):
+		def flush(self) -> None:
 			pass
 
-	def __init__(self, program_name, main_window): # type: (str, MainWindow) -> None
+	def __init__(self, program_name: str, main_window: MainWindow) -> None:
 		self.stdout = Tracer.STDStream(self, sys.stdout)
 		self.stderr = Tracer.STDStream(self, sys.stderr)
 		self.program_name = program_name
 		self.main_window = main_window
-		self.window = None # type: InternalErrorDialog | None
+		self.window: InternalErrorDialog | None = None
 		self.creating_window = False
 		self.buffer = ''
+		self.flush_after_id: str | None = None
 		try:
 			self.file = open(Assets.log_file_path('%s.txt' % program_name),'w')
 		except OSError:
 			pass
 
-	def _find_presenter(self): # type: () -> (MainWindow | Toplevel)
+	def _find_presenter(self) -> AnyWindow:
 		presenter = self.main_window
 		children = presenter.winfo_children()
 		while len(children) and isinstance(children[-1], Toplevel):
@@ -46,12 +49,12 @@ class Tracer(object):
 			children = presenter.winfo_children()
 		return presenter
 
-	def _present(self): # type: () -> None
+	def _present(self) -> None:
 		if self.creating_window:
 			return
 		if self.window is None:
 			self.creating_window = True
-			def present(): # type: () -> None
+			def present() -> None:
 				presenter = self._find_presenter()
 				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking:
 					self.main_window.after(1000, present)
@@ -64,10 +67,12 @@ class Tracer(object):
 			self.main_window.after(0, present)
 		self.flush()
 
-	def write(self, text, source=None): # type: (str, STDStream | None) -> None
-		if not self.file:
-			return
-		self.file.write(text)
+	def write(self, text: str, source: STDStream | None = None) -> None:
+		if self.file:
+			self.file.write(text)
+			if self.flush_after_id is not None:
+				self.main_window.after_cancel(self.flush_after_id)
+			self.flush_after_id = self.main_window.after(10, self.flush)
 		if self.window:
 			self.window.add_text(text)
 		else:
@@ -76,6 +81,9 @@ class Tracer(object):
 				self._present()
 
 	def flush(self) -> None:
+		if self.flush_after_id is not None:
+			self.main_window.after_cancel(self.flush_after_id)
+			self.flush_after_id = None
 		if not self.file:
 			return
 		self.file.flush()
@@ -85,7 +93,7 @@ class Tracer(object):
 		self.write(''.join(traceback.format_exception(*sys.exc_info())))
 
 _TRACER: Tracer | None = None
-def setup_trace(program_name, main_window):
+def setup_trace(program_name: str, main_window: MainWindow) -> None:
 	global _TRACER
 	if _TRACER is not None:
 		return
@@ -93,5 +101,5 @@ def setup_trace(program_name, main_window):
 	sys.stdout = _TRACER.stdout
 	sys.stderr = _TRACER.stderr
 
-def get_tracer(): # type: () -> (Tracer | None)
+def get_tracer() -> Tracer | None:
 	return _TRACER
