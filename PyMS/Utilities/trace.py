@@ -16,12 +16,16 @@ except:
 
 class Tracer(object):
 	class STDStream(object):
-		def __init__(self, tracer: Tracer, stream: TextIO) -> None:
+		def __init__(self, tracer: Tracer, stream: TextIO | None) -> None:
 			self.tracer = tracer
 			self.stream = stream
 
 		def write(self, text: str) -> None:
-			self.stream.write(text)
+			if self.stream:
+				try:
+					self.stream.write(text)
+				except:
+					pass
 			self.tracer.write(text, self)
 
 		def flush(self) -> None:
