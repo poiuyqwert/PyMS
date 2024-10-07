@@ -1,6 +1,5 @@
 
 from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
-from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *

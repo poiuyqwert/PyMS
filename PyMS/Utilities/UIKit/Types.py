@@ -5,9 +5,14 @@ from .Widgets import Toplevel as _Toplevel
 from typing import TypeAlias as _TypeAlias
 from typing import Literal as _Literal
 
-# from tkinter.constants import *
+import tkinter as _tk
+from PIL import Image as _PILImage
+from PIL import ImageTk as _ImageTk
 
 AnyWindow: _TypeAlias = _MainWindow | _Toplevel
+
+AnyPhotoImage = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
+AnyBitmapImage = _tk.BitmapImage | _ImageTk.BitmapImage
 
 WidgetState = _Literal['normal', 'disabled']
 

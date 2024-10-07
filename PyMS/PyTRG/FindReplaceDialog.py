@@ -126,9 +126,10 @@ class FindReplaceDialog(PyMSDialog):
 			item: tuple[str, str] = self.text.tag_ranges('Selection') # type: ignore[assignment]
 			if item and r.match(self.text.get(*item)):
 				ins = r.sub(rep, self.text.get(*item))
-				self.text.delete(*item)
-				self.text.insert(item[0], ins)
-				self.text.update_range(item[0])
+				with self.text.undo_group():
+					self.text.delete(*item)
+					self.text.insert(item[0], ins)
+				self.text.mark_recolor_range(f'{item[0]} linestart', f'{item[0]} lineend')
 		if self.multiline.get():
 			m = r.search(self.text.get(INSERT, END))
 			if m:
@@ -219,9 +220,10 @@ class FindReplaceDialog(PyMSDialog):
 			return
 		text = r.subn(self.replacewith.get(), self.text.get('1.0', END))
 		if text[1]:
-			self.text.delete('1.0', END)
-			self.text.insert('1.0', text[0].rstrip('\n'))
-			self.text.update_range('1.0')
+			with self.text.undo_group():
+				self.text.delete('1.0', END)
+				self.text.insert('1.0', text[0].rstrip('\n'))
+			self.text.mark_recolor_range('1.0', END)
 		MessageBox.showinfo(parent=self, title='Replace Complete', message='%s matches replaced.' % text[1])
 
 	def updatecolor(self) -> None:

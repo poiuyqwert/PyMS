@@ -1,9 +1,7 @@
 
 from .Config import PyTRGConfig
 from .Delegates import MainDelegate
-from .TRGCodeText import TRGCodeText
 from .FindReplaceDialog import FindReplaceDialog
-from .CodeColors import CodeColors
 from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
@@ -25,6 +23,8 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
+from ..Utilities.EditedState import EditedState
+from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 from dataclasses import dataclass
 import re
@@ -47,7 +47,7 @@ class Completing:
 			self.option_index = 0
 		return self.options[self.option_index]
 
-class PyTRG(MainWindow, MainDelegate):
+class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
 		self.guifile = guifile
@@ -63,10 +63,12 @@ class PyTRG(MainWindow, MainDelegate):
 
 		self.trg: TRG.TRG | None = None
 		self.file: str | None = None
-		self.edited = False
 		self.tbl: TBL.TBL
 		self.aibin: AIBIN.AIBIN
 		self.findwindow: FindReplaceDialog | None = None
+		
+		self.edited_state = EditedState()
+		self.edited_state.callback += self.update_edited
 
 		self.update_title()
 
@@ -124,11 +126,12 @@ class PyTRG(MainWindow, MainDelegate):
 		self.autocompfuncs.sort()
 
 		# Text editor
-		self.text = TRGCodeText(self, self, self.autocomptext, self.edit, highlights=self.config_.highlights.data, state=DISABLED)
+		self.text = CodeText(self, self.edited_state, self)
 		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.icallback = self.statusupdate
-		self.text.scallback = self.statusupdate
-		self.text.acallback = self.autocomplete
+		self.text.bind(CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(WidgetEvent.Text.Selection(), self.statusupdate)
+
+		self.setup_syntax_highlighting()
 
 		#Statusbar
 		self.status = StringVar()
@@ -153,6 +156,171 @@ class PyTRG(MainWindow, MainDelegate):
 			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyTRG')
 
+	def keywords(self) -> list[str]:
+		keywords = set(('Trigger', 'BriefingTrigger', 'Conditions', 'Actions', 'String', 'UnitProperties'))
+		for condition in Conditions.definitions_registry:
+			for cparameter in condition.parameters:
+				if not isinstance(cparameter, Parameters.HasKeywords):
+					continue
+				for keyword in cparameter.keywords():
+					keywords.add(keyword)
+		for action in Actions.definitions_registry + BriefingActions.definitions_registry:
+			for aparameter in action.parameters:
+				if not isinstance(aparameter, Parameters.HasKeywords):
+					continue
+				for keyword in aparameter.keywords():
+					keywords.add(keyword)
+		return sorted(list(keywords))
+
+	def setup_syntax_highlighting(self) -> None:
+		condition_names = [condition.name for condition in Conditions.definitions_registry]
+		action_names = [action.name for action in Actions.definitions_registry]
+		keywords = self.keywords()
+		self.syntax_highlighting = SyntaxHighlighting(
+			syntax_components=(
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=self.config_.highlights.comment
+						),
+						pattern=r'#[^\n]*$'
+					),
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=self.config_.highlights.header
+						),
+						pattern=r'Trigger(?=\([^\n]+\):)|Conditions(?=(?: \w+)?:)|Actions(?=(?: \w+)?:)|Constant(?= \w+:)|String(?= \d+:)|Property(?= \d+:)'
+					),
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=self.config_.highlights.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Condition',
+							description='The style of condition names.',
+							highlight_style=self.config_.highlights.condition
+						),
+						pattern='|'.join(condition_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Action',
+							description='The style of action names.',
+							highlight_style=self.config_.highlights.action
+						),
+						pattern='|'.join(action_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Constant',
+							description='The style of constants.',
+							highlight_style=self.config_.highlights.constant
+						),
+						pattern=r'\{\w+\}'
+					),
+				)),
+				SyntaxComponent((
+					r'(?<=Constant )',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Constant Definition',
+							description='The style of constant definitions.',
+							highlight_style=self.config_.highlights.constant_definition
+						),
+						pattern=r'\w+'
+					),
+					r'(?=:)'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=self.config_.highlights.number
+						),
+						pattern=r'\d+|x(?:2|4|8|16|32)|0x[0-9a-fA-F]+'
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='TBL Format',
+							description='The style of TBL formatted characters, like null: <0>',
+							highlight_style=self.config_.highlights.tbl_format
+						),
+						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+					),
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) , = { }',
+							highlight_style=self.config_.highlights.operator
+						),
+						pattern=r'[():,\-]'
+					),
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=self.config_.highlights.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=self.config_.highlights.selection,
+					tag='sel'
+				),
+				HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=self.config_.highlights.error
+				),
+				HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=self.config_.highlights.warning
+				),
+			)
+		)
+		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
 	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
 		err = None
@@ -160,7 +328,7 @@ class PyTRG(MainWindow, MainDelegate):
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
 			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
-			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path))
+			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path), self.mpqhandler.load_file(self.config_.settings.files.bwscript.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -170,7 +338,7 @@ class PyTRG(MainWindow, MainDelegate):
 		return err
 
 	def check_saved(self) -> CheckSaved:
-		if not self.trg or not self.edited:
+		if not self.trg or not self.edited_state.is_edited:
 			return CheckSaved.saved
 		file = self.file
 		if not file:
@@ -192,15 +360,12 @@ class PyTRG(MainWindow, MainDelegate):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
 
-	def statusupdate(self) -> None:
+	def statusupdate(self, event: Event | None = None) -> None:
 		i = self.text.index(INSERT).split('.') + [0]
 		item = self.text.tag_ranges('Selection')
 		if item:
 			i[2] = len(self.text.get(*item))
 		self.codestatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
-
-	def edit(self) -> None:
-		self.mark_edited()
 
 	def update_title(self) -> None:
 		file_path = self.file
@@ -211,21 +376,18 @@ class PyTRG(MainWindow, MainDelegate):
 		else:
 			self.title('PyTRG %s (%s)' % (LONG_VERSION, file_path))
 
-	def mark_edited(self, edited: bool = True) -> None:
-		self.edited = edited
+	def update_edited(self, edited: bool = True) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.text.re = None
 		self.trg = TRG.TRG(self.tbl,self.aibin)
 		self.file = None
 		self.status.set('Editing new TRG.')
 		self.update_title()
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.mark_edited(False)
+		self.text.load('')
 
 	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -245,17 +407,13 @@ class PyTRG(MainWindow, MainDelegate):
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
-		self.text.re = None
 		self.trg = trg
 		self.update_title()
 		self.file = file
 		self.status.set('Load Successful!')
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.text.insert('1.0', data.rstrip('\n'))
-		self.text.edit_reset()
+		self.text.load(data.rstrip('\n'))
 		self.text.see('1.0')
-		self.mark_edited(False)
 
 	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -268,16 +426,12 @@ class PyTRG(MainWindow, MainDelegate):
 		except:
 			ErrorDialog(self, PyMSError('Import','Could not open file "%s"' % file))
 			return
-		self.text.re = None
 		self.trg = TRG.TRG()
 		self.file = file
 		self.update_title()
 		self.status.set('Import Successful!')
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.text.insert('1.0', text.rstrip('\n'))
-		self.text.edit_reset()
-		self.mark_edited(False)
+		self.text.load(text.rstrip('\n'))
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)
@@ -299,7 +453,7 @@ class PyTRG(MainWindow, MainDelegate):
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
 		self.status.set('Save Successful!')
-		self.mark_edited(False)
+		self.text.edit_modified(False)
 		self.file = file_path
 		self.update_title()
 		return CheckSaved.saved
@@ -365,8 +519,7 @@ class PyTRG(MainWindow, MainDelegate):
 		self.file = None
 		self.update_title()
 		self.status.set('Load or create a TRG.')
-		self.text.delete('1.0', END)
-		self.mark_edited(False)
+		self.text.load('')
 		self.action_states()
 
 	def find(self) -> None:
@@ -378,10 +531,9 @@ class PyTRG(MainWindow, MainDelegate):
 			self.findwindow.findentry.focus_set(highlight=True)
 
 	def colors(self) -> None:
-		c = CodeColors(self, self.text, self.config_.windows.colors)
-		if c.cont:
-			self.text.setup(c.cont)
-			self.highlights = c.cont
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		if dialog.updated:
+			self.text.update_highlight_styles()
 
 	def settings(self, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
@@ -402,7 +554,6 @@ class PyTRG(MainWindow, MainDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
-		self.config_.highlights.data = dict(self.text.highlights)
 		self.config_.save()
 		self.destroy()
 
@@ -410,7 +561,6 @@ class PyTRG(MainWindow, MainDelegate):
 		i = self.text.tag_ranges('Selection')
 		if i and '\n' in self.text.get(*i):
 			return False
-		self.text.taboverride = ' (,):'
 		def docomplete() -> None:
 			if not self.complete:
 				return
@@ -482,3 +632,16 @@ class PyTRG(MainWindow, MainDelegate):
 	def get_trg(self) -> TRG.TRG:
 		assert self.trg is not None
 		return self.trg
+
+	# CodeTextDelegate
+	def comment_symbols(self) -> list[str]:
+		return ['#']
+
+	def comment_symbol(self) -> str:
+		return '#'
+
+	def autocomplete_override_keys(self) -> str:
+		return ' (,):'
+
+	def get_autocomplete_options(self, line: str) -> list[str] | None:
+		return None

@@ -81,6 +81,7 @@ class UnitCodeType(CodeType.IntCodeType):
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			unit_name: str | None = None
+			token: Tokens.Token | None = None
 			if parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				unit_name = token.raw_value
@@ -308,6 +309,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			upgrade_name: str | None = None
+			token: Tokens.Token | None = None
 			if parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				upgrade_name = token.raw_value
@@ -343,6 +345,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			technology_name: str | None = None
+			token: Tokens.Token | None = None
 			if parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				technology_name = token.raw_value

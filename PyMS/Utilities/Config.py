@@ -1,12 +1,14 @@
 
 from __future__ import annotations
 
-from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL, Misc
+from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL, Misc, Font
+
 from . import Assets
 from .MPQHandler import MPQHandler
 
 from numbers import Number
 import os, json, re, enum
+from dataclasses import dataclass
 
 from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
 
@@ -761,41 +763,6 @@ class Enum(ConfigObject, Generic[E]):
 	def restore_state(self) -> None:
 		self.value = self._saved_state
 
-class Highlights(Dictionary[dict]):
-	def __init__(self, *, defaults: dict[str, dict] = {}) -> None:
-		super().__init__(value_type=dict, defaults=defaults)
-
-	def encode(self) -> JSONValue:
-		from .UIKit.Font import Font
-		def fix_fonts(data: dict):
-			for key,value in data.items():
-				if isinstance(value, dict):
-					fix_fonts(value)
-				elif isinstance(value, Font):
-					data[key] = (value.family(), value.size(), 'bold' if value.is_bold() else 'normal')
-		data = dict(self.data)
-		fix_fonts(data)
-		return dict(self.data)
-
-	def decode(self, data: JSONValue) -> None:
-		from .UIKit.Font import Font
-		if not isinstance(data, dict):
-			return
-		def fix_fonts(data: dict):
-			for key,value in data.items():
-				if key == 'font':
-					try:
-						data[key] = Font(family=value[0], size=value[1], bold=value[2] == 'bold')
-					except:
-						data[key] = None
-				elif isinstance(value, dict):
-					fix_fonts(value)
-		for key,value in data.items():
-			if not isinstance(key, str) or not isinstance(value, dict):
-				continue
-			fix_fonts(value)
-			self.data[key] = value
-
 class Color(ConfigObject):
 	RE_MATCH = re.compile(r'#?[a-zA-Z0-9]{6}')
 
@@ -822,3 +789,68 @@ class Color(ConfigObject):
 
 	def restore_state(self) -> None:
 		self.value = self._saved_state
+
+@dataclass
+class Style:
+	foreground: str | None = None
+	background: str | None = None
+	bold: bool = False
+
+	@property
+	def configuration(self) -> dict[str, Any]:
+		configuration: dict[str, Any] = {}
+		if self.foreground is not None:
+			configuration['foreground'] = self.foreground
+		if self.background is not None:
+			configuration['background'] = self.background
+		if self.bold:
+			configuration['font'] = Font.fixed().bolded()
+		return configuration
+
+	def copy(self) -> Style:
+		return Style(
+			foreground=self.foreground,
+			background=self.background,
+			bold=self.bold
+		)
+
+class HighlightStyle(ConfigObject):
+	def __init__(self, default: Style) -> None:
+		self._default = default
+		self.style = self._default.copy()
+		self._saved_state = self.style.copy()
+
+	def encode(self) -> JSONValue:
+		return {
+			'foreground': self.style.foreground,
+			'background': self.style.background,
+			'bold': self.style.bold
+		}
+
+	def decode(self, value: JSONValue) -> None:
+		from .UIKit.Font import Font
+		if not isinstance(value, dict):
+			return
+		foreground = value.get('foreground')
+		if not isinstance(foreground, str) or not Color.RE_MATCH.match(foreground):
+			foreground = None
+		background = value.get('background')
+		if not isinstance(background, str) or not Color.RE_MATCH.match(background):
+			background = None
+		bold = value.get('bold')
+		if not isinstance(bold, bool):
+			bold = False
+		self.style = Style(
+			foreground=foreground,
+			background=background,
+			bold=bold
+		)
+
+	def reset(self) -> None:
+		self.style = self._default.copy()
+
+	def store_state(self) -> None:
+		self._saved_state = self.style.copy()
+
+	def restore_state(self) -> None:
+		self.style = self._saved_state.copy()

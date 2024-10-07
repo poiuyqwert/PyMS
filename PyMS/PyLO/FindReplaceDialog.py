@@ -100,7 +100,7 @@ class FindReplaceDialog(PyMSDialog):
 			if s == DISABLED:
 				self.updown.set(1)
 		elif i == 3:
-			if self.delegate.get_text().tag_ranges('Selection'):
+			if self.delegate.get_text().tag_ranges('sel'):
 				self.selectcheck['state'] = NORMAL
 			else:
 				self.selectcheck['state'] = DISABLED
@@ -120,42 +120,44 @@ class FindReplaceDialog(PyMSDialog):
 				self.resettimer = self.after(1000, self.updatecolor)
 				self.findentry['bg'] = '#FFB4B4'
 				return
+			text = self.delegate.get_text()
 			if replace:
 				rep = self.replacewith.get()
 				if not rep in self.replace_history:
 					self.replace_history.append(rep)
-				item = tuple(str(i) for i in self.delegate.get_text().tag_ranges('Selection'))
-				if item and r.match(self.delegate.get_text().get(*item)):
-					ins = r.sub(rep, self.delegate.get_text().get(*item))
-					self.delegate.get_text().delete(*item)
-					self.delegate.get_text().insert(item[0], ins)
-					self.delegate.get_text().update_range(item[0])
+				item = tuple(str(i) for i in text.tag_ranges('sel'))
+				if item and r.match(text.get(*item)):
+					ins = r.sub(rep, text.get(*item))
+					with text.undo_group():
+						text.delete(*item)
+						text.insert(item[0], ins)
+					text.mark_recolor_range(f'{item[0]} linestart', f'{item[0]} lineend')
 			if self.multiline.get():
-				m = r.search(self.delegate.get_text().get(INSERT, END))
+				m = r.search(text.get(INSERT, END))
 				if m:
-					self.delegate.get_text().tag_remove('Selection', '1.0', END)
+					text.tag_remove('sel', '1.0', END)
 					s,e = '%s +%sc' % (INSERT, m.start(0)),'%s +%sc' % (INSERT,m.end(0))
-					self.delegate.get_text().tag_add('Selection', s, e)
-					self.delegate.get_text().mark_set(INSERT, e)
-					self.delegate.get_text().see(s)
+					text.tag_add('sel', s, e)
+					text.mark_set(INSERT, e)
+					text.see(s)
 					self.check(3)
 				else:
 					MessageBox.askquestion(parent=self.parent if event else self, title='Find', message="Can't find text.", type=MessageBox.OK)
 			else:
 				u = self.updown.get()
-				s,lse,rlse,e = ['-','+'][u],['lineend','linestart'][u],['linestart','lineend'][u],[self.delegate.get_text().index('1.0 lineend'),self.delegate.get_text().index(END)][u]
-				i = self.delegate.get_text().index(INSERT)
+				s,lse,rlse,e = ['-','+'][u],['lineend','linestart'][u],['linestart','lineend'][u],[text.index('1.0 lineend'),text.index(END)][u]
+				i = text.index(INSERT)
 				if i == e:
 					return
-				if i == self.delegate.get_text().index('%s %s' % (INSERT, rlse)):
-					i = self.delegate.get_text().index('%s %s1lines %s' % (INSERT, s, lse))
+				if i == text.index('%s %s' % (INSERT, rlse)):
+					i = text.index('%s %s1lines %s' % (INSERT, s, lse))
 				n = -1
 				while not u or i != e:
 					if u:
-						m = r.search(self.delegate.get_text().get(i, '%s %s' % (i, rlse)))
+						m = r.search(text.get(i, '%s %s' % (i, rlse)))
 					else:
 						m = None
-						a = r.finditer(self.delegate.get_text().get('%s %s' % (i, rlse), i))
+						a = r.finditer(text.get('%s %s' % (i, rlse), i))
 						c = 0
 						for xb,fb in enumerate(a):
 							if xb == n or n == -1:
@@ -163,21 +165,21 @@ class FindReplaceDialog(PyMSDialog):
 								c = xb
 						n = c - 1
 					if m:
-						self.delegate.get_text().tag_remove('Selection', '1.0', END)
+						text.tag_remove('sel', '1.0', END)
 						if u:
 							s,e = '%s +%sc' % (i,m.start(0)),'%s +%sc' % (i,m.end(0))
-							self.delegate.get_text().mark_set(INSERT, e)
+							text.mark_set(INSERT, e)
 						else:
 							s,e = '%s linestart +%sc' % (i,m.start(0)),'%s linestart +%sc' % (i,m.end(0))
-							self.delegate.get_text().mark_set(INSERT, s)
-						self.delegate.get_text().tag_add('Selection', s, e)
-						self.delegate.get_text().see(s)
+							text.mark_set(INSERT, s)
+						text.tag_add('sel', s, e)
+						text.see(s)
 						self.check(3)
 						break
-					if (not u and n == -1 and self.delegate.get_text().index('%s lineend' % i) == e) or i == e:
+					if (not u and n == -1 and text.index('%s lineend' % i) == e) or i == e:
 						MessageBox.askquestion(parent=self.parent if event else self, title='Find', message="Can't find text.", type=MessageBox.OK)
 						break
-					i = self.delegate.get_text().index('%s %s1lines %s' % (i, s, lse))
+					i = text.index('%s %s1lines %s' % (i, s, lse))
 				else:
 					MessageBox.askquestion(parent=self.parent if event else self, title='Find', message="Can't find text.", type=MessageBox.OK)
 
@@ -209,11 +211,13 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = self.after(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
-		text = r.subn(self.replacewith.get(), self.delegate.get_text().get('1.0', END))
+		text_widget = self.delegate.get_text()
+		text = r.subn(self.replacewith.get(), text_widget.get('1.0', END))
 		if text[1]:
-			self.delegate.get_text().delete('1.0', END)
-			self.delegate.get_text().insert('1.0', text[0].rstrip('\n'))
-			self.delegate.get_text().update_range('1.0')
+			with text_widget.undo_group():
+				text_widget.delete('1.0', END)
+				text_widget.insert('1.0', text[0].rstrip('\n'))
+			text_widget.mark_recolor_range('1.0', END)
 		MessageBox.askquestion(parent=self, title='Replace Complete', message='%s matches replaced.' % text[1], type=MessageBox.OK)
 
 	def updatecolor(self) -> None:

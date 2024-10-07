@@ -18,3 +18,7 @@ class FilesSettingsTab(SettingsTab):
 		aiscript = FileSettingView(self, edited_state, 'aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", config.settings.files.aiscript, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
 		aiscript.pack(side=TOP, fill=X)
 		self.register_settings_view(aiscript)
+
+		bwscript = FileSettingView(self, edited_state, 'bwscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", config.settings.files.bwscript, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
+		bwscript.pack(side=TOP, fill=X)
+		self.register_settings_view(bwscript)

@@ -71,7 +71,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
-		self.highlights = self.config_.code.highlights.data
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
 
@@ -91,12 +90,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file_menu.add_command('Open', self.open, Ctrl.o, bind_shortcut=False)
 		file_menu.add_command('Open Default Scripts', self.open_default, Ctrl.d, bind_shortcut=False)
 		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
-		file_menu.add_command('Save', self.save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
-		file_menu.add_command('Save As...', self.saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
+		def do_save():
+			self.save()
+		file_menu.add_command('Save', do_save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		def do_saveas():
+			self.saveas()
+		file_menu.add_command('Save As...', do_saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
 		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
 		file_menu.add_command('Close', self.close, Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
 		file_menu.add_separator()
-		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register, enabled=WIN_REG_AVAILABLE, underline='t')
+		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register_registry, enabled=WIN_REG_AVAILABLE, underline='t')
 		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, Shortcut.Exit, underline='e')
 
@@ -526,7 +529,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
-		self.config_.code.highlights.data = self.highlights
 		# self.config_.reference.value = self.reference.get()
 		self.config_.save()
 		self.destroy()
@@ -640,7 +642,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ExternalDefDialog(self, self.config_)
 
 	def decompiling_format(self) -> None:
-		DecompilingFormatDialog(self, self.config_.code.decomp_format)
+			DecompilingFormatDialog(self, self.config_.code.decomp_format)
 
 	# def managetbl(self) -> None:
 	# 	headers = self.get_selected_scripts()
@@ -723,12 +725,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				self.listbox.select_set(index)
 
 	# Main Delegate
-	def get_highlights(self) -> Any:
-		return self.highlights
-
-	def set_highlights(self, highlights: Any) -> None:
-		self.highlights = highlights
-
 	def get_data_context(self) -> DataContext:
 		return self.data_context
 

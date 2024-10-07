@@ -7,7 +7,9 @@ from .Extensions import Extensions
 
 import tkinter as _Tk
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
+if TYPE_CHECKING:
+	from ..Types import AnyPhotoImage, AnyBitmapImage
 
 CoordinateAdjuster = Callable[[int, int], tuple[int, int]]
 
@@ -87,12 +89,12 @@ class Canvas(_Tk.Canvas, Extensions):
 		x2,y2 = self.coordinate_adjust(x2,y2)
 		return Canvas.Item(self, _Tk.Canvas.create_arc(self, x1,y1, x2,y2, *args, **kwargs))
 
-	def create_bitmap(self, x: int, y: int, bitmap: _Tk.BitmapImage | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
+	def create_bitmap(self, x: int, y: int, bitmap: AnyBitmapImage | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['bitmap'] = bitmap
 		return Canvas.Item(self, _Tk.Canvas.create_bitmap(self, x,y, *args, **kwargs))
 
-	def create_image(self, x: int, y: int, image: _Tk.Image | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
+	def create_image(self, x: int, y: int, image: AnyPhotoImage | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['image'] = image
 		return Canvas.Item(self, _Tk.Canvas.create_image(self, x,y, *args, **kwargs))

@@ -44,6 +44,7 @@ class PyTRGConfig(Config.Config):
 			def __init__(self) -> None:
 				self.stat_txt = Config.File(default='MPQ:rez\\stat_txt.tbl', name='TBL', filetypes=[FileType.tbl()])
 				self.aiscript = Config.File(default='MPQ:scripts\\aiscript.bin', name='aiscript.bin', filetypes=[FileType.bin_ai()])
+				self.bwscript = Config.File(default='MPQ:scripts\\bwscript.bin', name='bwscript.bin', filetypes=[FileType.bin_ai()])
 				super().__init__()
 		
 		class LastPath(Config.Group):
@@ -58,11 +59,29 @@ class PyTRGConfig(Config.Config):
 			self.last_path = PyTRGConfig.Settings.LastPath()
 			super().__init__()
 
+	class Highlights(Config.Group):
+		def __init__(self) -> None:
+			self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
+			self.header = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
+			self.keyword = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+			self.condition = Config.HighlightStyle(default=Config.Style(foreground='#000000', background='#EBEBEB'))
+			self.action = Config.HighlightStyle(default=Config.Style(foreground='#000000', background='#E1E1E1'))
+			self.constant = Config.HighlightStyle(default=Config.Style(foreground='#FF963C'))
+			self.constant_definition = Config.HighlightStyle(default=Config.Style(foreground='#FF963C'))
+			self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
+			self.tbl_format = Config.HighlightStyle(default=Config.Style(background='#E6E6E6'))
+			self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+			self.newline = Config.HighlightStyle(default=Config.Style())
+			self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
+			self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))
+			self.warning = Config.HighlightStyle(default=Config.Style(background='#FFC8C8'))
+			super().__init__()
+
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyTRGConfig.Windows()
 		self.last_path = PyTRGConfig.LastPath()
-		self.highlights = Config.Highlights()
+		self.highlights = PyTRGConfig.Highlights()
 		self.mpqs = Config.List(value_type=str)
 		self.settings = PyTRGConfig.Settings()
 		super().__init__()

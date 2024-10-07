@@ -165,6 +165,12 @@ class Key(Events):
 	Backspace = EventPattern(Keysym('BackSpace'))
 	Escape = EventPattern(Keysym('Escape'))
 	Tab = EventPattern(Keysym('Tab'))
+	Slash = EventPattern(Keysym('slash', '/'))
+	Backslash = EventPattern(Keysym('backslash', '\\'))
+	BraceLeft = EventPattern(Keysym('braceleft', '{'))
+	BraceRight = EventPattern(Keysym('braceright', '}'))
+	BracketLeft = EventPattern(Keysym('bracketleft', '['))
+	BracketRight = EventPattern(Keysym('bracketright', ']'))
 
 	F1 = EventPattern(Keysym('F1'))
 	F2 = EventPattern(Keysym('F2'))
@@ -312,6 +318,11 @@ class WidgetEvent:
 
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))
+	
+	class Text:
+		Selection = CustomEventPattern(Field('Selection'))
+		UndoStack = CustomEventPattern(Field('UndoStack'))
+		Modified = CustomEventPattern(Field('Modified'))
 	
 	class Treeview:
 		Select = CustomEventPattern(Field('TreeviewSelect'))

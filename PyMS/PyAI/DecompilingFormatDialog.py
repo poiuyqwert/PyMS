@@ -14,7 +14,6 @@ class DecompilingFormatDialog(PyMSDialog):
 		frame = Frame(self)
 		Label(frame, text='Block:', anchor=E).grid(row=0, column=0, sticky=EW)
 		self.block_combobox = Combobox(frame, state=READONLY, values=[format.label for format in BlockFormat.all()])
-		print(self.block_combobox.winfo_class())
 		self.block_combobox.current(BlockFormat.all().index(self.config_.block.value))
 		self.block_combobox.grid(row=0, column=1, sticky=EW)
 		Label(frame, text='Command:', anchor=E).grid(row=1, column=0, sticky=EW)

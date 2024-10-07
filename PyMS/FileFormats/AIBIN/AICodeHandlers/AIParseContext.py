@@ -21,7 +21,7 @@ class AIParseContext(ParseContext):
 		ParseContext.__init__(self, lexer, definitions)
 		self.data_context = data_context
 		self.spellcasters: list[int] = []
-		self.scripts: OrderedDict[str, tuple[AIScript, int]] = {}
+		self.scripts: OrderedDict[str, tuple[AIScript, int]] = OrderedDict()
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		if directive.definition == CodeDirectives.Spellcaster:

@@ -1,6 +1,6 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from .CodeText import CodeText, Highlights
+from .CodeText import CodeText, CodeTextDelegate
 from .CollapseView import CollapseView
 from .DropDown import DropDown
 from .EntryDropDown import EntryDropDown

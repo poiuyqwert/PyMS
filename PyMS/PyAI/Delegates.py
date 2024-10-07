@@ -13,13 +13,6 @@ class MainDelegate(Protocol):
 	def get_ai_bin(self) -> AIBIN.AIBIN:
 		...
 
-	# TODO: Proper typing
-	def get_highlights(self) -> dict[str, dict]:
-		...
-
-	def set_highlights(self, highlights: dict[str, dict]) -> None:
-		...
-
 	def get_data_context(self) -> DataContext:
 		...
 

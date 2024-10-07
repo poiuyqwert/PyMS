@@ -1,10 +1,8 @@
 
 from .Config import PyLOConfig
 from .Delegates import FindDelegate
-from .LOCodeText import LOCodeText
 from .FindReplaceDialog import FindReplaceDialog
-from .CodeColors import CodeColors
-from .Constants import RE_COORDINATES, RE_DRAG_COORDS
+from .Constants import SIGNED_INT, RE_COORDINATES, RE_DRAG_COORDS
 from .SettingsDialog import SettingsDialog
 
 from ..FileFormats.LO import LO
@@ -26,6 +24,7 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.FileSettingView import FileSettingView
 from ..Utilities.EditedState import EditedState
+from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 import io
 from enum import Enum
@@ -39,7 +38,7 @@ class MouseEvent(Enum):
 	drag = 1
 	release = 2
 
-class PyLO(MainWindow, FindDelegate):
+class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
 		self.guifile = guifile
@@ -57,7 +56,6 @@ class PyLO(MainWindow, FindDelegate):
 
 		self.lo: LO | None = None
 		self.file: str | None = None
-		self.edited = False
 		self.findwindow: FindReplaceDialog | None = None
 		self.basegrp: CacheGRP | None = None
 		self.basegrp_cache: dict[int, Image | None] = {}
@@ -71,6 +69,9 @@ class PyLO(MainWindow, FindDelegate):
 		self.overlayframe: int | None = None
 		self.dragoffset: tuple[int, int] | None = None
 		self.pauseupdate = False
+
+		self.edited_state = EditedState()
+		self.edited_state.callback += self.update_edited
 
 		self.update_title()
 
@@ -107,10 +108,13 @@ class PyLO(MainWindow, FindDelegate):
 
 		m = Frame(self)
 		# Text editor
-		self.text = LOCodeText(m, self.edit, highlights=self.config_.highlights.data, state=DISABLED)
+		self.text = CodeText(m, self.edited_state, self)
 		self.text.grid(sticky=NSEW)
-		self.text.icallback = self.statusupdate
-		self.text.scallback = self.statusupdate
+		self.text.bind(CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(WidgetEvent.Text.Selection(), self.statusupdate)
+		self.text.bind(CodeText.WidgetEvent.TextChanged(), lambda _: self.previewupdate())
+
+		self.setup_syntax_highlighting()
 	
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
@@ -178,6 +182,84 @@ class PyLO(MainWindow, FindDelegate):
 
 		self.config_.windows.main.load_size(self)
 
+	def setup_syntax_highlighting(self) -> None:
+		self.syntax_highlighting = SyntaxHighlighting(
+			syntax_components=(
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=self.config_.highlights.comment
+						),
+						pattern=r'#[^\n]*$'
+					),
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=self.config_.highlights.header
+						),
+						pattern=r'Frame:'
+					),
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=self.config_.highlights.number
+						),
+						pattern=SIGNED_INT
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) : ,',
+							highlight_style=self.config_.highlights.operator
+						),
+						pattern=r'[():,]'
+					),
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=self.config_.highlights.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=self.config_.highlights.selection,
+					tag='sel'
+				),
+				HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=self.config_.highlights.error
+				),
+				HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=self.config_.highlights.warning
+				),
+			)
+		)
+		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
 	def initialize(self) -> None:
 		self.update_grp_field_states()
 		self.updateusebase()
@@ -224,8 +306,9 @@ class PyLO(MainWindow, FindDelegate):
 			m = RE_DRAG_COORDS.match(self.text.get(s,'%s lineend' % INSERT))
 			if m:
 				self.pauseupdate = True
-				self.text.delete(s,'%s lineend' % INSERT)
-				self.text.insert(s,'%s%s%s%s%s' % (m.group(1),self.previewing_offset[0],m.group(2),self.previewing_offset[1],m.group(3)))
+				with self.text.undo_group():
+					self.text.delete(s,'%s lineend' % INSERT)
+					self.text.insert(s,'%s%s%s%s%s' % (m.group(1),self.previewing_offset[0],m.group(2),self.previewing_offset[1],m.group(3)))
 				self.pauseupdate = False
 			self.dragoffset = None
 			self.text.text.edit_separator()
@@ -275,7 +358,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.framesupdate()
 
 	def check_saved(self) -> CheckSaved:
-		if not self.lo or not self.edited:
+		if not self.lo or not self.edited_state.is_edited:
 			return CheckSaved.saved
 		file = self.file
 		if not file:
@@ -297,10 +380,10 @@ class PyLO(MainWindow, FindDelegate):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
 
-	def statusupdate(self) -> None:
+	def statusupdate(self, event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
-		item = self.text.tag_ranges('Selection')
+		item = self.text.tag_ranges('sel')
 		if item:
 			selected = len(self.text.get(*item))
 		self.codestatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
@@ -387,10 +470,6 @@ class PyLO(MainWindow, FindDelegate):
 			self.previewing_overlaygrp_frame = self.overlayframe
 			self.previewing_offset = offset
 
-	def edit(self) -> None:
-		self.mark_edited()
-		self.previewupdate()
-
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
@@ -400,9 +479,9 @@ class PyLO(MainWindow, FindDelegate):
 		else:
 			self.title('PyLO %s (%s)' % (LONG_VERSION, file_path))
 
-	def mark_edited(self, edited: bool = True) -> None:
-		self.edited = edited
+	def update_edited(self, edited: bool = True) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.previewupdate()
 
 	def new(self):
 		if self.check_saved() == CheckSaved.cancelled:
@@ -417,10 +496,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.updatescroll()
 		self.framesupdate()
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.text.insert('1.0', 'Frame:\n\t(0, 0)')
-		self.text.edit_reset()
-		self.mark_edited(False)
+		self.text.load('Frame:\n\t(0, 0)')
 
 	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -445,12 +521,9 @@ class PyLO(MainWindow, FindDelegate):
 		self.previewupdate()
 		self.updatescroll()
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.text.insert('1.0', d.getvalue().rstrip('\n'))
-		self.text.edit_reset()
+		self.text.load(d.getvalue().rstrip('\n'))
 		self.text.see('1.0')
 		self.text.mark_set('insert', '2.0 lineend')
-		self.mark_edited(False)
 
 	def iimport(self):
 		if self.check_saved() == CheckSaved.cancelled:
@@ -472,10 +545,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.updatescroll()
 		self.framesupdate()
 		self.action_states()
-		self.text.delete('1.0', END)
-		self.text.insert('1.0', text.rstrip('\n'))
-		self.text.edit_reset()
-		self.mark_edited(False)
+		self.text.load(text.rstrip('\n'))
 
 	def save(self) -> CheckSaved:
 		return self.saveas(file_path=self.file)
@@ -499,7 +569,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.file = file_path
 		self.update_title()
 		self.status.set('Save Successful!')
-		self.mark_edited(False)
+		self.text.edit_modified(False)
 		return CheckSaved.saved
 
 	def export(self) -> None:
@@ -543,8 +613,7 @@ class PyLO(MainWindow, FindDelegate):
 		self.updatescroll()
 		self.framesupdate()
 		self.grp_cache = [{},{}]
-		self.text.delete('1.0', END)
-		self.mark_edited(False)
+		self.text.load('')
 		self.action_states()
 
 	def find(self) -> None:
@@ -556,9 +625,9 @@ class PyLO(MainWindow, FindDelegate):
 		self.findwindow.focus_set()
 
 	def colors(self) -> None:
-		c = CodeColors(self, self.text.tags)
-		if c.cont:
-			self.text.setup(c.cont)
+		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
+		if dialog.updated:
+			self.setup_syntax_highlighting()
 
 	def settings(self) -> None:
 		SettingsDialog(self, self.config_, self.mpq_handler)
@@ -581,7 +650,6 @@ class PyLO(MainWindow, FindDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
-		self.config_.highlights.data = self.text.highlights
 		self.base_grp_field.save()
 		self.overlay_grp_field.save()
 		self.config_.preview.use_base_grp.value = self.usebasegrp.get()
@@ -597,3 +665,16 @@ class PyLO(MainWindow, FindDelegate):
 	# FindDelegate
 	def get_text(self) -> CodeText:
 		return self.text
+
+	# CodeTextDelegate
+	def comment_symbols(self) -> list[str]:
+		return ['#']
+
+	def comment_symbol(self) -> str:
+		return '#'
+
+	def autocomplete_override_keys(self) -> str:
+		return ':'
+
+	def get_autocomplete_options(self, line: str) -> list[str] | None:
+		return ['Frame']

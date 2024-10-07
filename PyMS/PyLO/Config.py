@@ -65,11 +65,23 @@ class PyLOConfig(Config.Config):
 			self.use_overlay_grp = Config.Boolean(default=True)
 			super().__init__()
 
+	class Highlights(Config.Group):
+		def __init__(self) -> None:
+			self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
+			self.header = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
+			self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
+			self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+			self.newline = Config.HighlightStyle(default=Config.Style())
+			self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
+			self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))
+			self.warning = Config.HighlightStyle(default=Config.Style(background='#FFC8C8'))
+			super().__init__()
+
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyLOConfig.Windows()
 		self.last_path = PyLOConfig.LastPath()
-		self.highlights = Config.Highlights()
+		self.highlights = PyLOConfig.Highlights()
 		self.mpqs = Config.List(value_type=str)
 		self.settings = PyLOConfig.Settings()
 		self.preview = PyLOConfig.Preview()

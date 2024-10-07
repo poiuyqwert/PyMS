@@ -18,6 +18,9 @@ class Extensions(_Tk.Misc):
 				pass
 		return None
 
+	def clipboard_not_empty(self) -> bool:
+		return not not self.clipboard_get()
+
 	def clipboard_set(self, text):
 		self.clipboard_clear()
 		self.clipboard_append(text)

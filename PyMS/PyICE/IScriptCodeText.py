@@ -48,9 +48,9 @@ class IScriptCodeText(CodeText):
 				elif m.group(3):
 					self.tk.call(self.text.orig, 'insert', head, '#')
 				head = self.index('%s +1line' % head)
-			self.update_range(self.index('%s linestart' % item[0]), self.index('%s lineend' % item[1]))
+			self.mark_recolor_range(self.index('%s linestart' % item[0]), self.index('%s lineend' % item[1]))
 
-	def setupparser(self):
+	def setup_syntax(self):
 		comment = '(?P<Comment>#(?!#[gG][rR][pP]:|#[nN][aA][mM][eE]:)[^\\n]*$)'
 		block = '^[ \\t]*(?P<Block>[^\x00:(),\\n]+)(?=:)'
 		opcodes = []

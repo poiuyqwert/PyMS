@@ -4,7 +4,9 @@ from .Extensions import Extensions
 
 import tkinter as _Tk
 
-Widget = _Tk.Widget # For type hinting
+# For type hinting
+Widget = _Tk.Widget
+Misc = _Tk.Misc
 
 class Tk(_Tk.Tk, Extensions):
 	def __init__(self, *args, **kwargs):

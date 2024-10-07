@@ -3,7 +3,7 @@ from .Sort import SortBy
 from .DecompilingFormat import BlockFormat, CommandFormat, CommentFormat
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType
+from ..Utilities.UIKit import Size, FileType, Font
 from ..Utilities import Assets
 
 def _migrate_1_to_2(data: dict) -> None:
@@ -19,7 +19,6 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('redohistory',), ('max_redos',)),
 		(('windows', 'external_def'), ('windows', 'extdefs')),
 		(('stat_txt',), ('settings', 'files', 'stat_txt')),
-		(('highlights',), ('code', 'highlights')),
 	))
 
 class PyAIConfig(Config.Config):
@@ -103,9 +102,28 @@ class PyAIConfig(Config.Config):
 				self.comment = Config.Enum(enum_type=CommentFormat, default=CommentFormat.hash)
 				super().__init__()
 
+		class Highlights(Config.Group):
+			def __init__(self) -> None:
+				self.comment = Config.HighlightStyle(default=Config.Style(foreground='#008000'))
+				self.header = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.ai_id = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
+				self.block = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF'))
+				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
+				self.type = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.directive = Config.HighlightStyle(default=Config.Style(foreground='#FF6600'))
+				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
+				self.tbl_format = Config.HighlightStyle(default=Config.Style(background='#E6E6E6'))
+				self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.keyword = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.newline = Config.HighlightStyle(default=Config.Style())
+				self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
+				self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))
+				self.warning = Config.HighlightStyle(default=Config.Style(background='#FFC8C8'))
+				super().__init__()
+
 		def __init__(self) -> None:
 			self.decomp_format = PyAIConfig.Code.DecompFormat()
-			self.highlights = Config.Highlights()
+			self.highlights = PyAIConfig.Code.Highlights()
 			super().__init__()
 
 	def __init__(self) -> None:
