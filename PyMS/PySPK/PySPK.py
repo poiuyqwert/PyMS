@@ -407,8 +407,8 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		visible = (self.visible.get() & (1 << layer))
 		if star in self.item_map:
 			item = self.item_map[star]
-			self.skyCanvas.coords(item, star.x,star.y)
-			self.skyCanvas.itemconfig(item, state=(NORMAL if visible else HIDDEN))
+			item.coords(star.x,star.y)
+			item.config(state=(NORMAL if visible else HIDDEN))
 		else:
 			image = self.get_image(star.image)
 			item = self.skyCanvas.create_image(star.x,star.y, image=image, anchor=NW, tags='layer%d' % layer, state=(NORMAL if visible else HIDDEN))
@@ -429,7 +429,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def update_selection(self) -> None:
 		while len(self.selected_stars) < len(self.item_selection_boxs):
-			self.skyCanvas.delete(self.item_selection_boxs[-1])
+			self.item_selection_boxs[-1].delete()
 			del self.item_selection_boxs[-1]
 		for i,star in enumerate(self.selected_stars):
 			x1,y1,x2,y2 = star.x-1,star.y-1, star.x+star.image.width,star.y+star.image.height
@@ -437,7 +437,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				item = self.skyCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#F9515B', tags='selection')
 				self.item_selection_boxs.append(item)
 			else:
-				self.skyCanvas.coords(self.item_selection_boxs[i], x1,y1, x2,y2)
+				self.item_selection_boxs[i].coords(x1,y1, x2,y2)
 		self.edit_status.set('%d stars selected' % len(self.selected_stars))
 		self.stars_tab.update_selection()
 
@@ -463,7 +463,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not len(self.selected_stars) or not MessageBox.askyesno(parent=self, title='Delete Stars', message="Are you sure you want to delete the stars?"):
 			return
 		for star in self.selected_stars:
-			self.skyCanvas.delete(self.item_map[star])
+			self.item_map[star].delete()
 			del self.item_map[star]
 			for layer in self.spk.layers:
 				try:
@@ -482,8 +482,8 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			if self.item_selecting_box is None:
 				self.item_selecting_box = self.skyCanvas.create_rectangle(event.x,event.y, event.x,event.y, outline='#FF0000')
 			else:
-				self.skyCanvas.itemconfig(self.item_selecting_box, state=NORMAL)
-			self.skyCanvas.coords(self.item_selecting_box, self.selecting_start[0],self.selecting_start[1], event.x,event.y)
+				self.item_selecting_box.config(state=NORMAL)
+			self.item_selecting_box.coords(self.selecting_start[0],self.selecting_start[1], event.x,event.y)
 		elif mouse_event == MouseEvent.up:
 			x,y = event.x,event.y
 			if self.selecting_start is not None:
@@ -496,7 +496,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			for item in items:
 				if item in self.star_map:
 					layer = -1
-					for tag in self.skyCanvas.gettags(item):
+					for tag in item.get_tags():
 						if tag.startswith('layer'):
 							layer = int(tag[5:])
 							break
@@ -561,11 +561,11 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				image = self.get_image(self.selected_image)
 				self.item_place_image = self.skyCanvas.create_image(x,y, image=image)
 			else:
-				self.skyCanvas.coords(self.item_place_image, x,y)
+				self.item_place_image.coords(x,y)
 
 	def mouse_leave(self, event: Event) -> None:
 		if self.item_place_image:
-			self.skyCanvas.delete(self.item_place_image)
+			self.item_place_image.delete()
 			self.item_place_image = None
 
 	def preview(self) -> None:

@@ -11,6 +11,7 @@ from PIL import ImageTk as _ImageTk
 
 AnyWindow: _TypeAlias = _MainWindow | _Toplevel
 
+AnyImage = _tk.Image | _ImageTk.PhotoImage | _ImageTk.BitmapImage | _PILImage.Image
 AnyPhotoImage = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
 AnyBitmapImage = _tk.BitmapImage | _ImageTk.BitmapImage
 

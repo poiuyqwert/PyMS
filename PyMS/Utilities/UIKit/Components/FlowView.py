@@ -272,7 +272,7 @@ class FlowView(Frame):
 			for view,x,y,w,_ in row:
 				place(view, x,y, w)
 		# print(total_w,total_h)
-		self._content_area.itemconfig(self.content_view_id, width=total_w,height=total_h)
+		self.content_view_id.config(width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 
 if __name__ == '__main__':

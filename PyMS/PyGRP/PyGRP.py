@@ -295,7 +295,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def grpoutline(self) -> None:
 		if self.grpo.get() and self.listbox.curselection() and self.showpreview.get():
 			if self.grp:
-				x,y = 131 - self.grp.width//2, 131 - self.grp.height/2
+				x,y = 131 - self.grp.width//2, 131 - self.grp.height//2
 				w,h = x + self.grp.width + 1, y + self.grp.height + 1
 			else:
 				x,y,w,h = 0,0,0,0

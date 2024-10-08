@@ -9,7 +9,7 @@ import tkinter as _Tk
 
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-	from ..Types import AnyPhotoImage, AnyBitmapImage
+	from ..Types import AnyImage, AnyBitmapImage
 
 CoordinateAdjuster = Callable[[int, int], tuple[int, int]]
 
@@ -37,6 +37,9 @@ class Canvas(_Tk.Canvas, Extensions):
 
 		def delete(self) -> None:
 			self.canvas.delete(self.item_id)
+
+		def get_tags(self) -> tuple[str, ...]:
+			return self.canvas.gettags(self.item_id)
 
 		def tag_raise(self) -> None:
 			self.canvas.tag_raise(self.item_id)
@@ -72,17 +75,17 @@ class Canvas(_Tk.Canvas, Extensions):
 
 	# TODO: Apply coordinate adjust
 	# def addtag_closest(self, newtag, x, y, halo=None, start=None):
-    # def addtag_enclosed(self, newtag, x1, y1, x2, y2):
-    # def addtag_overlapping(self, newtag, x1, y1, x2, y2):
+	# def addtag_enclosed(self, newtag, x1, y1, x2, y2):
+	# def addtag_overlapping(self, newtag, x1, y1, x2, y2):
 	# def bbox(self, *args):
 	# def canvasx(self, screenx, gridspacing=None):
-    # def canvasy(self, screeny, gridspacing=None):
+	# def canvasy(self, screeny, gridspacing=None):
 	# def coords(self, *args):
 	# def find_closest(self, x, y, halo=None, start=None):
-    # def find_enclosed(self, x1, y1, x2, y2):
-    # def find_overlapping(self, x1, y1, x2, y2):
+	# def find_enclosed(self, x1, y1, x2, y2):
+	# def find_overlapping(self, x1, y1, x2, y2):
 	# def scan_mark(self, x, y):
-    # def scan_dragto(self, x, y, gain=10):
+	# def scan_dragto(self, x, y, gain=10):
 
 	def create_arc(self, x1: int, y1: int, x2: int, y2: int, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
 		x1,y1 = self.coordinate_adjust(x1,y1)
@@ -94,7 +97,7 @@ class Canvas(_Tk.Canvas, Extensions):
 		kwargs['bitmap'] = bitmap
 		return Canvas.Item(self, _Tk.Canvas.create_bitmap(self, x,y, *args, **kwargs))
 
-	def create_image(self, x: int, y: int, image: AnyPhotoImage | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
+	def create_image(self, x: int, y: int, image: AnyImage | None = None, *args, **kwargs) -> Canvas.Item: # type: ignore[override]
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['image'] = image
 		return Canvas.Item(self, _Tk.Canvas.create_image(self, x,y, *args, **kwargs))
@@ -129,10 +132,31 @@ class Canvas(_Tk.Canvas, Extensions):
 		kwargs['window'] = window
 		return Canvas.Item(self, _Tk.Canvas.create_window(self, x,y, *args, **kwargs))
 
-	def coords(self, item_id: int, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None: # type: ignore[override]
+	def coords(self, item_id_or_tag: int | str, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None: # type: ignore[override]
 		x,y = self.coordinate_adjust(x, y)
 		if x2 is not None and y2 is not None:
 			x2,y2 = self.coordinate_adjust(x2, y2)
-			_Tk.Canvas.coords(self, item_id, x,y, x2,y2)
+			_Tk.Canvas.coords(self, item_id_or_tag, x,y, x2,y2)
 		else:
-			_Tk.Canvas.coords(self, item_id, x,y)
+			_Tk.Canvas.coords(self, item_id_or_tag, x,y)
+
+	def find_above(self, item_id_or_tag: int | str) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_above(self, item_id_or_tag)]
+
+	def find_all(self) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find(self)]
+
+	def find_below(self, item_id_or_tag: int | str) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_below(self,item_id_or_tag)]
+
+	def find_closest(self, x: int, y: int, halo: int | None = None, start: str | None = None) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_closest(self, x, y, halo, start)]
+
+	def find_enclosed(self, x1: int, y1: int, x2: int, y2: int) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_enclosed(self, x1,y1, x2,y2)]
+
+	def find_overlapping(self, x1: int, y1: int, x2: int, y2: int) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_overlapping(self, x1,y1, x2,y2)]
+
+	def find_withtag(self, item_id_or_tag: int | str) -> list[Canvas.Item]: # type: ignore[override]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_above(self, item_id_or_tag)]

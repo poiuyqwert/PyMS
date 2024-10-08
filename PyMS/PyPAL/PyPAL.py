@@ -171,7 +171,7 @@ class PyPAL(MainWindow):
 			return
 		self.selected = i
 		x,y = 2+17*(i%16),2+17*(i//16)
-		self.canvas.coords(self.sel, x, y, x+17, y+17)
+		self.sel.coords(x, y, x+17, y+17)
 
 	def changecolor(self, e: Event, i: int) -> None:
 		if not self.palette:
@@ -308,7 +308,7 @@ class PyPAL(MainWindow):
 		self.status.set('Load or create a palette.')
 		self.mark_edited(False)
 		self.selected = None
-		self.canvas.coords(self.sel, 0, 0, 0, 0)
+		self.sel.coords(0, 0, 0, 0)
 		self.update()
 		self.action_states()
 

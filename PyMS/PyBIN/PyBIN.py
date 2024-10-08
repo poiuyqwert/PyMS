@@ -125,7 +125,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.event_moved = False
 
 		self.background: PCX.PCX | None = None
-		self.background_image: Image | None = None
+		self.background_image: AnyPhotoImage | None = None
 
 		self.item_background: Canvas.Item | None = None # type: ignore[name-defined]
 		self.item_selection_box: Canvas.Item | None = None # type: ignore[name-defined]
@@ -489,16 +489,16 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		delete = True
 		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				self.background_image = cast(Image, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
+				self.background_image = cast(PhotoImage, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
 			if self.background_image:
 				delete = False
 				if self.item_background:
-					self.widgetCanvas.itemconfigure(self.item_background, image=self.background_image)
+					self.item_background.config(image=self.background_image)
 				else:
 					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
-					self.widgetCanvas.lower(self.item_background)
+					self.item_background.tag_lower()
 		if self.item_background and delete:
-			self.widgetCanvas.delete(self.item_background)
+			self.item_background.delete()
 			self.item_background = None
 
 	def load_dlggrp(self) -> None:
@@ -688,7 +688,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		for node in self.flattened_nodes():
 			node.lift()
 		if self.item_selection_box:
-			self.widgetCanvas.lift(self.item_selection_box)
+			self.item_selection_box.tag_raise()
 
 	def toggle_setting(self, setting: Config.Boolean, variable: BooleanVar) -> None:
 		setting.value = variable.get()
@@ -698,11 +698,11 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if self.selected_node:
 			x1,y1,x2,y2 = self.selected_node.bounding_box()
 			if self.item_selection_box:
-				self.widgetCanvas.coords(self.item_selection_box, x1,y1, x2,y2)
+				self.item_selection_box.coords(x1,y1, x2,y2)
 			else:
 				self.item_selection_box = self.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#ff6961')
 		elif self.item_selection_box:
-			self.widgetCanvas.delete(self.item_selection_box)
+			self.item_selection_box.delete()
 			self.item_selection_box = None
 
 	def update_list_selection(self) -> None:
@@ -1320,20 +1320,20 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 
 	def node_render_image_update(self, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
 		if image:
-			self.widgetCanvas.itemconfigure(item, image=image)
-		self.widgetCanvas.coords(item, x, y)
+			item.config(image=image)
+		item.coords(x, y)
 
 	def node_render_rect_create(self, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_rectangle(x1, y1, x2, y2, width=1, outline=color)
 
 	def node_render_rect_update(self, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
-		self.widgetCanvas.coords(item, x1, y1, x2, y2)
+		item.coords(x1, y1, x2, y2)
 
 	def node_render_lift(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
-		self.widgetCanvas.lift(item)
+		item.tag_raise()
 
 	def node_render_delete(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
-		self.widgetCanvas.delete(item)
+		item.delete()
 
 	def capture_exception(self) -> None:
 		InternalErrorDialog.capture(self, 'PyBIN')

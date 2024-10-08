@@ -434,7 +434,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 			for x,c in enumerate(yd):
 				item = self.canvas.find_withtag('%d,%d' % (x,y))
 				if item:
-					self.canvas.itemconfigure(item[0], fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][c]]))
+					item[0].config(fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][c]]))
 
 	def update_title(self) -> None:
 		file_path = self.file

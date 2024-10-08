@@ -94,7 +94,7 @@ class MiniEditor(PyMSDialog):
 		items = self.canvas.find_overlapping(e.x,e.y,e.x,e.y)
 		if self.click is None or not items:
 			return
-		tags = self.canvas.gettags(items[0])
+		tags = items[0].get_tags()
 		if not tags or not tags[0].startswith('tile'):
 			return
 		coords_str = tags[0][4:].split(',')

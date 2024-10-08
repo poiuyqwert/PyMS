@@ -113,9 +113,13 @@ class GraphicsUnitsTab(DATUnitsTab):
 		s = Frame(l)
 		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack(side=TOP)
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00', tags='addon_parent_size')
+
+		self.unit_item: Canvas.Item | None = None
+		self.addon_parent_item: Canvas.Item | None = None
+		self.size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00')
+		self.place_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000')
+		self.addon_parent_size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00')
+	
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=TOP)
 		o = Frame(s)
 		Checkbutton(o, text='Show StarEdit Placement Box (Red)', variable=self.showplace, command=self.drawboxes).pack(side=LEFT)
@@ -179,25 +183,28 @@ class GraphicsUnitsTab(DATUnitsTab):
 			entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
 			w = entry.staredit_placement_size.width / 2.0
 			h = entry.staredit_placement_size.height / 2.0
-			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
-			self.preview.lift('place')
+			self.place_item.coords(130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
+			self.place_item.tag_raise()
 		else:
-			self.preview.coords('place', 0, 0, 0, 0)
+			self.place_item.coords(0, 0, 0, 0)
 		if self.showpreview.get() and self.showdims.get():
-			self.preview.coords('size', 130-self.left.get(), 130-self.up.get(), 130+self.right.get(), 130+self.down.get())
-			self.preview.lift('size')
+			self.size_item.coords(130-self.left.get(), 130-self.up.get(), 130+self.right.get(), 130+self.down.get())
+			self.size_item.tag_raise()
 		else:
-			self.preview.coords('size', 0, 0, 0 ,0)
+			self.size_item.coords(0, 0, 0 ,0)
 
-	def draw_image(self, image_id, tag, x=130, y=130): # type: (int, str, int, int) -> None
+	def draw_image(self, image_id: int, x: int = 130, y: int = 130) -> Canvas.Item | None: 
 		frame = self.delegate.data_context.get_image_frame(image_id)
-		if frame:
-			self.preview.create_image(x, y, image=frame[0], tags=tag)
+		if not frame:
+			return None
+		return self.preview.create_image(x, y, image=frame[0])
 
 	def draw_addon_preview(self): # type: () -> None
 		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
 			return
-		self.preview.delete('addon_parent')
+		if self.addon_parent_item:
+			self.addon_parent_item.delete()
+			self.addon_parent_item = None
 		addon_preview = self.showpreview.get()
 		addon_preview = addon_preview and self.show_addon_placement_checkbox['state'] == NORMAL
 		addon_preview = addon_preview and self.show_addon_placement.get()
@@ -214,22 +221,24 @@ class GraphicsUnitsTab(DATUnitsTab):
 			y = 129 - h//2 - self.vertical.get()
 			parent_flingy = self.delegate.data_context.flingy.dat.get_entry(parent_entry.graphics)
 			parent_sprite = self.delegate.data_context.sprites.dat.get_entry(parent_flingy.sprite)
-			self.draw_image(parent_sprite.image, 'addon_parent', x=x+parent_w//2, y=y+parent_h//2)
-			self.preview.coords('addon_parent_size', x, y, x+parent_w, y+parent_h)
-			self.preview.lift('addon_parent_size')
+			self.addon_parent_item = self.draw_image(parent_sprite.image, x=x+parent_w//2, y=y+parent_h//2)
+			self.addon_parent_size_item.coords(x, y, x+parent_w, y+parent_h)
+			self.addon_parent_size_item.tag_raise()
 		else:
-			self.preview.coords('addon_parent_size', 0, 0, 0 ,0)
+			self.addon_parent_size_item.coords(0, 0, 0 ,0)
 
 	def drawpreview(self): # type: () -> None
 		if not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
 			return
 		self.draw_addon_preview()
-		self.preview.delete('unit')
+		if self.unit_item:
+			self.unit_item.delete()
+			self.unit_item = None
 		if self.showpreview.get():
 			flingy_id = self.graphicsentry.get()
 			flingy = self.delegate.data_context.flingy.dat.get_entry(flingy_id)
 			sprite = self.delegate.data_context.sprites.dat.get_entry(flingy.sprite)
-			self.draw_image(sprite.image, 'unit')
+			self.unit_item = self.draw_image(sprite.image)
 		self.drawboxes()
 
 	def load_data(self, entry): # type: (DATUnit) -> None

@@ -94,7 +94,7 @@ class PreviewDialog(PyMSDialog):
 					py += SPK.SPK.LAYER_SIZE[1]
 				px -= SPK.SPK.LAYER_ORIGIN[0]
 				py -= SPK.SPK.LAYER_ORIGIN[1]
-				self.canvas.coords(self.items[star], x+px,y+py)
+				self.items[star].coords(x+px,y+py)
 
 	def dismiss(self) -> None:
 		self.delegate.config_.windows.preview.save_size(self)

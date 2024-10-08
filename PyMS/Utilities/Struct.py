@@ -406,10 +406,11 @@ class IntArrayField(ArrayField):
 	def __init__(self, field_type: IntArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[int]) -> bytes:
+	def pack(self, value: Sequence[int], clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
+		# TODO: Clamp
 		return struct.pack(self.format, *value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> list[int]:
@@ -419,10 +420,11 @@ class BoolArrayField(ArrayField):
 	def __init__(self, field_type: IntArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[int]) -> bytes:
+	def pack(self, value: Sequence[int], clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
+		# TODO: Clamp
 		return struct.pack(self.format, *value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> list[bool]:
@@ -432,10 +434,11 @@ class FloatArrayField(ArrayField):
 	def __init__(self, field_type: FloatArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[float]) -> bytes:
+	def pack(self, value: Sequence[float], clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
+		# TODO: Clamp
 		return struct.pack(self.format, *value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> list[float]:
@@ -727,7 +730,7 @@ class StructArray:
 			result += struct.pack()
 		return result
 
-	def unpack(self, data: bytes, offset: int = 0) -> list[S]:
+	def unpack(self, data: bytes, offset: int = 0):
 		return self.struct_type.unpack_array(data, self.count, offset)
 
 	def __eq__(self, other) -> bool:

@@ -128,9 +128,9 @@ class StarEditUnitsTab(DATUnitsTab):
 		l = LabelFrame(bottom, text='Preview:')
 		self.preview = Canvas(l, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack(side=TOP)
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00', tags='size')
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000', tags='place')
-		self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00', tags='addon_parent_size')
+
+		self.place_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000')
+
 		Checkbutton(l, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=TOP)
 		l.pack(side=LEFT)
 		bottom.pack(fill=X)
@@ -164,10 +164,10 @@ class StarEditUnitsTab(DATUnitsTab):
 		if self.showpreview.get():
 			w = self.width.get() // 2
 			h = self.height.get() // 2
-			self.preview.coords('place', 130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
-			self.preview.lift('place')
+			self.place_item.coords(130-floor(w), 130-floor(h), 129+ceil(w), 129+ceil(h))
+			self.place_item.tag_raise()
 		else:
-			self.preview.coords('place', 0, 0, 0, 0)
+			self.place_item.coords(0, 0, 0, 0)
 
 	def draw_image(self, image_id, tag, x=130, y=130): # type: (int, str, int, int) -> None
 		frame = self.delegate.data_context.get_image_frame(image_id)
