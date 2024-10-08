@@ -17,14 +17,14 @@ class CHKSectionTYPE(CHKSection):
 	STARCRAFT = b"RAWS"
 	BROODWAR = b"RAWB"
 	@staticmethod
-	def TYPE_NAME(t): # type: (bytes) -> str
+	def TYPE_NAME(t: bytes) -> str:
 		names = {
 			CHKSectionTYPE.STARCRAFT:'StarCraft',
 			CHKSectionTYPE.BROODWAR:'BroodWar'
 		}
 		return names.get(t,'Unknown')
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.type = CHKSectionTYPE.BROODWAR
 		from .CHKSectionVER import CHKSectionVER
@@ -34,11 +34,11 @@ class CHKSectionTYPE(CHKSection):
 			if not verSect.version == CHKSectionVER.BW:
 				self.type = CHKSectionTYPE.STARCRAFT
 
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.type = data[:4]
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return self.type
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Type',str(self.type)), CHKSectionTYPE.TYPE_NAME(self.type))

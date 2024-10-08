@@ -128,7 +128,7 @@ class ItemSelectDialog(PyMSDialog):
 		if close:
 			PyMSDialog.ok(self)
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		if self.window_geometry_config:
 			self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

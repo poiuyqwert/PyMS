@@ -20,21 +20,21 @@ if TYPE_CHECKING:
 DAT = TypeVar('DAT', bound=AbstractDAT)
 
 class DATData(Generic[DAT]):
-	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name): # type: (DataContext, DATID, Type[DAT], str, str) -> None
+	def __init__(self, data_context: DataContext, dat_id: DATID, dat_type: Type[DAT], data_file: str, entry_type_name: str) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.dat_type = dat_type
 		self.data_file = data_file
-		self.dat = None # type: DAT | None
-		self.default_dat = None # type: DAT | None
+		self.dat: DAT | None = None
+		self.default_dat: DAT | None = None
 		self.entry_type_name = entry_type_name
-		self.file_path = None # type: str | None
-		self.names = () # type: tuple[str, ...]
-		self.name_overrides = {} # type: dict[int, tuple[bool, str]]
+		self.file_path: str | None = None
+		self.names: tuple[str, ...] = ()
+		self.name_overrides: dict[int, tuple[bool, str]] = {}
 
 		self.update_cb: Callback[DATID] = Callback()
 
-	def load_defaults(self, mpqhandler): # type: (MPQHandler) -> None
+	def load_defaults(self, mpqhandler: MPQHandler) -> None:
 		try:
 			dat = self.dat_type()
 			dat.load_file(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
@@ -47,7 +47,7 @@ class DATData(Generic[DAT]):
 		else:
 			self.update_names()
 
-	def new_file(self): # type: () -> None
+	def new_file(self) -> None:
 		if self.default_dat:
 			self.dat = copy.deepcopy(self.default_dat)
 			self.file_path = None
@@ -56,69 +56,69 @@ class DATData(Generic[DAT]):
 			self.dat.new_file()
 		self.update_names()
 
-	def load_file(self, file_path): # type: (str) -> None
+	def load_file(self, file_path: str) -> None:
 		dat = self.dat_type()
 		dat.load_file(file_path)
 		self.dat = dat
 		self.file_path = file_path
 		self.update_names()
 
-	def load_data(self, file_data): # type: (bytes) -> None
+	def load_data(self, file_data: bytes) -> None:
 		dat = self.dat_type()
 		dat.load_data(file_data)
 		self.dat = dat
 		self.file_path = None
 
-	def save_file(self, file_path): # type: (str) -> None
+	def save_file(self, file_path: str) -> None:
 		if not self.dat:
 			return
 		self.dat.save_file(file_path)
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		assert self.dat is not None
 		return self.dat.save_data()
 
-	def load_name_overrides(self, path, update_names=True): # type: (str, bool) -> None
+	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
 		with open(path, 'r') as f:
 			contents = f.readlines()
 		self.name_overrides = DATEntryName.parse_overrides(contents)
 		if update_names:
 			self.update_names()
 
-	def save_name_overrides(self, path): # type: (str) -> None
+	def save_name_overrides(self, path: str) -> None:
 		with open(path, 'w') as f:
 			for entry_id in sorted(self.name_overrides.keys()):
 				f.write('%d%s:%s\n' % (entry_id, '+' if self.name_overrides[entry_id][0] else '', self.name_overrides[entry_id][1]))
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		entry_count = self.entry_count()
-		names = [] # type: list[str]
+		names: list[str] = []
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-	def entry_name(self, entry_id): # type: (int) -> str
+	def entry_name(self, entry_id: int) -> str:
 		if entry_id >= len(self.names):
 			entry_count = self.entry_count()
 			return DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
-	def is_expanded(self): # type: () -> bool
+	def is_expanded(self) -> bool:
 		if self.dat:
 			return self.dat.is_expanded()
 		if self.default_dat:
 			return self.default_dat.is_expanded()
 		return False
 
-	def entry_count(self): # type: () -> int
+	def entry_count(self) -> int:
 		if self.dat:
 			return self.dat.entry_count()
 		if self.default_dat:
 			return self.default_dat.entry_count()
 		return self.dat_type.FORMAT.entries
 
-	def expand_entries(self, add): # type: (int) -> int
+	def expand_entries(self, add: int) -> int:
 		if not self.dat:
 			return False
 		expanded = self.dat.expand_entries(add)
@@ -127,10 +127,10 @@ class DATData(Generic[DAT]):
 		return expanded
 
 class UnitsDATData(DATData[UnitsDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.units, UnitsDAT, Assets.DataReference.Units, 'Unit')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -147,10 +147,10 @@ class UnitsDATData(DATData[UnitsDAT]):
 		self.update_cb(self.dat_id)
 
 class WeaponsDATData(DATData[WeaponsDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.weapons, WeaponsDAT, Assets.DataReference.Weapons, 'Weapon')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -168,10 +168,10 @@ class WeaponsDATData(DATData[WeaponsDAT]):
 		self.update_cb(self.dat_id)
 
 class FlingyDATData(DATData[FlingyDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.flingy, FlingyDAT, Assets.DataReference.Flingy, 'Flingy')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -188,10 +188,10 @@ class FlingyDATData(DATData[FlingyDAT]):
 		self.update_cb(self.dat_id)
 
 class SpritesDATData(DATData[SpritesDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.sprites, SpritesDAT, Assets.DataReference.Sprites, 'Sprite')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -207,10 +207,10 @@ class SpritesDATData(DATData[SpritesDAT]):
 		self.update_cb(self.dat_id)
 
 class ImagesDATData(DATData[ImagesDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.images, ImagesDAT, Assets.DataReference.Images, 'Image')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -225,10 +225,10 @@ class ImagesDATData(DATData[ImagesDAT]):
 		self.update_cb(self.dat_id)
 
 class UpgradesDATData(DATData[UpgradesDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.upgrades, UpgradesDAT, Assets.DataReference.Upgrades, 'Upgrade')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -246,10 +246,10 @@ class UpgradesDATData(DATData[UpgradesDAT]):
 		self.update_cb(self.dat_id)
 
 class TechDATData(DATData[TechDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.techdata, TechDAT, Assets.DataReference.Techdata, 'Technology')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -267,10 +267,10 @@ class TechDATData(DATData[TechDAT]):
 		self.update_cb(self.dat_id)
 
 class SoundsDATData(DATData[SoundsDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.sfxdata, SoundsDAT, Assets.DataReference.Sfxdata, 'Sound')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -287,10 +287,10 @@ class SoundsDATData(DATData[SoundsDAT]):
 		self.update_cb(self.dat_id)
 
 class PortraitsDATData(DATData[PortraitsDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.portdata, PortraitsDAT, Assets.DataReference.Portdata, 'Portrait')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -307,10 +307,10 @@ class PortraitsDATData(DATData[PortraitsDAT]):
 		self.update_cb(self.dat_id)
 
 class CampaignDATData(DATData[CampaignDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.mapdata, CampaignDAT, Assets.DataReference.Mapdata, 'Map')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -326,10 +326,10 @@ class CampaignDATData(DATData[CampaignDAT]):
 		self.update_cb(self.dat_id)
 
 class OrdersDATData(DATData[OrdersDAT]):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.orders, OrdersDAT, Assets.DataReference.Orders, 'Order')
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):

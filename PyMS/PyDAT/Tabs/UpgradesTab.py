@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class UpgradesTab(DATTab):
 	DAT_ID = DATID.upgrades
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -169,7 +169,7 @@ class UpgradesTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.cmdicons in ids:
 			self.icon_ddw.setentries(self.delegate.data_context.cmdicons.names)
 		if DataID.stat_txt in ids:
@@ -179,26 +179,26 @@ class UpgradesTab(DATTab):
 		if (DATID.units in ids or DATID.weapons in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def selicon(self, n, t=0): # type: (int, int) -> None
+	def selicon(self, n: int, t: int = 0) -> None:
 		if t:
 			self.icondd.set(n)
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
 
-	def choose_icon(self): # type: () -> None
+	def choose_icon(self) -> None:
 		def update_icon(index):
 			self.iconentry.set(index)
 		IconSelectDialog(self, self.delegate.data_context, update_icon, self.iconentry.get())
 
-	def drawpreview(self): # type: () -> None
+	def drawpreview(self) -> None:
 		self.preview.delete(ALL)
 		index = self.iconentry.get()
 		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry): # type: (DATUpgrade) -> None
+	def load_entry(self, entry: DATUpgrade) -> None:
 		self.baseminerals.set(entry.mineral_cost_base)
 		self.factorminerals.set(entry.mineral_cost_factor)
 		self.basevespene.set(entry.vespene_cost_base)
@@ -214,7 +214,7 @@ class UpgradesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry): # type: (DATUpgrade) -> None
+	def save_entry(self, entry: DATUpgrade) -> None:
 		if self.baseminerals.get() != entry.mineral_cost_base:
 			entry.mineral_cost_base = self.baseminerals.get()
 			self.edited = True

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 import re
 
 from typing import cast, Sequence, Type
@@ -15,72 +17,72 @@ from typing import cast, Sequence, Type
 class _Scanner(object):
 	RE_BLANK = re.compile(r'^[ \t]*$')
 
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.line = ''
 		self.offset = 0
 		self.length = 0
 		self.owned = False
 
-	def set_line(self, line): # type: (str) -> None
+	def set_line(self, line: str) -> None:
 		self.line = line
 		self.offset = 0
 		self.length = len(self.line)
 		self.owned = False
 
-	def lcut(self, char_count): # type: (int) -> None
+	def lcut(self, char_count: int) -> None:
 		self.offset += char_count
 
-	def rcut(self, char_count): # type: (int) -> None
+	def rcut(self, char_count: int) -> None:
 		self.length -= char_count
 
-	def is_empty(self): # type: () -> bool
+	def is_empty(self) -> bool:
 		return not self.line or self.length == 0
 
-	def is_done(self): # type: () -> bool
+	def is_done(self) -> bool:
 		return self.is_empty() or self.owned
 
-	def is_blank(self): # type: () -> bool
+	def is_blank(self) -> bool:
 		return _Scanner.RE_BLANK.match(self.line) is not None
 
-	def end(self): # type: () -> None
+	def end(self) -> None:
 		self.offset = len(self.line)-1
 		self.length = 0
 
-	def own(self): # type: () -> None
+	def own(self) -> None:
 		self.owned = True
 
-	def remainder(self): # type: () -> str
+	def remainder(self) -> str:
 		if not self.line:
 			return ''
 		return self.line[self.offset:self.offset+self.length]
 
-	def search(self, pattern): # type: (re.Pattern[str]) -> (re.Match[str] | None)
+	def search(self, pattern: re.Pattern[str]) -> (re.Match[str] | None):
 		return pattern.search(self.line, self.offset, self.length)
 
-	def match(self, pattern): # type: (re.Pattern[str]) -> (re.Match[str] | None)
+	def match(self, pattern: re.Pattern[str]) -> (re.Match[str] | None):
 		return pattern.match(self.line, self.offset, self.length)
 
 # Block content
 class Block(object):
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.open = True
-		self.parent = None # type: Block | None
-		# self.children = [] # type: list[Block]
+		self.parent: Block | None = None
+		# self.children: list[Block] = []
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (Block | None)
+	def start(scanner: _Scanner) -> Block | None:
 		return None
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		return False
 
-	def close(self): # type: () -> None
+	def close(self) -> None:
 		self.open = False
 
-	def repr_params(self): # type: () -> (str | None)
+	def repr_params(self) -> str | None:
 		return None
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		info = '-> ' if self.open else '   '
 		info += self.__class__.__name__
 		repr_params = self.repr_params()
@@ -89,17 +91,17 @@ class Block(object):
 		return info
 
 class ContainerBlock(Block):
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		Block.__init__(self)
-		self.children = [] # type: list[Block]
+		self.children: list[Block] = []
 
-	def add_child(self, block): # type: (Block) -> None
+	def add_child(self, block: Block) -> None:
 		self.children.append(block)
 		block.parent = self
 		if not self.open:
 			block.close()
 
-	def get_open_child(self): # type: () -> (Block | None)
+	def get_open_child(self) -> Block | None:
 		if not self.children:
 			return None
 		child = self.children[-1]
@@ -107,16 +109,16 @@ class ContainerBlock(Block):
 			return None
 		return child
 
-	def close_children(self): # type: () -> None
+	def close_children(self) -> None:
 		open_child = self.get_open_child()
 		if open_child:
 			open_child.close()
 
-	def close(self): # type: () -> None
+	def close(self) -> None:
 		Block.close(self)
 		self.close_children()
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		info = Block.__repr__(self)
 		for child in self.children:
 			info += '\r\n  ' + repr(child).replace('\r\n', '\r\n  ')
@@ -126,20 +128,20 @@ class LeafBlock(Block):
 	pass
 
 class ContentBlock(LeafBlock):
-	def __init__(self, span=None): # type: (str | Span | None) -> None
+	def __init__(self, span: str | Span | None = None) -> None:
 		LeafBlock.__init__(self)
-		self.spans = [] # type: list[Span]
+		self.spans: list[Span] = []
 		if span is not None:
 			if not isinstance(span, Span):
 				span = Span(span)
 			self.spans.append(span)
 
-	def add_span(self, span): # type: (str | Span) -> None
+	def add_span(self, span: str | Span) -> None:
 		if not isinstance(span, Span):
 			span = Span(span)
 		self.spans.append(span)
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		info = Block.__repr__(self)
 		# TODO: Update
 		for span in self.spans:
@@ -150,7 +152,7 @@ class ThematicBreak(LeafBlock):
 	RE_MARKER = re.compile(r' {0,3}(-|_|\*)+? *\1+? *\1+?(?: *\1+?)* *$')
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (ThematicBreak | None)
+	def start(scanner: _Scanner) -> ThematicBreak | None:
 		match = scanner.match(ThematicBreak.RE_MARKER)
 		if not match:
 			return None
@@ -161,13 +163,13 @@ class ATXHeading(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(#{1,6})(?:( +).+?( +#+ *)?)?$')
 	RE_ANCHOR_CLEAN = re.compile(r'[^a-zA-Z ]')
 
-	def __init__(self, level): # type: (int) -> None
+	def __init__(self, level: int) -> None:
 		ContentBlock.__init__(self)
 		self.level = level
 		self.open = False
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (ATXHeading | None)
+	def start(scanner: _Scanner) -> ATXHeading | None:
 		match = scanner.match(ATXHeading.RE_MARKER)
 		if not match:
 			return None
@@ -178,11 +180,11 @@ class ATXHeading(ContentBlock):
 			scanner.rcut(len(match.group(4)))
 		return ATXHeading(len(match.group(2)))
 
-	def repr_params(self): # type: () -> str
+	def repr_params(self) -> str:
 		return 'level=%d' % self.level
 
-	def anchor(self): # type: () -> str
-		def collapse(items): # type: (Sequence[Span | str]) -> str
+	def anchor(self) -> str:
+		def collapse(items: Sequence[Span | str]) -> str:
 			anchor = ''
 			for item in items:
 				if isinstance(item, Span):
@@ -196,7 +198,7 @@ class IndentedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r' {4}.+')
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (IndentedCodeBlock | None)
+	def start(scanner: _Scanner) -> IndentedCodeBlock | None:
 		match = scanner.match(IndentedCodeBlock.RE_MARKER)
 		if not match:
 			return None
@@ -204,7 +206,7 @@ class IndentedCodeBlock(ContentBlock):
 		scanner.own()
 		return IndentedCodeBlock()
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		match = scanner.match(IndentedCodeBlock.RE_MARKER)
 		if not match:
 			return False
@@ -215,21 +217,21 @@ class IndentedCodeBlock(ContentBlock):
 class FencedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(`{3,}|~{3,})([^`~][^`~]*?)?\s*$')
 	
-	def __init__(self, indent, fence, info_string): # type: (int, str, str) -> None
+	def __init__(self, indent: int, fence: str, info_string: str) -> None:
 		ContentBlock.__init__(self)
 		self.indent = indent
 		self._re_closing = re.compile(' {0,3}%s+\\s*$' % fence)
 		self.info_string = info_string
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (FencedCodeBlock | None)
+	def start(scanner: _Scanner) -> FencedCodeBlock | None:
 		match = scanner.match(FencedCodeBlock.RE_MARKER)
 		if not match:
 			return None
 		scanner.end()
 		return FencedCodeBlock(len(match.group(1)), match.group(2), match.group(3))
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		if not scanner.match(self._re_closing):
 			return True
 		scanner.end()
@@ -240,7 +242,7 @@ class Paragraph(ContentBlock):
 	RE_NOT_BLANK = re.compile(r'[^ \t]')
 
 	# @staticmethod
-	# def start(scanner): # type: (_Scanner) -> (Paragraph | None)
+	# def start(scanner: _Scanner) -> Paragraph | None:
 	# 	if not scanner.search(Paragraph.RE_NOT_BLANK):
 	# 		return None
 	# 	line = scanner.remainder().strip(' \t')
@@ -251,7 +253,7 @@ class BlockQuote(ContainerBlock):
 	RE_MARKER = re.compile(r'( {0,3}>)(?:( )|$)')
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (BlockQuote | None)
+	def start(scanner: _Scanner) -> BlockQuote | None:
 		match = scanner.match(BlockQuote.RE_MARKER)
 		if not match:
 			return None
@@ -264,12 +266,12 @@ class ListBlock(ContainerBlock):
 	MARKER_BULLET = '-'
 	MARKER_NUMERIC = '#'
 
-	def __init__(self, marker, level): # type: (str, int) -> None
+	def __init__(self, marker: str, level: int) -> None:
 		ContainerBlock.__init__(self)
 		self.marker = marker
 		self.level = level
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		match = scanner.match(ListItemBlock.RE_LEVEL)
 		if match and len(match.group(0)) >= self.level:
 			return True
@@ -283,7 +285,7 @@ class ListBlock(ContainerBlock):
 				return True
 		return False
 
-	def repr_params(self): # type: () -> str
+	def repr_params(self) -> str:
 		return "marker='%s', level=%d" % (self.marker, self.level)
 
 class ListItemBlock(ContainerBlock):
@@ -291,7 +293,7 @@ class ListItemBlock(ContainerBlock):
 	RE_LEVEL = re.compile(r' +')
 
 	@staticmethod
-	def start(scanner): # type: (_Scanner) -> (ListBlock | None)
+	def start(scanner: _Scanner) -> ListBlock | None:
 		match = scanner.match(ListItemBlock.RE_MARKER)
 		if not match:
 			return None
@@ -312,7 +314,7 @@ class ListItemBlock(ContainerBlock):
 		list.add_child(ListItemBlock())
 		return list
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		match = scanner.match(ListItemBlock.RE_LEVEL)
 		parent = cast(ListBlock, self.parent)
 		if not match or len(match.group(0)) < parent.level:
@@ -322,16 +324,16 @@ class ListItemBlock(ContainerBlock):
 
 # Inline content
 class Span(object):
-	def __init__(self, text): # type: (str | None) -> None
-		self.contents = [] # type: list[Span | str]
+	def __init__(self, text: str | None) -> None:
+		self.contents: list[Span | str] = []
 		if text:
 			self.contents.append(text)
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Span] | None)
+	def apply(text: str) -> tuple[int, int, Span] | None:
 		return None
 
-	def scan(self, span_type): # type: (type[Span]) -> bool
+	def scan(self, span_type: type[Span]) -> bool:
 		if span_type == self.__class__:
 			return False
 		found = False
@@ -352,10 +354,10 @@ class Span(object):
 			index += 1
 		return found
 
-	def repr_params(self): # type: () -> (str | None)
+	def repr_params(self) -> str | None:
 		return None
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		result = '<%s' % self.__class__.__name__
 		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
@@ -373,20 +375,20 @@ class CodeSpan(Span):
 	RE_MARKER = re.compile(r'(`{1,3})(.+?)\1')
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, CodeSpan] | None)
+	def apply(text: str) -> tuple[int, int, CodeSpan] | None:
 		match = CodeSpan.RE_MARKER.search(text)
 		if not match:
 			return None
 		return (match.start(), match.end(), CodeSpan(match.group(2)))
 
-	def scan(self, span_type): # type: (type[Span]) -> bool
+	def scan(self, span_type: type[Span]) -> bool:
 		return False
 
 class Bold(Span):
 	RE_MARKER = re.compile(r'([*_]{2,3})(.+?)\1')
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Bold] | None)
+	def apply(text: str) -> tuple[int, int, Bold] | None:
 		match = Bold.RE_MARKER.search(text)
 		if not match:
 			return None
@@ -396,7 +398,7 @@ class Italic(Span):
 	RE_MARKER = re.compile(r'([*_])(.+?)\1')
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Italic] | None)
+	def apply(text: str) -> tuple[int, int, Italic] | None:
 		match = Italic.RE_MARKER.search(text)
 		if not match:
 			return None
@@ -406,7 +408,7 @@ class Strikethrough(Span):
 	RE_MARKER = re.compile(r'~~(.+?)~~')
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Strikethrough] | None)
+	def apply(text: str) -> tuple[int, int, Strikethrough] | None:
 		match = Strikethrough.RE_MARKER.search(text)
 		if not match:
 			return None
@@ -415,13 +417,13 @@ class Strikethrough(Span):
 class Link(Span):
 	RE_MARKER = re.compile(r'(?<!!)\[(.+?)\]\((\S+?|<.+?>)(?: ([\'"])(.+?)\3)?\)')
 
-	def __init__(self, text, link, title): # type: (str, str, str | None) -> None
+	def __init__(self, text: str, link: str, title: str | None) -> None:
 		Span.__init__(self, text)
 		self.link = link
 		self.title = title
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Link] | None)
+	def apply(text: str) -> tuple[int, int, Link] | None:
 		match = Link.RE_MARKER.search(text)
 		if not match:
 			return None
@@ -441,14 +443,14 @@ class Link(Span):
 class Image(Span):
 	RE_MARKER = re.compile(r'!\[(.+?)\]\((\S+|<.+?>)(?: ([\'"])(.+?)\3)?\)')
 
-	def __init__(self, alt_text, link, title): # type: (str, str, str | None) -> None
+	def __init__(self, alt_text: str, link: str, title: str | None) -> None:
 		Span.__init__(self, None)
 		self.alt_text = alt_text
 		self.link = link
 		self.title = title
 
 	@staticmethod
-	def apply(text): # type: (str) -> (tuple[int, int, Image] | None)
+	def apply(text: str) -> tuple[int, int, Image] | None:
 		match = Image.RE_MARKER.search(text)
 		if not match:
 			return None
@@ -487,7 +489,7 @@ class Document(ContainerBlock):
 	)
 
 	@staticmethod
-	def parse(markdown): # type: (str) -> Document
+	def parse(markdown: str) -> Document:
 		document = Document()
 		scanner = _Scanner()
 		lines = Document.RE_NEWLINE.split(markdown)
@@ -551,8 +553,8 @@ class Document(ContainerBlock):
 		parse_spans(document)
 		return document
 
-	def is_continued(self, scanner): # type: (_Scanner) -> bool
+	def is_continued(self, scanner: _Scanner) -> bool:
 		return True
 
-	def close(self): # type: () -> None
+	def close(self) -> None:
 		self.close_children()

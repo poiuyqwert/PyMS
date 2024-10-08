@@ -25,22 +25,22 @@ class CHKSectionERA(CHKSection):
 	ARCTIC = 6
 	TWILIGHT = 7
 	@staticmethod
-	def TILESET_NAME(t): # type: (int) -> str
+	def TILESET_NAME(t: int) -> str:
 		return ['Badlands','Space Platform','Installation','Ashworld','Jungle','Desert','Arctic','Twilight'][t % (CHKSectionERA.TWILIGHT+1)]
 
 	@staticmethod
-	def TILESET_FILE(t): # type: (int) -> str
+	def TILESET_FILE(t: int) -> str:
 		return ['badlands','platform','install','ashworld','jungle','desert','ice','twilight'][t % (CHKSectionERA.TWILIGHT+1)]
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.tileset = CHKSectionERA.BADLANDS
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.tileset = int(struct.unpack('<H', data[:2])[0])
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<H', self.tileset)
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Tileset',str(self.tileset)), CHKSectionERA.TILESET_NAME(self.tileset))

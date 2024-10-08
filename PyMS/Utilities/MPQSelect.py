@@ -39,14 +39,14 @@ class MPQSelect(PyMSDialog):
 		self.window_geometry_config = window_geometry_config
 		self.regex = IntVar()
 		self.regex.set(0)
-		self.files = [] # type: list[str]
-		self.file = None # type: str | None
-		self.resettimer = None # type: str | None
-		self.searchtimer = None # type: str | None
+		self.files: list[str] = []
+		self.file: str | None = None
+		self.resettimer: str | None = None
+		self.searchtimer: str | None = None
 		self.action = action
 		PyMSDialog.__init__(self, parent, self.action.title(name))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		self.listbox = ScrolledListbox(self, width=35, height=10)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
@@ -70,10 +70,10 @@ class MPQSelect(PyMSDialog):
 
 		return self.open
 
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def listfiles(self): # type: () -> None
+	def listfiles(self) -> None:
 		self.files = []
 		for file_entry in self.mpqhandler.list_files():
 			if not file_entry.file_name in self.files:
@@ -85,7 +85,7 @@ class MPQSelect(PyMSDialog):
 					self.files.append(mpq_filename)
 		self.files.sort()
 
-	def updatelist(self): # type: () -> None
+	def updatelist(self) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 			self.searchtimer = None
@@ -107,18 +107,18 @@ class MPQSelect(PyMSDialog):
 		else:
 			self.open['state'] = DISABLED
 
-	def updatecolor(self): # type: () -> None
+	def updatecolor(self) -> None:
 		if self.resettimer:
 			self.after_cancel(self.resettimer)
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
-	def updatesearch(self, *_): # type: (Event) -> None
+	def updatesearch(self, event: Event | None = None) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
-	def ok(self, _=None): # type: (Event | None) -> None
+	def ok(self, _: Event | None = None) -> None:
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
 		history = self.history_config.data
@@ -129,6 +129,6 @@ class MPQSelect(PyMSDialog):
 			del history[0]
 		PyMSDialog.ok(self)
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class ImagesTab(DATTab):
 	DAT_ID = DATID.images
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -165,7 +165,7 @@ class ImagesTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		self.previewing = None # type: int | None
+		self.previewing: int | None = None
 		self.showpreview = BooleanVar()
 		self.showpreview.set(self.delegate.data_context.config.preview.image.show.value)
 
@@ -189,7 +189,7 @@ class ImagesTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.imagestbl in ids:
 			image_names = ('None',) + self.delegate.data_context.imagestbl.strings
 			for dropdown,entry_var in self.grpdds:
@@ -215,10 +215,10 @@ class ImagesTab(DATTab):
 		if (DATID.units in ids or DATID.sprites in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def shieldupdate(self, n): # type: (int) -> None
+	def shieldupdate(self, n: int) -> None:
 		self.shieldentry.set([0,133,2,184][n])
 
-	def drawpreview(self, e=None): # type: (Event | None) -> None
+	def drawpreview(self, e: Event | None = None) -> None:
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():
@@ -229,7 +229,7 @@ class ImagesTab(DATTab):
 			else:
 				self.previewing = None
 
-	def load_entry(self, entry): # type: (DATImage) -> None
+	def load_entry(self, entry: DATImage) -> None:
 		self.grpentry.set(entry.grp_file)
 		self.graphicsturns.set(entry.gfx_turns)
 		self.clickable.set(entry.clickable)
@@ -251,7 +251,7 @@ class ImagesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry): # type: (DATImage) -> None
+	def save_entry(self, entry: DATImage) -> None:
 		if self.grpentry.get() != entry.grp_file:
 			entry.grp_file = self.grpentry.get()
 			self.edited = True

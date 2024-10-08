@@ -170,5 +170,5 @@ class TechDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATTechnology
 	FILE_NAME = "techdata.dat"
 
-	def get_entry(self, index): # type: (int) -> DATTechnology
+	def get_entry(self, index: int) -> DATTechnology:
 		return cast(DATTechnology, super(TechDAT, self).get_entry(index))

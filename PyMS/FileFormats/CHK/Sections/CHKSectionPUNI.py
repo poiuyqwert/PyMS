@@ -21,9 +21,9 @@ class CHKSectionPUNI(CHKSection):
 	NAME = 'PUNI'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.availability = [] # type: list[list[CHKUnitAvailability]]
+		self.availability: list[list[CHKUnitAvailability]] = []
 		for _ in range(228):
 			self.availability.append([])
 			for _ in range(12):
@@ -45,7 +45,7 @@ class CHKSectionPUNI(CHKSection):
 			for u in range(228):
 				self.availability[u][p].default = defaults[u]
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		result = b''
 		for p in range(12):
 			availability = [self.availability[u][p].available for u in range(228)]
@@ -56,7 +56,7 @@ class CHKSectionPUNI(CHKSection):
 			result += struct.pack('<228B', *defaults)
 		return result
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Available','Use Defaults']:

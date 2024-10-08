@@ -242,7 +242,7 @@ def type_label(stage, bin, data=None):
 	"""Label"""
 	return 2
 
-def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
+def type_imageid(stage: int, bin: IScriptBIN, data: int | str | None = None) -> int | tuple[str,str]:
 	"""ImageID"""
 	if data is None:
 		return 2
@@ -256,7 +256,7 @@ def type_imageid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | N
 		raise PyMSError('Parameter',"Invalid ImageID value '%s', it must be a number in the range 0 to %s" % (data,bin.imagesdat.entry_count()))
 	return v
 
-def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
+def type_spriteid(stage: int, bin: IScriptBIN, data: int | str | None = None) -> int | tuple[str,str]:
 	"""SpriteID"""
 	if data is None:
 		return 2
@@ -270,7 +270,7 @@ def type_spriteid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | 
 		raise PyMSError('Parameter',"Invalid SpriteID value '%s', it must be a number in the range 0 to %s" % (data,bin.spritesdat.entry_count()))
 	return v
 
-def type_flingyid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
+def type_flingyid(stage: int, bin: IScriptBIN, data: int | str | None = None) -> int | tuple[str,str]:
 	"""FlingyID"""
 	if data is None:
 		return 2
@@ -317,7 +317,7 @@ def type_flipstate(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid FlipState value '%s', it must be a number in the range 0 to 255" % data)
 	return v
 
-def type_soundid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
+def type_soundid(stage: int, bin: IScriptBIN, data: int | str | None = None) -> int | tuple[str,str]:
 	"""SoundID"""
 	if data is None:
 		return 2
@@ -373,7 +373,7 @@ def type_weapon(stage, bin, data=None):
 		raise PyMSError('Parameter',"Invalid Weapon value '%s', it must be 1 for ground attack or not 1 for air attack." % data)
 	return v
 
-def type_weaponid(stage, bin, data=None): # type: (int, IScriptBIN, int | str | None) -> (int | tuple[str,str])
+def type_weaponid(stage: int, bin: IScriptBIN, data: int | str | None = None) -> int | tuple[str,str]:
 	"""WeaponID"""
 	if data is None:
 		return 1

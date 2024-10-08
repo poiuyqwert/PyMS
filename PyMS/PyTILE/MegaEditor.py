@@ -34,7 +34,7 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
 		pass
 
-	def draw_group(self): # type: () -> None
+	def draw_group(self) -> None:
 		pass
 
 	def mark_edited(self):

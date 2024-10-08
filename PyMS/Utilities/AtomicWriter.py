@@ -7,7 +7,7 @@ import os, codecs
 from typing import IO
 
 class AtomicWriter:
-	def __init__(self, path, mode="w+b", createmode=None, encoding=None): # type: (str, str, int | None, str | None) -> None
+	def __init__(self, path: str, mode: str = "w+b", createmode: int | None = None, encoding: str | None = None) -> None:
 		self.real_file = path
 		self.handle: IO
 		self.temp_file = None
@@ -25,7 +25,7 @@ class AtomicWriter:
 		self.write = self.handle.write
 		self.fileno = self.handle.fileno
 
-	def close(self): # type: () -> None
+	def close(self) -> None:
 		if self.handle and not self.handle.closed:
 			self.handle.flush()
 			os.fsync(self.handle.fileno())
@@ -59,7 +59,7 @@ class AtomicWriter:
 					except:
 						pass
 
-	def discard(self): # type: () -> None
+	def discard(self) -> None:
 		if self.handle and not self.handle.closed:
 			self.handle.close()
 		if self.temp_file:
@@ -68,5 +68,5 @@ class AtomicWriter:
 			except:
 				pass
 
-	def __del__(self): # type: () -> None
+	def __del__(self) -> None:
 		self.discard()

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -37,15 +37,15 @@ class MapsTab(DATTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.mapdatatbl in ids:
 			self.missions.setentries(('None',) + self.delegate.data_context.mapdatatbl.strings)
 			self.missionentry.range[1] = len(self.delegate.data_context.mapdatatbl.strings)
 
-	def load_entry(self, entry): # type: (DATMap) -> None
+	def load_entry(self, entry: DATMap) -> None:
 		self.missionentry.set(entry.map_file)
 
-	def save_entry(self, entry): # type: (DATMap) -> None
+	def save_entry(self, entry: DATMap) -> None:
 		if self.missionentry.get() != entry.map_file:
 			entry.map_file = self.missionentry.get()
 			self.edited = True

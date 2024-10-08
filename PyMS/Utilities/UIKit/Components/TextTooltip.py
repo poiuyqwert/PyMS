@@ -9,7 +9,7 @@ class TextTooltip(Tooltip):
 	def __init__(self, parent: Text, tag: str, **kwargs) -> None:
 		self.text_widget = parent
 		self.tag = tag
-		self.cursor = kwargs.pop('cursor', None) # type: (list[str] | None)
+		self.cursor: (list[str] | None) = kwargs.pop('cursor', None)
 		self._old_cursor = None
 		kwargs['mouse'] = True
 		Tooltip.__init__(self, parent, **kwargs)

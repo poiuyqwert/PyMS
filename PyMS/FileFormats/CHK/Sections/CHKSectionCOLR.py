@@ -37,7 +37,7 @@ class CHKSectionCOLR(CHKSection):
 	DEFAULT_COLORS = [RED,BLUE,TEAL,PURPLE,ORANGE,BROWN,WHITE,YELLOW]
 
 	@staticmethod
-	def COLOR_NAME(c): # type: (int) -> str
+	def COLOR_NAME(c: int) -> str:
 		names = {
 			CHKSectionCOLR.RED:'Red',
 			CHKSectionCOLR.BLUE:'Blue',
@@ -60,7 +60,7 @@ class CHKSectionCOLR(CHKSection):
 		return names.get(c,'Unknown')
 
 	@staticmethod
-	def PALETTE_INDICES(c): # type: (int) -> int
+	def PALETTE_INDICES(c: int) -> int:
 		names = {
 			CHKSectionCOLR.RED:111,
 			CHKSectionCOLR.BLUE:165,
@@ -82,17 +82,17 @@ class CHKSectionCOLR(CHKSection):
 		}
 		return names.get(c,0)
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.colors = CHKSectionCOLR.DEFAULT_COLORS
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.colors = list(int(c) for c in struct.unpack('<8B', data[:8]))
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<8B', *self.colors)
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		for p,c in enumerate(self.colors):
 			result += '\t%s # %s\n' % (pad('Player%d' % (p+1), str(c)), CHKSectionCOLR.COLOR_NAME(c))

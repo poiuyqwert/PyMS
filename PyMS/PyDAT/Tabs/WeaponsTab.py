@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class WeaponsTab(DATTab):
 	DAT_ID = DATID.weapons
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -286,7 +286,7 @@ class WeaponsTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.stat_txt in ids:
 			strings = ('None',) + self.delegate.data_context.stat_txt.strings
 			self.labels.setentries(strings)
@@ -316,26 +316,26 @@ class WeaponsTab(DATTab):
 		self.errormsgentry.range[1] = string_limit
 		self.iconentry.range[1] = self.delegate.data_context.cmdicons.frame_count() - 1
 
-	def selicon(self, n, t=0): # type: (int, int) -> None
+	def selicon(self, n: int, t: int = 0) -> None:
 		if t:
 			self.icondd.set(n)
 		else:
 			self.iconentry.set(n)
 		self.drawpreview()
 
-	def choose_icon(self): # type: () -> None
-		def update_icon(index): # type: (int) -> None
+	def choose_icon(self) -> None:
+		def update_icon(index: int) -> None:
 			self.iconentry.set(index)
 		IconSelectDialog(self, self.delegate.data_context, update_icon, self.iconentry.get())
 
-	def drawpreview(self): # type: () -> None
+	def drawpreview(self) -> None:
 		self.preview.delete(ALL)
 		index = self.iconentry.get()
 		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry): # type: (DATWeapon) -> None
+	def load_entry(self, entry: DATWeapon) -> None:
 		self.label.set(entry.label)
 		self.graphicsentry.set(entry.graphics)
 		self.unused.set(entry.unused_technology)
@@ -377,7 +377,7 @@ class WeaponsTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry): # type: (DATWeapon) -> None
+	def save_entry(self, entry: DATWeapon) -> None:
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True

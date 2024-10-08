@@ -12,27 +12,27 @@ if TYPE_CHECKING:
 	from typing import BinaryIO
 
 class DDDataBIN(object):
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self._doodads = [[0]*256 for _ in range(512)]
 
-	def doodad_count(self): # type: () -> int
+	def doodad_count(self) -> int:
 		return len(self._doodads)
 	
-	def get_doodad(self, id): # type: (int) -> list[int]
+	def get_doodad(self, id: int) -> list[int]:
 		return self._doodads[id]
 
-	def add_doodad(self, doodad): # type: (list[int]) -> int
+	def add_doodad(self, doodad: list[int]) -> int:
 		if len(doodad) != 256:
 			raise PyMSError('Add Doodad', 'Incorrect doodad placeability (expected list of size 256, got %d)' % len(doodad))
 		id = len(self._doodads)
 		self._doodads.append(doodad)
 		return id
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'dddata.dat')
 		if len(data) != 262144:
 			raise PyMSError('Load',"'%s' is an invalid dddata.bin file" % file)
-		doodads = [] # type: list[list[int]]
+		doodads: list[list[int]] = []
 		try:
 			o = 0
 			while o + 511 < len(data):
@@ -42,7 +42,7 @@ class DDDataBIN(object):
 			raise PyMSError('Load',"Unsupported dddata.dat file '%s', could possibly be corrupt" % file)
 		self._doodads = doodads
 
-	def save_file(self, file): # type: (str | BinaryIO) -> None
+	def save_file(self, file: str | BinaryIO) -> None:
 		data = b''
 		for d in self._doodads:
 			data += struct.pack('<256H', *d)

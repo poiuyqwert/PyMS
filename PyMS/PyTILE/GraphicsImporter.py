@@ -30,7 +30,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		title += ' Graphics'
 		PyMSDialog.__init__(self, parent, title, resizable=(True,True), set_min_size=(True,True))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		tileset = self.delegate.get_tileset()
 		assert tileset is not None
 	
@@ -123,7 +123,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 
 		return self.import_button
 
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
 	@property
@@ -146,7 +146,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 			case TileType.mini:
 				return self.config_.import_.graphics.mini
 
-	def load_settings(self): # type: () -> None
+	def load_settings(self) -> None:
 		config = self.type_config
 		if isinstance(config, PyTILEConfig.Import.Graphics.MegaSettings):
 			self.megatiles_reuse_duplicates_old.set(config.megatiles_reuse_duplicates_old.value)
@@ -160,13 +160,13 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		self.replace_selections.set(config.replace_selections.value)
 		self.auto_close.set(config.auto_close.value)
 
-	def update_states(self, *_): # type: (Any) -> None
+	def update_states(self, event: Event | None = None) -> None:
 		self.import_button['state'] = NORMAL if self.graphics_list.size() else DISABLED
 		sel = NORMAL if self.graphics_list.curselection() else DISABLED
 		for b in self.sel_buttons:
 			b['state'] = sel
 
-	def iimport(self, *_): # type: (Any) -> None
+	def iimport(self, event: Event | None = None) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
@@ -192,7 +192,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 			if self.auto_close.get():
 				self.ok()
 
-	def select_paths(self, replace=False): # type: (bool) -> None
+	def select_paths(self, replace: bool = False) -> None:
 		paths = self.config_.last_path.graphics.select_open(self)
 		if paths:
 			if replace:
@@ -202,12 +202,12 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 			self.graphics_list.yview_moveto(1.0)
 		self.update_states()
 
-	def remove_paths(self, *_): # type: (Any) -> None
+	def remove_paths(self, event: None = None) -> None:
 		for index in sorted(self.graphics_list.curselection(), reverse=True):
 			self.graphics_list.delete(index)
 		self.update_states()
 
-	def shift_up(self): # type: () -> None
+	def shift_up(self) -> None:
 		min_index = -1
 		select = []
 		for index in sorted(self.graphics_list.curselection()):
@@ -224,7 +224,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		for index in select:
 			self.graphics_list.select_set(index)
 
-	def shift_down(self): # type: () -> None
+	def shift_down(self) -> None:
 		max_index = self.graphics_list.size()
 		select = []
 		for index in sorted(self.graphics_list.curselection(), reverse=True):
@@ -241,7 +241,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		for index in select:
 			self.graphics_list.select_set(index)
 
-	def select_null(self, tiletype): # type: (TileType) -> None
+	def select_null(self, tiletype: TileType) -> None:
 		id = 0
 		if tiletype == TileType.mega:
 			id = self.megatiles_null_id.get()
@@ -265,17 +265,17 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		elif tiletype == TileType.mini:
 			self.minitiles_null_id.set(id)
 
-	def megaload(self): # type: () -> None
+	def megaload(self) -> None:
 		pass
 
-	def update_ranges(self): # type: () -> None
+	def update_ranges(self) -> None:
 		pass
 
-	def reset_options(self): # type: () -> None
+	def reset_options(self) -> None:
 		self.type_config.reset()
 		self.load_settings()
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		config = self.type_config
 		if isinstance(config, PyTILEConfig.Import.Graphics.MegaSettings):
 			config.megatiles_reuse_duplicates_old.value = not not self.megatiles_reuse_duplicates_old.get()

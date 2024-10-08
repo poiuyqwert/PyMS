@@ -36,28 +36,28 @@ class VF4Megatile:
 class VF4(object):
 	MAX_ID = 65535
 
-	def __init__(self): # type: () -> None
-		self._megatile = [] # type: list[VF4Megatile]
+	def __init__(self) -> None:
+		self._megatile: list[VF4Megatile] = []
 
-	def megatile_count(self): # type: () -> int
+	def megatile_count(self) -> int:
 		return len(self._megatile)
 
-	def megatiles_remaining(self): # type: () -> int
+	def megatiles_remaining(self) -> int:
 		return (VF4.MAX_ID+1) - len(self._megatile)
 
-	def get_megatile(self, id): # type: (int) -> VF4Megatile
+	def get_megatile(self, id: int) -> VF4Megatile:
 		return self._megatile[id]
 
-	def add_megatile(self, flags): # type: (VF4Megatile) -> int
+	def add_megatile(self, flags: VF4Megatile) -> int:
 		id = len(self._megatile)
 		self._megatile.append(flags)
 		return id
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'VF4')
 		if data and len(data) % 32:
 			raise PyMSError('Load',"'%s' is an invalid VF4 file" % file)
-		all_megatile = [] # type: list[VF4Megatile]
+		all_megatile: list[VF4Megatile] = []
 		try:
 			o = 0
 			while o + 31 < len(data):
@@ -69,7 +69,7 @@ class VF4(object):
 			raise PyMSError('Load',"Unsupported VF4 file '%s', could possibly be corrupt" % file)
 		self._megatile = all_megatile
 
-	def save_file(self, file): # type: (str | BinaryIO) -> None
+	def save_file(self, file: str | BinaryIO) -> None:
 		data = b''
 		for flags in self._megatile:
 			data += flags.save_data()

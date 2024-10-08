@@ -38,7 +38,7 @@ class CV5Group(object):
 	TYPE_DOODAD = 1
 	SCR = 1
 
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.type = 0 
 		self.flags = 0
 		self._edge_left_or_overlay_id = 0
@@ -51,7 +51,7 @@ class CV5Group(object):
 		self._piece_down_or_unknown8 = 0
 		self.megatile_ids: list[int] = []
 
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.type,\
 			self.flags,\
 			self._edge_left_or_overlay_id,\
@@ -64,7 +64,7 @@ class CV5Group(object):
 			self._piece_down_or_unknown8 = list(int(v) for v in struct.unpack('<10H', data[:20]))
 		self.megatile_ids = list(int(v) for v in struct.unpack('<16H', data[20:]))
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		values = [
 			self.type,
 			self.flags,
@@ -79,7 +79,7 @@ class CV5Group(object):
 		] + self.megatile_ids
 		return struct.pack('<26H', *values)
 
-	def update_settings(self, group): # type: (CV5Group) -> None
+	def update_settings(self, group: CV5Group) -> None:
 		self.type = group.type
 		self.flags = group.flags
 		self._edge_left_or_overlay_id = group._edge_left_or_overlay_id
@@ -92,116 +92,116 @@ class CV5Group(object):
 		self._piece_down_or_unknown8 = group._piece_down_or_unknown8
 
 	@property
-	def basic_edge_left(self): # type: () -> int
+	def basic_edge_left(self) -> int:
 		return self._edge_left_or_overlay_id
 	@basic_edge_left.setter
-	def basic_edge_left(self, value): # type: (int) -> None
+	def basic_edge_left(self, value: int) -> None:
 		self._edge_left_or_overlay_id = value
 
 	@property
-	def basic_edge_up(self): # type: () -> int
+	def basic_edge_up(self) -> int:
 		return self._edge_up_or_scr
 	@basic_edge_up.setter
-	def basic_edge_up(self, value): # type: (int) -> None
+	def basic_edge_up(self, value: int) -> None:
 		self._edge_up_or_scr = value
 
 	@property
-	def basic_edge_right(self): # type: () -> int
+	def basic_edge_right(self) -> int:
 		return self._edge_right_or_string_id
 	@basic_edge_right.setter
-	def basic_edge_right(self, value): # type: (int) -> None
+	def basic_edge_right(self, value: int) -> None:
 		self._edge_right_or_string_id = value
 
 	@property
-	def basic_edge_down(self): # type: () -> int
+	def basic_edge_down(self) -> int:
 		return self._edge_down_or_unknown4
 	@basic_edge_down.setter
-	def basic_edge_down(self, value): # type: (int) -> None
+	def basic_edge_down(self, value: int) -> None:
 		self._edge_down_or_unknown4 = value
 
 	@property
-	def basic_piece_left(self): # type: () -> int
+	def basic_piece_left(self) -> int:
 		return self._piece_left_or_dddata_id
 	@basic_piece_left.setter
-	def basic_piece_left(self, value): # type: (int) -> None
+	def basic_piece_left(self, value: int) -> None:
 		self._piece_left_or_dddata_id = value
 
 	@property
-	def basic_piece_up(self): # type: () -> int
+	def basic_piece_up(self) -> int:
 		return self._piece_up_or_width
 	@basic_piece_up.setter
-	def basic_piece_up(self, value): # type: (int) -> None
+	def basic_piece_up(self, value: int) -> None:
 		self._piece_up_or_width = value
 
 	@property
-	def basic_piece_right(self): # type: () -> int
+	def basic_piece_right(self) -> int:
 		return self._piece_right_or_height
 	@basic_piece_right.setter
-	def basic_piece_right(self, value): # type: (int) -> None
+	def basic_piece_right(self, value: int) -> None:
 		self._piece_right_or_height = value
 
 	@property
-	def basic_piece_down(self): # type: () -> int
+	def basic_piece_down(self) -> int:
 		return self._piece_down_or_unknown8
 	@basic_piece_down.setter
-	def basic_piece_down(self, value): # type: (int) -> None
+	def basic_piece_down(self, value: int) -> None:
 		self._piece_down_or_unknown8 = value
 
 
 	@property
-	def doodad_overlay_id(self): # type: () -> int
+	def doodad_overlay_id(self) -> int:
 		return self._edge_left_or_overlay_id
 	@doodad_overlay_id.setter
-	def doodad_overlay_id(self, value): # type: (int) -> None
+	def doodad_overlay_id(self, value: int) -> None:
 		self._edge_left_or_overlay_id = value
 
 	@property
-	def doodad_scr(self): # type: () -> int
+	def doodad_scr(self) -> int:
 		return self._edge_up_or_scr
 	@doodad_scr.setter
-	def doodad_scr(self, value): # type: (int) -> None
+	def doodad_scr(self, value: int) -> None:
 		self._edge_up_or_scr = value
 
 	@property
-	def doodad_string_id(self): # type: () -> int
+	def doodad_string_id(self) -> int:
 		return self._edge_right_or_string_id
 	@doodad_string_id.setter
-	def doodad_string_id(self, value): # type: (int) -> None
+	def doodad_string_id(self, value: int) -> None:
 		self._edge_right_or_string_id = value
 
 	@property
-	def doodad_unknown4(self): # type: () -> int
+	def doodad_unknown4(self) -> int:
 		return self._edge_down_or_unknown4
 	@doodad_unknown4.setter
-	def doodad_unknown4(self, value): # type: (int) -> None
+	def doodad_unknown4(self, value: int) -> None:
 		self._edge_down_or_unknown4 = value
 
 	@property
-	def doodad_dddata_id(self): # type: () -> int
+	def doodad_dddata_id(self) -> int:
 		return self._piece_left_or_dddata_id
 	@doodad_dddata_id.setter
-	def doodad_dddata_id(self, value): # type: (int) -> None
+	def doodad_dddata_id(self, value: int) -> None:
 		self._piece_left_or_dddata_id = value
 
 	@property
-	def doodad_width(self): # type: () -> int
+	def doodad_width(self) -> int:
 		return self._piece_up_or_width
 	@doodad_width.setter
-	def doodad_width(self, value): # type: (int) -> None
+	def doodad_width(self, value: int) -> None:
 		self._piece_up_or_width = value
 
 	@property
-	def doodad_height(self): # type: () -> int
+	def doodad_height(self) -> int:
 		return self._piece_right_or_height
 	@doodad_height.setter
-	def doodad_height(self, value): # type: (int) -> None
+	def doodad_height(self, value: int) -> None:
 		self._piece_right_or_height = value
 
 	@property
-	def doodad_unknown8(self): # type: () -> int
+	def doodad_unknown8(self) -> int:
 		return self._piece_down_or_unknown8
 	@doodad_unknown8.setter
-	def doodad_unknown8(self, value): # type: (int) -> None
+	def doodad_unknown8(self, value: int) -> None:
 		self._piece_down_or_unknown8 = value
 
 	def __eq__(self, other: Any) -> bool:
@@ -234,28 +234,28 @@ class CV5Group(object):
 class CV5(object):
 	MAX_ID = 4095
 
-	def __init__(self): # type: () -> None
-		self._groups = [] # type: list[CV5Group]
+	def __init__(self) -> None:
+		self._groups: list[CV5Group] = []
 
-	def group_count(self): # type: () -> int
+	def group_count(self) -> int:
 		return len(self._groups)
 
-	def groups_remaining(self): # type: () -> int
+	def groups_remaining(self) -> int:
 		return (CV5.MAX_ID+1) - len(self._groups)
  
-	def get_group(self, id): # type: (int) -> CV5Group
+	def get_group(self, id: int) -> CV5Group:
 		return self._groups[id]
 
-	def add_group(self, group): # type: (CV5Group) -> int
+	def add_group(self, group: CV5Group) -> int:
 		id = len(self._groups)
 		self._groups.append(group)
 		return id
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'CV5')
 		if data and len(data) % 52:
 			raise PyMSError('Load',"'%s' is an invalid CV5 file" % file)
-		groups = [] # type: list[CV5Group]
+		groups: list[CV5Group] = []
 		try:
 			o = 0
 			while o + 51 < len(data):
@@ -267,7 +267,7 @@ class CV5(object):
 			raise PyMSError('Load',"Unsupported CV5 file '%s', could possibly be corrupt" % file)
 		self._groups = groups
 
-	def save_file(self, file): # type: (str | BinaryIO) -> None
+	def save_file(self, file: str | BinaryIO) -> None:
 		data = b''
 		for group in self._groups:
 			data += group.save_data()

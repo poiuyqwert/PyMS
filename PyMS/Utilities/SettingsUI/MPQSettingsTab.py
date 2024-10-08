@@ -39,8 +39,8 @@ class MPQSettingsTab(SettingsTab):
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='has_selection'),
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.adddefault, "Add default StarCraft MPQ's", Shift.Insert),
 		self.toolbar.add_spacer(10, flexible=True)
-		def move_callback(dir): # type: (int) -> Callable[[], None]
-			def move(): # type: () -> None
+		def move_callback(dir: int) -> Callable[[], None]:
+			def move() -> None:
 				self.movempq(dir=dir)
 			return move
 		self.toolbar.add_button(Assets.get_image('up'), move_callback(0), 'Move MPQ Up', Shift.Up, enabled=False, tags='has_selection'),
@@ -49,14 +49,14 @@ class MPQSettingsTab(SettingsTab):
 
 		self.action_states()
 
-	def activate(self): # type: () -> None
+	def activate(self) -> None:
 		self.listbox.focus_set()
 
-	def action_states(self): # type: () -> None
+	def action_states(self) -> None:
 		has_selection = not not self.listbox.curselection()
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-	def movempq(self, key=None, dir=0): # type: (Event | None, int) -> None
+	def movempq(self, key: Event | None = None, dir: int = 0) -> None:
 		i = int(self.listbox.curselection()[0])
 		if i == [0,self.listbox.size()-1][dir]: # type: ignore[operator]
 			return
@@ -71,7 +71,7 @@ class MPQSettingsTab(SettingsTab):
 		self.listbox.see(n)
 		self.edited_state.mark_edited()
 
-	def add(self, key=None, add=None): # type: (Event | None, list[str] | None) -> None
+	def add(self, key: Event | None = None, add: list[str] | None = None) -> None:
 		n: str | int = 0
 		s: int = 0
 		if add is None:
@@ -100,7 +100,7 @@ class MPQSettingsTab(SettingsTab):
 		self.action_states()
 		self.edited_state.mark_edited()
 
-	def remove(self, key=None): # type: (Event | None) -> None
+	def remove(self, key: Event | None = None) -> None:
 		i = int(self.listbox.curselection()[0])
 		del self.mpqs_config.data[i]
 		self.listbox.delete(i)
@@ -111,7 +111,7 @@ class MPQSettingsTab(SettingsTab):
 		self.action_states()
 		self.edited_state.mark_edited()
 
-	def adddefault(self, key=None): # type: (Event | None) -> None
+	def adddefault(self, key: Event | None = None) -> None:
 		scdir = PYMS_CONFIG.scdir.path
 		PYMS_CONFIG.store_state()
 		if scdir is None or not os.path.isdir(scdir):

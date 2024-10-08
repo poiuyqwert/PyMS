@@ -21,13 +21,13 @@ class PyMSError(Exception):
 			self.exception = sys.exc_info()
 		self.level = level
 
-	def repr(self): # type: () -> str
+	def repr(self) -> str:
 		r = '%s Error: %s' % (self.type, self.error)
 		if self.line:
 			r += '\n    Line %s: %s' % (self.line, self.code)
 		return r
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		from .utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
@@ -40,5 +40,5 @@ class PyMSError(Exception):
 				r += repr(w)
 		return r
 
-	def __str__(self): # type: () -> str
+	def __str__(self) -> str:
 		return repr(self)

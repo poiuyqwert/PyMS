@@ -13,10 +13,15 @@ from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
 from .. import Struct
 
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, cast, runtime_checkable, Protocol, Sequence
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
 	from .ParseContext import ParseContext
+
+@runtime_checkable
+class HasKeywords(Protocol):
+	def keywords(self) -> Sequence[str]:
+		...
 
 I = TypeVar('I')
 O = TypeVar('O')
@@ -185,7 +190,7 @@ class StrCodeType(CodeType[str, str]):
 				return token
 			raise
 
-class EnumCodeType(CodeType[int, int]):
+class EnumCodeType(CodeType[int, int], HasKeywords):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, cases: dict[str, int]) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._cases = cases
@@ -220,6 +225,9 @@ class EnumCodeType(CodeType[int, int]):
 			raise PyMSError('Parse', "Value '%s' is not a valid case for '%s' (possible values: %s)" % (token, self.name, self._possible_values()))
 		return self._cases[token]
 
+	def keywords(self) -> Sequence[str]:
+		return tuple(self._cases.keys())
+
 class BooleanCodeType(IntCodeType):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
 		IntCodeType.__init__(self, name, help_text, bytecode_type, limits=(0, 1))
@@ -236,3 +244,6 @@ class BooleanCodeType(IntCodeType):
 		elif token == 'false' or token == '0':
 			return False
 		raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))
+
+	def keywords(self) -> Sequence[str]:
+		return ('true', 'false')

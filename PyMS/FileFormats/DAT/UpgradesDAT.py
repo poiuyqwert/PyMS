@@ -181,5 +181,5 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATUpgrade
 	FILE_NAME = "upgrades.dat"
 
-	def get_entry(self, index): # type: (int) -> DATUpgrade
+	def get_entry(self, index: int) -> DATUpgrade:
 		return cast(DATUpgrade, super(UpgradesDAT, self).get_entry(index))

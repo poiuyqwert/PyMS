@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class FlingyTab(DATTab):
 	DAT_ID = DATID.flingy
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -92,7 +92,7 @@ class FlingyTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if (DATID.units in ids or DATID.weapons in ids) and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.sprites in ids:
@@ -102,7 +102,7 @@ class FlingyTab(DATTab):
 			else:
 				self.spriteentry.range[1] = 65535
 
-	def updatespeed(self, num, type): # type: (int, bool) -> None
+	def updatespeed(self, num: int, type: bool) -> None:
 		if type:
 			# self.topspeed.check = False
 			self.topspeed.set(int((float(num) * 320 / 3.0)))
@@ -115,7 +115,7 @@ class FlingyTab(DATTab):
 				s = s[:s.index('.')+4]
 			self.speed.set(s)
 
-	def updatehalt(self, num, type): # type: (int, bool) -> None
+	def updatehalt(self, num: int, type: bool) -> None:
 		if type:
 			# self.haltdistance.check = False
 			self.haltdistance.set(int((float(num) * 256)))
@@ -128,7 +128,7 @@ class FlingyTab(DATTab):
 				s = s[:s.index('.')+5]
 			self.halt.set(s)
 
-	def load_entry(self, entry): # type: (DATFlingy) -> None
+	def load_entry(self, entry: DATFlingy) -> None:
 		self.spriteentry.set(entry.sprite)
 		self.topspeed.set(entry.speed)
 		self.acceleration.set(entry.acceleration)
@@ -137,7 +137,7 @@ class FlingyTab(DATTab):
 		self.unused.set(entry.iscript_mask)
 		self.movecontrol.set(entry.movement_control)
 
-	def save_entry(self, entry): # type: (DATFlingy) -> None
+	def save_entry(self, entry: DATFlingy) -> None:
 		if self.spriteentry.get() != entry.sprite:
 			entry.sprite = self.spriteentry.get()
 			self.edited = True

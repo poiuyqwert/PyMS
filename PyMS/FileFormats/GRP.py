@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 try:
 	from tkinter import Image
 	from PIL import Image as PILImage
@@ -28,20 +30,20 @@ from typing import Callable, TypeVar, cast, BinaryIO, Sequence
 T = TypeVar('T')
 RLEFunc = Callable[[RawPalette, int, T], RGBA]
 
-def rle_normal(pal, index, player_colors=None): # type: (RawPalette, int, list[RGB] | None) -> RGBA
+def rle_normal(pal: RawPalette, index: int, player_colors: list[RGB] | None = None) -> RGBA:
 	rgb = pal[index]
 	if player_colors is not None and len(player_colors) >= 8 and 8 <= index <= 15:
 		rgb = player_colors[index - 8]
 	return (rgb[0],rgb[1],rgb[2], 255)
 
-def rle_shadow(pal, index, color=None): # type: (RawPalette, int, RGBA | None) -> RGBA
+def rle_shadow(pal: RawPalette, index: int, color: RGBA | None = None) -> RGBA:
 	return color or (0,0,0,255)
 
 class Outline(Enum):
 	enemy = 0
 	self = 1
 	ally = 2
-def rle_outline(pal, index, ally_status=Outline.self): # type: (RawPalette, int, Outline) -> RGBA
+def rle_outline(pal: RawPalette, index: int, ally_status: Outline = Outline.self) -> RGBA:
 	rgb = pal[index]
 	if 1 <= index <= 9:
 		if ally_status == Outline.enemy:
@@ -52,7 +54,7 @@ def rle_outline(pal, index, ally_status=Outline.self): # type: (RawPalette, int,
 			rgb = (220,220,60)
 	return (rgb[0],rgb[1],rgb[2], 255)
 
-def image_bounds(image, transindex=0): # type: (Pixels, int) -> Bounds
+def image_bounds(image: Pixels, transindex: int = 0) -> Bounds:
 	width = len(image[0])
 	bounds = [-1,-1,-1,-1]
 	found_pixels = False
@@ -74,7 +76,7 @@ def image_bounds(image, transindex=0): # type: (Pixels, int) -> Bounds
 	return (bounds[0], bounds[1], bounds[2], bounds[3])
 
 # transindex=None for no transparency
-def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False, draw_function=rle_normal, draw_info=None): # type: (Pixels, RawPalette, int, Bounds | None, bool, RLEFunc, T | None) -> PILImage.Image
+def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, image_bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> PILImage.Image:
 	if image_bounds:
 		x_min,y_min,x_max,y_max = image_bounds
 		image = list(line[x_min:x_max+1] for line in image[y_min:y_max+1])
@@ -84,7 +86,7 @@ def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False,
 	pal = [draw_function(palette,i,draw_info) for i in range(len(palette))]
 	if transindex is not None:
 		pal[transindex] = (0,0,0,0)
-	pixels = [] # type: list[int]
+	pixels: list[int] = []
 	if flipHor:
 		for row in image:
 			pixels.extend(reversed(row))
@@ -95,13 +97,13 @@ def image_to_pil(image, palette, transindex=0, image_bounds=None, flipHor=False,
 	i.putdata(data) # type: ignore[arg-type]
 	return i
 
-def image_to_tk(image, palette, transindex=0, image_bounds=None, flipHor=False, draw_function=rle_normal, draw_info=None): # type: (Pixels, RawPalette, int, Bounds | None, bool, RLEFunc, T | None) -> Image
+def image_to_tk(image: Pixels, palette: RawPalette, transindex: int = 0, image_bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
 	pil = image_to_pil(image, palette, transindex, image_bounds, flipHor, draw_function, draw_info)
 	return cast(Image, ImageTk.PhotoImage(pil))
 
 ImageWithBounds = tuple[Image, int, int, int, int]
 
-def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transindex=0, flipHor=False, draw_function=rle_normal, draw_info=None): # type: (RawPalette, GRP | CacheGRP | BMP | PCX | Pixels, int | None, bool, bool, bool, int, bool, RLEFunc, T | None) -> (Image | ImageWithBounds)
+def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, buffered: bool = False, size: bool = True, trans: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image | ImageWithBounds:
 	if isinstance(g, CacheGRP):
 		d = g[f or 0]
 	elif isinstance(g, GRP):
@@ -118,7 +120,7 @@ def frame_to_photo(p, g, f=None, buffered=False, size=True, trans=True, transind
 	width = len(d[0])
 	height = len(d)
 	i = PILImage.new('RGBA', (width,height))
-	data = [] # type: list[RGBA]
+	data: list[RGBA] = []
 	pal = list(draw_function(p,i,draw_info) for i in range(len(p)))
 	pal[transindex] = (0,0,0,0)
 	bounds = [-1,-1,-1,-1]
@@ -151,7 +153,7 @@ class RLE:
 	STATIC_MAX_LENGTH = REPEAT_FLAG - 1
 
 	@staticmethod
-	def encode_transparent(count): # type: (int) -> bytes
+	def encode_transparent(count: int) -> bytes:
 		encoded = b''
 		while count > 0:
 			encoded += struct.pack('<B', RLE.TRANSPARENT_FLAG | min(RLE.TRANSPARENT_MAX_LENGTH, count))
@@ -159,7 +161,7 @@ class RLE:
 		return encoded
 
 	@staticmethod
-	def encode_repeat(index, count): # type: (int, int) -> bytes
+	def encode_repeat(index: int, count: int) -> bytes:
 		encoded = b''
 		while count > 0:
 			encoded += struct.pack('<BB', RLE.REPEAT_FLAG | min(RLE.REPEAT_MAX_LENGTH, count), index)
@@ -167,7 +169,7 @@ class RLE:
 		return encoded
 
 	@staticmethod
-	def encode_static(line): # type: (Sequence[int]) -> bytes
+	def encode_static(line: Sequence[int]) -> bytes:
 		encoded = b''
 		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
 			run = line[x:x+RLE.STATIC_MAX_LENGTH]
@@ -175,7 +177,7 @@ class RLE:
 		return encoded
 
 	@staticmethod
-	def compress_line(line, transparent_index): # type: (Sequence[int], int) -> bytes
+	def compress_line(line: Sequence[int], transparent_index: int) -> bytes:
 		last_index = line[0]
 		repeat_count = 0
 		static_len = 0
@@ -205,8 +207,8 @@ class RLE:
 		return compressed
 
 	@staticmethod
-	def decompress_line(data, width, transparent_index=0): # type: (bytes, int, int) -> list[int]
-		line = [] # type: list[int]
+	def decompress_line(data: bytes, width: int, transparent_index: int = 0) -> list[int]:
+		line: list[int] = []
 		offset = 0
 		while len(line) < width:
 			byte = data[offset]
@@ -224,18 +226,18 @@ class RLE:
 		return line
 
 class CacheGRP:
-	def __init__(self, palette=[(0,0,0)]*256): # type: (RawPalette) -> None
+	def __init__(self, palette: RawPalette = [(0,0,0)]*256) -> None:
 		self.frames = 0
 		self.width = 0
 		self.height = 0
 		self.palette = palette
-		self.imagebuffer = [] # type: list[tuple[Bounds, tuple[int, ...]]]
-		self.images = {} # type: dict[int, Pixels]
-		self.image_bounds = {} # type: dict[int, Bounds]
+		self.imagebuffer: list[tuple[Bounds, tuple[int, ...]]] = []
+		self.images: dict[int, Pixels] = {}
+		self.image_bounds: dict[int, Bounds] = {}
 		self.databuffer = b''
-		self.uncompressed = None # type: bool | None
+		self.uncompressed: bool | None = None
 
-	def load_file(self, file, palette=None, restrict=None, uncompressed=None): # type: (str | BinaryIO, RawPalette | None, int | None, bool | None) -> None
+	def load_file(self, file: str | BinaryIO, palette: RawPalette | None = None, restrict: int | None = None, uncompressed: bool | None = None) -> None:
 		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = struct.unpack('<3H',data[:6])
@@ -243,10 +245,10 @@ class CacheGRP:
 				raise Exception()
 			if restrict:
 				frames = restrict
-			images = [] # type: list[tuple[Bounds, tuple[int, ...]]]
+			images: list[tuple[Bounds, tuple[int, ...]]] = []
 			for frame in range(frames):
 				xoffset, yoffset, linewidth, lines, framedata = tuple(int(v) for v in struct.unpack('<4BL', data[6+8*frame:14+8*frame]))
-				line_offsets = [] # type: list[int]
+				line_offsets: list[int] = []
 				for line in range(lines):
 					line_offsets.append(framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0])
 				images.append(((xoffset, yoffset, linewidth, lines), tuple(line_offsets)))
@@ -262,13 +264,13 @@ class CacheGRP:
 		self.databuffer = data
 		self.uncompressed = uncompressed
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return self.databuffer
 
-	def __getitem__(self, frame): # type: (int) -> Pixels
+	def __getitem__(self, frame: int) -> Pixels:
 		if frame in self.images:
 			return self.images[frame]
-		image = [] # type: list[list[int]]
+		image: list[list[int]] = []
 		(xoffset, yoffset, linewidth, lines), offsets = self.imagebuffer[frame]
 		if xoffset + linewidth > self.width:
 			linewidth = self.width - xoffset
@@ -303,17 +305,17 @@ class CacheGRP:
 		return self.images[frame]
 
 class GRP:
-	def __init__(self, palette=[(0,0,0)]*256, uncompressed=None, transindex=0): # type: (RawPalette, bool | None, int) -> None
+	def __init__(self, palette: RawPalette = [(0,0,0)]*256, uncompressed: bool | None = None, transindex: int = 0) -> None:
 		self.frames = 0
 		self.width = 0
 		self.height = 0
 		self.palette = palette
-		self.images = [] # type: list[Pixels]
-		self.images_bounds = [] # type: list[Bounds]
+		self.images: list[Pixels] = []
+		self.images_bounds: list[Bounds] = []
 		self.uncompressed = uncompressed
 		self.transindex = transindex
 
-	def load_file(self, file, palette=None, transindex=0, uncompressed=None): # type: (str | BinaryIO, RawPalette | None, int, bool | None) -> None
+	def load_file(self, file: str | BinaryIO, palette: RawPalette | None = None, transindex: int = 0, uncompressed: bool | None = None) -> None:
 		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = tuple(int(v) for v in struct.unpack('<3H',data[:6]))
@@ -322,10 +324,10 @@ class GRP:
 			retries = 2
 			while retries:
 				retries -= 1
-				images = [] # type: list[Pixels]
-				images_bounds = [] # type: list[Bounds]
+				images: list[Pixels] = []
+				images_bounds: list[Bounds] = []
 				for frame in range(frames):
-					image = [] # type: list[list[int]]
+					image: list[list[int]] = []
 					xoffset, yoffset, linewidth, lines, framedata = tuple(int(v) for v in struct.unpack('<4BL', data[6+8*frame:14+8*frame]))
 					# ignore extra bytes
 					if xoffset + linewidth > width:
@@ -368,7 +370,7 @@ class GRP:
 		self.images_bounds = images_bounds
 		self.transindex = transindex
 
-	def load_data(self, frames, palette=None, transindex=0, validate=True): # type: (list[Pixels], RawPalette | None, int, bool) -> None
+	def load_data(self, frames: list[Pixels], palette: RawPalette | None = None, transindex: int = 0, validate: bool = True) -> None:
 		if not frames:
 			raise PyMSError('GRP', 'Attempting to load GRP data with no frames')
 		self.frames = len(frames)
@@ -405,13 +407,13 @@ class GRP:
 		self.images.append(deepcopy(frame))
 		self.images_bounds.append(image_bounds(frame, self.transindex))
 
-	def save_data(self, uncompressed=None): # type: (bool | None) -> bytes
+	def save_data(self, uncompressed: bool | None = None) -> bytes:
 		if uncompressed is None:
 			uncompressed = self.uncompressed
 		header_data = struct.pack('<3H', self.frames, self.width, self.height)
 		image_data = b''
 		offset = 6 + 8 * self.frames
-		frame_history = {} # type: dict[bytes | tuple[int, int, int, int, tuple[tuple[int, ...], ...]], bytes]
+		frame_history: dict[bytes | tuple[int, int, int, int, tuple[tuple[int, ...], ...]], bytes] = {}
 		for z,frame in enumerate(self.images):
 			x_min, y_min, x_max, y_max = self.images_bounds[z]
 			if uncompressed:
@@ -435,8 +437,8 @@ class GRP:
 					header_data += frame_data
 					line_data = b''
 					line_offset = 2 * (y_max - y_min)
-					line_offsets = [] # type: list[bytes]
-					line_history = {} # type: dict[tuple[int, ...], bytes]
+					line_offsets: list[bytes] = []
+					line_history: dict[tuple[int, ...], bytes] = {}
 					for _y,line in enumerate(frame[y_min:y_max]):
 						line_hash = tuple(line)
 						# If there is a duplicate line is this frame, just point to it
@@ -455,7 +457,7 @@ class GRP:
 					offset += len(line_data)
 		return header_data + image_data
 
-	def save_file(self, file, uncompressed=None): # type: (str | BinaryIO, bool | None) -> None
+	def save_file(self, file: str | BinaryIO, uncompressed: bool | None = None) -> None:
 		image_data = self.save_data()
 		if isinstance(file, str):
 			try:

@@ -5,14 +5,14 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class LocaleDialog(PyMSDialog):
-	def __init__(self, parent, locale=0, title='Change locale for files', message='Type or choose the new locale id for the select files'): # type: (Misc, int, str, str) -> None
+	def __init__(self, parent: Misc, locale: int = 0, title: str = 'Change locale for files', message: str = 'Type or choose the new locale id for the select files') -> None:
 		self.save = True
 		self.result = IntegerVar(0,[0,65535])
 		self.result.set(locale)
 		self.message = message
 		PyMSDialog.__init__(self, parent, title)
 
-	def widgetize(self): # type: () -> (Widget | None)
+	def widgetize(self) -> Widget | None:
 		Label(self, text=self.message + ':', anchor=W, justify=LEFT).pack(padx=5, pady=5)
 		entry_dropdown = EntryDropDown(self, self.result, LOCALE_CHOICES, entry_width=5, dropdown_width=20)
 		entry_dropdown.pack()
@@ -25,6 +25,6 @@ class LocaleDialog(PyMSDialog):
 
 		return entry_dropdown.entry
 
-	def cancel(self, e=None): # type: (Event | None) -> None
+	def cancel(self, e: Event | None = None) -> None:
 		self.save = False
 		PyMSDialog.cancel(self)

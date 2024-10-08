@@ -26,13 +26,13 @@ class CHKSectionTECS(CHKSection):
 
 	TECHS = 24
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.stats = [] # type: list[CHKTechStats]
+		self.stats: list[CHKTechStats] = []
 		for _ in range(self.TECHS):
 			self.stats.append(CHKTechStats())
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		o = 0
 		defaults = list(bool(v) for v in struct.unpack('<%dB' % self.TECHS, data[o:o+self.TECHS]))
 		o += self.TECHS
@@ -47,12 +47,12 @@ class CHKSectionTECS(CHKSection):
 			stat = self.stats[n]
 			stat.default,stat.costMinerals,stat.costGas,stat.buildTime,stat.energyUsed = values
 
-	def save_data(self): # type: () -> bytes
-		defaults = [] # type: list[bool]
-		costMinerals = [] # type: list[int]
-		costGas = [] # type: list[int]
-		buildTimes = [] # type: list[int]
-		energyUsed = [] # type: list[int]
+	def save_data(self) -> bytes:
+		defaults: list[bool] = []
+		costMinerals: list[int] = []
+		costGas: list[int] = []
+		buildTimes: list[int] = []
+		energyUsed: list[int] = []
 		for stat in self.stats:
 			defaults.append(stat.default)
 			costMinerals.append(stat.costMinerals)
@@ -66,7 +66,7 @@ class CHKSectionTECS(CHKSection):
 		result += struct.pack('<%dH' % self.TECHS, *energyUsed)
 		return result
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Minerals','Gas','Build Time','Energy Used']:

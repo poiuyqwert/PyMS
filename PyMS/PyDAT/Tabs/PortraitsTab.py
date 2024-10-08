@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class PortraitsTab(DATTab):
 	DAT_ID = DATID.portdata
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -88,7 +88,7 @@ class PortraitsTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.portdatatbl in ids:
 			portdata = ('None',) + self.delegate.data_context.portdatatbl.strings
 			limit = len(self.delegate.data_context.portdatatbl.strings)
@@ -100,7 +100,7 @@ class PortraitsTab(DATTab):
 		if DATID.units in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def load_entry(self, entry): # type: (DATPortraits) -> None
+	def load_entry(self, entry: DATPortraits) -> None:
 		self.idle_entry.set(entry.idle.portrait_file)
 		self.idle_change.set(entry.idle.smk_change)
 		self.idle_unknown.set(entry.idle.unknown)
@@ -108,7 +108,7 @@ class PortraitsTab(DATTab):
 		self.talking_change.set(entry.talking.smk_change)
 		self.talking_unknown.set(entry.talking.unknown)
 
-	def save_entry(self, entry): # type: (DATPortraits) -> None
+	def save_entry(self, entry: DATPortraits) -> None:
 		if self.idle_entry.get() != entry.idle.portrait_file:
 			entry.idle.portrait_file = self.idle_entry.get()
 			self.edited = True

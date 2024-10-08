@@ -12,15 +12,15 @@ if TYPE_CHECKING:
 	from .DataID import DataID
 
 class TBLData(object):
-	def __init__(self, data_context, data_id, tbl_config): # type: (DataContext, DataID, Config.File) -> None
+	def __init__(self, data_context: DataContext, data_id: DataID, tbl_config: Config.File) -> None:
 		self.data_context = data_context
 		self.data_id = data_id
 		self.tbl_config = tbl_config
-		self.strings = () # type: tuple[str, ...]
+		self.strings: tuple[str, ...] = ()
 
 		self.update_cb: Callback[DataID] = Callback()
 
-	def load_strings(self): # type: () -> None
+	def load_strings(self) -> None:
 		file = self.data_context.mpq_handler.get_file(self.tbl_config.file_path)
 		if file:
 			tbl = TBL()
@@ -30,7 +30,7 @@ class TBLData(object):
 			self.strings = ()
 		self.update_cb(self.data_id)
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		tbl = TBL()
 		tbl.strings = [compile_string(string) for string in self.strings]
 		return tbl.save_data()

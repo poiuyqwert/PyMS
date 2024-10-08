@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKString(object):
-	def __init__(self, sect, string_id, text, refs=1): # type: (CHKSectionSTR, int, str, int) -> None
+	def __init__(self, sect: CHKSectionSTR, string_id: int, text: str, refs: int = 1) -> None:
 		self.sect = sect
 		self.string_id = string_id
 		self.text = text
@@ -31,12 +31,12 @@ class CHKSectionSTR(CHKSection):
 	NAME = 'STR '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.strings = {} # type: dict[int, CHKString]
-		self.open_ids = [] # type: list[int]
+		self.strings: dict[int, CHKString] = {}
+		self.open_ids: list[int] = []
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.strings = {}
 		self.open_ids = []
 		string_id = 0
@@ -55,16 +55,16 @@ class CHKSectionSTR(CHKSection):
 			self.strings[string_id] = string
 			string_id += 1
 	
-	def string_count(self): # type: () -> int
+	def string_count(self) -> int:
 		return len(self.strings)
 
-	def highest_index(self): # type: () -> int
+	def highest_index(self) -> int:
 		index = 0
 		if self.strings:
 			index = list(sorted(self.strings.keys()))[-1]
 		return index
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		count = self.highest_index() + 1
 		header = struct.pack('<H', count)
 		strings = b''
@@ -77,16 +77,16 @@ class CHKSectionSTR(CHKSection):
 			strings += string.text.encode('utf-8') or b'' + b'\0'
 		return header + strings
 
-	def string_exists(self, string_id): # type: (int) -> bool
+	def string_exists(self, string_id: int) -> bool:
 		return string_id in self.strings
 
-	def lookup_string(self, text): # type: (str) -> (CHKString | None)
+	def lookup_string(self, text: str) -> CHKString | None:
 		for string in list(self.strings.values()):
 			if string.text == text:
 				return string
 		return None
 
-	def add_string(self, text, reuse=True): # type: (str, bool) -> CHKString
+	def add_string(self, text: str, reuse: bool = True) -> CHKString:
 		if reuse:
 			string = self.lookup_string(text)
 			if string:
@@ -100,26 +100,26 @@ class CHKSectionSTR(CHKSection):
 		self.strings[index] = string
 		return string
 
-	def remove_text(self, text): # type: (str) -> None
+	def remove_text(self, text: str) -> None:
 		string = self.lookup_string(text)
 		if string:
 			string.release()
 
-	def remove_string(self, string_id): # type: (int) -> None
+	def remove_string(self, string_id: int) -> None:
 		string = self.strings.get(string_id)
 		if string:
 			string.release()
 
-	def get_string(self, string_id): # type: (int) -> (CHKString | None)
+	def get_string(self, string_id: int) -> CHKString | None:
 		return self.strings.get(string_id)
 
-	def get_text(self, string_id, default=None): # type: (int, str | None) -> (str | None)
+	def get_text(self, string_id: int, default: str | None = None) -> str | None:
 		string = self.get_string(string_id)
 		if string:
 			return string.text
 		return default
 
-	def set_string(self, string_id, text): # type: (int, str) -> CHKString
+	def set_string(self, string_id: int, text: str) -> CHKString:
 		string = self.get_string(string_id)
 		if string:
 			if string.references == 1:
@@ -130,11 +130,11 @@ class CHKSectionSTR(CHKSection):
 			string = self.add_string(text)
 		return string
 
-	def delete_string(self, string_id): # type: (int) -> None
+	def delete_string(self, string_id: int) -> None:
 		if string_id in self.strings:
 			del self.strings[string_id]
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		for n,string in self.strings.items():
 			result += '\t%s"%s"\n' % (pad('String %d' % (n+1)), string.text.replace('\\','\\\\').replace('"','\\"'))

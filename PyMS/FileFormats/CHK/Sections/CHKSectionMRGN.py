@@ -29,19 +29,19 @@ class CHKLocation(object):
 	ALL_AIR = (LOW_AIR | MEDIUM_AIR | HIGH_AIR)
 	ALL_ELEVATIONS = (ALL_GROUND | ALL_AIR)
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 		self.clear()
 
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		startX,startY,endX,endY,self.name,self.elevation = tuple(int(v) for v in struct.unpack('<4L2H', data[:20]))
 		self.start = [startX,startY]
 		self.end = [endX,endY]
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<4L2H', self.start[0],self.start[1],self.end[0],self.end[1],self.name,self.elevation)
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '\t#\n'
 		string = ''
 		strings = self.chk.get_section(CHKSectionSTR)
@@ -62,13 +62,13 @@ class CHKLocation(object):
 			result += '\t%s\n' % pad(key, str(value))
 		return result
 
-	def in_use(self): # type: () -> bool
+	def in_use(self) -> bool:
 		return self.name > 0 or self.start[0] != 0 or self.start[1] != 0 or self.end[0] != 0 or self.end[1] != 0 # or self.elevation != 0
 
-	def normalized_coords(self): # type: () -> tuple[int, int, int, int]
+	def normalized_coords(self) -> tuple[int, int, int, int]:
 		return (min(self.start[0],self.end[0]), min(self.start[1],self.end[1]), max(self.start[0],self.end[0]), max(self.start[1],self.end[1]))
 
-	def clear(self): # type: () -> None
+	def clear(self) -> None:
 		self.start = [0,0]
 		self.end = [0,0]
 		self.name = 0
@@ -78,11 +78,11 @@ class CHKSectionMRGN(CHKSection):
 	NAME = 'MRGN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.locations = [] # type: list[CHKLocation]
+		self.locations: list[CHKLocation] = []
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.locations = []
 		o = 0
 		while o+20 <= len(data):
@@ -91,23 +91,23 @@ class CHKSectionMRGN(CHKSection):
 			self.locations.append(location)
 			o += 20
 
-	def requires_post_processing(self): # type: () -> bool
+	def requires_post_processing(self) -> bool:
 		return True
 
-	def process_data(self): # type: () -> None
+	def process_data(self) -> None:
 		ver = self.chk.get_section(CHKSectionVER)
 		assert ver is not None
 		count = 255 if ver.version >= CHKSectionVER.SC104 else 64
 		while len(self.locations) < count:
 			self.locations.append(CHKLocation(self.chk))
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		result = b''
 		for location in self.locations:
 			result += location.save_data()
 		return result
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		for location in self.locations:
 			result += location.decompile()

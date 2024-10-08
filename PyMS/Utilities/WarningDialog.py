@@ -4,12 +4,12 @@ from .UIKit import *
 from .PyMSWarning import PyMSWarning
 
 class WarningDialog(PyMSDialog):
-	def __init__(self, parent, warnings, cont=False): # type: (Misc, list[PyMSWarning], bool) -> None
+	def __init__(self, parent: Misc, warnings: list[PyMSWarning], cont: bool = False) -> None:
 		self.warnings = warnings
 		self.cont = cont
 		PyMSDialog.__init__(self, parent, 'Warning!', resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		self.bind(Ctrl.a(), self.selectall)
 		frame = Frame(self, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
@@ -36,14 +36,14 @@ class WarningDialog(PyMSDialog):
 		buttonbar.pack(pady=10)
 		return ok
 
-	def selectall(self, key=None): # type: (Event | None) -> None
+	def selectall(self, key: Event | None = None) -> None:
 		self.warntext.focus_set()
 		self.warntext.tag_add(SEL, 1.0, END)
 
-	def ok(self, _=None): # type: (Event | None) -> None
+	def ok(self, _: Event | None = None) -> None:
 		self.cont = True
 		PyMSDialog.ok(self)
 
-	def cancel(self, _=None): # type: (Event | None) -> None
+	def cancel(self, _: Event | None = None) -> None:
 		self.cont = False
 		PyMSDialog.ok(self)

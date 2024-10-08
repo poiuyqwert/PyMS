@@ -13,6 +13,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
 from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
+from ..Utilities.CodeHandlers import CodeType
 from ..Utilities import ItemSelectDialog
 from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
@@ -95,8 +96,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
 		type_names = [type.name for type in CodeTypes.all_basic_types]
 		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
-		# TODO: Get keywords from Types?
-		keywords = ['aiscript', 'bwscript', 'LessThan', 'GreaterThan']
+		keywords: list[str] = []
+		for type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(type, CodeType.HasKeywords):
+				keywords.extend(type.keywords())
 		self.syntax_highlighting = SyntaxHighlighting(
 			syntax_components=(
 				SyntaxComponent((

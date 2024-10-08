@@ -15,11 +15,11 @@ class DATID(Enum):
 	orders = 'Orders'
 
 	@property
-	def ALL(self): # type: () -> tuple['DATID', ...]
+	def ALL(self) -> tuple['DATID', ...]:
 		return (DATID.units, DATID.weapons, DATID.flingy, DATID.sprites, DATID.images, DATID.upgrades, DATID.techdata, DATID.sfxdata, DATID.portdata, DATID.mapdata, DATID.orders)
 
 	@property
-	def filename(self): # type: () -> str
+	def filename(self) -> str:
 		match self:
 			case DATID.units:
 				return 'units.dat'
@@ -45,7 +45,7 @@ class DATID(Enum):
 				return 'orders.dat'
 
 	@property
-	def tab_id(self): # type: () -> str
+	def tab_id(self) -> str:
 		return self.value
 
 
@@ -58,7 +58,7 @@ class UnitsTabID(Enum):
 	ai_actions = 'AI Actions'
 
 	@property
-	def tab_name(self): # type: () -> str
+	def tab_name(self) -> str:
 		return self.value
 
 
@@ -74,7 +74,7 @@ class DataID(Enum):
 	iscriptbin = 'iscriptbin'
 
 	@property
-	def ALL(self): # type: () -> tuple['DataID', ...]
+	def ALL(self) -> tuple['DataID', ...]:
 		return (DataID.stat_txt, DataID.unitnamestbl, DataID.imagestbl, DataID.sfxdatatbl, DataID.portdatatbl, DataID.mapdatatbl, DataID.cmdicons, DataID.iscriptbin)
 
 AnyID = DATID | DataID

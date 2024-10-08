@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKUpgradeStats(object):
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.default = True
 		self.costMinerals = 0
 		self.costMineralsIncrease = 0
@@ -29,13 +29,13 @@ class CHKSectionUPGS(CHKSection):
 	UPGRADES = 46
 	PAD = False
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.stats = [] # type: list[CHKUpgradeStats]
+		self.stats: list[CHKUpgradeStats] = []
 		for _ in range(self.UPGRADES):
 			self.stats.append(CHKUpgradeStats())
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		o = 0
 		defaults = list(bool(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
 		o += self.UPGRADES+self.PAD
@@ -54,14 +54,14 @@ class CHKSectionUPGS(CHKSection):
 			stat = self.stats[n]
 			stat.default,stat.costMinerals,stat.costMineralsIncrease,stat.costGas,stat.costGasIncrease,stat.buildTime,stat.buildTimeIncrease = values
 
-	def save_data(self): # type: () -> bytes
-		defaults = [] # type: list[bool]
-		costMinerals = [] # type: list[int]
-		costMineralsIncreases = [] # type: list[int]
-		costGas = [] # type: list[int]
-		costGasIncreases = [] # type: list[int]
-		buildTimes = [] # type: list[int]
-		buildTimeIncreases = [] # type: list[int]
+	def save_data(self) -> bytes:
+		defaults: list[bool] = []
+		costMinerals: list[int] = []
+		costMineralsIncreases: list[int] = []
+		costGas: list[int] = []
+		costGasIncreases: list[int] = []
+		buildTimes: list[int] = []
+		buildTimeIncreases: list[int] = []
 		for stat in self.stats:
 			defaults.append(stat.default)
 			costMinerals.append(stat.costMinerals)
@@ -81,7 +81,7 @@ class CHKSectionUPGS(CHKSection):
 		result += struct.pack('<%dH' % self.UPGRADES, *buildTimeIncreases)
 		return result
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Minerals','Minerals Increase','Gas','Gas Increase','Build Time','Build Time Increase']:

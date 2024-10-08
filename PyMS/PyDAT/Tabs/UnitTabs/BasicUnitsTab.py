@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
 class BasicUnitsTab(DATUnitsTab):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
@@ -245,7 +245,7 @@ class BasicUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
@@ -275,7 +275,7 @@ class BasicUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DATID.upgrades in ids:
 			self.armor_upgrade_ddw.setentries(self.delegate.data_context.upgrades.names + ('None',))
 		if DATID.weapons in ids:
@@ -293,7 +293,7 @@ class BasicUnitsTab(DATUnitsTab):
 			self.ground_weapon_entry.range[1] = 255
 			self.air_weapon_entry.range[1] = 255
 
-	def load_data(self, entry): # type: (DATUnit) -> None
+	def load_data(self, entry: DATUnit) -> None:
 		self.hit_points_whole.set(entry.hit_points.whole)
 		self.hit_points_fraction.set(entry.hit_points.fraction)
 		self.shield_amount.set(entry.shield_amount)
@@ -323,7 +323,7 @@ class BasicUnitsTab(DATUnitsTab):
 		self.terran.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.terran) == DATUnit.StarEditGroupFlag.terran)
 		self.protoss.set((entry.staredit_group_flags & DATUnit.StarEditGroupFlag.protoss) == DATUnit.StarEditGroupFlag.protoss)
 
-	def save_data(self, entry): # type: (DATUnit) -> bool
+	def save_data(self, entry: DATUnit) -> bool:
 		edited = False
 		if self.hit_points_whole.get() != entry.hit_points.whole:
 			entry.hit_points.whole = self.hit_points_whole.get()

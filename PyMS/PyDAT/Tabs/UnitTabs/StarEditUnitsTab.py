@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
 class StarEditUnitsTab(DATUnitsTab):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
@@ -140,7 +140,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		for var in (self.width, self.height):
 			var.trace('w', lambda *_: self.drawpreview())
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
@@ -152,7 +152,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.stat_txt in ids:
 			count = min(255,len(self.delegate.data_context.stat_txt.strings)-1302)
 			ranks = ('No Sublabel',) + self.delegate.data_context.stat_txt.strings[1302:1302+count]
@@ -160,7 +160,7 @@ class StarEditUnitsTab(DATUnitsTab):
 			self.rankentry.range[1] = count
 			self.rankentry.editvalue()
 
-	def drawboxes(self): # type: () -> None
+	def drawboxes(self) -> None:
 		if self.showpreview.get():
 			w = self.width.get() // 2
 			h = self.height.get() // 2
@@ -169,12 +169,12 @@ class StarEditUnitsTab(DATUnitsTab):
 		else:
 			self.place_item.coords(0, 0, 0, 0)
 
-	def draw_image(self, image_id, tag, x=130, y=130): # type: (int, str, int, int) -> None
+	def draw_image(self, image_id: int, tag: str, x: int = 130, y: int = 130) -> None:
 		frame = self.delegate.data_context.get_image_frame(image_id)
 		if frame:
 			self.preview.create_image(x, y, image=frame[0], tags=tag)
 
-	def drawpreview(self): # type: () -> None
+	def drawpreview(self) -> None:
 		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
 			return
 		self.preview.delete('unit')
@@ -185,7 +185,7 @@ class StarEditUnitsTab(DATUnitsTab):
 			self.draw_image(sprite.image, 'unit')
 		self.drawboxes()
 
-	def load_data(self, entry): # type: (DATUnit) -> None
+	def load_data(self, entry: DATUnit) -> None:
 		self.men.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.men == DATUnit.StarEditGroupFlag.men)
 		self.building.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.building == DATUnit.StarEditGroupFlag.building)
 		self.factory.set(entry.staredit_group_flags & DATUnit.StarEditGroupFlag.factory == DATUnit.StarEditGroupFlag.factory)
@@ -210,7 +210,7 @@ class StarEditUnitsTab(DATUnitsTab):
 
 		self.drawpreview()
 
-	def save_data(self, entry): # type: (DATUnit) -> bool
+	def save_data(self, entry: DATUnit) -> bool:
 		edited = False
 
 		staredit_group_flags = entry.staredit_group_flags & DATUnit.StarEditGroupFlag.RACE_FLAGS

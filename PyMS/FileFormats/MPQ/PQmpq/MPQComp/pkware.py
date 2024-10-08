@@ -108,18 +108,18 @@ class Tables:
 
 	# asc tables
 	offsGenerated = False
-	offs2C34 = () # type: tuple[int, ...]
-	offs2D34 = () # type: tuple[int, ...]
-	offs2E34 = () # type: tuple[int, ...]
-	offs2EB4 = () # type: tuple[int, ...]
+	offs2C34: tuple[int, ...] = ()
+	offs2D34: tuple[int, ...] = ()
+	offs2E34: tuple[int, ...] = ()
+	offs2EB4: tuple[int, ...] = ()
 
 	# decode tables
 	positionsGenerated = False
-	position1 = () # type: tuple[int, ...]
-	position2 = () # type: tuple[int, ...]
+	position1: tuple[int, ...] = ()
+	position2: tuple[int, ...] = ()
 
 	@staticmethod
-	def gen_asc_tables(): # type: () -> None
+	def gen_asc_tables() -> None:
 		if Tables.offsGenerated:
 			return
 		offs2C34 = [0] * 0x100
@@ -163,7 +163,7 @@ class Tables:
 		Tables.offs2EB4 = tuple(offs2EB4)
 
 	@staticmethod
-	def gen_decode_tables(): # type: () -> None
+	def gen_decode_tables() -> None:
 		if Tables.positionsGenerated:
 			return
 		def gen_decode_table(count, bits_table, code_table):
@@ -190,7 +190,7 @@ class Lit:
 	# The value is how many bytes to copy from existing decompressed data
 	copy = 2
 
-def implode(data): # type: (bytes) -> bytes
+def implode(data: bytes) -> bytes:
 	return b''
 
 BYTE = struct.Struct('<B')
@@ -205,7 +205,7 @@ class Explode(object):
 	dsize_bits: int
 	bit_buff: int
 
-	def __init__(self, data): # type: (bytes) -> None
+	def __init__(self, data: bytes) -> None:
 		if Explode.DEBUG is None:
 			Explode.DEBUG = open('p_debug_explode.txt', 'w')
 
@@ -225,7 +225,7 @@ class Explode(object):
 		self.dsize_mask = 0xFFFF >> (0x10 - self.dsize_bits)
 		self.extra_bits = 0
 
-	def read_byte(self): # type: () -> int
+	def read_byte(self) -> int:
 		if self.offset == len(self.data):
 			raise InputExhaustedException()
 		byte = self.data[self.offset]
@@ -233,7 +233,7 @@ class Explode(object):
 		Explode.DEBUG.write("  pos: %d\n" % self.offset)
 		return byte
 
-	def waste_bits(self, bits): # type: (int) -> None
+	def waste_bits(self, bits: int) -> None:
 		Explode.DEBUG.write("waste: %d\n" % bits)
 		if bits <= self.extra_bits:
 			self.extra_bits -= bits
@@ -246,7 +246,7 @@ class Explode(object):
 			self.extra_bits = (self.extra_bits - bits) + 8
 			Explode.DEBUG.write("2buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
 
-	def decode_lit(self): # type: () -> tuple[int, int | None]
+	def decode_lit(self) -> tuple[int, int | None]:
 		# If current bit is set, return that we will copy X bytes, otherwise return X as the raw byte
 		lit_copy = self.bit_buff & 1
 		self.waste_bits(1)
@@ -287,7 +287,7 @@ class Explode(object):
 
 		return (Lit.byte, value)
 
-	def decode_dist(self, length): # type: (int) -> int
+	def decode_dist(self, length: int) -> int:
 		pos = Tables.position1[self.bit_buff & 0xFF]
 		skip = Tables.dist_bits[pos]
 		self.waste_bits(skip)
@@ -299,7 +299,7 @@ class Explode(object):
 			self.waste_bits(self.dsize_bits)
 		return pos + 1
 
-	def expand(self): # type: () -> bytes
+	def expand(self) -> bytes:
 		Explode.DEBUG.write(' size: %d\n' % len(self.data))
 		Explode.DEBUG.write('====\n')
 		decompressed = b''
@@ -332,7 +332,7 @@ class Explode(object):
 			raise
 		return decompressed
 
-def explode(data): # type: (bytes) -> bytes
+def explode(data: bytes) -> bytes:
 	if len(data) < 4:
 		raise PyMSError('Explode', "Not enough data to explode (got %d bytes, need at least 4)" % len(data))
 	info = Explode(data)

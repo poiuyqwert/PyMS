@@ -26,7 +26,7 @@ class CHKSectionOWNR(CHKSection):
 	NEUTRAL = 7
 	CLOSED_INVALID = 8 # INVALID
 	@staticmethod
-	def OWNER_NAME(v): # type: (int) -> str
+	def OWNER_NAME(v: int) -> str:
 		names = {
 			CHKSectionOWNR.INACTIVE:'Inactive',
 			CHKSectionOWNR.COMPUTER_GAME_INVALID:'Occupied by Computer (Invalid)',
@@ -40,17 +40,17 @@ class CHKSectionOWNR(CHKSection):
 		}
 		return names.get(v,'Unknown')
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.owners = [CHKSectionOWNR.HUMAN]*8 + [CHKSectionOWNR.INACTIVE]*3 + [CHKSectionOWNR.NEUTRAL]
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.owners = list(int(o) for o in struct.unpack('<12B', data[:12]))
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<12B', *self.owners)
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % self.NAME
 		for n,value in enumerate(self.owners):
 			result += '\t%s # %s\n' % (pad('Slot%02d' % n,str(value)), CHKSectionOWNR.OWNER_NAME(value))

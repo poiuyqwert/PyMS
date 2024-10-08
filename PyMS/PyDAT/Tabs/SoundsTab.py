@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class SoundsTab(DATTab):
 	DAT_ID = DATID.sfxdata
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -108,7 +108,7 @@ class SoundsTab(DATTab):
 			)),
 		))
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.sfxdatatbl in ids:
 			self.sounds.setentries(('None',) + self.delegate.data_context.sfxdatatbl.strings)
 			self.soundentry.range[1] = len(self.delegate.data_context.sfxdatatbl.strings)
@@ -116,14 +116,14 @@ class SoundsTab(DATTab):
 		if DATID.units in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 
-	def changesound(self, n=None): # type: (int | None) -> None
+	def changesound(self, n: int | None = None) -> None:
 		if n is None:
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
 		self.playbtn['state'] = NORMAL if (play_sound and MPQ.supported() and n > 0) else DISABLED
 
-	def play(self): # type: () -> None
+	def play(self) -> None:
 		if play_sound:
 			tbl_string = self.delegate.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
 			if tbl_string.endswith('<0>'):
@@ -132,7 +132,7 @@ class SoundsTab(DATTab):
 			if f:
 				play_sound(f.read())
 
-	def load_entry(self, entry): # type: (DATSound) -> None
+	def load_entry(self, entry: DATSound) -> None:
 		self.soundentry.set(entry.sound_file)
 		self.priority.set(entry.priority)
 
@@ -151,7 +151,7 @@ class SoundsTab(DATTab):
 
 		self.changesound()
 
-	def save_entry(self, entry): # type: (DATSound) -> None
+	def save_entry(self, entry: DATSound) -> None:
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True

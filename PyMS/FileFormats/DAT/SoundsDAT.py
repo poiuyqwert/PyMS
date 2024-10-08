@@ -110,5 +110,5 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATSound
 	FILE_NAME = "sfxdata.dat"
 
-	def get_entry(self, index): # type: (int) -> DATSound
+	def get_entry(self, index: int) -> DATSound:
 		return cast(DATSound, super(SoundsDAT, self).get_entry(index))

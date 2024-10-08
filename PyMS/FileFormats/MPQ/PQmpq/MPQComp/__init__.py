@@ -35,7 +35,7 @@ AlgorithmID.DECOMPRESSION_ALGORITHM = {
 	AlgorithmID.pkware: pkware.explode
 }
 
-def compress(algorithm_ids, data): # type: (int, bytes) -> bytes
+def compress(algorithm_ids: int, data: bytes) -> bytes:
 	for algorithm_id in AlgorithmID.COMPRESSION_ORDER:
 		if not (algorithm_id & algorithm_ids):
 			continue
@@ -45,7 +45,7 @@ def compress(algorithm_ids, data): # type: (int, bytes) -> bytes
 		data = algorithm(data)
 	return data
 
-def decompress(algorithm_ids, data): # type: (int, bytes) -> bytes
+def decompress(algorithm_ids: int, data: bytes) -> bytes:
 	for algorithm_id in reversed(AlgorithmID.COMPRESSION_ORDER):
 		if not (algorithm_id & algorithm_ids):
 			continue

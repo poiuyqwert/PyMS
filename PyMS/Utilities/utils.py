@@ -36,10 +36,10 @@ except:
 couriernew = ('Courier', -12, 'normal')
 couriernew_bold = ('Courier New', -11, 'bold')
 
-def is_windows(): # type: () -> bool
+def is_windows() -> bool:
 	return (platform.system().lower() == 'windows')
 
-def is_mac(): # type: () -> bool
+def is_mac() -> bool:
 	return (platform.system().lower() == 'darwin')
 
 # Decorator
@@ -65,10 +65,10 @@ def debug_state(states, history=[]):
 	print(('##### %d: %s' % (n, states[n] if n < len(states) else 'Unknown')))
 	history.append(None)
 
-def nearest_multiple(v, m, r=round): # type: (int, int, Callable[[float], float]) -> int
+def nearest_multiple(v: int, m: int, r: Callable[[float], float] = round) -> int:
 	return m * int(r(v / float(m)))
 
-def register_registry(program_name, extension, file_type_name=None): # type: (str, str, str | None) -> None
+def register_registry(program_name: str, extension: str, file_type_name: str | None = None) -> None:
 	if not WIN_REG_AVAILABLE:
 		raise PyMSError('Registry', 'You can currently only set as the default program on Windows machines.')
 	def delkey(key,sub_key):
@@ -112,14 +112,14 @@ def register_registry(program_name, extension, file_type_name=None): # type: (st
 	from .UIKit import MessageBox
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
-def flags(value, length): # type: (int | str, int) -> str
+def flags(value: int | str, length: int) -> str:
 	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
 			raise PyMSError('Flags', 'Invalid flags')
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
 	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
 
-def named_flags(flags, names, count, skip=0): # type: (int, Sequence[str | None], int, int) -> tuple[str, str]
+def named_flags(flags: int, names: Sequence[str | None], count: int, skip: int = 0) -> tuple[str, str]:
 	header = ''
 	values = ''
 	for n in range(count):
@@ -133,13 +133,13 @@ def named_flags(flags, names, count, skip=0): # type: (int, Sequence[str | None]
 		values += pad('1' if f else '0')
 	return (header,values)
 
-def binary(flags, count): # type: (int, int) -> str
+def binary(flags: int, count: int) -> str:
 	result = ''
 	for n in range(count):
 		result = ('1' if flags & (1 << n) else '0') + result
 	return result
 
-def flags_code(flags, name_map): # type: (int, dict[int, str]) -> str
+def flags_code(flags: int, name_map: dict[int, str]) -> str:
 	names = []
 	for (flag, name) in sorted(name_map.items(), key=lambda p: p[0]):
 		if flags & flag:
@@ -148,7 +148,7 @@ def flags_code(flags, name_map): # type: (int, dict[int, str]) -> str
 		return '0'
 	return ' | '.join(names)
 
-def fit(label, text, width=80, end=False, indent=0): # type: (str, str, int, bool, int) -> str
+def fit(label: str, text: str, width: int = 80, end: bool = False, indent: int = 0) -> str:
 	r = label
 	if not indent:
 		s = len(r)
@@ -206,7 +206,7 @@ def fit2(text: str, width: int = 80, indent: str | int = '', label: str | None =
 		first_line = False
 	return result[:-1]
 
-def float_to_str(value, strip_zero_decimals=True, max_decimals=4): # type: (float, bool, int) -> str
+def float_to_str(value: float, strip_zero_decimals: bool = True, max_decimals: int = 4) -> str:
 	result = str(value)
 	if result.endswith('.0') and strip_zero_decimals:
 		result = result[:-2]
@@ -214,22 +214,22 @@ def float_to_str(value, strip_zero_decimals=True, max_decimals=4): # type: (floa
 		result = result[:result.index('.') + max_decimals + 1]
 	return result
 
-def rpad(label, value='', span=20, padding=' '): # type: (str, str, int, str) -> str
+def rpad(label: str, value: str = '', span: int = 20, padding: str = ' ') -> str:
 	label = str(label)
 	return '%s%s%s' % (label, padding * (span - len(label)), value)
 pad = rpad
 
-def lpad(label, span=20, padding=' '): # type: (str, int, str) -> str
+def lpad(label: str, span: int = 20, padding: str = ' ') -> str:
 	label = str(label)
 	return '%s%s' % (padding * (span - len(label)), label)
 
-def get_umask(): # type: () -> int
+def get_umask() -> int:
 	umask = os.umask(0)
 	os.umask(umask)
 	return umask
 
 BYTE_UNITS = ('B','KB','MB','GB')
-def format_byte_size(bytes): # type: (float) -> str
+def format_byte_size(bytes: float) -> str:
 	value = bytes
 	unit_id = 0
 	while value / 1024.0 >= 1 and unit_id < len(BYTE_UNITS)-1:
@@ -237,7 +237,7 @@ def format_byte_size(bytes): # type: (float) -> str
 		unit_id += 1
 	return float_to_str(value, max_decimals=2) + BYTE_UNITS[unit_id]
 
-def create_temp_file(name, createmode=None): # type: (str, int | None) -> str
+def create_temp_file(name: str, createmode: int | None = None) -> str:
 	directory, filename = os.path.split(name)
 	handle, temp_file = tempfile.mkstemp(prefix=".%s-" % filename, dir=directory)
 	os.close(handle)
@@ -256,7 +256,7 @@ def create_temp_file(name, createmode=None): # type: (str, int | None) -> str
 
 	return temp_file
 
-def start_file(filepath): # type: (str) -> None
+def start_file(filepath: str) -> None:
 	if hasattr(os, 'startfile'):
 		os.startfile(filepath)
 	else:

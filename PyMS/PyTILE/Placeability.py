@@ -15,20 +15,20 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 		self.config_ = config
 		self.delegate = delegate
 		self.id = id
-		self.canvass = [] # type: list[Canvas]
-		self.canvas_images = [] # type: list[list[Image]]
-		self.groups = [] # type: list[list[IntegerVar]]
-		self.selecting = None # type: tuple[int, int] | None
+		self.canvass: list[Canvas] = []
+		self.canvas_images: list[list[Image]] = []
+		self.groups: list[list[IntegerVar]] = []
+		self.selecting: tuple[int, int] | None = None
 		self.width = 0
 		PyMSDialog.__init__(self, parent, 'Doodad Placeability [%s]' % id, resizable=(False,False))
 
-	def widgetize(self): # type: () -> (Widget | None)
+	def widgetize(self) -> Widget | None:
 		tileset = self.delegate.get_tileset()
 		assert tileset is not None
 		f = Frame(self)
 		ty = -1
-		def select_callback(pos): # type: (tuple[int, int]) -> Callable[[Event], None]
-			def select(_): # type: (Event) -> None
+		def select_callback(pos: tuple[int, int]) -> Callable[[Event], None]:
+			def select(_: Event) -> None:
 				self.select(pos)
 			return select
 		for group_id in range(tileset.cv5.group_count()):
@@ -66,21 +66,21 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 		f.pack(padx=5,pady=5)
 		return None
 
-	def select(self, pos): # type: (tuple[int, int]) -> None
+	def select(self, pos: tuple[int, int]) -> None:
 		self.selecting = pos
 		from .TilePalette import TilePalette
 		TilePalette(self, self.config_, self, TileType.group, self.groups[pos[1]][pos[0]].get())
 
-	def change(self, _, id): # type: (TileType, int) -> None
+	def change(self, _: TileType, id: int) -> None:
 		if self.selecting is None:
 			return
 		self.groups[self.selecting[1]][self.selecting[0]].set(id)
 		self.selecting = None
 
-	def cancel(self, e=None): # type: (Event | None) -> None
+	def cancel(self, e: Event | None = None) -> None:
 		self.ok()
 
-	def ok(self, e=None): # type: (Event | None) -> None
+	def ok(self, e: Event | None = None) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			PyMSDialog.ok(self)
@@ -98,17 +98,17 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 			self.delegate.mark_edited()
 		PyMSDialog.ok(self)
 
-	def get_tileset(self): # type: () -> (Tileset | None)
+	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id): # type: (int | VX4Minitile) -> Image
+	def get_tile(self, id: int | VX4Minitile) -> Image:
 		return self.delegate.get_tile(id)
 
-	def megaload(self): # type: () -> None
+	def megaload(self) -> None:
 		pass
 
-	def mark_edited(self): # type: () -> None
+	def mark_edited(self) -> None:
 		pass
 
-	def update_ranges(self): # type: () -> None
+	def update_ranges(self) -> None:
 		pass

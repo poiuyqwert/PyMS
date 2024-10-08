@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..utils import is_mac
 
 class FileType(tuple[str, str]):
@@ -7,14 +9,14 @@ class FileType(tuple[str, str]):
 	SEPARATOR = ';'
 
 	@staticmethod
-	def include_all_files(file_types): # type: (list[FileType]) -> list[FileType]
+	def include_all_files(file_types: list[FileType]) -> list[FileType]:
 		all_files = FileType.all_files()
 		if all_files in file_types:
 			return file_types
 		return file_types + [all_files]
 
 	@staticmethod
-	def default_extension(file_types): # type: (list[FileType]) -> (str | None)
+	def default_extension(file_types: list[FileType]) -> (str | None):
 		if not file_types:
 			return None
 		extension = file_types[0].extensions
@@ -204,8 +206,8 @@ class FileType(tuple[str, str]):
 	def json(name='JSON'):
 		return FileType(name, 'json')
 
-	def __new__(self, name, *exts): # type: (str, *str) -> FileType
-		extensions = list(exts) # type: list[str]
+	def __new__(self, name: str, *exts: str) -> FileType:
+		extensions: list[str] = list(exts)
 		for i, extension in enumerate(extensions):
 			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension

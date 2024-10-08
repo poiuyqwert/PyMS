@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class OrdersTab(DATTab):
 	DAT_ID = DATID.orders
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -164,7 +164,7 @@ class OrdersTab(DATTab):
 
 		self.highlightentry.trace('w', lambda *_: self.drawpreview())
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.stat_txt in ids:
 			self.labels.setentries(('None',) + self.delegate.data_context.stat_txt.strings)
 			self.labelentry.range[1] = len(self.delegate.data_context.stat_txt.strings)
@@ -194,19 +194,19 @@ class OrdersTab(DATTab):
 			self.energyentry.range[1] = 255
 			self.obscuredentry.range[1] = 255
 
-	def choose_icon(self): # type: () -> None
+	def choose_icon(self) -> None:
 		def update_icon(index):
 			self.highlightentry.set(index)
 		IconSelectDialog(self, self.delegate.data_context, update_icon, self.highlightentry.get(), none_index=65535)
 
-	def drawpreview(self): # type: () -> None
+	def drawpreview(self) -> None:
 		self.preview.delete(ALL)
 		index = self.highlightentry.get()
 		image = self.delegate.data_context.get_cmdicon(index)
 		if image:
 			self.preview.create_image(19-image[1]//2+(image[0].width()-image[2])//2, 19-image[3]//2+(image[0].height()-image[4])//2, image=image[0])
 
-	def load_entry(self, entry): # type: (DATOrder) -> None
+	def load_entry(self, entry: DATOrder) -> None:
 		self.label.set(entry.label)
 		self.weapontargeting.set(entry.use_weapon_targeting)
 		self.is_secondary.set(entry.unused_is_secondary)
@@ -229,7 +229,7 @@ class OrdersTab(DATTab):
 		
 		self.drawpreview()
 
-	def save_entry(self, entry): # type: (DATOrder) -> None
+	def save_entry(self, entry: DATOrder) -> None:
 		if self.label.get() != entry.label:
 			entry.label = self.label.get()
 			self.edited = True

@@ -34,7 +34,7 @@ class DataContext(object):
 	mpq_handler: MPQHandler
 	iscriptbin: IScriptBIN
 
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.config = PyDATConfig()
 
 		self.update_cb: Callback[AnyID] = Callback()
@@ -78,23 +78,23 @@ class DataContext(object):
 		self.orders = OrdersDATData(self)
 		self.orders.update_cb += self.update_cb
 
-		self.palettes = {} # type: dict[str, RawPalette]
-		self.grp_cache = {} # type: dict[str, dict[str, dict[int, ImageWithBounds]]]
-		self.hints = {} # type: dict[str, str]
+		self.palettes: dict[str, RawPalette] = {}
+		self.grp_cache: dict[str, dict[str, dict[int, ImageWithBounds]]] = {}
+		self.hints: dict[str, str] = {}
 
 		# TODO: Make adjustable (which will also need the FloatVar limits to be adjusted in the tabs)
 		self.ticks_per_second = TicksPerSecond.fastest
 
 		self.load_hints()
 
-	def load_hints(self): # type: () -> None
+	def load_hints(self) -> None:
 		with open(Assets.data_file_path('Hints.txt'),'r') as hints:
 			for l in hints:
 				m = re.match('(\\S+)=(.+)\n?', l)
 				if m:
 					self.hints[m.group(1)] = m.group(2)
 
-	def load_palettes(self): # type: () -> None
+	def load_palettes(self) -> None:
 		self.palettes = {}
 		pal = Palette()
 		palette_configs = [
@@ -112,7 +112,7 @@ class DataContext(object):
 				continue
 			self.palettes[name] = pal.palette
 
-	def load_mpqs(self): # type: () -> None
+	def load_mpqs(self) -> None:
 		self.mpq_handler = MPQHandler(self.config.mpqs)
 
 	# @overload
@@ -136,7 +136,7 @@ class DataContext(object):
 	# @overload
 	# def dat_data(self, datid: Literal[DATID.mapdata]) -> CampaignDATData: ...
 
-	def dat_data(self, datid): # type: (DATID) -> DATData
+	def dat_data(self, datid: DATID) -> DATData:
 		match datid:
 			case DATID.units:
 				return self.units
@@ -161,7 +161,7 @@ class DataContext(object):
 			case DATID.orders:
 				return self.orders
 
-	def data_data(self, dataid): # type: (DataID) -> (TBLData | IconData | IScriptBIN)
+	def data_data(self, dataid: DataID) -> TBLData | IconData | IScriptBIN:
 		match dataid:
 			case DataID.stat_txt:
 				return self.stat_txt
@@ -180,7 +180,7 @@ class DataContext(object):
 			case DataID.iscriptbin:
 				return self.iscriptbin
 
-	def load_additional_files(self): # type: () -> None
+	def load_additional_files(self) -> None:
 		self.mpq_handler.open_mpqs()
 		try:
 			self.unitnamestbl.load_strings()
@@ -215,7 +215,7 @@ class DataContext(object):
 		self.campaign.update_names()
 		self.orders.update_names()
 
-	def load_dat_files(self): # type: () -> None
+	def load_dat_files(self) -> None:
 		defaultmpqs = MPQHandler()
 		defaultmpqs.open_mpqs()
 		self.units.load_defaults(defaultmpqs)
@@ -231,7 +231,7 @@ class DataContext(object):
 		self.orders.load_defaults(defaultmpqs)
 		defaultmpqs.close_mpqs()
 
-	def get_cmdicon(self, index, highlighted=False): # type: (int, bool) -> (ImageWithBounds | None)
+	def get_cmdicon(self, index: int, highlighted: bool = False) -> ImageWithBounds | None:
 		if not 'Icons' in self.palettes or not self.cmdicons.grp or index >= self.cmdicons.grp.frames:
 			return None
 		if highlighted in self.cmdicons.images and index in self.cmdicons.images[highlighted]:
@@ -247,7 +247,7 @@ class DataContext(object):
 		self.cmdicons.images[highlighted][index] = image
 		return image
 
-	def get_grp_frame(self, path, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0, is_full_path=False): # type: (str, int | None, int | None, Any, str | None, int | None, bool) -> (ImageWithBounds | None)
+	def get_grp_frame(self, path: str, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0, is_full_path: bool = False) -> ImageWithBounds | None:
 		if palette is None:
 			if path.startswith('thingy\\tileset\\'):
 				palette = 'Terrain'
@@ -285,7 +285,7 @@ class DataContext(object):
 			self.grp_cache[path][palette][draw_function] = cast(ImageWithBounds, frame_to_photo(self.palettes[palette], grp, frame, True, draw_function=rle_function, draw_info=draw_info))
 		return self.grp_cache[path][palette][draw_function]
 
-	def get_image_frame(self, image_id, draw_function=None, remapping=None, draw_info=None, palette=None, frame=0): # type: (int, int | None, int | None, Any, str | None, int) -> (ImageWithBounds | None)
+	def get_image_frame(self, image_id: int, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:
 		if not self.images.dat:
 			return None
 		image_entry = self.images.dat.get_entry(image_id)

@@ -149,41 +149,41 @@ class Listfiles(object):
 	def __init__(self):
 		self.filenames = {}
 
-	def add_listfile_list(self, filenames): # type: (list[str]) -> None
+	def add_listfile_list(self, filenames: list[str]) -> None:
 		for filename in filenames:
 			hash_name_a = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_a)
 			hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 			self.filenames[(hash_name_a, hash_name_b)] = filename
 
-	def add_listfile_str(self, filenames): # type: (str) -> None
+	def add_listfile_str(self, filenames: str) -> None:
 		self.add_listfile_list(RE_NEWLINE.split(filenames))
 
-	def add_listfile_file(self, file): # type: (TextIO) -> None
+	def add_listfile_file(self, file: TextIO) -> None:
 		self.add_listfile_str(file.read())
 
-	def add_listfile_path(self, path): # type: (str) -> None
+	def add_listfile_path(self, path: str) -> None:
 		with open(path, 'r') as file:
 			self.add_listfile_file(file)
 
-	def get_filenames(self): # type: () -> list[str]
+	def get_filenames(self) -> list[str]:
 		return list(self.filenames.values())
 
 BYTE = struct.Struct('<B')
 
 class MPQ(object):
-	def __init__(self): # type: () -> None
-		self.mpq_offset = None # type: int | None
-		self.file_size = None # type: int | None
-		self.headerv1 = None # type: MPQHeaderV1 | None
-		self.path = None # type: str | None
-		self.file_handle = None # type: BinaryIO | None
-		self.hash_table = None # type: list[MPQHashEntry] | None
-		self.block_table = None # type: list[MPQBlockEntry] | None
-		self.internal_listfiles = None # type: Listfiles | None
+	def __init__(self) -> None:
+		self.mpq_offset: int | None = None
+		self.file_size: int | None = None
+		self.headerv1: MPQHeaderV1 | None = None
+		self.path: str | None = None
+		self.file_handle: BinaryIO | None = None
+		self.hash_table: list[MPQHashEntry] | None = None
+		self.block_table: list[MPQBlockEntry] | None = None
+		self.internal_listfiles: Listfiles | None = None
 
-		self.external_listfiles = None # type: Listfiles | None
+		self.external_listfiles: Listfiles | None = None
 
-	def load_file(self, path): # type: (str) -> None
+	def load_file(self, path: str) -> None:
 		try:
 			file_handle = open(path, 'rb')
 		except:
@@ -262,12 +262,12 @@ class MPQ(object):
 		self.internal_listfiles = None
 
 	# Set a Listfiles object on the MPQ so you don't need to continue passing it to `list_files`
-	def set_listfiles(self, listfiles): # type: (Listfiles) -> None
+	def set_listfiles(self, listfiles: Listfiles) -> None:
 		self.external_listfiles = listfiles
 
-	def _find_hash_entries(self, filename): # type: (str) -> list[MPQHashEntry]
+	def _find_hash_entries(self, filename: str) -> list[MPQHashEntry]:
 		assert self.hash_table is not None
-		entries = [] # type: list[MPQHashEntry]
+		entries: list[MPQHashEntry] = []
 		hash_name_a = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_a)
 		hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 		for hash_entry in self.hash_table:
@@ -275,10 +275,10 @@ class MPQ(object):
 				entries.append(hash_entry)
 		return entries
 
-	def _find_hash_entry(self, start_index, hash_name_a, hash_name_b, locale=MPQLocale.neutral): # type: (int, int, int, int) -> (MPQHashEntry | None)
+	def _find_hash_entry(self, start_index: int, hash_name_a: int, hash_name_b: int, locale: int = MPQLocale.neutral) -> MPQHashEntry | None:
 		assert self.headerv1 is not None
 		assert self.hash_table is not None
-		neutral_hash_entry = None # type: MPQHashEntry | None
+		neutral_hash_entry: MPQHashEntry | None = None
 		for offset in range(self.headerv1.hash_table_entries):
 			index = (start_index + offset) % self.headerv1.hash_table_entries
 			hash_entry = self.hash_table[index]
@@ -293,7 +293,7 @@ class MPQ(object):
 					neutral_hash_entry = hash_entry
 		return neutral_hash_entry
 
-	def _find_hash_entry_by_filename(self, filename, locale=MPQLocale.neutral): # type: (str, int) -> (MPQHashEntry | None)
+	def _find_hash_entry_by_filename(self, filename: str, locale: int = MPQLocale.neutral) -> MPQHashEntry | None:
 		assert self.headerv1 is not None
 		assert self.hash_table is not None
 		if filename.startswith(MPQFileEntry.UNKNOWN_PREFIX):
@@ -307,7 +307,7 @@ class MPQ(object):
 		hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 		return self._find_hash_entry(start_index, hash_name_a, hash_name_b, locale)
 
-	def get_internal_listfiles(self): # type: () -> Listfiles
+	def get_internal_listfiles(self) -> Listfiles:
 		# BN3 files have different internal listfile setup
 		if self.internal_listfiles is None:
 			self.internal_listfiles = Listfiles()
@@ -321,7 +321,7 @@ class MPQ(object):
 		return self.internal_listfiles
 
 	# `listfiles` will be combined with the internal listfile (if available) and listfiles set through `set_listfiles` (if available)
-	def list_files(self, listfiles=None): # type: (Listfiles | None) -> list[MPQFileEntry]
+	def list_files(self, listfiles: Listfiles | None = None) -> list[MPQFileEntry]:
 		assert self.headerv1 is not None
 		assert self.hash_table is not None
 		assert self.block_table is not None
@@ -346,7 +346,7 @@ class MPQ(object):
 
 		return file_entries
 
-	def _read_file_by_block_entry(self, block_entry, crypt_key=None): # type: (MPQBlockEntry, int | None) -> bytes
+	def _read_file_by_block_entry(self, block_entry: MPQBlockEntry, crypt_key: int | None = None) -> bytes:
 		assert self.headerv1 is not None
 		assert self.file_handle is not None
 		assert self.mpq_offset is not None
@@ -372,7 +372,7 @@ class MPQ(object):
 		header_length = 0
 		# If BN3 then adjust for header length value
 
-		block_offsets = [] # type: list[int]
+		block_offsets: list[int] = []
 		if (block_entry.flags & MPQBlockFlag.imploded or block_entry.flags & MPQBlockFlag.compressed) and not block_entry.flags & MPQBlockFlag.single_unit:
 			self.file_handle.seek(self.mpq_offset + block_entry.file_offset + header_length)
 			block_offsets_data = self.file_handle.read((total_blocks + 1) * 4)

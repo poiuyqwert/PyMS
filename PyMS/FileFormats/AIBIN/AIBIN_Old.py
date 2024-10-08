@@ -1758,7 +1758,7 @@ class AIBIN:
 		f.close()
 		return warnings
 
-	def compile_data(self, extra=False): # type: (bool) -> tuple[bytes, list[PyMSWarning]]
+	def compile_data(self, extra: bool = False) -> tuple[bytes, list[PyMSWarning]]:
 		data = ''
 		warnings = []
 		ais = ''
@@ -2128,7 +2128,7 @@ class BWBIN(AIBIN):
 			f.close()
 		return warnings
 
-	def compile_data(self, extra=False): # type: (bool) -> tuple[bytes, list[PyMSWarning]]
+	def compile_data(self, extra: bool = False) -> tuple[bytes, list[PyMSWarning]]:
 		data = ''
 		ais = ''
 		table = ''

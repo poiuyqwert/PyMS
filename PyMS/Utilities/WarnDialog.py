@@ -3,13 +3,13 @@ from .PyMSDialog import PyMSDialog
 from .UIKit import *
 
 class WarnDialog(PyMSDialog):
-	def __init__(self, parent, message, title='Warning!', show_dont_warn=False): # type: (Misc, str, str, bool) -> None
+	def __init__(self, parent: Misc, message: str, title: str = 'Warning!', show_dont_warn: bool = False) -> None:
 		self.message = message
 		self.dont_warn = IntVar()
 		self.show_dont_warn = show_dont_warn
 		PyMSDialog.__init__(self, parent, title, resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		Label(self, text=self.message).pack(side=TOP, padx=20,pady=10)
 		frame = Frame(self)
 		if self.show_dont_warn:
@@ -19,5 +19,5 @@ class WarnDialog(PyMSDialog):
 		frame.pack(side=BOTTOM, fill=BOTH, padx=20,pady=(0,10))
 		return ok
 
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		self.minsize(300, 100)

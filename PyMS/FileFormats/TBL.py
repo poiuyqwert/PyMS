@@ -86,7 +86,7 @@ TBL_REF = """#----------------------------------------------------
 
 DEF_DECOMPILE = ''.join([chr(x) for x in range(32)]) + '#<>'
 
-def compile_string(string): # type: (str) -> str
+def compile_string(string: str) -> str:
 	def special_chr(o):
 		c = int(o.group(1)) 
 		if -1 > c or 255 < c:
@@ -94,7 +94,7 @@ def compile_string(string): # type: (str) -> str
 		return chr(c)
 	return re.sub(r'<(\d+)>', special_chr, string)
 
-def decompile_string(string, exclude='', include=''): # type: (str, str, str) -> str
+def decompile_string(string: str, exclude: str = '', include: str = '') -> str:
 	def special_chr(o):
 		return '<%s>' % ord(o.group(0))
 	decompile = DEF_DECOMPILE + include
@@ -103,23 +103,23 @@ def decompile_string(string, exclude='', include=''): # type: (str, str, str) ->
 	return re.sub('([%s])' % decompile, special_chr, string)
 
 class TBL:
-	def __init__(self): # type: () -> None
-		self.strings = [] # type: list[str]
+	def __init__(self) -> None:
+		self.strings: list[str] = []
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'TBL')
 		try:
 			n = int(struct.unpack('<H', data[:2])[0])
 			offsets = list(int(v) for v in struct.unpack('<%sH' % n, data[2:2+2*n]))
 			findlen = list(offsets) + [len(data)]
 			findlen.sort(reverse=True)
-			lengths = {} # type: dict[int, int]
+			lengths: dict[int, int] = {}
 			for i in range(1,len(findlen)):
 				start = findlen[i]
 				if not start in lengths:
 					end = findlen[i-1]
 					lengths[start] = end-start
-			strings = [] # type: list[str]
+			strings: list[str] = []
 			for i in range(len(offsets)):
 				o = offsets[i]
 				l = lengths[o]
@@ -128,14 +128,14 @@ class TBL:
 		except:
 			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)
 
-	def interpret(self, file): # type: (str) -> None
+	def interpret(self, file: str) -> None:
 		try:
 			f = open(file,'r')
 			lines = f.readlines()
 			f.close()
 		except:
 			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
-		strings = [] # type: list[str]
+		strings: list[str] = []
 		for n,l in enumerate(lines):
 			line = l.split('#',1)[0]
 			if line:
@@ -145,7 +145,7 @@ class TBL:
 				strings.append(s)
 		self.strings = strings
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		o = 2 + 2 * len(self.strings)
 		header = struct.pack('<H', len(self.strings))
 		data = b''
@@ -157,7 +157,7 @@ class TBL:
 			o += len(s)
 		return header + data
 
-	def compile(self, file): # type: (str) -> None
+	def compile(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
@@ -166,7 +166,7 @@ class TBL:
 		f.write(data)
 		f.close()
 
-	def decompile(self, file, ref=False): # type: (str, bool) -> None
+	def decompile(self, file: str, ref: bool = False) -> None:
 		try:
 			f = AtomicWriter(file, 'w')
 		except:

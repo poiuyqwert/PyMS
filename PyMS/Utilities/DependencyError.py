@@ -2,7 +2,7 @@
 from .UIKit import *
 
 class DependencyError(MainWindow):
-	def __init__(self, prog, msg, hotlinks=None): # type: (str, str, tuple[tuple[str, str], ...] | None) -> None
+	def __init__(self, prog: str, msg: str, hotlinks: tuple[tuple[str, str], ...] | None = None) -> None:
 		#Window
 		MainWindow.__init__(self)
 		self.resizable(False,False)

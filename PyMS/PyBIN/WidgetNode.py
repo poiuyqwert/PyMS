@@ -13,7 +13,7 @@ import sys
 from typing import cast
 
 class WidgetNode:
-	SMK_FRAME_CACHE = {} # type: dict[str, dict[int, ImageTk.PhotoImage]]
+	SMK_FRAME_CACHE: dict[str, dict[int, ImageTk.PhotoImage]] = {}
 
 	def __init__(self, delegate: NodeDelegate, widget: DialogBIN.BINWidget | None = None) -> None:
 		self.delegate = delegate

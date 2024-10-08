@@ -19,16 +19,16 @@ class Click(Enum):
 		return 'bg'
 
 class MiniEditor(PyMSDialog):
-	def __init__(self, parent, id, delegate, colors={Click.left:0, Click.right:0}): # type: (Misc, int, MiniEditorDelegate, dict[Click, int]) -> None
+	def __init__(self, parent: Misc, id: int, delegate: MiniEditorDelegate, colors: dict[Click, int] = {Click.left:0, Click.right:0}) -> None:
 		self.colors = colors
-		self.click = None # type: Click | None
+		self.click: Click | None = None
 		self.select = False
 		self.id = id
 		self.delegate = delegate
 		self.edited = True
 		PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id, resizable=(False,False))
 
-	def widgetize(self): # type: () -> Widget
+	def widgetize(self) -> Widget:
 		tileset = self.delegate.get_tileset()
 		assert tileset is not None
 		self.canvas = Canvas(self, width=202, height=114)
@@ -41,12 +41,12 @@ class MiniEditor(PyMSDialog):
 		d = tileset.vr4.get_image(self.id)
 		self.colors[Click.left] = d[0][0]
 		self.indexs = []
-		def color_callback(pos, click): # type: (tuple[int, int], Click) -> Callable[[Event], None]
-			def color(_): # type: (Event) -> None
+		def color_callback(pos: tuple[int, int], click: Click) -> Callable[[Event], None]:
+			def color(_: Event) -> None:
 				self.color(pos, click)
 			return color
-		def pen_callback(index, click): # type: (int, Click) -> Callable[[Event], None]
-			def pen(_) : # type: (Event) -> None
+		def pen_callback(index: int, click: Click) -> Callable[[Event], None]:
+			def pen(_: Event) -> None:
 				self.pencolor(index, click)
 			return pen
 		for y,row in enumerate(d):
@@ -80,17 +80,17 @@ class MiniEditor(PyMSDialog):
 		b.pack(pady=3)
 		return ok
 
-	def dropper(self, e=None): # type: (Event | None) -> None
+	def dropper(self, e: Event | None = None) -> None:
 		if self.select:
 			self.canvas.delete('dropbd')
 		else:
 			self.canvas.create_rectangle(45, 90, 66, 111, outline='#000000', tags='dropbd')
 		self.select = not self.select
 
-	def release(self, e): # type: (Event) -> None
+	def release(self, e: Event) -> None:
 		self.click = None
 
-	def motion(self, e): # type: (Event) -> None
+	def motion(self, e: Event) -> None:
 		items = self.canvas.find_overlapping(e.x,e.y,e.x,e.y)
 		if self.click is None or not items:
 			return
@@ -100,7 +100,7 @@ class MiniEditor(PyMSDialog):
 		coords_str = tags[0][4:].split(',')
 		self.color((int(coords_str[0]), int(coords_str[1])), self.click)
 
-	def color(self, pos, click): # type: (tuple[int, int], Click) -> None
+	def color(self, pos: tuple[int, int], click: Click) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
@@ -117,7 +117,7 @@ class MiniEditor(PyMSDialog):
 			self.click = click
 		self.edited = True
 
-	def pencolor(self, index, click): # type: (int, Click) -> None
+	def pencolor(self, index: int, click: Click) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
@@ -125,7 +125,7 @@ class MiniEditor(PyMSDialog):
 		r = '#%02x%02x%02x' % tuple(tileset.wpe.palette[index])
 		self.canvas.itemconfig(click.config_key(), fill=r, outline=r)
 
-	def ok(self, _=None): # type: (Event | None) -> None
+	def ok(self, _: Event | None = None) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return

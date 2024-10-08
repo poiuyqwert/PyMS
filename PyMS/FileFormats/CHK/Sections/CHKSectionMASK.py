@@ -14,18 +14,18 @@ class CHKSectionMASK(CHKSection):
 	
 	raw_map: bytes
 	map: list[list[int]]
-	# def __init__(self, chk): # type: (CHK) -> None
+	# def __init__(self, chk: CHK) -> None:
 	# 	CHKSection.__init__(self, chk)
 	# 	self.raw_map = b''
 	# 	self.map = None # types: list[list[int]] | None
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.raw_map = data
 	
-	def requires_post_processing(self): # type: () -> bool
+	def requires_post_processing(self) -> bool:
 		return True
 	
-	def process_data(self): # type: () -> None
+	def process_data(self) -> None:
 		if self.map is not None:
 			return
 		self.map = []
@@ -38,7 +38,7 @@ class CHKSectionMASK(CHKSection):
 			offset = y*dims.width
 			self.map.append(list(int(t) for t in struct.unpack(struct_format, self.raw_map[offset:offset+dims.width])))
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		dims = self.chk.get_section(CHKSectionDIM)
 		assert dims is not None
 		result = b''
@@ -47,7 +47,7 @@ class CHKSectionMASK(CHKSection):
 			result += struct.pack(struct_format, *r)
 		return result
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % self.NAME
 		for row in self.map:
 			for t in row:

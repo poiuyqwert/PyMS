@@ -15,16 +15,16 @@ if TYPE_CHECKING:
 	from .DataContext import DataContext
 
 class IconData(object):
-	def __init__(self, data_context): # type: (DataContext) -> None
+	def __init__(self, data_context: DataContext) -> None:
 		self.data_context = data_context
-		self.grp = None # type: CacheGRP | None
-		self.ticon_pcx = None # type: PCX | None
-		self.names = () # type: tuple[str, ...]
-		self.images = {} # type: dict[bool, dict[int, ImageWithBounds]]
+		self.grp: CacheGRP | None = None
+		self.ticon_pcx: PCX | None = None
+		self.names: tuple[str, ...] = ()
+		self.images: dict[bool, dict[int, ImageWithBounds]] = {}
 
 		self.update_cb: Callback[DataID] = Callback()
 
-	def load_grp(self): # type: () -> None
+	def load_grp(self) -> None:
 		try:
 			grp = CacheGRP()
 			path = self.data_context.config.settings.files.cmdicons.file_path
@@ -36,7 +36,7 @@ class IconData(object):
 			self.images = {}
 			self.update_names()
 
-	def load_ticon_pcx(self): # type: () -> None
+	def load_ticon_pcx(self) -> None:
 		try:
 			pcx = PCX()
 			path = self.data_context.config.settings.files.ticon.file_path
@@ -47,11 +47,11 @@ class IconData(object):
 			self.ticon_pcx = pcx
 			self.images = {}
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		assert self.grp is not None
 		return self.grp.save_data()
 
-	def update_names(self): # type: () -> None
+	def update_names(self) -> None:
 		names = Assets.data_cache(Assets.DataReference.Icons)
 		if self.grp:
 			if self.grp.frames > len(names):
@@ -61,12 +61,12 @@ class IconData(object):
 		self.names = tuple(names)
 		self.update_cb(DataID.cmdicons)
 
-	def frame_count(self): # type: () -> int
+	def frame_count(self) -> int:
 		if self.grp:
 			return self.grp.frames
 		return len(self.names)
 
-	def frame_size(self): # type: () -> tuple[int, int]
+	def frame_size(self) -> tuple[int, int]:
 		if self.grp:
 			return (self.grp.width, self.grp.height)
 		return (36, 34)

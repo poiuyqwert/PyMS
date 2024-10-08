@@ -129,5 +129,5 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATSprite
 	FILE_NAME = "sprites.dat"
 
-	def get_entry(self, index): # type: (int) -> DATSprite
+	def get_entry(self, index: int) -> DATSprite:
 		return cast(DATSprite, super(SpritesDAT, self).get_entry(index))

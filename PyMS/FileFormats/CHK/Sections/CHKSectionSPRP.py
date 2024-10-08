@@ -16,18 +16,18 @@ class CHKSectionSPRP(CHKSection):
 	NAME = 'SPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.scenarioName = 0
 		self.description = 0
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.scenarioName,self.description = tuple(int(v) for v in struct.unpack('<HH', data[:4]))
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<HH', self.scenarioName, self.description)
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t%s\n' % pad('ScenarioName', 'String %d' % self.scenarioName)
 		result += '\t%s\n' % pad('Description', 'String %d' % self.description)

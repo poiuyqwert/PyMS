@@ -57,14 +57,14 @@ class DATPortraits(AbstractDAT.AbstractDATEntry):
 			self.talking = talking
 
 class DATPortraitCoder(DATCoders.DATPropertyCoder):
-	def encode(self, portrait): # type: (DATPortrait) -> OrderedDict[str, int]
+	def encode(self, portrait: DATPortrait) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['portrait_file'] = portrait.portrait_file
 		values['smk_change'] = portrait.smk_change
 		values['unknown'] = portrait.unknown
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATPortrait
+	def decode(self, values: dict[str, int]) -> DATPortrait:
 		if not 'portrait_file' in values:
 			raise PyMSError('Decode', 'Portrait missing `portrait_file` value')
 		if not 'smk_change' in values:
@@ -116,5 +116,5 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATPortraits
 	FILE_NAME = "portdata.dat"
 
-	def get_entry(self, index): # type: (int) -> DATPortraits
+	def get_entry(self, index: int) -> DATPortraits:
 		return cast(DATPortraits, super(PortraitsDAT, self).get_entry(index))

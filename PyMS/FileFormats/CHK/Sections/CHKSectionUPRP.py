@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKUnitProperties(object):
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 		self.validAbilities = 0
 		self.validProperties = 0
@@ -25,14 +25,14 @@ class CHKUnitProperties(object):
 		self.hangerUnits = 0
 		self.abilityStates = 0
 
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates = \
 			tuple(int(v) for v in struct.unpack('<2H4BL2H4x', data[:20]))
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<2H4BL2H4x', self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates)
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '\t#\n'
 		data = {
 			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
@@ -57,11 +57,11 @@ class CHKSectionUPRP(CHKSection):
 	NAME = 'UPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.properties = [] # type: list[CHKUnitProperties]
+		self.properties: list[CHKUnitProperties] = []
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.properties = []
 		o = 0
 		while o+20 <= len(data):
@@ -70,13 +70,13 @@ class CHKSectionUPRP(CHKSection):
 			self.properties.append(properties)
 			o += 20
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		result = b''
 		for properties in self.properties:
 			result += properties.save_data()
 		return result
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		for properties in self.properties:
 			result += properties.decompile()

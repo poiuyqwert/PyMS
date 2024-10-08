@@ -29,9 +29,9 @@ class Menu(_Tk.Menu, Extensions):
 			self.config(**{option: value})
 
 	def __init__(self, master: _Tk.Misc | None =None, cnf={}, **kw):
-		self._items = {} # type: dict[str, Menu.Item]
+		self._items: dict[str, Menu.Item] = {}
 		self._tag_manager = TagStateManager()
-		self._cascade_menus = [] # type: list[Menu]
+		self._cascade_menus: list[Menu] = []
 		_Tk.Menu.__init__(self, master, cnf, **kw)
 		Theme.apply_theme(self)
 

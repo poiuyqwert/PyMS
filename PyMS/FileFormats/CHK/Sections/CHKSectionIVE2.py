@@ -18,21 +18,21 @@ class CHKSectionIVE2(CHKSection):
 
 	RELEASE = 11
 	@staticmethod
-	def VER_NAME(v): # type: (int) -> str
+	def VER_NAME(v: int) -> str:
 		names = {
 			CHKSectionIVE2.RELEASE:'Release'
 		}
 		return names.get(v,'Unknown')
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionIVE2.RELEASE
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		self.version = int(struct.unpack('<H', data[:2])[0])
 	
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		return struct.pack('<H', self.version)
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',str(self.version)), CHKSectionIVE2.VER_NAME(self.version))

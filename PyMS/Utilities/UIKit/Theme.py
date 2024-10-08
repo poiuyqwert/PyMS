@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 import tkinter as _Tk
 import inspect as _inspect
 import re as _re
@@ -7,7 +9,7 @@ import traceback as _traceback
 from typing import Any, Callable, Type
 
 class Theme(object):
-	def __init__(self, name): # type: (str) -> None
+	def __init__(self, name: str) -> None:
 		self.name = name
 
 		from .. import Assets
@@ -15,7 +17,7 @@ class Theme(object):
 
 		try:
 			with open(Assets.theme_file_path(name), 'r') as f:
-				theme = json.load(f) # type: dict[str, str | dict[str, dict[str, str | int]]]
+				theme: dict[str, str | dict[str, dict[str, str | int]]] = json.load(f)
 		except:
 			print(("Theme '%s' does not exist or has an invalid format" % name))
 			print((_traceback.format_exc()))
@@ -24,7 +26,7 @@ class Theme(object):
 		self.author = str(theme.get('author', 'None'))
 		self.description = str(theme.get('description', 'None'))
 
-		self.widget_styles = [] # type: list[tuple[_Selector, dict[str, str | int]]]
+		self.widget_styles: list[tuple[_Selector, dict[str, str | int]]] = []
 		try:
 			widgets = theme['widgets']
 			if not isinstance(widgets, dict):
@@ -51,12 +53,12 @@ class Theme(object):
 		elif colors:
 			print(("Theme '%s' has invalid 'colors'" % name))
 
-_THEME = None # type: Theme | None
-_WIDGET_TYPES = None # type: dict[str, Type[_Tk.Misc]] | None
+_THEME: Theme | None = None
+_WIDGET_TYPES: dict[str, Type[_Tk.Misc]] | None = None
 
 class _SettingType(object):
 	@staticmethod
-	def integer(value): # type: (Any) -> bool
+	def integer(value: Any) -> bool:
 		return isinstance(value, int)
 
 	RE_COLOR = _re.compile(r'#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})')
@@ -110,7 +112,7 @@ _ALLOWED_SETTINGS: dict[str, Callable[[Any], bool]] = {
 	'troughcolor': _SettingType.color,
 }
 
-def _resolve_widget_types(): # type: () -> None
+def _resolve_widget_types() -> None:
 	global _WIDGET_TYPES
 	from . import Widgets
 	_WIDGET_TYPES = {
@@ -165,12 +167,12 @@ class _Priority:
 
 class _Matcher(object):
 	class Result(object):
-		def __init__(self, success, consume_widget): # type: (bool, bool) -> None
+		def __init__(self, success: bool, consume_widget: bool) -> None:
 			self.success = success
 			self.consume_widget = consume_widget
 
 	@classmethod
-	def parse(cls, token): # type: (str) -> (_Matcher | None)
+	def parse(cls, token: str) -> _Matcher | None:
 		matcher_types: list[Type[_Matcher]] = [_ProgramMatcher, _WidgetMatcher, _WildcardMatcher]
 		for matcher_type in matcher_types:
 			matcher = matcher_type.parse(token)
@@ -178,40 +180,40 @@ class _Matcher(object):
 				return matcher
 		return None
 
-	def priority(self): # type: () -> int
+	def priority(self) -> int:
 		raise NotImplementedError(self.__class__.__name__ + '.priority()')
 
-	def matches(self, widget): # type: (_Tk.Misc) -> _Matcher.Result
+	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		raise NotImplementedError(self.__class__.__name__ + '.matches()')
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.__repr__()')
 
 class _ProgramMatcher(_Matcher):
 	PARSE_RE = _re.compile(r'\[(\w+)\]')
 	@classmethod
-	def parse(cls, token): # type: (str) -> (_ProgramMatcher | None)
+	def parse(cls, token: str) -> _ProgramMatcher | None:
 		match = _ProgramMatcher.PARSE_RE.match(token)
 		if not match:
 			return None
 		return _ProgramMatcher(match.group(1))
 
-	def __init__(self, program_name): # type: (str) -> None
+	def __init__(self, program_name: str) -> None:
 		self.program_name = program_name
 
-	def priority(self): # type: () -> int
+	def priority(self) -> int:
 		return _Priority.program_specific
 
-	def matches(self, widget): # type: (_Tk.Misc) -> _Matcher.Result
+	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		return _Matcher.Result(True, False)
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		return '[%s]' % self.program_name
 
 class _WidgetMatcher(_Matcher):
 	PARSE_RE = _re.compile(r'(\w+)(?:\.(\w+))?')
 	@classmethod
-	def parse(cls, token): # type: (str) -> (_WidgetMatcher | None)
+	def parse(cls, token: str) -> _WidgetMatcher | None:
 		match = _WidgetMatcher.PARSE_RE.match(token)
 		if not match or not _WIDGET_TYPES:
 			return None
@@ -220,17 +222,17 @@ class _WidgetMatcher(_Matcher):
 			return None
 		return _WidgetMatcher(widget_type, match.group(2))
 
-	def __init__(self, widget_type, tag_name): # type: (Type[_Tk.Misc], str | None) -> None
+	def __init__(self, widget_type: Type[_Tk.Misc], tag_name: str | None) -> None:
 		self.widget_type = widget_type
 		self.tag_name = tag_name
 
-	def priority(self): # type: () -> int
+	def priority(self) -> int:
 		priority = len(_inspect.getmro(self.widget_type))
 		if self.tag_name:
 			priority += _Priority.tag_specific
 		return priority
 
-	def matches(self, widget): # type: (_Tk.Misc) -> _Matcher.Result
+	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		matches = isinstance(widget, self.widget_type)
 		if matches and self.tag_name:
 			if hasattr(widget, 'theme_tag'):
@@ -239,34 +241,33 @@ class _WidgetMatcher(_Matcher):
 				matches = False
 		return _Matcher.Result(matches, True)
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		return self.widget_type.__name__ + ('.%s' % self.tag_name if self.tag_name else '')
 
 class _WildcardMatcher(_Matcher):
 	@classmethod
-	def parse(cls, token): # type: (str) -> (_WildcardMatcher | None)
+	def parse(cls, token: str) -> _WildcardMatcher | None:
 		if not token in '**':
 			return None
 		return _WildcardMatcher(token == '**')
 
-	def __init__(self, many): # type: (bool) -> None
+	def __init__(self, many: bool) -> None:
 		self.many = many
 
-	def priority(self): # type: () -> int
+	def priority(self) -> int:
 		return 0
 
-	def matches(self, widget): # type: (_Tk.Misc) -> _Matcher.Result
+	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		return _Matcher.Result(True, True)
 
 	def __repr__(self):
 		return '*' + ('*' if self.many else '')
 
 class _Selector(object):
-	def __init__(self, definition): # type: (str) -> None
-		global _WIDGET_TYPES
+	def __init__(self, definition: str) -> None:
 		if _WIDGET_TYPES is None:
 			_resolve_widget_types()
-		self.matchers = [] # type: list[_Matcher]
+		self.matchers: list[_Matcher] = []
 		for component in definition.split(' '):
 			matcher = _Matcher.parse(component)
 			if not matcher:
@@ -274,16 +275,16 @@ class _Selector(object):
 				raise Exception() # TODO: Error handling
 			self.matchers.append(matcher)
 
-	def is_default(self): # type: () -> bool
+	def is_default(self) -> bool:
 		return len(self.matchers) == 1 and isinstance(self.matchers[0], _WildcardMatcher) and not self.matchers[0].many
 
-	def priority(self): # type: () -> int
+	def priority(self) -> int:
 		priority = _Priority.depth_specific * len(self.matchers)
 		for matcher in self.matchers:
 			priority += matcher.priority()
 		return priority
 
-	def matches(self, _widget): # type: (_Tk.Misc) -> bool
+	def matches(self, _widget: _Tk.Misc) -> bool:
 		if self.is_default():
 			return True
 		matcher_index = -1
@@ -313,13 +314,13 @@ class _Selector(object):
 					return False
 		return True
 
-	def describe(self): # type: () -> str
+	def describe(self) -> str:
 		return ' '.join(repr(matcher) for matcher in self.matchers)
 
-	def __repr__(self): # type: () -> str
+	def __repr__(self) -> str:
 		return "<Theme.Selector '%s'>" % self.describe()
 
-def load_theme(name, main_window): # type: (str | None, _Tk.Tk) -> None
+def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 	if not name:
 		from ..setutils import PYMS_CONFIG
 		name = PYMS_CONFIG.theme.value
@@ -334,10 +335,9 @@ def load_theme(name, main_window): # type: (str | None, _Tk.Tk) -> None
 
 	apply_theme(main_window)
 
-_INVALID_SETTINGS = [] # type: list[str]
-_INVALID_VALUES = {} # type: dict[Callable[[Any], bool], list[str | int]]
-def apply_theme(widget): # type: (_Tk.Misc) -> None
-	global _THEME, _INVALID_SETTINGS, _INVALID_VALUES
+_INVALID_SETTINGS: list[str] = []
+_INVALID_VALUES: dict[Callable[[Any], bool], list[str | int]] = {}
+def apply_theme(widget: _Tk.Misc) -> None:
 	if not _THEME:
 		return
 	for selector,styles_dict in _THEME.widget_styles:
@@ -367,15 +367,14 @@ def apply_theme(widget): # type: (_Tk.Misc) -> None
 					continue
 				widget.configure({key: value})
 
-def get_tag(kwargs): # type: (dict[str, Any]) -> tuple[dict[str, Any], str | None]
+def get_tag(kwargs: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
 	theme_tag = kwargs.get('theme_tag')
 	if 'theme_tag' in kwargs:
 		del kwargs['theme_tag']
 	return (kwargs, theme_tag)
 
-_INVALID_COLORS = [] # type: list[str]
-def get_color(*keys, default='#000000'): # type: (str, str) -> (str)
-	global _THEME
+_INVALID_COLORS: list[str] = []
+def get_color(*keys: str, default: str = '#000000') -> str:
 	if not _THEME or not _THEME.colors:
 		return default
 	colors: dict = _THEME.colors

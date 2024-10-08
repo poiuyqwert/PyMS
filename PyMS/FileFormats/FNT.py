@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
@@ -75,7 +77,7 @@ COLOR_CODES_TITLE: Remapping = {
 # Any color codes after these will do nothing
 COLOR_OVERPOWER = [5,11,20]
 
-def letter_to_photo(palette, letter, color, remap=None, remap_palette=None): # type: (PCX.PCX, Pixels, int, Remapping | None, PCX.PCX | None) -> ImageTk.PhotoImage
+def letter_to_photo(palette: PCX.PCX, letter: Pixels, color: int, remap: Remapping | None = None, remap_palette: PCX.PCX | None = None) -> ImageTk.PhotoImage:
 	i = PILImage.new('RGBA', (len(letter[0]),len(letter)))
 	if remap is None:
 		remap = COLOR_CODES_INGAME
@@ -84,10 +86,10 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None): # t
 	color_map = remap[color]
 	while isinstance(color_map, int):
 		color_map = remap[color_map]
-	data = [] # type: list[int]
+	data: list[int] = []
 	for y in letter:
 		data.extend(y)
-	pal = [] # type: list[RGBA]
+	pal: list[RGBA] = []
 	for n,c in enumerate(palette.palette):
 		alpha = 0
 		if n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]:
@@ -97,7 +99,7 @@ def letter_to_photo(palette, letter, color, remap=None, remap_palette=None): # t
 	i.putdata([pal[palette.image[color_map[0]][color_map[1]*8+i]] for i in data]) # type: ignore
 	return ImageTk.PhotoImage(i)
 
-def fnttobmp(fnt,pal,file=None): # type: (FNT, RawPalette, str | None) -> (BMP.BMP | None)
+def fnttobmp(fnt: FNT, pal: RawPalette, file: str | None = None) -> BMP.BMP | None:
 	b = BMP.BMP()
 	b.set_pixels(fnt.letters[0],pal)
 	for l in fnt.letters[1:]:
@@ -109,7 +111,7 @@ def fnttobmp(fnt,pal,file=None): # type: (FNT, RawPalette, str | None) -> (BMP.B
 	b.save_file(file)
 	return None
 
-def bmptofnt(bmp,lowi,letters,file=None): # type: (BMP.BMP, int, int, str | None) -> (FNT | None)
+def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> FNT | None:
 	f = FNT()
 	f.start,f.width,f.height = lowi,bmp.width // letters,bmp.height
 	for l in range(letters):
@@ -124,27 +126,27 @@ def bmptofnt(bmp,lowi,letters,file=None): # type: (BMP.BMP, int, int, str | None
 Size = Tuple[int, int, int, int]
 
 class FNT:
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.width = 0
 		self.height = 0
 		self.start = 0
-		self.letters = [] # type: list[Pixels]
-		self.sizes = [] # type: list[Size]
+		self.letters: list[Pixels] = []
+		self.sizes: list[Size] = []
 
-	def load_file(self, file): # type: (str | BinaryIO) -> None
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'FNT')
 		if data[:4] != b'FONT':
 			raise PyMSError('Load',"Invalid FNT file '%s' (invalid header)" % file)
 		try:
 			lowi,highi,maxw,maxh = tuple(int(v) for v in struct.unpack('<4B',data[4:8]))
-			letters = [] # type: list[Pixels]
-			sizes = [] # type: list[Size]
+			letters: list[Pixels] = []
+			sizes: list[Size] = []
 			for l in range(highi-lowi+1):
 				o = 8+4*l
 				o = int(struct.unpack('<L',data[o:o+4])[0])
 				if o:
 					width,height,xoffset,yoffset = tuple(int(v) for v in struct.unpack('4B', data[o:o+4]))
-					pxls = [[]] # type: Pixels
+					pxls: Pixels = [[]]
 					o += 4
 					while len(pxls) < height or (len(pxls) == height and len(pxls[-1]) < width):
 						c = data[o]
@@ -177,7 +179,7 @@ class FNT:
 		except:
 			raise PyMSError('Load',"Unsupported FNT file '%s', could possibly be corrupt" % file)
 
-	def save_file(self, file): # type: (str) -> None
+	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
@@ -189,7 +191,7 @@ class FNT:
 		header += self.height.to_bytes()
 		o = 8+4*len(self.letters)
 		data = b''
-		hist = {} # type: dict[bytes, int]
+		hist: dict[bytes, int] = {}
 		for d in self.letters:
 			ldata = b''
 			maxw = len(d[0])

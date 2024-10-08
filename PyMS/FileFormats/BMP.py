@@ -9,7 +9,7 @@ import struct, math
 
 from typing import BinaryIO
 
-def getPadding(value,alignment): # type: (int, int) -> int
+def getPadding(value: int, alignment: int) -> int:
 	return int(math.ceil(value/float(alignment)))*alignment - value
 
 class RLE:
@@ -19,8 +19,8 @@ class RLE:
 	ABSOLUTE_DELTA = 2
 
 	@staticmethod
-	def decompress(data, width, height): # type: (bytes, int, int) -> Pixels
-		image = [[]] # type: Pixels
+	def decompress(data: bytes, width: int, height: int) -> Pixels:
+		image: Pixels = [[]]
 		offset = 0
 		while True:
 			if data[offset] == RLE.ABSOLUTE_MODE:
@@ -55,17 +55,17 @@ class RLE:
 		return image
 
 class BMP:
-	def __init__(self, palette=[]): # type: (RawPalette) -> None
+	def __init__(self, palette: RawPalette = []) -> None:
 		self.width = 0
 		self.height = 0
 		self.palette = palette
-		self.image = [] # type: Pixels
+		self.image: Pixels = []
 
-	def load_file(self, file, issize=None): # type: (str | BinaryIO, tuple[int, int] | None) -> None
+	def load_file(self, file: str | BinaryIO, issize: tuple[int, int] | None = None) -> None:
 		data = load_file(file, 'BMP')
 		self.load_data(data, issize=issize)
 
-	def load_data(self, data, issize=None): # type: (bytes, tuple[int, int] | None) -> None
+	def load_data(self, data: bytes, issize: tuple[int, int] | None = None) -> None:
 		if data[:2] != b'BM':
 			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
 		try:
@@ -77,13 +77,13 @@ class BMP:
 				raise PyMSError('Load',"The BMP is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all.")
 			if not colors_used:
 				colors_used = 256
-			palette = [] # type: RawPalette
+			palette: RawPalette = []
 			for x in range(0,4 * colors_used,4):
 				b,g,r = tuple(int(c) for c in struct.unpack('<3B',data[14+dib_header_size+x:17+dib_header_size+x]))
 				palette.append((r,g,b))
 			palette.extend([(0,0,0)] * (256-colors_used))
 			if not compression:
-				image = [] # type: Pixels
+				image: Pixels = []
 				pad = getPadding(width,4)
 				for y in range(height):
 					x = pixels_offset+(width+pad)*y
@@ -103,14 +103,14 @@ class BMP:
 		self.palette = palette
 		self.image = image
 
-	def set_pixels(self, image, palette=None): # type: (Pixels, RawPalette | None) -> None
+	def set_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)
 		self.width = len(image[0])
 		if palette:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file): # type: (str) -> None
+	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file,'wb')
 		except:

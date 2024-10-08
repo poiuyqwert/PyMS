@@ -63,7 +63,7 @@ class EditorGroup:
 		self.weight = weight
 		self.row = 0
 		self.column = 0
-		self.editors = [] # type: list[Widget]
+		self.editors: list[Widget] = []
 
 	def _tip(self, widget: Widget, tooltip: str) -> None:
 		if self.tooltip:
@@ -151,7 +151,7 @@ class CopyOptions(Generic[G]):
 			config.value = var.get()
 
 class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, ErrorableSettingsDialogDelegate):
-	def __init__(self, guifile=None): # type: (str | None) -> None
+	def __init__(self, guifile: str | None = None) -> None:
 		MainWindow.__init__(self)
 		self.guifile = guifile
 
@@ -171,8 +171,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.loading_megas = False
 		self.loading_minis = False
-		self.tileset = None # type: Tileset | None
-		self.file = None # type: str | None
+		self.tileset: Tileset | None = None
+		self.file: str | None = None
 		self.edited = False
 		self.megatile = None
 
@@ -182,7 +182,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def save_as(): # type: () -> None
+		def save_as() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
@@ -256,7 +256,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.flow_view = FlowView(self.groupid, width=300)
 		self.flow_view.pack(fill=BOTH, expand=1, padx=2)
 
-		self.normal_editors = [] # type: list[EditorGroup]
+		self.normal_editors: list[EditorGroup] = []
 		walkability_editor = EditorGroup(self.flow_view.content_view, 'Walkability')\
 			.check_flag('Walkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.walkable).add()\
 			.check_flag('Unwalkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.unwalkable).add()
@@ -309,7 +309,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		megatile_editor = EditorGroup(self.flow_view.content_view, 'MegaTile')
 		megatile_group = Frame(megatile_editor.content)
-		megatile_editors = [] # type: list[Widget]
+		megatile_editors: list[Widget] = []
 		f = Frame(megatile_group)
 		Label(f, text='ID:').pack(side=LEFT)
 		megatile_editors.append(Entry(f, textvariable=self.megatilee, font=Font.fixed(), width=len(str(self.megatilee.range[1])), state=DISABLED))
@@ -386,7 +386,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.bind(Shift.Ctrl.c(), copy_mega)
 		self.bind(Shift.Ctrl.v(), paste_mega)
 	
-		def copy_tilegroup(*args): # type: (Any) -> None
+		def copy_tilegroup(*args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -452,7 +452,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.export_group_settings(f, [group], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_tilegroup(*args): # type: (Any) -> None
+		def paste_tilegroup(*args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -482,7 +482,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.bind(Ctrl.Alt.c(), copy_tilegroup)
 		self.bind(Ctrl.Alt.v(), paste_tilegroup)
 
-		self.doodad_editors = [] # type: list[EditorGroup]
+		self.doodad_editors: list[EditorGroup] = []
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Doodad')
 			.label('ID').add(new_row=False).entry('Each doodad must have a unique Doodad ID.\nAll MegaTile Groups in the doodad must have the same ID.', self.group_piece_left_or_dddata_id).add()
@@ -600,24 +600,24 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.stat_txt = stat_txt
 			self.doodad_group_dropdown.setentries(['None'] + [TBL.decompile_string(s) for s in self.stat_txt.strings])
 		self.mpq_handler.close_mpqs()
-		return None
+		return err
 
-	def get_tileset(self): # type: () -> (Tileset | None)
+	def get_tileset(self) -> Tileset | None:
 		return self.tileset
 
-	def tile_palette_binding_widget(self): # type: () -> Self
+	def tile_palette_binding_widget(self) -> Self:
 		return self
 
-	def tile_palette_bind_updown(self): # type: () -> bool
+	def tile_palette_bind_updown(self) -> bool:
 		return False
 
-	def tile_palette_selection_changed(self): # type: () -> None
+	def tile_palette_selection_changed(self) -> None:
 		self.megaload()
 
-	def is_file_open(self): # type: () -> bool
+	def is_file_open(self) -> bool:
 		return not not self.tileset
 
-	def check_saved(self): # type: () -> CheckSaved
+	def check_saved(self) -> CheckSaved:
 		if not self.is_file_open() or not self.edited:
 			return CheckSaved.saved
 		file = self.file
@@ -633,7 +633,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		else:
 			return self.saveas()
 
-	def action_states(self, *args, **kwargs): # type: (Any, Any) -> None
+	def action_states(self, *args: Any, **kwargs: Any) -> None:
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
@@ -653,11 +653,11 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		can_copy_doodadgroup = is_file_open and self.options_copy_doodadgroup.any_enabled()
 		self.copy_doodadgroup_btn['state'] = NORMAL if can_copy_doodadgroup else DISABLED
 
-	def mark_edited(self, edited=True): # type: (bool) -> None
+	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
-	def get_tile(self, id_or_minitile): # type: (int | VX4Minitile) -> Image
+	def get_tile(self, id_or_minitile: int | VX4Minitile) -> Image:
 		if id_or_minitile in TilePalette.TILE_CACHE:
 			return TilePalette.TILE_CACHE[id_or_minitile]
 		assert self.tileset is not None
@@ -668,7 +668,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		TilePalette.TILE_CACHE[id_or_minitile] = image
 		return image
 
-	def megatile_apply_all(self, mode=None): # type: (MegaEditorMode | None) -> None
+	def megatile_apply_all(self, mode: MegaEditorMode | None = None) -> None:
 		if not self.tileset:
 			return
 		copy_mask = ~0
@@ -695,7 +695,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if edited:
 			self.mark_edited()
 
-	def doodad_apply_all(self): # type: () -> None
+	def doodad_apply_all(self) -> None:
 		if not self.tileset:
 			return
 		doodad_id = self.group_piece_left_or_dddata_id.get()
@@ -707,20 +707,20 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			if group_id != self.palette.selected[0] and group.doodad_dddata_id == doodad_id:
 				group.update_settings(copy_group)
 
-	def mega_edit_mode_updated(self, mode): # type: (MegaEditorMode) -> None
+	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
 		if mode == MegaEditorMode.mini or mode == MegaEditorMode.flip:
 			self.apply_all_btn.pack_forget()
 		else:
 			self.apply_all_btn.pack()
 
-	def update_group_label(self): # type: () -> None
+	def update_group_label(self) -> None:
 		if not self.tileset:
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])
 		d = ['',' - Doodad'][group.type == CV5Group.TYPE_DOODAD]
 		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.palette.selected[0], d)
  
-	def update_editor(self, doodad=False, force=False): # type: (bool, bool) -> None
+	def update_editor(self, doodad: bool = False, force: bool = False) -> None:
 		if self.doodad.get() == doodad and not force:
 			return
 		if doodad:
@@ -732,7 +732,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.flow_view.add_subview(editor.container, padx=2, weight=editor.weight)
 		self.doodad.set(doodad)
 
-	def megaload(self): # type: () -> None
+	def megaload(self) -> None:
 		if not self.tileset:
 			return
 		self.loading_megas = True
@@ -765,18 +765,18 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.update_group_label()
 		self.loading_megas = False
 
-	def miniload(self): # type: () -> None
+	def miniload(self) -> None:
 		if not self.tileset:
 			return
 		self.mega_editor.set_megatile(self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection])
 
-	def group_type_changed(self, *_): # type: (Any) -> None
+	def group_type_changed(self, *_: Any) -> None:
 		pass
 
-	def group_doodad_changed(self, *_): # type: (Any) -> None
+	def group_doodad_changed(self, *_: Any) -> None:
 		pass
 
-	def group_values_changed(self, *_): # type: (Any) -> None
+	def group_values_changed(self, *_: Any) -> None:
 		if not self.tileset or self.loading_megas:
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])
@@ -802,7 +802,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			group.basic_piece_down = self.group_piece_down_or_unknown8.get()
 		self.mark_edited()
 
-	def choose(self, tile_type): # type: (TileType) -> None
+	def choose(self, tile_type: TileType) -> None:
 		if not self.tileset:
 			return
 		TilePalette(
@@ -814,7 +814,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			editing=True
 		)
 
-	def change(self, tiletype, id): # type: (TileType, int) -> None
+	def change(self, tiletype: TileType, id: int) -> None:
 		if not self.tileset:
 			return
 		if tiletype == TileType.group:
@@ -825,10 +825,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.mega_editor.set_megatile(id)
 			self.mark_edited()
 
-	def placeability(self): # type: () -> None
+	def placeability(self) -> None:
 		Placeability(self, self.config_, self, self.group_piece_left_or_dddata_id.get())
 
-	def update_ranges(self): # type: () -> None
+	def update_ranges(self) -> None:
 		if not self.tileset:
 			return
 		self.megatilee.setrange([0,self.tileset.vf4.megatile_count()-1])
@@ -836,7 +836,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.palette.update_size()
 		self.palette.draw_tiles(force=True)
 
-	def open(self, key=None, file=None): # type: (Any, str | None) -> None
+	def open(self, key: Event | None = None, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
@@ -860,10 +860,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if self.tileset.vx4.is_expanded():
 			self.config_.dont_warn.expanded_vx4.present(self)
 
-	def save(self, key=None) -> CheckSaved:
+	def save(self, key: Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, key=None, file_path=None): # type: (Any, str | None) -> CheckSaved
+	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.tileset:
 			return CheckSaved.saved
 		if not file_path:
@@ -882,7 +882,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.mark_edited(False)
 		return CheckSaved.saved
 
-	def close(self, key=None): # type: (Any) -> None
+	def close(self, key: Any = None) -> None:
 		if not self.is_file_open():
 			return
 		if self.check_saved() == CheckSaved.cancelled:
@@ -899,7 +899,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.palette.draw_tiles()
 		self.action_states()
 
-	def register_registry(self, e=None): # type: (Any) -> None
+	def register_registry(self, e: Any = None) -> None:
 		try:
 			register_registry('PyTILE', 'cv5', '')
 		except PyMSError as e:
@@ -908,13 +908,13 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def settings(self, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
-	def help(self, e=None): # type: (Any) -> None
+	def help(self, e: Any = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTILE.md')
 
-	def about(self, key=None): # type: (Any) -> None
+	def about(self, key: Any = None) -> None:
 		AboutDialog(self, 'PyTILE', LONG_VERSION, [('FaRTy1billion','Tileset file specs and HawtTiles.')])
 
-	def exit(self, e=None): # type: (Any) -> None
+	def exit(self, e: Any = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)

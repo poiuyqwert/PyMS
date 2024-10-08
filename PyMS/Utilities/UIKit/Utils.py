@@ -201,7 +201,7 @@ class GeometryAdjust:
 ScrollRegion = tuple[int, int, int, int]
 
 RE_SCROLLREGION = _re.compile(r'(\d+) (\d+) (\d+) (\d+)')
-def parse_scrollregion(scrollregion, default=(0, 0, 0, 0)): # type: (str, ScrollRegion) -> ScrollRegion
+def parse_scrollregion(scrollregion: str, default: ScrollRegion = (0, 0, 0, 0)) -> ScrollRegion:
 	match = RE_SCROLLREGION.match(scrollregion)
 	if not match:
 		return default
@@ -210,7 +210,7 @@ def parse_scrollregion(scrollregion, default=(0, 0, 0, 0)): # type: (str, Scroll
 Resizable = tuple[bool, bool]
 
 RE_RESIZABLE = _re.compile(r'([01]) ([01])')
-def parse_resizable(resizable, default=(False, False)): # type: (tuple[int, int] | str, Resizable) -> Resizable
+def parse_resizable(resizable: tuple[int, int] | str, default: Resizable = (False, False)) -> Resizable:
 	if isinstance(resizable, tuple):
 		return (bool(resizable[0]), bool(resizable[1]))
 	match = RE_RESIZABLE.match(resizable)
@@ -239,7 +239,7 @@ EVENT_ATTRS = [
 	'widget',
 	'delta',
 ]
-def repr_event(event): # type: (_Tk.Event) -> str
+def repr_event(event: _Tk.Event) -> str:
 	result = '<Event'
 	for attr in EVENT_ATTRS:
 		if hasattr(event, attr):

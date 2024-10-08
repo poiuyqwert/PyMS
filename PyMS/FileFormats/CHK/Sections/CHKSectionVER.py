@@ -19,7 +19,7 @@ class CHKSectionVER(CHKSection):
 	SC104 = 63
 	BW = 205
 	@staticmethod
-	def VER_NAME(v): # type: (int) -> str
+	def VER_NAME(v: int) -> str:
 		names = {
 			CHKSectionVER.BETA:'Beta',
 			CHKSectionVER.SC100:'StarCraft 1.00',
@@ -28,7 +28,7 @@ class CHKSectionVER(CHKSection):
 		}
 		return names.get(v,'Unknown')
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionVER.BW
 		from .CHKSectionTYPE import CHKSectionTYPE

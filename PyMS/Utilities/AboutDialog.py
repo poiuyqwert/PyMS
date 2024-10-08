@@ -16,7 +16,7 @@ class AboutDialog(PyMSDialog):
 		])
 		PyMSDialog.__init__(self, parent, 'About %s' % program, resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		name = Label(self, text='%s %s' % (self.program, self.version), font=Font(size=18))
 		name.pack(pady=5)
 		frame = Frame(self)

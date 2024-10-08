@@ -883,5 +883,5 @@ class UnitsDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATUnit
 	FILE_NAME = "units.dat"
 
-	def get_entry(self, index): # type: (int) -> DATUnit
+	def get_entry(self, index: int) -> DATUnit:
 		return cast(DATUnit, super(UnitsDAT, self).get_entry(index))

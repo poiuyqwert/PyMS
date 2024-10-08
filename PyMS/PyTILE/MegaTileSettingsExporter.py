@@ -14,7 +14,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Export MegaTile Settings', resizable=(False,False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		self.height = IntVar()
 		self.height.set(self.config_.export.megatiles.height.value)
 		self.walkability = IntVar()
@@ -45,11 +45,11 @@ class MegaTileSettingsExporter(PyMSDialog):
 
 		return self.export_button
 
-	def update_states(self, *_): # type: (Any) -> None
+	def update_states(self, event: Event | None = None) -> None:
 		any_on = self.height.get() or self.walkability.get() or self.block_sight.get() or self.ramp.get()
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 
-	def export(self): # type: () -> None
+	def export(self) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
@@ -59,7 +59,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 		tileset.export_megatile_settings(path, self.ids)
 		self.ok()
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		self.config_.export.megatiles.height.value = not not self.height.get()
 		self.config_.export.megatiles.walkability.value = not not self.walkability.get()
 		self.config_.export.megatiles.block_sight.value = not not self.block_sight.get()

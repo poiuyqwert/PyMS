@@ -29,7 +29,7 @@ class ForceType(Enum):
 				return 'Air'
 
 class AIActionsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
@@ -154,7 +154,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
@@ -168,7 +168,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if not DATID.orders in ids:
 			return
 
@@ -189,7 +189,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.attackunitentry.range[1] = count
 		self.attackmoveentry.range[1] = count
 
-	def force_weapon_id(self, force_type): # type: (ForceType) -> tuple[int | None, int]
+	def force_weapon_id(self, force_type: ForceType) -> tuple[int | None, int]:
 		assert self.delegate.data_context.units.dat is not None
 		unit_id = self.sub_delegate.id
 		if unit_id == 72 or unit_id == 82: # Carrier/Gantrithor
@@ -207,7 +207,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			weapon_id = entry.ground_weapon
 		return (unit_id if unit_id != self.sub_delegate.id else None, weapon_id)
 
-	def build_force_value(self, force_type): # type: (ForceType) -> None
+	def build_force_value(self, force_type: ForceType) -> None:
 		assert self.delegate.data_context.units.dat is not None
 		assert self.delegate.data_context.weapons.dat is not None
 		force_type_name = force_type.display_name
@@ -282,7 +282,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			text.insert(END, '\n\nUsing weapons from Unit: ')
 			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
 
-	def build_force_values(self): # type: () -> None
+	def build_force_values(self) -> None:
 		text = self.force_value_text
 		text["state"] = NORMAL
 		text.delete('1.0', END)
@@ -291,7 +291,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.build_force_value(ForceType.air)
 		text["state"] = DISABLED
 
-	def load_data(self, entry): # type: (DATUnit) -> None
+	def load_data(self, entry: DATUnit) -> None:
 		self.computeridle.set(entry.comp_ai_idle)
 		self.humanidle.set(entry.human_ai_idle)
 		self.returntoidle.set(entry.return_to_idle)
@@ -302,7 +302,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.AI_NoGuard.set(entry.ai_internal & DATUnit.AIInternalFlag.no_guard == DATUnit.AIInternalFlag.no_guard)
 		self.build_force_values()
 
-	def save_data(self, entry): # type: (DATUnit) -> bool
+	def save_data(self, entry: DATUnit) -> bool:
 		edited = False
 		if self.computeridle.get() != entry.comp_ai_idle:
 			entry.comp_ai_idle = self.computeridle.get()

@@ -26,19 +26,19 @@ class DATTab(NotebookTab, DATTabConveniences):
 	ARROW_UP: Image
 	DAT_ID: DATID
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		self.id = 0
 		self.delegate = delegate
-		self.used_by_references = None # type: tuple[DATRefs, ...] | None
-		self.used_by_collapse_button = None # type: Button | None
-		self.used_by_listbox = None # type: ScrolledListbox | None
-		self.used_by_data = [] # type: list[DATRefMatch]
-		self.used_by_header = None # type: StringVar | None
+		self.used_by_references: tuple[DATRefs, ...] | None = None
+		self.used_by_collapse_button: Button | None = None
+		self.used_by_listbox: ScrolledListbox | None = None
+		self.used_by_data: list[DATRefMatch] = []
+		self.used_by_header: StringVar | None = None
 		self.edited = False
 		self.page_title = ''
 		NotebookTab.__init__(self, parent)
 
-	def get_dat_data(self): # type: () -> DATData
+	def get_dat_data(self) -> DATData:
 		return self.delegate.data_context.dat_data(self.DAT_ID)
 
 	def get_names_settings(self) -> PyDATConfig.Names.Options | PyDATConfig.Names.SimpleOptions:
@@ -66,7 +66,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			case DATID.orders:
 				return self.delegate.data_context.config.names.orders
 
-	def update_used_by_header(self): # type: () -> None
+	def update_used_by_header(self) -> None:
 		if not self.used_by_header:
 			return
 		text = 'Used By (%d)' % len(self.used_by_data)
@@ -74,7 +74,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			text += ':'
 		self.used_by_header.set(text)
 
-	def toggle_used_by(self, toggle=True): # type: (bool) -> None
+	def toggle_used_by(self, toggle: bool = True) -> None:
 		visible = self.delegate.data_context.config.show_used_by.value
 		if toggle:
 			visible = not visible
@@ -89,7 +89,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.used_by_listbox.pack(side=BOTTOM, fill=X, padx=2, pady=2)
 			self.used_by_collapse_button['image'] = DATTab.ARROW_DOWN
 
-	def setup_used_by(self, references): # type: (tuple[DATRefs, ...]) -> None
+	def setup_used_by(self, references: tuple[DATRefs, ...]) -> None:
 		self.used_by_references = references
 
 		f = Frame(self)
@@ -110,7 +110,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.toggle_used_by(toggle=False)
 		self.update_used_by_header()
 
-	def check_used_by_references(self, lookup_id=None, used_by=None, force_open=False): # type: (int | None, tuple[DATRefs, ...] | None, bool) -> None
+	def check_used_by_references(self, lookup_id: int | None = None, used_by: tuple[DATRefs, ...] | None = None, force_open: bool = False) -> None:
 		self.used_by_data = []
 		if not self.used_by_listbox:
 			return
@@ -128,7 +128,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if force_open and not self.delegate.data_context.config.show_used_by.value:
 			self.toggle_used_by()
 
-	def used_by_jump(self, *_): # type: (Event) -> None
+	def used_by_jump(self, event: Event | None) -> None:
 		if not self.used_by_listbox:
 			return
 		selections = cast(list[int], self.used_by_listbox.curselection())
@@ -142,7 +142,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			if match.dat_sub_tab_id:
 				tab.change_sub_tab(match.dat_sub_tab_id)
 
-	def jump(self, datid, entry_id): # type: (DATID, int) -> None
+	def jump(self, datid: DATID, entry_id: int) -> None:
 		if entry_id < self.delegate.data_context.dat_data(datid).entry_count() - 1:
 			self.delegate.change_tab(datid)
 			self.delegate.change_id(entry_id)
@@ -150,13 +150,13 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def change_sub_tab(self, sub_tab_id):
 		pass
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		pass
 
-	def deactivate(self): # type: () -> None
+	def deactivate(self) -> None:
 		self.save_data()
 
-	def load_data(self, id=None): # type: (int | None) -> None
+	def load_data(self, id: int | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
@@ -169,7 +169,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def load_entry(self, entry):
 		pass
 
-	def save_data(self): # type: () -> None
+	def save_data(self) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
@@ -182,7 +182,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def save_entry(self, entry):
 		pass
 
-	def unsaved(self): # type: () -> (bool | None)
+	def unsaved(self) -> bool | None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return None
@@ -199,14 +199,14 @@ class DATTab(NotebookTab, DATTabConveniences):
 				self.save()
 		return None
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
 		text = dat.export_entry(self.id)
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def paste(self): # type: () -> None
+	def paste(self) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
@@ -215,7 +215,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.edited = True
 		self.delegate.refresh()
 
-	def reload(self): # type: () -> None
+	def reload(self) -> None:
 		dat = self.get_dat_data().dat
 		default_dat = self.get_dat_data().default_dat
 		if not dat or not default_dat:
@@ -223,7 +223,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		dat.set_entry(self.id, copy.deepcopy(default_dat.get_entry(self.id)))
 		self.delegate.refresh()
 
-	def _expand_entries(self, add): # type: (int) -> None
+	def _expand_entries(self, add: int) -> None:
 		dat_data = self.get_dat_data()
 		if not dat_data.expand_entries(add):
 			return
@@ -232,7 +232,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		entry_count = dat_data.entry_count()
 		self.delegate.change_id(entry_count - 1)
 
-	def add_entry(self): # type: () -> None
+	def add_entry(self) -> None:
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
@@ -240,7 +240,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			return
 		self._expand_entries(1)
 
-	def set_entry_count(self): # type: () -> None
+	def set_entry_count(self) -> None:
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
@@ -253,27 +253,27 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self._expand_entries(add)
 		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.config.windows.entry_count)
 
-	def new(self, key=None): # type: (Event | None) -> None
+	def new(self, key: Event | None = None) -> None:
 		if not self.unsaved():
 			self.get_dat_data().new_file()
 			self.id = 0
 			self.delegate.refresh()
 
-	def open_file(self, file, save=True): # type: (str, bool) -> None
+	def open_file(self, file: str, save: bool = True) -> None:
 		if not save or not self.unsaved():
 			self.get_dat_data().load_file(file)
 			self.id = 0
 			if self.delegate.active_tab() == self:
 				self.delegate.refresh()
 
-	def open_data(self, file_data, save=True): # type: (bytes, bool) -> None
+	def open_data(self, file_data: bytes, save: bool = True) -> None:
 		if not save or not self.unsaved():
 			self.get_dat_data().load_data(file_data)
 			self.id = 0
 			if self.delegate.active_tab() == self:
 				self.delegate.refresh()
 
-	def iimport(self): # type: () -> None
+	def iimport(self) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
@@ -284,10 +284,10 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.edited = True
 		self.delegate.refresh()
 
-	def save(self, key=None): # type: (Event | None) -> None
+	def save(self, key: Event | None = None) -> None:
 		self.saveas(file_path=self.get_dat_data().file_path)
 
-	def saveas(self, key=None, file_path=None): # type: (Event | None, str | None) -> None
+	def saveas(self, key: Event | None = None, file_path: str | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
@@ -306,7 +306,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.edited = False
 		self.delegate.update_status_bar()
 
-	def export(self, key=None): # type: (Event | None) -> None
+	def export(self, key: Event | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return

@@ -11,23 +11,23 @@ class CHKSection(object):
 	NAME: str
 	REQUIREMENTS: CHKRequirements
 
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.load_data()')
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		raise NotImplementedError(self.__class__.__name__ + '.save_data()')
 
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.decompile()')
 
-	def interpret(self, text): # type: (str) -> None
+	def interpret(self, text: str) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.interpret()')
 
-	def requires_post_processing(self): # type: () -> bool
+	def requires_post_processing(self) -> bool:
 		return False
 
-	def process_data(self): # type: () -> None
+	def process_data(self) -> None:
 		pass

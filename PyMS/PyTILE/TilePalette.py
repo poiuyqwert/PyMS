@@ -18,13 +18,13 @@ from ..Utilities import Config
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
-	TILE_CACHE = {} # type: dict[int | VX4Minitile, Image]
+	TILE_CACHE: dict[int | VX4Minitile, Image] = {}
 
 	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
 		TilePalette.OPEN_PALETTE_COUNT += 1
 		self.config_ = config
 		self.tiletype = tiletype
-		self.start_selected = [] # type: list[int]
+		self.start_selected: list[int] = []
 		if select is not None:
 			if isinstance(select, list):
 				self.start_selected.extend(sorted(select))
@@ -35,7 +35,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		self.edited = False
 		PyMSDialog.__init__(self, parent, self.get_title(), resizable=(tiletype != TileType.group,True), set_min_size=(True,True))
 
-	def widgetize(self): # type: () -> None
+	def widgetize(self) -> None:
 		typename = ''
 		smallertype = ''
 		if self.tiletype == TileType.group:
@@ -76,31 +76,31 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		statusbar.add_label(self.status)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-	def get_tileset(self): # type: () -> (Tileset | None)
+	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id): # type: (int | VX4Minitile) -> Image
+	def get_tile(self, id: int | VX4Minitile) -> Image:
 		return self.delegate.get_tile(id)
 
-	def tile_palette_binding_widget(self): # type: () -> Misc
+	def tile_palette_binding_widget(self) -> Misc:
 		return self
 
-	def tile_palette_double_clicked(self, id): # type: (int) -> None
+	def tile_palette_double_clicked(self, id: int) -> None:
 		self.delegate.change(self.tiletype, id)
 		self.ok()
 
-	def tile_palette_bind_updown(self): # type: () -> bool
+	def tile_palette_bind_updown(self) -> bool:
 		return True
 
-	def tile_palette_selection_changed(self): # type: () -> None
+	def tile_palette_selection_changed(self) -> None:
 		self.update_status()
 		self.update_state()
 		self.palette.draw_selections()
 
-	def change(self, tile_type, id): # type: (TileType, int) -> None
+	def change(self, tile_type: TileType, id: int) -> None:
 		pass
 
-	def megaload(self): # type: () -> None
+	def megaload(self) -> None:
 		pass
 
 	def update_ranges(self): # type () -> None
@@ -116,14 +116,14 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			case TileType.mini:
 				return self.config_.windows.palette.mini
 
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def select_smaller(self): # type: () -> None
+	def select_smaller(self) -> None:
 		tileset = self.get_tileset()
 		if not tileset:
 			return
-		ids = [] # type: list[int]
+		ids: list[int] = []
 		for id in self.palette.selected:
 			if self.tiletype == TileType.group:
 				for sid in tileset.cv5.get_group(id).megatile_ids:
@@ -135,10 +135,10 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 						ids.append(minitile.image_id)
 		TilePalette(self, self.config_, self, TileType.mega if self.tiletype == TileType.group else TileType.mini, ids, editing=True)
 
-	def mark_edited(self): # type: () -> None
+	def mark_edited(self) -> None:
 		self.edited = True
 
-	def get_title(self): # type: () -> str
+	def get_title(self) -> str:
 		tileset = self.get_tileset()
 		if not tileset:
 			return 'Tile Palette'
@@ -155,10 +155,10 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			max_count = tileset.minitiles_max()
 		return '%s Palette [%d/%d]' % (['Group','MegaTile','MiniTile Image'][self.tiletype.value], count, max_count)
 
-	def update_title(self): # type: () -> None
+	def update_title(self) -> None:
 		self.title(self.get_title())
 
-	def update_state(self): # type: () -> None
+	def update_state(self) -> None:
 		tileset = self.get_tileset()
 		if not tileset or self.toolbar is None:
 			return
@@ -174,7 +174,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		has_selection = not not self.palette.selected
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-	def update_status(self): # type: () -> None
+	def update_status(self) -> None:
 		status = 'Selected: '
 		if len(self.palette.selected):
 			for id in self.palette.selected:
@@ -183,7 +183,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			status += 'None'
 		self.status.set(status)
 
-	def add(self): # type: () -> None
+	def add(self) -> None:
 		tileset = self.get_tileset()
 		if not tileset:
 			return
@@ -211,7 +211,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		self.delegate.update_ranges()
 		self.mark_edited()
 
-	def export_graphics(self): # type: () -> None
+	def export_graphics(self) -> None:
 		tileset = self.get_tileset()
 		if not tileset:
 			return
@@ -226,11 +226,11 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		if path:
 			tileset.export_graphics(self.tiletype, path, self.palette.selected)
 
-	def import_graphics(self): # type: () -> None
+	def import_graphics(self) -> None:
 		from .GraphicsImporter import GraphicsImporter
 		GraphicsImporter(self, self.config_, self, self.tiletype, self.palette.selected)
 
-	def imported_graphics(self, new_ids): # type: (list[int]) -> None
+	def imported_graphics(self, new_ids: list[int]) -> None:
 		TilePalette.TILE_CACHE.clear()
 		self.update_title()
 		self.update_state()
@@ -242,7 +242,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		self.delegate.update_ranges()
 		self.mark_edited()
 
-	def export_settings(self): # type: () -> None
+	def export_settings(self) -> None:
 		tileset = self.get_tileset()
 		if not tileset or not len(self.palette.selected):
 			return
@@ -254,13 +254,13 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			from .MegaTileSettingsExporter import MegaTileSettingsExporter
 			MegaTileSettingsExporter(self, self.config_, self.palette.selected, self)
 
-	def import_settings(self): # type: () -> None
+	def import_settings(self) -> None:
 		if not len(self.palette.selected):
 			return
 		from .SettingsImporter import SettingsImporter
 		SettingsImporter(self, self.config_, self.tiletype, self.palette.selected, self)
 
-	def edit(self, e=None): # type: (Any) -> None
+	def edit(self, e: Any = None) -> None:
 		if not len(self.palette.selected):
 			return
 		if self.tiletype == TileType.mega:
@@ -270,7 +270,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			from .MiniEditor import MiniEditor
 			MiniEditor(self, self.palette.selected[0], self)
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		self.window_geometry_config.save_size(self)
 		if self.edited:
 			self.delegate.megaload()

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class SpritesTab(DATTab):
 	DAT_ID = DATID.sprites
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		scrollview = ScrollView(self)
 
@@ -79,7 +79,7 @@ class SpritesTab(DATTab):
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(fill=X)
 
-		self.previewing = None # type: int | None
+		self.previewing: int | None = None
 		self.showpreview = BooleanVar()
 		self.showpreview.set(self.delegate.data_context.config.preview.sprite.show.value)
 
@@ -102,7 +102,7 @@ class SpritesTab(DATTab):
 
 		self.vertpos.trace('w', lambda *_: self.drawpreview())
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DATID.flingy in ids and self.delegate.active_tab() == self:
 			self.check_used_by_references()
 		if DATID.images in ids:
@@ -111,14 +111,14 @@ class SpritesTab(DATTab):
 		if DATID.images in ids:
 			self.imageentry.range[1] = self.delegate.data_context.images.entry_count() - 1
 
-	def selcircle(self, n, t=0): # type: (int, int) -> None
+	def selcircle(self, n: int, t: int = 0) -> None:
 		if t:
 			self.selcircledd.set(n)
 		else:
 			self.selcircleentry.set(n)
 		self.drawpreview()
 
-	def updatehealth(self, num, type): # type: (int, bool) -> None
+	def updatehealth(self, num: int, type: bool) -> None:
 		if type:
 			# self.healthbar.check = False
 			self.healthbar.set((num + 1) * 3)
@@ -127,7 +127,7 @@ class SpritesTab(DATTab):
 			self.boxes.set(max(1,(num - 1) // 3))
 		self.drawpreview()
 
-	def drawpreview(self, e=None): # type: (Event | None) -> None
+	def drawpreview(self, e: Event | None = None) -> None:
 		if not self.delegate.data_context.sprites.dat:
 			return
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
@@ -156,7 +156,7 @@ class SpritesTab(DATTab):
 			else:
 				self.previewing = None
 
-	def load_entry(self, entry): # type: (DATSprite) -> None
+	def load_entry(self, entry: DATSprite) -> None:
 		self.imageentry.set(entry.image)
 		self.unused.set(entry.unused)
 		self.visible.set(entry.is_visible)
@@ -176,7 +176,7 @@ class SpritesTab(DATTab):
 
 		self.drawpreview()
 
-	def save_entry(self, entry): # type: (DATSprite) -> None
+	def save_entry(self, entry: DATSprite) -> None:
 		if self.imageentry.get() != entry.image:
 			entry.image = self.imageentry.get()
 			self.edited = True

@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 try:
 	from tkinter import Image
 	from PIL import Image as PILImage
@@ -33,33 +35,33 @@ from enum import Enum
 from typing import Callable, cast, Sequence
 
 
-def megatile_to_photo(tileset, megatile_id): # type: (Tileset, int) -> Image
+def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:
 	megatile = tileset.vx4.get_megatile(megatile_id)
 	pi = PILImage.new('P', (32,32))
-	pal = [] # type: list[int]
+	pal: list[int] = []
 	for c in tileset.wpe.palette:
 		pal.extend(c)
 	pi.putpalette(pal)
-	image = [[] for _ in range(32)] # type: list[list[int]]
+	image: list[list[int]] = [[] for _ in range(32)]
 	for m,minitile in enumerate(megatile.minitiles):
 		for y,p in enumerate(tileset.vr4.get_image(minitile.image_id)):
 			if minitile.flipped:
 				p = p[::-1]
 			image[(m // 4)*8+y].extend(p)
-	put = [] # type: list[int]
+	put: list[int] = []
 	for row in image:
 		put.extend(row)
 	pi.putdata(put)
 	return cast(Image, ImageTk.PhotoImage(pi))
 
-def minitile_to_photo(tileset, minitile): # type: (Tileset, VX4Minitile) -> Image
+def minitile_to_photo(tileset: Tileset, minitile: VX4Minitile) -> Image:
 	image = tileset.vr4.get_image(minitile.image_id)
 	pi = PILImage.new('P', (24,24))
-	pal = [] # type: list[int]
+	pal: list[int] = []
 	for c in tileset.wpe.palette:
 		pal.extend(c)
 	pi.putpalette(pal)
-	put = [] # type: list[int]
+	put: list[int] = []
 	for _y,p in enumerate(image):
 		if minitile.flipped:
 			p = p[::-1]
@@ -109,22 +111,22 @@ class Tileset(object):
 	wpe: Palette
 	wpe_path: str | None
 
-	def groups_max(self): # type: () -> int
+	def groups_max(self) -> int:
 		return CV5.MAX_ID+1
-	def groups_remaining(self): # type: () -> int
+	def groups_remaining(self) -> int:
 		return self.cv5.groups_remaining()
 
-	def megatiles_max(self): # type: () -> int
+	def megatiles_max(self) -> int:
 		return VX4.MAX_ID+1
-	def megatiles_remaining(self): # type: () -> int
+	def megatiles_remaining(self) -> int:
 		return self.vx4.megatiles_remaining()
 
-	def minitiles_max(self): # type: () -> int
+	def minitiles_max(self) -> int:
 		return VR4.max_id(self.vx4.is_expanded())+1
-	def minitiles_remaining(self): # type: () -> int
+	def minitiles_remaining(self) -> int:
 		return self.vr4.images_remaining(expanded_vx4=self.vx4.is_expanded())
 
-	def new_file(self, cv5=None, vf4=None, vx4=None, vr4=None, dddata=None, wpe=None): # type: (CV5 | None, VF4 | None, VX4 | None, VR4 | None, DDDataBIN | None, Palette | None) -> None
+	def new_file(self, cv5: CV5 | None = None, vf4: VF4 | None = None, vx4: VX4 | None = None, vr4: VR4 | None = None, dddata: DDDataBIN | None = None, wpe: Palette | None = None) -> None:
 		if cv5:
 			self.cv5 = cv5
 		else:
@@ -156,7 +158,7 @@ class Tileset(object):
 			self.wpe = Palette()
 		self.wpe_path = None
 
-	def load_file(self, cv5_path, vf4_path=None, vx4_path=None, vr4_path=None, dddata_path=None, wpe_path=None): # type: (str, str | None, str | None, str | None, str | None, str | None) -> None
+	def load_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
 		path = os.path.dirname(cv5_path)
 		name = os.path.basename(cv5_path)
 		if name.split(os.extsep)[-1].lower() == 'cv5':
@@ -193,7 +195,7 @@ class Tileset(object):
 		self.dddata_path = dddata_path
 		self.wpe_path = wpe_path
 
-	def save_file(self, cv5_path, vf4_path=None, vx4_path=None, vr4_path=None, dddata_path=None, wpe_path=None): # type: (str, str | None, str | None, str | None, str | None, str | None) -> None
+	def save_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
 		path = os.path.dirname(cv5_path)
 		name = os.path.basename(cv5_path)
 		if name.endswith(os.extsep + 'cv5'):
@@ -219,13 +221,13 @@ class Tileset(object):
 		self.dddata.save_file(dddata_path)
 		self.wpe.save_sc_wpe(wpe_path)
 
-	def import_graphics(self, tiletype, bmpfiles, ids=None, options=ImportGraphicsOptions()): # type: (TileType, list[str], list[int] | None, ImportGraphicsOptions) -> list[int]
+	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions = ImportGraphicsOptions()) -> list[int]:
 		if ids:
 			ids = list(ids)
 		else:
 			ids = []
-		new_ids = [] # type: list[int]
-		pixels = [] # type: list[list[int]]
+		new_ids: list[int] = []
+		pixels: list[list[int]] = []
 		for path in bmpfiles:
 			bmp = BMP()
 			bmp.load_file(path)
@@ -237,16 +239,16 @@ class Tileset(object):
 				raise PyMSError('Interpreting','The image is not the correct size for minitiles (got %sx%s, expected width and height to be multiples of 8)' % (bmp.width,bmp.height))
 			pixels.extend(bmp.image)
 
-		new_images = [] # type: list[VR4Image]
-		image_lookup = {} # type: dict[int, list[int]]
-		update_images = [] # type: list[tuple[int, VR4Image]]
+		new_images: list[VR4Image] = []
+		image_lookup: dict[int, list[int]] = {}
+		update_images: list[tuple[int, VR4Image]] = []
 
-		new_megatiles = [] # type: list[VX4Megatile]
-		mega_lookup = {} # type: dict[int, list[int]]
-		update_megatiles = [] # type: list[tuple[int, VX4Megatile]]
+		new_megatiles: list[VX4Megatile] = []
+		mega_lookup: dict[int, list[int]] = {}
+		update_megatiles: list[tuple[int, VX4Megatile]] = []
 
-		new_groups = [] # type: list[list[int]]
-		update_groups = [] # # type: list[tuple[int, list[int]]]
+		new_groups: list[list[int]] = []
+		update_groups: list[tuple[int, list[int]]] = []
 
 		minis_w = len(pixels[0]) // 8
 		minis_h = len(pixels) // 8
@@ -256,7 +258,7 @@ class Tileset(object):
 				px = ix * 8
 				image = tuple(tuple(pixels[py+oy][px:px+8]) for oy in range(8))
 				new_images.append(image)
-		minitile_details = [] # type: list[VX4Minitile]
+		minitile_details: list[VX4Minitile] = []
 		new_id = self.vr4.image_count()
 		i = 0
 		if tiletype == TileType.mini and options.minitiles_ignore_extra and len(new_images) > len(ids):
@@ -311,12 +313,12 @@ class Tileset(object):
 			megas_h = minis_h // 4
 			for y in range(megas_h):
 				for x in range(megas_w):
-					minitiles = [] # type: list[VX4Minitile]
+					minitiles: list[VX4Minitile] = []
 					for oy in range(4):
 						o = (y*4+oy)*minis_w + x*4
 						minitiles.extend(minitile_details[o:o+4])
 					new_megatiles.append(VX4Megatile(minitiles))
-			megatile_ids = [] # type: list[int]
+			megatile_ids: list[int] = []
 			new_id = self.vx4.megatile_count()
 			i = 0
 			if tiletype == TileType.mega and options.megatiles_ignore_extra and len(new_megatiles) > len(ids):
@@ -392,7 +394,7 @@ class Tileset(object):
 			self.cv5.get_group(id).megatile_ids = megatile_ids
 		return new_ids
 
-	def export_graphics(self, tiletype, path, ids): # type: (TileType, str, list[int]) -> None
+	def export_graphics(self, tiletype: TileType, path: str, ids: list[int]) -> None:
 		bmp = BMP()
 		bmp.palette = list(self.wpe.palette)
 		tiles_wide = 0

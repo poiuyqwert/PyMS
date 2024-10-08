@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 RE_OVERRIDE = re.compile(r'\s*(\d{1,5})\s*(\+?)\s*:(.*)')
 class EntryNameOverrides(PyMSDialog):
-	def __init__(self, parent, data_context, dat_id, entry_id=None): # type: (Misc, DataContext, DATID, int | None) -> None
+	def __init__(self, parent: Misc, data_context: DataContext, dat_id: DATID, entry_id: int | None = None) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.entry_id = IntegerVar(range=(0, 99999))
@@ -27,7 +27,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.append = IntVar()
 		PyMSDialog.__init__(self, parent, '%s Name Overrides' % data_context.dat_data(dat_id).entry_type_name, True, True, escape=True, set_min_size=(True,True))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		toolbar = Toolbar(self)
 		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
@@ -71,24 +71,24 @@ class EntryNameOverrides(PyMSDialog):
 
 		return None
 
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		self.data_context.config.windows.entry_name_overrides.load_size(self)
 
-	def refresh_list(self): # type: () -> None
+	def refresh_list(self) -> None:
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
 		self.listbox.insert(END, *[' %s %s %s' % (lpad(str(entry_id), 5), '+' if name_overrides[entry_id][0] else ' ', name_overrides[entry_id][1]) for entry_id in sorted(name_overrides.keys())])
 		self.listbox.yview_moveto(y)
 
-	def selection_updated(self, _=None): # type: (Event | None) -> None
+	def selection_updated(self, _: Event | None = None) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
 		entry_id = sorted(name_overrides.keys())[int(self.listbox.curselection()[0])]
 		self.entry_id.set(entry_id)
 		self.name.set(name_overrides[entry_id][1])
 		self.append.set(name_overrides[entry_id][0])
 
-	def open(self, _=None): # type: (Event | None) -> None
+	def open(self, _: Event | None = None) -> None:
 		path = self.data_context.config.last_path.entry_name_overrides.select_open(self)
 		if not path:
 			return
@@ -100,7 +100,7 @@ class EntryNameOverrides(PyMSDialog):
 			ErrorDialog(self, PyMSError('Open', "Couldn't open name overrides '%s'" % path))
 		self.refresh_list()
 
-	def saveas(self, _=None): # type: (Event | None) -> None
+	def saveas(self, _: Event | None = None) -> None:
 		path = self.data_context.config.last_path.entry_name_overrides.select_save(self, filename=self.dat_id.filename.replace('.dat', '.txt'))
 		if not path:
 			return
@@ -109,7 +109,7 @@ class EntryNameOverrides(PyMSDialog):
 		except:
 			ErrorDialog(self, PyMSError('Save', "Couldn't save name overrides to '%s'" % path))
 
-	def update(self, _=None): # type: (Event | None) -> None
+	def update(self, _: Event | None = None) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
 		entry_id = self.entry_id.get()
 		name = self.name.get()
@@ -120,14 +120,14 @@ class EntryNameOverrides(PyMSDialog):
 			del name_overrides[entry_id]
 		self.refresh_list()
 
-	def remove(self): # type: () -> None
+	def remove(self) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
 		entry_id = self.entry_id.get()
 		if entry_id in name_overrides:
 			del name_overrides[entry_id]
 		self.refresh_list()
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		self.data_context.config.windows.entry_name_overrides.save_size(self)
 		self.data_context.dat_data(self.dat_id).update_names()
 		PyMSDialog.dismiss(self)

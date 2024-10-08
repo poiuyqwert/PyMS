@@ -10,19 +10,19 @@ class InternalErrorDialog(PyMSDialog):
 	CAPTURE_PRINT = 1
 	CAPTURE_DIALOG = 2
 	@staticmethod
-	def capture(parent, prog, debug=0): # type: (Misc, str, int) -> None
+	def capture(parent: Misc, prog: str, debug: int = 0) -> None:
 		trace = ''.join(traceback.format_exception(*sys.exc_info()))
 		if debug == InternalErrorDialog.CAPTURE_DIALOG:
 			InternalErrorDialog(parent, prog, txt=trace)
 		elif debug == InternalErrorDialog.CAPTURE_PRINT:
 			print(trace)
 
-	def __init__(self, parent, prog, txt=None): # type: (Misc, str, str | None) -> None
+	def __init__(self, parent: Misc, prog: str, txt: str | None = None) -> None:
 		self.prog = prog
 		self.txt = txt
 		PyMSDialog.__init__(self, parent, 'PyMS Internal Error!', grabwait=False)
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		self.bind(Ctrl.a(), self.selectall)
 		Label(self, text='The PyMS program "%s" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information, see the Issues/Feedback section in the Readme for details.' % self.prog, justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
 		r = Frame(self)
@@ -57,7 +57,7 @@ class InternalErrorDialog(PyMSDialog):
 		buttonbar.pack(side=BOTTOM, pady=10)
 		return ok
 
-	def selectall(self, key=None): # type: (Event | None) -> None
+	def selectall(self, key: Event | None = None) -> None:
 		self.text.focus_set()
 		self.text.tag_add(SEL, 1.0, END)
 

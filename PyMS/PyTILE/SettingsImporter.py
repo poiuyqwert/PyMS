@@ -34,7 +34,7 @@ class SettingsImporter(PyMSDialog):
 			typename = 'MegaTile'
 		PyMSDialog.__init__(self, parent, 'Import %s Settings' % typename, resizable=(True,False), set_min_size=(True,True))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		self.settings_path = StringVar()
 		self.repeater = IntVar()
 		repeater_n = 0
@@ -74,7 +74,7 @@ class SettingsImporter(PyMSDialog):
 
 		return self.import_button
 
-	def select_path(self): # type: () -> None
+	def select_path(self) -> None:
 		typename = ''
 		if self.tiletype == TileType.group:
 			typename = 'MegaTile Group'
@@ -87,10 +87,10 @@ class SettingsImporter(PyMSDialog):
 		self.settings_entry.xview(END)
 		self.update_states()
 
-	def update_states(self, *_): # type: (Any) -> None
+	def update_states(self, *_: Any) -> None:
 		self.import_button['state'] = NORMAL if self.settings_path.get() else DISABLED
 
-	def iimport(self): # type: () -> None
+	def iimport(self) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return

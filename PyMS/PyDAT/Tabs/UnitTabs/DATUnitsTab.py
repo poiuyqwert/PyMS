@@ -11,30 +11,30 @@ if TYPE_CHECKING:
 	from ...DataID import DATID, AnyID
 
 class DATUnitsTab(NotebookTab, DATTabConveniences):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		self.delegate = delegate
 		self.sub_delegate = sub_delegate
 		self.edited = False
 		NotebookTab.__init__(self, parent)
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		pass
 
-	def jump(self, dat_id, entry_id): # type: (DATID, int) -> None
+	def jump(self, dat_id: DATID, entry_id: int) -> None:
 		if entry_id < self.delegate.data_context.dat_data(dat_id).entry_count() - 1:
 			self.delegate.change_tab(dat_id)
 			self.delegate.change_id(entry_id)
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		pass
 
-	def activate(self): # type: () -> None
+	def activate(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)
 		self.load_data(entry)
 
-	def deactivate(self): # type: () -> None
+	def deactivate(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		entry = self.delegate.data_context.units.dat.get_entry(self.sub_delegate.id)

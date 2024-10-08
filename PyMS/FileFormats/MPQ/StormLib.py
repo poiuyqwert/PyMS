@@ -696,7 +696,7 @@ if _StormLib is not None:
 	except:
 		_StormLib.GetLastError = None
 
-def _file_name(file_name): # type: (str | bytes) -> bytes
+def _file_name(file_name: str | bytes) -> bytes:
 	if isinstance(file_name, str):
 		return file_name.encode('utf-8')
 	return file_name
@@ -708,25 +708,25 @@ def SFileGetLocale():
 	assert _StormLib is not None
 	return _StormLib.SFileGetLocale()
 
-def SFileSetLocale(locale): # type: (int) -> int
+def SFileSetLocale(locale: int) -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileSetLocale(locale)
 
-def SFileOpenArchive(mpq_path, priority=0, flags=STREAM_FLAG_READ_ONLY): # type: (str, int, int) -> (MPQHANDLE | None)
+def SFileOpenArchive(mpq_path: str, priority: int = 0, flags: int = STREAM_FLAG_READ_ONLY) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
 	if not _StormLib.SFileOpenArchive(mpq_path.encode('utf-8'), priority, flags, ctypes.byref(h)):
 		return None
 	return h
 
-def SFileCreateArchive(mpq_path, flags=0, max_files=1024): # type: (str, int, int) -> (MPQHANDLE | None)
+def SFileCreateArchive(mpq_path: str, flags: int = 0, max_files: int = 1024) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
 	if not _StormLib.SFileCreateArchive(mpq_path.encode('utf-8'), flags, max_files, ctypes.byref(h)):
 		return None
 	return h
 
-def SFileCreateArchive2(mpq_path, create_info): # type: (str, SFILE_CREATE_MPQ) -> (MPQHANDLE | None)
+def SFileCreateArchive2(mpq_path: str, create_info: SFILE_CREATE_MPQ) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	create_info.size = ctypes.sizeof(SFILE_CREATE_MPQ)
 	h = MPQHANDLE()
@@ -734,76 +734,76 @@ def SFileCreateArchive2(mpq_path, create_info): # type: (str, SFILE_CREATE_MPQ) 
 		return None
 	return h
 
-def SFileFlushArchive(mpq): # type: (MPQHANDLE) -> bool
+def SFileFlushArchive(mpq: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileFlushArchive(mpq)
 
-def SFileCloseArchive(mpq): # type: (MPQHANDLE) -> bool
+def SFileCloseArchive(mpq: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileCloseArchive(mpq)
 
-def SFileAddListFile(mpq, listfile_path): # type: (MPQHANDLE, str) -> int
+def SFileAddListFile(mpq: MPQHANDLE, listfile_path: str) -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileAddListFile(mpq, listfile_path.encode('utf-8'))
 
-def SFileCompactArchive(mpq, listfile_path=None): # type: (MPQHANDLE, str | None) -> bool
+def SFileCompactArchive(mpq: MPQHANDLE, listfile_path: str | None = None) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileCompactArchive(mpq, listfile_path.encode('utf-8') if listfile_path else None, True)
 
-def SFileGetMaxFileCount(mpq): # type: (MPQHANDLE) -> int
+def SFileGetMaxFileCount(mpq: MPQHANDLE) -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileGetMaxFileCount(mpq)
 
-def SFileSetMaxFileCount(mpq, file_count): # type: (MPQHANDLE, int) -> bool
+def SFileSetMaxFileCount(mpq: MPQHANDLE, file_count: int) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileSetMaxFileCount(mpq, file_count)
 
-def SFileGetAttributes(mpq): # type: (MPQHANDLE) -> int
+def SFileGetAttributes(mpq: MPQHANDLE) -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileGetAttributes(mpq)
 
-def SFileSetAttributes(mpq, attributes): # type: (MPQHANDLE, int) -> bool
+def SFileSetAttributes(mpq: MPQHANDLE, attributes: int) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileSetAttributes(mpq, attributes)
 
-def SFileUpdateFileAttributes(mpq, attributes_file_path): # type: (MPQHANDLE, str) -> bool
+def SFileUpdateFileAttributes(mpq: MPQHANDLE, attributes_file_path: str) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileUpdateFileAttributes(mpq, attributes_file_path.encode('utf-8'))
 
-def SFileOpenPatchArchive(mpq, patch_mpq_path, patch_path_prefix, flags=0): # type: (MPQHANDLE, str, str, int) -> bool
+def SFileOpenPatchArchive(mpq: MPQHANDLE, patch_mpq_path: str, patch_path_prefix: str, flags: int = 0) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileOpenPatchArchive(mpq, patch_mpq_path.encode('utf-8'), patch_path_prefix.encode('utf-8'), flags)
 
-def SFileIsPatchedArchive(mpq): # type: (MPQHANDLE) -> bool
+def SFileIsPatchedArchive(mpq: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileIsPatchedArchive(mpq)
 
-def SFileHasFile(mpq, file_name): # type: (MPQHANDLE, str | bytes) -> bool
+def SFileHasFile(mpq: MPQHANDLE, file_name: str | bytes) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileHasFile(mpq, _file_name(file_name))
 
-def SFileOpenFileEx(mpq, file_name, search=SFILE_OPEN_FROM_MPQ): # type: (MPQHANDLE, str | bytes, int) -> (MPQHANDLE | None)
+def SFileOpenFileEx(mpq: MPQHANDLE, file_name: str | bytes, search: int = SFILE_OPEN_FROM_MPQ) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
 	if not _StormLib.SFileOpenFileEx(mpq, _file_name(file_name), search, ctypes.byref(h)):
 		return None
 	return h
 
-def SFileGetFileSize(file): # type: (MPQHANDLE) -> (int | None)
+def SFileGetFileSize(file: MPQHANDLE) -> int | None:
 	assert _StormLib is not None
 	size = _StormLib.SFileGetFileSize(file, None)
 	if size == SFILE_INVALID_SIZE or size == -1:
 		return None
 	return size
 
-def SFileSetFilePointer(file, position, move_method=FILE_BEGIN): # type: (MPQHANDLE, int, int) -> (int | None)
+def SFileSetFilePointer(file: MPQHANDLE, position: int, move_method: int = FILE_BEGIN) -> int | None:
 	assert _StormLib is not None
 	pointer = _StormLib.SFileSetFilePointer(file, position, None, move_method)
 	if pointer == SFILE_INVALID_POS or pointer == -1:
 		return None
 	return pointer
 
-def SFileReadFile(file, read=None): # type: (MPQHANDLE, int | None) -> (tuple[bytes | None, int])
+def SFileReadFile(file: MPQHANDLE, read: int | None = None) -> tuple[bytes | None, int]:
 	assert _StormLib is not None
 	if read is None:
 		read = SFileGetFileSize(file)
@@ -819,11 +819,11 @@ def SFileReadFile(file, read=None): # type: (MPQHANDLE, int | None) -> (tuple[by
 			return (None, 0)
 	return (data.raw[:total_read],total_read)
 
-def SFileCloseFile(file): # type: (MPQHANDLE) -> bool
+def SFileCloseFile(file: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileCloseFile(file)
 
-def SFileGetFileInfo(mpq, info_class): # type: (MPQHANDLE, int) -> (int | str | None)
+def SFileGetFileInfo(mpq: MPQHANDLE, info_class: int) -> int | str | None:
 	assert _StormLib is not None
 	info_container = None
 	if info_class == SFileMpqBlockTableSize:
@@ -838,14 +838,14 @@ def SFileGetFileInfo(mpq, info_class): # type: (MPQHANDLE, int) -> (int | str | 
 		return None
 	return info_container.value
 
-def SFileGetFileName(file): # type: (MPQHANDLE) -> (bytes | None)
+def SFileGetFileName(file: MPQHANDLE) -> bytes | None:
 	assert _StormLib is not None
 	name = ctypes.create_string_buffer(MAX_NAME_SIZE)
 	if not _StormLib.SFileGetFileName(file, ctypes.byref(name)):
 		return None
 	return name.raw
 
-def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, str | bytes, str | None) -> (tuple[MPQHANDLE | None, SFILE_FIND_DATA | None])
+def SFileFindFirstFile(mpq: MPQHANDLE, find_mask: str | bytes, listfile_path: str | None = None) -> tuple[MPQHANDLE | None, SFILE_FIND_DATA | None]:
 	assert _StormLib is not None
 	file_data = SFILE_FIND_DATA()
 	find_handle = _StormLib.SFileFindFirstFile(mpq, _file_name(find_mask), ctypes.byref(file_data), listfile_path.encode('utf-8') if listfile_path else None)
@@ -853,49 +853,49 @@ def SFileFindFirstFile(mpq, find_mask, listfile_path=None): # type: (MPQHANDLE, 
 		return (find_handle, file_data)
 	return (None, None)
 
-def SFileFindNextFile(find_handle): # type: (MPQHANDLE) -> (SFILE_FIND_DATA | None)
+def SFileFindNextFile(find_handle: MPQHANDLE) -> SFILE_FIND_DATA | None:
 	assert _StormLib is not None
 	file_data = SFILE_FIND_DATA()
 	if not _StormLib.SFileFindNextFile(find_handle, ctypes.byref(file_data)):
 		return None
 	return file_data
 
-def SFileFindClose(find_handle): # type: (MPQHANDLE) -> bool
+def SFileFindClose(find_handle: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileFindClose(find_handle)
 
-def SFileCreateFile(mpq, file_name, file_time, file_size, locale, flags): # type: (MPQHANDLE, str | bytes, int, int, int, int) -> (MPQHANDLE | None)
+def SFileCreateFile(mpq: MPQHANDLE, file_name: str | bytes, file_time: int, file_size: int, locale: int, flags: int) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
 	if not _StormLib.SFileCreateFile(mpq, _file_name(file_name), file_time, file_size, locale, flags, ctypes.byref(h)):
 		return None
 	return h
 
-def SFileWriteFile(file, data, compression): # type: (MPQHANDLE, bytes, int) -> (bool)
+def SFileWriteFile(file: MPQHANDLE, data: bytes, compression: int) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileWriteFile(file, data, len(data), compression)
 
-def SFileFinishFile(file): # type: (MPQHANDLE) -> (bool)
+def SFileFinishFile(file: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileFinishFile(file)
 
-def SFileAddFileEx(mpq, file_path, file_name, flags=MPQ_FILE_REPLACEEXISTING, compression=0, compression_next=MPQ_COMPRESSION_NEXT_SAME): # type: (MPQHANDLE, str, str | bytes, int, int, int) -> (bool)
+def SFileAddFileEx(mpq: MPQHANDLE, file_path: str, file_name: str | bytes, flags: int = MPQ_FILE_REPLACEEXISTING, compression: int = 0, compression_next: int = MPQ_COMPRESSION_NEXT_SAME) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileAddFileEx(mpq, file_path.encode('utf-8'), _file_name(file_name), flags, compression, compression_next)
 
-def SFileRemoveFile(mpq, file_name): # type: (MPQHANDLE, str | bytes) -> (bool)
+def SFileRemoveFile(mpq: MPQHANDLE, file_name: str | bytes) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileRemoveFile(mpq, _file_name(file_name), 0)
 
-def SFileRenameFile(mpq, file_name, new_file_name): # type: (MPQHANDLE, str | bytes, str | bytes) -> (bool)
+def SFileRenameFile(mpq: MPQHANDLE, file_name: str | bytes, new_file_name: str | bytes) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileRenameFile(mpq, _file_name(file_name), _file_name(new_file_name))
 
-def SFileSetFileLocale(file, locale): # type: (MPQHANDLE, int) -> (bool)
+def SFileSetFileLocale(file: MPQHANDLE, locale: int) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileSetFileLocale(file, locale)
 
-# def SFSetLastError(error): # type: (int) -> None
+# def SFSetLastError(error: int) -> None:
 #	assert _StormLib is not None
 # 	# StormLib only implements its own SetLastError on platforms other than windows
 # 	if _StormLib.SetLastError is None:

@@ -32,13 +32,13 @@ class ListfileSettingsTab(SettingsTab):
 
 		self.action_states()
 
-	def is_listfile_selected(self): # type: () -> bool
+	def is_listfile_selected(self) -> bool:
 		return not not self.listbox.curselection()
 
-	def action_states(self): # type: () -> None
+	def action_states(self) -> None:
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
-	def add(self, key=None): # type: (Event | None) -> None
+	def add(self, key: Event | None = None) -> None:
 		add = self.config_.settings.last_path.listfiles.select_open(self)
 		if add:
 			for i in add:
@@ -46,7 +46,7 @@ class ListfileSettingsTab(SettingsTab):
 			self.action_states()
 			self.edited_state.mark_edited()
 
-	def remove(self, key=None): # type: (Event | None) -> None
+	def remove(self, key: Event | None = None) -> None:
 		if not self.is_listfile_selected():
 			return
 		i = int(self.listbox.curselection()[0])

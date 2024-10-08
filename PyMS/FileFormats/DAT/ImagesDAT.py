@@ -240,5 +240,5 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATImage
 	FILE_NAME = "images.dat"
 
-	def get_entry(self, index): # type: (int) -> DATImage
+	def get_entry(self, index: int) -> DATImage:
 		return cast(DATImage, super(ImagesDAT, self).get_entry(index))

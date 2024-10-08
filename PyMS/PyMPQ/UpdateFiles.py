@@ -3,11 +3,11 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class UpdateFiles(PyMSDialog):
-	def __init__(self, parent, files): # type: (Misc, list[str]) -> None
+	def __init__(self, parent: Misc, files: list[str]) -> None:
 		self.files = files
 		PyMSDialog.__init__(self, parent, 'Files Edited', resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Widget | None)
+	def widgetize(self) -> Widget | None:
 		Label(self, text='These files have been modified since they were extracted.\n\nChoose which files to update the archive with:', justify=LEFT, anchor=W).pack(fill=X)
 
 		self.listbox = ScrolledListbox(self, selectmode=MULTIPLE, font=Font.fixed(), width=20, height=10)

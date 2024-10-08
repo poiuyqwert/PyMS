@@ -13,18 +13,18 @@ if TYPE_CHECKING:
 class DATTabConveniences(object):
 	delegate: MainDelegate
 
-	def tip(self, obj, tipname, hint): # type: (Widget, str, str) -> None
+	def tip(self, obj: Widget, tipname: str, hint: str) -> None:
 		Tooltip(obj, '%s:\n' % tipname + fit('  ', self.delegate.data_context.hints[hint], end=True)[:-1])
 
-	def makeCheckbox(self, frame, var, txt, hint): # type: (Misc, Variable, str, str) -> Checkbutton
+	def makeCheckbox(self, frame: Misc, var: Variable, txt: str, hint: str) -> Checkbutton:
 		c = Checkbutton(frame, text=txt, variable=var)
 		self.tip(c, txt, hint)
 		return c
 
-	def update_ticks(self, time, variable): # type: (int, IntegerVar) -> None
+	def update_ticks(self, time: int, variable: IntegerVar) -> None:
 		# variable.check = False
 		variable.set(int(float(time) * self.delegate.data_context.ticks_per_second))
 
-	def update_time(self, ticks, variable): # type: (int, FloatVar) -> None
+	def update_time(self, ticks: int, variable: FloatVar) -> None:
 		variable.check = False
 		variable.set(float_to_str(int(ticks) / float(self.delegate.data_context.ticks_per_second)))

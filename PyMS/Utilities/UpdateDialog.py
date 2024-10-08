@@ -11,8 +11,8 @@ class UpdateDialog(PyMSDialog):
 	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
-	def check_update(window, program): # type: (WindowExtensions, str) -> None
-		def do_check_update(window, program): # type: (WindowExtensions, str) -> None
+	def check_update(window: WindowExtensions, program: str) -> None:
+		def do_check_update(window: WindowExtensions, program: str) -> None:
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
 			try:
 				import ssl
@@ -44,12 +44,12 @@ class UpdateDialog(PyMSDialog):
 			window.after(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
-	def __init__(self, parent, program, versions): # type: (Misc, str, dict[str, str]) -> None
+	def __init__(self, parent: Misc, program: str, versions: dict[str, str]) -> None:
 		self.program = program
 		self.versions = versions
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
 			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,Assets.version(self.program),self.versions[self.program])	
 		else:
@@ -64,7 +64,7 @@ class UpdateDialog(PyMSDialog):
 		ok.pack(pady=5)
 		return ok
 
-	def ok(self, _=None): # type: (Event | None) -> None
+	def ok(self, _: Event | None = None) -> None:
 		if self.dont_remind_me.get():
 			PYMS_CONFIG.dont_remind_me.data['PyMS'] = self.versions['PyMS']
 			PYMS_CONFIG.dont_remind_me.data[self.program] = self.versions[self.program]
@@ -72,14 +72,14 @@ class UpdateDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 class SemVer(object):
-	def __init__(self, version): # type: (str) -> None
+	def __init__(self, version: str) -> None:
 		self.meta = None
 		if '-' in version:
 			version,self.meta = version.split('-')
 		components = (int(c) for c in version.split('.'))
 		self.major, self.minor, self.patch = components
 
-	def __lt__(self, other): # type: (Any) -> bool
+	def __lt__(self, other: Any) -> bool:
 		if not isinstance(other, SemVer):
 			return False
 		if self.major < other.major:
@@ -96,7 +96,7 @@ class SemVer(object):
 			return False
 		return False
 
-	def __gt__(self, other): # type: (Any) -> bool
+	def __gt__(self, other: Any) -> bool:
 		if not isinstance(other, SemVer):
 			return False
 		if self.major > other.major:
@@ -113,7 +113,7 @@ class SemVer(object):
 			return False
 		return False
 
-	def __eq__(self, other): # type: (Any) -> bool
+	def __eq__(self, other: Any) -> bool:
 		if not isinstance(other, SemVer):
 			return False
 		if self.major != other.major:
@@ -124,7 +124,7 @@ class SemVer(object):
 			return False
 		return True
 
-	def __ge__(self, other): # type: (Any) -> bool
+	def __ge__(self, other: Any) -> bool:
 		return self.__gt__(other) or self.__eq__(other)
 
 	def __repr__(self) -> str:

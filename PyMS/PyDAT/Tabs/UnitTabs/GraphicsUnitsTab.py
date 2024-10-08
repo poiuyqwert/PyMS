@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
 class GraphicsUnitsTab(DATUnitsTab):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
@@ -142,7 +142,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		for v in (self.left, self.up, self.right, self.down):
 			v.trace('w', lambda *_: self.drawboxes())
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
@@ -156,7 +156,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DATID.flingy in ids:
 			self.graphics_ddw.setentries(self.delegate.data_context.flingy.names)
 		if DATID.images in ids:
@@ -176,7 +176,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.constructionentry.range[1] = 4294967295
 			self.portraitsentry.range[1] = 65535
 
-	def drawboxes(self): # type: () -> None
+	def drawboxes(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		if self.showpreview.get() and self.showplace.get():
@@ -199,7 +199,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			return None
 		return self.preview.create_image(x, y, image=frame[0])
 
-	def draw_addon_preview(self): # type: () -> None
+	def draw_addon_preview(self) -> None:
 		if not self.delegate.data_context.units.dat or not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
 			return
 		if self.addon_parent_item:
@@ -227,7 +227,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		else:
 			self.addon_parent_size_item.coords(0, 0, 0 ,0)
 
-	def drawpreview(self): # type: () -> None
+	def drawpreview(self) -> None:
 		if not self.delegate.data_context.flingy.dat or not self.delegate.data_context.sprites.dat:
 			return
 		self.draw_addon_preview()
@@ -241,7 +241,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.unit_item = self.draw_image(sprite.image)
 		self.drawboxes()
 
-	def load_data(self, entry): # type: (DATUnit) -> None
+	def load_data(self, entry: DATUnit) -> None:
 		self.graphicsentry.set(entry.graphics)
 		self.constructionentry.set(entry.construction_animation)
 		self.direction.set(entry.unit_direction)
@@ -262,7 +262,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.addon_parent_id_entry['state'] = state
 		self.drawpreview()
 
-	def save_data(self, entry): # type: (DATUnit) -> bool
+	def save_data(self, entry: DATUnit) -> bool:
 		self.delegate.data_context.config.preview.unit.show.value = not not self.showpreview.get()
 		self.delegate.data_context.config.preview.unit.show_placement.value = not not self.showplace.get()
 		self.delegate.data_context.config.preview.unit.show_dimensions.value = not not self.showdims.get()

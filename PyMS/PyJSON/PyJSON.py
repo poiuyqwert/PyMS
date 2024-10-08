@@ -190,11 +190,11 @@ class PyJSON(MainWindow):
 
 	def rebuild_editor(self) -> None:
 		self.clear_editor()
-		item_ids = self.tree.treeview.selection()
-		if not item_ids:
-			return
-		item_id = item_ids[0]
-		value = self.data_source.value_for(item_id)
+		# item_ids = self.tree.treeview.selection()
+		# if not item_ids:
+		# 	return
+		# item_id = item_ids[0]
+		# value = self.data_source.value_for(item_id)
 
 
 	def refresh_object(self) -> None:

@@ -19,9 +19,9 @@ class CHKRequirements(object):
 	MODE_UMS = (1 << 1)
 	MODE_ALL = MODE_MELEE | MODE_UMS
 
-	def __init__(self, vers=VER_ALL, modes=MODE_ALL): # type: (int, int) -> None
+	def __init__(self, vers: int = VER_ALL, modes: int = MODE_ALL) -> None:
 		from .Sections.CHKSectionVER import CHKSectionVER
-		self.vers = [] # type: list[int]
+		self.vers: list[int] = []
 		if vers & CHKRequirements.VER_VANILLA:
 			self.vers.append(CHKSectionVER.SC100)
 		if vers & CHKRequirements.VER_HYBRID:
@@ -31,7 +31,7 @@ class CHKRequirements(object):
 
 		self.modes = modes
 
-	def is_required(self, chk, game_mode=MODE_ALL): # type: (CHK, int) -> bool
+	def is_required(self, chk: CHK, game_mode: int = MODE_ALL) -> bool:
 		from .Sections.CHKSectionVER import CHKSectionVER
 		verSect = chk.get_section(CHKSectionVER)
 		if not verSect:

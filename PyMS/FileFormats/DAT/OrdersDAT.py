@@ -276,5 +276,5 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 	ENTRY_STRUCT = DATOrder
 	FILE_NAME = "orders.dat"
 
-	def get_entry(self, index): # type: (int) -> DATOrder
+	def get_entry(self, index: int) -> DATOrder:
 		return cast(DATOrder, super(OrdersDAT, self).get_entry(index))

@@ -8,7 +8,7 @@ import struct, re
 from typing import BinaryIO, TextIO, cast
 
 class LO:
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.frames = [[[0,0]]]
 
 	def load_file(self, input: IO.AnyInputBytes) -> None:
@@ -16,7 +16,7 @@ class LO:
 			data = f.read()
 		try:
 			frames,overlays = tuple(int(v) for v in struct.unpack('<LL', data[:8]))
-			framedata = [] # type: list[list[list[int]]]
+			framedata: list[list[list[int]]] = []
 			for frame in range(frames):
 				framedata.append([])
 				offset = struct.unpack('<L', data[8+4*frame:12+4*frame])[0]
@@ -30,7 +30,7 @@ class LO:
 	def interpret(self, input: IO.AnyInputText) -> None:
 		with IO.InputText(input) as f:
 			data = f.readlines()
-		frames = [] # type: list[list[list[int]]]
+		frames: list[list[list[int]]] = []
 		framedata = False
 		overlays = -1
 		for n,l in enumerate(data):

@@ -2,7 +2,7 @@
 from .UIKit import *
 
 class PyMSDialog(Toplevel):
-	def __init__(self, parent, title, center=True, grabwait=True, hidden=False, escape=False, resizable=(True,True), set_min_size=(False,False)): # type: (Misc, str, bool, bool, bool, bool, tuple[bool,bool], tuple[bool,bool]) -> None
+	def __init__(self, parent: Misc, title: str, center: bool = True, grabwait: bool = True, hidden: bool = False, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
 		self._initial_max_size: tuple[int, int] | None = None
 		Toplevel.__init__(self, parent)
 		self.title(title)
@@ -40,25 +40,25 @@ class PyMSDialog(Toplevel):
 		if grabwait:
 			self.grab_wait()
 
-	def grab_wait(self): # type: () -> None
+	def grab_wait(self) -> None:
 		self.grab_set()
 		self.wait_window(self)
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		return None
-	def setup_complete(self): # type: () -> None
+	def setup_complete(self) -> None:
 		pass
 
-	def dismiss(self): # type: () -> None
+	def dismiss(self) -> None:
 		self.withdraw()
 		self.update_idletasks()
 		self.master.focus_set()
 		self.destroy()
 
-	def ok(self, event=None): # type: (Event | None) -> None
+	def ok(self, event: Event | None = None) -> None:
 		self.dismiss()
 
-	def cancel(self, event=None): # type: (Event | None) -> None
+	def cancel(self, event: Event | None = None) -> None:
 		self.dismiss()
 
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
@@ -67,7 +67,7 @@ class PyMSDialog(Toplevel):
 		return Toplevel.maxsize(self, width, height) # type: ignore
 
 	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized
-	def is_maximized(self): # type: () -> bool
+	def is_maximized(self) -> bool:
 		is_maximized = (self.wm_state() == 'zoomed')
 		if is_maximized and self._initial_max_size is not None:
 			cur_max_width, cur_max_height = self.maxsize()

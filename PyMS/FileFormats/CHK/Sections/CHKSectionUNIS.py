@@ -35,16 +35,16 @@ class CHKSectionUNIS(CHKSection):
 	UNITS = 228
 	WEAPONS = 100
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.unit_stats = [] # type: list[CHKUnitStats]
+		self.unit_stats: list[CHKUnitStats] = []
 		for _ in range(self.UNITS):
 			self.unit_stats.append(CHKUnitStats())
-		self.weapon_stats = [] # type: list[CHKWeaponStats]
+		self.weapon_stats: list[CHKWeaponStats] = []
 		for _ in range(self.WEAPONS):
 			self.weapon_stats.append(CHKWeaponStats())
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		o = 0
 		defaults = list(bool(v) for v in struct.unpack('<%dB' % self.UNITS, data[o:o+self.UNITS]))
 		o += self.UNITS
@@ -72,17 +72,17 @@ class CHKSectionUNIS(CHKSection):
 			weapon_stat = self.weapon_stats[n]
 			weapon_stat.damage,weapon_stat.damageUpgrade = values
 
-	def save_data(self): # type: () -> bytes
-		defaults = [] # type: list[bool]
-		healths = [] # type: list[int]
-		shields = [] # type: list[int]
-		armor = [] # type: list[int]
-		buildTimes = [] # type: list[int]
-		costMinerals = [] # type: list[int]
-		costGas = [] # type: list[int]
-		names = [] # type: list[int]
-		damage = [] # type: list[int]
-		damageUpgrade = [] # type: list[int]
+	def save_data(self) -> bytes:
+		defaults: list[bool] = []
+		healths: list[int] = []
+		shields: list[int] = []
+		armor: list[int] = []
+		buildTimes: list[int] = []
+		costMinerals: list[int] = []
+		costGas: list[int] = []
+		names: list[int] = []
+		damage: list[int] = []
+		damageUpgrade: list[int] = []
 		for unit_stats in self.unit_stats:
 			defaults.append(unit_stats.default)
 			healths.append(unit_stats.health)
@@ -107,7 +107,7 @@ class CHKSectionUNIS(CHKSection):
 		result += struct.pack('<%dH' % self.WEAPONS, *damageUpgrade)
 		return result
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Health','Shields','Armor','Build Time','Mineral Cost','Gas Cost','Name']:

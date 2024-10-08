@@ -12,17 +12,17 @@ from typing import BinaryIO
 
 # This class is designed for StarCraft PCX's, there is no guarantee it works with other PCX files
 class PCX:
-	def __init__(self, palette=[]): # type: (RawPalette) -> None
+	def __init__(self, palette: RawPalette = []) -> None:
 		self.width = 0
 		self.height = 0
 		self.palette = palette
-		self.image = [] # type: Pixels
+		self.image: Pixels = []
 
-	def load_file(self, file, pal=False): # type: (str | BinaryIO, bool) -> None
+	def load_file(self, file: str | BinaryIO, pal: bool = False) -> None:
 		data = load_file(file, 'PCX')
 		self.load_data(data, pal)
 
-	def load_data(self, data, pal=False): # type: (bytes, bool) -> None
+	def load_data(self, data: bytes, pal: bool = False) -> None:
 		if data[:4] != b'\x0A\x05\x01\x08':
 			raise PyMSError('Load',"Not a PCX file (no PCX header)")
 		try:
@@ -34,14 +34,14 @@ class PCX:
 				raise PyMSError('Load', "Unsupported PCX file, the palette information is missing")
 			if pal and (xmax > 256 or ymax > 256 or planes != 1):
 				raise PyMSError('Load', "Unsupported special palette (PCX) file")
-			palette = [] # type: RawPalette
+			palette: RawPalette = []
 			for x in range(0,768,3):
 				if x == 765:
 					r,g,b = tuple(int(c) for c in struct.unpack('3B', data[-768+x:]))
 				else:
 					r,g,b = tuple(int(c) for c in struct.unpack('3B', data[-768+x:-765+x]))
 				palette.append((r,g,b))
-			image = [[]] # type: Pixels
+			image: Pixels = [[]]
 			x = 128
 			while x < len(data) - 769:
 				c = data[x]
@@ -78,14 +78,14 @@ class PCX:
 		except:
 			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt")
 
-	def load_pixels(self, image, palette=None): # type: (Pixels, RawPalette | None) -> None
+	def load_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)
 		self.width = len(image[0])
 		if palette:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file): # type: (str) -> None
+	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file,'wb')
 		except:

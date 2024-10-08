@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class UnitsTab(DATTab):
 	DAT_ID = DATID.units
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
 		self.dattabs = Notebook(self, FLAT)
 		tabs = [
@@ -41,21 +41,21 @@ class UnitsTab(DATTab):
 			)),
 		))
 
-	def active_tab(self): # type: () -> DATUnitsTab
+	def active_tab(self) -> DATUnitsTab:
 		return cast(DATUnitsTab, self.dattabs.active)
 
-	def copy_subtab(self): # type: () -> None
+	def copy_subtab(self) -> None:
 		self.active_tab().copy()
 
-	def change_sub_tab(self, sub_tab_id): # type: (UnitsTabID) -> None
+	def change_sub_tab(self, sub_tab_id: UnitsTabID) -> None:
 		self.dattabs.display(sub_tab_id.tab_name)
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		for frame,_ in list(self.dattabs.pages.values()):
 			tab = cast(DATUnitsTab, frame)
 			tab.updated_pointer_entries(ids)
 
-	def load_data(self, id=None): # type: (int | None) -> None
+	def load_data(self, id: int | None = None) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		if id is not None:
@@ -64,7 +64,7 @@ class UnitsTab(DATTab):
 		self.active_tab().load_data(entry)
 		self.check_used_by_references()
 
-	def save_data(self): # type: () -> None
+	def save_data(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		entry = self.delegate.data_context.units.dat.get_entry(self.id)
@@ -73,7 +73,7 @@ class UnitsTab(DATTab):
 			self.delegate.update_status_bar()
 			self.check_used_by_references()
 
-	def save(self, key=None): # type: (Event | None) -> None
+	def save(self, key: Event | None = None) -> None:
 		DATTab.save(self)
 		if not self.edited:
 			for frame,_ in list(self.dattabs.pages.values()):

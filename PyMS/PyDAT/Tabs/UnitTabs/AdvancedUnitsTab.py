@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
 class AdvancedUnitsTab(DATUnitsTab):
-	def __init__(self, parent, delegate, sub_delegate): # type: (Misc, MainDelegate, SubDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
 
@@ -176,7 +176,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		scrollview.pack(fill=BOTH, expand=1)
 
-	def copy(self): # type: () -> None
+	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
 		text = self.delegate.data_context.units.dat.export_entry(self.sub_delegate.id, export_properties=[
@@ -189,7 +189,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		])
 		self.clipboard_set(text) # type: ignore[attr-defined]
 
-	def updated_pointer_entries(self, ids): # type: (list[AnyID]) -> None
+	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if not DATID.units in ids:
 			return
 
@@ -211,7 +211,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 		self.subunitoneentry.range[1] = limit
 		self.subunittwoentry.range[1] = limit
 
-	def load_data(self, entry): # type: (DATUnit) -> None
+	def load_data(self, entry: DATUnit) -> None:
 		self.subunitone.set(entry.subunit1)
 		self.subunittwo.set(entry.subunit2)
 
@@ -274,7 +274,7 @@ class AdvancedUnitsTab(DATUnitsTab):
 
 		self.reqIndex.set(entry.requirements)
 
-	def save_data(self, entry): # type: (DATUnit) -> bool
+	def save_data(self, entry: DATUnit) -> bool:
 		edited = False
 		if self.subunitone.get() != entry.subunit1:
 			entry.subunit1 = self.subunitone.get()

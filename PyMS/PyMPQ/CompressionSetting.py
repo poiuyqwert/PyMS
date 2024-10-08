@@ -11,7 +11,7 @@ class CompressionOption(Enum):
 	Audio = 'audio'
 	Auto = 'auto'
 
-	def display_name(self): # type: () -> str
+	def display_name(self) -> str:
 		match self:
 			case CompressionOption.NoCompression:
 				return 'None'
@@ -24,7 +24,7 @@ class CompressionOption(Enum):
 			case CompressionOption.Auto:
 				return 'Auto'
 
-	def compression_type(self): # type: () -> int
+	def compression_type(self) -> int:
 		match self:
 			case CompressionOption.Standard:
 				return MPQCompressionFlag.pkware
@@ -35,10 +35,10 @@ class CompressionOption(Enum):
 			case _:
 				return MPQCompressionFlag.none
 
-	def level_count(self): # type: () -> int
+	def level_count(self) -> int:
 		return len(self.compression_levels())
 
-	def compression_levels(self): # type: () -> tuple[int, ...]
+	def compression_levels(self) -> tuple[int, ...]:
 		if self == CompressionOption.Deflate:
 			return tuple(range(min(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION), max(Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION)+1))
 		elif self == CompressionOption.Audio:
@@ -46,21 +46,21 @@ class CompressionOption(Enum):
 		else:
 			return ()
 
-	def setting(self, level=0): # type: (int) -> CompressionSetting
+	def setting(self, level: int = 0) -> CompressionSetting:
 		return CompressionSetting(self, max(0, min(level, self.level_count()-1)))
 
 class CompressionSetting(object):
-	def __init__(self, type, level): # type: (CompressionOption, int) -> None
+	def __init__(self, type: CompressionOption, level: int) -> None:
 		self.type = type
 		self.level = level
 
-	def compression_level(self): # type: () -> int
+	def compression_level(self) -> int:
 		compression_levels = self.type.compression_levels()
 		if not compression_levels:
 			return 0
 		return compression_levels[self.level]
 
-	def level_name(self): # type: () -> str
+	def level_name(self) -> str:
 		compression_level = self.compression_level()
 		if self == CompressionOption.Deflate:
 			name = '%d' % compression_level
@@ -84,7 +84,7 @@ class CompressionSetting(object):
 			return ''
 
 	@staticmethod
-	def parse_value(menu_value): # type: (str) -> CompressionSetting
+	def parse_value(menu_value: str) -> CompressionSetting:
 		type_name = menu_value
 		level = 0
 		if ':' in menu_value:
@@ -95,7 +95,7 @@ class CompressionSetting(object):
 			type = CompressionOption(type_name)
 		return type.setting(level)
 
-	def __eq__(self, other): # type: (object) -> bool
+	def __eq__(self, other: object) -> bool:
 		if isinstance(other, CompressionSetting):
 			return self.type == other.type and self.level == other.level
 		elif isinstance(other, CompressionOption):
@@ -103,7 +103,7 @@ class CompressionSetting(object):
 		else:
 			return False
 
-	def __str__(self): # type: () -> str
+	def __str__(self) -> str:
 		if self.type.level_count() > 0:
 			return '%s:%d' % (self.type.value, self.level)
 		else:

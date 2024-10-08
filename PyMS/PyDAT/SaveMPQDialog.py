@@ -37,11 +37,11 @@ class SaveMPQDialog(PyMSDialog):
 		('cmdicons.grp', 'unit\\cmdbtns\\cmdicons.grp', DataID.cmdicons)
 	)
 
-	def __init__(self, parent, delegate): # type: (Misc, MainDelegate) -> None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Save MPQ', resizable=(False, False))
 
-	def widgetize(self): # type: () -> (Misc | None)
+	def widgetize(self) -> Misc | None:
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
 		self.listbox = ScrolledListbox(self, selectmode=MULTIPLE, font=Font.fixed(), width=14, height=len(SaveMPQDialog.OPTIONS))
 		self.listbox.pack(fill=BOTH, expand=1, padx=5)

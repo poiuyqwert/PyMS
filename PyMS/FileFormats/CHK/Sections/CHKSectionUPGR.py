@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKUpgradeLevels(object):
-	def __init__(self): # type: () -> None
+	def __init__(self) -> None:
 		self.maxLevel = 3
 		self.startLevel = 0
 		self.default = True
@@ -24,17 +24,17 @@ class CHKSectionUPGR(CHKSection):
 
 	UPGRADES = 46
 	
-	def __init__(self, chk): # type: (CHK) -> None
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.levels = [] # type: list[list[CHKUpgradeLevels]]
+		self.levels: list[list[CHKUpgradeLevels]] = []
 		for _ in range(self.UPGRADES):
 			self.levels.append([])
 			for _ in range(12):
 				self.levels[-1].append(CHKUpgradeLevels())
-		self.maxLevels = [] # type: list[int]
-		self.startLevels = [] # type: list[int]
+		self.maxLevels: list[int] = []
+		self.startLevels: list[int] = []
 	
-	def load_data(self, data): # type: (bytes) -> None
+	def load_data(self, data: bytes) -> None:
 		o = 0
 		for p in range(12):
 			maxLevels = list(int(v) for v in struct.unpack('<%dB' % self.UPGRADES, data[o:o+self.UPGRADES]))
@@ -54,7 +54,7 @@ class CHKSectionUPGR(CHKSection):
 			for u in range(self.UPGRADES):
 				self.levels[u][p].default = defaults[u]
 
-	def save_data(self): # type: () -> bytes
+	def save_data(self) -> bytes:
 		result = b''
 		for p in range(12):
 			maxLevels = [self.levels[u][p].maxLevel for u in range(self.UPGRADES)]
@@ -68,7 +68,7 @@ class CHKSectionUPGR(CHKSection):
 			result += struct.pack('<%dB' % self.UPGRADES, *defaults)
 		return result
 	
-	def decompile(self): # type: () -> str
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		result += '\t' + pad('#')
 		for name in ['Max Levels','Start Level','Use Defaults']:

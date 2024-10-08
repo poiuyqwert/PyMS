@@ -7,16 +7,16 @@ from typing import Callable, Any
 class CheckThread:
 	delay = 1
 
-	def __init__(self, callback, path): # type: (Callable[[list[str]], None], str) -> None
+	def __init__(self, callback: Callable[[list[str]], None], path: str) -> None:
 		self.callback = callback
 		self.path = path
 		self.cont = True
-		self.thread = None # type: int | None
+		self.thread: int | None = None
 
-	def check_update(self, _): # type: (Any) -> None
-		m = {} # type: dict[str, float]
-		def check_dir(path, main=False): # type: (str, bool) -> (list[str] | None)
-			u = [] # type: list[str]
+	def check_update(self, _: Any) -> None:
+		m: dict[str, float] = {}
+		def check_dir(path: str, main: bool = False) -> list[str] | None:
+			u: list[str] = []
 			for r,ds,fs in os.walk(path, topdown=False):
 				#print(r,ds,fs)
 				if main and not fs and not ds:
@@ -48,15 +48,15 @@ class CheckThread:
 			time.sleep(self.delay)
 		self.thread = None
 
-	def start(self): # type: () -> None
+	def start(self) -> None:
 		if self.thread is None:
 			self.thread = start_new_thread(self.check_update,(0,))
 		else:
 			self.cont = True
 
-	def end(self): # type: () -> None
+	def end(self) -> None:
 		if self.thread is not None:
 			self.cont = False
 
-	def is_running(self): # type: () -> bool
+	def is_running(self) -> bool:
 		return self.thread is not None and self.cont

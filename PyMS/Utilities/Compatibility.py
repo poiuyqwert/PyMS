@@ -7,7 +7,7 @@ class Requirement(Flag):
 	MPQ = auto()
 	PIL = auto()
 
-def check_compat(program_name, additional_requirements=Requirement.none): # type: (str, Requirement) -> None
+def check_compat(program_name: str, additional_requirements: Requirement = Requirement.none) -> None:
 	import sys
 
 	tcl_version = None
