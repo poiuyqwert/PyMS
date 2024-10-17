@@ -1,15 +1,15 @@
 
 from __future__ import annotations
 
-from ..FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, WeaponsDAT
-from ..FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
-from ..FileFormats import TBL
+from ...FileFormats.DAT import ImagesDAT, SpritesDAT, FlingyDAT, SoundsDAT, WeaponsDAT
+from ...FileFormats.DAT.Utilities import DATEntryName, DataNamesUsage
+from ...FileFormats import TBL
 
-from ..Utilities.fileutils import load_file
-from ..Utilities.PyMSWarning import PyMSWarning
-from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities import Assets
+from ...Utilities.fileutils import load_file
+from ...Utilities.PyMSWarning import PyMSWarning
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import Assets
 
 import struct, re
 try:

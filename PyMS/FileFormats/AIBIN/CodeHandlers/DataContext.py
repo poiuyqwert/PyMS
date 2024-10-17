@@ -1,6 +1,8 @@
 
-from ..TBL import TBL, decompile_string, compile_string
-from ..DAT import UnitsDAT, UpgradesDAT, TechDAT
+from ...TBL import TBL, decompile_string, compile_string
+from ...DAT import UnitsDAT, UpgradesDAT, TechDAT
+
+# TODO: Use DatEntryName?
 
 class DataContext(object):
 	def __init__(self, stattxt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None) -> None:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from . import CodeDirectives
-from ..DataContext import DataContext
+from .DataContext import DataContext
 
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers.Lexer import Lexer

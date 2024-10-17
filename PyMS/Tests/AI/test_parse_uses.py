@@ -26,7 +26,8 @@ script TEST {
 
 		parse_context = utils.parse_context(code)
 		ai = AIBIN.AIBIN()
-		ai.compile(parse_context)
+		scripts = AIBIN.AIBIN.compile(parse_context)
+		ai.add_scripts(scripts)
 
 		test_script = ai.list_scripts()[0]
 
@@ -80,7 +81,8 @@ goto TEST_2
 """
 		parse_context = utils.parse_context(code)
 		ai = AIBIN.AIBIN()
-		ai.compile(parse_context)
+		scripts = AIBIN.AIBIN.compile(parse_context)
+		ai.add_scripts(scripts)
 
 		base_script = ai.list_scripts()[0]
 		assert base_script.id == 'BASE'

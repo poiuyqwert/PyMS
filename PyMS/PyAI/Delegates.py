@@ -1,7 +1,6 @@
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.DataContext import DataContext
-from ..FileFormats.AIBIN.AICodeHandlers import AISerializeContext, AIParseContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, DataContext
 
 from ..Utilities.UIKit import AnyWindow
 from ..Utilities import IO

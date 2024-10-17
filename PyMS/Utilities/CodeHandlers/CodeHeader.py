@@ -9,7 +9,7 @@ class CodeHeader(Protocol):
 	def get_name(self) -> str:
 		...
 
-	def get_entry_points(self) -> list[CodeBlock]:
+	def get_entry_points(self) -> list[tuple[CodeBlock, str | None]]:
 		...
 
 	def has_entry_point(self, entry_point: CodeBlock) -> bool:

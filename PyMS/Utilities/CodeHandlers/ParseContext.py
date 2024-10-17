@@ -101,10 +101,8 @@ class ParseContext(object):
 		self.block_metadata[block].uses.append(use)
 		if block.next_block is not None:
 			self.add_block_use(block.next_block, use)
-		for command in block.commands:
-			for param in command.params:
-				if isinstance(param, CodeBlock):
-					self.add_block_use(param, use)
+		for ref_block in block.ref_blocks:
+			self.add_block_use(ref_block, use)
 
 	def add_block_use_block(self, block: CodeBlock, use_block: CodeBlock) -> None:
 		metadata = self.block_metadata[use_block]

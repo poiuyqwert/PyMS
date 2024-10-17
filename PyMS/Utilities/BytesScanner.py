@@ -28,6 +28,36 @@ class BytesScanner(object):
 		self.address += size
 
 	@overload
+	def can_scan(self, format: str) -> tuple[Any, ...]: ...
+	@overload
+	def can_scan(self, format: struct.Struct) -> tuple[Any, ...]: ...
+	@overload
+	def can_scan(self, format: Struct.IntField) -> int: ...
+	@overload
+	def can_scan(self, format: Struct.FloatField) -> float: ...
+	@overload
+	def can_scan(self, format: Struct.StringField) -> str: ...
+	@overload
+	def can_scan(self, format: Struct.IntArrayField) -> list[int]: ...
+	@overload
+	def can_scan(self, format: Struct.FloatArrayField) -> list[float]: ...
+	@overload
+	def can_scan(self, format: Struct.Field) -> Any: ...
+	@overload
+	def can_scan(self, format: Type[S]) -> S: ...
+	def can_scan(self, format: AnyFormat) -> Any:
+		size = 0
+		if isinstance(format, str):
+			size = struct.calcsize(format)
+		elif isinstance(format, struct.Struct):
+			size = format.size
+		elif isinstance(format, Struct.Field):
+			size = format.size
+		else: # if is Type[S]
+			size = format.calcsize()
+		return self.remaining_len() >= size
+
+	@overload
 	def peek(self, format: str) -> tuple[Any, ...]: ...
 	@overload
 	def peek(self, format: struct.Struct) -> tuple[Any, ...]: ...
@@ -87,6 +117,17 @@ class BytesScanner(object):
 		self.address += size
 		return result
 
+	def can_scan_bytes(self, length: int) -> bool:
+		return self.remaining_len() >= length
+
+	def peek_bytes(self, length: int) -> bytes:
+		return self.data[self.address:self.address+length]
+
+	def scan_bytes(self, length: int) -> bytes:
+		result = self.peek_bytes(length)
+		self.address += length
+		return result
+
 	def scan_cstr(self, encoding: str = 'utf-8') -> str:
 		start_address = self.address
 		while self.address < len(self.data):
@@ -101,11 +142,14 @@ class BytesScanner(object):
 			address = self.address
 		return BytesScanner(self.data, address)
 
-	def at_end(self):
+	def at_end(self) -> bool:
 		return self.address == len(self.data)
 
-	def jump_to(self, address):
+	def is_offset_valid(self, offset: int) -> bool:
+		return offset >= 0 and offset < len(self.data)
+
+	def jump_to(self, address: int) -> None:
 		self.address = address
 
-	def remaining_len(self):
+	def remaining_len(self) -> int:
 		return len(self.data) - self.address

@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from . import Tokens
-from .CodeType import CodeType, AddressCodeType, CodeBlock
+from .CodeType import CodeType, IntCodeType
+from .CodeBlock import CodeBlock
 from .ParseContext import ParseContext
 
 from .. import Struct
@@ -33,8 +34,15 @@ class CodeCommandDefinition(object):
 
 	def decompile(self, scanner: BytesScanner) -> CodeCommand:
 		params = []
+		param_repeat = 1
 		for param_type in self.param_types:
-			params.append(param_type.decompile(scanner))
+			for _ in range(param_repeat):
+				value = param_type.decompile(scanner)
+				params.append(value)
+			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
+				param_repeat = value
+			else:
+				param_repeat = 1
 		return CodeCommand(self, params)
 
 	def parse(self, parse_context: ParseContext) -> CodeCommand:
@@ -44,21 +52,27 @@ class CodeCommandDefinition(object):
 		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
 			_ = parse_context.lexer.next_token()
 			parse_context.command_in_parens = True
+		param_repeat = 1
 		for param_index,param_type in enumerate(self.param_types):
-			if parse_context.command_in_parens and param_index > 0:
-				token = parse_context.lexer.next_token()
-				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
-					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
-			value: Any | None = parse_context.lookup_param_value(param_type)
-			if value is None:
-				try:
-					value = param_type.lex(parse_context)
-				except PyMSError as e:
-					parse_context.attribute_error(e)
-					raise e
-				except:
-					raise
-			params.append(value)
+			for _ in range(param_repeat):
+				if parse_context.command_in_parens and param_index > 0:
+					token = parse_context.lexer.next_token()
+					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
+						raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
+				value: Any = parse_context.lookup_param_value(param_type)
+				if value is None:
+					try:
+						value = param_type.lex(parse_context)
+					except PyMSError as e:
+						parse_context.attribute_error(e)
+						raise e
+					except:
+						raise
+				params.append(value)
+			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
+				param_repeat = value
+			else:
+				param_repeat = 1
 		if parse_context.command_in_parens:
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
@@ -104,17 +118,35 @@ class CodeCommand(object):
 	def compile(self, context: BuilderContext) -> None:
 		assert self.definition.byte_code_id is not None
 		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
-		for param,param_type in zip(self.params, self.definition.param_types):
-			param_type.compile(param, context)
+		param_repeat = 1
+		param_index = 0
+		for param_type in self.definition.param_types:
+			for _ in range(param_repeat):
+				param = self.params[param_index]
+				param_type.compile(param, context)
+				param_index += 1
+			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
+				param_repeat = param
+			else:
+				param_repeat = 1
 
 	def serialize(self, context: SerializeContext) -> None:
 		parameters: list[str] = []
 		comments: list[str] = []
-		for param,param_type in zip(self.params, self.definition.param_types):
-			parameters.append(param_type.serialize(param, context))
-			comment = param_type.comment(param, context)
-			if comment is not None:
-				comments.append(comment)
+		param_repeat = 1
+		param_index = 0
+		for param_type in self.definition.param_types:
+			for _ in range(param_repeat):
+				param = self.params[param_index]
+				parameters.append(param_type.serialize(param, context))
+				comment = param_type.comment(param, context)
+				if comment is not None:
+					comments.append(comment)
+				param_index += 1
+			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
+				param_repeat = param
+			else:
+				param_repeat = 1
 		context.write(context.formatters.command.serialize(self.definition.name, parameters))
 		if comments:
 			context.write(context.formatters.comment.serialize(comments))

@@ -1,6 +1,6 @@
 
 from .AIFlag import AIFlag
-from .AICodeHandlers import CodeCommands
+from .CodeHandlers import CodeCommands
 
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
@@ -19,16 +19,14 @@ class AIScript(CodeHeader):
 	@staticmethod
 	def blank_entry_point() -> CodeBlock:
 		entry_point = CodeBlock()
-		entry_point.commands = [
-			CodeCommand(CodeCommands.Stop, [])
-		]
+		entry_point.add_command(CodeCommand(CodeCommands.Stop, []))
 		return entry_point
 
 	def get_name(self) -> str:
 		return self.id
 
-	def get_entry_points(self) -> list[CodeBlock]:
-		return [self.entry_point]
+	def get_entry_points(self) -> list[tuple[CodeBlock, str | None]]:
+		return [(self.entry_point, 'EntryPoint')]
 
 	def serialize(self, serialize_context: CodeCommands.SerializeContext) -> None:
 		serialize_context.write(f'\nscript {self.id} {{\n')

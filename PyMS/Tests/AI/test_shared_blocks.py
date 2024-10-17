@@ -33,7 +33,7 @@ class Header:
     broodwar_only 0
     staredit_hidden 0
     requires_location 0
-    entry_point SGTB_0000
+    entry_point SGTB_EntryPoint
 }"""
 
 	@staticmethod
@@ -52,13 +52,13 @@ class Block:
 	def shared_0000(owners: list[str] = ['BASE', 'SEPB', 'SGTB']) -> str:
 		comment = ''
 		if owners:
-			comment = ' # Shared by: ' + ', '.join(owners)
+			comment = '\t# Shared by: ' + ', '.join(owners)
 		return f""":shared_0000{comment}
 wait 1
 
 goto shared_0000"""
 
-	SGTB_0000 = """:SGTB_0000
+	SGTB_EntryPoint = """:SGTB_EntryPoint
 goto shared_0000"""
 
 	BWSS_0000 = """:BWSS_0000
@@ -67,18 +67,21 @@ stop"""
 class Scripts:
 	full_ai_script = f"""
 {Header.BASE}
+
 {Block.shared_0000()}
 
 
 {Header.SEPB}
 
 {Header.SGTB}
-{Block.SGTB_0000}
+
+{Block.SGTB_EntryPoint}
 
 """
 
 	fill_bw_script = f"""
 {Header.BWSS()}
+
 {Block.BWSS_0000}
 
 """
@@ -87,7 +90,8 @@ class Test_Shared_Blocks(unittest.TestCase):
 	def test_compile_all(self) -> None:
 		parse_context = utils.parse_context(Scripts.full_ai_script)
 		ai = AIBIN.AIBIN()
-		ai.compile(parse_context)
+		scripts = AIBIN.AIBIN.compile(parse_context)
+		ai.add_scripts(scripts)
 		
 		self.assertSequenceEqual([script.id for script in ai.list_scripts()], ['BASE', 'SEPB', 'SGTB'])
 		base = ai.get_script('BASE')
@@ -110,13 +114,12 @@ class Test_Shared_Blocks(unittest.TestCase):
 	def test_compile_decompile(self) -> None:
 		parse_context = utils.parse_context(Scripts.full_ai_script)
 		ai = AIBIN.AIBIN()
-		ai.compile(parse_context)
+		scripts = AIBIN.AIBIN.compile(parse_context)
+		ai.add_scripts(scripts)
 
 		output, serialize_context = utils.serialize_context()
 		ai.decompile(serialize_context)
 		code = output.getvalue()
-		print(f'`{code}`')
-		print(f'*{Scripts.full_ai_script}*')
 
 		self.assertEqual(code, Scripts.full_ai_script)
 
@@ -139,11 +142,13 @@ class Test_Shared_Blocks(unittest.TestCase):
 
 		expected_code = f"""
 {Header.SEPB}
+
 {Block.shared_0000(['SEPB', 'SGTB'])}
 
 
 {Header.SGTB}
-{Block.SGTB_0000}
+
+{Block.SGTB_EntryPoint}
 
 """
 		self.assertEqual(code, expected_code)
@@ -157,7 +162,9 @@ class Test_Shared_Blocks(unittest.TestCase):
 
 		expected_code = f"""
 {Header.SGTB}
-{Block.SGTB_0000}
+
+{Block.SGTB_EntryPoint}
+
 
 {Block.shared_0000()}
 
@@ -166,6 +173,8 @@ class Test_Shared_Blocks(unittest.TestCase):
 
 {Header.SEPB}
 """
+		print(f'`{code}`')
+		print(f'*{expected_code}*')
 		self.assertEqual(code, expected_code)
 
 	def test_cross_references_invalid(self) -> None:
@@ -177,9 +186,8 @@ class Test_Shared_Blocks(unittest.TestCase):
 """
 		print(code)
 		parse_context = utils.parse_context(code)
-		ai = AIBIN.AIBIN()
 		with self.assertRaises(PyMSError) as error_context:
-			ai.compile(parse_context)
+			AIBIN.AIBIN.compile(parse_context)
 		print(str(error_context.exception))
 		self.assertTrue('is cross referenced by scripts' in str(error_context.exception))
 
@@ -227,6 +235,6 @@ goto BWSS_0002
 		parse_context = utils.parse_context(code)
 		ai = AIBIN.AIBIN()
 		with self.assertRaises(PyMSError) as error_context:
-			ai.compile(parse_context)
+			AIBIN.AIBIN.compile(parse_context)
 		print(str(error_context.exception))
 		self.assertTrue('is cross referenced by scripts' in str(error_context.exception))

@@ -17,7 +17,6 @@ class SourceCodeParser(Protocol):
 
 class BlockSourceCodeParser(SourceCodeParser):
 	def parse(self, parse_context: ParseContext) -> bool:
-		from .CodeBlock import CodeBlock
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
@@ -68,7 +67,7 @@ class CommandSourceCodeParser(SourceCodeParser):
 			command = cmd_def.parse(parse_context)
 			if not parse_context.active_block:
 				raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
-			parse_context.active_block.commands.append(command)
+			parse_context.active_block.add_command(command)
 			for param in command.params:
 				if isinstance(param, CodeBlock):
 					parse_context.add_block_use_block(param, parse_context.active_block)

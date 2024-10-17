@@ -37,6 +37,9 @@ class IdentifierToken(RegexToken):
 class IntegerToken(RegexToken):
 	_regexp = re.compile(r'-?[0-9]+')
 
+class HexToken(RegexToken):
+	_regexp = re.compile(r'-?0x[0-9a-fA-F]+')
+
 class FloatToken(RegexToken):
 	_regexp = re.compile(r'-?[0-9]+\.[0-9]+')
 

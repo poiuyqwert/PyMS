@@ -1,5 +1,5 @@
 
-from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, CodeTypes, CodeDirectives
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *

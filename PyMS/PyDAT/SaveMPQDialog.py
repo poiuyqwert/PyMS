@@ -4,7 +4,7 @@ from __future__ import annotations
 from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
-from ..FileFormats.IScriptBIN import IScriptBIN
+from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError

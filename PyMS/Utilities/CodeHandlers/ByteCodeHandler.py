@@ -62,7 +62,7 @@ class ByteCodeHandler:
 						cmd.params[n] = new_block
 						if split_block == active_block:
 							active_block = new_block
-				active_block.commands.append(cmd)
+				active_block.add_command(cmd)
 				self.cmd_refs[cmd_address] = (active_block, cmd)
 				if cmd.definition.ends_flow:
 					break

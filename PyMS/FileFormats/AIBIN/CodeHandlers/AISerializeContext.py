@@ -1,5 +1,5 @@
 
-from ..DataContext import DataContext
+from .DataContext import DataContext
 
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.Formatters import Formatters

@@ -1,7 +1,7 @@
 
 from .AIScript import AIScript
 
-from .AICodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler
+from .CodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.BytesScanner import  BytesScanner
@@ -127,7 +127,7 @@ class AIBIN:
 				header.flags = script.flags
 				header.string_id = script.string_id + 1 # WARNING: string id's are 1 indexed in the file
 			headers += header.pack()
-		builder.data[:Struct.l_u32.size] = Struct.l_u32.pack(builder.current_offset) # Update offset to headers array
+		builder.set_data(0, Struct.l_u32.pack(builder.current_offset)) # Update offset to headers array
 		headers += b'\x00\x00\x00\x00' # Terminator for headers array
 		with IO.OutputBytes(output) as f:
 			f.write(builder.data)
@@ -187,7 +187,7 @@ class AIBIN:
 			raise PyMSError('Internal', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
 		if new_bw_size > Struct.l_u16.max:
 			_, bw_size = self.calculate_sizes()
-			raise PyMSError('Internal', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
+			raise PyMSError('Internal', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
 		self._scripts = scripts
 		self._cached_sizes = (new_ai_size, new_bw_size)
 

@@ -9,7 +9,7 @@ from ..FileFormats.DAT import *
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP, RLEFunc, rle_normal, rle_outline, rle_shadow, Outline, ImageWithBounds
 from ..FileFormats.MPQ.MPQ import MPQ
-from ..FileFormats.IScriptBIN import IScriptBIN
+from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
 from ..FileFormats.Images import RawPalette
 
 from ..Utilities import Assets
@@ -193,7 +193,7 @@ class DataContext(object):
 			self.portdatatbl.load_strings()
 			self.mapdatatbl.load_strings()
 			iscriptbin = IScriptBIN()
-			iscriptbin.load_file(self.mpq_handler.load_file(self.config.settings.files.iscript_bin.file_path))
+			iscriptbin.load(self.mpq_handler.load_file(self.config.settings.files.iscript_bin.file_path))
 			self.update_cb(DataID.iscriptbin)
 		except:
 			raise

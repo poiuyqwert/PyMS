@@ -1,11 +1,6 @@
 
-from ...FileFormats.AIBIN.AICodeHandlers.AIParseContext import AIParseContext
-from ...FileFormats.AIBIN.AICodeHandlers.AILexer import AILexer
-from ...FileFormats.AIBIN.AICodeHandlers.AIDefinitionsHandler import AIDefinitionsHandler
-from ...FileFormats.AIBIN.DataContext import DataContext
-from ...FileFormats.AIBIN.AICodeHandlers.AISerializeContext import AISerializeContext
+from ...FileFormats.AIBIN.CodeHandlers import AIParseContext, AILexer, AIDefinitionsHandler, DataContext, AISerializeContext
 
-from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.Formatters import Formatters
 
 import io

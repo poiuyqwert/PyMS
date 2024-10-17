@@ -14,9 +14,6 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		super().__init__()
 		self.register_commands(CodeCommands.all_header_commands)
 
-	def handles_token(self, token: Tokens.Token, parse_context: ParseContext) -> bool:
-		return isinstance(token, Tokens.IdentifierToken) and token.raw_value == 'script'
-
 	def parse(self, parse_context: ParseContext) -> bool:
 		from ..AIScript import AIScript
 		from ..AIFlag import AIFlag

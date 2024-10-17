@@ -398,11 +398,11 @@ Desert Doodad
 Desert Doodad2
 Desert Doodad3
 Desert Doodad Overlay
-Desert Doodad
+Desert Doodad4
 Twilight Doodad
-Twilight Doodad
-Twilight Doodad
-Twilight Doodad
+Twilight Doodad2
+Twilight Doodad3
+Twilight Doodad4
 Overmind Cocoon
 Warp Gate
 Psi Disrupter

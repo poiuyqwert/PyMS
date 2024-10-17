@@ -4,7 +4,7 @@ from .Config import PyAIConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.AICodeHandlers import CodeCommands, CodeTypes, CodeDirectives
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, CodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog

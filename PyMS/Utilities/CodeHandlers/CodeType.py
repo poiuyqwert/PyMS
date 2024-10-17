@@ -70,26 +70,37 @@ class CodeType(Generic[I, O]):
 		return hash(type(self))
 
 class IntCodeType(CodeType[int, int]):
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None, allow_hex: bool = False, param_repeater: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
-		self._limits = limits or (bytecode_type.min, bytecode_type.max)
+		self._limits = limits
+		self._allow_hex = allow_hex
+		self.param_repeater = param_repeater
 
 	def lex(self, parse_context: ParseContext) -> int:
 		token = parse_context.lexer.next_token()
-		if not isinstance(token, Tokens.IntegerToken):
+		if not isinstance(token, Tokens.IntegerToken) and (not isinstance(token, Tokens.HexToken) or not self._allow_hex):
 			raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
 	def parse(self, token: str, parse_context: ParseContext) -> int:
 		try:
-			num = int(token)
+			if token.startswith('0x') and self._allow_hex:
+				num = int(token, 16)
+			else:
+				num = int(token)
 		except:
 			raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))
 		self.validate(num, parse_context)
 		return num
 
+	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
+		if self._limits:
+			return self._limits
+		bytecode_type = cast(Struct.IntField, self._bytecode_type)
+		return (bytecode_type.min, bytecode_type.max)
+
 	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
-		min,max = self._limits
+		min,max = self.get_limits(parse_context)
 		if num < min:
 			raise PyMSError('Parse', "Value is too small for '%s' (got '%d', minimum is '%d')" % (self.name, num, min))
 		if num > max:
@@ -98,7 +109,7 @@ class IntCodeType(CodeType[int, int]):
 class FloatCodeType(CodeType[float, float]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
-		self._limits = limits or (bytecode_type.min, bytecode_type.max)
+		self._limits = limits
 
 	def lex(self, parse_context: ParseContext) -> float:
 		token = parse_context.lexer.next_token()
@@ -114,8 +125,14 @@ class FloatCodeType(CodeType[float, float]):
 		self.validate(num, parse_context)
 		return num
 
+	def get_limits(self, parse_context: ParseContext) -> tuple[float, float]:
+		if self._limits:
+			return self._limits
+		bytecode_type = cast(Struct.FloatField, self._bytecode_type)
+		return (bytecode_type.min, bytecode_type.max)
+
 	def validate(self, num: float, parse_context: ParseContext, token: str | None = None) -> None:
-		min,max = self._limits
+		min,max = self.get_limits(parse_context)
 		if num < min:
 			raise PyMSError('Parse', "Value is too small for '%s' (got '%f', minimum is '%f')" % (self.name, num, min))
 		if num > max:
