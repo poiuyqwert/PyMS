@@ -1,28 +1,20 @@
 
 from __future__ import annotations
 
-from ..FileFormats import TBL
+from .CodeGenerators.GeneratorPreset import GeneratorPreset
+
 from ..FileFormats import DAT
-from ..FileFormats import IScriptBIN
+from ..FileFormats.IScriptBIN import IScriptBIN
+from ..FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext, DataContext
 
-from ..Utilities import Config
+from ..Utilities import IO
 from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc
+from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc, AnyWindow
 
-from typing import Protocol
+from typing import Protocol, IO as BuiltinIO
 
 class MainDelegate(Protocol):
-	settings: Settings
-
-	tbl: TBL.TBL
-	imagestbl: TBL.TBL
-	sfxdatatbl: TBL.TBL
-	unitsdat: DAT.UnitsDAT
-	weaponsdat: DAT.WeaponsDAT
-	flingydat: DAT.FlingyDAT
-	spritesdat: DAT.SpritesDAT
-	imagesdat: DAT.ImagesDAT
-	soundsdat: DAT.SoundsDAT
+	unitsdat: DAT.UnitsDAT # TODO: units.dat?
 
 	mpqhandler: MPQHandler
 
@@ -32,11 +24,27 @@ class MainDelegate(Protocol):
 	flingylist: ScrolledListbox
 	unitlist: ScrolledListbox
 
-	def get_ibin(self) -> IScriptBIN.IScriptBIN:
+	def get_iscript_bin(self) -> IScriptBIN.IScriptBIN:
+		...
+
+	def get_data_context(self) -> DataContext:
+		...
+
+	def get_serialize_context(self, output: BuiltinIO[str]) -> ICESerializeContext:
+		...
+
+	def get_parse_context(self, input: IO.AnyInputText) -> ICEParseContext:
+		...
+
+	def save_code(self, code: str, parent: AnyWindow) -> bool:
 		...
 
 class CodeGeneratorDelegate(Protocol):
-	def load_preset(self, preset: str, window: Toplevel | None) -> bool:
+	def insert_code(self, code: str) -> None:
+		pass
+
+class ManagePresetsDelegate(Protocol):
+	def load_preset(self, preset: GeneratorPreset, window: Toplevel | None) -> bool:
 		...
 
 class ImportListDelegate(Protocol):

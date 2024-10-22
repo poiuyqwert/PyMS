@@ -1,20 +1,22 @@
 
 from .Delegates import MainDelegate
+from .Config import PyICEConfig
 
-from ..FileFormats import IScriptBIN
-from ..FileFormats import TBL
+from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands
 from ..FileFormats.MPQ.MPQ import MPQ
 
 from ..Utilities.utils import play_sound
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
+from ..Utilities.CodeHandlers.CodeCommand import CodeCommand
 
-import re
+import re, io
 
 class SoundDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate, text: Text, id: int = 0) -> None:
+	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig.Sounds, text: CodeText, id: int = 0) -> None:
 		self.delegate = delegate
+		self.config_ = config
 		self.text = text
 		self.id = IntVar()
 		self.id.set(id)
@@ -22,14 +24,16 @@ class SoundDialog(PyMSDialog):
 
 	def widgetize(self) -> Misc | None:
 		f = Frame(self)
-		self.dd = DropDown(f, self.id, ['%03s %s' % (n,TBL.decompile_string(self.delegate.sfxdatatbl.strings[self.delegate.soundsdat.get_entry(n).sound_file-1][:-1])) for n in range(self.delegate.soundsdat.entry_count())], width=30)
+		# TODO: Missing soundsdat?
+		sounds_dat = self.delegate.get_data_context().sounds_dat
+		assert sounds_dat is not None
+		self.dd = DropDown(f, self.id, ['%03s %s' % (n,self.delegate.get_data_context().sound_name(n)) for n in range(self.delegate.get_data_context().sounds_entry_count)], width=30)
 		self.dd.pack(side=LEFT, padx=1)
 		Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play, state=NORMAL if MPQ.supported() else DISABLED).pack(side=LEFT, padx=1)
 		f.pack(padx=5,pady=5)
 
-		self.overwrite = IntVar()
-		self.closeafter = IntVar()
-		self.closeafter.set(self.delegate.settings.sounds.get('closeafter',0))
+		self.overwrite = BooleanVar(value=self.config_.overwrite.value)
+		self.closeafter = BooleanVar(value=self.config_.close_after.value)
 
 		btns = Frame(self)
 		lf = LabelFrame(btns, text='Insert/Overwrite')
@@ -53,7 +57,10 @@ class SoundDialog(PyMSDialog):
 	def play(self) -> None:
 		if not play_sound:
 			return
-		f = self.delegate.mpqhandler.get_file('MPQ:sound\\' + self.delegate.sfxdatatbl.strings[self.delegate.soundsdat.get_entry(self.id.get()).sound_file-1][:-1])
+		sound_path = self.delegate.get_data_context().sound_path(self.id.get())
+		if not sound_path:
+			return
+		f = self.delegate.mpqhandler.get_file('MPQ:sound\\' + sound_path)
 		if not f:
 			return
 		play_sound(f.read())
@@ -72,20 +79,20 @@ class SoundDialog(PyMSDialog):
 
 	def docmd(self) -> None:
 		s = self.text.index('%s linestart' % INSERT)
-		i = IScriptBIN.type_soundid(1, self.delegate.get_ibin(), self.id.get())
-		assert isinstance(i, tuple)
-		longest_opcode = max([len(o[0][0]) for o in IScriptBIN.OPCODES] + [13]) + 1
-		t = '\tplaysnd%s\t%s' % (' ' * (longest_opcode-7),i[0])
-		if i[1]:
-			t += ' # ' + i[1]
-		if self.overwrite.get():
-			self.text.delete(s,'%s lineend' % INSERT)
-		else:
-			t += '\n'
-		self.text.insert(s, t)
+		output = io.StringIO()
+		serialize_context = self.delegate.get_serialize_context(output)
+		serialize_context.indent()
+		CodeCommand(CodeCommands.Playsnd, [self.id.get()]).serialize(serialize_context)
+		text = output.getvalue()
+		with self.text.undo_group():
+			if self.overwrite.get():
+				self.text.delete(s,'%s lineend' % INSERT)
+				text = text.rstrip('\n')
+			self.text.insert(s, text)
 		if self.closeafter.get():
 			self.destroy()
 
 	def destroy(self):
-		self.delegate.settings.sounds.closeafter = self.closeafter.get()
+		self.config_.overwrite.value = self.overwrite.get()
+		self.config_.close_after.value = self.closeafter.get()
 		PyMSDialog.withdraw(self)

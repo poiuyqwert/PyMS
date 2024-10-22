@@ -81,7 +81,7 @@ class SaveMPQDialog(PyMSDialog):
 									data_data = self.delegate.data_context.data_data(id)
 									if isinstance(data_data, IScriptBIN):
 										iscript_bin = data_data
-										buffer = IO.output_to_bytes(lambda f: iscript_bin.compile(f))
+										buffer = IO.output_to_bytes(lambda f: iscript_bin.save(f))
 									else:
 										buffer = data_data.save_data()
 								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)

@@ -29,7 +29,7 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 import io
 from enum import Enum
 
-from typing import cast, Callable
+from typing import Sequence, cast, Callable
 
 LONG_VERSION = 'v%s' % Assets.version('PyLO')
 
@@ -678,3 +678,9 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
 		return ['Frame']
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('Header',)

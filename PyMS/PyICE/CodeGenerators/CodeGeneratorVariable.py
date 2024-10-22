@@ -1,13 +1,33 @@
 
+from PyMS.Utilities.JSON import Object
+from . import CodeGenerator
+
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
+from ...Utilities import JSON
 
 import re
+from dataclasses import dataclass
 
-class CodeGeneratorVariable:
-	def __init__(self, generator, name='variable'):
-		self.generator = generator
-		self.name = name
+from typing import Self
+
+@dataclass
+class CodeGeneratorVariable(JSON.Codable):
+	name: str
+	generator: CodeGenerator.CodeGeneratorType
+
+	@classmethod
+	def from_json(cls, json: JSON.Object) -> Self:
+		return cls(
+			JSON.get(json, 'name', str),
+			JSON.get_obj(json, 'generator', CodeGenerator.discriminate_type)
+		)
+
+	def to_json(self) -> JSON.Object:
+		return {
+			'name': self.name,
+			'generator': self.generator.to_json()
+		}
 
 class CodeGeneratorVariableEditor(PyMSDialog):
 	def __init__(self, parent, variable):

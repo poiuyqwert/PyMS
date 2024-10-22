@@ -1,9 +1,11 @@
 
 from __future__ import annotations
 
+from .Config import PyICEConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats import IScriptBIN
+from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 from ..FileFormats import DAT
@@ -14,8 +16,9 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
+from ..Utilities.CodeHandlers import CodeCommand
 
-import os, re
+import re, io
 from enum import Enum, Flag
 from dataclasses import dataclass
 
@@ -33,15 +36,16 @@ PREVIEWER_CMDS: dict[EntryType, list[str]] = {
 	EntryType.sprites_dat: [],
 	EntryType.flingy_dat: []
 }
-for n,p in IScriptBIN.OPCODES:
-	if IScriptBIN.type_frame in p:
-		PREVIEWER_CMDS[EntryType.iscript].extend(n)
-	if IScriptBIN.type_imageid in p:
-		PREVIEWER_CMDS[EntryType.images_dat].extend(n)
-	if IScriptBIN.type_spriteid in p:
-		PREVIEWER_CMDS[EntryType.sprites_dat].extend(n)
-	if IScriptBIN.type_flingyid in p:
-		PREVIEWER_CMDS[EntryType.flingy_dat].extend(n)
+for cmd in CodeCommands.all_basic_commands:
+	for param_type in cmd.param_types:
+		if isinstance(param_type, CodeTypes.FrameCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.iscript]:
+			PREVIEWER_CMDS[EntryType.iscript].append(cmd.name)
+		if isinstance(param_type, CodeTypes.ImageIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.images_dat]:
+			PREVIEWER_CMDS[EntryType.images_dat].append(cmd.name)
+		if isinstance(param_type, CodeTypes.SpriteIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.sprites_dat]:
+			PREVIEWER_CMDS[EntryType.sprites_dat].append(cmd.name)
+		if isinstance(param_type, CodeTypes.FlingyIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.flingy_dat]:
+			PREVIEWER_CMDS[EntryType.flingy_dat].append(cmd.name)
 
 PALETTES: dict[str, RawPalette] = {}
 GRP_CACHE: dict[str, dict[int, dict[str, Image]]] = {}
@@ -79,8 +83,9 @@ class FrameSet(Flag):
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
 
 class PreviewerDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate, text: Text) -> None:
+	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig, text: CodeText) -> None:
 		self.delegate = delegate
+		self.config_ = config
 		self.text = text
 		self.previewing: Preview = Preview(0, 0, None)
 		self.previewnext: Preview | None = None
@@ -131,8 +136,10 @@ class PreviewerDialog(PyMSDialog):
 				self.curdd['state'] = NORMAL
 				self.curcmddd['state'] = NORMAL
 			cur = []
-			for i in range(self.delegate.imagesdat.entry_count()):
-				if self.delegate.imagesdat.get_entry(i).iscript_id == id:
+			images_dat = self.delegate.get_data_context().images_dat
+			assert images_dat is not None
+			for i in range(self.delegate.get_data_context().images_entry_count):
+				if images_dat.get_entry(i).iscript_id == id:
 					cur.append('['.join(self.delegate.imageslist.get(i).split('[')[:-1]))
 			self.curdd.setentries(cur)
 			if cur:
@@ -143,9 +150,9 @@ class PreviewerDialog(PyMSDialog):
 		left = Frame(self)
 		entry_details: list[tuple[EntryType, str, IntVar, IntVar, list[str], WidgetState]] = [
 			(EntryType.iscript, "Current IScript's images", self.curid, self.curcmd, [], DISABLED),
-			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.imagesdat.entry_count()), NORMAL),
-			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.spritesdat.entry_count()), NORMAL),
-			(EntryType.flingy_dat, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.delegate.flingylist,self.delegate.flingydat.entry_count()), NORMAL),
+			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.get_data_context().images_entry_count), NORMAL),
+			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.get_data_context().sprites_entry_count), NORMAL),
+			(EntryType.flingy_dat, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.delegate.flingylist,self.delegate.get_data_context().flingy_entry_count), NORMAL),
 		]
 		for entry_type,name,id_variable,cmd_var,entries,state in entry_details:
 			Label(left, text=name + ":", anchor=W).pack(fill=X)
@@ -172,10 +179,8 @@ class PreviewerDialog(PyMSDialog):
 				DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state).pack()
 			df.pack(side=LEFT)
 			f.pack()
-		self.overwrite = IntVar()
-		self.overwrite.set(self.delegate.settings.previewer.get('overwrite',0))
-		self.closeafter = IntVar()
-		self.closeafter.set(self.delegate.settings.previewer.get('closeafter',0))
+		self.overwrite = BooleanVar(value=self.config_.previewer.overwrite.value)
+		self.closeafter = BooleanVar(value=self.config_.previewer.close_after.value)
 		btns = Frame(left)
 		lf = LabelFrame(btns, text='Insert/Overwrite')
 		b = Frame(lf)
@@ -199,8 +204,7 @@ class PreviewerDialog(PyMSDialog):
 		Label(f, text='GRP Preview:', anchor=W).pack(side=LEFT, fill=X, expand=1)
 		Label(f, textvariable=self.grp_frame, anchor=W).pack(side=LEFT)
 		f.pack(fill=X)
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.settings.previewer.get('showpreview',1))
+
 		p = Frame(right)
 		self.preview = Canvas(p, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
@@ -223,11 +227,9 @@ class PreviewerDialog(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.toolbar.pack(padx=1, pady=3)
 
-		self.prevspeed = IntegerVar(self.delegate.settings.previewer.get('previewspeed', 150), [1,5000])
-		self.showpreview = IntVar()
-		self.showpreview.set(self.delegate.settings.previewer.get('showpreview',1))
-		self.looppreview = IntVar()
-		self.looppreview.set(self.delegate.settings.previewer.get('looppreview',1))
+		self.prevspeed = IntegerVar(val=self.config_.previewer.preview_speed.value)
+		self.showpreview = BooleanVar(value=self.config_.previewer.show_preview.value)
+		self.looppreview = BooleanVar(value=self.config_.previewer.loop_preview.value)
 		self.prevfrom = IntegerVar(0,[0,0])
 		self.prevto = IntegerVar(0,[0,0])
 
@@ -251,13 +253,20 @@ class PreviewerDialog(PyMSDialog):
 
 		if not PALETTES:
 			pal = Palette.Palette()
-			for palname in ['Units','bfire','gfire','ofire','Terrain','Icons']:
+			palette_configs = [
+				('Units', self.config_.settings.files.palettes.units),
+				('bfire', self.config_.settings.files.palettes.bfire),
+				('gfire', self.config_.settings.files.palettes.gfire),
+				('ofire', self.config_.settings.files.palettes.ofire),
+				('Terrain', self.config_.settings.files.palettes.terrain),
+				('Icons', self.config_.settings.files.palettes.icons),
+			]
+			for name,palette_config in palette_configs:
 				try:
-					
-					pal.load_file(self.delegate.settings.palettes.get(palname,Assets.palette_file_path('%s%spal' % (palname,os.extsep))))
-				except Exception as e:
+					pal.load_file(palette_config.file_path)
+				except:
 					continue
-				PALETTES[palname] = pal.palette
+				PALETTES[name] = pal.palette
 
 		return ok
 
@@ -282,30 +291,30 @@ class PreviewerDialog(PyMSDialog):
 		if frame_set == FrameSet.stop:
 			self.stopframe()
 		elif frame_set & FrameSet.PLAY:
-			if n == FrameSet.play_prev_framesets:
+			if frame_set == FrameSet.play_prev_framesets:
 				self.speed = -17
-			elif n == FrameSet.play_prev_frames:
+			elif frame_set == FrameSet.play_prev_frames:
 				self.speed = -1
-			elif n == FrameSet.play_next_frames:
+			elif frame_set == FrameSet.play_next_frames:
 				self.speed = 1
-			elif n == FrameSet.play_next_framesets:
+			elif frame_set == FrameSet.play_next_framesets:
 				self.speed = 17
 			self.play = self.after(int(self.prevspeed.get()), self.playframe)
 		else:
 			s: int
-			if n == FrameSet.first:
+			if frame_set == FrameSet.first:
 				s = 0
-			elif n == FrameSet.last:
+			elif frame_set == FrameSet.last:
 				s = self.previewing.grp.frames - 1
 			elif self.previewing:
 				s = self.previewing.frame
-				if n == FrameSet.prev_frameset:
+				if frame_set == FrameSet.prev_frameset:
 					s -= 17
-				elif n == FrameSet.prev_frame:
+				elif frame_set == FrameSet.prev_frame:
 					s -= 1
-				elif n == FrameSet.next_frame:
+				elif frame_set == FrameSet.next_frame:
 					s += 1
-				elif n == FrameSet.next_frameset:
+				elif frame_set == FrameSet.next_frameset:
 					s += 17
 				if s < 0 or s >= self.previewing.grp.frames:
 					if not self.looppreview.get():
@@ -385,7 +394,9 @@ class PreviewerDialog(PyMSDialog):
 				id_variable = self.flingys
 			i = listbox.get(id_variable.get()).strip().split(' ')[0]
 		else:
-			i = IScriptBIN.type_frame(1, None, self.previewing.frame)[0]
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			i = CodeTypes.FrameCodeType().serialize(self.previewing.frame, serialize_context)
 		if self.overwrite.get():
 			s = self.text.index('%s linestart' % INSERT)
 			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s,'%s lineend' % INSERT))
@@ -403,38 +414,41 @@ class PreviewerDialog(PyMSDialog):
 		s = self.text.index('%s linestart' % INSERT)
 		if entry_type != EntryType.iscript:
 			if entry_type == EntryType.images_dat:
-				formatter = IScriptBIN.type_imageid
 				listbox = self.delegate.imageslist
 				id_variable = self.image
-				cmd_variable = self.imagecmd
+				cmd_id = self.imagecmd.get()
 			elif entry_type == EntryType.sprites_dat:
-				formatter = IScriptBIN.type_spriteid
 				listbox = self.delegate.spriteslist
 				id_variable = self.sprites
-				cmd_variable = self.spritescmd
+				cmd_id = self.spritescmd.get()
 			else: # if entry_type == EntryType.flingy_dat
-				formatter = IScriptBIN.type_flingyid
 				listbox = self.delegate.flingylist
 				id_variable = self.flingys
-				cmd_variable = self.flingyscmd
-			i = formatter(1, self.delegate.get_ibin(), int(listbox.get(id_variable.get()).strip().split(' ')[0]))
+				cmd_id = self.flingyscmd.get()
+			value = int(listbox.get(id_variable.get()).strip().split(' ')[0])
 		else:
-			i = IScriptBIN.type_frame(1, None, self.previewing.frame)
-			cmd_variable = self.curcmd
-		assert isinstance(i, tuple)
-		cmd = PREVIEWER_CMDS[entry_type][cmd_variable.get()]
-		longest_opcode = max([len(o[0][0]) for o in IScriptBIN.OPCODES] + [13]) + 1
-		t = '\t%s%s\t%s' % (cmd,' ' * (longest_opcode-len(cmd)),i[0])
-		p = len(IScriptBIN.OPCODES[IScriptBIN.REV_OPCODES[cmd]][1])
-		if p > 1:
-			t += ' 0' * (p-1)
-		if i[1]:
-			t += ' # ' + i[1]
-		if self.overwrite.get():
-			self.text.delete(s,'%s lineend' % INSERT)
-		else:
-			t += '\n'
-		self.text.insert(s, t)
+			value = self.previewing.frame
+			cmd_id = self.curcmd.get()
+		cmd_def: CodeCommand.CodeCommandDefinition | None = None
+		for cmd in CodeCommands.all_basic_commands:
+			if cmd.byte_code_id == cmd_id:
+				cmd_def = cmd
+				break
+		if not cmd_def:
+			return
+		output = io.StringIO()
+		serialize_context = self.delegate.get_serialize_context(output)
+		serialize_context.indent()
+		params = [value]
+		while len(params) < len(cmd_def.param_types):
+			params.append(0)
+		CodeCommand.CodeCommand(cmd_def, params).serialize(serialize_context)
+		text = output.getvalue()
+		with self.text.undo_group():
+			if self.overwrite.get():
+				self.text.delete(s,'%s lineend' % INSERT)
+				text = text.rstrip('\n')
+			self.text.insert(s, text)
 		if self.closeafter.get():
 			self.destroy()
 
@@ -491,14 +505,18 @@ class PreviewerDialog(PyMSDialog):
 		if entry_type != self.entry_type():
 			return
 		self.stopframe()
+		sprites_dat = self.delegate.get_data_context().sprites_dat
+		assert sprites_dat is not None
 		if entry_type == EntryType.iscript:
 			image_id = int(self.curdd.entries[entry_id].strip().split(' ')[0])
 		elif entry_type == EntryType.images_dat:
 			image_id = int(self.delegate.imageslist.get(entry_id).strip().split(' ')[0])
 		elif entry_type == EntryType.sprites_dat:
-			image_id = self.delegate.spritesdat.get_entry(int(self.delegate.spriteslist.get(entry_id).strip().split(' ')[0])).image
+			image_id = sprites_dat.get_entry(int(self.delegate.spriteslist.get(entry_id).strip().split(' ')[0])).image
 		elif entry_type == EntryType.flingy_dat:
-			image_id = self.delegate.spritesdat.get_entry(self.delegate.flingydat.get_entry(int(self.delegate.flingylist.get(entry_id).strip().split(' ')[0])).sprite).image
+			flingy_dat = self.delegate.get_data_context().flingy_dat
+			assert flingy_dat is not None
+			image_id = sprites_dat.get_entry(flingy_dat.get_entry(int(self.delegate.flingylist.get(entry_id).strip().split(' ')[0])).sprite).image
 		self.previewnext = self.previewing.next_entry(image_id, frame)
 		self.drawpreview()
 		self.updateframes()
@@ -527,16 +545,17 @@ class PreviewerDialog(PyMSDialog):
 		if not self.showpreview.get():
 			return
 		image_id = self.previewing.image_id
-		grp_file_index = self.delegate.imagesdat.get_entry(image_id).grp_file
-		if not grp_file_index:
+		grp_file_path = self.delegate.get_data_context().image_path(image_id)
+		if not grp_file_path:
 			return
-		grp_file_path = self.delegate.imagestbl.strings[grp_file_index-1][:-1]
 		if grp_file_path.startswith('thingy\\tileset\\'):
 			pal = 'Terrain'
 		else:
+			images_dat = self.delegate.get_data_context().images_dat
+			assert images_dat is not None
 			pal = 'Units'
-			draw_function = self.delegate.imagesdat.get_entry(image_id).draw_function
-			remapping = self.delegate.imagesdat.get_entry(image_id).remapping
+			draw_function = images_dat.get_entry(image_id).draw_function
+			remapping = images_dat.get_entry(image_id).remapping
 			if draw_function == DAT.DATImage.DrawFunction.use_remapping and remapping is not None and remapping >= DAT.DATImage.Remapping.ofire and remapping <= DAT.DATImage.Remapping.bfire:
 				pal = ['o','b','g'][remapping-1] + 'fire'
 		sprite = self.grp(image_id, pal, self.previewing.frame, 'unit', grp_file_path)
@@ -545,9 +564,9 @@ class PreviewerDialog(PyMSDialog):
 
 	def destroy(self) -> None:
 		self.stopframe()
-		self.delegate.settings.previewer.overwrite = self.overwrite.get()
-		self.delegate.settings.previewer.closeafter = self.closeafter.get()
-		self.delegate.settings.previewer.showpreview = self.showpreview.get()
-		self.delegate.settings.previewer.previewspeed = self.prevspeed.get()
-		self.delegate.settings.previewer.looppreview = self.looppreview.get()
+		self.config_.previewer.overwrite.value = self.overwrite.get()
+		self.config_.previewer.close_after.value = self.closeafter.get()
+		self.config_.previewer.show_preview.value = self.showpreview.get()
+		self.config_.previewer.preview_speed.value = self.prevspeed.get()
+		self.config_.previewer.loop_preview.value = self.looppreview.get()
 		PyMSDialog.withdraw(self)

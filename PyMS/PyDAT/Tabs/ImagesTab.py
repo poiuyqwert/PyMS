@@ -198,12 +198,11 @@ class ImagesTab(DATTab):
 		if DataID.iscriptbin in ids:
 			iscript_names = []
 			last = -1
-			for id in list(self.delegate.data_context.iscriptbin.headers.keys()):
+			for script in self.delegate.data_context.iscriptbin.list_scripts():
+				id = script.id
 				if id-last > 1:
 					iscript_names.extend(['*Unused*'] * (id-last-1))
-				if id in self.delegate.data_context.iscriptbin.extrainfo:
-					n = self.delegate.data_context.iscriptbin.extrainfo[id]
-				elif id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+				if id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
 					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
 				else:
 					n = 'Unnamed Custom Entry'

@@ -5,16 +5,14 @@ from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, G
 
 from . import Assets
 from .MPQHandler import MPQHandler
+from . import JSON
 
 from numbers import Number
 import os, json, re, enum
 from dataclasses import dataclass
+from copy import deepcopy
 
-from typing import Any, Sequence, TypeAlias, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
-
-JSONValue: TypeAlias = 'int | float | str | bool | None | JSONObject | JSONArray'
-JSONObject = dict[str, JSONValue]
-JSONArray = Sequence[JSONValue]
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
 
 def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
 	'''Ensure there are nested `dict` objects in all parts of the keypath'''
@@ -45,10 +43,10 @@ def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str,
 
 @runtime_checkable
 class ConfigObject(Protocol):
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		...
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		...
 
 	def reset(self) -> None:
@@ -72,13 +70,13 @@ class Group(ConfigObject):
 				continue
 			yield (attr.rstrip('_'), value)
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		data = {}
 		for key, value in Group._fields(self):
 			data[key] = value.encode()
 		return data
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		if not isinstance(data, dict):
 			return
 		for attr, attr_data in list(data.items()):
@@ -117,7 +115,7 @@ class Config(Group):
 		self.load()
 
 	def load(self) -> None:
-		data: JSONObject | None = None
+		data: JSON.Object | None = None
 		try:
 			with open(Assets.settings_file_path(self._name), 'r') as f:
 				raw_data = json.load(f)
@@ -165,10 +163,10 @@ class String(ConfigObject):
 		self.value = self._default
 		self._saved_state = self.value
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, str):
 			return
 		self.value = value
@@ -189,10 +187,10 @@ class Int(ConfigObject):
 		self._saved_state = self.value
 		self.limits = limits
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, Number):
 			return
 		self.value = int(value)
@@ -215,10 +213,10 @@ class Float(ConfigObject):
 		self._saved_state = self.value
 		self.limits = limits
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, Number):
 			return
 		self.value = float(value)
@@ -240,10 +238,10 @@ class Boolean(ConfigObject):
 		self.value = self._default
 		self._saved_state = self.value
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, Number):
 			return
 		self.value = bool(value)
@@ -316,10 +314,10 @@ class WindowGeometry(ConfigObject):
 				geometry_adjust.pos = screen_size.center - geometry.size // 2
 			window.geometry(geometry_adjust.text)
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self._geometry
 
-	def decode(self, geometry: JSONValue) -> None:
+	def decode(self, geometry: JSON.Value) -> None:
 		if not isinstance(geometry, str) or Geometry.parse(geometry) is None:
 			return
 		self._geometry = geometry
@@ -371,10 +369,10 @@ class PaneSizes(ConfigObject):
 			coords[axis_index] = offset
 			paned_window.sash_place(pane_index, *coords)
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self._sizes
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		if not isinstance(data, list):
 			return
 		sizes: list[int] = []
@@ -425,10 +423,10 @@ class File(ConfigObject):
 		mpq_select = MPQSelect(parent, mpq_handler, name or self._name, filetype or self._filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
 		return mpq_select.file
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.file_path
 
-	def decode(self, file_path: JSONValue) -> None:
+	def decode(self, file_path: JSON.Value) -> None:
 		if not isinstance(file_path, str):
 			return
 		if not file_path.startswith('MPQ:') and not os.path.exists(file_path):
@@ -541,13 +539,13 @@ class SelectFile(ConfigObject):
 	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None, filename: str | None = None) -> str | None:
 		return self._select_file(parent, True, title, filetypes)
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return {
 			self._op_type.open_key: self._open_directory,
 			self._op_type.save_key: self._save_directory
 		}
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		if not isinstance(data, dict):
 			return
 		open_directory = data.get(self._op_type.open_key)
@@ -598,10 +596,10 @@ class SelectFile(ConfigObject):
 # 			self.directory = os.path.dirname(paths[0])
 # 		return paths
 
-# 	def encode(self) -> JSONValue:
+# 	def encode(self) -> JSON.Value:
 # 		return self.directory
 
-# 	def decode(self, directory: JSONValue) -> None:
+# 	def decode(self, directory: JSON.Value) -> None:
 # 		if not isinstance(directory, str) or not os.path.exists(directory):
 # 			return
 # 		self.directory = directory
@@ -630,10 +628,10 @@ class SelectDirectory(ConfigObject):
 			self.path = path
 		return path
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.path
 
-	def decode(self, directory: JSONValue) -> None:
+	def decode(self, directory: JSON.Value) -> None:
 		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
 		self.path = directory
@@ -663,10 +661,10 @@ class Warning(ConfigObject):
 		if dialog.dont_warn.get():
 			self._seen_version = self._remember_version
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self._seen_version
 
-	def decode(self, seen_version: JSONValue) -> None:
+	def decode(self, seen_version: JSON.Value) -> None:
 		if not isinstance(seen_version, int):
 			return
 		self._seen_version = seen_version
@@ -688,10 +686,10 @@ class Dictionary(ConfigObject, Generic[V]):
 		self.data: dict[str, V] = dict(self._defaults)
 		self._saved_state: dict[str, V] = self.data
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return dict(self.data)
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		if not isinstance(data, dict):
 			return
 		for key,value in data.items():
@@ -715,10 +713,10 @@ class List(ConfigObject, Generic[V]):
 		self.data: list[V] = list(self._defaults)
 		self._saved_state: list[V] = self.data
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.data
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		if not isinstance(data, list):
 			return
 		self.data = []
@@ -736,6 +734,45 @@ class List(ConfigObject, Generic[V]):
 	def restore_state(self) -> None:
 		self.data = list(self._saved_state)
 
+
+O = TypeVar('O', bound=JSON.Codable)
+class JSONList(ConfigObject, Generic[O]):
+	def __init__(self, *, value_type: type[O], defaults: list[O] = []) -> None:
+		self.value_type: type[O] = value_type
+		self._defaults: list[O] = list(defaults)
+		self.data: list[O] = list(self._defaults)
+		self._saved_state: list[O] = self.data
+
+	def encode(self) -> JSON.Value:
+		data: list[dict] = []
+		for obj in self.data:
+			try:
+				data.append(obj.to_json())
+			except:
+				continue
+		return data
+
+	def decode(self, data: JSON.Value) -> None:
+		if not isinstance(data, list):
+			return
+		self.data = []
+		for value in data:
+			if not isinstance(value, dict):
+				continue
+			try:
+				self.data.append(self.value_type.from_json(value))
+			except:
+				continue
+
+	def reset(self) -> None:
+		self.data = deepcopy(self._defaults)
+
+	def store_state(self) -> None:
+		self._saved_state = deepcopy(self.data)
+
+	def restore_state(self) -> None:
+		self.data = deepcopy(self._saved_state)
+
 E = TypeVar('E', bound=enum.Enum)
 class Enum(ConfigObject, Generic[E]):
 	def __init__(self, *, enum_type: type[E], default: E) -> None:
@@ -744,10 +781,10 @@ class Enum(ConfigObject, Generic[E]):
 		self.value = self._default
 		self._saved_state = self.value
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value.value
 
-	def decode(self, data: JSONValue) -> None:
+	def decode(self, data: JSON.Value) -> None:
 		try:
 			value = self._enum_type(data)
 		except:
@@ -771,10 +808,10 @@ class Color(ConfigObject):
 		self.value = self._default
 		self._saved_state = self.value
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return self.value
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, str):
 			return
 		if not Color.RE_MATCH.match(value):
@@ -820,14 +857,14 @@ class HighlightStyle(ConfigObject):
 		self.style = self._default.copy()
 		self._saved_state = self.style.copy()
 
-	def encode(self) -> JSONValue:
+	def encode(self) -> JSON.Value:
 		return {
 			'foreground': self.style.foreground,
 			'background': self.style.background,
 			'bold': self.style.bold
 		}
 
-	def decode(self, value: JSONValue) -> None:
+	def decode(self, value: JSON.Value) -> None:
 		from .UIKit.Font import Font
 		if not isinstance(value, dict):
 			return

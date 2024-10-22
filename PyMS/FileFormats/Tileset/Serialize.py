@@ -4,6 +4,7 @@ from .VF4 import VF4Flag
 
 from ...Utilities import Serialize
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import JSON
 
 import re
 from collections import OrderedDict
@@ -69,7 +70,7 @@ class MegatileField:
 	ramp = 'ramp'
 
 class GroupTypeEncoder(Serialize.IntEncoder):
-	def decode(self, value: Serialize.JSONValue) -> int:
+	def decode(self, value: JSON.Value) -> int:
 		value = Serialize.IntEncoder.decode(self, value)
 		if value == 1:
 			raise PyMSError('Decode', f"'TileGroup' can't have type 1 (doodad type). Must be a 'DoodadGroup' to be doodad type.")
@@ -80,7 +81,7 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], list[bool]]):
 		self.attr = 'flags'
 		self.flag = flag
 
-	def encode(self, value: list[int]) -> Serialize.JSONValue:
+	def encode(self, value: list[int]) -> JSON.Value:
 		result = ''
 		for n,flags in enumerate(value):
 			if n and not n % 4:
@@ -90,7 +91,7 @@ class MiniFlagsMultiEncoder(Serialize.SplitEncoder[list[int], list[bool]]):
 		return result
 	
 	RE_LINE = re.compile(r'\s*([TtFf01]{4})\s*')
-	def decode(self, value: Serialize.JSONValue, current: list[bool] | None) -> list[bool]:
+	def decode(self, value: JSON.Value, current: list[bool] | None) -> list[bool]:
 		if not isinstance(value, str):
 			raise PyMSError('Decoding', f"Expected a string, got '{value}'")
 		lines = value.splitlines()

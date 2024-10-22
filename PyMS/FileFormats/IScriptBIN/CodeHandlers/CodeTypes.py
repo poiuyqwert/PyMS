@@ -15,7 +15,7 @@ from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
 from ....Utilities import Assets
 
-from typing import cast
+from typing import cast, Sequence
 
 class FrameCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -227,7 +227,7 @@ class HeaderTypeCodeType(CodeType.IntCodeType):
 		if not num in IType.TYPE_TO_ENTRY_POINT_COUNT_MAP:
 			raise PyMSError('Parse', f'Invalid Type value, must be one of the numbers: {", ".join(str(type) for type in IType.TYPE_TO_ENTRY_POINT_COUNT_MAP.keys())}')
 
-class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None]):
+class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None], CodeType.HasKeywords):
 	def __init__(self) -> None:
 		super().__init__('HeaderLabel', 'A label name of a block in the script, or [NONE]', Struct.l_u16, True)
 
@@ -255,8 +255,11 @@ class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None])
 			return None
 		return parse_context.get_block(token)
 
+	def keywords(self) -> Sequence[str]:
+		return ('[NONE]',)
+
 all_header_types = [
-	HeaderIDCodeType,
-	HeaderTypeCodeType,
-	HeaderLabelCodeType,
+	HeaderIDCodeType(),
+	HeaderTypeCodeType(),
+	HeaderLabelCodeType(),
 ]

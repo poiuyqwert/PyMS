@@ -8,8 +8,10 @@ from ..Utilities import Config
 import re
 
 class FindDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: Misc, delegate: MainDelegate, window_geometry_config: Config.WindowGeometry, find_history_config: Config.List[str]) -> None:
 		self.delegate = delegate
+		self.window_geometry_config = window_geometry_config
+		self.find_history_config = find_history_config
 		self.resettimer: str | None = None
 		PyMSDialog.__init__(self, parent, 'Find', grabwait=False)
 
@@ -22,7 +24,7 @@ class FindDialog(PyMSDialog):
 
 		f = Frame(self)
 		Label(f, text='Find: ').pack(side=LEFT)
-		self.findentry = TextDropDown(f, self.find, self.delegate.settings.get('findhistory', []), 30)
+		self.findentry = TextDropDown(f, self.find, self.find_history_config.data, 30)
 		self.findentry_c = self.findentry['bg']
 		self.findentry.pack(side=LEFT,fill=X, expand=1)
 		f.pack(fill=X)
@@ -53,7 +55,7 @@ class FindDialog(PyMSDialog):
 
 	def setup_complete(self) -> None:
 		self.minsize(330,160)
-		self.delegate.settings.windows.load_window_size('find', self)
+		self.window_geometry_config.load_size(self)
 
 	def action_states(self, event: Event | None = None) -> None:
 		if not self.treelist.cur_selection() == -1:
@@ -69,8 +71,8 @@ class FindDialog(PyMSDialog):
 	def search(self, event: Event | None = None) -> None:
 		self.lists = []
 		self.treelist.delete(ALL)
-		if not self.find.get() in self.delegate.settings.findhistory:
-			self.delegate.settings.findhistory.append(self.find.get())
+		if not self.find.get() in self.find_history_config.data:
+			self.find_history_config.data.append(self.find.get())
 		if self.regex.get():
 			regex = self.find.get()
 		else:
@@ -112,7 +114,7 @@ class FindDialog(PyMSDialog):
 			assert index is not None and text is not None
 			g,s = int(index.split('.')[0]),int(text[:3].lstrip())
 			if self.lists[g] == self.delegate.iscriptlist:
-				s = sorted(self.delegate.get_ibin().headers.keys()).index(s)
+				s = sorted(script.id for script in self.delegate.get_iscript_bin().list_scripts()).index(s)
 			if not g in c:
 				if set:
 					self.lists[g].select_clear(0,END)
@@ -123,5 +125,5 @@ class FindDialog(PyMSDialog):
 		self.ok()
 
 	def dismiss(self) -> None:
-		self.delegate.settings.windows.save_window_size('find', self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

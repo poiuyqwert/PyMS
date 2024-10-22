@@ -43,11 +43,6 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		self.findwindow: FindReplaceDialog | None = None
 
 	def widgetize(self) -> Widget:
-		self.bind(Alt.Left(), lambda _: self.gotosection(0))
-		self.bind(Alt.Right(), lambda _: self.gotosection(1))
-		self.bind(Alt.Up(), lambda _: self.gotosection(2))
-		self.bind(Alt.Down(), lambda _: self.gotosection(3))
-
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
 		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t)
@@ -255,24 +250,6 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	# TODO: Cleanup
-	def gotosection(self, i: int) -> None:
-		c = [self.text.tag_prevrange, self.text.tag_nextrange][i % 2]
-		t = [('Error','Warning'),('AIID','Block')][i > 1]
-		a = c(t[0], INSERT)
-		b = c(t[1], INSERT)
-		s = None
-		if a:
-			if not b or self.text.compare(a[0], '<' if i % 2 else '>', b[0]):
-				s = a
-			else:
-				s = b
-		elif b:
-			s = b
-		if s:
-			self.text.see(s[0])
-			self.text.mark_set(INSERT, s[0])
-
 	def statusupdate(self, event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
@@ -306,23 +283,11 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		try:
 			AIBIN.AIBIN.compile(parse_context)
 		except PyMSError as e:
-			if e.line is not None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
-			if e.warnings:
-				for w in e.warnings:
-					if w.line is not None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+			self.text.highlight_error(e)
 			ErrorDialog(self, e)
 			return
 		if parse_context.warnings:
-			c = False
-			for w in parse_context.warnings:
-				if w.line is not None:
-					if not c:
-						self.text.see('%s.0' % w.line)
-						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)
 		else:
 			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
@@ -591,23 +556,22 @@ script {header_id} {{
 	RE_FIRST_IDENTIFIER = re.compile(r'^\s*[a-z]')
 	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
-		autocompete_options = list(type.name for type in CodeTypes.all_basic_types)
-		# TODO: Get type values 
-		autocompete_options.extend(('aiscript', 'bwscript', 'LessThan', 'GreaterThan'))
+		autocomplete_options = list(type.name for type in CodeTypes.all_basic_types)
+		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
 
 		data_context = self.delegate.get_data_context()
 		for unit_id in range(228):
 			unit_name = data_context.unit_name(unit_id)
-			if unit_name and not unit_name in autocompete_options:
-				autocompete_options.append(unit_name)
+			if unit_name and not unit_name in autocomplete_options:
+				autocomplete_options.append(unit_name)
 		for upgrade_id in range(61):
 			upgrade_name = data_context.upgrade_name(upgrade_id)
-			if upgrade_name and not upgrade_name in autocompete_options:
-				autocompete_options.append(upgrade_name)
+			if upgrade_name and not upgrade_name in autocomplete_options:
+				autocomplete_options.append(upgrade_name)
 		for tech_id in range(44):
 			tech_name = data_context.technology_name(tech_id)
-			if tech_name and not tech_name in autocompete_options:
-				autocompete_options.append(tech_name)
+			if tech_name and not tech_name in autocomplete_options:
+				autocomplete_options.append(tech_name)
 
 		head = '1.0'
 		while True:
@@ -616,10 +580,10 @@ script {header_id} {{
 				break
 			block_text = self.text.get(*block_range)
 			match = CodeEditDialog.RE_BLOCK_NAME.match(block_text)
-			if match and not match.group(1) in autocompete_options:
-				autocompete_options.append(match.group(1))
+			if match and not match.group(1) in autocomplete_options:
+				autocomplete_options.append(match.group(1))
 			head = block_range[1]
-		autocompete_options.sort()
+		autocomplete_options.sort()
 
 		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
 		main_identifiers.sort()
@@ -629,8 +593,14 @@ script {header_id} {{
 
 		is_first_identifier = not not CodeEditDialog.RE_FIRST_IDENTIFIER.match(line)
 		if is_first_identifier:
-			autocompete_options = main_identifiers + autocompete_options
+			autocomplete_options = main_identifiers + autocomplete_options
 		else:
-			autocompete_options.extend(main_identifiers)
+			autocomplete_options.extend(main_identifiers)
 			
-		return autocompete_options
+		return autocomplete_options
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('AIID', 'Block')

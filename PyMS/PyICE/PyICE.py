@@ -1,10 +1,14 @@
 
+from .Config import PyICEConfig
 from .Delegates import MainDelegate, ImportListDelegate
 from .ImportListDialog import ImportListDialog
 from .FindDialog import FindDialog
 from .CodeEditDialog import CodeEditDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
-from ..FileFormats import IScriptBIN
+from ..FileFormats.IScriptBIN import IScriptBIN
+from ..FileFormats.IScriptBIN.IScript import IScript
+from ..FileFormats.IScriptBIN.CodeHandlers import DataContext, ICEParseContext, ICESerializeContext, ICELexer
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
@@ -12,22 +16,23 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities.PyMSWarning import PyMSWarning
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.WarningDialog import WarningDialog
-from ..Utilities.SettingsDialog_Old import SettingsDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities import IO
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 
-from copy import deepcopy
-from collections import OrderedDict
 from enum import IntEnum
+
+from typing import IO as BuiltinIO
 
 LONG_VERSION = 'v%s' % Assets.version('PyICE')
 
@@ -38,34 +43,9 @@ class ColumnID(IntEnum):
 	Flingys = 3
 	Units = 4
 
-class PyICE(MainWindow, MainDelegate, ImportListDelegate):
-	tbl: TBL.TBL
-	imagestbl: TBL.TBL
-	sfxdatatbl: TBL.TBL
-	unitsdat: DAT.UnitsDAT
-	weaponsdat: DAT.WeaponsDAT
-	flingydat: DAT.FlingyDAT
-	spritesdat: DAT.SpritesDAT
-	imagesdat: DAT.ImagesDAT
-	soundsdat: DAT.SoundsDAT
-
+class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
-		self.settings = Settings('PyICE', '1')
-		self.settings.set_defaults({
-			'findhistory':[],
-		})
-		self.settings.settings.files.set_defaults({
-			'stat_txt':'MPQ:rez\\stat_txt.tbl',
-			'unitnamestbl':'MPQ:rez\\unitnames.tbl',
-			'imagestbl':'MPQ:arr\\images.tbl',
-			'sfxdatatbl':'MPQ:arr\\sfxdata.tbl',
-			'unitsdat':'MPQ:arr\\units.dat',
-			'weaponsdat':'MPQ:arr\\weapons.dat',
-			'flingydat':'MPQ:arr\\flingy.dat',
-			'spritesdat':'MPQ:arr\\sprites.dat',
-			'imagesdat':'MPQ:arr\\images.dat',
-			'sfxdatadat':'MPQ:arr\\sfxdata.dat'
-		})
+		self.guifile = guifile
 
 		#Window
 		MainWindow.__init__(self)
@@ -74,15 +54,17 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		ga.set_application('PyICE', Assets.version('PyICE'))
 		ga.track(GAScreen('PyICE'))
 		setup_trace('PyICE', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+
+		self.config_ = PyICEConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 
 		self.file: str | None = None
+		self.data_context = DataContext()
 		self.ibin: IScriptBIN.IScriptBIN | None = None
 		self.edited = False
 
 		self.update_title()
 
-		self.highlights = self.settings.get('highlights', None)
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
 		self.imports: list[str] = []
@@ -148,18 +130,16 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		statusbar.add_label(self.selectstatus, weight=1)
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load_size(self)
 
-		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings.settings or not len(self.settings.settings['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings.settings['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpqhandler = MPQHandler(self.config_.mpqs)
+
+	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
 			self.tblbin(err=e)
-
-		if guifile:
-			self.open(file=guifile)
-
+		if self.guifile:
+			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyICE')
 
 	def select_all(self) -> None:
@@ -170,7 +150,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		self.mpqhandler.open_mpqs()
 		err: PyMSError | None = None
 		try:
-			tbl = TBL.TBL()
+			stat_txt = TBL.TBL()
 			imagestbl = TBL.TBL()
 			sfxdatatbl = TBL.TBL()
 			unitsdat = DAT.UnitsDAT()
@@ -179,55 +159,55 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 			spritesdat = DAT.SpritesDAT()
 			imagesdat = DAT.ImagesDAT()
 			soundsdat = DAT.SoundsDAT()
-			tbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.stat_txt))
-			imagestbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.imagestbl))
-			sfxdatatbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.sfxdatatbl))
-			unitsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.unitsdat))
-			weaponsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.weaponsdat))
-			flingydat.load_file(self.mpqhandler.load_file(self.settings.settings.files.flingydat))
-			spritesdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.spritesdat))
-			imagesdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.imagesdat))
-			soundsdat.load_file(self.mpqhandler.load_file(self.settings.settings.files.sfxdatadat))
+			stat_txt.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.stat_txt.file_path))
+			imagestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.images.file_path))
+			sfxdatatbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.sfxdata.file_path))
+			unitsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
+			weaponsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.weapons.file_path))
+			flingydat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.flingy.file_path))
+			spritesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.sprites.file_path))
+			imagesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.images.file_path))
+			soundsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.sfxdata.file_path))
 		except PyMSError as e:
 			err = e
 		else:
-			self.tbl = tbl
-			self.imagestbl = imagestbl
-			self.sfxdatatbl = sfxdatatbl
-			self.unitsdat = unitsdat
-			self.weaponsdat = weaponsdat
-			self.flingydat = flingydat
-			self.spritesdat = spritesdat
-			self.imagesdat = imagesdat
-			self.soundsdat = soundsdat
+			self.data_context.set_stat_txt_tbl(stat_txt)
+			self.data_context.set_images_tbl(imagestbl)
+			self.data_context.set_sounds_tbl(sfxdatatbl)
+			self.unitsdat = unitsdat # TODO: units.dat?
+			self.data_context.set_weapons_dat(weaponsdat)
+			self.data_context.set_flingy_dat(flingydat)
+			self.data_context.set_sprites_dat(spritesdat)
+			self.data_context.set_images_dat(imagesdat)
+			self.data_context.set_sounds_dat(soundsdat)
 			try:
 				unitnamestbl = TBL.TBL()
-				unitnamestbl.load_file(self.mpqhandler.load_file(self.settings.settings.files.unitnamestbl))
+				unitnamestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.unitnames.file_path))
 			except:
-				self.unitnamestbl = None
+				self.unitnamestbl = None # TODO: Unitnames.tbl?
 			else:
 				self.unitnamestbl = unitnamestbl
 			self.update_dat_lists()
 		self.mpqhandler.close_mpqs()
 		return err
 
-	def get_image_names(self) -> tuple[str, ...]:
-		return tuple(DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)) for entry_id in range(self.imagesdat.entry_count()))
+	# def get_image_names(self) -> tuple[str, ...]:
+	# 	return tuple(DAT.DATEntryName.image(entry_id, data_names=Assets.data_cache(Assets.DataReference.Images)) for entry_id in range(self.imagesdat.entry_count()))
 
-	def get_sprite_names(self) -> tuple[str, ...]:
-		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)) for entry_id in range(self.spritesdat.entry_count()))
+	# def get_sprite_names(self) -> tuple[str, ...]:
+	# 	return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Sprites)) for entry_id in range(self.spritesdat.entry_count()))
 
-	def get_flingy_names(self) -> tuple[str, ...]:
-		return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)) for entry_id in range(self.flingydat.entry_count()))
+	# def get_flingy_names(self) -> tuple[str, ...]:
+	# 	return tuple(DAT.DATEntryName.sprite(entry_id, data_names=Assets.data_cache(Assets.DataReference.Flingy)) for entry_id in range(self.flingydat.entry_count()))
 
 	def get_unit_names(self) -> tuple[str, ...]:
-		return tuple(DAT.DATEntryName.unit(entry_id, stat_txt=self.tbl, unitnamestbl=self.unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore) for entry_id in range(self.unitsdat.entry_count()))
+		return tuple(DAT.DATEntryName.unit(entry_id, stat_txt=self.data_context.stat_txt_tbl, unitnamestbl=self.unitnamestbl, data_names_usage=DAT.DataNamesUsage.ignore) for entry_id in range(self.unitsdat.entry_count()))
 
 	def update_dat_lists(self) -> None:
 		updates = (
-			(self.get_image_names(), ColumnID.Images, self.imageslist),
-			(self.get_sprite_names(), ColumnID.Sprites, self.spriteslist),
-			(self.get_flingy_names(), ColumnID.Flingys, self.flingylist),
+			(self.data_context.get_image_names(), ColumnID.Images, self.imageslist),
+			(self.data_context.get_sprite_names(), ColumnID.Sprites, self.spriteslist),
+			(self.data_context.get_flingy_names(), ColumnID.Flingys, self.flingylist),
 			(self.get_unit_names(), ColumnID.Units, self.unitlist)
 		)
 		for names, column, listbox in updates:
@@ -240,26 +220,29 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		self.iscriptlist.delete(0,END)
 		if not self.ibin:
 			return
-		for iscript_id in list(self.ibin.headers.keys()):
-			if iscript_id in self.ibin.extrainfo:
-				name = self.ibin.extrainfo[iscript_id]
-			elif iscript_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+		scripts = sorted(self.ibin.list_scripts(), key=lambda script: script.id)
+		for iscript in scripts:
+			iscript_id = iscript.id
+			if iscript_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
 				name = Assets.data_cache(Assets.DataReference.IscriptIDList)[iscript_id]
 			else:
 				name = 'Unnamed Custom Entry'
 			self.iscriptlist.insert(END, '%03s %s' % (iscript_id, name))
 
 	def iscript_id_from_selection_index(self, index: int, column: ColumnID) -> int:
-		assert self.ibin is not None
 		if column == ColumnID.IScripts:
-			return list(self.ibin.headers.keys())[index]
+			assert self.ibin is not None
+			return self.ibin.list_scripts()[index].id
 		if column >= ColumnID.Units:
 			index = self.unitsdat.get_entry(index).graphics
 		if column >= ColumnID.Flingys:
-			index = self.flingydat.get_entry(index).sprite
+			assert self.data_context.flingy_dat is not None # TODO: Missing DAT files?
+			index = self.data_context.flingy_dat.get_entry(index).sprite
 		if column >= ColumnID.Sprites:
-			index = self.spritesdat.get_entry(index).image
-		return self.imagesdat.get_entry(index).iscript_id
+			assert self.data_context.sprites_dat is not None # TODO: Missing DAT files?
+			index = self.data_context.sprites_dat.get_entry(index).image
+		assert self.data_context.images_dat is not None # TODO: Missing DAT files?
+		return self.data_context.images_dat.get_entry(index).iscript_id
 
 	def selected_iscript_ids(self) -> list[int]:
 		iscript_ids: list[int] = []
@@ -320,18 +303,6 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		else:
 			return self.saveas()
 
-	def create_iscriptbin(self) -> IScriptBIN.IScriptBIN:
-		return IScriptBIN.IScriptBIN(
-				weaponsdat=self.weaponsdat,
-				flingydat=self.flingydat,
-				imagesdat=self.imagesdat,
-				spritesdat=self.spritesdat,
-				soundsdat=self.soundsdat,
-				stat_txt=self.tbl,
-				imagestbl=self.imagestbl,
-				sfxdatatbl=self.sfxdatatbl
-			)
-
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
@@ -349,7 +320,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.iscriptlist.delete(0,END)
-		self.ibin = self.create_iscriptbin()
+		self.ibin = IScriptBIN.IScriptBIN()
 		self.file = None
 		self.status.set('Editing new BIN.')
 		self.update_title()
@@ -360,12 +331,12 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
-			file = self.settings.lastpath.bin.select_open_files(self, title='Open BIN', filetypes=[FileType.bin_iscript()])
+			file = self.config_.last_path.bin.select_open(self)
 			if not file:
 				return
-		ibin = self.create_iscriptbin()
+		ibin = IScriptBIN.IScriptBIN()
 		try:
-			ibin.load_file(file)
+			ibin.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -387,13 +358,13 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		if not self.ibin:
 			return CheckSaved.saved
 		if not file_path:
-			file_path = self.settings.lastpath.bin.select_save_file(self, title='Save BIN As', filetypes=[FileType.bin_iscript()])
+			file_path = self.config_.last_path.bin.select_save(self)
 			if not file_path:
 				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.ibin.compile(file_path)
+			self.ibin.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -403,51 +374,39 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		self.mark_edited(False)
 		return CheckSaved.saved
 
-	# TODO: Cleanup
 	def iimport(self, files: str | list[str] | None = None, parent: Misc | None = None) -> None:
 		if not self.ibin:
 			return
 		if not files:
-			files = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+			files = self.config_.last_path.txt.select_open_multiple(self)
 		if not files:
 			return
 		if not isinstance(files, list):
 			files = [files]
 		if parent is None:
 			parent = self
-		ibin = self.create_iscriptbin()
+		scripts: dict[int, IScript] = {}
+		warnings: list[PyMSWarning] = []
 		try:
 			for file in files:
-				if self.ibin.code:
-					s = list(self.ibin.code.keys())[-1] + 10
-				else:
-					s = 0
-				w = ibin.interpret(file, s)
+				parse_context = self.get_parse_context(file)
+				new_scripts = IScriptBIN.IScriptBIN.compile(parse_context)
+				for new_script in new_scripts:
+					# TODO: Duplicate scripts
+					scripts[new_script.id] = new_script
+				warnings.extend(parse_context.warnings)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		if w:
-			w = WarningDialog(self, w, True)
+		new_size = self.ibin.can_add_scripts(scripts.values())
+		if new_size is not None:
+			size = self.ibin.calculate_size()
+			raise PyMSError('Parse', f"There is not enough room in your iscript.bin to compile these changes. The current file is {size}B out of the max 65535B, these changes would make the file {new_size}B.")
+		if warnings:
+			w = WarningDialog(self, warnings, True)
 			if not w.cont:
 				return
-		for id in list(ibin.headers.keys()):
-			if id in self.ibin.headers:
-				for o in self.ibin.headers[id][2]:
-					if o is not None and o in self.ibin.offsets:
-						self.ibin.remove_code(o,id)
-			self.ibin.headers[id] = ibin.headers[id]
-		for o,i in ibin.offsets.items():
-			if o in self.ibin.offsets:
-				self.ibin.offsets[o].extend(i)
-			else:
-				self.ibin.offsets[o] = i
-		c = deepcopy(self.ibin.code)
-		for o,cmd in ibin.code.items():
-			c[o] = cmd
-		k = list(c.keys())
-		k.sort()
-		self.ibin.code = OrderedDict(sorted(c.items(), key=lambda item: item[0]))
-		self.ibin.extrainfo.update(ibin.extrainfo)
+		self.ibin.add_scripts(scripts.values())
 		self.update_iscrips_list()
 		self.status.set('Import Successful!')
 		self.action_states()
@@ -459,11 +418,13 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 		selected_iscript_ids = self.selected_iscript_ids()
 		if not selected_iscript_ids:
 			return
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
-		if not file:
+		file_path = self.config_.last_path.txt.select_save(self)
+		if not file_path:
 			return
 		try:
-			self.ibin.decompile(file, ids=selected_iscript_ids)
+			with IO.OutputTextFile(file_path) as output:
+				serialize_context = self.get_serialize_context(output)
+				self.ibin.decompile(serialize_context, script_ids=selected_iscript_ids)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -471,7 +432,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 	def listimport(self) -> None:
 		if not self.is_file_open():
 			return
-		ImportListDialog(self, self.settings, self)
+		ImportListDialog(self, self.config_.windows.list_import, self.config_.last_path.txt, self)
 
 	def close(self) -> None:
 		if not self.is_file_open():
@@ -489,31 +450,14 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 	def find(self) -> None:
 		if not self.is_file_open():
 			return
-		FindDialog(self, self)
+		FindDialog(self, self, self.config_.windows.find, self.config_.find_history)
 
 	def codeedit(self) -> None:
 		selected_iscript_ids = self.selected_iscript_ids()
-		CodeEditDialog(self, self.settings, selected_iscript_ids)
+		CodeEditDialog(self, self, self.config_, selected_iscript_ids)
 
 	def tblbin(self, err: PyMSError | None = None) -> None:
-		data = [
-			('TBL Settings',[
-				('stat_txt.tbl', 'Contains Unit names', 'stat_txt', 'TBL'),
-				('unitnames.tbl', 'Contains Unit names for expanded dat files', 'unitnamestbl', 'TBL'),
-				('images.tbl', 'Contains GPR mpq file paths', 'imagestbl', 'TBL'),
-				('sfxdata.tbl', 'Contains Sound mpq file paths', 'sfxdatatbl', 'TBL'),
-			]),
-			('DAT Settings',[
-				('units.dat', 'Contains link to flingy.dat entries', 'unitsdat', 'UnitsDAT'),
-				('weapons.dat', 'Contains stat_txt.tbl string entry for weapon names', 'weaponsdat', 'WeaponsDAT'),
-				('flingy.dat', 'Contains link to sprite.dat entries', 'flingydat', 'FlingyDAT'),
-				('sprites.dat', 'Contains link to images.dat entries', 'spritesdat', 'SpritesDAT'),
-				('images.dat', 'Contains link to IScript entries and images.tbl string indexs', 'imagesdat', 'ImagesDAT'),
-				('sfxdata.dat', 'Contains sfxdata.tbl string entries for mpq file paths', 'sfxdatadat', 'SoundsDAT'),
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,495), err, settings=self.settings, mpqhandler=self.mpqhandler)
+		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
 
 	def register_registry(self) -> None:
 		try:
@@ -522,7 +466,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 			ErrorDialog(self, e)
 
 	def help(self) -> None:
-		HelpDialog(self, self.settings, 'Help/Programs/PyICE.md')
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyICE.md')
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyICE', LONG_VERSION)
@@ -530,7 +474,22 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate):
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.settings.windows.save_window_size('main', self)
-		self.settings.highlights = self.highlights
-		self.settings.save()
+		self.config_.windows.main.save_size(self)
+		self.config_.save()
 		self.destroy()
+
+	def get_iscript_bin(self) -> IScriptBIN.IScriptBIN:
+		assert self.ibin is not None
+		return self.ibin
+
+	def get_data_context(self) -> DataContext:
+		return self.data_context
+
+	def get_serialize_context(self, output: BuiltinIO[str]) -> ICESerializeContext:
+		return ICESerializeContext(output, self.data_context)
+
+	def get_parse_context(self, input: IO.AnyInputText) -> ICEParseContext:
+		with IO.InputText(input) as f:
+			code = f.read()
+		lexer = ICELexer(code)
+		return ICEParseContext(lexer, self.data_context)

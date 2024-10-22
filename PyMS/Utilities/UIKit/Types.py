@@ -30,3 +30,5 @@ Sticky = _Literal['n', 's', 'w', 'e', 'nw', 'sw', 'ne', 'se', 'ns', 'ew', 'nsew'
 SelectMode = _Literal['single', 'browse', 'multiple', 'extended']
 
 MoveViewBy = _Literal['moveto', 'scroll', 'units', 'pages']
+
+Comparitors = _Literal['<', '<=', '==', '>=', '>', '!=']

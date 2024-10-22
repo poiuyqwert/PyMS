@@ -6,9 +6,9 @@ from ..Utilities import Config
 import re
 
 class FindReplaceDialog(PyMSDialog):
-	def __init__(self, parent: Misc, text: CodeText, settings: Settings) -> None:
+	def __init__(self, parent: Misc, text: CodeText, window_geometry_config: Config.WindowGeometry) -> None:
 		self.text = text
-		self.settings = settings
+		self.window_geometry_config = window_geometry_config
 		self.resettimer: str | None = None
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
@@ -75,7 +75,7 @@ class FindReplaceDialog(PyMSDialog):
 		return self.findentry
 
 	def setup_complete(self) -> None:
-		self.settings.windows.load_window_size('find_replace', self)
+		self.window_geometry_config.load_size(self)
 
 	def check(self, i: int) -> None:
 		if i == 1:
@@ -118,9 +118,10 @@ class FindReplaceDialog(PyMSDialog):
 				item: tuple[str, str] = self.text.tag_ranges('Selection') # type: ignore[assignment]
 				if item and r.match(self.text.get(*item)):
 					ins = r.sub(rep, self.text.get(*item))
-					self.text.delete(*item)
-					self.text.insert(item[0], ins)
-					self.text.mark_recolor_range(item[0])
+					with self.text.undo_group():
+						self.text.delete(*item)
+						self.text.insert(item[0], ins)
+					self.text.mark_recolor_range(f'{item[0]} linestart', f'{item[0]} lineend')
 			if self.multiline.get():
 				m = r.search(self.text.get(INSERT, END))
 				if m:
@@ -209,9 +210,10 @@ class FindReplaceDialog(PyMSDialog):
 				return
 			text = r.subn(self.replacewith.get(), self.text.get('1.0', END))
 			if text[1]:
-				self.text.delete('1.0', END)
-				self.text.insert('1.0', text[0].rstrip('\n'))
-				self.text.mark_recolor_range('1.0')
+				with self.text.undo_group():
+					self.text.delete('1.0', END)
+					self.text.insert('1.0', text[0].rstrip('\n'))
+				self.text.mark_recolor_range('1.0', END)
 			MessageBox.askquestion(parent=self, title='Replace Complete', message='%s matches replaced.' % text[1], type=MessageBox.OK)
 
 	def updatecolor(self) -> None:
@@ -221,5 +223,5 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def dismiss(self) -> None:
-		self.settings.windows.save_window_size('find_replace', self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

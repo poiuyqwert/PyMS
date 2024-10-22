@@ -1,4 +1,5 @@
 
+from typing import Sequence
 from .Config import PyTRGConfig
 from .Delegates import MainDelegate
 from .FindReplaceDialog import FindReplaceDialog
@@ -645,3 +646,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
 		return None
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		return ('Error', 'Warning')
+
+	def jump_sections(self) -> Sequence[str] | None:
+		return ('Header',)

@@ -8,8 +8,8 @@ from ..Utilities import Config
 from typing import Callable
 
 class NameDialog(PyMSDialog):
-	def __init__(self, parent: Misc, settings: Settings, title: str = 'Name', value: str = '', done: str = 'Done', callback: Callable[[NameDialog, str], bool] | None = None):
-		self.settings = settings
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', callback: Callable[[NameDialog, str], bool] | None = None):
+		self.window_geometry_config = window_geometry_config
 		self.callback = callback
 		self.name = StringVar()
 		self.name.set(value)
@@ -29,7 +29,7 @@ class NameDialog(PyMSDialog):
 		return done
 
 	def setup_complete(self) -> None:
-		self.settings.windows.generator.load_window_size('name', self)
+		self.window_geometry_config.load_size(self)
 
 	def ok(self, event: Event | None = None) -> None:
 		if self.callback and self.callback(self, self.name.get()) == False:
@@ -37,5 +37,5 @@ class NameDialog(PyMSDialog):
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:
-		self.settings.windows.generator.save_window_size('name', self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

@@ -1,69 +1,107 @@
 
-from .CodeGenerator import CodeGeneratorType, CodeGeneratorEditor
+from . import CodeGenerator
 
 from ...Utilities.UIKit import *
+from ...Utilities import JSON
+from ...Utilities.PyMSError import PyMSError
 
 import re
+from dataclasses import dataclass
 
-class CodeGeneratorTypeListRepeater(object):
-	def count(self, list_size):
+from typing import Self, Callable, Protocol
+
+class CodeGeneratorTypeListRepeater(Protocol):
+	@staticmethod
+	def type_name() -> str:
+		...
+
+	@staticmethod
+	def display_name() -> str:
+		...
+
+	def count(self, list_size: int) -> int | None:
 		raise NotImplementedError(self.__class__.__name__ + '.count(list_size)')
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		raise NotImplementedError(self.__class__.__name__ + '.index(list_size, n)')
 
 class CodeGeneratorTypeListRepeaterDont(CodeGeneratorTypeListRepeater):
-	TYPE = 'dont'
-	NAME = "Don't Repeat"
+	@staticmethod
+	def type_name() -> str:
+		return 'dont'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return "Don't Repeat"
+
+	def count(self, list_size: int) -> int | None:
 		return list_size
 
-	def index(self, list_count, n):
-		if n >= list_count:
+	def index(self, list_size: int, n: int) -> int | None:
+		if n >= list_size:
 			return None
 		return n
 
 class CodeGeneratorTypeListRepeaterRepeatOnce(CodeGeneratorTypeListRepeater):
-	TYPE = 'once'
-	NAME = 'Once'
+	@staticmethod
+	def type_name() -> str:
+		return 'once'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Once'
+
+	def count(self, list_size: int) -> int | None:
 		return list_size * 2
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		if n >= list_size * 2:
 			return None
 		return n % list_size
 
 class CodeGeneratorTypeListRepeaterRepeatForever(CodeGeneratorTypeListRepeater):
-	TYPE = 'forever'
-	NAME = 'Forever'
+	@staticmethod
+	def type_name() -> str:
+		return 'forever'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Forever'
+
+	def count(self, list_size: int) -> int | None:
 		return None
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		return n % list_size
 
 class CodeGeneratorTypeListRepeaterRepeatLast(CodeGeneratorTypeListRepeater):
-	TYPE = 'last_forever'
-	NAME = 'Last Forever'
+	@staticmethod
+	def type_name() -> str:
+		return 'last_forever'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Last Forever'
+
+	def count(self, list_size: int) -> int | None:
 		return None
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		return min(n, list_size-1)
 
 class CodeGeneratorTypeListRepeaterRepeatInvertedOnce(CodeGeneratorTypeListRepeater):
-	TYPE = 'inverted_once'
-	NAME = 'Inverted Once'
+	@staticmethod
+	def type_name() -> str:
+		return 'inverted_once'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Inverted Once'
+
+	def count(self, list_size: int) -> int | None:
 		return list_size * 2 - 2
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		if n >= list_size * 2 - 2:
 			return None
 		if n >= list_size:
@@ -71,26 +109,36 @@ class CodeGeneratorTypeListRepeaterRepeatInvertedOnce(CodeGeneratorTypeListRepea
 		return n % list_size
 
 class CodeGeneratorTypeListRepeaterRepeatInvertedForever(CodeGeneratorTypeListRepeater):
-	TYPE = 'inverted_forever'
-	NAME = 'Inverted Forever'
+	@staticmethod
+	def type_name() -> str:
+		return 'inverted_forever'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Inverted Forever'
+
+	def count(self, list_size: int) -> int | None:
 		return None
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		i = n % (list_size * 2 - 2)
 		if i >= list_size:
 			return list_size - (i - list_size + 2)
 		return i
 
 class CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd(CodeGeneratorTypeListRepeater):
-	TYPE = 'inverted_once_repeat_end'
-	NAME = 'Inverted Once (Repeat End)'
+	@staticmethod
+	def type_name() -> str:
+		return 'inverted_once_repeat_end'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Inverted Once (Repeat End)'
+
+	def count(self, list_size: int) -> int | None:
 		return list_size * 2
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		if n >= list_size * 2:
 			return None
 		if n >= list_size:
@@ -98,18 +146,74 @@ class CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd(CodeGeneratorType
 		return n % list_size
 
 class CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd(CodeGeneratorTypeListRepeater):
-	TYPE = 'inverted_forever_repeat_end'
-	NAME = 'Inverted Forever (Repeat Ends)'
+	@staticmethod
+	def type_name() -> str:
+		return 'inverted_forever_repeat_end'
 
-	def count(self, list_size):
+	@staticmethod
+	def display_name() -> str:
+		return 'Inverted Forever (Repeat Ends)'
+
+	def count(self, list_size: int) -> int | None:
 		return None
 
-	def index(self, list_size, n):
+	def index(self, list_size: int, n: int) -> int | None:
 		if (n // list_size) % 2:
 			return list_size-(n % list_size + 1)
 		return n % list_size
 
-class CodeGeneratorEditorList(CodeGeneratorEditor):
+_REPEATERS: dict[str, CodeGeneratorTypeListRepeater] = {
+	CodeGeneratorTypeListRepeaterDont.type_name(): CodeGeneratorTypeListRepeaterDont(),
+	CodeGeneratorTypeListRepeaterRepeatOnce.type_name(): CodeGeneratorTypeListRepeaterRepeatOnce(),
+	CodeGeneratorTypeListRepeaterRepeatForever.type_name(): CodeGeneratorTypeListRepeaterRepeatForever(),
+	CodeGeneratorTypeListRepeaterRepeatLast.type_name(): CodeGeneratorTypeListRepeaterRepeatLast(),
+	CodeGeneratorTypeListRepeaterRepeatInvertedOnce.type_name(): CodeGeneratorTypeListRepeaterRepeatInvertedOnce(),
+	CodeGeneratorTypeListRepeaterRepeatInvertedForever.type_name(): CodeGeneratorTypeListRepeaterRepeatInvertedForever(),
+	CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd.type_name(): CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd(),
+	CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd.type_name(): CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd()
+}
+
+@dataclass
+class CodeGeneratorTypeList(CodeGenerator.CodeGeneratorType):
+	values: list[str]
+	repeater: CodeGeneratorTypeListRepeater
+
+	@classmethod
+	def type_name(cls) -> str:
+		return 'list'
+
+	@classmethod
+	def from_json(cls, json: JSON.Object) -> Self:
+		values = JSON.get_array(json, 'list', str)
+		repeater_name = JSON.get(json, 'repeater', str)
+		if not repeater_name in _REPEATERS:
+			raise PyMSError('JSON', 'Invalid JSON format (`repeater` has invalid value)')
+		return cls(values, _REPEATERS[repeater_name])
+
+	def to_json(self) -> JSON.Object:
+		json = CodeGenerator.CodeGeneratorType.to_json(self)
+		json['list'] = list(self.values)
+		json['repeater'] = self.repeater.type_name()
+		return json
+
+	def count(self) -> int | None:
+		return self.repeater.count(len(self.values))
+
+	def value(self, lookup_value: Callable[[str], int]) -> str:
+		n = self.repeater.index(len(self.values), lookup_value('n'))
+		if n is None:
+			return ''
+		value = self.values[n]
+		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
+		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
+
+	def description(self):
+		return 'Items from list: %s' % ', '.join(self.values)
+
+	def editor_type(self) -> Type[CodeGenerator.CodeGeneratorEditor]:
+		return CodeGeneratorEditorList
+
+class CodeGeneratorEditorList(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeList]):
 	RESIZABLE = (True,True)
 	REPEATERS = (
 		CodeGeneratorTypeListRepeaterDont,
@@ -122,8 +226,8 @@ class CodeGeneratorEditorList(CodeGeneratorEditor):
 		CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd
 	)
 
-	def __init__(self, parent, generator):
-		CodeGeneratorEditor.__init__(self, parent, generator)
+	def __init__(self, parent: Misc, generator: CodeGeneratorTypeList):
+		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator)
 
 		Label(self, text='Values:', anchor=W).pack(side=TOP, fill=X)
 		textframe = Frame(self, bd=2, relief=SUNKEN)
@@ -143,11 +247,11 @@ class CodeGeneratorEditorList(CodeGeneratorEditor):
 		self.repeater = IntVar()
 
 		Label(self, text='Repeat:', anchor=W).pack(side=TOP, fill=X)
-		DropDown(self, self.repeater, [r.NAME for r in CodeGeneratorEditorList.REPEATERS], width=20).pack(side=TOP, fill=X)
+		DropDown(self, self.repeater, [r.type_name() for r in CodeGeneratorEditorList.REPEATERS], width=20).pack(side=TOP, fill=X)
 
-		self.text.insert(END, '\n'.join(generator.list))
+		self.text.insert(END, '\n'.join(generator.values))
 		for n,repeater in enumerate(CodeGeneratorEditorList.REPEATERS):
-			if repeater.TYPE == self.generator.repeater.TYPE:
+			if repeater == self.generator.repeater:
 				self.repeater.set(n)
 				break
 
@@ -155,52 +259,4 @@ class CodeGeneratorEditorList(CodeGeneratorEditor):
 		self.generator.list = self.text.get(1.0, END).rstrip('\n').split('\n')
 		self.generator.repeater = CodeGeneratorEditorList.REPEATERS[self.repeater.get()]()
 
-class CodeGeneratorTypeList(CodeGeneratorType):
-	TYPE = 'list'
-	EDITOR = CodeGeneratorEditorList
-	REPEATERS = {
-		CodeGeneratorTypeListRepeaterDont.TYPE: CodeGeneratorTypeListRepeaterDont,
-		CodeGeneratorTypeListRepeaterRepeatOnce.TYPE: CodeGeneratorTypeListRepeaterRepeatOnce,
-		CodeGeneratorTypeListRepeaterRepeatForever.TYPE: CodeGeneratorTypeListRepeaterRepeatForever,
-		CodeGeneratorTypeListRepeaterRepeatLast.TYPE: CodeGeneratorTypeListRepeaterRepeatLast,
-		CodeGeneratorTypeListRepeaterRepeatInvertedOnce.TYPE: CodeGeneratorTypeListRepeaterRepeatInvertedOnce,
-		CodeGeneratorTypeListRepeaterRepeatInvertedForever.TYPE: CodeGeneratorTypeListRepeaterRepeatInvertedForever,
-		CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd.TYPE: CodeGeneratorTypeListRepeaterRepeatInvertedOnceRepeatEnd,
-		CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd.TYPE: CodeGeneratorTypeListRepeaterRepeatInvertedForeverRepeatEnd
-	}
-
-	@classmethod
-	def validate(cls, save):
-		if not 'list' in save and isinstance(save['list'], list) \
-				or not 'repeater' in save or not save['repeater'] in CodeGeneratorTypeList.REPEATERS:
-			return False
-		for val in save['list']:
-			if not isinstance(val, str):
-				return False
-		return True
-
-	def __init__(self, save={}):
-		self.list = save.get('list', [])
-		self.repeater = CodeGeneratorTypeList.REPEATERS.get(save.get('repeater'), CodeGeneratorTypeListRepeaterDont)()
-
-	def count(self):
-		return self.repeater.count(len(self.list))
-
-	def value(self, lookup_value):
-		n = self.repeater.index(len(self.list), lookup_value('n'))
-		if n is None:
-			return ''
-		value = self.list[n]
-		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
-		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
-
-	def description(self):
-		return 'Items from list: %s' % ', '.join(self.list)
-
-	def save(self):
-		save = CodeGeneratorType.save(self)
-		save['list'] = list(self.list)
-		save['repeater'] = self.repeater.TYPE
-		return save
-
-CodeGeneratorType.TYPES[CodeGeneratorTypeList.TYPE] = CodeGeneratorTypeList
+CodeGenerator.register_type(CodeGeneratorTypeList)

@@ -2,16 +2,13 @@
 from __future__ import annotations
 
 from .PyMSError import PyMSError
+from . import JSON
 
 import re
 from enum import Enum, Flag
 from collections import OrderedDict
 
-from typing import Type, Any, TypeAlias, Sequence, Protocol, TypeVar, Callable, Generic
-
-JSONObject = dict[str, 'JSONValue'] | OrderedDict[str, 'JSONValue']
-JSONArray = Sequence['JSONValue']
-JSONValue: TypeAlias = int | float | str | bool | None | JSONObject | JSONArray
+from typing import Type, Any, Sequence, TypeVar, Callable, Generic
 
 SubFields = dict[str, bool]
 Fields = dict[str, bool | SubFields]
@@ -19,20 +16,20 @@ Fields = dict[str, bool | SubFields]
 V = TypeVar('V')
 D = TypeVar('D')
 class Encoder(Generic[V,D]):
-	def encode(self, value: V) -> JSONValue:
+	def encode(self, value: V) -> JSON.Value:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue) -> D:
+	def decode(self, value: JSON.Value) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 	def apply(self, value: D, current: V) -> V:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 class GroupEncoder(Generic[V,D]):
-	def encode(self, value: V, fields: Fields | SubFields | None) -> JSONValue:
+	def encode(self, value: V, fields: Fields | SubFields | None) -> JSON.Value:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue, field: str, current: D | None) -> D:
+	def decode(self, value: JSON.Value, field: str, current: D | None) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 	def apply(self, value: D, current: V) -> V:
@@ -41,10 +38,10 @@ class GroupEncoder(Generic[V,D]):
 class SplitEncoder(Generic[V,D]):
 	attr: str
 
-	def encode(self, value: V) -> JSONValue:
+	def encode(self, value: V) -> JSON.Value:
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
-	def decode(self, value: JSONValue, current: D | None) -> D:
+	def decode(self, value: JSON.Value, current: D | None) -> D:
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 	def apply(self, value: D, current: V) -> V:
@@ -54,13 +51,13 @@ class JoinEncoder(Generic[V,D]):
 	def __init__(self, fields: Sequence[tuple[str, str, Encoder]]) -> None:
 		self.fields = fields
 
-	# def encode(self, value: V, field: str) -> JSONValue:
+	# def encode(self, value: V, field: str) -> JSON.Value:
 	# 	for _,field_name,encoder in self.fields:
 	# 		if field_name != field:
 	# 			continue
 	# 		return encoder.encode(value)
 
-	# def decode(self, value: JSONValue, field: str) -> D:
+	# def decode(self, value: JSON.Value, field: str) -> D:
 	# 	for _,field_name,encoder in self.fields:
 	# 		if field_name != field:
 	# 			continue
@@ -76,10 +73,10 @@ class IntEncoder(Encoder[int,int]):
 		self.min = min
 		self.max = max
 
-	def encode(self, value: int) -> JSONValue:
+	def encode(self, value: int) -> JSON.Value:
 		return value
 
-	def decode(self, value: JSONValue) -> int:
+	def decode(self, value: JSON.Value) -> int:
 		if isinstance(value, str):
 			if not IntEncoder._RE.match(value):
 				raise PyMSError('Decode', f"Expected an integer, got '{value}'")
@@ -100,10 +97,10 @@ class FloatEncoder(Encoder[float,float]):
 		self.min = min
 		self.max = max
 
-	def encode(self, value: float) -> JSONValue:
+	def encode(self, value: float) -> JSON.Value:
 		return value
 
-	def decode(self, value: JSONValue) -> float:
+	def decode(self, value: JSON.Value) -> float:
 		if not isinstance(value, float) and not isinstance(value, int):
 			raise PyMSError('Decode', f"Expected a float/integer, got '{value}'")
 		if self.min is not None and value < self.min:
@@ -116,11 +113,11 @@ class FloatEncoder(Encoder[float,float]):
 		return value
 
 class BoolEncoder(Encoder[bool,bool]):
-	def encode(self, value: bool) -> JSONValue:
+	def encode(self, value: bool) -> JSON.Value:
 		return value
 
 	@staticmethod
-	def parse(value: JSONValue) -> bool:
+	def parse(value: JSON.Value) -> bool:
 		if isinstance(value, bool):
 			return value
 		if isinstance(value, str):
@@ -134,7 +131,7 @@ class BoolEncoder(Encoder[bool,bool]):
 			return True
 		raise PyMSError('Decode', f"Expected a boolen ('true', 't', '1', 'false', 'f', or '0'), got '{value}'")
 
-	def decode(self, value: JSONValue) -> bool:
+	def decode(self, value: JSON.Value) -> bool:
 		return BoolEncoder.parse(value)
 	
 	def apply(self, value: bool, current: bool) -> bool:
@@ -144,10 +141,10 @@ class StrEncoder(Encoder[str,str]):
 	def __init__(self, max_length: int | None = None):
 		self.max_length = max_length
 
-	def encode(self, value: str) -> JSONValue:
+	def encode(self, value: str) -> JSON.Value:
 		return value
 
-	def decode(self, value: JSONValue) -> str:
+	def decode(self, value: JSON.Value) -> str:
 		if not isinstance(value, str):
 			raise PyMSError('Decode', f"Expected a string, got '{value}")
 		if self.max_length is not None and len(value) > self.max_length:
@@ -163,7 +160,7 @@ class FlagEncoder(GroupEncoder[F,FlagsMap]):
 	def __init__(self, zero_flags: F):
 		self.zero_flags = zero_flags
 
-	def encode(self, value: F, fields: Fields | SubFields | None) -> JSONValue:
+	def encode(self, value: F, fields: Fields | SubFields | None) -> JSON.Value:
 		f_type = type(self.zero_flags)
 		flags: OrderedDict = OrderedDict()
 		for flag_name in dir(f_type):
@@ -178,7 +175,7 @@ class FlagEncoder(GroupEncoder[F,FlagsMap]):
 			flags[flag_name] = has_flag
 		return flags
 
-	def decode(self, value: JSONValue, field: str, current: FlagsMap | None) -> FlagsMap:
+	def decode(self, value: JSON.Value, field: str, current: FlagsMap | None) -> FlagsMap:
 		if current is not None:
 			result = current
 		else:
@@ -207,7 +204,7 @@ class IntFlagEncoder(GroupEncoder[int,FlagsMap]):
 	def __init__(self, flags: dict[str, int]) -> None:
 		self.flags = flags
 
-	def encode(self, value: int, fields: Fields | SubFields | None) -> JSONValue:
+	def encode(self, value: int, fields: Fields | SubFields | None) -> JSON.Value:
 		flags: OrderedDict = OrderedDict()
 		for flag_name,flag in sorted(self.flags.items(), key=lambda t: t[1]):
 			if fields is not None and not fields.get(flag_name):
@@ -216,7 +213,7 @@ class IntFlagEncoder(GroupEncoder[int,FlagsMap]):
 			flags[flag_name] = has_flag
 		return flags
 
-	def decode(self, value: JSONValue, field: str, current: FlagsMap | None) -> FlagsMap:
+	def decode(self, value: JSON.Value, field: str, current: FlagsMap | None) -> FlagsMap:
 		if current is not None:
 			result = current
 		else:
@@ -246,10 +243,10 @@ class EnumValueEncoder(Encoder[E,E]):
 	def __init__(self, enum_type: Type[E]) -> None:
 		self.enum_type = enum_type
 
-	def encode(self, value: E) -> JSONValue:
+	def encode(self, value: E) -> JSON.Value:
 		return value.value
 
-	def decode(self, value: JSONValue) -> E:
+	def decode(self, value: JSON.Value) -> E:
 		try:
 			return self.enum_type(value)
 		except:
@@ -262,10 +259,10 @@ class EnumNameEncoder(Encoder[E,E]):
 	def __init__(self, enum_type: Type[E]) -> None:
 		self.enum_type = enum_type
 
-	def encode(self, value: E) -> JSONValue:
+	def encode(self, value: E) -> JSON.Value:
 		return value.name
 
-	def decode(self, value: JSONValue) -> E:
+	def decode(self, value: JSON.Value) -> E:
 		if not isinstance(value, str):
 			raise PyMSError('Decode', f"Expected a string, got '{value}'")
 		if not hasattr(self.enum_type, value):
@@ -283,10 +280,10 @@ class RenameEncoder(Encoder[V,D]):
 		self.attr = attr
 		self.encoder = encoder
 
-	def encode(self, value: V) -> JSONValue:
+	def encode(self, value: V) -> JSON.Value:
 		return self.encoder.encode(value)
 
-	def decode(self, value: JSONValue) -> D:
+	def decode(self, value: JSON.Value) -> D:
 		return self.encoder.decode(value)
 
 	def apply(self, value: D, current: V) -> V:
@@ -307,10 +304,10 @@ class Definition:
 		self.id_mode = id_mode
 		self.structure = structure
 
-def _encode_json(obj: object, structure: Structure | SubStructure, fields: Fields | SubFields | None) -> OrderedDict[str, JSONValue]:
+def _encode_json(obj: object, structure: Structure | SubStructure, fields: Fields | SubFields | None) -> OrderedDict[str, JSON.Value]:
 	if fields is not None and len(fields) == 0:
 		raise PyMSError('Internal', 'No fields to encode')
-	json: OrderedDict[str, JSONValue] = OrderedDict()
+	json: OrderedDict[str, JSON.Value] = OrderedDict()
 	for key,encoder in structure.items():
 		field: bool | SubFields | None = None
 		if fields is not None:
@@ -323,7 +320,7 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 		if isinstance(encoder, RenameEncoder):
 			attr = encoder.attr
 		if isinstance(encoder, JoinEncoder):
-			sub_json: OrderedDict[str, JSONValue] = OrderedDict()
+			sub_json: OrderedDict[str, JSON.Value] = OrderedDict()
 			for attr,sub_key,sub_encoder in encoder.fields:
 				if not hasattr(obj, attr):
 					raise PyMSError('Internal', f"'{attr}' is not a valid attribute name")
@@ -347,7 +344,7 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 		json[key] = value
 	return json
 
-def encode_json(obj: object, id: int | None, definition: Definition, fields: Fields | None = None) -> OrderedDict[str, JSONValue]:
+def encode_json(obj: object, id: int | None, definition: Definition, fields: Fields | None = None) -> OrderedDict[str, JSON.Value]:
 	json = _encode_json(obj, definition.structure, fields)
 	if id is not None:
 		json['_id'] = id
@@ -358,8 +355,8 @@ def encode_json(obj: object, id: int | None, definition: Definition, fields: Fie
 	json.move_to_end('_type', last=False)
 	return json
 
-def encode_jsons(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> list[OrderedDict[str, JSONValue]]:
-	json: list[OrderedDict[str, JSONValue]] = []
+def encode_jsons(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> list[OrderedDict[str, JSON.Value]]:
+	json: list[OrderedDict[str, JSON.Value]] = []
 	for obj,id in objs:
 		definition = get_definition(obj)
 		if not definition:
@@ -368,7 +365,7 @@ def encode_jsons(objs: Sequence[tuple[object, int]], get_definition: Callable[[o
 	return json
 
 def encode_text(obj: object, id: int | None, definition: Definition, fields: Fields | None = None) -> str:
-	def flatten(json: dict[str, JSONValue], prefix: str | None = None) -> str:
+	def flatten(json: dict[str, JSON.Value], prefix: str | None = None) -> str:
 		result = ''
 		for key,value in json.items():
 			if key.startswith('_'):
@@ -467,7 +464,7 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 					json[key] = sub_json
 				elif not isinstance(sub_json, OrderedDict):
 					raise PyMSError('Decode', f"Expected '{key}' to be an object but got '{sub_json}'")
-				for attr,field,sub_decoder in decoder.fields:
+				for _,field,sub_decoder in decoder.fields:
 					if sub_key == field:
 						sub_json[sub_key] = sub_decoder.decode(value)
 						break

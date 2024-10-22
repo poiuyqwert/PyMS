@@ -7,8 +7,9 @@ from ..Utilities import Assets
 from ..Utilities import Config
 
 class ImportListDialog(PyMSDialog):
-	def __init__(self, parent: Misc, settings: Settings, delegate: ImportListDelegate) -> None:
-		self.settings = settings
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, txt_last_path_config: Config.SelectFile, delegate: ImportListDelegate) -> None:
+		self.window_geometry_config = window_geometry_config
+		self.txt_last_path_config = txt_last_path_config
 		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'List Importing')
 
@@ -41,10 +42,10 @@ class ImportListDialog(PyMSDialog):
 
 	def setup_complete(self) -> None:
 		self.minsize(200,150)
-		self.settings.windows.load_window_size('listimport', self)
+		self.window_geometry_config.load_size(self)
 
 	def add(self) -> None:
-		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[FileType.txt()])
+		iimport = self.txt_last_path_config.select_open_multiple(self)
 		if iimport:
 			for i in iimport:
 				if i not in self.delegate.imports:
@@ -88,5 +89,5 @@ class ImportListDialog(PyMSDialog):
 		self.update_states()
 
 	def dismiss(self) -> None:
-		self.settings.windows.save_window_size('listimport', self)
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

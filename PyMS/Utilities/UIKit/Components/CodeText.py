@@ -3,8 +3,11 @@ from ..Widgets import *
 from ..EventPattern import *
 from ..Font import Font
 from ..SyntaxHighlighting import SyntaxHighlighting, HighlightComponent
+from ..Types import Comparitors
 
 from ...EditedState import EditedState
+from ...PyMSError import PyMSError
+from ...PyMSWarning import PyMSWarning
 
 import re
 from dataclasses import dataclass
@@ -20,7 +23,7 @@ class AutocompleteState:
 	end_index: str
 
 class CodeTextDelegate(Protocol):
-	def comment_symbols(self) -> list[str]:
+	def comment_symbols(self) -> Sequence[str]:
 		...
 
 	def comment_symbol(self) -> str:
@@ -29,7 +32,13 @@ class CodeTextDelegate(Protocol):
 	def autocomplete_override_keys(self) -> str:
 		...
 
-	def get_autocomplete_options(self, line: str) -> list[str] | None:
+	def get_autocomplete_options(self, line: str) -> Sequence[str] | None:
+		...
+
+	def jump_highlights(self) -> Sequence[str] | None:
+		...
+
+	def jump_sections(self) -> Sequence[str] | None:
 		...
 
 class _UndoGroup:
@@ -138,6 +147,13 @@ class CodeText(Frame):
 		self.text.bind(WidgetEvent.Text.Modified(), self.modified)
 		self.text.bind(Ctrl.Slash(), self.comment_range)
 		self.text.bind(Key.Pressed(), self.key_pressed)
+
+		if self.delegate.jump_highlights():
+			self.text.bind(Alt.Left(), lambda _: self.goto_highlight(-1))
+			self.text.bind(Alt.Right(), lambda _: self.goto_highlight(1))
+		if self.delegate.jump_sections():
+			self.text.bind(Alt.Up(), lambda _: self.goto_section(-1))
+			self.text.bind(Alt.Down(), lambda _: self.goto_section(1))
 
 		self.tag_configure('sel', foreground='')
 
@@ -424,3 +440,40 @@ class CodeText(Frame):
 			self.event_generate(CodeText.WidgetEvent.InsertCursorMoved())
 			pass
 		return result
+
+	def _goto_tag(self, tags: Sequence[str], direction: int) -> None:
+		next_range = self.text.tag_prevrange if direction < 0 else self.text.tag_nextrange
+		comparitor: Comparitors = '>' if direction < 0 else '<'
+		closest_index: str | None = None
+		for tag in tags:
+			tag_range = next_range(tag, INSERT)
+			if tag_range and (not closest_index or self.text.compare(tag_range[0], comparitor, closest_index)):
+				closest_index = tag_range[0]
+		if closest_index:
+			self.text.see(closest_index)
+			self.text.mark_set(INSERT, closest_index)
+
+	def goto_highlight(self, direction: int) -> None:
+		if (tags := self.delegate.jump_highlights()):
+			self._goto_tag(tags, direction)
+
+	def goto_section(self, direction: int) -> None:
+		if (tags := self.delegate.jump_sections()):
+			self._goto_tag(tags, direction)
+
+	def highlight_error(self, error: PyMSError, tag: str = 'Error', warnings_tag: str = 'Warning') -> None:
+		if error.line is not None:
+			self.text.see('%s.0' % error.line)
+			self.text.tag_add(tag, '%s.0' % error.line, '%s.end' % error.line)
+			if error.warnings and warnings_tag:
+				self.highlight_warnings(error.warnings, warnings_tag, see=False)
+
+	def highlight_warning(self, warning: PyMSWarning, tag: str = 'Warning', see: bool = True) -> None:
+		if warning.line is not None:
+			self.text.see('%s.0' % warning.line)
+			self.text.tag_add(tag, '%s.0' % warning.line, '%s.end' % warning.line)
+
+	def highlight_warnings(self, warnings: list[PyMSWarning], tag: str = 'Warning', see: bool = True) -> None:
+		for warning in warnings:
+			self.highlight_warning(warning, tag, see)
+			see = False

@@ -79,7 +79,7 @@ class CHK:
 			if aiscript is None:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			self.aiscript = AIBIN.AIBIN()#stat_txt=self.stat_txt)
-			self.aiscript.load(aiscript)
+			self.aiscript.load(aiscript, bw_input=None)
 		self.sections: dict[str, CHKSection] = {}
 		self.section_order: list[str] = []
 
