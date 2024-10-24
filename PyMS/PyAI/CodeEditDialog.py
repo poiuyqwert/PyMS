@@ -547,8 +547,7 @@ script {header_id} {{
 		return ['#', ';']
 
 	def comment_symbol(self) -> str:
-		# TODO: Formatter based
-		return '#'
+		return self.delegate.get_formatters().comment.symbol()
 
 	def autocomplete_override_keys(self) -> str:
 		return ' (,)'
@@ -587,8 +586,7 @@ script {header_id} {{
 
 		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
 		main_identifiers.sort()
-		# TODO: Directives
-		main_identifiers.extend(('@spellcaster','@supress_all','@suppress_next_line'))
+		main_identifiers.extend(f'@{directive.name}' for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives)
 		main_identifiers.append('script')
 
 		is_first_identifier = not not CodeEditDialog.RE_FIRST_IDENTIFIER.match(line)

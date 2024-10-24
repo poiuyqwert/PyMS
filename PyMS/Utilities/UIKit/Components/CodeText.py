@@ -398,7 +398,6 @@ class CodeText(Frame):
 				return EventPropogation.Break
 			self.autocomplete_state = AutocompleteState(text_prefix, options + [''], 0, index, index)
 		
-		# TODO: How does this affect undo/redo?
 		with self.undo_group():
 			self.delete(self.autocomplete_state.start_index, self.autocomplete_state.end_index)
 			option = self.autocomplete_state.options[self.autocomplete_state.option_index]

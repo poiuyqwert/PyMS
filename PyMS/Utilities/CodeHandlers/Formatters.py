@@ -39,14 +39,23 @@ class ParensCommandFormatter(CommandFormatter):
 		return result
 
 class CommentFormatter(Protocol):
+	def symbol(self) -> str:
+		...
+
 	def serialize(self, comments: list[str]) -> str:
 		...
 
 class HashCommentFormatter(CommentFormatter):
+	def symbol(self) -> str:
+		return '#'
+
 	def serialize(self, comments: list[str]) -> str:
 		return f'\t# {", ".join(comments)}'
 
 class SemicolonCommentFormatter(CommentFormatter):
+	def symbol(self) -> str:
+		return ';'
+
 	def serialize(self, comments: list[str]) -> str:
 		return f'\t; {", ".join(comments)}'
 

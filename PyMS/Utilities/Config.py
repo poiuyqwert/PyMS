@@ -404,7 +404,7 @@ class File(ConfigObject):
 	def select_file(self, parent: Misc, name: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
-		initial_dir: str | None = None # TODO: Initial dir
+		initial_dir: str | None = None
 		path = FileDialog.askopenfilename(
 			parent=window,
 			title=f'Select {name or self._name}',

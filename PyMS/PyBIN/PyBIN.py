@@ -587,26 +587,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			font16x = FNT.FNT()
 
 			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			path = self.config_.settings.files.font10.file_path
-			try:
-				font10.load_file(self.mpq_handler.load_file(path, False))
-			except:
-				font10.load_file(self.mpq_handler.load_file(path, True))
-			path = self.config_.settings.files.font14.file_path
-			try:
-				font14.load_file(self.mpq_handler.load_file(path, False))
-			except:
-				font14.load_file(self.mpq_handler.load_file(path, True))
-			path = self.config_.settings.files.font16.file_path
-			try:
-				font16.load_file(self.mpq_handler.load_file(path, False))
-			except:
-				font16.load_file(self.mpq_handler.load_file(path, True))
-			path = self.config_.settings.files.font16x.file_path
-			try:
-				font16x.load_file(self.mpq_handler.load_file(path, False))
-			except:
-				font16x.load_file(self.mpq_handler.load_file(path, True))
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, lambda data: font14.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, lambda data: font16.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, lambda data: font16x.load_file(data))
 		except PyMSError as e:
 			err = e
 		else:

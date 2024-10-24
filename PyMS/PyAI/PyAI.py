@@ -354,7 +354,6 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.ai is None:
 			self.scriptstatus.set('')
 			return
-		# TODO: Calculate sizes
 		ai_count,bw_count = self.ai.count_scripts()
 		ai_size,bw_size = self.ai.calculate_sizes()
 		s = f'aiscript.bin: {ai_count} ({ai_size} B)     bwscript.bin: {bw_count} ({bw_size} B)'

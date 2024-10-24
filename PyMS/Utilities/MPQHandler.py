@@ -9,8 +9,9 @@ from . import Config
 
 import os, io
 
-from typing import BinaryIO
+from typing import BinaryIO, Callable, TypeVar
 
+T = TypeVar('T')
 class MPQHandler(object):
 	def __init__(self, mpqs_config: Config.List[str] | None = None, listfiles: list[str] | None = None) -> None:
 		self.mpqs_config = mpqs_config
@@ -85,13 +86,7 @@ class MPQHandler(object):
 	GET_FROM_FOLDER_OR_MPQ = GET_FROM_FOLDER + GET_FROM_MPQ
 	# Try to get file from MPQ, and fallback to /PyMS/MPQ folder
 	GET_FROM_MPQ_OR_FOLDER = GET_FROM_MPQ + GET_FROM_FOLDER
-	# TODO: Remove `folder` paramater in favour of `sources`
-	# folder(True)=Get only from folder
-	# folder(None)=Get from either, MPQ first, folder second
-	# folder(False)=Get only from MPQ
-	def get_file(self, path: str, folder: bool | None = None, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO | None:
-		if folder is not None:
-			sources = MPQHandler.GET_FROM_FOLDER if folder else MPQHandler.GET_FROM_MPQ
+	def get_file(self, path: str, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO | None:
 		file: BinaryIO | None = None
 		for source in sources:
 			if source == MPQHandler._SOURCE_MPQ:
@@ -104,11 +99,20 @@ class MPQHandler(object):
 					return file
 		return file
 
-	def load_file(self, path: str, folder: bool | None = None, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO:
-		file = self.get_file(path, folder, sources)
+	def load_file(self, path: str, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO:
+		file = self.get_file(path, sources)
 		if not file:
 			raise PyMSError('Load', f"Couldn't load '{path}' from MPQ")
 		return file
+
+	# Convenience to try to read and process the file from the MPQ, and if that fails try with the one from folder (mainly used for fonts as they are encrypted in the standard mpqs)
+	def read_file(self, path: str, read: Callable[[BinaryIO], T]) -> T:
+		try:
+			data = self.load_file(path, MPQHandler.GET_FROM_MPQ)
+			return read(data)
+		except:
+			data = self.load_file(path, MPQHandler.GET_FROM_FOLDER)
+			return read(data)
 
 	def get_file_mpq(self, path: str) -> BinaryIO | None:
 		file: BinaryIO | None = None

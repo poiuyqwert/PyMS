@@ -57,9 +57,8 @@ class BlockCodeType(CodeType.AddressCodeType):
 		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
 
 class UnitCodeType(CodeType.IntCodeType):
-	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227, or a full unit name from stat_txt.tbl') -> None:
-		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, name, help_text, bytecode_type=Struct.l_u16, limits=(0, 227))
+	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227 (or higher if using expanded DAT file), or a full unit name from stat_txt.tbl') -> None:
+		CodeType.IntCodeType.__init__(self, name, help_text, bytecode_type=Struct.l_u16)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (UnitCodeType, BuildingCodeType, MilitaryCodeType, GGMilitaryCodeType, AGMilitaryCodeType, GAMilitaryCodeType, AAMilitaryCodeType))
@@ -102,6 +101,12 @@ class UnitCodeType(CodeType.IntCodeType):
 			return
 		if num > parse_context.data_context.units_dat.entry_count():
 			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
+
+	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
+		entry_count = 227
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context.units_dat is not None:
+			entry_count = parse_context.data_context.units_dat.entry_count()
+		return (0, entry_count)
 
 class BuildingCodeType(UnitCodeType):
 	def __init__(self) -> None:
@@ -297,8 +302,7 @@ class AAMilitaryCodeType(MilitaryCodeType):
 
 class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, 'upgrade', 'An upgrade ID from 0 to 60, or a full upgrade name from stat_txt.tbl', Struct.l_u16, limits=(0, 60))
+		CodeType.IntCodeType.__init__(self, 'upgrade', 'An upgrade ID from 0 to 60 (or higher if using expanded DAT file), or a full upgrade name from stat_txt.tbl', Struct.l_u16)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, UpgradeCodeType)
@@ -331,10 +335,15 @@ class UpgradeCodeType(CodeType.IntCodeType):
 		if num > parse_context.data_context.upgrades_dat.entry_count():
 			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
 
+	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
+		entry_count = 60
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context.upgrades_dat is not None:
+			entry_count = parse_context.data_context.upgrades_dat.entry_count()
+		return (0, entry_count)
+
 class TechnologyCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
-		# TODO: Expanded DAT
-		CodeType.IntCodeType.__init__(self, 'technology', 'An technology ID from 0 to 43, or a full technology name from stat_txt.tbl', Struct.l_u16, limits=(0, 43))
+		CodeType.IntCodeType.__init__(self, 'technology', 'An technology ID from 0 to 43 (or higher if using expanded DAT file), or a full technology name from stat_txt.tbl', Struct.l_u16)
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, TechnologyCodeType)
@@ -366,6 +375,12 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			return
 		if num > parse_context.data_context.techdata_dat.entry_count():
 			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
+
+	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
+		entry_count = 43
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context.techdata_dat is not None:
+			entry_count = parse_context.data_context.techdata_dat.entry_count()
+		return (0, entry_count)
 
 class StringCodeType(CodeType.StrCodeType):
 	def __init__(self) -> None:
