@@ -7,12 +7,12 @@ def main() -> None:
 	from PyMS.PyAI.PyAI import PyAI, LONG_VERSION
 
 	from PyMS.FileFormats.AIBIN import AIBIN
-	from PyMS.FileFormats.AIBIN.DataContext import DataContext
-	from PyMS.FileFormats.AIBIN.AICodeHandlers.AIDefinitionsHandler import AIDefinitionsHandler
-	from PyMS.FileFormats.AIBIN.AICodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
-	from PyMS.FileFormats.AIBIN.AICodeHandlers.AILexer import AILexer
-	from PyMS.FileFormats.AIBIN.AICodeHandlers.AISerializeContext import AISerializeContext
-	from PyMS.FileFormats.AIBIN.AICodeHandlers.AIParseContext import AIParseContext
+	from PyMS.FileFormats.AIBIN.CodeHandlers.DataContext import DataContext
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AIDefinitionsHandler import AIDefinitionsHandler
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AILexer import AILexer
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AISerializeContext import AISerializeContext
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AIParseContext import AIParseContext
 
 	from PyMS.FileFormats import DAT
 	from PyMS.FileFormats import TBL

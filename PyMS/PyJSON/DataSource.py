@@ -13,7 +13,7 @@ ItemID: TypeAlias = str
 PathComponent: TypeAlias = int | str
 Path = list[PathComponent]
 
-Data = JSON.JSONArray | JSON.JSONObject
+Data = JSON.JSON.Array | JSON.JSON.Object
 
 class DataSource:
 	def __init__(self, data: Data | None = None) -> None:
@@ -37,7 +37,7 @@ class DataSource:
 					return False
 		return True
 
-	def _icon_for(self, value: JSON.JSONValue) -> Image | None:
+	def _icon_for(self, value: JSON.JSON.Value) -> Image | None:
 		if isinstance(value, dict):
 			return Assets.get_image('debug')
 		elif isinstance(value, list):
@@ -51,12 +51,12 @@ class DataSource:
 			item_id += f':{key}'
 		return item_id
 
-	def _object_name(self, data: JSON.JSONObject) -> str:
+	def _object_name(self, data: JSON.JSON.Object) -> str:
 		if self.name_key is not None and self.name_key in data:
 			return str(data[self.name_key])
 		return json.dumps(data)
 
-	def _insert_object(self, data: JSON.JSONObject, parent: str | None, index: int | Literal['end'] = END) -> None:
+	def _insert_object(self, data: JSON.JSON.Object, parent: str | None, index: int | Literal['end'] = END) -> None:
 		if not self._treeview:
 			return
 		if self._is_flat(data):
@@ -69,13 +69,13 @@ class DataSource:
 				self._insert_value(value, new_parent)
 				self.all_keys.add(key)
 
-	def _insert_array(self, data: JSON.JSONArray, parent: str | None, index: int | Literal['end'] = END) -> None:
+	def _insert_array(self, data: JSON.JSON.Array, parent: str | None, index: int | Literal['end'] = END) -> None:
 		if not self._treeview:
 			return
 		for value in data:
 			self._insert_value(value, parent)
 
-	def _insert_value(self, value: JSON.JSONValue, parent: str | None = None, index: int | Literal['end'] = END):
+	def _insert_value(self, value: JSON.JSON.Value, parent: str | None = None, index: int | Literal['end'] = END):
 		if not self._treeview:
 			return
 		if isinstance(value, dict):
@@ -169,8 +169,8 @@ class DataSource:
 		
 		return path
 
-	def value_at(self, path: Path) -> JSON.JSONValue:
-		data: JSON.JSONValue = self.data
+	def value_at(self, path: Path) -> JSON.JSON.Value:
+		data: JSON.JSON.Value = self.data
 		for component in path:
 			if isinstance(component, str):
 				assert isinstance(data, dict)
@@ -180,6 +180,6 @@ class DataSource:
 				data = data[component]
 		return data
 
-	def value_for(self, item_id: ItemID) -> JSON.JSONValue:
+	def value_for(self, item_id: ItemID) -> JSON.JSON.Value:
 		path = self.item_path(item_id)
 		return self.value_at(path)
