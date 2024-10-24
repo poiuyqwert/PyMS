@@ -19,6 +19,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import os
 from enum import Flag
@@ -92,6 +93,7 @@ class PyGRP(MainWindow):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -707,6 +709,9 @@ BMP's must be imported with the same style they were exported as.""")
 	def about(self, key: Event | None = None) -> None:
 		self.stopframe()
 		AboutDialog(self, 'PyGRP', LONG_VERSION, [('TeLaMoN','Compressed GRP file specs.')])
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self, e: Event | None = None) -> None:
 		self.stopframe()

@@ -38,6 +38,7 @@ from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import os, io
 
@@ -164,6 +165,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyAI')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		
@@ -522,6 +524,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			('modmaster50','Lots of ideas, testing, and support, thanks a lot!')
 		]
 		AboutDialog(self, 'PyAI', LONG_VERSION, thanks)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self, e=None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

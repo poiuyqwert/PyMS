@@ -21,6 +21,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import sys, time, shutil, os, re
 
@@ -84,6 +85,7 @@ class PyMPQ(MainWindow):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.mpq editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMPQ')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -682,6 +684,9 @@ class PyMPQ(MainWindow):
 
 	def about(self, key: Event | None = None) -> None:
 		AboutDialog(self, 'PyMPQ', LONG_VERSION)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def cleanup_temp(self) -> None:
 		self.thread.end()

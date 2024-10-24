@@ -22,6 +22,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 LONG_VERSION = 'v%s' % Assets.version('PyFNT')
 
@@ -326,6 +327,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyFNT')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -586,6 +588,9 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 			('StormCoast-Fortress.net','FNT specs')
 		]
 		AboutDialog(self, 'PyFNT', LONG_VERSION, thanks)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

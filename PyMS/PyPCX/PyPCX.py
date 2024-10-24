@@ -19,6 +19,7 @@ from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import cast
 
@@ -70,6 +71,7 @@ class PyPCX(MainWindow):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pcx editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPCX')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -274,6 +276,9 @@ class PyPCX(MainWindow):
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyPCX', LONG_VERSION)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

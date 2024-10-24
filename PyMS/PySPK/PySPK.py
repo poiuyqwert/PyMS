@@ -27,6 +27,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import Enum
 
@@ -120,6 +121,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -736,6 +738,9 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		AboutDialog(self, 'PySPK', LONG_VERSION, [
 			('FaRTy1billion','File Specs and SPKEdit')
 		])
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def load_settings(self) -> None:
 		self.config_.windows.main.load_size(self)

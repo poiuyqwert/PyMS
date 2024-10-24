@@ -26,6 +26,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
+from ..Utilities.SponsorDialog import SponsorDialog
 
 from dataclasses import dataclass
 import re
@@ -101,6 +102,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -550,6 +552,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyTRG', LONG_VERSION, [('FaRTy1billion','For creating TrigPlug and giving me the specs!')])
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

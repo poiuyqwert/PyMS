@@ -28,6 +28,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import time
 from enum import Enum
@@ -152,6 +153,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -1132,6 +1134,9 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [
 			('FaRTy1billion','File Specs and BinEdit2')
 		])
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def load_settings(self) -> None:
 		self.show_preview_settings.set(self.config_.preview.show_settings.value)

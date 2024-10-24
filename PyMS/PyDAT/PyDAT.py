@@ -24,6 +24,7 @@ from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import os
 
@@ -88,6 +89,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
+		toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -487,6 +489,9 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def about(self, key: Event | None = None) -> None:
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self, e: Event | None = None) -> None:
 		if not self.unsaved():

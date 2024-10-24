@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..FileFormats.MPQ.SFmpq import Z_BEST_SPEED, Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION, MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH
 from ..FileFormats.MPQ.MPQ import MPQCompressionFlag
 

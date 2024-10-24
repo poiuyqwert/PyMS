@@ -25,6 +25,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.FileSettingView import FileSettingView
 from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import io
 from enum import Enum
@@ -102,6 +103,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyLO')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -645,6 +647,9 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyLO', LONG_VERSION)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

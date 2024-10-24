@@ -26,6 +26,7 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import Literal
 
@@ -100,6 +101,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTBL')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.grid(row=0,column=0, padx=1,pady=1, sticky=EW)
@@ -517,6 +519,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def about(self) -> None:
 		AboutDialog(self, 'PyTBL', LONG_VERSION)
+
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
 	def exit(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
