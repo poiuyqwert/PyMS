@@ -5,7 +5,7 @@ from .SettingsTab import SettingsTab
 from ..UIKit import *
 from .. import Config
 from .. import Assets
-from ..setutils import PYMS_CONFIG
+from ..PyMSConfig import PYMS_CONFIG
 from ..EditedState import EditedState
 
 class ThemeSettingsTab(SettingsTab):

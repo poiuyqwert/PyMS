@@ -1,6 +1,6 @@
 
 from . import Assets
-from .setutils import PYMS_CONFIG
+from .PyMSConfig import PYMS_CONFIG
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 

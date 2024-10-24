@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from typing import BinaryIO
 
+# TODO: Replace usage with IO
 def load_file(file: str | BinaryIO, file_type: str = 'file', mode: str = 'rb') -> bytes:
 	try:
 		if isinstance(file, str):

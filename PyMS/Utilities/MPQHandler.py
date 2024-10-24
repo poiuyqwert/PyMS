@@ -36,7 +36,7 @@ class MPQHandler(object):
 		self.mpqs = []
 
 	def add_defaults(self) -> None:
-		from .setutils import PYMS_CONFIG
+		from .PyMSConfig import PYMS_CONFIG
 		scdir = PYMS_CONFIG.scdir.path
 		if scdir is None or not os.path.isdir(scdir):
 			return

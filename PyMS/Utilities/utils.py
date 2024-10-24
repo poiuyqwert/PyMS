@@ -32,10 +32,6 @@ except:
 	def SetValue(_a,_b,_c,_d) -> None:
 		pass
 
-# TODO: Remove
-couriernew = ('Courier', -12, 'normal')
-couriernew_bold = ('Courier New', -11, 'bold')
-
 def is_windows() -> bool:
 	return (platform.system().lower() == 'windows')
 
@@ -290,16 +286,3 @@ except:
 		handle.close()
 		start_new_thread(do_play, (temp_file,))
 	play_sound = osx_play
-
-class FFile:
-	def __init__(self, bytes=True):
-		self.data = b'' if bytes else ''
-
-	def read(self):
-		return self.data
-
-	def write(self, data):
-		self.data += data
-
-	def close(self):
-		pass

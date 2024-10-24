@@ -6,7 +6,7 @@ from .SettingsTab import SettingsTab
 from ...FileFormats.MPQ.MPQ import MPQ
 
 from .. import Assets
-from ..setutils import PYMS_CONFIG
+from ..PyMSConfig import PYMS_CONFIG
 from ..UIKit import *
 from .. import Config
 from ..EditedState import EditedState

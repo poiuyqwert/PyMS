@@ -322,7 +322,7 @@ class _Selector(object):
 
 def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 	if not name:
-		from ..setutils import PYMS_CONFIG
+		from ..PyMSConfig import PYMS_CONFIG
 		name = PYMS_CONFIG.theme.value
 	if not name:
 		return
