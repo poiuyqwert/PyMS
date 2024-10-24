@@ -1,9 +1,12 @@
 
 from __future__ import annotations
 
+from ..Config import PyICEConfig
+
 from ...Utilities.UIKit import Frame, Misc
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Config
 
 from typing import Self, Type, Callable, TypeVar, Generic
 
@@ -31,17 +34,21 @@ class CodeGeneratorType(JSON.Codable):
 	def description(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.description()')
 
-	def editor_type(self) -> Type[CodeGeneratorEditor]:
+	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGeneratorEditor:
 		raise NotImplementedError(self.__class__.__name__ + '.editor()')
 
 T = TypeVar('T', bound=CodeGeneratorType)
 class CodeGeneratorEditor(Frame, Generic[T]):
-	def __init__(self, parent: Misc, generator: T):
+	def __init__(self, parent: Misc, generator: T, window_geometry_config: Config.WindowGeometry):
 		self.generator = generator
+		self.window_geometry_config = window_geometry_config
 		Frame.__init__(self, parent)
 
 	def save(self):
 		raise NotImplementedError(self.__class__.__name__ + '.save()')
+
+	def is_resizable(self) -> tuple[bool, bool]:
+		raise NotImplementedError(self.__class__.__name__ + '.is_resizable()')
 
 _REGISTRY: dict[str, Type[CodeGeneratorType]] = {}
 

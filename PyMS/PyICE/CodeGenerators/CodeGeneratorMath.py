@@ -1,9 +1,11 @@
 
 from . import CodeGenerator
+from ..Config import PyICEConfig
 
 from ...Utilities.UIKit import *
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Config
 
 import re
 from dataclasses import dataclass
@@ -44,14 +46,12 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 	def description(self) -> str:
 		return self.math
 
-	def editor_type(self) -> Type[CodeGenerator.CodeGeneratorEditor]:
-		return CodeGeneratorEditorMath
+	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+		return CodeGeneratorEditorMath(parent, self, config.windows.generator.editor.math)
 
 class CodeGeneratorEditorMath(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeMath]):
-	RESIZABLE = (True,False)
-
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeMath):
-		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator)
+	def __init__(self, parent: Misc, generator: CodeGeneratorTypeMath, window_geometry_config: Config.WindowGeometry) -> None:
+		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
 		self.math = StringVar()
 		self.math.set(self.generator.math)
@@ -59,7 +59,10 @@ class CodeGeneratorEditorMath(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTyp
 		Label(self, text='Math:', anchor=W).pack(side=TOP, fill=X)
 		Entry(self, textvariable=self.math).pack(side=TOP, fill=X)
 
-	def save(self):
+	def save(self) -> None:
 		self.generator.math = self.math.get()
+
+	def is_resizable(self) -> tuple[bool, bool]:
+		return (True, False)
 
 CodeGenerator.register_type(CodeGeneratorTypeMath)

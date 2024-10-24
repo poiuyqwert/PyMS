@@ -1,6 +1,4 @@
 
-from .CodeGenerators import GeneratorPreset
-
 from ..Utilities import Config
 from ..Utilities.UIKit import Size, FileType
 from ..Utilities import Assets
@@ -44,10 +42,18 @@ class PyICEConfig(Config.Config):
 				super().__init__()
 
 		class Generator(Config.Group):
+			class Editor(Config.Group):
+				def __init__(self) -> None:
+					self.list = Config.WindowGeometry()
+					self.math = Config.WindowGeometry()
+					self.range = Config.WindowGeometry()
+					super().__init__()
+
 			def __init__(self) -> None:
 				self.main = Config.WindowGeometry()
 				self.name = Config.WindowGeometry()
 				self.presets = Config.WindowGeometry()
+				self.editor = PyICEConfig.Windows.Generator.Editor()
 				super().__init__()
 
 		def __init__(self) -> None:
@@ -150,6 +156,7 @@ class PyICEConfig(Config.Config):
 				super().__init__()
 
 		def __init__(self) -> None:
+			from .CodeGenerators import GeneratorPreset
 			self.presets = Config.JSONList(value_type=GeneratorPreset.GeneratorPreset, defaults=GeneratorPreset.DEFAULT_PRESETS)
 			self.pane = PyICEConfig.Generator.Pane()
 			super().__init__()

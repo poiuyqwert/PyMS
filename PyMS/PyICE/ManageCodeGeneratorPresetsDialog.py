@@ -2,7 +2,6 @@
 from .Config import PyICEConfig
 from .Delegates import ManagePresetsDelegate
 from .CodeGenerators.GeneratorPreset import GeneratorPreset
-from .CodeGenerators import CodeGeneratorType
 from .NameDialog import NameDialog
 
 from ..Utilities.UIKit import *
@@ -11,7 +10,7 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities import Config
+from ..Utilities.CheckSaved import CheckSaved
 
 import json
 
@@ -106,15 +105,16 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		if not self.listbox.curselection():
 			return
 		selected = int(self.listbox.curselection()[0])
-		def do_rename(window, name):
+		def do_rename(window: AnyWindow, name: str) -> CheckSaved:
 			for preset in self.config_.generator.presets.data:
 				if preset.name == name:
 					ErrorDialog(self, PyMSError('Renaming','That name already exists'))
-					return
+					return CheckSaved.cancelled
 			self.config_.generator.presets.data[selected].name = name
 			self.update_list()
+			return CheckSaved.saved
 		name = self.config_.generator.presets.data[selected].name
-		NameDialog(self, self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', callback=do_rename)
+		NameDialog(self, self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', save_callback=do_rename)
 
 	def update_states(self, event: Event | None = None) -> None:
 		selected = None

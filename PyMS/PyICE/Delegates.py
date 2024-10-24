@@ -1,17 +1,18 @@
 
 from __future__ import annotations
 
-from .CodeGenerators.GeneratorPreset import GeneratorPreset
+from typing import TYPE_CHECKING, Protocol, IO as BuiltinIO
+if TYPE_CHECKING:
+	from .CodeGenerators.GeneratorPreset import GeneratorPreset
+	from .CodeGenerators.CodeGeneratorVariable import CodeGeneratorVariable
 
-from ..FileFormats import DAT
-from ..FileFormats.IScriptBIN import IScriptBIN
-from ..FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext, DataContext
+	from ..FileFormats import DAT
+	from ..FileFormats.IScriptBIN import IScriptBIN
+	from ..FileFormats.IScriptBIN.CodeHandlers import ICESerializeContext, ICEParseContext, DataContext
 
-from ..Utilities import IO
-from ..Utilities.MPQHandler import MPQHandler
-from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc, AnyWindow
-
-from typing import Protocol, IO as BuiltinIO
+	from ..Utilities import IO
+	from ..Utilities.MPQHandler import MPQHandler
+	from ..Utilities.UIKit import ScrolledListbox, Toplevel, Misc, AnyWindow
 
 class MainDelegate(Protocol):
 	unitsdat: DAT.UnitsDAT # TODO: units.dat?
@@ -45,6 +46,13 @@ class CodeGeneratorDelegate(Protocol):
 
 class ManagePresetsDelegate(Protocol):
 	def load_preset(self, preset: GeneratorPreset, window: Toplevel | None) -> bool:
+		...
+
+class VariableEditorDelegate(Protocol):
+	def unique_name(self, name: str, ignore: CodeGeneratorVariable | None = None) -> str:
+		...
+
+	def update_list(self, select: int | None = None) -> None:
 		...
 
 class ImportListDelegate(Protocol):

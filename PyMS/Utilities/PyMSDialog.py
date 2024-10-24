@@ -40,6 +40,19 @@ class PyMSDialog(Toplevel):
 		if grabwait:
 			self.grab_wait()
 
+	def set_resizable(self, width: bool, height: bool) -> None:
+		min_w = 0
+		max_w = self.winfo_screenwidth()
+		min_h = 0
+		max_h = self.winfo_screenheight()
+		geometry = Geometry.of(self)
+		if not width:
+			min_w = max_w = geometry.size.width
+		if not height:
+			min_h = max_h = geometry.size.height
+		self.minsize(min_w, min_h)
+		self.maxsize(max_w, max_h)
+
 	def grab_wait(self) -> None:
 		self.grab_set()
 		self.wait_window(self)

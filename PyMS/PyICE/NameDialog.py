@@ -4,13 +4,14 @@ from __future__ import annotations
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Config
+from ..Utilities.CheckSaved import CheckSaved
 
 from typing import Callable
 
 class NameDialog(PyMSDialog):
-	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', callback: Callable[[NameDialog, str], bool] | None = None):
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
 		self.window_geometry_config = window_geometry_config
-		self.callback = callback
+		self.save_callback = save_callback
 		self.name = StringVar()
 		self.name.set(value)
 		self.done = done
@@ -32,7 +33,7 @@ class NameDialog(PyMSDialog):
 		self.window_geometry_config.load_size(self)
 
 	def ok(self, event: Event | None = None) -> None:
-		if self.callback and self.callback(self, self.name.get()) == False:
+		if self.save_callback and self.save_callback(self, self.name.get()) == CheckSaved.cancelled:
 			return
 		PyMSDialog.ok(self)
 

@@ -1,11 +1,15 @@
 
 from __future__ import annotations
 
+from PyMS.Utilities.UIKit import Misc
+
 from . import CodeGenerator
+from ..Config import PyICEConfig
 
 from ...Utilities.UIKit import *
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Config
 
 from dataclasses import dataclass
 
@@ -33,7 +37,7 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 	def to_json(self) -> JSON.Object:
 		json = CodeGenerator.CodeGeneratorType.to_json(self)
 		json['start'] = self.start
-		json['stop'] = self.stop,
+		json['stop'] = self.stop
 		json['step'] = self.step
 		return json
 
@@ -50,14 +54,12 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 	def description(self):
 		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
 
-	def editor_type(self) -> Type[CodeGenerator.CodeGeneratorEditor]:
-		return CodeGeneratorEditorRange
+	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)
 
 class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeRange]):
-	RESIZABLE = (False,False)
-
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeRange):
-		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator)
+	def __init__(self, parent: Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
+		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
 		self.start = IntegerVar(0,[0,None])
 		self.start.set(self.generator.start)
@@ -73,9 +75,12 @@ class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTy
 		Label(self, text=', by adding ').pack(side=LEFT)
 		Entry(self, textvariable=self.step, width=5).pack(side=LEFT)
 
-	def save(self):
+	def save(self) -> None:
 		self.generator.start = self.start.get()
 		self.generator.stop = self.stop.get()
 		self.generator.step = self.step.get()
+
+	def is_resizable(self) -> tuple[bool, bool]:
+		return (False, False)
 
 CodeGenerator.register_type(CodeGeneratorTypeRange)

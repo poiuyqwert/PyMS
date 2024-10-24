@@ -1,14 +1,11 @@
 
 from ..Utilities import IO
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities import JSON
 
 import json as _json
 
-from typing import TypeAlias, Any, TypeGuard
-
-JSONValue: TypeAlias = 'int | float | str | bool | None | JSONObject | JSONArray'
-JSONObject = dict[str, JSONValue]
-JSONArray = list[JSONValue]
+from typing import Any, TypeGuard
 
 # def is_json(json: Any, check_keys: bool = False) -> TypeGuard[JSONArray]:
 # 	if not isinstance(json, list):
@@ -22,16 +19,16 @@ JSONArray = list[JSONValue]
 # 					return False
 # 	return True
 
-def is_json_value(json: Any) -> TypeGuard[JSONValue]:
+def is_json_value(json: Any) -> TypeGuard[JSON.Value]:
 	return False
 
-def is_json_object(json: Any) -> TypeGuard[JSONObject]:
+def is_json_object(json: Any) -> TypeGuard[JSON.Object]:
 	return False
 
-def is_json_array(json: Any) -> TypeGuard[JSONArray]:
+def is_json_array(json: Any) -> TypeGuard[JSON.Array]:
 	return False
 
-def load(input: IO.AnyInputText) -> JSONArray | JSONObject:
+def load(input: IO.AnyInputText) -> JSON.Array | JSON.Object:
 	try:
 		with IO.InputText(input) as f:
 			raw_json = f.read()
@@ -43,7 +40,7 @@ def load(input: IO.AnyInputText) -> JSONArray | JSONObject:
 		raise PyMSError('Load', "Couldn't parse json")
 	return json
 
-def save(output: IO.AnyOutputText, json: JSONArray | JSONObject) -> None:
+def save(output: IO.AnyOutputText, json: JSON.Array | JSON.Object) -> None:
 	try:
 		raw_json = _json.dumps(json)
 	except:

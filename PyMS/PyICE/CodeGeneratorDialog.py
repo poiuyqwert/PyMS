@@ -4,17 +4,18 @@ from .CodeGenerators import *
 from .NameDialog import NameDialog
 from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
 from .CodeGenerators.GeneratorPreset import GeneratorPreset
-from .Delegates import CodeGeneratorDelegate
+from .Delegates import CodeGeneratorDelegate, VariableEditorDelegate
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.CheckSaved import CheckSaved
 
 import re
 
-class CodeGeneratorDialog(PyMSDialog):
+class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 	def __init__(self, parent: Misc, config: PyICEConfig, delegate: CodeGeneratorDelegate) -> None:
 		self.variables: list[CodeGeneratorVariable] = []
 		self.previewing = False
@@ -50,7 +51,7 @@ class CodeGeneratorDialog(PyMSDialog):
 					menu.add_command(label='More...', command=self.manage_presets)
 					break
 				else:
-					menu.add_command(label=preset.name, command=lambda p=preset: self.load_preset(preset))
+					menu.add_command(label=preset.name, command=lambda p=preset: self.load_preset(p))
 			menu.add_separator()
 			menu.add_command(label='Manage Presets', command=self.manage_presets)
 			menu.post(*self.winfo_pointerxy())
@@ -124,10 +125,9 @@ class CodeGeneratorDialog(PyMSDialog):
 
 	def setup_complete(self) -> None:
 		self.config_.windows.generator.main.load_size(self)
-		def update_panes():
-			self.config_.generator.pane.variables_list.save_size(self.hor_pane)
-			self.config_.generator.pane.code_box.save_size(self.ver_pane)
-		self.after(200, update_panes)
+		self.update()
+		self.config_.generator.pane.variables_list.load_size(self.hor_pane)
+		self.config_.generator.pane.code_box.load_size(self.ver_pane)
 
 	def code_dispatch(self, operation, *args) -> str:
 		if operation in ['insert','delete'] and not self.previewing:
@@ -171,7 +171,7 @@ class CodeGeneratorDialog(PyMSDialog):
 	def edit(self, *_) -> None:
 		if self.listbox.curselection():
 			variable = self.variables[int(self.listbox.curselection()[0])]
-			CodeGeneratorVariableEditor(self, variable)
+			CodeGeneratorVariableEditor(self, self, variable, self.config_)
 
 	def insert(self, *_) -> None:
 		code = self.generate()
@@ -181,40 +181,28 @@ class CodeGeneratorDialog(PyMSDialog):
 		self.ok()
 
 	def save_preset(self, *_) -> None:
-		def do_save(window, name):
+		def do_save(window: AnyWindow, name: str) -> CheckSaved:
 			replace = None
-			for n,preset in enumerate(self.settings.get('generator',{}).get('presets',[])):
-				if preset['name'] == name:
+			for n,preset in enumerate(self.config_.generator.presets.data):
+				if preset.name == name:
 					cont = MessageBox.askquestion(parent=window, title='Overwrite Preset?', message="A preset with the name '%s' already exists. Do you want to overwrite it?" % name, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 					if cont == MessageBox.NO:
-						return
+						return CheckSaved.saved
 					elif cont == MessageBox.CANCEL:
-						return False
+						return CheckSaved.cancelled
 					replace = n
 					break
-			preset = {
-				'name': name,
-				'code': self.text.get(1.0,END),
-				'variables': []
-			}
-			if preset['code'].endswith('\r\n'):
-				preset['code'] = preset['code'][:-2]
-			elif preset['code'].endswith('\n'):
-				preset['code'] = preset['code'][:-1]
-			for v in self.variables:
-				preset['variables'].append({
-					'name': v.name,
-					'generator': v.generator.save()
-				})
-			if not 'generator' in self.settings:
-				self.settings['generator'] = {}
-			if not 'presets' in self.settings['generator']:
-				self.settings['generator']['presets'] = []
+			preset = GeneratorPreset(
+				name=name,
+				code=self.text.get(1.0,END).rstrip('\r\n'),
+				variables=list(self.variables)
+			)
 			if replace is None:
-				self.settings['generator']['presets'].insert(0, preset)
+				self.config_.generator.presets.data.insert(0, preset)
 			else:
-				self.settings['generator']['presets'][replace] = preset
-		NameDialog(self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', callback=do_save)
+				self.config_.generator.presets.data[replace] = preset
+			return CheckSaved.saved
+		NameDialog(self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', save_callback=do_save)
 
 	def load_preset(self, preset: GeneratorPreset, window=None) -> bool:
 		if self.variables or self.text.get(1.0, END).strip():

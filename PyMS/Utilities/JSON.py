@@ -27,7 +27,7 @@ def get(json: Object, key: str, type: Type[T]) -> T:
 		raise PyMSError('JSON', f'Invalid JSON format (missing `{key}`)')
 	value = json.get(key)
 	if isinstance(type, Codable):
-		if not isinstance(value, Object):
+		if not isinstance(value, dict):
 			raise PyMSError('JSON', f'Invalid JSON format (invalid `{key}`)')
 		return type.from_json(value)
 	if not isinstance(value, type):
@@ -35,7 +35,8 @@ def get(json: Object, key: str, type: Type[T]) -> T:
 	return value
 
 def get_obj(json: Object, key: str, discriminator: Discriminator[C]) -> C:
-	type = discriminator(json)
+	obj_json = get(json, key, dict)
+	type = discriminator(obj_json)
 	return get(json, key, type)
 
 def get_array(json: Object, key: str, type: Type[T]) -> list[T]:
