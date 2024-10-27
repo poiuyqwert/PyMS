@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyGRP', Requirement.PIL)
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyGRP.PyGRP import PyGRP, LONG_VERSION
 	from PyMS.PyGRP.utils import BMPStyle, grptobmp, bmptogrp
 

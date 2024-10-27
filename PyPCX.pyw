@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyPCX', Requirement.PIL)
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyPCX.PyPCX import PyPCX, LONG_VERSION
 
 	from PyMS.FileFormats import PCX

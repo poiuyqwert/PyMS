@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 try:
-	from tkinter import Image
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	from ...Utilities import Assets
 	from ...Utilities.DependencyError import DependencyError
 	import sys, os
-	e = DependencyError('PyMS', 'Pillow is missing. Consult the Source Installation section of the README.', (('README','file:///%s' % Assets.readme_file_path),))
+	e = DependencyError('PyMS', 'Pillow is missing. Please consult the Installation section of the Readme.')
 	e.startup()
 	sys.exit()
+
+from tkinter import Image
 
 from .CV5 import CV5, CV5Group
 from .VF4 import VF4, VF4Megatile

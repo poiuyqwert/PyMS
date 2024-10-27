@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyAI')
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyAI.PyAI import PyAI, LONG_VERSION
 
 	from PyMS.FileFormats.AIBIN import AIBIN
@@ -32,12 +32,12 @@ def main() -> None:
 		upgrades = Assets.mpq_file_path('arr', 'upgrades.dat')
 		techdata = Assets.mpq_file_path('arr', 'techdata.dat')
 		stattxt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
-		scripts: str | None = None
-		aiscript: str | None = None
-		bwscript: str | None = None
+		scripts = None # type: str | None
+		aiscript = None # type: str | None
+		bwscript = None # type: str | None
 		hidewarns = False
-		deffile: str | None = None
-		gui: str | None = None
+		deffile = None # type: str | None
+		gui = None # type: str | None
 
 	if not sys.argv or (len(sys.argv) == 1 and os.path.basename(sys.argv[0]).lower() in ['','pyai.py','pyai.pyw','pyai.exe']):
 		gui = PyAI()
@@ -78,23 +78,23 @@ def main() -> None:
 					args.append('%s%s%s' % (os.path.join(path,'bw' + os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, 'bin'))
 			warnings = []
 			try:
-				print(f"Loading units.dat '{opt.units}'...")
+				print("Loading units.dat '%s'..." % opt.units)
 				unitsdat = DAT.UnitsDAT()
 				unitsdat.load_file(opt.units)
-				print(f"- Loading finished successfully\nLoading upgrades.dat '{opt.upgrades}'...")
+				print("- Loading finished successfully\nLoading upgrades.dat '%s'..." % opt.upgrades)
 				upgradesdat = DAT.UpgradesDAT()
 				upgradesdat.load_file(opt.upgrades)
-				print(f"- Loading finished successfully\nLoading techdata.dat '{opt.techdata}'...")
+				print("- Loading finished successfully\nLoading techdata.dat '%s'..." % opt.techdata)
 				techdat = DAT.TechDAT()
 				techdat.load_file(opt.techdata)
-				print(f"- Loading finished successfully\nLoading stat_txt.tbl '{opt.stattxt}'...")
+				print("- Loading finished successfully\nLoading stat_txt.tbl '%s'..." % opt.stattxt)
 				tbl = TBL.TBL()
 				tbl.load_file(opt.stattxt)
 				print('- Loading finished successfully')
 				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
 				definitions_handler = AIDefinitionsHandler()
 				if opt.deffile:
-					print(f"Loading external definitions file '{opt.deffile}'...")
+					print("Loading external definitions file '%s'..." % opt.deffile)
 					handler = AIDefsSourceCodeHandler()
 					with IO.InputText(opt.deffile) as f:
 						code = f.read()
@@ -104,7 +104,7 @@ def main() -> None:
 					parse_context.finalize()
 					print('- Loading finished successfully')
 				if opt.decompile:
-					ids: list[str] | None = None
+					ids = None # type: list[str] | None
 					if opt.scripts:
 						ids = []
 						for i in opt.scripts.split(','):
@@ -113,9 +113,9 @@ def main() -> None:
 								return
 							ids.append(i)
 					bin = AIBIN.AIBIN()
-					print(f"Loading aiscript.bin '{args[0]} and bwscript.bin '{args[1]}'...")
+					print("Loading aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[1]))
 					bin.load(args[0], args[1])
-					print(f" - Loading finished successfully\nWriting AI Scripts to '{args[2]}'...")
+					print(" - Loading finished successfully\nWriting AI Scripts to '%s'..." % args[2])
 					# TODO: Customize formatters
 					formatters = Formatters.Formatters(
 						block = Formatters.HyphenBlockFormatter(),
@@ -125,26 +125,26 @@ def main() -> None:
 					with open(args[2], 'w') as f:
 						serialize_context = AISerializeContext(f, definitions_handler, formatters, data_context)
 						bin.decompile(serialize_context, ids)
-					print(f" - '{args[2]}' written succesfully")
+					print(" - '%s' written succesfully" % args[2])
 				else:
 					bin = AIBIN.AIBIN()
 					if opt.aiscript:
 						if opt.bwscript:
-							print(f"Loading base aiscript.bin '{os.path.abspath(opt.aiscript)}' and bwscript.bin '{os.path.abspath(opt.bwscript)}'...")
+							print("Loading base aiscript.bin '%s' and bwscript.bin '%s'..." % (os.path.abspath(opt.aiscript), os.path.abspath(opt.bwscript)))
 						else:
-							print(f"Loading base aiscript.bin '{os.path.abspath(opt.aiscript)}'...")
+							print("Loading base aiscript.bin '%s'..." % os.path.abspath(opt.aiscript))
 						bin.load(opt.aiscript, opt.bwscript)
-					print(f" - Loading finished successfully\nLoading script '{args[0]}'...")
+					print(" - Loading finished successfully\nLoading script '%s'..." % args[0])
 					with IO.InputText(args[0]) as f:
 						code = f.read()
-					print(f" - Loading finished successfully\nCompiling script '{args[0]}'...")
+					print(" - Loading finished successfully\nCompiling script '%s'..." % args[0])
 					lexer = AILexer(code)
 					parse_context = AIParseContext(lexer, definitions_handler, data_context)
 					bin.compile(parse_context)
 					warnings = parse_context.warnings
-					print(f" - '{args[0]}' compiled successfully\nSaving file '{args[0]}' to aiscript.bin '{args[1]}' and bwscript.bin '{args[2]}'...")
+					print(" - '%s' compiled successfully\nSaving file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2]))
 					bin.save(args[1], args[2])
-					print(f" - aiscript.bin '{args[1]}' and bwscript.bin '{args[2]}' written succesfully")
+					print(" - aiscript.bin '%s' and bwscript.bin '%s' written succesfully" % (args[1], args[2]))
 				if not opt.hidewarns:
 					for warning in warnings:
 						print(repr(warning))

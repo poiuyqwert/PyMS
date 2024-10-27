@@ -3,6 +3,7 @@ from . import Assets
 from .PyMSConfig import PYMS_CONFIG
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
+from .SemVer import SemVer
 
 import json, urllib.request, urllib.parse, urllib.error
 from _thread import start_new_thread
@@ -26,11 +27,11 @@ class UpdateDialog(PyMSDialog):
 			if PyMS_version >= latest_PyMS_version and program_version >= latest_program_version:
 				return
 			show = 2
-			if PyMS_dont_remind_me_raw := PYMS_CONFIG.dont_remind_me.data.get('PyMS'):
+			if PyMS_dont_remind_me_raw := PYMS_CONFIG.reminder.pyms_version.data.get('PyMS'):
 				PyMS_dont_remind_me = SemVer(PyMS_dont_remind_me_raw)
 				if PyMS_dont_remind_me >= latest_PyMS_version:
 					show -= 1
-			if program_dont_remind_me_raw := PYMS_CONFIG.dont_remind_me.data.get(program):
+			if program_dont_remind_me_raw := PYMS_CONFIG.reminder.pyms_version.data.get(program):
 				program_dont_remind_me = SemVer(program_dont_remind_me_raw)
 				if program_dont_remind_me >= latest_program_version:
 					show -= 1
@@ -66,67 +67,7 @@ class UpdateDialog(PyMSDialog):
 
 	def ok(self, _: Event | None = None) -> None:
 		if self.dont_remind_me.get():
-			PYMS_CONFIG.dont_remind_me.data['PyMS'] = self.versions['PyMS']
-			PYMS_CONFIG.dont_remind_me.data[self.program] = self.versions[self.program]
+			PYMS_CONFIG.reminder.pyms_version.data['PyMS'] = self.versions['PyMS']
+			PYMS_CONFIG.reminder.pyms_version.data[self.program] = self.versions[self.program]
 			PYMS_CONFIG.save()
 		PyMSDialog.ok(self)
-
-class SemVer(object):
-	def __init__(self, version: str) -> None:
-		self.meta = None
-		if '-' in version:
-			version,self.meta = version.split('-')
-		components = (int(c) for c in version.split('.'))
-		self.major, self.minor, self.patch = components
-
-	def __lt__(self, other: Any) -> bool:
-		if not isinstance(other, SemVer):
-			return False
-		if self.major < other.major:
-			return True
-		elif self.major > other.major:
-			return False
-		if self.minor < other.minor:
-			return True
-		elif self.minor > other.minor:
-			return False
-		if self.patch < other.patch:
-			return True
-		elif self.patch > other.patch:
-			return False
-		return False
-
-	def __gt__(self, other: Any) -> bool:
-		if not isinstance(other, SemVer):
-			return False
-		if self.major > other.major:
-			return True
-		elif self.major < other.major:
-			return False
-		if self.minor > other.minor:
-			return True
-		elif self.minor < other.minor:
-			return False
-		if self.patch > other.patch:
-			return True
-		elif self.patch < other.patch:
-			return False
-		return False
-
-	def __eq__(self, other: Any) -> bool:
-		if not isinstance(other, SemVer):
-			return False
-		if self.major != other.major:
-			return False
-		if self.minor != other.minor:
-			return False
-		if self.patch != other.patch:
-			return False
-		return True
-
-	def __ge__(self, other: Any) -> bool:
-		return self.__gt__(other) or self.__eq__(other)
-
-	def __repr__(self) -> str:
-		meta = f'-{self.meta}' if self.meta else ''
-		return f'<SemVer {self.major}.{self.minor}.{self.patch}{meta}>'

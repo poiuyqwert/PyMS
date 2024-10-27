@@ -3,6 +3,7 @@ from .gapy.ga import *
 from . import Assets
 from .PyMSConfig import PYMS_CONFIG
 
+# TODO: Update analytics
 ga.set_tracking_id(PYMS_CONFIG.analytics.tid.value)
 cid = ga.set_client_id(PYMS_CONFIG.analytics.cid.value)
 ga.Custom.register(1, 'PYMS_VERSION')

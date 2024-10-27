@@ -26,7 +26,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 import sys, time, shutil, os, re
 
 if not MPQ.supported():
-	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', (('Contact','file:///%s' % Assets.readme_file_path),))
+	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', hotlinks=(('Contact','file:///%s' % Assets.readme_file_path),))
 	e.startup()
 	sys.exit()
 

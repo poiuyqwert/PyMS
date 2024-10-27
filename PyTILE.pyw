@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyTILE', Requirement.PIL)
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyTILE.PyTILE import PyTILE, LONG_VERSION
 
 	import os, optparse, sys

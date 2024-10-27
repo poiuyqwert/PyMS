@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyTRG')
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION
 
 	from PyMS.FileFormats.TRG import TRG

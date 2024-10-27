@@ -20,5 +20,8 @@ from tkinter import Tcl
 from tkinter.ttk import Style
 READONLY = 'readonly'
 
-from PIL import Image as PILImage
-from PIL import ImageTk
+try:
+	from PIL import Image as PILImage
+	from PIL import ImageTk
+except:
+	pass

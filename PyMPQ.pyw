@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyMPQ', Requirement.MPQ)
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyMPQ.PyMPQ import PyMPQ, LONG_VERSION
 
 	import os, optparse, sys

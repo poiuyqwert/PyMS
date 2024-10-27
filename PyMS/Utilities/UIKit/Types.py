@@ -6,14 +6,20 @@ from typing import TypeAlias as _TypeAlias
 from typing import Literal as _Literal
 
 import tkinter as _tk
-from PIL import Image as _PILImage
-from PIL import ImageTk as _ImageTk
 
 AnyWindow: _TypeAlias = _MainWindow | _Toplevel
 
-AnyImage = _tk.Image | _ImageTk.PhotoImage | _ImageTk.BitmapImage | _PILImage.Image
-AnyPhotoImage = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
-AnyBitmapImage = _tk.BitmapImage | _ImageTk.BitmapImage
+try:
+	from PIL import Image as _PILImage
+	from PIL import ImageTk as _ImageTk
+
+	AnyImage = _tk.Image | _ImageTk.PhotoImage | _ImageTk.BitmapImage | _PILImage.Image
+	AnyPhotoImage = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
+	AnyBitmapImage = _tk.BitmapImage | _ImageTk.BitmapImage
+except:
+	AnyImage: _TypeAlias = _tk.Image # type: ignore
+	AnyPhotoImage: _TypeAlias = _tk.PhotoImage # type: ignore
+	AnyBitmapImage: _TypeAlias = _tk.BitmapImage # type: ignore
 
 WidgetState = _Literal['normal', 'disabled']
 

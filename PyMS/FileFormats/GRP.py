@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 try:
-	from tkinter import Image
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
 	from ..Utilities import Assets
 	from ..Utilities.DependencyError import DependencyError
 	import sys, os
-	e = DependencyError('PyMS','PIL is missing. Consult the Source Installation section of the Documentation.', (('Documentation','file:///%s' % Assets.readme_file_path),))
+	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
 	e.startup()
 	sys.exit()
+
+from tkinter import Image
 	
 from .Images import Pixels, RawPalette, RGBA, RGB, Bounds
 from .BMP import BMP

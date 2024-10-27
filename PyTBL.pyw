@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyTBL')
 
-def main() -> None:
+def main(): # type: () -> None
 	from PyMS.PyTBL.PyTBL import PyTBL, LONG_VERSION
 
 	from PyMS.FileFormats import TBL
