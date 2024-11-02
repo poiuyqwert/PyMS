@@ -31,7 +31,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
    
    **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables).
 2. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
-3. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python3 -m pip install -r requirements.txt`. If you get an error like `python3 is not found`, try `python -m pip install -r requirements.txt` (just make sure you are using PIP that is installed with the correct Python version and not another verson of Python on your machine).
+3. **Install Dependencies.** Install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python -m pip install -r requirements.txt`. If you have multiple versions of python install, make sure you are using PIP that is installed with the correct Python version and not another verson of Python on your machine.
 
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
