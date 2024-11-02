@@ -33,14 +33,14 @@ class InternalErrorDialog(PyMSDialog):
 		hscroll = Scrollbar(frame, orient=HORIZONTAL)
 		vscroll = Scrollbar(frame)
 		self.text = Text(frame, bd=0, highlightthickness=0, width=70, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=NONE, exportselection=0, state=DISABLED)
-		self.add_text(f'PyMS: {Assets.version("PyMS")}')
-		self.add_text(f'{self.prog}: {Assets.version(self.prog)}')
-		self.add_text(f'Python: {sys.version}')
+		self.add_text('PyMS: %s' % Assets.version("PyMS"))
+		self.add_text('%s: %s' % (self.prog, Assets.version(self.prog)))
+		self.add_text('Python: %s' % sys.version)
 		try:
-			self.add_text(f'Tcl/Tk: {Tcl().call("info", "patchlevel")}')
+			self.add_text('Tcl/Tk: %s' % Tcl().call("info", "patchlevel"))
 		except:
 			pass
-		self.add_text(f'Platform: {platform.system()}')
+		self.add_text('Platform: %s' % platform.system())
 		if self.txt:
 			self.add_text(self.txt)
 		self.text.grid(sticky=NSEW)
