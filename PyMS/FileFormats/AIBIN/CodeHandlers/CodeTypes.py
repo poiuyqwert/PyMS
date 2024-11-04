@@ -79,18 +79,20 @@ class UnitCodeType(CodeType.IntCodeType):
 
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			rollback = parse_context.lexer.get_rollback()
 			unit_name: str | None = None
-			token: Tokens.Token | None = None
-			if parse_context.command_in_parens:
+			token: Tokens.Token | None = parse_context.lexer.get_token(Tokens.StringToken)
+			if token:
+				unit_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				unit_name = token.raw_value
-			else:
-				token = parse_context.lexer.get_token(Tokens.StringToken)
-				if token:
-					unit_name = CodeType.StrCodeType.parse_string(token.raw_value)
-			if unit_name and (unit_id := parse_context.data_context.unit_id(unit_name)):
-				self.validate(unit_id, parse_context, unit_name)
-				return unit_id
+			if unit_name:
+				unit_id = parse_context.data_context.unit_id(unit_name)
+				if unit_id is not None:
+					self.validate(unit_id, parse_context, unit_name)
+					return unit_id
+			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
@@ -310,20 +312,33 @@ class UpgradeCodeType(CodeType.IntCodeType):
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		return isinstance(other_type, UpgradeCodeType)
 
+	def serialize(self, value: int, context: SerializeContext) -> str:
+		if context.definitions:
+			variable = context.definitions.lookup_variable(value, self)
+			if variable:
+				return variable.name
+		if isinstance(context, AISerializeContext) and context.data_context:
+			name = context.data_context.upgrade_name(value)
+			if name:
+				return StringCodeType.serialize_string(name)
+		return str(value)
+
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			rollback = parse_context.lexer.get_rollback()
 			upgrade_name: str | None = None
-			token: Tokens.Token | None = None
-			if parse_context.command_in_parens:
+			token: Tokens.Token | None = parse_context.lexer.get_token(Tokens.StringToken)
+			if token:
+				upgrade_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				upgrade_name = token.raw_value
-			else:
-				token = parse_context.lexer.get_token(Tokens.StringToken)
-				if token:
-					upgrade_name = CodeType.StrCodeType.parse_string(token.raw_value)
-			if upgrade_name and (upgrade_id := parse_context.data_context.upgrade_id(upgrade_name)):
-				self.validate(upgrade_id, parse_context, upgrade_name)
-				return upgrade_id
+			if upgrade_name:
+				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
+				if upgrade_id is not None:
+					self.validate(upgrade_id, parse_context, upgrade_name)
+					return upgrade_id
+			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
@@ -351,20 +366,33 @@ class TechnologyCodeType(CodeType.IntCodeType):
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		return isinstance(other_type, TechnologyCodeType)
 
+	def serialize(self, value: int, context: SerializeContext) -> str:
+		if context.definitions:
+			variable = context.definitions.lookup_variable(value, self)
+			if variable:
+				return variable.name
+		if isinstance(context, AISerializeContext) and context.data_context:
+			name = context.data_context.technology_name(value)
+			if name:
+				return StringCodeType.serialize_string(name)
+		return str(value)
+
 	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			rollback = parse_context.lexer.get_rollback()
 			technology_name: str | None = None
-			token: Tokens.Token | None = None
-			if parse_context.command_in_parens:
+			token: Tokens.Token | None = parse_context.lexer.get_token(Tokens.StringToken)
+			if token:
+				technology_name = CodeType.StrCodeType.parse_string(token.raw_value)
+			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				technology_name = token.raw_value
-			else:
-				token = parse_context.lexer.get_token(Tokens.StringToken)
-				if token:
-					technology_name = CodeType.StrCodeType.parse_string(token.raw_value)
-			if technology_name and (technology_id := parse_context.data_context.technology_id(technology_name)):
-				self.validate(technology_id, parse_context, technology_name)
-				return technology_id
+			if technology_name:
+				technology_id = parse_context.data_context.technology_id(technology_name)
+				if technology_id is not None:
+					self.validate(technology_id, parse_context, technology_name)
+					return technology_id
+			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:

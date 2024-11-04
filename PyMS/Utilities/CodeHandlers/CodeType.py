@@ -190,13 +190,11 @@ class StrCodeType(CodeType[str, str]):
 		return StrCodeType.serialize_string(value)
 
 	def lex(self, parse_context: ParseContext) -> str:
-		token: Tokens.Token
-		if parse_context.command_in_parens:
+		token: Tokens.Token = parse_context.lexer.next_token()
+		if not not isinstance(token, Tokens.StringToken) and parse_context.command_in_parens:
 			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
-		else:
-			token = parse_context.lexer.next_token()
-			if not isinstance(token, Tokens.StringToken):
-				raise parse_context.error('Parse', "Expected string value but got '%s'" % token.raw_value)
+		if not isinstance(token, Tokens.StringToken):
+			raise parse_context.error('Parse', "Expected string value but got '%s'" % token.raw_value)
 		return self.parse(token.raw_value, parse_context)
 
 	def parse(self, token: str, parse_context: ParseContext) -> str:
