@@ -59,7 +59,7 @@ class PyGRP(MainWindow):
 		self.resizable(False, False)
 
 		self.frame_index: int | None = None
-		self.pal: str
+		self.pal: str = ''
 		self.palettes: dict[str, Palette.Palette] = {}
 		self.frames: list[dict[str, Image]] = []
 		self.item: Canvas.Item | None = None # type: ignore[name-defined]
