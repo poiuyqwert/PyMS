@@ -218,11 +218,16 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 				listbox.insert(END, '%03s %s [%s]' % (index, name, self.iscript_id_from_selection_index(index, column)))
 		self.action_states()
 
+	def _sorted_scripts(self) -> list[IScript]:
+		if not self.ibin:
+			return []
+		return sorted(self.ibin.list_scripts(), key=lambda script: script.id)
+
 	def update_iscrips_list(self) -> None:
 		self.iscriptlist.delete(0,END)
 		if not self.ibin:
 			return
-		scripts = sorted(self.ibin.list_scripts(), key=lambda script: script.id)
+		scripts = self._sorted_scripts()
 		for iscript in scripts:
 			iscript_id = iscript.id
 			if iscript_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
@@ -234,7 +239,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 	def iscript_id_from_selection_index(self, index: int, column: ColumnID) -> int:
 		if column == ColumnID.IScripts:
 			assert self.ibin is not None
-			return self.ibin.list_scripts()[index].id
+			return self._sorted_scripts()[index].id
 		if column >= ColumnID.Units:
 			index = self.unitsdat.get_entry(index).graphics
 		if column >= ColumnID.Flingys:
