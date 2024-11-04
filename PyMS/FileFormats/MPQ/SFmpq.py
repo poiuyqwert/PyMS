@@ -15,16 +15,23 @@ if SFMPQ_DIR:
 		'SFmpq.dylib',
 	)
 	for library in libraries:
+		print(f'Attempting to load {library}...')
 		if hasattr(ctypes, 'WinDLL'):
 			try:
+				print(f'  Attempting with WinDLL...')
 				_SFmpq = ctypes.WinDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
+				print('    Success')
 				break
-			except Exception:
+			except Exception as e:
+				print(f'    Error {e}')
 				pass
 		try:
+			print(f'  Attempting with CDLL...')
 			_SFmpq = ctypes.CDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
+			print('    Success')
 			break
-		except Exception as error:
+		except Exception as e:
+			print(f'    Error {e}')
 			pass
 
 SFMPQ_LOADED = (_SFmpq is not None)
