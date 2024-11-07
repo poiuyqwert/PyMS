@@ -1,14 +1,14 @@
 
+from .Config import PyMODConfig
 from .SourceFiles import *
 from .CompileThread import *
 from .ExtractDialog import ExtractDialog
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
-from ..Utilities.Settings import Settings
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.UpdateDialog import UpdateDialog
@@ -21,8 +21,8 @@ class TabID:
 	logs = 'logs'
 
 class PyMOD(MainWindow):
-	def __init__(self):
-		self.settings = Settings('PyMOD', '1')
+	def __init__(self) -> None:
+		self.config_ = PyMODConfig()
 
 		#Window
 		MainWindow.__init__(self)
@@ -32,15 +32,13 @@ class PyMOD(MainWindow):
 		ga.track(GAScreen('PyMOD'))
 		self.minsize(400,350)
 		setup_trace('PyMOD', self)
-		Theme.load_theme(self.settings.get('theme'), self)
+		Theme.load_theme(self.config_.theme.value, self)
 
-		self.project_path = None # type: str | None
-		self.source_graph = None # type: SourceFolder | None
-		self.compile_thread = None # type: CompileThread | None
+		self.project_path: str | None = None
+		self.source_graph: SourceFolder | None = None
+		self.compile_thread: CompileThread | None = None
 
-		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if (not 'mpqs' in self.settings or not len(self.settings.settings.files['mpqs'])) and self.mpqhandler.add_defaults():
-			self.settings.settings.files['mpqs'] = self.mpqhandler.mpq_paths()
+		self.mpqhandler = MPQHandler(self.config_.mpqs)
 
 		self.update_title()
 
@@ -97,48 +95,45 @@ class PyMOD(MainWindow):
 		statusbar.add_spacer()
 		statusbar.pack(side=BOTTOM, fill=X)
 
-		self.settings.windows.load_window_size('main', self)
+		self.config_.windows.main.load_size(self)
 
+	def initialize(self) -> None:
 		UpdateDialog.check_update(self, 'PyMOD')
 
-	def is_project_open(self):
-		return not not self.project_path
-
-	def is_compiling(self):
-		return not not self.compile_thread
-
-	def update_title(self):
+	def update_title(self) -> None:
 		project_path = self.project_path
-		if not project_path and self.is_project_open():
+		if not project_path:
 			project_path = 'Untitled.txt'
 		if not project_path:
 			self.title('PyMOD %s' % LONG_VERSION)
 		else:
 			self.title('PyMOD %s (%s)' % (LONG_VERSION, project_path))
 
-	def mark_edited(self, edited=True):
+	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
-	def update_states(self):
-		self.toolbar.tag_enabled('file_open', self.is_project_open())
-		self.extract_button['state'] = NORMAL if self.is_project_open() and not self.is_compiling() else DISABLED
-		self.compile_button['state'] = NORMAL if self.is_project_open() and not self.is_compiling() else DISABLED
-		self.cancel_button['state'] = NORMAL if self.is_compiling() else DISABLED
+	def update_states(self) -> None:
+		is_project_open = not not self.project_path
+		is_compiling = not not self.compile_thread
+		self.toolbar.tag_enabled('file_open', is_project_open)
+		self.extract_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
+		self.compile_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
+		self.cancel_button['state'] = NORMAL if is_compiling else DISABLED
 
-	def refresh_files(self):
+	def refresh_files(self) -> None:
 		self.files_tree.delete(ALL)
-		if not self.is_project_open():
+		if not self.project_path:
 			return
 		self.source_graph = build_source_graph(self.project_path)
 		self.files_tree.build(((self.source_graph, True),), lambda node: () if isinstance(node, SourceFile) else tuple((file,None) for file in node.files) + tuple((folder,True) for folder in node.folders), lambda node: node.display_name())
 
-	def new(self):
+	def new(self) -> None:
 		pass
 
-	def open(self, project_path=None):
+	def open(self, project_path: str | None = None) -> None:
 		if not project_path:
-			project_path = self.settings.lastpath.project.select_directory(self, title='Open Project Directory')
+			project_path = self.config_.last_path.project.select_open(self)
 		if not project_path:
 			return
 		self.close()
@@ -146,20 +141,22 @@ class PyMOD(MainWindow):
 		self.refresh_files()
 		self.update_states()
 
-	def save(self):
+	def save(self) -> None:
 		pass
 
-	def saveas(self):
+	def saveas(self) -> None:
 		pass
 
-	def close(self):
+	def close(self) -> None:
 		pass
 
-	def extract(self):
-		ExtractDialog(self, self.mpqhandler, self.settings)
+	def extract(self) -> None:
+		ExtractDialog(self, self.mpqhandler, self.config_)
 
-	def compile(self):
-		if self.compile_thread != None:
+	def compile(self) -> None:
+		if self.project_path is None or self.source_graph is None:
+			return
+		if self.compile_thread is not None:
 			return
 		self.refresh_files()
 		self.notebook.display(TabID.logs)
@@ -169,12 +166,14 @@ class PyMOD(MainWindow):
 		self.update_states()
 		self.watch_compile()
 
-	def cancel(self):
+	def cancel(self) -> None:
 		if not self.compile_thread:
 			return
 		self.compile_thread.input_queue.put(CompileThread.InputMessage.Abort())
 
-	def watch_compile(self):
+	def watch_compile(self) -> None:
+		if self.compile_thread is None:
+			return
 		while True:
 			try:
 				message = self.compile_thread.output_queue.get(False)
@@ -191,16 +190,16 @@ class PyMOD(MainWindow):
 			return
 		self.after(200, self.watch_compile)
 
-	def manage_settings(self, key=None, err=None):
-		SettingsDialog(self, [('Theme',)], (550,380), err, settings=self.settings, mpqhandler=self.mpqhandler)
+	def manage_settings(self) -> None:
+		SettingsDialog(self, self.config_)
 
-	def help(self, e=None):
-		HelpDialog(self, self.settings, 'Help/Programs/PyMOD.md')
+	def help(self) -> None:
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyMOD.md')
 
-	def about(self, key=None):
+	def about(self) -> None:
 		AboutDialog(self, 'PyMOD', LONG_VERSION)
 
-	def exit(self, e=None):
-		self.settings.windows.save_window_size('main', self)
-		self.settings.save()
+	def exit(self) -> None:
+		self.config_.windows.main.save_size(self)
+		self.config_.save()
 		self.destroy()
