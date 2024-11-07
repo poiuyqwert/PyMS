@@ -85,8 +85,8 @@ class StringEditor(PyMSDialog):
 	def find(self, e=None):
 		if not self.listbox.size():
 			return
-		from . import FindDialog
-		FindDialog.FindDialog(self, True)
+		from . import FindStringDialog
+		FindStringDialog.FindStringDialog(self)
 
 	def ok(self):
 		self.result = int(self.listbox.curselection()[0])
@@ -123,7 +123,7 @@ class StringEditor(PyMSDialog):
 					self.save()
 				else:
 					self.saveas()
-		if file == None:
+		if file is None:
 			file = self.settings.lastpath.tbl.select_open_file(self, title='Open stat_txt.tbl', filetypes=[FileType.tbl()])
 		if file:
 			tbl = TBL.TBL()
@@ -134,7 +134,7 @@ class StringEditor(PyMSDialog):
 				return
 			max = len(tbl.strings)
 			ids = {}
-			for s,i in self.parent.strings.iteritems():
+			for s,i in self.parent.strings.items():
 				if s >= max:
 					ids[s] = i
 			if ids:
@@ -151,7 +151,7 @@ class StringEditor(PyMSDialog):
 		self.open(Assets.mpq_file_path('rez', 'stat_txt.tbl'))
 
 	def save(self, key=None, file=None):
-		if file == None:
+		if file is None:
 			file = self.parent.stattxt()
 		try:
 			self.tbl.compile(file)
@@ -183,14 +183,14 @@ class StringEditor(PyMSDialog):
 		string = int(self.listbox.curselection()[0])
 		if self.parent.ai:
 			ids = {}
-			for s,i in self.parent.strings.iteritems():
+			for s,i in self.parent.strings.items():
 				if s > string:
 					ids[s] = i
 			if ids:
 				plural = 0
 				i = ''
 				e = 0
-				for s,x in ids.iteritems():
+				for s,x in ids.items():
 					if e < 6:
 						i += '    '
 					comma = False

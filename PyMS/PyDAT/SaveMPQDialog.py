@@ -1,15 +1,20 @@
 
+from __future__ import annotations
+
 from .DataID import DATID, DataID
 
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
+from ..FileFormats.IScriptBIN.IScriptBIN import IScriptBIN
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.UIKit import *
-from ..Utilities import Assets
+from ..Utilities import IO
 
-import os, shutil
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from .Delegates import MainDelegate
 
 class SaveMPQDialog(PyMSDialog):
 	OPTIONS = (
@@ -32,10 +37,11 @@ class SaveMPQDialog(PyMSDialog):
 		('cmdicons.grp', 'unit\\cmdbtns\\cmdicons.grp', DataID.cmdicons)
 	)
 
-	def __init__(self, parent):
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Save MPQ', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		Label(self, text='Select the files you want to save:', justify=LEFT, anchor=W).pack(fill=X)
 		self.listbox = ScrolledListbox(self, selectmode=MULTIPLE, font=Font.fixed(), width=14, height=len(SaveMPQDialog.OPTIONS))
 		self.listbox.pack(fill=BOTH, expand=1, padx=5)
@@ -43,12 +49,9 @@ class SaveMPQDialog(PyMSDialog):
 		Button(sel, text='Select All', command=lambda: self.listbox.select_set(0,END)).pack(side=LEFT, fill=X, expand=1)
 		Button(sel, text='Unselect All', command=lambda: self.listbox.select_clear(0,END)).pack(side=LEFT, fill=X, expand=1)
 		sel.pack(fill=X, padx=5)
-		self.sempq = IntVar()
-		self.sempq.set(self.parent.data_context.settings.get('sempq', False))
-		Checkbutton(self, text='Self-executing MPQ (SEMPQ)', variable=self.sempq).pack(pady=3)
 		for filename,_,_ in SaveMPQDialog.OPTIONS:
 			self.listbox.insert(END, filename)
-			if filename in self.parent.mpq_export:
+			if filename in self.delegate.data_context.config.mpq_export.data:
 				self.listbox.select_set(END)
 		btns = Frame(self)
 		save = Button(btns, text='Save', width=10, command=self.save)
@@ -57,22 +60,13 @@ class SaveMPQDialog(PyMSDialog):
 		btns.pack()
 		return save
 
-	def save(self):
+	def save(self) -> None:
 		selected_options = [SaveMPQDialog.OPTIONS[i] for i in self.listbox.curselection()]
 		if not selected_options:
 			MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
 		else:
-			if self.sempq.get():
-				file = self.parent.data_context.settings.lastpath.sempq.select_save_file(self, title='Save SEMPQ to...', filetypes=[FileType.exe_mpq()])
-			else:
-				file = self.parent.data_context.settings.lastpath.mpq.select_save_file(self, title='Save MPQ to...', filetypes=[FileType.mpq()])
+			file = self.delegate.data_context.config.last_path.mpq.select_save(self)
 			if file:
-				if self.sempq.get() and not os.path.exists(file):
-					try:
-						shutil.copy(Assets.data_file_path('SEMPQ.exe'), file)
-					except:
-						ErrorDialog(self, PyMSError('Saving','Could not create SEMPQ "%s".' % file))
-						return
 				not_saved = []
 				try:
 					mpq = MPQ.of(file)
@@ -81,11 +75,15 @@ class SaveMPQDialog(PyMSDialog):
 						for filename,filepath,id in selected_options:
 							try:
 								if isinstance(id, DATID):
-									dat_data = self.parent.data_context.dat_data(id)
+									dat_data = self.delegate.data_context.dat_data(id)
 									buffer = dat_data.save_data()
 								else:
-									data_data = self.parent.data_context.data_data(id)
-									buffer = data_data.save_data()
+									data_data = self.delegate.data_context.data_data(id)
+									if isinstance(data_data, IScriptBIN):
+										iscript_bin = data_data
+										buffer = IO.output_to_bytes(lambda f: iscript_bin.save(f))
+									else:
+										buffer = data_data.save_data()
 								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)
 								buffer = None
 							except:
@@ -96,7 +94,6 @@ class SaveMPQDialog(PyMSDialog):
 				if not_saved:
 					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(not_saved))
 
-	def ok(self):
-		self.parent.data_context.settings.sempq = not not self.sempq.get()
-		self.parent.mpq_export = [self.listbox.get(i) for i in self.listbox.curselection()]
+	def ok(self, event: Event | None = None) -> None:
+		self.delegate.data_context.config.mpq_export.data = [self.listbox.get(i) for i in self.listbox.curselection()]
 		PyMSDialog.ok(self)

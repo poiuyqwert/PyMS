@@ -1,25 +1,28 @@
 
-from ..FileFormats.Tileset.Tileset import TILETYPE_MEGA
+from __future__ import annotations
+
+from .Config import PyTILEConfig
+from .Delegates import MainDelegate
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class MegaTileSettingsExporter(PyMSDialog):
-	def __init__(self, parent, settings, ids):
-		self.settings = settings
+	def __init__(self, parent: Misc, config: PyTILEConfig, ids: list[int], delegate: MainDelegate) -> None:
+		self.config_ = config
 		self.ids = ids
-		self.tileset = parent.tileset
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Export MegaTile Settings', resizable=(False,False))
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		self.height = IntVar()
-		self.height.set(self.settings.export.megatiles.get('height',True))
+		self.height.set(self.config_.export.megatiles.height.value)
 		self.walkability = IntVar()
-		self.walkability.set(self.settings.export.megatiles.get('walkability',True))
+		self.walkability.set(self.config_.export.megatiles.walkability.value)
 		self.block_sight = IntVar()
-		self.block_sight.set(self.settings.export.megatiles.get('block_sight',True))
+		self.block_sight.set(self.config_.export.megatiles.block_sight.value)
 		self.ramp = IntVar()
-		self.ramp.set(self.settings.export.megatiles.get('ramp',True))
+		self.ramp.set(self.config_.export.megatiles.ramp.value)
 
 		f = LabelFrame(self, text='Export')
 		Checkbutton(f, text='Height', variable=self.height, anchor=W).grid(column=0,row=0, sticky=W)
@@ -42,19 +45,23 @@ class MegaTileSettingsExporter(PyMSDialog):
 
 		return self.export_button
 
-	def update_states(self, *_):
+	def update_states(self, event: Event | None = None) -> None:
 		any_on = self.height.get() or self.walkability.get() or self.block_sight.get() or self.ramp.get()
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 
-	def export(self):
-		path = self.settings.lastpath.settings.select_save_file(self, key='export', title='Export MegaTile Settings', filetypes=[FileType.txt()])
-		if path:
-			self.tileset.export_settings(TILETYPE_MEGA, path, self.ids)
-			self.ok()
+	def export(self) -> None:
+		tileset = self.delegate.get_tileset()
+		if not tileset:
+			return
+		path = self.config_.last_path.settings.select_save(self, title='Export MegaTile Settings')
+		if not path:
+			return
+		tileset.export_megatile_settings(path, self.ids)
+		self.ok()
 
-	def dismiss(self):
-		self.settings.export.megatiles.height = not not self.height.get()
-		self.settings.export.megatiles.walkability = not not self.walkability.get()
-		self.settings.export.megatiles.block_sight = not not self.block_sight.get()
-		self.settings.export.megatiles.ramp = not not self.ramp.get()
+	def dismiss(self) -> None:
+		self.config_.export.megatiles.height.value = not not self.height.get()
+		self.config_.export.megatiles.walkability.value = not not self.walkability.get()
+		self.config_.export.megatiles.block_sight.value = not not self.block_sight.get()
+		self.config_.export.megatiles.ramp.value = not not self.ramp.get()
 		PyMSDialog.dismiss(self)

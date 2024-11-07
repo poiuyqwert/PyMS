@@ -1,16 +1,23 @@
 
+from __future__ import annotations
+
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities import Config
+from ..Utilities.CheckSaved import CheckSaved
+
+from typing import Callable
 
 class NameDialog(PyMSDialog):
-	def __init__(self, parent, title='Name', value='', done='Done', callback=None):
-		self.callback = callback
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
+		self.window_geometry_config = window_geometry_config
+		self.save_callback = save_callback
 		self.name = StringVar()
 		self.name.set(value)
 		self.done = done
 		PyMSDialog.__init__(self, parent, title, grabwait=True, resizable=(True,False))
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		Label(self, text='Name:', width=30, anchor=W).pack(side=TOP, fill=X, padx=3)
 		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
 
@@ -22,14 +29,14 @@ class NameDialog(PyMSDialog):
 
 		return done
 
-	def setup_complete(self):
-		self.parent.settings.windows.generator.load_window_size('name', self)
+	def setup_complete(self) -> None:
+		self.window_geometry_config.load_size(self)
 
-	def ok(self):
-		if self.callback and self.callback(self, self.name.get()) == False:
+	def ok(self, event: Event | None = None) -> None:
+		if self.save_callback and self.save_callback(self, self.name.get()) == CheckSaved.cancelled:
 			return
 		PyMSDialog.ok(self)
 
-	def dismiss(self):
-		self.parent.settings.windows.generator.save_window_size('name', self)
+	def dismiss(self) -> None:
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

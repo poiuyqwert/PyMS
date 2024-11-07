@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyBIN')
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PyBIN.PyBIN import PyBIN, LONG_VERSION
 
 	import os, optparse, sys

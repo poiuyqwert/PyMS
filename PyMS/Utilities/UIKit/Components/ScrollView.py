@@ -3,12 +3,14 @@ from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import *
 from ..EventPattern import *
 
+from typing import Callable
+
 # TODO: PyDAT switching units tabs to a tab that was already displyed before, nothing is displayed, unless clicked again
 
 # WARNING: You must use the `scrollView.content_view` as the master of the widgets placed into a ScrollView
 # WARNING: ScrollView relies on `bind_all` for scrolling, only 1 can be used per window
 class ScrollView(Frame):
-	def __init__(self, parent, **config):
+	def __init__(self, parent: Misc, **config) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
@@ -19,10 +21,12 @@ class ScrollView(Frame):
 		xscrollbar.grid(sticky=EW)
 		yscrollbar = AutohideScrollbar(self, command=self._content_area.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
-		def scrolled(l,h,bar):
-			bar.set(l,h)
-		self._content_area.config(xscrollcommand=lambda l,h,s=xscrollbar: scrolled(l,h,s),yscrollcommand=lambda l,h,s=yscrollbar: scrolled(l,h,s))
-		def scroll(event):
+		def scrolled_callback(bar: Scrollbar) -> Callable[[float, float], None]:
+			def scrolled(l,h):
+				bar.set(l,h)
+			return scrolled
+		self._content_area.config(xscrollcommand=scrolled_callback(xscrollbar),yscrollcommand=scrolled_callback(yscrollbar))
+		def scroll(event: Event) -> None:
 			horizontal = False
 			if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 				horizontal = True
@@ -38,21 +42,21 @@ class ScrollView(Frame):
 		self.grid_rowconfigure(0,weight=1)
 		self.grid_columnconfigure(0,weight=1)
 
-		def resize(*_):
+		def resize(*_) -> None:
 			self._content_area.config(scrollregion=self._content_area.bbox("all"))
-		self.content_view.bind(WidgetEvent.Configure, resize)
+		self.content_view.bind(WidgetEvent.Configure(), resize)
 
-		def bind_scroll(*_):
-			self.bind_all(Mouse.Scroll, scroll)
-		def unbind_scroll(*_):
-			self.unbind_all(Mouse.Scroll)
-		self.bind(WidgetEvent.Activate, bind_scroll)
-		self.bind(WidgetEvent.Deactivate, unbind_scroll)
-		self.bind(WidgetEvent.Map, bind_scroll, True)
-		self.bind(WidgetEvent.Unmap, unbind_scroll)
+		def bind_scroll(*_) -> None:
+			self.bind_all(Mouse.Scroll(), scroll)
+		def unbind_scroll(*_) -> None:
+			self.unbind_all(Mouse.Scroll())
+		self.bind(WidgetEvent.Activate(), bind_scroll)
+		self.bind(WidgetEvent.Deactivate(), unbind_scroll)
+		self.bind(WidgetEvent.Map(), bind_scroll, True)
+		self.bind(WidgetEvent.Unmap(), unbind_scroll)
 
 		self._focus_bind_info = None
-		def check_focus():
+		def check_focus() -> None:
 			focused = self.content_view.focus_displayof()
 			if self._focus_bind_info:
 				view,bind_id = self._focus_bind_info
@@ -61,27 +65,29 @@ class ScrollView(Frame):
 				except:
 					pass
 				self._focus_bind_info = None
-			def focus_out(*_):
+			def focus_out(*_) -> None:
 				check_focus()
 			if focused:
-				self._focus_bind_info = (focused,focused.bind(Focus.Out, focus_out, True))
+				self._focus_bind_info = (focused,focused.bind(Focus.Out(), focus_out, True))
 				self.scroll_to_view(focused)
-		def focus_in(*_):
+		def focus_in(*_) -> None:
 			check_focus()
-		self.content_view.bind(Focus.In, focus_in)
+		self.content_view.bind(Focus.In(), focus_in)
 
-	def viewport_size(self):
+	def viewport_size(self) -> tuple[int, int]:
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
-	def content_size(self):
+	
+	def content_size(self) -> tuple[int, int]:
 		_,_,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)
-	def content_offset(self):
+
+	def content_offset(self) -> tuple[int, int]:
 		w,h = self.content_size()
 		x = w * self._content_area.xview()[0]
 		y = h * self._content_area.yview()[0]
-		return (x,y)
+		return (int(x), int(y))
 
-	def scroll_to_view(self, view):
+	def scroll_to_view(self, view: Misc) -> None:
 		if isinstance(view, Toplevel):
 			return
 		view_x1 = 0

@@ -1,10 +1,16 @@
 
+from __future__ import annotations
+
 from .DATFormat import DATTypeSize, DATTypePosition, DATTypeExtents, DATTypeHitPoints, DATTypeSupply
 
 from ...Utilities.PyMSError import PyMSError
 
 import re
 from collections import OrderedDict
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any
 
 class DATPropertyCoder(object):
 	def encode(self, value):
@@ -14,11 +20,11 @@ class DATPropertyCoder(object):
 		raise NotImplementedError(self.__class__.__name__ + '.decode()')
 
 class DATFlagsCoder(DATPropertyCoder):
-	def __init__(self, bit_count, flag_mapping): # type: (int, dict[int, str]) -> DATFlagsCoder
+	def __init__(self, bit_count: int, flag_mapping: dict[int, str]) -> None:
 		self.bit_count = bit_count
 		self.flag_mapping = flag_mapping
 
-	def encode(self, flags): # type: (int) -> OrderedDict[str, bool]
+	def encode(self, flags: int) -> OrderedDict[str, bool]:
 		values = OrderedDict()
 		for bit in range(self.bit_count):
 			flag = (1 << bit)
@@ -29,11 +35,11 @@ class DATFlagsCoder(DATPropertyCoder):
 		return values
 
 	RE_FLAG = re.compile(r'^flag_0x([0-9a-fA-F]{2})$')
-	def decode(self, values): # type: (dict[str, bool]) -> int
+	def decode(self, values: dict[str, bool]) -> int:
 		flags = 0
-		flag_list = self.flag_mapping.keys()
-		name_list = self.flag_mapping.values()
-		for (name, enabled) in values.items():
+		flag_list = list(self.flag_mapping.keys())
+		name_list = list(self.flag_mapping.values())
+		for (name, enabled) in list(values.items()):
 			if not enabled:
 				continue
 			if name in name_list:
@@ -47,13 +53,13 @@ class DATFlagsCoder(DATPropertyCoder):
 		return flags
 
 class DATSizeCoder(DATPropertyCoder):
-	def encode(self, size): # type: (DATTypeSize) -> OrderedDict[str, int]
+	def encode(self, size: DATTypeSize) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['width'] = size.width
 		values['height'] = size.height
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATTypeSize
+	def decode(self, values: dict[str, int]) -> DATTypeSize:
 		if not 'width' in values:
 			raise PyMSError('Decode', 'Size missing `width` value')
 		if not 'height' in values:
@@ -64,13 +70,13 @@ class DATSizeCoder(DATPropertyCoder):
 		return size
 
 class DATPositionCoder(DATPropertyCoder):
-	def encode(self, position): # type: (DATTypePosition) -> OrderedDict[str, int]
+	def encode(self, position: DATTypePosition) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['x'] = position.x
 		values['y'] = position.y
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATTypePosition
+	def decode(self, values: dict[str, int]) -> DATTypePosition:
 		if not 'x' in values:
 			raise PyMSError('Decode', 'Position missing `x` value')
 		if not 'y' in values:
@@ -81,7 +87,7 @@ class DATPositionCoder(DATPropertyCoder):
 		return position
 
 class DATExtentsCoder(DATPropertyCoder):
-	def encode(self, extents): # type: (DATTypeExtents) -> OrderedDict[str, int]
+	def encode(self, extents: DATTypeExtents) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['left'] = extents.left
 		values['up'] = extents.up
@@ -89,7 +95,7 @@ class DATExtentsCoder(DATPropertyCoder):
 		values['down'] = extents.down
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATTypeExtents
+	def decode(self, values: dict[str, int]) -> DATTypeExtents:
 		if not 'left' in values:
 			raise PyMSError('Decode', 'Extents missing `left` value')
 		if not 'up' in values:
@@ -106,13 +112,13 @@ class DATExtentsCoder(DATPropertyCoder):
 		return extents
 
 class DATHitPointsCoder(DATPropertyCoder):
-	def encode(self, hit_points): # type: (DATTypeHitPoints) -> OrderedDict[str, int]
+	def encode(self, hit_points: DATTypeHitPoints) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['whole'] = hit_points.whole
 		values['fraction'] = hit_points.fraction
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATTypeHitPoints
+	def decode(self, values: dict[str, int]) -> DATTypeHitPoints:
 		if not 'whole' in values:
 			raise PyMSError('Decode', 'Hit Points missing `whole` value')
 		if not 'fraction' in values:
@@ -123,13 +129,13 @@ class DATHitPointsCoder(DATPropertyCoder):
 		return hit_points
 
 class DATSupplyCoder(DATPropertyCoder):
-	def encode(self, supply): # type: (DATTypeSupply) -> OrderedDict[str, Any]
+	def encode(self, supply: DATTypeSupply) -> OrderedDict[str, Any]:
 		values = OrderedDict()
 		values['whole'] = supply.whole
 		values['half'] = True if supply.half else False
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> DATTypeSupply
+	def decode(self, values: dict[str, int]) -> DATTypeSupply:
 		if not 'whole' in values:
 			raise PyMSError('Decode', 'Supply missing `whole` value')
 		if not 'half' in values:
@@ -140,14 +146,14 @@ class DATSupplyCoder(DATPropertyCoder):
 		return supply
 
 class DATBoolCoder(DATPropertyCoder):
-	def encode(self, value): # type: (int) -> Any
+	def encode(self, value: int) -> Any:
 		if value == 0:
 			return False
 		elif value == 1:
 			return True
 		return value
 
-	def decode(self, value): # type: (Any) -> int
+	def decode(self, value: Any) -> int:
 		if value == False:
 			return 0
 		elif value == True:

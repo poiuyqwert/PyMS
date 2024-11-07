@@ -1,63 +1,65 @@
 
+from .Delegates import TooltipDelegate
+
+from ..FileFormats.AIBIN.AIFlag import AIFlag
 from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
 
 class ListboxTooltip(Tooltip):
-	def __init__(self, parent, font=None, delay=750, press=False):
-		if font == None:
-			font = Font.fixed()
+	def __init__(self, parent: ScrolledListbox, delegate: TooltipDelegate, font: Font | None = None, delay: int = 750, press: bool = False):
+		self.scrolled_listbox = parent
+		self.delegate = delegate
 		Tooltip.__init__(self, parent, '', font, delay, press)
-		self.index = None
+		self.index: int | None = None
 
-	def enter(self, e):
+	def enter(self, e: Event | None = None) -> None:
 		if self.parent.size():
 			self.motion(e)
 			Tooltip.enter(self,e)
 
-	def leave(self, e=None):
+	def leave(self, e: Event | None = None) -> None:
 		Tooltip.leave(self,e)
 		if e and e.type == '4':
 			self.enter(e)
 
-	def motion(self, e):
-		if self.tip and self.index != self.parent.nearest(e.y):
+	def motion(self, e: Event | None = None) -> None:
+		if not e:
+			return
+		if self.tip and self.index != self.scrolled_listbox.nearest(e.y):
 			self.leave()
 			self.enter(e)
 		self.pos = (e.x,e.y)
 		Tooltip.motion(self, e)
 
-	def showtip(self):
+	def showtip(self) -> None:
 		if self.tip:
 			return
-		self.tip = Toplevel(self.parent)
+		self.tip = TooltipWindow(self.parent)
 		self.tip.maxsize(640,400)
-		self.tip.wm_overrideredirect(1)
+		self.tip.wm_overrideredirect(True)
 		pos = list(self.parent.winfo_pointerxy())
-		self.index = self.parent.nearest(pos[1] - self.parent.winfo_rooty())
-		item = self.parent.get_entry(self.index)
-		id = item[0]
+		index = self.scrolled_listbox.listbox.nearest(pos[1] - self.parent.winfo_rooty())
+		script = self.delegate.get_list_entry(index)
+		self.index = index
+		in_bwbin = 'Yes' if script.in_bwscript else 'No'
 		flags = ''
-		comma = False
-		for d,f in zip(['BroodWar Only','Invisible in StarEdit','Requires a Location'],item[2]):
-			if f == '1':
-				if comma:
+		for name,flag in (('BroodWar Only',AIFlag.broodwar_only),('Invisible in StarEdit',AIFlag.staredit_hidden),('Requires a Location',AIFlag.requires_location)):
+			if script.flags & flag:
+				if flags:
 					flags += ', '
-				else:
-					comma = True
-				if not flags:
-					flags = 'Flags             : '
-				flags += d
+				flags += name
 		if flags:
-			flags += '\n'
-		text = "Script ID         : %s\nIn bwscript.bin   : %s\n%sString ID         : %s\n" % (id, ['No','Yes'][item[1]], flags, item[3])
-		ai = self.parent.master.ai
-		text += fit('String            : ', TBL.decompile_string(ai.tbl.strings[ai.ais[id][1]]), end=True)
-		if id in ai.aiinfo and ai.aiinfo[id][0]:
-			text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
-		else:
-			text = text[:-1]
+			flags = f'Flags             : {flags}\n'
+		text = f"Script ID         : {script.id}\nIn bwscript.bin   : {in_bwbin}\n{flags}String ID         : {script.string_id}\n"
+		data_context = self.delegate.get_data_context()
+		if (string := data_context.stattxt_string(script.string_id)):
+			text += fit('String            : ', string, end=True)
+		# if id in ai.aiinfo and ai.aiinfo[id][0]:
+		# 	text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
+		# else:
+		text = text[:-1]
 		frame = Frame(self.tip, background='#FFFFC8', relief=SOLID, borderwidth=1)
 		Label(frame, text=text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()

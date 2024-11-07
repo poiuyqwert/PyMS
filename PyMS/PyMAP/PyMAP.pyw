@@ -947,10 +947,10 @@ class BWImage:
 	@staticmethod
 	def purge_frames(grpFile=None, player_color_id=None, flipHor=None, draw_function_id=None, draw_remapping=None, index=None):
 		keys = [grpFile, player_color_id, flipHor, draw_function_id, draw_remapping, index]
-		while keys[-1] == None:
+		while keys[-1] is None:
 			del keys[-1]
 		def do_purge(cache, keys):
-			if key[0] == None:
+			if key[0] is None:
 				for k in cache.keys():
 					do_purge(cache[k], keys[1:])
 			elif len(keys) == 1:
@@ -1072,7 +1072,7 @@ class BWImage:
 			self.draw_info = GRP.OUTLINE_ALLY
 			print((1, self.parent))
 			print((2, self.parent.unit_ref))
-			if self.parent != None and self.parent.unit_ref != None:
+			if self.parent is not None and self.parent.unit_ref is not None:
 				units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 				unit = units.get_unit(self.parent.unit_ref)
 				if unit:
@@ -1086,12 +1086,12 @@ class BWImage:
 						self.draw_info = GRP.OUTLINE_ENEMY
 					else:
 						self.draw_info = GRP.OUTLINE_ALLY
-		elif self.unit_ref != None:
+		elif self.unit_ref is not None:
 			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 			unit = units.get_unit(self.unit_ref)
 			if unit:
 				self.player_color_id = self.ui.chk.player_color(unit.owner)
-				if self.player_color_id != None:
+				if self.player_color_id is not None:
 					start_index = self.player_color_id * 8
 					if start_index+7 < len(self.ui.tunitpcx.image[0]):
 						self.draw_info = []
@@ -1106,7 +1106,7 @@ class BWImage:
 		return (self.position[0] + self.position_offset[0], self.position[1] + self.position_offset[1])
 
 	def get_grp(self):
-		if self.grp == None:
+		if self.grp is None:
 			if self.grpFile in BWImage.GRP_CACHE:
 				self.grp = BWImage.GRP_CACHE[self.grpFile]
 			else:
@@ -1137,7 +1137,7 @@ class BWImage:
 			and self.draw_function_id in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor] \
 			and self.draw_remapping in BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id]:
 				frame = BWImage.FRAME_CACHE[self.grpFile][self.player_color_id][flipHor][self.draw_function_id][self.draw_remapping].get(index)
-			if frame == None:
+			if frame is None:
 				grp = self.get_grp()
 				if grp:
 					frame = GRP.frame_to_photo(self.ui.palettes[self.pal], grp, index, True, False, True, 0, flipHor, self.draw_function, self.draw_info)
@@ -1162,7 +1162,7 @@ class BWImage:
 		headers = self.ui.iscriptbin.headers[self.iscript_id][2]
 		if header < len(headers):
 			iscript_offset = headers[header]
-			if iscript_offset != None:
+			if iscript_offset is not None:
 				self.iscript_wait = 0
 				self.op_goto(iscript_offset)
 				for child in self.children:
@@ -1312,14 +1312,14 @@ class ActionUpdateString(Action):
 
 	def undo(self):
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-		if self.end_text != None and self.start_text == None:
+		if self.end_text is not None and self.start_text is None:
 			strings.delete_string(self.string_id)
 		else:
 			strings.set_string(self.string_id, self.start_text)
 
 	def redo(self):
 		strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
-		if self.start_text != None and self.end_text == None:
+		if self.start_text is not None and self.end_text is None:
 			strings.delete_string(self.string_id)
 		else:
 			strings.set_string(self.string_id, self.end_text)
@@ -1426,14 +1426,14 @@ class EditLayerTerrain(EditLayer):
 			era = self.ui.chk.get_section(CHKSectionERA.NAME)
 			details = TERRAIN_DETAILS[era.tileset]['types'][self.type_id]
 			options = details.get('options')
-			if options == None:
+			if options is None:
 				options = []
 				details['options'] = options
 				for range_details in details['ranges']:
 					for group in range(*range_details['groups']):
 						for tile in range(*range_details['tiles']):
 							options.append([group,tile])
-						if range_details['messy'] != None and self.messy:
+						if range_details['messy'] is not None and self.messy:
 							for tile in range(*range_details['messy']):
 								options.append([group,tile])
 			option = random.choice(options)
@@ -1607,9 +1607,9 @@ class EditLayerLocations(EditLayer):
 						elif x1 <= x <= x2 and y1 <= y <= y2:
 							print('Edit Location')
 							return
-					elif unused == None:
+					elif unused is None:
 						unused = l
-				if not self.current_event and unused != None and button_event & EditLayer.MOUSE_DOWN:
+				if not self.current_event and unused is not None and button_event & EditLayer.MOUSE_DOWN:
 					location = locations.locations[unused]
 					self.ui.action_manager.start_group()
 					strings = self.ui.chk.get_section(CHKSectionSTR.NAME)
@@ -1634,7 +1634,7 @@ class EditLayerLocations(EditLayer):
 					self.current_event = [EditLayer.EDIT_RESIZE_RIGHT,EditLayer.EDIT_RESIZE_BOTTOM]
 					self.mouse_offset = [0,0]
 					self.resize_location = unused
-			if self.current_event and self.resize_location != None:
+			if self.current_event and self.resize_location is not None:
 				self.raise_location(self.resize_location)
 				location = locations.locations[self.resize_location]
 				if self.current_event[0] == EditLayer.EDIT_MOVE:
@@ -1687,7 +1687,7 @@ class EditLayerUnits(EditLayer):
 			self.selected_images.remove(image)
 			if image.ref in self.selection_images:
 				selection_image = self.selection_images.get(image.ref)
-				if selection_image != None:
+				if selection_image is not None:
 					self.ui.maplayer_images.remove_image(selection_image)
 					del self.selection_images[image.ref]
 
@@ -1697,7 +1697,7 @@ class EditLayerUnits(EditLayer):
 			self.ui.mapCanvas.tag_raise('selection_box')
 
 	def select(self, image):
-		if image.unit_ref != None:
+		if image.unit_ref is not None:
 			self.selected_images.append(image)
 			unit_sect = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 			selected_unit = unit_sect.get_unit(image.unit_ref)
@@ -1719,7 +1719,7 @@ class EditLayerUnits(EditLayer):
 				self.selecting_start = (x,y)
 				self.selecting_images = set()
 				print(('Reset', flags(button_event,8)))
-			elif self.selecting_start != None:
+			elif self.selecting_start is not None:
 				if not button_event & (EditLayer.MODIFIER_SHIFT | EditLayer.MODIFIER_CTRL):
 					self.deselect_all()
 				if button_event & EditLayer.MOUSE_MOVE:
@@ -1729,7 +1729,7 @@ class EditLayerUnits(EditLayer):
 				sx2 = max(self.selecting_start[0],x)
 				sy2 = max(self.selecting_start[1],y)
 				if self.selecting_moved:
-					if self.selection_box == None:
+					if self.selection_box is None:
 						self.selection_box = self.ui.mapCanvas.create_rectangle(sx1,sy1,sx2,sy2, outline='#FF0000', tags='selection_box')
 					else:
 						self.ui.mapCanvas.coords(self.selection_box, sx1,sy1,sx2,sy2)
@@ -1873,7 +1873,7 @@ class MapLayerTerrain(MapLayer):
 		group = self.ui.tileset.cv5.groups[tile[0]]
 		mega = group[13][tile[1]]
 		image = self.tile_cache.get(mega)
-		if image == None:
+		if image is None:
 			image = Tilesets.megatile_to_photo(self.ui.tileset, mega)
 			self.tile_cache[mega] = image
 		self.map[tag] = self.ui.mapCanvas.create_image((x+0.5) * 32, (y+0.5) * 32, image=image, tags=tag)
@@ -1914,7 +1914,7 @@ class MapLayerImages(MapLayer):
 		self.ui.mapCanvas.delete(image.ref)
 
 	def update_display(self, x1,y1, x2,y2):
-		if self.images == None:
+		if self.images is None:
 			units = self.ui.chk.get_section(CHKSectionUNIT.NAME)
 			self.images = {}
 			for n in range(units.unit_count()):
@@ -2378,7 +2378,7 @@ class PyMAP(Tk):
 		if self.tick_alarm or start:
 			if self.chk:
 				now = int(time.time() * 1000)
-				if self.last_tick == None:
+				if self.last_tick is None:
 					self.last_tick = now
 				dt = now - self.last_tick
 				self.last_tick = now
@@ -2390,7 +2390,7 @@ class PyMAP(Tk):
 				self.tick_alarm = None
 
 	def stop_tick(self):
-		if self.tick_alarm != None:
+		if self.tick_alarm is not None:
 			cancel = self.tick_alarm
 			self.tick_alarm = None
 			self.after_cancel(cancel)
@@ -2552,7 +2552,7 @@ class PyMAP(Tk):
 					self.saveas()
 
 	def select_file(self, title, open=True, ext='.scx', filetypes=[('BroodWar Map','*.scx'),('StarCraft Map','*.scm'),('Raw Map','*.chk'),('All Files','*')], parent=None):
-		if parent == None:
+		if parent is None:
 			parent = self
 		path = self.settings.get('lastpath', BASE_DIR)
 		parent._pyms__window_blocking = True
@@ -2573,7 +2573,7 @@ class PyMAP(Tk):
 
 	def update_title(self, file=None):
 		title = 'PyMAP %s' % LONG_VERSION
-		if file == None and self.file:
+		if file is None and self.file:
 			file = os.path.basename(self.file)
 		if file:
 			title += ' (%s)' % file
@@ -2591,7 +2591,7 @@ class PyMAP(Tk):
 
 	def open(self, key=None, file=None):
 		if not self.unsaved():
-			if file == None:
+			if file is None:
 				file = self.select_file('Open Map')
 				if not file:
 					return
@@ -2630,13 +2630,13 @@ class PyMAP(Tk):
 					for pathFormat in tilesetPaths:
 						path = pathFormat % tilesetName
 						tilesetFile = self.mpqhandler.get_file(path)
-						# if isinstance(tilesetFile, BadFile):
+						# if not tilesetFile:
 						# 	path = pathFormat % (tilesetName + '-nc')
 						# 	tilesetFile = self.mpqhandler.get_file(path)
-						# 	if isinstance(tilesetFile, BadFile):
+						# 	if not tilesetFile:
 						# 		path = pathFormat % (tilesetName[0].upper() + tilesetName[1:])
 						# 		tilesetFile = self.mpqhandler.get_file(path)
-						if isinstance(tilesetFile, BadFile):
+						if not tilesetFile:
 							break
 						tilesetFiles.append(tilesetFile)
 					if len(tilesetFiles) == len(tilesetPaths):
@@ -2676,7 +2676,7 @@ class PyMAP(Tk):
 	def save(self, key=None):
 		if key and self.buttons['save']['state'] != NORMAL:
 			return
-		if self.file == None:
+		if self.file is None:
 			self.saveas()
 			return
 		try:

@@ -3,7 +3,7 @@ from ..Utilities import Assets
 from ..Utilities.UIKit import *
 
 class LayerRow(Frame):
-	def __init__(self, parent, selvar=None, visvar=None, lockvar=None, layer=None, **kwargs):
+	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs):
 		Frame.__init__(self, parent, **kwargs)
 		self.selvar = selvar
 		self.visvar = visvar
@@ -14,9 +14,9 @@ class LayerRow(Frame):
 		self.locked = BooleanVar()
 		self.locked.set(False)
 		# TODO: Use Toolbar?
-		visbtn = Checkbutton(self, image=Assets.get_image('eye'), indicatoron=0, width=20, height=20, variable=self.visible, onvalue=True, offvalue=False, command=self.toggle_vis, highlightthickness=0)
+		visbtn = Checkbutton(self, image=Assets.get_image('eye'), indicatoron=False, width=20, height=20, variable=self.visible, onvalue=True, offvalue=False, command=self.toggle_vis, highlightthickness=0)
 		visbtn.pack(side=LEFT)
-		lockbtn = Checkbutton(self, image=Assets.get_image('lock'), indicatoron=0, width=20, height=20, variable=self.locked, onvalue=True, offvalue=False, command=self.toggle_lock, highlightthickness=0)
+		lockbtn = Checkbutton(self, image=Assets.get_image('lock'), indicatoron=False, width=20, height=20, variable=self.locked, onvalue=True, offvalue=False, command=self.toggle_lock, highlightthickness=0)
 		lockbtn.pack(side=LEFT)
 		self.label = Label(self, text='Layer %d' % (layer+1))
 		self.label.pack(side=LEFT)
@@ -24,11 +24,11 @@ class LayerRow(Frame):
 		self.visvar.trace('w', self.update_state)
 		self.lockvar.trace('w', self.update_state)
 		self.update_state()
-		self.bind(Mouse.Click_Left, self.select)
-		self.label.bind(Mouse.Click_Left, self.select)
-		self.hide_widget = None # Gross :(
+		self.bind(Mouse.Click_Left(), self.select)
+		self.label.bind(Mouse.Click_Left(), self.select)
+		self.hide_widget: Frame | None = None # Gross :(
 
-	def update_state(self, *args, **kwargs):
+	def update_state(self, *args, **kwargs) -> None:
 		self.visible.set((self.visvar.get() & (1 << self.layer)) != 0)
 		self.locked.set((self.lockvar.get() & (1 << self.layer)) != 0)
 		# TODO: Support theme
@@ -39,26 +39,26 @@ class LayerRow(Frame):
 			self.config(background='#FFFFFF')
 			self.label.config(background='#FFFFFF')
 
-	def select(self, event):
+	def select(self, event: Event) -> None:
 		self.selvar.set(self.layer)
 
-	def toggle_vis(self):
+	def toggle_vis(self) -> None:
 		if self.visible.get():
 			self.visvar.set(self.visvar.get() | (1 << self.layer))
 		else:
 			self.visvar.set(self.visvar.get() & ~(1 << self.layer))
 
-	def toggle_lock(self):
+	def toggle_lock(self) -> None:
 		if self.locked.get():
 			self.lockvar.set(self.lockvar.get() | (1 << self.layer))
 		else:
 			self.lockvar.set(self.lockvar.get() & ~(1 << self.layer))
 
-	def hide(self):
-		if self.hide_widget == None:
+	def hide(self) -> None:
+		if self.hide_widget is None:
 			self.hide_widget = Frame(self)
 		self.hide_widget.place(in_=self, relwidth=1, relheight=1)
 
-	def show(self):
+	def show(self) -> None:
 		if self.hide_widget:
 			self.hide_widget.place_forget()

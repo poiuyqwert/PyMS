@@ -4,13 +4,15 @@ from ..Widgets import *
 from ..ShowScrollbar import ShowScrollbar
 from ..EventPattern import *
 
+from typing import Literal
+
 class ScrolledListbox(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal=ShowScrollbar.when_needed, vertical=ShowScrollbar.when_needed, auto_bind=True, scroll_speed=1, **kwargs):
+	def __init__(self, parent: Misc, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, scroll_speed: int = 1, **kwargs):
 		Frame.__init__(self, parent, **frame_config)
 
 		if not 'exportselection' in kwargs:
-			kwargs['exportselection'] = 0
+			kwargs['exportselection'] = False
 		if not 'highlightthickness' in kwargs:
 			kwargs['highlightthickness'] = 0
 		if not 'activestyle' in kwargs:
@@ -42,7 +44,7 @@ class ScrolledListbox(Frame):
 
 		# Proxy listbox binding on self, but preserve binding to self in separate function
 		self.frame_bind = self.bind
-		self.bind = self.listbox.bind
+		self.bind = self.listbox.bind # type: ignore[method-assign, assignment]
 		# Proxy listbox functions on self
 		self.scan_mark = self.listbox.scan_mark
 		self.selection_includes = self.listbox.selection_includes
@@ -52,8 +54,8 @@ class ScrolledListbox(Frame):
 		self.scan_dragto = self.listbox.scan_dragto
 		self.select_anchor = self.listbox.select_anchor
 		self.see = self.listbox.see
-		self.selection_clear = self.listbox.selection_clear
-		self.size = self.listbox.size
+		self.selection_clear = self.listbox.selection_clear # type: ignore[method-assign, assignment]
+		self.size = self.listbox.size # type: ignore[method-assign, assignment]
 		self.index = self.listbox.index
 		self.selection_set = self.listbox.selection_set
 		self.itemcget = self.listbox.itemcget
@@ -61,7 +63,7 @@ class ScrolledListbox(Frame):
 		self.itemconfig = self.listbox.itemconfig
 		self.get = self.listbox.get
 		self.selection_anchor = self.listbox.selection_anchor
-		self.bbox = self.listbox.bbox
+		self.bbox = self.listbox.bbox # type: ignore[method-assign, assignment]
 		self.insert = self.listbox.insert
 		self.select_clear = self.listbox.select_clear
 		self.select_includes = self.listbox.select_includes
@@ -75,10 +77,10 @@ class ScrolledListbox(Frame):
 		self.yview = self.listbox.yview
 
 		if auto_bind:
-			bind_to = self.listbox
-			if isinstance(auto_bind, Widget):
+			bind_to: Misc = self.listbox
+			if isinstance(auto_bind, Misc):
 				bind_to = auto_bind
-			def scroll(event):
+			def scroll(event: Event) -> str:
 				horizontal = False
 				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:
 					horizontal = True
@@ -91,32 +93,32 @@ class ScrolledListbox(Frame):
 				elif event.delta <= 0 and cur[1] < 1:
 					view('scroll', scroll_speed, 'units')
 				return EventPropogation.Break
-			def move(event, offset):
+			def move(event: Event, offset: int | Literal['end']) -> str:
 				if self.listbox['selectmode'] == MULTIPLE:
 					return EventPropogation.Continue
-				if event.state & (Modifier.Shift.state | Modifier.Mac.Ctrl.state | Modifier.Alt.state | Modifier.Ctrl.state):
+				if isinstance(event.state, int) and event.state & (Modifier.Shift.state | Modifier.Mac.Ctrl.state | Modifier.Alt.state | Modifier.Ctrl.state):
 					return EventPropogation.Continue
 				index = 0
 				if offset == END:
-					index = self.size()-2
+					index = self.size()-2 # type: ignore[operator]
 				elif offset not in [0,END] and self.curselection():
-					index = max(min(self.size()-1, int(self.curselection()[0]) + offset),0)
+					index = max(min(self.size()-1, int(self.curselection()[0]) + offset),0) # type: ignore[operator]
 				self.select_clear(0,END)
 				self.select_set(index)
 				self.see(index)
-				self.listbox.event_generate(WidgetEvent.Listbox.Select)
+				self.listbox.event_generate(WidgetEvent.Listbox.Select())
 				self.listbox.focus_set()
 				return EventPropogation.Break
 			bind = [
-				(Mouse.Scroll, scroll),
-				(Key.Home, lambda event: move(event, 0)),
-				(Key.End, lambda event: move(event, END)),
-				(Key.Up, lambda event: move(event, -1)),
-				(Key.Left, lambda event: move(event, -1)),
-				(Key.Down, lambda event: move(event, 1)),
-				(Key.Right, lambda event: move(event, 1)),
-				(Key.Prior, lambda event: move(event, -10)),
-				(Key.Next, lambda event: move(event, 10)),
+				(Mouse.Scroll(), scroll),
+				(Key.Home(), lambda event: move(event, 0)),
+				(Key.End(), lambda event: move(event, END)),
+				(Key.Up(), lambda event: move(event, -1)),
+				(Key.Left(), lambda event: move(event, -1)),
+				(Key.Down(), lambda event: move(event, 1)),
+				(Key.Right(), lambda event: move(event, 1)),
+				(Key.Prior(), lambda event: move(event, -10)),
+				(Key.Next(), lambda event: move(event, 10)),
 			]
 			for b in bind:
 				bind_to.bind(*b, add=True)

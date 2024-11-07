@@ -1,21 +1,46 @@
 
+from . import CodeGenerator
+from ..Config import PyICEConfig
+from ..Delegates import VariableEditorDelegate
+
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
+from ...Utilities import JSON
 
-class CodeGeneratorVariable:
-	def __init__(self, generator, name='variable'):
-		self.generator = generator
-		self.name = name
+import re
+from dataclasses import dataclass
+
+from typing import Self
+
+@dataclass
+class CodeGeneratorVariable(JSON.Codable):
+	name: str
+	generator: CodeGenerator.CodeGeneratorType
+
+	@classmethod
+	def from_json(cls, json: JSON.Object) -> Self:
+		return cls(
+			JSON.get(json, 'name', str),
+			JSON.get_obj(json, 'generator', CodeGenerator.discriminate_type)
+		)
+
+	def to_json(self) -> JSON.Object:
+		return {
+			'name': self.name,
+			'generator': self.generator.to_json()
+		}
 
 class CodeGeneratorVariableEditor(PyMSDialog):
-	def __init__(self, parent, variable):
+	def __init__(self, parent: Misc, delegate: VariableEditorDelegate, variable: CodeGeneratorVariable, config: PyICEConfig):
+		self.delegate = delegate
 		self.variable = variable
-		PyMSDialog.__init__(self, parent, 'Variable Editor', grabwait=True, resizable=variable.generator.EDITOR.RESIZABLE)
+		self.config_ = config
+		PyMSDialog.__init__(self, parent, 'Variable Editor', grabwait=True)
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		self.name = StringVar()
 		self.name.set(self.variable.name)
-		def strip_name(*_):
+		def strip_name(*_) -> None:
 			strip_re = re.compile(r'[^a-zA-Z0-9_]')
 			name = self.name.get()
 			stripped = strip_re.sub('', name)
@@ -26,7 +51,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 		Label(self, text='Name:', anchor=W).pack(side=TOP, fill=X, padx=3)
 		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
 
-		self.editor = self.variable.generator.EDITOR(self, self.variable.generator)
+		self.editor = self.variable.generator.build_editor(self, self.config_)
 		self.editor.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=3)
 
 		buts = Frame(self)
@@ -37,15 +62,16 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 
 		return done
 
-	def setup_complete(self):
-		self.parent.settings.windows.generator.editor.load_window_size(self.variable.generator.TYPE, self)
+	def setup_complete(self) -> None:
+		self.set_resizable(*self.editor.is_resizable())
+		self.editor.window_geometry_config.load_size(self)
 
-	def ok(self):
-		self.variable.name = self.parent.unique_name(self.name.get(), self.variable)
+	def ok(self, event: Event | None = None) -> None:
+		self.variable.name = self.delegate.unique_name(self.name.get(), self.variable)
 		self.editor.save()
-		self.parent.update_list()
+		self.delegate.update_list()
 		PyMSDialog.ok(self)
 
-	def dismiss(self):
-		self.parent.settings.windows.generator.editor.save_window_size(self.variable.generator.TYPE, self)
+	def dismiss(self) -> None:
+		self.editor.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

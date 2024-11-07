@@ -1,29 +1,13 @@
 
-from .UnitsDAT import UnitsDAT, Unit
-from .WeaponsDAT import WeaponsDAT, Weapon
-from .FlingyDAT import FlingyDAT, Flingy
-from .SpritesDAT import SpritesDAT, Sprite
-from .ImagesDAT import ImagesDAT, Image
-from .UpgradesDAT import UpgradesDAT, Upgrade
-from .TechDAT import TechDAT, Technology
-from .SoundsDAT import SoundsDAT, Sound
-from .PortraitsDAT import PortraitsDAT, Portrait
-from .CampaignDAT import CampaignDAT, Map
-from .OrdersDAT import OrdersDAT, Order
+from .UnitsDAT import UnitsDAT, DATUnit
+from .WeaponsDAT import WeaponsDAT, DATWeapon
+from .FlingyDAT import FlingyDAT, DATFlingy
+from .SpritesDAT import SpritesDAT, DATSprite
+from .ImagesDAT import ImagesDAT, DATImage
+from .UpgradesDAT import UpgradesDAT, DATUpgrade
+from .TechDAT import TechDAT, DATTechnology
+from .SoundsDAT import SoundsDAT, DATSound
+from .PortraitsDAT import PortraitsDAT, DATPortraits, DATPortrait
+from .CampaignDAT import CampaignDAT, DATMap
+from .OrdersDAT import OrdersDAT, DATOrder
 from .Utilities import DATEntryName, DataNamesUsage
-
-__all__ = [
-	'UnitsDAT', 'Unit',
-	'WeaponsDAT', 'Weapon',
-	'FlingyDAT', 'Flingy',
-	'SpritesDAT', 'Sprite',
-	'ImagesDAT', 'Image',
-	'UpgradesDAT', 'Upgrade',
-	'TechDAT', 'Technology',
-	'SoundsDAT', 'Sound',
-	'PortraitsDAT', 'Portrait',
-	'CampaignDAT', 'Map',
-	'OrdersDAT', 'Order',
-
-	'DATEntryName', 'DataNamesUsage'
-]

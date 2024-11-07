@@ -6,21 +6,22 @@ from . import DATCoders
 from ...Utilities.PyMSError import PyMSError
 
 from collections import OrderedDict
+from typing import cast
 
-class Portrait(object):
+class DATPortrait(object):
 	def __init__(self):
 		self.portrait_file = 0
 		self.smk_change = 0
 		self.unknown = 0
 
-class Portraits(AbstractDAT.AbstractDATEntry):
+class DATPortraits(AbstractDAT.AbstractDATEntry):
 	class Property:
 		idle = 'idle'
 		talking = 'talking'
 
 	def __init__(self):
-		self.idle = Portrait()
-		self.talking = Portrait()
+		self.idle = DATPortrait()
+		self.talking = DATPortrait()
 
 	def load_values(self, values):
 		self.idle.portrait_file,\
@@ -43,34 +44,34 @@ class Portraits(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Portraits'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Portraits.Property.idle, self.idle, data, _PortraitsPropertyCoder.idle)
-		self._export_property_value(export_properties, Portraits.Property.talking, self.talking, data, _PortraitsPropertyCoder.talking)
+		self._export_property_value(export_properties, DATPortraits.Property.idle, self.idle, data, _PortraitsPropertyCoder.idle)
+		self._export_property_value(export_properties, DATPortraits.Property.talking, self.talking, data, _PortraitsPropertyCoder.talking)
 
 	def _import_data(self, data):
-		idle = self._import_property_value(data, Portraits.Property.idle, _PortraitsPropertyCoder.idle)
-		talking = self._import_property_value(data, Portraits.Property.talking, _PortraitsPropertyCoder.talking)
+		idle = self._import_property_value(data, DATPortraits.Property.idle, _PortraitsPropertyCoder.idle)
+		talking = self._import_property_value(data, DATPortraits.Property.talking, _PortraitsPropertyCoder.talking)
 
-		if idle != None:
+		if idle is not None:
 			self.idle = idle
-		if talking != None:
+		if talking is not None:
 			self.talking = talking
 
 class DATPortraitCoder(DATCoders.DATPropertyCoder):
-	def encode(self, portrait): # type: (Portrait) -> OrderedDict[str, int]
+	def encode(self, portrait: DATPortrait) -> OrderedDict[str, int]:
 		values = OrderedDict()
 		values['portrait_file'] = portrait.portrait_file
 		values['smk_change'] = portrait.smk_change
 		values['unknown'] = portrait.unknown
 		return values
 
-	def decode(self, values): # type: (dict[str, int]) -> Portrait
+	def decode(self, values: dict[str, int]) -> DATPortrait:
 		if not 'portrait_file' in values:
 			raise PyMSError('Decode', 'Portrait missing `portrait_file` value')
 		if not 'smk_change' in values:
 			raise PyMSError('Decode', 'Portrait missing `smk_change` value')
 		if not 'unknown' in values:
 			raise PyMSError('Decode', 'Portrait missing `unknown` value')
-		portrait = Portrait()
+		portrait = DATPortrait()
 		portrait.portrait_file = values['portrait_file']
 		portrait.smk_change = values['smk_change']
 		portrait.unknown = values['unknown']
@@ -112,8 +113,8 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Portraits
+	ENTRY_STRUCT = DATPortraits
 	FILE_NAME = "portdata.dat"
 
-	def get_entry(self, index): # type: (int) -> Portraits
-		return super(PortraitsDAT, self).get_entry(index)
+	def get_entry(self, index: int) -> DATPortraits:
+		return cast(DATPortraits, super(PortraitsDAT, self).get_entry(index))

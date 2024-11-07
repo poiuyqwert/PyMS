@@ -1,5 +1,7 @@
 
-class Tool:
-	Select = 0
-	Move = 1
-	Draw = 2
+from enum import Enum
+
+class Tool(Enum):
+	select = 0
+	move = 1
+	draw = 2

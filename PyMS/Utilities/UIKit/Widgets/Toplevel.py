@@ -1,19 +1,16 @@
 
 from .. import Theme
-from .Extensions import Extensions
+from .Extensions import Extensions, WindowExtensions
 
-try: # Python 2
-	import Tkinter as _Tk
-except: # Python 3
-	import tkinter as _Tk
+import tkinter as _Tk
 
 
-class Toplevel(_Tk.Toplevel, Extensions):
+class Toplevel(_Tk.Toplevel, Extensions, WindowExtensions):
 	def __init__(self, *args, **kwargs):
 		_Tk.Toplevel.__init__(self, *args, **kwargs)
 		Theme.apply_theme(self)
 
-	def make_active(self):
+	def make_active(self) -> None:
 		if self.state() == 'withdrawn':
 			self.deiconify()
 		self.lift()

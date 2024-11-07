@@ -6,7 +6,7 @@ from ..utils import data_to_hex
 import unittest
 
 class Test_RLE_Encode_Repeat(unittest.TestCase):
-	def test_length_one(self):
+	def test_length_one(self) -> None:
 		length = 1
 		expected = '41 01'
 
@@ -14,7 +14,7 @@ class Test_RLE_Encode_Repeat(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_index_two(self):
+	def test_index_two(self) -> None:
 		index = 2
 		expected = '41 02'
 
@@ -22,7 +22,7 @@ class Test_RLE_Encode_Repeat(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_length_two(self):
+	def test_length_two(self) -> None:
 		length = 2
 		expected = '42 01'
 
@@ -30,7 +30,7 @@ class Test_RLE_Encode_Repeat(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_max_length(self):
+	def test_max_length(self) -> None:
 		length = 63
 		expected = '7F 01'
 
@@ -38,7 +38,7 @@ class Test_RLE_Encode_Repeat(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_over_max_length(self):
+	def test_over_max_length(self) -> None:
 		length = 64
 		expected = '7F 01 41 01'
 
@@ -46,7 +46,7 @@ class Test_RLE_Encode_Repeat(unittest.TestCase):
 
 		self.assertEqual(result, expected)
 
-	def test_over_max_length_twice(self):
+	def test_over_max_length_twice(self) -> None:
 		length = 127
 		expected = '7F 01 7F 01 41 01'
 

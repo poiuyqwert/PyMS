@@ -1,13 +1,19 @@
 
+from .Delegates import MainDelegate
+
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 
+import re
+
 class FindDialog(PyMSDialog):
-	def __init__(self, parent):
-		self.resettimer = None
+	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+		self.delegate = delegate
+		self.resettimer: str | None = None
+		self.findhistory: list[str] = []
 		PyMSDialog.__init__(self, parent, 'Find', grabwait=False, escape=True, resizable=(True,False))
 
-	def widgetize(self):
+	def widgetize(self) -> (Misc | None):
 		self.find = StringVar()
 		self.casesens = BooleanVar()
 		self.regex = BooleanVar()
@@ -19,8 +25,8 @@ class FindDialog(PyMSDialog):
 		l = Frame(self)
 		f = Frame(l)
 		Label(f, text='Find:').pack(side=LEFT)
-		self.findentry = TextDropDown(f, self.find, self.parent.findhistory, 30)
-		self.findentry.c = self.findentry['bg']
+		self.findentry = TextDropDown(f, self.find, self.findhistory, 30)
+		self.findentry_c = self.findentry['bg']
 		self.findentry.pack(fill=X)
 		self.findentry.entry.selection_range(0, END)
 		self.findentry.focus_set()
@@ -45,39 +51,37 @@ class FindDialog(PyMSDialog):
 		Button(l, text='Close', command=self.ok).pack(fill=X, pady=4)
 		l.pack(side=LEFT, fill=Y, padx=2)
 
-		self.bind(Key.Return, self.findnext)
+		self.bind(Key.Return(), self.findnext)
 
 		return self.findentry
 
-	def setup_complete(self):
-		self.parent.settings.windows.load_window_size('find', self)
+	def setup_complete(self) -> None:
+		self.delegate.config_.windows.find.load_size(self)
 
-	def findnext(self, key=None):
+	def findnext(self, event: Event | None = None) -> None:
 		self.updatecolor()
 		t = self.find.get()
-		if not t in self.parent.findhistory:
-			self.parent.findhistory.insert(0, t)
-		size = self.parent.listbox.size()
+		if not t in self.findhistory:
+			self.findhistory.insert(0, t)
+		size: int = self.delegate.listbox.size() # type: ignore[assignment]
 		if size:
 			if self.regex.get():
-				regex = t
-				if not regex.startswith('\\A'):
-					regex = '.*' + regex
-				if not regex.endswith('\\Z'):
-					regex = regex + '.*'
+				regex_str = t
+				if not regex_str.startswith('\\A'):
+					regex_str = '.*' + regex_str
+				if not regex_str.endswith('\\Z'):
+					regex_str = regex_str + '.*'
 			else:
-				regex = '.*%s.*' % re.escape(t)
+				regex_str = '.*%s.*' % re.escape(t)
 			try:
-				regex = re.compile(regex, 0 if self.casesens.get() else re.I)
+				regex = re.compile(regex_str, 0 if self.casesens.get() else re.I)
 			except:
-				self.reset = self.findentry
-				self.reset.c = self.reset['bg']
-				self.reset['bg'] = '#FFB4B4'
+				self.findentry['bg'] = '#FFB4B4'
 				self.resettimer = self.after(1000, self.updatecolor)
 				return
 			wrap = self.wrap.get()
 			down = self.updown.get()
-			s = int(self.parent.listbox.curselection()[0])
+			s = int(self.delegate.listbox.curselection()[0])
 			def next(i, down, size):
 				if down:
 					i += 1
@@ -98,24 +102,24 @@ class FindDialog(PyMSDialog):
 				check = s
 			while check:
 				check -= 1
-				if regex.match(self.parent.listbox.get(i)):
-					self.parent.listbox.select_clear(0,END)
-					self.parent.listbox.select_set(i)
-					self.parent.listbox.see(i)
-					self.parent.update()
+				if regex.match(self.delegate.listbox.get(i)):
+					self.delegate.listbox.select_clear(0,END)
+					self.delegate.listbox.select_set(i)
+					self.delegate.listbox.see(i)
+					self.delegate.update()
 					return
 				i = next(i, down, size)
-		p = self
-		if key and key.keycode != 13:
+		p: Misc = self
+		if event and event.keycode != 13:
 			p = self.parent
-		MessageBox.showinfo('Find', "Can't find text.")
+		MessageBox.showinfo('Find', "Can't find text.", parent=p)
 
-	def updatecolor(self):
+	def updatecolor(self) -> None:
 		if self.resettimer:
 			self.after_cancel(self.resettimer)
 			self.resettimer = None
-		self.findentry['bg'] = self.findentry.c
+		self.findentry['bg'] = self.findentry_c
 
-	def dismiss(self):
-		self.parent.settings.windows.save_window_size('find', self)
+	def dismiss(self) -> None:
+		self.delegate.config_.windows.find.save_size(self)
 		PyMSDialog.dismiss(self)

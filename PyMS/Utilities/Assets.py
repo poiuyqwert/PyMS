@@ -1,6 +1,14 @@
 
+from __future__ import annotations
+
 import os as _os
 import sys as _sys
+
+from typing import TYPE_CHECKING, cast
+if TYPE_CHECKING:
+	from .UIKit import PhotoImage
+	from .UIKit import Image
+	from .UIKit import ImageTk
 
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
@@ -13,10 +21,10 @@ internals_dir = _os.path.join(base_dir, 'PyMS')
 ## Versions
 versions_file_path = _os.path.join(internals_dir, 'versions.json')
 
-_VERSIONS = None
-def version(program_name): # type: (str) -> str
+_VERSIONS: dict[str, str] = {}
+def version(program_name: str) -> str:
 	global _VERSIONS
-	if _VERSIONS == None:
+	if not _VERSIONS:
 		import json
 		with open(versions_file_path, 'r') as f:
 			_VERSIONS = json.load(f)
@@ -28,77 +36,67 @@ readme_file_path = _os.path.join(base_dir, 'README.md')
 ## Images
 images_dir = _os.path.join(internals_dir, 'Images')
 
-def image_path(filename): # type: (str) -> str
+def image_path(filename: str) -> str:
 	return _os.path.join(images_dir, filename)
 
-_IMAGE_CACHE = {}
-def get_image(filename, cache=True): # type: (str, bool) -> (_PhotoImage | None)
-	from .UIKit import PhotoImage as _PhotoImage
+_IMAGE_CACHE: dict[str, Image] = {}
+def get_image(filename: str, cache: bool = True) -> Image:
+	from .UIKit import PhotoImage
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
-	global _IMAGE_CACHE
 	if filename in _IMAGE_CACHE:
 		return _IMAGE_CACHE[filename]
 	path = image_path(filename)
-	if not _os.path.exists(path):
-		return None
 	try:
-		image = _PhotoImage(file=path)
+		image = PhotoImage(file=path)
 	except:
-		return None
+		image = PhotoImage()
 	if cache:
 		_IMAGE_CACHE[filename] = image
 	return image
 
 def clear_image_cache():
-	global _IMAGE_CACHE
 	_IMAGE_CACHE.clear()
 
 ## MPQ
 mpq_dir = _os.path.join(internals_dir, 'MPQ')
 
-def mpq_file_path(*path_components): # type: (*str) -> str
+def mpq_file_path(*path_components: str) -> str:
 	return _os.path.join(mpq_dir, *path_components)
 
-def mpq_file_name(*path_components): # type: (*str) -> str
+def mpq_file_name(*path_components: str) -> str:
 	return '\\'.join(path_components)
 
-def mpq_file_ref(*path_components): # type: (*str) -> str
+def mpq_file_ref(*path_components: str) -> str:
 	return 'MPQ:' + mpq_file_name(*path_components)
 
-def mpq_file_path_to_file_name(file_path): # type: (str) -> str
+def mpq_file_path_to_file_name(file_path: str) -> str:
 	if not file_path.startswith(mpq_dir):
 		return file_path
 	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
 	return mpq_file_name(*path_components)
 
-def mpq_file_path_to_ref(file_path): # type: (str) -> str
+def mpq_file_path_to_ref(file_path: str) -> str:
 	if not file_path.startswith(mpq_dir):
 		return file_path
 	path_components = _os.path.normpath(_os.path.relpath(file_path, mpq_dir)).split(_os.path.sep)
 	return mpq_file_ref(*path_components)
 
-def mpq_ref_to_file_path(file_ref): # type: (str) -> str
+def mpq_ref_to_file_path(file_ref: str) -> str:
 	if not file_ref.startswith('MPQ:'):
 		return file_ref
 	path_components = file_ref[4:].split('\\')
 	return mpq_file_path(*path_components)
 
-def mpq_ref_to_file_name(file_ref): # type: (str) -> str
+def mpq_ref_to_file_name(file_ref: str) -> str:
 	if not file_ref.startswith('MPQ:'):
 		return file_ref
 	return file_ref[4:]
 
-## Docs
-docs_dir = _os.path.join(base_dir, 'Docs')
-
-def doc_path(filename): # type: (str) -> str
-	return _os.path.join(docs_dir, filename)
-
 ## Data
 data_dir = _os.path.join(internals_dir, 'Data')
 
-def data_file_path(filename): # type: (str) -> str
+def data_file_path(filename: str) -> str:
 	return _os.path.join(data_dir, filename)
 
 class DataReference:
@@ -129,9 +127,8 @@ class DataReference:
 	Sfxdata         = 'Sfxdata' # Sound Effects
 	ShieldSize      = 'ShieldSize' # Shield Sizes
 
-_DATA_CACHE = {}
-def data_cache(filename): # type: (str) -> list[str]
-	global _DATA_CACHE
+_DATA_CACHE: dict[str, list[str]] = {}
+def data_cache(filename: str) -> list[str]:
 	if not filename in _DATA_CACHE:
 		with open(data_file_path('%s.txt' % filename), 'r') as f:
 			_DATA_CACHE[filename] = [l.rstrip() for l in f.readlines()]
@@ -140,19 +137,19 @@ def data_cache(filename): # type: (str) -> list[str]
 ## Palettes
 palettes_dir = _os.path.join(base_dir, 'Palettes')
 
-def palette_file_path(filename): # type: (str) -> str
+def palette_file_path(filename: str) -> str:
 	return _os.path.join(palettes_dir, filename)
 
 ## Settings
 settings_dir = _os.path.join(base_dir, 'Settings')
 
-def settings_file_path(name): # type: (str) -> str
+def settings_file_path(name: str) -> str:
 	return _os.path.join(settings_dir, '%s%stxt' % (name, _os.extsep))
 
 ## Logs
 logs_dir = _os.path.join(internals_dir, 'Logs')
 
-def log_file_path(filename): # type: (str) -> str
+def log_file_path(filename: str) -> str:
 	return _os.path.join(logs_dir, filename)
 
 ## Internal Temp
@@ -165,20 +162,20 @@ def internal_temp_file(filename):
 help_dir = _os.path.join(base_dir, 'Help')
 
 class HelpFolder(object):
-	def __init__(self, name): # type: (str) -> HelpFolder
+	def __init__(self, name: str) -> None:
 		self.name = name
-		self.parent = None # type: (HelpFolder | None)
-		self.folders = [] # type: list[HelpFolder]
-		self.files = [] # type: list[HelpFile]
+		self.parent: (HelpFolder | None) = None
+		self.folders: list[HelpFolder] = []
+		self.files: list[HelpFile] = []
 
-	def add_folder(self, folder): # type: (HelpFolder) -> None
+	def add_folder(self, folder: HelpFolder) -> None:
 		self.folders.append(folder)
 		folder.parent = self
 
-	def add_file(self, file): # type: (HelpFile) -> None
+	def add_file(self, file: HelpFile) -> None:
 		self.files.append(file)
 
-	def index(self, path): # type: (str) -> (str | None)
+	def index(self, path: str) -> str | None:
 		path_components = path.split('#')[0].split('/')
 		if path_components[0] == '':
 			path_components.pop(0)
@@ -188,7 +185,7 @@ class HelpFolder(object):
 			path_components[-1] = _os.path.splitext(path_components[-1])[0]
 		return self._index(path_components)
 
-	def _index(self, path_components): # type: (list[str]) -> (str | None)
+	def _index(self, path_components: list[str]) -> (str | None):
 		if len(path_components) == 1:
 			for index, file in enumerate(self.files):
 				if path_components[0] == file.name:
@@ -197,15 +194,15 @@ class HelpFolder(object):
 			for index, folder in enumerate(self.folders):
 				if path_components[0] == folder.name:
 					sub_index = folder._index(path_components[1:])
-					if sub_index == None:
+					if sub_index is None:
 						return None
 					return '%d.%s' % (index + len(self.files), sub_index)
 		return None
 
-	def get_file(self, index): # type: (str) -> (HelpFile | None)
+	def get_file(self, index: str) -> HelpFile | None:
 		return self._get_file(list(int(i) for i in index.split('.')))
 
-	def _get_file(self, index_components): # type: (list[int]) -> (HelpFile | None)
+	def _get_file(self, index_components: list[int]) -> (HelpFile | None):
 		if len(index_components) == 1:
 			if index_components[0] >= len(self.files):
 				return None
@@ -224,22 +221,22 @@ class HelpFolder(object):
 			result += '\n > ' + repr(folder).replace('\n', '\n  ')
 		return result
 class HelpFile(object):
-	def __init__(self, path, folder): # type: (str, HelpFolder) -> HelpFile
+	def __init__(self, path: str, folder: HelpFolder) -> None:
 		self.path = '/'.join(_os.path.split(path))
 		self.name = _os.path.splitext(path.split('/')[-1])[0]
 		self.folder = folder
 
-_HELP_TREE = None
-def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
+_HELP_TREE: HelpFolder | None = None
+def help_tree( force_update: bool = False) -> HelpFolder:
 	global _HELP_TREE 
-	if _HELP_TREE != None and force_update == False:
+	if _HELP_TREE is not None and force_update == False:
 		return _HELP_TREE
 	root = None
-	parents = {} # type: dict[str, HelpFolder]
+	parents: dict[str, HelpFolder] = {}
 	for path, _, filenames in _os.walk(help_dir):
 		folder = HelpFolder(_os.path.split(path)[-1])
 		parents[path] = folder
-		if root == None:
+		if root is None:
 			root = folder
 		else:
 			parent_path,_ = _os.path.split(path)
@@ -251,10 +248,11 @@ def help_tree(force_update=False): # type: (bool) -> (HelpFolder)
 			if ext != _os.extsep + 'md':
 				continue
 			folder.add_file(HelpFile(_os.path.relpath(_os.path.join(path, filename), help_dir), folder))
+	assert root is not None
 	_HELP_TREE = root
 	return root
 
-def help_file_path(path): # type: (str) -> (str | None)
+def help_file_path(path: str) -> str | None:
 	if not _os.extsep in path:
 		path += _os.extsep + 'md'
 	path_components = path.split('/')
@@ -267,8 +265,8 @@ def help_file_path(path): # type: (str) -> (str | None)
 		return None
 	return full_path
 
-_HELP_IMAGE_CACHE = {}
-def help_image(path): # type: (str) -> (_PhotoImage | None)
+_HELP_IMAGE_CACHE: dict[str, Image] = {}
+def help_image(path: str) -> Image | None:
 	from .UIKit import PhotoImage as _PhotoImage
 	from .UIKit import PILImage as _PILImage
 	from .UIKit import ImageTk as _ImageTk
@@ -280,33 +278,32 @@ def help_image(path): # type: (str) -> (_PhotoImage | None)
 	full_path = _os.path.join(help_dir, *path_components)
 	if not _os.path.exists(full_path):
 		return None
-	global _HELP_IMAGE_CACHE
 	if full_path in _HELP_IMAGE_CACHE:
 		return _HELP_IMAGE_CACHE[full_path]
+	image: Image
 	try:
 		image = _PhotoImage(file=full_path)
 	except:
 		try:
 			pil_image = _PILImage.open(full_path)
-			image = _ImageTk.PhotoImage(pil_image)
+			image = cast(Image, _ImageTk.PhotoImage(pil_image))
 		except:
 			return None
 	_HELP_IMAGE_CACHE[full_path] = image
 	return image
 
 def clear_help_image_cache():
-	global _HELP_IMAGE_CACHE
 	_HELP_IMAGE_CACHE.clear()
 
 ## Themes
 
 themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
 
-def theme_file_path(name): # type: (str) -> (str)
+def theme_file_path(name: str) -> str:
 	return _os.path.join(themes_dir, '%s.txt' % name)
 
-_THEME_LIST = None
-def theme_list(): # type: () -> list[str]
+_THEME_LIST: list[str] | None = None
+def theme_list() -> list[str]:
 	global _THEME_LIST
 	if not _THEME_LIST:
 		_THEME_LIST = []

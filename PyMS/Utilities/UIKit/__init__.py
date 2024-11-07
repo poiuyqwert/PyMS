@@ -9,27 +9,19 @@ from . import Theme
 from .EventPattern import *
 from .FileType import *
 from .ShowScrollbar import *
+from .Types import *
+from .SyntaxHighlighting import *
 
+import tkinter.filedialog as FileDialog
+import tkinter.messagebox as MessageBox
+import tkinter.colorchooser as ColorChooser
 
-try: # Python 2
-	import tkFileDialog as FileDialog
-	import tkMessageBox as MessageBox
-	import tkColorChooser as ColorChooser
-except: # Python 3
-	import tkinter.filedialog as FileDialog
-	import tkinter.messagebox as MessageBox
-	import tkinter.colorchooser as ColorChooser
-# import Tkdnd
-
+from tkinter import Tcl
+from tkinter.ttk import Style
+READONLY = 'readonly'
 
 try:
 	from PIL import Image as PILImage
-	try:
-		from PIL import ImageTk
-	except:
-		import ImageTk
+	from PIL import ImageTk
 except:
-	class PILImage(object):
-		pass
-	class ImageTk(object):
-		pass
+	pass

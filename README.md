@@ -24,22 +24,26 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
 
 
 ## Installation
-1. **Install Python.** You should get the latest Python 2.7.x, currently that is [Python 2.7.12](https://www.python.org/downloads/release/python-2712/)
+1. **Install Python.** You should get the latest Python from the following list of supported versions:
+   * Python 3.11.x
+   * Python 3.12.x
+   * Python 3.13.x
    
-   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/2.7/using/windows.html#excursus-setting-environment-variables).
-2. **Install Dependencies.** Use PIP (the Python package manager), to install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python2.7 -m pip install -r requirements.txt`
-3. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
+   **Note:** On Windows, you must ensure that Python is in your "Path" environment variable. If you use the MSI Installer there is an "Add Python.exe to path" option you should make sure is enabled during installation, otherwise you can [set it up manually](https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables).
+2. **Download PyMS.** Always get the most up to date PyMS from [github](https://github.com/poiuyqwert/pyms) ([direct link](https://github.com/poiuyqwert/PyMS/archive/master.zip)). If you are updating PyMS, you can keep your settings files located in the Settings folder.
+3. **Install Dependencies.** Install all dependencies of PyMS by opening the command line, navigating to the PyMS folder, and running `python -m pip install -r requirements.txt`. If you have multiple versions of python install, make sure you are using PIP that is installed with the correct Python version and not another verson of Python on your machine.
 
 ## Issues/Feedback
 If you run into any issues with the programs, or have any feedback to improve the programs, please do one of the following:
-1. Create an issue [here on github](https://github.com/poiuyqwert/PyMS/issues)
-1. Post in [this thread](http://www.staredit.net/topic/17719/) on [StarEdit.net](http://www.staredit.net)
-1. [Email me](mailto:p.q.poiuy.qwert@gmail.com)
+1. Create an issue [on github](https://github.com/poiuyqwert/PyMS/issues)
+2. Join the [SEN Discord](https://discord.gg/Bzba93Z5r9) and chat about it in `#starcraft-tools` or `#mod-discussion`
+3. Post in [this thread](http://www.staredit.net/topic/17719/) on [StarEdit.net](http://www.staredit.net)
+4. [Email me](mailto:p.q.poiuy.qwert@gmail.com)
 
 Please include as much information as possible. If you are reporting an issue, please include:
-* The version of the program you had issues with (you can check in Libs\versions.json)
+* The version of the program you had issues with (you can check in `PyMS\PyMS\versions.json`)
 * The OS you are running on
-* The error message or crash logs. If the program crashed without an error dialog, you can check in the Libs\Logs\ folder for the programs log file
+* The error message or crash logs. If the program crashed without an error dialog, you can check in the `PyMS\PyMS\Logs\` folder for the programs log file
 
 ## Analytics
 At the moment PyMS only tracks the launch of PyMS programs, anonamously and with no sensitive information sent. An example of the data sent in these analytics calls:

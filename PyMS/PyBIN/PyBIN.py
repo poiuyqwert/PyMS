@@ -1,6 +1,11 @@
 
+from __future__ import annotations
+
+from .Config import PyBINConfig
+from .Delegates import MainDelegate, NodeDelegate
 from .WidgetNode import WidgetNode
 from .WidgetSettings import WidgetSettings
+from .SettingsUI.SettingsDialog import SettingsDialog
 
 from ..FileFormats import DialogBIN
 from ..FileFormats import PCX
@@ -11,70 +16,81 @@ from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
-from ..Utilities.Settings import Settings
+from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.InternalErrorDialog import InternalErrorDialog
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.SettingsDialog import SettingsDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.fileutils import check_allow_overwrite_internal_file
+from ..Utilities.CheckSaved import CheckSaved
+from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
+from ..Utilities.SponsorDialog import SponsorDialog
 
 import time
+from enum import Enum
+
+from typing import Callable, cast
 
 LONG_VERSION = 'v%s' % Assets.version('PyBIN')
 
 FRAME_DELAY = 67
 
-MOUSE_DOWN = 0
-MOUSE_MOVE = 1
-MOUSE_UP = 2
+class MouseEvent(Enum):
+	down = 0
+	move = 1
+	up = 2
 
-EDIT_NONE = 0
-EDIT_MOVE = 1
-EDIT_RESIZE_LEFT = 2
-EDIT_RESIZE_TOP = 3
-EDIT_RESIZE_RIGHT = 4
-EDIT_RESIZE_BOTTOM = 5
+class EditEvent(Enum):
+	none = 0
+	move = 1
+	resize_left = 2
+	resize_top = 3
+	resize_right = 4
+	resize_bottom = 5
 
-MODIFIER_SHIFT = 1
-MODIFIER_CTRL = 2
+	@staticmethod
+	def of(x1: int, y1: int, x2: int, y2: int, mouseX: int, mouseY: int, resizable: bool = True) -> list[EditEvent]:
+		event: list[EditEvent] = []
+		nx1 = (x1 if x1 < x2 else x2)
+		ny1 = (y1 if y1 < y2 else y2)
+		nx2 = (x2 if x2 > x1 else x1)
+		ny2 = (y2 if y2 > y1 else y1)
+		d = 2 * resizable
+		if nx1-d <= mouseX <= nx2+d and ny1-d <= mouseY <= ny2+d:
+			event.append(EditEvent.move)
+			if resizable:
+				dist_left = abs(x1 - mouseX)
+				dist_right = abs(x2 - mouseX)
+				if dist_left < dist_right and dist_left <= d:
+					event = [EditEvent.resize_left,EditEvent.none]
+				elif dist_right < dist_left and dist_right <= d:
+					event = [EditEvent.resize_right,EditEvent.none]
+				dist_top = abs(y1 - mouseY)
+				dist_bot = abs(y2 - mouseY)
+				if dist_top < dist_bot and dist_top <= d:
+					if len(event) == 1:
+						event = [EditEvent.none,EditEvent.resize_top]
+					else:
+						event[1] = EditEvent.resize_top
+				elif dist_bot < dist_top and dist_bot <= d:
+					if len(event) == 1:
+						event = [EditEvent.none,EditEvent.resize_bottom]
+					else:
+						event[1] = EditEvent.resize_bottom
+		return event
 
-def edit_event(x1,y1,x2,y2, mouseX,mouseY, resizable=True):
-	event = []
-	nx1 = (x1 if x1 < x2 else x2)
-	ny1 = (y1 if y1 < y2 else y2)
-	nx2 = (x2 if x2 > x1 else x1)
-	ny2 = (y2 if y2 > y1 else y1)
-	d = 2 * resizable
-	if nx1-d <= mouseX <= nx2+d and ny1-d <= mouseY <= ny2+d:
-		event.append(EDIT_MOVE)
-		if resizable:
-			dist_left = abs(x1 - mouseX)
-			dist_right = abs(x2 - mouseX)
-			if dist_left < dist_right and dist_left <= d:
-				event = [EDIT_RESIZE_LEFT,EDIT_NONE]
-			elif dist_right < dist_left and dist_right <= d:
-				event = [EDIT_RESIZE_RIGHT,EDIT_NONE]
-			dist_top = abs(y1 - mouseY)
-			dist_bot = abs(y2 - mouseY)
-			if dist_top < dist_bot and dist_top <= d:
-				if len(event) == 1:
-					event = [EDIT_NONE,EDIT_RESIZE_TOP]
-				else:
-					event[1] = EDIT_RESIZE_TOP
-			elif dist_bot < dist_top and dist_bot <= d:
-				if len(event) == 1:
-					event = [EDIT_NONE,EDIT_RESIZE_BOTTOM]
-				else:
-					event[1] = EDIT_RESIZE_BOTTOM
-	return event
+class ClickModifier(Enum):
+	none = 0
+	shift = 1
+	ctrl = 2
 
-class PyBIN(MainWindow):
-	def __init__(self, guifile=None):
+class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDelegate):
+	def __init__(self, guifile: str | None = None) -> None:
+		self.guifile = guifile
 
 		#Window
 		MainWindow.__init__(self)
@@ -84,36 +100,36 @@ class PyBIN(MainWindow):
 		ga.track(GAScreen('PyBIN'))
 		setup_trace('PyBIN', self)
 
-		self.settings = Settings('PyBIN', '1')
-		Theme.load_theme(self.settings.get('theme'), self)
+		self.config_ = PyBINConfig()
+		Theme.load_theme(self.config_.theme.value, self)
 
-		self.bin = None
-		self.file = None
+		self.bin: DialogBIN.DialogBIN | None = None
+		self.file: str | None = None
 		self.edited = False
-		self.dialog = None
-		self.widget_map = None
+		self.dialog: WidgetNode | None = None
+		self.widget_map: dict[str, WidgetNode] = {}
 
 		self.update_title()
 
-		self.tfont = None
-		self.dlggrp = None
-		self.tilegrp = None
-		self.dialog_assets = {}
-		self.dialog_frames = {}
+		self.tfont: PCX.PCX | None = None
+		self.dlggrp: GRP.GRP | None = None
+		self.tilegrp: GRP.GRP | None = None
+		self.dialog_assets: dict[int, PILImage.Image] = {}
+		self.dialog_frames: dict[int, PILImage.Image] = {}
 
-		self.selected_node = None
+		self.selected_node: WidgetNode | None = None
 
-		self.old_cursor = None
-		self.edit_node = None
-		self.current_event = []
+		self.old_cursor: str | None = None
+		self.edit_node: WidgetNode | None = None
+		self.current_event: list[EditEvent] = []
 		self.mouse_offset = [0,0]
 		self.event_moved = False
 
-		self.background = None
-		self.background_image = None
+		self.background: PCX.PCX | None = None
+		self.background_image: AnyPhotoImage | None = None
 
-		self.item_background = None
-		self.item_selection_box = None
+		self.item_background: Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_selection_box: Canvas.Item | None = None # type: ignore[name-defined]
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -122,17 +138,22 @@ class PyBIN(MainWindow):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
+		def save() -> None:
+			self.save()
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		def save_as() -> None:
+			self.saveas()
+		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
+		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
@@ -153,11 +174,11 @@ class PyBIN(MainWindow):
 		self.show_bounds_responsive = BooleanVar()
 		self.load_settings()
 
-		self.last_tick = None
-		self.tick_alarm = None
+		self.last_tick: int | None = None
+		self.tick_alarm: str | None = None
 
 		self.type_menu = Menu(self, tearoff=0)
-		fields = (
+		type_fields = (
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_DEFAULT_BTN], DialogBIN.BINWidget.TYPE_DEFAULT_BTN),
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_BUTTON], DialogBIN.BINWidget.TYPE_BUTTON),
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_OPTION_BTN], DialogBIN.BINWidget.TYPE_OPTION_BTN),
@@ -176,13 +197,17 @@ class PyBIN(MainWindow):
 			None,
 			('Group',-1),
 		)
-		for info in fields:
+		def add_new_node_callback(node_type: int) -> Callable[[], None]:
+			def add_new_node() -> None:
+				self.add_new_node(node_type)
+			return add_new_node
+		for info in type_fields:
 			if info:
-				self.type_menu.add_command(label=info[0], command=lambda t=info[1]: self.add_new_node(t))
+				self.type_menu.add_command(label=info[0], command=add_new_node_callback(info[1]))
 			else:
 				self.type_menu.add_separator()
 
-		self.scr_enabled = IntVar()
+		self.scr_enabled = BooleanVar()
 
 		frame = Frame(self)
 		leftframe = Frame(frame)
@@ -195,10 +220,10 @@ class PyBIN(MainWindow):
 
 		self.widgetTree = TreeList(leftframe)
 		self.widgetTree.grid(row=1, column=0, padx=1, pady=1, sticky=NSEW)
-		self.widgetTree.bind(Mouse.Click_Left, self.list_select)
-		self.widgetTree.bind(Mouse.Drag_Left, self.list_drag)
-		self.widgetTree.bind(ButtonRelease.Click_Left, self.list_drop)
-		self.widgetTree.bind(Double.Click_Left, self.list_double_click)
+		self.widgetTree.bind(Mouse.Click_Left(), self.list_select)
+		self.widgetTree.bind(Mouse.Drag_Left(), self.list_drag)
+		self.widgetTree.bind(ButtonRelease.Click_Left(), self.list_drop)
+		self.widgetTree.bind(Double.Click_Left(), self.list_double_click)
 
 		self.widgets_toolbar = Toolbar(leftframe)
 		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, tags='file_open')
@@ -213,41 +238,44 @@ class PyBIN(MainWindow):
 
 		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')
 		widgetsframe = LabelFrame(self.preview_settings_frame, text='Widget')
-		fields = (
-			('Images','show_images',self.show_images),
-			('Text','show_text',self.show_text),
-			('SMKs','show_smks',self.show_smks),
-			('Hidden','show_hidden',self.show_hidden),
-			('Dialog','show_dialog',self.show_dialog)
+		preview_fields = (
+			('Images',self.config_.preview.show_images,self.show_images),
+			('Text',self.config_.preview.show_text,self.show_text),
+			('SMKs',self.config_.preview.show_smks,self.show_smks),
+			('Hidden',self.config_.preview.show_hidden,self.show_hidden),
+			('Dialog',self.config_.preview.show_dialog,self.show_dialog)
 		)
-		for i,(name,setting_name,variable) in enumerate(fields):
-			check = Checkbutton(widgetsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+		def toggle_setting_callback(setting: Config.Boolean, variable: BooleanVar) -> Callable[[], None]:
+			def toggle_setting() -> None:
+				self.toggle_setting(setting, variable)
+			return toggle_setting
+		for i,(name,setting,variable) in enumerate(preview_fields):
+			check = Checkbutton(widgetsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
 		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5)
 		smkframe = LabelFrame(self.preview_settings_frame, text='SMKs')
-		fields = (
-			('Animated','show_animated',self.show_animated),
-			('Hovers','show_hover_smks',self.show_hover_smks)
+		smk_fields = (
+			('Animated',self.config_.preview.show_animated,self.show_animated),
+			('Hovers',self.config_.preview.show_hover_smks,self.show_hover_smks)
 		)
-		for i,(name,setting_name,variable) in enumerate(fields):
-			check = Checkbutton(smkframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+		for i,(name,setting,variable) in enumerate(smk_fields):
+			check = Checkbutton(smkframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		smkframe.grid_columnconfigure(0, weight=1)
 		smkframe.grid_columnconfigure(1, weight=1)
 		smkframe.grid(row=1, column=0, sticky=NSEW, padx=5)
 		boundsframe = LabelFrame(self.preview_settings_frame, text='Bounds')
-		fields = (
-			('Widgets','show_bounds_widget',self.show_bounds_widget, NORMAL),
-			('Groups','show_bounds_group',self.show_bounds_group, NORMAL),
-			('Text','show_bounds_text',self.show_bounds_text, NORMAL),
-			('Responsive','show_bounds_responsive',self.show_bounds_responsive, NORMAL)
+		bounds_fields = (
+			('Widgets',self.config_.preview.show_bounds_widget,self.show_bounds_widget),
+			('Groups',self.config_.preview.show_bounds_group,self.show_bounds_group),
+			('Text',self.config_.preview.show_bounds_text,self.show_bounds_text),
+			('Responsive',self.config_.preview.show_bounds_responsive,self.show_bounds_responsive)
 		)
-		for i,(name,setting_name,variable,state) in enumerate(fields):
-			check = Checkbutton(boundsframe, text=name, variable=variable, command=lambda n=setting_name,v=variable: self.toggle_setting(n,v))
-			check['state'] = state
-			check.grid(row=i / 2, column=i % 2, sticky=W)
+		for i,(name,setting,variable) in enumerate(bounds_fields):
+			check = Checkbutton(boundsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=W)
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
 		boundsframe.grid(row=2, column=0, sticky=NSEW, padx=5)
@@ -257,7 +285,7 @@ class PyBIN(MainWindow):
 			theme = DialogBIN.THEME_ASSETS_INFO[t]
 			themes.append('%s (%s)' % (theme['name'],theme['path']))
 		DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=EW)
-		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting('show_background',self.show_background)).grid(row=1, column=0, sticky=W)
+		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=W)
 		themeframe.grid_columnconfigure(0, weight=1)
 		# themeframe.grid_columnconfigure(1, weight=1)
 		themeframe.grid(row=3, column=0, sticky=NSEW, padx=5)
@@ -273,7 +301,7 @@ class PyBIN(MainWindow):
 		rightframe = Frame(frame)
 		Label(rightframe, text='Canvas:', anchor=W).pack(side=TOP, fill=X)
 		bdframe = Frame(rightframe, borderwidth=1, relief=SUNKEN)
-		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview')
+		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview') # type: ignore[call-arg]
 		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
 		bdframe.pack(side=TOP)
@@ -281,29 +309,37 @@ class PyBIN(MainWindow):
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.grid_rowconfigure(0, weight=1, minsize=480)
 		frame.pack(fill=BOTH, expand=1)
-		self.widgetCanvas.bind(Mouse.Motion, self.mouse_motion)
-		self.widgetCanvas.bind(Cursor.Leave, lambda e: self.edit_status.set(''))
-		self.widgetCanvas.bind(Double.Click_Left, lambda e,m=0: self.canvas_double_click(e,m))
-		self.widgetCanvas.bind(Ctrl.Double.Click_Left, lambda e,m=MODIFIER_CTRL: self.canvas_double_click(e,m))
+		self.widgetCanvas.bind(Mouse.Motion(), self.mouse_motion)
+		self.widgetCanvas.bind(Cursor.Leave(), lambda e: self.edit_status.set(''))
+		def canvas_double_click_callback(click_modifier: ClickModifier) -> Callable[[Event], None]:
+			def canvas_double_click(event: Event) -> None:
+				self.canvas_double_click(event, click_modifier)
+			return canvas_double_click
+		self.widgetCanvas.bind(Double.Click_Left(), canvas_double_click_callback(ClickModifier.none))
+		self.widgetCanvas.bind(Ctrl.Double.Click_Left(), canvas_double_click_callback(ClickModifier.ctrl))
 
 		mouse_events = (
-			(Mouse.Click_Left, MOUSE_DOWN),
-			(Mouse.Drag_Left, MOUSE_MOVE),
-			(ButtonRelease.Click_Left, MOUSE_UP),
+			(Mouse.Click_Left, MouseEvent.down),
+			(Mouse.Drag_Left, MouseEvent.move),
+			(ButtonRelease.Click_Left, MouseEvent.up),
 		)
 		mouse_modifiers = (
-			(None,0),
-			(Modifier.Shift,MODIFIER_SHIFT),
-			(Modifier.Ctrl,MODIFIER_CTRL)
+			(None,ClickModifier.none),
+			(Modifier.Shift,ClickModifier.shift),
+			(Modifier.Ctrl,ClickModifier.ctrl)
 		)
+		def mouse_event_callback(mouse_event: MouseEvent, click_modifier: ClickModifier) -> Callable[[Event], None]:
+			def _mouse_event(event: Event) -> None:
+				self.mouse_event(event, mouse_event, click_modifier)
+			return _mouse_event
 		for base_event,etype in mouse_events:
 			for event_mod,mod in mouse_modifiers:
 				event = base_event
 				if event_mod:
 					event = event_mod + event
-				self.widgetCanvas.bind(event, lambda e,t=etype,m=mod: self.mouse_event(e,t,m))
+				self.widgetCanvas.bind(event(), mouse_event_callback(etype,mod))
 
-		self.bind(Key.Return, self.list_double_click)
+		self.bind(Key.Return(), self.list_double_click)
 
 		#Statusbar
 		self.status = StringVar()
@@ -316,49 +352,49 @@ class PyBIN(MainWindow):
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		self.update_idletasks()
-		w,h,_,_,_ = parse_geometry(self.winfo_geometry())
-		self.minsize(w,h)
-		self.settings.windows.load_window_size('main', self)
+		geometry = Geometry.of(self)
+		self.minsize(geometry.size.width, geometry.size.height)
+		self.config_.windows.main.load_size(self)
 
-		self.mpqhandler = MPQHandler(self.settings.settings.get('mpqs',[]))
-		if not len(self.mpqhandler.mpq_paths()) and self.mpqhandler.add_defaults():
-			self.settings.settings.mpqs = self.mpqhandler.mpq_paths()
+		self.mpq_handler = MPQHandler(self.config_.mpqs)
+
+	def initialize(self) -> None:
 		e = self.open_files()
-
-		if guifile:
-			self.open(file=guifile)
-
-		UpdateDialog.check_update(self, 'PyBIN')
-
 		if e:
 			self.mpqsettings(err=e)
+		if self.guifile:
+			self.open(file=self.guifile)
+		UpdateDialog.check_update(self, 'PyBIN')
 
-	def tick(self, start=False):
-		if self.tick_alarm or start:
-			if self.bin:
-				now = int(time.time() * 1000)
-				if self.last_tick == None:
-					self.last_tick = now
-				dt = now - self.last_tick
+	def tick(self, start: bool = False) -> None:
+		if not self.tick_alarm or not start:
+			return
+		if self.bin:
+			now = int(time.time() * 1000)
+			if self.last_tick is None:
 				self.last_tick = now
-				for node in self.flattened_nodes():
-					node.tick(dt)
-					node.update_video()
-				self.widgetCanvas.update_idletasks()
-				self.tick_alarm = self.after(FRAME_DELAY,self.tick)
-			else:
-				self.tick_alarm = None
-
-	def stop_tick(self):
-		if self.tick_alarm != None:
-			cancel = self.tick_alarm
+			dt = now - self.last_tick
+			self.last_tick = now
+			for node in self.flattened_nodes():
+				node.tick(dt)
+				node.update_video()
+			self.widgetCanvas.update_idletasks()
+			self.tick_alarm = self.after(FRAME_DELAY,self.tick)
+		else:
 			self.tick_alarm = None
-			self.after_cancel(cancel)
 
-	def scr_toggled(self):
+	def stop_tick(self) -> None:
+		if self.tick_alarm is None:
+			return
+		cancel = self.tick_alarm
+		self.tick_alarm = None
+		self.after_cancel(cancel)
+
+	def scr_toggled(self) -> None:
+		assert self.bin is not None
 		self.bin.remastered = self.scr_enabled.get()
 
-	def toggle_preview_settings(self):
+	def toggle_preview_settings(self) -> None:
 		show = not self.show_preview_settings.get()
 		self.show_preview_settings.set(show)
 		if show:
@@ -368,18 +404,23 @@ class PyBIN(MainWindow):
 			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrowup'))
 			self.preview_settings_frame.grid_remove()
 
-	def add_node(self):
+	def add_node(self) -> None:
 		self.type_menu.post(*self.winfo_pointerxy())
 
-	def add_new_node(self, ctrl_type):
+	def add_new_node(self, ctrl_type: int) -> None:
+		if not self.bin:
+			return
 		parent = self.dialog
 		index = 0
 		if self.selected_node:
-			if self.selected_node.children != None:
+			if self.selected_node.children is not None:
 				parent = self.selected_node
 			else:
 				parent = self.selected_node.parent
-				index = parent.children.index(self.selected_node)
+				if parent and parent.children is not None:
+					index = parent.children.index(self.selected_node)
+		if not parent:
+			return
 		node = None
 		if ctrl_type == -1:
 			node = WidgetNode(self)
@@ -388,8 +429,8 @@ class PyBIN(MainWindow):
 			widget = DialogBIN.BINWidget(ctrl_type)
 			widget.width = 201
 			widget.height = 101
-			widget.x1 = x1 + (x2-x1-(widget.width-1)) / 2
-			widget.y1 = y1 + (y2-y1-(widget.height-1)) / 2
+			widget.x1 = x1 + (x2-x1-(widget.width-1)) // 2
+			widget.y1 = y1 + (y2-y1-(widget.height-1)) // 2
 			widget.x2 = widget.x1 + widget.width-1
 			widget.y2 = widget.y1 + widget.height-1
 			if widget.flags & DialogBIN.BINWidget.FLAG_RESPONSIVE:
@@ -402,12 +443,14 @@ class PyBIN(MainWindow):
 			if ctrl_type >= DialogBIN.BINWidget.TYPE_HTML:
 				self.scr_enabled.set(True)
 		parent.add_child(node, index)
-		self.reload_list()
-		self.reload_canvas()
+		self.refresh_nodes()
+		self.refresh_preview()
 		self.select_node(node)
 		self.mark_edited()
 
-	def remove_node(self):
+	def remove_node(self) -> None:
+		if not self.bin or not self.selected_node:
+			return
 		self.selected_node.remove_display()
 		if self.selected_node.widget:
 			self.bin.widgets.remove(self.selected_node.widget)
@@ -417,26 +460,28 @@ class PyBIN(MainWindow):
 		self.selected_node.remove_from_parent()
 		self.selected_node = None
 		self.update_selection_box()
-		self.reload_list()
+		self.refresh_nodes()
 		self.mark_edited()
 
-	def move_node(self, delta):
+	def move_node(self, delta: int) -> None:
+		if not self.selected_node or not self.selected_node.parent or self.selected_node.parent.children is None:
+			return
 		index = self.selected_node.parent.children.index(self.selected_node)
 		dest = index + delta
 		if 0 <= dest <= len(self.selected_node.parent.children):
 			self.selected_node.parent.children.insert(dest, self.selected_node)
 			del self.selected_node.parent.children[index + (dest < index)]
-			self.reload_list()
+			self.refresh_nodes()
 			self.action_states()
 			self.update_zorder()
 			self.mark_edited()
 
-	def update_background(self):
+	def update_background(self) -> None:
 		if self.bin and self.show_theme_index.get() and not self.background:
 			try:
 				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
-				background.load_file(self.mpqhandler.get_file(path))
+				background.load_file(self.mpq_handler.load_file(path))
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -446,19 +491,19 @@ class PyBIN(MainWindow):
 		delete = True
 		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				self.background_image = GRP.frame_to_photo(self.background.palette, self.background, -1, size=False)
+				self.background_image = cast(PhotoImage, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
 			if self.background_image:
 				delete = False
 				if self.item_background:
-					self.widgetCanvas.itemconfigure(self.item_background, image=self.background_image)
+					self.item_background.config(image=self.background_image)
 				else:
 					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
-					self.widgetCanvas.lower(self.item_background)
+					self.item_background.tag_lower()
 		if self.item_background and delete:
-			self.widgetCanvas.delete(self.item_background)
+			self.item_background.delete()
 			self.item_background = None
 
-	def load_dlggrp(self):
+	def load_dlggrp(self) -> None:
 		dlggrp = None
 		check = ['MPQ:glue\\palmm\\dlg.grp']
 		if self.show_theme_index.get():
@@ -467,7 +512,7 @@ class PyBIN(MainWindow):
 		for path in check:
 			try:
 				dlggrp = GRP.GRP()
-				dlggrp.load_file(self.mpqhandler.get_file(path), uncompressed=True)
+				dlggrp.load_file(self.mpq_handler.load_file(path), uncompressed=True)
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -477,19 +522,9 @@ class PyBIN(MainWindow):
 		# if self.bin:
 		# 	for widget in self.flattened_nodes():
 		# 		pass
-			# self.reload_canvas()
+			# self.refresh_preview()
 
-	def dialog_asset(self, asset_id):
-		asset = None
-		if self.dlggrp and self.background:
-			if asset_id in self.dialog_assets:
-				asset = self.dialog_assets[asset_id]
-			else:
-				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, image_bounds=self.dlggrp.images_bounds[asset_id])
-				self.dialog_assets[asset_id] = asset
-		return asset
-
-	def load_tilegrp(self):
+	def load_tilegrp(self) -> None:
 		tilegrp = None
 		check = ['MPQ:glue\\palmm\\tile.grp']
 		if self.show_theme_index.get():
@@ -498,7 +533,7 @@ class PyBIN(MainWindow):
 		for path in check:
 			try:
 				tilegrp = GRP.GRP()
-				tilegrp.load_file(self.mpqhandler.get_file(path))
+				tilegrp.load_file(self.mpq_handler.load_file(path))
 			except:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -508,19 +543,9 @@ class PyBIN(MainWindow):
 		# if self.bin:
 		# 	for widget in self.flattened_nodes():
 		# 		pass
-			# self.reload_canvas()
+			# self.refresh_preview()
 
-	def dialog_frame(self, frame_id):
-		frame = None
-		if self.tilegrp and self.background:
-			if frame_id in self.dialog_frames:
-				frame = self.dialog_frames[frame_id]
-			else:
-				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, image_bounds=self.tilegrp.images_bounds[frame_id])
-				self.dialog_frames[frame_id] = frame
-		return frame
-
-	def load_tfont(self):
+	def load_tfont(self) -> None:
 		tfont = None
 		check = ['MPQ:glue\\title\\tfont.pcx']
 		if self.show_theme_index.get():
@@ -529,7 +554,7 @@ class PyBIN(MainWindow):
 		for path in check:
 			try:
 				tfont = PCX.PCX()
-				tfont.load_file(self.mpqhandler.get_file(path))
+				tfont.load_file(self.mpq_handler.load_file(path))
 			except:
 				tfont = None
 			else:
@@ -539,22 +564,22 @@ class PyBIN(MainWindow):
 			for widget in self.flattened_nodes():
 				widget.string = None
 				widget.item_string_images = None
-			# self.reload_canvas()
+			# self.refresh_preview()
 
-	def change_theme(self, n):
+	def change_theme(self, n: int) -> None:
 		index = self.show_theme_index.get()-1
-		if index != self.settings.preview.get('theme_id'):
-			self.settings.preview.theme_id = index
+		if index != self.config_.preview.theme_id.value:
+			self.config_.preview.theme_id.value = index
 			self.background = None
 			self.background_image = None
 			self.update_background()
 			self.load_dlggrp()
 			self.load_tilegrp()
 			self.load_tfont()
-			self.reload_canvas()
+			self.refresh_preview()
 
-	def open_files(self):
-		self.mpqhandler.open_mpqs()
+	def open_files(self) -> (PyMSError | None):
+		self.mpq_handler.open_mpqs()
 		err = None
 		try:
 			tfontgam = PCX.PCX()
@@ -563,27 +588,11 @@ class PyBIN(MainWindow):
 			font16 = FNT.FNT()
 			font16x = FNT.FNT()
 
-			tfontgam.load_file(self.mpqhandler.get_file(self.settings.settings.files.get('tfontgam', 'MPQ:game\\tfontgam.pcx')))
-			path = self.settings.settings.files.get('font10', 'MPQ:font\\font10.fnt')
-			try:
-				font10.load_file(self.mpqhandler.get_file(path, False))
-			except:
-				font10.load_file(self.mpqhandler.get_file(path, True))
-			path = self.settings.settings.files.get('font14', 'MPQ:font\\font14.fnt')
-			try:
-				font14.load_file(self.mpqhandler.get_file(path, False))
-			except:
-				font14.load_file(self.mpqhandler.get_file(path, True))
-			path = self.settings.settings.files.get('font16', 'MPQ:font\\font16.fnt')
-			try:
-				font16.load_file(self.mpqhandler.get_file(path, False))
-			except:
-				font16.load_file(self.mpqhandler.get_file(path, True))
-			path = self.settings.settings.files.get('font16x', 'MPQ:font\\font16x.fnt')
-			try:
-				font16x.load_file(self.mpqhandler.get_file(path, False))
-			except:
-				font16x.load_file(self.mpqhandler.get_file(path, True))
+			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, lambda data: font14.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, lambda data: font16.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, lambda data: font16x.load_file(data))
 		except PyMSError as e:
 			err = e
 		else:
@@ -592,309 +601,287 @@ class PyBIN(MainWindow):
 			self.font14 = font14
 			self.font16 = font16
 			self.font16x = font16x
-		self.mpqhandler.close_mpqs()
+		self.mpq_handler.close_mpqs()
 		return err
 
-	def mpqsettings(self, key=None, err=None):
-		data = [
-			('Preview Settings',[
-				('tfontgam.pcx','The special palette which holds text colors.','tfontgam','PCX'),
-				('font10.fnt','Size 10 font','font10','FNT'),
-				('font14.fnt','Size 14 font','font14','FNT'),
-				('font16.fnt','Size 16 font','font16','FNT'),
-				('font16x.fnt','Size 16x font','font16x','FNT'),
-			]),
-			('Theme',)
-		]
-		SettingsDialog(self, data, (550,430), err, settings=self.settings, mpqhandler=self.mpqhandler)
+	def mpqsettings(self, key: Event | None = None, err: PyMSError | None = None) -> None:
+		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
-	def unsaved(self):
-		if self.bin and self.edited:
-			file = self.file
-			if not file:
-				file = 'Unnamed.bin'
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
-				if self.file:
-					self.save()
-				else:
-					self.saveas()
+	def check_saved(self) -> CheckSaved:
+		if not self.bin or not self.edited:
+			return CheckSaved.saved
+		file = self.file
+		if not file:
+			file = 'Unnamed.bin'
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		if save == MessageBox.NO:
+			return CheckSaved.saved
+		if save == MessageBox.CANCEL:
+			return CheckSaved.cancelled
+		if self.file:
+			return self.save()
+		else:
+			return self.saveas()
 
-	def is_file_open(self):
+	def is_file_open(self) -> bool:
 		return not not self.bin
 
-	def has_selected_node(self):
-		return self.selected_node != None
+	def has_selected_node(self) -> bool:
+		return self.selected_node is not None
 
-	def action_states(self):
+	def action_states(self) -> None:
 		is_file_open = self.is_file_open()
 		self.toolbar.tag_enabled('file_open', is_file_open)
 
-		has_selected_node = self.has_selected_node()
-		selection_is_dialog = (has_selected_node and self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG)
+		selection_is_dialog = (self.selected_node and self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG)
 		can_move_up = False
 		can_move_down = False
-		if has_selected_node and not not self.selected_node.parent:
+		if self.selected_node and not not self.selected_node.parent and not self.selected_node.parent.children is None:
 			index = self.selected_node.parent.children.index(self.selected_node)
 			can_move_up = (index > 0)
 			can_move_down = (index < len(self.selected_node.parent.children)-1)
 		self.widgets_toolbar.tag_enabled('file_open', is_file_open)
-		self.widgets_toolbar.tag_enabled('node_selected', has_selected_node)
+		self.widgets_toolbar.tag_enabled('node_selected', self.has_selected_node())
 		self.widgets_toolbar.tag_enabled('dialog_not_selected', not selection_is_dialog)
 		self.widgets_toolbar.tag_enabled('can_move_up', can_move_up)
 		self.widgets_toolbar.tag_enabled('can_move_down', can_move_down)
 
 		# self.scr_check['state'] = NORMAL if is_file_open and not self.bin.remastered_required() else DISABLED
 
-	def mark_edited(self, edited=True):
-		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
-		self.action_states()
-
-	def setup_nodes(self):
+	def setup_nodes(self) -> None:
+		if not self.bin:
+			return
 		for widget in self.bin.widgets:
 			node = WidgetNode(self, widget)
-			if self.dialog == None:
+			if self.dialog is None:
 				self.dialog = node
 			else:
 				self.dialog.add_child(node)
 
-	def flattened_nodes(self, include_groups=True):
-		nodes = []
-		def add_node(node):
+	def flattened_nodes(self, include_groups: bool = True) -> list[WidgetNode]:
+		nodes: list[WidgetNode] = []
+		def add_node(node: WidgetNode) -> None:
 			if node.widget or include_groups:
 				nodes.append(node)
-			if node.children:
+			if node.children is not None:
 				for child in node.children:
 					add_node(child)
 		if self.dialog:
 			add_node(self.dialog)
 		return nodes
 
-	def reload_list(self):
-		self.widget_map = {}
-		self.widgetTree.delete(ALL)
-		def list_node(index, node):
-			group = None
-			if node.children != None:
-				group = True
-			node.index = self.widgetTree.insert(index, node.get_name(), group)
-			if node == self.selected_node:
-				self.widgetTree.select(node.index)
-				self.widgetTree.see(node.index)
-			self.widget_map[node.index] = node
-			if node.children:
-				for child in reversed(node.children):
-					list_node(node.index + '.-1', child)
-		list_node('-1', self.dialog)
-
-	def update_zorder(self):
+	def update_zorder(self) -> None:
 		for node in self.flattened_nodes():
 			node.lift()
 		if self.item_selection_box:
-			self.widgetCanvas.lift(self.item_selection_box)
+			self.item_selection_box.tag_raise()
 
-	def reload_canvas(self):
-		if self.bin:
-			# self.widgetCanvas.delete(ALL)
-			self.update_background()
-			reorder = False
-			for node in self.flattened_nodes():
-				reorder = node.update_display() or reorder
-			self.update_selection_box()
-			if reorder:
-				self.update_zorder()
+	def toggle_setting(self, setting: Config.Boolean, variable: BooleanVar) -> None:
+		setting.value = variable.get()
+		self.refresh_preview()
 
-	def toggle_setting(self, setting_name, variable):
-		self.settings.preview[setting_name] = variable.get()
-		self.reload_canvas()
-
-	def update_selection_box(self):
+	def update_selection_box(self) -> None:
 		if self.selected_node:
 			x1,y1,x2,y2 = self.selected_node.bounding_box()
 			if self.item_selection_box:
-				self.widgetCanvas.coords(self.item_selection_box, x1,y1, x2,y2)
+				self.item_selection_box.coords(x1,y1, x2,y2)
 			else:
 				self.item_selection_box = self.widgetCanvas.create_rectangle(x1,y1, x2,y2, width=1, outline='#ff6961')
 		elif self.item_selection_box:
-			self.widgetCanvas.delete(self.item_selection_box)
+			self.item_selection_box.delete()
 			self.item_selection_box = None
 
-	def update_list_selection(self):
-		if self.selected_node:
+	def update_list_selection(self) -> None:
+		if self.selected_node and self.selected_node.index:
 			self.widgetTree.select(self.selected_node.index)
 			self.widgetTree.see(self.selected_node.index)
 		else:
 			self.widgetTree.select(None)
 
-	def edit_node_settings(self, node=None):
-		if node == None:
+	def edit_node_settings(self, node: WidgetNode | None = None) -> None:
+		if node is None:
 			node = self.selected_node
 		if node and node.widget:
-			WidgetSettings(self, node)
+			WidgetSettings(self, node, self)
 
-	def canvas_double_click(self, e, m):
-		if self.bin:
-			prefer_selection = (m == MODIFIER_CTRL)
-			def check_clicked(node, x,y):
-				found = None
-				x1,y1,x2,y2 = node.bounding_box()
-				if node.widget:
-					x1 = node.widget.x1
-					y1 = node.widget.y1
-					x2 = node.widget.x2
-					y2 = node.widget.y2
-				event = edit_event(x1,y1,x2,y2, x,y, False)
-				if event:
-					found = node
-					if node.children and (not prefer_selection or node != self.selected_node):
-						for child in reversed(node.children):
-							found_child = check_clicked(child, x,y)
-							if found_child != None:
-								found = found_child
-				return found
-			node = check_clicked(self.dialog, e.x,e.y)
-			if node:
-				self.edit_node_settings(node)
+	def canvas_double_click(self, e: Event, m: ClickModifier):
+		if not self.dialog:
+			return
+		prefer_selection = (m == ClickModifier.ctrl)
+		def check_clicked(node: WidgetNode, x: int, y: int) -> (WidgetNode | None):
+			found = None
+			x1,y1,x2,y2 = node.bounding_box()
+			if node.widget:
+				x1 = node.widget.x1
+				y1 = node.widget.y1
+				x2 = node.widget.x2
+				y2 = node.widget.y2
+			event = EditEvent.of(x1,y1,x2,y2, x,y, False)
+			if event:
+				found = node
+				if node.children is not None and (not prefer_selection or node != self.selected_node):
+					for child in reversed(node.children):
+						found_child = check_clicked(child, x,y)
+						if found_child is not None:
+							found = found_child
+			return found
+		node = check_clicked(self.dialog, e.x,e.y)
+		if node:
+			self.edit_node_settings(node)
 
-	def list_double_click(self, event):
+	def list_double_click(self, event: Event) -> None:
 		selected = self.widgetTree.cur_selection()
-		if selected and selected[0] > -1:
-			list_index = self.widgetTree.index(selected[0])
-			node = self.widget_map.get(list_index)
-			if node:
-				self.edit_node_settings(node)
+		if not selected or selected[0] < 0:
+			return
+		list_index = self.widgetTree.index(selected[0])
+		if not list_index:
+			return
+		node = self.widget_map.get(list_index)
+		if node:
+			self.edit_node_settings(node)
 
-	def select_node(self, node):
+	def select_node(self, node: WidgetNode | None) -> None:
 		self.selected_node = node
 		self.update_selection_box()
 		self.update_list_selection()
 		self.action_states()
 
-	def list_select(self, event):
+	def list_select(self, event: Event) -> None:
 		selected = self.widgetTree.cur_selection()
-		if selected and selected[0] > -1:
-			list_index = self.widgetTree.index(selected[0])
-			self.selected_node = self.widget_map[list_index]
-			self.update_selection_box()
-			self.action_states()
+		if not selected or selected[0] < 0:
+			return
+		list_index = self.widgetTree.index(selected[0])
+		if not list_index:
+			return
+		self.selected_node = self.widget_map[list_index]
+		self.update_selection_box()
+		self.action_states()
 
-	def list_drag(self, event):
+	def list_drag(self, event: Event) -> None:
 		# todo: Not started on node?
-		if self.selected_node and (not self.selected_node.widget or self.selected_node.widget.type != DialogBIN.BINWidget.TYPE_DIALOG):
-			index = self.widgetTree.index("@%d,%d" % (event.x, event.y))
-			self.widgetTree.highlight(index)
+		if not self.selected_node:
+			return
+		if self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
+			return
+		index = self.widgetTree.index("@%d,%d" % (event.x, event.y))
+		self.widgetTree.highlight(index)
 
-	def list_drop(self, event):
+	def list_drop(self, event: Event) -> None:
 		# todo: Not started on node?
-		if self.selected_node and (not self.selected_node.widget or self.selected_node.widget.type != DialogBIN.BINWidget.TYPE_DIALOG):
-			self.widgetTree.highlight(None)
-			index,below = self.widgetTree.lookup_coords(event.x, event.y)
-			if index and index != self.selected_node.index:
-				highlight = self.widget_map[index]
-				if self.selected_node.children:
-					check = highlight.parent
-					while check:
-						if check == self.selected_node:
-							return
-						check = check.parent
-				if highlight.children != None:
-					highlight.add_child(self.selected_node)
-				else:
-					highlight.parent.add_child(self.selected_node, highlight.parent.children.index(highlight) + below)
-				self.reload_list()
-				self.reload_canvas()
-				self.mark_edited()
+		if not self.selected_node:
+			return
+		if self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
+			return
+		self.widgetTree.highlight(None)
+		index,below = self.widgetTree.lookup_coords(event.x, event.y)
+		if index is None or index == self.selected_node.index:
+			return
+		highlight = self.widget_map[index]
+		if self.selected_node.children is not None:
+			check = highlight.parent
+			while check:
+				if check == self.selected_node:
+					return
+				check = check.parent
+		if highlight.children is not None:
+			highlight.add_child(self.selected_node)
+		elif highlight.parent and highlight.parent.children is not None:
+			highlight.parent.add_child(self.selected_node, highlight.parent.children.index(highlight) + below)
+		self.refresh_nodes()
+		self.refresh_preview()
+		self.mark_edited()
 
-	def edit_event(self, x,y, node=None, prefer_selection=False):
-		if node == None:
+	def edit_event(self, x: int, y: int, node: WidgetNode | None = None, prefer_selection: bool = False) -> tuple[WidgetNode | None, list[EditEvent]]:
+		if node is None:
 			node = self.dialog
-		found = [None,[]]
+		if node is None:
+			return (None, [])
+		found_node: WidgetNode | None = None
+		found_event: list[EditEvent] = []
 		x1,y1,x2,y2 = node.bounding_box()
 		if node.widget:
 			x1 = node.widget.x1
 			y1 = node.widget.y1
 			x2 = node.widget.x2
 			y2 = node.widget.y2
-		event = edit_event(x1,y1,x2,y2, x,y, node.widget != None)
+		event = EditEvent.of(x1,y1,x2,y2, x,y, node.widget is not None)
 		if event:
-			found[0] = node
-			found[1] = event
-		if node.children and (not prefer_selection or node != self.selected_node):
+			found_node = node
+			found_event = event
+		if node.children is not None and (not prefer_selection or node != self.selected_node):
 			for child in reversed(node.children):
 				found_child = self.edit_event(x,y, node=child, prefer_selection=prefer_selection)
-				if found_child[0] != None:
-					found = found_child
+				if found_child[0] is not None:
+					found_node,found_event = found_child
 					break
-		return found
+		return (found_node, found_event)
 
-	def mouse_motion(self, event):
-		if self.bin:
-			if self.old_cursor == None:
-				self.old_cursor = self.widgetCanvas.cget('cursor')
-			cursor = [self.old_cursor]
-			node,mouse_event = self.edit_event(event.x,event.y)
-			if node != None:
-				if node.widget:
-					if node.widget.x1 > node.widget.x2:
-						if EDIT_RESIZE_LEFT in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_LEFT)] = EDIT_RESIZE_RIGHT
-						elif EDIT_RESIZE_RIGHT in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_RIGHT)] = EDIT_RESIZE_LEFT
-					if node.widget.y1 > node.widget.y2:
-						if EDIT_RESIZE_TOP in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_TOP)] = EDIT_RESIZE_BOTTOM
-						elif EDIT_RESIZE_BOTTOM in mouse_event:
-							mouse_event[mouse_event.index(EDIT_RESIZE_BOTTOM)] = EDIT_RESIZE_TOP
-				if mouse_event[0] == EDIT_MOVE:
-					cursor.extend(['crosshair','fleur','size'])
-				elif mouse_event[0] == EDIT_RESIZE_LEFT:
-					cursor.extend(['left_side','size_we','resizeleft','resizeleftright'])
-				elif mouse_event[0] == EDIT_RESIZE_RIGHT:
-					cursor.extend(['right_side','size_we','resizeright','resizeleftright'])
-				if len(mouse_event) == 2:
-					if mouse_event[1] == EDIT_RESIZE_TOP:
-						cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
-					elif mouse_event[1] == EDIT_RESIZE_BOTTOM:
-						cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
-					if mouse_event[0] == EDIT_RESIZE_LEFT and mouse_event[1] == EDIT_RESIZE_TOP:
-						cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
-					elif mouse_event[0] == EDIT_RESIZE_RIGHT and mouse_event[1] == EDIT_RESIZE_TOP:
-						cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
-					elif mouse_event[0] == EDIT_RESIZE_LEFT and mouse_event[1] == EDIT_RESIZE_BOTTOM:
-						cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
-					elif mouse_event[0] == EDIT_RESIZE_RIGHT and mouse_event[1] == EDIT_RESIZE_BOTTOM:
-						cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
-				if node.widget:
-					self.edit_status.set('Edit Widget: ' + node.get_name())
-				else:
-					self.edit_status.set('Edit ' + node.get_name())
+	def mouse_motion(self, event: Event) -> None:
+		if not self.bin:
+			return
+		if self.old_cursor is None:
+			self.old_cursor = self.widgetCanvas.cget('cursor')
+		cursor = [self.old_cursor]
+		node,mouse_event = self.edit_event(event.x,event.y)
+		if node is not None:
+			if node.widget:
+				if node.widget.x1 > node.widget.x2:
+					if EditEvent.resize_left in mouse_event:
+						mouse_event[mouse_event.index(EditEvent.resize_left)] = EditEvent.resize_right
+					elif EditEvent.resize_right in mouse_event:
+						mouse_event[mouse_event.index(EditEvent.resize_right)] = EditEvent.resize_left
+				if node.widget.y1 > node.widget.y2:
+					if EditEvent.resize_top in mouse_event:
+						mouse_event[mouse_event.index(EditEvent.resize_top)] = EditEvent.resize_bottom
+					elif EditEvent.resize_bottom in mouse_event:
+						mouse_event[mouse_event.index(EditEvent.resize_bottom)] = EditEvent.resize_top
+			if mouse_event[0] == EditEvent.move:
+				cursor.extend(['crosshair','fleur','size'])
+			elif mouse_event[0] == EditEvent.resize_left:
+				cursor.extend(['left_side','size_we','resizeleft','resizeleftright'])
+			elif mouse_event[0] == EditEvent.resize_right:
+				cursor.extend(['right_side','size_we','resizeright','resizeleftright'])
+			if len(mouse_event) == 2:
+				if mouse_event[1] == EditEvent.resize_top:
+					cursor.extend(['top_side','size_ns','resizeup','resizeupdown'])
+				elif mouse_event[1] == EditEvent.resize_bottom:
+					cursor.extend(['bottom_side','size_ns','resizedown','resizeupdown'])
+				if mouse_event[0] == EditEvent.resize_left and mouse_event[1] == EditEvent.resize_top:
+					cursor.extend(['top_left_corner','size_nw_se','resizetopleft'])
+				elif mouse_event[0] == EditEvent.resize_right and mouse_event[1] == EditEvent.resize_top:
+					cursor.extend(['top_right_corner','size_ne_sw','resizetopright'])
+				elif mouse_event[0] == EditEvent.resize_left and mouse_event[1] == EditEvent.resize_bottom:
+					cursor.extend(['bottom_left_corner','size_ne_sw','resizebottomleft'])
+				elif mouse_event[0] == EditEvent.resize_right and mouse_event[1] == EditEvent.resize_bottom:
+					cursor.extend(['bottom_right_corner','size_nw_se','resizebottomright'])
+			if node.widget:
+				self.edit_status.set('Edit Widget: ' + node.get_name())
 			else:
-				self.edit_status.set('')
-			self.widgetCanvas.apply_cursor(cursor)
+				self.edit_status.set('Edit ' + node.get_name())
+		else:
+			self.edit_status.set('')
+		self.widgetCanvas.apply_cursor(cursor) # type: ignore[attr-defined]
 
-	def mouse_event(self, event, button_event, modifier):
+	def mouse_event(self, event: Event, mouse_event: MouseEvent, modifier: ClickModifier) -> None:
 		RESTRICT_TO_WINDOW = True
 		if self.bin:
 			x = event.x
 			y = event.y
-			if button_event == MOUSE_DOWN:
-				node,mouse_event = self.edit_event(event.x,event.y, prefer_selection=(modifier == MODIFIER_CTRL))
+			if mouse_event == MouseEvent.down:
+				node,edit_event = self.edit_event(event.x,event.y, prefer_selection=(modifier == ClickModifier.ctrl))
 				self.select_node(node)
 				if node:
 					self.edit_node = node
-					self.current_event = mouse_event
+					self.current_event = edit_event
 					self.event_moved = False
-					if mouse_event[0] == EDIT_MOVE:
+					if edit_event[0] == EditEvent.move:
 						x1,y1,x2,y2 = node.bounding_box()
 						self.mouse_offset = [x1 - x, y1 - y]
 			if self.edit_node:
-				if button_event == MOUSE_MOVE:
+				if mouse_event == MouseEvent.move:
 					self.event_moved = True
 				x1,y1,x2,y2 = self.edit_node.bounding_box()
-				if self.current_event[0] == EDIT_MOVE:
+				if self.current_event[0] == EditEvent.move:
 					dx = (x + self.mouse_offset[0]) - x1
 					dy = (y + self.mouse_offset[1]) - y1
 					x1 += dx
@@ -917,13 +904,13 @@ class PyBIN(MainWindow):
 								dy += ry1-y1
 							elif y2 > ry2:
 								dy += ry2-y2
-					def offset_node(node, delta_x,delta_y):
+					def offset_node(node: WidgetNode, delta_x: int, delta_y) -> None:
 						if node.widget:
 							node.widget.x1 += delta_x
 							node.widget.y1 += delta_y
 							node.widget.x2 += delta_x
 							node.widget.y2 += delta_y
-						if node.children:
+						if node.children is not None:
 							for child in node.children:
 								offset_node(child, delta_x,delta_y)
 						node.update_display()
@@ -933,17 +920,18 @@ class PyBIN(MainWindow):
 					if dx or dy:
 						self.mark_edited()
 				elif self.event_moved:
+					assert self.edit_node.widget is not None
 					rdx2,rdy2 = 0,0
-					if EDIT_RESIZE_LEFT in self.current_event:
+					if EditEvent.resize_left in self.current_event:
 						rdx2 = self.edit_node.widget.x1 - x
 						self.edit_node.widget.x1 = x
-					elif EDIT_RESIZE_RIGHT in self.current_event:
+					elif EditEvent.resize_right in self.current_event:
 						rdx2 = x - self.edit_node.widget.x2
 						self.edit_node.widget.x2 = x
-					if EDIT_RESIZE_TOP in self.current_event:
+					if EditEvent.resize_top in self.current_event:
 						rdy2 = self.edit_node.widget.y1 - y
 						self.edit_node.widget.y1 = y
-					elif EDIT_RESIZE_BOTTOM in self.current_event:
+					elif EditEvent.resize_bottom in self.current_event:
 						rdy2 = y - self.edit_node.widget.y2
 						self.edit_node.widget.y2 = y
 					if rdx2 > 0:
@@ -963,20 +951,20 @@ class PyBIN(MainWindow):
 						self.update_selection_box()
 					self.mark_edited()
 				check = self.edit_node
-				while check.parent and check.parent.widget == None:
+				while check.parent and check.parent.widget is None:
 					check.parent.update_display()
 					check = check.parent
-				if button_event == MOUSE_UP:
+				if mouse_event == MouseEvent.up:
 					self.edit_node = None
 					self.current_event = []
 					self.mouse_offset = [0, 0]
 
-	def clear(self):
+	def clear(self) -> None:
 		self.bin = None
 		self.file = None
 		self.edited = False
 		self.dialog = None
-		self.widget_map = None
+		self.widget_map.clear()
 
 		self.update_title()
 
@@ -995,7 +983,7 @@ class PyBIN(MainWindow):
 		self.widgetTree.delete(ALL)
 		self.widgetCanvas.delete(ALL)
 
-	def update_title(self):
+	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.bin'
@@ -1004,176 +992,337 @@ class PyBIN(MainWindow):
 		else:
 			self.title('PyBIN %s (%s)' % (LONG_VERSION, file_path))
 
-	def new(self, key=None):
-		if not self.unsaved():
-			if not self.tfont:
-				self.load_tfont()
-			if not self.dlggrp:
-				self.load_dlggrp()
-			if not self.tilegrp:
-				self.load_tilegrp()
-			self.clear()
-			self.bin = DialogBIN.DialogBIN()
-			self.setup_nodes()
-			self.reload_list()
-			self.reload_canvas()
-			self.file = None
-			self.status.set('Editing new Dialog.')
-			self.update_title()
-			self.mark_edited(False)
-			self.action_states()
-			self.tick(True)
+	def new(self, key: Event | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if not self.tfont:
+			self.load_tfont()
+		if not self.dlggrp:
+			self.load_dlggrp()
+		if not self.tilegrp:
+			self.load_tilegrp()
+		self.clear()
+		self.bin = DialogBIN.DialogBIN()
+		self.setup_nodes()
+		self.refresh_nodes()
+		self.refresh_preview()
+		self.file = None
+		self.status.set('Editing new Dialog.')
+		self.update_title()
+		self.mark_edited(False)
+		self.action_states()
+		self.tick(True)
 
-	def open(self, key=None, file=None):
-		if not self.unsaved():
-			if file == None:
-				file = self.settings.lastpath.bin.select_open_file(self, title='Open Dialog BIN', filetypes=[FileType.bin_dialog()])
-				if not file:
-					return
-			dbin = DialogBIN.DialogBIN()
-			try:
-				dbin.load_file(file)
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			if not self.tfont:
-				self.load_tfont()
-			if not self.dlggrp:
-				self.load_dlggrp()
-			if not self.tilegrp:
-				self.load_tilegrp()
-			self.clear()
-			self.bin = dbin
-			self.setup_nodes()
-			self.reload_list()
-			self.reload_canvas()
-			self.file = file
-			self.update_title()
-			self.scr_enabled.set(self.bin.remastered)
-			self.status.set('Load Successful!')
-			self.mark_edited(False)
-			self.select_node(self.dialog)
-			self.action_states()
-			self.tick(True)
-
-	def iimport(self, key=None):
-		if not self.unsaved():
-			file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+	def open(self, key: Event | None = None, file: str | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		if file is None:
+			file = self.config_.last_path.bin.select_open(self)
 			if not file:
 				return
-			dbin = DialogBIN.DialogBIN()
-			try:
-				dbin.interpret_file(file)
-			except PyMSError as e:
-				ErrorDialog(self, e)
-				return
-			if not self.tfont:
-				self.load_tfont()
-			if not self.dlggrp:
-				self.load_dlggrp()
-			if not self.tilegrp:
-				self.load_tilegrp()
-			self.clear()
-			self.bin = dbin
-			self.setup_nodes()
-			self.reload_list()
-			self.reload_canvas()
-			self.file = file
-			self.update_title()
-			self.scr_enabled.set(self.bin.remastered)
-			self.status.set('Import Successful!')
-			self.mark_edited(False)
-			self.action_states()
-			self.tick(True)
-
-	def save(self, key=None):
-		self.saveas(file_path=self.file)
-
-	def saveas(self, key=None, file_path=None):
-		if not file_path:
-			file_path = self.settings.lastpath.bin.select_save_file(self, title='Save Dialog BIN As', filetypes=[FileType.bin_dialog()])
-			if not file_path:
-				return
-		elif not check_allow_overwrite_internal_file(file_path):
+		dbin = DialogBIN.DialogBIN()
+		try:
+			dbin.load_file(file)
+		except PyMSError as e:
+			ErrorDialog(self, e)
 			return
+		if not self.tfont:
+			self.load_tfont()
+		if not self.dlggrp:
+			self.load_dlggrp()
+		if not self.tilegrp:
+			self.load_tilegrp()
+		self.clear()
+		self.bin = dbin
+		self.setup_nodes()
+		self.refresh_nodes()
+		self.refresh_preview()
+		self.file = file
+		self.update_title()
+		self.scr_enabled.set(self.bin.remastered)
+		self.status.set('Load Successful!')
+		self.mark_edited(False)
+		self.select_node(self.dialog)
+		self.action_states()
+		self.tick(True)
+
+	def iimport(self, key: Event | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		file = self.config_.last_path.txt.select_open(self)
+		if not file:
+			return
+		dbin = DialogBIN.DialogBIN()
+		try:
+			dbin.interpret_file(file)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		if not self.tfont:
+			self.load_tfont()
+		if not self.dlggrp:
+			self.load_dlggrp()
+		if not self.tilegrp:
+			self.load_tilegrp()
+		self.clear()
+		self.bin = dbin
+		self.setup_nodes()
+		self.refresh_nodes()
+		self.refresh_preview()
+		self.file = file
+		self.update_title()
+		self.scr_enabled.set(self.bin.remastered)
+		self.status.set('Import Successful!')
+		self.mark_edited(False)
+		self.action_states()
+		self.tick(True)
+
+	def save(self, key: Event | None = None) -> CheckSaved:
+		return self.saveas(file_path=self.file)
+
+	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
+		if not self.bin:
+			return CheckSaved.saved
+		if not file_path:
+			file_path = self.config_.last_path.bin.select_save(self)
+			if not file_path:
+				return CheckSaved.cancelled
+		elif not check_allow_overwrite_internal_file(file_path):
+			return CheckSaved.cancelled
 		try:
 			self.bin.save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
+			return CheckSaved.cancelled
 		self.status.set('Save Successful!')
 		self.mark_edited(False)
 		self.file = file_path
 		self.update_title()
+		return CheckSaved.saved
 
-	def export(self, key=None):
-		file = self.settings.lastpath.txt.select_save_file(self, key='export', title='Export TXT', filetypes=[FileType.txt()])
+	def export(self, key: Event | None = None) -> None:
+		if not self.bin:
+			return
+		file = self.config_.last_path.txt.select_save(self)
 		if not file:
-			return True
+			return
 		try:
 			self.bin.decompile_file(file)
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def close(self, key=None):
-		if not self.unsaved():
-			self.clear()
-			self.status.set('Load or create a Dialog BIN.')
-			self.mark_edited(False)
-			self.scr_enabled.set(False)
-			self.action_states()
+	def close(self, key: Event | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.clear()
+		self.status.set('Load or create a Dialog BIN.')
+		self.mark_edited(False)
+		self.scr_enabled.set(False)
+		self.action_states()
 
-	def register(self, e=None):
+	def register_registry(self, e: Event | None = None) -> None:
 		try:
 			register_registry('PyBIN', 'bin', 'Dialog')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e=None):
-		HelpDialog(self, self.settings, 'Help/Programs/PyBIN.md')
+	def help(self, e: Event | None = None) -> None:
+		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyBIN.md')
 
-	def about(self, key=None):
+	def about(self, key: Event | None = None) -> None:
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [
 			('FaRTy1billion','File Specs and BinEdit2')
 		])
 
-	def load_settings(self):
-		self.show_preview_settings.set(self.settings.preview.get('show_settings',True))
-		self.show_images.set(self.settings.preview.get('show_images',True))
-		self.show_text.set(self.settings.preview.get('show_text',True))
-		self.show_smks.set(self.settings.preview.get('show_smks',True))
-		self.show_hidden.set(self.settings.preview.get('show_hidden',True))
-		self.show_dialog.set(self.settings.preview.get('show_dialog',False))
-		self.show_animated.set(self.settings.preview.get('show_animated',False))
-		self.show_hover_smks.set(self.settings.preview.get('show_hover_smks',False))
-		self.show_background.set(self.settings.preview.get('show_background',False))
-		self.show_theme_index.set(self.settings.preview.get('theme_id',-1) + 1)
-		self.show_bounds_widget.set(self.settings.preview.get('show_bounds_widget',True))
-		self.show_bounds_group.set(self.settings.preview.get('show_bounds_group',True))
-		self.show_bounds_text.set(self.settings.preview.get('show_bounds_text',True))
-		self.show_bounds_responsive.set(self.settings.preview.get('show_bounds_responsive',True))
+	def sponsor(self) -> None:
+		SponsorDialog(self)
 
-	def save_settings(self):
-		self.settings.preview.show_settings = self.show_preview_settings.get()
-		self.settings.preview.show_images = self.show_images.get()
-		self.settings.preview.show_text = self.show_text.get()
-		self.settings.preview.show_smks = self.show_smks.get()
-		self.settings.preview.show_hidden = self.show_hidden.get()
-		self.settings.preview.show_dialog = self.show_dialog.get()
-		self.settings.preview.show_animated = self.show_animated.get()
-		self.settings.preview.show_hover_smks = self.show_hover_smks.get()
-		self.settings.preview.show_background = self.show_background.get()
-		self.settings.preview.theme_id = self.show_theme_index.get()-1
-		self.settings.preview.show_bounds_widget = self.show_bounds_widget.get()
-		self.settings.preview.show_bounds_group = self.show_bounds_group.get()
-		self.settings.preview.show_bounds_text = self.show_bounds_text.get()
-		self.settings.preview.show_bounds_responsive = self.show_bounds_responsive.get()
+	def load_settings(self) -> None:
+		self.show_preview_settings.set(self.config_.preview.show_settings.value)
+		self.show_images.set(self.config_.preview.show_images.value)
+		self.show_text.set(self.config_.preview.show_text.value)
+		self.show_smks.set(self.config_.preview.show_smks.value)
+		self.show_hidden.set(self.config_.preview.show_hidden.value)
+		self.show_dialog.set(self.config_.preview.show_dialog.value)
+		self.show_animated.set(self.config_.preview.show_animated.value)
+		self.show_hover_smks.set(self.config_.preview.show_hover_smks.value)
+		self.show_background.set(self.config_.preview.show_background.value)
+		self.show_theme_index.set(self.config_.preview.theme_id.value + 1)
+		self.show_bounds_widget.set(self.config_.preview.show_bounds_widget.value)
+		self.show_bounds_group.set(self.config_.preview.show_bounds_group.value)
+		self.show_bounds_text.set(self.config_.preview.show_bounds_text.value)
+		self.show_bounds_responsive.set(self.config_.preview.show_bounds_responsive.value)
 
-	def exit(self, e=None):
-		if not self.unsaved():
-			self.settings.windows.save_window_size('main', self)
-			self.save_settings()
-			self.settings.save()
-			self.stop_tick()
-			self.destroy()
+	def save_settings(self) -> None:
+		self.config_.preview.show_settings.value = self.show_preview_settings.get()
+		self.config_.preview.show_images.value = self.show_images.get()
+		self.config_.preview.show_text.value = self.show_text.get()
+		self.config_.preview.show_smks.value = self.show_smks.get()
+		self.config_.preview.show_hidden.value = self.show_hidden.get()
+		self.config_.preview.show_dialog.value = self.show_dialog.get()
+		self.config_.preview.show_animated.value = self.show_animated.get()
+		self.config_.preview.show_hover_smks.value = self.show_hover_smks.get()
+		self.config_.preview.show_background.value = self.show_background.get()
+		self.config_.preview.theme_id.value = self.show_theme_index.get()-1
+		self.config_.preview.show_bounds_widget.value = self.show_bounds_widget.get()
+		self.config_.preview.show_bounds_group.value = self.show_bounds_group.get()
+		self.config_.preview.show_bounds_text.value = self.show_bounds_text.get()
+		self.config_.preview.show_bounds_responsive.value = self.show_bounds_responsive.get()
+
+	def exit(self, e: Event | None = None) -> None:
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.config_.windows.main.save_size(self)
+		self.save_settings()
+		self.config_.save()
+		self.stop_tick()
+		self.destroy()
+
+	# MainDelegate
+	def get_bin(self) -> (DialogBIN.DialogBIN | None):
+		return self.bin
+
+	def get_config(self) -> PyBINConfig:
+		return self.config_
+
+	def get_mpqhandler(self) -> MPQHandler:
+		return self.mpq_handler
+
+	def get_scr_enabled(self) -> bool:
+		return self.scr_enabled.get()
+
+	def mark_edited(self, edited: bool = True) -> None:
+		self.edited = edited
+		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.action_states()
+
+	def refresh_preview(self) -> None:
+		if not self.bin:
+			return
+		# self.widgetCanvas.delete(ALL)
+		self.update_background()
+		reorder = False
+		for node in self.flattened_nodes():
+			reorder = node.update_display() or reorder
+		self.update_selection_box()
+		if reorder:
+			self.update_zorder()
+
+	def refresh_smks(self) -> None:
+		pass
+
+	def refresh_nodes(self) -> None:
+		self.widget_map = {}
+		self.widgetTree.delete(ALL)
+		if not self.dialog:
+			return
+		def list_node(at_index: str, node: WidgetNode) -> None:
+			group = None
+			if node.children is not None:
+				group = True
+			index = self.widgetTree.insert(at_index, node.get_name(), group)
+			if not index:
+				return
+			node.index = index
+			if node == self.selected_node:
+				self.widgetTree.select(index)
+				self.widgetTree.see(index)
+			self.widget_map[index] = node
+			if node.children is not None:
+				for child in reversed(node.children):
+					list_node(node.index + '.-1', child)
+		list_node('-1', self.dialog)
+
+	# NodeDelegate
+
+	def get_dialog_asset(self, asset_id: int) -> (PILImage.Image | None):
+		asset = None
+		if self.dlggrp and self.background:
+			if asset_id in self.dialog_assets:
+				asset = self.dialog_assets[asset_id]
+			else:
+				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, image_bounds=self.dlggrp.images_bounds[asset_id])
+				self.dialog_assets[asset_id] = asset
+		return asset
+
+	def get_dialog_frame(self, frame_id: int) -> (PILImage.Image | None):
+		frame = None
+		if self.tilegrp and self.background:
+			if frame_id in self.dialog_frames:
+				frame = self.dialog_frames[frame_id]
+			else:
+				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, image_bounds=self.tilegrp.images_bounds[frame_id])
+				self.dialog_frames[frame_id] = frame
+		return frame
+
+	def get_show_hidden(self) -> bool:
+		return self.show_hidden.get()
+
+	def get_show_dialog(self) -> bool:
+		return self.show_dialog.get()
+
+	def get_show_smks(self) -> bool:
+		return self.show_smks.get()
+
+	def get_show_animated(self) -> bool:
+		return self.show_animated.get()
+
+	def get_show_images(self) -> bool:
+		return self.show_images.get()
+
+	def get_show_text(self) -> bool:
+		return self.show_text.get()
+
+	def get_show_bounds_widget(self) -> bool:
+		return self.show_bounds_widget.get()
+
+	def get_show_bounds_group(self) -> bool:
+		return self.show_bounds_group.get()
+
+	def get_show_bounds_text(self) -> bool:
+		return self.show_bounds_text.get()
+
+	def get_show_bounds_responsive(self) -> bool:
+		return self.show_bounds_responsive.get()
+
+	def get_font(self, flags: int) -> FNT.FNT:
+		if flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_10:
+			return self.font10
+		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_14:
+			return self.font14
+		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16:
+			return self.font16
+		elif flags & DialogBIN.BINWidget.FLAG_FONT_SIZE_16x:
+			return self.font16x
+		else:
+			return self.font10
+
+	def get_tfontgam(self) -> PCX.PCX:
+		return self.tfontgam
+
+	def get_tfont(self) -> (PCX.PCX | None):
+		return self.tfont
+
+	def node_render_image_create(self, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
+		return self.widgetCanvas.create_image(x, y, image=image, anchor=anchor)
+
+	def node_render_image_update(self, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+		if image:
+			item.config(image=image)
+		item.coords(x, y)
+
+	def node_render_rect_create(self, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
+		return self.widgetCanvas.create_rectangle(x1, y1, x2, y2, width=1, outline=color)
+
+	def node_render_rect_update(self, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
+		item.coords(x1, y1, x2, y2)
+
+	def node_render_lift(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+		item.tag_raise()
+
+	def node_render_delete(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+		item.delete()
+
+	def capture_exception(self) -> None:
+		InternalErrorDialog.capture(self, 'PyBIN')

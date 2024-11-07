@@ -2,6 +2,8 @@
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
+import re
+
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.resettimer = None

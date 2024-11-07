@@ -1,16 +1,21 @@
 
+from .Delegates import ImportListDelegate
+
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
+from ..Utilities import Config
 
 class ImportListDialog(PyMSDialog):
-	def __init__(self, parent, settings):
-		self.settings = settings
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, txt_last_path_config: Config.SelectFile, delegate: ImportListDelegate) -> None:
+		self.window_geometry_config = window_geometry_config
+		self.txt_last_path_config = txt_last_path_config
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'List Importing')
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add File', Key.Insert, NORMAL)
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add File', Key.Insert)
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove File', Key.Delete, enabled=False, tags='has_selection')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Selected Script', Ctrl.i, enabled=False, tags='has_selection')
@@ -24,65 +29,65 @@ class ImportListDialog(PyMSDialog):
 		buttons = Frame(self)
 		ok = Button(buttons, text='Ok', width=10, command=self.ok)
 		ok.pack(side=LEFT, padx=3, pady=3)
-		self.importbtn = Button(buttons, text='Import All', width=10, command=self.iimportall, state=[NORMAL,DISABLED][not self.parent.imports])
+		self.importbtn = Button(buttons, text='Import All', width=10, command=self.iimportall, state=DISABLED if not self.delegate.imports else NORMAL)
 		self.importbtn.pack(padx=3, pady=3)
 		buttons.pack()
 
-		if self.parent.imports:
+		if self.delegate.imports:
 			self.update()
 			self.listbox.select_set(0)
 			self.listbox.see(0)
 
 		return ok
 
-	def setup_complete(self):
+	def setup_complete(self) -> None:
 		self.minsize(200,150)
-		self.settings.windows.load_window_size('listimport', self)
+		self.window_geometry_config.load_size(self)
 
-	def add(self, key=None):
-		iimport = self.settings.lastpath.txt.select_open_files(self, title='Add Imports', filetypes=[FileType.txt()])
+	def add(self) -> None:
+		iimport = self.txt_last_path_config.select_open_multiple(self)
 		if iimport:
 			for i in iimport:
-				if i not in self.parent.imports:
-					self.parent.imports.append(i)
+				if i not in self.delegate.imports:
+					self.delegate.imports.append(i)
 			self.update()
 			self.listbox.select_clear(0,END)
 			self.listbox.select_set(END)
 			self.listbox.see(END)
 
-	def remove(self, key=None):
+	def remove(self) -> None:
 		index = int(self.listbox.curselection()[0])
-		del self.parent.imports[index]
-		if self.parent.imports and index == len(self.parent.imports):
+		del self.delegate.imports[index]
+		if self.delegate.imports and index == len(self.delegate.imports):
 			self.listbox.select_set(index-1)
 			self.listbox.see(index-1)
 		self.update()
 
-	def iimport(self, key=None):
-		self.parent.iimport(file=self.listbox.get(self.listbox.curselection()[0]), parent=self)
+	def iimport(self) -> None:
+		self.delegate.iimport(files=self.listbox.get(self.listbox.curselection()[0]), parent=self)
 
-	def iimportall(self):
-		self.parent.iimport(file=self.parent.imports, parent=self)
+	def iimportall(self) -> None:
+		self.delegate.iimport(files=self.delegate.imports, parent=self)
 
-	def update_states(self):
+	def update_states(self) -> None:
 		has_selection = not not self.listbox.curselection()
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-		can_import = not not self.parent.imports
+		can_import = not not self.delegate.imports
 		self.toolbar.tag_enabled('can_import', can_import)
 		self.importbtn['state'] = NORMAL if can_import else DISABLED
 
-	def update(self):
+	def update(self) -> None:
 		sel = 0
 		if self.listbox.size():
 			sel = self.listbox.curselection()[0]
 			self.listbox.delete(0, END)
-		if self.parent.imports:
-			for file in self.parent.imports:
+		if self.delegate.imports:
+			for file in self.delegate.imports:
 				self.listbox.insert(END, file)
 			self.listbox.select_set(sel)
 		self.update_states()
 
-	def dismiss(self):
-		self.settings.windows.save_window_size('listimport', self)
+	def dismiss(self) -> None:
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

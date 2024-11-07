@@ -1,10 +1,20 @@
 
+from __future__ import annotations
+
+from .DataID import DATID
+
+from ..FileFormats.DAT.AbstractDAT import AbstractDATEntry
+
+from typing import TYPE_CHECKING, Callable, Any
+if TYPE_CHECKING:
+	from .DataContext import DataContext
+
 class DATRefs(object):
-	def __init__(self, dat_id, refs_lookup):
+	def __init__(self, dat_id: DATID, refs_lookup: Callable[[AbstractDATEntry], tuple[DATRef, ...]]) -> None:
 		self.dat_id = dat_id
 		self.refs_lookup = refs_lookup
 
-	def matching(self, data_context, lookup_id):
+	def matching(self, data_context: DataContext, lookup_id: int) -> list[DATRefMatch]:
 		matches = []
 		dat_data = data_context.dat_data(self.dat_id)
 		if not dat_data.dat:
@@ -18,27 +28,27 @@ class DATRefs(object):
 		return matches
 
 class DATRef(object):
-	def __init__(self, field_name, entry_id, entry_id_range_end=None, dat_sub_tab=None):
+	def __init__(self, field_name: str, entry_id: int, entry_id_range_end: int | None = None, dat_sub_tab: Any | None = None) -> None:
 		self.field_name = field_name
 		self.entry_id = entry_id
 		self.entry_id_range_end = entry_id_range_end
 		self.dat_sub_tab = dat_sub_tab
 
-	def matches(self, entry_id):
+	def matches(self, entry_id: int) -> bool:
 		if self.entry_id_range_end:
 			return entry_id >= self.entry_id and entry_id <= self.entry_id_range_end
 		else:
 			return entry_id == self.entry_id
 
 class DATRefMatch(object):
-	def __init__(self, dat_id, dat_sub_tab_id, field_name, entry_id, entry_name):
+	def __init__(self, dat_id: DATID, dat_sub_tab_id: Any, field_name: str, entry_id: int, entry_name: str) -> None:
 		self.dat_id = dat_id
 		self.dat_sub_tab_id = dat_sub_tab_id
 		self.field_name = field_name
 		self.entry_id = entry_id
 		self.entry_name = entry_name
 
-	def __str__(self):
+	def __str__(self) -> str:
 		dat_sub_tab = ''
 		if self.dat_sub_tab_id:
 			dat_sub_tab = ' (%s sub-tab)' % self.dat_sub_tab_id.tab_name

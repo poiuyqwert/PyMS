@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 from PyMS.Utilities.Compatibility import check_compat
-check_compat('PyAI')
+check_compat('PyTRG')
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PyTRG.PyTRG import PyTRG, LONG_VERSION
 
 	from PyMS.FileFormats.TRG import TRG
@@ -20,7 +20,7 @@ def main():
 		p = optparse.OptionParser(usage='usage: PyTRG [options] <inp> [out]', version='PyTRG %s' % LONG_VERSION)
 		p.add_option('-d', '--decompile', action='store_true', dest='convert', help="Decompile a TRG file [default]", default=True)
 		p.add_option('-c', '--compile', action='store_false', dest='convert', help="Compile a TRG file")
-		p.add_option('-t', '--trig', action='store_true', help="Used to decompile/compile a GOT compatable TRG", default=False)
+		p.add_option('-g', '--got', action='store_true', help="Used to decompile/compile a GOT compatable TRG", default=False)
 		p.add_option('-r', '--reference', action='store_true', help="When decompiling, put a reference for parameter types, conditions and actions with parameter lists, and AIScripts [default: Off]", default=False)
 		p.add_option('-s', '--stattxt',  help="Used to signify the stat_txt.tbl file to use [default: Libs\\MPQ\\rez\\stat_txt.tbl]", default=Assets.mpq_file_path('rez', 'stat_txt.tbl'))
 		p.add_option('-a', '--aiscript', help="Used to signify the aiscript.bin file to use [default: Libs\\MPQ\\scripts\\aiscript.bin]", default=Assets.mpq_file_path('scripts', 'aiscript.bin'))
@@ -35,7 +35,7 @@ def main():
 			path = os.path.dirname(args[0])
 			if not path:
 				path = os.path.abspath('')
-			trg = TRG()
+			trg = TRG.TRG()
 			if len(args) == 1:
 				if opt.convert:
 					ext = 'txt'
@@ -44,23 +44,23 @@ def main():
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			try:
 				if opt.convert:
-					if opt.trig:
+					if opt.got:
 						print("Reading GOT compatable TRG '%s'..." % args[0])
 					else:
 						print("Reading TRG '%s'..." % args[0])
-					trg.load_file(args[0], opt.trig)
+					trg.load(args[0], TRG.Format.got if opt.got else TRG.Format.normal)
 					print(" - '%s' read successfully\nDecompiling TRG file '%s'..." % (args[0],args[0]))
 					trg.decompile(args[1], opt.reference)
 					print(" - '%s' written succesfully" % args[1])
 				else:
 					print("Interpreting file '%s'..." % args[0])
-					trg.interpret(args[0])
+					trg.compile(args[0]) # TODO: Warnings
 					print(" - '%s' read successfully" % args[0])
-					if opt.trig:
+					if opt.got:
 						print("Compiling file '%s' to GOT compatable TRG format..." % args[0])
 					else:
 						print("Compiling file '%s' to TRG format..." % args[0])
-					trg.compile(args[1], opt.trig)
+					trg.save(args[1], TRG.Format.got if opt.got else TRG.Format.normal)
 					print(" - '%s' written succesfully" % args[1])
 			except PyMSError as e:
 				print(repr(e))

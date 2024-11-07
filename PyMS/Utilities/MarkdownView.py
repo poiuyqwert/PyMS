@@ -7,13 +7,15 @@ from . import Assets
 
 import webbrowser, re, os
 
-def _em(em=1): # type: (float) -> int
+from typing import cast
+
+def _em( em: float = 1) -> int:
 	return int(16 * em)
 
-def _list_numbered(num):
+def _list_numbered(num: int) -> str:
 	return '%d. ' % num
 
-def _list_lettered(num):
+def _list_lettered(num: int) -> str:
 	result = ''
 	while num > 0:
 		result += chr(96 + num % 26)
@@ -35,7 +37,7 @@ _ROMAN_LOOKUP = (
 	(4, 'iv'),
 	(1, 'i'),
 )
-def _list_roman(num):
+def _list_roman(num: int) -> str:
 	result = ''
 	for (div, roman) in _ROMAN_LOOKUP:
 		(count, num) = divmod(num, div)
@@ -46,27 +48,25 @@ def _list_roman(num):
 
 class MarkdownView(Frame):
 	class _ListDisplay(object):
-		def __init__(self, list_block, margin): # type: (Markdown.ListBlock, int) -> MarkdownView._ListDisplay
+		def __init__(self, list_block: Markdown.ListBlock, margin: int) -> None:
 			self.list_block = list_block
 			self.margin = margin
 	class _ListItemDisplay(object):
-		def __init__(self, marker, size): # type: (str, int) -> MarkdownView._ListItemDisplay
+		def __init__(self, marker: str, size: int) -> None:
 			self.marker = marker
 			self.size = size
 	class _ListItemTags(object):
-		def __init__(self, first_line_tag, subsequent_lines_tag):
+		def __init__(self, first_line_tag: str, subsequent_lines_tag: str) -> None:
 			self.first_line_tag = first_line_tag
 			self.first_line_used = False
 			self.subsequent_lines_tag = subsequent_lines_tag
 	_LIST_BULLETS = ('• ', '◦ ', '▪ ')
-	_LIST_BULLET_CACHE = None # type: tuple[_ListItemDisplay]
 	_LIST_NUMERICS = (_list_numbered, _list_lettered, _list_roman)
-	_LIST_NUMERIC_CACHE = ([], [], []) # type: tuple[list[_ListItemDisplay], list[_ListItemDisplay], list[_ListItemDisplay]]
 
 	RE_LINK_HAS_SCHEME = re.compile(r'[a-zA-Z][a-zA-Z0-9+.-]{1,31}:')
 
 	# Specify `link_callback` to handle relative links
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		self.link_callback = kwargs.pop('link_callback', None)
 		if not 'relief' in kwargs:
 			kwargs['relief'] = SUNKEN
@@ -74,10 +74,14 @@ class MarkdownView(Frame):
 				kwargs['bd'] = 2
 		Frame.__init__(self, *args, **kwargs)
 
+		self._next_tags: tuple[str, ...] | None = None
+		self._list_bullet_cache: tuple[MarkdownView._ListItemDisplay, ...] | None = None
+		self._list_numeric_cache: tuple[list[MarkdownView._ListItemDisplay], list[MarkdownView._ListItemDisplay], list[MarkdownView._ListItemDisplay]] = ([], [], [])
+
 		hscroll = Scrollbar(self, orient=HORIZONTAL)
 		vscroll = Scrollbar(self)
 		self.font = Font.default().sized(_em())
-		self.textview = Text(self, bd=0, wrap=WORD, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0, font=self.font, insertontime=0)
+		self.textview = Text(self, bd=0, wrap=WORD, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False, font=self.font, insertontime=0)
 		self.textview.grid(column=0,row=0, padx=50, sticky=NSEW)
 		vscroll.grid(column=1,row=0, sticky=NS)
 		vscroll.config(command=self.textview.yview)
@@ -101,17 +105,17 @@ class MarkdownView(Frame):
 		self.set_code_background('#EEEEEE')
 		self.textview.tag_raise(SEL)
 
-		self.links = {} # type: dict[str, Markdown.Link]
-		self.headers = {} # type: dict[str, str]
-		self.images = {} # type: dict[str, Markdown.Image]
-		def link_lookup(tags): # type: (tuple[str, ...]) -> (Markdown.Link | None)
+		self.links: dict[str, Markdown.Link] = {}
+		self.headers: dict[str, str] = {}
+		self.images: dict[str, Markdown.Image] = {}
+		def link_lookup(tags: tuple[str, ...]) -> (Markdown.Link | None):
 			for tag in tags:
 				if tag.startswith('link_'):
 					link = self.links.get(tag)
 					if link:
 						return link
 			return None
-		def link_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
+		def link_tooltip_lookup(_: str | None, tags:  tuple[str, ...]) -> str | None:
 			link = link_lookup(tags)
 			if not link:
 				return None
@@ -124,18 +128,21 @@ class MarkdownView(Frame):
 			return tooltip
 		TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
 
-		def image_tooltip_lookup(_, tags): # type: (str, tuple[str, ...]) -> (str | None)
+		def image_tooltip_lookup(_: str | None, tags: tuple[str, ...]) -> str | None:
 			for tag in tags:
-				if tag.startswith('image_'):
-					image = self.images.get(tag)
-					tooltip = image.alt_text
-					if image.title:
-						tooltip += ' (%s)' % image.title
-					return tooltip
+				if not tag.startswith('image_'):
+					continue
+				image = self.images.get(tag)
+				if not image:
+					continue
+				tooltip = image.alt_text
+				if image.title:
+					tooltip += ' (%s)' % image.title
+				return tooltip
 			return None
 		TextDynamicTooltip(self.textview, 'image', image_tooltip_lookup)
 
-		def link_click(*_):
+		def link_click(_: Event) -> None:
 			index = self.textview.index('current')
 			tags = self.textview.tag_names(index)
 			link = link_lookup(tags)
@@ -147,40 +154,42 @@ class MarkdownView(Frame):
 				self.view_fragment(link.link[1:].lower())
 			elif self.link_callback:
 				self.link_callback(link.link)
-		self.textview.tag_bind('link', Mouse.Click_Left, link_click)
+		self.textview.tag_bind('link', Mouse.Click_Left(), link_click)
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(0, weight=1)
 
 		self._read_only = True
-		self.textview._original_w = self.textview._w + '_original'
-		self.tk.call('rename', self.textview._w, self.textview._original_w)
-		self.tk.createcommand(self.textview._w, self.dispatch)
+		self.textview_original_w = getattr(self.textview, '_w') + '_original'
+		self.tk.call('rename', getattr(self.textview, '_w'), self.textview_original_w)
+		self.tk.createcommand(getattr(self.textview, '_w'), self.dispatch)
 
-	def dispatch(self, cmd, *args):
+	def dispatch(self, cmd: str, *args: str) -> str:
 		if self._read_only and (cmd == 'insert' or cmd == 'delete'):
 			return ""
 		try:
-			return self.tk.call((self.textview._original_w, cmd) + args)
-		except TclError:
+			return self.tk.call((self.textview_original_w, cmd) + args)
+		except:
 			return ""
 
-	def view_fragment(self, fragment):
+	def view_fragment(self, fragment: str) -> None:
 		index = self.headers.get(fragment)
 		if index:
 			self.textview.see(index)
 			dlineinfo = self.textview.dlineinfo(index)
+			if not dlineinfo:
+				return
 			self.textview.yview_scroll(dlineinfo[1], 'pixels')
 
-	def load_markdown(self, markdown): # type: (str) -> None
+	def load_markdown(self, markdown: str) -> None:
 		document = Markdown.Document.parse(markdown)
 
 		self.links.clear()
 		self.headers.clear()
 		self.images.clear()
-		self._lists = [] # type: list[MarkdownView._ListDisplay]
+		self._lists: list[MarkdownView._ListDisplay] = []
 		self._lists_margin = 0
-		self._list_items_tags = [] # type: list[MarkdownView._ListItemTags]
+		self._list_items_tags: list[MarkdownView._ListItemTags] = []
 		self._next_tags = ('top_margin',)
 
 		self._read_only = False
@@ -190,15 +199,20 @@ class MarkdownView(Frame):
 		self.textview.insert(END, '\n', 'bottom_margin')
 		self._read_only = True
 
-	def set_link_foreground(self, color): # type: (str) -> None
-		self.textview.tag_configure('link', foreground=color, underline=1)
+	def set_link_foreground(self, color: str) -> None:
+		self.textview.tag_configure('link', foreground=color, underline=True)
 
-	def set_code_background(self, color): # type: (str) -> None
+	def set_code_background(self, color: str) -> None:
 		self.textview.tag_configure('codespan', font=Font.fixed().sized(_em()), background=color)
 		self.textview.tag_configure('code', font=Font.fixed().sized(_em()), background=color, lmargin1=16,lmargin2=16, rmargin=16, wrap=NONE)
 
-	def insert_block(self, block): # type: (Markdown.Block) -> None
-		tags = ()
+	def _get_list_bullet_cache(self) -> tuple[_ListItemDisplay, ...]:
+		if self._list_bullet_cache is None:
+			self._list_bullet_cache = tuple(MarkdownView._ListItemDisplay(bullet, self.font.measure(bullet)) for bullet in MarkdownView._LIST_BULLETS)
+		return self._list_bullet_cache
+
+	def insert_block(self, block: Markdown.Block) -> None:
+		tags: tuple[str, ...] = ()
 		if self._list_items_tags:
 			list_item_tags = self._list_items_tags[-1]
 			if list_item_tags.first_line_used:
@@ -228,24 +242,22 @@ class MarkdownView(Frame):
 		elif isinstance(block, Markdown.ListBlock):
 			index = min(len(self._lists), 2)
 			if block.marker == Markdown.ListBlock.MARKER_BULLET:
-				if not MarkdownView._LIST_BULLET_CACHE:
-					MarkdownView._LIST_BULLET_CACHE = tuple(MarkdownView._ListItemDisplay(bullet, self.font.measure(bullet)) for bullet in MarkdownView._LIST_BULLETS)
-				margin = MarkdownView._LIST_BULLET_CACHE[index].size
+				margin = self._get_list_bullet_cache()[index].size
 			elif block.marker == Markdown.ListBlock.MARKER_NUMERIC:
-				if len(block.children) > len(MarkdownView._LIST_NUMERIC_CACHE[index]):
-					for num in range(len(MarkdownView._LIST_NUMERIC_CACHE[index]),len(block.children)):
+				if len(block.children) > len(self._list_numeric_cache[index]):
+					for num in range(len(self._list_numeric_cache[index]),len(block.children)):
 						marker = MarkdownView._LIST_NUMERICS[index](num+1)
-						MarkdownView._LIST_NUMERIC_CACHE[index].append(MarkdownView._ListItemDisplay(marker, self.font.measure(marker)))
-				margin = max(display.size for display in MarkdownView._LIST_NUMERIC_CACHE[index][:len(block.children)])
+						self._list_numeric_cache[index].append(MarkdownView._ListItemDisplay(marker, self.font.measure(marker)))
+				margin = max(display.size for display in self._list_numeric_cache[index][:len(block.children)])
 			self._lists.append(MarkdownView._ListDisplay(block, margin))
 			self._lists_margin += 10 + margin
 		elif isinstance(block, Markdown.ListItemBlock):
 			index = min(len(self._lists)-1,2)
 			if self._lists[-1].list_block.marker == Markdown.ListBlock.MARKER_BULLET:
-				display = MarkdownView._LIST_BULLET_CACHE[index]
+				display = self._get_list_bullet_cache()[index]
 			else:
-				list_block = block.parent # type: Markdown.ListBlock
-				display = MarkdownView._LIST_NUMERIC_CACHE[index][list_block.children.index(block)]
+				list_block = cast(Markdown.ListBlock, block.parent)
+				display = self._list_numeric_cache[index][list_block.children.index(block)]
 			firts_line_margin = self._lists_margin - display.size
 			first_line_tag = 'list_margin%d:%d' % (firts_line_margin, self._lists_margin)
 			self.textview.tag_configure(first_line_tag, lmargin1=firts_line_margin, lmargin2=self._lists_margin)
@@ -257,15 +269,15 @@ class MarkdownView(Frame):
 			for child in block.children:
 				self.insert_block(child)
 		if isinstance(block, Markdown.ListBlock):
-			display = self._lists.pop()
-			self._lists_margin -= 10 + display.margin
+			display_list = self._lists.pop()
+			self._lists_margin -= 10 + display_list.margin
 			if not self._lists:
 				self._next_tags = ('top_spacing',)
 		elif isinstance(block, Markdown.ListItemBlock):
 			self._list_items_tags.pop()
 
 	RE_KEYBOARD_SHORTCUT = re.compile(r'(?:(?:Shift|Ctrl|Alt)\+)+.+$')
-	def insert_content(self, block, tags, additional_first_line_tags=None, additional_last_line_tags=None): # type: (Markdown.ContentBlock, tuple[str], tuple[str], tuple[str]) -> None
+	def insert_content(self, block: Markdown.ContentBlock, tags: tuple[str, ...], additional_first_line_tags: tuple[str, ...] | None = None, additional_last_line_tags: tuple[str, ...] | None = None) -> None:
 		def insert_item(item, tags):
 			if isinstance(item, Markdown.CodeSpan):
 				tags += ('codespan',)

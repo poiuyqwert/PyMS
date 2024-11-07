@@ -1,8 +1,8 @@
 
 import struct, os
 
-def resource_path(resource_filename, test_file_path): # type: (str, str) -> str
+def resource_path(resource_filename: str, test_file_path: str) -> str:
 	return os.path.join(os.path.dirname(test_file_path), resource_filename)
 
-def data_to_hex(data, separator=' '): # type: (str, str) -> str
-	return separator.join('%02X' % struct.unpack('<B', b) for b in data)
+def data_to_hex(data: bytes, separator: str = ' ') -> str:
+	return separator.join('%02X' % b for b in data)

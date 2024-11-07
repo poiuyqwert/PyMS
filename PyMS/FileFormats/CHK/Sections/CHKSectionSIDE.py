@@ -1,10 +1,16 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
 from ....Utilities.utils import pad
 
 import struct
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
 
 class CHKSectionSIDE(CHKSection):
 	NAME = 'SIDE'
@@ -19,7 +25,7 @@ class CHKSectionSIDE(CHKSection):
 	RANDOM = 6
 	INACTIVE = 7
 	@staticmethod
-	def SIDE_NAME(v):
+	def SIDE_NAME(v: int) -> str:
 		names = {
 			CHKSectionSIDE.ZERG:'Zerg',
 			CHKSectionSIDE.TERRAN:'Terran',
@@ -32,18 +38,18 @@ class CHKSectionSIDE(CHKSection):
 		}
 		return names.get(v,'Unknown')
 
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.sides = [CHKSectionSIDE.RANDOM] * 8 + [CHKSectionSIDE.INACTIVE] * 4
 	
-	def load_data(self, data):
-		self.sides = list(struct.unpack('<12B', data[:12]))
+	def load_data(self, data: bytes) -> None:
+		self.sides = list(int(s) for s in struct.unpack('<12B', data[:12]))
 	
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<12B', *self.sides)
 	
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '%s:\n' % self.NAME
 		for n,value in enumerate(self.sides):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,value), CHKSectionSIDE.SIDE_NAME(value))
+			result += '\t%s # %s\n' % (pad('Slot%02d' % n,str(value)), CHKSectionSIDE.SIDE_NAME(value))
 		return result

@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyPCX', Requirement.PIL)
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PyPCX.PyPCX import PyPCX, LONG_VERSION
 
 	from PyMS.FileFormats import PCX
@@ -52,7 +52,7 @@ def main():
 				try:
 					bmp.load_file(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
-					pcx.load_data(bmp.image,bmp.palette)
+					pcx.load_pixels(bmp.image,bmp.palette)
 					pcx.save_file(args[1])
 				except PyMSError as e:
 					print(repr(e))

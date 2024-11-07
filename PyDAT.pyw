@@ -3,7 +3,7 @@
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyDAT')
 
-def main():
+def main(): # type: () -> None
 	from PyMS.PyDAT.PyDAT import PyDAT, LONG_VERSION
 
 	from PyMS.FileFormats import DAT

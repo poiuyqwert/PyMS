@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-class Weapon(AbstractDAT.AbstractDATEntry):
+from typing import cast
+
+class DATWeapon(AbstractDAT.AbstractDATEntry):
 	class Property:
 		label = 'label'
 		graphics = 'graphics'
@@ -125,117 +127,117 @@ class Weapon(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Weapon'
 	def _export_data(self, export_properties, data):
-		self._export_property_value(export_properties, Weapon.Property.label, self.label, data)
-		self._export_property_value(export_properties, Weapon.Property.graphics, self.graphics, data)
-		self._export_property_value(export_properties, Weapon.Property.unused_technology, self.unused_technology, data)
-		self._export_property_value(export_properties, Weapon.Property.target_flags, self.target_flags, data, _WeaponPropertyCoder.target_flags)
-		self._export_property_value(export_properties, Weapon.Property.minimum_range, self.minimum_range, data)
-		self._export_property_value(export_properties, Weapon.Property.maximum_range, self.maximum_range, data)
-		self._export_property_value(export_properties, Weapon.Property.damage_upgrade, self.damage_upgrade, data)
-		self._export_property_value(export_properties, Weapon.Property.weapon_type, self.weapon_type, data)
-		self._export_property_value(export_properties, Weapon.Property.weapon_behavior, self.weapon_behavior, data)
-		self._export_property_value(export_properties, Weapon.Property.remove_after, self.remove_after, data)
-		self._export_property_value(export_properties, Weapon.Property.explosion_type, self.explosion_type, data)
-		self._export_property_value(export_properties, Weapon.Property.inner_splash_range, self.inner_splash_range, data)
-		self._export_property_value(export_properties, Weapon.Property.medium_splash_range, self.medium_splash_range, data)
-		self._export_property_value(export_properties, Weapon.Property.outer_splash_range, self.outer_splash_range, data)
-		self._export_property_value(export_properties, Weapon.Property.damage_amount, self.damage_amount, data)
-		self._export_property_value(export_properties, Weapon.Property.damage_bonus, self.damage_bonus, data)
-		self._export_property_value(export_properties, Weapon.Property.weapon_cooldown, self.weapon_cooldown, data)
-		self._export_property_value(export_properties, Weapon.Property.damage_factor, self.damage_factor, data)
-		self._export_property_value(export_properties, Weapon.Property.attack_angle, self.attack_angle, data)
-		self._export_property_value(export_properties, Weapon.Property.launch_spin, self.launch_spin, data)
-		self._export_property_value(export_properties, Weapon.Property.forward_offset, self.forward_offset, data)
-		self._export_property_value(export_properties, Weapon.Property.upward_offset, self.upward_offset, data)
-		self._export_property_value(export_properties, Weapon.Property.target_error_message, self.target_error_message, data)
-		self._export_property_value(export_properties, Weapon.Property.icon, self.icon, data)
+		self._export_property_value(export_properties, DATWeapon.Property.label, self.label, data)
+		self._export_property_value(export_properties, DATWeapon.Property.graphics, self.graphics, data)
+		self._export_property_value(export_properties, DATWeapon.Property.unused_technology, self.unused_technology, data)
+		self._export_property_value(export_properties, DATWeapon.Property.target_flags, self.target_flags, data, _WeaponPropertyCoder.target_flags)
+		self._export_property_value(export_properties, DATWeapon.Property.minimum_range, self.minimum_range, data)
+		self._export_property_value(export_properties, DATWeapon.Property.maximum_range, self.maximum_range, data)
+		self._export_property_value(export_properties, DATWeapon.Property.damage_upgrade, self.damage_upgrade, data)
+		self._export_property_value(export_properties, DATWeapon.Property.weapon_type, self.weapon_type, data)
+		self._export_property_value(export_properties, DATWeapon.Property.weapon_behavior, self.weapon_behavior, data)
+		self._export_property_value(export_properties, DATWeapon.Property.remove_after, self.remove_after, data)
+		self._export_property_value(export_properties, DATWeapon.Property.explosion_type, self.explosion_type, data)
+		self._export_property_value(export_properties, DATWeapon.Property.inner_splash_range, self.inner_splash_range, data)
+		self._export_property_value(export_properties, DATWeapon.Property.medium_splash_range, self.medium_splash_range, data)
+		self._export_property_value(export_properties, DATWeapon.Property.outer_splash_range, self.outer_splash_range, data)
+		self._export_property_value(export_properties, DATWeapon.Property.damage_amount, self.damage_amount, data)
+		self._export_property_value(export_properties, DATWeapon.Property.damage_bonus, self.damage_bonus, data)
+		self._export_property_value(export_properties, DATWeapon.Property.weapon_cooldown, self.weapon_cooldown, data)
+		self._export_property_value(export_properties, DATWeapon.Property.damage_factor, self.damage_factor, data)
+		self._export_property_value(export_properties, DATWeapon.Property.attack_angle, self.attack_angle, data)
+		self._export_property_value(export_properties, DATWeapon.Property.launch_spin, self.launch_spin, data)
+		self._export_property_value(export_properties, DATWeapon.Property.forward_offset, self.forward_offset, data)
+		self._export_property_value(export_properties, DATWeapon.Property.upward_offset, self.upward_offset, data)
+		self._export_property_value(export_properties, DATWeapon.Property.target_error_message, self.target_error_message, data)
+		self._export_property_value(export_properties, DATWeapon.Property.icon, self.icon, data)
 
 	def _import_data(self, data):
-		label = self._import_property_value(data, Weapon.Property.label)
-		graphics = self._import_property_value(data, Weapon.Property.graphics)
-		unused_technology = self._import_property_value(data, Weapon.Property.unused_technology)
-		target_flags = self._import_property_value(data, Weapon.Property.target_flags, _WeaponPropertyCoder.target_flags)
-		minimum_range = self._import_property_value(data, Weapon.Property.minimum_range)
-		maximum_range = self._import_property_value(data, Weapon.Property.maximum_range)
-		damage_upgrade = self._import_property_value(data, Weapon.Property.damage_upgrade)
-		weapon_type = self._import_property_value(data, Weapon.Property.weapon_type)
-		weapon_behavior = self._import_property_value(data, Weapon.Property.weapon_behavior)
-		remove_after = self._import_property_value(data, Weapon.Property.remove_after)
-		explosion_type = self._import_property_value(data, Weapon.Property.explosion_type)
-		inner_splash_range = self._import_property_value(data, Weapon.Property.inner_splash_range)
-		medium_splash_range = self._import_property_value(data, Weapon.Property.medium_splash_range)
-		outer_splash_range = self._import_property_value(data, Weapon.Property.outer_splash_range)
-		damage_amount = self._import_property_value(data, Weapon.Property.damage_amount)
-		damage_bonus = self._import_property_value(data, Weapon.Property.damage_bonus)
-		weapon_cooldown = self._import_property_value(data, Weapon.Property.weapon_cooldown)
-		damage_factor = self._import_property_value(data, Weapon.Property.damage_factor)
-		attack_angle = self._import_property_value(data, Weapon.Property.attack_angle)
-		launch_spin = self._import_property_value(data, Weapon.Property.launch_spin)
-		forward_offset = self._import_property_value(data, Weapon.Property.forward_offset)
-		upward_offset = self._import_property_value(data, Weapon.Property.upward_offset)
-		target_error_message = self._import_property_value(data, Weapon.Property.target_error_message)
-		icon = self._import_property_value(data, Weapon.Property.icon)
+		label = self._import_property_value(data, DATWeapon.Property.label)
+		graphics = self._import_property_value(data, DATWeapon.Property.graphics)
+		unused_technology = self._import_property_value(data, DATWeapon.Property.unused_technology)
+		target_flags = self._import_property_value(data, DATWeapon.Property.target_flags, _WeaponPropertyCoder.target_flags)
+		minimum_range = self._import_property_value(data, DATWeapon.Property.minimum_range)
+		maximum_range = self._import_property_value(data, DATWeapon.Property.maximum_range)
+		damage_upgrade = self._import_property_value(data, DATWeapon.Property.damage_upgrade)
+		weapon_type = self._import_property_value(data, DATWeapon.Property.weapon_type)
+		weapon_behavior = self._import_property_value(data, DATWeapon.Property.weapon_behavior)
+		remove_after = self._import_property_value(data, DATWeapon.Property.remove_after)
+		explosion_type = self._import_property_value(data, DATWeapon.Property.explosion_type)
+		inner_splash_range = self._import_property_value(data, DATWeapon.Property.inner_splash_range)
+		medium_splash_range = self._import_property_value(data, DATWeapon.Property.medium_splash_range)
+		outer_splash_range = self._import_property_value(data, DATWeapon.Property.outer_splash_range)
+		damage_amount = self._import_property_value(data, DATWeapon.Property.damage_amount)
+		damage_bonus = self._import_property_value(data, DATWeapon.Property.damage_bonus)
+		weapon_cooldown = self._import_property_value(data, DATWeapon.Property.weapon_cooldown)
+		damage_factor = self._import_property_value(data, DATWeapon.Property.damage_factor)
+		attack_angle = self._import_property_value(data, DATWeapon.Property.attack_angle)
+		launch_spin = self._import_property_value(data, DATWeapon.Property.launch_spin)
+		forward_offset = self._import_property_value(data, DATWeapon.Property.forward_offset)
+		upward_offset = self._import_property_value(data, DATWeapon.Property.upward_offset)
+		target_error_message = self._import_property_value(data, DATWeapon.Property.target_error_message)
+		icon = self._import_property_value(data, DATWeapon.Property.icon)
 
-		if label != None:
+		if label is not None:
 			self.label = label
-		if graphics != None:
+		if graphics is not None:
 			self.graphics = graphics
-		if unused_technology != None:
+		if unused_technology is not None:
 			self.unused_technology = unused_technology
-		if target_flags != None:
+		if target_flags is not None:
 			self.target_flags = target_flags
-		if minimum_range != None:
+		if minimum_range is not None:
 			self.minimum_range = minimum_range
-		if maximum_range != None:
+		if maximum_range is not None:
 			self.maximum_range = maximum_range
-		if damage_upgrade != None:
+		if damage_upgrade is not None:
 			self.damage_upgrade = damage_upgrade
-		if weapon_type != None:
+		if weapon_type is not None:
 			self.weapon_type = weapon_type
-		if weapon_behavior != None:
+		if weapon_behavior is not None:
 			self.weapon_behavior = weapon_behavior
-		if remove_after != None:
+		if remove_after is not None:
 			self.remove_after = remove_after
-		if explosion_type != None:
+		if explosion_type is not None:
 			self.explosion_type = explosion_type
-		if inner_splash_range != None:
+		if inner_splash_range is not None:
 			self.inner_splash_range = inner_splash_range
-		if medium_splash_range != None:
+		if medium_splash_range is not None:
 			self.medium_splash_range = medium_splash_range
-		if outer_splash_range != None:
+		if outer_splash_range is not None:
 			self.outer_splash_range = outer_splash_range
-		if damage_amount != None:
+		if damage_amount is not None:
 			self.damage_amount = damage_amount
-		if damage_bonus != None:
+		if damage_bonus is not None:
 			self.damage_bonus = damage_bonus
-		if weapon_cooldown != None:
+		if weapon_cooldown is not None:
 			self.weapon_cooldown = weapon_cooldown
-		if damage_factor != None:
+		if damage_factor is not None:
 			self.damage_factor = damage_factor
-		if attack_angle != None:
+		if attack_angle is not None:
 			self.attack_angle = attack_angle
-		if launch_spin != None:
+		if launch_spin is not None:
 			self.launch_spin = launch_spin
-		if forward_offset != None:
+		if forward_offset is not None:
 			self.forward_offset = forward_offset
-		if upward_offset != None:
+		if upward_offset is not None:
 			self.upward_offset = upward_offset
-		if target_error_message != None:
+		if target_error_message is not None:
 			self.target_error_message = target_error_message
-		if icon != None:
+		if icon is not None:
 			self.icon = icon
 
 class _WeaponPropertyCoder:
 	target_flags = DATCoders.DATFlagsCoder(9, {
-		Weapon.TargetFlag.air: 'air',
-		Weapon.TargetFlag.ground: 'ground',
-		Weapon.TargetFlag.mechanical: 'mechanical',
-		Weapon.TargetFlag.organic: 'organic',
-		Weapon.TargetFlag.non_building: 'non_building',
-		Weapon.TargetFlag.non_robotic: 'non_robotic',
-		Weapon.TargetFlag.terrain: 'terrain',
-		Weapon.TargetFlag.organic_or_mechanical: 'organic_or_mechanical',
-		Weapon.TargetFlag.own: 'own',
+		DATWeapon.TargetFlag.air: 'air',
+		DATWeapon.TargetFlag.ground: 'ground',
+		DATWeapon.TargetFlag.mechanical: 'mechanical',
+		DATWeapon.TargetFlag.organic: 'organic',
+		DATWeapon.TargetFlag.non_building: 'non_building',
+		DATWeapon.TargetFlag.non_robotic: 'non_robotic',
+		DATWeapon.TargetFlag.terrain: 'terrain',
+		DATWeapon.TargetFlag.organic_or_mechanical: 'organic_or_mechanical',
+		DATWeapon.TargetFlag.own: 'own',
 	})
 
 # weapons.dat file handler
@@ -342,8 +344,8 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 				}
 			]
 		})
-	ENTRY_STRUCT = Weapon
+	ENTRY_STRUCT = DATWeapon
 	FILE_NAME = "weapons.dat"
 
-	def get_entry(self, index): # type: (int) -> Weapon
-		return super(WeaponsDAT, self).get_entry(index)
+	def get_entry(self, index: int) -> DATWeapon:
+		return cast(DATWeapon, super(WeaponsDAT, self).get_entry(index))

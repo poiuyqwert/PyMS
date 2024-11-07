@@ -9,7 +9,7 @@ from ..utils import resource_path
 import unittest
 
 class Test_Entry_Name(unittest.TestCase):
-	def test_generic_name(self):
+	def test_generic_name(self) -> None:
 		entry_ids = (0, 1, 2, 3)
 		type = 'Entry'
 		id_count = 3
@@ -73,7 +73,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name,
 			)
 
-	def test_unit_name(self):
+	def test_unit_name(self) -> None:
 		entry_ids = (0, 114, 227, 228, 250, 251)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -276,7 +276,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name,
 			)
 
-	def test_weapon_name(self):
+	def test_weapon_name(self) -> None:
 		entry_ids = (0, 61, 129, 130)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -407,7 +407,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_image_name(self):
+	def test_image_name(self) -> None:
 		entry_ids = (0, 499, 998, 999)
 		imagesdat = ImagesDAT()
 		imagesdat.load_file(resource_path('images.dat', __file__))
@@ -500,7 +500,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_sprite_name(self):
+	def test_sprite_name(self) -> None:
 		entry_ids = (0, 258, 516, 517)
 		spritesdat = SpritesDAT()
 		spritesdat.load_file(resource_path('sprites.dat', __file__))
@@ -597,7 +597,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_flingy_name(self):
+	def test_flingy_name(self) -> None:
 		entry_ids = (0, 104, 208, 209)
 		flingydat = FlingyDAT()
 		flingydat.load_file(resource_path('flingy.dat', __file__))
@@ -698,7 +698,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_upgrade_name(self):
+	def test_upgrade_name(self) -> None:
 		entry_ids = (0, 30, 60, 61)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -829,7 +829,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_tech_name(self):
+	def test_tech_name(self) -> None:
 		entry_ids = (0, 21, 43, 44)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
@@ -960,7 +960,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_sound_name(self):
+	def test_sound_name(self) -> None:
 		entry_ids = (0, 571, 1143, 1144)
 		sfxdatatbl = TBL()
 		sfxdatatbl.load_file(resource_path('sfxdata.tbl', __file__))
@@ -1079,14 +1079,14 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_portrait_name(self):
+	def test_portrait_name(self) -> None:
 		entry_ids = (0, 54, 109, 110)
 		portdatatbl = TBL()
 		portdatatbl.load_file(resource_path('portdata.tbl', __file__))
 		portdatadat = PortraitsDAT()
 		portdatadat.load_file(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
-		portdatadat.get_entry(110).sound_file = 2 # tmarine\\TMaFid0
+		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\TGhFid0
 
 		expected_names = (
 			'Portrait #0',
@@ -1113,10 +1113,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tmarine\\TMaTlk0',
-			'UTassadar\\UTaTlk0',
-			'UFlag12\\UF12Tlk0',
 			'tmarine\\TMaFid0',
+			'UTassadar\\UTaFid0',
+			'UFlag12\\UF12Fid0',
+			'tghost\TGhFid0',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1125,10 +1125,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tmarine\\TMaTlk0',
-			'UTassadar\\UTaTlk0',
-			'UFlag12\\UF12Tlk0',
 			'tmarine\\TMaFid0',
+			'UTassadar\\UTaFid0',
+			'UFlag12\\UF12Fid0',
+			'tghost\TGhFid0',
 		)
 		decompiled_portdatatbl = TBL()
 		decompiled_portdatatbl.strings = [decompile_string(string) for string in portdatatbl.strings]
@@ -1139,10 +1139,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaTlk0)',
-			'Gantrithor (UTassadar\\UTaTlk0)',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0)',
-			'Expanded Portrait #110 (tmarine\\TMaFid0)',
+			'Marine (tmarine\\TMaFid0)',
+			'Gantrithor (UTassadar\\UTaFid0)',
+			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0)',
+			'Expanded Portrait #110 (tghost\TGhFid0)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1169,10 +1169,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'Marine (tmarine\\TMaTlk0) [V1]',
-			'Gantrithor (UTassadar\\UTaTlk0) [V2]',
-			'Flag (Blue) (Pl.12) (UFlag12\\UF12Tlk0) [V3]',
-			'Expanded Portrait #110 (tmarine\\TMaFid0) [V4]',
+			'Marine (tmarine\\TMaFid0) [V1]',
+			'Gantrithor (UTassadar\\UTaFid0) [V2]',
+			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0) [V3]',
+			'Expanded Portrait #110 (tghost\TGhFid0) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1186,7 +1186,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_map_name(self):
+	def test_map_name(self) -> None:
 		entry_ids = (0, 32, 64, 65)
 		mapdatatbl = TBL()
 		mapdatatbl.load_file(resource_path('mapdata.tbl', __file__))
@@ -1208,9 +1208,9 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial',
-			'BW - protoss02',
-			'Unknown',
+			'No map',
+			'BW - protoss01',
+			'BW - zerg10',
 			'Expanded Map #65',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
@@ -1220,10 +1220,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1232,10 +1232,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
+			'null',
+			'campaign\\expprotoss\\protoss01',
+			'campaign\\expzerg\\zerg10',
 			'campaign\\terran\\tutorial',
-			'campaign\\expprotoss\\protoss02',
-			'Map #64',
-			'campaign\\terran\\terran01',
 		)
 		decompiled_mapdatatbl = TBL()
 		decompiled_mapdatatbl.strings = [decompile_string(string) for string in mapdatatbl.strings]
@@ -1246,10 +1246,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial)',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02)',
-			'Unknown',
-			'Expanded Map #65 (campaign\\terran\\terran01)',
+			'No map (null)',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01)',
+			'BW - zerg10 (campaign\\expzerg\\zerg10)',
+			'Expanded Map #65 (campaign\\terran\\tutorial)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1276,10 +1276,10 @@ class Test_Entry_Name(unittest.TestCase):
 			)
 
 		expected_names = (
-			'tutorial (campaign\\terran\\tutorial) [V1]',
-			'BW - protoss02 (campaign\\expprotoss\\protoss02) [V2]',
-			'Unknown [V3]',
-			'Expanded Map #65 (campaign\\terran\\terran01) [V4]',
+			'No map (null) [V1]',
+			'BW - protoss01 (campaign\\expprotoss\\protoss01) [V2]',
+			'BW - zerg10 (campaign\\expzerg\\zerg10) [V3]',
+			'Expanded Map #65 (campaign\\terran\\tutorial) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),
@@ -1293,7 +1293,7 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name
 			)
 
-	def test_order_name(self):
+	def test_order_name(self) -> None:
 		entry_ids = (0, 94, 188, 189)
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))

@@ -1,114 +1,35 @@
 
+from .Config import PyICEConfig
 from .CodeGenerators import *
 from .NameDialog import NameDialog
 from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
+from .CodeGenerators.GeneratorPreset import GeneratorPreset
+from .Delegates import CodeGeneratorDelegate, VariableEditorDelegate
 
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
+from ..Utilities.CheckSaved import CheckSaved
 
-import os
+import re
 
-class CodeGeneratorDialog(PyMSDialog):
-	PRESETS = [
-		{
-			'name': 'Play Frames', 
-			'code': """\
-	playfram            $frame
-	wait                2""", 
-			'variables': [
-				{
-					'name': 'frame',
-					'generator': {
-						'type': 'range',
-						'start': 0, 
-						'stop': 20, 
-						'step': 1
-					}
-				}
-			]
-		}, 
-		{
-			'name': 'Play Framesets', 
-			'code': """\
-	playfram            %frameset
-	wait                2""", 
-			'variables': [
-				{
-					'name': 'frameset',
-					'generator': {
-						'type': 'range',
-						'start': 0, 
-						'stop': 51, 
-						'step': 17
-					}
-				}
-			]
-		},
-		{
-            'name': 'Play Framesets (Advanced)', 
-            'code': """\
-	playfram            %frame
-	wait                2""", 
-            'variables': [
-                {
-                    'name': 'frameset',
-                    'generator': {
-                        'type': 'range',
-                        'start': 0, 
-                        'stop': 20, 
-                        'step': 1
-                    }
-                }, 
-                {
-                    'name': 'frame',
-                    'generator': {
-                        'type': 'math',
-                        'math': '$frameset * 17'
-                    }
-                }
-            ]
-        },
-        {
-            'name': 'Hover Bobbing', 
-            'code': """\
-	setvertpos          $offset
-	waitrand            8 10""", 
-            'variables': [
-                {
-                    'name': 'offset',
-                    'generator': {
-                        'type': 'list',
-                        'list': [
-                            '0', 
-                            '1', 
-                            '2'
-                        ], 
-                        'repeater': 'inverted_once'
-                    }
-                }
-            ]
-        }
-	]
-	def __init__(self, parent):
-		self.variables = []
+class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
+	def __init__(self, parent: Misc, config: PyICEConfig, delegate: CodeGeneratorDelegate) -> None:
+		self.variables: list[CodeGeneratorVariable] = []
 		self.previewing = False
-		self.settings = parent.parent.settings
-		if not 'generator' in self.settings:
-			self.settings['generator'] = {}
-		if not 'presets' in self.settings['generator']:
-			self.settings['generator']['presets'] = CodeGeneratorDialog.PRESETS
+		self.config_ = config
+		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Code Generator', grabwait=True)
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		self.hor_pane = PanedWindow(self,orient=HORIZONTAL)
 		leftframe = Frame(self.hor_pane)
 		Label(leftframe, text='Variables:', anchor=W).pack(side=TOP, fill=X)
 		self.listbox = ScrolledListbox(leftframe, selectmode=EXTENDED, width=15, height=10)
-		self.listbox.bind(WidgetEvent.Listbox.Select, self.update_states)
-		self.listbox.bind(Double.Click_Left, self.edit)
+		self.listbox.bind(WidgetEvent.Listbox.Select(), self.update_states)
+		self.listbox.bind(Double.Click_Left(), self.edit)
 		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
 
 		def add_variable(generator_class, name):
@@ -124,13 +45,13 @@ class CodeGeneratorDialog(PyMSDialog):
 			menu.post(*self.winfo_pointerxy())
 		def load_preset_pressed():
 			menu = Menu(self, tearoff=0)
-			presets = self.settings.get('generator', {}).get('presets',[])
+			presets = self.config_.generator.presets.data
 			for n,preset in enumerate(presets):
 				if n == 5:
 					menu.add_command(label='More...', command=self.manage_presets)
 					break
 				else:
-					menu.add_command(label=preset['name'], command=lambda n=n: self.load_preset(n))
+					menu.add_command(label=preset.name, command=lambda p=preset: self.load_preset(p))
 			menu.add_separator()
 			menu.add_command(label='Manage Presets', command=self.manage_presets)
 			menu.post(*self.winfo_pointerxy())
@@ -166,11 +87,14 @@ class CodeGeneratorDialog(PyMSDialog):
 		colors = Frame(self.ver_pane, bd=2, relief=SUNKEN)
 		hscroll = Scrollbar(colors, orient=HORIZONTAL)
 		vscroll = Scrollbar(colors)
+
 		self.code = Text(colors, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
 		self.code.grid(sticky=NSEW)
-		self.code.orig = self.text._w + '_orig'
-		self.tk.call('rename', self.code._w, self.code.orig)
-		self.tk.createcommand(self.code._w, self.code_dispatch)
+	
+		self.code_orig = getattr(self.code, '_w') + '_orig'
+		self.tk.call('rename', getattr(self.code, '_w'), self.code_orig)
+		self.tk.createcommand(getattr(self.code, '_w'), self.code_dispatch)
+
 		hscroll.config(command=self.code.xview)
 		hscroll.grid(sticky=EW)
 		vscroll.config(command=self.code.yview)
@@ -181,11 +105,11 @@ class CodeGeneratorDialog(PyMSDialog):
 		self.hor_pane.add(self.ver_pane, sticky=NSEW)
 		self.hor_pane.pack(fill=BOTH, expand=1, padx=3, pady=(0,3))
 
-		def select_all(text):
-			text.tag_remove(SEL, '1.0', END)
-			text.tag_add(SEL, '1.0', END)
-			text.mark_set(INSERT, '1.0')
-		self.bind(Ctrl.a, lambda *_: select_all(self.code))
+		def select_all(_: Event) -> None:
+			self.code.tag_remove(SEL, '1.0', END)
+			self.code.tag_add(SEL, '1.0', END)
+			self.code.mark_set(INSERT, END)
+		self.bind(Ctrl.a(), select_all)
 
 		buts = Frame(self)
 		self.insert_button = Button(buts, text='Insert', command=self.insert)
@@ -199,41 +123,38 @@ class CodeGeneratorDialog(PyMSDialog):
 
 		return self.insert_button
 
-	def setup_complete(self):
-		self.settings.windows.generator.load_window_size('main', self)
-		def update_panes():
-			if 'variables_list' in self.settings.generator:
-				self.hor_pane.sash_place(0, *self.settings.generator['variables_list'])
-			if 'code_box' in self.settings.generator:
-				self.ver_pane.sash_place(0, *self.settings.generator['code_box'])
-		self.after(200, update_panes)
+	def setup_complete(self) -> None:
+		self.config_.windows.generator.main.load_size(self)
+		self.update()
+		self.config_.generator.pane.variables_list.load_size(self.hor_pane)
+		self.config_.generator.pane.code_box.load_size(self.ver_pane)
 
-	def code_dispatch(self, operation, *args):
+	def code_dispatch(self, operation, *args) -> str:
 		if operation in ['insert','delete'] and not self.previewing:
 			return EventPropogation.Break
 		try:
-			return self.tk.call((self.code.orig, operation) + args)
-		except TclError:
+			return self.tk.call((self.code_orig, operation) + args)
+		except:
 			return ''
 
-	def update_states(self, *_):
+	def update_states(self, *_) -> None:
 		has_selection = not not self.listbox.curselection()
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-		can_save = self.variables and self.text.get(1.0,END)
+		can_save = bool(self.variables and self.text.get(1.0,END))
 		self.toolbar.tag_enabled('can_save', can_save)
 
-		has_presets = not not self.settings.get('generator',{}).get('presets',None)
+		has_presets = not not self.config_.generator.presets.data
 		self.toolbar.tag_enabled('has_presets', has_presets)
 
-	def remove(self, *_):
+	def remove(self, *_) -> None:
 		cont = MessageBox.askquestion(parent=self, title='Remove Variable?', message="The variable settings will be lost.", default=MessageBox.YES, type=MessageBox.YESNO)
 		if cont == MessageBox.NO:
 			return
 		del self.variables[int(self.listbox.curselection()[0])]
 		self.update_list()
 
-	def unique_name(self, name, ignore=None):
+	def unique_name(self, name: str, ignore: CodeGeneratorVariable | None = None) -> str:
 		n = 1
 		unique = name
 		if name == 'n':
@@ -247,109 +168,93 @@ class CodeGeneratorDialog(PyMSDialog):
 				unique = '%s%d' % (name,n)
 		return unique
 
-	def edit(self, *_):
+	def edit(self, *_) -> None:
 		if self.listbox.curselection():
 			variable = self.variables[int(self.listbox.curselection()[0])]
-			CodeGeneratorVariableEditor(self, variable)
+			CodeGeneratorVariableEditor(self, self, variable, self.config_)
 
-	def insert(self, *_):
+	def insert(self, *_) -> None:
 		code = self.generate()
-		if code == None:
+		if code is None:
 			return
-		self.parent.text.insert(INSERT, code)
+		self.delegate.insert_code(code)
 		self.ok()
 
-	def save_preset(self, *_):
-		def do_save(window, name):
+	def save_preset(self, *_) -> None:
+		def do_save(window: AnyWindow, name: str) -> CheckSaved:
 			replace = None
-			for n,preset in enumerate(self.settings.get('generator',{}).get('presets',[])):
-				if preset['name'] == name:
+			for n,preset in enumerate(self.config_.generator.presets.data):
+				if preset.name == name:
 					cont = MessageBox.askquestion(parent=window, title='Overwrite Preset?', message="A preset with the name '%s' already exists. Do you want to overwrite it?" % name, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 					if cont == MessageBox.NO:
-						return
+						return CheckSaved.saved
 					elif cont == MessageBox.CANCEL:
-						return False
+						return CheckSaved.cancelled
 					replace = n
 					break
-			preset = {
-				'name': name,
-				'code': self.text.get(1.0,END),
-				'variables': []
-			}
-			if preset['code'].endswith('\r\n'):
-				preset['code'] = preset['code'][:-2]
-			elif preset['code'].endswith('\n'):
-				preset['code'] = preset['code'][:-1]
-			for v in self.variables:
-				preset['variables'].append({
-					'name': v.name,
-					'generator': v.generator.save()
-				})
-			if not 'generator' in self.settings:
-				self.settings['generator'] = {}
-			if not 'presets' in self.settings['generator']:
-				self.settings['generator']['presets'] = []
-			if replace == None:
-				self.settings['generator']['presets'].insert(0, preset)
+			preset = GeneratorPreset(
+				name=name,
+				code=self.text.get(1.0,END).rstrip('\r\n'),
+				variables=list(self.variables)
+			)
+			if replace is None:
+				self.config_.generator.presets.data.insert(0, preset)
 			else:
-				self.settings['generator']['presets'][replace] = preset
-		NameDialog(self, title='Save Preset', done='Save', callback=do_save)
-	def load_preset(self, preset, window=None):
+				self.config_.generator.presets.data[replace] = preset
+			return CheckSaved.saved
+		NameDialog(self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', save_callback=do_save)
+
+	def load_preset(self, preset: GeneratorPreset, window=None) -> bool:
 		if self.variables or self.text.get(1.0, END).strip():
 			cont = MessageBox.askquestion(parent=window if window else self, title='Load Preset?', message="Your current variables and code will be lost.", default=MessageBox.YES, type=MessageBox.YESNO)
 			if cont == MessageBox.NO:
 				return False
-		if isinstance(preset, int):
-			preset = self.settings['generator']['presets'][preset]
 		self.text.delete(1.0, END)
-		self.text.insert(END, preset['code'])
-		self.variables = []
-		for var in preset['variables']:
-			generator = var['generator']
-			self.variables.append(CodeGeneratorVariable(CodeGeneratorType.TYPES[generator['type']](generator), var['name']))
+		self.text.insert(END, preset.code)
+		self.variables = list(preset.variables)
 		self.update_list()
 		return True
 
-	def manage_presets(self):
-		ManageCodeGeneratorPresetsDialog(self)
+	def manage_presets(self) -> None:
+		ManageCodeGeneratorPresetsDialog(self, self, self.config_)
 
-	def preview(self, *_):
+	def preview(self, *_) -> None:
 		code = self.generate()
-		if code != None:
+		if code is not None:
 			self.previewing = True
 			self.code.delete(1.0, END)
 			self.code.insert(END, code)
 			self.previewing = False
 
-	def update_list(self, select=None):
-		if select == None and self.listbox.curselection():
+	def update_list(self, select: int | None = None) -> None:
+		if select is None and self.listbox.curselection():
 			select = self.listbox.curselection()[0]
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
 		for v in self.variables:
 			self.listbox.insert(END, '$%s = %s' % (v.name, v.generator.description()))
-		if select != None:
+		if select is not None:
 			self.listbox.select_set(select)
 		self.listbox.yview_moveto(y)
 		self.update_states()
 
-	def generate(self):
+	def generate(self) -> str | None:
 		variable_re = re.compile(r'([$%])([a-zA-Z0-9_]+)')
 		code = self.text.get(1.0, END)
 		generated = ''
 		count = None
 		for v in self.variables:
 			c = v.generator.count()
-			if c != None:
-				if count == None:
+			if c is not None:
+				if count is None:
 					count = c
 				else:
 					count = max(count,c)
-		if count == None:
+		if count is None:
 			ErrorDialog(self, PyMSError('Generate','No finite variables to generate with'))
-			return
-		def calculate_variable(variable, values, lookup):
-			def calculate_variable_named(name, values, lookup):
+			return None
+		def calculate_variable(variable: CodeGeneratorVariable, values: dict, lookup: list) -> int:
+			def calculate_variable_named(name: str, values: dict, lookup: list):
 				if name in values:
 					return values[name]
 				for v in self.variables:
@@ -360,9 +265,9 @@ class CodeGeneratorDialog(PyMSDialog):
 				if variable.name in lookup:
 					raise PyMSError('Generate', 'Cyclical reference detected: %s' % ' > '.join(lookup + [variable.name]))
 				lookup.append(variable.name)
-				values[variable.name] = variable.generator.value(lambda n,v=values,l=lookup: calculate_variable_named(n,v,l))
+				values[variable.name] = variable.generator.value(lambda n: calculate_variable_named(n,values,lookup))
 			return values[variable.name]
-		def replace_variable(match, values):
+		def replace_variable(match: re.Match, values: dict) -> str:
 			tohex = (match.group(1) == '%')
 			name = match.group(2)
 			replacement = values.get(name, match.group(0))
@@ -380,12 +285,12 @@ class CodeGeneratorDialog(PyMSDialog):
 						calculate_variable(v, values, [])
 					except PyMSError as e:
 						ErrorDialog(self, e)
-						return
+						return None
 			generated += variable_re.sub(lambda m: replace_variable(m, values), code)
 		return generated
 
-	def dismiss(self):
-		self.settings.windows.generator.save_window_size('main', self)
-		self.settings.generator.variables_list = self.hor_pane.sash_coord(0)
-		self.settings.generator.code_box = self.ver_pane.sash_coord(0)
+	def dismiss(self) -> None:
+		self.config_.windows.generator.main.save_size(self)
+		self.config_.generator.pane.variables_list.save_size(self.hor_pane)
+		self.config_.generator.pane.code_box.save_size(self.ver_pane)
 		PyMSDialog.dismiss(self)

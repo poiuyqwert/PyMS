@@ -1,28 +1,33 @@
 
-from ....FileFormats import TRG
-
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
+
+from ....FileFormats.TRG import TRG
+
+from ....Utilities import IO
+
+import io
 
 class CHKSectionTRIG(CHKSection):
 	NAME = 'TRIG'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
-	def __init__(self, chk):
-		CHKSection.__init__(self, chk)
-		self.trg = None
+	trg: TRG.TRG
 	
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.trg = TRG.TRG(self.chk.stat_txt, self.chk.aiscript)
-		self.trg.load_data(data, True)
+		self.trg.load(data)
 	
-	def save_data(self):
+	def save_data(self) -> bytes:
 		if self.trg:
-			return self.trg.compile_data(True)
-		return ''
+			f = io.BytesIO()
+			# TODO: Deal with warnings?
+			warnings = self.trg.save(f)
+			return f.getvalue()
+		return b''
 	
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		if self.trg:
-			result += self.trg.decompile_data()
+			result += IO.output_to_text(lambda f: self.trg.decompile(f))
 		return result

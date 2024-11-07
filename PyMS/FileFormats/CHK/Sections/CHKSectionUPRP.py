@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from ..CHKSection import CHKSection
 from ..CHKRequirements import CHKRequirements
 
@@ -6,8 +8,12 @@ from ....Utilities.utils import pad, named_flags
 
 import struct
 
-class CHKUnitProperties:
-	def __init__(self, chk):
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from ..CHK import CHK
+
+class CHKUnitProperties(object):
+	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 		self.validAbilities = 0
 		self.validProperties = 0
@@ -19,14 +25,14 @@ class CHKUnitProperties:
 		self.hangerUnits = 0
 		self.abilityStates = 0
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates = \
-			struct.unpack('<2H4BL2H4x', data[:20])
+			tuple(int(v) for v in struct.unpack('<2H4BL2H4x', data[:20]))
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<2H4BL2H4x', self.validAbilities,self.validProperties,self.owner,self.health,self.shields,self.energy,self.resources,self.hangerUnits,self.abilityStates)
 
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '\t#\n'
 		data = {
 			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
@@ -44,18 +50,18 @@ class CHKUnitProperties:
 			if isinstance(value, tuple):
 				result += '\t%s%s\n' % (pad('#'), value[0])
 				value = value[1]
-			result += '\t%s\n' % pad(key, value)
+			result += '\t%s\n' % pad(key, str(value))
 		return result
 
 class CHKSectionUPRP(CHKSection):
 	NAME = 'UPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 	
-	def __init__(self, chk):
+	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.properties = []
+		self.properties: list[CHKUnitProperties] = []
 	
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.properties = []
 		o = 0
 		while o+20 <= len(data):
@@ -64,13 +70,13 @@ class CHKSectionUPRP(CHKSection):
 			self.properties.append(properties)
 			o += 20
 	
-	def save_data(self):
-		result = ''
+	def save_data(self) -> bytes:
+		result = b''
 		for properties in self.properties:
 			result += properties.save_data()
 		return result
 	
-	def decompile(self):
+	def decompile(self) -> str:
 		result = '%s:\n' % (self.NAME)
 		for properties in self.properties:
 			result += properties.decompile()

@@ -1,30 +1,37 @@
 
+from __future__ import annotations
+
 import sys
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from .PyMSWarning import PyMSWarning
+
 class PyMSError(Exception):
-	def __init__(self, type, error, line=None, code=None, warnings=[], capture_exception=False):
+	def __init__(self, type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] = [], capture_exception = False, level=1):
 		self.type = type
 		self.error = error
 		self.line = line
-		if self.line != None:
+		if self.line is not None:
 			self.line += 1
 		self.code = code
 		self.warnings = warnings
 		self.exception = None
 		if capture_exception:
 			self.exception = sys.exc_info()
+		self.level = level
 
-	def repr(self):
+	def repr(self) -> str:
 		r = '%s Error: %s' % (self.type, self.error)
 		if self.line:
 			r += '\n    Line %s: %s' % (self.line, self.code)
 		return r
 
-	def __repr__(self):
-		from utils import fit
+	def __repr__(self) -> str:
+		from .utils import fit
 		r = fit('%s Error: ' % self.type, self.error)
 		if self.line:
-			if self.code != None:
+			if self.code is not None:
 				r += fit('    Line %s: ' % self.line, self.code)
 			else:
 				r += '    Line %s' % self.line
@@ -33,5 +40,5 @@ class PyMSError(Exception):
 				r += repr(w)
 		return r
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return repr(self)

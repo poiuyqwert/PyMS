@@ -4,10 +4,10 @@
 
 import struct
 
-_crypt_table = None
-def crypt_table():
+_crypt_table: tuple[int, ...] | None = None
+def crypt_table() -> tuple[int, ...]:
 	global _crypt_table
-	if _crypt_table == None:
+	if _crypt_table is None:
 		table = [0] * 0x500
 		seed = 0x00100001
 		for index1 in range(0x100):
@@ -26,7 +26,7 @@ class HashType:
 	name_b = 2
 	key = 3
 
-def hash_string(string, hash_type):
+def hash_string(string: str, hash_type: int) -> int:
 	seed1 = 0x7FED7FED
 	seed2 = 0xEEEEEEEE
 	if hash_type == HashType.key:

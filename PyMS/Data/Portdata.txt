@@ -4,7 +4,7 @@ Firebat
 Vulture 
 Spider Mine 
 Goliath 
-Seige Tank 
+Siege Tank 
 SCV 
 Wraith 
 Science Vessel 
@@ -72,7 +72,7 @@ Sally
 Greedo 
 Boskk 
 Peter 
-Independant Advisor 
+Independent Advisor 
 Terran Gas Tank 
 Protoss Gas Orb 
 Zerg Gas Sac 

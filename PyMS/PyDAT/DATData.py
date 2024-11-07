@@ -1,62 +1,53 @@
 
+from __future__ import annotations
+
 from .DataID import DATID
+from .NameDisplaySetting import NamesDisplaySetting
 
 from ..FileFormats.DAT import *
-\
+from ..FileFormats.DAT.AbstractDAT import AbstractDAT
+
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
 
 import copy
 
-class NamesDisplaySetting:
-	basic = 'basic'
-	tbl = 'tbl'
-	combine = 'combine'
+from typing import TYPE_CHECKING, Generic, TypeVar, Type
+if TYPE_CHECKING:
+	from .DataContext import DataContext
 
-	DATANAMES_USAGE_TO_SETTING = None # type: dict[DataNamesUsage, str]
-	SETTING_TO_DATANAMES_USAGE = None # type: dict[str, DataNamesUsage]
+DAT = TypeVar('DAT', bound=AbstractDAT)
 
-NamesDisplaySetting.DATANAMES_USAGE_TO_SETTING = {
-	DataNamesUsage.use: NamesDisplaySetting.basic,
-	DataNamesUsage.ignore: NamesDisplaySetting.tbl,
-	DataNamesUsage.combine: NamesDisplaySetting.combine
-}
-NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE = {
-	NamesDisplaySetting.basic: DataNamesUsage.use,
-	NamesDisplaySetting.tbl: DataNamesUsage.ignore,
-	NamesDisplaySetting.combine: DataNamesUsage.combine
-}
-
-class DATData(object):
-	def __init__(self, data_context, dat_id, dat_type, data_file, entry_type_name):
+class DATData(Generic[DAT]):
+	def __init__(self, data_context: DataContext, dat_id: DATID, dat_type: Type[DAT], data_file: str, entry_type_name: str) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.dat_type = dat_type
 		self.data_file = data_file
+		self.dat: DAT | None = None
+		self.default_dat: DAT | None = None
 		self.entry_type_name = entry_type_name
-		self.dat = None
-		self.file_path = None
-		self.default_dat = None
-		self.names = ()
-		self.name_overrides = {}
+		self.file_path: str | None = None
+		self.names: tuple[str, ...] = ()
+		self.name_overrides: dict[int, tuple[bool, str]] = {}
 
-		self.update_cb = Callback()
+		self.update_cb: Callback[DATID] = Callback()
 
-	def load_defaults(self, mpqhandler):
+	def load_defaults(self, mpqhandler: MPQHandler) -> None:
 		try:
 			dat = self.dat_type()
-			dat.load_file(mpqhandler.get_file('MPQ:arr\\' + self.dat_type.FILE_NAME, MPQHandler.GET_FROM_FOLDER_OR_MPQ))
+			dat.load_file(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
 		except:
 			pass
 		else:
 			self.default_dat = dat
-		if self.dat == None:
+		if self.dat is None:
 			self.new_file()
 		else:
 			self.update_names()
 
-	def new_file(self):
+	def new_file(self) -> None:
 		if self.default_dat:
 			self.dat = copy.deepcopy(self.default_dat)
 			self.file_path = None
@@ -65,117 +56,122 @@ class DATData(object):
 			self.dat.new_file()
 		self.update_names()
 
-	def load_file(self, file_path):
+	def load_file(self, file_path: str) -> None:
 		dat = self.dat_type()
 		dat.load_file(file_path)
 		self.dat = dat
 		self.file_path = file_path
 		self.update_names()
 
-	def load_data(self, file_data):
+	def load_data(self, file_data: bytes) -> None:
 		dat = self.dat_type()
 		dat.load_data(file_data)
 		self.dat = dat
 		self.file_path = None
 
-	def save_file(self, file_path):
+	def save_file(self, file_path: str) -> None:
+		if not self.dat:
+			return
 		self.dat.save_file(file_path)
 
-	def save_data(self):
+	def save_data(self) -> bytes:
+		assert self.dat is not None
 		return self.dat.save_data()
 
-	def load_name_overrides(self, path, update_names=True):
+	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
 		with open(path, 'r') as f:
 			contents = f.readlines()
 		self.name_overrides = DATEntryName.parse_overrides(contents)
 		if update_names:
 			self.update_names()
 
-	def save_name_overrides(self, path):
+	def save_name_overrides(self, path: str) -> None:
 		with open(path, 'w') as f:
 			for entry_id in sorted(self.name_overrides.keys()):
 				f.write('%d%s:%s\n' % (entry_id, '+' if self.name_overrides[entry_id][0] else '', self.name_overrides[entry_id][1]))
 
-	def update_names(self):
+	def update_names(self) -> None:
 		entry_count = self.entry_count()
-		names = []
+		names: list[str] = []
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-	def entry_name(self, entry_id):
+	def entry_name(self, entry_id: int) -> str:
 		if entry_id >= len(self.names):
 			entry_count = self.entry_count()
 			return DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
-	def is_expanded(self):
+	def is_expanded(self) -> bool:
 		if self.dat:
 			return self.dat.is_expanded()
 		if self.default_dat:
 			return self.default_dat.is_expanded()
 		return False
 
-	def entry_count(self):
+	def entry_count(self) -> int:
 		if self.dat:
 			return self.dat.entry_count()
 		if self.default_dat:
 			return self.default_dat.entry_count()
 		return self.dat_type.FORMAT.entries
 
-	def expand_entries(self, add):
+	def expand_entries(self, add: int) -> int:
+		if not self.dat:
+			return False
 		expanded = self.dat.expand_entries(add)
 		if expanded:
 			self.update_names()
 		return expanded
 
-class UnitsDATData(DATData):
-	def __init__(self, data_context):
+class UnitsDATData(DATData[UnitsDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.units, UnitsDAT, Assets.DataReference.Units, 'Unit')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.unit(entry_id,
 				data_names=Assets.data_cache(self.data_file),
-				stat_txt=self.data_context.stat_txt,
-				unitnamestbl=self.data_context.unitnamestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				stat_txt=self.data_context.stat_txt.strings,
+				unitnamestbl=self.data_context.unitnamestbl.strings,
+				data_names_usage=self.data_context.config.names.units.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.units.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class WeaponsDATData(DATData):
-	def __init__(self, data_context):
+class WeaponsDATData(DATData[WeaponsDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.weapons, WeaponsDAT, Assets.DataReference.Weapons, 'Weapon')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.weapon(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				weaponsdat=self.dat,
-				stat_txt=self.data_context.stat_txt,
+				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=self.data_context.config.names.weapons.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.weapons.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class FlingyDATData(DATData):
-	def __init__(self, data_context):
+class FlingyDATData(DATData[FlingyDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.flingy, FlingyDAT, Assets.DataReference.Flingy, 'Flingy')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -184,18 +180,18 @@ class FlingyDATData(DATData):
 				flingydat=self.dat,
 				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
-				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				imagestbl=self.data_context.imagestbl.strings,
+				data_names_usage=self.data_context.config.names.flingy.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class SpritesDATData(DATData):
-	def __init__(self, data_context):
+class SpritesDATData(DATData[SpritesDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.sprites, SpritesDAT, Assets.DataReference.Sprites, 'Sprite')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
@@ -203,147 +199,147 @@ class SpritesDATData(DATData):
 				data_names=Assets.data_cache(self.data_file),
 				spritesdat=self.dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
-				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				imagestbl=self.data_context.imagestbl.strings,
+				data_names_usage=self.data_context.config.names.sprites.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class ImagesDATData(DATData):
-	def __init__(self, data_context):
+class ImagesDATData(DATData[ImagesDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.images, ImagesDAT, Assets.DataReference.Images, 'Image')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.image(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				imagesdat=self.dat,
-				imagestbl=self.data_context.imagestbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				imagestbl=self.data_context.imagestbl.strings,
+				data_names_usage=self.data_context.config.names.images.display.value.data_names_usage,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class UpgradesDATData(DATData):
-	def __init__(self, data_context):
+class UpgradesDATData(DATData[UpgradesDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.upgrades, UpgradesDAT, Assets.DataReference.Upgrades, 'Upgrade')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.upgrade(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				upgradesdat=self.dat,
-				stat_txt=self.data_context.stat_txt,
+				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=self.data_context.config.names.upgrades.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.upgrades.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class TechDATData(DATData):
-	def __init__(self, data_context):
+class TechDATData(DATData[TechDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.techdata, TechDAT, Assets.DataReference.Techdata, 'Technology')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.tech(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				techdatadat=self.dat,
-				stat_txt=self.data_context.stat_txt,
+				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=self.data_context.config.names.techdata.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.techdata.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class SoundsDATData(DATData):
-	def __init__(self, data_context):
+class SoundsDATData(DATData[SoundsDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.sfxdata, SoundsDAT, Assets.DataReference.Sfxdata, 'Sound')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.sound(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				sfxdatadat=self.dat,
-				sfxdatatbl=self.data_context.sfxdatatbl,
+				sfxdatatbl=self.data_context.sfxdatatbl.strings,
 				none_name='No sound',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=self.data_context.config.names.sfxdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class PortraitsDATData(DATData):
-	def __init__(self, data_context):
+class PortraitsDATData(DATData[PortraitsDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.portdata, PortraitsDAT, Assets.DataReference.Portdata, 'Portrait')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.portrait(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				portdatadat=self.dat,
-				portdatatbl=self.data_context.portdatatbl,
+				portdatatbl=self.data_context.portdatatbl.strings,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				data_names_usage=self.data_context.config.names.portdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class CampaignDATData(DATData):
-	def __init__(self, data_context):
+class CampaignDATData(DATData[CampaignDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.mapdata, CampaignDAT, Assets.DataReference.Mapdata, 'Map')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.map(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				mapdatadat=self.dat,
-				mapdatatbl=self.data_context.mapdatatbl,
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
+				mapdatatbl=self.data_context.mapdatatbl.strings,
+				data_names_usage=self.data_context.config.names.mapdata.display.value.data_names_usage,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class OrdersDATData(DATData):
-	def __init__(self, data_context):
+class OrdersDATData(DATData[OrdersDAT]):
+	def __init__(self, data_context: DataContext) -> None:
 		DATData.__init__(self, data_context, DATID.orders, OrdersDAT, Assets.DataReference.Orders, 'Order')
 
-	def update_names(self):
+	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
 			names.append(DATEntryName.order(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				ordersdat=self.dat,
-				stat_txt=self.data_context.stat_txt,
+				stat_txt=self.data_context.stat_txt.strings,
 				none_name='None',
-				data_names_usage=NamesDisplaySetting.SETTING_TO_DATANAMES_USAGE[self.data_context.settings.names[self.dat_id.id].get('display', NamesDisplaySetting.basic)],
-				tbl_raw_string=not self.data_context.settings.names[self.dat_id.id].get('simple', False),
+				data_names_usage=self.data_context.config.names.orders.display.value.data_names_usage,
+				tbl_raw_string=not self.data_context.config.names.orders.simple.value,
 				tbl_decompile=False,
 				name_overrides=self.name_overrides
 			))

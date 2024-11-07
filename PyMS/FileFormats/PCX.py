@@ -1,4 +1,6 @@
 
+from .Images import Pixels, RawPalette
+
 from ..Utilities.utils import nearest_multiple
 from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
@@ -6,41 +8,46 @@ from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct, math
 
+from typing import BinaryIO
+
 # This class is designed for StarCraft PCX's, there is no guarantee it works with other PCX files
 class PCX:
-	def __init__(self, palette=[]):
+	def __init__(self, palette: RawPalette = []) -> None:
 		self.width = 0
 		self.height = 0
 		self.palette = palette
-		self.image = []
+		self.image: Pixels = []
 
-	def load_file(self, file, pal=False):
+	def load_file(self, file: str | BinaryIO, pal: bool = False) -> None:
 		data = load_file(file, 'PCX')
-		if data[:4] != '\x0A\x05\x01\x08':
-			raise PyMSError('Load',"'%s' is not a PCX file (no PCX header)" % file)
+		self.load_data(data, pal)
+
+	def load_data(self, data: bytes, pal: bool = False) -> None:
+		if data[:4] != b'\x0A\x05\x01\x08':
+			raise PyMSError('Load',"Not a PCX file (no PCX header)")
 		try:
 			xmin,ymin,xmax,ymax,_hdpi,_vdpi = struct.unpack('<6H',data[4:16])
 			planes,_bytesperline,_palinfo,_hscreensize,_vscreensize = struct.unpack('<B4H', data[65:74])
 			xmax = (xmax-xmin)+1
 			ymax = (ymax-ymin)+1
-			if data[-769] != '\x0C':
-				raise PyMSError('Load', "Unsupported PCX file '%s', the palette information is missing" % file)
+			if data[-769] != 0x0C:
+				raise PyMSError('Load', "Unsupported PCX file, the palette information is missing")
 			if pal and (xmax > 256 or ymax > 256 or planes != 1):
-				raise PyMSError('Load', "Unsupported special palette (PCX) file '%s'" % file)
-			palette = []
+				raise PyMSError('Load', "Unsupported special palette (PCX) file")
+			palette: RawPalette = []
 			for x in range(0,768,3):
 				if x == 765:
-					c = list(struct.unpack('3B', data[-768+x:]))
+					r,g,b = tuple(int(c) for c in struct.unpack('3B', data[-768+x:]))
 				else:
-					c = list(struct.unpack('3B', data[-768+x:-765+x]))
-				palette.append(c)
-			image = [[]]
+					r,g,b = tuple(int(c) for c in struct.unpack('3B', data[-768+x:-765+x]))
+				palette.append((r,g,b))
+			image: Pixels = [[]]
 			x = 128
 			while x < len(data) - 769:
-				c = ord(data[x])
+				c = data[x]
 				x += 1
 				if c & 192 == 192:
-					image[-1].extend([ord(data[x])] * (63 & c))
+					image[-1].extend([data[x]] * (63 & c))
 					x += 1
 				else:
 					image[-1].append(c)
@@ -62,51 +69,53 @@ class PCX:
 			for y in image:
 				if len(y) < xmax:
 					y.extend([0]*(xmax-len(y)))
-			self.width,self.height,self.palette,self.image = xmax,ymax,palette,image
+			self.width = xmax
+			self.height = ymax
+			self.palette = palette
+			self.image = image
 		except PyMSError:
 			raise
 		except:
-			raise PyMSError('Load',"Unsupported PCX file '%s', could possibly be corrupt" % file)
+			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt")
 
-	def load_data(self, image, palette=None):
+	def load_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)
 		self.width = len(image[0])
 		if palette:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file):
+	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file,'wb')
 		except:
 			raise PyMSError('Save',"Could not save PCX to file '%s'" % file)
-		f.write('\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
+		f.write(b'\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
 		for y in self.image:
 			last = y[0]
 			repeat = 1
 			for index in y[1:]:
 				if index == last:
 					if repeat == 63:
-						f.write('\xFF%c' % index)
+						f.write(b'\xFF')
+						f.write(index.to_bytes())
 						repeat = 1
 					else:
 						repeat += 1
 				else:
 					if repeat > 1:
-						f.write('%c%c' % (repeat | 0xC0, last))
+						f.write((repeat | 0xC0).to_bytes())
 					elif last >= 192:
-						f.write('\xC1%c' % last)
-					else:
-						f.write(chr(last))
+						f.write(b'\xC1')
+					f.write(last.to_bytes())
 					last = index
 					repeat = 1
 			if repeat > 1:
-				f.write('%c%c' % (repeat | 0xC0, last))
+				f.write((repeat | 0xC0).to_bytes())
 			elif last >= 192:
-				f.write('\xC1%c' % last)
-			else:
-				f.write(chr(last))
-		f.write('\x0C' + ''.join(struct.pack('3B',*c) for c in self.palette))
+				f.write(b'\xC1')
+			f.write(last.to_bytes())
+		f.write(b'\x0C' + b''.join(struct.pack('3B',*c) for c in self.palette))
 		f.close()
 
 # import sys

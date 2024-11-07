@@ -1,83 +1,73 @@
 
 from . import Assets
-from .setutils import PYMS_SETTINGS
+from .PyMSConfig import PYMS_CONFIG
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
+from .SemVer import SemVer
 
-import json, urllib
-from thread import start_new_thread
+import json, urllib.request, urllib.parse, urllib.error
+from _thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
-	BRANCH = 'master' # Default to `master` branch, but can be update for long-lived branches
+	BRANCH = 'python3' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
-	def check_update(window, program):
-		def do_check_update(window, program):
+	def check_update(window: WindowExtensions, program: str) -> None:
+		def do_check_update(window: WindowExtensions, program: str) -> None:
 			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
-			remindme = PYMS_SETTINGS.get('remindme', True)
-			if remindme == True or remindme != Assets.version('PyMS'):
-				try:
-					versions = json.loads(urllib.urlopen(VERSIONS_URL).read())
-					PyMS_version = SemVer(versions['PyMS'])
-					program_version = SemVer(versions[program])
-				except:
+			try:
+				import ssl
+				versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
+				latest_PyMS_version = SemVer(versions['PyMS'])
+				latest_program_version = SemVer(versions[program])
+				PyMS_version = SemVer(Assets.version('PyMS'))
+				program_version = SemVer(Assets.version(program))
+			except:
+				return
+			if PyMS_version >= latest_PyMS_version and program_version >= latest_program_version:
+				return
+			show = 2
+			if PyMS_dont_remind_me_raw := PYMS_CONFIG.reminder.pyms_version.data.get('PyMS'):
+				PyMS_dont_remind_me = SemVer(PyMS_dont_remind_me_raw)
+				if PyMS_dont_remind_me >= latest_PyMS_version:
+					show -= 1
+			if program_dont_remind_me_raw := PYMS_CONFIG.reminder.pyms_version.data.get(program):
+				program_dont_remind_me = SemVer(program_dont_remind_me_raw)
+				if program_dont_remind_me >= latest_program_version:
+					show -= 1
+			if not show:
+				return
+			def callback():
+				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
+					window.after(1000, callback)
 					return
-				if Assets.version('PyMS') < PyMS_version or Assets.version(program) < program_version:
-					def callback():
-						if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
-							window.after(1000, callback)
-							return
-						UpdateDialog(window,program,versions)
-					window.after(1, callback)
+				UpdateDialog(window,program,versions)
+			window.after(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
-	def __init__(self, parent, program, versions):
+	def __init__(self, parent: Misc, program: str, versions: dict[str, str]) -> None:
 		self.program = program
 		self.versions = versions
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
-	def widgetize(self):
+	def widgetize(self) -> Misc | None:
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
 			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,Assets.version(self.program),self.versions[self.program])	
 		else:
 			text = "Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (Assets.version('PyMS'),self.versions['PyMS'])
 		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
 		f = Frame(self)
-		self.remind = IntVar()
-		remindme = PYMS_SETTINGS.get('remindme', True)
-		self.remind.set(remindme == True or remindme != Assets.version('PyMS'))
-		Checkbutton(f, text='Remind me later', variable=self.remind).pack(side=LEFT, padx=5)
+		self.dont_remind_me = BooleanVar()
+		Checkbutton(f, text="Don't remind me for this version", variable=self.dont_remind_me).pack(side=LEFT, padx=5)
 		Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=RIGHT, padx=5)
 		f.pack(fill=X, expand=1)
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=5)
 		return ok
 
-	def ok(self):
-		PYMS_SETTINGS.remindme = [Assets.version('PyMS'),1][self.remind.get()]
-		PYMS_SETTINGS.save()
+	def ok(self, _: Event | None = None) -> None:
+		if self.dont_remind_me.get():
+			PYMS_CONFIG.reminder.pyms_version.data['PyMS'] = self.versions['PyMS']
+			PYMS_CONFIG.reminder.pyms_version.data[self.program] = self.versions[self.program]
+			PYMS_CONFIG.save()
 		PyMSDialog.ok(self)
-
-class SemVer(object):
-	def __init__(self, version):
-		self.meta = None
-		if '-' in version:
-			version,self.meta = version.split('-')
-		components = (int(c) for c in version.split('.'))
-		self.major, self.minor, self.patch = components
-
-	def __lt__(self, other):
-		if not isinstance(other, SemVer):
-			return False
-		if self.major < other.major:
-			return True
-		elif self.major > other.major:
-			return False
-		if self.minor < other.minor:
-			return True
-		elif self.minor > other.minor:
-			return False
-		if self.patch < other.patch:
-			return True
-		elif self.patch > other.patch:
-			return False

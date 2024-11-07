@@ -1,27 +1,31 @@
 # coding=utf-8
 
+from __future__ import annotations
+
 from ..utils import is_mac
 
 import inspect
 
+from typing import Any, Type
+
 # https://www.tcl-lang.org/man/tcl8.4/TkCmd/bind.htm
 
 class EventPattern(object):
-	def __init__(self, *fields):
+	def __init__(self, *fields: Field) -> None:
 		# TODO: Validate fields make sense?
 		self.fields = fields
 
-	def name(self):
+	def name(self) -> str:
 		return '-'.join(field.value for field in self.fields)
 
-	def event(self):
+	def event(self) -> str:
 		return '<%s>' % self.name()
 
-	def description(self):
+	def description(self) -> str:
 		return ('' if is_mac() else '+').join(field.description for field in self.fields)
 
 	# Return the last field if it is a `Keysym`
-	def get_keysym(self):
+	def get_keysym(self) -> Field | None:
 		if not self.fields:
 			return None
 		field = self.fields[-1]
@@ -29,13 +33,13 @@ class EventPattern(object):
 			return None
 		return field
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return self.event()
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return '<%s %s>' % (self.__class__.__name__, self)
 
-	def __add__(self, other):
+	def __add__(self, other: EventPattern | Field) -> EventPattern:
 		if isinstance(other, EventPattern):
 			return EventPattern(*(self.fields + other.fields))
 		elif isinstance(other, Field):
@@ -43,21 +47,24 @@ class EventPattern(object):
 		else:
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
+	def __call__(self) -> str:
+		return self.event()
+
 class CustomEventPattern(EventPattern):
-	def event(self):
+	def event(self) -> str:
 		return '<<%s>>' % self.name()
 
 class Field(object):
-	def __init__(self, value, description=None):
+	def __init__(self, value: str, description: str | None = None) -> None:
 		self.value = value
 		self.description = description or value
 
-	def __eq__(self, other):
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Field):
 			return False
 		return other.value == self.value
 
-	def __add__(self, other):
+	def __add__(self, other: EventPattern | Field) -> EventPattern:
 		if isinstance(other, EventPattern):
 			return EventPattern(*((self,) + other.fields))
 		elif isinstance(other, Field):
@@ -66,7 +73,7 @@ class Field(object):
 			raise TypeError("unsupported operand type(s) for +: '%s' and '%s'" % (type(self).__name__, type(other).__name__))
 
 class ModifiedField(Field):
-	def __init__(self, value, description=None, state=0):
+	def __init__(self, value: str, description: str | None = None, state: int = 0) -> None:
 		self.state = state
 		Field.__init__(self, value, description)
 
@@ -90,24 +97,24 @@ class Modifier:
 class Keysym(Field):
 	# When using the Shift modifier, something like `Shift-c` does not work, it would need to be `Shift-C`
 	# So Keysym's specify their capitalized versions (if applicable) to automatically be adjusted for Shift modifiers
-	def __init__(self, key, description=None, capitalized_key=None, capitalized_key_description=None):
+	def __init__(self, key: str, description: str | None = None, capitalized_key: str | None = None, capitalized_key_description: str | None = None) -> None:
 		value = key
 		description = description or key.capitalize()
 		Field.__init__(self, value, description)
 		self._capitalized_key = capitalized_key
 		self._capitalized_key_description = capitalized_key_description
 
-	def capitalized(self):
+	def capitalized(self) -> Keysym:
 		if not self._capitalized_key:
 			return self
 		return Keysym(self._capitalized_key, self._capitalized_key_description)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return "<Keysym '%s'>" % self.value
 
 class Events(object):
 	@classmethod
-	def modify(cls, *modifiers):
+	def modify(cls: Type[Events], *modifiers: Field) -> None:
 		for attr, value in inspect.getmembers(cls, lambda member: not inspect.ismethod(member)):
 			if attr.startswith('_') or not isinstance(value, EventPattern):
 				continue
@@ -160,6 +167,12 @@ class Key(Events):
 	Backspace = EventPattern(Keysym('BackSpace'))
 	Escape = EventPattern(Keysym('Escape'))
 	Tab = EventPattern(Keysym('Tab'))
+	Slash = EventPattern(Keysym('slash', '/'))
+	Backslash = EventPattern(Keysym('backslash', '\\'))
+	BraceLeft = EventPattern(Keysym('braceleft', '{'))
+	BraceRight = EventPattern(Keysym('braceright', '}'))
+	BracketLeft = EventPattern(Keysym('bracketleft', '['))
+	BracketRight = EventPattern(Keysym('bracketright', ']'))
 
 	F1 = EventPattern(Keysym('F1'))
 	F2 = EventPattern(Keysym('F2'))
@@ -307,6 +320,19 @@ class WidgetEvent:
 
 	class Listbox:
 		Select = CustomEventPattern(Field('ListboxSelect'))
+	
+	class Text:
+		Selection = CustomEventPattern(Field('Selection'))
+		UndoStack = CustomEventPattern(Field('UndoStack'))
+		Modified = CustomEventPattern(Field('Modified'))
+	
+	class Treeview:
+		Select = CustomEventPattern(Field('TreeviewSelect'))
+		Open = CustomEventPattern(Field('TreeviewOpen'))
+		Close = CustomEventPattern(Field('TreeviewClose'))
+
+	class Combobox:
+		Selected = CustomEventPattern(Field('ComboboxSelected'))
 
 class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4
@@ -339,10 +365,10 @@ def _main():
 	]
 	for event in events:
 		print(event)
-		print(event.name())
-		print(event.description())
+		print((event.name()))
+		print((event.description()))
 
-	import Tkinter as Tk
+	import tkinter as Tk
 
 	root = Tk.Tk()
 	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')

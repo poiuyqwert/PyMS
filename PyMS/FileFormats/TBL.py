@@ -5,6 +5,8 @@ from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct, re
 
+from typing import BinaryIO
+
 TBL_REF = """#----------------------------------------------------
 # Misc.
 #    <0> = End Substring
@@ -84,7 +86,7 @@ TBL_REF = """#----------------------------------------------------
 
 DEF_DECOMPILE = ''.join([chr(x) for x in range(32)]) + '#<>'
 
-def compile_string(string):
+def compile_string(string: str) -> str:
 	def special_chr(o):
 		c = int(o.group(1)) 
 		if -1 > c or 255 < c:
@@ -92,7 +94,7 @@ def compile_string(string):
 		return chr(c)
 	return re.sub(r'<(\d+)>', special_chr, string)
 
-def decompile_string(string, exclude='', include=''):
+def decompile_string(string: str, exclude: str = '', include: str = '') -> str:
 	def special_chr(o):
 		return '<%s>' % ord(o.group(0))
 	decompile = DEF_DECOMPILE + include
@@ -101,40 +103,40 @@ def decompile_string(string, exclude='', include=''):
 	return re.sub('([%s])' % decompile, special_chr, string)
 
 class TBL:
-	def __init__(self):
-		self.strings = []
+	def __init__(self) -> None:
+		self.strings: list[str] = []
 
-	def load_file(self, file):
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'TBL')
 		try:
-			n = struct.unpack('<H', data[:2])[0]
-			offsets = struct.unpack('<%sH' % n, data[2:2+2*n])
+			n = int(struct.unpack('<H', data[:2])[0])
+			offsets = list(int(v) for v in struct.unpack('<%sH' % n, data[2:2+2*n]))
 			findlen = list(offsets) + [len(data)]
 			findlen.sort(reverse=True)
-			lengths = {}
-			for i in xrange(1,len(findlen)):
+			lengths: dict[int, int] = {}
+			for i in range(1,len(findlen)):
 				start = findlen[i]
 				if not start in lengths:
 					end = findlen[i-1]
 					lengths[start] = end-start
-			strings = []
-			for i in xrange(len(offsets)):
+			strings: list[str] = []
+			for i in range(len(offsets)):
 				o = offsets[i]
 				l = lengths[o]
-				strings.append(data[o:o+l].decode('latin-1'))
+				strings.append(data[o:o+l].decode('utf-8'))
 			self.strings = strings
 		except:
 			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)
 
-	def interpret(self, file):
+	def interpret(self, file: str) -> None:
 		try:
 			f = open(file,'r')
-			data = f.readlines()
+			lines = f.readlines()
 			f.close()
 		except:
 			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
-		strings = []
-		for n,l in enumerate(data):
+		strings: list[str] = []
+		for n,l in enumerate(lines):
 			line = l.split('#',1)[0]
 			if line:
 				if len(strings) == 65536:
@@ -143,19 +145,19 @@ class TBL:
 				strings.append(s)
 		self.strings = strings
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		o = 2 + 2 * len(self.strings)
-		header = bytearray(struct.pack('<H', len(self.strings)))
-		data = bytearray()
+		header = struct.pack('<H', len(self.strings))
+		data = b''
 		for s in self.strings:
 			if not s.endswith('\x00'):
 				s += '\x00'
 			header += struct.pack('<H', o)
-			data += bytearray(s, 'latin-1')
+			data += s.encode('utf-8')
 			o += len(s)
-		return str(header + data)
+		return header + data
 
-	def compile(self, file):
+	def compile(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file, 'wb')
 		except:
@@ -164,7 +166,7 @@ class TBL:
 		f.write(data)
 		f.close()
 
-	def decompile(self, file, ref=False):
+	def decompile(self, file: str, ref: bool = False) -> None:
 		try:
 			f = AtomicWriter(file, 'w')
 		except:

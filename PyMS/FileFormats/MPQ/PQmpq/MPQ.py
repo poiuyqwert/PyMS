@@ -1,40 +1,45 @@
 
+from __future__ import annotations
+
 # MPQ functionality based off of SFmpq (by Quantam and ShadowFlare), which is based off StormLib (by Ladislav Zezula)
 
 from . import MPQCrypt, MPQComp
 
 from ....Utilities.PyMSError import PyMSError
-from ....Utilities.Struct import *
+from ....Utilities import Struct
 from ....Utilities.utils import flags_code
 
 import re, math, struct
 
-class MPQHeaderV1(Struct):
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+	from typing import TextIO, BinaryIO
+
+class MPQHeaderV1(Struct.Struct):
 	ID_MPQ = b'MPQ\x1A'
 	ID_BN3 = b'BN3\x1A'
 
 	_fields = (
-		('type_id', Type.str(4)),
-		('header_size', Type.u32()),
-		('archive_size', Type.u32()),
-		('format_version', Type.u16()),
-		('sector_size_shift', Type.u16()),
-		('hash_table_offset', Type.u32()),
-		('block_table_offset', Type.u32()),
-		('hash_table_entries', Type.u32()),
-		('block_table_entries', Type.u32()),
+		('type_id', Struct.t_str(4)),
+		('header_size', Struct.t_u32),
+		('archive_size', Struct.t_u32),
+		('format_version', Struct.t_u16),
+		('sector_size_shift', Struct.t_u16),
+		('hash_table_offset', Struct.t_u32),
+		('block_table_offset', Struct.t_u32),
+		('hash_table_entries', Struct.t_u32),
+		('block_table_entries', Struct.t_u32),
 	)
 
-	def __init__(self):
-		self.type_id = None
-		self.header_size = None
-		self.archive_size = None
-		self.format_version = None
-		self.sector_size_shift = None
-		self.hash_table_offset = None
-		self.block_table_offset = None
-		self.hash_table_entries = None
-		self.block_table_entries = None
+	type_id: str
+	header_size: int
+	archive_size: int
+	format_version: int
+	sector_size_shift: int
+	hash_table_offset: int
+	block_table_offset: int
+	hash_table_entries: int
+	block_table_entries: int
 
 class MPQLocale:
 	neutral    = 0 # Neutral (English US)
@@ -52,24 +57,23 @@ class MPQLocale:
 	russian    = 1049 # 0x419
 	english_uk = 2056 # 0x808
 
-class MPQHashEntry(Struct):
+class MPQHashEntry(Struct.Struct):
 	BLOCK_INDEX_EMPTY   = 0xFFFFFFFF
 	BLOCK_INDEX_DELETED = 0xFFFFFFFE
 
 	_fields = (
-		('hash_name_a', Type.u32()),
-		('hash_name_b', Type.u32()),
-		('locale', Type.u16()),
-		('platform', Type.u16()),
-		('block_index', Type.u32())
+		('hash_name_a', Struct.t_u32),
+		('hash_name_b', Struct.t_u32),
+		('locale', Struct.t_u16),
+		('platform', Struct.t_u16),
+		('block_index', Struct.t_u32)
 	)
 
-	def __init__(self):
-		self.hash_name_a = None
-		self.hash_name_b = None
-		self.locale = None
-		self.platform = None
-		self.block_index = None
+	hash_name_a: int
+	hash_name_b: int
+	locale: int
+	platform: int
+	block_index: int
 
 class MPQBlockFlag:
 	imploded      = 0x00000100
@@ -82,19 +86,18 @@ class MPQBlockFlag:
 	sector_crc    = 0x04000000
 	exists        = 0x80000000
 
-class MPQBlockEntry(Struct):
+class MPQBlockEntry(Struct.Struct):
 	_fields = (
-		('file_offset', Type.u32()),
-		('compressed_size', Type.u32()),
-		('file_size', Type.u32()),
-		('flags', Type.u32())
+		('file_offset', Struct.t_u32),
+		('compressed_size', Struct.t_u32),
+		('file_size', Struct.t_u32),
+		('flags', Struct.t_u32)
 	)
 
-	def __init__(self):
-		self.file_offset = None
-		self.compressed_size = None
-		self.file_size = None
-		self.flags = None
+	file_offset: int
+	compressed_size: int
+	file_size: int
+	flags: int
 
 class MPQFileEntry(object):
 	UNKNOWN_PREFIX = '~unknowns\\unknown_'
@@ -146,41 +149,41 @@ class Listfiles(object):
 	def __init__(self):
 		self.filenames = {}
 
-	def add_listfile_list(self, filenames):
+	def add_listfile_list(self, filenames: list[str]) -> None:
 		for filename in filenames:
 			hash_name_a = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_a)
 			hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 			self.filenames[(hash_name_a, hash_name_b)] = filename
 
-	def add_listfile_str(self, filenames):
+	def add_listfile_str(self, filenames: str) -> None:
 		self.add_listfile_list(RE_NEWLINE.split(filenames))
 
-	def add_listfile_file(self, file):
+	def add_listfile_file(self, file: TextIO) -> None:
 		self.add_listfile_str(file.read())
 
-	def add_listfile_path(self, path):
+	def add_listfile_path(self, path: str) -> None:
 		with open(path, 'r') as file:
 			self.add_listfile_file(file)
 
-	def get_filenames(self):
-		return self.filenames.values()
+	def get_filenames(self) -> list[str]:
+		return list(self.filenames.values())
 
 BYTE = struct.Struct('<B')
 
 class MPQ(object):
-	def __init__(self):
-		self.mpq_offset = None
-		self.file_size = None
-		self.headerv1 = None
-		self.path = None
-		self.file_handle = None
-		self.hash_table = None
-		self.block_table = None
-		self.internal_listfiles = None
+	def __init__(self) -> None:
+		self.mpq_offset: int | None = None
+		self.file_size: int | None = None
+		self.headerv1: MPQHeaderV1 | None = None
+		self.path: str | None = None
+		self.file_handle: BinaryIO | None = None
+		self.hash_table: list[MPQHashEntry] | None = None
+		self.block_table: list[MPQBlockEntry] | None = None
+		self.internal_listfiles: Listfiles | None = None
 
-		self.external_listfiles = None
+		self.external_listfiles: Listfiles | None = None
 
-	def load_file(self, path):
+	def load_file(self, path: str) -> None:
 		try:
 			file_handle = open(path, 'rb')
 		except:
@@ -192,7 +195,7 @@ class MPQ(object):
 
 			# Find MPQ offset
 			mpq_offset = 0
-			max_offset = file_size - MPQHeaderV1.size()
+			max_offset = file_size - MPQHeaderV1.calcsize()
 			while mpq_offset < max_offset:
 				file_handle.seek(mpq_offset)
 				type_id = file_handle.read(4)
@@ -214,7 +217,7 @@ class MPQ(object):
 			# Load hash table
 			try:
 				file_handle.seek(mpq_offset + headerv1.hash_table_offset)
-				hash_table_data = file_handle.read(MPQHashEntry.size() * headerv1.hash_table_entries)
+				hash_table_data = file_handle.read(MPQHashEntry.calcsize() * headerv1.hash_table_entries)
 			except:
 				raise PyMSError('Load', "Couldn't read hash table")
 			hash_table_data = MPQCrypt.decrypt(hash_table_data, MPQTableKey.hash_table)
@@ -226,7 +229,7 @@ class MPQ(object):
 			# Load block table
 			try:
 				file_handle.seek(mpq_offset + headerv1.block_table_offset)
-				block_table_data = file_handle.read(MPQBlockEntry.size() * headerv1.block_table_entries)
+				block_table_data = file_handle.read(MPQBlockEntry.calcsize() * headerv1.block_table_entries)
 			except:
 				raise PyMSError('Load', "Couldn't read block table")
 			block_table_data = MPQCrypt.decrypt(block_table_data, MPQTableKey.block_table)
@@ -259,11 +262,12 @@ class MPQ(object):
 		self.internal_listfiles = None
 
 	# Set a Listfiles object on the MPQ so you don't need to continue passing it to `list_files`
-	def set_listfiles(self, listfiles):
+	def set_listfiles(self, listfiles: Listfiles) -> None:
 		self.external_listfiles = listfiles
 
-	def _find_hash_entries(self, filename):
-		entries = []
+	def _find_hash_entries(self, filename: str) -> list[MPQHashEntry]:
+		assert self.hash_table is not None
+		entries: list[MPQHashEntry] = []
 		hash_name_a = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_a)
 		hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 		for hash_entry in self.hash_table:
@@ -271,8 +275,10 @@ class MPQ(object):
 				entries.append(hash_entry)
 		return entries
 
-	def _find_hash_entry(self, start_index, hash_name_a, hash_name_b, locale=MPQLocale.neutral):
-		neutral_hash_entry = None
+	def _find_hash_entry(self, start_index: int, hash_name_a: int, hash_name_b: int, locale: int = MPQLocale.neutral) -> MPQHashEntry | None:
+		assert self.headerv1 is not None
+		assert self.hash_table is not None
+		neutral_hash_entry: MPQHashEntry | None = None
 		for offset in range(self.headerv1.hash_table_entries):
 			index = (start_index + offset) % self.headerv1.hash_table_entries
 			hash_entry = self.hash_table[index]
@@ -283,11 +289,13 @@ class MPQ(object):
 				if hash_entry.locale == locale:
 					return hash_entry
 				# If the entry has the neutral locale, store it to return in the case there is no entry with the requested locale
-				elif hash_entry.locale == MPQLocale.neutral and neutral_hash_entry == None:
+				elif hash_entry.locale == MPQLocale.neutral and neutral_hash_entry is None:
 					neutral_hash_entry = hash_entry
 		return neutral_hash_entry
 
-	def _find_hash_entry_by_filename(self, filename, locale=MPQLocale.neutral):
+	def _find_hash_entry_by_filename(self, filename: str, locale: int = MPQLocale.neutral) -> MPQHashEntry | None:
+		assert self.headerv1 is not None
+		assert self.hash_table is not None
 		if filename.startswith(MPQFileEntry.UNKNOWN_PREFIX):
 			try:
 				index = int(filename.split('_')[-1], 16)
@@ -299,9 +307,9 @@ class MPQ(object):
 		hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 		return self._find_hash_entry(start_index, hash_name_a, hash_name_b, locale)
 
-	def get_internal_listfiles(self):
+	def get_internal_listfiles(self) -> Listfiles:
 		# BN3 files have different internal listfile setup
-		if self.internal_listfiles == None:
+		if self.internal_listfiles is None:
 			self.internal_listfiles = Listfiles()
 			self.internal_listfiles.add_listfile_list([MPQInternalFile.attributes, MPQInternalFile.listfile, MPQInternalFile.signature])
 			crypt_key = MPQCrypt.hash_string(MPQInternalFile.listfile, MPQCrypt.HashType.key)
@@ -313,12 +321,15 @@ class MPQ(object):
 		return self.internal_listfiles
 
 	# `listfiles` will be combined with the internal listfile (if available) and listfiles set through `set_listfiles` (if available)
-	def list_files(self, listfiles=None):
+	def list_files(self, listfiles: Listfiles | None = None) -> list[MPQFileEntry]:
+		assert self.headerv1 is not None
+		assert self.hash_table is not None
+		assert self.block_table is not None
 		listfile_hashes = {}
 		listfile_hashes.update(self.get_internal_listfiles().filenames)
-		if listfiles != None:
+		if listfiles is not None:
 			listfile_hashes.update(listfiles.filenames)
-		if self.external_listfiles != None:
+		if self.external_listfiles is not None:
 			listfile_hashes.update(self.external_listfiles.filenames)
 
 		file_entries = []
@@ -329,22 +340,28 @@ class MPQ(object):
 			if not block_entry.flags & MPQBlockFlag.exists:
 				continue
 			entry_filename = listfile_hashes.get((hash_entry.hash_name_a, hash_entry.hash_name_b))
-			if entry_filename == None:
+			if entry_filename is None:
 				entry_filename = '%s%08x' % (MPQFileEntry.UNKNOWN_PREFIX, index)
 			file_entries.append(MPQFileEntry(entry_filename, hash_entry, block_entry))
 
 		return file_entries
 
-	def _read_file_by_block_entry(self, block_entry, crypt_key=None):
+	def _read_file_by_block_entry(self, block_entry: MPQBlockEntry, crypt_key: int | None = None) -> bytes:
+		assert self.headerv1 is not None
+		assert self.file_handle is not None
+		assert self.mpq_offset is not None
 		if not block_entry.flags & MPQBlockFlag.exists:
 			raise PyMSError('Read', "File doesn't exist")
 		if block_entry.file_size == 0:
-			return ''
+			return b''
 
-		if block_entry.flags & MPQBlockFlag.encrypted and not crypt_key:
-			raise PyMSError('Read', "Missing key for decrypting")
-		if block_entry.flags & MPQBlockFlag.adjust_key:
-			crypt_key = (crypt_key + block_entry.file_offset) ^ block_entry.file_size
+		if block_entry.flags & MPQBlockFlag.encrypted:
+			if not crypt_key:
+				raise PyMSError('Read', "Missing key for decrypting")
+			if block_entry.flags & MPQBlockFlag.adjust_key:
+				crypt_key = (crypt_key + block_entry.file_offset) ^ block_entry.file_size
+		else:
+			crypt_key = 0
 
 		read_size = block_entry.file_size
 		block_size = 512 << self.headerv1.sector_size_shift
@@ -355,20 +372,21 @@ class MPQ(object):
 		header_length = 0
 		# If BN3 then adjust for header length value
 
-		block_offsets = []
+		block_offsets: list[int] = []
 		if (block_entry.flags & MPQBlockFlag.imploded or block_entry.flags & MPQBlockFlag.compressed) and not block_entry.flags & MPQBlockFlag.single_unit:
 			self.file_handle.seek(self.mpq_offset + block_entry.file_offset + header_length)
 			block_offsets_data = self.file_handle.read((total_blocks + 1) * 4)
 			if block_entry.flags & MPQBlockFlag.encrypted:
+				assert crypt_key is not None
 				block_offsets_data = MPQCrypt.decrypt(block_offsets_data, crypt_key - 1)
-			block_offsets = struct.unpack('<%dL' % (total_blocks + 1), block_offsets_data)
+			block_offsets = list(int(o) for o in struct.unpack('<%dL' % (total_blocks + 1), block_offsets_data))
 		else:
 			for i in range(total_blocks):
 				block_offsets.append(i * block_size)
 			block_offsets.append(block_entry.compressed_size - header_length)
 
 		print(block_offsets)
-		file_data = ''
+		file_data = b''
 		for index in range(0, len(block_offsets)-1):
 			raw_size = block_offsets[index+1] - block_offsets[index]
 			sector_size = block_size
@@ -378,6 +396,7 @@ class MPQ(object):
 			self.file_handle.seek(self.mpq_offset + block_entry.file_offset + block_offsets[index])
 			block_data = self.file_handle.read(raw_size)
 			if block_entry.flags & MPQBlockFlag.encrypted:
+				assert crypt_key is not None
 				block_data = MPQCrypt.decrypt(block_data, crypt_key + index)
 			# Some sectors might not be compressed, only decompress if the raw size is smaller than the sector size
 			if raw_size < sector_size:
@@ -385,9 +404,9 @@ class MPQ(object):
 				if block_entry.flags & MPQBlockFlag.imploded:
 					algorithm_ids = MPQComp.AlgorithmID.pkware
 				elif block_entry.flags & MPQBlockFlag.compressed:
-					algorithm_ids = BYTE.unpack(block_data[0])[0]
+					algorithm_ids = block_data[0]
 					block_data = block_data[1:]
-				if algorithm_ids != None:
+				if algorithm_ids is not None:
 					block_data = MPQComp.decompress(algorithm_ids, block_data)
 			file_data += block_data
 			read_size -= len(block_data)
@@ -399,7 +418,7 @@ class MPQ(object):
 
 	def find_file(self, filename, locale=MPQLocale.neutral):
 		hash_entry = self._find_hash_entry_by_filename(filename, locale)
-		if hash_entry == None:
+		if hash_entry is None:
 			return None
 		block_entry = self.block_table[hash_entry.block_index]
 		return MPQFileEntry(filename, hash_entry, block_entry)
@@ -407,6 +426,6 @@ class MPQ(object):
 	def read_file(self, filename, locale=MPQLocale.neutral):
 		crypt_key = MPQCrypt.hash_string(filename, MPQCrypt.HashType.key)
 		hash_entry = self._find_hash_entry_by_filename(filename, locale)
-		if hash_entry == None:
+		if hash_entry is None:
 			raise PyMSError('Read', "No file with name '%s' exists" % filename)
 		return self._read_file_by_hash_entry(hash_entry, crypt_key)

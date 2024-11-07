@@ -1,13 +1,15 @@
 
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
+from ..Utilities import Config
 
 class FramesDialog(PyMSDialog):
-	def __init__(self, parent):
+	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry):
+		self.window_geometry_config = window_geometry_config
 		self.result = IntegerVar(1, [1,None])
 		PyMSDialog.__init__(self, parent, 'How many frames?', resizable=(True,False))
 
-	def widgetize(self):
+	def widgetize(self) -> (Misc | None):
 		Label(self, text='How many frames are contained in the BMP?').pack(padx=5, pady=5)
 		Entry(self, textvariable=self.result).pack(padx=5, fill=X)
 
@@ -19,14 +21,13 @@ class FramesDialog(PyMSDialog):
 
 		return ok
 
-	def setup_complete(self):
-		self.parent.settings.window.load_window_size('frames', self)
+	def setup_complete(self) -> None:
+		self.window_geometry_config.load_size(self)
 
-	def cancel(self):
-		self.result.check = False
+	def cancel(self, e: Event | None = None) -> None:
 		self.result.set(0)
 		PyMSDialog.cancel(self)
 
-	def dismiss(self):
-		self.parent.settings.window.save_window_size('frames', self)
+	def dismiss(self) -> None:
+		self.window_geometry_config.save_size(self)
 		PyMSDialog.dismiss(self)

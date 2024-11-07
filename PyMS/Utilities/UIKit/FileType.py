@@ -1,20 +1,22 @@
 
-import operator as _operator
+from __future__ import annotations
 
-class FileType(tuple):
+from ..utils import is_mac
+
+class FileType(tuple[str, str]):
 	WILDCARD = '*'
 	EXTSEP = '.' # Does Tkinter expect `os.extsep` or '.'?
 	SEPARATOR = ';'
 
 	@staticmethod
-	def include_all_files(file_types): # type: (list[FileType]) -> list[FileType]
+	def include_all_files(file_types: list[FileType]) -> list[FileType]:
 		all_files = FileType.all_files()
 		if all_files in file_types:
 			return file_types
 		return file_types + [all_files]
 
 	@staticmethod
-	def default_extension(file_types): # type: (list[FileType]) -> (str | None)
+	def default_extension(file_types: list[FileType]) -> (str | None):
 		if not file_types:
 			return None
 		extension = file_types[0].extensions
@@ -200,17 +202,30 @@ class FileType(tuple):
 	def cv5(name='StarCraft Tilesets'):
 		return FileType(name, 'cv5')
 
-	def __new__(self, name, *extensions): # tyoe: (str, *str) -> FileType
-		extensions = list(extensions) # type: list[str]
+	@staticmethod
+	def json(name='JSON'):
+		return FileType(name, 'json')
+
+	def __new__(self, name: str, *exts: str) -> FileType:
+		extensions: list[str] = list(exts)
 		for i, extension in enumerate(extensions):
 			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension
-		name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
-		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions)))
+		if not is_mac():
+			name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
+		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions))) # type: ignore[type-var]
 
-	name = property(_operator.itemgetter(0)) # type: str
+	@property
+	def name(self) -> str:
+		return self[0]
 	
-	extensions = property(_operator.itemgetter(1)) #type: str
+	@property
+	def extensions(self) -> str:
+		return self[1]
+
+	@property
+	def extensions_tuple(self) -> tuple[str, ...]:
+		return tuple(self.extensions.split(FileType.SEPARATOR))
 
 	# Both `name` and `extensions` must be equal, unless `extensions == FileType.WILDCARD` then the names don't need to match
 	def __eq__(self, other):
@@ -226,10 +241,10 @@ class FileType(tuple):
 
 def _main():
 	f = FileType.maps()
-	print(f[0])
-	print(f.name)
-	print(f[1])
-	print(f.extensions)
+	print((f[0]))
+	print((f.name))
+	print((f[1]))
+	print((f.extensions))
 
 if __name__ == '__main__':
 	_main()
