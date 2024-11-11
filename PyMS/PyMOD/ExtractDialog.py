@@ -1,34 +1,35 @@
 
+from .Config import PyMODConfig
+
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
+from ..Utilities.MPQHandler import MPQHandler
 
 import os
 
 class ExtractDialog(PyMSDialog):
-	def __init__(self, parent, mpqhandler, settings):
+	def __init__(self, parent: Misc, mpqhandler: MPQHandler, config: PyMODConfig) -> None:
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
 		self.search.set('*')
 		self.search.trace('w', self.updatesearch)
-		self.settings = settings
+		self.config_ = config
 		self.regex = IntVar()
 		self.regex.set(0)
-		self.files = []
-		self.file = None
-		self.resettimer = None
-		self.searchtimer = None
+		self.files: list[str] = []
+		self.resettimer: str | None = None
+		self.searchtimer: str | None = None
 		PyMSDialog.__init__(self, parent, 'Extract')
 
-	def widgetize(self):
+	def widgetize(self) -> Widget:
 		self.listbox = ScrolledListbox(self, width=35, height=10)
 		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
 
 		frame = Frame(self)
-		history = self.settings.extract.get('history',[])[::-1]
-		self.textdrop = TextDropDown(frame, self.search, history)
-		self.textdrop.entry.c = self.textdrop.entry['bg']
+		self.textdrop = TextDropDown(frame, self.search, self.config_.extract.history.data)
+		self.textdrop_entry_c = self.textdrop.entry['bg']
 		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
 		Radiobutton(frame, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
 		Radiobutton(frame, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
@@ -44,15 +45,15 @@ class ExtractDialog(PyMSDialog):
 
 		return self.extract_button
 
-	def setup_complete(self):
-		self.settings.windows.load_window_size('extract', self)
+	def setup_complete(self) -> None:
+		self.config_.windows.extract.load_size(self)
 
-	def listfiles(self):
-		def get_files_list(mpqhandler):
-			files = []
+	def listfiles(self) -> None:
+		def get_files_list(mpqhandler: MPQHandler) -> list[str]:
+			files: list[str] = []
 			for file_entry in mpqhandler.list_files():
 				if not file_entry.file_name in files:
-					files.append(file_entry.file_name)
+					files.append(file_entry.file_name.decode('utf-8'))
 			for path,_,filenames in os.walk(Assets.mpq_dir):
 				for filename in filenames:
 					mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))
@@ -60,12 +61,15 @@ class ExtractDialog(PyMSDialog):
 						files.append(mpq_filename)
 			files.sort()
 			return files
-		def update_files_list(files):
+		def update_files_list(files: list[str] | Exception | None) -> None:
+			# TODO: Exception or None cases?
+			if not isinstance(files, list):
+				return
 			self.files = files
 			self.updatelist()
 		self.after_background(update_files_list, get_files_list, self.mpqhandler)
 
-	def updatelist(self):
+	def updatelist(self) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 			self.searchtimer = None
@@ -87,20 +91,20 @@ class ExtractDialog(PyMSDialog):
 		else:
 			self.extract_button['state'] = DISABLED
 
-	def updatecolor(self):
+	def updatecolor(self) -> None:
 		if self.resettimer:
 			self.after_cancel(self.resettimer)
 			self.resettimer = None
-		self.textdrop.entry['bg'] = self.textdrop.entry.c
+		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
-	def updatesearch(self, *_):
+	def updatesearch(self, *_) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
 
-	def extract(self):
+	def extract(self) -> None:
 		pass
 
-	def dismiss(self):
-		self.settings.windows.save_window_size('extract', self)
+	def dismiss(self) -> None:
+		self.config_.windows.extract.save_size(self)
 		PyMSDialog.dismiss(self)

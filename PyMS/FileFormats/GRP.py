@@ -5,9 +5,8 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	from ..Utilities import Assets
 	from ..Utilities.DependencyError import DependencyError
-	import sys, os
+	import sys
 	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
 	e.startup()
 	sys.exit()
@@ -399,11 +398,14 @@ class GRP:
 			frame_index = len(self.images)
 			frame_height = len(frame)
 			if frame_height != self.height:
-				raise PyMSError('GRP', 'Adding frame %d has unexpected height (got %d, expected %d)' % (frame_index, frame_height, self.height))
+				raise PyMSError('GRP', 'Adding frame %d has unexpected height (got %d, expected %d)' % (frame_index+1, frame_height, self.height))
 			for (y, line) in enumerate(frame):
 				line_width = len(line)
 				if line_width != self.width:
-					raise PyMSError('GRP', 'Adding frame %d line %d has unexpected width (got %d, expected %d)' % (frame_index, y, line_width, self.width))
+					raise PyMSError('GRP', 'Adding frame %d line %d has unexpected width (got %d, expected %d)' % (frame_index+1, y, line_width, self.width))
+		if not self.images:
+			self.height = len(frame)
+			self.width = len(frame[0])
 		self.frames += 1
 		self.images.append(deepcopy(frame))
 		self.images_bounds.append(image_bounds(frame, self.transindex))

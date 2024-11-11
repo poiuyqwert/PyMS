@@ -134,7 +134,8 @@ _FILE_TYPES: list[Type[SourceFile]] = [
 ]
 
 def build_source_graph(project_path: str) -> SourceFolder:
-	root = RawSourceFolder(project_path)
+	root: SourceFolder = RawSourceFolder(project_path)
+	real_root_found = False
 	folders: dict[str, SourceFolder] = {}
 	for folder_path, folder_names, file_names in _os.walk(project_path, topdown=True):
 		folder_names[:] = list(folder_name for folder_name in folder_names if not folder_name.startswith('.'))
@@ -148,8 +149,9 @@ def build_source_graph(project_path: str) -> SourceFolder:
 				detected_folder_confidence = confidence
 		folder = detected_folder_type(folder_path)
 		folders[folder_path] = folder
-		if root is None:
+		if not real_root_found:
 			root = folder
+			real_root_found = True
 		parent_folder = folders.get(parent_path)
 		if parent_folder:
 			parent_folder.add_folder(folder)

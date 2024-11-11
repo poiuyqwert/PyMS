@@ -19,7 +19,9 @@ class MetaField:
 	outputs = 'outputs'
 
 class CompileError(Exception):
-	pass
+	def __init__(self, message: str, internal_exception: Exception | None = None):
+		super().__init__(message)
+		self.internal_exception = internal_exception
 
 class BaseCompileStep:
 	def __init__(self, compile_thread: CompileThread) -> None:
@@ -139,17 +141,15 @@ class CompileStep:
 			for frame_path in sorted(self.source_file.frame_paths):
 				try:
 					bmp.load_file(frame_path, issize=size)
-				except PyMSError:
-					raise
-				except:
-					raise CompileError("Couldn't load '%s'" % frame_path)
+				except Exception as e:
+					raise CompileError("Couldn't load '%s'" % frame_path, internal_exception=e)
 				if size == None:
 					size = (bmp.width, bmp.height)
 				grp.add_frame(bmp.image)
 			try:
 				grp.save_file(destination_path)
-			except:
-				raise CompileError("Couldn't save GRP")
+			except Exception as e:
+				raise CompileError("Couldn't save GRP", internal_exception=e)
 			self.compile_thread.output_queue.put(CompileThread.OutputMessage.Log('  GRP compiled!'))
 			self.compile_thread.update_input_metas(self.source_file.frame_paths)
 			self.compile_thread.update_output_metas([destination_path])
@@ -169,6 +169,7 @@ class CompileStep:
 			from ..FileFormats.MPQ import MPQ
 			mpq = MPQ.MPQ.of(artifact_path)
 			with mpq.create():
+				# TODO: Either need to build tree of intermediates to work on, or need to cleanup old intermediates
 				for folder_path, _, file_names in _os.walk(intermediates_path):
 					for file_name in file_names:
 						if file_name.startswith('.'):
@@ -346,6 +347,8 @@ class CompileThread(_Thread):
 					steps[index+1:index+1] = new_steps
 			except CompileError as e:
 				self.output_queue.put(CompileThread.OutputMessage.Log('ERROR: ' + str(e), tag='error'))
+				if e.internal_exception:
+					self.output_queue.put(CompileThread.OutputMessage.Log('INTERNAL ERROR:\n' + '\n'.join(_traceback.format_exception(e.internal_exception)), tag='error'))
 				return
 			except:
 				self.output_queue.put(CompileThread.OutputMessage.Log('ERROR:\n' + _traceback.format_exc(), tag='error'))
