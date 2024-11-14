@@ -1,6 +1,6 @@
 
 from .Config import PyMODConfig
-from .SourceFiles import *
+from . import Source
 from .CompileThread import *
 from .ExtractDialog import ExtractDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
@@ -35,7 +35,7 @@ class PyMOD(MainWindow):
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.project_path: str | None = None
-		self.source_graph: SourceFolder | None = None
+		self.source_graph: Source.Item | None = None
 		self.compile_thread: CompileThread | None = None
 
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
@@ -125,8 +125,11 @@ class PyMOD(MainWindow):
 		self.files_tree.delete(ALL)
 		if not self.project_path:
 			return
-		self.source_graph = build_source_graph(self.project_path)
-		self.files_tree.build(((self.source_graph, True),), lambda node: () if isinstance(node, SourceFile) else tuple((file,None) for file in node.files) + tuple((folder,True) for folder in node.folders), lambda node: node.display_name())
+		self.source_graph = Source.Item.build_source_graph(self.project_path)
+		if source_graph := self.source_graph:
+			self.files_tree.build(((source_graph, True),), lambda node: tuple((item,None if isinstance(item, Source.File) else True) for item in node.children) if isinstance(node, Source.Folder) else (), lambda node: node.display_name())
+		else:
+			self.files_tree.delete(ALL)
 
 	def new(self) -> None:
 		pass
