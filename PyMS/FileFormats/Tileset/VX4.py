@@ -139,7 +139,7 @@ class VX4(object):
 			data += megatile.save_data(self._expanded)
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'wb')
+				f = AtomicWriter(file)
 				f.write(data)
 				f.close()
 			except:

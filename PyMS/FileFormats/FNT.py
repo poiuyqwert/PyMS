@@ -181,7 +181,7 @@ class FNT:
 
 	def save_file(self, file: str) -> None:
 		try:
-			f = AtomicWriter(file, 'wb')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		header = b'FONT'

@@ -18,13 +18,12 @@ from .VF4 import VF4, VF4Megatile
 from .VX4 import VX4, VX4Megatile, VX4Minitile
 from .VR4 import VR4, VR4Image
 from .DDDataBIN import DDDataBIN
-from .Serialize import TileGroupField, TileGroupDef, DoodadGroupField, DoodadGroupDef, MegatileField, MegatileDef
+from .Serialize import TileGroupDef, DoodadGroupDef, MegatileDef
 
 from ..Palette import Palette
 from ..BMP import BMP
 
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
 from ...Utilities import Serialize
 from ...Utilities import IO
 

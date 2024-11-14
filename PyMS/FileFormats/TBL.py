@@ -136,7 +136,7 @@ class TBL:
 		except:
 			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
 		strings: list[str] = []
-		for n,l in enumerate(lines):
+		for l in lines:
 			line = l.split('#',1)[0]
 			if line:
 				if len(strings) == 65536:
@@ -159,7 +159,7 @@ class TBL:
 
 	def compile(self, file: str) -> None:
 		try:
-			f = AtomicWriter(file, 'wb')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Compile',"Could not load file '%s'" % file)
 		data = self.save_data()
@@ -168,13 +168,13 @@ class TBL:
 
 	def decompile(self, file: str, ref: bool = False) -> None:
 		try:
-			f = AtomicWriter(file, 'w')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		if ref:
-			f.write(TBL_REF)
+			f.write(TBL_REF.encode())
 		for s in self.strings:
-			f.write(decompile_string(s) + '\n')
+			f.write((decompile_string(s) + '\n').encode())
 		f.close()
 
 #t = TBL()

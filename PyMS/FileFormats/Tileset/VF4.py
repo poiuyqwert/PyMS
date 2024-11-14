@@ -75,7 +75,7 @@ class VF4(object):
 			data += flags.save_data()
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'wb')
+				f = AtomicWriter(file)
 				f.write(data)
 				f.close()
 			except:

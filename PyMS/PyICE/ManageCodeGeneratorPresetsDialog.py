@@ -67,8 +67,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
 		try:
-			f = AtomicWriter(path, 'w')
-			f.write(json.dumps(preset, indent=4))
+			f = AtomicWriter(path)
+			f.write(json.dumps(preset, indent=4).encode())
 			f.close()
 		except:
 			ErrorDialog(self, PyMSError('Export',"Could not write to file '%s'" % path))

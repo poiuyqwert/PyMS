@@ -4,11 +4,11 @@ from __future__ import annotations
 from . import TBL
 from . import AIBIN
 
-from ..Utilities.utils import flags
-from ..Utilities.fileutils import load_file
-from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities import Assets
+from ...Utilities.utils import flags
+from ...Utilities.fileutils import load_file
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import Assets
 
 import struct, re, os
 from collections import OrderedDict
@@ -2252,7 +2252,7 @@ class TRG:
 		data = self.decompile_data(ref)
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'w')
+				f = AtomicWriter(file)
 			except:
 				raise PyMSError('Decompile',"Could not load file '%s'" % file)
 		else:
@@ -2362,7 +2362,7 @@ class TRG:
 	def compile(self, file, TRIG=False):
 		data = self.compile_data(TRIG)
 		try:
-			f = AtomicWriter(file, 'wb')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Compiling', "Couldn't write to file '%s'" % file)
 		f.write(data)

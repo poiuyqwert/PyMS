@@ -112,7 +112,7 @@ class BMP:
 
 	def save_file(self, file: str) -> None:
 		try:
-			f = AtomicWriter(file,'wb')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Save',"Could not save BMP to file '%s'" % file)
 		data = b''

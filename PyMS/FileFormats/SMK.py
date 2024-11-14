@@ -481,7 +481,7 @@ class SMK:
 	# def save_file(self, file):
 	# 	data = self.save_data()
 	# 	try:
-	# 		f = AtomicWriter(file, 'wb')
+	# 		f = AtomicWriter(file)
 	# 	except:
 	# 		raise
 	# 	f.write(data)

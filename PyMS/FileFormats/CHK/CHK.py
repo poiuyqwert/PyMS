@@ -152,7 +152,7 @@ class CHK:
 	def save_file(self, file: str) -> None:
 		data = self.save_data()
 		try:
-			f = AtomicWriter(file, 'wb')
+			f = AtomicWriter(file)
 		except:
 			raise PyMSError('Save',"Could not save CHK to file '%s'" % file)
 		f.write(data)

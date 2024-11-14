@@ -48,7 +48,7 @@ class DDDataBIN(object):
 			data += struct.pack('<256H', *d)
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'wb')
+				f = AtomicWriter(file)
 				f.write(data)
 				f.close()
 			except:

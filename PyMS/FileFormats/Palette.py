@@ -148,7 +148,7 @@ class Palette:
 
 	def save_riff_pal(self, path: str) -> None:
 		try:
-			f = AtomicWriter(path,'wb')
+			f = AtomicWriter(path)
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
 		f.write(b'RIFF\x00\x00\x00\x00PAL data\x04\x04\x00\x00\x00\x03\x00\x01')
@@ -158,17 +158,17 @@ class Palette:
 
 	def save_jasc_pal(self, path: str) -> None:
 		try:
-			f = AtomicWriter(path, 'w')
+			f = AtomicWriter(path)
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
-		f.write('JASC-PAL\r\n0100\r\n256\r\n')
+		f.write('JASC-PAL\r\n0100\r\n256\r\n'.encode())
 		for color in self.palette:
-			f.write(' '.join(str(c) for c in color) + '\r\n')
+			f.write((' '.join(str(c) for c in color) + '\r\n').encode())
 		f.close()
 
 	def save_sc_wpe(self, path: str) -> None:
 		try:
-			f = AtomicWriter(path,'wb')
+			f = AtomicWriter(path)
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
 		for c in self.palette:
@@ -177,7 +177,7 @@ class Palette:
 
 	def save_sc_pal(self, path: str) -> None:
 		try:
-			f = AtomicWriter(path,'wb')
+			f = AtomicWriter(path)
 		except:
 			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
 		for c in self.palette:

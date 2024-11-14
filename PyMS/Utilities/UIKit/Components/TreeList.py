@@ -8,7 +8,7 @@ from ..Types import SelectMode
 import re
 from enum import Enum
 
-from typing import Callable, Sequence
+from typing import Callable, Sequence, TypeVar
 
 class SelectModifier(Enum):
 	none = 0
@@ -24,6 +24,8 @@ class TreeNode:
 
 	def __repr__(self) -> str:
 		return '<TreeNode text=%s depth=%d entry=%d>' % (repr(self.text), self.depth, self.entry)
+
+T = TypeVar('T')
 
 class TreeGroup(TreeNode):
 	def __init__(self, text: str, depth: int, entry: int, expanded: bool) -> None:
@@ -367,7 +369,7 @@ class TreeList(Frame):
 		if ranges:
 			self.text.see(ranges[0])
 
-	def build(self, tree: Sequence[tuple[Any, bool | None]], get_children: Callable[[Any], Sequence[tuple[Any, bool | None]]], get_name: Callable[[Any], str], index: str = '-1') -> None:
+	def build(self, tree: Sequence[tuple[T, bool | None]], get_children: Callable[[T], Sequence[tuple[T, bool | None]]], get_name: Callable[[T], str], index: str = '-1') -> None:
 		for node,folder in tree:
 			name = get_name(node)
 			node_index = self.insert(index, name, folder)

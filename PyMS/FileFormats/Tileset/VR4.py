@@ -112,7 +112,7 @@ class VR4(object):
 			data += struct.pack('64B', *i)
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'wb')
+				f = AtomicWriter(file)
 				f.write(data)
 				f.close()
 			except:

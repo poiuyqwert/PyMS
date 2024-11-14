@@ -464,7 +464,7 @@ class GRP:
 		image_data = self.save_data()
 		if isinstance(file, str):
 			try:
-				f = AtomicWriter(file, 'wb')
+				f = AtomicWriter(file)
 				f.write(image_data)
 				f.close()
 			except:

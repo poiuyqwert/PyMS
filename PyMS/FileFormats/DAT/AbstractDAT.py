@@ -75,7 +75,7 @@ class AbstractDAT(object):
 
 	def save_file(self, file_path: str) -> None:
 		try:
-			file = AtomicWriter(file_path, 'wb')
+			file = AtomicWriter(file_path)
 		except:
 			raise PyMSError("Save", "Could not create file for writing")
 		data = self.save_data()
@@ -184,13 +184,19 @@ class AbstractDAT(object):
 
 	def export_file(self, file_path: str) -> None:
 		try:
-			file = AtomicWriter(file_path, 'wb')
+			file = AtomicWriter(file_path)
 		except:
 			raise PyMSError("Decompile", "Could not create file for writing")
 		data = self.export_entries()
-		file.write(data)
+		file.write(data.encode())
 		file.close()
 
+	@overload
+	def export_entries(self, ids: list[int] | None = None, export_properties: list[str] | None = None, export_type: Literal[ExportType.text] = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str:
+		...
+	@overload
+	def export_entries(self, ids: list[int] | None = None, export_properties: list[str] | None = None, export_type: Literal[ExportType.json] = ExportType.json, json_dump: bool = False, json_indent: int = 4) -> OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
+		...
 	def export_entries(self, ids: list[int] | None = None, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		if not ids:
 			ids = list(range(self.entry_count()))
