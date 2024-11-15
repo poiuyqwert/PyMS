@@ -16,7 +16,7 @@ if STORMLIB_DIR:
 		('StormLib.dylib', 'utf-8'),
 	)
 	for library, unicode in libraries:
-		print(f'Attempting to load {library}...')
+		print(f'Attempting to load {library} ({unicode})...')
 		if hasattr(ctypes, 'WinDLL'):
 			try:
 				print(f'  Attempting with WinDLL...')
@@ -707,6 +707,7 @@ if _StormLib is not None:
 		_StormLib.GetLastError = None
 
 def _file_path(file_path: str) -> bytes:
+	print(f'Converting file path: {file_path} == {file_path.encode(_StormLib_Unicode)}')
 	return file_path.encode(_StormLib_Unicode)
 
 def _file_name(file_name: str | bytes) -> bytes:
