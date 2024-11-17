@@ -9,13 +9,14 @@ else:
 
 _StormLib = None
 _StormLib_Unicode = 'utf-8'
+_StormLib_TCHAR = ctypes.c_char_p
 if STORMLIB_DIR:
 	libraries = (
-		('StormLib.dll', 'utf-16'),
-		('StormLib64.dll', 'utf-16'),
-		('StormLib.dylib', 'utf-8'),
+		('StormLib.dll', 'utf-16', ctypes.c_wchar_p),
+		('StormLib64.dll', 'utf-16', ctypes.c_wchar_p),
+		('StormLib.dylib', 'utf-8', ctypes.c_char_p),
 	)
-	for library, unicode in libraries:
+	for library, unicode, tchar in libraries:
 		print(f'Attempting to load {library} ({unicode})...')
 		if hasattr(ctypes, 'WinDLL'):
 			try:
@@ -23,6 +24,7 @@ if STORMLIB_DIR:
 				_StormLib = ctypes.WinDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
 				print('    Success')
 				_StormLib_Unicode = unicode
+				_StormLib_TCHAR = tchar
 				break
 			except Exception as e:
 				print(f'    Error {e}')
@@ -32,6 +34,7 @@ if STORMLIB_DIR:
 			_StormLib = ctypes.CDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
 			print('    Success')
 			_StormLib_Unicode = unicode
+			_StormLib_TCHAR = tchar
 			break
 		except Exception as e:
 			print(f'    Error {e}')
@@ -487,15 +490,15 @@ if _StormLib is not None:
 	# # Functions for archive manipulation
 
 	# bool   WINAPI SFileOpenArchive(const TCHAR * szMpqName, DWORD dwPriority, DWORD dwFlags, HANDLE * phMpq);
-	_StormLib.SFileOpenArchive.argtypes = [ctypes.c_char_p, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileOpenArchive.argtypes = [_StormLib_TCHAR, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
 	_StormLib.SFileOpenArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCreateArchive(const TCHAR * szMpqName, DWORD dwCreateFlags, DWORD dwMaxFileCount, HANDLE * phMpq);
-	_StormLib.SFileCreateArchive.argtypes = [ctypes.c_char_p, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileCreateArchive.argtypes = [_StormLib_TCHAR, ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
 	_StormLib.SFileCreateArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileCreateArchive2(const TCHAR * szMpqName, PSFILE_CREATE_MPQ pCreateInfo, HANDLE * phMpq);
-	_StormLib.SFileCreateArchive2.argtypes = [ctypes.c_char_p, ctypes.POINTER(SFILE_CREATE_MPQ), ctypes.POINTER(MPQHANDLE)]
+	_StormLib.SFileCreateArchive2.argtypes = [_StormLib_TCHAR, ctypes.POINTER(SFILE_CREATE_MPQ), ctypes.POINTER(MPQHANDLE)]
 	_StormLib.SFileCreateArchive2.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileSetDownloadCallback(HANDLE hMpq, SFILE_DOWNLOAD_CALLBACK DownloadCB, void * pvUserData);
@@ -512,14 +515,14 @@ if _StormLib is not None:
 	# # so you can use this API to combining more listfiles.
 	# # Note that this function is internally called by SFileFindFirstFile
 	# DWORD  WINAPI SFileAddListFile(HANDLE hMpq, const TCHAR * szListFile);
-	_StormLib.SFileAddListFile.argtypes = [MPQHANDLE, ctypes.c_char_p]
+	_StormLib.SFileAddListFile.argtypes = [MPQHANDLE, _StormLib_TCHAR]
 	_StormLib.SFileAddListFile.restype = ctypes.c_uint32
 
 	# # Archive compacting
 	# bool   WINAPI SFileSetCompactCallback(HANDLE hMpq, SFILE_COMPACT_CALLBACK CompactCB, void * pvUserData);
 
 	# bool   WINAPI SFileCompactArchive(HANDLE hMpq, const TCHAR * szListFile, bool bReserved);
-	_StormLib.SFileCompactArchive.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_bool]
+	_StormLib.SFileCompactArchive.argtypes = [MPQHANDLE, _StormLib_TCHAR, ctypes.c_bool]
 	_StormLib.SFileCompactArchive.restype = ctypes.c_bool
 
 	# # Changing the maximum file count
@@ -548,7 +551,7 @@ if _StormLib is not None:
 	# # Functions for manipulation with patch archives
 
 	# bool   WINAPI SFileOpenPatchArchive(HANDLE hMpq, const TCHAR * szPatchMpqName, const char * szPatchPathPrefix, DWORD dwFlags);
-	_StormLib.SFileOpenPatchArchive.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32]
+	_StormLib.SFileOpenPatchArchive.argtypes = [MPQHANDLE, _StormLib_TCHAR, ctypes.c_char_p, ctypes.c_uint32]
 	_StormLib.SFileOpenPatchArchive.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileIsPatchedArchive(HANDLE hMpq);
@@ -618,7 +621,7 @@ if _StormLib is not None:
 	# # Functions for file searching
 
 	# HANDLE WINAPI SFileFindFirstFile(HANDLE hMpq, const char * szMask, SFILE_FIND_DATA * lpFindFileData, const TCHAR * szListFile);
-	_StormLib.SFileFindFirstFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.POINTER(SFILE_FIND_DATA), ctypes.c_char_p]
+	_StormLib.SFileFindFirstFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.POINTER(SFILE_FIND_DATA), _StormLib_TCHAR]
 	_StormLib.SFileFindFirstFile.restype = MPQHANDLE
 
 	# bool   WINAPI SFileFindNextFile(HANDLE hFind, SFILE_FIND_DATA * lpFindFileData);
@@ -652,15 +655,15 @@ if _StormLib is not None:
 	_StormLib.SFileFinishFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddFileEx(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags, DWORD dwCompression, DWORD dwCompressionNext);
-	_StormLib.SFileAddFileEx.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32]
+	_StormLib.SFileAddFileEx.argtypes = [MPQHANDLE, _StormLib_TCHAR, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32]
 	_StormLib.SFileAddFileEx.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddFile(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags);
-	# _StormLib.SFileAddFile.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32]
+	# _StormLib.SFileAddFile.argtypes = [MPQHANDLE, _StormLib_TCHAR, ctypes.c_char_p, ctypes.c_uint32]
 	# _StormLib.SFileAddFile.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileAddWave(HANDLE hMpq, const TCHAR * szFileName, const char * szArchivedName, DWORD dwFlags, DWORD dwQuality);
-	# _StormLib.SFileAddWave.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32]
+	# _StormLib.SFileAddWave.argtypes = [MPQHANDLE, _StormLib_TCHAR, ctypes.c_char_p, ctypes.c_uint32, ctypes.c_uint32]
 	# _StormLib.SFileAddWave.restype = ctypes.c_bool
 
 	# bool   WINAPI SFileRemoveFile(HANDLE hMpq, const char * szFileName, DWORD dwSearchScope);
@@ -707,7 +710,7 @@ if _StormLib is not None:
 		_StormLib.GetLastError = None
 
 def _file_path(file_path: str) -> bytes:
-	print(f'Converting file path: {file_path} == {file_path.encode(_StormLib_Unicode)}')
+	print(f'Converting file path: {file_path} == {file_path.encode(_StormLib_Unicode)!r}')
 	return file_path.encode(_StormLib_Unicode)
 
 def _file_name(file_name: str | bytes) -> bytes:
