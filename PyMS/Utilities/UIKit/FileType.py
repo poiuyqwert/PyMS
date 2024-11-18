@@ -6,7 +6,7 @@ from ..utils import is_mac
 class FileType(tuple[str, str]):
 	WILDCARD = '*'
 	EXTSEP = '.' # Does Tkinter expect `os.extsep` or '.'?
-	SEPARATOR = ' ' # ';'
+	SEPARATOR = ' '
 
 	@staticmethod
 	def include_all_files(file_types: list[FileType]) -> list[FileType]:

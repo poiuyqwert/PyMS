@@ -222,11 +222,8 @@ class StormLibMPQ(MPQ):
 	def open(self, read_only: bool = True) -> MPQ._WithContextManager:
 		auto_close = False
 		if not self.is_open():
-			print(f'Attempting to open {self.path}...')
 			mpq_handle = _StormLib.SFileOpenArchive(self.path, flags=(_StormLib.STREAM_FLAG_READ_ONLY if read_only else 0))
-			print(f'  mpq_handle: {mpq_handle} ({_StormLib.SFInvalidHandle(mpq_handle)})')
 			if _StormLib.SFInvalidHandle(mpq_handle):
-				print(f'  SFGetLastError: {_StormLib.SFGetLastError()}')
 				raise PyMSError('MPQ', "Error opening MPQ '%s' (%d)" % (self.path, _StormLib.SFGetLastError()))
 			self.mpq_handle = mpq_handle
 			self.read_only = read_only

@@ -16,25 +16,18 @@ if STORMLIB_DIR:
 		('StormLib.dylib', ctypes.c_char_p),
 	)
 	for library, tchar in libraries:
-		print(f'Attempting to load {library}...')
 		if hasattr(ctypes, 'WinDLL'):
 			try:
-				print(f'  Attempting with WinDLL...')
 				_StormLib = ctypes.WinDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
-				print('    Success')
 				_StormLib_TCHAR = tchar
 				break
-			except Exception as e:
-				print(f'    Error {e}')
+			except:
 				pass
 		try:
-			print(f'  Attempting with CDLL...')
 			_StormLib = ctypes.CDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
-			print('    Success')
 			_StormLib_TCHAR = tchar
 			break
-		except Exception as e:
-			print(f'    Error {e}')
+		except:
 			pass
 
 STORMLIB_LOADED = (_StormLib is not None)
