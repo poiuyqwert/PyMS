@@ -531,7 +531,7 @@ class PyMPQ(MainWindow):
 		try:
 			mpq.open()
 		except PyMSError:
-			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ."))
+			ErrorDialog(self, PyMSError('MPQ', "The file is not an MPQ, or the MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ.", capture_exception=True))
 			return
 		self.close()
 		self.mpq = mpq

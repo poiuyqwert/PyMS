@@ -502,14 +502,24 @@ class SelectFile(ConfigObject):
 				initialfile=filename or self._initial_filename
 			)
 		else:
-			path = cast(str | list[str] | None, FileDialog.askopenfilename(
-				parent=window,
-				multiple=multiple,
-				title=title or self._op_type.title(self._name, False, multiple),
-				initialdir=self._save_directory if save else self._open_directory,
-				filetypes=filetypes or self._filetypes,
-				defaultextension=self._default_extension
-			)) # type: ignore[call-arg]
+			if multiple:
+				paths = FileDialog.askopenfilenames(
+					parent=window,
+					title=title or self._op_type.title(self._name, False, multiple),
+					initialdir=self._save_directory if save else self._open_directory,
+					filetypes=filetypes or self._filetypes,
+					defaultextension=self._default_extension
+				)
+				if isinstance(paths, tuple):
+					path = list(paths)
+			else:
+				path = FileDialog.askopenfilename(
+					parent=window,
+					title=title or self._op_type.title(self._name, False, multiple),
+					initialdir=self._save_directory if save else self._open_directory,
+					filetypes=filetypes or self._filetypes,
+					defaultextension=self._default_extension
+				)
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
 			if isinstance(path, (list, tuple)):
