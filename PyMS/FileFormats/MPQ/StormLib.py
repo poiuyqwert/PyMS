@@ -8,22 +8,20 @@ else:
 	STORMLIB_DIR = os.path.dirname(__file__)
 
 _StormLib = None
-_StormLib_Unicode = 'utf-8'
-_StormLib_TCHAR = ctypes.c_char_p
+_StormLib_TCHAR: type[ctypes.c_char_p] | type[ctypes.c_wchar_p] = ctypes.c_char_p
 if STORMLIB_DIR:
 	libraries = (
-		('StormLib.dll', 'utf-16', ctypes.c_wchar_p),
-		('StormLib64.dll', 'utf-16', ctypes.c_wchar_p),
-		('StormLib.dylib', 'utf-8', ctypes.c_char_p),
+		('StormLib.dll', ctypes.c_wchar_p),
+		('StormLib64.dll', ctypes.c_wchar_p),
+		('StormLib.dylib', ctypes.c_char_p),
 	)
-	for library, unicode, tchar in libraries:
-		print(f'Attempting to load {library} ({unicode})...')
+	for library, tchar in libraries:
+		print(f'Attempting to load {library}...')
 		if hasattr(ctypes, 'WinDLL'):
 			try:
 				print(f'  Attempting with WinDLL...')
 				_StormLib = ctypes.WinDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
 				print('    Success')
-				_StormLib_Unicode = unicode
 				_StormLib_TCHAR = tchar
 				break
 			except Exception as e:
@@ -33,7 +31,6 @@ if STORMLIB_DIR:
 			print(f'  Attempting with CDLL...')
 			_StormLib = ctypes.CDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
 			print('    Success')
-			_StormLib_Unicode = unicode
 			_StormLib_TCHAR = tchar
 			break
 		except Exception as e:
@@ -709,13 +706,9 @@ if _StormLib is not None:
 	except:
 		_StormLib.GetLastError = None
 
-def _file_path(file_path: str) -> bytes:
-	print(f'Converting file path: {file_path} == {file_path.encode(_StormLib_Unicode)!r}')
-	return file_path.encode(_StormLib_Unicode)
-
 def _file_name(file_name: str | bytes) -> bytes:
 	if isinstance(file_name, str):
-		return file_name.encode(_StormLib_Unicode)
+		return file_name.encode('utf-8')
 	return file_name
 
 def SFInvalidHandle(h):
@@ -732,14 +725,14 @@ def SFileSetLocale(locale: int) -> int:
 def SFileOpenArchive(mpq_path: str, priority: int = 0, flags: int = STREAM_FLAG_READ_ONLY) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
-	if not _StormLib.SFileOpenArchive(_file_path(mpq_path), priority, flags, ctypes.byref(h)):
+	if not _StormLib.SFileOpenArchive(mpq_path, priority, flags, ctypes.byref(h)):
 		return None
 	return h
 
 def SFileCreateArchive(mpq_path: str, flags: int = 0, max_files: int = 1024) -> MPQHANDLE | None:
 	assert _StormLib is not None
 	h = MPQHANDLE()
-	if not _StormLib.SFileCreateArchive(_file_path(mpq_path), flags, max_files, ctypes.byref(h)):
+	if not _StormLib.SFileCreateArchive(mpq_path, flags, max_files, ctypes.byref(h)):
 		return None
 	return h
 
@@ -747,7 +740,7 @@ def SFileCreateArchive2(mpq_path: str, create_info: SFILE_CREATE_MPQ) -> MPQHAND
 	assert _StormLib is not None
 	create_info.size = ctypes.sizeof(SFILE_CREATE_MPQ)
 	h = MPQHANDLE()
-	if not _StormLib.SFileCreateArchive2(_file_path(mpq_path), ctypes.byref(create_info), ctypes.byref(h)):
+	if not _StormLib.SFileCreateArchive2(mpq_path, ctypes.byref(create_info), ctypes.byref(h)):
 		return None
 	return h
 
@@ -761,11 +754,11 @@ def SFileCloseArchive(mpq: MPQHANDLE) -> bool:
 
 def SFileAddListFile(mpq: MPQHANDLE, listfile_path: str) -> int:
 	assert _StormLib is not None
-	return _StormLib.SFileAddListFile(mpq, _file_path(listfile_path))
+	return _StormLib.SFileAddListFile(mpq, listfile_path)
 
 def SFileCompactArchive(mpq: MPQHANDLE, listfile_path: str | None = None) -> bool:
 	assert _StormLib is not None
-	return _StormLib.SFileCompactArchive(mpq, _file_path(listfile_path) if listfile_path else None, True)
+	return _StormLib.SFileCompactArchive(mpq, listfile_path if listfile_path else None, True)
 
 def SFileGetMaxFileCount(mpq: MPQHANDLE) -> int:
 	assert _StormLib is not None
@@ -785,11 +778,11 @@ def SFileSetAttributes(mpq: MPQHANDLE, attributes: int) -> bool:
 
 def SFileUpdateFileAttributes(mpq: MPQHANDLE, attributes_file_path: str) -> bool:
 	assert _StormLib is not None
-	return _StormLib.SFileUpdateFileAttributes(mpq, _file_path(attributes_file_path))
+	return _StormLib.SFileUpdateFileAttributes(mpq, attributes_file_path)
 
 def SFileOpenPatchArchive(mpq: MPQHANDLE, patch_mpq_path: str, patch_path_prefix: str, flags: int = 0) -> bool:
 	assert _StormLib is not None
-	return _StormLib.SFileOpenPatchArchive(mpq, _file_path(patch_mpq_path), _file_path(patch_path_prefix), flags)
+	return _StormLib.SFileOpenPatchArchive(mpq, patch_mpq_path, patch_path_prefix, flags)
 
 def SFileIsPatchedArchive(mpq: MPQHANDLE) -> bool:
 	assert _StormLib is not None
@@ -865,7 +858,7 @@ def SFileGetFileName(file: MPQHANDLE) -> bytes | None:
 def SFileFindFirstFile(mpq: MPQHANDLE, find_mask: str | bytes, listfile_path: str | None = None) -> tuple[MPQHANDLE | None, SFILE_FIND_DATA | None]:
 	assert _StormLib is not None
 	file_data = SFILE_FIND_DATA()
-	find_handle = _StormLib.SFileFindFirstFile(mpq, _file_name(find_mask), ctypes.byref(file_data), _file_path(listfile_path) if listfile_path else None)
+	find_handle = _StormLib.SFileFindFirstFile(mpq, _file_name(find_mask), ctypes.byref(file_data), listfile_path if listfile_path else None)
 	if not SFInvalidHandle(find_handle):
 		return (find_handle, file_data)
 	return (None, None)
@@ -898,7 +891,7 @@ def SFileFinishFile(file: MPQHANDLE) -> bool:
 
 def SFileAddFileEx(mpq: MPQHANDLE, file_path: str, file_name: str | bytes, flags: int = MPQ_FILE_REPLACEEXISTING, compression: int = 0, compression_next: int = MPQ_COMPRESSION_NEXT_SAME) -> bool:
 	assert _StormLib is not None
-	return _StormLib.SFileAddFileEx(mpq, _file_path(file_path), _file_name(file_name), flags, compression, compression_next)
+	return _StormLib.SFileAddFileEx(mpq, file_path, _file_name(file_name), flags, compression, compression_next)
 
 def SFileRemoveFile(mpq: MPQHANDLE, file_name: str | bytes) -> bool:
 	assert _StormLib is not None
