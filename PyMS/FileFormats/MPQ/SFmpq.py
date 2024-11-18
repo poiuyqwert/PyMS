@@ -19,12 +19,12 @@ if SFMPQ_DIR:
 			try:
 				_SFmpq = ctypes.WinDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
 				break
-			except Exception:
+			except:
 				pass
 		try:
 			_SFmpq = ctypes.CDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
 			break
-		except Exception as error:
+		except:
 			pass
 
 SFMPQ_LOADED = (_SFmpq is not None)

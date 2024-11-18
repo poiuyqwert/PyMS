@@ -41,7 +41,7 @@ class Tracer(object):
 		self.buffer = ''
 		self.flush_after_id: str | None = None
 		try:
-			self.file = open(Assets.log_file_path('%s.txt' % program_name),'w')
+			self.file = open(Assets.log_file_path('%s.txt' % program_name), 'w', encoding='utf-8')
 		except OSError:
 			pass
 
