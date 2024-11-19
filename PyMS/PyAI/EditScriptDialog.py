@@ -78,7 +78,7 @@ class EditScriptDialog(PyMSDialog):
 		if f.flags is not None:
 			self.flags = f.flags
 
-	def editid(self) -> bool:
+	def editid(self, *_) -> bool:
 		new = self.id.get()
 		if len(new) > 4 or [x for x in ',():' if x in new]:
 			self.id.set(self.validid)

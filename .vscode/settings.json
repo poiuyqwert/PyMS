@@ -3,7 +3,7 @@
 
     "pylint.args": [
         "--disable=all",
-        "--enable=unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
+        "--enable=unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode,W0611",
     ],
 
 	"mypy-type-checker.reportingScope": "workspace",
