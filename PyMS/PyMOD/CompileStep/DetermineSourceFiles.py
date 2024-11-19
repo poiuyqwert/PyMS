@@ -3,6 +3,7 @@ from .BaseCompileStep import BaseCompileStep
 from .CreateDirectory import CreateDirectory
 from .BuildMPQ import BuildMPQ
 from .CompileGRP import CompileGRP
+from .CompileAIScript import CompileAIScript
 from .CopyFile import CopyFile
 from .. import Source
 
@@ -31,6 +32,8 @@ class DetermineSourceFiles(BaseCompileStep):
 		steps: list[BaseCompileStep] = []
 		if isinstance(source_file, Source.GRP):
 			steps.append(CompileGRP(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.AIScript):
+			steps.append(CompileAIScript(self.compile_thread, source_file))
 		else:
 			destination_path = _os.path.join(_os.path.split(self.compile_thread.source_path_to_intermediates_path(source_file.path))[0], source_file.compiled_name())
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))

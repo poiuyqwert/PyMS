@@ -25,7 +25,7 @@ class BuildMPQ(BaseCompileStep):
 		from ...FileFormats.MPQ import MPQ
 		mpq = MPQ.MPQ.of(artifact_path)
 		with mpq.create():
-			# TODO: Either need to build tree of intermediates to work on, or need to cleanup old intermediates
+			# TODO: Double check file is a used input?
 			for folder_path, _, file_names in _os.walk(intermediates_path):
 				for file_name in file_names:
 					if file_name.startswith('.'):

@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 from . import Tokens
-from .ParseContext import ParseContext
-from .SourceCodeHandler import SourceCodeParser
-from .CodeDirective import CodeDirectiveDefinition
 
 from ..PyMSError import PyMSError
 

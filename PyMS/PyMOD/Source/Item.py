@@ -26,12 +26,14 @@ class Item:
 		from .File import File
 		from .MPQ import MPQ
 		from .GRP import GRP
+		from .AIScript import AIScript
 		SOURCE_TYPES: list[Type[Item]] = [
 			MPQ,
 			GRP,
+			AIScript,
 		]
 		root: Item | None = None
-		parent_folder: Folder | None = None
+		parent_folders: dict[str, Folder] = {}
 		for folder_path, folder_names, file_names in _os.walk(project_path, topdown=True):
 			folder_names[:] = list(folder_name for folder_name in folder_names if not folder_name.startswith('.'))
 			folder_name = _os.path.basename(folder_path)
@@ -43,12 +45,13 @@ class Item:
 					detected_source_type = source_type
 					detected_source_confidence = confidence
 			item = detected_source_type(folder_path)
-			if parent_folder:
-				parent_folder.add_child(item)
+			parent_path = _os.path.dirname(folder_path)
+			if parent_path in parent_folders:
+				parent_folders[parent_path].add_child(item)
 			if not root:
 				root = item
 			if isinstance(item, Folder):
-				parent_folder = item
+				parent_folders[folder_path] = item
 				for file_name in file_names:
 					if file_name.startswith('.'):
 						continue

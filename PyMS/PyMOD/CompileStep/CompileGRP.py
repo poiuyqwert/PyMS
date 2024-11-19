@@ -3,7 +3,6 @@ from .BaseCompileStep import BaseCompileStep, CompileError, Bucket
 from .. import Source
 
 import os as _os
-import re as _re
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -17,18 +16,19 @@ class CompileGRP(BaseCompileStep):
 	def bucket(self) -> Bucket:
 		return Bucket.make_intermediates
 
-	RE_FRAME_NAME = _re.compile(r'^frame\s*(\d+)\.bmp$')
 	def _determine_frame_paths(self) -> list[str]:
 		frame_paths: list[str] = []
 		for filename in _os.listdir(self.source_file.path):
-			if CompileGRP.RE_FRAME_NAME.match(filename):
+			if filename.endswith('.bmp'):
 				frame_paths.append(_os.path.join(self.source_file.path, filename))
-		return frame_paths
+		return sorted(frame_paths)
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Determining GRP frames for `{self.source_file.display_name()}`...')
 		frame_paths = self._determine_frame_paths()
 		self.log(f'  {len(frame_paths)} frames found.', tag='warning' if not frame_paths else None)
+		if not frame_paths:
+			return None
 		destination_path = _os.path.join(_os.path.dirname(self.compile_thread.source_path_to_intermediates_path(self.source_file.path)), self.source_file.compiled_name())
 		if not self.compile_thread.meta.check_requires_update(frame_paths, [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')

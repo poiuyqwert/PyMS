@@ -2,7 +2,6 @@
 from .BaseCompileStep import BaseCompileStep
 
 import os as _os
-import shutil as _shutil
 
 class CleanupIntermediates(BaseCompileStep):
 	def execute(self) -> list[BaseCompileStep] | None:
