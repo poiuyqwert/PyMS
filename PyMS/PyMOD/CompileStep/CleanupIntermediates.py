@@ -6,10 +6,10 @@ import os as _os
 class CleanupIntermediates(BaseCompileStep):
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Cleaning up intermediate files...')
-		if not _os.path.isdir(self.compile_thread.intermediates_path):
+		if not _os.path.isdir(self.compile_thread.project.intermediates_path):
 			self.log("  Folder doesn't exit, no cleanup required")
 			return None
-		for folder_path, _, file_names in _os.walk(self.compile_thread.intermediates_path):
+		for folder_path, _, file_names in _os.walk(self.compile_thread.project.intermediates_path):
 			for file_name in file_names:
 				file_path = _os.path.join(folder_path, file_name)
 				if not file_path in self.compile_thread.meta.used_outputs:

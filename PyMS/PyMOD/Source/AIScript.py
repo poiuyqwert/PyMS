@@ -11,3 +11,6 @@ class AIScript(File):
 		if AIScript.RE_NAME.match(folder_name):
 			return 1
 		return 0
+
+	def display_name(self) -> str:
+		return "aiscript.bin/bwscript.bin"

@@ -3,7 +3,7 @@ from .BaseCompileStep import BaseCompileStep
 
 class LoadMeta(BaseCompileStep):
 	def execute(self) -> list[BaseCompileStep] | None:
-		self.log('\nLoading `.build/meta.json`...')
+		self.log('Loading `.build/meta.json`...')
 		if not self.compile_thread.meta.exists():
 			self.log("  `.build/meta.json` doesn't exist yet, continuing without it.")
 			return None

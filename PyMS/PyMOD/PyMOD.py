@@ -4,6 +4,7 @@ from . import Source
 from .CompileThread import *
 from .ExtractDialog import ExtractDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
+from .Project import Project
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -13,6 +14,8 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.MPQHandler import MPQHandler
+
+import os, shutil
 
 LONG_VERSION = 'v%s' % Assets.version('PyMOD')
 
@@ -34,8 +37,7 @@ class PyMOD(MainWindow):
 		setup_trace('PyMOD', self)
 		Theme.load_theme(self.config_.theme.value, self)
 
-		self.project_path: str | None = None
-		self.source_graph: Source.Item | None = None
+		self.project: Project | None = None
 		self.compile_thread: CompileThread | None = None
 
 		self.mpqhandler = MPQHandler(self.config_.mpqs)
@@ -82,6 +84,8 @@ class PyMOD(MainWindow):
 		self.extract_button.pack(side=LEFT, padx=(0,10))
 		self.compile_button = Button(frame, text='Compile', command=self.compile, state=DISABLED)
 		self.compile_button.pack(side=LEFT)
+		self.clean_button = Button(frame, text='Clean', command=self.clean, state=DISABLED)
+		self.clean_button.pack(side=LEFT)
 		self.cancel_button = Button(frame, text='Cancel', command=self.cancel, state=DISABLED)
 		self.cancel_button.pack(side=LEFT)
 		frame.pack(side=TOP, pady=5)
@@ -101,32 +105,29 @@ class PyMOD(MainWindow):
 		UpdateDialog.check_update(self, 'PyMOD')
 
 	def update_title(self) -> None:
-		project_path = self.project_path
-		if not project_path:
-			project_path = 'Untitled.txt'
-		if not project_path:
+		if not self.project:
 			self.title('PyMOD %s' % LONG_VERSION)
 		else:
-			self.title('PyMOD %s (%s)' % (LONG_VERSION, project_path))
+			self.title('PyMOD %s (%s)' % (LONG_VERSION, self.project.path))
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 
 	def update_states(self) -> None:
-		is_project_open = not not self.project_path
+		is_project_open = not not self.project
 		is_compiling = not not self.compile_thread
 		self.toolbar.tag_enabled('file_open', is_project_open)
 		self.extract_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
 		self.compile_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
+		self.clean_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
 		self.cancel_button['state'] = NORMAL if is_compiling else DISABLED
 
 	def refresh_files(self) -> None:
 		self.files_tree.delete(ALL)
-		if not self.project_path:
+		if not self.project:
 			return
-		self.source_graph = Source.Item.build_source_graph(self.project_path)
-		if source_graph := self.source_graph:
+		if source_graph := self.project.update_source_graph():
 			self.files_tree.build(((source_graph, True),), lambda node: tuple((item,None if isinstance(item, Source.File) else True) for item in node.children) if isinstance(node, Source.Folder) else (), lambda node: node.display_name())
 		else:
 			self.files_tree.delete(ALL)
@@ -140,7 +141,7 @@ class PyMOD(MainWindow):
 		if not project_path:
 			return
 		self.close()
-		self.project_path = project_path
+		self.project = Project(project_path)
 		self.refresh_files()
 		self.update_states()
 
@@ -157,17 +158,35 @@ class PyMOD(MainWindow):
 		ExtractDialog(self, self.mpqhandler, self.config_)
 
 	def compile(self) -> None:
-		if self.project_path is None or self.source_graph is None:
+		if self.project is None:
 			return
 		if self.compile_thread is not None:
 			return
 		self.refresh_files()
+		if not self.project.source_graph:
+			return
 		self.notebook.display(TabID.logs)
 		self.logs_textview.delete('1.0', END)
-		self.compile_thread = CompileThread(self.project_path, self.source_graph)
+		self.compile_thread = CompileThread(self.project)
 		self.compile_thread.start()
 		self.update_states()
 		self.watch_compile()
+
+	def clean(self) -> None:
+		if self.project is None:
+			return
+		self.notebook.display(TabID.logs)
+		self.logs_textview.delete('1.0', END)
+		self.logs_textview.insert(END, f'Cleaning intermediates folder `{self.project.intermediates_path}`...')
+		if not os.path.exists(self.project.intermediates_path):
+			self.logs_textview.insert(END, f"\n  Folder doesn't exist, no cleanup required")
+			return
+		try:
+			shutil.rmtree(self.project.intermediates_path)
+		except:
+			self.logs_textview.insert(END, "\n  Couldn't clean intermediaters folder", 'error')
+			return
+		self.logs_textview.insert(END, '\n  Clean complete!', 'success')
 
 	def cancel(self) -> None:
 		if not self.compile_thread:

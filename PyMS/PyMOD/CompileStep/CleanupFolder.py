@@ -17,7 +17,7 @@ class CleanupFolder(BaseCompileStep):
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Cleaning up contents of folder `{self.folder_path}`...')
 		if not _os.path.isdir(self.folder_path):
-			self.log("  Folder doesn't exit, no cleanup required")
+			self.log("  Folder doesn't exist, no cleanup required")
 			return None
 		had_error = False
 		for name in _os.listdir(self.folder_path):

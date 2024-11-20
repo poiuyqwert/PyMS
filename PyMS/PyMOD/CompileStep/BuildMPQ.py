@@ -14,12 +14,12 @@ class BuildMPQ(BaseCompileStep):
 		self.source_folder = source_folder
 
 	def bucket(self) -> Bucket:
-		return Bucket.use_intermediates
+		return Bucket.package
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Building `{_os.path.basename(self.source_folder.path)}`...')
-		intermediates_path = self.compile_thread.source_path_to_intermediates_path(self.source_folder.path)
-		artifact_path = self.compile_thread.source_path_to_artifacts_path(self.source_folder.path)
+		intermediates_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_folder.path)
+		artifact_path = self.compile_thread.project.source_path_to_artifacts_path(self.source_folder.path)
 		if artifact_path.endswith(_os.pathsep):
 			artifact_path = artifact_path[:-1]
 		from ...FileFormats.MPQ import MPQ

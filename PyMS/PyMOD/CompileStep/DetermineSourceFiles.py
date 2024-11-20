@@ -4,6 +4,7 @@ from .CreateDirectory import CreateDirectory
 from .BuildMPQ import BuildMPQ
 from .CompileGRP import CompileGRP
 from .CompileAIScript import CompileAIScript
+from .CompileTBL import CompileTBL
 from .CopyFile import CopyFile
 from .. import Source
 
@@ -20,7 +21,7 @@ class DetermineSourceFiles(BaseCompileStep):
 
 	def handle_source_folder(self, source_folder: Source.Folder) -> list[BaseCompileStep]:
 		steps: list[BaseCompileStep] = [
-			CreateDirectory(self.compile_thread, self.compile_thread.source_path_to_intermediates_path(source_folder.path))
+			CreateDirectory(self.compile_thread, self.compile_thread.project.source_path_to_intermediates_path(source_folder.path))
 		]
 		for source_item in source_folder.children:
 			steps.extend(self.handle_source_item(source_item))
@@ -34,13 +35,19 @@ class DetermineSourceFiles(BaseCompileStep):
 			steps.append(CompileGRP(self.compile_thread, source_file))
 		elif isinstance(source_file, Source.AIScript):
 			steps.append(CompileAIScript(self.compile_thread, source_file))
+		elif isinstance(source_file, Source.TBL):
+			steps.append(CompileTBL(self.compile_thread, source_file))
 		else:
-			destination_path = _os.path.join(_os.path.split(self.compile_thread.source_path_to_intermediates_path(source_file.path))[0], source_file.compiled_name())
+			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.compiled_name())
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))
 		return steps
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log('Determining compile steps...')
-		compile_steps = self.handle_source_item(self.compile_thread.source_graph)
+		source_graph = self.compile_thread.project.source_graph
+		if not source_graph:
+			self.log('  No source files to compile')
+			return None
+		compile_steps = self.handle_source_item(source_graph)
 		self.log('  Compile steps determined.')
 		return compile_steps

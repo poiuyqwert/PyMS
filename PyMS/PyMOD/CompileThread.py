@@ -1,9 +1,9 @@
 
 from __future__ import annotations
 
-from . import Source
 from . import CompileStep
 from .Meta import MetaHandler
+from .Project import Project
 
 from threading import Thread as _Thread
 from queue import Queue as _Queue
@@ -28,28 +28,12 @@ class CompileThread(_Thread):
 		class Abort(_Base):
 			pass
 
-	def __init__(self, project_path: str, source_graph: Source.Item) -> None:
+	def __init__(self, project: Project) -> None:
 		_Thread.__init__(self)
-		self.project_path = project_path
-		self.build_path = _os.path.join(self.project_path, '.build')
-		self.intermediates_path = _os.path.join(self.build_path, 'intermediates')
-		self.artifacts_path = _os.path.join(self.build_path, 'artifacts')
-		self.source_graph = source_graph
+		self.project = project
 		self.input_queue: _Queue[CompileThread.InputMessage._Base] = _Queue()
 		self.output_queue: _Queue[CompileThread.OutputMessage._Base] = _Queue()
-		self.meta = MetaHandler(_os.path.join(self.build_path, 'meta.json'))
-
-	def source_path_to_intermediates_path(self, source_path: str, base_name: str | None = None) -> str:
-		intermediates_path = source_path.replace(self.project_path, self.intermediates_path)
-		if base_name:
-			intermediates_path = _os.path.join(_os.path.split(intermediates_path)[0], base_name)
-		return intermediates_path
-
-	def source_path_to_artifacts_path(self, source_path: str, base_name: str | None = None) -> str:
-		artifacts_path = source_path.replace(self.project_path, self.artifacts_path)
-		if base_name:
-			artifacts_path = _os.path.join(_os.path.split(artifacts_path)[0], base_name)
-		return artifacts_path
+		self.meta = MetaHandler(project.meta_path)
 
 	def log(self, message: str, tag: str | None = None) -> None:
 		self.output_queue.put(CompileThread.OutputMessage.Log(message, tag=tag))
@@ -75,14 +59,15 @@ class CompileThread(_Thread):
 
 		buckets: dict[CompileStep.Bucket, list[CompileStep.BaseCompileStep]] = {
 			CompileStep.Bucket.setup: [
-				CompileStep.CreateDirectory(self, self.build_path),
-				CompileStep.CleanupFolder(self, self.artifacts_path),
-				CompileStep.CreateDirectory(self, self.artifacts_path),
+				CompileStep.CreateDirectory(self, self.project.build_path),
+				CompileStep.CleanupFolder(self, self.project.artifacts_path),
+				CompileStep.CreateDirectory(self, self.project.artifacts_path),
 				CompileStep.LoadMeta(self),
 				CompileStep.DetermineSourceFiles(self),
 			],
 			CompileStep.Bucket.make_intermediates: [],
-			CompileStep.Bucket.use_intermediates: [
+			CompileStep.Bucket.use_intermediates: [],
+			CompileStep.Bucket.package: [
 				CompileStep.CleanupIntermediates(self),
 			],
 			CompileStep.Bucket.cleanup: [

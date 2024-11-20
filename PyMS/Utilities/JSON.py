@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .PyMSError import PyMSError
 
-from typing import TypeAlias, Sequence, runtime_checkable, Protocol, Self, Type, TypeVar, cast, Callable
+from typing import TypeAlias, Sequence, runtime_checkable, Protocol, Self, Type, TypeVar, Callable
 
 Value: TypeAlias = 'int | float | str | bool | None | Object | Array'
 Object = dict[str, Value]

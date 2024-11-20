@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+from ...Utilities.PyMSWarning import PyMSWarning
+
 from enum import StrEnum
 
 from typing import TYPE_CHECKING
@@ -11,11 +13,12 @@ class Bucket(StrEnum):
 	setup = 'setup'
 	make_intermediates = 'make_intermediates'
 	use_intermediates = 'use_intermediates'
+	package = 'package'
 	cleanup = 'cleanup'
 
 	@staticmethod
 	def order() -> tuple[Bucket, ...]:
-		return (Bucket.setup, Bucket.make_intermediates, Bucket.use_intermediates, Bucket.cleanup)
+		return (Bucket.setup, Bucket.make_intermediates, Bucket.use_intermediates, Bucket.package, Bucket.cleanup)
 
 	def __lt__(self, other: str) -> bool:
 		return Bucket.order().index(self) < Bucket.order().index(other)
@@ -38,3 +41,10 @@ class BaseCompileStep:
 	def log(self, message: str, tag: str | None = None) -> None:
 		from ..CompileThread import CompileThread
 		self.compile_thread.output_queue.put(CompileThread.OutputMessage.Log(message, tag=tag))
+
+	def warning(self, warning: PyMSWarning) -> None:
+		self.compile_thread.output_queue.put(CompileThread.OutputMessage.Log(repr(warning), tag='warning'))
+
+	def warnings(self, warnings: list[PyMSWarning]) -> None:
+		for warning in warnings:
+			self.warning(warning)

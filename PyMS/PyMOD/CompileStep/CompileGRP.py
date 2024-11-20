@@ -29,7 +29,7 @@ class CompileGRP(BaseCompileStep):
 		self.log(f'  {len(frame_paths)} frames found.', tag='warning' if not frame_paths else None)
 		if not frame_paths:
 			return None
-		destination_path = _os.path.join(_os.path.dirname(self.compile_thread.source_path_to_intermediates_path(self.source_file.path)), self.source_file.compiled_name())
+		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.compiled_name())
 		if not self.compile_thread.meta.check_requires_update(frame_paths, [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
 			return None
