@@ -1,7 +1,7 @@
 
 from .BaseCompileStep import BaseCompileStep
 from .CreateDirectory import CreateDirectory
-from .BuildMPQ import BuildMPQ
+from .PackageMPQ import PackageMPQ
 from .CompileGRP import CompileGRP
 from .CompileAIScript import CompileAIScript
 from .CompileTBL import CompileTBL
@@ -26,7 +26,7 @@ class DetermineSourceFiles(BaseCompileStep):
 		for source_item in source_folder.children:
 			steps.extend(self.handle_source_item(source_item))
 		if isinstance(source_folder, Source.MPQ):
-			steps.append(BuildMPQ(self.compile_thread, source_folder))
+			steps.append(PackageMPQ(self.compile_thread, source_folder))
 		return steps
 
 	def handle_source_file(self, source_file: Source.File) -> list[BaseCompileStep]:
@@ -38,7 +38,7 @@ class DetermineSourceFiles(BaseCompileStep):
 		elif isinstance(source_file, Source.TBL):
 			steps.append(CompileTBL(self.compile_thread, source_file))
 		else:
-			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.compiled_name())
+			destination_path = _os.path.join(_os.path.split(self.compile_thread.project.source_path_to_intermediates_path(source_file.path))[0], source_file.name)
 			steps.append(CopyFile(self.compile_thread, source_file.path, destination_path))
 		return steps
 

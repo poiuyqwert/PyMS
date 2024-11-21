@@ -406,11 +406,7 @@ class PyMPQ(MainWindow):
 	def compression_settings(self, filename: str) -> tuple[int, int]:
 		compression = CompressionSetting.parse_value(self.compvar.get())
 		if compression.type == CompressionOption.Auto:
-			extension = '.' + filename.split(os.extsep)[-1]
-			if extension in self.config_.settings.autocompression.data:
-				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data[extension])
-			else:
-				compression = CompressionSetting.parse_value(self.config_.settings.autocompression.data['Default'])
+			compression = CompressionSetting.find(filename, self.config_.settings.autocompression.data)
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 

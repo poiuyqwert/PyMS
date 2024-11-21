@@ -1,5 +1,5 @@
 from .BaseCompileStep import BaseCompileStep, CompileError, Bucket
-from .BuildMPQ import BuildMPQ
+from .PackageMPQ import PackageMPQ
 from .CleanupFolder import CleanupFolder
 from .CleanupIntermediates import CleanupIntermediates
 from .CopyFile import CopyFile

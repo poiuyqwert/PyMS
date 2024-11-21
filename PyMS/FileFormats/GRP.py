@@ -21,7 +21,7 @@ from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.AtomicWriter import AtomicWriter
 
-import struct
+import struct, math
 from copy import deepcopy
 from enum import Enum
 
@@ -409,6 +409,30 @@ class GRP:
 		self.frames += 1
 		self.images.append(deepcopy(frame))
 		self.images_bounds.append(image_bounds(frame, self.transindex))
+
+	def add_frames(self, image: Pixels, frames: int, vertical: bool = True) -> None:
+		if not image:
+			raise PyMSError('GRP', 'Adding frames has empty buffer')
+		width = len(image[0])
+		height = len(image)
+		if vertical:
+			height //= frames
+		else:
+			width //= min(frames,17)
+			height //= int(math.ceil(frames / 17.0))
+		if width > 256 or height > 256:
+			raise PyMSError('Load', f'Invalid dimensions in the image (Frames have a maximum size of 256x256, got {width}x{height})')
+		if self.frames and (width != self.width or height != self.height):
+			raise PyMSError('Load', f'Invalid dimensions in the image (Expected {self.width}x{self.height}, got {width}x{height})')
+		for n in range(frames):
+			frame = []
+			for y in range(height):
+				if vertical:
+					frame.append(image[n * height + y])
+				else:
+					x = (n % 17) * width
+					frame.append(image[(n // 17) * height + y][x:x+width])
+			self.add_frame(frame)
 
 	def save_data(self, uncompressed: bool | None = None) -> bytes:
 		if uncompressed is None:

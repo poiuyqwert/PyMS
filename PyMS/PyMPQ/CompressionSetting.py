@@ -4,6 +4,7 @@ from __future__ import annotations
 from ..FileFormats.MPQ.SFmpq import Z_BEST_SPEED, Z_DEFAULT_COMPRESSION, Z_NO_COMPRESSION, Z_BEST_COMPRESSION, MAWA_QUALITY_LOW, MAWA_QUALITY_MEDIUM, MAWA_QUALITY_HIGH
 from ..FileFormats.MPQ.MPQ import MPQCompressionFlag
 
+import os
 from enum import Enum
 
 class CompressionOption(Enum):
@@ -55,6 +56,15 @@ class CompressionSetting(object):
 	def __init__(self, type: CompressionOption, level: int) -> None:
 		self.type = type
 		self.level = level
+
+	@staticmethod
+	def find(filename: str, settings: dict[str, str]) -> CompressionSetting:
+		extension = '.' + filename.split(os.extsep)[-1]
+		if extension in settings:
+			return CompressionSetting.parse_value(settings[extension])
+		elif 'Default' in settings:
+			return CompressionSetting.parse_value(settings['Default'])
+		return CompressionSetting(CompressionOption.NoCompression, 0)
 
 	def compression_level(self) -> int:
 		compression_levels = self.type.compression_levels()

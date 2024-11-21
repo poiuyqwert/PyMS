@@ -18,8 +18,8 @@ class CompileTBL(BaseCompileStep):
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		from ...FileFormats.TBL import TBL
-		source_path = _os.path.join(self.source_file.path, self.source_file.compiled_name().replace('.tbl', '.txt'))
-		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.compiled_name())
+		source_path = _os.path.join(self.source_file.path, self.source_file.name.replace('.tbl', '.txt'))
+		destination_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, self.source_file.name)
 		if not self.compile_thread.meta.check_requires_update([source_path], [destination_path]):
 			self.log(f'No changes required for `{self.source_file.display_name()}`.')
 			return None

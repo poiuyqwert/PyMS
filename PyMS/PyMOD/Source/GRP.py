@@ -1,15 +1,10 @@
 
 from .File import File
 
-import re as _re
+import re, os
 
 class GRP(File):
-	RE_GRP_NAME = _re.compile(r'.+?\.grp$')
-
-	class Mode:
-		Frames = 'f'
-		ShadowFlare = 'sf'
-		FrameSet = 'fs'
+	RE_GRP_NAME = re.compile(r'.+?\.grp$')
 
 	@classmethod
 	def matches(cls, folder_name: str) -> float:
@@ -17,7 +12,9 @@ class GRP(File):
 			return 1
 		return 0
 
-	def __init__(self, path: str) -> None:
-		File.__init__(self, path)
-		self.uncompressed = False
-		self.mode = GRP.Mode.Frames
+	def frame_paths(self) -> list[str]:
+		frame_paths: list[str] = []
+		for filename in os.listdir(self.path):
+			if filename.endswith('.bmp'):
+				frame_paths.append(os.path.join(self.path, filename))
+		return sorted(frame_paths)

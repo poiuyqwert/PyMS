@@ -1,11 +1,15 @@
 
 from __future__ import annotations
 
-from ...Utilities.PyMSWarning import PyMSWarning
+from .. import Source
 
+from ...Utilities.PyMSWarning import PyMSWarning
+from ...Utilities import JSON
+
+import os
 from enum import StrEnum
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar, Type
 if TYPE_CHECKING:
 	from ..CompileThread import CompileThread
 
@@ -28,6 +32,7 @@ class CompileError(Exception):
 		super().__init__(message)
 		self.internal_exception = internal_exception
 
+C = TypeVar('C', bound=JSON.Decodable)
 class BaseCompileStep:
 	def __init__(self, compile_thread: 'CompileThread') -> None:
 		self.compile_thread = compile_thread
@@ -48,3 +53,9 @@ class BaseCompileStep:
 	def warnings(self, warnings: list[PyMSWarning]) -> None:
 		for warning in warnings:
 			self.warning(warning)
+
+	def load_config(self, type: Type[C], for_source: Source.Item) -> C | None:
+		config_path = for_source.config_path()
+		if not os.path.isfile(config_path):
+			return None
+		return JSON.load_file(config_path, type)

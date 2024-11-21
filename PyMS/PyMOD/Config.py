@@ -18,6 +18,7 @@ class PyMODConfig(Config.Config):
 			self.help = Config.WindowGeometry()
 			self.settings = PyMODConfig.Windows.Settings()
 			self.extract = Config.WindowGeometry()
+			self.name = Config.WindowGeometry()
 			super().__init__()
 
 	class LastPath(Config.Group):

@@ -5,6 +5,7 @@ from .CompileThread import *
 from .ExtractDialog import ExtractDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
 from .Project import Project
+from .NameDialog import NameDialog
 
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
@@ -14,6 +15,8 @@ from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.MPQHandler import MPQHandler
+from ..Utilities.PyMSError import PyMSError
+from ..Utilities.ErrorDialog import ErrorDialog
 
 import os, shutil
 
@@ -49,9 +52,6 @@ class PyMOD(MainWindow):
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.manage_settings, "Manage Settings", Ctrl.m)
@@ -68,6 +68,8 @@ class PyMOD(MainWindow):
 		frame = Frame(self.notebook)
 		self.files_tree = TreeList(frame)
 		self.files_tree.pack(padx=3, pady=3, fill=BOTH, expand=1)
+		self.refresh_button = Button(frame, text='Refresh', command=self.refresh_files, state=DISABLED)
+		self.refresh_button.pack(side=BOTTOM, pady=(5, 0))
 		self.notebook.add_tab(frame, 'Files', TabID.files)
 
 		frame = Frame(self.notebook)
@@ -118,6 +120,7 @@ class PyMOD(MainWindow):
 		is_project_open = not not self.project
 		is_compiling = not not self.compile_thread
 		self.toolbar.tag_enabled('file_open', is_project_open)
+		self.refresh_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
 		self.extract_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
 		self.compile_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
 		self.clean_button['state'] = NORMAL if is_project_open and not is_compiling else DISABLED
@@ -133,7 +136,22 @@ class PyMOD(MainWindow):
 			self.files_tree.delete(ALL)
 
 	def new(self) -> None:
-		pass
+		parent_path = self.config_.last_path.project.select_open(self, title='Select Containing Folder')
+		if not parent_path:
+			return
+		project_name = NameDialog(self, parent_path, self.config_.windows.name).name
+		if not project_name:
+			return
+		project_path = os.path.join(parent_path, project_name)
+		if os.path.exists(project_path):
+			ErrorDialog(self, PyMSError('New', f"Couldn't create project, `{project_path}` already exists"))
+			return
+		try:
+			os.mkdir(project_path)
+		except:
+			ErrorDialog(self, PyMSError('New', f"Couldn't create folder `{project_path}`", capture_exception=True))
+			return
+		self.open(project_path)
 
 	def open(self, project_path: str | None = None) -> None:
 		if not project_path:
@@ -142,17 +160,15 @@ class PyMOD(MainWindow):
 			return
 		self.close()
 		self.project = Project(project_path)
+		self.update_title()
 		self.refresh_files()
 		self.update_states()
 
-	def save(self) -> None:
-		pass
-
-	def saveas(self) -> None:
-		pass
-
 	def close(self) -> None:
-		pass
+		self.project = None
+		self.update_title()
+		self.refresh_files()
+		self.update_states()
 
 	def extract(self) -> None:
 		ExtractDialog(self, self.mpqhandler, self.config_)

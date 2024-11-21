@@ -20,20 +20,6 @@ class CompileAIScript(BaseCompileStep):
 	def bucket(self) -> Bucket:
 		return Bucket.use_intermediates
 
-	def _determine_script_paths(self) -> list[str]:
-		script_paths: list[str] = []
-		for filename in _os.listdir(self.source_file.path):
-			if filename.endswith('.txt') and not filename.endswith('def.txt'):
-				script_paths.append(_os.path.join(self.source_file.path, filename))
-		return sorted(script_paths)
-
-	def _determine_extdef_paths(self) -> list[str]:
-		extdef_paths: list[str] = []
-		for filename in _os.listdir(self.source_file.path):
-			if filename.endswith('def.txt'):
-				extdef_paths.append(_os.path.join(self.source_file.path, filename))
-		return sorted(extdef_paths)
-
 	def data_context(self) -> CodeHandlers.DataContext:
 		from ...FileFormats.TBL import TBL
 		from ...FileFormats.DAT import UnitsDAT, UpgradesDAT, TechDAT
@@ -112,13 +98,13 @@ class CompileAIScript(BaseCompileStep):
 
 	def execute(self) -> list[BaseCompileStep] | None:
 		self.log(f'Determining scripts for `{self.source_file.display_name()}`...')
-		script_paths = self._determine_script_paths()
+		script_paths = self.source_file.script_paths()
 		self.log(f'  {len(script_paths)} scripts found.', tag='warning' if not script_paths else None)
 		if not script_paths:
 			return None
 		
 		self.log(f'Determining extdefs for `{self.source_file.display_name()}`...')
-		extdef_paths = self._determine_extdef_paths()
+		extdef_paths = self.source_file.extdef_paths()
 		self.log(f'  {len(extdef_paths)} extdefs found.')
 		
 		aiscript_path = self.compile_thread.project.source_path_to_intermediates_path(self.source_file.path, 'aiscript.bin')

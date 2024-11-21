@@ -629,10 +629,10 @@ class SelectDirectory(ConfigObject):
 		self._saved_state = self.path
 		self._title = title
 
-	def select_open(self, parent: Misc) -> str | None:
+	def select_open(self, parent: Misc, title: str | None = None) -> str | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
-		path = FileDialog.askdirectory(parent=window, title=self._title, initialdir=self.path or Assets.base_dir)
+		path = FileDialog.askdirectory(parent=window, title=title or self._title, initialdir=self.path or Assets.base_dir)
 		setattr(window, '_pyms__window_blocking', False)
 		if path:
 			self.path = path

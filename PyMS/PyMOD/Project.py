@@ -59,7 +59,7 @@ class Project:
 			if isinstance(item, Source.Folder):
 				parent_folders[folder_path] = item
 				for file_name in file_names:
-					if file_name.startswith('.'):
+					if file_name.startswith('.') or file_name.endswith('config.json'):
 						continue
 					file_path = _os.path.join(folder_path, file_name)
 					item.add_child(Source.File(file_path))
