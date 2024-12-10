@@ -59,16 +59,8 @@ class CompileGRP(BaseCompileStep):
 
 		self.log(f'Checking for `config.json` for `{self.source_file.display_name()}`...')
 		config: CompileGRP.Config = CompileGRP.Config.default()
-		try:
-			loaded_config = self.load_config(CompileGRP.Config, self.source_file)
-			if not loaded_config:
-				self.log('  No `config.json` found, using default settings')
-			else:
-				config = loaded_config
-				self.log('  Config loaded!')
-				inputs.append(self.source_file.config_path())
-		except Exception as e:
-			raise CompileError("Couldn't load `config.json`", internal_exception=e)
+		if loaded_config := self.load_config(CompileGRP.Config, self.source_file):
+			config = loaded_config
 
 		if config.frames_mode in (FramesMode.single_vertical, FramesMode.single_framesets) and len(frame_paths) > 1:
 			raise CompileError(f'Too many frames for `{config.frames_mode.value}` frame mode')

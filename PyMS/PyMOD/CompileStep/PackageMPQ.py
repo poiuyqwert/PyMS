@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from .BaseCompileStep import BaseCompileStep, Bucket, CompileError
+from .BaseCompileStep import BaseCompileStep, Bucket
 from .. import Source
 
 from ...FileFormats.MPQ.MPQ import MPQ
@@ -44,6 +44,16 @@ class PackageMPQ(BaseCompileStep):
 				}
 			)
 
+	@dataclass
+	class FileConfig(JSON.Decodable):
+		compression: str
+
+		@classmethod
+		def from_json(cls, json: JSON.Object) -> Self:
+			return cls(
+				compression = JSON.get(json, 'compression', str)
+			)
+
 	def __init__(self, compile_thread: 'CompileThread', source_folder: Source.MPQ) -> None:
 		BaseCompileStep.__init__(self, compile_thread)
 		self.source_folder = source_folder
@@ -51,7 +61,7 @@ class PackageMPQ(BaseCompileStep):
 		self.config = PackageMPQ.Config.default()
 
 	def bucket(self) -> Bucket:
-		return Bucket.package
+		return Bucket.make_artifacts
 
 	def handle_source_item(self, source_item: Source.Item, mpq: MPQ) -> None:
 		if isinstance(source_item, Source.Folder):
@@ -70,23 +80,18 @@ class PackageMPQ(BaseCompileStep):
 			if os.path.isfile(file_path):
 				mpq_file_name = '\\'.join(os.path.normpath(os.path.relpath(file_path, self.mpq_intermediates_path)).split(os.path.sep))
 				self.log(f'  Adding `{mpq_file_name}`...')
-				compression_source = 'autocompression'
+				compression_source = 'autocompression settings'
 				compression = CompressionSetting.find(file_name, self.config.autocompression)
-				# TODO: Compression override?
-				self.log(f'    Using `{compression}` compression based on {compression_source} settings.')
+				self.log(f'    Checking `config.json` for `{source_file.display_name()}...')
+				if file_config := self.load_config(PackageMPQ.FileConfig, source_file, optional=True, log=False):
+					compression = CompressionSetting.parse_value(file_config.compression)
+					compression_source = f'`config.json` for `{source_file.display_name()}`'
+				self.log(f'    Using `{compression}` compression based on {compression_source}.')
 				mpq.add_file(file_path, mpq_file_name, compression=compression.type.compression_type(), compression_level=compression.compression_level())
 
 	def execute(self) -> list[BaseCompileStep] | None:
-		self.log(f'Checking for `config.json` for `{self.source_folder.name}`...')
-		try:
-			config = self.load_config(PackageMPQ.Config, self.source_folder)
-			if not config:
-				self.log('  No `config.json` found, using default settings')
-			else:
-				self.config = config
-				self.log('  Config loaded!')
-		except Exception as e:
-			raise CompileError("Couldn't load `config.json`", internal_exception=e)
+		if config := self.load_config(PackageMPQ.Config, self.source_folder):
+			self.config = config
 
 		self.log(f'Packaging `{self.source_folder.name}`...')
 		artifact_path = self.compile_thread.project.source_path_to_artifacts_path(self.source_folder.path)

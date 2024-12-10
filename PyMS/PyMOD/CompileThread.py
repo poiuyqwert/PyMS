@@ -67,10 +67,10 @@ class CompileThread(_Thread):
 			],
 			CompileStep.Bucket.make_intermediates: [],
 			CompileStep.Bucket.use_intermediates: [],
-			CompileStep.Bucket.package: [
+			CompileStep.Bucket.make_artifacts: [
 				CompileStep.CleanupIntermediates(self),
 			],
-			CompileStep.Bucket.cleanup: [
+			CompileStep.Bucket.shutdown: [
 				CompileStep.SaveMeta(self)
 			]
 		}
