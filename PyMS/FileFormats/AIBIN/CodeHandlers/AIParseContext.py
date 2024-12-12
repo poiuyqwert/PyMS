@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from .AILanguage import AILanguage
 from . import CodeDirectives
 from .DataContext import DataContext
 
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 class AIParseContext(ParseContext):
 	def __init__(self, lexer: Lexer, definitions: DefinitionsHandler, data_context: DataContext) -> None:
-		ParseContext.__init__(self, lexer, definitions)
+		ParseContext.__init__(self, lexer, AILanguage(), definitions)
 		self.data_context = data_context
 		self.spellcasters: list[int] = []
 		self.scripts: OrderedDict[str, tuple[AIScript, int]] = OrderedDict()

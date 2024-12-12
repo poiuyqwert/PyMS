@@ -15,7 +15,7 @@ from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, AIDefinitionsHandler, DataContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
@@ -37,10 +37,11 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
+from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-import os, io
+import io
 
 from typing import IO as BuiltinIO
 
@@ -398,6 +399,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		# TODO: Warn about plugins
 		self.ai = ai
 		self.aiscript = aiscript_path
 		self.bwscript = bwscript_path
@@ -596,6 +598,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				return
 			import_paths = [import_path]
 		for import_path in import_paths:
+			# TODO: Unify with save_code?
 			parse_context = self.get_parse_context(import_path)
 			scripts = self.ai.compile(parse_context)
 			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
@@ -605,6 +608,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			if new_bw_size is not None:
 				_, bw_size = self.ai.calculate_sizes()
 				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
+			# TODO: Plugins
 			if parse_context.warnings:
 				WarningDialog(parent, parse_context.warnings, True)
 			self.ai.add_scripts(scripts)
@@ -747,6 +751,15 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(parent, e)
 			return False
+		# TODO: Plugins
+		new_active_plugins = parse_context.language_context.active_plugins()
+		if new_active_plugins:
+			added_plugins = new_active_plugins.difference(self.ai.active_plugins)
+			if added_plugins:
+				pass
+			removed_plugins = self.ai.active_plugins.difference(new_active_plugins)
+			if removed_plugins:
+				pass
 		if parse_context.warnings:
 			WarningDialog(parent, parse_context.warnings, True)
 		self.ai.add_scripts(scripts)
@@ -758,8 +771,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	# def get_export_references(self) -> bool:
 	# 	return self.reference.get()
 
-	def _get_definitions_handler(self) -> AIDefinitionsHandler:
-		defs = AIDefinitionsHandler()
+	def _get_definitions_handler(self) -> DefinitionsHandler:
+		defs = DefinitionsHandler()
 		handler = AIDefsSourceCodeHandler()
 		for extdef in self.config_.extdefs.data:
 			with IO.InputText(extdef) as f:

@@ -4,7 +4,7 @@ from .Config import PyAIConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, CodeTypes, CodeDirectives
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -89,6 +89,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 
 	def setup_syntax_highlighting(self) -> None:
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
+		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
 		type_names = [type.name for type in CodeTypes.all_basic_types]
 		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
 		keywords: list[str] = []
@@ -148,6 +149,18 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 							highlight_style=self.config_.code.highlights.command
 						),
 						pattern='|'.join(cmd_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Command',
+							description='The style of command names for the AISE plugin.',
+							highlight_style=self.config_.code.highlights.aise_command
+						),
+						pattern='|'.join(aise_cmd_names)
 					),
 					r'\b'
 				)),
@@ -286,6 +299,16 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 			self.text.highlight_error(e)
 			ErrorDialog(self, e)
 			return
+		# TODO: Plugins
+		ai = self.delegate.get_ai_bin()
+		new_active_plugins = parse_context.language_context.active_plugins()
+		if new_active_plugins:
+			added_plugins = new_active_plugins.difference(ai.active_plugins)
+			if added_plugins:
+				pass
+			removed_plugins = ai.active_plugins.difference(new_active_plugins)
+			if removed_plugins:
+				pass
 		if parse_context.warnings:
 			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)

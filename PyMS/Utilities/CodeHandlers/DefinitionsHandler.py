@@ -2,11 +2,6 @@
 from __future__ import annotations
 
 from . import Tokens
-from .ParseContext import ParseContext
-from .SourceCodeHandler import SourceCodeParser
-from .CodeDirective import CodeDirectiveDefinition
-
-from ..PyMSError import PyMSError
 
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
@@ -23,17 +18,7 @@ class DefinitionsHandler(object):
 		_literals = ('=', '@', '(', ')')
 
 	def __init__(self) -> None:
-		self.types: dict[str, CodeType] = {}
 		self.variables: dict[str, Variable] = {}
-
-	def register_type(self, type: CodeType) -> None:
-		if type.name in self.types:
-			raise PyMSError('Internal', "Type with name '%s' already exists" % type.name)
-		self.types[type.name] = type
-
-	def register_types(self, types: list[CodeType]) -> None:
-		for type in types:
-			self.register_type(type)
 
 	def set_variable(self, name: str, value: Any, type: CodeType) -> None:
 		self.variables[name] = Variable(name, value, type)

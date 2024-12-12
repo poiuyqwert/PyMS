@@ -11,7 +11,7 @@ from ...Utilities import Struct
 from ...Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
 from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
-from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
+from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeCompiler
 
 from collections import OrderedDict
 import io
@@ -84,7 +84,7 @@ class IScriptBIN:
 	@staticmethod
 	def _save(scripts: Iterable[IScript], output: IO.AnyOutputBytes) -> None:
 		table = bytearray()
-		builder = ByteCodeBuilder()
+		builder = ByteCodeCompiler()
 		builder.add_data(Struct.l_u32.pack(0)) # Pack 0 for offset to table, to be updated later
 		for script in scripts:
 			table += Struct.l_u16.pack(script.id)

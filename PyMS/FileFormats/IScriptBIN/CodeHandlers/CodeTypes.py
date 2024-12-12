@@ -8,11 +8,11 @@ from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
-from ....Utilities.CodeHandlers.BuilderContext import BuilderContext
+from ....Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeBuilderType
 from ....Utilities.CodeHandlers import Tokens
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
-from ....Utilities.PyMSWarning import PyMSWarning
+# from ....Utilities.PyMSWarning import PyMSWarning
 from ....Utilities import Assets
 
 from typing import cast, Sequence
@@ -231,7 +231,7 @@ class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None],
 	def __init__(self) -> None:
 		super().__init__('HeaderLabel', 'A label name of a block in the script, or [NONE]', Struct.l_u16, True)
 
-	def compile(self, block: CodeBlock | None, context: BuilderContext) -> None:
+	def compile(self, block: CodeBlock | None, context: ByteCodeBuilderType) -> None:
 		type = cast(Struct.IntField, self._bytecode_type)
 		if block:
 			context.add_block_ref(block, type)

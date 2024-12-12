@@ -5,16 +5,16 @@ from . import Tokens
 from .CodeType import CodeType, IntCodeType
 from .CodeBlock import CodeBlock
 from .ParseContext import ParseContext
+from .DecompileContext import DecompileContext
 
 from .. import Struct
 from ..PyMSError import PyMSError
-from ..PyMSWarning import PyMSWarning
 from ..BytesScanner import BytesScanner
 
 from typing import TYPE_CHECKING, Sequence, Any
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
-	from .BuilderContext import BuilderContext
+	from .ByteCodeCompiler import ByteCodeBuilderType
 
 class CodeCommandDefinition(object):
 	@staticmethod
@@ -32,12 +32,12 @@ class CodeCommandDefinition(object):
 		self.ends_flow = ends_flow
 		self.separate = separate
 
-	def decompile(self, scanner: BytesScanner) -> CodeCommand:
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> CodeCommand:
 		params = []
 		param_repeat = 1
 		for param_type in self.param_types:
 			for _ in range(param_repeat):
-				value = param_type.decompile(scanner)
+				value = param_type.decompile(scanner, context)
 				params.append(value)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = value
@@ -115,7 +115,7 @@ class CodeCommand(object):
 		self.parent_block = parent_block
 		self.original_location: int | None = None # Byte address or Source line
 
-	def compile(self, context: BuilderContext) -> None:
+	def compile(self, context: ByteCodeBuilderType) -> None:
 		assert self.definition.byte_code_id is not None
 		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
 		param_repeat = 1

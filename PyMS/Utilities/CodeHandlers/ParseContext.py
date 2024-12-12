@@ -16,22 +16,7 @@ if TYPE_CHECKING:
 	from .CodeDirective import CodeDirective
 	from .Lexer import Lexer
 	from .CodeType import CodeType
-
-# class BlockReferenceResolver(object):
-# 	def __init__(self, source_line: int | None) -> None:
-# 		self.source_line = source_line
-
-# 	def block_defined(self, block: CodeBlock) -> None:
-# 		raise NotImplementedError(self.__class__.__name__ + '.block_defined()')
-
-# class CommandParamBlockReferenceResolver(BlockReferenceResolver):
-# 	def __init__(self, cmd: CodeCommand, param_index: int, source_line: int | None) -> None:
-# 		BlockReferenceResolver.__init__(self, source_line)
-# 		self.cmd = cmd
-# 		self.param_index = param_index
-
-# 	def block_defined(self, block: CodeBlock) -> None:
-# 		self.cmd.params[self.param_index] = block
+	from .LanguageDefinition import LanguageDefinition
 
 @dataclass
 class BlockMetadata:
@@ -46,8 +31,11 @@ class BlockMetadata:
 				self.uses.append(use)
 
 class ParseContext(object):
-	def __init__(self, lexer: Lexer, definitions: DefinitionsHandler | None = None) -> None:
+	def __init__(self, lexer: Lexer, language: LanguageDefinition, definitions: DefinitionsHandler | None = None) -> None:
+		from .LanguageDefinition import LanguageContext
 		self.lexer = lexer
+		self.language = language
+		self.language_context = LanguageContext()
 		self.definitions = definitions
 
 		self.active_block: CodeBlock | None = None

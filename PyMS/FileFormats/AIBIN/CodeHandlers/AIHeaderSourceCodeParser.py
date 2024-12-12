@@ -12,7 +12,9 @@ from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 	def __init__(self) -> None:
 		super().__init__()
-		self.register_commands(CodeCommands.all_header_commands)
+		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
+		for cmd_def in CodeCommands.all_header_commands:
+			self.cmd_defs[cmd_def.name] = cmd_def
 
 	def parse(self, parse_context: ParseContext) -> bool:
 		from ..AIScript import AIScript

@@ -109,6 +109,7 @@ class PyAIConfig(Config.Config):
 				self.ai_id = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.block = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF'))
 				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
+				self.aise_command = Config.HighlightStyle(default=Config.Style(foreground='#008080'))
 				self.type = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.directive = Config.HighlightStyle(default=Config.Style(foreground='#FF6600'))
 				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))

@@ -8,6 +8,9 @@ class AILexer(Lexer):
 	class SymbolToken(Tokens.LiteralsToken):
 		_literals = (':', '=', '@', '(', ')', ',', '{', '}', '--')
 
+	class AISESymbolToken(Tokens.LiteralsToken):
+		_literals = ('.', '|', '~')
+
 	class ScriptIDToken(Tokens.RegexToken):
 		_regexp = re.compile(r'\S{4}')
 
@@ -16,6 +19,8 @@ class AILexer(Lexer):
 		self.register_token_type(Tokens.WhitespaceToken, skip=True)
 		self.register_token_type(Tokens.CommentToken, skip=True)
 		self.register_token_type(AILexer.SymbolToken)
+		self.register_token_type(AILexer.AISESymbolToken)
+		self.register_token_type(Tokens.HexToken) # Required for AISE
 		self.register_token_type(Tokens.IntegerToken)
 		self.register_token_type(Tokens.BooleanToken)
 		self.register_token_type(Tokens.IdentifierToken)

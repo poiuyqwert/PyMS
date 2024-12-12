@@ -1,11 +1,13 @@
 
 from .AIScript import AIScript
+from .CodeHandlers import AISE
 
-from .CodeHandlers import AIByteCodeHandler, AISerializeContext, AIParseContext, AISourceCodeHandler
+from .CodeHandlers import AIDecompileContext, AISerializeContext, AIParseContext, AISourceCodeHandler
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.BytesScanner import  BytesScanner
-from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
+from ...Utilities.CodeHandlers.ByteCodeDecompiler import ByteCodeDecompiler
+from ...Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeCompiler
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
 from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
@@ -53,9 +55,10 @@ class AIBIN:
 	def __init__(self) -> None:
 		self._scripts: OrderedDict[str, AIScript] = OrderedDict()
 		self._cached_sizes: tuple[int, int] | None = None
+		self.active_plugins: set[str] = set()
 
 	@staticmethod
-	def _load(header_type: Type[H], file_name: str, input: IO.AnyInputBytes) -> OrderedDict[str, tuple[H, CodeBlock | None]]:
+	def _load(header_type: Type[H], file_name: str, input: IO.AnyInputBytes) -> tuple[OrderedDict[str, tuple[H, CodeBlock | None]], set[str]]:
 		try:
 			with IO.InputBytes(input) as f:
 				data = f.read()
@@ -63,10 +66,14 @@ class AIBIN:
 			raise
 		except:
 			raise PyMSError('Load', f"Couldn't load {file_name} from disk", capture_exception=True)
-		bytecode_handler = AIByteCodeHandler(data)
+		bytecode_context = AIDecompileContext(data)
+		bytecode_handler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
 		try:
 			headers_offset = scanner.scan(Struct.l_u32)
+			if headers_offset >= AISE.expanded_headers_offset:
+				bytecode_context.aise_context.expand(bytecode_context.language_context)
+				bytecode_context.aise_context.load_long_jumps(scanner, bytecode_context)
 			scanner.jump_to(headers_offset)
 			scripts: OrderedDict[str, tuple[H, CodeBlock | None]] = OrderedDict()
 			while not scanner.at_end() and scanner.peek(Struct.l_u32):
@@ -75,22 +82,23 @@ class AIBIN:
 					raise PyMSError('Load', "Duplicate AI ID '%s'" % id)
 				entry_point: CodeBlock | None = None
 				if header.address:
-					entry_point = bytecode_handler.decompile_block(header.address)
+					entry_point = bytecode_handler.decompile_block(header.address, bytecode_context)
 				scripts[header.id] = (header, entry_point)
-			return scripts
+			return (scripts, bytecode_context.language_context.active_plugins())
 		except PyMSError:
 			raise
 		except:
 			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt", capture_exception=True)
 
 	def load(self, ai_input: IO.AnyInputBytes, bw_input: IO.AnyInputBytes | None) -> None:
-		ai_headers = AIBIN._load(_AIScriptHeader, 'aiscript.bin', ai_input)
+		ai_headers, ai_plugins = AIBIN._load(_AIScriptHeader, 'aiscript.bin', ai_input)
 		bw_headers: OrderedDict[str, tuple[_BWScriptHeader, CodeBlock | None]] = OrderedDict()
+		bw_plugins: set[str] = set()
 		requires_bw = set(id for id,(header,_) in ai_headers.items() if header.is_in_bw) #any(header[0].address == 0 for header in ai_headers.values())
 		if requires_bw:
 			if not bw_input:
 				raise PyMSError('Load', f'aiscript.bin has {len(requires_bw)} scripts stored in bwscript.bin but no bwscript.bin is loaded: {", ".join(requires_bw)}')
-			bw_headers = AIBIN._load(_BWScriptHeader, 'bwscript.bin', bw_input)
+			bw_headers, bw_plugins = AIBIN._load(_BWScriptHeader, 'bwscript.bin', bw_input)
 		# extra_bw: set[str] = set()
 		# not_bw: str[str] = set()
 		for id in bw_headers.keys():
@@ -113,11 +121,12 @@ class AIBIN:
 			scripts[id] = script
 		self._scripts = scripts
 		self._cached_sizes = None
+		self._active_plugins = ai_plugins.union(bw_plugins)
 
 	@staticmethod
 	def _save(header_type: Type[H], scripts: Iterable[AIScript], output: IO.AnyOutputBytes) -> None:
 		headers = bytearray()
-		builder = ByteCodeBuilder()
+		builder = ByteCodeCompiler()
 		builder.add_data(Struct.l_u32.pack(0)) # Pack 0 for offset to headers array, to be updated later
 		for script in scripts:
 			header = header_type()

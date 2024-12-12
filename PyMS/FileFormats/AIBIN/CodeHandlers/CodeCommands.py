@@ -1,9 +1,11 @@
 
 from .CodeTypes import *
+from . import AISECodeTypes
 
 from ....Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 
-Goto = CodeCommandDefinition('goto', 'Jump to {1}.', 0, (BlockCodeType(),), ends_flow=True)
+# Note: The standard Goto command has to have a bit of pollution from AISE to manage long jump blocks
+Goto = CodeCommandDefinition('goto', 'Jump to {1}.', 0, (AISECodeTypes.LongBlockCodeType(),), ends_flow=True)
 NoTownsJump = CodeCommandDefinition('notowns_jump', 'If computer doesn\'t have a {1}, jump to {2}.', 1, (UnitCodeType(), BlockCodeType(),))
 Wait = CodeCommandDefinition('wait', 'Wait for {1} tenths of second in normal game speed.', 2, (WordCodeType(),), separate=True)
 StartTown = CodeCommandDefinition('start_town', 'Starts the AI Script for town management.', 3)
@@ -123,7 +125,7 @@ NukePos = CodeCommandDefinition('nuke_pos', 'Launch a nuke at map position (x,y)
 HelpIfTrouble = CodeCommandDefinition('help_iftrouble', 'Ask allies for help if ever in trouble.', 110)
 AlliesWatch = CodeCommandDefinition('allies_watch', "Expands at resource area number {1} using {2}. If {1} is below 9, it is a player's start location, otherwise it's a map's base location. Does nothing if resarea is occupied.", 111, (ByteCodeType(), BlockCodeType(),))
 TryTownPoint = CodeCommandDefinition('try_townpoint', "Jump to {2} if the AI doesn't own at least {1} expansions (Includes areatowns). Ignored otherwise. Used in conjunction with expand or allies_watch.", 112, (ByteCodeType(), BlockCodeType(),))
-IfTowns = CodeCommandDefinition('if_towns', 'Does not exist in memory.', 113)
+# IfTowns = CodeCommandDefinition('if_towns', 'Does not exist in memory.', 113)
 
 all_basic_commands: list[CodeCommandDefinition] = [
 	Goto,
@@ -239,7 +241,7 @@ all_basic_commands: list[CodeCommandDefinition] = [
 	HelpIfTrouble,
 	AlliesWatch,
 	TryTownPoint,
-	IfTowns,
+	# IfTowns,
 ]
 
 # Commands used by header

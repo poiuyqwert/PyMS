@@ -10,9 +10,11 @@ from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers import Lexer
 from ....Utilities.CodeHandlers import Tokens
+
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
+
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -51,7 +53,6 @@ class DWordCodeType(CodeType.IntCodeType):
 				return 1
 			case _:
 				return 0
-
 class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
 		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
@@ -77,7 +78,7 @@ class UnitCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def lex(self, parse_context: ParseContext) -> int:
+	def lex_token(self, parse_context: ParseContext) -> str:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			unit_name: str | None = None
@@ -87,13 +88,17 @@ class UnitCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				unit_name = token.raw_value
-			if unit_name:
-				unit_id = parse_context.data_context.unit_id(unit_name)
-				if unit_id is not None:
-					self.validate(unit_id, parse_context, unit_name)
-					return unit_id
+			if unit_name is not None and parse_context.data_context.unit_id(unit_name) is not None:
+				return unit_name
 			parse_context.lexer.rollback(rollback)
-		return super().lex(parse_context)
+		return super().lex_token(parse_context)
+
+	def parse_token(self, token: str, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			unit_id = parse_context.data_context.unit_id(token)
+			if unit_id is not None:
+				return unit_id
+		return super().parse_token(token, parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
@@ -323,7 +328,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def lex(self, parse_context: ParseContext) -> int:
+	def lex_token(self, parse_context: ParseContext) -> str:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			upgrade_name: str | None = None
@@ -333,13 +338,17 @@ class UpgradeCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				upgrade_name = token.raw_value
-			if upgrade_name:
-				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
-				if upgrade_id is not None:
-					self.validate(upgrade_id, parse_context, upgrade_name)
-					return upgrade_id
+			if upgrade_name is not None and parse_context.data_context.upgrade_id(upgrade_name) is not None:
+				return upgrade_name
 			parse_context.lexer.rollback(rollback)
-		return super().lex(parse_context)
+		return super().lex_token(parse_context)
+
+	def parse_token(self, token: str, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			upgrade_id = parse_context.data_context.upgrade_id(token)
+			if upgrade_id is not None:
+				return upgrade_id
+		return super().parse_token(token, parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
@@ -377,7 +386,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def lex(self, parse_context: ParseContext) -> int:
+	def lex_token(self, parse_context: ParseContext) -> str:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			technology_name: str | None = None
@@ -387,13 +396,17 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				technology_name = token.raw_value
-			if technology_name:
-				technology_id = parse_context.data_context.technology_id(technology_name)
-				if technology_id is not None:
-					self.validate(technology_id, parse_context, technology_name)
-					return technology_id
+			if technology_name is not None and parse_context.data_context.technology_id(technology_name) is not None:
+				return technology_name
 			parse_context.lexer.rollback(rollback)
-		return super().lex(parse_context)
+		return super().lex_token(parse_context)
+
+	def parse_token(self, token: str, parse_context: ParseContext) -> int:
+		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
+			technology_id = parse_context.data_context.technology_id(token)
+			if technology_id is not None:
+				return technology_id
+		return super().parse_token(token, parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)

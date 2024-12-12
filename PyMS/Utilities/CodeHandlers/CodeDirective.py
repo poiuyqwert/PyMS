@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from PyMS.Utilities.CodeHandlers.Lexer import Lexer
-
 from . import Tokens
 from .ParseContext import ParseContext
 
