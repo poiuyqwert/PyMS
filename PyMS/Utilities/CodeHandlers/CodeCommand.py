@@ -62,7 +62,7 @@ class CodeCommandDefinition(object):
 				value: Any = parse_context.lookup_param_value(param_type)
 				if value is None:
 					try:
-						value = param_type.lex(parse_context)
+						value = param_type.parse(parse_context)
 					except PyMSError as e:
 						parse_context.attribute_error(e)
 						raise e

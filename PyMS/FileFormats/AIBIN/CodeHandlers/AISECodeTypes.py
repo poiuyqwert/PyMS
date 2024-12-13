@@ -1,7 +1,10 @@
 
+from __future__ import annotations
+
 from .AIByteCodeCompiler import AIByteCodeCompiler
 from .AIDecompileContext import AIDecompileContext
 from . import CodeTypes
+from . import AISEIdleOrder
 
 from ....Utilities import Struct
 from ....Utilities.CodeHandlers import CodeType
@@ -54,62 +57,53 @@ class PointCodeType(CodeType.CodeType[Point, Point]):
 		else:
 			return f'({value[0]}, {value[1]})'
 
-	def lex_token(self, parse_context: ParseContext) -> str:
-		raw_token = ''
+	def _lex(self, parse_context: ParseContext) -> Point:
 		token = parse_context.lexer.next_token()
 		if token.raw_value == '(':
-			raw_token += token.raw_value
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', f"Expected integer value in 'point' x value, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected integer value in `{self.name}` x value, but got `{token.raw_value}`')
+			try:
+				x = int(token.raw_value)
+			except:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` x value (got `{token.raw_value}`)')
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == ',':
-				raise parse_context.error('Parse', f"Expected comma between 'point' x and y values, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected comma between `{self.name}` x and y values, but got `{token.raw_value}`')
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', f"Expected integer value in 'point' y value, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected integer value in `{self.name}` y value, but got `{token.raw_value}`')
+			try:
+				y = int(token.raw_value)
+			except:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` y value (got `{token.raw_value}`)')
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == ')':
-				raise parse_context.error('Parse', f"Expected ')' to end 'point`, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected `)` to end `{self.name}`, but got `{token.raw_value}`')
+			return (x, y)
 		elif token.raw_value == 'Loc':
-			raw_token += token.raw_value
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == '.':
-				raise parse_context.error('Parse', f"Expected '.' after 'Loc' for 'point`, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected `.` after `Loc` for `{self.name}`, but got `{token.raw_value}`')
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', f"Expected integer value for 'point' location id, but got '{token.raw_value}'")
-			raw_token += token.raw_value
+				raise parse_context.error('Parse', f'Expected integer value for `{self.name}` location id, but got `{token.raw_value}`')
+			try:
+				loc = int(token.raw_value)
+			except:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` location id (got `{token.raw_value}`)')
+			return (PointCodeType.LOCATION, loc)
 		elif token.raw_value == 'ScriptArea':
-			raw_token = token.raw_value
-		else:
-			raise parse_context.error('Parse', f"Expected a 'point' value but got '{token.raw_value}'")
-		return raw_token
-
-	RE_COORDS = re.compile(r'\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*')
-	RE_LOCATION = re.compile(r'\s*Loc\.(\d+)\s*')
-	def parse_token(self, token: str, parse_context: ParseContext) -> Point:
-		if token == 'ScriptArea':
 			return (PointCodeType.SCRIPT_AREA, 0)
-		if match := PointCodeType.RE_COORDS.match(token):
-			return (int(match.group(1)), int(match.group(2)))
-		if match := PointCodeType.RE_LOCATION.match(token):
-			return (PointCodeType.LOCATION, int(match.group(1)))
-		raise PyMSError('Parse', "Invalid value '%s' for '%s'" % (token, self.name))
+		raise parse_context.error('Parse', f'Expected a `{self.name}` value but got `{token.raw_value}`')
 
 	def validate(self, value: Point, parse_context: ParseContext, token: str | None = None) -> None:
 		# TODO: Do we need to validate any other cases?
 		if value[0] == PointCodeType.LOCATION and value[1] > 255:
-			raise PyMSError('Parse', f"Location id '{value[1]}' is not valid (must be a number from 0 to 255)")
+			raise PyMSError('Parse', f"Location id `{value[1]}` is not valid (must be a number from 0 to 255)")
 
 class OrderCodeType(CodeType.EnumCodeType):
-	def __init__(self) -> None:
-		super().__init__('order', 'An order ID from 0 to 188, or a [hardcoded] order name', Struct.l_u8, [
+	ORDER_NAMES = [
 			'Die',
 			'Stop',
 			'Guard',
@@ -299,35 +293,32 @@ class OrderCodeType(CodeType.EnumCodeType):
 			'Maelstrom',
 			'JunkYardDog',
 			'Fatal',
-		])
+		]
+
+	def __init__(self) -> None:
+		super().__init__('order', 'An order ID from 0 to 188, or a [hardcoded] order name', Struct.l_u8, OrderCodeType.ORDER_NAMES, allow_integer=True)
 
 class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 	def __init__(self, name: str = 'unit_id', help_text: str = 'Same as unit type, but also accepts: 228/None, 229/Any, 230/Group_Men, 231/Group_Buildings, 232/Group_Factories') -> None:
 		super().__init__(name, help_text)
 
-	def lex_token(self, parse_context: ParseContext) -> str:
+	def _lex(self, parse_context: ParseContext) -> int:
 		rollback = parse_context.lexer.get_rollback()
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.IdentifierToken):
-			value = token.raw_value.lower()
-			if value in ('none', 'any', 'group_men', 'group_buildings', 'group_factories'):
-				return value
+			group = token.raw_value.lower()
+			if group == 'none':
+				return 228
+			elif group == 'any':
+				return 229
+			elif group == 'group_men':
+				return 230
+			elif group == 'group_buildings':
+				return 231
+			elif group == 'group_factories':
+				return 232
 		parse_context.lexer.rollback(rollback)
-		return super().lex_token(parse_context)
-
-	def parse_token(self, token: str, parse_context: ParseContext) -> int:
-		group = token.lower()
-		if group == 'none':
-			return 228
-		elif group == 'any':
-			return 229
-		elif group == 'group_men':
-			return 230
-		elif group == 'group_buildings':
-			return 231
-		elif group == 'group_factories':
-			return 232
-		return super().parse_token(token, parse_context)
+		return super()._lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		if num >= 228 and num <= 232:
@@ -350,12 +341,13 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 	def keywords(self) -> Sequence[str]:
 		return ('None', 'Any', 'Group_Men', 'Group_Buildings', 'Group_Factories')
 
-class UnitGroupCodeType(CodeType.CodeType[tuple[int, ...], tuple[int, ...]]):
+UnitGroup = tuple[int, ...]
+class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 	def __init__(self) -> None:
 		self._unit_id_code_type = UnitIDCodeType()
 		super().__init__('unit_group', "Same as unit_id, but allows multiple with '|'", Struct.l_u16, False)
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> tuple[int, ...]:
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> UnitGroup:
 		value = scanner.scan(Struct.l_u16)
 		if value < 0xFF00:
 			return (value,)
@@ -365,7 +357,7 @@ class UnitGroupCodeType(CodeType.CodeType[tuple[int, ...], tuple[int, ...]]):
 			groups.append(scanner.scan(Struct.l_u16))
 		return tuple(groups)
 
-	def compile(self, groups: tuple[int, ...], context: ByteCodeBuilderType) -> None:
+	def compile(self, groups: UnitGroup, context: ByteCodeBuilderType) -> None:
 		count = len(groups)
 		if count > 1:
 			assert count <= 0xFF
@@ -373,22 +365,19 @@ class UnitGroupCodeType(CodeType.CodeType[tuple[int, ...], tuple[int, ...]]):
 		for group in groups:
 			context.add_data(Struct.l_u16.pack(group))
 
-	def lex_token(self, parse_context: ParseContext) -> str:
-		groups: list[str] = []
+	def _lex(self, parse_context: ParseContext) -> UnitGroup:
+		groups: list[int] = []
 		while True:
-			groups.append(self._unit_id_code_type.lex_token(parse_context))
+			groups.append(self._unit_id_code_type._lex(parse_context))
 			token = parse_context.lexer.next_token(peek=True)
 			if token.raw_value == '|':
 				_ = parse_context.lexer.next_token()
 			else:
 				break
-		return ' | '.join(groups)
+		return tuple(groups)
 
 	RE_OR = re.compile(r'\s*\|\s*')
-	def parse_token(self, token: str, parse_context: ParseContext) -> tuple[int, ...]:
-		return tuple(self._unit_id_code_type.parse_token(raw_group, parse_context) for raw_group in UnitGroupCodeType.RE_OR.split(token))
-
-	def validate(self, groups: tuple[int, ...], parse_context: ParseContext, token: str | None = None):
+	def validate(self, groups: UnitGroup, parse_context: ParseContext, token: str | None = None):
 		tokens: list[str | None] = []
 		if token is not None:
 			tokens = UnitGroupCodeType.RE_OR.split(token)
@@ -397,7 +386,7 @@ class UnitGroupCodeType(CodeType.CodeType[tuple[int, ...], tuple[int, ...]]):
 		for group, group_token in zip(groups, tokens):
 			self._unit_id_code_type.validate(group, parse_context, group_token)
 
-	def serialize(self, groups: tuple[int, ...], context: SerializeContext) -> str:
+	def serialize(self, groups: UnitGroup, context: SerializeContext) -> str:
 		return ' | '.join(self._unit_id_code_type.serialize(group, context) for group in groups)
 
 Area = tuple[Point, int]
@@ -415,27 +404,19 @@ class AreaCodeType(CodeType.CodeType[Area, Area]):
 		self._point_code_type.compile(value[0], context)
 		context.add_data(Struct.l_u16.pack(value[1]))
 
-	def lex_token(self, parse_context: ParseContext) -> str:
-		raw_token = self._point_code_type.lex_token(parse_context)
+	def _lex(self, parse_context: ParseContext) -> Area:
+		point = self._point_code_type._lex(parse_context)
+		radius = 0
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value == '~':
 			_ = parse_context.lexer.next_token()
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', f"Expected integer value for 'area' radius value, but got '{token.raw_value}'")
-			raw_token += f' ~ {token.raw_value}'
-		return raw_token
-
-	RE_TILDE = re.compile(r'\s*\~\s*')
-	def parse_token(self, token: str, parse_context: ParseContext) -> Area:
-		tokens = AreaCodeType.RE_TILDE.split(token, 1)
-		point = self._point_code_type.parse_token(tokens[0], parse_context)
-		radius = 0
-		if len(tokens) > 1:
+				raise parse_context.error('Parse', f'Expected integer value for `{self.name}` radius value, but got `{token.raw_value}`')
 			try:
-				radius = int(tokens[1])
+				radius = int(token.raw_value)
 			except:
-				raise PyMSError('Parse', f"Invalid integer value for 'area' radius value, got '{tokens[1]}'")
+				raise PyMSError('Parse', f'Invalid integer value for `{self.name}` radius value, got `{token.raw_value}`')
 		return (point, radius)
 
 	def validate(self, value: Area, parse_context: ParseContext, token: str | None = None) -> None:
@@ -464,3 +445,45 @@ class IssueOrderFlagsCodeType(CodeType.FlagsCodeType):
 			'EachAtMostOnce': 0x10,
 			'IgnoreDatReqs': 0x40,
 		})
+
+class CompareTrigCodeType(CodeType.EnumCodeType):
+	def __init__(self) -> None:
+		help_text = """One of:
+	AtLeast
+	AtMost
+	Set
+	Add
+	Subtract
+	Exactly
+	Randomize
+	AtLeast_Call
+	AtMost_Call
+	Exactly_Call
+	AtLeast_Wait
+	AtMost_Wait
+	Exactly_Wait"""
+		super().__init__('compare_trig', help_text, Struct.l_u8, {
+			'AtLeast': 0,
+			'AtMost': 1,
+			'Set': 7,
+			'Add': 8,
+			'Subtract': 9,
+			'Exactly': 10,
+			'Randomize': 11,
+			'AtLeast_Call': 128,
+			'AtMost_Call': 129,
+			'Exactly_Call': 138,
+			'AtLeast_Wait': 64,
+			'AtMost_Wait': 65,
+			'Exactly_Wait': 74,
+		})
+
+class IdleOrderCodeType(CodeType.EnumCodeType):
+	def __init__(self) -> None:
+		cases: dict[str, int] = {}
+		for n, order_name in enumerate(OrderCodeType.ORDER_NAMES):
+			cases[order_name] = n
+		cases['EnableBuiltin'] = 254
+		cases['DisableBuiltin'] = 255
+		super().__init__('idle_order', 'An order ID from 0 to 188, a [hardcoded] order name, or DisableBuiltin/EnableBuiltin',Struct.l_u8, cases, allow_integer=True)
+

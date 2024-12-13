@@ -109,11 +109,11 @@ class DefineSourceCodeParser(SourceCodeParser):
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '=':
 				raise parse_context.error('Parse', "Expected '=' but got '%s'" % token.raw_value)
-			token = parse_context.lexer.next_token()
-			# TODO: Use type to parse?
-			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
-			value = code_type.parse(token.raw_value, parse_context)
+			# token = parse_context.lexer.next_token()
+			# # TODO: Use type to parse?
+			# if not isinstance(token, Tokens.IntegerToken):
+			# 	raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
+			value = code_type.parse(parse_context)
 			definitions.set_variable(name, value, code_type)
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
