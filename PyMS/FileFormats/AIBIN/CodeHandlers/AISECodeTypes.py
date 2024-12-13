@@ -487,3 +487,411 @@ class IdleOrderCodeType(CodeType.EnumCodeType):
 		cases['DisableBuiltin'] = 255
 		super().__init__('idle_order', 'An order ID from 0 to 188, a [hardcoded] order name, or DisableBuiltin/EnableBuiltin',Struct.l_u8, cases, allow_integer=True)
 
+
+class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdleOrder.OptionSet]):
+	def __init__(self) -> None:
+		help_text = """Any of the following:
+	NotEnemies
+	Own
+	Allied
+	Unseen
+	Invisible
+	RemoveSilentFail
+	Remove"""
+		super().__init__('idle_order_flags', help_text, Struct.l_u16, False)
+
+	TYPE_MASK = 0x2F00
+	VALUE_MASK = 0xC0FF
+	SUB_OPTIONSET_TYPE_ID = 4
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> AISEIdleOrder.OptionSet:
+		def _decompile() -> AISEIdleOrder.OptionSet:
+			option_set: list[AISEIdleOrder.Option] = []
+			while True:
+				command = scanner.scan(Struct.l_u16)
+				type = (command & IdleOrderFlagsCodeType.TYPE_MASK) >> 8
+				value = command & IdleOrderFlagsCodeType.VALUE_MASK
+				if type == AISEIdleOrder.BasicFlags.TYPE_ID:
+					option_set.append(AISEIdleOrder.BasicFlags.decompile(value))
+					break
+				elif type == AISEIdleOrder.SpellEffects.TYPE_ID_WITH or type == AISEIdleOrder.SpellEffects.TYPE_ID_WITHOUT:
+					option_set.append(AISEIdleOrder.SpellEffects.decompile(type, value))
+				if type == AISEIdleOrder.UnitProps.TYPE_ID:
+					option_set.append(AISEIdleOrder.UnitProps.decompile(value, scanner))
+				elif type == IdleOrderFlagsCodeType.SUB_OPTIONSET_TYPE_ID:
+					option_set.append(_decompile())
+				elif type == AISEIdleOrder.Order.TYPE_ID:
+					option_set.append(AISEIdleOrder.Order.decompile(value))
+				elif type == AISEIdleOrder.UnitFlags.TYPE_ID:
+					option_set.append(AISEIdleOrder.UnitFlags.decompile(value, scanner))
+				elif type == AISEIdleOrder.Targetting.TYPE_ID:
+					option_set.append(AISEIdleOrder.Targetting.decompile(value))
+				elif type == AISEIdleOrder.RandomRate.TYPE_ID:
+					option_set.append(AISEIdleOrder.RandomRate.decompile(scanner))
+				elif type == AISEIdleOrder.UnitCount.TYPE_ID:
+					option_set.append(AISEIdleOrder.UnitCount.decompile(scanner))
+				elif type == AISEIdleOrder.TileFlags.TYPE_ID:
+					option_set.append(AISEIdleOrder.TileFlags.decompile(value, scanner))
+			return tuple(option_set)
+		return _decompile()
+
+# Not sure if it's easy to decipher or not but the few main points in the binary encoding there were
+# - The data was originally just u16 bitflags, but then got extended to have more complex settings that didn't fit in a single u16
+# - So it became list of u16 that contains a 'parameter type' and has some bits for the parameter data, but some parameters needed more data so they have extra bytes (not necessarily u16) before a new parameter starts with a u16
+# - The list is terminated with the u16 parameter that has type 0, the non-type bits there still are used for bitflags
+# - Type 4 is Self(...) opcode that contains an entire another idle_order_flags-encoded sequence 😇
+# - I seem to have written pyms side to allow nesting Self(flag1 | Self(Self(flag2))) but that is not really meaningful thing and the plugin side seems to parse it as just Self(flag1)
+
+	# def ai_idle_order_flags(self, data, stage=0):
+	# 	"""idle_order_flags        - Any of the following:
+	# 		NotEnemies
+	# 		Own
+	# 		Allied
+	# 		Unseen
+	# 		Invisible
+	# 		RemoveSilentFail
+	# 		Remove
+	# 	"""
+	# 	if stage == 0:
+	# 		pos = 0
+	# 		current = []
+	# 		stack = []
+	# 		depth = 0
+	# 		while True:
+	# 			v, = struct.unpack('<H', data[pos:pos + 2])
+	# 			if (v & 0x2f00) >> 8 == 3:
+	# 				# i32 amount
+	# 				amt, = struct.unpack('<I', data[pos + 2:pos + 6])
+	# 				current += [(v, amt)]
+	# 				pos += 6
+	# 			elif (v & 0x2f00) >> 8 == 4:
+	# 				depth += 1
+	# 				current += [(v,)]
+	# 				stack.append(current)
+	# 				current = []
+	# 				pos += 2
+	# 			elif (v & 0x2f00) >> 8 == 6:
+	# 				# u32 units.dat flags
+	# 				amt, = struct.unpack('<I', data[pos + 2:pos + 6])
+	# 				current += [(v, amt)]
+	# 				pos += 6
+	# 			elif (v & 0x2f00) >> 8 == 8:
+	# 				# u16 low, u16 high
+	# 				vars = struct.unpack('<HH', data[pos + 2:pos + 6])
+	# 				current += [(v, vars)]
+	# 				pos += 6
+	# 			elif (v & 0x2f00) >> 8 == 9:
+	# 				#u8,u8,u16,u16
+	# 				vars = struct.unpack('<BHHB',data[pos+2:pos+8])
+	# 				current += [(v,vars)]
+	# 				pos += 8
+	# 			elif (v & 0x2f00) >> 8 == 10:
+	# 				# u8 tile flags
+	# 				amt, = struct.unpack('<B', data[pos + 2:pos + 3])
+	# 				current += [(v, amt)]
+	# 				pos += 3
+	# 			else:
+	# 				current += [(v,)]
+	# 				pos += 2
+	# 			if v & 0x2f00 == 0:
+	# 				if depth == 0:
+	# 					result = current
+	# 					return [pos, result]
+	# 				else:
+	# 					depth -= 1
+	# 					finished = current
+	# 					current = stack.pop()
+	# 					current[-1] = (current[-1][0], finished)
+	# 	elif stage == 1:
+	# 		size, basic_flags = (
+	# 			self.flags(data[-1][0], stage, idle_order_flag_names, idle_order_flag_reverse)
+	# 		)
+	# 		result = '' if basic_flags == '0' else basic_flags
+	# 		for extended in data[:-1]:
+	# 			if result != '':
+	# 				result += ' | '
+	# 			ty = (extended[0] & 0x2f00) >> 8
+	# 			val = extended[0] & 0xc0ff
+	# 			if ty == 1:
+	# 				result += 'SpellEffects(%s)' % flags_to_str(val, spell_effect_names)
+	# 			elif ty == 2:
+	# 				result += 'WithoutSpellEffects(%s)' % flags_to_str(val, spell_effect_names)
+	# 			elif ty == 3:
+	# 				# Maybe it's actually fine to just show BROKEN if the script is broken
+	# 				# instead of erroring? Users can give better error reports =)
+	# 				ty = 'BROKEN'
+	# 				compare = 'BROKEN'
+	# 				c_id = val & 0xf
+	# 				ty_id = (val >> 4) & 0xf
+	# 				# Raw Hp/shield/etc values are converted to displayed values
+	# 				fixed_point_decimal = (c_id == 0 or c_id == 1) and (ty_id < 4)
+	# 				if fixed_point_decimal:
+	# 					amount = str(float(extended[1]) / 256)
+	# 				else:
+	# 					amount = str(int(extended[1]))
+	# 				if c_id == 0:
+	# 					compare = 'LessThan'
+	# 				elif c_id == 1:
+	# 					compare = 'GreaterThan'
+	# 				elif c_id == 2:
+	# 					compare = 'LessThanPercent'
+	# 				elif c_id == 3:
+	# 					compare = 'GreaterThanPercent'
+	# 				if ty_id == 0:
+	# 					ty = 'Hp'
+	# 				elif ty_id == 1:
+	# 					ty = 'Shields'
+	# 				elif ty_id == 2:
+	# 					ty = 'Health'
+	# 				elif ty_id == 3:
+	# 					ty = 'Energy'
+	# 				elif ty_id == 4:
+	# 					ty = 'Hangar'
+	# 				elif ty_id == 5:
+	# 					ty = 'Cargo'
+	# 				result += '%s(%s, %s)' % (ty, compare, amount)
+	# 				size += 4
+	# 			elif ty == 4:
+	# 				subgroup = extended[1]
+	# 				sz, self_flags = self.ai_idle_order_flags(subgroup, 1)
+	# 				result += 'Self(' + self_flags + ')'
+	# 				size += sz
+	# 			elif ty == 5:
+	# 				_, order_name = self.ai_order(val, 1)
+	# 				result += 'Order(%s)' % order_name
+	# 			elif ty == 6:
+	# 				flags = extended[1]
+	# 				if val == 0:
+	# 					result += 'UnitFlags(%s)' % flags_to_str(flags, units_dat_flags)
+	# 				elif val == 1:
+	# 					result += 'WithoutUnitFlags(%s)' % flags_to_str(flags, units_dat_flags)
+	# 				size += 4
+	# 			elif ty == 7:
+	# 				result += 'Targeting(%s)' % flags_to_str(val, idle_orders_targeting_flags)
+	# 			elif ty == 8:
+	# 				result += "RandomRate(%s, %s)" % (extended[1][0],extended[1][1])
+	# 				size += 4
+	# 			elif ty == 9:
+	# 				compare = 'BROKEN'
+	# 				c_id = extended[1][0]
+	# 				if c_id == 0:
+	# 					compare = 'AtLeast'
+	# 				elif c_id == 1:
+	# 					compare = 'AtMost'
+	# 				elif c_id == 10:
+	# 					compare = 'Exactly'
+	# 				result += "Count(%s, %s, %s, %s)" % (compare, extended[1][1], extended[1][2], extended[1][3])
+	# 				size += 6
+	# 			elif ty == 10:
+	# 				flags = extended[1]
+	# 				if val == 0:
+	# 					result += 'TileFlags(%s)' % flags_to_str(flags, tile_flags)
+	# 				elif val == 1:
+	# 					result += 'WithoutTileFlags(%s)' % flags_to_str(flags, tile_flags)
+	# 				size += 1
+	# 			else:
+	# 				raise PyMSError('Parameter', 'Invalid idle_orders encoding')
+	# 			size += 2
+	# 		if result == '':
+	# 			result = '0'
+	# 		return [size, result]
+	# 	elif stage == 2:
+	# 		result = ''
+	# 		size = 0
+	# 		for x in data:
+	# 			result += struct.pack('<H', x[0])
+	# 			size += 2
+	# 			if (x[0] & 0x2f00) >> 8 == 3:
+	# 				result += struct.pack('<I', x[1])
+	# 				size += 4
+	# 			if (x[0] & 0x2f00) >> 8 == 4:
+	# 				sz, res = self.ai_idle_order_flags(x[1], 2)
+	# 				size += sz
+	# 				result += res
+	# 			if (x[0] & 0x2f00) >> 8 == 6:
+	# 				result += struct.pack('<I', x[1])
+	# 				size += 4
+	# 			if (x[0] & 0x2f00) >> 8 == 8:
+	# 				result += struct.pack('<HH', x[1][0], x[1][1])
+	# 				size += 4
+	# 			if(x[0] & 0x2f00) >> 8 == 9:
+	# 				result += struct.pack('<BHHB',x[1][0],x[1][1],x[1][2],x[1][3])
+	# 				size += 6
+	# 			if(x[0] & 0x2f00) >> 8 == 10:
+	# 				result += struct.pack('B',x[1])
+	# 				size += 1
+	# 		return [size, result]
+	# 	elif stage == 3:
+	# 		result = []
+	# 		size = 0
+
+	# 		data = data.lower()
+	# 		# Finds a subgroup and returns the text with the subgroup removed and subgroup
+	# 		# not including the name/parens
+	# 		def find_subgroup(text, match):
+	# 			assert match.isalpha()
+	# 			match = re.search(match + r'\s*[([{]', text)
+	# 			if match is None:
+	# 				return (text, '')
+
+	# 			pos = match.end()
+	# 			open_char = text[pos - 1]
+	# 			if open_char == '(':
+	# 			    end_char = ')'
+	# 			elif open_char == '[':
+	# 			    end_char = ']'
+	# 			elif open_char == '{':
+	# 			    end_char = '}'
+	# 			depth = 0
+	# 			while pos < len(text):
+	# 				if text[pos] == end_char:
+	# 					if depth == 0:
+	# 						rest = text[:match.start()] + text[pos + 1:]
+	# 						subgroup = text[match.end():pos]
+	# 						return (rest, subgroup)
+	# 					else:
+	# 						depth -= 1
+	# 				if text[pos] == open_char:
+	# 					depth += 1
+	# 				pos += 1
+	# 			return (text, '')
+
+	# 		while True:
+	# 			data, self_flags = find_subgroup(data, 'self')
+	# 			if self_flags != '':
+	# 				sz, self_flags_bin = self.ai_idle_order_flags(self_flags, 3)
+	# 				size += sz + 2
+	# 				result += [(0x400, self_flags_bin)]
+	# 			else:
+	# 				break
+	# 		parts = [x.lower().strip() for x in data.split('|')]
+	# 		parts = [x for x in parts if x != '']
+	# 		parts = [x for x in parts if not x.isspace()]
+	# 		simple = []
+	# 		extended = []
+	# 		depth = 0
+	# 		for x in parts:
+	# 			old_depth = depth
+	# 			depth += x.count('(')
+	# 			depth += x.count('[')
+	# 			depth += x.count('{')
+	# 			depth -= x.count(')')
+	# 			depth -= x.count(']')
+	# 			depth -= x.count('}')
+	# 			if old_depth == 0 and not ('(' in x or '[' in x or '{' in x):
+	# 				simple.append(x)
+	# 			else:
+	# 				if old_depth == 0:
+	# 					extended.append(x)
+	# 				else:
+	# 					extended[-1] = extended[-1] + '|' + x
+
+	# 		for e in extended:
+	# 			match = re.match(r'(\w*)\((.*)\)', e)
+	# 			if match:
+	# 				name = match.group(1)
+	# 				if name == 'spelleffects' or name == 'withoutspelleffects':
+	# 					flags = match.group(2)
+	# 					val = flags_from_str(flags, spell_effect_names_reverse)
+	# 					if (val & 0x2f00) != 0:
+	# 						raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 					if name == 'spelleffects':
+	# 						result += [(0x100 | val,)]
+	# 					else:
+	# 						result += [(0x200 | val,)]
+	# 				elif name in ('hp', 'shields', 'health', 'energy', 'hangar','cargo'):
+	# 					params = match.group(2).split(',')
+	# 					if len(params) != 2:
+	# 						raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 					compare = params[0]
+	# 					amount = float(params[1])
+	# 					if name == 'hp':
+	# 						ty_id = 0x0
+	# 					elif name == 'shields':
+	# 						ty_id = 0x1
+	# 					elif name == 'health':
+	# 						ty_id = 0x2
+	# 					elif name == 'energy':
+	# 						ty_id = 0x3
+	# 					elif name == 'hangar':
+	# 						ty_id = 0x4
+	# 					elif name == 'cargo':
+	# 						ty_id = 0x5
+	# 					else:
+	# 						raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 					if compare == 'lessthan':
+	# 						compare_id = 0x0
+	# 					elif compare == 'greaterthan':
+	# 						compare_id = 0x1
+	# 					elif compare == 'lessthanpercent':
+	# 						compare_id = 0x2
+	# 					elif compare == 'greaterthanpercent':
+	# 						compare_id = 0x3
+	# 					else:
+	# 						raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 					val = compare_id | (ty_id << 4)
+	# 					# Raw Hp/shield/etc values are converted from displayed values
+	# 					fixed_point_decimal = (compare_id == 0 or compare_id == 1) and (ty_id < 4)
+	# 					if fixed_point_decimal:
+	# 						amount *= 256
+	# 					result += [(0x300 | val, int(amount))]
+	# 					size += 4
+	# 				elif name == 'order':
+	# 					_, val = self.ai_order(match.group(2).strip(), 3)
+	# 					result += [(0x500 | val,)]
+	# 				elif name == 'unitflags' or name == 'withoutunitflags':
+	# 					flags = match.group(2)
+	# 					val = flags_from_str(flags, units_dat_flags_reverse)
+	# 					if name == 'unitflags':
+	# 						result += [(0x600, val)]
+	# 					else:
+	# 						result += [(0x601, val)]
+	# 					size += 4
+	# 				elif name == 'targeting':
+	# 					flags = match.group(2)
+	# 					val = flags_from_str(flags, idle_orders_targeting_flags_reverse)
+	# 					if val >= 0x100:
+	# 						raise PyMSError('Parameter', 'Invalid idle_orders targeting flag %s' % e)
+	# 					result += [(0x700 | val,)]
+	# 				elif name == 'randomrate':
+	# 					params = match.group(2).split(',')
+	# 					arg1 = int(params[0])
+	# 					arg2 = int(params[1])
+	# 					result += [(0x800, (arg1,arg2))]
+	# 					size += 4
+	# 				elif name == 'count':
+	# 					params = match.group(2).split(',')
+	# 					compare = params[0]
+	# 					val = 0
+	# 					if compare == 'atleast':
+	# 						val |= 0x0
+	# 					elif compare == 'atmost':
+	# 						val |= 0x1
+	# 					elif compare == 'exactly':
+	# 						val |= 0xa
+	# 					arg1 = int(val)
+	# 					arg2 = int(params[1])
+	# 					arg3 = int(params[2])
+	# 					arg4 = int(params[3])
+	# 					result += [(0x900, (arg1,arg2,arg3,arg4))]
+	# 				elif name == 'tileflags' or name == 'withouttileflags':
+	# 					flags = match.group(2)
+	# 					val = flags_from_str(flags, tile_flags_reverse)
+	# 					if name == 'tileflags':
+	# 						result += [(0xa00, val)]
+	# 					else:
+	# 						result += [(0xa01, val)]
+	# 					size += 1
+	# 					size += 6
+	# 				else:
+	# 					raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 				size += 2
+	# 			else:
+	# 				raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % e)
+	# 		basic_size, basic_result = (
+	# 			self.flags('|'.join(simple), stage, idle_order_flag_names, idle_order_flag_reverse)
+	# 		)
+	# 		if basic_result & 0x2f00 != 0:
+	# 			raise PyMSError('Parameter', 'Invalid idle_orders flag %s' % str(simple))
+	# 		size += basic_size
+	# 		result += [(basic_result,)]
+	# 		return [size, result]
