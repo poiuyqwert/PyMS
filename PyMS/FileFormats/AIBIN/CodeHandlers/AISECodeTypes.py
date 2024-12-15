@@ -487,7 +487,6 @@ class IdleOrderCodeType(CodeType.EnumCodeType):
 		cases['DisableBuiltin'] = 255
 		super().__init__('idle_order', 'An order ID from 0 to 188, a [hardcoded] order name, or DisableBuiltin/EnableBuiltin',Struct.l_u8, cases, allow_integer=True)
 
-
 class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdleOrder.OptionSet]):
 	def __init__(self) -> None:
 		help_text = """Any of the following:
@@ -500,39 +499,11 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 	Remove"""
 		super().__init__('idle_order_flags', help_text, Struct.l_u16, False)
 
-	TYPE_MASK = 0x2F00
-	VALUE_MASK = 0xC0FF
-	SUB_OPTIONSET_TYPE_ID = 4
 	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> AISEIdleOrder.OptionSet:
-		def _decompile() -> AISEIdleOrder.OptionSet:
-			option_set: list[AISEIdleOrder.Option] = []
-			while True:
-				command = scanner.scan(Struct.l_u16)
-				type = (command & IdleOrderFlagsCodeType.TYPE_MASK) >> 8
-				value = command & IdleOrderFlagsCodeType.VALUE_MASK
-				if type == AISEIdleOrder.BasicFlags.TYPE_ID:
-					option_set.append(AISEIdleOrder.BasicFlags.decompile(value))
-					break
-				elif type == AISEIdleOrder.SpellEffects.TYPE_ID_WITH or type == AISEIdleOrder.SpellEffects.TYPE_ID_WITHOUT:
-					option_set.append(AISEIdleOrder.SpellEffects.decompile(type, value))
-				if type == AISEIdleOrder.UnitProps.TYPE_ID:
-					option_set.append(AISEIdleOrder.UnitProps.decompile(value, scanner))
-				elif type == IdleOrderFlagsCodeType.SUB_OPTIONSET_TYPE_ID:
-					option_set.append(_decompile())
-				elif type == AISEIdleOrder.Order.TYPE_ID:
-					option_set.append(AISEIdleOrder.Order.decompile(value))
-				elif type == AISEIdleOrder.UnitFlags.TYPE_ID:
-					option_set.append(AISEIdleOrder.UnitFlags.decompile(value, scanner))
-				elif type == AISEIdleOrder.Targetting.TYPE_ID:
-					option_set.append(AISEIdleOrder.Targetting.decompile(value))
-				elif type == AISEIdleOrder.RandomRate.TYPE_ID:
-					option_set.append(AISEIdleOrder.RandomRate.decompile(scanner))
-				elif type == AISEIdleOrder.UnitCount.TYPE_ID:
-					option_set.append(AISEIdleOrder.UnitCount.decompile(scanner))
-				elif type == AISEIdleOrder.TileFlags.TYPE_ID:
-					option_set.append(AISEIdleOrder.TileFlags.decompile(value, scanner))
-			return tuple(option_set)
-		return _decompile()
+		return AISEIdleOrder.OptionSet.decompile(0, scanner)
+
+	def serialize(self, value: AISEIdleOrder.OptionSet, context: SerializeContext) -> str:
+		return value.serialize_options()
 
 # Not sure if it's easy to decipher or not but the few main points in the binary encoding there were
 # - The data was originally just u16 bitflags, but then got extended to have more complex settings that didn't fit in a single u16

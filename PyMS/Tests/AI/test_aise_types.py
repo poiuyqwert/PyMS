@@ -357,33 +357,32 @@ class Test_IdleOrderCodeType(unittest.TestCase):
 class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 	def test_decompile(self) -> None:
 		cases = (
-			(b'\x00\x00', (AISEIdleOrder.BasicFlags(0),)),
-			(b'\x26\x00', (AISEIdleOrder.BasicFlags(0x26),)),
-			(b'\x26\x80', (AISEIdleOrder.BasicFlags(0x8026),)),
-			(b'\x03\x01\x00\x00', (AISEIdleOrder.SpellEffects(False, 0x03), AISEIdleOrder.BasicFlags(0))),
-			(b'\x03\x01\x02\x00', (AISEIdleOrder.SpellEffects(False, 0x03), AISEIdleOrder.BasicFlags(0x02))),
-			(b'\x10\x03\x32\x00\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00', (AISEIdleOrder.UnitProps(1, 0, 50), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0))),
-			(b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00', (
-				(AISEIdleOrder.SpellEffects(False, 0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20)),
+			(b'\x00\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),))),
+			(b'\x26\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),))),
+			(b'\x26\x80', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),))),
+			(b'\x03\x01\x00\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0)))),
+			(b'\x03\x01\x02\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02)))),
+			(b'\x10\x03\x00\x32\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0)))),
+			(b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
 				AISEIdleOrder.BasicFlags(0))
-			),
-			(b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00', (
-				(AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0)),
-				AISEIdleOrder.SpellEffects(without=False, flags=64),
-				AISEIdleOrder.SpellEffects(without=True, flags=32),
+			)),
+			(b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SpellEffects(flags=64),
+				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
 				AISEIdleOrder.RandomRate(low=50, high=60),
 				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
 				AISEIdleOrder.UnitFlags(without=True, flags=16448),
 				AISEIdleOrder.BasicFlags(flags=32)
-			)),
+			))),
 		)
 		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
 		for data, expected in cases:
 			context = AIDecompileContext(data)
 			scanner = BytesScanner(data)
 			result = code_type.decompile(scanner, context)
-			print('####', result)
 			self.assertEqual(result, expected)
 
 	# def test_compile(self) -> None:
@@ -432,18 +431,44 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 	# 			_ = code_type.parse(parse_context)
 	# 		self.assertTrue(expected in str(error_context.exception), f'`{expected}` not in `{error_context.exception}`')
 
-	# def test_serialize(self) -> None:
-	# 	cases = (
-	# 		((1, 2), '(1, 2)'),
-	# 		((2, 1), 'Loc.1'),
-	# 		((3, 0), 'ScriptArea'),
-	# 	)
-	# 	code_type = AISECodeTypes.IdleOrderFlagsCodeType()
-	# 	for value, expected in cases:
-	# 		_, serialize_context = utils.serialize_context()
-	# 		result = code_type.serialize(value, serialize_context)
-	# 		self.assertEqual(result, expected)
+	def test_serialize(self) -> None:
+		cases = (
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),)), ''),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),)), 'Own | Allied | InCombat'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),)), 'Own | Allied | InCombat | Remove'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0))), 'SpellEffects(Ensnare | Plague)'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02))), 'SpellEffects(Ensnare | Plague) | Own'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0))), 'Shields(LessThan, 50) | Health(LessThanPercent, 50)'),
+			(AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+				AISEIdleOrder.BasicFlags(0))
+			), 'Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat)'),
+			(AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SpellEffects(flags=64),
+				AISEIdleOrder.WithoutSpellEffects(flags=32),
+				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
+				AISEIdleOrder.RandomRate(low=50, high=60),
+				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
+				AISEIdleOrder.UnitFlags(without=True, flags=16448),
+				AISEIdleOrder.BasicFlags(flags=32)
+			)), 'Self(Order(AttackUnit) | Targetting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat'),
+		)
+		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
+		for value, expected in cases:
+			_, serialize_context = utils.serialize_context()
+			result = code_type.serialize(value, serialize_context)
+			self.assertEqual(result, expected)
 
+class Test_IdleOrderFlags_OptionSet(unittest.TestCase):
+	def test_simplify(self) -> None:
+		cases = (
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x1), AISEIdleOrder.BasicFlags(0x2))), AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x3),))),
+			# TODO: More tests
+		)
+		for option_set, expected in cases:
+			option_set.simplify()
+			self.assertEqual(option_set, expected)
 # # Nothing
 # '0'
 # b'\x00\x00'

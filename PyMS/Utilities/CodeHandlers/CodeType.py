@@ -10,8 +10,6 @@ from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
 from .. import Struct
 
-import re
-
 from typing import TYPE_CHECKING, Generic, TypeVar, cast, runtime_checkable, Protocol, Sequence
 if TYPE_CHECKING:
 	from .DecompileContext import DecompileContext
@@ -211,11 +209,14 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		# TODO: Check if value is valid
 		return value
 
-	def serialize(self, value: int, context: SerializeContext) -> str:
+	def serialize_basic(self, value: int) -> str:
 		for case_name,case_value in self._cases.items():
 			if value == case_value:
 				return case_name
 		raise PyMSError('Serialize', f'Value `{value}` has no case for `{self.name}`')
+
+	def serialize(self, value: int, context: SerializeContext) -> str:
+		return self.serialize_basic(value)
 
 	def _possible_values(self) -> str:
 		values = ''
@@ -268,23 +269,22 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		for name, flag in flags.items():
 			self._flags_to_names[flag] = name
 
-	def serialize(self, value: int, context: SerializeContext) -> str:
-		flags = []
-		for bit_index in range(self._bytecode_type.size * 8):
+	@staticmethod
+	def serialize_flags(flags: int, flags_to_names: dict[int, str], bytecode_type: Struct.IntField, empty_value: str = '0') -> str:
+		if not flags:
+			return empty_value
+		names = []
+		for bit_index in range(bytecode_type.size * 8):
 			flag = 1 << bit_index
-			if value & flag:
-				flags.append(self._flags_to_names.get(flag, hex(flag)))
-		return ' | '.join(flags)
+			if flags & flag:
+				names.append(flags_to_names.get(flag, f'0x{flag:X}'))
+		return ' | '.join(names)
 
-	def _possible_values(self) -> str:
-		values = ''
-		for name in self._names_to_flags.keys():
-			if values:
-				values += ', '
-			values += name
-		return values
+	def serialize(self, value: int, context: SerializeContext) -> str:
+		return FlagsCodeType.serialize_flags(value, self._flags_to_names, cast(Struct.IntField, self._bytecode_type))
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	@staticmethod
+	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value == ',':
@@ -294,9 +294,9 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		while True:
 			token = parse_context.lexer.next_token()
 			if isinstance(token, Tokens.IdentifierToken):
-				if not token.raw_value in self._names_to_flags:
-					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{self.name}` (must be integer/hex or possible names: {self._possible_values()})')
-				flags |= self._names_to_flags[token.raw_value]
+				if not token.raw_value in names_to_flags:
+					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}` (must be integer/hex or flag name)')
+				flags |= names_to_flags[token.raw_value]
 			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)):
 				try:
 					if token.raw_value.startswith('0x'):
@@ -304,18 +304,21 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 					else:
 						flag = int(token.raw_value)
 				except:
-					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{self.name}`')
-				if flag > cast(Struct.IntField, self._bytecode_type).max:
-					raise PyMSError('Parse', f'Flag `{token.raw_value}` is too large for `{self.name}`')
+					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}`')
+				if flag > bytecode_type.max:
+					raise PyMSError('Parse', f'Flag `{token.raw_value}` is too large for `{type_name}`')
 				flags |= flag
 			else:
-				raise parse_context.error('Parse', "Expected a '%s' flag identifier or integer/hex flag, but got '%s' (possible values: %s)" % (self.name, token.raw_value, self._possible_values()))
+				raise parse_context.error('Parse', f'Expected a {type_name} flag identifier or integer/hex flag, but got `{token.raw_value}`')
 			token = parse_context.lexer.next_token(peek=True)
 			if token.raw_value == '|':
 				_ = parse_context.lexer.next_token()
 			else:
 				break
 		return flags
+
+	def _lex(self, parse_context: ParseContext) -> int:
+		return FlagsCodeType.lex_flags(parse_context, self._names_to_flags, self.name, cast(Struct.IntField, self._bytecode_type))
 
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._names_to_flags.keys())
