@@ -505,6 +505,9 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 	def serialize(self, value: AISEIdleOrder.OptionSet, context: SerializeContext) -> str:
 		return value.serialize_options()
 
+	def parse(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
+		return AISEIdleOrder.OptionSet.parse_options(parse_context)
+
 # Not sure if it's easy to decipher or not but the few main points in the binary encoding there were
 # - The data was originally just u16 bitflags, but then got extended to have more complex settings that didn't fit in a single u16
 # - So it became list of u16 that contains a 'parameter type' and has some bits for the parameter data, but some parameters needed more data so they have extra bytes (not necessarily u16) before a new parameter starts with a u16

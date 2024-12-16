@@ -398,17 +398,33 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 	# 		result = builder.data
 	# 		self.assertEqual(result, expected)
 
-	# def test_parse_success(self) -> None:
-	# 	cases = (
-	# 		('(1, 2)', (1, 2)),
-	# 		('Loc.1', (2, 1)),
-	# 		('ScriptArea', (3, 0)),
-	# 	)
-	# 	code_type = AISECodeTypes.IdleOrderFlagsCodeType()
-	# 	for code, expected in cases:
-	# 		parse_context = utils.parse_context(code)
-	# 		result = code_type.parse(parse_context)
-	# 		self.assertEqual(result, expected)
+	def test_parse_success(self) -> None:
+		cases = (
+			(',', AISEIdleOrder.OptionSet(())),
+			('Own | Allied | InCombat,', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),))),
+			('Own | Allied | InCombat | Remove,', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),))),
+			('SpellEffects(Ensnare | Plague),', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03),))),
+			('SpellEffects(Ensnare | Plague) | Own,', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02)))),
+			('Shields(LessThan, 50) | Health(LessThanPercent, 50),', AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50)))),
+			('Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat),', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20)))),
+			('Self(Order(AttackUnit) | Targetting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat,', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12))),
+				AISEIdleOrder.SpellEffects(flags=64),
+				AISEIdleOrder.WithoutSpellEffects(flags=32),
+				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
+				AISEIdleOrder.RandomRate(low=50, high=60),
+				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
+				AISEIdleOrder.UnitFlags(without=True, flags=16448),
+				AISEIdleOrder.BasicFlags(flags=32)
+			))),
+		)
+		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
+		for code, expected in cases:
+			parse_context = utils.parse_context(code)
+			result = code_type.parse(parse_context)
+			print(f'  Result: {result}')
+			print(f'Expected: {expected}')
+			self.assertEqual(result, expected)
 
 	# def test_parse_failure(self) -> None:
 	# 	cases = (

@@ -21,6 +21,7 @@ class AILexer(Lexer):
 		self.register_token_type(AILexer.SymbolToken)
 		self.register_token_type(AILexer.AISESymbolToken)
 		self.register_token_type(Tokens.HexToken) # Required for AISE
+		self.register_token_type(Tokens.FloatToken) # Required for AISE
 		self.register_token_type(Tokens.IntegerToken)
 		self.register_token_type(Tokens.BooleanToken)
 		self.register_token_type(Tokens.IdentifierToken)

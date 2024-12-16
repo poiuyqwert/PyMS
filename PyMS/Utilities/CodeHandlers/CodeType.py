@@ -284,19 +284,22 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return FlagsCodeType.serialize_flags(value, self._flags_to_names, cast(Struct.IntField, self._bytecode_type))
 
 	@staticmethod
-	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField) -> int:
+	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
-		if token.raw_value == ',':
+		if token.raw_value == ',' or token.raw_value == ')':
 			return 0
 
 		flags = 0
 		while True:
 			token = parse_context.lexer.next_token()
 			if isinstance(token, Tokens.IdentifierToken):
-				if not token.raw_value in names_to_flags:
+				name = token.raw_value
+				if not case_sensitive:
+					name = name.lower()
+				if not name in names_to_flags:
 					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}` (must be integer/hex or flag name)')
-				flags |= names_to_flags[token.raw_value]
+				flags |= names_to_flags[name]
 			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)):
 				try:
 					if token.raw_value.startswith('0x'):

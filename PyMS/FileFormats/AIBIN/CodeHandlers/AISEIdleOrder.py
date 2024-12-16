@@ -5,6 +5,8 @@ from ....Utilities.BytesScanner import BytesScanner
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.CodeHandlers import CodeType
+from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers import Tokens
 
 from dataclasses import dataclass
 
@@ -22,6 +24,11 @@ class Option(Protocol):
 		...
 
 	def merge(self, other: Option) -> bool:
+		...
+
+	# TODO: Update complicated parsers to use CodeType parsing instead of custom parsing?
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
 		...
 
 _OPTION_TYPES: dict[int, Type[Option]] = {}
@@ -69,10 +76,18 @@ class BasicFlags(Option):
 		self.flags |= other.flags
 		return True
 
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		flag = BasicFlags.Flag._VALUES.get(token.raw_value.lower())
+		if flag is None:
+			return None
+		_ = parse_context.lexer.next_token()
+		return cls(flag)
+
 @dataclass
 class SpellEffects(Option):
 	TYPE_ID = 1
-	_NAME = 'SpellEffects'
 
 	class Flag:
 		ensnare = 0x1
@@ -105,7 +120,7 @@ class SpellEffects(Option):
 		return cls(value)
 
 	def serialize(self) -> str:
-		return f'{self._NAME}({CodeType.FlagsCodeType.serialize_flags(self.flags, SpellEffects.Flag._NAMES, Struct.l_u16)})'
+		return f'{self.__class__.__name__}({CodeType.FlagsCodeType.serialize_flags(self.flags, SpellEffects.Flag._NAMES, Struct.l_u16)})'
 
 	def merge(self, other: Option) -> bool:
 		if not isinstance(other, self.__class__):
@@ -113,9 +128,26 @@ class SpellEffects(Option):
 		self.flags |= other.flags
 		return True
 
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == cls.__name__:
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context, SpellEffects.Flag._VALUES, cls.__name__, Struct.l_u16, case_sensitive=False)
+		invalid_flags = (flags & OptionSet.TYPE_MASK)
+		if invalid_flags:
+			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
+		return cls(flags)
+
 class WithoutSpellEffects(SpellEffects):
 	TYPE_ID = 2
-	_NAME = 'WithoutSpellEffects'
 
 @dataclass
 class UnitProps(Option):
@@ -161,19 +193,19 @@ class UnitProps(Option):
 	def decompile(cls, value: int, scanner: BytesScanner) -> Self:
 		field = (value >> 4) & 0xF
 		if not field in UnitProps.Field._NAMES:
-			raise PyMSError('Decompile', f'`{field}` is not a valid `idle_order_flags` UnitProps field')
+			raise PyMSError('Decompile', f'`{field}` is not a valid `idle_order_flags` `{cls.__name__}` field')
 		comparison = value & 0xF
 		if not comparison in UnitProps.Comparison._NAMES:
-			raise PyMSError('Decompile', f'`{comparison}` is not a valid `idle_order_flags` UnitProprs comparison type')
+			raise PyMSError('Decompile', f'`{comparison}` is not a valid `idle_order_flags` `{cls.__name__}` comparison type')
 		return cls(field, comparison, scanner.scan(Struct.l_u32))
 
-	@property
-	def fixed_point_decimal(self) -> bool:
-		return (self.comparison == UnitProps.Comparison.less_than or self.comparison == UnitProps.Comparison.greater_than) and self.field < UnitProps.Field.hangar
+	@staticmethod
+	def uses_fixed_point_decimal(field: int, comparison: int) -> bool:
+		return field < UnitProps.Field.hangar and (comparison == UnitProps.Comparison.less_than or comparison == UnitProps.Comparison.greater_than)
 
 	def serialize(self) -> str:
 		amount: float = self.amount
-		if self.fixed_point_decimal:
+		if UnitProps.uses_fixed_point_decimal(self.field, self.comparison):
 			amount = amount / 256.0
 		return f'{UnitProps.Field._NAMES[self.field]}({UnitProps.Comparison._NAMES[self.comparison]}, {amount:g})'
 
@@ -181,6 +213,43 @@ class UnitProps(Option):
 		if other == self:
 			return True
 		return False
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		field_name = token.raw_value
+		field = UnitProps.Field._VALUES.get(field_name.lower())
+		if field is None:
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{field_name}` to start `{cls.__name__}` option)')
+		token = parse_context.lexer.next_token()
+		comparison = UnitProps.Comparison._VALUES.get(token.raw_value.lower())
+		if comparison is None:
+			raise parse_context.error('Parse', f'Invalid comparison `{token.raw_value}` for `{cls.__name__}` option')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ',':
+			raise parse_context.error('Parse', f'Expected comma between `{cls.__name__}` comparison and amount, but got `{token.raw_value}`')
+		uses_fixed_point_decimal = UnitProps.uses_fixed_point_decimal(field, comparison)
+		allowed = 'integer'
+		if uses_fixed_point_decimal:
+			allowed += ' or float'
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken) and (not uses_fixed_point_decimal or not isinstance(token, Tokens.FloatToken)):
+			raise parse_context.error('Parse', f'Expected an {allowed} amount for `{cls.__name__}` but got `{token.raw_value}`')
+		try:
+			amount = float(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` amount (expected an {allowed})')
+		# TODO: Validate amount
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{field_name}` `{cls.__name__}` option)')
+		if uses_fixed_point_decimal:
+			amount *= 256
+		return cls(field, comparison, int(amount))
 
 @dataclass
 class OptionSet(Option):
@@ -228,17 +297,57 @@ class OptionSet(Option):
 		result.simplify()
 		return result
 
-	def serialize(self) -> str:
-		return f'Self({self.serialize_options()})'
-
 	def serialize_options(self) -> str:
 		count = len(self.options)
 		return ' | '.join(option.serialize() for option in self.options if not isinstance(option, BasicFlags) or option.flags or count == 1)
+
+	def serialize(self) -> str:
+		return f'Self({self.serialize_options()})'
 
 	def merge(self, other: Option) -> bool:
 		if other == self:
 			return True
 		return False
+
+	@classmethod
+	def parse_options(cls, parse_context: ParseContext, is_root: bool = True) -> Self:
+		option_set: list[Option] = []
+		while True:
+			if is_root:
+				token = parse_context.lexer.next_token(peek=True)
+				if token.raw_value == ',':
+					break
+			for option_type in _option_types:
+				option = option_type.parse(parse_context)
+				if option is not None:
+					option_set.append(option)
+					break
+			else:
+				token = parse_context.lexer.next_token()
+				raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected an `idle_order_flags` option)')
+			token = parse_context.lexer.next_token(peek=True)
+			if token.raw_value == '|':
+				_ = parse_context.lexer.next_token()
+			else:
+				break
+		result = cls(tuple(option_set))
+		result.simplify()
+		return result
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == 'Self':
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `Self` to start option set)')
+		option_set = cls.parse_options(parse_context, False)
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `Self` option set)')
+		return option_set
 
 @dataclass
 class Order(Option):
@@ -258,6 +367,22 @@ class Order(Option):
 		if other == self:
 			return True
 		return False
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		from .AISECodeTypes import OrderCodeType
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == 'Order':
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}`)')
+		order_id = OrderCodeType().parse(parse_context)
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
+		return cls(order_id)
 
 @dataclass
 class UnitFlags(Option):
@@ -383,6 +508,26 @@ class UnitFlags(Option):
 		self.flags |= other.flags
 		return True
 
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		name = token.raw_value
+		if not name in ('UnitFlags', 'WithoutUnitFlags'):
+			return None
+		_ = parse_context.lexer.next_token()
+		without = name.startswith('Without')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context, UnitFlags.Flag._VALUES, cls.__name__, Struct.l_u32, case_sensitive=False)
+		invalid_flags = (flags & OptionSet.TYPE_MASK)
+		if invalid_flags:
+			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
+		return cls(without, flags)
+
 @dataclass
 class Targetting(Option):
 	TYPE_ID = 7
@@ -418,6 +563,24 @@ class Targetting(Option):
 		self.flags |= other.flags
 		return True
 
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == 'Targetting':
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context, Targetting.Flag._VALUES, 'Targetting', Struct.l_u8, case_sensitive=False)
+		invalid_flags = (flags & OptionSet.TYPE_MASK)
+		if invalid_flags:
+			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
+		return cls(flags)
+
 @dataclass
 class RandomRate(Option):
 	TYPE_ID = 8
@@ -436,6 +599,39 @@ class RandomRate(Option):
 		if other == self:
 			return True
 		return False
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == 'RandomRate':
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}`)')
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken):
+			raise parse_context.error('Parse', f'Expected an integer for `{cls.__name__}` low but got `{token.raw_value}`')
+		try:
+			low = int(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` low (expected an integer)')
+		# TODO: Validate low
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ',':
+			raise parse_context.error('Parse', f'Expected comma between `{cls.__name__}` low and high, but got `{token.raw_value}`')
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken):
+			raise parse_context.error('Parse', f'Expected an integer for `{cls.__name__}` high but got `{token.raw_value}`')
+		try:
+			high = int(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` high (expected an integer)')
+		# TODO: Validate high
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
+		return cls(low, high)
 
 @dataclass
 class UnitCount(Option):
@@ -462,7 +658,7 @@ class UnitCount(Option):
 	def decompile(cls, value: int, scanner: BytesScanner) -> Self:
 		comparison = scanner.scan(Struct.l_u8)
 		if not comparison in UnitCount.Comparison._NAMES:
-			raise PyMSError('Decompile', f'`{comparison}` is not a valid `idle_order_flags` UnitCount comparison type')
+			raise PyMSError('Decompile', f'`{comparison}` is not a valid `idle_order_flags` `{cls.__name__}` comparison type')
 		return cls(comparison, scanner.scan(Struct.l_u16), scanner.scan(Struct.l_u16), scanner.scan(Struct.l_u8))
 
 	def serialize(self) -> str:
@@ -472,6 +668,57 @@ class UnitCount(Option):
 		if other == self:
 			return True
 		return False
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		if not token.raw_value == 'Count':
+			return None
+		_ = parse_context.lexer.next_token()
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}`)')
+		token = parse_context.lexer.next_token()
+		comparison = UnitCount.Comparison._VALUES.get(token.raw_value.lower())
+		if comparison is None:
+			raise parse_context.error('Parse', f'Invalid comparison `{token.raw_value}` for `{cls.__name__}` option')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ',':
+			raise parse_context.error('Parse', f'Expected comma between `{cls.__name__}` comparison and amount, but got `{token.raw_value}`')
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken):
+			raise parse_context.error('Parse', f'Expected an integer for `{cls.__name__}` amount but got `{token.raw_value}`')
+		try:
+			amount = int(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` amount (expected an integer)')
+		# TODO: Validate amount
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ',':
+			raise parse_context.error('Parse', f'Expected comma between `{cls.__name__}` amount and radius, but got `{token.raw_value}`')
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken):
+			raise parse_context.error('Parse', f'Expected an integer for `{cls.__name__}` radius but got `{token.raw_value}`')
+		try:
+			radius = int(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` radius (expected an integer)')
+		# TODO: Validate radius
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ',':
+			raise parse_context.error('Parse', f'Expected comma between `{cls.__name__}` radius and players, but got `{token.raw_value}`')
+		token = parse_context.lexer.next_token()
+		if not isinstance(token, Tokens.IntegerToken):
+			raise parse_context.error('Parse', f'Expected an integer for `{cls.__name__}` players but got `{token.raw_value}`')
+		try:
+			players = int(token.raw_value)
+		except:
+			raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{cls.__name__}` players (expected an integer)')
+		# TODO: Validate players
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
+		return cls(comparison, amount, radius, players)
 
 @dataclass
 class TileFlags(Option):
@@ -506,6 +753,26 @@ class TileFlags(Option):
 			return False
 		self.flags |= other.flags
 		return True
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		token = parse_context.lexer.next_token(peek=True)
+		name = token.raw_value
+		if not name in ('TileFlags', 'WithoutTileFlags'):
+			return None
+		_ = parse_context.lexer.next_token()
+		without = name.startswith('Without')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == '(':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{name}` to start flags)')
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context, TileFlags.Flag._VALUES, name, Struct.l_u8, case_sensitive=False)
+		invalid_flags = (flags & OptionSet.TYPE_MASK)
+		if invalid_flags:
+			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{name}`')
+		token = parse_context.lexer.next_token()
+		if not token.raw_value == ')':
+			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{name}` flags)')
+		return cls(without, flags)
 
 _option_types: list[Type[Option]] = [
 	BasicFlags,
