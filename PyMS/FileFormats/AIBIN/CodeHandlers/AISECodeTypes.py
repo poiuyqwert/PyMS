@@ -341,11 +341,14 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 	def keywords(self) -> Sequence[str]:
 		return ('None', 'Any', 'Group_Men', 'Group_Buildings', 'Group_Factories')
 
-UnitGroup = tuple[int, ...]
+UnitGroup = int | tuple[int, ...]
 class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 	def __init__(self) -> None:
 		self._unit_id_code_type = UnitIDCodeType()
 		super().__init__('unit_group', "Same as unit_id, but allows multiple with '|'", Struct.l_u16, False)
+
+	def accepts(self, other_type: CodeType.CodeType) -> bool:
+		return isinstance(other_type, (CodeTypes.UnitCodeType, CodeTypes.BuildingCodeType, CodeTypes.MilitaryCodeType, CodeTypes.GGMilitaryCodeType, CodeTypes.AGMilitaryCodeType, CodeTypes.GAMilitaryCodeType, CodeTypes.AAMilitaryCodeType))
 
 	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> UnitGroup:
 		value = scanner.scan(Struct.l_u16)
@@ -358,6 +361,8 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 		return tuple(groups)
 
 	def compile(self, groups: UnitGroup, context: ByteCodeBuilderType) -> None:
+		if isinstance(groups, int):
+			groups = (groups,)
 		count = len(groups)
 		if count > 1:
 			assert count <= 0xFF
@@ -378,6 +383,8 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 
 	RE_OR = re.compile(r'\s*\|\s*')
 	def validate(self, groups: UnitGroup, parse_context: ParseContext, token: str | None = None):
+		if isinstance(groups, int):
+			groups = (groups,)
 		tokens: list[str | None] = []
 		if token is not None:
 			tokens = UnitGroupCodeType.RE_OR.split(token)
@@ -387,6 +394,8 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 			self._unit_id_code_type.validate(group, parse_context, group_token)
 
 	def serialize(self, groups: UnitGroup, context: SerializeContext) -> str:
+		if isinstance(groups, int):
+			groups = (groups,)
 		return ' | '.join(self._unit_id_code_type.serialize(group, context) for group in groups)
 
 Area = tuple[Point, int]

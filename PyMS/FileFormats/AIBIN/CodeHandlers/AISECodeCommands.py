@@ -18,7 +18,7 @@ BringJump = CodeCommandDefinition('bring_jump', 'Identical to bring trigger cond
 CreateScript = CodeCommandDefinition('create_script', 'Creates a new thread, arguments are "block, player, area, town, resarea". To use values from current thread, pass player = 255, area = (65534, 65534), town = 255, resarea = 255', 0x7C, (AISECodeTypes.LongBlockCodeType(), CodeTypes.ByteCodeType(), AISECodeTypes.AreaCodeType(), CodeTypes.ByteCodeType(), CodeTypes.ByteCodeType())) # TODO: Custom types
 PlayerJump = CodeCommandDefinition('player_jump', 'TODO', 0x7D, (CodeTypes.StringCodeType(), AISECodeTypes.LongBlockCodeType()))
 AISEKills = CodeCommandDefinition('aise_kills', 'TODO', 0x7E, (CodeTypes.ByteCodeType(), CodeTypes.ByteCodeType(), AISECodeTypes.CompareTrigCodeType(), CodeTypes.DWordCodeType(), AISECodeTypes.UnitGroupCodeType(), AISECodeTypes.LongBlockCodeType())) # TODO: Custom types?
-WaitRand = CodeCommandDefinition('wait_rand', 'TODO', 0x7F, (CodeTypes.DWordCodeType(), CodeTypes.DWordCodeType()))
+WaitRand = CodeCommandDefinition('wait_rand', 'TODO', 0x7F, (CodeTypes.DWordCodeType(), CodeTypes.DWordCodeType()), separate=True)
 UpgradeJump = CodeCommandDefinition('upgrade_jump', 'TODO', 0x80, (CodeTypes.ByteCodeType(), AISECodeTypes.CompareTrigCodeType(), CodeTypes.UpgradeCodeType(), CodeTypes.ByteCodeType(), AISECodeTypes.LongBlockCodeType()))
 TechJump = CodeCommandDefinition('tech_jump', 'TODO', 0x81, (CodeTypes.ByteCodeType(), AISECodeTypes.CompareTrigCodeType(), CodeTypes.TechnologyCodeType(), CodeTypes.ByteCodeType(), AISECodeTypes.LongBlockCodeType()))
 RandomCall = CodeCommandDefinition('random_call', 'TODO', 0x82, (CodeTypes.ByteCodeType(), AISECodeTypes.LongBlockCodeType()))

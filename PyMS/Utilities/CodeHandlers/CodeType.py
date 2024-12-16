@@ -174,7 +174,7 @@ class StrCodeType(CodeType[str, str]):
 		return result
 
 	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> str:
-		return scanner.scan_cstr()
+		return scanner.scan_cstr()[:-1]
 
 	def compile(self, value: str, context: ByteCodeBuilderType) -> None:
 		context.add_data(value.encode('utf-8') + b'\x00')
