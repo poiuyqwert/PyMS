@@ -502,6 +502,9 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> AISEIdleOrder.OptionSet:
 		return AISEIdleOrder.OptionSet.decompile(0, scanner)
 
+	def compile(self, value: AISEIdleOrder.OptionSet, context: ByteCodeBuilderType) -> None:
+		value.compile_options(context)
+
 	def serialize(self, value: AISEIdleOrder.OptionSet, context: SerializeContext) -> str:
 		return value.serialize_options()
 

@@ -7,6 +7,7 @@ from ....Utilities.PyMSError import PyMSError
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
 from ....Utilities.CodeHandlers import Tokens
+from ....Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeBuilderType
 
 from dataclasses import dataclass
 
@@ -31,7 +32,13 @@ class Option(Protocol):
 	def parse(cls, parse_context: ParseContext) -> Self | None:
 		...
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		...
+
 _OPTION_TYPES: dict[int, Type[Option]] = {}
+
+def build_command_word(type: int, value: int = 0) -> int:
+	return (type << 8) & OptionSet.TYPE_MASK | (value & OptionSet.VALUE_MASK)
 
 @dataclass
 class BasicFlags(Option):
@@ -84,6 +91,9 @@ class BasicFlags(Option):
 			return None
 		_ = parse_context.lexer.next_token()
 		return cls(flag)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(BasicFlags.TYPE_ID, self.flags)))
 
 @dataclass
 class SpellEffects(Option):
@@ -145,6 +155,9 @@ class SpellEffects(Option):
 		if not token.raw_value == ')':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
 		return cls(flags)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(self.TYPE_ID, self.flags)))
 
 class WithoutSpellEffects(SpellEffects):
 	TYPE_ID = 2
@@ -251,6 +264,11 @@ class UnitProps(Option):
 			amount *= 256
 		return cls(field, comparison, int(amount))
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		value = (self.field & 0xF) << 4 | (self.comparison & 0xF)
+		context.add_data(Struct.l_u16.pack(build_command_word(UnitProps.TYPE_ID, value)))
+		context.add_data(Struct.l_u32.pack(self.amount))
+
 @dataclass
 class OptionSet(Option):
 	TYPE_ID = 4
@@ -349,6 +367,27 @@ class OptionSet(Option):
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `Self` option set)')
 		return option_set
 
+	def compile_options(self, context: ByteCodeBuilderType) -> None:
+		self.simplify()
+		options: list[Option] = []
+		basic_flags: BasicFlags | None = None
+		for option in self.options:
+			if isinstance(option, BasicFlags):
+				basic_flags = option
+			else:
+				options.append(option)
+		if basic_flags is None:
+			options.append(BasicFlags(0))
+		else:
+			options.append(basic_flags)
+		
+		for option in options:
+			option.compile(context)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(OptionSet.TYPE_ID)))
+		self.compile_options(context)
+
 @dataclass
 class Order(Option):
 	TYPE_ID = 5
@@ -383,6 +422,9 @@ class Order(Option):
 		if not token.raw_value == ')':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
 		return cls(order_id)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(Order.TYPE_ID, self.order_id)))
 
 @dataclass
 class UnitFlags(Option):
@@ -528,6 +570,10 @@ class UnitFlags(Option):
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
 		return cls(without, flags)
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(UnitFlags.TYPE_ID, self.without)))
+		context.add_data(Struct.l_u32.pack(self.flags))
+
 @dataclass
 class Targetting(Option):
 	TYPE_ID = 7
@@ -581,6 +627,9 @@ class Targetting(Option):
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}` flags)')
 		return cls(flags)
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(Targetting.TYPE_ID, self.flags)))
+
 @dataclass
 class RandomRate(Option):
 	TYPE_ID = 8
@@ -632,6 +681,11 @@ class RandomRate(Option):
 		if not token.raw_value == ')':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
 		return cls(low, high)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(RandomRate.TYPE_ID)))
+		context.add_data(Struct.l_u16.pack(self.low))
+		context.add_data(Struct.l_u16.pack(self.high))
 
 @dataclass
 class UnitCount(Option):
@@ -720,6 +774,13 @@ class UnitCount(Option):
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{cls.__name__}`)')
 		return cls(comparison, amount, radius, players)
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(UnitCount.TYPE_ID)))
+		context.add_data(Struct.l_u8.pack(self.comparison))
+		context.add_data(Struct.l_u16.pack(self.amount))
+		context.add_data(Struct.l_u16.pack(self.radius))
+		context.add_data(Struct.l_u8.pack(self.players))
+
 @dataclass
 class TileFlags(Option):
 	TYPE_ID = 10
@@ -773,6 +834,10 @@ class TileFlags(Option):
 		if not token.raw_value == ')':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `{name}` flags)')
 		return cls(without, flags)
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		context.add_data(Struct.l_u16.pack(build_command_word(TileFlags.TYPE_ID, self.without)))
+		context.add_data(Struct.l_u8.pack(self.flags))
 
 _option_types: list[Type[Option]] = [
 	BasicFlags,

@@ -385,18 +385,39 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			result = code_type.decompile(scanner, context)
 			self.assertEqual(result, expected)
 
-	# def test_compile(self) -> None:
-	# 	cases = (
-	# 		((1,), b'\x01\x00'),
-	# 		((254,), b'\xFE\x00'),
-	# 		((1, 231, 232), b'\x03\xFF\x01\x00\xE7\x00\xE8\x00'),
-	# 	)
-	# 	code_type = AISECodeTypes.IdleOrderFlagsCodeType()
-	# 	for value, expected in cases:
-	# 		builder = AIByteCodeCompiler()
-	# 		code_type.compile(value, builder)
-	# 		result = builder.data
-	# 		self.assertEqual(result, expected)
+	def test_compile(self) -> None:
+		cases = (
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),)), b'\x00\x00'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),)), b'\x26\x00'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),)), b'\x26\x80'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0))), b'\x03\x01\x00\x00'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03),)), b'\x03\x01\x00\x00'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02))), b'\x03\x01\x02\x00'),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0))), b'\x10\x03\x00\x32\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00'),
+			(AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+				AISEIdleOrder.BasicFlags(0))
+			), b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00'),
+			(AISEIdleOrder.OptionSet((
+				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SpellEffects(flags=64),
+				AISEIdleOrder.WithoutSpellEffects(flags=32),
+				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
+				AISEIdleOrder.RandomRate(low=50, high=60),
+				AISEIdleOrder.UnitCount(comparison=10, amount=50, radius=6, players=13),
+				AISEIdleOrder.UnitFlags(without=True, flags=16448),
+				AISEIdleOrder.BasicFlags(flags=32)
+			)), b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00'),
+		)
+		code_type = AISECodeTypes.IdleOrderFlagsCodeType()
+		for value, expected in cases:
+			builder = AIByteCodeCompiler()
+			code_type.compile(value, builder)
+			result = bytes(builder.data)
+			print(value)
+			print(f'  Result: {result.hex(' ').upper()}')
+			print(f'Expected: {expected.hex(' ').upper()}')
+			self.assertEqual(result, expected)
 
 	def test_parse_success(self) -> None:
 		cases = (
@@ -422,8 +443,6 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 		for code, expected in cases:
 			parse_context = utils.parse_context(code)
 			result = code_type.parse(parse_context)
-			print(f'  Result: {result}')
-			print(f'Expected: {expected}')
 			self.assertEqual(result, expected)
 
 	# def test_parse_failure(self) -> None:
