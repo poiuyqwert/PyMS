@@ -261,13 +261,15 @@ class BooleanCodeType(IntCodeType):
 		return ('true', 'false')
 
 class FlagsCodeType(CodeType[int, int], HasKeywords):
-	# TODO: Add option for `allow_raw_flags`?
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int]) -> None:
+	# TODO: Should this just always be case insensitive?
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int], case_sensitive: bool = True, allow_raw_flags: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._names_to_flags = flags
 		self._flags_to_names: dict[int, str] = {}
 		for name, flag in flags.items():
 			self._flags_to_names[flag] = name
+		self._case_sensitive = case_sensitive
+		self._allow_raw_flags = allow_raw_flags
 
 	@staticmethod
 	def serialize_flags(flags: int, flags_to_names: dict[int, str], bytecode_type: Struct.IntField, empty_value: str = '0') -> str:
@@ -284,12 +286,15 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return FlagsCodeType.serialize_flags(value, self._flags_to_names, cast(Struct.IntField, self._bytecode_type))
 
 	@staticmethod
-	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True) -> int:
+	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True, allow_raw_flags: bool = False) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value == ',' or token.raw_value == ')':
 			return 0
 
+		allowed = 'flag name'
+		if allow_raw_flags:
+			allowed += ' or integer/hex'
 		flags = 0
 		while True:
 			token = parse_context.lexer.next_token()
@@ -298,9 +303,9 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 				if not case_sensitive:
 					name = name.lower()
 				if not name in names_to_flags:
-					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}` (must be integer/hex or flag name)')
+					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}` (must be a {allowed})')
 				flags |= names_to_flags[name]
-			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)):
+			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)) and allow_raw_flags:
 				try:
 					if token.raw_value.startswith('0x'):
 						flag = int(token.raw_value, 16)
@@ -312,7 +317,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 					raise PyMSError('Parse', f'Flag `{token.raw_value}` is too large for `{type_name}`')
 				flags |= flag
 			else:
-				raise parse_context.error('Parse', f'Expected a {type_name} flag identifier or integer/hex flag, but got `{token.raw_value}`')
+				raise parse_context.error('Parse', f'Expected a {type_name} {allowed}, but got `{token.raw_value}`')
 			token = parse_context.lexer.next_token(peek=True)
 			if token.raw_value == '|':
 				_ = parse_context.lexer.next_token()
@@ -321,7 +326,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return flags
 
 	def _lex(self, parse_context: ParseContext) -> int:
-		return FlagsCodeType.lex_flags(parse_context, self._names_to_flags, self.name, cast(Struct.IntField, self._bytecode_type))
+		return FlagsCodeType.lex_flags(parse_context, self._names_to_flags, self.name, cast(Struct.IntField, self._bytecode_type), self._case_sensitive, self._allow_raw_flags)
 
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._names_to_flags.keys())
