@@ -35,7 +35,7 @@ class LongBlockCodeType(CodeTypes.BlockCodeType):
 		return scanner.scan(bytecode_type)
 
 Point = tuple[int, int]
-class PointCodeType(CodeType.CodeType[Point, Point]):
+class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 	LOCATION = 65535
 	SCRIPT_AREA = 65534
 
@@ -101,6 +101,9 @@ class PointCodeType(CodeType.CodeType[Point, Point]):
 		# TODO: Do we need to validate any other cases?
 		if value[0] == PointCodeType.LOCATION and value[1] > 255:
 			raise PyMSError('Parse', f"Location id `{value[1]}` is not valid (must be a number from 0 to 255)")
+
+	def keywords(self) -> Sequence[str]:
+		return ('Loc', 'ScriptArea')
 
 class OrderCodeType(CodeType.EnumCodeType):
 	ORDER_NAMES = [
@@ -496,7 +499,7 @@ class IdleOrderCodeType(CodeType.EnumCodeType):
 		cases['DisableBuiltin'] = 255
 		super().__init__('idle_order', 'An order ID from 0 to 188, a [hardcoded] order name, or DisableBuiltin/EnableBuiltin',Struct.l_u8, cases, allow_integer=True)
 
-class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdleOrder.OptionSet]):
+class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdleOrder.OptionSet], CodeType.HasKeywords):
 	def __init__(self) -> None:
 		help_text = """Any of the following:
 	NotEnemies
@@ -519,6 +522,9 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 
 	def parse(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
 		return AISEIdleOrder.OptionSet.parse_options(parse_context)
+
+	def keywords(self) -> Sequence[str]:
+		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder._option_types), ())
 
 class AttackModeCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
@@ -652,6 +658,9 @@ class BuildAtPointCodeType(PointCodeType):
 			_ = parse_context.lexer.next_token()
 			return (BuildAtPointCodeType.TOWN_CENTER, 0)
 		return super().lex(parse_context)
+
+	def keywords(self) -> Sequence[str]:
+		return tuple(super().keywords()) + ('TownCenter',)
 
 class BuildAtFlagsCodeType(CodeType.FlagsCodeType):
 	def __init__(self) -> None:

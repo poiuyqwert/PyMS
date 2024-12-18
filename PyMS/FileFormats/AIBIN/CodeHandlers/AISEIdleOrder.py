@@ -11,7 +11,7 @@ from ....Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeBuilderType
 
 from dataclasses import dataclass
 
-from typing import runtime_checkable, Protocol, Self, Type, cast
+from typing import runtime_checkable, Protocol, Self, Type, cast, Sequence
 
 @runtime_checkable
 class Option(Protocol):
@@ -33,6 +33,10 @@ class Option(Protocol):
 		...
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
+		...
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
 		...
 
 _OPTION_TYPES: dict[int, Type[Option]] = {}
@@ -94,6 +98,10 @@ class BasicFlags(Option):
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
 		context.add_data(Struct.l_u16.pack(build_command_word(BasicFlags.TYPE_ID, self.flags)))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return tuple(BasicFlags.Flag._NAMES.values())
 
 @dataclass
 class SpellEffects(Option):
@@ -158,6 +166,10 @@ class SpellEffects(Option):
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
 		context.add_data(Struct.l_u16.pack(build_command_word(self.TYPE_ID, self.flags)))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return (cls.__name__,) + tuple(SpellEffects.Flag._NAMES.values())
 
 class WithoutSpellEffects(SpellEffects):
 	TYPE_ID = 2
@@ -268,6 +280,10 @@ class UnitProps(Option):
 		value = (self.field & 0xF) << 4 | (self.comparison & 0xF)
 		context.add_data(Struct.l_u16.pack(build_command_word(UnitProps.TYPE_ID, value)))
 		context.add_data(Struct.l_u32.pack(self.amount))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return tuple(UnitProps.Field._NAMES.values()) + tuple(UnitProps.Comparison._NAMES.values())
 
 @dataclass
 class OptionSet(Option):
@@ -388,6 +404,10 @@ class OptionSet(Option):
 		context.add_data(Struct.l_u16.pack(build_command_word(OptionSet.TYPE_ID)))
 		self.compile_options(context)
 
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('Self',)
+
 @dataclass
 class Order(Option):
 	TYPE_ID = 5
@@ -425,6 +445,11 @@ class Order(Option):
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
 		context.add_data(Struct.l_u16.pack(build_command_word(Order.TYPE_ID, self.order_id)))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		from .AISECodeTypes import OrderCodeType
+		return ('Order',) + tuple(OrderCodeType().keywords())
 
 @dataclass
 class UnitFlags(Option):
@@ -574,6 +599,10 @@ class UnitFlags(Option):
 		context.add_data(Struct.l_u16.pack(build_command_word(UnitFlags.TYPE_ID, self.without)))
 		context.add_data(Struct.l_u32.pack(self.flags))
 
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('UnitFlags', 'WithoutUnitFlags') + tuple(UnitFlags.Flag._NAMES.values())
+
 @dataclass
 class Targetting(Option):
 	TYPE_ID = 7
@@ -629,6 +658,10 @@ class Targetting(Option):
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
 		context.add_data(Struct.l_u16.pack(build_command_word(Targetting.TYPE_ID, self.flags)))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('Targetting',) + tuple(Targetting.Flag._NAMES.values())
 
 @dataclass
 class RandomRate(Option):
@@ -686,6 +719,10 @@ class RandomRate(Option):
 		context.add_data(Struct.l_u16.pack(build_command_word(RandomRate.TYPE_ID)))
 		context.add_data(Struct.l_u16.pack(self.low))
 		context.add_data(Struct.l_u16.pack(self.high))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('RandomRate',)
 
 @dataclass
 class UnitCount(Option):
@@ -781,6 +818,10 @@ class UnitCount(Option):
 		context.add_data(Struct.l_u16.pack(self.radius))
 		context.add_data(Struct.l_u8.pack(self.players))
 
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('Count',) + tuple(UnitCount.Comparison._NAMES.values())
+
 @dataclass
 class TileFlags(Option):
 	TYPE_ID = 10
@@ -838,6 +879,10 @@ class TileFlags(Option):
 	def compile(self, context: ByteCodeBuilderType) -> None:
 		context.add_data(Struct.l_u16.pack(build_command_word(TileFlags.TYPE_ID, self.without)))
 		context.add_data(Struct.l_u8.pack(self.flags))
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return ('TileFlags', 'WithoutTileFlags') + tuple(TileFlags.Flag._NAMES.values())
 
 _option_types: list[Type[Option]] = [
 	BasicFlags,
