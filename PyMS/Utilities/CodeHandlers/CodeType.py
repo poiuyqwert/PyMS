@@ -56,13 +56,13 @@ class CodeType(Generic[BinaryT, MemoryT]):
 
 	def parse(self, parse_context: ParseContext) -> MemoryT:
 		start = parse_context.lexer.get_rollback()
-		value = self._lex(parse_context)
+		value = self.lex(parse_context)
 		raw_value = parse_context.lexer.get_raw(from_state=start)
 		self.validate(value, parse_context, raw_value)
 		return value
 
-	def _lex(self, parse_context: ParseContext) -> MemoryT:
-		raise NotImplementedError(self.__class__.__name__ + '.lex_token()')
+	def lex(self, parse_context: ParseContext) -> MemoryT:
+		raise NotImplementedError(self.__class__.__name__ + '.lex()')
 
 	def validate(self, value: MemoryT, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
@@ -80,7 +80,7 @@ class IntCodeType(CodeType[int, int]):
 		self._allow_hex = allow_hex
 		self.param_repeater = param_repeater
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		token = parse_context.lexer.next_token()
 		allowed = 'integer'
 		if self._allow_hex:
@@ -112,7 +112,7 @@ class FloatCodeType(CodeType[float, float]):
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._limits = limits
 
-	def _lex(self, parse_context: ParseContext) -> float:
+	def lex(self, parse_context: ParseContext) -> float:
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.FloatToken):
 			try:
@@ -144,7 +144,7 @@ class AddressCodeType(CodeType[int, CodeBlock]):
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
 		return context.strategy.block_label(block)
 	
-	def _lex(self, parse_context: ParseContext) -> CodeBlock:
+	def lex(self, parse_context: ParseContext) -> CodeBlock:
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.IdentifierToken):
 			return parse_context.get_block(token.raw_value)
@@ -182,7 +182,7 @@ class StrCodeType(CodeType[str, str]):
 	def serialize(self, value: str, context: SerializeContext) -> str:
 		return StrCodeType.serialize_string(value)
 
-	def _lex(self, parse_context: ParseContext) -> str:
+	def lex(self, parse_context: ParseContext) -> str:
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.StringToken) and parse_context.command_in_parens:
 			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
@@ -226,7 +226,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 			values += name
 		return values
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.IdentifierToken):
 			if token.raw_value in self._cases:
@@ -248,7 +248,7 @@ class BooleanCodeType(IntCodeType):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
 		IntCodeType.__init__(self, name, help_text, bytecode_type, limits=(0, 1))
 
-	def _lex(self, parse_context: ParseContext) -> bool:
+	def lex(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.BooleanToken) or isinstance(token, Tokens.IntegerToken):
 			if token.raw_value == 'true' or token.raw_value == '1':
@@ -325,7 +325,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 				break
 		return flags
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		return FlagsCodeType.lex_flags(parse_context, self._names_to_flags, self.name, cast(Struct.IntField, self._bytecode_type), self._case_sensitive, self._allow_raw_flags)
 
 	def keywords(self) -> Sequence[str]:

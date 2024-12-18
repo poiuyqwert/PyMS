@@ -37,7 +37,7 @@ class FrameCodeType(CodeType.IntCodeType):
 			return f'Frame set {value // 17}, direction {value % 17}'
 		return None
 
-	def validate(self, num: int, parse_context: CodeType.ParseContext, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		# TODO: Check against GRP frames
 		# if bin and bin.grpframes and v > bin.grpframes:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frame for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes, (bin.grpframes - 17) // 17 * 17),extra=v)
@@ -52,7 +52,7 @@ class FramesetCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		super().__init__('Frameset', 'The index of a frame set in a GRP (number in the range 0 to 255)', Struct.l_u8)
 
-	def validate(self, num: int, parse_context: CodeType.ParseContext, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		# TODO: Check against GRP frames
 		# if bin and bin.grpframes and v*17 > bin.grpframes:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
@@ -64,7 +64,7 @@ class BFrameCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		super().__init__('BFrame', 'The index of a frame in a GRP (number in the range 0 to 255)', Struct.l_u8)
 
-	def validate(self, num: int, parse_context: CodeType.ParseContext, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		# TODO: Check against GRP frames
 		# if bin and bin.grpframes and v*17 > bin.grpframes:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
@@ -248,12 +248,9 @@ class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None],
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.IdentifierToken, ICELexer.NoneToken)):
 			raise parse_context.error('Parse', "Expected block label identifier or '[NONE]' but got '%s'" % token.raw_value)
-		return self.parse(token.raw_value, parse_context)
-
-	def parse(self, token: str, parse_context: ParseContext) -> CodeBlock | None:
-		if token == '[NONE]':
+		if token.raw_value == '[NONE]':
 			return None
-		return parse_context.get_block(token)
+		return parse_context.get_block(token.raw_value)
 
 	def keywords(self) -> Sequence[str]:
 		return ('[NONE]',)

@@ -2,7 +2,7 @@
 from .IScript import IScript
 from . import IType
 
-from .CodeHandlers import ICEByteCodeHandler, ICESerializeContext, ICEParseContext, ICESourceCodeHandler
+from .CodeHandlers import ICELanguage, ICESerializeContext, ICEParseContext, ICESourceCodeHandler
 
 from ...Utilities import IO
 from ...Utilities.PyMSError import PyMSError
@@ -11,7 +11,9 @@ from ...Utilities import Struct
 from ...Utilities.CodeHandlers.CodeBlock import CodeBlock
 from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
 from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
-from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeCompiler
+from ...Utilities.CodeHandlers.ByteCodeDecompiler import ByteCodeDecompiler
+from ...Utilities.CodeHandlers.DecompileContext import DecompileContext
+from ...Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeCompiler
 
 from collections import OrderedDict
 import io
@@ -31,7 +33,8 @@ class IScriptBIN:
 			raise
 		except:
 			raise PyMSError('Load', "Couldn't load iscript.bin from disk", capture_exception=True)
-		bytecode_handler = ICEByteCodeHandler(data)
+		decompile_context = DecompileContext(data, ICELanguage())
+		bytecode_decompiler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
 		try:
 			header_list_offset = scanner.scan(Struct.l_u32)
@@ -69,7 +72,7 @@ class IScriptBIN:
 							raise PyMSError('Load', f"Script with id {id} missing block for 'Init', file could possibly be invalid or corrupt")
 						entry_points.append(None)
 					else:
-						entry_point = bytecode_handler.decompile_block(block_offset)
+						entry_point = bytecode_decompiler.decompile_block(block_offset, decompile_context)
 						if n == 0:
 							init_entry_point = entry_point
 						else:

@@ -57,7 +57,7 @@ class PointCodeType(CodeType.CodeType[Point, Point]):
 		else:
 			return f'({value[0]}, {value[1]})'
 
-	def _lex(self, parse_context: ParseContext) -> Point:
+	def lex(self, parse_context: ParseContext) -> Point:
 		token = parse_context.lexer.next_token()
 		if token.raw_value == '(':
 			token = parse_context.lexer.next_token()
@@ -302,7 +302,7 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 	def __init__(self, name: str = 'unit_id', help_text: str = 'Same as unit type, but also accepts: 228/None, 229/Any, 230/Group_Men, 231/Group_Buildings, 232/Group_Factories') -> None:
 		super().__init__(name, help_text)
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		rollback = parse_context.lexer.get_rollback()
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.IdentifierToken):
@@ -318,7 +318,7 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 			elif group == 'group_factories':
 				return 232
 		parse_context.lexer.rollback(rollback)
-		return super()._lex(parse_context)
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		if num >= 228 and num <= 232:
@@ -370,10 +370,10 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 		for group in groups:
 			context.add_data(Struct.l_u16.pack(group))
 
-	def _lex(self, parse_context: ParseContext) -> UnitGroup:
+	def lex(self, parse_context: ParseContext) -> UnitGroup:
 		groups: list[int] = []
 		while True:
-			groups.append(self._unit_id_code_type._lex(parse_context))
+			groups.append(self._unit_id_code_type.lex(parse_context))
 			token = parse_context.lexer.next_token(peek=True)
 			if token.raw_value == '|':
 				_ = parse_context.lexer.next_token()
@@ -413,8 +413,8 @@ class AreaCodeType(CodeType.CodeType[Area, Area]):
 		self._point_code_type.compile(value[0], context)
 		context.add_data(Struct.l_u16.pack(value[1]))
 
-	def _lex(self, parse_context: ParseContext) -> Area:
-		point = self._point_code_type._lex(parse_context)
+	def lex(self, parse_context: ParseContext) -> Area:
+		point = self._point_code_type.lex(parse_context)
 		radius = 0
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value == '~':
@@ -646,12 +646,12 @@ class BuildAtPointCodeType(PointCodeType):
 			return 'TownCenter'
 		return super().serialize(value, context)
 
-	def _lex(self, parse_context: ParseContext) -> Point:
+	def lex(self, parse_context: ParseContext) -> Point:
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value.lower() == 'towncenter':
 			_ = parse_context.lexer.next_token()
 			return (BuildAtPointCodeType.TOWN_CENTER, 0)
-		return super()._lex(parse_context)
+		return super().lex(parse_context)
 
 class BuildAtFlagsCodeType(CodeType.FlagsCodeType):
 	def __init__(self) -> None:

@@ -88,7 +88,7 @@ class UnitCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			unit_name: str | None = None
@@ -103,7 +103,7 @@ class UnitCodeType(CodeType.IntCodeType):
 				if unit_id is not None:
 					return unit_id
 			parse_context.lexer.rollback(rollback)
-		return super()._lex(parse_context)
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
@@ -333,7 +333,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			upgrade_name: str | None = None
@@ -348,7 +348,7 @@ class UpgradeCodeType(CodeType.IntCodeType):
 				if upgrade_id is not None:
 					return upgrade_id
 			parse_context.lexer.rollback(rollback)
-		return super()._lex(parse_context)
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
@@ -386,7 +386,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 				return StringCodeType.serialize_string(name)
 		return str(value)
 
-	def _lex(self, parse_context: ParseContext) -> int:
+	def lex(self, parse_context: ParseContext) -> int:
 		if isinstance(parse_context, AIParseContext) and parse_context.data_context:
 			rollback = parse_context.lexer.get_rollback()
 			technology_name: str | None = None
@@ -401,7 +401,7 @@ class TechnologyCodeType(CodeType.IntCodeType):
 				if technology_id is not None:
 					return technology_id
 			parse_context.lexer.rollback(rollback)
-		return super()._lex(parse_context)
+		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
 		token = token or str(num)
