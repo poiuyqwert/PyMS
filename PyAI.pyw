@@ -8,7 +8,6 @@ def main(): # type: () -> None
 
 	from PyMS.FileFormats.AIBIN import AIBIN
 	from PyMS.FileFormats.AIBIN.CodeHandlers.DataContext import DataContext
-	from PyMS.FileFormats.AIBIN.CodeHandlers.AIDefinitionsHandler import AIDefinitionsHandler
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AILexer import AILexer
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISerializeContext import AISerializeContext
@@ -20,7 +19,7 @@ def main(): # type: () -> None
 	from PyMS.Utilities import Assets
 	from PyMS.Utilities.PyMSError import PyMSError
 	from PyMS.Utilities import IO
-	from PyMS.Utilities.CodeHandlers import Formatters
+	from PyMS.Utilities.CodeHandlers import Formatters, DefinitionsHandler
 
 	import os, optparse, sys
 	from dataclasses import dataclass
@@ -92,7 +91,7 @@ def main(): # type: () -> None
 				tbl.load_file(opt.stattxt)
 				print('- Loading finished successfully')
 				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
-				definitions_handler = AIDefinitionsHandler()
+				definitions_handler = DefinitionsHandler()
 				if opt.deffile:
 					print("Loading external definitions file '%s'..." % opt.deffile)
 					handler = AIDefsSourceCodeHandler()

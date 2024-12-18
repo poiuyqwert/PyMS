@@ -1,13 +1,15 @@
 
 from ...Utilities.CodeHandlers import CodeType
 from ...Utilities.CodeHandlers import CodeCommand
+from ...Utilities.CodeHandlers import LanguageDefinition
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.SourceCodeParser import CommandSourceCodeParser
 from ...Utilities.CodeHandlers.ParseContext import ParseContext
 from ...Utilities.CodeHandlers.Lexer import Lexer
 from ...Utilities.CodeHandlers import Tokens
 from ...Utilities.CodeHandlers.CodeBlock import CodeBlock
-from ...Utilities.CodeHandlers.ByteCodeBuilder import ByteCodeBuilder
+from ...Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeCompiler
+from ...Utilities.CodeHandlers.DecompileContext import DecompileContext
 from ...Utilities import Struct
 from ...Utilities.BytesScanner import BytesScanner
 
@@ -28,10 +30,25 @@ adv_command = CodeCommand.CodeCommand(AdvCommand, [0x1000, 0x02, 0x2000, 0x2100,
 adv_code = 'adv 4096 2 8192 8448 4352'
 adv_bytecode = b'\x01\x00\x10\x02\x00\x20\x00\x21\x00\x11'
 
+language = LanguageDefinition.LanguageDefinition([
+	LanguageDefinition.LanguagePlugin(
+		LanguageDefinition.LanguagePlugin.CORE_ID,
+		[
+			BasicCommand,
+			AdvCommand
+		],
+		[
+			RepeaterType,
+			IntType
+		]
+	)
+])
+
 class Test_Repeaters(unittest.TestCase):
 	def test_repeater_decompile_basic(self) -> None:
 		scanner = BytesScanner(basic_bytecode, 1)
-		command = BasicCommand.decompile(scanner)
+		context = DecompileContext(basic_bytecode, language)
+		command = BasicCommand.decompile(scanner, context)
 		self.assertEqual(command.params, basic_command.params)
 
 	def test_repeater_serialize_basic(self) -> None:
@@ -45,20 +62,21 @@ class Test_Repeaters(unittest.TestCase):
 		lexer.register_token_type(Tokens.WhitespaceToken, skip=True)
 		lexer.register_token_type(Tokens.IdentifierToken)
 		lexer.register_token_type(Tokens.IntegerToken)
-		context = ParseContext(lexer)
+		context = ParseContext(lexer, language)
 		context.active_block = CodeBlock()
-		parser = CommandSourceCodeParser([BasicCommand])
+		parser = CommandSourceCodeParser()
 		parser.parse(context)
 		self.assertEqual(context.active_block.commands[-1].params, basic_command.params)
 
 	def test_repeater_compile_basic(self) -> None:
-		builder = ByteCodeBuilder()
+		builder = ByteCodeCompiler()
 		basic_command.compile(builder)
 		self.assertEqual(builder.data, basic_bytecode)
 
 	def test_repeater_decompile_adv(self) -> None:
 		scanner = BytesScanner(adv_bytecode, 1)
-		command = AdvCommand.decompile(scanner)
+		context = DecompileContext(adv_bytecode, language)
+		command = AdvCommand.decompile(scanner, context)
 		self.assertEqual(command.params, adv_command.params)
 
 	def test_repeater_serialize_adv(self) -> None:
@@ -72,13 +90,13 @@ class Test_Repeaters(unittest.TestCase):
 		lexer.register_token_type(Tokens.WhitespaceToken, skip=True)
 		lexer.register_token_type(Tokens.IdentifierToken)
 		lexer.register_token_type(Tokens.IntegerToken)
-		context = ParseContext(lexer)
+		context = ParseContext(lexer, language)
 		context.active_block = CodeBlock()
-		parser = CommandSourceCodeParser([AdvCommand])
+		parser = CommandSourceCodeParser()
 		parser.parse(context)
 		self.assertEqual(context.active_block.commands[-1].params, adv_command.params)
 
 	def test_repeater_compile_adv(self) -> None:
-		builder = ByteCodeBuilder()
+		builder = ByteCodeCompiler()
 		adv_command.compile(builder)
 		self.assertEqual(builder.data, adv_bytecode)

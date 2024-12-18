@@ -43,27 +43,11 @@ class BlockSourceCodeParser(SourceCodeParser):
 		return False
 
 class CommandSourceCodeParser(SourceCodeParser):
-	def __init__(self, cmd_defs: list[CodeCommandDefinition] = []) -> None:
-		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
-		self.register_commands(cmd_defs)
-
-	def register_command(self, cmd_def: CodeCommandDefinition) -> None:
-		if cmd_def.name in self.cmd_defs:
-			raise PyMSError('Internal', "Command with name '%s' already exists" % cmd_def.name)
-		self.cmd_defs[cmd_def.name] = cmd_def
-
-	def register_commands(self, cmd_defs: list[CodeCommandDefinition]) -> None:
-		for cmd_def in cmd_defs:
-			self.register_command(cmd_def)
-
 	def parse(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value in self.cmd_defs:
-			# if not token.raw_value in self.cmd_defs:
-			# 	raise parse_context.error('Parse', "Unknown command '%s'" % token.raw_value, level=0)
-			cmd_def = self.cmd_defs[token.raw_value]
+		if isinstance(token, Tokens.IdentifierToken) and (cmd_def := parse_context.language.lookup_command(token.raw_value, parse_context.language_context)):
 			command = cmd_def.parse(parse_context)
 			if not parse_context.active_block:
 				raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
@@ -115,8 +99,7 @@ class DefineSourceCodeParser(SourceCodeParser):
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value in definitions.types:
-			type = definitions.types[token.raw_value]
+		if isinstance(token, Tokens.IdentifierToken) and (code_type := parse_context.language.lookup_type(token.raw_value, parse_context.language_context)):
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
 				raise parse_context.error('Parse', "Expected variable name but got '%s'" % token.raw_value)
@@ -126,12 +109,12 @@ class DefineSourceCodeParser(SourceCodeParser):
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '=':
 				raise parse_context.error('Parse', "Expected '=' but got '%s'" % token.raw_value)
-			token = parse_context.lexer.next_token()
-			# TODO: Use type to parse?
-			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
-			value = type.parse(token.raw_value, parse_context)
-			definitions.set_variable(name, value, type)
+			# token = parse_context.lexer.next_token()
+			# # TODO: Use type to parse?
+			# if not isinstance(token, Tokens.IntegerToken):
+			# 	raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
+			value = code_type.parse(parse_context)
+			definitions.set_variable(name, value, code_type)
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
 				raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)

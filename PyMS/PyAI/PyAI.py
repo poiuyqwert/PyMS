@@ -13,9 +13,10 @@ from .DecompilingFormatDialog import DecompilingFormatDialog
 from .Sort import SortBy
 from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
+from .AddedPluginsDialog import AddedPluginsDialog
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, AIDefinitionsHandler, DataContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
@@ -37,10 +38,11 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
+from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-import os, io
+import io
 
 from typing import IO as BuiltinIO
 
@@ -359,6 +361,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ai_count,bw_count = self.ai.count_scripts()
 		ai_size,bw_size = self.ai.calculate_sizes()
 		s = f'aiscript.bin: {ai_count} ({ai_size} B)     bwscript.bin: {bw_count} ({bw_size} B)'
+		if self.ai.active_plugins:
+			active_plugins = ', '.join(sorted(self.ai.active_plugins))
+			s = f'Plugins Required: {active_plugins}     {s}'
 		self.scriptstatus.set(s)
 
 	# Acitions
@@ -398,6 +403,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		if ai.active_plugins:
+			active_plugins = ', '.join(sorted(ai.active_plugins))
+			self.config_.dont_warn.plugins.present(self, message=f'These files use features that require these plugins: {active_plugins}')
 		self.ai = ai
 		self.aiscript = aiscript_path
 		self.bwscript = bwscript_path
@@ -544,6 +552,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		# TODO: Fix size calcs
 		s = 2 + self.ai.calculate_sizes()[0]
+		# TODO: Expand file?
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
@@ -596,21 +605,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				return
 			import_paths = [import_path]
 		for import_path in import_paths:
-			parse_context = self.get_parse_context(import_path)
-			scripts = self.ai.compile(parse_context)
-			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
-			if new_ai_size is not None:
-				ai_size, _ = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
-			if new_bw_size is not None:
-				_, bw_size = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
-			if parse_context.warnings:
-				WarningDialog(parent, parse_context.warnings, True)
-			self.ai.add_scripts(scripts)
-		self.update_script_status()
-		self.refresh_listbox()
-		self.mark_edited()
+			if not self.save_code(import_path, self):
+				return
 
 	def listimport(self) -> None:
 		ImportListDialog(self, self, self.config_)
@@ -731,24 +727,40 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def get_data_context(self) -> DataContext:
 		return self.data_context
 
-	def save_code(self, code: str, parent: AnyWindow) -> bool:
+	def save_code(self, code_or_path: str, parent: AnyWindow) -> bool:
 		if not self.ai:
 			return False
-		parse_context = self.get_parse_context(code)
+		parse_context = self.get_parse_context(code_or_path)
 		try:
 			scripts = AIBIN.AIBIN.compile(parse_context)
 			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
 			if new_ai_size is not None:
 				ai_size, _ = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
-			if new_bw_size is not None:
+				if self.ai.expanded:
+					raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_ai_size}B.")
+				else:
+					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your aiscript.bin to compile these changes, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+						return False
+					self.ai.expand()
+			if new_bw_size is not None and new_bw_size > self.ai.max_size(): # Check against max_size again for the case where the file just got expanded above because of aiscript.bin
 				_, bw_size = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
+				if self.ai.expanded:
+					raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_bw_size}B.")
+				else:
+					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your bwscript.bin to compile these changes, would you like to expand your bwscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+						return False
+					self.ai.expand()
 		except PyMSError as e:
 			ErrorDialog(parent, e)
 			return False
+		new_active_plugins = parse_context.language_context.active_plugins()
+		if new_active_plugins:
+			added_plugins = new_active_plugins.difference(self.ai.active_plugins)
+			if added_plugins and not AddedPluginsDialog(parent, parse_context.language_context, added_plugins).add:
+				return False
 		if parse_context.warnings:
 			WarningDialog(parent, parse_context.warnings, True)
+		self.ai.active_plugins.update(new_active_plugins)
 		self.ai.add_scripts(scripts)
 		self.update_script_status()
 		self.refresh_listbox()
@@ -758,8 +770,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	# def get_export_references(self) -> bool:
 	# 	return self.reference.get()
 
-	def _get_definitions_handler(self) -> AIDefinitionsHandler:
-		defs = AIDefinitionsHandler()
+	def _get_definitions_handler(self) -> DefinitionsHandler:
+		defs = DefinitionsHandler()
 		handler = AIDefsSourceCodeHandler()
 		for extdef in self.config_.extdefs.data:
 			with IO.InputText(extdef) as f:

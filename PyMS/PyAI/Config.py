@@ -52,6 +52,11 @@ class PyAIConfig(Config.Config):
 			self.list_import = Config.WindowGeometry()
 			super().__init__()
 
+	class DontWarn(Config.Group):
+		def __init__(self) -> None:
+			self.plugins = Config.Warning(message='These files use features that require a plugin.')
+			super().__init__()
+
 	class LastPath(Config.Group):
 		class TXT(Config.Group):
 			def __init__(self) -> None:
@@ -109,6 +114,7 @@ class PyAIConfig(Config.Config):
 				self.ai_id = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF', bold=True))
 				self.block = Config.HighlightStyle(default=Config.Style(foreground='#FF00FF'))
 				self.command = Config.HighlightStyle(default=Config.Style(foreground='#0000AA'))
+				self.aise_command = Config.HighlightStyle(default=Config.Style(foreground='#008080'))
 				self.type = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.directive = Config.HighlightStyle(default=Config.Style(foreground='#FF6600'))
 				self.number = Config.HighlightStyle(default=Config.Style(foreground='#FF0000'))
@@ -129,6 +135,7 @@ class PyAIConfig(Config.Config):
 	def __init__(self) -> None:
 		self.theme = Config.String()
 		self.windows = PyAIConfig.Windows()
+		self.dont_warn = PyAIConfig.DontWarn()
 		self.last_path = PyAIConfig.LastPath()
 		self.mpqs = Config.List(value_type=str)
 		self.settings = PyAIConfig.Settings()

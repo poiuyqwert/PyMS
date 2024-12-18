@@ -233,7 +233,6 @@ goto BWSS_0002
 """
 		print(code)
 		parse_context = utils.parse_context(code)
-		ai = AIBIN.AIBIN()
 		with self.assertRaises(PyMSError) as error_context:
 			AIBIN.AIBIN.compile(parse_context)
 		print(str(error_context.exception))

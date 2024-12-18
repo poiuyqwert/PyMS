@@ -1,11 +1,39 @@
 
+from __future__ import annotations
+
 from .CodeBlock import CodeBlock
-from .BuilderContext import BuilderContext, BuilderUpdater
 
 from ..PyMSError import PyMSError
 from .. import Struct
 
-class ByteCodeBuilder(BuilderContext):
+from typing import Protocol
+
+class ByteCodeBuilderType(Protocol):
+	def add_data(self, data: bytes | bytearray) -> int:
+		...
+
+	def add_block_ref(self, block: CodeBlock, type: Struct.IntField) -> int:
+		...
+
+	def set_data(self, address: int, data: bytes | bytearray, can_expand: bool = False) -> None:
+		...
+
+	def get_updater(self) -> BuilderUpdater:
+		...
+
+class BuilderUpdater:
+	def __init__(self, address: int, builder: ByteCodeBuilderType) -> None:
+		self.address = address
+		self.builder = builder
+
+	def update_data(self, data: bytes | bytearray):
+		self.builder.set_data(self.address, data)
+		self.address += len(data)
+
+	def skip(self, bytes: int) -> None:
+		self.address += bytes
+
+class ByteCodeCompiler(ByteCodeBuilderType):
 	def __init__(self) -> None:
 		self.data = bytearray()
 		self.block_offsets: dict[CodeBlock, int] = {}

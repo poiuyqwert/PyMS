@@ -142,3 +142,8 @@ class Lexer(object):
 
 	def rollback(self, state: State) -> None:
 		self.state = dataclasses.replace(state)
+
+	def get_raw(self, from_state: State, to_state: State | None = None) -> str:
+		if to_state is None:
+			to_state = self.state
+		return self.code[from_state.offset:to_state.offset]

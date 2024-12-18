@@ -2,17 +2,22 @@
 from . import WarningID
 from .AISerializeContext import AISerializeContext
 from .AIParseContext import AIParseContext
+from .AIDecompileContext import AIDecompileContext
 
 from ....FileFormats.DAT.UnitsDAT import DATUnit
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers.DecompileContext import DecompileContext
+from ....Utilities.BytesScanner import BytesScanner
 from ....Utilities.CodeHandlers import Lexer
 from ....Utilities.CodeHandlers import Tokens
+
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
+
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -56,6 +61,12 @@ class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
 		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
 
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> int:
+		address = super().decompile(scanner, context)
+		if isinstance(context, AIDecompileContext) and context.aise_context.expanded and address in context.aise_context.loaded_long_jumps:
+			return context.aise_context.loaded_long_jumps[address]
+		return address
+
 class UnitCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227 (or higher if using expanded DAT file), or a full unit name from stat_txt.tbl') -> None:
 		CodeType.IntCodeType.__init__(self, name, help_text, bytecode_type=Struct.l_u16)
@@ -87,10 +98,9 @@ class UnitCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				unit_name = token.raw_value
-			if unit_name:
+			if unit_name is not None:
 				unit_id = parse_context.data_context.unit_id(unit_name)
 				if unit_id is not None:
-					self.validate(unit_id, parse_context, unit_name)
 					return unit_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
@@ -333,10 +343,9 @@ class UpgradeCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				upgrade_name = token.raw_value
-			if upgrade_name:
+			if upgrade_name is not None:
 				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
 				if upgrade_id is not None:
-					self.validate(upgrade_id, parse_context, upgrade_name)
 					return upgrade_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
@@ -387,10 +396,9 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				technology_name = token.raw_value
-			if technology_name:
+			if technology_name is not None:
 				technology_id = parse_context.data_context.technology_id(technology_name)
 				if technology_id is not None:
-					self.validate(technology_id, parse_context, technology_name)
 					return technology_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)

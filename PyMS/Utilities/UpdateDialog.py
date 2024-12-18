@@ -9,7 +9,7 @@ import json, urllib.request, urllib.parse, urllib.error
 from _thread import start_new_thread
 
 class UpdateDialog(PyMSDialog):
-	BRANCH = 'python3' # Default to `master` branch, but can be update for long-lived branches
+	BRANCH = 'AISE' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
 	def check_update(window: WindowExtensions, program: str) -> None:
