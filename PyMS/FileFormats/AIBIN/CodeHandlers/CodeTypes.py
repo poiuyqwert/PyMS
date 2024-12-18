@@ -2,12 +2,15 @@
 from . import WarningID
 from .AISerializeContext import AISerializeContext
 from .AIParseContext import AIParseContext
+from .AIDecompileContext import AIDecompileContext
 
 from ....FileFormats.DAT.UnitsDAT import DATUnit
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers.DecompileContext import DecompileContext
+from ....Utilities.BytesScanner import BytesScanner
 from ....Utilities.CodeHandlers import Lexer
 from ....Utilities.CodeHandlers import Tokens
 
@@ -53,9 +56,16 @@ class DWordCodeType(CodeType.IntCodeType):
 				return 1
 			case _:
 				return 0
+
 class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
 		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
+
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> int:
+		address = super().decompile(scanner, context)
+		if isinstance(context, AIDecompileContext) and context.aise_context.expanded and address in context.aise_context.loaded_long_jumps:
+			return context.aise_context.loaded_long_jumps[address]
+		return address
 
 class UnitCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227 (or higher if using expanded DAT file), or a full unit name from stat_txt.tbl') -> None:

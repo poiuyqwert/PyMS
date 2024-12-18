@@ -520,6 +520,8 @@ class SelectFile(ConfigObject):
 					filetypes=filetypes or self._filetypes,
 					defaultextension=self._default_extension
 				)
+		if not path:
+			path = None
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
 			if isinstance(path, (list, tuple)):
@@ -663,11 +665,11 @@ class Warning(ConfigObject):
 		self._title = title
 		self._remember_version = remember_version
 
-	def present(self, parent: Misc) -> None:
+	def present(self, parent: Misc, message: str | None = None, title: str | None = None) -> None:
 		if self._remember_version <= self._seen_version:
 			return
 		from .WarnDialog import WarnDialog
-		dialog = WarnDialog(parent, self._message, self._title, show_dont_warn=True)
+		dialog = WarnDialog(parent, message or self._message, title or self._title, show_dont_warn=True)
 		if dialog.dont_warn.get():
 			self._seen_version = self._remember_version
 

@@ -11,7 +11,7 @@ from .. import Struct
 from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
 
-from typing import TYPE_CHECKING, Sequence, Any
+from typing import TYPE_CHECKING, Sequence, Any, Generator
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
 	from .ByteCodeCompiler import ByteCodeBuilderType
@@ -115,38 +115,33 @@ class CodeCommand(object):
 		self.parent_block = parent_block
 		self.original_location: int | None = None # Byte address or Source line
 
-	def compile(self, context: ByteCodeBuilderType) -> None:
-		assert self.definition.byte_code_id is not None
-		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
+	def iter_params(self) -> Generator[tuple[Any, CodeType], None, None]:
 		param_repeat = 1
 		param_index = 0
 		for param_type in self.definition.param_types:
 			for _ in range(param_repeat):
 				param = self.params[param_index]
-				param_type.compile(param, context)
+				yield (param, param_type)
 				param_index += 1
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = param
 			else:
 				param_repeat = 1
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		assert self.definition.byte_code_id is not None
+		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
+		for param, param_type in self.iter_params():
+			param_type.compile(param, context)
+
 	def serialize(self, context: SerializeContext) -> None:
 		parameters: list[str] = []
 		comments: list[str] = []
-		param_repeat = 1
-		param_index = 0
-		for param_type in self.definition.param_types:
-			for _ in range(param_repeat):
-				param = self.params[param_index]
-				parameters.append(param_type.serialize(param, context))
-				comment = param_type.comment(param, context)
-				if comment is not None:
-					comments.append(comment)
-				param_index += 1
-			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
-				param_repeat = param
-			else:
-				param_repeat = 1
+		for param, param_type in self.iter_params():
+			parameters.append(param_type.serialize(param, context))
+			comment = param_type.comment(param, context)
+			if comment is not None:
+				comments.append(comment)
 		context.write(context.formatters.command.serialize(self.definition.name, parameters))
 		if comments:
 			context.write(context.formatters.comment.serialize(comments))

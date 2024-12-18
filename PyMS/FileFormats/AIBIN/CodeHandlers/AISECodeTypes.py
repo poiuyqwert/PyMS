@@ -28,11 +28,11 @@ class LongBlockCodeType(CodeTypes.BlockCodeType):
 			bytecode_type = Struct.l_u32
 		context.add_block_ref(block, bytecode_type)
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> CodeBlock:
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> int:
 		bytecode_type: Struct.IntField = cast(Struct.IntField, self._bytecode_type)
 		if isinstance(context, AIDecompileContext) and context.aise_context.expanded:
 			bytecode_type = Struct.l_u32
-		return scanner.scan(bytecode_type) # type: ignore
+		return scanner.scan(bytecode_type)
 
 Point = tuple[int, int]
 class PointCodeType(CodeType.CodeType[Point, Point]):

@@ -22,9 +22,9 @@ class HasKeywords(Protocol):
 	def keywords(self) -> Sequence[str]:
 		...
 
-I = TypeVar('I')
-O = TypeVar('O')
-class CodeType(Generic[I, O]):
+BinaryT = TypeVar('BinaryT')
+MemoryT = TypeVar('MemoryT')
+class CodeType(Generic[BinaryT, MemoryT]):
 	# TODO: Remove `bytecode_type` from `CodeType` and move it to a subclass?
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
 		self.name = name
@@ -38,33 +38,33 @@ class CodeType(Generic[I, O]):
 	def compatible(self, other_type: CodeType) -> int:
 		return type(other_type) == type(self)
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> I:
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> BinaryT:
 		return scanner.scan(self._bytecode_type)
 
-	def compile(self, value: I, context: ByteCodeBuilderType) -> None:
+	def compile(self, value: MemoryT, context: ByteCodeBuilderType) -> None:
 		context.add_data(self._bytecode_type.pack(value))
 
-	def serialize(self, value: I, context: SerializeContext) -> str:
+	def serialize(self, value: MemoryT, context: SerializeContext) -> str:
 		if context.definitions:
 			variable = context.definitions.lookup_variable(value, self)
 			if variable:
 				return variable.name
 		return str(value)
 
-	def comment(self, value: I, context: SerializeContext) -> str | None:
+	def comment(self, value: MemoryT, context: SerializeContext) -> str | None:
 		return None
 
-	def parse(self, parse_context: ParseContext) -> O:
+	def parse(self, parse_context: ParseContext) -> MemoryT:
 		start = parse_context.lexer.get_rollback()
 		value = self._lex(parse_context)
 		raw_value = parse_context.lexer.get_raw(from_state=start)
 		self.validate(value, parse_context, raw_value)
 		return value
 
-	def _lex(self, parse_context: ParseContext) -> O:
+	def _lex(self, parse_context: ParseContext) -> MemoryT:
 		raise NotImplementedError(self.__class__.__name__ + '.lex_token()')
 
-	def validate(self, value: O, parse_context: ParseContext, token: str | None = None) -> None:
+	def validate(self, value: MemoryT, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
 
 	def __eq__(self, other) -> bool:
@@ -134,7 +134,7 @@ class FloatCodeType(CodeType[float, float]):
 		if num > max:
 			raise PyMSError('Parse', f'Value is too large for `{self.name}` (got `{num}`, maximum is `{max}`)')
 
-class AddressCodeType(CodeType[CodeBlock, CodeBlock]):
+class AddressCodeType(CodeType[int, CodeBlock]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, True)
 
