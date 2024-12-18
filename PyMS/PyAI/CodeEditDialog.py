@@ -4,7 +4,7 @@ from .Config import PyAIConfig
 from .Delegates import MainDelegate
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, CodeDirectives
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, AISECodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -96,6 +96,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		for type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
 			if isinstance(type, CodeType.HasKeywords):
 				keywords.extend(type.keywords())
+		aise_keywords: list[str] = []
+		for type in AISECodeTypes.all_types:
+			if isinstance(type, CodeType.HasKeywords):
+				aise_keywords.extend(type.keywords())
 		self.syntax_highlighting = SyntaxHighlighting(
 			syntax_components=(
 				SyntaxComponent((
@@ -213,10 +217,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 					HighlightPattern(
 						highlight=HighlightComponent(
 							name='Operator',
-							description='The style of the operators:\n    ( ) , = { }',
+							description='The style of the operators:\n    ( ) , = { } . | ~',
 							highlight_style=self.config_.code.highlights.operator
 						),
-						pattern=r'[(),={}]'
+						pattern=r'[(),={}.|~]'
 					),
 				)),
 				SyntaxComponent((
@@ -228,6 +232,18 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 							highlight_style=self.config_.code.highlights.keyword
 						),
 						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Keyword',
+							description='The style of AISE keywords.',
+							highlight_style=self.config_.code.highlights.aise_keyword
+						),
+						pattern='|'.join(aise_keywords)
 					),
 					r'\b'
 				)),
@@ -579,7 +595,7 @@ script {header_id} {{
 	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
 		autocomplete_options = list(type.name for type in CodeTypes.all_basic_types)
-		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
+		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types + AISECodeTypes.all_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
 
 		data_context = self.delegate.get_data_context()
 		for unit_id in range(228):
@@ -607,7 +623,7 @@ script {header_id} {{
 			head = block_range[1]
 		autocomplete_options.sort()
 
-		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
+		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands + AISECodeCommands.all_commands)
 		main_identifiers.sort()
 		main_identifiers.extend(f'@{directive.name}' for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives)
 		main_identifiers.append('script')

@@ -121,6 +121,7 @@ class PyAIConfig(Config.Config):
 				self.tbl_format = Config.HighlightStyle(default=Config.Style(background='#E6E6E6'))
 				self.operator = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.keyword = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
+				self.aise_keyword = Config.HighlightStyle(default=Config.Style(foreground='#0000FF', bold=True))
 				self.newline = Config.HighlightStyle(default=Config.Style())
 				self.selection = Config.HighlightStyle(default=Config.Style(background='#C0C0C0'))
 				self.error = Config.HighlightStyle(default=Config.Style(background='#FF8C8C'))
