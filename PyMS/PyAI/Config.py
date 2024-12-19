@@ -3,7 +3,7 @@ from .Sort import SortBy
 from .DecompilingFormat import BlockFormat, CommandFormat, CommentFormat
 
 from ..Utilities import Config
-from ..Utilities.UIKit import Size, FileType, Font
+from ..Utilities.UIKit import Size, FileType
 from ..Utilities import Assets
 
 def _migrate_1_to_2(data: dict) -> None:

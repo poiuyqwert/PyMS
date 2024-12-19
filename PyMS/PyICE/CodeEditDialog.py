@@ -8,7 +8,7 @@ from .SoundDialog import SoundDialog
 
 from ..FileFormats.IScriptBIN import IScriptBIN
 from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
-from ..FileFormats import GRP
+# from ..FileFormats import GRP
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -20,7 +20,7 @@ from ..Utilities.EditedState import EditedState
 from ..Utilities.CodeHandlers import CodeType
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
-import os, re, io
+import re, io
 
 from typing import Sequence
 
@@ -328,11 +328,11 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			if self.previewer is None:
 				self.previewer = PreviewerDialog(self, self.delegate, self.config_, self.text)
 			self.previewer.updatecurrentimages()
-			parse_context = self.delegate.get_parse_context('')
 			t = re.split('\\s+',self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT).split('#',1)[0].strip())
+			parse_context = self.delegate.get_parse_context(t[1])
 			if t[0] in PREVIEWER_CMDS[EntryType.iscript] and self.previewer.curradio['state'] == NORMAL:
 				try:
-					f = CodeTypes.FrameCodeType().parse(t[1], parse_context)
+					f = CodeTypes.FrameCodeType().parse(parse_context)
 				except:
 					f = 0
 				self.previewer.type.set(0)
@@ -341,7 +341,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(0, EntryType.iscript, f)
 			elif t[0] in PREVIEWER_CMDS[EntryType.images_dat]:
 				try:
-					n = CodeTypes.ImageIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.ImageIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(1)
@@ -350,7 +350,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(n, EntryType.images_dat)
 			elif t[0] in PREVIEWER_CMDS[EntryType.sprites_dat]:
 				try:
-					n = CodeTypes.SpriteIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.SpriteIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(2)
@@ -359,7 +359,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(n, EntryType.sprites_dat)
 			elif t[0] in PREVIEWER_CMDS[EntryType.flingy_dat]:
 				try:
-					n = CodeTypes.FlingyIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.FlingyIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(3)
@@ -377,7 +377,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		i = 0
 		if t[0] == 'playsnd':
 			try:
-				i = CodeTypes.SoundIDCodeType().parse(t[1], self.delegate.get_parse_context(''))
+				i = CodeTypes.SoundIDCodeType().parse(self.delegate.get_parse_context(t[1]))
 			except:
 				pass
 		SoundDialog(self, self.delegate, self.config_.sounds, self.text, i)
