@@ -22,3 +22,4 @@ from .Toolbar import Toolbar
 from .Tooltip import Tooltip, TooltipWindow
 from .TreeList import TreeList
 from .ScrolledTreeview import ScrolledTreeview
+from .WrappingLabel import WrappingLabel

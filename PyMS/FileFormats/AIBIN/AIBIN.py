@@ -14,10 +14,11 @@ from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
 from ...Utilities import Struct
 from ...Utilities import IO
 
-import io
+import io, enum
 from collections import OrderedDict
+from dataclasses import dataclass
 
-from typing import Type, TypeVar, Iterable, Mapping
+from typing import Type, TypeVar, Iterable, Mapping, Sequence
 
 class _BaseScriptHeader(Struct.Struct):
 	def __init__(self, id: str = '', address: int = 0) -> None:
@@ -47,6 +48,18 @@ class _AIScriptHeader(_BaseScriptHeader):
 		super().__init__(id, address)
 		self.string_id = string_id
 		self.flags = flags
+
+class LoadIssueReason(enum.Enum):
+	unreferenced_bw = enum.auto()
+	duplicate_bw = enum.auto()
+
+@dataclass
+class LoadIssue:
+	script_id: str
+	reason: LoadIssueReason
+	entry_point: CodeBlock
+
+LoadIssues = Sequence[LoadIssue]
 
 H = TypeVar('H', bound=_BaseScriptHeader)
 
@@ -91,23 +104,27 @@ class AIBIN:
 		except:
 			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt", capture_exception=True)
 
-	def load(self, ai_input: IO.AnyInputBytes, bw_input: IO.AnyInputBytes | None) -> None:
+	def load(self, ai_input: IO.AnyInputBytes, bw_input: IO.AnyInputBytes | None) -> LoadIssues:
 		ai_headers, ai_context = AIBIN._load(_AIScriptHeader, 'aiscript.bin', ai_input)
 		bw_headers: OrderedDict[str, tuple[_BWScriptHeader, CodeBlock | None]] = OrderedDict()
 		bw_context: AIDecompileContext | None = None
-		requires_bw = set(id for id,(header,_) in ai_headers.items() if header.is_in_bw) #any(header[0].address == 0 for header in ai_headers.values())
-		if requires_bw:
-			if not bw_input:
-				raise PyMSError('Load', f'aiscript.bin has {len(requires_bw)} scripts stored in bwscript.bin but no bwscript.bin is loaded: {", ".join(requires_bw)}')
+		requires_bw = set(id for id,(header,_) in ai_headers.items() if header.is_in_bw)
+		if requires_bw and not bw_input:
+			raise PyMSError('Load', f'aiscript.bin has {len(requires_bw)} scripts stored in bwscript.bin but no bwscript.bin is loaded: {", ".join(requires_bw)}')
+		if bw_input:
 			bw_headers, bw_context = AIBIN._load(_BWScriptHeader, 'bwscript.bin', bw_input)
-		# extra_bw: set[str] = set()
-		# not_bw: str[str] = set()
+		issues: list[LoadIssue] = []
 		for id in bw_headers.keys():
-			requires_bw.remove(id)
-		# 	if not id in ai_headers:
-		# 		extra_bw.add(id)
-		# 	if not ai_headers[id][0].is_in_bw:
-		# 		not_bw.add(id)
+			if not id in ai_headers:
+				block = bw_headers[id][1]
+				assert block is not None # TODO: Any better way?
+				issues.append(LoadIssue(id, LoadIssueReason.unreferenced_bw, block))
+			elif not ai_headers[id][0].is_in_bw:
+				block = bw_headers[id][1]
+				assert block is not None # TODO: Any better way?
+				issues.append(LoadIssue(id, LoadIssueReason.duplicate_bw, block))
+			if id in requires_bw:
+				requires_bw.remove(id)
 		if requires_bw:
 			raise PyMSError('Load', f'aiscript.bin has {len(requires_bw)} scripts stored in bwscript.bin that are not found in the loaded bwscript.bin: {", ".join(requires_bw)}')
 		scripts: OrderedDict[str, AIScript] = OrderedDict()
@@ -128,6 +145,9 @@ class AIBIN:
 		if bw_context is not None:
 			self.expanded |= bw_context.aise_context.expanded
 			self.active_plugins.update(bw_context.language_context.active_plugins())
+		
+		issues.sort(key=lambda issue: issue.script_id)
+		return issues
 
 	@staticmethod
 	def _save(header_type: Type[H], scripts: Iterable[AIScript], output: IO.AnyOutputBytes, expanded: bool) -> None:

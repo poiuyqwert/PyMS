@@ -14,6 +14,7 @@ from .Sort import SortBy
 from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
 from .AddedPluginsDialog import AddedPluginsDialog
+from .FixIssuesUI.FixIssuesDialog import FixIssuesDialog
 
 from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, DataContext
@@ -263,12 +264,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	# Misc. functions
 	def update_title(self) -> None:
-		details = ' (No Files Loaded)'
 		if self.aiscript:
-			details = f' ({self.aiscript})'
+			details = f'{self.aiscript}'
 			if self.bwscript:
-				details += f' ({self.bwscript})'
-		self.title(f'PyAI {LONG_VERSION}{details}')
+				details += f', {self.bwscript}'
+		else:
+			details = 'No Files Loaded'
+		self.title(f'PyAI {LONG_VERSION} ({details})')
 
 	def entry_text(self, script: AIBIN.AIScript) -> str:
 		string = f'String {script.string_id}'
@@ -371,10 +373,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.ai = AIBIN.AIBIN()
-		self.aiscript = None
-		self.bwscript = None
+		self.aiscript = 'aiscript.bin'
+		self.bwscript = 'bwscript.bin'
 		self.mark_edited(False)
-		self.title('aiscript.bin, bwscript.bin')
+		self.update_title()
 		self.status.set('Editing new file!')
 		self.listbox.delete(0, END)
 		self.action_states()
@@ -399,20 +401,23 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			bwscript_path = self.config_.last_path.bin.select_open(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)')
 		try:
 			ai = AIBIN.AIBIN()
-			ai.load(aiscript_file or aiscript_path, bwscript_file or bwscript_path)
+			issues = ai.load(aiscript_file or aiscript_path, bwscript_file or bwscript_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		edited = False
+		if issues:
+			if FixIssuesDialog(self, ai, issues).cancelled:
+				return
+			edited = True
 		if ai.active_plugins:
 			active_plugins = ', '.join(sorted(ai.active_plugins))
 			self.config_.dont_warn.plugins.present(self, message=f'These files use features that require these plugins: {active_plugins}')
 		self.ai = ai
 		self.aiscript = aiscript_path
 		self.bwscript = bwscript_path
-		self.mark_edited(False)
-		if not bwscript_path:
-			bwscript_path = 'bwscript.bin'
-		self.title('%s, %s' % (aiscript_path,bwscript_path))
+		self.mark_edited(edited)
+		self.update_title()
 		self.status.set('Load Successful!')
 		self.refresh_listbox()
 		self.action_states()
