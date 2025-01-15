@@ -154,7 +154,7 @@ class OutputBytesFile(BinaryIO):
 		if self.closed:
 			return
 		self.temp_file.close()
-		os.rename(self.temp_file.name, self.path)
+		os.replace(self.temp_file.name, self.path)
 
 	@property
 	def closed(self) -> bool:

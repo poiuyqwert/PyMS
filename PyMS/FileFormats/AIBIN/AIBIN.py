@@ -120,9 +120,14 @@ class AIBIN:
 		builder = ByteCodeBuilder()
 		builder.add_data(Struct.l_u32.pack(0)) # Pack 0 for offset to headers array, to be updated later
 		for script in scripts:
+			if not script.in_bwscript and header_type == _BWScriptHeader:
+				continue
 			header = header_type()
 			header.id = script.id
-			header.address = builder.compile_block(script.entry_point)
+			if script.in_bwscript and header_type == _AIScriptHeader:
+				header.address = 0
+			else:
+				header.address = builder.compile_block(script.entry_point)
 			if isinstance(header, _AIScriptHeader):
 				header.flags = script.flags
 				header.string_id = script.string_id + 1 # WARNING: string id's are 1 indexed in the file
@@ -135,18 +140,16 @@ class AIBIN:
 
 	@staticmethod
 	def _save_scripts(scripts: Mapping[str, AIScript], ai_output: IO.AnyOutputBytes, bw_output: IO.AnyOutputBytes | None) -> None:
-		ai_scripts: list[AIScript] = []
-		bw_scripts: list[AIScript] = []
+		bw_scripts: bool = False
 		for script in scripts.values():
 			if script.in_bwscript:
-				bw_scripts.append(script)
-			else:
-				ai_scripts.append(script)
+				bw_scripts = True
+				break
 		if bw_scripts:
 			if not bw_output:
-				raise PyMSError('Save', f'{len(bw_scripts)} scripts require to be saved inot bwscript.bin but no bwscript.bin is being saved')
-			AIBIN._save(_BWScriptHeader, bw_scripts, bw_output)
-		AIBIN._save(_AIScriptHeader, ai_scripts, ai_output)
+				raise PyMSError('Save', 'Some scripts require to be saved in bwscript.bin but no bwscript.bin is being saved')
+			AIBIN._save(_BWScriptHeader, scripts.values(), bw_output)
+		AIBIN._save(_AIScriptHeader, scripts.values(), ai_output)
 
 	def save(self, ai_output: IO.AnyOutputBytes, bw_output: IO.AnyOutputBytes | None) -> None:
 		AIBIN._save_scripts(self._scripts, ai_output, bw_output)
