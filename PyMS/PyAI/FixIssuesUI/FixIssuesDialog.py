@@ -183,6 +183,7 @@ class FixIssuesDialog(PyMSDialog):
 	def issue_resolution_updated(self) -> None:
 		issue_resolution = self.current_issue_resolution()
 		self.resolution_incomplete.set(issue_resolution.incomplete_text() or '')
+		self.refresh_list()
 
 	def resolve(self) -> None:
 		for issue_resolution in self.issue_resolutions:
