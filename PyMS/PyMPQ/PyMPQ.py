@@ -564,7 +564,7 @@ class PyMPQ(MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
-		files = self.config_.last_path.add.files.select_open(self)
+		files = self.config_.last_path.import_.files.select_open(self)
 		if not files:
 			return
 		f = FolderDialog(self, self.config_.import_.files_prefix)
@@ -586,7 +586,7 @@ class PyMPQ(MainWindow):
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
-		path = self.config_.last_path.add.folder.select_open(self)
+		path = self.config_.last_path.import_.folder.select_open(self)
 		if not path:
 			return
 		path = os.path.join(path,'')
