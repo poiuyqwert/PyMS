@@ -1,14 +1,14 @@
 
 from .Delegates import EditScriptDelegate
 from .FlagEditor import FlagEditor
-from .StringEditor import StringEditor
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Config import WindowGeometry
+from ..Utilities import ItemSelectDialog
 
-class EditScriptDialog(PyMSDialog):
+class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def __init__(self, parent: AnyWindow, delegate: EditScriptDelegate, config: WindowGeometry, id: str = 'MYAI', flags: int = 0, string_index: int = 0, title='Edit AI', initial=''):
 		self.delegate = delegate
 		self.config_ = config
@@ -57,8 +57,8 @@ class EditScriptDialog(PyMSDialog):
 		# vscroll.pack(side=RIGHT, fill=Y)
 		# aiinfo.pack(fill=BOTH, expand=1)
 
-		# entries.pack(side=LEFT, fill=BOTH, expand=1)
-		# frame.pack(fill=BOTH, expand=1)
+		entries.pack(side=LEFT, fill=BOTH, expand=1)
+		frame.pack(fill=BOTH, expand=1)
 
 		##Buttons
 		buttonframe = Frame(self)
@@ -70,7 +70,8 @@ class EditScriptDialog(PyMSDialog):
 		return identry
 
 	def setup_complete(self) -> None:
-		self.minsize(300,200)
+		self.minsize(500, 100)
+		self.maxsize(1000, 100)
 		self.config_.load_size(self)
 
 	def editflags(self) -> None:
@@ -112,9 +113,25 @@ class EditScriptDialog(PyMSDialog):
 		return True
 
 	def browse(self) -> None:
-		s = StringEditor(self, 'Select a String', True, self.string.get())
-		if s.result is not None:
-			self.string.set(s.result)
+		initial_selection = [int(self.string.get())]
+		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
+		# s = StringEditor(self, 'Select a String', True, self.string.get())
+		# if s.result is not None:
+		# 	self.string.set(s.result)
+
+	# ItemSelectDialog.Delegate
+	def get_items(self) -> Sequence[ItemSelectDialog.Item]:
+		strings = self.delegate.get_data_context().stattxt_strings()
+		if not strings:
+			return []
+		return strings
+
+	def item_selected(self, index: int) -> bool:
+		self.string.set(str(index))
+		return True
+
+	def items_selected(self, indexes: list[int]) -> bool:
+		return True
 
 	def ok(self, event: Event | None = None) -> None:
 		id = self.id.get()

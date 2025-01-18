@@ -2,7 +2,6 @@
 from .Delegates import TooltipDelegate
 
 from ..FileFormats.AIBIN.AIFlag import AIFlag
-from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
