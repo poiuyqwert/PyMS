@@ -193,7 +193,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 				self.ok()
 
 	def select_paths(self, replace: bool = False) -> None:
-		paths = self.config_.last_path.graphics.select_open(self)
+		paths = self.config_.last_path.graphics.select_open_multiple(self)
 		if paths:
 			if replace:
 				self.graphics_list.delete(0, END)

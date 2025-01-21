@@ -39,7 +39,7 @@ class ListfileSettingsTab(SettingsTab):
 		self.toolbar.tag_enabled('listfile_selected', self.is_listfile_selected())
 
 	def add(self, key: Event | None = None) -> None:
-		add = self.config_.settings.last_path.listfiles.select_open(self)
+		add = self.config_.settings.last_path.listfiles.select_open_multiple(self)
 		if add:
 			for i in add:
 				self.listbox.insert(END,i)
