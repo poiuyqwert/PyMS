@@ -44,7 +44,7 @@ class AddedPluginsDialog(PyMSDialog):
 		self.add = True
 		self.ok()
 
-	def update_reasons(self, event: Event | None = None) -> None:
+	def update_reasons(self, _event: Event | None = None) -> None:
 		selected_index: int = self.plugins_listbox.curselection()[0]
 		plugin_id = self.added_plugin_ids[selected_index]
 		reasons = self.language_context.get_reasons(plugin_id)

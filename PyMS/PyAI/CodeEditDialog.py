@@ -42,6 +42,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		PyMSDialog.__init__(self, parent, t, grabwait=False)
 		self.findwindow: FindReplaceDialog | None = None
 
+		self.syntax_highlighting: SyntaxHighlighting
+
 	def widgetize(self) -> Widget:
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
@@ -93,13 +95,13 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		type_names = [type.name for type in CodeTypes.all_basic_types]
 		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
 		keywords: list[str] = []
-		for type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
-			if isinstance(type, CodeType.HasKeywords):
-				keywords.extend(type.keywords())
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
 		aise_keywords: list[str] = []
-		for type in AISECodeTypes.all_types:
-			if isinstance(type, CodeType.HasKeywords):
-				aise_keywords.extend(type.keywords())
+		for code_type in AISECodeTypes.all_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				aise_keywords.extend(code_type.keywords())
 		self.syntax_highlighting = SyntaxHighlighting(
 			syntax_components=(
 				SyntaxComponent((
@@ -279,7 +281,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	def statusupdate(self, event: Event | None = None) -> None:
+	def statusupdate(self, _event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
 		sel_range = self.text.tag_ranges('sel')
@@ -290,7 +292,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 	def update_edited(self, edited: bool) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 		if self.file:
-			self.title('AI Script Editor [*%s*]' % self.file)
+			self.title(f'AI Script Editor [*{self.file}*]')
 
 	def cancel(self, _: Event | None = None) -> None:
 		if self.edited_state.is_edited:
@@ -335,10 +337,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w')
+			f = open(self.file, 'w', encoding='utf-8')
 			f.write(self.text.get('1.0', END))
 			f.close()
-			self.title('AI Script Editor [%s]' % self.file)
+			self.title(f'AI Script Editor [{self.file}]')
 
 	def exportas(self, _: Event | None = None) -> None:
 		file = self.config_.last_path.txt.ai.select_save(self)
@@ -351,13 +353,13 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		iimport = self.config_.last_path.txt.ai.select_save(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r')
+				f = open(iimport, 'r', encoding='utf-8')
 				self.text.delete('1.0', END)
 				self.text.insert('1.0', f.read())
 				self.text.edit_reset()
 				f.close()
 			except:
-				ErrorDialog(self, PyMSError('Import',"Could not import file '%s'" % iimport))
+				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'"))
 
 	def find(self, _: Event | None = None) -> None:
 		if not self.findwindow:
@@ -467,7 +469,7 @@ script {header_id} {{
 		}
 		header = re.compile(r'\A([^(]{4})\([^)]+\):\s*(?:\{.+\})?(?:\s*#.*)?\Z')
 		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\\Z')
-		jump = re.compile(r'\A(\s*)(%s)\((.+)\)(\s*#.*)?\Z' % '|'.join(list(debug.keys())))
+		jump = re.compile(fr'\A(\s*)({"|".join(list(debug.keys()))})\((.+)\)(\s*#.*)?\Z')
 		script,block = '',''
 		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
 			m = header.match(line)
@@ -485,12 +487,12 @@ script {header_id} {{
 			if m and m.group(2) in debug:
 				inblock = ''
 				if block:
-					inblock = ' block "%s"' % block
+					inblock = f' block "{block}"'
 				rep = {
-					'debug1':'== Debug %s ==' % d,
-					'debug2':'== Debug %s ==' % (d+1),
-					'debug3':'== Debug %s ==' % (d+2),
-					's':'[Line: %s | Inside script "%s"%s]' % (n, script, inblock),
+					'debug1':f'== Debug {d} ==',
+					'debug2':f'== Debug {d+1} ==',
+					'debug3':f'== Debug {d+2} ==',
+					's':f'[Line: {n} | Inside script "{script}"{inblock}]',
 					'c':m.group(4) or '',
 				}
 				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)
@@ -500,7 +502,7 @@ script {header_id} {{
 						data += line + '\n'
 						continue
 					for g,param in enumerate(p.groups()):
-						rep['param%s' % (g+1)] = param
+						rep[f'param{(g+1)}'] = param
 				data += m.group(1) + (debug[m.group(2)][0] % rep).replace('\n','\n' + m.group(1)) + '\n'
 				d += debug[m.group(2)][1]
 				continue
@@ -633,7 +635,7 @@ script {header_id} {{
 			autocomplete_options = main_identifiers + autocomplete_options
 		else:
 			autocomplete_options.extend(main_identifiers)
-			
+
 		return autocomplete_options
 
 	def jump_highlights(self) -> Sequence[str] | None:

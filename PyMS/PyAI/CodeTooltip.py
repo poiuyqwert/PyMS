@@ -30,7 +30,7 @@ class CodeTooltip(Tooltip):
 			return
 		hover_text = self.code_text.get(*tag_range)
 		try:
-			tooltip_text = self.gettext(hover_text)
+			tooltip_text = self.gettext(hover_text) # pylint: disable=assignment-from-none
 			if not tooltip_text:
 				return
 			self.tip = TooltipWindow(self.code_text, relief=SOLID, borderwidth=1)
@@ -39,7 +39,7 @@ class CodeTooltip(Tooltip):
 			Label(frame, text=tooltip_text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 			frame.pack()
 			pos = list(self.code_text.winfo_pointerxy())
-			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+			self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip.update_idletasks()
 			move = False
 			if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
@@ -49,7 +49,7 @@ class CodeTooltip(Tooltip):
 				move = True
 				pos[1] -= self.tip.winfo_reqheight() + 44
 			if move:
-				self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 		except:
 			if self.tip:
 				try:
@@ -59,7 +59,7 @@ class CodeTooltip(Tooltip):
 				self.tip = None
 			return
 
-	def gettext(self, hover_text: str) -> str | None:
+	def gettext(self, _hover_text: str) -> str | None:
 		# Overload to specify tooltip text
 		return None
 
@@ -77,10 +77,10 @@ class TypeCodeTooltip(CodeTooltip):
 	tag = 'Types'
 
 	def gettext(self, type_name: str) -> str | None:
-		types = CodeTypes.all_basic_types
-		for type in types:
-			if type.name == type_name:
-				return f"{type.name}:\n{fit('    ', type.help_text)}"
+		code_types = CodeTypes.all_basic_types
+		for code_type in code_types:
+			if code_type.name == type_name:
+				return f"{code_type.name}:\n{fit('    ', code_type.help_text)}"
 		return None
 
 # class StringCodeTooltip(CodeTooltip):

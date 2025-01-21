@@ -78,6 +78,7 @@ class FixIssuesDialog(PyMSDialog):
 		self.issue_resolutions = list(IssueResolution(aibin, issue) for issue in issues)
 		for issue_resolution in self.issue_resolutions:
 			issue_resolution.update_callback.add(self.issue_resolution_updated)
+		self.resolution_ui: Widget | None = None
 		self.cancelled = True
 		super().__init__(parent, 'Resolve issues', resizable=(False, False))
 
@@ -110,7 +111,6 @@ class FixIssuesDialog(PyMSDialog):
 		self.resolution_combobox.pack(fill=X)
 		self.resolution_container = Frame(frame)
 		self.resolution_container.pack(fill=X)
-		self.resolution_ui: Widget | None = None
 		self.resolution_incomplete = StringVar()
 		WrappingLabel(frame, textvariable=self.resolution_incomplete, justify=LEFT, anchor=W, font=Font.default().bolded()).pack(fill=X)
 		frame.pack(side=LEFT, fill=BOTH, expand=True, padx=5, pady=5)
@@ -161,7 +161,7 @@ class FixIssuesDialog(PyMSDialog):
 			issue_index = selection[0]
 		return self.issue_resolutions[issue_index]
 
-	def issue_selection_changed(self, event: Event | None = None) -> None:
+	def issue_selection_changed(self, _event: Event | None = None) -> None:
 		issue_resolution = self.current_issue_resolution()
 		self.issue_text.set(issue_resolution.reason_text())
 		self.resolution_combobox['values'] = ['[Choose a resolution]'] + [resolution.name() for resolution in issue_resolution.resolution_options]
@@ -169,7 +169,7 @@ class FixIssuesDialog(PyMSDialog):
 		self.resolution_selection_changed()
 		self.action_states()
 
-	def resolution_selection_changed(self, event: Event | None = None) -> None:
+	def resolution_selection_changed(self, _event: Event | None = None) -> None:
 		issue_resolution = self.current_issue_resolution()
 		if self.resolution_combobox.current() != issue_resolution.chosen_index:
 			issue_resolution.chosen_index = self.resolution_combobox.current()

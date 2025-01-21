@@ -15,7 +15,7 @@ class MainDelegate(Protocol):
 	def get_data_context(self) -> DataContext:
 		...
 
-	def save_code(self, code: str, parent: AnyWindow) -> bool:
+	def save_code(self, code_or_path: str, parent: AnyWindow) -> bool:
 		...
 
 	# def get_export_references(self) -> bool:
@@ -27,7 +27,7 @@ class MainDelegate(Protocol):
 	def get_serialize_context(self, output: BuiltinIO[str]) -> AISerializeContext:
 		...
 
-	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
+	def get_parse_context(self, any_input: IO.AnyInputText) -> AIParseContext:
 		...
 
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:

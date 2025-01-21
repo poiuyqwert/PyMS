@@ -4,6 +4,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 
 import re
 
+# TODO: Update file
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent):
 		self.resettimer = None

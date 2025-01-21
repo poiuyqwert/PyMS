@@ -54,7 +54,7 @@ class ImportListDialog(PyMSDialog):
 		self.toolbar.tag_enabled('item_selected', self.is_item_selected())
 		self.importbtn['state'] = NORMAL if self.can_import() else DISABLED
 
-	def add(self, event: Event | None = None) -> None:
+	def add(self, _event: Event | None = None) -> None:
 		iimport = self.config_.last_path.txt.import_.select_open_multiple(self, title='Add Imports')
 		if iimport:
 			for i in iimport:
@@ -65,7 +65,7 @@ class ImportListDialog(PyMSDialog):
 			self.listbox.select_set(END)
 			self.listbox.see(END)
 
-	def remove(self, event: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		index = int(self.listbox.curselection()[0])
 		del self.config_.imports.data[index]
 		if self.config_.imports.data and index == len(self.config_.imports.data):
@@ -73,7 +73,7 @@ class ImportListDialog(PyMSDialog):
 			self.listbox.see(index-1)
 		self.update()
 
-	def iimport(self, event: Event | None = None) -> None:
+	def iimport(self, _event: Event | None = None) -> None:
 		self.delegate.iimport([self.listbox.get(self.listbox.curselection()[0])], self)
 
 	def iimportall(self) -> None:

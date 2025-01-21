@@ -38,7 +38,7 @@ class ExternalDefDialog(PyMSDialog):
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('def_selected', self.def_selected())
 
-	def add(self, key: Event | None = None) -> None:
+	def add(self, _event: Event | None = None) -> None:
 		iimport = self.config_.last_path.txt.extdefs.select_open(self)
 		if iimport and iimport not in self.config_.extdefs.data:
 			self.config_.extdefs.data.append(iimport)
@@ -46,7 +46,7 @@ class ExternalDefDialog(PyMSDialog):
 			self.listbox.select_set(END)
 			self.listbox.see(END)
 
-	def remove(self, key: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		if not self.def_selected():
 			return
 		index = int(self.listbox.curselection()[0])

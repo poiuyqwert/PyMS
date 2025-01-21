@@ -16,7 +16,7 @@ class ContinueImportDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, 'Continue Importing?')
 
 	def widgetize(self) -> Widget:
-		Label(self, text="The AI Script with ID '%s' already exists, overwrite it?" % self.script_id).pack(pady=10)
+		Label(self, text=f"The AI Script with ID '{self.script_id}' already exists, overwrite it?").pack(pady=10)
 		frame = Frame(self)
 		yes = Button(frame, text='Yes', width=10, command=self.yes)
 		yes.pack(side=LEFT, padx=3)

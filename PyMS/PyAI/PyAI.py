@@ -47,7 +47,7 @@ import io
 
 from typing import IO as BuiltinIO
 
-LONG_VERSION = 'v%s' % Assets.version('PyAI')
+LONG_VERSION = 'v' + Assets.version('PyAI')
 
 class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -71,7 +71,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 		self.script_list: list[AIBIN.AIScript] = []
 		self.edited = False
-	
+
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
 		self.findhistory: list[str] = []
@@ -171,7 +171,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		
+
 		self.toolbar.add_row()
 		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Blank Script', Key.Insert, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Scripts', Key.Delete, enabled=False, tags='scripts_selected')
@@ -336,7 +336,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		bwscript = self.bwscript
 		if not bwscript:
 			bwscript = 'bwscript.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s' and '%s'?" % (aiscript, bwscript), default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -434,7 +434,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		try:
 			mpq_ctx = mpq.open()
 		except:
-			ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % file))
+			ErrorDialog(self, PyMSError('Open', f'Could not open MPQ "{file}"'))
 			return
 		with mpq_ctx:
 			ai = mpq.read_file('scripts\\aiscript.bin')
@@ -503,7 +503,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if not_saved:
-			MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(not_saved), type=MessageBox.OK)
+			MessageBox.askquestion(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.', type=MessageBox.OK)
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -519,13 +519,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.action_states()
 		self.update_script_status()
 
-	def register_registry(self, e=None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyAI', 'bin', 'AI')
-		except PyMSError as e:
-			ErrorDialog(self, e)
+		except PyMSError as err:
+			ErrorDialog(self, err)
 
-	def help(self, e=None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyAI.md')
 
 	def about(self) -> None:
@@ -541,7 +541,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, e=None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -561,12 +561,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
-		e = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
-		id = e.id.get()
-		if not id:
+		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
+		script_id = dialog.script_id.get()
+		if not script_id:
 			return
 		# TODO: In bwscript?
-		script = AIBIN.AIScript(id, e.flags, int(e.string.get()), AIBIN.AIScript.blank_entry_point(), False)
+		script = AIBIN.AIScript(script_id, dialog.flags, int(dialog.string.get()), AIBIN.AIScript.blank_entry_point(), False)
 		action = Actions.AddScriptAction(self, script, None)
 		self.action_manager.add_action(action)
 
@@ -616,7 +616,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def listimport(self) -> None:
 		ImportListDialog(self, self, self.config_)
 
-	def codeedit(self, event: Event | None = None) -> None:
+	def codeedit(self, _event: Event | None = None) -> None:
 		headers = self.get_selected_scripts()
 		CodeEditDialog(self, self, self.config_, list(header.id for header in headers))
 
@@ -625,10 +625,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if not scripts:
 			return
 		script = scripts[0]
-		e = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
-		if not e.id.get():
+		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
+		if not dialog.script_id.get():
 			return
-		action = Actions.EditScriptAction(self, script, e.id.get(), e.flags, int(e.string.get()))
+		action = Actions.EditScriptAction(self, script, dialog.script_id.get(), dialog.flags, int(dialog.string.get()))
 		self.action_manager.add_action(action)
 
 	def editflags(self) -> None:
@@ -662,9 +662,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if not file:
 			return
 		try:
-			files = open(file,'r').readlines()
+			with open(file, 'r', encoding='utf-8') as settings:
+				files = settings.readlines()
 		except:
-			MessageBox.showerror('Invalid File',"Could not open '%s'." % file)
+			MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
 
 		tbl = TBL.TBL()
 		try:
@@ -672,14 +673,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		unitsdat = DAT.UnitsDAT()
 		try:
 			unitsdat.load_file(files[1] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		upgradesdat = DAT.UpgradesDAT()
 		try:
 			upgradesdat.load_file(files[2] % {'path': Assets.base_dir})
@@ -693,7 +694,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		self.data_context.set_stattxt_tbl(tbl)
 		self.data_context.set_units_dat(unitsdat)
 		self.data_context.set_upgrades_dat(upgradesdat)
@@ -703,16 +704,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file = self.config_.last_path.txt.settings.select_save(self)
 		if file:
 			try:
-				set = open(file,'w')
+				settings = open(file, 'w', encoding='utf-8')
 			except:
-				MessageBox.showerror('Invalid File',"Could not save to '%s'." % file)
-			set.write(('%s\n%s\n%s\n%s' % (
-					self.config_.settings.files.stat_txt.file_path,
-					self.config_.settings.files.dat.units.file_path,
-					self.config_.settings.files.dat.upgrades,
-					self.config_.settings.files.dat.techdata
-				)).replace(Assets.base_dir, '%(path)s'))
-			set.close()
+				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
+			settings.write(f"""
+{self.config_.settings.files.stat_txt.file_path}
+{self.config_.settings.files.dat.units.file_path}
+{self.config_.settings.files.dat.upgrades}
+{self.config_.settings.files.dat.techdata}
+""".replace(Assets.base_dir, '%(path)s'))
+			settings.close()
 
 	# ActionsDelegate
 	def get_ai_bin(self) -> AIBIN.AIBIN:
@@ -799,10 +800,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		formatters = self.get_formatters()
 		return AISerializeContext(output, definitions, formatters, self.data_context)
 
-	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
+	def get_parse_context(self, any_input: IO.AnyInputText) -> AIParseContext:
 		definitions = self._get_definitions_handler()
-		with IO.InputText(input) as f:
-			code = f.read()
+		with IO.InputText(any_input) as input_text:
+			code = input_text.read()
 		lexer = AILexer(code)
 		return AIParseContext(lexer, definitions, self.data_context)
 

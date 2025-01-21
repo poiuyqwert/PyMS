@@ -34,7 +34,7 @@ class PyAIConfig(Config.Config):
 				self.main = Config.WindowGeometry(default_size=Size(550,430))
 				self.mpq_select = Config.WindowGeometry()
 				super().__init__()
-		
+
 		class Find(Config.Group):
 			def __init__(self) -> None:
 				self.script = Config.WindowGeometry()

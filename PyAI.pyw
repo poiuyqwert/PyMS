@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyAI')
@@ -91,7 +92,7 @@ def main(): # type: () -> None
 				tbl.load_file(opt.stattxt)
 				print('- Loading finished successfully')
 				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
-				definitions_handler = DefinitionsHandler()
+				definitions_handler = DefinitionsHandler.DefinitionsHandler()
 				if opt.deffile:
 					print("Loading external definitions file '%s'..." % opt.deffile)
 					handler = AIDefsSourceCodeHandler()
@@ -111,9 +112,9 @@ def main(): # type: () -> None
 								print('Invalid ID: %s' % i)
 								return
 							ids.append(i)
-					bin = AIBIN.AIBIN()
+					aibin = AIBIN.AIBIN()
 					print("Loading aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[1]))
-					bin.load(args[0], args[1])
+					aibin.load(args[0], args[1])
 					print(" - Loading finished successfully\nWriting AI Scripts to '%s'..." % args[2])
 					# TODO: Customize formatters
 					formatters = Formatters.Formatters(
@@ -121,18 +122,18 @@ def main(): # type: () -> None
 						command = Formatters.ParensCommandFormatter(),
 						comment = Formatters.HashCommentFormatter(),
 					)
-					with open(args[2], 'w') as f:
+					with open(args[2], 'w', encoding='utf-8') as f:
 						serialize_context = AISerializeContext(f, definitions_handler, formatters, data_context)
-						bin.decompile(serialize_context, ids)
+						aibin.decompile(serialize_context, ids)
 					print(" - '%s' written succesfully" % args[2])
 				else:
-					bin = AIBIN.AIBIN()
+					aibin = AIBIN.AIBIN()
 					if opt.aiscript:
 						if opt.bwscript:
 							print("Loading base aiscript.bin '%s' and bwscript.bin '%s'..." % (os.path.abspath(opt.aiscript), os.path.abspath(opt.bwscript)))
 						else:
 							print("Loading base aiscript.bin '%s'..." % os.path.abspath(opt.aiscript))
-						bin.load(opt.aiscript, opt.bwscript)
+						aibin.load(opt.aiscript, opt.bwscript)
 					print(" - Loading finished successfully\nLoading script '%s'..." % args[0])
 					with IO.InputText(args[0]) as f:
 						code = f.read()
@@ -142,7 +143,7 @@ def main(): # type: () -> None
 					bin.compile(parse_context)
 					warnings = parse_context.warnings
 					print(" - '%s' compiled successfully\nSaving file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2]))
-					bin.save(args[1], args[2])
+					aibin.save(args[1], args[2])
 					print(" - aiscript.bin '%s' and bwscript.bin '%s' written succesfully" % (args[1], args[2]))
 				if not opt.hidewarns:
 					for warning in warnings:

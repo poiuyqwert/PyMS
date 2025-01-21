@@ -22,12 +22,12 @@ class VariableNameDirectiveType(DirectiveType[str]):
 
 	def validate(self, variable_name: str, parse_context: ParseContext | None, token: str | None = None) -> None:
 		if parse_context is None:
-			raise PyMSError('Parse', "No parse context to lookup variable '%s'" % variable_name)
+			raise PyMSError('Parse', f"No parse context to lookup variable '{variable_name}'")
 		definitions = parse_context.definitions
 		if definitions is None:
-			raise PyMSError('Parse', "No definitions handler to lookup variable '%s'" % variable_name)
+			raise PyMSError('Parse', f"No definitions handler to lookup variable '{variable_name}'")
 		if not definitions.get_variable(variable_name):
-			raise PyMSError('Parse', "Variable named '%s' is not defined" % variable_name)
+			raise PyMSError('Parse', f"Variable named '{variable_name}' is not defined")
 
 class WarningDirectiveType(DirectiveType[str]):
 	def __init__(self) -> None:

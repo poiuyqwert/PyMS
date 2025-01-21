@@ -21,9 +21,9 @@ from dataclasses import dataclass
 from typing import Type, TypeVar, Iterable, Mapping, Sequence
 
 class _BaseScriptHeader(Struct.Struct):
-	def __init__(self, id: str = '', address: int = 0) -> None:
+	def __init__(self, script_id: str = '', address: int = 0) -> None:
 		super().__init__()
-		self.id = id
+		self.id = script_id
 		self.address = address
 
 class _BWScriptHeader(_BaseScriptHeader):
@@ -44,8 +44,8 @@ class _AIScriptHeader(_BaseScriptHeader):
 	def is_in_bw(self) -> bool:
 		return (self.address == 0)
 
-	def __init__(self, id: str = '', address: int = 0, string_id: int = 0, flags: int = 0) -> None:
-		super().__init__(id, address)
+	def __init__(self, script_id: str = '', address: int = 0, string_id: int = 0, flags: int = 0) -> None:
+		super().__init__(script_id, address)
 		self.string_id = string_id
 		self.flags = flags
 
@@ -72,14 +72,14 @@ class AIBIN:
 		self.active_plugins: set[str] = set()
 
 	@staticmethod
-	def _load(header_type: Type[H], file_name: str, input: IO.AnyInputBytes) -> tuple[OrderedDict[str, tuple[H, CodeBlock | None]], AIDecompileContext]:
+	def _load(header_type: Type[H], file_name: str, any_input: IO.AnyInputBytes) -> tuple[OrderedDict[str, tuple[H, CodeBlock | None]], AIDecompileContext]:
 		try:
-			with IO.InputBytes(input) as f:
-				data = f.read()
+			with IO.InputBytes(any_input) as input_bytes:
+				data = input_bytes.read()
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load', f"Couldn't load {file_name} from disk", capture_exception=True)
+		except Exception as exc:
+			raise PyMSError('Load', f"Couldn't load {file_name} from disk", capture_exception=True) from exc
 		bytecode_context = AIDecompileContext(data)
 		bytecode_handler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
@@ -93,7 +93,7 @@ class AIBIN:
 			while not scanner.at_end() and scanner.peek(Struct.l_u32):
 				header: H = scanner.scan(header_type)
 				if header.id in scripts:
-					raise PyMSError('Load', "Duplicate AI ID '%s'" % id)
+					raise PyMSError('Load', f"Duplicate AI ID '{header.id}'")
 				entry_point: CodeBlock | None = None
 				if header.address:
 					entry_point = bytecode_handler.decompile_block(header.address, bytecode_context)
@@ -101,8 +101,8 @@ class AIBIN:
 			return (scripts, bytecode_context)
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt", capture_exception=True)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt", capture_exception=True) from exc
 
 	def load(self, ai_input: IO.AnyInputBytes, bw_input: IO.AnyInputBytes | None) -> LoadIssues:
 		ai_headers, ai_context = AIBIN._load(_AIScriptHeader, 'aiscript.bin', ai_input)
@@ -114,29 +114,27 @@ class AIBIN:
 		if bw_input:
 			bw_headers, bw_context = AIBIN._load(_BWScriptHeader, 'bwscript.bin', bw_input)
 		issues: list[LoadIssue] = []
-		for id in bw_headers.keys():
-			if not id in ai_headers:
-				block = bw_headers[id][1]
+		for script_id, (_, block) in bw_headers.items():
+			if not script_id in ai_headers:
 				assert block is not None # TODO: Any better way?
-				issues.append(LoadIssue(id, LoadIssueReason.unreferenced_bw, block))
-			elif not ai_headers[id][0].is_in_bw:
-				block = bw_headers[id][1]
+				issues.append(LoadIssue(script_id, LoadIssueReason.unreferenced_bw, block))
+			elif not ai_headers[script_id][0].is_in_bw:
 				assert block is not None # TODO: Any better way?
-				issues.append(LoadIssue(id, LoadIssueReason.duplicate_bw, block))
-			if id in requires_bw:
-				requires_bw.remove(id)
+				issues.append(LoadIssue(script_id, LoadIssueReason.duplicate_bw, block))
+			if script_id in requires_bw:
+				requires_bw.remove(script_id)
 		if requires_bw:
 			raise PyMSError('Load', f'aiscript.bin has {len(requires_bw)} scripts stored in bwscript.bin that are not found in the loaded bwscript.bin: {", ".join(requires_bw)}')
 		scripts: OrderedDict[str, AIScript] = OrderedDict()
-		for id,(header,entry_point) in ai_headers.items():
+		for script_id,(header,entry_point) in ai_headers.items():
 			if header.is_in_bw:
-				entry_point = bw_headers[id][1]
+				entry_point = bw_headers[script_id][1]
 			if not entry_point:
-				raise PyMSError('Internal', f'Entry point for script {id} missing')
+				raise PyMSError('Internal', f'Entry point for script {script_id} missing')
 			# WARNING: string id's are 1 indexed in the file
-			script = AIScript(id, header.flags, header.string_id - 1, entry_point, header.is_in_bw)
+			script = AIScript(script_id, header.flags, header.string_id - 1, entry_point, header.is_in_bw)
 			entry_point.owners.append(script)
-			scripts[id] = script
+			scripts[script_id] = script
 		self._scripts = scripts
 		self._cached_sizes = None
 
@@ -145,7 +143,7 @@ class AIBIN:
 		if bw_context is not None:
 			self.expanded |= bw_context.aise_context.expanded
 			self.active_plugins.update(bw_context.language_context.active_plugins())
-		
+
 		issues.sort(key=lambda issue: issue.script_id)
 		return issues
 
@@ -280,7 +278,7 @@ class AIBIN:
 		for script_id in script_ids:
 			script = self._scripts.get(script_id)
 			if not script:
-				raise PyMSError('Decompile', "There is no AI Script with ID '%s'" % script_id)
+				raise PyMSError('Decompile', f"There is no AI Script with ID '{script_id}'")
 			strategy_builder.add_header(script)
 		source_serializer = SourceCodeSerializer()
 		source_serializer.decompile(serialize_context, strategy_builder.build())

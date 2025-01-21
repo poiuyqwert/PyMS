@@ -65,8 +65,8 @@ class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 				raise parse_context.error('Parse', f'Expected integer value in `{self.name}` x value, but got `{token.raw_value}`')
 			try:
 				x = int(token.raw_value)
-			except:
-				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` x value (got `{token.raw_value}`)')
+			except Exception as exc:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` x value (got `{token.raw_value}`)') from exc
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == ',':
 				raise parse_context.error('Parse', f'Expected comma between `{self.name}` x and y values, but got `{token.raw_value}`')
@@ -75,8 +75,8 @@ class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 				raise parse_context.error('Parse', f'Expected integer value in `{self.name}` y value, but got `{token.raw_value}`')
 			try:
 				y = int(token.raw_value)
-			except:
-				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` y value (got `{token.raw_value}`)')
+			except Exception as exc:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` y value (got `{token.raw_value}`)') from exc
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == ')':
 				raise parse_context.error('Parse', f'Expected `)` to end `{self.name}`, but got `{token.raw_value}`')
@@ -90,8 +90,8 @@ class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 				raise parse_context.error('Parse', f'Expected integer value for `{self.name}` location id, but got `{token.raw_value}`')
 			try:
 				loc = int(token.raw_value)
-			except:
-				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` location id (got `{token.raw_value}`)')
+			except Exception as exc:
+				raise parse_context.error('Parse', f'Invalid integer value in `{self.name}` location id (got `{token.raw_value}`)') from exc
 			return (PointCodeType.LOCATION, loc)
 		elif token.raw_value == 'ScriptArea':
 			return (PointCodeType.SCRIPT_AREA, 0)
@@ -427,8 +427,8 @@ class AreaCodeType(CodeType.CodeType[Area, Area]):
 				raise parse_context.error('Parse', f'Expected integer value for `{self.name}` radius value, but got `{token.raw_value}`')
 			try:
 				radius = int(token.raw_value)
-			except:
-				raise PyMSError('Parse', f'Invalid integer value for `{self.name}` radius value, got `{token.raw_value}`')
+			except Exception as exc:
+				raise PyMSError('Parse', f'Invalid integer value for `{self.name}` radius value, got `{token.raw_value}`') from exc
 		return (point, radius)
 
 	def validate(self, value: Area, parse_context: ParseContext, token: str | None = None) -> None:
@@ -520,11 +520,14 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 	def serialize(self, value: AISEIdleOrder.OptionSet, context: SerializeContext) -> str:
 		return value.serialize_options()
 
+	def lex(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
+		return super().lex(parse_context)
+
 	def parse(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
 		return AISEIdleOrder.OptionSet.parse_options(parse_context)
 
 	def keywords(self) -> Sequence[str]:
-		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder._option_types), ())
+		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder.OPTION_TYPES), ())
 
 class AttackModeCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
