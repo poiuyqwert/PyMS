@@ -10,7 +10,6 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities import Assets
-from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 
 from typing import TYPE_CHECKING
@@ -103,13 +102,13 @@ class SMKSettings(PyMSDialog, MainDelegate):
 	def load_property_smk(self) -> None:
 		smks = ['None']
 		overlay_id = 0
-		if bin := self.delegate.get_bin():
+		if dialog_bin := self.delegate.get_bin():
 			if self.smk.overlay_smk:
-				overlay_id = bin.smks.index(self.smk.overlay_smk) + 1
-			for smk in bin.smks:
+				overlay_id = dialog_bin.smks.index(self.smk.overlay_smk) + 1
+			for smk in dialog_bin.smks:
 				name = smk.filename
 				if smk.overlay_smk:
-					name += " (Overlay: %s)" % smk.overlay_smk.filename
+					name += f" (Overlay: {smk.overlay_smk.filename})"
 				smks.append(name)
 		self.smks_dropdown.setentries(smks)
 
@@ -131,10 +130,10 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.flag_unk4.set((self.smk.flags & DialogBIN.BINSMK.FLAG_UNK4 == DialogBIN.BINSMK.FLAG_UNK4))
 
 	def save_property_smk(self) -> bool:
-		assert (bin := self.delegate.get_bin())
+		assert (dialog_bin := self.delegate.get_bin())
 		edited = False
 		index = self.overlay_smk.get()-1
-		smk = (None if index == -1 else bin.smks[index])
+		smk = (None if index == -1 else dialog_bin.smks[index])
 		if smk != self.smk.overlay_smk:
 			self.smk.overlay_smk = smk
 			edited = True
@@ -183,28 +182,28 @@ class SMKSettings(PyMSDialog, MainDelegate):
 	def edit_smk(self) -> None:
 		if not self.overlay_smk.get():
 			return
-		if not (bin := self.delegate.get_bin()):
+		if not (dialog_bin := self.delegate.get_bin()):
 			return
 		pos = Geometry.of(self).pos
 		pos.x += 20
 		pos.y += 20
-		SMKSettings(self, bin.smks[self.overlay_smk.get()-1], self.widget, self, pos)
+		SMKSettings(self, dialog_bin.smks[self.overlay_smk.get()-1], self.widget, self, pos)
 
 	def add_smk(self) -> None:
-		if not (bin := self.delegate.get_bin()):
+		if not (dialog_bin := self.delegate.get_bin()):
 			return
 		smk = DialogBIN.BINSMK()
-		bin.smks.append(smk)
+		dialog_bin.smks.append(smk)
 		self.smk.overlay_smk = smk
 		self.refresh_smks()
 		self.edit_smk()
 		self.delegate.mark_edited()
 
-	def ok(self, e: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.update_preview()
 		PyMSDialog.ok(self)
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.ok()
 
 	def dismiss(self) -> None:

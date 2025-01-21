@@ -2,7 +2,7 @@
     "python.analysis.autoImportCompletions": false,
 
 	"pylint.args": [
-		"--disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name,too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks,too-many-ancestors,too-many-instance-attributes,too-many-arguments,too-many-public-methods,too-few-public-methods,import-outside-toplevel,bad-indentation,multiple-imports,line-too-long,wildcard-import,unused-wildcard-import,wrong-import-order,bare-except,unnecessary-negation,fixme,superfluous-parens,arguments-renamed"
+		"--disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,invalid-name,too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks,too-many-ancestors,too-many-instance-attributes,too-many-arguments,too-many-public-methods,too-few-public-methods,too-many-lines,import-outside-toplevel,bad-indentation,multiple-imports,line-too-long,wildcard-import,unused-wildcard-import,wrong-import-order,bare-except,unnecessary-negation,fixme,superfluous-parens,arguments-renamed,disallowed-name"
 	],
 
 	"mypy-type-checker.reportingScope": "workspace",

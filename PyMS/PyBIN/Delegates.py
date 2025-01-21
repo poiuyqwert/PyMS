@@ -41,7 +41,7 @@ class NodeDelegate(Protocol):
 	def get_dialog_asset(self, asset_id: int) -> (PILImage.Image | None):
 		...
 
-	def get_dialog_frame(self, id: int) -> (PILImage.Image | None):
+	def get_dialog_frame(self, frame_id: int) -> (PILImage.Image | None):
 		...
 
 	def get_show_hidden(self) -> bool:

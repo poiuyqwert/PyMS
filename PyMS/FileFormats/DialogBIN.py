@@ -2,7 +2,6 @@
 from . import TBL
 
 from ..Utilities.utils import flags
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import IO
 
@@ -557,15 +556,15 @@ class DialogBIN:
 		self.widgets = [dialog]
 		self.smks: list[BINSMK] = []
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		try:
 			self.load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported Dialog BIN file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported Dialog BIN file, could possibly be corrupt") from exc
 
 	def load_data(self, data: bytes) -> None:
 		widgets: list[BINWidget] = []
@@ -609,7 +608,7 @@ class DialogBIN:
 					setattr(widget, attr, value)
 
 			if widget.type > widget_max:
-				raise PyMSError('Load', "Invalid widget type '%s'" % widget_info[11])
+				raise PyMSError('Load', f"Invalid widget type '{widget_info[11]}'")
 
 			if widget.string:
 				end_offset = data.find(b'\0', string_offset)
@@ -729,9 +728,9 @@ class DialogBIN:
 			save_widget(widget, next_offset)
 		return b''.join(results)
 
-	def interpret_file(self, input: IO.AnyInputText) -> None:
-		with IO.InputText(input) as f:
-			text = f.read()
+	def interpret_file(self, any_input: IO.AnyInputText) -> None:
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 		self.interpret_data(text)
 
 	def interpret_data(self, data: str) -> None:
@@ -762,7 +761,7 @@ class DialogBIN:
 			if m:
 				smk_id = int(m.group(1))
 				if smk_id in smks:
-					raise PyMSError('Interpreting',"Duplicate definition for SMK '%s'" % smk_id,n,line)
+					raise PyMSError('Interpreting', f"Duplicate definition for SMK '{smk_id}'",n,line)
 				working = BINSMK()
 				if smk_id in backfill_smks:
 					for obj in backfill_smks[smk_id]:
@@ -782,15 +781,15 @@ class DialogBIN:
 			value = m.group(2)
 			if isinstance(working, BINWidget):
 				if not attr in BINWidget.ATTR_NAMES_REMASTERED:
-					raise PyMSError('Interpreting',"Invalid Widget attribute name '%s'" % attr,n,line)
+					raise PyMSError('Interpreting', f"Invalid Widget attribute name '{attr}'",n,line)
 				if attr == 'smk':
 					if value == 'None':
 						value = None
 					else:
 						try:
 							smk_id = int(value)
-						except:
-							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						except Exception as exc:
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'",n,line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'string':
 					if value is None:
@@ -802,20 +801,20 @@ class DialogBIN:
 					value = flags(value, 27)
 				else:
 					# todo: try catch
-					value = int(value)	
+					value = int(value)
 				if attr in BINWidget.ATTR_NAMES_REMASTERED and not attr in BINWidget.ATTR_NAMES:
 					remastered = True
 			else:
 				if not attr in BINSMK.ATTR_NAMES:
-					raise PyMSError('Interpreting',"Invalid SMK attribute name '%s'" % attr,n,line)
+					raise PyMSError('Interpreting', f"Invalid SMK attribute name '{attr}'",n,line)
 				if attr == 'overlay_smk':
 					if value == 'None':
 						value = None
 					else:
 						try:
 							smk_id = int(value)
-						except:
-							raise PyMSError('Interpreting',"Invalid SMK id '%s', expected an Integer or 'None'" % value,n,line)
+						except Exception as exc:
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'",n,line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'filename':
 					value = TBL.compile_string(value)
@@ -825,12 +824,11 @@ class DialogBIN:
 					value = int(value)
 			setattr(working, attr, value)
 		if backfill_smks:
-			raise PyMSError('Interpreting',"SMK %s is missing" % list(backfill_smks.keys())[0])
-		for i in range(len(widgets)):
-			widget = widgets[i]
+			raise PyMSError('Interpreting', f"SMK {list(backfill_smks.keys())[0]} is missing")
+		for index, widget in enumerate(widgets):
 			if widget.type == BINWidget.TYPE_DIALOG:
-				del widgets[i]
-				widgets.insert(i,widget)
+				del widgets[index]
+				widgets.insert(index,widget)
 				break
 		else:
 			raise PyMSError('Interpreting','No dialog found.')
@@ -849,7 +847,7 @@ class DialogBIN:
 		attrs: Sequence[str] = BINSMK.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
 		for i,smk in enumerate(self.smks):
-			result += 'SMK %d:\n' % i
+			result += f'SMK {i}:\n'
 			for attr in attrs:
 				value = getattr(smk, attr)
 				hint = ''
@@ -859,7 +857,7 @@ class DialogBIN:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
 					value = flags(value, 5)
-				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}'
 			result += '\n'
 		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
 		longest = sorted(len(n) for n in attrs)[-1]
@@ -879,7 +877,7 @@ class DialogBIN:
 						hint = BINWidget.TYPE_NAMES[value]
 					else:
 						hint = 'Unknown'
-				result += '\t%s%s%s%s%s\n' % (attr,' ' * (longest - len(attr) + 1),value,' # ' if hint else '',hint)
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}'
 			result += '\n'
 		return result
 
@@ -899,4 +897,3 @@ class DialogBIN:
 # 	data = dialogbin.save_data()
 # 	dialogbin.load_data(data)
 # 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')
-
