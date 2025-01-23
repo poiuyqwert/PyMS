@@ -24,7 +24,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-LONG_VERSION = 'v%s' % Assets.version('PyFNT')
+LONG_VERSION = 'v' + Assets.version('PyFNT')
 
 DISPLAY_CHARS = [
 	'', # 0
@@ -394,7 +394,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.fnt'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -415,7 +415,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		if not self.fnt:
 			return
 		for l in range(len(self.fnt.letters)):
-			self.listbox.insert(END, '%s (%s)' % (self.fnt.start+l,DISPLAY_CHARS[self.fnt.start+l]))
+			self.listbox.insert(END, f'{self.fnt.start+l} ({DISPLAY_CHARS[self.fnt.start+l]})')
 		self.listbox.select_set(0)
 
 	def resize(self) -> None:
@@ -426,7 +426,8 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.canvas['height'] = self.fnt.height * 4 + 1
 		for y in range(self.fnt.height):
 			for x in range(self.fnt.width):
-				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][0]]), outline='', tag='%d,%d' % (x,y)) # type: ignore[call-overload]
+				r,g,b = self.palette.palette[self.palette.image[0][0]]
+				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=f'#{r:02X}{g:02X}{b:02X}', outline='', tag=f'{x},{y}') # type: ignore[call-overload]
 
 	def preview(self) -> None:
 		if not self.fnt or not self.listbox.size():
@@ -434,18 +435,19 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		l = int(self.listbox.curselection()[0])
 		for y,yd in enumerate(self.fnt.letters[l]):
 			for x,c in enumerate(yd):
-				item = self.canvas.find_withtag('%d,%d' % (x,y))
+				item = self.canvas.find_withtag(f'{x},{y}')
 				if item:
-					item[0].config(fill='#%02X%02X%02X' % tuple(self.palette.palette[self.palette.image[0][c]]))
+					r,g,b = self.palette.palette[self.palette.image[0][c]]
+					item[0].config(fill=f'#{r:02X}{g:02X}{b:02X}')
 
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.fnt'
 		if not file_path:
-			self.title('PyFNT %s' % LONG_VERSION)
+			self.title(f'PyFNT {LONG_VERSION}')
 		else:
-			self.title('PyFNT %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyFNT {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -533,7 +535,6 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.canvas.delete(ALL)
 		self.canvas['width'] = 0
 		self.canvas['height'] = 0
-		self.firstbox = None
 
 	def exports(self) -> None:
 		if not self.fnt:

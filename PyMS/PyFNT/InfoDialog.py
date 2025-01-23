@@ -33,6 +33,6 @@ class InfoDialog(PyMSDialog):
 		self.letters.range[1] = 256 - i
 		self.letters.editvalue()
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.need_size = None
 		PyMSDialog.cancel(self)
