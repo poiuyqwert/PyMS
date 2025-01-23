@@ -118,8 +118,8 @@ class SpritesTab(DATTab):
 			self.selcircleentry.set(n)
 		self.drawpreview()
 
-	def updatehealth(self, num: int, type: bool) -> None:
-		if type:
+	def updatehealth(self, num: int, basic: bool) -> None:
+		if basic:
 			# self.healthbar.check = False
 			self.healthbar.set((num + 1) * 3)
 		else:
@@ -127,7 +127,7 @@ class SpritesTab(DATTab):
 			self.boxes.set(max(1,(num - 1) // 3))
 		self.drawpreview()
 
-	def drawpreview(self, e: Event | None = None) -> None:
+	def drawpreview(self, _event: Event | None = None) -> None:
 		if not self.delegate.data_context.sprites.dat:
 			return
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
@@ -186,7 +186,7 @@ class SpritesTab(DATTab):
 		if self.visible.get() != entry.is_visible:
 			entry.is_visible = self.visible.get()
 			self.edited = True
-		
+
 		if entry.health_bar is not None and self.healthbar.get() != entry.health_bar:
 			entry.health_bar = self.healthbar.get()
 			self.edited = True

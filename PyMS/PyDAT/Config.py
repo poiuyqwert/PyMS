@@ -1,5 +1,5 @@
 
-from .NameDisplaySetting import NamesDisplaySetting
+from .NamesDisplay import NamesDisplaySetting
 
 from ..Utilities import Config
 from ..Utilities.UIKit import Size, FileType

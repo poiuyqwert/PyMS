@@ -43,8 +43,8 @@ class DATUnitsTab(NotebookTab, DATTabConveniences):
 			self.sub_delegate.edited = edited
 			self.delegate.update_status_bar()
 
-	def load_data(self, entry):
+	def load_data(self, _entry):
 		pass
 
-	def save_data(self, entry):
+	def save_data(self, _entry):
 		return False

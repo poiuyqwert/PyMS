@@ -69,7 +69,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def update_used_by_header(self) -> None:
 		if not self.used_by_header:
 			return
-		text = 'Used By (%d)' % len(self.used_by_data)
+		text = f'Used By ({len(self.used_by_data)})'
 		if  self.delegate.data_context.config.show_used_by.value:
 			text += ':'
 		self.used_by_header.set(text)
@@ -128,7 +128,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if force_open and not self.delegate.data_context.config.show_used_by.value:
 			self.toggle_used_by()
 
-	def used_by_jump(self, event: Event | None) -> None:
+	def used_by_jump(self, _event: Event | None) -> None:
 		if not self.used_by_listbox:
 			return
 		selections = cast(list[int], self.used_by_listbox.curselection())
@@ -137,7 +137,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		selected = selections[0]
 		if selected < len(self.used_by_data):
 			match = self.used_by_data[selected]
-			tab = cast(DATTab, self.delegate.change_tab(match.dat_id)) # 
+			tab = cast(DATTab, self.delegate.change_tab(match.dat_id))
 			self.delegate.change_id(match.entry_id)
 			if match.dat_sub_tab_id:
 				tab.change_sub_tab(match.dat_sub_tab_id)
@@ -156,12 +156,12 @@ class DATTab(NotebookTab, DATTabConveniences):
 	def deactivate(self) -> None:
 		self.save_data()
 
-	def load_data(self, id: int | None = None) -> None:
+	def load_data(self, entry_id: int | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
-		if id is not None:
-			self.id = id
+		if entry_id is not None:
+			self.id = entry_id
 		entry = dat.get_entry(self.id)
 		self.load_entry(entry)
 		self.check_used_by_references()
@@ -192,7 +192,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			file = self.get_dat_data().file_path
 			if not file:
 				file = dat.FILE_NAME
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+			save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 			if save != MessageBox.NO:
 				if save == MessageBox.CANCEL:
 					return True
@@ -236,7 +236,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
-		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		self._expand_entries(1)
 
@@ -244,7 +244,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
-		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title='Expand %s?' % dat_data.dat.FILE_NAME, message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		def _set_entry_count(count):
 			add = count - dat_data.entry_count()
@@ -253,7 +253,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self._expand_entries(add)
 		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.config.windows.entry_count)
 
-	def new(self, key: Event | None = None) -> None:
+	def new(self, _event: Event | None = None) -> None:
 		if not self.unsaved():
 			self.get_dat_data().new_file()
 			self.id = 0
@@ -284,15 +284,15 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.edited = True
 		self.delegate.refresh()
 
-	def save(self, key: Event | None = None) -> None:
+	def save(self, _event: Event | None = None) -> None:
 		self.saveas(file_path=self.get_dat_data().file_path)
 
-	def saveas(self, key: Event | None = None, file_path: str | None = None) -> None:
+	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
 		if not file_path:
-			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title='Save %s As' % dat.FILE_NAME, filetypes=[FileType.dat('StarCraft %s files' % dat.FILE_NAME)], filename=dat.FILE_NAME)
+			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title=f'Save {dat.FILE_NAME} As', filetypes=[FileType.dat(f'StarCraft {dat.FILE_NAME} files')], filename=dat.FILE_NAME)
 			if not file_path:
 				return
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -306,7 +306,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.edited = False
 		self.delegate.update_status_bar()
 
-	def export(self, key: Event | None = None) -> None:
+	def export(self, _event: Event | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return

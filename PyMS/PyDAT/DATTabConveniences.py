@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-from __future__ import annotations
-
 from ..Utilities.utils import fit, float_to_str
 from ..Utilities.UIKit import *
 
@@ -10,11 +8,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .Delegates import MainDelegate
 
-class DATTabConveniences(object):
+class DATTabConveniences:
 	delegate: MainDelegate
 
 	def tip(self, obj: Widget, tipname: str, hint: str) -> None:
-		Tooltip(obj, '%s:\n' % tipname + fit('  ', self.delegate.data_context.hints[hint], end=True)[:-1])
+		Tooltip(obj, f'{tipname}:\n{fit("  ", self.delegate.data_context.hints[hint], end=True)[:-1]}')
 
 	def makeCheckbox(self, frame: Misc, var: Variable, txt: str, hint: str) -> Checkbutton:
 		c = Checkbutton(frame, text=txt, variable=var)

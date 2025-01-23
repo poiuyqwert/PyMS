@@ -104,7 +104,7 @@ class TechnologyTab(DATTab):
 		l = LabelFrame(m, text='Technology Properties:')
 		s = Frame(l)
 		f = Frame(s)
-		
+
 		Label(f, text='ResearchReq:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.researchReq, font=Font.fixed(), width=10).pack(side=LEFT)
 		self.tip(f, 'Research Requirements', 'TechReq')
@@ -122,7 +122,7 @@ class TechnologyTab(DATTab):
 		self.tip(f, 'Race', 'TechRace')
 		f.pack(fill=X)
 		f = Frame(s)
-		
+
 		self.makeCheckbox(f, self.unused, 'Researched', 'TechUnused').pack(side=LEFT)
 		self.makeCheckbox(f, self.broodwar, 'BroodWar', 'TechBW').pack(side=LEFT)
 

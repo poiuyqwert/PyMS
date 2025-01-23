@@ -75,7 +75,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 		# AI Flags
 		self.makeCheckbox(f, self.AI_NoSuicide, 'Ignore Strategic Suicide missions', 'UnitAINoSuicide').pack(side=LEFT)
 		self.makeCheckbox(f, self.AI_NoGuard, 'Don\'t become a guard', 'UnitAINoGuard').pack(side=LEFT)
-		
+
 		f.pack(fill=X)
 		s.pack(fill=BOTH, padx=5, pady=(0,5))
 		l.pack(fill=X, side=TOP)
@@ -251,36 +251,36 @@ class AIActionsUnitsTab(DATUnitsTab):
 		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) // 256)) * 7.58) * reduction)
 
 		def fstr(f):
-			return ('%f' % f).rstrip('0').rstrip('.')
+			return str(f).rstrip('0').rstrip('.')
 		text = self.force_value_text
 		text.insert(END, force_type_name, ('force_type',))
 		text.insert(END, '\n = ')
 		text.insert(END, fstr(force_value), ('force_value',))
 		text.insert(END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type_name.lower()
-		text.insert(END, '%d' % attack_range, ('%s_range' % tp,))
+		text.insert(END, str(attack_range), (f'{tp}_range',))
 		text.insert(END, ' / ')
-		text.insert(END, '%d' % cooldown, ('%s_cooldown' % tp,))
+		text.insert(END, str(cooldown), (f'{tp}_cooldown',))
 		text.insert(END, ') * ')
-		text.insert(END, '%d' % factor, ('%s_factor' % tp,))
+		text.insert(END, str(factor), (f'{tp}_factor',))
 		text.insert(END, ' * ')
-		text.insert(END, '%d' % damage, ('%s_damage' % tp,))
+		text.insert(END, str(damage), (f'{tp}_damage',))
 		text.insert(END, ' + (floor((')
-		text.insert(END, '%d' % factor, ('%s_factor' % tp,))
+		text.insert(END, str(factor), (f'{tp}_factor',))
 		text.insert(END, ' * ')
-		text.insert(END, '%d' % damage, ('%s_damage' % tp,))
+		text.insert(END, str(damage), (f'{tp}_damage',))
 		text.insert(END, ' * 2048) / ')
-		text.insert(END, '%d' % cooldown, ('%s_cooldown' % tp,))
+		text.insert(END, str(cooldown), (f'{tp}_cooldown',))
 		text.insert(END, ') * (')
-		text.insert(END, '%d' % hp, ('hp',))
+		text.insert(END, str(hp), ('hp',))
 		text.insert(END, ' + ')
-		text.insert(END, '%d' % shields, ('shields',))
+		text.insert(END, str(shields), ('shields',))
 		text.insert(END, ')) / 256)) * 7.58) * ')
 		text.insert(END, fstr(reduction), ('reduction',))
 		text.insert(END, ')')
 		if force_type == ForceType.air and override_unit_id is not None:
 			text.insert(END, '\n\nUsing weapons from Unit: ')
-			text.insert(END, '%d' % override_unit_id, ('%s_weapon_override' % tp,))
+			text.insert(END, str(override_unit_id), (f'{tp}_weapon_override',))
 
 	def build_force_values(self) -> None:
 		text = self.force_value_text

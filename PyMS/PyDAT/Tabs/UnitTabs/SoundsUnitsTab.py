@@ -16,7 +16,7 @@ class SoundsUnitsTab(DATUnitsTab):
 	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
 		scrollview = ScrollView(self)
-		
+
 		self.ready_sound = IntegerVar(0, [0,0])
 		self.ready_sound_dropdown = IntVar()
 		self.yes_sound_start = IntegerVar(0, [0,0])

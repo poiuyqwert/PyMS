@@ -226,7 +226,7 @@ class OrdersTab(DATTab):
 		self.highlightentry.set(entry.highlight_icon)
 		self.requirements.set(entry.requirements)
 		self.obscured.set(entry.obscured_order)
-		
+
 		self.drawpreview()
 
 	def save_entry(self, entry: DATOrder) -> None:

@@ -32,7 +32,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = Frame(l)
-		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, none_value=None, values=[], jump_dat_id=None):
+		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, values, none_value=None, jump_dat_id=None):
 			f = Frame(s)
 			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -44,10 +44,10 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.tip(f, title, hint_name)
 			f.pack(fill=X)
 			return dropdown
-		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', jump_dat_id=DATID.flingy)
-		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', jump_dat_id=DATID.images)
-		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', none_value=65535, jump_dat_id=DATID.portdata)
-		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
+		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', [], jump_dat_id=DATID.flingy)
+		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', [], jump_dat_id=DATID.images)
+		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', [], none_value=65535, jump_dat_id=DATID.portdata)
+		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', Assets.data_cache(Assets.DataReference.ElevationLevels))
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.direction, font=Font.fixed(), width=3).pack(side=LEFT)
@@ -86,7 +86,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		]
 		for t,v in dims:
 			f = Frame(s)
-			Label(f, text='%s:' % t, width=13, anchor=E).pack(side=LEFT)
+			Label(f, text=f'{t}:', width=13, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=v, font=Font.fixed(), width=5).pack(side=LEFT)
 			self.tip(f, t + ' Dimension', 'UnitDim' + t)
 			f.pack(fill=X)
@@ -119,7 +119,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#00FF00')
 		self.place_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000')
 		self.addon_parent_size_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FFFF00')
-	
+
 		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=TOP)
 		o = Frame(s)
 		Checkbutton(o, text='Show StarEdit Placement Box (Red)', variable=self.showplace, command=self.drawboxes).pack(side=LEFT)
@@ -193,7 +193,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 		else:
 			self.size_item.coords(0, 0, 0 ,0)
 
-	def draw_image(self, image_id: int, x: int = 130, y: int = 130) -> Canvas.Item | None: 
+	def draw_image(self, image_id: int, x: int = 130, y: int = 130) -> Canvas.Item | None:
 		frame = self.delegate.data_context.get_image_frame(image_id)
 		if not frame:
 			return None

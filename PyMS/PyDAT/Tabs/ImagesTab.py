@@ -197,17 +197,17 @@ class ImagesTab(DATTab):
 				entry_var.range[1] = len(self.delegate.data_context.imagestbl.strings)
 		if DataID.iscriptbin in ids:
 			iscript_names = []
-			last = -1
+			last_id = -1
 			for script in self.delegate.data_context.iscriptbin.list_scripts():
-				id = script.id
-				if id-last > 1:
-					iscript_names.extend(['*Unused*'] * (id-last-1))
-				if id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
-					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
+				script_id = script.id
+				if script_id-last_id > 1:
+					iscript_names.extend(['*Unused*'] * (script_id-last_id-1))
+				if script_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[script_id]
 				else:
 					n = 'Unnamed Custom Entry'
 				iscript_names.append(n)
-				last = id
+				last_id = script_id
 			self.iscripts.setentries(iscript_names)
 			self.iscriptentry.range[1] = len(iscript_names)-1
 
@@ -217,7 +217,7 @@ class ImagesTab(DATTab):
 	def shieldupdate(self, n: int) -> None:
 		self.shieldentry.set([0,133,2,184][n])
 
-	def drawpreview(self, e: Event | None = None) -> None:
+	def drawpreview(self, _event: Event | None = None) -> None:
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():

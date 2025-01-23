@@ -260,7 +260,6 @@ class StarEditUnitsTab(DATUnitsTab):
 		if self.height.get() != entry.staredit_placement_size.height:
 			entry.staredit_placement_size.height = self.height.get()
 			edited = True
-		
+
 		self.delegate.data_context.config.preview.staredit.show.value = self.showpreview.get()
 		return edited
-	

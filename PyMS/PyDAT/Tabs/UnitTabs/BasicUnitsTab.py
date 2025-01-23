@@ -411,4 +411,3 @@ class BasicUnitsTab(DATUnitsTab):
 			entry.staredit_group_flags = staredit_group_flags
 			edited = True
 		return edited
-	

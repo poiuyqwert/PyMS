@@ -32,7 +32,7 @@ class UpgradesTab(DATTab):
 		l = LabelFrame(scrollview.content_view, text='Upgrade Display:')
 		s = Frame(l)
 		ls = Frame(s)
-		
+
 		f = Frame(ls)
 		Label(f, text='Icon:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.iconentry, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -42,7 +42,7 @@ class UpgradesTab(DATTab):
 		self.tip(f, 'Upgrade Icon', 'UpgIcon')
 		Button(f, image=Assets.get_image('find'), command=self.choose_icon, width=20, height=20).pack(side=LEFT, padx=2)
 		f.pack(fill=X)
-		
+
 		f = Frame(ls)
 		Label(f, text='Label:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.labelentry, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -52,7 +52,7 @@ class UpgradesTab(DATTab):
 		self.tip(f, 'Upgrade Label', 'UpgLabel')
 		f.pack(fill=X)
 		ls.pack(side=LEFT, fill=X)
-		
+
 		ls = Frame(s, relief=SUNKEN, bd=1)
 		self.preview = Canvas(ls, width=34, height=34, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
@@ -70,19 +70,19 @@ class UpgradesTab(DATTab):
 		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Base Cost:')
 		s = Frame(l)
-		
+
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.baseminerals, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Base Mineral Cost', 'UpgMinerals')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.basevespene, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Base Vespene Cost', 'UpgVespene')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.basetime, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -102,19 +102,19 @@ class UpgradesTab(DATTab):
 
 		l = LabelFrame(m, text='Factor Cost:')
 		s = Frame(l)
-		
+
 		f = Frame(s)
 		Label(f, text='Minerals:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factorminerals, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Mineral Cost Factor', 'UpgFactorMinerals')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='Vespene:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factorvespene, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Vespene Cost Factor', 'UpgFactorVespene')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='Time:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.factortime, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -135,25 +135,25 @@ class UpgradesTab(DATTab):
 		m = Frame(scrollview.content_view)
 		l = LabelFrame(m, text='Misc.:')
 		s = Frame(l)
-		
+
 		f = Frame(s)
 		Label(f, text='Max Repeats:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.maxrepeats, font=Font.fixed(), width=3).pack(side=LEFT)
 		self.tip(f, 'Max Repeats', 'UpgRepeats')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='ReqIndex:', width=12, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.reqIndex, font=Font.fixed(), width=5).pack(side=LEFT)
 		self.tip(f, 'Requirements Index', 'UpgReq')
 		f.pack(fill=X)
-		
+
 		f = Frame(s)
 		Label(f, text='Race:', width=12, anchor=E).pack(side=LEFT)
 		DropDown(f, self.race, Assets.data_cache(Assets.DataReference.Races), width=10).pack(side=LEFT, fill=X, expand=1)
 		self.tip(f, 'Race', 'UpgRace')
 		f.pack(fill=X)
-		
+
 		self.makeCheckbox(s, self.broodwar, 'BroodWar', 'UpgIsBW').pack()
 		s.pack(fill=BOTH, padx=5, pady=5)
 		l.pack(side=LEFT)

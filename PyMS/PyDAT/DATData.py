@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from .DataID import DATID
-from .NameDisplaySetting import NamesDisplaySetting
 
 from ..FileFormats.DAT import *
 from ..FileFormats.DAT.AbstractDAT import AbstractDAT
@@ -79,16 +78,16 @@ class DATData(Generic[DAT]):
 		return self.dat.save_data()
 
 	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
-		with open(path, 'r') as f:
+		with open(path, 'r', encoding='utf-8') as f:
 			contents = f.readlines()
 		self.name_overrides = DATEntryName.parse_overrides(contents)
 		if update_names:
 			self.update_names()
 
 	def save_name_overrides(self, path: str) -> None:
-		with open(path, 'w') as f:
+		with open(path, 'w', encoding='utf-8') as f:
 			for entry_id in sorted(self.name_overrides.keys()):
-				f.write('%d%s:%s\n' % (entry_id, '+' if self.name_overrides[entry_id][0] else '', self.name_overrides[entry_id][1]))
+				f.write(f'{entry_id}{"+" if self.name_overrides[entry_id][0] else ""}:{self.name_overrides[entry_id][1]}\n')
 
 	def update_names(self) -> None:
 		entry_count = self.entry_count()

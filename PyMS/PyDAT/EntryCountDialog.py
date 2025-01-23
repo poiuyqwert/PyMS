@@ -21,16 +21,16 @@ class EntryCountDialog(PyMSDialog):
 
 	def widgetize(self) -> Misc | None:
 		assert self.dat_data.dat is not None
-		Label(self, text='How many entres to set for %s?' % self.dat_data.dat.FILE_NAME).pack(padx=5, pady=5)
+		Label(self, text=f'How many entres to set for {self.dat_data.dat.FILE_NAME}?').pack(padx=5, pady=5)
 		Entry(self, textvariable=self.result).pack(padx=5, fill=X)
 
 		details = []
 		if self.dat_data.dat.FORMAT.expanded_min_entries:
-			details.append(' - Minimum expanded entries: %d' % self.dat_data.dat.FORMAT.expanded_min_entries)
+			details.append(f' - Minimum expanded entries: {self.dat_data.dat.FORMAT.expanded_min_entries}')
 		if self.dat_data.dat.FORMAT.expanded_max_entries:
-			details.append(' - Maximum expanded entries: %d' % self.dat_data.dat.FORMAT.expanded_max_entries)
+			details.append(f' - Maximum expanded entries: {self.dat_data.dat.FORMAT.expanded_max_entries}')
 		if self.dat_data.dat.FORMAT.expanded_entries_multiple:
-			details.append(' - Expanded entries multiple: %d' % self.dat_data.dat.FORMAT.expanded_entries_multiple)
+			details.append(f' - Expanded entries multiple: {self.dat_data.dat.FORMAT.expanded_entries_multiple}')
 		if self.dat_data.dat.FORMAT.expanded_entries_reserved:
 			details.append(' - Some entries are reserved')
 		if details:
@@ -53,7 +53,7 @@ class EntryCountDialog(PyMSDialog):
 		if not self.resulting_count_var:
 			return
 		resulting_count = self.dat_data.dat.expanded_count(self.result.get())
-		self.resulting_count_var.set('Resulting entry count: %d' % resulting_count)
+		self.resulting_count_var.set(f'Resulting entry count: {resulting_count}')
 
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
@@ -61,7 +61,7 @@ class EntryCountDialog(PyMSDialog):
 	def ok(self, _: Event | None = None) -> None:
 		current_entry_count = self.dat_data.entry_count()
 		if self.result.get() < current_entry_count:
-			MessageBox.showerror(parent=self, title='Invalid Entry Count', message="The entry count can't be set to less than the current entries (%d)." % current_entry_count)
+			MessageBox.showerror(parent=self, title='Invalid Entry Count', message=f"The entry count can't be set to less than the current entries ({current_entry_count}).")
 			self.result.set(current_entry_count)
 			return
 		self.callback(self.result.get())
