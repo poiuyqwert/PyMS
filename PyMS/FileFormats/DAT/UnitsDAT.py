@@ -117,7 +117,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		neutral     = 1 << 7
 		RACE_FLAGS  = (zerg | terran | protoss)
 		GROUP_FLAGS = (men | building | factory | independent | neutral)
-	
+
 	class StarEditAvailabilityFlag:
 		non_neutral           = 1 << 0
 		unit_listing          = 1 << 1
@@ -308,7 +308,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 			self.staredit_availability_flags
 		)
 
-	def limit(self, id):
+	def limit(self, entry_id: int):
 		self.infestation = None
 		self.ready_sound = None
 		self.pissed_sound_start = None

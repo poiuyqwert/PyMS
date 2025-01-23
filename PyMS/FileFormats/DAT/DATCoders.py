@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any
 
-class DATPropertyCoder(object):
+class DATPropertyCoder:
 	def encode(self, value):
 		raise NotImplementedError(self.__class__.__name__ + '.encode()')
 
@@ -30,7 +30,7 @@ class DATFlagsCoder(DATPropertyCoder):
 			flag = (1 << bit)
 			flag_name = self.flag_mapping.get(flag)
 			if not flag_name:
-				flag_name = 'flag_0x%02X' % (flag)
+				flag_name = f'flag_0x{flag:02X}'
 			values[flag_name] = (flags & flag) == flag
 		return values
 
@@ -47,7 +47,7 @@ class DATFlagsCoder(DATPropertyCoder):
 			else:
 				match = DATFlagsCoder.RE_FLAG.match(name)
 				if not match:
-					raise PyMSError('Decode', 'Invalid flag name %s' % name)
+					raise PyMSError('Decode', f'Invalid flag name {name}')
 				flag = int(match.group(1), 16)
 			flags |= flag
 		return flags
@@ -149,13 +149,13 @@ class DATBoolCoder(DATPropertyCoder):
 	def encode(self, value: int) -> Any:
 		if value == 0:
 			return False
-		elif value == 1:
+		if value == 1:
 			return True
 		return value
 
 	def decode(self, value: Any) -> int:
-		if value == False:
+		if value is False:
 			return 0
-		elif value == True:
+		if value is True:
 			return 1
 		return value

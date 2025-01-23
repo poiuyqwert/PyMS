@@ -93,14 +93,14 @@ class DATData(Generic[DAT]):
 		entry_count = self.entry_count()
 		names: list[str] = []
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
+			names.append(DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
 	def entry_name(self, entry_id: int) -> str:
 		if entry_id >= len(self.names):
 			entry_count = self.entry_count()
-			return DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
+			return DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
 	def is_expanded(self) -> bool:
