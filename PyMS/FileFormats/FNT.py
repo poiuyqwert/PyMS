@@ -5,11 +5,10 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	from ..Utilities import Assets
 	from ..Utilities.DependencyError import DependencyError
-	import sys, os
-	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
-	e.startup()
+	import sys
+	err_dialog = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
+	err_dialog.startup()
 	sys.exit()
 
 from . import BMP
@@ -136,7 +135,7 @@ class FNT:
 	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'FNT')
 		if data[:4] != b'FONT':
-			raise PyMSError('Load',"Invalid FNT file '%s' (invalid header)" % file)
+			raise PyMSError('Load', f"Invalid FNT file '{file}' (invalid header)")
 		try:
 			lowi,highi,maxw,maxh = tuple(int(v) for v in struct.unpack('<4B',data[4:8]))
 			letters: list[Pixels] = []
@@ -176,14 +175,14 @@ class FNT:
 			self.start = lowi
 			self.letters = letters
 			self.sizes = sizes
-		except:
-			raise PyMSError('Load',"Unsupported FNT file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported FNT file '{file}', could possibly be corrupt") from exc
 
 	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file, 'wb')
-		except:
-			raise PyMSError('Compile',"Could not load file '%s'" % file)
+		except Exception as exc:
+			raise PyMSError('Compile', f"Could not load file '{file}'") from exc
 		header = b'FONT'
 		header += self.start.to_bytes()
 		header += (self.start+len(self.letters)-1).to_bytes()
