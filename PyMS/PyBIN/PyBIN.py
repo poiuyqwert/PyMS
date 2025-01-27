@@ -1248,7 +1248,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			if asset_id in self.dialog_assets:
 				asset = self.dialog_assets[asset_id]
 			else:
-				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, image_bounds=self.dlggrp.images_bounds[asset_id])
+				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, bounds=self.dlggrp.images_bounds[asset_id])
 				self.dialog_assets[asset_id] = asset
 		return asset
 
@@ -1258,7 +1258,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			if frame_id in self.dialog_frames:
 				frame = self.dialog_frames[frame_id]
 			else:
-				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, image_bounds=self.tilegrp.images_bounds[frame_id])
+				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, bounds=self.tilegrp.images_bounds[frame_id])
 				self.dialog_frames[frame_id] = frame
 		return frame
 

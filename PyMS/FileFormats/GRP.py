@@ -5,9 +5,8 @@ try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
 except:
-	from ..Utilities import Assets
 	from ..Utilities.DependencyError import DependencyError
-	import sys, os
+	import sys
 	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
 	e.startup()
 	sys.exit()
@@ -37,7 +36,7 @@ def rle_normal(pal: RawPalette, index: int, player_colors: list[RGB] | None = No
 		rgb = player_colors[index - 8]
 	return (rgb[0],rgb[1],rgb[2], 255)
 
-def rle_shadow(pal: RawPalette, index: int, color: RGBA | None = None) -> RGBA:
+def rle_shadow(_pal: RawPalette, _index: int, color: RGBA | None = None) -> RGBA:
 	return color or (0,0,0,255)
 
 class Outline(Enum):
@@ -77,9 +76,9 @@ def image_bounds(image: Pixels, transindex: int = 0) -> Bounds:
 	return (bounds[0], bounds[1], bounds[2], bounds[3])
 
 # transindex=None for no transparency
-def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, image_bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> PILImage.Image:
-	if image_bounds:
-		x_min,y_min,x_max,y_max = image_bounds
+def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> PILImage.Image:
+	if bounds:
+		x_min,y_min,x_max,y_max = bounds
 		image = list(line[x_min:x_max+1] for line in image[y_min:y_max+1])
 	width = len(image[0])
 	height = len(image)
@@ -98,12 +97,13 @@ def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, image_
 	i.putdata(data) # type: ignore[arg-type]
 	return i
 
-def image_to_tk(image: Pixels, palette: RawPalette, transindex: int = 0, image_bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
-	pil = image_to_pil(image, palette, transindex, image_bounds, flipHor, draw_function, draw_info)
+def image_to_tk(image: Pixels, palette: RawPalette, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
+	pil = image_to_pil(image, palette, transindex, bounds, flipHor, draw_function, draw_info)
 	return cast(Image, ImageTk.PhotoImage(pil))
 
 ImageWithBounds = tuple[Image, int, int, int, int]
 
+# TODO: Why are `buffered` and `trans` unused?
 def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, buffered: bool = False, size: bool = True, trans: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image | ImageWithBounds:
 	if isinstance(g, CacheGRP):
 		d = g[f or 0]
@@ -174,7 +174,7 @@ class RLE:
 		encoded = b''
 		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
 			run = line[x:x+RLE.STATIC_MAX_LENGTH]
-			encoded += struct.pack('<%dB' % (1 + len(run)), len(run), *run)
+			encoded += struct.pack(f'<{1 + len(run)}B', len(run), *run)
 		return encoded
 
 	@staticmethod
@@ -227,11 +227,11 @@ class RLE:
 		return line
 
 class CacheGRP:
-	def __init__(self, palette: RawPalette = [(0,0,0)]*256) -> None:
+	def __init__(self, palette: RawPalette | None = None) -> None:
 		self.frames = 0
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette = palette or [(0,0,0)]*256
 		self.imagebuffer: list[tuple[Bounds, tuple[int, ...]]] = []
 		self.images: dict[int, Pixels] = {}
 		self.image_bounds: dict[int, Bounds] = {}
@@ -242,8 +242,10 @@ class CacheGRP:
 		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = struct.unpack('<3H',data[:6])
-			if frames < 1 or frames > 2400 or width < 1 or width > 256 or height < 1 or height > 256:
-				raise Exception()
+			if frames < 1 or frames > 2400:
+				raise PyMSError('Load', f'Invalid GRP file (expected between 1 and 2400 frames, got {frames})')
+			if width < 1 or width > 256 or height < 1 or height > 256:
+				raise PyMSError('Load', f'Invalid GRP file (expected size to be between 1x1 and 256x256, got {width}x{height})')
 			if restrict:
 				frames = restrict
 			images: list[tuple[Bounds, tuple[int, ...]]] = []
@@ -253,8 +255,10 @@ class CacheGRP:
 				for line in range(lines):
 					line_offsets.append(framedata+struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0])
 				images.append(((xoffset, yoffset, linewidth, lines), tuple(line_offsets)))
-		except:
-			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt or an uncompressed GRP" % file, capture_exception=True)
+		except PyMSError:
+			raise
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt or an uncompressed GRP", capture_exception=True) from exc
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -284,11 +288,11 @@ class CacheGRP:
 					image.append([0] * xoffset + RLE.decompress_line(self.databuffer[offset:], linewidth) + [0] * (self.width-linewidth-xoffset))
 				if self.uncompressed is None:
 					self.uncompressed = False
-			except:
+			except Exception as exc: # pylint: disable=broad-exception-caught
 				if self.uncompressed is None:
 					self.uncompressed = True
 				else:
-					raise PyMSError('Decompile','Could not decompile frame %s, GRP could be corrupt.' % frame)
+					raise PyMSError('Decompile', f'Could not decompile frame {frame}, GRP could be corrupt.') from exc
 		if self.uncompressed:
 			try:
 				for offset in offsets:
@@ -297,8 +301,8 @@ class CacheGRP:
 						linedata = [0] * xoffset
 					linedata.extend(self.databuffer[offset:offset+linewidth])
 					image.append(linedata + [0] * (self.width-linewidth-xoffset))
-			except:
-				raise PyMSError('Decompile','Could not decompile frame %s, GRP could be corrupt.' % frame)
+			except Exception as exc:
+				raise PyMSError('Decompile', f'Could not decompile frame {frame}, GRP could be corrupt.') from exc
 		if len(image) < self.height:
 			image.extend([[0] * self.width for _ in range(self.height - len(image))])
 		self.images[frame] = image[:self.height]
@@ -306,11 +310,11 @@ class CacheGRP:
 		return self.images[frame]
 
 class GRP:
-	def __init__(self, palette: RawPalette = [(0,0,0)]*256, uncompressed: bool | None = None, transindex: int = 0) -> None:
+	def __init__(self, palette: RawPalette | None = None, uncompressed: bool | None = None, transindex: int = 0) -> None:
 		self.frames = 0
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette = palette or [(0,0,0)]*256
 		self.images: list[Pixels] = []
 		self.images_bounds: list[Bounds] = []
 		self.uncompressed = uncompressed
@@ -320,8 +324,10 @@ class GRP:
 		data = load_file(file, 'GRP')
 		try:
 			frames, width, height = tuple(int(v) for v in struct.unpack('<3H',data[:6]))
-			if frames < 1 or frames > 2400 or width < 1 or width > 256 or height < 1 or height > 256:
-				raise Exception()
+			if frames < 1 or frames > 2400:
+				raise PyMSError('Load', f'Invalid GRP file (expected between 1 and 2400 frames, got {frames})')
+			if width < 1 or width > 256 or height < 1 or height > 256:
+				raise PyMSError('Load', f'Invalid GRP file (expected size to be between 1x1 and 256x256, got {width}x{height})')
 			retries = 2
 			while retries:
 				retries -= 1
@@ -359,8 +365,10 @@ class GRP:
 						image.extend([[transindex] * width for _ in range(height - len(image))])
 					images.append(image[:height])
 					images_bounds.append((xoffset,yoffset,xoffset+linewidth,yoffset+lines))
-		except:
-			raise PyMSError('Load',"Unsupported GRP file '%s', could possibly be corrupt" % file, capture_exception=True)
+		except PyMSError:
+			raise
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported GRP file, could possibly be corrupt", capture_exception=True) from exc
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -381,11 +389,11 @@ class GRP:
 			for (n, frame) in enumerate(frames, 1):
 				frame_height = len(frame)
 				if frame_height != height:
-					raise PyMSError('GRP', 'Frame %d has unexpected height (got %d, expected %d)' % (n, frame_height, height))
+					raise PyMSError('GRP', f'Frame {n} has unexpected height (got {frame_height}, expected {height})')
 				for (y, line) in enumerate(frame):
 					line_width = len(line)
 					if line_width != width:
-						raise PyMSError('GRP', 'Frame %d line %d has unexpected width (got %d, expected %d)' % (n, y, line_width, width))
+						raise PyMSError('GRP', f'Frame {n} line {y} has unexpected width (got {line_width}, expected {width})')
 		self.height = height
 		self.width = width
 		if palette:
@@ -399,11 +407,11 @@ class GRP:
 			frame_index = len(self.images)
 			frame_height = len(frame)
 			if frame_height != self.height:
-				raise PyMSError('GRP', 'Adding frame %d has unexpected height (got %d, expected %d)' % (frame_index, frame_height, self.height))
+				raise PyMSError('GRP', f'Adding frame {frame_index} has unexpected height (got {frame_height}, expected {self.height})')
 			for (y, line) in enumerate(frame):
 				line_width = len(line)
 				if line_width != self.width:
-					raise PyMSError('GRP', 'Adding frame %d line %d has unexpected width (got %d, expected %d)' % (frame_index, y, line_width, self.width))
+					raise PyMSError('GRP', f'Adding frame {frame_index} line {y} has unexpected width (got {line_width}, expected {self.width})')
 		self.frames += 1
 		self.images.append(deepcopy(frame))
 		self.images_bounds.append(image_bounds(frame, self.transindex))
@@ -459,13 +467,13 @@ class GRP:
 		return header_data + image_data
 
 	def save_file(self, file: str | BinaryIO, uncompressed: bool | None = None) -> None:
-		image_data = self.save_data()
+		image_data = self.save_data(uncompressed)
 		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
 				f.write(image_data)
 				f.close()
-			except:
-				raise PyMSError('Save',"Could not save the GRP to '%s'" % file)
+			except Exception as exc:
+				raise PyMSError('Save', f"Could not save the GRP to '{file}'") from exc
 		else:
 			file.write(image_data)

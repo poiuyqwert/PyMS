@@ -26,7 +26,7 @@ from enum import Flag
 
 from typing import Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyGRP')
+LONG_VERSION = 'v' + Assets.version('PyGRP')
 
 class FrameSet(Flag):
 	first               = 1 << 0
@@ -47,7 +47,7 @@ class PyGRP(MainWindow):
 	def __init__(self, guifile: str | None = None):
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyGRP %s' % LONG_VERSION)
+		self.title(f'PyGRP {LONG_VERSION}')
 		self.set_icon('PyGRP')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyGRP', Assets.version('PyGRP'))
@@ -241,7 +241,7 @@ BMP's must be imported with the same style they were exported as.""")
 		file = self.file
 		if not file:
 			file = 'Unnamed.grp'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -318,7 +318,7 @@ BMP's must be imported with the same style they were exported as.""")
 			y2 += dy + 1
 		self.framebrdr.coords(x1,y1, x2,y2)
 
-	def preview(self, e: Event | None = None, force: bool = False) -> None:
+	def preview(self, _event: Event | None = None, force: bool = False) -> None:
 		if not self.grp:
 			return
 		self.action_states()
@@ -341,7 +341,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.item.delete()
 			self.item = None
 
-	def changepalette(self, e: Event | None = None) -> None:
+	def changepalette(self, _event: Event | None = None) -> None:
 		if not self.pallist.curselection():
 			return
 		pal = self.pallist.get(self.pallist.curselection()[0])
@@ -425,13 +425,13 @@ BMP's must be imported with the same style they were exported as.""")
 				return
 		self.stopframe()
 
-	def bgcolor(self, e: Event | None = None) -> None:
+	def bgcolor(self, _event: Event | None = None) -> None:
 		c = ColorChooser.askcolor(parent=self, initialcolor=self.canvas['background'], title='Select a background color')
 		if not c[1]:
 			return
 		self.canvas['background'] = c[1]
 
-	def selectall(self, e: Event | None = None) -> None:
+	def selectall(self, _event: Event | None = None) -> None:
 		self.listbox.select_set(0,END)
 		self.action_states()
 
@@ -453,8 +453,8 @@ BMP's must be imported with the same style they were exported as.""")
 	def append_frame(self, frame_index: int) -> None:
 		f = str(frame_index)
 		if self.hex.get():
-			f = '0x%02X' % frame_index
-		self.listbox.insert(END, '%sFrame %s' % ('   ' * (frame_index // 17 % 2), f))
+			f = f'0x{frame_index:02X}'
+		self.listbox.insert(END, f'{"   " * (frame_index // 17 % 2)}Frame {f}')
 
 	def update_list(self) -> None:
 		s = self.listbox.curselection()
@@ -468,7 +468,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.listbox.select_set(i)
 		self.listbox.yview_moveto(y)
 
-	def new(self, key: Event | None = None) -> None:
+	def new(self, _event: Event | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
@@ -486,7 +486,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.grpoutline()
 		self.frameoutline()
 
-	def open(self, key: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: Event | None = None, file: str | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
@@ -517,10 +517,10 @@ BMP's must be imported with the same style they were exported as.""")
 		if grp.uncompressed:
 			MessageBox.showinfo(parent=self, title='Uncompressed GRP', message='You have opened an uncompresed GRP.\nWhen saving make sure you select the "Save Uncompressed" option.')
 
-	def save(self, key: Event | None = None) -> CheckSaved:
+	def save(self, _event: Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
+	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.grp:
 			return CheckSaved.saved
 		self.stopframe()
@@ -541,7 +541,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.action_states()
 		return CheckSaved.saved
 
-	def close(self, key: Event | None = None) -> None:
+	def close(self, _event: Event | None = None) -> None:
 		if not self.is_file_open():
 			return
 		if self.check_saved() == CheckSaved.cancelled:
@@ -560,7 +560,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.grpoutline()
 		self.frameoutline()
 
-	def exports(self, key: Event | None = None) -> None:
+	def exports(self, _event: Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -577,7 +577,7 @@ BMP's must be imported with the same style they were exported as.""")
 				return
 			self.status.set('Frames extracted successfully!')
 
-	def imports(self, key: Event | None = None) -> None:
+	def imports(self, _event: Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -630,7 +630,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.grpoutline()
 			self.frameoutline()
 
-	def remove(self, key: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -664,7 +664,7 @@ BMP's must be imported with the same style they were exported as.""")
 	def swap(self, f: int, d: int) -> None:
 		if not self.grp:
 			return
-		
+
 		c = self.frames[f]
 		self.frames[f] = self.frames[d]
 		self.frames[d] = c
@@ -672,7 +672,7 @@ BMP's must be imported with the same style they were exported as.""")
 		i = self.grp.images[f]
 		self.grp.images[f] = self.grp.images[d]
 		self.grp.images[d] = i
-		
+
 		b = self.grp.images_bounds[f]
 		self.grp.images_bounds[f] = self.grp.images_bounds[d]
 		self.grp.images_bounds[d] = b
@@ -694,7 +694,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.edited = True
 		self.action_states()
 
-	def register_registry(self, e: Event | None = None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyGRP', 'grp', '')
 		except PyMSError as e:
@@ -703,17 +703,17 @@ BMP's must be imported with the same style they were exported as.""")
 	def settings(self) -> None:
 		SettingsDialog(self, self.config_)
 
-	def help(self, e: Event | None = None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyGRP.md')
 
-	def about(self, key: Event | None = None) -> None:
+	def about(self, _event: Event | None = None) -> None:
 		self.stopframe()
 		AboutDialog(self, 'PyGRP', LONG_VERSION, [('TeLaMoN','Compressed GRP file specs.')])
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, e: Event | None = None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
