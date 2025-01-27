@@ -426,8 +426,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.canvas['height'] = self.fnt.height * 4 + 1
 		for y in range(self.fnt.height):
 			for x in range(self.fnt.width):
-				r,g,b = self.palette.palette[self.palette.image[0][0]]
-				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=f'#{r:02X}{g:02X}{b:02X}', outline='', tag=f'{x},{y}') # type: ignore[call-overload]
+				self.canvas.create_rectangle(3+x*4,3+y*4,6+x*4,6+y*4, fill=Colors.to_html(self.palette.palette[self.palette.image[0][0]]), outline='', tag=f'{x},{y}') # type: ignore[call-overload]
 
 	def preview(self) -> None:
 		if not self.fnt or not self.listbox.size():
@@ -437,8 +436,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 			for x,c in enumerate(yd):
 				item = self.canvas.find_withtag(f'{x},{y}')
 				if item:
-					r,g,b = self.palette.palette[self.palette.image[0][c]]
-					item[0].config(fill=f'#{r:02X}{g:02X}{b:02X}')
+					item[0].config(fill=Colors.to_html(self.palette.palette[self.palette.image[0][c]]))
 
 	def update_title(self) -> None:
 		file_path = self.file

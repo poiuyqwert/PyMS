@@ -23,7 +23,7 @@ import re
 
 from typing import Callable
 
-LONG_VERSION = 'v%s' % Assets.version('PyPAL')
+LONG_VERSION = 'v' + Assets.version('PyPAL')
 
 class PyPAL(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -130,7 +130,7 @@ class PyPAL(MainWindow):
 		file = self.file
 		if not file:
 			file = 'Unnamed.pal'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -147,12 +147,12 @@ class PyPAL(MainWindow):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.toolbar.tag_enabled('format_known', self.format is not None)
 
-	def popup(self, e: Event, i: int) -> None:
+	def popup(self, event: Event, i: int) -> None:
 		if not self.palette:
 			return
-		self.select(e,i)
+		self.select(event,i)
 		self.palmenu.tag_enabled('paste', not not self.canpaste()) # type: ignore[attr-defined]
-		self.palmenu.post(e.x_root, e.y_root)
+		self.palmenu.post(event.x_root, event.y_root)
 
 	def update(self) -> None:
 		if self.palette:
@@ -160,36 +160,36 @@ class PyPAL(MainWindow):
 		else:
 			pal = [(0,0,0)] * 256
 		for n,rgb in enumerate(pal):
-			c = '#%02X%02X%02X' % tuple(rgb)
+			c = Colors.to_html(rgb)
 			self.canvas.itemconfigure(n+1, fill=c, outline=c)
 
-	def colorstatus(self, e: Event | None, i: int) -> None:
+	def colorstatus(self, _event: Event | None, i: int) -> None:
 		if self.palette and i > -1:
-			info = (i,) + tuple(self.palette.palette[i]) * 2
-			self.status.set('Index: %s  RGB: (%s,%s,%s)  Hex: #%02X%02X%02X' % info)
+			r,g,b = self.palette.palette[i]
+			self.status.set(f'Index: {i}  RGB: ({r},{g},{b})  Hex: {Colors.to_html(r,g,b)}')
 
-	def select(self, e: Event | None, i: int) -> None:
+	def select(self, _event: Event | None, i: int) -> None:
 		if not self.palette:
 			return
 		self.selected = i
 		x,y = 2+17*(i%16),2+17*(i//16)
 		self.sel.coords(x, y, x+17, y+17)
 
-	def changecolor(self, e: Event, i: int) -> None:
+	def changecolor(self, _event: Event, i: int) -> None:
 		if not self.palette:
 			return
 		self.select(None,i)
-		c = ColorChooser.askcolor(parent=self, initialcolor='#%02X%02X%02X' % tuple(self.palette.palette[i]), title='Select Color')
+		c = ColorChooser.askcolor(parent=self, initialcolor=Colors.to_html(self.palette.palette[i]), title='Select Color')
 		if c[1]:
 			self.mark_edited()
 			self.canvas.itemconfigure(i+1, fill=c[1], outline=c[1])
 			self.palette.palette[i] = c[0]
 
-	def copy(self, key: Event | None = None) -> None:
+	def copy(self, _event: Event | None = None) -> None:
 		if not self.palette or self.selected is None:
 			return
 		self.clipboard_clear()
-		self.clipboard_append('#%02X%02X%02X' % tuple(self.palette.palette[self.selected]))
+		self.clipboard_append(Colors.to_html(self.palette.palette[self.selected]))
 
 	def canpaste(self, c: str | None = None) -> (RGB | None):
 		try:
@@ -203,7 +203,7 @@ class PyPAL(MainWindow):
 				return (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16))
 		return None
 
-	def paste(self, key=None):
+	def paste(self, _event: Event | None = None) -> None:
 		if not self.palette or self.selected is None:
 			return
 		try:
@@ -222,9 +222,9 @@ class PyPAL(MainWindow):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.pal'
 		if not file_path:
-			self.title('PyPAL %s' % LONG_VERSION)
+			self.title(f'PyPAL {LONG_VERSION}')
 		else:
-			self.title('PyPAL %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyPAL {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -315,9 +315,9 @@ class PyPAL(MainWindow):
 		self.action_states()
 
 	def register_registry(self) -> None:
-		for type,ext in [('','pal'),('Tileset ','wpe')]:
+		for pal_type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
-				register_registry('PyPAL', ext, type + 'Palette')
+				register_registry('PyPAL', ext, pal_type + 'Palette')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break
