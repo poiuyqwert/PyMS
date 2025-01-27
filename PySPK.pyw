@@ -12,7 +12,7 @@ def main(): # type: () -> None
 		gui = PySPK()
 		gui.startup()
 	else:
-		p = optparse.OptionParser(usage='usage: PySPK [options] <inp> [out]', version='PySPK %s' % LONG_VERSION)
+		p = optparse.OptionParser(usage='usage: PySPK [options] <inp> [out]', version='PySPK ' + LONG_VERSION)
 		p.add_option('--gui', help="Opens a file with the GUI", default='')
 		opt, _ = p.parse_args()
 		if opt.gui:

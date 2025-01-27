@@ -73,7 +73,7 @@ class PreviewDialog(PyMSDialog):
 				self.items[star] = item
 
 	def update_viewport(self) -> None:
-		if not len(self.items) or not self.delegate.spk:
+		if not self.items or not self.delegate.spk:
 			return
 		x = int(PreviewDialog.MAP_WIDTH * self.canvas.xview()[0])
 		y = int(PreviewDialog.MAP_HEIGHT * self.canvas.yview()[0])

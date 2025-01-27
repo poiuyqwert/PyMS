@@ -27,7 +27,7 @@ class StarsTab(NotebookTab):
 		self.toolbar.tag_enabled('file_open', self.delegate.is_file_open())
 		self.toolbar.tag_enabled('stars_selected', self.delegate.are_stars_selected())
 
-	def select_updated(self, event: Event | None = None) -> None:
+	def select_updated(self, _event: Event | None = None) -> None:
 		if not self.delegate.spk:
 			return
 		sel = tuple(int(s) for s in self.listbox.curselection())
@@ -52,7 +52,7 @@ class StarsTab(NotebookTab):
 			for l,layer in enumerate(self.delegate.spk.layers):
 				if self.delegate.visible.get() & (1 << l) and not self.delegate.locked.get() & (1 << l):
 					for star in layer.stars:
-						self.listbox.insert(END, '(%s,%s) on Layer %d' % (str(star.x).rjust(3),str(star.y).rjust(3),l+1))
+						self.listbox.insert(END, f'({str(star.x).rjust(3)},{str(star.y).rjust(3)}) on Layer {l+1}')
 						if star in self.delegate.selected_stars:
 							self.listbox.selection_set(END)
 			if self.listbox.size():
@@ -86,7 +86,7 @@ class StarsTab(NotebookTab):
 			for i in r:
 				if layer.stars[i] in self.delegate.selected_stars:
 					o = i + delta
-					if o >= 0 and o < len(layer.stars):
+					if 0 <= o < len(layer.stars):
 						tmp = layer.stars[i]
 						layer.stars[i] = layer.stars[o]
 						layer.stars[o] = tmp
