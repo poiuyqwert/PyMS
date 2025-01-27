@@ -4,6 +4,7 @@ from .Delegates import FindDelegate
 from .FindReplaceDialog import FindReplaceDialog
 from .Constants import SIGNED_INT, RE_COORDINATES, RE_DRAG_COORDS
 from .SettingsDialog import SettingsDialog
+from .CodeTooltip import SelectionTooltip
 
 from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
@@ -32,7 +33,7 @@ from enum import Enum
 
 from typing import Sequence, cast, Callable
 
-LONG_VERSION = 'v%s' % Assets.version('PyLO')
+LONG_VERSION = 'v' + Assets.version('PyLO')
 
 class MouseEvent(Enum):
 	click = 0
@@ -117,7 +118,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.text.bind(CodeText.WidgetEvent.TextChanged(), lambda _: self.previewupdate())
 
 		self.setup_syntax_highlighting()
-	
+
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
 
 		self.usebasegrp = BooleanVar()
@@ -262,6 +263,8 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
+		SelectionTooltip(self.text.text)
+
 	def initialize(self) -> None:
 		self.update_grp_field_states()
 		self.updateusebase()
@@ -294,7 +297,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.overlay_grp_field.set_enabled(self.useoverlaygrp.get())
 
 	# TODO: What is `t` for?
-	def drag(self, event: Event, t, mouse_event: MouseEvent) -> None:
+	def drag(self, event: Event, _t, mouse_event: MouseEvent) -> None:
 		if not self.previewing_offset:
 			return
 		if mouse_event == MouseEvent.click:
@@ -304,13 +307,13 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			offset = (max(-128,min(127,event.x + self.dragoffset[0])), max(-128,min(127,event.y + self.dragoffset[1])))
 			self.drawpreview(self.previewing_basegrp_frame, offset)
 		elif mouse_event == MouseEvent.release:
-			s = self.text.index('%s linestart' % INSERT)
-			m = RE_DRAG_COORDS.match(self.text.get(s,'%s lineend' % INSERT))
+			s = self.text.index(f'{INSERT} linestart')
+			m = RE_DRAG_COORDS.match(self.text.get(s,f'{INSERT} lineend'))
 			if m:
 				self.pauseupdate = True
 				with self.text.undo_group():
-					self.text.delete(s,'%s lineend' % INSERT)
-					self.text.insert(s,'%s%s%s%s%s' % (m.group(1),self.previewing_offset[0],m.group(2),self.previewing_offset[1],m.group(3)))
+					self.text.delete(s,f'{INSERT} lineend')
+					self.text.insert(s,f'{m.group(1)}{self.previewing_offset[0]}{m.group(2)}{self.previewing_offset[1]}{m.group(3)}')
 				self.pauseupdate = False
 			self.dragoffset = None
 			self.text.text.edit_separator()
@@ -365,7 +368,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.loa'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -382,7 +385,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
 
-	def statusupdate(self, event: Event | None = None) -> None:
+	def statusupdate(self, _event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
 		item = self.text.tag_ranges('sel')
@@ -416,7 +419,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 	def previewupdate(self) -> None:
 		if self.pauseupdate:
 			return
-		m = RE_COORDINATES.match(self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT))
+		m = RE_COORDINATES.match(self.text.get(f'{INSERT} linestart',f'{INSERT} lineend'))
 		if m:
 			index: str = INSERT
 			frame_index = -1
@@ -477,13 +480,17 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.lo?'
 		if not file_path:
-			self.title('PyLO %s' % LONG_VERSION)
+			self.title(f'PyLO {LONG_VERSION}')
 		else:
-			self.title('PyLO %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyLO {LONG_VERSION} ({file_path})')
 
 	def update_edited(self, edited: bool = True) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 		self.previewupdate()
+
+	def clear_grp_caches(self) -> None:
+		self.basegrp_cache.clear()
+		self.overlaygrp_cache.clear()
 
 	def new(self):
 		if self.check_saved() == CheckSaved.cancelled:
@@ -492,7 +499,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.file = None
 		self.status.set('Editing new LO?.')
 		self.update_title()
-		self.grp_cache = [{},{}]
+		self.clear_grp_caches()
 		self.overlayframe = 0
 		self.previewupdate()
 		self.updatescroll()
@@ -530,13 +537,14 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 	def iimport(self):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		file = self.settings.lastpath.txt.select_open_file(self, key='import', title='Import TXT', filetypes=[FileType.txt()])
+		file = self.config_.last_path.txt.select_open(self)
 		if not file:
 			return
 		try:
-			text = open(file,'r').read()
+			with open(file, 'r', encoding='utf-8') as f:
+				text = f.read()
 		except:
-			ErrorDialog(self, PyMSError('Import', "Couldn't import file '%s'" % file))
+			ErrorDialog(self, PyMSError('Import', f"Couldn't import file '{file}'"))
 			return
 		self.lo = LO()
 		self.file = file
@@ -593,12 +601,12 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			i.interpret(text)
 		except PyMSError as e:
 			if e.line is not None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
+				self.text.see(f'{e.line}.0')
+				self.text.tag_add('Error', f'{e.line}.0', f'{e.line}.end')
 			if e.warnings:
 				for w in e.warnings:
 					if w.line is not None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
 		MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
@@ -614,7 +622,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.previewupdate()
 		self.updatescroll()
 		self.framesupdate()
-		self.grp_cache = [{},{}]
+		self.clear_grp_caches()
 		self.text.load('')
 		self.action_states()
 
@@ -635,9 +643,9 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		SettingsDialog(self, self.config_, self.mpq_handler)
 
 	def register_registry(self) -> None:
-		for type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
+		for lo_type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
 			try:
-				register_registry('PyLO','lo' + ext, type + ' Overlay')
+				register_registry('PyLO','lo' + ext, lo_type + ' Overlay')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break

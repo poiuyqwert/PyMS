@@ -1,19 +1,16 @@
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import IO
 
 import struct, re
 
-from typing import BinaryIO, TextIO, cast
-
 class LO:
 	def __init__(self) -> None:
 		self.frames = [[[0,0]]]
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		try:
 			frames,overlays = tuple(int(v) for v in struct.unpack('<LL', data[:8]))
 			framedata: list[list[list[int]]] = []
@@ -24,12 +21,12 @@ class LO:
 					framedata[-1].append(list(int(v) for v in struct.unpack('bb', data[offset:offset+2])))
 					offset += 2
 			self.frames = framedata
-		except:
-			raise PyMSError('Load',"Unsupported LO* file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported LO* file, could possibly be corrupt") from exc
 
-	def interpret(self, input: IO.AnyInputText) -> None:
-		with IO.InputText(input) as f:
-			data = f.readlines()
+	def interpret(self, any_input: IO.AnyInputText) -> None:
+		with IO.InputText(any_input) as input_text:
+			data = input_text.readlines()
 		frames: list[list[list[int]]] = []
 		framedata = False
 		overlays = -1
@@ -41,7 +38,7 @@ class LO:
 						if line == 'Frame:':
 							if overlays != -1:
 								if len(frames[-1]) != overlays:
-									raise PyMSError('Interpreting',"Frameset %s has an invalid amount of overlays (expected %s, got %s)" % (len(frames), overlays, len(frames[-1])))
+									raise PyMSError('Interpreting', f"Frameset {len(frames)} has an invalid amount of overlays (expected {overlays}, got {len(frames[-1])})")
 								overlays = len(frames[-1])
 							frames.append([])
 						else:
@@ -50,12 +47,14 @@ class LO:
 								try:
 									x,y = int(valid.group(1)),int(valid.group(2))
 									if -127 > x > 127 or -127 > y > 127:
-										raise Exception()
+										raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})",n,line)
 									frames[-1].append([x,y])
 									if len(frames[-1]) == overlays:
 										framedata = False
-								except:
-									raise PyMSError('Interpreting',"Invalid offset coordinates (%s,%s)" % (x,y),n,line)
+								except PyMSError:
+									raise
+								except Exception as exc:
+									raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})",n,line) from exc
 							else:
 								raise PyMSError('Interpreting',"Unknown line format, expected coordinates",n,line)
 					elif line == 'Frame:':
@@ -70,7 +69,7 @@ class LO:
 			for frame in self.frames:
 				f.write('Frame:\n')
 				for overlay in frame:
-					f.write('    (%s, %s)\n' % tuple(overlay))
+					f.write(f'    ({overlay[0]}, {overlay[1]})\n')
 				f.write('\n')
 
 	def compile(self, output: IO.AnyOutputBytes) -> None:
