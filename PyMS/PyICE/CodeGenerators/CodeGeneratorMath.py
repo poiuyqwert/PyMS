@@ -37,11 +37,11 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 	def value(self, lookup_value: Callable[[str], int]) -> str:
 		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: str(lookup_value(m.group(1))), self.math)
 		if not CodeGeneratorTypeMath.MATH_RE.match(math):
-			raise PyMSError('Generate', "Invalid math expression '%s' (only numbers, +, -, /, *, (, ), and whitespace allowed)" % math)
+			raise PyMSError('Generate', f"Invalid math expression '{math}' (only numbers, +, -, /, *, (, ), and whitespace allowed)")
 		try:
-			return eval(math)
-		except:
-			raise PyMSError('Generate', "Error evaluating math expression '%s'" % math, capture_exception=True)
+			return eval(math) # pylint: disable=eval-used
+		except Exception as exc:
+			raise PyMSError('Generate', f"Error evaluating math expression '{math}'", capture_exception=True) from exc
 
 	def description(self) -> str:
 		return self.math

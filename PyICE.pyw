@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyICE')
@@ -6,7 +7,7 @@ check_compat('PyICE')
 def main(): # type: () -> None
 	from PyMS.PyICE.PyICE import PyICE, LONG_VERSION
 
-	from PyMS.FileFormats import IScriptBIN
+	from PyMS.FileFormats.IScriptBIN import IScriptBIN
 
 	from PyMS.Utilities import Assets
 	from PyMS.Utilities.PyMSError import PyMSError
@@ -50,6 +51,7 @@ def main(): # type: () -> None
 					ext = 'bin'
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			warnings = []
+			# TODO: Update command line
 			try:
 				if opt.convert:
 					if opt.scripts:

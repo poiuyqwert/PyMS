@@ -14,12 +14,12 @@ from ..Utilities.CodeHandlers.CodeCommand import CodeCommand
 import re, io
 
 class SoundDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig.Sounds, text: CodeText, id: int = 0) -> None:
+	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig.Sounds, text: CodeText, sound_id: int = 0) -> None:
 		self.delegate = delegate
 		self.config_ = config
 		self.text = text
 		self.id = IntVar()
-		self.id.set(id)
+		self.id.set(sound_id)
 		PyMSDialog.__init__(self, parent, "Sound Insert/Preview", grabwait=False, resizable=(False, False))
 
 	def widgetize(self) -> Misc | None:
@@ -27,7 +27,7 @@ class SoundDialog(PyMSDialog):
 		# TODO: Missing soundsdat?
 		sounds_dat = self.delegate.get_data_context().sounds_dat
 		assert sounds_dat is not None
-		self.dd = DropDown(f, self.id, ['%03s %s' % (n,self.delegate.get_data_context().sound_name(n)) for n in range(self.delegate.get_data_context().sounds_entry_count)], width=30)
+		self.dd = DropDown(f, self.id, [f'{n:03} {self.delegate.get_data_context().sound_name(n)}' for n in range(self.delegate.get_data_context().sounds_entry_count)], width=30)
 		self.dd.pack(side=LEFT, padx=1)
 		Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play, state=NORMAL if MPQ.supported() else DISABLED).pack(side=LEFT, padx=1)
 		f.pack(padx=5,pady=5)
@@ -67,10 +67,10 @@ class SoundDialog(PyMSDialog):
 
 	def doid(self) -> None:
 		if self.overwrite.get():
-			s = self.text.index('%s linestart' % INSERT)
-			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s,'%s lineend' % INSERT))
+			s = self.text.index(f'{INSERT} linestart')
+			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s,f'{INSERT} lineend'))
 			if m and m.group(2) == 'playsnd':
-				self.text.delete(s,'%s lineend' % INSERT)
+				self.text.delete(s, f'{INSERT} lineend')
 				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+str(self.id.get())+m.group(5))
 		else:
 			self.text.insert(INSERT, str(self.id.get()))
@@ -78,7 +78,7 @@ class SoundDialog(PyMSDialog):
 			self.destroy()
 
 	def docmd(self) -> None:
-		s = self.text.index('%s linestart' % INSERT)
+		s = self.text.index(f'{INSERT} linestart')
 		output = io.StringIO()
 		serialize_context = self.delegate.get_serialize_context(output)
 		serialize_context.indent()
@@ -86,7 +86,7 @@ class SoundDialog(PyMSDialog):
 		text = output.getvalue()
 		with self.text.undo_group():
 			if self.overwrite.get():
-				self.text.delete(s,'%s lineend' % INSERT)
+				self.text.delete(s, f'{INSERT} lineend')
 				text = text.rstrip('\n')
 			self.text.insert(s, text)
 		if self.closeafter.get():

@@ -33,9 +33,9 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		self.listbox.pack(side=TOP, padx=1, pady=1, fill=BOTH, expand=1)
 
 		def add_variable(generator_class, name):
-			id = len(self.variables)
+			gen_id = len(self.variables)
 			self.variables.append(CodeGeneratorVariable(generator_class(), self.unique_name(name)))
-			self.update_list(id)
+			self.update_list(gen_id)
 			self.edit()
 		def add_pressed():
 			menu = Menu(self, tearoff=0)
@@ -55,7 +55,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			menu.add_separator()
 			menu.add_command(label='Manage Presets', command=self.manage_presets)
 			menu.post(*self.winfo_pointerxy())
-		
+
 		self.toolbar = Toolbar(leftframe)
 		self.toolbar.add_button(Assets.get_image('add'), add_pressed, 'Add Variable')
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Variable', tags='has_selection')
@@ -90,7 +90,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 
 		self.code = Text(colors, height=1, bd=0, undo=1, maxundo=100, wrap=NONE, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=0)
 		self.code.grid(sticky=NSEW)
-	
+
 		self.code_orig = getattr(self.code, '_w') + '_orig'
 		self.tk.call('rename', getattr(self.code, '_w'), self.code_orig)
 		self.tk.createcommand(getattr(self.code, '_w'), self.code_dispatch)
@@ -165,7 +165,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 				continue
 			if v.name == unique:
 				n += 1
-				unique = '%s%d' % (name,n)
+				unique = f'{name}{n}'
 		return unique
 
 	def edit(self, *_) -> None:
@@ -185,7 +185,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			replace = None
 			for n,preset in enumerate(self.config_.generator.presets.data):
 				if preset.name == name:
-					cont = MessageBox.askquestion(parent=window, title='Overwrite Preset?', message="A preset with the name '%s' already exists. Do you want to overwrite it?" % name, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+					cont = MessageBox.askquestion(parent=window, title='Overwrite Preset?', message=f"A preset with the name '{name}' already exists. Do you want to overwrite it?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 					if cont == MessageBox.NO:
 						return CheckSaved.saved
 					elif cont == MessageBox.CANCEL:
@@ -232,7 +232,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
 		for v in self.variables:
-			self.listbox.insert(END, '$%s = %s' % (v.name, v.generator.description()))
+			self.listbox.insert(END, f'${v.name} = {v.generator.description()}')
 		if select is not None:
 			self.listbox.select_set(select)
 		self.listbox.yview_moveto(y)
@@ -273,7 +273,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			replacement = values.get(name, match.group(0))
 			if tohex:
 				try:
-					replacement = '0x%02X' % int(replacement)
+					replacement = f'0x{int(replacement):02X}'
 				except:
 					pass
 			return str(replacement)
@@ -286,7 +286,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 					except PyMSError as e:
 						ErrorDialog(self, e)
 						return None
-			generated += variable_re.sub(lambda m: replace_variable(m, values), code)
+			generated += variable_re.sub(lambda m,v=values: replace_variable(m, v), code) # type: ignore[misc]
 		return generated
 
 	def dismiss(self) -> None:

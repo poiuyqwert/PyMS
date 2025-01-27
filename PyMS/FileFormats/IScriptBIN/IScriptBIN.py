@@ -25,14 +25,14 @@ class IScriptBIN:
 		self._scripts: OrderedDict[int, IScript] = OrderedDict()
 		self._cached_size: int | None = None
 
-	def load(self, input: IO.AnyInputBytes) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		try:
-			with IO.InputBytes(input) as f:
-				data = f.read()
+			with IO.InputBytes(any_input) as input_bytes:
+				data = input_bytes.read()
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load', "Couldn't load iscript.bin from disk", capture_exception=True)
+		except Exception as exc:
+			raise PyMSError('Load', "Couldn't load iscript.bin from disk", capture_exception=True) from exc
 		decompile_context = DecompileContext(data, ICELanguage())
 		bytecode_decompiler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
@@ -43,33 +43,33 @@ class IScriptBIN:
 			while True:
 				if not scanner.can_scan(Struct.l_u32):
 					raise PyMSError('Load', 'Unexpected end of header list, file could possibly be invalid or corrupt')
-				id = scanner.scan(Struct.l_u16)
-				if id == 65535:
+				iscript_id = scanner.scan(Struct.l_u16)
+				if iscript_id == 65535:
 					break
 				header_offset = scanner.scan(Struct.l_u16)
 				if not header_offset or not scanner.is_offset_valid(header_offset):
-					raise PyMSError('Load', f'Script with id {id} has invalid header offset {header_offset}, file could possibly be invalid or corrupt')
+					raise PyMSError('Load', f'Script with id {iscript_id} has invalid header offset {header_offset}, file could possibly be invalid or corrupt')
 				header_scanner = scanner.clone(header_offset)
 				if not header_scanner.can_scan_bytes(4):
-					raise PyMSError('Load', f'Script with id {id} has invalid header offset {header_offset} (insufficient space), file could possibly be invalid or corrupt')
+					raise PyMSError('Load', f'Script with id {iscript_id} has invalid header offset {header_offset} (insufficient space), file could possibly be invalid or corrupt')
 				if header_scanner.scan_bytes(4) != b'SCPE':
-					raise PyMSError('Load', f'Script with id {id} header is missing, could possibly be a corrupt iscript.bin')
+					raise PyMSError('Load', f'Script with id {iscript_id} header is missing, could possibly be a corrupt iscript.bin')
 				if header_scanner.at_end():
-					raise PyMSError('Load', f'Script with id {id} has invalid header offset {header_offset} (insufficient space for type), file could possibly be invalid or corrupt')
+					raise PyMSError('Load', f'Script with id {iscript_id} has invalid header offset {header_offset} (insufficient space for type), file could possibly be invalid or corrupt')
 				script_type = header_scanner.scan(Struct.l_u16)
 				entry_points_count = IType.TYPE_TO_ENTRY_POINT_COUNT_MAP.get(script_type)
 				if entry_points_count is None:
-					raise PyMSError('Load', f'Script with id {id} has invalid type {script_type}, file could possibly be invalid or corrupt')
+					raise PyMSError('Load', f'Script with id {iscript_id} has invalid type {script_type}, file could possibly be invalid or corrupt')
 				header_scanner.skip(2)
 				init_entry_point: CodeBlock
 				entry_points: list[CodeBlock | None] = []
 				for n in range(entry_points_count):
 					if not header_scanner.can_scan(Struct.l_u16):
-						raise PyMSError('Load', f'Script with id {id} has invalid header offset {header_offset} (insufficient space for entry points), file could possibly be invalid or corrupt')
+						raise PyMSError('Load', f'Script with id {iscript_id} has invalid header offset {header_offset} (insufficient space for entry points), file could possibly be invalid or corrupt')
 					block_offset = header_scanner.scan(Struct.l_u16)
 					if block_offset == 0:
 						if n == 0:
-							raise PyMSError('Load', f"Script with id {id} missing block for 'Init', file could possibly be invalid or corrupt")
+							raise PyMSError('Load', f"Script with id {iscript_id} missing block for 'Init', file could possibly be invalid or corrupt")
 						entry_points.append(None)
 					else:
 						entry_point = bytecode_decompiler.decompile_block(block_offset, decompile_context)
@@ -77,12 +77,12 @@ class IScriptBIN:
 							init_entry_point = entry_point
 						else:
 							entry_points.append(entry_point)
-				scripts[id] = IScript(id, script_type, init_entry_point, *entry_points)
+				scripts[iscript_id] = IScript(iscript_id, script_type, init_entry_point, *entry_points)
 			self._scripts = scripts
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load', 'Unsupported iscript.bin, could possibly be invalid or corrupt', capture_exception=True)
+		except Exception as exc:
+			raise PyMSError('Load', 'Unsupported iscript.bin, could possibly be invalid or corrupt', capture_exception=True) from exc
 
 	@staticmethod
 	def _save(scripts: Iterable[IScript], output: IO.AnyOutputBytes) -> None:
@@ -169,7 +169,7 @@ class IScriptBIN:
 		for script_id in script_ids:
 			script = self._scripts.get(script_id)
 			if not script:
-				raise PyMSError('Decompile', "There is no Script with ID '%s'" % script_id)
+				raise PyMSError('Decompile', f"There is no Script with ID '{script_id}'")
 			strategy_builder.add_header(script)
 		source_serializer = SourceCodeSerializer()
 		source_serializer.decompile(serialize_context, strategy_builder.build())

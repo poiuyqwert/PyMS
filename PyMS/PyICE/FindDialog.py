@@ -13,10 +13,11 @@ class FindDialog(PyMSDialog):
 		self.window_geometry_config = window_geometry_config
 		self.find_history_config = find_history_config
 		self.resettimer: str | None = None
+		self.lists: list[ScrolledListbox] = []
+		self.findentry_c: str | None = None
 		PyMSDialog.__init__(self, parent, 'Find', grabwait=False)
 
 	def widgetize(self) -> Misc | None:
-		self.lists: list[ScrolledListbox] = []
 		self.find = StringVar()
 		self.regex = IntVar()
 		self.casesens = IntVar()
@@ -57,7 +58,7 @@ class FindDialog(PyMSDialog):
 		self.minsize(330,160)
 		self.window_geometry_config.load_size(self)
 
-	def action_states(self, event: Event | None = None) -> None:
+	def action_states(self, _event: Event | None = None) -> None:
 		if not self.treelist.cur_selection() == -1:
 			s = [NORMAL,DISABLED][not self.treelist.cur_selection()]
 		else:
@@ -68,7 +69,7 @@ class FindDialog(PyMSDialog):
 	def updatecolor(self) -> None:
 		self.findentry.entry['bg'] = self.findentry_c
 
-	def search(self, event: Event | None = None) -> None:
+	def search(self, _event: Event | None = None) -> None:
 		self.lists = []
 		self.treelist.delete(ALL)
 		if not self.find.get() in self.find_history_config.data:
@@ -76,7 +77,7 @@ class FindDialog(PyMSDialog):
 		if self.regex.get():
 			regex = self.find.get()
 		else:
-			regex = '.*%s.*' % re.escape(self.find.get())
+			regex = f'.*{re.escape(self.find.get())}.*'
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()])
 		except:
@@ -106,7 +107,7 @@ class FindDialog(PyMSDialog):
 						added = True
 					self.treelist.insert('-1.-1', l.get(x))
 
-	def select(self, set: bool) -> None:
+	def select(self, set_selection: bool) -> None:
 		c = []
 		for i in self.treelist.cur_selection():
 			index = self.treelist.index(i)
@@ -116,7 +117,7 @@ class FindDialog(PyMSDialog):
 			if self.lists[g] == self.delegate.iscriptlist:
 				s = sorted(script.id for script in self.delegate.get_iscript_bin().list_scripts()).index(s)
 			if not g in c:
-				if set:
+				if set_selection:
 					self.lists[g].select_clear(0,END)
 				self.lists[g].see(s)
 				c.append(g)

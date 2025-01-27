@@ -330,6 +330,7 @@ class CodeText(Frame):
 		if not self.highlight_components:
 			return
 		for highlight_component in self.highlight_components:
+			print(highlight_component.tag_name)
 			self.tag_delete(highlight_component.tag_name)
 			self.tag_configure(highlight_component.tag_name, **highlight_component.highlight_style.style.configuration)
 		self.tag_raise('sel')

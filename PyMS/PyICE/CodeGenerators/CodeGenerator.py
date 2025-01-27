@@ -16,8 +16,8 @@ class CodeGeneratorType(JSON.Codable):
 		raise NotImplementedError(cls.__name__ + '.type_name()')
 
 	@classmethod
-	def from_json(self, json: JSON.Object) -> Self:
-		raise NotImplementedError(self.__class__.__name__ + '.from_json()')
+	def from_json(cls, json: JSON.Object) -> Self:
+		raise NotImplementedError(cls.__name__ + '.from_json()')
 
 	def to_json(self) -> JSON.Object:
 		return {
@@ -52,8 +52,8 @@ class CodeGeneratorEditor(Frame, Generic[T]):
 
 _REGISTRY: dict[str, Type[CodeGeneratorType]] = {}
 
-def register_type(type: Type[CodeGeneratorType]):
-	_REGISTRY[type.type_name()] = type
+def register_type(gen_type: Type[CodeGeneratorType]):
+	_REGISTRY[gen_type.type_name()] = gen_type
 
 def lookup_type(name: str) -> Type[CodeGeneratorType] | None:
 	return _REGISTRY.get(name)
@@ -62,7 +62,7 @@ def discriminate_type(json: JSON.Object) -> Type[CodeGeneratorType]:
 	name = json.get('type')
 	if not isinstance(name, str):
 		raise PyMSError('JSON', 'Invalid JSON format (object missing discriminator type)')
-	type = lookup_type(name)
-	if not type:
+	gen_type = lookup_type(name)
+	if not gen_type:
 		raise PyMSError('JSON', f'Invalid JSON format (object has invalid discriminator type `{name}`)')
-	return type
+	return gen_type

@@ -4,7 +4,6 @@ from __future__ import annotations
 from .Config import PyICEConfig
 from .Delegates import MainDelegate
 
-from ..FileFormats import IScriptBIN
 from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
 from ..FileFormats import Palette
 from ..FileFormats import GRP
@@ -36,16 +35,16 @@ PREVIEWER_CMDS: dict[EntryType, list[str]] = {
 	EntryType.sprites_dat: [],
 	EntryType.flingy_dat: []
 }
-for cmd in CodeCommands.all_basic_commands:
-	for param_type in cmd.param_types:
-		if isinstance(param_type, CodeTypes.FrameCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.iscript]:
-			PREVIEWER_CMDS[EntryType.iscript].append(cmd.name)
-		if isinstance(param_type, CodeTypes.ImageIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.images_dat]:
-			PREVIEWER_CMDS[EntryType.images_dat].append(cmd.name)
-		if isinstance(param_type, CodeTypes.SpriteIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.sprites_dat]:
-			PREVIEWER_CMDS[EntryType.sprites_dat].append(cmd.name)
-		if isinstance(param_type, CodeTypes.FlingyIDCodeType) and not cmd.name in PREVIEWER_CMDS[EntryType.flingy_dat]:
-			PREVIEWER_CMDS[EntryType.flingy_dat].append(cmd.name)
+for _cmd in CodeCommands.all_basic_commands:
+	for param_type in _cmd.param_types:
+		if isinstance(param_type, CodeTypes.FrameCodeType) and not _cmd.name in PREVIEWER_CMDS[EntryType.iscript]:
+			PREVIEWER_CMDS[EntryType.iscript].append(_cmd.name)
+		if isinstance(param_type, CodeTypes.ImageIDCodeType) and not _cmd.name in PREVIEWER_CMDS[EntryType.images_dat]:
+			PREVIEWER_CMDS[EntryType.images_dat].append(_cmd.name)
+		if isinstance(param_type, CodeTypes.SpriteIDCodeType) and not _cmd.name in PREVIEWER_CMDS[EntryType.sprites_dat]:
+			PREVIEWER_CMDS[EntryType.sprites_dat].append(_cmd.name)
+		if isinstance(param_type, CodeTypes.FlingyIDCodeType) and not _cmd.name in PREVIEWER_CMDS[EntryType.flingy_dat]:
+			PREVIEWER_CMDS[EntryType.flingy_dat].append(_cmd.name)
 
 PALETTES: dict[str, RawPalette] = {}
 GRP_CACHE: dict[str, dict[int, dict[str, Image]]] = {}
@@ -123,14 +122,14 @@ class PreviewerDialog(PyMSDialog):
 		if not r:
 			self.nocur()
 			return
-		n = re.split('\\s+',self.text.get('%s +1lines linestart' % r[0],'%s +1lines lineend' % r[1]))
+		n = re.split('\\s+',self.text.get(f'{r[0]} +1lines linestart', f'{r[1]} +1lines lineend'))
 		name = n[0]
 		try:
-			id = int(n[1])
+			iscript_id = int(n[1])
 		except:
 			self.nocur()
 			return
-		if name == 'IsId' and id >= 0 and id <= 411:
+		if name == 'IsId' and iscript_id >= 0 and iscript_id <= 411:
 			if self.curradio and self.curradio['state'] == DISABLED:
 				self.curradio['state'] = NORMAL
 				self.curdd['state'] = NORMAL
@@ -139,7 +138,7 @@ class PreviewerDialog(PyMSDialog):
 			images_dat = self.delegate.get_data_context().images_dat
 			assert images_dat is not None
 			for i in range(self.delegate.get_data_context().images_entry_count):
-				if images_dat.get_entry(i).iscript_id == id:
+				if images_dat.get_entry(i).iscript_id == iscript_id:
 					cur.append('['.join(self.delegate.imageslist.get(i).split('[')[:-1]))
 			self.curdd.setentries(cur)
 			if cur:
@@ -163,8 +162,8 @@ class PreviewerDialog(PyMSDialog):
 					self.select(id_variable.get(), entry_type)
 				return select
 			def id_select_callback(entry_type: EntryType) -> Callable[[int], None]:
-				def select(id: int) -> None:
-					self.select(id, entry_type)
+				def select(entry_id: int) -> None:
+					self.select(entry_id, entry_type)
 				return select
 			if entry_type == EntryType.iscript:
 				self.curradio = Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state)
@@ -214,16 +213,16 @@ class PreviewerDialog(PyMSDialog):
 		p.pack()
 
 		self.toolbar = Toolbar(right)
-		self.toolbar.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Left', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Left', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Left', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Left', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, tags='is_playing'),
-		self.toolbar.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Right', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Right', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Right', enabled=False, tags='can_preview'),
-		self.toolbar.add_button(Assets.get_image('ffw'), lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 frames Right', enabled=False, tags='can_preview'),
+		self.toolbar.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Left', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Left', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('frwp'), lambda: self.frameset(FrameSet.play_prev_framesets), 'Play every 17th frame going Left', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('rwp'), lambda: self.frameset(FrameSet.play_prev_frames), 'Play every frame going Left', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('stop'), lambda: self.frameset(FrameSet.stop), 'Stop playing frames', enabled=False, tags='is_playing')
+		self.toolbar.add_button(Assets.get_image('fwp'), lambda: self.frameset(FrameSet.play_next_frames), 'Play every frame going Right', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('ffwp'), lambda: self.frameset(FrameSet.play_next_framesets), 'Play every 17th frame going Right', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('fw'), lambda: self.frameset(FrameSet.next_frame), 'Jump 1 frame Right', enabled=False, tags='can_preview')
+		self.toolbar.add_button(Assets.get_image('ffw'), lambda: self.frameset(FrameSet.next_frameset), 'Jump 17 frames Right', enabled=False, tags='can_preview')
 		self.toolbar.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.toolbar.pack(padx=1, pady=3)
 
@@ -398,10 +397,10 @@ class PreviewerDialog(PyMSDialog):
 			serialize_context = self.delegate.get_serialize_context(output)
 			i = CodeTypes.FrameCodeType().serialize(self.previewing.frame, serialize_context)
 		if self.overwrite.get():
-			s = self.text.index('%s linestart' % INSERT)
-			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s,'%s lineend' % INSERT))
+			s = self.text.index(f'{INSERT} linestart')
+			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s, f'{INSERT} lineend'))
 			if m and m.group(2) in PREVIEWER_CMDS[entry_type]:
-				self.text.delete(s,'%s lineend' % INSERT)
+				self.text.delete(s, f'{INSERT} lineend')
 				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+i+m.group(5))
 		else:
 			self.text.insert(INSERT, i)
@@ -411,7 +410,7 @@ class PreviewerDialog(PyMSDialog):
 	def docmd(self) -> None:
 		self.stopframe()
 		entry_type = self.entry_type()
-		s = self.text.index('%s linestart' % INSERT)
+		s = self.text.index(f'{INSERT} linestart')
 		if entry_type != EntryType.iscript:
 			if entry_type == EntryType.images_dat:
 				listbox = self.delegate.imageslist
@@ -446,7 +445,7 @@ class PreviewerDialog(PyMSDialog):
 		text = output.getvalue()
 		with self.text.undo_group():
 			if self.overwrite.get():
-				self.text.delete(s,'%s lineend' % INSERT)
+				self.text.delete(s, f'{INSERT} lineend')
 				text = text.rstrip('\n')
 			self.text.insert(s, text)
 		if self.closeafter.get():
@@ -454,7 +453,7 @@ class PreviewerDialog(PyMSDialog):
 
 	def updateframes(self) -> None:
 		if self.previewing.grp:
-			self.grp_frame.set('Frame: %s / %s' % (self.previewing.frame,self.previewing.grp.frames))
+			self.grp_frame.set(f'Frame: {self.previewing.frame} / {self.previewing.grp.frames}')
 			if self.previewing.grp.frames:
 				x = self.previewing.frame / self.previewing.grp.frames
 				self.scroll.set(x,x+1/float(self.previewing.grp.frames))
@@ -517,6 +516,8 @@ class PreviewerDialog(PyMSDialog):
 			flingy_dat = self.delegate.get_data_context().flingy_dat
 			assert flingy_dat is not None
 			image_id = sprites_dat.get_entry(flingy_dat.get_entry(int(self.delegate.flingylist.get(entry_id).strip().split(' ')[0])).sprite).image
+		else:
+			return
 		self.previewnext = self.previewing.next_entry(image_id, frame)
 		self.drawpreview()
 		self.updateframes()

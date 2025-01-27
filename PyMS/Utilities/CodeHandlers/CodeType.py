@@ -25,6 +25,13 @@ class HasKeywords(Protocol):
 BinaryT = TypeVar('BinaryT')
 MemoryT = TypeVar('MemoryT')
 class CodeType(Generic[BinaryT, MemoryT]):
+	@staticmethod
+	def find_by_name(name: str, code_types: list[CodeType]) -> CodeType | None:
+		for code_type in code_types:
+			if code_type.name == name:
+				return code_type
+		return None
+
 	# TODO: Remove `bytecode_type` from `CodeType` and move it to a subclass?
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.Field, block_reference: bool) -> None:
 		self.name = name

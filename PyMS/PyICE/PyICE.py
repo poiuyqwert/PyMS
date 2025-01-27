@@ -35,7 +35,7 @@ from enum import IntEnum
 
 from typing import IO as BuiltinIO
 
-LONG_VERSION = 'v%s' % Assets.version('PyICE')
+LONG_VERSION = 'v' + Assets.version('PyICE')
 
 class ColumnID(IntEnum):
 	IScripts = 0
@@ -61,6 +61,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 
 		self.file: str | None = None
 		self.data_context = DataContext()
+		self.unitnamestbl: TBL.TBL | None = None
 		self.ibin: IScriptBIN.IScriptBIN | None = None
 		self.edited = False
 
@@ -72,7 +73,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n),
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
 		def save():
@@ -93,7 +94,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE),
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -215,7 +216,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		for names, column, listbox in updates:
 			listbox.delete(0,END)
 			for index,name in enumerate(names):
-				listbox.insert(END, '%03s %s [%s]' % (index, name, self.iscript_id_from_selection_index(index, column)))
+				listbox.insert(END, f'{index:03} {name} [{self.iscript_id_from_selection_index(index, column)}]')
 		self.action_states()
 
 	def _sorted_scripts(self) -> list[IScript]:
@@ -234,7 +235,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 				name = Assets.data_cache(Assets.DataReference.IscriptIDList)[iscript_id]
 			else:
 				name = 'Unnamed Custom Entry'
-			self.iscriptlist.insert(END, '%03s %s' % (iscript_id, name))
+			self.iscriptlist.insert(END, f'{iscript_id:03} {name}')
 
 	def iscript_id_from_selection_index(self, index: int, column: ColumnID) -> int:
 		if column == ColumnID.IScripts:
@@ -275,7 +276,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 	def listbox_selection_changed(self, listbox: Listbox | None = None) -> None:
 		iscript_ids = self.selected_iscript_ids()
 		if iscript_ids:
-			self.selectstatus.set("IScript ID's Selected: %s" % ', '.join([str(i) for i in iscript_ids]))
+			self.selectstatus.set(f"IScript ID's Selected: {', '.join([str(i) for i in iscript_ids])}")
 		else:
 			self.selectstatus.set("IScript ID's Selected: None")
 		self.action_states()
@@ -300,7 +301,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		iscript = self.file
 		if not iscript:
 			iscript = 'iscript.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % iscript, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{iscript}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -315,9 +316,9 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.bin'
 		if not file_path:
-			self.title('PyICE %s' % LONG_VERSION)
+			self.title(f'PyICE {LONG_VERSION}')
 		else:
-			self.title('PyICE %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyICE {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -498,8 +499,8 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 	def get_serialize_context(self, output: BuiltinIO[str]) -> ICESerializeContext:
 		return ICESerializeContext(output, self.data_context)
 
-	def get_parse_context(self, input: IO.AnyInputText) -> ICEParseContext:
-		with IO.InputText(input) as f:
-			code = f.read()
+	def get_parse_context(self, any_input: IO.AnyInputText) -> ICEParseContext:
+		with IO.InputText(any_input) as input_text:
+			code = input_text.read()
 		lexer = ICELexer(code)
 		return ICEParseContext(lexer, self.data_context)

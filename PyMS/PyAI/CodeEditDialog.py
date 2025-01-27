@@ -2,6 +2,7 @@
 from .FindReplaceDialog import FindReplaceDialog
 from .Config import PyAIConfig
 from .Delegates import MainDelegate
+from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeTooltip, DirectiveTooltip
 
 from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, AISECodeTypes, CodeDirectives
@@ -280,6 +281,11 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 			)
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
+		CommandCodeTooltip(self.text.text)
+		AISECommandCodeTooltip(self.text.text)
+		TypeCodeTooltip(self.text.text)
+		DirectiveTooltip(self.text.text)
 
 	def statusupdate(self, _event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')

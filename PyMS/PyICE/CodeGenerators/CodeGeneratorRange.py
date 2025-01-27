@@ -52,7 +52,7 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 		return str(r[n])
 
 	def description(self):
-		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
+		return f'{self.start} to {self.stop}, by adding {self.step}'
 
 	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)

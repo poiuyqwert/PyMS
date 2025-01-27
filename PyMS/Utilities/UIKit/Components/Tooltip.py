@@ -19,7 +19,7 @@ class Tooltip(object):
 		self.id: str | None = None
 		self.tip: TooltipWindow | None = None
 		if attach_to_parent:
-			setattr(self.parent, '_tooltip', self)
+			setattr(self.parent, '_tooltip_' + self.__class__.__name__, self)
 
 	def setupbinds(self, press: bool) -> None:
 		self.parent.winfo_toplevel().bind(Focus.Out(), self.leave, '+')

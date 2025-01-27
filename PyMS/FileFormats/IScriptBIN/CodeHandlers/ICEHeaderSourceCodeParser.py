@@ -27,8 +27,8 @@ class ICEHeaderSourceCodeParser(CommandSourceCodeParser):
 		headerstart_line = parse_context.lexer.state.line
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.NewlineToken):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
-		
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line)")
+
 		script_id: int | None = None
 		script_type: int | None = None
 		init: CodeBlock | None = None
@@ -66,7 +66,7 @@ class ICEHeaderSourceCodeParser(CommandSourceCodeParser):
 			if isinstance(token, ICELexer.HeaderToken) and token.raw_value == '.headerend':
 				break
 			if not isinstance(token, Tokens.IdentifierToken):
-				raise parse_context.error('Parse', "Expected a script header command, got '%s' instead" % token.raw_value)
+				raise parse_context.error('Parse', f"Expected a script header command, got '{token.raw_value}' instead")
 			line = parse_context.lexer.state.line
 			cmd_def = self.cmd_defs[token.raw_value]
 			command = cmd_def.parse(parse_context)

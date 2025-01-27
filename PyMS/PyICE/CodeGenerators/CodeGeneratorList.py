@@ -210,7 +210,7 @@ class CodeGeneratorTypeList(CodeGenerator.CodeGeneratorType):
 		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
 
 	def description(self):
-		return 'Items from list: %s' % ', '.join(self.values)
+		return f'Items from list: {", ".join(self.values)}'
 
 	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorList(parent, self, config.windows.generator.editor.list)

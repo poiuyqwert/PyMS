@@ -90,7 +90,7 @@ class PyICEConfig(Config.Config):
 					self.images = Config.File(default=Assets.mpq_file_path('arr', 'images.dat'), name='images.dat', filetypes=[FileType.dat()])
 					self.sfxdata = Config.File(default=Assets.mpq_file_path('arr', 'sfxdata.dat'), name='sfxdata.dat', filetypes=[FileType.dat()])
 					super().__init__()
-	
+
 			class TBL(Config.Group):
 				def __init__(self) -> None:
 					self.stat_txt = Config.File(default=Assets.mpq_file_path('rez', 'stat_txt.tbl'), name='stat_txt.tbl', filetypes=[FileType.tbl()])

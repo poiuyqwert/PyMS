@@ -49,10 +49,10 @@ DEFAULT_PRESETS = [
 		]
 	),
 	GeneratorPreset(
-		name='Play Frames', 
+		name='Play Frames',
 		code="""\
 	playfram            $frame
-	wait                2""", 
+	wait                2""",
 		variables=[
 			CodeGeneratorVariable(
 				name='frame',
@@ -63,37 +63,37 @@ DEFAULT_PRESETS = [
 				)
 			)
 		]
-	), 
+	),
 	GeneratorPreset(
-		name='Play Framesets', 
+		name='Play Framesets',
 		code="""\
 	playfram            %frameset
-	wait                2""", 
+	wait                2""",
 		variables=[
 			CodeGeneratorVariable(
 				name='frameset',
 				generator=CodeGeneratorTypeRange(
-					start=0, 
-					stop=51, 
+					start=0,
+					stop=51,
 					step=17
 				)
 			)
 		]
 	),
 	GeneratorPreset(
-		name='Play Framesets (Advanced)', 
+		name='Play Framesets (Advanced)',
 		code="""\
 	playfram            %frame
-	wait                2""", 
+	wait                2""",
 		variables=[
 			CodeGeneratorVariable(
 				name='frameset',
 				generator=CodeGeneratorTypeRange(
-					start=0, 
-					stop=20, 
+					start=0,
+					stop=20,
 					step=1
 				)
-			), 
+			),
 			CodeGeneratorVariable(
 				name='frame',
 				generator=CodeGeneratorTypeMath('$frameset * 17')
@@ -101,10 +101,10 @@ DEFAULT_PRESETS = [
 		]
 	),
 	GeneratorPreset(
-		name='Hover Bobbing', 
+		name='Hover Bobbing',
 		code="""\
 	setvertpos          $offset
-	waitrand            8 10""", 
+	waitrand            8 10""",
 		variables=[
 			CodeGeneratorVariable(
 				name='offset',
@@ -113,7 +113,7 @@ DEFAULT_PRESETS = [
 						'0', 
 						'1', 
 						'2'
-					], 
+					],
 					repeater=CodeGeneratorTypeListRepeaterRepeatInvertedOnce()
 				)
 			)

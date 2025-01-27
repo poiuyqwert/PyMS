@@ -26,6 +26,13 @@ class DirectiveType(Generic[O]):
 		raise NotImplementedError(self.__class__.__name__ + '.validate()')
 
 class CodeDirectiveDefinition(object):
+	@staticmethod
+	def find_by_name(name: str, directive_defs: list[CodeDirectiveDefinition]) -> CodeDirectiveDefinition | None:
+		for directive_def in directive_defs:
+			if directive_def.name == name:
+				return directive_def
+		return None
+
 	def __init__(self, name: str, help_text: str, param_types: Sequence[DirectiveType] = ()) -> None:
 		self.name = name
 		self.help_text = help_text

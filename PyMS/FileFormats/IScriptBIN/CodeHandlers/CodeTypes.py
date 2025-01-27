@@ -45,32 +45,32 @@ class FrameCodeType(CodeType.IntCodeType):
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frame value is %s, or frameset 0x%02x)" % (data, bin.grpframes , (bin.grpframes - 17) // 17 * 17),extra=v)
 		try:
 			return super().validate(num, parse_context, token)
-		except:
-			raise PyMSError('Parse', f"Invalid Frame value '{num}', it must be a number in the range 0 to 65535 in decimal or hexidecimal (framesets are increments of 17: 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)")
+		except Exception as exc:
+			raise PyMSError('Parse', f"Invalid Frame value '{num}', it must be a number in the range 0 to 65535 in decimal or hexidecimal (framesets are increments of 17: 17 or 0x11, 34 or 0x22, 51 or 0x33, etc.)") from exc
 
 class FramesetCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		super().__init__('Frameset', 'The index of a frame set in a GRP (number in the range 0 to 255)', Struct.l_u8)
 
-	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
-		# TODO: Check against GRP frames
+	# TODO: Check against GRP frames
+	# def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		# if bin and bin.grpframes and v*17 > bin.grpframes:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
 		# if bin and bin.grpframes and v*17 > bin.grpframes - 17:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
-		return super().validate(num, parse_context, token)
+		# return super().validate(num, parse_context, token)
 
 class BFrameCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		super().__init__('BFrame', 'The index of a frame in a GRP (number in the range 0 to 255)', Struct.l_u8)
 
-	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
-		# TODO: Check against GRP frames
+	# TODO: Check against GRP frames
+	# def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		# if bin and bin.grpframes and v*17 > bin.grpframes:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
 		# if bin and bin.grpframes and v*17 > bin.grpframes - 17:
 		# 	raise PyMSWarning('Parameter',"'%s' is an invalid frameset for one or more of the GRP's specified in the header, and may cause a crash (max frameset value is %s)" % (data, (bin.grpframes - 17) // 17),extra=v)
-		return super().validate(num, parse_context, token)
+		# return super().validate(num, parse_context, token)
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -225,18 +225,18 @@ class HeaderTypeCodeType(CodeType.IntCodeType):
 
 	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		if not num in IType.TYPE_TO_ENTRY_POINT_COUNT_MAP:
-			raise PyMSError('Parse', f'Invalid Type value, must be one of the numbers: {", ".join(str(type) for type in IType.TYPE_TO_ENTRY_POINT_COUNT_MAP.keys())}')
+			raise PyMSError('Parse', f'Invalid Type value, must be one of the numbers: {", ".join(str(type_id) for type_id in IType.TYPE_TO_ENTRY_POINT_COUNT_MAP)}')
 
 class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None], CodeType.HasKeywords):
 	def __init__(self) -> None:
 		super().__init__('HeaderLabel', 'A label name of a block in the script, or [NONE]', Struct.l_u16, True)
 
 	def compile(self, block: CodeBlock | None, context: ByteCodeBuilderType) -> None:
-		type = cast(Struct.IntField, self._bytecode_type)
+		code_type = cast(Struct.IntField, self._bytecode_type)
 		if block:
-			context.add_block_ref(block, type)
+			context.add_block_ref(block, code_type)
 		else:
-			context.add_data(type.pack(0))
+			context.add_data(code_type.pack(0))
 
 	def serialize(self, block: CodeBlock | None, context: SerializeContext) -> str:
 		if block:
@@ -247,7 +247,7 @@ class HeaderLabelCodeType(CodeType.CodeType[CodeBlock | None, CodeBlock | None],
 	def lex(self, parse_context: ParseContext) -> CodeBlock | None:
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.IdentifierToken, ICELexer.NoneToken)):
-			raise parse_context.error('Parse', "Expected block label identifier or '[NONE]' but got '%s'" % token.raw_value)
+			raise parse_context.error('Parse', f"Expected block label identifier or '[NONE]' but got '{token.raw_value}'")
 		if token.raw_value == '[NONE]':
 			return None
 		return parse_context.get_block(token.raw_value)
