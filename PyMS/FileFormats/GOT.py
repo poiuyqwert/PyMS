@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import IO
 from ..Utilities import Serialize
@@ -306,12 +305,14 @@ class GOT:
 		self.resources_value = 0
 		self.subtype_value = 0
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
+		if len(data) != 97:
+			raise PyMSError('Load', f'Unsupported GOT file, could possibly be corrupt (invalid size, got {len(data)} expected 97)')
+		if data[0] != 3:
+			raise PyMSError('Load', f'Unsupported GOT file, could possibly be corrupt (invalid magic number, got {data[0]} expected 3)')
 		try:
-			if len(data) != 97 or data[0] != 3:
-				raise Exception()
 			raw_name: bytes
 			raw_subtype_name: bytes
 			gametype_id: int
@@ -348,8 +349,8 @@ class GOT:
 			team_mode = TeamMode(raw_team_mode)
 			cheat_codes = CheatCodes(raw_cheat_codes)
 			tournament_mode = TournametMode(raw_tournament_mode)
-		except PyMSError as e:
-			raise PyMSError('Load',"Unsupported GOT file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported GOT file, could possibly be corrupt") from exc
 		self.name = name
 		self.subtype_name = subtype_name
 		self.gametype_id = gametype_id
@@ -387,9 +388,9 @@ class GOT:
 				f.write('#----------------------------------------------------\n')
 			f.write(text)
 
-	def interpret(self, input: IO.AnyInputText):
-		with IO.InputText(input) as f:
-			text = f.read()
+	def interpret(self, any_input: IO.AnyInputText):
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 		Serialize.decode_text(text, [_GOTDefinition], lambda i,d: self, 1)
 
 	def save_data(self) -> bytes:

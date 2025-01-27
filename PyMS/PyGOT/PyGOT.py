@@ -5,9 +5,8 @@ from .SettingsDialog import SettingsDialog
 from ..FileFormats import GOT
 from ..FileFormats.TRG import TRG
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, fit, register_registry
+from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
 from ..Utilities.UIKit import *
-from ..Utilities import Config
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -20,7 +19,7 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SponsorDialog import SponsorDialog
 
-LONG_VERSION = 'v%s' % Assets.version('PyGOT')
+LONG_VERSION = 'v' + Assets.version('PyGOT')
 
 class PyGOT(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -118,7 +117,7 @@ class PyGOT(MainWindow):
 		self.name_entry = Entry(f, textvariable=self.name, font=Font.fixed(), width=32, state=DISABLED)
 		Tooltip(self.name_entry, 'The name of the Game Template listed in StarCraft')
 		self.name_entry.grid(row=0, column=1, pady=1, columnspan=3)
-		
+
 		Label(f, text='ID:').grid(sticky=E)
 		self.gametype_id_entry = Entry(f, textvariable=self.gametype_id, font=Font.fixed(), width=2, state=DISABLED)
 		Tooltip(self.gametype_id_entry, 'An ID used to define the order of the Game Template when its listed in StarCraft')
@@ -148,7 +147,7 @@ class PyGOT(MainWindow):
 		self.subtype_id_entry = Entry(f, textvariable=self.subtype_id, font=Font.fixed(), width=1, state=DISABLED)
 		Tooltip(self.subtype_id_entry, 'An ID used to define the order of the variation when its listed in StarCraft')
 		self.subtype_id_entry.grid(row=2, column=1, sticky=W, pady=1)
-		
+
 		Label(f, text='Label:').grid(row=1, column=2, sticky=E)
 		self.subtype_label_entry = Entry(f, textvariable=self.subtype_label, font=Font.fixed(), width=10, state=DISABLED)
 		# tip(self.subtype_label_entry, 'subid')
@@ -166,7 +165,7 @@ class PyGOT(MainWindow):
 		row = 0
 		def add_with_value(name: str, option_var: IntVar, options: list[str], value_var: IntegerVar) -> tuple[DropDown, Entry]:
 			nonlocal row
-			Label(l, text='%s:' % name, anchor=E).grid(row=row, column=0, sticky=E)
+			Label(l, text=name + ':', anchor=E).grid(row=row, column=0, sticky=E)
 			dropdown = DropDown(l, option_var, options, width=25, state=DISABLED)
 			dropdown.grid(row=row, column=1, pady=1)
 			entry = Entry(l, textvariable=value_var, font=Font.fixed(), width=10, state=DISABLED)
@@ -175,7 +174,7 @@ class PyGOT(MainWindow):
 			return (dropdown, entry)
 		def add_without_value(name: str, option_var: IntVar, options: list[str]) -> DropDown:
 			nonlocal row
-			Label(l, text='%s:' % name, anchor=E).grid(row=row, column=0, sticky=E)
+			Label(l, text=name + ':', anchor=E).grid(row=row, column=0, sticky=E)
 			dropdown = DropDown(l, option_var, options, width=25, state=DISABLED)
 			dropdown.grid(row=row, column=1, pady=1)
 			row += 1
@@ -217,7 +216,7 @@ class PyGOT(MainWindow):
 		file = self.file
 		if not file:
 			file = 'Unnamed.got'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -266,7 +265,7 @@ class PyGOT(MainWindow):
 		self.name.set('')
 		self.subtype_name.check = False
 		self.subtype_name.set('')
-		vars: list[Variable] = [
+		all_vars: list[Variable] = [
 			self.gametype_id,
 			self.league_id,
 			self.subtype_id,
@@ -287,7 +286,7 @@ class PyGOT(MainWindow):
 			self.resources_value,
 			self.subtype_value
 		]
-		for var in vars:
+		for var in all_vars:
 			var.set(0)
 
 	def update_title(self) -> None:
@@ -295,9 +294,9 @@ class PyGOT(MainWindow):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.got'
 		if not file_path:
-			self.title('PyGOT %s' % LONG_VERSION)
+			self.title(f'PyGOT {LONG_VERSION}')
 		else:
-			self.title('PyGOT %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyGOT {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -459,7 +458,7 @@ class PyGOT(MainWindow):
 		self.reset()
 		self.action_states()
 
-	def trg(self, format: TRG.Format) -> None:
+	def trg(self, trg_format: TRG.Format) -> None:
 		file = self.config_.last_path.trg.select_open(self)
 		if not file:
 			return
@@ -473,7 +472,7 @@ class PyGOT(MainWindow):
 		if not file:
 			return
 		try:
-			trg.save(file, format)
+			trg.save(file, trg_format)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
@@ -483,7 +482,7 @@ class PyGOT(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def sets(self, err: PyMSError | None = None) -> None:
+	def sets(self) -> None:
 		SettingsDialog(self, self.config_)
 
 	def help(self) -> None:
