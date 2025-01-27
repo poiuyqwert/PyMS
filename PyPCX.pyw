@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat, Requirement
 check_compat('PyPCX', Requirement.PIL)

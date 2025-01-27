@@ -23,7 +23,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import cast
 
-LONG_VERSION = 'v%s' % Assets.version('PyPCX')
+LONG_VERSION = 'v' + Assets.version('PyPCX')
 
 class PyPCX(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -34,7 +34,7 @@ class PyPCX(MainWindow):
 		ga.set_application('PyPCX', Assets.version('PyPCX'))
 		ga.track(GAScreen('PyPCX'))
 		setup_trace('PyPCX', self)
-		
+
 		self.config_ = PyPCXConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
@@ -57,7 +57,7 @@ class PyPCX(MainWindow):
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export as BMP', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', Ctrl.i),
+		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import BMP', Ctrl.i)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('colors'), self.loadpal, 'Import a palette', Ctrl.Alt.i, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('saveriff'), lambda: self.savepal(file_type=Palette.FileType.riff), 'Save Palette as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
@@ -120,7 +120,7 @@ class PyPCX(MainWindow):
 		file = self.file
 		if not file:
 			file = 'Unnamed.pcx'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		elif save == MessageBox.CANCEL:
@@ -135,9 +135,9 @@ class PyPCX(MainWindow):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.pcx'
 		if not file_path:
-			self.title('PyPCX %s' % LONG_VERSION)
+			self.title(f'PyPCX {LONG_VERSION}')
 		else:
-			self.title('PyPCX %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyPCX {LONG_VERSION} ({file_path})')
 
 	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
