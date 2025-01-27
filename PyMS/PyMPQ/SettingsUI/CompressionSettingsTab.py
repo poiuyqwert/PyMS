@@ -55,7 +55,7 @@ class CompressionSettingsTab(SettingsTab):
 		right = Frame(self)
 		Label(right, text='Compression Type:', anchor=W, justify=LEFT).pack(fill=X)
 		DropDown(right, self.compression_index, [type.display_name() for type in CompressionSettingsTab.COMPRESSION_CHOICES], self.choose_compression).pack(fill=X)
-		
+
 		self.levels_frame = Frame(right)
 		Label(self.levels_frame, text='Compression Level:', anchor=W, justify=LEFT).pack(side=TOP, fill=X)
 		self.levels_dropdown = DropDown(self.levels_frame, self.compression_level, [], self.choose_level)
@@ -106,8 +106,8 @@ class CompressionSettingsTab(SettingsTab):
 		if level != compression.level:
 			self.autocompression[extension] = str(compression.type.setting(level))
 			self.edited_state.mark_edited()
-	
-	def add(self, key: Event | None = None) -> None:
+
+	def add(self, _event: Event | None = None) -> None:
 		if self.addbutton['state'] == DISABLED:
 			return
 		e = self.extension.get()
@@ -125,7 +125,7 @@ class CompressionSettingsTab(SettingsTab):
 			self.edited_state.mark_edited()
 			self.action_states()
 
-	def remove(self, key: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		if self.rembutton['state'] == DISABLED:
 			return
 		s = int(self.listbox.curselection()[0])

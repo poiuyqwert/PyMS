@@ -370,7 +370,7 @@ SFileInfoCRC32                = 56 # CRC32 of the file
 
 class MPQHANDLE(ctypes.c_void_p):
 	def __repr__(self):
-		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
+		return f'<MPQHANDLE object at {hex(id(self))}: {hex(self.value)}>'
 
 class SFILE_FIND_DATA(ctypes.Structure):
 	_fields_ = [
@@ -555,7 +555,7 @@ if _StormLib is not None:
 	# bool   WINAPI SFileHasFile(HANDLE hMpq, const char * szFileName);
 	_StormLib.SFileHasFile.argtypes = [MPQHANDLE, ctypes.c_char_p]
 	_StormLib.SFileHasFile.restype = ctypes.c_bool
-	
+
 	# bool   WINAPI SFileOpenFileEx(HANDLE hMpq, const char * szFileName, DWORD dwSearchScope, HANDLE * phFile);
 	_StormLib.SFileOpenFileEx.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
 	_StormLib.SFileOpenFileEx.restype = ctypes.c_bool
@@ -838,7 +838,7 @@ def SFileGetFileInfo(mpq: MPQHANDLE, info_class: int) -> int | str | None:
 		info_container = ctypes.c_uint32()
 	# TODO: Implement more info types
 	if info_container is None:
-		raise NotImplementedError('Info class %d not implemented in SFileGetFileInfo' % info_class)
+		raise NotImplementedError(f'Info class {info_class} not implemented in SFileGetFileInfo')
 	length_needed = ctypes.c_uint32()
 	if not _StormLib.SFileGetFileInfo(mpq, info_class, ctypes.byref(info_container), ctypes.sizeof(info_container), ctypes.byref(length_needed)):
 		return None
@@ -914,4 +914,4 @@ def SFGetLastError():
 	# StormLib only implements its own GetLastError on platforms other than windows
 	if _StormLib.GetLastError is None:
 		return ctypes.GetLastError()
-	return _StormLib.GetLastError()
+	return _StormLib.GetLastError() # pylint: disable=not-callable

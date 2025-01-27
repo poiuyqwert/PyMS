@@ -27,11 +27,11 @@ class UpdateFiles(PyMSDialog):
 		btns.pack()
 		return save
 
-	def cancel(self):
+	def cancel(self, _event: Event | None = None):
 		self.files = []
 		PyMSDialog.ok(self)
 
-	def ok(self):
+	def ok(self, _event: Event | None = None):
 		self.files = []
 		for i in self.listbox.curselection():
 			self.files.append(self.listbox.get(i))

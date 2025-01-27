@@ -192,7 +192,7 @@ class MPQFILE(ctypes.Structure):
 class MPQARCHIVE(ctypes.Structure):
 	pass
 
-MPQFILE._fields_ = [
+MPQFILE._fields_ = [ # pylint: disable=protected-access
 	('nextFile',ctypes.POINTER(MPQFILE)),
 	('prevFile',ctypes.POINTER(MPQFILE)),
 	('fileName',ctypes.c_char * 260),
@@ -213,7 +213,7 @@ MPQFILE._fields_ = [
 	('hashEntry',ctypes.POINTER(HASHTABLEENTRY)),
 	('fileName',ctypes.c_char_p),
 ]
-MPQARCHIVE._fields_ = [
+MPQARCHIVE._fields_ = [ # pylint: disable=protected-access
 	('nextArc',ctypes.POINTER(MPQARCHIVE)),
 	('prevArc',ctypes.POINTER(MPQARCHIVE)),
 	('fileName',ctypes.c_char * 260),
@@ -237,7 +237,7 @@ MPQARCHIVE._fields_ = [
 
 class MPQHANDLE(ctypes.c_void_p):
 	def __repr__(self):
-		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
+		return f'<MPQHANDLE object at {hex(id(self))}: {hex(self.value)}>'
 
 if _SFmpq is not None:
 	try:
@@ -250,7 +250,7 @@ if _SFmpq is not None:
 	_SFmpq.SFMpqGetVersionString.restype = ctypes.c_char_p
 	# _SFmpq.SFMpqGetVersionString2.argtypes = [ctypes.c_char_p,ctypes.c_int]
 	_SFmpq.SFMpqGetVersion.restype = SFMPQVERSION
-	
+
 	_SFmpq.SFileOpenArchive.argtypes = [ctypes.c_char_p,ctypes.c_int32,ctypes.c_uint32,ctypes.POINTER(MPQHANDLE)]
 	_SFmpq.SFileCloseArchive.argtypes = [MPQHANDLE]
 	#_SFmpq.SFileOpenFileAsArchive.argtypes = [MPQHANDLE,ctypes.c_char_p,ctypes.c_int32,ctypes.c_int32,ctypes.POINTER(MPQHANDLE)]
@@ -301,10 +301,10 @@ def debug_log(func):
 	if DEBUG:
 		def do_log(*args, **kwargs):
 			result = func(*args, **kwargs)
-			print(("Func  : %s" % func.__name__))
-			print(("Args  : %s" % (args,)))
-			print(("kwargs: %s" % kwargs))
-			print(("Result: %s" % (result,)))
+			print((f"Func  : {func.__name__}"))
+			print((f"Args  : {args}"))
+			print((f"kwargs: {kwargs}"))
+			print((f"Result: {result}"))
 			return result
 		return do_log
 	else:
@@ -321,7 +321,7 @@ def SFGetLastError():
 	# SFmpq only implements its own GetLastError on platforms other than windows
 	if _SFmpq.GetLastError is None:
 		return ctypes.GetLastError()
-	return _SFmpq.GetLastError()
+	return _SFmpq.GetLastError() # pylint: disable=not-callable
 
 @debug_log
 def SFInvalidHandle(h: MPQHANDLE) -> bool:

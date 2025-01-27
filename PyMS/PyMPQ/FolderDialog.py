@@ -30,10 +30,10 @@ class FolderDialog(PyMSDialog):
 
 		return entry
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.save = False
 		PyMSDialog.cancel(self)
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.prefix_config.value = self.result.get()
 		PyMSDialog.ok(self)
