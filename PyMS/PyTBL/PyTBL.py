@@ -30,7 +30,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyTBL')
+LONG_VERSION = 'v' + Assets.version('PyTBL')
 
 class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -42,7 +42,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
 		ga.track(GAScreen('PyTBL'))
 		setup_trace('PyTBL', self)
-		
+
 		self.config_ = PyTBLConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
@@ -176,7 +176,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.config_.panes.color_list.load_size(self.ver_pane)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
-	
+
 	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
@@ -195,8 +195,8 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
 			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, lambda data: font8.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
 			unitpal.load_file(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
 			icons.load_file(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
@@ -248,7 +248,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.tbl'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -298,9 +298,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.tbl'
 		if not file_path:
-			self.title('PyTBL %s' % LONG_VERSION)
+			self.title(f'PyTBL {LONG_VERSION}')
 		else:
-			self.title('PyTBL %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTBL {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited

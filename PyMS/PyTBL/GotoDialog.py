@@ -28,7 +28,7 @@ class GotoDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.delegate.config_.windows.goto.load_size(self)
 
-	def jump(self, event: Event | None = None) -> None:
+	def jump(self, _event: Event | None = None) -> None:
 		if not self.delegate.tbl:
 			return
 		s = self.goto.get(True)

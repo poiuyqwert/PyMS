@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=consider-using-f-string
 
 from PyMS.Utilities.Compatibility import check_compat
 check_compat('PyTBL')
@@ -56,4 +57,3 @@ def main(): # type: () -> None
 
 if __name__ == '__main__':
 	main()
-	

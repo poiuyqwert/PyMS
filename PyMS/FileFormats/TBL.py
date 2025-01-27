@@ -96,11 +96,11 @@ def compile_string(string: str) -> str:
 
 def decompile_string(string: str, exclude: str = '', include: str = '') -> str:
 	def special_chr(o):
-		return '<%s>' % ord(o.group(0))
+		return f'<{ord(o.group(0))}>'
 	decompile = DEF_DECOMPILE + include
 	if exclude:
-		decompile = re.sub('[%s]' % re.escape(exclude),'',decompile)
-	return re.sub('([%s])' % decompile, special_chr, string)
+		decompile = re.sub(f'[{re.escape(exclude)}]','',decompile)
+	return re.sub(f'([{decompile}])', special_chr, string)
 
 class TBL:
 	def __init__(self) -> None:
@@ -120,23 +120,21 @@ class TBL:
 					end = findlen[i-1]
 					lengths[start] = end-start
 			strings: list[str] = []
-			for i in range(len(offsets)):
-				o = offsets[i]
+			for o in offsets:
 				l = lengths[o]
 				strings.append(data[o:o+l].decode('utf-8'))
 			self.strings = strings
-		except:
-			raise PyMSError('Load',"Unsupported TBL file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported TBL file '{file}', could possibly be corrupt") from exc
 
 	def interpret(self, file: str) -> None:
 		try:
-			f = open(file,'r')
-			lines = f.readlines()
-			f.close()
-		except:
-			raise PyMSError('Interpreting',"Could not load file '%s'" % file)
+			with open(file, 'r', encoding='utf-8') as f:
+				lines = f.readlines()
+		except Exception as exc:
+			raise PyMSError('Interpreting', f"Could not load file '{file}'") from exc
 		strings: list[str] = []
-		for n,l in enumerate(lines):
+		for l in lines:
 			line = l.split('#',1)[0]
 			if line:
 				if len(strings) == 65536:
