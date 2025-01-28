@@ -6,6 +6,7 @@ from ...FileFormats.AIBIN.AIBIN import AIBIN, LoadIssues, LoadIssue, LoadIssueRe
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
 from ...Utilities.Callback import Callback
+from ...Utilities.Config import WindowGeometry
 
 class IssueResolution:
 	def __init__(self, aibin: AIBIN, issue: LoadIssue):
@@ -74,25 +75,24 @@ class IssueResolution:
 		return True
 
 class FixIssuesDialog(PyMSDialog):
-	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues) -> None:
+	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues, window_geometry_config: WindowGeometry) -> None:
 		self.issue_resolutions = list(IssueResolution(aibin, issue) for issue in issues)
 		for issue_resolution in self.issue_resolutions:
 			issue_resolution.update_callback.add(self.issue_resolution_updated)
 		self.cancelled = True
-		super().__init__(parent, 'Resolve issues', resizable=(False, False))
+		self.window_geometry_config = window_geometry_config
+		super().__init__(parent, 'Resolve issues')
 
 	def widgetize(self) -> Misc | None:
-		self.maxsize(700, 400)
-
-		WrappingLabel(self, text='There are issues with some scripts in the loaded files. This could be because the bwscript.bin loaded is not the correct pair of the loaded aiscrip.bin, or that the files are slightly broken. Please review each script and choose how to resolve their issues, or cancel the loading entirely.', justify=LEFT, anchor=W).pack(fill=X, expand=True, padx=5, pady=5)
+		WrappingLabel(self, text='There are issues with some scripts in the loaded files. This could be because the bwscript.bin loaded is not the correct pair of the loaded aiscrip.bin, or that the files are slightly broken. Please review each script and choose how to resolve their issues, or cancel the loading entirely.', justify=LEFT, anchor=W).pack(fill=X, padx=5, pady=5)
 
 		details_frame = Frame(self)
 		frame = Frame(details_frame)
 		Label(frame, text='Scripts:', justify=LEFT, anchor=W).pack(fill=X)
 		self.scripts_listbox = ScrolledListbox(frame, width=30)
-		self.scripts_listbox.pack()
+		self.scripts_listbox.pack(fill=BOTH, expand=True)
 		self.scripts_listbox.bind(WidgetEvent.Listbox.Select.event(), self.issue_selection_changed)
-		frame.pack(side=LEFT, padx=5, pady=5)
+		frame.pack(side=LEFT, padx=5, pady=5, fill=BOTH, expand=True)
 
 		frame = Frame(details_frame)
 		Label(frame, text='Issue:', justify=LEFT, anchor=W).pack(fill=X)
@@ -109,12 +109,12 @@ class FixIssuesDialog(PyMSDialog):
 		self.resolution_combobox.bind(WidgetEvent.Combobox.Selected(), self.resolution_selection_changed)
 		self.resolution_combobox.pack(fill=X)
 		self.resolution_container = Frame(frame)
-		self.resolution_container.pack(fill=X)
+		self.resolution_container.pack(fill=BOTH, expand=True)
 		self.resolution_ui: Widget | None = None
 		self.resolution_incomplete = StringVar()
 		WrappingLabel(frame, textvariable=self.resolution_incomplete, justify=LEFT, anchor=W, font=Font.default().bolded()).pack(fill=X)
 		frame.pack(side=LEFT, fill=BOTH, expand=True, padx=5, pady=5)
-		details_frame.pack(fill=X, expand=True)
+		details_frame.pack(fill=BOTH, expand=True)
 
 		frame = Frame(self)
 		self.resolve_button = Button(frame, text='Resolve', width=10, command=self.resolve, state=DISABLED)
@@ -127,6 +127,10 @@ class FixIssuesDialog(PyMSDialog):
 		self.issue_selection_changed()
 
 		return cancel_button
+
+	def setup_complete(self) -> None:
+		self.minsize(700, 420)
+		self.window_geometry_config.load_size(self)
 
 	def preview_aiscript(self) -> None:
 		pass
@@ -190,3 +194,7 @@ class FixIssuesDialog(PyMSDialog):
 			issue_resolution.resolve()
 		self.cancelled = False
 		self.ok()
+
+	def dismiss(self) -> None:
+		self.window_geometry_config.save_size(self)
+		PyMSDialog.dismiss(self)
