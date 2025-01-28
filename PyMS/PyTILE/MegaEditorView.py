@@ -44,11 +44,11 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			if not self.enabled:
 				return
 			self.edit_mode.set(mode.value)
-		self.parent.bind(Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini)),
-		self.parent.bind(Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip)),
-		self.parent.bind(Key.h(), lambda _: set_edit_mode(MegaEditorMode.height)),
-		self.parent.bind(Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability)),
-		self.parent.bind(Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking)),
+		self.parent.bind(Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini))
+		self.parent.bind(Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip))
+		self.parent.bind(Key.h(), lambda _: set_edit_mode(MegaEditorMode.height))
+		self.parent.bind(Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability))
+		self.parent.bind(Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking))
 		self.parent.bind(Key.r(), lambda _: set_edit_mode(MegaEditorMode.ramp))
 
 		self.canvas = Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview') # type: ignore[call-arg]
@@ -114,8 +114,8 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id: int | VX4Minitile) -> Image:
-		return self.delegate.get_tile(id)
+	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+		return self.delegate.get_tile(tile_id)
 
 	def get_edit_mode(self) -> MegaEditorMode:
 		return MegaEditorMode(self.edit_mode.get())
@@ -153,14 +153,14 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			self.height_tools.pack()
 			self.active_tools = self.height_tools
 
-	def edit_mode_updated(self, event: Event | None = None) -> None:
+	def edit_mode_updated(self, _event: Event | None = None) -> None:
 		self.update_tools()
 		self.draw_edit_mode()
 		mode = self.get_edit_mode()
 		self.config_.mega_edit.mode.value = mode
 		self.delegate.mega_edit_mode_updated(mode)
 
-	def height_updated(self, event: Event | None = None) -> None:
+	def height_updated(self, _event: Event | None = None) -> None:
 		self.config_.mega_edit.height.value = self.height.get()
 
 	def draw_border(self, minitile_n: int, color: str = '#FFFFFF') -> None:

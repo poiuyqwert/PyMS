@@ -45,7 +45,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 
 		return self.export_button
 
-	def update_states(self, event: Event | None = None) -> None:
+	def update_states(self, _event: Event | None = None) -> None:
 		any_on = self.height.get() or self.walkability.get() or self.block_sight.get() or self.ramp.get()
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 

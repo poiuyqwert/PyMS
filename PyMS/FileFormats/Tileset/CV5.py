@@ -34,12 +34,12 @@ class CV5DoodadFlag:
 	has_overlay_unit   = 0x2000 # Has Units.dat overlay
 	overlay_flipped    = 0x4000 # Overlay is flipped (unused) (is not cleared SC, so this flag also counts as Temporary creep)
 
-class CV5Group(object):
+class CV5Group:
 	TYPE_DOODAD = 1
 	SCR = 1
 
 	def __init__(self) -> None:
-		self.type = 0 
+		self.type = 0
 		self.flags = 0
 		self._edge_left_or_overlay_id = 0
 		self._edge_up_or_scr = 0
@@ -82,14 +82,14 @@ class CV5Group(object):
 	def update_settings(self, group: CV5Group) -> None:
 		self.type = group.type
 		self.flags = group.flags
-		self._edge_left_or_overlay_id = group._edge_left_or_overlay_id
-		self._edge_up_or_scr = group._edge_up_or_scr
-		self._edge_right_or_string_id = group._edge_right_or_string_id
-		self._edge_down_or_unknown4 = group._edge_down_or_unknown4
-		self._piece_left_or_dddata_id = group._piece_left_or_dddata_id
-		self._piece_up_or_width = group._piece_up_or_width
-		self._piece_right_or_height = group._piece_right_or_height
-		self._piece_down_or_unknown8 = group._piece_down_or_unknown8
+		self._edge_left_or_overlay_id = group._edge_left_or_overlay_id # pylint: disable=protected-access
+		self._edge_up_or_scr = group._edge_up_or_scr # pylint: disable=protected-access
+		self._edge_right_or_string_id = group._edge_right_or_string_id # pylint: disable=protected-access
+		self._edge_down_or_unknown4 = group._edge_down_or_unknown4 # pylint: disable=protected-access
+		self._piece_left_or_dddata_id = group._piece_left_or_dddata_id # pylint: disable=protected-access
+		self._piece_up_or_width = group._piece_up_or_width # pylint: disable=protected-access
+		self._piece_right_or_height = group._piece_right_or_height # pylint: disable=protected-access
+		self._piece_down_or_unknown8 = group._piece_down_or_unknown8 # pylint: disable=protected-access
 
 	@property
 	def basic_edge_left(self) -> int:
@@ -231,7 +231,7 @@ class CV5Group(object):
 			return False
 		return True
 
-class CV5(object):
+class CV5:
 	MAX_ID = 4095
 
 	def __init__(self) -> None:
@@ -242,19 +242,19 @@ class CV5(object):
 
 	def groups_remaining(self) -> int:
 		return (CV5.MAX_ID+1) - len(self._groups)
- 
-	def get_group(self, id: int) -> CV5Group:
-		return self._groups[id]
+
+	def get_group(self, group_id: int) -> CV5Group:
+		return self._groups[group_id]
 
 	def add_group(self, group: CV5Group) -> int:
-		id = len(self._groups)
+		group_id = len(self._groups)
 		self._groups.append(group)
-		return id
+		return group_id
 
 	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'CV5')
 		if data and len(data) % 52:
-			raise PyMSError('Load',"'%s' is an invalid CV5 file" % file)
+			raise PyMSError('Load', f"'{file}' is an invalid CV5 file")
 		groups: list[CV5Group] = []
 		try:
 			o = 0
@@ -263,8 +263,8 @@ class CV5(object):
 				group.load_data(data[o:o+52])
 				groups.append(group)
 				o += 52
-		except:
-			raise PyMSError('Load',"Unsupported CV5 file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported CV5 file '{file}', could possibly be corrupt") from exc
 		self._groups = groups
 
 	def save_file(self, file: str | BinaryIO) -> None:
@@ -276,8 +276,8 @@ class CV5(object):
 				f = AtomicWriter(file, 'wb')
 				f.write(data)
 				f.close()
-			except:
-				raise PyMSError('Save',"Could not save the CV5 to '%s'" % file)
+			except Exception as exc:
+				raise PyMSError('Save', f"Could not save the CV5 to '{file}'") from exc
 		else:
 			file.write(data)
 			file.close()

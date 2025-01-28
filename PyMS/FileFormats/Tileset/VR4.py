@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 VR4Image = Tuple[Tuple[int, ...], ...]
 VR4ImageInput = Sequence[Sequence[int]]
 
-class VR4(object):
+class VR4:
 	MAX_ID 				= 0xFFFE // 2
 	MAX_ID_EXPANDED_VX4 = 0xFFFFFFFE // 2
 
@@ -55,14 +55,14 @@ class VR4(object):
 					break
 		if not correct_size:
 			raise PyMSError('Add Image', 'Incorrect image size (must be 8x8)')
-		id = len(self._images)
+		image_id = len(self._images)
 		self._images.append(tuple(tuple(r) for r in image))
-		image_hash = self.image_hash(self._images[id])
+		image_hash = self.image_hash(self._images[image_id])
 		if not image_hash in self._lookup:
 			self._lookup[image_hash] = []
-		self._lookup[image_hash].append(id)
+		self._lookup[image_hash].append(image_id)
 
-	def set_image(self, id: int, image: VR4ImageInput) -> None:
+	def set_image(self, image_id: int, image: VR4ImageInput) -> None:
 		correct_size = (len(image) == 8)
 		if correct_size:
 			for r in image:
@@ -71,35 +71,35 @@ class VR4(object):
 					break
 		if not correct_size:
 			raise PyMSError('Set Image', 'Incorrect image size (must be 8x8)')
-		old_hash = self.image_hash(self._images[id])
-		self._lookup[old_hash].remove(id)
+		old_hash = self.image_hash(self._images[image_id])
+		self._lookup[old_hash].remove(image_id)
 		if len(self._lookup[old_hash]) == 0:
 			del self._lookup[old_hash]
-		self._images[id] = tuple(tuple(r) for r in image)
-		image_hash = self.image_hash(self._images[id])
+		self._images[image_id] = tuple(tuple(r) for r in image)
+		image_hash = self.image_hash(self._images[image_id])
 		if not image_hash in self._lookup:
 			self._lookup[image_hash] = []
-		self._lookup[image_hash].append(id)
+		self._lookup[image_hash].append(image_id)
 
-	def get_image(self, id: int) -> VR4Image:
-		return self._images[id]
+	def get_image(self, image_id: int) -> VR4Image:
+		return self._images[image_id]
 
 	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'VR4')
 		if data and len(data) % 64:
-			raise PyMSError('Load',"'%s' is an invalid VR4 file" % file)
+			raise PyMSError('Load', f"'{file}' is an invalid VR4 file")
 		images: list[VR4Image] = []
 		lookup: dict[int, list[int]] = {}
 		try:
-			for id in range(len(data) // 64):
-				d = tuple(int(v) for v in struct.unpack('64B', data[id*64:(id+1)*64]))
+			for image_id in range(len(data) // 64):
+				d = tuple(int(v) for v in struct.unpack('64B', data[image_id*64:(image_id+1)*64]))
 				images.append(tuple(tuple(d[y:y+8]) for y in range(0,64,8)))
 				image_hash = self.image_hash(images[-1])
 				if not image_hash in self._lookup:
 					lookup[image_hash] = []
-				lookup[image_hash].append(id)
-		except:
-			raise PyMSError('Load',"Unsupported VR4 file '%s', could possibly be corrupt" % file)
+				lookup[image_hash].append(image_id)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported VR4 file '{file}', could possibly be corrupt") from exc
 		self._images = images
 		self._lookup = lookup
 
@@ -115,8 +115,8 @@ class VR4(object):
 				f = AtomicWriter(file, 'wb')
 				f.write(data)
 				f.close()
-			except:
-				raise PyMSError('Save',"Could not save the VR4 to '%s'" % file)
+			except Exception as exc:
+				raise PyMSError('Save', f"Could not save the VR4 to '{file}'") from exc
 		else:
 			file.write(data)
 			file.close()

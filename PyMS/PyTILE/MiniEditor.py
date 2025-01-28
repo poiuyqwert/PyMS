@@ -19,14 +19,14 @@ class Click(Enum):
 		return 'bg'
 
 class MiniEditor(PyMSDialog):
-	def __init__(self, parent: Misc, id: int, delegate: MiniEditorDelegate, colors: dict[Click, int] = {Click.left:0, Click.right:0}) -> None:
-		self.colors = colors
+	def __init__(self, parent: Misc, tile_id: int, delegate: MiniEditorDelegate, colors: dict[Click, int] | None = None) -> None:
+		self.colors = colors or {Click.left:0, Click.right:0}
 		self.click: Click | None = None
 		self.select = False
-		self.id = id
+		self.id = tile_id
 		self.delegate = delegate
 		self.edited = True
-		PyMSDialog.__init__(self, parent, 'MiniTile Editor [%s]' % id, resizable=(False,False))
+		PyMSDialog.__init__(self, parent, f'MiniTile Editor [{tile_id}]', resizable=(False,False))
 
 	def widgetize(self) -> Widget:
 		tileset = self.delegate.get_tileset()
@@ -52,24 +52,28 @@ class MiniEditor(PyMSDialog):
 		for y,row in enumerate(d):
 			self.indexs.append(list(row))
 			for x,index in enumerate(row):
-				cx,cy,c = x * 10 + 2, y * 10 + 2, '#%02x%02x%02x' % tuple(tileset.wpe.palette[index])
-				t = 'tile%s,%s' % (x,y)
+				cx = x * 10 + 2
+				cy = y * 10 + 2
+				c = Colors.to_html(tileset.wpe.palette[index])
+				t = f'tile{x},{y}'
 				self.canvas.create_rectangle(cx, cy, cx+10, cy+10, fill=c, outline=c, tags=t)
 				self.canvas.tag_bind(t, Mouse.Click_Left(), color_callback((x,y), Click.left))
 				self.canvas.tag_bind(t, Mouse.Click_Right(), color_callback((x,y), Click.right))
 				cx,cy = x + 32,y + 90
-				self.canvas.create_rectangle(cx, cy, cx+2, cy+2, fill=c, outline=c, tags='scale%s,%s' % (x,y))
+				self.canvas.create_rectangle(cx, cy, cx+2, cy+2, fill=c, outline=c, tags=f'scale{x},{y}')
 		self.canvas.create_rectangle(90, 2, 202, 114, fill='#000000', outline='#000000')
 		for n,rgb in enumerate(tileset.wpe.palette):
-			cx,cy,c = (n % 16) * 7 + 91, (n // 16) * 7 + 3, '#%02x%02x%02x' % tuple(rgb)
-			t = 'pal%s' % n
+			cx = (n % 16) * 7 + 91
+			cy = (n // 16) * 7 + 3
+			c = Colors.to_html(rgb)
+			t = f'pal{n}'
 			self.canvas.create_rectangle(cx, cy, cx+5, cy+5, fill=c, outline=c, tags=t)
-			c = '#%02x%02x%02x' % tuple(tileset.wpe.palette[self.colors[Click.right]])
+			c = Colors.to_html(tileset.wpe.palette[self.colors[Click.right]])
 			self.canvas.tag_bind(t, Mouse.Click_Left(), pen_callback(n, Click.left))
 			self.canvas.tag_bind(t, Mouse.Click_Right(), pen_callback(n, Click.right))
-		c = '#%02x%02x%02x' % tuple(tileset.wpe.palette[self.colors[Click.right]])
+		c = Colors.to_html(tileset.wpe.palette[self.colors[Click.right]])
 		self.canvas.create_rectangle(10, 98, 26, 114, fill=c, outline=c, tags='bg')
-		c = '#%02x%02x%02x' % tuple(tileset.wpe.palette[self.colors[Click.left]])
+		c = Colors.to_html(tileset.wpe.palette[self.colors[Click.left]])
 		self.canvas.create_rectangle(2, 90, 18, 106, fill=c, outline=c, tags='fg')
 		self.canvas.create_image(56, 101, image=Assets.get_image('eyedropper'), tags='eyedropper')
 		self.canvas.tag_bind('eyedropper', Mouse.Click_Left(), self.dropper)
@@ -80,18 +84,18 @@ class MiniEditor(PyMSDialog):
 		b.pack(pady=3)
 		return ok
 
-	def dropper(self, e: Event | None = None) -> None:
+	def dropper(self, _event: Event | None = None) -> None:
 		if self.select:
 			self.canvas.delete('dropbd')
 		else:
 			self.canvas.create_rectangle(45, 90, 66, 111, outline='#000000', tags='dropbd')
 		self.select = not self.select
 
-	def release(self, e: Event) -> None:
+	def release(self, _event: Event | None = None) -> None:
 		self.click = None
 
-	def motion(self, e: Event) -> None:
-		items = self.canvas.find_overlapping(e.x,e.y,e.x,e.y)
+	def motion(self, event: Event) -> None:
+		items = self.canvas.find_overlapping(event.x,event.y,event.x,event.y)
 		if self.click is None or not items:
 			return
 		tags = items[0].get_tags()
@@ -106,14 +110,14 @@ class MiniEditor(PyMSDialog):
 			return
 		if self.select:
 			self.colors[click] = self.indexs[pos[1]][pos[0]]
-			r = '#%02x%02x%02x' % tuple(tileset.wpe.palette[self.colors[click]])
+			r = Colors.to_html(tileset.wpe.palette[self.colors[click]])
 			self.canvas.itemconfig(click.config_key(), fill=r, outline=r)
 			self.dropper()
 		else:
 			self.indexs[pos[1]][pos[0]] = self.colors[click]
-			r = '#%02x%02x%02x' % tuple(tileset.wpe.palette[self.colors[click]])
-			self.canvas.itemconfig('tile%s,%s' % pos, fill=r, outline=r)
-			self.canvas.itemconfig('scale%s,%s' % pos, fill=r, outline=r)
+			r = Colors.to_html(tileset.wpe.palette[self.colors[click]])
+			self.canvas.itemconfig(f'tile{pos[0]},{pos[1]}', fill=r, outline=r)
+			self.canvas.itemconfig(f'scale{pos[0]},{pos[1]}', fill=r, outline=r)
 			self.click = click
 		self.edited = True
 
@@ -122,7 +126,7 @@ class MiniEditor(PyMSDialog):
 		if not tileset:
 			return
 		self.colors[click] = index
-		r = '#%02x%02x%02x' % tuple(tileset.wpe.palette[index])
+		r = Colors.to_html(tileset.wpe.palette[index])
 		self.canvas.itemconfig(click.config_key(), fill=r, outline=r)
 
 	def ok(self, _: Event | None = None) -> None:
