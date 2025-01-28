@@ -23,6 +23,9 @@ class AIParseContext(ParseContext):
 		self.data_context = data_context
 		self.spellcasters: list[int] = []
 		self.scripts: OrderedDict[str, tuple[AIScript, int]] = OrderedDict()
+		self.expanded_units: int | None = None
+		self.expanded_upgrades: int | None = None
+		self.expanded_tech: int | None = None
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		if directive.definition == CodeDirectives.Spellcaster:
@@ -34,6 +37,12 @@ class AIParseContext(ParseContext):
 			self.add_supressed_warning_id(directive.params[0])
 		elif directive.definition == CodeDirectives.SupressNextLine:
 			self.add_supressed_warning_id(directive.params[0], True)
+		elif directive.definition == CodeDirectives.ExpandUnits:
+			self.expanded_units = max(self.expanded_units or 0, directive.params[0])
+		elif directive.definition == CodeDirectives.ExpandUpgrades:
+			self.expanded_upgrades = max(self.expanded_upgrades or 0, directive.params[0])
+		elif directive.definition == CodeDirectives.ExpandTech:
+			self.expanded_tech = max(self.expanded_tech or 0, directive.params[0])
 
 	def finalize(self) -> None:
 		from ..AIScript import AIScript

@@ -68,7 +68,9 @@ class DirectiveSourceCodeParser(SourceCodeParser):
 
 	def register_directive(self, directive_def: CodeDirectiveDefinition) -> None:
 		if directive_def.name in self.directive_defs:
-			raise PyMSError('Internal', f"Directive with name '{directive_def.name}' already exists")
+			if self.directive_defs[directive_def.name] != directive_def:
+				raise PyMSError('Internal', f"Directive with name '{directive_def.name}' already exists")
+			return
 		self.directive_defs[directive_def.name] = directive_def
 
 	def register_directives(self, directive_defs: list[CodeDirectiveDefinition]) -> None:

@@ -79,7 +79,7 @@ class BasicFlags(Option):
 		return cls(value)
 
 	def serialize(self) -> str:
-		return CodeType.FlagsCodeType.serialize_flags(self.flags, BasicFlags.Flag._NAMES, Struct.l_u16, '')
+		return CodeType.FlagsCodeType.serialize_flags(self.flags, BasicFlags.Flag._NAMES, Struct.l_u16, '0')
 
 	def merge(self, other: Option) -> bool:
 		if not isinstance(other, BasicFlags):

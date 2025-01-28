@@ -323,7 +323,7 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 		parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		if num >= 228 and num <= 232:
 			return
 		super().validate(num, parse_context, token)
