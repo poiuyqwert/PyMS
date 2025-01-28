@@ -407,7 +407,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		edited = False
 		if issues:
-			if FixIssuesDialog(self, ai, issues, self.config_.windows.fix_issues).cancelled:
+			if FixIssuesDialog(self, ai, issues, self, self.config_).cancelled:
 				return
 			edited = True
 		if ai.active_plugins:

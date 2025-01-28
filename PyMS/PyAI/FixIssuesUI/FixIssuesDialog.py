@@ -1,12 +1,19 @@
 
+from ..Config import PyAIConfig
 from .Resolutions import *
+from ..Delegates import MainDelegate
+from .PreviewScriptDialog import PreviewScriptDialog
 
 from ...FileFormats.AIBIN.AIBIN import AIBIN, LoadIssues, LoadIssue, LoadIssueReason
+from ...FileFormats.AIBIN.AIScript import AIScript
 
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
 from ...Utilities.Callback import Callback
-from ...Utilities.Config import WindowGeometry
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
+
+import io
 
 class IssueResolution:
 	def __init__(self, aibin: AIBIN, issue: LoadIssue):
@@ -75,12 +82,13 @@ class IssueResolution:
 		return True
 
 class FixIssuesDialog(PyMSDialog):
-	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues, window_geometry_config: WindowGeometry) -> None:
+	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues, delegate: MainDelegate, config: PyAIConfig) -> None:
 		self.issue_resolutions = list(IssueResolution(aibin, issue) for issue in issues)
 		for issue_resolution in self.issue_resolutions:
 			issue_resolution.update_callback.add(self.issue_resolution_updated)
 		self.cancelled = True
-		self.window_geometry_config = window_geometry_config
+		self.delegate = delegate
+		self.config_ = config
 		super().__init__(parent, 'Resolve issues')
 
 	def widgetize(self) -> Misc | None:
@@ -130,13 +138,33 @@ class FixIssuesDialog(PyMSDialog):
 
 	def setup_complete(self) -> None:
 		self.minsize(700, 420)
-		self.window_geometry_config.load_size(self)
+		self.config_.windows.fix_issues.resolutions.load_size(self)
 
 	def preview_aiscript(self) -> None:
-		pass
+		issue_resolution = self.current_issue_resolution()
+		try:
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			issue_resolution.aibin.decompile(serialize_context, [issue_resolution.issue.script_id])
+			code = output.getvalue()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from aiscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
 
 	def preview_bwscript(self) -> None:
-		pass
+		issue_resolution = self.current_issue_resolution()
+		try:
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			aibin = AIBIN()
+			aibin.add_script(AIScript(issue_resolution.issue.script_id, 0, 0, issue_resolution.issue.entry_point, True))
+			aibin.decompile(serialize_context, [issue_resolution.issue.script_id])
+			code = output.getvalue()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from bwscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
 
 	def refresh_list(self) -> None:
 		issue_index: int = 0
@@ -196,5 +224,5 @@ class FixIssuesDialog(PyMSDialog):
 		self.ok()
 
 	def dismiss(self) -> None:
-		self.window_geometry_config.save_size(self)
+		self.config_.windows.fix_issues.resolutions.save_size(self)
 		PyMSDialog.dismiss(self)
