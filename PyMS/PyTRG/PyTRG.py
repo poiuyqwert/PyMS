@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 from dataclasses import dataclass
 import re
 
-LONG_VERSION = 'v%s' % Assets.version('PyTRG')
+LONG_VERSION = 'v' + Assets.version('PyTRG')
 
 @dataclass
 class Completing:
@@ -68,7 +68,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.tbl: TBL.TBL
 		self.aibin: AIBIN.AIBIN
 		self.findwindow: FindReplaceDialog | None = None
-		
+
 		self.edited_state = EditedState()
 		self.edited_state.callback += self.update_edited
 
@@ -122,8 +122,8 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 				if isinstance(aparameter, Parameters.HasKeywords):
 					for keyword in aparameter.keywords():
 						keywords[keyword] = None
-		for property in UnitProperties.properties_definitions:
-			functions[property.name] = None
+		for unit_property in UnitProperties.properties_definitions:
+			functions[unit_property.name] = None
 		self.autocomptext = list(keywords.keys())
 		self.autocompfuncs: list[str] = list(functions.keys())
 		self.autocompfuncs.sort()
@@ -346,7 +346,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.trg'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -363,21 +363,22 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.text['state'] = NORMAL if self.is_file_open() else DISABLED
 
-	def statusupdate(self, event: Event | None = None) -> None:
-		i = self.text.index(INSERT).split('.') + [0]
+	def statusupdate(self, _event: Event | None = None) -> None:
+		line,column = self.text.index(INSERT).split('.')
+		selected = 0
 		item = self.text.tag_ranges('Selection')
 		if item:
-			i[2] = len(self.text.get(*item))
-		self.codestatus.set('Line: %s  Column: %s  Selected: %s' % tuple(i))
+			selected = len(self.text.get(*item))
+		self.codestatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
 	def update_title(self) -> None:
 		file_path = self.file
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.trg'
 		if not file_path:
-			self.title('PyTRG %s' % LONG_VERSION)
+			self.title(f'PyTRG {LONG_VERSION}')
 		else:
-			self.title('PyTRG %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTRG {LONG_VERSION} ({file_path})')
 
 	def update_edited(self, edited: bool = True) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
@@ -402,11 +403,11 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		trg = TRG.TRG()
 		try:
 			trg.load(file)
-			data = IO.output_to_text(lambda f: trg.decompile(f))
-		except PyMSError as e:
+			data = IO.output_to_text(trg.decompile)
+		except PyMSError:
 			try:
 				trg.load(file, TRG.Format.got)
-				data = IO.output_to_text(lambda f: trg.decompile(f))
+				data = IO.output_to_text(trg.decompile)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -425,9 +426,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			text = open(file,'r').read()
+			with open(file, 'r', encoding='utf-8') as f:
+				text = f.read()
 		except:
-			ErrorDialog(self, PyMSError('Import','Could not open file "%s"' % file))
+			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
 			return
 		self.trg = TRG.TRG()
 		self.file = file
@@ -481,9 +483,8 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		if not file:
 			return
 		try:
-			f = open(file,'w')
-			f.write(self.text.get('1.0',END))
-			f.close()
+			with open(file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0',END))
 			self.status.set('Export Successful!')
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -495,12 +496,12 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			warnings = i.compile(text)
 		except PyMSError as e:
 			if e.line is not None:
-				self.text.see('%s.0' % e.line)
-				self.text.tag_add('Error', '%s.0' % e.line, '%s.end' % e.line)
+				self.text.see(f'{e.line}.0')
+				self.text.tag_add('Error', f'{e.line}.0', f'{e.line}.end')
 			if e.warnings:
 				for w in e.warnings:
 					if w.line is not None:
-						self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
 		if warnings:
@@ -508,9 +509,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			for w in warnings:
 				if w.line is not None:
 					if not c:
-						self.text.see('%s.0' % w.line)
+						self.text.see(f'{w.line}.0')
 						c = True
-					self.text.tag_add('Warning', '%s.0' % w.line, '%s.end' % w.line)
+					self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			WarningDialog(self, warnings, True)
 		else:
 			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
@@ -571,14 +572,14 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			if not self.complete:
 				return
 			complete_text = self.complete.next_option()
-			current_end = '%s+%sc' % (self.complete.initial_start, len(self.complete.initial_text))
-			complete_end = '%s+%sc' % (self.complete.initial_start, len(complete_text))
+			current_end = f'{self.complete.initial_start}+{len(self.complete.initial_text)}c'
+			complete_end = f'{self.complete.initial_start}+{len(complete_text)}c'
 			self.text.delete(self.complete.initial_start, current_end)
 			self.text.insert(self.complete.initial_start, complete_text)
 			self.text.tag_remove('Selection', '1.0', END)
 			self.text.tag_add('Selection', self.complete.initial_end, complete_end)
-		start = self.text.index('%s -1c wordstart' % INSERT)
-		end = self.text.index('%s -1c wordend' % INSERT)
+		start = self.text.index(f'{INSERT} -1c wordstart')
+		end = self.text.index(f'{INSERT} -1c wordend')
 		text = self.text.get(start, end)
 		if self.complete is not None:
 			if self.complete.initial_start != start or self.complete.initial_end != end or self.complete.initial_text != text:

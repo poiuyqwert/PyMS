@@ -108,10 +108,10 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 		PlayerGroup.unused_4: 'Unused 4',
 		PlayerGroup.non_allied_victory_players: 'Non Allied Victory Players'
 	})
-	
+
 	def name(self) -> str:
 		return 'Player'
-	
+
 	def help(self) -> str:
 		return 'A number in the range 0 to 255 (with or without the keyword Player before it), or any keyword from this list: Current Player, Foes, Allies, Neutral Players, All Players, Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4, Non Allied Victory Players'
 
@@ -126,7 +126,7 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 			return PlayerParameter.OPTIONS[player_group]
 		return str(player_group)
 
-	def _compile(self, value: str) -> int:
+	def compile(self, value: str) -> int:
 		if PlayerParameter.OPTIONS.has_value(value):
 			return PlayerParameter.OPTIONS.key_of(value)
 		if value.startswith('Player '):
@@ -143,20 +143,19 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 		return self.decompile(condition.player_group)
 
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> (PyMSWarning | None):
-		condition.player_group = self._compile(value)
+		condition.player_group = self.compile(value)
 		return None
 
-	def action_decompile(self, action: Action, trg: TRG) -> str:
+	def action_decompile(self, action: Action, _trg: TRG) -> str:
 		if self.target:
 			return self.decompile(action.target_player_group)
-		else:
-			return self.decompile(action.player_group)
+		return self.decompile(action.player_group)
 
-	def action_compile(self, value: str, action: Action, trg: TRG) -> (PyMSWarning | None):
+	def action_compile(self, value: str, action: Action, _trg: TRG) -> (PyMSWarning | None):
 		if self.target:
-			action.target_player_group = self._compile(value)
+			action.target_player_group = self.compile(value)
 		else:
-			action.player_group = self._compile(value)
+			action.player_group = self.compile(value)
 		return None
 
 class ComparisonParameter(ConditionParameter, HasKeywords):
@@ -378,7 +377,7 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 		if score_type in ScoreTypeParameter.OPTIONS:
 			return ScoreTypeParameter.OPTIONS[score_type]
 		return str(score_type)
-	
+
 	def _compile(self, value: str) -> tuple[int, PyMSWarning | None]:
 		if ScoreTypeParameter.OPTIONS.has_value(value):
 			return (ScoreTypeParameter.OPTIONS.key_of(value), None)
@@ -392,7 +391,7 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return self._decompile(condition.score_type)
-	
+
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		condition.score_type, warning = self._compile(value)
 		return warning
@@ -461,7 +460,7 @@ class SwitchStateParameter(ConditionParameter, HasKeywords):
 		if condition.switch_state in SwitchStateParameter.OPTIONS:
 			return SwitchStateParameter.OPTIONS[condition.switch_state]
 		return str(condition.switch_state)
-	
+
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		if SwitchStateParameter.OPTIONS.has_value(value):
 			condition.switch_state = SwitchStateParameter.OPTIONS.key_of(value)
@@ -482,7 +481,7 @@ class TimeParameter(ActionParameter):
 
 	def help(self) -> str:
 		return 'Can be any number in the range 0 to 4294967295'
-	
+
 	def __init__(self, transmission: bool = False) -> None:
 		self.transmission = transmission
 
@@ -539,7 +538,7 @@ class StringParameter(ActionParameter, HasKeywords):
 class UnitParameter(ActionParameter):
 	def name(self) -> str:
 		return 'Unit'
-	
+
 	def help(self) -> str:
 		return 'A unit ID from 0 to 227 (and extended unit ID 233 to 65535), or a full unit name (in the TBL, its the part before the first <0>)'
 
@@ -672,7 +671,7 @@ class QuantityParameter(ActionParameter, HasKeywords):
 
 	def help(self) -> str:
 		return 'Can be any number in the range 1 to 4294967295, or the keyword All'
-	
+
 	def keywords(self) -> tuple[str, ...]:
 		return ('All',)
 
@@ -743,7 +742,7 @@ class SwitchActionParameter(ActionParameter, HasKeywords):
 		if action.switch_action in SwitchActionParameter.OPTIONS:
 			return SwitchActionParameter.OPTIONS[action.switch_action]
 		return str(action.switch_action)
-	
+
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		if SwitchActionParameter.OPTIONS.has_value(value):
 			action.switch_action = SwitchActionParameter.OPTIONS.key_of(value)
@@ -777,7 +776,7 @@ class StateActionParameter(ActionParameter, HasKeywords):
 		if action.state_action in StateActionParameter.OPTIONS:
 			return StateActionParameter.OPTIONS[action.state_action]
 		return str(action.state_action)
-	
+
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		if StateActionParameter.OPTIONS.has_value(value):
 			action.state_action = StateActionParameter.OPTIONS.key_of(value)
@@ -950,7 +949,7 @@ class SlotParameter(ActionParameter, HasKeywords):
 		raise PyMSError('Parameter', f"'{value}' is an invalid Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
 
 class RawFieldParameter(ConditionParameter, ActionParameter):
-	limit: int 
+	limit: int
 
 	def name(self) -> str:
 		return 'Raw'
@@ -1020,8 +1019,8 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 				address = int(value, 16)
 			else:
 				address = int(value)
-		except:
-			raise PyMSError('Paramater', f"'{value}' is not a valid Memory (value must be in hex prefixed with 0x, or decimal)")
+		except Exception as exc:
+			raise PyMSError('Paramater', f"'{value}' is not a valid Memory (value must be in hex prefixed with 0x, or decimal)") from exc
 		if address % 4:
 			raise PyMSError('Parameter', 'Memory must be a multiple of 4')
 		address -= 0x0058A364
@@ -1075,8 +1074,8 @@ class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
 				mask = int(raw_mask, 16)
 			else:
 				mask = int(raw_mask)
-		except:
-			raise PyMSError('Paramater', f"'{raw_mask}' is not a valid Mask (value must be in hex or decimal, or the keyword No Mask)")
+		except Exception as exc:
+			raise PyMSError('Paramater', f"'{raw_mask}' is not a valid Mask (value must be in hex or decimal, or the keyword No Mask)") from exc
 		if mask > Struct.l_u32.max:
 			raise PyMSError('Parameter', 'Mask is too high')
 		return mask
