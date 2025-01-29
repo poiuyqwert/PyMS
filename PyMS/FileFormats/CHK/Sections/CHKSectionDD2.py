@@ -30,20 +30,20 @@ class CHKDoodadVisual:
 
 	def decompile(self):
 		result = "\t#\n"
-		result += '\t%s\n' % pad('DoodadID', self.doodadID)
-		result += '\t%s\n' % pad('Position', '%s,%s' % (self.position[0],self.position[1]))
-		result += '\t%s\n' % pad('Owner', self.owner)
-		result += '\t%s\n' % pad('Enabled', self.enabled)
+		result += f'\t{pad('DoodadID', self.doodadID)}\n'
+		result += f'\t{pad('Position', f'{self.position[0]},{self.position[1]}')}\n'
+		result += f'\t{pad('Owner', self.owner)}\n'
+		result += f'\t{pad('Enabled', self.enabled)}\n'
 		return result
 
 class CHKSectionDD2(CHKSection):
 	NAME = 'DD2 '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.doodads: list[CHKDoodadVisual] = []
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.doodads = []
 		o = 0
@@ -52,15 +52,15 @@ class CHKSectionDD2(CHKSection):
 			doodad.load_data(data[o:o+8])
 			self.doodads.append(doodad)
 			o += 8
-	
+
 	def save_data(self) -> bytes:
 		result = b''
 		for doodad in self.doodads:
 			result += doodad.save_data()
 		return result
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		for doodad in self.doodads:
 			result += doodad.decompile()
 		return result

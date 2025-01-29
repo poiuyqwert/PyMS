@@ -21,17 +21,17 @@ class CHKSectionDIM(CHKSection):
 	MEDIUM = 128
 	LARGE = 192
 	HUGE = 256
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.width = CHKSectionDIM.MEDIUM
 		self.height = CHKSectionDIM.MEDIUM
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.width,self.height = tuple(int(d) for d in struct.unpack('<2H', data[:4]))
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<2H', self.width, self.height)
-	
+
 	def decompile(self) -> str:
-		return '%s:\n\t%s\n\t%s\n' % (self.NAME, pad('Width',str(self.width)), pad('Height',str(self.height)))
+		return f'{self.NAME}:\n\t{pad('Width',str(self.width))}\n\t{pad('Height',str(self.height))}\n'

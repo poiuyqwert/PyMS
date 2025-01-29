@@ -120,8 +120,8 @@ class CHK:
 			self.load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported CHK file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported CHK file '{file}', could possibly be corrupt") from exc
 
 	def load_data(self, data: bytes) -> None:
 		offset = 0
@@ -153,8 +153,8 @@ class CHK:
 		data = self.save_data()
 		try:
 			f = AtomicWriter(file, 'wb')
-		except:
-			raise PyMSError('Save',"Could not save CHK to file '%s'" % file)
+		except Exception as exc:
+			raise PyMSError('Save', f"Could not save CHK to file '{file}'") from exc
 		f.write(data)
 		f.close()
 

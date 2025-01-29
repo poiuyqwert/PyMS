@@ -45,4 +45,4 @@ class CHKSectionVER(CHKSection):
 		return struct.pack('<H', self.version)
 
 	def decompile(self):
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',self.version), CHKSectionVER.VER_NAME(self.version))
+		return f'{self.NAME}:\n\t{pad('Version',self.version)} # {CHKSectionVER.VER_NAME(self.version)}\n'

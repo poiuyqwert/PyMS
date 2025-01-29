@@ -15,20 +15,20 @@ if TYPE_CHECKING:
 class CHKSectionSPRP(CHKSection):
 	NAME = 'SPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.scenarioName = 0
 		self.description = 0
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.scenarioName,self.description = tuple(int(v) for v in struct.unpack('<HH', data[:4]))
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<HH', self.scenarioName, self.description)
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
-		result += '\t%s\n' % pad('ScenarioName', 'String %d' % self.scenarioName)
-		result += '\t%s\n' % pad('Description', 'String %d' % self.description)
+		result = f'{self.NAME}:\n'
+		result += f'\t{pad('ScenarioName', f'String {self.scenarioName}')}\n'
+		result += f'\t{pad('Description', f'String {self.description}')}\n'
 		return result

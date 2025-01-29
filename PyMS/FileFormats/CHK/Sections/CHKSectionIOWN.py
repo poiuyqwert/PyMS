@@ -39,19 +39,19 @@ class CHKSectionIOWN(CHKSection):
 			CHKSectionIOWN.CLOSED_INVALID: 'Closed (Invalid)'
 		}
 		return names.get(v,'Unknown')
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.owners = [CHKSectionIOWN.HUMAN]*8 + [CHKSectionIOWN.INACTIVE]*4
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.owners = list(int(o) for o in struct.unpack('<12B', data[:12]))
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<12B', *self.owners)
 
 	def decompile(self) -> str:
-		result = '%s:\n' % self.NAME
+		result = f'{self.NAME}:\n'
 		for n,value in enumerate(self.owners):
-			result += '\t%s # %s\n' % (pad('Slot%02d' % n,str(value)), CHKSectionIOWN.OWNER_NAME(value))
+			result += f'\t{pad(f'Slot{n:02d}',str(value))} # {CHKSectionIOWN.OWNER_NAME(value)}\n'
 		return result
