@@ -530,7 +530,7 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 		return AISEIdleOrder.OptionSet.parse_options(parse_context)
 
 	def keywords(self) -> Sequence[str]:
-		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder.OPTION_TYPES), ())
+		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder.OPTION_TYPES.values()), ())
 
 class AttackModeCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:

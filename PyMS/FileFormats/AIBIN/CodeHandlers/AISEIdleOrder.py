@@ -39,7 +39,7 @@ class Option(Protocol):
 	def keywords(cls) -> Sequence[str]:
 		...
 
-_OPTION_TYPES: dict[int, Type[Option]] = {}
+OPTION_TYPES: dict[int, Type[Option]] = {}
 
 def build_command_word(cmd_type: int, value: int = 0) -> int:
 	return (cmd_type << 8) & OptionSet.TYPE_MASK | (value & OptionSet.VALUE_MASK)
@@ -325,7 +325,7 @@ class OptionSet(Option):
 			command = scanner.scan(Struct.l_u16)
 			cmd_type = (command & OptionSet.TYPE_MASK) >> 8
 			value = command & OptionSet.VALUE_MASK
-			option_type = _OPTION_TYPES.get(cmd_type)
+			option_type = OPTION_TYPES.get(cmd_type)
 			if not option_type:
 				raise PyMSError('Decompile', f'`{cmd_type}` is not a valid `idle_order_flags` option type')
 			option_set.append(option_type.decompile(value, scanner))
@@ -355,7 +355,7 @@ class OptionSet(Option):
 				token = parse_context.lexer.next_token(peek=True)
 				if token.raw_value == ',':
 					break
-			for option_type in OPTION_TYPES:
+			for option_type in OPTION_TYPES.values():
 				option = option_type.parse(parse_context)
 				if option is not None:
 					option_set.append(option)
@@ -888,7 +888,7 @@ class TileFlags(Option):
 	def keywords(cls) -> Sequence[str]:
 		return ('TileFlags', 'WithoutTileFlags') + tuple(TileFlags.Flag.NAMES.values())
 
-OPTION_TYPES: list[Type[Option]] = [
+_OPTION_TYPES: list[Type[Option]] = [
 	BasicFlags,
 	SpellEffects, WithoutSpellEffects,
 	UnitProps,
@@ -900,5 +900,5 @@ OPTION_TYPES: list[Type[Option]] = [
 	UnitCount,
 	TileFlags,
 ]
-for _option_type in OPTION_TYPES:
+for _option_type in _OPTION_TYPES:
 	OPTION_TYPES[_option_type.TYPE_ID] = _option_type
