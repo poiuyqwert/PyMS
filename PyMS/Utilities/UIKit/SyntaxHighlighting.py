@@ -9,6 +9,13 @@ from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
 	from ..Config import HighlightStyle
 
+__all__ = [
+	'HighlightComponent',
+	'HighlightPattern',
+	'SyntaxComponent',
+	'SyntaxHighlighting',
+]
+
 @dataclass
 class HighlightComponent:
 	name: str

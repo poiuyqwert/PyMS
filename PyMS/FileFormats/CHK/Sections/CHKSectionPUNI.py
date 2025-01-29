@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUnitAvailability(object):
+class CHKUnitAvailability:
 	def __init__(self):
 		self.available = True
 		self.default = True

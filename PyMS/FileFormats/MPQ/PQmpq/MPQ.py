@@ -99,7 +99,7 @@ class MPQBlockEntry(Struct.Struct):
 	file_size: int
 	flags: int
 
-class MPQFileEntry(object):
+class MPQFileEntry:
 	UNKNOWN_PREFIX = '~unknowns\\unknown_'
 
 	def __init__(self, filename, hash_entry, block_entry):
@@ -145,7 +145,7 @@ class MPQInternalFile:
 	signature = "(signature)"
 
 RE_NEWLINE = re.compile(r'[\n\r]+')
-class Listfiles(object):
+class Listfiles:
 	def __init__(self):
 		self.filenames = {}
 
@@ -170,7 +170,7 @@ class Listfiles(object):
 
 BYTE = struct.Struct('<B')
 
-class MPQ(object):
+class MPQ:
 	def __init__(self) -> None:
 		self.mpq_offset: int | None = None
 		self.file_size: int | None = None

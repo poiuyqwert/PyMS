@@ -7,6 +7,20 @@ from typing import Literal as _Literal
 
 import tkinter as _tk
 
+__all__ = [
+	'AnyWindow',
+	'AnyImage',
+	'AnyPhotoImage',
+	'AnyBitmapImage',
+	'WidgetState',
+	'Relief',
+	'Anchor',
+	'Sticky',
+	'SelectMode',
+	'MoveViewBy',
+	'Comparitors',
+]
+
 AnyWindow: _TypeAlias = _MainWindow | _Toplevel
 
 try:

@@ -11,6 +11,8 @@ from ..Utilities import ItemSelectDialog
 
 import re
 
+from typing import Sequence
+
 class ScriptLocation:
 	aiscript = 1
 	bwscript = 2

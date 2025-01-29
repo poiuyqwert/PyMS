@@ -20,6 +20,42 @@ if TYPE_CHECKING:
 	from .Condition import Condition
 	from .Action import Action
 
+__all__ = [
+	'ConditionParameter',
+	'ActionParameter',
+	'HasKeywords',
+	'NumberParameter',
+	'PlayerParameter',
+	'ComparisonParameter',
+	'UnitTypeParameter',
+	'LocationParameter',
+	'ResourceTypeParameter',
+	'ScoreTypeParameter',
+	'SwitchParameter',
+	'SwitchStateParameter',
+	'TimeParameter',
+	'StringParameter',
+	'UnitParameter',
+	'ModifierParameter',
+	'WAVParameter',
+	'DisplayParameter',
+	'QuantityParameter',
+	'PropertiesParameter',
+	'SwitchActionParameter',
+	'StateActionParameter',
+	'AIScriptParameter',
+	'OrderParameter',
+	'PercentageParameter',
+	'AllianceStatusParameter',
+	'SlotParameter',
+	'RawFieldParameter',
+	'LongParameter',
+	'ShortParamater',
+	'ByteParameter',
+	'MemoryParameter',
+	'MaskParameter',
+]
+
 class _Parameter(Protocol):
 	def name(self) -> str:
 		...

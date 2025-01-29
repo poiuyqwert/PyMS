@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any, Type
 
-class DATFormat(object):
+class DATFormat:
 	def __init__(self, dat_format: dict) -> None:
 		self.entries: int = dat_format["entries"]
 		self.expanded_min_entries: int | None = dat_format.get("expanded_min_entries")
@@ -43,7 +43,7 @@ class DATFormat(object):
 				return prop
 		return None
 
-class DATType(object):
+class DATType:
 	STRUCT: struct.Struct
 
 	@classmethod
@@ -160,7 +160,7 @@ class DATTypeSupply(DATType):
 		value = (self.whole << 1) | (1 if self.half else 0)
 		return self.pack_data((value,))
 
-class DATProperty(object):
+class DATProperty:
 	DAT_TYPES = {
 		'byte': DATTypeByte,
 		'short': DATTypeShort,

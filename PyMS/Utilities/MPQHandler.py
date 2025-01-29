@@ -12,7 +12,7 @@ import os, io
 from typing import BinaryIO, Callable, TypeVar
 
 T = TypeVar('T')
-class MPQHandler(object):
+class MPQHandler:
 	def __init__(self, mpqs_config: Config.List[str] | None = None, listfiles: list[str] | None = None) -> None:
 		self.mpqs_config = mpqs_config
 		self.mpqs: list[MPQ] = []

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 	from .DataContext import DataContext
 	from .DataID import DataID
 
-class TBLData(object):
+class TBLData:
 	def __init__(self, data_context: DataContext, data_id: DataID, tbl_config: Config.File) -> None:
 		self.data_context = data_context
 		self.data_id = data_id

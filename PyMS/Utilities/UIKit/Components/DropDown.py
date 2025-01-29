@@ -36,18 +36,18 @@ class DropDown(Frame):
 		self.entry['state'] = state
 		self.entry.bind(Mouse.Click_Left(), self.choose)
 		def move_callback(i: int| Literal['end']) -> Callable[[Event], None]:
-			def move(e: Event) -> None:
-				self.move(e, i)
+			def move(event: Event) -> None:
+				self.move(event, i)
 			return move
-		self.entry.bind(Key.Home(), move_callback(0)),
-		self.entry.bind(Key.End(), move_callback(END)),
-		self.entry.bind(Key.Up(), move_callback(-1)),
-		self.entry.bind(Key.Left(), move_callback(-1)),
-		self.entry.bind(Key.Down(), move_callback(1)),
-		self.entry.bind(Key.Right(), move_callback(1)),
-		self.entry.bind(Key.Prior(), move_callback(-10)),
-		self.entry.bind(Key.Next(), move_callback(10)),
-		self.entry.bind(Key.Pressed(), self.key_pressed),
+		self.entry.bind(Key.Home(), move_callback(0))
+		self.entry.bind(Key.End(), move_callback(END))
+		self.entry.bind(Key.Up(), move_callback(-1))
+		self.entry.bind(Key.Left(), move_callback(-1))
+		self.entry.bind(Key.Down(), move_callback(1))
+		self.entry.bind(Key.Right(), move_callback(1))
+		self.entry.bind(Key.Prior(), move_callback(-10))
+		self.entry.bind(Key.Next(), move_callback(10))
+		self.entry.bind(Key.Pressed(), self.key_pressed)
 		self.entry.bind(Key.Return(), self.choose)
 		self.setentries(entries)
 		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)
@@ -66,7 +66,7 @@ class DropDown(Frame):
 			return True
 		self.entry.config(validate='focusout', validatecommand=(self.register(validate), '%V'))
 
-	def __setitem__(self, item: str, value: Any) -> None:
+	def __setitem__(self, item: str, value) -> None:
 		if item == 'state':
 			self.entry['state'] = value
 			self.button['state'] = value
@@ -97,16 +97,18 @@ class DropDown(Frame):
 		else:
 			self.text.set('')
 
-	def move(self, e: Event, a: int | Literal['end']) -> str:
+	def move(self, _event: Event, a: int | Literal['end']) -> str:
 		if self.entry['state'] == NORMAL:
 			if a == END:
 				i = len(self.entries)-1
 			elif a:
 				i = max(min(len(self.entries)-1,self.variable.get() + a),0)
+			else:
+				return EventPropogation.Break
 			self.set(i)
 		return EventPropogation.Break
 
-	def choose(self, e: Event | None = None) -> None:
+	def choose(self, _event: Event | None = None) -> None:
 		if self.entry['state'] == NORMAL:
 			i = self.variable.get()
 			if i == self.none_value:

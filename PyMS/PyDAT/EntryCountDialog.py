@@ -48,7 +48,7 @@ class EntryCountDialog(PyMSDialog):
 
 		return ok
 
-	def update_resulting_count(self, *_: Any) -> None:
+	def update_resulting_count(self, *_) -> None:
 		assert self.dat_data.dat is not None
 		if not self.resulting_count_var:
 			return

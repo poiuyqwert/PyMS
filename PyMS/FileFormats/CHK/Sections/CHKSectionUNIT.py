@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUnit(object):
+class CHKUnit:
 	NYDUS_LINK = (1 << 9)
 	ADDON_LINK = (1 << 10)
 

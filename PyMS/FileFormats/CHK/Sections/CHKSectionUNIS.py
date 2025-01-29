@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUnitStats(object):
+class CHKUnitStats:
 	def __init__(self):
 		self.default = True
 		self.health = 0
@@ -23,7 +23,7 @@ class CHKUnitStats(object):
 		self.costGas = 0
 		self.name = 0
 
-class CHKWeaponStats(object):
+class CHKWeaponStats:
 	def __init__(self):
 		self.damage = 0
 		self.damageUpgrade = 0

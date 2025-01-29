@@ -198,7 +198,7 @@ BYTE = struct.Struct('<B')
 class InputExhaustedException(Exception):
 	pass
 
-class Explode(object):
+class Explode:
 	DEBUG: TextIO
 
 	comp_type: int

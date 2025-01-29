@@ -9,7 +9,7 @@ from ... import Assets
 from typing import Callable
 
 class Notebook(Frame):
-	def __init__(self, parent: Misc, relief: Relief = RAISED, switchcallback=None) -> None:
+	def __init__(self, parent: Misc, relief: Relief = RAISED) -> None:
 		self.parent = parent
 		self.active: Widget | None = None
 		self.tab = IntVar()

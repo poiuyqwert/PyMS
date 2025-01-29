@@ -4,11 +4,12 @@ from ..Widgets import *
 from ..ShowScrollbar import ShowScrollbar
 from ..EventPattern import *
 
-from typing import Literal
+from typing import Literal, Any
 
 class ScrolledListbox(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent: Misc, frame_config={'bd': 2, 'relief': SUNKEN}, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, scroll_speed: int = 1, **kwargs):
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, scroll_speed: int = 1, **kwargs):
+		frame_config = frame_config or {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
 		if not 'exportselection' in kwargs:
@@ -30,7 +31,7 @@ class ScrolledListbox(Frame):
 				scrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self.listbox.xview)
 			scrollbar.grid(column=0,row=1, sticky=EW)
 			self.listbox.config(xscrollcommand=scrollbar.set)
-		
+
 		if vertical != ShowScrollbar.never:
 			if horizontal == ShowScrollbar.always:
 				scrollbar = Scrollbar(self, command=self.listbox.yview)

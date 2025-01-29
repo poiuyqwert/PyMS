@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from ..utils import is_mac
 
+__all__ = [
+	'FileType',
+]
+
 class FileType(tuple[str, str]):
 	WILDCARD = '*'
 	EXTSEP = '.' # Does Tkinter expect `os.extsep` or '.'?
@@ -53,7 +57,7 @@ class FileType(tuple[str, str]):
 	@staticmethod
 	def bin_iscript(name='StarCraft IScripts'):
 		return FileType.bin(name)
-	
+
 	@staticmethod
 	def mpq(name='MPQ Files'):
 		return FileType(name, 'mpq')
@@ -206,19 +210,19 @@ class FileType(tuple[str, str]):
 	def json(name='JSON'):
 		return FileType(name, 'json')
 
-	def __new__(self, name: str, *exts: str) -> FileType:
+	def __new__(cls, name: str, *exts: str) -> FileType:
 		extensions: list[str] = list(exts)
 		for i, extension in enumerate(extensions):
 			if extension and extension != FileType.WILDCARD and not extension.startswith(FileType.WILDCARD + FileType.EXTSEP):
 				extensions[i] = (FileType.WILDCARD if extension.startswith(FileType.EXTSEP) else FileType.WILDCARD + FileType.EXTSEP) + extension
 		if not is_mac():
-			name += ' (%s)' % ', '.join(extension[1:] for extension in extensions)
+			name += f' ({", ".join(extension[1:] for extension in extensions)})'
 		return tuple.__new__(FileType, (name, FileType.SEPARATOR.join(extensions))) # type: ignore[type-var]
 
 	@property
 	def name(self) -> str:
 		return self[0]
-	
+
 	@property
 	def extensions(self) -> str:
 		return self[1]

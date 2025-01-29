@@ -4,6 +4,23 @@ from .Extensions import Extensions
 
 import tkinter as _Tk
 
+__all__ = [
+	'Widget',
+	'Misc',
+	'Tk',
+	'Frame',
+	'Button',
+	'Checkbutton',
+	'Radiobutton',
+	'Label',
+	'Text',
+	'Entry',
+	'Listbox',
+	'Scrollbar',
+	'LabelFrame',
+	'PanedWindow',
+]
+
 # For type hinting
 Widget = _Tk.Widget
 Misc = _Tk.Misc

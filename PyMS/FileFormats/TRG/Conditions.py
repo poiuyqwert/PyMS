@@ -5,7 +5,7 @@ from PyMS.Utilities import IO
 
 from .Parameters import *
 from .Condition import Condition
-from .Constants import ConditionType, Matches
+from .Constants import ConditionType, Matches, PlayerGroup, Mask
 
 from ...Utilities import IO
 

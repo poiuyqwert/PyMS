@@ -389,7 +389,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.bind(Shift.Ctrl.c(), copy_mega)
 		self.bind(Shift.Ctrl.v(), paste_mega)
 
-		def copy_tilegroup(*_args: Any) -> None:
+		def copy_tilegroup(*_args) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -455,7 +455,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.export_group_settings(f, [group], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_tilegroup(*_args: Any) -> None:
+		def paste_tilegroup(*_args) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -636,7 +636,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		else:
 			return self.saveas()
 
-	def action_states(self, *_args: Any, **_kwargs: Any) -> None:
+	def action_states(self, *_args, **_kwargs) -> None:
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
@@ -773,13 +773,13 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			return
 		self.mega_editor.set_megatile(self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection])
 
-	def group_type_changed(self, *_: Any) -> None:
+	def group_type_changed(self, *_) -> None:
 		pass
 
-	def group_doodad_changed(self, *_: Any) -> None:
+	def group_doodad_changed(self, *_) -> None:
 		pass
 
-	def group_values_changed(self, *_: Any) -> None:
+	def group_values_changed(self, *_) -> None:
 		if not self.tileset or self.loading_megas:
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])

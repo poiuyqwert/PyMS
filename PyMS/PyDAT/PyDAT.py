@@ -245,14 +245,14 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		else:
 			self.simple_names_checkbox['state'] = DISABLED
 			self.simple_names.set(False)
-	def change_names_display(self, *_: Any) -> None:
+	def change_names_display(self, *_) -> None:
 		name_settings = self.active_tab().get_names_settings()
 		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
 		if new_setting == name_settings.display.value:
 			return
 		name_settings.display.value = new_setting
 		self.active_tab().get_dat_data().update_names()
-	def change_simple_names(self, *_: Any) -> None:
+	def change_simple_names(self, *_) -> None:
 		name_settings = self.active_tab().get_names_settings()
 		if not isinstance(name_settings, PyDATConfig.Names.SimpleOptions) or self.simple_names.get() == name_settings.simple.value:
 			return

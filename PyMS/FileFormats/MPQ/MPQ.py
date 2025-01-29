@@ -57,7 +57,7 @@ class MPQInternalFile:
 	listfile = "(listfile)"
 	signature = "(signature)"
 
-class MPQFileEntry(object):
+class MPQFileEntry:
 	def __init__(self, file_name: str | bytes = '', locale: int = MPQLocale.neutral) -> None:
 		self.file_name: bytes = file_name.encode('utf-8') if isinstance(file_name, str) else file_name
 		self.full_size: int | None = None
@@ -91,7 +91,7 @@ class MPQFileEntry(object):
 
 # MPQ is an abstract class. Use `MPQ.of()` to get a type-erased, concrete, implementation.
 # A different implementation will be returned depending on supported libraries
-class MPQ(object):
+class MPQ:
 	@staticmethod
 	def of(mpq_path: str) -> MPQ:
 		if _StormLib.STORMLIB_LOADED:
@@ -117,7 +117,7 @@ class MPQ(object):
 	def __init__(self, path: str) -> None:
 		self.path = path
 
-	class _WithContextManager(object):
+	class _WithContextManager:
 		def __init__(self, mpq: MPQ, auto_close: bool) -> None:
 			self.mpq = mpq
 			self.auto_close = auto_close

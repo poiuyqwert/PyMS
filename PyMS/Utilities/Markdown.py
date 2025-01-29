@@ -14,7 +14,7 @@ from typing import cast, Sequence, Type
 #  - Reference links are not supported
 #  - Autolinks are not supported
 
-class _Scanner(object):
+class _Scanner:
 	RE_BLANK = re.compile(r'^[ \t]*$')
 
 	def __init__(self) -> None:
@@ -63,7 +63,7 @@ class _Scanner(object):
 		return pattern.match(self.line, self.offset, self.length)
 
 # Block content
-class Block(object):
+class Block:
 	def __init__(self) -> None:
 		self.open = True
 		self.parent: Block | None = None
@@ -323,7 +323,7 @@ class ListItemBlock(ContainerBlock):
 		return True
 
 # Inline content
-class Span(object):
+class Span:
 	def __init__(self, text: str | None) -> None:
 		self.contents: list[Span | str] = []
 		if text:

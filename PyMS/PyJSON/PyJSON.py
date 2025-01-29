@@ -175,7 +175,7 @@ class PyJSON(MainWindow):
 		self.object_status.set('')
 		self.action_states()
 
-	def check_format(self, json_data: Any) -> bool:
+	def check_format(self, json_data) -> bool:
 		if not isinstance(json_data, list):
 			return False
 		for object in json_data:

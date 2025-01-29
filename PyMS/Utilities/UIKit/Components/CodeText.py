@@ -12,7 +12,7 @@ from ...PyMSWarning import PyMSWarning
 import re
 from dataclasses import dataclass
 
-from typing import Generator, Protocol, Sequence
+from typing import Generator, Protocol, Sequence, Any
 
 @dataclass
 class AutocompleteState:
@@ -72,7 +72,7 @@ class CodeText(Frame):
 
 		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
 		frame = Frame(self)
-	
+
 		font = Font.fixed().sized(12)
 		self.lines = Text(frame, height=1, font=font, bg='#E4E4E4', fg='#808080', width=8, cursor='')
 		self.lines.config(bd=0)
@@ -134,7 +134,7 @@ class CodeText(Frame):
 		self.lines.bind(Mouse.Scroll(), lambda _: EventPropogation.Break)
 		self.lines.bind(Focus.In(), self.selectline)
 
-		self.afterid: str | None = None
+		self.after_id: str | None = None
 		self.last_delete: tuple[str, str, str] | None = None
 		self.coloring = False
 		self.dnd = False
@@ -194,16 +194,16 @@ class CodeText(Frame):
 		self.edit_reset()
 		self.edit_modified(False)
 
-	def popup(self, e: Event) -> str | None:
+	def popup(self, event: Event) -> str | None:
 		if not self.text['state'] == NORMAL:
 			return EventPropogation.Break
-		
+
 		self.textmenu.tag_enabled('can_undo', self.edit_canundo())
 		self.textmenu.tag_enabled('can_redo', self.edit_canredo())
 		self.textmenu.tag_enabled('has_selection', not not self.tag_ranges('sel'))
 		self.textmenu.tag_enabled('can_paste', self.clipboard_not_empty())
 
-		self.textmenu.post(e.x_root, e.y_root)
+		self.textmenu.post(event.x_root, event.y_root)
 
 		return EventPropogation.Break
 
@@ -235,7 +235,7 @@ class CodeText(Frame):
 		else:
 			Frame.__setitem__(self, item, value)
 
-	def selectall(self, e: Event | None = None) -> None:
+	def selectall(self, _event: Event | None = None) -> None:
 		self.tag_add('sel', '1.0', END)
 		self.mark_set(INSERT, '1.0')
 
@@ -251,23 +251,23 @@ class CodeText(Frame):
 			head, tail = self.lines_indexes()
 		while self.compare(head, '<=', tail):
 			yield head
-			next_head = self.index('%s +1line' % head)
+			next_head = self.index(f'{head} +1line')
 			if next_head == head:
 				break
 			head = next_head
 
-	def indent(self, event: Event | None = None) -> str | None:
+	def indent(self, _event: Event | None = None) -> str | None:
 		for line_index in self.lines_range():
 			self.insert(line_index, '\t')
 		return EventPropogation.Break
 
-	def dedent(self, event: Event | None = None) -> str | None:
+	def dedent(self, _event: Event | None = None) -> str | None:
 		for line_index in self.lines_range():
 			if self.get(line_index) in ' \t':
 				self.delete(line_index)
 		return EventPropogation.Break
 
-	def comment_range(self, event: Event | None = None) -> str | None:
+	def comment_range(self, _event: Event | None = None) -> str | None:
 		if not self.delegate:
 			return EventPropogation.Break
 		regex = re.compile(rf'(\s*)({"|".join(self.delegate.comment_symbols())}\s*)?(.*)')
@@ -299,15 +299,15 @@ class CodeText(Frame):
 		self.vscroll.set(*args)
 		self.lines.yview(MOVETO, args[0])
 
-	def selectline(self, e: Event | None = None) -> None:
+	def selectline(self, _event: Event | None = None) -> None:
 		self.tag_remove('sel', '1.0', END)
 		head = self.lines.index('current linestart')
-		tail = self.index('%s lineend+1c' % head)
+		tail = self.index(f'{head} lineend+1c')
 		self.tag_add('sel', head, tail)
 		self.mark_set(INSERT, tail)
 		self.focus_set()
 
-	def modified(self, event: Event | None = None) -> None:
+	def modified(self, _event: Event | None = None) -> None:
 		self.edited_state.mark_edited(self.text.edit_modified())
 		self.update_lines()
 
@@ -315,9 +315,9 @@ class CodeText(Frame):
 		lines = self.lines.get('1.0', END).count('\n')
 		dif = self.get('1.0', END).count('\n') - lines
 		if dif > 0:
-			self.lines.insert(END, '\n' + '\n'.join(['%s%s' % (' ' * (7-len(str(n))), n) for n in range(lines+1,lines+1+dif)]))
+			self.lines.insert(END, '\n' + '\n'.join([f'{" " * (7-len(str(n)))}{n}' for n in range(lines+1,lines+1+dif)]))
 		elif dif:
-			self.lines.delete('%s%slines' % (END,dif),END)
+			self.lines.delete(f'{END}{dif}lines',END)
 
 	def mark_recolor_line(self, index: str) -> None:
 		self.mark_recolor_range(f'{index} linestart', f'{index} lineend')
@@ -326,8 +326,8 @@ class CodeText(Frame):
 		self.tag_add("Update", start, end)
 		if self.coloring:
 			self.coloring = False
-		if not self.afterid:
-			self.afterid = self.after(1, self.docolor)
+		if not self.after_id:
+			self.after_id = self.after(1, self.docolor)
 
 	def set_syntax_highlighting(self, syntax_highlighting: SyntaxHighlighting) -> None:
 		if self.highlight_components is not None:
@@ -349,7 +349,7 @@ class CodeText(Frame):
 		self.tag_raise('sel')
 
 	def docolor(self) -> None:
-		self.afterid = None
+		self.after_id = None
 		if self.coloring:
 			return
 		self.coloring = True
@@ -361,14 +361,14 @@ class CodeText(Frame):
 	def colorize(self) -> None:
 		if self.re_syntax is None or self.highlight_components is None:
 			return
-		next = '1.0'
+		next_index = '1.0'
 		while True:
-			item = self.tag_nextrange('Update', next)
+			item = self.tag_nextrange('Update', next_index)
 			if not item:
 				break
 			self.tag_remove('Update', *item)
 			head, tail = item
-			next = self.index(f'{tail} +1lines linestart')
+			next_index = self.index(f'{tail} +1lines linestart')
 			head = self.index(f'{head} linestart')
 			tail = self.index(f'{tail} lineend')
 			for highlight_compoent in self.highlight_components:
@@ -386,13 +386,13 @@ class CodeText(Frame):
 			if not self.coloring:
 				return
 
-	def autocomplete(self, event: Event | None) -> str | None:
+	def autocomplete(self, _event: Event | None) -> str | None:
 		if not self.delegate:
 			return EventPropogation.Break
 
 		if self.has_selection() and not self.autocomplete_state:
 			return EventPropogation.Continue
-		
+
 		if not self.autocomplete_state:
 			index = self.index('insert')
 			line = self.get(f'{index} linestart', index)
@@ -409,12 +409,12 @@ class CodeText(Frame):
 			next_char = self.get(index)
 			if next_char and not next_char in ' \t\n':
 				return EventPropogation.Continue
-			
+
 			options = list(option[len(text_prefix):] for option in autocomplete_options if option.startswith(text_prefix))
 			if not options:
 				return EventPropogation.Break
 			self.autocomplete_state = AutocompleteState(text_prefix, options + [''], 0, index, index)
-		
+
 		with self.undo_group():
 			self.delete(self.autocomplete_state.start_index, self.autocomplete_state.end_index)
 			option = self.autocomplete_state.options[self.autocomplete_state.option_index]
@@ -458,7 +458,6 @@ class CodeText(Frame):
 			self.event_generate(CodeText.WidgetEvent.TextChanged())
 		if cmd == 'mark' and args[0] == 'set' and args[1] == INSERT:
 			self.event_generate(CodeText.WidgetEvent.InsertCursorMoved())
-			pass
 		return result
 
 	def _goto_tag(self, tags: Sequence[str], direction: int) -> None:
@@ -487,15 +486,16 @@ class CodeText(Frame):
 
 	def highlight_error(self, error: PyMSError, tag: str = 'Error', warnings_tag: str = 'Warning') -> None:
 		if error.line is not None:
-			self.text.see('%s.0' % error.line)
-			self.text.tag_add(tag, '%s.0' % error.line, '%s.end' % error.line)
+			self.text.see(f'{error.line}.0')
+			self.text.tag_add(tag, f'{error.line}.0', f'{error.line}.end')
 			if error.warnings and warnings_tag:
 				self.highlight_warnings(error.warnings, warnings_tag, see=False)
 
 	def highlight_warning(self, warning: PyMSWarning, tag: str = 'Warning', see: bool = True) -> None:
 		if warning.line is not None:
-			self.text.see('%s.0' % warning.line)
-			self.text.tag_add(tag, '%s.0' % warning.line, '%s.end' % warning.line)
+			if see:
+				self.text.see(f'{warning.line}.0')
+			self.text.tag_add(tag, f'{warning.line}.0', f'{warning.line}.end')
 
 	def highlight_warnings(self, warnings: list[PyMSWarning], tag: str = 'Warning', see: bool = True) -> None:
 		for warning in warnings:

@@ -77,7 +77,7 @@ class SettingsImporter(PyMSDialog):
 		self.settings_entry.xview(END)
 		self.update_states()
 
-	def update_states(self, *_: Any) -> None:
+	def update_states(self, *_) -> None:
 		self.import_button['state'] = NORMAL if self.settings_path.get() else DISABLED
 
 	def iimport(self) -> None:

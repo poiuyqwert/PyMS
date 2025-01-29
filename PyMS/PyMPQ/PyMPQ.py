@@ -217,7 +217,7 @@ class PyMPQ(MainWindow):
 			# _,locale = LOCALE_CHOICES[locale_index]
 			self.after(1, lambda: self.locale_menu_choice.set(locale_index))
 
-	def locale_changed(self, *_: Any) -> None:
+	def locale_changed(self, *_) -> None:
 		locale_index = self.locale_menu_choice.get()
 		_name,locale = LOCALE_CHOICES[locale_index]
 		if locale is not None:

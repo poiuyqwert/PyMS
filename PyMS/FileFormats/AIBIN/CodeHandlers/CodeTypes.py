@@ -20,6 +20,26 @@ from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
 
+__all__ = [
+	'ByteCodeType',
+	'WordCodeType',
+	'DWordCodeType',
+	'BlockCodeType',
+	'UnitCodeType',
+	'BuildingCodeType',
+	'MilitaryCodeType',
+	'GGMilitaryCodeType',
+	'AGMilitaryCodeType',
+	'GAMilitaryCodeType',
+	'AAMilitaryCodeType',
+	'UpgradeCodeType',
+	'TechnologyCodeType',
+	'StringCodeType',
+	'CompareCodeType',
+	'TBLStringCodeType',
+	'BinFileCodeType',
+	'BoolCodeType',
+]
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:

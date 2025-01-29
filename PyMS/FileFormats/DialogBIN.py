@@ -389,7 +389,7 @@ DIALOG_FRAME_BL = 6
 DIALOG_FRAME_B = 7
 DIALOG_FRAME_BR = 8
 
-class BINWidget(object):
+class BINWidget:
 	BYTE_SIZE = 86
 	STRUCT =            '<L6H4LH5L4HLL4HLL'
 	BYTE_SIZE_REMASTERED = 88
@@ -514,7 +514,7 @@ class BINWidget(object):
 				return self.string
 		return None
 
-class BINSMK(object):
+class BINSMK:
 	BYTE_SIZE = 30
 	ATTR_NAMES = ('overlay_smk','flags','unknown1','filename','unknown2','offset_x','offset_y','unknown3','unknown4')
 

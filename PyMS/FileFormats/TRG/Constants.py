@@ -1,4 +1,25 @@
 
+__all__ = [
+	'ConditionType',
+	'ActionType',
+	'BriefingActionType',
+	'Comparison',
+	'SwitchState',
+	'ConditionFlag',
+	'PlayerGroup',
+	'UnitType',
+	'ResourceType',
+	'ScoreType',
+	'AllianceStatus',
+	'SwitchAction',
+	'StateAction',
+	'Order',
+	'NumberModifier',
+	'ActionFlag',
+	'Mask',
+	'Matches',
+]
+
 class ConditionType:
 	no_condition = 0
 	countdown_timer = 1

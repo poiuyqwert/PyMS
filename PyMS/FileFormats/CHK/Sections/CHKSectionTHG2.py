@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKDoodad(object):
+class CHKDoodad:
 	SPRITE = (1 << 12)
 	DISABLED = (1 << 15)
 

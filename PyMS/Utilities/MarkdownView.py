@@ -47,15 +47,15 @@ def _list_roman(num: int) -> str:
 	return '%s. ' % result
 
 class MarkdownView(Frame):
-	class _ListDisplay(object):
+	class _ListDisplay:
 		def __init__(self, list_block: Markdown.ListBlock, margin: int) -> None:
 			self.list_block = list_block
 			self.margin = margin
-	class _ListItemDisplay(object):
+	class _ListItemDisplay:
 		def __init__(self, marker: str, size: int) -> None:
 			self.marker = marker
 			self.size = size
-	class _ListItemTags(object):
+	class _ListItemTags:
 		def __init__(self, first_line_tag: str, subsequent_lines_tag: str) -> None:
 			self.first_line_tag = first_line_tag
 			self.first_line_used = False
@@ -66,7 +66,7 @@ class MarkdownView(Frame):
 	RE_LINK_HAS_SCHEME = re.compile(r'[a-zA-Z][a-zA-Z0-9+.-]{1,31}:')
 
 	# Specify `link_callback` to handle relative links
-	def __init__(self, *args: Any, **kwargs: Any) -> None:
+	def __init__(self, *args, **kwargs) -> None:
 		self.link_callback = kwargs.pop('link_callback', None)
 		if not 'relief' in kwargs:
 			kwargs['relief'] = SUNKEN

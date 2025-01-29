@@ -9,8 +9,8 @@ class CanSetItem(Protocol):
 	def __setitem__(self, key: str, value: Any):
 		...
 
-class TagStateManager(object):
-	class Item(object):
+class TagStateManager:
+	class Item:
 		def __init__(self, item: CanSetItem, tags: Sequence[str]) -> None:
 			self._item = item
 			self.tags = tags

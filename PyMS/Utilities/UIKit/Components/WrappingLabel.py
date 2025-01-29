@@ -7,5 +7,5 @@ class WrappingLabel(Label):
 		super().__init__(*args, **kwargs)
 		self.bind(WidgetEvent.Configure(), self.update_wrapping)
 
-	def update_wrapping(self, event: Event) -> None:
+	def update_wrapping(self, _event: Event) -> None:
 		self.config(wraplength=self.winfo_width())

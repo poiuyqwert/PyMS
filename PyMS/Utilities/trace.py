@@ -14,8 +14,8 @@ try:
 except:
 	pass
 
-class Tracer(object):
-	class STDStream(object):
+class Tracer:
+	class STDStream:
 		def __init__(self, tracer: Tracer, stream: TextIO | None) -> None:
 			self.tracer = tracer
 			self.stream = stream

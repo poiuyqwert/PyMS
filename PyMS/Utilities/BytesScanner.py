@@ -13,7 +13,7 @@ AnyStruct = str | struct.Struct
 S = TypeVar('S', bound=Struct.Struct)
 AnyFormat: TypeAlias = str | struct.Struct | Struct.Field | Type[Struct.Struct]
 
-class BytesScanner(object):
+class BytesScanner:
 	def __init__(self, data: bytes, address: int = 0) -> None:
 		self.data = data
 		self.address = address

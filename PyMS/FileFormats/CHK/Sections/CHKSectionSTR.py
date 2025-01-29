@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKString(object):
+class CHKString:
 	def __init__(self, sect: CHKSectionSTR, string_id: int, text: str, refs: int = 1) -> None:
 		self.sect = sect
 		self.string_id = string_id

@@ -106,7 +106,7 @@ class ImportGraphicsOptions:
 class ImportSettingsOptions:
 	repeater: Serialize.Repeater = Serialize.repeater_ignore
 
-class Tileset(object):
+class Tileset:
 	cv5: CV5
 	cv5_path: str | None
 	vf4: VF4

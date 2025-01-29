@@ -8,7 +8,7 @@ from ...Utilities.PyMSError import PyMSError
 from collections import OrderedDict
 from typing import cast
 
-class DATPortrait(object):
+class DATPortrait:
 	def __init__(self):
 		self.portrait_file = 0
 		self.smk_change = 0

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUpgradeLevels(object):
+class CHKUpgradeLevels:
 	def __init__(self) -> None:
 		self.maxLevel = 3
 		self.startLevel = 0

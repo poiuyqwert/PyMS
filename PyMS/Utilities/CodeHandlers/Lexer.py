@@ -9,6 +9,12 @@ import re, dataclasses
 from typing import Type, TypeVar, Callable
 from enum import Enum
 
+__all__ = [
+	'Stop',
+	'State',
+	'Lexer',
+]
+
 class Stop(Enum):
 	proceed = 0
 	exclude = 1

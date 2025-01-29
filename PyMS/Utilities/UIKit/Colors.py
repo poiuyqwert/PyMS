@@ -1,6 +1,10 @@
 
 from typing import overload
 
+__all__ = [
+	'Colors',
+]
+
 class Colors:
 	SystemHighlight = 'SystemHighlight'
 

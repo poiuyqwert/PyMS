@@ -76,7 +76,7 @@ class ScrollView(Frame):
 
 	def viewport_size(self) -> tuple[int, int]:
 		return (self._content_area.winfo_width(), self._content_area.winfo_height())
-	
+
 	def content_size(self) -> tuple[int, int]:
 		_,_,w,h = (int(v) for v in self._content_area.cget('scrollregion').split(' '))
 		return (w,h)

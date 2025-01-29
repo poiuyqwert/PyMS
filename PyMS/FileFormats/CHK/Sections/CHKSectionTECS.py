@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKTechStats(object):
+class CHKTechStats:
 	def __init__(self):
 		self.default = True
 		self.costMinerals = 0

@@ -161,7 +161,7 @@ def internal_temp_file(filename):
 ## Help
 help_dir = _os.path.join(base_dir, 'Help')
 
-class HelpFolder(object):
+class HelpFolder:
 	def __init__(self, name: str) -> None:
 		self.name = name
 		self.parent: (HelpFolder | None) = None
@@ -220,7 +220,7 @@ class HelpFolder(object):
 		for folder in self.folders:
 			result += '\n > ' + repr(folder).replace('\n', '\n  ')
 		return result
-class HelpFile(object):
+class HelpFile:
 	def __init__(self, path: str, folder: HelpFolder) -> None:
 		self.path = '/'.join(_os.path.split(path))
 		self.name = _os.path.splitext(path.split('/')[-1])[0]

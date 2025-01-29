@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKLocation(object):
+class CHKLocation:
 	NO_ELEVATION = 0
 	LOW_GROUND = (1 << 0)
 	MEDIUM_GROUND = (1 << 1)

@@ -22,7 +22,7 @@ class EditableReportSubList(RichList):
 		self.editing = False
 		self.lineselect = False
 
-		Frame.__init__(self, parent)
+		RichList.__init__(self, parent)
 		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **kwargs)
 		self.text.config(bd=0)
 		self.text.pack(fill=BOTH, expand=1)
@@ -57,9 +57,9 @@ class EditableReportSubList(RichList):
 	def insert(self, index: int | Literal['end'], text, tags: str | Sequence[str] | None = None) -> str:
 		if index == END:
 			index = -1
-		e = 'entry%s' % self.entry
+		e = f'entry{self.entry}'
 		def doselect_callback(tag_name: str, s: int) -> Callable[[Event], None]:
-			def doselect(event: Event) -> None:
+			def doselect(_event: Event) -> None:
 				self.doselect(tag_name, s)
 			return doselect
 		def popup_callback(tag_name: str) -> Callable[[Event], None]:
@@ -74,14 +74,14 @@ class EditableReportSubList(RichList):
 		if tags is None:
 			tags = e
 		elif isinstance(tags, str):
-			tags = '%s %s' % (e,tags)
+			tags = f'{e} {tags}'
 		else:
-			tags = '%s %s' % (e,' '.join(tags))
+			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry%s.last +1l' % self.entries[index]
+			i = f'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
-		if index == -1 or index == len(self.entries)-1:
+		if index in (-1, len(self.entries)-1):
 			self.entries.append(self.entry)
 		else:
 			self.entries.insert(index+1, self.entry)
@@ -89,20 +89,20 @@ class EditableReportSubList(RichList):
 		self.execute('insert',(i, text, tags))
 		return self.execute('insert',(i + ' lineend', '\n'))
 
-	def doubleclick(self, e: Event) -> None:
+	def doubleclick(self, event: Event) -> None:
 		if self.report.dcmd:
-			self.report.dcmd(e)
+			self.report.dcmd(event)
 
-	def popup(self, e: Event, i: str) -> None:
+	def popup(self, event: Event, i: str) -> None:
 		if self.report.pcmd:
-			self.report.pcmd(e,i)
+			self.report.pcmd(event, i)
 
-	def selected(self, e: int | str) -> bool:
-		if isinstance(e,int):
-			e = 'entry%s' % e
-		return not not [n for n in self.text.tag_names('%s.first' % e) if n == 'Selection']
+	def selected(self, entry: int | str) -> bool:
+		if isinstance(entry, int):
+			entry = f'entry{entry}'
+		return not not [n for n in self.text.tag_names(f'{entry}.first') if n == 'Selection']
 
-	def deselect(self, e: Event) -> None:
+	def deselect(self, _event: Event) -> None:
 		if self.lineselect:
 			self.lineselect = False
 		else:
@@ -110,6 +110,7 @@ class EditableReportSubList(RichList):
 			self.text.tag_remove('Selection', '1.0', END)
 
 	def movesel(self, d: int, s: bool = False) -> None:
+		l = ''
 		if self.lastsel:
 			l = self.lastsel
 		elif self.entries:
@@ -118,14 +119,14 @@ class EditableReportSubList(RichList):
 			return
 		if not s:
 			self.text.tag_remove('Selection', '1.0', END)
-		r = self.text.tag_names('%s.last %+dl lineend -1c' % (l,d))
+		r = self.text.tag_names(f'{l}.last +{d}l lineend -1c')
 		for e in r:
 			if e.startswith('entry'):
-				self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
+				self.text.tag_add('Selection', f'{e}.first', f'{e}.last')
 				self.lastsel = e
 				break
 		else:
-			self.text.tag_add('Selection', '%s.first' % self.lastsel, '%s.last' % self.lastsel)
+			self.text.tag_add('Selection', f'{self.lastsel}.first', '{self.lastsel}.last')
 
 	def doselect(self, i: str, t: int) -> None:
 		self.lineselect = True
@@ -139,23 +140,23 @@ class EditableReportSubList(RichList):
 			if self.selectmode == EXTENDED:
 				self.lastsel = i
 			if not self.selected(i):
-				self.text.tag_add('Selection',  '%s.first' % i, '%s.last' % i)
+				self.text.tag_add('Selection', f'{i}.first', f'{i}.last')
 		elif t == 1 and self.selectmode == EXTENDED:
-			if tuple(int(n) for n in self.text.index('%s.first' % self.lastsel).split('.')) > tuple(int(n) for n in self.text.index('%s.first' % i).split('.')):
+			if tuple(int(n) for n in self.text.index(f'{self.lastsel}.first').split('.')) > tuple(int(n) for n in self.text.index(f'{i}.first').split('.')):
 				d = '-1l'
 			else:
 				d = '+1l'
-			c,f = self.text.index('%s.last %s lineend -1c' % (self.lastsel,d)),self.text.index('%s.last %s lineend -1c' % (i,d))
+			c,f = self.text.index(f'{self.lastsel}.last {d} lineend -1c'),self.text.index(f'{i}.last {d} lineend -1c')
 			while d == '-1l' or c != f:
 				r = self.text.tag_names(c)
 				if not 'Selection' in r:
 					for e in r:
 						if e.startswith('entry'):
-							self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
+							self.text.tag_add('Selection', f'{e}.first', f'{e}.last')
 							break
 				if d == '-1l' and c == f:
 					break
-				c = self.text.index('%s %s lineend -1c' % (c,d))
+				c = self.text.index(f'{c} {d} lineend -1c')
 			self.lastsel = i
 		self.dctimer = self.after(300, self.nodc)
 		if self.report.scmd:
@@ -164,18 +165,18 @@ class EditableReportSubList(RichList):
 	def nodc(self) -> None:
 		self.dctimer = None
 
-	def edit(self, e: Event | None = None) -> None:
+	def edit(self, _event_or_entry: Event | int | None = None) -> None:
 		if self.dctimer:
 			self.after_cancel(self.dctimer)
 			self.dctimer = None
 			return
 		self.editing = True
-		if isinstance(e,int):
-			tag_name = 'entry%s' % self.entries[e]
-		elif e is None:
+		if isinstance(_event_or_entry, int):
+			tag_name = f'entry{self.entries[_event_or_entry]}'
+		elif _event_or_entry is None:
 			tag_name = [n for n in self.text.tag_names('Selection.first') if n.startswith('entry')][0]
 		else:
-			c = '@%s,%s' % (e.x,e.y)
+			c = f'@{_event_or_entry.x},{_event_or_entry.y}'
 			tag_name = [n for n in self.text.tag_names(c) if n.startswith('entry')][0]
 		index = self.text.index(tag_name + '.first')
 		text = self.text.get(tag_name + '.first', tag_name + '.last')
@@ -184,12 +185,12 @@ class EditableReportSubList(RichList):
 		entry = Entry(self.text, width=len(text) + 5, textvariable=self.edittext, bd=1, relief=SOLID)
 		entry.select_range(0,END)
 		def endedit_callback(index: str, tag_name: str) -> Callable[[Event], None]:
-			def endedit(e: Event) -> None:
+			def endedit(_event: Event) -> None:
 				self.endedit(index, tag_name)
 			return endedit
 		entry.bind(Key.Return(), endedit_callback(index,tag_name))
 		entry.bind(Focus.Out(), endedit_callback(index,tag_name))
-		self.text.window_create('%s.first' % tag_name, window=entry)
+		self.text.window_create(f'{tag_name}.first', window=entry)
 		entry.focus_set()
 		self.execute('delete',(tag_name + '.first', tag_name + '.last'))
 		self.text.tag_remove('Selection', '1.0', END)
@@ -206,13 +207,13 @@ class EditableReportSubList(RichList):
 	def get(self, index: int) -> str:
 		if self.checkedit:
 			return self.checkedit
-		return self.text.get('entry%s.first' % self.entries[index],'entry%s.last' % self.entries[index])
+		return self.text.get(f'entry{self.entries[index]}.first', f'entry{self.entries[index]}.last')
 
 class ReportSubList(RichList):
 	def __init__(self, parent: Misc, **kwargs):
 		self.entry = 0
 		self.entries = []
-		Frame.__init__(self, parent)
+		RichList.__init__(self, parent)
 		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **kwargs)
 		self.text.pack(fill=BOTH, expand=1)
 
@@ -239,7 +240,7 @@ class ReportSubList(RichList):
 	def insert(self, index: int | Literal['end'], text: str, tags: str | Sequence[str] | None = 'RightAlign') -> str:
 		if index == END:
 			index = -1
-		e = 'entry%s' % self.entry
+		e = f'entry{self.entry}'
 		# def select_callback(tag: str) -> Callable[[Event], None]:
 		# 	def select(event: Event) -> None:
 		# 		self.select(tag)
@@ -248,22 +249,22 @@ class ReportSubList(RichList):
 		if tags is None:
 			tags = e
 		elif isinstance(tags, str):
-			tags = '%s %s' % (e,tags)
+			tags = f'{e} {tags}'
 		else:
-			tags = '%s %s' % (e,' '.join(tags))
+			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry%s.last +1l' % self.entries[index]
+			i = f'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
-		if index == -1 or index == len(self.entries)-1:
+		if index in (-1, len(self.entries)-1):
 			self.entries.append(self.entry)
 		else:
 			self.entries.insert(index+1, self.entry)
 		self.entry += 1
-		return self.execute('insert',(i, '%s\n' % text, tags))
+		return self.execute('insert',(i, f'{text}\n', tags))
 
 class ReportList(Frame):
-	def __init__(self, parent: Misc, columns: list[str | None] = [''], selectmode: SelectMode = SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, min_widths: list[int] | None = None, **conf) -> None:
+	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, min_widths: list[int] | None = None, **conf) -> None:
 		self.scmd = scmd
 		self.rcmd = rcmd
 		self.pcmd = pcmd
@@ -276,7 +277,7 @@ class ReportList(Frame):
 		self.vscroll = Scrollbar(self)
 		self.vscroll.config(command=self.yview)
 		self.vscroll.pack(side=RIGHT, fill=Y)
-		for n,title in enumerate(columns):
+		for n,title in enumerate(columns or ['']):
 			l = Frame(self.panes)
 			if title is None:
 				b = Button(l, text=' ', state=DISABLED)
@@ -316,7 +317,7 @@ class ReportList(Frame):
 		for c in self.columns:
 			c[1].yview(MOVETO, a[0])
 
-	# def select(self, e: Event, l: RichList) -> None:
+	# def select(self, _event: Event, l: RichList) -> None:
 	# 	sel = l.cur_selection()
 	# 	for c in self.columns:
 	# 		c[1].select_clear(0,END)

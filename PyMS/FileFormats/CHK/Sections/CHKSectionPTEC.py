@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKTechAvailability(object):
+class CHKTechAvailability:
 	def __init__(self) -> None:
 		self.available = 3
 		self.researched = 0

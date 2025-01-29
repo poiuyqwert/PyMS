@@ -1,7 +1,7 @@
 
 from typing import Any
 
-class SemVer(object):
+class SemVer:
 	def __init__(self, version: str) -> None:
 		self.meta = None
 		if '-' in version:

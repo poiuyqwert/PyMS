@@ -1,7 +1,8 @@
+# pylint: disable=protected-access
 
 from ...FileFormats.Tileset import Tileset
 from ...FileFormats.Tileset.CV5 import CV5Group, CV5Flag
-from ...FileFormats.Tileset.VF4 import VF4Megatile, VF4Flag
+from ...FileFormats.Tileset.VF4 import VF4Megatile
 
 class ID:
 	basic_empty: int
@@ -13,7 +14,7 @@ class ID:
 	doodad_inc: int
 	doodad_full: int
 	doodad_flags: int
-	
+
 	mega_empty: int
 	mega_full: int
 	mega_crosshatch: int

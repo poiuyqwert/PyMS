@@ -22,6 +22,8 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 import re, io
 from dataclasses import dataclass
 
+from typing import Sequence
+
 class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 	@staticmethod
 	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> SyntaxHighlighting:

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKForce(object):
+class CHKForce:
 	RANDOM_START = (1 << 0)
 	ALLIES = (1 << 1)
 	ALLIED_VICTORY = (1 << 2)

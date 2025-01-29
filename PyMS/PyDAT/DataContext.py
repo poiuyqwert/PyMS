@@ -30,7 +30,7 @@ class TicksPerSecond:
 	slower  = 9
 	slowest = 6
 
-class DataContext(object):
+class DataContext:
 	mpq_handler: MPQHandler
 	iscriptbin: IScriptBIN
 

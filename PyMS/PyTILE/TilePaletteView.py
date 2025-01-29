@@ -59,7 +59,7 @@ class TilePaletteView(Frame):
 		self.canvas.config(yscrollcommand=yscrollcommand(scrollbar))
 
 		self.initial_scroll_bind = None
-		def initial_scroll(_: Any) -> None:
+		def initial_scroll(_) -> None:
 			self.scroll_to_selection()
 			if self.initial_scroll_bind is None:
 				return

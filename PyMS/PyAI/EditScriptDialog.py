@@ -8,6 +8,8 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Config import WindowGeometry
 from ..Utilities import ItemSelectDialog
 
+from typing import Sequence
+
 class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def __init__(self, parent: AnyWindow, delegate: EditScriptDelegate, config: WindowGeometry, script_id: str = 'MYAI', flags: int = 0, string_index: int = 0, title='Edit AI', initial=''):
 		self.delegate = delegate

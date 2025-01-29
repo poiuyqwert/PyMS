@@ -28,7 +28,7 @@ class Extensions(_Tk.Misc):
 class WindowExtensions(_Tk.Misc, _Tk.Wm):
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
 		if width and height and not hasattr(self, '_initial_max_size'):
-			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self)
+			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self) # pylint: disable=attribute-defined-outside-init
 		return _Tk.Toplevel.maxsize(self, width, height) # type: ignore[arg-type]
 
 	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized

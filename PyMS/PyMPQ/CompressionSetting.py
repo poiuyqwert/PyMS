@@ -51,7 +51,7 @@ class CompressionOption(Enum):
 	def setting(self, level: int = 0) -> CompressionSetting:
 		return CompressionSetting(self, max(0, min(level, self.level_count()-1)))
 
-class CompressionSetting(object):
+class CompressionSetting:
 	def __init__(self, compression_type: CompressionOption, level: int) -> None:
 		self.type = compression_type
 		self.level = level

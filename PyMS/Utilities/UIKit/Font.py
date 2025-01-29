@@ -7,6 +7,10 @@ from uuid import uuid4 as _uuid4
 
 from typing import Sequence
 
+__all__ = [
+	'Font',
+]
+
 class Font(_Fonts.Font):
 	@staticmethod
 	def named(name: str) -> Font | None:
@@ -117,7 +121,7 @@ class Font(_Fonts.Font):
 	def bolded(self) -> Font:
 		if self.is_bold():
 			return self
-		return Font(family=self.family(), size=self.size(), bold=True, italic=self.is_italic(), underline=self.is_underlined(), overstrike=self.has_overstrike()) 
+		return Font(family=self.family(), size=self.size(), bold=True, italic=self.is_italic(), underline=self.is_underlined(), overstrike=self.has_overstrike())
 
 	def italicize(self) -> Font:
 		if self.is_italic():
@@ -138,7 +142,7 @@ class Font(_Fonts.Font):
 		return Font(family=self.family(), size=self.size(), bold=self.is_bold(), italic=self.is_italic(), underline=self.is_underlined(), overstrike=self.has_overstrike())
 
 	def __repr__(self) -> str:
-		return "<Font family='%s' size=%d weight=%s slant=%s underline=%s overstrike=%s %s>" % (self.family(), self.size(), self.weight(), self.slant(), self.is_underlined(), self.has_overstrike(), self.actual())
+		return f"<Font family='{self.family()}' size={self.size()} weight={self.weight()} slant={self.slant()} underline={self.is_underlined()} overstrike={self.has_overstrike()} {self.actual()}>"
 
 	def __copy__(self) -> Font:
 		return self.copy()

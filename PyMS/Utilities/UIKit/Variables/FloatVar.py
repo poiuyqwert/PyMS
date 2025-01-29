@@ -15,14 +15,14 @@ class FloatVar(IntegerVar):
 			if s:
 				try:
 					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
-						raise Exception()
+						raise ValueError()
 					isfloat = self.get(True)
 					s = self.get()
 					if s in self.exclude:
-						raise Exception()
+						raise ValueError()
 					s = str(s)
 					if self.precision and not s.endswith('.0') and len(s)-s.index('.')-1 > self.precision:
-						raise Exception()
+						raise ValueError()
 					if not isfloat.endswith('.') and not isfloat.endswith('.0') and s.endswith('.0'):
 						s = s[:-2]
 						s = int(s)

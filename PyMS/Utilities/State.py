@@ -5,7 +5,7 @@ from .Callback import Callback
 
 from typing import Any, Callable
 
-class State(object):
+class State:
 	@staticmethod
 	def _get(field: str) -> Callable[[State], Any]:
 		attr = '_' + field

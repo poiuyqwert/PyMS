@@ -107,7 +107,7 @@ class CollapseView(Frame):
 		Frame.grid(self, **kwargs)
 
 	def _update_state(self, apply_callback: bool = True) -> None:
-		self.collapse_button._update_state(self.collapsed)
+		self.collapse_button._update_state(self.collapsed) # pylint: disable=protected-access
 		if self.collapsed and self._hide:
 			self._hide()
 		elif not self.collapsed and self._show:

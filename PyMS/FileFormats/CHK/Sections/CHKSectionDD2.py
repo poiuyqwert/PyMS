@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKDoodadVisual(object):
+class CHKDoodadVisual:
 	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
 		self.doodadID = 0
