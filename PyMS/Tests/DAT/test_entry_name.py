@@ -11,7 +11,7 @@ import unittest
 class Test_Entry_Name(unittest.TestCase):
 	def test_generic_name(self) -> None:
 		entry_ids = (0, 1, 2, 3)
-		type = 'Entry'
+		entry_type = 'Entry'
 		id_count = 3
 		data_names = ['Name 1', 'Name 2', 'Name 3']
 
@@ -23,7 +23,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count),
+				DATEntryName.generic(entry_id, entry_type, id_count),
 				expected_name
 			)
 
@@ -35,7 +35,7 @@ class Test_Entry_Name(unittest.TestCase):
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names),
+				DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names),
 				expected_name
 			)
 
@@ -52,7 +52,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names, name_overrides=name_overrides),
+				DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names, name_overrides=name_overrides),
 				expected_name,
 			)
 
@@ -69,7 +69,7 @@ class Test_Entry_Name(unittest.TestCase):
 		}
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
-				DATEntryName.generic(entry_id, type, id_count, data_names=data_names, name_overrides=name_overrides),
+				DATEntryName.generic(entry_id, entry_type, id_count, data_names=data_names, name_overrides=name_overrides),
 				expected_name,
 			)
 
@@ -1086,7 +1086,7 @@ class Test_Entry_Name(unittest.TestCase):
 		portdatadat = PortraitsDAT()
 		portdatadat.load_file(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
-		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\TGhFid0
+		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\\TGhFid0
 
 		expected_names = (
 			'Portrait #0',
@@ -1116,7 +1116,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'tmarine\\TMaFid0',
 			'UTassadar\\UTaFid0',
 			'UFlag12\\UF12Fid0',
-			'tghost\TGhFid0',
+			'tghost\\TGhFid0',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1128,7 +1128,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'tmarine\\TMaFid0',
 			'UTassadar\\UTaFid0',
 			'UFlag12\\UF12Fid0',
-			'tghost\TGhFid0',
+			'tghost\\TGhFid0',
 		)
 		decompiled_portdatatbl = TBL()
 		decompiled_portdatatbl.strings = [decompile_string(string) for string in portdatatbl.strings]
@@ -1142,7 +1142,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Marine (tmarine\\TMaFid0)',
 			'Gantrithor (UTassadar\\UTaFid0)',
 			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0)',
-			'Expanded Portrait #110 (tghost\TGhFid0)',
+			'Expanded Portrait #110 (tghost\\TGhFid0)',
 		)
 		for (entry_id, expected_name) in zip(entry_ids, expected_names):
 			self.assertEqual(
@@ -1172,7 +1172,7 @@ class Test_Entry_Name(unittest.TestCase):
 			'Marine (tmarine\\TMaFid0) [V1]',
 			'Gantrithor (UTassadar\\UTaFid0) [V2]',
 			'Flag (Blue) (Pl.12) (UFlag12\\UF12Fid0) [V3]',
-			'Expanded Portrait #110 (tghost\TGhFid0) [V4]',
+			'Expanded Portrait #110 (tghost\\TGhFid0) [V4]',
 		)
 		name_overrides = {
 			0: (True, '[V1]'),

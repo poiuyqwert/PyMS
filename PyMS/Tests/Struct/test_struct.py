@@ -90,7 +90,7 @@ class Test(Struct.Struct):
 	adouble: list[float]
 
 	mix: list[int]
-	
+
 	_fields = (
 		Struct.t_pad(),
 		('s8', Struct.t_s8),
@@ -181,7 +181,7 @@ class Test(Struct.Struct):
 		if other.mix != self.mix:
 			return False
 		return True
-	
+
 	@staticmethod
 	def min() -> Test:
 		test = Test()

@@ -49,7 +49,7 @@ class Header:
 
 class Block:
 	@staticmethod
-	def shared_0000(owners: list[str] = ['BASE', 'SEPB', 'SGTB']) -> str:
+	def shared_0000(owners: tuple[str, ...] = ('BASE', 'SEPB', 'SGTB')) -> str:
 		comment = ''
 		if owners:
 			comment = '\t# Shared by: ' + ', '.join(owners)
@@ -92,7 +92,7 @@ class Test_Shared_Blocks(unittest.TestCase):
 		ai = AIBIN.AIBIN()
 		scripts = AIBIN.AIBIN.compile(parse_context)
 		ai.add_scripts(scripts)
-		
+
 		self.assertSequenceEqual([script.id for script in ai.list_scripts()], ['BASE', 'SEPB', 'SGTB'])
 		base = ai.get_script('BASE')
 		assert base is not None
@@ -143,7 +143,7 @@ class Test_Shared_Blocks(unittest.TestCase):
 		expected_code = f"""
 {Header.SEPB}
 
-{Block.shared_0000(['SEPB', 'SGTB'])}
+{Block.shared_0000(('SEPB', 'SGTB'))}
 
 
 {Header.SGTB}
@@ -180,7 +180,7 @@ class Test_Shared_Blocks(unittest.TestCase):
 	def test_cross_references_invalid(self) -> None:
 		code = f"""
 {Header.BASE}
-{Block.shared_0000(['BASE', 'BWSS'])}
+{Block.shared_0000(('BASE', 'BWSS'))}
 
 {Header.BWSS('shared_0000')}
 """

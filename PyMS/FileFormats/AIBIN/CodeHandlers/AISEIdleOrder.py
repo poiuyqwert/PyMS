@@ -15,7 +15,7 @@ from typing import runtime_checkable, Protocol, Self, Type, cast, Sequence
 
 @runtime_checkable
 class Option(Protocol):
-	TYPE_ID: int 
+	TYPE_ID: int
 
 	@classmethod
 	def decompile(cls, value: int, scanner: BytesScanner) -> Self:

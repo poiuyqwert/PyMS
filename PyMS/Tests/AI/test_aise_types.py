@@ -28,7 +28,7 @@ class Test_PointCodeType(unittest.TestCase):
 		expected = b'\x01\x00\x02\x00'
 		builder = AIByteCodeCompiler()
 		code_type = AISECodeTypes.PointCodeType()
-		
+
 		code_type.compile(value, builder)
 		result = builder.data
 
@@ -205,7 +205,7 @@ class Test_AreaCodeType(unittest.TestCase):
 		expected = b'\x01\x00\x02\x00\x03\x00'
 		builder = AIByteCodeCompiler()
 		code_type = AISECodeTypes.AreaCodeType()
-		
+
 		code_type.compile(value, builder)
 		result = builder.data
 
@@ -541,4 +541,3 @@ class Test_IdleOrderFlags_OptionSet(unittest.TestCase):
 # # Every possible filter type, some inside self()
 # 'InCombat|SpellEffects(Matrix)|WithoutSpellEffects(Blind)|Hangar(LessThan,1)|Self(Order(AttackUnit)|Targeting(Enemy)|TileFlags(Creep|Ramp))|RandomRate(50, 60)|Count(Exactly, 50, 6, 13)|WithoutUnitFlags(Robotic|Hero)'
 # b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00'
-
