@@ -4,7 +4,7 @@ from ...Utilities.CodeHandlers import CodeCommand
 from ...Utilities.CodeHandlers import LanguageDefinition
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.SourceCodeParser import CommandSourceCodeParser
-from ...Utilities.CodeHandlers.ParseContext import ParseContext
+from ...Utilities.CodeHandlers.ParseContext import ParseContext, ParseSettings
 from ...Utilities.CodeHandlers.Lexer import Lexer
 from ...Utilities.CodeHandlers import Tokens
 from ...Utilities.CodeHandlers.CodeBlock import CodeBlock
@@ -62,7 +62,7 @@ class Test_Repeaters(unittest.TestCase):
 		lexer.register_token_type(Tokens.WhitespaceToken, skip=True)
 		lexer.register_token_type(Tokens.IdentifierToken)
 		lexer.register_token_type(Tokens.IntegerToken)
-		context = ParseContext(lexer, language)
+		context = ParseContext(lexer, language, ParseSettings())
 		context.active_block = CodeBlock()
 		parser = CommandSourceCodeParser()
 		parser.parse(context)
@@ -90,7 +90,7 @@ class Test_Repeaters(unittest.TestCase):
 		lexer.register_token_type(Tokens.WhitespaceToken, skip=True)
 		lexer.register_token_type(Tokens.IdentifierToken)
 		lexer.register_token_type(Tokens.IntegerToken)
-		context = ParseContext(lexer, language)
+		context = ParseContext(lexer, language, ParseSettings())
 		context.active_block = CodeBlock()
 		parser = CommandSourceCodeParser()
 		parser.parse(context)

@@ -4,7 +4,9 @@ from .AISerializeContext import AISerializeContext
 from .AIParseContext import AIParseContext
 from .AIDecompileContext import AIDecompileContext
 
-from ....FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import UnitsDAT, DATUnit
+from ....FileFormats.DAT.UpgradesDAT import UpgradesDAT
+from ....FileFormats.DAT.TechDAT import TechDAT
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
@@ -105,19 +107,19 @@ class UnitCodeType(CodeType.IntCodeType):
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
-			return
-		if num > parse_context.data_context.units_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 227
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.units_dat is not None:
-			entry_count = parse_context.data_context.units_dat.entry_count()
+		entry_count = UnitsDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.units_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.units_dat.entry_count())
+			if parse_context.settings.expanded_units is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_units)
 		return (0, entry_count)
 
 class BuildingCodeType(UnitCodeType):
@@ -136,11 +138,13 @@ class BuildingCodeType(UnitCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id == 42: # Overlord
+			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
 			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building) or (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.resource_miner):
@@ -163,9 +167,11 @@ class MilitaryCodeType(UnitCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
 			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if not (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building):
@@ -192,16 +198,20 @@ class GGMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
@@ -227,16 +237,20 @@ class AGMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
@@ -262,16 +276,20 @@ class GAMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
@@ -297,16 +315,20 @@ class AAMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
@@ -350,19 +372,19 @@ class UpgradeCodeType(CodeType.IntCodeType):
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.upgrades_dat is None:
-			return
-		if num > parse_context.data_context.upgrades_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 60
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.upgrades_dat is not None:
-			entry_count = parse_context.data_context.upgrades_dat.entry_count()
+		entry_count = UpgradesDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.upgrades_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.upgrades_dat.entry_count())
+			if parse_context.settings.expanded_upgrades is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_upgrades)
 		return (0, entry_count)
 
 class TechnologyCodeType(CodeType.IntCodeType):
@@ -403,19 +425,19 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.techdata_dat is None:
-			return
-		if num > parse_context.data_context.techdata_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 43
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.techdata_dat is not None:
-			entry_count = parse_context.data_context.techdata_dat.entry_count()
+		entry_count = TechDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.techdata_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.techdata_dat.entry_count())
+			if parse_context.settings.expanded_tech is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_tech)
 		return (0, entry_count)
 
 class StringCodeType(CodeType.StrCodeType):

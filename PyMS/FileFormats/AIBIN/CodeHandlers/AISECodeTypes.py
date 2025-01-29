@@ -323,7 +323,7 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 		parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
 		if num >= 228 and num <= 232:
 			return
 		super().validate(num, parse_context, token)
@@ -373,10 +373,13 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 		for group in groups:
 			context.add_data(Struct.l_u16.pack(group))
 
+	def parse_variable(self, parse_context: ParseContext) -> UnitGroup | None:
+		return None # Need to not do this so `parse()` will continue into `lex()` to allow parsing multiple values
+
 	def lex(self, parse_context: ParseContext) -> UnitGroup:
 		groups: list[int] = []
 		while True:
-			groups.append(self._unit_id_code_type.lex(parse_context))
+			groups.append(self._unit_id_code_type.parse(parse_context))
 			token = parse_context.lexer.next_token(peek=True)
 			if token.raw_value == '|':
 				_ = parse_context.lexer.next_token()

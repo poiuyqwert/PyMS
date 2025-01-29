@@ -79,7 +79,7 @@ class BasicFlags(Option):
 		return cls(value)
 
 	def serialize(self) -> str:
-		return CodeType.FlagsCodeType.serialize_flags(self.flags, BasicFlags.Flag.NAMES, Struct.l_u16, '')
+		return CodeType.FlagsCodeType.serialize_flags(self.flags, BasicFlags.Flag.NAMES, Struct.l_u16, '0')
 
 	def merge(self, other: Option) -> bool:
 		if not isinstance(other, BasicFlags):
@@ -90,7 +90,11 @@ class BasicFlags(Option):
 	@classmethod
 	def parse(cls, parse_context: ParseContext) -> Self | None:
 		token = parse_context.lexer.next_token(peek=True)
-		flag = BasicFlags.Flag.VALUES.get(token.raw_value.lower())
+		flag: int | None
+		if token.raw_value == '0':
+			flag = 0
+		else:
+			flag = BasicFlags.Flag.VALUES.get(token.raw_value.lower())
 		if flag is None:
 			return None
 		_ = parse_context.lexer.next_token()

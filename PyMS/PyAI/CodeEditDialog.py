@@ -23,6 +23,198 @@ import re, io
 from dataclasses import dataclass
 
 class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> SyntaxHighlighting:
+		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
+		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
+		type_names = [type.name for type in CodeTypes.all_basic_types]
+		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
+		keywords: list[str] = []
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
+		aise_keywords: list[str] = []
+		for code_type in AISECodeTypes.all_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				aise_keywords.extend(code_type.keywords())
+		return SyntaxHighlighting(
+			syntax_components=(
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=highlights_config.comment
+						),
+						pattern=r'(?:#|;)[^\n]*$'
+					),
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=highlights_config.header
+						),
+						pattern=r'script'
+					),
+					r'[ \t]+',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AI ID',
+							description='The style of the AI ID in the AI header.',
+							highlight_style=highlights_config.ai_id
+						),
+						pattern=r'[^\n\x00,():]{4}'
+					),
+					r'(?=[ \t]+\{)',
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Block',
+							description='The style of a --block-- or :block in the code.',
+							highlight_style=highlights_config.block
+						),
+						pattern=r'--\w+--|:\w+'
+					)
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Command',
+							description='The style of command names.',
+							highlight_style=highlights_config.command
+						),
+						pattern='|'.join(cmd_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Command',
+							description='The style of command names for the AISE plugin.',
+							highlight_style=highlights_config.aise_command
+						),
+						pattern='|'.join(aise_cmd_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Type',
+							description='The style of type names.',
+							highlight_style=highlights_config.type
+						),
+						pattern='|'.join(type_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Directive',
+							description='The style of @directive names.',
+							highlight_style=highlights_config.directive
+						),
+						pattern=f'@(?:{"|".join(directive_names)})'
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=highlights_config.number
+						),
+						pattern=r'\d+'
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='TBL Format',
+							description='The style of TBL formatted characters, like null: <0>',
+							highlight_style=highlights_config.tbl_format
+						),
+						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+					),
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) , = { } . | ~',
+							highlight_style=highlights_config.operator
+						),
+						pattern=r'[(),={}.|~]'
+					),
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=highlights_config.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Keyword',
+							description='The style of AISE keywords.',
+							highlight_style=highlights_config.aise_keyword
+						),
+						pattern='|'.join(aise_keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=highlights_config.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=highlights_config.selection,
+					tag='sel'
+				),
+				HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=highlights_config.error
+				),
+				HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=highlights_config.warning
+				),
+			)
+		)
+
 	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
 		self.delegate = delegate
 		self.config_ = config
@@ -91,195 +283,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		self.config_.windows.code_edit.load_size(self)
 
 	def setup_syntax_highlighting(self) -> None:
-		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
-		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
-		type_names = [type.name for type in CodeTypes.all_basic_types]
-		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
-		keywords: list[str] = []
-		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
-			if isinstance(code_type, CodeType.HasKeywords):
-				keywords.extend(code_type.keywords())
-		aise_keywords: list[str] = []
-		for code_type in AISECodeTypes.all_types:
-			if isinstance(code_type, CodeType.HasKeywords):
-				aise_keywords.extend(code_type.keywords())
-		self.syntax_highlighting = SyntaxHighlighting(
-			syntax_components=(
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Comment',
-							description='The style of a comment.',
-							highlight_style=self.config_.code.highlights.comment
-						),
-						pattern=r'(?:#|;)[^\n]*$'
-					),
-				)),
-				SyntaxComponent((
-					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Header',
-							description='The style of a `script` header.',
-							highlight_style=self.config_.code.highlights.header
-						),
-						pattern=r'script'
-					),
-					r'[ \t]+',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='AI ID',
-							description='The style of the AI ID in the AI header.',
-							highlight_style=self.config_.code.highlights.ai_id
-						),
-						pattern=r'[^\n\x00,():]{4}'
-					),
-					r'(?=[ \t]+\{)',
-				)),
-				SyntaxComponent((
-					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Block',
-							description='The style of a --block-- or :block in the code.',
-							highlight_style=self.config_.code.highlights.block
-						),
-						pattern=r'--\w+--|:\w+'
-					)
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Command',
-							description='The style of command names.',
-							highlight_style=self.config_.code.highlights.command
-						),
-						pattern='|'.join(cmd_names)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='AISE Command',
-							description='The style of command names for the AISE plugin.',
-							highlight_style=self.config_.code.highlights.aise_command
-						),
-						pattern='|'.join(aise_cmd_names)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Type',
-							description='The style of type names.',
-							highlight_style=self.config_.code.highlights.type
-						),
-						pattern='|'.join(type_names)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Directive',
-							description='The style of @directive names.',
-							highlight_style=self.config_.code.highlights.directive
-						),
-						pattern=f'@(?:{"|".join(directive_names)})'
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Number',
-							description='The style of all numbers.',
-							highlight_style=self.config_.code.highlights.number
-						),
-						pattern=r'\d+'
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='TBL Format',
-							description='The style of TBL formatted characters, like null: <0>',
-							highlight_style=self.config_.code.highlights.tbl_format
-						),
-						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
-					),
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Operator',
-							description='The style of the operators:\n    ( ) , = { } . | ~',
-							highlight_style=self.config_.code.highlights.operator
-						),
-						pattern=r'[(),={}.|~]'
-					),
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Keyword',
-							description='The style of keywords.',
-							highlight_style=self.config_.code.highlights.keyword
-						),
-						pattern='|'.join(keywords)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='AISE Keyword',
-							description='The style of AISE keywords.',
-							highlight_style=self.config_.code.highlights.aise_keyword
-						),
-						pattern='|'.join(aise_keywords)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Newline',
-							description='The style of newlines',
-							highlight_style=self.config_.code.highlights.newline
-						),
-						pattern=r'\n'
-					),
-				)),
-			),
-			highlight_components=(
-				HighlightComponent(
-					name='Selection',
-					description='The style of selected text in the editor.',
-					highlight_style=self.config_.code.highlights.selection,
-					tag='sel'
-				),
-				HighlightComponent(
-					name='Error',
-					description='The style of highlighted errors in the editor.',
-					highlight_style=self.config_.code.highlights.error
-				),
-				HighlightComponent(
-					name='Warning',
-					description='The style of highlighted warnings in the editor.',
-					highlight_style=self.config_.code.highlights.warning
-				),
-			)
-		)
+		self.syntax_highlighting = CodeEditDialog.build_syntax_highlighting(self.config_.code.highlights)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
 		CommandCodeTooltip(self.text.text)

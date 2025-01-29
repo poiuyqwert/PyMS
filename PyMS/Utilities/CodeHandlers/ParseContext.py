@@ -9,7 +9,7 @@ from ..PyMSWarning import PyMSWarning
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 if TYPE_CHECKING:
 	from .CodeHeader import CodeHeader
 	from .DefinitionsHandler import DefinitionsHandler
@@ -30,13 +30,21 @@ class BlockMetadata:
 			if not use in self.uses:
 				self.uses.append(use)
 
-class ParseContext(object):
-	def __init__(self, lexer: Lexer, language: LanguageDefinition, definitions: DefinitionsHandler | None = None) -> None:
+class ParseSettings:
+	def __init__(self) -> None:
+		self.suppress_warnings: list[str] = []
+		self.suppress_warnings_next_line: list[str] = []
+
+S = TypeVar('S', bound=ParseSettings)
+
+class ParseContext(Generic[S]):
+	def __init__(self, lexer: Lexer, language: LanguageDefinition, settings: S, definitions: DefinitionsHandler | None = None) -> None:
 		from .LanguageDefinition import LanguageContext
 		self.lexer = lexer
 		self.language = language
 		self.language_context = LanguageContext()
 		self.definitions = definitions
+		self.settings = settings
 
 		self.active_block: CodeBlock | None = None
 		self.command_in_parens = False
@@ -45,8 +53,8 @@ class ParseContext(object):
 		self.missing_blocks: dict[str, list[int]] = {}
 		self.blocks: dict[str, CodeBlock] = {}
 		self.unused_blocks: set[str] = set()
-		self.suppress_warnings: list[str] = []
-		self.suppress_warnings_next_line: list[str] = []
+
+		self.next_line() # TODO: Is this the best way?
 
 	def get_block(self, name: str) -> CodeBlock:
 		block = self.blocks.get(name)
@@ -123,7 +131,7 @@ class ParseContext(object):
 					earliest_line = first_line
 					earliest_block_name = block_name
 			raise PyMSError('Parse', "Block with name '%s' is not defined" % earliest_block_name, line=earliest_line)
-		self.warnings = list(warning for warning in self.warnings if warning.id not in self.suppress_warnings)
+		self.warnings = list(warning for warning in self.warnings if warning.id not in self.settings.suppress_warnings)
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		pass
@@ -150,19 +158,19 @@ class ParseContext(object):
 		warning.code = self.lexer.get_line_of_code(warning.line)
 
 	def add_warning(self, warning: PyMSWarning) -> None:
-		if warning.id in self.suppress_warnings_next_line:
+		if warning.id in self.settings.suppress_warnings_next_line:
 			return
 		self.attribute_warning(warning)
 		self.warnings.append(warning)
 
 	def add_supressed_warning_id(self, warning_id: str, next_line: bool = False) -> None:
 		if next_line:
-			self.suppress_warnings_next_line.append(warning_id)
+			self.settings.suppress_warnings_next_line.append(warning_id)
 		else:
-			self.suppress_warnings.append(warning_id)
+			self.settings.suppress_warnings.append(warning_id)
 
 	def next_line(self) -> None:
-		self.suppress_warnings_next_line = []
+		self.settings.suppress_warnings_next_line = []
 
 	def lookup_param_value(self, param_type: CodeType) -> Any | None:
 		value: Any | None = None
@@ -174,10 +182,10 @@ class ParseContext(object):
 				if not param_type.accepts(variable.type):
 					raise self.error('Parse', f"Incorrect type on varaible '{variable.name}'. Excpected '{param_type.name}' but got '{variable.type.name}'")
 				value = variable.value
-				try:
-					param_type.validate(value, self, token.raw_value)
-				except PyMSError as e:
-					e.warnings.append(PyMSWarning('Variable', f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
-					raise
+				# try:
+				# 	param_type.validate(value, self, token.raw_value)
+				# except PyMSError as e:
+				# 	e.warnings.append(PyMSWarning('Variable', f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
+				# 	raise
 				_ = self.lexer.next_token()
 		return value

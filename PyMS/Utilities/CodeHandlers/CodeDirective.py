@@ -16,14 +16,18 @@ class DirectiveType(Generic[O]):
 		self.name = name
 		self.help_text = help_text
 
+	def parse(self, parse_context: ParseContext) -> O:
+		start = parse_context.lexer.get_rollback()
+		value = self.lex(parse_context)
+		raw_value = parse_context.lexer.get_raw(from_state=start)
+		self.validate(value, parse_context, raw_value)
+		return value
+
 	def lex(self, parse_context: ParseContext) -> O:
 		raise NotImplementedError(self.__class__.__name__ + '.lex()')
 
-	def parse(self, token: str, parse_context: ParseContext | None) -> O:
-		raise NotImplementedError(self.__class__.__name__ + '.parse()')
-
-	def validate(self, value: O, parse_context: ParseContext | None, token: str | None = None) -> None:
-		raise NotImplementedError(self.__class__.__name__ + '.validate()')
+	def validate(self, value: O, parse_context: ParseContext, token: str | None = None) -> None:
+		pass
 
 class CodeDirectiveDefinition(object):
 	@staticmethod

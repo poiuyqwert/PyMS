@@ -62,11 +62,18 @@ class CodeType(Generic[BinaryT, MemoryT]):
 		return None
 
 	def parse(self, parse_context: ParseContext) -> MemoryT:
+		value: MemoryT
 		start = parse_context.lexer.get_rollback()
-		value = self.lex(parse_context)
-		raw_value = parse_context.lexer.get_raw(from_state=start)
+		if (var_value := self.parse_variable(parse_context)) is not None:
+			value = var_value
+		else:
+			value = self.lex(parse_context)
+		raw_value = parse_context.lexer.get_raw(from_state=start).strip(' ') # TODO: Better way to handle skipped tokens like spaces?
 		self.validate(value, parse_context, raw_value)
 		return value
+
+	def parse_variable(self, parse_context: ParseContext) -> MemoryT | None:
+		return parse_context.lookup_param_value(self)
 
 	def lex(self, parse_context: ParseContext) -> MemoryT:
 		raise NotImplementedError(self.__class__.__name__ + '.lex()')

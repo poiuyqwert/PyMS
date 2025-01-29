@@ -1,11 +1,19 @@
 
+from ..Config import PyAIConfig
 from .Resolutions import *
+from ..Delegates import MainDelegate
+from .PreviewScriptDialog import PreviewScriptDialog
 
 from ...FileFormats.AIBIN.AIBIN import AIBIN, LoadIssues, LoadIssue, LoadIssueReason
+from ...FileFormats.AIBIN.AIScript import AIScript
 
 from ...Utilities.UIKit import *
 from ...Utilities.PyMSDialog import PyMSDialog
 from ...Utilities.Callback import Callback
+from ...Utilities.PyMSError import PyMSError
+from ...Utilities.ErrorDialog import ErrorDialog
+
+import io
 
 class IssueResolution:
 	def __init__(self, aibin: AIBIN, issue: LoadIssue):
@@ -74,26 +82,26 @@ class IssueResolution:
 		return True
 
 class FixIssuesDialog(PyMSDialog):
-	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues) -> None:
+	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues, delegate: MainDelegate, config: PyAIConfig) -> None:
 		self.issue_resolutions = list(IssueResolution(aibin, issue) for issue in issues)
 		for issue_resolution in self.issue_resolutions:
 			issue_resolution.update_callback.add(self.issue_resolution_updated)
 		self.resolution_ui: Widget | None = None
 		self.cancelled = True
-		super().__init__(parent, 'Resolve issues', resizable=(False, False))
+		self.delegate = delegate
+		self.config_ = config
+		super().__init__(parent, 'Resolve issues')
 
 	def widgetize(self) -> Misc | None:
-		self.maxsize(700, 400)
-
-		WrappingLabel(self, text='There are issues with some scripts in the loaded files. This could be because the bwscript.bin loaded is not the correct pair of the loaded aiscrip.bin, or that the files are slightly broken. Please review each script and choose how to resolve their issues, or cancel the loading entirely.', justify=LEFT, anchor=W).pack(fill=X, expand=True, padx=5, pady=5)
+		WrappingLabel(self, text='There are issues with some scripts in the loaded files. This could be because the bwscript.bin loaded is not the correct pair of the loaded aiscrip.bin, or that the files are slightly broken. Please review each script and choose how to resolve their issues, or cancel the loading entirely.', justify=LEFT, anchor=W).pack(fill=X, padx=5, pady=5)
 
 		details_frame = Frame(self)
 		frame = Frame(details_frame)
 		Label(frame, text='Scripts:', justify=LEFT, anchor=W).pack(fill=X)
 		self.scripts_listbox = ScrolledListbox(frame, width=30)
-		self.scripts_listbox.pack()
+		self.scripts_listbox.pack(fill=BOTH, expand=True)
 		self.scripts_listbox.bind(WidgetEvent.Listbox.Select.event(), self.issue_selection_changed)
-		frame.pack(side=LEFT, padx=5, pady=5)
+		frame.pack(side=LEFT, padx=5, pady=5, fill=BOTH, expand=True)
 
 		frame = Frame(details_frame)
 		Label(frame, text='Issue:', justify=LEFT, anchor=W).pack(fill=X)
@@ -110,11 +118,11 @@ class FixIssuesDialog(PyMSDialog):
 		self.resolution_combobox.bind(WidgetEvent.Combobox.Selected(), self.resolution_selection_changed)
 		self.resolution_combobox.pack(fill=X)
 		self.resolution_container = Frame(frame)
-		self.resolution_container.pack(fill=X)
+		self.resolution_container.pack(fill=BOTH, expand=True)
 		self.resolution_incomplete = StringVar()
 		WrappingLabel(frame, textvariable=self.resolution_incomplete, justify=LEFT, anchor=W, font=Font.default().bolded()).pack(fill=X)
 		frame.pack(side=LEFT, fill=BOTH, expand=True, padx=5, pady=5)
-		details_frame.pack(fill=X, expand=True)
+		details_frame.pack(fill=BOTH, expand=True)
 
 		frame = Frame(self)
 		self.resolve_button = Button(frame, text='Resolve', width=10, command=self.resolve, state=DISABLED)
@@ -128,11 +136,35 @@ class FixIssuesDialog(PyMSDialog):
 
 		return cancel_button
 
+	def setup_complete(self) -> None:
+		self.minsize(700, 420)
+		self.config_.windows.fix_issues.resolutions.load_size(self)
+
 	def preview_aiscript(self) -> None:
-		pass
+		issue_resolution = self.current_issue_resolution()
+		try:
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			issue_resolution.aibin.decompile(serialize_context, [issue_resolution.issue.script_id])
+			code = output.getvalue()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from aiscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
 
 	def preview_bwscript(self) -> None:
-		pass
+		issue_resolution = self.current_issue_resolution()
+		try:
+			output = io.StringIO()
+			serialize_context = self.delegate.get_serialize_context(output)
+			aibin = AIBIN()
+			aibin.add_script(AIScript(issue_resolution.issue.script_id, 0, 0, issue_resolution.issue.entry_point, True))
+			aibin.decompile(serialize_context, [issue_resolution.issue.script_id])
+			code = output.getvalue()
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
+		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from bwscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
 
 	def refresh_list(self) -> None:
 		issue_index: int = 0
@@ -190,3 +222,7 @@ class FixIssuesDialog(PyMSDialog):
 			issue_resolution.resolve()
 		self.cancelled = False
 		self.ok()
+
+	def dismiss(self) -> None:
+		self.config_.windows.fix_issues.resolutions.save_size(self)
+		PyMSDialog.dismiss(self)

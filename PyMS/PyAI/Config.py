@@ -41,6 +41,12 @@ class PyAIConfig(Config.Config):
 				self.string = Config.WindowGeometry()
 				super().__init__()
 
+		class FixIssues(Config.Group):
+			def __init__(self) -> None:
+				self.resolutions = Config.WindowGeometry(default_size=Size(700, 420))
+				self.preview_code = Config.WindowGeometry(default_size=Size(700, 700))
+				super().__init__()
+
 		def __init__(self) -> None:
 			self.main = Config.WindowGeometry()
 			self.help = Config.WindowGeometry()
@@ -50,6 +56,7 @@ class PyAIConfig(Config.Config):
 			self.extdefs = Config.WindowGeometry()
 			self.find = PyAIConfig.Windows.Find()
 			self.list_import = Config.WindowGeometry()
+			self.fix_issues = PyAIConfig.Windows.FixIssues()
 			super().__init__()
 
 	class DontWarn(Config.Group):

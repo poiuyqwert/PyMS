@@ -59,15 +59,13 @@ class CodeCommandDefinition(object):
 					token = parse_context.lexer.next_token()
 					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
 						raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
-				value: Any = parse_context.lookup_param_value(param_type)
-				if value is None:
-					try:
-						value = param_type.parse(parse_context)
-					except PyMSError as e:
-						parse_context.attribute_error(e)
-						raise e
-					except:
-						raise
+				try:
+					value = param_type.parse(parse_context)
+				except PyMSError as e:
+					parse_context.attribute_error(e)
+					raise e
+				except:
+					raise
 				params.append(value)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = value

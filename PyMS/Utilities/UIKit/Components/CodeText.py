@@ -61,9 +61,10 @@ class CodeText(Frame):
 		TextChanged = CustomEventPattern(Field('TextChanged'))
 		InsertCursorMoved = CustomEventPattern(Field('InsertCursorMoved'))
 
-	def __init__(self, parent: Misc, edited_state: EditedState, delegate: CodeTextDelegate) -> None:
-		self.edited_state = edited_state
+	def __init__(self, parent: Misc, edited_state: EditedState | None = None, delegate: CodeTextDelegate | None = None) -> None:
+		self.edited_state = edited_state or EditedState()
 		self.delegate = delegate
+		self.read_only = False
 
 		self.highlight_components: Sequence[HighlightComponent] | None = None
 		self.re_syntax: re.Pattern | None = None
@@ -148,18 +149,22 @@ class CodeText(Frame):
 		self.text.bind(Ctrl.Slash(), self.comment_range)
 		self.text.bind(Key.Pressed(), self.key_pressed)
 
-		if self.delegate.jump_highlights():
-			self.text.bind(Alt.Left(), lambda _: self.goto_highlight(-1))
-			self.text.bind(Alt.Right(), lambda _: self.goto_highlight(1))
-		if self.delegate.jump_sections():
-			self.text.bind(Alt.Up(), lambda _: self.goto_section(-1))
-			self.text.bind(Alt.Down(), lambda _: self.goto_section(1))
+		if self.delegate:
+			if self.delegate.jump_highlights():
+				self.text.bind(Alt.Left(), lambda _: self.goto_highlight(-1))
+				self.text.bind(Alt.Right(), lambda _: self.goto_highlight(1))
+			if self.delegate.jump_sections():
+				self.text.bind(Alt.Up(), lambda _: self.goto_section(-1))
+				self.text.bind(Alt.Down(), lambda _: self.goto_section(1))
 
 		self.tag_configure('sel', foreground='')
 
 		self.text_orig = getattr(self.text, '_w') + '_orig'
 		self.tk.call('rename', getattr(self.text, '_w'), self.text_orig)
 		self.tk.createcommand(getattr(self.text, '_w'), self.dispatch)
+
+	def set_read_only(self, read_only: bool) -> None:
+		self.read_only = read_only
 
 	def edit_canundo(self) -> bool:
 		try:
@@ -180,8 +185,12 @@ class CodeText(Frame):
 		return not not self.tag_ranges('sel')
 
 	def load(self, text: str) -> None:
+		read_only = self.read_only
+		if self.read_only:
+			self.read_only = False
 		self.delete('1.0', END)
 		self.insert(END, text)
+		self.read_only = read_only
 		self.edit_reset()
 		self.edit_modified(False)
 
@@ -259,6 +268,8 @@ class CodeText(Frame):
 		return EventPropogation.Break
 
 	def comment_range(self, event: Event | None = None) -> str | None:
+		if not self.delegate:
+			return EventPropogation.Break
 		regex = re.compile(rf'(\s*)({"|".join(self.delegate.comment_symbols())}\s*)?(.*)')
 		with self.undo_group():
 			for line_index in self.lines_range():
@@ -272,6 +283,8 @@ class CodeText(Frame):
 		return EventPropogation.Break
 
 	def key_pressed(self, event: Event | None) -> str | None:
+		if not self.delegate:
+			return EventPropogation.Continue
 		if self.autocomplete_state and event and event.char and event.char in self.delegate.autocomplete_override_keys():
 			self.tag_remove('sel', '1.0', END)
 			self.mark_set(INSERT, self.autocomplete_state.end_index)
@@ -374,6 +387,9 @@ class CodeText(Frame):
 				return
 
 	def autocomplete(self, event: Event | None) -> str | None:
+		if not self.delegate:
+			return EventPropogation.Break
+
 		if self.has_selection() and not self.autocomplete_state:
 			return EventPropogation.Continue
 		
@@ -417,12 +433,16 @@ class CodeText(Frame):
 	def dispatch(self, cmd: str, *args: str) -> str:
 		recolor_range: tuple[str, str] | None = None
 		if cmd == 'insert':
+			if self.read_only:
+				return EventPropogation.Break
 			index = args[0]
 			if index == 'end':
 				index = 'end -1c'
 			index = self.index(index)
 			recolor_range = (index, f'{index} +{len(args[1])}c')
 		elif cmd == 'delete':
+			if self.read_only:
+				return EventPropogation.Break
 			index = self.index(f'{args[0]} linestart')
 			recolor_range = (index, f'{index} lineend')
 		elif cmd == 'edit' and args[0] in ('redo', 'undo'):
@@ -454,10 +474,14 @@ class CodeText(Frame):
 			self.text.mark_set(INSERT, closest_index)
 
 	def goto_highlight(self, direction: int) -> None:
+		if not self.delegate:
+			return
 		if (tags := self.delegate.jump_highlights()):
 			self._goto_tag(tags, direction)
 
 	def goto_section(self, direction: int) -> None:
+		if not self.delegate:
+			return
 		if (tags := self.delegate.jump_sections()):
 			self._goto_tag(tags, direction)
 
