@@ -459,7 +459,7 @@ class IssueOrderFlagsCodeType(CodeType.FlagsCodeType):
 			'SingleUnit': 0x08,
 			'EachAtMostOnce': 0x10,
 			'IgnoreDatReqs': 0x40,
-		})
+		}, allow_raw_flags=True)
 
 class CompareTrigCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:
