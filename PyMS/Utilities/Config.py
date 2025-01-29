@@ -395,8 +395,8 @@ class File(ConfigObject):
 	def __init__(self, *, default: str, name: str, filetypes: list[FileType], initial_filename: str | None = None) -> None:
 		self._default = default
 		self.file_path = self._default
-		self._name = name
-		self._filetypes = FileType.include_all_files(filetypes)
+		self.name = name
+		self.filetypes = FileType.include_all_files(filetypes)
 		self._default_extension = FileType.default_extension(filetypes)
 		self._initial_filename = initial_filename or os.path.basename(self.file_path)
 		self._saved_state = self.file_path
@@ -407,9 +407,9 @@ class File(ConfigObject):
 		initial_dir: str | None = None
 		path = FileDialog.askopenfilename(
 			parent=window,
-			title=f'Select {name or self._name}',
+			title=f'Select {name or self.name}',
 			initialdir=initial_dir or Assets.base_dir,
-			filetypes=filetypes or self._filetypes,
+			filetypes=filetypes or self.filetypes,
 			defaultextension=self._default_extension,
 			initialfile=self._initial_filename
 		)
@@ -420,7 +420,7 @@ class File(ConfigObject):
 
 	def select_mpq(self, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
 		from .MPQSelect import MPQSelect
-		mpq_select = MPQSelect(parent, mpq_handler, name or self._name, filetype or self._filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
+		mpq_select = MPQSelect(parent, mpq_handler, name or self.name, filetype or self.filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
 		return mpq_select.file
 
 	def encode(self) -> JSON.Value:

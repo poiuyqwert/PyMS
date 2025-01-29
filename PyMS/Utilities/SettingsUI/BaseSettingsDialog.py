@@ -37,7 +37,7 @@ class BaseSettingsDialog(PyMSDialog, Generic[C]):
 		self.notebook.add_tab(tab, name)
 		self.tabs.append(tab)
 
-	def save(self):
+	def save(self) -> None:
 		for tab in self.tabs:
 			tab.save()
 
@@ -45,7 +45,7 @@ class BaseSettingsDialog(PyMSDialog, Generic[C]):
 		if not self.edited_state.is_edited or MessageBox.askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
 			PyMSDialog.cancel(self)
 
-	def ok(self):
+	def ok(self, event: Event | None = None) -> None:
 		if self.edited_state.is_edited:
 			self.save()
 		PyMSDialog.ok(self)
@@ -82,7 +82,7 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 		elif not self.edited_state.is_edited or MessageBox.askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
 			PyMSDialog.cancel(self)
 
-	def ok(self):
+	def ok(self, event: Event | None = None) -> None:
 		if self.edited_state.is_edited:
 			self.config_.store_state()
 			self.save()

@@ -20,7 +20,7 @@ class FileSettingView(SettingView):
 		self.mpq_handler = mpq_handler
 		self.mpq_history_config = mpq_history_config
 		self.mpq_window_geometry_config = mpq_window_geometry_config
-		
+
 		self.variable = StringVar()
 		self.variable.set(setting.file_path)
 		self.variable.trace('w', self.changed)
@@ -66,7 +66,7 @@ class FileSettingView(SettingView):
 		assert self.mpq_handler is not None
 		assert self.mpq_history_config is not None
 		assert self.mpq_window_geometry_config is not None
-		file_path = self.setting.select_mpq(self, self.mpq_handler, self.mpq_history_config, self.mpq_window_geometry_config, self.setting._name, self.setting._filetypes[0])
+		file_path = self.setting.select_mpq(self, self.mpq_handler, self.mpq_history_config, self.mpq_window_geometry_config, self.setting.name, self.setting.filetypes[0])
 		if file_path:
 			self.variable.set(file_path)
 

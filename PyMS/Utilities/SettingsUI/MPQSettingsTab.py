@@ -35,16 +35,16 @@ class MPQSettingsTab(SettingsTab):
 			self.listbox.select_set(0)
 
 		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add MPQ', Key.Insert),
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='has_selection'),
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.adddefault, "Add default StarCraft MPQ's", Shift.Insert),
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add MPQ', Key.Insert)
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove MPQ', Key.Delete, enabled=False, tags='has_selection')
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.adddefault, "Add default StarCraft MPQ's", Shift.Insert)
 		self.toolbar.add_spacer(10, flexible=True)
-		def move_callback(dir: int) -> Callable[[], None]:
+		def move_callback(direction: int) -> Callable[[], None]:
 			def move() -> None:
-				self.movempq(dir=dir)
+				self.movempq(direction=direction)
 			return move
-		self.toolbar.add_button(Assets.get_image('up'), move_callback(0), 'Move MPQ Up', Shift.Up, enabled=False, tags='has_selection'),
-		self.toolbar.add_button(Assets.get_image('down'), move_callback(1), 'Move MPQ Down', Shift.Down, enabled=False, tags='has_selection'),
+		self.toolbar.add_button(Assets.get_image('up'), move_callback(0), 'Move MPQ Up', Shift.Up, enabled=False, tags='has_selection')
+		self.toolbar.add_button(Assets.get_image('down'), move_callback(1), 'Move MPQ Down', Shift.Down, enabled=False, tags='has_selection')
 		self.toolbar.pack(fill=X, padx=51, pady=1)
 
 		self.action_states()
@@ -56,12 +56,12 @@ class MPQSettingsTab(SettingsTab):
 		has_selection = not not self.listbox.curselection()
 		self.toolbar.tag_enabled('has_selection', has_selection)
 
-	def movempq(self, key: Event | None = None, dir: int = 0) -> None:
+	def movempq(self, _event: Event | None = None, direction: int = 0) -> None:
 		i = int(self.listbox.curselection()[0])
-		if i == [0,self.listbox.size()-1][dir]: # type: ignore[operator]
+		if i == [0,self.listbox.size()-1][direction]: # type: ignore[operator]
 			return
 		s = self.listbox.get(i)
-		n = i + [-1,1][dir]
+		n = i + [-1,1][direction]
 		self.mpqs_config.data[i] = self.mpqs_config.data[n]
 		self.mpqs_config.data[n] = s
 		self.listbox.delete(i)
@@ -71,7 +71,7 @@ class MPQSettingsTab(SettingsTab):
 		self.listbox.see(n)
 		self.edited_state.mark_edited()
 
-	def add(self, key: Event | None = None, add: list[str] | None = None) -> None:
+	def add(self, _event: Event | None = None, add: list[str] | None = None) -> None:
 		n: str | int = 0
 		s: int = 0
 		if add is None:
@@ -100,7 +100,7 @@ class MPQSettingsTab(SettingsTab):
 		self.action_states()
 		self.edited_state.mark_edited()
 
-	def remove(self, key: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		i = int(self.listbox.curselection()[0])
 		del self.mpqs_config.data[i]
 		self.listbox.delete(i)
@@ -111,7 +111,7 @@ class MPQSettingsTab(SettingsTab):
 		self.action_states()
 		self.edited_state.mark_edited()
 
-	def adddefault(self, key: Event | None = None) -> None:
+	def adddefault(self, _event: Event | None = None) -> None:
 		scdir = PYMS_CONFIG.scdir.path
 		PYMS_CONFIG.store_state()
 		if scdir is None or not os.path.isdir(scdir):
@@ -119,7 +119,7 @@ class MPQSettingsTab(SettingsTab):
 		if scdir and os.path.isdir(scdir):
 			a = []
 			for f in ['Patch_rt','BrooDat','StarDat']:
-				p = os.path.join(scdir, '%s%smpq' % (f,os.extsep))
+				p = os.path.join(scdir, f'{f}{os.extsep}mpq')
 				if os.path.exists(p) and not p in self.mpqs_config.data:
 					a.append(p)
 			if len(a) != 3:
