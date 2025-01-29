@@ -5,7 +5,7 @@ from .AILanguage import AILanguage
 from . import CodeDirectives
 from .DataContext import DataContext
 
-from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers.ParseContext import ParseContext, ParseSettings
 from ....Utilities.CodeHandlers.Lexer import Lexer
 from ....Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ....Utilities.CodeHandlers.CodeDirective import CodeDirective
@@ -17,15 +17,19 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..AIScript import AIScript
 
-class AIParseContext(ParseContext):
-	def __init__(self, lexer: Lexer, definitions: DefinitionsHandler, data_context: DataContext) -> None:
-		ParseContext.__init__(self, lexer, AILanguage(), definitions)
-		self.data_context = data_context
-		self.spellcasters: list[int] = []
-		self.scripts: OrderedDict[str, tuple[AIScript, int]] = OrderedDict()
+class AIParseSettings(ParseSettings):
+	def __init__(self) -> None:
+		super().__init__()
 		self.expanded_units: int | None = None
 		self.expanded_upgrades: int | None = None
 		self.expanded_tech: int | None = None
+
+class AIParseContext(ParseContext[AIParseSettings]):
+	def __init__(self, lexer: Lexer, settings: AIParseSettings, definitions: DefinitionsHandler, data_context: DataContext) -> None:
+		ParseContext.__init__(self, lexer, AILanguage(), settings, definitions)
+		self.data_context = data_context
+		self.spellcasters: list[int] = []
+		self.scripts: OrderedDict[str, tuple[AIScript, int]] = OrderedDict()
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		if directive.definition == CodeDirectives.Spellcaster:
@@ -38,11 +42,11 @@ class AIParseContext(ParseContext):
 		elif directive.definition == CodeDirectives.SupressNextLine:
 			self.add_supressed_warning_id(directive.params[0], True)
 		elif directive.definition == CodeDirectives.ExpandUnits:
-			self.expanded_units = max(self.expanded_units or 0, directive.params[0])
+			self.settings.expanded_units = max(self.settings.expanded_units or 0, directive.params[0])
 		elif directive.definition == CodeDirectives.ExpandUpgrades:
-			self.expanded_upgrades = max(self.expanded_upgrades or 0, directive.params[0])
+			self.settings.expanded_upgrades = max(self.settings.expanded_upgrades or 0, directive.params[0])
 		elif directive.definition == CodeDirectives.ExpandTech:
-			self.expanded_tech = max(self.expanded_tech or 0, directive.params[0])
+			self.settings.expanded_tech = max(self.settings.expanded_tech or 0, directive.params[0])
 
 	def finalize(self) -> None:
 		from ..AIScript import AIScript

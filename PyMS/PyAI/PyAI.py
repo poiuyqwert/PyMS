@@ -17,7 +17,7 @@ from .AddedPluginsDialog import AddedPluginsDialog
 from .FixIssuesUI.FixIssuesDialog import FixIssuesDialog
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, DataContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AIParseSettings, AILexer, AIDefsSourceCodeHandler, DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
@@ -775,14 +775,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	# def get_export_references(self) -> bool:
 	# 	return self.reference.get()
 
-	def _get_definitions_handler(self) -> DefinitionsHandler:
+	def _get_definitions_handler(self, parse_settings: AIParseSettings | None = None) -> DefinitionsHandler:
 		defs = DefinitionsHandler()
 		handler = AIDefsSourceCodeHandler()
+		if parse_settings is None:
+			parse_settings = AIParseSettings()
 		for extdef in self.config_.extdefs.data:
 			with IO.InputText(extdef) as f:
 				code = f.read()
 			lexer = AILexer(code)
-			parse_context = AIParseContext(lexer, defs, self.data_context)
+			parse_context = AIParseContext(lexer, parse_settings, defs, self.data_context)
 			handler.parse(parse_context)
 			parse_context.finalize()
 		return defs
@@ -800,11 +802,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		return AISerializeContext(output, definitions, formatters, self.data_context)
 
 	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
-		definitions = self._get_definitions_handler()
+		parse_settings = AIParseSettings()
+		definitions = self._get_definitions_handler(parse_settings)
 		with IO.InputText(input) as f:
 			code = f.read()
 		lexer = AILexer(code)
-		return AIParseContext(lexer, definitions, self.data_context)
+		return AIParseContext(lexer, parse_settings, definitions, self.data_context)
 
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
 		if not keep_existing:

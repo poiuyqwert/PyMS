@@ -118,8 +118,8 @@ class UnitCodeType(CodeType.IntCodeType):
 		if isinstance(parse_context, AIParseContext):
 			if parse_context.data_context.units_dat is not None:
 				entry_count = max(entry_count, parse_context.data_context.units_dat.entry_count())
-			if parse_context.expanded_units is not None:
-				entry_count = max(entry_count, parse_context.expanded_units)
+			if parse_context.settings.expanded_units is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_units)
 		return (0, entry_count)
 
 class BuildingCodeType(UnitCodeType):
@@ -383,8 +383,8 @@ class UpgradeCodeType(CodeType.IntCodeType):
 		if isinstance(parse_context, AIParseContext):
 			if parse_context.data_context.upgrades_dat is not None:
 				entry_count = max(entry_count, parse_context.data_context.upgrades_dat.entry_count())
-			if parse_context.expanded_upgrades is not None:
-				entry_count = max(entry_count, parse_context.expanded_upgrades)
+			if parse_context.settings.expanded_upgrades is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_upgrades)
 		return (0, entry_count)
 
 class TechnologyCodeType(CodeType.IntCodeType):
@@ -436,8 +436,8 @@ class TechnologyCodeType(CodeType.IntCodeType):
 		if isinstance(parse_context, AIParseContext):
 			if parse_context.data_context.techdata_dat is not None:
 				entry_count = max(entry_count, parse_context.data_context.techdata_dat.entry_count())
-			if parse_context.expanded_tech is not None:
-				entry_count = max(entry_count, parse_context.expanded_tech)
+			if parse_context.settings.expanded_tech is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_tech)
 		return (0, entry_count)
 
 class StringCodeType(CodeType.StrCodeType):

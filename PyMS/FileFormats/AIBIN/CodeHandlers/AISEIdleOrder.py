@@ -90,7 +90,11 @@ class BasicFlags(Option):
 	@classmethod
 	def parse(cls, parse_context: ParseContext) -> Self | None:
 		token = parse_context.lexer.next_token(peek=True)
-		flag = BasicFlags.Flag._VALUES.get(token.raw_value.lower())
+		flag: int | None
+		if token.raw_value == '0':
+			flag = 0
+		else:
+			flag = BasicFlags.Flag._VALUES.get(token.raw_value.lower())
 		if flag is None:
 			return None
 		_ = parse_context.lexer.next_token()

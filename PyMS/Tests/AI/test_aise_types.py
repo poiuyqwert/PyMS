@@ -422,6 +422,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 	def test_parse_success(self) -> None:
 		cases = (
 			(',', AISEIdleOrder.OptionSet(())),
+			('0', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),))),
 			('Own | Allied | InCombat,', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),))),
 			('Own | Allied | InCombat | Remove,', AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),))),
 			('SpellEffects(Ensnare | Plague),', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03),))),
@@ -468,7 +469,7 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 
 	def test_serialize(self) -> None:
 		cases = (
-			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),)), ''),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0),)), '0'),
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x26),)), 'Own | Allied | InCombat'),
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x8026),)), 'Own | Allied | InCombat | Remove'),
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0))), 'SpellEffects(Ensnare | Plague)'),

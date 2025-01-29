@@ -30,7 +30,7 @@ class DefinitionsHandler(object):
 		matching_variable: Variable | None = None
 		matching_priority: int = 0
 		for variable in self.variables.values():
-			if variable.value == value and (priority := type.compatible(variable.type)) and priority > matching_priority:
+			if variable.value == value and (priority := type.compatible(variable.type)) is not None and priority > matching_priority:
 				matching_variable = variable
 				matching_priority = priority
 		return matching_variable

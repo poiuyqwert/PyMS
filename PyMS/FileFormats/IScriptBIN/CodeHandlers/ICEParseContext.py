@@ -4,7 +4,7 @@ from __future__ import annotations
 from .ICELanguage import ICELanguage
 from .DataContext import DataContext
 
-from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers.ParseContext import ParseContext, ParseSettings
 from ....Utilities.CodeHandlers.Lexer import Lexer
 
 from collections import OrderedDict
@@ -15,6 +15,6 @@ if TYPE_CHECKING:
 
 class ICEParseContext(ParseContext):
 	def __init__(self, lexer: Lexer, data_context: DataContext) -> None:
-		ParseContext.__init__(self, lexer, ICELanguage())
+		ParseContext.__init__(self, lexer, ICELanguage(), ParseSettings())
 		self.data_context = data_context
 		self.scripts: OrderedDict[int, tuple[IScript, int]] = OrderedDict()
