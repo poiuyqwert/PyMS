@@ -78,7 +78,7 @@ class ParseContext(Generic[S]):
 	def define_block(self, name: str, line: int) -> CodeBlock:
 		metadata = self.lookup_block_metadata_by_name(name)
 		if metadata is not None and metadata.definition_line is not None:
-			raise self.error('Parse', "A block named '%s' is already defined on line %d" % (name, metadata.definition_line))
+			raise self.error('Parse', f"A block named '{name}' is already defined on line {metadata.definition_line}")
 		block = self.get_block(name)
 		self.block_metadata[block].definition_line = line
 		if name in self.missing_blocks:
@@ -108,7 +108,7 @@ class ParseContext(Generic[S]):
 	def missing_block(self, name: str, source_line: int) -> None:
 		block_metadata = self.lookup_block_metadata_by_name(name)
 		if block_metadata and block_metadata.definition_line is not None:
-			raise PyMSError('Internal', "Block with name '%s' is being set as missing but is already defined" % name, line=source_line)
+			raise PyMSError('Internal', f"Block with name '{name}' is being set as missing but is already defined", line=source_line)
 		if not name in self.missing_blocks:
 			self.missing_blocks[name] = []
 		self.missing_blocks[name].append(source_line)
@@ -117,10 +117,10 @@ class ParseContext(Generic[S]):
 		for block_name in self.unused_blocks:
 			block = self.blocks[block_name]
 			block_metadata = self.block_metadata[block]
-			self.add_warning(PyMSWarning('Parse', "Block with name '%s' is unused and will be discarded" % block_name, line=block_metadata.definition_line, id='block_unused'))
+			self.add_warning(PyMSWarning('Parse', f"Block with name '{block_name}' is unused and will be discarded", line=block_metadata.definition_line, id='block_unused'))
 		if self.active_block:
 			block_metadata = self.block_metadata[self.active_block]
-			raise self.error('Parse', "The last block (named '%s') does not end" % block_metadata.name, line=block_metadata.definition_line)
+			raise self.error('Parse', f"The last block (named '{block_metadata.name}') does not end", line=block_metadata.definition_line)
 		self.unused_blocks.clear()
 		if self.missing_blocks:
 			earliest_line = None
@@ -130,16 +130,16 @@ class ParseContext(Generic[S]):
 				if earliest_line is None or first_line < earliest_line:
 					earliest_line = first_line
 					earliest_block_name = block_name
-			raise PyMSError('Parse', "Block with name '%s' is not defined" % earliest_block_name, line=earliest_line)
+			raise PyMSError('Parse', f"Block with name '{earliest_block_name}' is not defined", line=earliest_line)
 		self.warnings = list(warning for warning in self.warnings if warning.id not in self.settings.suppress_warnings)
 
 	def handle_directive(self, directive: CodeDirective) -> None:
 		pass
 
-	def error(self, type: str, error: str, line: int | None = None, level=1) -> PyMSError:
+	def error(self, err_type: str, error: str, line: int | None = None, level=1) -> PyMSError:
 		if line is None:
 			line = self.lexer.state.line
-		return PyMSError(type, error, line, self.lexer.get_line_of_code(line), level=level)
+		return PyMSError(err_type, error, line, self.lexer.get_line_of_code(line), level=level)
 
 	def attribute_error(self, error: PyMSError) -> None:
 		if error.line is None:
@@ -147,10 +147,10 @@ class ParseContext(Generic[S]):
 		if error.code is None:
 			error.code = self.lexer.get_line_of_code(error.line - 1)
 
-	def warning(self, type: str, warning: str, line: int | None = None, level: int = 0, id: str | None = None) -> PyMSWarning:
+	def warning(self, warn_type: str, warning: str, line: int | None = None, level: int = 0, warn_id: str | None = None) -> PyMSWarning:
 		if line is None:
 			line = self.lexer.state.line
-		return PyMSWarning(type, warning, line=line, code=self.lexer.get_line_of_code(line), level=level, id=id)
+		return PyMSWarning(warn_type, warning, line=line, code=self.lexer.get_line_of_code(line), level=level, id=warn_id)
 
 	def attribute_warning(self, warning: PyMSWarning) -> None:
 		if warning.line is None:

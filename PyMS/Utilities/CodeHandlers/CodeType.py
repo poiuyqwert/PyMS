@@ -37,7 +37,7 @@ class CodeType(Generic[BinaryT, MemoryT]):
 		self.name = name
 		self.help_text = help_text
 		self._bytecode_type = bytecode_type
-		self._block_reference = block_reference
+		self.block_reference = block_reference
 
 	def accepts(self, other_type: CodeType) -> bool:
 		return type(other_type) == type(self)

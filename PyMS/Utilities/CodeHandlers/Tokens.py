@@ -3,7 +3,7 @@ import re
 
 from typing import Self, Sequence
 
-class Token(object):
+class Token:
 	def __init__(self, raw_value: str) -> None:
 		self.raw_value = raw_value
 
@@ -12,14 +12,18 @@ class Token(object):
 		raise NotImplementedError(cls.__name__ + '.match()')
 
 	def __repr__(self):
-		return '<%s %s>' % (self.__class__.__name__, repr(self.raw_value))
+		return f'<{self.__class__.__name__} {self.raw_value!r}>'
 
 class EOFToken(Token):
 	def __init__(self):
 		Token.__init__(self, None)
 
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		return None
+
 	def __repr__(self):
-		return '<%s>' % self.__class__.__name__
+		return f'<{self.__class__.__name__}>'
 
 class RegexToken(Token):
 	_regexp: re.Pattern[str]

@@ -36,11 +36,11 @@ class ByteCodeDecompiler:
 				cmd_id = scanner.scan(Struct.l_u8)
 				cmd_def = context.language.lookup_command(cmd_id, context.language_context)
 				if not cmd_def:
-					raise PyMSError('Byte Code', "Invalid command id '%d'" % cmd_id)
+					raise PyMSError('Byte Code', f"Invalid command id '{cmd_id}'")
 				cmd = cmd_def.decompile(scanner, context)
 				cmd.original_location = cmd_address
 				for n,param_type in enumerate(cmd.definition.param_types):
-					if param_type._block_reference:
+					if param_type.block_reference:
 						new_block, split_block = self._decompile_block(cmd.params[n], context)
 						cmd.params[n] = new_block
 						if split_block == active_block:

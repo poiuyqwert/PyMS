@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
 	from .ByteCodeCompiler import ByteCodeBuilderType
 
-class CodeCommandDefinition(object):
+class CodeCommandDefinition:
 	@staticmethod
 	def find_by_name(name: str, cmd_defs: list[CodeCommandDefinition]) -> CodeCommandDefinition | None:
 		for cmd_def in cmd_defs:
@@ -64,8 +64,6 @@ class CodeCommandDefinition(object):
 				except PyMSError as e:
 					parse_context.attribute_error(e)
 					raise e
-				except:
-					raise
 				params.append(value)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = value
@@ -77,7 +75,7 @@ class CodeCommandDefinition(object):
 				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line or file)")
 		return CodeCommand(self, params, parse_context.active_block)
 
 	def full_help_text(self) -> str:
@@ -106,7 +104,7 @@ class CodeCommandDefinition(object):
 			help_text += params_help
 		return help_text
 
-class CodeCommand(object):
+class CodeCommand:
 	def __init__(self, definition: CodeCommandDefinition, params: list[Any], parent_block: CodeBlock | None = None) -> None:
 		self.definition = definition
 		self.params = params

@@ -12,7 +12,7 @@ class ByteCodeBuilderType(Protocol):
 	def add_data(self, data: bytes | bytearray) -> int:
 		...
 
-	def add_block_ref(self, block: CodeBlock, type: Struct.IntField) -> int:
+	def add_block_ref(self, block: CodeBlock, struct_type: Struct.IntField) -> int:
 		...
 
 	def set_data(self, address: int, data: bytes | bytearray, can_expand: bool = False) -> None:
@@ -30,8 +30,8 @@ class BuilderUpdater:
 		self.builder.set_data(self.address, data)
 		self.address += len(data)
 
-	def skip(self, bytes: int) -> None:
-		self.address += bytes
+	def skip(self, bytes_count: int) -> None:
+		self.address += bytes_count
 
 class ByteCodeCompiler(ByteCodeBuilderType):
 	def __init__(self) -> None:
@@ -47,13 +47,13 @@ class ByteCodeCompiler(ByteCodeBuilderType):
 	def _resolve_block_refs(self, block: CodeBlock) -> None:
 		if not block in self.block_refs:
 			return
-		for ref_address,type in self.block_refs.pop(block):
+		for ref_address,struct_type in self.block_refs.pop(block):
 			block_address = self.block_offsets.get(block)
 			if not block_address:
 				raise PyMSError('Internal', 'Block is not compiled')
 			# Clamp offset to allow saving to check file size
 			# TODO: Is there a better way?
-			self.set_data(ref_address, type.pack(block_address, clamp=True))
+			self.set_data(ref_address, struct_type.pack(block_address, clamp=True))
 
 	def _compile_block(self, block: CodeBlock) -> None:
 		if block in self.block_offsets:
@@ -82,18 +82,18 @@ class ByteCodeCompiler(ByteCodeBuilderType):
 		self.data += data
 		return offset
 
-	def add_block_ref(self, block: CodeBlock, type: Struct.IntField) -> int:
+	def add_block_ref(self, block: CodeBlock, struct_type: Struct.IntField) -> int:
 		if block in self.block_offsets:
 			# Clamp offset to allow saving to check file size
 			# TODO: Is there a better way?
-			return self.add_data(type.pack(self.block_offsets[block], clamp=True))
+			return self.add_data(struct_type.pack(self.block_offsets[block], clamp=True))
 		else:
 			if not block in self.block_refs:
 				self.block_refs[block] = []
-			self.block_refs[block].append((self.current_offset, type))
+			self.block_refs[block].append((self.current_offset, struct_type))
 			if not block in self.next_blocks:
 				self.next_blocks.append(block)
-			return self.add_data(type.pack(0)) # Pack 0 for the offset now, which will be updated later once the block is compiled
+			return self.add_data(struct_type.pack(0)) # Pack 0 for the offset now, which will be updated later once the block is compiled
 
 	def set_data(self, address: int, data: bytes | bytearray, can_expand: bool = False) -> None:
 		if address + len(data) > len(self.data) and not can_expand:

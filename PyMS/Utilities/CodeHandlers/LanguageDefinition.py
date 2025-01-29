@@ -47,12 +47,12 @@ class LanguageContext:
 		return list(self._status_reasons[plugin_id].keys())
 
 	def active_plugins(self, ignore_core: bool = True) -> set[str]:
-		return set(id for id,status in self._plugin_statuses.items() if status == PluginStatus.in_use and (id != LanguagePlugin.CORE_ID or ignore_core == False))
+		return set(id for id,status in self._plugin_statuses.items() if status == PluginStatus.in_use and (id != LanguagePlugin.CORE_ID or not ignore_core))
 
 class LanguageDefinition:
-	def __init__(self, plugins: list[LanguagePlugin] = []) -> None:
-		self.plugins = plugins
-		for plugin in plugins:
+	def __init__(self, plugins: list[LanguagePlugin] | None = None) -> None:
+		self.plugins = plugins or []
+		for plugin in self.plugins:
 			if plugin.id == LanguagePlugin.CORE_ID:
 				break
 		else:
@@ -99,8 +99,8 @@ class LanguageDefinition:
 class LanguagePlugin:
 	CORE_ID = 'core'
 
-	def __init__(self, id: str, cmd_defs: list[CodeCommandDefinition], code_types: list[CodeType]) -> None:
-		self.id = id
+	def __init__(self, language_id: str, cmd_defs: list[CodeCommandDefinition], code_types: list[CodeType]) -> None:
+		self.id = language_id
 
 		self._cmd_id_lookup: dict[int, CodeCommandDefinition] = {}
 		self._cmd_name_lookup: dict[str, CodeCommandDefinition] = {}
@@ -112,7 +112,7 @@ class LanguagePlugin:
 			if cmd_def.name in self._cmd_name_lookup:
 				raise PyMSError('Internal', f'Command with name `{cmd_def.name}` (`{self._cmd_name_lookup[cmd_def.name].byte_code_id}`) already exists')
 			self._cmd_name_lookup[cmd_def.name] = cmd_def
-		
+
 		self._type_name_lookup: dict[str, CodeType] = {}
 		for code_type in code_types:
 			if code_type.name in self._type_name_lookup:

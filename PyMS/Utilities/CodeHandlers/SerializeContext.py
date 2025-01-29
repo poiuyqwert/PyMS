@@ -9,7 +9,6 @@ import re
 from typing import TYPE_CHECKING, IO
 if TYPE_CHECKING:
 	from .DefinitionsHandler import DefinitionsHandler
-	from .DecompileStrategy import DecompileStrategy
 
 class SerializeContext:
 	def __init__(self, output: IO[str], definitions: DefinitionsHandler | None = None, formatters: Formatters = Formatters()) -> None:

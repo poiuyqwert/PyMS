@@ -20,7 +20,7 @@ class State:
 	line: int = 0
 
 T = TypeVar('T', bound=Token)
-class Lexer(object):
+class Lexer:
 	def __init__(self, code: str) -> None:
 		self.code = code
 		self._lines_of_code_cache: list[str] | None = None

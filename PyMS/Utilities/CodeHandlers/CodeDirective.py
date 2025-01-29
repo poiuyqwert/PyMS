@@ -29,7 +29,7 @@ class DirectiveType(Generic[O]):
 	def validate(self, value: O, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
 
-class CodeDirectiveDefinition(object):
+class CodeDirectiveDefinition:
 	@staticmethod
 	def find_by_name(name: str, directive_defs: list[CodeDirectiveDefinition]) -> CodeDirectiveDefinition | None:
 		for directive_def in directive_defs:
@@ -46,7 +46,7 @@ class CodeDirectiveDefinition(object):
 		params: list[Any] = []
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '(':
-			raise parse_context.error('Parse', "Expected '(' but got '%s'" % token.raw_value)
+			raise parse_context.error('Parse', f"Expected '(' but got '{token.raw_value}'")
 		for param_index,param_type in enumerate(self.param_types):
 			if param_index > 0:
 				token = parse_context.lexer.next_token()
@@ -57,15 +57,13 @@ class CodeDirectiveDefinition(object):
 			except PyMSError as e:
 				parse_context.attribute_error(e)
 				raise e
-			except:
-				raise
 			params.append(value)
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
 			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line or file)")
 		return CodeDirective(self, params)
 
 	def full_help_text(self) -> str:
@@ -94,7 +92,7 @@ class CodeDirectiveDefinition(object):
 			help_text += params_help
 		return help_text
 
-class CodeDirective(object):
+class CodeDirective:
 	def __init__(self, definition: CodeDirectiveDefinition, params: list[Any]) -> None:
 		self.definition = definition
 		self.params = params
