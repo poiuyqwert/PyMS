@@ -139,7 +139,7 @@ class PyDATConfig(Config.Config):
 
 	class DontWarn(Config.Group):
 		def __init__(self) -> None:
-			self.expanded_dat = Config.Warning(message="This DAT file is expanded and will require a plugin like 'DatExtend'.")
+			self.expanded_dat = Config.Warn(message="This DAT file is expanded and will require a plugin like 'DatExtend'.")
 			super().__init__()
 
 	class Preview(Config.Group):

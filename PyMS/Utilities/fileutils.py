@@ -11,15 +11,15 @@ if TYPE_CHECKING:
 def load_file(file: str | BinaryIO, file_type: str = 'file', mode: str = 'rb') -> bytes:
 	try:
 		if isinstance(file, str):
-			f = open(file, mode)
+			f = open(file, mode, encoding='utf-8')
 		else:
 			f = file
 		data = f.read()
-	except Exception:
+	except Exception as exc:
 		name = ''
 		if isinstance(file, str):
-			name = " '%s'" % file
-		raise PyMSError('Load',"Could not load %s%s" % (file_type, name), capture_exception=True)
+			name = f" '{file}'"
+		raise PyMSError('Load', f"Could not load {file_type}{name}", capture_exception=True) from exc
 	finally:
 		try:
 			f.close()
@@ -45,4 +45,4 @@ def check_allow_overwrite_internal_file(file_path: str) -> bool:
 		return True
 	if not os.path.exists(file_path):
 		return True
-	return MessageBox.askyesno('Overwrite internal file?', "Are you sure you want to overwrite internal file '%s'? This could result in problems or negative experiences." % os.path.basename(file_path)) == MessageBox.YES
+	return MessageBox.askyesno('Overwrite internal file?', f"Are you sure you want to overwrite internal file '{os.path.basename(file_path)}'? This could result in problems or negative experiences.") == MessageBox.YES

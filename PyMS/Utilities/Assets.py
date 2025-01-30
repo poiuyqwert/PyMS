@@ -6,9 +6,7 @@ import sys as _sys
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
-	from .UIKit import PhotoImage
 	from .UIKit import Image
-	from .UIKit import ImageTk
 
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
@@ -23,10 +21,10 @@ versions_file_path = _os.path.join(internals_dir, 'versions.json')
 
 _VERSIONS: dict[str, str] = {}
 def version(program_name: str) -> str:
-	global _VERSIONS
+	global _VERSIONS # pylint: disable=global-statement
 	if not _VERSIONS:
 		import json
-		with open(versions_file_path, 'r') as f:
+		with open(versions_file_path, 'r', encoding='utf-8') as f:
 			_VERSIONS = json.load(f)
 	return _VERSIONS[program_name]
 
@@ -130,7 +128,7 @@ class DataReference:
 _DATA_CACHE: dict[str, list[str]] = {}
 def data_cache(filename: str) -> list[str]:
 	if not filename in _DATA_CACHE:
-		with open(data_file_path('%s.txt' % filename), 'r') as f:
+		with open(data_file_path(f'{filename}.txt'), 'r', encoding='utf-8') as f:
 			_DATA_CACHE[filename] = [l.rstrip() for l in f.readlines()]
 	return _DATA_CACHE[filename]
 
@@ -144,7 +142,7 @@ def palette_file_path(filename: str) -> str:
 settings_dir = _os.path.join(base_dir, 'Settings')
 
 def settings_file_path(name: str) -> str:
-	return _os.path.join(settings_dir, '%s%stxt' % (name, _os.extsep))
+	return _os.path.join(settings_dir, f'{name}{_os.extsep}txt')
 
 ## Logs
 logs_dir = _os.path.join(internals_dir, 'Logs')
@@ -193,10 +191,10 @@ class HelpFolder:
 		else:
 			for index, folder in enumerate(self.folders):
 				if path_components[0] == folder.name:
-					sub_index = folder._index(path_components[1:])
+					sub_index = folder._index(path_components[1:]) # pylint: disable=protected-access
 					if sub_index is None:
 						return None
-					return '%d.%s' % (index + len(self.files), sub_index)
+					return f'{index + len(self.files)}.{sub_index}'
 		return None
 
 	def get_file(self, index: str) -> HelpFile | None:
@@ -211,7 +209,7 @@ class HelpFolder:
 			index_components[0] -= len(self.files)
 			if index_components[0] >= len(self.folders):
 				return None
-			return self.folders[index_components[0]]._get_file(index_components[1:])
+			return self.folders[index_components[0]]._get_file(index_components[1:]) # pylint: disable=protected-access
 
 	def __repr__(self):
 		result = self.name
@@ -228,8 +226,8 @@ class HelpFile:
 
 _HELP_TREE: HelpFolder | None = None
 def help_tree( force_update: bool = False) -> HelpFolder:
-	global _HELP_TREE 
-	if _HELP_TREE is not None and force_update == False:
+	global _HELP_TREE # pylint: disable=global-statement
+	if _HELP_TREE is not None and not force_update:
 		return _HELP_TREE
 	root = None
 	parents: dict[str, HelpFolder] = {}
@@ -300,11 +298,11 @@ def clear_help_image_cache():
 themes_dir = _os.path.join(base_dir, 'PyMS', 'Themes')
 
 def theme_file_path(name: str) -> str:
-	return _os.path.join(themes_dir, '%s.txt' % name)
+	return _os.path.join(themes_dir, f'{name}{_os.extsep}txt')
 
 _THEME_LIST: list[str] | None = None
 def theme_list() -> list[str]:
-	global _THEME_LIST
+	global _THEME_LIST # pylint: disable=global-statement
 	if not _THEME_LIST:
 		_THEME_LIST = []
 		for filename in _os.listdir(themes_dir):

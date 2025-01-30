@@ -61,7 +61,7 @@ class PyAIConfig(Config.Config):
 
 	class DontWarn(Config.Group):
 		def __init__(self) -> None:
-			self.plugins = Config.Warning(message='These files use features that require a plugin.')
+			self.plugins = Config.Warn(message='These files use features that require a plugin.')
 			super().__init__()
 
 	class LastPath(Config.Group):

@@ -36,7 +36,7 @@ class WarningDialog(PyMSDialog):
 		buttonbar.pack(pady=10)
 		return ok
 
-	def selectall(self, key: Event | None = None) -> None:
+	def selectall(self, _event: Event | None = None) -> None:
 		self.warntext.focus_set()
 		self.warntext.tag_add(SEL, 1.0, END)
 

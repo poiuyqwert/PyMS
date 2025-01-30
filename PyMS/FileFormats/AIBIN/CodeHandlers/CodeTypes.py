@@ -169,7 +169,7 @@ class BuildingCodeType(UnitCodeType):
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building) or (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.resource_miner):
 			return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, id=WarningID.building))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, warn_id=WarningID.building))
 
 class MilitaryCodeType(UnitCodeType):
 	def __init__(self, name: str = 'military', help_text: str = 'Same as unit type, but only for a unit to train (not a Building, Resource Miners, or Overlords)') -> None:
@@ -196,7 +196,7 @@ class MilitaryCodeType(UnitCodeType):
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if not (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building):
 			return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' Unit is a building", level=1, id=WarningID.military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' Unit is a building", level=1, warn_id=WarningID.military))
 
 class GGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -235,7 +235,7 @@ class GGMilitaryCodeType(MilitaryCodeType):
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.gg_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.gg_military))
 
 class AGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -274,7 +274,7 @@ class AGMilitaryCodeType(MilitaryCodeType):
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ag_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.ag_military))
 
 class GAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -313,7 +313,7 @@ class GAMilitaryCodeType(MilitaryCodeType):
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ga_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.ga_military))
 
 class AAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -352,7 +352,7 @@ class AAMilitaryCodeType(MilitaryCodeType):
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.aa_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.aa_military))
 
 class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:

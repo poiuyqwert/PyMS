@@ -58,7 +58,7 @@ class SyntaxHighlightingDialog(PyMSDialog):
 	def selected_highlight_component(self) -> HighlightComponent:
 		return self.highlight_components[self.listbox.curselection()[0]]
 
-	def highlight_component_selected(self, event: Event | None = None) -> None:
+	def highlight_component_selected(self, _event: Event | None = None) -> None:
 		highlight_component = self.selected_highlight_component()
 
 		self.infotext.set(fit('  ' if '\n' in highlight_component.description else '', highlight_component.description, 35))
@@ -102,7 +102,7 @@ class SyntaxHighlightingDialog(PyMSDialog):
 	def hex_color(self, color: tuple[int, int, int]) -> str:
 		return f'#{color[0]:02X}{color[1]:02X}{color[2]:02X}'
 
-	def select_foreground(self, event: Event | None = None) -> None:
+	def select_foreground(self, _event: Event | None = None) -> None:
 		highlight_component = self.selected_highlight_component()
 		color,_ = ColorChooser.askcolor(parent=self, initialcolor=highlight_component.highlight_style.style.foreground or '#000000', title='Select foreground color')
 		if color:
@@ -110,7 +110,7 @@ class SyntaxHighlightingDialog(PyMSDialog):
 			self.fgcanvas['background'] = highlight_component.highlight_style.style.foreground
 		self.focus_set()
 
-	def select_background(self, event: Event | None = None) -> None:
+	def select_background(self, _event: Event | None = None) -> None:
 		highlight_component = self.selected_highlight_component()
 		color,_ = ColorChooser.askcolor(parent=self, initialcolor=highlight_component.highlight_style.style.background or '#000000', title='Select background color')
 		if color:
@@ -118,7 +118,7 @@ class SyntaxHighlightingDialog(PyMSDialog):
 			self.fgcanvas['background'] = highlight_component.highlight_style.style.background
 		self.focus_set()
 
-	def cancel(self, event: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.updated = False
 		for highlight_component in self.highlight_components:
 			highlight_component.highlight_style.restore_state()

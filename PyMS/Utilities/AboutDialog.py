@@ -4,20 +4,20 @@ from .UIKit import *
 
 # TODO: Update about dialog
 class AboutDialog(PyMSDialog):
-	def __init__(self, parent: Misc, program: str, version: str, thanks: list[tuple[str, str]]=[]) -> None:
+	def __init__(self, parent: Misc, program: str, version: str, thanks: list[tuple[str, str]] | None = None) -> None:
 		self.program = program
 		self.version = version
-		self.thanks = thanks
+		self.thanks = thanks or []
 		self.thanks.extend([
 			('ShadowFlare','For SFmpq, some file specs, and all her tools!'),
 			('Ladislav Zezula','For StormLib'),
 			('BroodWarAI.com','Support and hosting of course!'),
 			('Blizzard','For creating StarCraft and BroodWar...'),
 		])
-		PyMSDialog.__init__(self, parent, 'About %s' % program, resizable=(False, False))
+		PyMSDialog.__init__(self, parent, f'About {program}', resizable=(False, False))
 
 	def widgetize(self) -> Misc | None:
-		name = Label(self, text='%s %s' % (self.program, self.version), font=Font(size=18))
+		name = Label(self, text=f'{self.program} {self.version}', font=Font(size=18))
 		name.pack(pady=5)
 		frame = Frame(self)
 		Label(frame, text='Author:').grid(sticky=E)

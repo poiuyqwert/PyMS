@@ -117,7 +117,7 @@ class ParseContext(Generic[S]):
 		for block_name in self.unused_blocks:
 			block = self.blocks[block_name]
 			block_metadata = self.block_metadata[block]
-			self.add_warning(PyMSWarning('Parse', f"Block with name '{block_name}' is unused and will be discarded", line=block_metadata.definition_line, id='block_unused'))
+			self.add_warning(PyMSWarning('Parse', f"Block with name '{block_name}' is unused and will be discarded", line=block_metadata.definition_line, warn_id='block_unused'))
 		if self.active_block:
 			block_metadata = self.block_metadata[self.active_block]
 			raise self.error('Parse', f"The last block (named '{block_metadata.name}') does not end", line=block_metadata.definition_line)
@@ -150,7 +150,7 @@ class ParseContext(Generic[S]):
 	def warning(self, warn_type: str, warning: str, line: int | None = None, level: int = 0, warn_id: str | None = None) -> PyMSWarning:
 		if line is None:
 			line = self.lexer.state.line
-		return PyMSWarning(warn_type, warning, line=line, code=self.lexer.get_line_of_code(line), level=level, id=warn_id)
+		return PyMSWarning(warn_type, warning, line=line, code=self.lexer.get_line_of_code(line), level=level, warn_id=warn_id)
 
 	def attribute_warning(self, warning: PyMSWarning) -> None:
 		if warning.line is None:

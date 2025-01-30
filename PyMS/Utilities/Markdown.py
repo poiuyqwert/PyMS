@@ -70,10 +70,10 @@ class Block:
 		# self.children: list[Block] = []
 
 	@staticmethod
-	def start(scanner: _Scanner) -> Block | None:
+	def start(_scanner: _Scanner) -> Block | None:
 		return None
 
-	def is_continued(self, scanner: _Scanner) -> bool:
+	def is_continued(self, _scanner: _Scanner) -> bool:
 		return False
 
 	def close(self) -> None:
@@ -85,9 +85,9 @@ class Block:
 	def __repr__(self) -> str:
 		info = '-> ' if self.open else '   '
 		info += self.__class__.__name__
-		repr_params = self.repr_params()
+		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
-			info += ' (%s)' % repr_params
+			info += f' ({repr_params})'
 		return info
 
 class ContainerBlock(Block):
@@ -181,7 +181,7 @@ class ATXHeading(ContentBlock):
 		return ATXHeading(len(match.group(2)))
 
 	def repr_params(self) -> str:
-		return 'level=%d' % self.level
+		return f'level={self.level}'
 
 	def anchor(self) -> str:
 		def collapse(items: Sequence[Span | str]) -> str:
@@ -216,11 +216,11 @@ class IndentedCodeBlock(ContentBlock):
 
 class FencedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(`{3,}|~{3,})([^`~][^`~]*?)?\s*$')
-	
+
 	def __init__(self, indent: int, fence: str, info_string: str) -> None:
 		ContentBlock.__init__(self)
 		self.indent = indent
-		self._re_closing = re.compile(' {0,3}%s+\\s*$' % fence)
+		self._re_closing = re.compile(r' {0,3}%s+\\s*$' % fence)
 		self.info_string = info_string
 
 	@staticmethod
@@ -286,7 +286,7 @@ class ListBlock(ContainerBlock):
 		return False
 
 	def repr_params(self) -> str:
-		return "marker='%s', level=%d" % (self.marker, self.level)
+		return f"marker='{self.marker}', level={self.level}"
 
 class ListItemBlock(ContainerBlock):
 	RE_MARKER = re.compile(r'( {0,3})([-+*]|[0-9]{1,9}[.)])(?:( {1,4})(?:[^ ]|$)|( )(?:[^ ]|$)|$)')
@@ -310,9 +310,9 @@ class ListItemBlock(ContainerBlock):
 			marker = ListBlock.MARKER_BULLET
 		else:
 			marker = ListBlock.MARKER_NUMERIC
-		list = ListBlock(marker, level)
-		list.add_child(ListItemBlock())
-		return list
+		list_block = ListBlock(marker, level)
+		list_block.add_child(ListItemBlock())
+		return list_block
 
 	def is_continued(self, scanner: _Scanner) -> bool:
 		match = scanner.match(ListItemBlock.RE_LEVEL)
@@ -330,7 +330,7 @@ class Span:
 			self.contents.append(text)
 
 	@staticmethod
-	def apply(text: str) -> tuple[int, int, Span] | None:
+	def apply(_text: str) -> tuple[int, int, Span] | None:
 		return None
 
 	def scan(self, span_type: type[Span]) -> bool:
@@ -358,7 +358,7 @@ class Span:
 		return None
 
 	def __repr__(self) -> str:
-		result = '<%s' % self.__class__.__name__
+		result = f'<{self.__class__.__name__}'
 		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
 			result += ' ' + repr_params
@@ -368,7 +368,7 @@ class Span:
 				result += repr(item)
 			elif isinstance(item, str):
 				result += item
-		result += '</%s>' % self.__class__.__name__
+		result += f'</{self.__class__.__name__}>'
 		return result
 
 class CodeSpan(Span):
@@ -435,9 +435,9 @@ class Link(Span):
 		return (match.start(), match.end(), Link(text, link, title))
 
 	def repr_params(self): # type () -> (str | None)
-		result = 'link="%s"' % self.link
+		result = f'link="{self.link}"'
 		if self.title:
-			result += ' title="%s"' % self.title
+			result += f' title="{self.title}"'
 		return result
 
 class Image(Span):
@@ -462,9 +462,9 @@ class Image(Span):
 		return (match.start(), match.end(), Image(alt_text, link, title))
 
 	def repr_params(self): # type () -> (str | None)
-		result = 'link="%s" alt_text="%s"' % (self.link, self.alt_text)
+		result = f'link="{self.link}" alt_text="{self.alt_text}"'
 		if self.title:
-			result += ' title="%s"' % self.title
+			result += f' title="{self.title}"'
 		return result
 
 class Document(ContainerBlock):
@@ -553,7 +553,7 @@ class Document(ContainerBlock):
 		parse_spans(document)
 		return document
 
-	def is_continued(self, scanner: _Scanner) -> bool:
+	def is_continued(self, _scanner: _Scanner) -> bool:
 		return True
 
 	def close(self) -> None:

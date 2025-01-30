@@ -1,5 +1,5 @@
 
-from typing import Generic, TypeVar, overload
+from typing import Generic, TypeVar
 
 K = TypeVar('K')
 V = TypeVar('V')

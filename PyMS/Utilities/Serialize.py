@@ -69,9 +69,9 @@ class JoinEncoder(Generic[V,D]):
 
 class IntEncoder(Encoder[int,int]):
 	_RE = re.compile(r'^\d+$')
-	def __init__(self, min: int | None = None, max: int | None = None):
-		self.min = min
-		self.max = max
+	def __init__(self, min_value: int | None = None, max_value: int | None = None):
+		self.min = min_value
+		self.max = max_value
 
 	def encode(self, value: int) -> JSON.Value:
 		return value
@@ -93,9 +93,9 @@ class IntEncoder(Encoder[int,int]):
 		return value
 
 class FloatEncoder(Encoder[float,float]):
-	def __init__(self, min: float | None = None, max: float | None = None):
-		self.min = min
-		self.max = max
+	def __init__(self, min_value: float | None = None, max_value: float | None = None):
+		self.min = min_value
+		self.max = max_value
 
 	def encode(self, value: float) -> JSON.Value:
 		return value
@@ -133,7 +133,7 @@ class BoolEncoder(Encoder[bool,bool]):
 
 	def decode(self, value: JSON.Value) -> bool:
 		return BoolEncoder.parse(value)
-	
+
 	def apply(self, value: bool, current: bool) -> bool:
 		return value
 
@@ -249,8 +249,8 @@ class EnumValueEncoder(Encoder[E,E]):
 	def decode(self, value: JSON.Value) -> E:
 		try:
 			return self.enum_type(value)
-		except:
-			raise PyMSError('Decode', f"'{value}' is not a valid option")
+		except Exception as exc:
+			raise PyMSError('Decode', f"'{value}' is not a valid option") from exc
 
 	def apply(self, value: E, current: E) -> E:
 		return value
@@ -344,10 +344,10 @@ def _encode_json(obj: object, structure: Structure | SubStructure, fields: Field
 		json[key] = value
 	return json
 
-def encode_json(obj: object, id: int | None, definition: Definition, fields: Fields | None = None) -> OrderedDict[str, JSON.Value]:
+def encode_json(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None) -> OrderedDict[str, JSON.Value]:
 	json = _encode_json(obj, definition.structure, fields)
-	if id is not None:
-		json['_id'] = id
+	if obj_id is not None:
+		json['_id'] = obj_id
 		json.move_to_end('_id', last=False)
 	elif definition.id_mode == IDMode.header:
 		raise PyMSError('Internal', f"Missing ID for '{definition.name}' object")
@@ -357,14 +357,14 @@ def encode_json(obj: object, id: int | None, definition: Definition, fields: Fie
 
 def encode_jsons(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> list[OrderedDict[str, JSON.Value]]:
 	json: list[OrderedDict[str, JSON.Value]] = []
-	for obj,id in objs:
+	for obj,obj_id in objs:
 		definition = get_definition(obj)
 		if not definition:
 			raise PyMSError('Internal', f"Object type '{obj.__class__.__name__}' has no definition")
-		json.append(encode_json(obj, id, definition, fields))
+		json.append(encode_json(obj, obj_id, definition, fields))
 	return json
 
-def encode_text(obj: object, id: int | None, definition: Definition, fields: Fields | None = None) -> str:
+def encode_text(obj: object, obj_id: int | None, definition: Definition, fields: Fields | None = None) -> str:
 	def flatten(json: dict[str, JSON.Value], prefix: str | None = None) -> str:
 		result = ''
 		for key,value in json.items():
@@ -383,28 +383,28 @@ def encode_text(obj: object, id: int | None, definition: Definition, fields: Fie
 				result += f'\t{key} {value}\n'
 		return result
 	result: str
-	if id is not None:
+	if obj_id is not None:
 		match definition.id_mode:
 			case IDMode.comment:
-				result = f'# Export of {definition.name} {id}\n{definition.name}:\n'
+				result = f'# Export of {definition.name} {obj_id}\n{definition.name}:\n'
 			case IDMode.header:
-				result = f'{definition.name}({id}):\n'
+				result = f'{definition.name}({obj_id}):\n'
 	elif definition.id_mode == IDMode.header:
 		raise PyMSError('Internal', f"Missing ID for '{definition.name}' object")
 	else:
 		result = f'{definition.name}:\n'
-	json = encode_json(obj, id, definition, fields)
+	json = encode_json(obj, obj_id, definition, fields)
 	return result + flatten(json)
 
 def encode_texts(objs: Sequence[tuple[object, int]], get_definition: Callable[[object], Definition | None], fields: Fields | None = None) -> str:
 	result = ''
-	for obj, id in objs:
+	for obj, obj_id in objs:
 		definition = get_definition(obj)
 		if not definition:
 			raise PyMSError('Internal', f"Object type '{obj.__class__.__name__}' has no definition")
 		if result:
 			result += '\n'
-		result += encode_text(obj, id, definition, fields)
+		result += encode_text(obj, obj_id, definition, fields)
 	return result
 
 class LineScanner:
@@ -546,21 +546,21 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 	if working:
 		assert definition is not None
 		_add_json(working, definition, result)
-	if not len(result):
+	if not result:
 		raise PyMSError('Decode', 'Nothing to decode.')
 	return result
 
 Repeater = Callable[[int, int, int], int | None]
 
-def repeater_ignore(decode_count: int, obj_n: int, obj_count: int) -> (int | None):
+def repeater_ignore(decode_count: int, obj_n: int, _obj_count: int) -> (int | None):
 	if obj_n >= decode_count:
 		return None
 	return obj_n
 
-def repeater_loop(decode_count: int, obj_n: int, obj_count: int) -> (int | None):
+def repeater_loop(decode_count: int, obj_n: int, _obj_count: int) -> (int | None):
 	return obj_n % decode_count
 
-def repeater_repeat_last(decode_count: int, obj_n: int, obj_count: int) -> (int | None):
+def repeater_repeat_last(decode_count: int, obj_n: int, _obj_count: int) -> (int | None):
 	return min(obj_n, decode_count-1)
 
 O = TypeVar('O')

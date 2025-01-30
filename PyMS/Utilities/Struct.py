@@ -69,8 +69,8 @@ class Processed(Protocol):
 	def finalize_unpack(self, value: Any) -> Any: ...
 
 class Type:
-	def __init__(self, format: Format) -> None:
-		self._format = format
+	def __init__(self, struct_format: Format) -> None:
+		self._format = struct_format
 
 	@property
 	def is_signed(self) -> bool:
@@ -86,8 +86,8 @@ class Type:
 		return other._format == self._format
 
 class PadType(Type):
-	def __init__(self, format: Literal[Format.pad], length: int):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Literal[Format.pad], length: int):
+		Type.__init__(self, struct_format)
 		self.length = length
 
 	@property
@@ -106,12 +106,12 @@ class PadType(Type):
 		return True
 
 class IntType(Type):
-	def __init__(self, format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
+		Type.__init__(self, struct_format)
 
 class BoolType(Type, Processed):
-	def __init__(self, format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
+		Type.__init__(self, struct_format)
 
 	def prepare_to_pack(self, value: bool) -> int:
 		return int(value)
@@ -120,16 +120,16 @@ class BoolType(Type, Processed):
 		return bool(value)
 
 class FloatType(Type):
-	def __init__(self, format: Literal[Format.float, Format.double]):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Literal[Format.float, Format.double]):
+		Type.__init__(self, struct_format)
 
 class Strip(Enum):
 	none = 0
 	right = 1
 	from_first = 2
 class StringType(Type, Processed):
-	def __init__(self, format: Literal[Format.char, Format.pstr, Format.str], length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8'):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Literal[Format.char, Format.pstr, Format.str], length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8'):
+		Type.__init__(self, struct_format)
 		self.length = length
 		self.strip = strip
 		self.encoding = encoding
@@ -191,8 +191,8 @@ def t_str(length: int, strip: Strip = Strip.from_first, encoding: str = 'utf-8')
 	return StringType(Format.str, length, strip, encoding)
 
 class Array(Type):
-	def __init__(self, format: Format, length: int):
-		Type.__init__(self, format)
+	def __init__(self, struct_format: Format, length: int):
+		Type.__init__(self, struct_format)
 		self.length = length
 
 	@property
@@ -200,8 +200,8 @@ class Array(Type):
 		return f'{self.length}{self._format}'
 
 class IntArray(Array):
-	def __init__(self, format: Literal[Format.pad, Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64], length: int):
-		Array.__init__(self, format, length)
+	def __init__(self, struct_format: Literal[Format.pad, Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64], length: int):
+		Array.__init__(self, struct_format, length)
 
 class BoolArray(IntArray, Processed):
 	def prepare_to_pack(self, value: list[bool]) -> list[int]:
@@ -211,8 +211,8 @@ class BoolArray(IntArray, Processed):
 		return [bool(b) for b in value]
 
 class FloatArray(Array):
-	def __init__(self, format: Literal[Format.float, Format.double], length: int):
-		Array.__init__(self, format, length)
+	def __init__(self, struct_format: Literal[Format.float, Format.double], length: int):
+		Array.__init__(self, struct_format, length)
 
 def t_as8(length: int) -> IntArray:
 	return IntArray(Format.s8, length)
@@ -254,7 +254,7 @@ class Field:
 	def format(self) -> str:
 		return f'{self.endian}{self.field_type.format}'
 
-	def pack(self, value: Any, clamp: bool = False) -> bytes:
+	def pack(self, value: Any, _clamp: bool = False) -> bytes:
 		return struct.pack(self.format, value)
 
 	def unpack(self, data: bytes, offset: int = 0) -> Any:
@@ -274,18 +274,18 @@ class IntField(Field):
 
 	@property
 	def min(self) -> int:
-		min = 0
+		min_value = 0
 		if self.is_signed:
-			min = -((2 ** (self.size * 8)) // 2)
-		return min
-	
+			min_value = -((2 ** (self.size * 8)) // 2)
+		return min_value
+
 	@property
 	def max(self) -> int:
-		max = 2 ** (self.size * 8)
+		max_value = 2 ** (self.size * 8)
 		if self.is_signed:
-			max = (max // 2)
-		max -= 1
-		return max
+			max_value = (max_value // 2)
+		max_value -= 1
+		return max_value
 
 class BoolField(Field):
 	def __init__(self, field_type: BoolType, endian: Endian = Endian.little) -> None:
@@ -301,18 +301,18 @@ class BoolField(Field):
 
 	@property
 	def min(self) -> int:
-		min = 0
+		min_value = 0
 		if self.is_signed:
-			min = -((2 ** (self.size * 8)) // 2)
-		return min
-	
+			min_value = -((2 ** (self.size * 8)) // 2)
+		return min_value
+
 	@property
 	def max(self) -> int:
-		max = 2 ** (self.size * 8)
+		max_value = 2 ** (self.size * 8)
 		if self.is_signed:
-			max = (max // 2)
-		max -= 1
-		return max
+			max_value = (max_value // 2)
+		max_value -= 1
+		return max_value
 
 class FloatField(Field):
 	def __init__(self, field_type: FloatType, endian: Endian = Endian.little) -> None:
@@ -333,15 +333,15 @@ class FloatField(Field):
 		if self.field_type.format == Format.float:
 			if FloatField._FLOAT_MIN is not None:
 				return FloatField._FLOAT_MIN
-			min = float(struct.unpack('>f', b'\xff\x7f\xff\xff')[0])
-			FloatField._FLOAT_MIN = min
-			return min
+			min_value = float(struct.unpack('>f', b'\xff\x7f\xff\xff')[0])
+			FloatField._FLOAT_MIN = min_value
+			return min_value
 		else:
 			if FloatField._DOUBLE_MIN is not None:
 				return FloatField._DOUBLE_MIN
-			min = float(struct.unpack('>d', b'\xff\xef\xff\xff\xff\xff\xff\xff')[0])
-			FloatField._DOUBLE_MIN = min
-			return min
+			min_value = float(struct.unpack('>d', b'\xff\xef\xff\xff\xff\xff\xff\xff')[0])
+			FloatField._DOUBLE_MIN = min_value
+			return min_value
 
 	_FLOAT_MAX: float | None = None
 	_DOUBLE_MAX: float | None = None
@@ -350,21 +350,21 @@ class FloatField(Field):
 		if self.field_type.format == Format.float:
 			if FloatField._FLOAT_MAX is not None:
 				return FloatField._FLOAT_MAX
-			max = float(struct.unpack('>f', b'\x7f\x7f\xff\xff')[0])
-			FloatField._FLOAT_MAX = max
-			return max
+			max_value = float(struct.unpack('>f', b'\x7f\x7f\xff\xff')[0])
+			FloatField._FLOAT_MAX = max_value
+			return max_value
 		else:
 			if FloatField._DOUBLE_MAX is not None:
 				return FloatField._DOUBLE_MAX
-			max = float(struct.unpack('>d', b'\x7f\xef\xff\xff\xff\xff\xff\xff')[0])
-			FloatField._DOUBLE_MAX = max
-			return max
+			max_value = float(struct.unpack('>d', b'\x7f\xef\xff\xff\xff\xff\xff\xff')[0])
+			FloatField._DOUBLE_MAX = max_value
+			return max_value
 
 class StringField(Field):
 	def __init__(self, field_type: StringType, endian: Endian = Endian.little) -> None:
 		Field.__init__(self, field_type, endian)
 
-	def pack(self, value: str, clamp: bool = False) -> bytes:
+	def pack(self, value: str, _clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Processed)
 		return struct.pack(self.format, self.field_type.prepare_to_pack(value))
 
@@ -406,7 +406,7 @@ class IntArrayField(ArrayField):
 	def __init__(self, field_type: IntArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[int], clamp: bool = False) -> bytes:
+	def pack(self, value: Sequence[int], _clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
@@ -420,7 +420,7 @@ class BoolArrayField(ArrayField):
 	def __init__(self, field_type: IntArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[int], clamp: bool = False) -> bytes:
+	def pack(self, value: Sequence[int], _clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
@@ -434,7 +434,7 @@ class FloatArrayField(ArrayField):
 	def __init__(self, field_type: FloatArray, endian: Endian = Endian.little) -> None:
 		ArrayField.__init__(self, field_type, endian)
 
-	def pack(self, value: Sequence[float], clamp: bool = False) -> bytes:
+	def pack(self, value: Sequence[float], _clamp: bool = False) -> bytes:
 		assert isinstance(self.field_type, Array)
 		if len(value) != self.field_type.length:
 			raise PyMSError('Pack', f"Array of '{self.field_type.format}' is length {self.field_type.length}, but got {len(value)}")
@@ -476,10 +476,10 @@ class MixedInts:
 		self.types = types
 
 	def format(self, endian: Endian) -> str:
-		format = endian.value
-		for type in self.types:
-			format += type.format
-		return format
+		struct_format = endian.value
+		for int_type in self.types:
+			struct_format += int_type.format
+		return struct_format
 
 	def size(self, endian: Endian) -> int:
 		return struct.calcsize(self.format(endian))
@@ -511,7 +511,7 @@ class Struct:
 
 	@classmethod
 	def format(cls) -> Struct.Format:
-		format: list[str | type[Struct] | StructArray | MixedInts] = []
+		struct_format: list[str | type[Struct] | StructArray | MixedInts] = []
 		format_str = ''
 		for field_def in cls._fields:
 			ctype: Type
@@ -520,9 +520,9 @@ class Struct:
 					ctype = field_def[1]
 				else:
 					if format_str:
-						format.append(format_str)
+						struct_format.append(format_str)
 						format_str = ''
-					format.append(field_def[1])
+					struct_format.append(field_def[1])
 					continue
 			else:
 				ctype = field_def
@@ -530,19 +530,19 @@ class Struct:
 				format_str += cls._endian
 			format_str += ctype.format
 		if format_str:
-			format.append(format_str)
-		return tuple(format)
+			struct_format.append(format_str)
+		return tuple(struct_format)
 
 	@classmethod
 	def get_processors(cls) -> Struct.Processors:
 		if cls._processors is not None:
 			return cls._processors
 		processors: list[struct.Struct | type[Struct] | StructArray | MixedInts] = []
-		for format in cls.format():
-			if isinstance(format, str):
-				processors.append(struct.Struct(format))
+		for struct_format in cls.format():
+			if isinstance(struct_format, str):
+				processors.append(struct.Struct(struct_format))
 			else:
-				processors.append(format)
+				processors.append(struct_format)
 		_processors = tuple(processors)
 		cls._processors = _processors
 		return _processors
@@ -578,14 +578,14 @@ class Struct:
 		for field_def in self._fields:
 			if not isinstance(field_def, tuple):
 				continue
-			name,type = field_def
-			if isinstance(type, Type):
-				if isinstance(type, Array):
+			name,field_type = field_def
+			if isinstance(field_type, Type):
+				if isinstance(field_type, Array):
 					values.extend(getattr(self, name))
 				else:
 					value = getattr(self, name)
-					if isinstance(type, Processed):
-						value = type.prepare_to_pack(value)
+					if isinstance(field_type, Processed):
+						value = field_type.prepare_to_pack(value)
 					values.append(value)
 			else:
 				if values:
@@ -595,12 +595,12 @@ class Struct:
 					result += processor.pack(*values)
 					values.clear()
 				value = getattr(self, name)
-				if isinstance(type, StructArray):
+				if isinstance(field_type, StructArray):
 					assert isinstance(value, list)
-					result += type.pack(value)
-				elif isinstance(type, MixedInts):
+					result += field_type.pack(value)
+				elif isinstance(field_type, MixedInts):
 					assert isinstance(value, list)
-					result += type.pack(value, self._endian)
+					result += field_type.pack(value, self._endian)
 				else:
 					assert isinstance(value, Struct)
 					result += value.pack()
@@ -616,7 +616,7 @@ class Struct:
 	def unpack(cls, data: bytes, offset: int = 0) -> Self:
 		processors = cls.get_processors()
 		if len(data) < offset + cls.calcsize():
-			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls.calcsize(), len(data) - offset))
+			raise PyMSError('Struct', f'Not enough data (expected {cls.calcsize()}, got {len(data) - offset})')
 		obj = cls()
 		field_index = 0
 		def next_field() -> Struct.FieldInfo:
@@ -634,15 +634,15 @@ class Struct:
 				offset += processor.size
 				value_index = 0
 				while value_index < len(values):
-					name,type = next_field()
-					assert isinstance(type, Type)
-					if isinstance(type, Array):
-						value = list(values[value_index:value_index+type.length])
-						value_index += type.length
+					name,field_type = next_field()
+					assert isinstance(field_type, Type)
+					if isinstance(field_type, Array):
+						value = list(values[value_index:value_index+field_type.length])
+						value_index += field_type.length
 					else:
 						value = values[value_index]
-						if isinstance(type, Processed):
-							value = type.finalize_unpack(value)
+						if isinstance(field_type, Processed):
+							value = field_type.finalize_unpack(value)
 						value_index += 1
 					setattr(obj, name, value)
 			else:
@@ -663,7 +663,7 @@ class Struct:
 	@classmethod
 	def unpack_array(cls, data: bytes, count: int, offset: int = 0) -> list[Self]:
 		if len(data) < offset + cls.calcsize() * count:
-			raise PyMSError('Struct', 'Not enough data (expected %d, got %d)' % (cls.calcsize() * count, len(data) - offset))
+			raise PyMSError('Struct', f'Not enough data (expected {cls.calcsize() * count}, got {len(data) - offset})')
 		array = []
 		for _ in range(count):
 			array.append(cls.unpack(data, offset))
@@ -674,25 +674,25 @@ class Struct:
 	def unpack_file(cls, file_handle: BinaryIO) -> Self:
 		try:
 			data = file_handle.read(cls.calcsize())
-		except:
-			raise PyMSError('Struct', 'Not enough data (expected %d)' % (cls.calcsize()))
+		except Exception as exc:
+			raise PyMSError('Struct', f'Not enough data (expected {cls.calcsize()})') from exc
 		return cls.unpack(data)
 
 	def __repr__(self) -> str:
-		format = ''
+		struct_format = ''
 		for format_piece in self.format():
-			if format:
-				format += ' '
+			if struct_format:
+				struct_format += ' '
 			if isinstance(format_piece, str):
-				format += format_piece
+				struct_format += format_piece
 			elif isinstance(format_piece, StructArray):
-				format += f'{format_piece.struct_type.__name__}[]'
+				struct_format += f'{format_piece.struct_type.__name__}[]'
 			elif isinstance(format_piece, MixedInts):
-				format += format_piece.format(self._endian)
+				struct_format += format_piece.format(self._endian)
 			else:
-				format += format_piece.__name__
-		result = """<%s.%s struct = '%s'
-""" % (self.__class__.__module__, self.__class__.__name__, format)
+				struct_format += format_piece.__name__
+		result = f"""<{self.__class__.__module__}.{self.__class__.__name__} struct = '{struct_format}'
+"""
 		for field_def in self._fields:
 			if not isinstance(field_def, tuple):
 				continue
@@ -700,7 +700,7 @@ class Struct:
 			value = getattr(self, name)
 			if isinstance(value, str):
 				value = value.encode('unicode_escape')
-			result += "\t%s = %s\n" % (name, value)
+			result += f"\t{name} = {value}\n"
 		return result + ">"
 
 	def post_unpack(self) -> None:
@@ -726,8 +726,8 @@ class StructArray:
 		if len(value) != self.count:
 			raise PyMSError('Pack', f"Array of '{self.struct_type.__name__}' is length {self.count}, but got {len(value)}")
 		result = b''
-		for struct in value:
-			result += struct.pack()
+		for struct_obj in value:
+			result += struct_obj.pack()
 		return result
 
 	def unpack(self, data: bytes, offset: int = 0):

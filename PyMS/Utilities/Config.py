@@ -12,7 +12,7 @@ import os, json, re, enum
 from dataclasses import dataclass
 from copy import deepcopy
 
-from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal
 
 def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
 	'''Ensure there are nested `dict` objects in all parts of the keypath'''
@@ -86,10 +86,10 @@ class Group(ConfigObject):
 				attr = attr + '_'
 				if not hasattr(self, attr):
 					continue
-			object = getattr(self, attr)
-			if not isinstance(object, ConfigObject):
+			obj = getattr(self, attr)
+			if not isinstance(obj, ConfigObject):
 				continue
-			object.decode(attr_data)
+			obj.decode(attr_data)
 
 	def reset(self) -> None:
 		for _, value in Group._fields(self):
@@ -111,13 +111,13 @@ class Config(Group):
 	def __init__(self) -> None:
 		Group.__init__(self)
 		if self._name is None or self._version is None:
-			raise NotImplementedError('`_name` and/or `_version` are not set for `%s`' % self.__class__.__name__)
+			raise NotImplementedError(f'`_name` and/or `_version` are not set for `{self.__class__.__name__}`')
 		self.load()
 
 	def load(self) -> None:
 		data: JSON.Object | None = None
 		try:
-			with open(Assets.settings_file_path(self._name), 'r') as f:
+			with open(Assets.settings_file_path(self._name), 'r', encoding='utf-8') as f:
 				raw_data = json.load(f)
 			if isinstance(raw_data, dict):
 				data = dict(raw_data)
@@ -145,12 +145,11 @@ class Config(Group):
 			self.decode(data)
 
 	def save(self) -> None:
-		import os
 		try:
 			data = self.encode()
 			assert isinstance(data, dict)
 			data['version'] = self._version
-			with open(Assets.settings_file_path(self._name), 'w') as f:
+			with open(Assets.settings_file_path(self._name), 'w', encoding='utf-8') as f:
 				json.dump(data, f, sort_keys=True, indent=4)
 		except:
 			from . import trace
@@ -262,7 +261,7 @@ class WindowGeometry(ConfigObject):
 		self._default_size = default_size
 		self._default_centered = default_centered
 
-	def save_size(self, window: AnyWindow, closing: bool = True) -> None:
+	def save_size(self, window: AnyWindow) -> None:
 		resizable_w,resizable_h = parse_resizable(window.resizable())
 		geometry = Geometry.of(window)
 		if resizable_w or resizable_h:
@@ -332,8 +331,8 @@ class WindowGeometry(ConfigObject):
 		self._geometry = self._saved_state
 
 class PaneSizes(ConfigObject):
-	def __init__(self, *, defaults: list[int] = [], pane_index: int | None = None) -> None:
-		self._defaults = defaults
+	def __init__(self, *, defaults: list[int] | None = None, pane_index: int | None = None) -> None:
+		self._defaults = defaults or []
 		self._sizes: list[int] = self._defaults
 		self._pane_index = pane_index
 		self._saved_state: list[int] = list(self._sizes)
@@ -485,9 +484,11 @@ class SelectFile(ConfigObject):
 		self._initial_filename = initial_filename
 
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False) -> str | None: ...
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False, filename: str | None = None) -> str | None:
+		...
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True]) -> list[str] | None: ...
+	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True] = True, filename: str | None = None) -> list[str] | None:
+		...
 	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
@@ -549,7 +550,7 @@ class SelectFile(ConfigObject):
 		return self._select_file(parent, False, title, filetypes, True)
 
 	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None, filename: str | None = None) -> str | None:
-		return self._select_file(parent, True, title, filetypes)
+		return self._select_file(parent, True, title, filetypes, False, filename)
 
 	def encode(self) -> JSON.Value:
 		return {
@@ -657,7 +658,7 @@ class SelectDirectory(ConfigObject):
 	def restore_state(self) -> None:
 		self.path = self._saved_state
 
-class Warning(ConfigObject):
+class Warn(ConfigObject):
 	def __init__(self, *, message: str, title: str = 'Warning!', remember_version: int = 1) -> None:
 		self._seen_version = 0
 		self._saved_state = self._seen_version
@@ -692,9 +693,9 @@ class Warning(ConfigObject):
 
 V = TypeVar('V', int, float, str, bool, dict)
 class Dictionary(ConfigObject, Generic[V]):
-	def __init__(self, *, value_type: type[V], defaults: dict[str, V] = {}) -> None:
+	def __init__(self, *, value_type: type[V], defaults: dict[str, V] | None = None) -> None:
 		self.value_type: type[V] = value_type
-		self._defaults: dict[str, V] = dict(defaults)
+		self._defaults: dict[str, V] = dict(defaults or {})
 		self.data: dict[str, V] = dict(self._defaults)
 		self._saved_state: dict[str, V] = self.data
 
@@ -719,9 +720,9 @@ class Dictionary(ConfigObject, Generic[V]):
 		self.data = dict(self._saved_state)
 
 class List(ConfigObject, Generic[V]):
-	def __init__(self, *, value_type: type[V], defaults: list[V] = []) -> None:
+	def __init__(self, *, value_type: type[V], defaults: list[V] | None = None) -> None:
 		self.value_type: type[V] = value_type
-		self._defaults: list[V] = list(defaults)
+		self._defaults: list[V] = list(defaults or [])
 		self.data: list[V] = list(self._defaults)
 		self._saved_state: list[V] = self.data
 
@@ -749,9 +750,9 @@ class List(ConfigObject, Generic[V]):
 
 O = TypeVar('O', bound=JSON.Codable)
 class JSONList(ConfigObject, Generic[O]):
-	def __init__(self, *, value_type: type[O], defaults: list[O] = []) -> None:
+	def __init__(self, *, value_type: type[O], defaults: list[O] | None = None) -> None:
 		self.value_type: type[O] = value_type
-		self._defaults: list[O] = list(defaults)
+		self._defaults: list[O] = list(defaults or [])
 		self.data: list[O] = list(self._defaults)
 		self._saved_state: list[O] = self.data
 
@@ -877,7 +878,6 @@ class HighlightStyle(ConfigObject):
 		}
 
 	def decode(self, value: JSON.Value) -> None:
-		from .UIKit.Font import Font
 		if not isinstance(value, dict):
 			return
 		foreground = value.get('foreground')

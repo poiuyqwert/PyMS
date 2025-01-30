@@ -113,7 +113,7 @@ class MPQSelect(PyMSDialog):
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
-	def updatesearch(self, event: Event | None = None) -> None:
+	def updatesearch(self, _event: Event | None = None) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)

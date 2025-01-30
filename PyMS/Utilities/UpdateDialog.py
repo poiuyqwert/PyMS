@@ -14,7 +14,7 @@ class UpdateDialog(PyMSDialog):
 	@staticmethod
 	def check_update(window: WindowExtensions, program: str) -> None:
 		def do_check_update(window: WindowExtensions, program: str) -> None:
-			VERSIONS_URL = 'https://raw.githubusercontent.com/poiuyqwert/PyMS/%s/PyMS/versions.json' % UpdateDialog.BRANCH
+			VERSIONS_URL = f'https://raw.githubusercontent.com/poiuyqwert/PyMS/{UpdateDialog.BRANCH}/PyMS/versions.json'
 			try:
 				import ssl
 				versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.SSLContext()).read())
@@ -38,7 +38,7 @@ class UpdateDialog(PyMSDialog):
 			if not show:
 				return
 			def callback():
-				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking:
+				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking: # pylint: disable=protected-access
 					window.after(1000, callback)
 					return
 				UpdateDialog(window,program,versions)
@@ -52,9 +52,9 @@ class UpdateDialog(PyMSDialog):
 
 	def widgetize(self) -> Misc | None:
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
-			text = "Your version of %s (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (self.program,Assets.version(self.program),self.versions[self.program])	
+			text = f"Your version of {self.program} ({Assets.version(self.program)}) is older then the current version ({self.versions[self.program]}).\nIt is recommended that you update as soon as possible."	
 		else:
-			text = "Your version of PyMS (%s) is older then the current version (%s).\nIt is recommended that you update as soon as possible." % (Assets.version('PyMS'),self.versions['PyMS'])
+			text = f"Your version of PyMS ({Assets.version('PyMS')}) is older then the current version ({self.versions['PyMS']}).\nIt is recommended that you update as soon as possible."
 		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
 		f = Frame(self)
 		self.dont_remind_me = BooleanVar()

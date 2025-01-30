@@ -41,7 +41,7 @@ class Tracer:
 		self.buffer = ''
 		self.flush_after_id: str | None = None
 		try:
-			self.file = open(Assets.log_file_path('%s.txt' % program_name), 'w', encoding='utf-8')
+			self.file = open(Assets.log_file_path(f'{program_name}.txt'), 'w', encoding='utf-8')
 		except OSError:
 			pass
 
@@ -60,7 +60,7 @@ class Tracer:
 			self.creating_window = True
 			def present() -> None:
 				presenter = self._find_presenter()
-				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking:
+				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking: # pylint: disable=protected-access
 					self.main_window.after(1000, present)
 					return
 				self.window = InternalErrorDialog(presenter, self.program_name, self.buffer)
@@ -98,7 +98,7 @@ class Tracer:
 
 _TRACER: Tracer | None = None
 def setup_trace(program_name: str, main_window: MainWindow) -> None:
-	global _TRACER
+	global _TRACER # pylint: disable=global-statement
 	if _TRACER is not None:
 		return
 	_TRACER = Tracer(program_name, main_window)
