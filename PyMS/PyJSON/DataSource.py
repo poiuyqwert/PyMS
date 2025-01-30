@@ -155,18 +155,18 @@ class DataSource:
 		path: Path = []
 		if not self._treeview:
 			return path
-		
+
 		parent_id = self._treeview.parent(item_id)
 		if parent_id:
 			path = self.item_path(parent_id)
-		
+
 		component: str | int
 		if ':' in item_id:
 			component = item_id.split(':', 1)[-1]
 		else:
 			component = self._treeview.index(item_id)
 		path.append(component)
-		
+
 		return path
 
 	def value_at(self, path: Path) -> JSON.JSON.Value:

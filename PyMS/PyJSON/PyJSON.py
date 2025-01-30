@@ -21,7 +21,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyJSON')
+LONG_VERSION = 'v' + Assets.version('PyJSON')
 
 class PyJSON(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -32,7 +32,7 @@ class PyJSON(MainWindow):
 		ga.set_application('PyJSON', Assets.version('PyJSON'))
 		ga.track(GAScreen('PyJSON'))
 		setup_trace('PyJSON', self)
-		
+
 		self.config_ = PyJSONConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
@@ -85,7 +85,7 @@ class PyJSON(MainWindow):
 		self.tree.treeview.bind(WidgetEvent.Treeview.Select(), lambda e: self.refresh_object())
 
 		import json
-		with open('/Users/zzahos/Projects/Personal/PyMS_Data/stat_txt.json','r') as f:
+		with open('/Users/zzahos/Projects/Personal/PyMS_Data/stat_txt.json', 'r', encoding='utf-8') as f:
 			data = json.load(f)
 		# data = {
 		# 	'Objects':[
@@ -129,7 +129,7 @@ class PyJSON(MainWindow):
 		file_path = self.file_path
 		if not file_path:
 			file_path = 'Unnamed.json'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file_path, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file_path}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -156,9 +156,9 @@ class PyJSON(MainWindow):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.json'
 		if not file_path:
-			self.title('[WIP] PyJSON %s' % LONG_VERSION)
+			self.title(f'[WIP] PyJSON {LONG_VERSION}')
 		else:
-			self.title('[WIP] PyJSON %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'[WIP] PyJSON {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -168,7 +168,6 @@ class PyJSON(MainWindow):
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.data_source.set_data(None)
-		self.path = None
 		self.status.set('Editing new JSON.')
 		self.mark_edited(False)
 		self.update_title()
@@ -178,8 +177,8 @@ class PyJSON(MainWindow):
 	def check_format(self, json_data) -> bool:
 		if not isinstance(json_data, list):
 			return False
-		for object in json_data:
-			if not isinstance(object, dict):
+		for obj in json_data:
+			if not isinstance(obj, dict):
 				return False
 		return True
 

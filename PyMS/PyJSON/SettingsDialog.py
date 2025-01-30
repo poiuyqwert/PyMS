@@ -3,9 +3,7 @@ from .Config import PyJSONConfig
 
 from ..Utilities.SettingsUI.BaseSettingsDialog import BaseSettingsDialog
 from ..Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
-from ..Utilities.SettingsUI.MPQSettingsTab import MPQSettingsTab
 from ..Utilities.UIKit import *
-from ..Utilities.MPQHandler import MPQHandler
 
 class SettingsDialog(BaseSettingsDialog[PyJSONConfig]):
 	def __init__(self, parent: Misc, config: PyJSONConfig):
