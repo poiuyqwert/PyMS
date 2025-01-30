@@ -20,7 +20,7 @@ class Click(Enum):
 
 class MiniEditor(PyMSDialog):
 	def __init__(self, parent: Misc, tile_id: int, delegate: MiniEditorDelegate, colors: dict[Click, int] | None = None) -> None:
-		self.colors = colors or {Click.left:0, Click.right:0}
+		self.colors = colors if colors is not None else {Click.left:0, Click.right:0}
 		self.click: Click | None = None
 		self.select = False
 		self.id = tile_id

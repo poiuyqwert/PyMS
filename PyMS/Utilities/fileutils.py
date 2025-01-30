@@ -3,28 +3,21 @@ from __future__ import annotations
 
 from .PyMSError import PyMSError
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
+from typing import BinaryIO
 
 # TODO: Replace usage with IO
-def load_file(file: str | BinaryIO, file_type: str = 'file', mode: str = 'rb') -> bytes:
+def load_file(file: str | BinaryIO, file_type: str = 'file') -> bytes:
 	try:
 		if isinstance(file, str):
-			f = open(file, mode, encoding='utf-8')
+			with open(file, 'rb') as f:
+				data = f.read()
 		else:
-			f = file
-		data = f.read()
+			data = file.read()
 	except Exception as exc:
 		name = ''
 		if isinstance(file, str):
 			name = f" '{file}'"
 		raise PyMSError('Load', f"Could not load {file_type}{name}", capture_exception=True) from exc
-	finally:
-		try:
-			f.close()
-		except:
-			pass
 	return data
 
 # Check if `path` is a sub-path of `root`

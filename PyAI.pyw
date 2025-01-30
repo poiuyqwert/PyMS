@@ -12,7 +12,7 @@ def main(): # type: () -> None
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISourceCodeHandlers import AIDefsSourceCodeHandler
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AILexer import AILexer
 	from PyMS.FileFormats.AIBIN.CodeHandlers.AISerializeContext import AISerializeContext
-	from PyMS.FileFormats.AIBIN.CodeHandlers.AIParseContext import AIParseContext
+	from PyMS.FileFormats.AIBIN.CodeHandlers.AIParseContext import AIParseContext, AIParseSettings
 
 	from PyMS.FileFormats import DAT
 	from PyMS.FileFormats import TBL
@@ -93,13 +93,14 @@ def main(): # type: () -> None
 				print('- Loading finished successfully')
 				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
 				definitions_handler = DefinitionsHandler.DefinitionsHandler()
+				parse_settings = AIParseSettings()
 				if opt.deffile:
 					print("Loading external definitions file '%s'..." % opt.deffile)
 					handler = AIDefsSourceCodeHandler()
 					with IO.InputText(opt.deffile) as f:
 						code = f.read()
 					lexer = AILexer(code)
-					parse_context = AIParseContext(lexer, definitions_handler, data_context)
+					parse_context = AIParseContext(lexer, parse_settings, definitions_handler, data_context)
 					handler.parse(parse_context)
 					parse_context.finalize()
 					print('- Loading finished successfully')
@@ -139,7 +140,7 @@ def main(): # type: () -> None
 						code = f.read()
 					print(" - Loading finished successfully\nCompiling script '%s'..." % args[0])
 					lexer = AILexer(code)
-					parse_context = AIParseContext(lexer, definitions_handler, data_context)
+					parse_context = AIParseContext(lexer, parse_settings, definitions_handler, data_context)
 					bin.compile(parse_context)
 					warnings = parse_context.warnings
 					print(" - '%s' compiled successfully\nSaving file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2]))

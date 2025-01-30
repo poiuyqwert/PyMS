@@ -11,27 +11,17 @@ from typing import Literal, Sequence, Callable
 
 class EditableReportSubList(RichList):
 	def __init__(self, parent: Misc, selectmode: SelectMode, report: ReportList, **kwargs) -> None:
+		RichList.__init__(self, parent, {}, **kwargs)
+
 		self.report = report
 		self.lastsel: str | None = None
 		self.selectmode = selectmode
 		self.checkedit: str | None = None
 		self.edittext = StringVar()
-		self.entry = 0
-		self.entries = []
 		self.dctimer: str | None = None
 		self.editing = False
 		self.lineselect = False
 
-		RichList.__init__(self, parent)
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **kwargs)
-		self.text.config(bd=0)
-		self.text.pack(fill=BOTH, expand=1)
-
-		text_w = getattr(self.text, '_w')
-		self.text_orig = text_w + '_orig'
-		self.tk.call('rename', text_w, self.text_orig)
-		self.tk.createcommand(text_w, self.dispatch)
-		self.text.tag_config('Selection', background='lightblue')
 		self.text.tag_bind('Selection', Mouse.Click_Left(), self.edit)
 		bind = [
 			(Mouse.Click_Left(), self.deselect),
@@ -43,16 +33,10 @@ class EditableReportSubList(RichList):
 		for b in bind:
 			self.text.bind(*b)
 
-		self.tag_bind = self.text.tag_bind
-		self.tag_cget = self.text.tag_cget
-		self.tag_config = self.text.tag_config
-		self.tag_delete = self.text.tag_delete
-		self.tag_lower = self.text.tag_lower
-		self.tag_names = self.text.tag_names
-		self.tag_raise = self.text.tag_raise
-		self.tag_ranges = self.text.tag_ranges
-		self.tag_unbind = self.text.tag_unbind
-		self.yview = self.text.yview
+	def setup_ui(self, **text_kwargs) -> None:
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
+		self.text.config(bd=0)
+		self.text.pack(fill=BOTH, expand=1)
 
 	def insert(self, index: int | Literal['end'], text, tags: str | Sequence[str] | None = None) -> str:
 		if index == END:
@@ -209,30 +193,24 @@ class EditableReportSubList(RichList):
 			return self.checkedit
 		return self.text.get(f'entry{self.entries[index]}.first', f'entry{self.entries[index]}.last')
 
+	def execute(self, cmd: str, args: tuple[str, ...]) -> str:
+		try:
+			return self.tk.call((self.text_orig, cmd) + args)
+		except:
+			return ""
+
+	def dispatch(self, cmd: str, *args: str) -> str:
+		if not cmd in ['insert','delete'] and not 'sel' in args:
+			return self.execute(cmd, args)
+		return ''
+
 class ReportSubList(RichList):
 	def __init__(self, parent: Misc, **kwargs):
-		self.entry = 0
-		self.entries = []
-		RichList.__init__(self, parent)
-		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **kwargs)
+		RichList.__init__(self, parent, {}, **kwargs)
+
+	def setup_ui(self, **text_kwargs) -> None:
+		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
 		self.text.pack(fill=BOTH, expand=1)
-
-		text_w = getattr(self.text, '_w')
-		self.text_orig = text_w + '_orig'
-		self.tk.call('rename', text_w, self.text_orig)
-		self.tk.createcommand(text_w, self.dispatch)
-		self.text.tag_configure('RightAlign', justify=RIGHT)
-
-		self.tag_bind = self.text.tag_bind
-		self.tag_cget = self.text.tag_cget
-		self.tag_config = self.text.tag_config
-		self.tag_delete = self.text.tag_delete
-		self.tag_lower = self.text.tag_lower
-		self.tag_names = self.text.tag_names
-		self.tag_raise = self.text.tag_raise
-		self.tag_ranges = self.text.tag_ranges
-		self.tag_unbind = self.text.tag_unbind
-		self.yview = self.text.yview
 
 	def select(self, e: int | str | Literal['end']) -> None:
 		pass

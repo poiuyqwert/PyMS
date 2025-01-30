@@ -1,4 +1,5 @@
 
+from PyMS.Utilities.UIKit.Widgets import Misc
 from ..Widgets import *
 from ..EventPattern import *
 
@@ -6,26 +7,19 @@ import re
 
 from typing import Literal, Sequence, Callable, Any
 
+
 class RichList(Frame):
 	selregex = re.compile(r'\bsel\b')
 	idregex = re.compile(r'(\d+)\.(\d+).(\d+)(.+)?')
 
-	def __init__(self, parent: Misc, **kwargs):
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, **kwargs):
+		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
+		Frame.__init__(self, parent, **frame_config)
+
 		self.entry = 0
 		self.entries: list[int] = []
-
-		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
-		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
-		self.vscroll = Scrollbar(self)
-		self.text = Text(self, cursor='arrow', height=1, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=False, **kwargs)
-		self.text.config(bd=0)
-		self.text.grid(sticky=NSEW)
-		self.hscroll.config(command=self.text.xview)
-		self.hscroll.grid(sticky=EW)
-		self.vscroll.config(command=self.text.yview)
-		self.vscroll.grid(sticky=NS, row=0, column=1)
-		self.grid_rowconfigure(0,weight=1)
-		self.grid_columnconfigure(0,weight=1)
+		self.text: Text
+		self.setup_ui(**kwargs)
 
 		text_w = getattr(self.text, '_w')
 		self.text_orig = text_w + '_orig'
@@ -43,6 +37,19 @@ class RichList(Frame):
 		self.tag_ranges = self.text.tag_ranges
 		self.tag_unbind = self.text.tag_unbind
 		self.yview = self.text.yview
+
+	def setup_ui(self, **text_kwargs) -> None:
+		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
+		self.vscroll = Scrollbar(self)
+		self.text = Text(self, cursor='arrow', height=1, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=False, **text_kwargs)
+		self.text.config(bd=0)
+		self.text.grid(sticky=NSEW)
+		self.hscroll.config(command=self.text.xview)
+		self.hscroll.grid(sticky=EW)
+		self.vscroll.config(command=self.text.yview)
+		self.vscroll.grid(sticky=NS, row=0, column=1)
+		self.grid_rowconfigure(0,weight=1)
+		self.grid_columnconfigure(0,weight=1)
 
 	def index(self, index: str) -> int:
 		m = self.idregex.match(index)

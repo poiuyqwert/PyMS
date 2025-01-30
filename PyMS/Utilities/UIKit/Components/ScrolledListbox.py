@@ -9,7 +9,7 @@ from typing import Literal, Any
 class ScrolledListbox(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
 	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: Misc | bool = True, scroll_speed: int = 1, **kwargs):
-		frame_config = frame_config or {'bd': 2, 'relief': SUNKEN}
+		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
 		if not 'exportselection' in kwargs:

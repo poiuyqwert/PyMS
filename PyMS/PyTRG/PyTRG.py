@@ -1,9 +1,9 @@
 
-from typing import Sequence
 from .Config import PyTRGConfig
 from .Delegates import MainDelegate
 from .FindReplaceDialog import FindReplaceDialog
 from .SettingsUI.SettingsDialog import SettingsDialog
+from .Tooltips import ActionsTooltip, ConditionsTooltip
 
 from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitProperties, Parameters
 from ..FileFormats import TBL
@@ -30,6 +30,8 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from dataclasses import dataclass
 import re
+
+from typing import Sequence
 
 LONG_VERSION = 'v' + Assets.version('PyTRG')
 
@@ -323,6 +325,9 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			)
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
+
+		ActionsTooltip(self.text.text)
+		ConditionsTooltip(self.text.text)
 
 	def open_files(self) -> (PyMSError | None):
 		self.mpqhandler.open_mpqs()
