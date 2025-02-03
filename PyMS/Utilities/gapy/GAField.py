@@ -30,17 +30,18 @@ class Screen:
 class Custom:
 	@staticmethod
 	def Dimension(n):
-		return 'cd%d' % n
+		return f'cd{n}'
 
 	@staticmethod
 	def Metric(n):
-		return 'cm%d' % n
+		return f'cm{n}'
 
 	def __init__(self) -> None:
-		self._registered = set()
+		self._registered: set[str] = set()
 
-	def register(self, n, name):
+	def register(self, n: int, name: str) -> str:
 		if hasattr(self, name) and not name in self._registered:
-			raise AttributeError("'%s' is already an attribute so can\'t be registered" % name)
-		setattr(self, name, 'cd%d' % n)
+			raise AttributeError(f"'{name}' is already an attribute so can\'t be registered")
+		# setattr(self, name, 'cd%d' % n)
 		self._registered.add(name)
+		return Custom.Dimension(n)

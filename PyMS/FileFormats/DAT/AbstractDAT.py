@@ -11,7 +11,7 @@ from copy import deepcopy
 from enum import Enum
 import json, re
 
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, BinaryIO, overload, Literal
 if TYPE_CHECKING:
     from typing import Any, Callable
     from .DATFormat import DATFormat, DATType
@@ -201,6 +201,12 @@ class AbstractDAT:
 			data.append(self.get_entry(entry_id).export_data(entry_id, export_properties))
 		return self._export(data, export_type, json_dump, json_indent)
 
+	@overload
+	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: Literal[ExportType.text] = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str:
+		...
+	@overload
+	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: Literal[ExportType.json] = ExportType.json, json_dump: bool = False, json_indent: int = 4) -> OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
+		...
 	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
 	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		data = self.get_entry(entry_id).export_data(entry_id, export_properties)

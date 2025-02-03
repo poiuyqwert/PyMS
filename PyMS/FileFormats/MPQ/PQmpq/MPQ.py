@@ -407,6 +407,7 @@ class MPQ:
 		return file_data
 
 	def _read_file_by_hash_entry(self, hash_entry: MPQHashEntry, crypt_key: int | None = None) -> bytes:
+		assert self.block_table is not None
 		block_entry = self.block_table[hash_entry.block_index]
 		return self._read_file_by_block_entry(block_entry, crypt_key)
 
@@ -414,6 +415,7 @@ class MPQ:
 		hash_entry = self._find_hash_entry_by_filename(filename, locale)
 		if hash_entry is None:
 			return None
+		assert self.block_table is not None
 		block_entry = self.block_table[hash_entry.block_index]
 		return MPQFileEntry(filename, hash_entry, block_entry)
 

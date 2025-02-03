@@ -426,9 +426,9 @@ class PyMPQ(MainWindow):
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
-	def popup(self, _event: Event, i: int) -> None:
-		if not self.listbox.cur_selection():
-			self.listbox.select_set(i)
+	def popup(self, _event: Event, _i: str) -> None:
+		# if not self.listbox.cur_selection():
+		# 	self.listbox.select_set(i)
 		self.listmenu.post(*self.winfo_pointerxy())
 
 	def changelocale(self) -> None:
