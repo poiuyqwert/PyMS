@@ -19,6 +19,8 @@ from ..Utilities.fileutils import check_allow_overwrite_internal_file
 from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.SponsorDialog import SponsorDialog
 
+from typing import Any
+
 LONG_VERSION = 'v' + Assets.version('PyGOT')
 
 class PyGOT(MainWindow):
@@ -48,10 +50,10 @@ class PyGOT(MainWindow):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Game Template', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Game Template', Ctrl.e, enabled=False, tags='file_open')
@@ -71,7 +73,7 @@ class PyGOT(MainWindow):
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
 		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
 
-		def edited(*_) -> None:
+		def edited(*_: Any) -> None:
 			if not self.got:
 				return
 			self.mark_edited()

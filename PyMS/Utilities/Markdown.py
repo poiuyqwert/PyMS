@@ -434,7 +434,7 @@ class Link(Span):
 		title = match.group(4)
 		return (match.start(), match.end(), Link(text, link, title))
 
-	def repr_params(self): # type () -> (str | None)
+	def repr_params(self) -> (str | None):
 		result = f'link="{self.link}"'
 		if self.title:
 			result += f' title="{self.title}"'
@@ -461,7 +461,7 @@ class Image(Span):
 		title = match.group(4)
 		return (match.start(), match.end(), Image(alt_text, link, title))
 
-	def repr_params(self): # type () -> (str | None)
+	def repr_params(self) -> (str | None):
 		result = f'link="{self.link}" alt_text="{self.alt_text}"'
 		if self.title:
 			result += f' title="{self.title}"'
@@ -540,7 +540,7 @@ class Document(ContainerBlock):
 				open_block.close()
 		# print('\r\n' + repr(document))
 		# Phase 2. Parse inline structure
-		def parse_spans(block):
+		def parse_spans(block: Block) -> None:
 			if isinstance(block, IndentedCodeBlock) or isinstance(block, FencedCodeBlock):
 				return
 			if isinstance(block, ContentBlock):

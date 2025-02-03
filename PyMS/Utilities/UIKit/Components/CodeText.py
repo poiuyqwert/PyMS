@@ -12,7 +12,7 @@ from ...PyMSWarning import PyMSWarning
 import re
 from dataclasses import dataclass
 
-from typing import Generator, Protocol, Sequence, Any
+from typing import Generator, Protocol, Sequence, Any, Literal
 
 @dataclass
 class AutocompleteState:
@@ -50,8 +50,9 @@ class _UndoGroup:
 		self.text['autoseparator'] = False
 		self.text.edit_separator()
 
-	def __exit__(self, exc_type, exc_value, traceback) -> None:
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.text['autoseparator'] = self.autoseparator
+		return False
 
 class CodeText(Frame):
 	autoindent = re.compile('^([ \\t]*)')
@@ -207,7 +208,7 @@ class CodeText(Frame):
 
 		return EventPropogation.Break
 
-	def copy(self, cut=False) -> None:
+	def copy(self, cut: bool = False) -> None:
 		self.clipboard_set(self.get('sel.first','sel.last'))
 		if cut:
 			self.mark_set('insert', 'sel.first')

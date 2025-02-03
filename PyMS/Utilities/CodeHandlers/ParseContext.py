@@ -24,7 +24,7 @@ class BlockMetadata:
 	definition_line: int | None
 	uses: list[CodeHeader]
 
-	def merge(self, other: BlockMetadata):
+	def merge(self, other: BlockMetadata) -> None:
 		self.definition_line = other.definition_line
 		for use in other.uses:
 			if not use in self.uses:
@@ -136,7 +136,7 @@ class ParseContext(Generic[S]):
 	def handle_directive(self, directive: CodeDirective) -> None:
 		pass
 
-	def error(self, err_type: str, error: str, line: int | None = None, level=1) -> PyMSError:
+	def error(self, err_type: str, error: str, line: int | None = None, level: int = 1) -> PyMSError:
 		if line is None:
 			line = self.lexer.state.line
 		return PyMSError(err_type, error, line, self.lexer.get_line_of_code(line), level=level)

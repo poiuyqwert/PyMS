@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATWeapon(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -44,33 +46,33 @@ class DATWeapon(AbstractDAT.AbstractDATEntry):
 		own                   = 1 << 8
 		ALL_FLAGS             = (air | ground | mechanical | organic | non_building | non_robotic | terrain | organic_or_mechanical | own)
 
-	def __init__(self):
-		self.label = 0
-		self.graphics = 0
-		self.unused_technology = 0
-		self.target_flags = 0
-		self.minimum_range = 0
-		self.maximum_range = 0
-		self.damage_upgrade = 0
-		self.weapon_type = 0
-		self.weapon_behavior = 0
-		self.remove_after = 0
-		self.explosion_type = 0
-		self.inner_splash_range = 0
-		self.medium_splash_range = 0
-		self.outer_splash_range = 0
-		self.damage_amount = 0
-		self.damage_bonus = 0
-		self.weapon_cooldown = 0
-		self.damage_factor = 0
-		self.attack_angle = 0
-		self.launch_spin = 0
-		self.forward_offset = 0
-		self.upward_offset = 0
-		self.target_error_message = 0
-		self.icon = 0
+	def __init__(self) -> None:
+		self.label: int = 0
+		self.graphics: int = 0
+		self.unused_technology: int = 0
+		self.target_flags: int = 0
+		self.minimum_range: int = 0
+		self.maximum_range: int = 0
+		self.damage_upgrade: int = 0
+		self.weapon_type: int = 0
+		self.weapon_behavior: int = 0
+		self.remove_after: int = 0
+		self.explosion_type: int = 0
+		self.inner_splash_range: int = 0
+		self.medium_splash_range: int = 0
+		self.outer_splash_range: int = 0
+		self.damage_amount: int = 0
+		self.damage_bonus: int = 0
+		self.weapon_cooldown: int = 0
+		self.damage_factor: int = 0
+		self.attack_angle: int = 0
+		self.launch_spin: int = 0
+		self.forward_offset: int = 0
+		self.upward_offset: int = 0
+		self.target_error_message: int = 0
+		self.icon: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.label,\
 		self.graphics,\
 		self.unused_technology,\
@@ -95,9 +97,9 @@ class DATWeapon(AbstractDAT.AbstractDATEntry):
 		self.upward_offset,\
 		self.target_error_message,\
 		self.icon\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.label,
 			self.graphics,
@@ -126,7 +128,7 @@ class DATWeapon(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Weapon'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATWeapon.Property.label, self.label, data)
 		self._export_property_value(export_properties, DATWeapon.Property.graphics, self.graphics, data)
 		self._export_property_value(export_properties, DATWeapon.Property.unused_technology, self.unused_technology, data)
@@ -152,7 +154,7 @@ class DATWeapon(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATWeapon.Property.target_error_message, self.target_error_message, data)
 		self._export_property_value(export_properties, DATWeapon.Property.icon, self.icon, data)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		label = self._import_property_value(data, DATWeapon.Property.label)
 		graphics = self._import_property_value(data, DATWeapon.Property.graphics)
 		unused_technology = self._import_property_value(data, DATWeapon.Property.unused_technology)

@@ -388,7 +388,7 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 		return tuple(groups)
 
 	RE_OR = re.compile(r'\s*\|\s*')
-	def validate(self, groups: UnitGroup, parse_context: ParseContext, token: str | None = None):
+	def validate(self, groups: UnitGroup, parse_context: ParseContext, token: str | None = None) -> None:
 		if isinstance(groups, int):
 			groups = (groups,)
 		tokens: list[str | None] = []

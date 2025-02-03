@@ -144,9 +144,9 @@ class BasicUnitsTab(DATUnitsTab):
 		l.pack(fill=X)
 
 		self.supply_required = IntegerVar(0, [0,255])
-		self.supply_required_half = IntVar()
+		self.supply_required_half = BooleanVar()
 		self.supply_provided = IntegerVar(0, [0,255])
-		self.supply_provided_half = IntVar()
+		self.supply_provided_half = BooleanVar()
 		self.zerg = IntVar()
 		self.terran = IntVar()
 		self.protoss = IntVar()

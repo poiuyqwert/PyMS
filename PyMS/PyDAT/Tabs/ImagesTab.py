@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 
-class ImagesTab(DATTab):
+class ImagesTab(DATTab[DATImage]):
 	DAT_ID = DATID.images
 
 	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
@@ -35,11 +35,11 @@ class ImagesTab(DATTab):
 		self.grps = DropDown(f, self.grpdd, [], self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
-		def check_grp_ref():
+		def check_grp_ref() -> None:
 			grp_id = self.grpdd.get()
 			refs = (
 				DATRefs(DATID.images, lambda image: (
-					DATRef('GRP File', image.grp_file),
+					DATRef('GRP File', cast(DATImage, image).grp_file),
 				)),
 			)
 			self.check_used_by_references(grp_id, refs, force_open=True)
@@ -52,11 +52,11 @@ class ImagesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, [], self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
-		def check_iscript_ref():
+		def check_iscript_ref() -> None:
 			iscript_id = self.iscriptdd.get()
 			refs = (
 				DATRefs(DATID.images, lambda image: (
-					DATRef('IScript ID', image.iscript_id),
+					DATRef('IScript ID', cast(DATImage, image).iscript_id),
 				)),
 			)
 			self.check_used_by_references(iscript_id, refs, force_open=True)

@@ -7,9 +7,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
+from typing import BinaryIO
 
 class VF4Flag:
 	walkable    = 0x0001
@@ -28,7 +26,7 @@ class VF4Megatile:
 	def save_data(self) -> bytes:
 		return struct.pack('<16H', *self.flags)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, VF4Megatile):
 			return False
 		return other.flags == self.flags

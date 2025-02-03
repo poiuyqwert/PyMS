@@ -28,12 +28,12 @@ class CHKDoodadVisual:
 	def save_data(self) -> bytes:
 		return struct.pack('<3H2B', self.doodadID,self.position[0],self.position[1],self.owner,self.enabled)
 
-	def decompile(self):
+	def decompile(self) -> str:
 		result = "\t#\n"
-		result += f'\t{pad('DoodadID', self.doodadID)}\n'
+		result += f'\t{pad('DoodadID', str(self.doodadID))}\n'
 		result += f'\t{pad('Position', f'{self.position[0]},{self.position[1]}')}\n'
-		result += f'\t{pad('Owner', self.owner)}\n'
-		result += f'\t{pad('Enabled', self.enabled)}\n'
+		result += f'\t{pad('Owner', str(self.owner))}\n'
+		result += f'\t{pad('Enabled', str(self.enabled))}\n'
 		return result
 
 class CHKSectionDD2(CHKSection):

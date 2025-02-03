@@ -84,7 +84,7 @@ class FindReplaceDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def check(self, update: Update):
+	def check(self, update: Update) -> None:
 		if update == Update.regex:
 			if self.regex.get():
 				self.multicheck['state'] = NORMAL

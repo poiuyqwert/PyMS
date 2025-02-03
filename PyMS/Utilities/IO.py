@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os, io, tempfile
 
-from typing import TextIO, BinaryIO, Callable, Iterable, Iterator
+from typing import TextIO, BinaryIO, Callable, Iterable, Iterator, Any, Literal
 
 AnyInputText = str | TextIO
 AnyInputBytes = str | bytes | BinaryIO
@@ -32,11 +32,12 @@ class InputText:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class InputBytes:
 	def __init__(self, any_input: AnyInputBytes):
@@ -55,11 +56,12 @@ class InputBytes:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class OutputTextFile(TextIO):
 	def __init__(self, path: str) -> None:
@@ -130,7 +132,7 @@ class OutputTextFile(TextIO):
 	def __enter__(self) -> TextIO:
 		return self
 
-	def __exit__(self, etype, value, traceback) -> None:
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
 		self.close()
 
 	def __iter__(self) -> Iterator[str]:
@@ -208,7 +210,7 @@ class OutputBytesFile(BinaryIO):
 	def __enter__(self) -> BinaryIO:
 		return self
 
-	def __exit__(self, etype, value, traceback) -> None:
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
 		self.close()
 
 	def __iter__(self) -> Iterator[bytes]:
@@ -230,10 +232,11 @@ class OutputText:
 	def __enter__(self) -> TextIO:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class OutputBytes:
 	def __init__(self, output: AnyOutputBytes):
@@ -248,10 +251,11 @@ class OutputBytes:
 	def __enter__(self) -> BinaryIO:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 def open_input_text(any_input: AnyInputText) -> TextIO:
 	if isinstance(any_input, str):

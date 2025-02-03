@@ -26,7 +26,7 @@ class BuilderUpdater:
 		self.address = address
 		self.builder = builder
 
-	def update_data(self, data: bytes | bytearray):
+	def update_data(self, data: bytes | bytearray) -> None:
 		self.builder.set_data(self.address, data)
 		self.address += len(data)
 

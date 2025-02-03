@@ -19,7 +19,7 @@ class PyMSConfig(Config.Config):
 	}
 
 	class Analytics(Config.Group):
-		def __init__(self):
+		def __init__(self) -> None:
 			self.allow = Config.Boolean(default=True)
 			self.tid = Config.String(default='UA-42320973-2')
 			self.cid = Config.String()
@@ -31,7 +31,7 @@ class PyMSConfig(Config.Config):
 			self.python_version = Config.String(default=None)
 			super().__init__()
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.analytics = PyMSConfig.Analytics()
 		self.scdir = Config.SelectDirectory(title='Choose StarCraft Directory')
 		self.reminder = PyMSConfig.Reminder()

@@ -7,7 +7,7 @@ from ..Variables import IntegerVar
 
 from ... import Assets
 
-from typing import Callable, Literal, Sequence
+from typing import Callable, Literal, Sequence, Any
 
 class DropDown(Frame):
 	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
@@ -18,7 +18,7 @@ class DropDown(Frame):
 		self._original_display_callback = None
 		if display and isinstance(display, Variable):
 			self._original_display_callback = display.callback
-			def callback_wrapper(num):
+			def callback_wrapper(num: int) -> None:
 				self.set(num)
 				if self._original_display_callback:
 					self._original_display_callback(self.variable.get())
@@ -55,18 +55,18 @@ class DropDown(Frame):
 
 		self.background_color = self.entry.cget('bg')
 		self.highlight_color = self.entry.cget('selectbackground')
-		def update_background(color):
+		def update_background(color: str) -> None:
 			self.entry['bg'] = color
 		self.entry.bind(Focus.In(), lambda *_: update_background(self.highlight_color))
 		self.entry.bind(Focus.Out(), lambda *_: update_background(self.background_color))
 		# The Focus.Out event stops firing sometimes, so we use a workaround with `validatecommand` triggering on `focusout` to overcome the issue
-		def validate(reason):
+		def validate(reason: str) -> bool:
 			if reason == 'focusout':
 				update_background(self.background_color)
 			return True
 		self.entry.config(validate='focusout', validatecommand=(self.register(validate), '%V'))
 
-	def __setitem__(self, item: str, value) -> None:
+	def __setitem__(self, item: str, value: Any) -> None:
 		if item == 'state':
 			self.entry['state'] = value
 			self.button['state'] = value

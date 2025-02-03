@@ -7,7 +7,7 @@ from ..EditedState import EditedState
 from .. import Assets
 from ..MPQHandler import MPQHandler
 
-from typing import overload
+from typing import overload, Any
 
 class FileSettingView(SettingView):
 	@overload
@@ -53,7 +53,7 @@ class FileSettingView(SettingView):
 		self.editable = editable
 		self._update_state()
 
-	def set_enabled(self, enabled: bool):
+	def set_enabled(self, enabled: bool) -> None:
 		self.enabled = enabled
 		self._update_state()
 
@@ -70,7 +70,7 @@ class FileSettingView(SettingView):
 		if file_path:
 			self.variable.set(file_path)
 
-	def changed(self, *_) -> None:
+	def changed(self, *_: Any) -> None:
 		edited = self.variable.get() != self.setting.file_path
 		self.edited_state.mark_edited(edited)
 

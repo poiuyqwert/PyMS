@@ -13,9 +13,8 @@ class DeleteResolution(Resolution):
 
 	def name(self) -> str:
 		if self.from_bwscript:
-			return f'Delete script from bwscript.bin'
-		else:
-			return f'Replace script in aiscript.bin with one in bwscript.bin'
+			return 'Delete script from bwscript.bin'
+		return 'Replace script in aiscript.bin with one in bwscript.bin'
 
 	def ui(self, parent: Misc) -> Widget | None:
 		return None
@@ -24,7 +23,7 @@ class DeleteResolution(Resolution):
 		# TODO: Check file size
 		return None
 
-	def resolve(self, ai: AIBIN, issue: LoadIssue):
+	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:
 		if self.from_bwscript:
 			return
 		script = ai.get_script(issue.script_id)

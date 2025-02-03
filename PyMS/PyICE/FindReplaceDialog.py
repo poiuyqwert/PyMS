@@ -97,7 +97,7 @@ class FindReplaceDialog(PyMSDialog):
 				self.selectcheck['state'] = DISABLED
 				self.inselection.set(0)
 
-	def findnext(self, key: Event | None = None, replace: bool = False):
+	def findnext(self, key: Event | None = None, replace: bool = False) -> None:
 		f = self.find.get()
 		if not f in self.findhistory:
 			self.findhistory.append(f)

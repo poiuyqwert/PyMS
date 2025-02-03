@@ -28,13 +28,15 @@ class DATRefs:
 		return matches
 
 class DATRef:
-	def __init__(self, field_name: str, entry_id: int, entry_id_range_end: int | None = None, dat_sub_tab: Any | None = None) -> None:
+	def __init__(self, field_name: str, entry_id: int | None, entry_id_range_end: int | None = None, dat_sub_tab: Any | None = None) -> None:
 		self.field_name = field_name
 		self.entry_id = entry_id
 		self.entry_id_range_end = entry_id_range_end
 		self.dat_sub_tab = dat_sub_tab
 
 	def matches(self, entry_id: int) -> bool:
+		if self.entry_id is None:
+			return False
 		if self.entry_id_range_end:
 			return entry_id >= self.entry_id and entry_id <= self.entry_id_range_end
 		else:

@@ -83,10 +83,10 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import TRG', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('savegottrg'), self.savegottrg, 'Save *.got Compatable *.trg', Ctrl.g, enabled=False, tags='file_open')

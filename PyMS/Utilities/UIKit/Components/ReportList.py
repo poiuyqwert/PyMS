@@ -7,10 +7,10 @@ from ..Font import Font
 from ..EventPattern import *
 from ..Types import SelectMode
 
-from typing import Literal, Sequence, Callable
+from typing import Literal, Sequence, Callable, Any
 
 class EditableReportSubList(RichList):
-	def __init__(self, parent: Misc, selectmode: SelectMode, report: ReportList, **kwargs) -> None:
+	def __init__(self, parent: Misc, selectmode: SelectMode, report: ReportList, **kwargs: Any) -> None:
 		RichList.__init__(self, parent, {}, **kwargs)
 
 		self.report = report
@@ -33,12 +33,12 @@ class EditableReportSubList(RichList):
 		for b in bind:
 			self.text.bind(*b)
 
-	def setup_ui(self, **text_kwargs) -> None:
+	def setup_ui(self, **text_kwargs: Any) -> None:
 		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
 		self.text.config(bd=0)
 		self.text.pack(fill=BOTH, expand=1)
 
-	def insert(self, index: int | Literal['end'], text, tags: str | Sequence[str] | None = None) -> str:
+	def insert(self, index: int | Literal['end'], text: str, tags: str | Sequence[str] | None = None) -> str:
 		if index == END:
 			index = -1
 		e = f'entry{self.entry}'
@@ -116,7 +116,8 @@ class EditableReportSubList(RichList):
 		self.lineselect = True
 		if self.editing:
 			self.text.tag_remove('Selection', '1.0', END)
-			self.report.scmd()
+			if self.report.scmd:
+				self.report.scmd()
 			return
 		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel is None) or (t == 2 and self.selectmode != SINGLE):
 			if self.selectmode != MULTIPLE and t != 2:
@@ -205,10 +206,10 @@ class EditableReportSubList(RichList):
 		return ''
 
 class ReportSubList(RichList):
-	def __init__(self, parent: Misc, **kwargs):
+	def __init__(self, parent: Misc, **kwargs: Any) -> None:
 		RichList.__init__(self, parent, {}, **kwargs)
 
-	def setup_ui(self, **text_kwargs) -> None:
+	def setup_ui(self, **text_kwargs: Any) -> None:
 		self.text = Text(self, cursor='arrow', height=1, width=1, font=Font.fixed(), bd=0, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, exportselection=False, **text_kwargs)
 		self.text.pack(fill=BOTH, expand=1)
 
@@ -242,7 +243,7 @@ class ReportSubList(RichList):
 		return self.execute('insert',(i, f'{text}\n', tags))
 
 class ReportList(Frame):
-	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, scmd=None, rcmd=None, pcmd=None, dcmd=None, min_widths: list[int] | None = None, **conf) -> None:
+	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, scmd: Callable[[], None] | None = None, rcmd: Callable[[int, str], bool] | None = None, pcmd: Callable[[Event, str], None] | None = None, dcmd: Callable[[Event], None] | None = None, min_widths: list[int] | None = None, **conf: Any) -> None:
 		self.scmd = scmd
 		self.rcmd = rcmd
 		self.pcmd = pcmd
@@ -302,7 +303,7 @@ class ReportList(Frame):
 	# 		for s in sel:
 	# 			c[1].select_set(s)
 
-	def insert(self, index: int | Literal['end'], text: str | list[str]):
+	def insert(self, index: int | Literal['end'], text: str | list[str]) -> None:
 		if isinstance(text, str):
 			text = [text]
 		if len(text) < len(self.columns):
@@ -327,7 +328,7 @@ class ReportList(Frame):
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('ReportList Test')
 

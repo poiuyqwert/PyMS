@@ -4,12 +4,14 @@ from ..Widgets import *
 from ..EventPattern import *
 from ..Utils import remove_bind
 
-from typing import Callable
+from dataclasses import dataclass
+
+from typing import Callable, Any
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
 # TODO: Subclass ScrollView?
 class FlowView(Frame):
-	def __init__(self, parent: Misc, **config) -> None:
+	def __init__(self, parent: Misc, **config: Any) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
@@ -21,7 +23,7 @@ class FlowView(Frame):
 		yscrollbar = AutohideScrollbar(self, command=self._content_area.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
 		def scrolled_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
-			def scrolled(low: float, high: float):
+			def scrolled(low: float, high: float) -> None:
 				scrollbar.set(low, high)
 				# self.update_viewport()
 			return scrolled
@@ -209,20 +211,25 @@ class FlowView(Frame):
 		if changed and set_needs_update:
 			self.set_needs_update()
 
-	def _update_layout(self, *_) -> None:
+	def _update_layout(self, *_: Any) -> None:
 		if not self._update:
 			return
+		@dataclass
+		class WidgetMeta:
+			widget: Widget
+			x: int
+			y: int
+			width: int
+			weight: float
 		self._update = False
 		max_w = self._content_area.winfo_width()
 		# print(max_w)
 		x = 0
 		y = 0
 		w = 0
-		rows: list[list[list]] = [[]]
+		rows: list[list[WidgetMeta]] = [[]]
 		row_widths = []
 		row_h = 0
-		def place(view, x,y, width):
-			view.place(x=x, y=y, width=width)
 		for view in self.subviews:
 			name = str(view)
 			if not name in self._sizes:
@@ -240,7 +247,7 @@ class FlowView(Frame):
 				y += row_h
 				rows.append([])
 				row_h = 0
-			rows[-1].append([view,x+padx_l,y+pady_t,view_w_real,weight])
+			rows[-1].append(WidgetMeta(view, x+padx_l, y+pady_t, view_w_real, weight))
 			if x == 0 and view_w > max_w:
 				w = max(w,view_w)
 				row_widths.append(view_w)
@@ -256,20 +263,20 @@ class FlowView(Frame):
 		for row,row_width in zip(rows,row_widths):
 			if row_width < max_w:
 				total_weight = 0.0
-				for _,_,_,_,weight in row:
-					total_weight += weight
+				for widget_meta in row:
+					total_weight += widget_meta.weight
 				if total_weight:
 					distrubute = max_w - row_width
-					add_widths = tuple(int(col[4] / total_weight * distrubute) for col in row)
+					add_widths = tuple(int(widget_meta.weight / total_weight * distrubute) for widget_meta in row)
 					offset = 0
-					for n,col in enumerate(row):
-						col[1] += offset
-						col[3] += add_widths[n]
+					for n,widget_meta in enumerate(row):
+						widget_meta.x += offset
+						widget_meta.width += add_widths[n]
 						offset += add_widths[n]
 				row_width = max_w
 			total_w = max(total_w,row_width)
-			for view,x,y,w,_ in row:
-				place(view, x,y, w)
+			for widget_meta in row:
+				widget_meta.widget.place(x=widget_meta.x, y=widget_meta.y, width=widget_meta.width)
 		# print(total_w,total_h)
 		self.content_view_id.config(width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))

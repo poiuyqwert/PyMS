@@ -435,7 +435,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.listbox.select_set(0,END)
 		self.action_states()
 
-	def preview_limits(self, init=False) -> None:
+	def preview_limits(self, init: bool = False) -> None:
 		if self.grp:
 			self.prevstart.config(state=NORMAL)
 			self.prevend.config(state=NORMAL)

@@ -159,7 +159,7 @@ class TechnologyTab(DATTab):
 		self.drawpreview()
 
 	def choose_icon(self) -> None:
-		def update_icon(index): # type (int) -> None
+		def update_icon(index: int) -> None:
 			self.iconentry.set(index)
 		IconSelectDialog(self, self.delegate.data_context, update_icon, self.iconentry.get())
 

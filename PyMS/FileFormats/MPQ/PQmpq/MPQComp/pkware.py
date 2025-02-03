@@ -103,7 +103,7 @@ class Tables:
 		0x0300, 0x0D40, 0x1D00, 0x0D00, 0x1500, 0x0540, 0x0500, 0x1900,
 		0x0900, 0x0940, 0x1100, 0x0100, 0x1E00, 0x0E00, 0x0140, 0x1600,
 		0x0600, 0x1A00, 0x0E40, 0x0640, 0x0A40, 0x0A00, 0x1200, 0x0200,
-		0x1C00, 0x0C00, 0x1400, 0x0400, 0x1800, 0x0800, 0x1000, 0x0000  
+		0x1C00, 0x0C00, 0x1400, 0x0400, 0x1800, 0x0800, 0x1000, 0x0000,
 	)
 
 	# asc tables
@@ -166,14 +166,14 @@ class Tables:
 	def gen_decode_tables() -> None:
 		if Tables.positionsGenerated:
 			return
-		def gen_decode_table(count, bits_table, code_table):
+		def gen_decode_table(count: int, bits_table: tuple[int, ...], code_table: tuple[int, ...]) -> tuple[int, ...]:
 			positions = [0] * 0x100
 			for index in range(count-1, -1, -1):
 				code = code_table[index]
 				bits = 1 << bits_table[index]
 				for pos in range(code, 0x100, bits):
 					positions[pos] = index
-			return positions
+			return tuple(positions)
 		Tables.positionsGenerated = True
 		Tables.position1 = gen_decode_table(0x40, Tables.dist_bits, Tables.dist_code)
 		Tables.position2 = gen_decode_table(0x10, Tables.len_bits, Tables.len_code)
@@ -191,7 +191,7 @@ class Lit:
 	copy = 2
 
 def implode(data: bytes) -> bytes:
-	return b''
+	return data # TODO: Implement
 
 BYTE = struct.Struct('<B')
 
@@ -207,7 +207,7 @@ class Explode:
 
 	def __init__(self, data: bytes) -> None:
 		if Explode.DEBUG is None:
-			Explode.DEBUG = open('p_debug_explode.txt', 'w')
+			Explode.DEBUG = open('p_debug_explode.txt', 'w', encoding='utf-8')
 
 		self.data = data
 
@@ -215,10 +215,10 @@ class Explode:
 		self.offset = 3
 
 		if 4 > self.dsize_bits or self.dsize_bits > 6:
-			raise PyMSError('Explode', "Invalid dictionary size (got %d, need 4, 5 or 6)" % self.dsize_bits)
+			raise PyMSError('Explode', f"Invalid dictionary size (got {self.dsize_bits}, need 4, 5 or 6)")
 		if self.comp_type != CompType.binary:
 			if self.comp_type != CompType.ascii:
-				raise PyMSError('Explode', "Invalid compression type (got %d, need either 0 or 1)" % self.comp_type)
+				raise PyMSError('Explode', f"Invalid compression type (got {self.comp_type}, need either 0 or 1)")
 			Tables.gen_asc_tables()
 		Tables.gen_decode_tables()
 
@@ -230,21 +230,21 @@ class Explode:
 			raise InputExhaustedException()
 		byte = self.data[self.offset]
 		self.offset += 1
-		Explode.DEBUG.write("  pos: %d\n" % self.offset)
+		Explode.DEBUG.write(f"  pos: {self.offset}\n")
 		return byte
 
 	def waste_bits(self, bits: int) -> None:
-		Explode.DEBUG.write("waste: %d\n" % bits)
+		Explode.DEBUG.write(f"waste: {bits}\n")
 		if bits <= self.extra_bits:
 			self.extra_bits -= bits
 			self.bit_buff >>= bits
-			Explode.DEBUG.write("1buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
+			Explode.DEBUG.write(f"1buff: {self.bit_buff} extra: {self.extra_bits}\n")
 		else:
 			self.bit_buff >>= self.extra_bits
 			self.bit_buff |= (self.read_byte() << 8)
 			self.bit_buff >>= (bits - self.extra_bits)
 			self.extra_bits = (self.extra_bits - bits) + 8
-			Explode.DEBUG.write("2buff: %d extra: %d\n" % (self.bit_buff, self.extra_bits))
+			Explode.DEBUG.write(f"2buff: {self.bit_buff} extra: {self.extra_bits}\n")
 
 	def decode_lit(self) -> tuple[int, int | None]:
 		# If current bit is set, return that we will copy X bytes, otherwise return X as the raw byte
@@ -265,7 +265,7 @@ class Explode:
 				if value == 0x205:
 					return (Lit.done, None)
 			return (Lit.copy, value + 2)
-		
+
 		if self.comp_type == CompType.binary:
 			value = (self.bit_buff & 0xFF)
 			self.waste_bits(8)
@@ -300,7 +300,7 @@ class Explode:
 		return pos + 1
 
 	def expand(self) -> bytes:
-		Explode.DEBUG.write(' size: %d\n' % len(self.data))
+		Explode.DEBUG.write(f' size: {len(self.data)}\n')
 		Explode.DEBUG.write('====\n')
 		decompressed = b''
 		try:
@@ -309,31 +309,29 @@ class Explode:
 				if lit == Lit.done:
 					break
 				assert value is not None
-				Explode.DEBUG.write('  lit: %d %d\n' % (lit, value))
+				Explode.DEBUG.write(f'  lit: {lit} {value}\n')
 				if lit == Lit.copy:
 					move_back = self.decode_dist(value)
-					Explode.DEBUG.write(' dist: %d\n' % move_back)
+					Explode.DEBUG.write(f' dist: {move_back}\n')
 					Explode.DEBUG.write('write:')
 					# `move_back` can be less than `value`, which means it will end up copying from the copied data. For example:
 					# If `decompressed == \x00\x01\x02\x03`, `move_back == 2`, and `value` == 4, the result would be `\x00\x01\x02\x03\x02\x03\x02\x03`
 					while value > 0:
 						copy_size = min(move_back, value)
 						for c in decompressed[-move_back:-move_back + copy_size or None]:
-							Explode.DEBUG.write(' %d' % c)
+							Explode.DEBUG.write(f' {c}')
 						decompressed += decompressed[-move_back:-move_back + copy_size or None]
 						value -= copy_size
 					Explode.DEBUG.write('\n')
 				else:
-					Explode.DEBUG.write('write: %d\n' % value)
+					Explode.DEBUG.write(f'write: {value}\n')
 					decompressed += BYTE.pack(value)
 		except InputExhaustedException:
 			pass
-		except:
-			raise
 		return decompressed
 
 def explode(data: bytes) -> bytes:
 	if len(data) < 4:
-		raise PyMSError('Explode', "Not enough data to explode (got %d bytes, need at least 4)" % len(data))
+		raise PyMSError('Explode', f"Not enough data to explode (got {len(data)} bytes, need at least 4)")
 	info = Explode(data)
 	return info.expand()

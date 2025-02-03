@@ -17,8 +17,8 @@ class FindDialog(PyMSDialog):
 		self.find = StringVar()
 		self.casesens = BooleanVar()
 		self.regex = BooleanVar()
-		self.updown = IntVar()
-		self.updown.set(1)
+		self.updown = BooleanVar()
+		self.updown.set(True)
 		self.wrap = BooleanVar()
 		self.wrap.set(True)
 
@@ -82,7 +82,7 @@ class FindDialog(PyMSDialog):
 			wrap = self.wrap.get()
 			down = self.updown.get()
 			s = int(self.delegate.listbox.curselection()[0])
-			def next_i(i, down, size):
+			def next_i(i: int, down: bool, size: int) -> int:
 				if down:
 					i += 1
 					while i >= size:

@@ -2,8 +2,10 @@
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 
+from typing import Any
+
 class LayerRow(Frame):
-	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs):
+	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs: Any) -> None:
 		Frame.__init__(self, parent, **kwargs)
 		self.selvar = selvar
 		self.visvar = visvar
@@ -28,7 +30,7 @@ class LayerRow(Frame):
 		self.label.bind(Mouse.Click_Left(), self.select)
 		self.hide_widget: Frame | None = None # Gross :(
 
-	def update_state(self, *_args, **_kwargs) -> None:
+	def update_state(self, *_args: Any, **_kwargs: Any) -> None:
 		self.visible.set((self.visvar.get() & (1 << self.layer)) != 0)
 		self.locked.set((self.lockvar.get() & (1 << self.layer)) != 0)
 		# TODO: Support theme

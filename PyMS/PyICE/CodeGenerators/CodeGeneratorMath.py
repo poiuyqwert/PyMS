@@ -34,8 +34,8 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 
 	VARIABLE_RE = re.compile(r'\$([a-zA-Z0-9_]+)')
 	MATH_RE = re.compile(r'^[0-9.+-/*() \t]+$')
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: str(lookup_value(m.group(1))), self.math)
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		math = CodeGeneratorTypeMath.VARIABLE_RE.sub(lambda m: lookup_value(m.group(1)), self.math)
 		if not CodeGeneratorTypeMath.MATH_RE.match(math):
 			raise PyMSError('Generate', f"Invalid math expression '{math}' (only numbers, +, -, /, *, (, ), and whitespace allowed)")
 		try:

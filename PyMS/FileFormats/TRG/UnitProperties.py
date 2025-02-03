@@ -93,7 +93,7 @@ class UnitProperties(Struct.Struct):
 				elif isinstance(definition, PropertyStateDefinition) and self.state_flags & definition.flag:
 					f.write(f'\n  {definition.name}()')
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, UnitProperties):
 			return False
 		if other.fields_available_flags != self.fields_available_flags:

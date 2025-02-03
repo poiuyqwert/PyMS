@@ -1,6 +1,8 @@
 
 import ctypes, os, sys
 
+from typing import Any
+
 STORMLIB_DIR = None
 if hasattr(sys, 'frozen'):
 	STORMLIB_DIR = os.path.join(os.path.dirname(sys.executable) ,'PyMS','FileFormats','MPQ')
@@ -369,8 +371,8 @@ SFileInfoCRC32                = 56 # CRC32 of the file
 
 
 class MPQHANDLE(ctypes.c_void_p):
-	def __repr__(self):
-		return f'<MPQHANDLE object at {hex(id(self))}: {hex(self.value)}>'
+	def __repr__(self) -> str:
+		return f'<MPQHANDLE object at {hex(id(self))}: {hex(self.value) if self.value is not None else None}>'
 
 class SFILE_FIND_DATA(ctypes.Structure):
 	_fields_ = [
@@ -386,7 +388,7 @@ class SFILE_FIND_DATA(ctypes.Structure):
 		('locale', ctypes.c_uint32),
 	]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.file_name = b''
 		self.plain_name = b''
 		self.hash_index = 0
@@ -414,7 +416,7 @@ class SFILE_CREATE_MPQ(ctypes.Structure):
 		('max_file_count', ctypes.c_uint32),
 	]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.size = 0
 		self.mpq_version = 0
 		self.user_data1 = None
@@ -709,10 +711,10 @@ def _file_name(file_name: str | bytes) -> bytes:
 		return file_name.encode('utf-8')
 	return file_name
 
-def SFInvalidHandle(h):
+def SFInvalidHandle(h: Any) -> bool:
 	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]
 
-def SFileGetLocale():
+def SFileGetLocale() -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileGetLocale()
 
@@ -910,8 +912,9 @@ def SFileSetFileLocale(file: MPQHANDLE, locale: int) -> bool:
 # 		windll.kernel32.SetLastError(error)
 # 	return _StormLib.SetLastError(error)
 
-def SFGetLastError():
+def SFGetLastError() -> int:
+	assert _StormLib is not None
 	# StormLib only implements its own GetLastError on platforms other than windows
 	if _StormLib.GetLastError is None:
-		return ctypes.GetLastError()
+		return ctypes.GetLastError() # type: ignore[attr-defined]
 	return _StormLib.GetLastError() # pylint: disable=not-callable

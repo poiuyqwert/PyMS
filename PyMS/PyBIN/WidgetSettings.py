@@ -12,7 +12,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Any
 if TYPE_CHECKING:
 	from .WidgetNode import WidgetNode
 
@@ -30,14 +30,14 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.left = IntegerVar(range=[0,65535])
 		self.right = IntegerVar(range=[0,65535])
 		self.width = IntegerVar(range=[0,65535])
-		def calc_right(_) -> None:
+		def calc_right(_: Any) -> None:
 			self.calculate(self.right,self.left,self.width,1,-1,False)
 		self.left.callback = calc_right
 		self.width.callback = calc_right
 		self.top = IntegerVar(range=[0,65535])
 		self.bottom = IntegerVar(range=[0,65535])
 		self.height = IntegerVar(range=[0,65535])
-		def calc_bottom(_) -> None:
+		def calc_bottom(_: Any) -> None:
 			self.calculate(self.left,self.right,self.width,-1,1,False)
 		self.top.callback = calc_bottom
 		self.height.callback = calc_bottom
@@ -49,14 +49,14 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.responsive_left = IntegerVar(range=[0,65535])
 		self.responsive_right = IntegerVar(range=[0,65535])
 		self.responsive_width = IntegerVar(range=[0,65535])
-		def calc_responsive_right(_) -> None:
+		def calc_responsive_right(_: Any) -> None:
 			self.calculate(self.responsive_right,self.responsive_left,self.responsive_width,1,-1,False)
 		self.responsive_left.callback = calc_responsive_right
 		self.responsive_width.callback = calc_responsive_right
 		self.responsive_top = IntegerVar(range=[0,65535])
 		self.responsive_bottom = IntegerVar(range=[0,65535])
 		self.responsive_height = IntegerVar(range=[0,65535])
-		def calc_responsive_bottom(_) -> None:
+		def calc_responsive_bottom(_: Any) -> None:
 			self.calculate(self.responsive_left,self.responsive_right,self.responsive_width,-1,1,False)
 		self.responsive_top.callback = calc_responsive_bottom
 		self.responsive_height.callback = calc_responsive_bottom
@@ -100,7 +100,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))
 
 	def widgetize(self) -> (Misc | None):
-		def calc_button(f: Misc, calc, orig, offset, direction, fix) -> Button:
+		def calc_button(f: Misc, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Button:
 			def calc_callback(calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Callable[[], None]:
 				def calculate() -> None:
 					self.calculate(calc, orig, offset, direction, fix)

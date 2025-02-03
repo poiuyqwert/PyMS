@@ -18,7 +18,7 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 		self.edited = False
 		PyMSDialog.__init__(self, parent, f'MegaTile Editor [{tile_id}]')
 
-	def widgetize(self):
+	def widgetize(self) -> Widget | None:
 		self.editor = MegaEditorView.MegaEditorView(self, self.config_, self, self.id)
 		self.editor.pack(side=TOP, padx=3, pady=(3,0))
 		ok = Button(self, text='Ok', width=10, command=self.ok)
@@ -37,13 +37,13 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 	def draw_group(self) -> None:
 		pass
 
-	def mark_edited(self):
+	def mark_edited(self) -> None:
 		self.edited = True
 
-	def megaload(self):
+	def megaload(self) -> None:
 		self.editor.draw()
 
-	def ok(self, _event: Event | None = None):
+	def ok(self, _event: Event | None = None) -> None:
 		if self.edited:
 			from .TilePalette import TilePalette
 			if self.editor.megatile_id in TilePalette.TILE_CACHE:

@@ -373,7 +373,7 @@ class GOT:
 		self.resources_value = resources_value
 		self.subtype_value = subtype_value
 
-	def decompile(self, output: IO.AnyOutputText, include_reference: bool = True):
+	def decompile(self, output: IO.AnyOutputText, include_reference: bool = True) -> None:
 		text = Serialize.encode_text(self, None, _GOTDefinition)
 		with IO.OutputText(output) as f:
 			if include_reference:
@@ -388,7 +388,7 @@ class GOT:
 				f.write('#----------------------------------------------------\n')
 			f.write(text)
 
-	def interpret(self, any_input: IO.AnyInputText):
+	def interpret(self, any_input: IO.AnyInputText) -> None:
 		with IO.InputText(any_input) as input_text:
 			text = input_text.read()
 		Serialize.decode_text(text, [_GOTDefinition], lambda i,d: self, 1)
@@ -396,7 +396,7 @@ class GOT:
 	def save_data(self) -> bytes:
 		return struct.pack('<B32s32s2B3H11B3Lx', 3, self.name.encode('utf-8'),self.subtype_name.encode('utf-8'),self.gametype_id,self.subtype_id,self.subtype_display,self.subtype_label,self.victory_condition,self.resources,self.unit_stats,self.fog_of_war,self.starting_units,self.starting_positions,self.player_types,self.allies,self.team_mode,self.cheat_codes,self.tournament_mode,self.victory_condition_value,self.resources_value,self.subtype_value)
 
-	def save_file(self, output: IO.AnyOutputBytes):
+	def save_file(self, output: IO.AnyOutputBytes) -> None:
 		data = self.save_data()
 		with IO.OutputBytes(output) as f:
 			f.write(data)

@@ -20,13 +20,13 @@ class DataContext:
 		self.weapons_dat = weapons_dat
 		self._weapon_names: tuple[str, ...] | None = None
 
-	def set_images_tbl(self, images_tbl: TBL | None):
+	def set_images_tbl(self, images_tbl: TBL | None) -> None:
 		self.images_tbl = images_tbl
 		self._image_names = None
 		self._sprite_names = None
 		self._flingy_names = None
 
-	def set_images_dat(self, images_dat: ImagesDAT | None):
+	def set_images_dat(self, images_dat: ImagesDAT | None) -> None:
 		self.images_dat = images_dat
 		self._image_names = None
 
@@ -62,7 +62,7 @@ class DataContext:
 			return None
 		return self.images_tbl.strings[string_id][:-1]
 
-	def set_sprites_dat(self, sprites_dat: SpritesDAT | None):
+	def set_sprites_dat(self, sprites_dat: SpritesDAT | None) -> None:
 		self.sprites_dat = sprites_dat
 		self._sprite_names = None
 
@@ -87,7 +87,7 @@ class DataContext:
 			return None
 		return sprite_names[sprite_id]
 
-	def set_flingy_dat(self, flingy_dat: FlingyDAT | None):
+	def set_flingy_dat(self, flingy_dat: FlingyDAT | None) -> None:
 		self.flingy_dat = flingy_dat
 		self._flingy_names = None
 
@@ -112,11 +112,11 @@ class DataContext:
 			return None
 		return flingy_names[flingy_id]
 
-	def set_sounds_tbl(self, sounds_tbl: TBL | None):
+	def set_sounds_tbl(self, sounds_tbl: TBL | None) -> None:
 		self.sounds_tbl = sounds_tbl
 		self._sound_names = None
 
-	def set_sounds_dat(self, sounds_dat: SoundsDAT | None):
+	def set_sounds_dat(self, sounds_dat: SoundsDAT | None) -> None:
 		self.sounds_dat = sounds_dat
 		self._sound_names = None
 
@@ -152,11 +152,11 @@ class DataContext:
 			return None
 		return self.sounds_tbl.strings[string_id][:-1]
 
-	def set_stat_txt_tbl(self, stat_txt_tbl: TBL | None):
+	def set_stat_txt_tbl(self, stat_txt_tbl: TBL | None) -> None:
 		self.stat_txt_tbl = stat_txt_tbl
 		self._weapon_names = None
 
-	def set_weapons_dat(self, weapons_dat: WeaponsDAT | None):
+	def set_weapons_dat(self, weapons_dat: WeaponsDAT | None) -> None:
 		self.weapons_dat = weapons_dat
 		self._weapon_names = None
 

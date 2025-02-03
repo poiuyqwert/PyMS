@@ -8,6 +8,8 @@ from .. import Assets
 from ..PyMSConfig import PYMS_CONFIG
 from ..EditedState import EditedState
 
+from typing import Any
+
 class ThemeSettingsTab(SettingsTab):
 	def __init__(self, parent: Notebook, edited_state: EditedState, setting: Config.String):
 		super().__init__(parent)
@@ -84,7 +86,7 @@ class ThemeSettingsTab(SettingsTab):
 			edited = True
 		self.edited_state.mark_edited(edited)
 
-	def default_updated(self, *_) -> None:
+	def default_updated(self, *_: Any) -> None:
 		if self.default.get():
 			theme = self.current_default()
 			theme_index = self.theme_index(theme)
@@ -93,7 +95,7 @@ class ThemeSettingsTab(SettingsTab):
 			self.listbox.see(theme_index)
 		self.check_edited()
 
-	def selection_updated(self, _=None) -> None:
+	def selection_updated(self, _event: Event | None = None) -> None:
 		self.preview_theme()
 		self.check_edited()
 

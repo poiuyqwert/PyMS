@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 	from .DecompileStrategy import DecompileStrategy
 
 class SourceCodeSerializer:
-	def decompile(self, serialize_context: SerializeContext, decompile_strategy: DecompileStrategy):
+	def decompile(self, serialize_context: SerializeContext, decompile_strategy: DecompileStrategy) -> None:
 		serialize_context.strategy = decompile_strategy
 		add_newlines = False
 		for item in serialize_context.strategy.items:

@@ -11,18 +11,18 @@ class Token:
 	def match(cls, code: str, offset: int) -> (Self | None):
 		raise NotImplementedError(cls.__name__ + '.match()')
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return f'<{self.__class__.__name__} {self.raw_value!r}>'
 
 class EOFToken(Token):
-	def __init__(self):
-		Token.__init__(self, None)
+	def __init__(self) -> None:
+		Token.__init__(self, '')
 
 	@classmethod
 	def match(cls, code: str, offset: int) -> (Self | None):
 		return None
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return f'<{self.__class__.__name__}>'
 
 class RegexToken(Token):

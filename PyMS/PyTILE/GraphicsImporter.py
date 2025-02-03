@@ -162,7 +162,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			return
-		def can_expand():
+		def can_expand() -> bool:
 			return MessageBox.askyesno(parent=self, title='Expand VX4', message="You have run out of minitiles, would you like to expand the VX4 file? If you don't know what this is you should google 'VX4 Expander Plugin' before saying Yes")
 		options = ImportGraphicsOptions()
 		options.minitiles_reuse_duplicates_old = self.minitiles_reuse_duplicates_old.get()
@@ -251,7 +251,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 	def mark_edited(self) -> None:
 		return self.delegate.mark_edited()
 
-	def change(self, tiletype, tile_id):
+	def change(self, tiletype: TileType, tile_id: int) -> None:
 		if tiletype == TileType.mega:
 			self.megatiles_null_id.set(tile_id)
 		elif tiletype == TileType.mini:

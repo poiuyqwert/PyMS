@@ -27,7 +27,7 @@ class PreviewDialog(PyMSDialog):
 		yscrollbar = Scrollbar(self, command=self.canvas.yview)
 		yscrollbar.grid(row=0,column=1, sticky=NS)
 		def scroll_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
-			def scroll(l,h):
+			def scroll(l: float, h: float) -> None:
 				scrollbar.set(l,h)
 				self.update_viewport()
 			return scroll
@@ -36,7 +36,7 @@ class PreviewDialog(PyMSDialog):
 		self.grid_columnconfigure(0,weight=1)
 
 		self.canvas.focus_set()
-		def scroll_map(event: Event | None = None, horizontal: bool = False, delta: int = 0):
+		def scroll_map(event: Event | None = None, horizontal: bool = False, delta: int = 0) -> None:
 			if event:
 				horizontal = False
 				if hasattr(event, 'state') and getattr(event, 'state', 0) & Modifier.Shift.state:

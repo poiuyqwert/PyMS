@@ -103,7 +103,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 	def megaload(self) -> None:
 		pass
 
-	def update_ranges(self): # type () -> None
+	def update_ranges(self) -> None:
 		pass
 
 	@property

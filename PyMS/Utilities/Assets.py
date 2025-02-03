@@ -53,7 +53,7 @@ def get_image(filename: str, cache: bool = True) -> Image:
 		_IMAGE_CACHE[filename] = image
 	return image
 
-def clear_image_cache():
+def clear_image_cache() -> None:
 	_IMAGE_CACHE.clear()
 
 ## MPQ
@@ -153,7 +153,7 @@ def log_file_path(filename: str) -> str:
 ## Internal Temp
 internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
-def internal_temp_file(filename):
+def internal_temp_file(filename: str) -> str:
 	return _os.path.join(internal_temp_dir, filename)
 
 ## Help
@@ -211,7 +211,7 @@ class HelpFolder:
 				return None
 			return self.folders[index_components[0]]._get_file(index_components[1:]) # pylint: disable=protected-access
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		result = self.name
 		for file in self.files:
 			result += '\n - ' + file.name
@@ -290,7 +290,7 @@ def help_image(path: str) -> Image | None:
 	_HELP_IMAGE_CACHE[full_path] = image
 	return image
 
-def clear_help_image_cache():
+def clear_help_image_cache() -> None:
 	_HELP_IMAGE_CACHE.clear()
 
 ## Themes

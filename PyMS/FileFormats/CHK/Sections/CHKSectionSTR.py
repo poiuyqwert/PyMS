@@ -19,10 +19,10 @@ class CHKString:
 		self.text = text
 		self.references = refs
 
-	def retain(self):
+	def retain(self) -> None:
 		self.references += 1
 
-	def release(self):
+	def release(self) -> None:
 		self.references -= 1
 		if self.references == 0:
 			self.sect.delete_string(self.string_id)

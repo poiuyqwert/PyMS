@@ -644,7 +644,7 @@ class DialogBIN:
 		self.widgets = widgets
 		self.smks = smks
 
-	def save_file(self, output: IO.AnyOutputBytes, remastered: bool | None = None):
+	def save_file(self, output: IO.AnyOutputBytes, remastered: bool | None = None) -> None:
 		data = self.save_data(remastered)
 		with IO.OutputBytes(output) as f:
 			f.write(data)

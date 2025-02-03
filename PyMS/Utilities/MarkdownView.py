@@ -7,7 +7,7 @@ from . import Assets
 
 import webbrowser, re, os
 
-from typing import cast
+from typing import cast, Any
 
 def _em( em: float = 1) -> int:
 	return int(16 * em)
@@ -66,7 +66,7 @@ class MarkdownView(Frame):
 	RE_LINK_HAS_SCHEME = re.compile(r'[a-zA-Z][a-zA-Z0-9+.-]{1,31}:')
 
 	# Specify `link_callback` to handle relative links
-	def __init__(self, *args, **kwargs) -> None:
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		self.link_callback = kwargs.pop('link_callback', None)
 		if not 'relief' in kwargs:
 			kwargs['relief'] = SUNKEN
@@ -283,22 +283,21 @@ class MarkdownView(Frame):
 
 	RE_KEYBOARD_SHORTCUT = re.compile(r'(?:(?:Shift|Ctrl|Alt)\+)+.+$')
 	def insert_content(self, block: Markdown.ContentBlock, tags: tuple[str, ...], additional_first_line_tags: tuple[str, ...] | None = None, additional_last_line_tags: tuple[str, ...] | None = None) -> None:
-		def insert_item(item, tags):
+		def insert_item(item: str | Markdown.Span, tags: tuple[str, ...]) -> None:
 			if isinstance(item, Markdown.CodeSpan):
 				tags += ('codespan',)
 				# Markdown "Keyboard Shortcut" Extension
 				#  - Code spans where the content matches keyboard shortcut format (see RE_KEYBOARD_SHORTCUT) will be updated on Mac to reflect the mac shortcuts
-				if is_mac():
-					match = MarkdownView.RE_KEYBOARD_SHORTCUT.match(item.contents[0])
-					if match:
-						item.contents[0] = item.contents[0]\
-							.replace('Ctrl+', Modifier.Ctrl.description)\
-							.replace('Alt+', Modifier.Alt.description)\
-							.replace('Shift+', Modifier.Shift.description)
+				content = item.contents[0]
+				if is_mac() and isinstance(content, str) and MarkdownView.RE_KEYBOARD_SHORTCUT.match(content):
+					item.contents[0] = content\
+						.replace('Ctrl+', Modifier.Ctrl.description)\
+						.replace('Alt+', Modifier.Alt.description)\
+						.replace('Shift+', Modifier.Shift.description)
 			elif isinstance(item, Markdown.Bold):
 				tags += ('bold',)
 			elif isinstance(item, Markdown.Link):
-				link_tag = 'link_%d' % len(self.links)
+				link_tag = f'link_{len(self.links)}'
 				tags += ('link', link_tag)
 				self.links[link_tag] = item
 			elif isinstance(item, Markdown.Image):

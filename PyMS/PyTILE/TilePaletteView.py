@@ -8,7 +8,7 @@ from ..Utilities.UIKit import *
 
 from math import ceil
 
-from typing import Callable
+from typing import Callable, Any
 
 class TilePaletteView(Frame):
 	# sub_select currently only supported by TileType.group when multiselect=False
@@ -59,7 +59,7 @@ class TilePaletteView(Frame):
 		self.canvas.config(yscrollcommand=yscrollcommand(scrollbar))
 
 		self.initial_scroll_bind = None
-		def initial_scroll(_) -> None:
+		def initial_scroll(_: Any) -> None:
 			self.scroll_to_selection()
 			if self.initial_scroll_bind is None:
 				return

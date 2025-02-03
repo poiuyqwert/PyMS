@@ -55,7 +55,7 @@ class Preview:
 	frame: int
 	grp: GRP.CacheGRP | None
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Preview):
 			return False
 		return other.image_id == self.image_id and other.frame == self.frame
@@ -522,7 +522,7 @@ class PreviewerDialog(PyMSDialog):
 		self.drawpreview()
 		self.updateframes()
 
-	def selectframe(self, t: MoveViewBy, p: float, e=None) -> None:
+	def selectframe(self, t: MoveViewBy, p: float, e: str) -> None:
 		if not self.previewing.grp:
 			return
 		self.stopframe()

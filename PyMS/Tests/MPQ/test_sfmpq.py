@@ -158,10 +158,10 @@ class Test_SFMPQ_Open(unittest.TestCase):
 class Test_SFMPQ_Create(unittest.TestCase):
 	path: str
 
-	def setUp(self):
+	def setUp(self) -> None:
 		self.path = tempfile.mktemp()
 
-	def tearDown(self):
+	def tearDown(self) -> None:
 		if os.path.exists(self.path):
 			os.unlink(self.path)
 

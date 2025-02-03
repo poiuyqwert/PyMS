@@ -12,7 +12,7 @@ class RichList(Frame):
 	selregex = re.compile(r'\bsel\b')
 	idregex = re.compile(r'(\d+)\.(\d+).(\d+)(.+)?')
 
-	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, **kwargs):
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, **kwargs: Any) -> None:
 		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
@@ -38,7 +38,7 @@ class RichList(Frame):
 		self.tag_unbind = self.text.tag_unbind
 		self.yview = self.text.yview
 
-	def setup_ui(self, **text_kwargs) -> None:
+	def setup_ui(self, **text_kwargs: Any) -> None:
 		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
 		self.vscroll = Scrollbar(self)
 		self.text = Text(self, cursor='arrow', height=1, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=False, **text_kwargs)
@@ -68,10 +68,10 @@ class RichList(Frame):
 	def tag_prevrange(self, tag: str, start: str, end: str) -> (tuple[str, str] | tuple[()]):
 		return self.text.tag_prevrange(tag, self.index(start), self.index(end))
 
-	def image_create(self, index: str, cnf: dict[str, Any] | None = None, **kw) -> str:
+	def image_create(self, index: str, cnf: dict[str, Any] | None = None, **kw: Any) -> str:
 		return self.text.image_create(self.index(index), cnf or {}, **kw)
 
-	def image_configure(self, index: str, **options) -> tuple[str, str, str, str, str | int] | dict[str, tuple[str, str, str, str, str | int]] | None:
+	def image_configure(self, index: str, **options: Any) -> tuple[str, str, str, str, str | int] | dict[str, tuple[str, str, str, str, str | int]] | None:
 		return self.text.image_configure(self.index(index), **options)
 
 	def image_cget(self, index: str, option: str) -> tuple[str, str, str, str, str | int]:
@@ -163,7 +163,7 @@ class RichList(Frame):
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('RichList Test')
 

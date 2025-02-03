@@ -90,7 +90,7 @@ class PyMPQConfig(Config.Config):
 			self.folder_prefix = Config.String()
 			super().__init__()
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.compression = Config.String(default=str(CompressionOption.Auto.setting()))
 		self.encrypt = Config.Boolean(default=False)
 		self.locale = Config.Int(default=0, limits=(0,65535))

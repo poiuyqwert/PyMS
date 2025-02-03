@@ -19,6 +19,7 @@ def _migrate_1_to_2(data: dict) -> None:
 		(('redohistory',), ('max_redos',)),
 		(('windows', 'external_def'), ('windows', 'extdefs')),
 		(('stat_txt',), ('settings', 'files', 'stat_txt')),
+		(('findreplacewindow',), ('windows', 'find', 'find_replace')),
 	))
 
 class PyAIConfig(Config.Config):
@@ -39,6 +40,7 @@ class PyAIConfig(Config.Config):
 			def __init__(self) -> None:
 				self.script = Config.WindowGeometry()
 				self.string = Config.WindowGeometry()
+				self.find_replace = Config.WindowGeometry()
 				super().__init__()
 
 		class FixIssues(Config.Group):

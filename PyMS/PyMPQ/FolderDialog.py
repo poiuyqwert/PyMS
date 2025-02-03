@@ -23,7 +23,7 @@ class FolderDialog(PyMSDialog):
 		buttons.pack()
 
 		self.bind(Key.Return(), self.ok)
-		def select_all(*_):
+		def select_all(_event: Event) -> None:
 			entry.select_to(END)
 			entry.icursor(END)
 		self.bind(Ctrl.a(), select_all)

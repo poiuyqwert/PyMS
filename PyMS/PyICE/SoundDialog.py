@@ -92,7 +92,7 @@ class SoundDialog(PyMSDialog):
 		if self.closeafter.get():
 			self.destroy()
 
-	def destroy(self):
+	def destroy(self) -> None:
 		self.config_.overwrite.value = self.overwrite.get()
 		self.config_.close_after.value = self.closeafter.get()
 		PyMSDialog.withdraw(self)

@@ -12,7 +12,7 @@ class App:
 	Version = 'av'
 	InstallerID = 'aiid'
 
-	def __init__(self):
+	def __init__(self) -> None:
 		raise NotImplementedError
 
 class Event:
@@ -21,7 +21,7 @@ class Event:
 	Label = 'el'
 	Value = 'ev'
 
-	def __init__(self):
+	def __init__(self) -> None:
 		raise NotImplementedError
 
 class Screen:
@@ -36,7 +36,7 @@ class Custom:
 	def Metric(n):
 		return 'cm%d' % n
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self._registered = set()
 
 	def register(self, n, name):

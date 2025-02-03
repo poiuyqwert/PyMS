@@ -21,7 +21,7 @@ class ActionDefinition(Protocol):
 	def matches(self, action: Action) -> int:
 		...
 
-	def decompile(self, action: Action, trg: TRG, output: IO.AnyOutputText):
+	def decompile(self, action: Action, trg: TRG, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
 			f.write(f'{self.name}(')
 			has_parameters = False

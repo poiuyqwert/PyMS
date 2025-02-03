@@ -24,12 +24,12 @@ class Canvas(_Tk.Canvas, Extensions):
 		def __getitem__(self, option: str) -> Any:
 			return self.cget(option)
 
-		def config(self, **kwargs) -> None:
+		def config(self, **kwargs: Any) -> None:
 			self.canvas.itemconfig(self.item_id, **kwargs)
 		def __setitem__(self, option: str, value: Any) -> None:
 			self.config(**{option: value})
 
-		def coords(self, x: int, y: int, x2: int | None = None, y2: int | None = None):
+		def coords(self, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None:
 			x,y = self.canvas.coordinate_adjust(x, y)
 			if x2 is not None and y2 is not None:
 				x2,y2 = self.canvas.coordinate_adjust(x2, y2)
@@ -67,7 +67,7 @@ class Canvas(_Tk.Canvas, Extensions):
 	def coordinate_adjust_os(x: int, y: int) -> tuple[int, int]:
 		return (x + (1 if is_mac() else 0), y + (1 if is_mac() else 0))
 
-	def __init__(self, master: _Tk.Misc | None = None, cnf: dict[str, Any] | None = None, coordinate_adjust: CoordinateAdjuster | None = None, **kw):
+	def __init__(self, master: _Tk.Misc | None = None, cnf: dict[str, Any] | None = None, coordinate_adjust: CoordinateAdjuster | None = None, **kw: Any):
 		self.coordinate_adjust: CoordinateAdjuster = coordinate_adjust or Canvas.coordinate_adjust_none
 		kw, self.theme_tag = Theme.get_tag(kw)
 		_Tk.Canvas.__init__(self, master, cnf or {}, **kw)
@@ -87,50 +87,50 @@ class Canvas(_Tk.Canvas, Extensions):
 	# def scan_mark(self, x, y):
 	# def scan_dragto(self, x, y, gain=10):
 
-	def create_arc(self, x1: int, y1: int, x2: int, y2: int, *args, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_arc(self, x1: int, y1: int, x2: int, y2: int, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x1,y1 = self.coordinate_adjust(x1,y1)
 		x2,y2 = self.coordinate_adjust(x2,y2)
-		return Canvas.Item(self, _Tk.Canvas.create_arc(self, x1,y1, x2,y2, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_arc(self, x1,y1, x2,y2, **kwargs))
 
-	def create_bitmap(self, x: int, y: int, *args, bitmap: AnyBitmapImage | None = None, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_bitmap(self, x: int, y: int, bitmap: AnyBitmapImage | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['bitmap'] = bitmap
-		return Canvas.Item(self, _Tk.Canvas.create_bitmap(self, x,y, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_bitmap(self, x,y, **kwargs))
 
-	def create_image(self, x: int, y: int, *args, image: AnyImage | None = None, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_image(self, x: int, y: int, image: AnyImage | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['image'] = image
-		return Canvas.Item(self, _Tk.Canvas.create_image(self, x,y, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_image(self, x,y, **kwargs))
 
-	def create_line(self, *points: tuple[int,int], **kwargs) -> Canvas.Item: # type: ignore[override]
+	def create_line(self, *points: tuple[int,int], **kwargs: Any) -> Canvas.Item: # type: ignore[override]
 		points = tuple(self.coordinate_adjust(point[0],point[1]) for point in points)
 		coords = sum(points, ())
 		return Canvas.Item(self, _Tk.Canvas.create_line(self, *coords, **kwargs))
 
-	def create_oval(self, x1: int, y1: int, x2: int, y2: int, *args, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_oval(self, x1: int, y1: int, x2: int, y2: int, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x1,y1 = self.coordinate_adjust(x1,y1)
 		x2,y2 = self.coordinate_adjust(x2,y2)
-		return Canvas.Item(self, _Tk.Canvas.create_oval(self, x1,y1, x2,y2, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_oval(self, x1,y1, x2,y2, **kwargs))
 
-	def create_polygon(self, *points: tuple[int,int], **kwargs) -> Canvas.Item: # type: ignore[override]
+	def create_polygon(self, *points: tuple[int,int], **kwargs: Any) -> Canvas.Item: # type: ignore[override]
 		points = tuple(self.coordinate_adjust(point[0],point[1]) for point in points)
 		coords = sum(points, ())
 		return Canvas.Item(self, _Tk.Canvas.create_polygon(self, *coords, **kwargs))
 
-	def create_rectangle(self, x1: int, y1: int, x2: int, y2: int, *args, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_rectangle(self, x1: int, y1: int, x2: int, y2: int, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x1,y1 = self.coordinate_adjust(x1,y1)
 		x2,y2 = self.coordinate_adjust(x2,y2)
-		return Canvas.Item(self, _Tk.Canvas.create_rectangle(self, x1,y1, x2,y2, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_rectangle(self, x1,y1, x2,y2, **kwargs))
 
-	def create_text(self, x: int, y: int, *args, text: str | None = None, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_text(self, x: int, y: int, text: str | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['text'] = text
-		return Canvas.Item(self, _Tk.Canvas.create_text(self, x,y, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_text(self, x,y, **kwargs))
 
-	def create_window(self, x: int, y: int, *args, window: _Tk.Widget | None = None, **kwargs) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def create_window(self, x: int, y: int, window: _Tk.Widget | None = None, **kwargs: Any) -> Canvas.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x,y)
 		kwargs['window'] = window
-		return Canvas.Item(self, _Tk.Canvas.create_window(self, x,y, *args, **kwargs))
+		return Canvas.Item(self, _Tk.Canvas.create_window(self, x,y, **kwargs))
 
 	def coords(self, item_id_or_tag: int | str, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None: # type: ignore[override] # pylint: disable=arguments-differ
 		x,y = self.coordinate_adjust(x, y)

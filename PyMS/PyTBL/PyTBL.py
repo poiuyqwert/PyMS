@@ -74,10 +74,10 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', Ctrl.d)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', Ctrl.e, enabled=False, tags='file_open')
@@ -274,7 +274,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def text_insert(self, pos: str, text: str) -> None:
 		self.tk.call((self.text_orig, 'insert', pos, text))
 
-	def text_delete(self, start: str, end: str | None = None):
+	def text_delete(self, start: str, end: str | None = None) -> None:
 		self.tk.call((self.text_orig, 'delete', start, end))
 
 	def dispatch(self, cmd: str, *args: str ) -> None:
@@ -320,7 +320,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
-	def open(self, file: str | None = None):
+	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file:
@@ -426,7 +426,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END):
+	def add(self, index: int | Literal['end'] = END) -> None:
 		if not self.tbl:
 			return
 		if index == END:

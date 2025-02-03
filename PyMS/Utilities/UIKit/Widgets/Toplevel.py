@@ -4,9 +4,11 @@ from .Extensions import Extensions, WindowExtensions
 
 import tkinter as _Tk
 
+from typing import Any
+
 
 class Toplevel(_Tk.Toplevel, Extensions, WindowExtensions):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		_Tk.Toplevel.__init__(self, *args, **kwargs)
 		Theme.apply_theme(self)
 

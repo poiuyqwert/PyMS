@@ -8,7 +8,6 @@ from . import Lexer
 from .. import Struct
 from ..PyMSError import PyMSError
 from ..BytesScanner import BytesScanner
-from .. import Struct
 
 from typing import TYPE_CHECKING, Generic, TypeVar, cast, runtime_checkable, Protocol, Sequence
 if TYPE_CHECKING:
@@ -40,12 +39,12 @@ class CodeType(Generic[BinaryT, MemoryT]):
 		self.block_reference = block_reference
 
 	def accepts(self, other_type: CodeType) -> bool:
-		return type(other_type) == type(self)
+		return isinstance(self, type(other_type))
 
 	def compatible(self, other_type: CodeType) -> int:
-		return type(other_type) == type(self)
+		return isinstance(self, type(other_type))
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> BinaryT:
+	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> BinaryT:
 		return scanner.scan(self._bytecode_type)
 
 	def compile(self, value: MemoryT, context: ByteCodeBuilderType) -> None:
@@ -58,7 +57,7 @@ class CodeType(Generic[BinaryT, MemoryT]):
 				return variable.name
 		return str(value)
 
-	def comment(self, value: MemoryT, context: SerializeContext) -> str | None:
+	def comment(self, _value: MemoryT, _context: SerializeContext) -> str | None:
 		return None
 
 	def parse(self, parse_context: ParseContext) -> MemoryT:
@@ -81,8 +80,8 @@ class CodeType(Generic[BinaryT, MemoryT]):
 	def validate(self, value: MemoryT, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
 
-	def __eq__(self, other) -> bool:
-		return type(other) == type(self)
+	def __eq__(self, other: object) -> bool:
+		return isinstance(self, type(other))
 
 	def __hash__(self) -> int:
 		return hash(type(self))
@@ -102,24 +101,24 @@ class IntCodeType(CodeType[int, int]):
 		try:
 			if isinstance(token, Tokens.IntegerToken):
 				return int(token.raw_value)
-			elif isinstance(token, Tokens.HexToken) and self._allow_hex:
+			if isinstance(token, Tokens.HexToken) and self._allow_hex:
 				return int(token.raw_value, 16)
-		except:
-			raise parse_context.error('Parse', f'Expected {allowed} value but got `{token.raw_value}`')
+		except Exception as exc:
+			raise parse_context.error('Parse', f'Expected {allowed} value but got `{token.raw_value}`') from exc
 		raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected {allowed})')
 
-	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
+	def get_limits(self, _parse_context: ParseContext) -> tuple[int, int]:
 		if self._limits:
 			return self._limits
 		bytecode_type = cast(Struct.IntField, self._bytecode_type)
 		return (bytecode_type.min, bytecode_type.max)
 
 	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
-		min,max = self.get_limits(parse_context)
-		if num < min:
-			raise PyMSError('Parse', f'Value is too small for `{self.name}` (got `{num}`, minimum is `{min}`)')
-		if num > max:
-			raise PyMSError('Parse', f'Value is too large for `{self.name}` (got `{num}`, maximum is `{max}`)')
+		min_value,max_value = self.get_limits(parse_context)
+		if num < min_value:
+			raise PyMSError('Parse', f'Value is too small for `{self.name}` (got `{num}`, minimum is `{min_value}`)')
+		if num > max_value:
+			raise PyMSError('Parse', f'Value is too large for `{self.name}` (got `{num}`, maximum is `{max_value}`)')
 
 class FloatCodeType(CodeType[float, float]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.FloatField, limits: tuple[float, float] | None = None) -> None:
@@ -131,22 +130,22 @@ class FloatCodeType(CodeType[float, float]):
 		if isinstance(token, Tokens.FloatToken):
 			try:
 				return float(token.raw_value)
-			except:
-				raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected float value)')
+			except Exception as exc:
+				raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected float value)') from exc
 		raise parse_context.error('Parse', f'Expected float value but got `{token.raw_value}`')
 
-	def get_limits(self, parse_context: ParseContext) -> tuple[float, float]:
+	def get_limits(self, _parse_context: ParseContext) -> tuple[float, float]:
 		if self._limits:
 			return self._limits
 		bytecode_type = cast(Struct.FloatField, self._bytecode_type)
 		return (bytecode_type.min, bytecode_type.max)
 
 	def validate(self, num: float, parse_context: ParseContext, token: str | None = None) -> None:
-		min,max = self.get_limits(parse_context)
-		if num < min:
-			raise PyMSError('Parse', f'Value is too small for `{self.name}` (got `{num}`, minimum is `{min}`)')
-		if num > max:
-			raise PyMSError('Parse', f'Value is too large for `{self.name}` (got `{num}`, maximum is `{max}`)')
+		min_value,max_value = self.get_limits(parse_context)
+		if num < min_value:
+			raise PyMSError('Parse', f'Value is too small for `{self.name}` (got `{num}`, minimum is `{min_value}`)')
+		if num > max_value:
+			raise PyMSError('Parse', f'Value is too large for `{self.name}` (got `{num}`, maximum is `{max_value}`)')
 
 class AddressCodeType(CodeType[int, CodeBlock]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
@@ -157,7 +156,7 @@ class AddressCodeType(CodeType[int, CodeBlock]):
 
 	def serialize(self, block: CodeBlock, context: SerializeContext) -> str:
 		return context.strategy.block_label(block)
-	
+
 	def lex(self, parse_context: ParseContext) -> CodeBlock:
 		token = parse_context.lexer.next_token()
 		if isinstance(token, Tokens.IdentifierToken):
@@ -182,12 +181,12 @@ class StrCodeType(CodeType[str, str]):
 		try:
 			result = ast.literal_eval(string)
 			if not isinstance(result, str):
-				raise Exception()
-		except:
-			raise PyMSError('Parse', f'Value `{string}` is not a valid string')
+				raise ValueError()
+		except Exception as exc:
+			raise PyMSError('Parse', f'Value `{string}` is not a valid string') from exc
 		return result
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> str:
+	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> str:
 		return scanner.scan_cstr()[:-1]
 
 	def compile(self, value: str, context: ByteCodeBuilderType) -> None:
@@ -218,7 +217,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		self._values = set(cases.values())
 		self._allow_integer = allow_integer
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> int:
+	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> int:
 		value = scanner.scan(self._bytecode_type)
 		# TODO: Check if value is valid
 		return value
@@ -325,8 +324,8 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 						flag = int(token.raw_value, 16)
 					else:
 						flag = int(token.raw_value)
-				except:
-					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}`')
+				except Exception as exc:
+					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}`') from exc
 				if flag > bytecode_type.max:
 					raise PyMSError('Parse', f'Flag `{token.raw_value}` is too large for `{type_name}`')
 				flags |= flag

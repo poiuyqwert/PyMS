@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKTechStats:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.default = True
 		self.costMinerals = 0
 		self.costGas = 0
@@ -74,9 +74,9 @@ class CHKSectionTECS(CHKSection):
 		result += '\n'
 		for n,stat in enumerate(self.stats):
 			result += '\t' + pad(f'Tech{n:02d}')
-			result += pad(stat.default)
-			result += pad(stat.costMinerals)
-			result += pad(stat.costGas)
-			result += pad(stat.buildTime)
+			result += pad(str(stat.default))
+			result += pad(str(stat.costMinerals))
+			result += pad(str(stat.costGas))
+			result += pad(str(stat.buildTime))
 			result += f'{stat.energyUsed}\n'
 		return result

@@ -12,7 +12,7 @@ from ....Utilities import Assets
 from math import floor, sqrt
 from enum import Enum
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
@@ -21,7 +21,7 @@ class ForceType(Enum):
 	air = 1
 
 	@property
-	def display_name(self):
+	def display_name(self) -> str:
 		match self:
 			case ForceType.ground:
 				return 'Ground'
@@ -49,7 +49,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 
 		l = LabelFrame(scrollview.content_view, text='AI Actions:')
 		s = Frame(l)
-		def add_dropdown(title, entry_variable, dropdown_variable, hint_name):
+		def add_dropdown(title: str, entry_variable: IntegerVar, dropdown_variable: IntVar, hint_name: str) -> DropDown:
 			f = Frame(s)
 			Label(f, text=title + ':', width=16, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=3).pack(side=LEFT)
@@ -85,23 +85,23 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.force_value_text.pack(fill=BOTH, padx=5,pady=5)
 		l.pack(fill=X, side=TOP)
 
-		def show_hand_cursor(*_):
+		def show_hand_cursor(*_: Any) -> None:
 			self.force_value_text.config(cursor='hand2')
-		def show_arrow_cursor(*_):
+		def show_arrow_cursor(*_: Any) -> None:
 			self.force_value_text.config(cursor='arrow')
-		def view_ground_weapon(*_):
-			_,weapon_id = self.force_weapon_id(ForceType.ground)
+		def view_ground_weapon(*_: Any) -> None:
+			_a,weapon_id = self.force_weapon_id(ForceType.ground)
 			if weapon_id != 130:
 				self.delegate.change_tab(DATID.weapons)
 				self.delegate.change_id(weapon_id)
-		def view_air_weapon(*_):
-			_,weapon_id = self.force_weapon_id(ForceType.air)
+		def view_air_weapon(*_: Any) -> None:
+			_b,weapon_id = self.force_weapon_id(ForceType.air)
 			if weapon_id != 130:
 				self.delegate.change_tab(DATID.weapons)
 				self.delegate.change_id(weapon_id)
-		def view_basic_unit(*_):
+		def view_basic_unit(*_: Any) -> None:
 			self.sub_delegate.change_sub_tab(UnitsTabID.basic)
-		def view_weapon_override_unit(force_type):
+		def view_weapon_override_unit(force_type: ForceType) -> None:
 			unit_id,_ = self.force_weapon_id(force_type)
 			if unit_id is None:
 				return
@@ -250,12 +250,12 @@ class AIActionsUnitsTab(DATUnitsTab):
 		reduction = reductions.get(unit_id, 1.0)
 		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) // 256)) * 7.58) * reduction)
 
-		def fstr(f):
+		def fstr(f: float) -> str:
 			return str(f).rstrip('0').rstrip('.')
 		text = self.force_value_text
 		text.insert(END, force_type_name, ('force_type',))
 		text.insert(END, '\n = ')
-		text.insert(END, fstr(force_value), ('force_value',))
+		text.insert(END, str(force_value), ('force_value',))
 		text.insert(END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type_name.lower()
 		text.insert(END, str(attack_range), (f'{tp}_range',))

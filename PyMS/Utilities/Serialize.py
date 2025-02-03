@@ -565,7 +565,7 @@ def repeater_repeat_last(decode_count: int, obj_n: int, _obj_count: int) -> (int
 
 O = TypeVar('O')
 def decode_text(text: str, definitions: Sequence[Definition], builder: Callable[[int, Definition], O], objs: int | None = None, repeater: Repeater = repeater_ignore) -> list[O]:
-	def _apply(json: dict[str, Any], obj: object, structure: Structure | SubStructure):
+	def _apply(json: dict[str, Any], obj: object, structure: Structure | SubStructure) -> None:
 		for key,value in json.items():
 			if key in ('_type', '_id'):
 				continue

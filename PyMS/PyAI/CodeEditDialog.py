@@ -1,7 +1,7 @@
 
 from .FindReplaceDialog import FindReplaceDialog
 from .Config import PyAIConfig
-from .Delegates import MainDelegate
+from .Delegates import MainDelegate, FindReplaceDelegate
 from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeTooltip, DirectiveTooltip
 
 from ..FileFormats.AIBIN import AIBIN
@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 from typing import Sequence
 
-class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, FindReplaceDelegate):
 	@staticmethod
 	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> SyntaxHighlighting:
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
@@ -375,7 +375,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 
 	def find(self, _: Event | None = None) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
+			self.findwindow = FindReplaceDialog(self, self, self.config_.windows.find.find_replace)
 			self.bind(Key.F3(), self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
@@ -655,3 +655,13 @@ script {header_id} {{
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('AIID', 'Block')
+
+	# FindReplaceDelegate
+	def get_find_history(self) -> list[str]:
+		return self.delegate.get_find_history()
+
+	def get_replace_history(self) -> list[str]:
+		return self.delegate.get_replace_history()
+
+	def get_code_text(self) -> ItemSelectDialog.CodeText:
+		return self.text

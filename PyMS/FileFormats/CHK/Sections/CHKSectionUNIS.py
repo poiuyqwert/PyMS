@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKUnitStats:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.default = True
 		self.health = 0
 		self.shields = 0
@@ -24,7 +24,7 @@ class CHKUnitStats:
 		self.name = 0
 
 class CHKWeaponStats:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.damage = 0
 		self.damageUpgrade = 0
 
@@ -115,13 +115,13 @@ class CHKSectionUNIS(CHKSection):
 		result += '\n'
 		for n,unit_stats in enumerate(self.unit_stats):
 			result += '\t' + pad(f'Unit{n:03d}')
-			result += pad(unit_stats.default)
-			result += pad(unit_stats.health / 256.0)
-			result += pad(unit_stats.shields)
-			result += pad(unit_stats.armor)
-			result += pad(unit_stats.buildTime)
-			result += pad(unit_stats.costMinerals)
-			result += pad(unit_stats.costGas)
+			result += pad(str(unit_stats.default))
+			result += pad(str(unit_stats.health / 256.0))
+			result += pad(str(unit_stats.shields))
+			result += pad(str(unit_stats.armor))
+			result += pad(str(unit_stats.buildTime))
+			result += pad(str(unit_stats.costMinerals))
+			result += pad(str(unit_stats.costGas))
 			result += f'{unit_stats.name}\n'
 		result += '\t' + pad('#')
 		for name in ['Damage','Damage Upgrade']:
@@ -129,6 +129,6 @@ class CHKSectionUNIS(CHKSection):
 		result += '\n'
 		for n,weapon_stats in enumerate(self.weapon_stats):
 			result += '\t' + pad(f'Weapon{n:03d}')
-			result += pad(weapon_stats.damage)
+			result += pad(str(weapon_stats.damage))
 			result += f'{weapon_stats.damageUpgrade}\n'
 		return result

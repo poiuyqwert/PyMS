@@ -63,22 +63,22 @@ class _SettingType:
 
 	RE_COLOR = _re.compile(r'#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})')
 	@staticmethod
-	def color(value):
+	def color(value: object) -> bool:
 		# TODO: Support color names?
 		if not isinstance(value, str):
 			return False
 		return not not _SettingType.RE_COLOR.match(value)
 
 	@staticmethod
-	def relief(value):
+	def relief(value: object) -> bool:
 		return value in ('raised', 'sunken', 'flat', 'ridge', 'solid', 'groove')
 
 	@staticmethod
-	def anchor(value):
+	def anchor(value: object) -> bool:
 		return value in ('n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw', 'center')
 
 	@staticmethod
-	def active_style(value):
+	def active_style(value: object) -> bool:
 		return value in ('dotbox', 'none', 'underline')
 
 _ALLOWED_SETTINGS: dict[str, Callable[[Any], bool]] = {
@@ -260,7 +260,7 @@ class _WildcardMatcher(_Matcher):
 	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		return _Matcher.Result(True, True)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return '*' + ('*' if self.many else '')
 
 class _Selector:

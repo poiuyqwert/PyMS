@@ -48,10 +48,10 @@ class PyPCX(MainWindow):
 		#Toolbar
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')

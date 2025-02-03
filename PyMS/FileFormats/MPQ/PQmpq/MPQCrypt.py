@@ -6,7 +6,7 @@ import struct
 
 _crypt_table: tuple[int, ...] | None = None
 def crypt_table() -> tuple[int, ...]:
-	global _crypt_table
+	global _crypt_table # pylint: disable=global-statement
 	if _crypt_table is None:
 		table = [0] * 0x500
 		seed = 0x00100001
@@ -40,7 +40,7 @@ def hash_string(string: str, hash_type: int) -> int:
 
 LONG = struct.Struct('<L')
 
-def decrypt(data, key):
+def decrypt(data: bytes, key: int) -> bytes:
 	result = b''
 	seed = 0xEEEEEEEE
 	offset = 0

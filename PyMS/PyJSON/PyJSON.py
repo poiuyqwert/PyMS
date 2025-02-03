@@ -46,10 +46,10 @@ class PyJSON(MainWindow):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
@@ -174,7 +174,7 @@ class PyJSON(MainWindow):
 		self.object_status.set('')
 		self.action_states()
 
-	def check_format(self, json_data) -> bool:
+	def check_format(self, json_data: list | dict) -> bool:
 		if not isinstance(json_data, list):
 			return False
 		for obj in json_data:
@@ -205,7 +205,7 @@ class PyJSON(MainWindow):
 		# value = self.data_source.value_for(self.tree.treeview.selection()[0])
 		self.rebuild_editor()
 
-	def open(self, file_path: str | None = None):
+	def open(self, file_path: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file_path:
@@ -259,7 +259,7 @@ class PyJSON(MainWindow):
 		self.object_status.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END):
+	def add(self, index: int | Literal['end'] = END) -> None:
 		if not self.data_source.data:
 			return
 		self.mark_edited()

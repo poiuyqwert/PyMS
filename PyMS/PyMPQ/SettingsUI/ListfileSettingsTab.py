@@ -59,6 +59,6 @@ class ListfileSettingsTab(SettingsTab):
 		self.edited_state.mark_edited()
 
 	def save(self) -> None:
-		self.config_.settings.listfiles.data.remove()
+		self.config_.settings.listfiles.data.clear()
 		for i in range(self.listbox.size()): # type: ignore
 			self.config_.settings.listfiles.data.append(self.listbox.get(i))

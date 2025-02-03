@@ -29,26 +29,24 @@ class Point:
 	def of(point: tuple[int,int]) -> Point:
 		return Point(point[0], point[1])
 
-	def __add__(self, other) -> Point:
+	def __add__(self, other: object) -> Point:
 		if isinstance(other, Point):
 			return Point(self.x + other.x, self.y + other.y)
-		elif isinstance(other, Size):
+		if isinstance(other, Size):
 			return Point(self.x + other.width, self.y + other.height)
-		else:
-			raise ValueError('Can only add `Point` or `Size`')
+		raise ValueError('Can only add `Point` or `Size`')
 
-	def __sub__(self, other) -> Point:
+	def __sub__(self, other: object) -> Point:
 		if isinstance(other, Point):
 			return Point(self.x - other.x, self.y - other.y)
-		elif isinstance(other, Size):
+		if isinstance(other, Size):
 			return Point(self.x - other.width, self.y - other.height)
-		else:
-			raise ValueError('Can only subtract `Point` or `Size`')
+		raise ValueError('Can only subtract `Point` or `Size`')
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if isinstance(other, tuple) and len(other) == 2:
 			return other[0] == self.x and other[1] == self.y
-		elif isinstance(other, Point):
+		if isinstance(other, Point):
 			return other.x == self.x and other.y == self.y
 		return False
 
@@ -61,7 +59,7 @@ class Size:
 	def of(size: tuple[int,int]) -> Size:
 		return Size(size[0], size[1])
 
-	def __floordiv__(self, divisor) -> Size:
+	def __floordiv__(self, divisor: object) -> Size:
 		if not isinstance(divisor, int):
 			raise ValueError('Can only divide by int')
 		return Size(self.width // divisor, self.height // divisor)
@@ -73,10 +71,10 @@ class Size:
 	def centered_in(self, other: Size) -> Point:
 		return Point((other.width - self.width) // 2, (other.height - self.height) // 2)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if isinstance(other, Sequence) and len(other) == 2:
 			return other[0] == self.width and other[1] == self.height
-		elif isinstance(other, Size):
+		if isinstance(other, Size):
 			return other.width == self.width and other.height == self.height
 		return False
 
@@ -115,7 +113,7 @@ class Rect:
 		if max_size:
 			self.size.height = min(max_size.height, self.size.height)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if isinstance(other, Sequence):
 			if len(other) == 2:
 				return self.pos == other[0] and self.size == other[1]
@@ -262,7 +260,7 @@ def repr_event(event: _Tk.Event) -> str:
 				result += f' ({value})'
 	return result + '\n>'
 
-def remove_bind(widget: _Tk.Misc, sequence: str, funcid: str):
+def remove_bind(widget: _Tk.Misc, sequence: str, funcid: str) -> None:
 	"""Unbind for this WIDGET for event SEQUENCE  the
 	function identified with FUNCID."""
 	bound = ''

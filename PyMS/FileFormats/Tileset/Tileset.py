@@ -410,7 +410,7 @@ class Tileset:
 		tile_width = 0
 		tiles_high = 0
 		tile_height = 0
-		def calc_dims(tiles):
+		def calc_dims(tiles: int) -> tuple[int, int]:
 			for f in range(int(math.sqrt(tiles)),0,-1):
 				if not tiles % f:
 					return (tiles // f, f)

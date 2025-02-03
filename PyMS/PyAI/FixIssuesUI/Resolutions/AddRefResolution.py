@@ -11,7 +11,7 @@ class AddRefResolution(Resolution):
 		self.update_callback = Callback()
 
 	def name(self) -> str:
-		return f'Add definition to aiscript.bin'
+		return 'Add definition to aiscript.bin'
 
 	def ui(self, parent: Misc) -> Widget | None:
 		return None
@@ -19,6 +19,6 @@ class AddRefResolution(Resolution):
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:
 		return None
 
-	def resolve(self, ai: AIBIN, issue: LoadIssue):
+	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:
 		script = AIScript(issue.script_id, 0, 0, issue.entry_point, False)
 		ai.add_script(script)

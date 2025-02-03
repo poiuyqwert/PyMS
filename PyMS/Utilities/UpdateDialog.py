@@ -37,7 +37,7 @@ class UpdateDialog(PyMSDialog):
 					show -= 1
 			if not show:
 				return
-			def callback():
+			def callback() -> None:
 				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking: # pylint: disable=protected-access
 					window.after(1000, callback)
 					return

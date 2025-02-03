@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 import io
 from enum import Enum
 
-from typing import Sequence, cast, Callable
+from typing import Sequence, cast, Callable, Any
 
 LONG_VERSION = 'v' + Assets.version('PyLO')
 
@@ -84,10 +84,10 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import LO?', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export LO?', Ctrl.e, enabled=False, tags='file_open')
@@ -273,7 +273,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			self.open(file=self.guifile)
 		UpdateDialog.check_update(self, 'PyLO')
 
-	def scrolling(self, scroll_type: str, amount: str, increment: str | None = None):
+	def scrolling(self, scroll_type: str, amount: str, increment: str | None = None) -> None:
 		if not self.overlaygrp:
 			return
 		increments = {'pages':17,'units':1}
@@ -292,12 +292,12 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		step = 1 / float(self.overlaygrp.frames)
 		self.framescroll.set(self.overlayframe*step, (self.overlayframe+1)*step)
 
-	def update_grp_field_states(self, *_) -> None:
+	def update_grp_field_states(self, *_: Any) -> None:
 		self.base_grp_field.set_enabled(self.usebasegrp.get())
 		self.overlay_grp_field.set_enabled(self.useoverlaygrp.get())
 
 	# TODO: What is `t` for?
-	def drag(self, event: Event, _t, mouse_event: MouseEvent) -> None:
+	def drag(self, event: Event, _t: Any, mouse_event: MouseEvent) -> None:
 		if not self.previewing_offset:
 			return
 		if mouse_event == MouseEvent.click:
@@ -492,7 +492,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.basegrp_cache.clear()
 		self.overlaygrp_cache.clear()
 
-	def new(self):
+	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.lo = LO()
@@ -534,7 +534,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.text.see('1.0')
 		self.text.mark_set('insert', '2.0 lineend')
 
-	def iimport(self):
+	def iimport(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		file = self.config_.last_path.txt.select_open(self)

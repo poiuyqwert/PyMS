@@ -14,7 +14,7 @@ import json, re
 from typing import TYPE_CHECKING, BinaryIO
 if TYPE_CHECKING:
     from typing import Any, Callable
-    from .DATFormat import DATFormat
+    from .DATFormat import DATFormat, DATType
     from .DATCoders import DATPropertyCoder
 
 class ExportType(Enum):
@@ -30,8 +30,8 @@ class AbstractDAT:
 	# Default filename for DAT file
 	FILE_NAME: str
 
-	def __init__(self):
-		self.entries = []
+	def __init__(self) -> None:
+		self.entries: list[AbstractDATEntry] = []
 
 	def new_file(self, entry_count: int | None = None) -> None:
 		entry_count = max(entry_count or 0, self.FORMAT.entries)
@@ -136,7 +136,7 @@ class AbstractDAT:
 		entries: list[dict[str, Any]] = []
 		entry_starts: dict[int, int] = {}
 		entry: dict[str, Any] | None = None
-		def check_entry():
+		def check_entry() -> None:
 			if entry is None:
 				return
 			if len(entry) < 3:
@@ -275,10 +275,10 @@ class AbstractDAT:
 class AbstractDATEntry:
 	EXPORT_NAME: str | None = None
 
-	def load_values(self, values: tuple) -> None:
+	def load_values(self, values: tuple[int | DATType | None, ...]) -> None:
 		pass
 
-	def save_values(self) -> tuple:
+	def save_values(self) -> tuple[int | DATType | None, ...]:
 		return ()
 
 	# Ensure entry has limited properties unavailable (set to `None`)
@@ -314,7 +314,7 @@ class AbstractDATEntry:
 	def _import_data(self, data: dict[str, Any]) -> None:
 		pass
 
-	def _export_property_value(self, export_properties: list[str], prop: str, value: Any, data: dict[str, Any], property_encoder: DATPropertyCoder | None = None) -> None:
+	def _export_property_value(self, export_properties: list[str] | None, prop: str, value: Any, data: dict[str, Any], property_encoder: DATPropertyCoder | None = None) -> None:
 		if value is None or (export_properties and not prop in export_properties):
 			return
 		if property_encoder:

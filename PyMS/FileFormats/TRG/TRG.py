@@ -268,7 +268,7 @@ class TRG:
 			token = process_actions(trigger)
 			return token
 
-		def process_string():
+		def process_string() -> None:
 			nonlocal strings
 			token = lexer.next_token()
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != '(':
@@ -404,7 +404,7 @@ class TRG:
 		self.format = trg_format
 		return warnings
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, TRG):
 			return False
 		if other.format != self.format:

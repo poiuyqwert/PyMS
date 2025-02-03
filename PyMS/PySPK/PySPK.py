@@ -31,7 +31,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import Enum
 
-from typing import Callable, cast
+from typing import Callable, cast, Any
 
 LONG_VERSION = 'v' + Assets.version('PySPK')
 
@@ -104,10 +104,10 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
@@ -344,7 +344,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			else:
 				row.hide()
 
-	def layer_updated(self, *_args) -> None:
+	def layer_updated(self, *_args: Any) -> None:
 		if not self.is_file_open():
 			return
 		layer = self.layer.get()
@@ -356,7 +356,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.locked.set((1+2+4+8+16) & ~(1 << layer))
 		self.action_states()
 
-	def visible_updated(self, *_args) -> None:
+	def visible_updated(self, *_args: Any) -> None:
 		if not self.spk:
 			return
 		visible = self.visible.get()
@@ -371,7 +371,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if update_sel:
 			self.update_selection()
 
-	def locked_updated(self, *_args) -> None:
+	def locked_updated(self, *_args: Any) -> None:
 		if not self.spk:
 			return
 		updated_sel = False
@@ -384,12 +384,12 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if updated_sel:
 			self.update_selection()
 
-	def autovis_updated(self, *_args) -> None:
+	def autovis_updated(self, *_args: Any) -> None:
 		if not self.is_file_open() or not self.autovis.get():
 			return
 		self.layer_updated()
 
-	def autolock_updated(self, *_args) -> None:
+	def autolock_updated(self, *_args: Any) -> None:
 		if not self.is_file_open() or not self.autolock.get():
 			return
 		self.layer_updated()

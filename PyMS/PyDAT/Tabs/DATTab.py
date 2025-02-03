@@ -4,7 +4,9 @@ from __future__ import annotations
 from ..Config import PyDATConfig
 from ..DATTabConveniences import DATTabConveniences
 from ..EntryCountDialog import EntryCountDialog
-from ..DataID import DATID, AnyID
+from ..DataID import DATID, AnyID, UnitsTabID
+
+from ...FileFormats.DAT.AbstractDAT import AbstractDATEntry
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.ErrorDialog import ErrorDialog
@@ -14,13 +16,14 @@ from ...Utilities.fileutils import check_allow_overwrite_internal_file
 
 import copy
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Generic, TypeVar
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 	from ..DATRef import DATRefs, DATRefMatch
 	from ..DATData import DATData
 
-class DATTab(NotebookTab, DATTabConveniences):
+ET = TypeVar('ET', bound=AbstractDATEntry)
+class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 	ARROWS_LOADED = False
 	ARROW_DOWN: Image
 	ARROW_UP: Image
@@ -147,7 +150,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			self.delegate.change_tab(datid)
 			self.delegate.change_id(entry_id)
 
-	def change_sub_tab(self, sub_tab_id):
+	def change_sub_tab(self, sub_tab_id: UnitsTabID) -> None:
 		pass
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
@@ -166,7 +169,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		self.load_entry(entry)
 		self.check_used_by_references()
 
-	def load_entry(self, entry):
+	def load_entry(self, entry: ET) -> None:
 		pass
 
 	def save_data(self) -> None:
@@ -179,7 +182,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 		if self.edited:
 			self.delegate.update_status_bar()
 
-	def save_entry(self, entry):
+	def save_entry(self, entry: ET) -> None:
 		pass
 
 	def unsaved(self) -> bool | None:
@@ -246,7 +249,7 @@ class DATTab(NotebookTab, DATTabConveniences):
 			return
 		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
-		def _set_entry_count(count):
+		def _set_entry_count(count: int) -> None:
 			add = count - dat_data.entry_count()
 			if add < 1:
 				return

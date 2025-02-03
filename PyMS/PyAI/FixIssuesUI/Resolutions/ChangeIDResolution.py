@@ -31,7 +31,7 @@ class ChangeIDResolution(Resolution):
 			return 'Script ID already exists'
 		return None
 
-	def resolve(self, ai: AIBIN, issue: LoadIssue):
+	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:
 		new_id = self.new_id.get()
 		ai_script = ai.get_script(issue.script_id)
 		assert ai_script is not None

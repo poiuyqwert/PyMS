@@ -208,7 +208,7 @@ class TreeList(Frame):
 			self.text.image_create(f'entry{node.entry}.first -1c', image=self.icons[node.expanded])
 			self.text.tag_add(f'icon{node.entry}', f'entry{node.entry}.first -2c', f'entry{node.entry}.first -1c')
 			def toggle_callback(entry: int) -> Callable[[Event], None]:
-				def toggle(_event: Event):
+				def toggle(_event: Event) -> None:
 					self.toggle(entry)
 				return toggle
 			self.text.tag_bind(f'icon{node.entry}', Mouse.Click_Left(), toggle_callback(node.entry))
@@ -218,7 +218,7 @@ class TreeList(Frame):
 			self.execute('insert',(f'entry{node.entry}.last', '\n'))
 		if selectable:
 			def select_callback(entry: int, modifier: SelectModifier) -> Callable[[Event], None]:
-				def select(_event: Event):
+				def select(_event: Event) -> None:
 					self.select(entry, modifier)
 				return select
 			self.text.tag_bind(f'entry{node.entry}', Mouse.Click_Left(), select_callback(node.entry, SelectModifier.none))
@@ -245,7 +245,7 @@ class TreeList(Frame):
 		self.text.image_configure(f'icon{group.entry}.first', image=self.icons[expanded])
 		if expanded:
 			base = f'icon{group.entry}.first'
-			def insert_children(group, line_offset=1):
+			def insert_children(group: TreeGroup, line_offset: int = 1) -> int:
 				for child in group.children:
 					self.write_node(f'{base} +{line_offset}l linestart', child)
 					line_offset += 1
@@ -346,7 +346,7 @@ class TreeList(Frame):
 			return False
 		return ('Selection' in self.text.tag_names(f'entry{node.entry}.first'))
 
-	def set(self, index: int | str, text: str):
+	def set(self, index: int | str, text: str) -> None:
 		node = self.get_node(index)
 		if not node:
 			return
@@ -377,7 +377,7 @@ class TreeList(Frame):
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('TreeList Test')
 

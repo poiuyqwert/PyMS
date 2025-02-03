@@ -35,7 +35,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 import io
 
-from typing import Self, cast, Callable, Generic, TypeVar
+from typing import Self, cast, Callable, Generic, TypeVar, Any
 
 LONG_VERSION = 'v' + Assets.version('PyTILE')
 
@@ -71,7 +71,7 @@ class EditorGroup:
 			tooltip += '\n' + self.tooltip
 		Tooltip(widget, tooltip)
 
-	def skip(self, columns=1) -> Self:
+	def skip(self, columns: int = 1) -> Self:
 		self.column += columns
 		return self
 
@@ -321,12 +321,12 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		megatile_editors[-1].pack(side=LEFT, padx=2)
 		Tooltip(megatile_editors[-1], 'MegaTile Palette')
 		f.pack(side=TOP, fill=X, padx=3)
-		def megatile_apply_all_pressed():
+		def megatile_apply_all_pressed() -> None:
 			menu = Menu(self, tearoff=0)
 			mode = self.mega_editor.get_edit_mode()
 			name = ('Height','Walkability','Blocks View','Ramp(?)')[mode.value-2]
 			shortcut = (Shift.Ctrl.h,Shift.Ctrl.w,Shift.Ctrl.b,Shift.Ctrl.r)[mode.value-2]
-			menu.add_command(label=f"Apply {name} flags to Megatiles in Group ({shortcut.description()})", command=lambda m=mode: self.megatile_apply_all(mode))
+			menu.add_command(label=f"Apply {name} flags to Megatiles in Group ({shortcut.description()})", command=lambda m=mode: self.megatile_apply_all(mode)) # type: ignore[misc]
 			menu.add_command(label=f"Apply all flags to Megatiles in Group ({Shift.Ctrl.a.description()})", command=self.megatile_apply_all)
 			menu.add_separator()
 			menu.add_checkbutton(label=f"Exclude Null Tiles ({Shift.Ctrl.n.description()})", variable=self.apply_all_exclude_nulls)
@@ -346,7 +346,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		megatile_editor.widget(megatile_group, megatile_editors).add()
 		self.normal_editors.append(megatile_editor)
 
-		def copy_mega(*_args) -> None:
+		def copy_mega(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			fields: Serialize.Fields = {
@@ -363,7 +363,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.export_megatile_settings(f, [mega_id], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_mega(*_args) -> None:
+		def paste_mega(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.tileset.cv5.get_group(self.palette.selected[0])
@@ -389,7 +389,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.bind(Shift.Ctrl.c(), copy_mega)
 		self.bind(Shift.Ctrl.v(), paste_mega)
 
-		def copy_tilegroup(*_args) -> None:
+		def copy_tilegroup(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -455,7 +455,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.export_group_settings(f, [group], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_tilegroup(*_args) -> None:
+		def paste_tilegroup(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -530,7 +530,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.label('Raw').add(new_row=False).entry('Raw value of added in StarCraft: Remastered (1 = Added in SC:R)', self.group_edge_up_or_scr).add()
 		)
 		self.doodad_group_dropdown: DropDown
-		def store_dropdown(dropdown: DropDown):
+		def store_dropdown(dropdown: DropDown) -> None:
 			self.doodad_group_dropdown = dropdown
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Name')
@@ -636,7 +636,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		else:
 			return self.saveas()
 
-	def action_states(self, *_args, **_kwargs) -> None:
+	def action_states(self, *_args: Any, **_kwargs: Any) -> None:
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
@@ -773,13 +773,13 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			return
 		self.mega_editor.set_megatile(self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection])
 
-	def group_type_changed(self, *_) -> None:
+	def group_type_changed(self, *_: Any) -> None:
 		pass
 
-	def group_doodad_changed(self, *_) -> None:
+	def group_doodad_changed(self, *_: Any) -> None:
 		pass
 
-	def group_values_changed(self, *_) -> None:
+	def group_values_changed(self, *_: Any) -> None:
 		if not self.tileset or self.loading_megas:
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])
@@ -931,8 +931,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.config_.save()
 		self.destroy()
 
-	def draw_group(self):
+	def draw_group(self) -> None:
 		pass
 
-	def tile_palette_double_clicked(self, tile_id: int):
+	def tile_palette_double_clicked(self, tile_id: int) -> None:
 		pass

@@ -5,7 +5,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.UIKit import *
 from ..Utilities import Config
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Any
 if TYPE_CHECKING:
 	from .DATData import DATData
 
@@ -48,7 +48,7 @@ class EntryCountDialog(PyMSDialog):
 
 		return ok
 
-	def update_resulting_count(self, *_) -> None:
+	def update_resulting_count(self, *_: Any) -> None:
 		assert self.dat_data.dat is not None
 		if not self.resulting_count_var:
 			return

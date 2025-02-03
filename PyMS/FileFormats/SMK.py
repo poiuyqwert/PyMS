@@ -4,6 +4,8 @@ from ..Utilities.PyMSError import PyMSError
 
 import struct
 
+from typing import BinaryIO
+
 # http://wiki.multimedia.cx/index.php?title=Smacker
 
 
@@ -21,14 +23,14 @@ class SMKAudioInfo:
 	COMPRESSION_SMK = 1
 	COMPRESSION_BINK = 2 # Unsupported
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.has_audio = False
 		self.compressed = SMKAudioInfo.COMPRESSION_NONE
 		self.bit_depth = 8
 		self.channels = 1
 		self.rate = 0
 
-	def load_info(self, info):
+	def load_info(self, info: int) -> None:
 		self.has_audio = ((info & SMKAudioInfo.FLAG_HAS_AUDIO) == SMKAudioInfo.FLAG_HAS_AUDIO)
 		self.compressed = SMKAudioInfo.COMPRESSION_NONE
 		if info & SMKAudioInfo.FLAG_COMPRESSED:
@@ -58,35 +60,35 @@ class SMKFrameInfo:
 	TYPE_AUDIO_TRACK_5 = (1 << 6)
 	TYPE_AUDIO_TRACK_6 = (1 << 7)
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.keyframe = False
 		self.unknown = False
 		self.chunk_size = 0
 		self.type = 0
 
-	def load_info(self, info, frame_type):
+	def load_info(self, info: int, frame_type: int) -> None:
 		self.keyframe = ((info & SMKFrameInfo.FLAG_KEYFRAME) == SMKFrameInfo.FLAG_KEYFRAME)
 		self.unknown = ((info & SMKFrameInfo.FLAG_UNKNOWN) == SMKFrameInfo.FLAG_UNKNOWN)
 		self.chunk_size = (info & 0xFFFFFFFC)
 		self.type = frame_type
 
 class SMKFrame:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.audio = None
-		self.palette = None
-		self.image = None
+		self.palette: list[tuple[int, int, int]] = []
+		self.image: list[list[int]] = []
 
 class BitStream:
-	def __init__(self, data):
+	def __init__(self, data: bytes) -> None:
 		self.data = data
 		self.byte = 0
 		self.bit = 0
 
-	def read(self, read_bits):
+	def read(self, read_bits: int) -> int:
 		value = 0
 		bit = 0
 		while read_bits:
-			v = struct.unpack('<B', self.data[self.byte])[0]
+			v = self.data[self.byte]
 			read = min(read_bits,8-self.bit)
 			for read_bit in range(self.bit,self.bit+read):
 				if read_bit > bit:
@@ -102,17 +104,17 @@ class BitStream:
 		return value
 
 class HuffNode:
-	def __init__(self):
-		self.branch0 = None
-		self.branch1 = None
-		self.value = None
-		self.escape_code = None
+	def __init__(self) -> None:
+		self.branch0: HuffNode | None = None
+		self.branch1: HuffNode | None = None
+		self.value: int
+		self.escape_code: int
 
 class HuffTree:
-	def __init__(self, bit_stream):
-		self.root = None
+	def __init__(self, bit_stream: BitStream) -> None:
+		self.root: HuffNode
 		if bit_stream.read(1):
-			def build_node(node, d=0):
+			def build_node(node: HuffNode, d: int = 0) -> None:
 				if bit_stream.read(1):
 					node.branch0 = HuffNode()
 					build_node(node.branch0,d+1)
@@ -126,8 +128,8 @@ class HuffTree:
 		if bit_stream.read(1):
 			raise PyMSError('HuffTree', "Couldn't read from bit stream")
 
-	def lookup(self, bit_stream, node=None):
-		value = None
+	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
+		value: int
 		if node is None:
 			node = self.root
 		if node.branch0 is None:
@@ -139,9 +141,9 @@ class HuffTree:
 		return value
 
 class BigHuffTree:
-	def __init__(self, bit_stream):
-		self.root = None
-		self.cache = None
+	def __init__(self, bit_stream: BitStream) -> None:
+		self.root: HuffNode
+		self.cache: list[int]
 		if bit_stream.read(1):
 			tree_low = HuffTree(bit_stream)
 			tree_high = HuffTree(bit_stream)
@@ -150,7 +152,7 @@ class BigHuffTree:
 				low = bit_stream.read(8)
 				high = bit_stream.read(8)
 				self.cache[i] = low | (high << 8)
-			def build_node(node, d=0):
+			def build_node(node: HuffNode, d: int = 0) -> None:
 				if bit_stream.read(1):
 					node.branch0 = HuffNode()
 					build_node(node.branch0,d+1)
@@ -173,7 +175,7 @@ class BigHuffTree:
 		if bit_stream.read(1):
 			raise PyMSError('BigHuffTree', "Couldn't read from bit stream")
 
-	def lookup(self, bit_stream, node=None):
+	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
 		value = None
 		if node is None:
 			node = self.root
@@ -192,7 +194,7 @@ class BigHuffTree:
 			value = self.lookup(bit_stream, node.branch0)
 		return value
 
-	def reset_cache(self):
+	def reset_cache(self) -> None:
 		self.cache = [0,0,0]
 
 class SMK:
@@ -232,7 +234,7 @@ class SMK:
 		57,   58,   59,  128,  256,  512, 1024, 2048
 	]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.version = 2
 		self.width = 0
 		self.height = 0
@@ -241,27 +243,27 @@ class SMK:
 		self.flags = 0
 		self.current_frame = 0
 		self.last_frame = 0
-		self.audio_info = None
-		self.frame_info = None
-		self.tree_mmap = None
-		self.tree_mclr = None
-		self.tree_full = None
-		self.tree_type = None
-		self.frame_data = None
+		self.audio_info: list[SMKAudioInfo] | None = None
+		self.frame_info: list[SMKFrameInfo] | None = None
+		self.tree_mmap: BigHuffTree | None = None
+		self.tree_mclr: BigHuffTree | None = None
+		self.tree_full: BigHuffTree | None = None
+		self.tree_type: BigHuffTree | None = None
+		self.frame_data: list[bytes] | None = None
 
-		self.last_palette = None
-		self.frame_cache = None
+		self.last_palette: list[tuple[int, int, int]] | None = None
+		self.frame_cache: dict[int, SMKFrame] = {}
 
-	def load_file(self, file):
+	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'SMK')
 		try:
 			self.load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported SMK file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported SMK file '{file}', could possibly be corrupt") from exc
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		signature,width,height,frames,framerate,smk_flags = struct.unpack('<4s3LlL', data[:24])
 		if not signature in ('SMK2', 'SMK4'):
 			raise PyMSError('Load',"Not an SMK file (no SMK header)")
@@ -279,21 +281,21 @@ class SMK:
 		_audio_sizes = struct.unpack('<7L', data[24:52]) # Unused?
 		trees_size,_mmap_size,_mclr_size,_full_size,_type_size = struct.unpack('<5L', data[52:72])
 		audio_rates = struct.unpack('<7L', data[72:100])
-		audio_info = []
+		audio_info: list[SMKAudioInfo] = []
 		for v in audio_rates:
-			info = SMKAudioInfo()
-			info.load_info(v)
-			audio_info.append(info)
+			audio = SMKAudioInfo()
+			audio.load_info(v)
+			audio_info.append(audio)
 		o = 104
-		frame_sizes = struct.unpack('<%dL' % frames, data[o:o+4*frames])
+		frame_sizes = struct.unpack(f'<{frames}L', data[o:o+4*frames])
 		o += 4*frames
-		frame_types = struct.unpack('<%dB' % frames, data[o:o+frames])
+		frame_types = struct.unpack(f'<{frames}B', data[o:o+frames])
 		o += frames
-		frame_info = []
+		frame_info: list[SMKFrameInfo] = []
 		for i,t in zip(frame_sizes,frame_types):
-			info = SMKFrameInfo()
-			info.load_info(i,t)
-			frame_info.append(info)
+			frame = SMKFrameInfo()
+			frame.load_info(i,t)
+			frame_info.append(frame)
 		# Load Trees
 		stream = BitStream(data[o:o+trees_size])
 		o += trees_size
@@ -324,22 +326,24 @@ class SMK:
 		self.last_palette = None
 		self.frame_cache = {}
 
-	def load_palette(self, data):
+	def _load_palette(self, data: bytes) -> None:
+		assert self.frame_info is not None
+		assert self.frame_cache is not None
 		# print('Load Palette')
 		_frame_info = self.frame_info[self.current_frame]
 		last_frame = None
 		if self.current_frame:
 			last_frame = self.frame_cache[self.current_frame-1]
-		palette = []
+		palette: list[tuple[int, int, int]] = []
 		i = 0
 		o = 0
 		while len(palette) < 256:
-			r = struct.unpack('<B', data[o])[0]
+			r = data[o]
 			o += 1
 			if r & 0xC0:
 				copy = (r & 0x7F) + 1
 				if r & 0x40:
-					i = struct.unpack('<B', data[o])[0]
+					i = data[o]
 					o += 1
 				if last_frame:
 					palette.extend(last_frame.palette[i:i+copy])
@@ -353,11 +357,15 @@ class SMK:
 		frame = self.frame_cache[self.current_frame]
 		frame.palette = palette
 
-	def load_audio(self, data):
+	def _load_audio(self, data: bytes) -> None:
 		# print('Load Audio')
 		pass
 
-	def load_image(self, data):
+	def _load_image(self, data: bytes) -> None:
+		assert self.tree_mmap is not None
+		assert self.tree_mclr is not None
+		assert self.tree_full is not None
+		assert self.tree_type is not None
 		# print('Load Video')
 		frame = self.frame_cache[self.current_frame]
 		frame.image = [[0] * self.width for _ in range(self.height)]
@@ -436,7 +444,10 @@ class SMK:
 				# bmp.save_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/glue/mainmenu/editoron%d-%d.bmp' % (self.current_frame, TEST))
 				# TEST += 1
 
-	def get_frame(self):
+	def get_frame(self) -> SMKFrame:
+		assert self.frame_data is not None
+		assert self.frame_info is not None
+		assert self.audio_info is not None
 		if self.current_frame in self.frame_cache:
 			return self.frame_cache[self.current_frame]
 		frame = SMKFrame()
@@ -445,9 +456,9 @@ class SMK:
 		chunk = self.frame_data[self.current_frame]
 		frame_info = self.frame_info[self.current_frame]
 		if frame_info.type & SMKFrameInfo.TYPE_PALETTE:
-			size = struct.unpack('<B', chunk[o])[0] * 4 - 1
+			size = chunk[o] * 4 - 1
 			o += 1
-			self.load_palette(chunk[o:o+size])
+			self._load_palette(chunk[o:o+size])
 			o += size
 		else:
 			last_frame = None
@@ -456,22 +467,23 @@ class SMK:
 			if last_frame:
 				frame.palette = last_frame.palette
 			else:
-				frame.palette = ((0,0,0),) * 256
+				frame.palette = [(0,0,0)] * 256
 		for t,audio_info in enumerate(self.audio_info):
 			if frame_info.type & (1 << (t + 1)) and audio_info.has_audio:
 				size = struct.unpack('<L', chunk[o:o+4])[0] - 4
 				o += 4
-				self.load_audio(chunk[o:o+size])
+				self._load_audio(chunk[o:o+size])
 				o += size
-		self.load_image(chunk[o:])
+		self._load_image(chunk[o:])
 		return self.frame_cache[self.current_frame]
 
-	def seek_keyframe(self, frame):
+	def seek_keyframe(self, frame: int) -> None:
+		assert self.frame_info is not None
 		self.current_frame = frame
 		while self.current_frame > 0 and not self.frame_info[self.current_frame].keyframe:
 			self.current_frame -= 1
 
-	def next_frame(self):
+	def next_frame(self) -> None:
 		if not self.current_frame in self.frame_cache:
 			self.get_frame()
 		self.current_frame += 1

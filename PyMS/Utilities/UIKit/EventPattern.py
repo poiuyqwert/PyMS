@@ -368,42 +368,42 @@ class EventPropogation:
 	# Return from event callbacks to leave current processing but continue processing other bindings
 	Continue = 'continue'
 
-def _main():
-	events = [
-		Ctrl.a,
-		Modifier.Ctrl + Key.a,
-		Alt.a,
-		Ctrl.Alt.a,
-		Shift.Ctrl.Alt.a,
-		Shift.Click_Left,
-		Shift.Click_Right,
-		Shift.Double.Click_Left,
-		Shift.Ctrl.Alt.Quadruple.Click_Right,
-		Mouse.Drag_Left,
-		Shift.Ctrl.Alt.Drag_Left,
-		ButtonRelease.Click_Left,
-		Double.Click_Left,
-		Ctrl.Double.Click_Left,
-		WidgetEvent.Configure,
-		WidgetEvent.Listbox.Select
-	]
-	for event in events:
-		print(event)
-		print((event.name()))
-		print((event.description()))
+# def _main() -> None:
+# 	events = [
+# 		Ctrl.a,
+# 		Modifier.Ctrl + Key.a,
+# 		Alt.a,
+# 		Ctrl.Alt.a,
+# 		Shift.Ctrl.Alt.a,
+# 		Shift.Click_Left,
+# 		Shift.Click_Right,
+# 		Shift.Double.Click_Left,
+# 		Shift.Ctrl.Alt.Quadruple.Click_Right,
+# 		Mouse.Drag_Left,
+# 		Shift.Ctrl.Alt.Drag_Left,
+# 		ButtonRelease.Click_Left,
+# 		Double.Click_Left,
+# 		Ctrl.Double.Click_Left,
+# 		WidgetEvent.Configure,
+# 		WidgetEvent.Listbox.Select
+# 	]
+# 	for event in events:
+# 		print(event)
+# 		print((event.name()))
+# 		print((event.description()))
 
-	import tkinter as Tk
+# 	import tkinter as Tk
 
-	root = Tk.Tk()
-	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')
-	canvas.grid(row=0, column=1)
-	def double_click(*_e):
-		print('Double')
-	canvas.bind(Double.Click_Left, double_click)
-	def click(*_e):
-		print('Left')
-	canvas.bind(Mouse.Click_Left, click)
-	root.mainloop()
+# 	root = Tk.Tk()
+# 	canvas = Tk.Canvas(root, width=400, height=400, bg='grey')
+# 	canvas.grid(row=0, column=1)
+# 	def double_click(*_e):
+# 		print('Double')
+# 	canvas.bind(Double.Click_Left, double_click)
+# 	def click(*_e):
+# 		print('Left')
+# 	canvas.bind(Mouse.Click_Left, click)
+# 	root.mainloop()
 
-if __name__ == '__main__':
-	_main()
+# if __name__ == '__main__':
+# 	_main()

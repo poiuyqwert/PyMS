@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATSound(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -21,22 +23,22 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 
 		ALL_FLAGS = (preload | unit_speech | one_at_a_time | never_preempt)
 
-	def __init__(self):
-		self.sound_file = 0
-		self.priority = 0
-		self.flags = 0
-		self.portrait_length_adjust = 0
-		self.minimum_volume = 0
+	def __init__(self) -> None:
+		self.sound_file: int = 0
+		self.priority: int = 0
+		self.flags: int = 0
+		self.portrait_length_adjust: int = 0
+		self.minimum_volume: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.sound_file,\
 		self.priority,\
 		self.flags,\
 		self.portrait_length_adjust,\
 		self.minimum_volume\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.sound_file,
 			self.priority,
@@ -46,14 +48,14 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Sound'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATSound.Property.sound_file, self.sound_file, data)
 		self._export_property_value(export_properties, DATSound.Property.priority, self.priority, data)
 		self._export_property_value(export_properties, DATSound.Property.flags, self.flags, data, _SoundPropertyCoder.flags)
 		self._export_property_value(export_properties, DATSound.Property.portrait_length_adjust, self.portrait_length_adjust, data)
 		self._export_property_value(export_properties, DATSound.Property.minimum_volume, self.minimum_volume, data)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		sound_file = self._import_property_value(data, DATSound.Property.sound_file)
 		priority = self._import_property_value(data, DATSound.Property.priority)
 		flags = self._import_property_value(data, DATSound.Property.flags, _SoundPropertyCoder.flags)

@@ -28,7 +28,7 @@ class CodeGeneratorType(JSON.Codable):
 	def count(self) -> int | None:
 		raise NotImplementedError(self.__class__.__name__ + '.count()')
 
-	def value(self, lookup_value: Callable[[str], int]) -> str:
+	def value(self, lookup_value: Callable[[str], str]) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.value()')
 
 	def description(self) -> str:
@@ -44,7 +44,7 @@ class CodeGeneratorEditor(Frame, Generic[T]):
 		self.window_geometry_config = window_geometry_config
 		Frame.__init__(self, parent)
 
-	def save(self):
+	def save(self) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.save()')
 
 	def is_resizable(self) -> tuple[bool, bool]:
@@ -52,7 +52,7 @@ class CodeGeneratorEditor(Frame, Generic[T]):
 
 _REGISTRY: dict[str, Type[CodeGeneratorType]] = {}
 
-def register_type(gen_type: Type[CodeGeneratorType]):
+def register_type(gen_type: Type[CodeGeneratorType]) -> None:
 	_REGISTRY[gen_type.type_name()] = gen_type
 
 def lookup_type(name: str) -> Type[CodeGeneratorType] | None:

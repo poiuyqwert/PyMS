@@ -93,10 +93,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file_menu.add_command('Open', self.open, Ctrl.o, bind_shortcut=False)
 		file_menu.add_command('Open Default Scripts', self.open_default, Ctrl.d, bind_shortcut=False)
 		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
-		def do_save():
+		def do_save() -> None:
 			self.save()
 		file_menu.add_command('Save', do_save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
-		def do_saveas():
+		def do_saveas() -> None:
 			self.saveas()
 		file_menu.add_command('Save As...', do_saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
 		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
@@ -549,7 +549,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.config_.save()
 		self.destroy()
 
-	def select_all(self):
+	def select_all(self) -> None:
 		self.listbox.select_set(0, END)
 
 	def add(self) -> None:
@@ -816,6 +816,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		for index,script in enumerate(self.script_list):
 			if script.id in ids:
 				self.listbox.select_set(index)
+
+	def get_find_history(self) -> list[str]:
+		return self.findhistory
+
+	def get_replace_history(self) -> list[str]:
+		return self.replacehistory
 
 	# Tooltip Delegate
 	def get_list_entry(self, index: int) -> AIBIN.AIScript:

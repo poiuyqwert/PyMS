@@ -90,7 +90,7 @@ class DATTypeLong(DATTypeScalar):
 class DATTypeSize(DATType):
 	STRUCT = struct.Struct('<2H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.width = 0
 		self.height = 0
 
@@ -103,7 +103,7 @@ class DATTypeSize(DATType):
 class DATTypePosition(DATType):
 	STRUCT = struct.Struct('<2H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.x = 0
 		self.y = 0
 
@@ -116,7 +116,7 @@ class DATTypePosition(DATType):
 class DATTypeExtents(DATType):
 	STRUCT = struct.Struct('<4H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.left = 0
 		self.up = 0
 		self.right = 0
@@ -131,7 +131,7 @@ class DATTypeExtents(DATType):
 class DATTypeHitPoints(DATType):
 	STRUCT = struct.Struct('<L')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.whole = 0
 		self.fraction = 0
 
@@ -147,7 +147,7 @@ class DATTypeHitPoints(DATType):
 class DATTypeSupply(DATType):
 	STRUCT = struct.Struct('<B')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.whole = 0
 		self.half = False
 

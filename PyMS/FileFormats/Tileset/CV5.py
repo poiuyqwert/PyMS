@@ -7,7 +7,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from typing import BinaryIO
 
@@ -204,7 +204,7 @@ class CV5Group:
 	def doodad_unknown8(self, value: int) -> None:
 		self._piece_down_or_unknown8 = value
 
-	def __eq__(self, other: Any) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, CV5Group):
 			return False
 		if other.type != self.type:

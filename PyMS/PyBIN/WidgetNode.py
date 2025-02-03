@@ -59,7 +59,7 @@ class WidgetNode:
 		self.parent.children.remove(self)
 		self.parent = None
 
-	def add_child(self, node: WidgetNode, index: int = -1):
+	def add_child(self, node: WidgetNode, index: int = -1) -> None:
 		if self.children is None:
 			return
 		node.remove_from_parent()
@@ -339,14 +339,16 @@ class WidgetNode:
 				if not check.flags & DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER or SHOW_HOVER_SMKS:
 					if not check.filename in self.smks:
 						try:
-							smk = SMK.SMK()
-							smk.load_file(self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename))
-							delay = int(1000 / float(smk.fps))
-							if self.frame_delay is None:
-								self.frame_delay = delay
-							else:
-								self.frame_delay = min(self.frame_delay,delay)
-							self.smks[check.filename] = smk
+							file = self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename)
+							if file:
+								smk = SMK.SMK()
+								smk.load_file(file)
+								delay = int(1000 / float(smk.fps))
+								if self.frame_delay is None:
+									self.frame_delay = delay
+								else:
+									self.frame_delay = min(self.frame_delay,delay)
+								self.smks[check.filename] = smk
 						except:
 							self.delegate.capture_exception()
 					show_smk = self.smks.get(check.filename)

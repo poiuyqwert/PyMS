@@ -6,33 +6,34 @@ from . import DATCoders
 from ...Utilities.PyMSError import PyMSError
 
 from collections import OrderedDict
-from typing import cast
+
+from typing import cast, Any
 
 class DATPortrait:
-	def __init__(self):
-		self.portrait_file = 0
-		self.smk_change = 0
-		self.unknown = 0
+	def __init__(self) -> None:
+		self.portrait_file: int = 0
+		self.smk_change: int = 0
+		self.unknown: int = 0
 
 class DATPortraits(AbstractDAT.AbstractDATEntry):
 	class Property:
 		idle = 'idle'
 		talking = 'talking'
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.idle = DATPortrait()
 		self.talking = DATPortrait()
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.idle.portrait_file,\
 		self.talking.portrait_file,\
 		self.idle.smk_change,\
 		self.talking.smk_change,\
 		self.idle.unknown,\
 		self.talking.unknown\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.idle.portrait_file,
 			self.talking.portrait_file,
@@ -43,11 +44,11 @@ class DATPortraits(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Portraits'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATPortraits.Property.idle, self.idle, data, _PortraitsPropertyCoder.idle)
 		self._export_property_value(export_properties, DATPortraits.Property.talking, self.talking, data, _PortraitsPropertyCoder.talking)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		idle = self._import_property_value(data, DATPortraits.Property.idle, _PortraitsPropertyCoder.idle)
 		talking = self._import_property_value(data, DATPortraits.Property.talking, _PortraitsPropertyCoder.talking)
 

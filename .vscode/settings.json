@@ -6,6 +6,9 @@
 	],
 
 	"mypy-type-checker.reportingScope": "workspace",
+	// "mypy-type-checker.args": [
+	// 	"--disallow-untyped-defs"
+	// ],
 
     "python.testing.unittestArgs": [
         "-v",

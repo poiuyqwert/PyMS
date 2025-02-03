@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKUnitAvailability:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.available = True
 		self.default = True
 
@@ -30,7 +30,7 @@ class CHKSectionPUNI(CHKSection):
 				self.availability[-1].append(CHKUnitAvailability())
 		self.globalAvailability = [True] * 228
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		offset = 0
 		for p in range(12):
 			availability = list(bool(v) for v in struct.unpack('<228B', data[offset:offset+228]))
@@ -66,7 +66,7 @@ class CHKSectionPUNI(CHKSection):
 			result += f'\t# Player {p+1}\n'
 			for u in range(228):
 				result += '\t' + pad(f'Unit{u:03d}')
-				result += pad(self.availability[u][p].available)
+				result += pad(str(self.availability[u][p].available))
 				result += f'{self.availability[u][p].default}\n'
 		result += f'\t{pad('# Global','Available')}\n'
 		for u in range(228):

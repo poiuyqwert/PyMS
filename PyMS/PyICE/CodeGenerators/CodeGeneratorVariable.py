@@ -10,7 +10,7 @@ from ...Utilities import JSON
 import re
 from dataclasses import dataclass
 
-from typing import Self
+from typing import Self, Any
 
 @dataclass
 class CodeGeneratorVariable(JSON.Codable):
@@ -40,7 +40,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 	def widgetize(self) -> Widget:
 		self.name = StringVar()
 		self.name.set(self.variable.name)
-		def strip_name(*_) -> None:
+		def strip_name(*_: Any) -> None:
 			strip_re = re.compile(r'[^a-zA-Z0-9_]')
 			name = self.name.get()
 			stripped = strip_re.sub('', name)
@@ -66,7 +66,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 		self.set_resizable(*self.editor.is_resizable())
 		self.editor.window_geometry_config.load_size(self)
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.variable.name = self.delegate.unique_name(self.name.get(), self.variable)
 		self.editor.save()
 		self.delegate.update_list()

@@ -25,6 +25,8 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 import sys, time, shutil, os, re
 
+from typing import Any
+
 if not MPQ.supported():
 	dep_err_dialog = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!')
 	dep_err_dialog.startup()
@@ -109,7 +111,7 @@ class PyMPQ(MainWindow):
 		Radiobutton(filter_frame, text='Wildcard', variable=self.regex, value=0).pack(side=RIGHT)
 		filter_frame.pack(side=TOP, fill=X)
 
-		self.encvar = IntVar()
+		self.encvar = BooleanVar()
 		self.compvar = StringVar()
 
 		self.locale_menu_choice = IntVar()
@@ -217,7 +219,7 @@ class PyMPQ(MainWindow):
 			# _,locale = LOCALE_CHOICES[locale_index]
 			self.after(1, lambda: self.locale_menu_choice.set(locale_index))
 
-	def locale_changed(self, *_) -> None:
+	def locale_changed(self, *_: Any) -> None:
 		locale_index = self.locale_menu_choice.get()
 		_name,locale = LOCALE_CHOICES[locale_index]
 		if locale is not None:
@@ -232,6 +234,7 @@ class PyMPQ(MainWindow):
 	def load_settings(self) -> None:
 		self.config_.windows.main.load_size(self)
 		self.config_.list_sizes.load_size(self.listbox.panes)
+		assert self.config_.compression.value is not None
 		self.compvar.set(self.config_.compression.value)
 		self.encvar.set(self.config_.encrypt.value)
 		self.locale_menu_choice.set(find_locale_index(self.config_.locale.value))
@@ -585,7 +588,7 @@ class PyMPQ(MainWindow):
 		with self.open_mpq(read_only=False):
 			for filepath in files:
 				filename = os.path.basename(filepath)
-				folder = self.config_.import_.files_prefix.value
+				folder = self.config_.import_.files_prefix.value or ''
 				compression,compression_level = self.compression_settings(filename)
 				self.mpq.add_file(filepath, folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
 			self.mpq.flush()
@@ -607,7 +610,7 @@ class PyMPQ(MainWindow):
 			return
 		with self.open_mpq(read_only=False):
 			for root,_,filenames in os.walk(path):
-				folder = self.config_.import_.folder_prefix.value
+				folder = self.config_.import_.folder_prefix.value or ''
 				path_folder = root.replace(path,'')
 				if path_folder:
 					folder += '\\'.join(os.path.split(path_folder)) + '\\'

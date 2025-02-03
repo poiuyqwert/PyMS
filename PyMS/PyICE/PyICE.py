@@ -76,10 +76,10 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
@@ -104,11 +104,13 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 
 		#listbox,etc.
 		listframes = Frame(self)
-		def listbox_colum(name):
+		def listbox_colum(name: str) -> ScrolledListbox:
 			f = Frame(listframes)
 			Label(f, text=name + ':', anchor=W).pack(fill=X)
 			listbox = ScrolledListbox(f, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1)
-			listbox.bind(WidgetEvent.Listbox.Select, lambda _,l=listbox: self.listbox_selection_changed(l))
+			def selection_changed(_event: Event) -> None:
+				self.listbox_selection_changed(listbox)
+			listbox.bind(WidgetEvent.Listbox.Select(), selection_changed)
 			listbox.pack(fill=BOTH, expand=1)
 			Button(f, text='Unselect All', command=lambda l=listbox: self.unselect(l)).pack(fill=X)
 			f.pack(side=LEFT, fill=BOTH, padx=2, expand=1)
@@ -269,11 +271,11 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 					iscript_ids.append(iscript_id)
 		return sorted(iscript_ids)
 
-	def unselect(self, listbox) -> None:
+	def unselect(self, listbox: ScrolledListbox) -> None:
 		listbox.select_clear(0, END)
 		self.listbox_selection_changed()
 
-	def listbox_selection_changed(self, listbox: Listbox | None = None) -> None:
+	def listbox_selection_changed(self, listbox: ScrolledListbox | None = None) -> None:
 		iscript_ids = self.selected_iscript_ids()
 		if iscript_ids:
 			self.selectstatus.set(f"IScript ID's Selected: {', '.join([str(i) for i in iscript_ids])}")

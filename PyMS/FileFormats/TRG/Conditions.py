@@ -21,7 +21,7 @@ class ConditionDefinition(Protocol):
 	def matches(self, condition: Condition) -> int:
 		...
 
-	def decompile(self, condition: Condition, trg: TRG, output: IO.AnyOutputText):
+	def decompile(self, condition: Condition, trg: TRG, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
 			f.write(f'{self.name}(')
 			has_parameters = False

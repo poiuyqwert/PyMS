@@ -34,7 +34,7 @@ class CHKSectionPTEC(CHKSection):
 		self.globalAvailability: list[int] = []
 		self.globallyResearched: list[int] = []
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		o = 0
 		for p in range(12):
 			availability = list(int(v) for v in struct.unpack(f'<{self.TECHS}B', data[o:o+self.TECHS]))

@@ -13,7 +13,7 @@ class Click(Enum):
 	left = 0
 	right = 1
 
-	def config_key(self): # type () -> str
+	def config_key(self) -> str:
 		if self == Click.left:
 			return 'fg'
 		return 'bg'

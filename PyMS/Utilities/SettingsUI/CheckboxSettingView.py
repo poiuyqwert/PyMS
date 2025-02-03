@@ -5,6 +5,8 @@ from ..UIKit import *
 from ..EditedState import EditedState
 from .. import Config
 
+from typing import Any
+
 class CheckboxSettingView(SettingView):
 	def __init__(self, parent: Misc, edited_state: EditedState, name: str, setting: Config.Boolean):
 		super().__init__(parent, edited_state)
@@ -13,7 +15,7 @@ class CheckboxSettingView(SettingView):
 		self.variable.set(setting.value)
 		Checkbutton(self, text=name, variable=self.variable, command=self.changed).pack()
 
-	def changed(self, *_) -> None:
+	def changed(self, *_: Any) -> None:
 		edited = self.variable.get() != self.setting.value
 		self.edited_state.mark_edited(edited)
 

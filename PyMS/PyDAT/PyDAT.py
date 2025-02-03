@@ -28,7 +28,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 import os
 
-from typing import cast, Callable
+from typing import cast, Callable, Any
 
 LONG_VERSION = 'v' + Assets.version('PyDAT')
 
@@ -54,7 +54,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.updates.append(update_id)
 			if self.update_after_id:
 				self.after_cancel(self.update_after_id)
-			def perform_updates():
+			def perform_updates() -> None:
 				self.update_after_id = None
 				updates = self.updates
 				self.updates = []
@@ -106,7 +106,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		collapse_button.pack(side=TOP)
 		f.pack(fill=X, pady=2)
 
-		def _update_collapse_setting(collapsed):
+		def _update_collapse_setting(collapsed: bool) -> None:
 			self.data_context.config.show_listbox_options.value = not collapsed
 		collapse_view = CollapseView(left, collapse_button, callback=_update_collapse_setting)
 		collapse_view.pack(fill=X, padx=2, pady=2)
@@ -245,14 +245,14 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		else:
 			self.simple_names_checkbox['state'] = DISABLED
 			self.simple_names.set(False)
-	def change_names_display(self, *_) -> None:
+	def change_names_display(self, *_: Any) -> None:
 		name_settings = self.active_tab().get_names_settings()
 		new_setting = PyDAT.NAMES_OPTION_TO_SETTING[self.names_display.get()]
 		if new_setting == name_settings.display.value:
 			return
 		name_settings.display.value = new_setting
 		self.active_tab().get_dat_data().update_names()
-	def change_simple_names(self, *_) -> None:
+	def change_simple_names(self, *_: Any) -> None:
 		name_settings = self.active_tab().get_names_settings()
 		if not isinstance(name_settings, PyDATConfig.Names.SimpleOptions) or self.simple_names.get() == name_settings.simple.value:
 			return

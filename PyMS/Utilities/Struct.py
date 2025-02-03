@@ -6,7 +6,7 @@ from .PyMSError import PyMSError
 import struct
 from enum import StrEnum, Enum
 
-from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar
+from typing import Self, BinaryIO, Literal, Sequence, Any, Protocol, runtime_checkable, TypeVar, Generic
 
 class Endian(StrEnum):
 	native = '@'
@@ -80,7 +80,7 @@ class Type:
 	def format(self) -> str:
 		return self._format.value
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Type):
 			return False
 		return other._format == self._format
@@ -96,7 +96,7 @@ class PadType(Type):
 			return self._format.value
 		return f'{self.length}{self._format}'
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, PadType):
 			return False
 		if other._format != self._format:
@@ -158,7 +158,7 @@ class StringType(Type, Processed):
 					value = value[:index]
 		return value.decode(self.encoding)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, StringType):
 			return False
 		if other._format != self._format:
@@ -490,7 +490,7 @@ class MixedInts:
 	def unpack(self, data: bytes, offset: int, endian: Endian) -> list[int]:
 		return list(struct.unpack_from(self.format(endian), data, offset))
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, MixedInts):
 			return False
 		if other.types != self.types:
@@ -713,7 +713,7 @@ class Struct:
 		pass
 
 S = TypeVar('S', bound=Struct)
-class StructArray:
+class StructArray(Generic[S]):
 	def __init__(self, struct_type: type[S], count: int) -> None:
 		self.struct_type = struct_type
 		self.count = count
@@ -730,10 +730,10 @@ class StructArray:
 			result += struct_obj.pack()
 		return result
 
-	def unpack(self, data: bytes, offset: int = 0):
+	def unpack(self, data: bytes, offset: int = 0) -> Sequence[S]:
 		return self.struct_type.unpack_array(data, self.count, offset)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, StructArray):
 			return False
 		if other.struct_type != self.struct_type:

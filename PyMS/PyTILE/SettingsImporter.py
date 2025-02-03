@@ -14,7 +14,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Serialize
 
-from enum import Enum
+from typing import Any
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
@@ -77,7 +77,7 @@ class SettingsImporter(PyMSDialog):
 		self.settings_entry.xview(END)
 		self.update_states()
 
-	def update_states(self, *_) -> None:
+	def update_states(self, *_: Any) -> None:
 		self.import_button['state'] = NORMAL if self.settings_path.get() else DISABLED
 
 	def iimport(self) -> None:
@@ -98,7 +98,7 @@ class SettingsImporter(PyMSDialog):
 			if self.auto_close.get():
 				self.ok()
 
-	def dismiss(self):
+	def dismiss(self) -> None:
 		self.config_.import_.settings.repeater.value = SettingsImporter.REPEATERS[self.repeater.get()][1]
 		self.config_.import_.settings.auto_close.value = not not self.auto_close.get()
 		PyMSDialog.dismiss(self)

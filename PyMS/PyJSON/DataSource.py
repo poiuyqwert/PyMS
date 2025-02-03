@@ -73,9 +73,9 @@ class DataSource:
 		if not self._treeview:
 			return
 		for value in data:
-			self._insert_value(value, parent)
+			self._insert_value(value, parent, index)
 
-	def _insert_value(self, value: JSON.JSON.Value, parent: str | None = None, index: int | Literal['end'] = END):
+	def _insert_value(self, value: JSON.JSON.Value, parent: str | None = None, index: int | Literal['end'] = END) -> None:
 		if not self._treeview:
 			return
 		if isinstance(value, dict):
@@ -123,7 +123,7 @@ class DataSource:
 			max_width = max(max_width, self._item_width(child_id, 0))
 		self._treeview.column('#0', width=max_width, stretch=False)
 
-	def _update_width(self, item_id: ItemID):
+	def _update_width(self, item_id: ItemID) -> None:
 		if not self._treeview:
 			return
 		max_width = max(self._item_width(item_id), self._treeview.column('#0', 'width'))

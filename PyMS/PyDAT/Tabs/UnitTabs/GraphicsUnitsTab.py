@@ -32,7 +32,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = Frame(l)
-		def add_dropdown(title, entry_variable, dropdown_variable, hint_name, values, none_value=None, jump_dat_id=None):
+		def add_dropdown(title: str, entry_variable: IntegerVar, dropdown_variable: IntVar, hint_name: str, values: list[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> DropDown:
 			f = Frame(s)
 			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -252,10 +252,9 @@ class GraphicsUnitsTab(DATUnitsTab):
 		self.down.set(entry.unit_extents.down)
 		self.portraitsentry.set(entry.portrait)
 
-		has_addon_positon = entry.addon_position is not None
-		self.horizontal.set(entry.addon_position.x if has_addon_positon else 0)
-		self.vertical.set(entry.addon_position.y if has_addon_positon else 0)
-		state = (DISABLED,NORMAL)[has_addon_positon]
+		self.horizontal.set(entry.addon_position.x if entry.addon_position is not None else 0)
+		self.vertical.set(entry.addon_position.y if entry.addon_position is not None else 0)
+		state = NORMAL if entry.addon_position is not None else DISABLED
 		self.horizontalw['state'] = state
 		self.verticalw['state'] = state
 		self.show_addon_placement_checkbox['state'] = state

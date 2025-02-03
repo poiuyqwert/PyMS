@@ -37,7 +37,7 @@ def migrate_field(data: dict, from_keypath: tuple[str, ...], to_keypath: tuple[s
 		data = migrate_nest(data, to_keypath[:-1])
 	data[to_keypath[-1]] = value
 
-def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]):
+def migrate_fields(data: dict, keypaths: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]) -> None:
 	for from_keypath,to_keypath in keypaths:
 		migrate_field(data, from_keypath, to_keypath)
 
@@ -331,11 +331,11 @@ class WindowGeometry(ConfigObject):
 		self._geometry = self._saved_state
 
 class PaneSizes(ConfigObject):
-	def __init__(self, *, defaults: list[int] | None = None, pane_index: int | None = None) -> None:
-		self._defaults = defaults or []
-		self._sizes: list[int] = self._defaults
+	def __init__(self, *, defaults: tuple[int, ...] | None = None, pane_index: int | None = None) -> None:
+		self._defaults: tuple[int, ...] = defaults or ()
+		self._sizes: tuple[int, ...] = self._defaults
 		self._pane_index = pane_index
-		self._saved_state: list[int] = list(self._sizes)
+		self._saved_state: tuple[int, ...] = self._sizes
 
 	def save_size(self, paned_window: PanedWindow) -> None:
 		paned_window.update()
@@ -350,7 +350,7 @@ class PaneSizes(ConfigObject):
 			coord = paned_window.sash_coord(pane_index)[axis_index]
 			sizes.append(coord - offset)
 			offset = coord
-		self._sizes = sizes
+		self._sizes = tuple(sizes)
 
 	def load_size(self, paned_window: PanedWindow) -> None:
 		if not self._sizes:
@@ -379,7 +379,7 @@ class PaneSizes(ConfigObject):
 			if not isinstance(size, int):
 				return
 			sizes.append(size)
-		self._sizes = sizes
+		self._sizes = tuple(sizes)
 
 	def reset(self) -> None:
 		self._sizes = self._defaults

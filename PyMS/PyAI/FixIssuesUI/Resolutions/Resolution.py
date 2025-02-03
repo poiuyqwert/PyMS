@@ -19,5 +19,5 @@ class Resolution(Protocol):
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:
 		...
 
-	def resolve(self, ai: AIBIN, issue: LoadIssue):
+	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:
 		...

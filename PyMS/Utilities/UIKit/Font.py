@@ -147,5 +147,5 @@ class Font(_Fonts.Font):
 	def __copy__(self) -> Font:
 		return self.copy()
 
-	def __deepcopy__(self, memo) -> Font:
+	def __deepcopy__(self, memo: None) -> Font:
 		return self.copy()

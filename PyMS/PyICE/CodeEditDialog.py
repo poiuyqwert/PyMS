@@ -23,7 +23,7 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 import re, io
 
-from typing import Sequence
+from typing import Sequence, Any
 
 class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig, ids: list[int]) -> None:
@@ -324,7 +324,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		if dialog.updated:
 			self.text.update_highlight_styles()
 
-	def generate(self, *_) -> None:
+	def generate(self, *_: Any) -> None:
 		CodeGeneratorDialog(self, self.config_, self)
 
 	def preview(self, _event: Event | None = None) -> None:
@@ -399,7 +399,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		# if warnings:
 		# 	WarningDialog(self, warnings)
 
-	def write(self, text) -> None:
+	def write(self, text: str) -> None:
 		self.decompile += text
 
 	def readlines(self) -> list[str]:

@@ -710,7 +710,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if node and node.widget:
 			WidgetSettings(self, node, self)
 
-	def canvas_double_click(self, e: Event, m: ClickModifier):
+	def canvas_double_click(self, e: Event, m: ClickModifier) -> None:
 		if not self.dialog:
 			return
 		prefer_selection = (m == ClickModifier.ctrl)
@@ -910,7 +910,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 								dy += ry1-y1
 							elif y2 > ry2:
 								dy += ry2-y2
-					def offset_node(node: WidgetNode, delta_x: int, delta_y) -> None:
+					def offset_node(node: WidgetNode, delta_x: int, delta_y: int) -> None:
 						if node.widget:
 							node.widget.x1 += delta_x
 							node.widget.y1 += delta_y
