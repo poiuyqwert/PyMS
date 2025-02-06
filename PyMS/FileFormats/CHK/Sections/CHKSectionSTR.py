@@ -137,5 +137,6 @@ class CHKSectionSTR(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for n,string in self.strings.items():
-			result += f'\t{pad(f'String {n+1}')}"{string.text.replace('\\','\\\\').replace('"','\\"')}"\n'
+			text = string.text.replace('\\','\\\\').replace('"','\\"')
+			result += f'\t{pad(f"String {n+1}")}"{text}"\n'
 		return result

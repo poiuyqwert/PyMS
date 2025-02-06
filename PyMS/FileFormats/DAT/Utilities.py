@@ -132,7 +132,7 @@ class DATEntryName:
 						special = pieces[1]
 					tbl_name = DATEntryName.RE_TBL_CODES.sub('', tbl_name)
 					if special and special != '*':
-						tbl_name += f' ({DATEntryName.RE_TBL_CODES.sub('', special)})'
+						tbl_name += f' ({DATEntryName.RE_TBL_CODES.sub("", special)})'
 			else:
 				tbl_name = None
 		else:

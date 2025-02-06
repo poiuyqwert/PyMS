@@ -43,4 +43,4 @@ class CHKSectionERA(CHKSection):
 		return struct.pack('<H', self.tileset)
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad('Tileset',str(self.tileset))} # {CHKSectionERA.TILESET_NAME(self.tileset)}\n'
+		return f'{self.NAME}:\n\t{pad("Tileset",str(self.tileset))} # {CHKSectionERA.TILESET_NAME(self.tileset)}\n'

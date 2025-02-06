@@ -54,14 +54,14 @@ class CHKSectionFORC(CHKSection):
 
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
-		result += f'\t{pad('#', 'Force')}\n'
+		result += f'\t{pad("#", "Force")}\n'
 		for p in range(8):
-			result += f'\t{pad(f'Player {p+1}', str(self.playerForces[p]+1))}\n'
+			result += f'\t{pad(f"Player {p+1}", str(self.playerForces[p]+1))}\n'
 		properties = ''
 		for f,force in enumerate(self.forces):
-			result += f'\t{pad(f'Name{f+1}', f'String {force.name}')}\n'
+			result += f'\t{pad(f"Name{f+1}", f"String {force.name}")}\n'
 			header,values = named_flags(force.properties, ["Random Start","Allies","Allied Victory","Shared Vision"], 8)
 			if not properties:
-				properties = f'\t{pad('#')}{header}\n'
-			properties += f'\t{pad(f'Properies{f+1}', values)}\n'
+				properties = f'\t{pad("#")}{header}\n'
+			properties += f'\t{pad(f"Properies{f+1}", values)}\n'
 		return result + properties

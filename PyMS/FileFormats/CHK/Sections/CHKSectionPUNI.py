@@ -68,7 +68,7 @@ class CHKSectionPUNI(CHKSection):
 				result += '\t' + pad(f'Unit{u:03d}')
 				result += pad(str(self.availability[u][p].available))
 				result += f'{self.availability[u][p].default}\n'
-		result += f'\t{pad('# Global','Available')}\n'
+		result += f'\t{pad("# Global","Available")}\n'
 		for u in range(228):
-			result += f'\t{pad(f'Unit{u:03d}', str(self.globalAvailability[u]))}\n'
+			result += f'\t{pad(f"Unit{u:03d}", str(self.globalAvailability[u]))}\n'
 		return result

@@ -29,6 +29,6 @@ class CHKSectionSPRP(CHKSection):
 
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
-		result += f'\t{pad('ScenarioName', f'String {self.scenarioName}')}\n'
-		result += f'\t{pad('Description', f'String {self.description}')}\n'
+		result += f'\t{pad("ScenarioName", f"String {self.scenarioName}")}\n'
+		result += f'\t{pad("Description", f"String {self.description}")}\n'
 		return result

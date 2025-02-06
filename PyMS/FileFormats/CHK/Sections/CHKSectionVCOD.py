@@ -32,7 +32,7 @@ class CHKSectionVCOD(CHKSection):
 		return self.code + struct.pack('<16B',*self.opcodes)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n\t{pad('Code',self.code.hex())}\n'
+		result = f'{self.NAME}:\n\t{pad("Code",self.code.hex())}\n'
 		for n,opcode in enumerate(self.opcodes):
-			result += f'\t{pad(f'Opcode{n:02d}' % n, str(opcode))}\n'
+			result += f'\t{pad(f"Opcode{n:02d}" % n, str(opcode))}\n'
 		return result

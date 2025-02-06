@@ -32,12 +32,12 @@ class CHKDoodad:
 
 	def decompile(self) -> str:
 		result = "\t#\n"
-		result += f'\t{pad('DoodadID', str(self.doodadID))}\n'
-		result += f'\t{pad('Position', f'{self.position[0]},{self.position[1]}')}\n'
-		result += f'\t{pad('Owner', str(self.owner))}\n'
+		result += f'\t{pad("DoodadID", str(self.doodadID))}\n'
+		result += f'\t{pad("Position", f"{self.position[0]},{self.position[1]}")}\n'
+		result += f'\t{pad("Owner", str(self.owner))}\n'
 		header,values = named_flags(self.flags, ["Sprite",None,None,"Disabled"], 16, 12)
-		result += f'\t{pad('#')}{header}\n'
-		result += f'\t{pad('Flags', values)}\n'
+		result += f'\t{pad("#")}{header}\n'
+		result += f'\t{pad("Flags", values)}\n'
 		return result
 
 class CHKSectionTHG2(CHKSection):

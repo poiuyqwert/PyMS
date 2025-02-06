@@ -415,8 +415,8 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			code_type.compile(value, builder)
 			result = bytes(builder.data)
 			print(value)
-			print(f'  Result: {result.hex(' ').upper()}')
-			print(f'Expected: {expected.hex(' ').upper()}')
+			print(f'  Result: {result.hex(" ").upper()}')
+			print(f'Expected: {expected.hex(" ").upper()}')
 			self.assertEqual(result, expected)
 
 	def test_parse_success(self) -> None:

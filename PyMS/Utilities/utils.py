@@ -91,7 +91,7 @@ def register_registry(program_name: str, extension: str, file_type_name: str | N
 	if hasattr(sys, 'frozen'):
 		executable = f'"{sys.executable}"'
 	else:
-		executable = f'"{sys.executable.replace('python.exe','pythonw.exe')}" "{os.path.join(Assets.base_dir, program_name + ".pyw")}"'
+		executable = f'"{sys.executable.replace("python.exe","pythonw.exe")}" "{os.path.join(Assets.base_dir, program_name + ".pyw")}"'
 	try:
 		delkey(HKEY_CLASSES_ROOT, os.extsep + extension)
 		delkey(HKEY_CLASSES_ROOT, key)

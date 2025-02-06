@@ -51,5 +51,5 @@ class CHKSectionSIDE(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for n,value in enumerate(self.sides):
-			result += f'\t{pad(f'Slot{n:02d}',str(value))} # {CHKSectionSIDE.SIDE_NAME(value)}\n'
+			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionSIDE.SIDE_NAME(value)}\n'
 		return result

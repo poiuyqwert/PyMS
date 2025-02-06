@@ -29,5 +29,5 @@ class CHKSectionUPUS(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for n,u in enumerate(self.properties_used):
-			result += f'\t{pad(f'Properties{n:02d}', str(u))}\n'
+			result += f'\t{pad(f"Properties{n:02d}", str(u))}\n'
 		return result

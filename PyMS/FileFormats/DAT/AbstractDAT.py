@@ -140,7 +140,7 @@ class AbstractDAT:
 			if entry is None:
 				return
 			if len(entry) < 3:
-				raise PyMSError('Import', f'Entry {entry['_id']} is empty', line=entry_starts[entry['_id']])
+				raise PyMSError('Import', f'Entry {entry["_id"]} is empty', line=entry_starts[entry['_id']])
 			entries.append(entry)
 		for n,line in enumerate(text.splitlines()):
 			line = cls.re_comment.sub('', line)
@@ -227,8 +227,8 @@ class AbstractDAT:
 						lines.append(f'\t{name} {value}')
 			lines = []
 			for entry in data:
-				id_specifier = f'({entry['_id']})' if '_id' in entry else ''
-				lines.append(f'{entry['_type']}{id_specifier}:')
+				id_specifier = f'({entry["_id"]})' if '_id' in entry else ''
+				lines.append(f'{entry["_type"]}{id_specifier}:')
 				flatten(entry, (), lines)
 				lines.append('')
 			return '\n'.join(lines)

@@ -29,5 +29,5 @@ class CHKSectionSWNM(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for n,name in enumerate(self.names):
-			result += f'\t{pad(f'Switch {n}', f'String {name}')}\n'
+			result += f'\t{pad(f"Switch {n}", f"String {name}")}\n'
 		return result

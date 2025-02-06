@@ -53,5 +53,5 @@ class CHKSectionIOWN(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for n,value in enumerate(self.owners):
-			result += f'\t{pad(f'Slot{n:02d}',str(value))} # {CHKSectionIOWN.OWNER_NAME(value)}\n'
+			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionIOWN.OWNER_NAME(value)}\n'
 		return result

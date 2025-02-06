@@ -29,5 +29,5 @@ class CHKSectionWAV(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for w in range(512):
-			result += f'\t{pad(f'Wav{w:03d}', f'String {self.paths[w]}')}\n'
+			result += f'\t{pad(f"Wav{w:03d}", f"String {self.paths[w]}")}\n'
 		return result

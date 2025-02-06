@@ -289,7 +289,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		themes = ['None']
 		for t in range(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
 			theme = DialogBIN.THEME_ASSETS_INFO[t]
-			themes.append(f'{theme['name']} ({theme['path']})')
+			themes.append(f'{theme["name"]} ({theme["path"]})')
 		DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=EW)
 		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=W)
 		themeframe.grid_columnconfigure(0, weight=1)

@@ -95,5 +95,5 @@ class CHKSectionCOLR(CHKSection):
 	def decompile(self) -> str:
 		result = f'{self.NAME}:\n'
 		for p,c in enumerate(self.colors):
-			result += f'\t{pad(f'Player{p+1}', str(c))} # {CHKSectionCOLR.COLOR_NAME(c)}\n'
+			result += f'\t{pad(f"Player{p+1}", str(c))} # {CHKSectionCOLR.COLOR_NAME(c)}\n'
 		return result

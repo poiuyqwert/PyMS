@@ -34,7 +34,7 @@ def build_user_agent():
 	system = os_name()
 	version = os_version()
 	if system == 'darwin':
-		user_agent += f' (Macintosh; Intel Mac OS X {version.replace('.','_')})'
+		user_agent += f' (Macintosh; Intel Mac OS X {version.replace(".","_")})'
 	elif system == 'windows':
 		user_agent += f' (Windows NT {version}{"; WOW64" if bits == 64 else ""})'
 	else:

@@ -48,7 +48,7 @@ class CHKUnitProperties:
 		for key in ['ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += f'\t{pad('#')}{value[0]}\n'
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
 			result += f'\t{pad(key, str(value))}\n'
 		return result

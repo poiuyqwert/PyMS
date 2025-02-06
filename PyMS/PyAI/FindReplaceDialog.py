@@ -196,7 +196,7 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = self.after(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
-		MessageBox.askquestion(parent=self, title='Count', message=f'{len(r.findall(self.delegate.get_code_text().get('1.0', END)))} matches found.', type=MessageBox.OK)
+		MessageBox.askquestion(parent=self, title='Count', message=f'{len(r.findall(self.delegate.get_code_text().get("1.0", END)))} matches found.', type=MessageBox.OK)
 
 	def replaceall(self) -> None:
 		f = self.find.get()

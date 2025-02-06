@@ -476,7 +476,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def settings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, self.data_context.config, self, err, self.data_context.mpq_handler)
 
-	def register_registry(self, e: Event | None = None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyDAT', 'dat', '')
 		except PyMSError as e:
