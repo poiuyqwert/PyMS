@@ -518,19 +518,22 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 		return AISEIdleOrder.OptionSet.decompile(0, scanner)
 
 	def compile(self, value: AISEIdleOrder.OptionSet, context: ByteCodeBuilderType) -> None:
-		value.compile_options(context)
+		value.compile(context)
 
 	def serialize(self, value: AISEIdleOrder.OptionSet, context: SerializeContext) -> str:
-		return value.serialize_options()
+		return value.serialize()
 
 	def lex(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
 		return super().lex(parse_context)
 
 	def parse(self, parse_context: ParseContext) -> AISEIdleOrder.OptionSet:
-		return AISEIdleOrder.OptionSet.parse_options(parse_context)
+		option_set = AISEIdleOrder.OptionSet.parse(parse_context)
+		if not option_set:
+			raise PyMSError('Parse', f"Couldn't parse value for `{self.name}`")
+		return option_set
 
 	def keywords(self) -> Sequence[str]:
-		return sum((tuple(option_type.keywords()) for option_type in AISEIdleOrder.OPTION_TYPES.values()), ())
+		return AISEIdleOrder.OptionSet.keywords()
 
 class AttackModeCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:

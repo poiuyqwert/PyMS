@@ -11,7 +11,7 @@ from ....Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeBuilderType
 
 from dataclasses import dataclass
 
-from typing import runtime_checkable, Protocol, Self, Type, cast, Sequence
+from typing import runtime_checkable, Protocol, Self, Type, Sequence
 
 @runtime_checkable
 class Option(Protocol):
@@ -43,6 +43,96 @@ OPTION_TYPES: dict[int, Type[Option]] = {}
 
 def build_command_word(cmd_type: int, value: int = 0) -> int:
 	return (cmd_type << 8) & OptionSet.TYPE_MASK | (value & OptionSet.VALUE_MASK)
+
+@dataclass
+class OptionSet:
+	TYPE_MASK = 0x2F00
+	VALUE_MASK = 0xC0FF
+
+	options: tuple[Option, ...]
+
+	def simplify(self) -> None:
+		options: dict[int, list[Option]] = {}
+		for option in self.options:
+			if not option.TYPE_ID in options:
+				options[option.TYPE_ID] = []
+			existing_options = options[option.TYPE_ID]
+			if isinstance(option, OptionSet):
+				option.simplify()
+				existing_options.append(option)
+			else:
+				for existing_option in existing_options:
+					if existing_option.merge(option):
+						break
+				else:
+					existing_options.append(option)
+		self.options = tuple(option for options in options.values() for option in options)
+
+	@classmethod
+	def decompile(cls, value: int, scanner: BytesScanner) -> Self:
+		option_set: list[Option] = []
+		while True:
+			command = scanner.scan(Struct.l_u16)
+			cmd_type = (command & OptionSet.TYPE_MASK) >> 8
+			value = command & OptionSet.VALUE_MASK
+			option_type = OPTION_TYPES.get(cmd_type)
+			if not option_type:
+				raise PyMSError('Decompile', f'`{cmd_type}` is not a valid `idle_order_flags` option type')
+			option_set.append(option_type.decompile(value, scanner))
+			if cmd_type == BasicFlags.TYPE_ID:
+				break
+		result = cls(tuple(option_set))
+		result.simplify()
+		return result
+
+	def serialize(self) -> str:
+		count = len(self.options)
+		return ' | '.join(option.serialize() for option in self.options if not isinstance(option, BasicFlags) or option.flags or count == 1)
+
+	@classmethod
+	def parse(cls, parse_context: ParseContext) -> Self | None:
+		option_set: list[Option] = []
+		while True:
+			token = parse_context.lexer.next_token(peek=True)
+			if token.raw_value == ',':
+				break
+			for option_type in OPTION_TYPES.values():
+				option = option_type.parse(parse_context)
+				if option is not None:
+					option_set.append(option)
+					break
+			else:
+				token = parse_context.lexer.next_token()
+				raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected an `idle_order_flags` option)')
+			token = parse_context.lexer.next_token(peek=True)
+			if token.raw_value == '|':
+				_ = parse_context.lexer.next_token()
+			else:
+				break
+		result = cls(tuple(option_set))
+		result.simplify()
+		return result
+
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		self.simplify()
+		options: list[Option] = []
+		basic_flags: BasicFlags | None = None
+		for option in self.options:
+			if isinstance(option, BasicFlags):
+				basic_flags = option
+			else:
+				options.append(option)
+		if basic_flags is None:
+			options.append(BasicFlags(0))
+		else:
+			options.append(basic_flags)
+
+		for option in options:
+			option.compile(context)
+
+	@classmethod
+	def keywords(cls) -> Sequence[str]:
+		return sum((tuple(option_type.keywords()) for option_type in OPTION_TYPES.values()), ())
 
 @dataclass
 class BasicFlags(Option):
@@ -290,87 +380,20 @@ class UnitProps(Option):
 		return tuple(UnitProps.Field.NAMES.values()) + tuple(UnitProps.Comparison.NAMES.values())
 
 @dataclass
-class OptionSet(Option):
+class SelfOptions(OptionSet, Option):
 	TYPE_ID = 4
-
-	TYPE_MASK = 0x2F00
-	VALUE_MASK = 0xC0FF
-
-	options: tuple[Option, ...]
-
-	def simplify(self) -> None:
-		options: dict[int, list[Option]] = {}
-		for option in self.options:
-			if not option.TYPE_ID in options:
-				options[option.TYPE_ID] = []
-			existing_options = options[option.TYPE_ID]
-			if isinstance(option, OptionSet):
-				option.simplify()
-				existing_options.append(option)
-			else:
-				for existing_option in existing_options:
-					if existing_option.merge(option):
-						break
-				else:
-					existing_options.append(option)
-		if len(options) == 1 and OptionSet.TYPE_ID in options and len(options[OptionSet.TYPE_ID]) == 1:
-			self.options = cast(OptionSet, options[OptionSet.TYPE_ID][0]).options
-		else:
-			self.options = tuple(option for options in options.values() for option in options)
 
 	@classmethod
 	def decompile(cls, value: int, scanner: BytesScanner) -> Self:
-		option_set: list[Option] = []
-		while True:
-			command = scanner.scan(Struct.l_u16)
-			cmd_type = (command & OptionSet.TYPE_MASK) >> 8
-			value = command & OptionSet.VALUE_MASK
-			option_type = OPTION_TYPES.get(cmd_type)
-			if not option_type:
-				raise PyMSError('Decompile', f'`{cmd_type}` is not a valid `idle_order_flags` option type')
-			option_set.append(option_type.decompile(value, scanner))
-			if cmd_type == BasicFlags.TYPE_ID:
-				break
-		result = cls(tuple(option_set))
-		result.simplify()
-		return result
-
-	def serialize_options(self) -> str:
-		count = len(self.options)
-		return ' | '.join(option.serialize() for option in self.options if not isinstance(option, BasicFlags) or option.flags or count == 1)
+		return super().decompile(value, scanner)
 
 	def serialize(self) -> str:
-		return f'Self({self.serialize_options()})'
+		return f'Self({super().serialize()})'
 
 	def merge(self, other: Option) -> bool:
 		if other == self:
 			return True
 		return False
-
-	@classmethod
-	def parse_options(cls, parse_context: ParseContext, is_root: bool = True) -> Self:
-		option_set: list[Option] = []
-		while True:
-			if is_root:
-				token = parse_context.lexer.next_token(peek=True)
-				if token.raw_value == ',':
-					break
-			for option_type in OPTION_TYPES.values():
-				option = option_type.parse(parse_context)
-				if option is not None:
-					option_set.append(option)
-					break
-			else:
-				token = parse_context.lexer.next_token()
-				raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected an `idle_order_flags` option)')
-			token = parse_context.lexer.next_token(peek=True)
-			if token.raw_value == '|':
-				_ = parse_context.lexer.next_token()
-			else:
-				break
-		result = cls(tuple(option_set))
-		result.simplify()
-		return result
 
 	@classmethod
 	def parse(cls, parse_context: ParseContext) -> Self | None:
@@ -381,32 +404,15 @@ class OptionSet(Option):
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `Self` to start option set)')
-		option_set = cls.parse_options(parse_context, False)
+		option_set = super().parse(parse_context)
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == ')':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `)` to end `Self` option set)')
 		return option_set
 
-	def compile_options(self, context: ByteCodeBuilderType) -> None:
-		self.simplify()
-		options: list[Option] = []
-		basic_flags: BasicFlags | None = None
-		for option in self.options:
-			if isinstance(option, BasicFlags):
-				basic_flags = option
-			else:
-				options.append(option)
-		if basic_flags is None:
-			options.append(BasicFlags(0))
-		else:
-			options.append(basic_flags)
-
-		for option in options:
-			option.compile(context)
-
 	def compile(self, context: ByteCodeBuilderType) -> None:
-		context.add_data(Struct.l_u16.pack(build_command_word(OptionSet.TYPE_ID)))
-		self.compile_options(context)
+		context.add_data(Struct.l_u16.pack(build_command_word(SelfOptions.TYPE_ID)))
+		super().compile(context)
 
 	@classmethod
 	def keywords(cls) -> Sequence[str]:
@@ -892,7 +898,7 @@ _OPTION_TYPES: list[Type[Option]] = [
 	BasicFlags,
 	SpellEffects, WithoutSpellEffects,
 	UnitProps,
-	OptionSet,
+	SelfOptions,
 	Order,
 	UnitFlags,
 	Targetting,

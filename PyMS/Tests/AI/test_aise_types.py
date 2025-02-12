@@ -364,11 +364,11 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			(b'\x03\x01\x02\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02)))),
 			(b'\x10\x03\x00\x32\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00', AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0)))),
 			(b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00', AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
 				AISEIdleOrder.BasicFlags(0))
 			)),
 			(b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00', AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -395,11 +395,11 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02))), b'\x03\x01\x02\x00'),
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0))), b'\x10\x03\x00\x32\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
 				AISEIdleOrder.BasicFlags(0))
 			), b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -428,9 +428,11 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			('SpellEffects(Ensnare | Plague),', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03),))),
 			('SpellEffects(Ensnare | Plague) | Own,', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02)))),
 			('Shields(LessThan, 50) | Health(LessThanPercent, 50),', AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50)))),
-			('Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat),', AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20)))),
+			('Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat),', AISEIdleOrder.OptionSet((
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+			))),
 			('Self(Order(AttackUnit) | Targetting(Enemy) | TileFlags(Creep | Ramp)) | SpellEffects(Matrix) | WithoutSpellEffects(Blind) | Hangar(LessThan, 1) | RandomRate(50, 60) | Count(Exactly, 50, 6, 13) | WithoutUnitFlags(Hero | Robotic) | InCombat,', AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -476,11 +478,11 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x03), AISEIdleOrder.BasicFlags(0x02))), 'SpellEffects(Ensnare | Plague) | Own'),
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.UnitProps(1, 0, 12800), AISEIdleOrder.UnitProps(2, 2, 50), AISEIdleOrder.BasicFlags(0))), 'Shields(LessThan, 50) | Health(LessThanPercent, 50)'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02), AISEIdleOrder.TileFlags(False, 0x04), AISEIdleOrder.BasicFlags(0x20))),
 				AISEIdleOrder.BasicFlags(0))
 			), 'Self(SpellEffects(Plague) | TileFlags(Creep) | InCombat)'),
 			(AISEIdleOrder.OptionSet((
-				AISEIdleOrder.OptionSet((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
+				AISEIdleOrder.SelfOptions((AISEIdleOrder.Order(order_id=10), AISEIdleOrder.Targetting(flags=2), AISEIdleOrder.TileFlags(without=False, flags=12), AISEIdleOrder.BasicFlags(flags=0))),
 				AISEIdleOrder.SpellEffects(flags=64),
 				AISEIdleOrder.WithoutSpellEffects(flags=32),
 				AISEIdleOrder.UnitProps(field=4, comparison=0, amount=1),
@@ -500,6 +502,7 @@ class Test_IdleOrderFlags_OptionSet(unittest.TestCase):
 	def test_simplify(self) -> None:
 		cases = (
 			(AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x1), AISEIdleOrder.BasicFlags(0x2))), AISEIdleOrder.OptionSet((AISEIdleOrder.BasicFlags(0x3),))),
+			(AISEIdleOrder.OptionSet((AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02),)),)), AISEIdleOrder.OptionSet((AISEIdleOrder.SelfOptions((AISEIdleOrder.SpellEffects(0x02),)),)))
 			# TODO: More tests
 		)
 		for option_set, expected in cases:
