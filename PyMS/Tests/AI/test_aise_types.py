@@ -508,39 +508,3 @@ class Test_IdleOrderFlags_OptionSet(unittest.TestCase):
 		for option_set, expected in cases:
 			option_set.simplify()
 			self.assertEqual(option_set, expected)
-# # Nothing
-# '0'
-# b'\x00\x00'
-
-# # Simple u16 flags
-# 'Own|Allied|InCombat'
-# b'\x26\x00'
-
-# # Simple u16 flags with high bits used
-# 'Own|Allied|InCombat|Remove'
-# b'\x26\x80'
-
-# # Extended filter
-# 'SpellEffects(Ensnare|Plague)'
-# b'\x03\x01\x00\x00'
-
-# # Extended filter + simple flag;
-# # Simple flag field always terminates the parameter while other filters can (should?) be compiled in the order they are in text.
-# 'Own|SpellEffects(Ensnare|Plague)'
-# b'\x03\x01\x02\x00'
-
-# 'SpellEffects(Ensnare|Plague)|Own'
-# b'\x03\x01\x02\x00'
-
-# # Two filters with same type id. Also example where a filter needs more space than just single u16
-# 'Shields(LessThan, 50)|Health(LessThanPercent, 50)'
-# b'\x10\x03\x00\x32\x00\x00\x22\x03\x32\x00\x00\x00\x00\x00'
-
-# # `Self` contains another idle_order_flags inside it
-# 'Self(InCombat|SpellEffects(Plague)|TileFlags(Creep))'
-# #         v--------------------------v This part
-# b'\x00\x04\x02\x01\x00\x0A\x04\x20\x00\x00\x00'
-
-# # Every possible filter type, some inside self()
-# 'InCombat|SpellEffects(Matrix)|WithoutSpellEffects(Blind)|Hangar(LessThan,1)|Self(Order(AttackUnit)|Targeting(Enemy)|TileFlags(Creep|Ramp))|RandomRate(50, 60)|Count(Exactly, 50, 6, 13)|WithoutUnitFlags(Robotic|Hero)'
-# b'\x00\x04\x0A\x05\x02\x07\x00\x0A\x0C\x00\x00\x40\x01\x20\x02\x40\x03\x01\x00\x00\x00\x00\x08\x32\x00\x3C\x00\x00\x09\x0A\x32\x00\x06\x00\x0D\x01\x06\x40\x40\x00\x00\x20\x00'
