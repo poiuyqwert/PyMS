@@ -107,7 +107,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		f.pack(fill=X, pady=2)
 
 		def _update_collapse_setting(collapsed):
-			self.data_context.settings.show_listbox_options = not collapsed
+			self.data_context.config.show_listbox_options = not collapsed
 		collapse_view = CollapseView(left, collapse_button, callback=_update_collapse_setting)
 		collapse_view.pack(fill=X, padx=2, pady=2)
 

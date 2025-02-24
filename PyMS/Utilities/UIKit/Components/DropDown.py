@@ -76,7 +76,10 @@ class DropDown(Frame):
 	def setentries(self, entries: Sequence[str]) -> None:
 		self.entries = list(entries)
 		if self.entries:
-			self.text.set(self.entries[self.variable.get()])
+			if self.variable.get() == self.none_value:
+				self.text.set(self.none_name)
+			else:
+				self.text.set(self.entries[self.variable.get()])
 		else:
 			self.text.set('')
 
@@ -91,7 +94,10 @@ class DropDown(Frame):
 		if num >= len(self.entries):
 			num = len(self.entries)-1
 		if self.entries:
-			self.text.set(self.entries[num])
+			if num == self.none_value:
+				self.text.set(self.none_name)
+			else:
+				self.text.set(self.entries[num])
 			if self.stay_right:
 				self.entry.xview_moveto(1.0)
 		else:

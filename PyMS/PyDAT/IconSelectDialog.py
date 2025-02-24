@@ -28,6 +28,13 @@ class IconSelectDialog(PyMSDialog):
 		self.scrolled_canvas.pack(side=TOP, fill=BOTH, expand=1)
 		self.selection_box_item = self.scrolled_canvas.canvas.create_rectangle(0, 0, 0, 0, outline='#FFFFFF')
 
+		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
+		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
+		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
+		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
+
 		buttonframe = Frame(self)
 		Button(buttonframe, text='Ok', width=10, command=self.ok).pack(side=LEFT, pady=5, padx=3)
 		Button(buttonframe, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
@@ -49,13 +56,6 @@ class IconSelectDialog(PyMSDialog):
 		max_height = self.winfo_height() + 10 * icon_size[1]
 		self.maxsize(max_width, max_height)
 		self.data_context.config.windows.icon_select.load_size(self)
-
-		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
-		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
-		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
-		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
 		
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()
@@ -180,6 +180,8 @@ class IconSelectDialog(PyMSDialog):
 		self.selection_box_item.tag_raise()
 
 	def _redraw_selection(self, old_selection: int, new_selection: int) -> None:
+		start_index = 0
+		end_index = 0
 		if self._last_display_parameters:
 			_, start_index, end_index = self._last_display_parameters
 			old_display_index = self._selected_index_to_display_index(old_selection)
