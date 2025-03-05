@@ -36,6 +36,7 @@ class AISEContext:
 			self.loaded_long_jumps[cmd_address] = cmd.params[0]
 
 	def determine_long_jumps(self, scripts: Iterable[AIScript], context: AIByteCodeCompiler) -> None:
+		self.expanded = True
 		checked_blocks: set[CodeBlock] = set()
 		def check_block(block: CodeBlock) -> None:
 			if block in checked_blocks:
