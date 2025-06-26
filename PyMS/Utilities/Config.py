@@ -512,6 +512,8 @@ class SelectFile(ConfigObject):
 				)
 				if isinstance(paths, tuple):
 					path = list(paths)
+				else:
+					path = paths
 			else:
 				path = FileDialog.askopenfilename(
 					parent=window,
