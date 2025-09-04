@@ -14,6 +14,7 @@ if STORMLIB_DIR:
 		('StormLib.dll', ctypes.c_wchar_p),
 		('StormLib64.dll', ctypes.c_wchar_p),
 		('StormLib.dylib', ctypes.c_char_p),
+		('StormLibLinux.so', ctypes.c_char_p),
 	)
 	for library, tchar in libraries:
 		if hasattr(ctypes, 'WinDLL'):
