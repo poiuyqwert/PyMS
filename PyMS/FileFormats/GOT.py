@@ -393,7 +393,31 @@ class GOT:
 		Serialize.decode_text(text, [_GOTDefinition], lambda i,d: self, 1)
 
 	def save_data(self) -> bytes:
-		return struct.pack('<B32s32s2B3H11B3Lx', 3, self.name.encode('utf-8'),self.subtype_name.encode('utf-8'),self.gametype_id,self.subtype_id,self.subtype_display,self.subtype_label,self.victory_condition,self.resources,self.unit_stats,self.fog_of_war,self.starting_units,self.starting_positions,self.player_types,self.allies,self.team_mode,self.cheat_codes,self.tournament_mode,self.victory_condition_value,self.resources_value,self.subtype_value)
+		return struct.pack(
+			"<B32s32s2B3H11B3Lx",
+			3,
+			self.name.encode("utf-8"),
+			self.subtype_name.encode("utf-8"),
+			self.gametype_id,
+			self.league_id,
+			self.subtype_id,
+			self.subtype_display,
+			self.subtype_label,
+			self.victory_condition.value,
+			self.resources.value,
+			self.unit_stats.value,
+			self.fog_of_war.value,
+			self.starting_units.value,
+			self.starting_positions.value,
+			self.player_types.value,
+			self.allies.value,
+			self.team_mode.value,
+			self.cheat_codes.value,
+			self.tournament_mode.value,
+			self.victory_condition_value,
+			self.resources_value,
+			self.subtype_value,
+		)
 
 	def save_file(self, output: IO.AnyOutputBytes):
 		data = self.save_data()
