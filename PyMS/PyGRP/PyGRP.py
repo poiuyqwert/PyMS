@@ -588,7 +588,7 @@ BMP's must be imported with the same style they were exported as.""")
 		else:
 			file = self.config_.last_path.bmp.select_open(self)
 			if file is not None:
-				files = [file]
+				files = file
 		if not files:
 			return
 		frames = 0
