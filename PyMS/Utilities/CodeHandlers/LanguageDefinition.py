@@ -72,7 +72,7 @@ class LanguageDefinition:
 				reason = reasons[0]
 				if len(reasons) > 1:
 					reason = f'{reason}, and {len(reasons)-1} other reasons'
-				raise PyMSError('Language', f'Command `{cmd_def.name}` is invalid as language plugin `{plugin.id}` is not avaialable ({reason})')
+				raise PyMSError('Language', f'Command `{cmd_def.name}` is invalid as language plugin `{plugin.id}` is not available ({reason})')
 			plugin.activate(f'Command `{cmd_def.name}` referenced', language_context)
 			return cmd_def
 		return None
@@ -91,7 +91,7 @@ class LanguageDefinition:
 				reason = reasons[0]
 				if len(reasons) > 1:
 					reason = f'{reason}, and {len(reasons)-1} other reasons'
-				raise PyMSError('Language', f'Type `{code_type.name}` is invalid as language plugin `{plugin.id}` is not avaialable ({reason})')
+				raise PyMSError('Language', f'Type `{code_type.name}` is invalid as language plugin `{plugin.id}` is not available ({reason})')
 			plugin.activate(f'Type `{code_type.name}` referenced', language_context)
 			return code_type
 		return None

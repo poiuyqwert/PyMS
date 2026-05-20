@@ -19,7 +19,7 @@ class IntSettingView(SettingView):
 			width = len(str(setting.limits[1]))
 		if setting.value is not None:
 			self.variable.set(setting.value)
-		self.variable.trace('w', self.changed)
+		self.variable.trace_add('write', self.changed)
 
 		Label(self, text=name, font=Font.default().bolded(), anchor=W).pack(fill=X, expand=1)
 		Label(self, text=description, anchor=W).pack(fill=X, expand=1)

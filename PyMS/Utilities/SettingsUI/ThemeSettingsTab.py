@@ -18,7 +18,7 @@ class ThemeSettingsTab(SettingsTab):
 		self.setting = setting
 
 		self.default = BooleanVar()
-		self.default.trace('w', self.default_updated)
+		self.default.trace_add('write', self.default_updated)
 		self.author = StringVar()
 		self.description = StringVar()
 

@@ -8,9 +8,9 @@ class MaskedCheckbutton(Checkbutton):
 		self._value = options['value']
 		del options['value']
 		self._real_variable: IntVar = options['variable']
-		self._real_variable.trace('w', self._update_state)
+		self._real_variable.trace_add('write', self._update_state)
 		self._variable = IntVar()
-		self._variable.trace('w', self._update_value)
+		self._variable.trace_add('write', self._update_value)
 		options['variable'] = self._variable
 		Checkbutton.__init__(self, parent, **options)
 		self._update_state()

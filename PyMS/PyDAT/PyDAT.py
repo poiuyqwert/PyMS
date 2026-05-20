@@ -135,9 +135,9 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		jump.grid(column=1,row=1, sticky=W)
 
 		self.names_display = IntVar()
-		self.names_display.trace('w', self.change_names_display)
+		self.names_display.trace_add('write', self.change_names_display)
 		self.simple_names = BooleanVar()
-		self.simple_names.trace('w', self.change_simple_names)
+		self.simple_names.trace_add('write', self.change_simple_names)
 		Label(collapse_view, text='Names:').grid(column=0,row=2, sticky=E)
 		DropDown(collapse_view, self.names_display, ['Basic', 'TBL d', 'Combined']).grid(column=1,row=2, sticky=EW)
 		self.simple_names_checkbox = Checkbutton(collapse_view, text='Simple TBL Names', variable=self.simple_names)

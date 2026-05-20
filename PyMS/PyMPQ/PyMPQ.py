@@ -115,7 +115,7 @@ class PyMPQ(MainWindow):
 		self.compvar = StringVar()
 
 		self.locale_menu_choice = IntVar()
-		self.locale_menu_choice.trace('w', self.locale_changed)
+		self.locale_menu_choice.trace_add('write', self.locale_changed)
 
 		self.setmenu = Menu(self, tearoff=0)
 		self.compmenu = Menu(self.setmenu, tearoff=0)

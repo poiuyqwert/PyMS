@@ -83,15 +83,15 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.item_selection_boxs: list[Canvas.Item] = [] # type: ignore[name-defined]
 
 		self.layer = IntVar()
-		self.layer.trace('w', self.layer_updated)
+		self.layer.trace_add('write', self.layer_updated)
 		self.visible = IntVar()
-		self.visible.trace('w', self.visible_updated)
+		self.visible.trace_add('write', self.visible_updated)
 		self.locked = IntVar()
-		self.locked.trace('w', self.locked_updated)
+		self.locked.trace_add('write', self.locked_updated)
 		self.autovis = BooleanVar()
-		self.autovis.trace('w', self.autovis_updated)
+		self.autovis.trace_add('write', self.autovis_updated)
 		self.autolock = BooleanVar()
-		self.autolock.trace('w', self.autolock_updated)
+		self.autolock.trace_add('write', self.autolock_updated)
 		self.tool = IntVar()
 		self.tool.set(Tool.select.value)
 

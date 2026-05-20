@@ -138,9 +138,9 @@ class GraphicsUnitsTab(DATUnitsTab):
 		scrollview.pack(fill=BOTH, expand=1)
 
 		for v in (self.graphicsentry, self.horizontal, self.vertical, self.addon_parent_id):
-			v.trace('w', lambda *_: self.drawpreview())
+			v.trace_add('write', lambda *_: self.drawpreview())
 		for v in (self.left, self.up, self.right, self.down):
-			v.trace('w', lambda *_: self.drawboxes())
+			v.trace_add('write', lambda *_: self.drawboxes())
 
 	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:

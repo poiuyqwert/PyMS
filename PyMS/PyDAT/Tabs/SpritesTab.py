@@ -100,7 +100,7 @@ class SpritesTab(DATTab):
 			)),
 		))
 
-		self.vertpos.trace('w', lambda *_: self.drawpreview())
+		self.vertpos.trace_add('write', lambda *_: self.drawpreview())
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DATID.flingy in ids and self.delegate.active_tab() == self:

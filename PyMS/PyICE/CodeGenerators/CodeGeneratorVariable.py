@@ -46,7 +46,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 			stripped = strip_re.sub('', name)
 			if stripped != name:
 				self.name.set(stripped)
-		self.name.trace('w', strip_name)
+		self.name.trace_add('write', strip_name)
 
 		Label(self, text='Name:', anchor=W).pack(side=TOP, fill=X, padx=3)
 		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)

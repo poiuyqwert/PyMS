@@ -37,7 +37,7 @@ class EntryCountDialog(PyMSDialog):
 			Label(self, text='Constraints:\n' + '\n'.join(details), justify=LEFT, anchor=W).pack(padx=5,pady=5, fill=X)
 			self.resulting_count_var = StringVar()
 			Label(self, textvariable=self.resulting_count_var, justify=LEFT, anchor=W).pack(padx=5,pady=(0,5), fill=X)
-			self.result.trace('w', self.update_resulting_count)
+			self.result.trace_add('write', self.update_resulting_count)
 			self.update_resulting_count()
 
 		buttons = Frame(self)

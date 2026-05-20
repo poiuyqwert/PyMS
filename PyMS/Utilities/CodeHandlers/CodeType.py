@@ -214,7 +214,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		if isinstance(cases, list):
 			cases = dict((name, n) for n,name in enumerate(cases))
 		self._cases = cases
-		self._values = set(cases.values())
+		self._values_to_cases = {v: k for k, v in cases.items()}
 		self._allow_integer = allow_integer
 
 	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> int:
@@ -223,10 +223,9 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		return value
 
 	def serialize_basic(self, value: int) -> str:
-		for case_name,case_value in self._cases.items():
-			if value == case_value:
-				return case_name
-		raise PyMSError('Serialize', f'Value `{value}` has no case for `{self.name}`')
+		if not value in self._values_to_cases:
+			raise PyMSError('Serialize', f'Value `{value}` has no case for `{self.name}`')
+		return self._values_to_cases[value]
 
 	def serialize(self, value: int, context: SerializeContext) -> str:
 		return self.serialize_basic(value)
@@ -248,7 +247,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		if isinstance(token, Tokens.IntegerToken) and self._allow_integer:
 			try:
 				value = int(token.raw_value)
-				if value in self._values:
+				if value in self._values_to_cases:
 					return value
 			except:
 				pass
@@ -257,7 +256,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._cases.keys())
 
-class BooleanCodeType(IntCodeType):
+class BooleanCodeType(IntCodeType, HasKeywords):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
 		IntCodeType.__init__(self, name, help_text, bytecode_type, limits=(0, 1))
 

@@ -55,7 +55,7 @@ class Test_Language_Comamnd_Bytecode(unittest.TestCase):
 		language_context.set_status(BPluginID, LanguageDefinition.PluginStatus.unavailable, 'Manually disabled')
 		with self.assertRaises(PyMSError) as error_context:
 			Language.lookup_command(1, language_context)
-		self.assertTrue('Command `b` is invalid as language plugin `B` is not avaialable' in str(error_context.exception))
+		self.assertTrue('Command `b` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))
 
 class Test_Language_Command_Source(unittest.TestCase):
@@ -84,7 +84,7 @@ class Test_Language_Command_Source(unittest.TestCase):
 		language_context.set_status(BPluginID, LanguageDefinition.PluginStatus.unavailable, 'Manually disabled')
 		with self.assertRaises(PyMSError) as error_context:
 			Language.lookup_command('b', language_context)
-		self.assertTrue('Command `b` is invalid as language plugin `B` is not avaialable' in str(error_context.exception))
+		self.assertTrue('Command `b` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))
 
 class Test_Language_Type_Source(unittest.TestCase):
@@ -113,5 +113,5 @@ class Test_Language_Type_Source(unittest.TestCase):
 		language_context.set_status(BPluginID, LanguageDefinition.PluginStatus.unavailable, 'Manually disabled')
 		with self.assertRaises(PyMSError) as error_context:
 			Language.lookup_type('word', language_context)
-		self.assertTrue('Type `word` is invalid as language plugin `B` is not avaialable' in str(error_context.exception))
+		self.assertTrue('Type `word` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))

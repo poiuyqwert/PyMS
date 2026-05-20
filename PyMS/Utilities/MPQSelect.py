@@ -34,7 +34,7 @@ class MPQSelect(PyMSDialog):
 		self.search = StringVar()
 		search = default_search or filetype.extensions_tuple[0]
 		self.search.set(search)
-		self.search.trace('w', self.updatesearch)
+		self.search.trace_add('write', self.updatesearch)
 		self.history_config = history_config
 		self.window_geometry_config = window_geometry_config
 		self.regex = IntVar()

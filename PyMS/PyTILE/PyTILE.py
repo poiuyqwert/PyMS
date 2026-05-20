@@ -141,7 +141,7 @@ class CopyOptions(Generic[G]):
 		variable = BooleanVar()
 		self.options.append((config, variable))
 		variable.set(config.value)
-		variable.trace('w', self.callback)
+		variable.trace_add('write', self.callback)
 		return variable
 
 	def any_enabled(self) -> bool:
@@ -215,7 +215,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.doodad = BooleanVar()
 		self.doodad.set(False)
-		self.doodad.trace('w', self.group_doodad_changed)
+		self.doodad.trace_add('write', self.group_doodad_changed)
 
 		self.apply_all_exclude_nulls = IntVar()
 		self.apply_all_exclude_nulls.set(self.config_.mega_edit.apply_all_exclude_nulls.value)

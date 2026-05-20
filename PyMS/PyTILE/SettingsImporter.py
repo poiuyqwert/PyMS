@@ -65,7 +65,7 @@ class SettingsImporter(PyMSDialog):
 		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT, padx=(10,0))
 		buts.pack(side=BOTTOM, fill=X, padx=3, pady=3)
 
-		self.settings_path.trace('w', self.update_states)
+		self.settings_path.trace_add('write', self.update_states)
 
 		return self.import_button
 

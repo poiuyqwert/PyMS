@@ -123,10 +123,10 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 
 		self.usebasegrp = BooleanVar()
 		self.usebasegrp.set(self.config_.preview.use_base_grp.value)
-		self.usebasegrp.trace('w', self.update_grp_field_states)
+		self.usebasegrp.trace_add('write', self.update_grp_field_states)
 		self.useoverlaygrp = BooleanVar()
 		self.useoverlaygrp.set(self.config_.preview.use_overlay_grp.value)
-		self.useoverlaygrp.trace('w', self.update_grp_field_states)
+		self.useoverlaygrp.trace_add('write', self.update_grp_field_states)
 		self.baseframes = StringVar()
 		self.baseframes.set('Base Frame: - / -')
 		self.overlayframes = StringVar()

@@ -79,7 +79,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 		self.sort = StringVar()
 		self.sort.set(self.config_.sort.value.value)
-		self.sort.trace('w', lambda *_: self.refresh_listbox())
+		self.sort.trace_add('write', lambda *_: self.refresh_listbox())
 		# self.reference = BooleanVar()
 		# self.reference.set(self.config_.reference.value)
 

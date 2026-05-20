@@ -18,7 +18,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.validid = script_id
 		self.script_id = StringVar()
 		self.script_id.set(script_id)
-		self.script_id.trace('w', self.editid)
+		self.script_id.trace_add('write', self.editid)
 		self.flags = flags
 		self.validstring = string_index
 		self.string = StringVar()

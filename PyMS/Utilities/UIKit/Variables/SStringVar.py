@@ -9,7 +9,7 @@ class SStringVar(StringVar):
 		self.lastvalid = val
 		self.set(val)
 		self.callback = callback
-		self.trace('w', self.editvalue)
+		self.trace_add('write', self.editvalue)
 
 	def editvalue(self, *_):
 		if self.check:

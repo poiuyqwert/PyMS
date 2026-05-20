@@ -25,7 +25,7 @@ class CompressionSettingsTab(SettingsTab):
 		self.autocompression = dict(self.autocompression_config.data)
 
 		self.extension = StringVar()
-		self.extension.trace('w', lambda *e: self.action_states())
+		self.extension.trace_add('write', lambda *e: self.action_states())
 
 		left = Frame(self)
 		Label(left, text='File Extension:', anchor=W, justify=LEFT).pack(fill=X)

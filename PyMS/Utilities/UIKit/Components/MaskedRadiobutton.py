@@ -8,13 +8,13 @@ class MaskedRadiobutton(Radiobutton):
 		self._mask: int = options['mask']
 		del options['mask']
 		self._real_variable: IntVar = options['variable']
-		self._real_variable.trace('w', self._update_state)
+		self._real_variable.trace_add('write', self._update_state)
 		if not hasattr(self._real_variable, '_masked_radio_variable'):
 			setattr(self._real_variable, '_masked_radio_variables', {})
 		_masked_radio_variables: dict[int, IntVar] = getattr(self._real_variable, '_masked_radio_variables')
 		if not self._mask in _masked_radio_variables:
 			_masked_radio_variables[self._mask] = IntVar()
-			_masked_radio_variables[self._mask].trace('w', self._update_value)
+			_masked_radio_variables[self._mask].trace_add('write', self._update_value)
 		self._variable = _masked_radio_variables[self._mask]
 		options['variable'] = self._variable
 		Radiobutton.__init__(self, parent, **options)

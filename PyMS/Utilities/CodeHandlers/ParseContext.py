@@ -180,7 +180,7 @@ class ParseContext(Generic[S]):
 			variable = self.definitions.get_variable(token.raw_value)
 			if variable:
 				if not param_type.accepts(variable.type):
-					raise self.error('Parse', f"Incorrect type on varaible '{variable.name}'. Excpected '{param_type.name}' but got '{variable.type.name}'")
+					raise self.error('Parse', f"Incorrect type on variable '{variable.name}'. Expected '{param_type.name}' but got '{variable.type.name}'")
 				value = variable.value
 				# try:
 				# 	param_type.validate(value, self, token.raw_value)

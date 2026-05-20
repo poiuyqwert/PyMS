@@ -138,7 +138,7 @@ class StarEditUnitsTab(DATUnitsTab):
 		scrollview.pack(fill=BOTH, expand=1)
 
 		for var in (self.width, self.height):
-			var.trace('w', lambda *_: self.drawpreview())
+			var.trace_add('write', lambda *_: self.drawpreview())
 
 	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:

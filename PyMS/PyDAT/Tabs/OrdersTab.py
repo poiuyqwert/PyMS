@@ -162,7 +162,7 @@ class OrdersTab(DATTab):
 			)),
 		))
 
-		self.highlightentry.trace('w', lambda *_: self.drawpreview())
+		self.highlightentry.trace_add('write', lambda *_: self.drawpreview())
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.stat_txt in ids:

@@ -21,7 +21,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.palette_editable = palette_editable
 		self.edit_mode = IntVar()
 		self.edit_mode.set(self.config_.mega_edit.mode.value.value)
-		self.edit_mode.trace('w', self.edit_mode_updated)
+		self.edit_mode.trace_add('write', self.edit_mode_updated)
 		self.delegate.mega_edit_mode_updated(self.get_edit_mode())
 		self.minitile_n = 0
 		self.last_click: int | None = None
@@ -32,7 +32,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.minitile = IntegerVar(0,[0,0],callback=lambda id: self.change(None, int(id)), callback_when=IntegerVar.UpdateCase.user)
 		self.height = IntVar()
 		self.height.set(self.config_.mega_edit.height.value)
-		self.height.trace('w', self.height_updated)
+		self.height.trace_add('write', self.height_updated)
 
 		self.active_tools: Widget | None = None
 

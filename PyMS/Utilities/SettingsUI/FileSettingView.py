@@ -23,7 +23,7 @@ class FileSettingView(SettingView):
 
 		self.variable = StringVar()
 		self.variable.set(setting.file_path)
-		self.variable.trace('w', self.changed)
+		self.variable.trace_add('write', self.changed)
 
 		self.editable = True
 		self.enabled = True
