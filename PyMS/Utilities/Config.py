@@ -522,6 +522,8 @@ class SelectFile(ConfigObject):
 					filetypes=filetypes or self._filetypes,
 					defaultextension=self._default_extension
 				)
+		if not path:
+			path = None
 		from .fileutils import check_allow_overwrite_internal_file
 		if save and path is not None:
 			if isinstance(path, (list, tuple)):
