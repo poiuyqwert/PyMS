@@ -121,8 +121,6 @@ def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, b
 	inp = BMP.BMP()
 	try:
 		if frames:
-			if isinstance(bmp, list) and len(bmp) == 1:
-				bmp = str(bmp[0])
 			assert isinstance(bmp, str)
 			fullfile = os.path.join(path,bmp)
 			if not mute:
