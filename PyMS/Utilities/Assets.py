@@ -5,7 +5,7 @@ import os as _os
 import sys as _sys
 
 from typing import cast
-from .UIKit import Image
+from .UIKit import Image, PhotoImage
 
 if hasattr(_sys, 'frozen'):
 	base_dir = _os.path.dirname(_sys.executable)
@@ -36,9 +36,8 @@ images_dir = _os.path.join(internals_dir, 'Images')
 def image_path(filename: str) -> str:
 	return _os.path.join(images_dir, filename)
 
-_IMAGE_CACHE: dict[str, Image] = {}
-def get_image(filename: str, cache: bool = True) -> Image:
-	from .UIKit import PhotoImage
+_IMAGE_CACHE: dict[str, PhotoImage] = {}
+def lookup_image(filename: str, cache: bool = True) -> PhotoImage | None:
 	if not _os.extsep in filename:
 		filename += _os.extsep + 'gif'
 	if filename in _IMAGE_CACHE:
@@ -47,9 +46,15 @@ def get_image(filename: str, cache: bool = True) -> Image:
 	try:
 		image = PhotoImage(file=path)
 	except:
-		image = PhotoImage()
+		return None
 	if cache:
 		_IMAGE_CACHE[filename] = image
+	return image
+
+def get_image(filename: str, cache: bool = True) -> PhotoImage:
+	image = lookup_image(filename, cache)
+	if not image:
+		image = PhotoImage()
 	return image
 
 def clear_image_cache() -> None:

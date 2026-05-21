@@ -27,18 +27,20 @@ class MainWindow(Tk, WindowExtensions):
 		from ... import Assets
 		import os
 		try:
-			icon = Assets.get_image(f'{name}.ico')
+			icon = Assets.lookup_image(f'{name}.ico')
 			if not icon:
-				icon = Assets.get_image(name)
+				icon = Assets.lookup_image(name)
 			if not icon:
-				icon = Assets.get_image('PyMS.ico')
+				icon = Assets.lookup_image('PyMS.ico')
 			if not icon:
-				icon = Assets.get_image('PyMS')
-			try:
-				self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
-			except:
-				self.wm_iconbitmap(default=icon)
-			return
+				icon = Assets.lookup_image('PyMS')
+			if icon:
+				try:
+					self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
+					return
+				except:
+					self.wm_iconbitmap(default=icon)
+					return
 		except:
 			pass
 		try:
@@ -47,7 +49,6 @@ class MainWindow(Tk, WindowExtensions):
 				icon_path = Assets.image_path('PyMS.xbm')
 			icon_path = f'@{icon_path}'
 			self.wm_iconbitmap(default=icon_path)
-			return
 		except:
 			pass
 

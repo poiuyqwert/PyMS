@@ -61,7 +61,7 @@ class ScrollView(Frame):
 			if self._focus_bind_info:
 				view,bind_id = self._focus_bind_info
 				try:
-					view.unbind(Focus.Out, bind_id)
+					view.unbind(Focus.Out(), bind_id)
 				except:
 					pass
 				self._focus_bind_info = None
