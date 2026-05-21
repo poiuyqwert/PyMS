@@ -3,7 +3,6 @@ from ..Widgets import *
 from ..Font import Font
 from ..EventPattern import *
 from ..Utils import remove_bind
-from ...utils import is_mac
 
 from typing import Callable, Literal
 
@@ -15,10 +14,8 @@ class DropDownChooser(Toplevel):
 		self._typed = ''
 		self._typed_timer: str | None = None
 		Toplevel.__init__(self, parent, relief=SOLID, borderwidth=1)
-		self.wm_overrideredirect(True)
 		parent_toplevel = parent.winfo_toplevel()
-		if is_mac():
-			self.transient(parent_toplevel)
+		self.make_frameless(parent_toplevel)
 		scrollbar = Scrollbar(self)
 		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(options)), font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
 		self.listbox.config(bd=0)

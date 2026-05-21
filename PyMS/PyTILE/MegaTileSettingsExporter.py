@@ -7,6 +7,8 @@ from .Delegates import MainDelegate
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
+from typing import Any
+
 class MegaTileSettingsExporter(PyMSDialog):
 	def __init__(self, parent: Misc, config: PyTILEConfig, ids: list[int], delegate: MainDelegate) -> None:
 		self.config_ = config
@@ -45,7 +47,7 @@ class MegaTileSettingsExporter(PyMSDialog):
 
 		return self.export_button
 
-	def update_states(self, _event: Event | None = None) -> None:
+	def update_states(self, *_: Any) -> None:
 		any_on = self.height.get() or self.walkability.get() or self.block_sight.get() or self.ramp.get()
 		self.export_button['state'] = NORMAL if any_on else DISABLED
 

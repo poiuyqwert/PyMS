@@ -43,7 +43,7 @@ from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-import io
+import io, os
 
 from typing import IO as BuiltinIO
 
@@ -646,7 +646,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ExternalDefDialog(self, self.config_)
 
 	def decompiling_format(self) -> None:
-			DecompilingFormatDialog(self, self.config_.code.decomp_format)
+		DecompilingFormatDialog(self, self.config_.code.decomp_format)
 
 	# def managetbl(self) -> None:
 	# 	headers = self.get_selected_scripts()
@@ -782,6 +782,8 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if parse_settings is None:
 			parse_settings = AIParseSettings()
 		for extdef in self.config_.extdefs.data:
+			if not os.path.isfile(extdef):
+				raise PyMSError('External Definitions', f"External definitions file not found: '{extdef}'. Remove or update the entry in the External Defs dialog.")
 			with IO.InputText(extdef) as f:
 				code = f.read()
 			lexer = AILexer(code)

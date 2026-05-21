@@ -37,7 +37,7 @@ class ListboxTooltip(Tooltip):
 			return
 		self.tip = TooltipWindow(self.parent)
 		self.tip.maxsize(640,400)
-		self.tip.wm_overrideredirect(True)
+		self.tip.make_frameless(self.parent.winfo_toplevel())
 		pos = list(self.parent.winfo_pointerxy())
 		index = self.scrolled_listbox.listbox.nearest(pos[1] - self.parent.winfo_rooty())
 		script = self.delegate.get_list_entry(index)

@@ -31,7 +31,7 @@ class SelectionTooltip(Tooltip):
 			return
 		try:
 			self.tip = TooltipWindow(self.text_widget, relief=SOLID, borderwidth=1)
-			self.tip.wm_overrideredirect(True)
+			self.tip.make_frameless(self.text_widget.winfo_toplevel())
 			c = Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
 			c.pack()
 			c.create_line((123,128),(134,128),fill='#00FF00')

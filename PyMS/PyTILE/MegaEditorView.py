@@ -10,6 +10,8 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
 
+from typing import Any
+
 class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
 		Frame.__init__(self, parent)
@@ -153,14 +155,14 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			self.height_tools.pack()
 			self.active_tools = self.height_tools
 
-	def edit_mode_updated(self, _event: Event | None = None) -> None:
+	def edit_mode_updated(self, *_: Any) -> None:
 		self.update_tools()
 		self.draw_edit_mode()
 		mode = self.get_edit_mode()
 		self.config_.mega_edit.mode.value = mode
 		self.delegate.mega_edit_mode_updated(mode)
 
-	def height_updated(self, _event: Event | None = None) -> None:
+	def height_updated(self, *_: Any) -> None:
 		self.config_.mega_edit.height.value = self.height.get()
 
 	def draw_border(self, minitile_n: int, color: str = '#FFFFFF') -> None:

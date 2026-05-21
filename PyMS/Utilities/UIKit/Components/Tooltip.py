@@ -2,7 +2,6 @@
 from ..Font import Font
 from ..Widgets import *
 from ..EventPattern import *
-from ...utils import is_mac
 
 class TooltipWindow(Toplevel):
 	pass
@@ -52,9 +51,7 @@ class Tooltip:
 		if self.tip:
 			return
 		self.tip = TooltipWindow(self.parent, relief=SOLID, borderwidth=1)
-		self.tip.wm_overrideredirect(True)
-		if is_mac():
-			self.tip.wm_transient(self.parent.winfo_toplevel())
+		self.tip.make_frameless(self.parent.winfo_toplevel())
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 		Label(frame, text=self.text, justify=LEFT, font=self.font, foreground='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1) # type: ignore[arg-type]
 		frame.pack()

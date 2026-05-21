@@ -33,7 +33,7 @@ class CodeTooltip(Tooltip):
 			if not tooltip_text:
 				return
 			self.tip = TooltipWindow(self.code_text, relief=SOLID, borderwidth=1)
-			self.tip.wm_overrideredirect(True)
+			self.tip.make_frameless(self.code_text.winfo_toplevel())
 			frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 			Label(frame, text=tooltip_text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 			frame.pack()

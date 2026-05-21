@@ -10,6 +10,8 @@ from . import Config
 import os, re
 from enum import Enum
 
+from typing import Any
+
 class MPQSelect(PyMSDialog):
 	class Action(Enum):
 		open = 0
@@ -113,7 +115,7 @@ class MPQSelect(PyMSDialog):
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
-	def updatesearch(self, _event: Event | None = None) -> None:
+	def updatesearch(self, *_: Any) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)
