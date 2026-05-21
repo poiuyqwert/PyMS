@@ -77,7 +77,7 @@ class FindDialog(PyMSDialog):
 				regex = re.compile(regex_str, 0 if self.casesens.get() else re.I)
 			except:
 				self.findentry['bg'] = '#FFB4B4'
-				self.resettimer = self.after(1000, self.updatecolor)
+				self.resettimer = self.after_managed(1000, self.updatecolor)
 				return
 			wrap = self.wrap.get()
 			down = self.updown.get()
@@ -116,7 +116,7 @@ class FindDialog(PyMSDialog):
 
 	def updatecolor(self) -> None:
 		if self.resettimer:
-			self.after_cancel(self.resettimer)
+			self.after_managed_cancel(self.resettimer)
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 

@@ -53,13 +53,13 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				return
 			self.updates.append(update_id)
 			if self.update_after_id:
-				self.after_cancel(self.update_after_id)
+				self.after_managed_cancel(self.update_after_id)
 			def perform_updates() -> None:
 				self.update_after_id = None
 				updates = self.updates
 				self.updates = []
 				self.updated_pointer_entries(updates)
-			self.update_after_id = self.after(1, perform_updates)
+			self.update_after_id = self.after_managed(1, perform_updates)
 		self.data_context.update_cb += buffer_updates
 
 		self.data_context.load_palettes()

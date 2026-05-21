@@ -2385,7 +2385,7 @@ class PyMAP(Tk):
 				for layer in self.map_layers:
 					layer.tick(dt)
 				self.mapCanvas.update_idletasks()
-				self.tick_alarm = self.after(FRAME_DELAY,self.tick)
+				self.tick_alarm = self.after_managed(FRAME_DELAY,self.tick)
 			else:
 				self.tick_alarm = None
 
@@ -2393,7 +2393,7 @@ class PyMAP(Tk):
 		if self.tick_alarm is not None:
 			cancel = self.tick_alarm
 			self.tick_alarm = None
-			self.after_cancel(cancel)
+			self.after_cancel_managed(cancel)
 
 	def file_settings(self, key=None, err=None):
 		data = [

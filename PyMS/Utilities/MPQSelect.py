@@ -89,7 +89,7 @@ class MPQSelect(PyMSDialog):
 
 	def updatelist(self) -> None:
 		if self.searchtimer:
-			self.after_cancel(self.searchtimer)
+			self.after_managed_cancel(self.searchtimer)
 			self.searchtimer = None
 		self.listbox.delete(0,END)
 		s = self.search.get()
@@ -98,7 +98,7 @@ class MPQSelect(PyMSDialog):
 		try:
 			r = re.compile(s)
 		except:
-			self.resettimer = self.after(1000, self.updatecolor)
+			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.textdrop.entry['bg'] = '#FFB4B4'
 		else:
 			for f in [p for p in self.files if r.match(p)]:
@@ -111,14 +111,14 @@ class MPQSelect(PyMSDialog):
 
 	def updatecolor(self) -> None:
 		if self.resettimer:
-			self.after_cancel(self.resettimer)
+			self.after_managed_cancel(self.resettimer)
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
 	def updatesearch(self, *_: Any) -> None:
 		if self.searchtimer:
-			self.after_cancel(self.searchtimer)
-		self.searchtimer = self.after(200, self.updatelist)
+			self.after_managed_cancel(self.searchtimer)
+		self.searchtimer = self.after_managed(200, self.updatelist)
 
 	def ok(self, _: Event | None = None) -> None:
 		f = self.listbox.get(self.listbox.curselection()[0])

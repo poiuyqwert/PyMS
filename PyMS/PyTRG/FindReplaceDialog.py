@@ -116,7 +116,7 @@ class FindReplaceDialog(PyMSDialog):
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
 		except:
-			self.resettimer = self.after(1000, self.updatecolor)
+			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
 		if replace:
@@ -203,7 +203,7 @@ class FindReplaceDialog(PyMSDialog):
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
 		except:
-			self.resettimer = self.after(1000, self.updatecolor)
+			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
 		MessageBox.showinfo(parent=self, title='Count', message=f'{len(r.findall(self.text.get("1.0", END)))} matches found.')
@@ -218,7 +218,7 @@ class FindReplaceDialog(PyMSDialog):
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
 		except:
-			self.resettimer = self.after(1000, self.updatecolor)
+			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
 		text = r.subn(self.replacewith.get(), self.text.get('1.0', END))
@@ -231,7 +231,7 @@ class FindReplaceDialog(PyMSDialog):
 
 	def updatecolor(self) -> None:
 		if self.resettimer:
-			self.after_cancel(self.resettimer)
+			self.after_managed_cancel(self.resettimer)
 			self.resettimer = None
 		self.findentry['bg'] = self.findentry_c
 

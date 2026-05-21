@@ -66,7 +66,7 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 	def setup_complete(self) -> None:
 		super().setup_complete()
 		if self.err:
-			self.after(1, self.showerr)
+			self.after_managed(1, self.showerr)
 
 	def showerr(self) -> None:
 		if self.err is None:

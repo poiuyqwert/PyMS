@@ -136,7 +136,7 @@ class DropDown(Frame):
 
 	def key_pressed(self, event: Event) -> str:
 		if self._typed_timer:
-			self.after_cancel(self._typed_timer)
+			self.after_managed_cancel(self._typed_timer)
 			self._typed_timer = None
 		if event.keysym == Key.Backspace.name():
 			self._typed = self._typed[:-1]
@@ -149,7 +149,7 @@ class DropDown(Frame):
 				if self._typed in item.lower():
 					self.set(index)
 					break
-			self._typed_timer = self.after(1000, self.clear_typed)
+			self._typed_timer = self.after_managed(1000, self.clear_typed)
 		return EventPropogation.Break
 
 	def clear_typed(self) -> None:

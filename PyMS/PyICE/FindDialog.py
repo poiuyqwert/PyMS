@@ -83,7 +83,7 @@ class FindDialog(PyMSDialog):
 		except:
 			self.findentry_c = self.findentry.entry['bg']
 			self.findentry.entry['bg'] = '#FFB4B4'
-			self.resettimer = self.after(1000, self.updatecolor)
+			self.resettimer = self.after_managed(1000, self.updatecolor)
 			return
 		d: list[tuple[str, ScrolledListbox]] = [
 			('IScript Entries',self.delegate.iscriptlist),

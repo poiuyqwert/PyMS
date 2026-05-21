@@ -44,7 +44,7 @@ class CheckThread:
 			elif u:
 				# u.append('test')
 				self.callback([f.replace(self.path,'') for f in u])
-				# self.parent.after(1, self.parent.update_files, [f.replace(self.path,'') for f in u])
+				# self.parent.after_managed(1, self.parent.update_files, [f.replace(self.path,'') for f in u])
 			time.sleep(self.delay)
 		self.thread = None
 

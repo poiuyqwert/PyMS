@@ -88,7 +88,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		return self.text
 
 	def setup_complete(self) -> None:
-		self.after(1, self.load)
+		self.after_managed(1, self.load)
 
 		self.config_.windows.code_edit.load_size(self)
 
@@ -373,7 +373,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			else:
 				self.previewer.select(0, self.previewer.entry_type())
 			self.previewer.deiconify()
-			self.after(50, self.previewer.updateframes)
+			self.after_managed(50, self.previewer.updateframes)
 		self.previewer.focus_set()
 
 	def sounds(self) -> None:

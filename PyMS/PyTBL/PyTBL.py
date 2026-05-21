@@ -131,7 +131,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.text.mark_set('textend', '1.0')
 		self.text.mark_gravity('textend', RIGHT)
 		self.text.grid(sticky=NSEW)
-		self.text.bind(Ctrl.a(), lambda e: self.after(1, self.selectall))
+		self.text.bind(Ctrl.a(), lambda e: self.after_managed(1, self.selectall))
 		hscroll.config(command=self.text.xview)
 		hscroll.grid(sticky=EW)
 		vscroll.config(command=self.text.yview)

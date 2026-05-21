@@ -20,7 +20,7 @@ class MainWindow(Tk, WindowExtensions):
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
 		except:
 			pass
-		self.after(1, self.initialize)
+		self.after_managed(1, self.initialize)
 		self.mainloop()
 
 	def set_icon(self, name: str) -> None:

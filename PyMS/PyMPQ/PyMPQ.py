@@ -62,7 +62,7 @@ class PyMPQ(MainWindow):
 		self.totalsize = 0
 		self.temp_folder = os.path.join(Assets.internal_temp_dir, str(int(time.time())))
 		def update_files(files: list[str]) -> None:
-			self.after(1, self.update_files, files)
+			self.after_managed(1, self.update_files, files)
 		self.thread = CheckThread(update_files, self.temp_folder)
 		self.resettimer: str | None = None
 
@@ -217,7 +217,7 @@ class PyMPQ(MainWindow):
 		else:
 			locale_index = find_locale_index(self.config_.locale.value)
 			# _,locale = LOCALE_CHOICES[locale_index]
-			self.after(1, lambda: self.locale_menu_choice.set(locale_index))
+			self.after_managed(1, lambda: self.locale_menu_choice.set(locale_index))
 
 	def locale_changed(self, *_: Any) -> None:
 		locale_index = self.locale_menu_choice.get()
@@ -359,7 +359,7 @@ class PyMPQ(MainWindow):
 					filter_pattern = re.compile(filter_str)
 				except:
 					filter_pattern = None
-					self.resettimer = self.after(1000, self.reset_entry_background_color)
+					self.resettimer = self.after_managed(1000, self.reset_entry_background_color)
 					self.textdrop.entry['bg'] = '#FFB4B4'
 			if filter_pattern:
 				self.display_files = [file_entry for file_entry in self.display_files if filter_pattern.match(file_entry.file_name.decode('utf-8'))]

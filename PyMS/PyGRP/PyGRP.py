@@ -362,7 +362,7 @@ BMP's must be imported with the same style they were exported as.""")
 				self.speed = 1
 			elif n == FrameSet.play_next_framesets:
 				self.speed = 17
-			self.play = self.after(int(self.prevspeed.get()), self.playframe)
+			self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
 			self.action_states()
 		else:
 			s: int | Literal['end']
@@ -399,7 +399,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if not self.play:
 			return
 		self.speed = None
-		self.after_cancel(self.play)
+		self.after_managed_cancel(self.play)
 		self.play = None
 		self.action_states()
 
@@ -420,8 +420,8 @@ BMP's must be imported with the same style they were exported as.""")
 				self.listbox.see(i)
 				self.preview()
 				if self.play:
-					self.after_cancel(self.play)
-				self.play = self.after(int(self.prevspeed.get()), self.playframe)
+					self.after_managed_cancel(self.play)
+				self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
 				return
 		self.stopframe()
 

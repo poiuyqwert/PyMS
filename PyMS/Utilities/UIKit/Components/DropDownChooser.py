@@ -124,7 +124,7 @@ class DropDownChooser(Toplevel):
 
 	def key_pressed(self, event: Event) -> None:
 		if self._typed_timer:
-			self.after_cancel(self._typed_timer)
+			self.after_managed_cancel(self._typed_timer)
 		if event.keysym == Key.Backspace.name():
 			self._typed = self._typed[:-1]
 		elif event.char:
@@ -135,7 +135,7 @@ class DropDownChooser(Toplevel):
 				if self._typed in item.lower():
 					self.jump_to(index)
 					break
-			self._typed_timer = self.after(1000, self.clear_typed)
+			self._typed_timer = self.after_managed(1000, self.clear_typed)
 
 	def clear_typed(self) -> None:
 		self._typed_timer = None

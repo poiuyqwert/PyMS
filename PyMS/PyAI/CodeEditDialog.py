@@ -277,7 +277,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		statusbar.pack(side=BOTTOM, fill=X)
 
 		if self.ids:
-			self.after(1, self.load)
+			self.after_managed(1, self.load)
 
 		return self.text
 

@@ -39,10 +39,10 @@ class UpdateDialog(PyMSDialog):
 				return
 			def callback() -> None:
 				if hasattr(window, '_pyms__window_blocking') and window._pyms__window_blocking: # pylint: disable=protected-access
-					window.after(1000, callback)
+					window.after_managed(1000, callback)
 					return
 				UpdateDialog(window,program,versions)
-			window.after(1, callback)
+			window.after_managed(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
 	def __init__(self, parent: Misc, program: str, versions: dict[str, str]) -> None:

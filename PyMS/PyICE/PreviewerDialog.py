@@ -298,7 +298,7 @@ class PreviewerDialog(PyMSDialog):
 				self.speed = 1
 			elif frame_set == FrameSet.play_next_framesets:
 				self.speed = 17
-			self.play = self.after(int(self.prevspeed.get()), self.playframe)
+			self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
 		else:
 			s: int
 			if frame_set == FrameSet.first:
@@ -344,7 +344,7 @@ class PreviewerDialog(PyMSDialog):
 		# 	self.drawpreview()
 		# if n in [3,4,6,7]:
 		# 	self.speed = [-17,-1,None,1,17][n - 3]
-		# 	self.play = self.after(int(self.prevspeed.get()), self.playframe)
+		# 	self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
 		# elif self.speed or self.play:
 		# 	self.stopframe()
 		self.action_states()
@@ -353,7 +353,7 @@ class PreviewerDialog(PyMSDialog):
 		if not self.play:
 			return
 		self.speed = 0
-		self.after_cancel(self.play)
+		self.after_managed_cancel(self.play)
 		self.play = None
 		self.action_states()
 
@@ -375,8 +375,8 @@ class PreviewerDialog(PyMSDialog):
 			self.updateframes()
 			self.drawpreview()
 			if self.play:
-				self.after_cancel(self.play)
-			self.play = self.after(int(self.prevspeed.get()), self.playframe)
+				self.after_managed_cancel(self.play)
+			self.play = self.after_managed(int(self.prevspeed.get()), self.playframe)
 
 	def doid(self) -> None:
 		self.stopframe()
@@ -533,8 +533,8 @@ class PreviewerDialog(PyMSDialog):
 			self.previewnext = self.previewing.next_frame(min(self.previewing.grp.frames-1,max(0,self.previewing.frame + int(p) * a[e])))
 		self.updateframes()
 		# if self.timer:
-			# self.after_cancel(self.timer)
-		# self.timer = self.after(10, self.drawpreview)
+			# self.after_cancel_managed(self.timer)
+		# self.timer = self.after_managed(10, self.drawpreview)
 		self.drawpreview()
 
 	def drawpreview(self) -> None:

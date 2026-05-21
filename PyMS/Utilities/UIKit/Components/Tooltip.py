@@ -31,7 +31,7 @@ class Tooltip:
 
 	def enter(self, _event: Event | None = None) -> None:
 		self.unschedule()
-		self.id = self.parent.after(self.delay, self.showtip)
+		self.id = self.parent.after_managed(self.delay, self.showtip)
 
 	def leave(self, _event: Event | None = None) -> None:
 		self.unschedule()
@@ -39,12 +39,12 @@ class Tooltip:
 
 	def motion(self, _event: Event | None = None) -> None:
 		if self.id:
-			self.parent.after_cancel(self.id)
-			self.id = self.parent.after(self.delay, self.showtip)
+			self.parent.after_managed_cancel(self.id)
+			self.id = self.parent.after_managed(self.delay, self.showtip)
 
 	def unschedule(self) -> None:
 		if self.id:
-			self.parent.after_cancel(self.id)
+			self.parent.after_managed_cancel(self.id)
 			self.id = None
 
 	def showtip(self) -> None:

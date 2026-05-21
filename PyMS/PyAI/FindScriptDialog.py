@@ -98,7 +98,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def updatecolor(self) -> None:
 		if self.reset_entry:
 			if self.reset_timer:
-				self.after_cancel(self.reset_timer)
+				self.after_managed_cancel(self.reset_timer)
 				self.reset_timer = None
 			self.reset_entry['bg'] = self.reset_color
 			self.reset_entry = None
@@ -143,7 +143,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 				self.reset_entry = entry
 				self.reset_color = entry['bg']
 				entry['bg'] = '#FFB4B4'
-				self.reset_timer = self.after(1000, self.updatecolor)
+				self.reset_timer = self.after_managed(1000, self.updatecolor)
 				raise
 
 		try:

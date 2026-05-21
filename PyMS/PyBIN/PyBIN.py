@@ -385,7 +385,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 				node.tick(dt)
 				node.update_video()
 			self.widgetCanvas.update_idletasks()
-			self.tick_alarm = self.after(FRAME_DELAY,self.tick)
+			self.tick_alarm = self.after_managed(FRAME_DELAY,self.tick)
 		else:
 			self.tick_alarm = None
 
@@ -394,7 +394,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			return
 		cancel = self.tick_alarm
 		self.tick_alarm = None
-		self.after_cancel(cancel)
+		self.after_managed_cancel(cancel)
 
 	def scr_toggled(self) -> None:
 		assert self.bin is not None

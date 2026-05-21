@@ -86,7 +86,7 @@ class CodeText(Frame):
 		self.text.config(bd=0)
 		self.text.configure(tabs=self.tk.call("font", "measure", self.text["font"], "-displayof", frame, '    '))
 		self.text.pack(side=LEFT, fill=BOTH, expand=1)
-		self.text.bind(Ctrl.a(), lambda e: self.after(1, self.selectall))
+		self.text.bind(Ctrl.a(), lambda e: self.after_managed(1, self.selectall))
 
 		frame.grid(sticky=NSEW)
 		hscroll.config(command=self.text.xview)
@@ -328,7 +328,7 @@ class CodeText(Frame):
 		if self.coloring:
 			self.coloring = False
 		if not self.after_id:
-			self.after_id = self.after(1, self.docolor)
+			self.after_id = self.after_managed(1, self.docolor)
 
 	def set_syntax_highlighting(self, syntax_highlighting: SyntaxHighlighting) -> None:
 		if self.highlight_components is not None:
@@ -357,7 +357,7 @@ class CodeText(Frame):
 		self.colorize()
 		self.coloring = False
 		if self.tag_ranges('Update'):
-			self.after_id = self.after(1, self.docolor)
+			self.after_id = self.after_managed(1, self.docolor)
 
 	def colorize(self) -> None:
 		if self.re_syntax is None or self.highlight_components is None:

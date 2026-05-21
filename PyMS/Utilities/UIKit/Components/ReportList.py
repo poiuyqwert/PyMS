@@ -143,7 +143,7 @@ class EditableReportSubList(RichList):
 					break
 				c = self.text.index(f'{c} {d} lineend -1c')
 			self.lastsel = i
-		self.dctimer = self.after(300, self.nodc)
+		self.dctimer = self.after_managed(300, self.nodc)
 		if self.report.scmd:
 			self.report.scmd()
 
@@ -152,7 +152,7 @@ class EditableReportSubList(RichList):
 
 	def edit(self, _event_or_entry: Event | int | None = None) -> None:
 		if self.dctimer:
-			self.after_cancel(self.dctimer)
+			self.after_managed_cancel(self.dctimer)
 			self.dctimer = None
 			return
 		self.editing = True

@@ -61,22 +61,22 @@ class Tracer:
 			def present() -> None:
 				presenter = self._find_presenter()
 				if hasattr(presenter, '_pyms__window_blocking') and presenter._pyms__window_blocking: # pylint: disable=protected-access
-					self.main_window.after(1000, present)
+					self.main_window.after_managed(1000, present)
 					return
 				self.window = InternalErrorDialog(presenter, self.program_name, self.buffer)
 				self.buffer = ''
 				self.creating_window = False
 				self.window.grab_wait()
 				self.window = None
-			self.main_window.after(0, present)
+			self.main_window.after_managed(0, present)
 		self.flush()
 
 	def write(self, text: str, source: STDStream | None = None) -> None:
 		if self.file:
 			self.file.write(text)
 			if self.flush_after_id is not None:
-				self.main_window.after_cancel(self.flush_after_id)
-			self.flush_after_id = self.main_window.after(10, self.flush)
+				self.main_window.after_managed_cancel(self.flush_after_id)
+			self.flush_after_id = self.main_window.after_managed(10, self.flush)
 		if self.window:
 			self.window.add_text(text)
 		else:
@@ -86,7 +86,7 @@ class Tracer:
 
 	def flush(self) -> None:
 		if self.flush_after_id is not None:
-			self.main_window.after_cancel(self.flush_after_id)
+			self.main_window.after_managed_cancel(self.flush_after_id)
 			self.flush_after_id = None
 		if not self.file:
 			return
