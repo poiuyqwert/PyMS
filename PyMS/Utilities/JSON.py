@@ -26,7 +26,7 @@ def get(json: Object, key: str, val_type: Type[T]) -> T:
 	if not key in json:
 		raise PyMSError('JSON', f'Invalid JSON format (missing `{key}`)')
 	value = json.get(key)
-	if isinstance(val_type, Codable):
+	if isinstance(val_type, type) and issubclass(val_type, Codable):
 		if not isinstance(value, dict):
 			raise PyMSError('JSON', f'Invalid JSON format (invalid `{key}`)')
 		return val_type.from_json(value)
@@ -45,15 +45,18 @@ def get_array(json: Object, key: str, val_type: Type[T]) -> list[T]:
 	array = json.get(key)
 	if not isinstance(array, list):
 		raise PyMSError('JSON', f'Invalid JSON format (invalid `{key}`)')
+	is_codable = isinstance(val_type, type) and issubclass(val_type, Codable)
+	result: list[T] = []
 	for index,value in enumerate(array):
-		if isinstance(val_type, Codable):
+		if is_codable:
 			try:
 				value = val_type.from_json(value)
 			except Exception as exc:
 				raise PyMSError('JSON', f'Invalid JSON format (array `{key}` contains invalid value at index {index})') from exc
 		elif not isinstance(value, val_type):
 			raise PyMSError('JSON', f'Invalid JSON format (array `{key}` contains invalid value at index {index})')
-	return array
+		result.append(value)
+	return result
 
 def get_array_obj(json: Object, key: str, discriminator: Discriminator[C]) -> list[C]:
 	val_type = discriminator(json)
