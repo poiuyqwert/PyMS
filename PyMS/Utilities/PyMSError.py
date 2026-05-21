@@ -1,14 +1,12 @@
 
 from __future__ import annotations
 
-import sys
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .PyMSWarning import PyMSWarning
 
 class PyMSError(Exception):
-	def __init__(self, err_type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] | None = None, capture_exception: bool = False, level: int = 1) -> None:
+	def __init__(self, err_type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] | None = None, level: int = 1) -> None:
 		self.type = err_type
 		self.error = error
 		self.line = line
@@ -16,9 +14,6 @@ class PyMSError(Exception):
 			self.line += 1
 		self.code = code
 		self.warnings = warnings or []
-		self.exception = None
-		if capture_exception:
-			self.exception = sys.exc_info()
 		self.level = level
 
 	def repr(self) -> str:

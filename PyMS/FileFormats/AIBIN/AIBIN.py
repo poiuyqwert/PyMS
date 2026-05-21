@@ -79,7 +79,7 @@ class AIBIN:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', f"Couldn't load {file_name} from disk", capture_exception=True) from exc
+			raise PyMSError('Load', f"Couldn't load {file_name} from disk") from exc
 		bytecode_context = AIDecompileContext(data)
 		bytecode_handler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
@@ -102,7 +102,7 @@ class AIBIN:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt", capture_exception=True) from exc
+			raise PyMSError('Load', f"Unsupported {file_name}, could possibly be invalid or corrupt") from exc
 
 	def load(self, ai_input: IO.AnyInputBytes, bw_input: IO.AnyInputBytes | None) -> LoadIssues:
 		ai_headers, ai_context = AIBIN._load(_AIScriptHeader, 'aiscript.bin', ai_input)

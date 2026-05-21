@@ -17,7 +17,7 @@ def load_file(file: str | BinaryIO, file_type: str = 'file') -> bytes:
 		name = ''
 		if isinstance(file, str):
 			name = f" '{file}'"
-		raise PyMSError('Load', f"Could not load {file_type}{name}", capture_exception=True) from exc
+		raise PyMSError('Load', f"Could not load {file_type}{name}") from exc
 	return data
 
 # Check if `path` is a sub-path of `root`

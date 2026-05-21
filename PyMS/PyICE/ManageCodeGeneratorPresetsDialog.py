@@ -83,7 +83,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 				with open(path, 'r', encoding='utf-8') as f:
 					preset_json = json.loads(f.read())
 			except Exception as exc:
-				raise PyMSError('Import', f"Could not read preset '{path}'", capture_exception=True) from exc
+				raise PyMSError('Import', f"Could not read preset '{path}'") from exc
 			preset = GeneratorPreset.from_json(preset_json)
 			copy = 1
 			while True:

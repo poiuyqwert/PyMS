@@ -49,7 +49,7 @@ class AbstractDAT:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError("Load", f"Invalid {self.FILE_NAME} (error parsing file)", capture_exception=True) from exc
+			raise PyMSError("Load", f"Invalid {self.FILE_NAME} (error parsing file)") from exc
 
 	def load_data(self, data: bytes) -> None:
 		data_size = len(data)

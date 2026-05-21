@@ -41,7 +41,7 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 		try:
 			return eval(math) # pylint: disable=eval-used
 		except Exception as exc:
-			raise PyMSError('Generate', f"Error evaluating math expression '{math}'", capture_exception=True) from exc
+			raise PyMSError('Generate', f"Error evaluating math expression '{math}'") from exc
 
 	def description(self) -> str:
 		return self.math

@@ -258,7 +258,7 @@ class CacheGRP:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt or an uncompressed GRP", capture_exception=True) from exc
+			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt or an uncompressed GRP") from exc
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -368,7 +368,7 @@ class GRP:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported GRP file, could possibly be corrupt", capture_exception=True) from exc
+			raise PyMSError('Load',"Unsupported GRP file, could possibly be corrupt") from exc
 		self.frames = frames
 		self.width = width
 		self.height = height

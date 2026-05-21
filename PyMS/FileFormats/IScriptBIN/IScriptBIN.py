@@ -32,7 +32,7 @@ class IScriptBIN:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', "Couldn't load iscript.bin from disk", capture_exception=True) from exc
+			raise PyMSError('Load', "Couldn't load iscript.bin from disk") from exc
 		decompile_context = DecompileContext(data, ICELanguage())
 		bytecode_decompiler = ByteCodeDecompiler()
 		scanner = BytesScanner(data)
@@ -82,7 +82,7 @@ class IScriptBIN:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load', 'Unsupported iscript.bin, could possibly be invalid or corrupt', capture_exception=True) from exc
+			raise PyMSError('Load', 'Unsupported iscript.bin, could possibly be invalid or corrupt') from exc
 
 	@staticmethod
 	def _save(scripts: Iterable[IScript], output: IO.AnyOutputBytes) -> None:

@@ -1,4 +1,6 @@
 
+import traceback
+
 from .PyMSDialog import PyMSDialog
 from .WarningDialog import WarningDialog
 from .InternalErrorDialog import InternalErrorDialog
@@ -6,11 +8,10 @@ from .UIKit import *
 from .PyMSError import PyMSError
 from .trace import get_tracer
 
-import traceback
-
 class ErrorDialog(PyMSDialog):
 	def __init__(self, parent: Misc, error: PyMSError) -> None:
 		self.error = error
+		self.chained_exception: BaseException | None = error.__cause__ or error.__context__
 		PyMSDialog.__init__(self, parent, f'{error.type} Error!', resizable=(False, False))
 
 	def widgetize(self) -> Misc | None:
@@ -24,7 +25,7 @@ class ErrorDialog(PyMSDialog):
 			p = ''
 		Button(frame, text=f'{w} Warning{p}', width=10, command=self.viewwarnings, state=DISABLED if not self.error.warnings else NORMAL).pack(side=LEFT, padx=3)
 		Button(frame, text='Copy', width=10, command=self.copy).pack(side=LEFT, padx=6)
-		if self.error.exception:
+		if self.chained_exception:
 			Button(frame, text='Internal Error', width=10, command=self.internal).pack(side=LEFT, padx=6)
 		frame.pack(pady=10)
 		return ok
@@ -40,5 +41,6 @@ class ErrorDialog(PyMSDialog):
 		program_name = 'PyMS'
 		if tracer := get_tracer():
 			program_name = tracer.program_name
-		assert self.error.exception is not None
-		InternalErrorDialog(self, program_name, txt=''.join(traceback.format_exception(*self.error.exception)))
+		assert self.chained_exception is not None
+		formatted = traceback.TracebackException.from_exception(self.chained_exception).format()
+		InternalErrorDialog(self, program_name, txt=''.join(formatted))

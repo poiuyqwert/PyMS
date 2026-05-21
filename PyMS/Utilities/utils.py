@@ -101,7 +101,7 @@ def register_registry(program_name: str, extension: str, file_type_name: str | N
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell', REG_SZ, 'open')
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, f'{executable} --gui "%%1"')
 	except Exception as exc:
-		raise PyMSError('Registry', 'Could not complete file association.', capture_exception=True) from exc
+		raise PyMSError('Registry', 'Could not complete file association.') from exc
 	from .UIKit import MessageBox
 	MessageBox.showinfo('Success!', 'The file association was set.')
 
