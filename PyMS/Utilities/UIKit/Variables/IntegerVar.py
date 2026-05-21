@@ -97,7 +97,7 @@ class IntegerVar(StringVar):
 		# 	print('Set %s %s' % (value, update_case))
 		self.update_case = update_case
 		if self.limit_when & update_case & IntegerVar.UpdateCase.programmatic:
-			value = self.apply_limits(value)[1]
+			value = self.apply_limits(value)
 			# if self._tag:
 			# 	print('Setting %s %s' % (value, update_case))
 		StringVar.set(self, value)

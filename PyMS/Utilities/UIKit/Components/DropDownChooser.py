@@ -41,7 +41,7 @@ class DropDownChooser(Toplevel):
 			(Key.Up(), lambda e: self.move(-1)),
 			(Key.Left(), lambda e: self.move(-1)),
 			(Key.Down(), lambda e: self.move(1)),
-			(Key.Right(), lambda e: self.move(-1)),
+			(Key.Right(), lambda e: self.move(1)),
 			(Key.Prior(), lambda e: self.move(-10)),
 			(Key.Next(), lambda e: self.move(10)),
 			(Key.Pressed(), self.key_pressed)

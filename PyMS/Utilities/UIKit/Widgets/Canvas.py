@@ -159,4 +159,4 @@ class Canvas(_Tk.Canvas, Extensions):
 		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_overlapping(self, x1,y1, x2,y2)]
 
 	def find_withtag(self, item_id_or_tag: int | str) -> list[Canvas.Item]: # type: ignore[override]
-		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_above(self, item_id_or_tag)]
+		return [Canvas.Item(self, item_id) for item_id in _Tk.Canvas.find_withtag(self, item_id_or_tag)]

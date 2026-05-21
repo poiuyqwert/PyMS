@@ -109,7 +109,7 @@ class RichList(Frame):
 		else:
 			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry{self.entries[index]}.last +1l'
+			i = f'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
 		if index in (-1, len(self.entries)-1):

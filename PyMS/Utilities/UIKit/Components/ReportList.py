@@ -110,7 +110,7 @@ class EditableReportSubList(RichList):
 				self.lastsel = e
 				break
 		else:
-			self.text.tag_add('Selection', f'{self.lastsel}.first', '{self.lastsel}.last')
+			self.text.tag_add('Selection', f'{self.lastsel}.first', f'{self.lastsel}.last')
 
 	def doselect(self, i: str, t: int) -> None:
 		self.lineselect = True
