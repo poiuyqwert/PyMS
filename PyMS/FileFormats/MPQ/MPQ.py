@@ -81,6 +81,9 @@ class MPQFileEntry:
 			return False
 		return self.file_name == other.file_name and self.locale == other.locale
 
+	def __hash__(self) -> int:
+		return hash((self.file_name, self.locale))
+
 	def __repr__(self) -> str:
 		return f"<MPQFileEntry object at {hex(id(self))}: '{self.file_name.decode('utf-8')}', locale {self.locale}, flags {self.flags:08X}>"
 

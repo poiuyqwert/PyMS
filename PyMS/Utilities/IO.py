@@ -64,10 +64,10 @@ class InputBytes:
 		return False
 
 class OutputTextFile(TextIO):
-	def __init__(self, path: str) -> None:
+	def __init__(self, path: str, encoding: str = 'utf-8') -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
-		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False)
+		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False, encoding=encoding)
 
 	@property
 	def mode(self) -> str:
@@ -81,7 +81,7 @@ class OutputTextFile(TextIO):
 		if self.closed:
 			return
 		self.temp_file.close()
-		os.rename(self.temp_file.name, self.path)
+		os.replace(self.temp_file.name, self.path)
 
 	@property
 	def closed(self) -> bool:

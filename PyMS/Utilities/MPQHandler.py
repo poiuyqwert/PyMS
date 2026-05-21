@@ -58,14 +58,16 @@ class MPQHandler:
 	def open_mpqs(self) -> list[str]:
 		failed = []
 		if MPQ.supported():
-			self.open = True
+			any_opened = False
 			for mpq in self.mpqs:
 				try:
 					for listfile_path in self.listfiles:
 						mpq.add_listfile(listfile_path)
 					mpq.open()
+					any_opened = True
 				except:
 					failed.append(mpq.path)
+			self.open = any_opened
 		return failed
 
 	def close_mpqs(self) -> None:
@@ -175,14 +177,14 @@ class MPQHandler:
 		if not self.open:
 			self.open_mpqs()
 			close = True
-		files = []
+		files: set[MPQFileEntry] = set()
 		for mpq in self.mpqs:
 			try:
 				for file in mpq.list_files():
 					if not file in files:
-						files.append(file)
+						files.add(file)
 			except:
 				continue
 		if close:
 			self.close_mpqs()
-		return files
+		return list(files)

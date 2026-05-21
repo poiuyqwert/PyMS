@@ -43,8 +43,8 @@ PYMS_CONFIG = PyMSConfig()
 if WIN_REG_AVAILABLE and PYMS_CONFIG.scdir.path is None:
 	try:
 		from winreg import OpenKey, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, QueryValueEx # type: ignore # pylint: disable=import-error
-		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft', 0, KEY_READ | KEY_WOW64_32KEY)
-		path = QueryValueEx(h, 'InstallPath')[0]
+		with OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft', 0, KEY_READ | KEY_WOW64_32KEY) as h:
+			path = QueryValueEx(h, 'InstallPath')[0]
 		if isinstance(path, str) and os.path.isdir(path):
 			PYMS_CONFIG.scdir.path = path
 	except:
