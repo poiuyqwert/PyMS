@@ -96,8 +96,8 @@ class BMP:
 				image = RLE.decompress(data[pixels_offset:], width, height)
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load',"Unsupported BMP file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported BMP file, could possibly be corrupt") from exc
 		self.width = width
 		self.height = height
 		self.palette = palette
@@ -113,8 +113,8 @@ class BMP:
 	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file,'wb')
-		except:
-			raise PyMSError('Save',"Could not save BMP to file '%s'" % file)
+		except Exception as exc:
+			raise PyMSError('Save',"Could not save BMP to file '%s'" % file) from exc
 		data = b''
 		pad = getPadding(self.width,4)
 		for y in self.image:

@@ -62,8 +62,8 @@ def main(): # type: () -> None
 								ids.append(int(i))
 								if ids[-1] < 0 or ids[-1] >= dat.count:
 									raise PyMSError('Options',"Invalid ID '%s'" % ids[-1])
-						except:
-							raise PyMSError('Options','Invalid ID list')
+						except Exception as exc:
+							raise PyMSError('Options','Invalid ID list') from exc
 					else:
 						ids = None
 					print("Reading DAT '%s'..." % args[0])

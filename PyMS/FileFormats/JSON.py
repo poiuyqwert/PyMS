@@ -32,21 +32,21 @@ def load(input: IO.AnyInputText) -> JSON.Array | JSON.Object:
 	try:
 		with IO.InputText(input) as f:
 			raw_json = f.read()
-	except:
-		raise PyMSError('Load', "Couldn't load json")
+	except Exception as exc:
+		raise PyMSError('Load', "Couldn't load json") from exc
 	try:
 		json = _json.loads(raw_json)
-	except:
-		raise PyMSError('Load', "Couldn't parse json")
+	except Exception as exc:
+		raise PyMSError('Load', "Couldn't parse json") from exc
 	return json
 
 def save(output: IO.AnyOutputText, json: JSON.Array | JSON.Object) -> None:
 	try:
 		raw_json = _json.dumps(json)
-	except:
-		raise PyMSError('Save', "Couldn't save json")
+	except Exception as exc:
+		raise PyMSError('Save', "Couldn't save json") from exc
 	try:
 		with IO.OutputText(output) as f:
 			f.write(raw_json)
-	except:
-		raise PyMSError('Save', "Couldn't open file")
+	except Exception as exc:
+		raise PyMSError('Save', "Couldn't open file") from exc
