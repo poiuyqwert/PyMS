@@ -15,6 +15,10 @@ class Bidict(Generic[K,V]):
 		return self._key_map.get(value, defualt)
 
 	def __setitem__(self, key: K, value: V) -> None:
+		if key in self._value_map:
+			del self._key_map[self._value_map[key]]
+		if value in self._key_map:
+			del self._value_map[self._key_map[value]]
 		self._value_map[key] = value
 		self._key_map[value] = key
 
