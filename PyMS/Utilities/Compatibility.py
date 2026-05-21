@@ -78,24 +78,29 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 		else:
 			show_error(program_name, 'Incorrect Python version (%d.%d). Please consult the Installation section of the Readme.' % (sys.version_info.major, sys.version_info.minor))
 
-	tcl_version = None
+	tcl_version = None # type: str | None
 	try:
 		import tkinter
-		tcl_version = tkinter.Tcl().call("info", "patchlevel")
 	except:
 		try:
 			import Tkinter as tkinter # type: ignore
-			tcl_version = tkinter.Tcl().call("info", "patchlevel")
 		except:
 			show_error(program_name, 'Tkinter is missing. Please consult the Installation section of the Readme.')
 
-	unsupported_tkinter = [
-		(True, '8.6.13')
-	]
-	import platform
-	is_mac = platform.system().lower() == 'darwin'
-	if (is_mac, tcl_version) in unsupported_tkinter:
-		show_error(program_name, 'Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
+	try:
+		tcl_version = tkinter.Tcl().call("info", "patchlevel")
+	except:
+		pass
+	if tcl_version:
+		unsupported_tkinter = [
+			(True, '8.6.13')
+		]
+		import platform
+		is_mac = platform.system().lower() == 'darwin'
+		if (is_mac, tcl_version) in unsupported_tkinter:
+			show_error(program_name, 'Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
+	else:
+		show_error(program_name, 'Couldn\'t check Tkinter\'s Tcl/Tk version (%s). It is possible that PyMS might not function properly.\nYou can continue to use the programs, or consult the Installation section of the Readme.' % tcl_version, warning=True)
 
 	if additional_requirements & Requirement.MPQ:
 		from ..FileFormats.MPQ.MPQ import MPQ
