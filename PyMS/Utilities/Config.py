@@ -12,7 +12,7 @@ import os, json, re, enum
 from dataclasses import dataclass
 from copy import deepcopy
 
-from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, cast
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal
 
 def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
 	'''Ensure there are nested `dict` objects in all parts of the keypath'''
@@ -33,6 +33,7 @@ def migrate_field(data: dict, from_keypath: tuple[str, ...], to_keypath: tuple[s
 		if not key in obj:
 			return
 		value = obj[key]
+		obj = value
 	if len(to_keypath) > 1:
 		data = migrate_nest(data, to_keypath[:-1])
 	data[to_keypath[-1]] = value
@@ -145,7 +146,6 @@ class Config(Group):
 			self.decode(data)
 
 	def save(self) -> None:
-		import os
 		try:
 			data = self.encode()
 			assert isinstance(data, dict)
@@ -879,7 +879,6 @@ class HighlightStyle(ConfigObject):
 		}
 
 	def decode(self, value: JSON.Value) -> None:
-		from .UIKit.Font import Font
 		if not isinstance(value, dict):
 			return
 		foreground = value.get('foreground')
