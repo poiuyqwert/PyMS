@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from .DataID import DATID
-from .NameDisplaySetting import NamesDisplaySetting
 
 from ..FileFormats.DAT import *
 from ..FileFormats.DAT.AbstractDAT import AbstractDAT
@@ -79,29 +78,29 @@ class DATData(Generic[DAT]):
 		return self.dat.save_data()
 
 	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
-		with open(path, 'r') as f:
+		with open(path, 'r', encoding='utf-8') as f:
 			contents = f.readlines()
 		self.name_overrides = DATEntryName.parse_overrides(contents)
 		if update_names:
 			self.update_names()
 
 	def save_name_overrides(self, path: str) -> None:
-		with open(path, 'w') as f:
+		with open(path, 'w', encoding='utf-8') as f:
 			for entry_id in sorted(self.name_overrides.keys()):
-				f.write('%d%s:%s\n' % (entry_id, '+' if self.name_overrides[entry_id][0] else '', self.name_overrides[entry_id][1]))
+				f.write(f'{entry_id}{"+" if self.name_overrides[entry_id][0] else ""}:{self.name_overrides[entry_id][1]}\n')
 
 	def update_names(self) -> None:
 		entry_count = self.entry_count()
 		names: list[str] = []
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
+			names.append(DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
 	def entry_name(self, entry_id: int) -> str:
 		if entry_id >= len(self.names):
 			entry_count = self.entry_count()
-			return DATEntryName.generic(entry_id, type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
+			return DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
 	def is_expanded(self) -> bool:

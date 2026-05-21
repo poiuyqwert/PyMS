@@ -19,7 +19,7 @@ class ICEBlockSourceCodeParser(SourceCodeParser):
 		block = parse_context.define_block(name, parse_context.lexer.state.line)
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.NewlineToken):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line)")
 		if parse_context.active_block:
 			parse_context.active_block.next_block = block
 			block.prev_block = parse_context.active_block

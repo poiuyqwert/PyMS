@@ -8,33 +8,33 @@ if TYPE_CHECKING:
 	from .PyMSWarning import PyMSWarning
 
 class PyMSError(Exception):
-	def __init__(self, type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] = [], capture_exception = False, level=1):
-		self.type = type
+	def __init__(self, err_type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] | None = None, capture_exception: bool = False, level: int = 1) -> None:
+		self.type = err_type
 		self.error = error
 		self.line = line
 		if self.line is not None:
 			self.line += 1
 		self.code = code
-		self.warnings = warnings
+		self.warnings = warnings or []
 		self.exception = None
 		if capture_exception:
 			self.exception = sys.exc_info()
 		self.level = level
 
 	def repr(self) -> str:
-		r = '%s Error: %s' % (self.type, self.error)
+		r = f'{self.type} Error: {self.error}'
 		if self.line:
-			r += '\n    Line %s: %s' % (self.line, self.code)
+			r += f'\n    Line {self.line}: {self.code}'
 		return r
 
 	def __repr__(self) -> str:
 		from .utils import fit
-		r = fit('%s Error: ' % self.type, self.error)
+		r = fit(f'{self.type} Error: ', self.error)
 		if self.line:
 			if self.code is not None:
-				r += fit('    Line %s: ' % self.line, self.code)
+				r += fit(f'    Line {self.line}: ', self.code)
 			else:
-				r += '    Line %s' % self.line
+				r += f'    Line {self.line}'
 		if self.warnings:
 			for w in self.warnings:
 				r += repr(w)

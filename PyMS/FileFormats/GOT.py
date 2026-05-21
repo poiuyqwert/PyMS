@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import IO
 from ..Utilities import Serialize
@@ -306,12 +305,14 @@ class GOT:
 		self.resources_value = 0
 		self.subtype_value = 0
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
+		if len(data) != 97:
+			raise PyMSError('Load', f'Unsupported GOT file, could possibly be corrupt (invalid size, got {len(data)} expected 97)')
+		if data[0] != 3:
+			raise PyMSError('Load', f'Unsupported GOT file, could possibly be corrupt (invalid magic number, got {data[0]} expected 3)')
 		try:
-			if len(data) != 97 or data[0] != 3:
-				raise Exception()
 			raw_name: bytes
 			raw_subtype_name: bytes
 			gametype_id: int
@@ -334,7 +335,28 @@ class GOT:
 			resources_value: int
 			subtype_value: int
 			fields = struct.unpack('<x32s32s2B3H11B3Lx', data)
-			raw_name,raw_subtype_name,gametype_id,league_id,subtype_id,subtype_display,subtype_label,raw_victory_condition,raw_resources,raw_unit_stats,raw_fog_of_war,raw_starting_units,raw_starting_positions,raw_player_types,raw_allies,raw_team_mode,raw_cheat_codes,raw_tournament_mode,victory_condition_value,resources_value,subtype_value = fields
+			raw_name,\
+				raw_subtype_name,\
+				gametype_id,\
+				league_id,\
+				subtype_id,\
+				subtype_display,\
+				subtype_label,\
+				raw_victory_condition,\
+				raw_resources,\
+				raw_unit_stats,\
+				raw_fog_of_war,\
+				raw_starting_units,\
+				raw_starting_positions,\
+				raw_player_types,\
+				raw_allies,\
+				raw_team_mode,\
+				raw_cheat_codes,\
+				raw_tournament_mode,\
+				victory_condition_value,\
+				resources_value,\
+				subtype_value\
+					= fields
 			name = raw_name.rstrip(b'\x00').decode('utf-8')
 			subtype_name = raw_subtype_name.rstrip(b'\x00').decode('utf-8')
 			victory_condition = VictoryCondition(raw_victory_condition)
@@ -348,8 +370,8 @@ class GOT:
 			team_mode = TeamMode(raw_team_mode)
 			cheat_codes = CheatCodes(raw_cheat_codes)
 			tournament_mode = TournametMode(raw_tournament_mode)
-		except PyMSError as e:
-			raise PyMSError('Load',"Unsupported GOT file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load', "Unsupported GOT file, could possibly be corrupt") from exc
 		self.name = name
 		self.subtype_name = subtype_name
 		self.gametype_id = gametype_id
@@ -372,7 +394,7 @@ class GOT:
 		self.resources_value = resources_value
 		self.subtype_value = subtype_value
 
-	def decompile(self, output: IO.AnyOutputText, include_reference: bool = True):
+	def decompile(self, output: IO.AnyOutputText, include_reference: bool = True) -> None:
 		text = Serialize.encode_text(self, None, _GOTDefinition)
 		with IO.OutputText(output) as f:
 			if include_reference:
@@ -387,39 +409,39 @@ class GOT:
 				f.write('#----------------------------------------------------\n')
 			f.write(text)
 
-	def interpret(self, input: IO.AnyInputText):
-		with IO.InputText(input) as f:
-			text = f.read()
+	def interpret(self, any_input: IO.AnyInputText) -> None:
+		with IO.InputText(any_input) as input_text:
+			text = input_text.read()
 		Serialize.decode_text(text, [_GOTDefinition], lambda i,d: self, 1)
 
 	def save_data(self) -> bytes:
 		return struct.pack(
-			"<B32s32s2B3H11B3Lx",
+			'<B32s32s2B3H11B3Lx',
 			3,
-			self.name.encode("utf-8"),
-			self.subtype_name.encode("utf-8"),
+			self.name.encode('utf-8'),
+			self.subtype_name.encode('utf-8'),
 			self.gametype_id,
 			self.league_id,
 			self.subtype_id,
 			self.subtype_display,
 			self.subtype_label,
-			self.victory_condition.value,
-			self.resources.value,
-			self.unit_stats.value,
-			self.fog_of_war.value,
-			self.starting_units.value,
-			self.starting_positions.value,
-			self.player_types.value,
-			self.allies.value,
-			self.team_mode.value,
-			self.cheat_codes.value,
-			self.tournament_mode.value,
+			self.victory_condition,
+			self.resources,
+			self.unit_stats,
+			self.fog_of_war,
+			self.starting_units,
+			self.starting_positions,
+			self.player_types,
+			self.allies,
+			self.team_mode,
+			self.cheat_codes,
+			self.tournament_mode,
 			self.victory_condition_value,
 			self.resources_value,
-			self.subtype_value,
+			self.subtype_value
 		)
 
-	def save_file(self, output: IO.AnyOutputBytes):
+	def save_file(self, output: IO.AnyOutputBytes) -> None:
 		data = self.save_data()
 		with IO.OutputBytes(output) as f:
 			f.write(data)

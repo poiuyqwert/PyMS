@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKLocation(object):
+class CHKLocation:
 	NO_ELEVATION = 0
 	LOW_GROUND = (1 << 0)
 	MEDIUM_GROUND = (1 << 1)
@@ -31,6 +31,12 @@ class CHKLocation(object):
 
 	def __init__(self, chk: CHK) -> None:
 		self.chk = chk
+
+		self.start = [0,0]
+		self.end = [0,0]
+		self.name = 0
+		self.elevation = CHKLocation.NO_ELEVATION
+
 		self.clear()
 
 	def load_data(self, data: bytes) -> None:
@@ -49,17 +55,17 @@ class CHKLocation(object):
 		if strings and self.name > -1 and self.name < len(strings.strings):
 			string = ' # ' + decompile_string(strings.strings[self.name].text)
 		data = {
-			'Start': pad('%s,%s' % (self.start[0],self.start[1])),
-			'End': pad('%s,%s' % (self.end[0],self.end[1])),
-			'Name': '%s%s' % (self.name, string),
+			'Start': pad(f'{self.start[0]},{self.start[1]}'),
+			'End': pad(f'{self.end[0]},{self.end[1]}'),
+			'Name': f'{self.name}{string}',
 			'Elevation': named_flags(self.elevation, ["Low Ground", "Med. Ground", "High Ground", "Low Air", "Med. Air", "High Air"], 16),
 		}
 		for key in ['Start','End','Name','Elevation']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += '\t%s%s\n' % (pad('#'), value[0])
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
-			result += '\t%s\n' % pad(key, str(value))
+			result += f'\t{pad(key, str(value))}\n'
 		return result
 
 	def in_use(self) -> bool:
@@ -77,11 +83,11 @@ class CHKLocation(object):
 class CHKSectionMRGN(CHKSection):
 	NAME = 'MRGN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.locations: list[CHKLocation] = []
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.locations = []
 		o = 0
@@ -108,7 +114,7 @@ class CHKSectionMRGN(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		for location in self.locations:
 			result += location.decompile()
 		return result

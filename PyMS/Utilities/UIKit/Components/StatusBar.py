@@ -1,8 +1,10 @@
 
 from ..Widgets import *
 
+from typing import Any
+
 class StatusBar(Frame):
-	def __init__(self, parent: Misc, *args, **kwargs):
+	def __init__(self, parent: Misc, *args: Any, **kwargs: Any) -> None:
 		self._weights: list[float | None] = []
 		Frame.__init__(self, parent, *args, **kwargs)
 

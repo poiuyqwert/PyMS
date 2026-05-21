@@ -102,8 +102,8 @@ class FlingyTab(DATTab):
 			else:
 				self.spriteentry.range[1] = 65535
 
-	def updatespeed(self, num: int, type: bool) -> None:
-		if type:
+	def updatespeed(self, num: int, basic: bool) -> None:
+		if basic:
 			# self.topspeed.check = False
 			self.topspeed.set(int((float(num) * 320 / 3.0)))
 		else:
@@ -115,8 +115,8 @@ class FlingyTab(DATTab):
 				s = s[:s.index('.')+4]
 			self.speed.set(s)
 
-	def updatehalt(self, num: int, type: bool) -> None:
-		if type:
+	def updatehalt(self, num: int, basic: bool) -> None:
+		if basic:
 			# self.haltdistance.check = False
 			self.haltdistance.set(int((float(num) * 256)))
 		else:

@@ -97,7 +97,7 @@ class PyBINConfig(Config.Config):
 			def __init__(self) -> None:
 				self.mpq_select_history = Config.List(value_type=str)
 				super().__init__()
-		
+
 		def __init__(self) -> None:
 			self.widget = PyBINConfig.Edit.Widget()
 			self.smk = PyBINConfig.Edit.SMK()

@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-f-string
 
 from .UIKit import *
 from . import Assets
@@ -35,7 +36,7 @@ class DependencyError(MainWindow):
 		screen_size = Size(self.winfo_screenwidth(), self.winfo_screenheight())
 		self.geometry(geometry.adjust_center_in(screen_size).text)
 
-	def continue_(self, event: Event | None = None) -> None:
+	def continue_(self, _event: Event | None = None) -> None:
 		self.should_continue = True
 		if self.dont_remind.get():
 			from .PyMSConfig import PYMS_CONFIG

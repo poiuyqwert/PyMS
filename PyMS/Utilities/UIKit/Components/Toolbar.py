@@ -69,7 +69,7 @@ class Toolbar(Frame):
 					return _binding_trigger_command
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:
-				tooltip += ' (%s)' % shortcut.description()
+				tooltip += f' ({shortcut.description()})'
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 
@@ -88,7 +88,7 @@ class Toolbar(Frame):
 					return _binding_trigger_radiobutton
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:
-				tooltip += ' (%s)' % shortcut.description()
+				tooltip += f' ({shortcut.description()})'
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 
@@ -107,7 +107,7 @@ class Toolbar(Frame):
 					return _binding_trigger_checkbutton
 				self._bind_target.bind(shortcut(), _callback())
 			if add_shortcut_to_tooltip:
-				tooltip += ' (%s)' % shortcut.description()
+				tooltip += f' ({shortcut.description()})'
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 

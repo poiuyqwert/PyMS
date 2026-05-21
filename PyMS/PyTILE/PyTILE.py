@@ -33,11 +33,11 @@ from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDel
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.SponsorDialog import SponsorDialog
 
-import sys, io
+import io
 
-from typing import Self, cast, Callable, Generic, TypeVar
+from typing import Self, cast, Callable, Generic, TypeVar, Any
 
-LONG_VERSION = 'v%s' % Assets.version('PyTILE')
+LONG_VERSION = 'v' + Assets.version('PyTILE')
 
 class EditorGroup:
 	class EditorWidget:
@@ -71,7 +71,7 @@ class EditorGroup:
 			tooltip += '\n' + self.tooltip
 		Tooltip(widget, tooltip)
 
-	def skip(self, columns=1) -> Self:
+	def skip(self, columns: int = 1) -> Self:
 		self.column += columns
 		return self
 
@@ -135,13 +135,13 @@ class CopyOptions(Generic[G]):
 		self.group = group
 		self.callback = callback
 		self.options: list[tuple[Config.Boolean, BooleanVar]] = []
-			
+
 	def option(self, get_config: Callable[[G], Config.Boolean]) -> BooleanVar:
 		config = get_config(self.group)
 		variable = BooleanVar()
 		self.options.append((config, variable))
 		variable.set(config.value)
-		variable.trace('w', self.callback)
+		variable.trace_add('write', self.callback)
 		return variable
 
 	def any_enabled(self) -> bool:
@@ -156,7 +156,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		MainWindow.__init__(self)
 		self.guifile = guifile
 
-		self.title('PyTILE %s' % LONG_VERSION)
+		self.title('PyTILE ' + LONG_VERSION)
 		self.set_icon('PyTILE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyTILE', Assets.version('PyTILE'))
@@ -215,7 +215,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.doodad = BooleanVar()
 		self.doodad.set(False)
-		self.doodad.trace('w', self.group_doodad_changed)
+		self.doodad.trace_add('write', self.group_doodad_changed)
 
 		self.apply_all_exclude_nulls = IntVar()
 		self.apply_all_exclude_nulls.set(self.config_.mega_edit.apply_all_exclude_nulls.value)
@@ -321,14 +321,15 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		megatile_editors[-1].pack(side=LEFT, padx=2)
 		Tooltip(megatile_editors[-1], 'MegaTile Palette')
 		f.pack(side=TOP, fill=X, padx=3)
-		def megatile_apply_all_pressed():
+		def megatile_apply_all_pressed() -> None:
 			menu = Menu(self, tearoff=0)
 			mode = self.mega_editor.get_edit_mode()
-			name = [None,None,'Height','Walkability','Blocks View','Ramp(?)'][mode.value]
-			menu.add_command(label="Apply %s flags to Megatiles in Group (Control+Shift+%s)" % (name, name[0]), command=lambda m=mode: self.megatile_apply_all(mode))
-			menu.add_command(label="Apply all flags to Megatiles in Group (Control+Shift+A)", command=self.megatile_apply_all)
+			name = ('Height','Walkability','Blocks View','Ramp(?)')[mode.value-2]
+			shortcut = (Shift.Ctrl.h,Shift.Ctrl.w,Shift.Ctrl.b,Shift.Ctrl.r)[mode.value-2]
+			menu.add_command(label=f"Apply {name} flags to Megatiles in Group ({shortcut.description()})", command=lambda m=mode: self.megatile_apply_all(mode)) # type: ignore[misc]
+			menu.add_command(label=f"Apply all flags to Megatiles in Group ({Shift.Ctrl.a.description()})", command=self.megatile_apply_all)
 			menu.add_separator()
-			menu.add_checkbutton(label="Exclude Null Tiles (Control+Shift+N)", variable=self.apply_all_exclude_nulls)
+			menu.add_checkbutton(label=f"Exclude Null Tiles ({Shift.Ctrl.n.description()})", variable=self.apply_all_exclude_nulls)
 			menu.post(*self.winfo_pointerxy())
 		self.apply_all_btn = Button(megatile_group, text='Apply to Megas', state=DISABLED, command=megatile_apply_all_pressed)
 		megatile_editors.append(self.apply_all_btn)
@@ -345,31 +346,31 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		megatile_editor.widget(megatile_group, megatile_editors).add()
 		self.normal_editors.append(megatile_editor)
 
-		def copy_mega(*args):
+		def copy_mega(*_args: Any) -> None:
 			if not self.tileset:
 				return
-			options = {
+			fields: Serialize.Fields = {
 				'megatiles_export_height': self.copy_mega_height.get(),
 				'megatiles_export_walkability': self.copy_mega_walkable.get(),
 				'megatiles_export_block_sight': self.copy_mega_sight.get(),
 				'megatiles_export_ramp': self.copy_mega_ramp.get(),
 			}
-			if not max(options.values()):
+			if not any(fields.values()):
 				return
-			group = self.tileset.cv5.groups[self.palette.selected[0]]
-			mega = group[13][self.palette.sub_selection]
+			group = self.tileset.cv5.get_group(self.palette.selected[0])
+			mega_id = group.megatile_ids[self.palette.sub_selection]
 			f = io.StringIO()
-			self.tileset.export_settings(TileType.mega, f, [mega], options)
+			self.tileset.export_megatile_settings(f, [mega_id], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_mega(*args):
+		def paste_mega(*_args: Any) -> None:
 			if not self.tileset:
 				return
-			group = self.tileset.cv5.groups[self.palette.selected[0]]
-			mega = group[13][self.palette.sub_selection]
+			group = self.tileset.cv5.get_group(self.palette.selected[0])
+			mega_id = group.megatile_ids[self.palette.sub_selection]
 			settings = self.clipboard_get()
 			try:
-				self.tileset.import_settings(TileType.mega, settings, [mega])
+				self.tileset.export_megatile_settings(settings, [mega_id])
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -380,15 +381,15 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check('Walkable', 'Copy Walkable settings for MegaTile', self.copy_mega_walkable).add()\
 			.check('Blocks Sight', 'Copy Blocks Sight settings for MegaTile', self.copy_mega_sight).add()\
 			.check('Ramp', 'Copy Ramp settings for MegaTile', self.copy_mega_ramp).add()
-		copy_mega_btn = copy_mega_editor.button('Copy (%s)' % Shift.Ctrl.c.description(), 'Copy chosen settings to clipboard', copy_mega)
+		copy_mega_btn = copy_mega_editor.button(f'Copy ({Shift.Ctrl.c.description()})', 'Copy chosen settings to clipboard', copy_mega)
 		self.copy_mega_btn = copy_mega_btn.widget
 		copy_mega_btn.add()
-		copy_mega_editor.button('Paste (%s)' % Shift.Ctrl.v.description(), 'Paste settings from clipboard', paste_mega).add()
+		copy_mega_editor.button(f'Paste ({Shift.Ctrl.v.description()})', 'Paste settings from clipboard', paste_mega).add()
 		self.normal_editors.append(copy_mega_editor)
 		self.bind(Shift.Ctrl.c(), copy_mega)
 		self.bind(Shift.Ctrl.v(), paste_mega)
-	
-		def copy_tilegroup(*args: Any) -> None:
+
+		def copy_tilegroup(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -454,7 +455,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			self.tileset.export_group_settings(f, [group], fields)
 			self.clipboard_clear()
 			self.clipboard_append(f.getvalue())
-		def paste_tilegroup(*args: Any) -> None:
+		def paste_tilegroup(*_args: Any) -> None:
 			if not self.tileset:
 				return
 			group = self.palette.selected[0]
@@ -476,10 +477,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check('Edge Types', 'Copy settings from Edge Types', self.copy_tilegroup_edge_types).add(new_row=False)\
 			.check('Piece Types', 'Copy settings from Piece Types', self.copy_tilegroup_piece_types).add()\
 			.check('Group Type', 'Copy Group Type setting', self.copy_tilegroup_group_type).add()
-		copy_tilegroup_btn = copy_tilegroup_settings_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
+		copy_tilegroup_btn = copy_tilegroup_settings_editor.button(f'Copy ({Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', copy_tilegroup)
 		self.copy_tilegroup_btn = copy_tilegroup_btn.widget
 		copy_tilegroup_btn.add(new_row=False)
-		copy_tilegroup_settings_editor.button('Paste (%s)' % Ctrl.Alt.v.description(), 'Paste settings from clipboard', paste_tilegroup).add()
+		copy_tilegroup_settings_editor.button(f'Paste ({Ctrl.Alt.v.description()})', 'Paste settings from clipboard', paste_tilegroup).add()
 		self.normal_editors.append(copy_tilegroup_settings_editor)
 		self.bind(Ctrl.Alt.c(), copy_tilegroup)
 		self.bind(Ctrl.Alt.v(), paste_tilegroup)
@@ -529,7 +530,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.label('Raw').add(new_row=False).entry('Raw value of added in StarCraft: Remastered (1 = Added in SC:R)', self.group_edge_up_or_scr).add()
 		)
 		self.doodad_group_dropdown: DropDown
-		def store_dropdown(dropdown: DropDown):
+		def store_dropdown(dropdown: DropDown) -> None:
 			self.doodad_group_dropdown = dropdown
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Name')
@@ -555,10 +556,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			.check('Unknown', 'Copy settings from Unknown', self.copy_doodadgroup_unknown).add()\
 			.check('SC:R', 'Copy settings from SC:R', self.copy_doodadgroup_scr).add()\
 			.check('Name', 'Copy settings from Name', self.copy_doodadgroup_name).add()
-		copy_doodadgroup_btn = copy_doodadgroup_editor.button('Copy (%s)' % Ctrl.Alt.c.description(), 'Copy chosen settings to clipboard', copy_tilegroup)
+		copy_doodadgroup_btn = copy_doodadgroup_editor.button(f'Copy ({Ctrl.Alt.c.description()})', 'Copy chosen settings to clipboard', copy_tilegroup)
 		self.copy_doodadgroup_btn = copy_doodadgroup_btn.widget
 		copy_doodadgroup_btn.add(new_row=False)
-		copy_doodadgroup_editor.button('Paste (%s)' % Ctrl.Alt.v.description(), 'Paste settings from clipboard', paste_tilegroup).add()
+		copy_doodadgroup_editor.button(f'Paste ({Ctrl.Alt.v.description()})', 'Paste settings from clipboard', paste_tilegroup).add()
 		self.doodad_editors.append(copy_doodadgroup_editor)
 
 		self.update_editor(force=True)
@@ -625,7 +626,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		file = self.file
 		if not file:
 			file = 'Unnamed.cv5'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -635,7 +636,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		else:
 			return self.saveas()
 
-	def action_states(self, *args: Any, **kwargs: Any) -> None:
+	def action_states(self, *_args: Any, **_kwargs: Any) -> None:
 		is_file_open = self.is_file_open()
 
 		self.toolbar.tag_enabled('file_open', is_file_open)
@@ -645,7 +646,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		if is_file_open and cast(Tileset, self.tileset).vx4.is_expanded():
 			self.expanded.set('VX4 Expanded')
-		
+
 		can_copy_mega = is_file_open and self.options_copy_mega.any_enabled()
 		self.copy_mega_btn['state'] = NORMAL if can_copy_mega else DISABLED
 
@@ -720,8 +721,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			return
 		group = self.tileset.cv5.get_group(self.palette.selected[0])
 		d = ['',' - Doodad'][group.type == CV5Group.TYPE_DOODAD]
-		self.groupid['text'] = 'MegaTile Group [%s%s]' % (self.palette.selected[0], d)
- 
+		self.groupid['text'] = f'MegaTile Group [{self.palette.selected[0]}{d}]'
+
 	def update_editor(self, doodad: bool = False, force: bool = False) -> None:
 		if self.doodad.get() == doodad and not force:
 			return
@@ -816,15 +817,15 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			editing=True
 		)
 
-	def change(self, tiletype: TileType, id: int) -> None:
+	def change(self, tiletype: TileType, entry_id: int) -> None:
 		if not self.tileset:
 			return
 		if tiletype == TileType.group:
-			self.palette.select(id, sub_select=0, scroll_to=True)
+			self.palette.select(entry_id, sub_select=0, scroll_to=True)
 		elif tiletype == TileType.mega and not self.loading_megas:
-			self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection] = id
+			self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection] = entry_id
 			self.palette.draw_tiles(force=True)
-			self.mega_editor.set_megatile(id)
+			self.mega_editor.set_megatile(entry_id)
 			self.mark_edited()
 
 	def placeability(self) -> None:
@@ -838,7 +839,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.palette.update_size()
 		self.palette.draw_tiles(force=True)
 
-	def open(self, key: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: Event | None = None, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
@@ -862,10 +863,10 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if self.tileset.vx4.is_expanded():
 			self.config_.dont_warn.expanded_vx4.present(self)
 
-	def save(self, key: Event | None = None) -> CheckSaved:
+	def save(self, _event: Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
+	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.tileset:
 			return CheckSaved.saved
 		if not file_path:
@@ -884,7 +885,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.mark_edited(False)
 		return CheckSaved.saved
 
-	def close(self, key: Any = None) -> None:
+	def close(self, _event: Event | None = None) -> None:
 		if not self.is_file_open():
 			return
 		if self.check_saved() == CheckSaved.cancelled:
@@ -901,7 +902,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.palette.draw_tiles()
 		self.action_states()
 
-	def register_registry(self, e: Any = None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyTILE', 'cv5', '')
 		except PyMSError as e:
@@ -910,16 +911,16 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 	def settings(self, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
-	def help(self, e: Any = None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTILE.md')
 
-	def about(self, key: Any = None) -> None:
+	def about(self, _event: Event | None = None) -> None:
 		AboutDialog(self, 'PyTILE', LONG_VERSION, [('FaRTy1billion','Tileset file specs and HawtTiles.')])
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, e: Any = None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -930,8 +931,8 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.config_.save()
 		self.destroy()
 
-	def draw_group(self):
+	def draw_group(self) -> None:
 		pass
 
-	def tile_palette_double_clicked(self):
+	def tile_palette_double_clicked(self, tile_id: int) -> None:
 		pass

@@ -116,7 +116,7 @@ class Condition(Struct.Struct):
 	def masked(self, masked: int) -> None:
 		self.fields[8] = masked
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Condition):
 			return False
 		if other.fields != self.fields:

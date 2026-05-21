@@ -4,11 +4,12 @@ from ..Widgets import *
 from ..ShowScrollbar import ShowScrollbar
 from ..EventPattern import *
 
-from typing import Callable
+from typing import Callable, Any
 
 class ScrolledCanvas(Frame):
 	# `auto_bind` can be `True` to bind to the internal `Listbox`, or can be any `Widget` to bind to
-	def __init__(self, parent: Misc, frame_config: dict[str, Any] = {'bd': 2, 'relief': SUNKEN}, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: bool = True, scroll_speed: int = 1, **kwargs) -> None:
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, horizontal: ShowScrollbar = ShowScrollbar.when_needed, vertical: ShowScrollbar = ShowScrollbar.when_needed, auto_bind: bool = True, scroll_speed: int = 1, **kwargs: Any) -> None:
+		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
 		Frame.__init__(self, parent, **frame_config)
 
 		if not 'highlightthickness' in kwargs:
@@ -19,9 +20,9 @@ class ScrolledCanvas(Frame):
 		self.canvas.grid(column=0,row=0, sticky=NSEW)
 
 		def scroll_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
-			def scroll_update(low, high):
+			def scroll_update(low: float, high: float) -> None:
 				scrollbar.set(low, high)
-				self.canvas.event_generate(WidgetEvent.Scrolled)
+				self.canvas.event_generate(WidgetEvent.Scrolled())
 			return scroll_update
 
 		if horizontal != ShowScrollbar.never:
@@ -31,7 +32,7 @@ class ScrolledCanvas(Frame):
 				scrollbar = AutohideScrollbar(self, orient=HORIZONTAL, command=self.canvas.xview)
 			scrollbar.grid(column=0,row=1, sticky=EW)
 			self.canvas.config(xscrollcommand=scroll_callback(scrollbar))
-		
+
 		if vertical != ShowScrollbar.never:
 			if horizontal == ShowScrollbar.always:
 				scrollbar = Scrollbar(self, command=self.canvas.yview)

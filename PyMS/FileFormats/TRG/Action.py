@@ -10,7 +10,7 @@ class Action(Struct.Struct):
 		('fields', Struct.MixedInts((Struct.t_au32(6), Struct.t_u16, Struct.t_au8(3), Struct.t_pad(), Struct.t_u16))),
 	)
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.fields = [0] * 11
 
 	@staticmethod
@@ -199,7 +199,7 @@ class Action(Struct.Struct):
 	def masked(self, masked: int) -> None:
 		self.fields[10] = masked
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Action):
 			return False
 		if other.fields != self.fields:

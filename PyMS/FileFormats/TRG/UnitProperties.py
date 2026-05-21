@@ -84,16 +84,16 @@ class UnitProperties(Struct.Struct):
 		self.hanger_count = 0
 		self.state_flags = 0
 
-	def decompile(self, id: int, output: IO.AnyOutputText) -> None:
+	def decompile(self, unit_props_id: int, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
-			f.write(f'UnitProperties({id}):')
+			f.write(f'UnitProperties({unit_props_id}):')
 			for definition in properties_definitions:
 				if isinstance(definition, PropertyFieldDefinition) and self.fields_available_flags & definition.flag:
 					f.write(f'\n  {definition.name}({getattr(self, definition.attr)})')
 				elif isinstance(definition, PropertyStateDefinition) and self.state_flags & definition.flag:
 					f.write(f'\n  {definition.name}()')
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, UnitProperties):
 			return False
 		if other.fields_available_flags != self.fields_available_flags:

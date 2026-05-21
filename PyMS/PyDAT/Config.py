@@ -1,5 +1,5 @@
 
-from .NameDisplaySetting import NamesDisplaySetting
+from .NamesDisplay import NamesDisplaySetting
 
 from ..Utilities import Config
 from ..Utilities.UIKit import Size, FileType
@@ -117,7 +117,7 @@ class PyDATConfig(Config.Config):
 			def __init__(self) -> None:
 				self.display = Config.Enum(enum_type=NamesDisplaySetting, default=NamesDisplaySetting.basic)
 				super().__init__()
-		
+
 		class SimpleOptions(Options):
 			def __init__(self) -> None:
 				self.simple = Config.Boolean(default=False)
@@ -139,7 +139,7 @@ class PyDATConfig(Config.Config):
 
 	class DontWarn(Config.Group):
 		def __init__(self) -> None:
-			self.expanded_dat = Config.Warning(message="This DAT file is expanded and will require a plugin like 'DatExtend'.")
+			self.expanded_dat = Config.Warn(message="This DAT file is expanded and will require a plugin like 'DatExtend'.")
 			super().__init__()
 
 	class Preview(Config.Group):
@@ -172,7 +172,7 @@ class PyDATConfig(Config.Config):
 		self.names = PyDATConfig.Names()
 		self.mpq_export = Config.List(value_type=str)
 		self.show_listbox_options = Config.Boolean(default=True)
-		self.list_size = Config.PaneSizes(defaults=[300])
+		self.list_size = Config.PaneSizes(defaults=(300,))
 		self.dont_warn = PyDATConfig.DontWarn()
 		self.show_used_by = Config.Boolean(default=True)
 		self.preview = PyDATConfig.Preview()

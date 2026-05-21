@@ -10,6 +10,8 @@ from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
+from typing import Any
+
 class PaletteTab(NotebookTab):
 	MAX_SIZE = 150
 	PAD = 10
@@ -21,8 +23,8 @@ class PaletteTab(NotebookTab):
 
 		scrollframe = Frame(self, bd=2, relief=SUNKEN)
 		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
-		def scroll_palette(event):
-			if self.toplevel.spk:
+		def scroll_palette(event: Event) -> None:
+			if self.delegate.spk:
 				if event.delta > 0:
 					self.starsCanvas.yview('scroll', -1, 'units')
 				else:
@@ -91,7 +93,7 @@ class PaletteTab(NotebookTab):
 			self.item_palette_box = None
 
 	def palette_select(self, event: Event) -> None:
-		if not self.delegate.spk or not len(self.delegate.spk.images):
+		if not self.delegate.spk or not self.delegate.spk.images:
 			return
 		_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
 		y = event.y + self.starsCanvas.yview()[0] * height
@@ -108,7 +110,7 @@ class PaletteTab(NotebookTab):
 		self.starsCanvas.delete(ALL)
 		self.item_palette_box = None
 
-	def export_image(self, *args) -> None:
+	def export_image(self, *_args: Any) -> None:
 		if not self.delegate.selected_image:
 			return
 		filepath = self.delegate.config_.last_path.bmp.select_save(self, title='Export Star')
@@ -117,7 +119,7 @@ class PaletteTab(NotebookTab):
 			bmp.set_pixels(self.delegate.selected_image.pixels, self.delegate.platform_wpe.palette)
 			bmp.save_file(filepath)
 
-	def import_image(self, *args) -> None:
+	def import_image(self, *_args: Any) -> None:
 		if not self.delegate.spk:
 			return
 		filepath = self.delegate.config_.last_path.bmp.select_open(self, title='Import Star')

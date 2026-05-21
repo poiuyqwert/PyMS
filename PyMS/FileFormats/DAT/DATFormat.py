@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any, Type
 
-class DATFormat(object):
-	def __init__(self, format: dict) -> None:
-		self.entries: int = format["entries"]
-		self.expanded_min_entries: int | None = format.get("expanded_min_entries")
-		self.expanded_max_entries: int | None = format.get("expanded_max_entries")
-		self.expanded_entries_multiple: int | None = format.get("expanded_entries_multiple")
-		self.expanded_entries_reserved: list[int] | None = format.get("expanded_entries_reserved")
-		self.properties = list(DATProperty(prop) for prop in format["properties"])
+class DATFormat:
+	def __init__(self, dat_format: dict) -> None:
+		self.entries: int = dat_format["entries"]
+		self.expanded_min_entries: int | None = dat_format.get("expanded_min_entries")
+		self.expanded_max_entries: int | None = dat_format.get("expanded_max_entries")
+		self.expanded_entries_multiple: int | None = dat_format.get("expanded_entries_multiple")
+		self.expanded_entries_reserved: list[int] | None = dat_format.get("expanded_entries_reserved")
+		self.properties = list(DATProperty(prop) for prop in dat_format["properties"])
 
 	# Return a tuple `(<entry_count>, <is_expanded>)` if valid size, otherwise None
 	def check_file_size(self, size: int) -> tuple[int, bool] | None:
@@ -43,12 +43,12 @@ class DATFormat(object):
 				return prop
 		return None
 
-class DATType(object):
+class DATType:
 	STRUCT: struct.Struct
 
 	@classmethod
-	def size(self) -> int:
-		return self.STRUCT.size
+	def size(cls) -> int:
+		return cls.STRUCT.size
 
 	def unpack_data(self, data: bytes, offset: int) -> Any:
 		return self.STRUCT.unpack(data[offset:offset+self.size()])
@@ -90,7 +90,7 @@ class DATTypeLong(DATTypeScalar):
 class DATTypeSize(DATType):
 	STRUCT = struct.Struct('<2H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.width = 0
 		self.height = 0
 
@@ -103,7 +103,7 @@ class DATTypeSize(DATType):
 class DATTypePosition(DATType):
 	STRUCT = struct.Struct('<2H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.x = 0
 		self.y = 0
 
@@ -116,7 +116,7 @@ class DATTypePosition(DATType):
 class DATTypeExtents(DATType):
 	STRUCT = struct.Struct('<4H')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.left = 0
 		self.up = 0
 		self.right = 0
@@ -131,7 +131,7 @@ class DATTypeExtents(DATType):
 class DATTypeHitPoints(DATType):
 	STRUCT = struct.Struct('<L')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.whole = 0
 		self.fraction = 0
 
@@ -147,7 +147,7 @@ class DATTypeHitPoints(DATType):
 class DATTypeSupply(DATType):
 	STRUCT = struct.Struct('<B')
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.whole = 0
 		self.half = False
 
@@ -160,7 +160,7 @@ class DATTypeSupply(DATType):
 		value = (self.whole << 1) | (1 if self.half else 0)
 		return self.pack_data((value,))
 
-class DATProperty(object):
+class DATProperty:
 	DAT_TYPES = {
 		'byte': DATTypeByte,
 		'short': DATTypeShort,
@@ -172,15 +172,15 @@ class DATProperty(object):
 		'hit_points': DATTypeHitPoints,
 		'supply': DATTypeSupply,
 	}
-	def __init__(self, format: dict) -> None:
-		self.name: str = format["name"]
-		self._dat_type: Type[DATType] = self.DAT_TYPES[format["type"]]
-		if "expanded_type" in format:
-			self._expanded_type: Type[DATType] = self.DAT_TYPES[format["expanded_type"]]
+	def __init__(self, prop_format: dict) -> None:
+		self.name: str = prop_format["name"]
+		self._dat_type: Type[DATType] = self.DAT_TYPES[prop_format["type"]]
+		if "expanded_type" in prop_format:
+			self._expanded_type: Type[DATType] = self.DAT_TYPES[prop_format["expanded_type"]]
 		else:
 			self._expanded_type = self._dat_type
-		self.entry_offset: int | None = format.get("entry_offset")
-		self._entry_count: int | None = format.get("entry_count")
+		self.entry_offset: int | None = prop_format.get("entry_offset")
+		self._entry_count: int | None = prop_format.get("entry_count")
 
 	def dat_type(self, is_expanded: bool) -> Type[DATType]:
 		if is_expanded:
@@ -216,7 +216,7 @@ class DATProperty(object):
 				prop_data = [None] * self.entry_offset + prop_data
 			if self._entry_count:
 				prop_data += [None] * (total_entry_count - (self.entry_offset or 0) - self._entry_count)
-		
+
 		return (total_size, tuple(prop_data))
 
 	def save_data(self, values: tuple, is_expanded: bool) -> bytes:
@@ -235,7 +235,7 @@ class DATProperty(object):
 		return b''.join(value.save_data() for value in values)
 
 	# Whether this property is on an entry with `id` (non-expanded, as expanded dats have all entries)
-	def is_on_entry(self, id: int) -> bool:
+	def is_on_entry(self, entry_id: int) -> bool:
 		if not self.entry_offset or not self._entry_count:
 			return True
-		return (id >= self.entry_offset and id < (self.entry_offset + self._entry_count))
+		return (entry_id >= self.entry_offset and entry_id < (self.entry_offset + self._entry_count))

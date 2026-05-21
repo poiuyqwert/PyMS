@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .CHK import CHK
 
-class CHKSection(object):
+class CHKSection:
 	NAME: str
 	REQUIREMENTS: CHKRequirements
 

@@ -1,34 +1,38 @@
 
+from __future__ import annotations
+
 from . import GAField, GATarget
 
-import platform, uuid
+import uuid
+
+from typing import Self, Sequence
 
 class GAData:
-	def __init__(self, data=None):
+	def __init__(self, data: dict[str, str] | None = None) -> None:
 		if data is None:
 			self._data = {}
 		else:
 			self._data = data.copy()
 
-	def __setitem__(self, field, value):
+	def __setitem__(self, field: str, value: str) -> None:
 		self._data[field] = value
-	def set_data(self, data):
+	def set_data(self, data: dict[str, str]) -> None:
 		self._data = data.copy()
-	def update_data(self, data):
+	def update_data(self, data: dict[str, str]) -> None:
 		self._data.update(data)
 
-	def __getitem__(self, field):
+	def __getitem__(self, field: str) -> str | None:
 		if not field in self._data:
 			return None
 		return self._data[field]
-	def get_data(self):
+	def get_data(self) -> dict[str, str]:
 		return self._data.copy()
 
-	def __delitem__(self, field):
+	def __delitem__(self, field: str) -> None:
 		if field in self._data:
 			del self._data[field]
 
-	def set_application(self, name, version=None, appId=None, installerId=None):
+	def set_application(self, name: str, version: str | None = None, appId: str | None = None, installerId: str | None = None) -> Self:
 		self[GAField.App.Name] = name
 		if version is not None:
 			self[GAField.App.Version] = version
@@ -38,20 +42,20 @@ class GAData:
 			self[GAField.App.InstallerID] = installerId
 		return self
 
-	def __copy__(self):
+	def __copy__(self) -> GAData:
 		return self.copy()
-	def __deepcopy__(self, memo):
+	def __deepcopy__(self, memo: dict) -> GAData:
 		return self.copy()
-	def copy(self):
+	def copy(self) -> GAData:
 		return GAData(self._data)
 
 class GAHit(GAData):
 	TYPE: str | None = None
 
-	def _build_data(self, data):
+	def _build_data(self, data: dict[str, str]) -> None:
 		if self.TYPE is not None:
 			data[GAField.HitType] = self.TYPE
-	def tracking_data(self):
+	def tracking_data(self) -> dict[str, str]:
 		data = self._data.copy()
 		self._build_data(data)
 		return data
@@ -59,46 +63,64 @@ class GAHit(GAData):
 class GAScreen(GAHit):
 	TYPE = 'screenview'
 
-	def __init__(self, name, data=None):
+	def __init__(self, name: str, data: dict[str, str] | None = None):
 		GAHit.__init__(self, data)
-		self[GAField.Screen.Name] = name
+		self.name = name
 
-	def copy(self):
-		return GAScreen(self[GAField.Screen.Name], self._data)
+	def _build_data(self, data: dict[str, str]) -> None:
+		super()._build_data(data)
+		data[GAField.Screen.Name] = self.name
+
+	def copy(self) -> GAScreen:
+		return GAScreen(self.name, self._data)
 
 class GAEvent(GAHit):
 	TYPE = 'event'
 
-	def __init__(self, category, action, data=None):
+	def __init__(self, category: str, action: str, data: dict[str, str] | None = None):
 		GAHit.__init__(self, data)
-		self[GAField.Event.Category] = category
-		self[GAField.Event.Action] = action
+		self.category = category
+		self.action = action
 
-	def copy(self):
-		return GAEvent(self[GAField.Event.Category], self[GAField.Event.Action], self._data)
+	def _build_data(self, data: dict[str, str]) -> None:
+		super()._build_data(data)
+		data[GAField.Event.Category] = self.category
+		data[GAField.Event.Action] = self.action
+
+	def copy(self) -> GAEvent:
+		return GAEvent(self.category, self.action, self._data)
 
 class GoogleAnalytics(GAData):
-	def __init__(self, data=None):
+	def __init__(self, data: dict[str, str] | None = None) -> None:
 		GAData.__init__(self, data)
 		self.enabled = True
-		self._registered = {}
+		self._registered: dict[str, GAHit] = {}
 		self.Custom = GAField.Custom()
 		self.set_target(GATarget.GAAPITarget())
+		self.tracking_id: str | None = None
+		self.client_id: str = str(uuid.uuid4())
 
-	def set_target(self, target):
+	def set_target(self, target: GATarget.GATarget) -> None:
 		self._target = target
-	def set_tracking_id(self, tracking_id):
-		self[GAField.TrackingID] = tracking_id
-	def set_client_id(self, client_id=None):
-		if client_id is None:
-			client_id = str(uuid.uuid4())
-		self[GAField.ClientID] = client_id
-		return client_id
 
-	def _build_data(self, data):
+	def set_tracking_id(self, tracking_id: str) -> None:
+		self.tracking_id = tracking_id
+		# self[GAField.TrackingID] = tracking_id
+
+	def set_client_id(self, client_id: str | None = None) -> str:
+		if client_id is not None:
+			self.client_id = client_id
+		return self.client_id
+
+	def _build_data(self, data: dict[str, str]) -> None:
 		if not GAField.Version in data:
 			data[GAField.Version] = '1'
-	def _hit_data(self, hit):
+		if not GAField.TrackingID in data and self.tracking_id is not None:
+			data[GAField.TrackingID] = self.tracking_id
+		if not GAField.ClientID in data:
+			data[GAField.ClientID] = self.client_id
+
+	def _hit_data(self, hit: GAHit | dict[str, str]):
 		data = self._data.copy()
 		self._build_data(data)
 		if isinstance(hit, GAHit):
@@ -106,7 +128,8 @@ class GoogleAnalytics(GAData):
 		else:
 			data.update(hit)
 		return data
-	def track(self, hit):
+
+	def track(self, hit: GAHit | Sequence[GAHit]):
 		if not self.enabled:
 			return
 		data = None
@@ -116,34 +139,15 @@ class GoogleAnalytics(GAData):
 			data = [self._hit_data(h) for h in hit]
 		self._target.track(data)
 
-	def register(self, name, hit):
-		if hasattr(self, name) and not name in self._registered:
-			raise AttributeError("'%s' is already an attribute so can\'t be registered" % name)
-		self._registered[name] = hit
-		def _execute_registered(args, kwargs, self=self, hit=hit):
-			if kwargs is not None:
-				hit = hit.copy()
-				hit.update_data(kwargs)
-			self.track(hit)
-		setattr(self, name, lambda *args, **kwargs: _execute_registered(args, kwargs))
+	# def register(self, name: str, hit: GAHit):
+	# 	if hasattr(self, name) and not name in self._registered:
+	# 		raise AttributeError(f"'{name}' is already an attribute so can\'t be registered")
+	# 	self._registered[name] = hit
+	# 	def _execute_registered(args, kwargs, self=self, hit=hit):
+	# 		if kwargs is not None:
+	# 			hit = hit.copy()
+	# 			hit.update_data(kwargs)
+	# 		self.track(hit)
+	# 	setattr(self, name, lambda *args, **kwargs: _execute_registered(args, kwargs))
 
 ga = GoogleAnalytics()
-
-if __name__ == '__main__':
-	# ga.set_target(GATarget.GAAPITarget(debug=True))
-	ga.set_tracking_id('UA-42320973-3')
-	print((ga.set_client_id())) #'80d7d928-8946-443c-845c-49039ef671f8')
-	ga.set_application('PyGRP', '4.0.0')
-	ga.Custom.register(1, 'PYMS_VERSION')
-	ga.Custom.register(2, 'PYTHON_VERSION')
-	ga.Custom.register(3, 'OS_NAME')
-	ga.Custom.register(4, 'OS_VERSION')
-	ga.Custom.register(5, 'OS_BITS')
-	ga[ga.Custom.PYMS_VERSION] = '1.2.3'
-	ga[ga.Custom.PYTHON_VERSION] = platform.python_version()
-	ga[ga.Custom.OS_NAME] = GATarget.os_name()
-	ga[ga.Custom.OS_VERSION] = GATarget.os_version()
-	ga[ga.Custom.OS_BITS] = GATarget.os_bits()
-	ga.track(GAScreen('main'))
-	import time
-	time.sleep(5)

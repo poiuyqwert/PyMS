@@ -55,11 +55,11 @@ class UnitsTab(DATTab):
 			tab = cast(DATUnitsTab, frame)
 			tab.updated_pointer_entries(ids)
 
-	def load_data(self, id: int | None = None) -> None:
+	def load_data(self, entry_id: int | None = None) -> None:
 		if not self.delegate.data_context.units.dat:
 			return
-		if id is not None:
-			self.id = id
+		if entry_id is not None:
+			self.id = entry_id
 		entry = self.delegate.data_context.units.dat.get_entry(self.id)
 		self.active_tab().load_data(entry)
 		self.check_used_by_references()
@@ -73,7 +73,7 @@ class UnitsTab(DATTab):
 			self.delegate.update_status_bar()
 			self.check_used_by_references()
 
-	def save(self, key: Event | None = None) -> None:
+	def save(self, _event: Event | None = None) -> None:
 		DATTab.save(self)
 		if not self.edited:
 			for frame,_ in list(self.dattabs.pages.values()):

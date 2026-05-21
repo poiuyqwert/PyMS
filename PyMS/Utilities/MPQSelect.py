@@ -10,6 +10,8 @@ from . import Config
 import os, re
 from enum import Enum
 
+from typing import Any
+
 class MPQSelect(PyMSDialog):
 	class Action(Enum):
 		open = 0
@@ -34,7 +36,7 @@ class MPQSelect(PyMSDialog):
 		self.search = StringVar()
 		search = default_search or filetype.extensions_tuple[0]
 		self.search.set(search)
-		self.search.trace('w', self.updatesearch)
+		self.search.trace_add('write', self.updatesearch)
 		self.history_config = history_config
 		self.window_geometry_config = window_geometry_config
 		self.regex = IntVar()
@@ -113,7 +115,7 @@ class MPQSelect(PyMSDialog):
 			self.resettimer = None
 		self.textdrop.entry['bg'] = self.textdrop_entry_c
 
-	def updatesearch(self, event: Event | None = None) -> None:
+	def updatesearch(self, *_: Any) -> None:
 		if self.searchtimer:
 			self.after_cancel(self.searchtimer)
 		self.searchtimer = self.after(200, self.updatelist)

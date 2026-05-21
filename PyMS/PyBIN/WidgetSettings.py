@@ -10,10 +10,9 @@ from ..FileFormats import DialogBIN, TBL
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
-from ..Utilities import Config
 from ..Utilities.MPQHandler import MPQHandler
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Any
 if TYPE_CHECKING:
 	from .WidgetNode import WidgetNode
 
@@ -31,13 +30,15 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.left = IntegerVar(range=[0,65535])
 		self.right = IntegerVar(range=[0,65535])
 		self.width = IntegerVar(range=[0,65535])
-		calc_right = lambda n: self.calculate(self.right,self.left,self.width,1,-1,False)
+		def calc_right(_: Any) -> None:
+			self.calculate(self.right,self.left,self.width,1,-1,False)
 		self.left.callback = calc_right
 		self.width.callback = calc_right
 		self.top = IntegerVar(range=[0,65535])
 		self.bottom = IntegerVar(range=[0,65535])
 		self.height = IntegerVar(range=[0,65535])
-		calc_bottom = lambda n: self.calculate(self.left,self.right,self.width,-1,1,False)
+		def calc_bottom(_: Any) -> None:
+			self.calculate(self.left,self.right,self.width,-1,1,False)
 		self.top.callback = calc_bottom
 		self.height.callback = calc_bottom
 		self.string = StringVar()
@@ -48,15 +49,17 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.responsive_left = IntegerVar(range=[0,65535])
 		self.responsive_right = IntegerVar(range=[0,65535])
 		self.responsive_width = IntegerVar(range=[0,65535])
-		calc_right = lambda n: self.calculate(self.responsive_right,self.responsive_left,self.responsive_width,1,-1,False)
-		self.responsive_left.callback = calc_right
-		self.responsive_width.callback = calc_right
+		def calc_responsive_right(_: Any) -> None:
+			self.calculate(self.responsive_right,self.responsive_left,self.responsive_width,1,-1,False)
+		self.responsive_left.callback = calc_responsive_right
+		self.responsive_width.callback = calc_responsive_right
 		self.responsive_top = IntegerVar(range=[0,65535])
 		self.responsive_bottom = IntegerVar(range=[0,65535])
 		self.responsive_height = IntegerVar(range=[0,65535])
-		calc_bottom = lambda n: self.calculate(self.responsive_left,self.responsive_right,self.responsive_width,-1,1,False)
-		self.responsive_top.callback = calc_bottom
-		self.responsive_height.callback = calc_bottom
+		def calc_responsive_bottom(_: Any) -> None:
+			self.calculate(self.responsive_left,self.responsive_right,self.responsive_width,-1,1,False)
+		self.responsive_top.callback = calc_responsive_bottom
+		self.responsive_height.callback = calc_responsive_bottom
 
 		self.flag_unk1 = BooleanVar()
 		self.flag_disabled = BooleanVar()
@@ -97,7 +100,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))
 
 	def widgetize(self) -> (Misc | None):
-		def calc_button(f: Misc, calc, orig, offset, direction, fix) -> Button:
+		def calc_button(f: Misc, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Button:
 			def calc_callback(calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Callable[[], None]:
 				def calculate() -> None:
 					self.calculate(calc, orig, offset, direction, fix)
@@ -352,13 +355,13 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 	def load_property_smk(self) -> None:
 		smks = ['None']
 		smk_id = 0
-		if bin := self.delegate.get_bin():
+		if dialog_bin := self.delegate.get_bin():
 			if self.widget.smk:
-				smk_id = bin.smks.index(self.widget.smk)+1
-			for smk in bin.smks:
+				smk_id = dialog_bin.smks.index(self.widget.smk)+1
+			for smk in dialog_bin.smks:
 				name = smk.filename
 				if smk.overlay_smk:
-					name += " (Overlay: %s)" % smk.overlay_smk.filename
+					name += f" (Overlay: {smk.overlay_smk.filename})"
 				smks.append(name)
 		self.smks_dropdown.setentries(smks)
 		self.smk.set(0 if not self.widget.smk else smk_id)
@@ -417,10 +420,10 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.flag_unk10.set((self.widget.flags & DialogBIN.BINWidget.FLAG_UNK10 == DialogBIN.BINWidget.FLAG_UNK10))
 
 	def save_property_smk(self) -> bool:
-		assert (bin := self.delegate.get_bin())
+		assert (dialog_bin := self.delegate.get_bin())
 		edited = False
 		index = self.smk.get()-1
-		smk = (None if index == -1 else bin.smks[index])
+		smk = (None if index == -1 else dialog_bin.smks[index])
 		if smk != self.widget.smk:
 			self.widget.smk = smk
 			edited = True
@@ -536,19 +539,19 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		SMKSettings(self, self.widget.smk, self.node, self)
 
 	def add_smk(self) -> None:
-		if not (bin := self.delegate.get_bin()):
+		if not (dialog_bin := self.delegate.get_bin()):
 			return
 		smk = DialogBIN.BINSMK()
-		bin.smks.append(smk)
+		dialog_bin.smks.append(smk)
 		self.widget.smk = smk
 		self.delegate.mark_edited()
 		SMKSettings(self, smk, self.node, self)
 
-	def ok(self, e: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.update_preview()
 		PyMSDialog.ok(self)
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.ok()
 
 	def dismiss(self) -> None:

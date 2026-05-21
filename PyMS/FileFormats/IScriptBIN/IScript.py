@@ -6,6 +6,7 @@ from .CodeHandlers.ICESerializeContext import ICESerializeContext
 from ...Utilities.CodeHandlers.CodeCommand import CodeCommand
 from ...Utilities.CodeHandlers.CodeHeader import CodeHeader
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
+from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities import Assets
 
 from dataclasses import dataclass
@@ -118,7 +119,7 @@ class IScript(CodeHeader):
 # ----------------------------------------------------------------------------- #
 # This header is used by images.dat entries:
 # 115 Carrier Warp Flash (protoss\carrier.grp)
-	def serialize(self, serialize_context: CodeCommands.SerializeContext) -> None:
+	def serialize(self, serialize_context: SerializeContext) -> None:
 		if serialize_context.formatters.indent_bodies:
 			serialize_context.dedent()
 		serialize_context.write('# ----------------------------------------------------------------------------- #\n')

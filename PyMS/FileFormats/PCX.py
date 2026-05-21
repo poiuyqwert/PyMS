@@ -12,10 +12,10 @@ from typing import BinaryIO
 
 # This class is designed for StarCraft PCX's, there is no guarantee it works with other PCX files
 class PCX:
-	def __init__(self, palette: RawPalette = []) -> None:
+	def __init__(self, palette: RawPalette | None = None) -> None:
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette = palette or [(0,0,0)]*256
 		self.image: Pixels = []
 
 	def load_file(self, file: str | BinaryIO, pal: bool = False) -> None:
@@ -75,8 +75,8 @@ class PCX:
 			self.image = image
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt") from exc
 
 	def load_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)
@@ -88,8 +88,8 @@ class PCX:
 	def save_file(self, file: str) -> None:
 		try:
 			f = AtomicWriter(file,'wb')
-		except:
-			raise PyMSError('Save',"Could not save PCX to file '%s'" % file)
+		except Exception as exc:
+			raise PyMSError('Save', f"Could not save PCX to file '{file}'") from exc
 		f.write(b'\x0A\x05\x01\x08' + struct.pack('<6H49xB4H54x', 0, 0, self.width-1, self.height-1, 72, 72, 1, nearest_multiple(self.width,2,math.ceil), 0, 0, 0))
 		for y in self.image:
 			last = y[0]

@@ -8,7 +8,7 @@ import traceback as _traceback
 
 from typing import Any, Callable, Type
 
-class Theme(object):
+class Theme:
 	def __init__(self, name: str) -> None:
 		self.name = name
 
@@ -16,11 +16,11 @@ class Theme(object):
 		import json
 
 		try:
-			with open(Assets.theme_file_path(name), 'r') as f:
+			with open(Assets.theme_file_path(name), 'r', encoding='utf-8') as f:
 				theme: dict[str, str | dict[str, dict[str, str | int]]] = json.load(f)
 		except:
-			print(("Theme '%s' does not exist or has an invalid format" % name))
-			print((_traceback.format_exc()))
+			print(f"Theme '{name}' does not exist or has an invalid format")
+			print(_traceback.format_exc())
 			raise
 
 		self.author = str(theme.get('author', 'None'))
@@ -30,14 +30,14 @@ class Theme(object):
 		try:
 			widgets = theme['widgets']
 			if not isinstance(widgets, dict):
-				raise Exception()
+				raise TypeError('`widgets` is not a dictionary')
 			widget_styles = list(widgets.items())
 		except:
-			print(("Theme '%s' missing 'widgets' or it is invalid" % name))
-			print((_traceback.format_exc()))
+			print(f"Theme '{name}' missing 'widgets' or it is invalid")
+			print(_traceback.format_exc())
 			raise
 		if not widget_styles:
-			print(("Theme '%s' has an empty set of 'widgets'" % name))
+			print(f"Theme '{name}' has an empty set of 'widgets'")
 		for selector_def,styles in widget_styles:
 			try:
 				selector = _Selector(selector_def)
@@ -45,40 +45,40 @@ class Theme(object):
 			except:
 				continue
 		self.widget_styles.sort(key=lambda item: item[0].priority())
-		
+
 		colors = theme.get('colors')
 		self.colors = None
 		if isinstance(colors, dict):
 			self.colors = colors
 		elif colors:
-			print(("Theme '%s' has invalid 'colors'" % name))
+			print(f"Theme '{name}' has invalid 'colors'")
 
 _THEME: Theme | None = None
 _WIDGET_TYPES: dict[str, Type[_Tk.Misc]] | None = None
 
-class _SettingType(object):
+class _SettingType:
 	@staticmethod
 	def integer(value: Any) -> bool:
 		return isinstance(value, int)
 
 	RE_COLOR = _re.compile(r'#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})')
 	@staticmethod
-	def color(value):
+	def color(value: object) -> bool:
 		# TODO: Support color names?
 		if not isinstance(value, str):
 			return False
 		return not not _SettingType.RE_COLOR.match(value)
 
 	@staticmethod
-	def relief(value):
+	def relief(value: object) -> bool:
 		return value in ('raised', 'sunken', 'flat', 'ridge', 'solid', 'groove')
 
 	@staticmethod
-	def anchor(value):
+	def anchor(value: object) -> bool:
 		return value in ('n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw', 'center')
 
 	@staticmethod
-	def active_style(value):
+	def active_style(value: object) -> bool:
 		return value in ('dotbox', 'none', 'underline')
 
 _ALLOWED_SETTINGS: dict[str, Callable[[Any], bool]] = {
@@ -113,7 +113,7 @@ _ALLOWED_SETTINGS: dict[str, Callable[[Any], bool]] = {
 }
 
 def _resolve_widget_types() -> None:
-	global _WIDGET_TYPES
+	global _WIDGET_TYPES # pylint: disable=global-statement
 	from . import Widgets
 	_WIDGET_TYPES = {
 		'Tk': Widgets.Tk,
@@ -165,8 +165,8 @@ class _Priority:
 	tag_specific = 10
 	depth_specific = 100
 
-class _Matcher(object):
-	class Result(object):
+class _Matcher:
+	class Result:
 		def __init__(self, success: bool, consume_widget: bool) -> None:
 			self.success = success
 			self.consume_widget = consume_widget
@@ -208,7 +208,7 @@ class _ProgramMatcher(_Matcher):
 		return _Matcher.Result(True, False)
 
 	def __repr__(self) -> str:
-		return '[%s]' % self.program_name
+		return f'[{self.program_name}]'
 
 class _WidgetMatcher(_Matcher):
 	PARSE_RE = _re.compile(r'(\w+)(?:\.(\w+))?')
@@ -242,7 +242,7 @@ class _WidgetMatcher(_Matcher):
 		return _Matcher.Result(matches, True)
 
 	def __repr__(self) -> str:
-		return self.widget_type.__name__ + ('.%s' % self.tag_name if self.tag_name else '')
+		return self.widget_type.__name__ + (f'.{self.tag_name}' if self.tag_name else '')
 
 class _WildcardMatcher(_Matcher):
 	@classmethod
@@ -260,10 +260,10 @@ class _WildcardMatcher(_Matcher):
 	def matches(self, widget: _Tk.Misc) -> _Matcher.Result:
 		return _Matcher.Result(True, True)
 
-	def __repr__(self):
+	def __repr__(self) -> str:
 		return '*' + ('*' if self.many else '')
 
-class _Selector(object):
+class _Selector:
 	def __init__(self, definition: str) -> None:
 		if _WIDGET_TYPES is None:
 			_resolve_widget_types()
@@ -271,8 +271,8 @@ class _Selector(object):
 		for component in definition.split(' '):
 			matcher = _Matcher.parse(component)
 			if not matcher:
-				print(("Theme selecter '%s' doesn't correspond to any matcher" % definition))
-				raise Exception() # TODO: Error handling
+				print(f"Theme selecter '{definition}' doesn't correspond to any matcher")
+				raise NameError(name=definition) # TODO: Error handling
 			self.matchers.append(matcher)
 
 	def is_default(self) -> bool:
@@ -318,7 +318,7 @@ class _Selector(object):
 		return ' '.join(repr(matcher) for matcher in self.matchers)
 
 	def __repr__(self) -> str:
-		return "<Theme.Selector '%s'>" % self.describe()
+		return f"<Theme.Selector '{self.describe()}'>"
 
 def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 	if not name:
@@ -326,7 +326,7 @@ def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 		name = PYMS_CONFIG.theme.value
 	if not name:
 		return
-	global _THEME
+	global _THEME # pylint: disable=global-statement
 
 	try:
 		_THEME = Theme(name)
@@ -346,21 +346,21 @@ def apply_theme(widget: _Tk.Misc) -> None:
 				styles = list(styles_dict.items())
 			except:
 				if not selector.describe() in _INVALID_SETTINGS:
-					print(("Theme '%s' selector '%s' has invalid settings" % (_THEME.name, selector.describe())))
+					print(f"Theme '{_THEME.name}' selector '{selector.describe()}' has invalid settings")
 					_INVALID_SETTINGS.append(selector.describe())
 				continue
 			for key,value in styles:
 				key_type = _ALLOWED_SETTINGS.get(key)
 				if not key_type:
 					if not key in _INVALID_SETTINGS:
-						print(("Theme '%s' setting '%s' is invalid" % (_THEME.name, key)))
+						print(f"Theme '{_THEME.name}' setting '{key}' is invalid")
 						_INVALID_SETTINGS.append(key)
 					continue
 				if not key_type(value):
 					if not key_type in _INVALID_VALUES:
 						_INVALID_VALUES[key_type] = []
 					if not value in _INVALID_VALUES[key_type]:
-						print(("Theme '%s' value '%s' for setting '%s' is invalid" % (_THEME.name, value, key)))
+						print(f"Theme '{_THEME.name}' value '{value}' for setting '{key}' is invalid")
 						_INVALID_VALUES[key_type].append(value)
 					continue
 				if not key in list(widget.keys()):
@@ -395,7 +395,7 @@ def get_color(*keys: str, default: str = '#000000') -> str:
 	if not _SettingType.color(color):
 		name = '.'.join(keys)
 		if not name in _INVALID_COLORS:
-			print(("Theme '%s' has invalid/missing color '%s'" % (_THEME.name, name)))
+			print(f"Theme '{_THEME.name}' has invalid/missing color '{name}'")
 			_INVALID_COLORS.append(name)
 		return default
 	return color

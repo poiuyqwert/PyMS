@@ -49,7 +49,7 @@ class HelpDialog(PyMSDialog):
 		if not help_file:
 			return
 		if help_file_path := Assets.help_file_path(help_file.path):
-			with open(help_file_path, 'r') as f:
+			with open(help_file_path, 'r', encoding='utf-8') as f:
 				self.markdownview.load_markdown(f.read())
 
 	def destroy(self) -> None:

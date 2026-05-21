@@ -469,4 +469,3 @@ class WeaponsTab(DATTab):
 		if self.iconentry.get() != entry.icon:
 			entry.icon = self.iconentry.get()
 			self.edited = True
-

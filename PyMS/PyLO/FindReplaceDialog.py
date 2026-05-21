@@ -7,7 +7,7 @@ from ..Utilities import Config
 
 import re
 
-from typing import Callable, cast
+from typing import Callable
 
 class FindReplaceDialog(PyMSDialog):
 	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, delegate: FindDelegate) -> None:
@@ -76,7 +76,7 @@ class FindReplaceDialog(PyMSDialog):
 		l.pack(side=LEFT, fill=Y, padx=2)
 
 		def check_callback2(i: int) -> Callable[[Event], None]:
-			def check(event: Event) -> None:
+			def check(_event: Event) -> None:
 				self.check(i)
 			return check
 		self.bind(Focus.In(), check_callback2(3))
@@ -136,7 +136,8 @@ class FindReplaceDialog(PyMSDialog):
 				m = r.search(text.get(INSERT, END))
 				if m:
 					text.tag_remove('sel', '1.0', END)
-					s,e = '%s +%sc' % (INSERT, m.start(0)),'%s +%sc' % (INSERT,m.end(0))
+					s = f'{INSERT} +{m.start(0)}c'
+					e = f'{INSERT} +{m.end(0)}c'
 					text.tag_add('sel', s, e)
 					text.mark_set(INSERT, e)
 					text.see(s)
@@ -149,37 +150,39 @@ class FindReplaceDialog(PyMSDialog):
 				i = text.index(INSERT)
 				if i == e:
 					return
-				if i == text.index('%s %s' % (INSERT, rlse)):
-					i = text.index('%s %s1lines %s' % (INSERT, s, lse))
+				if i == text.index(f'{INSERT} {rlse}'):
+					i = text.index(f'{INSERT} {s}1lines {lse}')
 				n = -1
 				while not u or i != e:
 					if u:
-						m = r.search(text.get(i, '%s %s' % (i, rlse)))
+						m = r.search(text.get(i, f'{i} {rlse}'))
 					else:
 						m = None
-						a = r.finditer(text.get('%s %s' % (i, rlse), i))
+						a = r.finditer(text.get(f'{i} {rlse}', i))
 						c = 0
 						for xb,fb in enumerate(a):
-							if xb == n or n == -1:
+							if n in (xb, -1):
 								m = fb
 								c = xb
 						n = c - 1
 					if m:
 						text.tag_remove('sel', '1.0', END)
 						if u:
-							s,e = '%s +%sc' % (i,m.start(0)),'%s +%sc' % (i,m.end(0))
+							s = f'{i} +{m.start(0)}c'
+							e = f'{i} +{m.end(0)}c'
 							text.mark_set(INSERT, e)
 						else:
-							s,e = '%s linestart +%sc' % (i,m.start(0)),'%s linestart +%sc' % (i,m.end(0))
+							s = f'{i} linestart +{m.start(0)}c'
+							e = f'{i} linestart +{m.end(0)}c'
 							text.mark_set(INSERT, s)
 						text.tag_add('sel', s, e)
 						text.see(s)
 						self.check(3)
 						break
-					if (not u and n == -1 and text.index('%s lineend' % i) == e) or i == e:
+					if (not u and n == -1 and text.index(f'{i} lineend') == e) or i == e:
 						MessageBox.askquestion(parent=self.parent if event else self, title='Find', message="Can't find text.", type=MessageBox.OK)
 						break
-					i = text.index('%s %s1lines %s' % (i, s, lse))
+					i = text.index(f'{i} {s}1lines {lse}')
 				else:
 					MessageBox.askquestion(parent=self.parent if event else self, title='Find', message="Can't find text.", type=MessageBox.OK)
 
@@ -196,7 +199,7 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = self.after(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
-		MessageBox.askquestion(parent=self, title='Count', message='%s matches found.' % len(r.findall(self.delegate.get_text().get('1.0', END))), type=MessageBox.OK)
+		MessageBox.askquestion(parent=self, title='Count', message=f'{len(r.findall(self.delegate.get_text().get("1.0", END)))} matches found.', type=MessageBox.OK)
 
 	def replaceall(self) -> None:
 		f = self.find.get()
@@ -218,7 +221,7 @@ class FindReplaceDialog(PyMSDialog):
 				text_widget.delete('1.0', END)
 				text_widget.insert('1.0', text[0].rstrip('\n'))
 			text_widget.mark_recolor_range('1.0', END)
-		MessageBox.askquestion(parent=self, title='Replace Complete', message='%s matches replaced.' % text[1], type=MessageBox.OK)
+		MessageBox.askquestion(parent=self, title='Replace Complete', message=f'{text[1]} matches replaced.', type=MessageBox.OK)
 
 	def updatecolor(self) -> None:
 		if self.resettimer:

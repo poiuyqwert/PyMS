@@ -9,6 +9,12 @@ import re, dataclasses
 from typing import Type, TypeVar, Callable
 from enum import Enum
 
+__all__ = [
+	'Stop',
+	'State',
+	'Lexer',
+]
+
 class Stop(Enum):
 	proceed = 0
 	exclude = 1
@@ -20,7 +26,7 @@ class State:
 	line: int = 0
 
 T = TypeVar('T', bound=Token)
-class Lexer(object):
+class Lexer:
 	def __init__(self, code: str) -> None:
 		self.code = code
 		self._lines_of_code_cache: list[str] | None = None
@@ -142,3 +148,8 @@ class Lexer(object):
 
 	def rollback(self, state: State) -> None:
 		self.state = dataclasses.replace(state)
+
+	def get_raw(self, from_state: State, to_state: State | None = None) -> str:
+		if to_state is None:
+			to_state = self.state
+		return self.code[from_state.offset:to_state.offset]

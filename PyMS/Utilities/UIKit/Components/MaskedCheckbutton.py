@@ -1,19 +1,21 @@
 
 from ..Widgets import *
 
+from typing import Any
+
 class MaskedCheckbutton(Checkbutton):
-	def __init__(self, parent: Misc, **options) -> None:
+	def __init__(self, parent: Misc, **options: Any) -> None:
 		self._value = options['value']
 		del options['value']
 		self._real_variable: IntVar = options['variable']
-		self._real_variable.trace('w', self._update_state)
+		self._real_variable.trace_add('write', self._update_state)
 		self._variable = IntVar()
-		self._variable.trace('w', self._update_value)
+		self._variable.trace_add('write', self._update_value)
 		options['variable'] = self._variable
 		Checkbutton.__init__(self, parent, **options)
 		self._update_state()
 
-	def _update_state(self, *_) -> None:
+	def _update_state(self, *_: Any) -> None:
 		try:
 			raw = self._real_variable.get()
 		except:
@@ -22,7 +24,7 @@ class MaskedCheckbutton(Checkbutton):
 		if on != self._variable.get():
 			self._variable.set(on)
 
-	def _update_value(self, *_) -> None:
+	def _update_value(self, *_: Any) -> None:
 		value = self._real_variable.get()
 		cur_on = ((value & self._value) == self._value)
 		on = self._variable.get()

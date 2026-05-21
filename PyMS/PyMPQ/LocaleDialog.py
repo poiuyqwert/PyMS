@@ -25,6 +25,6 @@ class LocaleDialog(PyMSDialog):
 
 		return entry_dropdown.entry
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.save = False
 		PyMSDialog.cancel(self)

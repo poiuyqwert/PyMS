@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .CHK import CHK
 
-class CHKRequirements(object):
+class CHKRequirements:
 	VER_NONE = 0
 	VER_VANILLA = (1 << 0)
 	VER_HYBRID = (1 << 1)

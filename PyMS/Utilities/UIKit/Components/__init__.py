@@ -1,6 +1,7 @@
 
 from .AutohideScrollbar import AutohideScrollbar
 from .CodeText import CodeText, CodeTextDelegate
+from .CodeTooltip import CodeTooltip
 from .CollapseView import CollapseView
 from .DropDown import DropDown
 from .EntryDropDown import EntryDropDown
@@ -22,3 +23,4 @@ from .Toolbar import Toolbar
 from .Tooltip import Tooltip, TooltipWindow
 from .TreeList import TreeList
 from .ScrolledTreeview import ScrolledTreeview
+from .WrappingLabel import WrappingLabel

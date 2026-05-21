@@ -1,7 +1,7 @@
 
 from typing import Any
 
-class SemVer(object):
+class SemVer:
 	def __init__(self, version: str) -> None:
 		self.meta = None
 		if '-' in version:
@@ -14,15 +14,15 @@ class SemVer(object):
 			return False
 		if self.major < other.major:
 			return True
-		elif self.major > other.major:
+		if self.major > other.major:
 			return False
 		if self.minor < other.minor:
 			return True
-		elif self.minor > other.minor:
+		if self.minor > other.minor:
 			return False
 		if self.patch < other.patch:
 			return True
-		elif self.patch > other.patch:
+		if self.patch > other.patch:
 			return False
 		return False
 
@@ -31,15 +31,15 @@ class SemVer(object):
 			return False
 		if self.major > other.major:
 			return True
-		elif self.major < other.major:
+		if self.major < other.major:
 			return False
 		if self.minor > other.minor:
 			return True
-		elif self.minor < other.minor:
+		if self.minor < other.minor:
 			return False
 		if self.patch > other.patch:
 			return True
-		elif self.patch < other.patch:
+		if self.patch < other.patch:
 			return False
 		return False
 

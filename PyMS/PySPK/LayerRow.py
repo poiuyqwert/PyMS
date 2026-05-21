@@ -2,8 +2,10 @@
 from ..Utilities import Assets
 from ..Utilities.UIKit import *
 
+from typing import Any
+
 class LayerRow(Frame):
-	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs):
+	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs: Any) -> None:
 		Frame.__init__(self, parent, **kwargs)
 		self.selvar = selvar
 		self.visvar = visvar
@@ -18,17 +20,17 @@ class LayerRow(Frame):
 		visbtn.pack(side=LEFT)
 		lockbtn = Checkbutton(self, image=Assets.get_image('lock'), indicatoron=False, width=20, height=20, variable=self.locked, onvalue=True, offvalue=False, command=self.toggle_lock, highlightthickness=0)
 		lockbtn.pack(side=LEFT)
-		self.label = Label(self, text='Layer %d' % (layer+1))
+		self.label = Label(self, text=f'Layer {layer+1}')
 		self.label.pack(side=LEFT)
-		self.selvar.trace('w', self.update_state)
-		self.visvar.trace('w', self.update_state)
-		self.lockvar.trace('w', self.update_state)
+		self.selvar.trace_add('write', self.update_state)
+		self.visvar.trace_add('write', self.update_state)
+		self.lockvar.trace_add('write', self.update_state)
 		self.update_state()
 		self.bind(Mouse.Click_Left(), self.select)
 		self.label.bind(Mouse.Click_Left(), self.select)
 		self.hide_widget: Frame | None = None # Gross :(
 
-	def update_state(self, *args, **kwargs) -> None:
+	def update_state(self, *_args: Any, **_kwargs: Any) -> None:
 		self.visible.set((self.visvar.get() & (1 << self.layer)) != 0)
 		self.locked.set((self.lockvar.get() & (1 << self.layer)) != 0)
 		# TODO: Support theme
@@ -39,7 +41,7 @@ class LayerRow(Frame):
 			self.config(background='#FFFFFF')
 			self.label.config(background='#FFFFFF')
 
-	def select(self, event: Event) -> None:
+	def select(self, _event: Event) -> None:
 		self.selvar.set(self.layer)
 
 	def toggle_vis(self) -> None:

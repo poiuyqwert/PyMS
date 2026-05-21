@@ -5,18 +5,18 @@ from . import Tokens
 from .CodeType import CodeType, IntCodeType
 from .CodeBlock import CodeBlock
 from .ParseContext import ParseContext
+from .DecompileContext import DecompileContext
 
 from .. import Struct
 from ..PyMSError import PyMSError
-from ..PyMSWarning import PyMSWarning
 from ..BytesScanner import BytesScanner
 
-from typing import TYPE_CHECKING, Sequence, Any
+from typing import TYPE_CHECKING, Sequence, Any, Generator
 if TYPE_CHECKING:
 	from .SerializeContext import SerializeContext
-	from .BuilderContext import BuilderContext
+	from .ByteCodeCompiler import ByteCodeBuilderType
 
-class CodeCommandDefinition(object):
+class CodeCommandDefinition:
 	@staticmethod
 	def find_by_name(name: str, cmd_defs: list[CodeCommandDefinition]) -> CodeCommandDefinition | None:
 		for cmd_def in cmd_defs:
@@ -32,12 +32,12 @@ class CodeCommandDefinition(object):
 		self.ends_flow = ends_flow
 		self.separate = separate
 
-	def decompile(self, scanner: BytesScanner) -> CodeCommand:
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> CodeCommand:
 		params = []
 		param_repeat = 1
 		for param_type in self.param_types:
 			for _ in range(param_repeat):
-				value = param_type.decompile(scanner)
+				value = param_type.decompile(scanner, context)
 				params.append(value)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = value
@@ -59,15 +59,11 @@ class CodeCommandDefinition(object):
 					token = parse_context.lexer.next_token()
 					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
 						raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
-				value: Any = parse_context.lookup_param_value(param_type)
-				if value is None:
-					try:
-						value = param_type.lex(parse_context)
-					except PyMSError as e:
-						parse_context.attribute_error(e)
-						raise e
-					except:
-						raise
+				try:
+					value = param_type.parse(parse_context)
+				except PyMSError as e:
+					parse_context.attribute_error(e)
+					raise e
 				params.append(value)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = value
@@ -79,7 +75,7 @@ class CodeCommandDefinition(object):
 				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line or file)")
 		return CodeCommand(self, params, parse_context.active_block)
 
 	def full_help_text(self) -> str:
@@ -108,45 +104,40 @@ class CodeCommandDefinition(object):
 			help_text += params_help
 		return help_text
 
-class CodeCommand(object):
+class CodeCommand:
 	def __init__(self, definition: CodeCommandDefinition, params: list[Any], parent_block: CodeBlock | None = None) -> None:
 		self.definition = definition
 		self.params = params
 		self.parent_block = parent_block
 		self.original_location: int | None = None # Byte address or Source line
 
-	def compile(self, context: BuilderContext) -> None:
-		assert self.definition.byte_code_id is not None
-		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
+	def iter_params(self) -> Generator[tuple[Any, CodeType], None, None]:
 		param_repeat = 1
 		param_index = 0
 		for param_type in self.definition.param_types:
 			for _ in range(param_repeat):
 				param = self.params[param_index]
-				param_type.compile(param, context)
+				yield (param, param_type)
 				param_index += 1
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
 				param_repeat = param
 			else:
 				param_repeat = 1
 
+	def compile(self, context: ByteCodeBuilderType) -> None:
+		assert self.definition.byte_code_id is not None
+		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
+		for param, param_type in self.iter_params():
+			param_type.compile(param, context)
+
 	def serialize(self, context: SerializeContext) -> None:
 		parameters: list[str] = []
 		comments: list[str] = []
-		param_repeat = 1
-		param_index = 0
-		for param_type in self.definition.param_types:
-			for _ in range(param_repeat):
-				param = self.params[param_index]
-				parameters.append(param_type.serialize(param, context))
-				comment = param_type.comment(param, context)
-				if comment is not None:
-					comments.append(comment)
-				param_index += 1
-			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
-				param_repeat = param
-			else:
-				param_repeat = 1
+		for param, param_type in self.iter_params():
+			parameters.append(param_type.serialize(param, context))
+			comment = param_type.comment(param, context)
+			if comment is not None:
+				comments.append(comment)
 		context.write(context.formatters.command.serialize(self.definition.name, parameters))
 		if comments:
 			context.write(context.formatters.comment.serialize(comments))

@@ -7,9 +7,7 @@ from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
+from typing import BinaryIO
 
 class VF4Flag:
 	walkable    = 0x0001
@@ -28,12 +26,12 @@ class VF4Megatile:
 	def save_data(self) -> bytes:
 		return struct.pack('<16H', *self.flags)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, VF4Megatile):
 			return False
 		return other.flags == self.flags
 
-class VF4(object):
+class VF4:
 	MAX_ID = 65535
 
 	def __init__(self) -> None:
@@ -45,18 +43,18 @@ class VF4(object):
 	def megatiles_remaining(self) -> int:
 		return (VF4.MAX_ID+1) - len(self._megatile)
 
-	def get_megatile(self, id: int) -> VF4Megatile:
-		return self._megatile[id]
+	def get_megatile(self, tile_id: int) -> VF4Megatile:
+		return self._megatile[tile_id]
 
 	def add_megatile(self, flags: VF4Megatile) -> int:
-		id = len(self._megatile)
+		tile_id = len(self._megatile)
 		self._megatile.append(flags)
-		return id
+		return tile_id
 
 	def load_file(self, file: str | BinaryIO) -> None:
 		data = load_file(file, 'VF4')
 		if data and len(data) % 32:
-			raise PyMSError('Load',"'%s' is an invalid VF4 file" % file)
+			raise PyMSError('Load', f"'{file}' is an invalid VF4 file")
 		all_megatile: list[VF4Megatile] = []
 		try:
 			o = 0
@@ -65,8 +63,8 @@ class VF4(object):
 				flags.load_data(data[o:o+32])
 				all_megatile.append(flags)
 				o += 32
-		except:
-			raise PyMSError('Load',"Unsupported VF4 file '%s', could possibly be corrupt" % file)
+		except Exception as exc:
+			raise PyMSError('Load', f"Unsupported VF4 file '{file}', could possibly be corrupt") from exc
 		self._megatile = all_megatile
 
 	def save_file(self, file: str | BinaryIO) -> None:
@@ -78,8 +76,8 @@ class VF4(object):
 				f = AtomicWriter(file, 'wb')
 				f.write(data)
 				f.close()
-			except:
-				raise PyMSError('Save',"Could not save the VF4 to '%s'" % file)
+			except Exception as exc:
+				raise PyMSError('Save', f"Could not save the VF4 to '{file}'") from exc
 		else:		
 			file.write(data)
 			file.close()

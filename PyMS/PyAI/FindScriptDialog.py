@@ -11,6 +11,8 @@ from ..Utilities import ItemSelectDialog
 
 import re
 
+from typing import Sequence
+
 class ScriptLocation:
 	aiscript = 1
 	bwscript = 2
@@ -90,7 +92,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.minsize(300,325)
 		self.config_.load_size(self)
 
-	def update(self, e: Event | None = None) -> None:
+	def update(self, _event: Event | None = None) -> None:
 		self.select['state'] = NORMAL
 
 	def updatecolor(self) -> None:
@@ -101,7 +103,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			self.reset_entry['bg'] = self.reset_color
 			self.reset_entry = None
 
-	def selectall(self, e: Event | None = None) -> None:
+	def selectall(self, _event: Event | None = None) -> None:
 		if self.listbox.size():
 			self.listbox.select_set(0, END)
 			self.select['state'] = NORMAL
@@ -134,7 +136,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 				if not regex.endswith('\\Z'):
 					regex = regex + '.*'
 			else:
-				regex = '.*%s.*' % re.escape(regex)
+				regex = f'.*{re.escape(regex)}.*'
 			try:
 				return re.compile(regex, re.I if self.casesens.get() else 0)
 			except:

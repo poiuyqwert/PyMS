@@ -3,10 +3,10 @@ from .Tooltip import Tooltip
 from ..Widgets import *
 from ..EventPattern import *
 
-from typing import Callable
+from typing import Callable, Any
 
 class TextTooltip(Tooltip):
-	def __init__(self, parent: Text, tag: str, **kwargs) -> None:
+	def __init__(self, parent: Text, tag: str, **kwargs: Any) -> None:
 		self.text_widget = parent
 		self.tag = tag
 		self.cursor: (list[str] | None) = kwargs.pop('cursor', None)
@@ -22,23 +22,23 @@ class TextTooltip(Tooltip):
 		if press:
 			self.text_widget.tag_bind(self.tag, Mouse.ButtonPress(), self.leave)
 
-	def enter(self, e: Event | None = None) -> None:
+	def enter(self, _event: Event | None = None) -> None:
 		if self.cursor:
 			self._old_cursor = self.parent.cget('cursor')
 			self.text_widget.apply_cursor(self.cursor) # type: ignore[attr-defined]
 		Tooltip.enter(self)
 
-	def leave(self, e: Event | None = None) -> None:
+	def leave(self, _event: Event | None = None) -> None:
 		if self._old_cursor:
 			self.text_widget.config(cursor=self._old_cursor)
 		Tooltip.leave(self)
 
 class TextDynamicTooltip(TextTooltip):
-	def __init__(self, parent: Text, tag: str, text_lookup: Callable[[str | None, tuple[str, ...]], str | None], **kwargs) -> None:
+	def __init__(self, parent: Text, tag: str, text_lookup: Callable[[str | None, tuple[str, ...]], str | None], **kwargs: Any) -> None:
 		self.text_lookup = text_lookup
 		TextTooltip.__init__(self, parent, tag, **kwargs)
 
-	def showtip(self):
+	def showtip(self) -> None:
 		index = self.text_widget.index('current')
 		tags = self.text_widget.tag_names(index)
 		if not self.tag in tags:

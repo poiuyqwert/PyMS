@@ -19,7 +19,7 @@ class WidgetNode:
 		self.delegate = delegate
 		self.widget = widget
 		self.parent: WidgetNode | None = None
-		self.name = None
+		self.name: str | None = None # TODO: Is this actually used?
 		self.index: str | None = None
 		self.children: list[WidgetNode] | None
 		if widget and widget.type != DialogBIN.BINWidget.TYPE_DIALOG:
@@ -44,13 +44,13 @@ class WidgetNode:
 
 	def get_name(self) -> str:
 		name = 'Group'
-		if self.widget:
+		if self.name:
+			name = self.name
+		elif self.widget:
 			name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
 			display_text = self.widget.display_text()
 			if display_text:
-				name = '%s [%s]' % (TBL.decompile_string(display_text),name)
-		if self.name:
-			name = '%s [%s]' % self.name
+				name = f'{TBL.decompile_string(display_text)} [{name}]'
 		return name
 
 	def remove_from_parent(self) -> None:
@@ -59,7 +59,7 @@ class WidgetNode:
 		self.parent.children.remove(self)
 		self.parent = None
 
-	def add_child(self, node: WidgetNode, index: int = -1):
+	def add_child(self, node: WidgetNode, index: int = -1) -> None:
 		if self.children is None:
 			return
 		node.remove_from_parent()
@@ -339,14 +339,16 @@ class WidgetNode:
 				if not check.flags & DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER or SHOW_HOVER_SMKS:
 					if not check.filename in self.smks:
 						try:
-							smk = SMK.SMK()
-							smk.load_file(self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename))
-							delay = int(1000 / float(smk.fps))
-							if self.frame_delay is None:
-								self.frame_delay = delay
-							else:
-								self.frame_delay = min(self.frame_delay,delay)
-							self.smks[check.filename] = smk
+							file = self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename)
+							if file:
+								smk = SMK.SMK()
+								smk.load_file(file)
+								delay = int(1000 / float(smk.fps))
+								if self.frame_delay is None:
+									self.frame_delay = delay
+								else:
+									self.frame_delay = min(self.frame_delay,delay)
+								self.smks[check.filename] = smk
 						except:
 							self.delegate.capture_exception()
 					show_smk = self.smks.get(check.filename)
@@ -384,14 +386,12 @@ class WidgetNode:
 		reorder = False
 		SHOW_IMAGES = self.delegate.get_show_images()
 		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.visible() and self.widget.string:
-			photo_change = False
 			if self.photo is None:
 				try:
 					pcx = PCX.PCX()
 					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
 					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans))
-					photo_change = True
 				except:
 					self.delegate.capture_exception()
 			if self.photo:

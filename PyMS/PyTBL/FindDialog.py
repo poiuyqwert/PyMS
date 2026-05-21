@@ -17,8 +17,8 @@ class FindDialog(PyMSDialog):
 		self.find = StringVar()
 		self.casesens = BooleanVar()
 		self.regex = BooleanVar()
-		self.updown = IntVar()
-		self.updown.set(1)
+		self.updown = BooleanVar()
+		self.updown.set(True)
 		self.wrap = BooleanVar()
 		self.wrap.set(True)
 
@@ -72,7 +72,7 @@ class FindDialog(PyMSDialog):
 				if not regex_str.endswith('\\Z'):
 					regex_str = regex_str + '.*'
 			else:
-				regex_str = '.*%s.*' % re.escape(t)
+				regex_str = f'.*{re.escape(t)}.*'
 			try:
 				regex = re.compile(regex_str, 0 if self.casesens.get() else re.I)
 			except:
@@ -82,7 +82,7 @@ class FindDialog(PyMSDialog):
 			wrap = self.wrap.get()
 			down = self.updown.get()
 			s = int(self.delegate.listbox.curselection()[0])
-			def next(i, down, size):
+			def next_i(i: int, down: bool, size: int) -> int:
 				if down:
 					i += 1
 					while i >= size:
@@ -92,7 +92,7 @@ class FindDialog(PyMSDialog):
 					while i < 0:
 						i += size
 				return i
-			i = next(s, down, size)
+			i = next_i(s, down, size)
 			check = 0
 			if wrap:
 				check = size - 1
@@ -108,7 +108,7 @@ class FindDialog(PyMSDialog):
 					self.delegate.listbox.see(i)
 					self.delegate.update()
 					return
-				i = next(i, down, size)
+				i = next_i(i, down, size)
 		p: Misc = self
 		if event and event.keycode != 13:
 			p = self.parent

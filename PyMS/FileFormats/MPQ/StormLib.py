@@ -1,6 +1,8 @@
 
 import ctypes, os, sys
 
+from typing import Any
+
 STORMLIB_DIR = None
 if hasattr(sys, 'frozen'):
 	STORMLIB_DIR = os.path.join(os.path.dirname(sys.executable) ,'PyMS','FileFormats','MPQ')
@@ -370,8 +372,8 @@ SFileInfoCRC32                = 56 # CRC32 of the file
 
 
 class MPQHANDLE(ctypes.c_void_p):
-	def __repr__(self):
-		return '<MPQHANDLE object at %s: %s>' % (hex(id(self)), hex(self.value))
+	def __repr__(self) -> str:
+		return f'<MPQHANDLE object at {hex(id(self))}: {hex(self.value) if self.value is not None else None}>'
 
 class SFILE_FIND_DATA(ctypes.Structure):
 	_fields_ = [
@@ -387,7 +389,7 @@ class SFILE_FIND_DATA(ctypes.Structure):
 		('locale', ctypes.c_uint32),
 	]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.file_name = b''
 		self.plain_name = b''
 		self.hash_index = 0
@@ -415,7 +417,7 @@ class SFILE_CREATE_MPQ(ctypes.Structure):
 		('max_file_count', ctypes.c_uint32),
 	]
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.size = 0
 		self.mpq_version = 0
 		self.user_data1 = None
@@ -556,7 +558,7 @@ if _StormLib is not None:
 	# bool   WINAPI SFileHasFile(HANDLE hMpq, const char * szFileName);
 	_StormLib.SFileHasFile.argtypes = [MPQHANDLE, ctypes.c_char_p]
 	_StormLib.SFileHasFile.restype = ctypes.c_bool
-	
+
 	# bool   WINAPI SFileOpenFileEx(HANDLE hMpq, const char * szFileName, DWORD dwSearchScope, HANDLE * phFile);
 	_StormLib.SFileOpenFileEx.argtypes = [MPQHANDLE, ctypes.c_char_p, ctypes.c_uint32, ctypes.POINTER(MPQHANDLE)]
 	_StormLib.SFileOpenFileEx.restype = ctypes.c_bool
@@ -710,10 +712,10 @@ def _file_name(file_name: str | bytes) -> bytes:
 		return file_name.encode('utf-8')
 	return file_name
 
-def SFInvalidHandle(h):
+def SFInvalidHandle(h: Any) -> bool:
 	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]
 
-def SFileGetLocale():
+def SFileGetLocale() -> int:
 	assert _StormLib is not None
 	return _StormLib.SFileGetLocale()
 
@@ -839,7 +841,7 @@ def SFileGetFileInfo(mpq: MPQHANDLE, info_class: int) -> int | str | None:
 		info_container = ctypes.c_uint32()
 	# TODO: Implement more info types
 	if info_container is None:
-		raise NotImplementedError('Info class %d not implemented in SFileGetFileInfo' % info_class)
+		raise NotImplementedError(f'Info class {info_class} not implemented in SFileGetFileInfo')
 	length_needed = ctypes.c_uint32()
 	if not _StormLib.SFileGetFileInfo(mpq, info_class, ctypes.byref(info_container), ctypes.sizeof(info_container), ctypes.byref(length_needed)):
 		return None
@@ -911,8 +913,9 @@ def SFileSetFileLocale(file: MPQHANDLE, locale: int) -> bool:
 # 		windll.kernel32.SetLastError(error)
 # 	return _StormLib.SetLastError(error)
 
-def SFGetLastError():
+def SFGetLastError() -> int:
+	assert _StormLib is not None
 	# StormLib only implements its own GetLastError on platforms other than windows
 	if _StormLib.GetLastError is None:
-		return ctypes.GetLastError()
-	return _StormLib.GetLastError()
+		return ctypes.GetLastError() # type: ignore[attr-defined]
+	return _StormLib.GetLastError() # pylint: disable=not-callable

@@ -29,19 +29,19 @@ class SortBy(Enum):
 
 class Sort:
 	@staticmethod
-	def by_file_order(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
+	def by_file_order(headers: list[AIBIN.AIScript], _tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return headers
 
 	@staticmethod
-	def by_id(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
+	def by_id(headers: list[AIBIN.AIScript], _tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: header.id)
 
 	@staticmethod
-	def by_bw(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
+	def by_bw(headers: list[AIBIN.AIScript], _tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: (header.in_bwscript, header.id))
 
 	@staticmethod
-	def by_flags(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
+	def by_flags(headers: list[AIBIN.AIScript], _tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
 		return sorted(headers, key=lambda header: (header.flags, header.id))
 
 	@staticmethod

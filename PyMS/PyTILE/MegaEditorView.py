@@ -10,6 +10,8 @@ from ..FileFormats.Tileset.VX4 import VX4Minitile
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
 
+from typing import Any
+
 class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
 		Frame.__init__(self, parent)
@@ -21,7 +23,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.palette_editable = palette_editable
 		self.edit_mode = IntVar()
 		self.edit_mode.set(self.config_.mega_edit.mode.value.value)
-		self.edit_mode.trace('w', self.edit_mode_updated)
+		self.edit_mode.trace_add('write', self.edit_mode_updated)
 		self.delegate.mega_edit_mode_updated(self.get_edit_mode())
 		self.minitile_n = 0
 		self.last_click: int | None = None
@@ -32,7 +34,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.minitile = IntegerVar(0,[0,0],callback=lambda id: self.change(None, int(id)), callback_when=IntegerVar.UpdateCase.user)
 		self.height = IntVar()
 		self.height.set(self.config_.mega_edit.height.value)
-		self.height.trace('w', self.height_updated)
+		self.height.trace_add('write', self.height_updated)
 
 		self.active_tools: Widget | None = None
 
@@ -44,11 +46,11 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			if not self.enabled:
 				return
 			self.edit_mode.set(mode.value)
-		self.parent.bind(Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini)),
-		self.parent.bind(Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip)),
-		self.parent.bind(Key.h(), lambda _: set_edit_mode(MegaEditorMode.height)),
-		self.parent.bind(Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability)),
-		self.parent.bind(Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking)),
+		self.parent.bind(Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini))
+		self.parent.bind(Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip))
+		self.parent.bind(Key.h(), lambda _: set_edit_mode(MegaEditorMode.height))
+		self.parent.bind(Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability))
+		self.parent.bind(Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking))
 		self.parent.bind(Key.r(), lambda _: set_edit_mode(MegaEditorMode.ramp))
 
 		self.canvas = Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview') # type: ignore[call-arg]
@@ -114,8 +116,8 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id: int | VX4Minitile) -> Image:
-		return self.delegate.get_tile(id)
+	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+		return self.delegate.get_tile(tile_id)
 
 	def get_edit_mode(self) -> MegaEditorMode:
 		return MegaEditorMode(self.edit_mode.get())
@@ -153,14 +155,14 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			self.height_tools.pack()
 			self.active_tools = self.height_tools
 
-	def edit_mode_updated(self, event: Event | None = None) -> None:
+	def edit_mode_updated(self, *_: Any) -> None:
 		self.update_tools()
 		self.draw_edit_mode()
 		mode = self.get_edit_mode()
 		self.config_.mega_edit.mode.value = mode
 		self.delegate.mega_edit_mode_updated(mode)
 
-	def height_updated(self, event: Event | None = None) -> None:
+	def height_updated(self, *_: Any) -> None:
 		self.config_.mega_edit.height.value = self.height.get()
 
 	def draw_border(self, minitile_n: int, color: str = '#FFFFFF') -> None:

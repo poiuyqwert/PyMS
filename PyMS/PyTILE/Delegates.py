@@ -14,14 +14,14 @@ class MainDelegate(Protocol):
 	def get_tileset(self) -> (Tileset | None):
 		...
 
-	def get_tile(self, id: int | VX4Minitile) -> Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
 		...
 
 	def mark_edited(self) -> None:
 		...
 
 class TilePaletteDelegate(MainDelegate, Protocol):
-	def change(self, tile_type: TileType, id: int) -> None:
+	def change(self, tile_type: TileType, tile_id: int) -> None:
 		...
 
 	def megaload(self) -> None:
@@ -40,7 +40,7 @@ class TilePaletteViewDelegate(MainDelegate, Protocol):
 	def tile_palette_selection_changed(self) -> None:
 		...
 
-	def tile_palette_double_clicked(self, id: int) -> None:
+	def tile_palette_double_clicked(self, tile_id: int) -> None:
 		...
 
 class MegaEditorDelegate(MainDelegate, Protocol):

@@ -11,16 +11,16 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from typing import Callable
 
 class Placeability(PyMSDialog, TilePaletteDelegate):
-	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MainDelegate, id: int = 0) -> None:
+	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MainDelegate, doodad_id: int = 0) -> None:
 		self.config_ = config
 		self.delegate = delegate
-		self.id = id
+		self.id = doodad_id
 		self.canvass: list[Canvas] = []
 		self.canvas_images: list[list[Image]] = []
 		self.groups: list[list[IntegerVar]] = []
 		self.selecting: tuple[int, int] | None = None
 		self.width = 0
-		PyMSDialog.__init__(self, parent, 'Doodad Placeability [%s]' % id, resizable=(False,False))
+		PyMSDialog.__init__(self, parent, f'Doodad Placeability [{doodad_id}]', resizable=(False,False))
 
 	def widgetize(self) -> Widget | None:
 		tileset = self.delegate.get_tileset()
@@ -48,7 +48,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 					for x in range(self.width):
 						placeable_group_id = tileset.dddata.get_doodad(self.id)[x + y * self.width]
 						if not y:
-							t = 'tile%s,%s' % (x,y)
+							t = f'tile{x},{y}'
 							self.canvas_images[-1].append(megatile_to_photo(tileset, group.megatile_ids[x]))
 							self.canvass[-1].create_image(x * 33 + 18, 18, image=self.canvas_images[-1][-1], tags=t)
 							self.canvass[-1].tag_bind(t, Double.Click_Left(), select_callback((x,y)))
@@ -56,7 +56,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 						Entry(f, textvariable=self.groups[-1][-1], width=1, font=Font.fixed(), bd=0).grid(sticky=E+W, column=x, row=y*2+1, padx=x%2)
 			elif ty > 0:
 				for x in range(self.width):
-					t = 'tile%s,%s' % (x,y)
+					t = f'tile{x},{y}'
 					self.canvas_images[height-ty].append(megatile_to_photo(tileset, group.megatile_ids[x]))
 					self.canvass[height-ty].create_image(x * 33 + 18, 18, image=self.canvas_images[height-ty][-1], tags=t)
 					self.canvass[height-ty].tag_bind(t, Double.Click_Left(), select_callback((x,height-ty)))
@@ -71,16 +71,16 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 		from .TilePalette import TilePalette
 		TilePalette(self, self.config_, self, TileType.group, self.groups[pos[1]][pos[0]].get())
 
-	def change(self, _: TileType, id: int) -> None:
+	def change(self, _: TileType, doodad_id: int) -> None:
 		if self.selecting is None:
 			return
-		self.groups[self.selecting[1]][self.selecting[0]].set(id)
+		self.groups[self.selecting[1]][self.selecting[0]].set(doodad_id)
 		self.selecting = None
 
-	def cancel(self, e: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.ok()
 
-	def ok(self, e: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		tileset = self.delegate.get_tileset()
 		if not tileset:
 			PyMSDialog.ok(self)
@@ -101,8 +101,8 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, id: int | VX4Minitile) -> Image:
-		return self.delegate.get_tile(id)
+	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+		return self.delegate.get_tile(tile_id)
 
 	def megaload(self) -> None:
 		pass

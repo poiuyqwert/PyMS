@@ -162,7 +162,7 @@ class OrdersTab(DATTab):
 			)),
 		))
 
-		self.highlightentry.trace('w', lambda *_: self.drawpreview())
+		self.highlightentry.trace_add('write', lambda *_: self.drawpreview())
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.stat_txt in ids:
@@ -195,7 +195,7 @@ class OrdersTab(DATTab):
 			self.obscuredentry.range[1] = 255
 
 	def choose_icon(self) -> None:
-		def update_icon(index):
+		def update_icon(index: int) -> None:
 			self.highlightentry.set(index)
 		IconSelectDialog(self, self.delegate.data_context, update_icon, self.highlightentry.get(), none_index=65535)
 
@@ -226,7 +226,7 @@ class OrdersTab(DATTab):
 		self.highlightentry.set(entry.highlight_icon)
 		self.requirements.set(entry.requirements)
 		self.obscured.set(entry.obscured_order)
-		
+
 		self.drawpreview()
 
 	def save_entry(self, entry: DATOrder) -> None:

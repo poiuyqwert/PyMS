@@ -56,7 +56,14 @@ class IconSelectDialog(PyMSDialog):
 		max_height = self.winfo_height() + 10 * icon_size[1]
 		self.maxsize(max_width, max_height)
 		self.data_context.config.windows.icon_select.load_size(self)
-		
+
+		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
+		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
+		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
+		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
+		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
+
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()
 		self._scroll_to_selection()
@@ -140,7 +147,7 @@ class IconSelectDialog(PyMSDialog):
 		self.selection_box_item.tag_lower()
 
 	def _display_index_to_tag(self, display_index: int) -> str:
-		return 'icon%d' % display_index
+		return f'icon{display_index}'
 
 	def _draw_icons(self, force: bool = False) -> None:
 		columns, _, start_y, visible_start_index, visible_end_index = self._calculate_visibility()
@@ -213,7 +220,7 @@ class IconSelectDialog(PyMSDialog):
 		return self.data_context.cmdicons.names[selected_index]
 
 	def _update_status_selection(self) -> None:
-		self.status_selection.set('Selected: %d (%s)' % (self.selected_index, self._selected_index_to_name(self.selected_index)))
+		self.status_selection.set(f'Selected: {self.selected_index} ({self._selected_index_to_name(self.selected_index)})')
 
 	def _coords_to_display_index(self, x: int, y: int, add_scroll_offset: bool = True) -> int | None:
 		columns, total_height, _, _, _ = self._calculate_visibility()
@@ -247,7 +254,7 @@ class IconSelectDialog(PyMSDialog):
 			self._clear_status_hover()
 			return
 		selection_index = self._display_index_to_selected_index(display_index)
-		self.status_hover.set('Hovering: %d (%s)' % (selection_index, self._selected_index_to_name(selection_index)))
+		self.status_hover.set(f'Hovering: {selection_index} ({self._selected_index_to_name(selection_index)})')
 
 	def ok(self, _: Event | None = None) -> None:
 		if self.selected_index != self._initial_selection:

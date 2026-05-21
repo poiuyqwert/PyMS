@@ -1,13 +1,14 @@
 
-from ..Utilities.UIKit import *
+from ..Widgets import *
+from ..EventPattern import *
+from .Tooltip import Tooltip, TooltipWindow
 
-# TODO: Generalize
 class CodeTooltip(Tooltip):
-	tag: str
+	tag = ''
 
-	def __init__(self, parent: CodeText, text: str = '', font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
+	def __init__(self, parent: Text):
 		self.code_text = parent
-		super().__init__(parent, text, font, delay, press, mouse, attach_to_parent)
+		Tooltip.__init__(self, parent)
 
 	def setupbinds(self, press: bool) -> None:
 		if self.tag:
@@ -15,27 +16,29 @@ class CodeTooltip(Tooltip):
 			self.code_text.tag_bind(self.tag, Cursor.Leave(), self.leave, '+')
 			self.code_text.tag_bind(self.tag, Mouse.Motion(), self.motion, '+')
 			self.code_text.tag_bind(self.tag, Mouse.Click_Left(), self.leave, '+')
-			self.code_text.tag_bind(self.tag, Mouse.ButtonPress(), self.leave)
+			self.code_text.tag_bind(self.tag, Mouse.ButtonRelease(), self.leave)
 
 	def showtip(self) -> None:
 		if self.tip:
 			return
-		t = ''
-		if self.tag:
-			pos = list(self.code_text.winfo_pointerxy())
-			tag_range = self.code_text.tag_prevrange(self.tag,self.code_text.index('@%s,%s+1c' % (pos[0] - self.code_text.winfo_rootx(),pos[1] - self.code_text.winfo_rooty())))
-			if tag_range:
-				head,tail = tag_range
-				t = self.code_text.get(head,tail)
+		if not self.tag:
+			return
+		pos = list(self.parent.winfo_pointerxy())
+		tag_range = self.code_text.tag_prevrange(self.tag, self.code_text.index(f'@{pos[0] - self.code_text.winfo_rootx()},{pos[1] - self.code_text.winfo_rooty()}+1c'))
+		if not tag_range:
+			return
+		hover_text = self.code_text.get(*tag_range)
 		try:
-			t = self.gettext(t)
+			tooltip_text = self.gettext(hover_text) # pylint: disable=assignment-from-none
+			if not tooltip_text:
+				return
 			self.tip = TooltipWindow(self.code_text, relief=SOLID, borderwidth=1)
-			self.tip.wm_overrideredirect(True)
+			self.tip.make_frameless(self.code_text.winfo_toplevel())
 			frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
-			Label(frame, text=t, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1) # type: ignore[arg-type]
+			Label(frame, text=tooltip_text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 			frame.pack()
 			pos = list(self.code_text.winfo_pointerxy())
-			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+			self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip.update_idletasks()
 			move = False
 			if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
@@ -45,7 +48,7 @@ class CodeTooltip(Tooltip):
 				move = True
 				pos[1] -= self.tip.winfo_reqheight() + 44
 			if move:
-				self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 		except:
 			if self.tip:
 				try:
@@ -55,6 +58,6 @@ class CodeTooltip(Tooltip):
 				self.tip = None
 			return
 
-	def gettext(self, t):
+	def gettext(self, _hover_text: str) -> str | None:
 		# Overload to specify tooltip text
-		return ''
+		return None

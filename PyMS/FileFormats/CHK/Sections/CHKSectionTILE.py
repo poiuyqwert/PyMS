@@ -11,13 +11,13 @@ import struct
 class CHKSectionTILE(CHKSection):
 	NAME = 'TILE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
-	
+
 	raw_map: bytes
 	map: list[list[list[int]]]
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.raw_map = data
-	
+
 	def requires_post_processing(self) -> bool:
 		return True
 
@@ -30,7 +30,7 @@ class CHKSectionTILE(CHKSection):
 		diff = dims.width*dims.height - len(self.raw_map)
 		if diff > 0:
 			self.raw_map += b'\0' * diff
-		struct_format = '<%dH' % dims.width
+		struct_format = f'<{dims.width}H'
 		for y in range(dims.height):
 			offset = y*dims.width*2
 			values = tuple(int(v) for v in struct.unpack(struct_format, self.raw_map[offset:offset+dims.width*2]))
@@ -40,16 +40,16 @@ class CHKSectionTILE(CHKSection):
 		dims = self.chk.get_section(CHKSectionDIM)
 		assert dims is not None
 		result = b''
-		struct_format = '<%dH' % dims.width
+		struct_format = f'<{dims.width}H'
 		for r in self.map:
 			values = [v[0] << 4 + v[1] for v in r]
 			result += struct.pack(struct_format, *values)
 		return result
 
 	def decompile(self) -> str:
-		result = '%s:\n' % self.NAME
+		result = f'{self.NAME}:\n'
 		for row in self.map:
-			for t in row:
-				result += pad('%d,%d' % t,span=6)
+			for g,m in row:
+				result += pad(f'{g},{m}',span=6)
 			result += '\n'
 		return result

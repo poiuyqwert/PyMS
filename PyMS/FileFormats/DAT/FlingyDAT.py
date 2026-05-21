@@ -2,7 +2,9 @@
 from . import AbstractDAT
 from . import DATFormat
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATFlingy(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -14,16 +16,16 @@ class DATFlingy(AbstractDAT.AbstractDATEntry):
 		iscript_mask = 'iscript_mask'
 		movement_control = 'movement_control'
 
-	def __init__(self):
-		self.sprite = 0
-		self.speed = 0
-		self.acceleration = 0
-		self.halt_distance = 0
-		self.turn_radius = 0
-		self.iscript_mask = 0
-		self.movement_control = 0
+	def __init__(self) -> None:
+		self.sprite: int = 0
+		self.speed: int = 0
+		self.acceleration: int = 0
+		self.halt_distance: int = 0
+		self.turn_radius: int = 0
+		self.iscript_mask: int = 0
+		self.movement_control: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.sprite,\
 		self.speed,\
 		self.acceleration,\
@@ -31,9 +33,9 @@ class DATFlingy(AbstractDAT.AbstractDATEntry):
 		self.turn_radius,\
 		self.iscript_mask,\
 		self.movement_control\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.sprite,
 			self.speed,
@@ -45,7 +47,7 @@ class DATFlingy(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Flingy'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATFlingy.Property.sprite, self.sprite, data)
 		self._export_property_value(export_properties, DATFlingy.Property.speed, self.speed, data)
 		self._export_property_value(export_properties, DATFlingy.Property.acceleration, self.acceleration, data)
@@ -54,7 +56,7 @@ class DATFlingy(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATFlingy.Property.iscript_mask, self.iscript_mask, data)
 		self._export_property_value(export_properties, DATFlingy.Property.movement_control, self.movement_control, data)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		sprite = self._import_property_value(data, DATFlingy.Property.sprite)
 		speed = self._import_property_value(data, DATFlingy.Property.speed)
 		acceleration = self._import_property_value(data, DATFlingy.Property.acceleration)

@@ -7,20 +7,20 @@ from . import Assets
 
 import webbrowser, re, os
 
-from typing import cast
+from typing import cast, Any
 
 def _em( em: float = 1) -> int:
 	return int(16 * em)
 
 def _list_numbered(num: int) -> str:
-	return '%d. ' % num
+	return f'{num}. '
 
 def _list_lettered(num: int) -> str:
 	result = ''
 	while num > 0:
 		result += chr(96 + num % 26)
 		num -= 26
-	return '%s. ' % result
+	return f'{result}. '
 
 _ROMAN_LOOKUP = (
 	(1000, 'm'),
@@ -44,18 +44,18 @@ def _list_roman(num: int) -> str:
 		result += roman * count
 		if not num:
 			break
-	return '%s. ' % result
+	return f'{result}. '
 
 class MarkdownView(Frame):
-	class _ListDisplay(object):
+	class _ListDisplay:
 		def __init__(self, list_block: Markdown.ListBlock, margin: int) -> None:
 			self.list_block = list_block
 			self.margin = margin
-	class _ListItemDisplay(object):
+	class _ListItemDisplay:
 		def __init__(self, marker: str, size: int) -> None:
 			self.marker = marker
 			self.size = size
-	class _ListItemTags(object):
+	class _ListItemTags:
 		def __init__(self, first_line_tag: str, subsequent_lines_tag: str) -> None:
 			self.first_line_tag = first_line_tag
 			self.first_line_used = False
@@ -108,6 +108,10 @@ class MarkdownView(Frame):
 		self.links: dict[str, Markdown.Link] = {}
 		self.headers: dict[str, str] = {}
 		self.images: dict[str, Markdown.Image] = {}
+		self._lists: list[MarkdownView._ListDisplay] = []
+		self._lists_margin = 0
+		self._list_items_tags: list[MarkdownView._ListItemTags] = []
+
 		def link_lookup(tags: tuple[str, ...]) -> (Markdown.Link | None):
 			for tag in tags:
 				if tag.startswith('link_'):
@@ -124,7 +128,7 @@ class MarkdownView(Frame):
 			else:
 				tooltip = link.link
 			if link.title:
-				tooltip = '%s (%s)' % (link.title, tooltip)
+				tooltip = f'{link.title} ({tooltip})'
 			return tooltip
 		TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
 
@@ -137,7 +141,7 @@ class MarkdownView(Frame):
 					continue
 				tooltip = image.alt_text
 				if image.title:
-					tooltip += ' (%s)' % image.title
+					tooltip += f' ({image.title})'
 				return tooltip
 			return None
 		TextDynamicTooltip(self.textview, 'image', image_tooltip_lookup)
@@ -187,9 +191,9 @@ class MarkdownView(Frame):
 		self.links.clear()
 		self.headers.clear()
 		self.images.clear()
-		self._lists: list[MarkdownView._ListDisplay] = []
+		self._lists = []
 		self._lists_margin = 0
-		self._list_items_tags: list[MarkdownView._ListItemTags] = []
+		self._list_items_tags = []
 		self._next_tags = ('top_margin',)
 
 		self._read_only = False
@@ -224,8 +228,8 @@ class MarkdownView(Frame):
 			tags += self._next_tags
 			self._next_tags = None
 		if isinstance(block, Markdown.ATXHeading):
-			self.headers[block.anchor()] = self.textview.index('%s -1lines' % END)
-			self.insert_content(block, tags + ('h%d' % block.level,))
+			self.headers[block.anchor()] = self.textview.index(f'{END} -1lines')
+			self.insert_content(block, tags + (f'h{block.level}',))
 		elif isinstance(block, Markdown.Paragraph):
 			additional_last_line_tags = None
 			if \
@@ -241,6 +245,7 @@ class MarkdownView(Frame):
 			self.textview.insert(END, '\n')
 		elif isinstance(block, Markdown.ListBlock):
 			index = min(len(self._lists), 2)
+			margin = 0
 			if block.marker == Markdown.ListBlock.MARKER_BULLET:
 				margin = self._get_list_bullet_cache()[index].size
 			elif block.marker == Markdown.ListBlock.MARKER_NUMERIC:
@@ -259,9 +264,9 @@ class MarkdownView(Frame):
 				list_block = cast(Markdown.ListBlock, block.parent)
 				display = self._list_numeric_cache[index][list_block.children.index(block)]
 			firts_line_margin = self._lists_margin - display.size
-			first_line_tag = 'list_margin%d:%d' % (firts_line_margin, self._lists_margin)
+			first_line_tag = f'list_margin{firts_line_margin}:{self._lists_margin}'
 			self.textview.tag_configure(first_line_tag, lmargin1=firts_line_margin, lmargin2=self._lists_margin)
-			subsequent_lines_tag = 'list_margin%d' % self._lists_margin
+			subsequent_lines_tag = f'list_margin{self._lists_margin}'
 			self.textview.tag_configure(subsequent_lines_tag, lmargin1=self._lists_margin, lmargin2=self._lists_margin)
 			self._list_items_tags.append(MarkdownView._ListItemTags(first_line_tag, subsequent_lines_tag))
 			self.textview.insert(END, display.marker, tags + (first_line_tag,))
@@ -278,22 +283,21 @@ class MarkdownView(Frame):
 
 	RE_KEYBOARD_SHORTCUT = re.compile(r'(?:(?:Shift|Ctrl|Alt)\+)+.+$')
 	def insert_content(self, block: Markdown.ContentBlock, tags: tuple[str, ...], additional_first_line_tags: tuple[str, ...] | None = None, additional_last_line_tags: tuple[str, ...] | None = None) -> None:
-		def insert_item(item, tags):
+		def insert_item(item: str | Markdown.Span, tags: tuple[str, ...]) -> None:
 			if isinstance(item, Markdown.CodeSpan):
 				tags += ('codespan',)
 				# Markdown "Keyboard Shortcut" Extension
 				#  - Code spans where the content matches keyboard shortcut format (see RE_KEYBOARD_SHORTCUT) will be updated on Mac to reflect the mac shortcuts
-				if is_mac():
-					match = MarkdownView.RE_KEYBOARD_SHORTCUT.match(item.contents[0])
-					if match:
-						item.contents[0] = item.contents[0]\
-							.replace('Ctrl+', Modifier.Ctrl.description)\
-							.replace('Alt+', Modifier.Alt.description)\
-							.replace('Shift+', Modifier.Shift.description)
+				content = item.contents[0]
+				if is_mac() and isinstance(content, str) and MarkdownView.RE_KEYBOARD_SHORTCUT.match(content):
+					item.contents[0] = content\
+						.replace('Ctrl+', Modifier.Ctrl.description)\
+						.replace('Alt+', Modifier.Alt.description)\
+						.replace('Shift+', Modifier.Shift.description)
 			elif isinstance(item, Markdown.Bold):
 				tags += ('bold',)
 			elif isinstance(item, Markdown.Link):
-				link_tag = 'link_%d' % len(self.links)
+				link_tag = f'link_{len(self.links)}'
 				tags += ('link', link_tag)
 				self.links[link_tag] = item
 			elif isinstance(item, Markdown.Image):
@@ -301,9 +305,9 @@ class MarkdownView(Frame):
 				image = Assets.help_image(item.link)
 				if not image:
 					return
-				start_index = self.textview.index('%s -1chars' % END)
+				start_index = self.textview.index(f'{END} -1chars')
 				self.textview.image_create(END, image=image)
-				image_tag = 'image_%d' % len(self.images)
+				image_tag = f'image_{len(self.images)}'
 				tags += ('image', image_tag)
 				for tag in tags:
 					self.textview.tag_add(tag, start_index, END)

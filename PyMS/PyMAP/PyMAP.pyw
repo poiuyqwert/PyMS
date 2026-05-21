@@ -2188,7 +2188,7 @@ class PyMAP(Tk):
 			else:
 				Frame(toolbar, width=btn).pack(side=LEFT)
 		self.edit_layer_index = IntVar(0)
-		self.edit_layer_index.trace('w', self.change_edit_layer)
+		self.edit_layer_index.trace_add('write', self.change_edit_layer)
 		self.edit_layer_dropdown = DropDown(toolbar, self.edit_layer_index, [l.name for l in self.edit_layers], width=25)
 		self.edit_layer_dropdown.pack(side=LEFT, padx=2)
 		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)

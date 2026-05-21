@@ -6,11 +6,11 @@ import tkinter as _Tk
 from typing import Any, Sequence, Protocol
 
 class CanSetItem(Protocol):
-	def __setitem__(self, key: str, value: Any):
+	def __setitem__(self, key: str, value: Any) -> None:
 		...
 
-class TagStateManager(object):
-	class Item(object):
+class TagStateManager:
+	class Item:
 		def __init__(self, item: CanSetItem, tags: Sequence[str]) -> None:
 			self._item = item
 			self.tags = tags
@@ -39,7 +39,7 @@ class TagStateManager(object):
 				self._tagged_items[tag] = items
 		self._update_item(tag_item)
 
-	def tag_enabled(self, tag: str, enabled: bool):
+	def tag_enabled(self, tag: str, enabled: bool) -> None:
 		self._tag_states[tag] = enabled
 		items = self._tagged_items.get(tag)
 		if not items:

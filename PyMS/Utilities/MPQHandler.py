@@ -12,7 +12,7 @@ import os, io
 from typing import BinaryIO, Callable, TypeVar
 
 T = TypeVar('T')
-class MPQHandler(object):
+class MPQHandler:
 	def __init__(self, mpqs_config: Config.List[str] | None = None, listfiles: list[str] | None = None) -> None:
 		self.mpqs_config = mpqs_config
 		self.mpqs: list[MPQ] = []
@@ -42,7 +42,7 @@ class MPQHandler(object):
 		if scdir is None or not os.path.isdir(scdir):
 			return
 		for mpq_name in ['Patch_rt','BrooDat','StarDat']:
-			mpq_path = os.path.join(scdir, '%s%smpq' % (mpq_name, os.extsep))
+			mpq_path = os.path.join(scdir, f'{mpq_name}{os.extsep}mpq')
 			if not os.path.exists(mpq_path) or not not [mpq for mpq in self.mpqs if mpq.path == mpq_path]:
 				continue
 			mpq = MPQ.of(mpq_path)
@@ -79,14 +79,14 @@ class MPQHandler(object):
 	_SOURCE_FOLDER = 'FOLDER'
 	_SOURCE_MPQ = 'MPQ'
 	# Only get file from /PyMS/MPQ folder
-	GET_FROM_FOLDER = [_SOURCE_FOLDER]
+	GET_FROM_FOLDER = (_SOURCE_FOLDER,)
 	# Only get file from MPQs
-	GET_FROM_MPQ = [_SOURCE_MPQ]
+	GET_FROM_MPQ = (_SOURCE_MPQ,)
 	# Try to get file from /PyMS/MPQ folder, and fallback to MPQ
 	GET_FROM_FOLDER_OR_MPQ = GET_FROM_FOLDER + GET_FROM_MPQ
 	# Try to get file from MPQ, and fallback to /PyMS/MPQ folder
 	GET_FROM_MPQ_OR_FOLDER = GET_FROM_MPQ + GET_FROM_FOLDER
-	def get_file(self, path: str, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO | None:
+	def get_file(self, path: str, sources: tuple[str, ...] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO | None:
 		file: BinaryIO | None = None
 		for source in sources:
 			if source == MPQHandler._SOURCE_MPQ:
@@ -99,7 +99,7 @@ class MPQHandler(object):
 					return file
 		return file
 
-	def load_file(self, path: str, sources: list[str] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO:
+	def load_file(self, path: str, sources: tuple[str, ...] = GET_FROM_MPQ_OR_FOLDER) -> BinaryIO:
 		file = self.get_file(path, sources)
 		if not file:
 			raise PyMSError('Load', f"Couldn't load '{path}' from MPQ")
@@ -120,7 +120,7 @@ class MPQHandler(object):
 			return file
 		path = Assets.mpq_ref_to_file_name(path)
 		close = False
-		if self.open == False:
+		if not self.open:
 			self.open_mpqs()
 			close = True
 		if not self.open:
@@ -147,7 +147,7 @@ class MPQHandler(object):
 		if MPQ.supported() and not folder and in_mpq:
 			file_name = Assets.mpq_ref_to_file_name(path)
 			close = False
-			if self.open == False:
+			if not self.open:
 				self.open_mpqs()
 				close = True
 			if not self.open:
@@ -163,7 +163,7 @@ class MPQHandler(object):
 			if close:
 				self.close_mpqs()
 			return has_file
-		if folder != False:
+		if folder:
 			if in_mpq:
 				return os.path.exists(Assets.mpq_ref_to_file_path(path))
 			else:
@@ -172,7 +172,7 @@ class MPQHandler(object):
 
 	def list_files(self) -> list[MPQFileEntry]:
 		close = False
-		if self.open == False:
+		if not self.open:
 			self.open_mpqs()
 			close = True
 		files = []

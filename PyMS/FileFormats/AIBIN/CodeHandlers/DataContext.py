@@ -4,7 +4,7 @@ from ...DAT import UnitsDAT, UpgradesDAT, TechDAT
 
 # TODO: Use DatEntryName?
 
-class DataContext(object):
+class DataContext:
 	def __init__(self, stattxt_tbl: TBL | None = None, unitnames_tbl: TBL | None = None, units_dat: UnitsDAT | None = None, upgrades_dat: UpgradesDAT | None = None, techdata_dat: TechDAT | None = None) -> None:
 		self.stattxt_tbl = stattxt_tbl
 		self.unitnames_tbl = unitnames_tbl

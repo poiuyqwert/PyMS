@@ -34,7 +34,7 @@ class PyTILEConfig(Config.Config):
 					super().__init__()
 			def __init__(self) -> None:
 				self.graphics = PyTILEConfig.Windows.Import.Graphics()
-				super().__init__() 
+				super().__init__()
 
 		class Palette(Config.Group):
 			def __init__(self) -> None:
@@ -126,7 +126,7 @@ class PyTILEConfig(Config.Config):
 
 	class DontWarn(Config.Group):
 		def __init__(self) -> None:
-			self.expanded_vx4 = Config.Warning(message="This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
+			self.expanded_vx4 = Config.Warn(message="This tileset is using an expanded vx4 file (vx4ex). This could be a Remastered tileset, and/or will require a 'VX4 Expander Plugin' for pre-Remastered.")
 			super().__init__()
 
 	class Import(Config.Group):
@@ -140,7 +140,7 @@ class PyTILEConfig(Config.Config):
 					self.replace_selections = Config.Boolean(default=True)
 					self.auto_close = Config.Boolean(default=True)
 					super().__init__()
-			
+
 			class MegaSettings(MiniSettings):
 				def __init__(self) -> None:
 					self.megatiles_reuse_duplicates_old = Config.Boolean(default=False)
@@ -174,7 +174,7 @@ class PyTILEConfig(Config.Config):
 				self.block_sight = Config.Boolean(default=True)
 				self.ramp = Config.Boolean(default=True)
 				super().__init__()
-		
+
 		def __init__(self) -> None:
 			self.megatiles = PyTILEConfig.Export.MegaTiles()
 			super().__init__()

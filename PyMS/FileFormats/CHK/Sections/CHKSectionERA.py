@@ -35,12 +35,12 @@ class CHKSectionERA(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.tileset = CHKSectionERA.BADLANDS
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.tileset = int(struct.unpack('<H', data[:2])[0])
-	
+
 	def save_data(self) -> bytes:
 		return struct.pack('<H', self.tileset)
 
 	def decompile(self) -> str:
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Tileset',str(self.tileset)), CHKSectionERA.TILESET_NAME(self.tileset))
+		return f'{self.NAME}:\n\t{pad("Tileset",str(self.tileset))} # {CHKSectionERA.TILESET_NAME(self.tileset)}\n'

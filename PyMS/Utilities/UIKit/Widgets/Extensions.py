@@ -21,14 +21,14 @@ class Extensions(_Tk.Misc):
 	def clipboard_not_empty(self) -> bool:
 		return not not self.clipboard_get()
 
-	def clipboard_set(self, text):
+	def clipboard_set(self, text: str) -> None:
 		self.clipboard_clear()
 		self.clipboard_append(text)
 
 class WindowExtensions(_Tk.Misc, _Tk.Wm):
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
 		if width and height and not hasattr(self, '_initial_max_size'):
-			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self)
+			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self) # pylint: disable=attribute-defined-outside-init
 		return _Tk.Toplevel.maxsize(self, width, height) # type: ignore[arg-type]
 
 	# `wm_state` will be `'zoomed'` when `window.size == window.maxsize`, not just when it is maximized

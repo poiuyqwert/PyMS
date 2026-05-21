@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATTechnology(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -19,20 +21,20 @@ class DATTechnology(AbstractDAT.AbstractDATEntry):
 		researched = 'researched'
 		broodwar_only = 'broodwar_only'
 
-	def __init__(self):
-		self.mineral_cost = 0
-		self.vespene_cost = 0
-		self.research_time = 0
-		self.energy_required = 0
-		self.research_requirements = 65535
-		self.use_requirements = 65535
-		self.icon = 0
-		self.label = 0
-		self.staredit_race = 0
-		self.researched = 0
-		self.broodwar_only = 0
+	def __init__(self) -> None:
+		self.mineral_cost: int = 0
+		self.vespene_cost: int = 0
+		self.research_time: int = 0
+		self.energy_required: int = 0
+		self.research_requirements: int = 65535
+		self.use_requirements: int = 65535
+		self.icon: int = 0
+		self.label: int = 0
+		self.staredit_race: int = 0
+		self.researched: int = 0
+		self.broodwar_only: int = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.mineral_cost,\
 		self.vespene_cost,\
 		self.research_time,\
@@ -44,9 +46,9 @@ class DATTechnology(AbstractDAT.AbstractDATEntry):
 		self.staredit_race,\
 		self.researched,\
 		self.broodwar_only\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.mineral_cost,
 			self.vespene_cost,
@@ -62,7 +64,7 @@ class DATTechnology(AbstractDAT.AbstractDATEntry):
 		)
 
 	EXPORT_NAME = 'Technology'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATTechnology.Property.mineral_cost, self.mineral_cost, data)
 		self._export_property_value(export_properties, DATTechnology.Property.vespene_cost, self.vespene_cost, data)
 		self._export_property_value(export_properties, DATTechnology.Property.research_time, self.research_time, data)
@@ -75,7 +77,7 @@ class DATTechnology(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATTechnology.Property.researched, self.researched, data, _TechnologyPropertyCoder.researched)
 		self._export_property_value(export_properties, DATTechnology.Property.broodwar_only, self.broodwar_only, data, _TechnologyPropertyCoder.broodwar_only)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		mineral_cost = self._import_property_value(data, DATTechnology.Property.mineral_cost)
 		vespene_cost = self._import_property_value(data, DATTechnology.Property.vespene_cost)
 		research_time = self._import_property_value(data, DATTechnology.Property.research_time)

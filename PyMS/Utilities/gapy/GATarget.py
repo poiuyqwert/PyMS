@@ -5,18 +5,18 @@ import urllib.parse, urllib.request, urllib.parse, urllib.error, urllib.request,
 
 
 class GATarget:
-	def track(self, data):
-		raise NotImplementedError('%s.track' % self.__class__.__name__)
+	def track(self, data: dict[str, str]) -> None:
+		raise NotImplementedError(f'{self.__class__.__name__}.track')
 
-class GAOutputTarget:
-	def track(self, data):
+class GAOutputTarget(GATarget):
+	def track(self, data: dict[str, str]):
 		print(data)
 
 
 def os_bits():
 	if sys.maxsize > 2**32:
 		return 64
-	elif sys.maxsize > 2**16:
+	if sys.maxsize > 2**16:
 		return 32
 	return 16
 
@@ -30,18 +30,18 @@ def os_version():
 
 def build_user_agent():
 	bits = os_bits()
-	user_agent = 'Python%d/%s' % (bits, platform.python_version())
+	user_agent = f'Python{bits}/{platform.python_version()}'
 	system = os_name()
 	version = os_version()
 	if system == 'darwin':
-		user_agent += ' (Macintosh; Intel Mac OS X %s)' % version.replace('.','_')
+		user_agent += f' (Macintosh; Intel Mac OS X {version.replace(".","_")})'
 	elif system == 'windows':
-		user_agent += ' (Windows NT %s%s)' % (version, '; WOW64' if bits == 64 else '')
+		user_agent += f' (Windows NT {version}{"; WOW64" if bits == 64 else ""})'
 	else:
-		user_agent += ' (%s %s)' % (system, version)
+		user_agent += f' ({system} {version})'
 	return user_agent
 
-class GAAPITarget(threading.Thread):
+class GAAPITarget(GATarget, threading.Thread):
 	PROTOCOL = 'http'
 	HOST = 'www.google-analytics.com'
 	COLLECT_PATH = '/collect'
@@ -96,7 +96,7 @@ class GAAPITarget(threading.Thread):
 		except urllib.error.URLError:
 			for data in batch:
 				self._backlog.append((data, self._time()))
-		except Exception:
+		except:
 			pass
 
 	def run(self):

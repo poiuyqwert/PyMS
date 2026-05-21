@@ -31,9 +31,9 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from enum import Enum
 
-from typing import Callable, cast
+from typing import Callable, cast, Any
 
-LONG_VERSION = 'v%s' % Assets.version('PySPK')
+LONG_VERSION = 'v' + Assets.version('PySPK')
 
 class MouseEvent(Enum):
 	down = 0
@@ -83,15 +83,15 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.item_selection_boxs: list[Canvas.Item] = [] # type: ignore[name-defined]
 
 		self.layer = IntVar()
-		self.layer.trace('w', self.layer_updated)
+		self.layer.trace_add('write', self.layer_updated)
 		self.visible = IntVar()
-		self.visible.trace('w', self.visible_updated)
+		self.visible.trace_add('write', self.visible_updated)
 		self.locked = IntVar()
-		self.locked.trace('w', self.locked_updated)
+		self.locked.trace_add('write', self.locked_updated)
 		self.autovis = BooleanVar()
-		self.autovis.trace('w', self.autovis_updated)
+		self.autovis.trace_add('write', self.autovis_updated)
 		self.autolock = BooleanVar()
-		self.autolock.trace('w', self.autolock_updated)
+		self.autolock.trace_add('write', self.autolock_updated)
 		self.tool = IntVar()
 		self.tool.set(Tool.select.value)
 
@@ -104,10 +104,10 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
 		self.toolbar.add_button(Assets.get_image('importc'), self.iimport, 'Import from BMP', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export, 'Export to BMP', Ctrl.e, enabled=False, tags=('file_open', 'has_layers'))
@@ -180,6 +180,8 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.bind(Key.Backspace(), lambda _: self.delete_stars())
 		rightframe.grid(row=0, column=1, padx=2, pady=2, sticky=NSEW)
 		frame.pack(fill=X)
+
+		self.last_pos = (0,0)
 		mouse_events = (
 			(Mouse.Click_Left, MouseEvent.down),
 			(Mouse.Drag_Left, MouseEvent.move),
@@ -244,11 +246,11 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if len(self.spk.layers[layer].stars) and not MessageBox.askyesno(parent=self, title='Delete Layer', message="Are you sure you want to delete the layer?"):
 			return
 		del self.spk.layers[layer]
-		self.skyCanvas.delete('layer%d' % layer)
+		self.skyCanvas.delete(f'layer{layer}')
 		if layer < len(self.spk.layers):
 			for i in range(layer+1,len(self.spk.layers)+1):
-				self.skyCanvas.addtag_withtag('layer%d' % (i-1), 'layer%d' % i)
-				self.skyCanvas.dtag('layer%d' % i)
+				self.skyCanvas.addtag_withtag(f'layer{i-1}', f'layer{i}')
+				self.skyCanvas.dtag(f'layer{i}')
 		else:
 			self.layer.set(layer-1)
 		self.rows[len(self.spk.layers)].hide()
@@ -264,11 +266,11 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		temp = self.spk.layers[cur_layer]
 		self.spk.layers[cur_layer] = self.spk.layers[swap_layer]
 		self.spk.layers[swap_layer] = temp
-		self.skyCanvas.addtag_withtag('temp', 'layer%d' % cur_layer)
-		self.skyCanvas.dtag('layer%d' % cur_layer)
-		self.skyCanvas.addtag_withtag('layer%d' % cur_layer, 'layer%d' % swap_layer)
-		self.skyCanvas.dtag('layer%d' % swap_layer)
-		self.skyCanvas.addtag_withtag('layer%d' % swap_layer, 'temp')
+		self.skyCanvas.addtag_withtag('temp', f'layer{cur_layer}')
+		self.skyCanvas.dtag(f'layer{cur_layer}')
+		self.skyCanvas.addtag_withtag(f'layer{cur_layer}', f'layer{swap_layer}')
+		self.skyCanvas.dtag(f'layer{swap_layer}')
+		self.skyCanvas.addtag_withtag(f'layer{swap_layer}', 'temp')
 		self.skyCanvas.dtag('temp')
 		self.edit()
 
@@ -294,7 +296,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.spk'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -342,7 +344,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			else:
 				row.hide()
 
-	def layer_updated(self, *args) -> None:
+	def layer_updated(self, *_args: Any) -> None:
 		if not self.is_file_open():
 			return
 		layer = self.layer.get()
@@ -354,13 +356,13 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.locked.set((1+2+4+8+16) & ~(1 << layer))
 		self.action_states()
 
-	def visible_updated(self, *args) -> None:
+	def visible_updated(self, *_args: Any) -> None:
 		if not self.spk:
 			return
 		visible = self.visible.get()
 		update_sel = False
 		for l,layer in enumerate(self.spk.layers):
-			self.skyCanvas.itemconfig('layer%d' % l, state=(NORMAL if (visible & (1 << l)) else HIDDEN))
+			self.skyCanvas.itemconfig(f'layer{l}', state=(NORMAL if (visible & (1 << l)) else HIDDEN))
 			for star in layer.stars:
 				if star in self.selected_stars:
 					update_sel = True
@@ -369,7 +371,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if update_sel:
 			self.update_selection()
 
-	def locked_updated(self, *args) -> None:
+	def locked_updated(self, *_args: Any) -> None:
 		if not self.spk:
 			return
 		updated_sel = False
@@ -382,12 +384,12 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if updated_sel:
 			self.update_selection()
 
-	def autovis_updated(self, *args) -> None:
+	def autovis_updated(self, *_args: Any) -> None:
 		if not self.is_file_open() or not self.autovis.get():
 			return
 		self.layer_updated()
 
-	def autolock_updated(self, *args) -> None:
+	def autolock_updated(self, *_args: Any) -> None:
 		if not self.is_file_open() or not self.autolock.get():
 			return
 		self.layer_updated()
@@ -396,7 +398,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not self.spk:
 			return
 		for l in range(len(self.spk.layers)):
-			self.skyCanvas.tag_lower('layer%d' % l)
+			self.skyCanvas.tag_lower(f'layer{l}')
 		self.skyCanvas.lift('selection')
 
 	def get_image(self, spkimage: SPK.SPKImage) -> (Image | None):
@@ -413,7 +415,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			item.config(state=(NORMAL if visible else HIDDEN))
 		else:
 			image = self.get_image(star.image)
-			item = self.skyCanvas.create_image(star.x,star.y, image=image, anchor=NW, tags='layer%d' % layer, state=(NORMAL if visible else HIDDEN))
+			item = self.skyCanvas.create_image(star.x,star.y, image=image, anchor=NW, tags=f'layer{layer}', state=(NORMAL if visible else HIDDEN))
 			self.star_map[item] = star
 			self.item_map[star] = item
 
@@ -440,7 +442,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				self.item_selection_boxs.append(item)
 			else:
 				self.item_selection_boxs[i].coords(x1,y1, x2,y2)
-		self.edit_status.set('%d stars selected' % len(self.selected_stars))
+		self.edit_status.set(f'{len(self.selected_stars)} stars selected')
 		self.stars_tab.update_selection()
 
 	# def edit_star_settings(self, star=None):
@@ -450,7 +452,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	# 		StarSettings(self, star)
 
 	def move_stars(self, delta: tuple[int, int]) -> None:
-		if not len(self.selected_stars):
+		if not self.selected_stars:
 			return
 		for star in self.selected_stars:
 			star.x = max(0,star.x + delta[0])
@@ -462,7 +464,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def delete_stars(self) -> None:
 		if not self.spk:
 			return
-		if not len(self.selected_stars) or not MessageBox.askyesno(parent=self, title='Delete Stars', message="Are you sure you want to delete the stars?"):
+		if not self.selected_stars or not MessageBox.askyesno(parent=self, title='Delete Stars', message="Are you sure you want to delete the stars?"):
 			return
 		for star in self.selected_stars:
 			self.item_map[star].delete()
@@ -477,7 +479,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stars_tab.update_list()
 		self.edit()
 
-	def select_event(self, event: Event, mouse_event, click_modifier):
+	def select_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
 		if mouse_event == MouseEvent.down:
 			self.selecting_start = (event.x,event.y)
 		elif mouse_event == MouseEvent.move and self.selecting_start:
@@ -509,7 +511,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.update_selection()
 			self.selecting_start = None
 
-	def move_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
+	def move_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None: # pylint: disable=unused-argument
 		if mouse_event == MouseEvent.down:
 			self.last_pos = (event.x,event.y)
 		else:
@@ -517,12 +519,12 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.move_stars((dx,dy))
 			self.last_pos = (event.x,event.y)
 
-	def draw_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None:
+	def draw_event(self, event: Event, mouse_event: MouseEvent, click_modifier: ClickModifier) -> None: # pylint: disable=unused-argument
 		if not self.spk:
 			return
 		if mouse_event != MouseEvent.up \
 				or not self.selected_image \
-				or not len(self.spk.layers) \
+				or not self.spk.layers \
 				or self.layer.get() < 0 \
 				or self.locked.get() & (1 << self.layer.get()):
 			return
@@ -565,7 +567,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			else:
 				self.item_place_image.coords(x,y)
 
-	def mouse_leave(self, event: Event) -> None:
+	def mouse_leave(self, _event: Event) -> None:
 		if self.item_place_image:
 			self.item_place_image.delete()
 			self.item_place_image = None
@@ -577,9 +579,9 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.spk = None
 		self.file = None
 		self.mark_edited(False)
-		
+
 		self.update_title()
-		
+
 		self.selected_image = None
 		self.selected_stars = []
 
@@ -602,9 +604,9 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.spk'
 		if not file_path:
-			self.title('PySPK %s' % LONG_VERSION)
+			self.title(f'PySPK {LONG_VERSION}')
 		else:
-			self.title('PySPK %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PySPK {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -638,10 +640,10 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		self.clear()
 		self.spk = spk
-		if len(self.spk.layers):
+		if self.spk.layers:
 			self.layer.set(0)
 		self.reload_list()
-		if len(self.spk.images):
+		if self.spk.images:
 			self.selected_image = self.spk.images[0]
 		self.palette_tab.reload_palette()
 		self.update_stars()
@@ -669,10 +671,10 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return
 		self.clear()
 		self.spk = spk
-		if len(self.spk.layers):
+		if self.spk.layers:
 			self.layer.set(0)
 		self.reload_list()
-		if len(self.spk.images):
+		if self.spk.images:
 			self.selected_image = self.spk.images[0]
 		self.palette_tab.reload_palette()
 		self.update_stars()

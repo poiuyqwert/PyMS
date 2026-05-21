@@ -8,13 +8,12 @@ from ..FileFormats.PCX import PCX
 
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
-from ..Utilities.UIKit import Image
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from .DataContext import DataContext
 
-class IconData(object):
+class IconData:
 	def __init__(self, data_context: DataContext) -> None:
 		self.data_context = data_context
 		self.grp: CacheGRP | None = None

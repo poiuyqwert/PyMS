@@ -12,17 +12,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKString(object):
+class CHKString:
 	def __init__(self, sect: CHKSectionSTR, string_id: int, text: str, refs: int = 1) -> None:
 		self.sect = sect
 		self.string_id = string_id
 		self.text = text
 		self.references = refs
 
-	def retain(self):
+	def retain(self) -> None:
 		self.references += 1
 
-	def release(self):
+	def release(self) -> None:
 		self.references -= 1
 		if self.references == 0:
 			self.sect.delete_string(self.string_id)
@@ -30,12 +30,12 @@ class CHKString(object):
 class CHKSectionSTR(CHKSection):
 	NAME = 'STR '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.strings: dict[int, CHKString] = {}
 		self.open_ids: list[int] = []
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.strings = {}
 		self.open_ids = []
@@ -54,7 +54,7 @@ class CHKSectionSTR(CHKSection):
 			string = CHKString(self, string_id, text)
 			self.strings[string_id] = string
 			string_id += 1
-	
+
 	def string_count(self) -> int:
 		return len(self.strings)
 
@@ -133,9 +133,10 @@ class CHKSectionSTR(CHKSection):
 	def delete_string(self, string_id: int) -> None:
 		if string_id in self.strings:
 			del self.strings[string_id]
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		for n,string in self.strings.items():
-			result += '\t%s"%s"\n' % (pad('String %d' % (n+1)), string.text.replace('\\','\\\\').replace('"','\\"'))
+			text = string.text.replace('\\','\\\\').replace('"','\\"')
+			result += f'\t{pad(f"String {n+1}")}"{text}"\n'
 		return result

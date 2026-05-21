@@ -14,7 +14,7 @@ from typing import cast, Sequence, Type
 #  - Reference links are not supported
 #  - Autolinks are not supported
 
-class _Scanner(object):
+class _Scanner:
 	RE_BLANK = re.compile(r'^[ \t]*$')
 
 	def __init__(self) -> None:
@@ -63,17 +63,17 @@ class _Scanner(object):
 		return pattern.match(self.line, self.offset, self.length)
 
 # Block content
-class Block(object):
+class Block:
 	def __init__(self) -> None:
 		self.open = True
 		self.parent: Block | None = None
 		# self.children: list[Block] = []
 
 	@staticmethod
-	def start(scanner: _Scanner) -> Block | None:
+	def start(_scanner: _Scanner) -> Block | None:
 		return None
 
-	def is_continued(self, scanner: _Scanner) -> bool:
+	def is_continued(self, _scanner: _Scanner) -> bool:
 		return False
 
 	def close(self) -> None:
@@ -85,9 +85,9 @@ class Block(object):
 	def __repr__(self) -> str:
 		info = '-> ' if self.open else '   '
 		info += self.__class__.__name__
-		repr_params = self.repr_params()
+		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
-			info += ' (%s)' % repr_params
+			info += f' ({repr_params})'
 		return info
 
 class ContainerBlock(Block):
@@ -181,7 +181,7 @@ class ATXHeading(ContentBlock):
 		return ATXHeading(len(match.group(2)))
 
 	def repr_params(self) -> str:
-		return 'level=%d' % self.level
+		return f'level={self.level}'
 
 	def anchor(self) -> str:
 		def collapse(items: Sequence[Span | str]) -> str:
@@ -216,11 +216,11 @@ class IndentedCodeBlock(ContentBlock):
 
 class FencedCodeBlock(ContentBlock):
 	RE_MARKER = re.compile(r'( {0,3})(`{3,}|~{3,})([^`~][^`~]*?)?\s*$')
-	
+
 	def __init__(self, indent: int, fence: str, info_string: str) -> None:
 		ContentBlock.__init__(self)
 		self.indent = indent
-		self._re_closing = re.compile(' {0,3}%s+\\s*$' % fence)
+		self._re_closing = re.compile(r' {0,3}%s+\\s*$' % fence)
 		self.info_string = info_string
 
 	@staticmethod
@@ -286,7 +286,7 @@ class ListBlock(ContainerBlock):
 		return False
 
 	def repr_params(self) -> str:
-		return "marker='%s', level=%d" % (self.marker, self.level)
+		return f"marker='{self.marker}', level={self.level}"
 
 class ListItemBlock(ContainerBlock):
 	RE_MARKER = re.compile(r'( {0,3})([-+*]|[0-9]{1,9}[.)])(?:( {1,4})(?:[^ ]|$)|( )(?:[^ ]|$)|$)')
@@ -310,9 +310,9 @@ class ListItemBlock(ContainerBlock):
 			marker = ListBlock.MARKER_BULLET
 		else:
 			marker = ListBlock.MARKER_NUMERIC
-		list = ListBlock(marker, level)
-		list.add_child(ListItemBlock())
-		return list
+		list_block = ListBlock(marker, level)
+		list_block.add_child(ListItemBlock())
+		return list_block
 
 	def is_continued(self, scanner: _Scanner) -> bool:
 		match = scanner.match(ListItemBlock.RE_LEVEL)
@@ -323,14 +323,14 @@ class ListItemBlock(ContainerBlock):
 		return True
 
 # Inline content
-class Span(object):
+class Span:
 	def __init__(self, text: str | None) -> None:
 		self.contents: list[Span | str] = []
 		if text:
 			self.contents.append(text)
 
 	@staticmethod
-	def apply(text: str) -> tuple[int, int, Span] | None:
+	def apply(_text: str) -> tuple[int, int, Span] | None:
 		return None
 
 	def scan(self, span_type: type[Span]) -> bool:
@@ -358,7 +358,7 @@ class Span(object):
 		return None
 
 	def __repr__(self) -> str:
-		result = '<%s' % self.__class__.__name__
+		result = f'<{self.__class__.__name__}'
 		repr_params = self.repr_params() # pylint: disable=assignment-from-none
 		if repr_params:
 			result += ' ' + repr_params
@@ -368,7 +368,7 @@ class Span(object):
 				result += repr(item)
 			elif isinstance(item, str):
 				result += item
-		result += '</%s>' % self.__class__.__name__
+		result += f'</{self.__class__.__name__}>'
 		return result
 
 class CodeSpan(Span):
@@ -434,10 +434,10 @@ class Link(Span):
 		title = match.group(4)
 		return (match.start(), match.end(), Link(text, link, title))
 
-	def repr_params(self): # type () -> (str | None)
-		result = 'link="%s"' % self.link
+	def repr_params(self) -> (str | None):
+		result = f'link="{self.link}"'
 		if self.title:
-			result += ' title="%s"' % self.title
+			result += f' title="{self.title}"'
 		return result
 
 class Image(Span):
@@ -461,10 +461,10 @@ class Image(Span):
 		title = match.group(4)
 		return (match.start(), match.end(), Image(alt_text, link, title))
 
-	def repr_params(self): # type () -> (str | None)
-		result = 'link="%s" alt_text="%s"' % (self.link, self.alt_text)
+	def repr_params(self) -> (str | None):
+		result = f'link="{self.link}" alt_text="{self.alt_text}"'
 		if self.title:
-			result += ' title="%s"' % self.title
+			result += f' title="{self.title}"'
 		return result
 
 class Document(ContainerBlock):
@@ -540,7 +540,7 @@ class Document(ContainerBlock):
 				open_block.close()
 		# print('\r\n' + repr(document))
 		# Phase 2. Parse inline structure
-		def parse_spans(block):
+		def parse_spans(block: Block) -> None:
 			if isinstance(block, IndentedCodeBlock) or isinstance(block, FencedCodeBlock):
 				return
 			if isinstance(block, ContentBlock):
@@ -553,7 +553,7 @@ class Document(ContainerBlock):
 		parse_spans(document)
 		return document
 
-	def is_continued(self, scanner: _Scanner) -> bool:
+	def is_continued(self, _scanner: _Scanner) -> bool:
 		return True
 
 	def close(self) -> None:

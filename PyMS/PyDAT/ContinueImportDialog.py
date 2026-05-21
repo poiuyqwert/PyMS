@@ -10,14 +10,14 @@ class ContinueImportDialog(PyMSDialog):
 		yes = 1
 		yes_to_all = 2
 
-	def __init__(self, parent: Misc, dattype: str, id: int) -> None:
+	def __init__(self, parent: Misc, dattype: str, entry_id: int) -> None:
 		self.dattype = dattype
-		self.id = id
+		self.id = entry_id
 		self.cont = ContinueImportDialog.Result.cancel
 		PyMSDialog.__init__(self, parent, 'Continue Importing?')
 
 	def widgetize(self) -> Misc | None:
-		Label(self, text="You are about to import the %s entry %s, overwrite existing data?" % (self.dattype,self.id)).pack(pady=10)
+		Label(self, text=f"You are about to import the {self.dattype} entry {self.id}, overwrite existing data?").pack(pady=10)
 		frame = Frame(self)
 		yes = Button(frame, text='Yes', width=10, command=self.yes)
 		yes.pack(side=LEFT, padx=3)

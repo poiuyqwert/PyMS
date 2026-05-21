@@ -11,7 +11,7 @@ import tkinter as _Tk
 from typing import Any, Callable, Sequence
 
 class Menu(_Tk.Menu, Extensions):
-	class Item(object):
+	class Item:
 		def __init__(self, menu: Menu, index: int):
 			self.menu = menu
 			self.index = index
@@ -22,17 +22,17 @@ class Menu(_Tk.Menu, Extensions):
 		def __getitem__(self, option: str) -> Any:
 			return self.cget(option)
 
-		def config(self, **kwargs) -> None:
+		def config(self, **kwargs: Any) -> None:
 			self.menu.entryconfig(self.index, **kwargs)
 
 		def __setitem__(self, option: str, value: Any) -> None:
 			self.config(**{option: value})
 
-	def __init__(self, master: _Tk.Misc | None =None, cnf={}, **kw):
+	def __init__(self, master: _Tk.Misc | None =None, cnf: dict[str, Any] | None = None, **kw: Any) -> None:
 		self._items: dict[str, Menu.Item] = {}
 		self._tag_manager = TagStateManager()
 		self._cascade_menus: list[Menu] = []
-		_Tk.Menu.__init__(self, master, cnf, **kw)
+		_Tk.Menu.__init__(self, master, cnf or {}, **kw)
 		Theme.apply_theme(self)
 
 	def _detect_underline(self, label: str, shortcut: EventPattern | None, kwargs: dict[str, Any]) -> None:
@@ -42,7 +42,7 @@ class Menu(_Tk.Menu, Extensions):
 		# Remove `underline` to handle invalid values. It will be replaced if we can determine a proper value
 		if 'underline' in kwargs:
 			del kwargs['underline']
-		find = None 
+		find = None
 		if isinstance(underline, str):
 			find = underline
 		elif shortcut is not None:
@@ -65,7 +65,7 @@ class Menu(_Tk.Menu, Extensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not calling the `command` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the command to be able to configure it
-	def add_command(self, label: str, command: Callable[[], None], shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs) -> Menu.Item: # type: ignore[override]
+	def add_command(self, label: str, command: Callable[[], None], shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)
@@ -73,7 +73,7 @@ class Menu(_Tk.Menu, Extensions):
 		item = Menu.Item(self, self.index(_Tk.END) or 0)
 		if shortcut and bind_shortcut:
 			def _command_callback(item: Menu.Item, command: Callable[[], None]) -> Callable[[_Tk.Event], None]:
-				def _binding_trigger_command(event: _Tk.Event) -> None:
+				def _binding_trigger_command(_event: _Tk.Event) -> None:
 					if item['state'] == _Tk.DISABLED:
 						return
 					command()
@@ -89,7 +89,7 @@ class Menu(_Tk.Menu, Extensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not setting the `variable` to `value` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the radiobutton to be able to configure it
-	def add_radiobutton(self, label: str, variable: _Tk.Variable, value: Any, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs) -> Menu.Item: # type: ignore[override]
+	def add_radiobutton(self, label: str, variable: _Tk.Variable, value: Any, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)
@@ -97,7 +97,7 @@ class Menu(_Tk.Menu, Extensions):
 		item = Menu.Item(self, self.index(_Tk.END) or 0)
 		if shortcut and bind_shortcut:
 			def _callback(item: Menu.Item, variable: _Tk.Variable, value: Any) -> Callable[[_Tk.Event], None]:
-				def _binding_trigger_radiobutton(e: _Tk.Event) -> None:
+				def _binding_trigger_radiobutton(_event: _Tk.Event) -> None:
 					if item['state'] == _Tk.DISABLED:
 						return
 					variable.set(value)
@@ -113,7 +113,7 @@ class Menu(_Tk.Menu, Extensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not toggling the `variable` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the checkbutton to be able to configure it
-	def add_checkbutton(self, label: str, variable: _Tk.Variable, onvalue: Any = True, offvalue: Any = False, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs) -> Menu.Item: # type: ignore[override]
+	def add_checkbutton(self, label: str, variable: _Tk.Variable, onvalue: Any = True, offvalue: Any = False, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)
@@ -121,7 +121,7 @@ class Menu(_Tk.Menu, Extensions):
 		item = Menu.Item(self, self.index(_Tk.END) or 0)
 		if shortcut and bind_shortcut:
 			def _callback(item: Menu.Item, variable: _Tk.Variable, onvalue: Any, offvalue: Any) -> Callable[[_Tk.Event], None]:
-				def _binding_trigger_checkbutton(e: _Tk.Event) -> None:
+				def _binding_trigger_checkbutton(_event: _Tk.Event) -> None:
 					if item['state'] == _Tk.DISABLED:
 						return
 					variable.set(onvalue if variable.get() == offvalue else offvalue)
@@ -135,7 +135,7 @@ class Menu(_Tk.Menu, Extensions):
 	# Extend `add_cascade` to:
 	#  - Generate a `Menu` if none is specified and return in
 	#  - Remember its children so `tag_enabled` will apply recursively
-	def add_cascade(self, label: str, menu: Menu | None = None, **kwargs) -> Menu: # type: ignore[override]
+	def add_cascade(self, label: str, menu: Menu | None = None, **kwargs: Any) -> Menu: # type: ignore[override]
 		if not menu:
 			menu = Menu(self, tearoff=kwargs.get('tearoff', 0))
 		_Tk.Menu.add_cascade(self, label=label, menu=menu, **kwargs)

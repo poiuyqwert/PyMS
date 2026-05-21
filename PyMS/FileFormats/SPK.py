@@ -35,15 +35,15 @@ class SPK:
 		self.layers: list[SPKLayer] = []
 		self.images: list[SPKImage] = []
 
-	def load_file(self, input: IO.AnyInputBytes) -> None:
-		with IO.InputBytes(input) as f:
-			data = f.read()
+	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		try:
 			self.load_data(data)
 		except PyMSError as e:
 			raise e
-		except:
-			raise PyMSError('Load',"Unsupported SPK file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Load',"Unsupported SPK file, could possibly be corrupt") from exc
 
 	def load_data(self, data: bytes) -> None:
 		layer_count = struct.unpack('<H', data[:2])[0]
@@ -82,11 +82,11 @@ class SPK:
 		bmp = BMP.BMP()
 		try:
 			bmp.load_file(filepath)
-		except:
-			raise PyMSError('Interpreting',"Could not load file '%s'" % filepath)
+		except Exception as exc:
+			raise PyMSError('Interpreting', f"Could not load file '{filepath}'") from exc
 		height = int(bmp.height / float(layer_count))
 		if bmp.height % height:
-			raise PyMSError('Interpreting',"Image is not the correct height to fit %d layers" % layer_count)
+			raise PyMSError('Interpreting', f"Image is not the correct height to fit {layer_count} layers")
 		layers = list(SPKLayer() for _ in range(layer_count))
 		runs_by_row = []
 		for bmp_row in bmp.image:
@@ -174,7 +174,7 @@ class SPK:
 					pixels += struct.pack('<HH', star.image.width, star.image.height)
 					pixels_offset += 4
 					for row in star.image.pixels:
-						pixels += struct.pack('<%dB' % star.image.width, *row)
+						pixels += struct.pack(f'<{star.image.width}B', *row)
 					pixels_offset += star.image.width * star.image.height
 				headers += struct.pack('<HHL', star.x, star.y, images[lookup])
 		return headers + pixels

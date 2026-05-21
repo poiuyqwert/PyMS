@@ -201,16 +201,16 @@ class CodeGeneratorTypeList(CodeGenerator.CodeGeneratorType):
 	def count(self) -> int | None:
 		return self.repeater.count(len(self.values))
 
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		n = self.repeater.index(len(self.values), lookup_value('n'))
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		n = self.repeater.index(len(self.values), int(lookup_value('n')))
 		if n is None:
 			return ''
 		value = self.values[n]
 		variable_re = re.compile(r'\$([a-zA-Z0-9_]+)')
-		return variable_re.sub(lambda m: str(lookup_value(m.group(1))), value)
+		return variable_re.sub(lambda m: lookup_value(m.group(1)), value)
 
-	def description(self):
-		return 'Items from list: %s' % ', '.join(self.values)
+	def description(self) -> str:
+		return f'Items from list: {", ".join(self.values)}'
 
 	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorList(parent, self, config.windows.generator.editor.list)

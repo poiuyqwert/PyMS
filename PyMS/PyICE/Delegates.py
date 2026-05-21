@@ -34,7 +34,7 @@ class MainDelegate(Protocol):
 	def get_serialize_context(self, output: BuiltinIO[str]) -> ICESerializeContext:
 		...
 
-	def get_parse_context(self, input: IO.AnyInputText) -> ICEParseContext:
+	def get_parse_context(self, any_input: IO.AnyInputText) -> ICEParseContext:
 		...
 
 	def save_code(self, code: str, parent: AnyWindow) -> bool:

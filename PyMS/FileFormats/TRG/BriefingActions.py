@@ -4,7 +4,7 @@ from __future__ import annotations
 from .ActionDefinition import ActionDefinition, BasicActionDefinition, RawActionDefinition
 from .Parameters import *
 from .Action import Action
-from .Constants import BriefingActionType, Matches
+from .Constants import ActionType, BriefingActionType, Matches
 
 definitions_registry: list[ActionDefinition] = [
 	BasicActionDefinition('NoAction', 'No action', BriefingActionType.no_action),

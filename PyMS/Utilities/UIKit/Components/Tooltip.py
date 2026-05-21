@@ -2,12 +2,11 @@
 from ..Font import Font
 from ..Widgets import *
 from ..EventPattern import *
-from ...utils import is_mac
 
 class TooltipWindow(Toplevel):
 	pass
 
-class Tooltip(object):
+class Tooltip:
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
 	def __init__(self, parent: Misc, text: str = '', font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
 		self.parent = parent
@@ -19,7 +18,7 @@ class Tooltip(object):
 		self.id: str | None = None
 		self.tip: TooltipWindow | None = None
 		if attach_to_parent:
-			setattr(self.parent, '_tooltip', self)
+			setattr(self.parent, '_tooltip_' + self.__class__.__name__, self)
 
 	def setupbinds(self, press: bool) -> None:
 		self.parent.winfo_toplevel().bind(Focus.Out(), self.leave, '+')
@@ -30,15 +29,15 @@ class Tooltip(object):
 		if press:
 			self.parent.bind(Mouse.ButtonPress(), self.leave, '+')
 
-	def enter(self, e: Event | None = None) -> None:
+	def enter(self, _event: Event | None = None) -> None:
 		self.unschedule()
 		self.id = self.parent.after(self.delay, self.showtip)
 
-	def leave(self, e: Event | None = None) -> None:
+	def leave(self, _event: Event | None = None) -> None:
 		self.unschedule()
 		self.hidetip()
 
-	def motion(self, e: Event | None = None) -> None:
+	def motion(self, _event: Event | None = None) -> None:
 		if self.id:
 			self.parent.after_cancel(self.id)
 			self.id = self.parent.after(self.delay, self.showtip)
@@ -52,9 +51,7 @@ class Tooltip(object):
 		if self.tip:
 			return
 		self.tip = TooltipWindow(self.parent, relief=SOLID, borderwidth=1)
-		self.tip.wm_overrideredirect(True)
-		if is_mac():
-			self.tip.wm_transient(self.parent.winfo_toplevel())
+		self.tip.make_frameless(self.parent.winfo_toplevel())
 		frame = Frame(self.tip, background='#FFFFC8', borderwidth=0)
 		Label(frame, text=self.text, justify=LEFT, font=self.font, foreground='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1) # type: ignore[arg-type]
 		frame.pack()
@@ -70,7 +67,7 @@ class Tooltip(object):
 			x = self.tip.winfo_screenwidth() - self.tip.winfo_width()
 		if y + self.tip.winfo_height() > self.tip.winfo_screenheight():
 			y = self.tip.winfo_screenheight() - self.tip.winfo_height()
-		self.tip.wm_geometry('+%d+%d' % (x,y))
+		self.tip.wm_geometry(f'+{x}+{y}')
 
 	def hidetip(self) -> None:
 		if self.tip:

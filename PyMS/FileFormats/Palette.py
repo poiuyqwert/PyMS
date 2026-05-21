@@ -42,7 +42,7 @@ class Palette:
 			return tuple(load_types)
 
 		@staticmethod
-		def save_types(format: Palette.Format, ext: str | None) -> tuple[FileType, ...]:
+		def save_types(pal_format: Palette.Format, ext: str | None) -> tuple[FileType, ...]:
 			save_types_lookup: dict[Palette.Format, dict[str | None, list[FileType]]] = {
 				Palette.Format.riff: {
 					None: [FileType.pal_riff()]
@@ -59,14 +59,14 @@ class Palette:
 					None: [FileType.wpe()]
 				}
 			}
-			save_types_format = save_types_lookup.get(format)
+			save_types_format = save_types_lookup.get(pal_format)
 			if not save_types_format:
-				raise PyMSError('Palette',"Unsupported save format '%s'" % format)
+				raise PyMSError('Palette', f"Unsupported save format '{pal_format}'")
 			save_types = save_types_format.get(ext, save_types_format[None])
 			return tuple(save_types)
 
-		def __init__(self, format: Palette.Format, ext: str) -> None:
-			self.format = format
+		def __init__(self, pal_format: Palette.Format, ext: str) -> None:
+			self.format = pal_format
 			self.ext = ext
 
 	def __init__(self) -> None:
@@ -95,16 +95,16 @@ class Palette:
 		pcx = PCX()
 		try:
 			pcx.load_data(data)
-		except:
-			raise PyMSError('Palette',"Unsupported PCX palette file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Palette',"Unsupported PCX palette file, could possibly be corrupt") from exc
 		return pcx.palette
 
 	def load_bmp(self, data: bytes) -> RawPalette:
 		bmp = BMP()
 		try:
 			bmp.load_data(data)
-		except:
-			raise PyMSError('Palette',"Unsupported BMP palette file, could possibly be corrupt")
+		except Exception as exc:
+			raise PyMSError('Palette', "Unsupported BMP palette file, could possibly be corrupt") from exc
 		return bmp.palette
 
 	def load_sc_wpe(self, data: bytes) -> RawPalette:
@@ -131,16 +131,16 @@ class Palette:
 			(Palette.Format.raw_rgba, self.load_sc_wpe),
 			(Palette.Format.raw_rgb, self.load_sc_pal)
 		)
-		for format,load_method in formats:
+		for pal_format,load_method in formats:
 			try:
-				palette = load_method(data) # type: ignore
+				palette = load_method(data)
 				if len(palette) == 256:
-					self.format = format
+					self.format = pal_format
 					break
 			except:
 				pass
 		else:
-			raise PyMSError('Palette',"Unsupported palette file '%s', could possibly be corrupt" % path)
+			raise PyMSError('Palette', f"Unsupported palette file '{path}', could possibly be corrupt")
 		self.palette = palette
 
 	def load_data(self, palette: RawPalette) -> None:
@@ -149,8 +149,8 @@ class Palette:
 	def save_riff_pal(self, path: str) -> None:
 		try:
 			f = AtomicWriter(path,'wb')
-		except:
-			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
+		except Exception as exc:
+			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
 		f.write(b'RIFF\x00\x00\x00\x00PAL data\x04\x04\x00\x00\x00\x03\x00\x01')
 		for c in self.palette:
 			f.write(struct.pack('3Bx',*c))
@@ -159,8 +159,8 @@ class Palette:
 	def save_jasc_pal(self, path: str) -> None:
 		try:
 			f = AtomicWriter(path, 'w')
-		except:
-			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
+		except Exception as exc:
+			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
 		f.write('JASC-PAL\r\n0100\r\n256\r\n')
 		for color in self.palette:
 			f.write(' '.join(str(c) for c in color) + '\r\n')
@@ -169,8 +169,8 @@ class Palette:
 	def save_sc_wpe(self, path: str) -> None:
 		try:
 			f = AtomicWriter(path,'wb')
-		except:
-			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
+		except Exception as exc:
+			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
 		for c in self.palette:
 			f.write(struct.pack('3Bx',*c))
 		f.close()
@@ -178,22 +178,22 @@ class Palette:
 	def save_sc_pal(self, path: str) -> None:
 		try:
 			f = AtomicWriter(path,'wb')
-		except:
-			raise PyMSError('Palette',"Could not save palette to file '%s'" % path)
+		except Exception as exc:
+			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
 		for c in self.palette:
 			f.write(struct.pack('3B',*c))
 		f.close()
 
-	def save(self, path: str, format: Palette.Format) -> None:
+	def save(self, path: str, pal_format: Palette.Format) -> None:
 		formats = {
 			Palette.Format.riff: self.save_riff_pal,
 			Palette.Format.jasc: self.save_jasc_pal,
 			Palette.Format.raw_rgba: self.save_sc_wpe,
 			Palette.Format.raw_rgb: self.save_sc_pal
 		}
-		save_method = formats.get(format)
+		save_method = formats.get(pal_format)
 		if not save_method:
-			raise PyMSError('Palette',"Unsupported save format '%s'" % format)
+			raise PyMSError('Palette', f"Unsupported save format '{pal_format}'")
 		save_method(path)
 
 Palette.FileType.riff = Palette.FileType(Palette.Format.riff, 'pal')

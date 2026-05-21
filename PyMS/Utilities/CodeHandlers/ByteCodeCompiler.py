@@ -1,11 +1,39 @@
 
+from __future__ import annotations
+
 from .CodeBlock import CodeBlock
-from .BuilderContext import BuilderContext, BuilderUpdater
 
 from ..PyMSError import PyMSError
 from .. import Struct
 
-class ByteCodeBuilder(BuilderContext):
+from typing import Protocol
+
+class ByteCodeBuilderType(Protocol):
+	def add_data(self, data: bytes | bytearray) -> int:
+		...
+
+	def add_block_ref(self, block: CodeBlock, struct_type: Struct.IntField) -> int:
+		...
+
+	def set_data(self, address: int, data: bytes | bytearray, can_expand: bool = False) -> None:
+		...
+
+	def get_updater(self) -> BuilderUpdater:
+		...
+
+class BuilderUpdater:
+	def __init__(self, address: int, builder: ByteCodeBuilderType) -> None:
+		self.address = address
+		self.builder = builder
+
+	def update_data(self, data: bytes | bytearray) -> None:
+		self.builder.set_data(self.address, data)
+		self.address += len(data)
+
+	def skip(self, bytes_count: int) -> None:
+		self.address += bytes_count
+
+class ByteCodeCompiler(ByteCodeBuilderType):
 	def __init__(self) -> None:
 		self.data = bytearray()
 		self.block_offsets: dict[CodeBlock, int] = {}
@@ -19,13 +47,13 @@ class ByteCodeBuilder(BuilderContext):
 	def _resolve_block_refs(self, block: CodeBlock) -> None:
 		if not block in self.block_refs:
 			return
-		for ref_address,type in self.block_refs.pop(block):
+		for ref_address,struct_type in self.block_refs.pop(block):
 			block_address = self.block_offsets.get(block)
 			if not block_address:
 				raise PyMSError('Internal', 'Block is not compiled')
 			# Clamp offset to allow saving to check file size
 			# TODO: Is there a better way?
-			self.set_data(ref_address, type.pack(block_address, clamp=True))
+			self.set_data(ref_address, struct_type.pack(block_address, clamp=True))
 
 	def _compile_block(self, block: CodeBlock) -> None:
 		if block in self.block_offsets:
@@ -54,18 +82,18 @@ class ByteCodeBuilder(BuilderContext):
 		self.data += data
 		return offset
 
-	def add_block_ref(self, block: CodeBlock, type: Struct.IntField) -> int:
+	def add_block_ref(self, block: CodeBlock, struct_type: Struct.IntField) -> int:
 		if block in self.block_offsets:
 			# Clamp offset to allow saving to check file size
 			# TODO: Is there a better way?
-			return self.add_data(type.pack(self.block_offsets[block], clamp=True))
+			return self.add_data(struct_type.pack(self.block_offsets[block], clamp=True))
 		else:
 			if not block in self.block_refs:
 				self.block_refs[block] = []
-			self.block_refs[block].append((self.current_offset, type))
+			self.block_refs[block].append((self.current_offset, struct_type))
 			if not block in self.next_blocks:
 				self.next_blocks.append(block)
-			return self.add_data(type.pack(0)) # Pack 0 for the offset now, which will be updated later once the block is compiled
+			return self.add_data(struct_type.pack(0)) # Pack 0 for the offset now, which will be updated later once the block is compiled
 
 	def set_data(self, address: int, data: bytes | bytearray, can_expand: bool = False) -> None:
 		if address + len(data) > len(self.data) and not can_expand:

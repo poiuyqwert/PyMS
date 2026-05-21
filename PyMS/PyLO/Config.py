@@ -46,7 +46,7 @@ class PyLOConfig(Config.Config):
 				self.base_grp = Config.File(default='MPQ:unit\\terran\\wessel.grp', name='Base GRP', filetypes=[FileType.grp()])
 				self.overlay_grp = Config.File(default='MPQ:unit\\terran\\wesselt.grp', name='Overlay GRP', filetypes=[FileType.grp()])
 				super().__init__()
-		
+
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
 				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])

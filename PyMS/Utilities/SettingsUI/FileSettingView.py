@@ -7,7 +7,7 @@ from ..EditedState import EditedState
 from .. import Assets
 from ..MPQHandler import MPQHandler
 
-from typing import overload
+from typing import overload, Any
 
 class FileSettingView(SettingView):
 	@overload
@@ -20,10 +20,10 @@ class FileSettingView(SettingView):
 		self.mpq_handler = mpq_handler
 		self.mpq_history_config = mpq_history_config
 		self.mpq_window_geometry_config = mpq_window_geometry_config
-		
+
 		self.variable = StringVar()
 		self.variable.set(setting.file_path)
-		self.variable.trace('w', self.changed)
+		self.variable.trace_add('write', self.changed)
 
 		self.editable = True
 		self.enabled = True
@@ -53,7 +53,7 @@ class FileSettingView(SettingView):
 		self.editable = editable
 		self._update_state()
 
-	def set_enabled(self, enabled: bool):
+	def set_enabled(self, enabled: bool) -> None:
 		self.enabled = enabled
 		self._update_state()
 
@@ -66,11 +66,11 @@ class FileSettingView(SettingView):
 		assert self.mpq_handler is not None
 		assert self.mpq_history_config is not None
 		assert self.mpq_window_geometry_config is not None
-		file_path = self.setting.select_mpq(self, self.mpq_handler, self.mpq_history_config, self.mpq_window_geometry_config, self.setting._name, self.setting._filetypes[0])
+		file_path = self.setting.select_mpq(self, self.mpq_handler, self.mpq_history_config, self.mpq_window_geometry_config, self.setting.name, self.setting.filetypes[0])
 		if file_path:
 			self.variable.set(file_path)
 
-	def changed(self, *_) -> None:
+	def changed(self, *_: Any) -> None:
 		edited = self.variable.get() != self.setting.file_path
 		self.edited_state.mark_edited(edited)
 

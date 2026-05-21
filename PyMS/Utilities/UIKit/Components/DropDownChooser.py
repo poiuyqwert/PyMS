@@ -14,10 +14,8 @@ class DropDownChooser(Toplevel):
 		self._typed = ''
 		self._typed_timer: str | None = None
 		Toplevel.__init__(self, parent, relief=SOLID, borderwidth=1)
-		self.wm_overrideredirect(True)
 		parent_toplevel = parent.winfo_toplevel()
-		if is_mac():
-			self.transient(parent_toplevel)
+		self.make_frameless(parent_toplevel)
 		scrollbar = Scrollbar(self)
 		self.listbox = Listbox(self, selectmode=SINGLE, height=min(10,len(options)), font=Font.fixed(), highlightthickness=0, yscrollcommand=scrollbar.set, activestyle=DOTBOX)
 		self.listbox.config(bd=0)
@@ -28,8 +26,8 @@ class DropDownChooser(Toplevel):
 			self.listbox.see(self.result)
 		self.listbox.bind(ButtonRelease.Click_Left(), self.select)
 		def enter_callback(i: int) -> Callable[[Event], None]:
-			def enter(e: Event) -> None:
-				self.enter(e, i)
+			def enter(event: Event) -> None:
+				self.enter(event, i)
 			return enter
 		bind: list[tuple[str, Callable[[Event], None]]] = [
 			(Cursor.Enter(), enter_callback(1)),
@@ -54,23 +52,24 @@ class DropDownChooser(Toplevel):
 		if len(options) > 10:
 			scrollbar.pack(side=RIGHT, fill=Y)
 		self.listbox.pack(side=LEFT, fill=BOTH, expand=1)
+		# TODO: Use UIKit.Utils.Geometry?
 		w = parent.winfo_width()
 		h = self.listbox.winfo_reqheight()
 		x = parent.winfo_rootx()
 		y = parent.winfo_rooty() + parent.winfo_height()
 		if y + h > self.winfo_screenheight():
 			y -= parent.winfo_height() + h
-		self.geometry('%dx%d+%d+%d' % (w,h,x, y))
+		self.geometry(f'{w}x{h}+{x}+{y}')
 		self.focus_binding = None
 		self.focus_binding = parent_toplevel.bind(Mouse.ButtonPress(), self.select, True)
 		self.bind(Focus.Out(), self.select)
 		self.focus_set()
 		self.wait_window(self)
 
-	def enter(self, e: Event, f: int) -> None:
+	def enter(self, _event: Event, f: int) -> None:
 		self.focus_index = f
 
-	def focusout(self, e: Event) -> None:
+	def focusout(self, _event: Event) -> None:
 		if not self.focus_index:
 			self.select()
 
@@ -87,37 +86,37 @@ class DropDownChooser(Toplevel):
 		self.listbox.select_set(index)
 		self.listbox.see(index)
 
-	def scroll(self, e: Event) -> None:
-		if e.delta > 0:
+	def scroll(self, event: Event) -> None:
+		if event.delta > 0:
 			self.listbox.yview('scroll', -2, 'units')
 		else:
 			self.listbox.yview('scroll', 2, 'units')
 
-	def home(self, e: Event) -> None:
+	def home(self, _event: Event) -> None:
 		self.listbox.yview('moveto', 0.0)
 
-	def end(self, e: Event) -> None:
+	def end(self, _event: Event) -> None:
 		self.listbox.yview('moveto', 1.0)
 
-	def up(self, e: Event) -> None:
+	def up(self, _event: Event) -> None:
 		self.listbox.yview('scroll', -1, 'units')
 
-	def down(self, e: Event) -> None:
+	def down(self, _event: Event) -> None:
 		self.listbox.yview('scroll', 1, 'units')
 
-	def pageup(self, e: Event) -> None:
+	def pageup(self, _event: Event) -> None:
 		self.listbox.yview('scroll', -1, 'pages')
 
-	def pagedown(self, e: Event) -> None:
+	def pagedown(self, _event: Event) -> None:
 		self.listbox.yview('scroll', 1, 'pages')
 
-	def select(self, e: Event | None = None) -> None:
+	def select(self, _event: Event | None = None) -> None:
 		s = self.listbox.curselection()
 		if s:
 			self.result = int(s[0])
 		self.close()
 
-	def close(self, e: Event | None = None) -> None:
+	def close(self, _event: Event | None = None) -> None:
 		self.parent.focus_set()
 		self.withdraw()
 		self.update_idletasks()

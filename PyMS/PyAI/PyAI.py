@@ -13,9 +13,11 @@ from .DecompilingFormatDialog import DecompilingFormatDialog
 from .Sort import SortBy
 from .Delegates import MainDelegate, ActionDelegate, TooltipDelegate
 from . import Actions
+from .AddedPluginsDialog import AddedPluginsDialog
+from .FixIssuesUI.FixIssuesDialog import FixIssuesDialog
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AILexer, AIDefsSourceCodeHandler, AIDefinitionsHandler, DataContext
+from ..FileFormats.AIBIN.CodeHandlers import AISerializeContext, AIParseContext, AIParseSettings, AILexer, AIDefsSourceCodeHandler, DataContext
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
@@ -37,14 +39,15 @@ from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities import IO
 from ..Utilities.ActionManager import ActionManager
 from ..Utilities.CodeHandlers.SerializeContext import Formatters
+from ..Utilities.CodeHandlers.DefinitionsHandler import DefinitionsHandler
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
 
-import os, io
+import io, os
 
 from typing import IO as BuiltinIO
 
-LONG_VERSION = 'v%s' % Assets.version('PyAI')
+LONG_VERSION = 'v' + Assets.version('PyAI')
 
 class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -68,7 +71,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 		self.script_list: list[AIBIN.AIScript] = []
 		self.edited = False
-	
+
 		self.action_manager = ActionManager()
 		self.action_manager.state_updated += self.action_states
 		self.findhistory: list[str] = []
@@ -76,7 +79,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 		self.sort = StringVar()
 		self.sort.set(self.config_.sort.value.value)
-		self.sort.trace('w', lambda *_: self.refresh_listbox())
+		self.sort.trace_add('write', lambda *_: self.refresh_listbox())
 		# self.reference = BooleanVar()
 		# self.reference.set(self.config_.reference.value)
 
@@ -90,10 +93,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file_menu.add_command('Open', self.open, Ctrl.o, bind_shortcut=False)
 		file_menu.add_command('Open Default Scripts', self.open_default, Ctrl.d, bind_shortcut=False)
 		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
-		def do_save():
+		def do_save() -> None:
 			self.save()
 		file_menu.add_command('Save', do_save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
-		def do_saveas():
+		def do_saveas() -> None:
 			self.saveas()
 		file_menu.add_command('Save As...', do_saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
 		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
@@ -168,7 +171,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		
+
 		self.toolbar.add_row()
 		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Blank Script', Key.Insert, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Scripts', Key.Delete, enabled=False, tags='scripts_selected')
@@ -261,12 +264,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	# Misc. functions
 	def update_title(self) -> None:
-		details = ' (No Files Loaded)'
 		if self.aiscript:
-			details = f' ({self.aiscript})'
+			details = f'{self.aiscript}'
 			if self.bwscript:
-				details += f' ({self.bwscript})'
-		self.title(f'PyAI {LONG_VERSION}{details}')
+				details += f', {self.bwscript}'
+		else:
+			details = 'No Files Loaded'
+		self.title(f'PyAI {LONG_VERSION} ({details})')
 
 	def entry_text(self, script: AIBIN.AIScript) -> str:
 		string = f'String {script.string_id}'
@@ -332,7 +336,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		bwscript = self.bwscript
 		if not bwscript:
 			bwscript = 'bwscript.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s' and '%s'?" % (aiscript, bwscript), default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -359,6 +363,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ai_count,bw_count = self.ai.count_scripts()
 		ai_size,bw_size = self.ai.calculate_sizes()
 		s = f'aiscript.bin: {ai_count} ({ai_size} B)     bwscript.bin: {bw_count} ({bw_size} B)'
+		if self.ai.active_plugins:
+			active_plugins = ', '.join(sorted(self.ai.active_plugins))
+			s = f'Plugins Required: {active_plugins}     {s}'
 		self.scriptstatus.set(s)
 
 	# Acitions
@@ -366,10 +373,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.ai = AIBIN.AIBIN()
-		self.aiscript = None
-		self.bwscript = None
+		self.aiscript = 'aiscript.bin'
+		self.bwscript = 'bwscript.bin'
 		self.mark_edited(False)
-		self.title('aiscript.bin, bwscript.bin')
+		self.update_title()
 		self.status.set('Editing new file!')
 		self.listbox.delete(0, END)
 		self.action_states()
@@ -394,17 +401,23 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			bwscript_path = self.config_.last_path.bin.select_open(self, title='Open bwscript.bin (Cancel to only open aiscript.bin)')
 		try:
 			ai = AIBIN.AIBIN()
-			ai.load(aiscript_file or aiscript_path, bwscript_file or bwscript_path)
+			issues = ai.load(aiscript_file or aiscript_path, bwscript_file or bwscript_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
+		edited = False
+		if issues:
+			if FixIssuesDialog(self, ai, issues, self, self.config_).cancelled:
+				return
+			edited = True
+		if ai.active_plugins:
+			active_plugins = ', '.join(sorted(ai.active_plugins))
+			self.config_.dont_warn.plugins.present(self, message=f'These files use features that require these plugins: {active_plugins}')
 		self.ai = ai
 		self.aiscript = aiscript_path
 		self.bwscript = bwscript_path
-		self.mark_edited(False)
-		if not bwscript_path:
-			bwscript_path = 'bwscript.bin'
-		self.title('%s, %s' % (aiscript_path,bwscript_path))
+		self.mark_edited(edited)
+		self.update_title()
 		self.status.set('Load Successful!')
 		self.refresh_listbox()
 		self.action_states()
@@ -421,7 +434,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		try:
 			mpq_ctx = mpq.open()
 		except:
-			ErrorDialog(self, PyMSError('Open','Could not open MPQ "%s"' % file))
+			ErrorDialog(self, PyMSError('Open', f'Could not open MPQ "{file}"'))
 			return
 		with mpq_ctx:
 			ai = mpq.read_file('scripts\\aiscript.bin')
@@ -490,7 +503,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if not_saved:
-			MessageBox.askquestion(parent=self, title='Save problems', message='%s could not be saved to the MPQ.' % ' and '.join(not_saved), type=MessageBox.OK)
+			MessageBox.askquestion(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.', type=MessageBox.OK)
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -506,13 +519,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.action_states()
 		self.update_script_status()
 
-	def register_registry(self, e=None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyAI', 'bin', 'AI')
-		except PyMSError as e:
-			ErrorDialog(self, e)
+		except PyMSError as err:
+			ErrorDialog(self, err)
 
-	def help(self, e=None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyAI.md')
 
 	def about(self) -> None:
@@ -528,7 +541,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, e=None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -536,7 +549,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.config_.save()
 		self.destroy()
 
-	def select_all(self):
+	def select_all(self) -> None:
 		self.listbox.select_set(0, END)
 
 	def add(self) -> None:
@@ -544,15 +557,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		# TODO: Fix size calcs
 		s = 2 + self.ai.calculate_sizes()[0]
+		# TODO: Expand file?
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
-		e = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
-		id = e.id.get()
-		if not id:
+		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
+		script_id = dialog.script_id.get()
+		if not script_id:
 			return
 		# TODO: In bwscript?
-		script = AIBIN.AIScript(id, e.flags, int(e.string.get()), AIBIN.AIScript.blank_entry_point(), False)
+		script = AIBIN.AIScript(script_id, dialog.flags, int(dialog.string.get()), AIBIN.AIScript.blank_entry_point(), False)
 		action = Actions.AddScriptAction(self, script, None)
 		self.action_manager.add_action(action)
 
@@ -596,26 +610,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				return
 			import_paths = [import_path]
 		for import_path in import_paths:
-			parse_context = self.get_parse_context(import_path)
-			scripts = self.ai.compile(parse_context)
-			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
-			if new_ai_size is not None:
-				ai_size, _ = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
-			if new_bw_size is not None:
-				_, bw_size = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
-			if parse_context.warnings:
-				WarningDialog(parent, parse_context.warnings, True)
-			self.ai.add_scripts(scripts)
-		self.update_script_status()
-		self.refresh_listbox()
-		self.mark_edited()
+			if not self.save_code(import_path, self):
+				return
 
 	def listimport(self) -> None:
 		ImportListDialog(self, self, self.config_)
 
-	def codeedit(self, event: Event | None = None) -> None:
+	def codeedit(self, _event: Event | None = None) -> None:
 		headers = self.get_selected_scripts()
 		CodeEditDialog(self, self, self.config_, list(header.id for header in headers))
 
@@ -624,10 +625,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if not scripts:
 			return
 		script = scripts[0]
-		e = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
-		if not e.id.get():
+		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
+		if not dialog.script_id.get():
 			return
-		action = Actions.EditScriptAction(self, script, e.id.get(), e.flags, int(e.string.get()))
+		action = Actions.EditScriptAction(self, script, dialog.script_id.get(), dialog.flags, int(dialog.string.get()))
 		self.action_manager.add_action(action)
 
 	def editflags(self) -> None:
@@ -645,7 +646,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		ExternalDefDialog(self, self.config_)
 
 	def decompiling_format(self) -> None:
-			DecompilingFormatDialog(self, self.config_.code.decomp_format)
+		DecompilingFormatDialog(self, self.config_.code.decomp_format)
 
 	# def managetbl(self) -> None:
 	# 	headers = self.get_selected_scripts()
@@ -661,9 +662,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if not file:
 			return
 		try:
-			files = open(file,'r').readlines()
+			with open(file, 'r', encoding='utf-8') as settings:
+				files = settings.readlines()
 		except:
-			MessageBox.showerror('Invalid File',"Could not open '%s'." % file)
+			MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
 
 		tbl = TBL.TBL()
 		try:
@@ -671,14 +673,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		unitsdat = DAT.UnitsDAT()
 		try:
 			unitsdat.load_file(files[1] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		upgradesdat = DAT.UpgradesDAT()
 		try:
 			upgradesdat.load_file(files[2] % {'path': Assets.base_dir})
@@ -692,7 +694,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		
+
 		self.data_context.set_stattxt_tbl(tbl)
 		self.data_context.set_units_dat(unitsdat)
 		self.data_context.set_upgrades_dat(upgradesdat)
@@ -702,16 +704,16 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file = self.config_.last_path.txt.settings.select_save(self)
 		if file:
 			try:
-				set = open(file,'w')
+				settings = open(file, 'w', encoding='utf-8')
 			except:
-				MessageBox.showerror('Invalid File',"Could not save to '%s'." % file)
-			set.write(('%s\n%s\n%s\n%s' % (
-					self.config_.settings.files.stat_txt.file_path,
-					self.config_.settings.files.dat.units.file_path,
-					self.config_.settings.files.dat.upgrades,
-					self.config_.settings.files.dat.techdata
-				)).replace(Assets.base_dir, '%(path)s'))
-			set.close()
+				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
+			settings.write(f"""
+{self.config_.settings.files.stat_txt.file_path}
+{self.config_.settings.files.dat.units.file_path}
+{self.config_.settings.files.dat.upgrades}
+{self.config_.settings.files.dat.techdata}
+""".replace(Assets.base_dir, '%(path)s'))
+			settings.close()
 
 	# ActionsDelegate
 	def get_ai_bin(self) -> AIBIN.AIBIN:
@@ -731,24 +733,40 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def get_data_context(self) -> DataContext:
 		return self.data_context
 
-	def save_code(self, code: str, parent: AnyWindow) -> bool:
+	def save_code(self, code_or_path: str, parent: AnyWindow) -> bool:
 		if not self.ai:
 			return False
-		parse_context = self.get_parse_context(code)
+		parse_context = self.get_parse_context(code_or_path)
 		try:
 			scripts = AIBIN.AIBIN.compile(parse_context)
 			new_ai_size, new_bw_size = self.ai.can_add_scripts(scripts)
 			if new_ai_size is not None:
 				ai_size, _ = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max 65535B, these changes would make the file {new_ai_size}B.")
-			if new_bw_size is not None:
+				if self.ai.expanded:
+					raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_ai_size}B.")
+				else:
+					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your aiscript.bin to compile these changes, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+						return False
+					self.ai.expand()
+			if new_bw_size is not None and new_bw_size > self.ai.max_size(): # Check against max_size again for the case where the file just got expanded above because of aiscript.bin
 				_, bw_size = self.ai.calculate_sizes()
-				raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max 65535B, these changes would make the file {new_bw_size}B.")
+				if self.ai.expanded:
+					raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_bw_size}B.")
+				else:
+					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your bwscript.bin to compile these changes, would you like to expand your bwscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+						return False
+					self.ai.expand()
 		except PyMSError as e:
 			ErrorDialog(parent, e)
 			return False
+		new_active_plugins = parse_context.language_context.active_plugins()
+		if new_active_plugins:
+			added_plugins = new_active_plugins.difference(self.ai.active_plugins)
+			if added_plugins and not AddedPluginsDialog(parent, parse_context.language_context, added_plugins).add:
+				return False
 		if parse_context.warnings:
 			WarningDialog(parent, parse_context.warnings, True)
+		self.ai.active_plugins.update(new_active_plugins)
 		self.ai.add_scripts(scripts)
 		self.update_script_status()
 		self.refresh_listbox()
@@ -758,14 +776,18 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	# def get_export_references(self) -> bool:
 	# 	return self.reference.get()
 
-	def _get_definitions_handler(self) -> AIDefinitionsHandler:
-		defs = AIDefinitionsHandler()
+	def _get_definitions_handler(self, parse_settings: AIParseSettings | None = None) -> DefinitionsHandler:
+		defs = DefinitionsHandler()
 		handler = AIDefsSourceCodeHandler()
+		if parse_settings is None:
+			parse_settings = AIParseSettings()
 		for extdef in self.config_.extdefs.data:
+			if not os.path.isfile(extdef):
+				raise PyMSError('External Definitions', f"External definitions file not found: '{extdef}'. Remove or update the entry in the External Defs dialog.")
 			with IO.InputText(extdef) as f:
 				code = f.read()
 			lexer = AILexer(code)
-			parse_context = AIParseContext(lexer, defs, self.data_context)
+			parse_context = AIParseContext(lexer, parse_settings, defs, self.data_context)
 			handler.parse(parse_context)
 			parse_context.finalize()
 		return defs
@@ -782,12 +804,13 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		formatters = self.get_formatters()
 		return AISerializeContext(output, definitions, formatters, self.data_context)
 
-	def get_parse_context(self, input: IO.AnyInputText) -> AIParseContext:
-		definitions = self._get_definitions_handler()
-		with IO.InputText(input) as f:
-			code = f.read()
+	def get_parse_context(self, any_input: IO.AnyInputText) -> AIParseContext:
+		parse_settings = AIParseSettings()
+		definitions = self._get_definitions_handler(parse_settings)
+		with IO.InputText(any_input) as input_text:
+			code = input_text.read()
 		lexer = AILexer(code)
-		return AIParseContext(lexer, definitions, self.data_context)
+		return AIParseContext(lexer, parse_settings, definitions, self.data_context)
 
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
 		if not keep_existing:
@@ -795,6 +818,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		for index,script in enumerate(self.script_list):
 			if script.id in ids:
 				self.listbox.select_set(index)
+
+	def get_find_history(self) -> list[str]:
+		return self.findhistory
+
+	def get_replace_history(self) -> list[str]:
+		return self.replacehistory
 
 	# Tooltip Delegate
 	def get_list_entry(self, index: int) -> AIBIN.AIScript:

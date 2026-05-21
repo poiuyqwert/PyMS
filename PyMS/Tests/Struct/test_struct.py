@@ -16,7 +16,7 @@ class Sub(Struct.Struct):
 		('double', Struct.t_double)
 	)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Sub):
 			return False
 		if other.u8 != self.u8:
@@ -90,7 +90,7 @@ class Test(Struct.Struct):
 	adouble: list[float]
 
 	mix: list[int]
-	
+
 	_fields = (
 		Struct.t_pad(),
 		('s8', Struct.t_s8),
@@ -125,7 +125,7 @@ class Test(Struct.Struct):
 		('mix', Struct.MixedInts((Struct.t_u8, Struct.t_u16, Struct.t_pad(2), Struct.t_u32, Struct.t_u64)))
 	)
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Test):
 			return False
 		if other.s8 != self.s8:
@@ -181,7 +181,7 @@ class Test(Struct.Struct):
 		if other.mix != self.mix:
 			return False
 		return True
-	
+
 	@staticmethod
 	def min() -> Test:
 		test = Test()

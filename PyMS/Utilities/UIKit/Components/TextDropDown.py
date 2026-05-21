@@ -8,10 +8,10 @@ from ... import Assets
 from typing import Any
 
 class TextDropDown(Frame):
-	def __init__(self, parent: Misc, variable: StringVar, history: list[str] = [], width: int | None = None, state: WidgetState = NORMAL):
+	def __init__(self, parent: Misc, variable: StringVar, history: list[str] | None = None, width: int | None = None, state: WidgetState = NORMAL):
 		self.variable = variable
 		self.set = self.variable.set
-		self.history = history
+		self.history = history or []
 		Frame.__init__(self, parent, borderwidth=2, relief=SUNKEN)
 		self.entry = Entry(self, textvariable=self.variable, width=width, highlightthickness=0) # type: ignore[arg-type]
 		self.entry.config(bd=0)
@@ -35,7 +35,7 @@ class TextDropDown(Frame):
 	def __getitem__(self, item: str) -> Any:
 		return self.entry[item]
 
-	def choose(self, e: Event | None = None) -> None:
+	def choose(self, _event: Event | None = None) -> None:
 		if self.entry['state'] == NORMAL and self.history:
 			i = -1
 			if self.variable.get() in self.history:

@@ -46,7 +46,7 @@ class PyTRGConfig(Config.Config):
 				self.aiscript = Config.File(default='MPQ:scripts\\aiscript.bin', name='aiscript.bin', filetypes=[FileType.bin_ai()])
 				self.bwscript = Config.File(default='MPQ:scripts\\bwscript.bin', name='bwscript.bin', filetypes=[FileType.bin_ai()])
 				super().__init__()
-		
+
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
 				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])

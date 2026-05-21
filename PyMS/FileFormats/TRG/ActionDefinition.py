@@ -21,7 +21,7 @@ class ActionDefinition(Protocol):
 	def matches(self, action: Action) -> int:
 		...
 
-	def decompile(self, action: Action, trg: TRG, output: IO.AnyOutputText):
+	def decompile(self, action: Action, trg: TRG, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
 			f.write(f'{self.name}(')
 			has_parameters = False
@@ -36,7 +36,7 @@ class ActionDefinition(Protocol):
 		...
 
 	def help(self) -> str:
-		help = f'{self.name}('
+		help_text = f'{self.name}('
 		description = self.description
 		param_help = ''
 		if self.parameters:
@@ -53,12 +53,12 @@ class ActionDefinition(Protocol):
 					param_name += f'({param_counts[param_name]})'
 				description = description.replace(f'{{{n}}}', f'`{param_name}`')
 				if n:
-					help += ', '
-				help += param_name
-		help += f')\n    {description}'
+					help_text += ', '
+				help_text += param_name
+		help_text += f')\n    {description}'
 		if param_help:
-			help += f'\n{param_help}'
-		return help
+			help_text += f'\n{param_help}'
+		return help_text
 
 class BasicActionDefinition(ActionDefinition):
 	def __init__(self, name: str, description: str, action_type: int, parameters: tuple[ActionParameter, ...] = (), default_flags: int = ActionFlag.always_display) -> None:

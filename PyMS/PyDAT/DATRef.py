@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Callable, Any
 if TYPE_CHECKING:
 	from .DataContext import DataContext
 
-class DATRefs(object):
+class DATRefs:
 	def __init__(self, dat_id: DATID, refs_lookup: Callable[[AbstractDATEntry], tuple[DATRef, ...]]) -> None:
 		self.dat_id = dat_id
 		self.refs_lookup = refs_lookup
@@ -27,20 +27,22 @@ class DATRefs(object):
 					matches.append(DATRefMatch(self.dat_id, ref.dat_sub_tab, ref.field_name, check_entry_id, dat_data.entry_name(check_entry_id)))
 		return matches
 
-class DATRef(object):
-	def __init__(self, field_name: str, entry_id: int, entry_id_range_end: int | None = None, dat_sub_tab: Any | None = None) -> None:
+class DATRef:
+	def __init__(self, field_name: str, entry_id: int | None, entry_id_range_end: int | None = None, dat_sub_tab: Any | None = None) -> None:
 		self.field_name = field_name
 		self.entry_id = entry_id
 		self.entry_id_range_end = entry_id_range_end
 		self.dat_sub_tab = dat_sub_tab
 
 	def matches(self, entry_id: int) -> bool:
+		if self.entry_id is None:
+			return False
 		if self.entry_id_range_end:
 			return entry_id >= self.entry_id and entry_id <= self.entry_id_range_end
 		else:
 			return entry_id == self.entry_id
 
-class DATRefMatch(object):
+class DATRefMatch:
 	def __init__(self, dat_id: DATID, dat_sub_tab_id: Any, field_name: str, entry_id: int, entry_name: str) -> None:
 		self.dat_id = dat_id
 		self.dat_sub_tab_id = dat_sub_tab_id
@@ -51,5 +53,5 @@ class DATRefMatch(object):
 	def __str__(self) -> str:
 		dat_sub_tab = ''
 		if self.dat_sub_tab_id:
-			dat_sub_tab = ' (%s sub-tab)' % self.dat_sub_tab_id.tab_name
-		return '%s, %s field%s, entry %s: %s' % (self.dat_id.filename, self.field_name, dat_sub_tab, self.entry_id, self.entry_name)
+			dat_sub_tab = f' ({self.dat_sub_tab_id.tab_name} sub-tab)'
+		return f'{self.dat_id.filename}, {self.field_name} field{dat_sub_tab}, entry {self.entry_id}: {self.entry_name}'

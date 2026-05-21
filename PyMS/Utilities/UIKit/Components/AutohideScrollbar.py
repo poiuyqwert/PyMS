@@ -1,25 +1,25 @@
 
 from ..Widgets import *
 
-from typing import Callable
+from typing import Callable, Any
 
 class AutohideScrollbar(Scrollbar):
-	def __init__(self, parent: Misc, **kwargs):
+	def __init__(self, parent: Misc, **kwargs: Any) -> None:
 		Scrollbar.__init__(self, parent, **kwargs)
 		self._hide: Callable[[], None] | None = None
 		self._show: Callable[[], None] | None = None
 
-	def place(self, **kwargs) -> None: # type: ignore[override]
+	def place(self, **kwargs: Any) -> None: # type: ignore[override]
 		self._hide = self.place_forget
 		self._show = self.place
 		Scrollbar.place(self, **kwargs)
 
-	def pack(self, **kwargs) -> None: # type: ignore[override]
+	def pack(self, **kwargs: Any) -> None: # type: ignore[override]
 		self._hide = self.pack_forget
 		self._show = self.pack
 		Scrollbar.pack(self, **kwargs)
 
-	def grid(self, **kwargs) -> None: # type: ignore[override]
+	def grid(self, **kwargs: Any) -> None: # type: ignore[override]
 		self._hide = self.grid_remove
 		self._show = self.grid
 		Scrollbar.grid(self, **kwargs)

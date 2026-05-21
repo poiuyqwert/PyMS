@@ -24,7 +24,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 			hyphens = (token.raw_value == '--')
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
-				raise parse_context.error('Parse', "Expected block name, got '%s' instead" % token.raw_value)
+				raise parse_context.error('Parse', f"Expected block name, got '{token.raw_value}' instead")
 			name = token.raw_value
 			block = parse_context.define_block(name, parse_context.lexer.state.line)
 			token = parse_context.lexer.next_token()
@@ -33,7 +33,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `--` to end the block name)")
 				token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
-				raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
+				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line)")
 			if parse_context.active_block:
 				parse_context.active_block.next_block = block
 				block.prev_block = parse_context.active_block
@@ -43,30 +43,14 @@ class BlockSourceCodeParser(SourceCodeParser):
 		return False
 
 class CommandSourceCodeParser(SourceCodeParser):
-	def __init__(self, cmd_defs: list[CodeCommandDefinition] = []) -> None:
-		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
-		self.register_commands(cmd_defs)
-
-	def register_command(self, cmd_def: CodeCommandDefinition) -> None:
-		if cmd_def.name in self.cmd_defs:
-			raise PyMSError('Internal', "Command with name '%s' already exists" % cmd_def.name)
-		self.cmd_defs[cmd_def.name] = cmd_def
-
-	def register_commands(self, cmd_defs: list[CodeCommandDefinition]) -> None:
-		for cmd_def in cmd_defs:
-			self.register_command(cmd_def)
-
 	def parse(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value in self.cmd_defs:
-			# if not token.raw_value in self.cmd_defs:
-			# 	raise parse_context.error('Parse', "Unknown command '%s'" % token.raw_value, level=0)
-			cmd_def = self.cmd_defs[token.raw_value]
+		if isinstance(token, Tokens.IdentifierToken) and (cmd_def := parse_context.language.lookup_command(token.raw_value, parse_context.language_context)):
 			command = cmd_def.parse(parse_context)
 			if not parse_context.active_block:
-				raise parse_context.error('Parse', "'%s' command defined outside of any block" % command.definition.name)
+				raise parse_context.error('Parse', f"'{command.definition.name}' command defined outside of any block")
 			parse_context.active_block.add_command(command)
 			for param in command.params:
 				if isinstance(param, CodeBlock):
@@ -78,13 +62,16 @@ class CommandSourceCodeParser(SourceCodeParser):
 		return False
 
 class DirectiveSourceCodeParser(SourceCodeParser):
-	def __init__(self, directive_defs: list[CodeDirectiveDefinition] = []) -> None:
+	def __init__(self, directive_defs: list[CodeDirectiveDefinition] | None = None) -> None:
 		self.directive_defs: dict[str, CodeDirectiveDefinition] = {}
-		self.register_directives(directive_defs)
+		if directive_defs is not None:
+			self.register_directives(directive_defs)
 
 	def register_directive(self, directive_def: CodeDirectiveDefinition) -> None:
 		if directive_def.name in self.directive_defs:
-			raise PyMSError('Internal', f"Directive with name '{directive_def.name}' already exists")
+			if self.directive_defs[directive_def.name] != directive_def:
+				raise PyMSError('Internal', f"Directive with name '{directive_def.name}' already exists")
+			return
 		self.directive_defs[directive_def.name] = directive_def
 
 	def register_directives(self, directive_defs: list[CodeDirectiveDefinition]) -> None:
@@ -98,9 +85,9 @@ class DirectiveSourceCodeParser(SourceCodeParser):
 		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
-				raise parse_context.error('Parse', "Expected directive name, got '%s' instead" % token.raw_value)
+				raise parse_context.error('Parse', f"Expected directive name, got '{token.raw_value}' instead")
 			if not token.raw_value in self.directive_defs:
-				raise parse_context.error('Parse', "Unknown directive '%s'" % token.raw_value)
+				raise parse_context.error('Parse', f"Unknown directive '{token.raw_value}'")
 			directive_def = self.directive_defs[token.raw_value]
 			directive = directive_def.parse(parse_context)
 			parse_context.handle_directive(directive)
@@ -115,25 +102,20 @@ class DefineSourceCodeParser(SourceCodeParser):
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.IdentifierToken) and token.raw_value in definitions.types:
-			type = definitions.types[token.raw_value]
+		if isinstance(token, Tokens.IdentifierToken) and (code_type := parse_context.language.lookup_type(token.raw_value, parse_context.language_context)):
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
-				raise parse_context.error('Parse', "Expected variable name but got '%s'" % token.raw_value)
+				raise parse_context.error('Parse', f"Expected variable name but got '{token.raw_value}'")
 			name = token.raw_value
 			if name in definitions.variables:
-				raise parse_context.error('Parse', "Variable named '%s' is already defined" % name)
+				raise parse_context.error('Parse', f"Variable named '{name}' is already defined")
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '=':
-				raise parse_context.error('Parse', "Expected '=' but got '%s'" % token.raw_value)
-			token = parse_context.lexer.next_token()
-			# TODO: Use type to parse?
-			if not isinstance(token, Tokens.IntegerToken):
-				raise parse_context.error('Parse', "Expected integer value but got '%s'" % token.raw_value)
-			value = type.parse(token.raw_value, parse_context)
-			definitions.set_variable(name, value, type)
+				raise parse_context.error('Parse', f"Expected '=' but got '{token.raw_value}'")
+			value = code_type.parse(parse_context)
+			definitions.set_variable(name, value, code_type)
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):
-				raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line or file)" % token.raw_value)
+				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line or file)")
 			return True
 		return False

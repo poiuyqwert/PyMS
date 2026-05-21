@@ -6,12 +6,12 @@ from .UIKit import *
 from .PyMSError import PyMSError
 from .trace import get_tracer
 
-import sys, traceback
+import traceback
 
 class ErrorDialog(PyMSDialog):
 	def __init__(self, parent: Misc, error: PyMSError) -> None:
 		self.error = error
-		PyMSDialog.__init__(self, parent, '%s Error!' % error.type, resizable=(False, False))
+		PyMSDialog.__init__(self, parent, f'{error.type} Error!', resizable=(False, False))
 
 	def widgetize(self) -> Misc | None:
 		Label(self, justify=LEFT, anchor=W, text=self.error.repr(), wraplength=640).pack(pady=10, padx=5)
@@ -22,7 +22,7 @@ class ErrorDialog(PyMSDialog):
 		p = 's'
 		if w == 1:
 			p = ''
-		Button(frame, text='%s Warning%s' % (w, p), width=10, command=self.viewwarnings, state=DISABLED if not self.error.warnings else NORMAL).pack(side=LEFT, padx=3)
+		Button(frame, text=f'{w} Warning{p}', width=10, command=self.viewwarnings, state=DISABLED if not self.error.warnings else NORMAL).pack(side=LEFT, padx=3)
 		Button(frame, text='Copy', width=10, command=self.copy).pack(side=LEFT, padx=6)
 		if self.error.exception:
 			Button(frame, text='Internal Error', width=10, command=self.internal).pack(side=LEFT, padx=6)

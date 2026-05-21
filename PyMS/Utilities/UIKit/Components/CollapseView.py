@@ -48,7 +48,7 @@ class CollapseView(Frame):
 		self.collapse_button = collapse_button
 		self._hide: Callable[[], None] | None = None
 		self._show: Callable[[], None] | None = None
-		self._show_info: dict | None = None
+		self._show_info: dict[str, Any] | None = None
 		self._show_order: tuple[int, ...] | None = None
 		self.callback = None
 		if 'callback' in kwargs:
@@ -60,11 +60,11 @@ class CollapseView(Frame):
 		self._update_state(apply_callback=False)
 
 	def place(self, **kwargs: Any) -> None: # type: ignore[override]
-		def _hide():
-			self._show_info = self.place_info()
+		def _hide() -> None:
+			self._show_info = self.place_info() # type: ignore[assignment]
 			self.place_forget()
 		self._hide = _hide
-		def _show():
+		def _show() -> None:
 			show_info = self._show_info or {}
 			Frame.place(self, **show_info)
 			self._show_info = None
@@ -72,12 +72,12 @@ class CollapseView(Frame):
 		Frame.place(self, **kwargs)
 
 	def pack(self, **kwargs: Any) -> None: # type: ignore[override]
-		def _hide():
-			self._show_info = self.pack_info()
+		def _hide() -> None:
+			self._show_info = self.pack_info() # type: ignore[assignment]
 			self._show_order = tuple(widget.winfo_id() for widget in self.master.pack_slaves())
 			self.pack_forget()
 		self._hide = _hide
-		def _show():
+		def _show() -> None:
 			show_info = self._show_info or {}
 			if self._show_order and self.winfo_id() in self._show_order:
 				slaves = self.master.pack_slaves()
@@ -107,7 +107,7 @@ class CollapseView(Frame):
 		Frame.grid(self, **kwargs)
 
 	def _update_state(self, apply_callback: bool = True) -> None:
-		self.collapse_button._update_state(self.collapsed)
+		self.collapse_button._update_state(self.collapsed) # pylint: disable=protected-access
 		if self.collapsed and self._hide:
 			self._hide()
 		elif not self.collapsed and self._show:

@@ -38,11 +38,11 @@ class CHKSectionVER(CHKSection):
 			if not typeSect.type == CHKSectionTYPE.BROODWAR:
 				self.version = CHKSectionVER.SC104
 
-	def load_data(self, data):
+	def load_data(self, data: bytes) -> None:
 		self.version = struct.unpack('<H', data[:2])[0]
 
-	def save_data(self):
+	def save_data(self) -> bytes:
 		return struct.pack('<H', self.version)
 
-	def decompile(self):
-		return '%s:\n\t%s # %s\n' % (self.NAME, pad('Version',self.version), CHKSectionVER.VER_NAME(self.version))
+	def decompile(self) -> str:
+		return f'{self.NAME}:\n\t{pad("Version",str(self.version))} # {CHKSectionVER.VER_NAME(self.version)}\n'

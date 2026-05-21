@@ -51,9 +51,9 @@ class CompressionOption(Enum):
 	def setting(self, level: int = 0) -> CompressionSetting:
 		return CompressionSetting(self, max(0, min(level, self.level_count()-1)))
 
-class CompressionSetting(object):
-	def __init__(self, type: CompressionOption, level: int) -> None:
-		self.type = type
+class CompressionSetting:
+	def __init__(self, compression_type: CompressionOption, level: int) -> None:
+		self.type = compression_type
 		self.level = level
 
 	def compression_level(self) -> int:
@@ -65,7 +65,7 @@ class CompressionSetting(object):
 	def level_name(self) -> str:
 		compression_level = self.compression_level()
 		if self == CompressionOption.Deflate:
-			name = '%d' % compression_level
+			name = str(compression_level)
 			if compression_level == Z_DEFAULT_COMPRESSION:
 				name = 'Default'
 			elif compression_level == Z_NO_COMPRESSION:
@@ -91,11 +91,11 @@ class CompressionSetting(object):
 		level = 0
 		if ':' in menu_value:
 			type_name,level_str = menu_value.split(':')
-			type = CompressionOption(type_name)
-			level = max(0, min(int(level_str), type.level_count()-1))
+			compression_type = CompressionOption(type_name)
+			level = max(0, min(int(level_str), compression_type.level_count()-1))
 		else:
-			type = CompressionOption(type_name)
-		return type.setting(level)
+			compression_type = CompressionOption(type_name)
+		return compression_type.setting(level)
 
 	def __eq__(self, other: object) -> bool:
 		if isinstance(other, CompressionSetting):
@@ -107,6 +107,6 @@ class CompressionSetting(object):
 
 	def __str__(self) -> str:
 		if self.type.level_count() > 0:
-			return '%s:%d' % (self.type.value, self.level)
+			return f'{self.type.value}:{self.level}'
 		else:
 			return self.type.value

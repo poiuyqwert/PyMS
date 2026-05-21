@@ -2,17 +2,44 @@
 from . import WarningID
 from .AISerializeContext import AISerializeContext
 from .AIParseContext import AIParseContext
+from .AIDecompileContext import AIDecompileContext
 
-from ....FileFormats.DAT.UnitsDAT import DATUnit
+from ....FileFormats.DAT.UnitsDAT import UnitsDAT, DATUnit
+from ....FileFormats.DAT.UpgradesDAT import UpgradesDAT
+from ....FileFormats.DAT.TechDAT import TechDAT
 
 from ....Utilities.CodeHandlers import CodeType
 from ....Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ....Utilities.CodeHandlers.ParseContext import ParseContext
+from ....Utilities.CodeHandlers.DecompileContext import DecompileContext
+from ....Utilities.BytesScanner import BytesScanner
 from ....Utilities.CodeHandlers import Lexer
 from ....Utilities.CodeHandlers import Tokens
+
 from ....Utilities import Struct
 from ....Utilities.PyMSError import PyMSError
 from ....Utilities.PyMSWarning import PyMSWarning
+
+__all__ = [
+	'ByteCodeType',
+	'WordCodeType',
+	'DWordCodeType',
+	'BlockCodeType',
+	'UnitCodeType',
+	'BuildingCodeType',
+	'MilitaryCodeType',
+	'GGMilitaryCodeType',
+	'AGMilitaryCodeType',
+	'GAMilitaryCodeType',
+	'AAMilitaryCodeType',
+	'UpgradeCodeType',
+	'TechnologyCodeType',
+	'StringCodeType',
+	'CompareCodeType',
+	'TBLStringCodeType',
+	'BinFileCodeType',
+	'BoolCodeType',
+]
 
 class ByteCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -56,6 +83,12 @@ class BlockCodeType(CodeType.AddressCodeType):
 	def __init__(self) -> None:
 		CodeType.AddressCodeType.__init__(self, 'block', 'The label name of a block in the code', Struct.l_u16)
 
+	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> int:
+		address = super().decompile(scanner, context)
+		if isinstance(context, AIDecompileContext) and context.aise_context.expanded and address in context.aise_context.loaded_long_jumps:
+			return context.aise_context.loaded_long_jumps[address]
+		return address
+
 class UnitCodeType(CodeType.IntCodeType):
 	def __init__(self, name: str = 'unit', help_text: str = 'A unit ID from 0 to 227 (or higher if using expanded DAT file), or a full unit name from stat_txt.tbl') -> None:
 		CodeType.IntCodeType.__init__(self, name, help_text, bytecode_type=Struct.l_u16)
@@ -87,27 +120,26 @@ class UnitCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				unit_name = token.raw_value
-			if unit_name:
+			if unit_name is not None:
 				unit_id = parse_context.data_context.unit_id(unit_name)
 				if unit_id is not None:
-					self.validate(unit_id, parse_context, unit_name)
 					return unit_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
-			return
-		if num > parse_context.data_context.units_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Unit '{token}' is not a valid unit")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 227
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.units_dat is not None:
-			entry_count = parse_context.data_context.units_dat.entry_count()
+		entry_count = UnitsDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.units_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.units_dat.entry_count())
+			if parse_context.settings.expanded_units is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_units)
 		return (0, entry_count)
 
 class BuildingCodeType(UnitCodeType):
@@ -126,16 +158,18 @@ class BuildingCodeType(UnitCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id == 42: # Overlord
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building) or (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.resource_miner):
 			return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, id=WarningID.building))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' is not a building, resource miner, or Overlord", level=1, warn_id=WarningID.building))
 
 class MilitaryCodeType(UnitCodeType):
 	def __init__(self, name: str = 'military', help_text: str = 'Same as unit type, but only for a unit to train (not a Building, Resource Miners, or Overlords)') -> None:
@@ -153,14 +187,16 @@ class MilitaryCodeType(UnitCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
+			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
 			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if not (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building):
 			return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' Unit is a building", level=1, id=WarningID.military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' Unit is a building", level=1, warn_id=WarningID.military))
 
 class GGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -182,20 +218,24 @@ class GGMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.gg_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.gg_military))
 
 class AGMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -217,20 +257,24 @@ class AGMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ag_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.ag_military))
 
 class GAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -252,20 +296,24 @@ class GAMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.ground_weapon != 130 or entry.attack_unit in (53,59):
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.ground_weapon != 130 or subunit_entry.attack_unit in (53,59):
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, id=WarningID.ga_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no ground weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.ga_military))
 
 class AAMilitaryCodeType(MilitaryCodeType):
 	def __init__(self) -> None:
@@ -287,20 +335,24 @@ class AAMilitaryCodeType(MilitaryCodeType):
 			case _:
 				return 0
 
-	def validate(self, unit_id: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, unit_id: int, parse_context: ParseContext, token: str | None = None) -> None:
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
 		if unit_id in parse_context.spellcasters:
 			return
+		if unit_id > parse_context.data_context.units_dat.entry_count():
+			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if entry.air_weapon != 130 or entry.attack_unit != 53:
 			return
 		if entry.subunit1 is not None and entry.subunit1 != 228:
+			if entry.subunit1 > parse_context.data_context.units_dat.entry_count():
+				return
 			subunit_entry = parse_context.data_context.units_dat.get_entry(entry.subunit1)
 			if subunit_entry.air_weapon != 130 or subunit_entry.attack_unit != 53:
 				return
-		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, id=WarningID.aa_military))
+		parse_context.add_warning(PyMSWarning('Parameter', f"Unit '{token or unit_id}' has no air weapon, and is not marked as a @spellcaster", level=1, warn_id=WarningID.aa_military))
 
 class UpgradeCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
@@ -333,27 +385,26 @@ class UpgradeCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				upgrade_name = token.raw_value
-			if upgrade_name:
+			if upgrade_name is not None:
 				upgrade_id = parse_context.data_context.upgrade_id(upgrade_name)
 				if upgrade_id is not None:
-					self.validate(upgrade_id, parse_context, upgrade_name)
 					return upgrade_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.upgrades_dat is None:
-			return
-		if num > parse_context.data_context.upgrades_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Upgrade '{token}' is not a valid upgrade")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 60
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.upgrades_dat is not None:
-			entry_count = parse_context.data_context.upgrades_dat.entry_count()
+		entry_count = UpgradesDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.upgrades_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.upgrades_dat.entry_count())
+			if parse_context.settings.expanded_upgrades is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_upgrades)
 		return (0, entry_count)
 
 class TechnologyCodeType(CodeType.IntCodeType):
@@ -387,27 +438,26 @@ class TechnologyCodeType(CodeType.IntCodeType):
 			elif parse_context.command_in_parens:
 				token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
 				technology_name = token.raw_value
-			if technology_name:
+			if technology_name is not None:
 				technology_id = parse_context.data_context.technology_id(technology_name)
 				if technology_id is not None:
-					self.validate(technology_id, parse_context, technology_name)
 					return technology_id
 			parse_context.lexer.rollback(rollback)
 		return super().lex(parse_context)
 
-	def validate(self, num: int, parse_context: ParseContext | None, token: str | None = None) -> None:
+	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
+		min_id,max_id = self.get_limits(parse_context)
 		token = token or str(num)
-		if num < 0:
-			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
-		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.techdata_dat is None:
-			return
-		if num > parse_context.data_context.techdata_dat.entry_count():
+		if num < min_id or num > max_id:
 			raise PyMSError('Parameter', f"Technology '{token}' is not a valid technology")
 
 	def get_limits(self, parse_context: ParseContext) -> tuple[int, int]:
-		entry_count = 43
-		if isinstance(parse_context, AIParseContext) and parse_context.data_context.techdata_dat is not None:
-			entry_count = parse_context.data_context.techdata_dat.entry_count()
+		entry_count = TechDAT.FORMAT.entries
+		if isinstance(parse_context, AIParseContext):
+			if parse_context.data_context.techdata_dat is not None:
+				entry_count = max(entry_count, parse_context.data_context.techdata_dat.entry_count())
+			if parse_context.settings.expanded_tech is not None:
+				entry_count = max(entry_count, parse_context.settings.expanded_tech)
 		return (0, entry_count)
 
 class StringCodeType(CodeType.StrCodeType):

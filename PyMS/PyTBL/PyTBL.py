@@ -30,7 +30,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 from typing import Literal
 
-LONG_VERSION = 'v%s' % Assets.version('PyTBL')
+LONG_VERSION = 'v' + Assets.version('PyTBL')
 
 class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
@@ -42,7 +42,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		ga.set_application('PyTBL', Assets.version('PyTBL'))
 		ga.track(GAScreen('PyTBL'))
 		setup_trace('PyTBL', self)
-		
+
 		self.config_ = PyTBLConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
@@ -74,10 +74,10 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default TBL', Ctrl.d)
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Strings', Ctrl.i)
 		self.toolbar.add_gap()
-		def save():
+		def save() -> None:
 			self.save()
 		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
-		def saveas():
+		def saveas() -> None:
 			self.saveas()
 		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Strings', Ctrl.e, enabled=False, tags='file_open')
@@ -176,7 +176,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.config_.panes.color_list.load_size(self.ver_pane)
 
 		self.mpq_handler = MPQHandler(self.config_.mpqs)
-	
+
 	def initialize(self) -> None:
 		e = self.open_files()
 		if e:
@@ -195,8 +195,8 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
 			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, lambda data: font8.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
 			unitpal.load_file(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
 			icons.load_file(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
@@ -248,7 +248,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.tbl'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -274,7 +274,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def text_insert(self, pos: str, text: str) -> None:
 		self.tk.call((self.text_orig, 'insert', pos, text))
 
-	def text_delete(self, start: str, end: str | None = None):
+	def text_delete(self, start: str, end: str | None = None) -> None:
 		self.tk.call((self.text_orig, 'delete', start, end))
 
 	def dispatch(self, cmd: str, *args: str ) -> None:
@@ -298,9 +298,9 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.tbl'
 		if not file_path:
-			self.title('PyTBL %s' % LONG_VERSION)
+			self.title(f'PyTBL {LONG_VERSION}')
 		else:
-			self.title('PyTBL %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyTBL {LONG_VERSION} ({file_path})')
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
@@ -320,7 +320,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
-	def open(self, file: str | None = None):
+	def open(self, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not file:
@@ -426,7 +426,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.stringstatus.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END):
+	def add(self, index: int | Literal['end'] = END) -> None:
 		if not self.tbl:
 			return
 		if index == END:

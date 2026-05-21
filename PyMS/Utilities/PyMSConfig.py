@@ -19,7 +19,7 @@ class PyMSConfig(Config.Config):
 	}
 
 	class Analytics(Config.Group):
-		def __init__(self):
+		def __init__(self) -> None:
 			self.allow = Config.Boolean(default=True)
 			self.tid = Config.String(default='UA-42320973-2')
 			self.cid = Config.String()
@@ -31,7 +31,7 @@ class PyMSConfig(Config.Config):
 			self.python_version = Config.String(default=None)
 			super().__init__()
 
-	def __init__(self):
+	def __init__(self) -> None:
 		self.analytics = PyMSConfig.Analytics()
 		self.scdir = Config.SelectDirectory(title='Choose StarCraft Directory')
 		self.reminder = PyMSConfig.Reminder()
@@ -42,7 +42,7 @@ PYMS_CONFIG = PyMSConfig()
 
 if WIN_REG_AVAILABLE and PYMS_CONFIG.scdir.path is None:
 	try:
-		from winreg import OpenKey, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, QueryValueEx # type: ignore
+		from winreg import OpenKey, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, QueryValueEx # type: ignore # pylint: disable=import-error
 		h = OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft', 0, KEY_READ | KEY_WOW64_32KEY)
 		path = QueryValueEx(h, 'InstallPath')[0]
 		if isinstance(path, str) and os.path.isdir(path):

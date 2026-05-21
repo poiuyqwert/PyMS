@@ -6,10 +6,10 @@ from ..Types import Relief
 
 from ... import Assets
 
-from typing import Callable
+from typing import Callable, Any
 
 class Notebook(Frame):
-	def __init__(self, parent: Misc, relief: Relief = RAISED, switchcallback=None) -> None:
+	def __init__(self, parent: Misc, relief: Relief = RAISED) -> None:
 		self.parent = parent
 		self.active: Widget | None = None
 		self.tab = IntVar()
@@ -26,7 +26,7 @@ class Notebook(Frame):
 		Frame.__init__(self, self.notebook, borderwidth=2, relief=relief)
 		Frame.pack(self, fill=BOTH, expand=1)
 
-		def show_hidden_tabs(*_) -> None:
+		def show_hidden_tabs(*_: Any) -> None:
 			visible_width = self.tabs_container.winfo_width()
 			hidden_tabs = []
 			for n,tab in enumerate(self.tabs):
@@ -45,7 +45,7 @@ class Notebook(Frame):
 					menu.add_command(label=tab_name, command=command_callback(tab_name), font=Font.default().bolded() if index == self.tab.get() else None) # type: ignore[arg-type]
 				menu.post(*self.winfo_pointerxy())
 
-		def resize(*_) -> None:
+		def resize(*_: Any) -> None:
 			overflowing = (self.tabs_container.winfo_reqwidth() > self.tabs_container.winfo_width())
 			if overflowing and not self.overflowing:
 				if not self.overflow_button:
@@ -57,10 +57,10 @@ class Notebook(Frame):
 		self.tabs_area.bind(WidgetEvent.Configure(), resize)
 		self.tabs_container.bind(WidgetEvent.Configure(), resize)
 
-	def pack(self, **kw) -> None: # type: ignore[override]
+	def pack(self, **kw: Any) -> None: # type: ignore[override]
 		self.notebook.pack(kw)
 
-	def grid(self, **kw) -> None: # type: ignore[override]
+	def grid(self, **kw: Any) -> None: # type: ignore[override]
 		self.notebook.grid(kw)
 
 	def add_tab(self, frame: Widget, title: str, tab_id: str | None = None) -> Radiobutton:

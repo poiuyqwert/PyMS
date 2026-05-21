@@ -1,31 +1,25 @@
 
+from PyMS.Utilities.UIKit.Widgets import Misc
 from ..Widgets import *
 from ..EventPattern import *
 
 import re
 
-from typing import Literal, Sequence, Callable
+from typing import Literal, Sequence, Callable, Any
+
 
 class RichList(Frame):
 	selregex = re.compile(r'\bsel\b')
 	idregex = re.compile(r'(\d+)\.(\d+).(\d+)(.+)?')
 
-	def __init__(self, parent: Misc, **kwargs):
+	def __init__(self, parent: Misc, frame_config: dict[str, Any] | None = None, **kwargs: Any) -> None:
+		frame_config = frame_config if frame_config is not None else {'bd': 2, 'relief': SUNKEN}
+		Frame.__init__(self, parent, **frame_config)
+
 		self.entry = 0
 		self.entries: list[int] = []
-
-		Frame.__init__(self, parent, bd=2, relief=SUNKEN)
-		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
-		self.vscroll = Scrollbar(self)
-		self.text = Text(self, cursor='arrow', height=1, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=False, **kwargs)
-		self.text.config(bd=0)
-		self.text.grid(sticky=NSEW)
-		self.hscroll.config(command=self.text.xview)
-		self.hscroll.grid(sticky=EW)
-		self.vscroll.config(command=self.text.yview)
-		self.vscroll.grid(sticky=NS, row=0, column=1)
-		self.grid_rowconfigure(0,weight=1)
-		self.grid_columnconfigure(0,weight=1)
+		self.text: Text
+		self.setup_ui(**kwargs)
 
 		text_w = getattr(self.text, '_w')
 		self.text_orig = text_w + '_orig'
@@ -44,10 +38,23 @@ class RichList(Frame):
 		self.tag_unbind = self.text.tag_unbind
 		self.yview = self.text.yview
 
+	def setup_ui(self, **text_kwargs: Any) -> None:
+		self.hscroll = Scrollbar(self, orient=HORIZONTAL)
+		self.vscroll = Scrollbar(self)
+		self.text = Text(self, cursor='arrow', height=1, wrap=NONE, insertontime=0, insertofftime=65535, highlightthickness=0, xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set, exportselection=False, **text_kwargs)
+		self.text.config(bd=0)
+		self.text.grid(sticky=NSEW)
+		self.hscroll.config(command=self.text.xview)
+		self.hscroll.grid(sticky=EW)
+		self.vscroll.config(command=self.text.yview)
+		self.vscroll.grid(sticky=NS, row=0, column=1)
+		self.grid_rowconfigure(0,weight=1)
+		self.grid_columnconfigure(0,weight=1)
+
 	def index(self, index: str) -> int:
 		m = self.idregex.match(index)
 		if m:
-			index = 'entry%s.first +%sl +%sc' % (self.entries[int(m.group(1))-1],int(m.group(2))-1,int(m.group(3)))
+			index = f'entry{self.entries[int(m.group(1))-1]}.first +{int(m.group(2))-1}l +{int(m.group(3))}c'
 			if m.group(4):
 				index += str(m.group(4))
 		return int(self.execute('index',(index,)))
@@ -61,24 +68,24 @@ class RichList(Frame):
 	def tag_prevrange(self, tag: str, start: str, end: str) -> (tuple[str, str] | tuple[()]):
 		return self.text.tag_prevrange(tag, self.index(start), self.index(end))
 
-	def image_create(self, index: str, cnf={}, **kw) -> Any:
-		return self.text.image_create(self.index(index), cnf, **kw)
+	def image_create(self, index: str, cnf: dict[str, Any] | None = None, **kw: Any) -> str:
+		return self.text.image_create(self.index(index), cnf or {}, **kw)
 
-	def image_configure(self, index: str, **options) -> Any:
+	def image_configure(self, index: str, **options: Any) -> tuple[str, str, str, str, str | int] | dict[str, tuple[str, str, str, str, str | int]] | None:
 		return self.text.image_configure(self.index(index), **options)
 
-	def image_cget(self, index: str, option: str) -> Any:
+	def image_cget(self, index: str, option: str) -> tuple[str, str, str, str, str | int]:
 		return self.text.image_configure(self.index(index), option)
 
 	def select(self, e: int | str | Literal['end']) -> None:
 		if e == END:
 			e = -1
 		if isinstance(e, int):
-			n = 'entry%s' % self.entries[e]
+			n = f'entry{self.entries[e]}'
 		elif isinstance(e, str):
 			n = e
 		else:
-			for n in self.text.tag_names(self.text.index('@%s,%s' % (e.x,e.y))):
+			for n in self.text.tag_names(self.text.index(f'@{e.x},{e.y}')):
 				if n.startswith('entry'):
 					break
 			else:
@@ -89,28 +96,28 @@ class RichList(Frame):
 	def insert(self, index: int | Literal['end'], text: str, tags: str | Sequence[str] | None = None) -> str:
 		if index == END:
 			index = -1
-		e = 'entry%s' % self.entry
+		e = f'entry{self.entry}'
 		def select_callback(tag: str) -> Callable[[Event], None]:
-			def select(event: Event) -> None:
+			def select(_event: Event) -> None:
 				self.select(tag)
 			return select
 		self.text.tag_bind(e, Mouse.Click_Left(), select_callback(e))
 		if tags is None:
 			tags = e
 		elif isinstance(tags, str):
-			tags = '%s %s' % (e,tags)
+			tags = f'{e} {tags}'
 		else:
-			tags = '%s %s' % (e,' '.join(tags))
+			tags = f'{e} {" ".join(tags)}'
 		if self.entries:
-			i = 'entry%s.last +1l' % self.entries[index]
+			i = 'entry{self.entries[index]}.last +1l'
 		else:
 			i = END
-		if index == -1 or index == len(self.entries)-1:
+		if index in (-1, len(self.entries)-1):
 			self.entries.append(self.entry)
 		else:
 			self.entries.insert(index+1, self.entry)
 		self.entry += 1
-		return self.execute('insert',(i, '%s\n' % text, tags))
+		return self.execute('insert',(i, f'{text}\n', tags))
 
 	def delete(self, index: int | Literal['all', 'end']) -> str:
 		if index == ALL:
@@ -119,7 +126,7 @@ class RichList(Frame):
 			return self.execute('delete', ('1.0',END))
 		if index == END:
 			index = -1
-		r = self.execute('delete',('entry%s.first' % self.entries[index],'entry%s.last' % self.entries[index]))
+		r = self.execute('delete',(f'entry{self.entries[index]}.first', f'entry{self.entries[index]}.last'))
 		if r:
 			del self.entries[index]
 		return r
@@ -136,10 +143,10 @@ class RichList(Frame):
 		return ''
 
 	def get(self, index: int) -> str:
-		return self.text.get('entry%s.first' % self.entries[index],'entry%s.last -1c' % self.entries[index])
+		return self.text.get(f'entry{self.entries[index]}.first', f'entry{self.entries[index]}.last -1c')
 
 	def size(self) -> int: # type: ignore[override]
-		lines = int(self.text.index('end-1c').split('.')[0])
+		lines = int(self.text.index('end-1c').split('.', maxsplit=1)[0])
 		index = 1
 		last_char = self.text.get('end-1c', 'end')
 		while last_char and last_char in '\r\n':
@@ -156,7 +163,7 @@ class RichList(Frame):
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('RichList Test')
 

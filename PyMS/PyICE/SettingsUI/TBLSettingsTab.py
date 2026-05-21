@@ -4,7 +4,6 @@ from ..Config import PyICEConfig
 from ...Utilities.UIKit import *
 from ...Utilities.SettingsUI.SettingsTab import SettingsTab
 from ...Utilities.SettingsUI.FileSettingView import FileSettingView
-from ...Utilities.SettingsUI.CheckboxSettingView import CheckboxSettingView
 from ...Utilities.EditedState import EditedState
 from ...Utilities.MPQHandler import MPQHandler
 

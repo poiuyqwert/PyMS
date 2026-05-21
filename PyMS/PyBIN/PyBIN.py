@@ -35,7 +35,7 @@ from enum import Enum
 
 from typing import Callable, cast
 
-LONG_VERSION = 'v%s' % Assets.version('PyBIN')
+LONG_VERSION = 'v' + Assets.version('PyBIN')
 
 FRAME_DELAY = 67
 
@@ -108,6 +108,12 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.edited = False
 		self.dialog: WidgetNode | None = None
 		self.widget_map: dict[str, WidgetNode] = {}
+
+		self.tfontgam: PCX.PCX
+		self.font10: FNT.FNT
+		self.font14: FNT.FNT
+		self.font16: FNT.FNT
+		self.font16x: FNT.FNT
 
 		self.update_title()
 
@@ -213,7 +219,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		leftframe = Frame(frame)
 		titleframe = Frame(leftframe)
 		Label(titleframe, text='Widgets:', anchor=W).pack(side=LEFT)
-		self.scr_check = Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=lambda: self.scr_toggled(), state=DISABLED)
+		self.scr_check = Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=self.scr_toggled, state=DISABLED)
 		Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
 		self.scr_check.pack(side=RIGHT, padx=(0,20))
 		titleframe.grid(row=0, column=0, sticky=EW)
@@ -283,7 +289,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		themes = ['None']
 		for t in range(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
 			theme = DialogBIN.THEME_ASSETS_INFO[t]
-			themes.append('%s (%s)' % (theme['name'],theme['path']))
+			themes.append(f'{theme["name"]} ({theme["path"]})')
 		DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=EW)
 		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=W)
 		themeframe.grid_columnconfigure(0, weight=1)
@@ -566,7 +572,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 				widget.item_string_images = None
 			# self.refresh_preview()
 
-	def change_theme(self, n: int) -> None:
+	def change_theme(self, _n: int) -> None:
 		index = self.show_theme_index.get()-1
 		if index != self.config_.preview.theme_id.value:
 			self.config_.preview.theme_id.value = index
@@ -589,10 +595,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			font16x = FNT.FNT()
 
 			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, lambda data: font10.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, lambda data: font14.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, lambda data: font16.load_file(data))
-			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, lambda data: font16x.load_file(data))
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, font14.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, font16.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, font16x.load_file)
 		except PyMSError as e:
 			err = e
 		else:
@@ -604,7 +610,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.mpq_handler.close_mpqs()
 		return err
 
-	def mpqsettings(self, key: Event | None = None, err: PyMSError | None = None) -> None:
+	def mpqsettings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
 
 	def check_saved(self) -> CheckSaved:
@@ -613,7 +619,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		file = self.file
 		if not file:
 			file = 'Unnamed.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message="Save changes to '%s'?" % file, default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
+		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 		if save == MessageBox.NO:
 			return CheckSaved.saved
 		if save == MessageBox.CANCEL:
@@ -704,7 +710,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if node and node.widget:
 			WidgetSettings(self, node, self)
 
-	def canvas_double_click(self, e: Event, m: ClickModifier):
+	def canvas_double_click(self, e: Event, m: ClickModifier) -> None:
 		if not self.dialog:
 			return
 		prefer_selection = (m == ClickModifier.ctrl)
@@ -729,7 +735,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if node:
 			self.edit_node_settings(node)
 
-	def list_double_click(self, event: Event) -> None:
+	def list_double_click(self, _event: Event) -> None:
 		selected = self.widgetTree.cur_selection()
 		if not selected or selected[0] < 0:
 			return
@@ -746,7 +752,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.update_list_selection()
 		self.action_states()
 
-	def list_select(self, event: Event) -> None:
+	def list_select(self, _event: Event) -> None:
 		selected = self.widgetTree.cur_selection()
 		if not selected or selected[0] < 0:
 			return
@@ -763,7 +769,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			return
 		if self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
 			return
-		index = self.widgetTree.index("@%d,%d" % (event.x, event.y))
+		index = self.widgetTree.index(f"@{event.x},{event.y}")
 		self.widgetTree.highlight(index)
 
 	def list_drop(self, event: Event) -> None:
@@ -904,7 +910,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 								dy += ry1-y1
 							elif y2 > ry2:
 								dy += ry2-y2
-					def offset_node(node: WidgetNode, delta_x: int, delta_y) -> None:
+					def offset_node(node: WidgetNode, delta_x: int, delta_y: int) -> None:
 						if node.widget:
 							node.widget.x1 += delta_x
 							node.widget.y1 += delta_y
@@ -988,11 +994,11 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if not file_path and self.is_file_open():
 			file_path = 'Untitled.bin'
 		if not file_path:
-			self.title('PyBIN %s' % LONG_VERSION)
+			self.title(f'PyBIN {LONG_VERSION}')
 		else:
-			self.title('PyBIN %s (%s)' % (LONG_VERSION, file_path))
+			self.title(f'PyBIN {LONG_VERSION} ({file_path})')
 
-	def new(self, key: Event | None = None) -> None:
+	def new(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not self.tfont:
@@ -1013,7 +1019,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def open(self, key: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: Event | None = None, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
@@ -1046,7 +1052,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def iimport(self, key: Event | None = None) -> None:
+	def iimport(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		file = self.config_.last_path.txt.select_open(self)
@@ -1077,10 +1083,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def save(self, key: Event | None = None) -> CheckSaved:
+	def save(self, _event: Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, key: Event | None = None, file_path: str | None = None) -> CheckSaved:
+	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.bin:
 			return CheckSaved.saved
 		if not file_path:
@@ -1100,7 +1106,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.update_title()
 		return CheckSaved.saved
 
-	def export(self, key: Event | None = None) -> None:
+	def export(self, _event: Event | None = None) -> None:
 		if not self.bin:
 			return
 		file = self.config_.last_path.txt.select_save(self)
@@ -1112,7 +1118,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def close(self, key: Event | None = None) -> None:
+	def close(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.clear()
@@ -1127,10 +1133,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e: Event | None = None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyBIN.md')
 
-	def about(self, key: Event | None = None) -> None:
+	def about(self, _event: Event | None = None) -> None:
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [
 			('FaRTy1billion','File Specs and BinEdit2')
 		])
@@ -1170,7 +1176,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.config_.preview.show_bounds_text.value = self.show_bounds_text.get()
 		self.config_.preview.show_bounds_responsive.value = self.show_bounds_responsive.get()
 
-	def exit(self, e: Event | None = None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -1242,7 +1248,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			if asset_id in self.dialog_assets:
 				asset = self.dialog_assets[asset_id]
 			else:
-				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, image_bounds=self.dlggrp.images_bounds[asset_id])
+				asset = GRP.image_to_pil(self.dlggrp.images[asset_id], self.background.palette, bounds=self.dlggrp.images_bounds[asset_id])
 				self.dialog_assets[asset_id] = asset
 		return asset
 
@@ -1252,7 +1258,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			if frame_id in self.dialog_frames:
 				frame = self.dialog_frames[frame_id]
 			else:
-				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, image_bounds=self.tilegrp.images_bounds[frame_id])
+				frame = GRP.image_to_pil(self.tilegrp.images[frame_id], self.background.palette, bounds=self.tilegrp.images_bounds[frame_id])
 				self.dialog_frames[frame_id] = frame
 		return frame
 

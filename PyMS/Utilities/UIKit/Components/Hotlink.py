@@ -21,8 +21,8 @@ class Hotlink(Label):
 			else:
 				self.bind(Mouse.Click_Left(), callback)
 
-	def enter(self, e: Event) -> None:
+	def enter(self, _event: Event) -> None:
 		self['font'] = self.hover_font
 
-	def leave(self, e: Event) -> None:
+	def leave(self, _event: Event) -> None:
 		self['font'] = self.font

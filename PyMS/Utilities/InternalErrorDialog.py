@@ -24,9 +24,9 @@ class InternalErrorDialog(PyMSDialog):
 
 	def widgetize(self) -> Misc | None:
 		self.bind(Ctrl.a(), self.selectall)
-		Label(self, text='The PyMS program "%s" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information, see the Issues/Feedback section in the Readme for details.' % self.prog, justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
+		Label(self, text=f'The PyMS program "{self.prog}" has encountered an unknown internal error.\nThe program will attempt to continue, but may cause problems or crash once you press Ok.\nPlease contact poiuy_qwert and send him this traceback with any relivant information, see the Issues/Feedback section in the Readme for details.', justify=LEFT).pack(side=TOP, padx=2, pady=2, fill=X)
 		r = Frame(self)
-		Hotlink(r, 'Readme (Local)', 'file:///%s' % Assets.readme_file_path).pack(side=RIGHT, padx=10, pady=2)
+		Hotlink(r, 'Readme (Local)', f'file:///{Assets.readme_file_path}').pack(side=RIGHT, padx=10, pady=2)
 		Hotlink(r, 'Readme (Online)', 'https://github.com/poiuyqwert/PyMS#issuesfeedback').pack(side=RIGHT, padx=10, pady=2)
 		r.pack(fill=X)
 		frame = Frame(self, bd=2, relief=SUNKEN)
@@ -57,7 +57,7 @@ class InternalErrorDialog(PyMSDialog):
 		buttonbar.pack(side=BOTTOM, pady=10)
 		return ok
 
-	def selectall(self, key: Event | None = None) -> None:
+	def selectall(self, _event: Event | None = None) -> None:
 		self.text.focus_set()
 		self.text.tag_add(SEL, 1.0, END)
 

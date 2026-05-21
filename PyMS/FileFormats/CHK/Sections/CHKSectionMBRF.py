@@ -11,23 +11,23 @@ import io
 class CHKSectionMBRF(CHKSection):
 	NAME = 'MBRF'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
+
 	trg: TRG.TRG
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.trg = TRG.TRG(self.chk.stat_txt, self.chk.aiscript)
 		self.trg.load(data, TRG.Format.briefing)
-	
+
 	def save_data(self) -> bytes:
 		if self.trg:
 			f = io.BytesIO()
 			# TODO: Deal with warnings?
-			warnings = self.trg.save(f)
+			_ = self.trg.save(f)
 			return f.getvalue()
 		return b''
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		if self.trg:
-			result += IO.output_to_text(lambda f: self.trg.decompile(f))
+			result += IO.output_to_text(self.trg.decompile)
 		return result

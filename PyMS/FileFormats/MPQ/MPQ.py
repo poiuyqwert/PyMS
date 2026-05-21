@@ -9,6 +9,8 @@ from enum import Enum
 
 from ...Utilities.PyMSError import PyMSError
 
+from typing import Any, Self, Literal
+
 class MPQLibrary(Enum):
 	StormLib = 1
 	SFmpq = 2
@@ -27,7 +29,7 @@ class MPQLocale:
 	english    = 1032 # 0x409
 	spanish    = 1034 # 0x40A
 	french     = 1036 # 0x40C
-	italian    = 1040 # 0x410 
+	italian    = 1040 # 0x410
 	japanese   = 1041 # 0x411
 	korean     = 1042 # 0x412
 	polish     = 1045 # 0x415
@@ -43,7 +45,7 @@ class MPQCompressionFlag:
 	pkware     = (1 << 3) # 0x08
 	wav_mono   = (1 << 6) # 0x40
 	wav_stereo = (1 << 7) # 0x80
-	
+
 	implode    = (1 << 15) # This translates to a file flag, not a compression type
 
 class MPQFileFlag:
@@ -57,49 +59,48 @@ class MPQInternalFile:
 	listfile = "(listfile)"
 	signature = "(signature)"
 
-class MPQFileEntry(object):
+class MPQFileEntry:
 	def __init__(self, file_name: str | bytes = '', locale: int = MPQLocale.neutral) -> None:
 		self.file_name: bytes = file_name.encode('utf-8') if isinstance(file_name, str) else file_name
-		self.full_size: int | None = None
-		self.compressed_size = None
-		self.locale: int = locale
+		self.full_size = 0
+		self.compressed_size = 0
+		self.locale = locale
 		# `compressed` includes if it is using "implode", and not just "compress"
-		self.compressed: bool | None = None
-		self.encrypted: bool | None = None
-		self.mod_crypt_key: bool | None = None
-		self.flags: int | None = None
+		self.compressed = False
+		self.encrypted = False
+		self.mod_crypt_key = False
+		self.flags = 0
 
-	def get_compression_ratio(self):
+	def get_compression_ratio(self) -> float:
 		if self.full_size:
 			return self.compressed_size / float(self.full_size)
 		return 0
 
-	def __eq__(self, other):
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, MPQFileEntry):
-			return
+			return False
 		return self.file_name == other.file_name and self.locale == other.locale
 
-	def __repr__(self):
-		return "<MPQFileEntry object at %s: '%s', locale %d, flags %08X>" % (hex(id(self)), self.file_name.decode('utf-8'), self.locale, self.flags)
+	def __repr__(self) -> str:
+		return f"<MPQFileEntry object at {hex(id(self))}: '{self.file_name.decode('utf-8')}', locale {self.locale}, flags {self.flags:08X}>"
 
 	def __lt__(self, other: MPQFileEntry) -> bool:
 		if not isinstance(other, MPQFileEntry):
-			raise Exception("Can't compare `%s` to `%s`", self.__class__.__name__, other.__class__.__name__)
+			raise PyMSError('Internal', f"Can't compare `{self.__class__.__name__}` to `{other.__class__.__name__}`")
 		if self.file_name == other.file_name:
 			return self.locale < other.locale
 		return self.file_name < other.file_name
 
 # MPQ is an abstract class. Use `MPQ.of()` to get a type-erased, concrete, implementation.
 # A different implementation will be returned depending on supported libraries
-class MPQ(object):
+class MPQ:
 	@staticmethod
 	def of(mpq_path: str) -> MPQ:
 		if _StormLib.STORMLIB_LOADED:
 			return StormLibMPQ(mpq_path)
-		elif _SFmpq.SFMPQ_LOADED:
+		if _SFmpq.SFMPQ_LOADED:
 			return SFMPQ(mpq_path)
-		else:
-			raise PyMSError('MPQ', "Couldn't load StormLib or SFmpq")
+		raise PyMSError('MPQ', "Couldn't load StormLib or SFmpq")
 
 	@staticmethod
 	def default_library() -> MPQLibrary | None:
@@ -117,15 +118,15 @@ class MPQ(object):
 	def __init__(self, path: str) -> None:
 		self.path = path
 
-	class _WithContextManager(object):
+	class _WithContextManager:
 		def __init__(self, mpq: MPQ, auto_close: bool) -> None:
 			self.mpq = mpq
 			self.auto_close = auto_close
 
-		def __enter__(self):
+		def __enter__(self) -> Self:
 			return self
 
-		def __exit__(self, exc_type, exc_value, traceback):
+		def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 			if self.auto_close:
 				self.mpq.close()
 			return False
@@ -152,16 +153,16 @@ class MPQ(object):
 		else:
 			return self.create(max_files, sector_size_shift)
 
-	def close(self):
+	def close(self) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.close()')
 
-	def used_block_count(self): # () -> int
+	def used_block_count(self) -> int:
 		raise NotImplementedError(self.__class__.__name__ + '.used_block_count()')
 
 	def add_listfile(self, listfile_path: str) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.add_listfile()')
 
-	def list_files(self, filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
+	def list_files(self, files_filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
 		raise NotImplementedError(self.__class__.__name__ + '.list_files()')
 
 	def has_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> bool:
@@ -187,10 +188,10 @@ class MPQ(object):
 	def delete_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.delete_file()')
 
-	def compact(self):
+	def compact(self) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.compact()')
 
-	def flush(self):
+	def flush(self) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.flush()')
 
 class StormLibMPQ(MPQ):
@@ -211,20 +212,21 @@ class StormLibMPQ(MPQ):
 			return None
 		return self.read_only
 
-	def _add_listfiles(self):
+	def _add_listfiles(self) -> None:
 		if not self.is_open():
 			return
+		assert self.mpq_handle is not None
 		for listfile_path in self.listfiles:
 			error = _StormLib.SFileAddListFile(self.mpq_handle, listfile_path)
 			if error:
-				raise PyMSError('MPQ', "Error adding listfile '%s' (%d)" % (listfile_path, error))
+				raise PyMSError('MPQ', f"Error adding listfile '{listfile_path}' ({error})")
 
 	def open(self, read_only: bool = True) -> MPQ._WithContextManager:
 		auto_close = False
 		if not self.is_open():
 			mpq_handle = _StormLib.SFileOpenArchive(self.path, flags=(_StormLib.STREAM_FLAG_READ_ONLY if read_only else 0))
 			if _StormLib.SFInvalidHandle(mpq_handle):
-				raise PyMSError('MPQ', "Error opening MPQ '%s' (%d)" % (self.path, _StormLib.SFGetLastError()))
+				raise PyMSError('MPQ', f"Error opening MPQ '{self.path}' ({ _StormLib.SFGetLastError()})")
 			self.mpq_handle = mpq_handle
 			self.read_only = read_only
 			self._add_listfiles()
@@ -236,7 +238,7 @@ class StormLibMPQ(MPQ):
 	def create(self, max_files: int = 1024, sector_size_shift: int = 3, stay_open: bool = True) -> MPQ._WithContextManager:
 		if self.mpq_handle:
 			raise PyMSError('MPQ', "MPQ is already open")
-		
+
 		create_info = _StormLib.SFILE_CREATE_MPQ()
 		# CreateInfo.dwMpqVersion   = (dwCreateFlags & MPQ_CREATE_ARCHIVE_VMASK) >> FLAGS_TO_FORMAT_SHIFT;
 		create_info.mpq_version = _StormLib.MPQ_FORMAT_VERSION_1
@@ -259,7 +261,7 @@ class StormLibMPQ(MPQ):
 
 		mpq_handle = _StormLib.SFileCreateArchive2(self.path, create_info)
 		if _StormLib.SFInvalidHandle(mpq_handle):
-			raise PyMSError('MPQ', "Error creating MPQ '%s' (%d)" % (self.path, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error creating MPQ '{self.path}' ({_StormLib.SFGetLastError()})")
 		self.mpq_handle = mpq_handle
 		self.read_only = False
 		if stay_open:
@@ -269,11 +271,12 @@ class StormLibMPQ(MPQ):
 
 		return MPQ._WithContextManager(self, auto_close=True)
 
-	def close(self):
+	def close(self) -> None:
 		if not self.is_open():
 			return
+		assert self.mpq_handle is not None
 		if not _StormLib.SFileCloseArchive(self.mpq_handle):
-			raise PyMSError('MPQ', "Error closing MPQ (%d)" % _StormLib.SFGetLastError())
+			raise PyMSError('MPQ', f"Error closing MPQ ({_StormLib.SFGetLastError()})")
 		self.mpq_handle = None
 
 	def _check_open_status(self, editing: bool) -> None:
@@ -282,12 +285,13 @@ class StormLibMPQ(MPQ):
 		if editing and self.is_read_only():
 			raise PyMSError('MPQ', "MPQ is open as read-only")
 
-	def used_block_count(self): # () -> int
+	def used_block_count(self) -> int:
 		self._check_open_status(editing=False)
+		assert self.mpq_handle is not None
 
 		count = _StormLib.SFileGetFileInfo(self.mpq_handle, _StormLib.SFileMpqBlockTableSize)
-		if count is None:
-			raise PyMSError('MPQ', "Error getting block count (%d)" % _StormLib.SFGetLastError())
+		if count is None or not isinstance(count, int):
+			raise PyMSError('MPQ', f"Error getting block count ({_StormLib.SFGetLastError()})")
 		return count
 
 	def add_listfile(self, listfile_path: str) -> None:
@@ -298,30 +302,28 @@ class StormLibMPQ(MPQ):
 		if self.mpq_handle:
 			error = _StormLib.SFileAddListFile(self.mpq_handle, listfile_path)
 			if error:
-				raise PyMSError('MPQ', "Error adding listfile '%s' (%d)" % (listfile_path, error))
+				raise PyMSError('MPQ', f"Error adding listfile '{listfile_path}' ({error})")
 
-	def list_files(self, filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
+	def list_files(self, files_filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
 		self._check_open_status(editing=False)
 		assert self.mpq_handle is not None
 
 		mask = '*'
 		regex = None
-		if isinstance(filter, str):
-			mask = filter
-		elif isinstance(filter, re.Pattern):
-			regex = filter
-		
+		if isinstance(files_filter, str):
+			mask = files_filter
+		elif isinstance(files_filter, re.Pattern):
+			regex = files_filter
+
 		find_handle,file_data = _StormLib.SFileFindFirstFile(self.mpq_handle, mask)
 		if _StormLib.SFInvalidHandle(find_handle):
 			return []
 		assert find_handle is not None
 
 		def file_entry_from_file_data(file_data: _StormLib.SFILE_FIND_DATA) -> (MPQFileEntry):
-			file_entry = MPQFileEntry()
-			file_entry.file_name = file_data.file_name
+			file_entry = MPQFileEntry(file_data.file_name, file_data.locale)
 			file_entry.full_size = file_data.file_size
 			file_entry.compressed_size = file_data.compressed_size
-			file_entry.locale = file_data.locale
 			file_entry.flags = file_data.file_flags
 			file_entry.compressed = (file_data.file_flags & _StormLib.MPQ_FILE_IMPLODE) == _StormLib.MPQ_FILE_IMPLODE or (file_data.file_flags & _StormLib.MPQ_FILE_COMPRESS) == _StormLib.MPQ_FILE_COMPRESS
 			file_entry.encrypted = (file_data.file_flags & _StormLib.MPQ_FILE_ENCRYPTED) == _StormLib.MPQ_FILE_ENCRYPTED
@@ -331,15 +333,13 @@ class StormLibMPQ(MPQ):
 		results = []
 		try:
 			while file_data:
-				if not regex or regex.match(file_data.file_name):
+				if not regex or regex.match(file_data.file_name.decode('utf-8')):
 					file_entry = file_entry_from_file_data(file_data)
 					results.append(file_entry)
 				file_data = _StormLib.SFileFindNextFile(find_handle)
-		except:
-			raise
 		finally:
 			_StormLib.SFileFindClose(find_handle)
-		
+
 		return results
 
 	def has_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> bool:
@@ -356,17 +356,15 @@ class StormLibMPQ(MPQ):
 		_StormLib.SFileSetLocale(locale)
 		file_handle = _StormLib.SFileOpenFileEx(self.mpq_handle, file_name)
 		if _StormLib.SFInvalidHandle(file_handle):
-			raise PyMSError('MPQ', "Error opening file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error opening file {file_name!r} ({_StormLib.SFGetLastError()})")
 		assert file_handle is not None
 
 		try:
 			data,_ = _StormLib.SFileReadFile(file_handle)
-		except:
-			raise
 		finally:
 			_StormLib.SFileCloseFile(file_handle)
 		if not data:
-			raise PyMSError('MPQ', "Error reading file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error reading file {file_name!r} ({_StormLib.SFGetLastError()})")
 
 		return data
 
@@ -394,7 +392,7 @@ class StormLibMPQ(MPQ):
 		_StormLib.SFileSetLocale(locale)
 		storm_flags, storm_compression = self._storm_file_settings(flags, compression)
 		if not _StormLib.SFileAddFileEx(self.mpq_handle, file_path, file_name, storm_flags, storm_compression):
-			raise PyMSError('MPQ', "Error adding file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error adding file {file_name!r} ({_StormLib.SFGetLastError()})")
 
 	# `compression_level` is not supported
 	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
@@ -404,14 +402,12 @@ class StormLibMPQ(MPQ):
 		storm_flags, storm_compression = self._storm_file_settings(flags, compression)
 		file_handle = _StormLib.SFileCreateFile(self.mpq_handle, file_name, 0, len(data), locale, storm_flags)
 		if _StormLib.SFInvalidHandle(file_handle):
-			raise PyMSError('MPQ', "Error creating file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error creating file {file_name!r} ({_StormLib.SFGetLastError()})")
 		assert file_handle is not None
 
 		try:
 			if not _StormLib.SFileWriteFile(file_handle, data, storm_compression):
-				raise PyMSError('MPQ', "Error writing data to file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
-		except:
-			raise
+				raise PyMSError('MPQ', f"Error writing data to file {file_name!r} ({_StormLib.SFGetLastError()})")
 		finally:
 			_StormLib.SFileFinishFile(file_handle)
 
@@ -421,7 +417,7 @@ class StormLibMPQ(MPQ):
 
 		_StormLib.SFileSetLocale(locale)
 		if not _StormLib.SFileRenameFile(self.mpq_handle, file_name, new_file_name):
-			raise PyMSError('MPQ', "Error renaming file %r to %r (%d)" % (file_name, new_file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error renaming file {file_name!r} to {new_file_name!r} ({_StormLib.SFGetLastError()})")
 
 	def change_file_locale(self, file_name: str | bytes, locale: int, new_locale: int) -> None:
 		self._check_open_status(editing=True)
@@ -430,14 +426,12 @@ class StormLibMPQ(MPQ):
 		_StormLib.SFileSetLocale(locale)
 		file_handle = _StormLib.SFileOpenFileEx(self.mpq_handle, file_name)
 		if _StormLib.SFInvalidHandle(file_handle):
-			raise PyMSError('MPQ', "Error opening file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error opening file {file_name!r} ({_StormLib.SFGetLastError()})")
 		assert file_handle is not None
 
 		try:
 			if not _StormLib.SFileSetFileLocale(file_handle, new_locale):
-				raise PyMSError('MPQ', "Error setting locale of file %r with locale %d to locale %d (%d)" % (file_name, locale, new_locale, _StormLib.SFGetLastError()))
-		except:
-			raise
+				raise PyMSError('MPQ',f"Error setting locale of file {file_name!r} with locale {locale} to locale {new_locale} ({_StormLib.SFGetLastError()})")
 		finally:
 			_StormLib.SFileCloseFile(file_handle)
 
@@ -447,16 +441,16 @@ class StormLibMPQ(MPQ):
 
 		_StormLib.SFileSetLocale(locale)
 		if not _StormLib.SFileRemoveFile(self.mpq_handle, file_name):
-			raise PyMSError('MPQ', "Error deleting file %r (%d)" % (file_name, _StormLib.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error deleting file {file_name!r} ({_StormLib.SFGetLastError()})")
 
-	def compact(self):
+	def compact(self) -> None:
 		self._check_open_status(editing=True)
 		assert self.mpq_handle is not None
 
 		if not _StormLib.SFileCompactArchive(self.mpq_handle):
-			raise PyMSError('MPQ', "Error compacting MPQ (%d)" % _StormLib.SFGetLastError())
+			raise PyMSError('MPQ', f"Error compacting MPQ ({_StormLib.SFGetLastError()})")
 
-	def flush(self):
+	def flush(self) -> None:
 		if not self.is_open() or self.is_read_only():
 			return
 		assert self.mpq_handle is not None
@@ -465,7 +459,7 @@ class StormLibMPQ(MPQ):
 class SFMPQ(MPQ):
 	def __init__(self, path: str) -> None:
 		MPQ.__init__(self, path)
-		self.mpq_handle: _StormLib.MPQHANDLE | None = None
+		self.mpq_handle: _SFmpq.MPQHANDLE | None = None
 		self.read_only = True
 		self.listfiles: list[str] = []
 
@@ -488,7 +482,7 @@ class SFMPQ(MPQ):
 			else:
 				mpq_handle = _SFmpq.MpqOpenArchiveForUpdate(self.path, _SFmpq.MOAU_OPEN_EXISTING | _SFmpq.MOAU_MAINTAIN_LISTFILE)
 			if _SFmpq.SFInvalidHandle(mpq_handle):
-				raise PyMSError('MPQ', "Error opening MPQ '%s' (%d)" % (self.path, _SFmpq.SFGetLastError()))
+				raise PyMSError('MPQ', f"Error opening MPQ '{self.path}' ({_SFmpq.SFGetLastError()})")
 			self.mpq_handle = mpq_handle
 			self.read_only = read_only
 			auto_close = True
@@ -502,7 +496,7 @@ class SFMPQ(MPQ):
 
 		mpq_handle = _SFmpq.MpqOpenArchiveForUpdateEx(self.path, _SFmpq.MOAU_CREATE_ALWAYS | _SFmpq.MOAU_MAINTAIN_LISTFILE, max_files, sector_size_shift)
 		if _SFmpq.SFInvalidHandle(mpq_handle):
-			raise PyMSError('MPQ', "Error creating MPQ '%s' (%d)" % (self.path, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error creating MPQ '{self.path}' ({_SFmpq.SFGetLastError()})")
 		self.mpq_handle = mpq_handle
 		self.read_only = False
 		if not stay_open:
@@ -510,11 +504,12 @@ class SFMPQ(MPQ):
 
 		return MPQ._WithContextManager(self, auto_close=True)
 
-	def close(self):
+	def close(self) -> None:
 		if not self.is_open():
 			return
+		assert self.mpq_handle is not None
 		if not _SFmpq.SFileCloseArchive(self.mpq_handle):
-			raise PyMSError('MPQ', "Error closing MPQ (%d)" % _SFmpq.SFGetLastError())
+			raise PyMSError('MPQ', f"Error closing MPQ ({_SFmpq.SFGetLastError()})")
 		self.mpq_handle = None
 
 	def _check_open_status(self, editing: bool) -> None:
@@ -523,12 +518,13 @@ class SFMPQ(MPQ):
 		if editing and self.is_read_only():
 			raise PyMSError('MPQ', "MPQ is open as read-only")
 
-	def used_block_count(self): # () -> int
+	def used_block_count(self) -> int:
 		self._check_open_status(editing=False)
+		assert self.mpq_handle is not None
 
 		count = _SFmpq.SFileGetFileInfo(self.mpq_handle, _SFmpq.SFILE_INFO_NUM_FILES)
 		if count is None:
-			raise PyMSError('MPQ', "Error getting block count (%d)" % _SFmpq.SFGetLastError())
+			raise PyMSError('MPQ', f"Error getting block count ({_SFmpq.SFGetLastError()})")
 		return count
 
 	def add_listfile(self, listfile_path: str) -> None:
@@ -537,23 +533,22 @@ class SFMPQ(MPQ):
 		# TODO: Check if file exists?
 		self.listfiles.append(listfile_path)
 
-	def list_files(self, filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
+	def list_files(self, files_filter: str | re.Pattern[str] | None = None) -> list[MPQFileEntry]:
 		self._check_open_status(editing=False)
+		assert self.mpq_handle is not None
 
 		regex = None
-		if isinstance(filter, str) and filter.replace('*',''):
-			regex = re.compile('^' + re.escape(filter).replace('\\?','.').replace('\\*','.*') + '$')
-		elif isinstance(filter, re.Pattern):
-			regex = filter
-		
+		if isinstance(files_filter, str) and files_filter.replace('*',''):
+			regex = re.compile('^' + re.escape(files_filter).replace('\\?','.').replace('\\*','.*') + '$')
+		elif isinstance(files_filter, re.Pattern):
+			regex = files_filter
+
 		list_entries = _SFmpq.SFileListFiles(self.mpq_handle, str('\r\n'.join(self.listfiles)))
 
 		def file_entry_from_file_list_entry(file_list_entry: _SFmpq.FILELISTENTRY) -> (MPQFileEntry):
-			file_entry = MPQFileEntry()
-			file_entry.file_name = file_list_entry.fileName
+			file_entry = MPQFileEntry(file_list_entry.fileName, file_list_entry.locale)
 			file_entry.full_size = file_list_entry.fullSize
 			file_entry.compressed_size = file_list_entry.compressedSize
-			file_entry.locale = file_list_entry.locale
 			file_entry.flags = file_list_entry.flags
 			file_entry.compressed = (file_list_entry.flags & _SFmpq.MAFA_COMPRESS2) == _SFmpq.MAFA_COMPRESS2 or (file_list_entry.flags & _SFmpq.MAFA_COMPRESS) == _SFmpq.MAFA_COMPRESS
 			file_entry.encrypted = (file_list_entry.flags & _SFmpq.MAFA_ENCRYPT) == _SFmpq.MAFA_ENCRYPT
@@ -564,29 +559,31 @@ class SFMPQ(MPQ):
 
 	def has_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> bool:
 		self._check_open_status(editing=False)
+		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
 
-		file_handle = _SFmpq.SFileOpenFileEx(self.mpq_handle, file_name)
+		file_handle = _SFmpq.SFileOpenFileEx(self.mpq_handle, file_name.decode('utf-8') if isinstance(file_name, bytes) else file_name)
 		has_file = not _SFmpq.SFInvalidHandle(file_handle)
-		_SFmpq.SFileCloseFile(file_handle)
+		if file_handle is not None:
+			_SFmpq.SFileCloseFile(file_handle)
 		return has_file
 
 	def read_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> bytes:
 		self._check_open_status(editing=False)
+		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
 
-		file_handle = _SFmpq.SFileOpenFileEx(self.mpq_handle, file_name)
+		file_handle = _SFmpq.SFileOpenFileEx(self.mpq_handle, file_name.decode('utf-8') if isinstance(file_name, bytes) else file_name)
 		if _SFmpq.SFInvalidHandle(file_handle):
-			raise PyMSError('MPQ', "Error opening file %r (%d)" % (file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error opening file {file_name!r} ({_SFmpq.SFGetLastError()})")
+		assert file_handle is not None
 
 		try:
 			data,_ = _SFmpq.SFileReadFile(file_handle)
-		except:
-			raise
 		finally:
 			_SFmpq.SFileCloseFile(file_handle)
 		if not data:
-			raise PyMSError('MPQ', "Error reading file %r (%d)" % (file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error reading file {file_name!r} ({_SFmpq.SFGetLastError()})")
 
 		return data
 
@@ -608,46 +605,52 @@ class SFMPQ(MPQ):
 
 	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
 
 		sfmpq_flags, sfmpq_compression = self._sfmpq_file_settings(flags, compression)
 		if not _SFmpq.MpqAddFileToArchiveEx(self.mpq_handle, file_path, file_name, sfmpq_flags, sfmpq_compression, compression_level):
-			raise PyMSError('MPQ', "Error adding file %r (%d)" % (file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error adding file {file_name!r} ({_SFmpq.SFGetLastError()})")
 
 	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
 
 		sfmpq_flags, sfmpq_compression = self._sfmpq_file_settings(flags, compression)
 		if not _SFmpq.MpqAddFileFromBufferEx(self.mpq_handle, data, file_name, sfmpq_flags, sfmpq_compression, compression_level):
-			raise PyMSError('MPQ', "Error adding data to file %r (%d)" % (file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error adding data to file {file_name!r} ({_SFmpq.SFGetLastError()})")
 
 	def rename_file(self, file_name: str | bytes, new_file_name: str | bytes, locale: int = MPQLocale.neutral) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
 
 		if not _SFmpq.MpqRenameFile(self.mpq_handle, file_name, new_file_name):
-			raise PyMSError('MPQ', "Error renaming file %r to %r (%d)" % (file_name, new_file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error renaming file {file_name!r} to {new_file_name!r} ({_SFmpq.SFGetLastError()})")
 
 	def change_file_locale(self, file_name: str | bytes, locale: int, new_locale: int) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 
 		if not _SFmpq.MpqSetFileLocale(self.mpq_handle, file_name, locale, new_locale):
-			raise PyMSError('MPQ', "Error setting locale of file %r with locale %d to locale %d (%d)" % (file_name, locale, new_locale, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error setting locale of file {file_name!r} with locale {locale} to locale {new_locale} ({_SFmpq.SFGetLastError()})")
 
 	def delete_file(self, file_name: str | bytes, locale: int = MPQLocale.neutral) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 
 		if not _SFmpq.MpqDeleteFileWithLocale(self.mpq_handle, file_name, locale):
-			raise PyMSError('MPQ', "Error deleting file %r (%d)" % (file_name, _SFmpq.SFGetLastError()))
+			raise PyMSError('MPQ', f"Error deleting file {file_name!r} ({_SFmpq.SFGetLastError()})")
 
-	def compact(self):
+	def compact(self) -> None:
 		self._check_open_status(editing=True)
+		assert self.mpq_handle is not None
 
 		if not _SFmpq.MpqCompactArchive(self.mpq_handle):
-			raise PyMSError('MPQ', "Error compacting MPQ (%d)" % _SFmpq.SFGetLastError())
+			raise PyMSError('MPQ', f"Error compacting MPQ ({_SFmpq.SFGetLastError()})")
 
-	def flush(self):
+	def flush(self) -> None:
 		if not self.is_open() or self.is_read_only():
 			return
 		self.close()

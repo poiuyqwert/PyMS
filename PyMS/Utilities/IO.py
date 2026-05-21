@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os, io, tempfile
 
-from typing import TextIO, BinaryIO, Callable, Iterable, Iterator
+from typing import TextIO, BinaryIO, Callable, Iterable, Iterator, Any, Literal
 
 AnyInputText = str | TextIO
 AnyInputBytes = str | bytes | BinaryIO
@@ -11,52 +11,57 @@ AnyInputBytes = str | bytes | BinaryIO
 AnyOutputText = str | TextIO
 AnyOutputBytes = str | BinaryIO
 
+class IOException(Exception):
+	pass
+
 class InputText:
-	def __init__(self, input: AnyInputText):
+	def __init__(self, any_input: AnyInputText):
 		self.entered = 0
 		self.close = False
 		self.file: TextIO
-		if isinstance(input, str):
-			if os.path.exists(input):
-				self.file = open(input, 'r')
+		if isinstance(any_input, str):
+			if os.path.exists(any_input):
+				self.file = open(any_input, 'r', encoding='utf-8')
 				self.close = True
 			else:
-				self.file = io.StringIO(input)
+				self.file = io.StringIO(any_input)
 		else:
-			self.file = input
+			self.file = any_input
 
 	def __enter__(self) -> TextIO:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class InputBytes:
-	def __init__(self, input: AnyInputBytes):
+	def __init__(self, any_input: AnyInputBytes):
 		self.entered = 0
 		self.close = False
 		self.file: BinaryIO
-		if isinstance(input, str):
-			self.file = open(input, 'rb')
+		if isinstance(any_input, str):
+			self.file = open(any_input, 'rb')
 			self.close = True
-		elif isinstance(input, bytes):
-			self.file = io.BytesIO(input)
+		elif isinstance(any_input, bytes):
+			self.file = io.BytesIO(any_input)
 		else:
-			self.file = input
+			self.file = any_input
 
 	def __enter__(self) -> BinaryIO:
 		self.entered += 1
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		self.entered -= 1
 		if self.entered == 0 and self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class OutputTextFile(TextIO):
 	def __init__(self, path: str) -> None:
@@ -92,28 +97,28 @@ class OutputTextFile(TextIO):
 		return self.temp_file.isatty()
 
 	def read(self, n: int = -1) -> str:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readable(self) -> bool:
 		return False
 
 	def readline(self, limit: int = -1) -> str:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readlines(self, hint: int = -1) -> list[str]:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def seek(self, offset: int, whence: int = 0) -> int:
-		raise Exception(f'Attempting to seek in {self.__class__.__name__}')
+		raise IOException(f'Attempting to seek in {self.__class__.__name__}')
 
 	def seekable(self) -> bool:
 		return False
 
 	def tell(self) -> int:
-		raise Exception(f'Attempting to tell in {self.__class__.__name__}')
+		raise IOException(f'Attempting to tell in {self.__class__.__name__}')
 
 	def truncate(self, size: int | None = None) -> int:
-		raise Exception(f'Attempting to truncate in {self.__class__.__name__}')
+		raise IOException(f'Attempting to truncate in {self.__class__.__name__}')
 
 	def writable(self) -> bool:
 		return self.temp_file.writable()
@@ -127,14 +132,14 @@ class OutputTextFile(TextIO):
 	def __enter__(self) -> TextIO:
 		return self
 
-	def __exit__(self, type, value, traceback) -> None:
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
 		self.close()
 
 	def __iter__(self) -> Iterator[str]:
-		raise Exception(f'Attempting to iterate a {self.__class__.__name__}')
-	
+		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
+
 	def __next__(self) -> str:
-		raise Exception(f'Attempting to next a {self.__class__.__name__}')
+		raise IOException(f'Attempting to next a {self.__class__.__name__}')
 
 class OutputBytesFile(BinaryIO):
 	def __init__(self, path: str) -> None:
@@ -170,28 +175,28 @@ class OutputBytesFile(BinaryIO):
 		return self.temp_file.isatty()
 
 	def read(self, n: int = -1) -> bytes:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readable(self) -> bool:
 		return False
 
 	def readline(self, limit: int = -1) -> bytes:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def readlines(self, hint: int = -1) -> list[bytes]:
-		raise Exception(f'Attempting to read from {self.__class__.__name__}')
+		raise IOException(f'Attempting to read from {self.__class__.__name__}')
 
 	def seek(self, offset: int, whence: int = 0) -> int:
-		raise Exception(f'Attempting to seek in {self.__class__.__name__}')
+		raise IOException(f'Attempting to seek in {self.__class__.__name__}')
 
 	def seekable(self) -> bool:
 		return False
 
 	def tell(self) -> int:
-		raise Exception(f'Attempting to tell in {self.__class__.__name__}')
+		raise IOException(f'Attempting to tell in {self.__class__.__name__}')
 
 	def truncate(self, size: int | None = None) -> int:
-		raise Exception(f'Attempting to truncate in {self.__class__.__name__}')
+		raise IOException(f'Attempting to truncate in {self.__class__.__name__}')
 
 	def writable(self) -> bool:
 		return self.temp_file.writable()
@@ -205,14 +210,14 @@ class OutputBytesFile(BinaryIO):
 	def __enter__(self) -> BinaryIO:
 		return self
 
-	def __exit__(self, type, value, traceback) -> None:
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
 		self.close()
 
 	def __iter__(self) -> Iterator[bytes]:
-		raise Exception(f'Attempting to iterate a {self.__class__.__name__}')
-	
+		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
+
 	def __next__(self) -> bytes:
-		raise Exception(f'Attempting to next a {self.__class__.__name__}')
+		raise IOException(f'Attempting to next a {self.__class__.__name__}')
 
 class OutputText:
 	def __init__(self, output: AnyOutputText):
@@ -227,10 +232,11 @@ class OutputText:
 	def __enter__(self) -> TextIO:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
 			self.file.close()
 			self.close = False
+		return False
 
 class OutputBytes:
 	def __init__(self, output: AnyOutputBytes):
@@ -245,27 +251,28 @@ class OutputBytes:
 	def __enter__(self) -> BinaryIO:
 		return self.file
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
 			self.file.close()
 			self.close = False
+		return False
 
-def open_input_text(input: AnyInputText) -> TextIO:
-	if isinstance(input, str):
-		if os.path.exists(input):
-			return open(input, 'r')
+def open_input_text(any_input: AnyInputText) -> TextIO:
+	if isinstance(any_input, str):
+		if os.path.exists(any_input):
+			return open(any_input, 'r', encoding='utf-8')
 		else:
-			return io.StringIO(input)
+			return io.StringIO(any_input)
 	else:
-		return input
+		return any_input
 
-def open_input_bytes(input: AnyInputBytes) -> BinaryIO:
-	if isinstance(input, str):
-		return open(input, 'rb')
-	elif isinstance(input, bytes):
-		return io.BytesIO(input)
+def open_input_bytes(any_input: AnyInputBytes) -> BinaryIO:
+	if isinstance(any_input, str):
+		return open(any_input, 'rb')
+	elif isinstance(any_input, bytes):
+		return io.BytesIO(any_input)
 	else:
-		return input
+		return any_input
 
 def open_output_text(output: AnyOutputText) -> TextIO:
 	if isinstance(output, str):

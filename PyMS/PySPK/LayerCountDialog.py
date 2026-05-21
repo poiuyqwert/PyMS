@@ -19,6 +19,6 @@ class LayerCountDialog(PyMSDialog):
 
 		return ok
 
-	def cancel(self, event: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.result.set(0)
 		PyMSDialog.cancel(self)

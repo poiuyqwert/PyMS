@@ -8,7 +8,7 @@ from ..Types import SelectMode
 import re
 from enum import Enum
 
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Any
 
 class SelectModifier(Enum):
 	none = 0
@@ -23,7 +23,7 @@ class TreeNode:
 		self.parent: TreeGroup | None = None
 
 	def __repr__(self) -> str:
-		return '<TreeNode text=%s depth=%d entry=%d>' % (repr(self.text), self.depth, self.entry)
+		return f'<TreeNode text={self.text!r} depth={self.depth} entry={self.entry}>'
 
 class TreeGroup(TreeNode):
 	def __init__(self, text: str, depth: int, entry: int, expanded: bool) -> None:
@@ -42,7 +42,7 @@ class TreeGroup(TreeNode):
 			children += '\n\t' + repr(child).replace('\n','\n\t')
 		if children:
 			children += '\n'
-		return '<TreeGroup text=%s depth=%d entry=%d expanded=%d children=[%s]>' % (repr(self.text), self.depth, self.entry, self.expanded, children)
+		return f'<TreeGroup text={self.text!r} depth={self.depth} entry={self.entry} expanded={self.expanded} children=[{children}]>'
 
 class TreeList(Frame):
 	selregex = re.compile('\\bsel\\b')
@@ -95,11 +95,11 @@ class TreeList(Frame):
 		return ''
 
 	def lookup_coords(self, x: int, y: int) -> tuple[str | None, bool]:
-		index = self.index('@%d,%d' % (x,y))
+		index = self.index(f'@{x},{y}')
 		if index:
 			for o in range(1,100):
 				for below in (True,False):
-					check = self.index('@%d,%d' % (x,y + o * (1 if below else -1)))
+					check = self.index(f'@{x},{y + o * (1 if below else -1)}')
 					if check != index:
 						return (index, below)
 		return (index,True)
@@ -115,7 +115,7 @@ class TreeList(Frame):
 			index = ''
 			while node and node != self.root:
 				assert node.parent is not None
-				index = '%d%s%s' % (node.parent.children.index(node),'.' if index else '',index)
+				index = f'{node.parent.children.index(node)}{"." if index else ""}{index}'
 				node = node.parent
 		return index
 
@@ -157,7 +157,7 @@ class TreeList(Frame):
 		node = self.get_node(index)
 		if not node:
 			return
-		self.text.tag_add('Hightlight',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
+		self.text.tag_add('Hightlight',  f'entry{node.entry}.first', f'entry{node.entry}.last')
 
 	def cur_selection(self) -> list[int]:
 		s: list[int] = []
@@ -176,17 +176,17 @@ class TreeList(Frame):
 			return
 
 		if modifier == SelectModifier.shift and self.selectmode == EXTENDED:
-			if tuple(int(n) for n in self.text.index('entry%s.first' % self.lastsel).split('.')) > tuple(int(n) for n in self.text.index('entry%s.first' % node.entry).split('.')):
+			if tuple(int(n) for n in self.text.index(f'entry{self.lastsel}.first').split('.')) > tuple(int(n) for n in self.text.index(f'entry{node.entry}.first').split('.')):
 				d = '-1l'
 			else:
 				d = '+1l'
-			c,f = self.text.index('entry%s.last %s lineend -1c' % (self.lastsel,d)),self.text.index('entry%s.last %s lineend -1c' % (node.entry,d))
+			c,f = self.text.index(f'entry{self.lastsel}.last {d} lineend -1c'),self.text.index(f'entry{node.entry}.last {d} lineend -1c')
 			while c != f:
 				r = self.text.tag_names(c)
 				for e in r:
 					if e.startswith('entry') and (self.groupsel or not isinstance(self.entries[int(e[5:])],TreeGroup)) and not 'Selection' in r:
-						self.text.tag_add('Selection', '%s.first' % e, '%s.last' % e)
-				c = self.text.index('%s %s lineend -1c' % (c,d))
+						self.text.tag_add('Selection', f'{e}.first', f'{e}.last')
+				c = self.text.index(f'{c} {d} lineend -1c')
 			self.lastsel = node.entry
 		else:
 			if self.selectmode != MULTIPLE or modifier != SelectModifier.ctrl:
@@ -194,7 +194,7 @@ class TreeList(Frame):
 			if self.selectmode == EXTENDED:
 				self.lastsel = node.entry
 			if not self.selected(node.entry):
-				self.text.tag_add('Selection',  'entry%s.first' % node.entry, 'entry%s.last' % node.entry)
+				self.text.tag_add('Selection',  f'entry{node.entry}.first', f'entry{node.entry}.last')
 		self.text.event_generate(WidgetEvent.Listbox.Select())
 
 	def write_node(self, pos: str, node: TreeNode) -> None:
@@ -202,38 +202,38 @@ class TreeList(Frame):
 		selectable = True
 		if isinstance(node, TreeGroup):
 			selectable = self.groupsel
-			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
+			self.execute('insert',(pos, node.text, f'entry{node.entry}'))
 			self.execute('insert',(pos, '\t' * node.depth + '  '))
-			self.execute('insert',('entry%s.last' % node.entry, '\n'))
-			self.text.image_create('entry%s.first -1c' % node.entry, image=self.icons[node.expanded])
-			self.text.tag_add('icon%s' % node.entry, 'entry%s.first -2c' % node.entry, 'entry%s.first -1c' % node.entry)
+			self.execute('insert',(f'entry{node.entry}.last', '\n'))
+			self.text.image_create(f'entry{node.entry}.first -1c', image=self.icons[node.expanded])
+			self.text.tag_add(f'icon{node.entry}', f'entry{node.entry}.first -2c', f'entry{node.entry}.first -1c')
 			def toggle_callback(entry: int) -> Callable[[Event], None]:
-				def toggle(e: Event):
+				def toggle(_event: Event) -> None:
 					self.toggle(entry)
 				return toggle
-			self.text.tag_bind('icon%s' % node.entry, Mouse.Click_Left(), toggle_callback(node.entry))
+			self.text.tag_bind(f'icon{node.entry}', Mouse.Click_Left(), toggle_callback(node.entry))
 		else:
-			self.execute('insert',(pos, node.text, 'entry%s' % node.entry))
+			self.execute('insert',(pos, node.text, f'entry{node.entry}'))
 			self.execute('insert',(pos, '\t' * (node.depth+1)))
-			self.execute('insert',('entry%s.last' % node.entry, '\n'))
+			self.execute('insert',(f'entry{node.entry}.last', '\n'))
 		if selectable:
 			def select_callback(entry: int, modifier: SelectModifier) -> Callable[[Event], None]:
-				def select(e: Event):
+				def select(_event: Event) -> None:
 					self.select(entry, modifier)
 				return select
-			self.text.tag_bind('entry%s' % node.entry, Mouse.Click_Left(), select_callback(node.entry, SelectModifier.none))
-			self.text.tag_bind('entry%s' % node.entry, Shift.Click_Left(), select_callback(node.entry, SelectModifier.shift))
-			self.text.tag_bind('entry%s' % node.entry, Ctrl.Click_Left(), select_callback(node.entry, SelectModifier.ctrl))
+			self.text.tag_bind(f'entry{node.entry}', Mouse.Click_Left(), select_callback(node.entry, SelectModifier.none))
+			self.text.tag_bind(f'entry{node.entry}', Shift.Click_Left(), select_callback(node.entry, SelectModifier.shift))
+			self.text.tag_bind(f'entry{node.entry}', Ctrl.Click_Left(), select_callback(node.entry, SelectModifier.ctrl))
 
 	def erase_branch(self, node: TreeNode, eraseRoot: bool) -> None:
-		end = 'entry%s.last lineend +1c' % node.entry
+		end = f'entry{node.entry}.last lineend +1c'
 		if eraseRoot:
-			start = 'entry%s.last linestart' % node.entry
+			start = f'entry{node.entry}.last linestart'
 		else:
 			start = end
 		while isinstance(node, TreeGroup) and node.expanded and node.children:
 			deep_leaf = node.children[-1]
-			end = 'entry%s.last lineend +1c' % deep_leaf.entry
+			end = f'entry{deep_leaf.entry}.last lineend +1c'
 			node = deep_leaf
 		self.execute('delete', (start, end))
 
@@ -242,12 +242,12 @@ class TreeList(Frame):
 		if not isinstance(group, TreeGroup):
 			return
 		expanded = not group.expanded
-		self.text.image_configure('icon%s.first' % group.entry, image=self.icons[expanded])
+		self.text.image_configure(f'icon{group.entry}.first', image=self.icons[expanded])
 		if expanded:
-			base = 'icon%s.first' % group.entry
-			def insert_children(group, line_offset=1):
+			base = f'icon{group.entry}.first'
+			def insert_children(group: TreeGroup, line_offset: int = 1) -> int:
 				for child in group.children:
-					self.write_node('%s +%sl linestart' % (base,line_offset), child)
+					self.write_node(f'{base} +{line_offset}l linestart', child)
 					line_offset += 1
 					if isinstance(child, TreeGroup) and child.expanded:
 						line_offset += insert_children(child, line_offset)
@@ -320,10 +320,10 @@ class TreeList(Frame):
 				above = parent.children[-2]
 				while isinstance(above, TreeGroup) and above.expanded and above.children:
 					above = above.children[-1]
-				base = 'entry%s.last +1l' % (above.entry)
+				base = f'entry{above.entry}.last +1l'
 			elif parent != self.root:
-				base = 'entry%s.last +1l' % parent.entry
-			self.write_node('%s linestart' % base, node)
+				base = f'entry{parent.entry}.last +1l'
+			self.write_node(f'{base} linestart', node)
 		# print(self.entries)
 		# print(self.root)
 		return '.'.join(str(i) for i in indices)
@@ -344,17 +344,17 @@ class TreeList(Frame):
 		node = self.get_node(index)
 		if not node:
 			return False
-		return ('Selection' in self.text.tag_names('entry%s.first' % node.entry))
+		return ('Selection' in self.text.tag_names(f'entry{node.entry}.first'))
 
-	def set(self, index: int | str, text: str):
+	def set(self, index: int | str, text: str) -> None:
 		node = self.get_node(index)
 		if not node:
 			return
 		node.text = text
 		selected = self.selected(index)
-		start,end = tuple(str(i) for i in self.text.tag_ranges('entry%s' % node.entry))
+		start,end = tuple(str(i) for i in self.text.tag_ranges(f'entry{node.entry}'))
 		self.execute('delete', (start, end))
-		self.execute('insert', (start, text, 'entry%s' % node.entry))
+		self.execute('insert', (start, text, f'entry{node.entry}'))
 		if selected:
 			self.text.tag_add('Selection', start, end)
 
@@ -362,7 +362,7 @@ class TreeList(Frame):
 		node = self.get_node(index)
 		if not node:
 			return
-		entry = 'entry%s' % node.entry
+		entry = f'entry{node.entry}'
 		ranges = self.text.tag_ranges(entry)
 		if ranges:
 			self.text.see(ranges[0])
@@ -377,7 +377,7 @@ class TreeList(Frame):
 
 # import TBL,DAT
 # class Test(Tk):
-	# def __init__(self):
+	# def __init__(self) -> None:
 		# Tk.__init__(self)
 		# self.title('TreeList Test')
 
@@ -410,7 +410,7 @@ class TreeList(Frame):
 						# else:
 							# e = str(f-1)
 						# groups[f-1][s[2]] = self.tl.insert(e + '.-1', s[2], False)
-					# self.tl.insert(groups[f-1][s[2]] + '.-1', '[%s] %s%s' % (i,s[0],['',' (%s)' % s[1]][s[1] != '*']))
+					# self.tl.insert(groups[f-1][s[2]] + '.-1', '[%s] %s%s' % (i,s[0],['',f' ({s})'[1]][s[1] != '*']))
 					# found = True
 		# self.tl.insert('-1', 'Zerg', True)
 		# self.tl.insert('0.-1', 'Ground Units', True)

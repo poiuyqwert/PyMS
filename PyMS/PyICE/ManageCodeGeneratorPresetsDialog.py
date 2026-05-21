@@ -52,7 +52,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 	def remove(self) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
-		cont = MessageBox.askquestion(parent=self, title='Remove Preset?', message="'%s' will be removed and you won't be able to get it back. Continue?" % preset.name, default=MessageBox.OK, type=MessageBox.OKCANCEL)
+		cont = MessageBox.askquestion(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?", default=MessageBox.OK, type=MessageBox.OKCANCEL)
 		if cont == MessageBox.CANCEL:
 			return
 		del self.config_.generator.presets.data[selected]
@@ -71,7 +71,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			f.write(json.dumps(preset, indent=4))
 			f.close()
 		except:
-			ErrorDialog(self, PyMSError('Export',"Could not write to file '%s'" % path))
+			ErrorDialog(self, PyMSError('Export', f"Could not write to file '{path}'"))
 
 	def iimport(self) -> None:
 		path = self.config_.last_path.generators.txt.select_open(self)
@@ -80,14 +80,14 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		try:
 			preset_json = None
 			try:
-				with open(path, 'r') as f:
+				with open(path, 'r', encoding='utf-8') as f:
 					preset_json = json.loads(f.read())
-			except:
-				raise PyMSError('Import',"Could not read preset '%s'" % path, capture_exception=True)
+			except Exception as exc:
+				raise PyMSError('Import', f"Could not read preset '{path}'", capture_exception=True) from exc
 			preset = GeneratorPreset.from_json(preset_json)
 			copy = 1
 			while True:
-				check = '%s%s' % (preset.name,'' if copy == 1 else str(copy))
+				check = preset.name + '' if copy == 1 else str(copy)
 				for p in self.config_.generator.presets.data:
 					if check == p.name:
 						copy += 1
@@ -100,12 +100,12 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			self.update_list()
 		except PyMSError as e:
 			ErrorDialog(self, e)
-	
-	def rename(self, event: Event | None = None) -> None:
+
+	def rename(self, _event: Event | None = None) -> None:
 		if not self.listbox.curselection():
 			return
 		selected = int(self.listbox.curselection()[0])
-		def do_rename(window: AnyWindow, name: str) -> CheckSaved:
+		def do_rename(_window: AnyWindow, name: str) -> CheckSaved:
 			for preset in self.config_.generator.presets.data:
 				if preset.name == name:
 					ErrorDialog(self, PyMSError('Renaming','That name already exists'))
@@ -116,7 +116,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		name = self.config_.generator.presets.data[selected].name
 		NameDialog(self, self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', save_callback=do_rename)
 
-	def update_states(self, event: Event | None = None) -> None:
+	def update_states(self, _event: Event | None = None) -> None:
 		selected = None
 		if self.listbox.curselection():
 			selected = int(self.listbox.curselection()[0])

@@ -12,7 +12,9 @@ from ....Utilities.CodeHandlers.CodeBlock import CodeBlock
 class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 	def __init__(self) -> None:
 		super().__init__()
-		self.register_commands(CodeCommands.all_header_commands)
+		self.cmd_defs: dict[str, CodeCommandDefinition] = {}
+		for cmd_def in CodeCommands.all_header_commands:
+			self.cmd_defs[cmd_def.name] = cmd_def
 
 	def parse(self, parse_context: ParseContext) -> bool:
 		from ..AIScript import AIScript
@@ -23,12 +25,12 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		assert isinstance(parse_context, AIParseContext)
 		token = parse_context.lexer.check_token(AILexer.ScriptIDToken)
 		if not isinstance(token, AILexer.ScriptIDToken):
-			raise parse_context.error('Parse', "Expected script ID, got '%s' instead" % token.raw_value)
+			raise parse_context.error('Parse', f"Expected script ID, got '{token.raw_value}' instead")
 		line = parse_context.lexer.state.line
 		script_id = token.raw_value
 		if script_id in parse_context.scripts:
 			_,existing_line = parse_context.scripts[script_id]
-			raise parse_context.error('Parse', "A script with id '%s' is already defined on line %d" % (script_id, existing_line))
+			raise parse_context.error('Parse', f"A script with id '{script_id}' is already defined on line {existing_line}")
 
 		string_id: int | None = None
 		in_bwscript: bool | None = None
@@ -40,17 +42,17 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 		commands_parsed: list[CodeCommandDefinition] = []
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, AILexer.SymbolToken) or token.raw_value != '{':
-			raise parse_context.error('Parse', "Expected a '{' to start the script header, got '%s' instead" % token.raw_value)
+			raise parse_context.error('Parse', f"Expected a '{{' to start the script header, got '{token.raw_value}' instead")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.NewlineToken):
-			raise parse_context.error('Parse', "Unexpected token '%s' (expected end of line)" % token.raw_value)
+			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected end of line)")
 		while True:
 			token = parse_context.lexer.next_token()
 			line = parse_context.lexer.state.line
 			if isinstance(token, AILexer.SymbolToken) and token.raw_value == '}':
 				break
 			if not isinstance(token, Tokens.IdentifierToken):
-				raise parse_context.error('Parse', "Expected a script header command, got '%s' instead" % token.raw_value)
+				raise parse_context.error('Parse', f"Expected a script header command, got '{token.raw_value}' instead")
 			cmd_def = self.cmd_defs[token.raw_value]
 			command = cmd_def.parse(parse_context)
 			if command.definition in commands_parsed:

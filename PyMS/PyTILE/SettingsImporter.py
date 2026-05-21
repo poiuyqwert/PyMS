@@ -14,7 +14,7 @@ from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities import Serialize
 
-from enum import Enum
+from typing import Any
 
 class SettingsImporter(PyMSDialog):
 	REPEATERS = (
@@ -27,12 +27,7 @@ class SettingsImporter(PyMSDialog):
 		self.tiletype = tiletype
 		self.ids = ids
 		self.delegate = delegate
-		typename = ''
-		if self.tiletype == TileType.group:
-			typename = 'MegaTile Group'
-		elif self.tiletype == TileType.mega:
-			typename = 'MegaTile'
-		PyMSDialog.__init__(self, parent, 'Import %s Settings' % typename, resizable=(True,False), set_min_size=(True,True))
+		PyMSDialog.__init__(self, parent, f'Import {TileType.display_name(self.tiletype)} Settings', resizable=(True,False), set_min_size=(True,True))
 
 	def widgetize(self) -> Misc | None:
 		self.settings_path = StringVar()
@@ -70,17 +65,12 @@ class SettingsImporter(PyMSDialog):
 		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT, padx=(10,0))
 		buts.pack(side=BOTTOM, fill=X, padx=3, pady=3)
 
-		self.settings_path.trace('w', self.update_states)
+		self.settings_path.trace_add('write', self.update_states)
 
 		return self.import_button
 
 	def select_path(self) -> None:
-		typename = ''
-		if self.tiletype == TileType.group:
-			typename = 'MegaTile Group'
-		elif self.tiletype == TileType.mega:
-			typename = 'MegaTile'
-		path = self.config_.last_path.settings.select_open(self, title='Import %s Settings' % typename)
+		path = self.config_.last_path.settings.select_open(self, title=f'Import {TileType.display_name(self.tiletype)} Settings')
 		if not path:
 			return
 		self.settings_path.set(path)
@@ -108,7 +98,7 @@ class SettingsImporter(PyMSDialog):
 			if self.auto_close.get():
 				self.ok()
 
-	def dismiss(self):
+	def dismiss(self) -> None:
 		self.config_.import_.settings.repeater.value = SettingsImporter.REPEATERS[self.repeater.get()][1]
 		self.config_.import_.settings.auto_close.value = not not self.auto_close.get()
 		PyMSDialog.dismiss(self)

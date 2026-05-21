@@ -12,15 +12,15 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUnitAvailability(object):
-	def __init__(self):
+class CHKUnitAvailability:
+	def __init__(self) -> None:
 		self.available = True
 		self.default = True
 
 class CHKSectionPUNI(CHKSection):
 	NAME = 'PUNI'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.availability: list[list[CHKUnitAvailability]] = []
@@ -29,8 +29,8 @@ class CHKSectionPUNI(CHKSection):
 			for _ in range(12):
 				self.availability[-1].append(CHKUnitAvailability())
 		self.globalAvailability = [True] * 228
-	
-	def load_data(self, data):
+
+	def load_data(self, data: bytes) -> None:
 		offset = 0
 		for p in range(12):
 			availability = list(bool(v) for v in struct.unpack('<228B', data[offset:offset+228]))
@@ -44,7 +44,7 @@ class CHKSectionPUNI(CHKSection):
 			offset += 228
 			for u in range(228):
 				self.availability[u][p].default = defaults[u]
-	
+
 	def save_data(self) -> bytes:
 		result = b''
 		for p in range(12):
@@ -57,18 +57,18 @@ class CHKSectionPUNI(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		result += '\t' + pad('#')
 		for name in ['Available','Use Defaults']:
 			result += pad(name)
 		result += '\n'
 		for p in range(12):
-			result += '\t# Player %d\n' % (p+1)
+			result += f'\t# Player {p+1}\n'
 			for u in range(228):
-				result += '\t' + pad('Unit%03d' % u)
-				result += pad(self.availability[u][p].available)
-				result += '%s\n' % self.availability[u][p].default
-		result += '\t%s\n' % pad('# Global','Available')
+				result += '\t' + pad(f'Unit{u:03d}')
+				result += pad(str(self.availability[u][p].available))
+				result += f'{self.availability[u][p].default}\n'
+		result += f'\t{pad("# Global","Available")}\n'
 		for u in range(228):
-			result += '\t%s\n' % pad('Unit%03d' % u, str(self.globalAvailability[u]))
+			result += f'\t{pad(f"Unit{u:03d}", str(self.globalAvailability[u]))}\n'
 		return result

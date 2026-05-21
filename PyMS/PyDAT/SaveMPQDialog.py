@@ -72,16 +72,16 @@ class SaveMPQDialog(PyMSDialog):
 					mpq = MPQ.of(file)
 					with mpq.open_or_create():
 						buffer = None
-						for filename,filepath,id in selected_options:
+						for filename,filepath,item_id in selected_options:
 							try:
-								if isinstance(id, DATID):
-									dat_data = self.delegate.data_context.dat_data(id)
+								if isinstance(item_id, DATID):
+									dat_data = self.delegate.data_context.dat_data(item_id)
 									buffer = dat_data.save_data()
 								else:
-									data_data = self.delegate.data_context.data_data(id)
+									data_data = self.delegate.data_context.data_data(item_id)
 									if isinstance(data_data, IScriptBIN):
 										iscript_bin = data_data
-										buffer = IO.output_to_bytes(lambda f: iscript_bin.save(f))
+										buffer = IO.output_to_bytes(iscript_bin.save)
 									else:
 										buffer = data_data.save_data()
 								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)
@@ -92,7 +92,7 @@ class SaveMPQDialog(PyMSDialog):
 					ErrorDialog(self, e)
 					return
 				if not_saved:
-					MessageBox.showwarning(title='Save problems', message='%s could not be saved to the MPQ.' % ', '.join(not_saved))
+					MessageBox.showwarning(title='Save problems', message=f'{", ".join(not_saved)} could not be saved to the MPQ.')
 
 	def ok(self, event: Event | None = None) -> None:
 		self.delegate.data_context.config.mpq_export.data = [self.listbox.get(i) for i in self.listbox.curselection()]

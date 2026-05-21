@@ -7,7 +7,7 @@ from ..Variables import IntegerVar
 
 from ... import Assets
 
-from typing import Callable, Literal, Sequence
+from typing import Callable, Literal, Sequence, Any
 
 class DropDown(Frame):
 	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
@@ -18,7 +18,7 @@ class DropDown(Frame):
 		self._original_display_callback = None
 		if display and isinstance(display, Variable):
 			self._original_display_callback = display.callback
-			def callback_wrapper(num):
+			def callback_wrapper(num: int) -> None:
 				self.set(num)
 				if self._original_display_callback:
 					self._original_display_callback(self.variable.get())
@@ -36,18 +36,18 @@ class DropDown(Frame):
 		self.entry['state'] = state
 		self.entry.bind(Mouse.Click_Left(), self.choose)
 		def move_callback(i: int| Literal['end']) -> Callable[[Event], None]:
-			def move(e: Event) -> None:
-				self.move(e, i)
+			def move(event: Event) -> None:
+				self.move(event, i)
 			return move
-		self.entry.bind(Key.Home(), move_callback(0)),
-		self.entry.bind(Key.End(), move_callback(END)),
-		self.entry.bind(Key.Up(), move_callback(-1)),
-		self.entry.bind(Key.Left(), move_callback(-1)),
-		self.entry.bind(Key.Down(), move_callback(1)),
-		self.entry.bind(Key.Right(), move_callback(1)),
-		self.entry.bind(Key.Prior(), move_callback(-10)),
-		self.entry.bind(Key.Next(), move_callback(10)),
-		self.entry.bind(Key.Pressed(), self.key_pressed),
+		self.entry.bind(Key.Home(), move_callback(0))
+		self.entry.bind(Key.End(), move_callback(END))
+		self.entry.bind(Key.Up(), move_callback(-1))
+		self.entry.bind(Key.Left(), move_callback(-1))
+		self.entry.bind(Key.Down(), move_callback(1))
+		self.entry.bind(Key.Right(), move_callback(1))
+		self.entry.bind(Key.Prior(), move_callback(-10))
+		self.entry.bind(Key.Next(), move_callback(10))
+		self.entry.bind(Key.Pressed(), self.key_pressed)
 		self.entry.bind(Key.Return(), self.choose)
 		self.setentries(entries)
 		self.button = Button(self, image=Assets.get_image('arrow'), command=self.choose, state=state)
@@ -55,12 +55,12 @@ class DropDown(Frame):
 
 		self.background_color = self.entry.cget('bg')
 		self.highlight_color = self.entry.cget('selectbackground')
-		def update_background(color):
+		def update_background(color: str) -> None:
 			self.entry['bg'] = color
 		self.entry.bind(Focus.In(), lambda *_: update_background(self.highlight_color))
 		self.entry.bind(Focus.Out(), lambda *_: update_background(self.background_color))
 		# The Focus.Out event stops firing sometimes, so we use a workaround with `validatecommand` triggering on `focusout` to overcome the issue
-		def validate(reason):
+		def validate(reason: str) -> bool:
 			if reason == 'focusout':
 				update_background(self.background_color)
 			return True
@@ -103,16 +103,18 @@ class DropDown(Frame):
 		else:
 			self.text.set('')
 
-	def move(self, e: Event, a: int | Literal['end']) -> str:
+	def move(self, _event: Event, a: int | Literal['end']) -> str:
 		if self.entry['state'] == NORMAL:
 			if a == END:
 				i = len(self.entries)-1
 			elif a:
 				i = max(min(len(self.entries)-1,self.variable.get() + a),0)
+			else:
+				return EventPropogation.Break
 			self.set(i)
 		return EventPropogation.Break
 
-	def choose(self, e: Event | None = None) -> None:
+	def choose(self, _event: Event | None = None) -> None:
 		if self.entry['state'] == NORMAL:
 			i = self.variable.get()
 			if i == self.none_value:

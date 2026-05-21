@@ -6,7 +6,7 @@ from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class DecompilingFormatDialog(PyMSDialog):
-	def __init__(self, parent, config: PyAIConfig.Code.DecompFormat):
+	def __init__(self, parent: Misc, config: PyAIConfig.Code.DecompFormat):
 		self.config_ = config
 		PyMSDialog.__init__(self, parent, 'Decompiling Format', resizable=(False, False))
 
@@ -38,7 +38,7 @@ class DecompilingFormatDialog(PyMSDialog):
 
 		return ok
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.config_.block.value = BlockFormat.all()[self.block_combobox.current()]
 		self.config_.command.value = CommandFormat.all()[self.command_combobox.current()]
 		self.config_.comment.value = CommentFormat.all()[self.comment_combobox.current()]

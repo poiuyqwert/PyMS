@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from ...DATTabConveniences import DATTabConveniences
 
+from ....FileFormats.DAT.UnitsDAT import DATUnit
+
 from ....Utilities.UIKit import *
 
 from typing import TYPE_CHECKING
@@ -43,8 +45,8 @@ class DATUnitsTab(NotebookTab, DATTabConveniences):
 			self.sub_delegate.edited = edited
 			self.delegate.update_status_bar()
 
-	def load_data(self, entry):
+	def load_data(self, _entry: DATUnit) -> None:
 		pass
 
-	def save_data(self, entry):
+	def save_data(self, _entry: DATUnit) -> bool:
 		return False

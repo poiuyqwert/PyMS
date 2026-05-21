@@ -23,4 +23,4 @@ class CHKSectionUnknown(CHKSection):
 		return self.data
 
 	def decompile(self) -> str:
-		return '%s: # Unknown\n\t%s\n' % (self.NAME, pad('Data',self.data.hex()))
+		return f'{self.NAME}: # Unknown\n\t{pad("Data",self.data.hex())}\n'

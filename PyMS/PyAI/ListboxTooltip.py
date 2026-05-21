@@ -2,7 +2,6 @@
 from .Delegates import TooltipDelegate
 
 from ..FileFormats.AIBIN.AIFlag import AIFlag
-from ..FileFormats import TBL
 
 from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
@@ -30,7 +29,7 @@ class ListboxTooltip(Tooltip):
 		if self.tip and self.index != self.scrolled_listbox.nearest(e.y):
 			self.leave()
 			self.enter(e)
-		self.pos = (e.x,e.y)
+		# self.pos = (e.x,e.y)
 		Tooltip.motion(self, e)
 
 	def showtip(self) -> None:
@@ -38,7 +37,7 @@ class ListboxTooltip(Tooltip):
 			return
 		self.tip = TooltipWindow(self.parent)
 		self.tip.maxsize(640,400)
-		self.tip.wm_overrideredirect(True)
+		self.tip.make_frameless(self.parent.winfo_toplevel())
 		pos = list(self.parent.winfo_pointerxy())
 		index = self.scrolled_listbox.listbox.nearest(pos[1] - self.parent.winfo_rooty())
 		script = self.delegate.get_list_entry(index)
@@ -63,7 +62,7 @@ class ListboxTooltip(Tooltip):
 		frame = Frame(self.tip, background='#FFFFC8', relief=SOLID, borderwidth=1)
 		Label(frame, text=text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
 		frame.pack()
-		self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+		self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 		self.tip.update_idletasks()
 		move = False
 		if pos[0] + self.tip.winfo_reqwidth() > self.tip.winfo_screenwidth():
@@ -73,4 +72,4 @@ class ListboxTooltip(Tooltip):
 			move = True
 			pos[1] -= self.tip.winfo_reqheight() + 44
 		if move:
-			self.tip.wm_geometry('+%d+%d' % (pos[0],pos[1]+22))
+			self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')

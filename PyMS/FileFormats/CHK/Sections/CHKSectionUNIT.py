@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ..CHK import CHK
 
-class CHKUnit(object):
+class CHKUnit:
 	NYDUS_LINK = (1 << 9)
 	ADDON_LINK = (1 << 10)
 
@@ -59,15 +59,15 @@ class CHKUnit(object):
 		result = '\t#\n'
 		data = {
 			'InstanceID': self.instanceID,
-			'Position': '%s,%s' % (self.position[0], self.position[1]),
+			'Position': f'{self.position[0]},{self.position[1]}',
 			'UnitID': self.unit_id,
 			'BuildingRelation': named_flags(self.buildingRelation, ["Nydus Link","Addon Link"], 16, 9),
 			'ValidAbilities': named_flags(self.validAbilities, ["Cloak", "Burrow", "In Transit", "Hullucinated", "Invincible"], 16),
 			'ValidProperties': named_flags(self.validProperties, ["Owner", "Health", "Shields", "Energy", "Resources", "Hanger"], 16),
 			'Owner': self.owner + 1,
-			'Health': '%s%%' % self.health,
-			'Shields': '%s%%' % self.shields,
-			'Energy': '%s%%' % self.energy,
+			'Health': f'{self.health}%%',
+			'Shields': f'{self.shields}%%',
+			'Energy': f'{self.energy}%%',
 			'Resources': self.resources,
 			'HangerUnits': self.hangerUnits,
 			'AbilityStates': named_flags(self.validAbilities, ["Cloaked", "Burrowed", "In Transit", "Hullucinated", "Invincible"], 16),
@@ -76,20 +76,20 @@ class CHKUnit(object):
 		for key in ['InstanceID','Position','UnitID','BuildingRelation','ValidAbilities','ValidProperties','Owner','Health','Shields','Energy','Resources','HangerUnits','AbilityStates','UnitRelationID']:
 			value = data[key]
 			if isinstance(value, tuple):
-				result += '\t%s%s\n' % (pad('#'), value[0])
+				result += f'\t{pad("#")}{value[0]}\n'
 				value = value[1]
-			result += '\t%s\n' % pad(key, str(value))
+			result += f'\t{pad(key, str(value))}\n'
 		return result
 
 class CHKSectionUNIT(CHKSection):
 	NAME = 'UNIT'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
-	
+
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.units: dict[int, CHKUnit] = {}
 		self.unused_ids: list[int] = []
-	
+
 	def load_data(self, data: bytes) -> None:
 		self.units = {}
 		o = 0
@@ -110,16 +110,16 @@ class CHKSectionUNIT(CHKSection):
 
 	def get_unit(self, ref_id: int) -> CHKUnit | None:
 		return self.units.get(ref_id)
-	
+
 	def save_data(self) -> bytes:
 		result = b''
 		for ref_id in sorted(self.units.keys()):
 			unit = self.units[ref_id]
 			result += unit.save_data()
 		return result
-	
+
 	def decompile(self) -> str:
-		result = '%s:\n' % (self.NAME)
+		result = f'{self.NAME}:\n'
 		for ref_id in sorted(self.units.keys()):
 			unit = self.units[ref_id]
 			result += unit.decompile()

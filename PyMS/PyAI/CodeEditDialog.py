@@ -1,10 +1,11 @@
 
 from .FindReplaceDialog import FindReplaceDialog
 from .Config import PyAIConfig
-from .Delegates import MainDelegate
+from .Delegates import MainDelegate, FindReplaceDelegate
+from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeTooltip, DirectiveTooltip
 
 from ..FileFormats.AIBIN import AIBIN
-from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, CodeTypes, CodeDirectives
+from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, AISECodeTypes, CodeDirectives
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -21,7 +22,201 @@ from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 import re, io
 from dataclasses import dataclass
 
-class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
+from typing import Sequence
+
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, FindReplaceDelegate):
+	@staticmethod
+	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> SyntaxHighlighting:
+		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
+		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
+		type_names = [type.name for type in CodeTypes.all_basic_types]
+		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
+		keywords: list[str] = []
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
+		aise_keywords: list[str] = []
+		for code_type in AISECodeTypes.all_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				aise_keywords.extend(code_type.keywords())
+		return SyntaxHighlighting(
+			syntax_components=(
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Comment',
+							description='The style of a comment.',
+							highlight_style=highlights_config.comment
+						),
+						pattern=r'(?:#|;)[^\n]*$'
+					),
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Header',
+							description='The style of a `script` header.',
+							highlight_style=highlights_config.header
+						),
+						pattern=r'script'
+					),
+					r'[ \t]+',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AI ID',
+							description='The style of the AI ID in the AI header.',
+							highlight_style=highlights_config.ai_id
+						),
+						pattern=r'[^\n\x00,():]{4}'
+					),
+					r'(?=[ \t]+\{)',
+				)),
+				SyntaxComponent((
+					r'^[ \t]*',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Block',
+							description='The style of a --block-- or :block in the code.',
+							highlight_style=highlights_config.block
+						),
+						pattern=r'--\w+--|:\w+'
+					)
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Command',
+							description='The style of command names.',
+							highlight_style=highlights_config.command
+						),
+						pattern='|'.join(cmd_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Command',
+							description='The style of command names for the AISE plugin.',
+							highlight_style=highlights_config.aise_command
+						),
+						pattern='|'.join(aise_cmd_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Type',
+							description='The style of type names.',
+							highlight_style=highlights_config.type
+						),
+						pattern='|'.join(type_names)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Directive',
+							description='The style of @directive names.',
+							highlight_style=highlights_config.directive
+						),
+						pattern=f'@(?:{"|".join(directive_names)})'
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Number',
+							description='The style of all numbers.',
+							highlight_style=highlights_config.number
+						),
+						pattern=r'\d+'
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='TBL Format',
+							description='The style of TBL formatted characters, like null: <0>',
+							highlight_style=highlights_config.tbl_format
+						),
+						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
+					),
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Operator',
+							description='The style of the operators:\n    ( ) , = { } . | ~',
+							highlight_style=highlights_config.operator
+						),
+						pattern=r'[(),={}.|~]'
+					),
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Keyword',
+							description='The style of keywords.',
+							highlight_style=highlights_config.keyword
+						),
+						pattern='|'.join(keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					r'\b',
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='AISE Keyword',
+							description='The style of AISE keywords.',
+							highlight_style=highlights_config.aise_keyword
+						),
+						pattern='|'.join(aise_keywords)
+					),
+					r'\b'
+				)),
+				SyntaxComponent((
+					HighlightPattern(
+						highlight=HighlightComponent(
+							name='Newline',
+							description='The style of newlines',
+							highlight_style=highlights_config.newline
+						),
+						pattern=r'\n'
+					),
+				)),
+			),
+			highlight_components=(
+				HighlightComponent(
+					name='Selection',
+					description='The style of selected text in the editor.',
+					highlight_style=highlights_config.selection,
+					tag='sel'
+				),
+				HighlightComponent(
+					name='Error',
+					description='The style of highlighted errors in the editor.',
+					highlight_style=highlights_config.error
+				),
+				HighlightComponent(
+					name='Warning',
+					description='The style of highlighted warnings in the editor.',
+					highlight_style=highlights_config.warning
+				),
+			)
+		)
+
 	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
 		self.delegate = delegate
 		self.config_ = config
@@ -41,6 +236,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		t += 'AI Script Editor'
 		PyMSDialog.__init__(self, parent, t, grabwait=False)
 		self.findwindow: FindReplaceDialog | None = None
+
+		self.syntax_highlighting: SyntaxHighlighting
 
 	def widgetize(self) -> Widget:
 		self.toolbar = Toolbar(self)
@@ -88,169 +285,15 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		self.config_.windows.code_edit.load_size(self)
 
 	def setup_syntax_highlighting(self) -> None:
-		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
-		type_names = [type.name for type in CodeTypes.all_basic_types]
-		directive_names = [directive.name for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives]
-		keywords: list[str] = []
-		for type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
-			if isinstance(type, CodeType.HasKeywords):
-				keywords.extend(type.keywords())
-		self.syntax_highlighting = SyntaxHighlighting(
-			syntax_components=(
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Comment',
-							description='The style of a comment.',
-							highlight_style=self.config_.code.highlights.comment
-						),
-						pattern=r'(?:#|;)[^\n]*$'
-					),
-				)),
-				SyntaxComponent((
-					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Header',
-							description='The style of a `script` header.',
-							highlight_style=self.config_.code.highlights.header
-						),
-						pattern=r'script'
-					),
-					r'[ \t]+',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='AI ID',
-							description='The style of the AI ID in the AI header.',
-							highlight_style=self.config_.code.highlights.ai_id
-						),
-						pattern=r'[^\n\x00,():]{4}'
-					),
-					r'(?=[ \t]+\{)',
-				)),
-				SyntaxComponent((
-					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Block',
-							description='The style of a --block-- or :block in the code.',
-							highlight_style=self.config_.code.highlights.block
-						),
-						pattern=r'--\w+--|:\w+'
-					)
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Command',
-							description='The style of command names.',
-							highlight_style=self.config_.code.highlights.command
-						),
-						pattern='|'.join(cmd_names)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Type',
-							description='The style of type names.',
-							highlight_style=self.config_.code.highlights.type
-						),
-						pattern='|'.join(type_names)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Directive',
-							description='The style of @directive names.',
-							highlight_style=self.config_.code.highlights.directive
-						),
-						pattern=f'@(?:{"|".join(directive_names)})'
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Number',
-							description='The style of all numbers.',
-							highlight_style=self.config_.code.highlights.number
-						),
-						pattern=r'\d+'
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='TBL Format',
-							description='The style of TBL formatted characters, like null: <0>',
-							highlight_style=self.config_.code.highlights.tbl_format
-						),
-						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
-					),
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Operator',
-							description='The style of the operators:\n    ( ) , = { }',
-							highlight_style=self.config_.code.highlights.operator
-						),
-						pattern=r'[(),={}]'
-					),
-				)),
-				SyntaxComponent((
-					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Keyword',
-							description='The style of keywords.',
-							highlight_style=self.config_.code.highlights.keyword
-						),
-						pattern='|'.join(keywords)
-					),
-					r'\b'
-				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
-							name='Newline',
-							description='The style of newlines',
-							highlight_style=self.config_.code.highlights.newline
-						),
-						pattern=r'\n'
-					),
-				)),
-			),
-			highlight_components=(
-				HighlightComponent(
-					name='Selection',
-					description='The style of selected text in the editor.',
-					highlight_style=self.config_.code.highlights.selection,
-					tag='sel'
-				),
-				HighlightComponent(
-					name='Error',
-					description='The style of highlighted errors in the editor.',
-					highlight_style=self.config_.code.highlights.error
-				),
-				HighlightComponent(
-					name='Warning',
-					description='The style of highlighted warnings in the editor.',
-					highlight_style=self.config_.code.highlights.warning
-				),
-			)
-		)
+		self.syntax_highlighting = CodeEditDialog.build_syntax_highlighting(self.config_.code.highlights)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	def statusupdate(self, event: Event | None = None) -> None:
+		CommandCodeTooltip(self.text.text)
+		AISECommandCodeTooltip(self.text.text)
+		TypeCodeTooltip(self.text.text)
+		DirectiveTooltip(self.text.text)
+
+	def statusupdate(self, _event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
 		sel_range = self.text.tag_ranges('sel')
@@ -261,7 +304,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 	def update_edited(self, edited: bool) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 		if self.file:
-			self.title('AI Script Editor [*%s*]' % self.file)
+			self.title(f'AI Script Editor [*{self.file}*]')
 
 	def cancel(self, _: Event | None = None) -> None:
 		if self.edited_state.is_edited:
@@ -286,6 +329,16 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 			self.text.highlight_error(e)
 			ErrorDialog(self, e)
 			return
+		# TODO: Plugins
+		ai = self.delegate.get_ai_bin()
+		new_active_plugins = parse_context.language_context.active_plugins()
+		if new_active_plugins:
+			added_plugins = new_active_plugins.difference(ai.active_plugins)
+			if added_plugins:
+				pass
+			removed_plugins = ai.active_plugins.difference(new_active_plugins)
+			if removed_plugins:
+				pass
 		if parse_context.warnings:
 			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)
@@ -296,10 +349,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w')
+			f = open(self.file, 'w', encoding='utf-8')
 			f.write(self.text.get('1.0', END))
 			f.close()
-			self.title('AI Script Editor [%s]' % self.file)
+			self.title(f'AI Script Editor [{self.file}]')
 
 	def exportas(self, _: Event | None = None) -> None:
 		file = self.config_.last_path.txt.ai.select_save(self)
@@ -312,17 +365,17 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate):
 		iimport = self.config_.last_path.txt.ai.select_save(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r')
+				f = open(iimport, 'r', encoding='utf-8')
 				self.text.delete('1.0', END)
 				self.text.insert('1.0', f.read())
 				self.text.edit_reset()
 				f.close()
 			except:
-				ErrorDialog(self, PyMSError('Import',"Could not import file '%s'" % iimport))
+				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'"))
 
 	def find(self, _: Event | None = None) -> None:
 		if not self.findwindow:
-			self.findwindow = FindReplaceDialog(self)
+			self.findwindow = FindReplaceDialog(self, self, self.config_.windows.find.find_replace)
 			self.bind(Key.F3(), self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
@@ -428,7 +481,7 @@ script {header_id} {{
 		}
 		header = re.compile(r'\A([^(]{4})\([^)]+\):\s*(?:\{.+\})?(?:\s*#.*)?\Z')
 		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\\Z')
-		jump = re.compile(r'\A(\s*)(%s)\((.+)\)(\s*#.*)?\Z' % '|'.join(list(debug.keys())))
+		jump = re.compile(fr'\A(\s*)({"|".join(list(debug.keys()))})\((.+)\)(\s*#.*)?\Z')
 		script,block = '',''
 		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
 			m = header.match(line)
@@ -446,12 +499,12 @@ script {header_id} {{
 			if m and m.group(2) in debug:
 				inblock = ''
 				if block:
-					inblock = ' block "%s"' % block
+					inblock = f' block "{block}"'
 				rep = {
-					'debug1':'== Debug %s ==' % d,
-					'debug2':'== Debug %s ==' % (d+1),
-					'debug3':'== Debug %s ==' % (d+2),
-					's':'[Line: %s | Inside script "%s"%s]' % (n, script, inblock),
+					'debug1':f'== Debug {d} ==',
+					'debug2':f'== Debug {d+1} ==',
+					'debug3':f'== Debug {d+2} ==',
+					's':f'[Line: {n} | Inside script "{script}"{inblock}]',
 					'c':m.group(4) or '',
 				}
 				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)
@@ -461,7 +514,7 @@ script {header_id} {{
 						data += line + '\n'
 						continue
 					for g,param in enumerate(p.groups()):
-						rep['param%s' % (g+1)] = param
+						rep[f'param{(g+1)}'] = param
 				data += m.group(1) + (debug[m.group(2)][0] % rep).replace('\n','\n' + m.group(1)) + '\n'
 				d += debug[m.group(2)][1]
 				continue
@@ -556,7 +609,7 @@ script {header_id} {{
 	RE_BLOCK_NAME = re.compile(r'(?:--|:)(\w+)')
 	def get_autocomplete_options(self, line: str) -> list[str] | None:
 		autocomplete_options = list(type.name for type in CodeTypes.all_basic_types)
-		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
+		autocomplete_options.extend(keyword for type in CodeTypes.all_basic_types + AISECodeTypes.all_types if isinstance(type, CodeType.HasKeywords) for keyword in type.keywords())
 
 		data_context = self.delegate.get_data_context()
 		for unit_id in range(228):
@@ -584,7 +637,7 @@ script {header_id} {{
 			head = block_range[1]
 		autocomplete_options.sort()
 
-		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
+		main_identifiers = list(cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands + AISECodeCommands.all_commands)
 		main_identifiers.sort()
 		main_identifiers.extend(f'@{directive.name}' for directive in CodeDirectives.all_basic_directives + CodeDirectives.all_defs_directives)
 		main_identifiers.append('script')
@@ -594,7 +647,7 @@ script {header_id} {{
 			autocomplete_options = main_identifiers + autocomplete_options
 		else:
 			autocomplete_options.extend(main_identifiers)
-			
+
 		return autocomplete_options
 
 	def jump_highlights(self) -> Sequence[str] | None:
@@ -602,3 +655,13 @@ script {header_id} {{
 
 	def jump_sections(self) -> Sequence[str] | None:
 		return ('AIID', 'Block')
+
+	# FindReplaceDelegate
+	def get_find_history(self) -> list[str]:
+		return self.delegate.get_find_history()
+
+	def get_replace_history(self) -> list[str]:
+		return self.delegate.get_replace_history()
+
+	def get_code_text(self) -> ItemSelectDialog.CodeText:
+		return self.text

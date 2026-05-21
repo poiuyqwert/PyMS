@@ -4,12 +4,14 @@ from ..Widgets import *
 from ..EventPattern import *
 from ..Utils import remove_bind
 
-from typing import Callable
+from dataclasses import dataclass
+
+from typing import Callable, Any
 
 # WARNING: You must use the `flowView.content_view` as the master of the widgets placed into a FlowView
 # TODO: Subclass ScrollView?
 class FlowView(Frame):
-	def __init__(self, parent: Misc, **config) -> None:
+	def __init__(self, parent: Misc, **config: Any) -> None:
 		Frame.__init__(self, parent, **config)
 
 		self._content_area = Canvas(self, scrollregion=(0,0,0,0), highlightthickness=0)
@@ -21,8 +23,8 @@ class FlowView(Frame):
 		yscrollbar = AutohideScrollbar(self, command=self._content_area.yview)
 		yscrollbar.grid(sticky=NS, row=0, column=1)
 		def scrolled_callback(scrollbar: Scrollbar) -> Callable[[float, float], None]:
-			def scrolled(l: float, h: float):
-				scrollbar.set(l,h)
+			def scrolled(low: float, high: float) -> None:
+				scrollbar.set(low, high)
 				# self.update_viewport()
 			return scrolled
 		self._content_area.config(xscrollcommand=scrolled_callback(xscrollbar),yscrollcommand=scrolled_callback(yscrollbar))
@@ -52,7 +54,7 @@ class FlowView(Frame):
 		self._update = False
 		self.bind('<<Update>>', self._update_layout)
 		self._viewport_widths: list[int] = []
-		def resize(e: Event) -> None:
+		def resize(_event: Event) -> None:
 			viewport_width = self.viewport_size()[0]
 			if not viewport_width in self._viewport_widths or self._viewport_widths.count(viewport_width) < 2:
 				self._viewport_widths.append(viewport_width)
@@ -71,12 +73,12 @@ class FlowView(Frame):
 				except:
 					pass
 				self._focus_bind_info = None
-			def focus_out(e: Event) -> None:
+			def focus_out(_event: Event) -> None:
 				check_focus()
 			if focused:
 				self._focus_bind_info = (focused,focused.bind(Focus.Out(), focus_out, True))
 				self.scroll_to_view(focused)
-		def focus_in(e: Event) -> None:
+		def focus_in(_event: Event) -> None:
 			check_focus()
 		self.content_view.bind(Focus.In(), focus_in)
 
@@ -143,7 +145,6 @@ class FlowView(Frame):
 			'pady': pady,
 			'weight': weight
 		}
-		self._subview_configs[name]
 		view.grid(in_=self._staging_view)
 		self._update_view_size(view, update_idletasks=True)
 		self._bindings[name] = view.bind(WidgetEvent.Configure(), lambda *_: self._update_view_size(view, set_needs_update=True), True)
@@ -210,20 +211,25 @@ class FlowView(Frame):
 		if changed and set_needs_update:
 			self.set_needs_update()
 
-	def _update_layout(self, *_) -> None:
+	def _update_layout(self, *_: Any) -> None:
 		if not self._update:
 			return
+		@dataclass
+		class WidgetMeta:
+			widget: Widget
+			x: int
+			y: int
+			width: int
+			weight: float
 		self._update = False
 		max_w = self._content_area.winfo_width()
 		# print(max_w)
 		x = 0
 		y = 0
 		w = 0
-		rows: list[list[list]] = [[]]
+		rows: list[list[WidgetMeta]] = [[]]
 		row_widths = []
 		row_h = 0
-		def place(view, x,y, width):
-			view.place(x=x, y=y, width=width)
 		for view in self.subviews:
 			name = str(view)
 			if not name in self._sizes:
@@ -241,7 +247,7 @@ class FlowView(Frame):
 				y += row_h
 				rows.append([])
 				row_h = 0
-			rows[-1].append([view,x+padx_l,y+pady_t,view_w_real,weight])
+			rows[-1].append(WidgetMeta(view, x+padx_l, y+pady_t, view_w_real, weight))
 			if x == 0 and view_w > max_w:
 				w = max(w,view_w)
 				row_widths.append(view_w)
@@ -257,39 +263,39 @@ class FlowView(Frame):
 		for row,row_width in zip(rows,row_widths):
 			if row_width < max_w:
 				total_weight = 0.0
-				for _,_,_,_,weight in row:
-					total_weight += weight
+				for widget_meta in row:
+					total_weight += widget_meta.weight
 				if total_weight:
 					distrubute = max_w - row_width
-					add_widths = tuple(int(col[4] / total_weight * distrubute) for col in row)
+					add_widths = tuple(int(widget_meta.weight / total_weight * distrubute) for widget_meta in row)
 					offset = 0
-					for n in range(len(row)):
-						row[n][1] += offset
-						row[n][3] += add_widths[n]
+					for n,widget_meta in enumerate(row):
+						widget_meta.x += offset
+						widget_meta.width += add_widths[n]
 						offset += add_widths[n]
 				row_width = max_w
 			total_w = max(total_w,row_width)
-			for view,x,y,w,_ in row:
-				place(view, x,y, w)
+			for widget_meta in row:
+				widget_meta.widget.place(x=widget_meta.x, y=widget_meta.y, width=widget_meta.width)
 		# print(total_w,total_h)
 		self.content_view_id.config(width=total_w,height=total_h)
 		self._content_area.config(scrollregion=(0,0,total_w,total_h))
 
-if __name__ == '__main__':
-	import random,string
+# if __name__ == '__main__':
+# 	import random,string
 
-	window = Tk()
-	flow = FlowView(window, borderwidth=2, relief=SUNKEN, width=500,height=350)
-	flow.pack(fill=BOTH, expand=1, padx=30,pady=30)
-	count = random.randint(10,20)
-	for n in range(count):
-		f = LabelFrame(flow.content_view, text=''.join([random.choice(string.ascii_lowercase + ' ') for i in range(random.randint(10,20))]))
-		for t in range(random.randint(1,5)):
-			if t == 3:
-				e = Entry(f, width=5)
-				e.pack()
-			l = Label(f, text=''.join([random.choice(string.ascii_lowercase + ' ') for i in range(random.randint(10,20))]))
-			l.pack()
-		flow.add_subview(f, padx=2,pady=2, weight=0 if n % 5 else 1)
-	flow.scroll_to_view(flow)
-	window.mainloop()
+# 	window = Tk()
+# 	flow = FlowView(window, borderwidth=2, relief=SUNKEN, width=500,height=350)
+# 	flow.pack(fill=BOTH, expand=1, padx=30,pady=30)
+# 	count = random.randint(10,20)
+# 	for n in range(count):
+# 		f = LabelFrame(flow.content_view, text=''.join([random.choice(string.ascii_lowercase + ' ') for i in range(random.randint(10,20))]))
+# 		for t in range(random.randint(1,5)):
+# 			if t == 3:
+# 				e = Entry(f, width=5)
+# 				e.pack()
+# 			l = Label(f, text=''.join([random.choice(string.ascii_lowercase + ' ') for i in range(random.randint(10,20))]))
+# 			l.pack()
+# 		flow.add_subview(f, padx=2,pady=2, weight=0 if n % 5 else 1)
+# 	flow.scroll_to_view(flow)
+# 	window.mainloop()

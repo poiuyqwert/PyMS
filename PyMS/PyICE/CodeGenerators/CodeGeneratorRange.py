@@ -44,15 +44,15 @@ class CodeGeneratorTypeRange(CodeGenerator.CodeGeneratorType):
 	def count(self) -> int:
 		return len(list(range(self.start,self.stop+1,self.step)))
 
-	def value(self, lookup_value: Callable[[str], int]) -> str:
-		n = lookup_value('n')
+	def value(self, lookup_value: Callable[[str], str]) -> str:
+		n = int(lookup_value('n'))
 		r = list(range(self.start,self.stop+1,self.step))
 		if n >= len(r):
 			return ''
 		return str(r[n])
 
-	def description(self):
-		return '%d to %d, by adding %d' % (self.start,self.stop,self.step)
+	def description(self) -> str:
+		return f'{self.start} to {self.stop}, by adding {self.step}'
 
 	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorRange(parent, self, config.windows.generator.editor.range)

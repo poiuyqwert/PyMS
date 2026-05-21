@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
 	from ..Delegates import MainDelegate
 
-class ImagesTab(DATTab):
+class ImagesTab(DATTab[DATImage]):
 	DAT_ID = DATID.images
 
 	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
@@ -35,11 +35,11 @@ class ImagesTab(DATTab):
 		self.grps = DropDown(f, self.grpdd, [], self.grpentry, width=30)
 		self.grpdds = [(self.grps,self.grpentry)]
 		self.grps.pack(side=LEFT, fill=X, expand=1, padx=2)
-		def check_grp_ref():
+		def check_grp_ref() -> None:
 			grp_id = self.grpdd.get()
 			refs = (
 				DATRefs(DATID.images, lambda image: (
-					DATRef('GRP File', image.grp_file),
+					DATRef('GRP File', cast(DATImage, image).grp_file),
 				)),
 			)
 			self.check_used_by_references(grp_id, refs, force_open=True)
@@ -52,11 +52,11 @@ class ImagesTab(DATTab):
 		Label(f, text='=').pack(side=LEFT)
 		self.iscripts = DropDown(f, self.iscriptdd, [], self.iscriptentry, width=30)
 		self.iscripts.pack(side=LEFT, fill=X, expand=1, padx=2)
-		def check_iscript_ref():
+		def check_iscript_ref() -> None:
 			iscript_id = self.iscriptdd.get()
 			refs = (
 				DATRefs(DATID.images, lambda image: (
-					DATRef('IScript ID', image.iscript_id),
+					DATRef('IScript ID', cast(DATImage, image).iscript_id),
 				)),
 			)
 			self.check_used_by_references(iscript_id, refs, force_open=True)
@@ -197,17 +197,17 @@ class ImagesTab(DATTab):
 				entry_var.range[1] = len(self.delegate.data_context.imagestbl.strings)
 		if DataID.iscriptbin in ids:
 			iscript_names = []
-			last = -1
+			last_id = -1
 			for script in self.delegate.data_context.iscriptbin.list_scripts():
-				id = script.id
-				if id-last > 1:
-					iscript_names.extend(['*Unused*'] * (id-last-1))
-				if id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
-					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[id]
+				script_id = script.id
+				if script_id-last_id > 1:
+					iscript_names.extend(['*Unused*'] * (script_id-last_id-1))
+				if script_id < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
+					n = Assets.data_cache(Assets.DataReference.IscriptIDList)[script_id]
 				else:
 					n = 'Unnamed Custom Entry'
 				iscript_names.append(n)
-				last = id
+				last_id = script_id
 			self.iscripts.setentries(iscript_names)
 			self.iscriptentry.range[1] = len(iscript_names)-1
 
@@ -217,7 +217,7 @@ class ImagesTab(DATTab):
 	def shieldupdate(self, n: int) -> None:
 		self.shieldentry.set([0,133,2,184][n])
 
-	def drawpreview(self, e: Event | None = None) -> None:
+	def drawpreview(self, _event: Event | None = None) -> None:
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
 			self.preview.delete(ALL)
 			if self.showpreview.get():

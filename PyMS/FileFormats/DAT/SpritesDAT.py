@@ -3,7 +3,9 @@ from . import AbstractDAT
 from . import DATFormat
 from . import DATCoders
 
-from typing import cast
+from collections import OrderedDict
+
+from typing import cast, Any
 
 class DATSprite(AbstractDAT.AbstractDATEntry):
 	class Property:
@@ -14,24 +16,24 @@ class DATSprite(AbstractDAT.AbstractDATEntry):
 		selection_circle_image = 'selection_circle_image'
 		selection_circle_offset = 'selection_circle_offset'
 
-	def __init__(self):
-		self.image = 0
-		self.health_bar = 0
-		self.unused = 0
-		self.is_visible = 0
-		self.selection_circle_image = 0
-		self.selection_circle_offset = 0
+	def __init__(self) -> None:
+		self.image: int = 0
+		self.health_bar: int | None = 0
+		self.unused: int = 0
+		self.is_visible: int = 0
+		self.selection_circle_image: int | None = 0
+		self.selection_circle_offset: int | None = 0
 
-	def load_values(self, values):
+	def load_values(self, values: tuple[int | DATFormat.DATType | None, ...]) -> None:
 		self.image,\
 		self.health_bar,\
 		self.unused,\
 		self.is_visible,\
 		self.selection_circle_image,\
 		self.selection_circle_offset\
-			= values
+			= values # type: ignore[assignment]
 
-	def save_values(self):
+	def save_values(self) -> tuple[int | DATFormat.DATType | None, ...]:
 		return (
 			self.image,
 			self.health_bar,
@@ -41,21 +43,27 @@ class DATSprite(AbstractDAT.AbstractDATEntry):
 			self.selection_circle_offset,
 		)
 
-	def limit(self, id):
-		if not SpritesDAT.FORMAT.get_property('health_bar').is_on_entry(id):
+	def limit(self, entry_id: int) -> None:
+		health_bar_prop = SpritesDAT.FORMAT.get_property('health_bar')
+		assert health_bar_prop is not None
+		if not health_bar_prop.is_on_entry(entry_id):
 			self.health_bar = None
-		if not SpritesDAT.FORMAT.get_property('selection_circle_image').is_on_entry(id):
+		selection_circle_image_prop = SpritesDAT.FORMAT.get_property('selection_circle_image')
+		assert selection_circle_image_prop is not None
+		if not selection_circle_image_prop.is_on_entry(entry_id):
 			self.selection_circle_image = None
-		if not SpritesDAT.FORMAT.get_property('selection_circle_offset').is_on_entry(id):
+		selection_circle_offset_prop = SpritesDAT.FORMAT.get_property('selection_circle_offset')
+		assert selection_circle_offset_prop is not None
+		if not selection_circle_offset_prop.is_on_entry(entry_id):
 			self.selection_circle_offset = None
 
-	def expand(self):
+	def expand(self) -> None:
 		self.health_bar = self.health_bar or 0
 		self.selection_circle_image = self.selection_circle_image or 0
 		self.selection_circle_offset = self.selection_circle_offset or 0
 
 	EXPORT_NAME = 'Sprite'
-	def _export_data(self, export_properties, data):
+	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATSprite.Property.image, self.image, data)
 		self._export_property_value(export_properties, DATSprite.Property.health_bar, self.health_bar, data)
 		self._export_property_value(export_properties, DATSprite.Property.unused, self.unused, data, _SpritePropertyCoder.unused)
@@ -63,7 +71,7 @@ class DATSprite(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATSprite.Property.selection_circle_image, self.selection_circle_image, data)
 		self._export_property_value(export_properties, DATSprite.Property.selection_circle_offset, self.selection_circle_offset, data)
 
-	def _import_data(self, data):
+	def _import_data(self, data: dict[str, Any]) -> None:
 		image = self._import_property_value(data, DATSprite.Property.image)
 		health_bar = self._import_property_value(data, DATSprite.Property.health_bar, allowed=(self.health_bar is not None))
 		unused = self._import_property_value(data, DATSprite.Property.unused, _SpritePropertyCoder.unused)

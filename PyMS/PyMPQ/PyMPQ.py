@@ -25,12 +25,14 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 import sys, time, shutil, os, re
 
+from typing import Any
+
 if not MPQ.supported():
-	e = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!', hotlinks=(('Contact','file:///%s' % Assets.readme_file_path),))
-	e.startup()
+	dep_err_dialog = DependencyError('PyMPQ', 'PyMS currently only has Windows and Mac support for MPQ files, thus this program is useless.\nIf you can help compile and test StormLib and/or SFmpq for your operating system, then please Contact me!')
+	dep_err_dialog.startup()
 	sys.exit()
 
-LONG_VERSION = 'v%s' % Assets.version('PyMPQ')
+LONG_VERSION = 'v' + Assets.version('PyMPQ')
 
 class ColumnID:
 	Filename = 0
@@ -44,17 +46,17 @@ class PyMPQ(MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
 		#Window
 		MainWindow.__init__(self)
-		self.title('PyMPQ %s' % LONG_VERSION)
 		self.set_icon('PyMPQ')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
 		ga.track(GAScreen('PyMPQ'))
 		setup_trace('PyMPQ', self)
-		
+
 		self.config_ = PyMPQConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
 		self.mpq: MPQ | None = None
+		self.mpq_path: str | None = None
 		self.all_files: list[MPQFileEntry] = []
 		self.display_files: list[MPQFileEntry] = []
 		self.totalsize = 0
@@ -63,6 +65,8 @@ class PyMPQ(MainWindow):
 			self.after(1, self.update_files, files)
 		self.thread = CheckThread(update_files, self.temp_folder)
 		self.resettimer: str | None = None
+
+		self.update_title()
 
 		#Toolbar
 		self.toolbar = Toolbar(self)
@@ -94,29 +98,29 @@ class PyMPQ(MainWindow):
 		self.regex.set(self.config_.filter.regex.value)
 		self.filter = StringVar()
 		self.filter.set(['*','.+'][self.regex.get()])
-		filter = Frame(self)
-		Label(filter, text='Filter: ').pack(side=LEFT)
-		self.textdrop = TextDropDown(filter, self.filter, self.config_.filter.history.data)
+		filter_frame = Frame(self)
+		Label(filter_frame, text='Filter: ').pack(side=LEFT)
+		self.textdrop = TextDropDown(filter_frame, self.filter, self.config_.filter.history.data)
 		self.textdrop.pack(side=LEFT, fill=X, expand=1)
 		self.textdrop.entry.bind(Key.Return(), self.dofilter)
 		self.default_background_color = self.textdrop.entry['bg']
-		self.find_button = Button(filter, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=DISABLED)
+		self.find_button = Button(filter_frame, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=DISABLED)
 		Tooltip(self.find_button, 'List Matches')
 		self.find_button.pack(side=LEFT, padx=2)
-		Radiobutton(filter, text='Regex', variable=self.regex, value=1).pack(side=RIGHT)
-		Radiobutton(filter, text='Wildcard', variable=self.regex, value=0).pack(side=RIGHT)
-		filter.pack(side=TOP, fill=X)
+		Radiobutton(filter_frame, text='Regex', variable=self.regex, value=1).pack(side=RIGHT)
+		Radiobutton(filter_frame, text='Wildcard', variable=self.regex, value=0).pack(side=RIGHT)
+		filter_frame.pack(side=TOP, fill=X)
 
-		self.encvar = IntVar()
+		self.encvar = BooleanVar()
 		self.compvar = StringVar()
 
 		self.locale_menu_choice = IntVar()
-		self.locale_menu_choice.trace('w', self.locale_changed)
+		self.locale_menu_choice.trace_add('write', self.locale_changed)
 
 		self.setmenu = Menu(self, tearoff=0)
 		self.compmenu = Menu(self.setmenu, tearoff=0)
 		self.locale_menu = Menu(self.setmenu, tearoff=0)
-		
+
 		self.deflatemenu = Menu(self.compmenu, tearoff=0)
 		for level in range(0,CompressionOption.Deflate.level_count()):
 			compression = CompressionOption.Deflate.setting(level)
@@ -137,11 +141,11 @@ class PyMPQ(MainWindow):
 		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionOption.Standard.setting()), shortcut=Key.F3, shortcut_widget=self) # type: ignore
 		self.compmenu.add_cascade(label='Deflate', menu=self.deflatemenu, underline=0)
 		self.compmenu.add_cascade(label='Audio', menu=self.audiomenu, underline=0)
-		
+
 		for index,(locale_name,locale) in enumerate(LOCALE_CHOICES):
-			command = lambda: None
+			command = lambda: None # pylint: disable=unnecessary-lambda-assignment
 			if locale is not None:
-				locale_name += ' [%d]' % locale
+				locale_name += f' [{locale}]'
 			else:
 				command = self.choose_other_locale
 			self.locale_menu.add_radiobutton(label=locale_name, variable=self.locale_menu_choice, value=index, command=command)
@@ -159,7 +163,7 @@ class PyMPQ(MainWindow):
 		self.listmenu.add_command(label='Delete', command=self.remove, underline=0)
 		self.listmenu.add_command(label='Rename', command=self.rename, underline=0)
 		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
-		
+
 		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, self.select, self.do_rename, self.popup, self.openfile, min_widths=[50]*6)
 		self.listbox_ascending_arrow = Assets.get_image('arrow.gif')
 		self.listbox_descending_arrow = Assets.get_image('arrowup.gif')
@@ -197,6 +201,13 @@ class PyMPQ(MainWindow):
 
 		UpdateDialog.check_update(self, 'PyMPQ')
 
+	def update_title(self) -> None:
+		if self.mpq_path:
+			details = f' ({self.mpq_path})'
+		else:
+			details = ''
+		self.title(f'PyAI {LONG_VERSION}{details}')
+
 	def choose_other_locale(self) -> None:
 		locale_dialog = LocaleDialog(self, title='Change locale', message='Type a custom locale or choose an existing locale')
 		if locale_dialog.save:
@@ -218,11 +229,12 @@ class PyMPQ(MainWindow):
 	def update_locale_status(self) -> None:
 		locale_index = find_locale_index(self.config_.locale.value)
 		locale_name,_ = LOCALE_CHOICES[locale_index]
-		self.locale_status.set('Locale: %s [%d]' % (locale_name, self.config_.locale.value))
+		self.locale_status.set(f'Locale: {locale_name} [{self.config_.locale.value}]')
 
 	def load_settings(self) -> None:
 		self.config_.windows.main.load_size(self)
 		self.config_.list_sizes.load_size(self.listbox.panes)
+		assert self.config_.compression.value is not None
 		self.compvar.set(self.config_.compression.value)
 		self.encvar.set(self.config_.encrypt.value)
 		self.locale_menu_choice.set(find_locale_index(self.config_.locale.value))
@@ -265,7 +277,7 @@ class PyMPQ(MainWindow):
 			total_size = 0
 			for index in selected_indexes:
 				total_size += self.display_files[index].full_size or 0
-			self.selected.set('Selected %s files, %s' % (len(selected_indexes), format_byte_size(total_size)))
+			self.selected.set(f'Selected {len(selected_indexes)} files, {format_byte_size(total_size)}')
 		else:
 			self.selected.set('')
 		self.action_states()
@@ -276,14 +288,14 @@ class PyMPQ(MainWindow):
 		self.find_button['state'] = NORMAL if is_mpq_chosen else DISABLED
 		self.toolbar.tag_enabled('file_selected', self.is_file_selected())
 
-	def dofilter(self, e: Event | None = None) -> None:
+	def dofilter(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
-		filter = self.filter.get()
+		mpq_filter = self.filter.get()
 		filters = self.config_.filter.history.data
-		if filter in filters:
-			filters.remove(filter)
-		filters.append(filter)
+		if mpq_filter in filters:
+			filters.remove(mpq_filter)
+		filters.append(mpq_filter)
 		if len(filters) > 10:
 			del filters[0]
 		self.update_list()
@@ -292,8 +304,8 @@ class PyMPQ(MainWindow):
 		assert self.mpq is not None
 		try:
 			return self.mpq.open(read_only)
-		except:
-			raise PyMSError('MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ.")
+		except Exception as exc:
+			raise PyMSError('MPQ', "The MPQ could not be opened. Other non-PyMS programs may lock MPQ's while open. Please try closing any programs that might be locking your MPQ.") from exc
 
 	def list_files(self) -> None:
 		if not self.is_mpq_chosen():
@@ -303,8 +315,8 @@ class PyMPQ(MainWindow):
 		try:
 			with self.open_mpq():
 				file_entries = self.mpq.list_files()
-		except PyMSError as e:
-			ErrorDialog(self, e)
+		except PyMSError as err:
+			ErrorDialog(self, err)
 			return
 		self.all_files = []
 		self.totalsize = 0
@@ -341,16 +353,16 @@ class PyMPQ(MainWindow):
 					filter_str = '^' + re.escape(filter_str).replace('\\?','.').replace('\\*','.+?') + '$'
 			elif filter_str == '.+':
 				filter_str = ''
-			filter: re.Pattern | None = None
+			filter_pattern: re.Pattern | None = None
 			if filter_str:
 				try:
-					filter = re.compile(filter_str)
+					filter_pattern = re.compile(filter_str)
 				except:
-					filter = None
+					filter_pattern = None
 					self.resettimer = self.after(1000, self.reset_entry_background_color)
 					self.textdrop.entry['bg'] = '#FFB4B4'
-			if filter:
-				self.display_files = [file_entry for file_entry in self.display_files if filter.match(file_entry.file_name.decode('utf-8'))]
+			if filter_pattern:
+				self.display_files = [file_entry for file_entry in self.display_files if filter_pattern.match(file_entry.file_name.decode('utf-8'))]
 			def keysort(file_entry: MPQFileEntry) -> tuple:
 				file_info = [file_entry.file_name, file_entry.full_size, file_entry.get_compression_ratio(), file_entry.compressed_size, file_entry.locale, self.attributes_for_file_entry(file_entry)]
 				# We only need to re-arrange the sort info if we are sorting by something other than the first column
@@ -364,7 +376,7 @@ class PyMPQ(MainWindow):
 				info = [
 					file_entry.file_name.decode('utf-8'),
 					format_byte_size(file_entry.full_size or 0),
-					'%d%%' % int(file_entry.get_compression_ratio()*100),
+					f'{int(file_entry.get_compression_ratio()*100)}%',
 					format_byte_size(file_entry.compressed_size or 0),
 					str(file_entry.locale),
 					self.attributes_for_file_entry(file_entry),
@@ -386,7 +398,7 @@ class PyMPQ(MainWindow):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		self.info.set('Total %s/%s files, %s' % (len(self.all_files), block_count, format_byte_size(self.totalsize)))
+		self.info.set(f'Total {len(self.all_files)}/{block_count} files, {format_byte_size(self.totalsize)}')
 		can_compact = block_count > len(self.all_files)
 		self.toolbar.tag_enabled('can_compact', can_compact)
 
@@ -414,9 +426,9 @@ class PyMPQ(MainWindow):
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
-	def popup(self, e: Event, i: int) -> None:
-		if not self.listbox.cur_selection():
-			self.listbox.select_set(i)
+	def popup(self, _event: Event, _i: str) -> None:
+		# if not self.listbox.cur_selection():
+		# 	self.listbox.select_set(i)
 		self.listmenu.post(*self.winfo_pointerxy())
 
 	def changelocale(self) -> None:
@@ -445,7 +457,7 @@ class PyMPQ(MainWindow):
 				return
 			self.update_list()
 
-	def openfile(self, e: Event | None = None) -> None:
+	def openfile(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -474,7 +486,7 @@ class PyMPQ(MainWindow):
 			return
 		assert self.mpq is not None
 		if len(files) == 1:
-			if not MessageBox.askyesno(parent=self, title='File Edited', message='File "%s" has been modified since it was extracted.\n\nUpdate the archive with this file?' % files[0]):
+			if not MessageBox.askyesno(parent=self, title='File Edited', message=f'File "{files[0]}" has been modified since it was extracted.\n\nUpdate the archive with this file?'):
 				return
 		else:
 			u = UpdateFiles(self, files)
@@ -501,7 +513,7 @@ class PyMPQ(MainWindow):
 		for listfile_path in self.config_.settings.listfiles.data:
 			self.mpq.add_listfile(listfile_path)
 
-	def new(self, key: Event | None = None) -> None:
+	def new(self, _event: Event | None = None) -> None:
 		file = self.config_.last_path.mpq.select_save(self)
 		if not file:
 			return
@@ -513,16 +525,17 @@ class PyMPQ(MainWindow):
 			return
 		self.close()
 		self.mpq = mpq
+		self.mpq_path = file
 		self._update_listfiles()
 		self.all_files = []
 		self.display_files = []
 		self.totalsize = 0
 		self.status.set('Editing new MPQ.')
-		self.title('PyMPQ %s (%s)' % (LONG_VERSION,file))
+		self.update_title()
 		self.update_list()
 		self.select()
 
-	def open(self, key: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: Event | None = None, file: str | None = None) -> None:
 		if file is None:
 			file = self.config_.last_path.mpq.select_open(self)
 			if not file:
@@ -535,8 +548,9 @@ class PyMPQ(MainWindow):
 			return
 		self.close()
 		self.mpq = mpq
+		self.mpq_path = file
 		self._update_listfiles()
-		self.title('PyMPQ %s (%s)' % (LONG_VERSION,file))
+		self.update_title()
 		self.status.set('Load Successful!')
 		self.list_files()
 		self.update_info()
@@ -544,23 +558,24 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def close(self, key: Event | None = None) -> None:
+	def close(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
 		self.mpq.close()
 		self.mpq = None
+		self.mpq_path = None
 		self.all_files = []
 		self.display_files = []
 		self.listbox.delete(ALL)
-		self.title('PyMPQ %s' % LONG_VERSION)
+		self.update_title()
 		self.status.set('Open or create an MPQ.')
 		self.cleanup_temp()
 		self.update_info()
 		# self.update_list()
 		self.select()
 
-	def add(self, key: Event | None = None) -> None:
+	def add(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -573,7 +588,7 @@ class PyMPQ(MainWindow):
 		with self.open_mpq(read_only=False):
 			for filepath in files:
 				filename = os.path.basename(filepath)
-				folder = self.config_.import_.files_prefix.value
+				folder = self.config_.import_.files_prefix.value or ''
 				compression,compression_level = self.compression_settings(filename)
 				self.mpq.add_file(filepath, folder + filename, self.config_.locale.value, compression=compression, compression_level=compression_level)
 			self.mpq.flush()
@@ -582,7 +597,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def adddir(self, key: Event | None = None) -> None:
+	def adddir(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -595,7 +610,7 @@ class PyMPQ(MainWindow):
 			return
 		with self.open_mpq(read_only=False):
 			for root,_,filenames in os.walk(path):
-				folder = self.config_.import_.folder_prefix.value
+				folder = self.config_.import_.folder_prefix.value or ''
 				path_folder = root.replace(path,'')
 				if path_folder:
 					folder += '\\'.join(os.path.split(path_folder)) + '\\'
@@ -608,7 +623,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def remove(self, key: Event | None = None) -> None:
+	def remove(self, _event: Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		assert self.mpq is not None
@@ -622,7 +637,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def rename(self, key: Event | None = None) -> None:
+	def rename(self, _event: Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		listbox = self.listbox.columns[ColumnID.Filename][1]
@@ -635,7 +650,7 @@ class PyMPQ(MainWindow):
 			# return
 		# pass
 
-	def extract(self, key: Event | None = None) -> None:
+	def extract(self, _event: Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		assert self.mpq is not None
@@ -654,18 +669,18 @@ class PyMPQ(MainWindow):
 				try:
 					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
 				except:
-					ErrorDialog(self, PyMSError('Extract', "Couldn't read file '%s' from MPQ" % file_entry.file_name.decode('utf-8')))
+					ErrorDialog(self, PyMSError('Extract', f"Couldn't read file '{file_entry.file_name.decode('utf-8')}' from MPQ"))
 				with open(os.path.join(path,*path_components),'wb') as f:
 					f.write(data)
 
-	def mansets(self, key: Event | None = None) -> None:
-		if key:
+	def mansets(self, event: Event | None = None) -> None:
+		if event:
 			SettingsDialog(self, self.config_)
 			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())
 
-	def compact(self, key: Event | None = None) -> None:
+	def compact(self, _event: Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -673,16 +688,16 @@ class PyMPQ(MainWindow):
 			self.mpq.compact()
 		self.update_info()
 
-	def register_registry(self, e: Event | None = None) -> None:
+	def register_registry(self, _event: Event | None = None) -> None:
 		try:
 			register_registry('PyMPQ', 'mpq', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, e: Event | None = None) -> None:
+	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyMPQ.md')
 
-	def about(self, key: Event | None = None) -> None:
+	def about(self, _event: Event | None = None) -> None:
 		AboutDialog(self, 'PyMPQ', LONG_VERSION)
 
 	def sponsor(self) -> None:
@@ -693,7 +708,7 @@ class PyMPQ(MainWindow):
 		if os.path.exists(self.temp_folder):
 			shutil.rmtree(self.temp_folder)
 
-	def exit(self, e: Event | None = None) -> None:
+	def exit(self, _event: Event | None = None) -> None:
 		self.cleanup_temp()
 		self.save_settings()
 		self.destroy()

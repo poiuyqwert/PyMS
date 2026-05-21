@@ -45,20 +45,20 @@ class DATEntryName:
 			for line in overrides:
 				m = DATEntryName.RE_NAME_OVERRIDE.match(line)
 				if not m:
-					raise PyMSError('Open', "Invalid name override '%s'" % line)
+					raise PyMSError('Open', f"Invalid name override '{line}'")
 				entry_id = int(m.group(1))
 				append = (m.group(2) == '+')
 				name = m.group(3)
 				name_overrides[entry_id] = (append, name)
 		except PyMSError:
 			raise
-		except:
-			raise PyMSError('Open', "Invalid name overrides")
+		except Exception as exc:
+			raise PyMSError('Open', "Invalid name overrides") from exc
 		return name_overrides
 
 	@staticmethod
-	def _build_name(entry_id: int, data_name: str | None, tbl_name: str | None, override_name: str | None, data_names_usage: DataNamesUsage, id_count: int, type: str) -> str:
-		default_name = '%s #%d' % (type, entry_id)
+	def _build_name(entry_id: int, data_name: str | None, tbl_name: str | None, override_name: str | None, data_names_usage: DataNamesUsage, id_count: int, entry_type: str) -> str:
+		default_name = f'{entry_type} #{entry_id}'
 		if entry_id >= id_count:
 			default_name = 'Expanded ' + default_name
 		name = None
@@ -68,7 +68,7 @@ class DATEntryName:
 			if data_name == tbl_name:
 				name = data_name
 			else:
-				name = '%s (%s)' % (data_name, tbl_name)
+				name = f'{data_name} ({tbl_name})'
 		elif data_names_usage != DataNamesUsage.ignore and data_name:
 			name = data_name
 		elif data_names_usage != DataNamesUsage.use and tbl_name:
@@ -80,7 +80,7 @@ class DATEntryName:
 		return name
 
 	@staticmethod
-	def generic(entry_id: int, type: str, id_count: int, data_names: list[str] | None = None, name_overrides: dict[int, tuple[bool, str]] | None = None) -> str:
+	def generic(entry_id: int, entry_type: str, id_count: int, data_names: list[str] | None = None, name_overrides: dict[int, tuple[bool, str]] | None = None) -> str:
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -89,12 +89,12 @@ class DATEntryName:
 		data_name = None
 		if data_names and entry_id < len(data_names):
 			data_name = data_names[entry_id]
-		return DATEntryName._build_name(entry_id, data_name, None, override_name, DataNamesUsage.use, id_count, type)
+		return DATEntryName._build_name(entry_id, data_name, None, override_name, DataNamesUsage.use, id_count, entry_type)
 
 	@staticmethod
 	def unit(entry_id: int, data_names: list[str] | None = None, stat_txt: Strings | None = None, unitnamestbl: Strings | None = None, data_names_usage: DataNamesUsage = DataNamesUsage.use, tbl_raw_string: bool = True, tbl_decompile: bool = True, name_overrides: dict[int, tuple[bool, str]] | None = None) -> str:
 		if UnitsDAT.FORMAT.expanded_entries_reserved and entry_id in UnitsDAT.FORMAT.expanded_entries_reserved:
-			return 'Reserved Unit #%d' % entry_id
+			return f'Reserved Unit #{entry_id}'
 		override_append, override_name = None, None
 		if name_overrides and entry_id in name_overrides:
 			override_append, override_name = name_overrides[entry_id]
@@ -132,7 +132,7 @@ class DATEntryName:
 						special = pieces[1]
 					tbl_name = DATEntryName.RE_TBL_CODES.sub('', tbl_name)
 					if special and special != '*':
-						tbl_name += ' (%s)' % DATEntryName.RE_TBL_CODES.sub('', special)
+						tbl_name += f' ({DATEntryName.RE_TBL_CODES.sub("", special)})'
 			else:
 				tbl_name = None
 		else:

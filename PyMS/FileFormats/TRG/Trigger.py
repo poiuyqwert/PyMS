@@ -38,7 +38,7 @@ class Execution(Struct.Struct):
 		self.flags = 0
 		self.player_groups = [0] * 27
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Execution):
 			return False
 		if other.flags != self.flags:
@@ -107,7 +107,7 @@ class Trigger(Struct.Struct):
 				return True
 		return False
 
-	def decompile(self, trg: TRG, output: IO.AnyOutputText):
+	def decompile(self, trg: TRG, output: IO.AnyOutputText) -> None:
 		with IO.OutputText(output) as f:
 			if self.is_missing_briefing:
 				f.write('BriefingTrigger():\n')
@@ -157,7 +157,7 @@ class Trigger(Struct.Struct):
 					action_definition.decompile(action, trg, f)
 					has_action = True
 
-	def __eq__(self, other) -> bool:
+	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Trigger):
 			return False
 		if other.execution != self.execution:

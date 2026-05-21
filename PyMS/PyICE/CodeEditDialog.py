@@ -5,10 +5,11 @@ from .FindReplaceDialog import FindReplaceDialog
 from .CodeGeneratorDialog import CodeGeneratorDialog
 from .PreviewerDialog import PreviewerDialog, PREVIEWER_CMDS, EntryType
 from .SoundDialog import SoundDialog
+from .CodeTooltip import AnimationTooltip, CommandTooltip
 
 from ..FileFormats.IScriptBIN import IScriptBIN
 from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands, CodeTypes
-from ..FileFormats import GRP
+# from ..FileFormats import GRP
 
 from ..Utilities.UIKit import *
 from ..Utilities.PyMSDialog import PyMSDialog
@@ -20,9 +21,9 @@ from ..Utilities.EditedState import EditedState
 from ..Utilities.CodeHandlers import CodeType
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
-import os, re, io
+import re, io
 
-from typing import Sequence
+from typing import Sequence, Any
 
 class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig, ids: list[int]) -> None:
@@ -46,6 +47,8 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		PyMSDialog.__init__(self, parent, title, grabwait=False)
 		self.findwindow: FindReplaceDialog | None = None
 		self.previewer: PreviewerDialog | None = None
+
+		self.syntax_highlighting: SyntaxHighlighting
 
 	def widgetize(self) -> Widget:
 		toolbar = Toolbar(self)
@@ -93,9 +96,9 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands]
 		header_names = [cmd.name for cmd in CodeCommands.all_header_commands]
 		keywords: list[str] = []
-		for type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
-			if isinstance(type, CodeType.HasKeywords):
-				keywords.extend(type.keywords())
+		for code_type in CodeTypes.all_basic_types + CodeTypes.all_header_types:
+			if isinstance(code_type, CodeType.HasKeywords):
+				keywords.extend(code_type.keywords())
 		self.syntax_highlighting = SyntaxHighlighting(
 			syntax_components=(
 				SyntaxComponent((
@@ -219,7 +222,10 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		)
 		self.text.set_syntax_highlighting(self.syntax_highlighting)
 
-	def statusupdate(self, event: Event | None = None) -> None:
+		AnimationTooltip(self.text.text)
+		CommandTooltip(self.text.text)
+
+	def statusupdate(self, _event: Event | None = None) -> None:
 		line, column = self.text.index(INSERT).split('.')
 		selected = 0
 		sel_range = self.text.tag_ranges('sel')
@@ -230,9 +236,9 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 	def update_edited(self, edited: bool) -> None:
 		self.editstatus['state'] = NORMAL if edited else DISABLED
 		if self.file:
-			self.title('IScript Editor [*%s*]' % self.file)
+			self.title(f'IScript Editor [*{self.file}*]')
 
-	def cancel(self, event: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		if self.edited_state.is_edited:
 			save = MessageBox.askquestion(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
 			if save != MessageBox.NO:
@@ -241,7 +247,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.save()
 		self.ok()
 
-	def save(self, event: Event | None = None) -> None:
+	def save(self, _event: Event | None = None) -> None:
 		code = self.text.get('1.0', END)
 		if self.delegate.save_code(code, self):
 			self.text.edit_modified(False)
@@ -263,7 +269,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 	# 		return None
 	# 	return grp.frames
 
-	def test(self, event: Event | None = None) -> None:
+	def test(self, _event: Event | None = None) -> None:
 		code = self.text.get('1.0', END)
 		parse_context = self.delegate.get_parse_context(code)
 		try:
@@ -278,61 +284,59 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		else:
 			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
 
-	def export(self, event: Event | None = None) -> None:
+	def export(self, _event: Event | None = None) -> None:
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w')
-			f.write(self.text.get('1.0', END))
-			f.close()
-			self.title('IScript Editor [%s]' % self.file)
+			with open(self.file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0', END))
+			self.title(f'IScript Editor [{self.file}]')
 
-	def exportas(self, event: Event | None = None) -> None:
+	def exportas(self, _event: Event | None = None) -> None:
 		file = self.config_.last_path.txt.select_save(self)
 		if not file:
 			return
 		self.file = file
 		self.export()
 
-	def iimport(self, event: Event | None = None) -> None:
+	def iimport(self, _event: Event | None = None) -> None:
 		iimport = self.config_.last_path.txt.select_open(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r')
-				self.text.delete('1.0', END)
-				self.text.insert('1.0', f.read())
-				self.text.edit_reset()
-				f.close()
+				with open(iimport, 'r', encoding='utf-8') as f:
+					self.text.delete('1.0', END)
+					self.text.insert('1.0', f.read())
+					self.text.edit_reset()
 			except:
-				ErrorDialog(self, PyMSError('Import','Could not import file "%s"' % iimport))
+				ErrorDialog(self, PyMSError('Import', f'Could not import file "{iimport}"'))
 
-	def find(self, event: Event | None = None) -> None:
+	def find(self, _event: Event | None = None) -> None:
 		if self.findwindow is None:
 			findwindow = FindReplaceDialog(self, self.text, self.config_.windows.find_replace)
 			self.findwindow = findwindow
-			self.bind(Key.F3(), lambda e: findwindow.findnext(e))
+			self.bind(Key.F3(), findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 		self.findwindow.focus_set()
 
-	def colors(self, event: Event | None = None) -> None:
+	def colors(self, _event: Event | None = None) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
 		if dialog.updated:
 			self.text.update_highlight_styles()
 
-	def generate(self, *_) -> None:
+	def generate(self, *_: Any) -> None:
 		CodeGeneratorDialog(self, self.config_, self)
 
-	def preview(self, event: Event | None = None) -> None:
+	def preview(self, _event: Event | None = None) -> None:
 		if not self.previewer or self.previewer.state() == 'withdrawn':
 			if self.previewer is None:
 				self.previewer = PreviewerDialog(self, self.delegate, self.config_, self.text)
 			self.previewer.updatecurrentimages()
-			parse_context = self.delegate.get_parse_context('')
-			t = re.split('\\s+',self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT).split('#',1)[0].strip())
+			t = re.split('\\s+',self.text.get(f'{INSERT} linestart', f'{INSERT} lineend').split('#',1)[0].strip())
+			parse_context = self.delegate.get_parse_context(t[1])
 			if t[0] in PREVIEWER_CMDS[EntryType.iscript] and self.previewer.curradio['state'] == NORMAL:
 				try:
-					f = CodeTypes.FrameCodeType().parse(t[1], parse_context)
+					f = CodeTypes.FrameCodeType().parse(parse_context)
 				except:
 					f = 0
 				self.previewer.type.set(0)
@@ -341,7 +345,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(0, EntryType.iscript, f)
 			elif t[0] in PREVIEWER_CMDS[EntryType.images_dat]:
 				try:
-					n = CodeTypes.ImageIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.ImageIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(1)
@@ -350,7 +354,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(n, EntryType.images_dat)
 			elif t[0] in PREVIEWER_CMDS[EntryType.sprites_dat]:
 				try:
-					n = CodeTypes.SpriteIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.SpriteIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(2)
@@ -359,7 +363,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				self.previewer.select(n, EntryType.sprites_dat)
 			elif t[0] in PREVIEWER_CMDS[EntryType.flingy_dat]:
 				try:
-					n = CodeTypes.FlingyIDCodeType().parse(t[1], parse_context)
+					n = CodeTypes.FlingyIDCodeType().parse(parse_context)
 				except:
 					n = 0
 				self.previewer.type.set(3)
@@ -373,11 +377,11 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		self.previewer.focus_set()
 
 	def sounds(self) -> None:
-		t = re.split('\\s+',self.text.get('%s linestart' % INSERT,'%s lineend' % INSERT).split('#',1)[0].strip())
+		t = re.split('\\s+',self.text.get(f'{INSERT} linestart', f'{INSERT} lineend').split('#',1)[0].strip())
 		i = 0
 		if t[0] == 'playsnd':
 			try:
-				i = CodeTypes.SoundIDCodeType().parse(t[1], self.delegate.get_parse_context(''))
+				i = CodeTypes.SoundIDCodeType().parse(self.delegate.get_parse_context(t[1]))
 			except:
 				pass
 		SoundDialog(self, self.delegate, self.config_.sounds, self.text, i)
@@ -395,7 +399,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		# if warnings:
 		# 	WarningDialog(self, warnings)
 
-	def write(self, text) -> None:
+	def write(self, text: str) -> None:
 		self.decompile += text
 
 	def readlines(self) -> list[str]:

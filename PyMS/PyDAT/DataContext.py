@@ -17,7 +17,7 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 
-import os, re
+import re
 
 from typing import cast, Any
 
@@ -30,7 +30,7 @@ class TicksPerSecond:
 	slower  = 9
 	slowest = 6
 
-class DataContext(object):
+class DataContext:
 	mpq_handler: MPQHandler
 	iscriptbin: IScriptBIN
 
@@ -88,7 +88,7 @@ class DataContext(object):
 		self.load_hints()
 
 	def load_hints(self) -> None:
-		with open(Assets.data_file_path('Hints.txt'),'r') as hints:
+		with open(Assets.data_file_path('Hints.txt'), 'r', encoding='utf-8') as hints:
 			for l in hints:
 				m = re.match('(\\S+)=(.+)\n?', l)
 				if m:
@@ -195,8 +195,6 @@ class DataContext(object):
 			iscriptbin = IScriptBIN()
 			iscriptbin.load(self.mpq_handler.load_file(self.config.settings.files.iscript_bin.file_path))
 			self.update_cb(DataID.iscriptbin)
-		except:
-			raise
 		finally:
 			self.mpq_handler.close_mpqs()
 		self.load_palettes()

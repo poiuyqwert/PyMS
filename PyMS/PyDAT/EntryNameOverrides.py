@@ -25,7 +25,7 @@ class EntryNameOverrides(PyMSDialog):
 			self.entry_id.set(entry_id)
 		self.name = StringVar()
 		self.append = IntVar()
-		PyMSDialog.__init__(self, parent, '%s Name Overrides' % data_context.dat_data(dat_id).entry_type_name, True, True, escape=True, set_min_size=(True,True))
+		PyMSDialog.__init__(self, parent, f'{data_context.dat_data(dat_id).entry_type_name} Name Overrides', True, True, escape=True, set_min_size=(True,True))
 
 	def widgetize(self) -> Misc | None:
 		toolbar = Toolbar(self)
@@ -78,7 +78,7 @@ class EntryNameOverrides(PyMSDialog):
 		y = self.listbox.yview()[0]
 		self.listbox.delete(0,END)
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
-		self.listbox.insert(END, *[' %s %s %s' % (lpad(str(entry_id), 5), '+' if name_overrides[entry_id][0] else ' ', name_overrides[entry_id][1]) for entry_id in sorted(name_overrides.keys())])
+		self.listbox.insert(END, *[f' {lpad(str(entry_id), 5)} {"+" if name_overrides[entry_id][0] else " "} {name_overrides[entry_id][1]}' for entry_id in sorted(name_overrides.keys())])
 		self.listbox.yview_moveto(y)
 
 	def selection_updated(self, _: Event | None = None) -> None:
@@ -97,7 +97,7 @@ class EntryNameOverrides(PyMSDialog):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		except:
-			ErrorDialog(self, PyMSError('Open', "Couldn't open name overrides '%s'" % path))
+			ErrorDialog(self, PyMSError('Open', f"Couldn't open name overrides '{path}'"))
 		self.refresh_list()
 
 	def saveas(self, _: Event | None = None) -> None:
@@ -107,7 +107,7 @@ class EntryNameOverrides(PyMSDialog):
 		try:
 			self.data_context.dat_data(self.dat_id).save_name_overrides(path)
 		except:
-			ErrorDialog(self, PyMSError('Save', "Couldn't save name overrides to '%s'" % path))
+			ErrorDialog(self, PyMSError('Save', f"Couldn't save name overrides to '{path}'"))
 
 	def update(self, _: Event | None = None) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides

@@ -24,7 +24,7 @@ class IntegerVar(StringVar):
 		StringVar.__init__(self, value=val)
 		# self.set(val)
 		self.is_hex = False
-		self.trace('w', self.editvalue)
+		self.trace_add('write', self.editvalue)
 		self.update_case = IntegerVar.UpdateCase.user
 
 	def editvalue(self, *_):

@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-f-string
 
 import sys
 
@@ -17,15 +18,16 @@ def _show_error_uikit(program_name, message, warning): # type: (str, str, bool) 
 
 def _show_error_tkinter(program_name, message, warning): # type: (str, str, bool) -> bool
 	try:
-		import tkinter.messagebox as messagebox
+		from tkinter import messagebox
 	except:
 		import tkMessageBox as messagebox # type: ignore
 	if warning:
-		return messagebox.askyesno('Dependency Error', message + '\n\nWould you like to continue?')
-	messagebox.showerror('Dependency Error', message)
+		return messagebox.askyesno(program_name + ' Dependency Error', message + '\n\nWould you like to continue?')
+	messagebox.showerror(program_name + ' Dependency Error', message)
 	return False
 
 def _show_error_console(program_name, message, warning): # type: (str, str, bool) -> bool
+	print(program_name + ' error:')
 	print(message)
 	print('  Readme (Local): README.md')
 	print('  Readme (Online): https://github.com/poiuyqwert/PyMS#installation')
@@ -47,7 +49,7 @@ def show_error(program_name, message, warning=False): # type: (str, str, bool) -
 			should_continue = show_error_method(program_name, message, warning)
 			error = None
 			break
-		except Exception as e:
+		except Exception as e: # pylint: disable=broad-exception-caught
 			error = e
 			continue
 	if error is not None:
@@ -102,7 +104,7 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 
 	if additional_requirements & Requirement.PIL:
 		try:
-			from PIL import Image
-			from PIL import ImageTk
+			from PIL import Image as _Image
+			from PIL import ImageTk as _ImageTk
 		except:
 			show_error(program_name, 'PIL/PILLOW is missing. Please consult the Installation section of the Readme.')
