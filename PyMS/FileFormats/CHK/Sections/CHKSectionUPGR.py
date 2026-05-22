@@ -19,7 +19,7 @@ class CHKUpgradeLevels:
 		self.default = True
 
 class CHKSectionUPGR(CHKSection):
-	NAME = 'UPGR'
+	NAME = b'UPGR'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 46
@@ -69,7 +69,7 @@ class CHKSectionUPGR(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Max Levels','Start Level','Use Defaults']:
 			result += pad(name)

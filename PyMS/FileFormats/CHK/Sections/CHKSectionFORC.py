@@ -23,7 +23,7 @@ class CHKForce:
 		self.properties = 0
 
 class CHKSectionFORC(CHKSection):
-	NAME = 'FORC'
+	NAME = b'FORC'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	def __init__(self, chk: CHK) -> None:
@@ -53,7 +53,7 @@ class CHKSectionFORC(CHKSection):
 		return struct.pack('<8B4H4B', *(self.playerForces + names + properties))
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += f'\t{pad("#", "Force")}\n'
 		for p in range(8):
 			result += f'\t{pad(f"Player {p+1}", str(self.playerForces[p]+1))}\n'

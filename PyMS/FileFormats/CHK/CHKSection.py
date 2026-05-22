@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 	from .CHK import CHK
 
 class CHKSection:
-	NAME: str
+	NAME: bytes
 	REQUIREMENTS: CHKRequirements
 
 	def __init__(self, chk: CHK) -> None:

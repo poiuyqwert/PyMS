@@ -21,7 +21,7 @@ class CHKTechStats:
 		self.energyUsed = 0
 
 class CHKSectionTECS(CHKSection):
-	NAME = 'TECS'
+	NAME = b'TECS'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 24
@@ -67,7 +67,7 @@ class CHKSectionTECS(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Minerals','Gas','Build Time','Energy Used']:
 			result += pad(name)

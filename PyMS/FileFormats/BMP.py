@@ -71,8 +71,8 @@ class BMP:
 		try:
 			pixels_offset, dib_header_size, width, height, bitcount, compression, colors_used = \
 				tuple(int(v) for v in struct.unpack('<4LxxHL12xL',data[10:50]))
-			if issize and width != issize[0] and height != issize[1]:
-				raise PyMSError('Load', "Invalid dimensions (Expected %sx%s, got %sx%s)" % (issize[0],issize[1],width,height))
+			if issize and (width != issize[0] or height != issize[1]):
+				raise PyMSError('Load', f"Invalid dimensions (Expected {issize[0]}x{issize[1]}, got {width}x{height})")
 			if bitcount != 8 or not compression in [0,1]:
 				raise PyMSError('Load',"The BMP is not in the correct form. It must be 256 color (8 bit), with RLE compression or no compression at all.")
 			if not colors_used:
@@ -87,7 +87,7 @@ class BMP:
 				pad = getPadding(width,4)
 				for y in range(height):
 					x = pixels_offset+(width+pad)*y
-					image.append(list(int(v) for v in struct.unpack('%sB%s' % (width, 'x' * pad),data[x:x+width+pad])))
+					image.append(list(int(v) for v in struct.unpack(f"{width}B{'x' * pad}",data[x:x+width+pad])))
 				image.reverse()
 				for y in range(len(image)):
 					if len(image[y]) > width:
@@ -114,11 +114,11 @@ class BMP:
 		try:
 			f = AtomicWriter(file,'wb')
 		except Exception as exc:
-			raise PyMSError('Save',"Could not save BMP to file '%s'" % file) from exc
+			raise PyMSError('Save',f"Could not save BMP to file '{file}'") from exc
 		data = b''
 		pad = getPadding(self.width,4)
 		for y in self.image:
-			data = struct.pack('<%sB%s' % (self.width, 'x' * pad), *y) + data
+			data = struct.pack(f"<{self.width}B{'x' * pad}", *y) + data
 		palette = list(self.palette)
 		if len(palette) < 256:
 			palette.extend([(0,0,0)] * (256-len(palette)))

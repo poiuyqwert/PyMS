@@ -41,7 +41,7 @@ class CHKDoodad:
 		return result
 
 class CHKSectionTHG2(CHKSection):
-	NAME = 'THG2'
+	NAME = b'THG2'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	def __init__(self, chk: CHK) -> None:
@@ -64,7 +64,7 @@ class CHKSectionTHG2(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for doodad in self.doodads:
 			result += doodad.decompile()
 		return result

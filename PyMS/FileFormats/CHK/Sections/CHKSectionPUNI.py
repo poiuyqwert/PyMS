@@ -18,7 +18,7 @@ class CHKUnitAvailability:
 		self.default = True
 
 class CHKSectionPUNI(CHKSection):
-	NAME = 'PUNI'
+	NAME = b'PUNI'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 
 	def __init__(self, chk: CHK) -> None:
@@ -57,7 +57,7 @@ class CHKSectionPUNI(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Available','Use Defaults']:
 			result += pad(name)

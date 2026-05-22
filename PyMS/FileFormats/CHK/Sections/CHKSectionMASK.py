@@ -9,7 +9,7 @@ from ....Utilities.utils import pad, binary
 import struct
 
 class CHKSectionMASK(CHKSection):
-	NAME = 'MASK'
+	NAME = b'MASK'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 
 	raw_map: bytes
@@ -49,7 +49,7 @@ class CHKSectionMASK(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for row in self.map:
 			for t in row:
 				result += pad(binary(t,8),span=9)

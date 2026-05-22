@@ -23,7 +23,7 @@ class CHKUpgradeStats:
 		self.buildTimeIncrease = 0
 
 class CHKSectionUPGS(CHKSection):
-	NAME = 'UPGS'
+	NAME = b'UPGS'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UPGRADES = 46
@@ -82,7 +82,7 @@ class CHKSectionUPGS(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Minerals','Minerals Increase','Gas','Gas Increase','Build Time','Build Time Increase']:
 			result += pad(name)

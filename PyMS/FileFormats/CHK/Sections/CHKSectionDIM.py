@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionDIM(CHKSection):
-	NAME = 'DIM '
+	NAME = b'DIM '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	TINY = 64
@@ -34,4 +34,4 @@ class CHKSectionDIM(CHKSection):
 		return struct.pack('<2H', self.width, self.height)
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad("Width",str(self.width))}\n\t{pad("Height",str(self.height))}\n'
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Width",str(self.width))}\n\t{pad("Height",str(self.height))}\n'

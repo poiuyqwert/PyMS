@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionCOLR(CHKSection):
-	NAME = 'COLR'
+	NAME = b'COLR'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_BROODWAR, CHKRequirements.MODE_ALL)
 
 	RED = 0
@@ -93,7 +93,7 @@ class CHKSectionCOLR(CHKSection):
 		return struct.pack('<8B', *self.colors)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for p,c in enumerate(self.colors):
 			result += f'\t{pad(f"Player{p+1}", str(c))} # {CHKSectionCOLR.COLOR_NAME(c)}\n'
 		return result

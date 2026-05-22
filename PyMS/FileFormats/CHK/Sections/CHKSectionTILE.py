@@ -9,7 +9,7 @@ from ....Utilities.utils import pad
 import struct
 
 class CHKSectionTILE(CHKSection):
-	NAME = 'TILE'
+	NAME = b'TILE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	raw_map: bytes
@@ -47,7 +47,7 @@ class CHKSectionTILE(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for row in self.map:
 			for g,m in row:
 				result += pad(f'{g},{m}',span=6)

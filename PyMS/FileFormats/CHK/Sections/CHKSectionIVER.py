@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionIVER(CHKSection):
-	NAME = 'IVER'
+	NAME = b'IVER'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	BETA = 9
@@ -41,4 +41,4 @@ class CHKSectionIVER(CHKSection):
 		return struct.pack('<H', self.version)
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad("Version",str(self.version))} # {CHKSectionIVER.VER_NAME(self.version)}\n'
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Version",str(self.version))} # {CHKSectionIVER.VER_NAME(self.version)}\n'

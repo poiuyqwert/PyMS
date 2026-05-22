@@ -29,7 +29,7 @@ class CHKWeaponStats:
 		self.damageUpgrade = 0
 
 class CHKSectionUNIS(CHKSection):
-	NAME = 'UNIS'
+	NAME = b'UNIS'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	UNITS = 228
@@ -108,7 +108,7 @@ class CHKSectionUNIS(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Use Defaults','Health','Shields','Armor','Build Time','Mineral Cost','Gas Cost','Name']:
 			result += pad(name)

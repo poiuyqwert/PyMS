@@ -19,7 +19,7 @@ class CHKTechAvailability:
 		self.default = True
 
 class CHKSectionPTEC(CHKSection):
-	NAME = 'PTEC'
+	NAME = b'PTEC'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_VANILLA_HYBRID, CHKRequirements.MODE_UMS)
 
 	TECHS = 24
@@ -69,7 +69,7 @@ class CHKSectionPTEC(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += '\t' + pad('#')
 		for name in ['Available','Researched','Use Defaults']:
 			result += pad(name)

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionIOWN(CHKSection):
-	NAME = 'IOWN'
+	NAME = b'IOWN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	INACTIVE = 0
@@ -51,7 +51,7 @@ class CHKSectionIOWN(CHKSection):
 		return struct.pack('<12B', *self.owners)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,value in enumerate(self.owners):
 			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionIOWN.OWNER_NAME(value)}\n'
 		return result

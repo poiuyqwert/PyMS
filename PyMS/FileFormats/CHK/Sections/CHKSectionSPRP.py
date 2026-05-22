@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionSPRP(CHKSection):
-	NAME = 'SPRP'
+	NAME = b'SPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	def __init__(self, chk: CHK) -> None:
@@ -28,7 +28,7 @@ class CHKSectionSPRP(CHKSection):
 		return struct.pack('<HH', self.scenarioName, self.description)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		result += f'\t{pad("ScenarioName", f"String {self.scenarioName}")}\n'
 		result += f'\t{pad("Description", f"String {self.description}")}\n'
 		return result

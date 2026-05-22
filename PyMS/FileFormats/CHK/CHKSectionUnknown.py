@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class CHKSectionUnknown(CHKSection):
 	data: bytes
 
-	def __init__(self, chk: CHK, name: str) -> None:
+	def __init__(self, chk: CHK, name: bytes) -> None:
 		CHKSection.__init__(self, chk)
 		self.NAME = name
 
@@ -23,4 +23,5 @@ class CHKSectionUnknown(CHKSection):
 		return self.data
 
 	def decompile(self) -> str:
-		return f'{self.NAME}: # Unknown\n\t{pad("Data",self.data.hex())}\n'
+		# TODO: NAME can be invalid ascii
+		return f'{self.NAME.decode("ascii")}: # Unknown\n\t{pad("Data",self.data.hex())}\n'

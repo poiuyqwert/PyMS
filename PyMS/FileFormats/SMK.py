@@ -265,10 +265,10 @@ class SMK:
 
 	def load_data(self, data: bytes) -> None:
 		signature,width,height,frames,framerate,smk_flags = struct.unpack('<4s3LlL', data[:24])
-		if not signature in ('SMK2', 'SMK4'):
+		if not signature in (b'SMK2', b'SMK4'):
 			raise PyMSError('Load',"Not an SMK file (no SMK header)")
 		version = SMK.SMK2
-		if signature == 'SMK4':
+		if signature == b'SMK4':
 			version = SMK.SMK4
 		if smk_flags & SMK.SMK_FLAG_RING_FRAME:
 			frames += 1

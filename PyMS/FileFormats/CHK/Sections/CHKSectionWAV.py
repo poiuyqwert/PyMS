@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionWAV(CHKSection):
-	NAME = 'WAV '
+	NAME = b'WAV '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	def __init__(self, chk: CHK) -> None:
@@ -27,7 +27,7 @@ class CHKSectionWAV(CHKSection):
 		return struct.pack('<512L', *self.paths)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for w in range(512):
 			result += f'\t{pad(f"Wav{w:03d}", f"String {self.paths[w]}")}\n'
 		return result

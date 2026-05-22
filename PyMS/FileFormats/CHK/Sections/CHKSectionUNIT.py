@@ -82,7 +82,7 @@ class CHKUnit:
 		return result
 
 class CHKSectionUNIT(CHKSection):
-	NAME = 'UNIT'
+	NAME = b'UNIT'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	def __init__(self, chk: CHK) -> None:
@@ -119,7 +119,7 @@ class CHKSectionUNIT(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for ref_id in sorted(self.units.keys()):
 			unit = self.units[ref_id]
 			result += unit.decompile()

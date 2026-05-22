@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionSWNM(CHKSection):
-	NAME = 'SWNM'
+	NAME = b'SWNM'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	def __init__(self, chk: CHK) -> None:
@@ -27,7 +27,7 @@ class CHKSectionSWNM(CHKSection):
 		return struct.pack('<256L', *self.names)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,name in enumerate(self.names):
 			result += f'\t{pad(f"Switch {n}", f"String {name}")}\n'
 		return result

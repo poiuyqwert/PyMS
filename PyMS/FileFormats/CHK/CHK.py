@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 S = TypeVar('S', bound=CHKSection)
 
 class CHK:
-	SECTION_TYPES: dict[str, Type[CHKSection]] = {
+	SECTION_TYPES: dict[bytes, Type[CHKSection]] = {
 		CHKSectionTYPE.NAME:CHKSectionTYPE,
 		CHKSectionVER.NAME:CHKSectionVER,
 		CHKSectionIVER.NAME:CHKSectionIVER,
@@ -80,10 +80,10 @@ class CHK:
 				aiscript = Assets.mpq_file_path('scripts', 'aiscript.bin')
 			self.aiscript = AIBIN.AIBIN()#stat_txt=self.stat_txt)
 			self.aiscript.load(aiscript, bw_input=None)
-		self.sections: dict[str, CHKSection] = {}
-		self.section_order: list[str] = []
+		self.sections: dict[bytes, CHKSection] = {}
+		self.section_order: list[bytes] = []
 
-	def get_section_named(self, name: str, game_mode: int = CHKRequirements.MODE_ALL) -> CHKSection | None:
+	def get_section_named(self, name: bytes, game_mode: int = CHKRequirements.MODE_ALL) -> CHKSection | None:
 		sect_class = CHK.SECTION_TYPES[name]
 		required = False
 
@@ -125,12 +125,12 @@ class CHK:
 
 	def load_data(self, data: bytes) -> None:
 		offset = 0
-		sections: dict[str, CHKSection] = {}
-		section_order: list[str] = []
+		sections: dict[bytes, CHKSection] = {}
+		section_order: list[bytes] = []
 		toProcess: list[CHKSection] = []
 		while offset < len(data)-8:
 			header = struct.unpack('<4sL', data[offset:offset+8])
-			name = str(header[0])
+			name = header[0]
 			length = int(header[1])
 			offset += 8
 			sect_class = CHK.SECTION_TYPES.get(name)
@@ -160,7 +160,7 @@ class CHK:
 
 	def save_data(self) -> bytes:
 		result = b''
-		order: list[str] = []
+		order: list[bytes] = []
 		order.extend(self.section_order)
 		for name in list(self.sections.keys()):
 			if not name in order:

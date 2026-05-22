@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionTYPE(CHKSection):
-	NAME = "TYPE"
+	NAME = b'TYPE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	STARCRAFT = b"RAWS"
@@ -41,4 +41,4 @@ class CHKSectionTYPE(CHKSection):
 		return self.type
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad("Type",str(self.type))} # {CHKSectionTYPE.TYPE_NAME(self.type)}\n'
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Type",str(self.type))} # {CHKSectionTYPE.TYPE_NAME(self.type)}\n'

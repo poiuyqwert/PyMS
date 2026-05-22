@@ -54,7 +54,7 @@ class CHKUnitProperties:
 		return result
 
 class CHKSectionUPRP(CHKSection):
-	NAME = 'UPRP'
+	NAME = b'UPRP'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 
 	def __init__(self, chk: CHK) -> None:
@@ -77,7 +77,7 @@ class CHKSectionUPRP(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for properties in self.properties:
 			result += properties.decompile()
 		return result

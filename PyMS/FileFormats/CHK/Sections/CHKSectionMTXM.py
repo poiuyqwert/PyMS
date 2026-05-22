@@ -9,7 +9,7 @@ from ....Utilities.utils import pad
 import struct
 
 class CHKSectionMTXM(CHKSection):
-	NAME = 'MTXM'
+	NAME = b'MTXM'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	raw_map: bytes
@@ -47,7 +47,7 @@ class CHKSectionMTXM(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for row in self.map:
 			for g,m in row:
 				result += pad(f'{g},{m}',span=6)

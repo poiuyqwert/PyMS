@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionERA(CHKSection):
-	NAME = 'ERA '
+	NAME = b'ERA '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	BADLANDS = 0
@@ -43,4 +43,4 @@ class CHKSectionERA(CHKSection):
 		return struct.pack('<H', self.tileset)
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad("Tileset",str(self.tileset))} # {CHKSectionERA.TILESET_NAME(self.tileset)}\n'
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Tileset",str(self.tileset))} # {CHKSectionERA.TILESET_NAME(self.tileset)}\n'

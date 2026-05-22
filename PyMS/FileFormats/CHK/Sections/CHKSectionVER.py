@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionVER(CHKSection):
-	NAME = "VER "
+	NAME = b'VER '
 
 	BETA = 57
 	SC100 = 59
@@ -45,4 +45,4 @@ class CHKSectionVER(CHKSection):
 		return struct.pack('<H', self.version)
 
 	def decompile(self) -> str:
-		return f'{self.NAME}:\n\t{pad("Version",str(self.version))} # {CHKSectionVER.VER_NAME(self.version)}\n'
+		return f'{self.NAME.decode("ascii")}:\n\t{pad("Version",str(self.version))} # {CHKSectionVER.VER_NAME(self.version)}\n'

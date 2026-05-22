@@ -81,7 +81,7 @@ class CHKLocation:
 		self.elevation = CHKLocation.NO_ELEVATION
 
 class CHKSectionMRGN(CHKSection):
-	NAME = 'MRGN'
+	NAME = b'MRGN'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 
 	def __init__(self, chk: CHK) -> None:
@@ -114,7 +114,7 @@ class CHKSectionMRGN(CHKSection):
 		return result
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for location in self.locations:
 			result += location.decompile()
 		return result

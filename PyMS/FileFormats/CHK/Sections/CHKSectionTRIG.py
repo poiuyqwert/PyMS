@@ -9,7 +9,7 @@ from ....Utilities import IO
 import io
 
 class CHKSectionTRIG(CHKSection):
-	NAME = 'TRIG'
+	NAME = b'TRIG'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_UMS)
 
 	trg: TRG.TRG
@@ -27,7 +27,7 @@ class CHKSectionTRIG(CHKSection):
 		return b''
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		if self.trg:
 			result += IO.output_to_text(self.trg.decompile)
 		return result

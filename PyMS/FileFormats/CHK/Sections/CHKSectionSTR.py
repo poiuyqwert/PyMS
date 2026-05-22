@@ -28,7 +28,7 @@ class CHKString:
 			self.sect.delete_string(self.string_id)
 
 class CHKSectionSTR(CHKSection):
-	NAME = 'STR '
+	NAME = b'STR '
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	def __init__(self, chk: CHK) -> None:
@@ -135,7 +135,7 @@ class CHKSectionSTR(CHKSection):
 			del self.strings[string_id]
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,string in self.strings.items():
 			text = string.text.replace('\\','\\\\').replace('"','\\"')
 			result += f'\t{pad(f"String {n+1}")}"{text}"\n'

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionSIDE(CHKSection):
-	NAME = 'SIDE'
+	NAME = b'SIDE'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	ZERG = 0
@@ -49,7 +49,7 @@ class CHKSectionSIDE(CHKSection):
 		return struct.pack('<12B', *self.sides)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,value in enumerate(self.sides):
 			result += f'\t{pad(f"Slot{n:02d}",str(value))} # {CHKSectionSIDE.SIDE_NAME(value)}\n'
 		return result

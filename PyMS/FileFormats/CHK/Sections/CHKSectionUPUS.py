@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 	from ..CHK import CHK
 
 class CHKSectionUPUS(CHKSection):
-	NAME = 'UPUS'
+	NAME = b'UPUS'
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_NONE, CHKRequirements.MODE_NONE)
 
 	def __init__(self, chk: CHK) -> None:
@@ -27,7 +27,7 @@ class CHKSectionUPUS(CHKSection):
 		return struct.pack('<64B', *self.properties_used)
 
 	def decompile(self) -> str:
-		result = f'{self.NAME}:\n'
+		result = f'{self.NAME.decode("ascii")}:\n'
 		for n,u in enumerate(self.properties_used):
 			result += f'\t{pad(f"Properties{n:02d}", str(u))}\n'
 		return result
