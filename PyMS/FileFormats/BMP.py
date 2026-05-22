@@ -94,6 +94,8 @@ class BMP:
 						del image[y][width:]
 			else:
 				image = RLE.decompress(data[pixels_offset:], width, height)
+				margin = len(image) - height
+				image = image[margin:]
 		except PyMSError:
 			raise
 		except Exception as exc:
