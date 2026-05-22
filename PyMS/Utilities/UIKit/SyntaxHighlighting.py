@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 
 from dataclasses import dataclass
+from functools import cached_property
 
 from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
@@ -62,7 +63,7 @@ class SyntaxHighlighting:
 	def full_pattern(self) -> str:
 		return '|'.join(component.full_pattern for component in self.syntax_components)
 
-	@property
+	@cached_property
 	def re_pattern(self) -> re.Pattern:
 		return re.compile(self.full_pattern)
 

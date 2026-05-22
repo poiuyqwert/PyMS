@@ -392,6 +392,8 @@ def get_color(*keys: str, default: str = '#000000') -> str:
 			continue
 		else:
 			return default
+	else:
+		return default
 	if not _SettingType.color(color):
 		name = '.'.join(keys)
 		if not name in _INVALID_COLORS:

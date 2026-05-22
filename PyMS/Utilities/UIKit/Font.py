@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+import re as _re
 import tkinter.font as _Fonts
 
 from uuid import uuid4 as _uuid4
@@ -76,10 +77,9 @@ class Font(_Fonts.Font):
 		if overstrike is not None:
 			options['overstrike'] = overstrike
 		if not name:
-			# In Python2.7 with Tkinter 8.5rev81008 (at least) the auto-generated `name` under the hood is somehow not unique, so we create our own unique name if None is supplied
-			name = _uuid4().hex
+			name = f'pyms_{_re.sub(r'\W+', '_', family) if family else 'DEFAULT'}_{size if size else 'DEFAULT'}_{bool(bold):d}{bool(italic):d}{bool(underline):d}{bool(overstrike):d}'
 		options['name'] = name
-		options['exists'] = only_existing
+		options['exists'] = only_existing or name in _Fonts.names()
 		_Fonts.Font.__init__(self, **options)
 
 	# Get settings
