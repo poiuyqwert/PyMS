@@ -230,7 +230,9 @@ class Tileset:
 		self.dddata.save_file(dddata_path)
 		self.wpe.save_sc_wpe(wpe_path)
 
-	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions = ImportGraphicsOptions()) -> list[int]:
+	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions | None = None) -> list[int]:
+		if options is None:
+			options = ImportGraphicsOptions()
 		if ids:
 			ids = list(ids)
 		else:
@@ -464,7 +466,9 @@ class Tileset:
 				return TileGroupDef
 			file.write(Serialize.encode_texts(groups, get_definition, fields))
 
-	def import_group_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
+	def import_group_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions | None = None) -> None:
+		if options is None:
+			options = ImportSettingsOptions()
 		with IO.InputText(any_input) as input_text:
 			text = input_text.read()
 
@@ -487,7 +491,9 @@ class Tileset:
 			megatiles = list((self.vf4.get_megatile(id), id) for id in ids)
 			file.write(Serialize.encode_texts(megatiles, lambda _: MegatileDef, fields))
 
-	def import_megatile_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions = ImportSettingsOptions()) -> None:
+	def import_megatile_settings(self, any_input: IO.AnyInputText, ids: list[int], options: ImportSettingsOptions | None = None) -> None:
+		if options is None:
+			options = ImportSettingsOptions()
 		with IO.InputText(any_input) as input_text:
 			text = input_text.read()
 

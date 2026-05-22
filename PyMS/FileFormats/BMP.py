@@ -55,10 +55,10 @@ class RLE:
 		return image
 
 class BMP:
-	def __init__(self, palette: RawPalette = []) -> None:
+	def __init__(self, palette: RawPalette | None = None) -> None:
 		self.width = 0
 		self.height = 0
-		self.palette = palette
+		self.palette: RawPalette = palette if palette is not None else []
 		self.image: Pixels = []
 
 	def load_file(self, file: str | BinaryIO, issize: tuple[int, int] | None = None) -> None:

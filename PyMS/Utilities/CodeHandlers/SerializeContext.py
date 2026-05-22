@@ -11,10 +11,10 @@ if TYPE_CHECKING:
 	from .DefinitionsHandler import DefinitionsHandler
 
 class SerializeContext:
-	def __init__(self, output: IO[str], definitions: DefinitionsHandler | None = None, formatters: Formatters = Formatters()) -> None:
+	def __init__(self, output: IO[str], definitions: DefinitionsHandler | None = None, formatters: Formatters | None = None) -> None:
 		self._output = output
 		self.definitions = definitions
-		self.formatters = formatters
+		self.formatters = formatters if formatters is not None else Formatters()
 		self.strategy = DecompileStrategy.empty()
 		self._indent_level = 0
 		self._indent_next = False

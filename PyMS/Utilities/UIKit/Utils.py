@@ -95,7 +95,9 @@ class Rect:
 	def max_y(self) -> int:
 		return self.pos.y + self.size.height
 
-	def clamp(self, *, size: Size, pos: Point = Point(0,0), min_size: Size | None = None, max_size: Size | None = None) -> None:
+	def clamp(self, *, size: Size, pos: Point | None = None, min_size: Size | None = None, max_size: Size | None = None) -> None:
+		if pos is None:
+			pos = Point(0,0)
 		if self.pos.x < pos.x:
 			self.pos.x = pos.x
 		if self.pos.y < pos.y:
@@ -154,11 +156,15 @@ class Geometry(Rect):
 	def __str__(self) -> str:
 		return self.text
 
-	def adjust_center_at(self, pos: Point = Point(0,0)) -> GeometryAdjust:
+	def adjust_center_at(self, pos: Point | None = None) -> GeometryAdjust:
+		if pos is None:
+			pos = Point(0,0)
 		adjust_pos = pos - self.size // 2
 		return GeometryAdjust(pos=adjust_pos)
 
-	def adjust_center_in(self, size: Size, pos: Point = Point(0,0)) -> GeometryAdjust:
+	def adjust_center_in(self, size: Size, pos: Point | None = None) -> GeometryAdjust:
+		if pos is None:
+			pos = Point(0,0)
 		adjust_pos = Point(size.width // 2 - self.size.width // 2, size.height // 2 - self.size.height // 2)
 		adjust_pos += pos
 		return GeometryAdjust(pos=adjust_pos)

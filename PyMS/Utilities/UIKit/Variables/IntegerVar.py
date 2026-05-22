@@ -10,11 +10,11 @@ class IntegerVar(StringVar):
 		user = 2
 		both = (programmatic | user)
 
-	def __init__(self, val=0, range=[None,None], exclude=[], callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
+	def __init__(self, val=0, range=None, exclude=None, callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
 		self.defaultval = val
 		self.lastvalid = val
-		self.range = range
-		self.exclude = exclude
+		self.range = range if range is not None else [None, None]
+		self.exclude = exclude if exclude is not None else []
 		self.callback = callback
 		self.allow_hex = allow_hex
 		self.maxout = maxout

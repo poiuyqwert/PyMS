@@ -2551,7 +2551,9 @@ class PyMAP(Tk):
 				else:
 					self.saveas()
 
-	def select_file(self, title, open=True, ext='.scx', filetypes=[('BroodWar Map','*.scx'),('StarCraft Map','*.scm'),('Raw Map','*.chk'),('All Files','*')], parent=None):
+	def select_file(self, title, open=True, ext='.scx', filetypes=None, parent=None):
+		if filetypes is None:
+			filetypes = [('BroodWar Map','*.scx'),('StarCraft Map','*.scm'),('Raw Map','*.chk'),('All Files','*')]
 		if parent is None:
 			parent = self
 		path = self.settings.get('lastpath', BASE_DIR)

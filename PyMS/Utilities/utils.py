@@ -55,10 +55,10 @@ def debug_func_log(should_log_call=None):
 			return result
 		return do_log
 	return decorator
-def debug_state(states, history=[]): # pylint: disable=dangerous-default-value
-	n = len(history)
+def debug_state(states):
+	n = getattr(debug_state, '_count', 0)
 	print(f'##### {n}: {states[n] if n < len(states) else "Unknown"}')
-	history.append(None)
+	debug_state._count = n + 1 # type: ignore[attr-defined]
 
 def nearest_multiple(v: int, m: int, r: Callable[[float], float] = round) -> int:
 	return m * int(r(v / float(m)))
