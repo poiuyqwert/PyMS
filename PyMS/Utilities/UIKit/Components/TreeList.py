@@ -231,11 +231,22 @@ class TreeList(Frame):
 			start = f'entry{node.entry}.last linestart'
 		else:
 			start = end
+		root = node
 		while isinstance(node, TreeGroup) and node.expanded and node.children:
 			deep_leaf = node.children[-1]
 			end = f'entry{deep_leaf.entry}.last lineend +1c'
 			node = deep_leaf
 		self.execute('delete', (start, end))
+		self._cleanup_tags(root, eraseRoot)
+
+	def _cleanup_tags(self, node: TreeNode, includeRoot: bool) -> None:
+		if includeRoot:
+			self.text.tag_delete(f'entry{node.entry}')
+			if isinstance(node, TreeGroup):
+				self.text.tag_delete(f'icon{node.entry}')
+		if isinstance(node, TreeGroup) and node.expanded:
+			for child in node.children:
+				self._cleanup_tags(child, True)
 
 	def toggle(self, entry: int | str) -> None:
 		group = self.get_node(entry)
@@ -259,6 +270,9 @@ class TreeList(Frame):
 
 	def delete(self, index: int | str) -> None:
 		if index == ALL:
+			for tag in self.text.tag_names():
+				if tag.startswith('entry') or tag.startswith('icon'):
+					self.text.tag_delete(tag)
 			self.entry = 0
 			self.root.children = []
 			self.entries = {}
@@ -418,8 +432,8 @@ class TreeList(Frame):
 		# self.tl.insert('0.0.-1', 'Zerg Zergling', False)
 		# self.tl.insert('-1', 'Terran', False)
 		# self.tl.insert('0', 'Test', False)
-		# self.tl.bind('<Button-1>', self.test)
-		# self.tl.bind('<Alt-d>', self.delete)
+		# self.tl.bind(Mouse.Click_Left(), self.test)
+		# self.tl.bind(Alt.d(), self.delete)
 		# print(self.tl.groups)
 
 	# def test(self, e):

@@ -340,6 +340,8 @@ class WidgetEvent:
 	Map = EventPattern(Field('Map'))
 	Unmap = EventPattern(Field('Unmap'))
 
+	Destroy = EventPattern(Field('Destroy'))
+
 	Scrolled = CustomEventPattern(Field('Scrolled'))
 
 	class Listbox:
@@ -357,6 +359,13 @@ class WidgetEvent:
 
 	class Combobox:
 		Selected = CustomEventPattern(Field('ComboboxSelected'))
+
+	class Notebook:
+		TabActivated = CustomEventPattern(Field('TabActivated'))
+		TabDeactivated = CustomEventPattern(Field('TabDeactivated'))
+
+	class FlowView:
+		Update = CustomEventPattern(Field('Update'))
 
 class Shortcut:
 	Exit = Ctrl.q if is_mac() else Alt.F4

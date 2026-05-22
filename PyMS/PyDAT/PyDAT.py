@@ -180,7 +180,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			page.page_title = name
 			self.pages.append(page)
 			self.dattabs.add_tab(page, name)
-		self.dattabs.bind('<<TabActivated>>', lambda _: self.refresh())
+		self.dattabs.bind(WidgetEvent.Notebook.TabActivated(), lambda _: self.refresh())
 		self.hor_pane.add(self.dattabs.notebook, sticky=NSEW)
 		self.hor_pane.pack(fill=BOTH, expand=1)
 

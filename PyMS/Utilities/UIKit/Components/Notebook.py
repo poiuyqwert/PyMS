@@ -79,7 +79,7 @@ class Notebook(Frame):
 		if self.active:
 			if hasattr(self.active, 'deactivate'):
 				self.active.deactivate()
-			self.event_generate('<<TabDeactivated>>')
+			self.event_generate(WidgetEvent.Notebook.TabDeactivated())
 			self.active.forget()
 		self.tab.set(self.pages[tab_id][1])
 		self.active = self.pages[tab_id][0]
@@ -87,7 +87,7 @@ class Notebook(Frame):
 		if hasattr(self.active, 'activate'):
 			self.active.activate()
 		self.update_idletasks()
-		self.event_generate('<<TabActivated>>')
+		self.event_generate(WidgetEvent.Notebook.TabActivated())
 		return self.active
 
 class NotebookTab(Frame):

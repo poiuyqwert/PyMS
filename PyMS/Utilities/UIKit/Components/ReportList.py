@@ -336,7 +336,7 @@ class ReportList(Frame):
 		# self.rl.pack(fill=BOTH, expand=1)
 		# for n in range(50):
 			# self.rl.insert(END, [str(n+x) for x in range(3)])
-		# self.rl.bind('<ButtonRelease-1>', self.sel)
+		# self.rl.bind(ButtonRelease.Click_Left(), self.sel)
 
 	# def sel(self, e):
 		# s = self.rl.curselection()

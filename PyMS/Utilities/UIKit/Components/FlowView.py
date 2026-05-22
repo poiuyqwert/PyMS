@@ -52,7 +52,7 @@ class FlowView(Frame):
 		self._subview_configs: dict[str, dict] = {}
 		self._bindings: dict[str, str] = {}
 		self._update = False
-		self.bind('<<Update>>', self._update_layout)
+		self.bind(WidgetEvent.FlowView.Update(), self._update_layout)
 		self._viewport_widths: list[int] = []
 		def resize(_event: Event) -> None:
 			viewport_width = self.viewport_size()[0]
@@ -97,7 +97,7 @@ class FlowView(Frame):
 		# import inspect
 		# print(inspect.stack()[1][3])
 		self._update = True
-		self.event_generate('<<Update>>')
+		self.event_generate(WidgetEvent.FlowView.Update())
 
 	def scroll_to_view(self, view: Misc) -> None:
 		offset_x = 0

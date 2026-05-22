@@ -1,5 +1,6 @@
 
 from ..Utils import remove_bind
+from ..EventPattern import WidgetEvent
 
 import tkinter as _Tk
 
@@ -15,7 +16,7 @@ class Extensions(_Tk.Misc):
 		"""Schedule `func` after `ms` milliseconds and auto-cancel if this widget is destroyed first."""
 		if not hasattr(self, '_managed_after_ids'):
 			self._managed_after_ids: set[str] = set()
-			self.bind('<Destroy>', self._cancel_managed_afters, '+')
+			self.bind(WidgetEvent.Destroy(), self._cancel_managed_afters, '+')
 		holder: list[str] = ['']
 		def wrapper() -> None:
 			self._managed_after_ids.discard(holder[0])

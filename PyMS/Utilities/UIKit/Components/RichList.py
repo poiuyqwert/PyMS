@@ -1,5 +1,4 @@
 
-from PyMS.Utilities.UIKit.Widgets import Misc
 from ..Widgets import *
 from ..EventPattern import *
 
@@ -177,7 +176,7 @@ class RichList(Frame):
 		# print(self.rl.tag_add('r','3.1.1','3.1.0 lineend -1c'))
 		# self.img = PhotoImage(file='Images\\treeopen.gif')
 		# self.rl.image_create('2.1.1', image=self.img)
-		# self.rl.bind('<Enter>', self.enter)
+		# self.rl.bind(Cursor.Enter(), self.enter)
 
 	# def enter(self, e):
 		# self.rl.delete(0)
