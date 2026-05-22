@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os as _os
 import sys as _sys
+from uuid import uuid4 as _uuid4
 
 from typing import cast
 from .UIKit import Image, PhotoImage
@@ -157,7 +158,9 @@ def log_file_path(filename: str) -> str:
 ## Internal Temp
 internal_temp_dir = _os.path.join(internals_dir, 'Temp')
 
-def internal_temp_file(filename: str) -> str:
+def internal_temp_file_path(filename: str | None = None) -> str:
+	if filename is None:
+		filename = _uuid4().hex
 	return _os.path.join(internal_temp_dir, filename)
 
 ## Help

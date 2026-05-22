@@ -2,7 +2,7 @@
 from .PyMSError import PyMSError
 
 from textwrap import wrap
-import os, sys, platform, tempfile, errno
+import os, sys, platform, subprocess, tempfile, errno
 
 from typing import Callable, Any, Sequence
 
@@ -254,7 +254,7 @@ def start_file(filepath: str) -> None:
 		os.startfile(filepath)
 	else:
 		cmd = 'open' if is_mac() else 'xdg-open'
-		start_new_thread(os.system, (f'{cmd} "{filepath}"',))
+		subprocess.Popen([cmd, filepath])
 
 play_sound: Callable[[bytes], None] | None = None
 try:
@@ -263,23 +263,21 @@ try:
 		start_new_thread(PlaySound, (raw_audio, SND_MEMORY))
 	play_sound = win_play
 except:
-	import subprocess
 	def osx_play(raw_audio):
 		from . import Assets
 		def do_play(path):
 			try:
-				subprocess.call(["afplay", temp_file])
+				subprocess.call(["afplay", path])
 			except:
 				pass
 			try:
 				os.remove(path)
 			except:
 				pass
-		temp_file = create_temp_file(Assets.internal_temp_file('audio'))
-		handle = open(temp_file, 'wb')
-		handle.write(raw_audio)
-		handle.flush()
-		os.fsync(handle.fileno())
-		handle.close()
+		temp_file = create_temp_file(Assets.internal_temp_file_path())
+		with open(temp_file, 'wb') as handle:
+			handle.write(raw_audio)
+			handle.flush()
+			os.fsync(handle.fileno())
 		start_new_thread(do_play, (temp_file,))
 	play_sound = osx_play

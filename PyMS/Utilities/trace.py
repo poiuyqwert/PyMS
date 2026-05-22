@@ -40,9 +40,10 @@ class Tracer:
 		self.creating_window = False
 		self.buffer = ''
 		self.flush_after_id: str | None = None
+		self.file: TextIO | None = None
 		try:
 			self.file = open(Assets.log_file_path(f'{program_name}.txt'), 'w', encoding='utf-8')
-		except OSError:
+		except:
 			pass
 
 	def _find_presenter(self) -> AnyWindow:

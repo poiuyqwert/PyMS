@@ -22,8 +22,8 @@ class Test_paths(unittest.TestCase):
 	def test_log_file_path_joins_logs_dir(self) -> None:
 		self.assertEqual(Assets.log_file_path('error.log'), os.path.join(Assets.logs_dir, 'error.log'))
 
-	def test_internal_temp_file_joins_temp_dir(self) -> None:
-		self.assertEqual(Assets.internal_temp_file('scratch.bin'), os.path.join(Assets.internal_temp_dir, 'scratch.bin'))
+	def test_internal_temp_file_path_joins_temp_dir(self) -> None:
+		self.assertEqual(Assets.internal_temp_file_path('scratch.bin'), os.path.join(Assets.internal_temp_dir, 'scratch.bin'))
 
 	def test_theme_file_path_appends_txt(self) -> None:
 		self.assertEqual(Assets.theme_file_path('Dark'), os.path.join(Assets.themes_dir, f'Dark{os.extsep}txt'))

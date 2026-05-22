@@ -4,8 +4,6 @@ from __future__ import annotations
 import re as _re
 import tkinter.font as _Fonts
 
-from uuid import uuid4 as _uuid4
-
 from typing import Sequence
 
 __all__ = [
