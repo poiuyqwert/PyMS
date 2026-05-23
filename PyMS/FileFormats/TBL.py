@@ -145,15 +145,15 @@ class TBL:
 
 	def save_data(self) -> bytes:
 		o = 2 + 2 * len(self.strings)
-		header = struct.pack('<H', len(self.strings))
-		data = b''
+		header = bytearray(struct.pack('<H', len(self.strings)))
+		data = bytearray()
 		for s in self.strings:
 			if not s.endswith('\x00'):
 				s += '\x00'
 			header += struct.pack('<H', o)
 			data += s.encode('utf-8')
 			o += len(s)
-		return header + data
+		return bytes(header + data)
 
 	def compile(self, file: str) -> None:
 		try:

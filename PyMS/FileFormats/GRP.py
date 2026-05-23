@@ -155,34 +155,34 @@ class RLE:
 
 	@staticmethod
 	def encode_transparent(count: int) -> bytes:
-		encoded = b''
+		encoded = bytearray()
 		while count > 0:
 			encoded += struct.pack('<B', RLE.TRANSPARENT_FLAG | min(RLE.TRANSPARENT_MAX_LENGTH, count))
 			count -= RLE.TRANSPARENT_MAX_LENGTH
-		return encoded
+		return bytes(encoded)
 
 	@staticmethod
 	def encode_repeat(index: int, count: int) -> bytes:
-		encoded = b''
+		encoded = bytearray()
 		while count > 0:
 			encoded += struct.pack('<BB', RLE.REPEAT_FLAG | min(RLE.REPEAT_MAX_LENGTH, count), index)
 			count -= RLE.REPEAT_MAX_LENGTH
-		return encoded
+		return bytes(encoded)
 
 	@staticmethod
 	def encode_static(line: Sequence[int]) -> bytes:
-		encoded = b''
+		encoded = bytearray()
 		for x in range(0, len(line), RLE.STATIC_MAX_LENGTH):
 			run = line[x:x+RLE.STATIC_MAX_LENGTH]
 			encoded += struct.pack(f'<{1 + len(run)}B', len(run), *run)
-		return encoded
+		return bytes(encoded)
 
 	@staticmethod
 	def compress_line(line: Sequence[int], transparent_index: int) -> bytes:
 		last_index = line[0]
 		repeat_count = 0
 		static_len = 0
-		compressed = b''
+		compressed = bytearray()
 		for (x,index) in enumerate(line):
 			if index == last_index:
 				repeat_count += 1
@@ -205,7 +205,7 @@ class RLE:
 			compressed += RLE.encode_static(line[-static_len:])
 		elif repeat_count:
 			compressed += RLE.encode_repeat(last_index, repeat_count)
-		return compressed
+		return bytes(compressed)
 
 	@staticmethod
 	def decompress_line(data: bytes, width: int, transparent_index: int = 0) -> list[int]:

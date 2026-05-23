@@ -659,7 +659,7 @@ class DialogBIN:
 		string_offsets = {}
 		smk_offset = len(self.widgets) * widget_size
 		offsets = [0, smk_offset, smk_offset + len(self.smks) * BINSMK.BYTE_SIZE]
-		results: list[bytes] = [b'',b'',b'']
+		results: list[bytearray] = [bytearray(), bytearray(), bytearray()]
 		def save_string(string: str) -> int:
 			if not string:
 				return 0

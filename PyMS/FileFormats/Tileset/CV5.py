@@ -268,9 +268,7 @@ class CV5:
 		self._groups = groups
 
 	def save_file(self, file: str | BinaryIO) -> None:
-		data = b''
-		for group in self._groups:
-			data += group.save_data()
+		data = b''.join(group.save_data() for group in self._groups)
 		if isinstance(file, str):
 			try:
 				f = AtomicWriter(file, 'wb')
