@@ -152,7 +152,7 @@ class AbstractDAT:
 				name,raw_id = match.groups()
 				entry_id = int(raw_id)
 				if entry_id in entry_starts:
-					raise PyMSError('Import', f'Entry {entry_id} already exists' % entry_id, line=n, code=line)
+					raise PyMSError('Import', f'Entry {entry_id} already exists', line=n, code=line)
 				entry = {'_type': name, '_id': entry_id}
 				entry_starts[entry_id] = n
 				continue
@@ -247,8 +247,9 @@ class AbstractDAT:
 			if not isinstance(data, str):
 				raise PyMSError('Import', 'Expected text to import')
 			data = AbstractDAT.parse_text(data)
-		elif export_type == ExportType.json and not isinstance(data, list):
-			raise PyMSError('Import', 'Expected json list to import')
+		elif export_type == ExportType.json:
+			if not isinstance(data, list):
+				raise PyMSError('Import', 'Expected json list to import')
 		else:
 			raise PyMSError('Import', f'Invalid import type `{export_type}`')
 		backup = deepcopy(self.entries)
@@ -295,11 +296,11 @@ class AbstractDATEntry:
 	def expand(self) -> None:
 		pass
 
-	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
+	# Export some or all `export_properties` (`None` or empty array for all properties, or an array of property names for a subset) to the specified format
 	def export_data(self, entry_id: int | None = None, export_properties: list[str] | None = None) -> OrderedDict[str, Any]:
 		data: OrderedDict[str, Any] = OrderedDict()
 		data["_type"] = self.EXPORT_NAME
-		if id is not None:
+		if entry_id is not None:
 			data["_id"] = entry_id
 		self._export_data(export_properties, data)
 		return data

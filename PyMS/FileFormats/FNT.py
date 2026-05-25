@@ -183,16 +183,13 @@ class FNT:
 			f = AtomicWriter(file, 'wb')
 		except Exception as exc:
 			raise PyMSError('Compile', f"Could not load file '{file}'") from exc
-		header = b'FONT'
-		header += self.start.to_bytes()
-		header += (self.start+len(self.letters)-1).to_bytes()
-		header += self.width.to_bytes()
-		header += self.height.to_bytes()
+		header = bytearray(b'FONT')
+		header += struct.pack('<4B', self.start, self.start+len(self.letters)-1, self.width, self.height)
 		o = 8+4*len(self.letters)
-		data = b''
+		data = bytearray()
 		hist: dict[bytes, int] = {}
 		for d in self.letters:
-			ldata = b''
+			ldata = bytearray()
 			maxw = len(d[0])
 			w,h,xo,yo = 0,0,999,-1
 			for y,yd in enumerate(d):
@@ -211,28 +208,26 @@ class FNT:
 			else:
 				w -= xo
 				h -= yo
-				ldata += w.to_bytes()
-				ldata += h.to_bytes()
-				ldata += xo.to_bytes()
-				ldata += yo.to_bytes()
+				ldata += struct.pack('<4B', w, h, xo, yo)
 				skip = 0
 				for row in d[yo:yo+h]:
 					for x in row[xo:xo+w]:
 						if not x and skip < 31:
 							skip += 1
 						else:
-							ldata += ((skip << 3) + x).to_bytes()
+							ldata += struct.pack('<B', (skip << 3) + x)
 							skip = 0
 				if skip:
-					ldata += (skip << 3).to_bytes()
-				if ldata in hist:
-					header += struct.pack('<L',hist[ldata])
+					ldata += struct.pack('<B', skip << 3)
+				ldata_key = bytes(ldata)
+				if ldata_key in hist:
+					header += struct.pack('<L', hist[ldata_key])
 				else:
-					header += struct.pack('<L',o)
-					hist[ldata] = o
+					header += struct.pack('<L', o)
+					hist[ldata_key] = o
 					data += ldata
 					o += len(ldata)
-		f.write(header + data)
+		f.write(bytes(header + data))
 		f.close()
 
 # from BMP import *

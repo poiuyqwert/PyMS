@@ -100,11 +100,11 @@ class CHK:
 	def get_section(self, section_type: Type[S], game_mode: int = CHKRequirements.MODE_ALL) -> S | None:
 		required = section_type.REQUIREMENTS.is_required(self, game_mode)
 		sect = self.sections.get(section_type.NAME)
-		if not isinstance(sect, section_type):
+		if sect is not None and not isinstance(sect, section_type):
 			return None
 		if required and sect is None:
 			sect = section_type(self)
-			self.sections[section_type.name] = sect
+			self.sections[section_type.NAME] = sect
 		return sect
 
 	def player_color(self, player: int) -> int:

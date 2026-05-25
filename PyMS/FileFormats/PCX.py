@@ -98,23 +98,23 @@ class PCX:
 				if index == last:
 					if repeat == 63:
 						f.write(b'\xFF')
-						f.write(index.to_bytes())
+						f.write(struct.pack('<B', index))
 						repeat = 1
 					else:
 						repeat += 1
 				else:
 					if repeat > 1:
-						f.write((repeat | 0xC0).to_bytes())
+						f.write(struct.pack('<B', repeat | 0xC0))
 					elif last >= 192:
 						f.write(b'\xC1')
-					f.write(last.to_bytes())
+					f.write(struct.pack('<B', last))
 					last = index
 					repeat = 1
 			if repeat > 1:
-				f.write((repeat | 0xC0).to_bytes())
+				f.write(struct.pack('<B', repeat | 0xC0))
 			elif last >= 192:
 				f.write(b'\xC1')
-			f.write(last.to_bytes())
+			f.write(struct.pack('<B', last))
 		f.write(b'\x0C' + b''.join(struct.pack('3B',*c) for c in self.palette))
 		f.close()
 

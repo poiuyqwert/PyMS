@@ -610,14 +610,14 @@ class DialogBIN:
 			if widget.type > widget_max:
 				raise PyMSError('Load', f"Invalid widget type '{widget_info[11]}'")
 
-			if widget.string:
+			if string_offset:
 				end_offset = data.find(b'\0', string_offset)
 				widget.string = data[string_offset:end_offset].decode('utf-8')
 
 			if widget.type == BINWidget.TYPE_DIALOG:
 				next_widget = smk_offset
-			if widget.smk:
-				if not widget.smk in smk_map:
+			elif smk_offset:
+				if not smk_offset in smk_map:
 					load_smk(smk_offset)
 				widget.smk = smk_map[smk_offset]
 
@@ -827,8 +827,7 @@ class DialogBIN:
 			raise PyMSError('Interpreting', f"SMK {list(backfill_smks.keys())[0]} is missing")
 		for index, widget in enumerate(widgets):
 			if widget.type == BINWidget.TYPE_DIALOG:
-				del widgets[index]
-				widgets.insert(index,widget)
+				widgets.insert(0, widgets.pop(index))
 				break
 		else:
 			raise PyMSError('Interpreting','No dialog found.')
@@ -845,7 +844,7 @@ class DialogBIN:
 		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		result = ''
 		attrs: Sequence[str] = BINSMK.ATTR_NAMES
-		longest = sorted(len(n) for n in attrs)[-1]
+		longest = max(len(n) for n in attrs)
 		for i,smk in enumerate(self.smks):
 			result += f'SMK {i}:\n'
 			for attr in attrs:
@@ -857,10 +856,10 @@ class DialogBIN:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
 					value = flags(value, 5)
-				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}'
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}\n'
 			result += '\n'
 		attrs = BINWidget.ATTR_NAMES_REMASTERED if remastered else BINWidget.ATTR_NAMES
-		longest = sorted(len(n) for n in attrs)[-1]
+		longest = max(len(n) for n in attrs)
 		for widget in self.widgets:
 			result += 'Widget:\n'
 			for attr in attrs:
