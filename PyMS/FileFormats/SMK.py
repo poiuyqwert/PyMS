@@ -129,16 +129,15 @@ class HuffTree:
 			raise PyMSError('HuffTree', "Couldn't read from bit stream")
 
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
-		value: int
 		if node is None:
 			node = self.root
-		if node.branch0 is None:
-			value = node.value
-		elif bit_stream.read(1):
-			value = self.lookup(bit_stream, node.branch1)
-		else:
-			value = self.lookup(bit_stream, node.branch0)
-		return value
+		while node.branch0 is not None:
+			if bit_stream.read(1):
+				assert node.branch1 is not None
+				node = node.branch1
+			else:
+				node = node.branch0
+		return node.value
 
 class BigHuffTree:
 	def __init__(self, bit_stream: BitStream) -> None:
@@ -176,22 +175,22 @@ class BigHuffTree:
 			raise PyMSError('BigHuffTree', "Couldn't read from bit stream")
 
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
-		value = None
 		if node is None:
 			node = self.root
-		if node.branch0 is None:
-			if node.escape_code != 0xFF:
-				value = self.cache[node.escape_code]
+		while node.branch0 is not None:
+			if bit_stream.read(1):
+				assert node.branch1 is not None
+				node = node.branch1
 			else:
-				value = node.value
-			if self.cache[0] != value:
-				self.cache[2] = self.cache[1]
-				self.cache[1] = self.cache[0]
-				self.cache[0] = value
-		elif bit_stream.read(1):
-			value = self.lookup(bit_stream, node.branch1)
+				node = node.branch0
+		if node.escape_code != 0xFF:
+			value = self.cache[node.escape_code]
 		else:
-			value = self.lookup(bit_stream, node.branch0)
+			value = node.value
+		if self.cache[0] != value:
+			self.cache[2] = self.cache[1]
+			self.cache[1] = self.cache[0]
+			self.cache[0] = value
 		return value
 
 	def reset_cache(self) -> None:

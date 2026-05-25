@@ -16,18 +16,22 @@ if SFMPQ_DIR:
 		'SFmpq64.dll',
 		'SFmpq.dylib',
 	)
+	loaders: list[type[ctypes.CDLL]] = []
+	if hasattr(ctypes, 'WinDLL'):
+		loaders.append(ctypes.WinDLL)
+	loaders.append(ctypes.CDLL)
 	for library in libraries:
-		if hasattr(ctypes, 'WinDLL'):
+		path = os.path.join(SFMPQ_DIR, library)
+		loaded: ctypes.CDLL | None = None
+		for loader in loaders:
 			try:
-				_SFmpq = ctypes.WinDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
+				loaded = loader(path, ctypes.RTLD_GLOBAL)
 				break
 			except:
 				pass
-		try:
-			_SFmpq = ctypes.CDLL(os.path.join(SFMPQ_DIR, library), ctypes.RTLD_GLOBAL)
+		if loaded is not None:
+			_SFmpq = loaded
 			break
-		except:
-			pass
 
 SFMPQ_LOADED = (_SFmpq is not None)
 

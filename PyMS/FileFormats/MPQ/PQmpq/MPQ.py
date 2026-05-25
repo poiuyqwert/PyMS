@@ -244,16 +244,25 @@ class MPQ:
 		self.block_table = block_table
 
 	def close(self) -> None:
-		self.mpq_offset = None
-		self.file_size = None
-		self.headerv1 = None
-		self.path = None
-		if self.file_handle:
+		if self.file_handle is None:
+			return
+		try:
 			self.file_handle.close()
-		self.file_handle = None
-		self.hash_table = None
-		self.block_table = None
-		self.internal_listfiles = None
+		finally:
+			self.file_handle = None
+			self.mpq_offset = None
+			self.file_size = None
+			self.headerv1 = None
+			self.path = None
+			self.hash_table = None
+			self.block_table = None
+			self.internal_listfiles = None
+
+	def __enter__(self) -> MPQ:
+		return self
+
+	def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+		self.close()
 
 	# Set a Listfiles object on the MPQ so you don't need to continue passing it to `list_files`
 	def set_listfiles(self, listfiles: Listfiles) -> None:
@@ -265,7 +274,7 @@ class MPQ:
 		hash_name_a = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_a)
 		hash_name_b = MPQCrypt.hash_string(filename, MPQCrypt.HashType.name_b)
 		for hash_entry in self.hash_table:
-			if hash_entry.hash_name_a == hash_name_a and hash_entry.hash_name_b == hash_name_b and (hash_entry.block_index & MPQHashEntry.BLOCK_INDEX_DELETED) != MPQHashEntry.BLOCK_INDEX_DELETED:
+			if hash_entry.hash_name_a == hash_name_a and hash_entry.hash_name_b == hash_name_b and hash_entry.block_index != MPQHashEntry.BLOCK_INDEX_DELETED:
 				entries.append(hash_entry)
 		return entries
 

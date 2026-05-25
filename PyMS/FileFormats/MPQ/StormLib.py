@@ -18,20 +18,23 @@ if STORMLIB_DIR:
 		('StormLib.dylib', ctypes.c_char_p),
 		('StormLibLinux.so', ctypes.c_char_p),
 	)
+	loaders: list[type[ctypes.CDLL]] = []
+	if hasattr(ctypes, 'WinDLL'):
+		loaders.append(ctypes.WinDLL)
+	loaders.append(ctypes.CDLL)
 	for library, tchar in libraries:
-		if hasattr(ctypes, 'WinDLL'):
+		path = os.path.join(STORMLIB_DIR, library)
+		loaded: ctypes.CDLL | None = None
+		for loader in loaders:
 			try:
-				_StormLib = ctypes.WinDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
-				_StormLib_TCHAR = tchar
+				loaded = loader(path, ctypes.RTLD_GLOBAL)
 				break
 			except:
 				pass
-		try:
-			_StormLib = ctypes.CDLL(os.path.join(STORMLIB_DIR, library), ctypes.RTLD_GLOBAL)
+		if loaded is not None:
+			_StormLib = loaded
 			_StormLib_TCHAR = tchar
 			break
-		except:
-			pass
 
 STORMLIB_LOADED = (_StormLib is not None)
 
@@ -844,8 +847,6 @@ def SFileGetFileInfo(mpq: MPQHANDLE, info_class: int) -> int | str | None:
 		raise NotImplementedError(f'Info class {info_class} not implemented in SFileGetFileInfo')
 	length_needed = ctypes.c_uint32()
 	if not _StormLib.SFileGetFileInfo(mpq, info_class, ctypes.byref(info_container), ctypes.sizeof(info_container), ctypes.byref(length_needed)):
-		return None
-	if not isinstance(info_container, ctypes.c_uint):
 		return None
 	return info_container.value
 

@@ -83,7 +83,7 @@ def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, bounds
 	width = len(image[0])
 	height = len(image)
 	i = PILImage.new('RGBA', (width,height))
-	pal = [draw_function(palette,i,draw_info) for i in range(len(palette))]
+	pal = [draw_function(palette,index,draw_info) for index in range(len(palette))]
 	if transindex is not None:
 		pal[transindex] = (0,0,0,0)
 	pixels: list[int] = []
@@ -122,7 +122,7 @@ def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int
 	height = len(d)
 	i = PILImage.new('RGBA', (width,height))
 	data: list[RGBA] = []
-	pal = list(draw_function(p,i,draw_info) for i in range(len(p)))
+	pal = list(draw_function(p,index,draw_info) for index in range(len(p)))
 	pal[transindex] = (0,0,0,0)
 	bounds = [-1,-1,-1,-1]
 	for y,yd in enumerate(d):
@@ -284,8 +284,10 @@ class CacheGRP:
 		image.extend([[0] * self.width for _ in range(yoffset)])
 		if not self.uncompressed:
 			try:
+				compressed_rows: list[list[int]] = []
 				for offset in offsets:
-					image.append([0] * xoffset + RLE.decompress_line(self.databuffer[offset:], linewidth) + [0] * (self.width-linewidth-xoffset))
+					compressed_rows.append([0] * xoffset + RLE.decompress_line(self.databuffer[offset:], linewidth) + [0] * (self.width-linewidth-xoffset))
+				image.extend(compressed_rows)
 				if self.uncompressed is None:
 					self.uncompressed = False
 			except Exception as exc: # pylint: disable=broad-exception-caught
