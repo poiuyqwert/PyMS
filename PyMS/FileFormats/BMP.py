@@ -39,6 +39,8 @@ class RLE:
 							if len(image) < height:
 								image.extend([[0] * width] * (height - len(image)))
 							break
+						if len(image) == height:
+							break
 						image.append([])
 				else:
 					n = data[offset+1]
