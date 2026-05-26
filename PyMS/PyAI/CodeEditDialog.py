@@ -20,7 +20,6 @@ from ..Utilities.EditedState import EditedState
 from ..Utilities.SyntaxHighlightingDialog import SyntaxHighlightingDialog
 
 import re, io
-from dataclasses import dataclass
 
 from typing import Sequence
 
@@ -349,9 +348,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		if not self.file:
 			self.exportas()
 		else:
-			f = open(self.file, 'w', encoding='utf-8')
-			f.write(self.text.get('1.0', END))
-			f.close()
+			with open(self.file, 'w', encoding='utf-8') as f:
+				f.write(self.text.get('1.0', END))
 			self.title(f'AI Script Editor [{self.file}]')
 
 	def exportas(self, _: Event | None = None) -> None:
@@ -362,16 +360,16 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		self.export()
 
 	def iimport(self, _: Event | None = None) -> None:
-		iimport = self.config_.last_path.txt.ai.select_save(self)
+		iimport = self.config_.last_path.txt.ai.select_open(self)
 		if iimport:
 			try:
-				f = open(iimport, 'r', encoding='utf-8')
+				with open(iimport, 'r', encoding='utf-8') as f:
+					contents = f.read()
 				self.text.delete('1.0', END)
-				self.text.insert('1.0', f.read())
+				self.text.insert('1.0', contents)
 				self.text.edit_reset()
-				f.close()
-			except:
-				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'"))
+			except Exception as e:
+				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'", cause=e))
 
 	def find(self, _: Event | None = None) -> None:
 		if not self.findwindow:
@@ -480,7 +478,7 @@ script {header_id} {{
 			#'try_townpoint':('',),
 		}
 		header = re.compile(r'\A([^(]{4})\([^)]+\):\s*(?:\{.+\})?(?:\s*#.*)?\Z')
-		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\\Z')
+		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\Z')
 		jump = re.compile(fr'\A(\s*)({"|".join(list(debug.keys()))})\((.+)\)(\s*#.*)?\Z')
 		script,block = '',''
 		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
