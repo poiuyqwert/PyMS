@@ -406,7 +406,7 @@ class TRG:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, TRG):
-			return False
+			return NotImplemented
 		if other.format != self.format:
 			return False
 		if other.triggers != self.triggers:

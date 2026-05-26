@@ -45,7 +45,7 @@ class SemVer:
 
 	def __eq__(self, other: Any) -> bool:
 		if not isinstance(other, SemVer):
-			return False
+			return NotImplemented
 		if self.major != other.major:
 			return False
 		if self.minor != other.minor:

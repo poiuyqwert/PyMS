@@ -103,7 +103,7 @@ class CompressionSetting:
 		elif isinstance(other, CompressionOption):
 			return self.type == other
 		else:
-			return False
+			return NotImplemented
 
 	def __str__(self) -> str:
 		if self.type.level_count() > 0:

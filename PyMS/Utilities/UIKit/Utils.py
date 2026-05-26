@@ -48,7 +48,7 @@ class Point:
 			return other[0] == self.x and other[1] == self.y
 		if isinstance(other, Point):
 			return other.x == self.x and other.y == self.y
-		return False
+		return NotImplemented
 
 @dataclass
 class Size:
@@ -76,7 +76,7 @@ class Size:
 			return other[0] == self.width and other[1] == self.height
 		if isinstance(other, Size):
 			return other.width == self.width and other.height == self.height
-		return False
+		return NotImplemented
 
 @dataclass
 class Rect:
@@ -123,7 +123,7 @@ class Rect:
 				return other[0] == self.pos.x and other[1] == self.pos.y and other[2] == self.size.width and other[3] == self.size.height
 		elif isinstance(other, Rect):
 			return other.pos == self.pos and other.size == self.size
-		return False
+		return NotImplemented
 
 @dataclass
 class Geometry(Rect):

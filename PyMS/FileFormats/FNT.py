@@ -21,9 +21,9 @@ from ..Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import Dict, Tuple, BinaryIO
+from typing import BinaryIO
 
-Remapping = Dict[int, int | Tuple[int, int]]
+Remapping = dict[int, int | tuple[int, int]]
 
 # Maps the color characters to special palette index
 COLOR_CODES_INGAME: Remapping = {
@@ -122,7 +122,7 @@ def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> 
 	f.save_file(file)
 	return None
 
-Size = Tuple[int, int, int, int]
+Size = tuple[int, int, int, int]
 
 class FNT:
 	def __init__(self) -> None:

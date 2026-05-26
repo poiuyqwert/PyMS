@@ -78,7 +78,7 @@ class MPQFileEntry:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, MPQFileEntry):
-			return False
+			return NotImplemented
 		return self.file_name == other.file_name and self.locale == other.locale
 
 	def __hash__(self) -> int:

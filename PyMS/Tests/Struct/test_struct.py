@@ -18,7 +18,7 @@ class Sub(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Sub):
-			return False
+			return NotImplemented
 		if other.u8 != self.u8:
 			return False
 		if other.s64 != self.s64:
@@ -127,7 +127,7 @@ class Test(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Test):
-			return False
+			return NotImplemented
 		if other.s8 != self.s8:
 			return False
 		if other.u8 != self.u8:

@@ -95,7 +95,7 @@ class UnitProperties(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, UnitProperties):
-			return False
+			return NotImplemented
 		if other.fields_available_flags != self.fields_available_flags:
 			return False
 		if other.state_flags != self.state_flags:

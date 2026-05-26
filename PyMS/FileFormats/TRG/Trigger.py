@@ -40,7 +40,7 @@ class Execution(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Execution):
-			return False
+			return NotImplemented
 		if other.flags != self.flags:
 			return False
 		if other.player_groups != self.player_groups:
@@ -159,7 +159,7 @@ class Trigger(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Trigger):
-			return False
+			return NotImplemented
 		if other.execution != self.execution:
 			return False
 		if other.conditions != self.conditions:

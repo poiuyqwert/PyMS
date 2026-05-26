@@ -85,7 +85,7 @@ class Field:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Field):
-			return False
+			return NotImplemented
 		return other.value == self.value
 
 	def __add__(self, other: EventPattern | Field) -> EventPattern:

@@ -118,7 +118,7 @@ class Condition(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Condition):
-			return False
+			return NotImplemented
 		if other.fields != self.fields:
 			return False
 		return True

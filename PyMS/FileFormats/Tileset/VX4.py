@@ -35,6 +35,11 @@ class VX4Minitile:
 	def __hash__(self) -> int:
 		return hash((self.image_id, self.flipped))
 
+	def __eq__(self, other: object) -> bool:
+		if not isinstance(other, VX4Minitile):
+			return NotImplemented
+		return self.image_id == other.image_id and self.flipped == other.flipped
+
 class VX4Megatile:
 	def __init__(self, minitiles: list[VX4Minitile] | None = None) -> None:
 		if minitiles is None:
@@ -58,6 +63,11 @@ class VX4Megatile:
 	def __hash__(self) -> int:
 		return hash(tuple(self.minitiles))
 
+	def __eq__(self, other: object) -> bool:
+		if not isinstance(other, VX4Megatile):
+			return NotImplemented
+		return self.minitiles == other.minitiles
+
 class VX4:
 	MAX_ID = 65535
 
@@ -79,7 +89,10 @@ class VX4:
 		return (VX4.MAX_ID+1) - len(self._megatiles)
 
 	def find_megatile_ids(self, megatile: VX4Megatile) -> list[int]:
-		return self._lookup.get(hash(megatile), [])
+		# Verify each hash hit with `==` so colliding-but-distinct megatiles
+		# don't get treated as duplicates (callers reuse the returned tile ids).
+		candidates = self._lookup.get(hash(megatile), [])
+		return [tile_id for tile_id in candidates if self._megatiles[tile_id] == megatile]
 
 	def get_megatile(self, tile_id: int) -> VX4Megatile:
 		return self._megatiles[tile_id]

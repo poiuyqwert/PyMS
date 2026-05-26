@@ -206,7 +206,7 @@ class CV5Group:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, CV5Group):
-			return False
+			return NotImplemented
 		if other.type != self.type:
 			return False
 		if other.flags != self.flags:

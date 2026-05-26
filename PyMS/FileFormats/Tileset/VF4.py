@@ -28,7 +28,7 @@ class VF4Megatile:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, VF4Megatile):
-			return False
+			return NotImplemented
 		return other.flags == self.flags
 
 class VF4:

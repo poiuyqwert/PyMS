@@ -234,7 +234,7 @@ class FileType(tuple[str, str]):
 	# Both `name` and `extensions` must be equal, unless `extensions == FileType.WILDCARD` then the names don't need to match
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, FileType):
-			return False
+			return NotImplemented
 		if not self.extensions == other.extensions:
 			return False
 		if self.extensions == FileType.WILDCARD:

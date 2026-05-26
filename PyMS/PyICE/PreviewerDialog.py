@@ -57,7 +57,7 @@ class Preview:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Preview):
-			return False
+			return NotImplemented
 		return other.image_id == self.image_id and other.frame == self.frame
 
 	def next_frame(self, frame: int) -> Preview:

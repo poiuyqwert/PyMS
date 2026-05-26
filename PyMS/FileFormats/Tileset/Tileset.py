@@ -31,7 +31,8 @@ import os, math
 from dataclasses import dataclass
 from enum import Enum
 
-from typing import Callable, cast, Sequence
+from collections.abc import Callable, Sequence
+from typing import cast
 
 
 def megatile_to_photo(tileset: Tileset, megatile_id: int) -> Image:

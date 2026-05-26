@@ -82,7 +82,7 @@ class Type:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Type):
-			return False
+			return NotImplemented
 		return other._format == self._format
 
 class PadType(Type):
@@ -98,7 +98,7 @@ class PadType(Type):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, PadType):
-			return False
+			return NotImplemented
 		if other._format != self._format:
 			return False
 		if other.length != self.length:
@@ -160,7 +160,7 @@ class StringType(Type, Processed):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, StringType):
-			return False
+			return NotImplemented
 		if other._format != self._format:
 			return False
 		if other.length != self.length:
@@ -492,7 +492,7 @@ class MixedInts:
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, MixedInts):
-			return False
+			return NotImplemented
 		if other.types != self.types:
 			return False
 		return True
@@ -735,7 +735,7 @@ class StructArray(Generic[S]):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, StructArray):
-			return False
+			return NotImplemented
 		if other.struct_type != self.struct_type:
 			return False
 		if other.count != self.count:

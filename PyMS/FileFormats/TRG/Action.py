@@ -201,7 +201,7 @@ class Action(Struct.Struct):
 
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Action):
-			return False
+			return NotImplemented
 		if other.fields != self.fields:
 			return False
 		return True
