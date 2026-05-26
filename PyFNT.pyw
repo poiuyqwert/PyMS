@@ -65,7 +65,7 @@ def main(): # type: () -> None
 						bmp = BMP()
 						print("Reading BMP '%s'..." % args[0])
 						try:
-							bmp.load_file(args[0])
+							bmp.load(args[0])
 							print(" - '%s' read successfully\nDecompiling BMP to file '%s'..." % (args[0], args[1]))
 							bmptofnt(bmp, lowi, letters, args[1])
 							print(" - '%s' written succesfully" % args[1])

@@ -102,7 +102,7 @@ class Palette:
 	def load_bmp(self, data: bytes) -> RawPalette:
 		bmp = BMP()
 		try:
-			bmp.load_data(data)
+			bmp.load(data)
 		except Exception as exc:
 			raise PyMSError('Palette', "Unsupported BMP palette file, could possibly be corrupt") from exc
 		return bmp.palette

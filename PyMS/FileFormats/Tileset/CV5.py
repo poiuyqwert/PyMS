@@ -278,4 +278,3 @@ class CV5:
 				raise PyMSError('Save', f"Could not save the CV5 to '{file}'") from exc
 		else:
 			file.write(data)
-			file.close()

@@ -117,7 +117,7 @@ class PaletteTab(NotebookTab):
 		if filepath:
 			bmp = BMP.BMP()
 			bmp.set_pixels(self.delegate.selected_image.pixels, self.delegate.platform_wpe.palette)
-			bmp.save_file(filepath)
+			bmp.save(filepath)
 
 	def import_image(self, *_args: Any) -> None:
 		if not self.delegate.spk:

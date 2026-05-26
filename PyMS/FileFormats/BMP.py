@@ -1,13 +1,12 @@
 
+from __future__ import annotations
+
 from .Images import Pixels, RawPalette
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, math
-
-from typing import BinaryIO
 
 def getPadding(value: int, alignment: int) -> int:
 	return int(math.ceil(value/float(alignment)))*alignment - value
@@ -61,11 +60,9 @@ class BMP:
 		self.palette: RawPalette = palette if palette is not None else []
 		self.image: Pixels = []
 
-	def load_file(self, file: str | BinaryIO, issize: tuple[int, int] | None = None) -> None:
-		data = load_file(file, 'BMP')
-		self.load_data(data, issize=issize)
-
-	def load_data(self, data: bytes, issize: tuple[int, int] | None = None) -> None:
+	def load(self, any_input: IO.AnyInputBytes, issize: tuple[int, int] | None = None) -> None:
+		with IO.InputBytes(any_input) as input_bytes:
+			data = input_bytes.read()
 		if data[:2] != b'BM':
 			raise PyMSError('Load',"Invalid BMP file (no BMP header)")
 		try:
@@ -110,11 +107,7 @@ class BMP:
 			self.palette = list(palette)
 		self.image = [list(y) for y in image]
 
-	def save_file(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file,'wb')
-		except Exception as exc:
-			raise PyMSError('Save',f"Could not save BMP to file '{file}'") from exc
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''
 		pad = getPadding(self.width,4)
 		for y in self.image:
@@ -128,5 +121,5 @@ class BMP:
 			t.reverse()
 			data = struct.pack('<3Bx', t[0], t[1], t[2]) + data
 		data = struct.pack('<HH4LHH6L', 0, 0, 1078, 40, self.width, self.height, 1, 8, 0, len(data) - 1024, 0, 0, 0, 0) + data
-		f.write(b'BM' + struct.pack('<L',len(data) + 6) + data)
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(b'BM' + struct.pack('<L',len(data) + 6) + data)

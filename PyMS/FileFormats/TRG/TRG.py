@@ -90,7 +90,7 @@ class TRG:
 						f.write(TRG.STRING_STRUCT.pack(string))
 					if action.flags & ActionFlag.unit_property_used:
 						properties: UnitProperties
-						if action.flags & ActionFlag.unit_property_used:
+						if action.unit_properties_index in self.unit_properties:
 							properties = self.unit_properties[action.unit_properties_index]
 						else:
 							properties = UnitProperties()

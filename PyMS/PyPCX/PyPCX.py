@@ -222,7 +222,7 @@ class PyPCX(MainWindow):
 		b = BMP()
 		b.set_pixels(self.pcx.image,self.pcx.palette)
 		try:
-			b.save_file(file)
+			b.save(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -236,7 +236,7 @@ class PyPCX(MainWindow):
 			return
 		b = BMP()
 		try:
-			b.load_file(file)
+			b.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return

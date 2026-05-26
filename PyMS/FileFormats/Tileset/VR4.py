@@ -44,7 +44,7 @@ class VR4:
 	def find_image_ids(self, image: VR4ImageInput) -> tuple[list[int], list[int]]:
 		image = tuple(tuple(r) for r in image)
 		image_hash, flipped_hash = self.image_hashes(image)
-		return (self._lookup.get(image_hash, []), self._lookup.get(flipped_hash, []))
+		return (list(self._lookup.get(image_hash, ())), list(self._lookup.get(flipped_hash, ())))
 
 	def add_image(self, image: VR4ImageInput) -> None:
 		correct_size = (len(image) == 8)

@@ -107,7 +107,7 @@ def fnttobmp(fnt: FNT, pal: RawPalette, file: str | None = None) -> BMP.BMP | No
 	b.width = len(b.image[0])
 	if file is None:
 		return b
-	b.save_file(file)
+	b.save(file)
 	return None
 
 def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> FNT | None:

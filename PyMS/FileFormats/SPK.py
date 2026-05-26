@@ -81,7 +81,7 @@ class SPK:
 	def interpret_file(self, filepath: str, layer_count: int) -> None:
 		bmp = BMP.BMP()
 		try:
-			bmp.load_file(filepath)
+			bmp.load(filepath)
 		except Exception as exc:
 			raise PyMSError('Interpreting', f"Could not load file '{filepath}'") from exc
 		height = int(bmp.height / float(layer_count))
@@ -197,7 +197,7 @@ class SPK:
 							image[star.y+y+ly][star.x+x] = star.image.pixels[y][x]
 		bmp = BMP.BMP()
 		bmp.set_pixels(image, palette.palette)
-		bmp.save_file(filepath)
+		bmp.save(filepath)
 
 # import PAL, BMP
 # if __name__ == '__main__':

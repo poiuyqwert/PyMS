@@ -560,7 +560,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.status.set('Importing FNT, please wait...')
 		b = BMP()
 		try:
-			b.load_file(file)
+			b.load(file)
 			fnt = bmptofnt(b,s.lowi.get(),s.letters.get())
 		except PyMSError as e:
 			ErrorDialog(self, e)

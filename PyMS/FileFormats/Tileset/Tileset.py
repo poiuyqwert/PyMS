@@ -241,7 +241,7 @@ class Tileset:
 		pixels: list[list[int]] = []
 		for path in bmpfiles:
 			bmp = BMP()
-			bmp.load_file(path)
+			bmp.load(path)
 			if tiletype == TileType.group and (bmp.width != 512 or bmp.height % 32):
 				raise PyMSError('Interpreting', f'The image is not the correct size for tile groups (got {bmp.width}x{bmp.height}, expected width to be 512 and height to be a multiple of 32)')
 			elif tiletype == TileType.mega and (bmp.width % 32 or bmp.height % 32):
@@ -288,9 +288,9 @@ class Tileset:
 						del new_images[i]
 						minitile_details.append(VX4Minitile(existing_all_ids[0], flipped))
 				if not found:
-					existing_normal_ids = image_lookup.get(image_hash,[])
+					existing_normal_ids = list(image_lookup.get(image_hash, ()))
 					flipped_hash = VR4.image_hash(image, True)
-					existing_flipped_ids = image_lookup.get(flipped_hash,[])
+					existing_flipped_ids = list(image_lookup.get(flipped_hash, ()))
 					existing_all_ids = existing_normal_ids + existing_flipped_ids
 					if len(existing_all_ids) and (options.minitiles_reuse_duplicates_new or options.minitiles_reuse_null_with_id in existing_all_ids):
 						flipped = not existing_normal_ids
@@ -373,15 +373,15 @@ class Tileset:
 				if tiletype == TileType.group and options.groups_ignore_extra and groups > len(ids):
 					groups = len(ids)
 				for n in range(groups):
-					megatile_ids = megatile_ids[n*16:(n+1)*16]
+					group_megatile_ids = megatile_ids[n*16:(n+1)*16]
 					if len(ids):
 						image_id = ids[0]
 						del ids[0]
-						update_groups.append((image_id,megatile_ids))
+						update_groups.append((image_id,group_megatile_ids))
 					else:
 						if tiletype == TileType.group:
 							new_ids.append(self.cv5.group_count() + len(new_groups))
-						new_groups.append(megatile_ids)
+						new_groups.append(group_megatile_ids)
 				if len(new_groups) > self.groups_remaining():
 					raise PyMSError('Importing', f'Import aborted because it exceeded the maximum megatile group count ({self.cv5.group_count()} + {len(new_groups)} > {CV5.MAX_ID+1})')
 		# Update minitiles
@@ -451,7 +451,7 @@ class Tileset:
 				image = self.vr4.get_image(mini_id)
 				for row_y,row in enumerate(image):
 					bmp.image[mini_y+row_y].extend(row)
-		bmp.save_file(path)
+		bmp.save(path)
 
 	def export_group_settings(self, output: IO.AnyOutputText, ids: Sequence[int], fields: Serialize.Fields | None = None) -> None:
 		with IO.OutputText(output) as file:

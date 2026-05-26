@@ -100,7 +100,7 @@ def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMP
 				if not mute:
 					print(f"Writing BMP '{name}'...")
 				out.set_pixels(frame)
-				out.save_file(os.path.join(path,name))
+				out.save(os.path.join(path,name))
 				if not mute:
 					print(f" - '{name}' written succesfully")
 			n += 1
@@ -111,7 +111,7 @@ def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMP
 		out.height = len(out.image)
 		out.width = len(out.image[0])
 		name = f'{bmpname}{os.extsep}bmp'
-		out.save_file(os.path.join(path,name))
+		out.save(os.path.join(path,name))
 		if not mute:
 			print(f" - '{name}' written succesfully")
 
@@ -124,7 +124,7 @@ def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, b
 		fullfile = os.path.join(path,bmp)
 		if not mute:
 			print(f"Reading BMP '{fullfile}'...")
-		inp.load_file(fullfile)
+		inp.load(fullfile)
 		if vertical:
 			out.width = inp.width
 			out.height = inp.height // frames
@@ -171,7 +171,7 @@ def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, b
 					fullfile = os.path.join(path,f)
 					if not mute:
 						print(f"Reading BMP '{fullfile}'...")
-					inp.load_file(fullfile)
+					inp.load(fullfile)
 					if found % 2:
 						if issize and inp.width != issize[0] and inp.height != issize[1]:
 							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Expected {issize[0]}x{issize[1]}, got {inp.width}x{inp.height})")
