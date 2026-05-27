@@ -132,7 +132,7 @@ class DATSupplyCoder(DATPropertyCoder[DATTypeSupply, Mapping[str, int]]):
 	def encode(self, supply: DATTypeSupply) -> Mapping[str, Any]:
 		values = OrderedDict()
 		values['whole'] = supply.whole
-		values['half'] = True if supply.half else False
+		values['half'] = supply.half
 		return values
 
 	def decode(self, values: Mapping[str, int]) -> DATTypeSupply:
@@ -142,7 +142,7 @@ class DATSupplyCoder(DATPropertyCoder[DATTypeSupply, Mapping[str, int]]):
 			raise PyMSError('Decode', 'Supply missing `half` value')
 		supply = DATTypeSupply()
 		supply.whole = values['whole']
-		supply.half = True if values['half'] else False
+		supply.half = bool(values['half'])
 		return supply
 
 class DATBoolCoder(DATPropertyCoder[int, Any]):

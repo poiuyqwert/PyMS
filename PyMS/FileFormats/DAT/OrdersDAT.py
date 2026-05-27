@@ -98,18 +98,18 @@ class DATOrder(AbstractDAT.AbstractDATEntry):
 	EXPORT_NAME = 'Order'
 	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATOrder.Property.label, self.label, data)
-		self._export_property_value(export_properties, DATOrder.Property.use_weapon_targeting, self.use_weapon_targeting, data, _OrderPropertyCoder.use_weapon_targeting)
-		self._export_property_value(export_properties, DATOrder.Property.unused_is_secondary, self.unused_is_secondary, data, _OrderPropertyCoder.unused_is_secondary)
-		self._export_property_value(export_properties, DATOrder.Property.unused_allow_non_subunits, self.unused_allow_non_subunits, data, _OrderPropertyCoder.unused_allow_non_subunits)
-		self._export_property_value(export_properties, DATOrder.Property.changes_subunit_order, self.changes_subunit_order, data, _OrderPropertyCoder.changes_subunit_order)
-		self._export_property_value(export_properties, DATOrder.Property.unused_allow_subunits, self.unused_allow_subunits, data, _OrderPropertyCoder.unused_allow_subunits)
-		self._export_property_value(export_properties, DATOrder.Property.interruptable, self.interruptable, data, _OrderPropertyCoder.interruptable)
-		self._export_property_value(export_properties, DATOrder.Property.waypoints_slowdown, self.waypoints_slowdown, data, _OrderPropertyCoder.waypoints_slowdown)
-		self._export_property_value(export_properties, DATOrder.Property.queueable, self.queueable, data, _OrderPropertyCoder.queueable)
-		self._export_property_value(export_properties, DATOrder.Property.disabled_maintain_unit_target, self.disabled_maintain_unit_target, data, _OrderPropertyCoder.disabled_maintain_unit_target)
-		self._export_property_value(export_properties, DATOrder.Property.obstructable, self.obstructable, data, _OrderPropertyCoder.obstructable)
-		self._export_property_value(export_properties, DATOrder.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, data, _OrderPropertyCoder.flee_unreturnable_damage)
-		self._export_property_value(export_properties, DATOrder.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, data, _OrderPropertyCoder.unused_requires_movable_unit)
+		self._export_property_value(export_properties, DATOrder.Property.use_weapon_targeting, self.use_weapon_targeting, data, property_encoder=_OrderPropertyCoder.use_weapon_targeting)
+		self._export_property_value(export_properties, DATOrder.Property.unused_is_secondary, self.unused_is_secondary, data, property_encoder=_OrderPropertyCoder.unused_is_secondary)
+		self._export_property_value(export_properties, DATOrder.Property.unused_allow_non_subunits, self.unused_allow_non_subunits, data, property_encoder=_OrderPropertyCoder.unused_allow_non_subunits)
+		self._export_property_value(export_properties, DATOrder.Property.changes_subunit_order, self.changes_subunit_order, data, property_encoder=_OrderPropertyCoder.changes_subunit_order)
+		self._export_property_value(export_properties, DATOrder.Property.unused_allow_subunits, self.unused_allow_subunits, data, property_encoder=_OrderPropertyCoder.unused_allow_subunits)
+		self._export_property_value(export_properties, DATOrder.Property.interruptable, self.interruptable, data, property_encoder=_OrderPropertyCoder.interruptable)
+		self._export_property_value(export_properties, DATOrder.Property.waypoints_slowdown, self.waypoints_slowdown, data, property_encoder=_OrderPropertyCoder.waypoints_slowdown)
+		self._export_property_value(export_properties, DATOrder.Property.queueable, self.queueable, data, property_encoder=_OrderPropertyCoder.queueable)
+		self._export_property_value(export_properties, DATOrder.Property.disabled_maintain_unit_target, self.disabled_maintain_unit_target, data, property_encoder=_OrderPropertyCoder.disabled_maintain_unit_target)
+		self._export_property_value(export_properties, DATOrder.Property.obstructable, self.obstructable, data, property_encoder=_OrderPropertyCoder.obstructable)
+		self._export_property_value(export_properties, DATOrder.Property.flee_unreturnable_damage, self.flee_unreturnable_damage, data, property_encoder=_OrderPropertyCoder.flee_unreturnable_damage)
+		self._export_property_value(export_properties, DATOrder.Property.unused_requires_movable_unit, self.unused_requires_movable_unit, data, property_encoder=_OrderPropertyCoder.unused_requires_movable_unit)
 		self._export_property_value(export_properties, DATOrder.Property.weapon_targeting, self.weapon_targeting, data)
 		self._export_property_value(export_properties, DATOrder.Property.technology_energy, self.technology_energy, data)
 		self._export_property_value(export_properties, DATOrder.Property.iscript_animation, self.iscript_animation, data)
@@ -279,4 +279,4 @@ class OrdersDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "orders.dat"
 
 	def get_entry(self, index: int) -> DATOrder:
-		return cast(DATOrder, super(OrdersDAT, self).get_entry(index))
+		return cast(DATOrder, super().get_entry(index))

@@ -324,7 +324,7 @@ class UnitIDCodeType(CodeTypes.UnitCodeType, CodeType.HasKeywords):
 		return super().lex(parse_context)
 
 	def validate(self, num: int, parse_context: ParseContext, token: str | None = None) -> None:
-		if num >= 228 and num <= 232:
+		if 228 <= num <= 232:
 			return
 		super().validate(num, parse_context, token)
 
@@ -353,7 +353,7 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
 		return isinstance(other_type, (CodeTypes.UnitCodeType, CodeTypes.BuildingCodeType, CodeTypes.MilitaryCodeType, CodeTypes.GGMilitaryCodeType, CodeTypes.AGMilitaryCodeType, CodeTypes.GAMilitaryCodeType, CodeTypes.AAMilitaryCodeType))
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> UnitGroup:
+	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> UnitGroup:
 		value = scanner.scan(Struct.l_u16)
 		if value < 0xFF00:
 			return (value,)
@@ -514,7 +514,7 @@ class IdleOrderFlagsCodeType(CodeType.CodeType[AISEIdleOrder.OptionSet, AISEIdle
 	Remove"""
 		super().__init__('idle_order_flags', help_text, Struct.l_u16, False)
 
-	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> AISEIdleOrder.OptionSet:
+	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> AISEIdleOrder.OptionSet:
 		return AISEIdleOrder.OptionSet.decompile(0, scanner)
 
 	def compile(self, value: AISEIdleOrder.OptionSet, context: ByteCodeBuilderType) -> None:

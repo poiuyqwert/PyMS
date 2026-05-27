@@ -51,7 +51,7 @@ class DATSound(AbstractDAT.AbstractDATEntry):
 	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATSound.Property.sound_file, self.sound_file, data)
 		self._export_property_value(export_properties, DATSound.Property.priority, self.priority, data)
-		self._export_property_value(export_properties, DATSound.Property.flags, self.flags, data, _SoundPropertyCoder.flags)
+		self._export_property_value(export_properties, DATSound.Property.flags, self.flags, data, property_encoder=_SoundPropertyCoder.flags)
 		self._export_property_value(export_properties, DATSound.Property.portrait_length_adjust, self.portrait_length_adjust, data)
 		self._export_property_value(export_properties, DATSound.Property.minimum_volume, self.minimum_volume, data)
 
@@ -113,4 +113,4 @@ class SoundsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "sfxdata.dat"
 
 	def get_entry(self, index: int) -> DATSound:
-		return cast(DATSound, super(SoundsDAT, self).get_entry(index))
+		return cast(DATSound, super().get_entry(index))

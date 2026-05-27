@@ -50,9 +50,9 @@ class RLE:
 				image[-1].extend([data[offset+1]] * data[offset])
 			offset += 2
 		image.reverse()
-		for y in range(len(image)):
-			if len(image[y]) > width:
-				del image[y][width:]
+		for row in image:
+			if len(row) > width:
+				del row[width:]
 		return image
 
 class BMP:
@@ -88,9 +88,9 @@ class BMP:
 					x = pixels_offset+(width+pad)*y
 					image.append(list(int(v) for v in struct.unpack(f"{width}B{'x' * pad}",data[x:x+width+pad])))
 				image.reverse()
-				for y in range(len(image)):
-					if len(image[y]) > width:
-						del image[y][width:]
+				for row in image:
+					if len(row) > width:
+						del row[width:]
 			else:
 				image = RLE.decompress(data[pixels_offset:], width, height)
 		except PyMSError:

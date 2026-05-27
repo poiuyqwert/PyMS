@@ -320,7 +320,7 @@ class UnitProps(Option):
 
 	@staticmethod
 	def uses_fixed_point_decimal(field: int, comparison: int) -> bool:
-		return field < UnitProps.Field.hangar and (comparison == UnitProps.Comparison.less_than or comparison == UnitProps.Comparison.greater_than)
+		return field < UnitProps.Field.hangar and comparison in (UnitProps.Comparison.less_than, UnitProps.Comparison.greater_than)
 
 	def serialize(self) -> str:
 		amount: float = self.amount

@@ -80,7 +80,7 @@ class DATUpgrade(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATUpgrade.Property.label, self.label, data)
 		self._export_property_value(export_properties, DATUpgrade.Property.staredit_race, self.staredit_race, data)
 		self._export_property_value(export_properties, DATUpgrade.Property.max_repeats, self.max_repeats, data)
-		self._export_property_value(export_properties, DATUpgrade.Property.broodwar_only, self.broodwar_only, data, _UpgradePropertyCoder.broodwar_only)
+		self._export_property_value(export_properties, DATUpgrade.Property.broodwar_only, self.broodwar_only, data, property_encoder=_UpgradePropertyCoder.broodwar_only)
 
 	def _import_data(self, data: dict[str, Any]) -> None:
 		mineral_cost_base = self._import_property_value(data, DATUpgrade.Property.mineral_cost_base)
@@ -184,4 +184,4 @@ class UpgradesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "upgrades.dat"
 
 	def get_entry(self, index: int) -> DATUpgrade:
-		return cast(DATUpgrade, super(UpgradesDAT, self).get_entry(index))
+		return cast(DATUpgrade, super().get_entry(index))

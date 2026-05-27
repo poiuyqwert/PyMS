@@ -74,8 +74,8 @@ class DATTechnology(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATTechnology.Property.icon, self.icon, data)
 		self._export_property_value(export_properties, DATTechnology.Property.label, self.label, data)
 		self._export_property_value(export_properties, DATTechnology.Property.staredit_race, self.staredit_race, data)
-		self._export_property_value(export_properties, DATTechnology.Property.researched, self.researched, data, _TechnologyPropertyCoder.researched)
-		self._export_property_value(export_properties, DATTechnology.Property.broodwar_only, self.broodwar_only, data, _TechnologyPropertyCoder.broodwar_only)
+		self._export_property_value(export_properties, DATTechnology.Property.researched, self.researched, data, property_encoder=_TechnologyPropertyCoder.researched)
+		self._export_property_value(export_properties, DATTechnology.Property.broodwar_only, self.broodwar_only, data, property_encoder=_TechnologyPropertyCoder.broodwar_only)
 
 	def _import_data(self, data: dict[str, Any]) -> None:
 		mineral_cost = self._import_property_value(data, DATTechnology.Property.mineral_cost)
@@ -173,4 +173,4 @@ class TechDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "techdata.dat"
 
 	def get_entry(self, index: int) -> DATTechnology:
-		return cast(DATTechnology, super(TechDAT, self).get_entry(index))
+		return cast(DATTechnology, super().get_entry(index))

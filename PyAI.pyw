@@ -141,7 +141,7 @@ def main(): # type: () -> None
 					print(" - Loading finished successfully\nCompiling script '%s'..." % args[0])
 					lexer = AILexer(code)
 					parse_context = AIParseContext(lexer, parse_settings, definitions_handler, data_context)
-					bin.compile(parse_context)
+					aibin.compile(parse_context)
 					warnings = parse_context.warnings
 					print(" - '%s' compiled successfully\nSaving file '%s' to aiscript.bin '%s' and bwscript.bin '%s'..." % (args[0], args[0], args[1], args[2]))
 					aibin.save(args[1], args[2])

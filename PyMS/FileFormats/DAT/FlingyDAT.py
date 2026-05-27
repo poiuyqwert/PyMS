@@ -120,4 +120,4 @@ class FlingyDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "flingy.dat"
 
 	def get_entry(self, index: int) -> DATFlingy:
-		return cast(DATFlingy, super(FlingyDAT, self).get_entry(index))
+		return cast(DATFlingy, super().get_entry(index))

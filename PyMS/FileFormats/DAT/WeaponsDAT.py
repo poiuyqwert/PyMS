@@ -132,7 +132,7 @@ class DATWeapon(AbstractDAT.AbstractDATEntry):
 		self._export_property_value(export_properties, DATWeapon.Property.label, self.label, data)
 		self._export_property_value(export_properties, DATWeapon.Property.graphics, self.graphics, data)
 		self._export_property_value(export_properties, DATWeapon.Property.unused_technology, self.unused_technology, data)
-		self._export_property_value(export_properties, DATWeapon.Property.target_flags, self.target_flags, data, _WeaponPropertyCoder.target_flags)
+		self._export_property_value(export_properties, DATWeapon.Property.target_flags, self.target_flags, data, property_encoder=_WeaponPropertyCoder.target_flags)
 		self._export_property_value(export_properties, DATWeapon.Property.minimum_range, self.minimum_range, data)
 		self._export_property_value(export_properties, DATWeapon.Property.maximum_range, self.maximum_range, data)
 		self._export_property_value(export_properties, DATWeapon.Property.damage_upgrade, self.damage_upgrade, data)
@@ -350,4 +350,4 @@ class WeaponsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "weapons.dat"
 
 	def get_entry(self, index: int) -> DATWeapon:
-		return cast(DATWeapon, super(WeaponsDAT, self).get_entry(index))
+		return cast(DATWeapon, super().get_entry(index))

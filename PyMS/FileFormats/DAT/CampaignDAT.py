@@ -44,4 +44,4 @@ class CampaignDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "mapdata.dat"
 
 	def get_entry(self, index: int) -> DATMap:
-		return cast(DATMap, super(CampaignDAT, self).get_entry(index))
+		return cast(DATMap, super().get_entry(index))

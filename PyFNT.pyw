@@ -9,8 +9,10 @@ def main(): # type: () -> None
 
 	from PyMS.FileFormats.FNT import FNT, fnttobmp, bmptofnt
 	from PyMS.FileFormats.BMP import BMP
+	from PyMS.FileFormats.Palette import Palette
 
 	from PyMS.Utilities.PyMSError import PyMSError
+	from PyMS.Utilities import Assets
 
 	import os, optparse, sys
 
@@ -37,12 +39,20 @@ def main(): # type: () -> None
 			if len(args) == 1:
 				args.append('%s%s%s' % (os.path.join(path,os.extsep.join(os.path.basename(args[0]).split(os.extsep)[:-1])), os.extsep, ext))
 			if opt.convert:
+				pal = Palette()
+				print("Reading Icons.pal...")
+				try:
+					pal.load_file(Assets.palette_file_path('Icons.pal'))
+					print(" - Read Icons.pal successfully")
+				except PyMSError as e:
+					print(repr(e))
+					return
 				fnt = FNT()
 				print("Reading FNT '%s'..." % args[0])
 				try:
 					fnt.load_file(args[0])
 					print(" - '%s' read successfully\nDecompiling FNT to file '%s'..." % (args[0], args[1]))
-					fnttobmp(fnt,args[1])
+					fnttobmp(fnt, pal.palette, args[1])
 					print(" - '%s' written succesfully" % args[1])
 				except PyMSError as e:
 					print(repr(e))

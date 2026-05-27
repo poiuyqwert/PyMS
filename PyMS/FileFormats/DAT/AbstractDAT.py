@@ -191,7 +191,7 @@ class AbstractDAT:
 		file.write(data)
 		file.close()
 
-	def export_entries(self, entry_ids: list[int] | None = None, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
+	def export_entries(self, entry_ids: list[int] | None = None, *, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		if not entry_ids:
 			entry_ids = list(range(self.entry_count()))
 		data: list[OrderedDict] = []
@@ -202,13 +202,13 @@ class AbstractDAT:
 		return self._export(data, export_type, json_dump, json_indent)
 
 	@overload
-	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: Literal[ExportType.text] = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str:
+	def export_entry(self, entry_id: int, *, export_properties: list[str] | None = None, export_type: Literal[ExportType.text] = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str:
 		...
 	@overload
-	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: Literal[ExportType.json] = ExportType.json, json_dump: bool = False, json_indent: int = 4) -> OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
+	def export_entry(self, entry_id: int, *, export_properties: list[str] | None = None, export_type: Literal[ExportType.json] = ExportType.json, json_dump: bool = False, json_indent: int = 4) -> OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		...
 	# Export some or all `export_properties` (`None` or emptry array for all properties, or an array of property names for a subset) to the specified format
-	def export_entry(self, entry_id: int, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
+	def export_entry(self, entry_id: int, *, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		data = self.get_entry(entry_id).export_data(entry_id, export_properties)
 		return self._export(data, export_type, json_dump, json_indent)
 
@@ -321,7 +321,7 @@ class AbstractDATEntry:
 	def _import_data(self, data: dict[str, Any]) -> None:
 		pass
 
-	def _export_property_value(self, export_properties: list[str] | None, prop: str, value: Any, data: dict[str, Any], property_encoder: DATPropertyCoder | None = None) -> None:
+	def _export_property_value(self, export_properties: list[str] | None, prop: str, value: Any, data: dict[str, Any], *, property_encoder: DATPropertyCoder | None = None) -> None:
 		if value is None or (export_properties and not prop in export_properties):
 			return
 		if property_encoder:

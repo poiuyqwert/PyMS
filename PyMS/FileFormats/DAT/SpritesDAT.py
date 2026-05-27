@@ -66,8 +66,8 @@ class DATSprite(AbstractDAT.AbstractDATEntry):
 	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATSprite.Property.image, self.image, data)
 		self._export_property_value(export_properties, DATSprite.Property.health_bar, self.health_bar, data)
-		self._export_property_value(export_properties, DATSprite.Property.unused, self.unused, data, _SpritePropertyCoder.unused)
-		self._export_property_value(export_properties, DATSprite.Property.is_visible, self.is_visible, data, _SpritePropertyCoder.is_visible)
+		self._export_property_value(export_properties, DATSprite.Property.unused, self.unused, data, property_encoder=_SpritePropertyCoder.unused)
+		self._export_property_value(export_properties, DATSprite.Property.is_visible, self.is_visible, data, property_encoder=_SpritePropertyCoder.is_visible)
 		self._export_property_value(export_properties, DATSprite.Property.selection_circle_image, self.selection_circle_image, data)
 		self._export_property_value(export_properties, DATSprite.Property.selection_circle_offset, self.selection_circle_offset, data)
 
@@ -138,4 +138,4 @@ class SpritesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "sprites.dat"
 
 	def get_entry(self, index: int) -> DATSprite:
-		return cast(DATSprite, super(SpritesDAT, self).get_entry(index))
+		return cast(DATSprite, super().get_entry(index))

@@ -148,11 +148,11 @@ class DATTypeSupply(DATType):
 	STRUCT = struct.Struct('<B')
 
 	def __init__(self) -> None:
-		self.whole = 0
-		self.half = False
+		self.whole: int = 0
+		self.half: bool = False
 
 	def load_data(self, data: bytes, offset: int) -> None:
-		value = self.unpack_data(data, offset)[0]
+		value: int = self.unpack_data(data, offset)[0]
 		self.whole = value >> 1
 		self.half = (value & 1) == 1
 
@@ -238,4 +238,4 @@ class DATProperty:
 	def is_on_entry(self, entry_id: int) -> bool:
 		if not self.entry_offset or not self._entry_count:
 			return True
-		return (entry_id >= self.entry_offset and entry_id < (self.entry_offset + self._entry_count))
+		return self.entry_offset <= entry_id < (self.entry_offset + self._entry_count)

@@ -23,8 +23,9 @@ class CHKSection:
 	def decompile(self) -> str:
 		raise NotImplementedError(self.__class__.__name__ + '.decompile()')
 
-	def interpret(self, text: str) -> None:
-		raise NotImplementedError(self.__class__.__name__ + '.interpret()')
+	# TODO: Interpret
+	# def interpret(self, text: str) -> None:
+	# 	raise NotImplementedError(self.__class__.__name__ + '.interpret()')
 
 	def requires_post_processing(self) -> bool:
 		return False

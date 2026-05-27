@@ -45,8 +45,8 @@ class DATPortraits(AbstractDAT.AbstractDATEntry):
 
 	EXPORT_NAME = 'Portraits'
 	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
-		self._export_property_value(export_properties, DATPortraits.Property.idle, self.idle, data, _PortraitsPropertyCoder.idle)
-		self._export_property_value(export_properties, DATPortraits.Property.talking, self.talking, data, _PortraitsPropertyCoder.talking)
+		self._export_property_value(export_properties, DATPortraits.Property.idle, self.idle, data, property_encoder=_PortraitsPropertyCoder.idle)
+		self._export_property_value(export_properties, DATPortraits.Property.talking, self.talking, data, property_encoder=_PortraitsPropertyCoder.talking)
 
 	def _import_data(self, data: dict[str, Any]) -> None:
 		idle = self._import_property_value(data, DATPortraits.Property.idle, _PortraitsPropertyCoder.idle)
@@ -118,4 +118,4 @@ class PortraitsDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "portdata.dat"
 
 	def get_entry(self, index: int) -> DATPortraits:
-		return cast(DATPortraits, super(PortraitsDAT, self).get_entry(index))
+		return cast(DATPortraits, super().get_entry(index))

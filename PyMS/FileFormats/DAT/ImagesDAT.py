@@ -110,10 +110,10 @@ class DATImage(AbstractDAT.AbstractDATEntry):
 	EXPORT_NAME = 'Image'
 	def _export_data(self, export_properties: list[str] | None, data: OrderedDict[str, Any]) -> None:
 		self._export_property_value(export_properties, DATImage.Property.grp_file, self.grp_file, data)
-		self._export_property_value(export_properties, DATImage.Property.gfx_turns, self.gfx_turns, data, _ImagePropertyCoder.gfx_turns)
-		self._export_property_value(export_properties, DATImage.Property.clickable, self.clickable, data, _ImagePropertyCoder.clickable)
-		self._export_property_value(export_properties, DATImage.Property.use_full_iscript, self.use_full_iscript, data, _ImagePropertyCoder.use_full_iscript)
-		self._export_property_value(export_properties, DATImage.Property.draw_if_cloaked, self.draw_if_cloaked, data, _ImagePropertyCoder.draw_if_cloaked)
+		self._export_property_value(export_properties, DATImage.Property.gfx_turns, self.gfx_turns, data, property_encoder=_ImagePropertyCoder.gfx_turns)
+		self._export_property_value(export_properties, DATImage.Property.clickable, self.clickable, data, property_encoder=_ImagePropertyCoder.clickable)
+		self._export_property_value(export_properties, DATImage.Property.use_full_iscript, self.use_full_iscript, data, property_encoder=_ImagePropertyCoder.use_full_iscript)
+		self._export_property_value(export_properties, DATImage.Property.draw_if_cloaked, self.draw_if_cloaked, data, property_encoder=_ImagePropertyCoder.draw_if_cloaked)
 		self._export_property_value(export_properties, DATImage.Property.draw_function, self.draw_function, data)
 		self._export_property_value(export_properties, DATImage.Property.remapping, self.remapping, data)
 		self._export_property_value(export_properties, DATImage.Property.iscript_id, self.iscript_id, data)
@@ -243,4 +243,4 @@ class ImagesDAT(AbstractDAT.AbstractDAT):
 	FILE_NAME = "images.dat"
 
 	def get_entry(self, index: int) -> DATImage:
-		return cast(DATImage, super(ImagesDAT, self).get_entry(index))
+		return cast(DATImage, super().get_entry(index))
