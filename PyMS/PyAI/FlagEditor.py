@@ -25,6 +25,6 @@ class FlagEditor(PyMSDialog):
 		buttons.pack(pady=3, padx=3)
 		return ok
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.flags = AIFlag.flags(self.location.get(), self.visible.get(), self.bwonly.get())
 		PyMSDialog.ok(self)

@@ -307,10 +307,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 
 	def cancel(self, _: Event | None = None) -> None:
 		if self.edited_state.is_edited:
-			save = MessageBox.askquestion(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return
+			save = MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES)
+			if save is None:
+				return
+			if save:
 				self.save()
 		self.ok()
 
@@ -342,7 +342,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)
 		else:
-			MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
+			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
 	def export(self, _: Event | None = None) -> None:
 		if not self.file:
@@ -368,7 +368,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 				self.text.delete('1.0', END)
 				self.text.insert('1.0', contents)
 				self.text.edit_reset()
-			except Exception as e:
+			except Exception as e: # pylint: disable=broad-exception-caught
 				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'", cause=e))
 
 	def find(self, _: Event | None = None) -> None:

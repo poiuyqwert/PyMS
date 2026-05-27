@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 	from .WidgetNode import WidgetNode
 
 class SMKSettings(PyMSDialog, MainDelegate):
-	def __init__(self, parent: Misc, smk: DialogBIN.BINSMK, widget: WidgetNode, delegate: MainDelegate, window_pos: Point | None = None) -> None:
+	def __init__(self, parent: Misc, *, smk: DialogBIN.BINSMK, widget: WidgetNode, delegate: MainDelegate, window_pos: Point | None = None) -> None:
 		self.smk = smk
 		self.widget = widget
 		self.delegate = delegate
@@ -187,7 +187,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		pos = Geometry.of(self).pos
 		pos.x += 20
 		pos.y += 20
-		SMKSettings(self, dialog_bin.smks[self.overlay_smk.get()-1], self.widget, self, pos)
+		SMKSettings(self, smk=dialog_bin.smks[self.overlay_smk.get()-1], widget=self.widget, delegate=self, window_pos=pos)
 
 	def add_smk(self) -> None:
 		if not (dialog_bin := self.delegate.get_bin()):

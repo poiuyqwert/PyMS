@@ -11,7 +11,7 @@ from ..Utilities import ItemSelectDialog
 from typing import Sequence, Any
 
 class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
-	def __init__(self, parent: AnyWindow, delegate: EditScriptDelegate, config: WindowGeometry, script_id: str = 'MYAI', flags: int = 0, string_index: int = 0, title: str = 'Edit AI', initial: str = ''):
+	def __init__(self, parent: AnyWindow, *, delegate: EditScriptDelegate, config: WindowGeometry, script_id: str = 'MYAI', flags: int = 0, string_index: int = 0, title: str = 'Edit AI', initial: str = ''):
 		self.delegate = delegate
 		self.config_ = config
 		self.initialid = initial
@@ -107,8 +107,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			else:
 				if (stattxt_tbl := self.delegate.get_data_context().stattxt_tbl):
 					strs = len(stattxt_tbl.strings)-1
-					if string_index > strs:
-						string_index = strs
+					string_index = min(string_index, strs)
 			self.string.set(str(string_index))
 		self.validstring = string_index
 		self.actualstring.set(self.delegate.get_data_context().stattxt_string(string_index) or '')
@@ -139,10 +138,11 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		script_id = self.script_id.get()
 		aibin = self.delegate.get_ai_bin()
 		if self.initialid != script_id and aibin.get_script(script_id) is not None:
-			replace = MessageBox.askquestion(parent=self, title='Replace Script?', message=f"The script with ID '{script_id}' already exists, replace it?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if replace != MessageBox.YES:
-				if replace == MessageBox.NO:
-					self.cancel()
+			replace = MessageBox.askyesnocancel(parent=self, title='Replace Script?', message=f"The script with ID '{script_id}' already exists, replace it?", default=MessageBox.YES)
+			if replace is None:
+				return
+			if not replace:
+				self.cancel()
 				return
 		if not self.string.get():
 			self.string.set('0')

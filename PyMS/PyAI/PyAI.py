@@ -205,7 +205,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda _: self.action_states())
 		self.listbox.bind(ButtonRelease.Click_Right(), self.popup)
 		self.listbox.bind(Double.Click_Left(), self.codeedit)
-		ListboxTooltip(self.listbox, self)
+		ListboxTooltip(self.listbox, delegate=self)
 
 		self.listmenu = Menu(self, tearoff=0)
 		self.listmenu.add_command('Add Blank Script', self.add, Key.Insert, underline='b') # type: ignore
@@ -336,15 +336,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		bwscript = self.bwscript
 		if not bwscript:
 			bwscript = 'bwscript.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.aiscript:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def popup(self, event: Event) -> None:
 		if not self.ai:
@@ -407,7 +406,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		edited = False
 		if issues:
-			if FixIssuesDialog(self, ai, issues, self, self.config_).cancelled:
+			if FixIssuesDialog(self, aibin=ai, issues=issues, delegate=self, config=self.config_).cancelled:
 				return
 			edited = True
 		if ai.active_plugins:
@@ -503,7 +502,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if not_saved:
-			MessageBox.askquestion(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.', type=MessageBox.OK)
+			MessageBox.showinfo(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.')
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -561,7 +560,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if s > 65535:
 			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
 			return
-		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, title='Adding New AI Script')
+		dialog = EditScriptDialog(self, delegate=self, config=self.config_.windows.script_edit, title='Adding New AI Script')
 		script_id = dialog.script_id.get()
 		if not script_id:
 			return
@@ -597,7 +596,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if serialize_context.strategy.external_headers:
-			MessageBox.askquestion(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers), type=MessageBox.OK)
+			MessageBox.showinfo(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers))
 
 	def iimport(self, import_paths: list[str] | None = None,  parent: AnyWindow | None = None) -> None:
 		if not self.ai:
@@ -625,10 +624,10 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if not scripts:
 			return
 		script = scripts[0]
-		dialog = EditScriptDialog(self, self, self.config_.windows.script_edit, script.id, script.flags, script.string_id, initial=script.id)
+		dialog = EditScriptDialog(self, delegate=self, config=self.config_.windows.script_edit, script_id=script.id, flags=script.flags, string_index=script.string_id, initial=script.id)
 		if not dialog.script_id.get():
 			return
-		action = Actions.EditScriptAction(self, script, dialog.script_id.get(), dialog.flags, int(dialog.string.get()))
+		action = Actions.EditScriptAction(self, script, new_id=dialog.script_id.get(), new_flags=dialog.flags, new_string_id=int(dialog.string.get()))
 		self.action_manager.add_action(action)
 
 	def editflags(self) -> None:
@@ -655,7 +654,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	# 	StringEditor(self, index=headers[0].id)
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
+		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpqhandler)
 
 	def openset(self) -> None:
 		file = self.config_.last_path.txt.settings.select_open(self)
@@ -704,16 +703,15 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file = self.config_.last_path.txt.settings.select_save(self)
 		if file:
 			try:
-				settings = open(file, 'w', encoding='utf-8')
-			except:
-				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
-			settings.write(f"""
+				with open(file, 'w', encoding='utf-8') as settings:
+					settings.write(f"""
 {self.config_.settings.files.stat_txt.file_path}
 {self.config_.settings.files.dat.units.file_path}
 {self.config_.settings.files.dat.upgrades}
 {self.config_.settings.files.dat.techdata}
 """.replace(Assets.base_dir, '%(path)s'))
-			settings.close()
+			except:
+				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
 
 	# ActionsDelegate
 	def get_ai_bin(self) -> AIBIN.AIBIN:

@@ -40,7 +40,7 @@ class RemoveScriptsAction(Action):
 		self.delegate.refresh_scripts(list(script.id for script in self.scripts))
 
 class EditScriptAction(Action):
-	def __init__(self, delegate: ActionDelegate, script: AIBIN.AIScript, new_id: str, new_flags: int, new_string_id: int) -> None:
+	def __init__(self, delegate: ActionDelegate, script: AIBIN.AIScript, *, new_id: str, new_flags: int, new_string_id: int) -> None:
 		self.delegate = delegate
 		self.script = script
 

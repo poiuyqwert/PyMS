@@ -103,6 +103,8 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.config_ = PyBINConfig()
 		Theme.load_theme(self.config_.theme.value, self)
 
+		self.edit_status = StringVar()
+
 		self.bin: DialogBIN.DialogBIN | None = None
 		self.file: str | None = None
 		self.edited = False
@@ -350,7 +352,6 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		#Statusbar
 		self.status = StringVar()
 		self.status.set('Load or create a Dialog BIN.')
-		self.edit_status = StringVar()
 		statusbar = StatusBar(self)
 		statusbar.add_label(self.status, width=35)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
@@ -611,7 +612,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		return err
 
 	def mpqsettings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def check_saved(self) -> CheckSaved:
 		if not self.bin or not self.edited:
@@ -619,15 +620,14 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		file = self.file
 		if not file:
 			file = 'Unnamed.bin'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.bin
@@ -1127,7 +1127,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.scr_enabled.set(False)
 		self.action_states()
 
-	def register_registry(self, e: Event | None = None) -> None:
+	def register_registry(self, _e: Event | None = None) -> None:
 		try:
 			register_registry('PyBIN', 'bin', 'Dialog')
 		except PyMSError as e:
@@ -1310,18 +1310,18 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 	def get_tfont(self) -> (PCX.PCX | None):
 		return self.tfont
 
-	def node_render_image_create(self, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_image_create(self, *, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_image(x, y, image=image, anchor=anchor)
 
-	def node_render_image_update(self, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+	def node_render_image_update(self, *, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
 		if image:
 			item.config(image=image)
 		item.coords(x, y)
 
-	def node_render_rect_create(self, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_rect_create(self, *, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_rectangle(x1, y1, x2, y2, width=1, outline=color)
 
-	def node_render_rect_update(self, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
+	def node_render_rect_update(self, *, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
 		item.coords(x1, y1, x2, y2)
 
 	def node_render_lift(self, item: Canvas.Item) -> None: # type: ignore[name-defined]

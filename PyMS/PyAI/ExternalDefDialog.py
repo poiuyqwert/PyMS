@@ -67,7 +67,7 @@ class ExternalDefDialog(PyMSDialog):
 			self.listbox.select_set(sel)
 		self.action_states()
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		PyMSDialog.ok(self)
 
 	def dismiss(self) -> None:

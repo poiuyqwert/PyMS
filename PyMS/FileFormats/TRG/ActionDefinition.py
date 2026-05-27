@@ -61,7 +61,7 @@ class ActionDefinition(Protocol):
 		return help_text
 
 class BasicActionDefinition(ActionDefinition):
-	def __init__(self, name: str, description: str, action_type: int, parameters: tuple[ActionParameter, ...] = (), default_flags: int = ActionFlag.always_display) -> None:
+	def __init__(self, *, name: str, description: str, action_type: int, parameters: tuple[ActionParameter, ...] = (), default_flags: int = ActionFlag.always_display) -> None:
 		self.name = name
 		self.description = description
 		self.action_type = action_type

@@ -10,7 +10,7 @@ from ...Utilities.PyMSError import PyMSError
 from ...Utilities.MPQHandler import MPQHandler
 
 class SettingsDialog(BaseErrorableSettingsDialog[PyAIConfig]):
-	def __init__(self, parent: Misc, config: PyAIConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
+	def __init__(self, parent: Misc, *, config: PyAIConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
 		self.mpq_handler = mpq_handler
 		super().__init__(parent, config, delegate, err)
 

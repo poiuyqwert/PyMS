@@ -536,7 +536,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 	def edit_smk(self) -> None:
 		if not self.widget.smk:
 			return
-		SMKSettings(self, self.widget.smk, self.node, self)
+		SMKSettings(self, smk=self.widget.smk, widget=self.node, delegate=self)
 
 	def add_smk(self) -> None:
 		if not (dialog_bin := self.delegate.get_bin()):
@@ -545,7 +545,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		dialog_bin.smks.append(smk)
 		self.widget.smk = smk
 		self.delegate.mark_edited()
-		SMKSettings(self, smk, self.node, self)
+		SMKSettings(self, smk=smk, widget=self.node, delegate=self)
 
 	def ok(self, _event: Event | None = None) -> None:
 		self.update_preview()

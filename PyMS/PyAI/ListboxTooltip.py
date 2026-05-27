@@ -7,7 +7,7 @@ from ..Utilities.utils import fit
 from ..Utilities.UIKit import *
 
 class ListboxTooltip(Tooltip):
-	def __init__(self, parent: ScrolledListbox, delegate: TooltipDelegate, font: Font | None = None, delay: int = 750, press: bool = False):
+	def __init__(self, parent: ScrolledListbox, *, delegate: TooltipDelegate, font: Font | None = None, delay: int = 750, press: bool = False):
 		self.scrolled_listbox = parent
 		self.delegate = delegate
 		Tooltip.__init__(self, parent, '', font, delay, press)

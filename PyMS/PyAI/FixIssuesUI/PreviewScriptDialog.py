@@ -7,7 +7,7 @@ from ...Utilities.PyMSDialog import PyMSDialog
 from ...Utilities.Config import WindowGeometry
 
 class PreviewScriptDialog(PyMSDialog):
-	def __init__(self, parent: Misc, code: str, title: str, window_geometry_config: WindowGeometry, highlights_config: PyAIConfig.Code.Highlights) -> None:
+	def __init__(self, parent: Misc, *, code: str, title: str, window_geometry_config: WindowGeometry, highlights_config: PyAIConfig.Code.Highlights) -> None:
 		self.code = code
 		self.window_geometry_config = window_geometry_config
 		self.highlights_config = highlights_config

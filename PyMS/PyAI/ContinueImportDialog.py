@@ -34,6 +34,6 @@ class ContinueImportDialog(PyMSDialog):
 		self.cont = ContinueImportDialog.Result.yes_to_all
 		self.ok()
 
-	def cancel(self, event: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		self.cont = ContinueImportDialog.Result.cancel
 		self.ok()

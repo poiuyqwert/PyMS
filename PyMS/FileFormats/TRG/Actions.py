@@ -7,66 +7,368 @@ from .Action import Action
 from .Constants import ActionType, Matches
 
 definitions_registry: list[ActionDefinition] = [
-	BasicActionDefinition('NoAction', 'No action', ActionType.no_action),
-	BasicActionDefinition('Victory', 'End scenario in victory for current player.', ActionType.victory),
-	BasicActionDefinition('Defeat', 'End scenario in defeat for current player.', ActionType.defeat),
-	BasicActionDefinition('PreserveTrigger', 'Preserve trigger.', ActionType.preserve_trigger),
-	BasicActionDefinition('Wait', 'Wait for {1} milliseconds.', ActionType.wait, (TimeParameter(),)),
-	BasicActionDefinition('PauseGame', 'Pause the game.', ActionType.pause_game),
-	BasicActionDefinition('UnpauseGame', 'Unpause the game.', ActionType.unpause_game),
-	BasicActionDefinition('Transmission', 'Send transmission to current player from {4} at {5}. Play {2} with duration {3}. Modify transmission duration: {6} {7} milliseconds. Display {0} when {1}.', ActionType.transmission, (StringParameter(), DisplayParameter(), WAVParameter(), TimeParameter(), UnitParameter(), LocationParameter(), ModifierParameter(), TimeParameter(transmission=True))),
-	BasicActionDefinition('PlayWAV', 'Play {0} with duration {2}.', ActionType.play_wav, (WAVParameter(), TimeParameter())),
-	BasicActionDefinition('DisplayTextMessage', 'Display {0} for current player when {1}.', ActionType.display_message, (StringParameter(), DisplayParameter())),
-	BasicActionDefinition('CenterView', 'Center view for current player at {0}.', ActionType.center_view, (LocationParameter(),)),
-	BasicActionDefinition('CreateUnitWithProperties', 'Create {1} {2} at {3} for {0}. Apply {4}.', ActionType.create_unit_properties, (PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter(), PropertiesParameter())),
-	BasicActionDefinition('SetMissionObjectives', 'Set mission objectives to {0}.', ActionType.set_mission_objectives, (StringParameter(),), default_flags=0),
-	BasicActionDefinition('SetSwitch', 'Modify switch: {1} {0}', ActionType.set_switch, (SwitchParameter(), SwitchActionParameter())),
-	BasicActionDefinition('SetCountdownTimer', 'Modify countdown timer: {0} {1} seconds.', ActionType.set_countdown_timer, (ModifierParameter(), TimeParameter())),
-	BasicActionDefinition('RunAIScript', 'Execute AI Script {0}.', ActionType.run_aiscript, (AIScriptParameter(location_based=False),)),
-	BasicActionDefinition('RunAIScriptAtLocation', 'Execute AI Script {0} at {1}.', ActionType.run_aiscript_at_location, (AIScriptParameter(location_based=True), LocationParameter())),
-	BasicActionDefinition('LeaderboardControl', 'Show Leader Board for most control of {1}. Display label {0}.', ActionType.leaderboard_control, (StringParameter(), UnitTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardControlAtLocation', 'Show Leader Board for most control of {1} at {2}. Display label {0}.', ActionType.leaderboard_control_at_location, (StringParameter(), UnitTypeParameter(), LocationParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardResources', 'Show Leader Board for accumulation of most {1}. Display label {0}.', ActionType.leaderboard_resources, (StringParameter(), ResourceTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardKills', 'Show Leader Board for accumulation of most kills of {1}. Display label {0}.', ActionType.leaderboard_kills, (StringParameter(), UnitTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardPoints', 'Show Leader Board for accumulation of most {1} points. Display label {0}.', ActionType.leaderboard_points, (StringParameter(), ScoreTypeParameter()), default_flags=0),
-	BasicActionDefinition('KillUnit', 'Kill all {1} for {0}.', ActionType.kill_unit, (PlayerParameter(), UnitTypeParameter())),
-	BasicActionDefinition('KillUnitsAtLocation', 'Kill {1} {2} for {0} at {3}.', ActionType.kill_unit_at_location, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())),
-	BasicActionDefinition('RemoveUnit', 'Remove all {1} for {0}.',ActionType.remove_unit, (PlayerParameter(), UnitTypeParameter())),
-	BasicActionDefinition('RemoveUnitsAtLocation', 'Remove {1} {2} for {0} at {3}.', ActionType.remove_unit_at_location, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())),
-	BasicActionDefinition('SetResources', 'Modify resources for {0}: {1} {2} of {3}.', ActionType.set_resources, (PlayerParameter(), ModifierParameter(), NumberParameter(), ResourceTypeParameter())),
-	BasicActionDefinition('SetScore', 'Modify score for {0}: {1} {3} of {3}.', ActionType.set_score, (PlayerParameter(), ModifierParameter(), NumberParameter(), ScoreTypeParameter())),
-	BasicActionDefinition('MinimapPing', 'Show minimap ping for current player at {0}.', ActionType.minimap_ping, (LocationParameter(),)),
-	BasicActionDefinition('TalkingPortrait', 'Show {0} talking to current player for {1} milliseconds.', ActionType.talking_portrait, (UnitParameter(), TimeParameter())),
-	BasicActionDefinition('MuteUnitSpeech', 'Mute all non-trigger unit sounds for current player.', ActionType.mute_unit_speech),
-	BasicActionDefinition('UnmuteUnitSpeech', 'Unmute all non-trigger unit sounds for current player.', ActionType.unmute_unit_speech),
-	BasicActionDefinition('LeaderboardComputerPlayers', 'Set use of computer players in leaderboard calculations to {0}.', ActionType.leaderboard_computer_players, (StateActionParameter(),), default_flags=0),
-	BasicActionDefinition('LeaderboardGoalControl', 'Show Leader Board for player closest to control of {1} of {2}. Display label {0}.', ActionType.leaderboard_goal_control, (StringParameter(), NumberParameter(), UnitTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardGoalControlAtLocation', 'Show Leader Board for player closest to control of {1} of {2} at {3}. Display label {0}.', ActionType.leaderboard_goal_control_at_location, (StringParameter(), NumberParameter(), UnitTypeParameter(), LocationParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardGoalResources', 'Show Leader Board for player closest to accumulation of {1} {2}. Display label {0}', ActionType.leaderboard_goal_resources, (StringParameter(), NumberParameter(), ResourceTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardGoalKills', 'Show Leader Board for player closest to {1} kills of {2}. Display label {0}.', ActionType.leaderboard_goal_kills, (StringParameter(), NumberParameter(), UnitTypeParameter()), default_flags=0),
-	BasicActionDefinition('LeaderboardGoalPoints', 'Show Leader Board for player closest to {1} of {2}. Display label {0}.', ActionType.leaderboard_goal_points, (StringParameter(), NumberParameter(), ScoreTypeParameter()), default_flags=0),
-	BasicActionDefinition('MoveLocation', 'Center location {2} on {1} owned by {0} at {3}.', ActionType.move_location, (PlayerParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))),
-	BasicActionDefinition('MoveUnit', 'Move {1} {2} for {0} at {4} to {3}.', ActionType.move_unit, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))),
-	BasicActionDefinition('LeaderboardGreed', 'Show Greed Leader Board for player closest to accumulation of {0} ore and gas.', ActionType.leaderboard_greed, (NumberParameter(),)),
-	BasicActionDefinition('SetNextScenario', 'Load scenario {0} after completion of current game.', ActionType.set_next_scenario, (StringParameter(),)),
-	BasicActionDefinition('SetDoodadState', 'Set doodad state for {1} for {0} at {2} to {3}.', ActionType.set_doodad_state, (PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())),
-	BasicActionDefinition('SetInvincibility', 'Set invincibility for {1} owned by {0} at {2} to {3}.', ActionType.set_invincibility, (PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())),
-	BasicActionDefinition('CreateUnit', 'Create {1} {2} at {3} for {0}.', ActionType.create_unit, (PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter())),
-	BasicActionDefinition('SetDeaths', 'Modify death counts for {0}: {2} {3} for {1}.', ActionType.set_deaths, (PlayerParameter(), UnitTypeParameter(), ModifierParameter(), NumberParameter())),
-	BasicActionDefinition('Order', 'Issue order to all {1} owned by {0} at {2}: {3} to {4}.', ActionType.order, (PlayerParameter(), UnitTypeParameter(), LocationParameter(), OrderParameter(), LocationParameter(destination=True))),
-	BasicActionDefinition('Comment', 'Comment: {0}.', ActionType.comment, (StringParameter(),), default_flags=0),
-	BasicActionDefinition('GiveUnitsToPlayer', 'Give {2} {3} owned by {0} at {4} to {1}.', ActionType.give_units, (PlayerParameter(), PlayerParameter(target=True), QuantityParameter(), UnitTypeParameter(), LocationParameter())),
-	BasicActionDefinition('ModifyUnitHitPoints', 'Set hit points for {1} {2} owned by {0} at {3} to {4}.', ActionType.modify_unit_hit_points, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())),
-	BasicActionDefinition('ModifyUnitEnergy', 'Set energy points for {1} {2} owned by {0} at {3} to {4}.', ActionType.modify_unit_energy, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())),
-	BasicActionDefinition('ModifyUnitShieldPoints', 'Set shield points for {1} {2} owned by {0} at {3} to {4}', ActionType.modify_unit_shield_points, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())),
-	BasicActionDefinition('ModifyUnitResourceAmount', 'Set resource amount for {1} resource sources owned by {0} at {2} to {3}.', ActionType.modify_unit_resources, (PlayerParameter(), QuantityParameter(), LocationParameter(), NumberParameter())),
-	BasicActionDefinition('ModifyUnitHangerCount', 'Add at most {4} to hangar for {1} {2} at {3} owned by {0}.', ActionType.modify_unit_hanger_count, (PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), NumberParameter())),
-	BasicActionDefinition('PauseTimer', 'Pause the countdown timer.', ActionType.pause_timer),
-	BasicActionDefinition('UnpauseTimer', 'Unpause the countdown timer.', ActionType.unpause_timer),
-	BasicActionDefinition('Draw', 'End the scenario in a draw for all players.', ActionType.draw),
-	BasicActionDefinition('SetAllianceStatus', 'Set {0} to {1}.', ActionType.set_alliance_status, (PlayerParameter(), AllianceStatusParameter())),
-	BasicActionDefinition('DisableDebugMode', 'Disable debug mode (does nothing?).', ActionType.disable_debug_mode, default_flags=0),
-	BasicActionDefinition('EnableDebugMode', 'Enable debug mode (does nothing?).', ActionType.enable_debug_mode, default_flags=0),
+	BasicActionDefinition(
+		name='NoAction',
+		description='No action',
+		action_type=ActionType.no_action
+	),
+	BasicActionDefinition(
+		name='Victory',
+		description='End scenario in victory for current player.',
+		action_type=ActionType.victory
+	),
+	BasicActionDefinition(
+		name='Defeat',
+		description='End scenario in defeat for current player.',
+		action_type=ActionType.defeat
+	),
+	BasicActionDefinition(
+		name='PreserveTrigger',
+		description='Preserve trigger.',
+		action_type=ActionType.preserve_trigger
+	),
+	BasicActionDefinition(
+		name='Wait',
+		description='Wait for {1} milliseconds.',
+		action_type=ActionType.wait,
+		parameters=(TimeParameter(),)
+	),
+	BasicActionDefinition(
+		name='PauseGame',
+		description='Pause the game.',
+		action_type=ActionType.pause_game
+	),
+	BasicActionDefinition(
+		name='UnpauseGame',
+		description='Unpause the game.',
+		action_type=ActionType.unpause_game
+	),
+	BasicActionDefinition(
+		name='Transmission',
+		description='Send transmission to current player from {4} at {5}. Play {2} with duration {3}. Modify transmission duration: {6} {7} milliseconds. Display {0} when {1}.',
+		action_type=ActionType.transmission,
+		parameters=(StringParameter(), DisplayParameter(), WAVParameter(), TimeParameter(), UnitParameter(), LocationParameter(), ModifierParameter(), TimeParameter(transmission=True))
+	),
+	BasicActionDefinition(
+		name='PlayWAV',
+		description='Play {0} with duration {2}.',
+		action_type=ActionType.play_wav,
+		parameters=(WAVParameter(), TimeParameter())
+	),
+	BasicActionDefinition(
+		name='DisplayTextMessage',
+		description='Display {0} for current player when {1}.',
+		action_type=ActionType.display_message,
+		parameters=(StringParameter(), DisplayParameter())
+	),
+	BasicActionDefinition(
+		name='CenterView',
+		description='Center view for current player at {0}.',
+		action_type=ActionType.center_view,
+		parameters=(LocationParameter(),)
+	),
+	BasicActionDefinition(
+		name='CreateUnitWithProperties',
+		description='Create {1} {2} at {3} for {0}. Apply {4}.',
+		action_type=ActionType.create_unit_properties,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter(), PropertiesParameter())
+	),
+	BasicActionDefinition(
+		name='SetMissionObjectives',
+		description='Set mission objectives to {0}.',
+		action_type=ActionType.set_mission_objectives,
+		parameters=(StringParameter(),),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='SetSwitch',
+		description='Modify switch: {1} {0}',
+		action_type=ActionType.set_switch,
+		parameters=(SwitchParameter(), SwitchActionParameter())
+	),
+	BasicActionDefinition(
+		name='SetCountdownTimer',
+		description='Modify countdown timer: {0} {1} seconds.',
+		action_type=ActionType.set_countdown_timer,
+		parameters=(ModifierParameter(), TimeParameter())
+	),
+	BasicActionDefinition(
+		name='RunAIScript',
+		description='Execute AI Script {0}.',
+		action_type=ActionType.run_aiscript,
+		parameters=(AIScriptParameter(location_based=False),)
+	),
+	BasicActionDefinition(
+		name='RunAIScriptAtLocation',
+		description='Execute AI Script {0} at {1}.',
+		action_type=ActionType.run_aiscript_at_location,
+		parameters=(AIScriptParameter(location_based=True), LocationParameter())
+	),
+	BasicActionDefinition(
+		name='LeaderboardControl',
+		description='Show Leader Board for most control of {1}. Display label {0}.',
+		action_type=ActionType.leaderboard_control,
+		parameters=(StringParameter(), UnitTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardControlAtLocation',
+		description='Show Leader Board for most control of {1} at {2}. Display label {0}.',
+		action_type=ActionType.leaderboard_control_at_location,
+		parameters=(StringParameter(), UnitTypeParameter(), LocationParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardResources',
+		description='Show Leader Board for accumulation of most {1}. Display label {0}.',
+		action_type=ActionType.leaderboard_resources,
+		parameters=(StringParameter(), ResourceTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardKills',
+		description='Show Leader Board for accumulation of most kills of {1}. Display label {0}.',
+		action_type=ActionType.leaderboard_kills,
+		parameters=(StringParameter(), UnitTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardPoints',
+		description='Show Leader Board for accumulation of most {1} points. Display label {0}.',
+		action_type=ActionType.leaderboard_points,
+		parameters=(StringParameter(), ScoreTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='KillUnit',
+		description='Kill all {1} for {0}.',
+		action_type=ActionType.kill_unit,
+		parameters=(PlayerParameter(), UnitTypeParameter())
+	),
+	BasicActionDefinition(
+		name='KillUnitsAtLocation',
+		description='Kill {1} {2} for {0} at {3}.',
+		action_type=ActionType.kill_unit_at_location,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+	),
+	BasicActionDefinition(
+		name='RemoveUnit',
+		description='Remove all {1} for {0}.',
+		action_type=ActionType.remove_unit,
+		parameters=(PlayerParameter(), UnitTypeParameter())
+	),
+	BasicActionDefinition(
+		name='RemoveUnitsAtLocation',
+		description='Remove {1} {2} for {0} at {3}.',
+		action_type=ActionType.remove_unit_at_location,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+	),
+	BasicActionDefinition(
+		name='SetResources',
+		description='Modify resources for {0}: {1} {2} of {3}.',
+		action_type=ActionType.set_resources,
+		parameters=(PlayerParameter(), ModifierParameter(), NumberParameter(), ResourceTypeParameter())
+	),
+	BasicActionDefinition(
+		name='SetScore',
+		description='Modify score for {0}: {1} {3} of {3}.',
+		action_type=ActionType.set_score,
+		parameters=(PlayerParameter(), ModifierParameter(), NumberParameter(), ScoreTypeParameter())
+	),
+	BasicActionDefinition(
+		name='MinimapPing',
+		description='Show minimap ping for current player at {0}.',
+		action_type=ActionType.minimap_ping,
+		parameters=(LocationParameter(),)
+	),
+	BasicActionDefinition(
+		name='TalkingPortrait',
+		description='Show {0} talking to current player for {1} milliseconds.',
+		action_type=ActionType.talking_portrait,
+		parameters=(UnitParameter(), TimeParameter())
+	),
+	BasicActionDefinition(
+		name='MuteUnitSpeech',
+		description='Mute all non-trigger unit sounds for current player.',
+		action_type=ActionType.mute_unit_speech
+	),
+	BasicActionDefinition(
+		name='UnmuteUnitSpeech',
+		description='Unmute all non-trigger unit sounds for current player.',
+		action_type=ActionType.unmute_unit_speech
+	),
+	BasicActionDefinition(
+		name='LeaderboardComputerPlayers',
+		description='Set use of computer players in leaderboard calculations to {0}.',
+		action_type=ActionType.leaderboard_computer_players,
+		parameters=(StateActionParameter(),),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardGoalControl',
+		description='Show Leader Board for player closest to control of {1} of {2}. Display label {0}.',
+		action_type=ActionType.leaderboard_goal_control,
+		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardGoalControlAtLocation',
+		description='Show Leader Board for player closest to control of {1} of {2} at {3}. Display label {0}.',
+		action_type=ActionType.leaderboard_goal_control_at_location,
+		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter(), LocationParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardGoalResources',
+		description='Show Leader Board for player closest to accumulation of {1} {2}. Display label {0}',
+		action_type=ActionType.leaderboard_goal_resources,
+		parameters=(StringParameter(), NumberParameter(), ResourceTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardGoalKills',
+		description='Show Leader Board for player closest to {1} kills of {2}. Display label {0}.',
+		action_type=ActionType.leaderboard_goal_kills,
+		parameters=(StringParameter(), NumberParameter(), UnitTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='LeaderboardGoalPoints',
+		description='Show Leader Board for player closest to {1} of {2}. Display label {0}.',
+		action_type=ActionType.leaderboard_goal_points,
+		parameters=(StringParameter(), NumberParameter(), ScoreTypeParameter()),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='MoveLocation',
+		description='Center location {2} on {1} owned by {0} at {3}.',
+		action_type=ActionType.move_location,
+		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))
+	),
+	BasicActionDefinition(
+		name='MoveUnit',
+		description='Move {1} {2} for {0} at {4} to {3}.',
+		action_type=ActionType.move_unit,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), LocationParameter(destination=True))
+	),
+	BasicActionDefinition(
+		name='LeaderboardGreed',
+		description='Show Greed Leader Board for player closest to accumulation of {0} ore and gas.',
+		action_type=ActionType.leaderboard_greed,
+		parameters=(NumberParameter(),)
+	),
+	BasicActionDefinition(
+		name='SetNextScenario',
+		description='Load scenario {0} after completion of current game.',
+		action_type=ActionType.set_next_scenario,
+		parameters=(StringParameter(),)
+	),
+	BasicActionDefinition(
+		name='SetDoodadState',
+		description='Set doodad state for {1} for {0} at {2} to {3}.',
+		action_type=ActionType.set_doodad_state,
+		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())
+	),
+	BasicActionDefinition(
+		name='SetInvincibility',
+		description='Set invincibility for {1} owned by {0} at {2} to {3}.',
+		action_type=ActionType.set_invincibility,
+		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), StateActionParameter())
+	),
+	BasicActionDefinition(
+		name='CreateUnit',
+		description='Create {1} {2} at {3} for {0}.',
+		action_type=ActionType.create_unit,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitParameter(), LocationParameter())
+	),
+	BasicActionDefinition(
+		name='SetDeaths',
+		description='Modify death counts for {0}: {2} {3} for {1}.',
+		action_type=ActionType.set_deaths,
+		parameters=(PlayerParameter(), UnitTypeParameter(), ModifierParameter(), NumberParameter())
+	),
+	BasicActionDefinition(
+		name='Order',
+		description='Issue order to all {1} owned by {0} at {2}: {3} to {4}.',
+		action_type=ActionType.order,
+		parameters=(PlayerParameter(), UnitTypeParameter(), LocationParameter(), OrderParameter(), LocationParameter(destination=True))
+	),
+	BasicActionDefinition(
+		name='Comment',
+		description='Comment: {0}.',
+		action_type=ActionType.comment,
+		parameters=(StringParameter(),),
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='GiveUnitsToPlayer',
+		description='Give {2} {3} owned by {0} at {4} to {1}.',
+		action_type=ActionType.give_units,
+		parameters=(PlayerParameter(), PlayerParameter(target=True), QuantityParameter(), UnitTypeParameter(), LocationParameter())
+	),
+	BasicActionDefinition(
+		name='ModifyUnitHitPoints',
+		description='Set hit points for {1} {2} owned by {0} at {3} to {4}.',
+		action_type=ActionType.modify_unit_hit_points,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+	),
+	BasicActionDefinition(
+		name='ModifyUnitEnergy',
+		description='Set energy points for {1} {2} owned by {0} at {3} to {4}.',
+		action_type=ActionType.modify_unit_energy,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+	),
+	BasicActionDefinition(
+		name='ModifyUnitShieldPoints',
+		description='Set shield points for {1} {2} owned by {0} at {3} to {4}',
+		action_type=ActionType.modify_unit_shield_points,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), PercentageParameter())
+	),
+	BasicActionDefinition(
+		name='ModifyUnitResourceAmount',
+		description='Set resource amount for {1} resource sources owned by {0} at {2} to {3}.',
+		action_type=ActionType.modify_unit_resources,
+		parameters=(PlayerParameter(), QuantityParameter(), LocationParameter(), NumberParameter())
+	),
+	BasicActionDefinition(
+		name='ModifyUnitHangerCount',
+		description='Add at most {4} to hangar for {1} {2} at {3} owned by {0}.',
+		action_type=ActionType.modify_unit_hanger_count,
+		parameters=(PlayerParameter(), QuantityParameter(), UnitTypeParameter(), LocationParameter(), NumberParameter())
+	),
+	BasicActionDefinition(
+		name='PauseTimer',
+		description='Pause the countdown timer.',
+		action_type=ActionType.pause_timer
+	),
+	BasicActionDefinition(
+		name='UnpauseTimer',
+		description='Unpause the countdown timer.',
+		action_type=ActionType.unpause_timer
+	),
+	BasicActionDefinition(
+		name='Draw',
+		description='End the scenario in a draw for all players.',
+		action_type=ActionType.draw
+	),
+	BasicActionDefinition(
+		name='SetAllianceStatus',
+		description='Set {0} to {1}.',
+		action_type=ActionType.set_alliance_status,
+		parameters=(PlayerParameter(), AllianceStatusParameter())
+	),
+	BasicActionDefinition(
+		name='DisableDebugMode',
+		description='Disable debug mode (does nothing?).',
+		action_type=ActionType.disable_debug_mode,
+		default_flags=0
+	),
+	BasicActionDefinition(
+		name='EnableDebugMode',
+		description='Enable debug mode (does nothing?).',
+		action_type=ActionType.enable_debug_mode,
+		default_flags=0
+	),
 
 	MemoryActionDefinition(),
 	RawActionDefinition()

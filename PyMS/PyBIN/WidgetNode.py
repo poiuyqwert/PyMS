@@ -90,14 +90,10 @@ class WidgetNode:
 		y2 = 0
 		for node in self.children:
 			cx1,cy1,cx2,cy2 = node.bounding_box()
-			if cx1 < x1:
-				x1 = cx1
-			if cy1 < y1:
-				y1 = cy1
-			if cx2 > x2:
-				x2 = cx2
-			if cy2 > y2:
-				y2 = cy2
+			x1 = min(x1, cx1)
+			y1 = min(y1, cy1)
+			x2 = max(x2, cx2)
+			y2 = max(y2, cy2)
 		return (x1,y1,x2,y2)
 
 	def text_box(self) -> tuple[int, int, int, int]:
@@ -220,7 +216,7 @@ class WidgetNode:
 				else:
 					up = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_UP_DISABLED)
 					down = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_DOWN_DISABLED)
-				if top and mid and bot and bar and up and down:
+				if top and mid and bot and bar and up and down: # pylint: disable=too-many-boolean-expressions
 					width = 0
 					height = y2-y1
 					for img in (top,mid,bot,bar,up,down):
@@ -275,7 +271,7 @@ class WidgetNode:
 				bl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BL)
 				b = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_B)
 				br = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_BR)
-				if tl and t and tr and l and m and r and bl and b and br:
+				if tl and t and tr and l and m and r and bl and b and br: # pylint: disable=too-many-boolean-expressions
 					width = x2-x1
 					height = y2-y1
 					i_width = width-tl.size[0]-tr.size[0]
@@ -302,9 +298,9 @@ class WidgetNode:
 					self.dialog_image = ImageTk.PhotoImage(pil)
 			if self.dialog_image:
 				if self.item_dialog:
-					self.delegate.node_render_image_update(self.item_dialog, x, y, self.dialog_image)
+					self.delegate.node_render_image_update(item=self.item_dialog, x=x, y=y, image=self.dialog_image)
 				else:
-					self.delegate.node_render_image_create(x, y, self.dialog_image, anchor)
+					self.delegate.node_render_image_create(x=x, y=y, image=self.dialog_image, anchor=anchor)
 					reorder = True
 		if self.dialog_image is None and self.item_dialog:
 			self.delegate.node_render_delete(self.item_dialog)
@@ -373,9 +369,9 @@ class WidgetNode:
 			x1 += bin_smk.offset_x
 			y1 += bin_smk.offset_y
 			if i < len(self.item_smks):
-				self.delegate.node_render_image_update(self.item_smks[i], x1, y1, image)
+				self.delegate.node_render_image_update(item=self.item_smks[i], x=x1, y=y1, image=image)
 			else:
-				item = self.delegate.node_render_image_create(x1, y1, image, NW)
+				item = self.delegate.node_render_image_create(x=x1, y=y1, image=image, anchor=NW)
 				self.item_smks.append(item)
 				# self.toplevel.widgetCanvas.create_rectangle(x1,y1,x1+self.smk.width,y1+self.smk.height, width=1, outline='#FFFF00')
 				reorder = True
@@ -395,9 +391,9 @@ class WidgetNode:
 			if self.photo:
 				x1,y1,_,_ = self.bounding_box()
 				if self.item_image:
-					self.delegate.node_render_image_update(self.item_image, x1, y1, self.photo)
+					self.delegate.node_render_image_update(item=self.item_image, x=x1, y=y1, image=self.photo)
 				else:
-					self.item_image = self.delegate.node_render_image_create(x1, y1, self.photo, NW)
+					self.item_image = self.delegate.node_render_image_create(x=x1, y=y1, image=self.photo, anchor=NW)
 					reorder = True
 		elif self.item_image:
 			self.delegate.node_render_delete(self.item_image)
@@ -419,7 +415,7 @@ class WidgetNode:
 				default_color = 2
 				if self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_COMBOBOX,DialogBIN.BINWidget.TYPE_DEFAULT_BTN,DialogBIN.BINWidget.TYPE_OPTION_BTN,DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN):
 					default_color = 3
-				self.string = StringPreview(self.widget.display_text() or '', font, tfontgam, remap, remap_pal, default_color)
+				self.string = StringPreview(self.widget.display_text() or '', font, tfontgam, remap=remap, remap_palette=remap_pal, default_color=default_color)
 			x1,y1,x2,y2 = self.text_box()
 			align = self.widget.flags
 			if self.widget.type == DialogBIN.BINWidget.TYPE_LABEL_LEFT_ALIGN:
@@ -435,14 +431,14 @@ class WidgetNode:
 			positions = self.string.get_positions(x1,y1, x2,y2, align_flags=align)
 			if self.item_string_images:
 				for item,position in zip(self.item_string_images,positions):
-					self.delegate.node_render_image_update(item, position[0], position[1], None)
+					self.delegate.node_render_image_update(item=item, x=position[0], y=position[1], image=None)
 			else:
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
 				for glyph,position in zip(glyphs,positions):
-					self.item_string_images.append(self.delegate.node_render_image_create(position[0], position[1], glyph, NW))
+					self.item_string_images.append(self.delegate.node_render_image_create(x=position[0], y=position[1], image=glyph, anchor=NW))
 				reorder = True
-		elif self.item_string_images:
+		elif self.item_string_images is not None:
 			for item in self.item_string_images:
 				self.delegate.node_render_delete(item)
 			self.item_string_images = None
@@ -455,14 +451,14 @@ class WidgetNode:
 		if SHOW_BOUNDING_BOX and (self.widget or SHOW_GROUP_BOUNDS):
 			x1,y1,x2,y2 = self.bounding_box()
 			if self.item_bounds:
-				self.delegate.node_render_rect_update(self.item_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
 				color = '#505050'
 				if self.widget:
 					color = '#0080ff'
 					if self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG:
 						color = '#00A0A0'
-				self.item_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, color)
+				self.item_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color=color)
 				reorder = True
 		elif self.item_bounds:
 			self.delegate.node_render_delete(self.item_bounds)
@@ -475,9 +471,9 @@ class WidgetNode:
 		if SHOW_TEXT_BOUNDS and self.widget and self.widget.display_text() is not None:
 			x1,y1,x2,y2 = self.text_box()
 			if self.item_text_bounds:
-				self.delegate.node_render_rect_update(self.item_text_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_text_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
-				self.item_text_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, '#F0F0F0')
+				self.item_text_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color='#F0F0F0')
 				reorder = True
 		elif self.item_text_bounds:
 			self.delegate.node_render_delete(self.item_text_bounds)
@@ -490,9 +486,9 @@ class WidgetNode:
 		if SHOW_RESPONSIVE_BOUNDS and self.widget and self.widget.has_responsive():
 			x1,y1,x2,y2 = self.widget.responsive_box()
 			if self.item_responsive_bounds:
-				self.delegate.node_render_rect_update(self.item_responsive_bounds, x1, y1, x2, y2)
+				self.delegate.node_render_rect_update(item=self.item_responsive_bounds, x1=x1, y1=y1, x2=x2, y2=y2)
 			else:
-				self.item_responsive_bounds = self.delegate.node_render_rect_create(x1, y1, x2, y2, '#00FF80')
+				self.item_responsive_bounds = self.delegate.node_render_rect_create(x1=x1, y1=y1, x2=x2, y2=y2, color='#00FF80')
 				reorder = True
 		elif self.item_responsive_bounds:
 			self.delegate.node_render_delete(self.item_responsive_bounds)

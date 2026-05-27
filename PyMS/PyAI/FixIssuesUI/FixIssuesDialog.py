@@ -82,7 +82,7 @@ class IssueResolution:
 		return True
 
 class FixIssuesDialog(PyMSDialog):
-	def __init__(self, parent: Misc, aibin: AIBIN, issues: LoadIssues, delegate: MainDelegate, config: PyAIConfig) -> None:
+	def __init__(self, parent: Misc, *, aibin: AIBIN, issues: LoadIssues, delegate: MainDelegate, config: PyAIConfig) -> None:
 		self.issue_resolutions = list(IssueResolution(aibin, issue) for issue in issues)
 		for issue_resolution in self.issue_resolutions:
 			issue_resolution.update_callback.add(self.issue_resolution_updated)
@@ -150,7 +150,7 @@ class FixIssuesDialog(PyMSDialog):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from aiscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
+		PreviewScriptDialog(self, code=code, title=f'Preview script `{issue_resolution.issue.script_id}` from aiscript.bin', window_geometry_config=self.config_.windows.fix_issues.preview_code, highlights_config=self.config_.code.highlights)
 
 	def preview_bwscript(self) -> None:
 		issue_resolution = self.current_issue_resolution()
@@ -164,7 +164,7 @@ class FixIssuesDialog(PyMSDialog):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
-		PreviewScriptDialog(self, code, f'Preview script `{issue_resolution.issue.script_id}` from bwscript.bin', self.config_.windows.fix_issues.preview_code, self.config_.code.highlights)
+		PreviewScriptDialog(self, code=code, title=f'Preview script `{issue_resolution.issue.script_id}` from bwscript.bin', window_geometry_config=self.config_.windows.fix_issues.preview_code, highlights_config=self.config_.code.highlights)
 
 	def refresh_list(self) -> None:
 		issue_index: int = 0

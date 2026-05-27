@@ -141,7 +141,7 @@ class FindReplaceDialog(PyMSDialog):
 				code_text.see(s)
 				self.check(3)
 			else:
-				MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+				MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 		else:
 			u = self.updown.get()
 			s,lse,rlse,e = ['-','+'][u],['lineend','linestart'][u],['linestart','lineend'][u],[code_text.index('1.0 lineend'),code_text.index(END)][u]
@@ -177,11 +177,11 @@ class FindReplaceDialog(PyMSDialog):
 					self.check(3)
 					break
 				if (not u and n == -1 and code_text.index(f'{i} lineend') == e) or i == e:
-					MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+					MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 					break
 				i = code_text.index(f'{i} {s}1lines {lse}')
 			else:
-				MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+				MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 
 	def count(self) -> None:
 		f = self.find.get()
@@ -196,7 +196,7 @@ class FindReplaceDialog(PyMSDialog):
 			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
-		MessageBox.askquestion(parent=self, title='Count', message=f'{len(r.findall(self.delegate.get_code_text().get("1.0", END)))} matches found.', type=MessageBox.OK)
+		MessageBox.showinfo(parent=self, title='Count', message=f'{len(r.findall(self.delegate.get_code_text().get("1.0", END)))} matches found.')
 
 	def replaceall(self) -> None:
 		f = self.find.get()
@@ -217,7 +217,7 @@ class FindReplaceDialog(PyMSDialog):
 			with code_text.undo_group():
 				code_text.delete('1.0', END)
 				code_text.insert('1.0', text[0].rstrip('\n'))
-		MessageBox.askquestion(parent=self, title='Replace Complete', message=f'{text[1]} matches replaced.', type=MessageBox.OK)
+		MessageBox.showinfo(parent=self, title='Replace Complete', message=f'{text[1]} matches replaced.')
 
 	def updatecolor(self) -> None:
 		if self.resettimer:
