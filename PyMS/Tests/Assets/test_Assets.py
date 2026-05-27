@@ -66,12 +66,10 @@ class Test_mpq_file_path_to_file_name(unittest.TestCase):
 		self.assertEqual(Assets.mpq_file_path_to_file_name(path), 'subdir\\file.dat')
 
 	def test_three_components(self) -> None:
-		# ISS-353: paths deeper than 2 components were collapsed by os.path.split
 		path = Assets.mpq_file_path('a', 'b', 'file.dat')
 		self.assertEqual(Assets.mpq_file_path_to_file_name(path), 'a\\b\\file.dat')
 
 	def test_deeply_nested_components(self) -> None:
-		# ISS-353: verify deep nesting is preserved
 		path = Assets.mpq_file_path('a', 'b', 'c', 'd', 'file.dat')
 		self.assertEqual(Assets.mpq_file_path_to_file_name(path), 'a\\b\\c\\d\\file.dat')
 
@@ -95,12 +93,10 @@ class Test_mpq_file_path_to_ref(unittest.TestCase):
 		self.assertEqual(Assets.mpq_file_path_to_ref(path), 'MPQ:subdir\\file.dat')
 
 	def test_three_components(self) -> None:
-		# ISS-353
 		path = Assets.mpq_file_path('a', 'b', 'file.dat')
 		self.assertEqual(Assets.mpq_file_path_to_ref(path), 'MPQ:a\\b\\file.dat')
 
 	def test_deeply_nested_components(self) -> None:
-		# ISS-353
 		path = Assets.mpq_file_path('a', 'b', 'c', 'd', 'file.dat')
 		self.assertEqual(Assets.mpq_file_path_to_ref(path), 'MPQ:a\\b\\c\\d\\file.dat')
 
@@ -135,7 +131,6 @@ class Test_mpq_round_trip(unittest.TestCase):
 		self.assertEqual(Assets.mpq_ref_to_file_path(ref), original)
 
 	def test_path_to_name_round_trip_components(self) -> None:
-		# ISS-353: nested paths must round-trip preserving all components
 		components = ('a', 'b', 'c', 'file.dat')
 		path = Assets.mpq_file_path(*components)
 		name = Assets.mpq_file_path_to_file_name(path)
@@ -158,14 +153,14 @@ class Test_data_cache(unittest.TestCase):
 
 class Test_image_cache_reset(unittest.TestCase):
 	def test_clear_image_cache_empties_cache(self) -> None:
-		Assets._IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment]
+		Assets._IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment] # pylint: disable=protected-access
 		Assets.clear_image_cache()
-		self.assertNotIn('__sentinel__', Assets._IMAGE_CACHE)
+		self.assertNotIn('__sentinel__', Assets._IMAGE_CACHE) # pylint: disable=protected-access
 
 	def test_clear_help_image_cache_empties_cache(self) -> None:
-		Assets._HELP_IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment]
+		Assets._HELP_IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment] # pylint: disable=protected-access
 		Assets.clear_help_image_cache()
-		self.assertNotIn('__sentinel__', Assets._HELP_IMAGE_CACHE)
+		self.assertNotIn('__sentinel__', Assets._HELP_IMAGE_CACHE) # pylint: disable=protected-access
 
 
 class Test_HelpFolder(unittest.TestCase):

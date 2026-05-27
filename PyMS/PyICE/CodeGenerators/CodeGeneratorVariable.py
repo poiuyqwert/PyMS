@@ -63,7 +63,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 		return done
 
 	def setup_complete(self) -> None:
-		self.set_resizable(*self.editor.is_resizable())
+		self.resizable(*self.editor.is_resizable())
 		self.editor.window_geometry_config.load_size(self)
 
 	def ok(self, _event: Event | None = None) -> None:

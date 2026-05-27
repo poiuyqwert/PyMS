@@ -9,31 +9,31 @@ if hasattr(sys, 'frozen'):
 else:
 	STORMLIB_DIR = os.path.dirname(__file__)
 
-_StormLib = None
+_StormLib: ctypes.CDLL | None = None
 _StormLib_TCHAR: type[ctypes.c_char_p] | type[ctypes.c_wchar_p] = ctypes.c_char_p
 if STORMLIB_DIR:
-	libraries = (
+	_libraries = (
 		('StormLib.dll', ctypes.c_wchar_p),
 		('StormLib64.dll', ctypes.c_wchar_p),
 		('StormLib.dylib', ctypes.c_char_p),
 		('StormLibLinux.so', ctypes.c_char_p),
 	)
-	loaders: list[type[ctypes.CDLL]] = []
+	_loaders: list[type[ctypes.CDLL]] = []
 	if hasattr(ctypes, 'WinDLL'):
-		loaders.append(ctypes.WinDLL)
-	loaders.append(ctypes.CDLL)
-	for library, tchar in libraries:
-		path = os.path.join(STORMLIB_DIR, library)
-		loaded: ctypes.CDLL | None = None
-		for loader in loaders:
+		_loaders.append(ctypes.WinDLL)
+	_loaders.append(ctypes.CDLL)
+	for _library, _tchar in _libraries:
+		_path = os.path.join(STORMLIB_DIR, _library)
+		_loaded: ctypes.CDLL | None = None
+		for _loader in _loaders:
 			try:
-				loaded = loader(path, ctypes.RTLD_GLOBAL)
+				_loaded = _loader(_path, ctypes.RTLD_GLOBAL)
 				break
 			except:
 				pass
-		if loaded is not None:
-			_StormLib = loaded
-			_StormLib_TCHAR = tchar
+		if _loaded is not None:
+			_StormLib = _loaded
+			_StormLib_TCHAR = _tchar
 			break
 
 STORMLIB_LOADED = (_StormLib is not None)
@@ -703,7 +703,7 @@ if _StormLib is not None:
 	try:
 		_StormLib.GetLastError.restype = ctypes.c_uint32
 	except:
-		_StormLib.GetLastError = None
+		pass
 
 def _file_path(file_path: str) -> str | bytes:
 	if _StormLib_TCHAR == ctypes.c_char_p:
@@ -917,6 +917,8 @@ def SFileSetFileLocale(file: MPQHANDLE, locale: int) -> bool:
 def SFGetLastError() -> int:
 	assert _StormLib is not None
 	# StormLib only implements its own GetLastError on platforms other than windows
-	if _StormLib.GetLastError is None:
+	try:
+		return _StormLib.GetLastError() # pylint: disable=not-callable
+	except:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
-	return _StormLib.GetLastError() # pylint: disable=not-callable
+	

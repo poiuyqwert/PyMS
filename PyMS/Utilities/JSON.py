@@ -29,7 +29,7 @@ def get(json: Object, key: str, val_type: Type[T]) -> T:
 	if isinstance(val_type, type) and issubclass(val_type, Codable):
 		if not isinstance(value, dict):
 			raise PyMSError('JSON', f'Invalid JSON format (invalid `{key}`)')
-		return val_type.from_json(value)
+		return val_type.from_json(value) # type: ignore
 	if not isinstance(value, val_type):
 		raise PyMSError('JSON', f'Invalid JSON format (invalid `{key}`)')
 	return value
@@ -50,7 +50,7 @@ def get_array(json: Object, key: str, val_type: Type[T]) -> list[T]:
 	for index,value in enumerate(array):
 		if is_codable:
 			try:
-				value = val_type.from_json(value)
+				value = val_type.from_json(value) # type: ignore
 			except Exception as exc:
 				raise PyMSError('JSON', f'Invalid JSON format (array `{key}` contains invalid value at index {index})') from exc
 		elif not isinstance(value, val_type):

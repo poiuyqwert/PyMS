@@ -131,10 +131,12 @@ class HuffTree:
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
 		if node is None:
 			node = self.root
-		while node.branch0 is not None:
+		while True:
 			if bit_stream.read(1):
 				assert node.branch1 is not None
 				node = node.branch1
+			elif node.branch0 is None:
+				break
 			else:
 				node = node.branch0
 		return node.value
@@ -177,10 +179,12 @@ class BigHuffTree:
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
 		if node is None:
 			node = self.root
-		while node.branch0 is not None:
+		while True:
 			if bit_stream.read(1):
 				assert node.branch1 is not None
 				node = node.branch1
+			elif node.branch0 is None:
+				break
 			else:
 				node = node.branch0
 		if node.escape_code != 0xFF:

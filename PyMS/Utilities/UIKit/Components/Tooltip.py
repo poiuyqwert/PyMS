@@ -1,7 +1,10 @@
 
 from ..Font import Font
 from ..Widgets import *
+from ..Widgets.Extensions import MiscExtensions
 from ..EventPattern import *
+
+from typing import cast
 
 class TooltipWindow(Toplevel):
 	pass
@@ -9,7 +12,7 @@ class TooltipWindow(Toplevel):
 class Tooltip:
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
 	def __init__(self, parent: Misc, text: str = '', font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
-		self.parent = parent
+		self.parent: MiscExtensions = cast(MiscExtensions, parent)
 		self.setupbinds(press)
 		self.text = text
 		self.font = font or Font.fixed()

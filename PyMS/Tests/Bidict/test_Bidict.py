@@ -59,7 +59,6 @@ class Test_setitem(unittest.TestCase):
 		self.assertEqual(b.key_of(1), 'a')
 
 	def test_overwrite_value_removes_stale_reverse_entry(self) -> None:
-		# ISS-358: reassigning a key must purge the previous value from the reverse map
 		b = Bidict({'a': 1})
 		b['a'] = 2
 		self.assertEqual(b['a'], 2)
@@ -69,13 +68,12 @@ class Test_setitem(unittest.TestCase):
 			b.key_of(1)
 
 	def test_overwrite_preserves_bijection(self) -> None:
-		# ISS-358: invariant — every value in _key_map points back to a key that still maps to it
 		b = Bidict({'a': 1, 'b': 2})
 		b['a'] = 3
 		for value in b.values():
-			self.assertEqual(b._value_map[b._key_map[value]], value)
+			self.assertEqual(b._value_map[b._key_map[value]], value) # pylint: disable=protected-access
 		for key in b.keys():
-			self.assertEqual(b._key_map[b._value_map[key]], key)
+			self.assertEqual(b._key_map[b._value_map[key]], key) # pylint: disable=protected-access
 
 	def test_assigning_value_already_used_removes_old_key(self) -> None:
 		# Symmetric case: if the new value is already mapped under a different key,
@@ -124,7 +122,6 @@ class Test_has_value(unittest.TestCase):
 		self.assertFalse(b.has_value(99))
 
 	def test_false_after_overwrite(self) -> None:
-		# ISS-358: the old value must not still report as present after reassignment
 		b = Bidict({'a': 1})
 		b['a'] = 2
 		self.assertFalse(b.has_value(1))

@@ -9,28 +9,28 @@ if hasattr(sys, 'frozen'):
 else:
 	SFMPQ_DIR = os.path.dirname(__file__)
 
-_SFmpq = None
+_SFmpq: ctypes.CDLL | None = None
 if SFMPQ_DIR:
-	libraries = (
+	_libraries = (
 		'SFmpq.dll',
 		'SFmpq64.dll',
 		'SFmpq.dylib',
 	)
-	loaders: list[type[ctypes.CDLL]] = []
+	_loaders: list[type[ctypes.CDLL]] = []
 	if hasattr(ctypes, 'WinDLL'):
-		loaders.append(ctypes.WinDLL)
-	loaders.append(ctypes.CDLL)
-	for library in libraries:
-		path = os.path.join(SFMPQ_DIR, library)
-		loaded: ctypes.CDLL | None = None
-		for loader in loaders:
+		_loaders.append(ctypes.WinDLL)
+	_loaders.append(ctypes.CDLL)
+	for _library in _libraries:
+		_path = os.path.join(SFMPQ_DIR, _library)
+		_loaded: ctypes.CDLL | None = None
+		for _loader in _loaders:
 			try:
-				loaded = loader(path, ctypes.RTLD_GLOBAL)
+				_loaded = _loader(_path, ctypes.RTLD_GLOBAL)
 				break
 			except:
 				pass
-		if loaded is not None:
-			_SFmpq = loaded
+		if _loaded is not None:
+			_SFmpq = _loaded
 			break
 
 SFMPQ_LOADED = (_SFmpq is not None)
@@ -238,7 +238,7 @@ if _SFmpq is not None:
 	try:
 		_SFmpq.GetLastError.restype = ctypes.c_int32
 	except:
-		_SFmpq.GetLastError = None
+		pass
 
 	_SFmpq.MpqGetVersionString.restype = ctypes.c_char_p
 	_SFmpq.MpqGetVersion.restype = ctypes.c_float
@@ -299,9 +299,10 @@ def _file_name(file_name: str | bytes) -> bytes:
 def SFGetLastError() -> int:
 	assert _SFmpq is not None
 	# SFmpq only implements its own GetLastError on platforms other than windows
-	if _SFmpq.GetLastError is None:
+	try:
+		return _SFmpq.GetLastError() # pylint: disable=not-callable
+	except:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
-	return _SFmpq.GetLastError() # pylint: disable=not-callable
 
 def SFInvalidHandle(h: Any) -> bool:
 	return not isinstance(h, MPQHANDLE) or h.value in [None,0,-1]

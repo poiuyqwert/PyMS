@@ -141,7 +141,7 @@ class CopyOptions(Generic[G]):
 		variable = BooleanVar()
 		self.options.append((config, variable))
 		variable.set(config.value)
-		variable.trace_add('write', self.callback)
+		variable.trace_add('write', self._callback)
 		return variable
 
 	def any_enabled(self) -> bool:
@@ -150,6 +150,9 @@ class CopyOptions(Generic[G]):
 	def save(self) -> None:
 		for config,var in self.options:
 			config.value = var.get()
+
+	def _callback(self, *_: Any) -> None:
+		self.callback()
 
 class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEditorViewDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:

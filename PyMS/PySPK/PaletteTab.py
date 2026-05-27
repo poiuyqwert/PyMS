@@ -127,7 +127,7 @@ class PaletteTab(NotebookTab):
 			return
 		b = BMP.BMP()
 		try:
-			b.load_file(filepath)
+			b.load(filepath)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 		else:

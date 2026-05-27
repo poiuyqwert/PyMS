@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import ctypes
 import sys
-import tkinter as _Tk
+from .Extensions import WindowExtensions
 import uuid
 from typing import Any
 
@@ -76,7 +76,7 @@ def _initialize() -> bool:
 		return False
 
 
-def disable_rounded_corners(toplevel: _Tk.Toplevel) -> None:
+def disable_rounded_corners(toplevel: WindowExtensions) -> None:
 	if not _initialize():
 		return
 

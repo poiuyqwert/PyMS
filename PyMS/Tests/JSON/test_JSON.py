@@ -65,7 +65,6 @@ class Test_get(unittest.TestCase):
 			JSON.get({'n': None}, 'n', int)
 
 	def test_codable_decoded(self) -> None:
-		# ISS-351: Codable type should be detected and from_json invoked
 		result = JSON.get({'p': {'x': 1, 'y': 2}}, 'p', Point)
 		self.assertIsInstance(result, Point)
 		self.assertEqual(result, Point(x=1, y=2))
@@ -83,23 +82,23 @@ class Test_get_obj(unittest.TestCase):
 	def test_discriminator_selects_type(self) -> None:
 		def discriminator(obj: JSON.Object) -> type:
 			return Point if 'x' in obj else Named
-		result = JSON.get_obj({'item': {'x': 5, 'y': 6}}, 'item', discriminator)
+		result: Point | Named = JSON.get_obj({'item': {'x': 5, 'y': 6}}, 'item', discriminator)
 		self.assertEqual(result, Point(x=5, y=6))
 
 	def test_discriminator_selects_alternate_type(self) -> None:
 		def discriminator(obj: JSON.Object) -> type:
 			return Point if 'x' in obj else Named
-		result = JSON.get_obj({'item': {'name': 'foo'}}, 'item', discriminator)
+		result: Point | Named = JSON.get_obj({'item': {'name': 'foo'}}, 'item', discriminator)
 		self.assertEqual(result, Named(name='foo'))
 
 	def test_missing_key_raises(self) -> None:
-		def discriminator(obj: JSON.Object) -> type:
+		def discriminator(_: JSON.Object) -> type:
 			return Point
 		with self.assertRaises(PyMSError):
 			JSON.get_obj({}, 'item', discriminator)
 
 	def test_non_dict_value_raises(self) -> None:
-		def discriminator(obj: JSON.Object) -> type:
+		def discriminator(_: JSON.Object) -> type:
 			return Point
 		with self.assertRaises(PyMSError):
 			JSON.get_obj({'item': 'not a dict'}, 'item', discriminator)
@@ -128,9 +127,7 @@ class Test_get_array(unittest.TestCase):
 			JSON.get_array({'a': [1, 'two', 3]}, 'a', int)
 
 	def test_codable_elements_are_decoded(self) -> None:
-		# ISS-352: Decoded values must actually be in the returned list,
-		# not the raw dicts. Combined with ISS-351 (Codable branch was dead).
-		raw = {'pts': [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]}
+		raw: JSON.Object = {'pts': [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]}
 		result = JSON.get_array(raw, 'pts', Point)
 		self.assertEqual(result, [Point(x=1, y=2), Point(x=3, y=4)])
 		for item in result:
@@ -141,9 +138,8 @@ class Test_get_array(unittest.TestCase):
 			JSON.get_array({'pts': [{'x': 1, 'y': 2}, {'x': 'bad'}]}, 'pts', Point)
 
 	def test_returns_fresh_list_does_not_mutate_input(self) -> None:
-		# ISS-352: result should be a new list, not the caller-owned array
-		original = [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]
-		raw = {'pts': original}
+		original: JSON.Array = [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]
+		raw: JSON.Object = {'pts': original}
 		result = JSON.get_array(raw, 'pts', Point)
 		self.assertIsNot(result, original)
 		# Caller's input should still contain raw dicts
@@ -156,14 +152,14 @@ class Test_get_array(unittest.TestCase):
 
 class Test_get_array_obj(unittest.TestCase):
 	def test_discriminator_picks_type_for_array(self) -> None:
-		def discriminator(obj: JSON.Object) -> type:
+		def discriminator(_: JSON.Object) -> type:
 			return Point
-		raw = {'pts': [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]}
-		result = JSON.get_array_obj(raw, 'pts', discriminator)
+		raw: JSON.Object = {'pts': [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]}
+		result: list[Point] = JSON.get_array_obj(raw, 'pts', discriminator)
 		self.assertEqual(result, [Point(x=1, y=2), Point(x=3, y=4)])
 
 	def test_missing_array_raises(self) -> None:
-		def discriminator(obj: JSON.Object) -> type:
+		def discriminator(_: JSON.Object) -> type:
 			return Point
 		with self.assertRaises(PyMSError):
 			JSON.get_array_obj({}, 'pts', discriminator)

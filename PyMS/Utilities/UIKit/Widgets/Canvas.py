@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ...utils import is_mac
 from .. import Theme
-from .Extensions import Extensions
+from .Extensions import MiscExtensions
 
 import tkinter as _Tk
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 CoordinateAdjuster = Callable[[int, int], tuple[int, int]]
 
-class Canvas(_Tk.Canvas, Extensions):
+class Canvas(_Tk.Canvas, MiscExtensions):
 	class Item:
 		def __init__(self, canvas: Canvas, item_id: int):
 			self.canvas = canvas

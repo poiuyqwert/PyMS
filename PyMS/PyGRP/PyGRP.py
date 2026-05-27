@@ -582,7 +582,7 @@ BMP's must be imported with the same style they were exported as.""")
 			return
 		self.stopframe()
 		update_preview_limit = self.prevto.get() == self.grp.frames
-		files: list[str] | None = None
+		files: str | list[str] | None = None
 		if self.get_bmp_style() == BMPStyle.bmp_per_frame:
 			files = self.config_.last_path.bmp.select_open_multiple(self, title='Import frames...')
 		else:

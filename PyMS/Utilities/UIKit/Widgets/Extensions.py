@@ -1,12 +1,13 @@
 
 from ..Utils import remove_bind
 from ..EventPattern import WidgetEvent
+from ...utils import is_mac
 
 import tkinter as _Tk
 
 from typing import Any, Callable
 
-class Extensions(_Tk.Misc):
+class MiscExtensions(_Tk.Misc):
 	def remove_bind(self, sequence: str, funcid: str) -> None:
 		"""Unbind for this widget for event SEQUENCE  the
 		function identified with FUNCID."""
@@ -33,14 +34,14 @@ class Extensions(_Tk.Misc):
 			self._managed_after_ids.discard(after_id)
 		try:
 			self.after_cancel(after_id)
-		except Exception:
+		except:
 			pass
 
 	def _cancel_managed_afters(self, _event: Any = None) -> None:
 		for after_id in list(getattr(self, '_managed_after_ids', ())):
 			try:
 				self.after_cancel(after_id)
-			except Exception:
+			except:
 				pass
 		self._managed_after_ids = set()
 
@@ -60,7 +61,29 @@ class Extensions(_Tk.Misc):
 		self.clipboard_clear()
 		self.clipboard_append(text)
 
-class WindowExtensions(_Tk.Misc, _Tk.Wm):
+class WindowExtensions(MiscExtensions, _Tk.Wm):
+	def make_active(self) -> None:
+		if self.state() == 'withdrawn':
+			self.deiconify()
+		self.lift()
+		self.focus_force()
+		if not self.grab_status():
+			self.grab_set()
+			self.grab_release()
+
+	def make_frameless(self, parent_toplevel: _Tk.Wm | None = None) -> None:
+		self.wm_overrideredirect(True)
+		if is_mac():
+			if parent_toplevel is not None:
+				self.wm_transient(parent_toplevel)
+			try:
+				# Tk 9.0 / macOS Big Sur+ renders borderless NSWindows with a 26pt
+				# rounded-corner mask and exposes no Tcl knob to disable it.
+				from ._macos_corners import disable_rounded_corners
+				disable_rounded_corners(self)
+			except:
+				pass
+
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]
 		if width and height and not hasattr(self, '_initial_max_size'):
 			self._initial_max_size: tuple[int, int] | None = _Tk.Toplevel.maxsize(self) # pylint: disable=attribute-defined-outside-init
@@ -74,3 +97,7 @@ class WindowExtensions(_Tk.Misc, _Tk.Wm):
 			initial_max_width, initial_max_height = self._initial_max_size
 			is_maximized = (cur_max_width >= initial_max_width and cur_max_height >= initial_max_height)
 		return is_maximized
+
+	def grab_wait(self) -> None:
+		self.grab_set()
+		self.wait_window(self)

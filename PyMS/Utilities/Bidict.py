@@ -1,9 +1,10 @@
 
-from typing import Generic, TypeVar, Sequence
+from typing import TypeVar
+from collections.abc import MutableMapping, Iterator
 
 K = TypeVar('K')
 V = TypeVar('V')
-class Bidict(Generic[K,V]):
+class Bidict(MutableMapping[K, V]):
 	def __init__(self, _dict: dict[K, V]):
 		self._value_map = {key: value for key,value in _dict.items()}
 		self._key_map = {value: key for key,value in _dict.items()}
@@ -30,16 +31,13 @@ class Bidict(Generic[K,V]):
 		del self._value_map[key]
 		del self._key_map[value]
 
-	def keys(self) -> Sequence[K]:
-		return self._value_map.keys() # type: ignore[return-value]
+	def __iter__(self) -> Iterator[K]:
+		return iter(self._value_map)
 
-	def values(self) -> Sequence[V]:
-		return self._value_map.values() # type: ignore[return-value]
+	def __len__(self) -> int:
+		return len(self._value_map)
 
-	def items(self) -> Sequence[tuple[K, V]]:
-		return self._value_map.items() # type: ignore[return-value]
-
-	def __contains__(self, key: K) -> bool:
+	def __contains__(self, key: object) -> bool:
 		return key in self._value_map
 
 	def has_value(self, value: V) -> bool:

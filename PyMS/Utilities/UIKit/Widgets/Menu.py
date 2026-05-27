@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from ..TagStateManager import TagStateManager
 from .. import Theme
-from .Extensions import Extensions
+from .Extensions import MiscExtensions
 from ..EventPattern import EventPattern
 
 import tkinter as _Tk
 
 from typing import Any, Callable, Sequence
 
-class Menu(_Tk.Menu, Extensions):
+class Menu(_Tk.Menu, MiscExtensions):
 	class Item:
 		def __init__(self, menu: Menu, index: int):
 			self.menu = menu
