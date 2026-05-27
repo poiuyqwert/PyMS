@@ -3,11 +3,40 @@ from __future__ import annotations
 
 from .PyMSError import PyMSError
 
-from typing import TypeAlias, Sequence, runtime_checkable, Protocol, Self, Type, TypeVar, Callable
+from typing import TypeAlias, Sequence, runtime_checkable, Protocol, Self, Type, TypeVar, Callable, Any, TypeGuard
 
-Value: TypeAlias = 'int | float | str | bool | None | Object | Array'
+Primitive: TypeAlias = int | float | str | bool | None
+Value: TypeAlias = 'Primitive | Object | Array'
 Object = dict[str, Value]
 Array = Sequence[Value]
+
+def is_json_primitive(json: Any) -> TypeGuard[Primitive]:
+	return isinstance(json, (int, float, str, bool)) or json is None
+
+def is_json_object(json: Any, lazy: bool = False) -> TypeGuard[Object]:
+	if not isinstance(json, dict):
+		return False
+	if lazy:
+		return True
+	for key, value in json:
+		if not isinstance(key, str):
+			return False
+		if not is_json_value(value):
+			return False
+	return True
+
+def is_json_array(json: Any, lazy: bool = False) -> TypeGuard[Array]:
+	if not isinstance(json, Sequence):
+		return False
+	if lazy:
+		return True
+	for value in json:
+		if not is_json_value(value):
+			return False
+	return True
+
+def is_json_value(json: Any, lazy: bool = False) -> TypeGuard[Value]:
+	return is_json_primitive(json) or is_json_object(json, lazy) or is_json_array(json, lazy)
 
 @runtime_checkable
 class Codable(Protocol):

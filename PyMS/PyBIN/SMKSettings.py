@@ -164,7 +164,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		if flags != self.smk.flags:
 			self.smk.flags = flags
 			edited = True
-		
+
 		if edited:
 			self.delegate.mark_edited()
 

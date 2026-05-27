@@ -175,11 +175,11 @@ class MPQ:
 		raise NotImplementedError(self.__class__.__name__ + '.read_file()')
 
 	# `compression_level` may not be supported by all implementations
-	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.add_file()')
 
 	# `compression_level` may not be supported by all implementations
-	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		raise NotImplementedError(self.__class__.__name__ + '.add_data()')
 
 	def rename_file(self, file_name: str | bytes, new_file_name: str | bytes, locale: int = MPQLocale.neutral) -> None:
@@ -388,7 +388,7 @@ class StormLibMPQ(MPQ):
 		return (storm_flags, storm_compression)
 
 	# `compression_level` is not supported
-	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
 		assert self.mpq_handle is not None
 
@@ -398,7 +398,7 @@ class StormLibMPQ(MPQ):
 			raise PyMSError('MPQ', f"Error adding file {file_name!r} ({_StormLib.SFGetLastError()})")
 
 	# `compression_level` is not supported
-	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
 		assert self.mpq_handle is not None
 
@@ -606,7 +606,7 @@ class SFMPQ(MPQ):
 
 		return (sfmpq_flags, sfmpq_compression)
 
-	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_file(self, file_path: str, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
 		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)
@@ -615,7 +615,7 @@ class SFMPQ(MPQ):
 		if not _SFmpq.MpqAddFileToArchiveEx(self.mpq_handle, file_path, file_name, sfmpq_flags, sfmpq_compression, compression_level):
 			raise PyMSError('MPQ', f"Error adding file {file_name!r} ({_SFmpq.SFGetLastError()})")
 
-	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
+	def add_data(self, data: bytes, file_name: str | bytes, locale: int = MPQLocale.neutral, *, flags: int = MPQFileFlag.none, compression: int = MPQCompressionFlag.none, compression_level: int = 0) -> None:
 		self._check_open_status(editing=True)
 		assert self.mpq_handle is not None
 		_SFmpq.SFileSetLocale(locale)

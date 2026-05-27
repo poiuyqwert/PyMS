@@ -40,7 +40,7 @@ TileGroup:
 	piece.down 0
 """
 		expected = group_empty()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -77,7 +77,7 @@ TileGroup:
 	piece.down 9
 """
 		expected = group_inc()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -114,7 +114,7 @@ TileGroup:
 	piece.down 65535
 """
 		expected = group_full()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -151,7 +151,7 @@ TileGroup:
 	piece.down 0
 """
 		expected = group_flags()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -165,7 +165,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.type = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -194,7 +194,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.flags = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -214,7 +214,7 @@ TileGroup:
 		expected.basic_edge_up = 0
 		expected.basic_edge_right = 0
 		expected.basic_edge_down = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -228,7 +228,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_edge_left = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -242,7 +242,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_edge_up = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -256,7 +256,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_edge_right = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -270,7 +270,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_edge_down = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -290,7 +290,7 @@ TileGroup:
 		expected.basic_piece_up = 0
 		expected.basic_piece_right = 0
 		expected.basic_piece_down = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -304,7 +304,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_piece_left = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -318,7 +318,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_piece_up = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -332,7 +332,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_piece_right = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -346,7 +346,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.basic_piece_down = 0
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -360,7 +360,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.type = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -389,7 +389,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.flags = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -409,7 +409,7 @@ TileGroup:
 		expected.basic_edge_up = Max.u16
 		expected.basic_edge_right = Max.u16
 		expected.basic_edge_down = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -423,7 +423,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_edge_left = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -437,7 +437,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_edge_up = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -451,7 +451,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_edge_right = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -465,7 +465,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_edge_down = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -485,7 +485,7 @@ TileGroup:
 		expected.basic_piece_up = Max.u16
 		expected.basic_piece_right = Max.u16
 		expected.basic_piece_down = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -499,7 +499,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_piece_left = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -513,7 +513,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_piece_up = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -527,7 +527,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_piece_right = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -541,7 +541,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.basic_piece_down = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -555,7 +555,7 @@ TileGroup:
 """
 		expected = group_empty()
 		expected.flags |= CV5Flag.walkable
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -568,7 +568,7 @@ TileGroup:
 	flags.walkable 1
 """
 		expected = group_full()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -582,7 +582,7 @@ TileGroup:
 """
 		expected = group_full()
 		expected.flags &= ~CV5Flag.walkable
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full])
 		result = tileset.cv5.get_group(ID.basic_full)
 
@@ -595,7 +595,7 @@ TileGroup:
 	flags.walkable 0
 """
 		expected = group_empty()
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty])
 		result = tileset.cv5.get_group(ID.basic_empty)
 
@@ -658,7 +658,7 @@ TileGroup:
 	piece.down 65535
 """
 		expected = (group_empty(), group_full())
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full,ID.basic_empty])
 		result = (tileset.cv5.get_group(ID.basic_full), tileset.cv5.get_group(ID.basic_empty))
 
@@ -697,7 +697,7 @@ TileGroup:
 	piece.down 0
 """
 		expected = (group_empty(), group_inc())
-		
+
 		tileset.import_group_settings(settings, [ID.basic_full,ID.basic_inc], options)
 		result = (tileset.cv5.get_group(ID.basic_full), tileset.cv5.get_group(ID.basic_inc))
 
@@ -762,7 +762,7 @@ TileGroup:
 	piece.down 65535
 """
 		expected = (group_empty(), group_full(), group_empty(), group_full())
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags], options)
 		result = tuple(tileset.cv5.get_group(id) for id in [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags])
 
@@ -827,7 +827,7 @@ TileGroup:
 	piece.down 65535
 """
 		expected = (group_empty(), group_full(), group_full(), group_full())
-		
+
 		tileset.import_group_settings(settings, [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags], options)
 		result = tuple(tileset.cv5.get_group(id) for id in [ID.basic_empty,ID.basic_inc,ID.basic_full,ID.basic_flags])
 
@@ -864,7 +864,7 @@ DoodadGroup:
 	unknown8 0
 """
 		expected = group_empty(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -900,7 +900,7 @@ DoodadGroup:
 	unknown8 9
 """
 		expected = group_inc(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -936,7 +936,7 @@ DoodadGroup:
 	unknown8 65535
 """
 		expected = group_full(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -972,7 +972,7 @@ DoodadGroup:
 	unknown8 0
 """
 		expected = group_flags(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1001,7 +1001,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.flags = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1015,7 +1015,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_overlay_id = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1029,7 +1029,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_scr = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1043,7 +1043,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_string_id = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1057,7 +1057,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_unknown4 = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1071,7 +1071,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_dddata_id = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1085,7 +1085,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_width = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1099,7 +1099,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_height = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1113,7 +1113,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.doodad_unknown8 = 0
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1127,7 +1127,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_overlay_id = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1141,7 +1141,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_scr = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1155,7 +1155,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_string_id = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1169,7 +1169,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_unknown4 = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1183,7 +1183,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_dddata_id = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1197,7 +1197,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_width = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1211,7 +1211,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_height = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1225,7 +1225,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.doodad_unknown8 = Max.u16
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1239,7 +1239,7 @@ DoodadGroup:
 """
 		expected = group_empty(True)
 		expected.flags |= CV5Flag.walkable
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1252,7 +1252,7 @@ DoodadGroup:
 	flags.walkable 1
 """
 		expected = group_full(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1266,7 +1266,7 @@ DoodadGroup:
 """
 		expected = group_full(True)
 		expected.flags &= ~CV5Flag.walkable
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full])
 		result = tileset.cv5.get_group(ID.doodad_full)
 
@@ -1279,7 +1279,7 @@ DoodadGroup:
 	flags.walkable 0
 """
 		expected = group_empty(True)
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty])
 		result = tileset.cv5.get_group(ID.doodad_empty)
 
@@ -1340,7 +1340,7 @@ DoodadGroup:
 	unknown8 65535
 """
 		expected = (group_empty(True), group_full(True))
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full,ID.doodad_empty])
 		result = (tileset.cv5.get_group(ID.doodad_full), tileset.cv5.get_group(ID.doodad_empty))
 
@@ -1378,7 +1378,7 @@ DoodadGroup:
 	unknown8 0
 """
 		expected = (group_empty(True), group_inc(True))
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_full,ID.doodad_inc], options)
 		result = (tileset.cv5.get_group(ID.doodad_full), tileset.cv5.get_group(ID.doodad_inc))
 
@@ -1441,7 +1441,7 @@ DoodadGroup:
 	unknown8 65535
 """
 		expected = (group_empty(True), group_full(True), group_empty(True), group_full(True))
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags], options)
 		result = tuple(tileset.cv5.get_group(id) for id in [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags])
 
@@ -1504,7 +1504,7 @@ DoodadGroup:
 	unknown8 65535
 """
 		expected = (group_empty(True), group_full(True), group_full(True), group_full(True))
-		
+
 		tileset.import_group_settings(settings, [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags], options)
 		result = tuple(tileset.cv5.get_group(id) for id in [ID.doodad_empty,ID.doodad_inc,ID.doodad_full,ID.doodad_flags])
 
@@ -1906,7 +1906,7 @@ MegaTile:
 		1111
 """
 		expected = (mega_empty(), mega_full())
-		
+
 		tileset.import_megatile_settings(settings, [ID.mega_full,ID.mega_empty])
 		result = (tileset.vf4.get_megatile(ID.mega_full), tileset.vf4.get_megatile(ID.mega_empty))
 
@@ -1945,7 +1945,7 @@ MegaTile:
 		0000
 """
 		expected = (mega_empty(), mega_crosshatch())
-		
+
 		tileset.import_megatile_settings(settings, [ID.mega_full,ID.mega_crosshatch], options)
 		result = (tileset.vf4.get_megatile(ID.mega_full), tileset.vf4.get_megatile(ID.mega_crosshatch))
 
@@ -2010,7 +2010,7 @@ MegaTile:
 		1111
 """
 		expected = (mega_empty(), mega_full(), mega_empty(), mega_full())
-		
+
 		tileset.import_megatile_settings(settings, [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2], options)
 		result = tuple(tileset.vf4.get_megatile(id) for id in [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2])
 
@@ -2075,7 +2075,7 @@ MegaTile:
 		1111
 """
 		expected = (mega_empty(), mega_full(), mega_full(), mega_full())
-		
+
 		tileset.import_megatile_settings(settings, [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2], options)
 		result = tuple(tileset.vf4.get_megatile(id) for id in [ID.mega_empty,ID.mega_crosshatch,ID.mega_full,ID.mega_crosshatch2])
 

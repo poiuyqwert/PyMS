@@ -806,7 +806,7 @@ def SFileOpenFileEx(mpq: MPQHANDLE, file_name: str | bytes, search: int = SFILE_
 def SFileGetFileSize(file: MPQHANDLE) -> int | None:
 	assert _StormLib is not None
 	size = _StormLib.SFileGetFileSize(file, None)
-	if size == SFILE_INVALID_SIZE or size == -1:
+	if size in (SFILE_INVALID_SIZE, -1):
 		return None
 	return size
 
@@ -876,7 +876,7 @@ def SFileFindClose(find_handle: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileFindClose(find_handle)
 
-def SFileCreateFile(mpq: MPQHANDLE, file_name: str | bytes, file_time: int, file_size: int, locale: int, flags: int) -> MPQHANDLE | None:
+def SFileCreateFile(mpq: MPQHANDLE, file_name: str | bytes, file_time: int, file_size: int, locale: int, flags: int) -> MPQHANDLE | None: # pylint: disable=too-many-positional-arguments
 	assert _StormLib is not None
 	h = MPQHANDLE()
 	if not _StormLib.SFileCreateFile(mpq, _file_name(file_name), file_time, file_size, locale, flags, ctypes.byref(h)):
@@ -891,7 +891,7 @@ def SFileFinishFile(file: MPQHANDLE) -> bool:
 	assert _StormLib is not None
 	return _StormLib.SFileFinishFile(file)
 
-def SFileAddFileEx(mpq: MPQHANDLE, file_path: str, file_name: str | bytes, flags: int = MPQ_FILE_REPLACEEXISTING, compression: int = 0, compression_next: int = MPQ_COMPRESSION_NEXT_SAME) -> bool:
+def SFileAddFileEx(mpq: MPQHANDLE, file_path: str, file_name: str | bytes, flags: int = MPQ_FILE_REPLACEEXISTING, compression: int = 0, compression_next: int = MPQ_COMPRESSION_NEXT_SAME) -> bool: # pylint: disable=too-many-positional-arguments
 	assert _StormLib is not None
 	return _StormLib.SFileAddFileEx(mpq, _file_path(file_path), _file_name(file_name), flags, compression, compression_next)
 
@@ -921,4 +921,4 @@ def SFGetLastError() -> int:
 		return _StormLib.GetLastError() # pylint: disable=not-callable
 	except:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
-	
+

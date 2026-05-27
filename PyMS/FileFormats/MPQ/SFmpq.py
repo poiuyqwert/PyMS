@@ -402,7 +402,7 @@ def MpqAddFileToArchive(mpq: MPQHANDLE, source: str, dest: str | bytes, flags: i
 	assert _SFmpq is not None
 	return _SFmpq.MpqAddFileToArchive(mpq, source.encode('utf-8'), _file_name(dest), flags)
 
-def MpqAddFileFromBufferEx(mpq: MPQHANDLE, buffer: bytes, file: str | bytes, flags: int = MAFA_REPLACE_EXISTING, comptype: int = 0, complevel: int = 0) -> bool:
+def MpqAddFileFromBufferEx(mpq: MPQHANDLE, buffer: bytes, file: str | bytes, flags: int = MAFA_REPLACE_EXISTING, comptype: int = 0, complevel: int = 0) -> bool: # pylint: disable=too-many-positional-arguments
 	assert _SFmpq is not None
 	return _SFmpq.MpqAddFileFromBufferEx(mpq, buffer, len(buffer), _file_name(file), flags, comptype, complevel)
 
@@ -422,7 +422,7 @@ def MpqOpenArchiveForUpdateEx(mpq_path: str, flags: int = MOAU_OPEN_ALWAYS, maxf
 	assert _SFmpq is not None
 	return _SFmpq.MpqOpenArchiveForUpdateEx(mpq_path.encode('utf-8'), flags, maxfiles, blocksize)
 
-def MpqAddFileToArchiveEx(mpq: MPQHANDLE, source: str, dest: str | bytes, flags: int = MAFA_REPLACE_EXISTING, comptype: int = 0, complevel: int = 0) -> bool:
+def MpqAddFileToArchiveEx(mpq: MPQHANDLE, source: str, dest: str | bytes, flags: int = MAFA_REPLACE_EXISTING, comptype: int = 0, complevel: int = 0) -> bool: # pylint: disable=too-many-positional-arguments
 	assert _SFmpq is not None
 	return _SFmpq.MpqAddFileToArchiveEx(mpq, source.encode('utf-8'), _file_name(dest), flags, comptype, complevel)
 

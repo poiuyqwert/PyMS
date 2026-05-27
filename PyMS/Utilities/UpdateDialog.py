@@ -52,7 +52,7 @@ class UpdateDialog(PyMSDialog):
 
 	def widgetize(self) -> Misc | None:
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
-			text = f"Your version of {self.program} ({Assets.version(self.program)}) is older then the current version ({self.versions[self.program]}).\nIt is recommended that you update as soon as possible."	
+			text = f"Your version of {self.program} ({Assets.version(self.program)}) is older then the current version ({self.versions[self.program]}).\nIt is recommended that you update as soon as possible."
 		else:
 			text = f"Your version of PyMS ({Assets.version('PyMS')}) is older then the current version ({self.versions['PyMS']}).\nIt is recommended that you update as soon as possible."
 		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)

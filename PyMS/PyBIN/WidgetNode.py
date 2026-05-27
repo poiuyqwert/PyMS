@@ -361,11 +361,10 @@ class WidgetNode:
 		for i,(bin_smk,smk) in enumerate(showing):
 			frame = smk.get_frame()
 			# trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
-			trans = False
 			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
 				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
 			else:
-				image = cast(ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False, trans=trans))
+				image = cast(ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False))
 				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
 					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
 				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
@@ -390,8 +389,7 @@ class WidgetNode:
 				try:
 					pcx = PCX.PCX()
 					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
-					trans = ((self.widget.flags & DialogBIN.BINWidget.FLAG_TRANSPARENCY) == DialogBIN.BINWidget.FLAG_TRANSPARENCY)
-					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False, trans=trans))
+					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
 				except:
 					self.delegate.capture_exception()
 			if self.photo:

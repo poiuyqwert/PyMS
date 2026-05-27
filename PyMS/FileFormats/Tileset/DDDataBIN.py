@@ -17,7 +17,7 @@ class DDDataBIN:
 
 	def doodad_count(self) -> int:
 		return len(self._doodads)
-	
+
 	def get_doodad(self, doodad_id: int) -> list[int]:
 		return self._doodads[doodad_id]
 

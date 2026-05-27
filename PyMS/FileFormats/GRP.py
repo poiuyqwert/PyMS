@@ -12,7 +12,7 @@ except:
 	sys.exit()
 
 from tkinter import Image
-	
+
 from .Images import Pixels, RawPalette, RGBA, RGB, Bounds
 from .BMP import BMP
 from .PCX import PCX
@@ -76,7 +76,7 @@ def image_bounds(image: Pixels, transindex: int = 0) -> Bounds:
 	return (bounds[0], bounds[1], bounds[2], bounds[3])
 
 # transindex=None for no transparency
-def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> PILImage.Image:
+def image_to_pil(image: Pixels, palette: RawPalette, *, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> PILImage.Image:
 	if bounds:
 		x_min,y_min,x_max,y_max = bounds
 		image = list(line[x_min:x_max+1] for line in image[y_min:y_max+1])
@@ -97,14 +97,13 @@ def image_to_pil(image: Pixels, palette: RawPalette, transindex: int = 0, bounds
 	i.putdata(data) # type: ignore[arg-type]
 	return i
 
-def image_to_tk(image: Pixels, palette: RawPalette, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
-	pil = image_to_pil(image, palette, transindex, bounds, flipHor, draw_function, draw_info)
+def image_to_tk(image: Pixels, palette: RawPalette, *, transindex: int = 0, bounds: Bounds | None = None, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image:
+	pil = image_to_pil(image, palette, transindex=transindex, bounds=bounds, flipHor=flipHor, draw_function=draw_function, draw_info=draw_info)
 	return cast(Image, ImageTk.PhotoImage(pil))
 
 ImageWithBounds = tuple[Image, int, int, int, int]
 
-# TODO: Why are `buffered` and `trans` unused?
-def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, buffered: bool = False, size: bool = True, trans: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image | ImageWithBounds:
+def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int | None = None, *, size: bool = True, transindex: int = 0, flipHor: bool = False, draw_function: RLEFunc = rle_normal, draw_info: T | None = None) -> Image | ImageWithBounds:
 	if isinstance(g, CacheGRP):
 		d = g[f or 0]
 	elif isinstance(g, GRP):
@@ -117,7 +116,7 @@ def frame_to_photo(p: RawPalette, g: GRP | CacheGRP | BMP | PCX | Pixels, f: int
 	else:
 		d = g
 	if not size:
-		return image_to_tk(d, p, transindex, flipHor=flipHor, draw_function=draw_function, draw_info=draw_info)
+		return image_to_tk(d, p, transindex=transindex, flipHor=flipHor, draw_function=draw_function, draw_info=draw_info)
 	width = len(d[0])
 	height = len(d)
 	i = PILImage.new('RGBA', (width,height))

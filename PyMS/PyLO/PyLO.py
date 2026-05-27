@@ -440,7 +440,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			return None
 		if not frame_index in self.basegrp_cache:
 			try:
-				self.basegrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, True, False))
+				self.basegrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, size=False))
 			except:
 				self.basegrp_cache[frame_index] = None
 		return self.basegrp_cache[frame_index]
@@ -450,7 +450,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 			return None
 		if not frame_index in self.overlaygrp_cache:
 			try:
-				self.overlaygrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, True, False))
+				self.overlaygrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, size=False))
 			except:
 				self.overlaygrp_cache[frame_index] = None
 		return self.overlaygrp_cache[frame_index]

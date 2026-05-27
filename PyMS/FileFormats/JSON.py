@@ -5,32 +5,9 @@ from ..Utilities import JSON
 
 import json as _json
 
-from typing import Any, TypeGuard
-
-# def is_json(json: Any, check_keys: bool = False) -> TypeGuard[JSONArray]:
-# 	if not isinstance(json, list):
-# 		return False
-# 	for object in json:
-# 		if not isinstance(object, dict):
-# 			return False
-# 		if check_keys:
-# 			for key in object.keys():
-# 				if not isinstance(key, str):
-# 					return False
-# 	return True
-
-def is_json_value(json: Any) -> TypeGuard[JSON.Value]:
-	return False
-
-def is_json_object(json: Any) -> TypeGuard[JSON.Object]:
-	return False
-
-def is_json_array(json: Any) -> TypeGuard[JSON.Array]:
-	return False
-
-def load(input: IO.AnyInputText) -> JSON.Array | JSON.Object:
+def load(inp: IO.AnyInputText) -> JSON.Array | JSON.Object:
 	try:
-		with IO.InputText(input) as f:
+		with IO.InputText(inp) as f:
 			raw_json = f.read()
 	except Exception as exc:
 		raise PyMSError('Load', "Couldn't load json") from exc

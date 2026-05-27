@@ -497,7 +497,7 @@ class PreviewerDialog(PyMSDialog):
 					GRP_CACHE[path] = {}
 				if not frame in GRP_CACHE:
 					GRP_CACHE[path][frame] = {}
-				GRP_CACHE[path][frame][pal] = cast(Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, True, False))
+				GRP_CACHE[path][frame][pal] = cast(Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False))
 		return GRP_CACHE[path][frame][pal]
 
 	def select(self, entry_id: int, entry_type: EntryType, frame: int = 0) -> None:

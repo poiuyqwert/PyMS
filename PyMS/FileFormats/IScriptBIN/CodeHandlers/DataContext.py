@@ -5,7 +5,7 @@ from ...DAT import DATEntryName, DataNamesUsage, ImagesDAT, SpritesDAT, FlingyDA
 from ....Utilities import Assets
 
 class DataContext:
-	def __init__(self, images_tbl: TBL | None = None, images_dat: ImagesDAT | None = None, sprites_dat: SpritesDAT | None = None, flingy_dat: FlingyDAT | None = None, sounds_tbl: TBL | None = None, sounds_dat: SoundsDAT | None = None, stat_txt_tbl: TBL | None = None, weapons_dat: WeaponsDAT | None = None):
+	def __init__(self, *, images_tbl: TBL | None = None, images_dat: ImagesDAT | None = None, sprites_dat: SpritesDAT | None = None, flingy_dat: FlingyDAT | None = None, sounds_tbl: TBL | None = None, sounds_dat: SoundsDAT | None = None, stat_txt_tbl: TBL | None = None, weapons_dat: WeaponsDAT | None = None):
 		self.images_tbl = images_tbl
 		self.images_dat = images_dat
 		self._image_names: tuple[str, ...] | None = None

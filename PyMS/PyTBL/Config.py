@@ -51,7 +51,7 @@ class PyTBLConfig(Config.Config):
 				self.icons = Config.File(default='MPQ:game\\icons.grp', name='icons.grp', filetypes=[FileType.grp()])
 				self.unit_pal = Config.File(default=Assets.palette_file_path('Units.pal'), name='Unit Palette', filetypes=[FileType.pal()])
 				super().__init__()
-		
+
 		class LastPath(Config.Group):
 			def __init__(self) -> None:
 				self.mpqs = Config.SelectFile(name='MPQ', filetypes=[FileType.mpq_all(),FileType.mpq(),FileType.exe_mpq(),FileType.scm(),FileType.scx()])

@@ -507,7 +507,7 @@ class BINWidget:
 		return self.type in (BINWidget.TYPE_BUTTON, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_DEFAULT_BTN)
 
 	def display_text(self) -> (str | None):
-		if self.type != BINWidget.TYPE_DIALOG and self.type != BINWidget.TYPE_IMAGE and self.type != BINWidget.TYPE_HTML:
+		if self.type not in (BINWidget.TYPE_DIALOG, BINWidget.TYPE_IMAGE, BINWidget.TYPE_HTML):
 			if self.is_button() and self.flags & (BINWidget.FLAG_VIRTUAL_HOTKEY | BINWidget.FLAG_HAS_HOTKEY):
 				return self.string[1:]
 			else:

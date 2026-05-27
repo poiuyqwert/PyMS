@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 
 # Python port of SComp by Ladislav Zezula, which is an implementation of:
 #   PKWARE Data Compression Library for Win32
@@ -6,7 +7,7 @@
 #   PKWARE Data Compression Library Reg. U.S. Pat. and Tm. Off.
 #   Version 1.11
 
-from .....Utilities.PyMSError import  PyMSError
+from .....Utilities.PyMSError import PyMSError
 
 import struct
 
@@ -207,7 +208,7 @@ class Explode:
 
 	def __init__(self, data: bytes) -> None:
 		if Explode.DEBUG is None:
-			Explode.DEBUG = open('p_debug_explode.txt', 'w', encoding='utf-8')
+			Explode.DEBUG = open('p_debug_explode.txt', 'w', encoding='utf-8') # pylint: disable=consider-using-with
 
 		self.data = data
 

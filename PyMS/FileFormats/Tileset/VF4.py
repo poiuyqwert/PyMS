@@ -78,6 +78,6 @@ class VF4:
 				f.close()
 			except Exception as exc:
 				raise PyMSError('Save', f"Could not save the VF4 to '{file}'") from exc
-		else:		
+		else:
 			file.write(data)
 			file.close()

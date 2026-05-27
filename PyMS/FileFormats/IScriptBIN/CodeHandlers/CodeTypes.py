@@ -55,7 +55,7 @@ class FrameCodeType(CodeType.IntCodeType):
 			return str(value)
 		return f'0x{value:02X}'
 
-	def comment(self, value: int, context: SerializeContext) -> str | None:
+	def comment(self, value: int, _context: SerializeContext) -> str | None:
 		if not value % 17:
 			return f'Frame set {value // 17}'
 		if value > 17:
@@ -239,7 +239,7 @@ class HeaderIDCodeType(CodeType.IntCodeType):
 	def __init__(self) -> None:
 		super().__init__('ID', 'The iscript id of an animation set which is referenced by images.dat, each set has a unique id', Struct.l_u16)
 
-	def comment(self, value: int, context: SerializeContext) -> str | None:
+	def comment(self, value: int, _context: SerializeContext) -> str | None:
 		if value < len(Assets.data_cache(Assets.DataReference.IscriptIDList)):
 			return Assets.data_cache(Assets.DataReference.IscriptIDList)[value]
 		return f'UnknownScript{value}'

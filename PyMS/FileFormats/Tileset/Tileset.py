@@ -136,7 +136,7 @@ class Tileset:
 	def minitiles_remaining(self) -> int:
 		return self.vr4.images_remaining(expanded_vx4=self.vx4.is_expanded())
 
-	def new_file(self, cv5: CV5 | None = None, vf4: VF4 | None = None, vx4: VX4 | None = None, vr4: VR4 | None = None, dddata: DDDataBIN | None = None, wpe: Palette | None = None) -> None:
+	def new_file(self, *, cv5: CV5 | None = None, vf4: VF4 | None = None, vx4: VX4 | None = None, vr4: VR4 | None = None, dddata: DDDataBIN | None = None, wpe: Palette | None = None) -> None:
 		if cv5:
 			self.cv5 = cv5
 		else:
@@ -168,7 +168,7 @@ class Tileset:
 			self.wpe = Palette()
 		self.wpe_path = None
 
-	def load_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
+	def load_file(self, cv5_path: str, *, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
 		path = os.path.dirname(cv5_path)
 		name = os.path.basename(cv5_path)
 		if name.split(os.extsep)[-1].lower() == 'cv5':
@@ -205,7 +205,7 @@ class Tileset:
 		self.dddata_path = dddata_path
 		self.wpe_path = wpe_path
 
-	def save_file(self, cv5_path: str, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
+	def save_file(self, cv5_path: str, *, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
 		path = os.path.dirname(cv5_path)
 		name = os.path.basename(cv5_path)
 		if name.endswith(os.extsep + 'cv5'):

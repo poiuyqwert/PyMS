@@ -179,7 +179,8 @@ class MPQ:
 
 	def load_file(self, path: str) -> None:
 		try:
-			file_handle = open(path, 'rb')
+			# File handle is stored on `self` and closed via `close()`/`__exit__`, so a `with` block is not appropriate here.
+			file_handle = open(path, 'rb')  # pylint: disable=consider-using-with
 		except Exception as exc:
 			raise PyMSError('Load', f"Could not load '{path}'") from exc
 		try:
@@ -392,10 +393,8 @@ class MPQ:
 		file_data = b''
 		for index in range(0, len(block_offsets)-1):
 			raw_size = block_offsets[index+1] - block_offsets[index]
-			sector_size = block_size
 			# The last sector might be smaller than a full sector
-			if sector_size > read_size:
-				sector_size = read_size
+			sector_size = min(block_size, read_size)
 			self.file_handle.seek(self.mpq_offset + block_entry.file_offset + block_offsets[index])
 			block_data = self.file_handle.read(raw_size)
 			if block_entry.flags & MPQBlockFlag.encrypted:

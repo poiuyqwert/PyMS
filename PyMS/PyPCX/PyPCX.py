@@ -110,7 +110,7 @@ class PyPCX(MainWindow):
 			return
 		self.canvas.config(width=self.pcx.width,height=self.pcx.height)
 		self.canvas.pack(side=TOP)
-		self.image = cast(Image, frame_to_photo(self.pcx.palette, self.pcx, -1, size=False, trans=False))
+		self.image = cast(Image, frame_to_photo(self.pcx.palette, self.pcx, -1, size=False))
 		self.canvas.create_image(0, 0, image=self.image, anchor=NW)
 		self.action_states()
 

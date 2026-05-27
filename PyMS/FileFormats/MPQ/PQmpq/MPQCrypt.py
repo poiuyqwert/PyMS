@@ -54,7 +54,7 @@ def decrypt(data: bytes, key: int) -> bytes:
 
 		result += LONG.pack(c)
 		offset += 4
-	
+
 	remaining = len(data) % 4
 	if remaining:
 		result += data[-remaining:]
