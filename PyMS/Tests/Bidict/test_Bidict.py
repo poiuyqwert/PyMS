@@ -1,4 +1,6 @@
 
+# pylint: disable=protected-access
+
 from ...Utilities.Bidict import Bidict
 
 import unittest

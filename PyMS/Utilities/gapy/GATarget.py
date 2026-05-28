@@ -3,13 +3,16 @@ from . import GAField
 
 import urllib.parse, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, platform, threading, time, sys
 
+from typing import TypeAlias
+
+EventData: TypeAlias = dict[str, str]
 
 class GATarget:
-	def track(self, data: dict[str, str]) -> None:
+	def track(self, data: EventData | list[EventData]) -> None:
 		raise NotImplementedError(f'{self.__class__.__name__}.track')
 
 class GAOutputTarget(GATarget):
-	def track(self, data: dict[str, str]):
+	def track(self, data: EventData | list[EventData]):
 		print(data)
 
 
@@ -140,7 +143,7 @@ class GAAPITarget(GATarget, threading.Thread):
 		self._pause_cond.notify()
 		self._pause_cond.release()
 
-	def track(self, data):
+	def track(self, data: EventData | list[EventData]):
 		if isinstance(data, dict):
 			self._track.append(data)
 		else:

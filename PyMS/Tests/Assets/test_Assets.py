@@ -1,4 +1,6 @@
 
+# pylint: disable=protected-access
+
 from ...Utilities import Assets
 
 import os
@@ -153,14 +155,14 @@ class Test_data_cache(unittest.TestCase):
 
 class Test_image_cache_reset(unittest.TestCase):
 	def test_clear_image_cache_empties_cache(self) -> None:
-		Assets._IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment] # pylint: disable=protected-access
+		Assets._IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment]
 		Assets.clear_image_cache()
-		self.assertNotIn('__sentinel__', Assets._IMAGE_CACHE) # pylint: disable=protected-access
+		self.assertNotIn('__sentinel__', Assets._IMAGE_CACHE)
 
 	def test_clear_help_image_cache_empties_cache(self) -> None:
-		Assets._HELP_IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment] # pylint: disable=protected-access
+		Assets._HELP_IMAGE_CACHE['__sentinel__'] = object()  # type: ignore[assignment]
 		Assets.clear_help_image_cache()
-		self.assertNotIn('__sentinel__', Assets._HELP_IMAGE_CACHE) # pylint: disable=protected-access
+		self.assertNotIn('__sentinel__', Assets._HELP_IMAGE_CACHE)
 
 
 class Test_HelpFolder(unittest.TestCase):

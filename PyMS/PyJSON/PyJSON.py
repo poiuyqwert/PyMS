@@ -186,6 +186,8 @@ class PyJSON(MainWindow):
 
 	def clear_editor(self) -> None:
 		for child in self.editor_frame.winfo_children():
+			if not isinstance(child, Widget):
+				continue
 			child.pack_forget()
 
 	def rebuild_editor(self) -> None:

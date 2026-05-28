@@ -32,7 +32,7 @@ class NameDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		if self.save_callback and self.save_callback(self, self.name.get()) == CheckSaved.cancelled:
 			return
 		PyMSDialog.ok(self)

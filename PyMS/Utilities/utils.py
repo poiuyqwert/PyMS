@@ -58,7 +58,7 @@ def debug_func_log(should_log_call=None):
 def debug_state(states):
 	n = getattr(debug_state, '_count', 0)
 	print(f'##### {n}: {states[n] if n < len(states) else "Unknown"}')
-	debug_state._count = n + 1 # type: ignore[attr-defined]
+	debug_state._count = n + 1 # type: ignore[attr-defined] # pylint: disable=protected-access
 
 def nearest_multiple(v: int, m: int, r: Callable[[float], float] = round) -> int:
 	return m * int(r(v / float(m)))
@@ -258,7 +258,7 @@ def start_file(filepath: str) -> None:
 
 play_sound: Callable[[bytes], None] | None = None
 try:
-	from winsound import PlaySound, SND_MEMORY # type: ignore[attr-defined]
+	from winsound import PlaySound, SND_MEMORY # type: ignore[attr-defined] # pylint: disable=import-error
 	def win_play(raw_audio):
 		start_new_thread(PlaySound, (raw_audio, SND_MEMORY))
 	play_sound = win_play

@@ -79,8 +79,7 @@ class PreviewDialog(PyMSDialog):
 					display[-1].append(self.characters[c][color])
 				elif a in FNT.COLOR_CODES_INGAME and not color in FNT.COLOR_OVERPOWER:
 					color = a
-			if w > width:
-				width = w
+			width = max(width, w)
 		if self.hotkey.get() and hotkey and hotkey < 6:
 			if hotkey == 1:
 				display[-1][0] = self.geticon('mins',0)
@@ -115,7 +114,7 @@ class PreviewDialog(PyMSDialog):
 		ok.pack(pady=3)
 		return ok
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.delegate.config_.preview.hotkey.value = self.hotkey.get()
 		self.delegate.config_.preview.end_at_null.value = self.endatnull.get()
 		PyMSDialog.ok(self)

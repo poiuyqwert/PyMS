@@ -46,7 +46,7 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 	def ok(self, _event: Event | None = None) -> None:
 		if self.edited:
 			from .TilePalette import TilePalette
-			if self.editor.megatile_id in TilePalette.TILE_CACHE:
+			if self.editor.megatile_id is not None and self.editor.megatile_id in TilePalette.TILE_CACHE:
 				del TilePalette.TILE_CACHE[self.editor.megatile_id]
 			self.delegate.megaload()
 			self.delegate.draw_tiles(force=True)

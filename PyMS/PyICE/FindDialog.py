@@ -113,7 +113,7 @@ class FindDialog(PyMSDialog):
 			index = self.treelist.index(i)
 			text = self.treelist.get(i)
 			assert index is not None and text is not None
-			g,s = int(index.split('.')[0]),int(text[:3].lstrip())
+			g,s = int(index.split('.', maxsplit=1)[0]),int(text[:3].lstrip())
 			if self.lists[g] == self.delegate.iscriptlist:
 				s = sorted(script.id for script in self.delegate.get_iscript_bin().list_scripts()).index(s)
 			if not g in c:

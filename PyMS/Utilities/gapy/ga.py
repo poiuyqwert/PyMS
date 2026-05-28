@@ -8,7 +8,8 @@ import uuid
 from typing import Self, Sequence
 
 class GAData:
-	def __init__(self, data: dict[str, str] | None = None) -> None:
+	def __init__(self, data: GATarget.EventData | None = None) -> None:
+		self._data: GATarget.EventData
 		if data is None:
 			self._data = {}
 		else:
@@ -16,16 +17,16 @@ class GAData:
 
 	def __setitem__(self, field: str, value: str) -> None:
 		self._data[field] = value
-	def set_data(self, data: dict[str, str]) -> None:
+	def set_data(self, data: GATarget.EventData) -> None:
 		self._data = data.copy()
-	def update_data(self, data: dict[str, str]) -> None:
+	def update_data(self, data: GATarget.EventData) -> None:
 		self._data.update(data)
 
 	def __getitem__(self, field: str) -> str | None:
 		if not field in self._data:
 			return None
 		return self._data[field]
-	def get_data(self) -> dict[str, str]:
+	def get_data(self) -> GATarget.EventData:
 		return self._data.copy()
 
 	def __delitem__(self, field: str) -> None:
@@ -52,10 +53,10 @@ class GAData:
 class GAHit(GAData):
 	TYPE: str | None = None
 
-	def _build_data(self, data: dict[str, str]) -> None:
+	def _build_data(self, data: GATarget.EventData) -> None:
 		if self.TYPE is not None:
 			data[GAField.HitType] = self.TYPE
-	def tracking_data(self) -> dict[str, str]:
+	def tracking_data(self) -> GATarget.EventData:
 		data = self._data.copy()
 		self._build_data(data)
 		return data
@@ -63,11 +64,11 @@ class GAHit(GAData):
 class GAScreen(GAHit):
 	TYPE = 'screenview'
 
-	def __init__(self, name: str, data: dict[str, str] | None = None):
+	def __init__(self, name: str, data: GATarget.EventData | None = None):
 		GAHit.__init__(self, data)
 		self.name = name
 
-	def _build_data(self, data: dict[str, str]) -> None:
+	def _build_data(self, data: GATarget.EventData) -> None:
 		super()._build_data(data)
 		data[GAField.Screen.Name] = self.name
 
@@ -77,12 +78,12 @@ class GAScreen(GAHit):
 class GAEvent(GAHit):
 	TYPE = 'event'
 
-	def __init__(self, category: str, action: str, data: dict[str, str] | None = None):
+	def __init__(self, category: str, action: str, data: GATarget.EventData | None = None):
 		GAHit.__init__(self, data)
 		self.category = category
 		self.action = action
 
-	def _build_data(self, data: dict[str, str]) -> None:
+	def _build_data(self, data: GATarget.EventData) -> None:
 		super()._build_data(data)
 		data[GAField.Event.Category] = self.category
 		data[GAField.Event.Action] = self.action
@@ -91,7 +92,7 @@ class GAEvent(GAHit):
 		return GAEvent(self.category, self.action, self._data)
 
 class GoogleAnalytics(GAData):
-	def __init__(self, data: dict[str, str] | None = None) -> None:
+	def __init__(self, data: GATarget.EventData | None = None) -> None:
 		GAData.__init__(self, data)
 		self.enabled = True
 		self._registered: dict[str, GAHit] = {}
@@ -112,7 +113,7 @@ class GoogleAnalytics(GAData):
 			self.client_id = client_id
 		return self.client_id
 
-	def _build_data(self, data: dict[str, str]) -> None:
+	def _build_data(self, data: GATarget.EventData) -> None:
 		if not GAField.Version in data:
 			data[GAField.Version] = '1'
 		if not GAField.TrackingID in data and self.tracking_id is not None:
@@ -120,7 +121,7 @@ class GoogleAnalytics(GAData):
 		if not GAField.ClientID in data:
 			data[GAField.ClientID] = self.client_id
 
-	def _hit_data(self, hit: GAHit | dict[str, str]):
+	def _hit_data(self, hit: GAHit | GATarget.EventData):
 		data = self._data.copy()
 		self._build_data(data)
 		if isinstance(hit, GAHit):
@@ -132,7 +133,7 @@ class GoogleAnalytics(GAData):
 	def track(self, hit: GAHit | Sequence[GAHit]):
 		if not self.enabled:
 			return
-		data = None
+		data: GATarget.EventData | list[GATarget.EventData]
 		if isinstance(hit, GAHit):
 			data = self._hit_data(hit)
 		else: # If its not a GAHit we assume its an iterable of GAHit's

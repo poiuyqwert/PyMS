@@ -1,4 +1,3 @@
-# pylint: disable=protected-access
 
 from ...FileFormats.Tileset import Tileset
 from ...FileFormats.Tileset.CV5 import CV5Group, CV5Flag
@@ -33,28 +32,28 @@ def group_inc(doodad: bool = False) -> CV5Group:
 	group = CV5Group()
 	group.type = CV5Group.TYPE_DOODAD if doodad else 0
 	group.flags = 1
-	group._edge_left_or_overlay_id = 2
-	group._edge_up_or_scr = 3
-	group._edge_right_or_string_id = 4
-	group._edge_down_or_unknown4 = 5
-	group._piece_left_or_dddata_id = 6
-	group._piece_up_or_width = 7
-	group._piece_right_or_height = 8
-	group._piece_down_or_unknown8 = 9
+	group._edge_left_or_overlay_id = 2 # pylint: disable=protected-access
+	group._edge_up_or_scr = 3 # pylint: disable=protected-access
+	group._edge_right_or_string_id = 4 # pylint: disable=protected-access
+	group._edge_down_or_unknown4 = 5 # pylint: disable=protected-access
+	group._piece_left_or_dddata_id = 6 # pylint: disable=protected-access
+	group._piece_up_or_width = 7 # pylint: disable=protected-access
+	group._piece_right_or_height = 8 # pylint: disable=protected-access
+	group._piece_down_or_unknown8 = 9 # pylint: disable=protected-access
 	return group
 
 def group_full(doodad: bool = False) -> CV5Group:
 	group = CV5Group()
 	group.type = CV5Group.TYPE_DOODAD if doodad else Max.u16
 	group.flags = Max.u16
-	group._edge_left_or_overlay_id = Max.u16
-	group._edge_up_or_scr = Max.u16
-	group._edge_right_or_string_id = Max.u16
-	group._edge_down_or_unknown4 = Max.u16
-	group._piece_left_or_dddata_id = Max.u16
-	group._piece_up_or_width = Max.u16
-	group._piece_right_or_height = Max.u16
-	group._piece_down_or_unknown8 = Max.u16
+	group._edge_left_or_overlay_id = Max.u16 # pylint: disable=protected-access
+	group._edge_up_or_scr = Max.u16 # pylint: disable=protected-access
+	group._edge_right_or_string_id = Max.u16 # pylint: disable=protected-access
+	group._edge_down_or_unknown4 = Max.u16 # pylint: disable=protected-access
+	group._piece_left_or_dddata_id = Max.u16 # pylint: disable=protected-access
+	group._piece_up_or_width = Max.u16 # pylint: disable=protected-access
+	group._piece_right_or_height = Max.u16 # pylint: disable=protected-access
+	group._piece_down_or_unknown8 = Max.u16 # pylint: disable=protected-access
 	return group
 
 def group_flags(doodad: bool = False) -> CV5Group:

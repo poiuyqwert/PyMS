@@ -47,7 +47,7 @@ class Tracer:
 			pass
 
 	def _find_presenter(self) -> AnyWindow:
-		presenter = self.main_window
+		presenter: AnyWindow = self.main_window
 		children = presenter.winfo_children()
 		while len(children) and isinstance(children[-1], Toplevel):
 			presenter = children[-1]

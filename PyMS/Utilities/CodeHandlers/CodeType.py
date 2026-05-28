@@ -278,8 +278,8 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._names_to_flags = flags
 		self._flags_to_names: dict[int, str] = {}
-		for name, flag in flags.items():
-			self._flags_to_names[flag] = name
+		for flag_name, flag in flags.items():
+			self._flags_to_names[flag] = flag_name
 		self._case_sensitive = case_sensitive
 		self._allow_raw_flags = allow_raw_flags
 

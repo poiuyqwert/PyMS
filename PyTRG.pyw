@@ -51,7 +51,7 @@ def main(): # type: () -> None
 						print("Reading TRG '%s'..." % args[0])
 					trg.load(args[0], TRG.Format.got if opt.got else TRG.Format.normal)
 					print(" - '%s' read successfully\nDecompiling TRG file '%s'..." % (args[0],args[0]))
-					trg.decompile(args[1], opt.reference)
+					trg.decompile(args[1]) #, opt.reference)
 					print(" - '%s' written succesfully" % args[1])
 				else:
 					print("Interpreting file '%s'..." % args[0])

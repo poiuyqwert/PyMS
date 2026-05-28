@@ -370,7 +370,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 
 	def redraw_delegate(self) -> None:
 		from .TilePalette import TilePalette
-		if self.megatile_id in TilePalette.TILE_CACHE:
+		if self.megatile_id is not None and self.megatile_id in TilePalette.TILE_CACHE:
 			del TilePalette.TILE_CACHE[self.megatile_id]
 		self.delegate.draw_group()
 
