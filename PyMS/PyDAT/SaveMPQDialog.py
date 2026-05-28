@@ -94,6 +94,6 @@ class SaveMPQDialog(PyMSDialog):
 				if not_saved:
 					MessageBox.showwarning(title='Save problems', message=f'{", ".join(not_saved)} could not be saved to the MPQ.')
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		self.delegate.data_context.config.mpq_export.data = [self.listbox.get(i) for i in self.listbox.curselection()]
 		PyMSDialog.ok(self)

@@ -31,14 +31,14 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.right = IntegerVar(range=[0,65535])
 		self.width = IntegerVar(range=[0,65535])
 		def calc_right(_: Any) -> None:
-			self.calculate(self.right,self.left,self.width,1,-1,False)
+			self.calculate(self.right, self.left, self.width, 1, fix=-1, allow_advanced=False)
 		self.left.callback = calc_right
 		self.width.callback = calc_right
 		self.top = IntegerVar(range=[0,65535])
 		self.bottom = IntegerVar(range=[0,65535])
 		self.height = IntegerVar(range=[0,65535])
 		def calc_bottom(_: Any) -> None:
-			self.calculate(self.left,self.right,self.width,-1,1,False)
+			self.calculate(self.left, self.right, self.width, -1, fix=1, allow_advanced=False)
 		self.top.callback = calc_bottom
 		self.height.callback = calc_bottom
 		self.string = StringVar()
@@ -50,14 +50,14 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.responsive_right = IntegerVar(range=[0,65535])
 		self.responsive_width = IntegerVar(range=[0,65535])
 		def calc_responsive_right(_: Any) -> None:
-			self.calculate(self.responsive_right,self.responsive_left,self.responsive_width,1,-1,False)
+			self.calculate(self.responsive_right, self.responsive_left, self.responsive_width, 1, fix=-1, allow_advanced=False)
 		self.responsive_left.callback = calc_responsive_right
 		self.responsive_width.callback = calc_responsive_right
 		self.responsive_top = IntegerVar(range=[0,65535])
 		self.responsive_bottom = IntegerVar(range=[0,65535])
 		self.responsive_height = IntegerVar(range=[0,65535])
 		def calc_responsive_bottom(_: Any) -> None:
-			self.calculate(self.responsive_left,self.responsive_right,self.responsive_width,-1,1,False)
+			self.calculate(self.responsive_left, self.responsive_right, self.responsive_width, -1, fix=1, allow_advanced=False)
 		self.responsive_top.callback = calc_responsive_bottom
 		self.responsive_height.callback = calc_responsive_bottom
 
@@ -100,21 +100,21 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))
 
 	def widgetize(self) -> (Misc | None):
-		def calc_button(f: Misc, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Button:
-			def calc_callback(calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int) -> Callable[[], None]:
+		def calc_button(f: Misc, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, *, fix: int) -> Button:
+			def calc_callback(calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, *, fix: int) -> Callable[[], None]:
 				def calculate() -> None:
-					self.calculate(calc, orig, offset, direction, fix)
+					self.calculate(calc, orig, offset, direction, fix=fix)
 				return calculate
-			return Button(f, image=Assets.get_image('debug'), width=20, height=20, command=calc_callback(calc,orig,offset,direction,fix))
+			return Button(f, image=Assets.get_image('debug'), width=20, height=20, command=calc_callback(calc, orig, offset, direction, fix=fix))
 		boundsframe = LabelFrame(self, text="Bounds")
 		Label(boundsframe, text='Left:').grid(row=0,column=0, sticky=E)
 		Entry(boundsframe, textvariable=self.left, font=Font.fixed(), width=5).grid(row=0,column=1)
-		calculate = calc_button(boundsframe, self.left, self.right, self.width, -1, 1)
+		calculate = calc_button(boundsframe, self.left, self.right, self.width, -1, fix=1)
 		calculate.grid(row=0,column=2)
 		self.advanced_widgets.append(calculate)
 		Label(boundsframe, text='Top:').grid(row=0,column=3, sticky=E)
 		Entry(boundsframe, textvariable=self.top, font=Font.fixed(), width=5).grid(row=0,column=4)
-		calculate = calc_button(boundsframe, self.top, self.bottom, self.height, -1, 1)
+		calculate = calc_button(boundsframe, self.top, self.bottom, self.height, -1, fix=1)
 		calculate.grid(row=0,column=5)
 		self.advanced_widgets.append(calculate)
 		right_label = Label(boundsframe, text='Right:')
@@ -123,7 +123,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		right_entry = Entry(boundsframe, textvariable=self.right, font=Font.fixed(), width=5)
 		right_entry.grid(row=1,column=1)
 		self.advanced_widgets.append(right_entry)
-		calculate = calc_button(boundsframe, self.right, self.left, self.width, 1, -1)
+		calculate = calc_button(boundsframe, self.right, self.left, self.width, 1, fix=-1)
 		calculate.grid(row=1,column=2)
 		self.advanced_widgets.append(calculate)
 		bottom_label = Label(boundsframe, text='Bottom:')
@@ -132,17 +132,17 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		bottom_entry = Entry(boundsframe, textvariable=self.bottom, font=Font.fixed(), width=5)
 		bottom_entry.grid(row=1,column=4)
 		self.advanced_widgets.append(bottom_entry)
-		calculate = calc_button(boundsframe, self.bottom, self.top, self.height, 1, -1)
+		calculate = calc_button(boundsframe, self.bottom, self.top, self.height, 1, fix=-1)
 		calculate.grid(row=1,column=5)
 		self.advanced_widgets.append(calculate)
 		Label(boundsframe, text='Width:').grid(row=2,column=0, sticky=E)
 		Entry(boundsframe, textvariable=self.width, font=Font.fixed(), width=5).grid(row=2,column=1)
-		calculate = calc_button(boundsframe, self.width, self.right, self.left, -1, 1)
+		calculate = calc_button(boundsframe, self.width, self.right, self.left, -1, fix=1)
 		calculate.grid(row=2,column=2)
 		self.advanced_widgets.append(calculate)
 		Label(boundsframe, text='Height:').grid(row=2,column=3, sticky=E)
 		Entry(boundsframe, textvariable=self.height, font=Font.fixed(), width=5).grid(row=2,column=4)
-		calculate = calc_button(boundsframe, self.height, self.bottom, self.top, -1, 1)
+		calculate = calc_button(boundsframe, self.height, self.bottom, self.top, -1, fix=1)
 		calculate.grid(row=2,column=5)
 		self.advanced_widgets.append(calculate)
 		boundsframe.grid(row=0,column=0, padx=5,pady=0, ipadx=2,ipady=2, sticky=N)
@@ -150,12 +150,12 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		responsiveframe = LabelFrame(self, text="Mouse Response")
 		Label(responsiveframe, text='Left:').grid(row=0,column=0, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_left, font=Font.fixed(), width=5).grid(row=0,column=1)
-		calculate = calc_button(responsiveframe, self.responsive_left, self.responsive_right, self.responsive_width, -1, 1)
+		calculate = calc_button(responsiveframe, self.responsive_left, self.responsive_right, self.responsive_width, -1, fix=1)
 		calculate.grid(row=0,column=2)
 		self.advanced_widgets.append(calculate)
 		Label(responsiveframe, text='Top:').grid(row=0,column=3, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_top, font=Font.fixed(), width=5).grid(row=0,column=4)
-		calculate = calc_button(responsiveframe, self.responsive_top, self.responsive_bottom, self.responsive_height, -1, 1)
+		calculate = calc_button(responsiveframe, self.responsive_top, self.responsive_bottom, self.responsive_height, -1, fix=1)
 		calculate.grid(row=0,column=5)
 		self.advanced_widgets.append(calculate)
 		right_label = Label(responsiveframe, text='Right:')
@@ -164,7 +164,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		right_entry = Entry(responsiveframe, textvariable=self.responsive_right, font=Font.fixed(), width=5)
 		right_entry.grid(row=1,column=1)
 		self.advanced_widgets.append(right_entry)
-		calculate = calc_button(responsiveframe, self.responsive_right, self.responsive_left, self.responsive_width, 1, -1)
+		calculate = calc_button(responsiveframe, self.responsive_right, self.responsive_left, self.responsive_width, 1, fix=-1)
 		calculate.grid(row=1,column=2)
 		self.advanced_widgets.append(calculate)
 		bottom_label = Label(responsiveframe, text='Bottom:')
@@ -173,17 +173,17 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		bottom_entry = Entry(responsiveframe, textvariable=self.responsive_bottom, font=Font.fixed(), width=5)
 		bottom_entry.grid(row=1,column=4)
 		self.advanced_widgets.append(bottom_entry)
-		calculate = calc_button(responsiveframe, self.responsive_bottom, self.responsive_top, self.responsive_height, 1, -1)
+		calculate = calc_button(responsiveframe, self.responsive_bottom, self.responsive_top, self.responsive_height, 1, fix=-1)
 		calculate.grid(row=1,column=5)
 		self.advanced_widgets.append(calculate)
 		Label(responsiveframe, text='Width:').grid(row=2,column=0, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_width, font=Font.fixed(), width=5).grid(row=2,column=1)
-		calculate = calc_button(responsiveframe, self.responsive_width, self.responsive_right, self.responsive_left, -1, 1)
+		calculate = calc_button(responsiveframe, self.responsive_width, self.responsive_right, self.responsive_left, -1, fix=1)
 		calculate.grid(row=2,column=2)
 		self.advanced_widgets.append(calculate)
 		Label(responsiveframe, text='Height:').grid(row=2,column=3, sticky=E)
 		Entry(responsiveframe, textvariable=self.responsive_height, font=Font.fixed(), width=5).grid(row=2,column=4)
-		calculate = calc_button(responsiveframe, self.responsive_height, self.responsive_bottom, self.responsive_top, -1, 1)
+		calculate = calc_button(responsiveframe, self.responsive_height, self.responsive_bottom, self.responsive_top, -1, fix=1)
 		calculate.grid(row=2,column=5)
 		self.advanced_widgets.append(calculate)
 		Checkbutton(responsiveframe, text='Responds to Mouse', variable=self.flag_responsive).grid(row=3,column=0, columnspan=6)
@@ -338,7 +338,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.minsize(updated_geometry.size.width, updated_geometry.size.height)
 		self.maxsize(updated_geometry.size.width, updated_geometry.size.height)
 
-	def calculate(self, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, fix: int, allow_advanced: bool = True) -> None:
+	def calculate(self, calc: IntegerVar, orig: IntegerVar, offset: IntegerVar, direction: int, *, fix: int, allow_advanced: bool = True) -> None:
 		if not self.show_advanced.get() or allow_advanced:
 			calc.set(orig.get() + offset.get() * direction + fix)
 

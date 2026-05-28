@@ -474,7 +474,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			SaveMPQDialog(self, self)
 
 	def settings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.data_context.config, self, err, self.data_context.mpq_handler)
+		SettingsDialog(self, config=self.data_context.config, delegate=self, err=err, mpq_handler=self.data_context.mpq_handler)
 
 	def register_registry(self, _event: Event | None = None) -> None:
 		try:

@@ -192,9 +192,9 @@ class AIActionsUnitsTab(DATUnitsTab):
 	def force_weapon_id(self, force_type: ForceType) -> tuple[int | None, int]:
 		assert self.delegate.data_context.units.dat is not None
 		unit_id = self.sub_delegate.id
-		if unit_id == 72 or unit_id == 82: # Carrier/Gantrithor
+		if unit_id in (72, 82): # Carrier/Gantrithor
 			unit_id = 73 # Intercepter
-		elif unit_id == 81 or unit_id == 83: # Reaver/Warbringer
+		elif unit_id in (81, 83): # Reaver/Warbringer
 			unit_id = 85 # Scarab
 		else:
 			entry = self.delegate.data_context.units.dat.get_entry(unit_id)

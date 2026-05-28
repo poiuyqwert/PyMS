@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class IconSelectDialog(PyMSDialog):
 	# If `none_index` is not `None`, then an empty icon will be shown and its index when selected will be `none_index`
-	def __init__(self, parent: Misc, data_context: DataContext, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
+	def __init__(self, parent: Misc, *, data_context: DataContext, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
 		self.data_context = data_context
 		self.delegate = delegate
 		self._initial_selection = selected_index
@@ -165,8 +165,8 @@ class IconSelectDialog(PyMSDialog):
 		for index in range(start_index, end_index + 1):
 			if self.none_index is not None and index == 0:
 				continue
-			was_visible = (index >= last_start_index and index <= last_end_index)
-			is_visible = (index >= visible_start_index and index <= visible_end_index)
+			was_visible = (last_start_index <= index <= last_end_index)
+			is_visible = (visible_start_index <= index <= visible_end_index)
 			tag = self._display_index_to_tag(index)
 			if is_visible:
 				x = ((index - visible_start_index) % columns) * icon_size[0]
@@ -192,14 +192,14 @@ class IconSelectDialog(PyMSDialog):
 		if self._last_display_parameters:
 			_, start_index, end_index = self._last_display_parameters
 			old_display_index = self._selected_index_to_display_index(old_selection)
-			if old_display_index >= start_index and old_display_index <= end_index:
+			if start_index <= old_display_index <= end_index:
 				frame_index = self._display_index_to_frame_index(old_display_index)
 				image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=False)
 				if image_with_bounds:
 					icon, _, _, _, _ = image_with_bounds
 					self.scrolled_canvas.canvas.itemconfigure(self._display_index_to_tag(old_display_index), image=icon)
 		new_display_index = self._selected_index_to_display_index(new_selection)
-		if new_display_index >= start_index and new_display_index <= end_index:
+		if start_index <= new_display_index <= end_index:
 			frame_index = self._display_index_to_frame_index(new_display_index)
 			image_with_bounds = self.data_context.get_cmdicon(frame_index, highlighted=True)
 			if image_with_bounds:

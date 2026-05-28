@@ -32,7 +32,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = Frame(l)
-		def add_dropdown(title: str, entry_variable: IntegerVar, dropdown_variable: IntVar, hint_name: str, values: list[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> DropDown:
+		def add_dropdown(title: str, *, entry_variable: IntegerVar, dropdown_variable: IntVar, hint_name: str, values: list[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> DropDown:
 			f = Frame(s)
 			Label(f, text=title + ':', width=13, anchor=E).pack(side=LEFT)
 			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=5).pack(side=LEFT)
@@ -44,10 +44,10 @@ class GraphicsUnitsTab(DATUnitsTab):
 			self.tip(f, title, hint_name)
 			f.pack(fill=X)
 			return dropdown
-		self.graphics_ddw = add_dropdown('Graphics', self.graphicsentry, self.graphicsdd, 'UnitGfx', [], jump_dat_id=DATID.flingy)
-		self.construction_ddw = add_dropdown('Construction', self.constructionentry, self.constructiondd, 'UnitConstruction', [], jump_dat_id=DATID.images)
-		self.portraits_ddw = add_dropdown('Portraits', self.portraitsentry, self.portraitsdd, 'UnitPortrait', [], none_value=65535, jump_dat_id=DATID.portdata)
-		self.elevation_ddw = add_dropdown('Elevation', self.elevationentry, self.elevationdd, 'UnitElevationLevel', Assets.data_cache(Assets.DataReference.ElevationLevels))
+		self.graphics_ddw = add_dropdown('Graphics', entry_variable=self.graphicsentry, dropdown_variable=self.graphicsdd, hint_name='UnitGfx', values=[], jump_dat_id=DATID.flingy)
+		self.construction_ddw = add_dropdown('Construction', entry_variable=self.constructionentry, dropdown_variable=self.constructiondd, hint_name='UnitConstruction', values=[], jump_dat_id=DATID.images)
+		self.portraits_ddw = add_dropdown('Portraits', entry_variable=self.portraitsentry, dropdown_variable=self.portraitsdd, hint_name='UnitPortrait', values=[], none_value=65535, jump_dat_id=DATID.portdata)
+		self.elevation_ddw = add_dropdown('Elevation', entry_variable=self.elevationentry, dropdown_variable=self.elevationdd, hint_name='UnitElevationLevel', values=Assets.data_cache(Assets.DataReference.ElevationLevels))
 		f = Frame(s)
 		Label(f, text='Direction:', width=13, anchor=E).pack(side=LEFT)
 		Entry(f, textvariable=self.direction, font=Font.fixed(), width=3).pack(side=LEFT)

@@ -24,7 +24,7 @@ class DATRefs:
 			check_refs = self.refs_lookup(check_entry)
 			for ref in check_refs:
 				if ref.matches(lookup_id):
-					matches.append(DATRefMatch(self.dat_id, ref.dat_sub_tab, ref.field_name, check_entry_id, dat_data.entry_name(check_entry_id)))
+					matches.append(DATRefMatch(self.dat_id, dat_sub_tab_id=ref.dat_sub_tab, field_name=ref.field_name, entry_id=check_entry_id, entry_name=dat_data.entry_name(check_entry_id)))
 		return matches
 
 class DATRef:
@@ -38,12 +38,12 @@ class DATRef:
 		if self.entry_id is None:
 			return False
 		if self.entry_id_range_end:
-			return entry_id >= self.entry_id and entry_id <= self.entry_id_range_end
+			return self.entry_id <= entry_id <= self.entry_id_range_end
 		else:
 			return entry_id == self.entry_id
 
 class DATRefMatch:
-	def __init__(self, dat_id: DATID, dat_sub_tab_id: Any, field_name: str, entry_id: int, entry_name: str) -> None:
+	def __init__(self, dat_id: DATID, *, dat_sub_tab_id: Any, field_name: str, entry_id: int, entry_name: str) -> None:
 		self.dat_id = dat_id
 		self.dat_sub_tab_id = dat_sub_tab_id
 		self.field_name = field_name

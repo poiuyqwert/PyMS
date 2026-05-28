@@ -197,7 +197,7 @@ class OrdersTab(DATTab):
 	def choose_icon(self) -> None:
 		def update_icon(index: int) -> None:
 			self.highlightentry.set(index)
-		IconSelectDialog(self, self.delegate.data_context, update_icon, self.highlightentry.get(), none_index=65535)
+		IconSelectDialog(self, data_context=self.delegate.data_context, delegate=update_icon, selected_index=self.highlightentry.get(), none_index=65535)
 
 	def drawpreview(self) -> None:
 		self.preview.delete(ALL)

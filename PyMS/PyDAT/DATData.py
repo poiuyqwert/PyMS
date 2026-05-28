@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 DAT = TypeVar('DAT', bound=AbstractDAT)
 
 class DATData(Generic[DAT]):
-	def __init__(self, data_context: DataContext, dat_id: DATID, dat_type: Type[DAT], data_file: str, entry_type_name: str) -> None:
+	def __init__(self, data_context: DataContext, *, dat_id: DATID, dat_type: Type[DAT], data_file: str, entry_type_name: str) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.dat_type = dat_type
@@ -127,7 +127,7 @@ class DATData(Generic[DAT]):
 
 class UnitsDATData(DATData[UnitsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.units, UnitsDAT, Assets.DataReference.Units, 'Unit')
+		DATData.__init__(self, data_context, dat_id=DATID.units, dat_type=UnitsDAT, data_file=Assets.DataReference.Units, entry_type_name='Unit')
 
 	def update_names(self) -> None:
 		names = []
@@ -147,7 +147,7 @@ class UnitsDATData(DATData[UnitsDAT]):
 
 class WeaponsDATData(DATData[WeaponsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.weapons, WeaponsDAT, Assets.DataReference.Weapons, 'Weapon')
+		DATData.__init__(self, data_context, dat_id=DATID.weapons, dat_type=WeaponsDAT, data_file=Assets.DataReference.Weapons, entry_type_name='Weapon')
 
 	def update_names(self) -> None:
 		names = []
@@ -168,7 +168,7 @@ class WeaponsDATData(DATData[WeaponsDAT]):
 
 class FlingyDATData(DATData[FlingyDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.flingy, FlingyDAT, Assets.DataReference.Flingy, 'Flingy')
+		DATData.__init__(self, data_context, dat_id=DATID.flingy, dat_type=FlingyDAT, data_file=Assets.DataReference.Flingy, entry_type_name='Flingy')
 
 	def update_names(self) -> None:
 		names = []
@@ -188,7 +188,7 @@ class FlingyDATData(DATData[FlingyDAT]):
 
 class SpritesDATData(DATData[SpritesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.sprites, SpritesDAT, Assets.DataReference.Sprites, 'Sprite')
+		DATData.__init__(self, data_context, dat_id=DATID.sprites, dat_type=SpritesDAT, data_file=Assets.DataReference.Sprites, entry_type_name='Sprite')
 
 	def update_names(self) -> None:
 		names = []
@@ -207,7 +207,7 @@ class SpritesDATData(DATData[SpritesDAT]):
 
 class ImagesDATData(DATData[ImagesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.images, ImagesDAT, Assets.DataReference.Images, 'Image')
+		DATData.__init__(self, data_context, dat_id=DATID.images, dat_type=ImagesDAT, data_file=Assets.DataReference.Images, entry_type_name='Image')
 
 	def update_names(self) -> None:
 		names = []
@@ -225,7 +225,7 @@ class ImagesDATData(DATData[ImagesDAT]):
 
 class UpgradesDATData(DATData[UpgradesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.upgrades, UpgradesDAT, Assets.DataReference.Upgrades, 'Upgrade')
+		DATData.__init__(self, data_context, dat_id=DATID.upgrades, dat_type=UpgradesDAT, data_file=Assets.DataReference.Upgrades, entry_type_name='Upgrade')
 
 	def update_names(self) -> None:
 		names = []
@@ -246,7 +246,7 @@ class UpgradesDATData(DATData[UpgradesDAT]):
 
 class TechDATData(DATData[TechDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.techdata, TechDAT, Assets.DataReference.Techdata, 'Technology')
+		DATData.__init__(self, data_context, dat_id=DATID.techdata, dat_type=TechDAT, data_file=Assets.DataReference.Techdata, entry_type_name='Technology')
 
 	def update_names(self) -> None:
 		names = []
@@ -267,7 +267,7 @@ class TechDATData(DATData[TechDAT]):
 
 class SoundsDATData(DATData[SoundsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.sfxdata, SoundsDAT, Assets.DataReference.Sfxdata, 'Sound')
+		DATData.__init__(self, data_context, dat_id=DATID.sfxdata, dat_type=SoundsDAT, data_file=Assets.DataReference.Sfxdata, entry_type_name='Sound')
 
 	def update_names(self) -> None:
 		names = []
@@ -287,7 +287,7 @@ class SoundsDATData(DATData[SoundsDAT]):
 
 class PortraitsDATData(DATData[PortraitsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.portdata, PortraitsDAT, Assets.DataReference.Portdata, 'Portrait')
+		DATData.__init__(self, data_context, dat_id=DATID.portdata, dat_type=PortraitsDAT, data_file=Assets.DataReference.Portdata, entry_type_name='Portrait')
 
 	def update_names(self) -> None:
 		names = []
@@ -307,7 +307,7 @@ class PortraitsDATData(DATData[PortraitsDAT]):
 
 class CampaignDATData(DATData[CampaignDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.mapdata, CampaignDAT, Assets.DataReference.Mapdata, 'Map')
+		DATData.__init__(self, data_context, dat_id=DATID.mapdata, dat_type=CampaignDAT, data_file=Assets.DataReference.Mapdata, entry_type_name='Map')
 
 	def update_names(self) -> None:
 		names = []
@@ -326,7 +326,7 @@ class CampaignDATData(DATData[CampaignDAT]):
 
 class OrdersDATData(DATData[OrdersDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, DATID.orders, OrdersDAT, Assets.DataReference.Orders, 'Order')
+		DATData.__init__(self, data_context, dat_id=DATID.orders, dat_type=OrdersDAT, data_file=Assets.DataReference.Orders, entry_type_name='Order')
 
 	def update_names(self) -> None:
 		names = []

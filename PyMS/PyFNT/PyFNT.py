@@ -394,15 +394,14 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.fnt'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.fnt
@@ -570,7 +569,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.status.set('Font imported successfully!')
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:

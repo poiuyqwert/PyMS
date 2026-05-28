@@ -245,11 +245,11 @@ class DataContext:
 		self.cmdicons.images[highlighted][index] = image
 		return image
 
-	def get_grp_frame(self, path: str, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0, is_full_path: bool = False) -> ImageWithBounds | None:
+	def get_grp_frame(self, path: str, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0, is_full_path: bool = False) -> ImageWithBounds | None:
 		if palette is None:
 			if path.startswith('thingy\\tileset\\'):
 				palette = 'Terrain'
-			elif draw_function == DATImage.DrawFunction.use_remapping and remapping is not None and remapping >= DATImage.Remapping.ofire and remapping <= DATImage.Remapping.bfire:
+			elif draw_function == DATImage.DrawFunction.use_remapping and remapping is not None and DATImage.Remapping.ofire <= remapping <= DATImage.Remapping.bfire:
 				palette = ('o','g','b')[remapping-1] + 'fire'
 			else:
 				palette = 'Units'
@@ -283,7 +283,7 @@ class DataContext:
 			self.grp_cache[path][palette][draw_function] = cast(ImageWithBounds, frame_to_photo(self.palettes[palette], grp, frame, draw_function=rle_function, draw_info=draw_info))
 		return self.grp_cache[path][palette][draw_function]
 
-	def get_image_frame(self, image_id: int, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:
+	def get_image_frame(self, image_id: int, *, draw_function: int | None = None, remapping: int | None = None, draw_info: Any | None = None, palette: str | None = None, frame: int = 0) -> ImageWithBounds | None:
 		if not self.images.dat:
 			return None
 		image_entry = self.images.dat.get_entry(image_id)
@@ -297,4 +297,4 @@ class DataContext:
 			draw_function = image_entry.draw_function
 			if draw_function == DATImage.DrawFunction.use_remapping and remapping is None:
 				remapping = image_entry.remapping
-		return self.get_grp_frame(grp_path, draw_function, remapping, draw_info, palette, frame)
+		return self.get_grp_frame(grp_path, draw_function=draw_function, remapping=remapping, draw_info=draw_info, palette=palette, frame=frame)

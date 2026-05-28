@@ -195,10 +195,10 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 			file = self.get_dat_data().file_path
 			if not file:
 				file = dat.FILE_NAME
-			save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-			if save != MessageBox.NO:
-				if save == MessageBox.CANCEL:
-					return True
+			save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+			if save is None:
+				return True
+			if save:
 				self.save()
 		return None
 
