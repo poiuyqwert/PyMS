@@ -39,7 +39,7 @@ class Lexer:
 	def get_line_of_code(self, line: int) -> str | None:
 		if self._lines_of_code_cache is None:
 			self._lines_of_code_cache = Lexer._newline_regexp.split(self.code)
-		if line >= 0 and line < len(self._lines_of_code_cache):
+		if 0 <= line < len(self._lines_of_code_cache):
 			return self._lines_of_code_cache[line]
 		return None
 

@@ -146,7 +146,7 @@ class BytesScanner:
 		return self.address == len(self.data)
 
 	def is_offset_valid(self, offset: int) -> bool:
-		return offset >= 0 and offset < len(self.data)
+		return 0 <= offset < len(self.data)
 
 	def jump_to(self, address: int) -> None:
 		self.address = address

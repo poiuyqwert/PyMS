@@ -149,7 +149,7 @@ class TilePaletteView(Frame):
 				update_ranges.append(self.visible_range)
 			for update_range in update_ranges:
 				for tile_id in range(update_range[0],update_range[1]+1):
-					if (tile_id < visible_range[0] or tile_id > visible_range[1]) and tile_id >= self.visible_range[0] and tile_id <= self.visible_range[1]:
+					if (tile_id < visible_range[0] or tile_id > visible_range[1]) and self.visible_range[0] <= tile_id <= self.visible_range[1]:
 						del self.canvas_images[tile_id]
 						self.canvas.delete(f'tile{tile_id}')
 					else:

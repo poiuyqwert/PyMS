@@ -129,7 +129,7 @@ class PreviewerDialog(PyMSDialog):
 		except:
 			self.nocur()
 			return
-		if name == 'IsId' and iscript_id >= 0 and iscript_id <= 411:
+		if name == 'IsId' and 0 <= iscript_id <= 411:
 			if self.curradio and self.curradio['state'] == DISABLED:
 				self.curradio['state'] = NORMAL
 				self.curdd['state'] = NORMAL
@@ -365,7 +365,7 @@ class PreviewerDialog(PyMSDialog):
 			return
 		i = self.previewing.frame + self.speed
 		frames = prevto-prevfrom+1
-		if self.looppreview.get() or (i >= prevfrom and i <= prevto):
+		if self.looppreview.get() or (prevfrom <= i <= prevto):
 			while i < prevfrom or i > prevto:
 				if i < prevfrom:
 					i += frames
@@ -557,7 +557,7 @@ class PreviewerDialog(PyMSDialog):
 			pal = 'Units'
 			draw_function = images_dat.get_entry(image_id).draw_function
 			remapping = images_dat.get_entry(image_id).remapping
-			if draw_function == DAT.DATImage.DrawFunction.use_remapping and remapping is not None and remapping >= DAT.DATImage.Remapping.ofire and remapping <= DAT.DATImage.Remapping.bfire:
+			if draw_function == DAT.DATImage.DrawFunction.use_remapping and remapping is not None and DAT.DATImage.Remapping.ofire <= remapping <= DAT.DATImage.Remapping.bfire:
 				pal = ['o','b','g'][remapping-1] + 'fire'
 		sprite = self.grp(image_id, pal, self.previewing.frame, 'unit', grp_file_path)
 		if sprite:

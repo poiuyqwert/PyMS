@@ -66,7 +66,7 @@ class PreviewDialog(PyMSDialog):
 			display.append([])
 			for c in l:
 				a = ord(c)
-				if a >= fnt.start and a < fnt.start + len(fnt.letters):
+				if fnt.start <= a < fnt.start + len(fnt.letters):
 					a -= fnt.start
 					size = fnt.sizes[a][0]
 					if ord(c) == 32 :

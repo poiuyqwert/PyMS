@@ -129,15 +129,14 @@ class PyJSON(MainWindow):
 		file_path = self.file_path
 		if not file_path:
 			file_path = 'Unnamed.json'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file_path}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file_path}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file_path:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.data_source.data

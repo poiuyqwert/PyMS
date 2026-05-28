@@ -368,15 +368,14 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		file = self.file
 		if not file:
 			file = 'Unnamed.loa'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.lo
@@ -609,7 +608,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 						self.text.tag_add('Warning', f'{w.line}.0', f'{w.line}.end')
 			ErrorDialog(self, e)
 			return
-		MessageBox.askquestion(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.', type=MessageBox.OK)
+		MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

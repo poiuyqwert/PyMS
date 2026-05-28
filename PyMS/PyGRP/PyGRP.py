@@ -241,15 +241,14 @@ BMP's must be imported with the same style they were exported as.""")
 		file = self.file
 		if not file:
 			file = 'Unnamed.grp'
-		save = MessageBox.askquestion(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-		if save == MessageBox.NO:
-			return CheckSaved.saved
-		if save == MessageBox.CANCEL:
+		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		if save is None:
 			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
 		if self.file:
 			return self.save()
-		else:
-			return self.saveas()
+		return self.saveas()
 
 	def is_file_open(self) -> bool:
 		return not not self.grp
@@ -409,7 +408,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if self.speed and self.listbox.curselection() and prevto > prevfrom:
 			i = int(self.listbox.curselection()[0]) + self.speed
 			frames = prevto-prevfrom+1
-			if self.looppreview.get() or (i >= prevfrom and i <= prevto):
+			if self.looppreview.get() or (prevfrom <= i <= prevto):
 				while i < prevfrom or i > prevto:
 					if i < prevfrom:
 						i += frames

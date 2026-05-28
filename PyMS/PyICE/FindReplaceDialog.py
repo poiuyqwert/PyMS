@@ -136,7 +136,7 @@ class FindReplaceDialog(PyMSDialog):
 					p: Misc = self
 					if key and key.keycode == 13:
 						p = self.parent
-					MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+					MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 			else:
 				u = self.updown.get()
 				s,lse,rlse,e = ['-','+'][u],['lineend','linestart'][u],['linestart','lineend'][u],[self.text.index('1.0 lineend'),self.text.index(END)][u]
@@ -176,14 +176,14 @@ class FindReplaceDialog(PyMSDialog):
 						p = self
 						if key and key.keycode == 13:
 							p = self.parent
-						MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+						MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 						break
 					i = self.text.index(f'{i} {s}1lines {lse}')
 				else:
 					p = self
 					if key and key.keycode == 13:
 						p = self.parent
-					MessageBox.askquestion(parent=p, title='Find', message="Can't find text.", type=MessageBox.OK)
+					MessageBox.showinfo(parent=p, title='Find', message="Can't find text.")
 
 	def count(self) -> None:
 		f = self.find.get()
@@ -197,7 +197,7 @@ class FindReplaceDialog(PyMSDialog):
 				self.resettimer = self.after_managed(1000, self.updatecolor)
 				self.findentry['bg'] = '#FFB4B4'
 				return
-			MessageBox.askquestion(parent=self, title='Count', message=f'{len(r.findall(self.text.get("1.0", END)))} matches found.', type=MessageBox.OK)
+			MessageBox.showinfo(parent=self, title='Count', message=f'{len(r.findall(self.text.get("1.0", END)))} matches found.')
 
 	def replaceall(self) -> None:
 		f = self.find.get()
@@ -217,7 +217,7 @@ class FindReplaceDialog(PyMSDialog):
 					self.text.delete('1.0', END)
 					self.text.insert('1.0', text[0].rstrip('\n'))
 				self.text.mark_recolor_range('1.0', END)
-			MessageBox.askquestion(parent=self, title='Replace Complete', message=f'{text[1]} matches replaced.', type=MessageBox.OK)
+			MessageBox.showinfo(parent=self, title='Replace Complete', message=f'{text[1]} matches replaced.')
 
 	def updatecolor(self) -> None:
 		if self.resettimer:

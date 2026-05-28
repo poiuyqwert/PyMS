@@ -52,8 +52,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 	def remove(self) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
-		cont = MessageBox.askquestion(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?", default=MessageBox.OK, type=MessageBox.OKCANCEL)
-		if cont == MessageBox.CANCEL:
+		cont = MessageBox.askokcancel(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?")
+		if not cont:
 			return
 		del self.config_.generator.presets.data[selected]
 		self.update_list()

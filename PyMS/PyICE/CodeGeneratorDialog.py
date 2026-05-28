@@ -152,8 +152,8 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 		self.toolbar.tag_enabled('has_presets', has_presets)
 
 	def remove(self, *_: Any) -> None:
-		cont = MessageBox.askquestion(parent=self, title='Remove Variable?', message="The variable settings will be lost.", default=MessageBox.YES, type=MessageBox.YESNO)
-		if cont == MessageBox.NO:
+		cont = MessageBox.askyesno(parent=self, title='Remove Variable?', message="The variable settings will be lost.", default=MessageBox.YES)
+		if not cont:
 			return
 		del self.variables[int(self.listbox.curselection()[0])]
 		self.update_list()
@@ -189,11 +189,11 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			replace = None
 			for n,preset in enumerate(self.config_.generator.presets.data):
 				if preset.name == name:
-					cont = MessageBox.askquestion(parent=window, title='Overwrite Preset?', message=f"A preset with the name '{name}' already exists. Do you want to overwrite it?", default=MessageBox.YES, type=MessageBox.YESNOCANCEL)
-					if cont == MessageBox.NO:
-						return CheckSaved.saved
-					elif cont == MessageBox.CANCEL:
+					cont = MessageBox.askyesnocancel(parent=window, title='Overwrite Preset?', message=f"A preset with the name '{name}' already exists. Do you want to overwrite it?", default=MessageBox.YES)
+					if cont is None:
 						return CheckSaved.cancelled
+					if not cont:
+						return CheckSaved.saved
 					replace = n
 					break
 			preset = GeneratorPreset(
@@ -210,8 +210,8 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 
 	def load_preset(self, preset: GeneratorPreset, window: AnyWindow | None = None) -> bool:
 		if self.variables or self.text.get(1.0, END).strip():
-			cont = MessageBox.askquestion(parent=window if window else self, title='Load Preset?', message="Your current variables and code will be lost.", default=MessageBox.YES, type=MessageBox.YESNO)
-			if cont == MessageBox.NO:
+			cont = MessageBox.askyesno(parent=window if window else self, title='Load Preset?', message="Your current variables and code will be lost.", default=MessageBox.YES)
+			if not cont:
 				return False
 		self.text.delete(1.0, END)
 		self.text.insert(END, preset.code)
