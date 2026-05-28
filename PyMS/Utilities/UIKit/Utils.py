@@ -98,10 +98,8 @@ class Rect:
 	def clamp(self, *, size: Size, pos: Point | None = None, min_size: Size | None = None, max_size: Size | None = None) -> None:
 		if pos is None:
 			pos = Point(0,0)
-		if self.pos.x < pos.x:
-			self.pos.x = pos.x
-		if self.pos.y < pos.y:
-			self.pos.y = pos.y
+		self.pos.x = max(self.pos.x, pos.x)
+		self.pos.y = max(self.pos.y, pos.y)
 		if self.max_x > pos.x + size.width:
 			self.size.width = size.width - (self.pos.x - pos.x)
 		if self.max_y > pos.y + size.height:

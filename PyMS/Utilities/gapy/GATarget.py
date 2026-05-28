@@ -89,7 +89,8 @@ class GAAPITarget(GATarget, threading.Thread):
 			# print(repr(body))
 			request = urllib.request.Request(self._url_batch if len(batch) > 1 else self._url_collect, body.encode('utf-8'))
 			request.add_header('User-Agent', self._useragent)
-			_ = urllib.request.urlopen(request)
+			with urllib.request.urlopen(request):
+				pass
 			# print('done: ' + result.read())
 			if self._backlog:
 				retry_at = self._time()

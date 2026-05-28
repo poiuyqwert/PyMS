@@ -541,7 +541,7 @@ class Document(ContainerBlock):
 		# print('\r\n' + repr(document))
 		# Phase 2. Parse inline structure
 		def parse_spans(block: Block) -> None:
-			if isinstance(block, IndentedCodeBlock) or isinstance(block, FencedCodeBlock):
+			if isinstance(block, (IndentedCodeBlock, FencedCodeBlock)):
 				return
 			if isinstance(block, ContentBlock):
 				for span_type in Document.SPAN_PRIORITY:

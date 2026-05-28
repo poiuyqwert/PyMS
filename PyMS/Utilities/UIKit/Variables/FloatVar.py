@@ -4,10 +4,10 @@ from .IntegerVar import IntegerVar
 from tkinter import StringVar
 
 class FloatVar(IntegerVar):
-	def __init__(self, val='0', range=None, exclude=None, callback=None, precision=None):
+	def __init__(self, val='0', val_range=None, exclude=None, callback=None, precision=None):
 		self.precision = precision
 		self.check = True
-		IntegerVar.__init__(self, val, range, exclude, callback)
+		IntegerVar.__init__(self, val, val_range, exclude, callback)
 
 	def editvalue(self, *_):
 		if self.check:

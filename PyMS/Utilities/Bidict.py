@@ -6,7 +6,7 @@ K = TypeVar('K')
 V = TypeVar('V')
 class Bidict(MutableMapping[K, V]):
 	def __init__(self, _dict: dict[K, V]):
-		self._value_map = {key: value for key,value in _dict.items()}
+		self._value_map = dict(_dict)
 		self._key_map = {value: key for key,value in _dict.items()}
 
 	def key_of(self, value: V) -> K:

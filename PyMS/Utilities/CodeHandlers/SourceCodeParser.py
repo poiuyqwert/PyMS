@@ -20,7 +20,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.LiteralsToken) and (token.raw_value == ':' or token.raw_value == '--'):
+		if isinstance(token, Tokens.LiteralsToken) and token.raw_value in (':', '--'):
 			hyphens = (token.raw_value == '--')
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):

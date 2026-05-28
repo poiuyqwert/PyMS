@@ -1585,13 +1585,13 @@ class EditLayerLocations(EditLayer):
 			y = y1+mouseY
 			locations = self.ui.chk.get_section(CHKSectionMRGN.NAME)
 			if button_event & EditLayer.MOUSE_DOWN or button_event & EditLayer.MOUSE_DOUBLE:
-	 			self.current_event = []
-	 			unused = None
-	 			for l in self.zOrder:
-	 				if l == 63 and not self.show_anywhere:
+				self.current_event = []
+				unused = None
+				for l in self.zOrder:
+					if l == 63 and not self.show_anywhere:
 						continue
 					location = locations.locations[l]
-	 				if location.in_use():
+					if location.in_use():
 						x1,y1,x2,y2 = location.normalized_coords()
 						if button_event & EditLayer.MOUSE_DOWN:
 							event = resize_event(location,x,y)

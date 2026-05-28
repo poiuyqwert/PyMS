@@ -16,7 +16,7 @@ class MiscExtensions(_Tk.Misc):
 	def after_managed(self, ms: int, func: Callable[..., Any], *args: Any) -> str:
 		"""Schedule `func` after `ms` milliseconds and auto-cancel if this widget is destroyed first."""
 		if not hasattr(self, '_managed_after_ids'):
-			self._managed_after_ids: set[str] = set()
+			self._managed_after_ids: set[str] = set() # pylint: disable=attribute-defined-outside-init
 			self.bind(WidgetEvent.Destroy(), self._cancel_managed_afters, '+')
 		holder: list[str] = ['']
 		def wrapper() -> None:
@@ -43,7 +43,7 @@ class MiscExtensions(_Tk.Misc):
 				self.after_cancel(after_id)
 			except:
 				pass
-		self._managed_after_ids = set()
+		self._managed_after_ids = set() # pylint: disable=attribute-defined-outside-init
 
 	def apply_cursor(self, cursors: list[str]) -> (str | None):
 		for cursor in reversed(cursors):

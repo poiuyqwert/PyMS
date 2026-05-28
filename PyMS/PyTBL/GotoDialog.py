@@ -7,7 +7,7 @@ from ..Utilities.UIKit import *
 class GotoDialog(PyMSDialog):
 	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
-		self.goto = IntegerVar(range=(0,65535), allow_hex=True)
+		self.goto = IntegerVar(val_range=(0,65535), allow_hex=True)
 		self.gotohistory: list[str] = []
 		PyMSDialog.__init__(self, parent, 'Goto', grabwait=False, escape=True, resizable=(False,False))
 

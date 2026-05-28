@@ -25,8 +25,8 @@ class SMKSettings(PyMSDialog, MainDelegate):
 
 		self.filename = StringVar()
 		self.overlay_smk = IntVar()
-		self.overlay_x = IntegerVar(range=[0,65535])
-		self.overlay_y = IntegerVar(range=[0,65535])
+		self.overlay_x = IntegerVar(val_range=[0,65535])
+		self.overlay_y = IntegerVar(val_range=[0,65535])
 
 		self.flag_fadein = BooleanVar()
 		self.flag_dark = BooleanVar()

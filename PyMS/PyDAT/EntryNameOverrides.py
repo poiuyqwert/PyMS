@@ -20,7 +20,7 @@ class EntryNameOverrides(PyMSDialog):
 	def __init__(self, parent: Misc, data_context: DataContext, dat_id: DATID, entry_id: int | None = None) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
-		self.entry_id = IntegerVar(range=(0, 99999))
+		self.entry_id = IntegerVar(val_range=(0, 99999))
 		if entry_id:
 			self.entry_id.set(entry_id)
 		self.name = StringVar()

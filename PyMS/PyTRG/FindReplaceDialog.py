@@ -91,7 +91,7 @@ class FindReplaceDialog(PyMSDialog):
 			else:
 				self.multicheck['state'] = DISABLED
 				self.multiline.set(0)
-		if update == Update.regex or update == Update.multiline:
+		if update in (Update.regex, Update.multiline):
 			s = [NORMAL,DISABLED][self.multiline.get()]
 			self.up['state'] = s
 			self.down['state'] = s

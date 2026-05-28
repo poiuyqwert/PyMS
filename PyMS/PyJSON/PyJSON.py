@@ -260,7 +260,7 @@ class PyJSON(MainWindow):
 		self.object_status.set('')
 		self.action_states()
 
-	def add(self, index: int | Literal['end'] = END) -> None:
+	def add(self, _index: int | Literal['end'] = END) -> None:
 		if not self.data_source.data:
 			return
 		self.mark_edited()

@@ -198,7 +198,7 @@ class StrCodeType(CodeType[str, str]):
 	def lex(self, parse_context: ParseContext) -> str:
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.StringToken) and parse_context.command_in_parens:
-			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value == ',' or token.raw_value == ')' else Lexer.Stop.proceed)
+			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
 		if isinstance(token, Tokens.StringToken):
 			try:
 				return StrCodeType.parse_string(token.raw_value)
@@ -262,10 +262,10 @@ class BooleanCodeType(IntCodeType, HasKeywords):
 
 	def lex(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.next_token()
-		if isinstance(token, Tokens.BooleanToken) or isinstance(token, Tokens.IntegerToken):
-			if token.raw_value == 'true' or token.raw_value == '1':
+		if isinstance(token, (Tokens.BooleanToken, Tokens.IntegerToken)):
+			if token.raw_value in ('true', '1'):
 				return True
-			elif token.raw_value == 'false' or token.raw_value == '0':
+			if token.raw_value in ('false', '0'):
 				return False
 		raise parse_context.error('Parse', f'Expected a `{self.name}` boolean but got `{token.raw_value}`')
 
@@ -301,7 +301,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 	def lex_flags(*, parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True, allow_raw_flags: bool = False) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
-		if token.raw_value == ',' or token.raw_value == ')':
+		if token.raw_value in (',', ')'):
 			return 0
 
 		allowed = 'flag name'

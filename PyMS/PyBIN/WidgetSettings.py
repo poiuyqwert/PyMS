@@ -27,35 +27,35 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.advanced_shown = True
 		self.show_advanced = BooleanVar()
 
-		self.left = IntegerVar(range=[0,65535])
-		self.right = IntegerVar(range=[0,65535])
-		self.width = IntegerVar(range=[0,65535])
+		self.left = IntegerVar(val_range=[0,65535])
+		self.right = IntegerVar(val_range=[0,65535])
+		self.width = IntegerVar(val_range=[0,65535])
 		def calc_right(_: Any) -> None:
 			self.calculate(self.right, self.left, self.width, 1, fix=-1, allow_advanced=False)
 		self.left.callback = calc_right
 		self.width.callback = calc_right
-		self.top = IntegerVar(range=[0,65535])
-		self.bottom = IntegerVar(range=[0,65535])
-		self.height = IntegerVar(range=[0,65535])
+		self.top = IntegerVar(val_range=[0,65535])
+		self.bottom = IntegerVar(val_range=[0,65535])
+		self.height = IntegerVar(val_range=[0,65535])
 		def calc_bottom(_: Any) -> None:
 			self.calculate(self.left, self.right, self.width, -1, fix=1, allow_advanced=False)
 		self.top.callback = calc_bottom
 		self.height.callback = calc_bottom
 		self.string = StringVar()
-		self.identifier = IntegerVar(range=[0,65535])
+		self.identifier = IntegerVar(val_range=[0,65535])
 		self.smk = IntVar()
-		self.text_offset_x = IntegerVar(range=[0,65535])
-		self.text_offset_y = IntegerVar(range=[0,65535])
-		self.responsive_left = IntegerVar(range=[0,65535])
-		self.responsive_right = IntegerVar(range=[0,65535])
-		self.responsive_width = IntegerVar(range=[0,65535])
+		self.text_offset_x = IntegerVar(val_range=[0,65535])
+		self.text_offset_y = IntegerVar(val_range=[0,65535])
+		self.responsive_left = IntegerVar(val_range=[0,65535])
+		self.responsive_right = IntegerVar(val_range=[0,65535])
+		self.responsive_width = IntegerVar(val_range=[0,65535])
 		def calc_responsive_right(_: Any) -> None:
 			self.calculate(self.responsive_right, self.responsive_left, self.responsive_width, 1, fix=-1, allow_advanced=False)
 		self.responsive_left.callback = calc_responsive_right
 		self.responsive_width.callback = calc_responsive_right
-		self.responsive_top = IntegerVar(range=[0,65535])
-		self.responsive_bottom = IntegerVar(range=[0,65535])
-		self.responsive_height = IntegerVar(range=[0,65535])
+		self.responsive_top = IntegerVar(val_range=[0,65535])
+		self.responsive_bottom = IntegerVar(val_range=[0,65535])
+		self.responsive_height = IntegerVar(val_range=[0,65535])
 		def calc_responsive_bottom(_: Any) -> None:
 			self.calculate(self.responsive_left, self.responsive_right, self.responsive_width, -1, fix=1, allow_advanced=False)
 		self.responsive_top.callback = calc_responsive_bottom
@@ -94,7 +94,7 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.flag_no_click_snd = BooleanVar()
 		self.flag_unk10 = BooleanVar()
 
-		self.scr_unknown1 = IntegerVar(range=[0,65535])
+		self.scr_unknown1 = IntegerVar(val_range=[0,65535])
 
 		assert node.widget is not None
 		PyMSDialog.__init__(self, parent, 'Edit ' + DialogBIN.BINWidget.TYPE_NAMES[node.widget.type], resizable=(False, False))

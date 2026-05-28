@@ -17,7 +17,8 @@ class UpdateDialog(PyMSDialog):
 			VERSIONS_URL = f'https://raw.githubusercontent.com/poiuyqwert/PyMS/{UpdateDialog.BRANCH}/PyMS/versions.json'
 			try:
 				import ssl
-				versions = json.loads(urllib.request.urlopen(VERSIONS_URL, context=ssl.create_default_context()).read())
+				with urllib.request.urlopen(VERSIONS_URL, context=ssl.create_default_context()) as response:
+					versions = json.loads(response.read())
 				latest_PyMS_version = SemVer(versions['PyMS'])
 				latest_program_version = SemVer(versions[program])
 				PyMS_version = SemVer(Assets.version('PyMS'))

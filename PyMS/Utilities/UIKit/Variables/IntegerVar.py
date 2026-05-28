@@ -10,10 +10,10 @@ class IntegerVar(StringVar):
 		user = 2
 		both = (programmatic | user)
 
-	def __init__(self, val=0, range=None, exclude=None, callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
+	def __init__(self, val=0, val_range=None, exclude=None, callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
 		self.defaultval = val
 		self.lastvalid = val
-		self.range = range if range is not None else [None, None]
+		self.range = val_range if val_range is not None else [None, None]
 		self.exclude = exclude if exclude is not None else []
 		self.callback = callback
 		self.allow_hex = allow_hex
@@ -130,8 +130,8 @@ class IntegerVar(StringVar):
 		except:
 			return 0
 
-	def setrange(self, range):
-		self.range = list(range)
+	def setrange(self, val_range):
+		self.range = list(val_range)
 		value = self.get()
 		new_value = self.apply_limits(value)
 		if new_value != value:
@@ -141,8 +141,8 @@ class IntegerVar(StringVar):
 	def apply_limits(self, value):
 		# if self._tag:
 		# 	print(value, self.range)
-		min,max = self.range
-		if min is not None and min >= 0 and self.get(True).startswith('-'):
+		min_value, max_value = self.range
+		if min_value is not None and min_value >= 0 and self.get(True).startswith('-'):
 			# if self._tag:
 			# 	print('Invalid negative')
 			value = self.lastvalid
@@ -150,15 +150,15 @@ class IntegerVar(StringVar):
 			# if self._tag:
 			# 	print('Exclude')
 			value = self.lastvalid
-		elif min is not None and value < min:
+		elif min_value is not None and value < min_value:
 			# if self._tag:
 			# 	print('Minimum')
-			value = min
-		elif max is not None and value > max:
+			value = min_value
+		elif max_value is not None and value > max_value:
 			# if self._tag:
 			# 	print('Maximum')
 			if self.maxout is not None:
 				value = self.maxout
 			else:
-				value = max
+				value = max_value
 		return value

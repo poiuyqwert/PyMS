@@ -713,7 +713,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 				group.update_settings(copy_group)
 
 	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
-		if mode == MegaEditorMode.mini or mode == MegaEditorMode.flip:
+		if mode in (MegaEditorMode.mini, MegaEditorMode.flip):
 			self.apply_all_btn.pack_forget()
 		else:
 			self.apply_all_btn.pack()

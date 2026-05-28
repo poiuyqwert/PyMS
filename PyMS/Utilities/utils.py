@@ -254,7 +254,8 @@ def start_file(filepath: str) -> None:
 		os.startfile(filepath)
 	else:
 		cmd = 'open' if is_mac() else 'xdg-open'
-		subprocess.Popen([cmd, filepath])
+		# Fire-and-forget launch of the system file viewer; we intentionally do not wait for it.
+		subprocess.Popen([cmd, filepath])  # pylint: disable=consider-using-with
 
 play_sound: Callable[[bytes], None] | None = None
 try:

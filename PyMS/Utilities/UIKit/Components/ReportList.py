@@ -119,7 +119,10 @@ class EditableReportSubList(RichList):
 			if self.report.scmd:
 				self.report.scmd()
 			return
-		if t == 0 or (t == 1 and self.selectmode == EXTENDED and self.lastsel is None) or (t == 2 and self.selectmode != SINGLE):
+		is_basic_select = (t == 0)
+		is_extended_first = (t == 1 and self.selectmode == EXTENDED and self.lastsel is None)
+		is_multi_toggle = (t == 2 and self.selectmode != SINGLE)
+		if is_basic_select or is_extended_first or is_multi_toggle:
 			if self.selectmode != MULTIPLE and t != 2:
 				self.text.tag_remove('Selection', '1.0', END)
 			if self.selectmode == EXTENDED:

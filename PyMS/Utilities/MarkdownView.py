@@ -169,7 +169,7 @@ class MarkdownView(Frame):
 		self.tk.createcommand(getattr(self.textview, '_w'), self.dispatch)
 
 	def dispatch(self, cmd: str, *args: str) -> str:
-		if self._read_only and (cmd == 'insert' or cmd == 'delete'):
+		if self._read_only and cmd in ('insert', 'delete'):
 			return ""
 		try:
 			return self.tk.call((self.textview_original_w, cmd) + args)
@@ -239,7 +239,7 @@ class MarkdownView(Frame):
 				):
 				additional_last_line_tags = ('bottom_spacing',)
 			self.insert_content(block, tags, additional_last_line_tags=additional_last_line_tags)
-		elif isinstance(block, Markdown.IndentedCodeBlock) or isinstance(block, Markdown.FencedCodeBlock):
+		elif isinstance(block, (Markdown.IndentedCodeBlock, Markdown.FencedCodeBlock)):
 			self.insert_content(block, tags + ('code',), additional_first_line_tags=('top_spacing',), additional_last_line_tags=('bottom_spacing',))
 			# self._next_tags = ('top_spacing',)
 			self.textview.insert(END, '\n')
