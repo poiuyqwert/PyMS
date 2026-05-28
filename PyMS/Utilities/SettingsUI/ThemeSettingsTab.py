@@ -112,7 +112,7 @@ class ThemeSettingsTab(SettingsTab):
 				theme = Theme.Theme(theme_name)
 				self.author.set(theme.author)
 				self.description.set(theme.description)
-			except:
+			except Exception:
 				self.author.set('ERROR')
 				self.description.set("Couldn't load theme")
 

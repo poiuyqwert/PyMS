@@ -28,7 +28,7 @@ class IconData:
 			grp = CacheGRP()
 			path = self.data_context.config.settings.files.cmdicons.file_path
 			grp.load_file(self.data_context.mpq_handler.load_file(path))
-		except:
+		except Exception:
 			pass
 		else:
 			self.grp = grp
@@ -40,7 +40,7 @@ class IconData:
 			pcx = PCX()
 			path = self.data_context.config.settings.files.ticon.file_path
 			pcx.load_file(self.data_context.mpq_handler.load_file(path))
-		except:
+		except Exception:
 			pass
 		else:
 			self.ticon_pcx = pcx

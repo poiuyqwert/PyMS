@@ -440,7 +440,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		if not frame_index in self.basegrp_cache:
 			try:
 				self.basegrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.basegrp, frame_index, size=False))
-			except:
+			except Exception:
 				self.basegrp_cache[frame_index] = None
 		return self.basegrp_cache[frame_index]
 
@@ -450,7 +450,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		if not frame_index in self.overlaygrp_cache:
 			try:
 				self.overlaygrp_cache[frame_index] = cast(Image, frame_to_photo(self.unitpal.palette, self.overlaygrp, frame_index, size=False))
-			except:
+			except Exception:
 				self.overlaygrp_cache[frame_index] = None
 		return self.overlaygrp_cache[frame_index]
 
@@ -542,7 +542,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		try:
 			with open(file, 'r', encoding='utf-8') as f:
 				text = f.read()
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Import', f"Couldn't import file '{file}'"))
 			return
 		self.lo = LO()

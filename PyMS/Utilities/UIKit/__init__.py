@@ -23,5 +23,5 @@ READONLY = 'readonly'
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
+except Exception:
 	pass

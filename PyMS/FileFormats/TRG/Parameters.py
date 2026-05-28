@@ -97,7 +97,7 @@ class NumberParameter(ConditionParameter, ActionParameter):
 			number = int(value)
 			if -1 < number < 4294967296:
 				return number
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Paramater', f"'{value}' is not a valid Number (value must be a number in the range 0 to 4294967295)")
 
@@ -171,7 +171,7 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 			player_group = int(value)
 			if -1 < player_group < 256:
 				return player_group
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Player (value must be in the range 0 to 255, or on of the keywords: Current Player, Foes, Allies, Neutral Players, All Players, Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4, Non Allied Victory Players)")
 
@@ -223,7 +223,7 @@ class ComparisonParameter(ConditionParameter, HasKeywords):
 			if -1 < num < 256:
 				condition.comparison = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
 
@@ -267,7 +267,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 			unit_type = int(value)
 			if -1 < unit_type < 65536:
 				return unit_type
-		except:
+		except Exception:
 			pass
 		if trg.stat_txt:
 			for unit_id,string in enumerate(trg.stat_txt.strings[:228]):
@@ -318,7 +318,7 @@ class LocationParameter(ConditionParameter, ActionParameter, HasKeywords):
 			location_index = int(value)
 			if 0 <= location_index < 255:
 				return location_index + 1
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Location (value must be in the range 0 to 254, or the keyword Anywhere, which is Location 63)")
 
@@ -370,7 +370,7 @@ class ResourceTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				return (num, PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)"))
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
 
@@ -421,7 +421,7 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				return (num, PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected ScoreType (value should be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)"))
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid ScoreType (value must be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)")
 
@@ -459,7 +459,7 @@ class SwitchParameter(ConditionParameter, ActionParameter, HasKeywords):
 			switch_index = int(value)
 			if -1 < switch_index < 256:
 				return switch_index
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Switch (value must be in the range 0 to 255)")
 
@@ -506,7 +506,7 @@ class SwitchStateParameter(ConditionParameter, HasKeywords):
 			if -1 < num < 256:
 				condition.switch_state = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected SwitchState (value must be one of the keywords: Set, Cleared)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid SwitchState (value must be one of the keywords: Set, Cleared)")
 
@@ -535,7 +535,7 @@ class TimeParameter(ActionParameter):
 				else:
 					action.duration = duration
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is not a valid Time (value must be a number in the range 0 to 4294967295)")
 
@@ -567,7 +567,7 @@ class StringParameter(ActionParameter, HasKeywords):
 				if string_index == 0:
 					return PyMSWarning(warn_type='Parameter', warning='String 0 means "no string"')
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid String (value must be in the range 0 to 4294967296), or the keyword No String")
 
@@ -597,7 +597,7 @@ class UnitParameter(ActionParameter):
 			unit_type = int(value)
 			if unit_type < 0 or unit_type > 65535:
 				unit_type = None
-		except:
+		except Exception:
 			pass
 		if trg.stat_txt:
 			if unit_type is None:
@@ -641,7 +641,7 @@ class ModifierParameter(ActionParameter, HasKeywords):
 			if -1 < num < 256:
 				action.number_modifier = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Modifier (value should be one of the keywords: Set To, Add, Subtract)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Modifier (value must be one of the keywords: Set To, Add, Subtract)")
 
@@ -673,7 +673,7 @@ class WAVParameter(ActionParameter, HasKeywords):
 				if wav_string_index == 0:
 					return PyMSWarning(warn_type='Parameter', warning='WAV 0 means "No WAV"')
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid WAV (value must be in the range 1 to 4294967296, or the keyword No WAV)")
 
@@ -727,7 +727,7 @@ class QuantityParameter(ActionParameter, HasKeywords):
 				if number == 0:
 					return PyMSWarning(warn_type='Parameter', warning='Quantity 0 means "all"')
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is not a valid Quantity (value must be a number in the range 1 to 4294967295, or the keyword All)")
 
@@ -753,7 +753,7 @@ class PropertiesParameter(ActionParameter, HasKeywords):
 				action.unit_properties_index = index - 1
 				action.flags |= ActionFlag.unit_property_used
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid unit Properties index (value must be in the range 1 to 64, with or without the keyword Properties before it)")
 
@@ -788,7 +788,7 @@ class SwitchActionParameter(ActionParameter, HasKeywords):
 			if -1 < num < 256:
 				action.switch_action = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
 
@@ -822,7 +822,7 @@ class StateActionParameter(ActionParameter, HasKeywords):
 			if -1 < num < 256:
 				action.state_action = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected StateAction (value must be one of the keywords: Set, Clear, Toggle)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid StateAction (value must be one of the keywords: Set, Clear, Toggle)")
 
@@ -895,7 +895,7 @@ class OrderParameter(ActionParameter, HasKeywords):
 			if -1 < num < 256:
 				action.order = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Order (value must be one of the keywords: Move, Patrol, Attack)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Order (value must be one of the keywords: Move, Patrol, Attack)")
 
@@ -919,7 +919,7 @@ class PercentageParameter(ActionParameter):
 				if number > 100:
 					return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is larger than 100%")
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Paramater', f"'{value}' is not a valid Number (value must be a number in the range 0 to 4294967295)")
 
@@ -953,7 +953,7 @@ class AllianceStatusParameter(ActionParameter, HasKeywords):
 			if -1 < num < 256:
 				action.alliance_status = num
 				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
 
@@ -980,7 +980,7 @@ class SlotParameter(ActionParameter, HasKeywords):
 				if slot > 4:
 					return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
 				return None
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Parameter', f"'{value}' is an invalid Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
 
@@ -1001,7 +1001,7 @@ class RawFieldParameter(ConditionParameter, ActionParameter):
 			number = int(value)
 			if -1 < number <= self.limit:
 				return number
-		except:
+		except Exception:
 			pass
 		raise PyMSError('Paramater', f"'{value}' is not a valid Raw number for this field (value must be a number in the range 0 to {self.limit})")
 

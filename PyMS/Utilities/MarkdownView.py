@@ -173,7 +173,7 @@ class MarkdownView(Frame):
 			return ""
 		try:
 			return self.tk.call((self.textview_original_w, cmd) + args)
-		except:
+		except Exception:
 			return ""
 
 	def view_fragment(self, fragment: str) -> None:

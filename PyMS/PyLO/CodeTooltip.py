@@ -52,11 +52,11 @@ class SelectionTooltip(Tooltip):
 			if move:
 				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 			self.tip['background'] = '#FF0000'
-		except:
+		except Exception:
 			if self.tip:
 				try:
 					self.tip.destroy()
-				except:
+				except Exception:
 					pass
 				self.tip = None
 			return

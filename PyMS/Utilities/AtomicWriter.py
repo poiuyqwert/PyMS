@@ -17,7 +17,7 @@ class AtomicWriter:
 			self.handle = open(temp_file, mode, encoding=encoding)
 			self.temp_file = temp_file
 		else:
-			self.handle = open(path, mode, encoding=encoding)
+			self.handle = open(path, mode, encoding=encoding) # pylint: disable=consider-using-with
 
 		self.write = self.handle.write
 		self.fileno = self.handle.fileno
@@ -37,7 +37,7 @@ class AtomicWriter:
 				bak_file = os.path.join(directory, bak_name)
 				try:
 					os.rename(self.real_file, bak_file)
-				except:
+				except Exception:
 					bak_file = None
 			try:
 				os.rename(self.temp_file, self.real_file)
@@ -45,14 +45,14 @@ class AtomicWriter:
 				if bak_file:
 					try:
 						os.rename(bak_file, self.real_file)
-					except:
+					except Exception:
 						pass
 				raise PyMSError('Save', "File already exists and cannot be modified") from exc
 			finally:
 				if bak_file:
 					try:
 						os.remove(bak_file)
-					except:
+					except Exception:
 						pass
 
 	def discard(self) -> None:
@@ -61,7 +61,7 @@ class AtomicWriter:
 		if self.temp_file:
 			try:
 				os.remove(self.temp_file)
-			except:
+			except Exception:
 				pass
 
 	def __del__(self) -> None:

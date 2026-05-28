@@ -432,7 +432,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		try:
 			with open(file, 'r', encoding='utf-8') as f:
 				text = f.read()
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Import', f'Could not open file "{file}"'))
 			return
 		self.trg = TRG.TRG()

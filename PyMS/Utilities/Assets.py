@@ -46,7 +46,7 @@ def lookup_image(filename: str, cache: bool = True) -> PhotoImage | None:
 	path = image_path(filename)
 	try:
 		image = PhotoImage(file=path)
-	except:
+	except Exception:
 		return None
 	if cache:
 		_IMAGE_CACHE[filename] = image
@@ -288,11 +288,11 @@ def help_image(path: str) -> Image | None:
 	image: Image
 	try:
 		image = _PhotoImage(file=full_path)
-	except:
+	except Exception:
 		try:
 			pil_image = _PILImage.open(full_path)
 			image = cast(Image, _ImageTk.PhotoImage(pil_image))
-		except:
+		except Exception:
 			return None
 	_HELP_IMAGE_CACHE[full_path] = image
 	return image

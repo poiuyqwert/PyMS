@@ -23,7 +23,7 @@ class UpdateDialog(PyMSDialog):
 				latest_program_version = SemVer(versions[program])
 				PyMS_version = SemVer(Assets.version('PyMS'))
 				program_version = SemVer(Assets.version(program))
-			except:
+			except Exception:
 				return
 			if PyMS_version >= latest_PyMS_version and program_version >= latest_program_version:
 				return

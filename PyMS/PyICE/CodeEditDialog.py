@@ -307,7 +307,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 					self.text.delete('1.0', END)
 					self.text.insert('1.0', f.read())
 					self.text.edit_reset()
-			except:
+			except Exception:
 				ErrorDialog(self, PyMSError('Import', f'Could not import file "{iimport}"'))
 
 	def find(self, _event: Event | None = None) -> None:
@@ -337,7 +337,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			if t[0] in PREVIEWER_CMDS[EntryType.iscript] and self.previewer.curradio['state'] == NORMAL:
 				try:
 					f = CodeTypes.FrameCodeType().parse(parse_context)
-				except:
+				except Exception:
 					f = 0
 				self.previewer.type.set(0)
 				self.previewer.curid.set(0)
@@ -346,7 +346,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			elif t[0] in PREVIEWER_CMDS[EntryType.images_dat]:
 				try:
 					n = CodeTypes.ImageIDCodeType().parse(parse_context)
-				except:
+				except Exception:
 					n = 0
 				self.previewer.type.set(1)
 				self.previewer.image.set(n)
@@ -355,7 +355,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			elif t[0] in PREVIEWER_CMDS[EntryType.sprites_dat]:
 				try:
 					n = CodeTypes.SpriteIDCodeType().parse(parse_context)
-				except:
+				except Exception:
 					n = 0
 				self.previewer.type.set(2)
 				self.previewer.sprites.set(n)
@@ -364,7 +364,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 			elif t[0] in PREVIEWER_CMDS[EntryType.flingy_dat]:
 				try:
 					n = CodeTypes.FlingyIDCodeType().parse(parse_context)
-				except:
+				except Exception:
 					n = 0
 				self.previewer.type.set(3)
 				self.previewer.flingys.set(n)
@@ -382,7 +382,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 		if t[0] == 'playsnd':
 			try:
 				i = CodeTypes.SoundIDCodeType().parse(self.delegate.get_parse_context(t[1]))
-			except:
+			except Exception:
 				pass
 		SoundDialog(parent=self, delegate=self.delegate, config=self.config_.sounds, text=self.text, sound_id=i)
 

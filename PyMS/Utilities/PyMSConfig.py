@@ -47,5 +47,5 @@ if registry.IS_AVAILABLE and PYMS_CONFIG.scdir.path is None:
 			path = QueryValueEx(h, 'InstallPath')[0]
 		if isinstance(path, str) and os.path.isdir(path):
 			PYMS_CONFIG.scdir.path = path
-	except:
+	except Exception:
 		pass

@@ -34,14 +34,14 @@ class MiscExtensions(_Tk.Misc):
 			self._managed_after_ids.discard(after_id)
 		try:
 			self.after_cancel(after_id)
-		except:
+		except Exception:
 			pass
 
 	def _cancel_managed_afters(self, _event: Any = None) -> None:
 		for after_id in list(getattr(self, '_managed_after_ids', ())):
 			try:
 				self.after_cancel(after_id)
-			except:
+			except Exception:
 				pass
 		self._managed_after_ids = set() # pylint: disable=attribute-defined-outside-init
 
@@ -50,7 +50,7 @@ class MiscExtensions(_Tk.Misc):
 			try:
 				self.configure(cursor=cursor) # type: ignore[call-arg]
 				return cursor
-			except:
+			except Exception:
 				pass
 		return None
 
@@ -81,7 +81,7 @@ class WindowExtensions(MiscExtensions, _Tk.Wm):
 				# rounded-corner mask and exposes no Tcl knob to disable it.
 				from ._macos_corners import disable_rounded_corners  # pylint: disable=cyclic-import
 				disable_rounded_corners(self)
-			except:
+			except Exception:
 				pass
 
 	def maxsize(self, width: int | None = None, height: int | None = None) -> tuple[int, int]: # type: ignore[override]

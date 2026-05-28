@@ -641,7 +641,7 @@ class DialogBIN:
 				load_widget(next_widget, remastered)
 		try:
 			load_widget(0, False)
-		except:
+		except Exception:
 			widgets = []
 			smk_map = {}
 			smks = []

@@ -53,7 +53,7 @@ class IntegerVar(StringVar):
 						#	 print('at 2')
 						raise Exception()
 					refresh = False
-				except:
+				except Exception:
 					#raise
 					s = self.lastvalid
 				else:
@@ -112,7 +112,7 @@ class IntegerVar(StringVar):
 	def get(self, s: bool = False) -> int | str:
 		try:
 			string = StringVar.get(self)
-		except:
+		except Exception:
 			string = ''
 		if s:
 			return string
@@ -122,12 +122,12 @@ class IntegerVar(StringVar):
 				return 0
 			try:
 				return int(string, 16)
-			except:
+			except Exception:
 				return 0
 		self.is_hex = False
 		try:
 			return int(string or 0)
-		except:
+		except Exception:
 			return 0
 
 	def setrange(self, val_range):

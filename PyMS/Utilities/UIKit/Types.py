@@ -30,7 +30,7 @@ try:
 	AnyImage: _TypeAlias = _tk.Image | _ImageTk.PhotoImage | _ImageTk.BitmapImage | _PILImage.Image
 	AnyPhotoImage: _TypeAlias = _tk.PhotoImage | _ImageTk.PhotoImage | _PILImage.Image
 	AnyBitmapImage: _TypeAlias = _tk.BitmapImage | _ImageTk.BitmapImage
-except:
+except Exception:
 	AnyImage: _TypeAlias = _tk.Image # type: ignore
 	AnyPhotoImage: _TypeAlias = _tk.PhotoImage # type: ignore
 	AnyBitmapImage: _TypeAlias = _tk.BitmapImage # type: ignore

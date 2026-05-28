@@ -6,7 +6,7 @@ from typing import Callable, Any, Sequence
 
 try:
 	from _thread import start_new_thread
-except:
+except Exception:
 	import threading
 	def start_new_thread(function: Callable[..., object], args: tuple[Any, ...], kwargs: dict[str, Any] | None = None) -> int: # type: ignore[no-redef]
 		thread = threading.Thread(target=function, args=args, kwargs=kwargs)
@@ -196,17 +196,17 @@ try:
 	def win_play(raw_audio):
 		start_new_thread(PlaySound, (raw_audio, SND_MEMORY))
 	play_sound = win_play
-except:
+except Exception:
 	def osx_play(raw_audio):
 		from . import Assets  # pylint: disable=cyclic-import
 		def do_play(path):
 			try:
 				subprocess.call(["afplay", path])
-			except:
+			except Exception:
 				pass
 			try:
 				os.remove(path)
-			except:
+			except Exception:
 				pass
 		temp_file = create_temp_file(Assets.internal_temp_file_path())
 		with open(temp_file, 'wb') as handle:

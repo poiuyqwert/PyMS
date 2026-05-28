@@ -38,7 +38,7 @@ class InternalErrorDialog(PyMSDialog):
 		self.add_text(f'Python: {sys.version}')
 		try:
 			self.add_text(f'Tcl/Tk: {Tcl().call("info", "patchlevel")}')
-		except:
+		except Exception:
 			pass
 		self.add_text(f'Platform: {platform.system()}')
 		if self.txt:

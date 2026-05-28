@@ -102,7 +102,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 				string_index = int(string_index_raw)
 				if string_index < 0:
 					raise PyMSError('Internal', 'Invalid string ID')
-			except:
+			except Exception:
 				string_index = self.validstring
 			else:
 				if (stattxt_tbl := self.delegate.get_data_context().stattxt_tbl):

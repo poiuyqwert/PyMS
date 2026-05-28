@@ -289,7 +289,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		for index in self.listbox.curselection():
 			try:
 				selected.append(self.script_list[index])
-			except:
+			except Exception:
 				pass
 		return selected
 
@@ -433,7 +433,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		mpq = MPQ.of(file)
 		try:
 			mpq_ctx = mpq.open()
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Open', f'Could not open MPQ "{file}"'))
 			return
 		with mpq_ctx:
@@ -441,7 +441,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			bw = None
 			try:
 				bw = mpq.read_file('scripts\\bwscript.bin')
-			except:
+			except Exception:
 				pass
 		self.open(aiscript=(ai, 'scripts\\aiscript.bin'), bwscript=(bw, 'scripts\\bwscript.bin'))
 
@@ -492,12 +492,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			with mpq.open_or_create():
 				try:
 					mpq.add_data(ai_bytes.getvalue(), 'scripts\\aiscript.bin', compression=MPQCompressionFlag.pkware)
-				except:
+				except Exception:
 					not_saved.append('scripts\\aiscript.bin')
 				if bw_bytes:
 					try:
 						mpq.add_data(bw_bytes.getvalue(), 'scripts\\bwscript.bin', compression=MPQCompressionFlag.pkware)
-					except:
+					except Exception:
 						not_saved.append('scripts\\bwscript.bin')
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -664,7 +664,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		try:
 			with open(file, 'r', encoding='utf-8') as settings:
 				files = settings.readlines()
-		except:
+		except Exception:
 			MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
 
 		tbl = TBL.TBL()
@@ -711,7 +711,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 {self.config_.settings.files.dat.upgrades}
 {self.config_.settings.files.dat.techdata}
 """.replace(Assets.base_dir, '%(path)s'))
-			except:
+			except Exception:
 				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
 
 	# ActionsDelegate

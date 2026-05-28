@@ -4,7 +4,7 @@ from __future__ import annotations
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
+except Exception:
 	from ...Utilities.DependencyError import DependencyError
 	import sys
 	e = DependencyError('PyMS', 'Pillow is missing. Please consult the Installation section of the Readme.')

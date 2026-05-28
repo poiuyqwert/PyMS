@@ -98,7 +98,7 @@ class MPQSelect(PyMSDialog):
 			s = '^' + re.escape(s).replace('\\?','.').replace('\\*','.+?') + '$'
 		try:
 			r = re.compile(s)
-		except:
+		except Exception:
 			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.textdrop.entry['bg'] = '#FFB4B4'
 		else:

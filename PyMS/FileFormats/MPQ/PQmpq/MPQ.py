@@ -231,7 +231,7 @@ class MPQ:
 			block_table = MPQBlockEntry.unpack_array(block_table_data, headerv1.block_table_entries)
 			# for entry in block_table:
 			# 	print(entry)
-		except:
+		except Exception:
 			file_handle.close()
 			raise
 

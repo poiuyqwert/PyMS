@@ -29,7 +29,7 @@ if STORMLIB_DIR:
 			try:
 				_loaded = _loader(_path, ctypes.RTLD_GLOBAL)
 				break
-			except:
+			except Exception:
 				pass
 		if _loaded is not None:
 			_StormLib = _loaded
@@ -696,13 +696,13 @@ if _StormLib is not None:
 	# void  SetLastError(DWORD dwErrCode);
 	# try:
 	# 	_StormLib.SetLastError.argtypes = [ctypes.c_uint32]
-	# except:
+	# except Exception:
 	# 	_StormLib.SetLastError = None
 
 	# DWORD GetLastError();
 	try:
 		_StormLib.GetLastError.restype = ctypes.c_uint32
-	except:
+	except Exception:
 		pass
 
 def _file_path(file_path: str) -> str | bytes:
@@ -919,6 +919,6 @@ def SFGetLastError() -> int:
 	# StormLib only implements its own GetLastError on platforms other than windows
 	try:
 		return _StormLib.GetLastError() # pylint: disable=not-callable
-	except:
+	except Exception:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
 

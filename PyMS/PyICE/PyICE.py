@@ -188,7 +188,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 			try:
 				unitnamestbl = TBL.TBL()
 				unitnamestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.unitnames.file_path))
-			except:
+			except Exception:
 				self.unitnamestbl = None # TODO: Unitnames.tbl?
 			else:
 				self.unitnamestbl = unitnamestbl

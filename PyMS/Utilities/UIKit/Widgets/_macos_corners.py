@@ -35,9 +35,7 @@ _initialized = False
 
 
 def _initialize() -> bool:
-	global _initialized
-	global _msg_id, _msg_id_double, _msg_id_ulong, _msg_id_sel, _msg_ulong, _msg_charp
-	global _sel, _ns_app_class
+	global _initialized, _msg_id, _msg_id_double, _msg_id_ulong, _msg_id_sel, _msg_ulong, _msg_charp, _sel, _ns_app_class # pylint: disable=global-statement
 
 	if _initialized:
 		return _ns_app_class != 0
@@ -72,7 +70,7 @@ def _initialize() -> bool:
 
 		_ns_app_class = libobjc.objc_getClass(b'NSApplication') or 0
 		return _ns_app_class != 0
-	except:
+	except Exception:
 		return False
 
 
@@ -84,7 +82,7 @@ def disable_rounded_corners(toplevel: WindowExtensions) -> None:
 	try:
 		original_title = toplevel.wm_title()
 		toplevel.wm_title(marker)
-	except:
+	except Exception:
 		return
 	toplevel.update_idletasks()
 
@@ -93,7 +91,7 @@ def disable_rounded_corners(toplevel: WindowExtensions) -> None:
 	finally:
 		try:
 			toplevel.wm_title(original_title)
-		except:
+		except Exception:
 			pass
 
 	if not ns_window:

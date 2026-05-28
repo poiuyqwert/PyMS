@@ -70,7 +70,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 			f = AtomicWriter(path, 'w')
 			f.write(json.dumps(preset, indent=4))
 			f.close()
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Export', f"Could not write to file '{path}'"))
 
 	def iimport(self) -> None:

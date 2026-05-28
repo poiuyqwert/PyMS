@@ -6,7 +6,7 @@ import sys, os
 IS_AVAILABLE = True
 try:
 	from winreg import OpenKey, EnumKey, DeleteKey, HKEY_CLASSES_ROOT, REG_SZ, SetValue # type: ignore[attr-defined] # pylint: disable=import-error
-except:
+except Exception:
 	IS_AVAILABLE = False
 	def OpenKey(_a,_b) -> str:
 		return ''

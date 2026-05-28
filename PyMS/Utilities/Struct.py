@@ -152,7 +152,7 @@ class StringType(Type, Processed):
 			case Strip.from_first:
 				try:
 					index = value.index(b'\x00')
-				except:
+				except Exception:
 					pass
 				else:
 					value = value[:index]

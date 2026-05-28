@@ -2351,7 +2351,7 @@ class PyMAP(Tk):
 			for p in ['Units','bfire','gfire','ofire','Terrain']:#,'Icons']:
 				try:
 					pal.load_file(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
-				except:
+				except Exception:
 					if p == 'Units':
 						raise
 					continue

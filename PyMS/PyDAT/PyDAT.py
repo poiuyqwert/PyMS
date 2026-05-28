@@ -416,7 +416,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				try:
 					file_data = mpq.read_file('arr\\' + filename)
 					tab.open_data(file_data)
-				except:
+				except Exception:
 					continue
 			else:
 				filepath = os.path.join(path, filename)
@@ -424,7 +424,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 					continue
 				try:
 					tab.open_file(filepath)
-				except:
+				except Exception:
 					continue
 			if tab.get_dat_data().is_expanded():
 				found_expanded.append(filename)

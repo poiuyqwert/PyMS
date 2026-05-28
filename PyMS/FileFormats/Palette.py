@@ -137,7 +137,7 @@ class Palette:
 				if len(palette) == 256:
 					self.format = pal_format
 					break
-			except:
+			except Exception:
 				pass
 		else:
 			raise PyMSError('Palette', f"Unsupported palette file '{path}', could possibly be corrupt")

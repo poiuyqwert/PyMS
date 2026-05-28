@@ -200,7 +200,7 @@ class EditableReportSubList(RichList):
 	def execute(self, cmd: str, args: tuple[str, ...]) -> str:
 		try:
 			return self.tk.call((self.text_orig, cmd) + args)
-		except:
+		except Exception:
 			return ""
 
 	def dispatch(self, cmd: str, *args: str) -> str:

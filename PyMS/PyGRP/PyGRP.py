@@ -132,7 +132,7 @@ class PyGRP(MainWindow):
 					self.pal = pal
 				self.pallist.insert(END, pal)
 				self.palettes[pal] = p
-			except:
+			except Exception:
 				pass
 		if not self.pal:
 			raise PyMSError('PyGRP', "Couldn't load palettes")

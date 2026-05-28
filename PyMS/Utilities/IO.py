@@ -21,7 +21,7 @@ class InputText:
 		self.file: IO[str]
 		if isinstance(any_input, str):
 			if os.path.exists(any_input):
-				self.file = open(any_input, 'r', encoding='utf-8')
+				self.file = open(any_input, 'r', encoding='utf-8') # pylint: disable=consider-using-with
 				self.close = True
 			else:
 				self.file = io.StringIO(any_input)
@@ -45,7 +45,7 @@ class InputBytes:
 		self.close = False
 		self.file: IO[bytes]
 		if isinstance(any_input, str):
-			self.file = open(any_input, 'rb')
+			self.file = open(any_input, 'rb') # pylint: disable=consider-using-with
 			self.close = True
 		elif isinstance(any_input, bytes):
 			self.file = io.BytesIO(any_input)
@@ -67,7 +67,7 @@ class OutputTextFile(IO[str]):
 	def __init__(self, path: str, encoding: str = 'utf-8') -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
-		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False, encoding=encoding)
+		self.temp_file = tempfile.NamedTemporaryFile('w', prefix=f'.{filename}-', dir=directory, delete=False, encoding=encoding) # pylint: disable=consider-using-with
 
 	@property
 	def mode(self) -> str:
@@ -145,7 +145,7 @@ class OutputBytesFile(IO[bytes]):
 	def __init__(self, path: str) -> None:
 		self.path = path
 		directory, filename = os.path.split(os.path.abspath(path))
-		self.temp_file = tempfile.NamedTemporaryFile('wb', prefix=f'.{filename}-', dir=directory, delete=False)
+		self.temp_file = tempfile.NamedTemporaryFile('wb', prefix=f'.{filename}-', dir=directory, delete=False) # pylint: disable=consider-using-with
 
 	@property
 	def mode(self) -> str:

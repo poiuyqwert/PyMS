@@ -4,7 +4,7 @@ from __future__ import annotations
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
+except Exception:
 	from ..Utilities.DependencyError import DependencyError
 	import sys
 	err_dialog = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')

@@ -18,7 +18,7 @@ class MainWindow(Tk, WindowExtensions):
 
 			app = NSRunningApplication.runningApplicationWithProcessIdentifier_(getpid())
 			app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
-		except:
+		except Exception:
 			pass
 		self.after_managed(1, self.initialize)
 		self.mainloop()
@@ -38,10 +38,10 @@ class MainWindow(Tk, WindowExtensions):
 				try:
 					self.tk.call('wm', 'iconphoto', getattr(self, '_w'), '-default', icon) # Python3: self.wm_iconphoto(True, icon)
 					return
-				except:
+				except Exception:
 					self.wm_iconbitmap(default=icon)
 					return
-		except:
+		except Exception:
 			pass
 		try:
 			icon_path = Assets.image_path(f'{name}.xbm')
@@ -49,7 +49,7 @@ class MainWindow(Tk, WindowExtensions):
 				icon_path = Assets.image_path('PyMS.xbm')
 			icon_path = f'@{icon_path}'
 			self.wm_iconbitmap(default=icon_path)
-		except:
+		except Exception:
 			pass
 
 	def destroy(self) -> None:

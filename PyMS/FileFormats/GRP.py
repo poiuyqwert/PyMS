@@ -4,7 +4,7 @@ from __future__ import annotations
 try:
 	from PIL import Image as PILImage
 	from PIL import ImageTk
-except:
+except Exception:
 	from ..Utilities.DependencyError import DependencyError
 	import sys
 	e = DependencyError('PyMS','PIL is missing. Please consult the Installation section of the Readme.')
@@ -357,7 +357,7 @@ class GRP:
 							for line in range(lines):
 								offset = framedata+int(struct.unpack('<H',data[framedata+2*line:framedata+2+2*line])[0])
 								image.append([transindex] * xoffset + RLE.decompress_line(data[offset:], linewidth, transindex) + [transindex] * (width-linewidth-xoffset))
-						except:
+						except Exception:
 							if uncompressed is None:
 								uncompressed = True
 								break

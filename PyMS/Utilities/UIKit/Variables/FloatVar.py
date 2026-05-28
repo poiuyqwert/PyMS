@@ -28,7 +28,7 @@ class FloatVar(IntegerVar):
 						s = int(s)
 					else:
 						s = float(s)
-				except:
+				except Exception:
 					s = self.lastvalid
 				else:
 					if self.range[0] is not None and s < self.range[0]:
@@ -50,11 +50,11 @@ class FloatVar(IntegerVar):
 	def get(self, s=False):
 		try:
 			string = StringVar.get(self)
-		except:
+		except Exception:
 			string = ''
 		if s:
 			return string
 		try:
 			return float(string)
-		except:
+		except Exception:
 			return 0.0

@@ -489,7 +489,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
 				background.load_file(self.mpq_handler.load_file(path))
-			except:
+			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
 				self.background = background
@@ -520,7 +520,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			try:
 				dlggrp = GRP.GRP()
 				dlggrp.load_file(self.mpq_handler.load_file(path), uncompressed=True)
-			except:
+			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
 				break
@@ -541,7 +541,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			try:
 				tilegrp = GRP.GRP()
 				tilegrp.load_file(self.mpq_handler.load_file(path))
-			except:
+			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
 				break
@@ -562,7 +562,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			try:
 				tfont = PCX.PCX()
 				tfont.load_file(self.mpq_handler.load_file(path))
-			except:
+			except Exception:
 				tfont = None
 			else:
 				break

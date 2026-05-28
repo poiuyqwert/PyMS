@@ -127,7 +127,7 @@ class Config(Group):
 				version = data.get('version')
 				try:
 					version = int(version) # type: ignore[arg-type]
-				except:
+				except Exception:
 					version = None
 				if version is None or (version != self._version and self._migrations is None):
 					data = None
@@ -138,7 +138,7 @@ class Config(Group):
 							migration(data)
 				if data is not None:
 					del data['version']
-		except:
+		except Exception:
 			from . import trace
 			if tracer := trace.get_tracer():
 				tracer.trace_error()
@@ -153,7 +153,7 @@ class Config(Group):
 			data['version'] = self._version
 			with open(Assets.settings_file_path(self._name), 'w', encoding='utf-8') as f:
 				json.dump(data, f, sort_keys=True, indent=4)
-		except:
+		except Exception:
 			from . import trace
 			if tracer := trace.get_tracer():
 				tracer.trace_error()
@@ -301,7 +301,7 @@ class WindowGeometry(ConfigObject):
 			if geometry_adjust.maximized and can_maximize:
 				try:
 					window.wm_state('zoomed')
-				except:
+				except Exception:
 					pass
 		else:
 			window.update_idletasks()
@@ -765,7 +765,7 @@ class JSONList(ConfigObject, Generic[O]):
 		for obj in self.data:
 			try:
 				data.append(obj.to_json())
-			except:
+			except Exception:
 				continue
 		return data
 
@@ -778,7 +778,7 @@ class JSONList(ConfigObject, Generic[O]):
 				continue
 			try:
 				self.data.append(self.value_type.from_json(value))
-			except:
+			except Exception:
 				continue
 
 	def reset(self) -> None:
@@ -804,7 +804,7 @@ class Enum(ConfigObject, Generic[E]):
 	def decode(self, data: JSON.Value) -> None:
 		try:
 			value = self._enum_type(data)
-		except:
+		except Exception:
 			return
 		self.value = value
 

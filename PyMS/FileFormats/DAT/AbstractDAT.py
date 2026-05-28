@@ -261,7 +261,7 @@ class AbstractDAT:
 				if entry_id >= self.entry_count():
 					raise PyMSError('Export', f"Invalid entry id (must be between 0 and {self.entry_count()}, got {entry_id})")
 				self.get_entry(entry_id).import_data(entry)
-		except:
+		except Exception:
 			self.entries = backup
 			raise
 

@@ -170,13 +170,13 @@ class CodeText(Frame):
 	def edit_canundo(self) -> bool:
 		try:
 			return self.tk.call(getattr(self.text, '_w'), 'edit', 'canundo')
-		except:
+		except Exception:
 			return True
 
 	def edit_canredo(self) -> bool:
 		try:
 			return self.tk.call(getattr(self.text, '_w'), 'edit', 'canredo')
-		except:
+		except Exception:
 			return True
 
 	def undo_group(self) -> _UndoGroup:
@@ -450,7 +450,7 @@ class CodeText(Frame):
 			recolor_range = ('1.0', END)
 		try:
 			result = self.tk.call((self.text_orig, cmd) + args)
-		except:
+		except Exception:
 			result = ""
 		# print(cmd, args, result)
 		if recolor_range:

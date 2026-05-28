@@ -87,7 +87,7 @@ class MPQSettingsTab(SettingsTab):
 				try:
 					mpq.open()
 					mpq.close()
-				except:
+				except Exception:
 					continue
 				if n == END:
 					self.mpqs_config.data.append(i)

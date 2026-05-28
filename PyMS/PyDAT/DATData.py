@@ -37,7 +37,7 @@ class DATData(Generic[DAT]):
 		try:
 			dat = self.dat_type()
 			dat.load_file(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
-		except:
+		except Exception:
 			pass
 		else:
 			self.default_dat = dat

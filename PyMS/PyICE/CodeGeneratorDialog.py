@@ -138,7 +138,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			return EventPropogation.Break
 		try:
 			return self.tk.call((self.code_orig, operation) + args)
-		except:
+		except Exception:
 			return ''
 
 	def update_states(self, *_: Any) -> None:
@@ -278,7 +278,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			if tohex:
 				try:
 					replacement = f'0x{int(replacement):02X}'
-				except:
+				except Exception:
 					pass
 			return str(replacement)
 		for n in range(count):

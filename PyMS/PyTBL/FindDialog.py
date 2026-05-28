@@ -75,7 +75,7 @@ class FindDialog(PyMSDialog):
 				regex_str = f'.*{re.escape(t)}.*'
 			try:
 				regex = re.compile(regex_str, 0 if self.casesens.get() else re.I)
-			except:
+			except Exception:
 				self.findentry['bg'] = '#FFB4B4'
 				self.resettimer = self.after_managed(1000, self.updatecolor)
 				return

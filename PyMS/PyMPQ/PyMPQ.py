@@ -358,7 +358,7 @@ class PyMPQ(MainWindow):
 			if filter_str:
 				try:
 					filter_pattern = re.compile(filter_str)
-				except:
+				except Exception:
 					filter_pattern = None
 					self.resettimer = self.after_managed(1000, self.reset_entry_background_color)
 					self.textdrop.entry['bg'] = '#FFB4B4'
@@ -448,7 +448,7 @@ class PyMPQ(MainWindow):
 						try:
 							self.mpq.change_file_locale(file_entry.file_name, file_entry.locale, new_locale)
 							file_entry.locale = new_locale
-						except:
+						except Exception:
 							# TODO: Warn about files not updated
 							pass
 					self.mpq.flush()
@@ -669,7 +669,7 @@ class PyMPQ(MainWindow):
 						raise
 				try:
 					data = self.mpq.read_file(file_entry.file_name, file_entry.locale)
-				except:
+				except Exception:
 					ErrorDialog(self, PyMSError('Extract', f"Couldn't read file '{file_entry.file_name.decode('utf-8')}' from MPQ"))
 				with open(os.path.join(path,*path_components),'wb') as f:
 					f.write(data)

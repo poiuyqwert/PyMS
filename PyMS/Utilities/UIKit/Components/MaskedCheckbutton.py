@@ -18,7 +18,7 @@ class MaskedCheckbutton(Checkbutton):
 	def _update_state(self, *_: Any) -> None:
 		try:
 			raw = self._real_variable.get()
-		except:
+		except Exception:
 			return
 		on = ((raw & self._value) == self._value)
 		if on != self._variable.get():

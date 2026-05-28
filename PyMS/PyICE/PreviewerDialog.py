@@ -126,7 +126,7 @@ class PreviewerDialog(PyMSDialog):
 		name = n[0]
 		try:
 			iscript_id = int(n[1])
-		except:
+		except Exception:
 			self.nocur()
 			return
 		if name == 'IsId' and 0 <= iscript_id <= 411:
@@ -263,7 +263,7 @@ class PreviewerDialog(PyMSDialog):
 			for name,palette_config in palette_configs:
 				try:
 					pal.load_file(palette_config.file_path)
-				except:
+				except Exception:
 					continue
 				PALETTES[name] = pal.palette
 

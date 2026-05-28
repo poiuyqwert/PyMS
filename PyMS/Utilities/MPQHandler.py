@@ -53,7 +53,7 @@ class MPQHandler:
 				self.mpqs.append(mpq)
 				if self.mpqs_config is not None:
 					self.mpqs_config.data.append(mpq_path)
-			except:
+			except Exception:
 				pass
 
 	def open_mpqs(self) -> list[str]:
@@ -66,7 +66,7 @@ class MPQHandler:
 						mpq.add_listfile(listfile_path)
 					mpq.open()
 					any_opened = True
-				except:
+				except Exception:
 					failed.append(mpq.path)
 			self.open = any_opened
 		return failed
@@ -76,7 +76,7 @@ class MPQHandler:
 		for mpq in self.mpqs:
 			try:
 				mpq.close()
-			except:
+			except Exception:
 				pass
 
 	_SOURCE_FOLDER = 'FOLDER'
@@ -113,7 +113,7 @@ class MPQHandler:
 		try:
 			data = self.load_file(path, MPQHandler.GET_FROM_MPQ)
 			return read(data)
-		except:
+		except Exception:
 			data = self.load_file(path, MPQHandler.GET_FROM_FOLDER)
 			return read(data)
 
@@ -132,7 +132,7 @@ class MPQHandler:
 			try:
 				file = io.BytesIO(mpq.read_file(path))
 				break
-			except:
+			except Exception:
 				pass
 		if close:
 			self.close_mpqs()
@@ -161,7 +161,7 @@ class MPQHandler:
 					if mpq.has_file(file_name):
 						has_file = True
 						break
-				except:
+				except Exception:
 					pass
 			if close:
 				self.close_mpqs()
@@ -184,7 +184,7 @@ class MPQHandler:
 				for file in mpq.list_files():
 					if not file in files:
 						files.add(file)
-			except:
+			except Exception:
 				continue
 		if close:
 			self.close_mpqs()

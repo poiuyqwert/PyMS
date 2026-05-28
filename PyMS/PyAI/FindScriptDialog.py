@@ -111,7 +111,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def browse(self) -> None:
 		try:
 			initial_selection = [int(self.stringid.get())]
-		except:
+		except Exception:
 			initial_selection = []
 		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
 
@@ -139,7 +139,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 				regex = f'.*{re.escape(regex)}.*'
 			try:
 				return re.compile(regex, re.I if self.casesens.get() else 0)
-			except:
+			except Exception:
 				self.reset_entry = entry
 				self.reset_color = entry['bg']
 				entry['bg'] = '#FFB4B4'
@@ -151,7 +151,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			flags_matcher = get_matcher(self.flags, self.flagsentry)
 			stringid_matcher = get_matcher(self.stringid, self.stringidentry)
 			string_matcher = get_matcher(self.string, self.stringentry)
-		except:
+		except Exception:
 			return
 		matches: list[AIScript] = []
 		ai = self.delegate.get_ai_bin()

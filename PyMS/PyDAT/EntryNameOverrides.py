@@ -96,7 +96,7 @@ class EntryNameOverrides(PyMSDialog):
 			self.data_context.dat_data(self.dat_id).load_name_overrides(path, update_names=False)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Open', f"Couldn't open name overrides '{path}'"))
 		self.refresh_list()
 
@@ -106,7 +106,7 @@ class EntryNameOverrides(PyMSDialog):
 			return
 		try:
 			self.data_context.dat_data(self.dat_id).save_name_overrides(path)
-		except:
+		except Exception:
 			ErrorDialog(self, PyMSError('Save', f"Couldn't save name overrides to '{path}'"))
 
 	def update(self, _: Event | None = None) -> None:

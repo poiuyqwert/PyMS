@@ -27,7 +27,7 @@ if SFMPQ_DIR:
 			try:
 				_loaded = _loader(_path, ctypes.RTLD_GLOBAL)
 				break
-			except:
+			except Exception:
 				pass
 		if _loaded is not None:
 			_SFmpq = _loaded
@@ -237,7 +237,7 @@ class MPQHANDLE(ctypes.c_void_p):
 if _SFmpq is not None:
 	try:
 		_SFmpq.GetLastError.restype = ctypes.c_int32
-	except:
+	except Exception:
 		pass
 
 	_SFmpq.MpqGetVersionString.restype = ctypes.c_char_p
@@ -301,7 +301,7 @@ def SFGetLastError() -> int:
 	# SFmpq only implements its own GetLastError on platforms other than windows
 	try:
 		return _SFmpq.GetLastError() # pylint: disable=not-callable
-	except:
+	except Exception:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
 
 def SFInvalidHandle(h: Any) -> bool:

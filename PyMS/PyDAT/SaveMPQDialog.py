@@ -86,7 +86,7 @@ class SaveMPQDialog(PyMSDialog):
 										buffer = data_data.save_data()
 								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)
 								buffer = None
-							except:
+							except Exception:
 								not_saved.append(filename)
 				except PyMSError as e:
 					ErrorDialog(self, e)

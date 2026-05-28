@@ -345,7 +345,7 @@ class WidgetNode:
 								else:
 									self.frame_delay = min(self.frame_delay,delay)
 								self.smks[check.filename] = smk
-						except:
+						except Exception:
 							self.delegate.capture_exception()
 					show_smk = self.smks.get(check.filename)
 					if show_smk:
@@ -386,7 +386,7 @@ class WidgetNode:
 					pcx = PCX.PCX()
 					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
-				except:
+				except Exception:
 					self.delegate.capture_exception()
 			if self.photo:
 				x1,y1,_,_ = self.bounding_box()

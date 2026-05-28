@@ -19,7 +19,7 @@ def _show_error_uikit(program_name, message, warning): # type: (str, str, bool) 
 def _show_error_tkinter(program_name, message, warning): # type: (str, str, bool) -> bool
 	try:
 		from tkinter import messagebox
-	except:
+	except Exception:
 		import tkMessageBox as messagebox # type: ignore
 	if warning:
 		return messagebox.askyesno(program_name + ' Dependency Error', message + '\n\nWould you like to continue?')
@@ -81,15 +81,15 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 	tcl_version = None # type: str | None
 	try:
 		import tkinter
-	except:
+	except Exception:
 		try:
 			import Tkinter as tkinter # type: ignore
-		except:
+		except Exception:
 			show_error(program_name, 'Tkinter is missing. Please consult the Installation section of the Readme.')
 
 	try:
 		tcl_version = tkinter.Tcl().call("info", "patchlevel")
-	except:
+	except Exception:
 		pass
 	if tcl_version:
 		unsupported_tkinter = [
@@ -111,5 +111,5 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 		try:
 			from PIL import Image as _Image
 			from PIL import ImageTk as _ImageTk
-		except:
+		except Exception:
 			show_error(program_name, 'PIL/PILLOW is missing. Please consult the Installation section of the Readme.')

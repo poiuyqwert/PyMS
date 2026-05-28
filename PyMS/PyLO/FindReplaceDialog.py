@@ -116,7 +116,7 @@ class FindReplaceDialog(PyMSDialog):
 				regex = re.escape(regex)
 			try:
 				r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
-			except:
+			except Exception:
 				self.resettimer = self.after_managed(1000, self.updatecolor)
 				self.findentry['bg'] = '#FFB4B4'
 				return
@@ -195,7 +195,7 @@ class FindReplaceDialog(PyMSDialog):
 			regex = re.escape(regex)
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
-		except:
+		except Exception:
 			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return
@@ -210,7 +210,7 @@ class FindReplaceDialog(PyMSDialog):
 			regex = re.escape(regex)
 		try:
 			r = re.compile(regex, [re.I,0][self.casesens.get()] | [0,re.M | re.S][self.multiline.get()])
-		except:
+		except Exception:
 			self.resettimer = self.after_managed(1000, self.updatecolor)
 			self.findentry['bg'] = '#FFB4B4'
 			return

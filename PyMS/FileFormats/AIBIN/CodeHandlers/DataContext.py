@@ -39,7 +39,7 @@ class DataContext:
 			string += '\x00'
 		try:
 			return self.stattxt_tbl.strings.index(string)
-		except:
+		except Exception:
 			return None
 
 	def set_unitnames_tbl(self, unitnames_tbl: TBL | None) -> None:
@@ -87,7 +87,7 @@ class DataContext:
 			return None
 		try:
 			return unit_names.index(unit_name)
-		except:
+		except Exception:
 			return None
 
 	def set_upgrades_dat(self, upgrades_dat: UpgradesDAT | None) -> None:
@@ -127,7 +127,7 @@ class DataContext:
 			return None
 		try:
 			return upgrade_names.index(upgrade_name)
-		except:
+		except Exception:
 			return None
 
 	def set_techdata_dat(self, techdata_dat: TechDAT | None) -> None:
@@ -167,5 +167,5 @@ class DataContext:
 			return None
 		try:
 			return technology_names.index(technology_name)
-		except:
+		except Exception:
 			return None

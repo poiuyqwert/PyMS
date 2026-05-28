@@ -471,7 +471,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			for layer in self.spk.layers:
 				try:
 					layer.stars.remove(star)
-				except:
+				except Exception:
 					pass
 		self.selected_stars = []
 		self.update_selection()

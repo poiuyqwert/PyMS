@@ -202,7 +202,7 @@ class StrCodeType(CodeType[str, str]):
 		if isinstance(token, Tokens.StringToken):
 			try:
 				return StrCodeType.parse_string(token.raw_value)
-			except:
+			except Exception:
 				if parse_context and parse_context.command_in_parens:
 					return token.raw_value
 				raise
@@ -249,7 +249,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 				value = int(token.raw_value)
 				if value in self._values_to_cases:
 					return value
-			except:
+			except Exception:
 				pass
 		raise parse_context.error('Parse', f'Expected a `{self.name}` enum identifier but got `{token.raw_value}` (possible values: `{self._possible_values()}`)')
 

@@ -62,7 +62,7 @@ def main(): # type: () -> None
 				t = opt.specifics.split(',')
 				try:
 					lowi,letters = int(t),int(t)
-				except:
+				except Exception:
 					print('Invalid compiling specifics (must be lowest ASCII index followed by amount of letters, seperated by a comma)')
 				else:
 					if lowi < 1 or lowi > 255:

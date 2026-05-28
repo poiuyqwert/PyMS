@@ -108,7 +108,7 @@ class DataContext:
 		for name,palette_config in palette_configs:
 			try:
 				pal.load_file(palette_config.file_path)
-			except:
+			except Exception:
 				continue
 			self.palettes[name] = pal.palette
 
@@ -184,7 +184,7 @@ class DataContext:
 		self.mpq_handler.open_mpqs()
 		try:
 			self.unitnamestbl.load_strings()
-		except:
+		except Exception:
 			pass
 		try:
 			self.stat_txt.load_strings()

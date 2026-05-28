@@ -18,7 +18,7 @@ class Theme:
 		try:
 			with open(Assets.theme_file_path(name), 'r', encoding='utf-8') as f:
 				theme: dict[str, str | dict[str, dict[str, str | int]]] = json.load(f)
-		except:
+		except Exception:
 			print(f"Theme '{name}' does not exist or has an invalid format")
 			print(_traceback.format_exc())
 			raise
@@ -32,7 +32,7 @@ class Theme:
 			if not isinstance(widgets, dict):
 				raise TypeError('`widgets` is not a dictionary')
 			widget_styles = list(widgets.items())
-		except:
+		except Exception:
 			print(f"Theme '{name}' missing 'widgets' or it is invalid")
 			print(_traceback.format_exc())
 			raise
@@ -42,7 +42,7 @@ class Theme:
 			try:
 				selector = _Selector(selector_def)
 				self.widget_styles.append((selector, styles))
-			except:
+			except Exception:
 				continue
 		self.widget_styles.sort(key=lambda item: item[0].priority())
 
@@ -330,7 +330,7 @@ def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 
 	try:
 		_THEME = Theme(name)
-	except:
+	except Exception:
 		return
 
 	apply_theme(main_window)
@@ -344,7 +344,7 @@ def apply_theme(widget: _Tk.Misc) -> None:
 		if selector.matches(widget):
 			try:
 				styles = list(styles_dict.items())
-			except:
+			except Exception:
 				if not selector.describe() in _INVALID_SETTINGS:
 					print(f"Theme '{_THEME.name}' selector '{selector.describe()}' has invalid settings")
 					_INVALID_SETTINGS.append(selector.describe())

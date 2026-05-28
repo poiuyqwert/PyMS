@@ -11,7 +11,7 @@ from typing import TextIO
 
 try:
 	os.makedirs(Assets.logs_dir)
-except:
+except Exception:
 	pass
 
 class Tracer:
@@ -24,7 +24,7 @@ class Tracer:
 			if self.stream:
 				try:
 					self.stream.write(text)
-				except:
+				except Exception:
 					pass
 			self.tracer.write(text, self)
 
@@ -42,8 +42,8 @@ class Tracer:
 		self.flush_after_id: str | None = None
 		self.file: TextIO | None = None
 		try:
-			self.file = open(Assets.log_file_path(f'{program_name}.txt'), 'w', encoding='utf-8')
-		except:
+			self.file = open(Assets.log_file_path(f'{program_name}.txt'), 'w', encoding='utf-8') # pylint: disable=consider-using-with
+		except Exception:
 			pass
 
 	def _find_presenter(self) -> AnyWindow:

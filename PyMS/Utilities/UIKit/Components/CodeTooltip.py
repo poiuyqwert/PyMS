@@ -49,11 +49,11 @@ class CodeTooltip(Tooltip):
 				pos[1] -= self.tip.winfo_reqheight() + 44
 			if move:
 				self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
-		except:
+		except Exception:
 			if self.tip:
 				try:
 					self.tip.destroy()
-				except:
+				except Exception:
 					pass
 				self.tip = None
 			return

@@ -70,7 +70,7 @@ class FlowView(Frame):
 				view,bind_id = self._focus_bind_info
 				try:
 					view.unbind(Focus.Out(), bind_id)
-				except:
+				except Exception:
 					pass
 				self._focus_bind_info = None
 			def focus_out(_event: Event) -> None:

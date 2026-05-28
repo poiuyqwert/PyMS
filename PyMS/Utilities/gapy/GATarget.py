@@ -100,7 +100,7 @@ class GAAPITarget(GATarget, threading.Thread):
 		except urllib.error.URLError:
 			for data in batch:
 				self._backlog.append((data, self._time()))
-		except:
+		except Exception:
 			pass
 
 	def run(self):

@@ -194,7 +194,7 @@ class PyPAL(MainWindow):
 		try:
 			if c is None:
 				c = self.selection_get(selection='CLIPBOARD')
-		except:
+		except Exception:
 			pass
 		else:
 			m = re.match(r'^#([\dA-Fa-f]{2})([\dA-Fa-f]{2})([\dA-Fa-f]{2})$', c)
@@ -207,7 +207,7 @@ class PyPAL(MainWindow):
 			return
 		try:
 			c = self.selection_get(selection='CLIPBOARD')
-		except:
+		except Exception:
 			pass
 		else:
 			rgb = self.canpaste(c)
