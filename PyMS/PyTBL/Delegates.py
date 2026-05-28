@@ -13,16 +13,16 @@ from ..Utilities.UIKit import Text, ScrolledListbox
 from typing import Protocol
 
 class MainDelegate(Protocol):
-    tbl: TBL.TBL | None
-    config_: PyTBLConfig
-    unitpal: Palette.Palette
-    icons: GRP.GRP
-    font8: FNT.FNT
-    font10: FNT.FNT
-    tfontgam: PCX.PCX
+	tbl: TBL.TBL | None
+	config_: PyTBLConfig
+	unitpal: Palette.Palette
+	icons: GRP.GRP
+	font8: FNT.FNT
+	font10: FNT.FNT
+	tfontgam: PCX.PCX
 
-    text: Text
-    listbox: ScrolledListbox
+	text: Text
+	listbox: ScrolledListbox
 
-    def update(self) -> None:
-        ...
+	def update(self) -> None:
+		...

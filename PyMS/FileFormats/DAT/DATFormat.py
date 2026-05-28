@@ -5,7 +5,7 @@ import struct
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Any, Type
+	from typing import Any, Type
 
 class DATFormat:
 	def __init__(self, dat_format: dict) -> None:

@@ -47,11 +47,11 @@ class IntegerVar(StringVar):
 					if self.range[0] is not None and self.range[0] >= 0 and self.get(True).startswith('-'):
 						# if self._tag:
 						# 	print('at 1')
-						raise Exception()
+						raise ValueError('Negative value not allowed')
 					if s in self.exclude:
 						# if self._tag:
 						#	 print('at 2')
-						raise Exception()
+						raise ValueError('Value is excluded')
 					refresh = False
 				except Exception:
 					#raise

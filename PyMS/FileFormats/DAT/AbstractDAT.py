@@ -13,9 +13,9 @@ import json, re
 
 from typing import TYPE_CHECKING, BinaryIO, overload, Literal
 if TYPE_CHECKING:
-    from typing import Any, Callable
-    from .DATFormat import DATFormat, DATType
-    from .DATCoders import DATPropertyCoder
+	from typing import Any, Callable
+	from .DATFormat import DATFormat, DATType
+	from .DATCoders import DATPropertyCoder
 
 class ExportType(Enum):
 	text = 'text'

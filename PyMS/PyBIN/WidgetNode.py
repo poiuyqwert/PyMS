@@ -317,9 +317,7 @@ class WidgetNode:
 			return
 		for smk in list(self.smks.values()):
 			if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
-				# while self.frame_waited > self.frame_delay:
-					smk.next_frame()
-					# self.frame_waited -= self.frame_delay
+				smk.next_frame()
 		self.frame_waited = 0
 
 	def update_video(self) -> bool:
