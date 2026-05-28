@@ -75,10 +75,10 @@ class DropDownChooser(Toplevel):
 
 	def move(self, offset: int | Literal['end']) -> None:
 		index: int | Literal['end']
-		if offset in (0, END):
-			index = offset
-		else:
+		if isinstance(offset, int) and offset != 0:
 			index = max(min(self.listbox.size()-1,int(self.listbox.curselection()[0]) + offset),0)
+		else:
+			index = offset
 		self.jump_to(index)
 
 	def jump_to(self, index: int | Literal['end']) -> None:

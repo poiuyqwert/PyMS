@@ -32,7 +32,7 @@ def is_subpath(path: str, root_path: str) -> bool:
 # If `file_path` is an existing file in an internal folder, check if the user actually wants to overwrite it
 def check_allow_overwrite_internal_file(file_path: str) -> bool:
 	from . import Assets
-	from .UIKit import MessageBox
+	from .UIKit import MessageBox  # pylint: disable=cyclic-import
 	import os
 	if not is_subpath(file_path, Assets.base_dir):
 		return True

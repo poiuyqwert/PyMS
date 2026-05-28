@@ -5,7 +5,7 @@ from .DataSource import DataSource
 
 from ..FileFormats import JSON
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -61,7 +61,7 @@ class PyJSON(MainWindow):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.json editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.json editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyJSON')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -284,7 +284,7 @@ class PyJSON(MainWindow):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyJSON', 'json', '')
+			registry.register('PyJSON', 'json', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

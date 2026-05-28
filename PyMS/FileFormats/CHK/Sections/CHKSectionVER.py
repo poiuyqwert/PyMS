@@ -31,7 +31,7 @@ class CHKSectionVER(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.version = CHKSectionVER.BW
-		from .CHKSectionTYPE import CHKSectionTYPE
+		from .CHKSectionTYPE import CHKSectionTYPE  # pylint: disable=cyclic-import
 		typeSect = chk.sections.get(CHKSectionTYPE.NAME)
 		if typeSect:
 			typeSect = cast(CHKSectionTYPE, typeSect)

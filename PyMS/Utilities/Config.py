@@ -4,7 +4,6 @@ from __future__ import annotations
 from .UIKit import FileDialog, parse_resizable, FileType, AnyWindow, Geometry, GeometryAdjust, Size, PanedWindow, HORIZONTAL, Misc, Font
 
 from . import Assets
-from .MPQHandler import MPQHandler
 from . import JSON
 
 from numbers import Number
@@ -12,7 +11,9 @@ import os, json, re, enum
 from dataclasses import dataclass
 from copy import deepcopy
 
-from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal
+from typing import Any, Protocol, runtime_checkable, Generic, TypeVar, Callable, Generator, overload, Literal, TYPE_CHECKING
+if TYPE_CHECKING:
+	from .MPQHandler import MPQHandler
 
 def migrate_nest(data: dict, keypath: tuple[str, ...]) -> dict:
 	'''Ensure there are nested `dict` objects in all parts of the keypath'''
@@ -419,7 +420,7 @@ class File(ConfigObject):
 		return path
 
 	def select_mpq(self, *, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
-		from .MPQSelect import MPQSelect
+		from .MPQSelect import MPQSelect # pylint: disable=cyclic-import
 		mpq_select = MPQSelect(parent=parent, mpqhandler=mpq_handler, name=name or self.name, filetype=filetype or self.filetypes[0], history_config=history_config, window_geometry_config=window_geometry_config, action=MPQSelect.Action.select)
 		return mpq_select.file
 

@@ -12,7 +12,7 @@ from ..FileFormats import FNT
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -98,7 +98,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.tbl editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTBL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -509,7 +509,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyTBL', 'tbl', '')
+			registry.register('PyTBL', 'tbl', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

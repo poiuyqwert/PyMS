@@ -219,7 +219,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			tileset.export_graphics(self.tiletype, path, self.palette.selected)
 
 	def import_graphics(self) -> None:
-		from .GraphicsImporter import GraphicsImporter
+		from .GraphicsImporter import GraphicsImporter  # pylint: disable=cyclic-import
 		GraphicsImporter(parent=self, config=self.config_, delegate=self, tiletype=self.tiletype, ids=self.palette.selected)
 
 	def imported_graphics(self, new_ids: list[int]) -> None:

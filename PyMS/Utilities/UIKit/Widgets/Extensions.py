@@ -79,7 +79,7 @@ class WindowExtensions(MiscExtensions, _Tk.Wm):
 			try:
 				# Tk 9.0 / macOS Big Sur+ renders borderless NSWindows with a 26pt
 				# rounded-corner mask and exposes no Tcl knob to disable it.
-				from ._macos_corners import disable_rounded_corners
+				from ._macos_corners import disable_rounded_corners  # pylint: disable=cyclic-import
 				disable_rounded_corners(self)
 			except:
 				pass

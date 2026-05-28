@@ -5,11 +5,12 @@ from ..FileFormats.MPQ.MPQ import MPQ, MPQFileEntry
 
 from . import Assets
 from .PyMSError import PyMSError
-from . import Config
 
 import os, io
 
-from typing import BinaryIO, Callable, TypeVar
+from typing import BinaryIO, Callable, TypeVar, TYPE_CHECKING
+if TYPE_CHECKING:
+	from . import Config
 
 T = TypeVar('T')
 class MPQHandler:
@@ -37,7 +38,7 @@ class MPQHandler:
 		self.mpqs = []
 
 	def add_defaults(self) -> None:
-		from .PyMSConfig import PYMS_CONFIG
+		from .PyMSConfig import PYMS_CONFIG # pylint: disable=cyclic-import
 		scdir = PYMS_CONFIG.scdir.path
 		if scdir is None or not os.path.isdir(scdir):
 			return

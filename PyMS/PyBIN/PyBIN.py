@@ -12,7 +12,7 @@ from ..FileFormats import PCX
 from ..FileFormats import GRP
 from ..FileFormats import FNT
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -158,7 +158,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -1129,7 +1129,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 
 	def register_registry(self, _e: Event | None = None) -> None:
 		try:
-			register_registry('PyBIN', 'bin', 'Dialog')
+			registry.register('PyBIN', 'bin', 'Dialog')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

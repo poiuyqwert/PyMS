@@ -11,7 +11,8 @@ from .Config import PyMPQConfig
 from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 
 from ..Utilities.DependencyError import DependencyError
-from ..Utilities.utils import WIN_REG_AVAILABLE, format_byte_size, register_registry, start_file
+from ..Utilities.utils import format_byte_size, start_file
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -86,7 +87,7 @@ class PyMPQ(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.mpq editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.mpq editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMPQ')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -690,7 +691,7 @@ class PyMPQ(MainWindow):
 
 	def register_registry(self, _event: Event | None = None) -> None:
 		try:
-			register_registry('PyMPQ', 'mpq', '')
+			registry.register('PyMPQ', 'mpq', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

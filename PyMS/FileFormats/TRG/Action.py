@@ -207,6 +207,6 @@ class Action(Struct.Struct):
 		return True
 
 	def __repr__(self) -> str:
-		from .Actions import get_definition
+		from .Actions import get_definition  # pylint: disable=cyclic-import
 		definition = get_definition(self)
 		return f'<{definition.name} action = {self.fields}>'

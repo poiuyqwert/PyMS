@@ -13,7 +13,7 @@ from ..FileFormats import SPK
 from ..FileFormats import Palette
 from ..FileFormats import GRP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -118,7 +118,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.spk editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.spk editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PySPK')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -133,7 +133,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		listbox = Frame(f, border=2, relief=SUNKEN)
 		self.rows: list[LayerRow] = []
 		for l in range(5):
-			row = LayerRow(listbox, selvar=self.layer, visvar=self.visible, lockvar=self.locked, layer=l)
+			row = LayerRow(parent=listbox, selvar=self.layer, visvar=self.visible, lockvar=self.locked, layer=l)
 			row.hide()
 			row.pack(side=TOP, fill=X, expand=1)
 			self.rows.append(row)
@@ -728,7 +728,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PySPK', 'spk', '')
+			registry.register('PySPK', 'spk', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

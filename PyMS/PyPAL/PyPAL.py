@@ -5,7 +5,7 @@ from .SettingsDialog import SettingsDialog
 from ..FileFormats.Palette import Palette
 from ..FileFormats.Images import RGB
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -67,7 +67,7 @@ class PyPAL(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -316,7 +316,7 @@ class PyPAL(MainWindow):
 	def register_registry(self) -> None:
 		for pal_type,ext in [('','pal'),('Tileset ','wpe')]:
 			try:
-				register_registry('PyPAL', ext, pal_type + 'Palette')
+				registry.register('PyPAL', ext, pal_type + 'Palette')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break

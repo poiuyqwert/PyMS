@@ -22,7 +22,8 @@ from ..FileFormats import TBL
 from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
-from ..Utilities.utils import register_registry, WIN_REG_AVAILABLE, binary
+from ..Utilities.utils import binary
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities import Assets
 from ..Utilities.analytics import ga, GAScreen
@@ -102,7 +103,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
 		file_menu.add_command('Close', self.close, Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
 		file_menu.add_separator()
-		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register_registry, enabled=WIN_REG_AVAILABLE, underline='t')
+		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='t')
 		file_menu.add_separator()
 		file_menu.add_command('Exit', self.exit, Shortcut.Exit, underline='e')
 
@@ -165,7 +166,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_radiobutton(Assets.get_image('flagsort'), self.sort, 'flagsort', 'Sort by Flags')
 		self.toolbar.add_radiobutton(Assets.get_image('stringsort'), self.sort, 'stringsort', 'Sort by String')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyAI')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -520,7 +521,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def register_registry(self, _event: Event | None = None) -> None:
 		try:
-			register_registry('PyAI', 'bin', 'AI')
+			registry.register('PyAI', 'bin', 'AI')
 		except PyMSError as err:
 			ErrorDialog(self, err)
 

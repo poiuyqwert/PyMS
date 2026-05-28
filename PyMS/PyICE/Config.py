@@ -156,7 +156,7 @@ class PyICEConfig(Config.Config):
 				super().__init__()
 
 		def __init__(self) -> None:
-			from .CodeGenerators import GeneratorPreset
+			from .CodeGenerators import GeneratorPreset  # pylint: disable=cyclic-import
 			self.presets = Config.JSONList(value_type=GeneratorPreset.GeneratorPreset, defaults=GeneratorPreset.DEFAULT_PRESETS)
 			self.pane = PyICEConfig.Generator.Pane()
 			super().__init__()

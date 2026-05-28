@@ -272,9 +272,9 @@ def help_file_path(path: str) -> str | None:
 
 _HELP_IMAGE_CACHE: dict[str, Image] = {}
 def help_image(path: str) -> Image | None:
-	from .UIKit import PhotoImage as _PhotoImage
-	from .UIKit import PILImage as _PILImage
-	from .UIKit import ImageTk as _ImageTk
+	from .UIKit import PhotoImage as _PhotoImage  # pylint: disable=cyclic-import
+	from .UIKit import PILImage as _PILImage  # pylint: disable=cyclic-import
+	from .UIKit import ImageTk as _ImageTk  # pylint: disable=cyclic-import
 	path_components = path.split('/')
 	if path_components[0] == '':
 		path_components.pop(0)

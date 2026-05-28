@@ -4,13 +4,14 @@ from __future__ import annotations
 from .PyMSDialog import PyMSDialog
 from .UIKit import *
 from . import Assets
-from .MPQHandler import MPQHandler
 from . import Config
 
 import os, re
 from enum import Enum
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
+if TYPE_CHECKING:
+	from .MPQHandler import MPQHandler
 
 class MPQSelect(PyMSDialog):
 	class Action(Enum):

@@ -25,7 +25,7 @@ class EntryNameOverrides(PyMSDialog):
 			self.entry_id.set(entry_id)
 		self.name = StringVar()
 		self.append = IntVar()
-		PyMSDialog.__init__(self, parent, f'{data_context.dat_data(dat_id).entry_type_name} Name Overrides', True, True, escape=True, set_min_size=(True,True))
+		PyMSDialog.__init__(self, parent, f'{data_context.dat_data(dat_id).entry_type_name} Name Overrides', center=True, grabwait=True, escape=True, set_min_size=(True,True))
 
 	def widgetize(self) -> Misc | None:
 		toolbar = Toolbar(self)

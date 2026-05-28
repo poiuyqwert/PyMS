@@ -136,7 +136,7 @@ class MiniEditor(PyMSDialog):
 		if self.edited:
 			tileset.vr4.set_image(self.id, self.indexs)
 			self.delegate.mark_edited()
-			from .TilePalette import TilePalette
+			from .TilePalette import TilePalette  # pylint: disable=cyclic-import
 			TilePalette.TILE_CACHE.clear()
 			self.delegate.draw_tiles(force=True)
 		PyMSDialog.ok(self)

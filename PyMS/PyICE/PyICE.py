@@ -12,7 +12,7 @@ from ..FileFormats.IScriptBIN.CodeHandlers import DataContext, ICEParseContext, 
 from ..FileFormats import TBL
 from ..FileFormats import DAT
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -94,7 +94,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -470,7 +470,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyICE', 'bin', '')
+			registry.register('PyICE', 'bin', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

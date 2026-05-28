@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from .utils import WIN_REG_AVAILABLE
+from . import registry
 from . import Config
 
 import os
@@ -40,7 +40,7 @@ class PyMSConfig(Config.Config):
 
 PYMS_CONFIG = PyMSConfig()
 
-if WIN_REG_AVAILABLE and PYMS_CONFIG.scdir.path is None:
+if registry.IS_AVAILABLE and PYMS_CONFIG.scdir.path is None:
 	try:
 		from winreg import OpenKey, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, QueryValueEx # type: ignore # pylint: disable=import-error
 		with OpenKey(HKEY_LOCAL_MACHINE, 'SOFTWARE\\Blizzard Entertainment\\Starcraft', 0, KEY_READ | KEY_WOW64_32KEY) as h:

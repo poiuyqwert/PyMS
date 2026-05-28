@@ -14,7 +14,7 @@ class PyMSWarning(Exception):
 		self.sub_warnings = sub_warnings or []
 
 	def repr(self) -> str:
-		from .utils import fit
+		from .utils import fit  # pylint: disable=cyclic-import
 		r = fit(f'{self.type} Warning{f" ({self.id})" if self.id else ""}: ', self.warning, end=True)
 		if self.line and self.code:
 			r += fit(f'    Line {self.line}: ', self.code, end=True)
@@ -23,7 +23,7 @@ class PyMSWarning(Exception):
 		return r
 
 	def __repr__(self) -> str:
-		from .utils import fit
+		from .utils import fit  # pylint: disable=cyclic-import
 		r = fit(f'{self.type} Warning{f" ({self.id})" if self.id else ""}: ', self.warning)
 		if self.line and self.code:
 			r += fit(f'    Line {self.line}: ', self.code)

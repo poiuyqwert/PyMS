@@ -239,7 +239,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 			tile_id = self.megatiles_null_id.get()
 		elif tiletype == TileType.mini:
 			tile_id = self.minitiles_null_id.get()
-		from .TilePalette import TilePalette
+		from .TilePalette import TilePalette  # pylint: disable=cyclic-import
 		TilePalette(parent=self, config=self.config_, delegate=self, tiletype=tiletype, select=tile_id)
 
 	def get_tileset(self) -> Tileset | None:

@@ -3,8 +3,8 @@ from ....Utilities.CodeHandlers.LanguageDefinition import LanguageDefinition, La
 
 class CorePlugin(LanguagePlugin):
 	def __init__(self) -> None:
-		from . import CodeCommands
-		from . import CodeTypes
+		from . import CodeCommands  # pylint: disable=cyclic-import
+		from . import CodeTypes  # pylint: disable=cyclic-import
 		super().__init__(LanguagePlugin.CORE_ID, CodeCommands.all_basic_commands, CodeTypes.all_basic_types)
 
 class ICELanguage(LanguageDefinition):

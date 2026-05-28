@@ -20,7 +20,7 @@ class CHKRequirements:
 	MODE_ALL = MODE_MELEE | MODE_UMS
 
 	def __init__(self, vers: int = VER_ALL, modes: int = MODE_ALL) -> None:
-		from .Sections.CHKSectionVER import CHKSectionVER
+		from .Sections.CHKSectionVER import CHKSectionVER  # pylint: disable=cyclic-import
 		self.vers: list[int] = []
 		if vers & CHKRequirements.VER_VANILLA:
 			self.vers.append(CHKSectionVER.SC100)
@@ -32,7 +32,7 @@ class CHKRequirements:
 		self.modes = modes
 
 	def is_required(self, chk: CHK, game_mode: int = MODE_ALL) -> bool:
-		from .Sections.CHKSectionVER import CHKSectionVER
+		from .Sections.CHKSectionVER import CHKSectionVER  # pylint: disable=cyclic-import
 		verSect = chk.get_section(CHKSectionVER)
 		if not verSect:
 			return False

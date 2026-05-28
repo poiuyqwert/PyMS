@@ -5,7 +5,7 @@ from .SettingsDialog import SettingsDialog
 from ..FileFormats import GOT
 from ..FileFormats.TRG import TRG
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -65,7 +65,7 @@ class PyGOT(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.got editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.got editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGOT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -479,7 +479,7 @@ class PyGOT(MainWindow):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyGOT', 'got', '')
+			registry.register('PyGOT', 'got', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

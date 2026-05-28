@@ -7,7 +7,7 @@ from .SettingsDialog import SettingsDialog
 from ..FileFormats import GRP
 from ..FileFormats import Palette
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
@@ -90,7 +90,7 @@ class PyGRP(MainWindow):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -695,7 +695,7 @@ BMP's must be imported with the same style they were exported as.""")
 
 	def register_registry(self, _event: Event | None = None) -> None:
 		try:
-			register_registry('PyGRP', 'grp', '')
+			registry.register('PyGRP', 'grp', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

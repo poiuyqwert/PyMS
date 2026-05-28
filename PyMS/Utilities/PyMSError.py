@@ -25,7 +25,7 @@ class PyMSError(Exception):
 		return r
 
 	def __repr__(self) -> str:
-		from .utils import fit
+		from .utils import fit  # pylint: disable=cyclic-import
 		r = fit(f'{self.type} Error: ', self.error)
 		if self.line:
 			if self.code is not None:

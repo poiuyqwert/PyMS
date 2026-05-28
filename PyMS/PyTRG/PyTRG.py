@@ -9,7 +9,7 @@ from ..FileFormats.TRG import TRG, Conditions, Actions, BriefingActions, UnitPro
 from ..FileFormats import TBL
 from ..FileFormats.AIBIN import AIBIN
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -101,7 +101,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage stat_txt.tbl and aiscript.bin files', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.trg editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyTRG')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -548,7 +548,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyTRG', 'trg', '')
+			registry.register('PyTRG', 'trg', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

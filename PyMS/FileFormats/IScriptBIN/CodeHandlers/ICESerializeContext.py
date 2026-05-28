@@ -13,7 +13,7 @@ class TrailingBlockFormatter(Formatters.BlockFormatter):
 class SpacedCommandFormatter(Formatters.CommandFormatter):
 	def __init__(self) -> None:
 		super().__init__()
-		from . import CodeCommands
+		from . import CodeCommands  # pylint: disable=cyclic-import
 		self.max_width = max(len(cmd.name) for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands)
 
 	def serialize(self, command_name: str, parameters: list[str]) -> str:

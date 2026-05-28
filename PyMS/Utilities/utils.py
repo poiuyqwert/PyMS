@@ -1,8 +1,6 @@
 
-from .PyMSError import PyMSError
-
 from textwrap import wrap
-import os, sys, platform, subprocess, tempfile, errno
+import os, platform, subprocess, tempfile, errno
 
 from typing import Callable, Any, Sequence
 
@@ -14,22 +12,6 @@ except:
 		thread = threading.Thread(target=function, args=args, kwargs=kwargs)
 		thread.start()
 		return thread.ident or 0
-
-WIN_REG_AVAILABLE = True
-try:
-	from winreg import OpenKey, EnumKey, DeleteKey, HKEY_CLASSES_ROOT, REG_SZ, SetValue # type: ignore[attr-defined] # pylint: disable=import-error
-except:
-	WIN_REG_AVAILABLE = False
-	def OpenKey(_a,_b) -> str:
-		return ''
-	def EnumKey(_a,_b) -> str:
-		return ''
-	def DeleteKey(_a,_b) -> None:
-		pass
-	HKEY_CLASSES_ROOT = ''
-	REG_SZ = ''
-	def SetValue(_a,_b,_c,_d) -> None:
-		pass
 
 def is_windows() -> bool:
 	return (platform.system().lower() == 'windows')
@@ -62,55 +44,6 @@ def debug_state(states):
 
 def nearest_multiple(v: int, m: int, r: Callable[[float], float] = round) -> int:
 	return m * int(r(v / float(m)))
-
-def register_registry(program_name: str, extension: str, file_type_name: str | None = None) -> None:
-	if not WIN_REG_AVAILABLE:
-		raise PyMSError('Registry', 'You can currently only set as the default program on Windows machines.')
-	def delkey(key,sub_key):
-		try:
-			h = OpenKey(key,sub_key)
-		except OSError as e:
-			if e.errno == 2:
-				return
-			raise
-		try:
-			while True:
-				n = EnumKey(h,0)
-				delkey(h,n)
-		except EnvironmentError:
-			pass
-		h.Close()
-		DeleteKey(key,sub_key)
-
-	from . import Assets
-	key = f'{program_name}:{extension}'
-	if file_type_name:
-		file_type_name = ' ' + file_type_name
-	else:
-		file_type_name = ''
-	if hasattr(sys, 'frozen'):
-		executable = f'"{sys.executable}"'
-	else:
-		executable = f'"{sys.executable.replace("python.exe","pythonw.exe")}" "{os.path.join(Assets.base_dir, program_name + ".pyw")}"'
-	try:
-		delkey(HKEY_CLASSES_ROOT, os.extsep + extension)
-		delkey(HKEY_CLASSES_ROOT, key)
-		SetValue(HKEY_CLASSES_ROOT, '.' + extension, REG_SZ, key)
-		SetValue(HKEY_CLASSES_ROOT, key, REG_SZ, f'StarCraft{file_type_name} *.{extension} file ({program_name})')
-		SetValue(HKEY_CLASSES_ROOT, key + '\\DefaultIcon', REG_SZ, Assets.image_path(f'{program_name}.ico'))
-		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell', REG_SZ, 'open')
-		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, f'{executable} --gui "%%1"')
-	except Exception as exc:
-		raise PyMSError('Registry', 'Could not complete file association.') from exc
-	from .UIKit import MessageBox
-	MessageBox.showinfo('Success!', 'The file association was set.')
-
-def flags(value: int | str, length: int) -> str:
-	if isinstance(value, str):
-		if len(value) != length or value.replace('0','').replace('1',''):
-			raise PyMSError('Flags', 'Invalid flags')
-		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
-	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
 
 def named_flags(value: int, names: Sequence[str | None], count: int, skip: int = 0) -> tuple[str, str]:
 	header = ''
@@ -265,7 +198,7 @@ try:
 	play_sound = win_play
 except:
 	def osx_play(raw_audio):
-		from . import Assets
+		from . import Assets  # pylint: disable=cyclic-import
 		def do_play(path):
 			try:
 				subprocess.call(["afplay", path])

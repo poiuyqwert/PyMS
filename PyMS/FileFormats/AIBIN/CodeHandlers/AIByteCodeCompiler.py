@@ -5,7 +5,7 @@ from ....Utilities import Struct
 
 class AIByteCodeCompiler(ByteCodeCompiler):
 	def __init__(self) -> None:
-		from .AISE import AISEContext
+		from .AISE import AISEContext  # pylint: disable=cyclic-import
 		self.aise_context = AISEContext()
 		super().__init__()
 

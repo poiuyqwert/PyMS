@@ -429,7 +429,7 @@ class Order(Option):
 		return cls(value)
 
 	def serialize(self) -> str:
-		from .AISECodeTypes import OrderCodeType
+		from .AISECodeTypes import OrderCodeType  # pylint: disable=cyclic-import
 		return f'Order({OrderCodeType().serialize_basic(self.order_id)})'
 
 	def merge(self, other: Option) -> bool:
@@ -439,7 +439,7 @@ class Order(Option):
 
 	@classmethod
 	def parse(cls, parse_context: ParseContext) -> Self | None:
-		from .AISECodeTypes import OrderCodeType
+		from .AISECodeTypes import OrderCodeType  # pylint: disable=cyclic-import
 		token = parse_context.lexer.next_token(peek=True)
 		if not token.raw_value == 'Order':
 			return None
@@ -458,7 +458,7 @@ class Order(Option):
 
 	@classmethod
 	def keywords(cls) -> Sequence[str]:
-		from .AISECodeTypes import OrderCodeType
+		from .AISECodeTypes import OrderCodeType  # pylint: disable=cyclic-import
 		return ('Order',) + tuple(OrderCodeType().keywords())
 
 @dataclass

@@ -12,7 +12,7 @@ class Theme:
 	def __init__(self, name: str) -> None:
 		self.name = name
 
-		from .. import Assets
+		from .. import Assets  # pylint: disable=cyclic-import
 		import json
 
 		try:
@@ -114,7 +114,7 @@ _ALLOWED_SETTINGS: dict[str, Callable[[Any], bool]] = {
 
 def _resolve_widget_types() -> None:
 	global _WIDGET_TYPES # pylint: disable=global-statement
-	from . import Widgets
+	from . import Widgets  # pylint: disable=cyclic-import
 	_WIDGET_TYPES = {
 		'Tk': Widgets.Tk,
 		'Toplevel': Widgets.Toplevel,
@@ -132,7 +132,7 @@ def _resolve_widget_types() -> None:
 		'LabelFrame': Widgets.LabelFrame,
 		'PanedWindow': Widgets.PanedWindow,
 	}
-	from . import Components
+	from . import Components  # pylint: disable=cyclic-import
 	_WIDGET_TYPES.update({
 		'AutohideScrollbar': Components.AutohideScrollbar,
 		'CodeText': Components.CodeText,
@@ -322,7 +322,7 @@ class _Selector:
 
 def load_theme(name: str | None, main_window: _Tk.Tk) -> None:
 	if not name:
-		from ..PyMSConfig import PYMS_CONFIG
+		from ..PyMSConfig import PYMS_CONFIG  # pylint: disable=cyclic-import
 		name = PYMS_CONFIG.theme.value
 	if not name:
 		return

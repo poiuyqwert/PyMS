@@ -13,7 +13,8 @@ from .Delegates import MainDelegate
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.DAT import *
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry, lpad
+from ..Utilities.utils import lpad
+from ..Utilities import registry
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.PyMSError import PyMSError
@@ -86,7 +87,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			return open_files
 		toolbar.add_button(Assets.get_image('debug'), open_files_callback(), 'Reload data files', Ctrl.r)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -478,7 +479,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 	def register_registry(self, _event: Event | None = None) -> None:
 		try:
-			register_registry('PyDAT', 'dat', '')
+			registry.register('PyDAT', 'dat', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

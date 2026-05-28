@@ -10,7 +10,7 @@ from ..FileFormats.LO import LO
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import CacheGRP, frame_to_photo
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -101,7 +101,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ Settings', Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.lo? editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyLO')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -644,7 +644,7 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 	def register_registry(self) -> None:
 		for lo_type,ext in [('Attack','a'),('Birth','b'),('Landing Dust','d'),('Fire','f'),('Powerup','o'),('Shield/Smoke','s'),('Liftoff Dust','u'),('Misc.','g'),('Misc.','l'),('Misc.','x')]:
 			try:
-				register_registry('PyLO','lo' + ext, lo_type + ' Overlay')
+				registry.register('PyLO','lo' + ext, lo_type + ' Overlay')
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				break

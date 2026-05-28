@@ -124,6 +124,6 @@ class Condition(Struct.Struct):
 		return True
 
 	def __repr__(self) -> str:
-		from .Conditions import get_definition
+		from .Conditions import get_definition  # pylint: disable=cyclic-import
 		definition = get_definition(self)
 		return f'<{definition.name} condition = {self.fields}>'

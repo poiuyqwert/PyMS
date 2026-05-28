@@ -8,7 +8,7 @@ from ..FileFormats.PCX import PCX
 from ..FileFormats.FNT import FNT, fnttobmp, bmptofnt
 from ..FileFormats.BMP import BMP
 
-from ..Utilities.utils import WIN_REG_AVAILABLE, register_registry
+from ..Utilities import registry
 from ..Utilities.UIKit import *
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -324,7 +324,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage MPQ's and Special Palette", Ctrl.m)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=WIN_REG_AVAILABLE)
+		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.fnt editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyFNT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
@@ -573,7 +573,7 @@ class PyFNT(MainWindow, ErrorableSettingsDialogDelegate):
 
 	def register_registry(self) -> None:
 		try:
-			register_registry('PyFNT', 'fnt', 'Font')
+			registry.register('PyFNT', 'fnt', 'Font')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 

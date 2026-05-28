@@ -24,7 +24,7 @@ class MainWindow(Tk, WindowExtensions):
 		self.mainloop()
 
 	def set_icon(self, name: str) -> None:
-		from ... import Assets
+		from ... import Assets  # pylint: disable=cyclic-import
 		import os
 		try:
 			icon = Assets.lookup_image(f'{name}.ico')
@@ -53,6 +53,6 @@ class MainWindow(Tk, WindowExtensions):
 			pass
 
 	def destroy(self) -> None:
-		from ... import Assets
+		from ... import Assets  # pylint: disable=cyclic-import
 		Assets.clear_image_cache()
 		return Tk.destroy(self)

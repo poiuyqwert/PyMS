@@ -27,7 +27,7 @@ class CHKSectionTYPE(CHKSection):
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
 		self.type = CHKSectionTYPE.BROODWAR
-		from .CHKSectionVER import CHKSectionVER
+		from .CHKSectionVER import CHKSectionVER  # pylint: disable=cyclic-import
 		verSect = chk.sections.get(CHKSectionVER.NAME)
 		if verSect:
 			verSect = cast(CHKSectionVER, verSect)

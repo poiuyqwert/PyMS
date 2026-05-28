@@ -127,7 +127,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		if not tileset or self.megatile_id is None:
 			return
 		minitile_image_id = tileset.vx4.get_megatile(self.megatile_id).minitiles[self.minitile_n].image_id
-		from .MiniEditor import MiniEditor
+		from .MiniEditor import MiniEditor  # pylint: disable=cyclic-import
 		MiniEditor(self.parent, minitile_image_id, self)
 
 	def set_enabled(self, enabled: bool) -> None:
@@ -369,7 +369,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.load_megatile()
 
 	def redraw_delegate(self) -> None:
-		from .TilePalette import TilePalette
+		from .TilePalette import TilePalette  # pylint: disable=cyclic-import
 		if self.megatile_id is not None and self.megatile_id in TilePalette.TILE_CACHE:
 			del TilePalette.TILE_CACHE[self.megatile_id]
 		self.delegate.draw_group()
@@ -396,7 +396,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		tileset = self.delegate.get_tileset()
 		if not tileset or self.megatile_id is None:
 			return
-		from .TilePalette import TilePalette
+		from .TilePalette import TilePalette  # pylint: disable=cyclic-import
 		TilePalette(
 			parent=self.parent,
 			config=self.config_,
