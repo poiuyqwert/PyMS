@@ -65,7 +65,7 @@ class BMPStyle(Enum):
 				return True
 
 # TODO: Improve
-def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMPStyle, grp: str | GRP.GRP, bmp: str | None = None, frames: Sequence[int] | None = None, mute: bool = False) -> None:
+def grptobmp(*, path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMPStyle, grp: str | GRP.GRP, bmp: str | None = None, frames: Sequence[int] | None = None, mute: bool = False) -> None:
 	if isinstance(grp, str):
 		inp = GRP.GRP(pal.palette, uncompressed)
 		if not mute:
@@ -116,7 +116,7 @@ def grptobmp(path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: BMP
 			print(f" - '{name}' written succesfully")
 
 # TODO: Improve
-def bmptogrp(path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str | list[str], grp: str | None = None, issize: tuple[int,int] | None = None, ret: bool = False, mute: bool = False, vertical: bool = False, transindex: int = 0) -> (GRP.GRP | None):
+def bmptogrp(*, path: str, pal: Palette.Palette, uncompressed: bool, frames: int, bmp: str | list[str], grp: str | None = None, issize: tuple[int,int] | None = None, ret: bool = False, mute: bool = False, vertical: bool = False, transindex: int = 0) -> (GRP.GRP | None):
 	out = GRP.GRP(pal.palette, uncompressed, transindex)
 	inp = BMP.BMP()
 	if frames:

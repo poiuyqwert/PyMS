@@ -54,7 +54,7 @@ class GAAPITarget(GATarget, threading.Thread):
 	BATCH_MAX_TOTAL_SIZE = 16000
 	BATCH_MAX_TOTAL_TOLERANCE = 10
 
-	def __init__(self, protocol=None, host=None, collect_path=None, batch_path=None, debug_protocol=None, debug_path=None, useragent=None, debug=False):
+	def __init__(self, *, protocol=None, host=None, collect_path=None, batch_path=None, debug_protocol=None, debug_path=None, useragent=None, debug=False):
 		threading.Thread.__init__(self)
 		self.daemon = True
 		if debug:

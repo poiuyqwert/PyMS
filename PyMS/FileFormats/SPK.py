@@ -43,7 +43,7 @@ class SPK:
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported SPK file, could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported SPK file, could possibly be corrupt") from exc
 
 	def load_data(self, data: bytes) -> None:
 		layer_count = struct.unpack('<H', data[:2])[0]

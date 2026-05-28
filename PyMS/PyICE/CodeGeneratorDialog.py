@@ -206,7 +206,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 			else:
 				self.config_.generator.presets.data[replace] = preset
 			return CheckSaved.saved
-		NameDialog(self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', save_callback=do_save)
+		NameDialog(parent=self, window_geometry_config=self.config_.windows.generator.name, title='Save Preset', done='Save', save_callback=do_save)
 
 	def load_preset(self, preset: GeneratorPreset, window: AnyWindow | None = None) -> bool:
 		if self.variables or self.text.get(1.0, END).strip():
@@ -255,7 +255,7 @@ class CodeGeneratorDialog(PyMSDialog, VariableEditorDelegate):
 				else:
 					count = max(count,c)
 		if count is None:
-			ErrorDialog(self, PyMSError('Generate','No finite variables to generate with'))
+			ErrorDialog(self, PyMSError('Generate', 'No finite variables to generate with'))
 			return None
 		def calculate_variable(variable: CodeGeneratorVariable, values: dict[str, str], lookup: list[str]) -> str:
 			def calculate_variable_named(name: str, values: dict[str, str], lookup: list[str]) -> str:

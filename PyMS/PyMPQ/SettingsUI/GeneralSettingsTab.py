@@ -11,10 +11,10 @@ class GeneralSettingsTab(SettingsTab):
 		super().__init__(notebook)
 		self.config_ = config
 
-		max_files = IntSettingView(self, edited_state, 'Max Files', 'Max file capacity for new archives (cannot be changed for an existing archive)', self.config_.settings.defaults.maxfiles)
+		max_files = IntSettingView(parent=self, edited_state=edited_state, name='Max Files', description='Max file capacity for new archives (cannot be changed for an existing archive)', setting=self.config_.settings.defaults.maxfiles)
 		max_files.pack(side=TOP, fill=X)
 		self.register_settings_view(max_files)
 
-		block_size = IntSettingView(self, edited_state, 'Block Size', 'Block size for new archives (default is 3)', self.config_.settings.defaults.blocksize)
+		block_size = IntSettingView(parent=self, edited_state=edited_state, name='Block Size', description='Block size for new archives (default is 3)', setting=self.config_.settings.defaults.blocksize)
 		block_size.pack(side=TOP, fill=X)
 		self.register_settings_view(block_size)

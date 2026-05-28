@@ -12,7 +12,7 @@ from typing import Callable, Any
 
 class TilePaletteView(Frame):
 	# sub_select currently only supported by TileType.group when multiselect=False
-	def __init__(self, parent: Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False) -> None:
+	def __init__(self, *, parent: Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False) -> None:
 		Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected: list[int] = []

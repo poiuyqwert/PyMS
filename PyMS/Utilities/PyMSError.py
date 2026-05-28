@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 	from .PyMSWarning import PyMSWarning
 
 class PyMSError(Exception):
-	def __init__(self, err_type: str, error: str, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] | None = None, level: int = 1, cause: BaseException | None = None) -> None:
+	def __init__(self, err_type: str, error: str, *, line: int | None = None, code: str | None = None, warnings: list[PyMSWarning] | None = None, level: int = 1, cause: BaseException | None = None) -> None:
 		self.type = err_type
 		self.error = error
 		self.line = line

@@ -505,7 +505,7 @@ class PyTBL(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		PreviewDialog(self, self)
 
 	def mpqsettings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def register_registry(self) -> None:
 		try:

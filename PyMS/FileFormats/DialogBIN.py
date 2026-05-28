@@ -564,7 +564,7 @@ class DialogBIN:
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported Dialog BIN file, could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported Dialog BIN file, could possibly be corrupt") from exc
 
 	def load_data(self, data: bytes) -> None:
 		widgets: list[BINWidget] = []
@@ -761,7 +761,7 @@ class DialogBIN:
 			if m:
 				smk_id = int(m.group(1))
 				if smk_id in smks:
-					raise PyMSError('Interpreting', f"Duplicate definition for SMK '{smk_id}'",n,line)
+					raise PyMSError('Interpreting', f"Duplicate definition for SMK '{smk_id}'", line=n, code=line)
 				working = BINSMK()
 				if smk_id in backfill_smks:
 					for obj in backfill_smks[smk_id]:
@@ -773,15 +773,15 @@ class DialogBIN:
 				smks[smk_id] = working
 				continue
 			if not working:
-				raise PyMSError('Interpreting','Unexpected line, expected a Widget or SMK header',n,line)
+				raise PyMSError('Interpreting', 'Unexpected line, expected a Widget or SMK header', line=n, code=line)
 			m = re.match(r'^(\S+)(?:\s+(.+))?$', line)
 			if not m:
-				raise PyMSError('Interpreting','Unexpected line, expected a field value',n,line)
+				raise PyMSError('Interpreting', 'Unexpected line, expected a field value', line=n, code=line)
 			attr = m.group(1)
 			value = m.group(2)
 			if isinstance(working, BINWidget):
 				if not attr in BINWidget.ATTR_NAMES_REMASTERED:
-					raise PyMSError('Interpreting', f"Invalid Widget attribute name '{attr}'",n,line)
+					raise PyMSError('Interpreting', f"Invalid Widget attribute name '{attr}'", line=n, code=line)
 				if attr == 'smk':
 					if value == 'None':
 						value = None
@@ -789,7 +789,7 @@ class DialogBIN:
 						try:
 							smk_id = int(value)
 						except Exception as exc:
-							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'",n,line) from exc
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'", line=n, code=line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'string':
 					if value is None:
@@ -806,7 +806,7 @@ class DialogBIN:
 					remastered = True
 			else:
 				if not attr in BINSMK.ATTR_NAMES:
-					raise PyMSError('Interpreting', f"Invalid SMK attribute name '{attr}'",n,line)
+					raise PyMSError('Interpreting', f"Invalid SMK attribute name '{attr}'", line=n, code=line)
 				if attr == 'overlay_smk':
 					if value == 'None':
 						value = None
@@ -814,7 +814,7 @@ class DialogBIN:
 						try:
 							smk_id = int(value)
 						except Exception as exc:
-							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'",n,line) from exc
+							raise PyMSError('Interpreting', f"Invalid SMK id '{value}', expected an Integer or 'None'", line=n, code=line) from exc
 						value = get_smk(smk_id)
 				elif attr == 'filename':
 					value = TBL.compile_string(value)
@@ -830,7 +830,7 @@ class DialogBIN:
 				widgets.insert(0, widgets.pop(index))
 				break
 		else:
-			raise PyMSError('Interpreting','No dialog found.')
+			raise PyMSError('Interpreting', 'No dialog found.')
 		self.widgets = widgets
 		self.smks = list(smk for i,smk in sorted(smks.items(),key=lambda s: s[0]))
 		self.remastered = remastered

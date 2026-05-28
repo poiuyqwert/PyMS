@@ -384,7 +384,7 @@ class CodeEditDialog(PyMSDialog, CodeTextDelegate, CodeGeneratorDelegate):
 				i = CodeTypes.SoundIDCodeType().parse(self.delegate.get_parse_context(t[1]))
 			except:
 				pass
-		SoundDialog(self, self.delegate, self.config_.sounds, self.text, i)
+		SoundDialog(parent=self, delegate=self.delegate, config=self.config_.sounds, text=self.text, sound_id=i)
 
 	def load(self) -> None:
 		output = io.StringIO()

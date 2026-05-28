@@ -78,7 +78,7 @@ class TRG:
 				if is_missiong_briefing is None:
 					is_missiong_briefing = trigger.is_missing_briefing
 				elif trigger.is_missing_briefing != is_missiong_briefing:
-					warnings.append(PyMSWarning('Save', 'There is a mix of missing briefing and normal triggers'))
+					warnings.append(PyMSWarning(warn_type='Save', warning='There is a mix of missing briefing and normal triggers'))
 				for action in trigger.actions:
 					if action.string_index:
 						string: str
@@ -86,7 +86,7 @@ class TRG:
 							string = self.strings[action.string_index]
 						else:
 							string = ''
-							warnings.append(PyMSWarning('Save', f'String {action.string_index} is missing, saving an empty string'))
+							warnings.append(PyMSWarning(warn_type='Save', warning=f'String {action.string_index} is missing, saving an empty string'))
 						f.write(TRG.STRING_STRUCT.pack(string))
 					if action.flags & ActionFlag.unit_property_used:
 						properties: UnitProperties
@@ -94,7 +94,7 @@ class TRG:
 							properties = self.unit_properties[action.unit_properties_index]
 						else:
 							properties = UnitProperties()
-							warnings.append(PyMSWarning('Save', f'Unit properties {action.unit_properties_index} is missing, saving empty properties'))
+							warnings.append(PyMSWarning(warn_type='Save', warning=f'Unit properties {action.unit_properties_index} is missing, saving empty properties'))
 						f.write(properties.pack())
 		return warnings
 
@@ -243,7 +243,7 @@ class TRG:
 				if isinstance(token, TRGLexer.SymbolToken) and token.raw_value == ',':
 					token = lexer.check_token(TRGLexer.ParameterToken)
 			if not found_players:
-				warnings.append(PyMSWarning('Trigger', 'There are no player groups applied to trigger', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)))
+				warnings.append(PyMSWarning(warn_type='Trigger', warning='There are no player groups applied to trigger', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line)))
 				# raise PyMSError('Compile', f"Expected player for trigger, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ')':
 				raise PyMSError('Compile', f"Expected ')' to end player list, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))

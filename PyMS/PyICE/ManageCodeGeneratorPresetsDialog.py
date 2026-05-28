@@ -108,13 +108,13 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		def do_rename(_window: AnyWindow, name: str) -> CheckSaved:
 			for preset in self.config_.generator.presets.data:
 				if preset.name == name:
-					ErrorDialog(self, PyMSError('Renaming','That name already exists'))
+					ErrorDialog(self, PyMSError('Renaming', 'That name already exists'))
 					return CheckSaved.cancelled
 			self.config_.generator.presets.data[selected].name = name
 			self.update_list()
 			return CheckSaved.saved
 		name = self.config_.generator.presets.data[selected].name
-		NameDialog(self, self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', save_callback=do_rename)
+		NameDialog(parent=self, window_geometry_config=self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', save_callback=do_rename)
 
 	def update_states(self, _event: Event | None = None) -> None:
 		selected = None

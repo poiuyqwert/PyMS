@@ -27,7 +27,7 @@ class Delegate(Protocol):
 		return True
 
 class ItemSelectDialog(PyMSDialog):
-	def __init__(self, parent: AnyWindow, title: str, delegate: Delegate, selected: list[int] | None = None, multiselect: bool = False, window_geometry_config: Config.WindowGeometry | None = None, search_history_config: Config.List | None = None):
+	def __init__(self, *, parent: AnyWindow, title: str, delegate: Delegate, selected: list[int] | None = None, multiselect: bool = False, window_geometry_config: Config.WindowGeometry | None = None, search_history_config: Config.List | None = None):
 		self.delegate = delegate
 		self.initial_selection: list[int] | None = selected
 		self.multiselect = multiselect

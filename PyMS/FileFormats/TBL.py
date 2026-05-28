@@ -138,7 +138,7 @@ class TBL:
 			line = l.split('#',1)[0]
 			if line:
 				if len(strings) == 65536:
-					raise PyMSError('Interpreting',"There are too many string entries (max entries is 65536)")
+					raise PyMSError('Interpreting', "There are too many string entries (max entries is 65536)")
 				s = compile_string(line.rstrip('\r\n'))
 				strings.append(s)
 		self.strings = strings

@@ -8,7 +8,7 @@ from ..EditedState import EditedState
 from typing import Any
 
 class IntSettingView(SettingView):
-	def __init__(self, parent: Misc, edited_state: EditedState, name: str, description: str, setting: Config.Int) -> None:
+	def __init__(self, *, parent: Misc, edited_state: EditedState, name: str, description: str, setting: Config.Int) -> None:
 		super().__init__(parent, edited_state)
 		self.setting = setting
 

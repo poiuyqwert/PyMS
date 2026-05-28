@@ -288,7 +288,7 @@ class PySPK(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		return err
 
 	def mpqsettings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def check_saved(self) -> CheckSaved:
 		if not self.spk or not self.edited:

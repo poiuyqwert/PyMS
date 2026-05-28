@@ -175,7 +175,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 
 	def find_smk(self) -> None:
 		config = self.delegate.get_config()
-		m = MPQSelect(self, self.delegate.get_mpqhandler(), 'SMK', FileType.smk(), config.edit.smk.mpq_select_history, config.windows.edit.smk.mpq_select)
+		m = MPQSelect(parent=self, mpqhandler=self.delegate.get_mpqhandler(), name='SMK', filetype=FileType.smk(), history_config=config.edit.smk.mpq_select_history, window_geometry_config=config.windows.edit.smk.mpq_select)
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 

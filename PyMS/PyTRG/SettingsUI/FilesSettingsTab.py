@@ -11,14 +11,14 @@ class FilesSettingsTab(SettingsTab):
 	def __init__(self, notebook: Notebook, edited_state: EditedState, config: PyTRGConfig, mpq_handler: MPQHandler):
 		super().__init__(notebook)
 
-		stat_txt = FileSettingView(self, edited_state, 'stat_txt.tbl', 'Contains Unit and AI Script names', config.settings.files.stat_txt, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
+		stat_txt = FileSettingView(parent=self, edited_state=edited_state, name='stat_txt.tbl', description='Contains Unit and AI Script names', setting=config.settings.files.stat_txt, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
 		stat_txt.pack(side=TOP, fill=X)
 		self.register_settings_view(stat_txt)
 
-		aiscript = FileSettingView(self, edited_state, 'aiscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", config.settings.files.aiscript, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
+		aiscript = FileSettingView(parent=self, edited_state=edited_state, name='aiscript.bin', description="Contains AI ID's and references to names in stat_txt.tbl", setting=config.settings.files.aiscript, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
 		aiscript.pack(side=TOP, fill=X)
 		self.register_settings_view(aiscript)
 
-		bwscript = FileSettingView(self, edited_state, 'bwscript.bin', "Contains AI ID's and references to names in stat_txt.tbl", config.settings.files.bwscript, mpq_handler, config.settings.mpq_select_history, config.windows.settings.mpq_select)
+		bwscript = FileSettingView(parent=self, edited_state=edited_state, name='bwscript.bin', description="Contains AI ID's and references to names in stat_txt.tbl", setting=config.settings.files.bwscript, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
 		bwscript.pack(side=TOP, fill=X)
 		self.register_settings_view(bwscript)

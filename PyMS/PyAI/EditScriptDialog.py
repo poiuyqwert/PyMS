@@ -115,7 +115,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 
 	def browse(self) -> None:
 		initial_selection = [int(self.string.get())]
-		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
+		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
 		# s = StringEditor(self, 'Select a String', True, self.string.get())
 		# if s.result is not None:
 		# 	self.string.set(s.result)

@@ -15,7 +15,7 @@ from ..Utilities import Assets
 from ..Utilities import Config
 
 class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
-	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: GraphicsImporterDelegate, tiletype: TileType = TileType.group, ids: list[int] | None = None) -> None:
+	def __init__(self, *, parent: Misc, config: PyTILEConfig, delegate: GraphicsImporterDelegate, tiletype: TileType = TileType.group, ids: list[int] | None = None) -> None:
 		self.config_ = config
 		self.tiletype = tiletype
 		self.ids = ids
@@ -240,7 +240,7 @@ class GraphicsImporter(PyMSDialog, TilePaletteDelegate):
 		elif tiletype == TileType.mini:
 			tile_id = self.minitiles_null_id.get()
 		from .TilePalette import TilePalette
-		TilePalette(self, self.config_, self, tiletype, tile_id)
+		TilePalette(parent=self, config=self.config_, delegate=self, tiletype=tiletype, select=tile_id)
 
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()

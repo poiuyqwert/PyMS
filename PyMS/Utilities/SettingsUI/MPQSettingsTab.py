@@ -17,7 +17,7 @@ import os
 from typing import Callable
 
 class MPQSettingsTab(SettingsTab):
-	def __init__(self, parent: Notebook, edited_state: EditedState, mpq_hander: MPQHandler, mpqs_config: Config.List[str], mpqs_select_config: Config.SelectFile) -> None:
+	def __init__(self, *, parent: Notebook, edited_state: EditedState, mpq_hander: MPQHandler, mpqs_config: Config.List[str], mpqs_select_config: Config.SelectFile) -> None:
 		self.edited_state = edited_state
 		self.mpq_handler = mpq_hander
 		self.mpqs_config = mpqs_config

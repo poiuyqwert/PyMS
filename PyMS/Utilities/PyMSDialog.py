@@ -2,7 +2,7 @@
 from .UIKit import *
 #
 class PyMSDialog(Toplevel):
-	def __init__(self, parent: Misc, title: str, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
+	def __init__(self, parent: Misc, title: str, *, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
 		Toplevel.__init__(self, parent)
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)

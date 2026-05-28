@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 class PyMSWarning(Exception):
-	def __init__(self, warn_type: str, warning: str, line: int | None = None, code: str | None = None, level: int = 0, warn_id: str | None = None, sub_warnings: list[PyMSWarning] | None = None) -> None:
+	def __init__(self, *, warn_type: str, warning: str, line: int | None = None, code: str | None = None, level: int = 0, warn_id: str | None = None, sub_warnings: list[PyMSWarning] | None = None) -> None:
 		self.type = warn_type
 		self.warning = warning
 		self.line = line

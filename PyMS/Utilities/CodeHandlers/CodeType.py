@@ -258,7 +258,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 
 class BooleanCodeType(IntCodeType, HasKeywords):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField) -> None:
-		IntCodeType.__init__(self, name, help_text, bytecode_type, limits=(0, 1))
+		IntCodeType.__init__(self, name=name, help_text=help_text, bytecode_type=bytecode_type, limits=(0, 1))
 
 	def lex(self, parse_context: ParseContext) -> bool:
 		token = parse_context.lexer.next_token()
@@ -298,7 +298,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return FlagsCodeType.serialize_flags(value, self._flags_to_names, cast(Struct.IntField, self._bytecode_type))
 
 	@staticmethod
-	def lex_flags(parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True, allow_raw_flags: bool = False) -> int:
+	def lex_flags(*, parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True, allow_raw_flags: bool = False) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value == ',' or token.raw_value == ')':
@@ -338,7 +338,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return flags
 
 	def lex(self, parse_context: ParseContext) -> int:
-		return FlagsCodeType.lex_flags(parse_context, self._names_to_flags, self.name, cast(Struct.IntField, self._bytecode_type), self._case_sensitive, self._allow_raw_flags)
+		return FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=self._names_to_flags, type_name=self.name, bytecode_type=cast(Struct.IntField, self._bytecode_type), case_sensitive=self._case_sensitive, allow_raw_flags=self._allow_raw_flags)
 
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._names_to_flags.keys())

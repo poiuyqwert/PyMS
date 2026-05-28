@@ -24,7 +24,7 @@ class PCX:
 
 	def load_data(self, data: bytes, pal: bool = False) -> None:
 		if data[:4] != b'\x0A\x05\x01\x08':
-			raise PyMSError('Load',"Not a PCX file (no PCX header)")
+			raise PyMSError('Load', "Not a PCX file (no PCX header)")
 		try:
 			xmin,ymin,xmax,ymax,_hdpi,_vdpi = struct.unpack('<6H',data[4:16])
 			planes,_bytesperline,_palinfo,_hscreensize,_vscreensize = struct.unpack('<B4H', data[65:74])
@@ -76,7 +76,7 @@ class PCX:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported PCX file, could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported PCX file, could possibly be corrupt") from exc
 
 	def load_pixels(self, image: Pixels, palette: RawPalette | None = None) -> None:
 		self.height = len(image)

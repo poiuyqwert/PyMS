@@ -13,7 +13,7 @@ from ..Utilities import Assets
 from typing import Any
 
 class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
-	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
+	def __init__(self, *, parent: Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
 		Frame.__init__(self, parent)
 
 		self.parent = parent
@@ -398,11 +398,11 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			return
 		from .TilePalette import TilePalette
 		TilePalette(
-			self.parent,
-			self.config_,
-			self,
-			TileType.mini,
-			tileset.vx4.get_megatile(self.megatile_id).minitiles[self.minitile_n].image_id,
+			parent=self.parent,
+			config=self.config_,
+			delegate=self,
+			tiletype=TileType.mini,
+			select=tileset.vx4.get_megatile(self.megatile_id).minitiles[self.minitile_n].image_id,
 			editing=self.palette_editable
 		)
 

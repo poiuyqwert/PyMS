@@ -558,7 +558,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		s = 2 + self.ai.calculate_sizes()[0]
 		# TODO: Expand file?
 		if s > 65535:
-			ErrorDialog(self, PyMSError('Adding',"There is not enough room in your aiscript.bin to add a new script"))
+			ErrorDialog(self, PyMSError('Adding', "There is not enough room in your aiscript.bin to add a new script"))
 			return
 		dialog = EditScriptDialog(self, delegate=self, config=self.config_.windows.script_edit, title='Adding New AI Script')
 		script_id = dialog.script_id.get()

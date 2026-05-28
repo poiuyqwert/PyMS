@@ -466,7 +466,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		CodeEditDialog(self, self, self.config_, selected_iscript_ids)
 
 	def tblbin(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpqhandler)
 
 	def register_registry(self) -> None:
 		try:

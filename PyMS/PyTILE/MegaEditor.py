@@ -19,7 +19,7 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 		PyMSDialog.__init__(self, parent, f'MegaTile Editor [{tile_id}]')
 
 	def widgetize(self) -> Widget | None:
-		self.editor = MegaEditorView.MegaEditorView(self, self.config_, self, self.id)
+		self.editor = MegaEditorView.MegaEditorView(parent=self, config=self.config_, delegate=self, megatile_id=self.id)
 		self.editor.pack(side=TOP, padx=3, pady=(3,0))
 		ok = Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(side=BOTTOM, padx=3, pady=3)

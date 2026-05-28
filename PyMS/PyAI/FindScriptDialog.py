@@ -113,7 +113,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			initial_selection = [int(self.stringid.get())]
 		except:
 			initial_selection = []
-		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
+		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
 
 	def update_listbox(self) -> None:
 		self.listbox.delete(0, END)

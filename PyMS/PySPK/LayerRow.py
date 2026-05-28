@@ -5,7 +5,7 @@ from ..Utilities.UIKit import *
 from typing import Any
 
 class LayerRow(Frame):
-	def __init__(self, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs: Any) -> None:
+	def __init__(self, *, parent: Misc, selvar: IntVar, visvar: IntVar, lockvar: IntVar, layer: int, **kwargs: Any) -> None:
 		Frame.__init__(self, parent, **kwargs)
 		self.selvar = selvar
 		self.visvar = visvar

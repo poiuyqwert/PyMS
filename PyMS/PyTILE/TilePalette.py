@@ -20,7 +20,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 	OPEN_PALETTE_COUNT = 0
 	TILE_CACHE: dict[int | VX4Minitile, Image] = {}
 
-	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
+	def __init__(self, *, parent: Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
 		TilePalette.OPEN_PALETTE_COUNT += 1
 		self.config_ = config
 		self.tiletype = tiletype
@@ -65,7 +65,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				self.toolbar.add_button(Assets.get_image('import'), self.import_settings, f'Import {typename} Settings', Shift.Ctrl.i)
 			self.toolbar.pack(fill=X)
 
-		self.palette = TilePaletteView(self, self, self.tiletype, self.start_selected)
+		self.palette = TilePaletteView(parent=self, delegate=self, tiletype=self.tiletype, select=self.start_selected)
 		self.palette.pack(side=TOP, fill=BOTH, expand=1)
 
 		self.status = StringVar()
@@ -133,7 +133,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 				for minitile in tileset.vx4.get_megatile(tile_id).minitiles:
 					if not minitile.image_id in ids:
 						ids.append(minitile.image_id)
-		TilePalette(self, self.config_, self, TileType.mega if self.tiletype == TileType.group else TileType.mini, ids, editing=True)
+		TilePalette(parent=self, config=self.config_, delegate=self, tiletype=TileType.mega if self.tiletype == TileType.group else TileType.mini, select=ids, editing=True)
 
 	def mark_edited(self) -> None:
 		self.edited = True
@@ -220,7 +220,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 
 	def import_graphics(self) -> None:
 		from .GraphicsImporter import GraphicsImporter
-		GraphicsImporter(self, self.config_, self, self.tiletype, self.palette.selected)
+		GraphicsImporter(parent=self, config=self.config_, delegate=self, tiletype=self.tiletype, ids=self.palette.selected)
 
 	def imported_graphics(self, new_ids: list[int]) -> None:
 		TilePalette.TILE_CACHE.clear()
@@ -250,7 +250,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		if not self.palette.selected:
 			return
 		from .SettingsImporter import SettingsImporter
-		SettingsImporter(self, self.config_, self.tiletype, self.palette.selected, self)
+		SettingsImporter(parent=self, config=self.config_, tiletype=self.tiletype, ids=self.palette.selected, delegate=self)
 
 	def edit(self, _event: Event | None = None) -> None:
 		if not self.palette.selected:

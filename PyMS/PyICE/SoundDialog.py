@@ -14,7 +14,7 @@ from ..Utilities.CodeHandlers.CodeCommand import CodeCommand
 import re, io
 
 class SoundDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig.Sounds, text: CodeText, sound_id: int = 0) -> None:
+	def __init__(self, *, parent: Misc, delegate: MainDelegate, config: PyICEConfig.Sounds, text: CodeText, sound_id: int = 0) -> None:
 		self.delegate = delegate
 		self.config_ = config
 		self.text = text

@@ -434,7 +434,7 @@ class StormLibMPQ(MPQ):
 
 		try:
 			if not _StormLib.SFileSetFileLocale(file_handle, new_locale):
-				raise PyMSError('MPQ',f"Error setting locale of file {file_name!r} with locale {locale} to locale {new_locale} ({_StormLib.SFGetLastError()})")
+				raise PyMSError('MPQ', f"Error setting locale of file {file_name!r} with locale {locale} to locale {new_locale} ({_StormLib.SFGetLastError()})")
 		finally:
 			_StormLib.SFileCloseFile(file_handle)
 

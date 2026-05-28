@@ -369,7 +369,7 @@ class GRP:
 		except PyMSError:
 			raise
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported GRP file, could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported GRP file, could possibly be corrupt") from exc
 		self.frames = frames
 		self.width = width
 		self.height = height
@@ -458,7 +458,7 @@ class GRP:
 							data = RLE.compress_line(line[x_min:x_max], self.transindex)
 							line_data += data
 							if line_offset > 65535:
-								raise PyMSError('Save','The image has too much pixel data to compile')
+								raise PyMSError('Save', 'The image has too much pixel data to compile')
 							line_offsets.append(struct.pack('<H', line_offset))
 							line_history[line_hash] = line_offsets[-1]
 							line_offset += len(data)

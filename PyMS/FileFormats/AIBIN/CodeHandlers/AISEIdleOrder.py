@@ -249,7 +249,7 @@ class SpellEffects(Option):
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
-		flags = CodeType.FlagsCodeType.lex_flags(parse_context, SpellEffects.Flag.VALUES, cls.__name__, Struct.l_u16, case_sensitive=False)
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=SpellEffects.Flag.VALUES, type_name=cls.__name__, bytecode_type=Struct.l_u16, case_sensitive=False)
 		invalid_flags = (flags & OptionSet.TYPE_MASK)
 		if invalid_flags:
 			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
@@ -596,7 +596,7 @@ class UnitFlags(Option):
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
-		flags = CodeType.FlagsCodeType.lex_flags(parse_context, UnitFlags.Flag.VALUES, cls.__name__, Struct.l_u32, case_sensitive=False)
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=UnitFlags.Flag.VALUES, type_name=cls.__name__, bytecode_type=Struct.l_u32, case_sensitive=False)
 		invalid_flags = (flags & OptionSet.TYPE_MASK)
 		if invalid_flags:
 			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
@@ -657,7 +657,7 @@ class Targetting(Option):
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{cls.__name__}` to start flags)')
-		flags = CodeType.FlagsCodeType.lex_flags(parse_context, Targetting.Flag.VALUES, 'Targetting', Struct.l_u8, case_sensitive=False)
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=Targetting.Flag.VALUES, type_name='Targetting', bytecode_type=Struct.l_u8, case_sensitive=False)
 		invalid_flags = (flags & OptionSet.TYPE_MASK)
 		if invalid_flags:
 			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{cls.__name__}`')
@@ -877,7 +877,7 @@ class TileFlags(Option):
 		token = parse_context.lexer.next_token()
 		if not token.raw_value == '(':
 			raise parse_context.error('Parse', f'Unexpected token `{token.raw_value}` (expected `(` after `{name}` to start flags)')
-		flags = CodeType.FlagsCodeType.lex_flags(parse_context, TileFlags.Flag.VALUES, name, Struct.l_u8, case_sensitive=False)
+		flags = CodeType.FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=TileFlags.Flag.VALUES, type_name=name, bytecode_type=Struct.l_u8, case_sensitive=False)
 		invalid_flags = (flags & OptionSet.TYPE_MASK)
 		if invalid_flags:
 			raise parse_context.error('Parse', f'Invalid flags `0x{invalid_flags:X}` for `{name}`')

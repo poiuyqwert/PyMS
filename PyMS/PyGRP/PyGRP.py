@@ -570,7 +570,7 @@ BMP's must be imported with the same style they were exported as.""")
 			name = os.extsep.join(os.path.basename(file).replace(' ','').split(os.extsep)[:-1])
 			self.update_idletasks()
 			try:
-				grptobmp(os.path.dirname(file), self.palettes[self.pal], self.uncompressed.get(), self.get_bmp_style(), self.grp, name, indexs, True)
+				grptobmp(path=os.path.dirname(file), pal=self.palettes[self.pal], uncompressed=self.uncompressed.get(), bmp_style=self.get_bmp_style(), grp=self.grp, bmp=name, frames=indexs, mute=True)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -601,7 +601,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if self.grp.frames:
 			size = (self.grp.width, self.grp.height)
 		try:
-			fs = bmptogrp(os.path.dirname(files[0]), self.palettes[self.pal], self.uncompressed.get(), frames, files, None, size, True, True, self.get_bmp_style().is_vertical, self.transid.get())
+			fs = bmptogrp(path=os.path.dirname(files[0]), pal=self.palettes[self.pal], uncompressed=self.uncompressed.get(), frames=frames, bmp=files, grp=None, issize=size, ret=True, mute=True, vertical=self.get_bmp_style().is_vertical, transindex=self.transid.get())
 			assert fs is not None
 		except PyMSError as e:
 			ErrorDialog(self, e)

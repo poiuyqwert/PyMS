@@ -19,7 +19,7 @@ class SettingsDialog(BaseErrorableSettingsDialog[PyDATConfig]):
 	def widgetize(self) -> Misc | None:
 		widget = super().widgetize()
 
-		self.add_tab('MPQ Settings', MPQSettingsTab(self.notebook, self.edited_state.sub_state(), self.mpq_handler, self.config_.settings.mpqs, self.config_.settings.last_path.mpqs))
+		self.add_tab('MPQ Settings', MPQSettingsTab(parent=self.notebook, edited_state=self.edited_state.sub_state(), mpq_hander=self.mpq_handler, mpqs_config=self.config_.settings.mpqs, mpqs_select_config=self.config_.settings.last_path.mpqs))
 		self.add_tab('TBL Settings', TBLSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
 		self.add_tab('Other Settings', OtherSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))
 		self.add_tab('Palette Settings', PaletteSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_, self.mpq_handler))

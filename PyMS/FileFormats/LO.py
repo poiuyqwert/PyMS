@@ -22,7 +22,7 @@ class LO:
 					offset += 2
 			self.frames = framedata
 		except Exception as exc:
-			raise PyMSError('Load',"Unsupported LO* file, could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported LO* file, could possibly be corrupt") from exc
 
 	def interpret(self, any_input: IO.AnyInputText) -> None:
 		with IO.InputText(any_input) as input_text:
@@ -47,21 +47,21 @@ class LO:
 								try:
 									x,y = int(valid.group(1)),int(valid.group(2))
 									if -127 > x > 127 or -127 > y > 127:
-										raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})",n,line)
+										raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})", line=n, code=line)
 									frames[-1].append([x,y])
 									if len(frames[-1]) == overlays:
 										framedata = False
 								except PyMSError:
 									raise
 								except Exception as exc:
-									raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})",n,line) from exc
+									raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})", line=n, code=line) from exc
 							else:
-								raise PyMSError('Interpreting',"Unknown line format, expected coordinates",n,line)
+								raise PyMSError('Interpreting', "Unknown line format, expected coordinates", line=n, code=line)
 					elif line == 'Frame:':
 						frames.append([])
 						framedata = True
 					else:
-						raise PyMSError('Interpreting',"Unknown line format",n,line)
+						raise PyMSError('Interpreting', "Unknown line format", line=n, code=line)
 		self.frames = frames
 
 	def decompile(self, output: IO.AnyOutputText) -> None:

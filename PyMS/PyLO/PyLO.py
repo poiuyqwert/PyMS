@@ -155,10 +155,10 @@ class PyLO(MainWindow, FindDelegate, CodeTextDelegate):
 		c.pack(side=TOP)
 
 		edited_state = EditedState()
-		self.base_grp_field = FileSettingView(f, edited_state, 'Base GRP', None, self.config_.settings.files.base_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.base_grp_field = FileSettingView(parent=f, edited_state=edited_state, name='Base GRP', description=None, setting=self.config_.settings.files.base_grp, mpq_handler=self.mpq_handler, mpq_history_config=self.config_.settings.mpq_select_history, mpq_window_geometry_config=self.config_.windows.settings.mpq_select)
 		self.base_grp_field.set_editable(False)
 		self.base_grp_field.pack(side=TOP, fill=X, padx=5)
-		self.overlay_grp_field = FileSettingView(f, edited_state, 'Overlay GRP', None, self.config_.settings.files.overlay_grp, self.mpq_handler, self.config_.settings.mpq_select_history, self.config_.windows.settings.mpq_select)
+		self.overlay_grp_field = FileSettingView(parent=f, edited_state=edited_state, name='Overlay GRP', description=None, setting=self.config_.settings.files.overlay_grp, mpq_handler=self.mpq_handler, mpq_history_config=self.config_.settings.mpq_select_history, mpq_window_geometry_config=self.config_.windows.settings.mpq_select)
 		self.overlay_grp_field.set_editable(False)
 		self.overlay_grp_field.pack(side=TOP, fill=X, padx=5)
 

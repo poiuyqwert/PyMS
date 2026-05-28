@@ -69,7 +69,7 @@ class Placeability(PyMSDialog, TilePaletteDelegate):
 	def select(self, pos: tuple[int, int]) -> None:
 		self.selecting = pos
 		from .TilePalette import TilePalette
-		TilePalette(self, self.config_, self, TileType.group, self.groups[pos[1]][pos[0]].get())
+		TilePalette(parent=self, config=self.config_, delegate=self, tiletype=TileType.group, select=self.groups[pos[1]][pos[0]].get())
 
 	def change(self, _: TileType, doodad_id: int) -> None:
 		if self.selecting is None:

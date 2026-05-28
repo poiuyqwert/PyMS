@@ -418,9 +418,9 @@ class File(ConfigObject):
 		# 	self.file_path = path
 		return path
 
-	def select_mpq(self, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
+	def select_mpq(self, *, parent: Misc, mpq_handler: MPQHandler, history_config: List, window_geometry_config: WindowGeometry, name: str | None = None, filetype: FileType | None = None) -> str | None:
 		from .MPQSelect import MPQSelect
-		mpq_select = MPQSelect(parent, mpq_handler, name or self.name, filetype or self.filetypes[0],history_config, window_geometry_config, action=MPQSelect.Action.select)
+		mpq_select = MPQSelect(parent=parent, mpqhandler=mpq_handler, name=name or self.name, filetype=filetype or self.filetypes[0], history_config=history_config, window_geometry_config=window_geometry_config, action=MPQSelect.Action.select)
 		return mpq_select.file
 
 	def encode(self) -> JSON.Value:
@@ -485,12 +485,12 @@ class SelectFile(ConfigObject):
 		self._initial_filename = initial_filename
 
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False, filename: str | None = None) -> str | None:
+	def _select_file(self, *, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[False] = False, filename: str | None = None) -> str | None:
 		...
 	@overload
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True] = True, filename: str | None = None) -> list[str] | None:
+	def _select_file(self, *, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: Literal[True] = True, filename: str | None = None) -> list[str] | None:
 		...
-	def _select_file(self, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
+	def _select_file(self, *, parent: Misc, save: bool, title: str | None, filetypes: list[FileType] | None, multiple: bool = False, filename: str | None = None) -> str | list[str] | None:
 		window = parent.winfo_toplevel()
 		setattr(window, '_pyms__window_blocking', True)
 		path: str | list[str] | None
@@ -547,13 +547,13 @@ class SelectFile(ConfigObject):
 		return path
 
 	def select_open(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> str | None:
-		return self._select_file(parent, False, title, filetypes)
+		return self._select_file(parent=parent, save=False, title=title, filetypes=filetypes)
 
 	def select_open_multiple(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None) -> list[str] | None:
-		return self._select_file(parent, False, title, filetypes, True)
+		return self._select_file(parent=parent, save=False, title=title, filetypes=filetypes, multiple=True)
 
 	def select_save(self, parent: Misc, title: str | None = None, filetypes: list[FileType] | None = None, filename: str | None = None) -> str | None:
-		return self._select_file(parent, True, title, filetypes, False, filename)
+		return self._select_file(parent=parent, save=True, title=title, filetypes=filetypes, multiple=False, filename=filename)
 
 	def encode(self) -> JSON.Value:
 		return {

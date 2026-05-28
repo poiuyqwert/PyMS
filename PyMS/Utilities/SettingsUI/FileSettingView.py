@@ -11,10 +11,10 @@ from typing import overload, Any
 
 class FileSettingView(SettingView):
 	@overload
-	def __init__(self, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: MPQHandler, mpq_history_config: Config.List, mpq_window_geometry_config: Config.WindowGeometry) -> None: ...
+	def __init__(self, *, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: MPQHandler, mpq_history_config: Config.List, mpq_window_geometry_config: Config.WindowGeometry) -> None: ...
 	@overload
-	def __init__(self, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: None = None, mpq_history_config: None = None, mpq_window_geometry_config: None = None) -> None: ...
-	def __init__(self, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: MPQHandler | None = None, mpq_history_config: Config.List | None = None, mpq_window_geometry_config: Config.WindowGeometry | None = None) -> None:
+	def __init__(self, *, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: None = None, mpq_history_config: None = None, mpq_window_geometry_config: None = None) -> None: ...
+	def __init__(self, *, parent: Misc, edited_state: EditedState, name: str, description: str | None, setting: Config.File, mpq_handler: MPQHandler | None = None, mpq_history_config: Config.List | None = None, mpq_window_geometry_config: Config.WindowGeometry | None = None) -> None:
 		super().__init__(parent, edited_state)
 		self.setting = setting
 		self.mpq_handler = mpq_handler
@@ -66,7 +66,7 @@ class FileSettingView(SettingView):
 		assert self.mpq_handler is not None
 		assert self.mpq_history_config is not None
 		assert self.mpq_window_geometry_config is not None
-		file_path = self.setting.select_mpq(self, self.mpq_handler, self.mpq_history_config, self.mpq_window_geometry_config, self.setting.name, self.setting.filetypes[0])
+		file_path = self.setting.select_mpq(parent=self, mpq_handler=self.mpq_handler, history_config=self.mpq_history_config, window_geometry_config=self.mpq_window_geometry_config, name=self.setting.name, filetype=self.setting.filetypes[0])
 		if file_path:
 			self.variable.set(file_path)
 

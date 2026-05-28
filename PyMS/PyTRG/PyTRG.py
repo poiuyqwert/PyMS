@@ -544,7 +544,7 @@ class PyTRG(MainWindow, MainDelegate, CodeTextDelegate):
 			self.text.update_highlight_styles()
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpqhandler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpqhandler)
 
 	def register_registry(self) -> None:
 		try:

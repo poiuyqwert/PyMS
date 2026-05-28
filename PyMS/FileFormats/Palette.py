@@ -76,7 +76,7 @@ class Palette:
 	def load_riff_pal(self, data: bytes) -> RawPalette:
 		# TODO: Better parsing, specs here: https://worms2d.info/Palette_file
 		if len(data) != 1048 or not data.startswith(b'RIFF\x00\x00\x00\x00PAL data'):
-			raise PyMSError('Palette',"Unsupported RIFF palette file, could possibly be corrupt")
+			raise PyMSError('Palette', "Unsupported RIFF palette file, could possibly be corrupt")
 		return self.load_sc_pal(data[24:], 4)
 
 	def load_jasc_pal(self, data: bytes) -> RawPalette:
@@ -84,7 +84,7 @@ class Palette:
 		if not lines[-1]:
 			lines.pop()
 		if len(lines) != 259 or lines[0] != 'JASC-PAL' or lines[1] != '0100' or lines[2] != '256':
-			raise PyMSError('Palette',"Unsupported JASC palette file, could possibly be corrupt")
+			raise PyMSError('Palette', "Unsupported JASC palette file, could possibly be corrupt")
 		palette: RawPalette = []
 		for line in lines[3:]:
 			r,g,b = line.split(' ')
@@ -96,7 +96,7 @@ class Palette:
 		try:
 			pcx.load_data(data)
 		except Exception as exc:
-			raise PyMSError('Palette',"Unsupported PCX palette file, could possibly be corrupt") from exc
+			raise PyMSError('Palette', "Unsupported PCX palette file, could possibly be corrupt") from exc
 		return pcx.palette
 
 	def load_bmp(self, data: bytes) -> RawPalette:
@@ -113,7 +113,7 @@ class Palette:
 	def load_sc_pal(self, data: bytes, components: int = 3) -> RawPalette:
 		size = 256 * components
 		if len(data) != size:
-			raise PyMSError('Palette',"Unsupported PAL palette file, could possibly be corrupt")
+			raise PyMSError('Palette', "Unsupported PAL palette file, could possibly be corrupt")
 		palette: RawPalette = []
 		for x in range(0,size,components):
 			r,g,b = tuple(int(c) for c in struct.unpack('3B', data[x:x + 3]))

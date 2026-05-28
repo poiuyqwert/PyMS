@@ -31,7 +31,7 @@ class MPQSelect(PyMSDialog):
 		def title(self, name: str) -> str:
 			return f'{self.cta} {name}'
 
-	def __init__(self, parent: Misc, mpqhandler: MPQHandler, name: str, filetype: FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
+	def __init__(self, *, parent: Misc, mpqhandler: MPQHandler, name: str, filetype: FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
 		self.mpqhandler = mpqhandler
 		self.search = StringVar()
 		search = default_search or filetype.extensions_tuple[0]

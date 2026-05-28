@@ -87,14 +87,14 @@ class EditorGroup:
 		self.editors.append(widget)
 		return EditorGroup.EditorWidget(self, widget)
 
-	def check_flag(self, name: str, tooltip: str, variable: IntegerVar, value: int, editable: bool = True) -> EditorWidget:
+	def check_flag(self, *, name: str, tooltip: str, variable: IntegerVar, value: int, editable: bool = True) -> EditorWidget:
 		widget = MaskedCheckbutton(self.content, text=name, variable=variable, value=value, state=DISABLED)
 		self._tip(widget, tooltip)
 		if editable:
 			self.editors.append(widget)
 		return EditorGroup.EditorWidget(self, widget)
 
-	def radio_flag(self, name: str, tooltip: str, variable: IntegerVar, value: int, mask: int | None = None, editable: bool = True) -> EditorWidget:
+	def radio_flag(self, *, name: str, tooltip: str, variable: IntegerVar, value: int, mask: int | None = None, editable: bool = True) -> EditorWidget:
 		widget = MaskedRadiobutton(self.content, text=name, variable=variable, value=value, mask=mask if mask else variable.range[1], state=DISABLED)
 		self._tip(widget, tooltip)
 		if editable:
@@ -253,7 +253,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.copy_doodadgroup_name = self.options_copy_doodadgroup.option(lambda g: g.name)
 
 		mid = Frame(self)
-		self.palette = TilePaletteView(mid, self, TileType.group, multiselect=False, sub_select=True)
+		self.palette = TilePaletteView(parent=mid, delegate=self, tiletype=TileType.group, multiselect=False, sub_select=True)
 		self.palette.pack(side=LEFT, fill=Y)
 
 		settings = Frame(mid)
@@ -263,35 +263,35 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 
 		self.normal_editors: list[EditorGroup] = []
 		walkability_editor = EditorGroup(self.flow_view.content_view, 'Walkability')\
-			.check_flag('Walkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.walkable).add()\
-			.check_flag('Unwalkable*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.unwalkable).add()
+			.check_flag(name='Walkable*', tooltip='*Gets overwritten by SC based on minitile flags', variable=self.group_flags, value=CV5Flag.walkable).add()\
+			.check_flag(name='Unwalkable*', tooltip='*Gets overwritten by SC based on minitile flags', variable=self.group_flags, value=CV5Flag.unwalkable).add()
 		self.normal_editors.append(walkability_editor)
 		buildability_editor = EditorGroup(self.flow_view.content_view, 'Buildability')\
-			.check_flag('Unbuildable', 'No buildings buildable', self.group_flags, CV5Flag.unbuildable).add()\
-			.check_flag('Occupied', 'Unbuildable until a building on this tile gets removed', self.group_flags, CV5Flag.occupied).add()\
-			.check_flag('Special', 'Allow Beacons/Start Locations to be placeable', self.group_flags, CV5Flag.special_placeable).add()
+			.check_flag(name='Unbuildable', tooltip='No buildings buildable', variable=self.group_flags, value=CV5Flag.unbuildable).add()\
+			.check_flag(name='Occupied', tooltip='Unbuildable until a building on this tile gets removed', variable=self.group_flags, value=CV5Flag.occupied).add()\
+			.check_flag(name='Special', tooltip='Allow Beacons/Start Locations to be placeable', variable=self.group_flags, value=CV5Flag.special_placeable).add()
 		self.normal_editors.append(buildability_editor)
 		self.normal_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Creep')
-			.check_flag('Creep', 'Zerg can build here when this flag is combined with the Temporary creep flag', self.group_flags, CV5Flag.creep).add()
-			.check_flag('Receding', 'Receding creep', self.group_flags, CV5Flag.creep_receding).add()
-			.check_flag('Temporary', 'Zerg can build here when this flag is combined with the Creep flag', self.group_flags, CV5Flag.creep_temp).add()
+			.check_flag(name='Creep', tooltip='Zerg can build here when this flag is combined with the Temporary creep flag', variable=self.group_flags, value=CV5Flag.creep).add()
+			.check_flag(name='Receding', tooltip='Receding creep', variable=self.group_flags, value=CV5Flag.creep_receding).add()
+			.check_flag(name='Temporary', tooltip='Zerg can build here when this flag is combined with the Creep flag', variable=self.group_flags, value=CV5Flag.creep_temp).add()
 		)
 		height_editor = EditorGroup(self.flow_view.content_view, 'Height')\
-			.check_flag('Mid Ground*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.mid_ground).add()\
-			.check_flag('High Ground*', '*Gets overwritten by SC based on minitile flags (priority over Mid Ground)', self.group_flags, CV5Flag.high_ground).add()
+			.check_flag(name='Mid Ground*', tooltip='*Gets overwritten by SC based on minitile flags', variable=self.group_flags, value=CV5Flag.mid_ground).add()\
+			.check_flag(name='High Ground*', tooltip='*Gets overwritten by SC based on minitile flags (priority over Mid Ground)', variable=self.group_flags, value=CV5Flag.high_ground).add()
 		self.normal_editors.append(height_editor)
 		self.normal_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Misc.')
-			.check_flag('Has Doodad Cover', 'Provides cover for hit calculations', self.group_flags, CV5Flag.has_doodad_cover).add()
-			.check_flag('Blocks View*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.blocks_view).add()
-			.check_flag('Cliff Edge*', '*Gets overwritten by SC based on minitile flagsg', self.group_flags, CV5Flag.cliff_edge).add()
+			.check_flag(name='Has Doodad Cover', tooltip='Provides cover for hit calculations', variable=self.group_flags, value=CV5Flag.has_doodad_cover).add()
+			.check_flag(name='Blocks View*', tooltip='*Gets overwritten by SC based on minitile flags', variable=self.group_flags, value=CV5Flag.blocks_view).add()
+			.check_flag(name='Cliff Edge*', tooltip='*Gets overwritten by SC based on minitile flagsg', variable=self.group_flags, value=CV5Flag.cliff_edge).add()
 		)
 		self.normal_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Unknown')
-			.check_flag('0002', 'Unknown/unused flag 0x0002', self.group_flags, CV5Flag.unknown_0002).add()
-			.check_flag('0008', 'Unknown/unused flag 0x0008', self.group_flags, CV5Flag.unknown_0008).add()
-			.check_flag('0020', 'Unknown/unused flag 0x0020', self.group_flags, CV5Flag.unknown_0020).add()
+			.check_flag(name='0002', tooltip='Unknown/unused flag 0x0002', variable=self.group_flags, value=CV5Flag.unknown_0002).add()
+			.check_flag(name='0008', tooltip='Unknown/unused flag 0x0008', variable=self.group_flags, value=CV5Flag.unknown_0008).add()
+			.check_flag(name='0020', tooltip='Unknown/unused flag 0x0020', variable=self.group_flags, value=CV5Flag.unknown_0020).add()
 		)
 		self.normal_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Edge Types*', '*Unsure if StarEdit actually uses these, or if they are just reference/outdated values.')
@@ -343,7 +343,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.bind(Shift.Ctrl.r(), lambda *_: self.megatile_apply_all(MegaEditorMode.ramp))
 		self.bind(Shift.Ctrl.a(), lambda *_: self.megatile_apply_all(None))
 		self.bind(Shift.Ctrl.n(), lambda *_: self.apply_all_exclude_nulls.set(not self.apply_all_exclude_nulls.get()))
-		self.mega_editor = MegaEditorView(megatile_group, self.config_, self, palette_editable=True)
+		self.mega_editor = MegaEditorView(parent=megatile_group, config=self.config_, delegate=self, palette_editable=True)
 		self.mega_editor.set_enabled(False)
 		self.mega_editor.pack(side=TOP, padx=3, pady=(3,0))
 		megatile_editor.widget(megatile_group, megatile_editors).add()
@@ -498,38 +498,38 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Overlay')
 			.label('ID').add(new_row=False).entry('Sprite or Unit ID (depending on the following flags) for the overlay', self.group_edge_left_or_overlay_id).add(new_row=False)
-			.radio_flag('None', 'No overlay', self.group_flags, 0, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
-			.check_flag('Flipped*', 'The overlay is flipped. (*Unused)\n*Not cleared SC, so this flag also counts as Temporary creep', self.group_flags, CV5DoodadFlag.overlay_flipped).add(span=2, new_row=False)
-			.radio_flag('Sprites.dat*', 'The overlay ID is a Sprites.dat reference.\n*Not cleared by SC, so this flag also counts as Receding creep', self.group_flags, CV5DoodadFlag.has_overlay_sprite, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
-			.skip(2).radio_flag('Units.dat', 'The overlay ID is a Units.dat reference', self.group_flags, CV5DoodadFlag.has_overlay_unit, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add()
+			.radio_flag(name='None', tooltip='No overlay', variable=self.group_flags, value=0, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
+			.check_flag(name='Flipped*', tooltip='The overlay is flipped. (*Unused)\n*Not cleared SC, so this flag also counts as Temporary creep', variable=self.group_flags, value=CV5DoodadFlag.overlay_flipped).add(span=2, new_row=False)
+			.radio_flag(name='Sprites.dat*', tooltip='The overlay ID is a Sprites.dat reference.\n*Not cleared by SC, so this flag also counts as Receding creep', variable=self.group_flags, value=CV5DoodadFlag.has_overlay_sprite, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add(span=2)
+			.skip(2).radio_flag(name='Units.dat', tooltip='The overlay ID is a Units.dat reference', variable=self.group_flags, value=CV5DoodadFlag.has_overlay_unit, mask=CV5DoodadFlag.has_overlay_sprite | CV5DoodadFlag.has_overlay_unit).add()
 		)
 		self.doodad_editors.append(walkability_editor)
 		self.doodad_editors.append(buildability_editor)
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Creep')
-			.check_flag('Creep', 'Zerg can build here when this flag is combined with the Temporary creep flag', self.group_flags, CV5Flag.creep).add()
-			.check_flag('Receding*', 'Receding creep\n*Overlaps with Has Overlay Sprites.dat flag', self.group_flags, CV5Flag.creep_receding, editable=False).add()
-			.check_flag('Temporary*', 'Zerg can build here when this flag is combined with the Creep flag\n*Overlaps with Has Overlay Flipped flag', self.group_flags, CV5Flag.creep_temp, editable=False).add()
+			.check_flag(name='Creep', tooltip='Zerg can build here when this flag is combined with the Temporary creep flag', variable=self.group_flags, value=CV5Flag.creep).add()
+			.check_flag(name='Receding*', tooltip='Receding creep\n*Overlaps with Has Overlay Sprites.dat flag', variable=self.group_flags, value=CV5Flag.creep_receding, editable=False).add()
+			.check_flag(name='Temporary*', tooltip='Zerg can build here when this flag is combined with the Creep flag\n*Overlaps with Has Overlay Flipped flag', variable=self.group_flags, value=CV5Flag.creep_temp, editable=False).add()
 		)
 		self.doodad_editors.append(height_editor)
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Misc.')
-			.check_flag('Has Doodad Cover', 'Provides cover for hit calculations', self.group_flags, CV5Flag.has_doodad_cover).add()
-			.check_flag('Blocks View*', '*Gets overwritten by SC based on minitile flags', self.group_flags, CV5Flag.blocks_view).add()
-			.check_flag('Cliff Edge*', '*Overlaps with Has Overlay Units.dat flag', self.group_flags, CV5Flag.cliff_edge, editable=False).add()
+			.check_flag(name='Has Doodad Cover', tooltip='Provides cover for hit calculations', variable=self.group_flags, value=CV5Flag.has_doodad_cover).add()
+			.check_flag(name='Blocks View*', tooltip='*Gets overwritten by SC based on minitile flags', variable=self.group_flags, value=CV5Flag.blocks_view).add()
+			.check_flag(name='Cliff Edge*', tooltip='*Overlaps with Has Overlay Units.dat flag', variable=self.group_flags, value=CV5Flag.cliff_edge, editable=False).add()
 		)
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'Unknown')
 			.label('Unknown 4').add(new_row=False).entry('Unknown/unused', self.group_edge_down_or_unknown4).add(new_row=False)
-			.check_flag('0002', 'Unknown/unused flag 0x0002', self.group_flags, CV5Flag.unknown_0002).add(span=2)
+			.check_flag(name='0002', tooltip='Unknown/unused flag 0x0002', variable=self.group_flags, value=CV5Flag.unknown_0002).add(span=2)
 			.label('Unknown 8').add(new_row=False).entry('Unknown/unused', self.group_piece_down_or_unknown8).add(new_row=False)
-			.check_flag('0008', 'Unknown/unused flag 0x0008', self.group_flags, CV5Flag.unknown_0008).add(span=2)
-			.skip(2).check_flag('0020', 'Unknown/unused flag 0x0020', self.group_flags, CV5Flag.unknown_0020).add(span=2)
+			.check_flag(name='0008', tooltip='Unknown/unused flag 0x0008', variable=self.group_flags, value=CV5Flag.unknown_0008).add(span=2)
+			.skip(2).check_flag(name='0020', tooltip='Unknown/unused flag 0x0020', variable=self.group_flags, value=CV5Flag.unknown_0020).add(span=2)
 		)
 		self.doodad_editors.append(group_type_editor)
 		self.doodad_editors.append(
 			EditorGroup(self.flow_view.content_view, 'SC:R')
-			.check_flag('SC:R', 'Added in StarCraft: Remastered', self.group_edge_up_or_scr, CV5Group.SCR).add(span=2)
+			.check_flag(name='SC:R', tooltip='Added in StarCraft: Remastered', variable=self.group_edge_up_or_scr, value=CV5Group.SCR).add(span=2)
 			.label('Raw').add(new_row=False).entry('Raw value of added in StarCraft: Remastered (1 = Added in SC:R)', self.group_edge_up_or_scr).add()
 		)
 		self.doodad_group_dropdown: DropDown
@@ -811,11 +811,11 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 		if not self.tileset:
 			return
 		TilePalette(
-			self,
-			self.config_,
-			self,
-			tile_type,
-			self.palette.selected[0] if tile_type == TileType.group else self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection],
+			parent=self,
+			config=self.config_,
+			delegate=self,
+			tiletype=tile_type,
+			select=self.palette.selected[0] if tile_type == TileType.group else self.tileset.cv5.get_group(self.palette.selected[0]).megatile_ids[self.palette.sub_selection],
 			editing=True
 		)
 
@@ -911,7 +911,7 @@ class PyTILE(MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEdito
 			ErrorDialog(self, e)
 
 	def settings(self, err: PyMSError | None = None) -> None:
-		SettingsDialog(self, self.config_, self, err, self.mpq_handler)
+		SettingsDialog(parent=self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def help(self, _event: Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyTILE.md')

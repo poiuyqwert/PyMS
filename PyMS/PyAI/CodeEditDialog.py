@@ -565,7 +565,7 @@ script {header_id} {{
 		line = self.text.get(f'{INSERT} linestart', f'{INSERT} lineend')
 		if match := self.re_name_string_command().match(line):
 			initial_selection.append(int(match.group(2)))
-		ItemSelectDialog.ItemSelectDialog(self, 'Select String', self, initial_selection)
+		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
 
 	# ItemSelectDialog.Delegate
 	def get_items(self) -> Sequence[ItemSelectDialog.Item]:

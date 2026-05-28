@@ -173,7 +173,7 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 				return player_group
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid Player (value must be in the range 0 to 255, or on of the keywords: Current Player, Foes, Allies, Neutral Players, All Players, Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4, Non Allied Victory Players)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid Player (value must be in the range 0 to 255, or on of the keywords: Current Player, Foes, Allies, Neutral Players, All Players, Force 1, Force 2, Force 3, Force 4, Unused 1, Unused 2, Unused 3, Unused 4, Non Allied Victory Players)")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return self.decompile(condition.player_group)
@@ -222,10 +222,10 @@ class ComparisonParameter(ConditionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				condition.comparison = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
 
 class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
@@ -273,7 +273,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 			for unit_id,string in enumerate(trg.stat_txt.strings[:228]):
 				if value == UnitTypeParameter.unit_name(string):
 					return unit_id
-		raise PyMSError('Parameter',f"'{value}' is an invalid TUnit (value must be in the range 0 to 227, a full unit name, or a type from the list: None, Any Unit, Men, Buildings, Factories)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid TUnit (value must be in the range 0 to 227, a full unit name, or a type from the list: None, Any Unit, Men, Buildings, Factories)")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return self._decompile(condition.unit_type, trg)
@@ -369,10 +369,10 @@ class ResourceTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 		try:
 			num = int(value)
 			if -1 < num < 256:
-				return (num, PyMSWarning('Parameter', f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)"))
+				return (num, PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Comparison (value should be one of the keywords: At Least, Exactly, At Most)"))
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid Comparison (value must be one of the keywords: At Least, Exactly, At Most)")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return self._decompile(condition.resource_type)
@@ -420,10 +420,10 @@ class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 		try:
 			num = int(value)
 			if -1 < num < 256:
-				return (num, PyMSWarning('Parameter', f"'{value}' is not an expected ScoreType (value should be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)"))
+				return (num, PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected ScoreType (value should be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)"))
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid ScoreType (value must be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid ScoreType (value must be one of the keywords: Total, Units, Buildings, Units and Buildings, Razings, Kills and Razings, Custom)")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
 		return self._decompile(condition.score_type)
@@ -505,10 +505,10 @@ class SwitchStateParameter(ConditionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				condition.switch_state = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected SwitchState (value must be one of the keywords: Set, Cleared)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected SwitchState (value must be one of the keywords: Set, Cleared)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid SwitchState (value must be one of the keywords: Set, Cleared)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid SwitchState (value must be one of the keywords: Set, Cleared)")
 
 # TODO: Support time formats?
 class TimeParameter(ActionParameter):
@@ -565,7 +565,7 @@ class StringParameter(ActionParameter, HasKeywords):
 			if -1 < string_index < 4294967296:
 				action.string_index = string_index
 				if string_index == 0:
-					return PyMSWarning('Parameter', 'String 0 means "no string"')
+					return PyMSWarning(warn_type='Parameter', warning='String 0 means "no string"')
 				return None
 		except:
 			pass
@@ -606,7 +606,7 @@ class UnitParameter(ActionParameter):
 						unit_type = unit_id
 						break
 		if unit_type is None:
-			raise PyMSError('Parameter',f"'{value}' is an invalid Unit (value must be in the range 0 to 227, or a full unit name)")
+			raise PyMSError('Parameter', f"'{value}' is an invalid Unit (value must be in the range 0 to 227, or a full unit name)")
 		action.unit_type = unit_type
 		action.flags |= ActionFlag.unit_used
 		return None
@@ -640,10 +640,10 @@ class ModifierParameter(ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				action.number_modifier = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected Modifier (value should be one of the keywords: Set To, Add, Subtract)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Modifier (value should be one of the keywords: Set To, Add, Subtract)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid Modifier (value must be one of the keywords: Set To, Add, Subtract)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid Modifier (value must be one of the keywords: Set To, Add, Subtract)")
 
 class WAVParameter(ActionParameter, HasKeywords):
 	def name(self) -> str:
@@ -671,7 +671,7 @@ class WAVParameter(ActionParameter, HasKeywords):
 			if -1 < wav_string_index < 4294967296:
 				action.wav_string_index = wav_string_index
 				if wav_string_index == 0:
-					return PyMSWarning('Parameter', 'WAV 0 means "No WAV"')
+					return PyMSWarning(warn_type='Parameter', warning='WAV 0 means "No WAV"')
 				return None
 		except:
 			pass
@@ -725,7 +725,7 @@ class QuantityParameter(ActionParameter, HasKeywords):
 			if -1 < number < 4294967296:
 				action.quantity = number
 				if number == 0:
-					return PyMSWarning('Parameter', 'Quantity 0 means "all"')
+					return PyMSWarning(warn_type='Parameter', warning='Quantity 0 means "all"')
 				return None
 		except:
 			pass
@@ -787,10 +787,10 @@ class SwitchActionParameter(ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				action.switch_action = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid SwitchAction (value must be one of the keywords: Set, Clear, Toggle, Randomize)")
 
 class StateActionParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
@@ -821,10 +821,10 @@ class StateActionParameter(ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				action.state_action = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected StateAction (value must be one of the keywords: Set, Clear, Toggle)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected StateAction (value must be one of the keywords: Set, Clear, Toggle)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid StateAction (value must be one of the keywords: Set, Clear, Toggle)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid StateAction (value must be one of the keywords: Set, Clear, Toggle)")
 
 # TODO: AIScript
 class AIScriptParameter(ActionParameter):
@@ -894,10 +894,10 @@ class OrderParameter(ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				action.order = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected Order (value must be one of the keywords: Move, Patrol, Attack)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Order (value must be one of the keywords: Move, Patrol, Attack)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid Order (value must be one of the keywords: Move, Patrol, Attack)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid Order (value must be one of the keywords: Move, Patrol, Attack)")
 
 class PercentageParameter(ActionParameter):
 	def name(self) -> str:
@@ -917,7 +917,7 @@ class PercentageParameter(ActionParameter):
 			if -1 < number < 4294967296:
 				action.number = number
 				if number > 100:
-					return PyMSWarning('Parameter', f"'{value}' is larger than 100%")
+					return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is larger than 100%")
 				return None
 		except:
 			pass
@@ -952,10 +952,10 @@ class AllianceStatusParameter(ActionParameter, HasKeywords):
 			num = int(value)
 			if -1 < num < 256:
 				action.alliance_status = num
-				return PyMSWarning('Parameter', f"'{value}' is not an expected AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
+				return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
 		except:
 			pass
-		raise PyMSError('Parameter',f"'{value}' is an invalid AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
+		raise PyMSError('Parameter', f"'{value}' is an invalid AllyStatus (value must be one of the keywords: Enemy, Ally, Allied Victory)")
 
 class SlotParameter(ActionParameter, HasKeywords):
 	def name(self) -> str:
@@ -978,7 +978,7 @@ class SlotParameter(ActionParameter, HasKeywords):
 			if -1 < slot < 4294967296:
 				action.slot = slot
 				if slot > 4:
-					return PyMSWarning('Parameter', f"'{value}' is not an expected Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
+					return PyMSWarning(warn_type='Parameter', warning=f"'{value}' is not an expected Slot (value must be a number from 1 to 4, with or without they keyword Slot before it)")
 				return None
 		except:
 			pass

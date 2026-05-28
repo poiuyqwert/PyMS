@@ -22,7 +22,7 @@ class SettingsImporter(PyMSDialog):
 		('Repeat All Settings',	RepeaterID.repeat_all,	Serialize.repeater_loop),
 		('Repeat Last Setting',	RepeaterID.repeat_last,	Serialize.repeater_repeat_last)
 	)
-	def __init__(self, parent: Misc, config: PyTILEConfig, tiletype: TileType, ids: list[int], delegate: MainDelegate) -> None:
+	def __init__(self, *, parent: Misc, config: PyTILEConfig, tiletype: TileType, ids: list[int], delegate: MainDelegate) -> None:
 		self.config_ = config
 		self.tiletype = tiletype
 		self.ids = ids

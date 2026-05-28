@@ -9,7 +9,7 @@ from ..Utilities.CheckSaved import CheckSaved
 from typing import Callable
 
 class NameDialog(PyMSDialog):
-	def __init__(self, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
+	def __init__(self, *, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
 		self.window_geometry_config = window_geometry_config
 		self.save_callback = save_callback
 		self.name = StringVar()
