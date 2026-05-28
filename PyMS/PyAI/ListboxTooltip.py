@@ -10,7 +10,7 @@ class ListboxTooltip(Tooltip):
 	def __init__(self, parent: ScrolledListbox, *, delegate: TooltipDelegate, font: Font | None = None, delay: int = 750, press: bool = False):
 		self.scrolled_listbox = parent
 		self.delegate = delegate
-		Tooltip.__init__(self, parent, '', font, delay, press)
+		Tooltip.__init__(self, parent, '', font=font, delay=delay, press=press)
 		self.index: int | None = None
 
 	def enter(self, e: Event | None = None) -> None:

@@ -87,7 +87,7 @@ class CodeType(Generic[BinaryT, MemoryT]):
 		return hash(type(self))
 
 class IntCodeType(CodeType[int, int]):
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, limits: tuple[int, int ] | None = None, allow_hex: bool = False, param_repeater: bool = False) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, *, limits: tuple[int, int ] | None = None, allow_hex: bool = False, param_repeater: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._limits = limits
 		self._allow_hex = allow_hex
@@ -209,7 +209,7 @@ class StrCodeType(CodeType[str, str]):
 		raise parse_context.error('Parse', f'Expected string value but got `{token.raw_value}`')
 
 class EnumCodeType(CodeType[int, int], HasKeywords):
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, cases: dict[str, int] | list[str], allow_integer: bool = False) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, cases: dict[str, int] | list[str], *, allow_integer: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		if isinstance(cases, list):
 			cases = dict((name, n) for n,name in enumerate(cases))
@@ -274,7 +274,7 @@ class BooleanCodeType(IntCodeType, HasKeywords):
 
 class FlagsCodeType(CodeType[int, int], HasKeywords):
 	# TODO: Should this just always be case insensitive?
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int], case_sensitive: bool = True, allow_raw_flags: bool = False) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int], *, case_sensitive: bool = True, allow_raw_flags: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._names_to_flags = flags
 		self._flags_to_names: dict[int, str] = {}

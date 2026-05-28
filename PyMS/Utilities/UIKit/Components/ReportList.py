@@ -246,7 +246,7 @@ class ReportSubList(RichList):
 		return self.execute('insert',(i, f'{text}\n', tags))
 
 class ReportList(Frame):
-	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, scmd: Callable[[], None] | None = None, rcmd: Callable[[int, str], bool] | None = None, pcmd: Callable[[Event, str], None] | None = None, dcmd: Callable[[Event], None] | None = None, min_widths: list[int] | None = None, **conf: Any) -> None:
+	def __init__(self, parent: Misc, columns: list[str | None] | None = None, selectmode: SelectMode = SINGLE, *, scmd: Callable[[], None] | None = None, rcmd: Callable[[int, str], bool] | None = None, pcmd: Callable[[Event, str], None] | None = None, dcmd: Callable[[Event], None] | None = None, min_widths: list[int] | None = None, **conf: Any) -> None:
 		self.scmd = scmd
 		self.rcmd = rcmd
 		self.pcmd = pcmd

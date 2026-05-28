@@ -8,7 +8,7 @@ from ... import Assets
 from typing import Any
 
 class TextDropDown(Frame):
-	def __init__(self, parent: Misc, variable: StringVar, history: list[str] | None = None, width: int | None = None, state: WidgetState = NORMAL):
+	def __init__(self, parent: Misc, variable: StringVar, history: list[str] | None = None, width: int | None = None, *, state: WidgetState = NORMAL):
 		self.variable = variable
 		self.set = self.variable.set
 		self.history = history or []

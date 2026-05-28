@@ -65,7 +65,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not calling the `command` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the command to be able to configure it
-	def add_command(self, label: str, command: Callable[[], None], shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def add_command(self, label: str, command: Callable[[], None], shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ,too-many-positional-arguments
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)
@@ -89,7 +89,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not setting the `variable` to `value` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the radiobutton to be able to configure it
-	def add_radiobutton(self, label: str, variable: _Tk.Variable, value: Any, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def add_radiobutton(self, label: str, variable: _Tk.Variable, value: Any, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ,too-many-positional-arguments
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)
@@ -113,7 +113,7 @@ class Menu(_Tk.Menu, MiscExtensions):
 	#  - `underline` can be determined by the `shortcut`, or can be specified as a `str` or index
 	#  - The binding will automatically handle not toggling the `variable` if the item is disabled
 	#  - Return a `Menu.Item` wrapper of the checkbutton to be able to configure it
-	def add_checkbutton(self, label: str, variable: _Tk.Variable, onvalue: Any = True, offvalue: Any = False, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ
+	def add_checkbutton(self, label: str, variable: _Tk.Variable, onvalue: Any = True, offvalue: Any = False, shortcut: EventPattern | None = None, shortcut_widget: _Tk.Misc | None = None, enabled: bool = True, tags: str | Sequence[str] | None = None, bind_shortcut: bool = True, **kwargs: Any) -> Menu.Item: # type: ignore[override] # pylint: disable=arguments-differ,too-many-positional-arguments
 		if shortcut:
 			kwargs['accelerator'] = shortcut.name()
 		self._detect_underline(label, shortcut, kwargs)

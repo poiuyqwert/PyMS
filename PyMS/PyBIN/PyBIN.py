@@ -53,7 +53,7 @@ class EditEvent(Enum):
 	resize_bottom = 5
 
 	@staticmethod
-	def of(x1: int, y1: int, x2: int, y2: int, mouseX: int, mouseY: int, resizable: bool = True) -> list[EditEvent]:
+	def of(x1: int, y1: int, x2: int, y2: int, mouseX: int, mouseY: int, resizable: bool = True) -> list[EditEvent]: # pylint: disable=too-many-positional-arguments
 		event: list[EditEvent] = []
 		nx1 = (x1 if x1 < x2 else x2)
 		ny1 = (y1 if y1 < y2 else y2)

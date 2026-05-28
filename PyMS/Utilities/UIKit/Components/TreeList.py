@@ -47,7 +47,7 @@ class TreeGroup(TreeNode):
 class TreeList(Frame):
 	selregex = re.compile('\\bsel\\b')
 
-	def __init__(self, parent: Misc, selectmode: SelectMode = SINGLE, groupsel: bool = True, closeicon: Image | None = None, openicon: Image | None = None, height: int = 1, width: int = 1):
+	def __init__(self, parent: Misc, selectmode: SelectMode = SINGLE, groupsel: bool = True, *, closeicon: Image | None = None, openicon: Image | None = None, height: int = 1, width: int = 1):
 		self.selectmode = selectmode
 		self.lastsel: int | None = None
 		self.groupsel = groupsel

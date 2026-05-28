@@ -73,7 +73,7 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 			return
 		ErrorDialog(self, self.err)
 
-	def cancel(self, event: Event | None = None) -> None:
+	def cancel(self, _event: Event | None = None) -> None:
 		if self.err:
 			if MessageBox.askyesno(parent=self, title='Exit?', message="One or more files required for this program can not be found and must be chosen. Canceling will close the program, do you wish to continue?"):
 				self.delegate.exit()
@@ -82,7 +82,7 @@ class BaseErrorableSettingsDialog(BaseSettingsDialog[C]):
 		elif not self.edited_state.is_edited or MessageBox.askyesno(parent=self, title='Cancel?', message="Are you sure you want to cancel?\nAll unsaved changes will be lost."):
 			PyMSDialog.cancel(self)
 
-	def ok(self, event: Event | None = None) -> None:
+	def ok(self, _event: Event | None = None) -> None:
 		if self.edited_state.is_edited:
 			self.config_.store_state()
 			self.save()

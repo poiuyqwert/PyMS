@@ -541,7 +541,7 @@ class AttackModeCodeType(CodeType.EnumCodeType):
 			'Always',
 			'Default',
 			'Never'
-		], True)
+		], allow_integer=True)
 
 class AIControlCodeType(CodeType.EnumCodeType):
 	def __init__(self) -> None:

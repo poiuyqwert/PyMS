@@ -168,13 +168,13 @@ class PreviewerDialog(PyMSDialog):
 			if entry_type == EntryType.iscript:
 				self.curradio = Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state)
 				self.curradio.pack(side=LEFT)
-				self.curdd = DropDown(df, id_variable, entries, id_select_callback(entry_type), 30, state=state)
+				self.curdd = DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state)
 				self.curdd.pack()
 				self.curcmddd = DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state)
 				self.curcmddd.pack()
 			else:
 				Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state).pack(side=LEFT)
-				DropDown(df, id_variable, entries, id_select_callback(entry_type), 30, state=state).pack()
+				DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state).pack()
 				DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state).pack()
 			df.pack(side=LEFT)
 			f.pack()

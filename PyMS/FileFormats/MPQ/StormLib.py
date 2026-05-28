@@ -813,7 +813,7 @@ def SFileGetFileSize(file: MPQHANDLE) -> int | None:
 def SFileSetFilePointer(file: MPQHANDLE, position: int, move_method: int = FILE_BEGIN) -> int | None:
 	assert _StormLib is not None
 	pointer = _StormLib.SFileSetFilePointer(file, position, None, move_method)
-	if pointer == SFILE_INVALID_POS or pointer == -1:
+	if pointer in (SFILE_INVALID_POS, -1):
 		return None
 	return pointer
 
@@ -921,4 +921,3 @@ def SFGetLastError() -> int:
 		return _StormLib.GetLastError() # pylint: disable=not-callable
 	except Exception:
 		return ctypes.GetLastError() # type: ignore[attr-defined]
-

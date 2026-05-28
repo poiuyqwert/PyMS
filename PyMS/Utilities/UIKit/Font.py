@@ -60,7 +60,7 @@ class Font(_Fonts.Font):
 	def tooltip() -> Font:
 		return Font.named('TkTooltipFont') or Font()
 
-	def __init__(self, family: str | None = None, size: int | None = None, bold: bool | None = None, italic: bool | None = None, underline: bool | None = None, overstrike: bool | None = None, name: str | None = None, only_existing: bool = False) -> None:
+	def __init__(self, *, family: str | None = None, size: int | None = None, bold: bool | None = None, italic: bool | None = None, underline: bool | None = None, overstrike: bool | None = None, name: str | None = None, only_existing: bool = False) -> None:
 		options: dict = {}
 		if family is not None:
 			options['family'] = family

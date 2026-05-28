@@ -11,7 +11,7 @@ class TooltipWindow(Toplevel):
 
 class Tooltip:
 	# `attach_to_parent`, if True, will assign the Tooltip to the `_tooltip` property on the parent, to prevent the Tooltip from being garbage collected until its parent is
-	def __init__(self, parent: Misc, text: str = '', font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
+	def __init__(self, parent: Misc, text: str = '', *, font: Font | None = None, delay: int = 750, press: bool = False, mouse: bool = True, attach_to_parent: bool = True):
 		self.parent: MiscExtensions = cast(MiscExtensions, parent)
 		self.setupbinds(press)
 		self.text = text

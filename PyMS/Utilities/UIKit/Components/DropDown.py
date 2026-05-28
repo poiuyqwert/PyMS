@@ -10,7 +10,7 @@ from ... import Assets
 from typing import Callable, Literal, Sequence, Any
 
 class DropDown(Frame):
-	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
+	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, *, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
 		self.variable = variable
 		self.variable.set = self.set # type: ignore[assignment]
 		self.display = display

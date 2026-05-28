@@ -10,7 +10,7 @@ class IntegerVar(StringVar):
 		user = 2
 		both = (programmatic | user)
 
-	def __init__(self, val=0, val_range=None, exclude=None, callback=None, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
+	def __init__(self, val=0, val_range=None, exclude=None, callback=None, *, allow_hex=False, maxout=None, callback_when=UpdateCase.both, limit_when=UpdateCase.user):#, _tag=None):
 		self.defaultval = val
 		self.lastvalid = val
 		self.range = val_range if val_range is not None else [None, None]

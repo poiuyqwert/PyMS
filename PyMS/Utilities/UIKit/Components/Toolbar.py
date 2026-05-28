@@ -54,7 +54,7 @@ class Toolbar(Frame):
 		if tags:
 			self._tag_manager.add_item(button, tags)
 
-	def add_button(self, icon: Image, callback: Callable[[], None], tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True) -> Button:
+	def add_button(self, icon: Image, callback: Callable[[], None], tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True) -> Button: # pylint: disable=too-many-positional-arguments
 		self._calculate_size_adjusts()
 		size = Toolbar.BUTTON_SIZE
 		button = Button(self._row, image=icon, width=size, height=size, command=callback, state=NORMAL if enabled else DISABLED)
@@ -73,7 +73,7 @@ class Toolbar(Frame):
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 
-	def add_radiobutton(self, icon: Image, variable: Variable, value: Any, tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True) -> Radiobutton:
+	def add_radiobutton(self, icon: Image, variable: Variable, value: Any, tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True) -> Radiobutton: # pylint: disable=too-many-positional-arguments
 		self._calculate_size_adjusts()
 		size = Toolbar.BUTTON_SIZE + Toolbar.RADIO_SIZE_ADJUST
 		button = Radiobutton(self._row, image=icon, width=size, height=size, variable=variable, value=value, indicatoron=False, state=NORMAL if enabled else DISABLED)
@@ -92,7 +92,7 @@ class Toolbar(Frame):
 		self._add_button(button, tooltip, identifier, tags)
 		return button
 
-	def add_checkbutton(self, icon: Image, variable: Variable, tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True, onvalue: Any = True, offvalue: Any = False) -> Checkbutton:
+	def add_checkbutton(self, icon: Image, variable: Variable, tooltip: str, shortcut: EventPattern | None = None, enabled: bool = True, identifier: str | None = None, tags: str | Sequence[str] | None = None, add_shortcut_to_tooltip: bool = True, bind_shortcut: bool = True, onvalue: Any = True, offvalue: Any = False) -> Checkbutton: # pylint: disable=too-many-positional-arguments
 		self._calculate_size_adjusts()
 		size = Toolbar.BUTTON_SIZE + Toolbar.CHECK_SIZE_ADJUST
 		button = Checkbutton(self._row, image=icon, width=size, height=size, variable=variable, onvalue=onvalue, offvalue=offvalue, indicatoron=False, state=NORMAL if enabled else DISABLED)

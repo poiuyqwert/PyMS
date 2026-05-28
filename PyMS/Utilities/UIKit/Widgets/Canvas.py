@@ -132,7 +132,7 @@ class Canvas(_Tk.Canvas, MiscExtensions):
 		kwargs['window'] = window
 		return Canvas.Item(self, _Tk.Canvas.create_window(self, x,y, **kwargs))
 
-	def coords(self, item_id_or_tag: int | str, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None: # type: ignore[override] # pylint: disable=arguments-differ
+	def coords(self, item_id_or_tag: int | str, x: int, y: int, x2: int | None = None, y2: int | None = None) -> None: # type: ignore[override] # pylint: disable=arguments-differ,too-many-positional-arguments
 		x,y = self.coordinate_adjust(x, y)
 		if x2 is not None and y2 is not None:
 			x2,y2 = self.coordinate_adjust(x2, y2)

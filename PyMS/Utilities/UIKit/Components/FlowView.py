@@ -133,7 +133,7 @@ class FlowView(Frame):
 			y_span = yview[1] - yview[0]
 			self._content_area.yview_moveto(view_y2 / float(content_h) - y_span)
 
-	def _insert_subview(self, index: int, view: Widget, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
+	def _insert_subview(self, index: int, view: Widget, *, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self.subviews.insert(index, view)
 		if not isinstance(padx, tuple):
 			padx = (padx,padx)
@@ -149,11 +149,11 @@ class FlowView(Frame):
 		self._update_view_size(view, update_idletasks=True)
 		self._bindings[name] = view.bind(WidgetEvent.Configure(), lambda *_: self._update_view_size(view, set_needs_update=True), True)
 
-	def insert_subview(self, index: int, view: Widget, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
+	def insert_subview(self, index: int, view: Widget, *, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()
 
-	def insert_subviews(self, index: int, views: list[Widget], padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
+	def insert_subviews(self, index: int, views: list[Widget], *, padx: int | tuple[int, int] = 0, pady: int | tuple[int, int] = 0, weight: float = 0) -> None:
 		for view in reversed(views):
 			self._insert_subview(index, view, padx=padx,pady=pady, weight=weight)
 		self.set_needs_update()

@@ -165,7 +165,7 @@ class PyMPQ(MainWindow):
 		self.listmenu.add_command(label='Rename', command=self.rename, underline=0)
 		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
 
-		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, self.select, self.do_rename, self.popup, self.openfile, min_widths=[50]*6)
+		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, scmd=self.select, rcmd=self.do_rename, pcmd=self.popup, dcmd=self.openfile, min_widths=[50]*6)
 		self.listbox_ascending_arrow = Assets.get_image('arrow.gif')
 		self.listbox_descending_arrow = Assets.get_image('arrowup.gif')
 		self.listbox_blank_arrow = Assets.get_image('arrowblank.gif')
