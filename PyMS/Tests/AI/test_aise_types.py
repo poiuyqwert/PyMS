@@ -59,8 +59,62 @@ class Test_PointCodeType(unittest.TestCase):
 			('Loc,', 'Expected `.` after `Loc` for `point`'),
 			('Loc.a', 'Expected integer value for `point` location id'),
 			('Loc.256', 'Location id `256` is not valid'),
+
+			('(65535, 1)', 'x value `65535` is reserved'),
+			('(65534, 0)', 'x value `65534` is reserved'),
+			('(65536, 0)', 'x value `65536` is out of range'),
+			('(0, 65536)', 'y value `65536` is out of range'),
+			('(-1, 0)', 'x value `-1` is out of range'),
+			('(0, -1)', 'y value `-1` is out of range'),
 		)
 		code_type = AISECodeTypes.PointCodeType()
+		for code, expected in cases:
+			parse_context = utils.parse_context(code)
+			with self.assertRaises(PyMSError) as error_context:
+				_ = code_type.parse(parse_context)
+			self.assertTrue(expected in str(error_context.exception), f'`{expected}` not in `{error_context.exception}`')
+
+	def test_reserved_x_values_round_trip(self) -> None:
+		# A decompiled point with a sentinel x serializes to its keyword form, never as a literal coordinate
+		code_type = AISECodeTypes.PointCodeType()
+		for x, expected in ((AISECodeTypes.PointCodeType.LOCATION, 'Loc.5'), (AISECodeTypes.PointCodeType.SCRIPT_AREA, 'ScriptArea')):
+			_, serialize_context = utils.serialize_context()
+			value = (x, 5) if x == AISECodeTypes.PointCodeType.LOCATION else (x, 0)
+			self.assertEqual(code_type.serialize(value, serialize_context), expected)
+
+	def test_serialize(self) -> None:
+		cases = (
+			((1, 2), '(1, 2)'),
+			((AISECodeTypes.PointCodeType.LOCATION, 1), 'Loc.1'),
+			((AISECodeTypes.PointCodeType.SCRIPT_AREA, 0), 'ScriptArea'),
+		)
+		code_type = AISECodeTypes.PointCodeType()
+		for value, expected in cases:
+			_, serialize_context = utils.serialize_context()
+			result = code_type.serialize(value, serialize_context)
+			self.assertEqual(result, expected)
+
+class Test_BuildAtPointCodeType(unittest.TestCase):
+	def test_parse_success(self) -> None:
+		cases = (
+			('(1, 2)', (1, 2)),
+			('Loc.1', (AISECodeTypes.PointCodeType.LOCATION, 1)),
+			('ScriptArea', (AISECodeTypes.PointCodeType.SCRIPT_AREA, 0)),
+			('TownCenter', (AISECodeTypes.BuildAtPointCodeType.TOWN_CENTER, 0)),
+		)
+		code_type = AISECodeTypes.BuildAtPointCodeType()
+		for code, expected in cases:
+			parse_context = utils.parse_context(code)
+			result = code_type.parse(parse_context)
+			self.assertEqual(result, expected)
+
+	def test_parse_failure(self) -> None:
+		cases = (
+			('(65500, 0)', 'x value `65500` is reserved'),
+			('(65535, 1)', 'x value `65535` is reserved'),
+			('(65534, 0)', 'x value `65534` is reserved'),
+		)
+		code_type = AISECodeTypes.BuildAtPointCodeType()
 		for code, expected in cases:
 			parse_context = utils.parse_context(code)
 			with self.assertRaises(PyMSError) as error_context:
@@ -70,10 +124,9 @@ class Test_PointCodeType(unittest.TestCase):
 	def test_serialize(self) -> None:
 		cases = (
 			((1, 2), '(1, 2)'),
-			((AISECodeTypes.PointCodeType.LOCATION, 1), 'Loc.1'),
-			((AISECodeTypes.PointCodeType.SCRIPT_AREA, 0), 'ScriptArea'),
+			((AISECodeTypes.BuildAtPointCodeType.TOWN_CENTER, 0), 'TownCenter'),
 		)
-		code_type = AISECodeTypes.PointCodeType()
+		code_type = AISECodeTypes.BuildAtPointCodeType()
 		for value, expected in cases:
 			_, serialize_context = utils.serialize_context()
 			result = code_type.serialize(value, serialize_context)
@@ -163,6 +216,14 @@ class Test_UnitGroupCodeType(unittest.TestCase):
 			code_type.compile(value, builder)
 			result = builder.data
 			self.assertEqual(result, expected)
+
+	def test_compile_too_many_units_raises_pymserror(self) -> None:
+		code_type = AISECodeTypes.UnitGroupCodeType()
+		builder = AIByteCodeCompiler()
+		value = tuple(0 for _ in range(0x100))
+		with self.assertRaises(PyMSError) as error_context:
+			code_type.compile(value, builder)
+		self.assertIn('Too many units', str(error_context.exception))
 
 	def test_parse(self) -> None:
 		cases = (

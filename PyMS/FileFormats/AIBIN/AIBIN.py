@@ -116,10 +116,12 @@ class AIBIN:
 		issues: list[LoadIssue] = []
 		for script_id, (_, block) in bw_headers.items():
 			if not script_id in ai_headers:
-				assert block is not None # TODO: Any better way?
+				if block is None:
+					raise PyMSError('Load', f"bwscript.bin script '{script_id}' has no entry point block (file may be invalid or corrupt)")
 				issues.append(LoadIssue(script_id, LoadIssueReason.unreferenced_bw, block))
 			elif not ai_headers[script_id][0].is_in_bw:
-				assert block is not None # TODO: Any better way?
+				if block is None:
+					raise PyMSError('Load', f"bwscript.bin script '{script_id}' has no entry point block (file may be invalid or corrupt)")
 				issues.append(LoadIssue(script_id, LoadIssueReason.duplicate_bw, block))
 			if script_id in requires_bw:
 				requires_bw.remove(script_id)

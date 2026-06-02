@@ -53,6 +53,8 @@ class AIHeaderSourceCodeParser(CommandSourceCodeParser):
 				break
 			if not isinstance(token, Tokens.IdentifierToken):
 				raise parse_context.error('Parse', f"Expected a script header command, got '{token.raw_value}' instead")
+			if token.raw_value not in self.cmd_defs:
+				raise parse_context.error('Parse', f"Unknown script header command '{token.raw_value}'")
 			cmd_def = self.cmd_defs[token.raw_value]
 			command = cmd_def.parse(parse_context)
 			if command.definition in commands_parsed:

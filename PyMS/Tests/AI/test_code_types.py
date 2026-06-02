@@ -601,3 +601,21 @@ class Test_BoolCodeType(unittest.TestCase):
 
 	def test_keywords(self) -> None:
 		self.assertEqual(CodeTypes.BoolCodeType().keywords(), ('true', 'false'))
+
+
+class Test_DataContext_stattxt_string(unittest.TestCase):
+	def test_valid_id_returns_string(self) -> None:
+		data_context = _stattxt_data_context(['Marine\x00', 'Ghost\x00', 'Vulture\x00'])
+		self.assertEqual(data_context.stattxt_string(0), 'Marine')
+		self.assertEqual(data_context.stattxt_string(2), 'Vulture')
+
+	def test_out_of_upper_bound_returns_none(self) -> None:
+		data_context = _stattxt_data_context(['Marine\x00'])
+		self.assertIsNone(data_context.stattxt_string(1))
+
+	def test_negative_id_returns_none(self) -> None:
+		data_context = _stattxt_data_context(['Marine\x00', 'Ghost\x00', 'Vulture\x00'])
+		self.assertIsNone(data_context.stattxt_string(-1))
+
+	def test_no_tbl_returns_none(self) -> None:
+		self.assertIsNone(DataContext().stattxt_string(0))

@@ -166,7 +166,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			if stringid_matcher and not stringid_matcher.match(str(script.string_id)):
 				continue
 			string = data_context.stattxt_string(script.string_id)
-			if string_matcher and not string_matcher.match(string):
+			if string_matcher and (string is None or not string_matcher.match(string)):
 				continue
 			matches.append(script)
 		self.matching_scripts = matches

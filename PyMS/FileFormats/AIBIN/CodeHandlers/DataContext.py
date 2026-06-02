@@ -22,7 +22,7 @@ class DataContext:
 	def stattxt_string(self, string_id: int) -> str | None:
 		if not self.stattxt_tbl:
 			return None
-		if string_id >= len(self.stattxt_tbl.strings):
+		if string_id < 0 or string_id >= len(self.stattxt_tbl.strings):
 			return None
 		return decompile_string(self.stattxt_tbl.strings[string_id][:-1])
 

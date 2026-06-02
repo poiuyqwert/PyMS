@@ -565,8 +565,17 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		script_id = dialog.script_id.get()
 		if not script_id:
 			return
+		string_text = dialog.string.get().strip()
+		if not string_text:
+			string_id = 0
+		else:
+			try:
+				string_id = int(string_text)
+			except ValueError:
+				ErrorDialog(self, PyMSError('Adding', f"Invalid string ID '{string_text}' (must be a number)"))
+				return
 		# TODO: In bwscript?
-		script = AIBIN.AIScript(script_id, dialog.flags, int(dialog.string.get()), AIBIN.AIScript.blank_entry_point(), False)
+		script = AIBIN.AIScript(script_id, dialog.flags, string_id, AIBIN.AIScript.blank_entry_point(), False)
 		action = Actions.AddScriptAction(self, script, None)
 		self.action_manager.add_action(action)
 
@@ -610,7 +619,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				return
 			import_paths = [import_path]
 		for import_path in import_paths:
-			if not self.save_code(import_path, self):
+			if not self.save_code(import_path, parent):
 				return
 
 	def listimport(self) -> None:

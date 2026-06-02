@@ -42,6 +42,10 @@ class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 	def __init__(self, name: str = 'point', help_text: str = 'A point, either `(x, y)`, `Loc.{location id}`, or `ScriptArea`') -> None:
 		super().__init__(name, help_text, Struct.l_au16(2), False)
 
+	def reserved_x_values(self) -> tuple[int, ...]:
+		# x values that have a special meaning when serialized, so they can't be used as literal coordinates (they would round-trip incorrectly)
+		return (PointCodeType.LOCATION, PointCodeType.SCRIPT_AREA)
+
 	def decompile(self, scanner: BytesScanner, context: DecompileContext) -> Point:
 		return tuple(super().decompile(scanner, context)) # type: ignore
 
@@ -80,6 +84,12 @@ class PointCodeType(CodeType.CodeType[Point, Point], CodeType.HasKeywords):
 			token = parse_context.lexer.next_token()
 			if not token.raw_value == ')':
 				raise parse_context.error('Parse', f'Expected `)` to end `{self.name}`, but got `{token.raw_value}`')
+			if not 0 <= x <= 0xFFFF:
+				raise parse_context.error('Parse', f'`{self.name}` x value `{x}` is out of range (must be a number from 0 to 65535)')
+			if not 0 <= y <= 0xFFFF:
+				raise parse_context.error('Parse', f'`{self.name}` y value `{y}` is out of range (must be a number from 0 to 65535)')
+			if x in self.reserved_x_values():
+				raise parse_context.error('Parse', f'`{self.name}` x value `{x}` is reserved and cannot be used as a literal coordinate')
 			return (x, y)
 		elif token.raw_value == 'Loc':
 			token = parse_context.lexer.next_token()
@@ -368,7 +378,8 @@ class UnitGroupCodeType(CodeType.CodeType[UnitGroup, UnitGroup]):
 			groups = (groups,)
 		count = len(groups)
 		if count > 1:
-			assert count <= 0xFF
+			if count > 0xFF:
+				raise PyMSError('Compile', f'Too many units in `{self.name}` (got {count}, max is {0xFF})')
 			context.add_data(Struct.l_u16.pack(0xFF00 | count))
 		for group in groups:
 			context.add_data(Struct.l_u16.pack(group))
@@ -431,7 +442,7 @@ class AreaCodeType(CodeType.CodeType[Area, Area]):
 			try:
 				radius = int(token.raw_value)
 			except Exception as exc:
-				raise PyMSError('Parse', f'Invalid integer value for `{self.name}` radius value, got `{token.raw_value}`') from exc
+				raise parse_context.error('Parse', f'Invalid integer value for `{self.name}` radius value, got `{token.raw_value}`') from exc
 		return (point, radius)
 
 	def validate(self, value: Area, parse_context: ParseContext, token: str | None = None) -> None:
@@ -655,6 +666,9 @@ class BuildAtPointCodeType(PointCodeType):
 
 	def __init__(self) -> None:
 		super().__init__('build_at_point', 'A point, either `(x, y)`, `Loc.{location id}`, `ScriptArea` or `TownCenter`')
+
+	def reserved_x_values(self) -> tuple[int, ...]:
+		return super().reserved_x_values() + (BuildAtPointCodeType.TOWN_CENTER,)
 
 	def serialize(self, value: Point, context: SerializeContext) -> str:
 		if value[0] == BuildAtPointCodeType.TOWN_CENTER:
