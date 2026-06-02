@@ -861,7 +861,7 @@ class TileFlags(Option):
 		return f'{"Without" if self.without else ""}TileFlags({CodeType.FlagsCodeType.serialize_flags(self.flags, TileFlags.Flag.NAMES, Struct.l_u8)})'
 
 	def merge(self, other: Option) -> bool:
-		if not isinstance(other, UnitFlags) or other.without != self.without:
+		if not isinstance(other, TileFlags) or other.without != self.without:
 			return False
 		self.flags |= other.flags
 		return True

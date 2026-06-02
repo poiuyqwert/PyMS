@@ -23,10 +23,10 @@ class FileSettingsTab(SettingsTab):
 		unitsdat.pack(side=TOP, fill=X)
 		self.register_settings_view(unitsdat)
 
-		upgradesdat = FileSettingView(parent=self, edited_state=edited_state, name='upgrades.dat', description='Used to specify upgrade string entries in stat_txt.tbl', setting=config.settings.files.dat.units, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
+		upgradesdat = FileSettingView(parent=self, edited_state=edited_state, name='upgrades.dat', description='Used to specify upgrade string entries in stat_txt.tbl', setting=config.settings.files.dat.upgrades, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
 		upgradesdat.pack(side=TOP, fill=X)
 		self.register_settings_view(upgradesdat)
 
-		techdat = FileSettingView(parent=self, edited_state=edited_state, name='techdata.dat', description='Used to specify technology string entries in stat_txt.tbl', setting=config.settings.files.dat.units, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
+		techdat = FileSettingView(parent=self, edited_state=edited_state, name='techdata.dat', description='Used to specify technology string entries in stat_txt.tbl', setting=config.settings.files.dat.techdata, mpq_handler=mpq_handler, mpq_history_config=config.settings.mpq_select_history, mpq_window_geometry_config=config.windows.settings.mpq_select)
 		techdat.pack(side=TOP, fill=X)
 		self.register_settings_view(techdat)

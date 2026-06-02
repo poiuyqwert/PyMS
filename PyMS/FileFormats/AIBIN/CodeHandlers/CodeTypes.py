@@ -53,7 +53,7 @@ class WordCodeType(CodeType.IntCodeType):
 		return isinstance(other_type, (WordCodeType, ByteCodeType))
 
 	def compatible(self, other_type: CodeType.CodeType) -> int:
-		match type(other_type):
+		match other_type:
 			case WordCodeType():
 				return 2
 			case ByteCodeType():
@@ -140,14 +140,14 @@ class UnitCodeType(CodeType.IntCodeType):
 				entry_count = max(entry_count, parse_context.data_context.units_dat.entry_count())
 			if parse_context.settings.expanded_units is not None:
 				entry_count = max(entry_count, parse_context.settings.expanded_units)
-		return (0, entry_count)
+		return (0, entry_count - 1)
 
 class BuildingCodeType(UnitCodeType):
 	def __init__(self) -> None:
 		UnitCodeType.__init__(self, 'building', 'Same as unit type, but only units that are Buildings, Resource Miners, and Overlords')
 
 	def accepts(self, other_type: CodeType.CodeType) -> bool:
-		return isinstance(self, BuildingCodeType)
+		return isinstance(other_type, UnitCodeType)
 
 	def compatible(self, other_type: CodeType.CodeType) -> int:
 		match other_type:
@@ -164,7 +164,7 @@ class BuildingCodeType(UnitCodeType):
 			return
 		if unit_id == 42: # Overlord
 			return
-		if unit_id > parse_context.data_context.units_dat.entry_count():
+		if unit_id >= parse_context.data_context.units_dat.entry_count():
 			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building) or (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.resource_miner):
@@ -191,7 +191,7 @@ class MilitaryCodeType(UnitCodeType):
 		UnitCodeType.validate(self, unit_id, parse_context, token)
 		if not isinstance(parse_context, AIParseContext) or parse_context.data_context.units_dat is None:
 			return
-		if unit_id > parse_context.data_context.units_dat.entry_count():
+		if unit_id >= parse_context.data_context.units_dat.entry_count():
 			return
 		entry = parse_context.data_context.units_dat.get_entry(unit_id)
 		if not (entry.special_ability_flags & DATUnit.SpecialAbilityFlag.building):

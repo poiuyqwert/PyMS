@@ -663,9 +663,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return
 		try:
 			with open(file, 'r', encoding='utf-8') as settings:
-				files = settings.readlines()
+				files = settings.read().splitlines()
 		except Exception:
 			MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
+			return
+
+		if len(files) < 4:
+			MessageBox.showerror('Invalid File', f"'{file}' is not a valid settings file.")
+			return
 
 		tbl = TBL.TBL()
 		try:
@@ -705,12 +710,12 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		if file:
 			try:
 				with open(file, 'w', encoding='utf-8') as settings:
-					settings.write(f"""
-{self.config_.settings.files.stat_txt.file_path}
-{self.config_.settings.files.dat.units.file_path}
-{self.config_.settings.files.dat.upgrades}
-{self.config_.settings.files.dat.techdata}
-""".replace(Assets.base_dir, '%(path)s'))
+					settings.write('\n'.join((
+						self.config_.settings.files.stat_txt.file_path or '',
+						self.config_.settings.files.dat.units.file_path or '',
+						self.config_.settings.files.dat.upgrades.file_path or '',
+						self.config_.settings.files.dat.techdata.file_path or '',
+					)).replace(Assets.base_dir, '%(path)s'))
 			except Exception:
 				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
 
