@@ -498,6 +498,26 @@ class Test_IdleOrderFlagsCodeType(unittest.TestCase):
 			result = code_type.serialize(value, serialize_context)
 			self.assertEqual(result, expected)
 
+class Test_TileFlags_merge(unittest.TestCase):
+	def test_merges_with_matching_tile_flags(self) -> None:
+		a = AISEIdleOrder.TileFlags(False, 0x04)
+		b = AISEIdleOrder.TileFlags(False, 0x08)
+		self.assertTrue(a.merge(b))
+		self.assertEqual(a.flags, 0x0C)
+
+	def test_does_not_merge_across_without(self) -> None:
+		a = AISEIdleOrder.TileFlags(False, 0x04)
+		b = AISEIdleOrder.TileFlags(True, 0x08)
+		self.assertFalse(a.merge(b))
+		self.assertEqual(a.flags, 0x04)
+
+	def test_does_not_merge_with_unit_flags(self) -> None:
+		a = AISEIdleOrder.TileFlags(False, 0x04)
+		other = AISEIdleOrder.UnitFlags(False, 0x08)
+		# Before the fix this wrongly returned True and corrupted `flags`.
+		self.assertFalse(a.merge(other))
+		self.assertEqual(a.flags, 0x04)
+
 class Test_IdleOrderFlags_OptionSet(unittest.TestCase):
 	def test_simplify(self) -> None:
 		cases = (
