@@ -21,7 +21,7 @@ class SerializeContext:
 
 	RE_INDENT_NEWLINE = re.compile(r'\n(?=\s*\S)')
 	def write(self, text: str, force_indent: bool = False) -> None:
-		indent = '    ' * self._indent_level
+		indent = self.formatters.indent * self._indent_level
 		if force_indent or (self._indent_next and self._indent_level):
 			self._output.write(indent)
 		if self._indent_level:

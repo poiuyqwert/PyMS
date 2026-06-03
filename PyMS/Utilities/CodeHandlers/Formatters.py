@@ -65,3 +65,4 @@ class Formatters:
 	command: CommandFormatter = FlatCommandFormatter()
 	comment: CommentFormatter = HashCommentFormatter()
 	indent_bodies: bool = False
+	indent: str = '    '

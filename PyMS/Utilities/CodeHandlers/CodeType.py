@@ -4,6 +4,7 @@ from __future__ import annotations
 from . import Tokens
 from .CodeBlock import CodeBlock
 from . import Lexer
+from . import WarningID
 
 from .. import Struct
 from ..PyMSError import PyMSError
@@ -42,7 +43,14 @@ class CodeType(Generic[BinaryT, MemoryT]):
 		return isinstance(self, type(other_type))
 
 	def compatible(self, other_type: CodeType) -> int:
-		return isinstance(self, type(other_type))
+		# Priority for variable lookup: 0 if incompatible, otherwise higher the
+		# closer `other_type` is to this type in the inheritance chain (an exact
+		# class match ranks above a merely-compatible base type).
+		mro = type(self).__mro__
+		other_class = type(other_type)
+		if other_class not in mro:
+			return 0
+		return len(mro) - mro.index(other_class)
 
 	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> BinaryT:
 		return scanner.scan(self._bytecode_type)
@@ -80,12 +88,6 @@ class CodeType(Generic[BinaryT, MemoryT]):
 	def validate(self, value: MemoryT, parse_context: ParseContext, token: str | None = None) -> None:
 		pass
 
-	def __eq__(self, other: object) -> bool:
-		return isinstance(self, type(other))
-
-	def __hash__(self) -> int:
-		return hash(type(self))
-
 class IntCodeType(CodeType[int, int]):
 	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, *, limits: tuple[int, int ] | None = None, allow_hex: bool = False, param_repeater: bool = False) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
@@ -105,7 +107,7 @@ class IntCodeType(CodeType[int, int]):
 				return int(token.raw_value, 16)
 		except Exception as exc:
 			raise parse_context.error('Parse', f'Expected {allowed} value but got `{token.raw_value}`') from exc
-		raise PyMSError('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected {allowed})')
+		raise parse_context.error('Parse', f'Invalid value `{token.raw_value}` for `{self.name}` (expected {allowed})')
 
 	def get_limits(self, _parse_context: ParseContext) -> tuple[int, int]:
 		if self._limits:
@@ -196,8 +198,10 @@ class StrCodeType(CodeType[str, str]):
 		return StrCodeType.serialize_string(value)
 
 	def lex(self, parse_context: ParseContext) -> str:
+		start = parse_context.lexer.get_rollback()
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, Tokens.StringToken) and parse_context.command_in_parens:
+			parse_context.lexer.rollback(start)
 			token = parse_context.lexer.read_open_string(lambda token: Lexer.Stop.exclude if token.raw_value in (',', ')') else Lexer.Stop.proceed)
 		if isinstance(token, Tokens.StringToken):
 			try:
@@ -218,9 +222,7 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		self._allow_integer = allow_integer
 
 	def decompile(self, scanner: BytesScanner, _context: DecompileContext) -> int:
-		value = scanner.scan(self._bytecode_type)
-		# TODO: Check if value is valid
-		return value
+		return scanner.scan(self._bytecode_type)
 
 	def serialize_basic(self, value: int) -> str:
 		if not value in self._values_to_cases:
@@ -228,6 +230,10 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 		return self._values_to_cases[value]
 
 	def serialize(self, value: int, context: SerializeContext) -> str:
+		# A value with no named case (e.g. an unknown value read from a binary)
+		# serializes as its raw integer so the file stays recoverable.
+		if not value in self._values_to_cases:
+			return str(value)
 		return self.serialize_basic(value)
 
 	def _possible_values(self) -> str:
@@ -253,6 +259,10 @@ class EnumCodeType(CodeType[int, int], HasKeywords):
 				pass
 		raise parse_context.error('Parse', f'Expected a `{self.name}` enum identifier but got `{token.raw_value}` (possible values: `{self._possible_values()}`)')
 
+	def validate(self, value: int, parse_context: ParseContext, token: str | None = None) -> None:
+		if not value in self._values_to_cases:
+			raise PyMSError('Parse', f'Value `{value}` is not a valid case for `{self.name}` (possible values: `{self._possible_values()}`)')
+
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._cases.keys())
 
@@ -274,14 +284,13 @@ class BooleanCodeType(IntCodeType, HasKeywords):
 
 class FlagsCodeType(CodeType[int, int], HasKeywords):
 	# TODO: Should this just always be case insensitive?
-	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int], *, case_sensitive: bool = True, allow_raw_flags: bool = False) -> None:
+	def __init__(self, name: str, help_text: str, bytecode_type: Struct.IntField, flags: dict[str, int], *, case_sensitive: bool = True) -> None:
 		CodeType.__init__(self, name, help_text, bytecode_type, False)
 		self._names_to_flags = flags
 		self._flags_to_names: dict[int, str] = {}
 		for flag_name, flag in flags.items():
 			self._flags_to_names[flag] = flag_name
 		self._case_sensitive = case_sensitive
-		self._allow_raw_flags = allow_raw_flags
 
 	@staticmethod
 	def serialize_flags(flags: int, flags_to_names: dict[int, str], bytecode_type: Struct.IntField, empty_value: str = '0') -> str:
@@ -298,15 +307,20 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return FlagsCodeType.serialize_flags(value, self._flags_to_names, cast(Struct.IntField, self._bytecode_type))
 
 	@staticmethod
-	def lex_flags(*, parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True, allow_raw_flags: bool = False) -> int:
+	def lex_flags(*, parse_context: ParseContext, names_to_flags: dict[str, int], type_name: str, bytecode_type: Struct.IntField, case_sensitive: bool = True) -> int:
 		# TODO: The old AISE supported empty parameter for no flags, should this be changed?
 		token = parse_context.lexer.next_token(peek=True)
 		if token.raw_value in (',', ')'):
 			return 0
 
-		allowed = 'flag name'
-		if allow_raw_flags:
-			allowed += ' or integer/hex'
+		# Raw integer/hex flags are always accepted so decompiled text round-trips:
+		# `serialize_flags` emits any bit without a name as hex. A raw value whose
+		# bits don't all map to known flags is still accepted, but warns since it
+		# likely indicates a typo or an unintended bit.
+		known_mask = 0
+		for flag in names_to_flags.values():
+			known_mask |= flag
+		allowed = 'flag name or integer/hex'
 		flags = 0
 		while True:
 			token = parse_context.lexer.next_token()
@@ -317,16 +331,20 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 				if not name in names_to_flags:
 					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}` (must be a {allowed})')
 				flags |= names_to_flags[name]
-			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)) and allow_raw_flags:
+			elif isinstance(token, (Tokens.IntegerToken, Tokens.HexToken)):
 				try:
-					if token.raw_value.startswith('0x'):
+					if isinstance(token, Tokens.HexToken):
 						flag = int(token.raw_value, 16)
 					else:
 						flag = int(token.raw_value)
 				except Exception as exc:
 					raise PyMSError('Parse', f'Value `{token.raw_value}` is not a valid flag for `{type_name}`') from exc
+				if flag < 0:
+					raise PyMSError('Parse', f'Flag `{token.raw_value}` cannot be negative for `{type_name}`')
 				if flag > bytecode_type.max:
 					raise PyMSError('Parse', f'Flag `{token.raw_value}` is too large for `{type_name}`')
+				if flag & ~known_mask:
+					parse_context.add_warning(parse_context.warning(warn_type='Parse', warning=f'Raw flag `{token.raw_value}` for `{type_name}` does not match any known flag', warn_id=WarningID.raw_flag_unknown))
 				flags |= flag
 			else:
 				raise parse_context.error('Parse', f'Expected a {type_name} {allowed}, but got `{token.raw_value}`')
@@ -338,7 +356,7 @@ class FlagsCodeType(CodeType[int, int], HasKeywords):
 		return flags
 
 	def lex(self, parse_context: ParseContext) -> int:
-		return FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=self._names_to_flags, type_name=self.name, bytecode_type=cast(Struct.IntField, self._bytecode_type), case_sensitive=self._case_sensitive, allow_raw_flags=self._allow_raw_flags)
+		return FlagsCodeType.lex_flags(parse_context=parse_context, names_to_flags=self._names_to_flags, type_name=self.name, bytecode_type=cast(Struct.IntField, self._bytecode_type), case_sensitive=self._case_sensitive)
 
 	def keywords(self) -> Sequence[str]:
 		return tuple(self._names_to_flags.keys())

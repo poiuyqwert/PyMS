@@ -49,7 +49,7 @@ class ByteCodeCompiler(ByteCodeBuilderType):
 			return
 		for ref_address,struct_type in self.block_refs.pop(block):
 			block_address = self.block_offsets.get(block)
-			if not block_address:
+			if block_address is None:
 				raise PyMSError('Internal', 'Block is not compiled')
 			# Clamp offset to allow saving to check file size
 			# TODO: Is there a better way?
@@ -58,16 +58,18 @@ class ByteCodeCompiler(ByteCodeBuilderType):
 	def _compile_block(self, block: CodeBlock) -> None:
 		if block in self.block_offsets:
 			return
-		if block.prev_block is not None and not block.prev_block in self.block_offsets:
-			self._compile_block(block.prev_block)
-			return
-		offset = self.current_offset
-		self.block_offsets[block] = offset
-		for cmd in block.commands:
-			cmd.compile(self)
-		self._resolve_block_refs(block)
-		if block.next_block:
-			self._compile_block(block.next_block)
+		# Walk back to the earliest uncompiled block so the chain is laid down in order.
+		while block.prev_block is not None and not block.prev_block in self.block_offsets:
+			block = block.prev_block
+		# Compile forward along the next_block chain iteratively so a long linear
+		# chain (realistic for large scripts) doesn't exhaust the recursion limit.
+		current: CodeBlock | None = block
+		while current is not None and not current in self.block_offsets:
+			self.block_offsets[current] = self.current_offset
+			for cmd in current.commands:
+				cmd.compile(self)
+			self._resolve_block_refs(current)
+			current = current.next_block
 
 	def compile_block(self, block: CodeBlock) -> int:
 		self._compile_block(block)

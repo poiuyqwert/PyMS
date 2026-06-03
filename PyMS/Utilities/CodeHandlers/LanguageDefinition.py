@@ -62,8 +62,12 @@ class LanguageDefinition:
 		found: tuple[CodeCommandDefinition, LanguagePlugin] | None = None
 		for plugin in self.plugins:
 			if cmd_def := plugin.lookup_command(id_or_name):
-				plugin_status = language_context.get_status(plugin.id)
-				if plugin_status != PluginStatus.unavailable or found is None:
+				available = language_context.get_status(plugin.id) != PluginStatus.unavailable
+				if available:
+					if found is not None:
+						raise PyMSError('Language', f'Command `{cmd_def.name}` is ambiguous: it is defined by multiple available language plugins (`{found[1].id}` and `{plugin.id}`)')
+					found = (cmd_def, plugin)
+				elif found is None:
 					found = (cmd_def, plugin)
 		if found is not None:
 			cmd_def, plugin = found
@@ -81,8 +85,12 @@ class LanguageDefinition:
 		found: tuple[CodeType, LanguagePlugin] | None = None
 		for plugin in self.plugins:
 			if code_type := plugin.lookup_type(name):
-				plugin_status = language_context.get_status(plugin.id)
-				if plugin_status != PluginStatus.unavailable or found is None:
+				available = language_context.get_status(plugin.id) != PluginStatus.unavailable
+				if available:
+					if found is not None:
+						raise PyMSError('Language', f'Type `{code_type.name}` is ambiguous: it is defined by multiple available language plugins (`{found[1].id}` and `{plugin.id}`)')
+					found = (code_type, plugin)
+				elif found is None:
 					found = (code_type, plugin)
 		if found is not None:
 			code_type, plugin = found

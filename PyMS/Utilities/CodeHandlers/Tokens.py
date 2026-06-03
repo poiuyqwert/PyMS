@@ -36,7 +36,7 @@ class RegexToken(Token):
 		return cls(match.group(0))
 
 class IdentifierToken(RegexToken):
-	_regexp = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]+')
+	_regexp = re.compile(r'[a-zA-Z_][a-zA-Z_0-9]*')
 
 class IntegerToken(RegexToken):
 	_regexp = re.compile(r'-?[0-9]+')
@@ -80,4 +80,6 @@ class UnknownToken(RegexToken):
 	_regexp = re.compile(r'\s+|\S+')
 
 class BooleanToken(RegexToken):
-	_regexp = re.compile(r'true|false|1|0')
+	# The trailing word boundary stops a longer identifier (e.g. `truebox`) from
+	# being lexed as the boolean `true` plus a leftover token.
+	_regexp = re.compile(r'(?:true|false|1|0)\b')

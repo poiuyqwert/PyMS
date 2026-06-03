@@ -30,7 +30,8 @@ class ICESerializeContext(SerializeContext):
 		formatters = Formatters.Formatters(
 			block=TrailingBlockFormatter(),
 			command=SpacedCommandFormatter(),
-			indent_bodies=True
+			indent_bodies=True,
+			indent='\t'
 		)
 		super().__init__(output, formatters=formatters)
 		self.data_context = data_context

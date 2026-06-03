@@ -24,6 +24,7 @@ class ByteCodeDecompiler:
 			block.prev_block = prev_block
 			if prev_block.next_block:
 				block.next_block = prev_block.next_block
+				block.next_block.prev_block = block
 			prev_block.next_block = block
 			return (block, prev_block)
 		else:

@@ -125,7 +125,8 @@ class CodeCommand:
 				param_repeat = 1
 
 	def compile(self, context: ByteCodeBuilderType) -> None:
-		assert self.definition.byte_code_id is not None
+		if self.definition.byte_code_id is None:
+			raise PyMSError('Compile', f"Command '{self.definition.name}' has no byte code id and cannot be compiled")
 		context.add_data(Struct.l_u8.pack(self.definition.byte_code_id))
 		for param, param_type in self.iter_params():
 			param_type.compile(param, context)

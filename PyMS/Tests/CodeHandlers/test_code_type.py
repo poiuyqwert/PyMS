@@ -40,33 +40,6 @@ class Test_CodeType_Base(unittest.TestCase):
 		self.assertFalse(i.accepts(f))
 
 
-class Test_CodeType_EqualityHash(unittest.TestCase):
-	def test_same_class_equal(self) -> None:
-		self.assertEqual(CodeType.IntCodeType('a', 'a', Struct.l_u8), CodeType.IntCodeType('b', 'b', Struct.l_u8))
-
-	def test_different_class_not_equal(self) -> None:
-		i = CodeType.IntCodeType('i', 'i', Struct.l_u8)
-		f = CodeType.FloatCodeType('f', 'f', Struct.l_float)
-		self.assertNotEqual(i, f)
-
-	def test_equality_is_symmetric(self) -> None:
-		# `a == b` must agree with `b == a` for any two code types. The dunders
-		# are called directly on purpose: the `==` operator would dispatch to
-		# the subclass's reflected `__eq__` and hide the asymmetry being checked.
-		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u16)
-		bool_type = CodeType.BooleanCodeType('b', 'b', Struct.l_u8)
-		self.assertEqual(int_type.__eq__(bool_type), bool_type.__eq__(int_type))  # pylint: disable=unnecessary-dunder-call
-
-	def test_differently_configured_types_are_distinct(self) -> None:
-		# Two int types with different value limits represent different things
-		# and should not collide as dict keys.
-		narrow = CodeType.IntCodeType('n', 'n', Struct.l_u8, limits=(0, 10))
-		wide = CodeType.IntCodeType('w', 'w', Struct.l_u8, limits=(0, 200))
-		mapping = {narrow: 'narrow'}
-		mapping[wide] = 'wide'
-		self.assertEqual(len(mapping), 2)
-
-
 class Test_IntCodeType_Lex(unittest.TestCase):
 	def test_lex_integer(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u16)
@@ -385,16 +358,25 @@ class Test_FlagsCodeType(unittest.TestCase):
 		with self.assertRaises(PyMSError):
 			self.make().lex(context)
 
-	def test_lex_raw_hex_when_allowed(self) -> None:
+	def test_lex_raw_hex_matching_known_flag(self) -> None:
+		# A raw value whose bits all map to known flags is accepted without warning.
 		context = make_parse_context('0x04)')
 		context.command_in_parens = True
-		self.assertEqual(self.make(allow_raw_flags=True).lex(context), 0x04)
+		self.assertEqual(self.make().lex(context), 0x04)
+		self.assertEqual(context.warnings, [])
 
 	def test_lex_raw_too_large_raises(self) -> None:
 		context = make_parse_context('0x1FF)')
 		context.command_in_parens = True
 		with self.assertRaises(PyMSError):
-			self.make(allow_raw_flags=True).lex(context)
+			self.make().lex(context)
+
+	def test_lex_raw_unknown_bit_warns(self) -> None:
+		# A raw value with a bit that matches no known flag is still accepted, but warns.
+		context = make_parse_context('0x80)')
+		context.command_in_parens = True
+		self.assertEqual(self.make().lex(context), 0x80)
+		self.assertEqual(len(context.warnings), 1)
 
 	def test_lex_case_insensitive_when_configured(self) -> None:
 		flags = CodeType.FlagsCodeType('f', 'f', Struct.l_u8, {'alpha': 0x01, 'beta': 0x02}, case_sensitive=False)

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .CodeBlock import CodeBlock
 from . import Tokens
+from . import WarningID
 
 from ..PyMSError import PyMSError
 from ..PyMSWarning import PyMSWarning
@@ -92,13 +93,18 @@ class ParseContext(Generic[S]):
 		self.add_block_use(block, owner)
 
 	def add_block_use(self, block: CodeBlock, use: CodeHeader) -> None:
-		if use in self.block_metadata[block].uses:
-			return
-		self.block_metadata[block].uses.append(use)
-		if block.next_block is not None:
-			self.add_block_use(block.next_block, use)
-		for ref_block in block.ref_blocks:
-			self.add_block_use(ref_block, use)
+		# Iterative worklist over next_block/ref_blocks so a long chain of blocks
+		# doesn't exhaust the recursion limit on large scripts.
+		pending = [block]
+		while pending:
+			current = pending.pop()
+			metadata = self.block_metadata[current]
+			if use in metadata.uses:
+				continue
+			metadata.uses.append(use)
+			pending.extend(reversed(current.ref_blocks))
+			if current.next_block is not None:
+				pending.append(current.next_block)
 
 	def add_block_use_block(self, block: CodeBlock, use_block: CodeBlock) -> None:
 		metadata = self.block_metadata[use_block]
@@ -117,7 +123,7 @@ class ParseContext(Generic[S]):
 		for block_name in self.unused_blocks:
 			block = self.blocks[block_name]
 			block_metadata = self.block_metadata[block]
-			self.add_warning(PyMSWarning(warn_type='Parse', warning=f"Block with name '{block_name}' is unused and will be discarded", line=block_metadata.definition_line, warn_id='block_unused'))
+			self.add_warning(PyMSWarning(warn_type='Parse', warning=f"Block with name '{block_name}' is unused and will be discarded", line=block_metadata.definition_line, warn_id=WarningID.block_unused))
 		if self.active_block:
 			block_metadata = self.block_metadata[self.active_block]
 			raise self.error('Parse', f"The last block (named '{block_metadata.name}') does not end", line=block_metadata.definition_line)
@@ -154,8 +160,9 @@ class ParseContext(Generic[S]):
 
 	def attribute_warning(self, warning: PyMSWarning) -> None:
 		if warning.line is None:
-			warning.line = self.lexer.state.line
-		warning.code = self.lexer.get_line_of_code(warning.line)
+			warning.line = self.lexer.state.line + 1
+		if warning.code is None:
+			warning.code = self.lexer.get_line_of_code(warning.line - 1)
 
 	def add_warning(self, warning: PyMSWarning) -> None:
 		if warning.id in self.settings.suppress_warnings_next_line:
@@ -182,10 +189,10 @@ class ParseContext(Generic[S]):
 				if not param_type.accepts(variable.type):
 					raise self.error('Parse', f"Incorrect type on variable '{variable.name}'. Expected '{param_type.name}' but got '{variable.type.name}'")
 				value = variable.value
-				# try:
-				# 	param_type.validate(value, self, token.raw_value)
-				# except PyMSError as e:
-				# 	e.warnings.append(PyMSWarning('Variable', f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
-				# 	raise
+				try:
+					param_type.validate(value, self, token.raw_value)
+				except PyMSError as e:
+					e.warnings.append(PyMSWarning(warn_type='Variable', warning=f"The variable '{variable.name}' of type '{variable.type.name}' was set to '{variable.value}' when the above error happened"))
+					raise
 				_ = self.lexer.next_token()
 		return value
