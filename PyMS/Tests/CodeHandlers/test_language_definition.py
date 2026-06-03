@@ -2,10 +2,11 @@
 from ...Utilities.CodeHandlers import CodeType
 from ...Utilities.CodeHandlers import CodeCommand
 from ...Utilities.CodeHandlers import LanguageDefinition
-from ...Utilities import Struct
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import Struct
 
 import unittest
+
 
 ByteType = CodeType.IntCodeType('byte', 'byte', Struct.l_u8)
 WordType = CodeType.IntCodeType('word', 'word', Struct.l_u16)
@@ -28,6 +29,54 @@ Language = LanguageDefinition.LanguageDefinition([
 	CorePlugin,
 	BPlugin,
 ])
+
+
+class Test_LanguagePlugin(unittest.TestCase):
+	def test_duplicate_command_id_raises(self) -> None:
+		a = CodeCommand.CodeCommandDefinition('a', 'a', 0, [])
+		b = CodeCommand.CodeCommandDefinition('b', 'b', 0, [])
+		with self.assertRaises(PyMSError):
+			LanguageDefinition.LanguagePlugin('core', [a, b], [])
+
+	def test_duplicate_command_name_raises(self) -> None:
+		a = CodeCommand.CodeCommandDefinition('dup', 'a', 0, [])
+		b = CodeCommand.CodeCommandDefinition('dup', 'b', 1, [])
+		with self.assertRaises(PyMSError):
+			LanguageDefinition.LanguagePlugin('core', [a, b], [])
+
+	def test_duplicate_type_name_raises(self) -> None:
+		t1 = CodeType.IntCodeType('byte', 'a', Struct.l_u8)
+		t2 = CodeType.IntCodeType('byte', 'b', Struct.l_u16)
+		with self.assertRaises(PyMSError):
+			LanguageDefinition.LanguagePlugin('core', [], [t1, t2])
+
+	def test_command_with_no_id_is_name_only(self) -> None:
+		virtual = CodeCommand.CodeCommandDefinition('virtual', 'v', None, [])
+		plugin = LanguageDefinition.LanguagePlugin('core', [virtual], [])
+		self.assertIs(plugin.lookup_command('virtual'), virtual)
+		self.assertIsNone(plugin.lookup_command(0))
+
+
+class Test_LanguageDefinition(unittest.TestCase):
+	def test_requires_core_plugin(self) -> None:
+		non_core = LanguageDefinition.LanguagePlugin('extra', [], [])
+		with self.assertRaises(PyMSError):
+			LanguageDefinition.LanguageDefinition([non_core])
+
+	def test_ambiguous_command_across_available_plugins_is_reported(self) -> None:
+		# Two available plugins defining the same command name is a genuine
+		# collision and should be surfaced, not silently resolved to whichever
+		# plugin happens to be registered last.
+		core_cmd = CodeCommand.CodeCommandDefinition('shared', 'core', 0, [])
+		extra_cmd = CodeCommand.CodeCommandDefinition('shared', 'extra', 1, [])
+		language = LanguageDefinition.LanguageDefinition([
+			LanguageDefinition.LanguagePlugin(LanguageDefinition.LanguagePlugin.CORE_ID, [core_cmd], []),
+			LanguageDefinition.LanguagePlugin('extra', [extra_cmd], []),
+		])
+		context = LanguageDefinition.LanguageContext()
+		with self.assertRaises(PyMSError):
+			language.lookup_command('shared', context)
+
 
 class Test_Language_Comamnd_Bytecode(unittest.TestCase):
 	def test_core_command_success(self) -> None:
@@ -58,6 +107,7 @@ class Test_Language_Comamnd_Bytecode(unittest.TestCase):
 		self.assertTrue('Command `b` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))
 
+
 class Test_Language_Command_Source(unittest.TestCase):
 	def test_core_command_success(self) -> None:
 		language_context = LanguageDefinition.LanguageContext()
@@ -87,6 +137,7 @@ class Test_Language_Command_Source(unittest.TestCase):
 		self.assertTrue('Command `b` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))
 
+
 class Test_Language_Type_Source(unittest.TestCase):
 	def test_core_type_success(self) -> None:
 		language_context = LanguageDefinition.LanguageContext()
@@ -115,3 +166,32 @@ class Test_Language_Type_Source(unittest.TestCase):
 			Language.lookup_type('word', language_context)
 		self.assertTrue('Type `word` is invalid as language plugin `B` is not available' in str(error_context.exception))
 		self.assertTrue('Manually disabled' in str(error_context.exception))
+
+
+class Test_LanguageContext(unittest.TestCase):
+	def test_core_is_active_by_default(self) -> None:
+		context = LanguageDefinition.LanguageContext()
+		self.assertEqual(context.get_status(LanguageDefinition.LanguagePlugin.CORE_ID), LanguageDefinition.PluginStatus.in_use)
+
+	def test_unknown_plugin_status(self) -> None:
+		context = LanguageDefinition.LanguageContext()
+		self.assertEqual(context.get_status('mystery'), LanguageDefinition.PluginStatus.unknown)
+
+	def test_setting_conflicting_status_raises(self) -> None:
+		context = LanguageDefinition.LanguageContext()
+		context.set_status('plugin', LanguageDefinition.PluginStatus.in_use, 'used')
+		with self.assertRaises(PyMSError):
+			context.set_status('plugin', LanguageDefinition.PluginStatus.unavailable, 'now off')
+
+	def test_active_plugins_excludes_core_by_default(self) -> None:
+		context = LanguageDefinition.LanguageContext()
+		context.set_status('plugin', LanguageDefinition.PluginStatus.in_use, 'used')
+		self.assertEqual(context.active_plugins(), {'plugin'})
+
+	def test_active_plugins_can_include_core(self) -> None:
+		context = LanguageDefinition.LanguageContext()
+		self.assertIn(LanguageDefinition.LanguagePlugin.CORE_ID, context.active_plugins(False))
+
+
+if __name__ == '__main__':
+	unittest.main()
