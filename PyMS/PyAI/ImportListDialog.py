@@ -82,7 +82,9 @@ class ImportListDialog(PyMSDialog):
 	def update(self) -> None:
 		sel = 0
 		if self.listbox.size():
-			sel = self.listbox.curselection()[0]
+			selection = self.listbox.curselection()
+			if selection:
+				sel = selection[0]
 			self.listbox.delete(0, END)
 		if self.config_.imports.data:
 			for file in self.config_.imports.data:

@@ -35,7 +35,7 @@ class WarningDirectiveType(DirectiveType[str]):
 
 	def validate(self, warning_id: str, parse_context: ParseContext, token: str | None = None) -> None:
 		if not warning_id in WarningID.all_ids:
-			raise PyMSError('Parse', f"Unrecognized warning id '{token}'")
+			raise PyMSError('Parse', f"Unrecognized warning id '{warning_id}'")
 
 class IntDirectiveType(DirectiveType[int]):
 	def __init__(self) -> None:

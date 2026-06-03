@@ -36,6 +36,8 @@ class IssueResolution:
 				return "Script exists in bwscript.bin but is not defined in aiscript.bin"
 			case LoadIssueReason.duplicate_bw:
 				return "Script is in aiscript.bin but also exists in bwscript.bin"
+			case _:
+				raise ValueError(f"Unhandled load issue reason: {self.issue.reason}")
 
 	def list_name(self) -> str:
 		detail = 'No resolution chosen'
@@ -77,6 +79,8 @@ class IssueResolution:
 				return False
 			case LoadIssueReason.duplicate_bw:
 				return True
+			case _:
+				raise ValueError(f"Unhandled load issue reason: {self.issue.reason}")
 
 	def in_bwscript(self) -> bool:
 		return True

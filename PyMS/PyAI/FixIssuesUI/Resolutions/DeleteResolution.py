@@ -1,7 +1,7 @@
 
 from .Resolution import Resolution
 
-from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue
+from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue, AIScript
 
 from ....Utilities.UIKit import Misc, Widget
 from ....Utilities.Callback import Callback
@@ -20,7 +20,16 @@ class DeleteResolution(Resolution):
 		return None
 
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:
-		# TODO: Check file size
+		if self.from_bwscript:
+			return None
+		script = ai.get_script(issue.script_id)
+		if script is None:
+			return None
+		# Replacing the aiscript.bin entry point with the (possibly larger) bwscript.bin block could overflow aiscript.bin
+		simulated = AIScript(script.id, script.flags, script.string_id, issue.entry_point, False)
+		ai_size, _ = ai.can_add_scripts([simulated])
+		if ai_size is not None:
+			return f"There is not enough room in aiscript.bin for this script (would be {ai_size}B out of the max {ai.max_size()}B)"
 		return None
 
 	def resolve(self, ai: AIBIN, issue: LoadIssue) -> None:

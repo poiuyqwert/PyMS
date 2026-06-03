@@ -502,7 +502,7 @@ script {header_id} {{
 					'debug1':f'== Debug {d} ==',
 					'debug2':f'== Debug {d+1} ==',
 					'debug3':f'== Debug {d+2} ==',
-					's':f'[Line: {n} | Inside script "{script}"{inblock}]',
+					's':f'[Line: {n+1} | Inside script "{script}"{inblock}]',
 					'c':m.group(4) or '',
 				}
 				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)

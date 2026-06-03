@@ -13,7 +13,7 @@ class ExternalDefDialog(PyMSDialog):
 	def widgetize(self) -> Widget:
 		self.toolbar = Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add File', Key.Insert)
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove File', Key.Insert, tags='def_selected')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove File', Key.Delete, tags='def_selected')
 		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=1)
 
 		self.listbox = ScrolledListbox(self, font=Font.fixed(), width=1, height=1)
@@ -59,7 +59,9 @@ class ExternalDefDialog(PyMSDialog):
 	def update(self) -> None:
 		sel = 0
 		if self.listbox.size():
-			sel = self.listbox.curselection()[0]
+			selection = self.listbox.curselection()
+			if selection:
+				sel = selection[0]
 			self.listbox.delete(0, END)
 		if self.config_.extdefs.data:
 			for file in self.config_.extdefs.data:

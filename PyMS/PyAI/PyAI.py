@@ -162,7 +162,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_section()
 		self.toolbar.add_radiobutton(Assets.get_image('order'), self.sort, 'order', 'File Order')
 		self.toolbar.add_radiobutton(Assets.get_image('idsort'), self.sort, 'idsort', 'Sort by ID')
-		self.toolbar.add_radiobutton(Assets.get_image('bwsort'), self.sort, 'bwsort', 'Sory by BroodWar')
+		self.toolbar.add_radiobutton(Assets.get_image('bwsort'), self.sort, 'bwsort', 'Sort by BroodWar')
 		self.toolbar.add_radiobutton(Assets.get_image('flagsort'), self.sort, 'flagsort', 'Sort by Flags')
 		self.toolbar.add_radiobutton(Assets.get_image('stringsort'), self.sort, 'stringsort', 'Sort by String')
 		self.toolbar.add_section()
@@ -287,10 +287,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def get_selected_scripts(self) -> list[AIBIN.AIScript]:
 		selected: list[AIBIN.AIScript] = []
 		for index in self.listbox.curselection():
-			try:
-				selected.append(self.script_list[index])
-			except Exception:
-				pass
+			selected.append(self.script_list[index])
 		return selected
 
 	def refresh_listbox(self) -> None:
