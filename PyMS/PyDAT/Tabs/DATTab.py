@@ -10,7 +10,7 @@ from ...FileFormats.DAT.AbstractDAT import AbstractDATEntry
 
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.ErrorDialog import ErrorDialog
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 from ...Utilities.fileutils import check_allow_overwrite_internal_file
 
@@ -23,23 +23,23 @@ if TYPE_CHECKING:
 	from ..DATData import DATData
 
 ET = TypeVar('ET', bound=AbstractDATEntry)
-class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
+class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 	ARROWS_LOADED = False
-	ARROW_DOWN: Image
-	ARROW_UP: Image
+	ARROW_DOWN: UI.Image
+	ARROW_UP: UI.Image
 	DAT_ID: DATID
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.id = 0
 		self.delegate = delegate
 		self.used_by_references: tuple[DATRefs, ...] | None = None
-		self.used_by_collapse_button: Button | None = None
-		self.used_by_listbox: ScrolledListbox | None = None
+		self.used_by_collapse_button: UI.Button | None = None
+		self.used_by_listbox: UI.ScrolledListbox | None = None
 		self.used_by_data: list[DATRefMatch] = []
-		self.used_by_header: StringVar | None = None
+		self.used_by_header: UI.StringVar | None = None
 		self.edited = False
 		self.page_title = ''
-		NotebookTab.__init__(self, parent)
+		UI.NotebookTab.__init__(self, parent)
 
 	def get_dat_data(self) -> DATData:
 		return self.delegate.data_context.dat_data(self.DAT_ID)
@@ -89,27 +89,27 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 			self.used_by_listbox.pack_forget()
 			self.used_by_collapse_button['image'] = DATTab.ARROW_UP
 		else:
-			self.used_by_listbox.pack(side=BOTTOM, fill=X, padx=2, pady=2)
+			self.used_by_listbox.pack(side=UI.BOTTOM, fill=UI.X, padx=2, pady=2)
 			self.used_by_collapse_button['image'] = DATTab.ARROW_DOWN
 
 	def setup_used_by(self, references: tuple[DATRefs, ...]) -> None:
 		self.used_by_references = references
 
-		f = Frame(self)
-		h  = Frame(f)
+		f = UI.Frame(self)
+		h  = UI.Frame(f)
 		if not DATTab.ARROWS_LOADED:
 			DATTab.ARROW_DOWN = Assets.get_image('arrow')
 			DATTab.ARROW_UP = Assets.get_image('arrowup')
 			DATTab.ARROWS_LOADED = True
-		self.used_by_collapse_button = Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
-		self.used_by_collapse_button.pack(side=LEFT, padx=(0, 5))
-		self.used_by_header = StringVar()
-		Label(h, textvariable=self.used_by_header).pack(side=LEFT)
-		h.pack(side=TOP, fill=X)
-		self.used_by_listbox = ScrolledListbox(f, font=Font.fixed(), width=1, height=6)
-		self.used_by_listbox.bind(Double.Click_Left(), self.used_by_jump)
-		self.used_by_listbox.bind(Key.Return(), self.used_by_jump)
-		f.pack(side=BOTTOM, fill=X, padx=2, pady=2)
+		self.used_by_collapse_button = UI.Button(h, image=DATTab.ARROW_DOWN,  command=self.toggle_used_by)
+		self.used_by_collapse_button.pack(side=UI.LEFT, padx=(0, 5))
+		self.used_by_header = UI.StringVar()
+		UI.Label(h, textvariable=self.used_by_header).pack(side=UI.LEFT)
+		h.pack(side=UI.TOP, fill=UI.X)
+		self.used_by_listbox = UI.ScrolledListbox(f, font=UI.Font.fixed(), width=1, height=6)
+		self.used_by_listbox.bind(UI.Double.Click_Left(), self.used_by_jump)
+		self.used_by_listbox.bind(UI.Key.Return(), self.used_by_jump)
+		f.pack(side=UI.BOTTOM, fill=UI.X, padx=2, pady=2)
 		self.toggle_used_by(toggle=False)
 		self.update_used_by_header()
 
@@ -117,7 +117,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		self.used_by_data = []
 		if not self.used_by_listbox:
 			return
-		self.used_by_listbox.delete(0,END)
+		self.used_by_listbox.delete(0,UI.END)
 		if not used_by:
 			used_by = self.used_by_references
 		assert used_by is not None
@@ -126,12 +126,12 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		for dat_refs in used_by:
 			self.used_by_data.extend(dat_refs.matching(self.delegate.data_context, lookup_id))
 		if self.used_by_data:
-			self.used_by_listbox.insert(END, *tuple(str(r) for r in self.used_by_data))
+			self.used_by_listbox.insert(UI.END, *tuple(str(r) for r in self.used_by_data))
 		self.update_used_by_header()
 		if force_open and not self.delegate.data_context.config.show_used_by.value:
 			self.toggle_used_by()
 
-	def used_by_jump(self, _event: Event | None) -> None:
+	def used_by_jump(self, _event: UI.Event | None) -> None:
 		if not self.used_by_listbox:
 			return
 		selections = cast(list[int], self.used_by_listbox.curselection())
@@ -195,7 +195,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 			file = self.get_dat_data().file_path
 			if not file:
 				file = dat.FILE_NAME
-			save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
 			if save is None:
 				return True
 			if save:
@@ -239,7 +239,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
-		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+		if not dat_data.is_expanded() and not UI.MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		self._expand_entries(1)
 
@@ -247,7 +247,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		dat_data = self.get_dat_data()
 		if not dat_data.dat:
 			return
-		if not dat_data.is_expanded() and not MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
+		if not dat_data.is_expanded() and not UI.MessageBox.askyesno(parent=self, title=f'Expand {dat_data.dat.FILE_NAME}?', message="Expanded dat files require you to use a plugin like 'DatExtend'. Are you sure you want to continue?"):
 			return
 		def _set_entry_count(count: int) -> None:
 			add = count - dat_data.entry_count()
@@ -256,7 +256,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 			self._expand_entries(add)
 		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.config.windows.entry_count)
 
-	def new(self, _event: Event | None = None) -> None:
+	def new(self, _event: UI.Event | None = None) -> None:
 		if not self.unsaved():
 			self.get_dat_data().new_file()
 			self.id = 0
@@ -287,15 +287,15 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		self.edited = True
 		self.delegate.refresh()
 
-	def save(self, _event: Event | None = None) -> None:
+	def save(self, _event: UI.Event | None = None) -> None:
 		self.saveas(file_path=self.get_dat_data().file_path)
 
-	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> None:
+	def saveas(self, _event: UI.Event | None = None, file_path: str | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return
 		if not file_path:
-			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title=f'Save {dat.FILE_NAME} As', filetypes=[FileType.dat(f'StarCraft {dat.FILE_NAME} files')], filename=dat.FILE_NAME)
+			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title=f'Save {dat.FILE_NAME} As', filetypes=[UI.FileType.dat(f'StarCraft {dat.FILE_NAME} files')], filename=dat.FILE_NAME)
 			if not file_path:
 				return
 		elif not check_allow_overwrite_internal_file(file_path):
@@ -309,7 +309,7 @@ class DATTab(NotebookTab, DATTabConveniences, Generic[ET]):
 		self.edited = False
 		self.delegate.update_status_bar()
 
-	def export(self, _event: Event | None = None) -> None:
+	def export(self, _event: UI.Event | None = None) -> None:
 		dat = self.get_dat_data().dat
 		if not dat:
 			return

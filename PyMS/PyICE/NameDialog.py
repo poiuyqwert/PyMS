@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Config
 from ..Utilities.CheckSaved import CheckSaved
@@ -9,30 +9,30 @@ from ..Utilities.CheckSaved import CheckSaved
 from typing import Callable
 
 class NameDialog(PyMSDialog):
-	def __init__(self, *, parent: Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
+	def __init__(self, *, parent: UI.Misc, window_geometry_config: Config.WindowGeometry, title: str = 'Name', value: str = '', done: str = 'Done', save_callback: Callable[[NameDialog, str], CheckSaved] | None = None):
 		self.window_geometry_config = window_geometry_config
 		self.save_callback = save_callback
-		self.name = StringVar()
+		self.name = UI.StringVar()
 		self.name.set(value)
 		self.done = done
 		PyMSDialog.__init__(self, parent, title, grabwait=True, resizable=(True,False))
 
-	def widgetize(self) -> Misc | None:
-		Label(self, text='Name:', width=30, anchor=W).pack(side=TOP, fill=X, padx=3)
-		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
+	def widgetize(self) -> UI.Misc | None:
+		UI.Label(self, text='Name:', width=30, anchor=UI.W).pack(side=UI.TOP, fill=UI.X, padx=3)
+		UI.Entry(self, textvariable=self.name).pack(side=UI.TOP, fill=UI.X, padx=3)
 
-		buts = Frame(self)
-		done = Button(buts, text=self.done, command=self.ok)
-		done.pack(side=LEFT)
-		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT)
-		buts.pack(side=BOTTOM, fill=X, padx=3, pady=(0,3))
+		buts = UI.Frame(self)
+		done = UI.Button(buts, text=self.done, command=self.ok)
+		done.pack(side=UI.LEFT)
+		UI.Button(buts, text='Cancel', command=self.cancel).pack(side=UI.RIGHT)
+		buts.pack(side=UI.BOTTOM, fill=UI.X, padx=3, pady=(0,3))
 
 		return done
 
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		if self.save_callback and self.save_callback(self, self.name.get()) == CheckSaved.cancelled:
 			return
 		PyMSDialog.ok(self)

@@ -6,7 +6,7 @@ from ..FileFormats import GOT
 from ..FileFormats.TRG import TRG
 
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -23,10 +23,10 @@ from typing import Any
 
 LONG_VERSION = 'v' + Assets.version('PyGOT')
 
-class PyGOT(MainWindow):
+class PyGOT(UI.MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyGOT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyGOT', Assets.version('PyGOT'))
@@ -34,7 +34,7 @@ class PyGOT(MainWindow):
 		setup_trace('PyGOT', self)
 
 		self.config_ = PyGOTConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.got: GOT.GOT | None = None
@@ -44,140 +44,140 @@ class PyGOT(MainWindow):
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Game Template', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Game Template', UI.Ctrl.i)
 		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Game Template', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Game Template', UI.Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatable', Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatable *.trg', Ctrl.Alt.t)
+		self.toolbar.add_button(Assets.get_image('codeedit'), lambda: self.trg(TRG.Format.got), 'Convert *.trg to GOT compatable', UI.Ctrl.t)
+		self.toolbar.add_button(Assets.get_image('insert'), lambda: self.trg(TRG.Format.normal), 'Revert GOT compatable *.trg', UI.Ctrl.Alt.t)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.got editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGOT')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		def edited(*_: Any) -> None:
 			if not self.got:
 				return
 			self.mark_edited()
 			self.action_states()
-		self.name = SStringVar(length=32, callback=edited)
-		self.gametype_id = IntegerVar(0,[0,31], callback=edited)
-		self.league_id = IntegerVar(0, [0,255])
-		self.subtype_name = SStringVar(length=32, callback=edited)
-		self.subtype_id = IntegerVar(0,[0,7], callback=edited)
-		self.subtype_display = IntegerVar(0, [0,56533], callback=edited)
-		self.subtype_label = IntegerVar(0, [0,65535], callback=edited)
-		self.victory_condition = IntVar(value=0)
+		self.name = UI.SStringVar(length=32, callback=edited)
+		self.gametype_id = UI.IntegerVar(0,[0,31], callback=edited)
+		self.league_id = UI.IntegerVar(0, [0,255])
+		self.subtype_name = UI.SStringVar(length=32, callback=edited)
+		self.subtype_id = UI.IntegerVar(0,[0,7], callback=edited)
+		self.subtype_display = UI.IntegerVar(0, [0,56533], callback=edited)
+		self.subtype_label = UI.IntegerVar(0, [0,65535], callback=edited)
+		self.victory_condition = UI.IntVar(value=0)
 		self.victory_condition.trace_add('write', edited)
-		self.resources = IntVar(value=0)
+		self.resources = UI.IntVar(value=0)
 		self.resources.trace_add('write', edited)
-		self.unit_stats = IntVar(value=0)
+		self.unit_stats = UI.IntVar(value=0)
 		self.unit_stats.trace_add('write', edited)
-		self.fog_of_war = IntVar(value=0)
+		self.fog_of_war = UI.IntVar(value=0)
 		self.fog_of_war.trace_add('write', edited)
-		self.starting_units = IntVar(value=0)
+		self.starting_units = UI.IntVar(value=0)
 		self.starting_units.trace_add('write', edited)
-		self.starting_positions = IntVar(value=0)
+		self.starting_positions = UI.IntVar(value=0)
 		self.starting_positions.trace_add('write', edited)
-		self.player_types = IntVar(value=0)
+		self.player_types = UI.IntVar(value=0)
 		self.player_types.trace_add('write', edited)
-		self.allies = IntVar(value=0)
+		self.allies = UI.IntVar(value=0)
 		self.allies.trace_add('write', edited)
-		self.team_mode = IntVar(value=0)
+		self.team_mode = UI.IntVar(value=0)
 		self.team_mode.trace_add('write', edited)
-		self.cheat_codes = IntVar(value=0)
+		self.cheat_codes = UI.IntVar(value=0)
 		self.cheat_codes.trace_add('write', edited)
-		self.tournament_mode = IntVar(value=0)
+		self.tournament_mode = UI.IntVar(value=0)
 		self.tournament_mode.trace_add('write', edited)
-		self.victory_condition_value = IntegerVar(0, [0,4294967295], callback=edited)
-		self.resources_value = IntegerVar(0, [0,4294967295], callback=edited)
-		self.subtype_value = IntegerVar(0, [0,4294967295], callback=edited)
+		self.victory_condition_value = UI.IntegerVar(0, [0,4294967295], callback=edited)
+		self.resources_value = UI.IntegerVar(0, [0,4294967295], callback=edited)
+		self.subtype_value = UI.IntegerVar(0, [0,4294967295], callback=edited)
 
-		content = Frame(self)
+		content = UI.Frame(self)
 
-		l = LabelFrame(content, text='Template Info:', padx=5, pady=5)
-		f = Frame(l)
-		Label(f, text='Name:').grid(sticky=E)
-		self.name_entry = Entry(f, textvariable=self.name, font=Font.fixed(), width=32, state=DISABLED)
-		Tooltip(self.name_entry, 'The name of the Game Template listed in StarCraft')
+		l = UI.LabelFrame(content, text='Template Info:', padx=5, pady=5)
+		f = UI.Frame(l)
+		UI.Label(f, text='Name:').grid(sticky=UI.E)
+		self.name_entry = UI.Entry(f, textvariable=self.name, font=UI.Font.fixed(), width=32, state=UI.DISABLED)
+		UI.Tooltip(self.name_entry, 'The name of the Game Template listed in StarCraft')
 		self.name_entry.grid(row=0, column=1, pady=1, columnspan=3)
 
-		Label(f, text='ID:').grid(sticky=E)
-		self.gametype_id_entry = Entry(f, textvariable=self.gametype_id, font=Font.fixed(), width=2, state=DISABLED)
-		Tooltip(self.gametype_id_entry, 'An ID used to define the order of the Game Template when its listed in StarCraft')
-		self.gametype_id_entry.grid(row=1, column=1, sticky=W, pady=1)
+		UI.Label(f, text='ID:').grid(sticky=UI.E)
+		self.gametype_id_entry = UI.Entry(f, textvariable=self.gametype_id, font=UI.Font.fixed(), width=2, state=UI.DISABLED)
+		UI.Tooltip(self.gametype_id_entry, 'An ID used to define the order of the Game Template when its listed in StarCraft')
+		self.gametype_id_entry.grid(row=1, column=1, sticky=UI.W, pady=1)
 
-		Label(f, text='League ID:').grid(row=1, column=2, sticky=E)
-		self.league_id_entry = Entry(f, textvariable=self.league_id, font=Font.fixed(), width=10, state=DISABLED)
+		UI.Label(f, text='League ID:').grid(row=1, column=2, sticky=UI.E)
+		self.league_id_entry = UI.Entry(f, textvariable=self.league_id, font=UI.Font.fixed(), width=10, state=UI.DISABLED)
 		# tip(self.league_id_entry, 'subid')
-		self.league_id_entry.grid(row=1, column=3, sticky=W, pady=1)
-		f.pack(anchor=W)
+		self.league_id_entry.grid(row=1, column=3, sticky=UI.W, pady=1)
+		f.pack(anchor=UI.W)
 		f.grid_columnconfigure(2, weight=1)
-		l.pack(pady=(0, 5), fill=X, expand=1)
+		l.pack(pady=(0, 5), fill=UI.X, expand=1)
 
-		l = LabelFrame(content, text='Variation Info:', padx=5, pady=5)
-		f = Frame(l)
-		Label(f, text='Name:').grid(sticky=E)
-		self.subtype_name_entry = Entry(f, textvariable=self.subtype_name, font=Font.fixed(), width=32, state=DISABLED)
-		Tooltip(self.subtype_name_entry, 'The label for the variation (ie, the one to set greed amount)\nThis should be the same for each variation of a tempalte')
+		l = UI.LabelFrame(content, text='Variation Info:', padx=5, pady=5)
+		f = UI.Frame(l)
+		UI.Label(f, text='Name:').grid(sticky=UI.E)
+		self.subtype_name_entry = UI.Entry(f, textvariable=self.subtype_name, font=UI.Font.fixed(), width=32, state=UI.DISABLED)
+		UI.Tooltip(self.subtype_name_entry, 'The label for the variation (ie, the one to set greed amount)\nThis should be the same for each variation of a tempalte')
 		self.subtype_name_entry.grid(row=0, column=1, pady=1, columnspan=3)
 
-		Label(f, text='Display:').grid(sticky=E)
-		self.subtype_display_entry = Entry(f, textvariable=self.subtype_display, font=Font.fixed(), width=10, state=DISABLED)
-		Tooltip(self.subtype_display_entry, 'The value defining the variation amount (for example mineral count for greed or amount of teams for Team Vs)')
-		self.subtype_display_entry.grid(row=1, column=1, sticky=W, pady=1)
+		UI.Label(f, text='Display:').grid(sticky=UI.E)
+		self.subtype_display_entry = UI.Entry(f, textvariable=self.subtype_display, font=UI.Font.fixed(), width=10, state=UI.DISABLED)
+		UI.Tooltip(self.subtype_display_entry, 'The value defining the variation amount (for example mineral count for greed or amount of teams for Team Vs)')
+		self.subtype_display_entry.grid(row=1, column=1, sticky=UI.W, pady=1)
 
-		Label(f, text='ID:').grid(sticky=E)
-		self.subtype_id_entry = Entry(f, textvariable=self.subtype_id, font=Font.fixed(), width=1, state=DISABLED)
-		Tooltip(self.subtype_id_entry, 'An ID used to define the order of the variation when its listed in StarCraft')
-		self.subtype_id_entry.grid(row=2, column=1, sticky=W, pady=1)
+		UI.Label(f, text='ID:').grid(sticky=UI.E)
+		self.subtype_id_entry = UI.Entry(f, textvariable=self.subtype_id, font=UI.Font.fixed(), width=1, state=UI.DISABLED)
+		UI.Tooltip(self.subtype_id_entry, 'An ID used to define the order of the variation when its listed in StarCraft')
+		self.subtype_id_entry.grid(row=2, column=1, sticky=UI.W, pady=1)
 
-		Label(f, text='Label:').grid(row=1, column=2, sticky=E)
-		self.subtype_label_entry = Entry(f, textvariable=self.subtype_label, font=Font.fixed(), width=10, state=DISABLED)
+		UI.Label(f, text='Label:').grid(row=1, column=2, sticky=UI.E)
+		self.subtype_label_entry = UI.Entry(f, textvariable=self.subtype_label, font=UI.Font.fixed(), width=10, state=UI.DISABLED)
 		# tip(self.subtype_label_entry, 'subid')
-		self.subtype_label_entry.grid(row=1, column=3, sticky=W, pady=1)
+		self.subtype_label_entry.grid(row=1, column=3, sticky=UI.W, pady=1)
 
-		Label(f, text='Value:').grid(row=2, column=2, sticky=E)
-		self.subtype_value_entry = Entry(f, textvariable=self.subtype_value, font=Font.fixed(), width=10, state=DISABLED)
+		UI.Label(f, text='Value:').grid(row=2, column=2, sticky=UI.E)
+		self.subtype_value_entry = UI.Entry(f, textvariable=self.subtype_value, font=UI.Font.fixed(), width=10, state=UI.DISABLED)
 		# tip(self.subtype_value_entry, 'subid')
-		self.subtype_value_entry.grid(row=2, column=3, sticky=W, pady=1)
-		f.pack(anchor=W)
+		self.subtype_value_entry.grid(row=2, column=3, sticky=UI.W, pady=1)
+		f.pack(anchor=UI.W)
 		f.grid_columnconfigure(2, weight=1)
-		l.pack(pady=(0, 5), fill=X, expand=1)
+		l.pack(pady=(0, 5), fill=UI.X, expand=1)
 
-		l = LabelFrame(content, text='Settings', padx=5, pady=5)
+		l = UI.LabelFrame(content, text='Settings', padx=5, pady=5)
 		row = 0
-		def add_with_value(name: str, option_var: IntVar, options: list[str], value_var: IntegerVar) -> tuple[DropDown, Entry]:
+		def add_with_value(name: str, option_var: UI.IntVar, options: list[str], value_var: UI.IntegerVar) -> tuple[UI.DropDown, UI.Entry]:
 			nonlocal row
-			Label(l, text=name + ':', anchor=E).grid(row=row, column=0, sticky=E)
-			dropdown = DropDown(l, option_var, options, width=25, state=DISABLED)
+			UI.Label(l, text=name + ':', anchor=UI.E).grid(row=row, column=0, sticky=UI.E)
+			dropdown = UI.DropDown(l, option_var, options, width=25, state=UI.DISABLED)
 			dropdown.grid(row=row, column=1, pady=1)
-			entry = Entry(l, textvariable=value_var, font=Font.fixed(), width=10, state=DISABLED)
+			entry = UI.Entry(l, textvariable=value_var, font=UI.Font.fixed(), width=10, state=UI.DISABLED)
 			entry.grid(row=row, column=2, padx=(5, 0), pady=1)
 			row += 1
 			return (dropdown, entry)
-		def add_without_value(name: str, option_var: IntVar, options: list[str]) -> DropDown:
+		def add_without_value(name: str, option_var: UI.IntVar, options: list[str]) -> UI.DropDown:
 			nonlocal row
-			Label(l, text=name + ':', anchor=E).grid(row=row, column=0, sticky=E)
-			dropdown = DropDown(l, option_var, options, width=25, state=DISABLED)
+			UI.Label(l, text=name + ':', anchor=UI.E).grid(row=row, column=0, sticky=UI.E)
+			dropdown = UI.DropDown(l, option_var, options, width=25, state=UI.DISABLED)
 			dropdown.grid(row=row, column=1, pady=1)
 			row += 1
 			return dropdown
@@ -197,13 +197,13 @@ class PyGOT(MainWindow):
 		content.pack(padx=5, pady=(0, 5))
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a Game Template.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=35)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
@@ -218,7 +218,7 @@ class PyGOT(MainWindow):
 		file = self.file
 		if not file:
 			file = 'Unnamed.got'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -232,7 +232,7 @@ class PyGOT(MainWindow):
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
-		fields: tuple[Misc, ...] = (
+		fields: tuple[UI.Misc, ...] = (
 			self.name_entry,
 			self.gametype_id_entry,
 			self.league_id_entry,
@@ -254,19 +254,19 @@ class PyGOT(MainWindow):
 			self.tournament_mode_dropdown
 		)
 		for field in fields:
-			field['state'] = NORMAL if self.is_file_open() else DISABLED
+			field['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 		if self.got:
 			victory = GOT.VictoryCondition(self.victory_condition.get())
-			self.victory_condition_entry['state'] = NORMAL if victory.requires_value else DISABLED
+			self.victory_condition_entry['state'] = UI.NORMAL if victory.requires_value else UI.DISABLED
 			resources = GOT.Resources(self.resources.get())
-			self.resources_entry['state'] = NORMAL if resources.requires_value else DISABLED
+			self.resources_entry['state'] = UI.NORMAL if resources.requires_value else UI.DISABLED
 
 	def reset(self) -> None:
 		self.name.check = False
 		self.name.set('')
 		self.subtype_name.check = False
 		self.subtype_name.set('')
-		all_vars: list[Variable] = [
+		all_vars: list[UI.Variable] = [
 			self.gametype_id,
 			self.league_id,
 			self.subtype_id,
@@ -301,7 +301,7 @@ class PyGOT(MainWindow):
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .PyMSDialog import PyMSDialog
-from .UIKit import *
+from . import UIKit as UI
 from . import Assets
 from . import Config
 
@@ -32,15 +32,15 @@ class MPQSelect(PyMSDialog):
 		def title(self, name: str) -> str:
 			return f'{self.cta} {name}'
 
-	def __init__(self, *, parent: Misc, mpqhandler: MPQHandler, name: str, filetype: FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
+	def __init__(self, *, parent: UI.Misc, mpqhandler: MPQHandler, name: str, filetype: UI.FileType, history_config: Config.List, window_geometry_config: Config.WindowGeometry, default_search: str | None = None, action: MPQSelect.Action = Action.select) -> None:
 		self.mpqhandler = mpqhandler
-		self.search = StringVar()
+		self.search = UI.StringVar()
 		search = default_search or filetype.extensions_tuple[0]
 		self.search.set(search)
 		self.search.trace_add('write', self.updatesearch)
 		self.history_config = history_config
 		self.window_geometry_config = window_geometry_config
-		self.regex = IntVar()
+		self.regex = UI.IntVar()
 		self.regex.set(0)
 		self.files: list[str] = []
 		self.file: str | None = None
@@ -49,24 +49,24 @@ class MPQSelect(PyMSDialog):
 		self.action = action
 		PyMSDialog.__init__(self, parent, self.action.title(name))
 
-	def widgetize(self) -> Misc | None:
-		self.listbox = ScrolledListbox(self, width=35, height=10)
-		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
+	def widgetize(self) -> UI.Misc | None:
+		self.listbox = UI.ScrolledListbox(self, width=35, height=10)
+		self.listbox.pack(fill=UI.BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
 
-		s = Frame(self)
+		s = UI.Frame(self)
 		history = self.history_config.data[::-1]
-		self.textdrop = TextDropDown(s, self.search, history)
+		self.textdrop = UI.TextDropDown(s, self.search, history)
 		self.textdrop_entry_c = self.textdrop.entry['bg']
-		self.textdrop.pack(side=LEFT, fill=X, padx=1, pady=2)
-		self.open = Button(s, text=self.action.cta, width=10, command=self.ok)
-		self.open.pack(side=RIGHT, padx=1, pady=3)
-		s.pack(fill=X)
-		s = Frame(self)
-		Radiobutton(s, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		Radiobutton(s, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=LEFT, padx=1, pady=2)
-		Button(s, text='Cancel', width=10, command=self.cancel).pack(side=RIGHT, padx=1, pady=3)
-		s.pack(fill=X)
+		self.textdrop.pack(side=UI.LEFT, fill=UI.X, padx=1, pady=2)
+		self.open = UI.Button(s, text=self.action.cta, width=10, command=self.ok)
+		self.open.pack(side=UI.RIGHT, padx=1, pady=3)
+		s.pack(fill=UI.X)
+		s = UI.Frame(self)
+		UI.Radiobutton(s, text='Wildcard', variable=self.regex, value=0, command=self.updatelist).pack(side=UI.LEFT, padx=1, pady=2)
+		UI.Radiobutton(s, text='Regex', variable=self.regex, value=1, command=self.updatelist).pack(side=UI.LEFT, padx=1, pady=2)
+		UI.Button(s, text='Cancel', width=10, command=self.cancel).pack(side=UI.RIGHT, padx=1, pady=3)
+		s.pack(fill=UI.X)
 
 		self.listfiles()
 		self.updatelist()
@@ -92,7 +92,7 @@ class MPQSelect(PyMSDialog):
 		if self.searchtimer:
 			self.after_managed_cancel(self.searchtimer)
 			self.searchtimer = None
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		s = self.search.get()
 		if not self.regex.get():
 			s = '^' + re.escape(s).replace('\\?','.').replace('\\*','.+?') + '$'
@@ -103,12 +103,12 @@ class MPQSelect(PyMSDialog):
 			self.textdrop.entry['bg'] = '#FFB4B4'
 		else:
 			for f in [p for p in self.files if r.match(p)]:
-				self.listbox.insert(END,f)
+				self.listbox.insert(UI.END,f)
 		if self.listbox.size():
 			self.listbox.select_set(0)
-			self.open['state'] = NORMAL
+			self.open['state'] = UI.NORMAL
 		else:
-			self.open['state'] = DISABLED
+			self.open['state'] = UI.DISABLED
 
 	def updatecolor(self) -> None:
 		if self.resettimer:
@@ -121,7 +121,7 @@ class MPQSelect(PyMSDialog):
 			self.after_managed_cancel(self.searchtimer)
 		self.searchtimer = self.after_managed(200, self.updatelist)
 
-	def ok(self, _: Event | None = None) -> None:
+	def ok(self, _: UI.Event | None = None) -> None:
 		f = self.listbox.get(self.listbox.curselection()[0])
 		self.file = 'MPQ:' + f
 		history = self.history_config.data

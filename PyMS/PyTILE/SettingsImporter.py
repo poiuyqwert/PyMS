@@ -8,7 +8,7 @@ from .RepeaterID import RepeaterID
 from ..FileFormats.Tileset.Tileset import TileType, ImportSettingsOptions
 
 from ..Utilities import Assets
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
@@ -22,16 +22,16 @@ class SettingsImporter(PyMSDialog):
 		('Repeat All Settings',	RepeaterID.repeat_all,	Serialize.repeater_loop),
 		('Repeat Last Setting',	RepeaterID.repeat_last,	Serialize.repeater_repeat_last)
 	)
-	def __init__(self, *, parent: Misc, config: PyTILEConfig, tiletype: TileType, ids: list[int], delegate: MainDelegate) -> None:
+	def __init__(self, *, parent: UI.Misc, config: PyTILEConfig, tiletype: TileType, ids: list[int], delegate: MainDelegate) -> None:
 		self.config_ = config
 		self.tiletype = tiletype
 		self.ids = ids
 		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, f'Import {TileType.display_name(self.tiletype)} Settings', resizable=(True,False), set_min_size=(True,True))
 
-	def widgetize(self) -> Misc | None:
-		self.settings_path = StringVar()
-		self.repeater = IntVar()
+	def widgetize(self) -> UI.Misc | None:
+		self.settings_path = UI.StringVar()
+		self.repeater = UI.IntVar()
 		repeater_n = 0
 		repeater_setting = self.config_.import_.settings.repeater.value
 		for n,(_,setting,_) in enumerate(SettingsImporter.REPEATERS):
@@ -39,31 +39,31 @@ class SettingsImporter(PyMSDialog):
 				repeater_n = n
 				break
 		self.repeater.set(repeater_n)
-		self.auto_close = IntVar()
+		self.auto_close = UI.IntVar()
 		self.auto_close.set(self.config_.import_.settings.auto_close.value)
 
-		f = Frame(self)
-		Label(f, text='TXT:', anchor=W).pack(side=TOP, fill=X, expand=1)
-		entryframe = Frame(f)
-		self.settings_entry = Entry(entryframe, textvariable=self.settings_path, state=DISABLED)
-		self.settings_entry.pack(side=LEFT, fill=X, expand=1)
-		Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=self.select_path).pack(side=LEFT, padx=(1,0))
-		entryframe.pack(side=TOP, fill=X, expand=1)
-		f.pack(side=TOP, fill=X, padx=3)
+		f = UI.Frame(self)
+		UI.Label(f, text='TXT:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X, expand=1)
+		entryframe = UI.Frame(f)
+		self.settings_entry = UI.Entry(entryframe, textvariable=self.settings_path, state=UI.DISABLED)
+		self.settings_entry.pack(side=UI.LEFT, fill=UI.X, expand=1)
+		UI.Button(entryframe, image=Assets.get_image('find'), width=20, height=20, command=self.select_path).pack(side=UI.LEFT, padx=(1,0))
+		entryframe.pack(side=UI.TOP, fill=UI.X, expand=1)
+		f.pack(side=UI.TOP, fill=UI.X, padx=3)
 
-		sets = LabelFrame(self, text='Settings')
-		f = Frame(sets)
-		Label(f, text='Extra Tiles:', anchor=W).pack(side=TOP, fill=X)
-		DropDown(f, self.repeater, [r[0] for r in SettingsImporter.REPEATERS], width=20).pack(side=TOP, fill=X)
-		Checkbutton(f, text='Auto-close', variable=self.auto_close).pack(side=BOTTOM, padx=3, pady=(3,0))
-		f.pack(side=TOP, fill=X, padx=3, pady=(0,3))
-		sets.pack(side=TOP, fill=X, padx=3)
+		sets = UI.LabelFrame(self, text='Settings')
+		f = UI.Frame(sets)
+		UI.Label(f, text='Extra Tiles:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		UI.DropDown(f, self.repeater, [r[0] for r in SettingsImporter.REPEATERS], width=20).pack(side=UI.TOP, fill=UI.X)
+		UI.Checkbutton(f, text='Auto-close', variable=self.auto_close).pack(side=UI.BOTTOM, padx=3, pady=(3,0))
+		f.pack(side=UI.TOP, fill=UI.X, padx=3, pady=(0,3))
+		sets.pack(side=UI.TOP, fill=UI.X, padx=3)
 
-		buts = Frame(self)
-		self.import_button = Button(buts, text='Import', state=DISABLED, command=self.iimport)
-		self.import_button.pack(side=LEFT)
-		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT, padx=(10,0))
-		buts.pack(side=BOTTOM, fill=X, padx=3, pady=3)
+		buts = UI.Frame(self)
+		self.import_button = UI.Button(buts, text='Import', state=UI.DISABLED, command=self.iimport)
+		self.import_button.pack(side=UI.LEFT)
+		UI.Button(buts, text='Cancel', command=self.cancel).pack(side=UI.RIGHT, padx=(10,0))
+		buts.pack(side=UI.BOTTOM, fill=UI.X, padx=3, pady=3)
 
 		self.settings_path.trace_add('write', self.update_states)
 
@@ -74,11 +74,11 @@ class SettingsImporter(PyMSDialog):
 		if not path:
 			return
 		self.settings_path.set(path)
-		self.settings_entry.xview(END)
+		self.settings_entry.xview(UI.END)
 		self.update_states()
 
 	def update_states(self, *_: Any) -> None:
-		self.import_button['state'] = NORMAL if self.settings_path.get() else DISABLED
+		self.import_button['state'] = UI.NORMAL if self.settings_path.get() else UI.DISABLED
 
 	def iimport(self) -> None:
 		tileset = self.delegate.get_tileset()

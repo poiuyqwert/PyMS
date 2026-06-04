@@ -2,12 +2,12 @@
 from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, CodeTypes, CodeDirectives, AISECodeCommands
 
 from ..Utilities.utils import fit
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 from ..Utilities.CodeHandlers.CodeType import CodeType
 from ..Utilities.CodeHandlers.CodeDirective import CodeDirectiveDefinition
 
-class CommandCodeTooltip(CodeTooltip):
+class CommandCodeTooltip(UI.CodeTooltip):
 	tag = 'Command'
 
 	def gettext(self, cmd_name: str) -> str | None:
@@ -15,7 +15,7 @@ class CommandCodeTooltip(CodeTooltip):
 			return fit('', cmd_def.full_help_text())
 		return None
 
-class AISECommandCodeTooltip(CodeTooltip):
+class AISECommandCodeTooltip(UI.CodeTooltip):
 	tag = 'AISECommand'
 
 	def gettext(self, cmd_name: str) -> str | None:
@@ -23,7 +23,7 @@ class AISECommandCodeTooltip(CodeTooltip):
 			return fit('', cmd_def.full_help_text())
 		return None
 
-class TypeCodeTooltip(CodeTooltip):
+class TypeCodeTooltip(UI.CodeTooltip):
 	tag = 'Type'
 
 	def gettext(self, type_name: str) -> str | None:
@@ -54,7 +54,7 @@ class TypeCodeTooltip(CodeTooltip):
 # 			text += '\n    '.join([d for d,f in zip(['BroodWar Only','Invisible in StarEdit','Requires a Location'], flags) if f == '1'])
 # 		return text
 
-class DirectiveTooltip(CodeTooltip):
+class DirectiveTooltip(UI.CodeTooltip):
 	tag = 'Directive'
 
 	def gettext(self, directive_name: str) -> str | None:

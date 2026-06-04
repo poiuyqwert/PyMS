@@ -6,7 +6,7 @@ from ...DataID import DATID, UnitsTabID, AnyID
 
 from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ....Utilities.UIKit import *
+from ....Utilities import UIKit as UI
 from ....Utilities import Assets
 
 from math import floor, sqrt
@@ -29,61 +29,61 @@ class ForceType(Enum):
 				return 'Air'
 
 class AIActionsUnitsTab(DATUnitsTab):
-	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
-		scrollview = ScrollView(self)
+		scrollview = UI.ScrollView(self)
 
-		self.computeridleentry = IntegerVar(0,[0,189])
-		self.computeridle = IntVar()
-		self.humanidleentry = IntegerVar(0,[0,189])
-		self.humanidle = IntVar()
-		self.returntoidleentry = IntegerVar(0,[0,189])
-		self.returntoidle = IntVar()
-		self.attackunitentry = IntegerVar(0,[0,189])
-		self.attackunit = IntVar()
-		self.attackmoveentry = IntegerVar(0,[0,189])
-		self.attackmove = IntVar()
-		self.rightclick = IntVar()
-		self.AI_NoSuicide = IntVar()
-		self.AI_NoGuard = IntVar()
+		self.computeridleentry = UI.IntegerVar(0,[0,189])
+		self.computeridle = UI.IntVar()
+		self.humanidleentry = UI.IntegerVar(0,[0,189])
+		self.humanidle = UI.IntVar()
+		self.returntoidleentry = UI.IntegerVar(0,[0,189])
+		self.returntoidle = UI.IntVar()
+		self.attackunitentry = UI.IntegerVar(0,[0,189])
+		self.attackunit = UI.IntVar()
+		self.attackmoveentry = UI.IntegerVar(0,[0,189])
+		self.attackmove = UI.IntVar()
+		self.rightclick = UI.IntVar()
+		self.AI_NoSuicide = UI.IntVar()
+		self.AI_NoGuard = UI.IntVar()
 
-		l = LabelFrame(scrollview.content_view, text='AI Actions:')
-		s = Frame(l)
-		def add_dropdown(title: str, entry_variable: IntegerVar, dropdown_variable: IntVar, hint_name: str) -> DropDown:
-			f = Frame(s)
-			Label(f, text=title + ':', width=16, anchor=E).pack(side=LEFT)
-			Entry(f, textvariable=entry_variable, font=Font.fixed(), width=3).pack(side=LEFT)
-			Label(f, text='=').pack(side=LEFT)
-			dropdown = DropDown(f, dropdown_variable, [], entry_variable, width=30)
-			dropdown.pack(side=LEFT, fill=X, expand=1, padx=2)
-			Button(f, text='Jump ->', command=lambda variable=dropdown_variable: self.jump(DATID.orders, variable.get())).pack(side=LEFT)
+		l = UI.LabelFrame(scrollview.content_view, text='AI Actions:')
+		s = UI.Frame(l)
+		def add_dropdown(title: str, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str) -> UI.DropDown:
+			f = UI.Frame(s)
+			UI.Label(f, text=title + ':', width=16, anchor=UI.E).pack(side=UI.LEFT)
+			UI.Entry(f, textvariable=entry_variable, font=UI.Font.fixed(), width=3).pack(side=UI.LEFT)
+			UI.Label(f, text='=').pack(side=UI.LEFT)
+			dropdown = UI.DropDown(f, dropdown_variable, [], entry_variable, width=30)
+			dropdown.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
+			UI.Button(f, text='Jump ->', command=lambda variable=dropdown_variable: self.jump(DATID.orders, variable.get())).pack(side=UI.LEFT)
 			self.tip(f, title, hint_name)
-			f.pack(fill=X)
+			f.pack(fill=UI.X)
 			return dropdown
 		self.computeridle_ddw = add_dropdown('Computer Idle', self.computeridleentry, self.computeridle, 'UnitAICompIdle')
 		self.humanidle_ddw = add_dropdown('Human Idle', self.humanidleentry, self.humanidle, 'UnitAIHumanIdle')
 		self.returntoidle_ddw = add_dropdown('Return to Idle', self.returntoidleentry, self.returntoidle, 'UnitAIReturn')
 		self.attackunit_ddw = add_dropdown('Attack Unit', self.attackunitentry, self.attackunit, 'UnitAIAttackUnit')
 		self.attackmove_ddw = add_dropdown('Attack Move', self.attackmoveentry, self.attackmove, 'UnitAIAttackMove')
-		f = Frame(s)
-		Label(f, text='Right-Click Action:', width=16, anchor=E).pack(side=LEFT)
-		DropDown(f, self.rightclick, Assets.data_cache(Assets.DataReference.Rightclick), width=30).pack(side=LEFT, fill=X, expand=1, padx=2)
+		f = UI.Frame(s)
+		UI.Label(f, text='Right-Click Action:', width=16, anchor=UI.E).pack(side=UI.LEFT)
+		UI.DropDown(f, self.rightclick, Assets.data_cache(Assets.DataReference.Rightclick), width=30).pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
 		self.tip(f, 'Right-Click Action', 'UnitAIRightClick')
-		f.pack(fill=X, pady=5)
+		f.pack(fill=UI.X, pady=5)
 
-		f = Frame(s)
+		f = UI.Frame(s)
 		# AI Flags
-		self.makeCheckbox(f, self.AI_NoSuicide, 'Ignore Strategic Suicide missions', 'UnitAINoSuicide').pack(side=LEFT)
-		self.makeCheckbox(f, self.AI_NoGuard, 'Don\'t become a guard', 'UnitAINoGuard').pack(side=LEFT)
+		self.makeCheckbox(f, self.AI_NoSuicide, 'Ignore Strategic Suicide missions', 'UnitAINoSuicide').pack(side=UI.LEFT)
+		self.makeCheckbox(f, self.AI_NoGuard, 'Don\'t become a guard', 'UnitAINoGuard').pack(side=UI.LEFT)
 
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=(0,5))
-		l.pack(fill=X, side=TOP)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=(0,5))
+		l.pack(fill=UI.X, side=UI.TOP)
 
-		l = LabelFrame(scrollview.content_view, text='AI Force Values:')
-		self.force_value_text = Text(l, state=DISABLED, height=11, font=Font.fixed())
-		self.force_value_text.pack(fill=BOTH, padx=5,pady=5)
-		l.pack(fill=X, side=TOP)
+		l = UI.LabelFrame(scrollview.content_view, text='AI Force Values:')
+		self.force_value_text = UI.Text(l, state=UI.DISABLED, height=11, font=UI.Font.fixed())
+		self.force_value_text.pack(fill=UI.BOTH, padx=5,pady=5)
+		l.pack(fill=UI.X, side=UI.TOP)
 
 		def show_hand_cursor(*_: Any) -> None:
 			self.force_value_text.config(cursor='hand2')
@@ -108,7 +108,7 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.sub_delegate.change_sub_tab(UnitsTabID.basic)
 			self.delegate.change_id(unit_id)
 
-		bold = Font.fixed().bolded()
+		bold = UI.Font.fixed().bolded()
 		self.force_value_text.tag_configure('force_type', underline=True)
 		values = (
 			('force_value', '#000000', '#E8E8E8', None, 'Used to calculate the strength of a force of units'),
@@ -146,13 +146,13 @@ class AIActionsUnitsTab(DATUnitsTab):
 		)
 		for tag,fg,bg,action,tooltip in values:
 			self.force_value_text.tag_configure(tag, foreground=fg, background=bg, font=bold)
-			TextTooltip(self.force_value_text, tag, text=tooltip)
+			UI.TextTooltip(self.force_value_text, tag, text=tooltip)
 			if action:
-				self.force_value_text.tag_bind(tag, Cursor.Enter(), show_hand_cursor, '+')
-				self.force_value_text.tag_bind(tag, Cursor.Leave(), show_arrow_cursor, '+')
-				self.force_value_text.tag_bind(tag, Mouse.Click_Left(), action)
+				self.force_value_text.tag_bind(tag, UI.Cursor.Enter(), show_hand_cursor, '+')
+				self.force_value_text.tag_bind(tag, UI.Cursor.Leave(), show_arrow_cursor, '+')
+				self.force_value_text.tag_bind(tag, UI.Mouse.Click_Left(), action)
 
-		scrollview.pack(fill=BOTH, expand=1)
+		scrollview.pack(fill=UI.BOTH, expand=1)
 
 	def copy(self) -> None:
 		if not self.delegate.data_context.units.dat:
@@ -253,43 +253,43 @@ class AIActionsUnitsTab(DATUnitsTab):
 		def fstr(f: float) -> str:
 			return str(f).rstrip('0').rstrip('.')
 		text = self.force_value_text
-		text.insert(END, force_type_name, ('force_type',))
-		text.insert(END, '\n = ')
-		text.insert(END, str(force_value), ('force_value',))
-		text.insert(END, '\n = floor(floor(sqrt(floor(floor(')
+		text.insert(UI.END, force_type_name, ('force_type',))
+		text.insert(UI.END, '\n = ')
+		text.insert(UI.END, str(force_value), ('force_value',))
+		text.insert(UI.END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type_name.lower()
-		text.insert(END, str(attack_range), (f'{tp}_range',))
-		text.insert(END, ' / ')
-		text.insert(END, str(cooldown), (f'{tp}_cooldown',))
-		text.insert(END, ') * ')
-		text.insert(END, str(factor), (f'{tp}_factor',))
-		text.insert(END, ' * ')
-		text.insert(END, str(damage), (f'{tp}_damage',))
-		text.insert(END, ' + (floor((')
-		text.insert(END, str(factor), (f'{tp}_factor',))
-		text.insert(END, ' * ')
-		text.insert(END, str(damage), (f'{tp}_damage',))
-		text.insert(END, ' * 2048) / ')
-		text.insert(END, str(cooldown), (f'{tp}_cooldown',))
-		text.insert(END, ') * (')
-		text.insert(END, str(hp), ('hp',))
-		text.insert(END, ' + ')
-		text.insert(END, str(shields), ('shields',))
-		text.insert(END, ')) / 256)) * 7.58) * ')
-		text.insert(END, fstr(reduction), ('reduction',))
-		text.insert(END, ')')
+		text.insert(UI.END, str(attack_range), (f'{tp}_range',))
+		text.insert(UI.END, ' / ')
+		text.insert(UI.END, str(cooldown), (f'{tp}_cooldown',))
+		text.insert(UI.END, ') * ')
+		text.insert(UI.END, str(factor), (f'{tp}_factor',))
+		text.insert(UI.END, ' * ')
+		text.insert(UI.END, str(damage), (f'{tp}_damage',))
+		text.insert(UI.END, ' + (floor((')
+		text.insert(UI.END, str(factor), (f'{tp}_factor',))
+		text.insert(UI.END, ' * ')
+		text.insert(UI.END, str(damage), (f'{tp}_damage',))
+		text.insert(UI.END, ' * 2048) / ')
+		text.insert(UI.END, str(cooldown), (f'{tp}_cooldown',))
+		text.insert(UI.END, ') * (')
+		text.insert(UI.END, str(hp), ('hp',))
+		text.insert(UI.END, ' + ')
+		text.insert(UI.END, str(shields), ('shields',))
+		text.insert(UI.END, ')) / 256)) * 7.58) * ')
+		text.insert(UI.END, fstr(reduction), ('reduction',))
+		text.insert(UI.END, ')')
 		if force_type == ForceType.air and override_unit_id is not None:
-			text.insert(END, '\n\nUsing weapons from Unit: ')
-			text.insert(END, str(override_unit_id), (f'{tp}_weapon_override',))
+			text.insert(UI.END, '\n\nUsing weapons from Unit: ')
+			text.insert(UI.END, str(override_unit_id), (f'{tp}_weapon_override',))
 
 	def build_force_values(self) -> None:
 		text = self.force_value_text
-		text["state"] = NORMAL
-		text.delete('1.0', END)
+		text["state"] = UI.NORMAL
+		text.delete('1.0', UI.END)
 		self.build_force_value(ForceType.ground)
-		text.insert(END, '\n\n')
+		text.insert(UI.END, '\n\n')
 		self.build_force_value(ForceType.air)
-		text["state"] = DISABLED
+		text["state"] = UI.DISABLED
 
 	def load_data(self, entry: DATUnit) -> None:
 		self.computeridle.set(entry.comp_ai_idle)

@@ -5,19 +5,19 @@ from ...DATTabConveniences import DATTabConveniences
 
 from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ....Utilities.UIKit import *
+from ....Utilities import UIKit as UI
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 	from ...DataID import DATID, AnyID
 
-class DATUnitsTab(NotebookTab, DATTabConveniences):
-	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
+class DATUnitsTab(UI.NotebookTab, DATTabConveniences):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		self.delegate = delegate
 		self.sub_delegate = sub_delegate
 		self.edited = False
-		NotebookTab.__init__(self, parent)
+		UI.NotebookTab.__init__(self, parent)
 
 	def copy(self) -> None:
 		pass

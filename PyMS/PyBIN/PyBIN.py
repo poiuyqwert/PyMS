@@ -13,7 +13,7 @@ from ..FileFormats import GRP
 from ..FileFormats import FNT
 
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Config
@@ -88,12 +88,12 @@ class ClickModifier(Enum):
 	shift = 1
 	ctrl = 2
 
-class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDelegate):
+class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
 
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyBIN')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyBIN', Assets.version('PyBIN'))
@@ -101,9 +101,9 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		setup_trace('PyBIN', self)
 
 		self.config_ = PyBINConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
-		self.edit_status = StringVar()
+		self.edit_status = UI.StringVar()
 
 		self.bin: DialogBIN.DialogBIN | None = None
 		self.file: str | None = None
@@ -122,8 +122,8 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.tfont: PCX.PCX | None = None
 		self.dlggrp: GRP.GRP | None = None
 		self.tilegrp: GRP.GRP | None = None
-		self.dialog_assets: dict[int, PILImage.Image] = {}
-		self.dialog_frames: dict[int, PILImage.Image] = {}
+		self.dialog_assets: dict[int, UI.PILImage.Image] = {}
+		self.dialog_frames: dict[int, UI.PILImage.Image] = {}
 
 		self.selected_node: WidgetNode | None = None
 
@@ -134,58 +134,58 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.event_moved = False
 
 		self.background: PCX.PCX | None = None
-		self.background_image: AnyPhotoImage | None = None
+		self.background_image: UI.AnyPhotoImage | None = None
 
-		self.item_background: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_selection_box: Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_background: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_selection_box: UI.Canvas.Item | None = None # type: ignore[name-defined]
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i)
 		self.toolbar.add_gap()
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def save_as() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mpqsettings, 'Manage Settings', UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F4)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F4)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyBIN')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.show_preview_settings = BooleanVar()
-		self.show_images = BooleanVar()
-		self.show_text = BooleanVar()
-		self.show_smks = BooleanVar()
-		self.show_hidden = BooleanVar()
-		self.show_dialog = BooleanVar()
-		self.show_animated = BooleanVar()
-		self.show_hover_smks = BooleanVar()
-		self.show_background = BooleanVar()
-		self.show_theme_index = IntVar()
-		self.show_bounds_widget = BooleanVar()
-		self.show_bounds_group = BooleanVar()
-		self.show_bounds_text = BooleanVar()
-		self.show_bounds_responsive = BooleanVar()
+		self.show_preview_settings = UI.BooleanVar()
+		self.show_images = UI.BooleanVar()
+		self.show_text = UI.BooleanVar()
+		self.show_smks = UI.BooleanVar()
+		self.show_hidden = UI.BooleanVar()
+		self.show_dialog = UI.BooleanVar()
+		self.show_animated = UI.BooleanVar()
+		self.show_hover_smks = UI.BooleanVar()
+		self.show_background = UI.BooleanVar()
+		self.show_theme_index = UI.IntVar()
+		self.show_bounds_widget = UI.BooleanVar()
+		self.show_bounds_group = UI.BooleanVar()
+		self.show_bounds_text = UI.BooleanVar()
+		self.show_bounds_responsive = UI.BooleanVar()
 		self.load_settings()
 
 		self.last_tick: int | None = None
 		self.tick_alarm: str | None = None
 
-		self.type_menu = Menu(self, tearoff=0)
+		self.type_menu = UI.Menu(self, tearoff=0)
 		type_fields = (
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_DEFAULT_BTN], DialogBIN.BINWidget.TYPE_DEFAULT_BTN),
 			(DialogBIN.BINWidget.TYPE_NAMES[DialogBIN.BINWidget.TYPE_BUTTON], DialogBIN.BINWidget.TYPE_BUTTON),
@@ -215,25 +215,25 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			else:
 				self.type_menu.add_separator()
 
-		self.scr_enabled = BooleanVar()
+		self.scr_enabled = UI.BooleanVar()
 
-		frame = Frame(self)
-		leftframe = Frame(frame)
-		titleframe = Frame(leftframe)
-		Label(titleframe, text='Widgets:', anchor=W).pack(side=LEFT)
-		self.scr_check = Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=self.scr_toggled, state=DISABLED)
-		Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
-		self.scr_check.pack(side=RIGHT, padx=(0,20))
-		titleframe.grid(row=0, column=0, sticky=EW)
+		frame = UI.Frame(self)
+		leftframe = UI.Frame(frame)
+		titleframe = UI.Frame(leftframe)
+		UI.Label(titleframe, text='Widgets:', anchor=UI.W).pack(side=UI.LEFT)
+		self.scr_check = UI.Checkbutton(titleframe, text='SC:R', variable=self.scr_enabled, command=self.scr_toggled, state=UI.DISABLED)
+		UI.Tooltip(self.scr_check, 'StarCraft: Remastered compatibility (Automatically enabled when using SC:R widgets)')
+		self.scr_check.pack(side=UI.RIGHT, padx=(0,20))
+		titleframe.grid(row=0, column=0, sticky=UI.EW)
 
-		self.widgetTree = TreeList(leftframe)
-		self.widgetTree.grid(row=1, column=0, padx=1, pady=1, sticky=NSEW)
-		self.widgetTree.bind(Mouse.Click_Left(), self.list_select)
-		self.widgetTree.bind(Mouse.Drag_Left(), self.list_drag)
-		self.widgetTree.bind(ButtonRelease.Click_Left(), self.list_drop)
-		self.widgetTree.bind(Double.Click_Left(), self.list_double_click)
+		self.widgetTree = UI.TreeList(leftframe)
+		self.widgetTree.grid(row=1, column=0, padx=1, pady=1, sticky=UI.NSEW)
+		self.widgetTree.bind(UI.Mouse.Click_Left(), self.list_select)
+		self.widgetTree.bind(UI.Mouse.Drag_Left(), self.list_drag)
+		self.widgetTree.bind(UI.ButtonRelease.Click_Left(), self.list_drop)
+		self.widgetTree.bind(UI.Double.Click_Left(), self.list_double_click)
 
-		self.widgets_toolbar = Toolbar(leftframe)
+		self.widgets_toolbar = UI.Toolbar(leftframe)
 		self.widgets_toolbar.add_button(Assets.get_image('add'), self.add_node, 'Add Widget', enabled=False, tags='file_open')
 		self.widgets_toolbar.add_button(Assets.get_image('remove'), self.remove_node, 'Remove Selected', enabled=False, tags=('node_selected', 'dialog_not_selected'))
 		self.widgets_toolbar.add_button(Assets.get_image('edit'), self.edit_node_settings, 'Edit Widget', enabled=False, tags='node_selected')
@@ -242,10 +242,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.widgets_toolbar.add_spacer(2, flexible=True)
 		self.widgets_toolbar.add_button(Assets.get_image('up'), lambda: self.move_node(-1), 'Move Widget Up', enabled=False, tags='can_move_up')
 		self.widgets_toolbar.add_button(Assets.get_image('down'), lambda: self.move_node(2), 'Move Widget Down', enabled=False, tags='can_move_down')
-		self.widgets_toolbar.grid(row=2, column=0, padx=1, pady=1, sticky=EW)
+		self.widgets_toolbar.grid(row=2, column=0, padx=1, pady=1, sticky=UI.EW)
 
-		self.preview_settings_frame = LabelFrame(leftframe, text='Preview Settings')
-		widgetsframe = LabelFrame(self.preview_settings_frame, text='Widget')
+		self.preview_settings_frame = UI.LabelFrame(leftframe, text='Preview Settings')
+		widgetsframe = UI.LabelFrame(self.preview_settings_frame, text='Widget')
 		preview_fields = (
 			('Images',self.config_.preview.show_images,self.show_images),
 			('Text',self.config_.preview.show_text,self.show_text),
@@ -253,28 +253,28 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			('Hidden',self.config_.preview.show_hidden,self.show_hidden),
 			('Dialog',self.config_.preview.show_dialog,self.show_dialog)
 		)
-		def toggle_setting_callback(setting: Config.Boolean, variable: BooleanVar) -> Callable[[], None]:
+		def toggle_setting_callback(setting: Config.Boolean, variable: UI.BooleanVar) -> Callable[[], None]:
 			def toggle_setting() -> None:
 				self.toggle_setting(setting, variable)
 			return toggle_setting
 		for i,(name,setting,variable) in enumerate(preview_fields):
-			check = Checkbutton(widgetsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
-			check.grid(row=i // 2, column=i % 2, sticky=W)
+			check = UI.Checkbutton(widgetsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=UI.W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
-		widgetsframe.grid(row=0, column=0, sticky=NSEW, padx=5)
-		smkframe = LabelFrame(self.preview_settings_frame, text='SMKs')
+		widgetsframe.grid(row=0, column=0, sticky=UI.NSEW, padx=5)
+		smkframe = UI.LabelFrame(self.preview_settings_frame, text='SMKs')
 		smk_fields = (
 			('Animated',self.config_.preview.show_animated,self.show_animated),
 			('Hovers',self.config_.preview.show_hover_smks,self.show_hover_smks)
 		)
 		for i,(name,setting,variable) in enumerate(smk_fields):
-			check = Checkbutton(smkframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
-			check.grid(row=i // 2, column=i % 2, sticky=W)
+			check = UI.Checkbutton(smkframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=UI.W)
 		smkframe.grid_columnconfigure(0, weight=1)
 		smkframe.grid_columnconfigure(1, weight=1)
-		smkframe.grid(row=1, column=0, sticky=NSEW, padx=5)
-		boundsframe = LabelFrame(self.preview_settings_frame, text='Bounds')
+		smkframe.grid(row=1, column=0, sticky=UI.NSEW, padx=5)
+		boundsframe = UI.LabelFrame(self.preview_settings_frame, text='Bounds')
 		bounds_fields = (
 			('Widgets',self.config_.preview.show_bounds_widget,self.show_bounds_widget),
 			('Groups',self.config_.preview.show_bounds_group,self.show_bounds_group),
@@ -282,62 +282,62 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			('Responsive',self.config_.preview.show_bounds_responsive,self.show_bounds_responsive)
 		)
 		for i,(name,setting,variable) in enumerate(bounds_fields):
-			check = Checkbutton(boundsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
-			check.grid(row=i // 2, column=i % 2, sticky=W)
+			check = UI.Checkbutton(boundsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
+			check.grid(row=i // 2, column=i % 2, sticky=UI.W)
 		boundsframe.grid_columnconfigure(0, weight=1)
 		boundsframe.grid_columnconfigure(1, weight=1)
-		boundsframe.grid(row=2, column=0, sticky=NSEW, padx=5)
-		themeframe = LabelFrame(self.preview_settings_frame, text='Theme')
+		boundsframe.grid(row=2, column=0, sticky=UI.NSEW, padx=5)
+		themeframe = UI.LabelFrame(self.preview_settings_frame, text='Theme')
 		themes = ['None']
 		for t in range(DialogBIN.THEME_ASSETS_MAIN_MENU,DialogBIN.THEME_ASSETS_NONE):
 			theme = DialogBIN.THEME_ASSETS_INFO[t]
 			themes.append(f'{theme["name"]} ({theme["path"]})')
-		DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=EW)
-		Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=W)
+		UI.DropDown(themeframe, self.show_theme_index, themes, self.change_theme).grid(row=0, column=0, padx=5, sticky=UI.EW)
+		UI.Checkbutton(themeframe, text='Background', variable=self.show_background, command=lambda: self.toggle_setting(self.config_.preview.show_background,self.show_background)).grid(row=1, column=0, sticky=UI.W)
 		themeframe.grid_columnconfigure(0, weight=1)
 		# themeframe.grid_columnconfigure(1, weight=1)
-		themeframe.grid(row=3, column=0, sticky=NSEW, padx=5)
+		themeframe.grid(row=3, column=0, sticky=UI.NSEW, padx=5)
 		self.preview_settings_frame.grid_columnconfigure(0, weight=1)
-		self.preview_settings_frame.grid(row=3, column=0, padx=1,pady=1, ipady=3, sticky=NSEW)
+		self.preview_settings_frame.grid(row=3, column=0, padx=1,pady=1, ipady=3, sticky=UI.NSEW)
 		if not self.show_preview_settings.get():
 			self.preview_settings_frame.grid_remove()
 		leftframe.grid_rowconfigure(1, weight=1)
 		leftframe.grid_columnconfigure(0, weight=1)
-		leftframe.grid(row=0, column=0, padx=2, pady=2, sticky=NSEW)
+		leftframe.grid(row=0, column=0, padx=2, pady=2, sticky=UI.NSEW)
 		frame.grid_columnconfigure(0, weight=1, minsize=128)
 
-		rightframe = Frame(frame)
-		Label(rightframe, text='Canvas:', anchor=W).pack(side=TOP, fill=X)
-		bdframe = Frame(rightframe, borderwidth=1, relief=SUNKEN)
-		self.widgetCanvas = Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview') # type: ignore[call-arg]
+		rightframe = UI.Frame(frame)
+		UI.Label(rightframe, text='Canvas:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		bdframe = UI.Frame(rightframe, borderwidth=1, relief=UI.SUNKEN)
+		self.widgetCanvas = UI.Canvas(bdframe, background='#000000', highlightthickness=0, width=640, height=480, theme_tag='preview') # type: ignore[call-arg]
 		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
-		bdframe.pack(side=TOP)
-		rightframe.grid(row=0, column=1, padx=(2,5), pady=2, sticky=NSEW)
+		bdframe.pack(side=UI.TOP)
+		rightframe.grid(row=0, column=1, padx=(2,5), pady=2, sticky=UI.NSEW)
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.grid_rowconfigure(0, weight=1, minsize=480)
-		frame.pack(fill=BOTH, expand=1)
-		self.widgetCanvas.bind(Mouse.Motion(), self.mouse_motion)
-		self.widgetCanvas.bind(Cursor.Leave(), lambda e: self.edit_status.set(''))
-		def canvas_double_click_callback(click_modifier: ClickModifier) -> Callable[[Event], None]:
-			def canvas_double_click(event: Event) -> None:
+		frame.pack(fill=UI.BOTH, expand=1)
+		self.widgetCanvas.bind(UI.Mouse.Motion(), self.mouse_motion)
+		self.widgetCanvas.bind(UI.Cursor.Leave(), lambda e: self.edit_status.set(''))
+		def canvas_double_click_callback(click_modifier: ClickModifier) -> Callable[[UI.Event], None]:
+			def canvas_double_click(event: UI.Event) -> None:
 				self.canvas_double_click(event, click_modifier)
 			return canvas_double_click
-		self.widgetCanvas.bind(Double.Click_Left(), canvas_double_click_callback(ClickModifier.none))
-		self.widgetCanvas.bind(Ctrl.Double.Click_Left(), canvas_double_click_callback(ClickModifier.ctrl))
+		self.widgetCanvas.bind(UI.Double.Click_Left(), canvas_double_click_callback(ClickModifier.none))
+		self.widgetCanvas.bind(UI.Ctrl.Double.Click_Left(), canvas_double_click_callback(ClickModifier.ctrl))
 
 		mouse_events = (
-			(Mouse.Click_Left, MouseEvent.down),
-			(Mouse.Drag_Left, MouseEvent.move),
-			(ButtonRelease.Click_Left, MouseEvent.up),
+			(UI.Mouse.Click_Left, MouseEvent.down),
+			(UI.Mouse.Drag_Left, MouseEvent.move),
+			(UI.ButtonRelease.Click_Left, MouseEvent.up),
 		)
 		mouse_modifiers = (
 			(None,ClickModifier.none),
-			(Modifier.Shift,ClickModifier.shift),
-			(Modifier.Ctrl,ClickModifier.ctrl)
+			(UI.Modifier.Shift,ClickModifier.shift),
+			(UI.Modifier.Ctrl,ClickModifier.ctrl)
 		)
-		def mouse_event_callback(mouse_event: MouseEvent, click_modifier: ClickModifier) -> Callable[[Event], None]:
-			def _mouse_event(event: Event) -> None:
+		def mouse_event_callback(mouse_event: MouseEvent, click_modifier: ClickModifier) -> Callable[[UI.Event], None]:
+			def _mouse_event(event: UI.Event) -> None:
 				self.mouse_event(event, mouse_event, click_modifier)
 			return _mouse_event
 		for base_event,etype in mouse_events:
@@ -347,19 +347,19 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 					event = event_mod + event
 				self.widgetCanvas.bind(event(), mouse_event_callback(etype,mod))
 
-		self.bind(Key.Return(), self.list_double_click)
+		self.bind(UI.Key.Return(), self.list_double_click)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a Dialog BIN.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=35)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.edit_status, weight=1)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.update_idletasks()
-		geometry = Geometry.of(self)
+		geometry = UI.Geometry.of(self)
 		self.minsize(geometry.size.width, geometry.size.height)
 		self.config_.windows.main.load_size(self)
 
@@ -406,7 +406,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.show_preview_settings.set(show)
 		if show:
 			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrow'))
-			self.preview_settings_frame.grid(sticky=EW)
+			self.preview_settings_frame.grid(sticky=UI.EW)
 		else:
 			self.widgets_toolbar.update_icon('settings_toggle', Assets.get_image('arrowup'))
 			self.preview_settings_frame.grid_remove()
@@ -498,13 +498,13 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		delete = True
 		if self.bin and self.show_background.get() and self.background:
 			if not self.background_image:
-				self.background_image = cast(PhotoImage, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
+				self.background_image = cast(UI.PhotoImage, GRP.frame_to_photo(self.background.palette, self.background, -1, size=False))
 			if self.background_image:
 				delete = False
 				if self.item_background:
 					self.item_background.config(image=self.background_image)
 				else:
-					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=NW)
+					self.item_background = self.widgetCanvas.create_image(0,0, image=self.background_image, anchor=UI.NW)
 					self.item_background.tag_lower()
 		if self.item_background and delete:
 			self.item_background.delete()
@@ -611,7 +611,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.mpq_handler.close_mpqs()
 		return err
 
-	def mpqsettings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
+	def mpqsettings(self, _event: UI.Event | None = None, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
 
 	def check_saved(self) -> CheckSaved:
@@ -620,7 +620,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		file = self.file
 		if not file:
 			file = 'Unnamed.bin'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -682,7 +682,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if self.item_selection_box:
 			self.item_selection_box.tag_raise()
 
-	def toggle_setting(self, setting: Config.Boolean, variable: BooleanVar) -> None:
+	def toggle_setting(self, setting: Config.Boolean, variable: UI.BooleanVar) -> None:
 		setting.value = variable.get()
 		self.refresh_preview()
 
@@ -710,7 +710,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if node and node.widget:
 			WidgetSettings(self, node, self)
 
-	def canvas_double_click(self, e: Event, m: ClickModifier) -> None:
+	def canvas_double_click(self, e: UI.Event, m: ClickModifier) -> None:
 		if not self.dialog:
 			return
 		prefer_selection = (m == ClickModifier.ctrl)
@@ -735,7 +735,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		if node:
 			self.edit_node_settings(node)
 
-	def list_double_click(self, _event: Event) -> None:
+	def list_double_click(self, _event: UI.Event) -> None:
 		selected = self.widgetTree.cur_selection()
 		if not selected or selected[0] < 0:
 			return
@@ -752,7 +752,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.update_list_selection()
 		self.action_states()
 
-	def list_select(self, _event: Event) -> None:
+	def list_select(self, _event: UI.Event) -> None:
 		selected = self.widgetTree.cur_selection()
 		if not selected or selected[0] < 0:
 			return
@@ -763,7 +763,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.update_selection_box()
 		self.action_states()
 
-	def list_drag(self, event: Event) -> None:
+	def list_drag(self, event: UI.Event) -> None:
 		# todo: Not started on node?
 		if not self.selected_node:
 			return
@@ -772,7 +772,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		index = self.widgetTree.index(f"@{event.x},{event.y}")
 		self.widgetTree.highlight(index)
 
-	def list_drop(self, event: Event) -> None:
+	def list_drop(self, event: UI.Event) -> None:
 		# todo: Not started on node?
 		if not self.selected_node:
 			return
@@ -822,7 +822,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 					break
 		return (found_node, found_event)
 
-	def mouse_motion(self, event: Event) -> None:
+	def mouse_motion(self, event: UI.Event) -> None:
 		if not self.bin:
 			return
 		if self.old_cursor is None:
@@ -868,7 +868,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 			self.edit_status.set('')
 		self.widgetCanvas.apply_cursor(cursor) # type: ignore[attr-defined]
 
-	def mouse_event(self, event: Event, mouse_event: MouseEvent, modifier: ClickModifier) -> None:
+	def mouse_event(self, event: UI.Event, mouse_event: MouseEvent, modifier: ClickModifier) -> None:
 		RESTRICT_TO_WINDOW = True
 		if self.bin:
 			x = event.x
@@ -986,8 +986,8 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.item_background = None
 		self.item_selection_box = None
 
-		self.widgetTree.delete(ALL)
-		self.widgetCanvas.delete(ALL)
+		self.widgetTree.delete(UI.ALL)
+		self.widgetCanvas.delete(UI.ALL)
 
 	def update_title(self) -> None:
 		file_path = self.file
@@ -998,7 +998,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		else:
 			self.title(f'PyBIN {LONG_VERSION} ({file_path})')
 
-	def new(self, _event: Event | None = None) -> None:
+	def new(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if not self.tfont:
@@ -1019,7 +1019,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def open(self, _event: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: UI.Event | None = None, file: str | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		if file is None:
@@ -1052,7 +1052,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def iimport(self, _event: Event | None = None) -> None:
+	def iimport(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		file = self.config_.last_path.txt.select_open(self)
@@ -1083,10 +1083,10 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.action_states()
 		self.tick(True)
 
-	def save(self, _event: Event | None = None) -> CheckSaved:
+	def save(self, _event: UI.Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> CheckSaved:
+	def saveas(self, _event: UI.Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.bin:
 			return CheckSaved.saved
 		if not file_path:
@@ -1106,7 +1106,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.update_title()
 		return CheckSaved.saved
 
-	def export(self, _event: Event | None = None) -> None:
+	def export(self, _event: UI.Event | None = None) -> None:
 		if not self.bin:
 			return
 		file = self.config_.last_path.txt.select_save(self)
@@ -1118,7 +1118,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def close(self, _event: Event | None = None) -> None:
+	def close(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.clear()
@@ -1127,16 +1127,16 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.scr_enabled.set(False)
 		self.action_states()
 
-	def register_registry(self, _e: Event | None = None) -> None:
+	def register_registry(self, _e: UI.Event | None = None) -> None:
 		try:
 			registry.register('PyBIN', 'bin', 'Dialog')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, _event: Event | None = None) -> None:
+	def help(self, _event: UI.Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyBIN.md')
 
-	def about(self, _event: Event | None = None) -> None:
+	def about(self, _event: UI.Event | None = None) -> None:
 		AboutDialog(self, 'PyBIN', LONG_VERSION, [
 			('FaRTy1billion','File Specs and BinEdit2')
 		])
@@ -1176,7 +1176,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 		self.config_.preview.show_bounds_text.value = self.show_bounds_text.get()
 		self.config_.preview.show_bounds_responsive.value = self.show_bounds_responsive.get()
 
-	def exit(self, _event: Event | None = None) -> None:
+	def exit(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -1200,7 +1200,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 		self.action_states()
 
 	def refresh_preview(self) -> None:
@@ -1220,7 +1220,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 
 	def refresh_nodes(self) -> None:
 		self.widget_map = {}
-		self.widgetTree.delete(ALL)
+		self.widgetTree.delete(UI.ALL)
 		if not self.dialog:
 			return
 		def list_node(at_index: str, node: WidgetNode) -> None:
@@ -1242,7 +1242,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 
 	# NodeDelegate
 
-	def get_dialog_asset(self, asset_id: int) -> (PILImage.Image | None):
+	def get_dialog_asset(self, asset_id: int) -> (UI.PILImage.Image | None):
 		asset = None
 		if self.dlggrp and self.background:
 			if asset_id in self.dialog_assets:
@@ -1252,7 +1252,7 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 				self.dialog_assets[asset_id] = asset
 		return asset
 
-	def get_dialog_frame(self, frame_id: int) -> (PILImage.Image | None):
+	def get_dialog_frame(self, frame_id: int) -> (UI.PILImage.Image | None):
 		frame = None
 		if self.tilegrp and self.background:
 			if frame_id in self.dialog_frames:
@@ -1310,24 +1310,24 @@ class PyBIN(MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDeleg
 	def get_tfont(self) -> (PCX.PCX | None):
 		return self.tfont
 
-	def node_render_image_create(self, *, x: int, y: int, image: ImageTk.PhotoImage, anchor: Anchor) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_image_create(self, *, x: int, y: int, image: UI.ImageTk.PhotoImage, anchor: UI.Anchor) -> UI.Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_image(x, y, image=image, anchor=anchor)
 
-	def node_render_image_update(self, *, item: Canvas.Item, x: int, y: int, image: ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
+	def node_render_image_update(self, *, item: UI.Canvas.Item, x: int, y: int, image: UI.ImageTk.PhotoImage | None) -> None: # type: ignore[name-defined]
 		if image:
 			item.config(image=image)
 		item.coords(x, y)
 
-	def node_render_rect_create(self, *, x1: int, y1: int, x2: int, y2: int, color: str) -> Canvas.Item: # type: ignore[name-defined]
+	def node_render_rect_create(self, *, x1: int, y1: int, x2: int, y2: int, color: str) -> UI.Canvas.Item: # type: ignore[name-defined]
 		return self.widgetCanvas.create_rectangle(x1, y1, x2, y2, width=1, outline=color)
 
-	def node_render_rect_update(self, *, item: Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
+	def node_render_rect_update(self, *, item: UI.Canvas.Item, x1: int, y1: int, x2: int, y2: int) -> None: # type: ignore[name-defined]
 		item.coords(x1, y1, x2, y2)
 
-	def node_render_lift(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+	def node_render_lift(self, item: UI.Canvas.Item) -> None: # type: ignore[name-defined]
 		item.tag_raise()
 
-	def node_render_delete(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
+	def node_render_delete(self, item: UI.Canvas.Item) -> None: # type: ignore[name-defined]
 		item.delete()
 
 	def capture_exception(self) -> None:

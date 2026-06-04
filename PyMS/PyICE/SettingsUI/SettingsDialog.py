@@ -7,16 +7,16 @@ from ..Config import PyICEConfig
 from ...Utilities.SettingsUI.BaseSettingsDialog import BaseErrorableSettingsDialog, ErrorableSettingsDialogDelegate
 from ...Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
 from ...Utilities.SettingsUI.MPQSettingsTab import MPQSettingsTab
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.MPQHandler import MPQHandler
 
 class SettingsDialog(BaseErrorableSettingsDialog[PyICEConfig]):
-	def __init__(self, *, parent: Misc, config: PyICEConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
+	def __init__(self, *, parent: UI.Misc, config: PyICEConfig, delegate: ErrorableSettingsDialogDelegate, err: PyMSError | None, mpq_handler: MPQHandler):
 		self.mpq_handler = mpq_handler
 		super().__init__(parent, config, delegate, err)
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		widget = super().widgetize()
 
 		self.add_tab('MPQ Settings', MPQSettingsTab(parent=self.notebook, edited_state=self.edited_state.sub_state(), mpq_hander=self.mpq_handler, mpqs_config=self.config_.settings.mpqs, mpqs_select_config=self.config_.settings.last_path.mpqs))

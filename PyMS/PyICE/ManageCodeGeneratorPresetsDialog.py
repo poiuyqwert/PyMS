@@ -4,7 +4,7 @@ from .Delegates import ManagePresetsDelegate
 from .CodeGenerators.GeneratorPreset import GeneratorPreset
 from .NameDialog import NameDialog
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
@@ -15,18 +15,18 @@ from ..Utilities.CheckSaved import CheckSaved
 import json
 
 class ManageCodeGeneratorPresetsDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: ManagePresetsDelegate, config: PyICEConfig):
+	def __init__(self, parent: UI.Misc, delegate: ManagePresetsDelegate, config: PyICEConfig):
 		self.config_ = config
 		self.delegate = delegate
 		PyMSDialog.__init__(self, parent, 'Manage Presets', grabwait=True)
 
-	def widgetize(self) -> Misc | None:
-		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, width=30)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), self.update_states)
-		self.listbox.bind(Double.Click_Left(), self.rename)
-		self.listbox.pack(side=TOP, padx=3, pady=3, fill=BOTH, expand=1)
+	def widgetize(self) -> UI.Misc | None:
+		self.listbox = UI.ScrolledListbox(self, selectmode=UI.EXTENDED, width=30)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.update_states)
+		self.listbox.bind(UI.Double.Click_Left(), self.rename)
+		self.listbox.pack(side=UI.TOP, padx=3, pady=3, fill=UI.BOTH, expand=1)
 
-		self.toolbar = Toolbar(self)
+		self.toolbar = UI.Toolbar(self)
 		self.toolbar.add_button(Assets.get_image('test'), self.select, 'Use Preset', tags='preset_selected')
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Preset', tags='preset_selected')
@@ -38,10 +38,10 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Preset')
 		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Preset', tags='preset_selected')
-		self.toolbar.pack(side=TOP, fill=X, padx=3)
+		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=3)
 
-		done = Button(self, text='Done', command=self.ok)
-		done.pack(side=BOTTOM, padx=3, pady=(0,3))
+		done = UI.Button(self, text='Done', command=self.ok)
+		done.pack(side=UI.BOTTOM, padx=3, pady=(0,3))
 
 		return done
 
@@ -52,7 +52,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 	def remove(self) -> None:
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
-		cont = MessageBox.askokcancel(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?")
+		cont = UI.MessageBox.askokcancel(parent=self, title='Remove Preset?', message=f"'{preset.name}' will be removed and you won't be able to get it back. Continue?")
 		if not cont:
 			return
 		del self.config_.generator.presets.data[selected]
@@ -101,11 +101,11 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def rename(self, _event: Event | None = None) -> None:
+	def rename(self, _event: UI.Event | None = None) -> None:
 		if not self.listbox.curselection():
 			return
 		selected = int(self.listbox.curselection()[0])
-		def do_rename(_window: AnyWindow, name: str) -> CheckSaved:
+		def do_rename(_window: UI.AnyWindow, name: str) -> CheckSaved:
 			for preset in self.config_.generator.presets.data:
 				if preset.name == name:
 					ErrorDialog(self, PyMSError('Renaming', 'That name already exists'))
@@ -116,7 +116,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		name = self.config_.generator.presets.data[selected].name
 		NameDialog(parent=self, window_geometry_config=self.config_.windows.generator.name, title='Rename Preset', value=name, done='Rename', save_callback=do_rename)
 
-	def update_states(self, _event: Event | None = None) -> None:
+	def update_states(self, _event: UI.Event | None = None) -> None:
 		selected = None
 		if self.listbox.curselection():
 			selected = int(self.listbox.curselection()[0])
@@ -129,9 +129,9 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		if self.listbox.curselection():
 			select = self.listbox.curselection()[0]
 		y = self.listbox.yview()[0]
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		for preset in self.config_.generator.presets.data:
-			self.listbox.insert(END, preset.name)
+			self.listbox.insert(UI.END, preset.name)
 		if select is not None:
 			self.listbox.select_set(select)
 		self.listbox.yview_moveto(y)
@@ -142,7 +142,7 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		preset = self.config_.generator.presets.data.pop(selected)
 		index = selected+move
 		self.config_.generator.presets.data.insert(index, preset)
-		self.listbox.select_clear(0,END)
+		self.listbox.select_clear(0,UI.END)
 		self.listbox.select_set(index)
 		self.update_list()
 

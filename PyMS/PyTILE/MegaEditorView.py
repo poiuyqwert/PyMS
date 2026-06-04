@@ -7,21 +7,21 @@ from ..FileFormats.Tileset.Tileset import Tileset, TileType
 from ..FileFormats.Tileset.VF4 import VF4Flag
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 
 from typing import Any
 
-class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
-	def __init__(self, *, parent: Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
-		Frame.__init__(self, parent)
+class MegaEditorView(UI.Frame, TilePaletteDelegate, MiniEditorDelegate):
+	def __init__(self, *, parent: UI.Misc, config: PyTILEConfig, delegate: MegaEditorViewDelegate, megatile_id: int | None = None, palette_editable: bool = False) -> None:
+		UI.Frame.__init__(self, parent)
 
 		self.parent = parent
 		self.config_ = config
 		self.delegate = delegate
 		self.megatile_id = megatile_id
 		self.palette_editable = palette_editable
-		self.edit_mode = IntVar()
+		self.edit_mode = UI.IntVar()
 		self.edit_mode.set(self.config_.mega_edit.mode.value.value)
 		self.edit_mode.trace_add('write', self.edit_mode_updated)
 		self.delegate.mega_edit_mode_updated(self.get_edit_mode())
@@ -29,85 +29,85 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 		self.last_click: int | None = None
 		self.toggle_on: bool | None = None
 		self.enabled = True
-		self.disable: list[Misc] = []
+		self.disable: list[UI.Misc] = []
 
-		self.minitile = IntegerVar(0,[0,0],callback=lambda id: self.change(None, int(id)), callback_when=IntegerVar.UpdateCase.user)
-		self.height = IntVar()
+		self.minitile = UI.IntegerVar(0,[0,0],callback=lambda id: self.change(None, int(id)), callback_when=UI.IntegerVar.UpdateCase.user)
+		self.height = UI.IntVar()
 		self.height.set(self.config_.mega_edit.height.value)
 		self.height.trace_add('write', self.height_updated)
 
-		self.active_tools: Widget | None = None
+		self.active_tools: UI.Widget | None = None
 
-		frame = Frame(self)
-		d = DropDown(frame, self.edit_mode, ['Minitile (m)','Flip (f)','Height (h)','Walkable (w)','Block view (b)','Ramp? (r)'], width=15)
+		frame = UI.Frame(self)
+		d = UI.DropDown(frame, self.edit_mode, ['Minitile (m)','Flip (f)','Height (h)','Walkable (w)','Block view (b)','Ramp? (r)'], width=15)
 		self.disable.append(d)
-		d.pack(side=TOP, padx=5)
+		d.pack(side=UI.TOP, padx=5)
 		def set_edit_mode(mode: MegaEditorMode) -> None:
 			if not self.enabled:
 				return
 			self.edit_mode.set(mode.value)
-		self.parent.bind(Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini))
-		self.parent.bind(Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip))
-		self.parent.bind(Key.h(), lambda _: set_edit_mode(MegaEditorMode.height))
-		self.parent.bind(Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability))
-		self.parent.bind(Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking))
-		self.parent.bind(Key.r(), lambda _: set_edit_mode(MegaEditorMode.ramp))
+		self.parent.bind(UI.Key.m(), lambda _: set_edit_mode(MegaEditorMode.mini))
+		self.parent.bind(UI.Key.f(), lambda _: set_edit_mode(MegaEditorMode.flip))
+		self.parent.bind(UI.Key.h(), lambda _: set_edit_mode(MegaEditorMode.height))
+		self.parent.bind(UI.Key.w(), lambda _: set_edit_mode(MegaEditorMode.walkability))
+		self.parent.bind(UI.Key.b(), lambda _: set_edit_mode(MegaEditorMode.view_blocking))
+		self.parent.bind(UI.Key.r(), lambda _: set_edit_mode(MegaEditorMode.ramp))
 
-		self.canvas = Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.canvas_images: list[Image] = []
-		def mouse_to_mini(e: Event) -> int | None:
+		self.canvas = UI.Canvas(frame, width=96, height=96, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		self.canvas_images: list[UI.Image] = []
+		def mouse_to_mini(e: UI.Event) -> int | None:
 			if e.x < 1 or e.x > 96 or e.y < 1 or e.y > 96:
 				return None
 			return (e.y - 1) // 24 * 4 + (e.x - 1) // 24
-		def click(e: Event) -> None:
+		def click(e: UI.Event) -> None:
 			mini = mouse_to_mini(e)
 			if mini is None:
 				return
 			self.last_click = mini
 			self.click_minitile(mini)
-		def move(e: Event) -> None:
+		def move(e: UI.Event) -> None:
 			mini = mouse_to_mini(e)
 			if mini is None or mini == self.last_click:
 				return
 			self.last_click = mini
 			self.click_minitile(mini)
-		def release(_: Event) -> None:
+		def release(_: UI.Event) -> None:
 			self.last_click = None
 			self.toggle_on = None
-		def fill(e: Event) -> None:
+		def fill(e: UI.Event) -> None:
 			mini = mouse_to_mini(e)
 			if mini is None:
 				return
 			self.fill_minitiles(mini)
-		self.canvas.bind(Mouse.Click_Left(), click)
-		self.canvas.bind(Mouse.Drag_Left(), move)
-		self.canvas.bind(ButtonRelease.Click_Left(), release)
-		self.canvas.bind(Mouse.Click_Right(), fill)
-		self.canvas.pack(side=TOP)
-		self.mini_tools = Frame(frame)
-		e = Frame(self.mini_tools)
-		Label(e, text='ID:').pack(side=LEFT)
-		f = Entry(e, textvariable=self.minitile, font=Font.fixed(), width=5)
-		Tooltip(f, 'MiniTile ID:\nID for the selected MiniTile in the current MegaTile')
+		self.canvas.bind(UI.Mouse.Click_Left(), click)
+		self.canvas.bind(UI.Mouse.Drag_Left(), move)
+		self.canvas.bind(UI.ButtonRelease.Click_Left(), release)
+		self.canvas.bind(UI.Mouse.Click_Right(), fill)
+		self.canvas.pack(side=UI.TOP)
+		self.mini_tools = UI.Frame(frame)
+		e = UI.Frame(self.mini_tools)
+		UI.Label(e, text='ID:').pack(side=UI.LEFT)
+		f = UI.Entry(e, textvariable=self.minitile, font=UI.Font.fixed(), width=5)
+		UI.Tooltip(f, 'MiniTile ID:\nID for the selected MiniTile in the current MegaTile')
 		self.disable.append(f)
-		f.pack(side=LEFT, padx=2)
-		b = Button(e, image=Assets.get_image('find'), width=20, height=20, command=self.choose)
+		f.pack(side=UI.LEFT, padx=2)
+		b = UI.Button(e, image=Assets.get_image('find'), width=20, height=20, command=self.choose)
 		self.disable.append(b)
-		Tooltip(b, 'MiniTile Palette')
-		b.pack(side=LEFT, padx=2)
-		b = Button(e, image=Assets.get_image('edit'), width=20, height=20, command=self.editor)
+		UI.Tooltip(b, 'MiniTile Palette')
+		b.pack(side=UI.LEFT, padx=2)
+		b = UI.Button(e, image=Assets.get_image('edit'), width=20, height=20, command=self.editor)
 		self.disable.append(b)
-		b.pack(side=LEFT, padx=2)
-		e.pack(fill=X)
-		self.mini_tools.pack(side=TOP, pady=(3,0))
+		b.pack(side=UI.LEFT, padx=2)
+		e.pack(fill=UI.X)
+		self.mini_tools.pack(side=UI.TOP, pady=(3,0))
 		self.mini_tools.pack_forget()
-		self.height_tools = Frame(frame)
-		d = DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)'], width=15)
+		self.height_tools = UI.Frame(frame)
+		d = UI.DropDown(self.height_tools, self.height, ['Low (Red)','Mid (Orange)','High (Yellow)'], width=15)
 		self.disable.append(d)
-		d.pack(side=LEFT, padx=5)
-		self.height_tools.pack(side=TOP, pady=(3,0))
+		d.pack(side=UI.LEFT, padx=5)
+		self.height_tools.pack(side=UI.TOP, pady=(3,0))
 		self.height_tools.pack_forget()
-		frame.pack(side=LEFT, fill=Y)
+		frame.pack(side=UI.LEFT, fill=UI.Y)
 
 		self.update_mini_range()
 		self.update_tools()
@@ -116,7 +116,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
 		return self.delegate.get_tile(tile_id)
 
 	def get_edit_mode(self) -> MegaEditorMode:
@@ -132,7 +132,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 
 	def set_enabled(self, enabled: bool) -> None:
 		self.enabled = enabled
-		state = NORMAL if enabled else DISABLED
+		state = UI.NORMAL if enabled else UI.DISABLED
 		for w in self.disable:
 			w['state'] = state
 
@@ -350,7 +350,7 @@ class MegaEditorView(Frame, TilePaletteDelegate, MiniEditorDelegate):
 			return
 		for n,minitile in enumerate(tileset.vx4.get_megatile(self.megatile_id).minitiles):
 			self.canvas_images.append(self.delegate.get_tile(minitile))
-			self.canvas.create_image(2 + 24 * (n % 4), 2 + 24 * (n // 4), anchor=NW, image=self.canvas_images[-1], tags='tile')
+			self.canvas.create_image(2 + 24 * (n % 4), 2 + 24 * (n // 4), anchor=UI.NW, image=self.canvas_images[-1], tags='tile')
 
 	def draw(self) -> None:
 		self.draw_minitiles()

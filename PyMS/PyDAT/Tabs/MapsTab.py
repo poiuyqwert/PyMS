@@ -6,7 +6,7 @@ from ..DataID import DATID, DataID, AnyID
 
 from ...FileFormats.DAT import DATMap
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -15,27 +15,27 @@ if TYPE_CHECKING:
 class MapsTab(DATTab):
 	DAT_ID = DATID.mapdata
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
-		scrollview = ScrollView(self)
+		scrollview = UI.ScrollView(self)
 
-		self.missionentry = IntegerVar(0, [0,0])
-		self.missiondd = IntVar()
+		self.missionentry = UI.IntegerVar(0, [0,0])
+		self.missiondd = UI.IntVar()
 
-		l = LabelFrame(scrollview.content_view, text='Campaign Properties:')
-		s = Frame(l)
-		f = Frame(s)
-		Label(f, text='Mission Dir:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.missionentry, font=Font.fixed(), width=5).pack(side=LEFT)
-		Label(f, text='=').pack(side=LEFT)
-		self.missions = DropDown(f, self.missiondd, [], self.missionentry, width=30)
-		self.missions.pack(side=LEFT, fill=X, expand=1, padx=2)
+		l = UI.LabelFrame(scrollview.content_view, text='Campaign Properties:')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Mission Dir:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.missionentry, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.missions = UI.DropDown(f, self.missiondd, [], self.missionentry, width=30)
+		self.missions.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
 		self.tip(f, 'Mission Dir', 'MapFile')
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(fill=UI.X)
 
-		scrollview.pack(fill=BOTH, expand=1)
+		scrollview.pack(fill=UI.BOTH, expand=1)
 
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		if DataID.mapdatatbl in ids:

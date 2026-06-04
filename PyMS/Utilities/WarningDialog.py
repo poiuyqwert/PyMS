@@ -1,49 +1,49 @@
 
 from .PyMSDialog import PyMSDialog
-from .UIKit import *
+from . import UIKit as UI
 from .PyMSWarning import PyMSWarning
 
 class WarningDialog(PyMSDialog):
-	def __init__(self, parent: Misc, warnings: list[PyMSWarning], cont: bool = False) -> None:
+	def __init__(self, parent: UI.Misc, warnings: list[PyMSWarning], cont: bool = False) -> None:
 		self.warnings = warnings
 		self.cont = cont
 		PyMSDialog.__init__(self, parent, 'Warning!', resizable=(False, False))
 
-	def widgetize(self) -> Misc | None:
-		self.bind(Ctrl.a(), self.selectall)
-		frame = Frame(self, bd=2, relief=SUNKEN)
-		hscroll = Scrollbar(frame, orient=HORIZONTAL)
-		vscroll = Scrollbar(frame)
-		self.warntext = Text(frame, bd=0, highlightthickness=0, width=60, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=NONE, exportselection=False)
+	def widgetize(self) -> UI.Misc | None:
+		self.bind(UI.Ctrl.a(), self.selectall)
+		frame = UI.Frame(self, bd=2, relief=UI.SUNKEN)
+		hscroll = UI.Scrollbar(frame, orient=UI.HORIZONTAL)
+		vscroll = UI.Scrollbar(frame)
+		self.warntext = UI.Text(frame, bd=0, highlightthickness=0, width=60, height=10, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, wrap=UI.NONE, exportselection=False)
 		self.warntext.tag_config('highlevel', foreground='#960000')
 		self.warntext.grid()
 		hscroll.config(command=self.warntext.xview)
-		hscroll.grid(sticky=EW)
+		hscroll.grid(sticky=UI.EW)
 		vscroll.config(command=self.warntext.yview)
-		vscroll.grid(sticky=NS, row=0, column=1)
+		vscroll.grid(sticky=UI.NS, row=0, column=1)
 		for warning in self.warnings:
 			if warning.level:
-				self.warntext.insert(END, warning.repr(), 'highlevel')
+				self.warntext.insert(UI.END, warning.repr(), 'highlevel')
 			else:
-				self.warntext.insert(END, warning.repr())
-		self.warntext['state'] = DISABLED
-		frame.pack(side=TOP, pady=2, padx=2)
-		buttonbar = Frame(self)
-		ok = Button(buttonbar, text='Ok', width=10, command=self.ok)
-		ok.pack(side=LEFT, padx=3)
+				self.warntext.insert(UI.END, warning.repr())
+		self.warntext['state'] = UI.DISABLED
+		frame.pack(side=UI.TOP, pady=2, padx=2)
+		buttonbar = UI.Frame(self)
+		ok = UI.Button(buttonbar, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.LEFT, padx=3)
 		if self.cont:
-			Button(buttonbar, text='Cancel', width=10, command=self.cancel).pack(side=LEFT)
+			UI.Button(buttonbar, text='Cancel', width=10, command=self.cancel).pack(side=UI.LEFT)
 		buttonbar.pack(pady=10)
 		return ok
 
-	def selectall(self, _event: Event | None = None) -> None:
+	def selectall(self, _event: UI.Event | None = None) -> None:
 		self.warntext.focus_set()
-		self.warntext.tag_add(SEL, 1.0, END)
+		self.warntext.tag_add(UI.SEL, 1.0, UI.END)
 
-	def ok(self, _: Event | None = None) -> None:
+	def ok(self, _: UI.Event | None = None) -> None:
 		self.cont = True
 		PyMSDialog.ok(self)
 
-	def cancel(self, _: Event | None = None) -> None:
+	def cancel(self, _: UI.Event | None = None) -> None:
 		self.cont = False
 		PyMSDialog.ok(self)

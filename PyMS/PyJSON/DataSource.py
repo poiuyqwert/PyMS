@@ -1,7 +1,7 @@
 
 from ..FileFormats import JSON
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 
 import uuid, json
@@ -19,8 +19,8 @@ class DataSource:
 	def __init__(self, data: Data | None = None) -> None:
 		self.data = data
 		self._itemid_to_path: dict[ItemID, Path] = {}
-		self._treeview: Treeview | None = None
-		self._treeview_font: Font
+		self._treeview: UI.Treeview | None = None
+		self._treeview_font: UI.Font
 		self._treeview_arrow_width: int
 		self._treeview_indent_width: int
 		self.name_key: str | None = None
@@ -37,7 +37,7 @@ class DataSource:
 					return False
 		return True
 
-	def _icon_for(self, value: JSON.JSON.Value) -> Image | None:
+	def _icon_for(self, value: JSON.JSON.Value) -> UI.Image | None:
 		if isinstance(value, dict):
 			return Assets.get_image('debug')
 		elif isinstance(value, list):
@@ -56,7 +56,7 @@ class DataSource:
 			return str(data[self.name_key])
 		return json.dumps(data)
 
-	def _insert_object(self, data: JSON.JSON.Object, parent: str | None, index: int | Literal['end'] = END) -> None:
+	def _insert_object(self, data: JSON.JSON.Object, parent: str | None, index: int | Literal['end'] = UI.END) -> None:
 		if not self._treeview:
 			return
 		if self._is_flat(data):
@@ -69,13 +69,13 @@ class DataSource:
 				self._insert_value(value, new_parent)
 				self.all_keys.add(key)
 
-	def _insert_array(self, data: JSON.JSON.Array, parent: str | None, index: int | Literal['end'] = END) -> None:
+	def _insert_array(self, data: JSON.JSON.Array, parent: str | None, index: int | Literal['end'] = UI.END) -> None:
 		if not self._treeview:
 			return
 		for value in data:
 			self._insert_value(value, parent, index)
 
-	def _insert_value(self, value: JSON.JSON.Value, parent: str | None = None, index: int | Literal['end'] = END) -> None:
+	def _insert_value(self, value: JSON.JSON.Value, parent: str | None = None, index: int | Literal['end'] = UI.END) -> None:
 		if not self._treeview:
 			return
 		if isinstance(value, dict):
@@ -139,12 +139,12 @@ class DataSource:
 		self._insert_value(self.data)
 		self._refresh_width()
 
-	def attach(self, treeview: Treeview) -> None:
-		Style().configure('Treeview', indent=25)
+	def attach(self, treeview: UI.Treeview) -> None:
+		UI.Style().configure('Treeview', indent=25)
 		self._treeview = treeview
-		self._treeview_font = Font.named(Style().lookup('Treeview', 'font')) or Font.default()
+		self._treeview_font = UI.Font.named(UI.Style().lookup('Treeview', 'font')) or UI.Font.default()
 		self._treeview_arrow_width = 16
-		self._treeview_indent_width = Style().lookup('Treeview', 'indent')
+		self._treeview_indent_width = UI.Style().lookup('Treeview', 'indent')
 		self._refresh()
 
 	def set_data(self, data: Data | None) -> None:

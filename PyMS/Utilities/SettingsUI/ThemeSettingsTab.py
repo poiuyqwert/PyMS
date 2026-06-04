@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .SettingsTab import SettingsTab
-from ..UIKit import *
+from .. import UIKit as UI
 from .. import Config
 from .. import Assets
 from ..PyMSConfig import PYMS_CONFIG
@@ -11,43 +11,43 @@ from ..EditedState import EditedState
 from typing import Any
 
 class ThemeSettingsTab(SettingsTab):
-	def __init__(self, parent: Notebook, edited_state: EditedState, setting: Config.String):
+	def __init__(self, parent: UI.Notebook, edited_state: EditedState, setting: Config.String):
 		super().__init__(parent)
 
 		self.edited_state = edited_state
 		self.setting = setting
 
-		self.default = BooleanVar()
+		self.default = UI.BooleanVar()
 		self.default.trace_add('write', self.default_updated)
-		self.author = StringVar()
-		self.description = StringVar()
+		self.author = UI.StringVar()
+		self.description = UI.StringVar()
 
-		Label(self, text='Theme:', font=Font.default().bolded(), anchor=W).pack(fill=X)
-		Label(self, text='Choose a default theme for all programs or override the theme for this program.\nNote: If you change the theme you will need to restart the program for it to apply.', anchor=W, justify=LEFT).pack(fill=X, pady=(0,10))
+		UI.Label(self, text='Theme:', font=UI.Font.default().bolded(), anchor=UI.W).pack(fill=UI.X)
+		UI.Label(self, text='Choose a default theme for all programs or override the theme for this program.\nNote: If you change the theme you will need to restart the program for it to apply.', anchor=UI.W, justify=UI.LEFT).pack(fill=UI.X, pady=(0,10))
 
-		frame = Frame(self)
-		frame.pack(fill=BOTH, expand=1)
+		frame = UI.Frame(self)
+		frame.pack(fill=UI.BOTH, expand=1)
 
-		listbox_frame = Frame(frame)
-		listbox_frame.pack(side=LEFT, fill=Y)
-		self.listbox = ScrolledListbox(listbox_frame, width=20, height=10)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), self.selection_updated)
-		self.listbox.pack(fill=Y, expand=1)
-		Checkbutton(listbox_frame, text='Default', variable=self.default).pack()
+		listbox_frame = UI.Frame(frame)
+		listbox_frame.pack(side=UI.LEFT, fill=UI.Y)
+		self.listbox = UI.ScrolledListbox(listbox_frame, width=20, height=10)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.selection_updated)
+		self.listbox.pack(fill=UI.Y, expand=1)
+		UI.Checkbutton(listbox_frame, text='Default', variable=self.default).pack()
 
-		detail_frame = Frame(frame)
-		detail_frame.pack(side=RIGHT, fill=BOTH, expand=1, padx=(10,0))
+		detail_frame = UI.Frame(frame)
+		detail_frame.pack(side=UI.RIGHT, fill=UI.BOTH, expand=1, padx=(10,0))
 
-		Label(detail_frame, text='Author: ').grid(column=0, row=0, sticky=E)
-		Label(detail_frame, textvariable=self.author, anchor=W).grid(column=1, row=0, sticky=W)
-		Label(detail_frame, text='Description: ').grid(column=0, row=1, sticky=E)
-		Label(detail_frame, textvariable=self.description, anchor=W).grid(column=1, row=1, sticky=W)
+		UI.Label(detail_frame, text='Author: ').grid(column=0, row=0, sticky=UI.E)
+		UI.Label(detail_frame, textvariable=self.author, anchor=UI.W).grid(column=1, row=0, sticky=UI.W)
+		UI.Label(detail_frame, text='Description: ').grid(column=0, row=1, sticky=UI.E)
+		UI.Label(detail_frame, textvariable=self.description, anchor=UI.W).grid(column=1, row=1, sticky=UI.W)
 
 		detail_frame.grid_columnconfigure(0, weight=0)
 		detail_frame.grid_columnconfigure(1, weight=1)
 
-		self.listbox.insert(END, 'None')
-		self.listbox.insert(END, *Assets.theme_list())
+		self.listbox.insert(UI.END, 'None')
+		self.listbox.insert(UI.END, *Assets.theme_list())
 
 		theme = self.current_theme()
 		self.default.set(not theme)
@@ -90,12 +90,12 @@ class ThemeSettingsTab(SettingsTab):
 		if self.default.get():
 			theme = self.current_default()
 			theme_index = self.theme_index(theme)
-			self.listbox.select_clear(0, END)
+			self.listbox.select_clear(0, UI.END)
 			self.listbox.select_set(theme_index)
 			self.listbox.see(theme_index)
 		self.check_edited()
 
-	def selection_updated(self, _event: Event | None = None) -> None:
+	def selection_updated(self, _event: UI.Event | None = None) -> None:
 		self.preview_theme()
 		self.check_edited()
 
@@ -109,7 +109,7 @@ class ThemeSettingsTab(SettingsTab):
 			self.description.set('Use the default style applied by your OS')
 		else:
 			try:
-				theme = Theme.Theme(theme_name)
+				theme = UI.Theme.Theme(theme_name)
 				self.author.set(theme.author)
 				self.description.set(theme.description)
 			except Exception:

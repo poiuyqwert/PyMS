@@ -6,7 +6,7 @@ from PyMS.Utilities.UIKit import Misc
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -61,19 +61,19 @@ class CodeGeneratorEditorRange(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTy
 	def __init__(self, parent: Misc, generator: CodeGeneratorTypeRange, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
-		self.start = IntegerVar(0,[0,None])
+		self.start = UI.IntegerVar(0,[0,None])
 		self.start.set(self.generator.start)
-		self.stop = IntegerVar(0,[0,None])
+		self.stop = UI.IntegerVar(0,[0,None])
 		self.stop.set(self.generator.stop)
-		self.step = IntegerVar(1,[1,None])
+		self.step = UI.IntegerVar(1,[1,None])
 		self.step.set(self.generator.step)
 
-		Label(self, text='From ').pack(side=LEFT)
-		Entry(self, textvariable=self.start, width=5).pack(side=LEFT)
-		Label(self, text=' to ').pack(side=LEFT)
-		Entry(self, textvariable=self.stop, width=5).pack(side=LEFT)
-		Label(self, text=', by adding ').pack(side=LEFT)
-		Entry(self, textvariable=self.step, width=5).pack(side=LEFT)
+		UI.Label(self, text='From ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.start, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=' to ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.stop, width=5).pack(side=UI.LEFT)
+		UI.Label(self, text=', by adding ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=self.step, width=5).pack(side=UI.LEFT)
 
 	def save(self) -> None:
 		self.generator.start = self.start.get()

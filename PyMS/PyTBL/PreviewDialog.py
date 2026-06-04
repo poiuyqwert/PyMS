@@ -6,38 +6,38 @@ from ..FileFormats import TBL
 from ..FileFormats import FNT
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 import re
 
 from typing import cast
 
-Character = tuple[Image, FNT.Size]
+Character = tuple[UI.Image, FNT.Size]
 
 class PreviewDialog(PyMSDialog):
 	letter_space = 1
 	space_space = 4
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		self.delegate = delegate
-		self.icons: dict[str, tuple[Image, tuple[int, int, int, int]]] = {}
+		self.icons: dict[str, tuple[UI.Image, tuple[int, int, int, int]]] = {}
 		self.characters: dict[str, dict[int, Character]] = {}
-		self.hotkey = BooleanVar()
+		self.hotkey = UI.BooleanVar()
 		self.hotkey.set(self.delegate.config_.preview.hotkey.value)
-		self.endatnull = BooleanVar()
+		self.endatnull = UI.BooleanVar()
 		self.endatnull.set(self.delegate.config_.preview.end_at_null.value)
 		PyMSDialog.__init__(self, parent, 'Text Previewer', resizable=(False,False))
 
-	def geticon(self, icon_name: str, frame_index: int) -> tuple[Image, tuple[int, int, int, int]]:
+	def geticon(self, icon_name: str, frame_index: int) -> tuple[UI.Image, tuple[int, int, int, int]]:
 		if not icon_name in self.icons:
 			i = cast(GRP.ImageWithBounds, GRP.frame_to_photo(self.delegate.unitpal.palette, self.delegate.icons, frame_index))
 			self.icons[icon_name] = (i[0],(i[2]+1,i[4],0,0))
 		return self.icons[icon_name]
 
 	def preview(self) -> None:
-		self.canvas.delete(ALL)
+		self.canvas.delete(UI.ALL)
 		self.characters.clear()
-		text = TBL.compile_string(self.delegate.text.get('1.0',END)[:-1])
+		text = TBL.compile_string(self.delegate.text.get('1.0',UI.END)[:-1])
 		if not text:
 			return
 		color = 2
@@ -75,7 +75,7 @@ class PreviewDialog(PyMSDialog):
 					if not c in self.characters:
 						self.characters[c] = {}
 					if not color in self.characters[c]:
-						self.characters[c][color] = (cast(Image, FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color)), fnt.sizes[a])
+						self.characters[c][color] = (cast(UI.Image, FNT.letter_to_photo(self.delegate.tfontgam, fnt.letters[a], color)), fnt.sizes[a])
 					display[-1].append(self.characters[c][color])
 				elif a in FNT.COLOR_CODES_INGAME and not color in FNT.COLOR_OVERPOWER:
 					color = a
@@ -98,23 +98,23 @@ class PreviewDialog(PyMSDialog):
 		for letters in display:
 			x = 7
 			for l in letters:
-				self.canvas.create_image(x - l[1][2], y, image=l[0], anchor=NW)
+				self.canvas.create_image(x - l[1][2], y, image=l[0], anchor=UI.NW)
 				x += l[1][0] + self.letter_space
 			y += fnt.height
 
-	def widgetize(self) -> (Misc | None):
-		self.canvas = Canvas(self, width=200, height=16, background='#000000', bd=2, relief=SUNKEN)
+	def widgetize(self) -> (UI.Misc | None):
+		self.canvas = UI.Canvas(self, width=200, height=16, background='#000000', bd=2, relief=UI.SUNKEN)
 		self.canvas.pack(padx=5, pady=5)
-		f = Frame(self)
-		Checkbutton(f, text='Hotkey String', variable=self.hotkey, command=self.preview).pack(side=LEFT)
-		Checkbutton(f, text='End at Null', variable=self.endatnull, command=self.preview).pack(side=LEFT)
+		f = UI.Frame(self)
+		UI.Checkbutton(f, text='Hotkey String', variable=self.hotkey, command=self.preview).pack(side=UI.LEFT)
+		UI.Checkbutton(f, text='End at Null', variable=self.endatnull, command=self.preview).pack(side=UI.LEFT)
 		f.pack()
 		self.preview()
-		ok = Button(self, text='Ok', width=10, command=self.ok)
+		ok = UI.Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=3)
 		return ok
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.delegate.config_.preview.hotkey.value = self.hotkey.get()
 		self.delegate.config_.preview.end_at_null.value = self.endatnull.get()
 		PyMSDialog.ok(self)

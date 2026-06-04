@@ -2,7 +2,7 @@
 from . import Assets
 from .PyMSConfig import PYMS_CONFIG
 from .PyMSDialog import PyMSDialog
-from .UIKit import *
+from . import UIKit as UI
 from .SemVer import SemVer
 
 import json, urllib.request, urllib.parse, urllib.error
@@ -12,8 +12,8 @@ class UpdateDialog(PyMSDialog):
 	BRANCH = 'AISE' # Default to `master` branch, but can be update for long-lived branches
 
 	@staticmethod
-	def check_update(window: WindowExtensions, program: str) -> None:
-		def do_check_update(window: WindowExtensions, program: str) -> None:
+	def check_update(window: UI.WindowExtensions, program: str) -> None:
+		def do_check_update(window: UI.WindowExtensions, program: str) -> None:
 			VERSIONS_URL = f'https://raw.githubusercontent.com/poiuyqwert/PyMS/{UpdateDialog.BRANCH}/PyMS/versions.json'
 			try:
 				import ssl
@@ -46,27 +46,27 @@ class UpdateDialog(PyMSDialog):
 			window.after_managed(1, callback)
 		start_new_thread(do_check_update, (window, program))
 
-	def __init__(self, parent: Misc, program: str, versions: dict[str, str]) -> None:
+	def __init__(self, parent: UI.Misc, program: str, versions: dict[str, str]) -> None:
 		self.program = program
 		self.versions = versions
 		PyMSDialog.__init__(self, parent, 'New Version Found', resizable=(False, False))
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		if SemVer(Assets.version(self.program)) < SemVer(self.versions[self.program]):
 			text = f"Your version of {self.program} ({Assets.version(self.program)}) is older then the current version ({self.versions[self.program]}).\nIt is recommended that you update as soon as possible."
 		else:
 			text = f"Your version of PyMS ({Assets.version('PyMS')}) is older then the current version ({self.versions['PyMS']}).\nIt is recommended that you update as soon as possible."
-		Label(self, justify=LEFT, anchor=W, text=text).pack(pady=5,padx=5)
-		f = Frame(self)
-		self.dont_remind_me = BooleanVar()
-		Checkbutton(f, text="Don't remind me for this version", variable=self.dont_remind_me).pack(side=LEFT, padx=5)
-		Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=RIGHT, padx=5)
-		f.pack(fill=X, expand=1)
-		ok = Button(self, text='Ok', width=10, command=self.ok)
+		UI.Label(self, justify=UI.LEFT, anchor=UI.W, text=text).pack(pady=5,padx=5)
+		f = UI.Frame(self)
+		self.dont_remind_me = UI.BooleanVar()
+		UI.Checkbutton(f, text="Don't remind me for this version", variable=self.dont_remind_me).pack(side=UI.LEFT, padx=5)
+		UI.Hotlink(f, 'Github', 'https://github.com/poiuyqwert/PyMS').pack(side=UI.RIGHT, padx=5)
+		f.pack(fill=UI.X, expand=1)
+		ok = UI.Button(self, text='Ok', width=10, command=self.ok)
 		ok.pack(pady=5)
 		return ok
 
-	def ok(self, _: Event | None = None) -> None:
+	def ok(self, _: UI.Event | None = None) -> None:
 		if self.dont_remind_me.get():
 			PYMS_CONFIG.reminder.pyms_version.data['PyMS'] = self.versions['PyMS']
 			PYMS_CONFIG.reminder.pyms_version.data[self.program] = self.versions[self.program]

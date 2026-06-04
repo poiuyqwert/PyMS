@@ -2,7 +2,7 @@
 from . import CodeGenerator
 from ..Config import PyICEConfig
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import JSON
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import Config
@@ -46,18 +46,18 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 	def description(self) -> str:
 		return self.math
 
-	def build_editor(self, parent: Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
+	def build_editor(self, parent: UI.Misc, config: PyICEConfig) -> CodeGenerator.CodeGeneratorEditor:
 		return CodeGeneratorEditorMath(parent, self, config.windows.generator.editor.math)
 
 class CodeGeneratorEditorMath(CodeGenerator.CodeGeneratorEditor[CodeGeneratorTypeMath]):
-	def __init__(self, parent: Misc, generator: CodeGeneratorTypeMath, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Misc, generator: CodeGeneratorTypeMath, window_geometry_config: Config.WindowGeometry) -> None:
 		CodeGenerator.CodeGeneratorEditor.__init__(self, parent, generator, window_geometry_config)
 
-		self.math = StringVar()
+		self.math = UI.StringVar()
 		self.math.set(self.generator.math)
 
-		Label(self, text='Math:', anchor=W).pack(side=TOP, fill=X)
-		Entry(self, textvariable=self.math).pack(side=TOP, fill=X)
+		UI.Label(self, text='Math:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X)
+		UI.Entry(self, textvariable=self.math).pack(side=UI.TOP, fill=UI.X)
 
 	def save(self) -> None:
 		self.generator.math = self.math.get()

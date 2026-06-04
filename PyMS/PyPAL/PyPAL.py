@@ -6,7 +6,7 @@ from ..FileFormats.Palette import Palette
 from ..FileFormats.Images import RGB
 
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -25,10 +25,10 @@ from typing import Callable
 
 LONG_VERSION = 'v' + Assets.version('PyPAL')
 
-class PyPAL(MainWindow):
+class PyPAL(UI.MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyPAL')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyPAL', Assets.version('PyPAL'))
@@ -36,7 +36,7 @@ class PyPAL(MainWindow):
 		setup_trace('PyPAL', self)
 
 		self.config_ = PyPALConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.palette: Palette | None = None
@@ -48,74 +48,74 @@ class PyPAL(MainWindow):
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags=('file_open', 'format_known'))
 		def saveas_callback(file_type: Palette.FileType) -> Callable[[], None]:
 			def saveas() -> None:
 				self.saveas(file_type=file_type)
 			return saveas
-		self.toolbar.add_button(Assets.get_image('saveriff'), saveas_callback(Palette.FileType.riff), 'Save as RIFF *.pal', Ctrl.r, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savejasc'), saveas_callback(Palette.FileType.jasc), 'Save as JASC *.pal', Ctrl.j, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savepal'), saveas_callback(Palette.FileType.sc_pal), 'Save as StarCraft *.pal', Ctrl.p, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savewpe'), saveas_callback(Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', Ctrl.t, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('saveact'), saveas_callback(Palette.FileType.act), 'Save as Adobe Color Table *.act', Ctrl.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveriff'), saveas_callback(Palette.FileType.riff), 'Save as RIFF *.pal', UI.Ctrl.r, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savejasc'), saveas_callback(Palette.FileType.jasc), 'Save as JASC *.pal', UI.Ctrl.j, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savepal'), saveas_callback(Palette.FileType.sc_pal), 'Save as StarCraft *.pal', UI.Ctrl.p, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savewpe'), saveas_callback(Palette.FileType.wpe), 'Save as StarCraft Terrain *.wpe', UI.Ctrl.t, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveact'), saveas_callback(Palette.FileType.act), 'Save as Adobe Color Table *.act', UI.Ctrl.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.sets, "Manage Settings", UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.pal and *.wpe editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyPAL')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.palmenu = Menu(self, tearoff=0)
-		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=Ctrl.c) # type: ignore[call-arg]
-		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=Ctrl.p, tags='paste') # type: ignore[call-arg]
+		self.palmenu = UI.Menu(self, tearoff=0)
+		self.palmenu.add_command(label='Copy', command=self.copy, shortcut=UI.Ctrl.c) # type: ignore[call-arg]
+		self.palmenu.add_command(label='Paste', command=self.paste, shortcut=UI.Ctrl.p, tags='paste') # type: ignore[call-arg]
 
 		#Canvas
-		self.canvas = Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=Canvas.coordinate_adjust_os, theme_tag='preview') # type: ignore[call-arg, attr-defined]
+		self.canvas = UI.Canvas(self, width=273, height=273, background='#000000', coordinate_adjust=UI.Canvas.coordinate_adjust_os, theme_tag='preview') # type: ignore[call-arg, attr-defined]
 		self.canvas.pack(padx=2, pady=2)
-		def colorstatus_callback(index: int) -> Callable[[Event], None]:
-			def colorstatus(event: Event) -> None:
+		def colorstatus_callback(index: int) -> Callable[[UI.Event], None]:
+			def colorstatus(event: UI.Event) -> None:
 				self.colorstatus(event, index)
 			return colorstatus
-		def select_callback(index: int) -> Callable[[Event], None]:
-			def select(event: Event) -> None:
+		def select_callback(index: int) -> Callable[[UI.Event], None]:
+			def select(event: UI.Event) -> None:
 				self.select(event, index)
 			return select
-		def changecolor_callback(index: int) -> Callable[[Event], None]:
-			def changecolor(event: Event) -> None:
+		def changecolor_callback(index: int) -> Callable[[UI.Event], None]:
+			def changecolor(event: UI.Event) -> None:
 				self.changecolor(event, index)
 			return changecolor
-		def popup_callback(index: int) -> Callable[[Event], None]:
-			def popup(event: Event) -> None:
+		def popup_callback(index: int) -> Callable[[UI.Event], None]:
+			def popup(event: UI.Event) -> None:
 				self.popup(event, index)
 			return popup
 		for n in range(256):
 			x,y = 3+17*(n%16),3+17*(n//16)
 			self.canvas.create_rectangle(x, y, x+15, y+15, fill='#000000', outline='#000000')
-			self.canvas.tag_bind(n+1, Cursor.Enter(), colorstatus_callback(n))
-			self.canvas.tag_bind(n+1, Cursor.Leave(), colorstatus_callback(-1))
-			self.canvas.tag_bind(n+1, Mouse.Click_Left(), select_callback(n))
-			self.canvas.tag_bind(n+1, Double.Click_Left(), changecolor_callback(n))
-			self.canvas.tag_bind(n+1, ButtonRelease.Click_Right(), popup_callback(n))
+			self.canvas.tag_bind(n+1, UI.Cursor.Enter(), colorstatus_callback(n))
+			self.canvas.tag_bind(n+1, UI.Cursor.Leave(), colorstatus_callback(-1))
+			self.canvas.tag_bind(n+1, UI.Mouse.Click_Left(), select_callback(n))
+			self.canvas.tag_bind(n+1, UI.Double.Click_Left(), changecolor_callback(n))
+			self.canvas.tag_bind(n+1, UI.ButtonRelease.Click_Right(), popup_callback(n))
 		self.sel = self.canvas.create_rectangle(0,0,0,0,outline='#FFFFFF')
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a Palette.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=40)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		if guifile:
 			self.open(file=guifile)
@@ -130,7 +130,7 @@ class PyPAL(MainWindow):
 		file = self.file
 		if not file:
 			file = 'Unnamed.pal'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -146,7 +146,7 @@ class PyPAL(MainWindow):
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.toolbar.tag_enabled('format_known', self.format is not None)
 
-	def popup(self, event: Event, i: int) -> None:
+	def popup(self, event: UI.Event, i: int) -> None:
 		if not self.palette:
 			return
 		self.select(event,i)
@@ -159,36 +159,36 @@ class PyPAL(MainWindow):
 		else:
 			pal = [(0,0,0)] * 256
 		for n,rgb in enumerate(pal):
-			c = Colors.to_html(rgb)
+			c = UI.Colors.to_html(rgb)
 			self.canvas.itemconfigure(n+1, fill=c, outline=c)
 
-	def colorstatus(self, _event: Event | None, i: int) -> None:
+	def colorstatus(self, _event: UI.Event | None, i: int) -> None:
 		if self.palette and i > -1:
 			r,g,b = self.palette.palette[i]
-			self.status.set(f'Index: {i}  RGB: ({r},{g},{b})  Hex: {Colors.to_html(r,g,b)}')
+			self.status.set(f'Index: {i}  RGB: ({r},{g},{b})  Hex: {UI.Colors.to_html(r,g,b)}')
 
-	def select(self, _event: Event | None, i: int) -> None:
+	def select(self, _event: UI.Event | None, i: int) -> None:
 		if not self.palette:
 			return
 		self.selected = i
 		x,y = 2+17*(i%16),2+17*(i//16)
 		self.sel.coords(x, y, x+17, y+17)
 
-	def changecolor(self, _event: Event, i: int) -> None:
+	def changecolor(self, _event: UI.Event, i: int) -> None:
 		if not self.palette:
 			return
 		self.select(None,i)
-		c = ColorChooser.askcolor(parent=self, initialcolor=Colors.to_html(self.palette.palette[i]), title='Select Color')
+		c = UI.ColorChooser.askcolor(parent=self, initialcolor=UI.Colors.to_html(self.palette.palette[i]), title='Select Color')
 		if c[1]:
 			self.mark_edited()
 			self.canvas.itemconfigure(i+1, fill=c[1], outline=c[1])
 			self.palette.palette[i] = c[0]
 
-	def copy(self, _event: Event | None = None) -> None:
+	def copy(self, _event: UI.Event | None = None) -> None:
 		if not self.palette or self.selected is None:
 			return
 		self.clipboard_clear()
-		self.clipboard_append(Colors.to_html(self.palette.palette[self.selected]))
+		self.clipboard_append(UI.Colors.to_html(self.palette.palette[self.selected]))
 
 	def canpaste(self, c: str | None = None) -> (RGB | None):
 		try:
@@ -202,7 +202,7 @@ class PyPAL(MainWindow):
 				return (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16))
 		return None
 
-	def paste(self, _event: Event | None = None) -> None:
+	def paste(self, _event: UI.Event | None = None) -> None:
 		if not self.palette or self.selected is None:
 			return
 		try:
@@ -227,7 +227,7 @@ class PyPAL(MainWindow):
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:

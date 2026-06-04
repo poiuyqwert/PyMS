@@ -24,7 +24,7 @@ from ..FileFormats.MPQ.MPQ import MPQ, MPQCompressionFlag
 
 from ..Utilities.utils import binary
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
@@ -50,13 +50,13 @@ from typing import IO as BuiltinIO
 
 LONG_VERSION = 'v' + Assets.version('PyAI')
 
-class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
+class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
 		self.aiscript: str | None = None
 		self.bwscript: str | None = None
 
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.update_title()
 		self.set_icon('PyAI')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
@@ -65,7 +65,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		setup_trace('PyAI', self)
 
 		self.config_ = PyAIConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.data_context = DataContext()
 		self.ai: AIBIN.AIBIN | None = None
@@ -78,7 +78,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.findhistory: list[str] = []
 		self.replacehistory: list[str] = []
 
-		self.sort = StringVar()
+		self.sort = UI.StringVar()
 		self.sort.set(self.config_.sort.value.value)
 		self.sort.trace_add('write', lambda *_: self.refresh_listbox())
 		# self.reference = BooleanVar()
@@ -86,50 +86,50 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 		# Note: Toolbar will bind the shortcuts below
 		# TODO: Check for items not bound by `Toolbar`
-		self.menu = Menu(self)
+		self.menu = UI.Menu(self)
 		self.config(menu=self.menu)
 
 		file_menu = self.menu.add_cascade('File') # type: ignore[func-returns-value, arg-type]
-		file_menu.add_command('New', self.new, Ctrl.n, bind_shortcut=False)
-		file_menu.add_command('Open', self.open, Ctrl.o, bind_shortcut=False)
-		file_menu.add_command('Open Default Scripts', self.open_default, Ctrl.d, bind_shortcut=False)
-		file_menu.add_command('Open MPQ', self.open_mpq, Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
+		file_menu.add_command('New', self.new, UI.Ctrl.n, bind_shortcut=False)
+		file_menu.add_command('Open', self.open, UI.Ctrl.o, bind_shortcut=False)
+		file_menu.add_command('Open Default Scripts', self.open_default, UI.Ctrl.d, bind_shortcut=False)
+		file_menu.add_command('Open MPQ', self.open_mpq, UI.Ctrl.Alt.o, enabled=MPQ.supported(), bind_shortcut=False, underline='m')
 		def do_save() -> None:
 			self.save()
-		file_menu.add_command('Save', do_save, Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
+		file_menu.add_command('Save', do_save, UI.Ctrl.s, enabled=False, tags='file_open', bind_shortcut=False)
 		def do_saveas() -> None:
 			self.saveas()
-		file_menu.add_command('Save As...', do_saveas, Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
-		file_menu.add_command('Save MPQ', self.savempq, Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
-		file_menu.add_command('Close', self.close, Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
+		file_menu.add_command('Save As...', do_saveas, UI.Ctrl.Alt.a, enabled=False, tags='file_open', bind_shortcut=False, underline='As')
+		file_menu.add_command('Save MPQ', self.savempq, UI.Ctrl.Alt.m, enabled=MPQ.supported(), tags=('file_open','mpq_available'), bind_shortcut=False, underline='a')
+		file_menu.add_command('Close', self.close, UI.Ctrl.w, enabled=False, tags='file_open', bind_shortcut=False, underline='c')
 		file_menu.add_separator()
 		file_menu.add_command('Set as default *.bin editor (Windows Only)', self.register_registry, enabled=registry.IS_AVAILABLE, underline='t')
 		file_menu.add_separator()
-		file_menu.add_command('Exit', self.exit, Shortcut.Exit, underline='e')
+		file_menu.add_command('Exit', self.exit, UI.Shortcut.Exit, underline='e')
 
 		edit_menu = self.menu.add_cascade('Edit') # type: ignore[func-returns-value, arg-type]
-		edit_menu.add_command('Undo', self.action_manager.undo, Ctrl.z, enabled=False, tags='can_undo', bind_shortcut=False, underline='u')
-		edit_menu.add_command('Redo', self.action_manager.redo, Ctrl.y, enabled=False, tags='can_redo', bind_shortcut=False, underline='r')
+		edit_menu.add_command('Undo', self.action_manager.undo, UI.Ctrl.z, enabled=False, tags='can_undo', bind_shortcut=False, underline='u')
+		edit_menu.add_command('Redo', self.action_manager.redo, UI.Ctrl.y, enabled=False, tags='can_redo', bind_shortcut=False, underline='r')
 		edit_menu.add_separator()
-		edit_menu.add_command('Select All', self.select_all, Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
-		edit_menu.add_command('Add Blank Script', self.add, Key.Insert, enabled=False, tags='file_open', bind_shortcut=False, underline='b')
-		edit_menu.add_command('Remove Scripts', self.remove, Key.Delete, enabled=False, tags='scripts_selected', bind_shortcut=False, underline='v')
-		edit_menu.add_command('Find Scripts', self.find, Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_command('Select All', self.select_all, UI.Ctrl.a, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_command('Add Blank Script', self.add, UI.Key.Insert, enabled=False, tags='file_open', bind_shortcut=False, underline='b')
+		edit_menu.add_command('Remove Scripts', self.remove, UI.Key.Delete, enabled=False, tags='scripts_selected', bind_shortcut=False, underline='v')
+		edit_menu.add_command('Find Scripts', self.find, UI.Ctrl.f, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_separator()
-		edit_menu.add_command('Export Scripts', self.export, Ctrl.Alt.e, enabled=False, tags='scripts_selected', bind_shortcut=False)
-		edit_menu.add_command('Import Scripts', self.iimport, Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
-		edit_menu.add_command('Import a List of Files', self.listimport, Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_command('Export Scripts', self.export, UI.Ctrl.Alt.e, enabled=False, tags='scripts_selected', bind_shortcut=False)
+		edit_menu.add_command('Import Scripts', self.iimport, UI.Ctrl.Alt.i, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_command('Import a List of Files', self.listimport, UI.Ctrl.l, enabled=False, tags='file_open', bind_shortcut=False)
 		edit_menu.add_separator()
 		# edit_menu.add_checkbutton('Print Reference when Decompiling', self.reference, underline='p')
 		edit_menu.add_command('Decompiling Format', self.decompiling_format)
 		edit_menu.add_separator()
-		edit_menu.add_command('Edit AI Script', self.codeedit, Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
-		edit_menu.add_command('Edit AI ID, String, and Extra Info.', self.edit, Ctrl.i, enabled=False, tags='scripts_selected', bind_shortcut=False, underline='ID')
-		edit_menu.add_command('Edit Flags', self.editflags, Ctrl.g, enabled=False, tags='scripts_selected', bind_shortcut=False)
+		edit_menu.add_command('Edit AI Script', self.codeedit, UI.Ctrl.e, enabled=False, tags='file_open', bind_shortcut=False)
+		edit_menu.add_command('Edit AI ID, String, and Extra Info.', self.edit, UI.Ctrl.i, enabled=False, tags='scripts_selected', bind_shortcut=False, underline='ID')
+		edit_menu.add_command('Edit Flags', self.editflags, UI.Ctrl.g, enabled=False, tags='scripts_selected', bind_shortcut=False)
 		edit_menu.add_separator()
-		edit_menu.add_command('Manage External Definition Files', self.extdef, Ctrl.x, bind_shortcut=False)
+		edit_menu.add_command('Manage External Definition Files', self.extdef, UI.Ctrl.x, bind_shortcut=False)
 		# edit_menu.add_command('Manage TBL File', self.managetbl, Ctrl.t, bind_shortcut=False)
-		edit_menu.add_command('Manage Settings', self.settings, Ctrl.u, bind_shortcut=False, underline='m')
+		edit_menu.add_command('Manage Settings', self.settings, UI.Ctrl.u, bind_shortcut=False, underline='m')
 
 		view_menu = self.menu.add_cascade('View') # type: ignore[func-returns-value, arg-type]
 		view_menu.add_radiobutton('File Order', self.sort, SortBy.file_order.value, underline='Order')
@@ -139,26 +139,26 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		view_menu.add_radiobutton('Sort by Strings', self.sort, SortBy.string.value, underline='Strings')
 
 		help_menu = self.menu.add_cascade('Help') # type: ignore[func-returns-value, arg-type]
-		help_menu.add_command('View Help', self.help, Key.F1, bind_shortcut=False, underline='h')
+		help_menu.add_command('View Help', self.help, UI.Key.F1, bind_shortcut=False, underline='h')
 		help_menu.add_separator()
 		help_menu.add_command('About PyAI', self.about, underline='a')
 
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
-		self.toolbar.add_button(Assets.get_image('openmpq'), self.open_mpq, 'Open MPQ', Ctrl.Alt.o, enabled=MPQ.supported())
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', UI.Ctrl.d)
+		self.toolbar.add_button(Assets.get_image('openmpq'), self.open_mpq, 'Open MPQ', UI.Ctrl.Alt.o, enabled=MPQ.supported())
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=False, tags=('file_open','mpq_available'))
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', UI.Ctrl.Alt.m, enabled=False, tags=('file_open','mpq_available'))
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('undo'), self.action_manager.undo, 'Undo', Ctrl.z, enabled=False, tags='can_undo')
-		self.toolbar.add_button(Assets.get_image('redo'), self.action_manager.redo, 'Redo', Ctrl.y, enabled=False, tags='can_redo')
+		self.toolbar.add_button(Assets.get_image('undo'), self.action_manager.undo, 'Undo', UI.Ctrl.z, enabled=False, tags='can_undo')
+		self.toolbar.add_button(Assets.get_image('redo'), self.action_manager.redo, 'Redo', UI.Ctrl.y, enabled=False, tags='can_redo')
 		self.toolbar.add_section()
 		self.toolbar.add_radiobutton(Assets.get_image('order'), self.sort, 'order', 'File Order')
 		self.toolbar.add_radiobutton(Assets.get_image('idsort'), self.sort, 'idsort', 'Sort by ID')
@@ -167,66 +167,66 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.toolbar.add_radiobutton(Assets.get_image('stringsort'), self.sort, 'stringsort', 'Sort by String')
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyAI')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
 
 		self.toolbar.add_row()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Blank Script', Key.Insert, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Scripts', Key.Delete, enabled=False, tags='scripts_selected')
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Blank Script', UI.Key.Insert, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Scripts', UI.Key.Delete, enabled=False, tags='scripts_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Scripts', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Scripts', UI.Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Scripts', Ctrl.Alt.e, enabled=False, tags='scripts_selected')
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Scripts', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Scripts', UI.Ctrl.Alt.e, enabled=False, tags='scripts_selected')
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Scripts', UI.Ctrl.Alt.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', UI.Ctrl.l, enabled=False, tags='file_open')
 		self.toolbar.add_section()
 		# self.toolbar.add_checkbutton(Assets.get_image('reference'), self.reference, 'Print Reference when Decompiling')
 		self.toolbar.add_button(Assets.get_image('debug'), self.decompiling_format, 'Decompiling Format')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', Ctrl.e, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit AI ID, String, and Extra Info.', Ctrl.i, enabled=False, tags='scripts_selected')
-		self.toolbar.add_button(Assets.get_image('flags'), self.editflags, 'Edit Flags', Ctrl.g, enabled=False, tags='scripts_selected')
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit AI Script', UI.Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('edit'), self.edit, 'Edit AI ID, String, and Extra Info.', UI.Ctrl.i, enabled=False, tags='scripts_selected')
+		self.toolbar.add_button(Assets.get_image('flags'), self.editflags, 'Edit Flags', UI.Ctrl.g, enabled=False, tags='scripts_selected')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('extdef'), self.extdef, 'Manage External Definition Files', Ctrl.x)
+		self.toolbar.add_button(Assets.get_image('extdef'), self.extdef, 'Manage External Definition Files', UI.Ctrl.x)
 		# self.toolbar.add_button(Assets.get_image('tbl'), self.managetbl, 'Manage TBL file', Ctrl.t)
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', Ctrl.u)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage Settings', UI.Ctrl.u)
 		self.toolbar.add_gap()
 		self.toolbar.add_button(Assets.get_image('openset'), self.openset, 'Open TBL and DAT Settings')
 		self.toolbar.add_button(Assets.get_image('saveset'), self.saveset, 'Save TBL and DAT Settings')
-		self.toolbar.pack(side=TOP, fill=X)
+		self.toolbar.pack(side=UI.TOP, fill=UI.X)
 
 		self.menu.tag_enabled('mpq_available', MPQ.supported()) # type: ignore[attr-defined]
 		self.toolbar.tag_enabled('mpq_available', MPQ.supported()) # type: ignore[attr-defined]
 
-		self.listbox = ScrolledListbox(self, selectmode=EXTENDED, font=Font.fixed(), width=1, height=1)
-		self.listbox.pack(fill=BOTH, padx=2, pady=2, expand=1)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda _: self.action_states())
-		self.listbox.bind(ButtonRelease.Click_Right(), self.popup)
-		self.listbox.bind(Double.Click_Left(), self.codeedit)
+		self.listbox = UI.ScrolledListbox(self, selectmode=UI.EXTENDED, font=UI.Font.fixed(), width=1, height=1)
+		self.listbox.pack(fill=UI.BOTH, padx=2, pady=2, expand=1)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda _: self.action_states())
+		self.listbox.bind(UI.ButtonRelease.Click_Right(), self.popup)
+		self.listbox.bind(UI.Double.Click_Left(), self.codeedit)
 		ListboxTooltip(self.listbox, delegate=self)
 
-		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command('Add Blank Script', self.add, Key.Insert, underline='b') # type: ignore
-		self.listmenu.add_command('Remove Scripts', self.remove, Key.Delete, tags='scripts_selected', underline='r') # type: ignore
+		self.listmenu = UI.Menu(self, tearoff=0)
+		self.listmenu.add_command('Add Blank Script', self.add, UI.Key.Insert, underline='b') # type: ignore
+		self.listmenu.add_command('Remove Scripts', self.remove, UI.Key.Delete, tags='scripts_selected', underline='r') # type: ignore
 		self.listmenu.add_separator()
-		self.listmenu.add_command('Export Scripts', self.export, Ctrl.Alt.e, tags='scripts_selected') # type: ignore
-		self.listmenu.add_command('Import Scripts', self.iimport, Ctrl.Alt.i) # type: ignore
+		self.listmenu.add_command('Export Scripts', self.export, UI.Ctrl.Alt.e, tags='scripts_selected') # type: ignore
+		self.listmenu.add_command('Import Scripts', self.iimport, UI.Ctrl.Alt.i) # type: ignore
 		self.listmenu.add_separator()
-		self.listmenu.add_command('Edit AI Script', self.codeedit, Ctrl.e, tags='scripts_selected', underline='a') # type: ignore
-		self.listmenu.add_command('Edit Script ID and String', self.edit, Ctrl.i, tags='scripts_selected', underline='s') # type: ignore
-		self.listmenu.add_command('Edit Flags', self.editflags, Ctrl.g, tags='scripts_selected', underline='f') # type: ignore
+		self.listmenu.add_command('Edit AI Script', self.codeedit, UI.Ctrl.e, tags='scripts_selected', underline='a') # type: ignore
+		self.listmenu.add_command('Edit Script ID and String', self.edit, UI.Ctrl.i, tags='scripts_selected', underline='s') # type: ignore
+		self.listmenu.add_command('Edit Flags', self.editflags, UI.Ctrl.g, tags='scripts_selected', underline='f') # type: ignore
 
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load your files or create new ones.')
-		self.scriptstatus = StringVar()
-		statusbar = StatusBar(self)
+		self.scriptstatus = UI.StringVar()
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=1)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.scriptstatus, weight=1)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
@@ -293,14 +293,14 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def refresh_listbox(self) -> None:
 		yview = self.listbox.yview()
 		was_selected = self.get_selected_scripts()
-		self.listbox.delete(0, END)
+		self.listbox.delete(0, UI.END)
 		if not self.ai:
 			return
 		self.script_list = self.get_sortby().sort(self.ai.list_scripts(), self.data_context.stattxt_tbl)
 		for header in self.script_list:
-			self.listbox.insert(END, self.entry_text(header))
+			self.listbox.insert(UI.END, self.entry_text(header))
 			if header in was_selected:
-				self.listbox.select_set(END)
+				self.listbox.select_set(UI.END)
 		self.listbox.yview_moveto(yview[0])
 
 	def is_file_open(self) -> bool:
@@ -334,7 +334,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		bwscript = self.bwscript
 		if not bwscript:
 			bwscript = 'bwscript.bin'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{aiscript}' and '{bwscript}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -343,7 +343,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			return self.save()
 		return self.saveas()
 
-	def popup(self, event: Event) -> None:
+	def popup(self, event: UI.Event) -> None:
 		if not self.ai:
 			return
 		self.listmenu.tag_enabled('scripts_selected', not not self.listbox.curselection()) # type: ignore[attr-defined]
@@ -351,7 +351,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def update_script_status(self) -> None:
 		if self.ai is None:
@@ -375,7 +375,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.mark_edited(False)
 		self.update_title()
 		self.status.set('Editing new file!')
-		self.listbox.delete(0, END)
+		self.listbox.delete(0, UI.END)
 		self.action_states()
 		self.update_script_status()
 
@@ -500,7 +500,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if not_saved:
-			MessageBox.showinfo(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.')
+			UI.MessageBox.showinfo(parent=self, title='Save problems', message=f'{" and ".join(not_saved)} could not be saved to the MPQ.')
 
 	def close(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
@@ -512,17 +512,17 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.action_manager.clear()
 		self.update_title()
 		self.status.set('Load your files or create new ones.')
-		self.listbox.delete(0, END)
+		self.listbox.delete(0, UI.END)
 		self.action_states()
 		self.update_script_status()
 
-	def register_registry(self, _event: Event | None = None) -> None:
+	def register_registry(self, _event: UI.Event | None = None) -> None:
 		try:
 			registry.register('PyAI', 'bin', 'AI')
 		except PyMSError as err:
 			ErrorDialog(self, err)
 
-	def help(self, _event: Event | None = None) -> None:
+	def help(self, _event: UI.Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyAI.md')
 
 	def about(self) -> None:
@@ -538,7 +538,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, _event: Event | None = None) -> None:
+	def exit(self, _event: UI.Event | None = None) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
 		self.config_.windows.main.save_size(self)
@@ -547,7 +547,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 		self.destroy()
 
 	def select_all(self) -> None:
-		self.listbox.select_set(0, END)
+		self.listbox.select_set(0, UI.END)
 
 	def add(self) -> None:
 		if not self.ai:
@@ -603,9 +603,9 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			ErrorDialog(self, e)
 			return
 		if serialize_context.strategy.external_headers:
-			MessageBox.showinfo(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers))
+			UI.MessageBox.showinfo(parent=self, title='External References', message='One or more of the scripts you are exporting references an external block, so the scripts that are referenced have been exported as well:\n    %s' % '\n    '.join(script.get_name() for script in serialize_context.strategy.external_headers))
 
-	def iimport(self, import_paths: list[str] | None = None,  parent: AnyWindow | None = None) -> None:
+	def iimport(self, import_paths: list[str] | None = None,  parent: UI.AnyWindow | None = None) -> None:
 		if not self.ai:
 			return
 		if parent is None:
@@ -622,7 +622,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def listimport(self) -> None:
 		ImportListDialog(self, self, self.config_)
 
-	def codeedit(self, _event: Event | None = None) -> None:
+	def codeedit(self, _event: UI.Event | None = None) -> None:
 		headers = self.get_selected_scripts()
 		CodeEditDialog(self, self, self.config_, list(header.id for header in headers))
 
@@ -671,11 +671,11 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 			with open(file, 'r', encoding='utf-8') as settings:
 				files = settings.read().splitlines()
 		except Exception:
-			MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
+			UI.MessageBox.showerror('Invalid File', f"Could not open '{file}'.")
 			return
 
 		if len(files) < 4:
-			MessageBox.showerror('Invalid File', f"'{file}' is not a valid settings file.")
+			UI.MessageBox.showerror('Invalid File', f"'{file}' is not a valid settings file.")
 			return
 
 		tbl = TBL.TBL()
@@ -723,7 +723,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 						self.config_.settings.files.dat.techdata.file_path or '',
 					)).replace(Assets.base_dir, '%(path)s'))
 			except Exception:
-				MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
+				UI.MessageBox.showerror('Invalid File', f"Could not save to '{file}'.")
 
 	# ActionsDelegate
 	def get_ai_bin(self) -> AIBIN.AIBIN:
@@ -733,7 +733,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def refresh_scripts(self, select_script_ids: list[str] | None = None) -> None:
 		self.refresh_listbox()
 		if select_script_ids is not None:
-			self.listbox.select_clear(0, END)
+			self.listbox.select_clear(0, UI.END)
 			for index,header in enumerate(self.script_list):
 				if not header.id in select_script_ids:
 					continue
@@ -743,7 +743,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 	def get_data_context(self) -> DataContext:
 		return self.data_context
 
-	def save_code(self, code_or_path: str, parent: AnyWindow) -> bool:
+	def save_code(self, code_or_path: str, parent: UI.AnyWindow) -> bool:
 		if not self.ai:
 			return False
 		parse_context = self.get_parse_context(code_or_path)
@@ -755,7 +755,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				if self.ai.expanded:
 					raise PyMSError('Parse', f"There is not enough room in your aiscript.bin to compile these changes. The current file is {ai_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_ai_size}B.")
 				else:
-					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your aiscript.bin to compile these changes, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+					if UI.MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your aiscript.bin to compile these changes, would you like to expand your aiscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == UI.NO:
 						return False
 					self.ai.expand()
 			if new_bw_size is not None and new_bw_size > self.ai.max_size(): # Check against max_size again for the case where the file just got expanded above because of aiscript.bin
@@ -763,7 +763,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 				if self.ai.expanded:
 					raise PyMSError('Parse', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {self.ai.max_size()}B, these changes would make the file {new_bw_size}B.")
 				else:
-					if MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your bwscript.bin to compile these changes, would you like to expand your bwscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == NO:
+					if UI.MessageBox.askyesno(parent=self, title='Expand', message="There is not enough room in your bwscript.bin to compile these changes, would you like to expand your bwscript.bin? If you don't know what this is you should google 'AISE Plugin' before saying Yes") == UI.NO:
 						return False
 					self.ai.expand()
 		except PyMSError as e:
@@ -824,7 +824,7 @@ class PyAI(MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, ErrorableS
 
 	def select_scripts(self, ids: list[str], keep_existing: bool = False) -> None:
 		if not keep_existing:
-			self.listbox.select_clear(0, END)
+			self.listbox.select_clear(0, UI.END)
 		for index,script in enumerate(self.script_list):
 			if script.id in ids:
 				self.listbox.select_set(index)

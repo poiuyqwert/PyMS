@@ -4,16 +4,16 @@ from .Delegates import TilePaletteViewDelegate
 from ..FileFormats.Tileset.Tileset import TileType
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 from math import ceil
 
 from typing import Callable, Any
 
-class TilePaletteView(Frame):
+class TilePaletteView(UI.Frame):
 	# sub_select currently only supported by TileType.group when multiselect=False
-	def __init__(self, *, parent: Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False) -> None:
-		Frame.__init__(self, parent)
+	def __init__(self, *, parent: UI.Misc, delegate: TilePaletteViewDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, multiselect: bool = True, sub_select: bool = False) -> None:
+		UI.Frame.__init__(self, parent)
 		self.tiletype = tiletype
 		self.selected: list[int] = []
 		self.last_selection: tuple[int, bool] | None # (index, on_or_off) = None
@@ -35,23 +35,23 @@ class TilePaletteView(Frame):
 		self.visible_range = (-1, -1)
 
 		tile_size = self.get_tile_size()
-		self.canvas = Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.canvas_images: dict[int, Image] = {}
-		self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
-		scrollbar = Scrollbar(self, command=self.canvas.yview)
-		scrollbar.pack(side=LEFT, fill=Y)
+		self.canvas = UI.Canvas(self, width=2 + tile_size[0] * 16, height=2 + tile_size[1] * 8, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		self.canvas_images: dict[int, UI.Image] = {}
+		self.canvas.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		scrollbar = UI.Scrollbar(self, command=self.canvas.yview)
+		scrollbar.pack(side=UI.LEFT, fill=UI.Y)
 
-		def canvas_resized(_event: Event | None = None) -> None:
+		def canvas_resized(_event: UI.Event | None = None) -> None:
 			self.update_size()
-		self.canvas.bind(WidgetEvent.Configure(), canvas_resized)
+		self.canvas.bind(UI.WidgetEvent.Configure(), canvas_resized)
 		binding_widget = self.delegate.tile_palette_binding_widget()
-		binding_widget.bind(Mouse.Scroll(), lambda e: self.canvas.yview('scroll', -(e.delta // abs(e.delta)) if e.delta else 0,'units'))
+		binding_widget.bind(UI.Mouse.Scroll(), lambda e: self.canvas.yview('scroll', -(e.delta // abs(e.delta)) if e.delta else 0,'units'))
 		if self.delegate.tile_palette_bind_updown():
-			binding_widget.bind(Key.Down(), lambda e: self.canvas.yview('scroll', 1,'units'))
-			binding_widget.bind(Key.Up(), lambda e: self.canvas.yview('scroll', -1,'units'))
-		binding_widget.bind(Key.Next(), lambda e: self.canvas.yview('scroll', 1,'page'))
-		binding_widget.bind(Key.Prior(), lambda e: self.canvas.yview('scroll', -1,'page'))
-		def yscrollcommand(scrollbar: Scrollbar) -> Callable[[float, float], None]:
+			binding_widget.bind(UI.Key.Down(), lambda e: self.canvas.yview('scroll', 1,'units'))
+			binding_widget.bind(UI.Key.Up(), lambda e: self.canvas.yview('scroll', -1,'units'))
+		binding_widget.bind(UI.Key.Next(), lambda e: self.canvas.yview('scroll', 1,'page'))
+		binding_widget.bind(UI.Key.Prior(), lambda e: self.canvas.yview('scroll', -1,'page'))
+		def yscrollcommand(scrollbar: UI.Scrollbar) -> Callable[[float, float], None]:
 			def update_scrollbar(l: float, h: float) -> None:
 				scrollbar.set(l,h)
 				self.draw_tiles()
@@ -63,9 +63,9 @@ class TilePaletteView(Frame):
 			self.scroll_to_selection()
 			if self.initial_scroll_bind is None:
 				return
-			self.canvas.remove_bind(WidgetEvent.Configure(), self.initial_scroll_bind)
+			self.canvas.remove_bind(UI.WidgetEvent.Configure(), self.initial_scroll_bind)
 			self.initial_scroll_bind = None
-		self.initial_scroll_bind = self.canvas.bind(WidgetEvent.Configure(), initial_scroll, add=True)
+		self.initial_scroll_bind = self.canvas.bind(UI.WidgetEvent.Configure(), initial_scroll, add=True)
 
 	def get_tile_size(self, tiletype: TileType | None = None, group: bool = False) -> tuple[int, int]:
 		tiletype = self.tiletype if tiletype is None else tiletype
@@ -123,14 +123,14 @@ class TilePaletteView(Frame):
 		tileset = self.delegate.get_tileset()
 		if force or not tileset:
 			self.visible_range = (-1, -1)
-			self.canvas.delete(ALL)
+			self.canvas.delete(UI.ALL)
 			self.canvas_images.clear()
 		if not tileset:
 			return
 		viewport_size = (self.canvas.winfo_width(), self.canvas.winfo_height())
 		tile_size = self.get_tile_size()
 		tile_count = self.get_tile_count()
-		_,_,_,total_height = parse_scrollregion(self.canvas.cget('scrollregion'))
+		_,_,_,total_height = UI.parse_scrollregion(self.canvas.cget('scrollregion'))
 		topy = int(self.canvas.yview()[0] * total_height)
 		start_row = topy // tile_size[1]
 		start_y = start_row * int(tile_size[1])
@@ -168,9 +168,9 @@ class TilePaletteView(Frame):
 							elif self.tiletype == TileType.mini:
 								self.canvas_images[tile_id] = self.delegate.get_tile(VX4Minitile(tile_id, False))
 							tag = f'tile{tile_id}'
-							self.canvas.create_image(x,y, image=self.canvas_images[tile_id], tags=tag, anchor=NW)
-							def select_callback(tile_id: int, modifier: str | None) -> Callable[[Event], None]:
-								def select(_: Event) -> None:
+							self.canvas.create_image(x,y, image=self.canvas_images[tile_id], tags=tag, anchor=UI.NW)
+							def select_callback(tile_id: int, modifier: str | None) -> Callable[[UI.Event], None]:
+								def select(_: UI.Event) -> None:
 									select_id = tile_id
 									sub_select = None
 									if self.tiletype == TileType.group:
@@ -179,15 +179,15 @@ class TilePaletteView(Frame):
 										select_id //= 16
 									self.select(select_id, sub_select, modifier)
 								return select
-							self.canvas.tag_bind(tag, Mouse.Click_Left(), select_callback(tile_id,'set'))
-							self.canvas.tag_bind(tag, Shift.Click_Left(), select_callback(tile_id,'shift'))
-							self.canvas.tag_bind(tag, Ctrl.Click_Left(), select_callback(tile_id,'cntrl'))
-							def double_click_callback(tile_id: int) -> Callable[[Event], None]:
+							self.canvas.tag_bind(tag, UI.Mouse.Click_Left(), select_callback(tile_id,'set'))
+							self.canvas.tag_bind(tag, UI.Shift.Click_Left(), select_callback(tile_id,'shift'))
+							self.canvas.tag_bind(tag, UI.Ctrl.Click_Left(), select_callback(tile_id,'cntrl'))
+							def double_click_callback(tile_id: int) -> Callable[[UI.Event], None]:
 								tile_id //= (16 if self.tiletype == TileType.group else 1)
-								def double_click(_: Event) -> None:
+								def double_click(_: UI.Event) -> None:
 									self.delegate.tile_palette_double_clicked(tile_id)
 								return double_click
-							self.canvas.tag_bind(tag, Double.Click_Left(), double_click_callback(tile_id))
+							self.canvas.tag_bind(tag, UI.Double.Click_Left(), double_click_callback(tile_id))
 			self.visible_range = visible_range
 			self.draw_selections()
 

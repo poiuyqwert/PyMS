@@ -2,7 +2,7 @@
 from .Delegates import EditScriptDelegate
 from .FlagEditor import FlagEditor
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Config import WindowGeometry
@@ -11,42 +11,42 @@ from ..Utilities import ItemSelectDialog
 from typing import Sequence, Any
 
 class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
-	def __init__(self, parent: AnyWindow, *, delegate: EditScriptDelegate, config: WindowGeometry, script_id: str = 'MYAI', flags: int = 0, string_index: int = 0, title: str = 'Edit AI', initial: str = ''):
+	def __init__(self, parent: UI.AnyWindow, *, delegate: EditScriptDelegate, config: WindowGeometry, script_id: str = 'MYAI', flags: int = 0, string_index: int = 0, title: str = 'Edit AI', initial: str = ''):
 		self.delegate = delegate
 		self.config_ = config
 		self.initialid = initial
 		self.validid = script_id
-		self.script_id = StringVar()
+		self.script_id = UI.StringVar()
 		self.script_id.set(script_id)
 		self.script_id.trace_add('write', self.editid)
 		self.flags = flags
 		self.validstring = string_index
-		self.string = StringVar()
+		self.string = UI.StringVar()
 		self.string.set(str(string_index))
 		self.string.trace_add('write', lambda _a,_b,_c: self.editstring())
-		self.actualstring = StringVar()
+		self.actualstring = UI.StringVar()
 		self.actualstring.set(delegate.get_data_context().stattxt_string(string_index) or '')
 
 		PyMSDialog.__init__(self, parent, title)
 
-	def widgetize(self) -> Widget:
-		frame = Frame(self)
+	def widgetize(self) -> UI.Widget:
+		frame = UI.Frame(self)
 
 		##Entries
-		entries = Frame(frame)
-		id_frame = Frame(entries)
-		Label(id_frame, text='AI ID:', width=10, anchor=E).pack(side=LEFT)
-		identry = Entry(id_frame, justify=LEFT, textvariable=self.script_id, width=10, validate='key', vcmd=self.editid)
-		identry.pack(side=LEFT)
-		Button(id_frame, text='Flags', width=10, command=self.editflags).pack(side=RIGHT, padx=1, pady=2)
-		id_frame.pack(fill=X)
-		string = Frame(entries)
-		Label(string, text='String:', width=10, anchor=E).pack(side=LEFT)
-		stringid = Entry(string, justify=LEFT, textvariable=self.string, width=10, vcmd=self.editstring)
-		stringid.pack(side=LEFT)
-		Label(string, textvariable=self.actualstring, anchor=W, width=1).pack(side=LEFT, fill=X, expand=1)
-		Button(string, text='Browse...', width=10, command=self.browse).pack(side=RIGHT, padx=1, pady=2)
-		string.pack(fill=X)
+		entries = UI.Frame(frame)
+		id_frame = UI.Frame(entries)
+		UI.Label(id_frame, text='AI ID:', width=10, anchor=UI.E).pack(side=UI.LEFT)
+		identry = UI.Entry(id_frame, justify=UI.LEFT, textvariable=self.script_id, width=10, validate='key', vcmd=self.editid)
+		identry.pack(side=UI.LEFT)
+		UI.Button(id_frame, text='Flags', width=10, command=self.editflags).pack(side=UI.RIGHT, padx=1, pady=2)
+		id_frame.pack(fill=UI.X)
+		string = UI.Frame(entries)
+		UI.Label(string, text='String:', width=10, anchor=UI.E).pack(side=UI.LEFT)
+		stringid = UI.Entry(string, justify=UI.LEFT, textvariable=self.string, width=10, vcmd=self.editstring)
+		stringid.pack(side=UI.LEFT)
+		UI.Label(string, textvariable=self.actualstring, anchor=UI.W, width=1).pack(side=UI.LEFT, fill=UI.X, expand=1)
+		UI.Button(string, text='Browse...', width=10, command=self.browse).pack(side=UI.RIGHT, padx=1, pady=2)
+		string.pack(fill=UI.X)
 
 		# ##Extra info
 		# aiinfo = Frame(entries)
@@ -59,14 +59,14 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		# vscroll.pack(side=RIGHT, fill=Y)
 		# aiinfo.pack(fill=BOTH, expand=1)
 
-		entries.pack(side=LEFT, fill=BOTH, expand=1)
-		frame.pack(fill=BOTH, expand=1)
+		entries.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		frame.pack(fill=UI.BOTH, expand=1)
 
 		##Buttons
-		buttonframe = Frame(self)
-		self.okbtn = Button(buttonframe, text='Ok', width=10, command=self.ok)
-		self.okbtn.pack(side=LEFT, padx=3, pady=3)
-		Button(buttonframe, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
+		buttonframe = UI.Frame(self)
+		self.okbtn = UI.Button(buttonframe, text='Ok', width=10, command=self.ok)
+		self.okbtn.pack(side=UI.LEFT, padx=3, pady=3)
+		UI.Button(buttonframe, text='Cancel', width=10, command=self.cancel).pack(side=UI.LEFT, padx=3, pady=3)
 		buttonframe.pack()
 
 		return identry
@@ -89,9 +89,9 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			self.validid = new
 		if hasattr(self, 'okbtn'):
 			if len(new) < 4:
-				self.okbtn['state'] = DISABLED
+				self.okbtn['state'] = UI.DISABLED
 			elif len(new) == 4:
-				self.okbtn['state'] = NORMAL
+				self.okbtn['state'] = UI.NORMAL
 		return True
 
 	def editstring(self) -> bool:
@@ -134,11 +134,11 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 	def items_selected(self, indexes: list[int]) -> bool:
 		return True
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		script_id = self.script_id.get()
 		aibin = self.delegate.get_ai_bin()
 		if self.initialid != script_id and aibin.get_script(script_id) is not None:
-			replace = MessageBox.askyesnocancel(parent=self, title='Replace Script?', message=f"The script with ID '{script_id}' already exists, replace it?", default=MessageBox.YES)
+			replace = UI.MessageBox.askyesnocancel(parent=self, title='Replace Script?', message=f"The script with ID '{script_id}' already exists, replace it?", default=UI.MessageBox.YES)
 			if replace is None:
 				return
 			if not replace:
@@ -148,7 +148,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 			self.string.set('0')
 		PyMSDialog.ok(self)
 
-	def cancel(self, _event: Event | None = None) -> None:
+	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.script_id.set('')
 		PyMSDialog.ok(self)
 

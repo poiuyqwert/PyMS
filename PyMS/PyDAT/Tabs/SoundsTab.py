@@ -9,7 +9,7 @@ from ...FileFormats.DAT import DATSound, DATUnit
 from ...FileFormats.MPQ.MPQ import MPQ
 
 from ...Utilities.utils import play_sound
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 
 from typing import TYPE_CHECKING, cast
@@ -19,85 +19,85 @@ if TYPE_CHECKING:
 class SoundsTab(DATTab):
 	DAT_ID = DATID.sfxdata
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
-		scrollview = ScrollView(self)
+		scrollview = UI.ScrollView(self)
 
-		self.soundentry = IntegerVar(0, [0,0])
-		self.sounddd = IntVar()
+		self.soundentry = UI.IntegerVar(0, [0,0])
+		self.sounddd = UI.IntVar()
 
-		l = LabelFrame(scrollview.content_view, text='Sound:')
-		s = Frame(l)
-		f = Frame(s)
-		Label(f, text='Sound File:', width=9, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.soundentry, font=Font.fixed(), width=5).pack(side=LEFT)
-		Label(f, text='=').pack(side=LEFT)
-		self.sounds = DropDown(f, self.sounddd, [], self.changesound, width=30)
+		l = UI.LabelFrame(scrollview.content_view, text='Sound:')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Sound File:', width=9, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.soundentry, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.sounds = UI.DropDown(f, self.sounddd, [], self.changesound, width=30)
 		self.soundentry.callback = self.sounds.set
-		self.sounds.pack(side=LEFT, fill=X, expand=1, padx=2)
-		self.playbtn = Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play)
-		self.playbtn.pack(side=LEFT, padx=1)
+		self.sounds.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
+		self.playbtn = UI.Button(f, image=Assets.get_image('fwp'), width=20, height=20, command=self.play)
+		self.playbtn.pack(side=UI.LEFT, padx=1)
 		self.tip(f, 'Sound File', 'SoundFile')
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(fill=UI.X)
 
-		self.priority = IntegerVar(0, [0,255])
-		self.portrait_length_adjust = IntegerVar(0, [0,65535])
-		self.minimum_volume = IntegerVar(0, [0,100])
+		self.priority = UI.IntegerVar(0, [0,255])
+		self.portrait_length_adjust = UI.IntegerVar(0, [0,65535])
+		self.minimum_volume = UI.IntegerVar(0, [0,100])
 
-		m = Frame(scrollview.content_view)
+		m = UI.Frame(scrollview.content_view)
 
-		l = LabelFrame(m, text='General Properties:')
-		s = Frame(l)
+		l = UI.LabelFrame(m, text='General Properties:')
+		s = UI.Frame(l)
 
-		f = Frame(s)
-		Label(f, text='Priority:', width=17, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.priority, font=Font.fixed(), width=5).pack(side=LEFT)
+		f = UI.Frame(s)
+		UI.Label(f, text='Priority:', width=17, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.priority, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
 		self.tip(f, 'Priority', 'SoundPriority')
-		f.pack(fill=X)
+		f.pack(fill=UI.X)
 
-		f = Frame(s)
-		Label(f, text='Portrait Length Adjust:', width=17, anchor=E).pack(side=LEFT)
+		f = UI.Frame(s)
+		UI.Label(f, text='Portrait Length Adjust:', width=17, anchor=UI.E).pack(side=UI.LEFT)
 		self.tip(f, 'Portrait Length Adjust', 'SoundPortraitLengthAdjust')
-		Entry(f, textvariable=self.portrait_length_adjust, font=Font.fixed(), width=5).pack(side=LEFT)
-		f.pack(fill=X)
+		UI.Entry(f, textvariable=self.portrait_length_adjust, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+		f.pack(fill=UI.X)
 
-		f = Frame(s)
-		Label(f, text='Minimum Volume %:', width=17, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.minimum_volume, font=Font.fixed(), width=5).pack(side=LEFT)
+		f = UI.Frame(s)
+		UI.Label(f, text='Minimum Volume %:', width=17, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.minimum_volume, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
 		self.tip(f, 'Minimum Volume %', 'SoundMinimumVolume')
-		f.pack(fill=X)
+		f.pack(fill=UI.X)
 
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(side=LEFT, fill=Y)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(side=UI.LEFT, fill=UI.Y)
 
-		self.preload = IntVar()
-		self.unit_speech = IntVar()
-		self.one_at_a_time = IntVar()
-		self.never_preempt = IntVar()
+		self.preload = UI.IntVar()
+		self.unit_speech = UI.IntVar()
+		self.one_at_a_time = UI.IntVar()
+		self.never_preempt = UI.IntVar()
 
-		l = LabelFrame(m, text='Flags:')
-		s = Frame(l)
+		l = UI.LabelFrame(m, text='Flags:')
+		s = UI.Frame(l)
 
-		f = Frame(s)
-		self.makeCheckbox(f, self.preload, 'Preload', 'SoundPreload').pack(side=LEFT)
-		f.pack(side=TOP, fill=X)
-		f = Frame(s)
-		self.makeCheckbox(f, self.unit_speech, 'Unit Speech', 'SoundUnitSpeech').pack(side=LEFT)
-		f.pack(side=TOP, fill=X)
-		f = Frame(s)
-		self.makeCheckbox(f, self.one_at_a_time, 'One at a Time', 'SoundOneAtATime').pack(side=LEFT)
-		f.pack(side=TOP, fill=X)
-		f = Frame(s)
-		self.makeCheckbox(f, self.never_preempt, 'Never Preempt', 'SoundNeverPreempt').pack(side=LEFT)
-		f.pack(side=TOP, fill=X)
+		f = UI.Frame(s)
+		self.makeCheckbox(f, self.preload, 'Preload', 'SoundPreload').pack(side=UI.LEFT)
+		f.pack(side=UI.TOP, fill=UI.X)
+		f = UI.Frame(s)
+		self.makeCheckbox(f, self.unit_speech, 'Unit Speech', 'SoundUnitSpeech').pack(side=UI.LEFT)
+		f.pack(side=UI.TOP, fill=UI.X)
+		f = UI.Frame(s)
+		self.makeCheckbox(f, self.one_at_a_time, 'One at a Time', 'SoundOneAtATime').pack(side=UI.LEFT)
+		f.pack(side=UI.TOP, fill=UI.X)
+		f = UI.Frame(s)
+		self.makeCheckbox(f, self.never_preempt, 'Never Preempt', 'SoundNeverPreempt').pack(side=UI.LEFT)
+		f.pack(side=UI.TOP, fill=UI.X)
 
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(side=LEFT, padx=2)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(side=UI.LEFT, padx=2)
 
-		m.pack(fill=X)
-		scrollview.pack(fill=BOTH, expand=1)
+		m.pack(fill=UI.X)
+		scrollview.pack(fill=UI.BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
@@ -121,7 +121,7 @@ class SoundsTab(DATTab):
 			n = self.soundentry.get()
 		else:
 			self.soundentry.set(n)
-		self.playbtn['state'] = NORMAL if (play_sound and MPQ.supported() and n > 0) else DISABLED
+		self.playbtn['state'] = UI.NORMAL if (play_sound and MPQ.supported() and n > 0) else UI.DISABLED
 
 	def play(self) -> None:
 		if play_sound:

@@ -7,7 +7,7 @@ from ..DATRef import DATRefs, DATRef
 
 from ...FileFormats.DAT import DATSprite, DATFlingy
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities import Assets
 
 from typing import TYPE_CHECKING, cast
@@ -17,82 +17,82 @@ if TYPE_CHECKING:
 class SpritesTab(DATTab):
 	DAT_ID = DATID.sprites
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
-		scrollview = ScrollView(self)
+		scrollview = UI.ScrollView(self)
 
-		self.imageentry = IntegerVar(0, [0,998])
-		self.imagedd = IntVar()
-		self.visible = IntVar()
-		self.unused = IntVar()
-		self.selcircleentry = IntegerVar(0, [0,19], callback=lambda n: self.selcircle(n,1))
-		self.selcircledd = IntVar()
-		self.healthbar = IntegerVar(0, [0,255], callback=lambda n,i=0: self.updatehealth(n,i))
-		self.boxes = IntegerVar(1, [1,84], callback=lambda n,i=1: self.updatehealth(n,i))
-		self.vertpos = IntegerVar(0, [0,255])
+		self.imageentry = UI.IntegerVar(0, [0,998])
+		self.imagedd = UI.IntVar()
+		self.visible = UI.IntVar()
+		self.unused = UI.IntVar()
+		self.selcircleentry = UI.IntegerVar(0, [0,19], callback=lambda n: self.selcircle(n,1))
+		self.selcircledd = UI.IntVar()
+		self.healthbar = UI.IntegerVar(0, [0,255], callback=lambda n,i=0: self.updatehealth(n,i))
+		self.boxes = UI.IntegerVar(1, [1,84], callback=lambda n,i=1: self.updatehealth(n,i))
+		self.vertpos = UI.IntegerVar(0, [0,255])
 
-		l = LabelFrame(scrollview.content_view, text='Sprite Properties:')
-		s = Frame(l)
-		f = Frame(s)
-		Label(f, text='Image:', width=12, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.imageentry, font=Font.fixed(), width=5).pack(side=LEFT, padx=2)
-		Label(f, text='=').pack(side=LEFT)
-		self.image_ddw = DropDown(f, self.imagedd, [], self.imageentry, width=30)
-		self.image_ddw.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.imagedd.get())).pack(side=LEFT, padx=2)
+		l = UI.LabelFrame(scrollview.content_view, text='Sprite Properties:')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Image:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.imageentry, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT, padx=2)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.image_ddw = UI.DropDown(f, self.imagedd, [], self.imageentry, width=30)
+		self.image_ddw.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
+		UI.Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.imagedd.get())).pack(side=UI.LEFT, padx=2)
 		self.tip(f, 'Image', 'SpriteImage')
-		f.pack(fill=X)
-		f = Frame(s)
-		c = Checkbutton(f, text='Is Visible', variable=self.visible)
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		c = UI.Checkbutton(f, text='Is Visible', variable=self.visible)
 		self.tip(c, 'Is Visible', 'SpriteVisible')
-		c.pack(side=LEFT)
-		c = Checkbutton(f, text='Unused', variable=self.unused)
+		c.pack(side=UI.LEFT)
+		c = UI.Checkbutton(f, text='Unused', variable=self.unused)
 		self.tip(c, 'Unused', 'SpriteUnused')
-		c.pack(side=LEFT)
+		c.pack(side=UI.LEFT)
 		f.pack()
-		f = Frame(s)
-		Label(f, text='Sel. Circle:', width=12, anchor=E).pack(side=LEFT)
-		self.selentry = Entry(f, textvariable=self.selcircleentry, font=Font.fixed(), width=5)
-		self.selentry.pack(side=LEFT, padx=2)
-		Label(f, text='=').pack(side=LEFT)
-		self.seldd = DropDown(f, self.selcircledd, Assets.data_cache(Assets.DataReference.SelCircleSize), self.selcircle, width=30)
-		self.seldd.pack(side=LEFT, fill=X, expand=1, padx=2)
-		Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.selcircledd.get() + 561)).pack(side=LEFT, padx=2)
+		f = UI.Frame(s)
+		UI.Label(f, text='Sel. Circle:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		self.selentry = UI.Entry(f, textvariable=self.selcircleentry, font=UI.Font.fixed(), width=5)
+		self.selentry.pack(side=UI.LEFT, padx=2)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.seldd = UI.DropDown(f, self.selcircledd, Assets.data_cache(Assets.DataReference.SelCircleSize), self.selcircle, width=30)
+		self.seldd.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
+		UI.Button(f, text='Jump ->', command=lambda: self.jump(DATID.images, self.selcircledd.get() + 561)).pack(side=UI.LEFT, padx=2)
 		self.tip(f, 'Selection Circle', 'SpriteSelCircle')
-		f.pack(fill=X)
-		f = Frame(s)
-		Label(f, text='Health Bar:', width=12, anchor=E).pack(side=LEFT)
-		self.hpentry = Entry(f, textvariable=self.healthbar, font=Font.fixed(), width=5)
-		self.hpentry.pack(side=LEFT, padx=2)
-		Label(f, text='=').pack(side=LEFT)
-		self.hpboxes = Entry(f, textvariable=self.boxes, font=Font.fixed(), width=2)
-		self.hpboxes.pack(side=LEFT, padx=2)
-		Label(f, text='boxes').pack(side=LEFT)
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		UI.Label(f, text='Health Bar:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		self.hpentry = UI.Entry(f, textvariable=self.healthbar, font=UI.Font.fixed(), width=5)
+		self.hpentry.pack(side=UI.LEFT, padx=2)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.hpboxes = UI.Entry(f, textvariable=self.boxes, font=UI.Font.fixed(), width=2)
+		self.hpboxes.pack(side=UI.LEFT, padx=2)
+		UI.Label(f, text='boxes').pack(side=UI.LEFT)
 		self.tip(f, 'Health Bar', 'SpriteHPBar')
-		f.pack(fill=X)
-		f = Frame(s)
-		Label(f, text='Vert. Position:', width=12, anchor=E).pack(side=LEFT)
-		self.vertentry = Entry(f, textvariable=self.vertpos, font=Font.fixed(), width=5)
-		self.vertentry.pack(side=LEFT, padx=2)
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		UI.Label(f, text='Vert. Position:', width=12, anchor=UI.E).pack(side=UI.LEFT)
+		self.vertentry = UI.Entry(f, textvariable=self.vertpos, font=UI.Font.fixed(), width=5)
+		self.vertentry.pack(side=UI.LEFT, padx=2)
 		self.tip(f, 'Vertical Position', 'SpriteCircleOff')
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(fill=UI.X)
 
 		self.previewing: int | None = None
-		self.showpreview = BooleanVar()
+		self.showpreview = UI.BooleanVar()
 		self.showpreview.set(self.delegate.data_context.config.preview.sprite.show.value)
 
-		x = Frame(scrollview.content_view)
-		l = LabelFrame(x, text='Preview:')
-		s = Frame(l)
-		self.preview = Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		x = UI.Frame(scrollview.content_view)
+		l = UI.LabelFrame(x, text='Preview:')
+		s = UI.Frame(l)
+		self.preview = UI.Canvas(s, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
-		Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
+		UI.Checkbutton(s, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack()
 		s.pack()
-		l.pack(side=LEFT)
-		x.pack(fill=X)
-		scrollview.pack(fill=BOTH, expand=1)
+		l.pack(side=UI.LEFT)
+		x.pack(fill=UI.X)
+		scrollview.pack(fill=UI.BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.flingy, lambda flingy: (
@@ -127,14 +127,14 @@ class SpritesTab(DATTab):
 			self.boxes.set(max(1,(num - 1) // 3))
 		self.drawpreview()
 
-	def drawpreview(self, _event: Event | None = None) -> None:
+	def drawpreview(self, _event: UI.Event | None = None) -> None:
 		if not self.delegate.data_context.sprites.dat:
 			return
 		if self.previewing != self.id or (self.previewing is not None and not self.showpreview.get()) or (self.previewing is None and self.showpreview.get()):
-			self.preview.delete(ALL)
+			self.preview.delete(UI.ALL)
 			if self.showpreview.get():
 				i = int(self.selentry.get())
-				if self.selentry['state'] == NORMAL:
+				if self.selentry['state'] == UI.NORMAL:
 					image_id = 561 + i
 					frame = self.delegate.data_context.get_image_frame(image_id)
 					if frame:
@@ -170,7 +170,7 @@ class SpritesTab(DATTab):
 		for (value, variable, widgets) in fields:
 			has_value = value is not None
 			variable.set(value if has_value else 0)
-			state = NORMAL if has_value else DISABLED
+			state = UI.NORMAL if has_value else UI.DISABLED
 			for widget in widgets:
 				widget['state'] = state
 

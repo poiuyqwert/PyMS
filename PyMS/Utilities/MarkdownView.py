@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from .UIKit import *
+from . import UIKit as UI
 from .utils import is_mac
 from . import Markdown
 from . import Assets
@@ -46,7 +46,7 @@ def _list_roman(num: int) -> str:
 			break
 	return f'{result}. '
 
-class MarkdownView(Frame):
+class MarkdownView(UI.Frame):
 	class _ListDisplay:
 		def __init__(self, list_block: Markdown.ListBlock, margin: int) -> None:
 			self.list_block = list_block
@@ -69,41 +69,41 @@ class MarkdownView(Frame):
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		self.link_callback = kwargs.pop('link_callback', None)
 		if not 'relief' in kwargs:
-			kwargs['relief'] = SUNKEN
+			kwargs['relief'] = UI.SUNKEN
 			if not 'bd' in kwargs and not 'borderwidth' in kwargs:
 				kwargs['bd'] = 2
-		Frame.__init__(self, *args, **kwargs)
+		UI.Frame.__init__(self, *args, **kwargs)
 
 		self._next_tags: tuple[str, ...] | None = None
 		self._list_bullet_cache: tuple[MarkdownView._ListItemDisplay, ...] | None = None
 		self._list_numeric_cache: tuple[list[MarkdownView._ListItemDisplay], list[MarkdownView._ListItemDisplay], list[MarkdownView._ListItemDisplay]] = ([], [], [])
 
-		hscroll = Scrollbar(self, orient=HORIZONTAL)
-		vscroll = Scrollbar(self)
-		self.font = Font.default().sized(_em())
-		self.textview = Text(self, bd=0, wrap=WORD, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False, font=self.font, insertontime=0)
-		self.textview.grid(column=0,row=0, padx=50, sticky=NSEW)
-		vscroll.grid(column=1,row=0, sticky=NS)
+		hscroll = UI.Scrollbar(self, orient=UI.HORIZONTAL)
+		vscroll = UI.Scrollbar(self)
+		self.font = UI.Font.default().sized(_em())
+		self.textview = UI.Text(self, bd=0, wrap=UI.WORD, highlightthickness=0, xscrollcommand=hscroll.set, yscrollcommand=vscroll.set, exportselection=False, font=self.font, insertontime=0)
+		self.textview.grid(column=0,row=0, padx=50, sticky=UI.NSEW)
+		vscroll.grid(column=1,row=0, sticky=UI.NS)
 		vscroll.config(command=self.textview.yview)
-		hscroll.grid(column=0,row=1, sticky=EW)
+		hscroll.grid(column=0,row=1, sticky=UI.EW)
 		hscroll.config(command=self.textview.xview)
 
 		self.textview.tag_configure('line_spacing', spacing2=8, spacing3=8)
-		self.textview.tag_configure('h1', font=Font.default().sized(_em(2)).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('h2', font=Font.default().sized(_em(1.5)).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('h3', font=Font.default().sized(_em(1.25)).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('h4', font=Font.default().sized(_em()).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('h5', font=Font.default().sized(_em(0.875)).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('h6', font=Font.default().sized(_em(0.85)).bolded(), spacing1=24, spacing3=16)
-		self.textview.tag_configure('p', font=Font.default().sized(_em()))
+		self.textview.tag_configure('h1', font=UI.Font.default().sized(_em(2)).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('h2', font=UI.Font.default().sized(_em(1.5)).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('h3', font=UI.Font.default().sized(_em(1.25)).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('h4', font=UI.Font.default().sized(_em()).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('h5', font=UI.Font.default().sized(_em(0.875)).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('h6', font=UI.Font.default().sized(_em(0.85)).bolded(), spacing1=24, spacing3=16)
+		self.textview.tag_configure('p', font=UI.Font.default().sized(_em()))
 		self.textview.tag_configure('top_spacing', spacing1=16)
 		self.textview.tag_configure('bottom_spacing', spacing3=16)
-		self.textview.tag_configure('bold', font=Font.default().sized(_em()).bolded())
+		self.textview.tag_configure('bold', font=UI.Font.default().sized(_em()).bolded())
 		self.textview.tag_configure('top_margin', spacing1=64)
 		self.textview.tag_configure('bottom_margin', spacing3=64)
 		self.set_link_foreground('#6A5EFF')
 		self.set_code_background('#EEEEEE')
-		self.textview.tag_raise(SEL)
+		self.textview.tag_raise(UI.SEL)
 
 		self.links: dict[str, Markdown.Link] = {}
 		self.headers: dict[str, str] = {}
@@ -130,7 +130,7 @@ class MarkdownView(Frame):
 			if link.title:
 				tooltip = f'{link.title} ({tooltip})'
 			return tooltip
-		TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
+		UI.TextDynamicTooltip(self.textview, 'link', link_tooltip_lookup, cursor=('hand1','hand2','pointinghand'))
 
 		def image_tooltip_lookup(_: str | None, tags: tuple[str, ...]) -> str | None:
 			for tag in tags:
@@ -144,9 +144,9 @@ class MarkdownView(Frame):
 					tooltip += f' ({image.title})'
 				return tooltip
 			return None
-		TextDynamicTooltip(self.textview, 'image', image_tooltip_lookup)
+		UI.TextDynamicTooltip(self.textview, 'image', image_tooltip_lookup)
 
-		def link_click(_: Event) -> None:
+		def link_click(_: UI.Event) -> None:
 			index = self.textview.index('current')
 			tags = self.textview.tag_names(index)
 			link = link_lookup(tags)
@@ -158,7 +158,7 @@ class MarkdownView(Frame):
 				self.view_fragment(link.link[1:].lower())
 			elif self.link_callback:
 				self.link_callback(link.link)
-		self.textview.tag_bind('link', Mouse.Click_Left(), link_click)
+		self.textview.tag_bind('link', UI.Mouse.Click_Left(), link_click)
 
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_rowconfigure(0, weight=1)
@@ -197,18 +197,18 @@ class MarkdownView(Frame):
 		self._next_tags = ('top_margin',)
 
 		self._read_only = False
-		self.textview.delete('1.0', END)
+		self.textview.delete('1.0', UI.END)
 		self.insert_block(document)
-		self.textview.tag_add('line_spacing', '1.0', END)
-		self.textview.insert(END, '\n', 'bottom_margin')
+		self.textview.tag_add('line_spacing', '1.0', UI.END)
+		self.textview.insert(UI.END, '\n', 'bottom_margin')
 		self._read_only = True
 
 	def set_link_foreground(self, color: str) -> None:
 		self.textview.tag_configure('link', foreground=color, underline=True)
 
 	def set_code_background(self, color: str) -> None:
-		self.textview.tag_configure('codespan', font=Font.fixed().sized(_em()), background=color)
-		self.textview.tag_configure('code', font=Font.fixed().sized(_em()), background=color, lmargin1=16,lmargin2=16, rmargin=16, wrap=NONE)
+		self.textview.tag_configure('codespan', font=UI.Font.fixed().sized(_em()), background=color)
+		self.textview.tag_configure('code', font=UI.Font.fixed().sized(_em()), background=color, lmargin1=16,lmargin2=16, rmargin=16, wrap=UI.NONE)
 
 	def _get_list_bullet_cache(self) -> tuple[_ListItemDisplay, ...]:
 		if self._list_bullet_cache is None:
@@ -228,7 +228,7 @@ class MarkdownView(Frame):
 			tags += self._next_tags
 			self._next_tags = None
 		if isinstance(block, Markdown.ATXHeading):
-			self.headers[block.anchor()] = self.textview.index(f'{END} -1lines')
+			self.headers[block.anchor()] = self.textview.index(f'{UI.END} -1lines')
 			self.insert_content(block, tags + (f'h{block.level}',))
 		elif isinstance(block, Markdown.Paragraph):
 			additional_last_line_tags = None
@@ -242,7 +242,7 @@ class MarkdownView(Frame):
 		elif isinstance(block, (Markdown.IndentedCodeBlock, Markdown.FencedCodeBlock)):
 			self.insert_content(block, tags + ('code',), additional_first_line_tags=('top_spacing',), additional_last_line_tags=('bottom_spacing',))
 			# self._next_tags = ('top_spacing',)
-			self.textview.insert(END, '\n')
+			self.textview.insert(UI.END, '\n')
 		elif isinstance(block, Markdown.ListBlock):
 			index = min(len(self._lists), 2)
 			margin = 0
@@ -269,7 +269,7 @@ class MarkdownView(Frame):
 			subsequent_lines_tag = f'list_margin{self._lists_margin}'
 			self.textview.tag_configure(subsequent_lines_tag, lmargin1=self._lists_margin, lmargin2=self._lists_margin)
 			self._list_items_tags.append(MarkdownView._ListItemTags(first_line_tag, subsequent_lines_tag))
-			self.textview.insert(END, display.marker, tags + (first_line_tag,))
+			self.textview.insert(UI.END, display.marker, tags + (first_line_tag,))
 		if isinstance(block, Markdown.ContainerBlock):
 			for child in block.children:
 				self.insert_block(child)
@@ -291,9 +291,9 @@ class MarkdownView(Frame):
 				content = item.contents[0]
 				if is_mac() and isinstance(content, str) and MarkdownView.RE_KEYBOARD_SHORTCUT.match(content):
 					item.contents[0] = content\
-						.replace('Ctrl+', Modifier.Ctrl.description)\
-						.replace('Alt+', Modifier.Alt.description)\
-						.replace('Shift+', Modifier.Shift.description)
+						.replace('Ctrl+', UI.Modifier.Ctrl.description)\
+						.replace('Alt+', UI.Modifier.Alt.description)\
+						.replace('Shift+', UI.Modifier.Shift.description)
 			elif isinstance(item, Markdown.Bold):
 				tags += ('bold',)
 			elif isinstance(item, Markdown.Link):
@@ -305,18 +305,18 @@ class MarkdownView(Frame):
 				image = Assets.help_image(item.link)
 				if not image:
 					return
-				start_index = self.textview.index(f'{END} -1chars')
-				self.textview.image_create(END, image=image)
+				start_index = self.textview.index(f'{UI.END} -1chars')
+				self.textview.image_create(UI.END, image=image)
 				image_tag = f'image_{len(self.images)}'
 				tags += ('image', image_tag)
 				for tag in tags:
-					self.textview.tag_add(tag, start_index, END)
+					self.textview.tag_add(tag, start_index, UI.END)
 				self.images[image_tag] = item
 			if isinstance(item, Markdown.Span):
 				for sub_item in item.contents:
 					insert_item(sub_item, tags)
 			elif isinstance(item, str):
-				self.textview.insert(END, item, tags)
+				self.textview.insert(UI.END, item, tags)
 		end_index = len(block.spans)-1
 		for index, span in enumerate(block.spans):
 			line_tags = tags
@@ -325,4 +325,4 @@ class MarkdownView(Frame):
 			if index == end_index and additional_last_line_tags:
 				line_tags += additional_last_line_tags
 			insert_item(span, line_tags)
-			self.textview.insert(END, '\n', line_tags)
+			self.textview.insert(UI.END, '\n', line_tags)

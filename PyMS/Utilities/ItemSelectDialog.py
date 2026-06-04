@@ -1,6 +1,6 @@
 
 from PyMS.Utilities.UIKit import Event
-from .UIKit import *
+from . import UIKit as UI
 from .PyMSDialog import PyMSDialog
 from . import Config
 
@@ -27,7 +27,7 @@ class Delegate(Protocol):
 		return True
 
 class ItemSelectDialog(PyMSDialog):
-	def __init__(self, *, parent: AnyWindow, title: str, delegate: Delegate, selected: list[int] | None = None, multiselect: bool = False, window_geometry_config: Config.WindowGeometry | None = None, search_history_config: Config.List | None = None):
+	def __init__(self, *, parent: UI.AnyWindow, title: str, delegate: Delegate, selected: list[int] | None = None, multiselect: bool = False, window_geometry_config: Config.WindowGeometry | None = None, search_history_config: Config.List | None = None):
 		self.delegate = delegate
 		self.initial_selection: list[int] | None = selected
 		self.multiselect = multiselect
@@ -37,36 +37,36 @@ class ItemSelectDialog(PyMSDialog):
 		self.all_items: Sequence[Item] = []
 		self.filtered_items: list[tuple[int, Item]] = []
 
-		self.filter_var = StringVar()
+		self.filter_var = UI.StringVar()
 		self.filter_var.trace_add('write', lambda *_: self.refresh_filter())
-		self.filter_is_regex_var = BooleanVar(value=False)
+		self.filter_is_regex_var = UI.BooleanVar(value=False)
 
 		PyMSDialog.__init__(self, parent, title)
 
-	def widgetize(self) -> Misc | None:
-		self.listbox = ScrolledListbox(self, width=35, height=10, selectmode=EXTENDED if self.multiselect else SINGLE)
-		self.listbox.pack(fill=BOTH, padx=1, pady=1, expand=1)
+	def widgetize(self) -> UI.Misc | None:
+		self.listbox = UI.ScrolledListbox(self, width=35, height=10, selectmode=UI.EXTENDED if self.multiselect else UI.SINGLE)
+		self.listbox.pack(fill=UI.BOTH, padx=1, pady=1, expand=1)
 		self.listbox.focus_set()
-		self.listbox.bind(WidgetEvent.Listbox.Select(), self.update_states)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.update_states)
 
-		s = Frame(self)
-		self.filter_dropdown = TextDropDown(s, self.filter_var, self.search_history_config.data if self.search_history_config else [])
+		s = UI.Frame(self)
+		self.filter_dropdown = UI.TextDropDown(s, self.filter_var, self.search_history_config.data if self.search_history_config else [])
 		self.filter_dropdown_bg = self.filter_dropdown.entry['bg']
-		self.filter_dropdown.pack(side=LEFT, fill=X, padx=1, pady=2)
-		Radiobutton(s, text='Wildcard', variable=self.filter_is_regex_var, value=0, command=self.refresh_filter).pack(side=LEFT, padx=1, pady=2)
-		Radiobutton(s, text='Regex', variable=self.filter_is_regex_var, value=1, command=self.refresh_filter).pack(side=LEFT, padx=1, pady=2)
-		s.pack(fill=X)
+		self.filter_dropdown.pack(side=UI.LEFT, fill=UI.X, padx=1, pady=2)
+		UI.Radiobutton(s, text='Wildcard', variable=self.filter_is_regex_var, value=0, command=self.refresh_filter).pack(side=UI.LEFT, padx=1, pady=2)
+		UI.Radiobutton(s, text='Regex', variable=self.filter_is_regex_var, value=1, command=self.refresh_filter).pack(side=UI.LEFT, padx=1, pady=2)
+		s.pack(fill=UI.X)
 
-		s = Frame(self)
-		self.select_button = Button(s, text='Select', width=10, command=self.ok)
-		self.select_button.pack(side=LEFT, padx=(5,5), pady=3)
-		Button(s, text='Cancel', width=10, command=self.cancel).pack(side=RIGHT, padx=(1,5), pady=3)
-		s.pack(fill=X)
+		s = UI.Frame(self)
+		self.select_button = UI.Button(s, text='Select', width=10, command=self.ok)
+		self.select_button.pack(side=UI.LEFT, padx=(5,5), pady=3)
+		UI.Button(s, text='Cancel', width=10, command=self.cancel).pack(side=UI.RIGHT, padx=(1,5), pady=3)
+		s.pack(fill=UI.X)
 
 		return self.select_button
 
 	def update_states(self, _event: Event | None = None) -> None:
-		self.select_button['state'] = DISABLED if not self.listbox.curselection() else ACTIVE
+		self.select_button['state'] = UI.DISABLED if not self.listbox.curselection() else UI.ACTIVE
 
 	def setup_complete(self) -> None:
 		if self.window_geometry_config:
@@ -108,14 +108,14 @@ class ItemSelectDialog(PyMSDialog):
 		self.refresh_list(selected_indexes, scroll)
 
 	def refresh_list(self, selected_indexes: list[int], scroll: bool) -> None:
-		self.listbox.delete(0, END)
+		self.listbox.delete(0, UI.END)
 		scroll_to: int | None = None
 		for index,item in self.filtered_items:
-			self.listbox.insert(END, item.display_name if isinstance(item, DisplayItem) else item)
+			self.listbox.insert(UI.END, item.display_name if isinstance(item, DisplayItem) else item)
 			if index in selected_indexes:
-				self.listbox.select_set(END)
+				self.listbox.select_set(UI.END)
 				if scroll:
-					scroll_to = self.listbox.index(END)
+					scroll_to = self.listbox.index(UI.END)
 		if scroll_to is not None:
 			self.listbox.see(scroll_to)
 

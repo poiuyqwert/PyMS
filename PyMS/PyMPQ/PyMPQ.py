@@ -13,7 +13,7 @@ from ..FileFormats.MPQ.MPQ import MPQ, MPQLibrary, MPQFileEntry
 from ..Utilities.DependencyError import DependencyError
 from ..Utilities.utils import format_byte_size, start_file
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -43,10 +43,10 @@ class ColumnID:
 	Locale = 4
 	Attributes = 5
 
-class PyMPQ(MainWindow):
+class PyMPQ(UI.MainWindow):
 	def __init__(self, guifile: str | None = None) -> None:
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyMPQ')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyMPQ', Assets.version('PyMPQ'))
@@ -54,7 +54,7 @@ class PyMPQ(MainWindow):
 		setup_trace('PyMPQ', self)
 
 		self.config_ = PyMPQConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.mpq: MPQ | None = None
 		self.mpq_path: str | None = None
@@ -70,76 +70,76 @@ class PyMPQ(MainWindow):
 		self.update_title()
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w)
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Files', Ctrl.i, enabled=False, tags='mpq_open')
-		self.toolbar.add_button(Assets.get_image('openfolder'), self.adddir, 'Add Directory', Ctrl.d, enabled=False, tags='mpq_open')
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Delete Files', Key.Delete, enabled=False, tags='file_selected')
-		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', Ctrl.e, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add Files', UI.Ctrl.i, enabled=False, tags='mpq_open')
+		self.toolbar.add_button(Assets.get_image('openfolder'), self.adddir, 'Add Directory', UI.Ctrl.d, enabled=False, tags='mpq_open')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Delete Files', UI.Key.Delete, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('export'), self.extract, 'Extract Files', UI.Ctrl.e, enabled=False, tags='file_selected')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', Ctrl.r, enabled=False, tags='file_selected')
-		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', Ctrl.p, enabled=False, tags='can_compact')
+		self.toolbar.add_button(Assets.get_image('edit'), self.rename, 'Rename File', UI.Ctrl.r, enabled=False, tags='file_selected')
+		self.toolbar.add_button(Assets.get_image('debug'), self.compact, 'Compact Archive', UI.Ctrl.p, enabled=False, tags='can_compact')
 		# self.toolbar.add_button(Assets.get_image('insert'), self.editlistfile, 'Edit Internal Listfile', Ctrl.l, enabled=False, tags='mpq_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.mansets, 'Manage Settings', UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.mpq editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyMPQ')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.regex = IntVar()
+		self.regex = UI.IntVar()
 		self.regex.set(self.config_.filter.regex.value)
-		self.filter = StringVar()
+		self.filter = UI.StringVar()
 		self.filter.set(['*','.+'][self.regex.get()])
-		filter_frame = Frame(self)
-		Label(filter_frame, text='Filter: ').pack(side=LEFT)
-		self.textdrop = TextDropDown(filter_frame, self.filter, self.config_.filter.history.data)
-		self.textdrop.pack(side=LEFT, fill=X, expand=1)
-		self.textdrop.entry.bind(Key.Return(), self.dofilter)
+		filter_frame = UI.Frame(self)
+		UI.Label(filter_frame, text='Filter: ').pack(side=UI.LEFT)
+		self.textdrop = UI.TextDropDown(filter_frame, self.filter, self.config_.filter.history.data)
+		self.textdrop.pack(side=UI.LEFT, fill=UI.X, expand=1)
+		self.textdrop.entry.bind(UI.Key.Return(), self.dofilter)
 		self.default_background_color = self.textdrop.entry['bg']
-		self.find_button = Button(filter_frame, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=DISABLED)
-		Tooltip(self.find_button, 'List Matches')
-		self.find_button.pack(side=LEFT, padx=2)
-		Radiobutton(filter_frame, text='Regex', variable=self.regex, value=1).pack(side=RIGHT)
-		Radiobutton(filter_frame, text='Wildcard', variable=self.regex, value=0).pack(side=RIGHT)
-		filter_frame.pack(side=TOP, fill=X)
+		self.find_button = UI.Button(filter_frame, image=Assets.get_image('find'), width=20, height=20, command=self.dofilter, state=UI.DISABLED)
+		UI.Tooltip(self.find_button, 'List Matches')
+		self.find_button.pack(side=UI.LEFT, padx=2)
+		UI.Radiobutton(filter_frame, text='Regex', variable=self.regex, value=1).pack(side=UI.RIGHT)
+		UI.Radiobutton(filter_frame, text='Wildcard', variable=self.regex, value=0).pack(side=UI.RIGHT)
+		filter_frame.pack(side=UI.TOP, fill=UI.X)
 
-		self.encvar = BooleanVar()
-		self.compvar = StringVar()
+		self.encvar = UI.BooleanVar()
+		self.compvar = UI.StringVar()
 
-		self.locale_menu_choice = IntVar()
+		self.locale_menu_choice = UI.IntVar()
 		self.locale_menu_choice.trace_add('write', self.locale_changed)
 
-		self.setmenu = Menu(self, tearoff=0)
-		self.compmenu = Menu(self.setmenu, tearoff=0)
-		self.locale_menu = Menu(self.setmenu, tearoff=0)
+		self.setmenu = UI.Menu(self, tearoff=0)
+		self.compmenu = UI.Menu(self.setmenu, tearoff=0)
+		self.locale_menu = UI.Menu(self.setmenu, tearoff=0)
 
-		self.deflatemenu = Menu(self.compmenu, tearoff=0)
+		self.deflatemenu = UI.Menu(self.compmenu, tearoff=0)
 		for level in range(0,CompressionOption.Deflate.level_count()):
 			compression = CompressionOption.Deflate.setting(level)
-			self.deflatemenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=Key.F9 if level == 0 else None, shortcut_widget=self) # type: ignore
+			self.deflatemenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=UI.Key.F9 if level == 0 else None, shortcut_widget=self) # type: ignore
 
-		self.audiomenu = Menu(self.compmenu, tearoff=0)
+		self.audiomenu = UI.Menu(self.compmenu, tearoff=0)
 		audio_compression = (
-			(CompressionOption.Audio.setting(level=0), Key.F6),
-			(CompressionOption.Audio.setting(level=1), Key.F7),
-			(CompressionOption.Audio.setting(level=2), Key.F8),
+			(CompressionOption.Audio.setting(level=0), UI.Key.F6),
+			(CompressionOption.Audio.setting(level=1), UI.Key.F7),
+			(CompressionOption.Audio.setting(level=2), UI.Key.F8),
 		)
 		for compression,shortcut in audio_compression:
 			self.audiomenu.add_radiobutton(label=compression.level_name(), underline=0, variable=self.compvar, value=str(compression), shortcut=shortcut, shortcut_widget=self) # type: ignore
 
-		self.compmenu.add_radiobutton(label='Auto-Select', underline=0, variable=self.compvar, value=str(CompressionOption.Auto.setting()), shortcut=Key.F4, shortcut_widget=self) # type: ignore
+		self.compmenu.add_radiobutton(label='Auto-Select', underline=0, variable=self.compvar, value=str(CompressionOption.Auto.setting()), shortcut=UI.Key.F4, shortcut_widget=self) # type: ignore
 		self.compmenu.add_separator()
-		self.compmenu.add_radiobutton(label='None', underline=0, variable=self.compvar, value=str(CompressionOption.NoCompression.setting()), shortcut=Key.F2, shortcut_widget=self) # type: ignore
-		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionOption.Standard.setting()), shortcut=Key.F3, shortcut_widget=self) # type: ignore
+		self.compmenu.add_radiobutton(label='None', underline=0, variable=self.compvar, value=str(CompressionOption.NoCompression.setting()), shortcut=UI.Key.F2, shortcut_widget=self) # type: ignore
+		self.compmenu.add_radiobutton(label='Standard', underline=0, variable=self.compvar, value=str(CompressionOption.Standard.setting()), shortcut=UI.Key.F3, shortcut_widget=self) # type: ignore
 		self.compmenu.add_cascade(label='Deflate', menu=self.deflatemenu, underline=0)
 		self.compmenu.add_cascade(label='Audio', menu=self.audiomenu, underline=0)
 
@@ -151,13 +151,13 @@ class PyMPQ(MainWindow):
 				command = self.choose_other_locale
 			self.locale_menu.add_radiobutton(label=locale_name, variable=self.locale_menu_choice, value=index, command=command)
 
-		self.setmenu.add_command(label='Settings Dialog', command=lambda: self.mansets(1), underline=0, shortcut=Ctrl.m, shortcut_widget=self) # type: ignore
+		self.setmenu.add_command(label='Settings Dialog', command=lambda: self.mansets(1), underline=0, shortcut=UI.Ctrl.m, shortcut_widget=self) # type: ignore
 		self.setmenu.add_separator()
 		self.setmenu.add_cascade(label='Compression', menu=self.compmenu, underline=0)
-		self.setmenu.add_checkbutton(label='Encrypt', underline=0, onvalue=1, offvalue=0, variable=self.encvar, shortcut=Key.F5, shortcut_widget=self) # type: ignore
+		self.setmenu.add_checkbutton(label='Encrypt', underline=0, onvalue=1, offvalue=0, variable=self.encvar, shortcut=UI.Key.F5, shortcut_widget=self) # type: ignore
 		self.setmenu.add_cascade(label='Locale', menu=self.locale_menu, underline=0)
 
-		self.listmenu = Menu(self, tearoff=0)
+		self.listmenu = UI.Menu(self, tearoff=0)
 		self.listmenu.add_command(label='Open', command=self.openfile, underline=0)
 		self.listmenu.add_separator()
 		self.listmenu.add_command(label='Extract', command=self.extract, underline=0)
@@ -165,35 +165,35 @@ class PyMPQ(MainWindow):
 		self.listmenu.add_command(label='Rename', command=self.rename, underline=0)
 		self.listmenu.add_command(label='Change Locale', command=self.changelocale, underline=0)
 
-		self.listbox = ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], EXTENDED, scmd=self.select, rcmd=self.do_rename, pcmd=self.popup, dcmd=self.openfile, min_widths=[50]*6)
+		self.listbox = UI.ReportList(self, ['Name','Size','Ratio','Packed','Locale','Attributes',None], UI.EXTENDED, scmd=self.select, rcmd=self.do_rename, pcmd=self.popup, dcmd=self.openfile, min_widths=[50]*6)
 		self.listbox_ascending_arrow = Assets.get_image('arrow.gif')
 		self.listbox_descending_arrow = Assets.get_image('arrowup.gif')
 		self.listbox_blank_arrow = Assets.get_image('arrowblank.gif')
 		for column,(button,_) in enumerate(self.listbox.columns):
 			if column <= ColumnID.Attributes:
 				button['command'] = lambda c=column: self.sort(c)
-			button['compound'] = LEFT
+			button['compound'] = UI.LEFT
 		attributes_column_button,_ = self.listbox.columns[ColumnID.Attributes]
-		Tooltip(attributes_column_button, 'Attributes:\n C = Compressed\n E = Encrypted\n X = Adjust CryptKey')
+		UI.Tooltip(attributes_column_button, 'Attributes:\n C = Compressed\n E = Encrypted\n X = Adjust CryptKey')
 		self.update_columns()
 		self.update_list()
-		self.listbox.pack(fill=BOTH, expand=1)
+		self.listbox.pack(fill=UI.BOTH, expand=1)
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Open or create an MPQ.')
-		self.selected = StringVar()
-		self.info = StringVar()
-		self.locale_status = StringVar()
-		self.library_status = StringVar()
+		self.selected = UI.StringVar()
+		self.info = UI.StringVar()
+		self.locale_status = UI.StringVar()
+		self.library_status = UI.StringVar()
 		self.library_status.set(MPQLibrary.display_name(MPQ.default_library()))
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=25)
 		statusbar.add_label(self.selected, width=30)
 		statusbar.add_label(self.info, width=30)
 		statusbar.add_label(self.locale_status, weight=1)
 		statusbar.add_label(self.library_status, width=10)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.load_settings()
 
@@ -286,10 +286,10 @@ class PyMPQ(MainWindow):
 	def action_states(self) -> None:
 		is_mpq_chosen = self.is_mpq_chosen()
 		self.toolbar.tag_enabled('mpq_open', is_mpq_chosen)
-		self.find_button['state'] = NORMAL if is_mpq_chosen else DISABLED
+		self.find_button['state'] = UI.NORMAL if is_mpq_chosen else UI.DISABLED
 		self.toolbar.tag_enabled('file_selected', self.is_file_selected())
 
-	def dofilter(self, _event: Event | None = None) -> None:
+	def dofilter(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		mpq_filter = self.filter.get()
@@ -341,7 +341,7 @@ class PyMPQ(MainWindow):
 		if self.listbox.size():
 			for i in self.listbox.cur_selection():
 				previously_selected.append(self.display_files[i])
-			self.listbox.delete(ALL)
+			self.listbox.delete(UI.ALL)
 		# else:
 		# 	return
 		if self.is_mpq_chosen() and self.all_files:
@@ -383,9 +383,9 @@ class PyMPQ(MainWindow):
 					self.attributes_for_file_entry(file_entry),
 					''
 				]
-				self.listbox.insert(END, info)
+				self.listbox.insert(UI.END, info)
 				if file_entry in previously_selected:
-					self.listbox.select_set(END)
+					self.listbox.select_set(UI.END)
 		self.action_states()
 
 	def update_info(self) -> None:
@@ -427,7 +427,7 @@ class PyMPQ(MainWindow):
 		mpq_compression_flags = compression.type.compression_type()
 		return (mpq_compression_flags, compression.compression_level())
 
-	def popup(self, _event: Event, _i: str) -> None:
+	def popup(self, _event: UI.Event, _i: str) -> None:
 		# if not self.listbox.cur_selection():
 		# 	self.listbox.select_set(i)
 		self.listmenu.post(*self.winfo_pointerxy())
@@ -458,7 +458,7 @@ class PyMPQ(MainWindow):
 				return
 			self.update_list()
 
-	def openfile(self, _event: Event | None = None) -> None:
+	def openfile(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -487,7 +487,7 @@ class PyMPQ(MainWindow):
 			return
 		assert self.mpq is not None
 		if len(files) == 1:
-			if not MessageBox.askyesno(parent=self, title='File Edited', message=f'File "{files[0]}" has been modified since it was extracted.\n\nUpdate the archive with this file?'):
+			if not UI.MessageBox.askyesno(parent=self, title='File Edited', message=f'File "{files[0]}" has been modified since it was extracted.\n\nUpdate the archive with this file?'):
 				return
 		else:
 			u = UpdateFiles(self, files)
@@ -514,7 +514,7 @@ class PyMPQ(MainWindow):
 		for listfile_path in self.config_.settings.listfiles.data:
 			self.mpq.add_listfile(listfile_path)
 
-	def new(self, _event: Event | None = None) -> None:
+	def new(self, _event: UI.Event | None = None) -> None:
 		file = self.config_.last_path.mpq.select_save(self)
 		if not file:
 			return
@@ -536,7 +536,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def open(self, _event: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: UI.Event | None = None, file: str | None = None) -> None:
 		if file is None:
 			file = self.config_.last_path.mpq.select_open(self)
 			if not file:
@@ -559,7 +559,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def close(self, _event: Event | None = None) -> None:
+	def close(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -568,7 +568,7 @@ class PyMPQ(MainWindow):
 		self.mpq_path = None
 		self.all_files = []
 		self.display_files = []
-		self.listbox.delete(ALL)
+		self.listbox.delete(UI.ALL)
 		self.update_title()
 		self.status.set('Open or create an MPQ.')
 		self.cleanup_temp()
@@ -576,7 +576,7 @@ class PyMPQ(MainWindow):
 		# self.update_list()
 		self.select()
 
-	def add(self, _event: Event | None = None) -> None:
+	def add(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -598,7 +598,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def adddir(self, _event: Event | None = None) -> None:
+	def adddir(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -624,7 +624,7 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def remove(self, _event: Event | None = None) -> None:
+	def remove(self, _event: UI.Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		assert self.mpq is not None
@@ -638,11 +638,11 @@ class PyMPQ(MainWindow):
 		self.update_list()
 		self.select()
 
-	def rename(self, _event: Event | None = None) -> None:
+	def rename(self, _event: UI.Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		listbox = self.listbox.columns[ColumnID.Filename][1]
-		if not isinstance(listbox, EditableReportSubList):
+		if not isinstance(listbox, UI.EditableReportSubList):
 			return
 		listbox.edit()
 
@@ -651,7 +651,7 @@ class PyMPQ(MainWindow):
 			# return
 		# pass
 
-	def extract(self, _event: Event | None = None) -> None:
+	def extract(self, _event: UI.Event | None = None) -> None:
 		if not self.is_file_selected():
 			return
 		assert self.mpq is not None
@@ -674,14 +674,14 @@ class PyMPQ(MainWindow):
 				with open(os.path.join(path,*path_components),'wb') as f:
 					f.write(data)
 
-	def mansets(self, event: Event | None = None) -> None:
+	def mansets(self, event: UI.Event | None = None) -> None:
 		if event:
 			SettingsDialog(self, self.config_)
 			self._update_listfiles()
 		else:
 			self.setmenu.post(*self.winfo_pointerxy())
 
-	def compact(self, _event: Event | None = None) -> None:
+	def compact(self, _event: UI.Event | None = None) -> None:
 		if not self.is_mpq_chosen():
 			return
 		assert self.mpq is not None
@@ -689,16 +689,16 @@ class PyMPQ(MainWindow):
 			self.mpq.compact()
 		self.update_info()
 
-	def register_registry(self, _event: Event | None = None) -> None:
+	def register_registry(self, _event: UI.Event | None = None) -> None:
 		try:
 			registry.register('PyMPQ', 'mpq', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, _event: Event | None = None) -> None:
+	def help(self, _event: UI.Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyMPQ.md')
 
-	def about(self, _event: Event | None = None) -> None:
+	def about(self, _event: UI.Event | None = None) -> None:
 		AboutDialog(self, 'PyMPQ', LONG_VERSION)
 
 	def sponsor(self) -> None:
@@ -709,7 +709,7 @@ class PyMPQ(MainWindow):
 		if os.path.exists(self.temp_folder):
 			shutil.rmtree(self.temp_folder)
 
-	def exit(self, _event: Event | None = None) -> None:
+	def exit(self, _event: UI.Event | None = None) -> None:
 		self.cleanup_temp()
 		self.save_settings()
 		self.destroy()

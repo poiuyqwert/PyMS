@@ -2,10 +2,10 @@
 from ..FileFormats.IScriptBIN.CodeHandlers import CodeCommands
 
 from ..Utilities.utils import fit
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.CodeHandlers.CodeCommand import CodeCommandDefinition
 
-class AnimationTooltip(CodeTooltip):
+class AnimationTooltip(UI.CodeTooltip):
 	tag = 'HeaderCommand'
 
 	def gettext(self, cmd_name: str) -> str | None:
@@ -13,7 +13,7 @@ class AnimationTooltip(CodeTooltip):
 			return fit('', cmd_def.full_help_text())
 		return None
 
-class CommandTooltip(CodeTooltip):
+class CommandTooltip(UI.CodeTooltip):
 	tag = 'Command'
 
 	def gettext(self, cmd_name: str) -> str | None:

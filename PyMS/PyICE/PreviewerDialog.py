@@ -11,7 +11,7 @@ from ..FileFormats import DAT
 from ..FileFormats.MPQ.MPQ import MPQ
 from ..FileFormats.Images import RawPalette
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities import Assets
@@ -47,7 +47,7 @@ for _cmd in CodeCommands.all_basic_commands:
 			PREVIEWER_CMDS[EntryType.flingy_dat].append(_cmd.name)
 
 PALETTES: dict[str, RawPalette] = {}
-GRP_CACHE: dict[str, dict[int, dict[str, Image]]] = {}
+GRP_CACHE: dict[str, dict[int, dict[str, UI.Image]]] = {}
 
 @dataclass
 class Preview:
@@ -82,43 +82,43 @@ class FrameSet(Flag):
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
 
 class PreviewerDialog(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: MainDelegate, config: PyICEConfig, text: CodeText) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, config: PyICEConfig, text: UI.CodeText) -> None:
 		self.delegate = delegate
 		self.config_ = config
 		self.text = text
 		self.previewing: Preview = Preview(0, 0, None)
 		self.previewnext: Preview | None = None
 		self.timer: str | None = None
-		self.type = IntVar()
-		self.curid = IntVar()
-		self.curcmd = IntVar()
-		self.image = IntVar()
-		self.imagecmd = IntVar()
-		self.sprites = IntVar()
-		self.spritescmd = IntVar()
-		self.flingys = IntVar()
-		self.flingyscmd = IntVar()
-		self.grp_frame = StringVar()
+		self.type = UI.IntVar()
+		self.curid = UI.IntVar()
+		self.curcmd = UI.IntVar()
+		self.image = UI.IntVar()
+		self.imagecmd = UI.IntVar()
+		self.sprites = UI.IntVar()
+		self.spritescmd = UI.IntVar()
+		self.flingys = UI.IntVar()
+		self.flingyscmd = UI.IntVar()
+		self.grp_frame = UI.StringVar()
 		self.grp_frame.set('Frame: 0 / 0')
 		self.speed = 0
 		self.play: str | None = None
 		PyMSDialog.__init__(self, parent, "Graphics Insert/Preview", grabwait=False, resizable=(False, False))
 
 	def nocur(self) -> None:
-		if self.curradio and self.curradio['state'] == NORMAL:
-			self.curradio['state'] = DISABLED
-			self.curdd['state'] = DISABLED
-			self.curcmddd['state'] = DISABLED
+		if self.curradio and self.curradio['state'] == UI.NORMAL:
+			self.curradio['state'] = UI.DISABLED
+			self.curdd['state'] = UI.DISABLED
+			self.curcmddd['state'] = UI.DISABLED
 		if self.type.get() == EntryType.iscript.value:
 			self.type.set(EntryType.images_dat.value)
 
-	def getlist(self, lb: ScrolledListbox, c: int) -> list[str]:
+	def getlist(self, lb: UI.ScrolledListbox, c: int) -> list[str]:
 		return ['['.join(lb.get(i).split('[')[:-1]) for i in range(c)]
 
 	def updatecurrentimages(self) -> None:
-		r = self.text.tag_prevrange('HeaderStart',INSERT)
+		r = self.text.tag_prevrange('HeaderStart',UI.INSERT)
 		if not r:
-			r = self.text.tag_nextrange('HeaderStart',INSERT)
+			r = self.text.tag_nextrange('HeaderStart',UI.INSERT)
 		if not r:
 			self.nocur()
 			return
@@ -130,10 +130,10 @@ class PreviewerDialog(PyMSDialog):
 			self.nocur()
 			return
 		if name == 'IsId' and 0 <= iscript_id <= 411:
-			if self.curradio and self.curradio['state'] == DISABLED:
-				self.curradio['state'] = NORMAL
-				self.curdd['state'] = NORMAL
-				self.curcmddd['state'] = NORMAL
+			if self.curradio and self.curradio['state'] == UI.DISABLED:
+				self.curradio['state'] = UI.NORMAL
+				self.curdd['state'] = UI.NORMAL
+				self.curcmddd['state'] = UI.NORMAL
 			cur = []
 			images_dat = self.delegate.get_data_context().images_dat
 			assert images_dat is not None
@@ -145,19 +145,19 @@ class PreviewerDialog(PyMSDialog):
 				return
 		self.nocur()
 
-	def widgetize(self) -> Misc | None:
-		left = Frame(self)
-		entry_details: list[tuple[EntryType, str, IntVar, IntVar, list[str], WidgetState]] = [
-			(EntryType.iscript, "Current IScript's images", self.curid, self.curcmd, [], DISABLED),
-			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.get_data_context().images_entry_count), NORMAL),
-			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.get_data_context().sprites_entry_count), NORMAL),
-			(EntryType.flingy_dat, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.delegate.flingylist,self.delegate.get_data_context().flingy_entry_count), NORMAL),
+	def widgetize(self) -> UI.Misc | None:
+		left = UI.Frame(self)
+		entry_details: list[tuple[EntryType, str, UI.IntVar, UI.IntVar, list[str], UI.WidgetState]] = [
+			(EntryType.iscript, "Current IScript's images", self.curid, self.curcmd, [], UI.DISABLED),
+			(EntryType.images_dat, 'Images.dat entries', self.image, self.imagecmd, self.getlist(self.delegate.imageslist,self.delegate.get_data_context().images_entry_count), UI.NORMAL),
+			(EntryType.sprites_dat, 'Sprites.dat entries', self.sprites, self.spritescmd, self.getlist(self.delegate.spriteslist,self.delegate.get_data_context().sprites_entry_count), UI.NORMAL),
+			(EntryType.flingy_dat, 'Flingy.dat entries', self.flingys, self.flingyscmd, self.getlist(self.delegate.flingylist,self.delegate.get_data_context().flingy_entry_count), UI.NORMAL),
 		]
 		for entry_type,name,id_variable,cmd_var,entries,state in entry_details:
-			Label(left, text=name + ":", anchor=W).pack(fill=X)
-			f = Frame(left)
-			df = Frame(f)
-			def type_select_callback(id_variable: IntVar, entry_type: EntryType) -> Callable[[], None]:
+			UI.Label(left, text=name + ":", anchor=UI.W).pack(fill=UI.X)
+			f = UI.Frame(left)
+			df = UI.Frame(f)
+			def type_select_callback(id_variable: UI.IntVar, entry_type: EntryType) -> Callable[[], None]:
 				def select() -> None:
 					self.select(id_variable.get(), entry_type)
 				return select
@@ -166,53 +166,53 @@ class PreviewerDialog(PyMSDialog):
 					self.select(entry_id, entry_type)
 				return select
 			if entry_type == EntryType.iscript:
-				self.curradio = Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state)
-				self.curradio.pack(side=LEFT)
-				self.curdd = DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state)
+				self.curradio = UI.Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state)
+				self.curradio.pack(side=UI.LEFT)
+				self.curdd = UI.DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state)
 				self.curdd.pack()
-				self.curcmddd = DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state)
+				self.curcmddd = UI.DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state)
 				self.curcmddd.pack()
 			else:
-				Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state).pack(side=LEFT)
-				DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state).pack()
-				DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state).pack()
-			df.pack(side=LEFT)
+				UI.Radiobutton(f, text='', variable=self.type, command=type_select_callback(id_variable, entry_type), value=entry_type.value, state=state).pack(side=UI.LEFT)
+				UI.DropDown(df, id_variable, entries, id_select_callback(entry_type), width=30, state=state).pack()
+				UI.DropDown(df, cmd_var, PREVIEWER_CMDS[entry_type], width=30, state=state).pack()
+			df.pack(side=UI.LEFT)
 			f.pack()
-		self.overwrite = BooleanVar(value=self.config_.previewer.overwrite.value)
-		self.closeafter = BooleanVar(value=self.config_.previewer.close_after.value)
-		btns = Frame(left)
-		lf = LabelFrame(btns, text='Insert/Overwrite')
-		b = Frame(lf)
-		Checkbutton(b, text='Overwrite', variable=self.overwrite).pack(side=LEFT)
-		Checkbutton(b, text='Close after', variable=self.closeafter).pack(side=LEFT)
+		self.overwrite = UI.BooleanVar(value=self.config_.previewer.overwrite.value)
+		self.closeafter = UI.BooleanVar(value=self.config_.previewer.close_after.value)
+		btns = UI.Frame(left)
+		lf = UI.LabelFrame(btns, text='Insert/Overwrite')
+		b = UI.Frame(lf)
+		UI.Checkbutton(b, text='Overwrite', variable=self.overwrite).pack(side=UI.LEFT)
+		UI.Checkbutton(b, text='Close after', variable=self.closeafter).pack(side=UI.LEFT)
 		b.pack()
-		b = Frame(lf)
-		Button(b, text='ID', width=10, command=self.doid).pack(side=LEFT)
-		Button(b, text='Command', width=10, command=self.docmd).pack(side=LEFT)
+		b = UI.Frame(lf)
+		UI.Button(b, text='ID', width=10, command=self.doid).pack(side=UI.LEFT)
+		UI.Button(b, text='Command', width=10, command=self.docmd).pack(side=UI.LEFT)
 		b.pack(padx=5, pady=5)
-		lf.pack(side=LEFT)
-		r = Frame(btns)
-		ok = Button(r, text='Ok', width=10, command=self.destroy)
-		ok.pack(side=BOTTOM)
-		r.pack(fill=BOTH, expand=1)
-		btns.pack(side=BOTTOM, fill=X, padx=5, pady=5)
-		left.pack(side=LEFT, fill=Y)
+		lf.pack(side=UI.LEFT)
+		r = UI.Frame(btns)
+		ok = UI.Button(r, text='Ok', width=10, command=self.destroy)
+		ok.pack(side=UI.BOTTOM)
+		r.pack(fill=UI.BOTH, expand=1)
+		btns.pack(side=UI.BOTTOM, fill=UI.X, padx=5, pady=5)
+		left.pack(side=UI.LEFT, fill=UI.Y)
 
-		right = Frame(self)
-		f = Frame(right)
-		Label(f, text='GRP Preview:', anchor=W).pack(side=LEFT, fill=X, expand=1)
-		Label(f, textvariable=self.grp_frame, anchor=W).pack(side=LEFT)
-		f.pack(fill=X)
+		right = UI.Frame(self)
+		f = UI.Frame(right)
+		UI.Label(f, text='GRP Preview:', anchor=UI.W).pack(side=UI.LEFT, fill=UI.X, expand=1)
+		UI.Label(f, textvariable=self.grp_frame, anchor=UI.W).pack(side=UI.LEFT)
+		f.pack(fill=UI.X)
 
-		p = Frame(right)
-		self.preview = Canvas(p, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		p = UI.Frame(right)
+		self.preview = UI.Canvas(p, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
 		self.preview.pack()
-		self.scroll = Scrollbar(p, orient=HORIZONTAL, command=self.selectframe)
+		self.scroll = UI.Scrollbar(p, orient=UI.HORIZONTAL, command=self.selectframe)
 		self.scroll.set(0,1)
-		self.scroll.pack(fill=X)
+		self.scroll.pack(fill=UI.X)
 		p.pack()
 
-		self.toolbar = Toolbar(right)
+		self.toolbar = UI.Toolbar(right)
 		self.toolbar.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
 		self.toolbar.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Left', enabled=False, tags='can_preview')
 		self.toolbar.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Left', enabled=False, tags='can_preview')
@@ -226,29 +226,29 @@ class PreviewerDialog(PyMSDialog):
 		self.toolbar.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.toolbar.pack(padx=1, pady=3)
 
-		self.prevspeed = IntegerVar(val=self.config_.previewer.preview_speed.value)
-		self.showpreview = BooleanVar(value=self.config_.previewer.show_preview.value)
-		self.looppreview = BooleanVar(value=self.config_.previewer.loop_preview.value)
-		self.prevfrom = IntegerVar(0,[0,0])
-		self.prevto = IntegerVar(0,[0,0])
+		self.prevspeed = UI.IntegerVar(val=self.config_.previewer.preview_speed.value)
+		self.showpreview = UI.BooleanVar(value=self.config_.previewer.show_preview.value)
+		self.looppreview = UI.BooleanVar(value=self.config_.previewer.loop_preview.value)
+		self.prevfrom = UI.IntegerVar(0,[0,0])
+		self.prevto = UI.IntegerVar(0,[0,0])
 
-		opts = Frame(right)
-		speedview = Frame(opts)
-		Checkbutton(speedview, text='Show Preview at Speed:', variable=self.showpreview, command=self.display).pack(side=LEFT)
-		Entry(speedview, textvariable=self.prevspeed, font=Font.fixed(), width=4).pack(side=LEFT)
-		Label(speedview, text='ms').pack(side=LEFT)
+		opts = UI.Frame(right)
+		speedview = UI.Frame(opts)
+		UI.Checkbutton(speedview, text='Show Preview at Speed:', variable=self.showpreview, command=self.display).pack(side=UI.LEFT)
+		UI.Entry(speedview, textvariable=self.prevspeed, font=UI.Font.fixed(), width=4).pack(side=UI.LEFT)
+		UI.Label(speedview, text='ms').pack(side=UI.LEFT)
 		speedview.grid()
-		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(column=1, row=0) # , command=self.drawpreview
-		r = Frame(opts)
-		Label(r, text='Preview Between: ').pack(side=LEFT)
-		self.prevstart = Entry(r, textvariable=self.prevfrom, font=Font.fixed(), width=3, state=DISABLED)
-		self.prevstart.pack(side=LEFT)
-		Label(r, text=' - ').pack(side=LEFT)
-		self.prevend = Entry(r, textvariable=self.prevto, font=Font.fixed(), width=3, state=DISABLED)
-		self.prevend.pack(side=LEFT)
+		UI.Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(column=1, row=0) # , command=self.drawpreview
+		r = UI.Frame(opts)
+		UI.Label(r, text='Preview Between: ').pack(side=UI.LEFT)
+		self.prevstart = UI.Entry(r, textvariable=self.prevfrom, font=UI.Font.fixed(), width=3, state=UI.DISABLED)
+		self.prevstart.pack(side=UI.LEFT)
+		UI.Label(r, text=' - ').pack(side=UI.LEFT)
+		self.prevend = UI.Entry(r, textvariable=self.prevto, font=UI.Font.fixed(), width=3, state=UI.DISABLED)
+		self.prevend.pack(side=UI.LEFT)
 		r.grid(row=1, columnspan=2)
-		opts.pack(fill=X)
-		right.pack(side=LEFT, fill=Y, expand=1)
+		opts.pack(fill=UI.X)
+		right.pack(side=UI.LEFT, fill=UI.Y, expand=1)
 
 		if not PALETTES:
 			pal = Palette.Palette()
@@ -397,20 +397,20 @@ class PreviewerDialog(PyMSDialog):
 			serialize_context = self.delegate.get_serialize_context(output)
 			i = CodeTypes.FrameCodeType().serialize(self.previewing.frame, serialize_context)
 		if self.overwrite.get():
-			s = self.text.index(f'{INSERT} linestart')
-			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s, f'{INSERT} lineend'))
+			s = self.text.index(f'{UI.INSERT} linestart')
+			m = re.match('(\\s*)(\\S+)(\\s+)([^\\s#]+)(\\s+.*)?', self.text.get(s, f'{UI.INSERT} lineend'))
 			if m and m.group(2) in PREVIEWER_CMDS[entry_type]:
-				self.text.delete(s, f'{INSERT} lineend')
+				self.text.delete(s, f'{UI.INSERT} lineend')
 				self.text.insert(s, m.group(1)+m.group(2)+m.group(3)+i+m.group(5))
 		else:
-			self.text.insert(INSERT, i)
+			self.text.insert(UI.INSERT, i)
 		if self.closeafter.get():
 			self.destroy()
 
 	def docmd(self) -> None:
 		self.stopframe()
 		entry_type = self.entry_type()
-		s = self.text.index(f'{INSERT} linestart')
+		s = self.text.index(f'{UI.INSERT} linestart')
 		if entry_type != EntryType.iscript:
 			if entry_type == EntryType.images_dat:
 				listbox = self.delegate.imageslist
@@ -445,7 +445,7 @@ class PreviewerDialog(PyMSDialog):
 		text = output.getvalue()
 		with self.text.undo_group():
 			if self.overwrite.get():
-				self.text.delete(s, f'{INSERT} lineend')
+				self.text.delete(s, f'{UI.INSERT} lineend')
 				text = text.rstrip('\n')
 			self.text.insert(s, text)
 		if self.closeafter.get():
@@ -463,20 +463,20 @@ class PreviewerDialog(PyMSDialog):
 
 	def preview_limits(self) -> None:
 		if self.previewing.grp:
-			self.prevstart.config(state=NORMAL)
-			self.prevend.config(state=NORMAL)
+			self.prevstart.config(state=UI.NORMAL)
+			self.prevend.config(state=UI.NORMAL)
 			to = max(self.previewing.grp.frames-1,0)
 			self.prevfrom.range[1] = to
 			self.prevto.range[1] = to
 			self.prevfrom.set(0)
 			self.prevto.set(to)
 		else:
-			self.prevstart.config(state=DISABLED)
-			self.prevend.config(state=DISABLED)
+			self.prevstart.config(state=UI.DISABLED)
+			self.prevend.config(state=UI.DISABLED)
 			self.prevfrom.set(0)
 			self.prevto.set(0)
 
-	def grp(self, image_id: int, pal: str, frame: int, *path_components: str) -> Image | None:
+	def grp(self, image_id: int, pal: str, frame: int, *path_components: str) -> UI.Image | None:
 		if not MPQ.supported() or not pal in PALETTES:
 			return None
 		path = Assets.mpq_file_name(*path_components)
@@ -497,7 +497,7 @@ class PreviewerDialog(PyMSDialog):
 					GRP_CACHE[path] = {}
 				if not frame in GRP_CACHE:
 					GRP_CACHE[path][frame] = {}
-				GRP_CACHE[path][frame][pal] = cast(Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False))
+				GRP_CACHE[path][frame][pal] = cast(UI.Image, GRP.frame_to_photo(PALETTES[pal], grp, frame, size=False))
 		return GRP_CACHE[path][frame][pal]
 
 	def select(self, entry_id: int, entry_type: EntryType, frame: int = 0) -> None:
@@ -522,14 +522,14 @@ class PreviewerDialog(PyMSDialog):
 		self.drawpreview()
 		self.updateframes()
 
-	def selectframe(self, t: MoveViewBy, p: float, e: str) -> None:
+	def selectframe(self, t: UI.MoveViewBy, p: float, e: str) -> None:
 		if not self.previewing.grp:
 			return
 		self.stopframe()
 		a = {'pages':17,'units':1}
-		if t == MOVETO:
+		if t == UI.MOVETO:
 			self.previewnext = self.previewing.next_frame(int(self.previewing.grp.frames * float(p)))
-		elif t == SCROLL:
+		elif t == UI.SCROLL:
 			self.previewnext = self.previewing.next_frame(min(self.previewing.grp.frames-1,max(0,self.previewing.frame + int(p) * a[e])))
 		self.updateframes()
 		# if self.timer:
@@ -542,7 +542,7 @@ class PreviewerDialog(PyMSDialog):
 			return
 		elif self.previewnext:
 			self.previewing = self.previewnext
-		self.preview.delete(ALL)
+		self.preview.delete(UI.ALL)
 		if not self.showpreview.get():
 			return
 		image_id = self.previewing.image_id

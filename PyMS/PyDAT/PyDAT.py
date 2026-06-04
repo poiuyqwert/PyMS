@@ -21,7 +21,7 @@ from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
 from ..Utilities import Assets
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.HelpDialog import HelpDialog
 from ..Utilities.SettingsUI.BaseSettingsDialog import ErrorableSettingsDialogDelegate
 from ..Utilities.SponsorDialog import SponsorDialog
@@ -32,10 +32,10 @@ from typing import cast, Callable, Any
 
 LONG_VERSION = 'v' + Assets.version('PyDAT')
 
-class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
+class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.title(f'PyDAT {LONG_VERSION}')
 		self.set_icon('PyDAT')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
@@ -44,7 +44,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		setup_trace('PyDAT', self)
 
 		self.data_context = DataContext()
-		Theme.load_theme(self.data_context.config.theme.value, self)
+		UI.Theme.load_theme(self.data_context.config.theme.value, self)
 
 		self.updates: list[AnyID] = []
 		self.update_after_id = None
@@ -64,103 +64,103 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 
 		self.data_context.load_palettes()
 
-		toolbar = Toolbar(self)
-		toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
+		toolbar = UI.Toolbar(self)
+		toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
 		toolbar.add_gap()
-		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', Ctrl.d)
-		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', Ctrl.i)
-		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', Ctrl.Alt.o, enabled=MPQ.supported())
+		toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		toolbar.add_button(Assets.get_image('openfolder'), self.opendirectory, 'Open Directory', UI.Ctrl.d)
+		toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import from TXT', UI.Ctrl.i)
+		toolbar.add_button(Assets.get_image('openmpq'), self.openmpq, 'Open MPQ', UI.Ctrl.Alt.o, enabled=MPQ.supported())
 		toolbar.add_gap()
-		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
-		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', Ctrl.Alt.s)
-		toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', Ctrl.e)
-		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', Ctrl.Alt.m, enabled=MPQ.supported())
+		toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s)
+		toolbar.add_button(Assets.get_image('saveas'), self.saveas, 'Save As', UI.Ctrl.Alt.s)
+		toolbar.add_button(Assets.get_image('export'), self.export, 'Export to TXT', UI.Ctrl.e)
+		toolbar.add_button(Assets.get_image('savempq'), self.savempq, 'Save MPQ', UI.Ctrl.Alt.m, enabled=MPQ.supported())
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', Shift.Ctrl.n)
+		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', UI.Shift.Ctrl.n)
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and TBL files', Ctrl.m)
+		toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and TBL files', UI.Ctrl.m)
 		def open_files_callback() -> Callable[[], None]:
 			def open_files() -> None:
 				self.open_files()
 			return open_files
-		toolbar.add_button(Assets.get_image('debug'), open_files_callback(), 'Reload data files', Ctrl.r)
+		toolbar.add_button(Assets.get_image('debug'), open_files_callback(), 'Reload data files', UI.Ctrl.r)
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		toolbar.add_button(Assets.get_image('about'), self.about, 'About PyDAT')
 		toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		toolbar.add_section()
-		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		self.hor_pane = PanedWindow(self, orient=HORIZONTAL)
-		left = Frame(self.hor_pane)
-		self.listbox = ScrolledListbox(left, scroll_speed=2, font=Font.fixed(), width=45, height=1)
-		self.listbox.pack(side=TOP, fill=BOTH, padx=2, pady=2, expand=1)
-		self.listbox.bind(ButtonRelease.Click_Right(), self.popup)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), lambda *e: self.changeid())
+		self.hor_pane = UI.PanedWindow(self, orient=UI.HORIZONTAL)
+		left = UI.Frame(self.hor_pane)
+		self.listbox = UI.ScrolledListbox(left, scroll_speed=2, font=UI.Font.fixed(), width=45, height=1)
+		self.listbox.pack(side=UI.TOP, fill=UI.BOTH, padx=2, pady=2, expand=1)
+		self.listbox.bind(UI.ButtonRelease.Click_Right(), self.popup)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda *e: self.changeid())
 
-		f = Frame(left)
-		collapse_button = CollapseView.Button(f)
-		collapse_button.pack(side=TOP)
-		f.pack(fill=X, pady=2)
+		f = UI.Frame(left)
+		collapse_button = UI.CollapseView.Button(f)
+		collapse_button.pack(side=UI.TOP)
+		f.pack(fill=UI.X, pady=2)
 
 		def _update_collapse_setting(collapsed: bool) -> None:
 			self.data_context.config.show_listbox_options.value = not collapsed
-		collapse_view = CollapseView(left, collapse_button, callback=_update_collapse_setting)
-		collapse_view.pack(fill=X, padx=2, pady=2)
+		collapse_view = UI.CollapseView(left, collapse_button, callback=_update_collapse_setting)
+		collapse_view.pack(fill=UI.X, padx=2, pady=2)
 
 		collapse_view.set_collapsed(not self.data_context.config.show_listbox_options.value)
 
 		self.findhistory: list[str] = []
-		self.find = StringVar()
-		Label(collapse_view, text='Find:').grid(column=0,row=0, sticky=E)
-		find = Frame(collapse_view)
-		find_tdd = TextDropDown(find, self.find, self.findhistory, 5)
-		find_tdd.pack(side=LEFT, fill=X, expand=1)
-		find_tdd.entry.bind(Key.Return(), self.findnext)
-		Button(find, text='Next', command=self.findnext).pack(side=LEFT)
-		find.grid(column=1,row=0, sticky=EW)
+		self.find = UI.StringVar()
+		UI.Label(collapse_view, text='Find:').grid(column=0,row=0, sticky=UI.E)
+		find = UI.Frame(collapse_view)
+		find_tdd = UI.TextDropDown(find, self.find, self.findhistory, 5)
+		find_tdd.pack(side=UI.LEFT, fill=UI.X, expand=1)
+		find_tdd.entry.bind(UI.Key.Return(), self.findnext)
+		UI.Button(find, text='Next', command=self.findnext).pack(side=UI.LEFT)
+		find.grid(column=1,row=0, sticky=UI.EW)
 
 		collapse_view.grid_columnconfigure(1, weight=1)
 
-		self.jumpid = IntegerVar('', [0,0], allow_hex=True)
-		Label(collapse_view, text='ID Jump:').grid(column=0,row=1, sticky=E)
-		jump = Frame(collapse_view)
-		jump_entry = Entry(jump, textvariable=self.jumpid, width=5)
-		jump_entry.pack(side=LEFT)
-		jump_entry.bind(Key.Return(), self.jump)
-		Button(jump, text='Go', command=self.jump).pack(side=LEFT)
-		jump.grid(column=1,row=1, sticky=W)
+		self.jumpid = UI.IntegerVar('', [0,0], allow_hex=True)
+		UI.Label(collapse_view, text='ID Jump:').grid(column=0,row=1, sticky=UI.E)
+		jump = UI.Frame(collapse_view)
+		jump_entry = UI.Entry(jump, textvariable=self.jumpid, width=5)
+		jump_entry.pack(side=UI.LEFT)
+		jump_entry.bind(UI.Key.Return(), self.jump)
+		UI.Button(jump, text='Go', command=self.jump).pack(side=UI.LEFT)
+		jump.grid(column=1,row=1, sticky=UI.W)
 
-		self.names_display = IntVar()
+		self.names_display = UI.IntVar()
 		self.names_display.trace_add('write', self.change_names_display)
-		self.simple_names = BooleanVar()
+		self.simple_names = UI.BooleanVar()
 		self.simple_names.trace_add('write', self.change_simple_names)
-		Label(collapse_view, text='Names:').grid(column=0,row=2, sticky=E)
-		DropDown(collapse_view, self.names_display, ['Basic', 'TBL d', 'Combined']).grid(column=1,row=2, sticky=EW)
-		self.simple_names_checkbox = Checkbutton(collapse_view, text='Simple TBL Names', variable=self.simple_names)
-		self.simple_names_checkbox.grid(column=1,row=3, sticky=W)
+		UI.Label(collapse_view, text='Names:').grid(column=0,row=2, sticky=UI.E)
+		UI.DropDown(collapse_view, self.names_display, ['Basic', 'TBL d', 'Combined']).grid(column=1,row=2, sticky=UI.EW)
+		self.simple_names_checkbox = UI.Checkbutton(collapse_view, text='Simple TBL Names', variable=self.simple_names)
+		self.simple_names_checkbox.grid(column=1,row=3, sticky=UI.W)
 
-		self.hor_pane.add(left, sticky=NSEW, minsize=300)
+		self.hor_pane.add(left, sticky=UI.NSEW, minsize=300)
 
-		self.listmenu = Menu(self, tearoff=0)
-		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=Shift.Ctrl.c) # type: ignore[call-arg]
-		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=Ctrl.y, tags='can_copy_sub_tab') # type: ignore[call-arg]
-		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=Shift.Ctrl.p) # type: ignore[call-arg]
+		self.listmenu = UI.Menu(self, tearoff=0)
+		self.listmenu.add_command(label='Copy Entry to Clipboard', command=self.copy, shortcut=UI.Shift.Ctrl.c) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Copy Sub-Tab to Clipboard', command=self.copy_subtab, shortcut=UI.Ctrl.y, tags='can_copy_sub_tab') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Paste from Clipboard', command=self.paste, shortcut=UI.Shift.Ctrl.p) # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=Ctrl.r) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Reload Entry', command=self.reload, shortcut=UI.Ctrl.r) # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=Shift.Ctrl.a, tags='can_expand') # type: ignore[call-arg]
-		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=Shift.Ctrl.s, tags='can_expand') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Add Entry (DatExtend)', command=self.add_entry, shortcut=UI.Shift.Ctrl.a, tags='can_expand') # type: ignore[call-arg]
+		self.listmenu.add_command(label='Set Entry Count (DatExtend)', command=self.set_entry_count, shortcut=UI.Shift.Ctrl.s, tags='can_expand') # type: ignore[call-arg]
 		self.listmenu.add_separator()
-		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=Shift.Ctrl.n) # type: ignore[call-arg]
+		self.listmenu.add_command(label='Override Name', command=self.override_name, shortcut=UI.Shift.Ctrl.n) # type: ignore[call-arg]
 
-		self.status = StringVar()
-		self.expanded = StringVar()
+		self.status = UI.StringVar()
+		self.expanded = UI.StringVar()
 
-		self.dattabs = Notebook(self.hor_pane)
+		self.dattabs = UI.Notebook(self.hor_pane)
 		self.pages: list[DATTab] = []
 		tabs = (
 			('Units', Tabs.UnitsTab),
@@ -180,16 +180,16 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			page.page_title = name
 			self.pages.append(page)
 			self.dattabs.add_tab(page, name)
-		self.dattabs.bind(WidgetEvent.Notebook.TabActivated(), lambda _: self.refresh())
-		self.hor_pane.add(self.dattabs.notebook, sticky=NSEW)
-		self.hor_pane.pack(fill=BOTH, expand=1)
+		self.dattabs.bind(UI.WidgetEvent.Notebook.TabActivated(), lambda _: self.refresh())
+		self.hor_pane.add(self.dattabs.notebook, sticky=UI.NSEW)
+		self.hor_pane.pack(fill=UI.BOTH, expand=1)
 
 		#Statusbar
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=0.60)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.expanded)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.data_context.load_mpqs()
 
@@ -214,14 +214,14 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.active_tab().load_data()
 
 	def update_entry_listing(self, update_scroll: bool = False) -> None:
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		tab = self.active_tab()
 		dat_data = tab.get_dat_data()
 		if dat_data.dat:
 			max_id = dat_data.dat.entry_count() - 1
 			self.jumpid.range[1] = max_id
 			self.jumpid.editvalue()
-			self.listbox.insert(END, *[f' {lpad(str(id), min(4,len(str(max_id))))}  {name}' for id,name in enumerate(dat_data.names)])
+			self.listbox.insert(UI.END, *[f' {lpad(str(id), min(4,len(str(max_id))))}  {name}' for id,name in enumerate(dat_data.names)])
 			self.listbox.select_set(tab.id)
 			if update_scroll:
 				self.listbox.see(tab.id)
@@ -240,10 +240,10 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		name_settings = self.active_tab().get_names_settings()
 		self.names_display.set(PyDAT.NAMES_SETTING_TO_OPTION[name_settings.display.value])
 		if isinstance(name_settings, PyDATConfig.Names.SimpleOptions):
-			self.simple_names_checkbox['state'] = NORMAL
+			self.simple_names_checkbox['state'] = UI.NORMAL
 			self.simple_names.set(name_settings.simple.value)
 		else:
-			self.simple_names_checkbox['state'] = DISABLED
+			self.simple_names_checkbox['state'] = UI.DISABLED
 			self.simple_names.set(False)
 	def change_names_display(self, *_: Any) -> None:
 		name_settings = self.active_tab().get_names_settings()
@@ -266,7 +266,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.status.set(dat_data.file_path)
 		elif dat_data.dat:
 			self.status.set(dat_data.dat.FILE_NAME)
-		self.editstatus['state'] = NORMAL if tab.edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if tab.edited else UI.DISABLED
 		if dat_data.is_expanded():
 			self.expanded.set(f'{dat_data.dat_type.FILE_NAME} expanded')
 		else:
@@ -310,7 +310,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		if entry_id != self.active_tab().id:
 			self.save_data()
 			self.load_data(entry_id)
-			self.listbox.select_clear(0,END)
+			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(entry_id)
 			if show_selection:
 				self.listbox.see(entry_id)
@@ -323,7 +323,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def change_id(self, entry_id: int) -> None:
 		self.changeid(entry_id)
 
-	def findnext(self, _event: Event | None = None) -> None:
+	def findnext(self, _event: UI.Event | None = None) -> None:
 		find = self.find.get()
 		if find in self.findhistory:
 			self.findhistory.remove(find)
@@ -336,12 +336,12 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				self.changeid(cur, focus_list=False)
 				return
 			cur = (cur+1) % self.listbox.size() # type: ignore[operator]
-		MessageBox.showinfo('Find', f"Can't find '{self.find.get()}'.")
+		UI.MessageBox.showinfo('Find', f"Can't find '{self.find.get()}'.")
 
-	def jump(self, _event: Event | None = None) -> None:
+	def jump(self, _event: UI.Event | None = None) -> None:
 		self.changeid(self.jumpid.get())
 
-	def popup(self, event: Event) -> None:
+	def popup(self, event: UI.Event) -> None:
 		can_expand = False
 		dat = self.active_tab().get_dat_data().dat
 		if dat:
@@ -375,10 +375,10 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def override_name(self) -> None:
 		EntryNameOverrides(self, self.data_context, self.active_tab().DAT_ID, self.active_tab().id)
 
-	def new(self, _event: Event | None = None) -> None:
+	def new(self, _event: UI.Event | None = None) -> None:
 		self.active_tab().new()
 
-	def open(self, _event: Event | None = None, file_path: str | None = None) -> None:
+	def open(self, _event: UI.Event | None = None, file_path: str | None = None) -> None:
 		if file_path is None:
 			file_path = self.data_context.config.last_path.dat.select_open(self)
 			if not file_path:
@@ -441,57 +441,57 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			if message:
 				message += '\n\n'
 			message += f"Expanded DAT Files found:\n\t{', '.join(found_expanded)}\n\nExpanded DAT files require a plugin like 'DatExtend'."
-		MessageBox.showinfo('DAT Files Found', message)
+		UI.MessageBox.showinfo('DAT Files Found', message)
 
-	def openmpq(self, _event: Event | None = None) -> None:
-		path = self.data_context.config.last_path.mpq.select_open(self, filetypes=[FileType.mpq(),FileType.exe_mpq()])
+	def openmpq(self, _event: UI.Event | None = None) -> None:
+		path = self.data_context.config.last_path.mpq.select_open(self, filetypes=[UI.FileType.mpq(),UI.FileType.exe_mpq()])
 		if path:
 			self._open_all(path, True)
 
-	def opendirectory(self, _event: Event | None = None) -> None:
+	def opendirectory(self, _event: UI.Event | None = None) -> None:
 		path = self.data_context.config.last_path.dir.select_open(self)
 		if path:
 			self._open_all(path, False)
 
-	def iimport(self, _event: Event | None = None) -> None:
+	def iimport(self, _event: UI.Event | None = None) -> None:
 		self.active_tab().iimport()
 
-	def save(self, _event: Event | None = None) -> None:
+	def save(self, _event: UI.Event | None = None) -> None:
 		self.save_data()
 		self.active_tab().save()
 
-	def saveas(self, _event: Event | None = None) -> None:
+	def saveas(self, _event: UI.Event | None = None) -> None:
 		self.save_data()
 		self.active_tab().saveas()
 
-	def export(self, _event: Event | None = None) -> None:
+	def export(self, _event: UI.Event | None = None) -> None:
 		self.save_data()
 		self.active_tab().export()
 
-	def savempq(self, _event: Event | None = None) -> None:
+	def savempq(self, _event: UI.Event | None = None) -> None:
 		if MPQ.supported():
 			self.save_data()
 			SaveMPQDialog(self, self)
 
-	def settings(self, _event: Event | None = None, err: PyMSError | None = None) -> None:
+	def settings(self, _event: UI.Event | None = None, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, config=self.data_context.config, delegate=self, err=err, mpq_handler=self.data_context.mpq_handler)
 
-	def register_registry(self, _event: Event | None = None) -> None:
+	def register_registry(self, _event: UI.Event | None = None) -> None:
 		try:
 			registry.register('PyDAT', 'dat', '')
 		except PyMSError as e:
 			ErrorDialog(self, e)
 
-	def help(self, _event: Event | None = None) -> None:
+	def help(self, _event: UI.Event | None = None) -> None:
 		HelpDialog(self, self.data_context.config.windows.help, 'Help/Programs/PyDAT.md')
 
-	def about(self, _event: Event | None = None) -> None:
+	def about(self, _event: UI.Event | None = None) -> None:
 		AboutDialog(self, 'PyDAT', LONG_VERSION, [('BroodKiller',"DatEdit, its design, format specs, and data files.")])
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, _event: Event | None = None) -> None:
+	def exit(self, _event: UI.Event | None = None) -> None:
 		if not self.unsaved():
 			self.data_context.config.windows.main.save_size(self)
 			self.data_context.config.list_size.save_size(self.hor_pane)

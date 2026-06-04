@@ -3,22 +3,22 @@ from .Resolution import Resolution
 
 from ....FileFormats.AIBIN.AIBIN import AIBIN, LoadIssue, AIScript
 
-from ....Utilities.UIKit import *
+from ....Utilities import UIKit as UI
 from ....Utilities.Callback import Callback
 
 class ChangeIDResolution(Resolution):
 	def __init__(self, in_bwscript: bool) -> None:
 		self.in_bwscript = in_bwscript
-		self.new_id = StringVar()
+		self.new_id = UI.StringVar()
 		self.update_callback = Callback()
 		self.new_id.trace_add('write', lambda a,b,c: self.update_callback())
 
 	def name(self) -> str:
 		return f'Change script ID in {"bw" if self.in_bwscript else "ai"}script.bin'
 
-	def ui(self, parent: Misc) -> Widget | None:
+	def ui(self, parent: UI.Misc) -> UI.Widget | None:
 		ui = ChangeIDUI(parent, self.new_id)
-		ui.pack(side=LEFT)
+		ui.pack(side=UI.LEFT)
 		return ui
 
 	def can_resolve(self, ai: AIBIN, issue: LoadIssue) -> str | None:
@@ -43,9 +43,9 @@ class ChangeIDResolution(Resolution):
 			ai_script.id = new_id
 			ai.add_script(ai_script)
 
-class ChangeIDUI(Frame):
-	def __init__(self, parent: Misc, new_id: StringVar) -> None:
+class ChangeIDUI(UI.Frame):
+	def __init__(self, parent: UI.Misc, new_id: UI.StringVar) -> None:
 		super().__init__(parent)
 
-		Label(self, text='New script ID: ').pack(side=LEFT)
-		Entry(self, textvariable=new_id, width=4).pack(side=LEFT)
+		UI.Label(self, text='New script ID: ').pack(side=UI.LEFT)
+		UI.Entry(self, textvariable=new_id, width=4).pack(side=UI.LEFT)

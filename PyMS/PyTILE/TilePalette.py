@@ -10,7 +10,7 @@ from ..FileFormats.Tileset.CV5 import CV5Group
 from ..FileFormats.Tileset.VX4 import VX4Megatile, VX4Minitile
 from ..FileFormats.Tileset.VF4 import VF4Megatile
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities import Config
@@ -18,9 +18,9 @@ from ..Utilities import Config
 
 class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, MegaEditorDelegate, MiniEditorDelegate, GraphicsImporterDelegate):
 	OPEN_PALETTE_COUNT = 0
-	TILE_CACHE: dict[int | VX4Minitile, Image] = {}
+	TILE_CACHE: dict[int | VX4Minitile, UI.Image] = {}
 
-	def __init__(self, *, parent: Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
+	def __init__(self, *, parent: UI.Misc, config: PyTILEConfig, delegate: TilePaletteDelegate, tiletype: TileType = TileType.group, select: int | list[int] | None = None, editing: bool = False) -> None:
 		TilePalette.OPEN_PALETTE_COUNT += 1
 		self.config_ = config
 		self.tiletype = tiletype
@@ -48,41 +48,41 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			typename = 'MiniTiles'
 		self.toolbar = None
 		if self.editing:
-			self.toolbar = Toolbar(self)
-			self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add', Key.Insert, enabled=False, tags='can_add')
+			self.toolbar = UI.Toolbar(self)
+			self.toolbar.add_button(Assets.get_image('add'), self.add, 'Add', UI.Key.Insert, enabled=False, tags='can_add')
 			if self.tiletype != TileType.mini:
 				self.toolbar.add_section()
-				self.toolbar.add_button(Assets.get_image('colors'), self.select_smaller, f'Select {smallertype}', Ctrl.m)
+				self.toolbar.add_button(Assets.get_image('colors'), self.select_smaller, f'Select {smallertype}', UI.Ctrl.m)
 			if self.tiletype != TileType.group:
 				self.toolbar.add_section()
-				self.toolbar.add_button(Assets.get_image('edit'), self.edit, f'Edit {typename}', Key.Return)
+				self.toolbar.add_button(Assets.get_image('edit'), self.edit, f'Edit {typename}', UI.Key.Return)
 			self.toolbar.add_spacer(20)
-			self.toolbar.add_button(Assets.get_image('exportc'), self.export_graphics, f'Export {typename} Graphics', Ctrl.e, enabled=False, tags='has_selection')
-			self.toolbar.add_button(Assets.get_image('importc'), self.import_graphics, f'Import {typename} Graphics', Ctrl.i)
+			self.toolbar.add_button(Assets.get_image('exportc'), self.export_graphics, f'Export {typename} Graphics', UI.Ctrl.e, enabled=False, tags='has_selection')
+			self.toolbar.add_button(Assets.get_image('importc'), self.import_graphics, f'Import {typename} Graphics', UI.Ctrl.i)
 			if self.tiletype != TileType.mini:
 				self.toolbar.add_section()
-				self.toolbar.add_button(Assets.get_image('export'), self.export_settings, f'Export {typename} Settings', Shift.Ctrl.e, enabled=False, tags='has_selection')
-				self.toolbar.add_button(Assets.get_image('import'), self.import_settings, f'Import {typename} Settings', Shift.Ctrl.i)
-			self.toolbar.pack(fill=X)
+				self.toolbar.add_button(Assets.get_image('export'), self.export_settings, f'Export {typename} Settings', UI.Shift.Ctrl.e, enabled=False, tags='has_selection')
+				self.toolbar.add_button(Assets.get_image('import'), self.import_settings, f'Import {typename} Settings', UI.Shift.Ctrl.i)
+			self.toolbar.pack(fill=UI.X)
 
 		self.palette = TilePaletteView(parent=self, delegate=self, tiletype=self.tiletype, select=self.start_selected)
-		self.palette.pack(side=TOP, fill=BOTH, expand=1)
+		self.palette.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
 
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.update_status()
 		self.update_state()
 
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
 		return self.delegate.get_tile(tile_id)
 
-	def tile_palette_binding_widget(self) -> Misc:
+	def tile_palette_binding_widget(self) -> UI.Misc:
 		return self
 
 	def tile_palette_double_clicked(self, tile_id: int) -> None:
@@ -196,7 +196,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 			tileset.vx4.add_megatile(VX4Megatile())
 		else:
 			if tileset.minitiles_remaining() == 0:
-				if not MessageBox.askyesno(parent=self, title='Expand VX4', message="You have run out of minitiles, would you like to expand the VX4 file? If you don't know what this is you should google 'VX4 Expander Plugin' before saying Yes"):
+				if not UI.MessageBox.askyesno(parent=self, title='Expand VX4', message="You have run out of minitiles, would you like to expand the VX4 file? If you don't know what this is you should google 'VX4 Expander Plugin' before saying Yes"):
 					return
 				tileset.vx4.expand()
 			select = tileset.vr4.image_count()
@@ -252,7 +252,7 @@ class TilePalette(PyMSDialog, TilePaletteViewDelegate, TilePaletteDelegate, Mega
 		from .SettingsImporter import SettingsImporter
 		SettingsImporter(parent=self, config=self.config_, tiletype=self.tiletype, ids=self.palette.selected, delegate=self)
 
-	def edit(self, _event: Event | None = None) -> None:
+	def edit(self, _event: UI.Event | None = None) -> None:
 		if not self.palette.selected:
 			return
 		if self.tiletype == TileType.mega:

@@ -6,7 +6,7 @@ from ...DataID import DataID, AnyID
 
 from ....FileFormats.DAT.UnitsDAT import DATUnit
 
-from ....Utilities.UIKit import *
+from ....Utilities import UIKit as UI
 
 from math import floor, ceil
 
@@ -15,25 +15,25 @@ if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
 class StarEditUnitsTab(DATUnitsTab):
-	def __init__(self, parent: Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, sub_delegate: SubDelegate) -> None:
 		DATUnitsTab.__init__(self, parent, delegate, sub_delegate)
-		scrollview = ScrollView(self)
+		scrollview = UI.ScrollView(self)
 
-		self.nonneutral = IntVar()
-		self.unitlisting = IntVar()
-		self.missionbriefing = IntVar()
-		self.playersettings = IntVar()
-		self.allraces = IntVar()
-		self.setdoodadstate = IntVar()
-		self.nonlocationtriggers = IntVar()
-		self.unitherosettings = IntVar()
-		self.locationtriggers = IntVar()
-		self.broodwaronly = IntVar()
-		self.men = IntVar()
-		self.building = IntVar()
-		self.factory = IntVar()
-		self.independent = IntVar()
-		self.neutral = IntVar()
+		self.nonneutral = UI.IntVar()
+		self.unitlisting = UI.IntVar()
+		self.missionbriefing = UI.IntVar()
+		self.playersettings = UI.IntVar()
+		self.allraces = UI.IntVar()
+		self.setdoodadstate = UI.IntVar()
+		self.nonlocationtriggers = UI.IntVar()
+		self.unitherosettings = UI.IntVar()
+		self.locationtriggers = UI.IntVar()
+		self.broodwaronly = UI.IntVar()
+		self.men = UI.IntVar()
+		self.building = UI.IntVar()
+		self.factory = UI.IntVar()
+		self.independent = UI.IntVar()
+		self.neutral = UI.IntVar()
 
 		flags = [
 			(
@@ -66,76 +66,76 @@ class StarEditUnitsTab(DATUnitsTab):
 				],
 			)
 		]
-		top = Frame(scrollview.content_view)
+		top = UI.Frame(scrollview.content_view)
 		for lt,lf in flags:
-			l = LabelFrame(top, text=lt + ' Flags:')
-			s = Frame(l)
+			l = UI.LabelFrame(top, text=lt + ' Flags:')
+			s = UI.Frame(l)
 			for c in lf:
-				cc = Frame(s, width=20)
+				cc = UI.Frame(s, width=20)
 				for t,v,h in c:
-					f = Frame(cc)
-					self.makeCheckbox(f, v, t, h).pack(side=LEFT)
-					f.pack(fill=X)
-				cc.pack(side=LEFT, fill=Y)
-			s.pack(fill=BOTH, padx=5, pady=5)
-			l.pack(side=LEFT, fill=BOTH, expand=(lt == 'Availability'))
-		top.pack(fill=X)
+					f = UI.Frame(cc)
+					self.makeCheckbox(f, v, t, h).pack(side=UI.LEFT)
+					f.pack(fill=UI.X)
+				cc.pack(side=UI.LEFT, fill=UI.Y)
+			s.pack(fill=UI.BOTH, padx=5, pady=5)
+			l.pack(side=UI.LEFT, fill=UI.BOTH, expand=(lt == 'Availability'))
+		top.pack(fill=UI.X)
 
-		self.rankentry = IntegerVar(0, [0,0])
-		self.rankdd = IntVar()
-		self.mapstring = IntegerVar(0, [0,65535])
+		self.rankentry = UI.IntegerVar(0, [0,0])
+		self.rankdd = UI.IntVar()
+		self.mapstring = UI.IntegerVar(0, [0,65535])
 
-		l = LabelFrame(scrollview.content_view, text='String Properties:')
-		s = Frame(l)
-		f = Frame(s)
-		Label(f, text='Rank/Sublabel:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.rankentry, font=Font.fixed(), width=3).pack(side=LEFT)
-		Label(f, text='=').pack(side=LEFT)
-		self.ranks = DropDown(f, self.rankdd, [], self.rankentry)
-		self.ranks.pack(side=LEFT, fill=X, expand=1, padx=2)
+		l = UI.LabelFrame(scrollview.content_view, text='String Properties:')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Rank/Sublabel:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.rankentry, font=UI.Font.fixed(), width=3).pack(side=UI.LEFT)
+		UI.Label(f, text='=').pack(side=UI.LEFT)
+		self.ranks = UI.DropDown(f, self.rankdd, [], self.rankentry)
+		self.ranks.pack(side=UI.LEFT, fill=UI.X, expand=1, padx=2)
 		self.tip(f, 'Rank/Sublabel', 'UnitRank')
-		f.pack(fill=X)
-		f = Frame(s)
-		Label(f, text='Map String:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.mapstring, font=Font.fixed(), width=5).pack(side=LEFT)
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		UI.Label(f, text='Map String:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.mapstring, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
 		self.tip(f, 'Map String', 'UnitMapString')
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(fill=X)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(fill=UI.X)
 
-		self.width = IntegerVar(0, [0,65535])
-		self.height = IntegerVar(0, [0,65535])
-		self.showpreview = BooleanVar()
+		self.width = UI.IntegerVar(0, [0,65535])
+		self.height = UI.IntegerVar(0, [0,65535])
+		self.showpreview = UI.BooleanVar()
 		self.showpreview.set(self.delegate.data_context.config.preview.staredit.show.value)
 
-		bottom = Frame(scrollview.content_view)
-		r = Frame(bottom)
-		l = LabelFrame(r, text='Placement Box (Pixels):')
-		s = Frame(l)
-		f = Frame(s)
-		Label(f, text='Width:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.width, font=Font.fixed(), width=5).pack(side=LEFT)
+		bottom = UI.Frame(scrollview.content_view)
+		r = UI.Frame(bottom)
+		l = UI.LabelFrame(r, text='Placement Box (Pixels):')
+		s = UI.Frame(l)
+		f = UI.Frame(s)
+		UI.Label(f, text='Width:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.width, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
 		self.tip(f, 'Placement Width', 'UnitSEPlaceWidth')
-		f.pack(fill=X)
-		f = Frame(s)
-		Label(f, text='Height:', width=13, anchor=E).pack(side=LEFT)
-		Entry(f, textvariable=self.height, font=Font.fixed(), width=5).pack(side=LEFT)
+		f.pack(fill=UI.X)
+		f = UI.Frame(s)
+		UI.Label(f, text='Height:', width=13, anchor=UI.E).pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.height, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
 		self.tip(f, 'Placement Height', 'UnitSEPlaceHeight')
-		f.pack(fill=X)
-		s.pack(fill=BOTH, padx=5, pady=5)
-		l.pack(side=TOP)
-		r.pack(side=LEFT, fill=Y)
-		l = LabelFrame(bottom, text='Preview:')
-		self.preview = Canvas(l, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
-		self.preview.pack(side=TOP)
+		f.pack(fill=UI.X)
+		s.pack(fill=UI.BOTH, padx=5, pady=5)
+		l.pack(side=UI.TOP)
+		r.pack(side=UI.LEFT, fill=UI.Y)
+		l = UI.LabelFrame(bottom, text='Preview:')
+		self.preview = UI.Canvas(l, width=257, height=257, background='#000000', theme_tag='preview') # type: ignore[call-arg]
+		self.preview.pack(side=UI.TOP)
 
 		self.place_item = self.preview.create_rectangle(0, 0, 0, 0, outline='#FF0000')
 
-		Checkbutton(l, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=TOP)
-		l.pack(side=LEFT)
-		bottom.pack(fill=X)
+		UI.Checkbutton(l, text='Show Preview', variable=self.showpreview, command=self.drawpreview).pack(side=UI.TOP)
+		l.pack(side=UI.LEFT)
+		bottom.pack(fill=UI.X)
 
-		scrollview.pack(fill=BOTH, expand=1)
+		scrollview.pack(fill=UI.BOTH, expand=1)
 
 		for var in (self.width, self.height):
 			var.trace_add('write', lambda *_: self.drawpreview())

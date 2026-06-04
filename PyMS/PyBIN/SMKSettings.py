@@ -6,7 +6,7 @@ from .Delegates import MainDelegate
 
 from ..FileFormats import DialogBIN
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.MPQSelect import MPQSelect
 from ..Utilities import Assets
@@ -17,69 +17,69 @@ if TYPE_CHECKING:
 	from .WidgetNode import WidgetNode
 
 class SMKSettings(PyMSDialog, MainDelegate):
-	def __init__(self, parent: Misc, *, smk: DialogBIN.BINSMK, widget: WidgetNode, delegate: MainDelegate, window_pos: Point | None = None) -> None:
+	def __init__(self, parent: UI.Misc, *, smk: DialogBIN.BINSMK, widget: WidgetNode, delegate: MainDelegate, window_pos: UI.Point | None = None) -> None:
 		self.smk = smk
 		self.widget = widget
 		self.delegate = delegate
 		self.window_pos = window_pos
 
-		self.filename = StringVar()
-		self.overlay_smk = IntVar()
-		self.overlay_x = IntegerVar(val_range=[0,65535])
-		self.overlay_y = IntegerVar(val_range=[0,65535])
+		self.filename = UI.StringVar()
+		self.overlay_smk = UI.IntVar()
+		self.overlay_x = UI.IntegerVar(val_range=[0,65535])
+		self.overlay_y = UI.IntegerVar(val_range=[0,65535])
 
-		self.flag_fadein = BooleanVar()
-		self.flag_dark = BooleanVar()
-		self.flag_repeat = BooleanVar()
-		self.flag_hover = BooleanVar()
-		self.flag_unk1 = BooleanVar()
-		self.flag_unk2 = BooleanVar()
-		self.flag_unk3 = BooleanVar()
-		self.flag_unk4 = BooleanVar()
+		self.flag_fadein = UI.BooleanVar()
+		self.flag_dark = UI.BooleanVar()
+		self.flag_repeat = UI.BooleanVar()
+		self.flag_hover = UI.BooleanVar()
+		self.flag_unk1 = UI.BooleanVar()
+		self.flag_unk2 = UI.BooleanVar()
+		self.flag_unk3 = UI.BooleanVar()
+		self.flag_unk4 = UI.BooleanVar()
 
 		PyMSDialog.__init__(self, parent, 'Edit SMK', center=False, resizable=(True, False))
 
-	def widgetize(self) -> (Misc | None):
-		textframe = Frame(self)
-		Label(textframe, text='Filename:').pack(side=LEFT)
-		Entry(textframe, textvariable=self.filename, font=Font.fixed()).pack(side=LEFT, fill=X, expand=1)
-		button = Button(textframe, image=Assets.get_image('find'), width=20, height=20, command=self.find_smk)
-		button.pack(side=LEFT)
-		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=NSEW)
+	def widgetize(self) -> (UI.Misc | None):
+		textframe = UI.Frame(self)
+		UI.Label(textframe, text='Filename:').pack(side=UI.LEFT)
+		UI.Entry(textframe, textvariable=self.filename, font=UI.Font.fixed()).pack(side=UI.LEFT, fill=UI.X, expand=1)
+		button = UI.Button(textframe, image=Assets.get_image('find'), width=20, height=20, command=self.find_smk)
+		button.pack(side=UI.LEFT)
+		textframe.grid(row=0,column=0, padx=2,pady=2, sticky=UI.NSEW)
 
-		overlayframe = LabelFrame(self, text='Overlay SMK')
-		smkframe = Frame(overlayframe)
-		self.smks_dropdown = DropDown(smkframe, self.overlay_smk, ['None'], stay_right=False)
-		self.smks_dropdown.pack(side=LEFT, fill=X, expand=1)
-		button = Button(smkframe, image=Assets.get_image('edit'), width=20, height=20, command=self.edit_smk)
-		button.pack(side=LEFT)
-		button = Button(smkframe, image=Assets.get_image('add'), width=20, height=20, command=self.add_smk)
-		button.pack(side=LEFT)
-		smkframe.pack(side=TOP, fill=X, expand=1)
-		offsetframe = Frame(overlayframe)
-		Label(offsetframe, text='Offset X:').pack(side=LEFT)
-		Entry(offsetframe, textvariable=self.overlay_x, font=Font.fixed(), width=5).pack(side=LEFT)
-		Label(offsetframe, text='Offset Y:').pack(side=LEFT)
-		Entry(offsetframe, textvariable=self.overlay_y, font=Font.fixed(), width=5).pack(side=LEFT)
-		offsetframe.pack(side=TOP, fill=X, expand=1)
-		overlayframe.grid(row=1,column=0, padx=5,pady=0, sticky=NSEW)
+		overlayframe = UI.LabelFrame(self, text='Overlay SMK')
+		smkframe = UI.Frame(overlayframe)
+		self.smks_dropdown = UI.DropDown(smkframe, self.overlay_smk, ['None'], stay_right=False)
+		self.smks_dropdown.pack(side=UI.LEFT, fill=UI.X, expand=1)
+		button = UI.Button(smkframe, image=Assets.get_image('edit'), width=20, height=20, command=self.edit_smk)
+		button.pack(side=UI.LEFT)
+		button = UI.Button(smkframe, image=Assets.get_image('add'), width=20, height=20, command=self.add_smk)
+		button.pack(side=UI.LEFT)
+		smkframe.pack(side=UI.TOP, fill=UI.X, expand=1)
+		offsetframe = UI.Frame(overlayframe)
+		UI.Label(offsetframe, text='Offset X:').pack(side=UI.LEFT)
+		UI.Entry(offsetframe, textvariable=self.overlay_x, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+		UI.Label(offsetframe, text='Offset Y:').pack(side=UI.LEFT)
+		UI.Entry(offsetframe, textvariable=self.overlay_y, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
+		offsetframe.pack(side=UI.TOP, fill=UI.X, expand=1)
+		overlayframe.grid(row=1,column=0, padx=5,pady=0, sticky=UI.NSEW)
 
-		flagsframe = LabelFrame(self, text='Flags')
-		Checkbutton(flagsframe, text='Fade In', variable=self.flag_fadein).grid(row=0,column=0, sticky=W)
-		Checkbutton(flagsframe, text='Dark', variable=self.flag_dark).grid(row=1,column=0, sticky=W)
-		Checkbutton(flagsframe, text='Repeat Forever', variable=self.flag_repeat).grid(row=2,column=0, sticky=W)
-		Checkbutton(flagsframe, text='Show on Hover', variable=self.flag_hover).grid(row=3,column=0, sticky=W)
-		Checkbutton(flagsframe, text='4', variable=self.flag_unk1).grid(row=0,column=1, sticky=W)
-		Checkbutton(flagsframe, text='5', variable=self.flag_unk2).grid(row=1,column=1, sticky=W)
-		Checkbutton(flagsframe, text='6', variable=self.flag_unk3).grid(row=2,column=1, sticky=W)
-		Checkbutton(flagsframe, text='7', variable=self.flag_unk4).grid(row=3,column=1, sticky=W)
-		flagsframe.grid(row=0,column=1, rowspan=2, padx=2,pady=2, sticky=S)
+		flagsframe = UI.LabelFrame(self, text='Flags')
+		UI.Checkbutton(flagsframe, text='Fade In', variable=self.flag_fadein).grid(row=0,column=0, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='Dark', variable=self.flag_dark).grid(row=1,column=0, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='Repeat Forever', variable=self.flag_repeat).grid(row=2,column=0, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='Show on Hover', variable=self.flag_hover).grid(row=3,column=0, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='4', variable=self.flag_unk1).grid(row=0,column=1, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='5', variable=self.flag_unk2).grid(row=1,column=1, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='6', variable=self.flag_unk3).grid(row=2,column=1, sticky=UI.W)
+		UI.Checkbutton(flagsframe, text='7', variable=self.flag_unk4).grid(row=3,column=1, sticky=UI.W)
+		flagsframe.grid(row=0,column=1, rowspan=2, padx=2,pady=2, sticky=UI.S)
 
-		bottom = Frame(self)
-		ok = Button(bottom, text='Ok', width=10, command=self.ok)
-		ok.pack(side=LEFT, padx=1, pady=3)
-		Button(bottom, text='Update Preview', width=15, command=self.update_preview).pack(side=RIGHT, padx=3, pady=3)
-		bottom.grid(row=2,column=0, columnspan=2, pady=3, padx=3, sticky=EW)
+		bottom = UI.Frame(self)
+		ok = UI.Button(bottom, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.LEFT, padx=1, pady=3)
+		UI.Button(bottom, text='Update Preview', width=15, command=self.update_preview).pack(side=UI.RIGHT, padx=3, pady=3)
+		bottom.grid(row=2,column=0, columnspan=2, pady=3, padx=3, sticky=UI.EW)
 
 		self.grid_columnconfigure(0, weight=1)
 
@@ -89,7 +89,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.minsize(400,160)
 		self.maxsize(9999,160)
 		if self.window_pos:
-			self.geometry(GeometryAdjust(pos=self.window_pos).text)
+			self.geometry(UI.GeometryAdjust(pos=self.window_pos).text)
 		self.load_settings()
 		self.load_properties()
 
@@ -175,7 +175,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 
 	def find_smk(self) -> None:
 		config = self.delegate.get_config()
-		m = MPQSelect(parent=self, mpqhandler=self.delegate.get_mpqhandler(), name='SMK', filetype=FileType.smk(), history_config=config.edit.smk.mpq_select_history, window_geometry_config=config.windows.edit.smk.mpq_select)
+		m = MPQSelect(parent=self, mpqhandler=self.delegate.get_mpqhandler(), name='SMK', filetype=UI.FileType.smk(), history_config=config.edit.smk.mpq_select_history, window_geometry_config=config.windows.edit.smk.mpq_select)
 		if m.file and m.file.startswith('MPQ:'):
 			self.filename.set(m.file[4:])
 
@@ -184,7 +184,7 @@ class SMKSettings(PyMSDialog, MainDelegate):
 			return
 		if not (dialog_bin := self.delegate.get_bin()):
 			return
-		pos = Geometry.of(self).pos
+		pos = UI.Geometry.of(self).pos
 		pos.x += 20
 		pos.y += 20
 		SMKSettings(self, smk=dialog_bin.smks[self.overlay_smk.get()-1], widget=self.widget, delegate=self, window_pos=pos)
@@ -199,11 +199,11 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.edit_smk()
 		self.delegate.mark_edited()
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.update_preview()
 		PyMSDialog.ok(self)
 
-	def cancel(self, _event: Event | None = None) -> None:
+	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.ok()
 
 	def dismiss(self) -> None:

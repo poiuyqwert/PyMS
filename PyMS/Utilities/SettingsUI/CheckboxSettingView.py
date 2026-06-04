@@ -1,19 +1,19 @@
 
 from .SettingView import SettingView
 
-from ..UIKit import *
+from .. import UIKit as UI
 from ..EditedState import EditedState
 from .. import Config
 
 from typing import Any
 
 class CheckboxSettingView(SettingView):
-	def __init__(self, parent: Misc, edited_state: EditedState, name: str, setting: Config.Boolean):
+	def __init__(self, parent: UI.Misc, edited_state: EditedState, name: str, setting: Config.Boolean):
 		super().__init__(parent, edited_state)
 		self.setting = setting
-		self.variable = BooleanVar()
+		self.variable = UI.BooleanVar()
 		self.variable.set(setting.value)
-		Checkbutton(self, text=name, variable=self.variable, command=self.changed).pack()
+		UI.Checkbutton(self, text=name, variable=self.variable, command=self.changed).pack()
 
 	def changed(self, *_: Any) -> None:
 		edited = self.variable.get() != self.setting.value

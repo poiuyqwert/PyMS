@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from ..Utilities.PyMSDialog import PyMSDialog
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Config
 
 from typing import TYPE_CHECKING, Callable, Any
@@ -10,19 +10,19 @@ if TYPE_CHECKING:
 	from .DATData import DATData
 
 class EntryCountDialog(PyMSDialog):
-	def __init__(self, parent: Widget, callback: Callable[[int], None], dat_data: DATData, window_geometry_config: Config.WindowGeometry) -> None:
+	def __init__(self, parent: UI.Widget, callback: Callable[[int], None], dat_data: DATData, window_geometry_config: Config.WindowGeometry) -> None:
 		assert dat_data.dat is not None
 		self.callback = callback
 		self.dat_data = dat_data
-		self.resulting_count_var: StringVar | None = None
-		self.result = IntegerVar(dat_data.entry_count(), [1,dat_data.dat.FORMAT.expanded_max_entries])
+		self.resulting_count_var: UI.StringVar | None = None
+		self.result = UI.IntegerVar(dat_data.entry_count(), [1,dat_data.dat.FORMAT.expanded_max_entries])
 		self.window_geometry_config = window_geometry_config
 		PyMSDialog.__init__(self, parent, 'How many entries?', resizable=(True,False))
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		assert self.dat_data.dat is not None
-		Label(self, text=f'How many entres to set for {self.dat_data.dat.FILE_NAME}?').pack(padx=5, pady=5)
-		Entry(self, textvariable=self.result).pack(padx=5, fill=X)
+		UI.Label(self, text=f'How many entres to set for {self.dat_data.dat.FILE_NAME}?').pack(padx=5, pady=5)
+		UI.Entry(self, textvariable=self.result).pack(padx=5, fill=UI.X)
 
 		details = []
 		if self.dat_data.dat.FORMAT.expanded_min_entries:
@@ -34,16 +34,16 @@ class EntryCountDialog(PyMSDialog):
 		if self.dat_data.dat.FORMAT.expanded_entries_reserved:
 			details.append(' - Some entries are reserved')
 		if details:
-			Label(self, text='Constraints:\n' + '\n'.join(details), justify=LEFT, anchor=W).pack(padx=5,pady=5, fill=X)
-			self.resulting_count_var = StringVar()
-			Label(self, textvariable=self.resulting_count_var, justify=LEFT, anchor=W).pack(padx=5,pady=(0,5), fill=X)
+			UI.Label(self, text='Constraints:\n' + '\n'.join(details), justify=UI.LEFT, anchor=UI.W).pack(padx=5,pady=5, fill=UI.X)
+			self.resulting_count_var = UI.StringVar()
+			UI.Label(self, textvariable=self.resulting_count_var, justify=UI.LEFT, anchor=UI.W).pack(padx=5,pady=(0,5), fill=UI.X)
 			self.result.trace_add('write', self.update_resulting_count)
 			self.update_resulting_count()
 
-		buttons = Frame(self)
-		ok = Button(buttons, text='Ok', width=10, command=self.ok)
-		ok.pack(side=LEFT, padx=3, pady=3)
-		Button(buttons, text='Cancel', width=10, command=self.cancel).pack(padx=3, pady=3)
+		buttons = UI.Frame(self)
+		ok = UI.Button(buttons, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.LEFT, padx=3, pady=3)
+		UI.Button(buttons, text='Cancel', width=10, command=self.cancel).pack(padx=3, pady=3)
 		buttons.pack()
 
 		return ok
@@ -58,10 +58,10 @@ class EntryCountDialog(PyMSDialog):
 	def setup_complete(self) -> None:
 		self.window_geometry_config.load_size(self)
 
-	def ok(self, _: Event | None = None) -> None:
+	def ok(self, _: UI.Event | None = None) -> None:
 		current_entry_count = self.dat_data.entry_count()
 		if self.result.get() < current_entry_count:
-			MessageBox.showerror(parent=self, title='Invalid Entry Count', message=f"The entry count can't be set to less than the current entries ({current_entry_count}).")
+			UI.MessageBox.showerror(parent=self, title='Invalid Entry Count', message=f"The entry count can't be set to less than the current entries ({current_entry_count}).")
 			self.result.set(current_entry_count)
 			return
 		self.callback(self.result.get())

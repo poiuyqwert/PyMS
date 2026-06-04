@@ -3,7 +3,7 @@ from . import CodeGenerator
 from ..Config import PyICEConfig
 from ..Delegates import VariableEditorDelegate
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 from ...Utilities.PyMSDialog import PyMSDialog
 from ...Utilities import JSON
 
@@ -31,14 +31,14 @@ class CodeGeneratorVariable(JSON.Codable):
 		}
 
 class CodeGeneratorVariableEditor(PyMSDialog):
-	def __init__(self, parent: Misc, delegate: VariableEditorDelegate, variable: CodeGeneratorVariable, config: PyICEConfig):
+	def __init__(self, parent: UI.Misc, delegate: VariableEditorDelegate, variable: CodeGeneratorVariable, config: PyICEConfig):
 		self.delegate = delegate
 		self.variable = variable
 		self.config_ = config
 		PyMSDialog.__init__(self, parent, 'Variable Editor', grabwait=True)
 
-	def widgetize(self) -> Widget:
-		self.name = StringVar()
+	def widgetize(self) -> UI.Widget:
+		self.name = UI.StringVar()
 		self.name.set(self.variable.name)
 		def strip_name(*_: Any) -> None:
 			strip_re = re.compile(r'[^a-zA-Z0-9_]')
@@ -48,17 +48,17 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 				self.name.set(stripped)
 		self.name.trace_add('write', strip_name)
 
-		Label(self, text='Name:', anchor=W).pack(side=TOP, fill=X, padx=3)
-		Entry(self, textvariable=self.name).pack(side=TOP, fill=X, padx=3)
+		UI.Label(self, text='Name:', anchor=UI.W).pack(side=UI.TOP, fill=UI.X, padx=3)
+		UI.Entry(self, textvariable=self.name).pack(side=UI.TOP, fill=UI.X, padx=3)
 
 		self.editor = self.variable.generator.build_editor(self, self.config_)
-		self.editor.pack(side=TOP, fill=BOTH, expand=1, padx=3, pady=3)
+		self.editor.pack(side=UI.TOP, fill=UI.BOTH, expand=1, padx=3, pady=3)
 
-		buts = Frame(self)
-		done = Button(buts, text='Done', command=self.ok)
-		done.pack(side=LEFT)
-		Button(buts, text='Cancel', command=self.cancel).pack(side=RIGHT)
-		buts.pack(side=BOTTOM, fill=X, padx=3, pady=(0,3))
+		buts = UI.Frame(self)
+		done = UI.Button(buts, text='Done', command=self.ok)
+		done.pack(side=UI.LEFT)
+		UI.Button(buts, text='Cancel', command=self.cancel).pack(side=UI.RIGHT)
+		buts.pack(side=UI.BOTTOM, fill=UI.X, padx=3, pady=(0,3))
 
 		return done
 
@@ -66,7 +66,7 @@ class CodeGeneratorVariableEditor(PyMSDialog):
 		self.resizable(*self.editor.is_resizable())
 		self.editor.window_geometry_config.load_size(self)
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.variable.name = self.delegate.unique_name(self.name.get(), self.variable)
 		self.editor.save()
 		self.delegate.update_list()

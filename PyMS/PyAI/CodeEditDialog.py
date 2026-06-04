@@ -7,7 +7,7 @@ from .CodeTooltip import CommandCodeTooltip, AISECommandCodeTooltip, TypeCodeToo
 from ..FileFormats.AIBIN import AIBIN
 from ..FileFormats.AIBIN.CodeHandlers import CodeCommands, AISECodeCommands, CodeTypes, AISECodeTypes, CodeDirectives
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
@@ -23,9 +23,9 @@ import re, io
 
 from typing import Sequence
 
-class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, FindReplaceDelegate):
+class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate, FindReplaceDelegate):
 	@staticmethod
-	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> SyntaxHighlighting:
+	def build_syntax_highlighting(highlights_config: PyAIConfig.Code.Highlights) -> UI.SyntaxHighlighting:
 		cmd_names = [cmd.name for cmd in CodeCommands.all_basic_commands + CodeCommands.all_header_commands]
 		aise_cmd_names = [cmd.name for cmd in AISECodeCommands.all_commands]
 		type_names = [type.name for type in CodeTypes.all_basic_types]
@@ -38,11 +38,11 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		for code_type in AISECodeTypes.all_types:
 			if isinstance(code_type, CodeType.HasKeywords):
 				aise_keywords.extend(code_type.keywords())
-		return SyntaxHighlighting(
+		return UI.SyntaxHighlighting(
 			syntax_components=(
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Comment',
 							description='The style of a comment.',
 							highlight_style=highlights_config.comment
@@ -50,10 +50,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 						pattern=r'(?:#|;)[^\n]*$'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Header',
 							description='The style of a `script` header.',
 							highlight_style=highlights_config.header
@@ -61,8 +61,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 						pattern=r'script'
 					),
 					r'[ \t]+',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='AI ID',
 							description='The style of the AI ID in the AI header.',
 							highlight_style=highlights_config.ai_id
@@ -71,10 +71,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'(?=[ \t]+\{)',
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'^[ \t]*',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Block',
 							description='The style of a --block-- or :block in the code.',
 							highlight_style=highlights_config.block
@@ -82,10 +82,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 						pattern=r'--\w+--|:\w+'
 					)
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Command',
 							description='The style of command names.',
 							highlight_style=highlights_config.command
@@ -94,10 +94,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='AISE Command',
 							description='The style of command names for the AISE plugin.',
 							highlight_style=highlights_config.aise_command
@@ -106,10 +106,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Type',
 							description='The style of type names.',
 							highlight_style=highlights_config.type
@@ -118,9 +118,9 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Directive',
 							description='The style of @directive names.',
 							highlight_style=highlights_config.directive
@@ -129,10 +129,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Number',
 							description='The style of all numbers.',
 							highlight_style=highlights_config.number
@@ -141,9 +141,9 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='TBL Format',
 							description='The style of TBL formatted characters, like null: <0>',
 							highlight_style=highlights_config.tbl_format
@@ -151,9 +151,9 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 						pattern=r'<0*(?:25[0-5]|2[0-4]\d|1?\d?\d)?>'
 					),
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Operator',
 							description='The style of the operators:\n    ( ) , = { } . | ~',
 							highlight_style=highlights_config.operator
@@ -161,10 +161,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 						pattern=r'[(),={}.|~]'
 					),
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Keyword',
 							description='The style of keywords.',
 							highlight_style=highlights_config.keyword
@@ -173,10 +173,10 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
+				UI.SyntaxComponent((
 					r'\b',
-					HighlightPattern(
-						highlight=HighlightComponent(
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='AISE Keyword',
 							description='The style of AISE keywords.',
 							highlight_style=highlights_config.aise_keyword
@@ -185,9 +185,9 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 					),
 					r'\b'
 				)),
-				SyntaxComponent((
-					HighlightPattern(
-						highlight=HighlightComponent(
+				UI.SyntaxComponent((
+					UI.HighlightPattern(
+						highlight=UI.HighlightComponent(
 							name='Newline',
 							description='The style of newlines',
 							highlight_style=highlights_config.newline
@@ -197,18 +197,18 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 				)),
 			),
 			highlight_components=(
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Selection',
 					description='The style of selected text in the editor.',
 					highlight_style=highlights_config.selection,
 					tag='sel'
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Error',
 					description='The style of highlighted errors in the editor.',
 					highlight_style=highlights_config.error
 				),
-				HighlightComponent(
+				UI.HighlightComponent(
 					name='Warning',
 					description='The style of highlighted warnings in the editor.',
 					highlight_style=highlights_config.warning
@@ -216,7 +216,7 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 			)
 		)
 
-	def __init__(self, parent: AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
+	def __init__(self, parent: UI.AnyWindow, delegate: MainDelegate, config: PyAIConfig, ids: list[str]):
 		self.delegate = delegate
 		self.config_ = config
 		self.ids = ids
@@ -236,44 +236,44 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		PyMSDialog.__init__(self, parent, t, grabwait=False)
 		self.findwindow: FindReplaceDialog | None = None
 
-		self.syntax_highlighting: SyntaxHighlighting
+		self.syntax_highlighting: UI.SyntaxHighlighting
 
-	def widgetize(self) -> Widget:
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', Ctrl.s)
-		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', Ctrl.t)
+	def widgetize(self) -> UI.Widget:
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('save'), self.save, 'Save', UI.Ctrl.s)
+		self.toolbar.add_button(Assets.get_image('test'), self.test, 'Test Code', UI.Ctrl.t)
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', Ctrl.e)
-		self.toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', Ctrl.Alt.a)
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', Ctrl.i)
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Code', UI.Ctrl.e)
+		self.toolbar.add_button(Assets.get_image('saveas'), self.exportas, 'Export As...', UI.Ctrl.Alt.a)
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Code', UI.Ctrl.i)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', Ctrl.f)
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find/Replace', UI.Ctrl.f)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', Ctrl.Alt.c)
+		self.toolbar.add_button(Assets.get_image('colors'), self.colors, 'Color Settings', UI.Ctrl.Alt.c)
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', Ctrl.Alt.i, enabled=self.delegate.get_data_context().stattxt_tbl is not None)
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', Ctrl.Alt.p)
-		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', Ctrl.d)
-		self.toolbar.pack(fill=X, padx=2, pady=2)
+		self.toolbar.add_button(Assets.get_image('insert'), self.insert_string_id, 'Insert String ID', UI.Ctrl.Alt.i, enabled=self.delegate.get_data_context().stattxt_tbl is not None)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.transpile_to_pyai, 'Transpile to PyAI code', UI.Ctrl.Alt.p)
+		self.toolbar.add_button(Assets.get_image('debug'), self.debuggerize, 'Debuggerize your code', UI.Ctrl.d)
+		self.toolbar.pack(fill=UI.X, padx=2, pady=2)
 
-		self.text = CodeText(self, self.edited_state, self)
-		self.text.pack(fill=BOTH, expand=1, padx=1, pady=1)
-		self.text.bind(CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
-		self.text.text.bind(WidgetEvent.Text.Selection(), self.statusupdate)
+		self.text = UI.CodeText(self, self.edited_state, self)
+		self.text.pack(fill=UI.BOTH, expand=1, padx=1, pady=1)
+		self.text.bind(UI.CodeText.WidgetEvent.InsertCursorMoved(), self.statusupdate)
+		self.text.text.bind(UI.WidgetEvent.Text.Selection(), self.statusupdate)
 
 		self.setup_syntax_highlighting()
 
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		if self.ids:
 			self.status.set("Original ID's: " + ', '.join(self.ids))
-		self.scriptstatus = StringVar()
+		self.scriptstatus = UI.StringVar()
 		self.scriptstatus.set('Line: 1  Column: 0  Selected: 0')
 
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=1)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save.gif'))
 		statusbar.add_label(self.scriptstatus, weight=1)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		if self.ids:
 			self.after_managed(1, self.load)
@@ -292,8 +292,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		TypeCodeTooltip(self.text.text)
 		DirectiveTooltip(self.text.text)
 
-	def statusupdate(self, _event: Event | None = None) -> None:
-		line, column = self.text.index(INSERT).split('.')
+	def statusupdate(self, _event: UI.Event | None = None) -> None:
+		line, column = self.text.index(UI.INSERT).split('.')
 		selected = 0
 		sel_range = self.text.tag_ranges('sel')
 		if sel_range:
@@ -301,26 +301,26 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 		self.scriptstatus.set(f'Line: {line}  Column: {column}  Selected: {selected}')
 
 	def update_edited(self, edited: bool) -> None:
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 		if self.file:
 			self.title(f'AI Script Editor [*{self.file}*]')
 
-	def cancel(self, _: Event | None = None) -> None:
+	def cancel(self, _: UI.Event | None = None) -> None:
 		if self.edited_state.is_edited:
-			save = MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=MessageBox.YES)
+			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=UI.MessageBox.YES)
 			if save is None:
 				return
 			if save:
 				self.save()
 		self.ok()
 
-	def save(self, _: Event | None = None) -> None:
-		code = self.text.get('1.0', END)
+	def save(self, _: UI.Event | None = None) -> None:
+		code = self.text.get('1.0', UI.END)
 		if self.delegate.save_code(code, self):
 			self.text.edit_modified(False)
 
-	def test(self, _: Event | None = None) -> None:
-		code = self.text.get('1.0', END)
+	def test(self, _: UI.Event | None = None) -> None:
+		code = self.text.get('1.0', UI.END)
 		parse_context = self.delegate.get_parse_context(code)
 		try:
 			AIBIN.AIBIN.compile(parse_context)
@@ -342,44 +342,44 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)
 		else:
-			MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
+			UI.MessageBox.showinfo(parent=self, title='Test Completed', message='The code compiles with no errors or warnings.')
 
-	def export(self, _: Event | None = None) -> None:
+	def export(self, _: UI.Event | None = None) -> None:
 		if not self.file:
 			self.exportas()
 		else:
 			with open(self.file, 'w', encoding='utf-8') as f:
-				f.write(self.text.get('1.0', END))
+				f.write(self.text.get('1.0', UI.END))
 			self.title(f'AI Script Editor [{self.file}]')
 
-	def exportas(self, _: Event | None = None) -> None:
+	def exportas(self, _: UI.Event | None = None) -> None:
 		file = self.config_.last_path.txt.ai.select_save(self)
 		if not file:
 			return
 		self.file = file
 		self.export()
 
-	def iimport(self, _: Event | None = None) -> None:
+	def iimport(self, _: UI.Event | None = None) -> None:
 		iimport = self.config_.last_path.txt.ai.select_open(self)
 		if iimport:
 			try:
 				with open(iimport, 'r', encoding='utf-8') as f:
 					contents = f.read()
-				self.text.delete('1.0', END)
+				self.text.delete('1.0', UI.END)
 				self.text.insert('1.0', contents)
 				self.text.edit_reset()
 			except Exception as e: # pylint: disable=broad-exception-caught
 				ErrorDialog(self, PyMSError('Import', f"Could not import file '{iimport}'", cause=e))
 
-	def find(self, _: Event | None = None) -> None:
+	def find(self, _: UI.Event | None = None) -> None:
 		if not self.findwindow:
 			self.findwindow = FindReplaceDialog(self, self, self.config_.windows.find.find_replace)
-			self.bind(Key.F3(), self.findwindow.findnext)
+			self.bind(UI.Key.F3(), self.findwindow.findnext)
 		elif self.findwindow.state() == 'withdrawn':
 			self.findwindow.deiconify()
 		self.findwindow.focus_set()
 
-	def colors(self, _: Event | None = None) -> None:
+	def colors(self, _: UI.Event | None = None) -> None:
 		dialog = SyntaxHighlightingDialog(self, self.syntax_highlighting.all_highlight_components())
 		if dialog.updated:
 			self.text.update_highlight_styles()
@@ -389,8 +389,8 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, CodeTextDelegate, Fi
 	RE_OLD_PYAI_BLOCK = re.compile(r'^(\s*--)([^-]+)--', re.MULTILINE)
 	RE_OLD_PYAI_COMMAND = re.compile(r'^(\s*)([\w]+)\(([^)]*)\)(.*)', re.MULTILINE)
 	RE_COMMA = re.compile(r'\s*,\s*')
-	def transpile_to_pyai(self, _: Event | None = None) -> None:
-		code = self.text.text.get('1.0',END)
+	def transpile_to_pyai(self, _: UI.Event | None = None) -> None:
+		code = self.text.text.get('1.0',UI.END)
 
 		def replace_asc3_header(match: re.Match) -> str:
 			header_string = match.group(1)
@@ -449,8 +449,8 @@ script {header_id} {{
 		code = CodeEditDialog.RE_OLD_PYAI_COMMAND.sub(replace_old_pyai_command, code)
 
 		with self.text.undo_group():
-			self.text.delete('1.0', END)
-			self.text.insert(END, code)
+			self.text.delete('1.0', UI.END)
+			self.text.insert(UI.END, code)
 
 	def debuggerize(self) -> None:
 		d = 0
@@ -481,7 +481,7 @@ script {header_id} {{
 		label = re.compile(r'\A\s*--\s*(.+)\s*--(?:\s*\{(.+)\})?(?:\s*#.*)?\Z')
 		jump = re.compile(fr'\A(\s*)({"|".join(list(debug.keys()))})\((.+)\)(\s*#.*)?\Z')
 		script,block = '',''
-		for n,line in enumerate(self.text.text.get('1.0',END).split('\n')):
+		for n,line in enumerate(self.text.text.get('1.0',UI.END).split('\n')):
 			m = header.match(line)
 			if m:
 				script = m.group(1)
@@ -518,8 +518,8 @@ script {header_id} {{
 				continue
 			data += line + '\n'
 		with self.text.undo_group():
-			self.text.delete('1.0', END)
-			self.text.insert(END, data)
+			self.text.delete('1.0', UI.END)
+			self.text.insert(UI.END, data)
 
 	def load(self) -> None:
 		try:
@@ -547,8 +547,8 @@ script {header_id} {{
 
 	def destroy(self) -> None:
 		if self.findwindow:
-			Toplevel.destroy(self.findwindow)
-		Toplevel.destroy(self)
+			UI.Toplevel.destroy(self.findwindow)
+		UI.Toplevel.destroy(self)
 
 	def dismiss(self) -> None:
 		self.config_.windows.code_edit.save_size(self)
@@ -562,7 +562,7 @@ script {header_id} {{
 
 	def insert_string_id(self) -> None:
 		initial_selection = []
-		line = self.text.get(f'{INSERT} linestart', f'{INSERT} lineend')
+		line = self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend')
 		if match := self.re_name_string_command().match(line):
 			initial_selection.append(int(match.group(2)))
 		ItemSelectDialog.ItemSelectDialog(parent=self, title='Select String', delegate=self, selected=initial_selection)
@@ -577,17 +577,17 @@ script {header_id} {{
 
 	def item_selected(self, index: int) -> bool:
 		with self.text.undo_group():
-			line = self.text.get(f'{INSERT} linestart', f'{INSERT} lineend')
-			insert_index: str = self.text.index(INSERT)
+			line = self.text.get(f'{UI.INSERT} linestart', f'{UI.INSERT} lineend')
+			insert_index: str = self.text.index(UI.INSERT)
 			if match := self.re_name_string_command().match(line):
-				insert_index = f'{INSERT} linestart +{len(match.group(1))}c'
-				self.text.delete(insert_index, f'{INSERT} lineend')
+				insert_index = f'{UI.INSERT} linestart +{len(match.group(1))}c'
+				self.text.delete(insert_index, f'{UI.INSERT} lineend')
 			str_index = str(index)
 			comment = ''
 			if string := self.delegate.get_data_context().stattxt_string(index):
 				comment = self.delegate.get_formatters().comment.serialize([string])
 			self.text.insert(insert_index, str_index + comment)
-			self.text.mark_set(INSERT, f'{insert_index} +{len(str_index)}c')
+			self.text.mark_set(UI.INSERT, f'{insert_index} +{len(str_index)}c')
 		return True
 
 	def items_selected(self, indexes: list[int]) -> bool:
@@ -661,5 +661,5 @@ script {header_id} {{
 	def get_replace_history(self) -> list[str]:
 		return self.delegate.get_replace_history()
 
-	def get_code_text(self) -> ItemSelectDialog.CodeText:
+	def get_code_text(self) -> UI.CodeText:
 		return self.text

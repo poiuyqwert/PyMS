@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 
 from math import floor, ceil
@@ -12,41 +12,41 @@ if TYPE_CHECKING:
 
 class IconSelectDialog(PyMSDialog):
 	# If `none_index` is not `None`, then an empty icon will be shown and its index when selected will be `none_index`
-	def __init__(self, parent: Misc, *, data_context: DataContext, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
+	def __init__(self, parent: UI.Misc, *, data_context: DataContext, delegate: Callable[[int], None], selected_index: int, none_index: int | None = None) -> None:
 		self.data_context = data_context
 		self.delegate = delegate
 		self._initial_selection = selected_index
 		self.selected_index = selected_index
 		self.none_index = none_index
 		self._last_display_parameters: tuple[int, int, int] | None = None
-		self.selection_box_item: Canvas.Item # type: ignore[name-defined]
+		self.selection_box_item: UI.Canvas.Item # type: ignore[name-defined]
 		PyMSDialog.__init__(self, parent, 'Choose Icon', set_min_size=(True,True))
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		icon_size = self.data_context.cmdicons.frame_size()
-		self.scrolled_canvas = ScrolledCanvas(self, horizontal=ShowScrollbar.never, width=icon_size[0] * 10, height=icon_size[1] * 5, background='#000000')
-		self.scrolled_canvas.pack(side=TOP, fill=BOTH, expand=1)
+		self.scrolled_canvas = UI.ScrolledCanvas(self, horizontal=UI.ShowScrollbar.never, width=icon_size[0] * 10, height=icon_size[1] * 5, background='#000000')
+		self.scrolled_canvas.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
 		self.selection_box_item = self.scrolled_canvas.canvas.create_rectangle(0, 0, 0, 0, outline='#FFFFFF')
 
-		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
-		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
-		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
-		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
+		self.scrolled_canvas.canvas.bind(UI.Mouse.Click_Left(), self._select_icon)
+		self.scrolled_canvas.canvas.bind(UI.Double.Click_Left(), lambda *_: self.ok())
+		self.scrolled_canvas.canvas.bind(UI.Mouse.Motion(), self._update_status_hover)
+		self.scrolled_canvas.canvas.bind(UI.Cursor.Leave(), lambda *_: self._clear_status_hover())
+		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Configure(), lambda *_: self._canvas_resized())
+		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
 
-		buttonframe = Frame(self)
-		Button(buttonframe, text='Ok', width=10, command=self.ok).pack(side=LEFT, pady=5, padx=3)
-		Button(buttonframe, text='Cancel', width=10, command=self.cancel).pack(side=LEFT, padx=3, pady=3)
+		buttonframe = UI.Frame(self)
+		UI.Button(buttonframe, text='Ok', width=10, command=self.ok).pack(side=UI.LEFT, pady=5, padx=3)
+		UI.Button(buttonframe, text='Cancel', width=10, command=self.cancel).pack(side=UI.LEFT, padx=3, pady=3)
 		buttonframe.pack()
 
-		self.status_selection = StringVar()
-		self.status_hover = StringVar()
+		self.status_selection = UI.StringVar()
+		self.status_hover = UI.StringVar()
 
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status_selection, weight=0.5)
 		statusbar.add_label(self.status_hover, weight=0.5)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		return None
 
@@ -57,12 +57,12 @@ class IconSelectDialog(PyMSDialog):
 		self.maxsize(max_width, max_height)
 		self.data_context.config.windows.icon_select.load_size(self)
 
-		self.scrolled_canvas.canvas.bind(Mouse.Click_Left(), self._select_icon)
-		self.scrolled_canvas.canvas.bind(Double.Click_Left(), lambda *_: self.ok())
-		self.scrolled_canvas.canvas.bind(Mouse.Motion(), self._update_status_hover)
-		self.scrolled_canvas.canvas.bind(Cursor.Leave(), lambda *_: self._clear_status_hover())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Configure(), lambda *_: self._canvas_resized())
-		self.scrolled_canvas.canvas.bind(WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
+		self.scrolled_canvas.canvas.bind(UI.Mouse.Click_Left(), self._select_icon)
+		self.scrolled_canvas.canvas.bind(UI.Double.Click_Left(), lambda *_: self.ok())
+		self.scrolled_canvas.canvas.bind(UI.Mouse.Motion(), self._update_status_hover)
+		self.scrolled_canvas.canvas.bind(UI.Cursor.Leave(), lambda *_: self._clear_status_hover())
+		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Configure(), lambda *_: self._canvas_resized())
+		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
 
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()
@@ -181,7 +181,7 @@ class IconSelectDialog(PyMSDialog):
 				if was_visible:
 					self.scrolled_canvas.canvas.coords(tag, x,y)
 				else:
-					self.scrolled_canvas.canvas.create_image(x,y, image=icon, tags=tag, anchor=NW)
+					self.scrolled_canvas.canvas.create_image(x,y, image=icon, tags=tag, anchor=UI.NW)
 			else:
 				self.scrolled_canvas.canvas.delete(tag)
 		self.selection_box_item.tag_raise()
@@ -233,7 +233,7 @@ class IconSelectDialog(PyMSDialog):
 		row = y // icon_size[1]
 		return column + row * columns
 
-	def _select_icon(self, event: Event) -> None:
+	def _select_icon(self, event: UI.Event) -> None:
 		display_index = self._coords_to_display_index(event.x, event.y)
 		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			return
@@ -248,7 +248,7 @@ class IconSelectDialog(PyMSDialog):
 	def _clear_status_hover(self) -> None:
 		self.status_hover.set('')
 
-	def _update_status_hover(self, event: Event) -> None:
+	def _update_status_hover(self, event: UI.Event) -> None:
 		display_index = self._coords_to_display_index(event.x, event.y)
 		if display_index is None or display_index < 0 or display_index >= self._icon_count():
 			self._clear_status_hover()
@@ -256,7 +256,7 @@ class IconSelectDialog(PyMSDialog):
 		selection_index = self._display_index_to_selected_index(display_index)
 		self.status_hover.set(f'Hovering: {selection_index} ({self._selected_index_to_name(selection_index)})')
 
-	def ok(self, _: Event | None = None) -> None:
+	def ok(self, _: UI.Event | None = None) -> None:
 		if self.selected_index != self._initial_selection:
 			self.delegate(self.selected_index)
 		PyMSDialog.ok(self)

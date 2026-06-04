@@ -9,7 +9,7 @@ from ..FileFormats import Palette
 
 from ..Utilities import registry
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -43,10 +43,10 @@ class FrameSet(Flag):
 
 	PLAY = play_prev_framesets | play_prev_frames | play_next_frames | play_next_framesets
 
-class PyGRP(MainWindow):
+class PyGRP(UI.MainWindow):
 	def __init__(self, guifile: str | None = None):
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.title(f'PyGRP {LONG_VERSION}')
 		self.set_icon('PyGRP')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
@@ -55,14 +55,14 @@ class PyGRP(MainWindow):
 		setup_trace('PyGRP', self)
 
 		self.config_ = PyGRPConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 		self.resizable(False, False)
 
 		self.frame_index: int | None = None
 		self.pal: str = ''
 		self.palettes: dict[str, Palette.Palette] = {}
-		self.frames: list[dict[str, Image]] = []
-		self.item: Canvas.Item | None = None # type: ignore[name-defined]
+		self.frames: list[dict[str, UI.Image]] = []
+		self.item: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.grp: GRP.GRP | None = None
 		self.file: str | None = None
 		self.edited = False
@@ -70,55 +70,55 @@ class PyGRP(MainWindow):
 		self.play: str | None = None
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def save_as() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), save_as, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Selected Frames', Ctrl.e, enabled=False, tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', Ctrl.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('exportc'), self.exports, 'Export Selected Frames', UI.Ctrl.e, enabled=False, tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('importc'), self.imports, 'Import Frames', UI.Ctrl.i, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', Key.Delete, enabled=False, tags='frame_selected')
-		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', Ctrl.u, enabled=False, tags='can_move_up')
-		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', Ctrl.d, enabled=False, tags='can_move_down')
+		self.toolbar.add_button(Assets.get_image('remove'), self.remove, 'Remove Frames', UI.Key.Delete, enabled=False, tags='frame_selected')
+		self.toolbar.add_button(Assets.get_image('up'), lambda: self.shift(-1), 'Move Frames Up', UI.Ctrl.u, enabled=False, tags='can_move_up')
+		self.toolbar.add_button(Assets.get_image('down'), lambda: self.shift(1), 'Move Frames Down', UI.Ctrl.d, enabled=False, tags='can_move_down')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, "Manage Settings", UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.grp editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyGRP')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
-		frame = Frame(self)
+		frame = UI.Frame(self)
 
-		self.hex = BooleanVar()
+		self.hex = UI.BooleanVar()
 		self.hex.set(self.config_.hex.value)
 
-		leftframe = Frame(frame)
+		leftframe = UI.Frame(frame)
 		#Listbox
-		f = Frame(leftframe)
-		Label(f, text='Frames:', anchor=W).pack(side=LEFT)
-		Checkbutton(f, text='Hex', variable=self.hex, command=self.update_list).pack(side=RIGHT)
-		f.pack(side=TOP, fill=X)
-		self.listbox = ScrolledListbox(leftframe, scroll_speed=2, selectmode=EXTENDED, width=15, height=17)
-		self.listbox.pack(side=TOP, padx=1, pady=1, fill=X, expand=1)
-		self.listbox.bind(WidgetEvent.Listbox.Select(), self.preview)
-		self.bind(Ctrl.a(), self.selectall)
+		f = UI.Frame(leftframe)
+		UI.Label(f, text='Frames:', anchor=UI.W).pack(side=UI.LEFT)
+		UI.Checkbutton(f, text='Hex', variable=self.hex, command=self.update_list).pack(side=UI.RIGHT)
+		f.pack(side=UI.TOP, fill=UI.X)
+		self.listbox = UI.ScrolledListbox(leftframe, scroll_speed=2, selectmode=UI.EXTENDED, width=15, height=17)
+		self.listbox.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X, expand=1)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.preview)
+		self.bind(UI.Ctrl.a(), self.selectall)
 
 		#Palette
-		Label(leftframe, text='Palette:', anchor=W).pack(fill=X)
-		self.pallist = ScrolledListbox(leftframe, width=15, height=4)
-		self.pallist.pack(side=BOTTOM, padx=1, pady=1, fill=BOTH, expand=1)
-		self.pallist.bind(WidgetEvent.Listbox.Select(), self.changepalette)
+		UI.Label(leftframe, text='Palette:', anchor=UI.W).pack(fill=UI.X)
+		self.pallist = UI.ScrolledListbox(leftframe, width=15, height=4)
+		self.pallist.pack(side=UI.BOTTOM, padx=1, pady=1, fill=UI.BOTH, expand=1)
+		self.pallist.bind(UI.WidgetEvent.Listbox.Select(), self.changepalette)
 
 		s = -1
 		for pal in os.listdir(Assets.palettes_dir):
@@ -130,7 +130,7 @@ class PyGRP(MainWindow):
 					self.pal = pal
 				if not self.pal:
 					self.pal = pal
-				self.pallist.insert(END, pal)
+				self.pallist.insert(UI.END, pal)
 				self.palettes[pal] = p
 			except Exception:
 				pass
@@ -142,17 +142,17 @@ class PyGRP(MainWindow):
 		self.pallist.select_set(s)
 		self.pallist.see(s)
 
-		rightframe = Frame(frame)
+		rightframe = UI.Frame(frame)
 		#Canvas
-		self.canvas = Canvas(rightframe, width=258, height=258)
+		self.canvas = UI.Canvas(rightframe, width=258, height=258)
 		self.canvas.configure(background=self.config_.preview.bg_color.value)
-		self.canvas.pack(side=TOP, padx=2, pady=2)
-		self.canvas.bind(Double.Click_Left(), self.bgcolor)
-		self.grpbrdr: Canvas.Item = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00') # type: ignore[name-defined]
-		self.framebrdr: Canvas.Item = self.canvas.create_rectangle(0, 0, 0, 0, outline='#FF0000') # type: ignore[name-defined]
+		self.canvas.pack(side=UI.TOP, padx=2, pady=2)
+		self.canvas.bind(UI.Double.Click_Left(), self.bgcolor)
+		self.grpbrdr: UI.Canvas.Item = self.canvas.create_rectangle(0, 0, 0, 0, outline='#00FF00') # type: ignore[name-defined]
+		self.framebrdr: UI.Canvas.Item = self.canvas.create_rectangle(0, 0, 0, 0, outline='#FF0000') # type: ignore[name-defined]
 
 		#Frameviewing
-		self.controls = Toolbar(rightframe)
+		self.controls = UI.Toolbar(rightframe)
 		self.controls.add_button(Assets.get_image('begin'), lambda: self.frameset(FrameSet.first), 'Jump to first frame', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('frw'), lambda: self.frameset(FrameSet.prev_frameset), 'Jump 17 frames Up', enabled=False, tags='can_preview')
 		self.controls.add_button(Assets.get_image('rw'), lambda: self.frameset(FrameSet.prev_frame), 'Jump 1 frame Up', enabled=False, tags='can_preview')
@@ -166,67 +166,67 @@ class PyGRP(MainWindow):
 		self.controls.add_button(Assets.get_image('end'), lambda: self.frameset(FrameSet.last), 'Jump to last frame', enabled=False, tags='can_preview')
 		self.controls.pack(padx=1, pady=1)
 
-		self.prevspeed = IntegerVar(self.config_.preview.speed.value, [1,5000])
-		self.transid = IntegerVar(self.config_.transparent_index.value, [0,255])
-		self.prevfrom = IntegerVar(0, [0,0])
-		self.prevto = IntegerVar(0, [0,0])
-		self.showpreview = BooleanVar()
+		self.prevspeed = UI.IntegerVar(self.config_.preview.speed.value, [1,5000])
+		self.transid = UI.IntegerVar(self.config_.transparent_index.value, [0,255])
+		self.prevfrom = UI.IntegerVar(0, [0,0])
+		self.prevto = UI.IntegerVar(0, [0,0])
+		self.showpreview = UI.BooleanVar()
 		self.showpreview.set(self.config_.preview.show.value)
-		self.looppreview = BooleanVar()
+		self.looppreview = UI.BooleanVar()
 		self.looppreview.set(self.config_.preview.loop.value)
-		self.grpo = BooleanVar()
+		self.grpo = UI.BooleanVar()
 		self.grpo.set(self.config_.preview.outline.grp.value)
-		self.frameo = BooleanVar()
+		self.frameo = UI.BooleanVar()
 		self.frameo.set(self.config_.preview.outline.frame.value)
-		self.bmp_style = IntVar()
+		self.bmp_style = UI.IntVar()
 		self.bmp_style.set(self.config_.bmp_style.value.index)
-		self.uncompressed = BooleanVar()
+		self.uncompressed = UI.BooleanVar()
 		self.uncompressed.set(self.config_.uncompressed.value)
 
 		#Options
-		opts = Frame(rightframe)
-		f = Frame(opts)
-		Label(f, text='Preview Speed: ').pack(side=LEFT)
-		Entry(f, textvariable=self.prevspeed, font=Font.fixed(), width=4).pack(side=LEFT)
-		Label(f, text='ms  ').pack(side=LEFT)
-		f.grid(row=0, column=0, sticky=W)
-		f = Frame(opts)
-		Label(f, text='Transparent Index: ').pack(side=LEFT)
-		self.transent = Entry(f, textvariable=self.transid, font=Font.fixed(), width=3)
-		self.transent.pack(side=LEFT)
-		f.grid(row=0, column=1, sticky=W)
-		f = Frame(opts)
-		Label(f, text='Preview Between: ').pack(side=LEFT)
-		self.prevstart = Entry(f, textvariable=self.prevfrom, font=Font.fixed(), width=3, state=DISABLED)
-		self.prevstart.pack(side=LEFT)
-		Label(f, text=' - ').pack(side=LEFT)
-		self.prevend = Entry(f, textvariable=self.prevto, font=Font.fixed(), width=3, state=DISABLED)
-		self.prevend.pack(side=LEFT)
+		opts = UI.Frame(rightframe)
+		f = UI.Frame(opts)
+		UI.Label(f, text='Preview Speed: ').pack(side=UI.LEFT)
+		UI.Entry(f, textvariable=self.prevspeed, font=UI.Font.fixed(), width=4).pack(side=UI.LEFT)
+		UI.Label(f, text='ms  ').pack(side=UI.LEFT)
+		f.grid(row=0, column=0, sticky=UI.W)
+		f = UI.Frame(opts)
+		UI.Label(f, text='Transparent Index: ').pack(side=UI.LEFT)
+		self.transent = UI.Entry(f, textvariable=self.transid, font=UI.Font.fixed(), width=3)
+		self.transent.pack(side=UI.LEFT)
+		f.grid(row=0, column=1, sticky=UI.W)
+		f = UI.Frame(opts)
+		UI.Label(f, text='Preview Between: ').pack(side=UI.LEFT)
+		self.prevstart = UI.Entry(f, textvariable=self.prevfrom, font=UI.Font.fixed(), width=3, state=UI.DISABLED)
+		self.prevstart.pack(side=UI.LEFT)
+		UI.Label(f, text=' - ').pack(side=UI.LEFT)
+		self.prevend = UI.Entry(f, textvariable=self.prevto, font=UI.Font.fixed(), width=3, state=UI.DISABLED)
+		self.prevend.pack(side=UI.LEFT)
 		f.grid(row=1, columnspan=2)
-		Checkbutton(opts, text='Show Preview', variable=self.showpreview, command=self.showprev).grid(row=2, column=0, sticky=W)
-		Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(row=2, column=1, sticky=W)
-		Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=3, column=0, sticky=W)
-		Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=3, column=1, sticky=W)
-		dd = DropDown(opts, self.bmp_style, [style.display_name for style in BMPStyle.ALL()])
-		Tooltip(dd, """\
+		UI.Checkbutton(opts, text='Show Preview', variable=self.showpreview, command=self.showprev).grid(row=2, column=0, sticky=UI.W)
+		UI.Checkbutton(opts, text='Loop Preview', variable=self.looppreview).grid(row=2, column=1, sticky=UI.W)
+		UI.Checkbutton(opts, text='GRP Outline (Green)', variable=self.grpo, command=self.grpoutline).grid(row=3, column=0, sticky=UI.W)
+		UI.Checkbutton(opts, text='Frame Outline (Red)', variable=self.frameo, command=self.frameoutline).grid(row=3, column=1, sticky=UI.W)
+		dd = UI.DropDown(opts, self.bmp_style, [style.display_name for style in BMPStyle.ALL()])
+		UI.Tooltip(dd, """\
 This option controls the style of BMP being Exported/Imported.
 BMP's must be imported with the same style they were exported as.""")
-		dd.grid(row=4, column=0, sticky=EW, padx=(3,0))
-		Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=4, column=1, sticky=W)
+		dd.grid(row=4, column=0, sticky=UI.EW, padx=(3,0))
+		UI.Checkbutton(opts, text='Save Uncompressed', variable=self.uncompressed).grid(row=4, column=1, sticky=UI.W)
 		opts.pack(pady=(0,3))
 
-		leftframe.pack(side=LEFT, padx=1, pady=1, fill=Y, expand=1)
-		rightframe.pack(side=RIGHT, padx=1, pady=1)
+		leftframe.pack(side=UI.LEFT, padx=1, pady=1, fill=UI.Y, expand=1)
+		rightframe.pack(side=UI.RIGHT, padx=1, pady=1)
 		frame.pack()
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a GRP.')
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, width=45)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_spacer()
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
@@ -241,7 +241,7 @@ BMP's must be imported with the same style they were exported as.""")
 		file = self.file
 		if not file:
 			file = 'Unnamed.grp'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -268,8 +268,8 @@ BMP's must be imported with the same style they were exported as.""")
 		return not not selected and max(selected) < self.listbox.size()-1 # type: ignore[operator]
 
 	def action_states(self) -> None:
-		self.editstatus['state'] = NORMAL if self.edited else DISABLED
-		self.transent['state'] = NORMAL if self.is_file_open() else DISABLED
+		self.editstatus['state'] = UI.NORMAL if self.edited else UI.DISABLED
+		self.transent['state'] = UI.NORMAL if self.is_file_open() else UI.DISABLED
 
 		self.toolbar.tag_enabled('file_open', self.is_file_open())
 		self.toolbar.tag_enabled('frame_selected', self.is_frame_selected())
@@ -317,7 +317,7 @@ BMP's must be imported with the same style they were exported as.""")
 			y2 += dy + 1
 		self.framebrdr.coords(x1,y1, x2,y2)
 
-	def preview(self, _event: Event | None = None, force: bool = False) -> None:
+	def preview(self, _event: UI.Event | None = None, force: bool = False) -> None:
 		if not self.grp:
 			return
 		self.action_states()
@@ -340,7 +340,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.item.delete()
 			self.item = None
 
-	def changepalette(self, _event: Event | None = None) -> None:
+	def changepalette(self, _event: UI.Event | None = None) -> None:
 		if not self.pallist.curselection():
 			return
 		pal = self.pallist.get(self.pallist.curselection()[0])
@@ -368,7 +368,7 @@ BMP's must be imported with the same style they were exported as.""")
 			if n == FrameSet.first:
 				s = 0
 			elif n == FrameSet.last:
-				s = END
+				s = UI.END
 			elif self.listbox.curselection():
 				s = int(self.listbox.curselection()[0])
 				if n == FrameSet.prev_frameset:
@@ -389,7 +389,7 @@ BMP's must be imported with the same style they were exported as.""")
 						s %= size
 			else:
 				s = 0
-			self.listbox.select_clear(0,END)
+			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(s)
 			self.listbox.see(s)
 			self.preview()
@@ -414,7 +414,7 @@ BMP's must be imported with the same style they were exported as.""")
 						i += frames
 					if i > prevto:
 						i -= frames
-				self.listbox.select_clear(0,END)
+				self.listbox.select_clear(0,UI.END)
 				self.listbox.select_set(i)
 				self.listbox.see(i)
 				self.preview()
@@ -424,28 +424,28 @@ BMP's must be imported with the same style they were exported as.""")
 				return
 		self.stopframe()
 
-	def bgcolor(self, _event: Event | None = None) -> None:
-		c = ColorChooser.askcolor(parent=self, initialcolor=self.canvas['background'], title='Select a background color')
+	def bgcolor(self, _event: UI.Event | None = None) -> None:
+		c = UI.ColorChooser.askcolor(parent=self, initialcolor=self.canvas['background'], title='Select a background color')
 		if not c[1]:
 			return
 		self.canvas['background'] = c[1]
 
-	def selectall(self, _event: Event | None = None) -> None:
-		self.listbox.select_set(0,END)
+	def selectall(self, _event: UI.Event | None = None) -> None:
+		self.listbox.select_set(0,UI.END)
 		self.action_states()
 
 	def preview_limits(self, init: bool = False) -> None:
 		if self.grp:
-			self.prevstart.config(state=NORMAL)
-			self.prevend.config(state=NORMAL)
+			self.prevstart.config(state=UI.NORMAL)
+			self.prevend.config(state=UI.NORMAL)
 			to = max(self.grp.frames-1,0)
 			self.prevfrom.range[1] = to
 			self.prevto.range[1] = to
 			if init or self.prevto.get() > to:
 				self.prevto.set(to)
 		else:
-			self.prevstart.config(state=DISABLED)
-			self.prevend.config(state=DISABLED)
+			self.prevstart.config(state=UI.DISABLED)
+			self.prevend.config(state=UI.DISABLED)
 			self.prevfrom.set(0)
 			self.prevto.set(0)
 
@@ -453,12 +453,12 @@ BMP's must be imported with the same style they were exported as.""")
 		f = str(frame_index)
 		if self.hex.get():
 			f = f'0x{frame_index:02X}'
-		self.listbox.insert(END, f'{"   " * (frame_index // 17 % 2)}Frame {f}')
+		self.listbox.insert(UI.END, f'{"   " * (frame_index // 17 % 2)}Frame {f}')
 
 	def update_list(self) -> None:
 		s = self.listbox.curselection()
 		y = self.listbox.yview()[0]
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		if not self.grp:
 			return
 		for frame in range(self.grp.frames):
@@ -467,7 +467,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.listbox.select_set(i)
 		self.listbox.yview_moveto(y)
 
-	def new(self, _event: Event | None = None) -> None:
+	def new(self, _event: UI.Event | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
@@ -485,7 +485,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.grpoutline()
 		self.frameoutline()
 
-	def open(self, _event: Event | None = None, file: str | None = None) -> None:
+	def open(self, _event: UI.Event | None = None, file: str | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return
@@ -514,12 +514,12 @@ BMP's must be imported with the same style they were exported as.""")
 		self.grpoutline()
 		self.frameoutline()
 		if grp.uncompressed:
-			MessageBox.showinfo(parent=self, title='Uncompressed GRP', message='You have opened an uncompresed GRP.\nWhen saving make sure you select the "Save Uncompressed" option.')
+			UI.MessageBox.showinfo(parent=self, title='Uncompressed GRP', message='You have opened an uncompresed GRP.\nWhen saving make sure you select the "Save Uncompressed" option.')
 
-	def save(self, _event: Event | None = None) -> CheckSaved:
+	def save(self, _event: UI.Event | None = None) -> CheckSaved:
 		return self.saveas(file_path=self.file)
 
-	def saveas(self, _event: Event | None = None, file_path: str | None = None) -> CheckSaved:
+	def saveas(self, _event: UI.Event | None = None, file_path: str | None = None) -> CheckSaved:
 		if not self.grp:
 			return CheckSaved.saved
 		self.stopframe()
@@ -540,7 +540,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.action_states()
 		return CheckSaved.saved
 
-	def close(self, _event: Event | None = None) -> None:
+	def close(self, _event: UI.Event | None = None) -> None:
 		if not self.is_file_open():
 			return
 		if self.check_saved() == CheckSaved.cancelled:
@@ -552,14 +552,14 @@ BMP's must be imported with the same style they were exported as.""")
 		self.file = None
 		self.frames = []
 		self.status.set('Load or create a GRP.')
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		self.preview_limits()
 		self.preview()
 		self.action_states()
 		self.grpoutline()
 		self.frameoutline()
 
-	def exports(self, _event: Event | None = None) -> None:
+	def exports(self, _event: UI.Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -576,7 +576,7 @@ BMP's must be imported with the same style they were exported as.""")
 				return
 			self.status.set('Frames extracted successfully!')
 
-	def imports(self, _event: Event | None = None) -> None:
+	def imports(self, _event: UI.Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -619,7 +619,7 @@ BMP's must be imported with the same style they were exported as.""")
 				frame += 1
 			self.edited = True
 			self.grp.frames = len(self.grp.images)
-			self.listbox.select_clear(0,END)
+			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(sel)
 			self.listbox.see(sel)
 			self.status.set('Frames imported successfully!')
@@ -629,7 +629,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.grpoutline()
 			self.frameoutline()
 
-	def remove(self, _event: Event | None = None) -> None:
+	def remove(self, _event: UI.Event | None = None) -> None:
 		if not self.grp:
 			return
 		self.stopframe()
@@ -646,7 +646,7 @@ BMP's must be imported with the same style they were exported as.""")
 		if not self.grp.frames:
 			self.grp.width = 0
 			self.grp.height = 0
-		self.listbox.delete(0,END)
+		self.listbox.delete(0,UI.END)
 		self.update_list()
 		self.edited = True
 		if self.listbox.size():
@@ -685,7 +685,7 @@ BMP's must be imported with the same style they were exported as.""")
 			self.swap(f,f+d)
 		if self.frame_index is not None:
 			self.frame_index += d
-		self.listbox.select_clear(0,END)
+		self.listbox.select_clear(0,UI.END)
 		for f in s:
 			self.listbox.select_set(f+d)
 		if self.frame_index is not None:
@@ -693,7 +693,7 @@ BMP's must be imported with the same style they were exported as.""")
 		self.edited = True
 		self.action_states()
 
-	def register_registry(self, _event: Event | None = None) -> None:
+	def register_registry(self, _event: UI.Event | None = None) -> None:
 		try:
 			registry.register('PyGRP', 'grp', '')
 		except PyMSError as e:
@@ -702,17 +702,17 @@ BMP's must be imported with the same style they were exported as.""")
 	def settings(self) -> None:
 		SettingsDialog(self, self.config_)
 
-	def help(self, _event: Event | None = None) -> None:
+	def help(self, _event: UI.Event | None = None) -> None:
 		HelpDialog(self, self.config_.windows.help, 'Help/Programs/PyGRP.md')
 
-	def about(self, _event: Event | None = None) -> None:
+	def about(self, _event: UI.Event | None = None) -> None:
 		self.stopframe()
 		AboutDialog(self, 'PyGRP', LONG_VERSION, [('TeLaMoN','Compressed GRP file specs.')])
 
 	def sponsor(self) -> None:
 		SponsorDialog(self)
 
-	def exit(self, _event: Event | None = None) -> None:
+	def exit(self, _event: UI.Event | None = None) -> None:
 		self.stopframe()
 		if self.check_saved() == CheckSaved.cancelled:
 			return

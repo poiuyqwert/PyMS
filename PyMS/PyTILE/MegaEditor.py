@@ -7,28 +7,28 @@ from .Delegates import MegaEditorDelegate, MegaEditorViewDelegate
 from ..FileFormats.Tileset.Tileset import Tileset
 from ..FileFormats.Tileset.VX4 import VX4Minitile
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 
 class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
-	def __init__(self, parent: Misc, config: PyTILEConfig, delegate: MegaEditorDelegate, tile_id: int) -> None:
+	def __init__(self, parent: UI.Misc, config: PyTILEConfig, delegate: MegaEditorDelegate, tile_id: int) -> None:
 		self.config_ = config
 		self.delegate = delegate
 		self.id = tile_id
 		self.edited = False
 		PyMSDialog.__init__(self, parent, f'MegaTile Editor [{tile_id}]')
 
-	def widgetize(self) -> Widget | None:
+	def widgetize(self) -> UI.Widget | None:
 		self.editor = MegaEditorView.MegaEditorView(parent=self, config=self.config_, delegate=self, megatile_id=self.id)
-		self.editor.pack(side=TOP, padx=3, pady=(3,0))
-		ok = Button(self, text='Ok', width=10, command=self.ok)
-		ok.pack(side=BOTTOM, padx=3, pady=3)
+		self.editor.pack(side=UI.TOP, padx=3, pady=(3,0))
+		ok = UI.Button(self, text='Ok', width=10, command=self.ok)
+		ok.pack(side=UI.BOTTOM, padx=3, pady=3)
 		return ok
 
 	def get_tileset(self) -> Tileset | None:
 		return self.delegate.get_tileset()
 
-	def get_tile(self, tile_id: int | VX4Minitile) -> Image:
+	def get_tile(self, tile_id: int | VX4Minitile) -> UI.Image:
 		return self.delegate.get_tile(tile_id)
 
 	def mega_edit_mode_updated(self, mode: MegaEditorMode) -> None:
@@ -43,7 +43,7 @@ class MegaEditor(PyMSDialog, MegaEditorViewDelegate):
 	def megaload(self) -> None:
 		self.editor.draw()
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		if self.edited:
 			from .TilePalette import TilePalette  # pylint: disable=cyclic-import
 			if self.editor.megatile_id is not None and self.editor.megatile_id in TilePalette.TILE_CACHE:

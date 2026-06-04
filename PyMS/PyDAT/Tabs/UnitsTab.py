@@ -9,7 +9,7 @@ from ..DATRef import DATRefs, DATRef
 
 from ...FileFormats.DAT import DATUnit
 
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 class UnitsTab(DATTab):
 	DAT_ID = DATID.units
 
-	def __init__(self, parent: Misc, delegate: MainDelegate) -> None:
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate) -> None:
 		DATTab.__init__(self, parent, delegate)
-		self.dattabs = Notebook(self, FLAT)
+		self.dattabs = UI.Notebook(self, UI.FLAT)
 		tabs = [
 			('Basic', UnitTabs.BasicUnitsTab),
 			('Advanced', UnitTabs.AdvancedUnitsTab),
@@ -31,7 +31,7 @@ class UnitsTab(DATTab):
 		]
 		for name,tab in tabs:
 			self.dattabs.add_tab(tab(self.dattabs, delegate, self), name)
-		self.dattabs.pack(fill=BOTH, expand=1)
+		self.dattabs.pack(fill=UI.BOTH, expand=1)
 
 		self.setup_used_by((
 			DATRefs(DATID.units, lambda unit: (
@@ -73,7 +73,7 @@ class UnitsTab(DATTab):
 			self.delegate.update_status_bar()
 			self.check_used_by_references()
 
-	def save(self, _event: Event | None = None) -> None:
+	def save(self, _event: UI.Event | None = None) -> None:
 		DATTab.save(self)
 		if not self.edited:
 			for frame,_ in list(self.dattabs.pages.values()):

@@ -5,46 +5,46 @@ from .Delegates import MainDelegate
 from ..FileFormats import SPK
 from ..FileFormats import BMP
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 
 from typing import Any
 
-class PaletteTab(NotebookTab):
+class PaletteTab(UI.NotebookTab):
 	MAX_SIZE = 150
 	PAD = 10
 
-	def __init__(self, parent: Misc, delegate: MainDelegate, bind_target: Misc):
+	def __init__(self, parent: UI.Misc, delegate: MainDelegate, bind_target: UI.Misc):
 		self.delegate = delegate
 		self.item_palette_box = None
-		NotebookTab.__init__(self, parent)
+		UI.NotebookTab.__init__(self, parent)
 
-		scrollframe = Frame(self, bd=2, relief=SUNKEN)
-		self.starsCanvas = Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
-		def scroll_palette(event: Event) -> None:
+		scrollframe = UI.Frame(self, bd=2, relief=UI.SUNKEN)
+		self.starsCanvas = UI.Canvas(scrollframe, background='#000000', highlightthickness=0, width=PaletteTab.MAX_SIZE+PaletteTab.PAD*2, theme_tag='preview') # type: ignore[call-arg]
+		def scroll_palette(event: UI.Event) -> None:
 			if self.delegate.spk:
 				if event.delta > 0:
 					self.starsCanvas.yview('scroll', -1, 'units')
 				else:
 					self.starsCanvas.yview('scroll', 1, 'units')
-		self.starsCanvas.bind(Mouse.Scroll(), scroll_palette)
-		self.starsCanvas.bind(Mouse.Click_Left(), self.palette_select)
-		self.starsCanvas.pack(side=LEFT, fill=Y, expand=1)
-		scrollbar = Scrollbar(scrollframe, command=self.starsCanvas.yview)
+		self.starsCanvas.bind(UI.Mouse.Scroll(), scroll_palette)
+		self.starsCanvas.bind(UI.Mouse.Click_Left(), self.palette_select)
+		self.starsCanvas.pack(side=UI.LEFT, fill=UI.Y, expand=1)
+		scrollbar = UI.Scrollbar(scrollframe, command=self.starsCanvas.yview)
 		self.starsCanvas.config(yscrollcommand=scrollbar.set)
-		scrollbar.pack(side=LEFT, fill=Y, expand=1)
-		scrollframe.pack(side=TOP, padx=2, fill=Y, expand=1)
+		scrollbar.pack(side=UI.LEFT, fill=UI.Y, expand=1)
+		scrollframe.pack(side=UI.TOP, padx=2, fill=UI.Y, expand=1)
 
-		self.toolbar = Toolbar(self, bind_target=bind_target)
-		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', Key.m, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', Key.v, enabled=False, tags='file_open')
-		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', Key.p, enabled=False, tags='file_open')
+		self.toolbar = UI.Toolbar(self, bind_target=bind_target)
+		self.toolbar.add_radiobutton(Assets.get_image('select'), self.delegate.tool, Tool.select, 'Select', UI.Key.m, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('arrows'), self.delegate.tool, Tool.move, 'Move', UI.Key.v, enabled=False, tags='file_open')
+		self.toolbar.add_radiobutton(Assets.get_image('pencil'), self.delegate.tool, Tool.draw, 'Draw', UI.Key.p, enabled=False, tags='file_open')
 		self.toolbar.add_spacer(2, flexible=True)
 		self.toolbar.add_button(Assets.get_image('exportc'), self.export_image, 'Export Star', enabled=False, tags='image_selected')
 		self.toolbar.add_button(Assets.get_image('importc'), self.import_image, 'Import Star', enabled=False, tags='file_open')
-		self.toolbar.pack(side=TOP, fill=X, padx=2, pady=(2,0))
+		self.toolbar.pack(side=UI.TOP, fill=UI.X, padx=2, pady=(2,0))
 
 	def action_states(self) -> None:
 		self.toolbar.tag_enabled('file_open', self.delegate.is_file_open())
@@ -83,7 +83,7 @@ class PaletteTab(NotebookTab):
 				area = maxy-miny
 				maxy = 1-area
 				center = y + (y2-y)//2
-				_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+				_,_,_,height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
 				vis = height * area
 				top = center - vis//2
 				y = int(top / float(height))
@@ -92,10 +92,10 @@ class PaletteTab(NotebookTab):
 			self.starsCanvas.delete(self.item_palette_box)
 			self.item_palette_box = None
 
-	def palette_select(self, event: Event) -> None:
+	def palette_select(self, event: UI.Event) -> None:
 		if not self.delegate.spk or not self.delegate.spk.images:
 			return
-		_,_,_,height = parse_scrollregion(self.starsCanvas.cget('scrollregion'))
+		_,_,_,height = UI.parse_scrollregion(self.starsCanvas.cget('scrollregion'))
 		y = event.y + self.starsCanvas.yview()[0] * height
 		for img in self.delegate.spk.images:
 			height = min(img.height,PaletteTab.MAX_SIZE)+PaletteTab.PAD*2
@@ -107,7 +107,7 @@ class PaletteTab(NotebookTab):
 			y -= height
 
 	def clear(self) -> None:
-		self.starsCanvas.delete(ALL)
+		self.starsCanvas.delete(UI.ALL)
 		self.item_palette_box = None
 
 	def export_image(self, *_args: Any) -> None:

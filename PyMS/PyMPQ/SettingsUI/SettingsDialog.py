@@ -7,10 +7,10 @@ from ..Config import PyMPQConfig
 
 from ...Utilities.SettingsUI.BaseSettingsDialog import BaseSettingsDialog
 from ...Utilities.SettingsUI.ThemeSettingsTab import ThemeSettingsTab
-from ...Utilities.UIKit import *
+from ...Utilities import UIKit as UI
 
 class SettingsDialog(BaseSettingsDialog[PyMPQConfig]):
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		widget = super().widgetize()
 
 		self.add_tab('General', GeneralSettingsTab(self.notebook, self.edited_state.sub_state(), self.config_))

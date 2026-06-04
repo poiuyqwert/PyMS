@@ -13,7 +13,7 @@ from ..FileFormats import TBL
 from ..FileFormats import DAT
 
 from ..Utilities import registry
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities import Assets
@@ -44,12 +44,12 @@ class ColumnID(IntEnum):
 	Flingys = 3
 	Units = 4
 
-class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialogDelegate):
+class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialogDelegate):
 	def __init__(self, guifile: str | None = None) -> None:
 		self.guifile = guifile
 
 		#Window
-		MainWindow.__init__(self)
+		UI.MainWindow.__init__(self)
 		self.set_icon('PyICE')
 		self.protocol('WM_DELETE_WINDOW', self.exit)
 		ga.set_application('PyICE', Assets.version('PyICE'))
@@ -57,7 +57,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		setup_trace('PyICE', self)
 
 		self.config_ = PyICEConfig()
-		Theme.load_theme(self.config_.theme.value, self)
+		UI.Theme.load_theme(self.config_.theme.value, self)
 
 		self.file: str | None = None
 		self.data_context = DataContext()
@@ -72,68 +72,68 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		self.imports: list[str] = []
 
 		#Toolbar
-		self.toolbar = Toolbar(self)
-		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', Ctrl.n)
-		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', Ctrl.o)
-		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', Ctrl.d)
+		self.toolbar = UI.Toolbar(self)
+		self.toolbar.add_button(Assets.get_image('new'), self.new, 'New', UI.Ctrl.n)
+		self.toolbar.add_button(Assets.get_image('open'), self.open, 'Open', UI.Ctrl.o)
+		self.toolbar.add_button(Assets.get_image('opendefault'), self.open_default, 'Open Default Scripts', UI.Ctrl.d)
 		def save() -> None:
 			self.save()
-		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', Ctrl.s, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('save'), save, 'Save', UI.Ctrl.s, enabled=False, tags='file_open')
 		def saveas() -> None:
 			self.saveas()
-		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', Ctrl.Alt.a, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', Ctrl.w, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('saveas'), saveas, 'Save As', UI.Ctrl.Alt.a, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('close'), self.close, 'Close', UI.Ctrl.w, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', Ctrl.Alt.e, enabled=False, tags='entries_selected')
-		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', Ctrl.Alt.i, enabled=False, tags='file_open')
-		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', Ctrl.l, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('export'), self.export, 'Export Entries', UI.Ctrl.Alt.e, enabled=False, tags='entries_selected')
+		self.toolbar.add_button(Assets.get_image('import'), self.iimport, 'Import Entries', UI.Ctrl.Alt.i, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('listimport'), self.listimport, 'Import a List of Files', UI.Ctrl.l, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', Ctrl.f, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('find'), self.find, 'Find Entries', UI.Ctrl.f, enabled=False, tags='file_open')
 		self.toolbar.add_gap()
-		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', Ctrl.e, enabled=False, tags='file_open')
+		self.toolbar.add_button(Assets.get_image('codeedit'), self.codeedit, 'Edit IScript entries', UI.Ctrl.e, enabled=False, tags='file_open')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', Ctrl.m)
+		self.toolbar.add_button(Assets.get_image('asc3topyai'), self.tblbin, 'Manage TBL and DAT files', UI.Ctrl.m)
 		self.toolbar.add_section()
 		self.toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.bin editor (Windows Only)', enabled=registry.IS_AVAILABLE)
-		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', Key.F1)
+		self.toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
 		self.toolbar.add_button(Assets.get_image('about'), self.about, 'About PyICE')
 		self.toolbar.add_button(Assets.get_image('money'), self.sponsor, 'Donate')
 		self.toolbar.add_section()
-		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', Shortcut.Exit)
-		self.toolbar.pack(side=TOP, padx=1, pady=1, fill=X)
+		self.toolbar.add_button(Assets.get_image('exit'), self.exit, 'Exit', UI.Shortcut.Exit)
+		self.toolbar.pack(side=UI.TOP, padx=1, pady=1, fill=UI.X)
 
 		#listbox,etc.
-		listframes = Frame(self)
-		def listbox_colum(name: str) -> ScrolledListbox:
-			f = Frame(listframes)
-			Label(f, text=name + ':', anchor=W).pack(fill=X)
-			listbox = ScrolledListbox(f, selectmode=MULTIPLE, font=Font.fixed(), width=1, height=1)
-			def selection_changed(_event: Event) -> None:
+		listframes = UI.Frame(self)
+		def listbox_colum(name: str) -> UI.ScrolledListbox:
+			f = UI.Frame(listframes)
+			UI.Label(f, text=name + ':', anchor=UI.W).pack(fill=UI.X)
+			listbox = UI.ScrolledListbox(f, selectmode=UI.MULTIPLE, font=UI.Font.fixed(), width=1, height=1)
+			def selection_changed(_event: UI.Event) -> None:
 				self.listbox_selection_changed(listbox)
-			listbox.bind(WidgetEvent.Listbox.Select(), selection_changed)
-			listbox.pack(fill=BOTH, expand=1)
-			Button(f, text='Unselect All', command=lambda l=listbox: self.unselect(l)).pack(fill=X)
-			f.pack(side=LEFT, fill=BOTH, padx=2, expand=1)
+			listbox.bind(UI.WidgetEvent.Listbox.Select(), selection_changed)
+			listbox.pack(fill=UI.BOTH, expand=1)
+			UI.Button(f, text='Unselect All', command=lambda l=listbox: self.unselect(l)).pack(fill=UI.X)
+			f.pack(side=UI.LEFT, fill=UI.BOTH, padx=2, expand=1)
 			return listbox
 		self.iscriptlist = listbox_colum('IScript Entries')
 		self.imageslist = listbox_colum('Images')
 		self.spriteslist = listbox_colum('Sprites')
 		self.flingylist = listbox_colum("Flingy's")
 		self.unitlist = listbox_colum('Units')
-		listframes.pack(fill=BOTH, pady=2, expand=1)
+		listframes.pack(fill=UI.BOTH, pady=2, expand=1)
 
-		self.bind(Ctrl.a(), lambda *e: self.select_all())
+		self.bind(UI.Ctrl.a(), lambda *e: self.select_all())
 
 		#Statusbar
-		self.status = StringVar()
+		self.status = UI.StringVar()
 		self.status.set('Load or create a BIN.')
-		self.selectstatus = StringVar()
+		self.selectstatus = UI.StringVar()
 		self.selectstatus.set("IScript ID's Selected: None")
-		statusbar = StatusBar(self)
+		statusbar = UI.StatusBar(self)
 		statusbar.add_label(self.status, weight=1)
 		self.editstatus = statusbar.add_icon(Assets.get_image('save'))
 		statusbar.add_label(self.selectstatus, weight=1)
-		statusbar.pack(side=BOTTOM, fill=X)
+		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
 		self.config_.windows.main.load_size(self)
 
@@ -148,7 +148,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		UpdateDialog.check_update(self, 'PyICE')
 
 	def select_all(self) -> None:
-		self.iscriptlist.select_set(0, END)
+		self.iscriptlist.select_set(0, UI.END)
 		self.action_states()
 
 	def open_files(self) -> PyMSError | None:
@@ -216,9 +216,9 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 			(self.get_unit_names(), ColumnID.Units, self.unitlist)
 		)
 		for names, column, listbox in updates:
-			listbox.delete(0,END)
+			listbox.delete(0,UI.END)
 			for index,name in enumerate(names):
-				listbox.insert(END, f'{index:03} {name} [{self.iscript_id_from_selection_index(index, column)}]')
+				listbox.insert(UI.END, f'{index:03} {name} [{self.iscript_id_from_selection_index(index, column)}]')
 		self.action_states()
 
 	def _sorted_scripts(self) -> list[IScript]:
@@ -227,7 +227,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		return sorted(self.ibin.list_scripts(), key=lambda script: script.id)
 
 	def update_iscrips_list(self) -> None:
-		self.iscriptlist.delete(0,END)
+		self.iscriptlist.delete(0,UI.END)
 		if not self.ibin:
 			return
 		scripts = self._sorted_scripts()
@@ -237,7 +237,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 				name = Assets.data_cache(Assets.DataReference.IscriptIDList)[iscript_id]
 			else:
 				name = 'Unnamed Custom Entry'
-			self.iscriptlist.insert(END, f'{iscript_id:03} {name}')
+			self.iscriptlist.insert(UI.END, f'{iscript_id:03} {name}')
 
 	def iscript_id_from_selection_index(self, index: int, column: ColumnID) -> int:
 		if column == ColumnID.IScripts:
@@ -271,11 +271,11 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 					iscript_ids.append(iscript_id)
 		return sorted(iscript_ids)
 
-	def unselect(self, listbox: ScrolledListbox) -> None:
-		listbox.select_clear(0, END)
+	def unselect(self, listbox: UI.ScrolledListbox) -> None:
+		listbox.select_clear(0, UI.END)
 		self.listbox_selection_changed()
 
-	def listbox_selection_changed(self, listbox: ScrolledListbox | None = None) -> None:
+	def listbox_selection_changed(self, listbox: UI.ScrolledListbox | None = None) -> None:
 		iscript_ids = self.selected_iscript_ids()
 		if iscript_ids:
 			self.selectstatus.set(f"IScript ID's Selected: {', '.join([str(i) for i in iscript_ids])}")
@@ -291,7 +291,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 	def action_states(self) -> None:
 		is_file_open = self.is_file_open()
 		for listbox in [self.imageslist,self.spriteslist,self.flingylist,self.unitlist]:
-			listbox.listbox['state'] = NORMAL if is_file_open else DISABLED
+			listbox.listbox['state'] = UI.NORMAL if is_file_open else UI.DISABLED
 		self.toolbar.tag_enabled('file_open', is_file_open)
 
 		entries_selected = not not self.selected_iscript_ids()
@@ -303,7 +303,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		iscript = self.file
 		if not iscript:
 			iscript = 'iscript.bin'
-		save = MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{iscript}'?", default=MessageBox.YES)
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{iscript}'?", default=UI.MessageBox.YES)
 		if save is None:
 			return CheckSaved.cancelled
 		if not save:
@@ -323,12 +323,12 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 
 	def mark_edited(self, edited: bool = True) -> None:
 		self.edited = edited
-		self.editstatus['state'] = NORMAL if edited else DISABLED
+		self.editstatus['state'] = UI.NORMAL if edited else UI.DISABLED
 
 	def new(self) -> None:
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.iscriptlist.delete(0,END)
+		self.iscriptlist.delete(0,UI.END)
 		self.ibin = IScriptBIN.IScriptBIN()
 		self.file = None
 		self.status.set('Editing new BIN.')
@@ -383,7 +383,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 		self.mark_edited(False)
 		return CheckSaved.saved
 
-	def iimport(self, files: str | list[str] | None = None, parent: Misc | None = None) -> None:
+	def iimport(self, files: str | list[str] | None = None, parent: UI.Misc | None = None) -> None:
 		if not self.ibin:
 			return
 		if not files:
@@ -448,7 +448,7 @@ class PyICE(MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDialo
 			return
 		if self.check_saved() == CheckSaved.cancelled:
 			return
-		self.iscriptlist.delete(0,END)
+		self.iscriptlist.delete(0,UI.END)
 		self.ibin = None
 		self.file = None
 		self.update_title()

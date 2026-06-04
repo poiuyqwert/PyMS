@@ -6,14 +6,14 @@ from .StringPreview import StringPreview
 
 from ..FileFormats import DialogBIN, TBL, SMK, GRP, PCX, FNT
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
 import sys
 
 from typing import cast
 
 class WidgetNode:
-	SMK_FRAME_CACHE: dict[str, dict[int, ImageTk.PhotoImage]] = {}
+	SMK_FRAME_CACHE: dict[str, dict[int, UI.ImageTk.PhotoImage]] = {}
 
 	def __init__(self, delegate: NodeDelegate, widget: DialogBIN.BINWidget | None = None) -> None:
 		self.delegate = delegate
@@ -28,19 +28,19 @@ class WidgetNode:
 			self.children = []
 
 		self.string: StringPreview | None = None
-		self.photo: ImageTk.PhotoImage | None = None
+		self.photo: UI.ImageTk.PhotoImage | None = None
 		self.smks: dict[str, SMK.SMK] | None = None
-		self.dialog_image: ImageTk.PhotoImage | None = None
+		self.dialog_image: UI.ImageTk.PhotoImage | None = None
 		self.frame_delay: int | None = None
 		self.frame_waited = 0.0
 
-		self.item_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_text_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_responsive_bounds: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_string_images: list[Canvas.Item] | None = None # type: ignore[name-defined]
-		self.item_image: Canvas.Item | None = None # type: ignore[name-defined]
-		self.item_smks: list[Canvas.Item] = [] # type: ignore[name-defined]
-		self.item_dialog: Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_text_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_responsive_bounds: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_string_images: list[UI.Canvas.Item] | None = None # type: ignore[name-defined]
+		self.item_image: UI.Canvas.Item | None = None # type: ignore[name-defined]
+		self.item_smks: list[UI.Canvas.Item] = [] # type: ignore[name-defined]
+		self.item_dialog: UI.Canvas.Item | None = None # type: ignore[name-defined]
 
 	def get_name(self) -> str:
 		name = 'Group'
@@ -118,25 +118,25 @@ class WidgetNode:
 			x1,y1,x2,y2 = self.bounding_box()
 			x = x1
 			y = y1
-			anchor: Anchor = NW
+			anchor: UI.Anchor = UI.NW
 			if self.widget.type == DialogBIN.BINWidget.TYPE_CHECKBOX:
 				asset_id = DialogBIN.DIALOG_ASSET_CHECK_DISABLED
 				if self.enabled():
 					asset_id = DialogBIN.DIALOG_ASSET_CHECK_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_OPTION_BTN:
 				asset_id = DialogBIN.DIALOG_ASSET_RADIO_DISABLED
 				if self.enabled():
 					asset_id = DialogBIN.DIALOG_ASSET_RADIO_SELECTED
 				pil = self.delegate.get_dialog_asset(asset_id)
 				if pil:
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_SLIDER:
 				if self.enabled():
 					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SLIDER_LEFT)
@@ -163,7 +163,7 @@ class WidgetNode:
 						spots_padding = (width - left.size[0] - right.size[0] - spot.size[0] * (spots+1)) // spots
 					draw_x = 0
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (draw_x,mid_y - left.size[1]//2))
 					draw_x += left.size[0]
 					while spots >= 0:
@@ -177,9 +177,9 @@ class WidgetNode:
 					pil.paste(right, (draw_x,mid_y - right.size[1]//2))
 					if dot:
 						pil.paste(dot, ((width - dot.size[0])//2, mid_y - dot.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type in (DialogBIN.BINWidget.TYPE_BUTTON,DialogBIN.BINWidget.TYPE_DEFAULT_BTN):
 				if self.enabled():
 					left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_BUTTON_MID_LEFT)
@@ -195,16 +195,16 @@ class WidgetNode:
 					for img in (left,mid,right):
 						height = max(height, img.size[1])
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (0,mid_y - left.size[1]//2))
 					pad_size = width-left.size[0]-right.size[0]
 					if pad_size > 0:
 						pad = mid.resize((pad_size,mid.size[1]))
 						pil.paste(pad, (left.size[0],mid_y - pad.size[1]//2))
 					pil.paste(right, (width-right.size[0],mid_y - right.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_LISTBOX:
 				top = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_TOP)
 				mid = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_SCROLL_VERTICAL_MIDDLE)
@@ -222,7 +222,7 @@ class WidgetNode:
 					for img in (top,mid,bot,bar,up,down):
 						width = max(width, img.size[0])
 					mid_x = width // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(up, (mid_x-up.size[0]//2,0))
 					pil.paste(top, (mid_x-top.size[0]//2,up.size[1]+2))
 					mid_height = height - up.size[1] - 2 - top.size[1] - bot.size[1] - 2 - down.size[1]
@@ -232,10 +232,10 @@ class WidgetNode:
 					pil.paste(bot, (mid_x-bot.size[0]//2,height-down.size[1]-2-bot.size[1]))
 					pil.paste(down, (mid_x-down.size[0]//2,height-down.size[1]))
 					pil.paste(bar, (mid_x-bar.size[0]//2,up.size[1]+4))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					x = x2
 					y += (y2 - y1) // 2
-					anchor = E
+					anchor = UI.E
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_COMBOBOX:
 				left = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_LEFT)
 				middle = self.delegate.get_dialog_asset(DialogBIN.DIALOG_ASSET_COMBOBOX_MIDDLE)
@@ -250,7 +250,7 @@ class WidgetNode:
 					for img in (left,middle,right,arrow):
 						height = max(height, img.size[1])
 					mid_y = height // 2
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(left, (0,mid_y - left.size[1]//2))
 					pad_size = width-left.size[0]-right.size[0]
 					if pad_size > 0:
@@ -258,9 +258,9 @@ class WidgetNode:
 						pil.paste(pad, (left.size[0],mid_y - pad.size[1]//2))
 					pil.paste(right, (width-right.size[0],mid_y - right.size[1]//2))
 					pil.paste(arrow, (width-arrow.size[0]-5,mid_y - arrow.size[1]//2))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 					y += (y2 - y1) // 2
-					anchor = W
+					anchor = UI.W
 			elif self.widget.type == DialogBIN.BINWidget.TYPE_DIALOG and self.delegate.get_show_dialog():
 				tl = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_TL)
 				t = self.delegate.get_dialog_frame(DialogBIN.DIALOG_FRAME_T)
@@ -276,7 +276,7 @@ class WidgetNode:
 					height = y2-y1
 					i_width = width-tl.size[0]-tr.size[0]
 					i_height = height-tl.size[1]-bl.size[1]
-					pil = PILImage.new('RGBA', (width,height))
+					pil = UI.PILImage.new('RGBA', (width,height))
 					pil.paste(tl, (0,0))
 					if i_width > 0:
 						t_full = t.resize((i_width,t.size[1]))
@@ -295,7 +295,7 @@ class WidgetNode:
 						b_full = b.resize((i_width,b.size[1]))
 						pil.paste(b_full, (bl.size[0],height-b.size[1]))
 					pil.paste(br, (width-br.size[0],height-br.size[1]))
-					self.dialog_image = ImageTk.PhotoImage(pil)
+					self.dialog_image = UI.ImageTk.PhotoImage(pil)
 			if self.dialog_image:
 				if self.item_dialog:
 					self.delegate.node_render_image_update(item=self.item_dialog, x=x, y=y, image=self.dialog_image)
@@ -358,7 +358,7 @@ class WidgetNode:
 			if bin_smk.filename in WidgetNode.SMK_FRAME_CACHE and smk.current_frame in WidgetNode.SMK_FRAME_CACHE[bin_smk.filename]:
 				image = WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame]
 			else:
-				image = cast(ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False))
+				image = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(frame.palette, frame.image, None, size=False))
 				if not bin_smk.filename in WidgetNode.SMK_FRAME_CACHE:
 					WidgetNode.SMK_FRAME_CACHE[bin_smk.filename] = {}
 				WidgetNode.SMK_FRAME_CACHE[bin_smk.filename][smk.current_frame] = image
@@ -369,7 +369,7 @@ class WidgetNode:
 			if i < len(self.item_smks):
 				self.delegate.node_render_image_update(item=self.item_smks[i], x=x1, y=y1, image=image)
 			else:
-				item = self.delegate.node_render_image_create(x=x1, y=y1, image=image, anchor=NW)
+				item = self.delegate.node_render_image_create(x=x1, y=y1, image=image, anchor=UI.NW)
 				self.item_smks.append(item)
 				# self.toplevel.widgetCanvas.create_rectangle(x1,y1,x1+self.smk.width,y1+self.smk.height, width=1, outline='#FFFF00')
 				reorder = True
@@ -383,7 +383,7 @@ class WidgetNode:
 				try:
 					pcx = PCX.PCX()
 					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
-					self.photo = cast(ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
+					self.photo = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
 				except Exception:
 					self.delegate.capture_exception()
 			if self.photo:
@@ -391,7 +391,7 @@ class WidgetNode:
 				if self.item_image:
 					self.delegate.node_render_image_update(item=self.item_image, x=x1, y=y1, image=self.photo)
 				else:
-					self.item_image = self.delegate.node_render_image_create(x=x1, y=y1, image=self.photo, anchor=NW)
+					self.item_image = self.delegate.node_render_image_create(x=x1, y=y1, image=self.photo, anchor=UI.NW)
 					reorder = True
 		elif self.item_image:
 			self.delegate.node_render_delete(self.item_image)
@@ -434,7 +434,7 @@ class WidgetNode:
 				self.item_string_images = []
 				glyphs = self.string.get_glyphs()
 				for glyph,position in zip(glyphs,positions):
-					self.item_string_images.append(self.delegate.node_render_image_create(x=position[0], y=position[1], image=glyph, anchor=NW))
+					self.item_string_images.append(self.delegate.node_render_image_create(x=position[0], y=position[1], image=glyph, anchor=UI.NW))
 				reorder = True
 		elif self.item_string_images is not None:
 			for item in self.item_string_images:

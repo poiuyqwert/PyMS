@@ -1,22 +1,22 @@
 
 from .Constants import RE_COORDINATES
 
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
-class SelectionTooltip(Tooltip):
+class SelectionTooltip(UI.Tooltip):
 	tag = 'Selection'
 
-	def __init__(self, parent: Text) -> None:
+	def __init__(self, parent: UI.Text) -> None:
 		self.text_widget = parent
-		Tooltip.__init__(self, parent)
+		UI.Tooltip.__init__(self, parent)
 
 	def setupbinds(self, press: bool) -> None:
 		if self.tag:
-			self.text_widget.tag_bind(self.tag, Cursor.Enter(), self.enter, '+')
-			self.text_widget.tag_bind(self.tag, Cursor.Leave(), self.leave, '+')
-			self.text_widget.tag_bind(self.tag, Mouse.Motion(), self.motion, '+')
-			self.text_widget.tag_bind(self.tag, Mouse.Click_Left(), self.leave, '+')
-			self.text_widget.tag_bind(self.tag, Mouse.ButtonPress(), self.leave)
+			self.text_widget.tag_bind(self.tag, UI.Cursor.Enter(), self.enter, '+')
+			self.text_widget.tag_bind(self.tag, UI.Cursor.Leave(), self.leave, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.Motion(), self.motion, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.Click_Left(), self.leave, '+')
+			self.text_widget.tag_bind(self.tag, UI.Mouse.ButtonPress(), self.leave)
 
 	def showtip(self) -> None:
 		if self.tip:
@@ -30,9 +30,9 @@ class SelectionTooltip(Tooltip):
 		if not m:
 			return
 		try:
-			self.tip = TooltipWindow(self.text_widget, relief=SOLID, borderwidth=1)
+			self.tip = UI.TooltipWindow(self.text_widget, relief=UI.SOLID, borderwidth=1)
 			self.tip.make_frameless(self.text_widget.winfo_toplevel())
-			c = Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
+			c = UI.Canvas(self.tip, borderwidth=0, width=255, height=255, background='#FFFFC8', highlightthickness=0, takefocus=False)
 			c.pack()
 			c.create_line((123,128),(134,128),fill='#00FF00')
 			c.create_line((128,123),(128,134),fill='#00FF00')

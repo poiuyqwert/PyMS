@@ -1,22 +1,22 @@
 
-from .UIKit import *
+from . import UIKit as UI
 #
-class PyMSDialog(Toplevel):
-	def __init__(self, parent: Misc, title: str, *, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
-		Toplevel.__init__(self, parent)
+class PyMSDialog(UI.Toplevel):
+	def __init__(self, parent: UI.Misc, title: str, *, center: bool = True, grabwait: bool = True, escape: bool = False, resizable: tuple[bool, bool] = (True,True), set_min_size: tuple[bool, bool] = (False,False)) -> None:
+		UI.Toplevel.__init__(self, parent)
 		self.title(title)
 		self.protocol('WM_DELETE_WINDOW', self.cancel)
 		if escape:
-			self.bind(Shortcut.Close(), self.cancel)
+			self.bind(UI.Shortcut.Close(), self.cancel)
 		self.parent = parent
-		focus: Misc | None = self.widgetize()
+		focus: UI.Misc | None = self.widgetize()
 		self.update_idletasks()
-		geometry = Geometry.of(self)
+		geometry = UI.Geometry.of(self)
 		if set_min_size[0] or set_min_size[1]:
 			self.minsize(geometry.size.width if set_min_size[0] else 0, geometry.size.height if set_min_size[1] else 0)
-		screen_size = Size(self.winfo_screenwidth(), self.winfo_screenheight())
+		screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
 		if center:
-			self.geometry(GeometryAdjust(pos=geometry.size.centered_in(screen_size)).text)
+			self.geometry(UI.GeometryAdjust(pos=geometry.size.centered_in(screen_size)).text)
 		self.resizable(*resizable)
 		self.setup_complete()
 		if grabwait:
@@ -25,7 +25,7 @@ class PyMSDialog(Toplevel):
 			focus = self
 		focus.focus_set()
 
-	def widgetize(self) -> Misc | None:
+	def widgetize(self) -> UI.Misc | None:
 		return None
 	def setup_complete(self) -> None:
 		pass
@@ -36,8 +36,8 @@ class PyMSDialog(Toplevel):
 		self.master.focus_set()
 		self.destroy()
 
-	def ok(self, _event: Event | None = None) -> None:
+	def ok(self, _event: UI.Event | None = None) -> None:
 		self.dismiss()
 
-	def cancel(self, _event: Event | None = None) -> None:
+	def cancel(self, _event: UI.Event | None = None) -> None:
 		self.dismiss()

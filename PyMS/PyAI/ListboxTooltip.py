@@ -4,38 +4,38 @@ from .Delegates import TooltipDelegate
 from ..FileFormats.AIBIN.AIFlag import AIFlag
 
 from ..Utilities.utils import fit
-from ..Utilities.UIKit import *
+from ..Utilities import UIKit as UI
 
-class ListboxTooltip(Tooltip):
-	def __init__(self, parent: ScrolledListbox, *, delegate: TooltipDelegate, font: Font | None = None, delay: int = 750, press: bool = False):
+class ListboxTooltip(UI.Tooltip):
+	def __init__(self, parent: UI.ScrolledListbox, *, delegate: TooltipDelegate, font: UI.Font | None = None, delay: int = 750, press: bool = False):
 		self.scrolled_listbox = parent
 		self.delegate = delegate
-		Tooltip.__init__(self, parent, '', font=font, delay=delay, press=press)
+		UI.Tooltip.__init__(self, parent, '', font=font, delay=delay, press=press)
 		self.index: int | None = None
 
-	def enter(self, e: Event | None = None) -> None:
+	def enter(self, e: UI.Event | None = None) -> None:
 		if self.parent.size():
 			self.motion(e)
-			Tooltip.enter(self,e)
+			UI.Tooltip.enter(self,e)
 
-	def leave(self, e: Event | None = None) -> None:
-		Tooltip.leave(self,e)
+	def leave(self, e: UI.Event | None = None) -> None:
+		UI.Tooltip.leave(self,e)
 		if e and e.type == '4':
 			self.enter(e)
 
-	def motion(self, e: Event | None = None) -> None:
+	def motion(self, e: UI.Event | None = None) -> None:
 		if not e:
 			return
 		if self.tip and self.index != self.scrolled_listbox.nearest(e.y):
 			self.leave()
 			self.enter(e)
 		# self.pos = (e.x,e.y)
-		Tooltip.motion(self, e)
+		UI.Tooltip.motion(self, e)
 
 	def showtip(self) -> None:
 		if self.tip:
 			return
-		self.tip = TooltipWindow(self.parent)
+		self.tip = UI.TooltipWindow(self.parent)
 		self.tip.maxsize(640,400)
 		self.tip.make_frameless(self.parent.winfo_toplevel())
 		pos = list(self.parent.winfo_pointerxy())
@@ -59,8 +59,8 @@ class ListboxTooltip(Tooltip):
 		# 	text += 'Extra Information : %s' % ai.aiinfo[id][0].replace('\n','\n                    ')
 		# else:
 		text = text[:-1]
-		frame = Frame(self.tip, background='#FFFFC8', relief=SOLID, borderwidth=1)
-		Label(frame, text=text, justify=LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=FLAT).pack(padx=1, pady=1)
+		frame = UI.Frame(self.tip, background='#FFFFC8', relief=UI.SOLID, borderwidth=1)
+		UI.Label(frame, text=text, justify=UI.LEFT, font=self.font, fg='#000', background='#FFFFC8', relief=UI.FLAT).pack(padx=1, pady=1)
 		frame.pack()
 		self.tip.wm_geometry(f'+{pos[0]}+{pos[1]+22}')
 		self.tip.update_idletasks()
