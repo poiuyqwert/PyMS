@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .DATTab import DATTab
 from .UnitTabs.DATUnitsTab import DATUnitsTab
-from .UnitTabs import *
+from . import UnitTabs
 from ..DataID import DATID, UnitsTabID, AnyID
 from ..DATRef import DATRefs, DATRef
 
@@ -22,12 +22,12 @@ class UnitsTab(DATTab):
 		DATTab.__init__(self, parent, delegate)
 		self.dattabs = Notebook(self, FLAT)
 		tabs = [
-			('Basic', BasicUnitsTab),
-			('Advanced', AdvancedUnitsTab),
-			('Sounds', SoundsUnitsTab),
-			('Graphics', GraphicsUnitsTab),
-			('StarEdit', StarEditUnitsTab),
-			('AI Actions', AIActionsUnitsTab),
+			('Basic', UnitTabs.BasicUnitsTab),
+			('Advanced', UnitTabs.AdvancedUnitsTab),
+			('Sounds', UnitTabs.SoundsUnitsTab),
+			('Graphics', UnitTabs.GraphicsUnitsTab),
+			('StarEdit', UnitTabs.StarEditUnitsTab),
+			('AI Actions', UnitTabs.AIActionsUnitsTab),
 		]
 		for name,tab in tabs:
 			self.dattabs.add_tab(tab(self.dattabs, delegate, self), name)

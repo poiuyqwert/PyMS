@@ -1,5 +1,5 @@
 
-from .gapy.ga import *
+from .gapy.ga import GAScreen, GATarget, ga
 from . import Assets
 from .PyMSConfig import PYMS_CONFIG
 

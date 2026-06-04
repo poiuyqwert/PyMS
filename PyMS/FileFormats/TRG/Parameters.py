@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PyMS.Utilities.PyMSWarning import PyMSWarning
 
-from .Constants import *
+from . import Constants
 
 from ...FileFormats import TBL
 
@@ -117,32 +117,32 @@ class NumberParameter(ConditionParameter, ActionParameter):
 
 class PlayerParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		PlayerGroup.p1: 'Player 1',
-		PlayerGroup.p2: 'Player 2',
-		PlayerGroup.p3: 'Player 3',
-		PlayerGroup.p4: 'Player 4',
-		PlayerGroup.p5: 'Player 5',
-		PlayerGroup.p6: 'Player 6',
-		PlayerGroup.p7: 'Player 7',
-		PlayerGroup.p8: 'Player 8',
-		PlayerGroup.p9: 'Player 9',
-		PlayerGroup.p10: 'Player 10',
-		PlayerGroup.p11: 'Player 11',
-		PlayerGroup.p12: 'Player 12',
-		PlayerGroup.current_player: 'Current Player',
-		PlayerGroup.foes: 'Foes',
-		PlayerGroup.allies: 'Allies',
-		PlayerGroup.neutral_players: 'Neutral Players',
-		PlayerGroup.all_players: 'All Players',
-		PlayerGroup.force_1: 'Force 1',
-		PlayerGroup.force_2: 'Force 2',
-		PlayerGroup.force_3: 'Force 3',
-		PlayerGroup.force_4: 'Force 4',
-		PlayerGroup.unused_1: 'Unused 1',
-		PlayerGroup.unused_2: 'Unused 2',
-		PlayerGroup.unused_3: 'Unused 3',
-		PlayerGroup.unused_4: 'Unused 4',
-		PlayerGroup.non_allied_victory_players: 'Non Allied Victory Players'
+		Constants.PlayerGroup.p1: 'Player 1',
+		Constants.PlayerGroup.p2: 'Player 2',
+		Constants.PlayerGroup.p3: 'Player 3',
+		Constants.PlayerGroup.p4: 'Player 4',
+		Constants.PlayerGroup.p5: 'Player 5',
+		Constants.PlayerGroup.p6: 'Player 6',
+		Constants.PlayerGroup.p7: 'Player 7',
+		Constants.PlayerGroup.p8: 'Player 8',
+		Constants.PlayerGroup.p9: 'Player 9',
+		Constants.PlayerGroup.p10: 'Player 10',
+		Constants.PlayerGroup.p11: 'Player 11',
+		Constants.PlayerGroup.p12: 'Player 12',
+		Constants.PlayerGroup.current_player: 'Current Player',
+		Constants.PlayerGroup.foes: 'Foes',
+		Constants.PlayerGroup.allies: 'Allies',
+		Constants.PlayerGroup.neutral_players: 'Neutral Players',
+		Constants.PlayerGroup.all_players: 'All Players',
+		Constants.PlayerGroup.force_1: 'Force 1',
+		Constants.PlayerGroup.force_2: 'Force 2',
+		Constants.PlayerGroup.force_3: 'Force 3',
+		Constants.PlayerGroup.force_4: 'Force 4',
+		Constants.PlayerGroup.unused_1: 'Unused 1',
+		Constants.PlayerGroup.unused_2: 'Unused 2',
+		Constants.PlayerGroup.unused_3: 'Unused 3',
+		Constants.PlayerGroup.unused_4: 'Unused 4',
+		Constants.PlayerGroup.non_allied_victory_players: 'Non Allied Victory Players'
 	})
 
 	def name(self) -> str:
@@ -196,9 +196,9 @@ class PlayerParameter(ConditionParameter, HasKeywords):
 
 class ComparisonParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		Comparison.at_least: 'At Least',
-		Comparison.at_most: 'At Most',
-		Comparison.exactly: 'Exactly'
+		Constants.Comparison.at_least: 'At Least',
+		Constants.Comparison.at_most: 'At Most',
+		Constants.Comparison.exactly: 'Exactly'
 	})
 	def name(self) -> str:
 		return 'Comparison'
@@ -229,11 +229,11 @@ class ComparisonParameter(ConditionParameter, HasKeywords):
 
 class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		UnitType.none: 'None',
-		UnitType.any: 'Any Unit',
-		UnitType.men: 'Men',
-		UnitType.buildings: 'Buildings',
-		UnitType.factories: 'Factories'
+		Constants.UnitType.none: 'None',
+		Constants.UnitType.any: 'Any Unit',
+		Constants.UnitType.men: 'Men',
+		Constants.UnitType.buildings: 'Buildings',
+		Constants.UnitType.factories: 'Factories'
 	})
 
 	def name(self) -> str:
@@ -280,7 +280,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		condition.unit_type = self._compile(value, trg)
-		condition.flags |= ConditionFlag.unit_used
+		condition.flags |= Constants.ConditionFlag.unit_used
 		return None
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
@@ -288,7 +288,7 @@ class UnitTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		action.unit_type = self._compile(value, trg)
-		action.flags |= ActionFlag.unit_used
+		action.flags |= Constants.ActionFlag.unit_used
 		return None
 
 class LocationParameter(ConditionParameter, ActionParameter, HasKeywords):
@@ -344,9 +344,9 @@ class LocationParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 class ResourceTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		ResourceType.ore: 'Ore',
-		ResourceType.gas: 'Gas',
-		ResourceType.ore_and_gas: 'Ore and Gas'
+		Constants.ResourceType.ore: 'Ore',
+		Constants.ResourceType.gas: 'Gas',
+		Constants.ResourceType.ore_and_gas: 'Ore and Gas'
 	})
 
 	def name(self) -> str:
@@ -390,14 +390,14 @@ class ResourceTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 class ScoreTypeParameter(ConditionParameter, ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		ScoreType.total: 'Total',
-		ScoreType.units: 'Units',
-		ScoreType.buildings: 'Buildings',
-		ScoreType.units_and_buildings: 'Units and Buildings',
-		ScoreType.kills: 'Kills',
-		ScoreType.razings: 'Razings',
-		ScoreType.kills_and_razings: 'Kills and Razings',
-		ScoreType.custom: 'Custom'
+		Constants.ScoreType.total: 'Total',
+		Constants.ScoreType.units: 'Units',
+		Constants.ScoreType.buildings: 'Buildings',
+		Constants.ScoreType.units_and_buildings: 'Units and Buildings',
+		Constants.ScoreType.kills: 'Kills',
+		Constants.ScoreType.razings: 'Razings',
+		Constants.ScoreType.kills_and_razings: 'Kills and Razings',
+		Constants.ScoreType.custom: 'Custom'
 	})
 
 	def name(self) -> str:
@@ -479,8 +479,8 @@ class SwitchParameter(ConditionParameter, ActionParameter, HasKeywords):
 
 class SwitchStateParameter(ConditionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		SwitchState.set: 'Set',
-		SwitchState.cleared: 'Cleared'
+		Constants.SwitchState.set: 'Set',
+		Constants.SwitchState.cleared: 'Cleared'
 	})
 
 	def name(self) -> str:
@@ -608,14 +608,14 @@ class UnitParameter(ActionParameter):
 		if unit_type is None:
 			raise PyMSError('Parameter', f"'{value}' is an invalid Unit (value must be in the range 0 to 227, or a full unit name)")
 		action.unit_type = unit_type
-		action.flags |= ActionFlag.unit_used
+		action.flags |= Constants.ActionFlag.unit_used
 		return None
 
 class ModifierParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		NumberModifier.set: 'Set To',
-		NumberModifier.add: 'Add',
-		NumberModifier.subtract: 'Subtract'
+		Constants.NumberModifier.set: 'Set To',
+		Constants.NumberModifier.add: 'Add',
+		Constants.NumberModifier.subtract: 'Subtract'
 	})
 
 	def name(self) -> str:
@@ -688,15 +688,15 @@ class DisplayParameter(ActionParameter, HasKeywords):
 		return ('Always Display', 'Only With Subtitles')
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
-		if action.flags & ActionFlag.always_display:
+		if action.flags & Constants.ActionFlag.always_display:
 			return 'Always Display'
 		return 'Only With Subtitles'
 
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		if value == 'Always Display':
-			action.flags |= ActionFlag.always_display
+			action.flags |= Constants.ActionFlag.always_display
 		elif value == 'Only With Subtitles':
-			action.flags &= ~ActionFlag.always_display
+			action.flags &= ~Constants.ActionFlag.always_display
 		else:
 			raise PyMSError('Parameter', f"'{value}' is an invalid Display type (value must be one of the keywords: Always Display, Only With Subtitles)")
 		return None
@@ -751,7 +751,7 @@ class PropertiesParameter(ActionParameter, HasKeywords):
 			index = int(value)
 			if 0 < index < 65:
 				action.unit_properties_index = index - 1
-				action.flags |= ActionFlag.unit_property_used
+				action.flags |= Constants.ActionFlag.unit_property_used
 				return None
 		except Exception:
 			pass
@@ -759,10 +759,10 @@ class PropertiesParameter(ActionParameter, HasKeywords):
 
 class SwitchActionParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		SwitchAction.set: 'Set',
-		SwitchAction.clear: 'Clear',
-		SwitchAction.toggle: 'Toggle',
-		SwitchAction.randomize: 'Randomize'
+		Constants.SwitchAction.set: 'Set',
+		Constants.SwitchAction.clear: 'Clear',
+		Constants.SwitchAction.toggle: 'Toggle',
+		Constants.SwitchAction.randomize: 'Randomize'
 	})
 
 	def name(self) -> str:
@@ -794,9 +794,9 @@ class SwitchActionParameter(ActionParameter, HasKeywords):
 
 class StateActionParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		StateAction.set: 'Set',
-		StateAction.clear: 'Clear',
-		StateAction.toggle: 'Toggle'
+		Constants.StateAction.set: 'Set',
+		Constants.StateAction.clear: 'Clear',
+		Constants.StateAction.toggle: 'Toggle'
 	})
 
 	def name(self) -> str:
@@ -867,9 +867,9 @@ class AIScriptParameter(ActionParameter):
 
 class OrderParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		Order.move: 'Move',
-		Order.patrol: 'Patrol',
-		Order.attack: 'Attack',
+		Constants.Order.move: 'Move',
+		Constants.Order.patrol: 'Patrol',
+		Constants.Order.attack: 'Attack',
 	})
 
 	def name(self) -> str:
@@ -925,9 +925,9 @@ class PercentageParameter(ActionParameter):
 
 class AllianceStatusParameter(ActionParameter, HasKeywords):
 	OPTIONS = Bidict({
-		AllianceStatus.enemy: 'Enemy',
-		AllianceStatus.ally: 'Ally',
-		AllianceStatus.allied_victory: 'Allied Victory'
+		Constants.AllianceStatus.enemy: 'Enemy',
+		Constants.AllianceStatus.ally: 'Ally',
+		Constants.AllianceStatus.allied_victory: 'Allied Victory'
 	})
 
 	def name(self) -> str:
@@ -1073,7 +1073,7 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		player = self._compile(value)
 		condition.unit_type = 0
-		condition.flags |= ConditionFlag.unit_used
+		condition.flags |= Constants.ConditionFlag.unit_used
 		condition.player_group = player
 		return None
 
@@ -1083,7 +1083,7 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		player = self._compile(value)
 		action.unit_type = 0
-		action.flags |= ActionFlag.unit_used
+		action.flags |= Constants.ActionFlag.unit_used
 		action.player_group = player
 		return None
 
@@ -1098,7 +1098,7 @@ class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
 		return ('No Mask',)
 
 	def _decompile(self, mask: int, masked: int) -> str:
-		if masked != Mask.enabled:
+		if masked != Constants.Mask.enabled:
 			return 'No Mask'
 		return f"{mask:#010X}"
 
@@ -1122,7 +1122,7 @@ class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		mask = self._compile(value)
 		condition.mask = mask
-		condition.masked = Mask.enabled if mask else Mask.disabled
+		condition.masked = Constants.Mask.enabled if mask else Constants.Mask.disabled
 		return None
 
 	def action_decompile(self, action: Action, trg: TRG) -> str:
@@ -1131,5 +1131,5 @@ class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
 	def action_compile(self, value: str, action: Action, trg: TRG) -> PyMSWarning | None:
 		mask = self._compile(value)
 		action.mask = mask
-		action.masked = Mask.enabled if mask else Mask.disabled
+		action.masked = Constants.Mask.enabled if mask else Constants.Mask.disabled
 		return None

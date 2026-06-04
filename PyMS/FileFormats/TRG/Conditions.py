@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PyMS.Utilities import IO
 
-from .Parameters import *
+from .Parameters import ByteParameter, ComparisonParameter, ConditionParameter, LocationParameter, LongParameter, MaskParameter, MemoryParameter, NumberParameter, PlayerParameter, ResourceTypeParameter, ScoreTypeParameter, ShortParamater, SwitchParameter, SwitchStateParameter, UnitTypeParameter
 from .Condition import Condition
 from .Constants import ConditionType, Matches, PlayerGroup, Mask
 

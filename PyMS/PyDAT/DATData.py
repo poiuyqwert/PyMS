@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .DataID import DATID
 
-from ..FileFormats.DAT import *
+from ..FileFormats import DAT
 from ..FileFormats.DAT.AbstractDAT import AbstractDAT
 
 from ..Utilities.MPQHandler import MPQHandler
@@ -16,16 +16,16 @@ from typing import TYPE_CHECKING, Generic, TypeVar, Type
 if TYPE_CHECKING:
 	from .DataContext import DataContext
 
-DAT = TypeVar('DAT', bound=AbstractDAT)
+DATType = TypeVar('DATType', bound=AbstractDAT)
 
-class DATData(Generic[DAT]):
-	def __init__(self, data_context: DataContext, *, dat_id: DATID, dat_type: Type[DAT], data_file: str, entry_type_name: str) -> None:
+class DATData(Generic[DATType]):
+	def __init__(self, data_context: DataContext, *, dat_id: DATID, dat_type: Type[DATType], data_file: str, entry_type_name: str) -> None:
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.dat_type = dat_type
 		self.data_file = data_file
-		self.dat: DAT | None = None
-		self.default_dat: DAT | None = None
+		self.dat: DATType | None = None
+		self.default_dat: DATType | None = None
 		self.entry_type_name = entry_type_name
 		self.file_path: str | None = None
 		self.names: tuple[str, ...] = ()
@@ -80,7 +80,7 @@ class DATData(Generic[DAT]):
 	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
 		with open(path, 'r', encoding='utf-8') as f:
 			contents = f.readlines()
-		self.name_overrides = DATEntryName.parse_overrides(contents)
+		self.name_overrides = DAT.DATEntryName.parse_overrides(contents)
 		if update_names:
 			self.update_names()
 
@@ -93,14 +93,14 @@ class DATData(Generic[DAT]):
 		entry_count = self.entry_count()
 		names: list[str] = []
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
+			names.append(DAT.DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides))
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
 	def entry_name(self, entry_id: int) -> str:
 		if entry_id >= len(self.names):
 			entry_count = self.entry_count()
-			return DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
+			return DAT.DATEntryName.generic(entry_id, entry_type=self.entry_type_name, id_count=entry_count, data_names=Assets.data_cache(self.data_file), name_overrides=self.name_overrides)
 		return self.names[entry_id]
 
 	def is_expanded(self) -> bool:
@@ -125,15 +125,15 @@ class DATData(Generic[DAT]):
 			self.update_names()
 		return expanded
 
-class UnitsDATData(DATData[UnitsDAT]):
+class UnitsDATData(DATData[DAT.UnitsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.units, dat_type=UnitsDAT, data_file=Assets.DataReference.Units, entry_type_name='Unit')
+		DATData.__init__(self, data_context, dat_id=DATID.units, dat_type=DAT.UnitsDAT, data_file=Assets.DataReference.Units, entry_type_name='Unit')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.unit(entry_id,
+			names.append(DAT.DATEntryName.unit(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				stat_txt=self.data_context.stat_txt.strings,
 				unitnamestbl=self.data_context.unitnamestbl.strings,
@@ -145,15 +145,15 @@ class UnitsDATData(DATData[UnitsDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class WeaponsDATData(DATData[WeaponsDAT]):
+class WeaponsDATData(DATData[DAT.WeaponsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.weapons, dat_type=WeaponsDAT, data_file=Assets.DataReference.Weapons, entry_type_name='Weapon')
+		DATData.__init__(self, data_context, dat_id=DATID.weapons, dat_type=DAT.WeaponsDAT, data_file=Assets.DataReference.Weapons, entry_type_name='Weapon')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.weapon(entry_id,
+			names.append(DAT.DATEntryName.weapon(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				weaponsdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
@@ -166,15 +166,15 @@ class WeaponsDATData(DATData[WeaponsDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class FlingyDATData(DATData[FlingyDAT]):
+class FlingyDATData(DATData[DAT.FlingyDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.flingy, dat_type=FlingyDAT, data_file=Assets.DataReference.Flingy, entry_type_name='Flingy')
+		DATData.__init__(self, data_context, dat_id=DATID.flingy, dat_type=DAT.FlingyDAT, data_file=Assets.DataReference.Flingy, entry_type_name='Flingy')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.flingy(entry_id,
+			names.append(DAT.DATEntryName.flingy(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				flingydat=self.dat,
 				spritesdat=self.data_context.dat_data(DATID.sprites).dat,
@@ -186,15 +186,15 @@ class FlingyDATData(DATData[FlingyDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class SpritesDATData(DATData[SpritesDAT]):
+class SpritesDATData(DATData[DAT.SpritesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.sprites, dat_type=SpritesDAT, data_file=Assets.DataReference.Sprites, entry_type_name='Sprite')
+		DATData.__init__(self, data_context, dat_id=DATID.sprites, dat_type=DAT.SpritesDAT, data_file=Assets.DataReference.Sprites, entry_type_name='Sprite')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.sprite(entry_id,
+			names.append(DAT.DATEntryName.sprite(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				spritesdat=self.dat,
 				imagesdat=self.data_context.dat_data(DATID.images).dat,
@@ -205,15 +205,15 @@ class SpritesDATData(DATData[SpritesDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class ImagesDATData(DATData[ImagesDAT]):
+class ImagesDATData(DATData[DAT.ImagesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.images, dat_type=ImagesDAT, data_file=Assets.DataReference.Images, entry_type_name='Image')
+		DATData.__init__(self, data_context, dat_id=DATID.images, dat_type=DAT.ImagesDAT, data_file=Assets.DataReference.Images, entry_type_name='Image')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.image(entry_id,
+			names.append(DAT.DATEntryName.image(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				imagesdat=self.dat,
 				imagestbl=self.data_context.imagestbl.strings,
@@ -223,15 +223,15 @@ class ImagesDATData(DATData[ImagesDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class UpgradesDATData(DATData[UpgradesDAT]):
+class UpgradesDATData(DATData[DAT.UpgradesDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.upgrades, dat_type=UpgradesDAT, data_file=Assets.DataReference.Upgrades, entry_type_name='Upgrade')
+		DATData.__init__(self, data_context, dat_id=DATID.upgrades, dat_type=DAT.UpgradesDAT, data_file=Assets.DataReference.Upgrades, entry_type_name='Upgrade')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.upgrade(entry_id,
+			names.append(DAT.DATEntryName.upgrade(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				upgradesdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
@@ -244,15 +244,15 @@ class UpgradesDATData(DATData[UpgradesDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class TechDATData(DATData[TechDAT]):
+class TechDATData(DATData[DAT.TechDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.techdata, dat_type=TechDAT, data_file=Assets.DataReference.Techdata, entry_type_name='Technology')
+		DATData.__init__(self, data_context, dat_id=DATID.techdata, dat_type=DAT.TechDAT, data_file=Assets.DataReference.Techdata, entry_type_name='Technology')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.tech(entry_id,
+			names.append(DAT.DATEntryName.tech(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				techdatadat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,
@@ -265,15 +265,15 @@ class TechDATData(DATData[TechDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class SoundsDATData(DATData[SoundsDAT]):
+class SoundsDATData(DATData[DAT.SoundsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.sfxdata, dat_type=SoundsDAT, data_file=Assets.DataReference.Sfxdata, entry_type_name='Sound')
+		DATData.__init__(self, data_context, dat_id=DATID.sfxdata, dat_type=DAT.SoundsDAT, data_file=Assets.DataReference.Sfxdata, entry_type_name='Sound')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.sound(entry_id,
+			names.append(DAT.DATEntryName.sound(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				sfxdatadat=self.dat,
 				sfxdatatbl=self.data_context.sfxdatatbl.strings,
@@ -285,15 +285,15 @@ class SoundsDATData(DATData[SoundsDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class PortraitsDATData(DATData[PortraitsDAT]):
+class PortraitsDATData(DATData[DAT.PortraitsDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.portdata, dat_type=PortraitsDAT, data_file=Assets.DataReference.Portdata, entry_type_name='Portrait')
+		DATData.__init__(self, data_context, dat_id=DATID.portdata, dat_type=DAT.PortraitsDAT, data_file=Assets.DataReference.Portdata, entry_type_name='Portrait')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.portrait(entry_id,
+			names.append(DAT.DATEntryName.portrait(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				portdatadat=self.dat,
 				portdatatbl=self.data_context.portdatatbl.strings,
@@ -305,15 +305,15 @@ class PortraitsDATData(DATData[PortraitsDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class CampaignDATData(DATData[CampaignDAT]):
+class CampaignDATData(DATData[DAT.CampaignDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.mapdata, dat_type=CampaignDAT, data_file=Assets.DataReference.Mapdata, entry_type_name='Map')
+		DATData.__init__(self, data_context, dat_id=DATID.mapdata, dat_type=DAT.CampaignDAT, data_file=Assets.DataReference.Mapdata, entry_type_name='Map')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.map(entry_id,
+			names.append(DAT.DATEntryName.map(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				mapdatadat=self.dat,
 				mapdatatbl=self.data_context.mapdatatbl.strings,
@@ -324,15 +324,15 @@ class CampaignDATData(DATData[CampaignDAT]):
 		self.names = tuple(names)
 		self.update_cb(self.dat_id)
 
-class OrdersDATData(DATData[OrdersDAT]):
+class OrdersDATData(DATData[DAT.OrdersDAT]):
 	def __init__(self, data_context: DataContext) -> None:
-		DATData.__init__(self, data_context, dat_id=DATID.orders, dat_type=OrdersDAT, data_file=Assets.DataReference.Orders, entry_type_name='Order')
+		DATData.__init__(self, data_context, dat_id=DATID.orders, dat_type=DAT.OrdersDAT, data_file=Assets.DataReference.Orders, entry_type_name='Order')
 
 	def update_names(self) -> None:
 		names = []
 		entry_count = self.entry_count()
 		for entry_id in range(entry_count):
-			names.append(DATEntryName.order(entry_id,
+			names.append(DAT.DATEntryName.order(entry_id,
 				data_names=Assets.data_cache(self.data_file),
 				ordersdat=self.dat,
 				stat_txt=self.data_context.stat_txt.strings,

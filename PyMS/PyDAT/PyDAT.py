@@ -1,6 +1,6 @@
 
 from .Config import PyDATConfig
-from .Tabs import *
+from . import Tabs
 from .Tabs.DATTab import DATTab
 from .DataContext import DataContext
 from .NamesDisplay import NamesDisplaySetting
@@ -11,7 +11,6 @@ from .DataID import DATID, AnyID
 from .Delegates import MainDelegate
 
 from ..FileFormats.MPQ.MPQ import MPQ
-from ..FileFormats.DAT import *
 
 from ..Utilities.utils import lpad
 from ..Utilities import registry
@@ -164,17 +163,17 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.dattabs = Notebook(self.hor_pane)
 		self.pages: list[DATTab] = []
 		tabs = (
-			('Units', UnitsTab),
-			('Weapons', WeaponsTab),
-			('Flingy', FlingyTab),
-			('Sprites', SpritesTab),
-			('Images', ImagesTab),
-			('Upgrades', UpgradesTab),
-			('Techdata', TechnologyTab),
-			('Sfxdata', SoundsTab),
-			('Portdata', PortraitsTab),
-			('Mapdata', MapsTab),
-			('Orders', OrdersTab),
+			('Units', Tabs.UnitsTab),
+			('Weapons', Tabs.WeaponsTab),
+			('Flingy', Tabs.FlingyTab),
+			('Sprites', Tabs.SpritesTab),
+			('Images', Tabs.ImagesTab),
+			('Upgrades', Tabs.UpgradesTab),
+			('Techdata', Tabs.TechnologyTab),
+			('Sfxdata', Tabs.SoundsTab),
+			('Portdata', Tabs.PortraitsTab),
+			('Mapdata', Tabs.MapsTab),
+			('Orders', Tabs.OrdersTab),
 		)
 		for name,tab in tabs:
 			page = tab(self.dattabs, self)
@@ -355,7 +354,7 @@ class PyDAT(MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.active_tab().copy()
 
 	def copy_subtab(self) -> None:
-		tab = cast(UnitsTab, self.dattabs.active)
+		tab = cast(Tabs.UnitsTab, self.dattabs.active)
 		tab.copy_subtab()
 
 	def paste(self) -> None:

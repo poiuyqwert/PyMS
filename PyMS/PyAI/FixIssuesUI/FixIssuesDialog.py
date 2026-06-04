@@ -1,6 +1,6 @@
 
 from ..Config import PyAIConfig
-from .Resolutions import *
+from .Resolutions import AddRefResolution, ChangeIDResolution, DeleteResolution, Resolution
 from ..Delegates import MainDelegate
 from .PreviewScriptDialog import PreviewScriptDialog
 

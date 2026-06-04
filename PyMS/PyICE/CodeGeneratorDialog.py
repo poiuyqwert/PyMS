@@ -1,6 +1,6 @@
 
 from .Config import PyICEConfig
-from .CodeGenerators import *
+from .CodeGenerators import CodeGeneratorTypeList, CodeGeneratorTypeMath, CodeGeneratorTypeRange, CodeGeneratorVariable, CodeGeneratorVariableEditor
 from .NameDialog import NameDialog
 from .ManageCodeGeneratorPresetsDialog import ManageCodeGeneratorPresetsDialog
 from .CodeGenerators.GeneratorPreset import GeneratorPreset

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .ActionDefinition import ActionDefinition, BasicActionDefinition, RawActionDefinition
-from .Parameters import *
+from .Parameters import ModifierParameter, SlotParameter, StringParameter, TimeParameter, UnitParameter, WAVParameter
 from .Action import Action
 from .Constants import ActionType, BriefingActionType, Matches
 

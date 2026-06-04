@@ -5,7 +5,7 @@ from .TBLData import TBLData
 from .IconData import IconData
 from .DataID import DATID, DataID, AnyID
 
-from ..FileFormats.DAT import *
+from ..FileFormats.DAT import DATImage
 from ..FileFormats.Palette import Palette
 from ..FileFormats.GRP import frame_to_photo, CacheGRP, RLEFunc, rle_normal, rle_outline, rle_shadow, Outline, ImageWithBounds
 from ..FileFormats.MPQ.MPQ import MPQ

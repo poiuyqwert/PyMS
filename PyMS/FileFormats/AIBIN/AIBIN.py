@@ -8,7 +8,6 @@ from ...Utilities.PyMSError import PyMSError
 from ...Utilities.BytesScanner import  BytesScanner
 from ...Utilities.CodeHandlers.ByteCodeDecompiler import ByteCodeDecompiler
 from ...Utilities.CodeHandlers.CodeType import CodeBlock
-from ...Utilities.CodeHandlers.Lexer import *
 from ...Utilities.CodeHandlers.DecompileStrategy import DecompileStrategyBuilder
 from ...Utilities.CodeHandlers.SourceCodeSerializer import SourceCodeSerializer
 from ...Utilities import Struct

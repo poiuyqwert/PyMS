@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .ActionDefinition import ActionDefinition, BasicActionDefinition, MemoryActionDefinition, RawActionDefinition
-from .Parameters import *
+from .Parameters import AIScriptParameter, AllianceStatusParameter, DisplayParameter, LocationParameter, ModifierParameter, NumberParameter, OrderParameter, PercentageParameter, PlayerParameter, PropertiesParameter, QuantityParameter, ResourceTypeParameter, ScoreTypeParameter, StateActionParameter, StringParameter, SwitchActionParameter, SwitchParameter, TimeParameter, UnitParameter, UnitTypeParameter, WAVParameter
 from .Action import Action
 from .Constants import ActionType, Matches
 

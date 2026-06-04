@@ -1,9 +1,9 @@
 
 from .Trigger import Trigger
 from .UnitProperties import UnitProperties, properties_definitions, PropertyFieldDefinition, PropertyStateDefinition
-from .Constants import ConditionType, ConditionFlag, ActionType, ActionFlag
+from .Constants import ConditionType, ConditionFlag, ActionType, ActionFlag, PlayerGroup
 from .CodeHandler import TRGLexer
-from .Parameters import PlayerParameter, PlayerGroup
+from .Parameters import PlayerParameter
 from . import Conditions
 from . import Actions
 from .Condition import Condition

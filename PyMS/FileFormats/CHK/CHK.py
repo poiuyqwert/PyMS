@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .CHKRequirements import CHKRequirements
 from .CHKSectionUnknown import CHKSectionUnknown
-from .Sections import *
+from . import Sections
 
 from ...FileFormats import TBL
 from ...FileFormats.AIBIN import AIBIN
@@ -25,44 +25,44 @@ S = TypeVar('S', bound=CHKSection)
 
 class CHK:
 	SECTION_TYPES: dict[bytes, Type[CHKSection]] = {
-		CHKSectionTYPE.NAME:CHKSectionTYPE,
-		CHKSectionVER.NAME:CHKSectionVER,
-		CHKSectionIVER.NAME:CHKSectionIVER,
-		CHKSectionIVE2.NAME:CHKSectionIVE2,
-		CHKSectionVCOD.NAME:CHKSectionVCOD,
-		CHKSectionIOWN.NAME:CHKSectionIOWN,
-		CHKSectionOWNR.NAME:CHKSectionOWNR,
-		CHKSectionERA.NAME:CHKSectionERA,
-		CHKSectionDIM.NAME:CHKSectionDIM,
-		CHKSectionSIDE.NAME:CHKSectionSIDE,
-		CHKSectionMTXM.NAME:CHKSectionMTXM,
-		CHKSectionPUNI.NAME:CHKSectionPUNI,
-		CHKSectionUPGR.NAME:CHKSectionUPGR,
-		CHKSectionPTEC.NAME:CHKSectionPTEC,
-		CHKSectionUNIT.NAME:CHKSectionUNIT,
-		CHKSectionTILE.NAME:CHKSectionTILE,
-		CHKSectionDD2.NAME:CHKSectionDD2,
-		CHKSectionTHG2.NAME:CHKSectionTHG2,
-		CHKSectionMASK.NAME:CHKSectionMASK,
-		CHKSectionSTR.NAME:CHKSectionSTR,
-		CHKSectionUPRP.NAME:CHKSectionUPRP,
-		CHKSectionUPUS.NAME:CHKSectionUPUS,
-		CHKSectionMRGN.NAME:CHKSectionMRGN,
-		CHKSectionTRIG.NAME:CHKSectionTRIG,
-		CHKSectionMBRF.NAME:CHKSectionMBRF,
-		CHKSectionSPRP.NAME:CHKSectionSPRP,
-		CHKSectionFORC.NAME:CHKSectionFORC,
-		CHKSectionWAV.NAME:CHKSectionWAV,
-		CHKSectionUNIS.NAME:CHKSectionUNIS,
-		CHKSectionUPGS.NAME:CHKSectionUPGS,
-		CHKSectionTECS.NAME:CHKSectionTECS,
-		CHKSectionSWNM.NAME:CHKSectionSWNM,
-		CHKSectionCOLR.NAME:CHKSectionCOLR,
-		CHKSectionPUPx.NAME:CHKSectionPUPx,
-		CHKSectionPTEx.NAME:CHKSectionPTEx,
-		CHKSectionUNIx.NAME:CHKSectionUNIx,
-		CHKSectionUPGx.NAME:CHKSectionUPGx,
-		CHKSectionTECx.NAME:CHKSectionTECx
+		Sections.CHKSectionTYPE.NAME:Sections.CHKSectionTYPE,
+		Sections.CHKSectionVER.NAME:Sections.CHKSectionVER,
+		Sections.CHKSectionIVER.NAME:Sections.CHKSectionIVER,
+		Sections.CHKSectionIVE2.NAME:Sections.CHKSectionIVE2,
+		Sections.CHKSectionVCOD.NAME:Sections.CHKSectionVCOD,
+		Sections.CHKSectionIOWN.NAME:Sections.CHKSectionIOWN,
+		Sections.CHKSectionOWNR.NAME:Sections.CHKSectionOWNR,
+		Sections.CHKSectionERA.NAME:Sections.CHKSectionERA,
+		Sections.CHKSectionDIM.NAME:Sections.CHKSectionDIM,
+		Sections.CHKSectionSIDE.NAME:Sections.CHKSectionSIDE,
+		Sections.CHKSectionMTXM.NAME:Sections.CHKSectionMTXM,
+		Sections.CHKSectionPUNI.NAME:Sections.CHKSectionPUNI,
+		Sections.CHKSectionUPGR.NAME:Sections.CHKSectionUPGR,
+		Sections.CHKSectionPTEC.NAME:Sections.CHKSectionPTEC,
+		Sections.CHKSectionUNIT.NAME:Sections.CHKSectionUNIT,
+		Sections.CHKSectionTILE.NAME:Sections.CHKSectionTILE,
+		Sections.CHKSectionDD2.NAME:Sections.CHKSectionDD2,
+		Sections.CHKSectionTHG2.NAME:Sections.CHKSectionTHG2,
+		Sections.CHKSectionMASK.NAME:Sections.CHKSectionMASK,
+		Sections.CHKSectionSTR.NAME:Sections.CHKSectionSTR,
+		Sections.CHKSectionUPRP.NAME:Sections.CHKSectionUPRP,
+		Sections.CHKSectionUPUS.NAME:Sections.CHKSectionUPUS,
+		Sections.CHKSectionMRGN.NAME:Sections.CHKSectionMRGN,
+		Sections.CHKSectionTRIG.NAME:Sections.CHKSectionTRIG,
+		Sections.CHKSectionMBRF.NAME:Sections.CHKSectionMBRF,
+		Sections.CHKSectionSPRP.NAME:Sections.CHKSectionSPRP,
+		Sections.CHKSectionFORC.NAME:Sections.CHKSectionFORC,
+		Sections.CHKSectionWAV.NAME:Sections.CHKSectionWAV,
+		Sections.CHKSectionUNIS.NAME:Sections.CHKSectionUNIS,
+		Sections.CHKSectionUPGS.NAME:Sections.CHKSectionUPGS,
+		Sections.CHKSectionTECS.NAME:Sections.CHKSectionTECS,
+		Sections.CHKSectionSWNM.NAME:Sections.CHKSectionSWNM,
+		Sections.CHKSectionCOLR.NAME:Sections.CHKSectionCOLR,
+		Sections.CHKSectionPUPx.NAME:Sections.CHKSectionPUPx,
+		Sections.CHKSectionPTEx.NAME:Sections.CHKSectionPTEx,
+		Sections.CHKSectionUNIx.NAME:Sections.CHKSectionUNIx,
+		Sections.CHKSectionUPGx.NAME:Sections.CHKSectionUPGx,
+		Sections.CHKSectionTECx.NAME:Sections.CHKSectionTECx
 	}
 
 	def __init__(self, stat_txt: TBL.TBL | str | None = None, aiscript: AIBIN.AIBIN | str | None = None) -> None:
@@ -87,7 +87,7 @@ class CHK:
 		sect_class = CHK.SECTION_TYPES[name]
 		required = False
 
-		if name == CHKSectionVER.NAME:
+		if name == Sections.CHKSectionVER.NAME:
 			required = True
 		elif sect_class:
 			required = sect_class.REQUIREMENTS.is_required(self, game_mode)
@@ -108,10 +108,10 @@ class CHK:
 		return sect
 
 	def player_color(self, player: int) -> int:
-		colors = CHKSectionCOLR.DEFAULT_COLORS
-		if colr := self.get_section(CHKSectionCOLR):
+		colors = Sections.CHKSectionCOLR.DEFAULT_COLORS
+		if colr := self.get_section(Sections.CHKSectionCOLR):
 			colors = colr.colors
-		colors.extend((CHKSectionCOLR.GREEN,CHKSectionCOLR.PALE_YELLOW,CHKSectionCOLR.TAN,CHKSectionCOLR.NEUTRAL))
+		colors.extend((Sections.CHKSectionCOLR.GREEN,Sections.CHKSectionCOLR.PALE_YELLOW,Sections.CHKSectionCOLR.TAN,Sections.CHKSectionCOLR.NEUTRAL))
 		return colors[player]
 
 	def load_file(self, file: str | BinaryIO) -> None:
