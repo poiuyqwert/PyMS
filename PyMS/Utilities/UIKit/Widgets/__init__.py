@@ -6,3 +6,26 @@ from .Standard import *
 from .Canvas import Canvas
 from .Menu import Menu
 from .Extensions import WindowExtensions
+
+__all__ = [
+	'Button',
+	'Canvas',
+	'Checkbutton',
+	'Combobox',
+	'Entry',
+	'Frame',
+	'Label',
+	'LabelFrame',
+	'Listbox',
+	'Menu',
+	'Misc',
+	'PanedWindow',
+	'Radiobutton',
+	'Scrollbar',
+	'Text',
+	'Tk',
+	'Toplevel',
+	'Treeview',
+	'Widget',
+	'WindowExtensions',
+]
