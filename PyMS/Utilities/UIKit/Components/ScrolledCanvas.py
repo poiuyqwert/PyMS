@@ -1,8 +1,10 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from ..Widgets import *
+from ..Widgets import Canvas, Frame, Misc, Scrollbar, Widget
+from ..Constants import EW, HORIZONTAL, NS, NSEW, SUNKEN
+from .. import Event
 from ..ShowScrollbar import ShowScrollbar
-from ..EventPattern import *
+from ..EventPattern import EventPropogation, Modifier, Mouse, WidgetEvent
 
 from typing import Callable, Any
 

@@ -1,9 +1,11 @@
 
 from .DropDownChooser import DropDownChooser
-from ..Widgets import *
+from ..Widgets import Button, Entry, Frame, Misc
+from ..Constants import END, LEFT, NORMAL, RIGHT, SUNKEN, X, Y
+from ..Variables import IntVar, IntegerVar, StringVar, Variable
+from .. import Event
 from ..Font import Font
-from ..EventPattern import *
-from ..Variables import IntegerVar
+from ..EventPattern import EventPropogation, Focus, Key, Mouse
 
 from ... import Assets
 

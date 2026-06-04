@@ -1,7 +1,11 @@
 
+from tkinter import Event
+
+from .Constants import *
+from .Variables import *
+from .Images import *
 from .Widgets import *
 from .Components import *
-from .Variables import *
 from .Colors import *
 from .Font import *
 from .Utils import *

@@ -1,5 +1,6 @@
 
-from ..Widgets import *
+from ..Widgets import Checkbutton, Misc
+from ..Variables import IntVar
 
 from typing import Any
 

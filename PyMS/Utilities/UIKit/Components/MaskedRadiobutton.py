@@ -1,5 +1,6 @@
 
-from ..Widgets import *
+from ..Widgets import Misc, Radiobutton
+from ..Variables import IntVar
 
 from typing import Any
 

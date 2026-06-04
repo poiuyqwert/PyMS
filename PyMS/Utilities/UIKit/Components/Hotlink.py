@@ -1,7 +1,8 @@
 
-from ..Widgets import *
+from ..Widgets import Label, Misc
+from .. import Event
 from ..Font import Font
-from ..EventPattern import *
+from ..EventPattern import Cursor, Mouse
 
 import webbrowser
 

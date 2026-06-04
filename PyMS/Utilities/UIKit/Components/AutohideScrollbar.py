@@ -1,5 +1,5 @@
 
-from ..Widgets import *
+from ..Widgets import Misc, Scrollbar
 
 from typing import Callable, Any
 

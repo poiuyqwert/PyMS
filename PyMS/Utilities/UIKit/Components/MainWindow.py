@@ -1,5 +1,5 @@
 
-from ..Widgets import *
+from ..Widgets import Tk
 from ..Widgets.Extensions import WindowExtensions
 
 class MainWindow(Tk, WindowExtensions):

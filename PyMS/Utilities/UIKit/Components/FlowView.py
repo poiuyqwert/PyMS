@@ -1,7 +1,9 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from ..Widgets import *
-from ..EventPattern import *
+from ..Widgets import Canvas, Frame, Misc, Scrollbar, Widget
+from ..Constants import EW, HORIZONTAL, NS, NSEW, NW
+from .. import Event
+from ..EventPattern import Focus, Modifier, Mouse, WidgetEvent
 from ..Utils import remove_bind
 
 from dataclasses import dataclass

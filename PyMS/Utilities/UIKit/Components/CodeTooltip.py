@@ -1,6 +1,7 @@
 
-from ..Widgets import *
-from ..EventPattern import *
+from ..Widgets import Frame, Label, Text
+from ..Constants import FLAT, LEFT, SOLID
+from ..EventPattern import Cursor, Mouse
 from .Tooltip import Tooltip, TooltipWindow
 
 class CodeTooltip(Tooltip):

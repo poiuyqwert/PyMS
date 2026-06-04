@@ -1,8 +1,8 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from ..Widgets import *
+from ..Widgets import Frame, Misc, Scrollbar, Treeview
+from ..Constants import EW, HORIZONTAL, NS, NSEW, SUNKEN
 from ..ShowScrollbar import ShowScrollbar
-from ..EventPattern import *
 
 from typing import Any
 

@@ -1,7 +1,9 @@
 
-from ..Widgets import *
+from ..Widgets import Button, Frame, Menu, Misc, Radiobutton, Widget
+from ..Constants import BOTH, LEFT, NSEW, RAISED, RIGHT, W, X
+from ..Variables import IntVar
 from ..Font import Font
-from ..EventPattern import *
+from ..EventPattern import WidgetEvent
 from ..Types import Relief
 
 from ... import Assets

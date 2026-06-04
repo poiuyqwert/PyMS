@@ -1,8 +1,10 @@
 
 from .AutohideScrollbar import AutohideScrollbar
-from ..Widgets import *
+from ..Widgets import Frame, Listbox, Misc, Scrollbar
+from ..Constants import DOTBOX, END, EW, HORIZONTAL, MULTIPLE, NS, NSEW, SUNKEN
+from .. import Event
 from ..ShowScrollbar import ShowScrollbar
-from ..EventPattern import *
+from ..EventPattern import EventPropogation, Key, Modifier, Mouse, WidgetEvent
 
 from typing import Literal, Any
 

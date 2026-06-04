@@ -1,7 +1,8 @@
 
-from ..Widgets import *
+from ..Widgets import Entry, Frame, Label, Misc
+from ..Constants import LEFT
+from ..Variables import IntVar, IntegerVar
 from .DropDown import DropDown
-from ..Variables import IntegerVar
 
 from typing import Sequence
 

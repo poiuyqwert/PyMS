@@ -1,7 +1,8 @@
 
 from .Tooltip import Tooltip
-from ..Widgets import *
-from ..EventPattern import *
+from ..Widgets import Text
+from .. import Event
+from ..EventPattern import Cursor, Mouse
 
 from typing import Callable, Any
 

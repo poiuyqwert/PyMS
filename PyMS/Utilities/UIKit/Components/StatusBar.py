@@ -1,5 +1,8 @@
 
-from ..Widgets import *
+from ..Widgets import Frame, Label, Misc
+from ..Constants import DISABLED, NS, NSEW, SUNKEN, W
+from ..Variables import StringVar
+from ..Images import Image
 
 from typing import Any
 
