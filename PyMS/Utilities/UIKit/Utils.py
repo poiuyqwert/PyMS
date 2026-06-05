@@ -16,7 +16,6 @@ __all__ = [
 	'ScrollRegion',
 	'parse_scrollregion',
 	'parse_resizable',
-	'repr_event',
 	'remove_bind',
 ]
 
@@ -232,37 +231,6 @@ def parse_resizable(resizable: tuple[int, int] | str, default: Resizable = (Fals
 	if not match:
 		return default
 	return (bool(match.group(1)), bool(match.group(2)))
-
-EVENT_ATTRS = [
-	'serial',
-	'num',
-	'focus',
-	'height',
-	'width',
-	'keycode',
-	'state',
-	'time',
-	'x',
-	'y',
-	'x_root',
-	'y_root',
-	'char',
-	'send_event',
-	'keysym',
-	'keysym_num',
-	'type',
-	'widget',
-	'delta',
-]
-def repr_event(event: _Tk.Event) -> str:
-	result = '<Event'
-	for attr in EVENT_ATTRS:
-		if hasattr(event, attr):
-			value = getattr(event, attr)
-			result += f'\n\t{attr} = {value!r}'
-			if attr == 'widget':
-				result += f' ({value})'
-	return result + '\n>'
 
 def remove_bind(widget: _Tk.Misc, sequence: str, funcid: str) -> None:
 	"""Unbind for this WIDGET for event SEQUENCE  the

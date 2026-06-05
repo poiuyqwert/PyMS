@@ -2,7 +2,7 @@
 from ..Widgets import Button, Entry, Frame, Misc
 from ..Constants import END, LEFT, NORMAL, SUNKEN, X, Y
 from ..Variables import StringVar
-from .. import Event
+from ..Event import Event
 from .DropDownChooser import DropDownChooser
 from ..Types import WidgetState
 

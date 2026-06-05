@@ -5,7 +5,7 @@ from .RichList import RichList
 from ..Widgets import Button, Entry, Frame, Misc, PanedWindow, Scrollbar, Text
 from ..Constants import BOTH, DISABLED, END, EXTENDED, FLAT, HORIZONTAL, MOVETO, MULTIPLE, NONE, RIGHT, SINGLE, SOLID, SUNKEN, TOP, X, Y
 from ..Variables import StringVar
-from .. import Event
+from ..Event import Event
 from ..Font import Font
 from ..EventPattern import Ctrl, Double, Focus, Key, Mouse, Shift
 from ..Types import SelectMode

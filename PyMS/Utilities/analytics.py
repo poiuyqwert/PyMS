@@ -5,6 +5,9 @@ from .PyMSConfig import PYMS_CONFIG
 
 import platform
 
+# GAScreen is re-exported for consumers (`from ..Utilities.analytics import ga, GAScreen`).
+__all__ = ['GAScreen', 'ga']
+
 # TODO: Update analytics
 ga.set_tracking_id(PYMS_CONFIG.analytics.tid.value or '')
 cid = ga.set_client_id(PYMS_CONFIG.analytics.cid.value)

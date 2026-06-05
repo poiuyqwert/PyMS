@@ -1,6 +1,6 @@
 
 from ..Widgets import Label, Misc
-from .. import Event
+from ..Event import Event
 from ..Font import Font
 from ..EventPattern import Cursor, Mouse
 

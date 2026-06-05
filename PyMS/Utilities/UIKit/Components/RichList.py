@@ -1,7 +1,7 @@
 
 from ..Widgets import Frame, Misc, Scrollbar, Text
 from ..Constants import ALL, END, EW, HORIZONTAL, NONE, NS, NSEW, SUNKEN
-from .. import Event
+from ..Event import Event
 from ..EventPattern import Mouse
 
 import re

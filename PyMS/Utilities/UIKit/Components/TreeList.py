@@ -2,7 +2,7 @@
 from ..Widgets import Frame, Misc, Scrollbar, Text
 from ..Constants import ALL, END, EW, EXTENDED, HORIZONTAL, MULTIPLE, NONE, NS, NSEW, SINGLE, SUNKEN
 from ..Images import Image
-from .. import Event
+from ..Event import Event
 from ..Font import Font
 from ... import Assets
 from ..EventPattern import Ctrl, Mouse, Shift, WidgetEvent

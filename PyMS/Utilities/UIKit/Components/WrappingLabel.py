@@ -1,6 +1,6 @@
 
 from ..Widgets import Label
-from .. import Event
+from ..Event import Event
 from ..EventPattern import WidgetEvent
 
 from typing import Any

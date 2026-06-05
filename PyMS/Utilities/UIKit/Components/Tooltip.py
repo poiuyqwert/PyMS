@@ -2,7 +2,7 @@
 from ..Font import Font
 from ..Widgets import Frame, Label, Misc, Toplevel
 from ..Constants import FLAT, LEFT, SOLID
-from .. import Event
+from ..Event import Event
 from ..Widgets.Extensions import MiscExtensions
 from ..EventPattern import Cursor, Focus, Mouse
 

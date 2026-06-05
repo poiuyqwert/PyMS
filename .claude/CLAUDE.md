@@ -1,10 +1,6 @@
-# PyMS
+# Layout
 
-Cross-platform StarCraft: BroodWar modding suite. ~16 Tkinter GUI programs that edit the binary file formats used by the game (`.bin`, `.dat`, `.grp`, `.mpq`, `.tbl`, etc.), each with a matching command-line mode for compile/decompile workflows.
-
-## Layout
-
-Paths below are relative to this directory (the git repo root). The Python package lives in the `PyMS/` subdirectory. Internal imports are absolute from the package's parent, e.g. `from PyMS.Utilities import Assets`, so **this directory must be on `sys.path`** — which is why the `.pyw` entry points sit here, alongside the `PyMS/` package, rather than inside it.
+The Python package lives in the `PyMS/` subdirectory. Internal imports are absolute from the package's parent, e.g. `from PyMS.Utilities import Assets`, so **this directory must be on `sys.path`** — which is why the `.pyw` entry points sit here, alongside the `PyMS/` package, rather than inside it.
 
 - `*.pyw` — entry points, one per program (`PyAI.pyw`, `PyDAT.pyw`, ...). Each calls `check_compat(...)` then dispatches: no args → launch GUI; args → run the CLI via `optparse`.
 - `PyMS/<Program>/` — GUI code for each program. `<Program>.py` holds the main window class; sibling files are dialogs, config, and program-specific logic.
@@ -14,12 +10,15 @@ Paths below are relative to this directory (the git repo root). The Python packa
 - `PyMS/MPQ/`, `PyMS/Data/`, `PyMS/Images/`, `Palettes/`, `Help/` — bundled game data, assets, and Markdown help docs.
 - `Settings/` — per-program runtime settings (`.txt`, JSON-ish). User-editable; not code.
 
-## Environment
+# Environment
 
 - Python **3.11–3.13** only (`check_compat` warns/blocks otherwise). `.python-version` pins 3.13.12 via pyenv.
-- Runtime dep: **Pillow** (version pinned per Python version in `requirements.txt`).
+- `pylint` and `mypy` for static analysis
+- `unittest` framework for tests
+- Runtime dep: `Pillow` (version pinned per Python version in `requirements.txt`).
+- `pyenv` for managing python versions (always use pyenv to run python, pylint, mypy, and tests)
 
-## Conventions
+# Conventions
 
 - **Indentation is tabs** (`.editorconfig`: `indent_style = tab`), LF line endings, final newline. Match this exactly.
 - **Prefer modern Python 3 features over their Python 2 equivalents** everywhere — f-strings instead of `%` formatting or `.format()`, modern type annotations (`def f(x: int) -> str:`, `list[int]`, `str | None`) instead of `# type:` comments, `super()` with no args, walrus, etc. New code should read as idiomatic Python 3.
@@ -30,13 +29,13 @@ Paths below are relative to this directory (the git repo root). The Python packa
   - Keep heavy imports *inside* functions (as the existing `.pyw` files do), so only the minimal top-level module graph needs to satisfy this constraint.
 
   Keep this boundary tight: a single Python 3-only token anywhere in this import graph defeats the whole point of the version check. Everything reachable only at runtime (inside `main()`, the GUI classes, FileFormats, etc.) is free to use modern syntax.
-- `pylint` is heavily relaxed (see disabled rules in `.vscode/settings.json`): things like `invalid-name`, `wildcard-import`, `line-too-long`, missing docstrings are intentionally off. Don't "fix" those.
-- Many modules do `from ..Utilities.UIKit import *` — wildcard UIKit imports are the established pattern for GUI files.
-- `versions.json` holds the per-program version numbers.
+- `pylint` is heavily relaxed (see disabled rules in `.vscode/settings.json`): things like `invalid-name`, `line-too-long`, missing docstrings are intentionally off. Don't "fix" those.
+- **No wildcard imports** (`from X import *`) — `wildcard-import` is enabled in pylint. The only exceptions are the public-API barrels (`Utilities/UIKit/__init__.py` plus its `Constants`/`Widgets` submodules, and `FileFormats/CHK/__init__.py`): they re-export deliberately, each backed by an explicit (literal) `__all__` and a local `# pylint: disable=wildcard-import`.
+- **Namespace vs. explicit imports.** When a file would pull a large share of a module's surface (rule of thumb: more than ~5 names *and* ≥75% of its exports — and always for `UIKit`), import the module under an alias and qualify each use: `from ..Utilities import UIKit as UI` → `UI.Frame`, `from ..FileFormats import DAT` → `DAT.UnitsDAT` (mirrors the existing `Assets` convention). Otherwise import the specific names explicitly: `from ..Widgets import Frame, Label`.
 - Do not place any issue number references (like ISS-001 for example) in code/comments/tests
 - Test names/comments should describe the invariant, not the bug
 
-## Working notes
+# Working notes
 
 - A single program spans three layers: the `.pyw` entry point, the `PyMS/<Program>/` GUI, and the `PyMS/FileFormats/<Format>/` parser. Trace through all three when changing behavior.
 - Most `PyMS/FileFormats/` modules do double duty: they parse/write the raw binary game file **and** serialize to / parse from a human-editable **text format** (the decompiled source the GUI and CLI round-trip — e.g. AI/IScript scripts, `.dat` text dumps, `.trg` triggers). The shared `PyMS/Utilities/CodeHandlers/` framework (lexer → parser → compiler → serializer) backs the scriptable ones.
@@ -44,3 +43,20 @@ Paths below are relative to this directory (the git repo root). The Python packa
   - **Changes here must stay backwards compatible unless the task explicitly says otherwise.** Text that parsed before must still parse; binary that loaded before must still load. Don't rename, reorder, or repurpose existing tokens, keywords, or struct fields, and don't tighten parsing so previously-valid input now errors — add new syntax/fields additively.
   - Verify with round-trips: parse → serialize → parse should be stable, and binary load → save should stay byte-identical where it was before. Prefer adding/adjusting a `PyMS/Tests/` case over manual verification.
 - Don't edit files under `Settings/`, `PyMS/Logs/`, or bundled data dirs as part of code changes — those are runtime/user state.
+
+# Development Workflow
+
+## 1. Make changes
+
+- If the functionality is testable (non-UI, utilities, etc.), write tests to exercise all code paths.
+- If a bug is being fixed, write tests to exercise the bug first, and then implement the fix
+
+## 2. Run all tests
+
+Note: SFmpq tests are expected to fail on macOS at this time
+
+## 3. Static analysis
+
+Run both `pylint` and `mypy`, fix all issues reported (do not use `# pylint: disable=<rule>` or `#type: ignore[<rule>]` to "fix" issues without checking with the user first)
+
+## 4. Repeat steps 2 and 3 until all tests pass and no static analysis issues remain

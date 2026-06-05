@@ -3,7 +3,7 @@
 # backed by an `__all__` in the submodule. (Wildcards elsewhere were removed.)
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from tkinter import Event
+from .Event import *
 
 from .Constants import *
 from .Variables import *

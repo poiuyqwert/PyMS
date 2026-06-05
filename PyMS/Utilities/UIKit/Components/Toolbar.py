@@ -4,7 +4,7 @@ from ..Widgets import Button, Checkbutton, Frame, Misc, Radiobutton, Widget
 from ..Constants import DISABLED, LEFT, NORMAL, TOP, X
 from ..Variables import Variable
 from ..Images import Image
-from .. import Event
+from ..Event import Event
 from ..TagStateManager import TagStateManager
 from ..EventPattern import EventPattern
 

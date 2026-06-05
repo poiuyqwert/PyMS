@@ -2,7 +2,7 @@
 from .AutohideScrollbar import AutohideScrollbar
 from ..Widgets import Canvas, Frame, Misc, Scrollbar, Toplevel
 from ..Constants import EW, HORIZONTAL, NS, NSEW, NW
-from .. import Event
+from ..Event import Event
 from ..EventPattern import Focus, Modifier, Mouse, WidgetEvent
 
 from typing import Callable, Any

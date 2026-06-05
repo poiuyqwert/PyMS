@@ -1,7 +1,7 @@
 
 from ..Widgets import Listbox, Misc, Scrollbar, Toplevel
 from ..Constants import BOTH, DOTBOX, END, LEFT, RIGHT, SINGLE, SOLID, Y
-from .. import Event
+from ..Event import Event
 from ..Font import Font
 from ..EventPattern import ButtonRelease, Cursor, Focus, Key, Mouse
 from ..Utils import remove_bind

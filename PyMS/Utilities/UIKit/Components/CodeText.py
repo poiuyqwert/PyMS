@@ -1,7 +1,7 @@
 
 from ..Widgets import Frame, Menu, Misc, Scrollbar, Text
 from ..Constants import BOTH, END, EW, HORIZONTAL, INSERT, LEFT, MOVETO, NONE, NORMAL, NS, NSEW, SUNKEN, Y
-from .. import Event
+from ..Event import Event
 from ..EventPattern import Alt, ButtonRelease, Ctrl, CustomEventPattern, EventPropogation, Field, Focus, Key, Mouse, Shift, WidgetEvent
 from ..Font import Font
 from ..SyntaxHighlighting import SyntaxHighlighting, HighlightComponent
