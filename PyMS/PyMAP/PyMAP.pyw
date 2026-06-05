@@ -1,3 +1,5 @@
+# Dead Python-2 code, not part of the suite (no launcher, nothing imports it).
+# pylint: disable=wildcard-import,unused-wildcard-import
 from Libs.utils import *
 from Libs.setutils import *
 from Libs.trace import setup_trace

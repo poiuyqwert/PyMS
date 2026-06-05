@@ -1,4 +1,7 @@
 
+# Deliberate barrel: `from .Standard import *` is backed by Standard's `__all__`.
+# pylint: disable=wildcard-import,unused-wildcard-import
+
 from tkinter.ttk import Treeview
 from tkinter.ttk import Combobox
 

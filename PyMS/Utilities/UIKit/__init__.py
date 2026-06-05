@@ -1,4 +1,8 @@
 
+# This package is the public-API barrel: the `*` re-exports are deliberate, each
+# backed by an `__all__` in the submodule. (Wildcards elsewhere were removed.)
+# pylint: disable=wildcard-import,unused-wildcard-import
+
 from tkinter import Event
 
 from .Constants import *
