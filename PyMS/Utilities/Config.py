@@ -116,11 +116,18 @@ class Config(Group):
 			raise NotImplementedError(f'`_name` and/or `_version` are not set for `{self.__class__.__name__}`')
 		self.load()
 
+	def _read(self) -> JSON.Value:
+		with open(Assets.settings_file_path(self._name), 'r', encoding='utf-8') as f:
+			return json.load(f)
+
+	def _write(self, data: JSON.Object) -> None:
+		with open(Assets.settings_file_path(self._name), 'w', encoding='utf-8') as f:
+			json.dump(data, f, sort_keys=True, indent=4)
+
 	def load(self) -> None:
 		data: JSON.Object | None = None
 		try:
-			with open(Assets.settings_file_path(self._name), 'r', encoding='utf-8') as f:
-				raw_data = json.load(f)
+			raw_data = self._read()
 			if isinstance(raw_data, dict):
 				data = dict(raw_data)
 			if data:
@@ -151,8 +158,7 @@ class Config(Group):
 			data = self.encode()
 			assert isinstance(data, dict)
 			data['version'] = self._version
-			with open(Assets.settings_file_path(self._name), 'w', encoding='utf-8') as f:
-				json.dump(data, f, sort_keys=True, indent=4)
+			self._write(data)
 		except Exception:
 			from . import trace
 			if tracer := trace.get_tracer():
@@ -831,7 +837,7 @@ class Color(ConfigObject):
 	def decode(self, value: JSON.Value) -> None:
 		if not isinstance(value, str):
 			return
-		if not Color.RE_MATCH.match(value):
+		if not Color.RE_MATCH.fullmatch(value):
 			return
 		self.value = value
 
@@ -885,10 +891,10 @@ class HighlightStyle(ConfigObject):
 		if not isinstance(value, dict):
 			return
 		foreground = value.get('foreground')
-		if not isinstance(foreground, str) or not Color.RE_MATCH.match(foreground):
+		if not isinstance(foreground, str) or not Color.RE_MATCH.fullmatch(foreground):
 			foreground = None
 		background = value.get('background')
-		if not isinstance(background, str) or not Color.RE_MATCH.match(background):
+		if not isinstance(background, str) or not Color.RE_MATCH.fullmatch(background):
 			background = None
 		bold = value.get('bold')
 		if not isinstance(bold, bool):

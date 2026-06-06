@@ -35,6 +35,7 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 - **Namespace vs. explicit imports.** When a file would pull a large share of a module's surface (rule of thumb: more than ~5 names *and* ≥75% of its exports — and always for `UIKit`), import the module under an alias and qualify each use: `from ..Utilities import UIKit as UI` → `UI.Frame`, `from ..FileFormats import DAT` → `DAT.UnitsDAT` (mirrors the existing `Assets` convention). Otherwise import the specific names explicitly: `from ..Widgets import Frame, Label`.
 - Do not place any issue number references (like ISS-001 for example) in code/comments/tests
 - Test names/comments should describe the invariant, not the bug
+- **Tests must not write generated test data to disk.** Don't create temp files/dirs (or write into `Settings/`, bundled data, etc.) to feed or capture test data. Instead keep it in-memory: use the `Utilities/IO.py` helpers (`IO.InputText`/`IO.InputBytes` accept a path, a file-like object, *or* a raw `str`/`bytes`; `IO.output_to_text`/`IO.output_to_bytes` capture a writer's output), `io.StringIO`/`io.BytesIO`, or `unittest.mock` to stub the I/O boundary. When a class reads/writes files through a small overridable seam (e.g. `Config._read`/`_write`), mock that method to supply or capture data rather than going through the filesystem. Reading committed read-only fixtures under `PyMS/Tests/` is fine; producing new on-disk files during a test run is not.
 
 # Working notes
 
