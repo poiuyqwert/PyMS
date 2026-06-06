@@ -389,6 +389,8 @@ def encode_text(obj: object, obj_id: int | None, definition: Definition, fields:
 				result = f'# Export of {definition.name} {obj_id}\n{definition.name}:\n'
 			case IDMode.header:
 				result = f'{definition.name}({obj_id}):\n'
+			case IDMode.none:
+				result = f'{definition.name}:\n'
 	elif definition.id_mode == IDMode.header:
 		raise PyMSError('Internal', f"Missing ID for '{definition.name}' object")
 	else:
