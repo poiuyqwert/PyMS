@@ -19,7 +19,7 @@ class BytesScanner:
 		self.address = address
 
 	def matches(self, data: bytes, consume: bool = True) -> bool:
-		matches = data.startswith(data, self.address)
+		matches = self.data.startswith(data, self.address)
 		if matches and consume:
 			self.address += len(data)
 		return matches
