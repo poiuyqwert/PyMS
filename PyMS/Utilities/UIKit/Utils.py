@@ -230,7 +230,7 @@ def parse_resizable(resizable: tuple[int, int] | str, default: Resizable = (Fals
 	match = RE_RESIZABLE.match(resizable)
 	if not match:
 		return default
-	return (bool(match.group(1)), bool(match.group(2)))
+	return (bool(int(match.group(1))), bool(int(match.group(2))))
 
 def remove_bind(widget: _Tk.Misc, sequence: str, funcid: str) -> None:
 	"""Unbind for this WIDGET for event SEQUENCE  the
