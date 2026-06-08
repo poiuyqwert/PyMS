@@ -54,7 +54,7 @@ class _Scanner:
 	def remainder(self) -> str:
 		if not self.line:
 			return ''
-		return self.line[self.offset:self.offset+self.length]
+		return self.line[self.offset:self.length]
 
 	def search(self, pattern: re.Pattern[str]) -> (re.Match[str] | None):
 		return pattern.search(self.line, self.offset, self.length)
@@ -220,7 +220,7 @@ class FencedCodeBlock(ContentBlock):
 	def __init__(self, indent: int, fence: str, info_string: str) -> None:
 		ContentBlock.__init__(self)
 		self.indent = indent
-		self._re_closing = re.compile(r' {0,3}%s+\\s*$' % fence)
+		self._re_closing = re.compile(r' {0,3}%s+\s*$' % fence)
 		self.info_string = info_string
 
 	@staticmethod
