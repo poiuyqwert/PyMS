@@ -8,7 +8,7 @@ from .BMP import BMP
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.fileutils import load_file
 from ..Utilities.AtomicWriter import AtomicWriter
-from ..Utilities.UIKit.FileType import FileType
+from ..Utilities import UIKit # TODO: Note sure I like this referring to UIKit
 
 import struct
 from enum import Enum
@@ -31,32 +31,32 @@ class Palette:
 		act: Palette.FileType
 
 		@staticmethod
-		def load_types() -> tuple[FileType, ...]:
+		def load_types() -> tuple[UIKit.FileType, ...]:
 			load_types = [
-				FileType.pal(),
-				FileType.wpe(),
-				FileType.act(),
-				FileType.pcx(),
-				FileType.bmp()
+				UIKit.FileType.pal(),
+				UIKit.FileType.wpe(),
+				UIKit.FileType.act(),
+				UIKit.FileType.pcx(),
+				UIKit.FileType.bmp()
 			]
 			return tuple(load_types)
 
 		@staticmethod
-		def save_types(pal_format: Palette.Format, ext: str | None) -> tuple[FileType, ...]:
-			save_types_lookup: dict[Palette.Format, dict[str | None, list[FileType]]] = {
+		def save_types(pal_format: Palette.Format, ext: str | None) -> tuple[UIKit.FileType, ...]:
+			save_types_lookup: dict[Palette.Format, dict[str | None, list[UIKit.FileType]]] = {
 				Palette.Format.riff: {
-					None: [FileType.pal_riff()]
+					None: [UIKit.FileType.pal_riff()]
 				},
 				Palette.Format.jasc: {
-					None: [FileType.pal_jasc()]
+					None: [UIKit.FileType.pal_jasc()]
 				},
 				Palette.Format.raw_rgb: {
-					None: [FileType.pal_sc(),FileType.act()],
-					Palette.FileType.sc_pal.ext: [FileType.pal_sc()],
-					Palette.FileType.act.ext: [FileType.act()]
+					None: [UIKit.FileType.pal_sc(),UIKit.FileType.act()],
+					Palette.FileType.sc_pal.ext: [UIKit.FileType.pal_sc()],
+					Palette.FileType.act.ext: [UIKit.FileType.act()]
 				},
 				Palette.Format.raw_rgba: {
-					None: [FileType.wpe()]
+					None: [UIKit.FileType.wpe()]
 				}
 			}
 			save_types_format = save_types_lookup.get(pal_format)

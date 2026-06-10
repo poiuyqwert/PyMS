@@ -36,17 +36,17 @@ class LO:
 				if line:
 					if framedata:
 						if line == 'Frame:':
-							if overlays != -1:
-								if len(frames[-1]) != overlays:
-									raise PyMSError('Interpreting', f"Frameset {len(frames)} has an invalid amount of overlays (expected {overlays}, got {len(frames[-1])})")
+							if overlays == -1:
 								overlays = len(frames[-1])
+							elif len(frames[-1]) != overlays:
+								raise PyMSError('Interpreting', f"Frameset {len(frames)} has an invalid amount of overlays (expected {overlays}, got {len(frames[-1])})")
 							frames.append([])
 						else:
 							valid = re.match(r'\((-?\d+),\s*(-?\d+)\)', line)
 							if valid:
 								try:
 									x,y = int(valid.group(1)),int(valid.group(2))
-									if -127 > x > 127 or -127 > y > 127:
+									if x < -128 or x > 127 or y < -128 or y > 127:
 										raise PyMSError('Interpreting', f"Invalid offset coordinates ({x},{y})", line=n, code=line)
 									frames[-1].append([x,y])
 									if len(frames[-1]) == overlays:
