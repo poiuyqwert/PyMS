@@ -13,10 +13,11 @@ class CHKSectionMTXM(CHKSection):
 	REQUIREMENTS = CHKRequirements(CHKRequirements.VER_ALL, CHKRequirements.MODE_ALL)
 
 	raw_map: bytes
-	map: list[list[list[int]]]
+	map: list[list[list[int]]] | None = None
 
 	def load_data(self, data: bytes) -> None:
 		self.raw_map = data
+		self.map = None
 
 	def requires_post_processing(self) -> bool:
 		return True
@@ -39,14 +40,16 @@ class CHKSectionMTXM(CHKSection):
 	def save_data(self) -> bytes:
 		dims = self.chk.get_section(CHKSectionDIM)
 		assert dims is not None
+		assert self.map is not None
 		result = b''
 		struct_format = f'<{dims.width}H'
 		for r in self.map:
-			values = [v[0] << 4 + v[1] for v in r]
+			values = [(v[0] << 4) | v[1] for v in r]
 			result += struct.pack(struct_format, *values)
 		return result
 
 	def decompile(self) -> str:
+		assert self.map is not None
 		result = f'{self.NAME.decode("ascii")}:\n'
 		for row in self.map:
 			for g,m in row:

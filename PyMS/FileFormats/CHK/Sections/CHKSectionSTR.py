@@ -71,10 +71,9 @@ class CHKSectionSTR(CHKSection):
 		offset = 2+count*2
 		for string_id in range(count):
 			string = self.get_string(string_id)
-			if not string:
-				continue
+			text = string.text if string else ''
 			header += struct.pack('<H', offset+len(strings))
-			strings += (string.text.encode('utf-8') or b'') + b'\0'
+			strings += text.encode('utf-8') + b'\0'
 		return header + strings
 
 	def string_exists(self, string_id: int) -> bool:

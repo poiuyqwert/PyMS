@@ -84,7 +84,7 @@ class CHKSectionCOLR(CHKSection):
 
 	def __init__(self, chk: CHK) -> None:
 		CHKSection.__init__(self, chk)
-		self.colors = CHKSectionCOLR.DEFAULT_COLORS
+		self.colors = list(CHKSectionCOLR.DEFAULT_COLORS)
 
 	def load_data(self, data: bytes) -> None:
 		self.colors = list(int(c) for c in struct.unpack('<8B', data[:8]))
