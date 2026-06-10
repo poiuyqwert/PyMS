@@ -29,7 +29,7 @@ definitions_registry: list[ActionDefinition] = [
 	),
 	BasicActionDefinition(
 		name='Wait',
-		description='Wait for {1} milliseconds.',
+		description='Wait for {0} milliseconds.',
 		action_type=ActionType.wait,
 		parameters=(TimeParameter(),)
 	),
@@ -51,7 +51,7 @@ definitions_registry: list[ActionDefinition] = [
 	),
 	BasicActionDefinition(
 		name='PlayWAV',
-		description='Play {0} with duration {2}.',
+		description='Play {0} with duration {1}.',
 		action_type=ActionType.play_wav,
 		parameters=(WAVParameter(), TimeParameter())
 	),
@@ -171,7 +171,7 @@ definitions_registry: list[ActionDefinition] = [
 	),
 	BasicActionDefinition(
 		name='SetScore',
-		description='Modify score for {0}: {1} {3} of {3}.',
+		description='Modify score for {0}: {1} {2} of {3}.',
 		action_type=ActionType.set_score,
 		parameters=(PlayerParameter(), ModifierParameter(), NumberParameter(), ScoreTypeParameter())
 	),

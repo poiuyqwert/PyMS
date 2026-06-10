@@ -1006,7 +1006,7 @@ class RawFieldParameter(ConditionParameter, ActionParameter):
 		raise PyMSError('Paramater', f"'{value}' is not a valid Raw number for this field (value must be a number in the range 0 to {self.limit})")
 
 	def condition_decompile(self, condition: Condition, trg: TRG) -> str:
-		return str(condition._fields[self.field_index])
+		return str(condition.fields[self.field_index])
 
 	def condition_compile(self, value: str, condition: Condition, trg: TRG) -> PyMSWarning | None:
 		condition.fields[self.field_index] = self._compile(value)
@@ -1047,11 +1047,11 @@ class MemoryParameter(ConditionParameter, ActionParameter):
 	def _decompile(self, unit: int, player: int) -> str:
 		address = 0x0058A364 + (unit * 48) + (player * 4)
 		address %= Struct.l_u32.max + 1
-		return f"{address:#010X}"
+		return f"0x{address:08X}"
 
 	def _compile(self, value: str) -> int:
 		try:
-			if value.startswith('0x'):
+			if value.lower().startswith('0x'):
 				address = int(value, 16)
 			else:
 				address = int(value)
@@ -1100,13 +1100,13 @@ class MaskParameter(ConditionParameter, ActionParameter, HasKeywords):
 	def _decompile(self, mask: int, masked: int) -> str:
 		if masked != Constants.Mask.enabled:
 			return 'No Mask'
-		return f"{mask:#010X}"
+		return f"0x{mask:08X}"
 
 	def _compile(self, raw_mask: str) -> int:
 		if raw_mask == 'No Mask':
 			return 0
 		try:
-			if raw_mask.startswith('0x'):
+			if raw_mask.lower().startswith('0x'):
 				mask = int(raw_mask, 16)
 			else:
 				mask = int(raw_mask)
