@@ -39,7 +39,7 @@ class CodeGeneratorTypeMath(CodeGenerator.CodeGeneratorType):
 		if not CodeGeneratorTypeMath.MATH_RE.match(math):
 			raise PyMSError('Generate', f"Invalid math expression '{math}' (only numbers, +, -, /, *, (, ), and whitespace allowed)")
 		try:
-			return eval(math) # pylint: disable=eval-used
+			return str(eval(math)) # pylint: disable=eval-used
 		except Exception as exc:
 			raise PyMSError('Generate', f"Error evaluating math expression '{math}'") from exc
 
