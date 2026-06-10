@@ -544,12 +544,12 @@ class BINSMK:
 	def remove_widget(self, widget: BINWidget) -> None:
 		self.widgets.remove(widget)
 
-def flags(value: int | str, length: int) -> str:
+def flags(value: int | str, length: int) -> int | str:
 	if isinstance(value, str):
 		if len(value) != length or value.replace('0','').replace('1',''):
 			raise PyMSError('Flags', 'Invalid flags')
 		return sum(int(x)*(2**n) for n,x in enumerate(reversed(value)))
-	return ''.join(reversed([str(value/(2**n)%2) for n in range(length)]))
+	return ''.join(reversed([str(value//(2**n)%2) for n in range(length)]))
 
 class DialogBIN:
 	def __init__(self, remastered: bool = False) -> None:
@@ -882,7 +882,7 @@ class DialogBIN:
 						hint = BINWidget.TYPE_NAMES[value]
 					else:
 						hint = 'Unknown'
-				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}'
+				result += f'\t{attr}{" " * (longest - len(attr) + 1)}{value}{" # " if hint else ""}{hint}\n'
 			result += '\n'
 		return result
 

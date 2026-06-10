@@ -125,20 +125,21 @@ class HuffTree:
 					node.escape_code = 0xFF
 			self.root = HuffNode()
 			build_node(self.root)
+		else:
+			# No tree present: decode as a degenerate single-leaf tree of value 0.
+			self.root = HuffNode()
+			self.root.value = 0
+			self.root.escape_code = 0xFF
 		if bit_stream.read(1):
 			raise PyMSError('HuffTree', "Couldn't read from bit stream")
 
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
 		if node is None:
 			node = self.root
-		while True:
-			if bit_stream.read(1):
-				assert node.branch1 is not None
-				node = node.branch1
-			elif node.branch0 is None:
-				break
-			else:
-				node = node.branch0
+		while node.branch0 is not None:
+			next_node = node.branch1 if bit_stream.read(1) else node.branch0
+			assert next_node is not None
+			node = next_node
 		return node.value
 
 class BigHuffTree:
@@ -179,14 +180,10 @@ class BigHuffTree:
 	def lookup(self, bit_stream: BitStream, node: HuffNode | None = None) -> int:
 		if node is None:
 			node = self.root
-		while True:
-			if bit_stream.read(1):
-				assert node.branch1 is not None
-				node = node.branch1
-			elif node.branch0 is None:
-				break
-			else:
-				node = node.branch0
+		while node.branch0 is not None:
+			next_node = node.branch1 if bit_stream.read(1) else node.branch0
+			assert next_node is not None
+			node = next_node
 		if node.escape_code != 0xFF:
 			value = self.cache[node.escape_code]
 		else:
