@@ -3,6 +3,23 @@ from ...FileFormats.Tileset import Tileset
 from ...FileFormats.Tileset.CV5 import CV5Group, CV5Flag
 from ...FileFormats.Tileset.VF4 import VF4Megatile
 
+import io
+
+from typing import Any
+
+
+class _NoCloseBytesIO(io.BytesIO):
+	# Several `save_file` implementations close the file-like object after writing,
+	# which would free a plain BytesIO's buffer before we can read it.
+	def close(self) -> None:
+		pass
+
+
+def save_to_bytes(obj: Any) -> bytes:
+	buffer = _NoCloseBytesIO()
+	obj.save_file(buffer)
+	return buffer.getvalue()
+
 class ID:
 	basic_empty: int
 	basic_inc: int

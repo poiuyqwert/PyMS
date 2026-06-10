@@ -95,7 +95,7 @@ class VR4:
 				d = tuple(int(v) for v in struct.unpack('64B', data[image_id*64:(image_id+1)*64]))
 				images.append(tuple(tuple(d[y:y+8]) for y in range(0,64,8)))
 				image_hash = self.image_hash(images[-1])
-				if not image_hash in self._lookup:
+				if not image_hash in lookup:
 					lookup[image_hash] = []
 				lookup[image_hash].append(image_id)
 		except Exception as exc:
