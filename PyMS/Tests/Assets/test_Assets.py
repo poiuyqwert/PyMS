@@ -6,6 +6,7 @@ from ...Utilities import Assets
 import os
 import json
 import unittest
+from unittest.mock import patch, mock_open
 
 
 class Test_paths(unittest.TestCase):
@@ -140,17 +141,32 @@ class Test_mpq_round_trip(unittest.TestCase):
 
 
 class Test_data_cache(unittest.TestCase):
-	def test_returns_lines_from_data_file(self) -> None:
+	def test_returns_immutable_tuple(self) -> None:
 		# Use a data ref that is known to exist in the project's Data folder.
 		lines = Assets.data_cache(Assets.DataReference.Races)
-		self.assertIsInstance(lines, list)
+		self.assertIsInstance(lines, tuple)
 		self.assertTrue(all(isinstance(l, str) for l in lines))
 		self.assertGreater(len(lines), 0)
 
 	def test_result_is_cached(self) -> None:
+		# The cached tuple is immutable, so the same object can be shared safely across calls.
 		first = Assets.data_cache(Assets.DataReference.Races)
 		second = Assets.data_cache(Assets.DataReference.Races)
 		self.assertIs(first, second)
+
+	def test_reads_file_only_once(self) -> None:
+		# The underlying file is parsed once and reused.
+		saved = Assets._DATA_CACHE.pop(Assets.DataReference.Races, None)
+		try:
+			opener = mock_open(read_data='Alpha\nBeta\n')
+			with patch('builtins.open', opener):
+				Assets.data_cache(Assets.DataReference.Races)
+				Assets.data_cache(Assets.DataReference.Races)
+			self.assertEqual(opener.call_count, 1)
+		finally:
+			Assets._DATA_CACHE.pop(Assets.DataReference.Races, None)
+			if saved is not None:
+				Assets._DATA_CACHE[Assets.DataReference.Races] = saved
 
 
 class Test_image_cache_reset(unittest.TestCase):

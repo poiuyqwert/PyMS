@@ -49,10 +49,10 @@ class DATData(Generic[DATType]):
 	def new_file(self) -> None:
 		if self.default_dat:
 			self.dat = copy.deepcopy(self.default_dat)
-			self.file_path = None
 		else:
 			self.dat = self.dat_type()
 			self.dat.new_file()
+		self.file_path = None
 		self.update_names()
 
 	def load_file(self, file_path: str) -> None:

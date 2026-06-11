@@ -130,11 +130,12 @@ class DataReference:
 	Sfxdata         = 'Sfxdata' # Sound Effects
 	ShieldSize      = 'ShieldSize' # Shield Sizes
 
-_DATA_CACHE: dict[str, list[str]] = {}
-def data_cache(filename: str) -> list[str]:
+_DATA_CACHE: dict[str, tuple[str, ...]] = {}
+def data_cache(filename: str) -> tuple[str, ...]:
 	if not filename in _DATA_CACHE:
 		with open(data_file_path(f'{filename}.txt'), 'r', encoding='utf-8') as f:
-			_DATA_CACHE[filename] = [l.rstrip() for l in f.readlines()]
+			_DATA_CACHE[filename] = tuple(l.rstrip() for l in f.readlines())
+	# An immutable tuple is returned so callers cannot corrupt the shared cache.
 	return _DATA_CACHE[filename]
 
 ## Palettes

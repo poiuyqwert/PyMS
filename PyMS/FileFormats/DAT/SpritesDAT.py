@@ -44,15 +44,17 @@ class DATSprite(AbstractDAT.AbstractDATEntry):
 		)
 
 	def limit(self, entry_id: int) -> None:
-		health_bar_prop = SpritesDAT.FORMAT.get_property('health_bar')
+		health_bar_prop = SpritesDAT.FORMAT.get_property(DATSprite.Property.health_bar)
 		assert health_bar_prop is not None
 		if not health_bar_prop.is_on_entry(entry_id):
 			self.health_bar = None
-		selection_circle_image_prop = SpritesDAT.FORMAT.get_property('selection_circle_image')
+
+		selection_circle_image_prop = SpritesDAT.FORMAT.get_property(DATSprite.Property.selection_circle_image)
 		assert selection_circle_image_prop is not None
 		if not selection_circle_image_prop.is_on_entry(entry_id):
 			self.selection_circle_image = None
-		selection_circle_offset_prop = SpritesDAT.FORMAT.get_property('selection_circle_offset')
+
+		selection_circle_offset_prop = SpritesDAT.FORMAT.get_property(DATSprite.Property.selection_circle_offset)
 		assert selection_circle_offset_prop is not None
 		if not selection_circle_offset_prop.is_on_entry(entry_id):
 			self.selection_circle_offset = None

@@ -236,6 +236,6 @@ class DATProperty:
 
 	# Whether this property is on an entry with `id` (non-expanded, as expanded dats have all entries)
 	def is_on_entry(self, entry_id: int) -> bool:
-		if not self.entry_offset or not self._entry_count:
+		if self.entry_offset is None or self._entry_count is None:
 			return True
 		return self.entry_offset <= entry_id < (self.entry_offset + self._entry_count)

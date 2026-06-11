@@ -311,13 +311,40 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		)
 
 	def limit(self, entry_id: int) -> None:
-		self.infestation = None
-		self.ready_sound = None
-		self.pissed_sound_start = None
-		self.pissed_sound_end = None
-		self.yes_sound_start = None
-		self.yes_sound_end = None
-		self.addon_position = None
+		infestation_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.infestation)
+		assert infestation_prop is not None
+		if not infestation_prop.is_on_entry(entry_id):
+			self.infestation = None
+
+		ready_sound_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.ready_sound)
+		assert ready_sound_prop is not None
+		if not ready_sound_prop.is_on_entry(entry_id):
+			self.ready_sound = None
+
+		pissed_sound_start_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.pissed_sound_start)
+		assert pissed_sound_start_prop is not None
+		if not pissed_sound_start_prop.is_on_entry(entry_id):
+			self.pissed_sound_start = None
+
+		pissed_sound_end_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.pissed_sound_end)
+		assert pissed_sound_end_prop is not None
+		if not pissed_sound_end_prop.is_on_entry(entry_id):
+			self.pissed_sound_end = None
+
+		yes_sound_start_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.yes_sound_start)
+		assert yes_sound_start_prop is not None
+		if not yes_sound_start_prop.is_on_entry(entry_id):
+			self.yes_sound_start = None
+
+		yes_sound_end_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.yes_sound_end)
+		assert yes_sound_end_prop is not None
+		if not yes_sound_end_prop.is_on_entry(entry_id):
+			self.yes_sound_end = None
+			
+		addon_position_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.addon_position)
+		assert addon_position_prop is not None
+		if not addon_position_prop.is_on_entry(entry_id):
+			self.addon_position = None
 
 	def expand(self) -> None:
 		self.infestation = self.infestation or 0

@@ -54,10 +54,10 @@ class IconData:
 		names = Assets.data_cache(Assets.DataReference.Icons)
 		if self.grp:
 			if self.grp.frames > len(names):
-				names += ['Unknown'] * (len(names)-self.grp.frames)
+				names += ('Unknown',) * (self.grp.frames-len(names))
 			elif self.grp.frames < len(names):
 				names = names[:self.grp.frames]
-		self.names = tuple(names)
+		self.names = names
 		self.update_cb(DataID.cmdicons)
 
 	def frame_count(self) -> int:

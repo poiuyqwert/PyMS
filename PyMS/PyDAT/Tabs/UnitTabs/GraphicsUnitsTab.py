@@ -11,7 +11,7 @@ from ....Utilities import Assets
 
 from math import floor, ceil
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 if TYPE_CHECKING:
 	from ...Delegates import MainDelegate, SubDelegate
 
@@ -32,7 +32,7 @@ class GraphicsUnitsTab(DATUnitsTab):
 
 		l = UI.LabelFrame(scrollview.content_view, text='Sprite Graphics:')
 		s = UI.Frame(l)
-		def add_dropdown(title: str, *, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str, values: list[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> UI.DropDown:
+		def add_dropdown(title: str, *, entry_variable: UI.IntegerVar, dropdown_variable: UI.IntVar, hint_name: str, values: Sequence[str], none_value: int | None = None, jump_dat_id: DATID | None = None) -> UI.DropDown:
 			f = UI.Frame(s)
 			UI.Label(f, text=title + ':', width=13, anchor=UI.E).pack(side=UI.LEFT)
 			UI.Entry(f, textvariable=entry_variable, font=UI.Font.fixed(), width=5).pack(side=UI.LEFT)
