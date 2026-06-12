@@ -16,6 +16,18 @@ if TYPE_CHECKING:
 	from .DataID import DATID
 
 RE_OVERRIDE = re.compile(r'\s*(\d{1,5})\s*(\+?)\s*:(.*)')
+
+def apply_name_override(name_overrides: dict[int, tuple[bool, str]], entry_id: int, name: str, append: bool) -> None:
+	# A non-blank name inserts/updates the override; a blank name removes any existing one.
+	if name:
+		name_overrides[entry_id] = (append, name)
+	elif entry_id in name_overrides:
+		del name_overrides[entry_id]
+
+def remove_name_override(name_overrides: dict[int, tuple[bool, str]], entry_id: int) -> None:
+	if entry_id in name_overrides:
+		del name_overrides[entry_id]
+
 class EntryNameOverrides(PyMSDialog):
 	def __init__(self, parent: UI.Misc, data_context: DataContext, dat_id: DATID, entry_id: int | None = None) -> None:
 		self.data_context = data_context
@@ -111,20 +123,12 @@ class EntryNameOverrides(PyMSDialog):
 
 	def update(self, _: UI.Event | None = None) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
-		entry_id = self.entry_id.get()
-		name = self.name.get()
-		append = not not self.append.get()
-		if name:
-			name_overrides[entry_id] = (append, name)
-		elif entry_id in name_overrides:
-			del name_overrides[entry_id]
+		apply_name_override(name_overrides, self.entry_id.get(), self.name.get(), not not self.append.get())
 		self.refresh_list()
 
 	def remove(self) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
-		entry_id = self.entry_id.get()
-		if entry_id in name_overrides:
-			del name_overrides[entry_id]
+		remove_name_override(name_overrides, self.entry_id.get())
 		self.refresh_list()
 
 	def dismiss(self) -> None:
