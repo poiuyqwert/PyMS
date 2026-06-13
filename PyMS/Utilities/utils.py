@@ -65,6 +65,13 @@ def binary(value: int, count: int) -> str:
 		result = ('1' if value & (1 << n) else '0') + result
 	return result
 
+def pack_flags(pairs: Sequence[tuple[int, int]]) -> int:
+	# Combine `(value, flag_bit)` pairs into a single bitmask (a falsy value contributes nothing).
+	result = 0
+	for value, flag in pairs:
+		result |= value * flag
+	return result
+
 def flags_code(value: int, name_map: dict[int, str]) -> str:
 	names = []
 	for (flag, name) in sorted(name_map.items(), key=lambda p: p[0]):

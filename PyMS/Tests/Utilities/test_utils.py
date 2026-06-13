@@ -1,5 +1,5 @@
 
-from ...Utilities.utils import nearest_multiple, named_flags, binary, flags_code, fit, fit2, float_to_str, rpad, lpad, pad, format_byte_size
+from ...Utilities.utils import nearest_multiple, named_flags, binary, flags_code, fit, fit2, float_to_str, rpad, lpad, pad, format_byte_size, pack_flags
 
 import math
 import unittest
@@ -53,6 +53,20 @@ class Test_flags_code(unittest.TestCase):
 
 	def test_single_flag(self) -> None:
 		self.assertEqual(flags_code(2, {1: 'A', 2: 'B'}), 'B')
+
+
+class Test_pack_flags(unittest.TestCase):
+	def test_empty_is_zero(self) -> None:
+		self.assertEqual(pack_flags([]), 0)
+
+	def test_ors_set_flags(self) -> None:
+		self.assertEqual(pack_flags([(1, 1), (0, 2), (1, 4)]), 5)
+
+	def test_falsy_values_contribute_nothing(self) -> None:
+		self.assertEqual(pack_flags([(0, 1), (0, 2), (0, 4)]), 0)
+
+	def test_all_set(self) -> None:
+		self.assertEqual(pack_flags([(1, 1), (1, 2), (1, 4)]), 7)
 
 
 class Test_float_to_str(unittest.TestCase):

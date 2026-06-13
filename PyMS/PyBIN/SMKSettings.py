@@ -9,6 +9,7 @@ from ..FileFormats import DialogBIN
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities.MPQSelect import MPQSelect
+from ..Utilities.utils import pack_flags
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 
@@ -152,15 +153,16 @@ class SMKSettings(PyMSDialog, MainDelegate):
 			self.smk.offset_y = self.overlay_y.get()
 			edited = True
 
-		flags = 0
-		flags |= self.flag_fadein.get() * DialogBIN.BINSMK.FLAG_FADE_IN
-		flags |= self.flag_dark.get() * DialogBIN.BINSMK.FLAG_DARK
-		flags |= self.flag_repeat.get() * DialogBIN.BINSMK.FLAG_REPEATS
-		flags |= self.flag_hover.get() * DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER
-		flags |= self.flag_unk1.get() * DialogBIN.BINSMK.FLAG_UNK1
-		flags |= self.flag_unk2.get() * DialogBIN.BINSMK.FLAG_UNK2
-		flags |= self.flag_unk3.get() * DialogBIN.BINSMK.FLAG_UNK3
-		flags |= self.flag_unk4.get() * DialogBIN.BINSMK.FLAG_UNK4
+		flags = pack_flags((
+			(self.flag_fadein.get(), DialogBIN.BINSMK.FLAG_FADE_IN),
+			(self.flag_dark.get(), DialogBIN.BINSMK.FLAG_DARK),
+			(self.flag_repeat.get(), DialogBIN.BINSMK.FLAG_REPEATS),
+			(self.flag_hover.get(), DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER),
+			(self.flag_unk1.get(), DialogBIN.BINSMK.FLAG_UNK1),
+			(self.flag_unk2.get(), DialogBIN.BINSMK.FLAG_UNK2),
+			(self.flag_unk3.get(), DialogBIN.BINSMK.FLAG_UNK3),
+			(self.flag_unk4.get(), DialogBIN.BINSMK.FLAG_UNK4),
+		))
 		if flags != self.smk.flags:
 			self.smk.flags = flags
 			edited = True

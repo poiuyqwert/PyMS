@@ -73,8 +73,8 @@ class StringPreview:
 							w += self.font.sizes[l][0]
 							count += 1
 					w = int(round(w / float(count)))
-					x,y,_,h = self.font.sizes[a]
-					self.font.sizes[a] = (x,y,w,h)
+					_,sh,sxo,syo = self.font.sizes[a]
+					self.font.sizes[a] = (w,sh,sxo,syo)
 				w += 1
 				word.append(w)
 				word_width += w

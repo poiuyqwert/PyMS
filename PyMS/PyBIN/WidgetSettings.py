@@ -9,6 +9,7 @@ from ..FileFormats import DialogBIN, TBL
 
 from ..Utilities import UIKit as UI
 from ..Utilities.PyMSDialog import PyMSDialog
+from ..Utilities.utils import pack_flags
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 
@@ -485,39 +486,40 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 			self.widget.responsive_height = self.responsive_height.get()
 			edited = True
 
-		flags = 0
-		flags |= self.flag_unk1.get() * DialogBIN.BINWidget.FLAG_UNK1
-		flags |= self.flag_disabled.get() * DialogBIN.BINWidget.FLAG_DISABLED
-		flags |= self.flag_unk2.get() * DialogBIN.BINWidget.FLAG_UNK2
-		flags |= self.flag_visible.get() * DialogBIN.BINWidget.FLAG_VISIBLE
-		flags |= self.flag_responsive.get() * DialogBIN.BINWidget.FLAG_RESPONSIVE
-		flags |= self.flag_unk3.get() * DialogBIN.BINWidget.FLAG_UNK3
-		flags |= self.flag_cancel_btn.get() * DialogBIN.BINWidget.FLAG_CANCEL_BTN
-		flags |= self.flag_no_hover_snd.get() * DialogBIN.BINWidget.FLAG_NO_HOVER_SND
-		flags |= self.flag_virtual_hotkey.get() * DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY
-		flags |= self.flag_has_hotkey.get() * DialogBIN.BINWidget.FLAG_HAS_HOTKEY
-		flags |= self.flag_font_size_10.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_10
-		flags |= self.flag_font_size_16.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16
-		flags |= self.flag_unk4.get() * DialogBIN.BINWidget.FLAG_UNK4
-		flags |= self.flag_transparency.get() * DialogBIN.BINWidget.FLAG_TRANSPARENCY
-		flags |= self.flag_font_size_16x.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_16x
-		flags |= self.flag_unk5.get() * DialogBIN.BINWidget.FLAG_UNK5
-		flags |= self.flag_font_size_14.get() * DialogBIN.BINWidget.FLAG_FONT_SIZE_14
-		flags |= self.flag_unk6.get() * DialogBIN.BINWidget.FLAG_UNK6
-		flags |= self.flag_translucent.get() * DialogBIN.BINWidget.FLAG_TRANSLUCENT
-		flags |= self.flag_default_btn.get() * DialogBIN.BINWidget.FLAG_DEFAULT_BTN
-		flags |= self.flag_on_top.get() * DialogBIN.BINWidget.FLAG_ON_TOP
-		flags |= self.flag_text_align_center.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER
-		flags |= self.flag_text_align_right.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT
-		flags |= self.flag_text_align_center2.get() * DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2
-		flags |= self.flag_align_top.get() * DialogBIN.BINWidget.FLAG_ALIGN_TOP
-		flags |= self.flag_align_middle.get() * DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE
-		flags |= self.flag_align_bottom.get() * DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM
-		flags |= self.flag_unk7.get() * DialogBIN.BINWidget.FLAG_UNK7
-		flags |= self.flag_unk8.get() * DialogBIN.BINWidget.FLAG_UNK8
-		flags |= self.flag_unk9.get() * DialogBIN.BINWidget.FLAG_UNK9
-		flags |= self.flag_no_click_snd.get() * DialogBIN.BINWidget.FLAG_NO_CLICK_SND
-		flags |= self.flag_unk10.get() * DialogBIN.BINWidget.FLAG_UNK10
+		flags = pack_flags((
+			(self.flag_unk1.get(), DialogBIN.BINWidget.FLAG_UNK1),
+			(self.flag_disabled.get(), DialogBIN.BINWidget.FLAG_DISABLED),
+			(self.flag_unk2.get(), DialogBIN.BINWidget.FLAG_UNK2),
+			(self.flag_visible.get(), DialogBIN.BINWidget.FLAG_VISIBLE),
+			(self.flag_responsive.get(), DialogBIN.BINWidget.FLAG_RESPONSIVE),
+			(self.flag_unk3.get(), DialogBIN.BINWidget.FLAG_UNK3),
+			(self.flag_cancel_btn.get(), DialogBIN.BINWidget.FLAG_CANCEL_BTN),
+			(self.flag_no_hover_snd.get(), DialogBIN.BINWidget.FLAG_NO_HOVER_SND),
+			(self.flag_virtual_hotkey.get(), DialogBIN.BINWidget.FLAG_VIRTUAL_HOTKEY),
+			(self.flag_has_hotkey.get(), DialogBIN.BINWidget.FLAG_HAS_HOTKEY),
+			(self.flag_font_size_10.get(), DialogBIN.BINWidget.FLAG_FONT_SIZE_10),
+			(self.flag_font_size_16.get(), DialogBIN.BINWidget.FLAG_FONT_SIZE_16),
+			(self.flag_unk4.get(), DialogBIN.BINWidget.FLAG_UNK4),
+			(self.flag_transparency.get(), DialogBIN.BINWidget.FLAG_TRANSPARENCY),
+			(self.flag_font_size_16x.get(), DialogBIN.BINWidget.FLAG_FONT_SIZE_16x),
+			(self.flag_unk5.get(), DialogBIN.BINWidget.FLAG_UNK5),
+			(self.flag_font_size_14.get(), DialogBIN.BINWidget.FLAG_FONT_SIZE_14),
+			(self.flag_unk6.get(), DialogBIN.BINWidget.FLAG_UNK6),
+			(self.flag_translucent.get(), DialogBIN.BINWidget.FLAG_TRANSLUCENT),
+			(self.flag_default_btn.get(), DialogBIN.BINWidget.FLAG_DEFAULT_BTN),
+			(self.flag_on_top.get(), DialogBIN.BINWidget.FLAG_ON_TOP),
+			(self.flag_text_align_center.get(), DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER),
+			(self.flag_text_align_right.get(), DialogBIN.BINWidget.FLAG_TEXT_ALIGN_RIGHT),
+			(self.flag_text_align_center2.get(), DialogBIN.BINWidget.FLAG_TEXT_ALIGN_CENTER2),
+			(self.flag_align_top.get(), DialogBIN.BINWidget.FLAG_ALIGN_TOP),
+			(self.flag_align_middle.get(), DialogBIN.BINWidget.FLAG_ALIGN_MIDDLE),
+			(self.flag_align_bottom.get(), DialogBIN.BINWidget.FLAG_ALIGN_BOTTOM),
+			(self.flag_unk7.get(), DialogBIN.BINWidget.FLAG_UNK7),
+			(self.flag_unk8.get(), DialogBIN.BINWidget.FLAG_UNK8),
+			(self.flag_unk9.get(), DialogBIN.BINWidget.FLAG_UNK9),
+			(self.flag_no_click_snd.get(), DialogBIN.BINWidget.FLAG_NO_CLICK_SND),
+			(self.flag_unk10.get(), DialogBIN.BINWidget.FLAG_UNK10),
+		))
 		if flags != self.widget.flags:
 			self.widget.flags = flags
 			edited = True
