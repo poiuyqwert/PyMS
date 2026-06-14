@@ -91,4 +91,3 @@ class Test_migrate_fields(unittest.TestCase):
 		data: dict = {'present': 1}
 		Config.migrate_fields(data, ((('absent',), ('new',)),))
 		self.assertNotIn('new', data)
-

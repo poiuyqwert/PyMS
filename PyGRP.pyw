@@ -64,10 +64,10 @@ def main(): # type: () -> None
 						bmp_style = BMPStyle.single_bmp_vertical
 					else:
 						bmp_style = BMPStyle.bmp_per_frame
-					grptobmp(path, pal, opt.uncompressed, bmp_style, grp, bmp)
+					grptobmp(path=path, pal=pal, uncompressed=opt.uncompressed, bmp_style=bmp_style, grp=grp, bmp=bmp)
 				else:
 					assert bmp is not None
-					bmptogrp(path, pal, opt.uncompressed, opt.frames, bmp, grp)
+					bmptogrp(path=path, pal=pal, uncompressed=opt.uncompressed, frames=opt.frames, bmp=bmp, grp=grp)
 			except PyMSError as e:
 				print(repr(e))
 

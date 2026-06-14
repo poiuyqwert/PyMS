@@ -340,7 +340,7 @@ class DATUnit(AbstractDAT.AbstractDATEntry):
 		assert yes_sound_end_prop is not None
 		if not yes_sound_end_prop.is_on_entry(entry_id):
 			self.yes_sound_end = None
-			
+
 		addon_position_prop = UnitsDAT.FORMAT.get_property(DATUnit.Property.addon_position)
 		assert addon_position_prop is not None
 		if not addon_position_prop.is_on_entry(entry_id):
