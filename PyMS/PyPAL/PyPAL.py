@@ -153,7 +153,7 @@ class PyPAL(UI.MainWindow):
 		self.palmenu.tag_enabled('paste', not not self.canpaste()) # type: ignore[attr-defined]
 		self.palmenu.post(event.x_root, event.y_root)
 
-	def update(self) -> None:
+	def update_canvas(self) -> None:
 		if self.palette:
 			pal = self.palette.palette
 		else:
@@ -241,7 +241,7 @@ class PyPAL(UI.MainWindow):
 		if self.selected is None:
 			self.selected = 0
 			self.select(None,0)
-		self.update()
+		self.update_canvas()
 		self.action_states()
 		self.colorstatus(None, 0)
 
@@ -267,7 +267,7 @@ class PyPAL(UI.MainWindow):
 		if self.selected is None:
 			self.selected = 0
 			self.select(None,0)
-		self.update()
+		self.update_canvas()
 		self.action_states()
 		self.colorstatus(None, 0)
 
@@ -310,7 +310,7 @@ class PyPAL(UI.MainWindow):
 		self.mark_edited(False)
 		self.selected = None
 		self.sel.coords(0, 0, 0, 0)
-		self.update()
+		self.update_canvas()
 		self.action_states()
 
 	def register_registry(self) -> None:

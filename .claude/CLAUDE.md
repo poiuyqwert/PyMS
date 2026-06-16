@@ -50,7 +50,7 @@ The Python package lives in the `PyMS/` subdirectory. Internal imports are absol
 
 ## 1. Make changes
 
-- If the functionality is testable (non-UI, utilities, etc.), write tests to exercise all code paths.
+- If the functionality is testable, write tests to exercise all code paths.
 - If a bug is being fixed, write tests to exercise the bug first, and then implement the fix
 
 ## 2. Run all tests

@@ -18,7 +18,7 @@ class ExternalDefDialog(PyMSDialog):
 
 		self.listbox = UI.ScrolledListbox(self, font=UI.Font.fixed(), width=1, height=1)
 		self.listbox.pack(fill=UI.BOTH, expand=1)
-		self.update()
+		self.update_list()
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), lambda _: self.action_states())
 
 		buttons = UI.Frame(self)
@@ -42,7 +42,7 @@ class ExternalDefDialog(PyMSDialog):
 		iimport = self.config_.last_path.txt.extdefs.select_open(self)
 		if iimport and iimport not in self.config_.extdefs.data:
 			self.config_.extdefs.data.append(iimport)
-			self.update()
+			self.update_list()
 			self.listbox.select_set(UI.END)
 			self.listbox.see(UI.END)
 
@@ -54,9 +54,9 @@ class ExternalDefDialog(PyMSDialog):
 		if self.config_.extdefs.data and index == len(self.config_.extdefs.data):
 			self.listbox.select_set(index-1)
 			self.listbox.see(index-1)
-		self.update()
+		self.update_list()
 
-	def update(self) -> None:
+	def update_list(self) -> None:
 		sel = 0
 		if self.listbox.size():
 			selection = self.listbox.curselection()

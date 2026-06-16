@@ -75,7 +75,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 
 		self.listbox = UI.ScrolledListbox(self, selectmode=UI.EXTENDED, font=UI.Font.fixed(), width=1, height=1)
 		self.listbox.pack(fill=UI.BOTH, padx=2, pady=2, expand=1)
-		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.update)
+		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.update_select_state)
 
 		buttons = UI.Frame(self)
 		UI.Button(buttons, text='Find', width=10, command=self.find, default=UI.NORMAL).pack(side=UI.LEFT, padx=3, pady=3)
@@ -92,7 +92,7 @@ class FindScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		self.minsize(300,325)
 		self.config_.load_size(self)
 
-	def update(self, _event: UI.Event | None = None) -> None:
+	def update_select_state(self, _event: UI.Event | None = None) -> None:
 		self.select['state'] = UI.NORMAL
 
 	def updatecolor(self) -> None:

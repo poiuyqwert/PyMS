@@ -58,7 +58,7 @@ class EntryNameOverrides(PyMSDialog):
 		name_entry = UI.Entry(f, textvariable=self.name)
 		name_entry.pack(side=UI.LEFT, fill=UI.X, expand=1)
 		UI.Checkbutton(f, text="Append", variable=self.append).pack(side=UI.LEFT)
-		UI.Button(f, text='Update', command=self.update).pack(side=UI.LEFT, padx=3)
+		UI.Button(f, text='Update', command=self.update_override).pack(side=UI.LEFT, padx=3)
 		UI.Button(f, image=Assets.get_image('remove'), width=20, height=20, command=self.remove).pack(side=UI.LEFT)
 
 		f = UI.Frame(self)
@@ -66,7 +66,7 @@ class EntryNameOverrides(PyMSDialog):
 
 		UI.Button(f, text='Ok', command=self.ok).pack(side=UI.TOP)
 
-		self.bind(UI.Key.Return(), self.update)
+		self.bind(UI.Key.Return(), self.update_override)
 
 		self.refresh_list()
 
@@ -121,7 +121,7 @@ class EntryNameOverrides(PyMSDialog):
 		except Exception:
 			ErrorDialog(self, PyMSError('Save', f"Couldn't save name overrides to '{path}'"))
 
-	def update(self, _: UI.Event | None = None) -> None:
+	def update_override(self, _: UI.Event | None = None) -> None:
 		name_overrides = self.data_context.dat_data(self.dat_id).name_overrides
 		apply_name_override(name_overrides, self.entry_id.get(), self.name.get(), not not self.append.get())
 		self.refresh_list()

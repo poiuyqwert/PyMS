@@ -31,4 +31,5 @@ __all__ = [
 	'Treeview',
 	'Widget',
 	'WindowExtensions',
+	'Wm',
 ]

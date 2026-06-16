@@ -9,6 +9,7 @@ from typing import Any
 __all__ = [
 	'Widget',
 	'Misc',
+	'Wm',
 	'Tk',
 	'Toplevel',
 	'Frame',
@@ -27,6 +28,7 @@ __all__ = [
 # For type hinting
 Widget = _Tk.Widget
 Misc = _Tk.Misc
+Wm = _Tk.Wm
 
 class Tk(_Tk.Tk, WindowExtensions):
 	def __init__(self, *args: Any, **kwargs: Any) -> None:

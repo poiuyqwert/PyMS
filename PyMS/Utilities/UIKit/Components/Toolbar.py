@@ -141,3 +141,6 @@ class Toolbar(Frame):
 
 	def tag_enabled(self, tag: str, is_enabled: bool) -> None:
 		self._tag_manager.tag_enabled(tag, is_enabled)
+
+	def tag_is_enabled(self, tag: str) -> bool:
+		return self._tag_manager.is_enabled(tag)

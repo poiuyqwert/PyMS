@@ -34,7 +34,7 @@ class ImportListDialog(PyMSDialog):
 		buttons.pack()
 
 		if self.delegate.imports:
-			self.update()
+			self.update_list()
 			self.listbox.select_set(0)
 			self.listbox.see(0)
 
@@ -50,7 +50,7 @@ class ImportListDialog(PyMSDialog):
 			for i in iimport:
 				if i not in self.delegate.imports:
 					self.delegate.imports.append(i)
-			self.update()
+			self.update_list()
 			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(UI.END)
 			self.listbox.see(UI.END)
@@ -61,7 +61,7 @@ class ImportListDialog(PyMSDialog):
 		if self.delegate.imports and index == len(self.delegate.imports):
 			self.listbox.select_set(index-1)
 			self.listbox.see(index-1)
-		self.update()
+		self.update_list()
 
 	def iimport(self) -> None:
 		self.delegate.iimport(files=self.listbox.get(self.listbox.curselection()[0]), parent=self)
@@ -77,7 +77,7 @@ class ImportListDialog(PyMSDialog):
 		self.toolbar.tag_enabled('can_import', can_import)
 		self.importbtn['state'] = UI.NORMAL if can_import else UI.DISABLED
 
-	def update(self) -> None:
+	def update_list(self) -> None:
 		sel = 0
 		if self.listbox.size():
 			sel = self.listbox.curselection()[0]

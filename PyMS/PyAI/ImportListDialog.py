@@ -34,7 +34,7 @@ class ImportListDialog(PyMSDialog):
 
 		if self.config_.imports.data:
 			self.config_.imports.data = list(file_path for file_path in self.config_.imports.data if os.path.exists(file_path))
-			self.update()
+			self.update_list()
 			self.listbox.select_set(0)
 			self.listbox.see(0)
 
@@ -60,7 +60,7 @@ class ImportListDialog(PyMSDialog):
 			for i in iimport:
 				if i not in self.config_.imports.data:
 					self.config_.imports.data.append(i)
-			self.update()
+			self.update_list()
 			self.listbox.select_clear(0,UI.END)
 			self.listbox.select_set(UI.END)
 			self.listbox.see(UI.END)
@@ -71,7 +71,7 @@ class ImportListDialog(PyMSDialog):
 		if self.config_.imports.data and index == len(self.config_.imports.data):
 			self.listbox.select_set(index-1)
 			self.listbox.see(index-1)
-		self.update()
+		self.update_list()
 
 	def iimport(self, _event: UI.Event | None = None) -> None:
 		self.delegate.iimport([self.listbox.get(self.listbox.curselection()[0])], self)
@@ -79,7 +79,7 @@ class ImportListDialog(PyMSDialog):
 	def iimportall(self) -> None:
 		self.delegate.iimport(self.config_.imports.data, self)
 
-	def update(self) -> None:
+	def update_list(self) -> None:
 		sel = 0
 		if self.listbox.size():
 			selection = self.listbox.curselection()

@@ -46,3 +46,6 @@ class TagStateManager:
 			return
 		for item in items:
 			self._update_item(item)
+
+	def is_enabled(self, tag: str) -> bool:
+		return self._tag_states.get(tag, False)
