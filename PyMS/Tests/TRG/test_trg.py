@@ -115,13 +115,13 @@ class Test_binary_round_trip(unittest.TestCase):
 	def test_load_reproduces_model(self) -> None:
 		original = _compile(NORMAL_TEXT)
 		loaded = TRG()
-		loaded.load(io.BytesIO(self._save(original)))
+		loaded.load(self._save(original))
 		self.assertEqual(loaded, original)
 
 	def test_resave_is_byte_identical(self) -> None:
 		data = self._save(_compile(NORMAL_TEXT))
 		reloaded = TRG()
-		reloaded.load(io.BytesIO(data))
+		reloaded.load(data)
 		self.assertEqual(self._save(reloaded), data)
 
 	def test_got_format_omits_header(self) -> None:
@@ -130,12 +130,12 @@ class Test_binary_round_trip(unittest.TestCase):
 
 	def test_missing_header_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			TRG().load(io.BytesIO(b'not a valid header at all'))
+			TRG().load(b'not a valid header at all')
 
 	def test_referenced_unit_properties_round_trip(self) -> None:
 		# An action references the properties, so binary save/load must retain them.
 		original = _compile(PROPERTIES_TEXT)
 		loaded = TRG()
-		loaded.load(io.BytesIO(self._save(original)))
+		loaded.load(self._save(original))
 		self.assertEqual(loaded, original)
 		self.assertEqual(loaded.unit_properties, original.unit_properties)

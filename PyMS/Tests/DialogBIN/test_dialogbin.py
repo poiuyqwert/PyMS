@@ -113,7 +113,7 @@ class Test_load(unittest.TestCase):
 
 	def test_corrupt_data_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			DialogBIN().load(io.BytesIO(b'\x00' * 4))
+			DialogBIN().load(b'\x00' * 4)
 
 
 class Test_save(unittest.TestCase):

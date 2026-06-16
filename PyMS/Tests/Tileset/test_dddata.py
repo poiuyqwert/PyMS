@@ -3,7 +3,6 @@ from ...FileFormats.Tileset.DDDataBIN import DDDataBIN
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
-import io
 import struct
 import unittest
 
@@ -29,19 +28,19 @@ class Test_DDDataBIN(unittest.TestCase):
 
 	def test_load(self) -> None:
 		ddd = DDDataBIN()
-		ddd.load(io.BytesIO(b'\x00' * DDDATA_SIZE))
+		ddd.load(b'\x00' * DDDATA_SIZE)
 		self.assertEqual(ddd.doodad_count(), 512)
 		self.assertEqual(ddd.get_doodad(0), [0] * 256)
 
 	def test_load_reads_values(self) -> None:
 		first = struct.pack('<256H', *range(256))
 		ddd = DDDataBIN()
-		ddd.load(io.BytesIO(first + b'\x00' * (DDDATA_SIZE - len(first))))
+		ddd.load(first + b'\x00' * (DDDATA_SIZE - len(first)))
 		self.assertEqual(ddd.get_doodad(0), list(range(256)))
 
 	def test_load_wrong_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			DDDataBIN().load(io.BytesIO(b'\x00' * 100))
+			DDDataBIN().load(b'\x00' * 100)
 
 	def test_save_byte_length(self) -> None:
 		self.assertEqual(len(IO.output_to_bytes(DDDataBIN().save)), DDDATA_SIZE)
@@ -51,7 +50,7 @@ class Test_DDDataBIN(unittest.TestCase):
 		ddd.get_doodad(5)[0] = 0x1234
 		ddd.get_doodad(5)[255] = 0xFFFF
 		loaded = DDDataBIN()
-		loaded.load(io.BytesIO(IO.output_to_bytes(ddd.save)))
+		loaded.load(IO.output_to_bytes(ddd.save))
 		self.assertEqual(loaded.doodad_count(), 512)
 		self.assertEqual(loaded.get_doodad(5), ddd.get_doodad(5))
 		self.assertEqual(loaded.get_doodad(0), [0] * 256)

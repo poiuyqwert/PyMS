@@ -4,7 +4,6 @@ from ...Utilities.UIKit.FileType import FileType
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
-import io
 import unittest
 
 PALETTE = [(i, (i * 2) % 256, (i * 3) % 256) for i in range(256)]
@@ -60,7 +59,7 @@ class Test_load(unittest.TestCase):
 	def _detect(self, method_name: str) -> Palette:
 		data = _capture(method_name)
 		palette = Palette()
-		palette.load(io.BytesIO(data))
+		palette.load(data)
 		return palette
 
 	def test_detects_riff(self) -> None:
@@ -85,7 +84,7 @@ class Test_load(unittest.TestCase):
 
 	def test_unrecognized_data_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			Palette().load(io.BytesIO(b'not a palette'))
+			Palette().load(b'not a palette')
 
 
 class Test_save_types(unittest.TestCase):

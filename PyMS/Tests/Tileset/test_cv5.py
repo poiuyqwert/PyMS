@@ -4,7 +4,6 @@ from ...Utilities.PyMSError import PyMSError
 from .utils import group_inc, group_full
 from ...Utilities import IO
 
-import io
 import struct
 import unittest
 
@@ -71,11 +70,11 @@ class Test_CV5(unittest.TestCase):
 		cv5.add_group(with_megatiles(group_inc()))
 		cv5.add_group(with_megatiles(group_full()))
 		loaded = CV5()
-		loaded.load(io.BytesIO(IO.output_to_bytes(cv5.save)))
+		loaded.load(IO.output_to_bytes(cv5.save))
 		self.assertEqual(loaded.group_count(), 2)
 		self.assertEqual(loaded.get_group(0), with_megatiles(group_inc()))
 		self.assertEqual(loaded.get_group(1), with_megatiles(group_full()))
 
 	def test_load_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			CV5().load(io.BytesIO(b'\x00' * 51))
+			CV5().load(b'\x00' * 51)

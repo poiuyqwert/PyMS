@@ -3,7 +3,6 @@ from ...FileFormats.Tileset.VX4 import VX4, VX4Megatile, VX4Minitile
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
-import io
 import struct
 import unittest
 
@@ -75,7 +74,7 @@ class Test_VX4(unittest.TestCase):
 		vx4.add_megatile(self._megatile(0))
 		vx4.add_megatile(self._megatile(100))
 		loaded = VX4()
-		loaded.load(io.BytesIO(IO.output_to_bytes(vx4.save)), expanded=False)
+		loaded.load(IO.output_to_bytes(vx4.save), expanded=False)
 		self.assertEqual(loaded.megatile_count(), 2)
 		self.assertEqual(loaded.get_megatile(1), self._megatile(100))
 
@@ -83,7 +82,7 @@ class Test_VX4(unittest.TestCase):
 		vx4 = VX4(expanded=True)
 		vx4.add_megatile(VX4Megatile([VX4Minitile(image_id=70000 + n) for n in range(16)]))
 		loaded = VX4()
-		loaded.load(io.BytesIO(IO.output_to_bytes(vx4.save)), expanded=True)
+		loaded.load(IO.output_to_bytes(vx4.save), expanded=True)
 		self.assertEqual(loaded.get_megatile(0), vx4.get_megatile(0))
 
 	def test_expand(self) -> None:
@@ -93,4 +92,4 @@ class Test_VX4(unittest.TestCase):
 
 	def test_load_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			VX4().load(io.BytesIO(b'\x00' * 33), expanded=False)
+			VX4().load(b'\x00' * 33, expanded=False)

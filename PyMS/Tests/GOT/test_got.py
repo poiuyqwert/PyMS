@@ -101,20 +101,20 @@ class Test_save(unittest.TestCase):
 class Test_load(unittest.TestCase):
 	def test_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			GOT().load(io.BytesIO(b'\x00' * 50))
+			GOT().load(b'\x00' * 50)
 
 	def test_invalid_magic_raises(self) -> None:
 		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[0] = 0
 		with self.assertRaises(PyMSError):
-			GOT().load(io.BytesIO(bytes(data)))
+			GOT().load(data)
 
 	def test_invalid_enum_value_raises(self) -> None:
 		# Offset 73 holds the victory_condition byte; 99 is not a valid member.
 		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[73] = 99
 		with self.assertRaises(PyMSError):
-			GOT().load(io.BytesIO(bytes(data)))
+			GOT().load(data)
 
 
 class Test_decompile_interpret(unittest.TestCase):

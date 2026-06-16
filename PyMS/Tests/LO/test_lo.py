@@ -36,17 +36,17 @@ def _make(frames: list[list[list[int]]]) -> LO:
 class Test_load(unittest.TestCase):
 	def test_reads_frames(self) -> None:
 		lo = LO()
-		lo.load(io.BytesIO(ENCODED))
+		lo.load(ENCODED)
 		self.assertEqual(lo.frames, FRAMES)
 
 	def test_round_trip_with_save(self) -> None:
 		lo = LO()
-		lo.load(io.BytesIO(IO.output_to_bytes(_make(FRAMES).save)))
+		lo.load(IO.output_to_bytes(_make(FRAMES).save))
 		self.assertEqual(lo.frames, FRAMES)
 
 	def test_truncated_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			LO().load(io.BytesIO(b''))
+			LO().load(b'')
 
 
 class Test_save(unittest.TestCase):
@@ -55,12 +55,12 @@ class Test_save(unittest.TestCase):
 
 	def test_round_trip_with_load(self) -> None:
 		loaded = LO()
-		loaded.load(io.BytesIO(IO.output_to_bytes(_make(FRAMES).save)))
+		loaded.load(IO.output_to_bytes(_make(FRAMES).save))
 		self.assertEqual(loaded.frames, FRAMES)
 
 	def test_default_round_trips(self) -> None:
 		loaded = LO()
-		loaded.load(io.BytesIO(IO.output_to_bytes(LO().save)))
+		loaded.load(IO.output_to_bytes(LO().save))
 		self.assertEqual(loaded.frames, [[[0, 0]]])
 
 
@@ -115,5 +115,5 @@ class Test_interpret(unittest.TestCase):
 	def test_round_trip_through_save(self) -> None:
 		lo = _interpret(TEXT)
 		reloaded = LO()
-		reloaded.load(io.BytesIO(IO.output_to_bytes(lo.save)))
+		reloaded.load(IO.output_to_bytes(lo.save))
 		self.assertEqual(reloaded.frames, FRAMES)

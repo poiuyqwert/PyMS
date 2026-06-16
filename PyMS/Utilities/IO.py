@@ -6,7 +6,7 @@ import os, io, tempfile
 from typing import IO, Callable, Iterable, Iterator, Any, Literal
 
 AnyInputText = str | IO[str]
-AnyInputBytes = str | bytes | IO[bytes]
+AnyInputBytes = str | bytes | bytearray | IO[bytes]
 
 AnyOutputText = str | IO[str]
 AnyOutputBytes = str | IO[bytes]
@@ -47,7 +47,7 @@ class InputBytes:
 		if isinstance(any_input, str):
 			self.file = open(any_input, 'rb') # pylint: disable=consider-using-with
 			self.close = True
-		elif isinstance(any_input, bytes):
+		elif isinstance(any_input, (bytes, bytearray)):
 			self.file = io.BytesIO(any_input)
 		else:
 			self.file = any_input
@@ -269,7 +269,7 @@ def open_input_text(any_input: AnyInputText) -> IO[str]:
 def open_input_bytes(any_input: AnyInputBytes) -> IO[bytes]:
 	if isinstance(any_input, str):
 		return open(any_input, 'rb')
-	elif isinstance(any_input, bytes):
+	elif isinstance(any_input, (bytes, bytearray)):
 		return io.BytesIO(any_input)
 	else:
 		return any_input

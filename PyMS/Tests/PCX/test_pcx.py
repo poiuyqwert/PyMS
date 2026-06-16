@@ -74,7 +74,7 @@ class Test_load(unittest.TestCase):
 		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[-769] = 0x00  # corrupt the 0x0C palette marker
 		with self.assertRaises(PyMSError):
-			PCX().load(bytes(data))
+			PCX().load(data)
 
 	def test_pal_mode_accepts_small_image(self) -> None:
 		loaded = PCX()

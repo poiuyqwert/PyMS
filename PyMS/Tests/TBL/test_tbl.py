@@ -94,35 +94,35 @@ class Test_save(unittest.TestCase):
 class Test_load(unittest.TestCase):
 	def test_loads_strings_with_terminator(self) -> None:
 		tbl = TBL()
-		tbl.load(io.BytesIO(b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'))
+		tbl.load(b'\x02\x00\x06\x00\x09\x00AB\x00C\x00')
 		self.assertEqual(tbl.strings, ['AB\x00', 'C\x00'])
 
 	def test_round_trip_load_save_is_byte_identical(self) -> None:
 		data = b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'
 		tbl = TBL()
-		tbl.load(io.BytesIO(data))
+		tbl.load(data)
 		self.assertEqual(IO.output_to_bytes(tbl.save), data)
 
 	def test_overlapping_offsets_share_string(self) -> None:
 		data = struct.pack('<H', 2) + struct.pack('<H', 6) + struct.pack('<H', 6) + b'AB\x00'
 		tbl = TBL()
-		tbl.load(io.BytesIO(data))
+		tbl.load(data)
 		self.assertEqual(tbl.strings, ['AB\x00', 'AB\x00'])
 
 	def test_empty(self) -> None:
 		tbl = TBL()
-		tbl.load(io.BytesIO(b'\x00\x00'))
+		tbl.load(b'\x00\x00')
 		self.assertEqual(tbl.strings, [])
 
 	def test_truncated_header_raises(self) -> None:
 		tbl = TBL()
 		with self.assertRaises(PyMSError):
-			tbl.load(io.BytesIO(b'\x02\x00\x06\x00'))
+			tbl.load(b'\x02\x00\x06\x00')
 
 	def test_empty_input_raises(self) -> None:
 		tbl = TBL()
 		with self.assertRaises(PyMSError):
-			tbl.load(io.BytesIO(b''))
+			tbl.load(b'')
 
 
 class Test_decompile(unittest.TestCase):
@@ -186,7 +186,7 @@ class Test_decompile_interpret_round_trip(unittest.TestCase):
 	def test_binary_to_text_to_binary_is_identical(self) -> None:
 		data = b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'
 		loaded = TBL()
-		loaded.load(io.BytesIO(data))
+		loaded.load(data)
 		reinterpreted = TBL()
 		reinterpreted.strings = _interpret_text(_decompile_to_text(loaded))
 		self.assertEqual(IO.output_to_bytes(reinterpreted.save), data)

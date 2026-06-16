@@ -5,7 +5,6 @@ from ...FileFormats.Images import Pixels
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
-import io
 import struct
 import unittest
 
@@ -30,13 +29,13 @@ class Test_save_load_round_trip(unittest.TestCase):
 		]
 		fnt = _make_fnt(3, 2, 1, letters)
 		loaded = FNT()
-		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
+		loaded.load(IO.output_to_bytes(fnt.save))
 		self.assertEqual(loaded.letters, letters)
 
 	def test_dimensions_and_start_round_trip(self) -> None:
 		fnt = _make_fnt(3, 2, 5, [[[1, 0, 2], [0, 3, 0]]])
 		loaded = FNT()
-		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
+		loaded.load(IO.output_to_bytes(fnt.save))
 		self.assertEqual((loaded.width, loaded.height, loaded.start), (3, 2, 5))
 
 	def test_sizes_capture_bounding_boxes(self) -> None:
@@ -47,7 +46,7 @@ class Test_save_load_round_trip(unittest.TestCase):
 		]
 		fnt = _make_fnt(3, 2, 1, letters)
 		loaded = FNT()
-		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
+		loaded.load(IO.output_to_bytes(fnt.save))
 		self.assertEqual(loaded.sizes, [(3, 2, 0, 0), (1, 1, 1, 1), (0, 0, 0, 0)])
 
 	def test_identical_letters_are_deduplicated(self) -> None:
@@ -71,12 +70,12 @@ class Test_load(unittest.TestCase):
 
 	def test_invalid_header_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			FNT().load(io.BytesIO(b'XXXX0000'))
+			FNT().load(b'XXXX0000')
 
 	def test_corrupt_data_raises(self) -> None:
 		# Valid header claiming 4 glyphs but no offset table follows.
 		with self.assertRaises(PyMSError):
-			FNT().load(io.BytesIO(b'FONT' + struct.pack('<4B', 1, 4, 3, 2)))
+			FNT().load(b'FONT' + struct.pack('<4B', 1, 4, 3, 2))
 
 
 class Test_fnttobmp(unittest.TestCase):
