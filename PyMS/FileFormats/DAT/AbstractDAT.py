@@ -142,6 +142,8 @@ class AbstractDAT:
 			if match:
 				check_entry()
 				name,raw_id = match.groups()
+				if raw_id is None:
+					raise PyMSError('Import', 'Entry header missing id', line=n, code=line)
 				entry_id = int(raw_id)
 				if entry_id in entry_starts:
 					raise PyMSError('Import', f'Entry {entry_id} already exists', line=n, code=line)
@@ -267,8 +269,9 @@ class AbstractDAT:
 			if len(data_entries) != 1:
 				raise PyMSError('Import', f'Too many entries to import (expected 1, got {len(data_entries)})')
 			data = data_entries[0]
-		elif export_type == ExportType.json and not isinstance(data, list):
-			raise PyMSError('Import', 'Expected json list to import')
+		elif export_type == ExportType.json:
+			if not isinstance(data, dict):
+				raise PyMSError('Import', 'Expected json object to import')
 		else:
 			raise PyMSError('Import', f'Invalid import type `{export_type}`')
 		self.get_entry(entry_id).import_data(data)
