@@ -124,7 +124,7 @@ class PyGRP(UI.MainWindow):
 		for pal in os.listdir(Assets.palettes_dir):
 			try:
 				p = Palette.Palette()
-				p.load_file(Assets.palette_file_path(pal))
+				p.load(Assets.palette_file_path(pal))
 				if pal == self.config_.preview.palette.value:
 					s = self.pallist.size() # type: ignore[assignment]
 					self.pal = pal

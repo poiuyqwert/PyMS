@@ -147,7 +147,7 @@ class PyPCX(UI.MainWindow):
 				return
 		pcx = PCX()
 		try:
-			pcx.load_file(file)
+			pcx.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -171,7 +171,7 @@ class PyPCX(UI.MainWindow):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.pcx.save_file(file_path)
+			self.pcx.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
@@ -190,7 +190,7 @@ class PyPCX(UI.MainWindow):
 			return
 		pal = Palette()
 		try:
-			pal.load_file(file)
+			pal.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return

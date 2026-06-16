@@ -197,7 +197,7 @@ class Tileset:
 		self.dddata = DDDataBIN()
 		self.dddata.load_file(dddata_path)
 		self.wpe = Palette()
-		self.wpe.load_file(wpe_path)
+		self.wpe.load(wpe_path)
 		self.cv5_path = cv5_path
 		self.vf4_path = vf4_path
 		self.vx4_path = vx4_path

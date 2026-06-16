@@ -42,7 +42,7 @@ def main(): # type: () -> None
 				pal = Palette()
 				print("Reading Icons.pal...")
 				try:
-					pal.load_file(Assets.palette_file_path('Icons.pal'))
+					pal.load(Assets.palette_file_path('Icons.pal'))
 					print(" - Read Icons.pal successfully")
 				except PyMSError as e:
 					print(repr(e))

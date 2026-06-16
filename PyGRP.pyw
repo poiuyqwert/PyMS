@@ -52,7 +52,7 @@ def main(): # type: () -> None
 				fullfile += ext
 			print("Reading palette '%s'..." % fullfile)
 			try:
-				pal.load_file(fullfile)
+				pal.load(fullfile)
 				print(" - '%s' read successfully" % fullfile)
 				path = os.path.dirname(args[0])
 				if not path:

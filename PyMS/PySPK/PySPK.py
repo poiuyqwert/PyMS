@@ -279,7 +279,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		err = None
 		try:
 			platformwpe = Palette.Palette()
-			platformwpe.load_file(self.mpq_handler.load_file(self.config_.settings.files.platform_wpe.file_path))
+			platformwpe.load(self.mpq_handler.load_file(self.config_.settings.files.platform_wpe.file_path))
 		except PyMSError as e:
 			err = e
 		else:

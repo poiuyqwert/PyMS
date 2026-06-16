@@ -194,11 +194,11 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			font10 = FNT.FNT()
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
-			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load_file)
 			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
-			unitpal.load_file(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
-			icons.load_file(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
+			unitpal.load(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
+			icons.load(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
 			err = e
 		else:

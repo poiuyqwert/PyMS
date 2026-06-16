@@ -40,7 +40,7 @@ class IconData:
 		try:
 			pcx = PCX()
 			path = self.data_context.config.settings.files.ticon.file_path
-			pcx.load_file(self.data_context.mpq_handler.load_file(path))
+			pcx.load(self.data_context.mpq_handler.load_file(path))
 		except Exception:
 			pass
 		else:

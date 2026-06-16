@@ -31,13 +31,13 @@ ASKCOLOR = 'tkinter.colorchooser.askcolor'
 SELECT_OPEN = 'PyMS.Utilities.Config.SelectFile.select_open'
 SELECT_SAVE = 'PyMS.Utilities.Config.SelectFile.select_save'
 PALETTE_SAVE = 'PyMS.FileFormats.Palette.Palette.save'
-PALETTE_LOAD_FILE = 'PyMS.FileFormats.Palette.Palette.load_file'
+PALETTE_LOAD_FILE = 'PyMS.FileFormats.Palette.Palette.load'
 ALLOW_OVERWRITE = 'PyMS.PyPAL.PyPAL.check_allow_overwrite_internal_file'
 ERROR_DIALOG = 'PyMS.PyPAL.PyPAL.ErrorDialog'
 
 
 def _raw_rgb_bytes() -> bytes:
-	# 768-byte raw RGB dump — `Palette.load_file` detects this as `raw_rgb`.
+	# 768-byte raw RGB dump — `Palette.load` detects this as `raw_rgb`.
 	return bytes(component for color in PALETTE for component in color)
 
 

@@ -61,4 +61,8 @@ Note: SFmpq tests are expected to fail on macOS at this time
 
 Run both `pylint` and `mypy`, fix all issues reported (do not use `# pylint: disable=<rule>` or `#type: ignore[<rule>]` to "fix" issues without checking with the user first)
 
+- **Check the whole affected surface, not just the files you edited.** A change to a public method/class/signature can break callers in files you never opened. Renaming or removing a public method (or changing its signature) has a blast radius of *every* caller, so a file-scoped `mypy` run cannot see the breakage. After any such change, run mypy package-wide — `pyenv exec mypy PyMS/ *.pyw` — not just on the changed module.
+- **Don't trust the incremental `.mypy_cache` when verifying a cross-cutting change.** It can report phantom errors from an intermediate state, or hide real ones. Verify with `pyenv exec mypy --no-incremental ...` (or `rm -rf .mypy_cache` first), and confirm any reported error by actually reading the cited line before acting on it.
+- **`.pyw` entry points are invisible to mypy's type inference.** They use the Python-2 `# type:` comment style, so mypy usually can't infer instance types and therefore won't flag calls to renamed/removed methods there. Check `.pyw` callers by reading/grepping, not by relying on mypy.
+
 ## 4. Repeat steps 2 and 3 until all tests pass and no static analysis issues remain

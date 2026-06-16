@@ -6,14 +6,11 @@ from .PCX import PCX
 from .BMP import BMP
 
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.fileutils import load_file
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 from ..Utilities import UIKit # TODO: Note sure I like this referring to UIKit
 
 import struct
 from enum import Enum
-
-from typing import BinaryIO
 
 class Palette:
 	class Format(Enum):
@@ -73,13 +70,17 @@ class Palette:
 		self.palette: RawPalette = [(0,0,0)] * 256
 		self.format: Palette.Format | None = None
 
-	def load_riff_pal(self, data: bytes) -> RawPalette:
+	def load_riff_pal(self, any_input: IO.AnyInputBytes) -> RawPalette:
 		# TODO: Better parsing, specs here: https://worms2d.info/Palette_file
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if len(data) != 1048 or not data.startswith(b'RIFF\x00\x00\x00\x00PAL data'):
 			raise PyMSError('Palette', "Unsupported RIFF palette file, could possibly be corrupt")
 		return self.load_sc_pal(data[24:], 4)
 
-	def load_jasc_pal(self, data: bytes) -> RawPalette:
+	def load_jasc_pal(self, any_input: IO.AnyInputBytes) -> RawPalette:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		lines = data.decode('utf-8').split('\r\n')
 		if not lines[-1]:
 			lines.pop()
@@ -91,26 +92,28 @@ class Palette:
 			palette.append((int(r),int(g),int(b)))
 		return palette
 
-	def load_zsoft_pcx(self, data: bytes) -> RawPalette:
+	def load_zsoft_pcx(self, any_input: IO.AnyInputBytes) -> RawPalette:
 		pcx = PCX()
 		try:
-			pcx.load_data(data)
+			pcx.load(any_input)
 		except Exception as exc:
 			raise PyMSError('Palette', "Unsupported PCX palette file, could possibly be corrupt") from exc
 		return pcx.palette
 
-	def load_bmp(self, data: bytes) -> RawPalette:
+	def load_bmp(self, any_input: IO.AnyInputBytes) -> RawPalette:
 		bmp = BMP()
 		try:
-			bmp.load(data)
+			bmp.load(any_input)
 		except Exception as exc:
 			raise PyMSError('Palette', "Unsupported BMP palette file, could possibly be corrupt") from exc
 		return bmp.palette
 
-	def load_sc_wpe(self, data: bytes) -> RawPalette:
-		return self.load_sc_pal(data, 4)
+	def load_sc_wpe(self, any_input: IO.AnyInputBytes) -> RawPalette:
+		return self.load_sc_pal(any_input, 4)
 
-	def load_sc_pal(self, data: bytes, components: int = 3) -> RawPalette:
+	def load_sc_pal(self, any_input: IO.AnyInputBytes, components: int = 3) -> RawPalette:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		size = 256 * components
 		if len(data) != size:
 			raise PyMSError('Palette', "Unsupported PAL palette file, could possibly be corrupt")
@@ -120,8 +123,9 @@ class Palette:
 			palette.append((r,g,b))
 		return palette
 
-	def load_file(self, path: str | BinaryIO) -> None:
-		data = load_file(path, 'palette')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		formats = (
 			(Palette.Format.riff, self.load_riff_pal),
 			(Palette.Format.jasc, self.load_jasc_pal),
@@ -140,51 +144,36 @@ class Palette:
 			except Exception:
 				pass
 		else:
-			raise PyMSError('Palette', f"Unsupported palette file '{path}', could possibly be corrupt")
+			raise PyMSError('Palette', "Unsupported palette file, could possibly be corrupt")
 		self.palette = palette
 
-	def load_data(self, palette: RawPalette) -> None:
+	def load_palette(self, palette: RawPalette) -> None:
 		self.palette = list(palette)
 
-	def save_riff_pal(self, path: str) -> None:
-		try:
-			f = AtomicWriter(path,'wb')
-		except Exception as exc:
-			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
-		f.write(b'RIFF\x00\x00\x00\x00PAL data\x04\x04\x00\x00\x00\x03\x00\x01')
-		for c in self.palette:
-			f.write(struct.pack('3Bx',*c))
-		f.close()
+	def save_riff_pal(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			f.write(b'RIFF\x00\x00\x00\x00PAL data\x04\x04\x00\x00\x00\x03\x00\x01')
+			for c in self.palette:
+				f.write(struct.pack('3Bx',*c))
 
-	def save_jasc_pal(self, path: str) -> None:
-		try:
-			f = AtomicWriter(path, 'w')
-		except Exception as exc:
-			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
-		f.write('JASC-PAL\r\n0100\r\n256\r\n')
+	def save_jasc_pal(self, output: IO.AnyOutputBytes) -> None:
+		text = 'JASC-PAL\r\n0100\r\n256\r\n'
 		for color in self.palette:
-			f.write(' '.join(str(c) for c in color) + '\r\n')
-		f.close()
+			text += ' '.join(str(c) for c in color) + '\r\n'
+		with IO.OutputBytes(output) as f:
+			f.write(text.encode('utf-8'))
 
-	def save_sc_wpe(self, path: str) -> None:
-		try:
-			f = AtomicWriter(path,'wb')
-		except Exception as exc:
-			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
-		for c in self.palette:
-			f.write(struct.pack('3Bx',*c))
-		f.close()
+	def save_sc_wpe(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			for c in self.palette:
+				f.write(struct.pack('3Bx',*c))
 
-	def save_sc_pal(self, path: str) -> None:
-		try:
-			f = AtomicWriter(path,'wb')
-		except Exception as exc:
-			raise PyMSError('Palette', f"Could not save palette to file '{path}'") from exc
-		for c in self.palette:
-			f.write(struct.pack('3B',*c))
-		f.close()
+	def save_sc_pal(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			for c in self.palette:
+				f.write(struct.pack('3B',*c))
 
-	def save(self, path: str, pal_format: Palette.Format) -> None:
+	def save(self, output: IO.AnyOutputBytes, pal_format: Palette.Format) -> None:
 		formats = {
 			Palette.Format.riff: self.save_riff_pal,
 			Palette.Format.jasc: self.save_jasc_pal,
@@ -194,7 +183,7 @@ class Palette:
 		save_method = formats.get(pal_format)
 		if not save_method:
 			raise PyMSError('Palette', f"Unsupported save format '{pal_format}'")
-		save_method(path)
+		save_method(output)
 
 Palette.FileType.riff = Palette.FileType(Palette.Format.riff, 'pal')
 Palette.FileType.jasc = Palette.FileType(Palette.Format.jasc, 'pal')

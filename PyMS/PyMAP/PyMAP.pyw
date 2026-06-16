@@ -2352,14 +2352,14 @@ class PyMAP(Tk):
 			pal = PAL.Palette()
 			for p in ['Units','bfire','gfire','ofire','Terrain']:#,'Icons']:
 				try:
-					pal.load_file(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
+					pal.load(self.settings.get('%s.pal' % p,os.path.join(BASE_DIR, 'Palettes', '%s%spal' % (p,os.extsep))))
 				except Exception:
 					if p == 'Units':
 						raise
 					continue
 				palettes[p] = pal.palette
 			tunitpcx = PCX.PCX()
-			tunitpcx.load_file(self.mpqhandler.get_file(self.profile['tunitpcx']))
+			tunitpcx.load(self.mpqhandler.get_file(self.profile['tunitpcx']))
 		except PyMSError as e:
 			err = e
 		else:

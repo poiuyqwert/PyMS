@@ -379,7 +379,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		err = None
 		try:
 			palette = PCX()
-			palette.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			palette.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 		except PyMSError as e:
 			err = e
 		else:

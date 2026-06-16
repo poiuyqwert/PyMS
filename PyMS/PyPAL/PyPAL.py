@@ -254,7 +254,7 @@ class PyPAL(UI.MainWindow):
 				return
 		pal = Palette()
 		try:
-			pal.load_file(file)
+			pal.load(file)
 			self.format = pal.format
 		except PyMSError as e:
 			ErrorDialog(self, e)

@@ -107,7 +107,7 @@ class DataContext:
 		]
 		for name,palette_config in palette_configs:
 			try:
-				pal.load_file(palette_config.file_path)
+				pal.load(palette_config.file_path)
 			except Exception:
 				continue
 			self.palettes[name] = pal.palette

@@ -40,7 +40,7 @@ def main(): # type: () -> None
 			if opt.convert:
 				print("Reading PCX '%s'..." % args[0])
 				try:
-					pcx.load_file(args[0])
+					pcx.load(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					bmp.set_pixels(pcx.image,pcx.palette)
 					bmp.save(args[1])
@@ -54,7 +54,7 @@ def main(): # type: () -> None
 					bmp.load(args[0])
 					print(" - '%s' read successfully\nConverting '%s' to %s file '%s'..." % (args[0], args[0], ext.upper(), args[1]))
 					pcx.load_pixels(bmp.image,bmp.palette)
-					pcx.save_file(args[1])
+					pcx.save(args[1])
 				except PyMSError as e:
 					print(repr(e))
 				else:

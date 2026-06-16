@@ -488,7 +488,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			try:
 				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
-				background.load_file(self.mpq_handler.load_file(path))
+				background.load(self.mpq_handler.load_file(path))
 			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -561,7 +561,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		for path in check:
 			try:
 				tfont = PCX.PCX()
-				tfont.load_file(self.mpq_handler.load_file(path))
+				tfont.load(self.mpq_handler.load_file(path))
 			except Exception:
 				tfont = None
 			else:
@@ -595,7 +595,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			font16 = FNT.FNT()
 			font16x = FNT.FNT()
 
-			tfontgam.load_file(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
+			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
 			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
 			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, font14.load_file)
 			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, font16.load_file)

@@ -167,12 +167,12 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 			stat_txt.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.stat_txt.file_path))
 			imagestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.images.file_path))
 			sfxdatatbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.sfxdata.file_path))
-			unitsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
-			weaponsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.weapons.file_path))
-			flingydat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.flingy.file_path))
-			spritesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.sprites.file_path))
-			imagesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.images.file_path))
-			soundsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.sfxdata.file_path))
+			unitsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
+			weaponsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.weapons.file_path))
+			flingydat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.flingy.file_path))
+			spritesdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.sprites.file_path))
+			imagesdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.images.file_path))
+			soundsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.sfxdata.file_path))
 		except PyMSError as e:
 			err = e
 		else:

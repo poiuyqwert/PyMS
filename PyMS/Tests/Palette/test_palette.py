@@ -2,44 +2,38 @@
 from ...FileFormats.Palette import Palette
 from ...Utilities.UIKit.FileType import FileType
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 
 import io
 import unittest
-from unittest import mock
 
 PALETTE = [(i, (i * 2) % 256, (i * 3) % 256) for i in range(256)]
 Format = Palette.Format
 
 
-def _capture(method_name: str, *, text: bool) -> bytes:
+def _capture(method_name: str) -> bytes:
 	pal = Palette()
 	pal.palette = list(PALETTE)
-	buffer: io.StringIO | io.BytesIO = io.StringIO() if text else io.BytesIO()
-	writer = mock.MagicMock()
-	writer.write.side_effect = buffer.write
-	with mock.patch('PyMS.FileFormats.Palette.AtomicWriter', return_value=writer):
-		getattr(pal, method_name)('out.pal')
-	value = buffer.getvalue()
-	return value.encode('utf-8') if isinstance(value, str) else value
+	return IO.output_to_bytes(getattr(pal, method_name))
 
 
 class Test_format_round_trips(unittest.TestCase):
 	def test_riff(self) -> None:
-		data = _capture('save_riff_pal', text=False)
+		data = _capture('save_riff_pal')
 		self.assertEqual(len(data), 1048)
 		self.assertEqual(Palette().load_riff_pal(data), PALETTE)
 
 	def test_jasc(self) -> None:
-		data = _capture('save_jasc_pal', text=True)
+		data = _capture('save_jasc_pal')
 		self.assertEqual(Palette().load_jasc_pal(data), PALETTE)
 
 	def test_sc_wpe(self) -> None:
-		data = _capture('save_sc_wpe', text=False)
+		data = _capture('save_sc_wpe')
 		self.assertEqual(len(data), 1024)  # 256 * RGBA
 		self.assertEqual(Palette().load_sc_wpe(data), PALETTE)
 
 	def test_sc_pal(self) -> None:
-		data = _capture('save_sc_pal', text=False)
+		data = _capture('save_sc_pal')
 		self.assertEqual(len(data), 768)  # 256 * RGB
 		self.assertEqual(Palette().load_sc_pal(data), PALETTE)
 
@@ -62,36 +56,36 @@ class Test_parser_validation(unittest.TestCase):
 			Palette().load_sc_pal(b'\x00' * 100)
 
 
-class Test_load_file(unittest.TestCase):
-	def _detect(self, method_name: str, text: bool) -> Palette:
-		data = _capture(method_name, text=text)
+class Test_load(unittest.TestCase):
+	def _detect(self, method_name: str) -> Palette:
+		data = _capture(method_name)
 		palette = Palette()
-		palette.load_file(io.BytesIO(data))
+		palette.load(io.BytesIO(data))
 		return palette
 
 	def test_detects_riff(self) -> None:
-		palette = self._detect('save_riff_pal', text=False)
+		palette = self._detect('save_riff_pal')
 		self.assertEqual(palette.format, Format.riff)
 		self.assertEqual(palette.palette, PALETTE)
 
 	def test_detects_jasc(self) -> None:
-		palette = self._detect('save_jasc_pal', text=True)
+		palette = self._detect('save_jasc_pal')
 		self.assertEqual(palette.format, Format.jasc)
 		self.assertEqual(palette.palette, PALETTE)
 
 	def test_detects_wpe_as_raw_rgba(self) -> None:
-		palette = self._detect('save_sc_wpe', text=False)
+		palette = self._detect('save_sc_wpe')
 		self.assertEqual(palette.format, Format.raw_rgba)
 		self.assertEqual(palette.palette, PALETTE)
 
 	def test_detects_pal_as_raw_rgb(self) -> None:
-		palette = self._detect('save_sc_pal', text=False)
+		palette = self._detect('save_sc_pal')
 		self.assertEqual(palette.format, Format.raw_rgb)
 		self.assertEqual(palette.palette, PALETTE)
 
 	def test_unrecognized_data_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			Palette().load_file(io.BytesIO(b'not a palette'))
+			Palette().load(io.BytesIO(b'not a palette'))
 
 
 class Test_save_types(unittest.TestCase):

@@ -64,7 +64,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		self.overlaygrp: CacheGRP | None = None
 		self.overlaygrp_cache: dict[int, UI.Image | None] = {}
 		self.unitpal = Palette()
-		self.unitpal.load_file(Assets.palette_file_path('Units.pal'))
+		self.unitpal.load(Assets.palette_file_path('Units.pal'))
 		self.previewing_basegrp_frame: int | None = None
 		self.previewing_overlaygrp_frame: int | None = None
 		self.previewing_offset: tuple[int, int] | None = None

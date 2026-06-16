@@ -382,7 +382,7 @@ class WidgetNode:
 			if self.photo is None:
 				try:
 					pcx = PCX.PCX()
-					pcx.load_file(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
+					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					self.photo = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
 				except Exception:
 					self.delegate.capture_exception()
