@@ -41,7 +41,7 @@ def main(): # type: () -> None
 			try:
 				if opt.convert:
 					print("Reading LO? '%s'..." % args[0])
-					lo.load_file(args[0])
+					lo.load(args[0])
 					print(" - '%s' read successfully\nDecompiling LO? file '%s'..." % (args[0],args[0]))
 					lo.decompile(args[1])
 					print(" - '%s' written succesfully" % args[1])
@@ -49,7 +49,7 @@ def main(): # type: () -> None
 					print("Interpreting file '%s'..." % args[0])
 					lo.interpret(args[0])
 					print(" - '%s' read successfully\nCompiling file '%s' to LO? format..." % (args[0],args[0]))
-					lo.compile(args[1])
+					lo.save(args[1])
 					print(" - '%s' written succesfully" % args[1])
 			except PyMSError as e:
 				print(repr(e))

@@ -1,13 +1,10 @@
 
 from __future__ import annotations
 
-from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import IO
 
 import struct
-
-from typing import BinaryIO
 
 class VF4Flag:
 	walkable    = 0x0001
@@ -51,10 +48,11 @@ class VF4:
 		self._megatile.append(flags)
 		return tile_id
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'VF4')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if data and len(data) % 32:
-			raise PyMSError('Load', f"'{file}' is an invalid VF4 file")
+			raise PyMSError('Load', "Invalid VF4 file")
 		all_megatile: list[VF4Megatile] = []
 		try:
 			o = 0
@@ -64,20 +62,12 @@ class VF4:
 				all_megatile.append(flags)
 				o += 32
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported VF4 file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported VF4 file, could possibly be corrupt") from exc
 		self._megatile = all_megatile
 
-	def save_file(self, file: str | BinaryIO) -> None:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''
 		for flags in self._megatile:
 			data += flags.save_data()
-		if isinstance(file, str):
-			try:
-				f = AtomicWriter(file, 'wb')
-				f.write(data)
-				f.close()
-			except Exception as exc:
-				raise PyMSError('Save', f"Could not save the VF4 to '{file}'") from exc
-		else:
-			file.write(data)
-			file.close()
+		with IO.OutputBytes(output) as f:
+			f.write(data)

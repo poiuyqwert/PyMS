@@ -35,17 +35,17 @@ class SPK:
 		self.layers: list[SPKLayer] = []
 		self.images: list[SPKImage] = []
 
-	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(any_input) as input_bytes:
 			data = input_bytes.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
 			raise PyMSError('Load', "Unsupported SPK file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		layer_count = struct.unpack('<H', data[:2])[0]
 		star_counts = []
 		o = 2
@@ -152,12 +152,12 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def save_file(self, output: IO.AnyOutputBytes) -> None:
-		data = self.save_data()
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		data = self._save_data()
 		with IO.OutputBytes(output) as f:
 			f.write(data)
 
-	def save_data(self) -> bytes:
+	def _save_data(self) -> bytes:
 		headers = struct.pack('<H', len(self.layers))
 		pixels = b''
 		pixels_offset = 2

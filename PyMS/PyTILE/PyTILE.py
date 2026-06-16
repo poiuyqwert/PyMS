@@ -850,7 +850,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 				return
 		tileset = Tileset()
 		try:
-			tileset.load_file(file)
+			tileset.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -878,7 +878,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.tileset.save_file(file_path)
+			self.tileset.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

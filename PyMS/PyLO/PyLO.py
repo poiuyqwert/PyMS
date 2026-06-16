@@ -516,7 +516,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		lo = LO()
 		d = io.StringIO()
 		try:
-			lo.load_file(file)
+			lo.load(file)
 			lo.decompile(d)
 		except PyMSError as e:
 			ErrorDialog(self, e)
@@ -571,7 +571,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 		try:
 			text = self.text.get('1.0', UI.END)
 			self.lo.interpret(text)
-			self.lo.compile(file_path)
+			self.lo.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

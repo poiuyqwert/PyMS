@@ -2645,7 +2645,7 @@ class PyMAP(Tk):
 						tilesetFiles.append(tilesetFile)
 					if len(tilesetFiles) == len(tilesetPaths):
 						tileset = Tilesets.Tileset()
-						tileset.load_file(*tilesetFiles)
+						tileset.load(tilesetFiles[0], vf4=tilesetFiles[1], vx4=tilesetFiles[2], vr4=tilesetFiles[3], dddata=tilesetFiles[4], wpe=tilesetFiles[5])
 					self.mpqhandler.close_mpqs()
 			except PyMSError as e:
 				self.mpqhandler.close_mpqs()

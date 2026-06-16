@@ -211,62 +211,62 @@ class Test_load_palette(unittest.TestCase):
 		self.assertEqual(palette[0], (10, 20, 30))
 
 
-class Test_load_data(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_smk2(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(sig=b'SMK2', width=320, height=200))
+		smk.load(_build_smk(sig=b'SMK2', width=320, height=200))
 		self.assertEqual(smk.version, SMK.SMK2)
 		self.assertEqual((smk.width, smk.height), (320, 200))
 		self.assertEqual(smk.frames, 1)
 
 	def test_smk4(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(sig=b'SMK4'))
+		smk.load(_build_smk(sig=b'SMK4'))
 		self.assertEqual(smk.version, SMK.SMK4)
 
 	def test_fps_positive_framerate(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(framerate=100))
+		smk.load(_build_smk(framerate=100))
 		self.assertEqual(smk.fps, 10)
 
 	def test_fps_negative_framerate(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(framerate=-50))
+		smk.load(_build_smk(framerate=-50))
 		self.assertEqual(smk.fps, 2000)
 
 	def test_fps_zero_framerate(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(framerate=0))
+		smk.load(_build_smk(framerate=0))
 		self.assertEqual(smk.fps, 10)
 
 	def test_ring_frame_increments_count(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk(frames=1, flags=SMK.SMK_FLAG_RING_FRAME))
+		smk.load(_build_smk(frames=1, flags=SMK.SMK_FLAG_RING_FRAME))
 		self.assertEqual(smk.frames, 2)
 
 	def test_invalid_signature_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			SMK().load_data(_build_smk(sig=b'XXXX'))
+			SMK().load(_build_smk(sig=b'XXXX'))
 
 	def test_builds_trees_and_info(self) -> None:
 		smk = SMK()
-		smk.load_data(_build_smk())
+		smk.load(_build_smk())
 		assert smk.audio_info is not None and smk.frame_info is not None
 		self.assertEqual(len(smk.audio_info), 7)
 		self.assertEqual(len(smk.frame_info), 1)
 		self.assertIsNotNone(smk.tree_mmap)
 		self.assertIsNotNone(smk.tree_type)
 
-	def test_load_file_accepts_binary_io(self) -> None:
+	def test_load_accepts_binary_io(self) -> None:
 		smk = SMK()
-		smk.load_file(io.BytesIO(_build_smk()))
+		smk.load(io.BytesIO(_build_smk()))
 		self.assertEqual(smk.version, SMK.SMK2)
 
 
 class Test_real_file(unittest.TestCase):
 	def _load(self) -> SMK:
 		smk = SMK()
-		smk.load_file(resource_path(SAMPLE_SMK, __file__))
+		smk.load(resource_path(SAMPLE_SMK, __file__))
 		return smk
 
 	def test_header(self) -> None:

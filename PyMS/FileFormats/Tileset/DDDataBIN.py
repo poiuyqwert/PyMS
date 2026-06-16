@@ -1,15 +1,10 @@
 
 from __future__ import annotations
 
-from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import IO
 
 import struct
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
 
 class DDDataBIN:
 	def __init__(self) -> None:
@@ -28,10 +23,11 @@ class DDDataBIN:
 		self._doodads.append(doodad)
 		return doodad_id
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'dddata.dat')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if len(data) != 262144:
-			raise PyMSError('Load', f"'{file}' is an invalid dddata.bin file")
+			raise PyMSError('Load', "Invalid dddata.bin file")
 		doodads: list[list[int]] = []
 		try:
 			o = 0
@@ -39,20 +35,12 @@ class DDDataBIN:
 				doodads.append(list(int(v) for v in struct.unpack('<256H', data[o:o+512])))
 				o += 512
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported dddata.dat file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported dddata.dat file, could possibly be corrupt") from exc
 		self._doodads = doodads
 
-	def save_file(self, file: str | BinaryIO) -> None:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''
 		for d in self._doodads:
 			data += struct.pack('<256H', *d)
-		if isinstance(file, str):
-			try:
-				f = AtomicWriter(file, 'wb')
-				f.write(data)
-				f.close()
-			except Exception as exc:
-				raise PyMSError('Save', f"Could not save the dddata.dat to '{file}'") from exc
-		else:
-			file.write(data)
-			file.close()
+		with IO.OutputBytes(output) as f:
+			f.write(data)

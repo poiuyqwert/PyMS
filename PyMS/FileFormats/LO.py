@@ -8,7 +8,7 @@ class LO:
 	def __init__(self) -> None:
 		self.frames = [[[0,0]]]
 
-	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(any_input) as input_bytes:
 			data = input_bytes.read()
 		try:
@@ -72,7 +72,7 @@ class LO:
 					f.write(f'    ({overlay[0]}, {overlay[1]})\n')
 				f.write('\n')
 
-	def compile(self, output: IO.AnyOutputBytes) -> None:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		with IO.OutputBytes(output) as f:
 			overlays = len(self.frames[0])
 			f.write(struct.pack('<LL', len(self.frames), overlays))

@@ -1,7 +1,7 @@
 
 from ...FileFormats.Tileset.VF4 import VF4, VF4Megatile
 from ...Utilities.PyMSError import PyMSError
-from .utils import save_to_bytes
+from ...Utilities import IO
 
 import io
 import struct
@@ -55,16 +55,16 @@ class Test_VF4(unittest.TestCase):
 		vf4.add_megatile(self._megatile(0x01))
 		vf4.add_megatile(self._megatile(0x1F))
 		loaded = VF4()
-		loaded.load_file(io.BytesIO(save_to_bytes(vf4)))
+		loaded.load(io.BytesIO(IO.output_to_bytes(vf4.save)))
 		self.assertEqual(loaded.megatile_count(), 2)
 		self.assertEqual(loaded.get_megatile(0), self._megatile(0x01))
 		self.assertEqual(loaded.get_megatile(1), self._megatile(0x1F))
 
 	def test_load_empty(self) -> None:
 		vf4 = VF4()
-		vf4.load_file(io.BytesIO(b''))
+		vf4.load(io.BytesIO(b''))
 		self.assertEqual(vf4.megatile_count(), 0)
 
 	def test_load_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			VF4().load_file(io.BytesIO(b'\x00' * 33))
+			VF4().load(io.BytesIO(b'\x00' * 33))

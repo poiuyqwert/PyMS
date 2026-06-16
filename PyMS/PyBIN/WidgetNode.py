@@ -336,7 +336,7 @@ class WidgetNode:
 							file = self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename)
 							if file:
 								smk = SMK.SMK()
-								smk.load_file(file)
+								smk.load(file)
 								delay = int(1000 / float(smk.fps))
 								if self.frame_delay is None:
 									self.frame_delay = delay

@@ -1,15 +1,10 @@
 
 from __future__ import annotations
 
-from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import IO
 
 import struct
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
 
 class VX4Minitile:
 	def __init__(self, image_id: int = 0, flipped: bool = False) -> None:
@@ -117,16 +112,17 @@ class VX4:
 		self._lookup[megatile_hash].append(tile_id)
 
 	# expanded = True, False, or None (None = .vx4ex file extension detection)
-	def load_file(self, file: str | BinaryIO, expanded: bool | None = None) -> None:
-		if expanded is None and isinstance(file, str):
-			expanded = (file[-6:].lower() == '.vx4ex')
-		data = load_file(file, 'VX4')
+	def load(self, any_input: IO.AnyInputBytes, expanded: bool | None = None) -> None:
+		if expanded is None and isinstance(any_input, str):
+			expanded = (any_input[-6:].lower() == '.vx4ex')
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if expanded is None:
 			expanded = (len(data) // 32 >= VX4.MAX_ID)
 		struct_size = (64 if expanded else 32)
 		file_type = 'Expanded VX4 file' if expanded else 'VX4 file'
 		if data and len(data) % struct_size:
-			raise PyMSError('Load', f"'{file}' is an invalid {file_type}")
+			raise PyMSError('Load', f"Invalid {file_type}")
 		megatiles: list[VX4Megatile] = []
 		lookup: dict[int, list[int]] = {}
 		try:
@@ -141,22 +137,14 @@ class VX4:
 					lookup[megatile_hash] = []
 				lookup[megatile_hash].append(tile_id)
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported {file_type} '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', f"Unsupported {file_type}, could possibly be corrupt") from exc
 		self._megatiles = megatiles
 		self._lookup = lookup
 		self._expanded = expanded
 
-	def save_file(self, file: str | BinaryIO) -> None:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''
 		for megatile in self._megatiles:
 			data += megatile.save_data(self._expanded)
-		if isinstance(file, str):
-			try:
-				f = AtomicWriter(file, 'wb')
-				f.write(data)
-				f.close()
-			except Exception as exc:
-				raise PyMSError('Save', f"Could not save the VX4 to '{file}'") from exc
-		else:
-			file.write(data)
-			file.close()
+		with IO.OutputBytes(output) as f:
+			f.write(data)

@@ -1,15 +1,10 @@
 
 from __future__ import annotations
 
-from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import IO
 
 import struct
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-	from typing import BinaryIO
 
 class CV5Flag:
 	walkable          = 0x0001 # Walkable (gets overwritten by SC based on VF4 flags)
@@ -251,10 +246,11 @@ class CV5:
 		self._groups.append(group)
 		return group_id
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'CV5')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if data and len(data) % 52:
-			raise PyMSError('Load', f"'{file}' is an invalid CV5 file")
+			raise PyMSError('Load', "Invalid CV5 file")
 		groups: list[CV5Group] = []
 		try:
 			o = 0
@@ -264,17 +260,10 @@ class CV5:
 				groups.append(group)
 				o += 52
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported CV5 file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported CV5 file, could possibly be corrupt") from exc
 		self._groups = groups
 
-	def save_file(self, file: str | BinaryIO) -> None:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		data = b''.join(group.save_data() for group in self._groups)
-		if isinstance(file, str):
-			try:
-				f = AtomicWriter(file, 'wb')
-				f.write(data)
-				f.close()
-			except Exception as exc:
-				raise PyMSError('Save', f"Could not save the CV5 to '{file}'") from exc
-		else:
-			file.write(data)
+		with IO.OutputBytes(output) as f:
+			f.write(data)

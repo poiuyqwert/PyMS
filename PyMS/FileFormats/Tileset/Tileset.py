@@ -168,68 +168,76 @@ class Tileset:
 			self.wpe = Palette()
 		self.wpe_path = None
 
-	def load_file(self, cv5_path: str, *, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
-		path = os.path.dirname(cv5_path)
-		name = os.path.basename(cv5_path)
-		if name.split(os.extsep)[-1].lower() == 'cv5':
-			name = name[:-4]
-		if not vf4_path:
-			vf4_path = os.path.join(path, f'{name}{os.extsep}vf4')
-		if not vx4_path:
-			vx4_path = os.path.join(path, f'{name}{os.extsep}vx4ex')
-			# Check for and prefer expanded vx4 files
-			if not os.path.exists(vx4_path):
-				vx4_path = os.path.join(path, f'{name}{os.extsep}vx4')
-		if not vr4_path:
-			vr4_path = os.path.join(path, f'{name}{os.extsep}vr4')
-		if not dddata_path:
-			dddata_path = os.path.join(path, name, f'dddata{os.extsep}bin')
-		if not wpe_path:
-			wpe_path = os.path.join(path, f'{name}{os.extsep}wpe')
+	# Tileset is a composite of six separate binary files. When `cv5` is a path, any
+	# component not explicitly supplied is auto-derived from it as a sibling path.
+	def load(self, cv5: IO.AnyInputBytes, *, vf4: IO.AnyInputBytes | None = None, vx4: IO.AnyInputBytes | None = None, vr4: IO.AnyInputBytes | None = None, dddata: IO.AnyInputBytes | None = None, wpe: IO.AnyInputBytes | None = None) -> None:
+		if isinstance(cv5, str):
+			path = os.path.dirname(cv5)
+			name = os.path.basename(cv5)
+			if name.split(os.extsep)[-1].lower() == 'cv5':
+				name = name[:-4]
+			if vf4 is None:
+				vf4 = os.path.join(path, f'{name}{os.extsep}vf4')
+			if vx4 is None:
+				vx4 = os.path.join(path, f'{name}{os.extsep}vx4ex')
+				# Check for and prefer expanded vx4 files
+				if not os.path.exists(vx4):
+					vx4 = os.path.join(path, f'{name}{os.extsep}vx4')
+			if vr4 is None:
+				vr4 = os.path.join(path, f'{name}{os.extsep}vr4')
+			if dddata is None:
+				dddata = os.path.join(path, name, f'dddata{os.extsep}bin')
+			if wpe is None:
+				wpe = os.path.join(path, f'{name}{os.extsep}wpe')
+		if vf4 is None or vx4 is None or vr4 is None or dddata is None or wpe is None:
+			raise PyMSError('Load', 'Tileset requires all component files (pass a cv5 path to auto-derive siblings)')
 		self.cv5 = CV5()
-		self.cv5.load_file(cv5_path)
+		self.cv5.load(cv5)
 		self.vf4 = VF4()
-		self.vf4.load_file(vf4_path)
+		self.vf4.load(vf4)
 		self.vx4 = VX4()
-		self.vx4.load_file(vx4_path)
+		self.vx4.load(vx4)
 		self.vr4 = VR4()
-		self.vr4.load_file(vr4_path)
+		self.vr4.load(vr4)
 		self.dddata = DDDataBIN()
-		self.dddata.load_file(dddata_path)
+		self.dddata.load(dddata)
 		self.wpe = Palette()
-		self.wpe.load(wpe_path)
-		self.cv5_path = cv5_path
-		self.vf4_path = vf4_path
-		self.vx4_path = vx4_path
-		self.vr4_path = vr4_path
-		self.dddata_path = dddata_path
-		self.wpe_path = wpe_path
+		self.wpe.load(wpe)
+		self.cv5_path = cv5 if isinstance(cv5, str) else None
+		self.vf4_path = vf4 if isinstance(vf4, str) else None
+		self.vx4_path = vx4 if isinstance(vx4, str) else None
+		self.vr4_path = vr4 if isinstance(vr4, str) else None
+		self.dddata_path = dddata if isinstance(dddata, str) else None
+		self.wpe_path = wpe if isinstance(wpe, str) else None
 
-	def save_file(self, cv5_path: str, *, vf4_path: str | None = None, vx4_path: str | None = None, vr4_path: str | None = None, dddata_path: str | None = None, wpe_path: str | None = None) -> None:
-		path = os.path.dirname(cv5_path)
-		name = os.path.basename(cv5_path)
-		if name.endswith(os.extsep + 'cv5'):
-			name = name[:-4]
-		if vf4_path is None:
-			vf4_path = os.path.join(path, f'{name}{os.extsep}vf4')
-		if vx4_path is None:
-			expanded = 'ex' if self.vx4.is_expanded() else ''
-			vx4_path = os.path.join(path, f'{name}{os.extsep}vx4{expanded}')
-		if vr4_path is None:
-			vr4_path = os.path.join(path, f'{name}{os.extsep}vr4')
-		dddir = os.path.join(path, name)
-		if dddata_path is None:
-			dddata_path = os.path.join(dddir, f'dddata{os.extsep}bin')
-		if wpe_path is None:
-			wpe_path = os.path.join(path, f'{name}{os.extsep}wpe')
-		self.cv5.save_file(cv5_path)
-		self.vf4.save_file(vf4_path)
-		self.vx4.save_file(vx4_path)
-		self.vr4.save_file(vr4_path)
-		if not os.path.exists(dddir):
-			os.mkdir(dddir)
-		self.dddata.save_file(dddata_path)
-		self.wpe.save_sc_wpe(wpe_path)
+	def save(self, cv5: IO.AnyOutputBytes, *, vf4: IO.AnyOutputBytes | None = None, vx4: IO.AnyOutputBytes | None = None, vr4: IO.AnyOutputBytes | None = None, dddata: IO.AnyOutputBytes | None = None, wpe: IO.AnyOutputBytes | None = None) -> None:
+		if isinstance(cv5, str):
+			path = os.path.dirname(cv5)
+			name = os.path.basename(cv5)
+			if name.endswith(os.extsep + 'cv5'):
+				name = name[:-4]
+			if vf4 is None:
+				vf4 = os.path.join(path, f'{name}{os.extsep}vf4')
+			if vx4 is None:
+				expanded = 'ex' if self.vx4.is_expanded() else ''
+				vx4 = os.path.join(path, f'{name}{os.extsep}vx4{expanded}')
+			if vr4 is None:
+				vr4 = os.path.join(path, f'{name}{os.extsep}vr4')
+			dddir = os.path.join(path, name)
+			if dddata is None:
+				dddata = os.path.join(dddir, f'dddata{os.extsep}bin')
+			if wpe is None:
+				wpe = os.path.join(path, f'{name}{os.extsep}wpe')
+			if not os.path.exists(dddir):
+				os.mkdir(dddir)
+		if vf4 is None or vx4 is None or vr4 is None or dddata is None or wpe is None:
+			raise PyMSError('Save', 'Tileset requires all component outputs (pass a cv5 path to auto-derive siblings)')
+		self.cv5.save(cv5)
+		self.vf4.save(vf4)
+		self.vx4.save(vx4)
+		self.vr4.save(vr4)
+		self.dddata.save(dddata)
+		self.wpe.save_sc_wpe(wpe)
 
 	def import_graphics(self, tiletype: TileType, bmpfiles: list[str], ids: list[int] | None = None, options: ImportGraphicsOptions | None = None) -> list[int]:
 		if options is None:

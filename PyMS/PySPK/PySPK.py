@@ -633,7 +633,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				return
 		spk = SPK.SPK()
 		try:
-			spk.load_file(file)
+			spk.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -696,7 +696,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.spk.save_file(file_path)
+			self.spk.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

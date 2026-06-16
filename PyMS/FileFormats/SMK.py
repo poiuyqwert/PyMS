@@ -1,10 +1,8 @@
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities import IO
 
 import struct
-
-from typing import BinaryIO
 
 # http://wiki.multimedia.cx/index.php?title=Smacker
 
@@ -254,16 +252,17 @@ class SMK:
 		self.last_palette: list[tuple[int, int, int]] | None = None
 		self.frame_cache: dict[int, SMKFrame] = {}
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'SMK')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported SMK file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported SMK file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		signature,width,height,frames,framerate,smk_flags = struct.unpack('<4s3LlL', data[:24])
 		if not signature in (b'SMK2', b'SMK4'):
 			raise PyMSError('Load', "Not an SMK file (no SMK header)")
@@ -489,18 +488,6 @@ class SMK:
 		self.current_frame += 1
 		if self.current_frame == self.frames:
 			self.current_frame = 0
-
-	# def save_file(self, file):
-	# 	data = self.save_data()
-	# 	try:
-	# 		f = AtomicWriter(file, 'wb')
-	# 	except Exception:
-	# 		raise
-	# 	f.write(data)
-	# 	f.close()
-
-	# def save_data(self):
-	# 	pass
 
 # if __name__ == '__main__':
 # 	sys.stdout = open('/Users/zachzahos/Documents/Projects/PyMS/Libs/stdeo.txt','w')

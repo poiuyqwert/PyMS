@@ -1,7 +1,7 @@
 
 from ...FileFormats.Tileset.VR4 import VR4
 from ...Utilities.PyMSError import PyMSError
-from .utils import save_to_bytes
+from ...Utilities import IO
 
 import io
 import struct
@@ -53,9 +53,9 @@ class Test_VR4(unittest.TestCase):
 		self.assertEqual(vr4.find_image_ids(_image(0))[0], [])
 		self.assertEqual(vr4.find_image_ids(_image(100))[0], [0])
 
-	def test_load_file(self) -> None:
+	def test_load(self) -> None:
 		vr4 = VR4()
-		vr4.load_file(io.BytesIO(struct.pack('64B', *range(64))))
+		vr4.load(io.BytesIO(struct.pack('64B', *range(64))))
 		self.assertEqual(vr4.get_image(0), _image(0))
 
 	def test_save_load_round_trip(self) -> None:
@@ -63,26 +63,26 @@ class Test_VR4(unittest.TestCase):
 		vr4.add_image(_image(0))
 		vr4.add_image(_image(50))
 		loaded = VR4()
-		loaded.load_file(io.BytesIO(save_to_bytes(vr4)))
+		loaded.load(io.BytesIO(IO.output_to_bytes(vr4.save)))
 		self.assertEqual(loaded.image_count(), 2)
 		self.assertEqual(loaded.get_image(1), _image(50))
 
 	def test_load_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			VR4().load_file(io.BytesIO(b'\x00' * 65))
+			VR4().load(io.BytesIO(b'\x00' * 65))
 
 	def test_load_indexes_duplicate_images(self) -> None:
 		# Two identical images must both be found, not just the last one.
 		image = struct.pack('64B', *range(64))
 		vr4 = VR4()
-		vr4.load_file(io.BytesIO(image + image))
+		vr4.load(io.BytesIO(image + image))
 		self.assertEqual(vr4.find_image_ids(vr4.get_image(0))[0], [0, 1])
 
 	def test_reload_rebuilds_lookup(self) -> None:
 		# Loading into an already-populated VR4 must not carry over the old lookup.
 		image = struct.pack('64B', *range(64))
 		vr4 = VR4()
-		vr4.load_file(io.BytesIO(image))
-		vr4.load_file(io.BytesIO(image + image))
+		vr4.load(io.BytesIO(image))
+		vr4.load(io.BytesIO(image + image))
 		self.assertEqual(vr4.image_count(), 2)
 		self.assertEqual(vr4.find_image_ids(vr4.get_image(0))[0], [0, 1])

@@ -1,6 +1,7 @@
 
 from ...FileFormats.LO import LO
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 
 import io
 import unittest
@@ -12,12 +13,6 @@ FRAMES = [[[1, 2], [3, 4]], [[-1, -2], [5, 6]]]
 ENCODED = bytes.fromhex('0200000002000000100000001400000001020304fffe0506')
 
 TEXT = 'Frame:\n    (1, 2)\n    (3, 4)\n\nFrame:\n    (-1, -2)\n    (5, 6)\n\n'
-
-
-def _compile(lo: LO) -> bytes:
-	buffer = io.BytesIO()
-	lo.compile(buffer)
-	return buffer.getvalue()
 
 
 def _decompile(lo: LO) -> str:
@@ -38,34 +33,34 @@ def _make(frames: list[list[list[int]]]) -> LO:
 	return lo
 
 
-class Test_load_file(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_reads_frames(self) -> None:
 		lo = LO()
-		lo.load_file(io.BytesIO(ENCODED))
+		lo.load(io.BytesIO(ENCODED))
 		self.assertEqual(lo.frames, FRAMES)
 
-	def test_round_trip_with_compile(self) -> None:
+	def test_round_trip_with_save(self) -> None:
 		lo = LO()
-		lo.load_file(io.BytesIO(_compile(_make(FRAMES))))
+		lo.load(io.BytesIO(IO.output_to_bytes(_make(FRAMES).save)))
 		self.assertEqual(lo.frames, FRAMES)
 
 	def test_truncated_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			LO().load_file(io.BytesIO(b''))
+			LO().load(io.BytesIO(b''))
 
 
-class Test_compile(unittest.TestCase):
+class Test_save(unittest.TestCase):
 	def test_byte_layout(self) -> None:
-		self.assertEqual(_compile(_make(FRAMES)), ENCODED)
+		self.assertEqual(IO.output_to_bytes(_make(FRAMES).save), ENCODED)
 
 	def test_round_trip_with_load(self) -> None:
 		loaded = LO()
-		loaded.load_file(io.BytesIO(_compile(_make(FRAMES))))
+		loaded.load(io.BytesIO(IO.output_to_bytes(_make(FRAMES).save)))
 		self.assertEqual(loaded.frames, FRAMES)
 
 	def test_default_round_trips(self) -> None:
 		loaded = LO()
-		loaded.load_file(io.BytesIO(_compile(LO())))
+		loaded.load(io.BytesIO(IO.output_to_bytes(LO().save)))
 		self.assertEqual(loaded.frames, [[[0, 0]]])
 
 
@@ -117,8 +112,8 @@ class Test_interpret(unittest.TestCase):
 		with self.assertRaises(PyMSError):
 			_interpret(text)
 
-	def test_round_trip_through_compile(self) -> None:
+	def test_round_trip_through_save(self) -> None:
 		lo = _interpret(TEXT)
 		reloaded = LO()
-		reloaded.load_file(io.BytesIO(_compile(lo)))
+		reloaded.load(io.BytesIO(IO.output_to_bytes(lo.save)))
 		self.assertEqual(reloaded.frames, FRAMES)
