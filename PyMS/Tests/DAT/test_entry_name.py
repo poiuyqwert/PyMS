@@ -281,7 +281,7 @@ class Test_Entry_Name(unittest.TestCase):
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
 		weaponsdat = DAT.WeaponsDAT()
-		weaponsdat.load_file(resource_path('weapons.dat', __file__))
+		weaponsdat.load(resource_path('weapons.dat', __file__))
 		weaponsdat.expand_entries()
 		weaponsdat.get_entry(130).label = 570 # "General Duke<0>"
 
@@ -410,7 +410,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_image_name(self) -> None:
 		entry_ids = (0, 499, 998, 999)
 		imagesdat = DAT.ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
@@ -503,11 +503,11 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_sprite_name(self) -> None:
 		entry_ids = (0, 258, 516, 517)
 		spritesdat = DAT.SpritesDAT()
-		spritesdat.load_file(resource_path('sprites.dat', __file__))
+		spritesdat.load(resource_path('sprites.dat', __file__))
 		spritesdat.expand_entries()
 		spritesdat.get_entry(517).image = 999
 		imagesdat = DAT.ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
@@ -600,15 +600,15 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_flingy_name(self) -> None:
 		entry_ids = (0, 104, 208, 209)
 		flingydat = DAT.FlingyDAT()
-		flingydat.load_file(resource_path('flingy.dat', __file__))
+		flingydat.load(resource_path('flingy.dat', __file__))
 		flingydat.expand_entries()
 		flingydat.get_entry(209).sprite = 517
 		spritesdat = DAT.SpritesDAT()
-		spritesdat.load_file(resource_path('sprites.dat', __file__))
+		spritesdat.load(resource_path('sprites.dat', __file__))
 		spritesdat.expand_entries()
 		spritesdat.get_entry(517).image = 999
 		imagesdat = DAT.ImagesDAT()
-		imagesdat.load_file(resource_path('images.dat', __file__))
+		imagesdat.load(resource_path('images.dat', __file__))
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
@@ -703,7 +703,7 @@ class Test_Entry_Name(unittest.TestCase):
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
 		upgradesdat = DAT.UpgradesDAT()
-		upgradesdat.load_file(resource_path('upgrades.dat', __file__))
+		upgradesdat.load(resource_path('upgrades.dat', __file__))
 		upgradesdat.expand_entries()
 		upgradesdat.get_entry(61).label = 570 # "General Duke<0>"
 
@@ -834,7 +834,7 @@ class Test_Entry_Name(unittest.TestCase):
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
 		techdatadat = DAT.TechDAT()
-		techdatadat.load_file(resource_path('techdata.dat', __file__))
+		techdatadat.load(resource_path('techdata.dat', __file__))
 		techdatadat.expand_entries()
 		techdatadat.get_entry(44).label = 570 # "General Duke<0>"
 
@@ -965,7 +965,7 @@ class Test_Entry_Name(unittest.TestCase):
 		sfxdatatbl = TBL()
 		sfxdatatbl.load_file(resource_path('sfxdata.tbl', __file__))
 		sfxdatadat = DAT.SoundsDAT()
-		sfxdatadat.load_file(resource_path('sfxdata.dat', __file__))
+		sfxdatadat.load(resource_path('sfxdata.dat', __file__))
 		sfxdatadat.expand_entries()
 		sfxdatadat.get_entry(1144).sound_file = 2 # Misc\\Buzz.wav
 
@@ -1084,7 +1084,7 @@ class Test_Entry_Name(unittest.TestCase):
 		portdatatbl = TBL()
 		portdatatbl.load_file(resource_path('portdata.tbl', __file__))
 		portdatadat = DAT.PortraitsDAT()
-		portdatadat.load_file(resource_path('portdata.dat', __file__))
+		portdatadat.load(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
 		portdatadat.get_entry(110).idle.portrait_file = 3 # tghost\\TGhFid0
 
@@ -1191,7 +1191,7 @@ class Test_Entry_Name(unittest.TestCase):
 		mapdatatbl = TBL()
 		mapdatatbl.load_file(resource_path('mapdata.tbl', __file__))
 		mapdatadat = DAT.CampaignDAT()
-		mapdatadat.load_file(resource_path('mapdata.dat', __file__))
+		mapdatadat.load(resource_path('mapdata.dat', __file__))
 		mapdatadat.expand_entries()
 		mapdatadat.get_entry(65).map_file = 2 # campaign\\terran\\terran01
 
@@ -1298,7 +1298,7 @@ class Test_Entry_Name(unittest.TestCase):
 		stat_txt = TBL()
 		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
 		ordersdat = DAT.OrdersDAT()
-		ordersdat.load_file(resource_path('orders.dat', __file__))
+		ordersdat.load(resource_path('orders.dat', __file__))
 		ordersdat.expand_entries()
 		ordersdat.get_entry(189).label = 570 # "General Duke<0>"
 

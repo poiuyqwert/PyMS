@@ -5,6 +5,7 @@ from ...PyDAT.DataID import DATID
 from ...FileFormats import DAT
 from ...FileFormats.DAT.AbstractDAT import AbstractDAT
 from ...Utilities import Assets
+from ...Utilities import IO
 from ...Utilities.PyMSError import PyMSError
 
 import unittest
@@ -61,7 +62,7 @@ class Test_load_save(unittest.TestCase):
 	def test_load_data_round_trip(self) -> None:
 		source = DAT.UnitsDAT()
 		source.new_file()
-		raw = source.save_data()
+		raw = IO.output_to_bytes(source.save)
 		data = _data(self.dc)
 		data.file_path = 'stale'
 		data.load_data(raw)
@@ -75,22 +76,22 @@ class Test_load_save(unittest.TestCase):
 
 	def test_save_file_is_noop_without_dat(self) -> None:
 		data = _data(self.dc)
-		with patch.object(DAT.UnitsDAT, 'save_file') as save_file:
+		with patch.object(DAT.UnitsDAT, 'save') as save:
 			data.save_file('ignored')
-		save_file.assert_not_called()
+		save.assert_not_called()
 
 	def test_save_file_delegates_to_dat(self) -> None:
 		data = _data(self.dc)
 		data.new_file()
-		with patch.object(DAT.UnitsDAT, 'save_file') as save_file:
+		with patch.object(DAT.UnitsDAT, 'save') as save:
 			data.save_file('out.dat')
-		save_file.assert_called_once_with('out.dat')
+		save.assert_called_once_with('out.dat')
 
 	def test_load_file_sets_path_and_loads(self) -> None:
 		data = _data(self.dc)
-		with patch.object(DAT.UnitsDAT, 'load_file') as load_file:
+		with patch.object(DAT.UnitsDAT, 'load') as load:
 			data.load_file('in.dat')
-		load_file.assert_called_once_with('in.dat')
+		load.assert_called_once_with('in.dat')
 		self.assertIsNotNone(data.dat)
 		self.assertEqual(data.file_path, 'in.dat')
 

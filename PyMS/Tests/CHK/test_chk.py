@@ -2,6 +2,7 @@
 from .utils import make_chk, make_chk_with_version
 from ...FileFormats.CHK import Sections
 from ...FileFormats.CHK.CHKSectionUnknown import CHKSectionUnknown
+from ...Utilities import IO
 
 import struct
 import unittest
@@ -75,33 +76,33 @@ class Test_load_save(unittest.TestCase):
 		return chk
 
 	def test_round_trip_preserves_order_and_values(self) -> None:
-		data = self._populated().save_data()
+		data = IO.output_to_bytes(self._populated().save)
 		loaded = make_chk()
-		loaded.load_data(data)
+		loaded.load(data)
 		self.assertEqual(loaded.section_order, [CHKSectionVER.NAME, CHKSectionDIM.NAME])
 		dim = loaded.sections[CHKSectionDIM.NAME]
 		assert isinstance(dim, CHKSectionDIM)
 		self.assertEqual((dim.width, dim.height), (128, 96))
 
 	def test_round_trip_is_byte_identical(self) -> None:
-		data = self._populated().save_data()
+		data = IO.output_to_bytes(self._populated().save)
 		loaded = make_chk()
-		loaded.load_data(data)
-		self.assertEqual(loaded.save_data(), data)
+		loaded.load(data)
+		self.assertEqual(IO.output_to_bytes(loaded.save), data)
 
 	def test_unknown_section_preserved(self) -> None:
-		data = self._populated().save_data() + struct.pack('<4sL', b'XXXX', 3) + b'abc'
+		data = IO.output_to_bytes(self._populated().save) + struct.pack('<4sL', b'XXXX', 3) + b'abc'
 		loaded = make_chk()
-		loaded.load_data(data)
+		loaded.load(data)
 		self.assertIsInstance(loaded.sections[b'XXXX'], CHKSectionUnknown)
-		self.assertEqual(loaded.save_data(), data)
+		self.assertEqual(IO.output_to_bytes(loaded.save), data)
 
 	def test_save_appends_sections_not_in_order(self) -> None:
 		chk = self._populated()
 		# A section present but absent from section_order is still written.
 		era = Sections.CHKSectionERA(chk)
 		chk.sections[Sections.CHKSectionERA.NAME] = era
-		data = chk.save_data()
+		data = IO.output_to_bytes(chk.save)
 		loaded = make_chk()
-		loaded.load_data(data)
+		loaded.load(data)
 		self.assertIn(Sections.CHKSectionERA.NAME, loaded.sections)

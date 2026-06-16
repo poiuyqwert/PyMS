@@ -67,7 +67,7 @@ def main(): # type: () -> None
 					else:
 						ids = None
 					print("Reading DAT '%s'..." % args[0])
-					dat.load_file(args[0])
+					dat.load(args[0])
 					print(" - '%s' read successfully\nDecompiling DAT file '%s'..." % (args[0],args[0]))
 					dat.decompile(args[1], opt.reference, ids)
 					print(" - '%s' written succesfully" % args[1])
@@ -77,7 +77,7 @@ def main(): # type: () -> None
 					else:
 						basedat = Assets.mpq_file_path('arr','%s%sdat' % (['units','weapons','flingy','sprites','images','upgrades','techdata','sfxdata','portdata','mapdata','orders'][opt.type],os.extsep))
 					print("Loading base DAT file '%s'..." % basedat)
-					dat.load_file(basedat)
+					dat.load(basedat)
 					print(" - '%s' read successfully\nInterpreting file '%s'..." % (basedat,args[0]))
 					dat.interpret(args[0])
 					print(" - '%s' read successfully\nCompiling file '%s' to DAT format..." % (args[0],args[0]))

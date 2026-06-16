@@ -1,6 +1,7 @@
 
 from ...FileFormats.DAT import UnitsDAT
 from ...FileFormats.DAT.UnitsDAT import DATUnit
+from ...Utilities import IO
 
 from ..utils import resource_path
 
@@ -23,9 +24,9 @@ class Test_Units(unittest.TestCase):
 		expected = _real_units()
 
 		dat = UnitsDAT()
-		dat.load_data(expected)
+		dat.load(expected)
 
-		result = dat.save_data()
+		result = IO.output_to_bytes(dat.save)
 
 		self.assertEqual(result, expected)
 
@@ -37,15 +38,15 @@ class Test_Units_new_file(unittest.TestCase):
 	def test_new_file_saves_and_round_trips(self) -> None:
 		dat = UnitsDAT()
 		dat.new_file()
-		data = dat.save_data()
+		data = IO.output_to_bytes(dat.save)
 
 		reloaded = UnitsDAT()
-		reloaded.load_data(data)
-		self.assertEqual(reloaded.save_data(), data)
+		reloaded.load(data)
+		self.assertEqual(IO.output_to_bytes(reloaded.save), data)
 
 	def test_new_file_partial_property_pattern_matches_loaded_file(self) -> None:
 		loaded = UnitsDAT()
-		loaded.load_data(_real_units())
+		loaded.load(_real_units())
 		fresh = UnitsDAT()
 		fresh.new_file()
 
@@ -71,10 +72,10 @@ class Test_Units_new_file(unittest.TestCase):
 		dat = UnitsDAT()
 		dat.new_file(300)
 		self.assertTrue(dat.is_expanded())
-		data = dat.save_data()
+		data = IO.output_to_bytes(dat.save)
 		reloaded = UnitsDAT()
-		reloaded.load_data(data)
-		self.assertEqual(reloaded.save_data(), data)
+		reloaded.load(data)
+		self.assertEqual(IO.output_to_bytes(reloaded.save), data)
 
 
 class Test_is_on_entry(unittest.TestCase):

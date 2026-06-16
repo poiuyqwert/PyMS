@@ -11,15 +11,12 @@ from ...FileFormats.AIBIN import AIBIN
 from .CHKSection import CHKSection
 
 from ...Utilities import Assets
-from ...Utilities.fileutils import load_file
+from ...Utilities import IO
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
 
 import struct
 
-from typing import TYPE_CHECKING, Type, TypeVar
-if TYPE_CHECKING:
-	from typing import BinaryIO
+from typing import Type, TypeVar
 
 S = TypeVar('S', bound=CHKSection)
 
@@ -117,16 +114,17 @@ class CHK:
 		colors.extend((Sections.CHKSectionCOLR.GREEN,Sections.CHKSectionCOLR.PALE_YELLOW,Sections.CHKSectionCOLR.TAN,Sections.CHKSectionCOLR.NEUTRAL))
 		return colors[player]
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'CHK')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported CHK file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported CHK file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		offset = 0
 		sections: dict[bytes, CHKSection] = {}
 		section_order: list[bytes] = []
@@ -152,16 +150,7 @@ class CHK:
 		for sect in toProcess:
 			sect.process_data()
 
-	def save_file(self, file: str) -> None:
-		data = self.save_data()
-		try:
-			f = AtomicWriter(file, 'wb')
-		except Exception as exc:
-			raise PyMSError('Save', f"Could not save CHK to file '{file}'") from exc
-		f.write(data)
-		f.close()
-
-	def save_data(self) -> bytes:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		result = b''
 		order: list[bytes] = []
 		order.extend(self.section_order)
@@ -174,4 +163,5 @@ class CHK:
 				data = section.save_data()
 				result += struct.pack('<4sL', section.NAME, len(data))
 				result += data
-		return result
+		with IO.OutputBytes(output) as f:
+			f.write(result)

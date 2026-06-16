@@ -2337,13 +2337,13 @@ class PyMAP(Tk):
 			imagestbl = TBL.TBL()
 			imagestbl.load_file(self.mpqhandler.get_file(self.profile['imagestbl']))
 			unitsdat = DAT.UnitsDAT(stat_txt)
-			unitsdat.load_file(self.mpqhandler.get_file(self.profile['unitsdat']))
+			unitsdat.load(self.mpqhandler.get_file(self.profile['unitsdat']))
 			flingydat = DAT.FlingyDAT(stat_txt)
-			flingydat.load_file(self.mpqhandler.get_file(self.profile['flingydat']))
+			flingydat.load(self.mpqhandler.get_file(self.profile['flingydat']))
 			spritesdat = DAT.SpritesDAT(stat_txt)
-			spritesdat.load_file(self.mpqhandler.get_file(self.profile['spritesdat']))
+			spritesdat.load(self.mpqhandler.get_file(self.profile['spritesdat']))
 			imagesdat = DAT.ImagesDAT(stat_txt)
-			imagesdat.load_file(self.mpqhandler.get_file(self.profile['imagesdat']))
+			imagesdat.load(self.mpqhandler.get_file(self.profile['imagesdat']))
 			aibin = AIBIN.AIBIN(bwscript=None, units=unitsdat, upgrades=None, techs=None, stat_txt=stat_txt)
 			aibin.load_file(self.mpqhandler.get_file(self.profile['aiscript']))
 			iscriptbin = IScriptBIN.IScriptBIN(weaponsdat=None, flingydat=flingydat, imagesdat=imagesdat, spritesdat=spritesdat, soundsdat=None, stat_txt=stat_txt, imagestbl=imagestbl, sfxdatatbl=None)
@@ -2612,12 +2612,12 @@ class PyMAP(Tk):
 					chkfile = SFileOpenFileEx(scmap, 'staredit\\scenario.chk')
 					if not SFInvalidHandle(chkfile):
 						data,_ = SFileReadFile(chkfile)
-						chk.load_data(data)
+						chk.load(data)
 						SFileCloseFile(chkfile)
 						chkfile = None
 					SFileCloseArchive(scmap)
 				else:
-					chk.load_file(file)
+					chk.load(file)
 				era = chk.get_section(CHKSectionERA.NAME)
 				if era:
 					tilesetName = CHKSectionERA.TILESET_FILE(era.tileset)
@@ -2684,7 +2684,7 @@ class PyMAP(Tk):
 			self.saveas()
 			return
 		try:
-			self.chk.save_file(self.file)
+			self.chk.save(self.file)
 			self.status.set('Save Successful!')
 			self.edited = False
 			self.editstatus['state'] = DISABLED

@@ -4,6 +4,7 @@ from __future__ import annotations
 from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities.AtomicWriter import AtomicWriter
+from ...Utilities import IO
 
 from math import ceil
 from collections import OrderedDict
@@ -11,7 +12,7 @@ from copy import deepcopy
 from enum import Enum
 import json, re
 
-from typing import TYPE_CHECKING, BinaryIO, overload, Literal
+from typing import TYPE_CHECKING, overload, Literal
 if TYPE_CHECKING:
 	from typing import Any, Callable
 	from .DATFormat import DATFormat, DATType
@@ -42,16 +43,17 @@ class AbstractDAT:
 			for entry_id,entry in enumerate(self.entries):
 				entry.limit(entry_id)
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, self.FILE_NAME)
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError:
 			raise
 		except Exception as exc:
 			raise PyMSError("Load", f"Invalid {self.FILE_NAME} (error parsing file)") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		data_size = len(data)
 		entry_info = self.FORMAT.check_file_size(data_size)
 		if not entry_info:
@@ -73,16 +75,7 @@ class AbstractDAT:
 
 		self.entries = entries
 
-	def save_file(self, file_path: str) -> None:
-		try:
-			file = AtomicWriter(file_path, 'wb')
-		except Exception as exc:
-			raise PyMSError("Save", "Could not create file for writing") from exc
-		data = self.save_data()
-		file.write(data)
-		file.close()
-
-	def save_data(self) -> bytes:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		entry_count = self.entry_count()
 		is_expanded = entry_count > self.FORMAT.entries
 		all_values = list(zip(*(entry.save_values() for entry in self.entries)))
@@ -91,7 +84,8 @@ class AbstractDAT:
 		expected_data_size = self.FORMAT.file_size(expanded_entry_count=entry_count if is_expanded else None)
 		if data_size != expected_data_size:
 			raise PyMSError("Save", f"Save produced invalid size (expected {expected_data_size}, but got {data_size}")
-		return data
+		with IO.OutputBytes(output) as f:
+			f.write(data)
 
 	def entry_count(self) -> int:
 		return len(self.entries)

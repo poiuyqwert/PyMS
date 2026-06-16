@@ -9,6 +9,7 @@ from ..FileFormats.DAT.AbstractDAT import AbstractDAT
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
+from ..Utilities import IO
 
 import copy
 
@@ -36,7 +37,7 @@ class DATData(Generic[DATType]):
 	def load_defaults(self, mpqhandler: MPQHandler) -> None:
 		try:
 			dat = self.dat_type()
-			dat.load_file(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
+			dat.load(mpqhandler.load_file('MPQ:arr\\' + self.dat_type.FILE_NAME, sources=MPQHandler.GET_FROM_FOLDER_OR_MPQ))
 		except Exception:
 			pass
 		else:
@@ -57,25 +58,25 @@ class DATData(Generic[DATType]):
 
 	def load_file(self, file_path: str) -> None:
 		dat = self.dat_type()
-		dat.load_file(file_path)
+		dat.load(file_path)
 		self.dat = dat
 		self.file_path = file_path
 		self.update_names()
 
 	def load_data(self, file_data: bytes) -> None:
 		dat = self.dat_type()
-		dat.load_data(file_data)
+		dat.load(file_data)
 		self.dat = dat
 		self.file_path = None
 
 	def save_file(self, file_path: str) -> None:
 		if not self.dat:
 			return
-		self.dat.save_file(file_path)
+		self.dat.save(file_path)
 
 	def save_data(self) -> bytes:
 		assert self.dat is not None
-		return self.dat.save_data()
+		return IO.output_to_bytes(self.dat.save)
 
 	def load_name_overrides(self, path: str, update_names: bool = True) -> None:
 		with open(path, 'r', encoding='utf-8') as f:

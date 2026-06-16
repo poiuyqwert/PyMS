@@ -248,9 +248,9 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			unitsdat = DAT.UnitsDAT()
 			upgradesdat = DAT.UpgradesDAT()
 			techdat = DAT.TechDAT()
-			unitsdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
-			upgradesdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.upgrades.file_path))
-			techdat.load_file(self.mpqhandler.load_file(self.config_.settings.files.dat.techdata.file_path))
+			unitsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
+			upgradesdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.upgrades.file_path))
+			techdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.techdata.file_path))
 			tbl = TBL.TBL()
 			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
 		except PyMSError as e:
@@ -687,21 +687,21 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 
 		unitsdat = DAT.UnitsDAT()
 		try:
-			unitsdat.load_file(files[1] % {'path': Assets.base_dir})
+			unitsdat.load(files[1] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 
 		upgradesdat = DAT.UpgradesDAT()
 		try:
-			upgradesdat.load_file(files[2] % {'path': Assets.base_dir})
+			upgradesdat.load(files[2] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
 
 		techdat = DAT.TechDAT()
 		try:
-			techdat.load_file(files[3] % {'path': Assets.base_dir})
+			techdat.load(files[3] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
