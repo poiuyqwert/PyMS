@@ -495,7 +495,7 @@ BMP's must be imported with the same style they were exported as.""")
 				return
 		grp = GRP.GRP(self.palettes[self.pal].palette)
 		try:
-			grp.load_file(file, transindex=self.transid.get())
+			grp.load(file, transindex=self.transid.get())
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -530,7 +530,7 @@ BMP's must be imported with the same style they were exported as.""")
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.grp.save_file(file_path)
+			self.grp.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

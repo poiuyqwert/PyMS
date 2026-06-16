@@ -305,7 +305,7 @@ class GOT:
 		self.resources_value = 0
 		self.subtype_value = 0
 
-	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(any_input) as input_bytes:
 			data = input_bytes.read()
 		if len(data) != 97:
@@ -414,8 +414,8 @@ class GOT:
 			text = input_text.read()
 		Serialize.decode_text(text, [_GOTDefinition], lambda i,d: self, 1)
 
-	def save_data(self) -> bytes:
-		return struct.pack(
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		data = struct.pack(
 			'<B32s32s2B3H11B3Lx',
 			3,
 			self.name.encode('utf-8'),
@@ -440,8 +440,5 @@ class GOT:
 			self.resources_value,
 			self.subtype_value
 		)
-
-	def save_file(self, output: IO.AnyOutputBytes) -> None:
-		data = self.save_data()
 		with IO.OutputBytes(output) as f:
 			f.write(data)

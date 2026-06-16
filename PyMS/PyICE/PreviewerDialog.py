@@ -487,7 +487,7 @@ class PreviewerDialog(PyMSDialog):
 			else:
 				try:
 					grp = GRP.CacheGRP()
-					grp.load_file(self.delegate.mpqhandler.load_file('MPQ:' + path))
+					grp.load(self.delegate.mpqhandler.load_file('MPQ:' + path))
 				except PyMSError:
 					return None
 				self.previewing.grp = grp

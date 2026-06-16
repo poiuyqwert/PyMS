@@ -70,7 +70,7 @@ def grptobmp(*, path: str, pal: Palette.Palette, uncompressed: bool, bmp_style: 
 		inp = GRP.GRP(pal.palette, uncompressed)
 		if not mute:
 			print(f"Reading GRP '{grp}'...")
-		inp.load_file(grp)
+		inp.load(grp)
 		if not mute:
 			print(f" - '{grp}' read successfully")
 	else:
@@ -183,7 +183,7 @@ def bmptogrp(*, path: str, pal: Palette.Palette, uncompressed: bool, frames: int
 							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Expected {issize[0]}x{issize[1]}, got {inp.width}x{inp.height})")
 						if inp.width > 256 or inp.height > 256:
 							raise PyMSError('Load', f"Invalid dimensions in the BMP '{fullfile}' (Frames have a maximum size of 256x256, got {inp.width}x{inp.height})")
-						out.load_data([inp.image])
+						out.load_frames([inp.image])
 						found += 1
 					if not mute:
 						print(f" - '{fullfile}' read successfully")
@@ -201,7 +201,7 @@ def bmptogrp(*, path: str, pal: Palette.Palette, uncompressed: bool, frames: int
 		fullfile = os.path.join(path, f'{name}{os.extsep}grp')
 	if not mute:
 		print(f"Writing GRP '{fullfile}'...")
-	out.save_file(fullfile)
+	out.save(fullfile)
 	if not mute:
 		print(f" - '{fullfile}' written successfully")
 	return None

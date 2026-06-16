@@ -1,6 +1,7 @@
 
 from ...FileFormats.DialogBIN import DialogBIN, BINWidget, flags
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 from ..utils import resource_path
 
 import io
@@ -11,7 +12,7 @@ SAMPLE_BIN = 'gamemenu.bin'
 
 def _load_sample() -> DialogBIN:
 	dialog = DialogBIN()
-	dialog.load_file(resource_path(SAMPLE_BIN, __file__))
+	dialog.load(resource_path(SAMPLE_BIN, __file__))
 	return dialog
 
 
@@ -90,7 +91,7 @@ class Test_remastered_required(unittest.TestCase):
 		self.assertTrue(dialog.remastered_required())
 
 
-class Test_load_data(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_loads_real_file(self) -> None:
 		dialog = _load_sample()
 		self.assertFalse(dialog.remastered)
@@ -102,25 +103,25 @@ class Test_load_data(unittest.TestCase):
 		self.assertIn('GameMenu', [widget.string for widget in dialog.widgets])
 
 	def test_legacy_to_remastered_fallback(self) -> None:
-		# A dialog with an HTML widget can only be read as remastered; load_data
+		# A dialog with an HTML widget can only be read as remastered; load
 		# tries legacy first, fails on the unknown widget type, and falls back.
 		source = DialogBIN()
 		source.widgets.append(BINWidget(BINWidget.TYPE_HTML))
 		loaded = DialogBIN()
-		loaded.load_data(source.save_data(remastered=True))
+		loaded.load(IO.output_to_bytes(lambda f: source.save(f, remastered=True)))
 		self.assertTrue(loaded.remastered)
 
 	def test_corrupt_data_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			DialogBIN().load_file(io.BytesIO(b'\x00' * 4))
+			DialogBIN().load(io.BytesIO(b'\x00' * 4))
 
 
-class Test_save_data(unittest.TestCase):
+class Test_save(unittest.TestCase):
 	def test_real_file_binary_round_trip(self) -> None:
-		original = _load_sample().save_data()
+		original = IO.output_to_bytes(_load_sample().save)
 		reloaded = DialogBIN()
-		reloaded.load_data(original)
-		self.assertEqual(reloaded.save_data(), original)
+		reloaded.load(original)
+		self.assertEqual(IO.output_to_bytes(reloaded.save), original)
 
 	def test_crafted_round_trip_preserves_widgets(self) -> None:
 		source = DialogBIN()
@@ -128,12 +129,12 @@ class Test_save_data(unittest.TestCase):
 		button.string = 'OK'
 		button.x1, button.y1, button.x2, button.y2 = 10, 20, 110, 50
 		source.widgets.append(button)
-		data = source.save_data()
+		data = IO.output_to_bytes(source.save)
 		loaded = DialogBIN()
-		loaded.load_data(data)
+		loaded.load(data)
 		self.assertEqual(len(loaded.widgets), 2)
 		self.assertEqual(loaded.widgets[1].string, 'OK')
-		self.assertEqual(loaded.save_data(), data)
+		self.assertEqual(IO.output_to_bytes(loaded.save), data)
 
 
 class Test_text_round_trip(unittest.TestCase):
@@ -149,7 +150,7 @@ class Test_text_round_trip(unittest.TestCase):
 		text = _decompile(dialog)
 		reinterpreted = DialogBIN()
 		reinterpreted.interpret_file(io.StringIO(text))
-		self.assertEqual(reinterpreted.save_data(), dialog.save_data())
+		self.assertEqual(IO.output_to_bytes(reinterpreted.save), IO.output_to_bytes(dialog.save))
 
 	def test_decompile_emits_one_attribute_per_line(self) -> None:
 		text = _decompile(_load_sample())

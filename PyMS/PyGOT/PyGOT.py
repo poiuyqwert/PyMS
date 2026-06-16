@@ -380,7 +380,7 @@ class PyGOT(UI.MainWindow):
 				return
 		got = GOT.GOT()
 		try:
-			got.load_file(file)
+			got.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -426,7 +426,7 @@ class PyGOT(UI.MainWindow):
 			return CheckSaved.cancelled
 		try:
 			self.save_values()
-			self.got.save_file(file_path)
+			self.got.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

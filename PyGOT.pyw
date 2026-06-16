@@ -44,7 +44,7 @@ def main(): # type: () -> None
 			try:
 				if opt.convert:
 					print("Reading GOT '%s'..." % args[0])
-					got.load_file(args[0])
+					got.load(args[0])
 					print(" - '%s' read successfully\nDecompiling GOT file '%s'..." % (args[0],args[0]))
 					got.decompile(args[1], opt.reference)
 					print(" - '%s' written succesfully" % args[1])
@@ -52,7 +52,7 @@ def main(): # type: () -> None
 					print("Interpreting file '%s'..." % args[0])
 					got.interpret(args[0])
 					print(" - '%s' read successfully\nCompiling file '%s' to GOT format..." % (args[0],args[0]))
-					got.save_file(args[1])
+					got.save(args[1])
 					print(" - '%s' written succesfully" % args[1])
 					if opt.trig:
 						print("Reading TRG '%s'..." % args[0])

@@ -5,6 +5,7 @@ from ...FileFormats.GOT import (
 	PlayerTypes, Allies, TeamMode, CheatCodes, TournametMode,
 )
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 
 import io
 import unittest
@@ -79,41 +80,41 @@ class Test_enum_metadata(unittest.TestCase):
 					self.assertTrue(member.display_name)
 
 
-class Test_save_data(unittest.TestCase):
+class Test_save(unittest.TestCase):
 	def test_size_and_magic(self) -> None:
-		data = _sample().save_data()
+		data = IO.output_to_bytes(_sample().save)
 		self.assertEqual(len(data), 97)
 		self.assertEqual(data[0], 3)
 
 	def test_binary_round_trip(self) -> None:
 		loaded = GOT()
-		loaded.load_file(io.BytesIO(_sample().save_data()))
+		loaded.load(IO.output_to_bytes(_sample().save))
 		_assert_matches_sample(self, loaded)
 
-	def test_save_file_matches_save_data(self) -> None:
+	def test_save_to_stream_matches_captured_bytes(self) -> None:
 		got = _sample()
 		buffer = io.BytesIO()
-		got.save_file(buffer)
-		self.assertEqual(buffer.getvalue(), got.save_data())
+		got.save(buffer)
+		self.assertEqual(buffer.getvalue(), IO.output_to_bytes(got.save))
 
 
-class Test_load_file(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_invalid_size_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			GOT().load_file(io.BytesIO(b'\x00' * 50))
+			GOT().load(io.BytesIO(b'\x00' * 50))
 
 	def test_invalid_magic_raises(self) -> None:
-		data = bytearray(_sample().save_data())
+		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[0] = 0
 		with self.assertRaises(PyMSError):
-			GOT().load_file(io.BytesIO(bytes(data)))
+			GOT().load(io.BytesIO(bytes(data)))
 
 	def test_invalid_enum_value_raises(self) -> None:
 		# Offset 73 holds the victory_condition byte; 99 is not a valid member.
-		data = bytearray(_sample().save_data())
+		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[73] = 99
 		with self.assertRaises(PyMSError):
-			GOT().load_file(io.BytesIO(bytes(data)))
+			GOT().load(io.BytesIO(bytes(data)))
 
 
 class Test_decompile_interpret(unittest.TestCase):

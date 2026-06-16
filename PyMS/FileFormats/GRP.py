@@ -17,15 +17,14 @@ from .Images import Pixels, RawPalette, RGBA, RGB, Bounds
 from .BMP import BMP
 from .PCX import PCX
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct
 from copy import deepcopy
 from enum import Enum
 
-from typing import Callable, TypeVar, cast, BinaryIO, Sequence
+from typing import Callable, TypeVar, cast, Sequence
 
 T = TypeVar('T')
 RLEFunc = Callable[[RawPalette, int, T], RGBA]
@@ -237,8 +236,9 @@ class CacheGRP:
 		self.databuffer = b''
 		self.uncompressed: bool | None = None
 
-	def load_file(self, file: str | BinaryIO, palette: RawPalette | None = None, restrict: int | None = None, uncompressed: bool | None = None) -> None:
-		data = load_file(file, 'GRP')
+	def load(self, any_input: IO.AnyInputBytes, palette: RawPalette | None = None, restrict: int | None = None, uncompressed: bool | None = None) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
 			frames, width, height = struct.unpack('<3H',data[:6])
 			if frames < 1 or frames > 2400:
@@ -268,8 +268,9 @@ class CacheGRP:
 		self.databuffer = data
 		self.uncompressed = uncompressed
 
-	def save_data(self) -> bytes:
-		return self.databuffer
+	def save(self, output: IO.AnyOutputBytes) -> None:
+		with IO.OutputBytes(output) as f:
+			f.write(self.databuffer)
 
 	def __getitem__(self, frame: int) -> Pixels:
 		if frame in self.images:
@@ -321,8 +322,9 @@ class GRP:
 		self.uncompressed = uncompressed
 		self.transindex = transindex
 
-	def load_file(self, file: str | BinaryIO, palette: RawPalette | None = None, transindex: int = 0, uncompressed: bool | None = None) -> None:
-		data = load_file(file, 'GRP')
+	def load(self, any_input: IO.AnyInputBytes, palette: RawPalette | None = None, transindex: int = 0, uncompressed: bool | None = None) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
 			frames, width, height = tuple(int(v) for v in struct.unpack('<3H',data[:6]))
 			if frames < 1 or frames > 2400:
@@ -380,7 +382,7 @@ class GRP:
 		self.images_bounds = images_bounds
 		self.transindex = transindex
 
-	def load_data(self, frames: list[Pixels], palette: RawPalette | None = None, transindex: int = 0, validate: bool = True) -> None:
+	def load_frames(self, frames: list[Pixels], palette: RawPalette | None = None, transindex: int = 0, validate: bool = True) -> None:
 		if not frames:
 			raise PyMSError('GRP', 'Attempting to load GRP data with no frames')
 		self.frames = len(frames)
@@ -417,7 +419,7 @@ class GRP:
 		self.images.append(deepcopy(frame))
 		self.images_bounds.append(image_bounds(frame, self.transindex))
 
-	def save_data(self, uncompressed: bool | None = None) -> bytes:
+	def save(self, output: IO.AnyOutputBytes, uncompressed: bool | None = None) -> None:
 		if uncompressed is None:
 			uncompressed = self.uncompressed
 		header_data = struct.pack('<3H', self.frames, self.width, self.height)
@@ -465,16 +467,5 @@ class GRP:
 					line_data = b''.join(line_offsets) + line_data
 					image_data += line_data
 					offset += len(line_data)
-		return header_data + image_data
-
-	def save_file(self, file: str | BinaryIO, uncompressed: bool | None = None) -> None:
-		image_data = self.save_data(uncompressed)
-		if isinstance(file, str):
-			try:
-				f = AtomicWriter(file, 'wb')
-				f.write(image_data)
-				f.close()
-			except Exception as exc:
-				raise PyMSError('Save', f"Could not save the GRP to '{file}'") from exc
-		else:
-			file.write(image_data)
+		with IO.OutputBytes(output) as f:
+			f.write(header_data + image_data)

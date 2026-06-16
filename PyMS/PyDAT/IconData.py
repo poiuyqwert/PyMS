@@ -8,6 +8,7 @@ from ..FileFormats.PCX import PCX
 
 from ..Utilities.Callback import Callback
 from ..Utilities import Assets
+from ..Utilities import IO
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -27,7 +28,7 @@ class IconData:
 		try:
 			grp = CacheGRP()
 			path = self.data_context.config.settings.files.cmdicons.file_path
-			grp.load_file(self.data_context.mpq_handler.load_file(path))
+			grp.load(self.data_context.mpq_handler.load_file(path))
 		except Exception:
 			pass
 		else:
@@ -48,7 +49,7 @@ class IconData:
 
 	def save_data(self) -> bytes:
 		assert self.grp is not None
-		return self.grp.save_data()
+		return IO.output_to_bytes(self.grp.save)
 
 	def update_names(self) -> None:
 		names = Assets.data_cache(Assets.DataReference.Icons)

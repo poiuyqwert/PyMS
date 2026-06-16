@@ -562,17 +562,17 @@ class DialogBIN:
 		self.widgets = [dialog]
 		self.smks: list[BINSMK] = []
 
-	def load_file(self, any_input: IO.AnyInputBytes) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(any_input) as input_bytes:
 			data = input_bytes.read()
 		try:
-			self.load_data(data)
+			self._load_data(data)
 		except PyMSError as e:
 			raise e
 		except Exception as exc:
 			raise PyMSError('Load', "Unsupported Dialog BIN file, could possibly be corrupt") from exc
 
-	def load_data(self, data: bytes) -> None:
+	def _load_data(self, data: bytes) -> None:
 		widgets: list[BINWidget] = []
 		smk_map: dict[int, BINSMK] = {}
 		smks: list[BINSMK] = []
@@ -650,12 +650,12 @@ class DialogBIN:
 		self.widgets = widgets
 		self.smks = smks
 
-	def save_file(self, output: IO.AnyOutputBytes, remastered: bool | None = None) -> None:
-		data = self.save_data(remastered)
+	def save(self, output: IO.AnyOutputBytes, remastered: bool | None = None) -> None:
+		data = self._save_data(remastered)
 		with IO.OutputBytes(output) as f:
 			f.write(data)
 
-	def save_data(self, remastered: bool | None = None) -> bytes:
+	def _save_data(self, remastered: bool | None = None) -> bytes:
 		remastered = (self.remastered or self.remastered_required()) if remastered is None else remastered
 		widget_struct = BINWidget.STRUCT_REMASTERED if remastered else BINWidget.STRUCT
 		widget_size = BINWidget.BYTE_SIZE_REMASTERED if remastered else BINWidget.BYTE_SIZE
@@ -894,11 +894,11 @@ class DialogBIN:
 
 # if __name__ == '__main__':
 # 	dialogbin = DialogBIN()
-# 	dialogbin.load_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
-# 	data = dialogbin.save_data()
-# 	dialogbin.load_data(data)
+# 	dialogbin.load('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.bin')
+# 	data = IO.output_to_bytes(dialogbin.save)
+# 	dialogbin.load(data)
 # 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
 # 	dialogbin.interpret_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain.txt')
-# 	data = dialogbin.save_data()
-# 	dialogbin.load_data(data)
+# 	data = IO.output_to_bytes(dialogbin.save)
+# 	dialogbin.load(data)
 # 	dialogbin.decompile_file('/Users/zachzahos/Documents/Projects/PyMS/Libs/WORKING/rez/glumain2.txt')

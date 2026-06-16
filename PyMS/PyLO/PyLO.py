@@ -324,7 +324,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.base_grp.file_path))
+			g.load(self.mpq_handler.load_file(self.config_.settings.files.base_grp.file_path))
 			self.updatebasegrp(g)
 		except PyMSError as e:
 			if self.usebasegrp.get():
@@ -337,7 +337,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 			return
 		try:
 			g = CacheGRP()
-			g.load_file(self.mpq_handler.load_file(self.config_.settings.files.overlay_grp.file_path))
+			g.load(self.mpq_handler.load_file(self.config_.settings.files.overlay_grp.file_path))
 			self.updateoverlaygrp(g)
 		except PyMSError as e:
 			if self.useoverlaygrp.get():

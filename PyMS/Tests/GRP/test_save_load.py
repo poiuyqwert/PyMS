@@ -11,12 +11,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data([image])
-		save_grp.save_file(saved_file)
+		save_grp.load_frames([image])
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
@@ -29,12 +29,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data([image, image])
-		save_grp.save_file(saved_file)
+		save_grp.load_frames([image, image])
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
@@ -54,12 +54,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data([image])
-		save_grp.save_file(saved_file)
+		save_grp.load_frames([image])
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
@@ -88,12 +88,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data(images)
-		save_grp.save_file(saved_file)
+		save_grp.load_frames(images)
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
@@ -113,12 +113,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data([image])
-		save_grp.save_file(saved_file)
+		save_grp.load_frames([image])
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)
@@ -146,12 +146,12 @@ class Test_Save_And_Load(unittest.TestCase):
 
 		saved_file = io.BytesIO()
 		save_grp = GRP.GRP()
-		save_grp.load_data(images)
-		save_grp.save_file(saved_file)
+		save_grp.load_frames(images)
+		save_grp.save(saved_file)
 
 		saved_file.seek(0)
 		load_grp = GRP.GRP()
-		load_grp.load_file(saved_file)
+		load_grp.load(saved_file)
 
 		self.assertEqual(load_grp.width, width)
 		self.assertEqual(load_grp.height, height)

@@ -519,7 +519,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		for path in check:
 			try:
 				dlggrp = GRP.GRP()
-				dlggrp.load_file(self.mpq_handler.load_file(path), uncompressed=True)
+				dlggrp.load(self.mpq_handler.load_file(path), uncompressed=True)
 			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -540,7 +540,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		for path in check:
 			try:
 				tilegrp = GRP.GRP()
-				tilegrp.load_file(self.mpq_handler.load_file(path))
+				tilegrp.load(self.mpq_handler.load_file(path))
 			except Exception:
 				InternalErrorDialog.capture(self, 'PyBIN')
 			else:
@@ -1028,7 +1028,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 				return
 		dbin = DialogBIN.DialogBIN()
 		try:
-			dbin.load_file(file)
+			dbin.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -1096,7 +1096,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.bin.save_file(file_path)
+			self.bin.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

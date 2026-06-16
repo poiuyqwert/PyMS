@@ -70,7 +70,7 @@ class Test_save_data(unittest.TestCase):
 	def test_delegates_to_grp(self) -> None:
 		icon = IconData(_context())
 		grp = Mock()
-		grp.save_data.return_value = b'icon-bytes'
+		grp.save.side_effect = lambda f: f.write(b'icon-bytes')
 		icon.grp = cast(CacheGRP, grp)
 		self.assertEqual(icon.save_data(), b'icon-bytes')
 

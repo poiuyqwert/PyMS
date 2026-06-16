@@ -1115,7 +1115,7 @@ class BWImage:
 				grp_file = self.ui.mpqhandler.get_file('MPQ:' + self.grpFile)
 				try:
 					grp = GRP.CacheGRP()
-					grp.load_file(grp_file)
+					grp.load(grp_file)
 				except PyMSError as e:
 					return None
 				self.grp = grp

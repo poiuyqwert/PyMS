@@ -262,7 +262,7 @@ class DataContext:
 		if not path in self.grp_cache or not palette in self.grp_cache[path] or not draw_function in self.grp_cache[path][palette]:
 			try:
 				grp = CacheGRP()
-				grp.load_file(self.mpq_handler.load_file('MPQ:' + path),restrict=1)
+				grp.load(self.mpq_handler.load_file('MPQ:' + path),restrict=1)
 			except PyMSError:
 				return None
 			if not path in self.grp_cache:
