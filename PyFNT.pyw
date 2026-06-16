@@ -50,7 +50,7 @@ def main(): # type: () -> None
 				fnt = FNT()
 				print("Reading FNT '%s'..." % args[0])
 				try:
-					fnt.load_file(args[0])
+					fnt.load(args[0])
 					print(" - '%s' read successfully\nDecompiling FNT to file '%s'..." % (args[0], args[1]))
 					fnttobmp(fnt, pal.palette, args[1])
 					print(" - '%s' written succesfully" % args[1])

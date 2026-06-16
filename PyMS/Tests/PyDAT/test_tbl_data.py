@@ -3,6 +3,7 @@ from ...PyDAT.TBLData import TBLData
 from ...PyDAT.DataID import DataID
 from ...PyDAT.DataContext import DataContext
 from ...FileFormats.TBL import TBL, compile_string
+from ...Utilities import IO
 
 import io
 import unittest
@@ -13,7 +14,7 @@ from typing import cast
 def _tbl_bytes(strings: list[str]) -> bytes:
 	tbl = TBL()
 	tbl.strings = [compile_string(s) for s in strings]
-	return tbl.save_data()
+	return IO.output_to_bytes(tbl.save)
 
 
 def _context_with_file(data: bytes | None) -> DataContext:

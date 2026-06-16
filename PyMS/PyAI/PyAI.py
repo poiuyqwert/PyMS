@@ -252,7 +252,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 			upgradesdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.upgrades.file_path))
 			techdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.techdata.file_path))
 			tbl = TBL.TBL()
-			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			tbl.load(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
 		except PyMSError as e:
 			err = e
 		else:
@@ -680,7 +680,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 
 		tbl = TBL.TBL()
 		try:
-			tbl.load_file(files[0] % {'path': Assets.base_dir})
+			tbl.load(files[0] % {'path': Assets.base_dir})
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return

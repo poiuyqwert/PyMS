@@ -3,23 +3,13 @@ from ...FileFormats.FNT import FNT, fnttobmp, bmptofnt
 from ...FileFormats import BMP
 from ...FileFormats.Images import Pixels
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 
 import io
 import struct
 import unittest
-from unittest import mock
 
 PALETTE = [(0, 0, 0)] * 256
-
-
-def _save_to_bytes(fnt: FNT) -> bytes:
-	# Capture `save_file`'s output in memory by standing in for AtomicWriter.
-	buffer = io.BytesIO()
-	writer = mock.MagicMock()
-	writer.write.side_effect = buffer.write
-	with mock.patch('PyMS.FileFormats.FNT.AtomicWriter', return_value=writer):
-		fnt.save_file('out.fnt')
-	return buffer.getvalue()
 
 
 def _make_fnt(width: int, height: int, start: int, letters: list[Pixels]) -> FNT:
@@ -40,13 +30,13 @@ class Test_save_load_round_trip(unittest.TestCase):
 		]
 		fnt = _make_fnt(3, 2, 1, letters)
 		loaded = FNT()
-		loaded.load_file(io.BytesIO(_save_to_bytes(fnt)))
+		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
 		self.assertEqual(loaded.letters, letters)
 
 	def test_dimensions_and_start_round_trip(self) -> None:
 		fnt = _make_fnt(3, 2, 5, [[[1, 0, 2], [0, 3, 0]]])
 		loaded = FNT()
-		loaded.load_file(io.BytesIO(_save_to_bytes(fnt)))
+		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
 		self.assertEqual((loaded.width, loaded.height, loaded.start), (3, 2, 5))
 
 	def test_sizes_capture_bounding_boxes(self) -> None:
@@ -57,36 +47,36 @@ class Test_save_load_round_trip(unittest.TestCase):
 		]
 		fnt = _make_fnt(3, 2, 1, letters)
 		loaded = FNT()
-		loaded.load_file(io.BytesIO(_save_to_bytes(fnt)))
+		loaded.load(io.BytesIO(IO.output_to_bytes(fnt.save)))
 		self.assertEqual(loaded.sizes, [(3, 2, 0, 0), (1, 1, 1, 1), (0, 0, 0, 0)])
 
 	def test_identical_letters_are_deduplicated(self) -> None:
 		fnt = _make_fnt(3, 2, 1, [[[1, 0, 2], [0, 3, 0]], [[1, 0, 2], [0, 3, 0]]])
-		data = _save_to_bytes(fnt)
+		data = IO.output_to_bytes(fnt.save)
 		first_offset = struct.unpack('<L', data[8:12])[0]
 		second_offset = struct.unpack('<L', data[12:16])[0]
 		self.assertEqual(first_offset, second_offset)
 
 	def test_empty_glyph_uses_zero_offset(self) -> None:
 		fnt = _make_fnt(3, 2, 1, [[[0, 0, 0], [0, 0, 0]]])
-		data = _save_to_bytes(fnt)
+		data = IO.output_to_bytes(fnt.save)
 		self.assertEqual(struct.unpack('<L', data[8:12])[0], 0)
 
 
-class Test_load_file(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_header_prefix(self) -> None:
-		data = _save_to_bytes(_make_fnt(3, 2, 1, [[[1, 0, 2], [0, 3, 0]]]))
+		data = IO.output_to_bytes(_make_fnt(3, 2, 1, [[[1, 0, 2], [0, 3, 0]]]).save)
 		self.assertEqual(data[:4], b'FONT')
 		self.assertEqual(struct.unpack('<4B', data[4:8]), (1, 1, 3, 2))
 
 	def test_invalid_header_raises(self) -> None:
 		with self.assertRaises(PyMSError):
-			FNT().load_file(io.BytesIO(b'XXXX0000'))
+			FNT().load(io.BytesIO(b'XXXX0000'))
 
 	def test_corrupt_data_raises(self) -> None:
 		# Valid header claiming 4 glyphs but no offset table follows.
 		with self.assertRaises(PyMSError):
-			FNT().load_file(io.BytesIO(b'FONT' + struct.pack('<4B', 1, 4, 3, 2)))
+			FNT().load(io.BytesIO(b'FONT' + struct.pack('<4B', 1, 4, 3, 2)))
 
 
 class Test_fnttobmp(unittest.TestCase):

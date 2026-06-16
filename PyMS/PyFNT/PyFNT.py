@@ -481,7 +481,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		else:
 			fnt = FNT()
 			try:
-				fnt.load_file(file)
+				fnt.load(file)
 			except PyMSError as e:
 				ErrorDialog(self, e)
 				return
@@ -508,7 +508,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.fnt.save_file(file_path)
+			self.fnt.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled

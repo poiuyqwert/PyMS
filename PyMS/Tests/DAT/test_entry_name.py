@@ -76,9 +76,9 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_unit_name(self) -> None:
 		entry_ids = (0, 114, 227, 228, 250, 251)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		unitnamestbl = TBL()
-		unitnamestbl.load_file(resource_path('unitnames.tbl', __file__))
+		unitnamestbl.load(resource_path('unitnames.tbl', __file__))
 
 		expected_names = (
 			'Unit #0',
@@ -279,7 +279,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_weapon_name(self) -> None:
 		entry_ids = (0, 61, 129, 130)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		weaponsdat = DAT.WeaponsDAT()
 		weaponsdat.load(resource_path('weapons.dat', __file__))
 		weaponsdat.expand_entries()
@@ -414,7 +414,7 @@ class Test_Entry_Name(unittest.TestCase):
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Image #0',
@@ -511,7 +511,7 @@ class Test_Entry_Name(unittest.TestCase):
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Sprite #0',
@@ -612,7 +612,7 @@ class Test_Entry_Name(unittest.TestCase):
 		imagesdat.expand_entries()
 		imagesdat.get_entry(999).grp_file = 3 # zerg\\zavBirth.grp
 		imagestbl = TBL()
-		imagestbl.load_file(resource_path('images.tbl', __file__))
+		imagestbl.load(resource_path('images.tbl', __file__))
 
 		expected_names = (
 			'Flingy #0',
@@ -701,7 +701,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_upgrade_name(self) -> None:
 		entry_ids = (0, 30, 60, 61)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		upgradesdat = DAT.UpgradesDAT()
 		upgradesdat.load(resource_path('upgrades.dat', __file__))
 		upgradesdat.expand_entries()
@@ -832,7 +832,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_tech_name(self) -> None:
 		entry_ids = (0, 21, 43, 44)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		techdatadat = DAT.TechDAT()
 		techdatadat.load(resource_path('techdata.dat', __file__))
 		techdatadat.expand_entries()
@@ -963,7 +963,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_sound_name(self) -> None:
 		entry_ids = (0, 571, 1143, 1144)
 		sfxdatatbl = TBL()
-		sfxdatatbl.load_file(resource_path('sfxdata.tbl', __file__))
+		sfxdatatbl.load(resource_path('sfxdata.tbl', __file__))
 		sfxdatadat = DAT.SoundsDAT()
 		sfxdatadat.load(resource_path('sfxdata.dat', __file__))
 		sfxdatadat.expand_entries()
@@ -1082,7 +1082,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_portrait_name(self) -> None:
 		entry_ids = (0, 54, 109, 110)
 		portdatatbl = TBL()
-		portdatatbl.load_file(resource_path('portdata.tbl', __file__))
+		portdatatbl.load(resource_path('portdata.tbl', __file__))
 		portdatadat = DAT.PortraitsDAT()
 		portdatadat.load(resource_path('portdata.dat', __file__))
 		portdatadat.expand_entries()
@@ -1189,7 +1189,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_map_name(self) -> None:
 		entry_ids = (0, 32, 64, 65)
 		mapdatatbl = TBL()
-		mapdatatbl.load_file(resource_path('mapdata.tbl', __file__))
+		mapdatatbl.load(resource_path('mapdata.tbl', __file__))
 		mapdatadat = DAT.CampaignDAT()
 		mapdatadat.load(resource_path('mapdata.dat', __file__))
 		mapdatadat.expand_entries()
@@ -1296,7 +1296,7 @@ class Test_Entry_Name(unittest.TestCase):
 	def test_order_name(self) -> None:
 		entry_ids = (0, 94, 188, 189)
 		stat_txt = TBL()
-		stat_txt.load_file(resource_path('stat_txt.tbl', __file__))
+		stat_txt.load(resource_path('stat_txt.tbl', __file__))
 		ordersdat = DAT.OrdersDAT()
 		ordersdat.load(resource_path('orders.dat', __file__))
 		ordersdat.expand_entries()

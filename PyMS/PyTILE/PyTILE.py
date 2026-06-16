@@ -599,7 +599,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		self.mpq_handler.open_mpqs()
 		try:
 			stat_txt = TBL.TBL()
-			stat_txt.load_file(self.mpq_handler.load_file(self.config_.settings.files.stat_txt.file_path))
+			stat_txt.load(self.mpq_handler.load_file(self.config_.settings.files.stat_txt.file_path))
 		except PyMSError as e:
 			err = e
 		else:

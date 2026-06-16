@@ -335,7 +335,7 @@ class PyTRG(UI.MainWindow, MainDelegate, UI.CodeTextDelegate):
 		try:
 			tbl = TBL.TBL()
 			aibin = AIBIN.AIBIN()
-			tbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
+			tbl.load(self.mpqhandler.load_file(self.config_.settings.files.stat_txt.file_path))
 			aibin.load(self.mpqhandler.load_file(self.config_.settings.files.aiscript.file_path), self.mpqhandler.load_file(self.config_.settings.files.bwscript.file_path))
 		except PyMSError as e:
 			err = e

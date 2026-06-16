@@ -1,6 +1,7 @@
 
 from ...FileFormats.TBL import TBL, TBL_REF, compile_string, decompile_string
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities import IO
 
 import io
 import struct
@@ -70,58 +71,58 @@ class Test_decompile_string(unittest.TestCase):
 		self.assertEqual(compile_string(decompile_string(original)), original)
 
 
-class Test_save_data(unittest.TestCase):
+class Test_save(unittest.TestCase):
 	def test_layout(self) -> None:
 		tbl = TBL()
 		tbl.strings = ['AB', 'C']
-		self.assertEqual(tbl.save_data(), b'\x02\x00\x06\x00\x09\x00AB\x00C\x00')
+		self.assertEqual(IO.output_to_bytes(tbl.save), b'\x02\x00\x06\x00\x09\x00AB\x00C\x00')
 
 	def test_null_terminator_not_doubled(self) -> None:
 		without = TBL()
 		without.strings = ['A']
 		already = TBL()
 		already.strings = ['A\x00']
-		self.assertEqual(without.save_data(), already.save_data())
-		self.assertEqual(without.save_data(), b'\x01\x00\x04\x00A\x00')
+		self.assertEqual(IO.output_to_bytes(without.save), IO.output_to_bytes(already.save))
+		self.assertEqual(IO.output_to_bytes(without.save), b'\x01\x00\x04\x00A\x00')
 
 	def test_empty(self) -> None:
 		tbl = TBL()
 		tbl.strings = []
-		self.assertEqual(tbl.save_data(), b'\x00\x00')
+		self.assertEqual(IO.output_to_bytes(tbl.save), b'\x00\x00')
 
 
-class Test_load_file(unittest.TestCase):
+class Test_load(unittest.TestCase):
 	def test_loads_strings_with_terminator(self) -> None:
 		tbl = TBL()
-		tbl.load_file(io.BytesIO(b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'))
+		tbl.load(io.BytesIO(b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'))
 		self.assertEqual(tbl.strings, ['AB\x00', 'C\x00'])
 
 	def test_round_trip_load_save_is_byte_identical(self) -> None:
 		data = b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'
 		tbl = TBL()
-		tbl.load_file(io.BytesIO(data))
-		self.assertEqual(tbl.save_data(), data)
+		tbl.load(io.BytesIO(data))
+		self.assertEqual(IO.output_to_bytes(tbl.save), data)
 
 	def test_overlapping_offsets_share_string(self) -> None:
 		data = struct.pack('<H', 2) + struct.pack('<H', 6) + struct.pack('<H', 6) + b'AB\x00'
 		tbl = TBL()
-		tbl.load_file(io.BytesIO(data))
+		tbl.load(io.BytesIO(data))
 		self.assertEqual(tbl.strings, ['AB\x00', 'AB\x00'])
 
 	def test_empty(self) -> None:
 		tbl = TBL()
-		tbl.load_file(io.BytesIO(b'\x00\x00'))
+		tbl.load(io.BytesIO(b'\x00\x00'))
 		self.assertEqual(tbl.strings, [])
 
 	def test_truncated_header_raises(self) -> None:
 		tbl = TBL()
 		with self.assertRaises(PyMSError):
-			tbl.load_file(io.BytesIO(b'\x02\x00\x06\x00'))
+			tbl.load(io.BytesIO(b'\x02\x00\x06\x00'))
 
 	def test_empty_input_raises(self) -> None:
 		tbl = TBL()
 		with self.assertRaises(PyMSError):
-			tbl.load_file(io.BytesIO(b''))
+			tbl.load(io.BytesIO(b''))
 
 
 class Test_decompile(unittest.TestCase):
@@ -185,7 +186,7 @@ class Test_decompile_interpret_round_trip(unittest.TestCase):
 	def test_binary_to_text_to_binary_is_identical(self) -> None:
 		data = b'\x02\x00\x06\x00\x09\x00AB\x00C\x00'
 		loaded = TBL()
-		loaded.load_file(io.BytesIO(data))
+		loaded.load(io.BytesIO(data))
 		reinterpreted = TBL()
 		reinterpreted.strings = _interpret_text(_decompile_to_text(loaded))
-		self.assertEqual(reinterpreted.save_data(), data)
+		self.assertEqual(IO.output_to_bytes(reinterpreted.save), data)

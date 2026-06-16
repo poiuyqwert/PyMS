@@ -69,7 +69,7 @@ class CHK:
 			if stat_txt is None:
 				stat_txt = Assets.mpq_file_path('rez', 'stat_txt.tbl')
 			self.stat_txt = TBL.TBL()
-			self.stat_txt.load_file(stat_txt)
+			self.stat_txt.load(stat_txt)
 		if isinstance(aiscript, AIBIN.AIBIN):
 			self.aiscript = aiscript
 		else:

@@ -164,9 +164,9 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 			spritesdat = DAT.SpritesDAT()
 			imagesdat = DAT.ImagesDAT()
 			soundsdat = DAT.SoundsDAT()
-			stat_txt.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.stat_txt.file_path))
-			imagestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.images.file_path))
-			sfxdatatbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.sfxdata.file_path))
+			stat_txt.load(self.mpqhandler.load_file(self.config_.settings.files.tbl.stat_txt.file_path))
+			imagestbl.load(self.mpqhandler.load_file(self.config_.settings.files.tbl.images.file_path))
+			sfxdatatbl.load(self.mpqhandler.load_file(self.config_.settings.files.tbl.sfxdata.file_path))
 			unitsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.units.file_path))
 			weaponsdat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.weapons.file_path))
 			flingydat.load(self.mpqhandler.load_file(self.config_.settings.files.dat.flingy.file_path))
@@ -187,7 +187,7 @@ class PyICE(UI.MainWindow, MainDelegate, ImportListDelegate, ErrorableSettingsDi
 			self.data_context.set_sounds_dat(soundsdat)
 			try:
 				unitnamestbl = TBL.TBL()
-				unitnamestbl.load_file(self.mpqhandler.load_file(self.config_.settings.files.tbl.unitnames.file_path))
+				unitnamestbl.load(self.mpqhandler.load_file(self.config_.settings.files.tbl.unitnames.file_path))
 			except Exception:
 				self.unitnamestbl = None # TODO: Unitnames.tbl?
 			else:

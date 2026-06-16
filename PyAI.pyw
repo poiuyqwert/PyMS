@@ -89,7 +89,7 @@ def main(): # type: () -> None
 				techdat.load(opt.techdata)
 				print("- Loading finished successfully\nLoading stat_txt.tbl '%s'..." % opt.stattxt)
 				tbl = TBL.TBL()
-				tbl.load_file(opt.stattxt)
+				tbl.load(opt.stattxt)
 				print('- Loading finished successfully')
 				data_context = DataContext(stattxt_tbl=tbl, units_dat=unitsdat, upgrades_dat=upgradesdat, techdata_dat=techdat)
 				definitions_handler = DefinitionsHandler.DefinitionsHandler()

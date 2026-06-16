@@ -15,13 +15,10 @@ from . import BMP
 from . import PCX
 from .Images import Pixels, RGBA, RawPalette
 
-from ..Utilities.fileutils import load_file
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct
-
-from typing import BinaryIO
 
 Remapping = dict[int, int | tuple[int, int]]
 
@@ -119,7 +116,7 @@ def bmptofnt(bmp: BMP.BMP, lowi: int, letters: int, file: str | None = None) -> 
 			f.letters[-1].append(y[f.width * l:f.width * (l+1)])
 	if file is None:
 		return f
-	f.save_file(file)
+	f.save(file)
 	return None
 
 Size = tuple[int, int, int, int]
@@ -132,10 +129,11 @@ class FNT:
 		self.letters: list[Pixels] = []
 		self.sizes: list[Size] = []
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'FNT')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		if data[:4] != b'FONT':
-			raise PyMSError('Load', f"Invalid FNT file '{file}' (invalid header)")
+			raise PyMSError('Load', "Invalid FNT file (invalid header)")
 		try:
 			lowi,highi,maxw,maxh = tuple(int(v) for v in struct.unpack('<4B',data[4:8]))
 			letters: list[Pixels] = []
@@ -176,13 +174,9 @@ class FNT:
 			self.letters = letters
 			self.sizes = sizes
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported FNT file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported FNT file, could possibly be corrupt") from exc
 
-	def save_file(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file, 'wb')
-		except Exception as exc:
-			raise PyMSError('Compile', f"Could not load file '{file}'") from exc
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		header = bytearray(b'FONT')
 		header += struct.pack('<4B', self.start, self.start+len(self.letters)-1, self.width, self.height)
 		o = 8+4*len(self.letters)
@@ -227,8 +221,8 @@ class FNT:
 					hist[ldata_key] = o
 					data += ldata
 					o += len(ldata)
-		f.write(bytes(header + data))
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(bytes(header + data))
 
 # from BMP import *
 # import sys

@@ -1,11 +1,9 @@
 
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.fileutils import load_file
 from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 
 import struct, re
-
-from typing import BinaryIO
 
 TBL_REF = """#----------------------------------------------------
 # Misc.
@@ -106,8 +104,9 @@ class TBL:
 	def __init__(self) -> None:
 		self.strings: list[str] = []
 
-	def load_file(self, file: str | BinaryIO) -> None:
-		data = load_file(file, 'TBL')
+	def load(self, any_input: IO.AnyInputBytes) -> None:
+		with IO.InputBytes(any_input) as f:
+			data = f.read()
 		try:
 			n = int(struct.unpack('<H', data[:2])[0])
 			offsets = list(int(v) for v in struct.unpack(f'<{n}H', data[2:2+2*n]))
@@ -125,7 +124,7 @@ class TBL:
 				strings.append(data[o:o+l].decode('utf-8'))
 			self.strings = strings
 		except Exception as exc:
-			raise PyMSError('Load', f"Unsupported TBL file '{file}', could possibly be corrupt") from exc
+			raise PyMSError('Load', "Unsupported TBL file, could possibly be corrupt") from exc
 
 	def interpret(self, file: str) -> None:
 		try:
@@ -143,7 +142,7 @@ class TBL:
 				strings.append(s)
 		self.strings = strings
 
-	def save_data(self) -> bytes:
+	def save(self, output: IO.AnyOutputBytes) -> None:
 		o = 2 + 2 * len(self.strings)
 		header = bytearray(struct.pack('<H', len(self.strings)))
 		data = bytearray()
@@ -153,16 +152,8 @@ class TBL:
 			header += struct.pack('<H', o)
 			data += s.encode('utf-8')
 			o += len(s)
-		return bytes(header + data)
-
-	def compile(self, file: str) -> None:
-		try:
-			f = AtomicWriter(file, 'wb')
-		except Exception as exc:
-			raise PyMSError('Compile', f"Could not load file '{file}'") from exc
-		data = self.save_data()
-		f.write(data)
-		f.close()
+		with IO.OutputBytes(output) as f:
+			f.write(bytes(header + data))
 
 	def decompile(self, file: str, ref: bool = False) -> None:
 		try:
@@ -176,11 +167,10 @@ class TBL:
 		f.close()
 
 #t = TBL()
-#t.load_file('Data\stat_txt.tbl')
+#t.load('Data\stat_txt.tbl')
 #t.decompile('test.txt')
 # t.interpret('test.txt')
-# t.compile('test.tbl')
-# t.compile('test.tbl')
+# t.save('test.tbl')
 # o = open('out.txt','w')
 # def getord(o):
    # return '<%s>' % ord(o.group(0))

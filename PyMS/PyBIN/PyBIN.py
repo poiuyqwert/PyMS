@@ -596,10 +596,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			font16x = FNT.FNT()
 
 			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
-			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, font14.load_file)
-			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, font16.load_file)
-			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, font16x.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load)
+			self.mpq_handler.read_file(self.config_.settings.files.font14.file_path, font14.load)
+			self.mpq_handler.read_file(self.config_.settings.files.font16.file_path, font16.load)
+			self.mpq_handler.read_file(self.config_.settings.files.font16x.file_path, font16x.load)
 		except PyMSError as e:
 			err = e
 		else:

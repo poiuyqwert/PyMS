@@ -5,6 +5,7 @@ from ..FileFormats.TBL import TBL, decompile_string, compile_string
 
 from ..Utilities.Callback import Callback
 from ..Utilities import Config
+from ..Utilities import IO
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -24,7 +25,7 @@ class TBLData:
 		file = self.data_context.mpq_handler.get_file(self.tbl_config.file_path)
 		if file:
 			tbl = TBL()
-			tbl.load_file(file)
+			tbl.load(file)
 			self.strings = tuple(decompile_string(string) for string in tbl.strings)
 		else:
 			self.strings = ()
@@ -33,4 +34,4 @@ class TBLData:
 	def save_data(self) -> bytes:
 		tbl = TBL()
 		tbl.strings = [compile_string(string) for string in self.strings]
-		return tbl.save_data()
+		return IO.output_to_bytes(tbl.save)

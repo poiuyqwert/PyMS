@@ -195,8 +195,8 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			unitpal = Palette.Palette()
 			icons = GRP.GRP()
 			tfontgam.load(self.mpq_handler.load_file(self.config_.settings.files.tfontgam.file_path))
-			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load_file)
-			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load_file)
+			self.mpq_handler.read_file(self.config_.settings.files.font8.file_path, font8.load)
+			self.mpq_handler.read_file(self.config_.settings.files.font10.file_path, font10.load)
 			unitpal.load(self.mpq_handler.load_file(self.config_.settings.files.unit_pal.file_path))
 			icons.load(self.mpq_handler.load_file(self.config_.settings.files.icons.file_path))
 		except PyMSError as e:
@@ -328,7 +328,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				return
 		tbl = TBL.TBL()
 		try:
-			tbl.load_file(file)
+			tbl.load(file)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return
@@ -390,7 +390,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		elif not check_allow_overwrite_internal_file(file_path):
 			return CheckSaved.cancelled
 		try:
-			self.tbl.compile(file_path)
+			self.tbl.save(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
 			return CheckSaved.cancelled
