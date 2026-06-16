@@ -1,9 +1,7 @@
 
 from __future__ import annotations
 
-from ...Utilities.fileutils import load_file
 from ...Utilities.PyMSError import PyMSError
-from ...Utilities.AtomicWriter import AtomicWriter
 from ...Utilities import IO
 
 from math import ceil
@@ -176,14 +174,15 @@ class AbstractDAT:
 			raise PyMSError('Import', 'No entries found')
 		return entries
 
-	def export_file(self, file_path: str) -> None:
+	def export_file(self, file_path: IO.AnyOutputText) -> None:
+		data = self.export_entries(export_type=ExportType.text)
+		if not isinstance(data, str):
+			raise PyMSError("Decompile", "Could not export entries as text")
 		try:
-			file = AtomicWriter(file_path, 'wb')
+			with IO.OutputText(file_path) as file:
+				file.write(data)
 		except Exception as exc:
 			raise PyMSError("Decompile", "Could not create file for writing") from exc
-		data = self.export_entries()
-		file.write(data)
-		file.close()
 
 	def export_entries(self, entry_ids: list[int] | None = None, *, export_properties: list[str] | None = None, export_type: ExportType = ExportType.text, json_dump: bool = False, json_indent: int = 4) -> str | OrderedDict[str, Any] | list[OrderedDict[str, Any]]:
 		if not entry_ids:
@@ -232,8 +231,9 @@ class AbstractDAT:
 			return data
 		raise PyMSError('Export', f'Invalid export type `{export_type}`')
 
-	def import_file(self, file_path: str) -> None:
-		data = load_file(file_path).decode('utf-8')
+	def import_file(self, file_path: IO.AnyInputText) -> None:
+		with IO.InputText(file_path) as f:
+			data = f.read()
 		self.import_entries(data)
 
 	def import_entries(self, data: str | list[dict[str, Any]], export_type: ExportType = ExportType.text) -> None:

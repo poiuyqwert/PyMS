@@ -1,6 +1,5 @@
 
 from ..Utilities.PyMSError import PyMSError
-from ..Utilities.AtomicWriter import AtomicWriter
 from ..Utilities import IO
 
 import struct, re
@@ -155,16 +154,15 @@ class TBL:
 		with IO.OutputBytes(output) as f:
 			f.write(bytes(header + data))
 
-	def decompile(self, file: str, ref: bool = False) -> None:
+	def decompile(self, file: IO.AnyOutputText, ref: bool = False) -> None:
 		try:
-			f = AtomicWriter(file, 'w')
+			with IO.OutputText(file) as f:
+				if ref:
+					f.write(TBL_REF)
+				for s in self.strings:
+					f.write(decompile_string(s) + '\n')
 		except Exception as exc:
 			raise PyMSError('Decompile', f"Could not load file '{file}'") from exc
-		if ref:
-			f.write(TBL_REF)
-		for s in self.strings:
-			f.write(decompile_string(s) + '\n')
-		f.close()
 
 #t = TBL()
 #t.load('Data\stat_txt.tbl')

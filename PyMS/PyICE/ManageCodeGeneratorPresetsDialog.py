@@ -9,7 +9,7 @@ from ..Utilities.PyMSDialog import PyMSDialog
 from ..Utilities import Assets
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
-from ..Utilities.AtomicWriter import AtomicWriter
+from ..Utilities import IO
 from ..Utilities.CheckSaved import CheckSaved
 
 import json
@@ -67,9 +67,8 @@ class ManageCodeGeneratorPresetsDialog(PyMSDialog):
 		selected = int(self.listbox.curselection()[0])
 		preset = self.config_.generator.presets.data[selected]
 		try:
-			f = AtomicWriter(path, 'w')
-			f.write(json.dumps(preset, indent=4))
-			f.close()
+			with IO.OutputText(path) as f:
+				f.write(json.dumps(preset, indent=4))
 		except Exception:
 			ErrorDialog(self, PyMSError('Export', f"Could not write to file '{path}'"))
 

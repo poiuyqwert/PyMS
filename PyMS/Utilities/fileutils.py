@@ -1,25 +1,6 @@
 
 from __future__ import annotations
 
-from .PyMSError import PyMSError
-
-from typing import BinaryIO
-
-# TODO: Replace usage with IO
-def load_file(file: str | BinaryIO, file_type: str = 'file') -> bytes:
-	try:
-		if isinstance(file, str):
-			with open(file, 'rb') as f:
-				data = f.read()
-		else:
-			data = file.read()
-	except Exception as exc:
-		name = ''
-		if isinstance(file, str):
-			name = f" '{file}'"
-		raise PyMSError('Load', f"Could not load {file_type}{name}") from exc
-	return data
-
 # Check if `path` is a sub-path of `root`
 def is_subpath(path: str, root_path: str) -> bool:
 	import os

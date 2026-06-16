@@ -10,12 +10,9 @@ from unittest import mock
 
 
 def _decompile_to_text(tbl: TBL, ref: bool = False) -> str:
-	# Capture `decompile`'s output in memory by standing in for AtomicWriter.
+	# Capture `decompile`'s output in memory by handing it a stream.
 	buffer = io.StringIO()
-	writer = mock.MagicMock()
-	writer.write.side_effect = buffer.write
-	with mock.patch('PyMS.FileFormats.TBL.AtomicWriter', return_value=writer):
-		tbl.decompile('out.txt', ref)
+	tbl.decompile(buffer, ref)
 	return buffer.getvalue()
 
 
@@ -144,9 +141,10 @@ class Test_decompile(unittest.TestCase):
 	def test_write_error_raises(self) -> None:
 		tbl = TBL()
 		tbl.strings = ['x']
-		with mock.patch('PyMS.FileFormats.TBL.AtomicWriter', side_effect=OSError('nope')):
-			with self.assertRaises(PyMSError):
-				tbl.decompile('out.txt')
+		failing_stream = mock.MagicMock()
+		failing_stream.write.side_effect = OSError('nope')
+		with self.assertRaises(PyMSError):
+			tbl.decompile(failing_stream)
 
 
 class Test_interpret(unittest.TestCase):
