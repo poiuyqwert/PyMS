@@ -19,11 +19,11 @@ class PyMSDialog(UI.Toplevel):
 			self.geometry(UI.GeometryAdjust(pos=geometry.size.centered_in(screen_size)).text)
 		self.resizable(*resizable)
 		self.setup_complete()
-		if grabwait:
-			self.grab_wait()
 		if not focus:
 			focus = self
 		focus.focus_set()
+		if grabwait:
+			self.grab_wait()
 
 	def widgetize(self) -> UI.Misc | None:
 		return None
