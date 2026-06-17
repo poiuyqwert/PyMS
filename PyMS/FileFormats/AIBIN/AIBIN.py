@@ -226,6 +226,7 @@ class AIBIN:
 		self.add_scripts([script], allow_replace)
 
 	def add_scripts(self, add_scripts: Iterable[AIScript], allow_replace: bool = True) -> None:
+		add_scripts = list(add_scripts)
 		scripts = self._scripts.copy()
 		for script in add_scripts:
 			if not allow_replace and script.id in scripts:
@@ -242,6 +243,11 @@ class AIBIN:
 			raise PyMSError('Internal', f"There is not enough room in your bwscript.bin to compile these changes. The current file is {bw_size}B out of the max {max_size}B, these changes would make the file {new_bw_size}B.")
 		self._scripts = scripts
 		self._cached_sizes = (new_ai_size, new_bw_size)
+		# Mirror remove_script's owner bookkeeping so a script is registered as an
+		# owner of its entry point (idempotently, in case it already is).
+		for script in add_scripts:
+			if not any(owner is script for owner in script.entry_point.owners):
+				script.entry_point.owners.append(script)
 
 	def has_bwscripts(self) -> bool:
 		for script in self._scripts.values():

@@ -4,13 +4,11 @@ from .Delegates import ActionDelegate
 from ..FileFormats.AIBIN import AIBIN
 
 from ..Utilities.ActionManager import Action
-from ..Utilities.CodeHandlers.CodeBlock import CodeBlock
 
 class AddScriptAction(Action):
 	def __init__(self, delegate: ActionDelegate, script: AIBIN.AIScript, last_selected_script_id: str | None) -> None:
 		self.delegate = delegate
 		self.script = script
-		self.entry_point = CodeBlock()
 		self.last_selected_script_id = last_selected_script_id
 		super().__init__()
 
@@ -37,7 +35,7 @@ class RemoveScriptsAction(Action):
 	def undo(self) -> None:
 		for script in self.scripts:
 			self.delegate.get_ai_bin().add_script(script)
-		self.delegate.refresh_scripts(list(script.id for script in self.scripts))
+		self.delegate.refresh_scripts(list(s.id for s in self.scripts))
 
 class EditScriptAction(Action):
 	def __init__(self, delegate: ActionDelegate, script: AIBIN.AIScript, *, new_id: str, new_flags: int, new_string_id: int) -> None:
@@ -52,6 +50,10 @@ class EditScriptAction(Action):
 		self.new_flags = new_flags
 		self.new_string_id = new_string_id
 
+		# A different script already occupying new_id is overwritten by apply();
+		# it is captured here so undo() can restore it.
+		self.replaced_script: AIBIN.AIScript | None = None
+
 		super().__init__()
 
 	def apply(self) -> None:
@@ -60,6 +62,7 @@ class EditScriptAction(Action):
 		self.script.flags = self.new_flags
 		self.script.string_id = self.new_string_id
 		ai_bin.remove_script(self.old_id)
+		self.replaced_script = ai_bin.get_script(self.new_id)
 		ai_bin.add_script(self.script)
 		self.delegate.refresh_scripts([self.new_id])
 
@@ -70,6 +73,8 @@ class EditScriptAction(Action):
 		self.script.string_id = self.old_string_id
 		ai_bin.remove_script(self.new_id)
 		ai_bin.add_script(self.script)
+		if self.replaced_script is not None:
+			ai_bin.add_script(self.replaced_script)
 		self.delegate.refresh_scripts([self.old_id])
 
 class EditFlagsAction(Action):
