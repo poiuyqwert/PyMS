@@ -120,14 +120,14 @@ class CHKSectionSTR(CHKSection):
 
 	def set_string(self, string_id: int, text: str) -> CHKString:
 		string = self.get_string(string_id)
+		if string and string.references == 1:
+			string.text = text
+			return string
 		if string:
-			if string.references == 1:
-				string.text = text
-			else:
-				string = self.lookup_string(text)
-		if not string:
-			string = self.add_string(text)
-		return string
+			# Shared by more than one reference: this reference moves to a
+			# different string, so drop its hold on the original.
+			string.release()
+		return self.add_string(text)
 
 	def delete_string(self, string_id: int) -> None:
 		if string_id in self.strings:

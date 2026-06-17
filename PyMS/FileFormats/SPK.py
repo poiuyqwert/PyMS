@@ -78,12 +78,13 @@ class SPK:
 		self.layers = layers
 		self.images = list(images.values())
 
-	def interpret_file(self, filepath: str, layer_count: int) -> None:
+	def interpret_file(self, filepath: IO.AnyInputBytes, layer_count: int) -> None:
 		bmp = BMP.BMP()
 		try:
 			bmp.load(filepath)
 		except Exception as exc:
-			raise PyMSError('Interpreting', f"Could not load file '{filepath}'") from exc
+			source = filepath if isinstance(filepath, str) else 'BMP data'
+			raise PyMSError('Interpreting', f"Could not load file '{source}'") from exc
 		height = int(bmp.height / float(layer_count))
 		if bmp.height % height:
 			raise PyMSError('Interpreting', f"Image is not the correct height to fit {layer_count} layers")
@@ -101,7 +102,7 @@ class SPK:
 					run[1] = x-1
 					run = None
 			if run:
-				run[1] = len(bmp_row)
+				run[1] = len(bmp_row) - 1
 		images: dict[tuple[tuple[int, ...], ...], SPKImage] = {}
 		for y,row in enumerate(runs_by_row):
 			for x1,x2 in row:

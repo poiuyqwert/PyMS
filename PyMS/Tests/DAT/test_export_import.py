@@ -328,6 +328,11 @@ class Test_ImportEntries(unittest.TestCase):
 		with self.assertRaises(PyMSError):
 			self.dat.import_entries([{'_type': 'Flingy', '_id': self.dat.entry_count(), 'sprite': 1}], ExportType.json)
 
+	def test_import_entry_negative_id_raises(self) -> None:
+		# A negative id must be rejected rather than silently indexing from the end of the list.
+		with self.assertRaises(PyMSError):
+			self.dat.import_entries([{'_type': 'Flingy', '_id': -1, 'sprite': 1}], ExportType.json)
+
 	def test_failed_import_rolls_back_all_changes(self) -> None:
 		original_sprite = self.dat.get_entry(0).sprite
 		entries = [

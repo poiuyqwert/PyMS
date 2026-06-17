@@ -445,7 +445,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 				widget.responsive_y1 = 0
 				widget.responsive_x2 = widget.width-1
 				widget.responsive_y2 = widget.height-1
-			self.bin.widgets.append(widget)
+			self.bin.add_widget(widget)
 			node = WidgetNode(self, widget)
 			if ctrl_type >= DialogBIN.BINWidget.TYPE_HTML:
 				self.scr_enabled.set(True)

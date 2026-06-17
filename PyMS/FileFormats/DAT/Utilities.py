@@ -121,7 +121,7 @@ class DATEntryName:
 				if tbl_decompile:
 					tbl_name = decompile_string(tbl_name[:-1])
 				else:
-					tbl_name = tbl_name.rstrip('<0>')
+					tbl_name = DATEntryName.RE_STR_END.sub('', tbl_name)
 				if not tbl_raw_string:
 					pieces = tbl_name.split('<0>')
 					tbl_name = ''
@@ -226,7 +226,7 @@ class DATEntryName:
 
 	@staticmethod
 	def grp_flingy(entry_id: int, flingydat: FlingyDAT, spritesdat: SpritesDAT, imagesdat: ImagesDAT, imagestbl: Strings) -> str | None:
-		if entry_id > flingydat.entry_count():
+		if entry_id >= flingydat.entry_count():
 			return None
 		return DATEntryName.grp_sprite(flingydat.get_entry(entry_id).sprite, spritesdat, imagesdat, imagestbl)
 

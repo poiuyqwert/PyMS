@@ -88,7 +88,7 @@ def letter_to_photo(palette: PCX.PCX, letter: Pixels, color: int, remap: Remappi
 	pal: list[RGBA] = []
 	for n,c in enumerate(palette.palette):
 		alpha = 0
-		if n != palette.image[color_map[0]][color_map[1] * 8] and c != [255,0,255]:
+		if n != palette.image[color_map[0]][color_map[1] * 8] and c != (255,0,255):
 			alpha = 255
 		pal.append((c[0],c[1],c[2],alpha))
 	# TODO: Why do we need `type: ignore`?

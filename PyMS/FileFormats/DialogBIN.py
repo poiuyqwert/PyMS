@@ -450,9 +450,24 @@ class BINWidget:
 	# Remastered
 	TYPE_HTML = 15
 
-	INTERFACE_ID = 65535
-
-	TYPE_NAMES = ['Dialog','Deafult Button','Button','Option Button','CheckBox','Image','Slider','Unknown','TextBox','Label (Left Align)','Label (Right Align)','Label (Center Align)','ListBox','ComboBox','Highlight Button','HTML']
+	TYPE_NAMES = [
+		'Dialog',
+		'Default Button',
+		'Button',
+		'Option Button',
+		'CheckBox',
+		'Image',
+		'Slider',
+		'Unknown',
+		'TextBox',
+		'Label (Left Align)',
+		'Label (Center Align)',
+		'Label (Right Align)',
+		'ListBox',
+		'ComboBox',
+		'Highlight Button',
+		'HTML'
+	]
 
 	def __init__(self, ctrl_type: int = TYPE_DIALOG) -> None:
 		self.x1 = 0
@@ -465,8 +480,7 @@ class BINWidget:
 		self.string = ''
 		self.flags = BINWidget.FLAG_VISIBLE
 		self.unknown2 = 0
-		self.identifier = BINWidget.INTERFACE_ID
-		BINWidget.INTERFACE_ID -= 1
+		self.identifier = 65535
 		self.scr_unknown1 = 0
 		self.type = ctrl_type
 		self.unknown3 = 0
@@ -555,12 +569,16 @@ class DialogBIN:
 	def __init__(self, remastered: bool = False) -> None:
 		self.remastered = remastered
 		dialog = BINWidget()
+		dialog.identifier = 0
 		dialog.x2 = 639
 		dialog.y2 = 479
 		dialog.width = 640
 		dialog.height = 480
 		self.widgets = [dialog]
 		self.smks: list[BINSMK] = []
+
+	def add_widget(self, widget: BINWidget) -> None:
+		self.widgets.append(widget)
 
 	def load(self, any_input: IO.AnyInputBytes) -> None:
 		with IO.InputBytes(any_input) as input_bytes:
@@ -804,7 +822,7 @@ class DialogBIN:
 						value = TBL.compile_string(value)
 				elif attr == 'flags':
 					# todo: try catch
-					value = flags(value, 27)
+					value = flags(value, 32)
 				else:
 					# todo: try catch
 					value = int(value)
@@ -876,7 +894,7 @@ class DialogBIN:
 				elif attr == 'string' and value is not None:
 					value = TBL.decompile_string(value)
 				elif attr == 'flags':
-					value = flags(value, 27)
+					value = flags(value, 32)
 				elif attr == 'type':
 					if value < len(BINWidget.TYPE_NAMES):
 						hint = BINWidget.TYPE_NAMES[value]

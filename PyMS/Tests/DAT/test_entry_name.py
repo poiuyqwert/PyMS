@@ -276,6 +276,33 @@ class Test_Entry_Name(unittest.TestCase):
 				expected_name,
 			)
 
+	def test_unit_name_strips_only_terminator_not_trailing_chars(self) -> None:
+		# The '<0>' terminator must be removed as a suffix, not as a set of
+		# characters, so a name whose text ends in '0', '<', or '>' is kept whole.
+		self.assertEqual(
+			DAT.DATEntryName.unit(0, stat_txt=['Level 10<0>'], data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
+			'Level 10'
+		)
+		# A raw (null-terminated) string must also have its terminator removed.
+		self.assertEqual(
+			DAT.DATEntryName.unit(0, stat_txt=['Unit 0\x00'], data_names_usage=DAT.DataNamesUsage.ignore, tbl_decompile=False),
+			'Unit 0'
+		)
+
+	def test_grp_flingy_returns_none_for_out_of_range_id(self) -> None:
+		flingydat = DAT.FlingyDAT()
+		flingydat.load(resource_path('flingy.dat', __file__))
+		spritesdat = DAT.SpritesDAT()
+		spritesdat.load(resource_path('sprites.dat', __file__))
+		imagesdat = DAT.ImagesDAT()
+		imagesdat.load(resource_path('images.dat', __file__))
+		imagestbl = TBL()
+		imagestbl.load(resource_path('images.tbl', __file__))
+		# An id equal to the entry count is out of range and must not raise.
+		self.assertIsNone(
+			DAT.DATEntryName.grp_flingy(flingydat.entry_count(), flingydat, spritesdat, imagesdat, imagestbl)
+		)
+
 	def test_weapon_name(self) -> None:
 		entry_ids = (0, 61, 129, 130)
 		stat_txt = TBL()

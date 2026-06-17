@@ -56,6 +56,33 @@ class Test_CHKSectionSTR(unittest.TestCase):
 		self.assertIs(result, string)
 		self.assertEqual(string.text, 'After')
 
+	def test_set_string_on_shared_string_releases_original(self) -> None:
+		# When a string is referenced more than once, repointing one reference
+		# must not mutate the shared text and must drop that reference's hold on
+		# the original so its count is not left inflated.
+		section = _section()
+		shared = section.add_string('Shared')
+		section.add_string('Shared')
+		self.assertEqual(shared.references, 2)
+		result = section.set_string(shared.string_id, 'New')
+		self.assertIsNot(result, shared)
+		self.assertEqual(result.text, 'New')
+		self.assertEqual(shared.text, 'Shared')
+		self.assertEqual(shared.references, 1)
+		self.assertTrue(section.string_exists(shared.string_id))
+
+	def test_set_string_on_shared_string_reuses_existing_text(self) -> None:
+		# Repointing a shared reference onto text that already exists retains the
+		# existing string rather than leaving its count too low.
+		section = _section()
+		shared = section.add_string('Shared')
+		section.add_string('Shared')
+		existing = section.add_string('Target')
+		result = section.set_string(shared.string_id, 'Target')
+		self.assertIs(result, existing)
+		self.assertEqual(existing.references, 2)
+		self.assertEqual(shared.references, 1)
+
 	def test_get_text_default(self) -> None:
 		section = _section()
 		self.assertEqual(section.get_text(99, 'fallback'), 'fallback')

@@ -129,19 +129,24 @@ class CHK:
 		sections: dict[bytes, CHKSection] = {}
 		section_order: list[bytes] = []
 		toProcess: list[CHKSection] = []
-		while offset < len(data)-8:
+		while offset + 8 <= len(data):
 			header = struct.unpack('<4sL', data[offset:offset+8])
 			name = header[0]
 			length = int(header[1])
 			offset += 8
 			sect_class = CHK.SECTION_TYPES.get(name)
+			# TODO: Handle repeated sections in a more SC way
 			if not sect_class:
 				sect: CHKSection = CHKSectionUnknown(self, name)
 			else:
 				sect = sect_class(self)
 			sect.load_data(data[offset:offset+min(length,len(data)-offset)])
+			# A name can legitimately appear more than once; the sections dict
+			# keeps the last occurrence (last-wins), so record each name in the
+			# order only once to avoid writing it repeatedly on save.
+			if name not in sections:
+				section_order.append(name)
 			sections[name] = sect
-			section_order.append(name)
 			if sect.requires_post_processing():
 				toProcess.append(sect)
 			offset += length
@@ -153,7 +158,9 @@ class CHK:
 	def save(self, output: IO.AnyOutputBytes) -> None:
 		result = b''
 		order: list[bytes] = []
-		order.extend(self.section_order)
+		for name in self.section_order:
+			if not name in order:
+				order.append(name)
 		for name in list(self.sections.keys()):
 			if not name in order:
 				order.append(name)
