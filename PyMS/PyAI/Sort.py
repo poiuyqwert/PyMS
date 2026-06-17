@@ -46,4 +46,12 @@ class Sort:
 
 	@staticmethod
 	def by_string(headers: list[AIBIN.AIScript], tbl: TBL.TBL | None) -> list[AIBIN.AIScript]:
-		return sorted(headers, key=lambda header: (tbl.strings[header.string_id] if tbl else header.string_id, header.id))
+		if tbl is None:
+			return sorted(headers, key=lambda header: (header.string_id, header.id))
+		# Guard against string IDs outside the TBL's range (corrupt/foreign file, or a
+		# different TBL than the one used originally); such scripts sort first.
+		def string_key(header: AIBIN.AIScript) -> str:
+			if 0 <= header.string_id < len(tbl.strings):
+				return tbl.strings[header.string_id]
+			return ''
+		return sorted(headers, key=lambda header: (string_key(header), header.id))

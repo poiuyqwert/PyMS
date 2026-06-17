@@ -100,12 +100,22 @@ class FindReplaceDialog(PyMSDialog):
 				self.selectcheck['state'] = UI.DISABLED
 				self.inselection.set(0)
 
+	HISTORY_LIMIT = 10
+	@staticmethod
+	def record_history(history: list[str], entry: str) -> None:
+		if not entry:
+			return
+		if entry in history:
+			history.remove(entry)
+		history.append(entry)
+		if len(history) > FindReplaceDialog.HISTORY_LIMIT:
+			del history[0]
+
 	def findnext(self, event: UI.Event | None = None, replace: int = 0) -> None:
 		f = self.find.get()
-		if not f in self.delegate.get_find_history():
-			self.delegate.get_find_history().append(f)
 		if not f:
 			return
+		self.record_history(self.delegate.get_find_history(), f)
 		code_text = self.delegate.get_code_text()
 		regex = f
 		if not self.regex.get():
@@ -118,8 +128,7 @@ class FindReplaceDialog(PyMSDialog):
 			return
 		if replace:
 			rep = self.replacewith.get()
-			if not rep in self.delegate.get_replace_history():
-				self.delegate.get_replace_history().append(rep)
+			self.record_history(self.delegate.get_replace_history(), rep)
 			item = code_text.tag_ranges('Selection')
 			if item and r.match(code_text.get(*item)):
 				ins = r.sub(rep, code_text.get(*item))
@@ -152,6 +161,7 @@ class FindReplaceDialog(PyMSDialog):
 				i = code_text.index(f'{UI.INSERT} {s}1lines {lse}')
 			n = -1
 			while not u or i != e:
+				m = None
 				if u:
 					m = r.search(code_text.get(i, f'{i} {rlse}'))
 				else:
@@ -226,5 +236,11 @@ class FindReplaceDialog(PyMSDialog):
 		self.findentry['bg'] = self.findentry_c
 
 	def destroy(self) -> None:
+		# Closing this dialog only withdraws it so it can be reused (the editor re-shows
+		# the same window via deiconify); the owning CodeEditDialog performs the real
+		# teardown. Cancel any pending color-reset timer so it doesn't fire after close.
+		if self.resettimer:
+			self.after_managed_cancel(self.resettimer)
+			self.resettimer = None
 		self.window_geometry_config.save_size(self)
 		PyMSDialog.withdraw(self)

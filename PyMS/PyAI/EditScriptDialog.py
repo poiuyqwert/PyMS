@@ -42,7 +42,7 @@ class EditScriptDialog(PyMSDialog, ItemSelectDialog.Delegate):
 		id_frame.pack(fill=UI.X)
 		string = UI.Frame(entries)
 		UI.Label(string, text='String:', width=10, anchor=UI.E).pack(side=UI.LEFT)
-		stringid = UI.Entry(string, justify=UI.LEFT, textvariable=self.string, width=10, vcmd=self.editstring)
+		stringid = UI.Entry(string, justify=UI.LEFT, textvariable=self.string, width=10)
 		stringid.pack(side=UI.LEFT)
 		UI.Label(string, textvariable=self.actualstring, anchor=UI.W, width=1).pack(side=UI.LEFT, fill=UI.X, expand=1)
 		UI.Button(string, text='Browse...', width=10, command=self.browse).pack(side=UI.RIGHT, padx=1, pady=2)
