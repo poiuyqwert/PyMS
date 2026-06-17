@@ -83,6 +83,15 @@ class OutputTextFile(IO[str]):
 		self.temp_file.close()
 		os.replace(self.temp_file.name, self.path)
 
+	def discard(self) -> None:
+		if self.temp_file.closed:
+			return
+		self.temp_file.close()
+		try:
+			os.remove(self.temp_file.name)
+		except OSError:
+			pass
+
 	@property
 	def closed(self) -> bool:
 		return self.temp_file.closed
@@ -133,7 +142,10 @@ class OutputTextFile(IO[str]):
 		return self
 
 	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
-		self.close()
+		if exc_type is not None:
+			self.discard()
+		else:
+			self.close()
 
 	def __iter__(self) -> Iterator[str]:
 		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
@@ -160,6 +172,15 @@ class OutputBytesFile(IO[bytes]):
 			return
 		self.temp_file.close()
 		os.replace(self.temp_file.name, self.path)
+
+	def discard(self) -> None:
+		if self.temp_file.closed:
+			return
+		self.temp_file.close()
+		try:
+			os.remove(self.temp_file.name)
+		except OSError:
+			pass
 
 	@property
 	def closed(self) -> bool:
@@ -211,7 +232,10 @@ class OutputBytesFile(IO[bytes]):
 		return self
 
 	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
-		self.close()
+		if exc_type is not None:
+			self.discard()
+		else:
+			self.close()
 
 	def __iter__(self) -> Iterator[bytes]:
 		raise IOException(f'Attempting to iterate a {self.__class__.__name__}')
@@ -234,8 +258,8 @@ class OutputText:
 
 	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
-			self.file.close()
 			self.close = False
+			self.file.__exit__(exc_type, exc_value, traceback)
 		return False
 
 class OutputBytes:
@@ -253,8 +277,8 @@ class OutputBytes:
 
 	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Literal[False]:
 		if self.close:
-			self.file.close()
 			self.close = False
+			self.file.__exit__(exc_type, exc_value, traceback)
 		return False
 
 def open_input_text(any_input: AnyInputText) -> IO[str]:

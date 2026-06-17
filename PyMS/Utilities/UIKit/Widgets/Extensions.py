@@ -55,7 +55,10 @@ class MiscExtensions(_Tk.Misc):
 		return None
 
 	def clipboard_not_empty(self) -> bool:
-		return not not self.clipboard_get()
+		try:
+			return bool(self.clipboard_get())
+		except Exception:
+			return False
 
 	def clipboard_set(self, text: str) -> None:
 		self.clipboard_clear()

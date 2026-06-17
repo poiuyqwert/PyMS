@@ -639,7 +639,8 @@ class SelectFile(ConfigObject):
 class SelectDirectory(ConfigObject):
 	def __init__(self, *, title: str = 'Select Folder') -> None:
 		self.path = Assets.base_dir
-		self._saved_state = self.path
+		self.is_set = False
+		self._saved_state = (self.path, self.is_set)
 		self._title = title
 
 	def select_open(self, parent: Misc) -> str | None:
@@ -649,24 +650,29 @@ class SelectDirectory(ConfigObject):
 		setattr(window, '_pyms__window_blocking', False)
 		if path:
 			self.path = path
+			self.is_set = True
 		return path
 
 	def encode(self) -> JSON.Value:
+		if not self.is_set:
+			return None
 		return self.path
 
 	def decode(self, directory: JSON.Value) -> None:
 		if not isinstance(directory, str) or not os.path.exists(directory):
 			return
 		self.path = directory
+		self.is_set = True
 
 	def reset(self) -> None:
 		self.path = Assets.base_dir
+		self.is_set = False
 
 	def store_state(self) -> None:
-		self._saved_state = self.path
+		self._saved_state = (self.path, self.is_set)
 
 	def restore_state(self) -> None:
-		self.path = self._saved_state
+		self.path, self.is_set = self._saved_state
 
 class Warn(ConfigObject):
 	def __init__(self, *, message: str, title: str = 'Warning!', remember_version: int = 1) -> None:

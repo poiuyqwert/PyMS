@@ -134,7 +134,7 @@ class BytesScanner:
 			byte = self.data[self.address]
 			self.address += 1
 			if byte == 0:
-				return self.data[start_address:self.address].decode(encoding)
+				return self.data[start_address:self.address-1].decode(encoding)
 		raise PyMSError('Scan', 'String has no ending')
 
 	def clone(self, address: int | None = None) -> BytesScanner:

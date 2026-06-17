@@ -33,6 +33,26 @@ class Named:
 		return {'name': self.name}
 
 
+class Test_is_json_object(unittest.TestCase):
+	def test_validates_keys_and_values(self) -> None:
+		self.assertTrue(JSON.is_json_object({'name': 'value', 'count': 3}))
+
+	def test_rejects_non_dict(self) -> None:
+		self.assertFalse(JSON.is_json_object(['name', 'value']))
+
+	def test_rejects_non_string_keys(self) -> None:
+		self.assertFalse(JSON.is_json_object({1: 'value'}))
+
+	def test_rejects_invalid_values(self) -> None:
+		self.assertFalse(JSON.is_json_object({'when': object()}))
+
+	def test_validates_keys_longer_than_two_chars(self) -> None:
+		self.assertTrue(JSON.is_json_object({'longkey': 1}))
+
+	def test_lazy_skips_value_validation(self) -> None:
+		self.assertTrue(JSON.is_json_object({'when': object()}, lazy=True))
+
+
 class Test_get(unittest.TestCase):
 	def test_returns_int(self) -> None:
 		self.assertEqual(JSON.get({'n': 42}, 'n', int), 42)

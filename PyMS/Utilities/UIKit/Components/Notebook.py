@@ -24,6 +24,7 @@ class Notebook(Frame):
 		self.tabs_container.grid(row=0, column=0, sticky=W)
 		self.tabs_area.grid_columnconfigure(0, weight=1)
 		self.tabs: list[Radiobutton] = []
+		self.tab_ids: list[str] = []
 		self.pages: dict[str, tuple[Widget, int]] = {}
 		Frame.__init__(self, self.notebook, borderwidth=2, relief=relief)
 		Frame.pack(self, fill=BOTH, expand=1)
@@ -36,15 +37,15 @@ class Notebook(Frame):
 				w_req = tab.winfo_reqwidth()
 				w = tab.winfo_width()
 				if x > visible_width or w < w_req:
-					hidden_tabs.append((n, tab.cget('text')))
+					hidden_tabs.append((n, tab.cget('text'), self.tab_ids[n]))
 			if hidden_tabs:
 				menu = Menu(self)
-				def command_callback(name: str) -> Callable[[], None]:
+				def command_callback(tab_id: str) -> Callable[[], None]:
 					def command() -> None:
-						self.display(name)
+						self.display(tab_id)
 					return command
-				for index,tab_name in hidden_tabs:
-					menu.add_command(label=tab_name, command=command_callback(tab_name), font=Font.default().bolded() if index == self.tab.get() else None) # type: ignore[arg-type]
+				for index,tab_name,tab_id in hidden_tabs:
+					menu.add_command(label=tab_name, command=command_callback(tab_id), font=Font.default().bolded() if index == self.tab.get() else None) # type: ignore[arg-type]
 				menu.post(*self.winfo_pointerxy())
 
 		def resize(*_: Any) -> None:
@@ -67,12 +68,13 @@ class Notebook(Frame):
 
 	def add_tab(self, frame: Widget, title: str, tab_id: str | None = None) -> Radiobutton:
 		tab_id = tab_id or title
-		tab = Radiobutton(self.tabs_container, image=Assets.get_image('trans_fix'), text=title, fg='#000', indicatoron=False, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(title))
+		tab = Radiobutton(self.tabs_container, image=Assets.get_image('trans_fix'), text=title, fg='#000', indicatoron=False, compound=RIGHT, variable=self.tab, value=len(self.pages), command=lambda: self.display(tab_id))
 		tab.pack(side=LEFT)
 		self.tabs.append(tab)
+		self.tab_ids.append(tab_id)
 		self.pages[tab_id] = (frame, len(self.pages))
 		if not self.active:
-			self.display(title)
+			self.display(tab_id)
 		return tab
 
 	def display(self, tab_id: str) -> Widget:

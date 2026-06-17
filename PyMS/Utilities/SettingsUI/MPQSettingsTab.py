@@ -112,7 +112,7 @@ class MPQSettingsTab(SettingsTab):
 		self.edited_state.mark_edited()
 
 	def adddefault(self, _event: UI.Event | None = None) -> None:
-		scdir: str | None = PYMS_CONFIG.scdir.path
+		scdir: str | None = PYMS_CONFIG.scdir.path if PYMS_CONFIG.scdir.is_set else None
 		PYMS_CONFIG.store_state()
 		if scdir is None or not os.path.isdir(scdir):
 			scdir = PYMS_CONFIG.scdir.select_open(self)

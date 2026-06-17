@@ -39,8 +39,10 @@ class MPQHandler:
 
 	def add_defaults(self) -> None:
 		from .PyMSConfig import PYMS_CONFIG # pylint: disable=cyclic-import
+		if not PYMS_CONFIG.scdir.is_set:
+			return
 		scdir = PYMS_CONFIG.scdir.path
-		if scdir is None or not os.path.isdir(scdir):
+		if not os.path.isdir(scdir):
 			return
 		for mpq_name in ['Patch_rt','BrooDat','StarDat']:
 			mpq_path = os.path.join(scdir, f'{mpq_name}{os.extsep}mpq')

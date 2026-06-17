@@ -18,7 +18,7 @@ def is_json_object(json: Any, lazy: bool = False) -> TypeGuard[Object]:
 		return False
 	if lazy:
 		return True
-	for key, value in json:
+	for key, value in json.items():
 		if not isinstance(key, str):
 			return False
 		if not is_json_value(value):

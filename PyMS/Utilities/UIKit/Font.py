@@ -75,7 +75,9 @@ class Font(_Fonts.Font):
 		if overstrike is not None:
 			options['overstrike'] = overstrike
 		if not name:
-			name = f'pyms_{_re.sub(r'\W+', '_', family) if family else 'DEFAULT'}_{size if size else 'DEFAULT'}_{bool(bold):d}{bool(italic):d}{bool(underline):d}{bool(overstrike):d}'
+			family_part = _re.sub(r"\W+", "_", family) if family else "DEFAULT"
+			size_part = size if size else "DEFAULT"
+			name = f"pyms_{family_part}_{size_part}_{bool(bold):d}{bool(italic):d}{bool(underline):d}{bool(overstrike):d}"
 		options['name'] = name
 		options['exists'] = only_existing or name in _Fonts.names()
 		_Fonts.Font.__init__(self, **options)

@@ -220,9 +220,9 @@ class Test_scan_bytes(unittest.TestCase):
 
 
 class Test_scan_cstr(unittest.TestCase):
-	def test_reads_until_terminator_including_null(self) -> None:
+	def test_reads_until_terminator_excluding_null(self) -> None:
 		scanner = BytesScanner(b'abc\x00rest')
-		self.assertEqual(scanner.scan_cstr(), 'abc\x00')
+		self.assertEqual(scanner.scan_cstr(), 'abc')
 
 	def test_advances_past_terminator(self) -> None:
 		scanner = BytesScanner(b'abc\x00rest')
@@ -231,16 +231,16 @@ class Test_scan_cstr(unittest.TestCase):
 
 	def test_empty_string_is_just_terminator(self) -> None:
 		scanner = BytesScanner(b'\x00rest')
-		self.assertEqual(scanner.scan_cstr(), '\x00')
+		self.assertEqual(scanner.scan_cstr(), '')
 		self.assertEqual(scanner.address, 1)
 
 	def test_sequential_strings(self) -> None:
 		scanner = BytesScanner(b'a\x00b\x00')
-		self.assertEqual(scanner.scan_cstr(), 'a\x00')
-		self.assertEqual(scanner.scan_cstr(), 'b\x00')
+		self.assertEqual(scanner.scan_cstr(), 'a')
+		self.assertEqual(scanner.scan_cstr(), 'b')
 
 	def test_respects_current_address(self) -> None:
-		self.assertEqual(BytesScanner(b'xx\x00', 2).scan_cstr(), '\x00')
+		self.assertEqual(BytesScanner(b'xx\x00', 2).scan_cstr(), '')
 
 	def test_missing_terminator_raises(self) -> None:
 		with self.assertRaises(PyMSError):
@@ -248,7 +248,7 @@ class Test_scan_cstr(unittest.TestCase):
 
 	def test_custom_encoding(self) -> None:
 		scanner = BytesScanner('caf\xe9\x00'.encode('latin-1'))
-		self.assertEqual(scanner.scan_cstr('latin-1'), 'caf\xe9\x00')
+		self.assertEqual(scanner.scan_cstr('latin-1'), 'caf\xe9')
 
 
 class Test_clone(unittest.TestCase):

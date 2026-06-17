@@ -4,6 +4,7 @@ from __future__ import annotations
 from ...Utilities import Config
 
 import enum
+import os
 from dataclasses import dataclass
 
 import unittest
@@ -196,6 +197,41 @@ class Test_Dictionary(unittest.TestCase):
 		obj.data['b'] = 2
 		obj.reset()
 		self.assertEqual(obj.data, {'a': 1})
+
+
+class Test_SelectDirectory(unittest.TestCase):
+	def test_unset_by_default(self) -> None:
+		self.assertFalse(Config.SelectDirectory().is_set)
+
+	def test_encode_is_none_when_unset(self) -> None:
+		self.assertIsNone(Config.SelectDirectory().encode())
+
+	def test_decode_existing_path_marks_set(self) -> None:
+		obj = Config.SelectDirectory()
+		obj.decode(os.getcwd())
+		self.assertTrue(obj.is_set)
+		self.assertEqual(obj.encode(), os.getcwd())
+
+	def test_decode_nonexistent_path_stays_unset(self) -> None:
+		obj = Config.SelectDirectory()
+		obj.decode(os.path.join(os.getcwd(), 'this-directory-does-not-exist'))
+		self.assertFalse(obj.is_set)
+
+	def test_reset_clears_set(self) -> None:
+		obj = Config.SelectDirectory()
+		obj.decode(os.getcwd())
+		obj.reset()
+		self.assertFalse(obj.is_set)
+		self.assertIsNone(obj.encode())
+
+	def test_state_roundtrip_preserves_set(self) -> None:
+		obj = Config.SelectDirectory()
+		obj.decode(os.getcwd())
+		obj.store_state()
+		obj.reset()
+		obj.restore_state()
+		self.assertTrue(obj.is_set)
+		self.assertEqual(obj.encode(), os.getcwd())
 
 
 class Test_List(unittest.TestCase):
