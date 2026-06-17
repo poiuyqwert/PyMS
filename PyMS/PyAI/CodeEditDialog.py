@@ -310,14 +310,19 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate,
 			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Code?', message="Would you like to save the code?", default=UI.MessageBox.YES)
 			if save is None:
 				return
-			if save:
-				self.save()
+			if save and not self._save():
+				return
 		self.ok()
 
 	def save(self, _: UI.Event | None = None) -> None:
+		self._save()
+
+	def _save(self) -> bool:
 		code = self.text.get('1.0', UI.END)
-		if self.delegate.save_code(code, self):
-			self.text.edit_modified(False)
+		if not self.delegate.save_code(code, self):
+			return False
+		self.text.edit_modified(False)
+		return True
 
 	def test(self, _: UI.Event | None = None) -> None:
 		code = self.text.get('1.0', UI.END)
@@ -329,15 +334,15 @@ class CodeEditDialog(PyMSDialog, ItemSelectDialog.Delegate, UI.CodeTextDelegate,
 			ErrorDialog(self, e)
 			return
 		# TODO: Plugins
-		ai = self.delegate.get_ai_bin()
-		new_active_plugins = parse_context.language_context.active_plugins()
-		if new_active_plugins:
-			added_plugins = new_active_plugins.difference(ai.active_plugins)
-			if added_plugins:
-				pass
-			removed_plugins = ai.active_plugins.difference(new_active_plugins)
-			if removed_plugins:
-				pass
+		# ai = self.delegate.get_ai_bin()
+		# new_active_plugins = parse_context.language_context.active_plugins()
+		# if new_active_plugins:
+		# 	added_plugins = new_active_plugins.difference(ai.active_plugins)
+		# 	if added_plugins:
+		# 		pass
+		# 	removed_plugins = ai.active_plugins.difference(new_active_plugins)
+		# 	if removed_plugins:
+		# 		pass
 		if parse_context.warnings:
 			self.text.highlight_warnings(parse_context.warnings)
 			WarningDialog(self, parse_context.warnings, True)
@@ -435,8 +440,13 @@ script {header_id} {{
 			cmd_name = match.group(2)
 			for cmd_def in CodeCommands.all_basic_commands:
 				if cmd_def.name == cmd_name:
+					params_str = match.group(3).strip()
+					params = CodeEditDialog.RE_COMMA.split(params_str) if params_str else []
+					# Only rewrite when the argument count matches the definition;
+					# otherwise leave the line untouched rather than emit a malformed command.
+					if len(params) != len(cmd_def.param_types):
+						return match.group(0)
 					result = match.group(1) + match.group(2) + '('
-					params = CodeEditDialog.RE_COMMA.split(match.group(3))
 					for n,(param,param_type) in enumerate(zip(params, cmd_def.param_types)):
 						if n > 0:
 							result += ', '
@@ -452,7 +462,7 @@ script {header_id} {{
 			self.text.delete('1.0', UI.END)
 			self.text.insert(UI.END, code)
 
-	def debuggerize(self) -> None:
+	def debuggerize(self, _: UI.Event | None = None) -> None:
 		d = 0
 		data = ''
 		debug = {
@@ -507,7 +517,8 @@ script {header_id} {{
 				}
 				cmd_def = CodeCommandDefinition.find_by_name(m.group(2), CodeCommands.all_basic_commands)
 				if cmd_def is not None and cmd_def.param_types:
-					p = re.match('\\A%s\\Z' % ','.join(['\\s*(.+)\\s*'] * len(cmd_def.param_types)), m.group(3))
+					params_pattern = ','.join([r'\s*(.+)\s*'] * len(cmd_def.param_types))
+					p = re.match(rf'\A{params_pattern}\Z', m.group(3))
 					if not p:
 						data += line + '\n'
 						continue
@@ -534,16 +545,6 @@ script {header_id} {{
 		# TODO: Warnings?
 		# if warnings:
 		# 	WarningDialog(self, warnings)
-
-	# def close(self) -> None:
-	# 	if self.decompile:
-	# 		self.text.insert('1.0', self.decompile.strip())
-	# 		self.decompile = ''
-	# 		self.text.text.mark_set(INSERT, '1.0')
-	# 		self.text.text.see(INSERT)
-	# 		self.text.edit_reset()
-	# 		self.text.edited = False
-	# 		self.editstatus['state'] = DISABLED
 
 	def destroy(self) -> None:
 		if self.findwindow:
