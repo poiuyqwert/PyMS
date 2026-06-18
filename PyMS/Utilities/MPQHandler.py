@@ -114,10 +114,12 @@ class MPQHandler:
 	def read_file(self, path: str, read: Callable[[BinaryIO], T]) -> T:
 		try:
 			data = self.load_file(path, MPQHandler.GET_FROM_MPQ)
-			return read(data)
+			with data:
+				return read(data)
 		except Exception:
 			data = self.load_file(path, MPQHandler.GET_FROM_FOLDER)
-			return read(data)
+			with data:
+				return read(data)
 
 	def get_file_mpq(self, path: str) -> BinaryIO | None:
 		file: BinaryIO | None = None

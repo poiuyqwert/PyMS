@@ -129,8 +129,9 @@ def fit2(text: str, width: int = 80, indent: str | int = '', label: str | None =
 						line_width -= len(word) + 1
 						add_space = True
 					else:
-						line_width = break_line_width - len(word)
 						result += '\n' + label_indent + break_indent + word
+						line_width = break_line_width - len(word) - 1
+						add_space = True
 			else:
 				result += line
 			result += '\n'

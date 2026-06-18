@@ -79,8 +79,9 @@ class MPQSelect(PyMSDialog):
 	def listfiles(self) -> None:
 		self.files = []
 		for file_entry in self.mpqhandler.list_files():
-			if not file_entry.file_name in self.files:
-				self.files.append(file_entry.file_name.decode('utf-8'))
+			name = file_entry.file_name.decode('utf-8')
+			if name not in self.files:
+				self.files.append(name)
 		for path,_,filenames in os.walk(Assets.mpq_dir):
 			for filename in filenames:
 				mpq_filename = Assets.mpq_file_path_to_file_name(os.path.join(path, filename))

@@ -21,6 +21,11 @@ class Test_init(unittest.TestCase):
 		self.assertEqual((version.major, version.minor, version.patch), (1, 2, 3))
 		self.assertEqual(version.meta, 'beta')
 
+	def test_meta_keeps_trailing_dashes(self) -> None:
+		version = SemVer('1.2.3-beta-2')
+		self.assertEqual((version.major, version.minor, version.patch), (1, 2, 3))
+		self.assertEqual(version.meta, 'beta-2')
+
 	def test_too_few_components_raises(self) -> None:
 		with self.assertRaises(ValueError):
 			SemVer('1.2')
@@ -104,6 +109,10 @@ class Test_ge(unittest.TestCase):
 
 	def test_less_is_not_ge(self) -> None:
 		self.assertFalse(SemVer('1.0.0') >= SemVer('1.0.1'))
+
+	def test_comparison_with_non_semver_raises(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = SemVer('1.0.0') >= 5  # type: ignore[operator]
 
 
 class Test_repr(unittest.TestCase):

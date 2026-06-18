@@ -5,9 +5,11 @@ class SemVer:
 	def __init__(self, version: str) -> None:
 		self.meta = None
 		if '-' in version:
-			version,self.meta = version.split('-')
-		components = (int(c) for c in version.split('.'))
-		self.major, self.minor, self.patch = components
+			version,self.meta = version.split('-', 1)
+		parts = version.split('.')
+		if len(parts) != 3:
+			raise ValueError(f"Invalid SemVer '{version}': expected 'major.minor.patch'")
+		self.major, self.minor, self.patch = (int(c) for c in parts)
 
 	def __lt__(self, other: Any) -> bool:
 		if not isinstance(other, SemVer):
@@ -55,6 +57,8 @@ class SemVer:
 		return True
 
 	def __ge__(self, other: Any) -> bool:
+		if not isinstance(other, SemVer):
+			return NotImplemented
 		return self.__gt__(other) or self.__eq__(other)
 
 	def __repr__(self) -> str:

@@ -1,5 +1,4 @@
 
-from PyMS.Utilities.UIKit import Event
 from . import UIKit as UI
 from .PyMSDialog import PyMSDialog
 from . import Config
@@ -65,7 +64,7 @@ class ItemSelectDialog(PyMSDialog):
 
 		return self.select_button
 
-	def update_states(self, _event: Event | None = None) -> None:
+	def update_states(self, _event: UI.Event | None = None) -> None:
 		self.select_button['state'] = UI.DISABLED if not self.listbox.curselection() else UI.ACTIVE
 
 	def setup_complete(self) -> None:
@@ -119,8 +118,10 @@ class ItemSelectDialog(PyMSDialog):
 		if scroll_to is not None:
 			self.listbox.see(scroll_to)
 
-	def ok(self, _event: Event | None=None) -> None:
+	def ok(self, _event: UI.Event | None=None) -> None:
 		indexes: list[int] = [self.filtered_items[i][0] for i in self.listbox.curselection()]
+		if not indexes:
+			return
 		if self.multiselect:
 			close = self.delegate.items_selected(indexes)
 		else:

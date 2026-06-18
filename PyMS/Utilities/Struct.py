@@ -85,6 +85,9 @@ class Type:
 			return NotImplemented
 		return other._format == self._format
 
+	def __hash__(self) -> int:
+		return hash(self._format)
+
 class PadType(Type):
 	def __init__(self, struct_format: Literal[Format.pad], length: int):
 		Type.__init__(self, struct_format)
@@ -104,6 +107,9 @@ class PadType(Type):
 		if other.length != self.length:
 			return False
 		return True
+
+	def __hash__(self) -> int:
+		return hash((self._format, self.length))
 
 class IntType(Type):
 	def __init__(self, struct_format: Literal[Format.s8, Format.u8, Format.s16, Format.u16, Format.s32, Format.u32, Format.s64, Format.u64]):
@@ -170,6 +176,9 @@ class StringType(Type, Processed):
 		if other.encoding != self.encoding:
 			return False
 		return True
+
+	def __hash__(self) -> int:
+		return hash((self._format, self.length, self.strip, self.encoding))
 
 def t_pad(length: int = 1) -> PadType:
 	return PadType(Format.pad, length)
@@ -497,6 +506,9 @@ class MixedInts:
 			return False
 		return True
 
+	def __hash__(self) -> int:
+		return hash(tuple(self.types))
+
 class Struct:
 	Format = tuple['str | type[Struct] | StructArray | MixedInts', ...]
 	Processors = tuple['struct.Struct | type[Struct] | StructArray | MixedInts', ...]
@@ -741,3 +753,6 @@ class StructArray(Generic[S]):
 		if other.count != self.count:
 			return False
 		return True
+
+	def __hash__(self) -> int:
+		return hash((self.struct_type, self.count))

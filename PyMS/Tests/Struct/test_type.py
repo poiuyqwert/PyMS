@@ -167,3 +167,41 @@ class Test_Array_Signed(unittest.TestCase):
 
 	def test_adouble(self) -> None:
 		self.assertTrue(Struct.t_adouble(2).is_signed)
+
+
+class SubStruct(Struct.Struct):
+	u8: int
+
+	_fields = (
+		('u8', Struct.t_u8),
+	)
+
+
+class Test_Hashable(unittest.TestCase):
+	def test_type_hash_matches_equality(self) -> None:
+		self.assertEqual(hash(Struct.t_u8), hash(Struct.t_u8))
+		self.assertEqual(Struct.t_u8, Struct.t_u8)
+
+	def test_pad_type_hashable_and_consistent(self) -> None:
+		self.assertEqual(hash(Struct.t_pad(2)), hash(Struct.t_pad(2)))
+		self.assertIn(Struct.t_pad(2), {Struct.t_pad(2)})
+
+	def test_string_type_hashable_and_consistent(self) -> None:
+		self.assertEqual(hash(Struct.t_str(8)), hash(Struct.t_str(8)))
+		self.assertIn(Struct.t_str(8), {Struct.t_str(8)})
+
+	def test_mixed_ints_hashable(self) -> None:
+		mix = Struct.MixedInts((Struct.t_u8, Struct.t_u16))
+		same = Struct.MixedInts((Struct.t_u8, Struct.t_u16))
+		self.assertEqual(hash(mix), hash(same))
+		self.assertIn(mix, {same})
+
+	def test_struct_array_hashable(self) -> None:
+		array = Struct.StructArray(SubStruct, 2)
+		same = Struct.StructArray(SubStruct, 2)
+		self.assertEqual(hash(array), hash(same))
+		self.assertIn(array, {same})
+
+	def test_types_usable_as_dict_keys(self) -> None:
+		lookup = {Struct.t_u8: 'a', Struct.t_pad(1): 'b'}
+		self.assertEqual(lookup[Struct.t_u8], 'a')

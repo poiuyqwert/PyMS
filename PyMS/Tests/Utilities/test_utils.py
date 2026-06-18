@@ -191,3 +191,10 @@ class Test_fit2(unittest.TestCase):
 
 	def test_preserves_blank_lines(self) -> None:
 		self.assertEqual(fit2('a\n\nb'), 'a\n\nb')
+
+	def test_over_long_word_placed_on_its_own_line(self) -> None:
+		# A word wider than the line is emitted on its own wrapped line, and a
+		# following word is separated from it rather than merged.
+		result = fit2('aa bbbbbbbb cc', width=6)
+		self.assertNotIn('bbbbbbbbcc', result)
+		self.assertIn('bbbbbbbb', result.split('\n'))
