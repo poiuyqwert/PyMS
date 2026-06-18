@@ -135,6 +135,13 @@ class Test_SourceCodeHandler(unittest.TestCase):
 		with self.assertRaises(PyMSError):
 			self.make_handler().parse(context)
 
+	def test_no_registered_parsers_raises_pyms_error(self) -> None:
+		# With no parsers registered, unparseable input reports a parse error
+		# rather than referencing an unbound local.
+		context = make_parse_context('inc 5\n', LANGUAGE, with_block=False)
+		with self.assertRaises(PyMSError):
+			SourceCodeHandler().parse(context)
+
 
 if __name__ == '__main__':
 	unittest.main()

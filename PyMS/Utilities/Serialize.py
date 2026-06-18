@@ -535,6 +535,7 @@ def _decode_text_to_json(text: str, definitions: Sequence[Definition]) -> list[O
 			while not scanner.at_end():
 				line = _RE_COMMENT.sub('', scanner.peek()).strip()
 				if not line:
+					scanner.skip()
 					continue
 				if _RE_TYPE.match(line) or _RE_FIELD_FLAT.match(line) or _RE_FIELD_MULTI.match(line):
 					break

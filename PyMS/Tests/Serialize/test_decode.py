@@ -104,6 +104,12 @@ class Test_decode_text(unittest.TestCase):
 		result = decode_text(text, [definition], build_sample)
 		self.assertEqual(result[0].label, 'one\ntwo')
 
+	def test_blank_line_within_multiline_value_is_skipped(self) -> None:
+		definition = sample_definition()
+		text = 'Sample:\n\tlabel:\n\t\tone\n\n\t\ttwo\n'
+		result = decode_text(text, [definition], build_sample)
+		self.assertEqual(result[0].label, 'one\ntwo')
+
 	def test_round_trip_multiple_objects(self) -> None:
 		definition = count_definition()
 		text = encode_text(Sample(count=10), 0, definition) + '\n' + encode_text(Sample(count=20), 1, definition)

@@ -247,7 +247,7 @@ class _WidgetMatcher(_Matcher):
 class _WildcardMatcher(_Matcher):
 	@classmethod
 	def parse(cls, token: str) -> _WildcardMatcher | None:
-		if not token in '**':
+		if token not in ('*', '**'):
 			return None
 		return _WildcardMatcher(token == '**')
 

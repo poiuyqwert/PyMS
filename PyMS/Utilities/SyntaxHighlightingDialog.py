@@ -115,7 +115,7 @@ class SyntaxHighlightingDialog(PyMSDialog):
 		color,_ = UI.ColorChooser.askcolor(parent=self, initialcolor=highlight_component.highlight_style.style.background or '#000000', title='Select background color')
 		if color:
 			highlight_component.highlight_style.style.background = self.hex_color(color)
-			self.fgcanvas['background'] = highlight_component.highlight_style.style.background
+			self.bgcanvas['background'] = highlight_component.highlight_style.style.background
 		self.focus_set()
 
 	def cancel(self, _event: UI.Event | None = None) -> None:

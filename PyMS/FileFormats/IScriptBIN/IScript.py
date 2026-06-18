@@ -122,7 +122,7 @@ class IScript(CodeHeader):
 	def serialize(self, serialize_context: SerializeContext) -> None:
 		if serialize_context.formatters.indent_bodies:
 			serialize_context.dedent()
-		serialize_context.write('# ----------------------------------------------------------------------------- #\n')
+		serialize_context.write('\n# ----------------------------------------------------------------------------- #\n')
 		if isinstance(serialize_context, ICESerializeContext) and serialize_context.data_context.images_dat is not None:
 			found = False
 			for entry_id in range(serialize_context.data_context.images_dat.entry_count()):

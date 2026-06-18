@@ -80,7 +80,7 @@ class ActionManager(ActionGroup):
 		if not open_group.has_changes():
 			parent.remove_action(open_group)
 		elif len(open_group.actions) == 1:
-			parent.add_action(open_group.actions[0])
+			parent.add_action(open_group.actions[0], apply=False)
 			parent.remove_action(open_group)
 
 	def add_action(self, action: Action, apply: bool = True) -> None:

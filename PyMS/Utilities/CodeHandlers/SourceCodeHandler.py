@@ -25,6 +25,7 @@ class SourceCodeHandler(SourceCodeParser):
 		any_parsed = False
 		while True:
 			error: PyMSError | None = None
+			parsed = False
 			parse_context.lexer.skip((Tokens.WhitespaceToken, Tokens.NewlineToken, Tokens.CommentToken), peek=True)
 			rollback = parse_context.lexer.get_rollback()
 			for parser in self.parsers:
