@@ -20,7 +20,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.LiteralsToken) and token.raw_value in (':', '--'):
+		if isinstance(token, Tokens.SymbolToken) and token.raw_value in (':', '--'):
 			hyphens = (token.raw_value == '--')
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
@@ -29,7 +29,7 @@ class BlockSourceCodeParser(SourceCodeParser):
 			block = parse_context.define_block(name, parse_context.lexer.state.line)
 			token = parse_context.lexer.next_token()
 			if hyphens:
-				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != '--':
+				if not isinstance(token, Tokens.SymbolToken) or token.raw_value != '--':
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `--` to end the block name)")
 				token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.NewlineToken):
@@ -82,7 +82,7 @@ class DirectiveSourceCodeParser(SourceCodeParser):
 		token = parse_context.lexer.skip(Tokens.NewlineToken)
 		if isinstance(token, Tokens.EOFToken):
 			return True
-		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '@':
+		if isinstance(token, Tokens.SymbolToken) and token.raw_value == '@':
 			token = parse_context.lexer.next_token()
 			if not isinstance(token, Tokens.IdentifierToken):
 				raise parse_context.error('Parse', f"Expected directive name, got '{token.raw_value}' instead")
@@ -110,7 +110,7 @@ class DefineSourceCodeParser(SourceCodeParser):
 			if name in definitions.variables:
 				raise parse_context.error('Parse', f"Variable named '{name}' is already defined")
 			token = parse_context.lexer.next_token()
-			if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '=':
+			if not isinstance(token, Tokens.SymbolToken) or not token.raw_value == '=':
 				raise parse_context.error('Parse', f"Expected '=' but got '{token.raw_value}'")
 			value = code_type.parse(parse_context)
 			definitions.set_variable(name, value, code_type)

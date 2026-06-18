@@ -50,7 +50,7 @@ class FloatToken(RegexToken):
 class StringToken(RegexToken):
 	_regexp = re.compile(r'"([^\\"]|\\.)*"|\'([^\\\']|\\.)*\'')
 
-class LiteralsToken(Token):
+class SymbolToken(Token):
 	_literals: Sequence[str]
 	__regexp: re.Pattern[str] | None = None
 
@@ -58,6 +58,20 @@ class LiteralsToken(Token):
 	def match(cls, code: str, offset: int) -> (Self | None):
 		if cls.__regexp is None:
 			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in sorted(cls._literals, key=len, reverse=True)))
+		match = cls.__regexp.match(code, offset)
+		if not match:
+			return None
+		return cls(match.group(0))
+
+class KeywordToken(Token):
+	_keywords: Sequence[str]
+	__regexp: re.Pattern[str] | None = None
+
+	@classmethod
+	def match(cls, code: str, offset: int) -> (Self | None):
+		if cls.__regexp is None:
+			alternatives = '|'.join(re.escape(keyword) for keyword in sorted(cls._keywords, key=len, reverse=True))
+			cls.__regexp = re.compile(rf'\b(?:{alternatives})\b')
 		match = cls.__regexp.match(code, offset)
 		if not match:
 			return None

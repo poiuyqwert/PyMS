@@ -165,7 +165,7 @@ class TRG:
 				if condition.condition_type != ConditionType.no_condition:
 					trigger.add_condition(condition)
 				token = lexer.skip(Tokens.NewlineToken)
-				if isinstance(token, TRGLexer.KeywordsToken):
+				if isinstance(token, TRGLexer.KeywordToken):
 					break
 			return token
 
@@ -211,7 +211,7 @@ class TRG:
 				if action.action_type != ActionType.no_action:
 					trigger.add_action(action)
 				token = lexer.skip(Tokens.NewlineToken)
-				if isinstance(token, (TRGLexer.KeywordsToken, Tokens.EOFToken)):
+				if isinstance(token, (TRGLexer.KeywordToken, Tokens.EOFToken)):
 					break
 			return token
 
@@ -255,16 +255,22 @@ class TRG:
 				raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = lexer.skip(Tokens.NewlineToken)
 			if trg_format == Format.normal:
-				if not isinstance(token, TRGLexer.KeywordsToken) or token.raw_value != 'Conditions:':
+				if not isinstance(token, TRGLexer.KeywordToken) or token.raw_value != 'Conditions':
 					raise PyMSError('Compile', "Expected 'Conditions:' to start list of conditions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+				token = lexer.next_token()
+				if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+					raise PyMSError('Compile', "Expected ':' after 'Conditions'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = lexer.next_token()
 				if not isinstance(token, Tokens.NewlineToken):
 					raise PyMSError('Compile', f"Expected end of line, got '{token.raw_value}' instead", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 				token = process_conditions(trigger)
 			else:
 				trigger.add_condition(Condition.mission_briefing())
-			if not isinstance(token, TRGLexer.KeywordsToken) or token.raw_value != 'Actions:':
+			if not isinstance(token, TRGLexer.KeywordToken) or token.raw_value != 'Actions':
 				raise PyMSError('Compile', "Expected 'Actions:' to start list of actions", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
+			token = lexer.next_token()
+			if not isinstance(token, TRGLexer.SymbolToken) or token.raw_value != ':':
+				raise PyMSError('Compile', "Expected ':' after 'Actions'", line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			token = process_actions(trigger)
 			return token
 
@@ -377,7 +383,7 @@ class TRG:
 		while True:
 			if isinstance(token, Tokens.EOFToken):
 				break
-			if not isinstance(token, TRGLexer.KeywordsToken):
+			if not isinstance(token, TRGLexer.KeywordToken):
 				raise PyMSError('Compile', 'Expected start of Trigger, String, or UnitProperties', line=lexer.state.line, code=lexer.get_line_of_code(lexer.state.line))
 			if token.raw_value in ('Trigger', 'BriefingTrigger'):
 				trigger_format = Format.briefing if token.raw_value == 'BriefingTrigger' else Format.normal

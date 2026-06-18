@@ -14,7 +14,7 @@ class Variable:
 		self.type = code_type
 
 class DefinitionsHandler:
-	class SymbolToken(Tokens.LiteralsToken):
+	class SymbolToken(Tokens.SymbolToken):
 		_literals = ('=', '@', '(', ')')
 
 	def __init__(self) -> None:

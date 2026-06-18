@@ -45,12 +45,12 @@ class CodeDirectiveDefinition:
 	def parse(self, parse_context: ParseContext) -> CodeDirective:
 		params: list[Any] = []
 		token = parse_context.lexer.next_token()
-		if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == '(':
+		if not isinstance(token, Tokens.SymbolToken) or not token.raw_value == '(':
 			raise parse_context.error('Parse', f"Expected '(' but got '{token.raw_value}'")
 		for param_index,param_type in enumerate(self.param_types):
 			if param_index > 0:
 				token = parse_context.lexer.next_token()
-				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
+				if not isinstance(token, Tokens.SymbolToken) or token.raw_value != ',':
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
 			try:
 				value = param_type.parse(parse_context)
@@ -59,7 +59,7 @@ class CodeDirectiveDefinition:
 				raise e
 			params.append(value)
 		token = parse_context.lexer.next_token()
-		if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
+		if not isinstance(token, Tokens.SymbolToken) or token.raw_value != ')':
 			raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):

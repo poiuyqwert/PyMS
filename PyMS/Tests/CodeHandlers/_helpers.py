@@ -22,7 +22,7 @@ class HelperLexer(Lexer):
 	the production AI lexer uses (symbols, then numbers, boolean, identifier,
 	string), so token-shadowing behavior matches real usage."""
 
-	class SymbolToken(Tokens.LiteralsToken):
+	class SymbolToken(Tokens.SymbolToken):
 		_literals = (':', '=', '@', '(', ')', ',', '{', '}', '--', '|')
 
 	def __init__(self, code: str) -> None:

@@ -51,7 +51,7 @@ class CodeCommandDefinition:
 		parse_context.command_in_parens = False
 		params: list[Any] = []
 		token = parse_context.lexer.next_token(peek=True)
-		if isinstance(token, Tokens.LiteralsToken) and token.raw_value == '(':
+		if isinstance(token, Tokens.SymbolToken) and token.raw_value == '(':
 			_ = parse_context.lexer.next_token()
 			parse_context.command_in_parens = True
 		param_repeat = 1
@@ -60,7 +60,7 @@ class CodeCommandDefinition:
 			for _ in range(param_repeat):
 				if parse_context.command_in_parens and param_index > 0:
 					token = parse_context.lexer.next_token()
-					if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
+					if not isinstance(token, Tokens.SymbolToken) or token.raw_value != ',':
 						raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
 				try:
 					value = param_type.parse(parse_context)
@@ -75,7 +75,7 @@ class CodeCommandDefinition:
 				param_repeat = 1
 		if parse_context.command_in_parens:
 			token = parse_context.lexer.next_token()
-			if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ')':
+			if not isinstance(token, Tokens.SymbolToken) or token.raw_value != ')':
 				raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `)` to end parameters)")
 		token = parse_context.lexer.next_token()
 		if not isinstance(token, (Tokens.NewlineToken, Tokens.EOFToken)):

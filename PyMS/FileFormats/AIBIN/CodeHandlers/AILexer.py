@@ -5,10 +5,10 @@ from ....Utilities.CodeHandlers import Tokens
 import re
 
 class AILexer(Lexer):
-	class SymbolToken(Tokens.LiteralsToken):
+	class SymbolToken(Tokens.SymbolToken):
 		_literals = (':', '=', '@', '(', ')', ',', '{', '}', '--')
 
-	class AISESymbolToken(Tokens.LiteralsToken):
+	class AISESymbolToken(Tokens.SymbolToken):
 		_literals = ('.', '|', '~')
 
 	class ScriptIDToken(Tokens.RegexToken):

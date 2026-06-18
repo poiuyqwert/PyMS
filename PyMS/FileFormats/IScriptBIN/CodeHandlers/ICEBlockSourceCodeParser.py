@@ -14,7 +14,7 @@ class ICEBlockSourceCodeParser(SourceCodeParser):
 			return False
 		name = token.raw_value
 		token = parse_context.lexer.next_token()
-		if not isinstance(token, Tokens.LiteralsToken) or not token.raw_value == ':':
+		if not isinstance(token, Tokens.SymbolToken) or not token.raw_value == ':':
 			return False
 		block = parse_context.define_block(name, parse_context.lexer.state.line)
 		token = parse_context.lexer.next_token()

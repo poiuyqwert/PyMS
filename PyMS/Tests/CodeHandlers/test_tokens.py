@@ -205,42 +205,78 @@ class Test_EOFToken(unittest.TestCase):
 		self.assertEqual(Tokens.EOFToken().raw_value, '')
 
 
-class Test_LiteralsToken(unittest.TestCase):
-	class Symbols(Tokens.LiteralsToken):
+class Test_SymbolToken(unittest.TestCase):
+	class Symbols(Tokens.SymbolToken):
 		_literals = ('==', '=', '(')
 
-	class OtherSymbols(Tokens.LiteralsToken):
+	class OtherSymbols(Tokens.SymbolToken):
 		_literals = ('@',)
 
 	def test_matches_a_literal(self) -> None:
-		token = Test_LiteralsToken.Symbols.match('(rest', 0)
+		token = Test_SymbolToken.Symbols.match('(rest', 0)
 		assert token is not None
 		self.assertEqual(token.raw_value, '(')
 
 	def test_longest_alternative_can_be_ordered_first(self) -> None:
 		# `==` is listed before `=` so it wins where both could match.
-		token = Test_LiteralsToken.Symbols.match('==x', 0)
+		token = Test_SymbolToken.Symbols.match('==x', 0)
 		assert token is not None
 		self.assertEqual(token.raw_value, '==')
 
-	class UnorderedSymbols(Tokens.LiteralsToken):
+	class UnorderedSymbols(Tokens.SymbolToken):
 		# Shorter literal listed before the longer one that shares its prefix.
 		_literals = ('-', '--')
 
 	def test_longest_literal_wins_regardless_of_declaration_order(self) -> None:
-		token = Test_LiteralsToken.UnorderedSymbols.match('--x', 0)
+		token = Test_SymbolToken.UnorderedSymbols.match('--x', 0)
 		assert token is not None
 		self.assertEqual(token.raw_value, '--')
 
 	def test_no_match_returns_none(self) -> None:
-		self.assertIsNone(Test_LiteralsToken.Symbols.match('xyz', 0))
+		self.assertIsNone(Test_SymbolToken.Symbols.match('xyz', 0))
 
 	def test_distinct_subclasses_do_not_share_literals(self) -> None:
-		# Each LiteralsToken subclass must match only its own literals, even
+		# Each SymbolToken subclass must match only its own literals, even
 		# though the compiled-regex cache lives on the shared base class.
-		self.assertIsNotNone(Test_LiteralsToken.OtherSymbols.match('@', 0))
-		self.assertIsNone(Test_LiteralsToken.OtherSymbols.match('=', 0))
-		self.assertIsNone(Test_LiteralsToken.Symbols.match('@', 0))
+		self.assertIsNotNone(Test_SymbolToken.OtherSymbols.match('@', 0))
+		self.assertIsNone(Test_SymbolToken.OtherSymbols.match('=', 0))
+		self.assertIsNone(Test_SymbolToken.Symbols.match('@', 0))
+
+
+class Test_KeywordToken(unittest.TestCase):
+	class Keywords(Tokens.KeywordToken):
+		_keywords = ('if', 'ifdef', 'else')
+
+	class OtherKeywords(Tokens.KeywordToken):
+		_keywords = ('end',)
+
+	def test_matches_a_keyword(self) -> None:
+		token = Test_KeywordToken.Keywords.match('else ', 0)
+		assert token is not None
+		self.assertEqual(token.raw_value, 'else')
+
+	def test_longest_keyword_wins_regardless_of_declaration_order(self) -> None:
+		token = Test_KeywordToken.Keywords.match('ifdef ', 0)
+		assert token is not None
+		self.assertEqual(token.raw_value, 'ifdef')
+
+	def test_requires_trailing_word_boundary(self) -> None:
+		# A keyword embedded in a longer identifier must not match.
+		self.assertIsNone(Test_KeywordToken.Keywords.match('iffy', 0))
+
+	def test_requires_leading_word_boundary(self) -> None:
+		# Matching mid-identifier (no boundary before the keyword) must fail.
+		self.assertIsNone(Test_KeywordToken.Keywords.match('xif', 1))
+
+	def test_no_match_returns_none(self) -> None:
+		self.assertIsNone(Test_KeywordToken.Keywords.match('xyz', 0))
+
+	def test_distinct_subclasses_do_not_share_keywords(self) -> None:
+		# Each KeywordToken subclass must match only its own keywords, even
+		# though the compiled-regex cache lives on the shared base class.
+		self.assertIsNotNone(Test_KeywordToken.OtherKeywords.match('end', 0))
+		self.assertIsNone(Test_KeywordToken.OtherKeywords.match('if', 0))
+		self.assertIsNone(Test_KeywordToken.Keywords.match('end', 0))
 
 
 if __name__ == '__main__':
