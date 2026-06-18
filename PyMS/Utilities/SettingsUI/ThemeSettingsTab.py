@@ -30,7 +30,7 @@ class ThemeSettingsTab(SettingsTab):
 
 		listbox_frame = UI.Frame(frame)
 		listbox_frame.pack(side=UI.LEFT, fill=UI.Y)
-		self.listbox = UI.ScrolledListbox(listbox_frame, width=20, height=10)
+		self.listbox = UI.ScrolledListbox(listbox_frame, width=20, height=5)
 		self.listbox.bind(UI.WidgetEvent.Listbox.Select(), self.selection_updated)
 		self.listbox.pack(fill=UI.Y, expand=1)
 		UI.Checkbutton(listbox_frame, text='Default', variable=self.default).pack()
@@ -79,11 +79,18 @@ class ThemeSettingsTab(SettingsTab):
 		return 1 + Assets.theme_list().index(theme)
 
 	def check_edited(self) -> None:
-		edited = False
-		if (self.current_theme() is None) != self.default.get():
-			edited = True
-		if self.current_theme() != self.selected_theme():
-			edited = True
+		# Mirror `save()`: with 'Default' checked the selection becomes the global
+		# default and the per-program override is cleared; otherwise the selection
+		# becomes the per-program override and the global default is untouched.
+		# Comparing against both targets is what lets switching the global default
+		# back to 'None' register as a change.
+		if self.default.get():
+			new_theme = None
+			new_default = self.selected_theme()
+		else:
+			new_theme = self.selected_theme()
+			new_default = self.current_default()
+		edited = (new_theme != self.current_theme()) or (new_default != self.current_default())
 		self.edited_state.mark_edited(edited)
 
 	def default_updated(self, *_: Any) -> None:

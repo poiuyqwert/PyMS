@@ -11,12 +11,12 @@ class PyMSDialog(UI.Toplevel):
 		self.parent = parent
 		focus: UI.Misc | None = self.widgetize()
 		self.update_idletasks()
-		geometry = UI.Geometry.of(self)
+		required_size = UI.Size(self.winfo_reqwidth(), self.winfo_reqheight())
 		if set_min_size[0] or set_min_size[1]:
-			self.minsize(geometry.size.width if set_min_size[0] else 0, geometry.size.height if set_min_size[1] else 0)
+			self.minsize(required_size.width if set_min_size[0] else 0, required_size.height if set_min_size[1] else 0)
 		screen_size = UI.Size(self.winfo_screenwidth(), self.winfo_screenheight())
 		if center:
-			self.geometry(UI.GeometryAdjust(pos=geometry.size.centered_in(screen_size)).text)
+			self.geometry(UI.GeometryAdjust(pos=required_size.centered_in(screen_size)).text)
 		self.resizable(*resizable)
 		self.setup_complete()
 		if not focus:

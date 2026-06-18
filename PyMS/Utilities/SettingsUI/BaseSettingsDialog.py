@@ -17,17 +17,17 @@ class BaseSettingsDialog(PyMSDialog, Generic[C]):
 		self.tabs: list[SettingsTab] = []
 		self.edited_state = EditedState()
 		self.edited_state.callback += self.edited_updated
-		PyMSDialog.__init__(self, parent, 'Settings')
+		PyMSDialog.__init__(self, parent, 'Settings', set_min_size=(True, True))
 
 	def widgetize(self) -> UI.Misc | None:
-		self.notebook = UI.Notebook(self)
-		self.notebook.pack(fill=UI.BOTH, expand=1, padx=5, pady=5)
-
 		btns = UI.Frame(self)
 		self.ok_button = UI.Button(btns, text='Ok', width=10, command=self.ok, state=UI.DISABLED)
 		self.ok_button.pack(side=UI.LEFT, padx=3, pady=3)
 		UI.Button(btns, text='Cancel', width=10, command=self.cancel).pack(side=UI.LEFT, padx=3, pady=3)
-		btns.pack()
+		btns.pack(side=UI.BOTTOM)
+
+		self.notebook = UI.Notebook(self)
+		self.notebook.pack(side=UI.TOP, fill=UI.BOTH, expand=1, padx=5, pady=5)
 		return self.ok_button
 
 	def edited_updated(self, edited: bool) -> None:
