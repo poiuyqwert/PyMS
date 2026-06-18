@@ -1,6 +1,6 @@
 
 from typing import Protocol
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 class BlockFormatter(Protocol):
 	def serialize(self, block_name: str) -> str:
@@ -61,8 +61,8 @@ class SemicolonCommentFormatter(CommentFormatter):
 
 @dataclass
 class Formatters:
-	block: BlockFormatter = ColonBlockFormatter()
-	command: CommandFormatter = FlatCommandFormatter()
-	comment: CommentFormatter = HashCommentFormatter()
+	block: BlockFormatter = field(default_factory=ColonBlockFormatter)
+	command: CommandFormatter = field(default_factory=FlatCommandFormatter)
+	comment: CommentFormatter = field(default_factory=HashCommentFormatter)
 	indent_bodies: bool = False
 	indent: str = '    '

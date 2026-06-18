@@ -48,6 +48,13 @@ class Test_FormattersDefaults(unittest.TestCase):
 		self.assertIsInstance(formatters.comment, Formatters.HashCommentFormatter)
 		self.assertFalse(formatters.indent_bodies)
 
+	def test_default_formatters_not_shared_between_instances(self) -> None:
+		a = Formatters.Formatters()
+		b = Formatters.Formatters()
+		self.assertIsNot(a.block, b.block)
+		self.assertIsNot(a.command, b.command)
+		self.assertIsNot(a.comment, b.comment)
+
 
 if __name__ == '__main__':
 	unittest.main()

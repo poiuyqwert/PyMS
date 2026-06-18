@@ -41,6 +41,7 @@ class Test_Scanner(unittest.TestCase):
 		scanner.end()
 		self.assertTrue(scanner.is_empty())
 		self.assertEqual(scanner.remainder(), '')
+		self.assertEqual(scanner.offset, len('hello'))
 
 	def test_is_blank(self) -> None:
 		self.assertTrue(_scanner('   ').is_blank())

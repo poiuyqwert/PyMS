@@ -53,7 +53,7 @@ class CodeDirectiveDefinition:
 				if not isinstance(token, Tokens.LiteralsToken) or token.raw_value != ',':
 					raise parse_context.error('Parse', f"Unexpected token '{token.raw_value}' (expected `,` separating parameters)")
 			try:
-				value = param_type.lex(parse_context)
+				value = param_type.parse(parse_context)
 			except PyMSError as e:
 				parse_context.attribute_error(e)
 				raise e

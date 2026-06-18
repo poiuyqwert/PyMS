@@ -18,8 +18,8 @@ def _list_numbered(num: int) -> str:
 def _list_lettered(num: int) -> str:
 	result = ''
 	while num > 0:
-		result += chr(96 + num % 26)
-		num -= 26
+		(num, remainder) = divmod(num - 1, 26)
+		result = chr(97 + remainder) + result
 	return f'{result}. '
 
 _ROMAN_LOOKUP = (

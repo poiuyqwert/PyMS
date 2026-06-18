@@ -45,7 +45,7 @@ class _Scanner:
 		return _Scanner.RE_BLANK.match(self.line) is not None
 
 	def end(self) -> None:
-		self.offset = len(self.line)-1
+		self.offset = len(self.line)
 		self.length = 0
 
 	def own(self) -> None:

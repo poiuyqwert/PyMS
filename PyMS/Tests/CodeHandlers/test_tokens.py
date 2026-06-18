@@ -223,6 +223,15 @@ class Test_LiteralsToken(unittest.TestCase):
 		assert token is not None
 		self.assertEqual(token.raw_value, '==')
 
+	class UnorderedSymbols(Tokens.LiteralsToken):
+		# Shorter literal listed before the longer one that shares its prefix.
+		_literals = ('-', '--')
+
+	def test_longest_literal_wins_regardless_of_declaration_order(self) -> None:
+		token = Test_LiteralsToken.UnorderedSymbols.match('--x', 0)
+		assert token is not None
+		self.assertEqual(token.raw_value, '--')
+
 	def test_no_match_returns_none(self) -> None:
 		self.assertIsNone(Test_LiteralsToken.Symbols.match('xyz', 0))
 

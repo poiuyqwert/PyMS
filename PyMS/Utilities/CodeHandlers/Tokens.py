@@ -57,7 +57,7 @@ class LiteralsToken(Token):
 	@classmethod
 	def match(cls, code: str, offset: int) -> (Self | None):
 		if cls.__regexp is None:
-			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in cls._literals))
+			cls.__regexp = re.compile('|'.join(re.escape(literal) for literal in sorted(cls._literals, key=len, reverse=True)))
 		match = cls.__regexp.match(code, offset)
 		if not match:
 			return None

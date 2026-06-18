@@ -33,6 +33,7 @@ class EditedState:
 		if not edited_state in self.sub_states:
 			return
 		self.sub_states.remove(edited_state)
+		edited_state.callback -= self.update_sub_states
 		self.update_sub_states(False)
 
 	def update_sub_states(self, _: bool) -> None:

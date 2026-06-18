@@ -48,14 +48,15 @@ def register(program_name: str, extension: str, file_type_name: str | None = Non
 		executable = f'"{sys.executable}"'
 	else:
 		executable = f'"{sys.executable.replace("python.exe","pythonw.exe")}" "{os.path.join(Assets.base_dir, program_name + ".pyw")}"'
+	ext_key = os.extsep + extension
 	try:
-		delkey(HKEY_CLASSES_ROOT, os.extsep + extension)
+		delkey(HKEY_CLASSES_ROOT, ext_key)
 		delkey(HKEY_CLASSES_ROOT, key)
-		SetValue(HKEY_CLASSES_ROOT, '.' + extension, REG_SZ, key)
+		SetValue(HKEY_CLASSES_ROOT, ext_key, REG_SZ, key)
 		SetValue(HKEY_CLASSES_ROOT, key, REG_SZ, f'StarCraft{file_type_name} *.{extension} file ({program_name})')
 		SetValue(HKEY_CLASSES_ROOT, key + '\\DefaultIcon', REG_SZ, Assets.image_path(f'{program_name}.ico'))
 		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell', REG_SZ, 'open')
-		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, f'{executable} --gui "%%1"')
+		SetValue(HKEY_CLASSES_ROOT, key + '\\Shell\\open\\command', REG_SZ, f'{executable} --gui "%1"')
 	except Exception as exc:
 		raise PyMSError('Registry', 'Could not complete file association.') from exc
 	from .UIKit import MessageBox

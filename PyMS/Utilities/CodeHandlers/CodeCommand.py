@@ -36,11 +36,13 @@ class CodeCommandDefinition:
 		params = []
 		param_repeat = 1
 		for param_type in self.param_types:
+			values = []
 			for _ in range(param_repeat):
 				value = param_type.decompile(scanner, context)
-				params.append(value)
+				values.append(value)
+			params.extend(values)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
-				param_repeat = value
+				param_repeat = values[-1] if values else 0
 			else:
 				param_repeat = 1
 		return CodeCommand(self, params)
@@ -54,6 +56,7 @@ class CodeCommandDefinition:
 			parse_context.command_in_parens = True
 		param_repeat = 1
 		for param_index,param_type in enumerate(self.param_types):
+			values: list[Any] = []
 			for _ in range(param_repeat):
 				if parse_context.command_in_parens and param_index > 0:
 					token = parse_context.lexer.next_token()
@@ -64,9 +67,10 @@ class CodeCommandDefinition:
 				except PyMSError as e:
 					parse_context.attribute_error(e)
 					raise e
-				params.append(value)
+				values.append(value)
+			params.extend(values)
 			if isinstance(param_type, IntCodeType) and param_type.param_repeater:
-				param_repeat = value
+				param_repeat = values[-1] if values else 0
 			else:
 				param_repeat = 1
 		if parse_context.command_in_parens:

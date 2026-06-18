@@ -1,7 +1,8 @@
 
 from ._helpers import make_parse_context, make_language, ByteType
 
-from ...Utilities.CodeHandlers import CodeCommand
+from ...Utilities import Struct
+from ...Utilities.CodeHandlers import CodeCommand, CodeType
 from ...Utilities.CodeHandlers.SerializeContext import SerializeContext
 from ...Utilities.CodeHandlers.DecompileContext import DecompileContext
 from ...Utilities.CodeHandlers.ByteCodeCompiler import ByteCodeCompiler
@@ -14,6 +15,8 @@ import unittest, io
 IncCommand = CodeCommand.CodeCommandDefinition('inc', 'inc', 0, [ByteType])
 PairCommand = CodeCommand.CodeCommandDefinition('pair', 'pair', 1, [ByteType, ByteType])
 VirtualCommand = CodeCommand.CodeCommandDefinition('virtual', 'virtual', None, [ByteType])
+RepeaterType = CodeType.IntCodeType('count', 'count', Struct.l_u8, param_repeater=True)
+RepeatCommand = CodeCommand.CodeCommandDefinition('repeat', 'repeat', 3, [RepeaterType, ByteType])
 
 LANGUAGE = make_language([IncCommand, PairCommand], [ByteType])
 
@@ -70,6 +73,20 @@ class Test_Decompile(unittest.TestCase):
 		context = DecompileContext(data, LANGUAGE)
 		command = IncCommand.decompile(scanner, context)
 		self.assertEqual(command.params, [5])
+
+	def test_repeater_count_controls_following_param_count(self) -> None:
+		data = b'\x02\x0a\x0b'
+		scanner = BytesScanner(data)
+		context = DecompileContext(data, LANGUAGE)
+		command = RepeatCommand.decompile(scanner, context)
+		self.assertEqual(command.params, [2, 10, 11])
+
+	def test_zero_repeater_count_reads_no_following_params(self) -> None:
+		data = b'\x00'
+		scanner = BytesScanner(data)
+		context = DecompileContext(data, LANGUAGE)
+		command = RepeatCommand.decompile(scanner, context)
+		self.assertEqual(command.params, [0])
 
 
 class Test_Compile(unittest.TestCase):

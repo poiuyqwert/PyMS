@@ -54,6 +54,22 @@ class Test_Parse(unittest.TestCase):
 		with self.assertRaises(PyMSError):
 			parse_directive(OneArgDirective, '(7) extra')
 
+	def test_parameter_validation_runs_during_parse(self) -> None:
+		# A directive parameter's `validate` must run while parsing, the same as
+		# command parameters, so out-of-range values are rejected.
+		class EvenOnly(DirectiveType[int]):
+			def lex(self, parse_context) -> int:
+				return int(parse_context.lexer.next_token().raw_value)
+
+			def validate(self, value, parse_context, token=None) -> None:
+				if value % 2 != 0:
+					raise PyMSError('Parse', 'value must be even')
+
+		even_directive = CodeDirectiveDefinition('even', 'an even value', [EvenOnly('even', 'an even number')])
+		self.assertEqual(parse_directive(even_directive, '(4)').params, [4])
+		with self.assertRaises(PyMSError):
+			parse_directive(even_directive, '(3)')
+
 
 class Test_FullHelpText(unittest.TestCase):
 	def test_placeholder_resolves_to_parameter(self) -> None:

@@ -100,7 +100,7 @@ def check_compat(program_name, additional_requirements = Requirement.none): # ty
 		if (is_mac, tcl_version) in unsupported_tkinter:
 			show_error(program_name, 'Tkinter\'s Tcl/Tk version (%s) is incompatable. Please update your Python and/or Tcl/Tk version.' % tcl_version)
 	else:
-		show_error(program_name, 'Couldn\'t check Tkinter\'s Tcl/Tk version (%s). It is possible that PyMS might not function properly.\nYou can continue to use the programs, or consult the Installation section of the Readme.' % tcl_version, warning=True)
+		show_error(program_name, 'Couldn\'t check Tkinter\'s Tcl/Tk version. It is possible that PyMS might not function properly.\nYou can continue to use the programs, or consult the Installation section of the Readme.', warning=True)
 
 	if additional_requirements & Requirement.MPQ:
 		from ..FileFormats.MPQ.MPQ import MPQ
