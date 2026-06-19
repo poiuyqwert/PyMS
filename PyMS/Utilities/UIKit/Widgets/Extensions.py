@@ -13,8 +13,7 @@ class MiscExtensions(_Tk.Misc):
 		function identified with FUNCID."""
 		remove_bind(self, sequence, funcid)
 
-	def after_managed(self, ms: int, func: Callable[..., Any], *args: Any) -> str:
-		"""Schedule `func` after `ms` milliseconds and auto-cancel if this widget is destroyed first."""
+	def _register_managed_after(self, schedule: Callable[[Callable[[], None]], str], func: Callable[..., Any], args: tuple[Any, ...]) -> str:
 		if not hasattr(self, '_managed_after_ids'):
 			self._managed_after_ids: set[str] = set() # pylint: disable=attribute-defined-outside-init
 			self.bind(WidgetEvent.Destroy(), self._cancel_managed_afters, '+')
@@ -22,10 +21,22 @@ class MiscExtensions(_Tk.Misc):
 		def wrapper() -> None:
 			self._managed_after_ids.discard(holder[0])
 			func(*args)
-		after_id = self.after(ms, wrapper)
+		after_id = schedule(wrapper)
 		holder[0] = after_id
 		self._managed_after_ids.add(after_id)
 		return after_id
+
+	def after_managed(self, ms: int, func: Callable[..., Any], *args: Any) -> str:
+		"""Schedule `func` after `ms` milliseconds and auto-cancel if this widget is destroyed first."""
+		return self._register_managed_after(lambda wrapper: self.after(ms, wrapper), func, args)
+
+	def after_idle_managed(self, func: Callable[..., Any], *args: Any) -> str:
+		"""Schedule `func` to run at the next idle point and auto-cancel if this widget is destroyed first.
+
+		Idle callbacks are flushed by `update_idletasks()`, so a task scheduled here
+		runs before code that settles geometry inline (unlike a 0ms `after_managed`,
+		which only fires once the event loop runs)."""
+		return self._register_managed_after(self.after_idle, func, args)
 
 	def after_managed_cancel(self, after_id: str | None) -> None:
 		if after_id is None:

@@ -17,6 +17,7 @@ class Notebook(Frame):
 		self.tab = IntVar()
 		self.overflowing = False
 		self.overflow_button: Button | None = None
+		self._update_size_after_id: str | None = None
 		self.notebook = Frame(parent)
 		self.tabs_area = Frame(self.notebook)
 		self.tabs_area.pack(fill=X)
@@ -77,13 +78,20 @@ class Notebook(Frame):
 		self.pages[tab_id] = (frame, len(self.pages))
 		if not self.active:
 			self.display(tab_id)
-		self._update_default_size()
+		# Debounce: a burst of `add_tab` calls (e.g. building all of a dialog's tabs)
+		# collapses into a single sizing pass instead of one per tab. Scheduling on
+		# idle (not a timer) means the next `update_idletasks()` runs it — so callers
+		# that settle geometry inline, like PyMSDialog computing its min size, still
+		# see the size that fits the largest tab.
+		self.after_managed_cancel(self._update_size_after_id)
+		self._update_size_after_id = self.after_idle_managed(self._update_default_size)
 		return tab
 
 	def _update_default_size(self) -> None:
 		# Size the page container to fit the largest tab so that the default
 		# size is the max of all tabs' requested sizes (rather than only the
 		# active tab's), and switching tabs doesn't resize the notebook.
+		self._update_size_after_id = None
 		if not self.pages:
 			return
 		self.update_idletasks()

@@ -53,6 +53,10 @@ class UITestCase(unittest.TestCase):
 		# environments that can't show a window. A single throwaway root cannot be
 		# used to probe up front — on macOS Aqua a created-then-destroyed extra
 		# root corrupts a subsequently created root and segfaults the interpreter.
+		# Fonts are pooled per Tk interpreter; this test is about to build a fresh
+		# root, so drop any instances pooled against an earlier test's (now
+		# destroyed) root before they are looked up against the new one.
+		UI.Font.clear_pool()
 		patches = {**_DEFAULT_PATCHES, **(extra_patches or {})}
 		stack = contextlib.ExitStack()
 		self.addCleanup(stack.close)
