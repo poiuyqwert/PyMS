@@ -14,7 +14,7 @@ from typing import Callable, Literal, Sequence, Any
 class DropDown(Frame):
 	def __init__(self, parent: Misc, variable: IntVar, entries: Sequence[str], display: IntegerVar | Callable[[int], None] | None = None, *, width: int = 1, state: Literal['normal', 'active', 'disabled'] = NORMAL, stay_right: bool = False, none_name: str = 'None', none_value: int | None = None):
 		self.variable = variable
-		self.variable.set = self.set # type: ignore[assignment]
+		self.variable.trace_add('write', self._variable_changed)
 		self.display = display
 		self.stay_right = stay_right
 		self._original_display_callback = None
@@ -86,8 +86,11 @@ class DropDown(Frame):
 			self.text.set('')
 
 	def set(self, num: int) -> None:
+		self.variable.set(num)
+
+	def _variable_changed(self, *_: Any) -> None:
+		num = self.variable.get()
 		self.change(num)
-		IntVar.set(self.variable, num)
 		self.disp(num)
 		if self.stay_right:
 			self.entry.xview_moveto(1.0)
@@ -119,12 +122,10 @@ class DropDown(Frame):
 	def choose(self, _event: Event | None = None) -> None:
 		if self.entry['state'] == NORMAL:
 			i = self.variable.get()
-			if i == self.none_value:
-				n = self.entries.index(self.none_name)
-				if n >= 0:
-					i = n
+			if i == self.none_value and self.none_name in self.entries:
+				i = self.entries.index(self.none_name)
 			c = DropDownChooser(self, self.entries, i)
-			if c.result > -1 and c.result < len(self.entries) and self.entries[c.result] == self.none_name and self.none_value:
+			if c.result > -1 and c.result < len(self.entries) and self.entries[c.result] == self.none_name and self.none_value is not None:
 				self.set(self.none_value)
 			else:
 				self.set(c.result)
