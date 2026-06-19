@@ -15,7 +15,7 @@ class ErrorDialog(PyMSDialog):
 		PyMSDialog.__init__(self, parent, f'{error.type} Error!', resizable=(False, False))
 
 	def widgetize(self) -> UI.Misc | None:
-		UI.Label(self, justify=UI.LEFT, anchor=UI.W, text=self.error.repr(), wraplength=640).pack(pady=10, padx=5)
+		UI.Label(self, justify=UI.LEFT, anchor=UI.W, text=repr(self.error), wraplength=640).pack(pady=10, padx=5)
 		frame = UI.Frame(self)
 		ok = UI.Button(frame, text='Ok', width=10, command=self.ok)
 		ok.pack(side=UI.LEFT, padx=3)
@@ -32,7 +32,7 @@ class ErrorDialog(PyMSDialog):
 
 	def copy(self) -> None:
 		self.clipboard_clear()
-		self.clipboard_append(self.error.repr())
+		self.clipboard_append(repr(self.error))
 
 	def viewwarnings(self) -> None:
 		WarningDialog(self, self.error.warnings)

@@ -59,7 +59,7 @@ class InternalErrorDialog(PyMSDialog):
 
 	def selectall(self, _event: UI.Event | None = None) -> None:
 		self.text.focus_set()
-		self.text.tag_add(UI.SEL, 1.0, UI.END)
+		self.text.tag_add(UI.SEL, '1.0', UI.END)
 
 	def add_text(self, text: str, newline: bool = True) -> None:
 		self.text['state'] = UI.NORMAL

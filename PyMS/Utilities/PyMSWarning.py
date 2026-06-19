@@ -13,30 +13,17 @@ class PyMSWarning(Exception):
 		self.id = warn_id
 		self.sub_warnings = sub_warnings or []
 
-	def repr(self) -> str:
-		from .utils import fit  # pylint: disable=cyclic-import
-		r = fit(f'{self.type} Warning{f" ({self.id})" if self.id else ""}: ', self.warning, end=True)
-		if self.line and self.code:
-			r += fit(f'    Line {self.line}: ', self.code, end=True)
-		for w in self.sub_warnings:
-			r += w.repr()
-		return r
-
 	def __repr__(self) -> str:
-		from .utils import fit  # pylint: disable=cyclic-import
-		r = fit(f'{self.type} Warning{f" ({self.id})" if self.id else ""}: ', self.warning)
+		r = f'{self.type} Warning{f" ({self.id})" if self.id else ""}: {self.warning}'
 		if self.line and self.code:
-			r += fit(f'    Line {self.line}: ', self.code)
+			r += f'\n    Line {self.line}: {self.code}'
 		for w in self.sub_warnings:
-			r += repr(w)
-		return r[:-1]
+			r += '\n' + repr(w)
+		return r
 
 class PyMSWarnList(Exception):
 	def __init__(self, warnings: list[PyMSWarning]) -> None:
 		self.warnings = warnings
 
 	def __repr__(self) -> str:
-		r = ''
-		for w in self.warnings:
-			r += repr(w)
-		return r[:-1]
+		return '\n'.join(repr(w) for w in self.warnings)

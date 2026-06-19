@@ -63,8 +63,8 @@ class Test_include_all_files(unittest.TestCase):
 		self.assertEqual(FileType.include_all_files([]), [FileType.all_files()])
 
 	def test_existing_wildcard_of_other_name_counts_as_present(self) -> None:
-		# `all_files` equality ignores the name for wildcard extensions, so a
-		# differently-named wildcard entry already satisfies "all files".
+		# Any wildcard entry already matches every file, so a differently-named
+		# wildcard satisfies "all files" and nothing extra is appended.
 		existing = [FileType('Everything', '*')]
 		self.assertEqual(FileType.include_all_files(existing), existing)
 
@@ -87,8 +87,22 @@ class Test_eq(unittest.TestCase):
 	def test_same_extension_different_name_not_equal(self) -> None:
 		self.assertNotEqual(FileType('A', 'txt'), FileType('B', 'txt'))
 
-	def test_wildcard_matches_regardless_of_name(self) -> None:
-		self.assertEqual(FileType('A', '*'), FileType('B', '*'))
+	def test_wildcard_with_different_name_not_equal(self) -> None:
+		self.assertNotEqual(FileType('A', '*'), FileType('B', '*'))
 
 	def test_not_equal_to_non_filetype(self) -> None:
 		self.assertNotEqual(FileType('A', 'txt'), 'not a filetype')
+
+
+class Test_hash(unittest.TestCase):
+	def test_equal_filetypes_hash_equal(self) -> None:
+		self.assertEqual(hash(FileType('A', 'txt')), hash(FileType('A', 'txt')))
+
+	def test_wildcards_with_different_names_are_distinct_in_a_set(self) -> None:
+		# Equality requires both name and extensions to match, so wildcards with
+		# different names are distinct members.
+		self.assertEqual(len({FileType('A', '*'), FileType('B', '*')}), 2)
+
+	def test_usable_in_a_set(self) -> None:
+		types = {FileType('A', 'txt'), FileType('A', 'txt'), FileType('B', 'bmp')}
+		self.assertEqual(len(types), 2)

@@ -23,9 +23,9 @@ class WarningDialog(PyMSDialog):
 		vscroll.grid(sticky=UI.NS, row=0, column=1)
 		for warning in self.warnings:
 			if warning.level:
-				self.warntext.insert(UI.END, warning.repr(), 'highlevel')
+				self.warntext.insert(UI.END, repr(warning) + '\n', 'highlevel')
 			else:
-				self.warntext.insert(UI.END, warning.repr())
+				self.warntext.insert(UI.END, repr(warning) + '\n')
 		self.warntext['state'] = UI.DISABLED
 		frame.pack(side=UI.TOP, pady=2, padx=2)
 		buttonbar = UI.Frame(self)

@@ -18,23 +18,15 @@ class PyMSError(Exception):
 		if cause is not None:
 			self.__cause__ = cause
 
-	def repr(self) -> str:
+	def __repr__(self) -> str:
 		r = f'{self.type} Error: {self.error}'
 		if self.line:
-			r += f'\n    Line {self.line}: {self.code}'
-		return r
-
-	def __repr__(self) -> str:
-		from .utils import fit  # pylint: disable=cyclic-import
-		r = fit(f'{self.type} Error: ', self.error)
-		if self.line:
 			if self.code is not None:
-				r += fit(f'    Line {self.line}: ', self.code)
+				r += f'\n    Line {self.line}: {self.code}'
 			else:
-				r += f'    Line {self.line}'
-		if self.warnings:
-			for w in self.warnings:
-				r += repr(w)
+				r += f'\n    Line {self.line}'
+		for w in self.warnings:
+			r += '\n' + repr(w)
 		return r
 
 	def __str__(self) -> str:

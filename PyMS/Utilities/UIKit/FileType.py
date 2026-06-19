@@ -14,10 +14,9 @@ class FileType(tuple[str, str]):
 
 	@staticmethod
 	def include_all_files(file_types: list[FileType]) -> list[FileType]:
-		all_files = FileType.all_files()
-		if all_files in file_types:
+		if any(file_type.extensions == FileType.WILDCARD for file_type in file_types):
 			return file_types
-		return file_types + [all_files]
+		return file_types + [FileType.all_files()]
 
 	@staticmethod
 	def default_extension(file_types: list[FileType]) -> (str | None):
@@ -231,17 +230,17 @@ class FileType(tuple[str, str]):
 	def extensions_tuple(self) -> tuple[str, ...]:
 		return tuple(self.extensions.split(FileType.SEPARATOR))
 
-	# Both `name` and `extensions` must be equal, unless `extensions == FileType.WILDCARD` then the names don't need to match
+	# Both `name` and `extensions` must be equal.
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, FileType):
 			return NotImplemented
 		if not self.extensions == other.extensions:
 			return False
-		if self.extensions == FileType.WILDCARD:
-			return True
 		if not self.name == other.name:
 			return False
 		return True
+
+	__hash__ = tuple.__hash__
 
 # def _main() -> None:
 # 	f = FileType.maps()
