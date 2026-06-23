@@ -82,6 +82,5 @@ class PyTRGConfig(Config.Config):
 		self.windows = PyTRGConfig.Windows()
 		self.last_path = PyTRGConfig.LastPath()
 		self.highlights = PyTRGConfig.Highlights()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyTRGConfig.Settings()
 		super().__init__()

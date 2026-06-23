@@ -55,6 +55,5 @@ class PyFNTConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyFNTConfig.Windows()
 		self.last_path = PyFNTConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyFNTConfig.Settings()
 		super().__init__()

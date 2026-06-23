@@ -363,7 +363,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.minsize(geometry.size.width, geometry.size.height)
 		self.config_.windows.main.load_size(self)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()

@@ -119,7 +119,7 @@ class PyLO(UI.MainWindow, FindDelegate, UI.CodeTextDelegate):
 
 		self.setup_syntax_highlighting()
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 		self.usebasegrp = UI.BooleanVar()
 		self.usebasegrp.set(self.config_.preview.use_base_grp.value)

@@ -180,7 +180,6 @@ class PyICEConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyICEConfig.Windows()
 		self.last_path = PyICEConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyICEConfig.Settings()
 		self.find_history = Config.List(value_type=str)
 		self.code = PyICEConfig.Code()

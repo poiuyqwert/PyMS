@@ -213,7 +213,7 @@ class PySPK(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		statusbar.add_label(self.edit_status, weight=1)
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()

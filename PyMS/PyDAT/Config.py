@@ -167,7 +167,6 @@ class PyDATConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyDATConfig.Windows()
 		self.last_path = PyDATConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyDATConfig.Settings()
 		self.names = PyDATConfig.Names()
 		self.mpq_export = Config.List(value_type=str)

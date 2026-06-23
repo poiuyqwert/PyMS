@@ -147,7 +147,6 @@ class PyAIConfig(Config.Config):
 		self.windows = PyAIConfig.Windows()
 		self.dont_warn = PyAIConfig.DontWarn()
 		self.last_path = PyAIConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyAIConfig.Settings()
 		self.imports = Config.List(value_type=str)
 		self.extdefs = Config.List(value_type=str)

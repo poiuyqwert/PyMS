@@ -183,7 +183,6 @@ class PyTILEConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyTILEConfig.Windows()
 		self.last_path = PyTILEConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyTILEConfig.Settings()
 		self.mega_edit = PyTILEConfig.MegaEdit()
 		self.copy = PyTILEConfig.Copy()

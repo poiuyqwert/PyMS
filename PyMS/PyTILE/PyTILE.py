@@ -169,7 +169,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 		self.config_ = PyTILEConfig()
 		UI.Theme.load_theme(self.config_.theme.value, self)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 		self.stat_txt: TBL.TBL
 
@@ -584,7 +584,7 @@ class PyTILE(UI.MainWindow, TilePaletteDelegate, TilePaletteViewDelegate, MegaEd
 
 		self.config_.windows.main.load_size(self)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()

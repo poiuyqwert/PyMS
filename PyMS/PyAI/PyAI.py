@@ -230,7 +230,7 @@ class PyAI(UI.MainWindow, MainDelegate, ActionDelegate, TooltipDelegate, Errorab
 
 		self.config_.windows.main.load_size(self)
 
-		self.mpqhandler = MPQHandler(self.config_.mpqs)
+		self.mpqhandler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()

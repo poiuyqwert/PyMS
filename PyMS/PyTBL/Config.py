@@ -80,7 +80,6 @@ class PyTBLConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyTBLConfig.Windows()
 		self.last_path = PyTBLConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyTBLConfig.Settings()
 		self.panes = PyTBLConfig.Panes()
 		self.preview = PyTBLConfig.Preview()

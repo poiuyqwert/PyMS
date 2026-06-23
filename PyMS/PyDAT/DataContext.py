@@ -113,7 +113,7 @@ class DataContext:
 			self.palettes[name] = pal.palette
 
 	def load_mpqs(self) -> None:
-		self.mpq_handler = MPQHandler(self.config.mpqs)
+		self.mpq_handler = MPQHandler(self.config.settings.mpqs)
 
 	# @overload
 	# def dat_data(self, datid: Literal[DATID.units]) -> UnitsDATData: ...

@@ -1,5 +1,5 @@
 
-from ...FileFormats.DialogBIN import DialogBIN, BINWidget, flags
+from ...FileFormats.DialogBIN import DialogBIN, BINWidget, BINSMK, flags
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 from ..utils import resource_path
@@ -112,6 +112,22 @@ class Test_load(unittest.TestCase):
 		loaded = DialogBIN()
 		loaded.load(IO.output_to_bytes(lambda f: source.save(f, remastered=True)))
 		self.assertTrue(loaded.remastered)
+
+	def test_decodes_smk_filename(self) -> None:
+		# SMK filenames are stored as a null-terminated byte string in the file
+		# and must be decoded to str on load, like widget strings.
+		source = DialogBIN()
+		image = BINWidget(BINWidget.TYPE_IMAGE)
+		smk = BINSMK()
+		smk.filename = 'smk\\portrait.smk'
+		image.smk = smk
+		source.widgets.append(image)
+		source.smks.append(smk)
+		loaded = DialogBIN()
+		loaded.load(IO.output_to_bytes(source.save))
+		self.assertEqual(len(loaded.smks), 1)
+		self.assertEqual(loaded.smks[0].filename, 'smk\\portrait.smk')
+		self.assertIsInstance(loaded.smks[0].filename, str)
 
 	def test_corrupt_data_raises(self) -> None:
 		with self.assertRaises(PyMSError) as cm:

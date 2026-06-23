@@ -107,7 +107,6 @@ class PyBINConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PyBINConfig.Windows()
 		self.last_path = PyBINConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyBINConfig.Settings()
 		self.preview = PyBINConfig.Preview()
 		self.edit = PyBINConfig.Edit()

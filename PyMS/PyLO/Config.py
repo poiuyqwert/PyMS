@@ -82,7 +82,6 @@ class PyLOConfig(Config.Config):
 		self.windows = PyLOConfig.Windows()
 		self.last_path = PyLOConfig.LastPath()
 		self.highlights = PyLOConfig.Highlights()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PyLOConfig.Settings()
 		self.preview = PyLOConfig.Preview()
 		super().__init__()

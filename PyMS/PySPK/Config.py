@@ -65,7 +65,6 @@ class PySPKConfig(Config.Config):
 		self.theme = Config.String()
 		self.windows = PySPKConfig.Windows()
 		self.last_path = PySPKConfig.LastPath()
-		self.mpqs = Config.List(value_type=str)
 		self.settings = PySPKConfig.Settings()
 		self.auto = PySPKConfig.Auto()
 		super().__init__()

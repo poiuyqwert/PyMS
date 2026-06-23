@@ -175,7 +175,7 @@ class PyTBL(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		self.config_.panes.string_list.load_size(self.hor_pane)
 		self.config_.panes.color_list.load_size(self.ver_pane)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 	def initialize(self) -> None:
 		e = self.open_files()

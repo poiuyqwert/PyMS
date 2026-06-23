@@ -362,7 +362,7 @@ class PyFNT(UI.MainWindow, ErrorableSettingsDialogDelegate):
 		statusbar.add_spacer()
 		statusbar.pack(side=UI.BOTTOM, fill=UI.X)
 
-		self.mpq_handler = MPQHandler(self.config_.mpqs)
+		self.mpq_handler = MPQHandler(self.config_.settings.mpqs)
 
 		self.config_.windows.main.load_size(self)
 
