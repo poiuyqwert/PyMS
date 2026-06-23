@@ -38,8 +38,9 @@ class Test_StormLib_Open(unittest.TestCase):
 	def test_open_readonly_open_editable(self) -> None:
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
 		mpq.open(read_only=True)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			mpq.open(read_only=False)
+		self.assertIn('MPQ is already open as read-only', str(cm.exception))
 		mpq.close()
 
 	def test_with(self) -> None:
@@ -152,8 +153,9 @@ class Test_StormLib_Open(unittest.TestCase):
 
 	def test_read_file_no_locale_no_neutral(self) -> None:
 		mpq = MPQ.StormLibMPQ(resource_path('test.mpq', __file__))
-		with mpq.open() and self.assertRaises(PyMSError):
+		with mpq.open(), self.assertRaises(PyMSError) as cm:
 			mpq.read_file('unknown.txt', MPQ.MPQLocale.german)
+		self.assertIn('Error opening file', str(cm.exception))
 
 class Test_StormLib_Create(unittest.TestCase):
 	path: str

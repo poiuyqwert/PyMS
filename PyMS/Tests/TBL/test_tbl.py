@@ -113,13 +113,15 @@ class Test_load(unittest.TestCase):
 
 	def test_truncated_header_raises(self) -> None:
 		tbl = TBL()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			tbl.load(b'\x02\x00\x06\x00')
+		self.assertIn('Unsupported TBL file', str(cm.exception))
 
 	def test_empty_input_raises(self) -> None:
 		tbl = TBL()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			tbl.load(b'')
+		self.assertIn('Unsupported TBL file', str(cm.exception))
 
 
 class Test_decompile(unittest.TestCase):
@@ -143,8 +145,9 @@ class Test_decompile(unittest.TestCase):
 		tbl.strings = ['x']
 		failing_stream = mock.MagicMock()
 		failing_stream.write.side_effect = OSError('nope')
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			tbl.decompile(failing_stream)
+		self.assertIn('Could not load file', str(cm.exception))
 
 
 class Test_interpret(unittest.TestCase):
@@ -162,14 +165,16 @@ class Test_interpret(unittest.TestCase):
 		self.assertEqual(_interpret_text('a\n\nb\n'), ['a', '', 'b'])
 
 	def test_too_many_entries_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_interpret_text('x\n' * 65537)
+		self.assertIn('too many string entries', str(cm.exception))
 
 	def test_open_error_raises(self) -> None:
 		tbl = TBL()
 		with mock.patch('builtins.open', side_effect=OSError('nope')):
-			with self.assertRaises(PyMSError):
+			with self.assertRaises(PyMSError) as cm:
 				tbl.interpret('missing.txt')
+			self.assertIn("Could not load file 'missing.txt'", str(cm.exception))
 
 
 class Test_decompile_interpret_round_trip(unittest.TestCase):

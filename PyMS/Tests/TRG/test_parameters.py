@@ -34,12 +34,14 @@ class Test_NumberParameter(unittest.TestCase):
 		self.assertEqual(condition.number, 4294967295)
 
 	def test_compile_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('4294967296', Condition(), TRG_EMPTY)
+		self.assertIn('is not a valid Number', str(cm.exception))
 
 	def test_compile_non_numeric_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('abc', Condition(), TRG_EMPTY)
+		self.assertIn('is not a valid Number', str(cm.exception))
 
 
 class Test_PlayerParameter(unittest.TestCase):
@@ -61,8 +63,9 @@ class Test_PlayerParameter(unittest.TestCase):
 		self.assertEqual(self.PARAM.compile('200'), 200)
 
 	def test_compile_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.compile('256')
+		self.assertIn('is an invalid Player', str(cm.exception))
 
 
 class Test_ComparisonParameter(unittest.TestCase):
@@ -85,8 +88,9 @@ class Test_ComparisonParameter(unittest.TestCase):
 		self.assertEqual(condition.comparison, 5)
 
 	def test_compile_invalid_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('Maybe', Condition(), TRG_EMPTY)
+		self.assertIn('is an invalid Comparison', str(cm.exception))
 
 
 class Test_UnitTypeParameter(unittest.TestCase):
@@ -145,8 +149,9 @@ class Test_LocationParameter(unittest.TestCase):
 		self.assertEqual(condition.location_index, 1)
 
 	def test_compile_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('255', Condition(), TRG_EMPTY)
+		self.assertIn('is an invalid Location', str(cm.exception))
 
 
 class Test_SwitchParameter(unittest.TestCase):
@@ -168,8 +173,9 @@ class Test_SwitchParameter(unittest.TestCase):
 		self.assertEqual(condition.switch_index, 255)
 
 	def test_compile_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('256', Condition(), TRG_EMPTY)
+		self.assertIn('is an invalid Switch', str(cm.exception))
 
 
 class Test_ResourceTypeParameter(unittest.TestCase):
@@ -187,8 +193,9 @@ class Test_ResourceTypeParameter(unittest.TestCase):
 		self.assertEqual(condition.resource_type, 9)
 
 	def test_compile_invalid_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('Wood', Condition(), TRG_EMPTY)
+		self.assertIn("'Wood' is an invalid", str(cm.exception))
 
 	def test_decompile(self) -> None:
 		condition = Condition()
@@ -298,8 +305,9 @@ class Test_PropertiesParameter(unittest.TestCase):
 		self.assertTrue(action.flags & Constants.ActionFlag.unit_property_used)
 
 	def test_compile_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.action_compile('Properties 65', Action(), TRG_EMPTY)
+		self.assertIn('is an invalid unit Properties index', str(cm.exception))
 
 
 class Test_SlotParameter(unittest.TestCase):
@@ -369,8 +377,9 @@ class Test_RawFieldParameter(unittest.TestCase):
 		self.assertEqual(param.condition_decompile(condition, TRG_EMPTY), '200')
 
 	def test_compile_over_limit_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Parameters.ByteParameter(8).action_compile('256', Action(), TRG_EMPTY)
+		self.assertIn('is not a valid Raw number for this field', str(cm.exception))
 
 
 class Test_MemoryParameter(unittest.TestCase):
@@ -405,12 +414,14 @@ class Test_MemoryParameter(unittest.TestCase):
 		self.assertEqual(result.player_group, 7)
 
 	def test_not_multiple_of_four_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('0x0058A365', Condition(), TRG_EMPTY)
+		self.assertIn('Memory must be a multiple of 4', str(cm.exception))
 
 	def test_invalid_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('notanumber', Condition(), TRG_EMPTY)
+		self.assertIn('is not a valid Memory', str(cm.exception))
 
 
 class Test_MaskParameter(unittest.TestCase):
@@ -456,5 +467,6 @@ class Test_MaskParameter(unittest.TestCase):
 		self.assertEqual(result.mask, 0x1234)
 
 	def test_too_high_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.PARAM.condition_compile('0x100000000', Condition(), TRG_EMPTY)
+		self.assertIn('Mask is too high', str(cm.exception))

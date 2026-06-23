@@ -165,16 +165,19 @@ class Test_ExportEntries(unittest.TestCase):
 		self.assertNotIn('movement_control', text)
 
 	def test_export_entries_negative_id_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.export_entries([-1])
+		self.assertIn('Invalid entry id (must be between 0 and', str(cm.exception))
 
 	def test_export_entries_id_past_end_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.export_entries([self.dat.entry_count()])
+		self.assertIn('Invalid entry id (must be between 0 and', str(cm.exception))
 
 	def test_export_invalid_export_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.export_entries([0], export_type=cast(Any, 'not-a-type'))
+		self.assertIn('Invalid export type', str(cm.exception))
 
 
 class Test_ExportEntry(unittest.TestCase):
@@ -266,33 +269,39 @@ class Test_ParseText(unittest.TestCase):
 
 	def test_duplicate_entry_id_raises(self) -> None:
 		text = 'Flingy(0):\n\tsprite 1\nFlingy(0):\n\tsprite 2\n'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text(text)
+		self.assertIn('already exists', str(cm.exception))
 
 	def test_property_before_header_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text('\tsprite 5\n')
+		self.assertIn('Missing header before defining properties', str(cm.exception))
 
 	def test_empty_entry_raises(self) -> None:
 		# A header immediately followed by another header has no properties.
 		text = 'Flingy(0):\nFlingy(1):\n\tsprite 1\n'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text(text)
+		self.assertIn('is empty', str(cm.exception))
 
 	def test_unexpected_line_raises(self) -> None:
 		text = 'Flingy(0):\n\tsprite 1\nthis is not valid\n'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text(text)
+		self.assertIn('Unexpected line, expected a header or a property definition', str(cm.exception))
 
 	def test_no_entries_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text('# only a comment\n\n')
+		self.assertIn('No entries found', str(cm.exception))
 
 	def test_header_without_id_raises_cleanly(self) -> None:
 		# A header must carry an id (imports key off `_id`); a missing id is a reportable
 		# input error, not an internal crash.
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			AbstractDAT.parse_text('Flingy():\n\tsprite 1\n')
+		self.assertIn('Entry header missing id', str(cm.exception))
 
 
 class Test_ImportEntries(unittest.TestCase):
@@ -309,29 +318,35 @@ class Test_ImportEntries(unittest.TestCase):
 		self.assertEqual(self.dat.get_entry(1).sprite, 77)
 
 	def test_import_text_with_non_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries(cast(Any, [{'_type': 'Flingy', '_id': 0}]), ExportType.text)
+		self.assertIn('Expected text to import', str(cm.exception))
 
 	def test_import_json_with_non_list_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries(cast(Any, 'not a list'), ExportType.json)
+		self.assertIn('Expected json list to import', str(cm.exception))
 
 	def test_import_invalid_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries('whatever', cast(Any, 'bogus'))
+		self.assertIn('Invalid import type', str(cm.exception))
 
 	def test_import_entry_missing_id_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries([{'_type': 'Flingy', 'sprite': 1}], ExportType.json)
+		self.assertIn('Entry missing id', str(cm.exception))
 
 	def test_import_entry_id_out_of_range_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries([{'_type': 'Flingy', '_id': self.dat.entry_count(), 'sprite': 1}], ExportType.json)
+		self.assertIn('Invalid entry id (must be between 0 and', str(cm.exception))
 
 	def test_import_entry_negative_id_raises(self) -> None:
 		# A negative id must be rejected rather than silently indexing from the end of the list.
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries([{'_type': 'Flingy', '_id': -1, 'sprite': 1}], ExportType.json)
+		self.assertIn('Invalid entry id (must be between 0 and', str(cm.exception))
 
 	def test_failed_import_rolls_back_all_changes(self) -> None:
 		original_sprite = self.dat.get_entry(0).sprite
@@ -339,8 +354,9 @@ class Test_ImportEntries(unittest.TestCase):
 			{'_type': 'Flingy', '_id': 0, 'sprite': original_sprite + 123},
 			{'_type': 'Flingy', '_id': 1, 'unrecognized_property': 1},
 		]
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entries(entries, ExportType.json)
+		self.assertIn("Unrecognized property 'unrecognized_property'", str(cm.exception))
 		# The first entry's change must be undone even though it was applied before the second failed.
 		self.assertEqual(self.dat.get_entry(0).sprite, original_sprite)
 
@@ -356,20 +372,23 @@ class Test_ImportEntry(unittest.TestCase):
 
 	def test_import_entry_text_with_multiple_entries_raises(self) -> None:
 		text = _flingy_text(0) + _flingy_text(1)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entry(0, text)
+		self.assertIn('Too many entries to import', str(cm.exception))
 
 	def test_import_entry_text_with_non_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entry(0, cast(Any, {'_type': 'Flingy', '_id': 0}))
+		self.assertIn('Expected text to import', str(cm.exception))
 
 	def test_import_entry_json_object_applies_values(self) -> None:
 		self.dat.import_entry(2, {'_type': 'Flingy', '_id': 2, 'sprite': 88}, ExportType.json)
 		self.assertEqual(self.dat.get_entry(2).sprite, 88)
 
 	def test_import_entry_json_with_non_object_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.import_entry(0, cast(Any, [{'_type': 'Flingy', '_id': 0}]), ExportType.json)
+		self.assertIn('Expected json object to import', str(cm.exception))
 
 	def test_export_entry_import_entry_json_round_trip(self) -> None:
 		# Single-entry JSON export must be re-importable, mirroring the text path.
@@ -390,12 +409,14 @@ class Test_ImportData(unittest.TestCase):
 		self.dat.new_file()
 
 	def test_wrong_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.get_entry(0).import_data({'_type': 'NotFlingy', 'sprite': 1})
+		self.assertIn('Invalid type (expected', str(cm.exception))
 
 	def test_unrecognized_property_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.dat.get_entry(0).import_data({'_type': 'Flingy', 'nonexistent_property': 1})
+		self.assertIn("Unrecognized property 'nonexistent_property'", str(cm.exception))
 
 
 if __name__ == '__main__':

@@ -69,13 +69,15 @@ class Test_load(unittest.TestCase):
 		self.assertEqual(struct.unpack('<4B', data[4:8]), (1, 1, 3, 2))
 
 	def test_invalid_header_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FNT().load(b'XXXX0000')
+		self.assertIn('Invalid FNT file (invalid header)', str(cm.exception))
 
 	def test_corrupt_data_raises(self) -> None:
 		# Valid header claiming 4 glyphs but no offset table follows.
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FNT().load(b'FONT' + struct.pack('<4B', 1, 4, 3, 2))
+		self.assertIn('Unsupported FNT file, could possibly be corrupt', str(cm.exception))
 
 
 class Test_fnttobmp(unittest.TestCase):

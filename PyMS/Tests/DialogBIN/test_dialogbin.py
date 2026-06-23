@@ -36,12 +36,14 @@ class Test_flags(unittest.TestCase):
 		self.assertEqual(flags(flags(0b101101, 8), 8), 0b101101)
 
 	def test_invalid_length_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			flags('010', 4)
+		self.assertIn('Invalid flags', str(cm.exception))
 
 	def test_invalid_characters_raise(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			flags('012x', 4)
+		self.assertIn('Invalid flags', str(cm.exception))
 
 
 class Test_BINWidget(unittest.TestCase):
@@ -112,8 +114,9 @@ class Test_load(unittest.TestCase):
 		self.assertTrue(loaded.remastered)
 
 	def test_corrupt_data_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DialogBIN().load(b'\x00' * 4)
+		self.assertIn('Unsupported Dialog BIN file, could possibly be corrupt', str(cm.exception))
 
 
 class Test_save(unittest.TestCase):

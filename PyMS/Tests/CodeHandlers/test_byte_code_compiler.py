@@ -46,8 +46,9 @@ class Test_SetData(unittest.TestCase):
 	def test_out_of_range_without_expand_raises(self) -> None:
 		builder = ByteCodeCompiler()
 		builder.add_data(b'\x00\x00')
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			builder.set_data(1, b'\xaa\xbb')
+		self.assertIn('Attempting to set data of size', str(cm.exception))
 
 
 class Test_CompileBlock(unittest.TestCase):

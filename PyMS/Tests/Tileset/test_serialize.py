@@ -16,12 +16,14 @@ class Test_GroupTypeEncoder(unittest.TestCase):
 		self.assertEqual(GroupTypeEncoder().decode('5'), 5)
 
 	def test_rejects_doodad_type(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			GroupTypeEncoder().decode(1)
+		self.assertIn("'TileGroup' can't have type 1 (doodad type)", str(cm.exception))
 
 	def test_rejects_non_integer(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			GroupTypeEncoder().decode('not a number')
+		self.assertIn("Expected an integer, got 'not a number'", str(cm.exception))
 
 
 class Test_MiniFlagsMultiEncoder(unittest.TestCase):
@@ -46,12 +48,14 @@ class Test_MiniFlagsMultiEncoder(unittest.TestCase):
 		self.assertEqual(result[15], True)
 
 	def test_decode_wrong_line_count_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			MiniFlagsMultiEncoder(FLAG).decode('0000\n0000', None)
+		self.assertIn('Expected 4 lines of flags', str(cm.exception))
 
 	def test_decode_wrong_flag_count_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			MiniFlagsMultiEncoder(FLAG).decode('000\n0000\n0000\n0000', None)
+		self.assertIn('Expected 4 flags', str(cm.exception))
 
 	def test_apply_sets_and_clears_flag(self) -> None:
 		bools = [True] + [False] * 15

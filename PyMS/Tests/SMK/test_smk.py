@@ -155,8 +155,9 @@ class Test_HuffTree(unittest.TestCase):
 
 	def test_end_marker_error(self) -> None:
 		writer = _BitWriter().write(1, 1).write(0, 1).write(0x55, 8).write(1, 1)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			HuffTree(BitStream(writer.to_bytes()))
+		self.assertIn("Couldn't read from bit stream", str(cm.exception))
 
 	def test_lookup_stops_at_leaf_without_extra_bit(self) -> None:
 		# A leaf is reached by its path bits alone; no trailing 0 is consumed.
@@ -245,8 +246,9 @@ class Test_load(unittest.TestCase):
 		self.assertEqual(smk.frames, 2)
 
 	def test_invalid_signature_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			SMK().load(_build_smk(sig=b'XXXX'))
+		self.assertIn('Not an SMK file', str(cm.exception))
 
 	def test_builds_trees_and_info(self) -> None:
 		smk = SMK()

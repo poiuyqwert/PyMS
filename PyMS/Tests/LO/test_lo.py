@@ -45,8 +45,9 @@ class Test_load(unittest.TestCase):
 		self.assertEqual(lo.frames, FRAMES)
 
 	def test_truncated_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			LO().load(b'')
+		self.assertIn('Unsupported LO* file', str(cm.exception))
 
 
 class Test_save(unittest.TestCase):
@@ -84,12 +85,14 @@ class Test_interpret(unittest.TestCase):
 		self.assertEqual(_interpret(text).frames, [[[1, 2]]])
 
 	def test_coordinates_before_frame_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_interpret('    (1, 2)\n')
+		self.assertIn('Unknown line format', str(cm.exception))
 
 	def test_malformed_coordinate_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_interpret('Frame:\n    not coordinates\n')
+		self.assertIn('Unknown line format, expected coordinates', str(cm.exception))
 
 	def test_signed_byte_bounds_accepted(self) -> None:
 		# -128 and 127 are the signed-byte extremes `compile` can pack.
@@ -98,19 +101,22 @@ class Test_interpret(unittest.TestCase):
 	def test_out_of_range_coordinate_raises(self) -> None:
 		for text in ('Frame:\n    (128, 0)\n\n', 'Frame:\n    (-129, 0)\n\n', 'Frame:\n    (0, 200)\n\n'):
 			with self.subTest(text=text):
-				with self.assertRaises(PyMSError):
+				with self.assertRaises(PyMSError) as cm:
 					_interpret(text)
+				self.assertIn('Invalid offset coordinates', str(cm.exception))
 
 	def test_inconsistent_overlay_count_raises(self) -> None:
 		# The middle frame has one overlay while the others have two.
 		text = 'Frame:\n    (1, 2)\n    (3, 4)\n\nFrame:\n    (5, 6)\n\nFrame:\n    (7, 8)\n    (9, 10)\n\n'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_interpret(text)
+		self.assertIn('invalid amount of overlays', str(cm.exception))
 
 	def test_too_many_overlays_raises(self) -> None:
 		text = 'Frame:\n    (1, 2)\n    (3, 4)\n\nFrame:\n    (5, 6)\n    (7, 8)\n    (9, 10)\n\n'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_interpret(text)
+		self.assertIn('Unknown line format', str(cm.exception))
 
 	def test_round_trip_through_save(self) -> None:
 		lo = _interpret(TEXT)

@@ -44,8 +44,9 @@ class Test_ByteCodeType(unittest.TestCase):
 
 	def test_validate_rejects_out_of_range(self) -> None:
 		byte = CodeTypes.ByteCodeType()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			byte.parse(utils.parse_context('256'))
+		self.assertIn('Value is too large for `byte`', str(cm.exception))
 
 	def test_compile_decompile_round_trip(self) -> None:
 		byte = CodeTypes.ByteCodeType()
@@ -208,8 +209,9 @@ class Test_UnitCodeType_limits(unittest.TestCase):
 		# Highest valid id must not raise.
 		unit.validate(UnitsDAT.FORMAT.entries - 1, parse_context)
 		# `entry_count` itself is out of range and must raise (it didn't before the fix).
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			unit.validate(UnitsDAT.FORMAT.entries, parse_context)
+		self.assertIn('is not a valid unit', str(cm.exception))
 
 
 class Test_BuildingCodeType_accepts(unittest.TestCase):
@@ -463,8 +465,9 @@ class Test_UpgradeCodeType(unittest.TestCase):
 		self.assertEqual(CodeTypes.UpgradeCodeType().parse(parse_context), 3)
 
 	def test_validate_rejects_out_of_range(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeTypes.UpgradeCodeType().validate(99999, utils.parse_context(''))
+		self.assertIn('is not a valid upgrade', str(cm.exception))
 
 	def test_get_limits(self) -> None:
 		self.assertEqual(CodeTypes.UpgradeCodeType().get_limits(utils.parse_context('')), (0, UpgradesDAT.FORMAT.entries))
@@ -494,8 +497,9 @@ class Test_TechnologyCodeType(unittest.TestCase):
 		self.assertEqual(CodeTypes.TechnologyCodeType().serialize(5, serialize_context), '5')
 
 	def test_validate_rejects_out_of_range(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeTypes.TechnologyCodeType().validate(99999, utils.parse_context(''))
+		self.assertIn('is not a valid technology', str(cm.exception))
 
 	def test_get_limits(self) -> None:
 		self.assertEqual(CodeTypes.TechnologyCodeType().get_limits(utils.parse_context('')), (0, TechDAT.FORMAT.entries))
@@ -540,8 +544,9 @@ class Test_CompareCodeType(unittest.TestCase):
 		self.assertEqual(compare.serialize(0, serialize_context), 'LessThan')
 
 	def test_parse_rejects_unknown_case(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeTypes.CompareCodeType().parse(utils.parse_context('Nope'))
+		self.assertIn('is not a valid case for `compare`', str(cm.exception))
 
 
 class Test_TBLStringCodeType(unittest.TestCase):
@@ -581,8 +586,9 @@ class Test_BinFileCodeType(unittest.TestCase):
 		self.assertEqual(bin_file.serialize(1, serialize_context), 'bwscript')
 
 	def test_parse_rejects_unknown_case(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeTypes.BinFileCodeType().parse(utils.parse_context('nope'))
+		self.assertIn('is not a valid case for `bin_file`', str(cm.exception))
 
 
 class Test_BoolCodeType(unittest.TestCase):

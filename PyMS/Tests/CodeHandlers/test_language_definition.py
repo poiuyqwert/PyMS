@@ -35,20 +35,23 @@ class Test_LanguagePlugin(unittest.TestCase):
 	def test_duplicate_command_id_raises(self) -> None:
 		a = CodeCommand.CodeCommandDefinition('a', 'a', 0, [])
 		b = CodeCommand.CodeCommandDefinition('b', 'b', 0, [])
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			LanguageDefinition.LanguagePlugin('core', [a, b], [])
+		self.assertIn('Command with id `0`', str(error_context.exception))
 
 	def test_duplicate_command_name_raises(self) -> None:
 		a = CodeCommand.CodeCommandDefinition('dup', 'a', 0, [])
 		b = CodeCommand.CodeCommandDefinition('dup', 'b', 1, [])
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			LanguageDefinition.LanguagePlugin('core', [a, b], [])
+		self.assertIn('Command with name `dup`', str(error_context.exception))
 
 	def test_duplicate_type_name_raises(self) -> None:
 		t1 = CodeType.IntCodeType('byte', 'a', Struct.l_u8)
 		t2 = CodeType.IntCodeType('byte', 'b', Struct.l_u16)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			LanguageDefinition.LanguagePlugin('core', [], [t1, t2])
+		self.assertIn('Type with name `byte` already exists', str(error_context.exception))
 
 	def test_command_with_no_id_is_name_only(self) -> None:
 		virtual = CodeCommand.CodeCommandDefinition('virtual', 'v', None, [])
@@ -60,8 +63,9 @@ class Test_LanguagePlugin(unittest.TestCase):
 class Test_LanguageDefinition(unittest.TestCase):
 	def test_requires_core_plugin(self) -> None:
 		non_core = LanguageDefinition.LanguagePlugin('extra', [], [])
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			LanguageDefinition.LanguageDefinition([non_core])
+		self.assertIn('without a "core" plugin', str(error_context.exception))
 
 	def test_ambiguous_command_across_available_plugins_is_reported(self) -> None:
 		# Two available plugins defining the same command name is a genuine
@@ -74,8 +78,9 @@ class Test_LanguageDefinition(unittest.TestCase):
 			LanguageDefinition.LanguagePlugin('extra', [extra_cmd], []),
 		])
 		context = LanguageDefinition.LanguageContext()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			language.lookup_command('shared', context)
+		self.assertIn('Command `shared` is ambiguous', str(error_context.exception))
 
 
 class Test_Language_Comamnd_Bytecode(unittest.TestCase):
@@ -180,8 +185,9 @@ class Test_LanguageContext(unittest.TestCase):
 	def test_setting_conflicting_status_raises(self) -> None:
 		context = LanguageDefinition.LanguageContext()
 		context.set_status('plugin', LanguageDefinition.PluginStatus.in_use, 'used')
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as error_context:
 			context.set_status('plugin', LanguageDefinition.PluginStatus.unavailable, 'now off')
+		self.assertIn('when it is already', str(error_context.exception))
 
 	def test_active_plugins_excludes_core_by_default(self) -> None:
 		context = LanguageDefinition.LanguageContext()

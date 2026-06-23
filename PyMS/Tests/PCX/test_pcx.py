@@ -67,14 +67,16 @@ class Test_load(unittest.TestCase):
 
 	def test_invalid_header_raises(self) -> None:
 		data = IO.output_to_bytes(_sample().save)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			PCX().load(b'XXXX' + data[4:])
+		self.assertIn('Not a PCX file', str(cm.exception))
 
 	def test_missing_palette_marker_raises(self) -> None:
 		data = bytearray(IO.output_to_bytes(_sample().save))
 		data[-769] = 0x00  # corrupt the 0x0C palette marker
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			PCX().load(data)
+		self.assertIn('the palette information is missing', str(cm.exception))
 
 	def test_pal_mode_accepts_small_image(self) -> None:
 		loaded = PCX()
@@ -84,5 +86,6 @@ class Test_load(unittest.TestCase):
 	def test_pal_mode_rejects_oversized_image(self) -> None:
 		wide = PCX()
 		wide.load_pixels([[0] * 257], PALETTE)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			PCX().load(IO.output_to_bytes(wide.save), pal=True)
+		self.assertIn('Unsupported special palette (PCX) file', str(cm.exception))

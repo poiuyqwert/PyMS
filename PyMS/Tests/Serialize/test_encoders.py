@@ -30,27 +30,32 @@ class Test_IntEncoder(unittest.TestCase):
 		self.assertEqual(IntEncoder().decode('007'), 7)
 
 	def test_decode_non_numeric_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntEncoder().decode('12a')
+		self.assertIn('Expected an integer', str(cm.exception))
 
 	def test_decode_float_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntEncoder().decode(3.5)
+		self.assertIn('Expected an integer', str(cm.exception))
 
 	def test_decode_none_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntEncoder().decode(None)
+		self.assertIn('Expected an integer', str(cm.exception))
 
 	def test_decode_below_minimum_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntEncoder(min_value=0).decode(-1)
+		self.assertIn('is the minimum value', str(cm.exception))
 
 	def test_decode_at_minimum_allowed(self) -> None:
 		self.assertEqual(IntEncoder(min_value=0).decode(0), 0)
 
 	def test_decode_above_maximum_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntEncoder(max_value=10).decode(11)
+		self.assertIn('is the maximum value', str(cm.exception))
 
 	def test_decode_at_maximum_allowed(self) -> None:
 		self.assertEqual(IntEncoder(max_value=10).decode(10), 10)
@@ -70,20 +75,24 @@ class Test_FloatEncoder(unittest.TestCase):
 		self.assertEqual(FloatEncoder().decode(4), 4)
 
 	def test_decode_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FloatEncoder().decode('3.5')
+		self.assertIn('Expected a float/integer', str(cm.exception))
 
 	def test_decode_none_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FloatEncoder().decode(None)
+		self.assertIn('Expected a float/integer', str(cm.exception))
 
 	def test_decode_below_minimum_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FloatEncoder(min_value=0.0).decode(-0.5)
+		self.assertIn('is the minimum value', str(cm.exception))
 
 	def test_decode_above_maximum_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FloatEncoder(max_value=1.0).decode(1.5)
+		self.assertIn('is the maximum value', str(cm.exception))
 
 	def test_decode_within_bounds_allowed(self) -> None:
 		self.assertEqual(FloatEncoder(min_value=0.0, max_value=1.0).decode(0.5), 0.5)
@@ -112,12 +121,14 @@ class Test_BoolEncoder(unittest.TestCase):
 		self.assertIs(BoolEncoder.parse(1), True)
 
 	def test_parse_invalid_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			BoolEncoder.parse('maybe')
+		self.assertIn('Expected a boolen', str(cm.exception))
 
 	def test_parse_invalid_number_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			BoolEncoder.parse(2)
+		self.assertIn('Expected a boolen', str(cm.exception))
 
 	def test_decode_delegates_to_parse(self) -> None:
 		self.assertIs(BoolEncoder().decode('t'), True)
@@ -131,15 +142,17 @@ class Test_StrEncoder(unittest.TestCase):
 		self.assertEqual(StrEncoder().decode('hello'), 'hello')
 
 	def test_decode_non_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			StrEncoder().decode(42)
+		self.assertIn('Expected a string', str(cm.exception))
 
 	def test_decode_at_max_length_allowed(self) -> None:
 		self.assertEqual(StrEncoder(max_length=3).decode('abc'), 'abc')
 
 	def test_decode_over_max_length_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			StrEncoder(max_length=3).decode('abcd')
+		self.assertIn('is the maximum length', str(cm.exception))
 
 
 class Test_FlagEncoder(unittest.TestCase):
@@ -163,8 +176,9 @@ class Test_FlagEncoder(unittest.TestCase):
 		self.assertEqual(result, OrderedDict([('READ', True), ('WRITE', False)]))
 
 	def test_decode_invalid_flag_name_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			FlagEncoder(Perm(0)).decode('1', 'FLY', None)
+		self.assertIn('is not a valid flag name', str(cm.exception))
 
 	def test_apply_sets_and_clears_bits(self) -> None:
 		result = FlagEncoder(Perm(0)).apply(OrderedDict([('READ', True), ('WRITE', False)]), Perm.WRITE)
@@ -192,8 +206,9 @@ class Test_IntFlagEncoder(unittest.TestCase):
 		self.assertEqual(result, OrderedDict([('a', True)]))
 
 	def test_decode_invalid_flag_name_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			IntFlagEncoder(self.FLAGS).decode('1', 'z', None)
+		self.assertIn('is not a valid flag name', str(cm.exception))
 
 	def test_apply_sets_and_clears_bits(self) -> None:
 		result = IntFlagEncoder(self.FLAGS).apply(OrderedDict([('a', True), ('c', False)]), 4)
@@ -213,8 +228,9 @@ class Test_EnumValueEncoder(unittest.TestCase):
 		self.assertEqual(EnumValueEncoder(Mode).decode(2), Mode.beta)
 
 	def test_decode_invalid_value_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			EnumValueEncoder(Mode).decode(99)
+		self.assertIn('is not a valid option', str(cm.exception))
 
 	def test_apply_returns_new_value(self) -> None:
 		self.assertEqual(EnumValueEncoder(Mode).apply(Mode.beta, Mode.alpha), Mode.beta)
@@ -228,12 +244,14 @@ class Test_EnumNameEncoder(unittest.TestCase):
 		self.assertEqual(EnumNameEncoder(Mode).decode('beta'), Mode.beta)
 
 	def test_decode_unknown_name_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			EnumNameEncoder(Mode).decode('gamma')
+		self.assertIn('is not a valid option', str(cm.exception))
 
 	def test_decode_non_string_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			EnumNameEncoder(Mode).decode(1)
+		self.assertIn('Expected a string', str(cm.exception))
 
 	def test_apply_returns_new_value(self) -> None:
 		self.assertEqual(EnumNameEncoder(Mode).apply(Mode.beta, Mode.alpha), Mode.beta)

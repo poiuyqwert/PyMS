@@ -243,8 +243,9 @@ class Test_scan_cstr(unittest.TestCase):
 		self.assertEqual(BytesScanner(b'xx\x00', 2).scan_cstr(), '')
 
 	def test_missing_terminator_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			BytesScanner(b'abc').scan_cstr()
+		self.assertIn('String has no ending', str(cm.exception))
 
 	def test_custom_encoding(self) -> None:
 		scanner = BytesScanner('caf\xe9\x00'.encode('latin-1'))

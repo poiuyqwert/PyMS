@@ -107,8 +107,9 @@ class Test_Blocks(unittest.TestCase):
 	def test_redefining_a_block_raises(self) -> None:
 		ctx = make_parse_context('', with_block=False)
 		ctx.define_block('foo', 1)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			ctx.define_block('foo', 2)
+		self.assertIn("A block named 'foo' is already defined", str(cm.exception))
 
 
 class Test_AddBlockUse(unittest.TestCase):
@@ -173,8 +174,9 @@ class Test_LookupParamValue(unittest.TestCase):
 		definitions = DefinitionsHandler()
 		definitions.set_variable('flt', 1.0, float_type)
 		ctx = make_parse_context('flt', definitions=definitions)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			int_type.parse(ctx)
+		self.assertIn("Incorrect type on variable 'flt'", str(cm.exception))
 
 	def test_variable_value_is_validated_against_parameter_limits(self) -> None:
 		# A variable defined under a permissive type but used where the
@@ -184,8 +186,9 @@ class Test_LookupParamValue(unittest.TestCase):
 		definitions.set_variable('huge', 300, permissive)
 		tight = CodeType.IntCodeType('small', 's', Struct.l_u8)
 		ctx = make_parse_context('huge', definitions=definitions)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			tight.parse(ctx)
+		self.assertIn('Value is too large for `small`', str(cm.exception))
 
 	def test_variable_with_invalid_enum_case_is_rejected(self) -> None:
 		# An enum parameter must reject a value with no case whether it comes
@@ -194,8 +197,9 @@ class Test_LookupParamValue(unittest.TestCase):
 		definitions = DefinitionsHandler()
 		definitions.set_variable('bogus', 99, enum)
 		ctx = make_parse_context('bogus', definitions=definitions)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			enum.parse(ctx)
+		self.assertIn('Value `99` is not a valid case for `choice`', str(cm.exception))
 
 
 if __name__ == '__main__':

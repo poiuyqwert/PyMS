@@ -73,16 +73,19 @@ class Test_get(unittest.TestCase):
 		self.assertEqual(JSON.get({'d': {'a': 1}}, 'd', dict), {'a': 1})
 
 	def test_missing_key_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get({}, 'missing', int)
+		self.assertIn('Invalid JSON format (missing `missing`)', str(cm.exception))
 
 	def test_wrong_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get({'n': 'not an int'}, 'n', int)
+		self.assertIn('Invalid JSON format (invalid `n`)', str(cm.exception))
 
 	def test_none_value_for_int_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get({'n': None}, 'n', int)
+		self.assertIn('Invalid JSON format (invalid `n`)', str(cm.exception))
 
 	def test_codable_decoded(self) -> None:
 		result = JSON.get({'p': {'x': 1, 'y': 2}}, 'p', Point)
@@ -90,12 +93,14 @@ class Test_get(unittest.TestCase):
 		self.assertEqual(result, Point(x=1, y=2))
 
 	def test_codable_non_dict_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get({'p': [1, 2]}, 'p', Point)
+		self.assertIn('Invalid JSON format (invalid `p`)', str(cm.exception))
 
 	def test_codable_missing_key_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get({}, 'p', Point)
+		self.assertIn('Invalid JSON format (missing `p`)', str(cm.exception))
 
 
 class Test_get_obj(unittest.TestCase):
@@ -114,14 +119,16 @@ class Test_get_obj(unittest.TestCase):
 	def test_missing_key_raises(self) -> None:
 		def discriminator(_: JSON.Object) -> type:
 			return Point
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_obj({}, 'item', discriminator)
+		self.assertIn('Invalid JSON format (missing `item`)', str(cm.exception))
 
 	def test_non_dict_value_raises(self) -> None:
 		def discriminator(_: JSON.Object) -> type:
 			return Point
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_obj({'item': 'not a dict'}, 'item', discriminator)
+		self.assertIn('Invalid JSON format (invalid `item`)', str(cm.exception))
 
 
 class Test_get_array(unittest.TestCase):
@@ -135,16 +142,19 @@ class Test_get_array(unittest.TestCase):
 		self.assertEqual(JSON.get_array({'a': []}, 'a', int), [])
 
 	def test_missing_key_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_array({}, 'missing', int)
+		self.assertIn('Invalid JSON format (missing `missing`)', str(cm.exception))
 
 	def test_non_list_value_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_array({'a': 'not a list'}, 'a', int)
+		self.assertIn('Invalid JSON format (invalid `a`)', str(cm.exception))
 
 	def test_wrong_element_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_array({'a': [1, 'two', 3]}, 'a', int)
+		self.assertIn('Invalid JSON format (array `a` contains invalid value at index 1)', str(cm.exception))
 
 	def test_codable_elements_are_decoded(self) -> None:
 		raw: JSON.Object = {'pts': [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]}
@@ -154,8 +164,9 @@ class Test_get_array(unittest.TestCase):
 			self.assertIsInstance(item, Point)
 
 	def test_codable_invalid_element_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_array({'pts': [{'x': 1, 'y': 2}, {'x': 'bad'}]}, 'pts', Point)
+		self.assertIn('Invalid JSON format (array `pts` contains invalid value at index 1)', str(cm.exception))
 
 	def test_returns_fresh_list_does_not_mutate_input(self) -> None:
 		original: JSON.Array = [{'x': 1, 'y': 2}, {'x': 3, 'y': 4}]
@@ -181,5 +192,6 @@ class Test_get_array_obj(unittest.TestCase):
 	def test_missing_array_raises(self) -> None:
 		def discriminator(_: JSON.Object) -> type:
 			return Point
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			JSON.get_array_obj({}, 'pts', discriminator)
+		self.assertIn('Invalid JSON format (missing `pts`)', str(cm.exception))

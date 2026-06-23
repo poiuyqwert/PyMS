@@ -74,8 +74,9 @@ class Test_text_round_trip(unittest.TestCase):
 		self.assertEqual(output.getvalue(), MEMORY_TEXT)
 
 	def test_no_triggers_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_compile('String(1):\n  orphan\n\n')
+		self.assertIn('No triggers', str(cm.exception))
 
 	def test_compile_parses_unit_properties(self) -> None:
 		trg = _compile(PROPERTIES_TEXT)
@@ -93,13 +94,15 @@ class Test_text_round_trip(unittest.TestCase):
 		self.assertEqual(output.getvalue(), PROPERTIES_TEXT)
 
 	def test_duplicate_property_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_compile(PROPERTIES_TEXT.replace('  Health(100)\n', '  Health(100)\n  Health(50)\n'))
+		self.assertIn('Property already defined', str(cm.exception))
 
 	def test_property_value_too_large_raises(self) -> None:
 		# Owner is a u8, so 999 exceeds the field maximum.
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			_compile(PROPERTIES_TEXT.replace('Owner(5)', 'Owner(999)'))
+		self.assertIn('Integer parameter too large', str(cm.exception))
 
 
 class Test_binary_round_trip(unittest.TestCase):
@@ -129,8 +132,9 @@ class Test_binary_round_trip(unittest.TestCase):
 		self.assertNotEqual(data[:len(TRG.HEADER)], TRG.HEADER)
 
 	def test_missing_header_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			TRG().load(b'not a valid header at all')
+		self.assertIn('Not a valid .trg file (missing header)', str(cm.exception))
 
 	def test_referenced_unit_properties_round_trip(self) -> None:
 		# An action references the properties, so binary save/load must retain them.

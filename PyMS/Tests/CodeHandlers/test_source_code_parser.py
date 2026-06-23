@@ -47,8 +47,9 @@ class Test_BlockSourceCodeParser(unittest.TestCase):
 
 	def test_block_keyword_without_name_raises(self) -> None:
 		context = make_parse_context(':123\n', LANGUAGE, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			BlockSourceCodeParser().parse(context)
+		self.assertIn("Expected block name, got '123' instead", str(cm.exception))
 
 
 class Test_CommandSourceCodeParser(unittest.TestCase):
@@ -60,8 +61,9 @@ class Test_CommandSourceCodeParser(unittest.TestCase):
 
 	def test_command_outside_block_raises(self) -> None:
 		context = make_parse_context('inc 5\n', LANGUAGE, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CommandSourceCodeParser().parse(context)
+		self.assertIn("'inc' command defined outside of any block", str(cm.exception))
 
 	def test_flow_ending_command_clears_active_block(self) -> None:
 		context = make_parse_context('end\n', LANGUAGE)
@@ -86,8 +88,9 @@ class Test_DefineSourceCodeParser(unittest.TestCase):
 		definitions = DefinitionsHandler()
 		definitions.set_variable('foo', 1, ByteType)
 		context = make_parse_context('byte foo = 5\n', LANGUAGE, definitions=definitions, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DefineSourceCodeParser().parse(context)
+		self.assertIn("Variable named 'foo' is already defined", str(cm.exception))
 
 	def test_without_definitions_does_nothing(self) -> None:
 		context = make_parse_context('byte foo = 5\n', LANGUAGE, with_block=False)
@@ -102,8 +105,9 @@ class Test_DirectiveSourceCodeParser(unittest.TestCase):
 
 	def test_unknown_directive_raises(self) -> None:
 		context = make_parse_context('@nope()\n', LANGUAGE, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DirectiveSourceCodeParser([]).parse(context)
+		self.assertIn("Unknown directive 'nope'", str(cm.exception))
 
 	def test_register_same_definition_twice_is_ok(self) -> None:
 		directive_def = CodeDirectiveDefinition('mark', 'mark', [])
@@ -114,8 +118,9 @@ class Test_DirectiveSourceCodeParser(unittest.TestCase):
 
 	def test_register_conflicting_definition_raises(self) -> None:
 		parser = DirectiveSourceCodeParser([CodeDirectiveDefinition('mark', 'mark', [])])
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parser.register_directive(CodeDirectiveDefinition('mark', 'different', []))
+		self.assertIn("Directive with name 'mark' already exists", str(cm.exception))
 
 
 class Test_SourceCodeHandler(unittest.TestCase):
@@ -132,15 +137,17 @@ class Test_SourceCodeHandler(unittest.TestCase):
 
 	def test_unexpected_token_raises(self) -> None:
 		context = make_parse_context('%%%\n', LANGUAGE, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make_handler().parse(context)
+		self.assertIn("Unexpected token '%%%'", str(cm.exception))
 
 	def test_no_registered_parsers_raises_pyms_error(self) -> None:
 		# With no parsers registered, unparseable input reports a parse error
 		# rather than referencing an unbound local.
 		context = make_parse_context('inc 5\n', LANGUAGE, with_block=False)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			SourceCodeHandler().parse(context)
+		self.assertIn("Unexpected token 'inc'", str(cm.exception))
 
 
 if __name__ == '__main__':

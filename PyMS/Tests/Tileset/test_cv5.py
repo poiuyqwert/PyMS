@@ -76,5 +76,6 @@ class Test_CV5(unittest.TestCase):
 		self.assertEqual(loaded.get_group(1), with_megatiles(group_full()))
 
 	def test_load_invalid_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CV5().load(b'\x00' * 51)
+		self.assertIn('Invalid CV5 file', str(cm.exception))

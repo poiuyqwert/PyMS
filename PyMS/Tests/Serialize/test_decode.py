@@ -38,8 +38,9 @@ class Test_LineScanner(unittest.TestCase):
 	def test_pop_past_end_raises(self) -> None:
 		scanner = LineScanner('only')
 		scanner.pop()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			scanner.pop()
+		self.assertIn('Unexpected end of file', str(cm.exception))
 
 	def test_peek_does_not_advance(self) -> None:
 		scanner = LineScanner('one\ntwo')
@@ -50,8 +51,9 @@ class Test_LineScanner(unittest.TestCase):
 	def test_peek_at_end_raises(self) -> None:
 		scanner = LineScanner('only')
 		scanner.pop()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			scanner.peek()
+		self.assertIn('Unexpected end of file', str(cm.exception))
 
 	def test_skip_advances_without_returning(self) -> None:
 		scanner = LineScanner('one\ntwo')
@@ -151,29 +153,36 @@ class Test_decode_text(unittest.TestCase):
 
 class Test_decode_text_errors(unittest.TestCase):
 	def test_empty_text_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('', [sample_definition()], build_sample)
+		self.assertIn('Nothing to decode', str(cm.exception))
 
 	def test_comment_only_text_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('# just a comment\n', [sample_definition()], build_sample)
+		self.assertIn('Nothing to decode', str(cm.exception))
 
 	def test_field_before_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('\tcount 5\n', [sample_definition()], build_sample)
+		self.assertIn("Expected an object start ('<type>:')", str(cm.exception))
 
 	def test_unknown_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('Unknown:\n\tcount 5\n', [sample_definition()], build_sample)
+		self.assertIn("Can't find definition for 'Unknown' type", str(cm.exception))
 
 	def test_empty_object_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('Sample:\n', [sample_definition()], build_sample)
+		self.assertIn('Nothing to decode', str(cm.exception))
 
 	def test_unknown_field_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('Sample:\n\tbogus 5\n', [sample_definition()], build_sample)
+		self.assertIn("'bogus' is not a valid field name", str(cm.exception))
 
 	def test_unexpected_line_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decode_text('Sample:\n??? nope\n', [sample_definition()], build_sample)
+		self.assertIn("Unexpected line '??? nope'", str(cm.exception))

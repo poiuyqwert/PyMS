@@ -39,8 +39,9 @@ class Test_LinearDecompile(unittest.TestCase):
 
 	def test_unknown_command_id_raises(self) -> None:
 		data = b'\x7f'
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			decompile(data)
+		self.assertIn("Invalid command id '127'", str(cm.exception))
 
 
 class Test_BlockSplitting(unittest.TestCase):

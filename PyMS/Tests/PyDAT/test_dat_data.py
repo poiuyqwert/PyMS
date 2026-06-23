@@ -163,8 +163,9 @@ class Test_name_overrides(unittest.TestCase):
 	def test_load_invalid_raises(self) -> None:
 		data = _data(self.dc)
 		with patch('builtins.open', mock_open(read_data='not a valid override line\n')):
-			with self.assertRaises(PyMSError):
+			with self.assertRaises(PyMSError) as cm:
 				data.load_name_overrides('ignored', update_names=False)
+		self.assertIn('Invalid name override', str(cm.exception))
 
 	def test_load_triggers_update_names_by_default(self) -> None:
 		data = _data(self.dc)

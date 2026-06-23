@@ -55,8 +55,9 @@ class Test_IntCodeType_Lex(unittest.TestCase):
 
 	def test_lex_hex_rejected_when_not_allowed(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u16)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			int_type.lex(make_parse_context('0x10'))
+		self.assertIn('Invalid value `0x10` for `i`', str(cm.exception))
 
 	def test_invalid_integer_value_reports_a_source_line(self) -> None:
 		# Like the sibling parse-failure branch, the type-mismatch failure
@@ -77,13 +78,15 @@ class Test_IntCodeType_Validate(unittest.TestCase):
 
 	def test_too_small(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u8, limits=(5, 10))
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			int_type.validate(1, make_parse_context(''))
+		self.assertIn('Value is too small for `i`', str(cm.exception))
 
 	def test_too_large(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u8, limits=(0, 10))
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			int_type.validate(11, make_parse_context(''))
+		self.assertIn('Value is too large for `i`', str(cm.exception))
 
 	def test_default_limits_from_bytecode_type(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u8)
@@ -91,8 +94,9 @@ class Test_IntCodeType_Validate(unittest.TestCase):
 
 	def test_parse_rejects_out_of_range(self) -> None:
 		int_type = CodeType.IntCodeType('i', 'i', Struct.l_u8, limits=(0, 10))
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			int_type.parse(make_parse_context('99'))
+		self.assertIn('Value is too large for `i`', str(cm.exception))
 
 
 class Test_IntCodeType_Binary(unittest.TestCase):
@@ -142,13 +146,15 @@ class Test_FloatCodeType(unittest.TestCase):
 
 	def test_lex_rejects_integer_token(self) -> None:
 		float_type = CodeType.FloatCodeType('f', 'f', Struct.l_float)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			float_type.lex(make_parse_context('3'))
+		self.assertIn('Expected float value but got `3`', str(cm.exception))
 
 	def test_validate_limits(self) -> None:
 		float_type = CodeType.FloatCodeType('f', 'f', Struct.l_float, limits=(0.0, 1.0))
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			float_type.validate(2.0, make_parse_context(''))
+		self.assertIn('Value is too large for `f`', str(cm.exception))
 
 	def test_compile_decompile_roundtrip(self) -> None:
 		float_type = CodeType.FloatCodeType('f', 'f', Struct.l_float)
@@ -174,8 +180,9 @@ class Test_AddressCodeType(unittest.TestCase):
 
 	def test_lex_rejects_non_identifier(self) -> None:
 		addr = CodeType.AddressCodeType('a', 'a', Struct.l_u16)
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			addr.lex(make_parse_context('123'))
+		self.assertIn('Expected block label identifier but got `123`', str(cm.exception))
 
 	def test_serialize_uses_strategy_label(self) -> None:
 		addr = CodeType.AddressCodeType('a', 'a', Struct.l_u16)
@@ -202,8 +209,9 @@ class Test_StrCodeType(unittest.TestCase):
 		self.assertIn(CodeType.StrCodeType.serialize_string('hi')[0], '"\'')
 
 	def test_parse_string_rejects_invalid(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeType.StrCodeType.parse_string('not quoted')
+		self.assertIn('Value `not quoted` is not a valid string', str(cm.exception))
 
 	def test_decompile_drops_trailing_null(self) -> None:
 		str_type = CodeType.StrCodeType('s', 's')
@@ -250,22 +258,25 @@ class Test_EnumCodeType(unittest.TestCase):
 		self.assertEqual(self.make().lex(make_parse_context('beta')), 2)
 
 	def test_lex_invalid_case_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().lex(make_parse_context('gamma'))
+		self.assertIn('Value `gamma` is not a valid case for `e`', str(cm.exception))
 
 	def test_lex_integer_when_allowed(self) -> None:
 		self.assertEqual(self.make(allow_integer=True).lex(make_parse_context('2')), 2)
 
 	def test_lex_integer_rejected_when_not_allowed(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().lex(make_parse_context('2'))
+		self.assertIn('Expected a `e` enum identifier but got `2`', str(cm.exception))
 
 	def test_serialize_value_to_name(self) -> None:
 		self.assertEqual(self.make().serialize(1, serialize_context()), 'alpha')
 
 	def test_serialize_unknown_value_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().serialize_basic(99)
+		self.assertIn('Value `99` has no case for `e`', str(cm.exception))
 
 	def test_decompile_valid_value(self) -> None:
 		enum = self.make()
@@ -304,8 +315,9 @@ class Test_BooleanCodeType(unittest.TestCase):
 		self.assertEqual(self.make().lex(make_parse_context('0')), False)
 
 	def test_lex_invalid_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().lex(make_parse_context('maybe'))
+		self.assertIn('Expected a `b` boolean but got `maybe`', str(cm.exception))
 
 	def test_keywords(self) -> None:
 		self.assertEqual(set(self.make().keywords()), {'true', 'false'})
@@ -355,8 +367,9 @@ class Test_FlagsCodeType(unittest.TestCase):
 	def test_lex_invalid_flag_name_raises(self) -> None:
 		context = make_parse_context('purple)')
 		context.command_in_parens = True
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().lex(context)
+		self.assertIn('Value `purple` is not a valid flag for `f`', str(cm.exception))
 
 	def test_lex_raw_hex_matching_known_flag(self) -> None:
 		# A raw value whose bits all map to known flags is accepted without warning.
@@ -368,8 +381,9 @@ class Test_FlagsCodeType(unittest.TestCase):
 	def test_lex_raw_too_large_raises(self) -> None:
 		context = make_parse_context('0x1FF)')
 		context.command_in_parens = True
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			self.make().lex(context)
+		self.assertIn('Flag `0x1FF` is too large for `f`', str(cm.exception))
 
 	def test_lex_raw_unknown_bit_warns(self) -> None:
 		# A raw value with a bit that matches no known flag is still accepted, but warns.

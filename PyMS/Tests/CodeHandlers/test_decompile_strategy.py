@@ -33,8 +33,9 @@ class Test_DecompileStrategy(unittest.TestCase):
 		self.assertEqual(dict(strategy.labels), {})
 
 	def test_block_label_missing_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DecompileStrategy.empty().block_label(CodeBlock())
+		self.assertIn('Decompile strategy missing label for block', str(cm.exception))
 
 	def test_block_comment_default_none(self) -> None:
 		self.assertIsNone(DecompileStrategy.empty().block_comment(CodeBlock()))

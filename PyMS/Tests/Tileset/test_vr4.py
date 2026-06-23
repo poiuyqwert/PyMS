@@ -25,10 +25,12 @@ class Test_VR4(unittest.TestCase):
 
 	def test_add_wrong_size_raises(self) -> None:
 		vr4 = VR4()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			vr4.add_image(tuple([0] * 8 for _ in range(7)))  # 7 rows
-		with self.assertRaises(PyMSError):
+		self.assertIn('Incorrect image size (must be 8x8)', str(cm.exception))
+		with self.assertRaises(PyMSError) as cm:
 			vr4.add_image(tuple([0] * 7 for _ in range(8)))  # 7 columns
+		self.assertIn('Incorrect image size (must be 8x8)', str(cm.exception))
 
 	def test_find_image_ids_normal_only(self) -> None:
 		vr4 = VR4()
@@ -67,8 +69,9 @@ class Test_VR4(unittest.TestCase):
 		self.assertEqual(loaded.get_image(1), _image(50))
 
 	def test_load_invalid_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			VR4().load(b'\x00' * 65)
+		self.assertIn('Invalid VR4 file', str(cm.exception))
 
 	def test_load_indexes_duplicate_images(self) -> None:
 		# Two identical images must both be found, not just the last one.

@@ -43,16 +43,19 @@ class Test_Parse(unittest.TestCase):
 		self.assertEqual(directive.params, [7])
 
 	def test_missing_open_paren_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_directive(OneArgDirective, '7)')
+		self.assertIn("Expected '(' but got '7'", str(cm.exception))
 
 	def test_missing_close_paren_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_directive(OneArgDirective, '(7')
+		self.assertIn('expected `)` to end parameters', str(cm.exception))
 
 	def test_trailing_token_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_directive(OneArgDirective, '(7) extra')
+		self.assertIn('expected end of line or file', str(cm.exception))
 
 	def test_parameter_validation_runs_during_parse(self) -> None:
 		# A directive parameter's `validate` must run while parsing, the same as
@@ -67,8 +70,9 @@ class Test_Parse(unittest.TestCase):
 
 		even_directive = CodeDirectiveDefinition('even', 'an even value', [EvenOnly('even', 'an even number')])
 		self.assertEqual(parse_directive(even_directive, '(4)').params, [4])
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_directive(even_directive, '(3)')
+		self.assertIn('value must be even', str(cm.exception))
 
 
 class Test_FullHelpText(unittest.TestCase):

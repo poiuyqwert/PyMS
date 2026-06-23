@@ -38,17 +38,20 @@ class Test_encode_json(unittest.TestCase):
 		self.assertEqual(json['_type'], 'Sample')
 
 	def test_header_mode_without_id_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_json(Sample(), None, sample_definition(IDMode.header))
+		self.assertIn('Missing ID', str(cm.exception))
 
 	def test_missing_attribute_raises(self) -> None:
 		definition = Definition('Sample', IDMode.none, {'missing': IntEncoder()})
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_json(Sample(), None, definition)
+		self.assertIn('is not a valid attribute name', str(cm.exception))
 
 	def test_empty_fields_filter_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_json(Sample(), None, sample_definition(), {})
+		self.assertIn('No fields to encode', str(cm.exception))
 
 	def test_fields_filter_selects_subset(self) -> None:
 		json = encode_json(Sample(count=5, label='hi'), None, sample_definition(), {'count': True})
@@ -77,8 +80,9 @@ class Test_encode_jsons(unittest.TestCase):
 		self.assertEqual([j['count'] for j in jsons], [1, 2])
 
 	def test_missing_definition_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_jsons([(Sample(), 0)], lambda _: None)
+		self.assertIn('has no definition', str(cm.exception))
 
 
 class Test_encode_text(unittest.TestCase):
@@ -122,8 +126,9 @@ class Test_encode_text(unittest.TestCase):
 		self.assertIn('\tlabel:\n\t\tone\n\t\ttwo\n', text)
 
 	def test_header_mode_without_id_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_text(Sample(), None, sample_definition(IDMode.header))
+		self.assertIn('Missing ID', str(cm.exception))
 
 
 class Test_encode_texts(unittest.TestCase):
@@ -134,5 +139,6 @@ class Test_encode_texts(unittest.TestCase):
 		self.assertIn('\n\nSample:\n', text)
 
 	def test_missing_definition_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			encode_texts([(Sample(), 0)], lambda _: None)
+		self.assertIn('has no definition', str(cm.exception))

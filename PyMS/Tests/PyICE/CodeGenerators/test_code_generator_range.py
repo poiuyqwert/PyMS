@@ -36,12 +36,14 @@ class Test_CodeGeneratorTypeRange(unittest.TestCase):
 		self.assertEqual(CodeGeneratorTypeRange.from_json(generator.to_json()), generator)
 
 	def test_from_json_rejects_zero_step(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeRange.from_json({'type': 'range', 'start': 0, 'stop': 5, 'step': 0})
+		self.assertIn('`step` has invalid value 0', str(cm.exception))
 
 	def test_from_json_rejects_missing_field(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeRange.from_json({'type': 'range', 'start': 0, 'stop': 5})
+		self.assertIn('missing `step`', str(cm.exception))
 
 	def test_registered_as_range(self) -> None:
 		self.assertIs(CG.lookup_type('range'), CodeGeneratorTypeRange)

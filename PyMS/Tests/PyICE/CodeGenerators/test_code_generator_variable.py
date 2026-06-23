@@ -29,12 +29,14 @@ class Test_CodeGeneratorVariable(unittest.TestCase):
 		self.assertEqual(restored, variable)
 
 	def test_from_json_invalid_generator_type_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorVariable.from_json({
 				'name': 'frame',
 				'generator': {'type': 'not-a-real-type'},
 			})
+		self.assertIn('object has invalid discriminator type `not-a-real-type`', str(cm.exception))
 
 	def test_from_json_missing_name_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorVariable.from_json({'generator': {'type': 'range', 'start': 0, 'stop': 1, 'step': 1}})
+		self.assertIn('missing `name`', str(cm.exception))

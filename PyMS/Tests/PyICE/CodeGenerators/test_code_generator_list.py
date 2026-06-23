@@ -116,8 +116,9 @@ class Test_CodeGeneratorTypeList(unittest.TestCase):
 		self.assertEqual(restored.repeater.type_name(), 'last_forever')
 
 	def test_from_json_invalid_repeater_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeList.from_json({'type': 'list', 'list': ['a'], 'repeater': 'bogus'})
+		self.assertIn('`repeater` has invalid value', str(cm.exception))
 
 	def test_registered_as_list(self) -> None:
 		self.assertIs(CG.lookup_type('list'), CodeGeneratorTypeList)

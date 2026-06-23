@@ -54,16 +54,19 @@ class Test_Parse(unittest.TestCase):
 		self.assertEqual(command.params, [5, 6])
 
 	def test_trailing_token_is_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_command(IncCommand, '5 6')
+		self.assertIn('expected end of line or file', str(cm.exception))
 
 	def test_missing_comma_in_parens_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_command(PairCommand, '(5 6)')
+		self.assertIn('expected `,` separating parameters', str(cm.exception))
 
 	def test_unterminated_parens_rejected(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			parse_command(PairCommand, '(5, 6')
+		self.assertIn('expected `)` to end parameters', str(cm.exception))
 
 
 class Test_Decompile(unittest.TestCase):
@@ -99,8 +102,9 @@ class Test_Compile(unittest.TestCase):
 		# A parse-only/virtual command has no byte code id; compiling it should
 		# surface a proper PyMSError rather than an assertion.
 		builder = ByteCodeCompiler()
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeCommand.CodeCommand(VirtualCommand, [5]).compile(builder)
+		self.assertIn("Command 'virtual' has no byte code id and cannot be compiled", str(cm.exception))
 
 
 class Test_Serialize(unittest.TestCase):

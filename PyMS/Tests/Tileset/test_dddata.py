@@ -23,8 +23,9 @@ class Test_DDDataBIN(unittest.TestCase):
 		self.assertEqual(ddd.get_doodad(512), [7] * 256)
 
 	def test_add_doodad_wrong_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DDDataBIN().add_doodad([0] * 255)
+		self.assertIn('Incorrect doodad placeability (expected list of size 256', str(cm.exception))
 
 	def test_load(self) -> None:
 		ddd = DDDataBIN()
@@ -39,8 +40,9 @@ class Test_DDDataBIN(unittest.TestCase):
 		self.assertEqual(ddd.get_doodad(0), list(range(256)))
 
 	def test_load_wrong_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			DDDataBIN().load(b'\x00' * 100)
+		self.assertIn('Invalid dddata.bin file', str(cm.exception))
 
 	def test_save_byte_length(self) -> None:
 		self.assertEqual(len(IO.output_to_bytes(DDDataBIN().save)), DDDATA_SIZE)

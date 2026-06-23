@@ -91,5 +91,6 @@ class Test_VX4(unittest.TestCase):
 		self.assertTrue(vx4.is_expanded())
 
 	def test_load_invalid_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			VX4().load(b'\x00' * 33, expanded=False)
+		self.assertIn('Invalid VX4 file', str(cm.exception))

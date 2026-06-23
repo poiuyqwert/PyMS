@@ -65,5 +65,6 @@ class Test_VF4(unittest.TestCase):
 		self.assertEqual(vf4.megatile_count(), 0)
 
 	def test_load_invalid_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			VF4().load(b'\x00' * 33)
+		self.assertIn('Invalid VF4 file', str(cm.exception))

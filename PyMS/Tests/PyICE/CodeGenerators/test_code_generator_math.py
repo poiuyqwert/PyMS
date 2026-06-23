@@ -35,16 +35,19 @@ class Test_CodeGeneratorTypeMath(unittest.TestCase):
 		self.assertEqual(CodeGeneratorTypeMath('$a + 1').value(lookup), '7')
 
 	def test_value_rejects_non_math_characters(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeMath('__import__("os")').value(lambda _: '0')
+		self.assertIn('only numbers, +, -, /, *, (, ), and whitespace allowed', str(cm.exception))
 
 	def test_value_rejects_unsafe_substituted_content(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeMath('$x').value(lambda _: 'abc')
+		self.assertIn("Invalid math expression 'abc'", str(cm.exception))
 
 	def test_value_evaluation_error_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CodeGeneratorTypeMath('1/0').value(lambda _: '0')
+		self.assertIn("Error evaluating math expression '1/0'", str(cm.exception))
 
 	def test_description_is_the_expression(self) -> None:
 		self.assertEqual(CodeGeneratorTypeMath('$a + 1').description(), '$a + 1')

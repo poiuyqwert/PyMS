@@ -39,20 +39,24 @@ class Test_format_round_trips(unittest.TestCase):
 
 class Test_parser_validation(unittest.TestCase):
 	def test_riff_wrong_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Palette().load_riff_pal(b'RIFF\x00\x00\x00\x00PAL data' + b'\x00' * 10)
+		self.assertIn('Unsupported RIFF palette file', str(cm.exception))
 
 	def test_riff_bad_header_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Palette().load_riff_pal(b'XXXX' + b'\x00' * 1044)
+		self.assertIn('Unsupported RIFF palette file', str(cm.exception))
 
 	def test_jasc_bad_header_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Palette().load_jasc_pal(b'NOT-JASC\r\n0100\r\n256\r\n')
+		self.assertIn('Unsupported JASC palette file', str(cm.exception))
 
 	def test_sc_pal_wrong_size_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Palette().load_sc_pal(b'\x00' * 100)
+		self.assertIn('Unsupported PAL palette file', str(cm.exception))
 
 
 class Test_load(unittest.TestCase):
@@ -83,8 +87,9 @@ class Test_load(unittest.TestCase):
 		self.assertEqual(palette.palette, PALETTE)
 
 	def test_unrecognized_data_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			Palette().load(b'not a palette')
+		self.assertIn('Unsupported palette file', str(cm.exception))
 
 
 class Test_save_types(unittest.TestCase):

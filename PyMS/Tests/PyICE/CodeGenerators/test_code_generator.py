@@ -24,16 +24,19 @@ class Test_discriminate_type(unittest.TestCase):
 		self.assertIs(CG.discriminate_type({'type': 'range'}), CodeGeneratorTypeRange)
 
 	def test_missing_discriminator_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CG.discriminate_type({})
+		self.assertIn('object missing discriminator type', str(cm.exception))
 
 	def test_non_string_discriminator_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CG.discriminate_type({'type': 5})
+		self.assertIn('object missing discriminator type', str(cm.exception))
 
 	def test_unknown_discriminator_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			CG.discriminate_type({'type': 'nope'})
+		self.assertIn('object has invalid discriminator type `nope`', str(cm.exception))
 
 
 class Test_CodeGeneratorType_base(unittest.TestCase):

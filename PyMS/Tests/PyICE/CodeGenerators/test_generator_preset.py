@@ -36,8 +36,9 @@ class Test_GeneratorPreset(unittest.TestCase):
 		self.assertEqual(preset.variables, [])
 
 	def test_from_json_missing_field_raises(self) -> None:
-		with self.assertRaises(PyMSError):
+		with self.assertRaises(PyMSError) as cm:
 			GeneratorPreset.from_json({'name': 'NoCode', 'variables': []})
+		self.assertIn('missing `code`', str(cm.exception))
 
 	def test_default_presets_json_is_stable(self) -> None:
 		# Every bundled preset must serialize, deserialize, and re-serialize unchanged.
