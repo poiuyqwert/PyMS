@@ -374,21 +374,23 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		UpdateDialog.check_update(self, 'PyBIN')
 
 	def tick(self, start: bool = False) -> None:
-		if not self.tick_alarm or not start:
-			return
-		if self.bin:
-			now = int(time.time() * 1000)
-			if self.last_tick is None:
-				self.last_tick = now
-			dt = now - self.last_tick
-			self.last_tick = now
-			for node in self.flattened_nodes():
-				node.tick(dt)
-				node.update_video()
-			self.widgetCanvas.update_idletasks()
-			self.tick_alarm = self.after_managed(FRAME_DELAY,self.tick)
-		else:
+		if start:
+			if self.tick_alarm is not None:
+				return  # already running
+			self.last_tick = None
+		if not self.bin:
 			self.tick_alarm = None
+			return
+		now = int(time.time() * 1000)
+		if self.last_tick is None:
+			self.last_tick = now
+		dt = now - self.last_tick
+		self.last_tick = now
+		for node in self.flattened_nodes():
+			node.tick(dt)
+			node.update_video()
+		self.widgetCanvas.update_idletasks()
+		self.tick_alarm = self.after_managed(FRAME_DELAY, self.tick)
 
 	def stop_tick(self) -> None:
 		if self.tick_alarm is None:
@@ -489,8 +491,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
 				background.load(self.mpq_handler.load_file(path))
-			except Exception:
-				InternalErrorDialog.capture(self, 'PyBIN')
+			except Exception as e:
+				InternalErrorDialog.capture(self, 'PyBIN', e)
 			else:
 				self.background = background
 		elif not self.show_theme_index.get() and self.background:
@@ -512,45 +514,47 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def load_dlggrp(self) -> None:
 		dlggrp = None
+		error: Exception | None = None
 		check = ['MPQ:glue\\palmm\\dlg.grp']
 		if self.show_theme_index.get():
 			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp'
 			check.insert(0, path)
 		for path in check:
 			try:
-				dlggrp = GRP.GRP()
-				dlggrp.load(self.mpq_handler.load_file(path), uncompressed=True)
-			except Exception:
-				InternalErrorDialog.capture(self, 'PyBIN')
-			else:
-				break
+				grp = GRP.GRP()
+				grp.load(self.mpq_handler.load_file(path), uncompressed=True)
+			except Exception as e:
+				if error is None:
+					error = e
+				continue
+			dlggrp = grp
+			break
+		if dlggrp is None and error is not None:
+			InternalErrorDialog.capture(self, 'PyBIN', error)
 		self.dlggrp = dlggrp
 		self.dialog_assets = {}
-		# if self.bin:
-		# 	for widget in self.flattened_nodes():
-		# 		pass
-			# self.refresh_preview()
 
 	def load_tilegrp(self) -> None:
 		tilegrp = None
+		error: Exception | None = None
 		check = ['MPQ:glue\\palmm\\tile.grp']
 		if self.show_theme_index.get():
 			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp'
 			check.insert(0, path)
 		for path in check:
 			try:
-				tilegrp = GRP.GRP()
-				tilegrp.load(self.mpq_handler.load_file(path))
-			except Exception:
-				InternalErrorDialog.capture(self, 'PyBIN')
-			else:
-				break
+				grp = GRP.GRP()
+				grp.load(self.mpq_handler.load_file(path))
+			except Exception as e:
+				if error is None:
+					error = e
+				continue
+			tilegrp = grp
+			break
+		if tilegrp is None and error is not None:
+			InternalErrorDialog.capture(self, 'PyBIN', error)
 		self.tilegrp = tilegrp
 		self.dialog_frames = {}
-		# if self.bin:
-		# 	for widget in self.flattened_nodes():
-		# 		pass
-			# self.refresh_preview()
 
 	def load_tfont(self) -> None:
 		tfont = None
@@ -571,7 +575,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			for widget in self.flattened_nodes():
 				widget.string = None
 				widget.item_string_images = None
-			# self.refresh_preview()
 
 	def change_theme(self, _n: int) -> None:
 		index = self.show_theme_index.get()-1
@@ -630,7 +633,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		return self.saveas()
 
 	def is_file_open(self) -> bool:
-		return not not self.bin
+		return self.bin is not None
 
 	def has_selected_node(self) -> bool:
 		return self.selected_node is not None
@@ -642,7 +645,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		selection_is_dialog = (self.selected_node and self.selected_node.widget and self.selected_node.widget.type == DialogBIN.BINWidget.TYPE_DIALOG)
 		can_move_up = False
 		can_move_down = False
-		if self.selected_node and not not self.selected_node.parent and not self.selected_node.parent.children is None:
+		if self.selected_node and self.selected_node.parent is not None and self.selected_node.parent.children is not None:
 			index = self.selected_node.parent.children.index(self.selected_node)
 			can_move_up = (index > 0)
 			can_move_down = (index < len(self.selected_node.parent.children)-1)
@@ -651,8 +654,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.widgets_toolbar.tag_enabled('dialog_not_selected', not selection_is_dialog)
 		self.widgets_toolbar.tag_enabled('can_move_up', can_move_up)
 		self.widgets_toolbar.tag_enabled('can_move_down', can_move_down)
-
-		# self.scr_check['state'] = NORMAL if is_file_open and not self.bin.remastered_required() else DISABLED
 
 	def setup_nodes(self) -> None:
 		if not self.bin:
@@ -899,7 +900,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 						h = y2-y1
 						rx1,ry1,rx2,ry2 = (0,0,640,480) #self.dialog.widget.bounding_box()
 						rw = rx2-rx1
-						rh = ry2-rx1
+						rh = ry2-ry1
 						if w < rw:
 							if x1 < rx1:
 								dx += rx1-x1
@@ -988,6 +989,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 		self.widgetTree.delete(UI.ALL)
 		self.widgetCanvas.delete(UI.ALL)
+
+		WidgetNode.SMK_FRAME_CACHE.clear()
 
 	def update_title(self) -> None:
 		file_path = self.file
@@ -1206,7 +1209,6 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def refresh_preview(self) -> None:
 		if not self.bin:
 			return
-		# self.widgetCanvas.delete(ALL)
 		self.update_background()
 		reorder = False
 		for node in self.flattened_nodes():
@@ -1274,6 +1276,9 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def get_show_animated(self) -> bool:
 		return self.show_animated.get()
 
+	def get_show_hover_smks(self) -> bool:
+		return self.show_hover_smks.get()
+
 	def get_show_images(self) -> bool:
 		return self.show_images.get()
 
@@ -1331,4 +1336,4 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		item.delete()
 
 	def capture_exception(self) -> None:
-		InternalErrorDialog.capture(self, 'PyBIN')
+		InternalErrorDialog.capture(self, 'PyBIN', debug=InternalErrorDialog.CAPTURE_NONE)

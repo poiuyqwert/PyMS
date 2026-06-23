@@ -300,7 +300,7 @@ class WidgetNode:
 				if self.item_dialog:
 					self.delegate.node_render_image_update(item=self.item_dialog, x=x, y=y, image=self.dialog_image)
 				else:
-					self.delegate.node_render_image_create(x=x, y=y, image=self.dialog_image, anchor=anchor)
+					self.item_dialog = self.delegate.node_render_image_create(x=x, y=y, image=self.dialog_image, anchor=anchor)
 					reorder = True
 		if self.dialog_image is None and self.item_dialog:
 			self.delegate.node_render_delete(self.item_dialog)
@@ -323,7 +323,7 @@ class WidgetNode:
 	def update_video(self) -> bool:
 		reorder = False
 		SHOW_SMKS = self.delegate.get_show_smks()
-		SHOW_HOVER_SMKS = self.delegate.get_show_animated()
+		SHOW_HOVER_SMKS = self.delegate.get_show_hover_smks()
 		showing: list[tuple[DialogBIN.BINSMK, SMK.SMK]] = []
 		if SHOW_SMKS and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_HIGHLIGHT_BTN and self.widget.smk and self.visible():
 			if self.smks is None:

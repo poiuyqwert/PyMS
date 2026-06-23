@@ -24,6 +24,9 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.delegate = delegate
 		self.window_pos = window_pos
 
+		# Snapshot the SMK's properties so edits can be discarded on cancel.
+		self.original_smk = self.smk.copy()
+
 		self.filename = UI.StringVar()
 		self.overlay_smk = UI.IntVar()
 		self.overlay_x = UI.IntegerVar(val_range=[0,65535])
@@ -206,7 +209,10 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		PyMSDialog.ok(self)
 
 	def cancel(self, _event: UI.Event | None = None) -> None:
-		self.ok()
+		self.smk.restore(self.original_smk)
+		self.refresh_smks()
+		self.delegate.refresh_preview()
+		self.dismiss()
 
 	def dismiss(self) -> None:
 		self.save_settings()

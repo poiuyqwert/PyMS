@@ -1,4 +1,6 @@
 
+from __future__ import annotations
+
 from . import TBL
 
 from ..Utilities.PyMSError import PyMSError
@@ -502,6 +504,42 @@ class BINWidget:
 		if self.type in (BINWidget.TYPE_DEFAULT_BTN, BINWidget.TYPE_BUTTON, BINWidget.TYPE_OPTION_BTN, BINWidget.TYPE_CHECKBOX, BINWidget.TYPE_SLIDER, BINWidget.TYPE_TEXTBOX, BINWidget.TYPE_LISTBOX, BINWidget.TYPE_COMBOBOX, BINWidget.TYPE_HIGHLIGHT_BTN, BINWidget.TYPE_HTML):
 			self.flags |= BINWidget.FLAG_RESPONSIVE
 
+	def copy(self) -> BINWidget:
+		clone = BINWidget(self.type)
+		clone.restore(self)
+		return clone
+
+	def restore(self, other: BINWidget) -> None:
+		self.x1 = other.x1
+		self.y1 = other.y1
+		self.x2 = other.x2
+		self.y2 = other.y2
+		self.width = other.width
+		self.height = other.height
+		self.unknown1 = other.unknown1
+		self.string = other.string
+		self.flags = other.flags
+		self.unknown2 = other.unknown2
+		self.identifier = other.identifier
+		self.scr_unknown1 = other.scr_unknown1
+		self.type = other.type
+		self.unknown3 = other.unknown3
+		self.unknown4 = other.unknown4
+		self.unknown5 = other.unknown5
+		self.unknown6 = other.unknown6
+		self.responsive_x1 = other.responsive_x1
+		self.responsive_y1 = other.responsive_y1
+		self.responsive_x2 = other.responsive_x2
+		self.responsive_y2 = other.responsive_y2
+		self.unknown7 = other.unknown7
+		self.smk = other.smk
+		self.text_offset_x = other.text_offset_x
+		self.text_offset_y = other.text_offset_y
+		self.responsive_width = other.responsive_width
+		self.responsive_height = other.responsive_height
+		self.unknown8 = other.unknown8
+		self.unknown9 = other.unknown9
+
 	def bounding_box(self) -> tuple[int, int, int, int]:
 		x1 = (self.x1 if self.x1 < self.x2 else self.x2)
 		y1 = (self.y1 if self.y1 < self.y2 else self.y2)
@@ -552,6 +590,23 @@ class BINSMK:
 		self.unknown3 = 0
 		self.unknown4 = 0
 
+	def copy(self) -> BINSMK:
+		clone = BINSMK()
+		clone.restore(self)
+		return clone
+
+	def restore(self, other: BINSMK) -> None:
+		self.widgets = other.widgets
+		self.overlay_smk = other.overlay_smk
+		self.flags = other.flags
+		self.unknown1 = other.unknown1
+		self.filename = other.filename
+		self.unknown2 = other.unknown2
+		self.offset_x = other.offset_x
+		self.offset_y = other.offset_y
+		self.unknown3 = other.unknown3
+		self.unknown4 = other.unknown4
+
 	def add_widget(self, widget: BINWidget) -> None:
 		self.widgets.append(widget)
 
@@ -598,7 +653,7 @@ class DialogBIN:
 			smk_info = list(struct.unpack('<LH3LHHLL',data[offset:offset+BINSMK.BYTE_SIZE]))
 			filename_offset = smk_info[3]
 			end_offset = data.find(b'\0', filename_offset)
-			smk_info[3] = data[filename_offset:end_offset]
+			smk_info[3] = data[filename_offset:end_offset].decode('utf-8')
 			smk = BINSMK()
 			smk_map[offset] = smk
 			smks.append(smk)

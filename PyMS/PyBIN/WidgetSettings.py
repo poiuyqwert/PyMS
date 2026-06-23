@@ -24,6 +24,9 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		self.widget = node.widget
 		self.delegate = delegate
 
+		# Snapshot the widget's properties so edits can be discarded on cancel.
+		self.original_widget = self.widget.copy()
+
 		self.advanced_widgets: list[UI.Widget] = []
 		self.advanced_shown = True
 		self.show_advanced = UI.BooleanVar()
@@ -554,7 +557,12 @@ class WidgetSettings(PyMSDialog, MainDelegate):
 		PyMSDialog.ok(self)
 
 	def cancel(self, _event: UI.Event | None = None) -> None:
-		self.ok()
+		self.widget.restore(self.original_widget)
+		self.node.string = None
+		self.node.item_string_images = None
+		self.delegate.refresh_nodes()
+		self.delegate.refresh_preview()
+		self.dismiss()
 
 	def dismiss(self) -> None:
 		self.save_settings()

@@ -10,8 +10,11 @@ class InternalErrorDialog(PyMSDialog):
 	CAPTURE_PRINT = 1
 	CAPTURE_DIALOG = 2
 	@staticmethod
-	def capture(parent: UI.Misc, prog: str, debug: int = 0) -> None:
-		trace = ''.join(traceback.format_exception(*sys.exc_info()))
+	def capture(parent: UI.Misc, prog: str, exception: BaseException | None = None, debug: int = CAPTURE_DIALOG) -> None:
+		if exception is not None:
+			trace = ''.join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+		else:
+			trace = ''.join(traceback.format_exception(*sys.exc_info()))
 		if debug == InternalErrorDialog.CAPTURE_DIALOG:
 			InternalErrorDialog(parent, prog, txt=trace)
 		elif debug == InternalErrorDialog.CAPTURE_PRINT:

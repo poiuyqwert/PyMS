@@ -56,6 +56,9 @@ class NodeDelegate(Protocol):
 	def get_show_animated(self) -> bool:
 		...
 
+	def get_show_hover_smks(self) -> bool:
+		...
+
 	def get_show_images(self) -> bool:
 		...
 
