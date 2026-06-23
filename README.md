@@ -21,6 +21,7 @@ PyMS is a cross platform BroodWar modding suite written using [Python](http://ww
    * [PyTBL](https://github.com/poiuyqwert/PyMS#PyTBL)
    * [PyTILE](https://github.com/poiuyqwert/PyMS#PyTILE)
    * [PyTRG](https://github.com/poiuyqwert/PyMS#PyTRG)
+1. [License](https://github.com/poiuyqwert/PyMS#license)
 
 
 ## Installation
@@ -114,3 +115,7 @@ PyMS contains 16 programs to edit most of the file types you will encounter whil
 
 ### PyTRG
 [PyTRG](/Help/Programs/PyTRG.md) is used for editing triggers ([.trg](/Help/Files/TRG.md) files)
+
+
+## License
+PyMS is released under the [MIT License](/LICENSE.md). The bundled MPQ libraries are covered by their own licenses ([StormLib](/PyMS/FileFormats/MPQ/StormLib-license.txt), [SFmpq](/PyMS/FileFormats/MPQ/SFmpq-license.txt)).
