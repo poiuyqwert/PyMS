@@ -20,7 +20,6 @@ from ..Utilities import Config
 from ..Utilities import Assets
 from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.UpdateDialog import UpdateDialog
-from ..Utilities.InternalErrorDialog import InternalErrorDialog
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
@@ -138,6 +137,13 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 		self.item_background: UI.Canvas.Item | None = None # type: ignore[name-defined]
 		self.item_selection_box: UI.Canvas.Item | None = None # type: ignore[name-defined]
+
+		# Assets that failed to load, mapped to descriptions of what is using them.
+		# Widget failures are cleared and rebuilt on every refresh_preview; global
+		# failures mirror the cached loaders (dlggrp/tilegrp/tfont) which persist
+		# across files and aren't re-attempted by refresh_preview.
+		self.widget_asset_load_failures: dict[str, set[str]] = {}
+		self.global_asset_load_failures: dict[str, set[str]] = {}
 
 		#Toolbar
 		self.toolbar = UI.Toolbar(self)
@@ -313,6 +319,31 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.widgetCanvas.pack()
 		self.widgetCanvas.focus_set()
 		bdframe.pack(side=UI.TOP)
+
+		# Collapsible panel listing assets that failed to load
+		self.failed_assets_title = UI.StringVar()
+		self.failed_assets_title.set('Failed Assets')
+		failed_assets_header = UI.Frame(rightframe)
+		collapse_button = UI.CollapseView.Button(failed_assets_header)
+		collapse_button.pack(side=UI.LEFT)
+		UI.Label(failed_assets_header, textvariable=self.failed_assets_title, anchor=UI.W).pack(side=UI.LEFT, fill=UI.X, expand=1)
+		# The panel expands to fill the remaining space when shown; when collapsed the spacer
+		# takes over that space instead. Growing the spacer on collapse also gives macOS the
+		# geometry change it needs to repaint the vacated area (which otherwise ghosts until resize).
+		def failed_assets_toggled(collapsed: bool) -> None:
+			self.failed_assets_spacer.pack_configure(expand=collapsed)
+		self.failed_assets_view = UI.CollapseView(rightframe, collapse_button, bd=2, relief=UI.SUNKEN, callback=failed_assets_toggled)
+		failed_assets_scroll = UI.Scrollbar(self.failed_assets_view)
+		self.failed_assets_text = UI.Text(self.failed_assets_view, bd=0, highlightthickness=0, width=1, height=5, wrap=UI.WORD, yscrollcommand=failed_assets_scroll.set, exportselection=False, state=UI.DISABLED)
+		failed_assets_scroll.config(command=self.failed_assets_text.yview)
+		failed_assets_scroll.pack(side=UI.RIGHT, fill=UI.Y)
+		self.failed_assets_text.pack(side=UI.LEFT, fill=UI.BOTH, expand=1)
+		self.failed_assets_spacer = UI.Frame(rightframe)
+		self.failed_assets_spacer.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
+		failed_assets_header.pack(side=UI.TOP, fill=UI.X)
+		self.failed_assets_view.pack(side=UI.TOP, fill=UI.BOTH, expand=1)
+		self.failed_assets_view.collapse()
+
 		rightframe.grid(row=0, column=1, padx=(2,5), pady=2, sticky=UI.NSEW)
 		frame.grid_columnconfigure(1, weight=0, minsize=640)
 		frame.grid_rowconfigure(0, weight=1, minsize=480)
@@ -487,12 +518,12 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def update_background(self) -> None:
 		if self.bin and self.show_theme_index.get() and not self.background:
+			asset = DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 			try:
-				path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'backgnd.pcx'
 				background = PCX.PCX()
-				background.load(self.mpq_handler.load_file(path))
-			except Exception as e:
-				InternalErrorDialog.capture(self, 'PyBIN', e)
+				background.load(self.mpq_handler.load_file('MPQ:' + asset))
+			except Exception:
+				self.record_asset_load_failure(asset, 'Background')
 			else:
 				self.background = background
 		elif not self.show_theme_index.get() and self.background:
@@ -514,62 +545,52 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def load_dlggrp(self) -> None:
 		dlggrp = None
-		error: Exception | None = None
-		check = ['MPQ:glue\\palmm\\dlg.grp']
+		check = ['glue\\palmm\\dlg.grp']
 		if self.show_theme_index.get():
-			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp'
-			check.insert(0, path)
-		for path in check:
+			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'dlg.grp')
+		for asset in check:
 			try:
 				grp = GRP.GRP()
-				grp.load(self.mpq_handler.load_file(path), uncompressed=True)
-			except Exception as e:
-				if error is None:
-					error = e
+				grp.load(self.mpq_handler.load_file('MPQ:' + asset), uncompressed=True)
+			except Exception:
 				continue
 			dlggrp = grp
 			break
-		if dlggrp is None and error is not None:
-			InternalErrorDialog.capture(self, 'PyBIN', error)
+		self.set_global_asset_failures('Dialog widget assets', check if dlggrp is None else [])
 		self.dlggrp = dlggrp
 		self.dialog_assets = {}
 
 	def load_tilegrp(self) -> None:
 		tilegrp = None
-		error: Exception | None = None
-		check = ['MPQ:glue\\palmm\\tile.grp']
+		check = ['glue\\palmm\\tile.grp']
 		if self.show_theme_index.get():
-			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp'
-			check.insert(0, path)
-		for path in check:
+			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tile.grp')
+		for asset in check:
 			try:
 				grp = GRP.GRP()
-				grp.load(self.mpq_handler.load_file(path))
-			except Exception as e:
-				if error is None:
-					error = e
+				grp.load(self.mpq_handler.load_file('MPQ:' + asset))
+			except Exception:
 				continue
 			tilegrp = grp
 			break
-		if tilegrp is None and error is not None:
-			InternalErrorDialog.capture(self, 'PyBIN', error)
+		self.set_global_asset_failures('Dialog frame assets', check if tilegrp is None else [])
 		self.tilegrp = tilegrp
 		self.dialog_frames = {}
 
 	def load_tfont(self) -> None:
 		tfont = None
-		check = ['MPQ:glue\\title\\tfont.pcx']
+		check = ['glue\\title\\tfont.pcx']
 		if self.show_theme_index.get():
-			path = 'MPQ:' + DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx'
-			check.insert(0, path)
-		for path in check:
+			check.insert(0, DialogBIN.THEME_ASSETS_INFO[self.show_theme_index.get()-1]['path'] + 'tfont.pcx')
+		for asset in check:
 			try:
 				tfont = PCX.PCX()
-				tfont.load(self.mpq_handler.load_file(path))
+				tfont.load(self.mpq_handler.load_file('MPQ:' + asset))
 			except Exception:
 				tfont = None
 			else:
 				break
+		self.set_global_asset_failures('Menu font palette', check if tfont is None else [])
 		self.tfont = tfont
 		if self.bin:
 			for widget in self.flattened_nodes():
@@ -612,7 +633,27 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 			self.font16 = font16
 			self.font16x = font16x
 		self.mpq_handler.close_mpqs()
+		self.reload_assets()
 		return err
+
+	def reload_assets(self) -> None:
+		# Reload everything that depends on the MPQ configuration — e.g. when the MPQ settings
+		# change — since the global assets are cached and node assets are cached per-node, none
+		# of which re-evaluate on their own. Runs even when fonts failed to (re)load so assets
+		# that can no longer be found are cleared rather than left stale on the canvas.
+		self.background = None
+		self.background_image = None
+		if self.item_background:
+			self.item_background.delete()
+			self.item_background = None
+		if self.bin:
+			for node in self.flattened_nodes():
+				node.reset_display()
+		WidgetNode.SMK_FRAME_CACHE.clear()
+		self.load_dlggrp()
+		self.load_tilegrp()
+		self.load_tfont()
+		self.refresh_preview()
 
 	def mpqsettings(self, _event: UI.Event | None = None, err: PyMSError | None = None) -> None:
 		SettingsDialog(self, config=self.config_, delegate=self, err=err, mpq_handler=self.mpq_handler)
@@ -990,6 +1031,8 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.widgetTree.delete(UI.ALL)
 		self.widgetCanvas.delete(UI.ALL)
 
+		self.clear_asset_load_failures()
+
 		WidgetNode.SMK_FRAME_CACHE.clear()
 
 	def update_title(self) -> None:
@@ -1209,6 +1252,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def refresh_preview(self) -> None:
 		if not self.bin:
 			return
+		self.clear_asset_load_failures()
 		self.update_background()
 		reorder = False
 		for node in self.flattened_nodes():
@@ -1335,5 +1379,43 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def node_render_delete(self, item: UI.Canvas.Item) -> None: # type: ignore[name-defined]
 		item.delete()
 
-	def capture_exception(self) -> None:
-		InternalErrorDialog.capture(self, 'PyBIN', debug=InternalErrorDialog.CAPTURE_NONE)
+	def record_asset_load_failure(self, asset: str, usage: str) -> None:
+		usages = self.widget_asset_load_failures.get(asset)
+		if usages is None:
+			usages = set()
+			self.widget_asset_load_failures[asset] = usages
+		if usage in usages:
+			return
+		usages.add(usage)
+		self.update_failed_assets_display()
+
+	def set_global_asset_failures(self, usage: str, assets: list[str]) -> None:
+		for asset in list(self.global_asset_load_failures):
+			usages = self.global_asset_load_failures[asset]
+			usages.discard(usage)
+			if not usages:
+				del self.global_asset_load_failures[asset]
+		for asset in assets:
+			self.global_asset_load_failures.setdefault(asset, set()).add(usage)
+		self.update_failed_assets_display()
+
+	def clear_asset_load_failures(self) -> None:
+		if not self.widget_asset_load_failures:
+			return
+		self.widget_asset_load_failures = {}
+		self.update_failed_assets_display()
+
+	def update_failed_assets_display(self) -> None:
+		failures: dict[str, set[str]] = {}
+		for source in (self.global_asset_load_failures, self.widget_asset_load_failures):
+			for asset, usages in source.items():
+				failures.setdefault(asset, set()).update(usages)
+		count = len(failures)
+		self.failed_assets_title.set(f'Failed Assets ({count})' if count else 'Failed Assets')
+		self.failed_assets_text['state'] = UI.NORMAL
+		self.failed_assets_text.delete('1.0', UI.END)
+		for asset in sorted(failures):
+			self.failed_assets_text.insert(UI.END, f'{asset}\n')
+			for usage in sorted(failures[asset]):
+				self.failed_assets_text.insert(UI.END, f'\t{usage}\n')
+		self.failed_assets_text['state'] = UI.DISABLED

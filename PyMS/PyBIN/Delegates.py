@@ -104,5 +104,5 @@ class NodeDelegate(Protocol):
 	def node_render_delete(self, item: Canvas.Item) -> None: # type: ignore[name-defined]
 		...
 
-	def capture_exception(self) -> None:
+	def record_asset_load_failure(self, asset: str, usage: str) -> None:
 		...

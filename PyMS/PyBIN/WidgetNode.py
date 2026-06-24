@@ -53,6 +53,11 @@ class WidgetNode:
 				name = f'{TBL.decompile_string(display_text)} [{name}]'
 		return name
 
+	def get_usage_label(self) -> str:
+		if self.widget is None:
+			return self.get_name()
+		return f'{self.get_name()} [ID: {self.widget.identifier}]'
+
 	def remove_from_parent(self) -> None:
 		if not self.parent or self.parent.children is None:
 			return
@@ -344,7 +349,7 @@ class WidgetNode:
 									self.frame_delay = min(self.frame_delay,delay)
 								self.smks[check.filename] = smk
 						except Exception:
-							self.delegate.capture_exception()
+							self.delegate.record_asset_load_failure(check.filename, self.get_usage_label())
 					show_smk = self.smks.get(check.filename)
 					if show_smk:
 						showing.append((check, show_smk))
@@ -385,7 +390,7 @@ class WidgetNode:
 					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					self.photo = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
 				except Exception:
-					self.delegate.capture_exception()
+					self.delegate.record_asset_load_failure(self.widget.string, self.get_usage_label())
 			if self.photo:
 				x1,y1,_,_ = self.bounding_box()
 				if self.item_image:
@@ -546,3 +551,12 @@ class WidgetNode:
 		if self.item_responsive_bounds:
 			self.delegate.node_render_delete(self.item_responsive_bounds)
 			self.item_responsive_bounds = None
+
+	def reset_display(self) -> None:
+		# Drop the rendered items and the cached assets so the next display rebuilds them
+		# (e.g. after the MPQ configuration changes and assets must be reloaded).
+		self.remove_display()
+		self.photo = None
+		self.smks = None
+		self.string = None
+		self.frame_delay = None

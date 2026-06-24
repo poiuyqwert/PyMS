@@ -28,7 +28,7 @@ class MPQHandler:
 		if self.open:
 			self.close_mpqs()
 		if self.mpqs_config is None or not self.mpqs_config.data:
-			self.add_defaults()
+			self.mpqs = []
 		else:
 			self.mpqs = list(MPQ.of(mpq_path) for mpq_path in self.mpqs_config.data)
 
