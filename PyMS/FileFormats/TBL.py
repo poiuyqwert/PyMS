@@ -99,6 +99,13 @@ def decompile_string(string: str, exclude: str = '', include: str = '') -> str:
 		decompile = re.sub(f'[{re.escape(exclude)}]','',decompile)
 	return re.sub(f'([{decompile}])', special_chr, string)
 
+def simplify_string(string: str) -> str:
+	# Strip a leading hotkey marker: a single lowercase letter followed by a control character.
+	string = re.sub(r'^[a-z][\x00-\x1f]', '', string)
+	# Strip any remaining control (non-display) characters.
+	string = re.sub(r'[\x00-\x1f]', '', string)
+	return string
+
 class TBL:
 	def __init__(self) -> None:
 		self.strings: list[str] = []

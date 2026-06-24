@@ -19,10 +19,11 @@ def _node(widget: BINWidget | None = None, delegate: NodeDelegate | None = None)
 	return WidgetNode(delegate or cast(NodeDelegate, Mock()), widget)
 
 
-def _widget(widget_type: int, *, box: tuple[int, int, int, int] = (0, 0, 0, 0), string: str = '') -> BINWidget:
+def _widget(widget_type: int, *, box: tuple[int, int, int, int] = (0, 0, 0, 0), string: str = '', identifier: int = 7) -> BINWidget:
 	widget = BINWidget(widget_type)
 	widget.x1, widget.y1, widget.x2, widget.y2 = box
 	widget.string = string
+	widget.identifier = identifier
 	return widget
 
 
@@ -47,12 +48,12 @@ class Test_get_name(unittest.TestCase):
 		self.assertEqual(node.get_name(), 'Custom')
 
 	def test_widget_without_text_uses_type_name(self) -> None:
-		# An image widget has no display text.
-		self.assertEqual(_node(_widget(BINWidget.TYPE_IMAGE)).get_name(), 'Image')
+		# An image widget has no display text, so just the type name and id are shown.
+		self.assertEqual(_node(_widget(BINWidget.TYPE_IMAGE, identifier=7)).get_name(), 'Image [ID: 7]')
 
 	def test_widget_with_text(self) -> None:
-		node = _node(_widget(BINWidget.TYPE_LABEL_LEFT_ALIGN, string='Hello'))
-		self.assertEqual(node.get_name(), 'Hello [Label (Left Align)]')
+		node = _node(_widget(BINWidget.TYPE_LABEL_LEFT_ALIGN, string='Hello', identifier=7))
+		self.assertEqual(node.get_name(), 'Hello [ID: 7, Label (Left Align)]')
 
 
 class Test_tree_mutation(unittest.TestCase):

@@ -175,6 +175,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.show_preview_settings = UI.BooleanVar()
 		self.show_images = UI.BooleanVar()
 		self.show_text = UI.BooleanVar()
+		self.show_simple_names = UI.BooleanVar()
 		self.show_smks = UI.BooleanVar()
 		self.show_hidden = UI.BooleanVar()
 		self.show_dialog = UI.BooleanVar()
@@ -266,6 +267,9 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		for i,(name,setting,variable) in enumerate(preview_fields):
 			check = UI.Checkbutton(widgetsframe, text=name, variable=variable, command=toggle_setting_callback(setting,variable))
 			check.grid(row=i // 2, column=i % 2, sticky=UI.W)
+		simple_names_index = len(preview_fields)
+		simple_names_check = UI.Checkbutton(widgetsframe, text='Simple Names', variable=self.show_simple_names, command=self.toggle_simple_names)
+		simple_names_check.grid(row=simple_names_index // 2, column=simple_names_index % 2, sticky=UI.W)
 		widgetsframe.grid_columnconfigure(0, weight=1)
 		widgetsframe.grid_columnconfigure(1, weight=1)
 		widgetsframe.grid(row=0, column=0, sticky=UI.NSEW, padx=5)
@@ -727,6 +731,10 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 	def toggle_setting(self, setting: Config.Boolean, variable: UI.BooleanVar) -> None:
 		setting.value = variable.get()
 		self.refresh_preview()
+
+	def toggle_simple_names(self) -> None:
+		self.config_.preview.show_simple_names.value = self.show_simple_names.get()
+		self.refresh_nodes()
 
 	def update_selection_box(self) -> None:
 		if self.selected_node:
@@ -1194,6 +1202,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.show_preview_settings.set(self.config_.preview.show_settings.value)
 		self.show_images.set(self.config_.preview.show_images.value)
 		self.show_text.set(self.config_.preview.show_text.value)
+		self.show_simple_names.set(self.config_.preview.show_simple_names.value)
 		self.show_smks.set(self.config_.preview.show_smks.value)
 		self.show_hidden.set(self.config_.preview.show_hidden.value)
 		self.show_dialog.set(self.config_.preview.show_dialog.value)
@@ -1210,6 +1219,7 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 		self.config_.preview.show_settings.value = self.show_preview_settings.get()
 		self.config_.preview.show_images.value = self.show_images.get()
 		self.config_.preview.show_text.value = self.show_text.get()
+		self.config_.preview.show_simple_names.value = self.show_simple_names.get()
 		self.config_.preview.show_smks.value = self.show_smks.get()
 		self.config_.preview.show_hidden.value = self.show_hidden.get()
 		self.config_.preview.show_dialog.value = self.show_dialog.get()
@@ -1328,6 +1338,9 @@ class PyBIN(UI.MainWindow, MainDelegate, NodeDelegate, ErrorableSettingsDialogDe
 
 	def get_show_text(self) -> bool:
 		return self.show_text.get()
+
+	def get_show_simple_names(self) -> bool:
+		return self.show_simple_names.get()
 
 	def get_show_bounds_widget(self) -> bool:
 		return self.show_bounds_widget.get()

@@ -1,5 +1,5 @@
 
-from ...FileFormats.TBL import TBL, TBL_REF, compile_string, decompile_string
+from ...FileFormats.TBL import TBL, TBL_REF, compile_string, decompile_string, simplify_string
 from ...Utilities.PyMSError import PyMSError
 from ...Utilities import IO
 
@@ -66,6 +66,26 @@ class Test_decompile_string(unittest.TestCase):
 	def test_round_trips_with_compile(self) -> None:
 		original = '\x00\t#<>abc'
 		self.assertEqual(compile_string(decompile_string(original)), original)
+
+
+class Test_simplify_string(unittest.TestCase):
+	def test_plain_text_unchanged(self) -> None:
+		self.assertEqual(simplify_string('Cancel'), 'Cancel')
+
+	def test_strips_control_characters(self) -> None:
+		self.assertEqual(simplify_string('Hel\x00lo\x0c'), 'Hello')
+
+	def test_strips_leading_hotkey_marker(self) -> None:
+		# A lowercase letter followed by a control character at the start is a hotkey marker.
+		self.assertEqual(simplify_string('a\x0bAttack'), 'Attack')
+
+	def test_leading_hotkey_consumes_its_letter(self) -> None:
+		# The hotkey letter is removed along with its control character, not left behind.
+		self.assertEqual(simplify_string('a\x0bb'), 'b')
+
+	def test_uppercase_leading_letter_is_not_a_hotkey(self) -> None:
+		# Only a lowercase letter marks a hotkey; the uppercase letter is kept.
+		self.assertEqual(simplify_string('A\x0bttack'), 'Attack')
 
 
 class Test_save(unittest.TestCase):

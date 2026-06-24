@@ -65,6 +65,9 @@ class NodeDelegate(Protocol):
 	def get_show_text(self) -> bool:
 		...
 
+	def get_show_simple_names(self) -> bool:
+		...
+
 	def get_show_bounds_widget(self) -> bool:
 		...
 

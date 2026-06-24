@@ -75,6 +75,7 @@ class PyBINConfig(Config.Config):
 			self.show_settings = Config.Boolean(default=True)
 			self.show_images = Config.Boolean(default=True)
 			self.show_text = Config.Boolean(default=True)
+			self.show_simple_names = Config.Boolean(default=True)
 			self.show_smks = Config.Boolean(default=True)
 			self.show_hidden = Config.Boolean(default=True)
 			self.show_dialog = Config.Boolean(default=False)

@@ -47,10 +47,16 @@ class WidgetNode:
 		if self.name:
 			name = self.name
 		elif self.widget:
-			name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
+			type_name = DialogBIN.BINWidget.TYPE_NAMES[self.widget.type]
 			display_text = self.widget.display_text()
 			if display_text:
-				name = f'{TBL.decompile_string(display_text)} [{name}]'
+				if self.delegate.get_show_simple_names():
+					text = TBL.simplify_string(display_text)
+				else:
+					text = TBL.decompile_string(display_text)
+				name = f'{text} [ID: {self.widget.identifier}, {type_name}]'
+			else:
+				name = f'{type_name} [ID: {self.widget.identifier}]'
 		return name
 
 	def get_usage_label(self) -> str:
