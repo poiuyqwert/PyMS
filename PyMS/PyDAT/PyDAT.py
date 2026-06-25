@@ -17,6 +17,7 @@ from ..Utilities import registry
 from ..Utilities.analytics import ga, GAScreen
 from ..Utilities.trace import setup_trace
 from ..Utilities.PyMSError import PyMSError
+from ..Utilities.CheckSaved import CheckSaved
 from ..Utilities.UpdateDialog import UpdateDialog
 from ..Utilities.ErrorDialog import ErrorDialog
 from ..Utilities.AboutDialog import AboutDialog
@@ -28,7 +29,7 @@ from ..Utilities.SponsorDialog import SponsorDialog
 
 import os
 
-from typing import cast, Callable, Any
+from typing import cast, Any
 
 LONG_VERSION = 'v' + Assets.version('PyDAT')
 
@@ -80,11 +81,9 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		toolbar.add_button(Assets.get_image('idsort'), self.override_name, 'Name Overrides', UI.Shift.Ctrl.n)
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('asc3topyai'), self.settings, 'Manage MPQ and TBL files', UI.Ctrl.m)
-		def open_files_callback() -> Callable[[], None]:
-			def open_files() -> None:
-				self.open_files()
-			return open_files
-		toolbar.add_button(Assets.get_image('debug'), open_files_callback(), 'Reload data files', UI.Ctrl.r)
+		def reload_files() -> None:
+			self.open_files()
+		toolbar.add_button(Assets.get_image('debug'), reload_files, 'Reload data files', UI.Ctrl.r)
 		toolbar.add_section()
 		toolbar.add_button(Assets.get_image('register'), self.register_registry, 'Set as default *.dat editor (Windows Only)', enabled=registry.IS_AVAILABLE)
 		toolbar.add_button(Assets.get_image('help'), self.help, 'Help', UI.Key.F1)
@@ -266,6 +265,8 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.status.set(dat_data.file_path)
 		elif dat_data.dat:
 			self.status.set(dat_data.dat.FILE_NAME)
+		else:
+			self.status.set('')
 		self.editstatus['state'] = UI.NORMAL if tab.edited else UI.DISABLED
 		if dat_data.is_expanded():
 			self.expanded.set(f'{dat_data.dat_type.FILE_NAME} expanded')
@@ -275,7 +276,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def updated_pointer_entries(self, ids: list[AnyID]) -> None:
 		for page in self.pages:
 			page.updated_pointer_entries(ids)
-			if self.active_tab() == page and page.page_title in ids:
+			if self.active_tab() == page and page.DAT_ID in ids:
 				self.update_entry_listing(True)
 
 	def open_files(self, dat_files: bool = False) -> PyMSError | None:
@@ -290,11 +291,11 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.refresh()
 		return err
 
-	def unsaved(self) -> bool | None:
+	def check_saved(self) -> CheckSaved:
 		for page in self.pages:
-			if page.unsaved():
-				return True
-		return None
+			if page.check_saved() == CheckSaved.cancelled:
+				return CheckSaved.cancelled
+		return CheckSaved.saved
 
 	def load_data(self, entry_id: int | None = None) -> None:
 		self.active_tab().load_data(entry_id)
@@ -305,7 +306,10 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 	def changeid(self, entry_id: int | None = None, focus_list: bool = True) -> None:
 		show_selection = True
 		if entry_id is None:
-			entry_id = int(self.listbox.curselection()[0])
+			selection = self.listbox.curselection()
+			if not selection:
+				return
+			entry_id = int(selection[0])
 			show_selection = False
 		if entry_id != self.active_tab().id:
 			self.save_data()
@@ -329,7 +333,8 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			self.findhistory.remove(find)
 		self.findhistory.insert(0, find)
 		find = find.lower()
-		start = int(self.listbox.curselection()[0])
+		selection = self.listbox.curselection()
+		start = int(selection[0]) if selection else 0
 		cur = (start + 1) % self.listbox.size() # type: ignore[operator]
 		while cur != start:
 			if find in self.listbox.get(cur).lower():
@@ -492,8 +497,9 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 		SponsorDialog(self)
 
 	def exit(self, _event: UI.Event | None = None) -> None:
-		if not self.unsaved():
-			self.data_context.config.windows.main.save_size(self)
-			self.data_context.config.list_size.save_size(self.hor_pane)
-			self.data_context.config.save()
-			self.destroy()
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.data_context.config.windows.main.save_size(self)
+		self.data_context.config.list_size.save_size(self.hor_pane)
+		self.data_context.config.save()
+		self.destroy()

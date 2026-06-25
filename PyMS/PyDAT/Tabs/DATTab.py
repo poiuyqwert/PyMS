@@ -9,6 +9,7 @@ from ..DataID import DATID, AnyID, UnitsTabID
 from ...FileFormats.DAT.AbstractDAT import AbstractDATEntry
 
 from ...Utilities.PyMSError import PyMSError
+from ...Utilities.CheckSaved import CheckSaved
 from ...Utilities.ErrorDialog import ErrorDialog
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
@@ -185,22 +186,23 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 	def save_entry(self, entry: ET) -> None:
 		pass
 
-	def unsaved(self) -> bool | None:
+	def check_saved(self) -> CheckSaved:
 		dat = self.get_dat_data().dat
 		if not dat:
-			return None
+			return CheckSaved.saved
 		if self == self.delegate.active_tab():
 			self.save_data()
-		if self.edited:
-			file = self.get_dat_data().file_path
-			if not file:
-				file = dat.FILE_NAME
-			save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
-			if save is None:
-				return True
-			if save:
-				self.save()
-		return None
+		if not self.edited:
+			return CheckSaved.saved
+		file = self.get_dat_data().file_path
+		if not file:
+			file = dat.FILE_NAME
+		save = UI.MessageBox.askyesnocancel(parent=self, title='Save Changes?', message=f"Save changes to '{file}'?", default=UI.MessageBox.YES)
+		if save is None:
+			return CheckSaved.cancelled
+		if not save:
+			return CheckSaved.saved
+		return self.save()
 
 	def copy(self) -> None:
 		dat = self.get_dat_data().dat
@@ -257,24 +259,27 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		EntryCountDialog(self, _set_entry_count, dat_data, self.delegate.data_context.config.windows.entry_count)
 
 	def new(self, _event: UI.Event | None = None) -> None:
-		if not self.unsaved():
-			self.get_dat_data().new_file()
-			self.id = 0
-			self.delegate.refresh()
+		if self.check_saved() == CheckSaved.cancelled:
+			return
+		self.get_dat_data().new_file()
+		self.id = 0
+		self.delegate.refresh()
 
 	def open_file(self, file: str, save: bool = True) -> None:
-		if not save or not self.unsaved():
-			self.get_dat_data().load_file(file)
-			self.id = 0
-			if self.delegate.active_tab() == self:
-				self.delegate.refresh()
+		if save and self.check_saved() == CheckSaved.cancelled:
+			return
+		self.get_dat_data().load_file(file)
+		self.id = 0
+		if self.delegate.active_tab() == self:
+			self.delegate.refresh()
 
 	def open_data(self, file_data: bytes, save: bool = True) -> None:
-		if not save or not self.unsaved():
-			self.get_dat_data().load_data(file_data)
-			self.id = 0
-			if self.delegate.active_tab() == self:
-				self.delegate.refresh()
+		if save and self.check_saved() == CheckSaved.cancelled:
+			return
+		self.get_dat_data().load_data(file_data)
+		self.id = 0
+		if self.delegate.active_tab() == self:
+			self.delegate.refresh()
 
 	def iimport(self) -> None:
 		dat = self.get_dat_data().dat
@@ -287,27 +292,28 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		self.edited = True
 		self.delegate.refresh()
 
-	def save(self, _event: UI.Event | None = None) -> None:
-		self.saveas(file_path=self.get_dat_data().file_path)
+	def save(self, _event: UI.Event | None = None) -> CheckSaved:
+		return self.saveas(file_path=self.get_dat_data().file_path)
 
-	def saveas(self, _event: UI.Event | None = None, file_path: str | None = None) -> None:
+	def saveas(self, _event: UI.Event | None = None, file_path: str | None = None) -> CheckSaved:
 		dat = self.get_dat_data().dat
 		if not dat:
-			return
+			return CheckSaved.saved
 		if not file_path:
 			file_path = self.delegate.data_context.config.last_path.dat.select_save(self, title=f'Save {dat.FILE_NAME} As', filetypes=[UI.FileType.dat(f'StarCraft {dat.FILE_NAME} files')], filename=dat.FILE_NAME)
 			if not file_path:
-				return
+				return CheckSaved.cancelled
 		elif not check_allow_overwrite_internal_file(file_path):
-			return
+			return CheckSaved.cancelled
 		try:
 			self.get_dat_data().save_file(file_path)
 		except PyMSError as e:
 			ErrorDialog(self, e)
-			return
+			return CheckSaved.cancelled
 		self.get_dat_data().file_path = file_path
 		self.edited = False
 		self.delegate.update_status_bar()
+		return CheckSaved.saved
 
 	def export(self, _event: UI.Event | None = None) -> None:
 		dat = self.get_dat_data().dat

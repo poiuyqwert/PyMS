@@ -10,6 +10,7 @@ from ..DATRef import DATRefs, DATRef
 from ...FileFormats.DAT import DATUnit
 
 from ...Utilities import UIKit as UI
+from ...Utilities.CheckSaved import CheckSaved
 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
@@ -73,9 +74,10 @@ class UnitsTab(DATTab):
 			self.delegate.update_status_bar()
 			self.check_used_by_references()
 
-	def save(self, _event: UI.Event | None = None) -> None:
-		DATTab.save(self)
+	def save(self, _event: UI.Event | None = None) -> CheckSaved:
+		result = DATTab.save(self)
 		if not self.edited:
 			for frame,_ in list(self.dattabs.pages.values()):
 				tab = cast(DATUnitsTab, frame)
 				tab.edited = False
+		return result

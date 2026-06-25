@@ -57,13 +57,6 @@ class IconSelectDialog(PyMSDialog):
 		self.maxsize(max_width, max_height)
 		self.data_context.config.windows.icon_select.load_size(self)
 
-		self.scrolled_canvas.canvas.bind(UI.Mouse.Click_Left(), self._select_icon)
-		self.scrolled_canvas.canvas.bind(UI.Double.Click_Left(), lambda *_: self.ok())
-		self.scrolled_canvas.canvas.bind(UI.Mouse.Motion(), self._update_status_hover)
-		self.scrolled_canvas.canvas.bind(UI.Cursor.Leave(), lambda *_: self._clear_status_hover())
-		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Configure(), lambda *_: self._canvas_resized())
-		self.scrolled_canvas.canvas.bind(UI.WidgetEvent.Scrolled(), lambda *_: self._draw_icons())
-
 		self._update_status_selection()
 		self.scrolled_canvas.canvas.update_idletasks()
 		self._scroll_to_selection()
@@ -126,9 +119,11 @@ class IconSelectDialog(PyMSDialog):
 		columns, total_height, _, _, _ = self._calculate_visibility()
 		if columns == 0:
 			return
+		if total_height == 0:
+			return
 		viewport_height = self.scrolled_canvas.canvas.winfo_height()
 		y = max(0,min(total_height,(display_index // columns + 0.5) * icon_size[1] - viewport_height/2.0))
-		self.scrolled_canvas.canvas.yview_moveto(y // total_height)
+		self.scrolled_canvas.canvas.yview_moveto(y / total_height)
 
 	def _calculate_scrollregion(self) -> tuple[int, int]:
 		columns, height, _, _, _ = self._calculate_visibility()
@@ -152,7 +147,7 @@ class IconSelectDialog(PyMSDialog):
 	def _draw_icons(self, force: bool = False) -> None:
 		columns, _, start_y, visible_start_index, visible_end_index = self._calculate_visibility()
 		display_parameters = (columns, visible_start_index, visible_end_index)
-		if force or display_parameters == self._last_display_parameters:
+		if not force and display_parameters == self._last_display_parameters:
 			return
 		last_start_index = 9999
 		last_end_index = -1
