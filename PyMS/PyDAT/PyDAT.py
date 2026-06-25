@@ -393,7 +393,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			page = cast(DATTab, frame)
 			if filename == page.get_dat_data().dat_type.FILE_NAME:
 				try:
-					page.open_file(file_path)
+					page.open(file_path)
 				except PyMSError as e:
 					ErrorDialog(self, e)
 				else:
@@ -419,7 +419,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 			if mpq:
 				try:
 					file_data = mpq.read_file('arr\\' + filename)
-					tab.open_data(file_data)
+					tab.open(file_data)
 				except Exception:
 					continue
 			else:
@@ -427,7 +427,7 @@ class PyDAT(UI.MainWindow, MainDelegate, ErrorableSettingsDialogDelegate):
 				if not os.path.exists(filepath):
 					continue
 				try:
-					tab.open_file(filepath)
+					tab.open(filepath)
 				except Exception:
 					continue
 			if tab.get_dat_data().is_expanded():

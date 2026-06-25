@@ -56,18 +56,15 @@ class DATData(Generic[DATType]):
 		self.file_path = None
 		self.update_names()
 
-	def load_file(self, file_path: str) -> None:
+	def load(self, any_input: IO.AnyInputBytes) -> None:
 		dat = self.dat_type()
-		dat.load(file_path)
+		dat.load(any_input)
 		self.dat = dat
-		self.file_path = file_path
+		if isinstance(any_input, str):
+			self.file_path = any_input
+		else:
+			self.file_path = None
 		self.update_names()
-
-	def load_data(self, file_data: bytes) -> None:
-		dat = self.dat_type()
-		dat.load(file_data)
-		self.dat = dat
-		self.file_path = None
 
 	def save_file(self, file_path: str) -> None:
 		if not self.dat:
@@ -118,7 +115,7 @@ class DATData(Generic[DATType]):
 			return self.default_dat.entry_count()
 		return self.dat_type.FORMAT.entries
 
-	def expand_entries(self, add: int) -> int:
+	def expand_entries(self, add: int) -> bool:
 		if not self.dat:
 			return False
 		expanded = self.dat.expand_entries(add)

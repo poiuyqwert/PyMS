@@ -33,7 +33,7 @@ class EntryNameOverrides(PyMSDialog):
 		self.data_context = data_context
 		self.dat_id = dat_id
 		self.entry_id = UI.IntegerVar(val_range=(0, 99999))
-		if entry_id:
+		if entry_id is not None:
 			self.entry_id.set(entry_id)
 		self.name = UI.StringVar()
 		self.append = UI.IntVar()
@@ -108,8 +108,10 @@ class EntryNameOverrides(PyMSDialog):
 			self.data_context.dat_data(self.dat_id).load_name_overrides(path, update_names=False)
 		except PyMSError as e:
 			ErrorDialog(self, e)
+			return
 		except Exception:
 			ErrorDialog(self, PyMSError('Open', f"Couldn't open name overrides '{path}'"))
+			return
 		self.refresh_list()
 
 	def saveas(self, _: UI.Event | None = None) -> None:

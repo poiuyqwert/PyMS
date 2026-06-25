@@ -13,6 +13,7 @@ from ...Utilities.CheckSaved import CheckSaved
 from ...Utilities.ErrorDialog import ErrorDialog
 from ...Utilities import UIKit as UI
 from ...Utilities import Assets
+from ...Utilities import IO
 from ...Utilities.fileutils import check_allow_overwrite_internal_file
 
 import copy
@@ -265,18 +266,10 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		self.id = 0
 		self.delegate.refresh()
 
-	def open_file(self, file: str, save: bool = True) -> None:
+	def open(self, any_input: IO.AnyInputBytes, save: bool = True) -> None:
 		if save and self.check_saved() == CheckSaved.cancelled:
 			return
-		self.get_dat_data().load_file(file)
-		self.id = 0
-		if self.delegate.active_tab() == self:
-			self.delegate.refresh()
-
-	def open_data(self, file_data: bytes, save: bool = True) -> None:
-		if save and self.check_saved() == CheckSaved.cancelled:
-			return
-		self.get_dat_data().load_data(file_data)
+		self.get_dat_data().load(any_input)
 		self.id = 0
 		if self.delegate.active_tab() == self:
 			self.delegate.refresh()

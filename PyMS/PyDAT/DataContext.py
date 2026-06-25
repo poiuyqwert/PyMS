@@ -17,8 +17,6 @@ from ..Utilities.MPQHandler import MPQHandler
 from ..Utilities.PyMSError import PyMSError
 from ..Utilities.Callback import Callback
 
-import re
-
 from typing import cast, Any
 
 class TicksPerSecond:
@@ -90,9 +88,14 @@ class DataContext:
 	def load_hints(self) -> None:
 		with open(Assets.data_file_path('Hints.txt'), 'r', encoding='utf-8') as hints:
 			for l in hints:
-				m = re.match('(\\S+)=(.+)\n?', l)
-				if m:
-					self.hints[m.group(1)] = m.group(2)
+				key, sep, value = l.rpartition('=')
+				if not sep:
+					continue
+				key = key.strip()
+				value = value.strip()
+				if not key or not value or any(c.isspace() for c in key):
+					continue
+				self.hints[key] = value
 
 	def load_palettes(self) -> None:
 		self.palettes = {}
@@ -236,9 +239,12 @@ class DataContext:
 			return self.cmdicons.images[highlighted][index]
 		palette = self.palettes['Icons']
 		if highlighted and self.cmdicons.ticon_pcx:
-			palette = list(palette)
-			for i in range(16):
-				palette[i] = palette[self.cmdicons.ticon_pcx.image[0][32+i]]
+			ticon = self.cmdicons.ticon_pcx.image[0]
+			remap_count = max(0, min(16, len(ticon) - 32))
+			if remap_count:
+				palette = list(palette)
+				for i in range(remap_count):
+					palette[i] = palette[ticon[32+i]]
 		image = cast(ImageWithBounds, frame_to_photo(palette, self.cmdicons.grp, index))
 		if not highlighted in self.cmdicons.images:
 			self.cmdicons.images[highlighted] = {}

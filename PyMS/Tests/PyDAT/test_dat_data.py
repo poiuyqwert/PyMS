@@ -59,13 +59,13 @@ class Test_load_save(unittest.TestCase):
 	def setUp(self) -> None:
 		self.dc = DataContext()
 
-	def test_load_data_round_trip(self) -> None:
+	def test_load_bytes_clears_path_and_round_trips(self) -> None:
 		source = DAT.UnitsDAT()
 		source.new_file()
 		raw = IO.output_to_bytes(source.save)
 		data = _data(self.dc)
 		data.file_path = 'stale'
-		data.load_data(raw)
+		data.load(raw)
 		self.assertIsNotNone(data.dat)
 		self.assertIsNone(data.file_path)
 		self.assertEqual(data.save_data(), raw)
@@ -87,10 +87,10 @@ class Test_load_save(unittest.TestCase):
 			data.save_file('out.dat')
 		save.assert_called_once_with('out.dat')
 
-	def test_load_file_sets_path_and_loads(self) -> None:
+	def test_load_path_sets_path_and_loads(self) -> None:
 		data = _data(self.dc)
 		with patch.object(DAT.UnitsDAT, 'load') as load:
-			data.load_file('in.dat')
+			data.load('in.dat')
 		load.assert_called_once_with('in.dat')
 		self.assertIsNotNone(data.dat)
 		self.assertEqual(data.file_path, 'in.dat')
