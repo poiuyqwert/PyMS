@@ -29,6 +29,9 @@ class SMKSettings(PyMSDialog, MainDelegate):
 
 		self.filename = UI.StringVar()
 		self.overlay_smk = UI.IntVar()
+		# Overlay candidates shown in the dropdown, in order; index 0 of the dropdown
+		# is 'None', so dropdown index N maps to overlay_candidates[N-1].
+		self.overlay_candidates: list[DialogBIN.BINSMK] = []
 		self.overlay_x = UI.IntegerVar(val_range=[0,65535])
 		self.overlay_y = UI.IntegerVar(val_range=[0,65535])
 
@@ -103,20 +106,36 @@ class SMKSettings(PyMSDialog, MainDelegate):
 	def save_settings(self) -> None:
 		self.delegate.get_config().windows.edit.smk.main.save_size(self)
 
+	def creates_overlay_cycle(self, candidate: DialogBIN.BINSMK) -> bool:
+		# Assigning `candidate` as this SMK's overlay forms a cycle if following
+		# `candidate`'s overlay chain reaches this SMK (or is this SMK itself).
+		seen: set[int] = set()
+		check: DialogBIN.BINSMK | None = candidate
+		while check is not None and id(check) not in seen:
+			if check is self.smk:
+				return True
+			seen.add(id(check))
+			check = check.overlay_smk
+		return False
+
 	def load_property_smk(self) -> None:
 		smks = ['None']
+		self.overlay_candidates = []
 		overlay_id = 0
 		if dialog_bin := self.delegate.get_bin():
-			if self.smk.overlay_smk:
-				overlay_id = dialog_bin.smks.index(self.smk.overlay_smk) + 1
 			for smk in dialog_bin.smks:
+				if self.creates_overlay_cycle(smk):
+					continue
+				self.overlay_candidates.append(smk)
 				name = smk.filename
 				if smk.overlay_smk:
 					name += f" (Overlay: {smk.overlay_smk.filename})"
 				smks.append(name)
+				if smk is self.smk.overlay_smk:
+					overlay_id = len(self.overlay_candidates)
 		self.smks_dropdown.setentries(smks)
 
-		self.overlay_smk.set(0 if not self.smk.overlay_smk else overlay_id)
+		self.overlay_smk.set(overlay_id)
 
 	def load_properties(self) -> None:
 		self.filename.set(self.smk.filename)
@@ -134,10 +153,9 @@ class SMKSettings(PyMSDialog, MainDelegate):
 		self.flag_unk4.set((self.smk.flags & DialogBIN.BINSMK.FLAG_UNK4 == DialogBIN.BINSMK.FLAG_UNK4))
 
 	def save_property_smk(self) -> bool:
-		assert (dialog_bin := self.delegate.get_bin())
 		edited = False
 		index = self.overlay_smk.get()-1
-		smk = (None if index == -1 else dialog_bin.smks[index])
+		smk = (None if index < 0 else self.overlay_candidates[index])
 		if smk != self.smk.overlay_smk:
 			self.smk.overlay_smk = smk
 			edited = True
@@ -185,14 +203,13 @@ class SMKSettings(PyMSDialog, MainDelegate):
 			self.filename.set(m.file[4:])
 
 	def edit_smk(self) -> None:
-		if not self.overlay_smk.get():
-			return
-		if not (dialog_bin := self.delegate.get_bin()):
+		index = self.overlay_smk.get()-1
+		if index < 0:
 			return
 		pos = UI.Geometry.of(self).pos
 		pos.x += 20
 		pos.y += 20
-		SMKSettings(self, smk=dialog_bin.smks[self.overlay_smk.get()-1], widget=self.widget, delegate=self, window_pos=pos)
+		SMKSettings(self, smk=self.overlay_candidates[index], widget=self.widget, delegate=self, window_pos=pos)
 
 	def add_smk(self) -> None:
 		if not (dialog_bin := self.delegate.get_bin()):

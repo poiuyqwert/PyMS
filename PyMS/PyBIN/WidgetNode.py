@@ -29,7 +29,9 @@ class WidgetNode:
 
 		self.string: StringPreview | None = None
 		self.photo: UI.ImageTk.PhotoImage | None = None
+		self.image_load_failed: str | None = None
 		self.smks: dict[str, SMK.SMK] | None = None
+		self.smk_loads_failed: set[str] = set()
 		self.dialog_image: UI.ImageTk.PhotoImage | None = None
 		self.frame_delay: int | None = None
 		self.frame_waited = 0.0
@@ -326,8 +328,12 @@ class WidgetNode:
 		self.frame_waited += dt
 		if self.frame_delay is None or self.frame_waited < self.frame_delay:
 			return
+		repeats = bool(self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS)
 		for smk in list(self.smks.values()):
-			if smk.current_frame < smk.frames or self.widget.smk.flags & DialogBIN.BINSMK.FLAG_REPEATS:
+			# `next_frame` wraps back to 0 at the end, so comparing the post-wrap
+			# `current_frame` can never detect completion; stop a non-repeating SMK
+			# once it is showing its final frame instead.
+			if repeats or smk.current_frame < smk.frames - 1:
 				smk.next_frame()
 		self.frame_waited = 0
 
@@ -342,7 +348,7 @@ class WidgetNode:
 			check: DialogBIN.BINSMK | None = self.widget.smk
 			while check:
 				if not check.flags & DialogBIN.BINSMK.FLAG_SHOW_ON_HOVER or SHOW_HOVER_SMKS:
-					if not check.filename in self.smks:
+					if check.filename not in self.smks and check.filename not in self.smk_loads_failed:
 						try:
 							file = self.delegate.get_mpqhandler().get_file('MPQ:' + check.filename)
 							if file:
@@ -355,6 +361,7 @@ class WidgetNode:
 									self.frame_delay = min(self.frame_delay,delay)
 								self.smks[check.filename] = smk
 						except Exception:
+							self.smk_loads_failed.add(check.filename)
 							self.delegate.record_asset_load_failure(check.filename, self.get_usage_label())
 					show_smk = self.smks.get(check.filename)
 					if show_smk:
@@ -390,12 +397,13 @@ class WidgetNode:
 		reorder = False
 		SHOW_IMAGES = self.delegate.get_show_images()
 		if SHOW_IMAGES and self.widget and self.widget.type == DialogBIN.BINWidget.TYPE_IMAGE and self.visible() and self.widget.string:
-			if self.photo is None:
+			if self.photo is None and self.widget.string != self.image_load_failed:
 				try:
 					pcx = PCX.PCX()
 					pcx.load(self.delegate.get_mpqhandler().load_file('MPQ:' + self.widget.string))
 					self.photo = cast(UI.ImageTk.PhotoImage, GRP.frame_to_photo(pcx.palette, pcx, -1, size=False))
 				except Exception:
+					self.image_load_failed = self.widget.string
 					self.delegate.record_asset_load_failure(self.widget.string, self.get_usage_label())
 			if self.photo:
 				x1,y1,_,_ = self.bounding_box()
@@ -563,6 +571,8 @@ class WidgetNode:
 		# (e.g. after the MPQ configuration changes and assets must be reloaded).
 		self.remove_display()
 		self.photo = None
+		self.image_load_failed = None
 		self.smks = None
+		self.smk_loads_failed = set()
 		self.string = None
 		self.frame_delay = None
