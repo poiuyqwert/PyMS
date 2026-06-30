@@ -110,12 +110,12 @@ class Test_load_hints(unittest.TestCase):
 			self.dc.load_hints()
 		self.assertEqual(self.dc.hints, {'kept': 'yes', 'also_kept': 'ok'})
 
-	def test_multiple_equals_splits_on_the_last(self) -> None:
-		# The key pattern is greedy, so a line with several '=' splits at the final one.
+	def test_value_may_contain_equals(self) -> None:
+		# Keys never contain '=' but values can, so a line splits on the first '='.
 		self.dc.hints = {}
-		with patch('builtins.open', mock_open(read_data='expr=a=b+c\n')):
+		with patch('builtins.open', mock_open(read_data='UnitSndReady=0=No sound.\n')):
 			self.dc.load_hints()
-		self.assertEqual(self.dc.hints, {'expr=a': 'b+c'})
+		self.assertEqual(self.dc.hints, {'UnitSndReady': '0=No sound.'})
 
 
 class Test_image_frame_helpers(unittest.TestCase):

@@ -89,13 +89,8 @@ class AIActionsUnitsTab(DATUnitsTab):
 			self.force_value_text.config(cursor='hand2')
 		def show_arrow_cursor(*_: Any) -> None:
 			self.force_value_text.config(cursor='arrow')
-		def view_ground_weapon(*_: Any) -> None:
-			_a,weapon_id = self.force_weapon_id(ForceType.ground)
-			if weapon_id != 130:
-				self.delegate.change_tab(DATID.weapons)
-				self.delegate.change_id(weapon_id)
-		def view_air_weapon(*_: Any) -> None:
-			_b,weapon_id = self.force_weapon_id(ForceType.air)
+		def view_weapon(force_type: ForceType) -> None:
+			_,weapon_id = self.force_weapon_id(force_type)
 			if weapon_id != 130:
 				self.delegate.change_tab(DATID.weapons)
 				self.delegate.change_id(weapon_id)
@@ -112,14 +107,14 @@ class AIActionsUnitsTab(DATUnitsTab):
 		self.force_value_text.tag_configure('force_type', underline=True)
 		values = (
 			('force_value', '#000000', '#E8E8E8', None, 'Used to calculate the strength of a force of units'),
-			('ground_range', '#911EB4', '#EBD6F1', view_ground_weapon, 'Ground Weapon Range'),
-			('air_range', '#911EB4', '#EBD6F1', view_air_weapon, 'Air Weapon Range'),
-			('ground_cooldown', '#F58231', '#FDE8DA', view_ground_weapon, 'Ground Weapon Cooldown'),
-			('air_cooldown', '#F58231', '#FDE8DA', view_air_weapon, 'Air Weapon Cooldown'),
-			('ground_factor', '#AA6E28', '#F0E5D8', view_ground_weapon, 'Ground Weapon Factor'),
-			('air_factor', '#AA6E28', '#F0E5D8', view_air_weapon, 'Air Weapon Factor'),
-			('ground_damage', '#E6194B', '#FAD5DE', view_ground_weapon, 'Ground Weapon Damage'),
-			('air_damage', '#E6194B', '#FAD5DE', view_air_weapon, 'Air Weapon Damage'),
+			('ground_range', '#911EB4', '#EBD6F1', lambda *_: view_weapon(ForceType.ground), 'Ground Weapon Range'),
+			('air_range', '#911EB4', '#EBD6F1', lambda *_: view_weapon(ForceType.air), 'Air Weapon Range'),
+			('ground_cooldown', '#F58231', '#FDE8DA', lambda *_: view_weapon(ForceType.ground), 'Ground Weapon Cooldown'),
+			('air_cooldown', '#F58231', '#FDE8DA', lambda *_: view_weapon(ForceType.air), 'Air Weapon Cooldown'),
+			('ground_factor', '#AA6E28', '#F0E5D8', lambda *_: view_weapon(ForceType.ground), 'Ground Weapon Factor'),
+			('air_factor', '#AA6E28', '#F0E5D8', lambda *_: view_weapon(ForceType.air), 'Air Weapon Factor'),
+			('ground_damage', '#E6194B', '#FAD5DE', lambda *_: view_weapon(ForceType.ground), 'Ground Weapon Damage'),
+			('air_damage', '#E6194B', '#FAD5DE', lambda *_: view_weapon(ForceType.air), 'Air Weapon Damage'),
 			('hp', '#3CB44B', '#DCF1DE', view_basic_unit, 'Health'),
 			('shields', '#0082C8', '#D1E8F5', view_basic_unit, 'Shields'),
 			('reduction', '#F032E6', '#FCDAFA', None, \
@@ -248,14 +243,21 @@ class AIActionsUnitsTab(DATUnitsTab):
 		hp = unit.hit_points.whole
 		shields = unit.shield_amount if unit.shield_enabled else 0
 		reduction = reductions.get(unit_id, 1.0)
-		force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) // 256)) * 7.58) * reduction)
+		# The game divides by the weapon cooldown when calculating the force value, so a
+		# cooldown of 0 would cause a division by zero in-game. Surface that as an error
+		# instead of computing a value the game could never produce.
+		if cooldown == 0:
+			force_value_str = 'ERR'
+		else:
+			force_value = int(floor(sqrt(floor(floor(attack_range / cooldown) * factor * damage + (floor((factor * damage * 2048) / cooldown) * (hp + shields)) // 256)) * 7.58) * reduction)
+			force_value_str = str(force_value)
 
 		def fstr(f: float) -> str:
 			return str(f).rstrip('0').rstrip('.')
 		text = self.force_value_text
 		text.insert(UI.END, force_type_name, ('force_type',))
 		text.insert(UI.END, '\n = ')
-		text.insert(UI.END, str(force_value), ('force_value',))
+		text.insert(UI.END, force_value_str, ('force_value',))
 		text.insert(UI.END, '\n = floor(floor(sqrt(floor(floor(')
 		tp = force_type_name.lower()
 		text.insert(UI.END, str(attack_range), (f'{tp}_range',))
@@ -281,6 +283,8 @@ class AIActionsUnitsTab(DATUnitsTab):
 		if force_type == ForceType.air and override_unit_id is not None:
 			text.insert(UI.END, '\n\nUsing weapons from Unit: ')
 			text.insert(UI.END, str(override_unit_id), (f'{tp}_weapon_override',))
+		if cooldown == 0:
+			text.insert(UI.END, '\n\nERROR: The weapon cooldown is 0, causing a division by zero. The game would crash calculating this force value.')
 
 	def build_force_values(self) -> None:
 		text = self.force_value_text

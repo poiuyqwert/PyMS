@@ -88,7 +88,7 @@ class DataContext:
 	def load_hints(self) -> None:
 		with open(Assets.data_file_path('Hints.txt'), 'r', encoding='utf-8') as hints:
 			for l in hints:
-				key, sep, value = l.rpartition('=')
+				key, sep, value = l.partition('=')
 				if not sep:
 					continue
 				key = key.strip()

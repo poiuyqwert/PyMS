@@ -23,7 +23,7 @@ class DATUnitsTab(UI.NotebookTab, DATTabConveniences):
 		pass
 
 	def jump(self, dat_id: DATID, entry_id: int) -> None:
-		if entry_id < self.delegate.data_context.dat_data(dat_id).entry_count() - 1:
+		if 0 <= entry_id < self.delegate.data_context.dat_data(dat_id).entry_count():
 			self.delegate.change_tab(dat_id)
 			self.delegate.change_id(entry_id)
 

@@ -63,11 +63,11 @@ class SaveMPQDialog(PyMSDialog):
 	def save(self) -> None:
 		selected_options = [SaveMPQDialog.OPTIONS[i] for i in self.listbox.curselection()]
 		if not selected_options:
-			UI.MessageBox.showinfo('Nothing to save', 'Please choose at least one item to save.')
+			UI.MessageBox.showinfo(parent=self, title='Nothing to save', message='Please choose at least one item to save.')
 		else:
 			file = self.delegate.data_context.config.last_path.mpq.select_save(self)
 			if file:
-				not_saved = []
+				not_saved: list[tuple[str, str]] = []
 				try:
 					mpq = MPQ.of(file)
 					with mpq.open_or_create():
@@ -86,13 +86,14 @@ class SaveMPQDialog(PyMSDialog):
 										buffer = data_data.save_data()
 								mpq.add_data(buffer, filepath, compression=MPQCompressionFlag.pkware)
 								buffer = None
-							except Exception:
-								not_saved.append(filename)
+							except Exception as e:
+								not_saved.append((filename, str(e)))
 				except PyMSError as e:
 					ErrorDialog(self, e)
 					return
 				if not_saved:
-					UI.MessageBox.showwarning(title='Save problems', message=f'{", ".join(not_saved)} could not be saved to the MPQ.')
+					details = '\n'.join(f'{filename}: {reason}' for filename,reason in not_saved)
+					UI.MessageBox.showwarning(parent=self, title='Save problems', message=f'The following files could not be saved to the MPQ:\n\n{details}')
 
 	def ok(self, _event: UI.Event | None = None) -> None:
 		self.delegate.data_context.config.mpq_export.data = [self.listbox.get(i) for i in self.listbox.curselection()]

@@ -12,7 +12,12 @@ class DATTabConveniences:
 	delegate: MainDelegate
 
 	def tip(self, obj: UI.Widget, tipname: str, hint: str) -> None:
-		UI.Tooltip(obj, f'{tipname}:\n{fit("  ", self.delegate.data_context.hints[hint], end=True)[:-1]}')
+		hint_text = self.delegate.data_context.hints.get(hint)
+		if hint_text is None:
+			body = f"  Could not load hint '{hint}'"
+		else:
+			body = fit("  ", hint_text, end=True)[:-1]
+		UI.Tooltip(obj, f'{tipname}:\n{body}')
 
 	def makeCheckbox(self, frame: UI.Misc, var: UI.Variable, txt: str, hint: str) -> UI.Checkbutton:
 		c = UI.Checkbutton(frame, text=txt, variable=var)

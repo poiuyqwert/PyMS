@@ -124,7 +124,7 @@ class SoundsTab(DATTab):
 		self.playbtn['state'] = UI.NORMAL if (play_sound and MPQ.supported() and n > 0) else UI.DISABLED
 
 	def play(self) -> None:
-		if play_sound:
+		if play_sound and self.soundentry.get() > 0:
 			tbl_string = self.delegate.data_context.sfxdatatbl.strings[self.soundentry.get()-1]
 			if tbl_string.endswith('<0>'):
 				tbl_string = tbl_string[:-3]
@@ -155,7 +155,7 @@ class SoundsTab(DATTab):
 		if self.soundentry.get() != entry.sound_file:
 			entry.sound_file = self.soundentry.get()
 			self.edited = True
-			if self.delegate.data_context.config.settings.labels.custom:
+			if self.delegate.data_context.config.settings.labels.custom.value:
 				self.delegate.data_context.dat_data(DATID.sfxdata).update_names()
 		if self.priority.get() != entry.priority:
 			entry.priority = self.priority.get()

@@ -123,7 +123,7 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		if not used_by:
 			used_by = self.used_by_references
 		assert used_by is not None
-		if not lookup_id:
+		if lookup_id is None:
 			lookup_id = self.id
 		for dat_refs in used_by:
 			self.used_by_data.extend(dat_refs.matching(self.delegate.data_context, lookup_id))
@@ -148,7 +148,7 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 				tab.change_sub_tab(match.dat_sub_tab_id)
 
 	def jump(self, datid: DATID, entry_id: int) -> None:
-		if entry_id < self.delegate.data_context.dat_data(datid).entry_count() - 1:
+		if 0 <= entry_id < self.delegate.data_context.dat_data(datid).entry_count():
 			self.delegate.change_tab(datid)
 			self.delegate.change_id(entry_id)
 
@@ -281,7 +281,11 @@ class DATTab(UI.NotebookTab, DATTabConveniences, Generic[ET]):
 		file = self.delegate.data_context.config.last_path.txt.select_open(self)
 		if not file:
 			return
-		dat.import_file(file)
+		try:
+			dat.import_file(file)
+		except PyMSError as e:
+			ErrorDialog(self, e)
+			return
 		self.edited = True
 		self.delegate.refresh()
 
